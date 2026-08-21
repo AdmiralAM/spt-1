@@ -1,0 +1,13 @@
+  Determining projects to restore...
+D:\a\spt-1\spt-1\SPT-PopCounter\SPT-PopCounter.csproj : error NU1101: Unable to find package BepInEx.Core. No packages exist with this id in source(s): C:\Program Files\dotnet\library-packs, Microsoft Visual Studio Offline Packages, nuget.org
+D:\a\spt-1\spt-1\SPT-PopCounter\SPT-PopCounter.csproj : error NU1101: Unable to find package BepInEx.PluginInfoProps. No packages exist with this id in source(s): C:\Program Files\dotnet\library-packs, Microsoft Visual Studio Offline Packages, nuget.org
+  Failed to restore D:\a\spt-1\spt-1\SPT-PopCounter\SPT-PopCounter.csproj (in 2.7 sec).
+
+Build FAILED.
+
+D:\a\spt-1\spt-1\SPT-PopCounter\SPT-PopCounter.csproj : error NU1101: Unable to find package BepInEx.Core. No packages exist with this id in source(s): C:\Program Files\dotnet\library-packs, Microsoft Visual Studio Offline Packages, nuget.org
+D:\a\spt-1\spt-1\SPT-PopCounter\SPT-PopCounter.csproj : error NU1101: Unable to find package BepInEx.PluginInfoProps. No packages exist with this id in source(s): C:\Program Files\dotnet\library-packs, Microsoft Visual Studio Offline Packages, nuget.org
+    0 Warning(s)
+    2 Error(s)
+
+Time Elapsed 00:00:09.91
