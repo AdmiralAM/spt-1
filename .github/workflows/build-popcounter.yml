@@ -29,12 +29,12 @@ jobs:
           dotnet build SPT-PopCounter/SPT-PopCounter.csproj -c Release 2>&1 | Tee-Object -FilePath build-status/build.log
           $code=$LASTEXITCODE
           "BUILD_EXIT_CODE=$code" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
-          $dll='SPT-PopCounter/bin/Release/netstandard2.1/SPT Tactical HUD v1.9.1.dll'
+          $dll='SPT-PopCounter/bin/Release/netstandard2.1/SPT Tactical HUD v1.9.2.dll'
           if(Test-Path $dll){
             Remove-Item 'build-output' -Recurse -Force -ErrorAction SilentlyContinue
-            New-Item -ItemType Directory -Force -Path 'build-output/SPT Tactical HUD v1.9.1/assets' | Out-Null
-            Copy-Item $dll 'build-output/SPT Tactical HUD v1.9.1/SPT Tactical HUD v1.9.1.dll' -Force
-            Copy-Item 'SPT-PopCounter/assets/hud-sprites.png' 'build-output/SPT Tactical HUD v1.9.1/assets/hud-sprites.png' -Force
+            New-Item -ItemType Directory -Force -Path 'build-output/SPT Tactical HUD v1.9.2/assets' | Out-Null
+            Copy-Item $dll 'build-output/SPT Tactical HUD v1.9.2/SPT Tactical HUD v1.9.2.dll' -Force
+            Copy-Item 'SPT-PopCounter/assets/hud-sprites.png' 'build-output/SPT Tactical HUD v1.9.2/assets/hud-sprites.png' -Force
           }
           exit 0
       - name: Commit result
@@ -45,7 +45,7 @@ jobs:
           git add build-status/build.log
           git add -A build-output
           git diff --cached --quiet
-          if($LASTEXITCODE -ne 0){git commit -m 'Update Tactical HUD v1.9.1 build result [skip ci]';git push}
+          if($LASTEXITCODE -ne 0){git commit -m 'Update Tactical HUD v1.9.2 build result [skip ci]';git push}
       - name: Fail if build failed
         shell: pwsh
         run: if($env:BUILD_EXIT_CODE -ne '0'){exit 1}
@@ -53,6 +53,6 @@ jobs:
         if: env.BUILD_EXIT_CODE == '0'
         uses: actions/upload-artifact@v4
         with:
-          name: SPT-Tactical-HUD-v1.9.1
-          path: build-output/SPT Tactical HUD v1.9.1
+          name: SPT-Tactical-HUD-v1.9.2
+          path: build-output/SPT Tactical HUD v1.9.2
           if-no-files-found: error
