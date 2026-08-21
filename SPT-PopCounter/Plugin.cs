@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace SPTPopCounter
 {
-    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.8.0")]
+    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.8.1")]
     public sealed class Plugin : BaseUnityPlugin
     {
         ConfigEntry<bool> workAlways, editMode, popEnabled, statusEnabled, statusOutside, killEnabled, showVersion, killDiagnostics;
@@ -20,10 +20,10 @@ namespace SPTPopCounter
         ConfigEntry<float> popOpacity, statusOpacity, killOpacity, popX, popY, statusX, statusY, killX, killY, killLifetime;
         ConfigEntry<Color> pmcColor, scavColor, bossColor, reinforcedColor, weightOk, weightHeavy, weightCritical;
 
-        float nextRefresh, nextVersionScan, nextVersionApply;
+        float nextRefresh, nextVersionSearch, nextVersionApply, nextSubscribe;
         int mode, pmc, scav, boss, reinforced;
-        bool inRaid, previousRaidState, versionDiscoveryDone, lastShowVersion;
-        float hydration, energy, weight, maxWeight, overweightLimit, walkDrainLimit;
+        bool inRaid, previousRaidState, versionSearchPending, lastShowVersion;
+        float hydration, energy, weight, overweightLimit, walkDrainLimit;
         GUIStyle text, shadow;
         Type worldType, singletonType;
         PropertyInfo singletonInstance;
@@ -33,6 +33,8 @@ namespace SPTPopCounter
 
         readonly Dictionary<string, Tracked> tracked = new Dictionary<string, Tracked>();
         readonly Dictionary<string, object> playersByProfileId = new Dictionary<string, object>();
+        readonly Queue<string> subscribeQueue = new Queue<string>();
+        readonly HashSet<string> queuedIds = new HashSet<string>();
         readonly List<KillLine> kills = new List<KillLine>();
         readonly HashSet<string> diagSeen = new HashSet<string>();
         readonly List<VersionTarget> versionTargets = new List<VersionTarget>();
@@ -47,9 +49,9 @@ namespace SPTPopCounter
         sealed class Tracked
         {
             public object Player, Health, LastDamage, LastAttacker;
-            public bool Alive, DeathCaptured;
+            public bool Alive, DeathCaptured, Subscribed;
             public Vector3 Pos;
-            public string Kind, LastHit;
+            public string Kind, LastHit, LastWeapon;
             public EventInfo DiedEvent, DamageEvent, PlayerDamageEvent;
             public Delegate DiedHandler, DamageHandler, PlayerDamageHandler;
         }
@@ -63,6 +65,8 @@ namespace SPTPopCounter
             editMode = Config.Bind("General", "HUD Edit Mode", false, "Enable compact drag hitboxes");
             showVersion = Config.Bind("General", "Show SPT Version Label", false, "Show/hide native SPT version label");
             lastShowVersion = showVersion.Value;
+            versionSearchPending = true;
+            nextVersionSearch = Time.unscaledTime + 4f;
 
             popEnabled = Config.Bind("Population", "Enabled", true, "Population");
             popSize = Size("Population"); popOpacity = Opacity("Population"); popX = X("Population", 8); popY = BottomY("Population", 8);
@@ -74,13 +78,13 @@ namespace SPTPopCounter
             weightOk = C("Player Status Colors", "Weight OK", .58f, .75f, .52f); weightHeavy = C("Player Status Colors", "Weight Heavy", .78f, .68f, .39f); weightCritical = C("Player Status Colors", "Weight Critical", .75f, .42f, .39f);
 
             killEnabled = Config.Bind("Kill Feed", "Enabled", true, "Runtime kill feed");
-            killDiagnostics = Config.Bind("Kill Feed", "Diagnostics", true, "Log unresolved death attribution fields");
+            killDiagnostics = Config.Bind("Kill Feed", "Diagnostics", false, "Log unresolved death attribution fields");
             killMode = Config.Bind("Kill Feed", "Display Mode", "Normal", new ConfigDescription("Minimal / Normal / Detailed", new AcceptableValueList<string>("Minimal", "Normal", "Detailed")));
             killSize = Size("Kill Feed"); killOpacity = Opacity("Kill Feed"); killX = X("Kill Feed", 1500);
             killY = Config.Bind("Kill Feed", "Position Y", 100f, new ConfigDescription("Top Y", new AcceptableValueRange<float>(-100, 2000)));
             killLifetime = Config.Bind("Kill Feed", "Lifetime", 6f, new ConfigDescription("Seconds", new AcceptableValueRange<float>(2, 15)));
             killMax = Config.Bind("Kill Feed", "Max Entries", 3, new ConfigDescription("Lines", new AcceptableValueRange<int>(1, 6)));
-            Logger.LogInfo("SPT Tactical HUD v1.8.0 loaded");
+            Logger.LogInfo("SPT Tactical HUD v1.8.1 loaded");
         }
 
         ConfigEntry<int> Size(string s) => Config.Bind(s, "Size", 10, new ConfigDescription("Size", new AcceptableValueRange<int>(8, 20)));
@@ -92,9 +96,15 @@ namespace SPTPopCounter
         void Update()
         {
             if (Time.unscaledTime >= nextRefresh) { nextRefresh = Time.unscaledTime + .25f; Refresh(); }
-            if (!versionDiscoveryDone && Time.unscaledTime >= nextVersionScan) { nextVersionScan = Time.unscaledTime + 2f; DiscoverVersionTargets(); }
-            if (Time.unscaledTime >= nextVersionApply) { nextVersionApply = Time.unscaledTime + .5f; ApplyKnownVersionTargets(); }
-            if (showVersion.Value != lastShowVersion) { lastShowVersion = showVersion.Value; ApplyKnownVersionTargets(); }
+            if (inRaid && Time.unscaledTime >= nextSubscribe) { nextSubscribe = Time.unscaledTime + .35f; ProcessOneSubscription(); }
+            if (versionSearchPending && Time.unscaledTime >= nextVersionSearch) { versionSearchPending = false; DiscoverVersionTargetsOnce(); }
+            if (versionTargets.Count > 0 && Time.unscaledTime >= nextVersionApply) { nextVersionApply = Time.unscaledTime + 1f; ApplyKnownVersionTargets(); }
+            if (showVersion.Value != lastShowVersion)
+            {
+                lastShowVersion = showVersion.Value;
+                if (versionTargets.Count == 0) { versionSearchPending = true; nextVersionSearch = Time.unscaledTime + .5f; }
+                else ApplyKnownVersionTargets();
+            }
             kills.RemoveAll(k => Time.unscaledTime - k.Created > killLifetime.Value);
             if (!inRaid && !workAlways.Value && !statusOutside.Value) { mode = 0; return; }
             if (toggleKey.Value.IsDown()) mode = (mode + 1) % 3;
@@ -111,7 +121,7 @@ namespace SPTPopCounter
         }
 
         Rect PopRect() => new Rect(popX.Value, Screen.height - popY.Value - (popSize.Value + 7), Mathf.Max(95, popSize.Value * 12), popSize.Value + 7);
-        Rect StatusRect() => new Rect(statusX.Value, Screen.height - statusY.Value - (statusSize.Value + 7), Mathf.Max(160, statusSize.Value * 20), statusSize.Value + 7);
+        Rect StatusRect() => new Rect(statusX.Value, Screen.height - statusY.Value - (statusSize.Value + 7), Mathf.Max(125, statusSize.Value * 15), statusSize.Value + 7);
         Rect KillRect() => new Rect(killX.Value, killY.Value, killMode.Value == "Minimal" ? 180 : 290, (killSize.Value + 6) * Mathf.Max(1, killMax.Value));
 
         void Ensure()
@@ -160,11 +170,10 @@ namespace SPTPopCounter
             x = Label(r, "H " + Mathf.RoundToInt(hydration), x, 0, statusSize.Value, statusOpacity.Value, new Color(.48f, .70f, .88f));
             x = Label(r, "E " + Mathf.RoundToInt(energy), x, 0, statusSize.Value, statusOpacity.Value, new Color(.90f, .72f, .28f));
             Color wc; string load;
-            if (maxWeight <= 0 || weight < overweightLimit) { wc = weightOk.Value; load = "▲"; }
+            if (overweightLimit <= 0 || weight < overweightLimit) { wc = weightOk.Value; load = "▲"; }
             else if (walkDrainLimit <= 0 || weight < walkDrainLimit) { wc = weightHeavy.Value; load = "▲▲"; }
             else { wc = weightCritical.Value; load = "▲▲▲"; }
-            x = Label(r, "W " + weight.ToString("0.0") + "/" + maxWeight.ToString("0.0"), x, 0, statusSize.Value, statusOpacity.Value, wc);
-            Label(r, " " + load, x, 0, statusSize.Value, statusOpacity.Value, wc);
+            Label(r, "W " + load, x, 0, statusSize.Value, statusOpacity.Value, wc);
         }
 
         void DrawKills(Rect r, bool editing)
@@ -233,8 +242,7 @@ namespace SPTPopCounter
                 {
                     if (pl == null) continue;
                     string id = PlayerId(pl); if (string.IsNullOrEmpty(id)) id = pl.GetHashCode().ToString();
-                    string pid = ProfileId(pl); if (!string.IsNullOrEmpty(pid)) playersByProfileId[pid] = pl;
-                    seen.Add(id);
+                    seen.Add(id); playersByProfileId[id] = pl;
                     bool alive = IsAlive(pl); string kind = Kind(pl); Vector3 pos = Position(pl);
                     if (IsTrue(ReadMember(pl, "IsYourPlayer"))) local = pl;
                     else if (alive)
@@ -246,7 +254,8 @@ namespace SPTPopCounter
                     if (!tracked.TryGetValue(id, out t))
                     {
                         t = new Tracked { Player = pl, Alive = alive, Pos = pos, Kind = kind };
-                        tracked[id] = t; SubscribeEvents(id, t);
+                        tracked[id] = t;
+                        if (queuedIds.Add(id)) subscribeQueue.Enqueue(id);
                     }
                     else
                     {
@@ -260,7 +269,7 @@ namespace SPTPopCounter
                 {
                     Tracked t = tracked[id];
                     if (t.Alive && !t.DeathCaptured && (t.LastDamage != null || t.LastAttacker != null)) CaptureDeath(t);
-                    Unsubscribe(t); tracked.Remove(id);
+                    Unsubscribe(t); tracked.Remove(id); queuedIds.Remove(id);
                 }
 
                 pmc = p; scav = s; boss = b; reinforced = r; RefreshStatus(local);
@@ -271,15 +280,29 @@ namespace SPTPopCounter
         void SetRaidState(bool value)
         {
             previousRaidState = inRaid; inRaid = value;
-            if (inRaid != previousRaidState)
+            if (inRaid == previousRaidState) return;
+
+            versionTargets.Clear();
+            versionSearchPending = true;
+            nextVersionSearch = Time.unscaledTime + (inRaid ? 4f : 3f);
+
+            if (!inRaid)
             {
-                versionTargets.Clear(); versionDiscoveryDone = false; nextVersionScan = 0;
-                if (!inRaid)
-                {
-                    foreach (Tracked t in tracked.Values) Unsubscribe(t);
-                    tracked.Clear(); playersByProfileId.Clear(); kills.Clear(); diagSeen.Clear();
-                    if (!workAlways.Value && !statusOutside.Value) mode = 0;
-                }
+                foreach (Tracked t in tracked.Values) Unsubscribe(t);
+                tracked.Clear(); playersByProfileId.Clear(); subscribeQueue.Clear(); queuedIds.Clear(); kills.Clear(); diagSeen.Clear();
+                if (!workAlways.Value && !statusOutside.Value) mode = 0;
+            }
+        }
+
+        void ProcessOneSubscription()
+        {
+            while (subscribeQueue.Count > 0)
+            {
+                string id = subscribeQueue.Dequeue(); queuedIds.Remove(id);
+                Tracked t;
+                if (!tracked.TryGetValue(id, out t) || t.Subscribed || !t.Alive) continue;
+                SubscribeEvents(id, t);
+                break;
             }
         }
 
@@ -310,9 +333,7 @@ namespace SPTPopCounter
                     t.PlayerDamageHandler = BuildEventDelegate(t.PlayerDamageEvent.EventHandlerType, "OnTrackedPlayerDamage", id, 2);
                     t.PlayerDamageEvent.AddEventHandler(hc, t.PlayerDamageHandler);
                 }
-
-                if (killDiagnostics.Value)
-                    Logger.LogDebug("KillFeed hooks " + t.Kind + ": died=" + (t.DiedEvent != null) + " damage=" + (t.DamageEvent != null) + " byPlayer=" + (t.PlayerDamageEvent != null));
+                t.Subscribed = true;
             }
             catch (Exception ex) { if (killDiagnostics.Value) Logger.LogWarning("KillFeed subscribe: " + ex.Message); }
         }
@@ -331,8 +352,7 @@ namespace SPTPopCounter
             ParameterExpression[] pars = invoke.GetParameters().Select((p, i) => Expression.Parameter(p.ParameterType, "p" + i)).ToArray();
             MethodInfo target = GetType().GetMethod(method, BindingFlags.Instance | BindingFlags.NonPublic);
             Expression call;
-            if (modeId == 0)
-                call = Expression.Call(Expression.Constant(this), target, Expression.Constant(id));
+            if (modeId == 0) call = Expression.Call(Expression.Constant(this), target, Expression.Constant(id));
             else if (modeId == 1)
             {
                 Expression hit = pars.Length > 0 ? Expression.Convert(pars[0], typeof(object)) : Expression.Constant(null, typeof(object));
@@ -352,15 +372,26 @@ namespace SPTPopCounter
         {
             Tracked t; if (!tracked.TryGetValue(id, out t)) return;
             t.LastHit = hit?.ToString(); t.LastDamage = data;
-            object a = ExtractAttacker(data); if (a != null) t.LastAttacker = a;
+            object a = ExtractAttacker(data) ?? ResolveAttackerById(data);
+            if (a != null)
+            {
+                t.LastAttacker = a;
+                string w = Weapon(a); if (!string.IsNullOrEmpty(w) && w != "?") t.LastWeapon = w;
+            }
+            if (string.IsNullOrEmpty(t.LastWeapon)) t.LastWeapon = ResolveWeaponFromDamage(data);
         }
 
         void OnTrackedPlayerDamage(string id, object a, object b)
         {
             Tracked t; if (!tracked.TryGetValue(id, out t)) return;
-            object pa = NormalizePlayer(a), pb = NormalizePlayer(b);
-            if (pa != null && !ReferenceEquals(pa, t.Player)) t.LastAttacker = pa;
-            else if (pb != null && !ReferenceEquals(pb, t.Player)) t.LastAttacker = pb;
+            object pa = NormalizePlayer(a), pb = NormalizePlayer(b), attacker = null;
+            if (pa != null && !ReferenceEquals(pa, t.Player)) attacker = pa;
+            else if (pb != null && !ReferenceEquals(pb, t.Player)) attacker = pb;
+            if (attacker != null)
+            {
+                t.LastAttacker = attacker;
+                string w = Weapon(attacker); if (!string.IsNullOrEmpty(w) && w != "?") t.LastWeapon = w;
+            }
         }
 
         void OnTrackedDied(string id)
@@ -376,14 +407,34 @@ namespace SPTPopCounter
             object info = FirstNonNull(t.LastDamage, ReadMember(hc, "LastDamageInfo"), ReadMember(t.Player, "LastDamageInfo"), ReadMember(hc, "DamageInfo"), ReadMember(t.Player, "DamageInfo"));
             object attacker = t.LastAttacker ?? ExtractAttacker(info) ?? ResolveAttackerById(info);
             string hit = FirstNonEmpty(t.LastHit, ExtractHit(info));
-            string killer = "Unknown", weapon = "?"; float dist = 0; bool hasDist = false;
+            string killer = "Unknown", weapon = FirstNonEmpty(t.LastWeapon, ResolveWeaponFromDamage(info), "?"); float dist = 0; bool hasDist = false;
             if (attacker != null && !ReferenceEquals(attacker, t.Player))
             {
-                killer = Kind(attacker); weapon = Weapon(attacker); Vector3 ap = Position(attacker);
+                killer = Kind(attacker);
+                string liveWeapon = Weapon(attacker); if (!string.IsNullOrEmpty(liveWeapon) && liveWeapon != "?") weapon = liveWeapon;
+                Vector3 ap = Position(attacker);
                 if (ap != Vector3.zero && t.Pos != Vector3.zero) { dist = Vector3.Distance(ap, t.Pos); hasDist = true; }
             }
             else DiagnoseDeath(t.Player, hc, info);
             kills.Add(new KillLine { Killer = killer, Victim = t.Kind, Weapon = weapon, Hit = hit, Distance = dist, HasDistance = hasDist, Created = Time.unscaledTime });
+        }
+
+        string ResolveWeaponFromDamage(object info)
+        {
+            if (info == null) return null;
+            foreach (string n in new[] { "Weapon", "WeaponItem", "SourceItem", "Item", "WeaponTemplate" })
+            {
+                object v = ReadMember(info, n); if (v == null) continue;
+                string direct = v as string; if (!string.IsNullOrEmpty(direct)) return direct;
+                object tpl = ReadMember(v, "Template");
+                string name = (ReadMember(tpl, "ShortName") ?? ReadMember(tpl, "Name") ?? ReadMember(v, "ShortName") ?? ReadMember(v, "Name"))?.ToString();
+                if (!string.IsNullOrEmpty(name)) return name;
+            }
+            foreach (string n in new[] { "WeaponName", "SourceName", "WeaponId" })
+            {
+                string s = ReadMember(info, n)?.ToString(); if (!string.IsNullOrEmpty(s)) return s;
+            }
+            return null;
         }
 
         object ExtractAttacker(object info)
@@ -394,8 +445,7 @@ namespace SPTPopCounter
                 object p = NormalizePlayer(ReadMember(info, n)); if (p != null) return p;
             }
             object nested = FirstNonNull(ReadMember(info, "DamageSource"), ReadMember(info, "Weapon"), ReadMember(info, "Bullet"));
-            if (nested != null)
-                foreach (string n in new[] { "Player", "Owner", "Attacker", "SourcePlayer" }) { object p = NormalizePlayer(ReadMember(nested, n)); if (p != null) return p; }
+            if (nested != null) foreach (string n in new[] { "Player", "Owner", "Attacker", "SourcePlayer" }) { object p = NormalizePlayer(ReadMember(nested, n)); if (p != null) return p; }
             return null;
         }
 
@@ -404,8 +454,8 @@ namespace SPTPopCounter
             if (info == null) return null;
             foreach (string n in new[] { "SourceId", "AttackerId", "KillerId", "PlayerId", "ProfileId", "SourceProfileId" })
             {
-                object value = ReadMember(info, n); string id = value?.ToString();
-                object p; if (!string.IsNullOrEmpty(id) && playersByProfileId.TryGetValue(id, out p)) return p;
+                string id = ReadMember(info, n)?.ToString(); object p;
+                if (!string.IsNullOrEmpty(id) && playersByProfileId.TryGetValue(id, out p)) return p;
             }
             object nested = FirstNonNull(ReadMember(info, "DamageSource"), ReadMember(info, "Weapon"), ReadMember(info, "Bullet"));
             if (nested != null)
@@ -436,13 +486,6 @@ namespace SPTPopCounter
             if (!killDiagnostics.Value) return;
             string key = (info?.GetType().FullName ?? "null") + "|" + (hc?.GetType().FullName ?? "null"); if (!diagSeen.Add(key)) return;
             Logger.LogWarning("KillFeed unresolved victim=" + victim?.GetType().FullName + " health=" + (hc?.GetType().FullName ?? "null") + " damage=" + (info?.GetType().FullName ?? "null"));
-            if (info != null) Logger.LogInfo("KillFeed damage members: " + MemberNames(info.GetType(), 64));
-        }
-
-        string MemberNames(Type t, int max)
-        {
-            var names = new List<string>(); try { foreach (MemberInfo m in t.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) { if (!names.Contains(m.Name)) names.Add(m.Name); if (names.Count >= max) break; } } catch { }
-            return string.Join(",", names.ToArray());
         }
 
         void Unsubscribe(Tracked t)
@@ -450,6 +493,7 @@ namespace SPTPopCounter
             try { if (t.Health != null && t.DiedEvent != null && t.DiedHandler != null) t.DiedEvent.RemoveEventHandler(t.Health, t.DiedHandler); } catch { }
             try { if (t.Health != null && t.DamageEvent != null && t.DamageHandler != null) t.DamageEvent.RemoveEventHandler(t.Health, t.DamageHandler); } catch { }
             try { if (t.Health != null && t.PlayerDamageEvent != null && t.PlayerDamageHandler != null) t.PlayerDamageEvent.RemoveEventHandler(t.Health, t.PlayerDamageHandler); } catch { }
+            t.Subscribed = false;
         }
 
         void RefreshStatus(object pl)
@@ -471,32 +515,26 @@ namespace SPTPopCounter
             Vector2? walkLimits = ReadVector2(ReadMember(stamina, "WalkOverweightLimits"));
             float rel = ReadFloat(ReadMember(hc, "CarryingWeightRelativeModifier")) ?? 1f;
             float abs = ReadFloat(ReadMember(hc, "CarryingWeightAbsoluteModifier")) ?? 0f;
-            if (baseLimits.HasValue)
-            {
-                overweightLimit = baseLimits.Value.x * rel + abs;
-                maxWeight = baseLimits.Value.y * rel + abs;
-            }
+            if (baseLimits.HasValue) overweightLimit = baseLimits.Value.x * rel + abs;
             if (walkLimits.HasValue) walkDrainLimit = walkLimits.Value.x * rel + abs;
         }
 
-        void DiscoverVersionTargets()
+        void DiscoverVersionTargetsOnce()
         {
             try
             {
-                int found = 0;
                 foreach (MonoBehaviour mb in Resources.FindObjectsOfTypeAll<MonoBehaviour>())
                 {
                     if (mb == null) continue; Type t = mb.GetType(); string tn = t.Name;
                     if (tn.IndexOf("Text", StringComparison.OrdinalIgnoreCase) < 0 && tn.IndexOf("Label", StringComparison.OrdinalIgnoreCase) < 0) continue;
                     foreach (MemberInfo m in StringMembers(t))
                     {
-                        if (versionTargets.Any(x => ReferenceEquals(x.Owner, mb) && x.Member.Name == m.Name)) continue;
                         string value = ReadStringMember(mb, m);
                         if (string.IsNullOrEmpty(value) || value.IndexOf("SPT", StringComparison.OrdinalIgnoreCase) < 0) continue;
-                        versionTargets.Add(new VersionTarget { Owner = mb, Member = m, Original = value }); found++;
+                        versionTargets.Add(new VersionTarget { Owner = mb, Member = m, Original = value });
                     }
                 }
-                if (found > 0) { versionDiscoveryDone = true; ApplyKnownVersionTargets(); }
+                ApplyKnownVersionTargets();
             }
             catch (Exception ex) { Logger.LogDebug("Version discovery: " + ex.Message); }
         }
@@ -527,6 +565,33 @@ namespace SPTPopCounter
             try { PropertyInfo p = m as PropertyInfo; if (p != null && p.CanWrite) { p.SetValue(o, value, null); return; } FieldInfo f = m as FieldInfo; if (f != null) f.SetValue(o, value); } catch { }
         }
 
+        string Kind(object p)
+        {
+            string role = Role(p), side = Side(p);
+            if (IsBoss(role)) return "Boss"; if (IsReinforced(role)) return "Raider";
+            if (!string.IsNullOrEmpty(side) && side.IndexOf("USEC", StringComparison.OrdinalIgnoreCase) >= 0) return "USEC";
+            if (!string.IsNullOrEmpty(side) && side.IndexOf("BEAR", StringComparison.OrdinalIgnoreCase) >= 0) return "BEAR";
+            if (IsPmc(side)) return "PMC"; return "Scav";
+        }
+
+        string Weapon(object p)
+        {
+            object hands = ReadMember(p, "HandsController"), item = ReadMember(hands, "Item"), tpl = ReadMember(item, "Template");
+            string n = (ReadMember(tpl, "ShortName") ?? ReadMember(tpl, "Name") ?? ReadMember(item, "ShortName") ?? ReadMember(item, "Name"))?.ToString();
+            return string.IsNullOrEmpty(n) ? "?" : n;
+        }
+
+        Vector3 Position(object p)
+        {
+            try { object tr = ReadMember(p, "Transform") ?? ReadMember(p, "transform"), v = ReadMember(tr, "position"); if (v is Vector3) return (Vector3)v; } catch { }
+            return Vector3.zero;
+        }
+
+        string PlayerId(object p)
+        {
+            object pr = ReadMember(p, "Profile"); return (ReadMember(pr, "Id") ?? ReadMember(pr, "ProfileId") ?? ReadMember(p, "ProfileId"))?.ToString();
+        }
+
         object GetWorld()
         {
             if (worldType == null) worldType = FindType("EFT.GameWorld") ?? FindTypeByName("GameWorld"); if (worldType == null) return null;
@@ -541,43 +606,14 @@ namespace SPTPopCounter
             {
                 Type t = w.GetType(); playersMember = (MemberInfo)t.GetProperty("RegisteredPlayers", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) ?? t.GetProperty("AllPlayers", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic) ?? (MemberInfo)t.GetField("RegisteredPlayers", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             }
-            object v = playersMember is PropertyInfo ? ((PropertyInfo)playersMember).GetValue(w, null) : ((FieldInfo)playersMember)?.GetValue(w); return v as IEnumerable;
+            object v = playersMember is PropertyInfo pi ? pi.GetValue(w, null) : (playersMember as FieldInfo)?.GetValue(w); return v as IEnumerable;
         }
 
         object GetSingletonInstance(Type t)
         {
-            if (t == null) return null; Type sg = FindType("Comfort.Common.Singleton`1"); if (sg == null) return null;
-            try { return sg.MakeGenericType(t).GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)?.GetValue(null, null); } catch { return null; }
+            if (t == null) return null; Type s = FindType("Comfort.Common.Singleton`1"); if (s == null) return null;
+            try { return s.MakeGenericType(t).GetProperty("Instance", BindingFlags.Public | BindingFlags.Static)?.GetValue(null, null); } catch { return null; }
         }
-
-        string Kind(object p)
-        {
-            string role = Role(p), side = Side(p);
-            if (IsBoss(role)) return "Boss"; if (IsReinforced(role)) return "Raider";
-            if (!string.IsNullOrEmpty(side) && side.IndexOf("USEC", StringComparison.OrdinalIgnoreCase) >= 0) return "USEC";
-            if (!string.IsNullOrEmpty(side) && side.IndexOf("BEAR", StringComparison.OrdinalIgnoreCase) >= 0) return "BEAR";
-            if (IsPmc(side)) return "PMC"; return "Scav";
-        }
-
-        string Weapon(object p)
-        {
-            object hands = ReadMember(p, "HandsController"), item = ReadMember(hands, "Item"), tpl = ReadMember(item, "Template");
-            string n = (ReadMember(tpl, "ShortName") ?? ReadMember(tpl, "Name") ?? ReadMember(item, "ShortName"))?.ToString();
-            return string.IsNullOrEmpty(n) ? "?" : n;
-        }
-
-        Vector3 Position(object p)
-        {
-            try { object tr = ReadMember(p, "Transform") ?? ReadMember(p, "transform"), v = ReadMember(tr, "position"); if (v is Vector3) return (Vector3)v; } catch { }
-            return Vector3.zero;
-        }
-
-        string ProfileId(object p)
-        {
-            object pr = ReadMember(p, "Profile");
-            return (ReadMember(pr, "Id") ?? ReadMember(pr, "ProfileId") ?? ReadMember(p, "ProfileId"))?.ToString();
-        }
-        string PlayerId(object p) => ProfileId(p);
 
         static bool IsAlive(object p) { object h = ReadMember(p, "HealthController"), a = h != null ? ReadMember(h, "IsAlive") : ReadMember(p, "IsAlive"); return !(a is bool) || (bool)a; }
         static string Side(object p) { object pr = ReadMember(p, "Profile"), i = ReadMember(pr, "Info"); return (ReadMember(i, "Side") ?? ReadMember(pr, "Side"))?.ToString(); }
@@ -588,10 +624,10 @@ namespace SPTPopCounter
         static bool IsTrue(object v) => v is bool && (bool)v;
         static float? ReadFloat(object v) { if (v == null) return null; try { return Convert.ToSingle(v); } catch { return null; } }
         static float? ReadWrappedFloat(object v) { if (v == null) return null; return ReadFloat(ReadMember(v, "Value")) ?? ReadFloat(v); }
-        static bool? ReadWrappedBool(object v) { if (v == null) return null; object x = ReadMember(v, "Value") ?? v; if (x is bool) return (bool)x; return null; }
-        static Vector2? ReadVector2(object v) { if (v is Vector2) return (Vector2)v; return null; }
+        static bool? ReadWrappedBool(object v) { if (v == null) return null; object x = ReadMember(v, "Value") ?? v; return x is bool ? (bool?)x : null; }
         static float? ReadFloatDeep(object o, string a, string b) { object x = ReadMember(o, a); return ReadFloat(ReadMember(x, b)) ?? ReadFloat(x); }
-        static string FirstNonEmpty(params string[] values) { foreach (string v in values) if (!string.IsNullOrEmpty(v)) return v; return null; }
+        static Vector2? ReadVector2(object v) { if (v is Vector2) return (Vector2)v; return null; }
+        static string FirstNonEmpty(params string[] values) { foreach (string s in values) if (!string.IsNullOrEmpty(s) && s != "?") return s; return values.LastOrDefault(); }
         static object FirstNonNull(params object[] values) { foreach (object v in values) if (v != null) return v; return null; }
 
         static object ReadMember(object o, string n)
@@ -602,12 +638,7 @@ namespace SPTPopCounter
             return null;
         }
 
-        static Type FindType(string n)
-        {
-            foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies()) try { Type t = a.GetType(n, false); if (t != null) return t; } catch { }
-            return null;
-        }
-
+        static Type FindType(string n) { foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies()) try { Type t = a.GetType(n, false); if (t != null) return t; } catch { } return null; }
         static Type FindTypeByName(string n)
         {
             foreach (Assembly a in AppDomain.CurrentDomain.GetAssemblies())
