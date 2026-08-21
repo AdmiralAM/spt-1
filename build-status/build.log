@@ -1,12 +1,9 @@
   Determining projects to restore...
-  Restored D:\a\spt-1\spt-1\SPT-PopCounter\SPT-PopCounter.csproj (in 8.61 sec).
-D:\a\spt-1\spt-1\SPT-PopCounter\Plugin.cs(29,22): warning CS0169: The field 'Plugin.singletonInstance' is never used [D:\a\spt-1\spt-1\SPT-PopCounter\SPT-PopCounter.csproj]
-  SPT-PopCounter -> D:\a\spt-1\spt-1\SPT-PopCounter\bin\Release\netstandard2.1\SPT Tactical HUD v1.7.2.dll
+  Restored D:\a\spt-1\spt-1\SPT-PopCounter\SPT-PopCounter.csproj (in 4.25 sec).
+  SPT-PopCounter -> D:\a\spt-1\spt-1\SPT-PopCounter\bin\Release\netstandard2.1\SPT Tactical HUD v1.8.0.dll
 
 Build succeeded.
-
-D:\a\spt-1\spt-1\SPT-PopCounter\Plugin.cs(29,22): warning CS0169: The field 'Plugin.singletonInstance' is never used [D:\a\spt-1\spt-1\SPT-PopCounter\SPT-PopCounter.csproj]
-    1 Warning(s)
+    0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:28.03
+Time Elapsed 00:00:19.76
