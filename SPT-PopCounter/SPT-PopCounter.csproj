@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>SPT-PopCounter</AssemblyName>
+    <RootNamespace>SPTPopCounter</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Core" Version="5.4.21" />
+    <PackageReference Include="UnityEngine.Modules" Version="2021.3.33" />
+  </ItemGroup>
+</Project>
