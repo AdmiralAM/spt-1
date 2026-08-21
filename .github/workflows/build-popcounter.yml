@@ -23,6 +23,15 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Download BepInEx 5
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path deps | Out-Null
+          $url = 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip'
+          Invoke-WebRequest -Uri $url -OutFile deps/bepinex.zip
+          Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
+          if (-not (Test-Path 'deps/BepInEx/core/BepInEx.dll')) { throw 'BepInEx.dll not found after extraction' }
+
       - name: Build and capture log
         shell: pwsh
         run: |
