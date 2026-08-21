@@ -8,6 +8,12 @@
     <RootNamespace>SPTPopCounter</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Paulov.Bepinex.Framework" Version="2025.7.24.932" />
+    <Reference Include="BepInEx">
+      <HintPath>..\deps\BepInEx\core\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <PackageReference Include="UnityEngine.Modules" Version="2021.3.33">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 </Project>
