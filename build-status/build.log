@@ -1,9 +1,9 @@
   Determining projects to restore...
-  Restored D:\a\spt-1\spt-1\SPT-PopCounter\SPT-PopCounter.csproj (in 2.65 sec).
+  Restored D:\a\spt-1\spt-1\SPT-PopCounter\SPT-PopCounter.csproj (in 3.15 sec).
   SPT-PopCounter -> D:\a\spt-1\spt-1\SPT-PopCounter\bin\Release\netstandard2.1\SPT Tactical HUD v1.4.dll
 
 Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:13.81
+Time Elapsed 00:00:13.48
