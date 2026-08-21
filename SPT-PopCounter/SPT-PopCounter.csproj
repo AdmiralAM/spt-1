@@ -4,7 +4,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <AssemblyName>SPT Tactical HUD v1.6</AssemblyName>
+    <AssemblyName>SPT Tactical HUD v1.6.0</AssemblyName>
     <RootNamespace>SPTPopCounter</RootNamespace>
     <Version>1.6.0</Version>
     <AssemblyVersion>1.6.0.0</AssemblyVersion>
