@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,6 +83,26 @@ def alpha_bbox(icon: Image.Image):
     return icon.getchannel("A").point(lambda value: 255 if value >= 12 else 0).getbbox()
 
 
+def normalize_ink(icon: Image.Image) -> Image.Image:
+    """Make every authored source behave as one tintable EFT-style icon family.
+
+    Approved source art can contain different RGB palettes. Unity later modulates these
+    textures with GUI.color, so leaving source hues in place produces inconsistent role
+    and weapon colors. Preserve authored luminance/metal detail, but collapse chroma,
+    tighten tonal range and lightly restore edges lost during HUD-scale downsampling.
+    """
+    icon = icon.convert("RGBA")
+    alpha = icon.getchannel("A")
+    gray = ImageOps.grayscale(icon)
+    gray = ImageOps.autocontrast(gray, cutoff=1)
+    gray = ImageEnhance.Contrast(gray).enhance(1.08)
+    gray = gray.filter(ImageFilter.UnsharpMask(radius=.55, percent=115, threshold=3))
+    rgb = Image.merge("RGB", (gray, gray, gray))
+    result = rgb.convert("RGBA")
+    result.putalpha(alpha)
+    return result
+
+
 def fit(icon: Image.Image, target_box: tuple[int, int, int, int]) -> Image.Image:
     icon = icon.convert("RGBA")
     bbox = alpha_bbox(icon)
@@ -94,6 +114,7 @@ def fit(icon: Image.Image, target_box: tuple[int, int, int, int]) -> Image.Image
     factor = min(max_width / source.width, max_height / source.height)
     size = (max(1, round(source.width * factor)), max(1, round(source.height * factor)))
     source = source.resize(size, Image.Resampling.LANCZOS)
+    source = normalize_ink(source)
     result = Image.new("RGBA", (CELL, CELL), (0, 0, 0, 0))
     result.alpha_composite(source, ((CELL - source.width) // 2, (CELL - source.height) // 2))
     return result
@@ -122,7 +143,7 @@ def main() -> None:
         atlas.alpha_composite(icon, (column * CELL, row * CELL))
     OUT.parent.mkdir(parents=True, exist_ok=True)
     atlas.save(OUT, optimize=True)
-    print(f"Generated {OUT} {atlas.size} from {len(CELLS)} mapped assets")
+    print(f"Generated {OUT} {atlas.size} from {len(CELLS)} mapped monochrome assets")
 
 
 if __name__ == "__main__":
