@@ -60,12 +60,17 @@ namespace SPTPopCounter
             try
             {
                 Color[] px = sheet.GetPixels(x,y,Cell,Cell);
-                t = new Texture2D(Cell,Cell,TextureFormat.RGBA32,false);
+
+                // Each cell gets its own mip chain after cropping, so neighbouring atlas cells can never bleed
+                // into a tiny 12–20 px HUD icon. Trilinear minification gives substantially cleaner faction
+                // insignia and weapon silhouettes than directly bilinear-sampling the 64 px source texture.
+                t = new Texture2D(Cell,Cell,TextureFormat.RGBA32,true);
                 t.name = "HUD " + key;
-                t.filterMode = FilterMode.Bilinear;
+                t.filterMode = FilterMode.Trilinear;
                 t.wrapMode = TextureWrapMode.Clamp;
-                t.SetPixels(px);
-                t.Apply(false,true);
+                t.anisoLevel = 1;
+                t.SetPixels(px,0);
+                t.Apply(true,true);
                 cache[key] = t;
                 return t;
             }
