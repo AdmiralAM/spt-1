@@ -56,6 +56,10 @@ namespace SPTPopCounter
             {
                 bool debug = runtime.workAlways.Value;
                 bool editing = runtime.editMode.Value;
+                EventType eventType = Event.current.type;
+                bool relevantEvent = eventType == EventType.Repaint || eventType == EventType.MouseDown ||
+                                     eventType == EventType.MouseDrag || eventType == EventType.MouseUp;
+                if (!relevantEvent) return;
 
                 if ((runtime.inRaid || debug) && (runtime.mode >= 1 || editing) && runtime.popEnabled.Value)
                     DrawPopulation();
@@ -98,26 +102,26 @@ namespace SPTPopCounter
                 Rect r = new Rect(root.x + x, root.y + y, width + 4, size + 7);
                 Color old = text.normal.textColor;
 
-                text.normal.textColor = new Color(0, 0, 0, Mathf.Clamp01(effective * .94f));
-                int[,] offsets = { { -1, 0 }, { 1, 0 }, { 0, -1 }, { 0, 1 }, { -1, -1 }, { 1, -1 }, { -1, 1 }, { 1, 1 } };
-                for (int i = 0; i < 8; i++)
-                    GUI.Label(new Rect(r.x + offsets[i, 0], r.y + offsets[i, 1], r.width, r.height), value, text);
+                if (Event.current.type == EventType.Repaint)
+                {
+                    text.normal.textColor = new Color(0, 0, 0, Mathf.Clamp01(effective * .78f));
+                    GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), value, text);
+                    text.normal.textColor = main;
+                    GUI.Label(r, value, text);
+                    text.normal.textColor = old;
+                }
 
-                text.normal.textColor = new Color(0, 0, 0, Mathf.Clamp01(effective * .38f));
-                GUI.Label(new Rect(r.x + 2, r.y + 2, r.width, r.height), value, text);
-
-                text.normal.textColor = main;
-                GUI.Label(r, value, text);
-                text.normal.textColor = old;
                 return x + width + 2;
             }
 
             float Icon(Rect root, string key, float x, float y, int size, float opacity, Color color, float scale = 1f)
             {
+                float px = Mathf.Max(11f, (size + 6) * scale);
+                if (Event.current.type != EventType.Repaint) return x + px + 2;
+
                 Texture2D texture = icons.Get(key);
                 if (texture == null) return x;
 
-                float px = Mathf.Max(11f, (size + 6) * scale);
                 Rect r = new Rect(root.x + x, root.y + y - 2, px, px);
                 Color old = GUI.color;
 
@@ -138,10 +142,13 @@ namespace SPTPopCounter
             {
                 if (!runtime.editMode.Value) return;
 
-                Color old = GUI.color;
-                GUI.color = new Color(1f, 1f, 1f, .045f);
-                GUI.Box(r, string.Empty);
-                GUI.color = old;
+                if (Event.current.type == EventType.Repaint)
+                {
+                    Color old = GUI.color;
+                    GUI.color = new Color(1f, 1f, 1f, .045f);
+                    GUI.Box(r, string.Empty);
+                    GUI.color = old;
+                }
 
                 Event e = Event.current;
                 if (e.type == EventType.MouseDown && e.button == 0 && r.Contains(e.mousePosition))
