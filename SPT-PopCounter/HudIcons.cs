@@ -29,6 +29,7 @@ namespace SPTPopCounter
                 string[] candidates =
                 {
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD","assets","hud-sprites.png"),
+                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.10.2","assets","hud-sprites.png"),
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.10.0","assets","hud-sprites.png"),
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.9.0","assets","hud-sprites.png"),
                     Path.Combine(Paths.PluginPath,"assets","hud-sprites.png")
@@ -61,9 +62,9 @@ namespace SPTPopCounter
             {
                 Color[] px = sheet.GetPixels(x,y,Cell,Cell);
 
-                // Each cell gets its own mip chain after cropping, so neighbouring atlas cells can never bleed
-                // into a tiny 12–20 px HUD icon. Trilinear minification gives substantially cleaner faction
-                // insignia and weapon silhouettes than directly bilinear-sampling the 64 px source texture.
+                // Crop every atlas cell into an isolated texture before building mipmaps. This prevents
+                // neighbouring insignia from bleeding into 12–20 px HUD icons while keeping minification
+                // smoother than direct bilinear sampling from the source atlas.
                 t = new Texture2D(Cell,Cell,TextureFormat.RGBA32,true);
                 t.name = "HUD " + key;
                 t.filterMode = FilterMode.Trilinear;
