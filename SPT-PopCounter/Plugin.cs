@@ -11,7 +11,7 @@ using UnityEngine.SceneManagement;
 
 namespace SPTPopCounter
 {
-    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.11.0")]
+    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.11.1")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         ConfigEntry<bool> workAlways, editMode, popEnabled, statusEnabled, statusOutside, killEnabled, showVersion, killDiagnostics;
@@ -21,9 +21,9 @@ namespace SPTPopCounter
         ConfigEntry<float> popOpacity, statusOpacity, killOpacity, popX, popY, statusX, statusY, killX, killY, killLifetime;
         ConfigEntry<Color> pmcColor, scavColor, bossColor, reinforcedColor, weightOk, weightHeavy, weightCritical;
 
-        float nextRefresh, nextVersionSearch, nextVersionApply, nextSubscribe, nextOutsideProfileSearch;
-        int mode, pmc, scav, boss, reinforced;
-        bool inRaid, lastShowVersion;
+        float nextRefresh, nextVersionSearch, nextSubscribe, nextOutsideProfileSearch;
+        int mode, pmc, scav, boss, reinforced, versionSearchAttempts;
+        bool inRaid, lastShowVersion, versionTextTypesResolved;
         float hydration, energy, weight, overweightLimit, walkDrainLimit;
         GUIStyle text, shadow;
         Type worldType, singletonType;
@@ -40,6 +40,8 @@ namespace SPTPopCounter
         readonly List<KillLine> kills = new List<KillLine>();
         readonly HashSet<string> diagSeen = new HashSet<string>();
         readonly List<VersionTarget> versionTargets = new List<VersionTarget>();
+        readonly List<Type> versionTextTypes = new List<Type>();
+        readonly Dictionary<Type, MemberInfo[]> versionStringMembers = new Dictionary<Type, MemberInfo[]>();
 
         static readonly Color FixedPmc = new Color(.52f, .72f, .45f, 1f);
         static readonly Color FixedScav = new Color(.72f, .34f, .31f, 1f);
@@ -58,7 +60,7 @@ namespace SPTPopCounter
             public Delegate DiedHandler, DamageHandler, PlayerDamageHandler;
         }
         sealed class KillLine { public string Killer, Victim, Weapon, Hit; public float Distance, Created; public bool HasDistance; }
-        sealed class VersionTarget { public object Owner; public MemberInfo Member; public string Original; }
+        sealed class VersionTarget { public object Owner; public MemberInfo Member; public string Original; public bool WasEnabled; }
 
         void Awake()
         {
@@ -70,7 +72,8 @@ namespace SPTPopCounter
             editMode = Config.Bind("General", "HUD Edit Mode", false, "Enable compact drag hitboxes");
             showVersion = Config.Bind("General", "Show SPT Version Label", false, "Show/hide native SPT version label");
             lastShowVersion = showVersion.Value;
-            nextVersionSearch = Time.unscaledTime + .75f;
+            SceneManager.sceneLoaded += OnSceneLoaded;
+            ArmVersionSearch(.35f);
 
             popEnabled = Config.Bind("Population", "Enabled", true, "Population");
             popSize = Size("Population"); popOpacity = Opacity("Population"); popX = X("Population", 8); popY = BottomY("Population", 8);
@@ -88,7 +91,7 @@ namespace SPTPopCounter
             killY = Config.Bind("Kill Feed", "Position Y", 100f, new ConfigDescription("Top Y", new AcceptableValueRange<float>(-100, 2000)));
             killLifetime = Config.Bind("Kill Feed", "Lifetime", 6f, new ConfigDescription("Seconds", new AcceptableValueRange<float>(2, 15)));
             killMax = Config.Bind("Kill Feed", "Max Entries", 3, new ConfigDescription("Lines", new AcceptableValueRange<int>(1, 6)));
-            Logger.LogInfo("SPT Tactical HUD v1.11.0 loaded (HUD state " + mode + ")");
+            Logger.LogInfo("SPT Tactical HUD v1.11.1 loaded (HUD state " + mode + ")");
         }
 
         ConfigEntry<int> Size(string s) => Config.Bind(s, "Size", 10, new ConfigDescription("Size", new AcceptableValueRange<int>(8, 20)));
@@ -102,17 +105,26 @@ namespace SPTPopCounter
             int configuredMode = Mathf.Clamp(savedMode.Value, 0, 2);
             if (configuredMode != mode) mode = configuredMode;
             if (toggleKey.Value.IsDown()) SetHudMode((mode + 1) % 3);
-            if (Time.unscaledTime >= nextRefresh) { nextRefresh = Time.unscaledTime + .25f; Refresh(); }
+            if (Time.unscaledTime >= nextRefresh)
+            {
+                Refresh();
+                nextRefresh = Time.unscaledTime + (inRaid ? .25f : statusOutside.Value ? .5f : .75f);
+            }
             if (inRaid && Time.unscaledTime >= nextSubscribe) { nextSubscribe = Time.unscaledTime + .35f; ProcessOneSubscription(); }
-            if (Time.unscaledTime >= nextVersionSearch) { nextVersionSearch = Time.unscaledTime + 2f; DiscoverVersionTargetsOnce(); }
-            if (versionTargets.Count > 0 && Time.unscaledTime >= nextVersionApply) { nextVersionApply = Time.unscaledTime + 1f; ApplyKnownVersionTargets(); }
+            if (versionSearchAttempts > 0 && Time.unscaledTime >= nextVersionSearch)
+            {
+                versionSearchAttempts--;
+                DiscoverVersionTargetsOnce();
+                if (versionTargets.Count > 0) versionSearchAttempts = 0;
+                else if (versionSearchAttempts > 0) nextVersionSearch = Time.unscaledTime + 1.5f;
+            }
             if (showVersion.Value != lastShowVersion)
             {
                 lastShowVersion = showVersion.Value;
-                nextVersionSearch = Time.unscaledTime;
                 ApplyKnownVersionTargets();
+                if (versionTargets.Count == 0) ArmVersionSearch(0f);
             }
-            kills.RemoveAll(k => Time.unscaledTime - k.Created > killLifetime.Value);
+            if (kills.Count > 0) kills.RemoveAll(k => Time.unscaledTime - k.Created > killLifetime.Value);
         }
 
         void SetHudMode(int value)
@@ -123,7 +135,23 @@ namespace SPTPopCounter
             try { Config.Save(); } catch { }
         }
 
-        void OnDestroy() { foreach (Tracked t in tracked.Values) Unsubscribe(t); }
+        void OnDestroy()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+            foreach (Tracked t in tracked.Values) Unsubscribe(t);
+        }
+
+        void OnSceneLoaded(Scene scene, LoadSceneMode loadMode)
+        {
+            versionTargets.RemoveAll(target => !IsUsableUnityObject(target.Owner));
+            ArmVersionSearch(.25f);
+        }
+
+        void ArmVersionSearch(float delay)
+        {
+            versionSearchAttempts = 3;
+            nextVersionSearch = Time.unscaledTime + Mathf.Max(0f, delay);
+        }
 
         void OnGUI()
         {
@@ -316,8 +344,6 @@ namespace SPTPopCounter
         {
             if (inRaid == value) return;
             inRaid = value;
-
-            nextVersionSearch = Time.unscaledTime + (inRaid ? 2f : 1f);
 
             foreach (Tracked t in tracked.Values) Unsubscribe(t);
             tracked.Clear();
@@ -659,18 +685,6 @@ namespace SPTPopCounter
                 if (profile != null) return outsideProfile = profile;
             }
 
-            foreach (MonoBehaviour behaviour in Resources.FindObjectsOfTypeAll<MonoBehaviour>())
-            {
-                if (!IsUsableUnityObject(behaviour)) continue;
-                string typeName = behaviour.GetType().Name;
-                if (typeName.IndexOf("Application", StringComparison.OrdinalIgnoreCase) < 0 &&
-                    typeName.IndexOf("Session", StringComparison.OrdinalIgnoreCase) < 0 &&
-                    typeName.IndexOf("Menu", StringComparison.OrdinalIgnoreCase) < 0) continue;
-
-                object profile = ProfileFromSource(behaviour);
-                if (profile != null) return outsideProfile = profile;
-            }
-
             return null;
         }
 
@@ -711,21 +725,57 @@ namespace SPTPopCounter
             try
             {
                 versionTargets.RemoveAll(target => !IsUsableUnityObject(target.Owner));
-                foreach (MonoBehaviour mb in Resources.FindObjectsOfTypeAll<MonoBehaviour>())
+                EnsureVersionTextTypes();
+                foreach (Type componentType in versionTextTypes)
                 {
-                    if (!IsUsableUnityObject(mb)) continue; Type t = mb.GetType(); string tn = t.Name;
-                    if (tn.IndexOf("Text", StringComparison.OrdinalIgnoreCase) < 0 && tn.IndexOf("Label", StringComparison.OrdinalIgnoreCase) < 0) continue;
-                    foreach (MemberInfo m in StringMembers(t))
+                    foreach (UnityEngine.Object component in Resources.FindObjectsOfTypeAll(componentType))
                     {
-                        string value = ReadStringMember(mb, m);
-                        if (!LooksLikeSptVersion(value)) continue;
-                        if (versionTargets.Any(target => ReferenceEquals(target.Owner, mb) && target.Member.Name == m.Name)) continue;
-                        versionTargets.Add(new VersionTarget { Owner = mb, Member = m, Original = value });
+                        if (!IsUsableUnityObject(component)) continue;
+                        Type concreteType = component.GetType();
+                        MemberInfo[] members;
+                        if (!versionStringMembers.TryGetValue(concreteType, out members))
+                        {
+                            members = StringMembers(concreteType).ToArray();
+                            versionStringMembers[concreteType] = members;
+                        }
+
+                        foreach (MemberInfo member in members)
+                        {
+                            string value = ReadStringMember(component, member);
+                            if (!LooksLikeSptVersion(value)) continue;
+                            if (versionTargets.Any(target => ReferenceEquals(target.Owner, component) && target.Member.Name == member.Name)) continue;
+                            Behaviour behaviour = component as Behaviour;
+                            versionTargets.Add(new VersionTarget
+                            {
+                                Owner = component,
+                                Member = member,
+                                Original = value,
+                                WasEnabled = behaviour == null || behaviour.enabled
+                            });
+                        }
                     }
                 }
                 ApplyKnownVersionTargets();
             }
             catch (Exception ex) { Logger.LogDebug("Version discovery: " + ex.Message); }
+        }
+
+        void EnsureVersionTextTypes()
+        {
+            if (versionTextTypesResolved) return;
+            versionTextTypesResolved = true;
+            foreach (string name in new[]
+            {
+                "TMPro.TextMeshProUGUI",
+                "TMPro.TMP_Text",
+                "UnityEngine.UI.Text",
+                "EFT.UI.VersionNumber"
+            })
+            {
+                Type type = FindType(name);
+                if (type == null || !typeof(UnityEngine.Object).IsAssignableFrom(type)) continue;
+                if (!versionTextTypes.Any(existing => existing.IsAssignableFrom(type))) versionTextTypes.Add(type);
+            }
         }
 
         void ApplyKnownVersionTargets()
@@ -740,24 +790,17 @@ namespace SPTPopCounter
                 }
 
                 string current = ReadStringMember(target.Owner, target.Member);
+                Behaviour behaviour = target.Owner as Behaviour;
                 if (showVersion.Value)
                 {
-                    if (string.IsNullOrEmpty(current) || LooksLikeSptVersion(current))
-                        WriteStringMember(target.Owner, target.Member, target.Original);
-                    else
-                        versionTargets.RemoveAt(i);
+                    if (behaviour != null) behaviour.enabled = target.WasEnabled;
+                    WriteStringMember(target.Owner, target.Member, target.Original);
                 }
                 else
                 {
-                    if (LooksLikeSptVersion(current))
-                    {
-                        target.Original = current;
-                        WriteStringMember(target.Owner, target.Member, string.Empty);
-                    }
-                    else if (!string.IsNullOrEmpty(current))
-                    {
-                        versionTargets.RemoveAt(i);
-                    }
+                    if (LooksLikeSptVersion(current)) target.Original = current;
+                    WriteStringMember(target.Owner, target.Member, string.Empty);
+                    if (behaviour != null) behaviour.enabled = false;
                 }
             }
         }

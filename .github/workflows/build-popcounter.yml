@@ -14,7 +14,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -46,16 +46,25 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path build-status | Out-Null
           $ErrorActionPreference='Continue'
-          dotnet build SPT-PopCounter/SPT-PopCounter.csproj -c Release 2>&1 | Tee-Object -FilePath build-status/build.log
-          $code=$LASTEXITCODE
+          dotnet build SPT-PopCounter/SPT-PopCounter.csproj -c Release 2>&1 | Tee-Object -FilePath build-status/client-build.log
+          $clientCode=$LASTEXITCODE
+          dotnet build SPT-TacticalHUD-Server/SPT-TacticalHUD-Server.csproj -c Release 2>&1 | Tee-Object -FilePath build-status/server-build.log
+          $serverCode=$LASTEXITCODE
+          Get-Content build-status/client-build.log,build-status/server-build.log | Set-Content build-status/build.log
+          $code=if(($clientCode -eq 0) -and ($serverCode -eq 0)){0}else{1}
           "BUILD_EXIT_CODE=$code" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           $dll="SPT-PopCounter/bin/Release/netstandard2.1/$env:HUD_NAME.dll"
-          if(Test-Path $dll){
+          $serverDll='SPT-TacticalHUD-Server/bin/Release/net10.0/SPT Tactical HUD Server.dll'
+          if((Test-Path $dll) -and (Test-Path $serverDll)){
             Remove-Item 'build-output' -Recurse -Force -ErrorAction SilentlyContinue
             $package="build-output/$env:HUD_NAME"
-            New-Item -ItemType Directory -Force -Path "$package/assets" | Out-Null
-            Copy-Item $dll "$package/$env:HUD_NAME.dll" -Force
-            Copy-Item 'SPT-PopCounter/assets/hud-sprites.png' "$package/assets/hud-sprites.png" -Force
+            $client="$package/BepInEx/plugins/$env:HUD_NAME"
+            $server="$package/SPT/user/mods/SPT Tactical HUD Server"
+            New-Item -ItemType Directory -Force -Path "$client/assets" | Out-Null
+            New-Item -ItemType Directory -Force -Path $server | Out-Null
+            Copy-Item $dll "$client/$env:HUD_NAME.dll" -Force
+            Copy-Item 'SPT-PopCounter/assets/hud-sprites.png' "$client/assets/hud-sprites.png" -Force
+            Copy-Item $serverDll "$server/SPT Tactical HUD Server.dll" -Force
           }
           exit 0
       - name: Commit result
