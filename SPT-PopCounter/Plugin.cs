@@ -11,7 +11,7 @@ using UnityEngine.SceneManagement;
 
 namespace SPTPopCounter
 {
-    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.11.1")]
+    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.12.0")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         ConfigEntry<bool> workAlways, editMode, popEnabled, statusEnabled, statusOutside, killEnabled, showVersion, killDiagnostics;
@@ -25,13 +25,10 @@ namespace SPTPopCounter
         int mode, pmc, scav, boss, reinforced, versionSearchAttempts;
         bool inRaid, lastShowVersion, versionTextTypesResolved;
         float hydration, energy, weight, overweightLimit, walkDrainLimit;
-        GUIStyle text, shadow;
         Type worldType, singletonType;
         PropertyInfo singletonInstance;
         MemberInfo playersMember;
         object outsideProfile;
-        Vector2 dragOffset;
-        int dragCluster;
 
         readonly Dictionary<string, Tracked> tracked = new Dictionary<string, Tracked>();
         readonly Dictionary<string, object> playersByProfileId = new Dictionary<string, object>();
@@ -42,13 +39,6 @@ namespace SPTPopCounter
         readonly List<VersionTarget> versionTargets = new List<VersionTarget>();
         readonly List<Type> versionTextTypes = new List<Type>();
         readonly Dictionary<Type, MemberInfo[]> versionStringMembers = new Dictionary<Type, MemberInfo[]>();
-
-        static readonly Color FixedPmc = new Color(.52f, .72f, .45f, 1f);
-        static readonly Color FixedScav = new Color(.72f, .34f, .31f, 1f);
-        static readonly Color FixedBoss = new Color(.78f, .50f, .20f, 1f);
-        static readonly Color FixedRaider = new Color(.56f, .42f, .70f, 1f);
-        static readonly Color FixedNeutral = new Color(.72f, .74f, .74f, 1f);
-        static readonly Color FixedHeadshot = new Color(.72f, .25f, .23f, 1f);
 
         sealed class Tracked
         {
@@ -91,7 +81,7 @@ namespace SPTPopCounter
             killY = Config.Bind("Kill Feed", "Position Y", 100f, new ConfigDescription("Top Y", new AcceptableValueRange<float>(-100, 2000)));
             killLifetime = Config.Bind("Kill Feed", "Lifetime", 6f, new ConfigDescription("Seconds", new AcceptableValueRange<float>(2, 15)));
             killMax = Config.Bind("Kill Feed", "Max Entries", 3, new ConfigDescription("Lines", new AcceptableValueRange<int>(1, 6)));
-            Logger.LogInfo("SPT Tactical HUD v1.11.1 loaded (HUD state " + mode + ")");
+            Logger.LogInfo("SPT Tactical HUD v1.12.0 loaded (HUD state " + mode + ")");
         }
 
         ConfigEntry<int> Size(string s) => Config.Bind(s, "Size", 10, new ConfigDescription("Size", new AcceptableValueRange<int>(8, 20)));
@@ -139,6 +129,7 @@ namespace SPTPopCounter
         {
             SceneManager.sceneLoaded -= OnSceneLoaded;
             foreach (Tracked t in tracked.Values) Unsubscribe(t);
+            if (visualRenderer != null) visualRenderer.Dispose();
         }
 
         void OnSceneLoaded(Scene scene, LoadSceneMode loadMode)
@@ -156,112 +147,6 @@ namespace SPTPopCounter
         void OnGUI()
         {
             RenderVisualHud();
-        }
-
-        Rect PopRect() => new Rect(popX.Value, Screen.height - popY.Value - (popSize.Value + 7), Mathf.Max(95, popSize.Value * 12), popSize.Value + 7);
-        Rect StatusRect() => new Rect(statusX.Value, Screen.height - statusY.Value - (statusSize.Value + 7), Mathf.Max(125, statusSize.Value * 15), statusSize.Value + 7);
-        Rect KillRect() => new Rect(killX.Value, killY.Value, killMode.Value == "Minimal" ? 180 : 290, (killSize.Value + 6) * Mathf.Max(1, killMax.Value));
-
-        void Ensure()
-        {
-            if (text == null) text = new GUIStyle(GUI.skin.label) { fontStyle = FontStyle.Normal, padding = new RectOffset(), margin = new RectOffset() };
-            if (shadow == null) shadow = new GUIStyle(text);
-        }
-
-        float Label(Rect r, string s, float x, float y, int sz, float op, Color c)
-        {
-            text.fontSize = shadow.fontSize = sz; c.a *= op; text.normal.textColor = c; shadow.normal.textColor = new Color(0, 0, 0, op <= 0 ? 0 : Mathf.Min(1, op + .22f));
-            float w = text.CalcSize(new GUIContent(s)).x;
-            GUI.Label(new Rect(r.x + x + 1, r.y + y + 1, w + 3, sz + 5), s, shadow);
-            GUI.Label(new Rect(r.x + x, r.y + y, w + 3, sz + 5), s, text);
-            return x + w + 3;
-        }
-
-        void BoxDrag(int id, Rect r)
-        {
-            if (!editMode.Value) return;
-            GUI.Box(r, ""); Event e = Event.current;
-            if (e.type == EventType.MouseDown && e.button == 0 && r.Contains(e.mousePosition)) { dragCluster = id; dragOffset = e.mousePosition - new Vector2(r.x, r.y); e.Use(); }
-            if (e.type == EventType.MouseDrag && dragCluster == id)
-            {
-                Vector2 p = e.mousePosition - dragOffset; p.x = Mathf.Clamp(p.x, -r.width + 8, Screen.width - 8); p.y = Mathf.Clamp(p.y, -r.height + 6, Screen.height - 6);
-                if (id == 1) { popX.Value = p.x; popY.Value = Screen.height - p.y - r.height; }
-                else if (id == 2) { statusX.Value = p.x; statusY.Value = Screen.height - p.y - r.height; }
-                else { killX.Value = p.x; killY.Value = p.y; }
-                e.Use();
-            }
-            if (e.type == EventType.MouseUp && dragCluster == id) { dragCluster = 0; Config.Save(); e.Use(); }
-        }
-
-        void DrawPop(Rect r)
-        {
-            BoxDrag(1, r); float x = 0;
-            x = Label(r, "P " + pmc, x, 0, popSize.Value, popOpacity.Value, pmcColor.Value);
-            x = Label(r, "S " + scav, x, 0, popSize.Value, popOpacity.Value, scavColor.Value);
-            x = Label(r, "B " + boss, x, 0, popSize.Value, popOpacity.Value, bossColor.Value);
-            Label(r, "R " + reinforced, x, 0, popSize.Value, popOpacity.Value, reinforcedColor.Value);
-        }
-
-        void DrawStatus(Rect r)
-        {
-            BoxDrag(2, r); float x = 0;
-            x = Label(r, "H " + Mathf.RoundToInt(hydration), x, 0, statusSize.Value, statusOpacity.Value, new Color(.48f, .70f, .88f));
-            x = Label(r, "E " + Mathf.RoundToInt(energy), x, 0, statusSize.Value, statusOpacity.Value, new Color(.90f, .72f, .28f));
-            Color wc; string load;
-            if (overweightLimit <= 0 || weight < overweightLimit) { wc = weightOk.Value; load = "▲"; }
-            else if (walkDrainLimit <= 0 || weight < walkDrainLimit) { wc = weightHeavy.Value; load = "▲▲"; }
-            else { wc = weightCritical.Value; load = "▲▲▲"; }
-            Label(r, "W " + load, x, 0, statusSize.Value, statusOpacity.Value, wc);
-        }
-
-        void DrawKills(Rect r, bool editing)
-        {
-            BoxDrag(3, r);
-            if (kills.Count == 0)
-            {
-                if (editing) DrawKillRow(r, new KillLine { Killer = "USEC", Victim = "Scav", Weapon = "AK-74", Hit = "Head", Distance = 187, HasDistance = true, Created = Time.unscaledTime }, 0, 1f);
-                return;
-            }
-            int start = Math.Max(0, kills.Count - killMax.Value), row = 0;
-            for (int i = kills.Count - 1; i >= start; i--)
-            {
-                KillLine k = kills[i]; float age = Time.unscaledTime - k.Created, fade = Mathf.Clamp01((killLifetime.Value - age) / Mathf.Min(2f, killLifetime.Value));
-                DrawKillRow(r, k, row++, fade);
-            }
-        }
-
-        void DrawKillRow(Rect r, KillLine k, int row, float fade)
-        {
-            float y = row * (killSize.Value + 6), x = 0, op = killOpacity.Value * fade;
-            Color kc = RoleColor(k.Killer), vc = RoleColor(k.Victim);
-            x = Label(r, k.Killer, x, y, killSize.Value, op, kc);
-            x = Label(r, " [" + (string.IsNullOrEmpty(k.Weapon) ? "?" : k.Weapon) + "] ", x, y, killSize.Value, op, FixedNeutral);
-            x = Label(r, k.Victim, x, y, killSize.Value, op, vc);
-            if (killMode.Value != "Minimal")
-            {
-                string hit = string.IsNullOrEmpty(k.Hit) ? "?" : ShortHit(k.Hit);
-                x = Label(r, " " + hit, x, y, killSize.Value, op, hit == "HEAD" ? FixedHeadshot : FixedNeutral);
-                if (k.HasDistance) Label(r, " " + Mathf.RoundToInt(k.Distance) + "m", x, y, killSize.Value, op, FixedNeutral);
-            }
-        }
-
-        Color RoleColor(string k)
-        {
-            if (k == "USEC" || k == "BEAR" || k == "PMC") return FixedPmc;
-            if (k == "Scav") return FixedScav;
-            if (k == "Boss") return FixedBoss;
-            if (k == "Raider") return FixedRaider;
-            return FixedNeutral;
-        }
-
-        string ShortHit(string h)
-        {
-            h = (h ?? "").ToLowerInvariant();
-            if (h.Contains("head")) return "HEAD";
-            if (h.Contains("arm")) return "ARM";
-            if (h.Contains("leg")) return "LEG";
-            if (h.Contains("stomach")) return "STOM";
-            return "TORSO";
         }
 
         void Refresh()

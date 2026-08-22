@@ -59,7 +59,7 @@ jobs:
             Remove-Item 'build-output' -Recurse -Force -ErrorAction SilentlyContinue
             $package="build-output/$env:HUD_NAME"
             $client="$package/BepInEx/plugins/$env:HUD_NAME"
-            $server="$package/SPT/user/mods/SPT Tactical HUD Server"
+            $server="$package/SPT_Runtime/user/mods/SPT Tactical HUD Server"
             New-Item -ItemType Directory -Force -Path "$client/assets" | Out-Null
             New-Item -ItemType Directory -Force -Path $server | Out-Null
             Copy-Item $dll "$client/$env:HUD_NAME.dll" -Force

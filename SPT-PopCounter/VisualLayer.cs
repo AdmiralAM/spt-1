@@ -34,6 +34,8 @@ namespace SPTPopCounter
             readonly Plugin runtime;
             readonly HudIcons icons;
             readonly Font hudFont;
+            readonly Texture2D medallionPlate;
+            readonly Texture2D medallionRing;
             GUIStyle text;
             int dragCluster;
             Vector2 dragOffset;
@@ -51,6 +53,40 @@ namespace SPTPopCounter
                 {
                     hudFont = null;
                 }
+                medallionPlate = CreateMedallion(false);
+                medallionRing = CreateMedallion(true);
+            }
+
+            static Texture2D CreateMedallion(bool ring)
+            {
+                const int textureSize = 64;
+                Texture2D texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBA32, false);
+                texture.name = ring ? "HUD icon medallion ring" : "HUD icon medallion plate";
+                texture.filterMode = FilterMode.Bilinear;
+                texture.wrapMode = TextureWrapMode.Clamp;
+                Color[] pixels = new Color[textureSize * textureSize];
+                for (int y = 0; y < textureSize; y++)
+                {
+                    for (int x = 0; x < textureSize; x++)
+                    {
+                        float nx = (x + .5f - textureSize * .5f) / textureSize;
+                        float ny = (y + .5f - textureSize * .5f) / textureSize;
+                        float distance = Mathf.Sqrt(nx * nx + ny * ny);
+                        float alpha = ring
+                            ? Mathf.Clamp01(1f - Mathf.Abs(distance - .455f) / .035f)
+                            : Mathf.Clamp01((.50f - distance) / .045f);
+                        pixels[y * textureSize + x] = new Color(1f, 1f, 1f, alpha);
+                    }
+                }
+                texture.SetPixels(pixels);
+                texture.Apply(false, true);
+                return texture;
+            }
+
+            public void Dispose()
+            {
+                if (medallionPlate != null) UnityEngine.Object.Destroy(medallionPlate);
+                if (medallionRing != null) UnityEngine.Object.Destroy(medallionRing);
             }
 
             public void Render()
@@ -124,7 +160,16 @@ namespace SPTPopCounter
                 if (texture == null) return x;
 
                 Rect r = new Rect(root.x + x, root.y + y - 2, px, px);
+                Rect plate = new Rect(r.x - 2, r.y - 2, r.width + 4, r.height + 4);
                 Color old = GUI.color;
+
+                GUI.color = new Color(.025f, .030f, .028f, Mathf.Clamp01(opacity * .82f));
+                GUI.DrawTexture(plate, medallionPlate, ScaleMode.StretchToFill, true);
+
+                Color rim = color;
+                rim.a = Mathf.Clamp01(opacity * .46f);
+                GUI.color = rim;
+                GUI.DrawTexture(plate, medallionRing, ScaleMode.StretchToFill, true);
 
                 GUI.color = new Color(0, 0, 0, Mathf.Clamp01(opacity * .70f));
                 GUI.DrawTexture(new Rect(r.x + 1, r.y + 1, r.width, r.height), texture, ScaleMode.ScaleToFit, true);
@@ -247,8 +292,8 @@ namespace SPTPopCounter
 
                 int count = Mathf.Min(max, runtime.kills.Count);
                 int rows = editing ? Mathf.Max(1, count) : count;
-                float width = displayMode == "Detailed" ? 420f : displayMode == "Minimal" ? 160f : 290f;
-                float rowHeight = size + 12;
+                float width = displayMode == "Minimal" ? 88f : 225f;
+                float rowHeight = size + 14;
                 Rect root = new Rect(runtime.killX.Value, runtime.killY.Value, width, rowHeight * Mathf.Max(1, rows));
 
                 if (rows > 0)
@@ -276,15 +321,14 @@ namespace SPTPopCounter
             void DrawKillRow(Rect r, string killer, string victim, string weapon, string hit, float distance,
                 bool hasDistance, int row, float fade, string displayMode, int size, float opacity)
             {
-                float y = row * (size + 12);
+                float y = row * (size + 14);
                 float x = 0;
                 float op = opacity * fade;
                 Color killerColor = RoleColor(killer);
                 Color victimColor = RoleColor(victim);
 
                 x = Icon(r, RoleIcon(killer), x, y, size, op, killerColor, .86f);
-                x = Text(r, ShortRole(killer), x, y, size, op, killerColor, .98f);
-                x = Gap(x, 7);
+                x = Gap(x, 5);
 
                 if (displayMode != "Minimal")
                 {
@@ -293,7 +337,6 @@ namespace SPTPopCounter
                 }
 
                 x = Icon(r, RoleIcon(victim), x, y, size, op, victimColor, .86f);
-                x = Text(r, ShortRole(victim), x, y, size, op, victimColor, .98f);
 
                 if (displayMode != "Minimal")
                 {
@@ -305,24 +348,7 @@ namespace SPTPopCounter
                         x = Gap(x, 1);
                         x = Text(r, Mathf.RoundToInt(distance) + "m", x, y + 1, Mathf.Max(8, size - 1), op, Muted, .90f);
                     }
-                    if (displayMode == "Detailed" && weapon != "?")
-                    {
-                        x = Gap(x, 6);
-                        Text(r, weapon, x, y + 1, Mathf.Max(8, size - 1), op, Muted, .94f);
-                    }
                 }
-            }
-
-            static string ShortRole(string role)
-            {
-                if (role == "USEC") return "USEC";
-                if (role == "BEAR") return "BEAR";
-                if (role == "Scav") return "SCAV";
-                if (role == "Boss") return "BOSS";
-                if (role == "Raider") return "RAID";
-                if (role == "Self") return "YOU";
-                if (role == "PMC") return "PMC";
-                return "?";
             }
 
             static Color RoleColor(string role)

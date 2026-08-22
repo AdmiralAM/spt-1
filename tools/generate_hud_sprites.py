@@ -42,15 +42,18 @@ def fallback_scav() -> Image.Image:
     fg = (224, 226, 221, 255)
     cut = (0, 0, 0, 0)
 
-    def p(points, fill):
-        draw.polygon([(round(x * scale), round(y * scale)) for x, y in points], fill=fill)
-
-    p([(20, 7), (42, 8), (49, 17), (49, 42), (42, 54), (31, 60), (20, 54), (14, 43), (14, 20)], fg)
-    p([(18, 19), (46, 18), (43, 29), (20, 30)], cut)
-    draw.ellipse((23 * scale, 20 * scale, 30 * scale, 27 * scale), fill=fg)
-    draw.ellipse((35 * scale, 20 * scale, 42 * scale, 27 * scale), fill=fg)
-    p([(23, 35), (42, 34), (38, 47), (27, 48)], cut)
-    draw.line([(19 * scale, 13 * scale), (46 * scale, 49 * scale)], fill=cut, width=2 * scale)
+    # Unambiguous scav/bandit silhouette: knitted cap, exposed eyes and a raised face wrap.
+    # The broad shapes survive the 12–20 px runtime scale better than the old slashed shield.
+    draw.ellipse((13 * scale, 8 * scale, 51 * scale, 56 * scale), fill=fg)
+    draw.rounded_rectangle((14 * scale, 8 * scale, 50 * scale, 21 * scale), radius=5 * scale, fill=fg)
+    draw.rectangle((11 * scale, 18 * scale, 53 * scale, 24 * scale), fill=fg)
+    draw.polygon([(17 * scale, 40 * scale), (32 * scale, 33 * scale), (47 * scale, 40 * scale),
+                  (44 * scale, 57 * scale), (20 * scale, 57 * scale)], fill=fg)
+    draw.rounded_rectangle((18 * scale, 24 * scale, 46 * scale, 35 * scale), radius=4 * scale, fill=cut)
+    draw.ellipse((21 * scale, 27 * scale, 29 * scale, 32 * scale), fill=fg)
+    draw.ellipse((35 * scale, 27 * scale, 43 * scale, 32 * scale), fill=fg)
+    draw.polygon([(20 * scale, 43 * scale), (32 * scale, 37 * scale), (44 * scale, 43 * scale),
+                  (40 * scale, 47 * scale), (32 * scale, 44 * scale), (24 * scale, 47 * scale)], fill=cut)
     return icon.resize((CELL, CELL), Image.Resampling.LANCZOS)
 
 
@@ -84,22 +87,13 @@ def alpha_bbox(icon: Image.Image):
 
 
 def normalize_ink(icon: Image.Image) -> Image.Image:
-    """Make every authored source behave as one tintable EFT-style icon family.
-
-    Approved source art can contain different RGB palettes. Unity later modulates these
-    textures with GUI.color, so leaving source hues in place produces inconsistent role
-    and weapon colors. Preserve authored luminance/metal detail, but collapse chroma,
-    tighten tonal range and lightly restore edges lost during HUD-scale downsampling.
-    """
-    icon = icon.convert("RGBA")
+    """Normalize authored artwork to one coherent, tintable HUD material."""
     alpha = icon.getchannel("A")
-    gray = ImageOps.grayscale(icon)
-    gray = ImageOps.autocontrast(gray, cutoff=1)
-    gray = ImageEnhance.Contrast(gray).enhance(1.08)
-    gray = gray.filter(ImageFilter.UnsharpMask(radius=.55, percent=115, threshold=3))
-    rgb = Image.merge("RGB", (gray, gray, gray))
-    result = rgb.convert("RGBA")
-    result.putalpha(alpha)
+    ink = ImageOps.grayscale(icon)
+    ink = ImageOps.autocontrast(ink, cutoff=1)
+    ink = ImageEnhance.Contrast(ink).enhance(1.35)
+    ink = ink.filter(ImageFilter.UnsharpMask(radius=1.1, percent=135, threshold=3))
+    result = Image.merge("RGBA", (ink, ink, ink, alpha))
     return result
 
 

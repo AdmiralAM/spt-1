@@ -6,9 +6,9 @@
     <OutputType>Library</OutputType>
     <AssemblyName>SPT Tactical HUD Server</AssemblyName>
     <RootNamespace>SPTTacticalHUD.Server</RootNamespace>
-    <Version>1.11.1</Version>
-    <AssemblyVersion>1.11.1.0</AssemblyVersion>
-    <FileVersion>1.11.1.0</FileVersion>
+    <Version>1.12.0</Version>
+    <AssemblyVersion>1.12.0.0</AssemblyVersion>
+    <FileVersion>1.12.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="SPTarkov.Common" Version="4.1.2" />

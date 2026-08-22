@@ -43,6 +43,11 @@ def icon(sheet,key,size,color):
     return tint(im,color)
 
 def paste_icon(canvas,sheet,key,x,y,size,color):
+    pad=max(2,round(size*.14))
+    plate_box=(x-pad,y-pad,x+size+pad,y+size+pad)
+    plate=Image.new('RGBA',canvas.size,(0,0,0,0)); pd=ImageDraw.Draw(plate)
+    pd.ellipse(plate_box,fill=(6,8,7,210),outline=tuple(color[:3])+(118,),width=max(1,round(size*.08)))
+    canvas.alpha_composite(plate)
     im=icon(sheet,key,size,color)
     shadow=Image.new('RGBA',canvas.size,(0,0,0,0)); shadow.alpha_composite(im,(x+1,y+1)); shadow=shadow.filter(ImageFilter.GaussianBlur(.45))
     canvas.alpha_composite(shadow)
@@ -71,16 +76,13 @@ def status(canvas,sheet,x,y,scale=1.0):
     paste_icon(canvas,sheet,'weight1',x,y-1,max(10,isz-3),COLORS['ok'])
 
 def killrow(canvas,sheet,x,y,killer,kc,weapon,victim,vc,hit,dist,detailed=False,scale=1.0):
-    d=ImageDraw.Draw(canvas); role=max(10,round(11*scale)); isz=max(12,round(15*scale)); wisz=max(18,round(22*scale)); small=max(8,round(10*scale))
-    x=paste_icon(canvas,sheet,killer.lower(),x,y-2,isz,COLORS[kc]);x+=draw_text(d,(x,y),killer,role,COLORS[kc])+max(5,round(7*scale))
+    d=ImageDraw.Draw(canvas); isz=max(12,round(15*scale)); wisz=max(18,round(22*scale)); small=max(8,round(10*scale))
+    x=paste_icon(canvas,sheet,killer.lower(),x,y-2,isz,COLORS[kc]);x+=max(5,round(7*scale))
     x=paste_icon(canvas,sheet,weapon,x,y-1,wisz,COLORS['neutral'])
     x+=max(3,round(4*scale))
-    x=paste_icon(canvas,sheet,victim.lower(),x,y-2,isz,COLORS[vc]);x+=draw_text(d,(x,y),victim,role,COLORS[vc])+max(4,round(6*scale))
+    x=paste_icon(canvas,sheet,victim.lower(),x,y-2,isz,COLORS[vc]);x+=max(4,round(6*scale))
     x=paste_icon(canvas,sheet,hit,x,y-1,max(11,round(13*scale)),COLORS['head'] if hit=='head' else COLORS['muted'])
     x+=draw_text(d,(x+1,y+1),dist,small,COLORS['muted'])
-    if detailed:
-        name={'weapon_assault':'AK-74N','weapon_carbine':'M4A1','weapon_bolt':'M700'}.get(weapon,'Weapon')
-        draw_text(d,(x+6,y+1),name,small,COLORS['muted'])
 
 def qa_strip(canvas,sheet,x,y):
     d=ImageDraw.Draw(canvas)
