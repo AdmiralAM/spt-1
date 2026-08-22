@@ -42,7 +42,7 @@ public sealed class RequirementDataService(
             templateTable.Quests,
             hideoutTable);
         cancellationToken.ThrowIfCancellationRequested();
-        return ValueTask.FromResult(jsonUtil.Serialize(envelope));
+        return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
     }
 }
 
