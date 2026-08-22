@@ -30,7 +30,7 @@ namespace SPTPopCounter
             static readonly Color Head = new Color(.84f, .33f, .30f, 1f);
             static readonly Color Water = new Color(.49f, .69f, .86f, 1f);
             static readonly Color Energy = new Color(.86f, .70f, .31f, 1f);
-            static readonly Color WeightInk = new Color(.25f, .27f, .26f, 1f);
+            static readonly Color WeightInk = new Color(.82f, .84f, .82f, 1f);
 
             readonly Plugin runtime;
             readonly HudIcons icons;
@@ -154,6 +154,7 @@ namespace SPTPopCounter
 
             float Icon(Rect root, string key, float x, float y, int size, float opacity, Color color, float scale = 1f)
             {
+                if (string.Equals(key, "scav", StringComparison.OrdinalIgnoreCase)) scale *= 1.18f;
                 float px = Mathf.Max(11f, (size + 6) * scale);
                 if (Event.current.type != EventType.Repaint) return x + px + 2;
 
@@ -166,15 +167,20 @@ namespace SPTPopCounter
                 float iconOpacity = Mathf.Sqrt(Mathf.Clamp01(opacity));
 
                 bool weapon = key.StartsWith("weapon_", StringComparison.OrdinalIgnoreCase);
-                GUI.color = weapon
-                    ? new Color(.025f, .030f, .028f, Mathf.Clamp01(iconOpacity * .92f))
-                    : new Color(.95f, .96f, .95f, Mathf.Clamp01(iconOpacity * .96f));
-                GUI.DrawTexture(plate, medallionPlate, ScaleMode.StretchToFill, true);
+                bool bareStatus = key == "water" || key == "energy" || key == "weight" ||
+                                  key == "weight1" || key == "weight2" || key == "weight3";
+                if (!bareStatus)
+                {
+                    GUI.color = weapon
+                        ? new Color(.025f, .030f, .028f, Mathf.Clamp01(iconOpacity * .92f))
+                        : new Color(.95f, .96f, .95f, Mathf.Clamp01(iconOpacity * .96f));
+                    GUI.DrawTexture(plate, medallionPlate, ScaleMode.StretchToFill, true);
 
-                Color rim = color;
-                rim.a = Mathf.Clamp01(iconOpacity * .96f);
-                GUI.color = rim;
-                GUI.DrawTexture(plate, medallionRing, ScaleMode.StretchToFill, true);
+                    Color rim = color;
+                    rim.a = Mathf.Clamp01(iconOpacity * .96f);
+                    GUI.color = rim;
+                    GUI.DrawTexture(plate, medallionRing, ScaleMode.StretchToFill, true);
+                }
 
                 GUI.color = new Color(0, 0, 0, Mathf.Clamp01(iconOpacity * .78f));
                 GUI.DrawTexture(new Rect(r.x - 1, r.y, r.width, r.height), texture, ScaleMode.ScaleToFit, true);

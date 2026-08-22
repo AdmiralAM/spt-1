@@ -92,6 +92,40 @@ def fit(icon: Image.Image, target_box: tuple[int, int, int, int]) -> Image.Image
     return result
 
 
+def scav_micro_glyph() -> Image.Image:
+    """A HUD-scale reduction of the approved balaclava-and-cigarette Scav concept."""
+    scale = 4
+    icon = Image.new("RGBA", (CELL * scale, CELL * scale), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(icon)
+
+    # Broad shoulders and a large hood make a human silhouette readable before facial detail.
+    draw.rounded_rectangle((35, 174, 211, 252), radius=36, fill=(108, 108, 108, 255),
+                           outline=(238, 238, 238, 255), width=12)
+    draw.ellipse((52, 12, 196, 218), fill=(112, 112, 112, 255),
+                 outline=(242, 242, 242, 255), width=13)
+
+    # Oversized balaclava openings survive the final 12-20 px downscale.
+    draw.rounded_rectangle((69, 70, 182, 111), radius=18, fill=(8, 8, 8, 255),
+                           outline=(220, 220, 220, 255), width=8)
+    draw.ellipse((87, 84, 103, 97), fill=(248, 248, 248, 255))
+    draw.ellipse((147, 84, 163, 97), fill=(248, 248, 248, 255))
+    draw.rounded_rectangle((105, 146, 170, 183), radius=17, fill=(12, 12, 12, 255),
+                           outline=(202, 202, 202, 255), width=7)
+
+    # The cigarette deliberately projects beyond the face and uses a heavy outline.
+    draw.line((158, 161, 238, 179), fill=(8, 8, 8, 255), width=24)
+    draw.line((158, 161, 238, 179), fill=(244, 244, 244, 255), width=12)
+    draw.ellipse((226, 168, 246, 190), fill=(184, 184, 184, 255), outline=(8, 8, 8, 255), width=5)
+
+    return icon.resize((CELL, CELL), Image.Resampling.LANCZOS)
+
+
+def micro_focus(icon: Image.Image, key: str) -> Image.Image:
+    if key == "scav":
+        return scav_micro_glyph()
+    return icon
+
+
 def load(key: str, approved: Image.Image) -> Image.Image:
     column, row = CELLS[key]
     source_cell = 256
@@ -109,7 +143,7 @@ def main() -> None:
         raise ValueError(f"approved source atlas is {approved.size}, expected {(COLS * 256, ROWS * 256)}")
     atlas = Image.new("RGBA", (COLS * CELL, ROWS * CELL), (0, 0, 0, 0))
     for key, (column, row) in CELLS.items():
-        icon = fit(load(key, approved), TARGETS[group(key)])
+        icon = fit(micro_focus(load(key, approved), key), TARGETS[group(key)])
         atlas.alpha_composite(icon, (column * CELL, row * CELL))
     OUT.parent.mkdir(parents=True, exist_ok=True)
     atlas.save(OUT, optimize=True)

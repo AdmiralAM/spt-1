@@ -19,6 +19,7 @@ CELLS={
     'weapon_frag':(0,4),'weapon_impact':(1,4),'weapon_incendiary':(2,4),'weapon_melee':(3,4),'weapon_throwing':(4,4),'weapon_bolt':(5,4),'weapon_pcc':(6,4),'weapon_special':(7,4),
     'weapon_crossbow':(0,5),'weapon_tool':(1,5),'weapon_explosive':(2,5)
 }
+BARE_STATUS={'water','energy','weight','weight1','weight2','weight3'}
 
 def font(size):
     for p in [Path('C:/Windows/Fonts/bahnschrift.ttf'),Path('C:/Windows/Fonts/arialn.ttf'),Path('/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed.ttf')]:
@@ -43,12 +44,14 @@ def icon(sheet,key,size,color):
     return tint(im,color)
 
 def paste_icon(canvas,sheet,key,x,y,size,color):
+    if key == 'scav': size=max(size+2,round(size*1.18))
     pad=max(2,round(size*.14))
-    plate_box=(x-pad,y-pad,x+size+pad,y+size+pad)
-    plate=Image.new('RGBA',canvas.size,(0,0,0,0)); pd=ImageDraw.Draw(plate)
-    fill=(6,8,7,234) if key.startswith('weapon_') else (242,245,242,238)
-    pd.ellipse(plate_box,fill=fill,outline=tuple(color[:3])+(244,),width=max(1,round(size*.08)))
-    canvas.alpha_composite(plate)
+    if key not in BARE_STATUS:
+        plate_box=(x-pad,y-pad,x+size+pad,y+size+pad)
+        plate=Image.new('RGBA',canvas.size,(0,0,0,0)); pd=ImageDraw.Draw(plate)
+        fill=(6,8,7,234) if key.startswith('weapon_') else (242,245,242,238)
+        pd.ellipse(plate_box,fill=fill,outline=tuple(color[:3])+(244,),width=max(1,round(size*.08)))
+        canvas.alpha_composite(plate)
     im=icon(sheet,key,size,color)
     alpha=im.getchannel('A').filter(ImageFilter.MaxFilter(3))
     outline=Image.new('RGBA',im.size,(0,0,0,0)); outline.putalpha(alpha.point(lambda a:round(a*.78)))
@@ -81,7 +84,7 @@ def status(canvas,sheet,x,y,scale=1.0,vertical=False):
         row_x+=draw_text(d,(row_x,y),val,ts,COLORS['neutral'])+gap
         if vertical: y+=isz+8
         else: x=row_x
-    ink=(64,69,66,255)
+    ink=(209,214,209,255)
     x=paste_icon(canvas,sheet,'weight',x,y-2,max(13,isz+1),ink)+3;x+=draw_text(d,(x,y),'31',ts,COLORS['neutral'])
     x+=draw_text(d,(x,y+2),'kg',max(8,ts-3),COLORS['muted'])+3
     paste_icon(canvas,sheet,'weight1',x,y+1,max(10,isz-3),COLORS['ok'])

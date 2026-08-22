@@ -26,6 +26,13 @@ jobs:
           if([string]::IsNullOrWhiteSpace($version)){ throw 'Version missing from csproj' }
           "HUD_VERSION=$version" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "HUD_NAME=SPT Tactical HUD v$version" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          $serverChanged=$true
+          git rev-parse "$env:GITHUB_SHA^" 2>$null | Out-Null
+          if($LASTEXITCODE -eq 0){
+            git diff --quiet "$env:GITHUB_SHA^" $env:GITHUB_SHA -- SPT-TacticalHUD-Server
+            $serverChanged=($LASTEXITCODE -ne 0)
+          }
+          "SERVER_CHANGED=$($serverChanged.ToString().ToLowerInvariant())" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Generate HUD assets, normalize optics, quality gate and visual simulation
         shell: pwsh
         run: |
@@ -59,12 +66,14 @@ jobs:
             Remove-Item 'build-output' -Recurse -Force -ErrorAction SilentlyContinue
             $package="build-output/$env:HUD_NAME"
             $client="$package/BepInEx/plugins/$env:HUD_NAME"
-            $server="$package/SPT_Runtime/user/mods/SPT Tactical HUD Server"
             New-Item -ItemType Directory -Force -Path "$client/assets" | Out-Null
-            New-Item -ItemType Directory -Force -Path $server | Out-Null
             Copy-Item $dll "$client/$env:HUD_NAME.dll" -Force
             Copy-Item 'SPT-PopCounter/assets/hud-sprites.png' "$client/assets/hud-sprites.png" -Force
-            Copy-Item $serverDll "$server/SPT Tactical HUD Server.dll" -Force
+            if($env:SERVER_CHANGED -eq 'true'){
+              $server="$package/SPT_Runtime/user/mods/SPT Tactical HUD Server"
+              New-Item -ItemType Directory -Force -Path $server | Out-Null
+              Copy-Item $serverDll "$server/SPT Tactical HUD Server.dll" -Force
+            }
           }
           exit 0
       - name: Commit result
