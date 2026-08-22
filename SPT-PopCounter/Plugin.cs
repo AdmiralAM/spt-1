@@ -10,8 +10,8 @@ using UnityEngine;
 
 namespace SPTPopCounter
 {
-    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.8.1")]
-    public sealed class Plugin : BaseUnityPlugin
+    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.10.3")]
+    public sealed partial class Plugin : BaseUnityPlugin
     {
         ConfigEntry<bool> workAlways, editMode, popEnabled, statusEnabled, statusOutside, killEnabled, showVersion, killDiagnostics;
         ConfigEntry<KeyboardShortcut> toggleKey;
@@ -84,7 +84,7 @@ namespace SPTPopCounter
             killY = Config.Bind("Kill Feed", "Position Y", 100f, new ConfigDescription("Top Y", new AcceptableValueRange<float>(-100, 2000)));
             killLifetime = Config.Bind("Kill Feed", "Lifetime", 6f, new ConfigDescription("Seconds", new AcceptableValueRange<float>(2, 15)));
             killMax = Config.Bind("Kill Feed", "Max Entries", 3, new ConfigDescription("Lines", new AcceptableValueRange<int>(1, 6)));
-            Logger.LogInfo("SPT Tactical HUD v1.8.1 loaded");
+            Logger.LogInfo("SPT Tactical HUD v1.10.3 loaded");
         }
 
         ConfigEntry<int> Size(string s) => Config.Bind(s, "Size", 10, new ConfigDescription("Size", new AcceptableValueRange<int>(8, 20)));
@@ -114,10 +114,7 @@ namespace SPTPopCounter
 
         void OnGUI()
         {
-            Ensure(); bool debug = workAlways.Value, editing = editMode.Value;
-            if ((inRaid || debug) && (mode >= 1 || editing) && popEnabled.Value) DrawPop(PopRect());
-            if ((inRaid || debug || statusOutside.Value) && (mode >= 2 || editing) && statusEnabled.Value) DrawStatus(StatusRect());
-            if ((inRaid || debug) && killEnabled.Value) DrawKills(KillRect(), editing);
+            RenderVisualHud();
         }
 
         Rect PopRect() => new Rect(popX.Value, Screen.height - popY.Value - (popSize.Value + 7), Mathf.Max(95, popSize.Value * 12), popSize.Value + 7);
