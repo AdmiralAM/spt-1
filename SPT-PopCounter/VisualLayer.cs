@@ -30,6 +30,7 @@ namespace SPTPopCounter
             static readonly Color Head = new Color(.84f, .33f, .30f, 1f);
             static readonly Color Water = new Color(.49f, .69f, .86f, 1f);
             static readonly Color Energy = new Color(.86f, .70f, .31f, 1f);
+            static readonly Color WeightInk = new Color(.25f, .27f, .26f, 1f);
 
             readonly Plugin runtime;
             readonly HudIcons icons;
@@ -162,20 +163,27 @@ namespace SPTPopCounter
                 Rect r = new Rect(root.x + x, root.y + y - 2, px, px);
                 Rect plate = new Rect(r.x - 2, r.y - 2, r.width + 4, r.height + 4);
                 Color old = GUI.color;
+                float iconOpacity = Mathf.Sqrt(Mathf.Clamp01(opacity));
 
-                GUI.color = new Color(.025f, .030f, .028f, Mathf.Clamp01(opacity * .90f));
+                bool weapon = key.StartsWith("weapon_", StringComparison.OrdinalIgnoreCase);
+                GUI.color = weapon
+                    ? new Color(.025f, .030f, .028f, Mathf.Clamp01(iconOpacity * .92f))
+                    : new Color(.95f, .96f, .95f, Mathf.Clamp01(iconOpacity * .96f));
                 GUI.DrawTexture(plate, medallionPlate, ScaleMode.StretchToFill, true);
 
                 Color rim = color;
-                rim.a = Mathf.Clamp01(opacity * .62f);
+                rim.a = Mathf.Clamp01(iconOpacity * .96f);
                 GUI.color = rim;
                 GUI.DrawTexture(plate, medallionRing, ScaleMode.StretchToFill, true);
 
-                GUI.color = new Color(0, 0, 0, Mathf.Clamp01(opacity * .70f));
-                GUI.DrawTexture(new Rect(r.x + 1, r.y + 1, r.width, r.height), texture, ScaleMode.ScaleToFit, true);
+                GUI.color = new Color(0, 0, 0, Mathf.Clamp01(iconOpacity * .78f));
+                GUI.DrawTexture(new Rect(r.x - 1, r.y, r.width, r.height), texture, ScaleMode.ScaleToFit, true);
+                GUI.DrawTexture(new Rect(r.x + 1, r.y, r.width, r.height), texture, ScaleMode.ScaleToFit, true);
+                GUI.DrawTexture(new Rect(r.x, r.y - 1, r.width, r.height), texture, ScaleMode.ScaleToFit, true);
+                GUI.DrawTexture(new Rect(r.x, r.y + 1, r.width, r.height), texture, ScaleMode.ScaleToFit, true);
 
                 Color c = color;
-                c.a *= opacity;
+                c.a *= iconOpacity;
                 GUI.color = c;
                 GUI.DrawTexture(r, texture, ScaleMode.ScaleToFit, true);
                 GUI.color = old;
@@ -183,6 +191,8 @@ namespace SPTPopCounter
             }
 
             static float Gap(float x, float amount) => x + amount;
+            static bool Vertical(ConfigEntry<string> layout) =>
+                string.Equals(layout.Value, "Vertical", StringComparison.OrdinalIgnoreCase);
 
             void EditSurface(int id, Rect r, ConfigEntry<float> xEntry, ConfigEntry<float> yEntry, bool fromBottom)
             {
@@ -226,9 +236,35 @@ namespace SPTPopCounter
             {
                 int size = runtime.popSize.Value;
                 float opacity = runtime.popOpacity.Value;
-                float height = size + 9;
-                Rect root = new Rect(runtime.popX.Value, Screen.height - runtime.popY.Value - height, 260, height);
+                bool vertical = Vertical(runtime.popLayout);
+                float rowHeight = size + 14;
+                float height = vertical ? rowHeight * 4 : size + 9;
+                Rect root = new Rect(runtime.popX.Value, Screen.height - runtime.popY.Value - height,
+                    vertical ? 90 : 300, height);
                 float x = 0;
+
+                if (vertical)
+                {
+                    float maxX = 0;
+                    x = Icon(root, "usec", 0, 0, size, opacity, runtime.pmcColor.Value, .90f);
+                    x = Text(root, runtime.pmc.ToString(), Gap(x, 3), 0, size, opacity, Neutral);
+                    maxX = Mathf.Max(maxX, x);
+
+                    x = Icon(root, "scav", 0, rowHeight, size, opacity, runtime.scavColor.Value, .90f);
+                    x = Text(root, runtime.scav.ToString(), Gap(x, 3), rowHeight, size, opacity, Neutral);
+                    maxX = Mathf.Max(maxX, x);
+
+                    x = Icon(root, "boss", 0, rowHeight * 2, size, opacity, runtime.bossColor.Value, .90f);
+                    x = Text(root, runtime.boss.ToString(), Gap(x, 3), rowHeight * 2, size, opacity, Neutral);
+                    maxX = Mathf.Max(maxX, x);
+
+                    x = Icon(root, "raider", 0, rowHeight * 3, size, opacity, runtime.reinforcedColor.Value, .90f);
+                    x = Text(root, runtime.reinforced.ToString(), Gap(x, 3), rowHeight * 3, size, opacity, Neutral);
+                    maxX = Mathf.Max(maxX, x);
+
+                    EditSurface(1, new Rect(root.x, root.y, Mathf.Max(28, maxX), height), runtime.popX, runtime.popY, true);
+                    return;
+                }
 
                 x = Icon(root, "usec", x, 0, size, opacity, runtime.pmcColor.Value, .90f);
                 x = Gap(x, 3);
@@ -253,18 +289,11 @@ namespace SPTPopCounter
             {
                 int size = runtime.statusSize.Value;
                 float opacity = runtime.statusOpacity.Value;
-                float height = size + 9;
-                Rect root = new Rect(runtime.statusX.Value, Screen.height - runtime.statusY.Value - height, 260, height);
-                float x = 0;
-
-                x = Icon(root, "water", x, 0, size, opacity, Water, .90f);
-                x = Gap(x, 3);
-                x = Text(root, Mathf.RoundToInt(runtime.hydration).ToString(), x, 0, size, opacity, Neutral);
-                x = Gap(x, 8);
-                x = Icon(root, "energy", x, 0, size, opacity, Energy, .90f);
-                x = Gap(x, 3);
-                x = Text(root, Mathf.RoundToInt(runtime.energy).ToString(), x, 0, size, opacity, Neutral);
-                x = Gap(x, 8);
+                bool vertical = Vertical(runtime.statusLayout);
+                float rowHeight = size + 14;
+                float height = vertical ? rowHeight * 3 : size + 9;
+                Rect root = new Rect(runtime.statusX.Value, Screen.height - runtime.statusY.Value - height,
+                    vertical ? 125 : 300, height);
 
                 Color weightColor = runtime.weightOk.Value;
                 int severity = 1;
@@ -279,12 +308,38 @@ namespace SPTPopCounter
                     severity = 3;
                 }
 
-                x = Icon(root, "weight", x, 0, size, opacity, Muted, .86f);
-                x = Gap(x, 3);
-                x = Text(root, Mathf.RoundToInt(runtime.weight).ToString(), x, 0, size, opacity, Neutral);
+                float x = 0;
+                if (vertical)
+                {
+                    float maxX = 0;
+                    x = Icon(root, "water", 0, 0, size, opacity, Water, .90f);
+                    x = Text(root, Mathf.RoundToInt(runtime.hydration).ToString(), Gap(x, 3), 0, size, opacity, Neutral);
+                    maxX = Mathf.Max(maxX, x);
+
+                    x = Icon(root, "energy", 0, rowHeight, size, opacity, Energy, .90f);
+                    x = Text(root, Mathf.RoundToInt(runtime.energy).ToString(), Gap(x, 3), rowHeight, size, opacity, Neutral);
+                    maxX = Mathf.Max(maxX, x);
+
+                    x = Icon(root, "weight", 0, rowHeight * 2, size, opacity, WeightInk, 1.05f);
+                    x = Text(root, Mathf.RoundToInt(runtime.weight).ToString(), Gap(x, 3), rowHeight * 2, size, opacity, Neutral);
+                    x = Text(root, "kg", x, rowHeight * 2 + 1, Mathf.Max(8, size - 2), opacity, Muted, .82f);
+                    x = Icon(root, "weight" + severity, Gap(x, 3), rowHeight * 2 + 2, size, opacity, weightColor, .70f);
+                    maxX = Mathf.Max(maxX, x);
+
+                    EditSurface(2, new Rect(root.x, root.y, Mathf.Max(28, maxX), height), runtime.statusX, runtime.statusY, true);
+                    return;
+                }
+
+                x = Icon(root, "water", x, 0, size, opacity, Water, .90f);
+                x = Text(root, Mathf.RoundToInt(runtime.hydration).ToString(), Gap(x, 3), 0, size, opacity, Neutral);
+                x = Gap(x, 8);
+                x = Icon(root, "energy", x, 0, size, opacity, Energy, .90f);
+                x = Text(root, Mathf.RoundToInt(runtime.energy).ToString(), Gap(x, 3), 0, size, opacity, Neutral);
+                x = Gap(x, 8);
+                x = Icon(root, "weight", x, 0, size, opacity, WeightInk, 1.05f);
+                x = Text(root, Mathf.RoundToInt(runtime.weight).ToString(), Gap(x, 3), 0, size, opacity, Neutral);
                 x = Text(root, "kg", x, 1, Mathf.Max(8, size - 2), opacity, Muted, .82f);
-                x = Gap(x, 3);
-                x = Icon(root, "weight" + severity, x, 2, size, opacity, weightColor, .70f);
+                x = Icon(root, "weight" + severity, Gap(x, 3), 2, size, opacity, weightColor, .70f);
 
                 EditSurface(2, new Rect(root.x, root.y, Mathf.Max(28, x), height), runtime.statusX, runtime.statusY, true);
             }

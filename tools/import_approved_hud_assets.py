@@ -26,7 +26,7 @@ CELLS = {
 SINGLES = {
     "usec": "Metallic Eagle USEC Crest.png",
     "bear": "Металлический герб «BEAR» с медвежьей лапой.png",
-    "scav": "scav.png",
+    "scav": "Металлический медальон «SCAV».png",
     "boss": "Металлический череп в тактическом гербе.png",
     "raider": "Брутальная эмблема рейдера с черепом и винтовками.png",
     "water": "Глянцевый водный кристалл в металлической оправе.png",
@@ -124,6 +124,7 @@ def main() -> None:
 
     atlas = Image.new("RGBA", (COLS * SIZE, ROWS * SIZE), (0, 0, 0, 0))
     for key, icon in icons.items():
+        icon.save(args.output / f"{key}.png", optimize=True)
         column, row = CELLS[key]
         atlas.alpha_composite(icon, (column * SIZE, row * SIZE))
     atlas.save(args.output / "approved-icons.png", optimize=True)

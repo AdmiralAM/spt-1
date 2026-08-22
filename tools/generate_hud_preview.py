@@ -46,11 +46,13 @@ def paste_icon(canvas,sheet,key,x,y,size,color):
     pad=max(2,round(size*.14))
     plate_box=(x-pad,y-pad,x+size+pad,y+size+pad)
     plate=Image.new('RGBA',canvas.size,(0,0,0,0)); pd=ImageDraw.Draw(plate)
-    pd.ellipse(plate_box,fill=(6,8,7,230),outline=tuple(color[:3])+(158,),width=max(1,round(size*.08)))
+    fill=(6,8,7,234) if key.startswith('weapon_') else (242,245,242,238)
+    pd.ellipse(plate_box,fill=fill,outline=tuple(color[:3])+(244,),width=max(1,round(size*.08)))
     canvas.alpha_composite(plate)
     im=icon(sheet,key,size,color)
-    shadow=Image.new('RGBA',canvas.size,(0,0,0,0)); shadow.alpha_composite(im,(x+1,y+1)); shadow=shadow.filter(ImageFilter.GaussianBlur(.45))
-    canvas.alpha_composite(shadow)
+    alpha=im.getchannel('A').filter(ImageFilter.MaxFilter(3))
+    outline=Image.new('RGBA',im.size,(0,0,0,0)); outline.putalpha(alpha.point(lambda a:round(a*.78)))
+    canvas.alpha_composite(outline,(x,y))
     canvas.alpha_composite(im,(x,y))
     return x+size+2
 
@@ -61,17 +63,26 @@ def draw_text(draw,xy,value,size,color):
     box=draw.textbbox((x,y),value,font=f,stroke_width=1)
     return box[2]-box[0]
 
-def population(canvas,sheet,x,y,scale=1.0):
+def population(canvas,sheet,x,y,scale=1.0,vertical=False):
     d=ImageDraw.Draw(canvas); isz=max(11,round(16*scale)); ts=max(9,round(12*scale)); gap=max(5,round(7*scale))
     items=[('usec','12','pmc'),('scav','18','scav'),('boss','2','boss'),('raider','4','raider')]
     for key,num,c in items:
-        x=paste_icon(canvas,sheet,key,x,y-2,isz,COLORS[c])+3; x+=draw_text(d,(x,y),num,ts,COLORS['neutral'])+gap
+        row_x=x
+        row_x=paste_icon(canvas,sheet,key,row_x,y-2,isz,COLORS[c])+3
+        row_x+=draw_text(d,(row_x,y),num,ts,COLORS['neutral'])+gap
+        if vertical: y+=isz+8
+        else: x=row_x
 
-def status(canvas,sheet,x,y,scale=1.0):
+def status(canvas,sheet,x,y,scale=1.0,vertical=False):
     d=ImageDraw.Draw(canvas); isz=max(11,round(16*scale)); ts=max(9,round(12*scale)); gap=max(6,round(8*scale))
     for key,val,c in [('water','86','water'),('energy','72','energy')]:
-        x=paste_icon(canvas,sheet,key,x,y-2,isz,COLORS[c])+3;x+=draw_text(d,(x,y),val,ts,COLORS['neutral'])+gap
-    x=paste_icon(canvas,sheet,'weight',x,y-2,max(11,isz-1),COLORS['muted'])+3;x+=draw_text(d,(x,y),'31',ts,COLORS['neutral'])
+        row_x=x
+        row_x=paste_icon(canvas,sheet,key,row_x,y-2,isz,COLORS[c])+3
+        row_x+=draw_text(d,(row_x,y),val,ts,COLORS['neutral'])+gap
+        if vertical: y+=isz+8
+        else: x=row_x
+    ink=(64,69,66,255)
+    x=paste_icon(canvas,sheet,'weight',x,y-2,max(13,isz+1),ink)+3;x+=draw_text(d,(x,y),'31',ts,COLORS['neutral'])
     x+=draw_text(d,(x,y+2),'kg',max(8,ts-3),COLORS['muted'])+3
     paste_icon(canvas,sheet,'weight1',x,y+1,max(10,isz-3),COLORS['ok'])
 
@@ -107,6 +118,8 @@ def main():
     # Production-scale layout.
     population(bg,sheet,14,1044)
     status(bg,sheet,14,1018)
+    population(bg,sheet,320,900,1.0,True)
+    status(bg,sheet,390,900,1.0,True)
     killrow(bg,sheet,1535,86,'SELF','self','weapon_assault','SCAV','scav','head','187m',False)
     killrow(bg,sheet,1535,112,'BEAR','pmc','weapon_carbine','BOSS','boss','torso','42m',False)
     killrow(bg,sheet,1450,150,'USEC','pmc','weapon_bolt','RAIDER','raider','head','264m',True)

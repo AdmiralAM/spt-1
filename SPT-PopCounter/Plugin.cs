@@ -11,13 +11,13 @@ using UnityEngine.SceneManagement;
 
 namespace SPTPopCounter
 {
-    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.12.1")]
+    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.13.0")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         ConfigEntry<bool> workAlways, editMode, popEnabled, statusEnabled, statusOutside, killEnabled, showVersion, killDiagnostics;
         ConfigEntry<KeyboardShortcut> toggleKey;
         ConfigEntry<int> savedMode, popSize, statusSize, killSize, killMax;
-        ConfigEntry<string> killMode;
+        ConfigEntry<string> popLayout, statusLayout, killMode;
         ConfigEntry<float> popOpacity, statusOpacity, killOpacity, popX, popY, statusX, statusY, killX, killY, killLifetime;
         ConfigEntry<Color> pmcColor, scavColor, bossColor, reinforcedColor, weightOk, weightHeavy, weightCritical;
 
@@ -66,10 +66,12 @@ namespace SPTPopCounter
             ArmVersionSearch(.35f);
 
             popEnabled = Config.Bind("Population", "Enabled", true, "Population");
+            popLayout = Layout("Population");
             popSize = Size("Population"); popOpacity = Opacity("Population"); popX = X("Population", 8); popY = BottomY("Population", 8);
             pmcColor = C("Population Colors", "PMC", .55f, .72f, .58f); scavColor = C("Population Colors", "Scav", .72f, .48f, .46f); bossColor = C("Population Colors", "Boss", .78f, .60f, .38f); reinforcedColor = C("Population Colors", "Reinforced", .63f, .51f, .72f);
 
             statusEnabled = Config.Bind("Player Status", "Enabled", true, "Status");
+            statusLayout = Layout("Player Status");
             statusOutside = Config.Bind("Player Status", "Show Outside Raid", false, "Show outside raid if profile data is available");
             statusSize = Size("Player Status"); statusOpacity = Opacity("Player Status"); statusX = X("Player Status", 8); statusY = BottomY("Player Status", 24);
             weightOk = C("Player Status Colors", "Weight OK", .58f, .75f, .52f); weightHeavy = C("Player Status Colors", "Weight Heavy", .78f, .68f, .39f); weightCritical = C("Player Status Colors", "Weight Critical", .75f, .42f, .39f);
@@ -81,9 +83,11 @@ namespace SPTPopCounter
             killY = Config.Bind("Kill Feed", "Position Y", 100f, new ConfigDescription("Top Y", new AcceptableValueRange<float>(-100, 2000)));
             killLifetime = Config.Bind("Kill Feed", "Lifetime", 6f, new ConfigDescription("Seconds", new AcceptableValueRange<float>(2, 15)));
             killMax = Config.Bind("Kill Feed", "Max Entries", 3, new ConfigDescription("Lines", new AcceptableValueRange<int>(1, 6)));
-            Logger.LogInfo("SPT Tactical HUD v1.12.1 loaded (HUD state " + mode + ")");
+            Logger.LogInfo("SPT Tactical HUD v1.13.0 loaded (HUD state " + mode + ")");
         }
 
+        ConfigEntry<string> Layout(string s) => Config.Bind(s, "Layout", "Horizontal",
+            new ConfigDescription("Horizontal / Vertical", new AcceptableValueList<string>("Horizontal", "Vertical")));
         ConfigEntry<int> Size(string s) => Config.Bind(s, "Size", 10, new ConfigDescription("Size", new AcceptableValueRange<int>(8, 20)));
         ConfigEntry<float> Opacity(string s) => Config.Bind(s, "Opacity", .55f, new ConfigDescription("0 invisible / 1 opaque", new AcceptableValueRange<float>(0, 1)));
         ConfigEntry<float> X(string s, float v) => Config.Bind(s, "Position X", v, new ConfigDescription("X", new AcceptableValueRange<float>(-400, 4000)));
