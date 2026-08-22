@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using SPTPopCounter.ItemIntelligence;
+using SPTItemIntelligence;
 
 static class Program
 {

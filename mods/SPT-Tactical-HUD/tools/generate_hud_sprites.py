@@ -4,8 +4,8 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "SPT-PopCounter" / "assets" / "source" / "approved-icons.png"
-OUT = ROOT / "SPT-PopCounter" / "assets" / "hud-sprites.png"
+SOURCE = ROOT / "client" / "assets" / "source" / "approved-icons.png"
+OUT = ROOT / "client" / "assets" / "hud-sprites.png"
 CELL = 64
 COLS, ROWS = 8, 6
 

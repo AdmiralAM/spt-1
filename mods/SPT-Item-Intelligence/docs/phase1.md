@@ -1,6 +1,6 @@
-# Item Intelligence — Phase 1
+# SPT Item Intelligence — Phase 1
 
-Phase 1 adds one shared semantic layer over item/template objects already available in SPT. It does not alter the current Tactical HUD output.
+Version `0.1.0` adds one shared semantic layer over item/template objects already available in SPT. It is a standalone mod with its own DLL and lifecycle; it has no Tactical HUD dependency and does not alter Tactical HUD output.
 
 ## Data model
 

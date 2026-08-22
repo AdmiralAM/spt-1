@@ -13,8 +13,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PLUGIN = ROOT / "SPT-PopCounter" / "Plugin.cs"
-VISUAL = ROOT / "SPT-PopCounter" / "VisualLayer.cs"
+PLUGIN = ROOT / "client" / "Plugin.cs"
+VISUAL = ROOT / "client" / "VisualLayer.cs"
 
 
 def method_body(source: str, name: str) -> str:

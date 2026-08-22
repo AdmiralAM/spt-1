@@ -1,55 +1,22 @@
-# SPT Tactical HUD
+# SPT Mod Suite
 
-HUD mod for SPT 4.1.x. Current client version: **1.14.0**. The unchanged optional server companion remains **1.13.0**.
+This repository contains independent SPT mods. Each long-term product owns its source, documentation, tests and release version under `mods/`.
 
-## Download / repository channels
+| Mod | Version | Scope | Install channel |
+| --- | --- | --- | --- |
+| [SPT Tactical HUD](mods/SPT-Tactical-HUD) | Client `1.13.2`; optional server `1.13.0` | Population, status and kill-feed HUD only | [`runtime`](https://github.com/AdmiralAM/spt-1/tree/runtime) |
+| [SPT Item Intelligence](mods/SPT-Item-Intelligence) | `0.1.0` | Standalone item semantic registry, Phase 1 | [`runtime-item-intelligence`](https://github.com/AdmiralAM/spt-1/tree/runtime-item-intelligence) |
 
-- **Runtime:** install-only stable package. On the first migration, delete old `SPT Tactical HUD v...` plugin folders, then copy its folders into the SPT root. Later Runtime updates overwrite the same unversioned folder. It contains no source code or Python tools.
-- **Stable:** the exact source and CI output used to publish Runtime.
-- **Main:** active development; do not use the repository root itself as an installation package.
-- **Archive v1.13.0:** frozen full reserve of the complete 1.13.0 build before the Stable/Runtime split. It includes the client DLL, sprite atlas, server companion and matching source/build evidence; CI never moves this branch.
+`SPT Tactical HUD v1.14.0` is retired: that number was created when Item Intelligence was mistakenly compiled into the HUD. The corrected current HUD is the complete stable **v1.13.2**, while the extracted Item Intelligence code starts its own lifecycle at **v0.1.0**.
 
-Direct links: [download Runtime ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime.zip) · [browse Runtime](https://github.com/AdmiralAM/spt-1/tree/runtime) · [browse Stable](https://github.com/AdmiralAM/spt-1/tree/stable) · [download v1.13.0 reserve](https://github.com/AdmiralAM/spt-1/archive/refs/heads/archive/v1.13.0.zip) · [browse v1.13.0 reserve](https://github.com/AdmiralAM/spt-1/tree/archive/v1.13.0)
+## Repository channels
 
-## HUD clusters
+- `main` — active multi-mod development;
+- `stable` — exact CI-green source and build evidence for all current mods;
+- `runtime` — install-only **SPT Tactical HUD** package; it never contains Item Intelligence;
+- `runtime-item-intelligence` — install-only **SPT Item Intelligence** package; it never contains Tactical HUD;
+- `archive/v1.13.0` — frozen full Tactical HUD 1.13.0 reserve.
 
-- Population: PMC, Scav, Boss and Raider counts during a raid; independently selectable Horizontal/Vertical layout.
-- Player Status: hydration, energy and weight state; independently selectable Horizontal/Vertical layout and optional display outside raids.
-- Kill Feed: compact icon-only layouts. Minimal shows killer/victim roles; Normal adds weapon category and distance; Detailed also adds hit location. Player, bot and weapon names are never rendered.
-- HUD Edit Mode: compact draggable hitboxes with saved positions.
+Downloads: [Tactical HUD ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime.zip) · [Item Intelligence ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-item-intelligence.zip) · [Tactical HUD 1.13.0 reserve](https://github.com/AdmiralAM/spt-1/archive/refs/heads/archive/v1.13.0.zip)
 
-## Runtime rules
-
-- F9 cycles `Hidden -> Population -> Population + Status -> Hidden`.
-- The selected HUD state is restored after restarting the game.
-- Hideout and menu scenes are not treated as raids.
-- Raid counters, subscriptions and kill entries are cleared on every raid boundary.
-- The native SPT version label is hidden by default. Detection is scene-driven and limited to text-component types; there is no recurring global Unity object scan.
-- The server component performs no gameplay work and emits one successful-load line in the SPT server console.
-- Role and body pictograms use a cached light contrast plate with a strong category-colored rim; weapon silhouettes retain a dark plate. Hydration, energy, weight and weight-state glyphs render directly on the HUD with no circular plate or rim. No per-frame texture allocation.
-- Runtime hot paths reuse refresh collections and GUI measurement content. Kill-feed icon classification is cached when a death is recorded, and mouse/edit events use cached cluster hitboxes instead of rebuilding the visual layout.
-
-## Asset pipeline
-
-- Approved Pictures SPT artwork is stored as normalized transparent source PNGs. The production Scav cell uses a deliberately simplified micro-glyph of the approved balaclava-and-cigarette concept so its eyes and cigarette survive the 12-20 px HUD size.
-- CI composes a 512×384 atlas with 43 mapped cells and validates transparency, optical centering and micro-scale coverage.
-- Weapon families cover the complete approved 24-category board; unknown weapons use the cartridge icon.
-
-## Item Intelligence — Phase 1
-
-- All item/template inputs normalize into one immutable `ItemDefinition`.
-- The shared registry resolves `food`, `meds`, `ammo`, `weapon`, `armor`, `backpack`, `container`, `key`, `quest`, `barter` and `unknown` categories.
-- Semantic tags cover healing, resources, medical effects, throwable items, armor, storage and quests.
-- Exact-template and parent-template registrations override the reflection-based matcher; resolved templates are cached.
-- Unmatched or incomplete data always returns an explicit `unknown` definition.
-- Phase 1 is foundation only: it does not change HUD visuals or runtime behavior. See [the Phase 1 contract](docs/item-intelligence-phase1.md).
-
-## Package layout
-
-Copy the contents of the versioned build folder into the SPT game root. Client-only releases contain only:
-
-- `BepInEx/plugins/SPT Tactical HUD v1.14.0` — client HUD, Item Intelligence foundation and sprite atlas.
-
-The CI package includes `SPT_Runtime/user/mods/SPT Tactical HUD Server` only when the server component itself changes.
-
-Every green `main` build atomically promotes its verified commit to `stable` and regenerates the install-only `runtime` branch. Failed or superseded builds cannot replace either channel.
+Both runtime branches use stable, version-independent plugin directories. Copy only the branch for the mod you want into the SPT root.

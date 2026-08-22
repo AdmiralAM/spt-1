@@ -7,6 +7,6 @@
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\SPT-PopCounter\ItemIntelligence.cs" Link="ItemIntelligence.cs" />
+    <Compile Include="..\src\ItemIntelligence.cs" Link="ItemIntelligence.cs" />
   </ItemGroup>
 </Project>

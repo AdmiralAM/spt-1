@@ -2,7 +2,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
 
 ROOT=Path(__file__).resolve().parents[1]
-SHEET=ROOT/'SPT-PopCounter'/'assets'/'hud-sprites.png'
+SHEET=ROOT/'client'/'assets'/'hud-sprites.png'
 OUT=ROOT/'build-status'/'hud-preview.png'
 CELL=64
 

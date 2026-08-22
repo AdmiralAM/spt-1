@@ -2,46 +2,33 @@
 
 ## Branch roles
 
-| Branch | Purpose | Intended consumer |
+| Branch | Contents | CI behavior |
 | --- | --- | --- |
-| `main` | Active source, asset pipeline, QA tools and CI-generated build evidence | Development |
-| `stable` | Exact commit that passed the complete CI gate and produced the published runtime | Audit / rollback |
-| `runtime` | Minimal ready-to-copy SPT directory tree | Player installation |
-| `archive/v1.13.0` | Frozen full 1.13.0 source and build reserve; never advanced by CI | Permanent rollback reserve |
+| `main` | Active source for every independent mod | Triggers the complete suite gate |
+| `stable` | Exact multi-mod commit that passed the gate | Advanced only after all builds and artifacts succeed |
+| `runtime` | Install-only SPT Tactical HUD | Rebuilt from scratch; never contains Item Intelligence |
+| `runtime-item-intelligence` | Install-only SPT Item Intelligence | Rebuilt from scratch; never contains Tactical HUD |
+| `archive/v1.13.0` | Frozen full Tactical HUD 1.13.0 reserve | Never advanced by CI |
 
-`runtime` is generated from scratch after a successful build. It cannot accumulate obsolete DLLs, old versioned plugin folders, source code, Python tools, previews or build logs.
+The split runtime channels prevent an update to one mod from silently installing the other. Each uses a version-independent BepInEx plugin directory while its assembly and manifest retain the real semantic version.
 
-`archive/v1.13.0` is pinned to commit `82b5e99b9f5d97b44f44d2ada97e403b1e72a4d9`. Its `build-output/SPT Tactical HUD v1.13.0/` directory contains the client DLL, sprite atlas and server companion together as the original complete package.
+## Current releases
 
-## Runtime layout
+| Mod | Client version | Server version | Runtime path |
+| --- | --- | --- | --- |
+| SPT Tactical HUD | `1.13.2` | `1.13.0` optional | `BepInEx/plugins/SPT Tactical HUD/` |
+| SPT Item Intelligence | `0.1.0` | none | `BepInEx/plugins/SPT Item Intelligence/` |
 
-The client is normalized to a version-independent path:
-
-```text
-BepInEx/
-  plugins/
-    SPT Tactical HUD/
-      SPT Tactical HUD.dll
-      assets/
-        hud-sprites.png
-runtime-manifest.json
-README.md
-```
-
-This removes the need to create a new plugin directory for every client patch. The assembly and manifest still retain the real semantic version.
-
-The first migration to this channel requires deleting any legacy `BepInEx/plugins/SPT Tactical HUD v...` directories. Afterwards the Runtime ZIP can overwrite the same unversioned plugin directory directly.
-
-`SPT_Runtime/` is added only when the server component changed in the promoted source commit. Client-only releases explicitly leave the installed server companion untouched.
+Tactical HUD `1.14.0` is intentionally retired because it mixed the initial Item Intelligence source into the HUD assembly. No `1.14.0` runtime remains after the corrected publication.
 
 ## Promotion gate
 
-A commit reaches `stable` and `runtime` only after:
+A source commit is promoted only after:
 
-1. HUD asset generation and optical checks pass;
-2. the hot-path regression guard passes;
-3. client and server projects compile successfully;
-4. the versioned build package exists;
-5. the workflow artifact upload succeeds.
+1. Tactical HUD asset generation, optics and hot-path checks pass;
+2. Item Intelligence regression assertions pass;
+3. Tactical HUD client, Tactical HUD server and Item Intelligence compile successfully;
+4. both independent install packages exist;
+5. both workflow artifacts upload successfully.
 
-The workflow uses one cancellable concurrency group. A newer `main` commit supersedes an older in-progress build, preventing stale output from being promoted over newer source.
+Only then does CI atomically advance `stable` and regenerate both runtime branches. Failed or superseded builds cannot replace a published channel.

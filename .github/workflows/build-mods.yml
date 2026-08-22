@@ -1,0 +1,218 @@
+name: Build SPT Mod Suite
+
+on:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - 'build-output/**'
+      - 'mods/**/build-status/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: spt-mod-suite-main-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Resolve independent mod versions
+        shell: pwsh
+        run: |
+          [xml]$hudProj = Get-Content 'mods/SPT-Tactical-HUD/client/SPT-Tactical-HUD.csproj'
+          [xml]$serverProj = Get-Content 'mods/SPT-Tactical-HUD/server/SPT-TacticalHUD-Server.csproj'
+          [xml]$itemProj = Get-Content 'mods/SPT-Item-Intelligence/src/SPT-Item-Intelligence.csproj'
+          $hudVersion = $hudProj.Project.PropertyGroup.Version
+          $serverVersion = $serverProj.Project.PropertyGroup.Version
+          $itemVersion = $itemProj.Project.PropertyGroup.Version
+          if([string]::IsNullOrWhiteSpace($hudVersion) -or [string]::IsNullOrWhiteSpace($itemVersion)){ throw 'Mod version missing' }
+          "HUD_VERSION=$hudVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "HUD_NAME=SPT Tactical HUD v$hudVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "SERVER_VERSION=$serverVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "ITEM_VERSION=$itemVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "ITEM_NAME=SPT Item Intelligence v$itemVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          $serverChanged=$true
+          git rev-parse "$env:GITHUB_SHA^" 2>$null | Out-Null
+          if($LASTEXITCODE -eq 0){
+            git diff --quiet "$env:GITHUB_SHA^" $env:GITHUB_SHA -- mods/SPT-Tactical-HUD/server
+            $serverChanged=($LASTEXITCODE -ne 0)
+          }
+          "SERVER_CHANGED=$($serverChanged.ToString().ToLowerInvariant())" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Validate Tactical HUD assets and hot paths
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check pillow
+          python mods/SPT-Tactical-HUD/tools/generate_hud_sprites.py
+          python mods/SPT-Tactical-HUD/tools/normalize_hud_sprites.py
+          python mods/SPT-Tactical-HUD/tools/check_hud_assets.py
+          python mods/SPT-Tactical-HUD/tools/check_hud_optics.py
+          python mods/SPT-Tactical-HUD/tools/check_hud_hotpaths.py
+          python mods/SPT-Tactical-HUD/tools/generate_hud_preview.py
+
+      - name: Download BepInEx 5
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path deps | Out-Null
+          Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
+          Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
+
+      - name: Validate Item Intelligence Phase 1
+        shell: pwsh
+        run: dotnet run --project mods/SPT-Item-Intelligence/tests/SPT-Item-Intelligence.Tests.csproj -c Release
+
+      - name: Build independent packages and capture logs
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path 'mods/SPT-Tactical-HUD/build-status' | Out-Null
+          New-Item -ItemType Directory -Force -Path 'mods/SPT-Item-Intelligence/build-status' | Out-Null
+          $ErrorActionPreference='Continue'
+          dotnet build mods/SPT-Tactical-HUD/client/SPT-Tactical-HUD.csproj -c Release 2>&1 | Tee-Object -FilePath 'mods/SPT-Tactical-HUD/build-status/client-build.log'
+          $hudCode=$LASTEXITCODE
+          dotnet build mods/SPT-Tactical-HUD/server/SPT-TacticalHUD-Server.csproj -c Release 2>&1 | Tee-Object -FilePath 'mods/SPT-Tactical-HUD/build-status/server-build.log'
+          $serverCode=$LASTEXITCODE
+          dotnet build mods/SPT-Item-Intelligence/src/SPT-Item-Intelligence.csproj -c Release 2>&1 | Tee-Object -FilePath 'mods/SPT-Item-Intelligence/build-status/build.log'
+          $itemCode=$LASTEXITCODE
+          Get-Content 'mods/SPT-Tactical-HUD/build-status/client-build.log','mods/SPT-Tactical-HUD/build-status/server-build.log' | Set-Content 'mods/SPT-Tactical-HUD/build-status/build.log'
+          $code=if(($hudCode -eq 0) -and ($serverCode -eq 0) -and ($itemCode -eq 0)){0}else{1}
+          "BUILD_EXIT_CODE=$code" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+          $hudDll="mods/SPT-Tactical-HUD/client/bin/Release/netstandard2.1/$env:HUD_NAME.dll"
+          $serverDll='mods/SPT-Tactical-HUD/server/bin/Release/net10.0/SPT Tactical HUD Server.dll'
+          $itemDll="mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/$env:ITEM_NAME.dll"
+          if((Test-Path $hudDll) -and (Test-Path $serverDll) -and (Test-Path $itemDll)){
+            Remove-Item 'build-output' -Recurse -Force -ErrorAction SilentlyContinue
+
+            $hudPackage="build-output/$env:HUD_NAME"
+            $hudClient="$hudPackage/BepInEx/plugins/$env:HUD_NAME"
+            New-Item -ItemType Directory -Force -Path "$hudClient/assets" | Out-Null
+            Copy-Item $hudDll "$hudClient/$env:HUD_NAME.dll" -Force
+            Copy-Item 'mods/SPT-Tactical-HUD/client/assets/hud-sprites.png' "$hudClient/assets/hud-sprites.png" -Force
+            if($env:SERVER_CHANGED -eq 'true'){
+              $server="$hudPackage/SPT_Runtime/user/mods/SPT Tactical HUD Server"
+              New-Item -ItemType Directory -Force -Path $server | Out-Null
+              Copy-Item $serverDll "$server/SPT Tactical HUD Server.dll" -Force
+            }
+
+            $itemPackage="build-output/$env:ITEM_NAME"
+            $itemClient="$itemPackage/BepInEx/plugins/$env:ITEM_NAME"
+            New-Item -ItemType Directory -Force -Path $itemClient | Out-Null
+            Copy-Item $itemDll "$itemClient/$env:ITEM_NAME.dll" -Force
+          }
+          exit 0
+
+      - name: Commit generated evidence
+        shell: pwsh
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add mods/SPT-Tactical-HUD/client/assets/hud-sprites.png
+          git add mods/SPT-Tactical-HUD/build-status/build.log
+          git add mods/SPT-Tactical-HUD/build-status/hud-preview.png
+          git add mods/SPT-Item-Intelligence/build-status/build.log
+          git add -A build-output
+          git diff --cached --quiet
+          if($LASTEXITCODE -ne 0){git commit -m "Update SPT mod suite generated builds [skip ci]";git push}
+
+      - name: Fail if any build failed
+        shell: pwsh
+        run: if($env:BUILD_EXIT_CODE -ne '0'){exit 1}
+
+      - name: Upload Tactical HUD package
+        uses: actions/upload-artifact@v4
+        with:
+          name: SPT-Tactical-HUD-v${{ env.HUD_VERSION }}
+          path: build-output/${{ env.HUD_NAME }}
+          if-no-files-found: error
+
+      - name: Upload Item Intelligence package
+        uses: actions/upload-artifact@v4
+        with:
+          name: SPT-Item-Intelligence-v${{ env.ITEM_VERSION }}
+          path: build-output/${{ env.ITEM_NAME }}
+          if-no-files-found: error
+
+      - name: Publish stable and split runtime channels
+        shell: pwsh
+        run: |
+          $stableSha=(git rev-parse HEAD).Trim()
+          git push origin "$stableSha`:refs/heads/stable" --force
+
+          $hudRoot=Join-Path $env:RUNNER_TEMP 'spt-tactical-hud-runtime'
+          git worktree add --detach $hudRoot $stableSha
+          Push-Location $hudRoot
+          git checkout --orphan "runtime-hud-publish-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          git rm -rf .
+          $hudPackage=Join-Path $env:GITHUB_WORKSPACE "build-output/$env:HUD_NAME"
+          $hudSource=Join-Path $hudPackage "BepInEx/plugins/$env:HUD_NAME"
+          $hudTarget=Join-Path $hudRoot 'BepInEx/plugins/SPT Tactical HUD'
+          New-Item -ItemType Directory -Force -Path (Join-Path $hudTarget 'assets') | Out-Null
+          Copy-Item (Join-Path $hudSource "$env:HUD_NAME.dll") (Join-Path $hudTarget 'SPT Tactical HUD.dll') -Force
+          Copy-Item (Join-Path $hudSource 'assets/hud-sprites.png') (Join-Path $hudTarget 'assets/hud-sprites.png') -Force
+          $serverSource=Join-Path $hudPackage 'SPT_Runtime'
+          $serverIncluded=Test-Path $serverSource
+          if($serverIncluded){ Copy-Item $serverSource $hudRoot -Recurse -Force }
+          [ordered]@{
+            name='SPT Tactical HUD'; channel='runtime'; client_version=$env:HUD_VERSION;
+            server_version=$env:SERVER_VERSION; spt_version='4.1.x'; source_commit=$stableSha;
+            server_included=$serverIncluded; contains_item_intelligence=$false
+          } | ConvertTo-Json | Set-Content (Join-Path $hudRoot 'runtime-manifest.json') -Encoding utf8
+          $serverInstruction=if($serverIncluded){'This package includes the optional server companion.'}else{'The optional server companion is unchanged; leave the installed server folder untouched.'}
+          @"
+          # SPT Tactical HUD runtime
+
+          Ready-to-install **SPT Tactical HUD v$env:HUD_VERSION** for SPT **4.1.x**. $serverInstruction
+
+          Copy this branch into the SPT root. It contains Tactical HUD only and never installs Item Intelligence.
+          Verified source commit: **$stableSha**.
+          "@ | Set-Content (Join-Path $hudRoot 'README.md') -Encoding utf8
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m "Publish SPT Tactical HUD runtime v$env:HUD_VERSION"
+          git push origin HEAD:refs/heads/runtime --force
+          Pop-Location
+          git worktree remove $hudRoot --force
+
+          $itemRoot=Join-Path $env:RUNNER_TEMP 'spt-item-intelligence-runtime'
+          git worktree add --detach $itemRoot $stableSha
+          Push-Location $itemRoot
+          git checkout --orphan "runtime-item-publish-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          git rm -rf .
+          $itemPackage=Join-Path $env:GITHUB_WORKSPACE "build-output/$env:ITEM_NAME"
+          $itemSource=Join-Path $itemPackage "BepInEx/plugins/$env:ITEM_NAME/$env:ITEM_NAME.dll"
+          $itemTarget=Join-Path $itemRoot 'BepInEx/plugins/SPT Item Intelligence'
+          New-Item -ItemType Directory -Force -Path $itemTarget | Out-Null
+          Copy-Item $itemSource (Join-Path $itemTarget 'SPT Item Intelligence.dll') -Force
+          [ordered]@{
+            name='SPT Item Intelligence'; channel='runtime-item-intelligence'; version=$env:ITEM_VERSION;
+            phase='1'; spt_version='4.1.x'; source_commit=$stableSha; contains_tactical_hud=$false
+          } | ConvertTo-Json | Set-Content (Join-Path $itemRoot 'runtime-manifest.json') -Encoding utf8
+          @"
+          # SPT Item Intelligence runtime
+
+          Ready-to-install standalone **SPT Item Intelligence v$env:ITEM_VERSION** for SPT **4.1.x**.
+
+          Copy this branch into the SPT root. Phase 1 supplies the semantic registry and does not modify Tactical HUD visuals or behavior. This channel contains Item Intelligence only.
+          Verified source commit: **$stableSha**.
+          "@ | Set-Content (Join-Path $itemRoot 'README.md') -Encoding utf8
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m "Publish SPT Item Intelligence runtime v$env:ITEM_VERSION"
+          git push origin HEAD:refs/heads/runtime-item-intelligence --force
+          Pop-Location
+          git worktree remove $itemRoot --force

@@ -2,7 +2,7 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-SHEET = ROOT / 'SPT-PopCounter' / 'assets' / 'hud-sprites.png'
+SHEET = ROOT / 'client' / 'assets' / 'hud-sprites.png'
 CELL = 64
 CELLS = {
     'usec':(0,0),'bear':(1,0),'scav':(2,0),'boss':(3,0),'raider':(4,0),'water':(5,0),'energy':(6,0),'weight':(7,0),
