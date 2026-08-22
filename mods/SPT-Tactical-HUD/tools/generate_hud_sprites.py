@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "client" / "assets" / "source" / "approved-icons.png"
+SOURCE = ROOT / "client" / "assets" / "source" / "approved-cells"
 OUT = ROOT / "client" / "assets" / "hud-sprites.png"
 CELL = 64
 COLS, ROWS = 8, 6
@@ -126,10 +126,15 @@ def micro_focus(icon: Image.Image, key: str) -> Image.Image:
     return icon
 
 
-def load(key: str, approved: Image.Image) -> Image.Image:
-    column, row = CELLS[key]
-    source_cell = 256
-    icon = approved.crop((column * source_cell, row * source_cell, (column + 1) * source_cell, (row + 1) * source_cell))
+def load(key: str) -> Image.Image:
+    source = SOURCE / f"{key}.png"
+    if not source.is_file():
+        if key.startswith("weight") and key[-1:].isdigit():
+            return fallback_chevrons(int(key[-1]))
+        raise FileNotFoundError(f"Missing approved HUD source asset: {key}")
+    icon = Image.open(source).convert("RGBA")
+    if icon.size != (256, 256):
+        raise ValueError(f"approved source cell {key} is {icon.size}, expected (256, 256)")
     if alpha_bbox(icon):
         return icon
     if key.startswith("weight") and key[-1:].isdigit():
@@ -138,12 +143,9 @@ def load(key: str, approved: Image.Image) -> Image.Image:
 
 
 def main() -> None:
-    approved = Image.open(SOURCE).convert("RGBA")
-    if approved.size != (COLS * 256, ROWS * 256):
-        raise ValueError(f"approved source atlas is {approved.size}, expected {(COLS * 256, ROWS * 256)}")
     atlas = Image.new("RGBA", (COLS * CELL, ROWS * CELL), (0, 0, 0, 0))
     for key, (column, row) in CELLS.items():
-        icon = fit(micro_focus(load(key, approved), key), TARGETS[group(key)])
+        icon = fit(micro_focus(load(key), key), TARGETS[group(key)])
         atlas.alpha_composite(icon, (column * CELL, row * CELL))
     OUT.parent.mkdir(parents=True, exist_ok=True)
     atlas.save(OUT, optimize=True)
