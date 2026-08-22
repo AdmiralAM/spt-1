@@ -33,23 +33,27 @@ namespace SPTPopCounter
         {
             try
             {
+                Version assemblyVersion = typeof(HudIcons).Assembly.GetName().Version;
+                string semanticVersion = assemblyVersion == null
+                    ? string.Empty
+                    : assemblyVersion.Major + "." + assemblyVersion.Minor + "." + assemblyVersion.Build;
+
                 string[] candidates =
                 {
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD","assets","hud-sprites.png"),
-                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.13.1","assets","hud-sprites.png"),
-                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.13.0","assets","hud-sprites.png"),
-                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.12.1","assets","hud-sprites.png"),
-                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.12.0","assets","hud-sprites.png"),
-                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.11.1","assets","hud-sprites.png"),
-                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.11.0","assets","hud-sprites.png"),
-                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.10.4","assets","hud-sprites.png"),
-                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.10.3","assets","hud-sprites.png"),
-                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.10.2","assets","hud-sprites.png"),
-                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.10.0","assets","hud-sprites.png"),
-                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.9.0","assets","hud-sprites.png"),
+                    string.IsNullOrEmpty(semanticVersion) ? string.Empty : Path.Combine(Paths.PluginPath,"SPT Tactical HUD v" + semanticVersion,"assets","hud-sprites.png"),
                     Path.Combine(Paths.PluginPath,"assets","hud-sprites.png")
                 };
-                string path = candidates.FirstOrDefault(File.Exists);
+                string path = candidates.Where(p => !string.IsNullOrEmpty(p)).FirstOrDefault(File.Exists);
+                if (path == null)
+                {
+                    // Compatibility fallback for older unpacked packages. Prefer the newest versioned folder
+                    // deterministically instead of whichever recursive directory enumeration returns first.
+                    path = Directory.GetDirectories(Paths.PluginPath,"SPT Tactical HUD v*",SearchOption.TopDirectoryOnly)
+                        .OrderByDescending(p => p, StringComparer.OrdinalIgnoreCase)
+                        .Select(p => Path.Combine(p,"assets","hud-sprites.png"))
+                        .FirstOrDefault(File.Exists);
+                }
                 if (path == null)
                     path = Directory.GetFiles(Paths.PluginPath,"hud-sprites.png",SearchOption.AllDirectories).FirstOrDefault();
                 if (path == null) return;
