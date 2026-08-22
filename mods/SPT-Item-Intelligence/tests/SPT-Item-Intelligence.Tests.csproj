@@ -8,5 +8,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\src\ItemIntelligence.cs" Link="ItemIntelligence.cs" />
+    <Compile Include="..\src\SafeToSell.cs" Link="SafeToSell.cs" />
   </ItemGroup>
 </Project>

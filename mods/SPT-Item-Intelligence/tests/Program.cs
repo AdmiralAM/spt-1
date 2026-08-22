@@ -74,7 +74,7 @@ static class Program
         ItemDefinition cachedB = Resolve(registry, "cached", "IgnoredType", null);
         Expect(object.ReferenceEquals(cachedA, cachedB), "template definitions are cached");
 
-        Console.WriteLine("Item Intelligence Phase 1: " + assertions + " assertions passed.");
+        int phase2Assertions = Phase2Tests.Run();\n        Console.WriteLine("Item Intelligence: " + assertions + " Phase 1 assertions and " + phase2Assertions + " Phase 2 assertions passed.");
     }
 
     static ItemDefinition Resolve(ItemRegistry registry, string id, string type, IDictionary<string, object> signals)

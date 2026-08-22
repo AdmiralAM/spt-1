@@ -92,7 +92,7 @@ jobs:
           if(-not $downloaded){throw 'BepInEx download failed'}
           Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
 
-      - name: Validate Item Intelligence Phase 1
+      - name: Validate Item Intelligence Phase 2
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path 'mods/SPT-Item-Intelligence/build-status' | Out-Null
@@ -228,14 +228,14 @@ jobs:
           Copy-Item $itemSource (Join-Path $itemTarget 'SPT Item Intelligence.dll') -Force
           [ordered]@{
             name='SPT Item Intelligence'; channel='runtime-item-intelligence'; version=$env:ITEM_VERSION;
-            phase='1'; spt_version='4.1.x'; source_commit=$stableSha; contains_tactical_hud=$false
+            phase='2'; spt_version='4.1.x'; source_commit=$stableSha; contains_tactical_hud=$false
           } | ConvertTo-Json | Set-Content (Join-Path $itemRoot 'runtime-manifest.json') -Encoding utf8
           @"
           # SPT Item Intelligence runtime
 
           Ready-to-install standalone **SPT Item Intelligence v$env:ITEM_VERSION** for SPT **4.1.x**.
 
-          Copy this branch into the SPT root. Phase 1 supplies the semantic registry and does not modify Tactical HUD visuals or behavior. This channel contains Item Intelligence only.
+          Copy this branch into the SPT root. Phase 2 supplies the semantic registry and Safe-to-Sell decision model. It adds no item UI and does not modify Tactical HUD visuals or behavior. This channel contains Item Intelligence only.
           Verified source commit: **$stableSha**.
           "@ | Set-Content (Join-Path $itemRoot 'README.md') -Encoding utf8
           git config user.name 'github-actions[bot]'
