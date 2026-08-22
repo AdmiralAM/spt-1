@@ -7,8 +7,11 @@
 | `main` | Active source, asset pipeline, QA tools and CI-generated build evidence | Development |
 | `stable` | Exact commit that passed the complete CI gate and produced the published runtime | Audit / rollback |
 | `runtime` | Minimal ready-to-copy SPT directory tree | Player installation |
+| `archive/v1.13.0` | Frozen full 1.13.0 source and build reserve; never advanced by CI | Permanent rollback reserve |
 
 `runtime` is generated from scratch after a successful build. It cannot accumulate obsolete DLLs, old versioned plugin folders, source code, Python tools, previews or build logs.
+
+`archive/v1.13.0` is pinned to commit `82b5e99b9f5d97b44f44d2ada97e403b1e72a4d9`. Its `build-output/SPT Tactical HUD v1.13.0/` directory contains the client DLL, sprite atlas and server companion together as the original complete package.
 
 ## Runtime layout
 

@@ -7,8 +7,9 @@ HUD mod for SPT 4.1.x. Current client version: **1.13.2**. The unchanged optiona
 - **Runtime:** install-only stable package. On the first migration, delete old `SPT Tactical HUD v...` plugin folders, then copy its folders into the SPT root. Later Runtime updates overwrite the same unversioned folder. It contains no source code or Python tools.
 - **Stable:** the exact source and CI output used to publish Runtime.
 - **Main:** active development; do not use the repository root itself as an installation package.
+- **Archive v1.13.0:** frozen full reserve of the complete 1.13.0 build before the Stable/Runtime split. It includes the client DLL, sprite atlas, server companion and matching source/build evidence; CI never moves this branch.
 
-Direct links: [download Runtime ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime.zip) · [browse Runtime](https://github.com/AdmiralAM/spt-1/tree/runtime) · [browse Stable](https://github.com/AdmiralAM/spt-1/tree/stable)
+Direct links: [download Runtime ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime.zip) · [browse Runtime](https://github.com/AdmiralAM/spt-1/tree/runtime) · [browse Stable](https://github.com/AdmiralAM/spt-1/tree/stable) · [download v1.13.0 reserve](https://github.com/AdmiralAM/spt-1/archive/refs/heads/archive/v1.13.0.zip) · [browse v1.13.0 reserve](https://github.com/AdmiralAM/spt-1/tree/archive/v1.13.0)
 
 ## HUD clusters
 
