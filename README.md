@@ -2,6 +2,14 @@
 
 HUD mod for SPT 4.1.x. Current client version: **1.13.2**. The unchanged optional server companion remains **1.13.0**.
 
+## Download / repository channels
+
+- **Runtime:** install-only stable package. On the first migration, delete old `SPT Tactical HUD v...` plugin folders, then copy its folders into the SPT root. Later Runtime updates overwrite the same unversioned folder. It contains no source code or Python tools.
+- **Stable:** the exact source and CI output used to publish Runtime.
+- **Main:** active development; do not use the repository root itself as an installation package.
+
+Direct links: [download Runtime ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime.zip) · [browse Runtime](https://github.com/AdmiralAM/spt-1/tree/runtime) · [browse Stable](https://github.com/AdmiralAM/spt-1/tree/stable)
+
 ## HUD clusters
 
 - Population: PMC, Scav, Boss and Raider counts during a raid; independently selectable Horizontal/Vertical layout.
@@ -33,3 +41,5 @@ Copy the contents of the versioned build folder into the SPT game root. Client-o
 - `BepInEx/plugins/SPT Tactical HUD v1.13.2` — client HUD and sprite atlas.
 
 The CI package includes `SPT_Runtime/user/mods/SPT Tactical HUD Server` only when the server component itself changes.
+
+Every green `main` build atomically promotes its verified commit to `stable` and regenerates the install-only `runtime` branch. Failed or superseded builds cannot replace either channel.

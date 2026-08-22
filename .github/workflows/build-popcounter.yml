@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: write
+concurrency:
+  group: tactical-hud-main-build
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: windows-latest
@@ -26,8 +29,11 @@ jobs:
           [xml]$proj = Get-Content 'SPT-PopCounter/SPT-PopCounter.csproj'
           $version = $proj.Project.PropertyGroup.Version
           if([string]::IsNullOrWhiteSpace($version)){ throw 'Version missing from csproj' }
+          [xml]$serverProj = Get-Content 'SPT-TacticalHUD-Server/SPT-TacticalHUD-Server.csproj'
+          $serverVersion = $serverProj.Project.PropertyGroup.Version
           "HUD_VERSION=$version" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "HUD_NAME=SPT Tactical HUD v$version" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "SERVER_VERSION=$serverVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           $serverChanged=$true
           git rev-parse "$env:GITHUB_SHA^" 2>$null | Out-Null
           if($LASTEXITCODE -eq 0){
@@ -100,3 +106,62 @@ jobs:
           name: SPT-Tactical-HUD-v${{ env.HUD_VERSION }}
           path: build-output/${{ env.HUD_NAME }}
           if-no-files-found: error
+      - name: Publish stable source and install-only runtime branches
+        if: env.BUILD_EXIT_CODE == '0'
+        shell: pwsh
+        run: |
+          $stableSha=(git rev-parse HEAD).Trim()
+          git push origin "$stableSha`:refs/heads/stable" --force
+
+          $runtimeRoot=Join-Path $env:RUNNER_TEMP 'spt-tactical-hud-runtime'
+          git worktree add --detach $runtimeRoot $stableSha
+          Push-Location $runtimeRoot
+          $runtimePublishBranch="runtime-publish-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          git checkout --orphan $runtimePublishBranch
+          git rm -rf .
+
+          $package=Join-Path $env:GITHUB_WORKSPACE "build-output/$env:HUD_NAME"
+          $clientSource=Join-Path $package "BepInEx/plugins/$env:HUD_NAME"
+          $clientTarget=Join-Path $runtimeRoot 'BepInEx/plugins/SPT Tactical HUD'
+          New-Item -ItemType Directory -Force -Path (Join-Path $clientTarget 'assets') | Out-Null
+          Copy-Item (Join-Path $clientSource "$env:HUD_NAME.dll") (Join-Path $clientTarget 'SPT Tactical HUD.dll') -Force
+          Copy-Item (Join-Path $clientSource 'assets/hud-sprites.png') (Join-Path $clientTarget 'assets/hud-sprites.png') -Force
+
+          $serverSource=Join-Path $package 'SPT_Runtime'
+          $serverIncluded=Test-Path $serverSource
+          if($serverIncluded){ Copy-Item $serverSource $runtimeRoot -Recurse -Force }
+
+          $manifest=[ordered]@{
+            name='SPT Tactical HUD'
+            channel='stable'
+            client_version=$env:HUD_VERSION
+            server_version=$env:SERVER_VERSION
+            spt_version='4.1.x'
+            source_commit=$stableSha
+            server_included=$serverIncluded
+          }
+          $manifest | ConvertTo-Json | Set-Content (Join-Path $runtimeRoot 'runtime-manifest.json') -Encoding utf8
+
+          $serverInstruction=if($serverIncluded){
+            'This release changes the server companion; copy both BepInEx and SPT_Runtime.'
+          }else{
+            'The server companion is unchanged; copy only BepInEx and do not touch SPT_Runtime.'
+          }
+          @"
+          # SPT Tactical HUD runtime
+
+          Ready-to-install stable client: **v$env:HUD_VERSION** for SPT **4.1.x**.
+
+          One-time migration: delete old `BepInEx/plugins/SPT Tactical HUD v...` folders, then copy the folders from this branch into the SPT game root. Future Runtime updates overwrite the unversioned `SPT Tactical HUD` folder directly. $serverInstruction
+
+          This branch intentionally contains no source code, Python tools, previews or build logs.
+          Verified source commit: **$stableSha**.
+          "@ | Set-Content (Join-Path $runtimeRoot 'README.md') -Encoding utf8
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m "Publish Tactical HUD runtime v$env:HUD_VERSION"
+          git push origin HEAD:refs/heads/runtime --force
+          Pop-Location
+          git worktree remove $runtimeRoot --force
