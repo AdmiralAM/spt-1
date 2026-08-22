@@ -292,7 +292,7 @@ namespace SPTPopCounter
 
                 int count = Mathf.Min(max, runtime.kills.Count);
                 int rows = editing ? Mathf.Max(1, count) : count;
-                float width = displayMode == "Minimal" ? 88f : 225f;
+                float width = displayMode == "Detailed" ? 225f : displayMode == "Minimal" ? 88f : 195f;
                 float rowHeight = size + 14;
                 Rect root = new Rect(runtime.killX.Value, runtime.killY.Value, width, rowHeight * Mathf.Max(1, rows));
 
@@ -340,9 +340,12 @@ namespace SPTPopCounter
 
                 if (displayMode != "Minimal")
                 {
-                    x = Gap(x, 6);
-                    string hitKey = HitKey(hit);
-                    x = Icon(r, hitKey, x, y, size, op, hitKey == "head" ? Head : Muted, .76f);
+                    if (displayMode == "Detailed")
+                    {
+                        x = Gap(x, 6);
+                        string hitKey = HitKey(hit);
+                        x = Icon(r, hitKey, x, y, size, op, hitKey == "head" ? Head : Muted, .76f);
+                    }
                     if (hasDistance)
                     {
                         x = Gap(x, 1);

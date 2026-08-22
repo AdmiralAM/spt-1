@@ -6,7 +6,7 @@ Combined client/server HUD mod for SPT 4.1.x. Current development version: **1.1
 
 - Population: PMC, Scav, Boss and Raider counts during a raid.
 - Player Status: hydration, energy and weight state; optional profile-backed display outside raids.
-- Kill Feed: compact icon-only role sequence with weapon category, hit location and distance data. Player and bot names are never rendered.
+- Kill Feed: compact icon-only layouts. Minimal shows killer/victim roles; Normal adds weapon category and distance; Detailed also adds hit location. Player, bot and weapon names are never rendered.
 - HUD Edit Mode: compact draggable hitboxes with saved positions.
 
 ## Runtime rules

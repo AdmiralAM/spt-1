@@ -81,7 +81,8 @@ def killrow(canvas,sheet,x,y,killer,kc,weapon,victim,vc,hit,dist,detailed=False,
     x=paste_icon(canvas,sheet,weapon,x,y-1,wisz,COLORS['neutral'])
     x+=max(3,round(4*scale))
     x=paste_icon(canvas,sheet,victim.lower(),x,y-2,isz,COLORS[vc]);x+=max(4,round(6*scale))
-    x=paste_icon(canvas,sheet,hit,x,y-1,max(11,round(13*scale)),COLORS['head'] if hit=='head' else COLORS['muted'])
+    if detailed:
+        x=paste_icon(canvas,sheet,hit,x,y-1,max(11,round(13*scale)),COLORS['head'] if hit=='head' else COLORS['muted'])
     x+=draw_text(d,(x+1,y+1),dist,small,COLORS['muted'])
 
 def qa_strip(canvas,sheet,x,y):
