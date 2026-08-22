@@ -55,24 +55,51 @@ jobs:
       - name: Validate Tactical HUD assets and hot paths
         shell: pwsh
         run: |
-          python -m pip install --disable-pip-version-check pillow
-          python mods/SPT-Tactical-HUD/tools/generate_hud_sprites.py
-          python mods/SPT-Tactical-HUD/tools/normalize_hud_sprites.py
-          python mods/SPT-Tactical-HUD/tools/check_hud_assets.py
-          python mods/SPT-Tactical-HUD/tools/check_hud_optics.py
-          python mods/SPT-Tactical-HUD/tools/check_hud_hotpaths.py
-          python mods/SPT-Tactical-HUD/tools/generate_hud_preview.py
+          New-Item -ItemType Directory -Force -Path 'mods/SPT-Tactical-HUD/build-status' | Out-Null
+          $assetCode=0
+          python -m pip install --disable-pip-version-check pillow 2>&1 | Tee-Object -FilePath 'mods/SPT-Tactical-HUD/build-status/quality.log' -Append
+          if($LASTEXITCODE -ne 0){$assetCode=1}
+          python mods/SPT-Tactical-HUD/tools/generate_hud_sprites.py 2>&1 | Tee-Object -FilePath 'mods/SPT-Tactical-HUD/build-status/quality.log' -Append
+          if($LASTEXITCODE -ne 0){$assetCode=1}
+          python mods/SPT-Tactical-HUD/tools/normalize_hud_sprites.py 2>&1 | Tee-Object -FilePath 'mods/SPT-Tactical-HUD/build-status/quality.log' -Append
+          if($LASTEXITCODE -ne 0){$assetCode=1}
+          python mods/SPT-Tactical-HUD/tools/check_hud_assets.py 2>&1 | Tee-Object -FilePath 'mods/SPT-Tactical-HUD/build-status/quality.log' -Append
+          if($LASTEXITCODE -ne 0){$assetCode=1}
+          python mods/SPT-Tactical-HUD/tools/check_hud_optics.py 2>&1 | Tee-Object -FilePath 'mods/SPT-Tactical-HUD/build-status/quality.log' -Append
+          if($LASTEXITCODE -ne 0){$assetCode=1}
+          python mods/SPT-Tactical-HUD/tools/check_hud_hotpaths.py 2>&1 | Tee-Object -FilePath 'mods/SPT-Tactical-HUD/build-status/quality.log' -Append
+          if($LASTEXITCODE -ne 0){$assetCode=1}
+          python mods/SPT-Tactical-HUD/tools/generate_hud_preview.py 2>&1 | Tee-Object -FilePath 'mods/SPT-Tactical-HUD/build-status/quality.log' -Append
+          if($LASTEXITCODE -ne 0){$assetCode=1}
+          "ASSET_EXIT_CODE=$assetCode" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          exit 0
 
       - name: Download BepInEx 5
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path deps | Out-Null
-          Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
+          $downloaded=$false
+          for($attempt=1;$attempt -le 3;$attempt++){
+            try{
+              Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
+              $downloaded=$true
+              break
+            }catch{
+              if($attempt -eq 3){throw}
+              Start-Sleep -Seconds 5
+            }
+          }
+          if(-not $downloaded){throw 'BepInEx download failed'}
           Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
 
       - name: Validate Item Intelligence Phase 1
         shell: pwsh
-        run: dotnet run --project mods/SPT-Item-Intelligence/tests/SPT-Item-Intelligence.Tests.csproj -c Release
+        run: |
+          New-Item -ItemType Directory -Force -Path 'mods/SPT-Item-Intelligence/build-status' | Out-Null
+          dotnet run --project mods/SPT-Item-Intelligence/tests/SPT-Item-Intelligence.Tests.csproj -c Release 2>&1 | Tee-Object -FilePath 'mods/SPT-Item-Intelligence/build-status/test.log'
+          $testCode=$LASTEXITCODE
+          "ITEM_TEST_EXIT_CODE=$testCode" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          exit 0
 
       - name: Build independent packages and capture logs
         shell: pwsh
@@ -87,7 +114,7 @@ jobs:
           dotnet build mods/SPT-Item-Intelligence/src/SPT-Item-Intelligence.csproj -c Release 2>&1 | Tee-Object -FilePath 'mods/SPT-Item-Intelligence/build-status/build.log'
           $itemCode=$LASTEXITCODE
           Get-Content 'mods/SPT-Tactical-HUD/build-status/client-build.log','mods/SPT-Tactical-HUD/build-status/server-build.log' | Set-Content 'mods/SPT-Tactical-HUD/build-status/build.log'
-          $code=if(($hudCode -eq 0) -and ($serverCode -eq 0) -and ($itemCode -eq 0)){0}else{1}
+          $code=if(($hudCode -eq 0) -and ($serverCode -eq 0) -and ($itemCode -eq 0) -and ($env:ASSET_EXIT_CODE -eq '0') -and ($env:ITEM_TEST_EXIT_CODE -eq '0')){0}else{1}
           "BUILD_EXIT_CODE=$code" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
 
           $hudDll="mods/SPT-Tactical-HUD/client/bin/Release/netstandard2.1/$env:HUD_NAME.dll"
@@ -121,8 +148,10 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add mods/SPT-Tactical-HUD/client/assets/hud-sprites.png
           git add mods/SPT-Tactical-HUD/build-status/build.log
+          git add mods/SPT-Tactical-HUD/build-status/quality.log
           git add mods/SPT-Tactical-HUD/build-status/hud-preview.png
           git add mods/SPT-Item-Intelligence/build-status/build.log
+          git add mods/SPT-Item-Intelligence/build-status/test.log
           git add -A build-output
           git diff --cached --quiet
           if($LASTEXITCODE -ne 0){git commit -m "Update SPT mod suite generated builds [skip ci]";git push}
