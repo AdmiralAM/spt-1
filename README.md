@@ -1,6 +1,6 @@
 # SPT Tactical HUD
 
-HUD mod for SPT 4.1.x. Current client version: **1.13.2**. The unchanged optional server companion remains **1.13.0**.
+HUD mod for SPT 4.1.x. Current client version: **1.14.0**. The unchanged optional server companion remains **1.13.0**.
 
 ## Download / repository channels
 
@@ -35,11 +35,20 @@ Direct links: [download Runtime ZIP](https://github.com/AdmiralAM/spt-1/archive/
 - CI composes a 512×384 atlas with 43 mapped cells and validates transparency, optical centering and micro-scale coverage.
 - Weapon families cover the complete approved 24-category board; unknown weapons use the cartridge icon.
 
+## Item Intelligence — Phase 1
+
+- All item/template inputs normalize into one immutable `ItemDefinition`.
+- The shared registry resolves `food`, `meds`, `ammo`, `weapon`, `armor`, `backpack`, `container`, `key`, `quest`, `barter` and `unknown` categories.
+- Semantic tags cover healing, resources, medical effects, throwable items, armor, storage and quests.
+- Exact-template and parent-template registrations override the reflection-based matcher; resolved templates are cached.
+- Unmatched or incomplete data always returns an explicit `unknown` definition.
+- Phase 1 is foundation only: it does not change HUD visuals or runtime behavior. See [the Phase 1 contract](docs/item-intelligence-phase1.md).
+
 ## Package layout
 
 Copy the contents of the versioned build folder into the SPT game root. Client-only releases contain only:
 
-- `BepInEx/plugins/SPT Tactical HUD v1.13.2` — client HUD and sprite atlas.
+- `BepInEx/plugins/SPT Tactical HUD v1.14.0` — client HUD, Item Intelligence foundation and sprite atlas.
 
 The CI package includes `SPT_Runtime/user/mods/SPT Tactical HUD Server` only when the server component itself changes.
 
