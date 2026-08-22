@@ -1,5 +1,1 @@
-D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\Program.cs(77,50): error CS1056: Unexpected character '\' [D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\SPT-Item-Intelligence.Tests.csproj]
-D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\Program.cs(77,67): error CS1003: Syntax error, ',' expected [D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\SPT-Item-Intelligence.Tests.csproj]
-D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\Program.cs(77,68): error CS1002: ; expected [D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\SPT-Item-Intelligence.Tests.csproj]
-
-The build failed. Fix the build errors and run again.
+Item Intelligence: 23 Phase 1 assertions and 28 Phase 2 assertions passed.
