@@ -11,7 +11,7 @@ using UnityEngine.SceneManagement;
 
 namespace SPTPopCounter
 {
-    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.13.1")]
+    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.13.2")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         ConfigEntry<bool> workAlways, editMode, popEnabled, statusEnabled, statusOutside, killEnabled, showVersion, killDiagnostics;
@@ -32,6 +32,9 @@ namespace SPTPopCounter
 
         readonly Dictionary<string, Tracked> tracked = new Dictionary<string, Tracked>();
         readonly Dictionary<string, object> playersByProfileId = new Dictionary<string, object>();
+        readonly List<object> refreshPlayers = new List<object>(64);
+        readonly HashSet<string> refreshSeen = new HashSet<string>(StringComparer.Ordinal);
+        readonly List<string> refreshRemoved = new List<string>(32);
         readonly Queue<string> subscribeQueue = new Queue<string>();
         readonly HashSet<string> queuedIds = new HashSet<string>();
         readonly List<KillLine> kills = new List<KillLine>();
@@ -49,7 +52,12 @@ namespace SPTPopCounter
             public EventInfo DiedEvent, DamageEvent, PlayerDamageEvent;
             public Delegate DiedHandler, DamageHandler, PlayerDamageHandler;
         }
-        sealed class KillLine { public string Killer, Victim, Weapon, Hit; public float Distance, Created; public bool HasDistance; }
+        sealed class KillLine
+        {
+            public string Killer, Victim, WeaponIcon, HitIcon, DistanceText;
+            public float Created;
+            public bool HasDistance;
+        }
         sealed class VersionTarget { public object Owner; public MemberInfo Member; public string Original; public bool WasEnabled; }
 
         void Awake()
@@ -83,7 +91,7 @@ namespace SPTPopCounter
             killY = Config.Bind("Kill Feed", "Position Y", 100f, new ConfigDescription("Top Y", new AcceptableValueRange<float>(-100, 2000)));
             killLifetime = Config.Bind("Kill Feed", "Lifetime", 6f, new ConfigDescription("Seconds", new AcceptableValueRange<float>(2, 15)));
             killMax = Config.Bind("Kill Feed", "Max Entries", 3, new ConfigDescription("Lines", new AcceptableValueRange<int>(1, 6)));
-            Logger.LogInfo("SPT Tactical HUD v1.13.1 loaded (HUD state " + mode + ")");
+            Logger.LogInfo("SPT Tactical HUD v1.13.2 loaded (HUD state " + mode + ")");
         }
 
         ConfigEntry<string> Layout(string s) => Config.Bind(s, "Layout", "Horizontal",
@@ -118,7 +126,13 @@ namespace SPTPopCounter
                 ApplyKnownVersionTargets();
                 if (versionTargets.Count == 0) ArmVersionSearch(0f);
             }
-            if (kills.Count > 0) kills.RemoveAll(k => Time.unscaledTime - k.Created > killLifetime.Value);
+            if (kills.Count > 0)
+            {
+                float now = Time.unscaledTime;
+                float lifetime = killLifetime.Value;
+                for (int i = kills.Count - 1; i >= 0; i--)
+                    if (now - kills[i].Created > lifetime) kills.RemoveAt(i);
+            }
         }
 
         void SetHudMode(int value)
@@ -155,6 +169,9 @@ namespace SPTPopCounter
 
         void Refresh()
         {
+            refreshPlayers.Clear();
+            refreshSeen.Clear();
+            refreshRemoved.Clear();
             try
             {
                 object world = GetWorld();
@@ -172,12 +189,11 @@ namespace SPTPopCounter
                     return;
                 }
 
-                var players = new List<object>();
                 object local = null;
                 foreach (object player in ps)
                 {
                     if (!IsUsableUnityObject(player)) continue;
-                    players.Add(player);
+                    refreshPlayers.Add(player);
                     if (IsTrue(ReadMember(player, "IsYourPlayer"))) local = player;
                 }
 
@@ -191,11 +207,11 @@ namespace SPTPopCounter
                 SetRaidState(true);
 
                 int p = 0, s = 0, b = 0, r = 0;
-                var seen = new HashSet<string>(); playersByProfileId.Clear();
-                foreach (object pl in players)
+                playersByProfileId.Clear();
+                foreach (object pl in refreshPlayers)
                 {
                     string id = PlayerId(pl); if (string.IsNullOrEmpty(id)) id = pl.GetHashCode().ToString();
-                    seen.Add(id); playersByProfileId[id] = pl;
+                    refreshSeen.Add(id); playersByProfileId[id] = pl;
                     bool alive = IsAlive(pl); string kind = Kind(pl); Vector3 pos = Position(pl);
                     if (!ReferenceEquals(pl, local) && alive)
                     {
@@ -217,8 +233,12 @@ namespace SPTPopCounter
                     }
                 }
 
-                foreach (string id in tracked.Keys.Where(x => !seen.Contains(x)).ToList())
+                foreach (string id in tracked.Keys)
+                    if (!refreshSeen.Contains(id)) refreshRemoved.Add(id);
+
+                for (int i = 0; i < refreshRemoved.Count; i++)
                 {
+                    string id = refreshRemoved[i];
                     Tracked t = tracked[id];
                     if (t.Alive && !t.DeathCaptured && (t.LastDamage != null || t.LastAttacker != null)) CaptureDeath(t);
                     Unsubscribe(t); tracked.Remove(id); queuedIds.Remove(id);
@@ -227,6 +247,12 @@ namespace SPTPopCounter
                 pmc = p; scav = s; boss = b; reinforced = r; RefreshStatus(local);
             }
             catch (Exception ex) { Logger.LogWarning("HUD refresh: " + ex.Message); }
+            finally
+            {
+                refreshPlayers.Clear();
+                refreshSeen.Clear();
+                refreshRemoved.Clear();
+            }
         }
 
         void SetRaidState(bool value)
@@ -414,7 +440,17 @@ namespace SPTPopCounter
                 if (ap != Vector3.zero && t.Pos != Vector3.zero) { dist = Vector3.Distance(ap, t.Pos); hasDist = true; }
             }
             else DiagnoseDeath(t.Player, hc, info);
-            kills.Add(new KillLine { Killer = killer, Victim = victim, Weapon = weapon, Hit = hit, Distance = dist, HasDistance = hasDist, Created = Time.unscaledTime });
+            string cleanWeapon = HudVisualRenderer.CleanWeapon(weapon);
+            kills.Add(new KillLine
+            {
+                Killer = killer,
+                Victim = victim,
+                WeaponIcon = HudVisualRenderer.WeaponKey(cleanWeapon),
+                HitIcon = HudVisualRenderer.HitKey(hit),
+                DistanceText = hasDist ? Mathf.RoundToInt(dist) + "m" : string.Empty,
+                HasDistance = hasDist,
+                Created = Time.unscaledTime
+            });
         }
 
         string ResolveWeaponFromDamage(object info)

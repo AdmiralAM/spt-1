@@ -1,6 +1,6 @@
 # SPT Tactical HUD
 
-HUD mod for SPT 4.1.x. Current client version: **1.13.1**. The unchanged optional server companion remains **1.13.0**.
+HUD mod for SPT 4.1.x. Current client version: **1.13.2**. The unchanged optional server companion remains **1.13.0**.
 
 ## HUD clusters
 
@@ -18,6 +18,7 @@ HUD mod for SPT 4.1.x. Current client version: **1.13.1**. The unchanged optiona
 - The native SPT version label is hidden by default. Detection is scene-driven and limited to text-component types; there is no recurring global Unity object scan.
 - The server component performs no gameplay work and emits one successful-load line in the SPT server console.
 - Role and body pictograms use a cached light contrast plate with a strong category-colored rim; weapon silhouettes retain a dark plate. Hydration, energy, weight and weight-state glyphs render directly on the HUD with no circular plate or rim. No per-frame texture allocation.
+- Runtime hot paths reuse refresh collections and GUI measurement content. Kill-feed icon classification is cached when a death is recorded, and mouse/edit events use cached cluster hitboxes instead of rebuilding the visual layout.
 
 ## Asset pipeline
 
@@ -29,6 +30,6 @@ HUD mod for SPT 4.1.x. Current client version: **1.13.1**. The unchanged optiona
 
 Copy the contents of the versioned build folder into the SPT game root. Client-only releases contain only:
 
-- `BepInEx/plugins/SPT Tactical HUD v1.13.1` — client HUD and sprite atlas.
+- `BepInEx/plugins/SPT Tactical HUD v1.13.2` — client HUD and sprite atlas.
 
 The CI package includes `SPT_Runtime/user/mods/SPT Tactical HUD Server` only when the server component itself changes.

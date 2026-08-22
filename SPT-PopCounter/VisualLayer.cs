@@ -32,14 +32,43 @@ namespace SPTPopCounter
             static readonly Color Energy = new Color(.86f, .70f, .31f, 1f);
             static readonly Color WeightInk = new Color(.82f, .84f, .82f, 1f);
 
+            static readonly string[] LauncherTokens = { "rpg", "fn40gl", "m32", "gp-25", "grenade launcher", "launcher" };
+            static readonly string[] ImpactTokens = { "rgo", "rgn", "impact grenade" };
+            static readonly string[] FragTokens = { "f-1", "rgd-5", "m67", "vog-17", "vog-25", "grenade" };
+            static readonly string[] IncendiaryTokens = { "molotov", "thermite", "incendiary" };
+            static readonly string[] RevolverTokens = { "revolver", "rsh-12", "chiappa" };
+            static readonly string[] SawedOffTokens = { "sawed", "mp-43-1c", "mp-43 1c" };
+            static readonly string[] SemiShotgunTokens = { "saiga-12", "mp-153", "mp-155", "benelli", "m3 super", "aa-12" };
+            static readonly string[] PumpShotgunTokens = { "mp-133", "m870", "590a1", "ks-23", "toz-106", "shotgun" };
+            static readonly string[] BoltTokens = { "m700", "dvl", "t-5000", "mosin", "axmc", "vpo-215", "sv-98" };
+            static readonly string[] DmrTokens = { "sr-25", "rsass", "m1a", "mk18", "rfb", "svds", "svd", "vss" };
+            static readonly string[] LmgTokens = { "rpk", "pkm", "pkp", "rpd", "m249", "machine gun", "lmg" };
+            static readonly string[] PccTokens = { "stm-9", "saiga-9", "pistol caliber carbine", "pcc" };
+            static readonly string[] SmgTokens = { "mp5", "mp7", "mp9", "pp-", "pp19", "vector", "ump", "p90", "kedr", "klin", "ppsh", "sr-2" };
+            static readonly string[] CarbineTokens = { "adar", "tx-15", "tx15", "vpo-136", "sag ak", "carbine" };
+            static readonly string[] AssaultTokens = { "ak", "rd-704", "vpo-209", "m4", "hk416", "hk 416", "m16", "mdr", "scar", "aug", "g36", "mcx", "as val" };
+            static readonly string[] PistolTokens = { "glock", "p226", "m9", "tt", "usp", "five-seven", "1911", "aps", "pm pistol", "makarov", "pistol" };
+            static readonly string[] ThrowingTokens = { "throwing knife", "kunai" };
+            static readonly string[] MeleeTokens = { "knife", "axe", "machete", "sword", "crowbar", "melee" };
+            static readonly string[] ExplosiveTokens = { "mine", "explosive", "c4", "ied" };
+            static readonly string[] SpecialTokens = { "flare", "signal", "special weapon" };
+            static readonly string[] ToolTokens = { "tool", "multitool" };
+            static readonly string[] WeightIcons = { "weight1", "weight1", "weight2", "weight3" };
+
             readonly Plugin runtime;
             readonly HudIcons icons;
             readonly Font hudFont;
             readonly Texture2D medallionPlate;
             readonly Texture2D medallionRing;
+            readonly GUIContent textContent = new GUIContent();
             GUIStyle text;
             int dragCluster;
             Vector2 dragOffset;
+            Rect populationEditRect, statusEditRect, killEditRect;
+            bool populationEditRectValid, statusEditRectValid, killEditRectValid;
+            int cachedPmc = int.MinValue, cachedScav = int.MinValue, cachedBoss = int.MinValue, cachedRaider = int.MinValue;
+            int cachedHydration = int.MinValue, cachedEnergy = int.MinValue, cachedWeight = int.MinValue;
+            string pmcText, scavText, bossText, raiderText, hydrationText, energyText, weightText;
 
             public HudVisualRenderer(Plugin runtime)
             {
@@ -99,14 +128,30 @@ namespace SPTPopCounter
                                      eventType == EventType.MouseDrag || eventType == EventType.MouseUp;
                 if (!relevantEvent) return;
 
-                if ((runtime.inRaid || debug) && (runtime.mode >= 1 || editing) && runtime.popEnabled.Value)
+                bool showPopulation = (runtime.inRaid || debug) && (runtime.mode >= 1 || editing) && runtime.popEnabled.Value;
+                bool showStatus = (runtime.inRaid || debug || runtime.statusOutside.Value) &&
+                                  (runtime.mode >= 2 || editing) && runtime.statusEnabled.Value;
+                bool showKillFeed = (runtime.inRaid || debug) && runtime.killEnabled.Value;
+
+                if (eventType != EventType.Repaint)
+                {
+                    if (!editing) return;
+                    if (showPopulation && populationEditRectValid)
+                        EditSurface(1, populationEditRect, runtime.popX, runtime.popY, true);
+                    if (showStatus && statusEditRectValid)
+                        EditSurface(2, statusEditRect, runtime.statusX, runtime.statusY, true);
+                    if (showKillFeed && killEditRectValid)
+                        EditSurface(3, killEditRect, runtime.killX, runtime.killY, false);
+                    return;
+                }
+
+                if (showPopulation)
                     DrawPopulation();
 
-                if ((runtime.inRaid || debug || runtime.statusOutside.Value) &&
-                    (runtime.mode >= 2 || editing) && runtime.statusEnabled.Value)
+                if (showStatus)
                     DrawStatus();
 
-                if ((runtime.inRaid || debug) && runtime.killEnabled.Value)
+                if (showKillFeed)
                     DrawKillFeed(editing);
             }
 
@@ -136,16 +181,17 @@ namespace SPTPopCounter
                 float effective = Mathf.Clamp01(opacity * alphaScale);
                 Color main = color;
                 main.a *= effective;
-                float width = text.CalcSize(new GUIContent(value)).x;
+                textContent.text = value;
+                float width = text.CalcSize(textContent).x;
                 Rect r = new Rect(root.x + x, root.y + y, width + 4, size + 7);
                 Color old = text.normal.textColor;
 
                 if (Event.current.type == EventType.Repaint)
                 {
                     text.normal.textColor = new Color(0, 0, 0, Mathf.Clamp01(effective * .78f));
-                    GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), value, text);
+                    GUI.Label(new Rect(r.x + 1, r.y + 1, r.width, r.height), textContent, text);
                     text.normal.textColor = main;
-                    GUI.Label(r, value, text);
+                    GUI.Label(r, textContent, text);
                     text.normal.textColor = old;
                 }
 
@@ -200,8 +246,19 @@ namespace SPTPopCounter
             static bool Vertical(ConfigEntry<string> layout) =>
                 string.Equals(layout.Value, "Vertical", StringComparison.OrdinalIgnoreCase);
 
+            static string CachedInt(int value, ref int cachedValue, ref string cachedText)
+            {
+                if (value != cachedValue || cachedText == null)
+                {
+                    cachedValue = value;
+                    cachedText = value.ToString();
+                }
+                return cachedText;
+            }
+
             void EditSurface(int id, Rect r, ConfigEntry<float> xEntry, ConfigEntry<float> yEntry, bool fromBottom)
             {
+                CacheEditRect(id, r);
                 if (!runtime.editMode.Value) return;
 
                 if (Event.current.type == EventType.Repaint)
@@ -227,6 +284,7 @@ namespace SPTPopCounter
                     p.y = Mathf.Clamp(p.y, -r.height + 6, Screen.height - 6);
                     if (xEntry != null) xEntry.Value = p.x;
                     if (yEntry != null) yEntry.Value = fromBottom ? Screen.height - p.y - r.height : p.y;
+                    CacheEditRect(id, new Rect(p.x, p.y, r.width, r.height));
                     e.Use();
                 }
 
@@ -236,6 +294,13 @@ namespace SPTPopCounter
                     try { runtime.Config.Save(); } catch { }
                     e.Use();
                 }
+            }
+
+            void CacheEditRect(int id, Rect r)
+            {
+                if (id == 1) { populationEditRect = r; populationEditRectValid = true; }
+                else if (id == 2) { statusEditRect = r; statusEditRectValid = true; }
+                else if (id == 3) { killEditRect = r; killEditRectValid = true; }
             }
 
             void DrawPopulation()
@@ -248,24 +313,28 @@ namespace SPTPopCounter
                 Rect root = new Rect(runtime.popX.Value, Screen.height - runtime.popY.Value - height,
                     vertical ? 90 : 300, height);
                 float x = 0;
+                string currentPmc = CachedInt(runtime.pmc, ref cachedPmc, ref pmcText);
+                string currentScav = CachedInt(runtime.scav, ref cachedScav, ref scavText);
+                string currentBoss = CachedInt(runtime.boss, ref cachedBoss, ref bossText);
+                string currentRaider = CachedInt(runtime.reinforced, ref cachedRaider, ref raiderText);
 
                 if (vertical)
                 {
                     float maxX = 0;
                     x = Icon(root, "usec", 0, 0, size, opacity, runtime.pmcColor.Value, .90f);
-                    x = Text(root, runtime.pmc.ToString(), Gap(x, 3), 0, size, opacity, Neutral);
+                    x = Text(root, currentPmc, Gap(x, 3), 0, size, opacity, Neutral);
                     maxX = Mathf.Max(maxX, x);
 
                     x = Icon(root, "scav", 0, rowHeight, size, opacity, runtime.scavColor.Value, .90f);
-                    x = Text(root, runtime.scav.ToString(), Gap(x, 3), rowHeight, size, opacity, Neutral);
+                    x = Text(root, currentScav, Gap(x, 3), rowHeight, size, opacity, Neutral);
                     maxX = Mathf.Max(maxX, x);
 
                     x = Icon(root, "boss", 0, rowHeight * 2, size, opacity, runtime.bossColor.Value, .90f);
-                    x = Text(root, runtime.boss.ToString(), Gap(x, 3), rowHeight * 2, size, opacity, Neutral);
+                    x = Text(root, currentBoss, Gap(x, 3), rowHeight * 2, size, opacity, Neutral);
                     maxX = Mathf.Max(maxX, x);
 
                     x = Icon(root, "raider", 0, rowHeight * 3, size, opacity, runtime.reinforcedColor.Value, .90f);
-                    x = Text(root, runtime.reinforced.ToString(), Gap(x, 3), rowHeight * 3, size, opacity, Neutral);
+                    x = Text(root, currentRaider, Gap(x, 3), rowHeight * 3, size, opacity, Neutral);
                     maxX = Mathf.Max(maxX, x);
 
                     EditSurface(1, new Rect(root.x, root.y, Mathf.Max(28, maxX), height), runtime.popX, runtime.popY, true);
@@ -274,19 +343,19 @@ namespace SPTPopCounter
 
                 x = Icon(root, "usec", x, 0, size, opacity, runtime.pmcColor.Value, .90f);
                 x = Gap(x, 3);
-                x = Text(root, runtime.pmc.ToString(), x, 0, size, opacity, Neutral);
+                x = Text(root, currentPmc, x, 0, size, opacity, Neutral);
                 x = Gap(x, 7);
                 x = Icon(root, "scav", x, 0, size, opacity, runtime.scavColor.Value, .90f);
                 x = Gap(x, 3);
-                x = Text(root, runtime.scav.ToString(), x, 0, size, opacity, Neutral);
+                x = Text(root, currentScav, x, 0, size, opacity, Neutral);
                 x = Gap(x, 7);
                 x = Icon(root, "boss", x, 0, size, opacity, runtime.bossColor.Value, .90f);
                 x = Gap(x, 3);
-                x = Text(root, runtime.boss.ToString(), x, 0, size, opacity, Neutral);
+                x = Text(root, currentBoss, x, 0, size, opacity, Neutral);
                 x = Gap(x, 7);
                 x = Icon(root, "raider", x, 0, size, opacity, runtime.reinforcedColor.Value, .90f);
                 x = Gap(x, 3);
-                x = Text(root, runtime.reinforced.ToString(), x, 0, size, opacity, Neutral);
+                x = Text(root, currentRaider, x, 0, size, opacity, Neutral);
 
                 EditSurface(1, new Rect(root.x, root.y, Mathf.Max(28, x), height), runtime.popX, runtime.popY, true);
             }
@@ -300,6 +369,9 @@ namespace SPTPopCounter
                 float height = vertical ? rowHeight * 3 : size + 9;
                 Rect root = new Rect(runtime.statusX.Value, Screen.height - runtime.statusY.Value - height,
                     vertical ? 125 : 300, height);
+                string currentHydration = CachedInt(Mathf.RoundToInt(runtime.hydration), ref cachedHydration, ref hydrationText);
+                string currentEnergy = CachedInt(Mathf.RoundToInt(runtime.energy), ref cachedEnergy, ref energyText);
+                string currentWeight = CachedInt(Mathf.RoundToInt(runtime.weight), ref cachedWeight, ref weightText);
 
                 Color weightColor = runtime.weightOk.Value;
                 int severity = 1;
@@ -319,17 +391,17 @@ namespace SPTPopCounter
                 {
                     float maxX = 0;
                     x = Icon(root, "water", 0, 0, size, opacity, Water, .90f);
-                    x = Text(root, Mathf.RoundToInt(runtime.hydration).ToString(), Gap(x, 3), 0, size, opacity, Neutral);
+                    x = Text(root, currentHydration, Gap(x, 3), 0, size, opacity, Neutral);
                     maxX = Mathf.Max(maxX, x);
 
                     x = Icon(root, "energy", 0, rowHeight, size, opacity, Energy, .90f);
-                    x = Text(root, Mathf.RoundToInt(runtime.energy).ToString(), Gap(x, 3), rowHeight, size, opacity, Neutral);
+                    x = Text(root, currentEnergy, Gap(x, 3), rowHeight, size, opacity, Neutral);
                     maxX = Mathf.Max(maxX, x);
 
                     x = Icon(root, "weight", 0, rowHeight * 2, size, opacity, WeightInk, 1.05f);
-                    x = Text(root, Mathf.RoundToInt(runtime.weight).ToString(), Gap(x, 3), rowHeight * 2, size, opacity, Neutral);
+                    x = Text(root, currentWeight, Gap(x, 3), rowHeight * 2, size, opacity, Neutral);
                     x = Text(root, "kg", x, rowHeight * 2 + 1, Mathf.Max(8, size - 2), opacity, Muted, .82f);
-                    x = Icon(root, "weight" + severity, Gap(x, 3), rowHeight * 2 + 2, size, opacity, weightColor, .70f);
+                    x = Icon(root, WeightIcons[severity], Gap(x, 3), rowHeight * 2 + 2, size, opacity, weightColor, .70f);
                     maxX = Mathf.Max(maxX, x);
 
                     EditSurface(2, new Rect(root.x, root.y, Mathf.Max(28, maxX), height), runtime.statusX, runtime.statusY, true);
@@ -337,15 +409,15 @@ namespace SPTPopCounter
                 }
 
                 x = Icon(root, "water", x, 0, size, opacity, Water, .90f);
-                x = Text(root, Mathf.RoundToInt(runtime.hydration).ToString(), Gap(x, 3), 0, size, opacity, Neutral);
+                x = Text(root, currentHydration, Gap(x, 3), 0, size, opacity, Neutral);
                 x = Gap(x, 8);
                 x = Icon(root, "energy", x, 0, size, opacity, Energy, .90f);
-                x = Text(root, Mathf.RoundToInt(runtime.energy).ToString(), Gap(x, 3), 0, size, opacity, Neutral);
+                x = Text(root, currentEnergy, Gap(x, 3), 0, size, opacity, Neutral);
                 x = Gap(x, 8);
                 x = Icon(root, "weight", x, 0, size, opacity, WeightInk, 1.05f);
-                x = Text(root, Mathf.RoundToInt(runtime.weight).ToString(), Gap(x, 3), 0, size, opacity, Neutral);
+                x = Text(root, currentWeight, Gap(x, 3), 0, size, opacity, Neutral);
                 x = Text(root, "kg", x, 1, Mathf.Max(8, size - 2), opacity, Muted, .82f);
-                x = Icon(root, "weight" + severity, Gap(x, 3), 2, size, opacity, weightColor, .70f);
+                x = Icon(root, WeightIcons[severity], Gap(x, 3), 2, size, opacity, weightColor, .70f);
 
                 EditSurface(2, new Rect(root.x, root.y, Mathf.Max(28, x), height), runtime.statusX, runtime.statusY, true);
             }
@@ -370,7 +442,8 @@ namespace SPTPopCounter
                 if (runtime.kills.Count == 0)
                 {
                     if (editing)
-                        DrawKillRow(root, "Self", "Scav", "AK-74", "Head", 187f, true, 0, 1f, displayMode, size, opacity);
+                        DrawKillRow(root, "Self", "Scav", "weapon_assault", "head", "187m", true,
+                            0, 1f, displayMode, size, opacity);
                     return;
                 }
 
@@ -381,12 +454,12 @@ namespace SPTPopCounter
                     KillLine k = runtime.kills[i];
                     float age = Time.unscaledTime - k.Created;
                     float fade = Mathf.Clamp01((life - age) / fadeWindow);
-                    DrawKillRow(root, k.Killer, k.Victim, CleanWeapon(k.Weapon), k.Hit, k.Distance, k.HasDistance,
+                    DrawKillRow(root, k.Killer, k.Victim, k.WeaponIcon, k.HitIcon, k.DistanceText, k.HasDistance,
                         shown, fade, displayMode, size, opacity);
                 }
             }
 
-            void DrawKillRow(Rect r, string killer, string victim, string weapon, string hit, float distance,
+            void DrawKillRow(Rect r, string killer, string victim, string weaponIcon, string hitIcon, string distanceText,
                 bool hasDistance, int row, float fade, string displayMode, int size, float opacity)
             {
                 float y = row * (size + 14);
@@ -400,7 +473,7 @@ namespace SPTPopCounter
 
                 if (displayMode != "Minimal")
                 {
-                    x = Icon(r, WeaponKey(weapon), x, y - 2, size, op, Neutral, 1.35f);
+                    x = Icon(r, weaponIcon, x, y - 2, size, op, Neutral, 1.35f);
                     x = Gap(x, 4);
                 }
 
@@ -411,13 +484,12 @@ namespace SPTPopCounter
                     if (displayMode == "Detailed")
                     {
                         x = Gap(x, 6);
-                        string hitKey = HitKey(hit);
-                        x = Icon(r, hitKey, x, y, size, op, hitKey == "head" ? Head : Muted, 1f);
+                        x = Icon(r, hitIcon, x, y, size, op, hitIcon == "head" ? Head : Muted, 1f);
                     }
                     if (hasDistance)
                     {
                         x = Gap(x, 1);
-                        x = Text(r, Mathf.RoundToInt(distance) + "m", x, y + 1, Mathf.Max(8, size - 1), op, Muted, .90f);
+                        x = Text(r, distanceText, x, y + 1, Mathf.Max(8, size - 1), op, Muted, .90f);
                     }
                 }
             }
@@ -442,21 +514,21 @@ namespace SPTPopCounter
                 return "usec";
             }
 
-            static string HitKey(string hit)
+            internal static string HitKey(string hit)
             {
-                hit = (hit ?? string.Empty).ToLowerInvariant();
-                if (hit.Contains("head")) return "head";
-                if (hit.Contains("leftarm") || hit.Contains("left arm")) return "left_arm";
-                if (hit.Contains("rightarm") || hit.Contains("right arm")) return "right_arm";
-                if (hit.Contains("leftleg") || hit.Contains("left leg")) return "left_leg";
-                if (hit.Contains("rightleg") || hit.Contains("right leg")) return "right_leg";
-                if (hit.Contains("arm")) return "left_arm";
-                if (hit.Contains("leg")) return "left_leg";
-                if (hit.Contains("stomach")) return "stomach";
+                if (string.IsNullOrEmpty(hit)) return "torso";
+                if (Contains(hit, "head")) return "head";
+                if (Contains(hit, "leftarm") || Contains(hit, "left arm")) return "left_arm";
+                if (Contains(hit, "rightarm") || Contains(hit, "right arm")) return "right_arm";
+                if (Contains(hit, "leftleg") || Contains(hit, "left leg")) return "left_leg";
+                if (Contains(hit, "rightleg") || Contains(hit, "right leg")) return "right_leg";
+                if (Contains(hit, "arm")) return "left_arm";
+                if (Contains(hit, "leg")) return "left_leg";
+                if (Contains(hit, "stomach")) return "stomach";
                 return "torso";
             }
 
-            static string CleanWeapon(string raw)
+            internal static string CleanWeapon(string raw)
             {
                 if (string.IsNullOrWhiteSpace(raw)) return "?";
                 string s = raw.Trim();
@@ -474,42 +546,44 @@ namespace SPTPopCounter
                 return s;
             }
 
-            static string WeaponKey(string weapon)
+            internal static string WeaponKey(string weapon)
             {
-                string w = (weapon ?? string.Empty).ToLowerInvariant();
-                if (string.IsNullOrWhiteSpace(w) || w == "?") return "weapon_unknown";
-                if (HasAny(w, "rpg", "fn40gl", "m32", "gp-25", "grenade launcher", "launcher")) return "weapon_launcher";
-                if (HasAny(w, "rgo", "rgn", "impact grenade")) return "weapon_impact";
-                if (HasAny(w, "f-1", "rgd-5", "m67", "vog-17", "vog-25", "grenade")) return "weapon_frag";
-                if (HasAny(w, "molotov", "thermite", "incendiary")) return "weapon_incendiary";
-                if (HasAny(w, "revolver", "rsh-12", "chiappa")) return "weapon_revolver";
-                if (HasAny(w, "sawed", "mp-43-1c", "mp-43 1c")) return "weapon_shotgun_sawedoff";
-                if (HasAny(w, "saiga-12", "mp-153", "mp-155", "benelli", "m3 super", "aa-12")) return "weapon_shotgun_semi";
-                if (HasAny(w, "mp-133", "m870", "590a1", "ks-23", "toz-106", "shotgun")) return "weapon_shotgun_pump";
-                if (HasAny(w, "m700", "dvl", "t-5000", "mosin", "axmc", "vpo-215", "sv-98")) return "weapon_bolt";
-                if (HasAny(w, "sr-25", "rsass", "m1a", "mk18", "rfb", "svds", "svd", "vss")) return "weapon_dmr";
-                if (HasAny(w, "rpk", "pkm", "pkp", "rpd", "m249", "machine gun", "lmg")) return "weapon_lmg";
-                if (HasAny(w, "stm-9", "saiga-9", "pistol caliber carbine", "pcc")) return "weapon_pcc";
-                if (HasAny(w, "mp5", "mp7", "mp9", "pp-", "pp19", "vector", "ump", "p90", "kedr", "klin", "ppsh", "sr-2")) return "weapon_smg";
-                if (HasAny(w, "adar", "tx-15", "tx15", "vpo-136", "sag ak", "carbine")) return "weapon_carbine";
-                if (HasAny(w, "ak", "rd-704", "vpo-209", "m4", "hk416", "hk 416", "m16", "mdr", "scar", "aug", "g36", "mcx", "as val")) return "weapon_assault";
-                if (HasAny(w, "glock", "p226", "m9", "tt", "usp", "five-seven", "1911", "aps", "pm pistol", "makarov", "pistol")) return "weapon_pistol";
-                if (HasAny(w, "throwing knife", "kunai")) return "weapon_throwing";
-                if (HasAny(w, "knife", "axe", "machete", "sword", "crowbar", "melee")) return "weapon_melee";
-                if (HasAny(w, "crossbow")) return "weapon_crossbow";
-                if (HasAny(w, "mine", "explosive", "c4", "ied")) return "weapon_explosive";
-                if (HasAny(w, "flare", "signal", "special weapon")) return "weapon_special";
-                if (HasAny(w, "tool", "multitool")) return "weapon_tool";
-                if (HasAny(w, "sniper")) return "weapon_sniper";
+                if (string.IsNullOrWhiteSpace(weapon) || weapon == "?") return "weapon_unknown";
+                if (HasAny(weapon, LauncherTokens)) return "weapon_launcher";
+                if (HasAny(weapon, ImpactTokens)) return "weapon_impact";
+                if (HasAny(weapon, FragTokens)) return "weapon_frag";
+                if (HasAny(weapon, IncendiaryTokens)) return "weapon_incendiary";
+                if (HasAny(weapon, RevolverTokens)) return "weapon_revolver";
+                if (HasAny(weapon, SawedOffTokens)) return "weapon_shotgun_sawedoff";
+                if (HasAny(weapon, SemiShotgunTokens)) return "weapon_shotgun_semi";
+                if (HasAny(weapon, PumpShotgunTokens)) return "weapon_shotgun_pump";
+                if (HasAny(weapon, BoltTokens)) return "weapon_bolt";
+                if (HasAny(weapon, DmrTokens)) return "weapon_dmr";
+                if (HasAny(weapon, LmgTokens)) return "weapon_lmg";
+                if (HasAny(weapon, PccTokens)) return "weapon_pcc";
+                if (HasAny(weapon, SmgTokens)) return "weapon_smg";
+                if (HasAny(weapon, CarbineTokens)) return "weapon_carbine";
+                if (HasAny(weapon, AssaultTokens)) return "weapon_assault";
+                if (HasAny(weapon, PistolTokens)) return "weapon_pistol";
+                if (HasAny(weapon, ThrowingTokens)) return "weapon_throwing";
+                if (HasAny(weapon, MeleeTokens)) return "weapon_melee";
+                if (Contains(weapon, "crossbow")) return "weapon_crossbow";
+                if (HasAny(weapon, ExplosiveTokens)) return "weapon_explosive";
+                if (HasAny(weapon, SpecialTokens)) return "weapon_special";
+                if (HasAny(weapon, ToolTokens)) return "weapon_tool";
+                if (Contains(weapon, "sniper")) return "weapon_sniper";
                 return "weapon_unknown";
             }
 
-            static bool HasAny(string value, params string[] tokens)
+            static bool HasAny(string value, string[] tokens)
             {
                 foreach (string token in tokens)
-                    if (value.Contains(token)) return true;
+                    if (Contains(value, token)) return true;
                 return false;
             }
+
+            static bool Contains(string value, string token) =>
+                value.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0;
         }
     }
 }

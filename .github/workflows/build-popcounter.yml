@@ -43,6 +43,7 @@ jobs:
           python tools/normalize_hud_sprites.py
           python tools/check_hud_assets.py
           python tools/check_hud_optics.py
+          python tools/check_hud_hotpaths.py
           python tools/generate_hud_preview.py
       - name: Download BepInEx 5
         shell: pwsh
