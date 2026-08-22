@@ -26,12 +26,14 @@ jobs:
           if([string]::IsNullOrWhiteSpace($version)){ throw 'Version missing from csproj' }
           "HUD_VERSION=$version" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "HUD_NAME=SPT Tactical HUD v$version" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
-      - name: Generate HUD assets, quality gate and visual simulation
+      - name: Generate HUD assets, normalize optics, quality gate and visual simulation
         shell: pwsh
         run: |
           python -m pip install --disable-pip-version-check pillow
           python tools/generate_hud_sprites.py
+          python tools/normalize_hud_sprites.py
           python tools/check_hud_assets.py
+          python tools/check_hud_optics.py
           python tools/generate_hud_preview.py
       - name: Download BepInEx 5
         shell: pwsh
