@@ -75,7 +75,8 @@ static class Program
         Expect(object.ReferenceEquals(cachedA, cachedB), "template definitions are cached");
 
         int phase2Assertions = Phase2Tests.Run();
-        Console.WriteLine("Item Intelligence: " + assertions + " Phase 1 assertions and " + phase2Assertions + " Phase 2 assertions passed.");
+        int phase3Assertions = Phase3Tests.Run();
+        Console.WriteLine("Item Intelligence: " + assertions + " Phase 1, " + phase2Assertions + " Phase 2 and " + phase3Assertions + " Phase 3 assertions passed.");
     }
 
     static ItemDefinition Resolve(ItemRegistry registry, string id, string type, IDictionary<string, object> signals)

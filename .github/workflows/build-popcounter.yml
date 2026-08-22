@@ -35,14 +35,17 @@ jobs:
           [xml]$hudProj = Get-Content 'mods/SPT-Tactical-HUD/client/SPT-Tactical-HUD.csproj'
           [xml]$serverProj = Get-Content 'mods/SPT-Tactical-HUD/server/SPT-TacticalHUD-Server.csproj'
           [xml]$itemProj = Get-Content 'mods/SPT-Item-Intelligence/src/SPT-Item-Intelligence.csproj'
+          [xml]$itemServerProj = Get-Content 'mods/SPT-Item-Intelligence/server/SPT-Item-Intelligence.Server.csproj'
           $hudVersion = $hudProj.Project.PropertyGroup.Version
           $serverVersion = $serverProj.Project.PropertyGroup.Version
           $itemVersion = $itemProj.Project.PropertyGroup.Version
+          $itemServerVersion = $itemServerProj.Project.PropertyGroup.Version
           if([string]::IsNullOrWhiteSpace($hudVersion) -or [string]::IsNullOrWhiteSpace($itemVersion)){ throw 'Mod version missing' }
           "HUD_VERSION=$hudVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "HUD_NAME=SPT Tactical HUD v$hudVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "SERVER_VERSION=$serverVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "ITEM_VERSION=$itemVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "ITEM_SERVER_VERSION=$itemServerVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "ITEM_NAME=SPT Item Intelligence v$itemVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           $serverChanged=$true
           git rev-parse "$env:GITHUB_SHA^" 2>$null | Out-Null
@@ -92,7 +95,7 @@ jobs:
           if(-not $downloaded){throw 'BepInEx download failed'}
           Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
 
-      - name: Validate Item Intelligence Phase 2
+      - name: Validate Item Intelligence Phase 3
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path 'mods/SPT-Item-Intelligence/build-status' | Out-Null
@@ -111,16 +114,20 @@ jobs:
           $hudCode=$LASTEXITCODE
           dotnet build mods/SPT-Tactical-HUD/server/SPT-TacticalHUD-Server.csproj -c Release 2>&1 | Tee-Object -FilePath 'mods/SPT-Tactical-HUD/build-status/server-build.log'
           $serverCode=$LASTEXITCODE
-          dotnet build mods/SPT-Item-Intelligence/src/SPT-Item-Intelligence.csproj -c Release 2>&1 | Tee-Object -FilePath 'mods/SPT-Item-Intelligence/build-status/build.log'
+          dotnet build mods/SPT-Item-Intelligence/src/SPT-Item-Intelligence.csproj -c Release 2>&1 | Tee-Object -FilePath 'mods/SPT-Item-Intelligence/build-status/client-build.log'
           $itemCode=$LASTEXITCODE
+          dotnet build mods/SPT-Item-Intelligence/server/SPT-Item-Intelligence.Server.csproj -c Release 2>&1 | Tee-Object -FilePath 'mods/SPT-Item-Intelligence/build-status/server-build.log'
+          $itemServerCode=$LASTEXITCODE
           Get-Content 'mods/SPT-Tactical-HUD/build-status/client-build.log','mods/SPT-Tactical-HUD/build-status/server-build.log' | Set-Content 'mods/SPT-Tactical-HUD/build-status/build.log'
-          $code=if(($hudCode -eq 0) -and ($serverCode -eq 0) -and ($itemCode -eq 0) -and ($env:ASSET_EXIT_CODE -eq '0') -and ($env:ITEM_TEST_EXIT_CODE -eq '0')){0}else{1}
+          Get-Content 'mods/SPT-Item-Intelligence/build-status/client-build.log','mods/SPT-Item-Intelligence/build-status/server-build.log' | Set-Content 'mods/SPT-Item-Intelligence/build-status/build.log'
+          $code=if(($hudCode -eq 0) -and ($serverCode -eq 0) -and ($itemCode -eq 0) -and ($itemServerCode -eq 0) -and ($env:ASSET_EXIT_CODE -eq '0') -and ($env:ITEM_TEST_EXIT_CODE -eq '0')){0}else{1}
           "BUILD_EXIT_CODE=$code" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
 
           $hudDll="mods/SPT-Tactical-HUD/client/bin/Release/netstandard2.1/$env:HUD_NAME.dll"
           $serverDll='mods/SPT-Tactical-HUD/server/bin/Release/net10.0/SPT Tactical HUD Server.dll'
           $itemDll="mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/$env:ITEM_NAME.dll"
-          if((Test-Path $hudDll) -and (Test-Path $serverDll) -and (Test-Path $itemDll)){
+          $itemServerDll='mods/SPT-Item-Intelligence/server/bin/Release/net10.0/SPT Item Intelligence Server.dll'
+          if((Test-Path $hudDll) -and (Test-Path $serverDll) -and (Test-Path $itemDll) -and (Test-Path $itemServerDll)){
             Remove-Item 'build-output' -Recurse -Force -ErrorAction SilentlyContinue
 
             $hudPackage="build-output/$env:HUD_NAME"
@@ -138,6 +145,9 @@ jobs:
             $itemClient="$itemPackage/BepInEx/plugins/$env:ITEM_NAME"
             New-Item -ItemType Directory -Force -Path $itemClient | Out-Null
             Copy-Item $itemDll "$itemClient/$env:ITEM_NAME.dll" -Force
+            $itemServer="$itemPackage/SPT_Runtime/user/mods/SPT Item Intelligence Server"
+            New-Item -ItemType Directory -Force -Path $itemServer | Out-Null
+            Copy-Item $itemServerDll "$itemServer/SPT Item Intelligence Server.dll" -Force
           }
           exit 0
 
@@ -226,16 +236,19 @@ jobs:
           $itemTarget=Join-Path $itemRoot 'BepInEx/plugins/SPT Item Intelligence'
           New-Item -ItemType Directory -Force -Path $itemTarget | Out-Null
           Copy-Item $itemSource (Join-Path $itemTarget 'SPT Item Intelligence.dll') -Force
+          $itemServerSource=Join-Path $itemPackage 'SPT_Runtime'
+          Copy-Item $itemServerSource $itemRoot -Recurse -Force
           [ordered]@{
             name='SPT Item Intelligence'; channel='runtime-item-intelligence'; version=$env:ITEM_VERSION;
-            phase='2'; spt_version='4.1.x'; source_commit=$stableSha; contains_tactical_hud=$false
+            phase='3'; spt_version='4.1.x'; source_commit=$stableSha; server_version=$env:ITEM_SERVER_VERSION;
+            server_included=$true; contains_tactical_hud=$false
           } | ConvertTo-Json | Set-Content (Join-Path $itemRoot 'runtime-manifest.json') -Encoding utf8
           @"
           # SPT Item Intelligence runtime
 
           Ready-to-install standalone **SPT Item Intelligence v$env:ITEM_VERSION** for SPT **4.1.x**.
 
-          Copy this branch into the SPT root. Phase 2 supplies the semantic registry and Safe-to-Sell decision model. It adds no item UI and does not modify Tactical HUD visuals or behavior. This channel contains Item Intelligence only.
+          Copy this branch into the SPT root. Phase 3 includes the Item Intelligence client and its native SPT 4.1 server data companion. It adds no item UI and does not modify Tactical HUD visuals or behavior. This channel contains Item Intelligence only.
           Verified source commit: **$stableSha**.
           "@ | Set-Content (Join-Path $itemRoot 'README.md') -Encoding utf8
           git config user.name 'github-actions[bot]'
