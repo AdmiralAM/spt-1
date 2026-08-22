@@ -163,11 +163,11 @@ namespace SPTPopCounter
                 Rect plate = new Rect(r.x - 2, r.y - 2, r.width + 4, r.height + 4);
                 Color old = GUI.color;
 
-                GUI.color = new Color(.025f, .030f, .028f, Mathf.Clamp01(opacity * .82f));
+                GUI.color = new Color(.025f, .030f, .028f, Mathf.Clamp01(opacity * .90f));
                 GUI.DrawTexture(plate, medallionPlate, ScaleMode.StretchToFill, true);
 
                 Color rim = color;
-                rim.a = Mathf.Clamp01(opacity * .46f);
+                rim.a = Mathf.Clamp01(opacity * .62f);
                 GUI.color = rim;
                 GUI.DrawTexture(plate, medallionRing, ScaleMode.StretchToFill, true);
 
@@ -231,15 +231,19 @@ namespace SPTPopCounter
                 float x = 0;
 
                 x = Icon(root, "usec", x, 0, size, opacity, runtime.pmcColor.Value, .90f);
+                x = Gap(x, 3);
                 x = Text(root, runtime.pmc.ToString(), x, 0, size, opacity, Neutral);
                 x = Gap(x, 7);
                 x = Icon(root, "scav", x, 0, size, opacity, runtime.scavColor.Value, .90f);
+                x = Gap(x, 3);
                 x = Text(root, runtime.scav.ToString(), x, 0, size, opacity, Neutral);
                 x = Gap(x, 7);
                 x = Icon(root, "boss", x, 0, size, opacity, runtime.bossColor.Value, .90f);
+                x = Gap(x, 3);
                 x = Text(root, runtime.boss.ToString(), x, 0, size, opacity, Neutral);
                 x = Gap(x, 7);
                 x = Icon(root, "raider", x, 0, size, opacity, runtime.reinforcedColor.Value, .90f);
+                x = Gap(x, 3);
                 x = Text(root, runtime.reinforced.ToString(), x, 0, size, opacity, Neutral);
 
                 EditSurface(1, new Rect(root.x, root.y, Mathf.Max(28, x), height), runtime.popX, runtime.popY, true);
@@ -254,9 +258,11 @@ namespace SPTPopCounter
                 float x = 0;
 
                 x = Icon(root, "water", x, 0, size, opacity, Water, .90f);
+                x = Gap(x, 3);
                 x = Text(root, Mathf.RoundToInt(runtime.hydration).ToString(), x, 0, size, opacity, Neutral);
                 x = Gap(x, 8);
                 x = Icon(root, "energy", x, 0, size, opacity, Energy, .90f);
+                x = Gap(x, 3);
                 x = Text(root, Mathf.RoundToInt(runtime.energy).ToString(), x, 0, size, opacity, Neutral);
                 x = Gap(x, 8);
 
@@ -274,10 +280,11 @@ namespace SPTPopCounter
                 }
 
                 x = Icon(root, "weight", x, 0, size, opacity, Muted, .86f);
+                x = Gap(x, 3);
                 x = Text(root, Mathf.RoundToInt(runtime.weight).ToString(), x, 0, size, opacity, Neutral);
                 x = Text(root, "kg", x, 1, Mathf.Max(8, size - 2), opacity, Muted, .82f);
                 x = Gap(x, 3);
-                x = Icon(root, "weight" + severity, x, 0, size, opacity, weightColor, .70f);
+                x = Icon(root, "weight" + severity, x, 2, size, opacity, weightColor, .70f);
 
                 EditSurface(2, new Rect(root.x, root.y, Mathf.Max(28, x), height), runtime.statusX, runtime.statusY, true);
             }
@@ -327,7 +334,7 @@ namespace SPTPopCounter
                 Color killerColor = RoleColor(killer);
                 Color victimColor = RoleColor(victim);
 
-                x = Icon(r, RoleIcon(killer), x, y, size, op, killerColor, .86f);
+                x = Icon(r, RoleIcon(killer), x, y, size, op, killerColor, 1f);
                 x = Gap(x, 5);
 
                 if (displayMode != "Minimal")
@@ -336,7 +343,7 @@ namespace SPTPopCounter
                     x = Gap(x, 4);
                 }
 
-                x = Icon(r, RoleIcon(victim), x, y, size, op, victimColor, .86f);
+                x = Icon(r, RoleIcon(victim), x, y, size, op, victimColor, 1f);
 
                 if (displayMode != "Minimal")
                 {
@@ -344,7 +351,7 @@ namespace SPTPopCounter
                     {
                         x = Gap(x, 6);
                         string hitKey = HitKey(hit);
-                        x = Icon(r, hitKey, x, y, size, op, hitKey == "head" ? Head : Muted, .76f);
+                        x = Icon(r, hitKey, x, y, size, op, hitKey == "head" ? Head : Muted, 1f);
                     }
                     if (hasDistance)
                     {

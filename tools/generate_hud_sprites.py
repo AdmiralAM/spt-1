@@ -35,28 +35,6 @@ TARGETS = {
 }
 
 
-def fallback_scav() -> Image.Image:
-    scale = 4
-    icon = Image.new("RGBA", (CELL * scale, CELL * scale), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(icon)
-    fg = (224, 226, 221, 255)
-    cut = (0, 0, 0, 0)
-
-    # Unambiguous scav/bandit silhouette: knitted cap, exposed eyes and a raised face wrap.
-    # The broad shapes survive the 12–20 px runtime scale better than the old slashed shield.
-    draw.ellipse((13 * scale, 8 * scale, 51 * scale, 56 * scale), fill=fg)
-    draw.rounded_rectangle((14 * scale, 8 * scale, 50 * scale, 21 * scale), radius=5 * scale, fill=fg)
-    draw.rectangle((11 * scale, 18 * scale, 53 * scale, 24 * scale), fill=fg)
-    draw.polygon([(17 * scale, 40 * scale), (32 * scale, 33 * scale), (47 * scale, 40 * scale),
-                  (44 * scale, 57 * scale), (20 * scale, 57 * scale)], fill=fg)
-    draw.rounded_rectangle((18 * scale, 24 * scale, 46 * scale, 35 * scale), radius=4 * scale, fill=cut)
-    draw.ellipse((21 * scale, 27 * scale, 29 * scale, 32 * scale), fill=fg)
-    draw.ellipse((35 * scale, 27 * scale, 43 * scale, 32 * scale), fill=fg)
-    draw.polygon([(20 * scale, 43 * scale), (32 * scale, 37 * scale), (44 * scale, 43 * scale),
-                  (40 * scale, 47 * scale), (32 * scale, 44 * scale), (24 * scale, 47 * scale)], fill=cut)
-    return icon.resize((CELL, CELL), Image.Resampling.LANCZOS)
-
-
 def fallback_chevrons(count: int) -> Image.Image:
     icon = Image.new("RGBA", (CELL * 4, CELL * 4), (0, 0, 0, 0))
     draw = ImageDraw.Draw(icon)
@@ -120,8 +98,6 @@ def load(key: str, approved: Image.Image) -> Image.Image:
     icon = approved.crop((column * source_cell, row * source_cell, (column + 1) * source_cell, (row + 1) * source_cell))
     if alpha_bbox(icon):
         return icon
-    if key == "scav":
-        return fallback_scav()
     if key.startswith("weight") and key[-1:].isdigit():
         return fallback_chevrons(int(key[-1]))
     raise FileNotFoundError(f"Missing approved HUD source asset: {key}")

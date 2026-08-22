@@ -46,7 +46,7 @@ def paste_icon(canvas,sheet,key,x,y,size,color):
     pad=max(2,round(size*.14))
     plate_box=(x-pad,y-pad,x+size+pad,y+size+pad)
     plate=Image.new('RGBA',canvas.size,(0,0,0,0)); pd=ImageDraw.Draw(plate)
-    pd.ellipse(plate_box,fill=(6,8,7,210),outline=tuple(color[:3])+(118,),width=max(1,round(size*.08)))
+    pd.ellipse(plate_box,fill=(6,8,7,230),outline=tuple(color[:3])+(158,),width=max(1,round(size*.08)))
     canvas.alpha_composite(plate)
     im=icon(sheet,key,size,color)
     shadow=Image.new('RGBA',canvas.size,(0,0,0,0)); shadow.alpha_composite(im,(x+1,y+1)); shadow=shadow.filter(ImageFilter.GaussianBlur(.45))
@@ -65,24 +65,24 @@ def population(canvas,sheet,x,y,scale=1.0):
     d=ImageDraw.Draw(canvas); isz=max(11,round(16*scale)); ts=max(9,round(12*scale)); gap=max(5,round(7*scale))
     items=[('usec','12','pmc'),('scav','18','scav'),('boss','2','boss'),('raider','4','raider')]
     for key,num,c in items:
-        x=paste_icon(canvas,sheet,key,x,y-2,isz,COLORS[c]); x+=draw_text(d,(x,y),num,ts,COLORS['neutral'])+gap
+        x=paste_icon(canvas,sheet,key,x,y-2,isz,COLORS[c])+3; x+=draw_text(d,(x,y),num,ts,COLORS['neutral'])+gap
 
 def status(canvas,sheet,x,y,scale=1.0):
     d=ImageDraw.Draw(canvas); isz=max(11,round(16*scale)); ts=max(9,round(12*scale)); gap=max(6,round(8*scale))
     for key,val,c in [('water','86','water'),('energy','72','energy')]:
-        x=paste_icon(canvas,sheet,key,x,y-2,isz,COLORS[c]);x+=draw_text(d,(x,y),val,ts,COLORS['neutral'])+gap
-    x=paste_icon(canvas,sheet,'weight',x,y-2,max(11,isz-1),COLORS['muted']);x+=draw_text(d,(x,y),'31',ts,COLORS['neutral'])
+        x=paste_icon(canvas,sheet,key,x,y-2,isz,COLORS[c])+3;x+=draw_text(d,(x,y),val,ts,COLORS['neutral'])+gap
+    x=paste_icon(canvas,sheet,'weight',x,y-2,max(11,isz-1),COLORS['muted'])+3;x+=draw_text(d,(x,y),'31',ts,COLORS['neutral'])
     x+=draw_text(d,(x,y+2),'kg',max(8,ts-3),COLORS['muted'])+3
-    paste_icon(canvas,sheet,'weight1',x,y-1,max(10,isz-3),COLORS['ok'])
+    paste_icon(canvas,sheet,'weight1',x,y+1,max(10,isz-3),COLORS['ok'])
 
 def killrow(canvas,sheet,x,y,killer,kc,weapon,victim,vc,hit,dist,detailed=False,scale=1.0):
-    d=ImageDraw.Draw(canvas); isz=max(12,round(15*scale)); wisz=max(18,round(22*scale)); small=max(8,round(10*scale))
+    d=ImageDraw.Draw(canvas); isz=max(13,round(16*scale)); wisz=max(18,round(22*scale)); small=max(8,round(10*scale))
     x=paste_icon(canvas,sheet,killer.lower(),x,y-2,isz,COLORS[kc]);x+=max(5,round(7*scale))
     x=paste_icon(canvas,sheet,weapon,x,y-1,wisz,COLORS['neutral'])
     x+=max(3,round(4*scale))
     x=paste_icon(canvas,sheet,victim.lower(),x,y-2,isz,COLORS[vc]);x+=max(4,round(6*scale))
     if detailed:
-        x=paste_icon(canvas,sheet,hit,x,y-1,max(11,round(13*scale)),COLORS['head'] if hit=='head' else COLORS['muted'])
+        x=paste_icon(canvas,sheet,hit,x,y-2,isz,COLORS['head'] if hit=='head' else COLORS['muted'])
     x+=draw_text(d,(x+1,y+1),dist,small,COLORS['muted'])
 
 def qa_strip(canvas,sheet,x,y):

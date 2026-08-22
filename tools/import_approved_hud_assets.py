@@ -11,7 +11,7 @@ SIZE = 256
 COLS, ROWS = 8, 6
 
 CELLS = {
-    "usec": (0, 0), "bear": (1, 0), "boss": (3, 0), "raider": (4, 0),
+    "usec": (0, 0), "bear": (1, 0), "scav": (2, 0), "boss": (3, 0), "raider": (4, 0),
     "water": (5, 0), "energy": (6, 0), "weight": (7, 0), "head": (3, 1),
     "torso": (4, 1), "stomach": (5, 1), "left_arm": (6, 1), "right_arm": (7, 1),
     "left_leg": (0, 2), "right_leg": (1, 2), "self": (2, 2), "weapon_unknown": (3, 2),
@@ -26,6 +26,7 @@ CELLS = {
 SINGLES = {
     "usec": "Metallic Eagle USEC Crest.png",
     "bear": "Металлический герб «BEAR» с медвежьей лапой.png",
+    "scav": "scav.png",
     "boss": "Металлический череп в тактическом гербе.png",
     "raider": "Брутальная эмблема рейдера с черепом и винтовками.png",
     "water": "Глянцевый водный кристалл в металлической оправе.png",

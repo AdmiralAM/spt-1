@@ -11,7 +11,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "SPT Tactical HUD Server";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("1.12.0");
+    public SemanticVersioning.Version Version { get; init; } = new("1.12.1");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
@@ -25,7 +25,7 @@ public sealed class TacticalHudLoadNotice(ISptLogger<TacticalHudLoadNotice> logg
 {
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
-        logger.Success("SPT Tactical HUD v1.12.0 loaded successfully");
+        logger.Success("SPT Tactical HUD v1.12.1 loaded successfully");
         return Task.CompletedTask;
     }
 }

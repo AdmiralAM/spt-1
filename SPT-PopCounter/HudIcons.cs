@@ -36,6 +36,7 @@ namespace SPTPopCounter
                 string[] candidates =
                 {
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD","assets","hud-sprites.png"),
+                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.12.1","assets","hud-sprites.png"),
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.12.0","assets","hud-sprites.png"),
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.11.1","assets","hud-sprites.png"),
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.11.0","assets","hud-sprites.png"),
@@ -74,16 +75,15 @@ namespace SPTPopCounter
             {
                 Color[] px = sheet.GetPixels(x,y,Cell,Cell);
 
-                // Crop every atlas cell into an isolated texture before building mipmaps. This prevents
-                // neighbouring insignia from bleeding into 12–20 px HUD icons while keeping minification
-                // smoother than direct bilinear sampling from the source atlas.
-                t = new Texture2D(Cell,Cell,TextureFormat.RGBA32,true);
+                // Crop every atlas cell into an isolated, non-mipmapped UI texture. Bilinear sampling keeps
+                // edges stable while avoiding the detail washout seen in 12–20 px trilinear mip levels.
+                t = new Texture2D(Cell,Cell,TextureFormat.RGBA32,false);
                 t.name = "HUD " + key;
-                t.filterMode = FilterMode.Trilinear;
+                t.filterMode = FilterMode.Bilinear;
                 t.wrapMode = TextureWrapMode.Clamp;
                 t.anisoLevel = 1;
                 t.SetPixels(px,0);
-                t.Apply(true,true);
+                t.Apply(false,true);
                 cache[key] = t;
                 return t;
             }
