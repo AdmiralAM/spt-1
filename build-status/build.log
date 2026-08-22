@@ -1,18 +1,18 @@
   Determining projects to restore...
-  Restored D:\a\spt-1\spt-1\SPT-PopCounter\SPT-PopCounter.csproj (in 2.78 sec).
-  SPT-PopCounter -> D:\a\spt-1\spt-1\SPT-PopCounter\bin\Release\netstandard2.1\SPT Tactical HUD v1.13.1.dll
+  Restored D:\a\spt-1\spt-1\SPT-PopCounter\SPT-PopCounter.csproj (in 2.77 sec).
+  SPT-PopCounter -> D:\a\spt-1\spt-1\SPT-PopCounter\bin\Release\netstandard2.1\SPT Tactical HUD v1.13.2.dll
 
 Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:13.11
+Time Elapsed 00:00:14.93
   Determining projects to restore...
-  Restored D:\a\spt-1\spt-1\SPT-TacticalHUD-Server\SPT-TacticalHUD-Server.csproj (in 2.38 sec).
+  Restored D:\a\spt-1\spt-1\SPT-TacticalHUD-Server\SPT-TacticalHUD-Server.csproj (in 2.52 sec).
   SPT-TacticalHUD-Server -> D:\a\spt-1\spt-1\SPT-TacticalHUD-Server\bin\Release\net10.0\SPT Tactical HUD Server.dll
 
 Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:09.51
+Time Elapsed 00:00:10.28
