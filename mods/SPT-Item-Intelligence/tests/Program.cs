@@ -76,7 +76,8 @@ static class Program
 
         int phase2Assertions = Phase2Tests.Run();
         int phase3Assertions = Phase3Tests.Run();
-        Console.WriteLine("Item Intelligence: " + assertions + " Phase 1, " + phase2Assertions + " Phase 2 and " + phase3Assertions + " Phase 3 assertions passed.");
+        int phase4Assertions = Phase4Tests.Run();
+        Console.WriteLine("Item Intelligence: " + assertions + " Phase 1, " + phase2Assertions + " Phase 2, " + phase3Assertions + " Phase 3 and " + phase4Assertions + " Phase 4 assertions passed.");
     }
 
     static ItemDefinition Resolve(ItemRegistry registry, string id, string type, IDictionary<string, object> signals)

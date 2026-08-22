@@ -10,5 +10,6 @@
     <Compile Include="..\src\ItemIntelligence.cs" Link="ItemIntelligence.cs" />
     <Compile Include="..\src\SafeToSell.cs" Link="SafeToSell.cs" />
     <Compile Include="..\src\RequirementDataContract.cs" Link="RequirementDataContract.cs" />
+    <Compile Include="..\src\RequirementIndex.cs" Link="RequirementIndex.cs" />
   </ItemGroup>
 </Project>

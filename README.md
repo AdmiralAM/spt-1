@@ -5,9 +5,9 @@ This repository contains independent SPT mods. Each long-term product owns its s
 | Mod | Version | Scope | Install channel |
 | --- | --- | --- | --- |
 | [SPT Tactical HUD](mods/SPT-Tactical-HUD) | Client `1.13.2`; optional server `1.13.0` | Population, status and kill-feed HUD only | [`runtime`](https://github.com/AdmiralAM/spt-1/tree/runtime) |
-| [SPT Item Intelligence](mods/SPT-Item-Intelligence) | `0.3.0` | Safe-to-Sell + native SPT 4.1 data transport, Phase 3 | [`runtime-item-intelligence`](https://github.com/AdmiralAM/spt-1/tree/runtime-item-intelligence) |
+| [SPT Item Intelligence](mods/SPT-Item-Intelligence) | `0.4.0` | Safe-to-Sell + native SPT 4.1 transport + requirement index, Phase 4 | [`runtime-item-intelligence`](https://github.com/AdmiralAM/spt-1/tree/runtime-item-intelligence) |
 
-`SPT Tactical HUD v1.14.0` is retired: that number was created when Item Intelligence was mistakenly compiled into the HUD. The corrected current HUD is the complete stable **v1.13.2**, while the extracted Item Intelligence code started its own lifecycle at **v0.1.0** and now advances independently at **v0.3.0**.
+`SPT Tactical HUD v1.14.0` is retired: that number was created when Item Intelligence was mistakenly compiled into the HUD. The corrected current HUD is the complete stable **v1.13.2**, while the extracted Item Intelligence code started its own lifecycle at **v0.1.0** and now advances independently at **v0.4.0**.
 
 ## Repository channels
 
