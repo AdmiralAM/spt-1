@@ -288,15 +288,7 @@ namespace SPTPopCounter
                 if (displayMode != "Minimal")
                 {
                     x = Icon(r, WeaponKey(weapon), x, y, size, op, Neutral, .96f);
-                    if (displayMode == "Detailed" && weapon != "?")
-                    {
-                        x = Text(r, weapon, x, y + 1, Mathf.Max(8, size - 1), op, Muted, .94f);
-                        x = Gap(x, 6);
-                    }
-                    else
-                    {
-                        x = Gap(x, 4);
-                    }
+                    x = Gap(x, 4);
                 }
 
                 x = Icon(r, RoleIcon(victim), x, y, size, op, victimColor, .86f);
@@ -310,7 +302,12 @@ namespace SPTPopCounter
                     if (hasDistance)
                     {
                         x = Gap(x, 1);
-                        Text(r, Mathf.RoundToInt(distance) + "m", x, y + 1, Mathf.Max(8, size - 1), op, Muted, .90f);
+                        x = Text(r, Mathf.RoundToInt(distance) + "m", x, y + 1, Mathf.Max(8, size - 1), op, Muted, .90f);
+                    }
+                    if (displayMode == "Detailed" && weapon != "?")
+                    {
+                        x = Gap(x, 6);
+                        Text(r, weapon, x, y + 1, Mathf.Max(8, size - 1), op, Muted, .94f);
                     }
                 }
             }

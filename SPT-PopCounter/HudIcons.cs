@@ -29,6 +29,7 @@ namespace SPTPopCounter
                 string[] candidates =
                 {
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD","assets","hud-sprites.png"),
+                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.10.4","assets","hud-sprites.png"),
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.10.3","assets","hud-sprites.png"),
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.10.2","assets","hud-sprites.png"),
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.10.0","assets","hud-sprites.png"),

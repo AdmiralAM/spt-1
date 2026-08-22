@@ -7,27 +7,29 @@ using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace SPTPopCounter
 {
-    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.10.3")]
+    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.10.4")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         ConfigEntry<bool> workAlways, editMode, popEnabled, statusEnabled, statusOutside, killEnabled, showVersion, killDiagnostics;
         ConfigEntry<KeyboardShortcut> toggleKey;
-        ConfigEntry<int> popSize, statusSize, killSize, killMax;
+        ConfigEntry<int> savedMode, popSize, statusSize, killSize, killMax;
         ConfigEntry<string> killMode;
         ConfigEntry<float> popOpacity, statusOpacity, killOpacity, popX, popY, statusX, statusY, killX, killY, killLifetime;
         ConfigEntry<Color> pmcColor, scavColor, bossColor, reinforcedColor, weightOk, weightHeavy, weightCritical;
 
-        float nextRefresh, nextVersionSearch, nextVersionApply, nextSubscribe;
+        float nextRefresh, nextVersionSearch, nextVersionApply, nextSubscribe, nextOutsideProfileSearch;
         int mode, pmc, scav, boss, reinforced;
-        bool inRaid, previousRaidState, versionSearchPending, lastShowVersion;
+        bool inRaid, lastShowVersion;
         float hydration, energy, weight, overweightLimit, walkDrainLimit;
         GUIStyle text, shadow;
         Type worldType, singletonType;
         PropertyInfo singletonInstance;
         MemberInfo playersMember;
+        object outsideProfile;
         Vector2 dragOffset;
         int dragCluster;
 
@@ -62,11 +64,13 @@ namespace SPTPopCounter
         {
             workAlways = Config.Bind("General", "Work Always", false, "Debug override");
             toggleKey = Config.Bind("General", "Toggle Key", new KeyboardShortcut(KeyCode.F9), "Hidden -> population -> population + status -> hidden");
+            savedMode = Config.Bind("General", "HUD State", 0,
+                new ConfigDescription("0 hidden / 1 population / 2 population + status", new AcceptableValueRange<int>(0, 2)));
+            mode = Mathf.Clamp(savedMode.Value, 0, 2);
             editMode = Config.Bind("General", "HUD Edit Mode", false, "Enable compact drag hitboxes");
             showVersion = Config.Bind("General", "Show SPT Version Label", false, "Show/hide native SPT version label");
             lastShowVersion = showVersion.Value;
-            versionSearchPending = true;
-            nextVersionSearch = Time.unscaledTime + 4f;
+            nextVersionSearch = Time.unscaledTime + .75f;
 
             popEnabled = Config.Bind("Population", "Enabled", true, "Population");
             popSize = Size("Population"); popOpacity = Opacity("Population"); popX = X("Population", 8); popY = BottomY("Population", 8);
@@ -84,7 +88,7 @@ namespace SPTPopCounter
             killY = Config.Bind("Kill Feed", "Position Y", 100f, new ConfigDescription("Top Y", new AcceptableValueRange<float>(-100, 2000)));
             killLifetime = Config.Bind("Kill Feed", "Lifetime", 6f, new ConfigDescription("Seconds", new AcceptableValueRange<float>(2, 15)));
             killMax = Config.Bind("Kill Feed", "Max Entries", 3, new ConfigDescription("Lines", new AcceptableValueRange<int>(1, 6)));
-            Logger.LogInfo("SPT Tactical HUD v1.10.3 loaded");
+            Logger.LogInfo("SPT Tactical HUD v1.10.4 loaded (HUD state " + mode + ")");
         }
 
         ConfigEntry<int> Size(string s) => Config.Bind(s, "Size", 10, new ConfigDescription("Size", new AcceptableValueRange<int>(8, 20)));
@@ -95,19 +99,28 @@ namespace SPTPopCounter
 
         void Update()
         {
+            int configuredMode = Mathf.Clamp(savedMode.Value, 0, 2);
+            if (configuredMode != mode) mode = configuredMode;
+            if (toggleKey.Value.IsDown()) SetHudMode((mode + 1) % 3);
             if (Time.unscaledTime >= nextRefresh) { nextRefresh = Time.unscaledTime + .25f; Refresh(); }
             if (inRaid && Time.unscaledTime >= nextSubscribe) { nextSubscribe = Time.unscaledTime + .35f; ProcessOneSubscription(); }
-            if (versionSearchPending && Time.unscaledTime >= nextVersionSearch) { versionSearchPending = false; DiscoverVersionTargetsOnce(); }
+            if (Time.unscaledTime >= nextVersionSearch) { nextVersionSearch = Time.unscaledTime + 2f; DiscoverVersionTargetsOnce(); }
             if (versionTargets.Count > 0 && Time.unscaledTime >= nextVersionApply) { nextVersionApply = Time.unscaledTime + 1f; ApplyKnownVersionTargets(); }
             if (showVersion.Value != lastShowVersion)
             {
                 lastShowVersion = showVersion.Value;
-                if (versionTargets.Count == 0) { versionSearchPending = true; nextVersionSearch = Time.unscaledTime + .5f; }
-                else ApplyKnownVersionTargets();
+                nextVersionSearch = Time.unscaledTime;
+                ApplyKnownVersionTargets();
             }
             kills.RemoveAll(k => Time.unscaledTime - k.Created > killLifetime.Value);
-            if (!inRaid && !workAlways.Value && !statusOutside.Value) { mode = 0; return; }
-            if (toggleKey.Value.IsDown()) mode = (mode + 1) % 3;
+        }
+
+        void SetHudMode(int value)
+        {
+            mode = Mathf.Clamp(value, 0, 2);
+            if (savedMode.Value == mode) return;
+            savedMode.Value = mode;
+            try { Config.Save(); } catch { }
         }
 
         void OnDestroy() { foreach (Tracked t in tracked.Values) Unsubscribe(t); }
@@ -228,21 +241,46 @@ namespace SPTPopCounter
             try
             {
                 object world = GetWorld();
-                if (world == null) { SetRaidState(false); return; }
+                if (world == null)
+                {
+                    SetRaidState(false);
+                    RefreshOutsideRaidStatus(null);
+                    return;
+                }
                 IEnumerable ps = GetPlayers(world);
-                if (ps == null) { SetRaidState(false); return; }
+                if (ps == null)
+                {
+                    SetRaidState(false);
+                    RefreshOutsideRaidStatus(null);
+                    return;
+                }
+
+                var players = new List<object>();
+                object local = null;
+                foreach (object player in ps)
+                {
+                    if (!IsUsableUnityObject(player)) continue;
+                    players.Add(player);
+                    if (IsTrue(ReadMember(player, "IsYourPlayer"))) local = player;
+                }
+
+                if (!IsRaidWorld(world, local))
+                {
+                    SetRaidState(false);
+                    RefreshOutsideRaidStatus(local);
+                    return;
+                }
+
                 SetRaidState(true);
 
-                int p = 0, s = 0, b = 0, r = 0; object local = null;
+                int p = 0, s = 0, b = 0, r = 0;
                 var seen = new HashSet<string>(); playersByProfileId.Clear();
-                foreach (object pl in ps)
+                foreach (object pl in players)
                 {
-                    if (pl == null) continue;
                     string id = PlayerId(pl); if (string.IsNullOrEmpty(id)) id = pl.GetHashCode().ToString();
                     seen.Add(id); playersByProfileId[id] = pl;
                     bool alive = IsAlive(pl); string kind = Kind(pl); Vector3 pos = Position(pl);
-                    if (IsTrue(ReadMember(pl, "IsYourPlayer"))) local = pl;
-                    else if (alive)
+                    if (!ReferenceEquals(pl, local) && alive)
                     {
                         if (kind == "Boss") b++; else if (kind == "Raider") r++; else if (kind == "USEC" || kind == "BEAR" || kind == "PMC") p++; else s++;
                     }
@@ -276,19 +314,66 @@ namespace SPTPopCounter
 
         void SetRaidState(bool value)
         {
-            previousRaidState = inRaid; inRaid = value;
-            if (inRaid == previousRaidState) return;
+            if (inRaid == value) return;
+            inRaid = value;
 
-            versionTargets.Clear();
-            versionSearchPending = true;
-            nextVersionSearch = Time.unscaledTime + (inRaid ? 4f : 3f);
+            nextVersionSearch = Time.unscaledTime + (inRaid ? 2f : 1f);
 
-            if (!inRaid)
+            foreach (Tracked t in tracked.Values) Unsubscribe(t);
+            tracked.Clear();
+            playersByProfileId.Clear();
+            subscribeQueue.Clear();
+            queuedIds.Clear();
+            kills.Clear();
+            diagSeen.Clear();
+            pmc = scav = boss = reinforced = 0;
+
+            if (!inRaid && !statusOutside.Value)
             {
-                foreach (Tracked t in tracked.Values) Unsubscribe(t);
-                tracked.Clear(); playersByProfileId.Clear(); subscribeQueue.Clear(); queuedIds.Clear(); kills.Clear(); diagSeen.Clear();
-                if (!workAlways.Value && !statusOutside.Value) mode = 0;
+                hydration = energy = weight = overweightLimit = walkDrainLimit = 0f;
             }
+        }
+
+        bool IsRaidWorld(object world, object localPlayer)
+        {
+            if (!IsUsableUnityObject(world) || !IsUsableUnityObject(localPlayer)) return false;
+
+            string scene = string.Empty;
+            try { scene = SceneManager.GetActiveScene().name ?? string.Empty; } catch { }
+            if (ContainsHideoutMarker(scene) || ContainsHideoutMarker(world.GetType().FullName)) return false;
+
+            foreach (string member in new[] { "LocationId", "Location", "LocationName", "SceneName", "MapName" })
+            {
+                object value = ReadMember(world, member);
+                if (ContainsHideoutMarker(value?.ToString())) return false;
+            }
+
+            object profile = ReadMember(localPlayer, "Profile");
+            foreach (object value in new[]
+            {
+                ReadMember(localPlayer, "Location"),
+                ReadMember(profile, "Location"),
+                ReadMember(ReadMember(profile, "Info"), "Location")
+            })
+            {
+                if (ContainsHideoutMarker(value?.ToString())) return false;
+            }
+
+            return true;
+        }
+
+        static bool ContainsHideoutMarker(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return false;
+            string normalized = value.ToLowerInvariant();
+            return normalized.Contains("hideout") || normalized.Contains("убежищ");
+        }
+
+        static bool IsUsableUnityObject(object value)
+        {
+            if (value == null) return false;
+            UnityEngine.Object unityObject = value as UnityEngine.Object;
+            return ReferenceEquals(unityObject, null) || unityObject;
         }
 
         void ProcessOneSubscription()
@@ -495,16 +580,59 @@ namespace SPTPopCounter
 
         void RefreshStatus(object pl)
         {
-            if (pl == null) return;
+            if (!IsUsableUnityObject(pl)) return;
             object hc = ReadMember(pl, "HealthController");
-            hydration = ReadFloatDeep(hc, "Hydration", "Current") ?? ReadFloatDeep(hc, "Hydration", "Value") ?? hydration;
-            energy = ReadFloatDeep(hc, "Energy", "Current") ?? ReadFloatDeep(hc, "Energy", "Value") ?? energy;
+            object profile = ReadMember(pl, "Profile");
+            if (LooksLikeProfile(profile)) outsideProfile = profile;
+            RefreshStatusSources(hc, profile);
+        }
 
-            object profile = ReadMember(pl, "Profile"), inv = ReadMember(profile, "Inventory"), skills = ReadMember(profile, "Skills");
+        void RefreshOutsideRaidStatus(object localPlayer)
+        {
+            if (!statusOutside.Value)
+            {
+                hydration = energy = weight = overweightLimit = walkDrainLimit = 0f;
+                return;
+            }
+
+            if (IsUsableUnityObject(localPlayer))
+            {
+                RefreshStatus(localPlayer);
+                return;
+            }
+
+            object profile = FindOutsideProfile();
+            if (profile != null) RefreshStatusSources(null, profile);
+        }
+
+        void RefreshStatusSources(object hc, object profile)
+        {
+            object health = FirstNonNull(ReadMember(profile, "Health"), ReadMember(profile, "HealthInfo"), ReadMember(profile, "HealthController"));
+
+            float? currentHydration =
+                ReadFloatDeep(hc, "Hydration", "Current") ??
+                ReadFloatDeep(hc, "Hydration", "Value") ??
+                ReadFloatDeep(health, "Hydration", "Current") ??
+                ReadFloatDeep(health, "Hydration", "Value") ??
+                ReadFloatDeep(profile, "Hydration", "Current") ??
+                ReadFloatDeep(profile, "Hydration", "Value");
+            float? currentEnergy =
+                ReadFloatDeep(hc, "Energy", "Current") ??
+                ReadFloatDeep(hc, "Energy", "Value") ??
+                ReadFloatDeep(health, "Energy", "Current") ??
+                ReadFloatDeep(health, "Energy", "Value") ??
+                ReadFloatDeep(profile, "Energy", "Current") ??
+                ReadFloatDeep(profile, "Energy", "Value");
+
+            if (currentHydration.HasValue) hydration = currentHydration.Value;
+            if (currentEnergy.HasValue) energy = currentEnergy.Value;
+
+            object inv = ReadMember(profile, "Inventory"), skills = ReadMember(profile, "Skills");
             float? normal = ReadWrappedFloat(ReadMember(inv, "TotalWeight"));
             float? elite = ReadWrappedFloat(ReadMember(inv, "TotalWeightEliteSkill"));
             bool eliteBuff = ReadWrappedBool(ReadMember(skills, "StrengthBuffElite")) ?? false;
-            weight = (eliteBuff ? elite : normal) ?? normal ?? elite ?? weight;
+            float? currentWeight = (eliteBuff ? elite : normal) ?? normal ?? elite;
+            if (currentWeight.HasValue) weight = currentWeight.Value;
 
             object global = GetSingletonInstance(FindType("EFT.GlobalConfiguration") ?? FindTypeByName("GlobalConfiguration"));
             object stamina = ReadMember(global, "Stamina");
@@ -516,18 +644,81 @@ namespace SPTPopCounter
             if (walkLimits.HasValue) walkDrainLimit = walkLimits.Value.x * rel + abs;
         }
 
+        object FindOutsideProfile()
+        {
+            if (LooksLikeProfile(outsideProfile)) return outsideProfile;
+            if (Time.unscaledTime < nextOutsideProfileSearch) return null;
+            nextOutsideProfileSearch = Time.unscaledTime + 2f;
+
+            foreach (string typeName in new[] { "EFT.TarkovApplication", "TarkovApplication", "EFT.ClientApplication", "ClientApplication" })
+            {
+                Type type = FindType(typeName) ?? FindTypeByName(typeName.Substring(typeName.LastIndexOf('.') + 1));
+                object source = GetSingletonInstance(type);
+                object profile = ProfileFromSource(source);
+                if (profile != null) return outsideProfile = profile;
+            }
+
+            foreach (MonoBehaviour behaviour in Resources.FindObjectsOfTypeAll<MonoBehaviour>())
+            {
+                if (!IsUsableUnityObject(behaviour)) continue;
+                string typeName = behaviour.GetType().Name;
+                if (typeName.IndexOf("Application", StringComparison.OrdinalIgnoreCase) < 0 &&
+                    typeName.IndexOf("Session", StringComparison.OrdinalIgnoreCase) < 0 &&
+                    typeName.IndexOf("Menu", StringComparison.OrdinalIgnoreCase) < 0) continue;
+
+                object profile = ProfileFromSource(behaviour);
+                if (profile != null) return outsideProfile = profile;
+            }
+
+            return null;
+        }
+
+        object ProfileFromSource(object source)
+        {
+            if (source == null) return null;
+            if (LooksLikeProfile(source)) return source;
+
+            foreach (string name in new[] { "Profile", "MainProfile", "ActiveProfile", "SelectedProfile", "ProfileOfPet" })
+            {
+                object profile = ReadMember(source, name);
+                if (LooksLikeProfile(profile)) return profile;
+            }
+
+            foreach (string name in new[] { "Session", "BackEndSession", "BackendSession", "ClientSession" })
+            {
+                object session = ReadMember(source, name);
+                if (session == null) continue;
+                foreach (string profileName in new[] { "Profile", "MainProfile", "ActiveProfile", "ProfileOfPet" })
+                {
+                    object profile = ReadMember(session, profileName);
+                    if (LooksLikeProfile(profile)) return profile;
+                }
+            }
+
+            return null;
+        }
+
+        static bool LooksLikeProfile(object value)
+        {
+            if (value == null) return false;
+            return ReadMember(value, "Inventory") != null &&
+                   (ReadMember(value, "Info") != null || ReadMember(value, "Id") != null || ReadMember(value, "ProfileId") != null);
+        }
+
         void DiscoverVersionTargetsOnce()
         {
             try
             {
+                versionTargets.RemoveAll(target => !IsUsableUnityObject(target.Owner));
                 foreach (MonoBehaviour mb in Resources.FindObjectsOfTypeAll<MonoBehaviour>())
                 {
-                    if (mb == null) continue; Type t = mb.GetType(); string tn = t.Name;
+                    if (!IsUsableUnityObject(mb)) continue; Type t = mb.GetType(); string tn = t.Name;
                     if (tn.IndexOf("Text", StringComparison.OrdinalIgnoreCase) < 0 && tn.IndexOf("Label", StringComparison.OrdinalIgnoreCase) < 0) continue;
                     foreach (MemberInfo m in StringMembers(t))
                     {
                         string value = ReadStringMember(mb, m);
-                        if (string.IsNullOrEmpty(value) || value.IndexOf("SPT", StringComparison.OrdinalIgnoreCase) < 0) continue;
+                        if (!LooksLikeSptVersion(value)) continue;
+                        if (versionTargets.Any(target => ReferenceEquals(target.Owner, mb) && target.Member.Name == m.Name)) continue;
                         versionTargets.Add(new VersionTarget { Owner = mb, Member = m, Original = value });
                     }
                 }
@@ -538,17 +729,62 @@ namespace SPTPopCounter
 
         void ApplyKnownVersionTargets()
         {
-            foreach (VersionTarget t in versionTargets.ToArray())
+            for (int i = versionTargets.Count - 1; i >= 0; i--)
             {
-                if (t.Owner == null || t.Member == null) continue;
-                WriteStringMember(t.Owner, t.Member, showVersion.Value ? t.Original : string.Empty);
+                VersionTarget target = versionTargets[i];
+                if (!IsUsableUnityObject(target.Owner) || target.Member == null)
+                {
+                    versionTargets.RemoveAt(i);
+                    continue;
+                }
+
+                string current = ReadStringMember(target.Owner, target.Member);
+                if (showVersion.Value)
+                {
+                    if (string.IsNullOrEmpty(current) || LooksLikeSptVersion(current))
+                        WriteStringMember(target.Owner, target.Member, target.Original);
+                    else
+                        versionTargets.RemoveAt(i);
+                }
+                else
+                {
+                    if (LooksLikeSptVersion(current))
+                    {
+                        target.Original = current;
+                        WriteStringMember(target.Owner, target.Member, string.Empty);
+                    }
+                    else if (!string.IsNullOrEmpty(current))
+                    {
+                        versionTargets.RemoveAt(i);
+                    }
+                }
             }
         }
 
         IEnumerable<MemberInfo> StringMembers(Type t)
         {
-            foreach (PropertyInfo p in t.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) if (p.PropertyType == typeof(string) && p.CanRead && p.CanWrite) yield return p;
-            foreach (FieldInfo f in t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) if (f.FieldType == typeof(string)) yield return f;
+            foreach (PropertyInfo p in t.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                if (p.PropertyType == typeof(string) && p.CanRead && p.CanWrite && IsTextMemberName(p.Name)) yield return p;
+            foreach (FieldInfo f in t.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                if (f.FieldType == typeof(string) && IsTextMemberName(f.Name)) yield return f;
+        }
+
+        static bool IsTextMemberName(string name)
+        {
+            string normalized = (name ?? string.Empty).Replace("_", string.Empty).ToLowerInvariant();
+            return normalized == "text" || normalized == "mtext";
+        }
+
+        static bool LooksLikeSptVersion(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value) || value.IndexOf("SPT", StringComparison.OrdinalIgnoreCase) < 0) return false;
+            int digits = 0, dots = 0;
+            foreach (char c in value)
+            {
+                if (char.IsDigit(c)) digits++;
+                else if (c == '.') dots++;
+            }
+            return digits >= 3 && dots >= 2;
         }
 
         string ReadStringMember(object o, MemberInfo m)
