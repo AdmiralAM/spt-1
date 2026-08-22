@@ -4,15 +4,14 @@
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <AssemblyName>SPT Tactical HUD v1.10.2</AssemblyName>
+    <AssemblyName>SPT Tactical HUD v1.10.3</AssemblyName>
     <RootNamespace>SPTPopCounter</RootNamespace>
-    <Version>1.10.2</Version>
-    <AssemblyVersion>1.10.2.0</AssemblyVersion>
-    <FileVersion>1.10.2.0</FileVersion>
+    <Version>1.10.3</Version>
+    <AssemblyVersion>1.10.3.0</AssemblyVersion>
+    <FileVersion>1.10.3.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BepInEx"><HintPath>..\deps\BepInEx\core\BepInEx.dll</HintPath><Private>false</Private></Reference>
-    <Reference Include="0Harmony"><HintPath>..\deps\BepInEx\core\0Harmony.dll</HintPath><Private>false</Private></Reference>
     <PackageReference Include="UnityEngine.Modules" Version="2021.3.33"><PrivateAssets>all</PrivateAssets></PackageReference>
   </ItemGroup>
 </Project>
