@@ -11,7 +11,7 @@ using UnityEngine.SceneManagement;
 
 namespace SPTPopCounter
 {
-    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.10.4")]
+    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.11.0")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         ConfigEntry<bool> workAlways, editMode, popEnabled, statusEnabled, statusOutside, killEnabled, showVersion, killDiagnostics;
@@ -88,7 +88,7 @@ namespace SPTPopCounter
             killY = Config.Bind("Kill Feed", "Position Y", 100f, new ConfigDescription("Top Y", new AcceptableValueRange<float>(-100, 2000)));
             killLifetime = Config.Bind("Kill Feed", "Lifetime", 6f, new ConfigDescription("Seconds", new AcceptableValueRange<float>(2, 15)));
             killMax = Config.Bind("Kill Feed", "Max Entries", 3, new ConfigDescription("Lines", new AcceptableValueRange<int>(1, 6)));
-            Logger.LogInfo("SPT Tactical HUD v1.10.4 loaded (HUD state " + mode + ")");
+            Logger.LogInfo("SPT Tactical HUD v1.11.0 loaded (HUD state " + mode + ")");
         }
 
         ConfigEntry<int> Size(string s) => Config.Bind(s, "Size", 10, new ConfigDescription("Size", new AcceptableValueRange<int>(8, 20)));
@@ -489,16 +489,17 @@ namespace SPTPopCounter
             object info = FirstNonNull(t.LastDamage, ReadMember(hc, "LastDamageInfo"), ReadMember(t.Player, "LastDamageInfo"), ReadMember(hc, "DamageInfo"), ReadMember(t.Player, "DamageInfo"));
             object attacker = t.LastAttacker ?? ExtractAttacker(info) ?? ResolveAttackerById(info);
             string hit = FirstNonEmpty(t.LastHit, ExtractHit(info));
-            string killer = "Unknown", weapon = FirstNonEmpty(t.LastWeapon, ResolveWeaponFromDamage(info), "?"); float dist = 0; bool hasDist = false;
+            string killer = "Unknown", victim = IsTrue(ReadMember(t.Player, "IsYourPlayer")) ? "Self" : t.Kind;
+            string weapon = FirstNonEmpty(t.LastWeapon, ResolveWeaponFromDamage(info), "?"); float dist = 0; bool hasDist = false;
             if (attacker != null && !ReferenceEquals(attacker, t.Player))
             {
-                killer = Kind(attacker);
+                killer = IsTrue(ReadMember(attacker, "IsYourPlayer")) ? "Self" : Kind(attacker);
                 string liveWeapon = Weapon(attacker); if (!string.IsNullOrEmpty(liveWeapon) && liveWeapon != "?") weapon = liveWeapon;
                 Vector3 ap = Position(attacker);
                 if (ap != Vector3.zero && t.Pos != Vector3.zero) { dist = Vector3.Distance(ap, t.Pos); hasDist = true; }
             }
             else DiagnoseDeath(t.Player, hc, info);
-            kills.Add(new KillLine { Killer = killer, Victim = t.Kind, Weapon = weapon, Hit = hit, Distance = dist, HasDistance = hasDist, Created = Time.unscaledTime });
+            kills.Add(new KillLine { Killer = killer, Victim = victim, Weapon = weapon, Hit = hit, Distance = dist, HasDistance = hasDist, Created = Time.unscaledTime });
         }
 
         string ResolveWeaponFromDamage(object info)

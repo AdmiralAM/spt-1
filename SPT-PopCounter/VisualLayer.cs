@@ -24,6 +24,7 @@ namespace SPTPopCounter
             static readonly Color KillScav = new Color(.77f, .43f, .40f, 1f);
             static readonly Color KillBoss = new Color(.86f, .62f, .28f, 1f);
             static readonly Color KillRaider = new Color(.66f, .53f, .78f, 1f);
+            static readonly Color KillSelf = new Color(.65f, .78f, .42f, 1f);
             static readonly Color Neutral = new Color(.80f, .82f, .81f, 1f);
             static readonly Color Muted = new Color(.58f, .60f, .59f, 1f);
             static readonly Color Head = new Color(.84f, .33f, .30f, 1f);
@@ -246,8 +247,8 @@ namespace SPTPopCounter
 
                 int count = Mathf.Min(max, runtime.kills.Count);
                 int rows = editing ? Mathf.Max(1, count) : count;
-                float width = displayMode == "Detailed" ? 330f : displayMode == "Minimal" ? 145f : 245f;
-                float rowHeight = size + 8;
+                float width = displayMode == "Detailed" ? 420f : displayMode == "Minimal" ? 160f : 290f;
+                float rowHeight = size + 12;
                 Rect root = new Rect(runtime.killX.Value, runtime.killY.Value, width, rowHeight * Mathf.Max(1, rows));
 
                 if (rows > 0)
@@ -256,7 +257,7 @@ namespace SPTPopCounter
                 if (runtime.kills.Count == 0)
                 {
                     if (editing)
-                        DrawKillRow(root, "USEC", "Scav", "AK-74", "Head", 187f, true, 0, 1f, displayMode, size, opacity);
+                        DrawKillRow(root, "Self", "Scav", "AK-74", "Head", 187f, true, 0, 1f, displayMode, size, opacity);
                     return;
                 }
 
@@ -275,7 +276,7 @@ namespace SPTPopCounter
             void DrawKillRow(Rect r, string killer, string victim, string weapon, string hit, float distance,
                 bool hasDistance, int row, float fade, string displayMode, int size, float opacity)
             {
-                float y = row * (size + 8);
+                float y = row * (size + 12);
                 float x = 0;
                 float op = opacity * fade;
                 Color killerColor = RoleColor(killer);
@@ -287,7 +288,7 @@ namespace SPTPopCounter
 
                 if (displayMode != "Minimal")
                 {
-                    x = Icon(r, WeaponKey(weapon), x, y, size, op, Neutral, .96f);
+                    x = Icon(r, WeaponKey(weapon), x, y - 2, size, op, Neutral, 1.35f);
                     x = Gap(x, 4);
                 }
 
@@ -319,6 +320,7 @@ namespace SPTPopCounter
                 if (role == "Scav") return "SCAV";
                 if (role == "Boss") return "BOSS";
                 if (role == "Raider") return "RAID";
+                if (role == "Self") return "YOU";
                 if (role == "PMC") return "PMC";
                 return "?";
             }
@@ -329,6 +331,7 @@ namespace SPTPopCounter
                 if (role == "Scav") return KillScav;
                 if (role == "Boss") return KillBoss;
                 if (role == "Raider") return KillRaider;
+                if (role == "Self") return KillSelf;
                 return Neutral;
             }
 
@@ -338,6 +341,7 @@ namespace SPTPopCounter
                 if (role == "Scav") return "scav";
                 if (role == "Boss") return "boss";
                 if (role == "Raider") return "raider";
+                if (role == "Self") return "self";
                 return "usec";
             }
 
@@ -345,8 +349,12 @@ namespace SPTPopCounter
             {
                 hit = (hit ?? string.Empty).ToLowerInvariant();
                 if (hit.Contains("head")) return "head";
-                if (hit.Contains("arm")) return "arm";
-                if (hit.Contains("leg")) return "leg";
+                if (hit.Contains("leftarm") || hit.Contains("left arm")) return "left_arm";
+                if (hit.Contains("rightarm") || hit.Contains("right arm")) return "right_arm";
+                if (hit.Contains("leftleg") || hit.Contains("left leg")) return "left_leg";
+                if (hit.Contains("rightleg") || hit.Contains("right leg")) return "right_leg";
+                if (hit.Contains("arm")) return "left_arm";
+                if (hit.Contains("leg")) return "left_leg";
                 if (hit.Contains("stomach")) return "stomach";
                 return "torso";
             }
@@ -372,13 +380,38 @@ namespace SPTPopCounter
             static string WeaponKey(string weapon)
             {
                 string w = (weapon ?? string.Empty).ToLowerInvariant();
-                if (w.Contains("ak") || w.Contains("rpk") || w.Contains("rd-704") || w.Contains("vpo-136") || w.Contains("vpo-209")) return "ak";
-                if (w.Contains("m4") || w.Contains("hk416") || w.Contains("hk 416") || w.Contains("adar") || w.Contains("tx-15") || w.Contains("tx15") || w.Contains("m16") || w.Contains("mdr") || w.Contains("scar") || w.Contains("aug") || w.Contains("g36") || w.Contains("mcx")) return "ar";
-                if (w.Contains("mp5") || w.Contains("mp7") || w.Contains("mp9") || w.Contains("pp-") || w.Contains("pp19") || w.Contains("vector") || w.Contains("ump") || w.Contains("p90") || w.Contains("kedr") || w.Contains("klin")) return "smg";
-                if (w.Contains("saiga-12") || w.Contains("mp-133") || w.Contains("mp-153") || w.Contains("mp-155") || w.Contains("m870") || w.Contains("590a1") || w.Contains("ks-23") || w.Contains("benelli")) return "shotgun";
-                if (w.Contains("svd") || w.Contains("m700") || w.Contains("dvl") || w.Contains("t-5000") || w.Contains("mosin") || w.Contains("axmc") || w.Contains("vpo-215") || w.Contains("sv-98")) return "sniper";
-                if (w.Contains("glock") || w.Contains("p226") || w.Contains("m9") || w.Contains("tt") || w.Contains("usp") || w.Contains("five-seven") || w.Contains("1911") || w.Contains("aps") || w.Contains("pm pistol")) return "pistol";
-                return "weapon";
+                if (string.IsNullOrWhiteSpace(w) || w == "?") return "weapon_unknown";
+                if (HasAny(w, "rpg", "fn40gl", "m32", "gp-25", "grenade launcher", "launcher")) return "weapon_launcher";
+                if (HasAny(w, "rgo", "rgn", "impact grenade")) return "weapon_impact";
+                if (HasAny(w, "f-1", "rgd-5", "m67", "vog-17", "vog-25", "grenade")) return "weapon_frag";
+                if (HasAny(w, "molotov", "thermite", "incendiary")) return "weapon_incendiary";
+                if (HasAny(w, "revolver", "rsh-12", "chiappa")) return "weapon_revolver";
+                if (HasAny(w, "sawed", "mp-43-1c", "mp-43 1c")) return "weapon_shotgun_sawedoff";
+                if (HasAny(w, "saiga-12", "mp-153", "mp-155", "benelli", "m3 super", "aa-12")) return "weapon_shotgun_semi";
+                if (HasAny(w, "mp-133", "m870", "590a1", "ks-23", "toz-106", "shotgun")) return "weapon_shotgun_pump";
+                if (HasAny(w, "m700", "dvl", "t-5000", "mosin", "axmc", "vpo-215", "sv-98")) return "weapon_bolt";
+                if (HasAny(w, "sr-25", "rsass", "m1a", "mk18", "rfb", "svds", "svd", "vss")) return "weapon_dmr";
+                if (HasAny(w, "rpk", "pkm", "pkp", "rpd", "m249", "machine gun", "lmg")) return "weapon_lmg";
+                if (HasAny(w, "stm-9", "saiga-9", "pistol caliber carbine", "pcc")) return "weapon_pcc";
+                if (HasAny(w, "mp5", "mp7", "mp9", "pp-", "pp19", "vector", "ump", "p90", "kedr", "klin", "ppsh", "sr-2")) return "weapon_smg";
+                if (HasAny(w, "adar", "tx-15", "tx15", "vpo-136", "sag ak", "carbine")) return "weapon_carbine";
+                if (HasAny(w, "ak", "rd-704", "vpo-209", "m4", "hk416", "hk 416", "m16", "mdr", "scar", "aug", "g36", "mcx", "as val")) return "weapon_assault";
+                if (HasAny(w, "glock", "p226", "m9", "tt", "usp", "five-seven", "1911", "aps", "pm pistol", "makarov", "pistol")) return "weapon_pistol";
+                if (HasAny(w, "throwing knife", "kunai")) return "weapon_throwing";
+                if (HasAny(w, "knife", "axe", "machete", "sword", "crowbar", "melee")) return "weapon_melee";
+                if (HasAny(w, "crossbow")) return "weapon_crossbow";
+                if (HasAny(w, "mine", "explosive", "c4", "ied")) return "weapon_explosive";
+                if (HasAny(w, "flare", "signal", "special weapon")) return "weapon_special";
+                if (HasAny(w, "tool", "multitool")) return "weapon_tool";
+                if (HasAny(w, "sniper")) return "weapon_sniper";
+                return "weapon_unknown";
+            }
+
+            static bool HasAny(string value, params string[] tokens)
+            {
+                foreach (string token in tokens)
+                    if (value.Contains(token)) return true;
+                return false;
             }
         }
     }

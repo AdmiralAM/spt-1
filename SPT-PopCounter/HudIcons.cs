@@ -13,10 +13,17 @@ namespace SPTPopCounter
         readonly Dictionary<string, Texture2D> cache = new Dictionary<string, Texture2D>();
         readonly Dictionary<string, Vector2Int> cells = new Dictionary<string, Vector2Int>(StringComparer.OrdinalIgnoreCase)
         {
-            {"usec",new Vector2Int(0,0)},{"bear",new Vector2Int(1,0)},{"scav",new Vector2Int(2,0)},{"boss",new Vector2Int(3,0)},{"raider",new Vector2Int(4,0)},{"water",new Vector2Int(5,0)},
-            {"energy",new Vector2Int(0,1)},{"weight",new Vector2Int(1,1)},{"weight1",new Vector2Int(2,1)},{"weight2",new Vector2Int(3,1)},{"weight3",new Vector2Int(4,1)},{"head",new Vector2Int(5,1)},
-            {"torso",new Vector2Int(0,2)},{"arm",new Vector2Int(1,2)},{"leg",new Vector2Int(2,2)},{"stomach",new Vector2Int(3,2)},{"ak",new Vector2Int(4,2)},{"ar",new Vector2Int(5,2)},
-            {"smg",new Vector2Int(0,3)},{"shotgun",new Vector2Int(1,3)},{"sniper",new Vector2Int(2,3)},{"pistol",new Vector2Int(3,3)},{"weapon",new Vector2Int(4,3)}
+            {"usec",new Vector2Int(0,0)},{"bear",new Vector2Int(1,0)},{"scav",new Vector2Int(2,0)},{"boss",new Vector2Int(3,0)},
+            {"raider",new Vector2Int(4,0)},{"water",new Vector2Int(5,0)},{"energy",new Vector2Int(6,0)},{"weight",new Vector2Int(7,0)},
+            {"weight1",new Vector2Int(0,1)},{"weight2",new Vector2Int(1,1)},{"weight3",new Vector2Int(2,1)},{"head",new Vector2Int(3,1)},
+            {"torso",new Vector2Int(4,1)},{"stomach",new Vector2Int(5,1)},{"left_arm",new Vector2Int(6,1)},{"right_arm",new Vector2Int(7,1)},
+            {"left_leg",new Vector2Int(0,2)},{"right_leg",new Vector2Int(1,2)},{"self",new Vector2Int(2,2)},{"weapon_unknown",new Vector2Int(3,2)},
+            {"weapon_assault",new Vector2Int(4,2)},{"weapon_carbine",new Vector2Int(5,2)},{"weapon_smg",new Vector2Int(6,2)},{"weapon_lmg",new Vector2Int(7,2)},
+            {"weapon_sniper",new Vector2Int(0,3)},{"weapon_dmr",new Vector2Int(1,3)},{"weapon_shotgun_pump",new Vector2Int(2,3)},{"weapon_shotgun_semi",new Vector2Int(3,3)},
+            {"weapon_shotgun_sawedoff",new Vector2Int(4,3)},{"weapon_pistol",new Vector2Int(5,3)},{"weapon_revolver",new Vector2Int(6,3)},{"weapon_launcher",new Vector2Int(7,3)},
+            {"weapon_frag",new Vector2Int(0,4)},{"weapon_impact",new Vector2Int(1,4)},{"weapon_incendiary",new Vector2Int(2,4)},{"weapon_melee",new Vector2Int(3,4)},
+            {"weapon_throwing",new Vector2Int(4,4)},{"weapon_bolt",new Vector2Int(5,4)},{"weapon_pcc",new Vector2Int(6,4)},{"weapon_special",new Vector2Int(7,4)},
+            {"weapon_crossbow",new Vector2Int(0,5)},{"weapon_tool",new Vector2Int(1,5)},{"weapon_explosive",new Vector2Int(2,5)}
         };
         Texture2D sheet;
 
@@ -29,6 +36,7 @@ namespace SPTPopCounter
                 string[] candidates =
                 {
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD","assets","hud-sprites.png"),
+                    Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.11.0","assets","hud-sprites.png"),
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.10.4","assets","hud-sprites.png"),
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.10.3","assets","hud-sprites.png"),
                     Path.Combine(Paths.PluginPath,"SPT Tactical HUD v1.10.2","assets","hud-sprites.png"),
@@ -56,7 +64,7 @@ namespace SPTPopCounter
             Texture2D t;
             if (cache.TryGetValue(key,out t)) return t;
             Vector2Int c;
-            if (!cells.TryGetValue(key,out c)) c = cells["weapon"];
+            if (!cells.TryGetValue(key,out c)) c = cells["weapon_unknown"];
             int x = c.x * Cell;
             int yTop = c.y * Cell;
             int y = sheet.height - yTop - Cell;

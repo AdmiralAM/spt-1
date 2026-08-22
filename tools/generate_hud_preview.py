@@ -1,5 +1,5 @@
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
 
 ROOT=Path(__file__).resolve().parents[1]
 SHEET=ROOT/'SPT-PopCounter'/'assets'/'hud-sprites.png'
@@ -7,15 +7,17 @@ OUT=ROOT/'build-status'/'hud-preview.png'
 CELL=64
 
 COLORS={
-    'pmc':(143,194,130,255),'scav':(196,110,102,255),'boss':(219,158,71,255),'raider':(168,135,199,255),
+    'pmc':(143,194,130,255),'self':(165,197,107,255),'scav':(196,110,102,255),'boss':(219,158,71,255),'raider':(168,135,199,255),
     'neutral':(204,209,207,255),'muted':(148,153,150,255),'head':(214,84,77,255),
     'water':(125,176,219,255),'energy':(220,179,79,255),'ok':(148,191,132,255),'heavy':(199,174,100,255)
 }
 CELLS={
-    'usec':(0,0),'bear':(1,0),'scav':(2,0),'boss':(3,0),'raider':(4,0),'water':(5,0),
-    'energy':(0,1),'weight':(1,1),'weight1':(2,1),'weight2':(3,1),'weight3':(4,1),'head':(5,1),
-    'torso':(0,2),'arm':(1,2),'leg':(2,2),'stomach':(3,2),'ak':(4,2),'ar':(5,2),
-    'smg':(0,3),'shotgun':(1,3),'sniper':(2,3),'pistol':(3,3),'weapon':(4,3)
+    'usec':(0,0),'bear':(1,0),'scav':(2,0),'boss':(3,0),'raider':(4,0),'water':(5,0),'energy':(6,0),'weight':(7,0),
+    'weight1':(0,1),'weight2':(1,1),'weight3':(2,1),'head':(3,1),'torso':(4,1),'stomach':(5,1),'left_arm':(6,1),'right_arm':(7,1),
+    'left_leg':(0,2),'right_leg':(1,2),'self':(2,2),'weapon_unknown':(3,2),'weapon_assault':(4,2),'weapon_carbine':(5,2),'weapon_smg':(6,2),'weapon_lmg':(7,2),
+    'weapon_sniper':(0,3),'weapon_dmr':(1,3),'weapon_shotgun_pump':(2,3),'weapon_shotgun_semi':(3,3),'weapon_shotgun_sawedoff':(4,3),'weapon_pistol':(5,3),'weapon_revolver':(6,3),'weapon_launcher':(7,3),
+    'weapon_frag':(0,4),'weapon_impact':(1,4),'weapon_incendiary':(2,4),'weapon_melee':(3,4),'weapon_throwing':(4,4),'weapon_bolt':(5,4),'weapon_pcc':(6,4),'weapon_special':(7,4),
+    'weapon_crossbow':(0,5),'weapon_tool':(1,5),'weapon_explosive':(2,5)
 }
 
 def font(size):
@@ -27,7 +29,11 @@ def font(size):
 
 def tint(icon,color):
     alpha=icon.getchannel('A')
-    out=Image.new('RGBA',icon.size,color)
+    # Keep the authored metal/stone lighting instead of flattening every icon
+    # into a solid silhouette. Unity's GUI.color modulation behaves similarly.
+    luminance=ImageOps.grayscale(icon)
+    dark=tuple(max(0,round(channel*.24)) for channel in color[:3])
+    out=ImageOps.colorize(luminance,black=dark,white=color[:3]).convert('RGBA')
     out.putalpha(Image.eval(alpha,lambda a:a*color[3]//255))
     return out
 
@@ -65,21 +71,21 @@ def status(canvas,sheet,x,y,scale=1.0):
     paste_icon(canvas,sheet,'weight1',x,y-1,max(10,isz-3),COLORS['ok'])
 
 def killrow(canvas,sheet,x,y,killer,kc,weapon,victim,vc,hit,dist,detailed=False,scale=1.0):
-    d=ImageDraw.Draw(canvas); role=max(10,round(11*scale)); isz=max(12,round(15*scale)); wisz=max(14,round(17*scale)); small=max(8,round(10*scale))
+    d=ImageDraw.Draw(canvas); role=max(10,round(11*scale)); isz=max(12,round(15*scale)); wisz=max(18,round(22*scale)); small=max(8,round(10*scale))
     x=paste_icon(canvas,sheet,killer.lower(),x,y-2,isz,COLORS[kc]);x+=draw_text(d,(x,y),killer,role,COLORS[kc])+max(5,round(7*scale))
     x=paste_icon(canvas,sheet,weapon,x,y-1,wisz,COLORS['neutral'])
-    if detailed:
-        name={'ak':'AK-74N','ar':'M4A1','sniper':'M700'}.get(weapon,'Weapon')
-        x+=draw_text(d,(x,y+1),name,small,COLORS['muted'])+max(4,round(6*scale))
-    else:x+=max(3,round(4*scale))
+    x+=max(3,round(4*scale))
     x=paste_icon(canvas,sheet,victim.lower(),x,y-2,isz,COLORS[vc]);x+=draw_text(d,(x,y),victim,role,COLORS[vc])+max(4,round(6*scale))
     x=paste_icon(canvas,sheet,hit,x,y-1,max(11,round(13*scale)),COLORS['head'] if hit=='head' else COLORS['muted'])
-    draw_text(d,(x+1,y+1),dist,small,COLORS['muted'])
+    x+=draw_text(d,(x+1,y+1),dist,small,COLORS['muted'])
+    if detailed:
+        name={'weapon_assault':'AK-74N','weapon_carbine':'M4A1','weapon_bolt':'M700'}.get(weapon,'Weapon')
+        draw_text(d,(x+6,y+1),name,small,COLORS['muted'])
 
 def qa_strip(canvas,sheet,x,y):
     d=ImageDraw.Draw(canvas)
     draw_text(d,(x,y),'MICRO-SCALE QA',10,(170,174,171,255)); y+=18
-    keys=['usec','bear','scav','boss','raider','water','energy','weight','head','torso','arm','leg','stomach','ak','ar','smg','shotgun','sniper','pistol']
+    keys=['usec','bear','scav','boss','raider','self','water','energy','weight','head','torso','left_arm','right_arm','left_leg','right_leg','stomach','weapon_assault','weapon_smg','weapon_bolt']
     for size in (12,16,20):
         draw_text(d,(x,y+2),str(size)+'px',9,(135,139,136,255)); xx=x+34
         for key in keys:
@@ -98,15 +104,15 @@ def main():
     # Production-scale layout.
     population(bg,sheet,14,1044)
     status(bg,sheet,14,1018)
-    killrow(bg,sheet,1590,86,'USEC','pmc','ak','SCAV','scav','head','187m',False)
-    killrow(bg,sheet,1590,106,'BEAR','pmc','ar','BOSS','boss','torso','42m',False)
-    killrow(bg,sheet,1515,145,'USEC','pmc','sniper','RAIDER','raider','head','264m',True)
+    killrow(bg,sheet,1535,86,'SELF','self','weapon_assault','SCAV','scav','head','187m',False)
+    killrow(bg,sheet,1535,112,'BEAR','pmc','weapon_carbine','BOSS','boss','torso','42m',False)
+    killrow(bg,sheet,1450,150,'USEC','pmc','weapon_bolt','RAIDER','raider','head','264m',True)
 
     # Smaller and larger UI scale checks catch details that only work at one resolution.
     population(bg,sheet,14,980,.82)
     status(bg,sheet,14,956,.82)
-    killrow(bg,sheet,1610,205,'BEAR','pmc','smg','SCAV','scav','arm','28m',False,.82)
-    killrow(bg,sheet,1530,250,'USEC','pmc','shotgun','RAIDER','raider','stomach','16m',True,1.18)
+    killrow(bg,sheet,1560,215,'BEAR','pmc','weapon_smg','SCAV','scav','left_arm','28m',False,.82)
+    killrow(bg,sheet,1450,260,'SELF','self','weapon_shotgun_semi','RAIDER','raider','stomach','16m',True,1.18)
 
     qa_strip(bg,sheet,1185,835)
     OUT.parent.mkdir(parents=True,exist_ok=True)
