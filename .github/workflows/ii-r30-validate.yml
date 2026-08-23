@@ -1,0 +1,23 @@
+name: II R30 Validate
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mods/SPT-Item-Intelligence/**'
+      - '.github/workflows/ii-r30-validate.yml'
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Run Item Intelligence tests
+        shell: pwsh
+        run: |
+          Get-ChildItem mods/SPT-Item-Intelligence/tests -Filter '*.csproj' -Recurse | ForEach-Object { dotnet run --project $_.FullName -c Release }
+      - name: Build server 4.1.3
+        shell: pwsh
+        run: |
+          Get-ChildItem mods/SPT-Item-Intelligence/server -Filter '*.csproj' -Recurse | ForEach-Object { dotnet build $_.FullName -c Release }
