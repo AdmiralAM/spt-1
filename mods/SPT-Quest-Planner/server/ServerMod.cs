@@ -16,7 +16,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "SPT Quest Planner Server";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("0.3.0");
+    public SemanticVersioning.Version Version { get; init; } = new("0.4.0");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
@@ -38,12 +38,14 @@ public sealed class PlannerSnapshotService(
         object profile = profileHelper.GetPmcProfile(sessionId)!;
         QuestExtractionResult extraction = QuestExtractor.Extract(templateTable.Quests);
         PlayerProjection player = ProfileProjectionExtractor.Extract(profile);
-        var (_, validation) = PlannerGraph.Build(extraction.Nodes, extraction.Prerequisites);
+        var (graph, validation) = PlannerGraph.Build(extraction.Nodes, extraction.Prerequisites);
         IReadOnlyDictionary<QuestState, int> stateCounts = ProfileProjectionExtractor.CountStates(extraction.Nodes, player);
+        PlannerEvaluationResult evaluation = PlannerEvaluator.Evaluate(graph, extraction.ItemRequirements, player);
 
-        List<string> warnings = new(extraction.Warnings.Count + player.Warnings.Count + 1);
+        List<string> warnings = new(extraction.Warnings.Count + player.Warnings.Count + evaluation.Warnings.Count + 1);
         warnings.AddRange(extraction.Warnings);
         warnings.AddRange(player.Warnings);
+        warnings.AddRange(evaluation.Warnings);
         if (extraction.Nodes.Count > 0 && player.QuestStates.Count == 0)
             warnings.Add("Quest database is populated but PMC quest-state projection is empty");
 
@@ -58,7 +60,8 @@ public sealed class PlannerSnapshotService(
             player,
             stateCounts,
             validation,
-            warnings);
+            evaluation,
+            warnings.Distinct(StringComparer.Ordinal).ToArray());
 
         cancellationToken.ThrowIfCancellationRequested();
         return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
@@ -84,7 +87,7 @@ public sealed class QuestPlannerLoadNotice(ISptLogger<QuestPlannerLoadNotice> lo
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        logger.Success("SPT Quest Planner Server v0.3.0 loaded; quest graph and PMC quest-state projection ready");
+        logger.Success("SPT Quest Planner Server v0.4.0 loaded; quest evaluation and current/future requirement aggregation ready");
         return Task.CompletedTask;
     }
 }
