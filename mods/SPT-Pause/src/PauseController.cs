@@ -97,8 +97,7 @@ namespace SPTPause
         static bool ShortcutPressed(KeyboardShortcut shortcut)
         {
             if (shortcut.MainKey == KeyCode.None || !Input.GetKeyDown(shortcut.MainKey)) return false;
-            KeyCode[] modifiers = shortcut.Modifiers;
-            for (int i = 0; i < modifiers.Length; i++) if (!Input.GetKey(modifiers[i])) return false;
+            foreach (KeyCode modifier in shortcut.Modifiers) if (!Input.GetKey(modifier)) return false;
             return true;
         }
 
