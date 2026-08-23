@@ -52,3 +52,4 @@ jobs:
           name: item-intelligence-jproperty-fix
           path: diagnostic-package
           if-no-files-found: error
+# trigger
