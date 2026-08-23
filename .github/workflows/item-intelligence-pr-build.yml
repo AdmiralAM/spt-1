@@ -3,6 +3,11 @@ name: Validate Item Intelligence branch
 on:
   push:
     branches: [ feature/item-intelligence-value-source ]
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mods/SPT-Item-Intelligence/**'
+      - '.github/workflows/item-intelligence-pr-build.yml'
 
 permissions:
   contents: read
