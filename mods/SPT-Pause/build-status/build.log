@@ -1,9 +1,9 @@
   Determining projects to restore...
-  Restored D:\a\spt-1\spt-1\mods\SPT-Pause\src\SPT-Pause.csproj (in 290 ms).
+  Restored D:\a\spt-1\spt-1\mods\SPT-Pause\src\SPT-Pause.csproj (in 304 ms).
   SPT-Pause -> D:\a\spt-1\spt-1\mods\SPT-Pause\src\bin\Release\netstandard2.1\SPT Pause v0.1.1.dll
 
 Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:02.49
+Time Elapsed 00:00:02.03
