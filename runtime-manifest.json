@@ -1,0 +1,13 @@
+{
+  "name": "SPT Item Intelligence",
+  "channel": "runtime-item-intelligence",
+  "version": "0.10.1",
+  "phase": "18",
+  "spt_version": "4.1.x",
+  "source_commit": "d8dc7f4da8466ea82f96432c92cc1c8f092e17f4",
+  "server_version": "0.5.0",
+  "server_included": true,
+  "contains_tactical_hud": false,
+  "contains_pause": false,
+  "contains_belt_armband_inventory": false
+}
