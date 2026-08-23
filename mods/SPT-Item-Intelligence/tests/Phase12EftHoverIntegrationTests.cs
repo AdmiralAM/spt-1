@@ -84,7 +84,7 @@ static class Phase12EftHoverIntegrationTests
 
     sealed class FakeInventoryItemView
     {
-        public DirectItem Item;
+        public DirectItem Item { get; set; }
         public void OnPointerEnter(object eventData) { }
         public void OnPointerExit(object eventData) { }
     }
