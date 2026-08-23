@@ -64,9 +64,17 @@ namespace SPTItemIntelligence
 
     public sealed class ReflectionNewtonsoftSnapshotDecoder : IRequirementSnapshotDecoder
     {
+        readonly Action<string> trace;
+
+        public ReflectionNewtonsoftSnapshotDecoder(Action<string> trace = null)
+        {
+            this.trace = trace;
+        }
+
         public RequirementDataEnvelope Decode(string json)
         {
             if (string.IsNullOrWhiteSpace(json)) throw new ArgumentException("Snapshot JSON is missing.", nameof(json));
+            Trace("payload chars=" + json.Length + " bulbexHits=" + Count(json, RequirementDataContract.RuntimeTraceTemplateId));
             Type tokenType = FindType("Newtonsoft.Json.Linq.JToken");
             if (tokenType == null) throw new InvalidOperationException("Newtonsoft JSON runtime is unavailable.");
             MethodInfo parse = tokenType.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(string) }, null);
@@ -86,7 +94,33 @@ namespace SPTItemIntelligence
                 throw new InvalidOperationException("Requirement snapshot tables are incomplete.");
 
             long generated = JsonNode.ReadLong(JsonNode.Get(root, "generatedAtUnixSeconds"), 0);
+            Trace("decoder profileReady=" + (!JsonNode.IsNull(profile)) + " quests=" + CountValues(quests) + " hideoutAreas=" + CountValues(JsonNode.Get(hideout, "areas", "Areas")));
             return new RequirementDataEnvelope(generated, profile, quests, hideout, prices);
+        }
+
+        void Trace(string message)
+        {
+            if (trace != null) trace("[II TRACE] client " + message);
+        }
+
+        static int Count(string text, string value)
+        {
+            if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(value)) return 0;
+            int count = 0;
+            int index = 0;
+            while ((index = text.IndexOf(value, index, StringComparison.OrdinalIgnoreCase)) >= 0)
+            {
+                count++;
+                index += value.Length;
+            }
+            return count;
+        }
+
+        static int CountValues(object source)
+        {
+            int count = 0;
+            foreach (object ignored in JsonNode.Values(source)) count++;
+            return count;
         }
 
         static Type FindType(string fullName)
@@ -134,6 +168,13 @@ namespace SPTItemIntelligence
 
     public sealed class SptRequirementDataProjector : IRequirementDataProjector
     {
+        readonly Action<string> trace;
+
+        public SptRequirementDataProjector(Action<string> trace = null)
+        {
+            this.trace = trace;
+        }
+
         public RequirementProjection Project(RequirementDataEnvelope snapshot)
         {
             if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
@@ -143,6 +184,13 @@ namespace SPTItemIntelligence
             List<RequirementContribution> contributions = new List<RequirementContribution>();
             ProjectQuests(snapshot.profile, snapshot.quests, contributions);
             ProjectHideout(snapshot.profile, snapshot.hideout, contributions);
+            int ownedBulbex = 0;
+            for (int i = 0; i < owned.Count; i++)
+                if (owned[i].TemplateId == RequirementDataContract.RuntimeTraceTemplateId) ownedBulbex += owned[i].Count;
+            int bulbexContributions = 0;
+            for (int i = 0; i < contributions.Count; i++)
+                if (contributions[i].TemplateId == RequirementDataContract.RuntimeTraceTemplateId) bulbexContributions++;
+            Trace("projector ownedBulbex=" + ownedBulbex + " bulbexContributions=" + bulbexContributions + " totalContributions=" + contributions.Count);
             return new RequirementProjection(snapshot.generatedAtUnixSeconds, owned, contributions);
         }
 
@@ -250,7 +298,7 @@ namespace SPTItemIntelligence
             return false;
         }
 
-        static void ProjectHideout(object profile, object hideoutTable, List<RequirementContribution> output)
+        void ProjectHideout(object profile, object hideoutTable, List<RequirementContribution> output)
         {
             Dictionary<string, int> currentLevels = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             object profileHideout = JsonNode.Get(profile, "Hideout", "hideout");
@@ -268,7 +316,7 @@ namespace SPTItemIntelligence
             ProjectHideoutAreas(JsonNode.Get(hideoutTable, "customAreas", "CustomAreas"), currentLevels, output);
         }
 
-        static void ProjectHideoutAreas(object areas, Dictionary<string, int> currentLevels, List<RequirementContribution> output)
+        void ProjectHideoutAreas(object areas, Dictionary<string, int> currentLevels, List<RequirementContribution> output)
         {
             foreach (object area in JsonNode.Values(areas))
             {
@@ -286,12 +334,20 @@ namespace SPTItemIntelligence
                         int count = Math.Max(0, JsonNode.ReadInt(JsonNode.Get(requirement, "count", "Count", "value", "Value"), 0));
                         string requirementType = JsonNode.ReadString(JsonNode.Get(requirement, "type", "Type", "requirementType", "RequirementType"));
                         if (templateId.Length == 0 || count <= 0) continue;
-                        if (requirementType.Length != 0 && requirementType.IndexOf("item", StringComparison.OrdinalIgnoreCase) < 0 && requirementType != "1") continue;
+                        bool itemRequirement = requirementType.Length == 0 || requirementType.IndexOf("item", StringComparison.OrdinalIgnoreCase) >= 0 || requirementType == "1";
+                        if (templateId == RequirementDataContract.RuntimeTraceTemplateId)
+                            Trace("projector hideout stage=" + stage + " currentLevel=" + currentLevel + " type=" + requirementType + " count=" + count + " accepted=" + itemRequirement);
+                        if (!itemRequirement) continue;
                         string label = areaLabel + " L" + stage.ToString(CultureInfo.InvariantCulture);
                         output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count, label: label));
                     }
                 }
             }
+        }
+
+        void Trace(string message)
+        {
+            if (trace != null) trace("[II TRACE] client " + message);
         }
 
         sealed class QuestProgress
@@ -380,6 +436,7 @@ namespace SPTItemIntelligence
         readonly IPriceDataProjector priceProjector;
         readonly ItemPresentationStore presentationStore;
         readonly ItemHoverRuntimeController hoverController;
+        readonly Action<string> trace;
         int state = (int)RequirementBootstrapState.Loading;
         string detail = "LOADING ITEM DATA";
 
@@ -389,7 +446,8 @@ namespace SPTItemIntelligence
             IRequirementDataProjector projector,
             ItemPresentationStore presentationStore,
             ItemHoverRuntimeController hoverController,
-            IPriceDataProjector priceProjector = null)
+            IPriceDataProjector priceProjector = null,
+            Action<string> trace = null)
         {
             this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
             this.decoder = decoder ?? throw new ArgumentNullException(nameof(decoder));
@@ -397,6 +455,7 @@ namespace SPTItemIntelligence
             this.presentationStore = presentationStore ?? throw new ArgumentNullException(nameof(presentationStore));
             this.hoverController = hoverController ?? throw new ArgumentNullException(nameof(hoverController));
             this.priceProjector = priceProjector ?? new SptPriceDataProjector();
+            this.trace = trace;
         }
 
         public RequirementBootstrapState State => (RequirementBootstrapState)Volatile.Read(ref state);
@@ -419,6 +478,7 @@ namespace SPTItemIntelligence
                 ItemPriceIndex prices = priceProjector.Project(snapshot.prices);
                 cancellationToken.ThrowIfCancellationRequested();
                 presentationStore.Refresh(requirements, prices);
+                TraceRuntimeBoundary(index, requirements);
                 hoverController.RefreshActive();
                 Interlocked.Exchange(ref detail, "NO REQUIREMENT DATA");
                 Interlocked.Exchange(ref state, (int)RequirementBootstrapState.Ready);
@@ -443,6 +503,19 @@ namespace SPTItemIntelligence
         public ItemHoverText CreateFallback(string templateId)
         {
             return new ItemHoverText("ITEM INTELLIGENCE", string.Empty, Detail);
+        }
+
+        void TraceRuntimeBoundary(RequirementIndex index, ItemRequirementStateIndex requirements)
+        {
+            string target = RequirementDataContract.RuntimeTraceTemplateId;
+            RequirementIndexEntry indexed = index.Get(target);
+            ItemRequirementState state = requirements.Get(target);
+            ItemPresentationState presentation = presentationStore.Current.Get(target);
+            ItemHoverText text = new ItemHoverTextFormatter().Format(new ItemHoverState(presentation));
+            ItemMarkerPresentation marker = ItemMarkerPresentation.From(text);
+            if (trace == null) return;
+            trace("[II TRACE] client index owned=" + indexed.OwnedCount + " hideout=" + indexed.HideoutNeeded + " questNow=" + indexed.QuestNeededNow + " questLater=" + indexed.QuestNeededLater + " keep=" + indexed.KeepCount);
+            trace("[II TRACE] client state owned=" + state.OwnedCount + " hideout=" + state.HideoutNeeded + " questNow=" + state.QuestNeededNow + " questLater=" + state.QuestNeededLater + " keep=" + state.KeepCount + " presentationRequirement=" + presentation.HasRequirementData + " marker=" + marker.Kind);
         }
     }
 
@@ -610,7 +683,8 @@ namespace SPTItemIntelligence
             try
             {
                 Type type = source.GetType();
-                PropertyInfo keyProperty = type.GetProperty("Key", BindingFlags.Public | BindingFlags.Instance);
+                PropertyInfo keyProperty = type.GetProperty("Key", BindingFlags.Public | BindingFlags.Instance)
+                    ?? type.GetProperty("Name", BindingFlags.Public | BindingFlags.Instance);
                 PropertyInfo valueProperty = type.GetProperty("Value", BindingFlags.Public | BindingFlags.Instance);
                 if (keyProperty == null || valueProperty == null || keyProperty.GetIndexParameters().Length != 0 || valueProperty.GetIndexParameters().Length != 0)
                     return false;
