@@ -286,7 +286,7 @@ namespace SPTItemIntelligence
                         int count = Math.Max(0, JsonNode.ReadInt(JsonNode.Get(requirement, "count", "Count", "value", "Value"), 0));
                         string requirementType = JsonNode.ReadString(JsonNode.Get(requirement, "type", "Type", "requirementType", "RequirementType"));
                         if (templateId.Length == 0 || count <= 0) continue;
-                        if (requirementType.Length != 0 && requirementType.IndexOf("item", StringComparison.OrdinalIgnoreCase) < 0 && requirementType != "0") continue;
+                        if (requirementType.Length != 0 && requirementType.IndexOf("item", StringComparison.OrdinalIgnoreCase) < 0 && requirementType != "1") continue;
                         string label = areaLabel + " L" + stage.ToString(CultureInfo.InvariantCulture);
                         output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count, label: label));
                     }
