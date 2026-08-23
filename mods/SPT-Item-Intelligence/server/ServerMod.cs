@@ -87,7 +87,8 @@ public sealed class RequirementDataService(
             double price = Math.Round((buyBackPercent ?? 0) * (handbookValue / 100d), 0);
             if (price <= highestPrice) continue;
             highestPrice = price;
-            highestTrader = string.IsNullOrWhiteSpace(traderBase.Nickname) ? traderBase.Name : traderBase.Nickname;
+            string nickname = (traderBase.Nickname ?? string.Empty).Trim();
+            highestTrader = nickname.Length == 0 ? traderBase.Name : nickname;
         }
         return string.IsNullOrWhiteSpace(highestTrader) ? "Trader" : highestTrader;
     }

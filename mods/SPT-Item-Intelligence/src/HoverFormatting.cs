@@ -59,6 +59,10 @@ namespace SPTItemIntelligence
                 foreach (string detail in requirementDetails)
                     if (!string.IsNullOrWhiteSpace(detail)) details.Add(detail.Trim());
             RequirementDetailLines = details.AsReadOnly();
+            DetailedRequirementCount = Math.Min(3, details.Count);
+            MoreRequirementsLine = details.Count > DetailedRequirementCount
+                ? "Requirements: +" + (details.Count - DetailedRequirementCount).ToString(CultureInfo.InvariantCulture) + " more"
+                : string.Empty;
         }
 
         public string Primary { get; }
@@ -80,6 +84,8 @@ namespace SPTItemIntelligence
         public string TemplateLine { get; }
         public string BestSourceLine { get; }
         public IReadOnlyList<string> RequirementDetailLines { get; }
+        public int DetailedRequirementCount { get; }
+        public string MoreRequirementsLine { get; }
         public bool HasData => Primary.Length != 0 || Secondary.Length != 0 || Status.Length != 0 || KeepCount > 0;
         public bool IsDiagnostic =>
             string.Equals(Status, "LOADING ITEM DATA", StringComparison.OrdinalIgnoreCase) ||
@@ -121,14 +127,10 @@ namespace SPTItemIntelligence
                 if (TryLine(BestSourceLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(PerSlotLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(OwnedLine, requestedIndex, ref current, out found)) return found;
-                int detailLimit = mode == ItemTooltipMode.Full ? RequirementDetailLines.Count : Math.Min(3, RequirementDetailLines.Count);
+                int detailLimit = mode == ItemTooltipMode.Full ? RequirementDetailLines.Count : DetailedRequirementCount;
                 for (int i = 0; i < detailLimit; i++)
                     if (TryLine(RequirementDetailLines[i], requestedIndex, ref current, out found)) return found;
-                if (mode == ItemTooltipMode.Detailed && RequirementDetailLines.Count > detailLimit)
-                {
-                    string more = "Requirements: +" + (RequirementDetailLines.Count - detailLimit).ToString(CultureInfo.InvariantCulture) + " more";
-                    if (TryLine(more, requestedIndex, ref current, out found)) return found;
-                }
+                if (mode == ItemTooltipMode.Detailed && TryLine(MoreRequirementsLine, requestedIndex, ref current, out found)) return found;
             }
             if (mode == ItemTooltipMode.Full)
             {

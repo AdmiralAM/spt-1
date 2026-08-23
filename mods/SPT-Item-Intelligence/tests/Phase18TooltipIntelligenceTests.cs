@@ -89,6 +89,10 @@ static class Phase18TooltipIntelligenceTests
         }));
         ItemHoverText flea = new ItemHoverTextFormatter().Format(new ItemHoverState(store.Get("flea")));
         Expect(flea.BestSourceLine == "Best: Flea · 51,000 ₽/unit", "flea winning source is explicit", ref assertions);
+
+        ItemHoverText bounded = new ItemHoverText("1 ₽", "", "", "bounded", 0, 0, 0, 0, 0, "", new[] { "A", "B", "C", "D" });
+        Expect(Contains(bounded, ItemTooltipMode.Detailed, "Requirements: +1 more"), "detailed target list is bounded with a cached remainder line", ref assertions);
+        Expect(Contains(bounded, ItemTooltipMode.Full, "D"), "full mode retains every concrete target", ref assertions);
         return assertions;
     }
 
