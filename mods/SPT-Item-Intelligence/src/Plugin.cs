@@ -31,7 +31,7 @@ namespace SPTItemIntelligence
             dataBootstrap = new RequirementRuntimeBootstrap(
                 new ReflectionSptSnapshotTransport(),
                 new ReflectionNewtonsoftSnapshotDecoder(message => Logger.LogInfo(message)),
-                new SptRequirementDataProjector(message => Logger.LogInfo(message)),
+                new AqcQuestRequirementProjector(message => Logger.LogInfo(message)),
                 PresentationStore,
                 hoverController,
                 trace: message => Logger.LogInfo(message));
