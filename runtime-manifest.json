@@ -1,0 +1,12 @@
+{
+  "name": "SPT Tactical HUD",
+  "channel": "runtime",
+  "client_version": "1.13.2",
+  "server_version": "1.13.0",
+  "spt_version": "4.1.x",
+  "source_commit": "d8dc7f4da8466ea82f96432c92cc1c8f092e17f4",
+  "server_included": false,
+  "contains_item_intelligence": false,
+  "contains_pause": false,
+  "contains_belt_armband_inventory": false
+}
