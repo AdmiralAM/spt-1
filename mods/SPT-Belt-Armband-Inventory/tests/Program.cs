@@ -62,6 +62,10 @@ internal static class Program
         Assert(!ScavBeltPolicy.ShouldRestore(true, false, false), "empty Scav ArmBand remains vanilla-deleted");
         Assert(!ScavBeltPolicy.ShouldRestore(false, true, true), "already-visible ArmBand is not modified");
 
+        Assert(GrenadeSlotPolicy.ShouldIncludeBelt(true, true), "container belt participates in grenade fast-access slots");
+        Assert(!GrenadeSlotPolicy.ShouldIncludeBelt(true, false), "plain armband is never a grenade slot");
+        Assert(!GrenadeSlotPolicy.ShouldIncludeBelt(false, true), "container flag without an equipped item is ignored");
+
         Console.WriteLine("SPT Belt/Armband Inventory Phase 1: " + assertions + " assertions passed.");
     }
 
