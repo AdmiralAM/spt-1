@@ -79,7 +79,8 @@ static class Phase18TooltipIntelligenceTests
             new ItemPriceInput("VALUE", 42000, "Therapist", 12000, 9000, 2, 1)
         }));
         ItemHoverText text = new ItemHoverTextFormatter().Format(new ItemHoverState(store.Get("value")));
-        Expect(text.BestSourceLine == "Best: Therapist · 42,000 ₽/unit", "named winning trader is exposed", ref assertions);
+        Expect(text.Primary == "42,000 ₽ · Therapist", "vendor mode exposes named highest trader value", ref assertions);
+        Expect(text.Secondary.Length == 0, "vendor mode omits per-slot output", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Detailed, "Now: Signal - Part 1 ×2 · FIR"), "detailed mode names the active quest", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Detailed, "Hideout: Workbench L1 ×3"), "detailed mode names the hideout target", ref assertions);
 
@@ -87,8 +88,8 @@ static class Phase18TooltipIntelligenceTests
         {
             new ItemPriceInput("FLEA", 10000, "Prapor", 51000, 9000)
         }));
-        ItemHoverText flea = new ItemHoverTextFormatter().Format(new ItemHoverState(store.Get("flea")));
-        Expect(flea.BestSourceLine == "Best: Flea · 51,000 ₽/unit", "flea winning source is explicit", ref assertions);
+        ItemHoverText flea = new ItemHoverTextFormatter().Format(new ItemHoverState(store.Get("flea")), ItemValueMode.Flea);
+        Expect(flea.Primary == "51,000 ₽ · Flea" && flea.Secondary.Length == 0, "flea mode exposes flea value without per-slot output", ref assertions);
 
         ItemHoverText bounded = new ItemHoverText("1 ₽", "", "", "bounded", 0, 0, 0, 0, 0, "", new[] { "A", "B", "C", "D" });
         Expect(Contains(bounded, ItemTooltipMode.Detailed, "Requirements: +1 more"), "detailed target list is bounded with a cached remainder line", ref assertions);
