@@ -325,6 +325,22 @@ namespace SPTItemIntelligence
 
         public ItemDefinition Resolve(object itemOrTemplate)
         {
+            if (itemOrTemplate == null) return Unknown(null);
+
+            ItemDescriptor descriptor = itemOrTemplate as ItemDescriptor;
+            if (descriptor != null) return Resolve(descriptor);
+
+            string templateId;
+            if (ItemObjectReader.TryReadTemplateId(itemOrTemplate, out templateId))
+            {
+                lock (sync)
+                {
+                    ItemDefinition known;
+                    if (exact.TryGetValue(templateId, out known)) return known;
+                    if (cache.TryGetValue(templateId, out known)) return known;
+                }
+            }
+
             return Resolve(ItemDescriptor.FromObject(itemOrTemplate));
         }
 
@@ -383,6 +399,33 @@ namespace SPTItemIntelligence
             "HpResource", "MaxHpResource", "MedUseTime", "Hydration", "Energy", "FoodUseTime",
             "HealthEffects", "Effects", "Buffs", "StimulatorBuffs", "Damage", "ExplosionStrength"
         };
+
+        public static bool TryReadTemplateId(object source, out string templateId)
+        {
+            templateId = string.Empty;
+            if (source == null) return false;
+
+            ItemDescriptor descriptor = source as ItemDescriptor;
+            if (descriptor != null)
+            {
+                templateId = descriptor.TemplateId;
+                return !string.IsNullOrEmpty(templateId);
+            }
+
+            string raw = FirstString(source, "TemplateId", "Tpl", "_tpl");
+            object template = null;
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                template = ReadMember(source, "Template");
+                if (template == null)
+                    raw = FirstString(source, "Id", "_id");
+                else
+                    raw = FirstString(template, "TemplateId", "Id", "_id");
+            }
+
+            templateId = ItemText.NormalizeId(raw);
+            return !string.IsNullOrEmpty(templateId);
+        }
 
         public static ItemDescriptor Read(object source)
         {
