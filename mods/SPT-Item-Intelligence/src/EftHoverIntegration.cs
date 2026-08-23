@@ -6,6 +6,12 @@ using System.Threading;
 
 namespace SPTItemIntelligence
 {
+    public interface IItemHoverAnchorSink
+    {
+        void SetAnchor(object itemView);
+        void ClearAnchor();
+    }
+
     public static class EftItemTemplateIdResolver
     {
         static readonly string[] itemMembers = { "Item", "item", "ItemContext", "itemContext", "_item" };
@@ -152,6 +158,7 @@ namespace SPTItemIntelligence
         static EftItemViewHoverIntegration active;
 
         readonly ItemHoverRuntimeController controller;
+        readonly IItemHoverAnchorSink anchorSink;
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         object harmony;
@@ -162,11 +169,13 @@ namespace SPTItemIntelligence
         public EftItemViewHoverIntegration(
             ItemHoverRuntimeController controller,
             Action<string> logInfo = null,
-            Action<string> logWarning = null)
+            Action<string> logWarning = null,
+            IItemHoverAnchorSink anchorSink = null)
         {
             this.controller = controller ?? throw new ArgumentNullException(nameof(controller));
             this.logInfo = logInfo;
             this.logWarning = logWarning;
+            this.anchorSink = anchorSink;
         }
 
         public bool IsInstalled { get; private set; }
@@ -227,18 +236,22 @@ namespace SPTItemIntelligence
             string templateId = EftItemTemplateIdResolver.Resolve(itemView);
             if (templateId.Length == 0)
             {
+                if (anchorSink != null) anchorSink.ClearAnchor();
                 if (Interlocked.Exchange(ref unresolvedTemplateReported, 1) == 0 && logWarning != null)
                     logWarning("Item Intelligence could not resolve a template id from an EFT ItemView; this shape is ignored.");
                 return false;
             }
 
+            if (anchorSink != null) anchorSink.SetAnchor(itemView);
             controller.OnHoverEnter(templateId);
             return true;
         }
 
         internal void DispatchExit()
         {
-            if (!disposed) controller.OnHoverExit();
+            if (disposed) return;
+            if (anchorSink != null) anchorSink.ClearAnchor();
+            controller.OnHoverExit();
         }
 
         internal static List<HoverPatchTarget> DiscoverTargets(IEnumerable<Assembly> assemblies)
@@ -357,6 +370,7 @@ namespace SPTItemIntelligence
         {
             if (disposed) return;
             disposed = true;
+            if (anchorSink != null) anchorSink.ClearAnchor();
             controller.OnHoverExit();
             SafeUnpatch();
         }
