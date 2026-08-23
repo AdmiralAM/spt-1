@@ -5,6 +5,12 @@ using UnityEngine;
 
 namespace SPTItemIntelligence
 {
+    public enum ItemMarkerSide
+    {
+        Left,
+        Right
+    }
+
     public sealed class ItemIntelligenceUiSettings
     {
         readonly ConfigEntry<ItemTooltipMode> tooltipMode;
@@ -12,10 +18,14 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<float> tooltipScale;
         readonly ConfigEntry<float> tooltipOpacity;
         readonly ConfigEntry<int> tooltipFontSize;
+        readonly ConfigEntry<ItemMarkerSide> markerSide;
         readonly ConfigEntry<float> markerSize;
         readonly ConfigEntry<float> markerOpacity;
         readonly ConfigEntry<float> markerOffsetX;
         readonly ConfigEntry<float> markerOffsetY;
+        readonly ConfigEntry<bool> markerGlow;
+        readonly ConfigEntry<float> markerGlowStrength;
+        readonly ConfigEntry<float> markerGlowRadius;
         readonly ConfigEntry<Color> defaultColor;
         readonly ConfigEntry<Color> questNowColor;
         readonly ConfigEntry<Color> hideoutColor;
@@ -40,14 +50,22 @@ namespace SPTItemIntelligence
             tooltipFontSize = config.Bind("Tooltip", "Font Size", 13,
                 new ConfigDescription("Tooltip text size before Scale is applied.", new AcceptableValueRange<int>(11, 18)));
 
+            markerSide = config.Bind("Marker", "Side", ItemMarkerSide.Left,
+                "Select the upper-left or upper-right item-cell corner. This stays attached to the selected edge on multi-cell items.");
             markerSize = config.Bind("Marker", "Size", 14f,
                 new ConfigDescription("Information marker size in pixels.", new AcceptableValueRange<float>(10f, 28f)));
             markerOpacity = config.Bind("Marker", "Opacity", 0.96f,
                 new ConfigDescription("Information marker opacity.", new AcceptableValueRange<float>(0.20f, 1f)));
             markerOffsetX = config.Bind("Marker", "Offset X", 3f,
-                new ConfigDescription("Horizontal inset from the item cell upper-left corner; negative values move outward.", new AcceptableValueRange<float>(-40f, 40f)));
+                new ConfigDescription("Horizontal offset from the selected edge. Positive values move inward; negative values move outward.", new AcceptableValueRange<float>(-80f, 80f)));
             markerOffsetY = config.Bind("Marker", "Offset Y", 3f,
-                new ConfigDescription("Vertical inset from the item cell upper-left corner; negative values move outward.", new AcceptableValueRange<float>(-40f, 40f)));
+                new ConfigDescription("Vertical inset from the item cell upper edge; negative values move outward.", new AcceptableValueRange<float>(-40f, 40f)));
+            markerGlow = config.Bind("Marker", "Glow", true,
+                "Adds a subtle same-color halo behind the marker.");
+            markerGlowStrength = config.Bind("Marker", "Glow Strength", 0.24f,
+                new ConfigDescription("Opacity of the marker halo.", new AcceptableValueRange<float>(0f, 0.75f)));
+            markerGlowRadius = config.Bind("Marker", "Glow Radius", 1.6f,
+                new ConfigDescription("Spread of the marker halo in pixels.", new AcceptableValueRange<float>(0.5f, 4f)));
 
             defaultColor = ColorEntry(config, "Marker Colors", "Default Color", new Color(0.90f, 0.90f, 0.90f), "No unmet requirement.");
             questNowColor = ColorEntry(config, "Marker Colors", "Quest Now Color", new Color(1.00f, 0.35f, 0.21f), "Unmet active quest requirement.");
@@ -63,10 +81,14 @@ namespace SPTItemIntelligence
             tooltipScale.SettingChanged += delegate { Touch(); };
             tooltipOpacity.SettingChanged += delegate { Touch(); };
             tooltipFontSize.SettingChanged += delegate { Touch(); };
+            markerSide.SettingChanged += delegate { Touch(); };
             markerSize.SettingChanged += delegate { Touch(); };
             markerOpacity.SettingChanged += delegate { Touch(); };
             markerOffsetX.SettingChanged += delegate { Touch(); };
             markerOffsetY.SettingChanged += delegate { Touch(); };
+            markerGlow.SettingChanged += delegate { Touch(); };
+            markerGlowStrength.SettingChanged += delegate { Touch(); };
+            markerGlowRadius.SettingChanged += delegate { Touch(); };
             defaultColor.SettingChanged += delegate { Touch(); };
             questNowColor.SettingChanged += delegate { Touch(); };
             hideoutColor.SettingChanged += delegate { Touch(); };
@@ -81,10 +103,14 @@ namespace SPTItemIntelligence
         public float TooltipScale => Mathf.Clamp(tooltipScale.Value, 0.75f, 1.50f);
         public float TooltipOpacity => Mathf.Clamp01(tooltipOpacity.Value);
         public int TooltipFontSize => Mathf.Clamp(tooltipFontSize.Value, 11, 18);
+        public ItemMarkerSide MarkerSide => markerSide.Value;
         public float MarkerSize => Mathf.Clamp(markerSize.Value, 10f, 28f);
         public float MarkerOpacity => Mathf.Clamp01(markerOpacity.Value);
-        public float MarkerOffsetX => Mathf.Clamp(markerOffsetX.Value, -40f, 40f);
+        public float MarkerOffsetX => Mathf.Clamp(markerOffsetX.Value, -80f, 80f);
         public float MarkerOffsetY => Mathf.Clamp(markerOffsetY.Value, -40f, 40f);
+        public bool MarkerGlow => markerGlow.Value;
+        public float MarkerGlowStrength => Mathf.Clamp(markerGlowStrength.Value, 0f, 0.75f);
+        public float MarkerGlowRadius => Mathf.Clamp(markerGlowRadius.Value, 0.5f, 4f);
         public Color CompleteColor => enoughColor.Value;
         public Color PartialColor => partialColor.Value;
         public Color MissingColor => missingColor.Value;

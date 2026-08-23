@@ -190,23 +190,6 @@ namespace SPTItemIntelligence
             catch { return ItemHoverText.Empty; }
         }
 
-        static void DrawDetails(Rect marker, ItemHoverText text, ItemTooltipMode mode)
-        {
-            const float width = 286f;
-            const float gap = 8f;
-            const float lineHeight = 18f;
-            int lineCount = text.GetLineCount(mode);
-            float height = 12f + Math.Max(1, lineCount) * lineHeight;
-            float x = marker.xMax + gap;
-            if (x + width > Screen.width) x = marker.xMin - width - gap;
-            x = Mathf.Clamp(x, 0f, Mathf.Max(0f, Screen.width - width));
-            float y = Mathf.Clamp(marker.yMin, 0f, Mathf.Max(0f, Screen.height - height));
-
-            GUI.Box(new Rect(x, y, width, height), GUIContent.none);
-            for (int i = 0; i < lineCount; i++)
-                GUI.Label(new Rect(x + 10f, y + 6f + i * lineHeight, width - 20f, lineHeight), text.GetLine(mode, i));
-        }
-
         static RectTransform ResolveRectTransform(object itemView)
         {
             if (itemView == null) return null;
@@ -284,13 +267,15 @@ namespace SPTItemIntelligence
             readonly GameObject markerObject;
             readonly RectTransform rect;
             readonly Component text;
+            readonly Component glow;
             readonly Component outline;
 
-            AttachedMarkerView(GameObject markerObject, RectTransform rect, Component text, Component outline)
+            AttachedMarkerView(GameObject markerObject, RectTransform rect, Component text, Component glow, Component outline)
             {
                 this.markerObject = markerObject;
                 this.rect = rect;
                 this.text = text;
+                this.glow = glow;
                 this.outline = outline;
             }
 
@@ -310,6 +295,7 @@ namespace SPTItemIntelligence
                     rect.localRotation = Quaternion.identity;
 
                     Component text = markerObject.AddComponent(textType) as Component;
+                    Component glow = outlineType == null ? null : markerObject.AddComponent(outlineType) as Component;
                     Component outline = outlineType == null ? null : markerObject.AddComponent(outlineType) as Component;
                     Set(text, "text", "ⓘ");
                     Set(text, "fontStyle", FontStyle.Bold);
@@ -319,13 +305,18 @@ namespace SPTItemIntelligence
                     Set(text, "horizontalOverflow", Enum.Parse(PropertyType(text, "horizontalOverflow"), "Overflow"));
                     Set(text, "verticalOverflow", Enum.Parse(PropertyType(text, "verticalOverflow"), "Overflow"));
                     Set(text, "font", BuiltinFont());
+                    if (glow != null)
+                    {
+                        Set(glow, "useGraphicAlpha", false);
+                        Set(glow, "enabled", true);
+                    }
                     if (outline != null)
                     {
                         Set(outline, "effectColor", new Color(0f, 0f, 0f, 0.95f));
                         Set(outline, "useGraphicAlpha", true);
                     }
                     rect.SetAsLastSibling();
-                    return new AttachedMarkerView(markerObject, rect, text, outline);
+                    return new AttachedMarkerView(markerObject, rect, text, glow, outline);
                 }
                 catch { return null; }
             }
@@ -338,16 +329,36 @@ namespace SPTItemIntelligence
                 if (!visible) return;
 
                 float size = settings.MarkerSize;
+                bool right = settings.MarkerSide == ItemMarkerSide.Right;
+                Vector2 anchor = right ? new Vector2(1f, 1f) : new Vector2(0f, 1f);
+                rect.anchorMin = anchor;
+                rect.anchorMax = anchor;
+                rect.pivot = anchor;
                 rect.sizeDelta = new Vector2(size, size);
-                rect.anchoredPosition = new Vector2(settings.MarkerOffsetX, -settings.MarkerOffsetY);
+                rect.anchoredPosition = new Vector2(right ? -settings.MarkerOffsetX : settings.MarkerOffsetX, -settings.MarkerOffsetY);
+
                 Color color = settings.GetColor(presentation.Kind);
                 color.a = settings.MarkerOpacity;
                 Set(text, "text", presentation.Glyph);
-                Set(text, "fontSize", Mathf.Clamp(Mathf.RoundToInt(size * 0.88f), 9, 25));
+                Set(text, "fontSize", Mathf.Clamp(Mathf.RoundToInt(size * 0.78f), 8, 22));
                 Set(text, "color", color);
+
+                if (glow != null)
+                {
+                    bool glowEnabled = settings.MarkerGlow && settings.MarkerGlowStrength > 0f;
+                    Set(glow, "enabled", glowEnabled);
+                    if (glowEnabled)
+                    {
+                        Color glowColor = color;
+                        glowColor.a = settings.MarkerGlowStrength * settings.MarkerOpacity;
+                        float radius = settings.MarkerGlowRadius;
+                        Set(glow, "effectColor", glowColor);
+                        Set(glow, "effectDistance", new Vector2(radius, -radius));
+                    }
+                }
                 if (outline != null)
                 {
-                    float thickness = Mathf.Clamp(size * 0.085f, 1f, 2f);
+                    float thickness = Mathf.Clamp(size * 0.075f, 0.9f, 1.8f);
                     Set(outline, "effectDistance", new Vector2(thickness, -thickness));
                 }
                 rect.SetAsLastSibling();
