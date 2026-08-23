@@ -21,11 +21,16 @@ public sealed record QuestEvaluation(
 
 public sealed record AggregatedItemRequirement(
     string TemplateId,
-    double CurrentRequired,
-    double FutureRequired,
-    bool RequiresFoundInRaid,
+    double CurrentFirRequired,
+    double CurrentNonFirRequired,
+    double FutureFirRequired,
+    double FutureNonFirRequired,
     IReadOnlySet<string> CurrentQuestIds,
-    IReadOnlySet<string> FutureQuestIds);
+    IReadOnlySet<string> FutureQuestIds)
+{
+    public double CurrentRequired => CurrentFirRequired + CurrentNonFirRequired;
+    public double FutureRequired => FutureFirRequired + FutureNonFirRequired;
+}
 
 public sealed record PlannerEvaluationResult(
     IReadOnlyDictionary<string, QuestEvaluation> Quests,
@@ -71,10 +76,7 @@ public static class PlannerEvaluator
                 blockers.Add(edge.SourceQuestId);
             }
 
-            PlannerQuestDisposition disposition = Classify(
-                profileState,
-                levelSatisfied,
-                prerequisitesSatisfied);
+            PlannerQuestDisposition disposition = Classify(profileState, levelSatisfied, prerequisitesSatisfied);
 
             evaluations[node.QuestId] = new QuestEvaluation(
                 node.QuestId,
@@ -130,15 +132,16 @@ public static class PlannerEvaluator
                     byTemplate[templateId] = aggregate;
                 }
 
-                aggregate.RequiresFoundInRaid |= requirement.FoundInRaid;
                 if (current)
                 {
-                    aggregate.CurrentRequired += requirement.RequiredCount;
+                    if (requirement.FoundInRaid) aggregate.CurrentFirRequired += requirement.RequiredCount;
+                    else aggregate.CurrentNonFirRequired += requirement.RequiredCount;
                     aggregate.CurrentQuestIds.Add(requirement.QuestId);
                 }
                 else if (future)
                 {
-                    aggregate.FutureRequired += requirement.RequiredCount;
+                    if (requirement.FoundInRaid) aggregate.FutureFirRequired += requirement.RequiredCount;
+                    else aggregate.FutureNonFirRequired += requirement.RequiredCount;
                     aggregate.FutureQuestIds.Add(requirement.QuestId);
                 }
             }
@@ -148,9 +151,10 @@ public static class PlannerEvaluator
             .OrderBy(pair => pair.Key, StringComparer.Ordinal)
             .Select(pair => new AggregatedItemRequirement(
                 pair.Key,
-                pair.Value.CurrentRequired,
-                pair.Value.FutureRequired,
-                pair.Value.RequiresFoundInRaid,
+                pair.Value.CurrentFirRequired,
+                pair.Value.CurrentNonFirRequired,
+                pair.Value.FutureFirRequired,
+                pair.Value.FutureNonFirRequired,
                 new HashSet<string>(pair.Value.CurrentQuestIds, StringComparer.Ordinal),
                 new HashSet<string>(pair.Value.FutureQuestIds, StringComparer.Ordinal)))
             .ToArray();
@@ -158,9 +162,10 @@ public static class PlannerEvaluator
 
     private sealed class MutableAggregate
     {
-        public double CurrentRequired;
-        public double FutureRequired;
-        public bool RequiresFoundInRaid;
+        public double CurrentFirRequired;
+        public double CurrentNonFirRequired;
+        public double FutureFirRequired;
+        public double FutureNonFirRequired;
         public HashSet<string> CurrentQuestIds { get; } = new(StringComparer.Ordinal);
         public HashSet<string> FutureQuestIds { get; } = new(StringComparer.Ordinal);
     }
