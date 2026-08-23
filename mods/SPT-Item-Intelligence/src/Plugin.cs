@@ -30,11 +30,10 @@ namespace SPTItemIntelligence
             hoverController = new ItemHoverRuntimeController(PresentationStore, hoverSink, textCache, CreateFallback);
             dataBootstrap = new RequirementRuntimeBootstrap(
                 new ReflectionSptSnapshotTransport(),
-                new ReflectionNewtonsoftSnapshotDecoder(message => Logger.LogInfo(message)),
-                new AqcQuestRequirementProjector(message => Logger.LogInfo(message)),
+                new ReflectionNewtonsoftSnapshotDecoder(),
+                new AqcQuestRequirementProjector(),
                 PresentationStore,
-                hoverController,
-                trace: message => Logger.LogInfo(message));
+                hoverController);
             hoverIntegration = new EftItemViewHoverIntegration(
                 hoverController,
                 message => Logger.LogInfo(message),
@@ -79,6 +78,7 @@ namespace SPTItemIntelligence
         {
             if (dataCancellation != null) dataCancellation.Cancel();
             if (hoverIntegration != null) hoverIntegration.Dispose();
+            FirRequirementRegistry.Clear();
             dataTask = null;
             dataCancellation = null;
             dataBootstrap = null;
