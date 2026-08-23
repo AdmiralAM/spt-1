@@ -61,8 +61,8 @@ public sealed class RequirementDataService(
             templateTable.Prices.TryGetValue(templateId, out double fleaValue);
             double fallbackValue = handbookHelper.GetTemplatePrice(templateId);
             double traderValue = traderHelper.GetHighestSellToTraderPrice(templateId);
-            int width = Math.Max(1, item.Properties.Width ?? 1);
-            int height = Math.Max(1, item.Properties.Height ?? 1);
+            int width = Math.Max(1, item.Properties?.Width ?? 1);
+            int height = Math.Max(1, item.Properties?.Height ?? 1);
             result.Add(new ItemPriceSnapshotEntry(
                 templateId.ToString(),
                 ToLong(traderValue),
