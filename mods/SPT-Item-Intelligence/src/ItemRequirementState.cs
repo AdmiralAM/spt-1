@@ -119,8 +119,8 @@ namespace SPTItemIntelligence
                 if (entry == null) continue;
 
                 ItemRequirementDecision decision;
-                if (entry.SurplusCount > 0) decision = ItemRequirementDecision.SafeToSell;
-                else if (entry.KeepCount > 0) decision = ItemRequirementDecision.Keep;
+                if (entry.KeepCount > 0) decision = ItemRequirementDecision.Keep;
+                else if (entry.SurplusCount > 0) decision = ItemRequirementDecision.SafeToSell;
                 else decision = ItemRequirementDecision.None;
 
                 states[pair.Key] = new ItemRequirementState(

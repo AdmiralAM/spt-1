@@ -1,6 +1,6 @@
 # SPT Item Intelligence
 
-Independent item-intelligence mod for SPT 4.1.x. Current version: **0.10.0** (`Phase 18 tooltip intelligence`).
+Independent item-intelligence mod for SPT 4.1.x. Current version: **0.10.1** (`Phase 18 corrective patch`).
 
 Implemented pipeline:
 
@@ -12,15 +12,17 @@ Implemented pipeline:
 - Phase 13: one-shot live SPT snapshot bootstrap, quest/hideout/profile projection and visible diagnostic fallback;
 - Phase 14: compact status marker anchored to the hovered EFT item card, with full details revealed only while the marker itself is hovered;
 - Phase 15: approved `ⓘ` marker contract, requirement-priority colors, Minimal/Normal/Detailed/Full tooltip modes and live F12 appearance controls.
-- Phase 16: event-driven registration of every live EFT `ItemView` and persistent per-cell markers; the current Discussion default is top-right.
+- Phase 16: event-driven registration of every live EFT `ItemView`/`ItemCell` and persistent per-cell markers; the current Discussion default is upper-left.
 - Phase 17: schema-v2 server snapshot with flea, trader and handbook values, item dimensions and stack-aware Value/per-slot presentation.
 - Phase 18: real winning trader/source labels plus named quest and hideout requirement breakdowns in deeper tooltip modes.
 
 Phase 17 requests `/spt-item-intelligence/v2/snapshot` once in the background, projects the live profile and price table into immutable requirement/presentation indexes, and refreshes registered markers after publication. There is no update-loop or network polling. Until the snapshot is ready—or when a runtime dependency is unavailable—the overlay exposes an explicit diagnostic state instead of silently displaying nothing or inventing a sell recommendation.
 
-Phase 16 keeps a marker inside every registered live `ItemView` rectangle. `ItemView.Init` registers the view and `ItemView.Kill` removes it, so markers persist without inventory scans, polling or per-item GameObjects. Hovering an item body does nothing; the tooltip is rendered only when the cursor is inside that item's marker.
+Phase 16 keeps a child UI marker inside every registered live `ItemView`/`ItemCell`. Supported lifecycle initialization registers the view and cleanup removes it, so markers persist without inventory scans or polling. Hovering an item body does nothing; the tooltip is rendered only when the cursor is inside that item's marker.
 
-Phase 15 makes Value and concrete requirement counts the primary tooltip content: `Quest Now`, `Quest Later`, `Hideout` and `Keep ×N`. `SAFE TO SELL`/surplus is omitted from Normal and Detailed modes and appears only as low-priority Full-mode detail. Marker color follows requirement priority—not price or sell value—and every marker retains the same `ⓘ` glyph. F12 exposes tooltip mode, marker size, opacity, X/Y offsets and separate requirement-state colors.
+Phase 15 makes Value and concrete requirement progress the primary tooltip content: `Quest Now: owned/required`, `Hideout: owned/required`, `Quest Later: owned/required` and `Keep ×N`; fulfilled rows retain a `✓`. `ID`, `SAFE TO SELL` and surplus never appear in user-facing modes. Marker color follows unmet requirement priority (`Quest Now → Hideout → Quest Later → Default`), never price, sell value or generic Keep. Every marker retains the same `ⓘ` glyph. F12 exposes tooltip mode, marker size, opacity, X/Y offsets and native color selectors for the four marker states.
+
+The 0.10.1 correction attaches the marker to each supported item cell, removes the global per-frame marker scan, and opens the tooltip only while the pointer is over the marker itself. It also handles `ItemCell`, parameterized lifecycle methods, nested item contexts, completed quest conditions, constructing/custom hideout areas, and the SPT 4.1.2 Bulbex requirement (`619cbfeb6b8a1b37a54eebfa`, area type 4, stage 2).
 
 Phase 17 supplies the previously missing live Value data. The server publishes flea, highest trader and handbook fallback unit values plus template dimensions once per snapshot. The client selects the best source, applies the live item stack count and exposes both total Value and ₽/slot without allowing price to affect marker color.
 

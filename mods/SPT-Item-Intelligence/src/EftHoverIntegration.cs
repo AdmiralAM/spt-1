@@ -21,7 +21,7 @@ namespace SPTItemIntelligence
 
     public static class EftItemTemplateIdResolver
     {
-        static readonly string[] itemMembers = { "Item", "item", "ItemContext", "itemContext", "_item" };
+        static readonly string[] itemMembers = { "Item", "item", "ItemContext", "itemContext", "_itemContext", "Context", "context", "_item" };
         static readonly string[] templateIdMembers = { "TemplateId", "templateId", "Tpl", "tpl", "_tpl" };
         static readonly string[] templateMembers = { "Template", "template", "_template" };
         static readonly string[] templateObjectIdMembers = { "TemplateId", "templateId", "Id", "id", "_id", "Tpl", "tpl", "_tpl" };
@@ -35,6 +35,8 @@ namespace SPTItemIntelligence
             if (itemViewOrItem == null) return string.Empty;
 
             object item = ReadFirst(itemViewOrItem, itemMembers) ?? itemViewOrItem;
+            object nestedItem = ReadFirst(item, itemMembers);
+            if (nestedItem != null) item = nestedItem;
             string direct = ReadString(item, templateIdMembers);
             if (!string.IsNullOrWhiteSpace(direct)) return Normalize(direct);
 
@@ -47,6 +49,8 @@ namespace SPTItemIntelligence
         {
             if (itemViewOrItem == null) return 1;
             object item = ReadFirst(itemViewOrItem, itemMembers) ?? itemViewOrItem;
+            object nestedItem = ReadFirst(item, itemMembers);
+            if (nestedItem != null) item = nestedItem;
             object value = ReadFirst(item, stackMembers);
             if (value == null) value = ReadFirst(ReadFirst(item, updateMembers), stackMembers);
             if (value == null) return 1;
@@ -323,8 +327,8 @@ namespace SPTItemIntelligence
 
                     MethodInfo enter = FindPointerMethod(type, "OnPointerEnter");
                     MethodInfo exit = FindPointerMethod(type, "OnPointerExit");
-                    MethodInfo initialize = FindParameterlessMethod(type, "Init");
-                    MethodInfo kill = FindParameterlessMethod(type, "Kill");
+                    MethodInfo initialize = FindLifecycleMethod(type, new[] { "Init", "Show", "SetItem" });
+                    MethodInfo kill = FindLifecycleMethod(type, new[] { "Kill", "OnDisable", "Close" });
                     if (enter == null || exit == null || initialize == null || kill == null || !seenEnter.Add(enter)) continue;
                     result.Add(new HoverPatchTarget(type, enter, exit, initialize, kill));
                 }
@@ -334,14 +338,20 @@ namespace SPTItemIntelligence
 
         static bool LooksLikeItemView(Type type)
         {
-            if (type.Name.EndsWith("ItemView", StringComparison.Ordinal)) return true;
+            if (IsItemCellTypeName(type.Name)) return true;
             Type current = type.BaseType;
             while (current != null)
             {
-                if (current.Name == "ItemView") return true;
+                if (IsItemCellTypeName(current.Name)) return true;
                 current = current.BaseType;
             }
             return false;
+        }
+
+        static bool IsItemCellTypeName(string name)
+        {
+            return !string.IsNullOrEmpty(name) &&
+                (name.EndsWith("ItemView", StringComparison.Ordinal) || name.EndsWith("ItemCell", StringComparison.Ordinal));
         }
 
         static MethodInfo FindPointerMethod(Type type, string name)
@@ -358,14 +368,22 @@ namespace SPTItemIntelligence
             return null;
         }
 
-        static MethodInfo FindParameterlessMethod(Type type, string name)
+        static MethodInfo FindLifecycleMethod(Type type, string[] names)
         {
             const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
             MethodInfo[] methods;
             try { methods = type.GetMethods(flags); }
             catch { return null; }
-            for (int i = 0; i < methods.Length; i++)
-                if (methods[i].Name == name && methods[i].GetParameters().Length == 0) return methods[i];
+            for (int n = 0; n < names.Length; n++)
+            {
+                MethodInfo best = null;
+                for (int i = 0; i < methods.Length; i++)
+                {
+                    if (methods[i].Name != names[n]) continue;
+                    if (best == null || methods[i].GetParameters().Length < best.GetParameters().Length) best = methods[i];
+                }
+                if (best != null) return best;
+            }
             return null;
         }
 

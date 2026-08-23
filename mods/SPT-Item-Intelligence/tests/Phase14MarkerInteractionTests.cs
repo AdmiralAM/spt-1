@@ -7,16 +7,13 @@ static class Phase14MarkerInteractionTests
     {
         int assertions = 0;
         Expect(!ItemMarkerPresentation.From(ItemHoverText.Empty).IsVisible, "empty hover data hides the marker", ref assertions);
-        ItemMarkerPresentation neutral = ItemMarkerPresentation.From(new ItemHoverText("", "", "SAFE TO SELL · surplus 2"));
-        Expect(neutral.Kind == ItemMarkerKind.Neutral, "safe-to-sell does not drive marker color", ref assertions);
-        Expect(neutral.Glyph == "ⓘ", "the anchored marker uses the approved information glyph", ref assertions);
-        Expect(ItemMarkerPresentation.From(new ItemHoverText("", "", "KEEP · quest now")).Kind == ItemMarkerKind.Keep, "required items use the keep marker", ref assertions);
-        Expect(ItemMarkerPresentation.From(new ItemHoverText("ITEM INTELLIGENCE", "a", "LOADING ITEM DATA")).Kind == ItemMarkerKind.Loading, "loading state has a diagnostic marker", ref assertions);
-        Expect(ItemMarkerPresentation.From(new ItemHoverText("ITEM INTELLIGENCE", "a", "DATA UNAVAILABLE")).Kind == ItemMarkerKind.Unavailable, "unavailable state has an error marker", ref assertions);
-        Expect(ItemMarkerPresentation.From(new ItemHoverText("ITEM INTELLIGENCE", "a", "NO REQUIREMENT DATA")).Kind == ItemMarkerKind.Neutral, "neutral data uses the neutral requirement marker", ref assertions);
-
-        ItemHoverText safeText = new ItemHoverText("", "", "SAFE TO SELL");
-        Expect(object.ReferenceEquals(ItemMarkerPresentation.From(safeText), ItemMarkerPresentation.From(safeText)), "per-frame classification reuses immutable marker objects", ref assertions);
+        ItemMarkerPresentation safe = ItemMarkerPresentation.From(new ItemHoverText("12,000 ₽", "", "SAFE TO SELL · surplus 2"));
+        Expect(safe.Kind == ItemMarkerKind.Default, "sell value and internal surplus never color the marker", ref assertions);
+        Expect(safe.Glyph == "ⓘ", "the attached marker uses the approved information glyph", ref assertions);
+        Expect(ItemMarkerPresentation.From(new ItemHoverText("ITEM INTELLIGENCE", "", "LOADING ITEM DATA")).Kind == ItemMarkerKind.Default, "diagnostic state uses the default marker", ref assertions);
+        Expect(ItemMarkerPresentation.From(new ItemHoverText("ITEM INTELLIGENCE", "", "DATA UNAVAILABLE")).Kind == ItemMarkerKind.Default, "unavailable data does not invent a requirement state", ref assertions);
+        ItemHoverText defaultText = new ItemHoverText("1 ₽", "", "");
+        Expect(object.ReferenceEquals(ItemMarkerPresentation.From(defaultText), ItemMarkerPresentation.From(defaultText)), "marker classification reuses immutable presentations", ref assertions);
         return assertions;
     }
 

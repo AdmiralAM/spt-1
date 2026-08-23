@@ -5,7 +5,7 @@ using BepInEx;
 
 namespace SPTItemIntelligence
 {
-    [BepInPlugin("com.admiralam.spt.itemintelligence", "SPT Item Intelligence", "0.10.0")]
+    [BepInPlugin("com.admiralam.spt.itemintelligence", "SPT Item Intelligence", "0.10.1")]
     public sealed class Plugin : BaseUnityPlugin
     {
         ItemHoverOverlaySink hoverSink;
@@ -26,6 +26,7 @@ namespace SPTItemIntelligence
             uiSettings = new ItemIntelligenceUiSettings(Config);
             ItemHoverTextCache textCache = new ItemHoverTextCache();
             hoverSink = new ItemHoverOverlaySink(uiSettings, PresentationStore, textCache, CreateFallback);
+            uiSettings.Changed += hoverSink.Invalidate;
             hoverController = new ItemHoverRuntimeController(PresentationStore, hoverSink, textCache, CreateFallback);
             dataBootstrap = new RequirementRuntimeBootstrap(
                 new ReflectionSptSnapshotTransport(),
@@ -42,14 +43,14 @@ namespace SPTItemIntelligence
             hoverIntegration.TryInstall();
             StartDataLoad();
 
-            Logger.LogInfo("SPT Item Intelligence v0.10.0 loaded (named best source and concrete requirements)");
+            Logger.LogInfo("SPT Item Intelligence v0.10.1 loaded (cell-attached requirement intelligence)");
         }
 
         ItemHoverText CreateFallback(string templateId)
         {
             RequirementRuntimeBootstrap bootstrap = dataBootstrap;
             return bootstrap == null
-                ? new ItemHoverText("ITEM INTELLIGENCE", RequirementContribution.NormalizeId(templateId), "DATA UNAVAILABLE")
+                ? new ItemHoverText("ITEM INTELLIGENCE", string.Empty, "DATA UNAVAILABLE")
                 : bootstrap.CreateFallback(templateId);
         }
 

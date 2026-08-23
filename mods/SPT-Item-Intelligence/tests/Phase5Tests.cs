@@ -30,7 +30,7 @@ static class Phase5Tests
         Expect(quest.OwnedCount == 5, "owned count", ref assertions);
         Expect(quest.QuestNeededNow == 2 && quest.QuestNeededLater == 1, "quest counts", ref assertions);
         Expect(quest.KeepCount == 3 && quest.SurplusCount == 2, "quest keep/surplus", ref assertions);
-        Expect(quest.Decision == ItemRequirementDecision.SafeToSell && quest.IsSafeToSell, "surplus is safe to sell", ref assertions);
+        Expect(quest.Decision == ItemRequirementDecision.Keep && !quest.IsSafeToSell, "an active requirement remains Keep while surplus is retained internally", ref assertions);
         Expect(quest.RequiresFoundInRaid, "FIR flag survives projection", ref assertions);
         Expect(quest.HoldReason == "Current quest (FIR)", "priority hold reason", ref assertions);
 

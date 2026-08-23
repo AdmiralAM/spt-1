@@ -32,6 +32,14 @@ static class Phase12EftHoverIntegrationTests
         Expect(EftItemTemplateIdResolver.Resolve(null) == string.Empty, "null shape is safely ignored", ref assertions);
         Expect(EftItemTemplateIdResolver.Resolve(new object()) == string.Empty, "unknown shape is safely ignored", ref assertions);
         Expect(EftItemTemplateIdResolver.ResolveStackCount(new StackItemView { Item = new StackItem { StackObjectsCount = 37 } }) == 37, "live stack count resolves from the item instance", ref assertions);
+        Expect(EftItemTemplateIdResolver.Resolve(new ContextItemCell
+        {
+            _itemContext = new ItemContext { Item = new StackAndTemplateItem { TemplateId = " CONTEXT ", StackObjectsCount = 12 } }
+        }) == "context", "nested ItemContext resolves from an ItemCell", ref assertions);
+        Expect(EftItemTemplateIdResolver.ResolveStackCount(new ContextItemCell
+        {
+            _itemContext = new ItemContext { Item = new StackAndTemplateItem { TemplateId = "context", StackObjectsCount = 12 } }
+        }) == 12, "nested ItemContext stack count resolves", ref assertions);
 
         List<EftItemViewHoverIntegration.HoverPatchTarget> targets = EftItemViewHoverIntegration.DiscoverTargets(new[]
         {
@@ -44,6 +52,11 @@ static class Phase12EftHoverIntegrationTests
                 fakeFound = targets[i].Initialize.Name == "Init" && targets[i].Kill.Name == "Kill";
             }
         Expect(fakeFound, "ItemView pointer and lifecycle methods are discovered together", ref assertions);
+        bool cellFound = false;
+        for (int i = 0; i < targets.Count; i++)
+            if (targets[i].Type == typeof(FakeInventoryItemCell))
+                cellFound = targets[i].Initialize.Name == "SetItem" && targets[i].Initialize.GetParameters().Length == 1 && targets[i].Kill.Name == "Close";
+        Expect(cellFound, "ItemCell parameterized lifecycle methods are discovered", ref assertions);
 
         ItemPresentationStore store = new ItemPresentationStore();
         store.Refresh(ItemRequirementStateIndex.Empty, ItemPriceIndexBuilder.Build(new[]
@@ -102,12 +115,24 @@ static class Phase12EftHoverIntegrationTests
     sealed class NestedTemplate { public string _id; }
     sealed class StackItemView { public StackItem Item; }
     sealed class StackItem { public int StackObjectsCount; }
+    sealed class ContextItemCell { public ItemContext _itemContext; }
+    sealed class ItemContext { public StackAndTemplateItem Item; }
+    sealed class StackAndTemplateItem { public string TemplateId; public int StackObjectsCount; }
 
     sealed class FakeInventoryItemView
     {
         public DirectItem Item { get; set; }
         public void Init() { }
         public void Kill() { }
+        public void OnPointerEnter(object eventData) { }
+        public void OnPointerExit(object eventData) { }
+    }
+
+    sealed class FakeInventoryItemCell
+    {
+        public DirectItem Item { get; set; }
+        public void SetItem(DirectItem item) { Item = item; }
+        public void Close() { }
         public void OnPointerEnter(object eventData) { }
         public void OnPointerExit(object eventData) { }
     }
