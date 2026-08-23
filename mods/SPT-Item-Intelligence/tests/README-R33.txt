@@ -1,1 +1,0 @@
-R33 runtime validation: tooltip dynamic geometry, descender clipping, semantic complete/partial/missing colors, FIR visible only in Full display, F12 tooltip scale/opacity/font size and semantic colors.
