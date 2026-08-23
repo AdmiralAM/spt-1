@@ -1,18 +1,18 @@
   Determining projects to restore...
-  Restored D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\src\SPT-Item-Intelligence.csproj (in 411 ms).
+  Restored D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\src\SPT-Item-Intelligence.csproj (in 428 ms).
   SPT-Item-Intelligence -> D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\src\bin\Release\netstandard2.1\SPT Item Intelligence v0.4.0.dll
 
 Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:02.70
+Time Elapsed 00:00:02.87
   Determining projects to restore...
-  Restored D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\server\SPT-Item-Intelligence.Server.csproj (in 480 ms).
+  Restored D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\server\SPT-Item-Intelligence.Server.csproj (in 507 ms).
   SPT-Item-Intelligence.Server -> D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\server\bin\Release\net10.0\SPT Item Intelligence Server.dll
 
 Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:03.56
+Time Elapsed 00:00:03.58
