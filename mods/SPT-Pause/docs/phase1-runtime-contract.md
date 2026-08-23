@@ -32,4 +32,5 @@ Phase 1 is an independent implementation. It does not copy or compile either leg
 - [x] No `GameTimerClass` compile-time dependency.
 - [x] No periodic reflection/world polling.
 - [x] Automated state and clock-anchor tests.
+- [x] Disabling the mod while paused cannot block Resume.
 - [ ] Physical SPT 4.1.2 raid validation.
