@@ -1,26 +1,139 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Text;
 using System.Threading;
 
 namespace SPTItemIntelligence
 {
+    public enum ItemTooltipMode
+    {
+        Minimal,
+        Normal,
+        Detailed,
+        Full
+    }
+
     public sealed class ItemHoverText
     {
         internal static readonly ItemHoverText Empty = new ItemHoverText(string.Empty, string.Empty, string.Empty);
 
         public ItemHoverText(string primary, string secondary, string status)
+            : this(primary, secondary, status, string.Empty, 0, 0, 0, 0, 0)
+        {
+        }
+
+        public ItemHoverText(
+            string primary,
+            string secondary,
+            string status,
+            string templateId,
+            int ownedCount,
+            int questNeededNow,
+            int questNeededLater,
+            int hideoutNeeded,
+            int keepCount)
         {
             Primary = primary ?? string.Empty;
             Secondary = secondary ?? string.Empty;
             Status = status ?? string.Empty;
+            TemplateId = templateId ?? string.Empty;
+            OwnedCount = Math.Max(0, ownedCount);
+            QuestNeededNow = Math.Max(0, questNeededNow);
+            QuestNeededLater = Math.Max(0, questNeededLater);
+            HideoutNeeded = Math.Max(0, hideoutNeeded);
+            KeepCount = Math.Max(0, keepCount);
+
+            ValueLine = Primary.Length == 0 ? string.Empty : "Value: " + Primary;
+            QuestNowLine = CountLine("Quest Now", QuestNeededNow);
+            QuestLaterLine = CountLine("Quest Later", QuestNeededLater);
+            HideoutLine = CountLine("Hideout", HideoutNeeded);
+            KeepLine = CountLine("Keep", KeepCount);
+            PerSlotLine = Secondary.Length == 0 ? string.Empty : "Per slot: " + Secondary;
+            OwnedLine = CountLine("Owned", OwnedCount);
+            TemplateLine = TemplateId.Length == 0 ? string.Empty : "ID: " + TemplateId;
         }
 
         public string Primary { get; }
         public string Secondary { get; }
         public string Status { get; }
-        public bool HasData => Primary.Length != 0 || Secondary.Length != 0 || Status.Length != 0;
+        public string TemplateId { get; }
+        public int OwnedCount { get; }
+        public int QuestNeededNow { get; }
+        public int QuestNeededLater { get; }
+        public int HideoutNeeded { get; }
+        public int KeepCount { get; }
+        public string ValueLine { get; }
+        public string QuestNowLine { get; }
+        public string QuestLaterLine { get; }
+        public string HideoutLine { get; }
+        public string KeepLine { get; }
+        public string PerSlotLine { get; }
+        public string OwnedLine { get; }
+        public string TemplateLine { get; }
+        public bool HasData => Primary.Length != 0 || Secondary.Length != 0 || Status.Length != 0 || KeepCount > 0;
+        public bool IsDiagnostic =>
+            string.Equals(Status, "LOADING ITEM DATA", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(Status, "NO REQUIREMENT DATA", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(Status, "DATA UNAVAILABLE", StringComparison.OrdinalIgnoreCase);
+
+        public int GetLineCount(ItemTooltipMode mode)
+        {
+            int count = 0;
+            while (GetLine(mode, count).Length != 0) count++;
+            return count;
+        }
+
+        public string GetLine(ItemTooltipMode mode, int requestedIndex)
+        {
+            if (requestedIndex < 0) return string.Empty;
+            int current = 0;
+            string found;
+
+            if (IsDiagnostic)
+            {
+                if (TryLine(Primary, requestedIndex, ref current, out found)) return found;
+                if (TryLine(Secondary, requestedIndex, ref current, out found)) return found;
+                if (TryLine(Status, requestedIndex, ref current, out found)) return found;
+                return string.Empty;
+            }
+
+            if (TryLine(ValueLine, requestedIndex, ref current, out found)) return found;
+            if (mode != ItemTooltipMode.Minimal)
+            {
+                if (TryLine(QuestNowLine, requestedIndex, ref current, out found)) return found;
+                if (TryLine(QuestLaterLine, requestedIndex, ref current, out found)) return found;
+                if (TryLine(HideoutLine, requestedIndex, ref current, out found)) return found;
+            }
+            if (TryLine(KeepLine, requestedIndex, ref current, out found)) return found;
+
+            if (mode == ItemTooltipMode.Detailed || mode == ItemTooltipMode.Full)
+            {
+                if (TryLine(PerSlotLine, requestedIndex, ref current, out found)) return found;
+                if (TryLine(OwnedLine, requestedIndex, ref current, out found)) return found;
+            }
+            if (mode == ItemTooltipMode.Full)
+            {
+                if (TryLine(Status, requestedIndex, ref current, out found)) return found;
+                if (TryLine(TemplateLine, requestedIndex, ref current, out found)) return found;
+            }
+
+            if (current == 0 && requestedIndex == 0) return "No active requirements";
+            return string.Empty;
+        }
+
+        static bool TryLine(string line, int requestedIndex, ref int current, out string found)
+        {
+            found = string.Empty;
+            if (string.IsNullOrEmpty(line)) return false;
+            if (current++ != requestedIndex) return false;
+            found = line;
+            return true;
+        }
+
+        static string CountLine(string label, int count)
+        {
+            return count <= 0 ? string.Empty : label + " ×" + count.ToString(CultureInfo.InvariantCulture);
+        }
     }
 
     public sealed class ItemHoverTextFormatter
@@ -32,7 +145,16 @@ namespace SPTItemIntelligence
             string primary = hover.TotalValue > 0 ? FormatRoubles(hover.TotalValue) : string.Empty;
             string secondary = hover.ValuePerSlot > 0 ? FormatRoubles(hover.ValuePerSlot) + "/slot" : string.Empty;
             string status = FormatStatus(hover);
-            return new ItemHoverText(primary, secondary, status);
+            return new ItemHoverText(
+                primary,
+                secondary,
+                status,
+                hover.TemplateId,
+                hover.OwnedCount,
+                hover.QuestNeededNow,
+                hover.QuestNeededLater,
+                hover.HideoutNeeded,
+                hover.KeepCount);
         }
 
         static string FormatStatus(ItemHoverState hover)
