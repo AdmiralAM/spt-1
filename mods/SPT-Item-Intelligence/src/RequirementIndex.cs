@@ -122,9 +122,10 @@ namespace SPTItemIntelligence
         sealed class EntryAccumulator
         {
             readonly Dictionary<string, int> alternativeTotals = new Dictionary<string, int>(StringComparer.Ordinal);
+            readonly Dictionary<string, int> futureQuestTotals = new Dictionary<string, int>(StringComparer.Ordinal);
             readonly List<RequirementDetail> details = new List<RequirementDetail>();
             int additiveTotal;
-            int futureQuestMaximum;
+            int unlabeledFutureMaximum;
             public int QuestNeededNow;
             public int QuestNeededLater;
             public int HideoutNeeded;
@@ -134,29 +135,45 @@ namespace SPTItemIntelligence
             public void Add(RequirementContribution contribution, int remaining)
             {
                 if (contribution.Label.Length > 0) details.Add(new RequirementDetail(contribution.Source, contribution.Label, remaining, contribution.FoundInRaidRequired));
+
+                if (contribution.Source == RequirementSource.FutureQuest && contribution.CombineMode == RequirementCombineMode.Additive)
+                {
+                    Reasons |= RequirementReasonFlags.FutureQuest;
+                    if (contribution.FoundInRaidRequired) Reasons |= RequirementReasonFlags.FoundInRaid;
+                    if (contribution.Label.Length == 0)
+                    {
+                        unlabeledFutureMaximum = Math.Max(unlabeledFutureMaximum, remaining);
+                    }
+                    else
+                    {
+                        int current;
+                        futureQuestTotals.TryGetValue(contribution.Label, out current);
+                        futureQuestTotals[contribution.Label] = current + remaining;
+                    }
+                    return;
+                }
+
                 switch (contribution.Source)
                 {
                     case RequirementSource.CurrentQuest:
                         QuestNeededNow += remaining; Reasons |= RequirementReasonFlags.CurrentQuest; break;
                     case RequirementSource.FutureQuest:
-                        // Future quests are advisory. Display how many copies a future quest can require,
-                        // not the sum of every quest in a large modded quest database.
-                        QuestNeededLater = Math.Max(QuestNeededLater, remaining);
-                        futureQuestMaximum = Math.Max(futureQuestMaximum, remaining);
-                        Reasons |= RequirementReasonFlags.FutureQuest;
-                        break;
+                        QuestNeededLater += remaining; Reasons |= RequirementReasonFlags.FutureQuest; break;
                     case RequirementSource.Hideout:
                         HideoutNeeded += remaining; Reasons |= RequirementReasonFlags.Hideout; break;
                 }
                 if (contribution.FoundInRaidRequired) Reasons |= RequirementReasonFlags.FoundInRaid;
-                if (contribution.Source == RequirementSource.FutureQuest) return;
                 if (contribution.CombineMode == RequirementCombineMode.Additive) { additiveTotal += remaining; return; }
-                int current; if (!alternativeTotals.TryGetValue(contribution.AlternativeGroup, out current) || remaining > current) alternativeTotals[contribution.AlternativeGroup] = remaining;
+                int currentAlternative; if (!alternativeTotals.TryGetValue(contribution.AlternativeGroup, out currentAlternative) || remaining > currentAlternative) alternativeTotals[contribution.AlternativeGroup] = remaining;
             }
 
             public RequirementIndexEntry Finish(string templateId)
             {
-                int keep = additiveTotal + futureQuestMaximum;
+                int futureReserve = unlabeledFutureMaximum;
+                foreach (KeyValuePair<string, int> quest in futureQuestTotals) futureReserve = Math.Max(futureReserve, quest.Value);
+                QuestNeededLater += futureReserve;
+
+                int keep = additiveTotal + futureReserve;
                 foreach (KeyValuePair<string, int> alternative in alternativeTotals) keep += alternative.Value;
                 int surplus = Math.Max(0, OwnedCount - keep);
                 return new RequirementIndexEntry(templateId, QuestNeededNow, QuestNeededLater, HideoutNeeded, keep, OwnedCount, surplus, Reasons, details);
