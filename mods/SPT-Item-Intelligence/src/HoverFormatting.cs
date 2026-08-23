@@ -62,14 +62,25 @@ namespace SPTItemIntelligence
             PerSlotLine = string.Empty;
             OwnedLine = CountLine("Owned", OwnedCount);
             BestSourceLine = bestSource ?? string.Empty;
+
             List<string> details = new List<string>();
+            List<string> detailed = new List<string>();
             if (requirementDetails != null)
+            {
                 foreach (string detail in requirementDetails)
-                    if (!string.IsNullOrWhiteSpace(detail)) details.Add(detail.Trim());
+                {
+                    if (string.IsNullOrWhiteSpace(detail)) continue;
+                    string normalized = detail.Trim();
+                    details.Add(normalized);
+                    if (!normalized.StartsWith("Later:", StringComparison.OrdinalIgnoreCase)) detailed.Add(normalized);
+                }
+            }
             RequirementDetailLines = details.AsReadOnly();
-            DetailedRequirementCount = Math.Min(3, details.Count);
-            MoreRequirementsLine = details.Count > DetailedRequirementCount
-                ? "Requirements: +" + (details.Count - DetailedRequirementCount).ToString(CultureInfo.InvariantCulture) + " more"
+            int detailedVisible = Math.Min(3, detailed.Count);
+            DetailedRequirementLines = detailed.GetRange(0, detailedVisible).AsReadOnly();
+            DetailedRequirementCount = detailedVisible;
+            MoreRequirementsLine = detailed.Count > detailedVisible
+                ? "Requirements: +" + (detailed.Count - detailedVisible).ToString(CultureInfo.InvariantCulture) + " more"
                 : string.Empty;
         }
 
@@ -97,6 +108,7 @@ namespace SPTItemIntelligence
         public string OwnedLine { get; }
         public string BestSourceLine { get; }
         public IReadOnlyList<string> RequirementDetailLines { get; }
+        public IReadOnlyList<string> DetailedRequirementLines { get; }
         public int DetailedRequirementCount { get; }
         public string MoreRequirementsLine { get; }
         public bool HasData => Primary.Length != 0 || Secondary.Length != 0 || Status.Length != 0 || KeepCount > 0;
@@ -138,9 +150,9 @@ namespace SPTItemIntelligence
             if (mode == ItemTooltipMode.Detailed || mode == ItemTooltipMode.Full)
             {
                 if (TryLine(OwnedLine, requestedIndex, ref current, out found)) return found;
-                int detailLimit = mode == ItemTooltipMode.Full ? RequirementDetailLines.Count : DetailedRequirementCount;
-                for (int i = 0; i < detailLimit; i++)
-                    if (TryLine(RequirementDetailLines[i], requestedIndex, ref current, out found)) return found;
+                IReadOnlyList<string> selected = mode == ItemTooltipMode.Full ? RequirementDetailLines : DetailedRequirementLines;
+                for (int i = 0; i < selected.Count; i++)
+                    if (TryLine(selected[i], requestedIndex, ref current, out found)) return found;
                 if (mode == ItemTooltipMode.Detailed && TryLine(MoreRequirementsLine, requestedIndex, ref current, out found)) return found;
             }
             if (current == 0 && requestedIndex == 0) return "No active requirements";
@@ -202,16 +214,47 @@ namespace SPTItemIntelligence
         static IEnumerable<string> FormatRequirementDetails(IReadOnlyList<RequirementDetail> details)
         {
             if (details == null) yield break;
+
+            List<DetailAggregate> ordered = new List<DetailAggregate>();
+            Dictionary<string, DetailAggregate> grouped = new Dictionary<string, DetailAggregate>(StringComparer.Ordinal);
             for (int i = 0; i < details.Count; i++)
             {
                 RequirementDetail detail = details[i];
                 if (detail == null || detail.RemainingCount <= 0 || detail.Label.Length == 0) continue;
+                string key = ((int)detail.Source).ToString(CultureInfo.InvariantCulture) + "|" + detail.Label + "|" + (detail.FoundInRaidRequired ? "1" : "0");
+                DetailAggregate aggregate;
+                if (!grouped.TryGetValue(key, out aggregate))
+                {
+                    aggregate = new DetailAggregate(detail.Source, detail.Label, detail.FoundInRaidRequired);
+                    grouped.Add(key, aggregate);
+                    ordered.Add(aggregate);
+                }
+                aggregate.RemainingCount += detail.RemainingCount;
+            }
+
+            for (int i = 0; i < ordered.Count; i++)
+            {
+                DetailAggregate detail = ordered[i];
                 string prefix = detail.Source == RequirementSource.CurrentQuest ? "Now" :
                     detail.Source == RequirementSource.FutureQuest ? "Later" : "Hideout";
                 string line = prefix + ": " + detail.Label + " ×" + detail.RemainingCount.ToString(CultureInfo.InvariantCulture);
                 if (detail.FoundInRaidRequired) line += " · FIR";
                 yield return line;
             }
+        }
+
+        sealed class DetailAggregate
+        {
+            public DetailAggregate(RequirementSource source, string label, bool foundInRaidRequired)
+            {
+                Source = source;
+                Label = label;
+                FoundInRaidRequired = foundInRaidRequired;
+            }
+            public RequirementSource Source { get; }
+            public string Label { get; }
+            public bool FoundInRaidRequired { get; }
+            public int RemainingCount { get; set; }
         }
 
         static string FormatRoubles(long value)
