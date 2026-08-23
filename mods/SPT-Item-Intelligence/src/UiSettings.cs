@@ -5,9 +5,16 @@ using UnityEngine;
 
 namespace SPTItemIntelligence
 {
+    public enum ItemValueMode
+    {
+        Vendor,
+        Flea
+    }
+
     public sealed class ItemIntelligenceUiSettings
     {
         readonly ConfigEntry<ItemTooltipMode> tooltipMode;
+        readonly ConfigEntry<ItemValueMode> valueMode;
         readonly ConfigEntry<float> markerSize;
         readonly ConfigEntry<float> markerOpacity;
         readonly ConfigEntry<float> markerOffsetX;
@@ -23,7 +30,9 @@ namespace SPTItemIntelligence
         public ItemIntelligenceUiSettings(ConfigFile config)
         {
             tooltipMode = config.Bind("Tooltip", "Mode", ItemTooltipMode.Normal,
-                "Minimal: Value + Keep. Normal: adds Quest Now, Hideout and Quest Later with owned/required progress. Detailed: adds best source, per-slot, owned and up to three concrete targets. Full: shows every concrete target. Internal ids and sell/surplus decisions are never shown.");
+                "Minimal: Value + Keep. Normal: adds Quest Now, Hideout and Quest Later with owned/required progress. Detailed: adds owned and up to three concrete targets. Full: shows every concrete target. Internal ids and sell/surplus decisions are never shown.");
+            valueMode = config.Bind("Tooltip", "Value Source", ItemValueMode.Vendor,
+                "Vendor: show the highest NPC trader sell value. Flea: show the flea-market value.");
             markerSize = config.Bind("Marker", "Size", 14f,
                 new ConfigDescription("Information marker size in pixels.", new AcceptableValueRange<float>(10f, 28f)));
             markerOpacity = config.Bind("Marker", "Opacity", 0.96f,
@@ -39,6 +48,7 @@ namespace SPTItemIntelligence
             questLaterColor = ColorEntry(config, "Quest Later Color", new Color(0.75f, 0.55f, 1.00f), "Unmet future quest requirement.");
 
             tooltipMode.SettingChanged += delegate { Touch(); };
+            valueMode.SettingChanged += delegate { Touch(); };
             markerSize.SettingChanged += delegate { Touch(); };
             markerOpacity.SettingChanged += delegate { Touch(); };
             markerOffsetX.SettingChanged += delegate { Touch(); };
@@ -50,6 +60,7 @@ namespace SPTItemIntelligence
         }
 
         public ItemTooltipMode TooltipMode => tooltipMode.Value;
+        public ItemValueMode ValueMode => valueMode.Value;
         public float MarkerSize => Mathf.Clamp(markerSize.Value, 10f, 28f);
         public float MarkerOpacity => Mathf.Clamp01(markerOpacity.Value);
         public float MarkerOffsetX => Mathf.Clamp(markerOffsetX.Value, -40f, 40f);
