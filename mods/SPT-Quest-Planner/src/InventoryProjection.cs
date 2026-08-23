@@ -19,15 +19,24 @@ public sealed record InventoryProjection(
 
 public sealed record OutstandingItemRequirement(
     string TemplateId,
-    double CurrentRequired,
-    double FutureRequired,
+    double CurrentFirRequired,
+    double CurrentNonFirRequired,
+    double FutureFirRequired,
+    double FutureNonFirRequired,
     double OwnedTotal,
     double OwnedFoundInRaid,
-    double CurrentOutstanding,
-    double FutureOutstandingAfterCurrent,
-    bool RequiresFoundInRaid,
+    double CurrentFirOutstanding,
+    double CurrentNonFirOutstanding,
+    double FutureFirOutstandingAfterCurrent,
+    double FutureNonFirOutstandingAfterCurrent,
     IReadOnlySet<string> CurrentQuestIds,
-    IReadOnlySet<string> FutureQuestIds);
+    IReadOnlySet<string> FutureQuestIds)
+{
+    public double CurrentRequired => CurrentFirRequired + CurrentNonFirRequired;
+    public double FutureRequired => FutureFirRequired + FutureNonFirRequired;
+    public double CurrentOutstanding => CurrentFirOutstanding + CurrentNonFirOutstanding;
+    public double FutureOutstandingAfterCurrent => FutureFirOutstandingAfterCurrent + FutureNonFirOutstandingAfterCurrent;
+}
 
 public static class InventoryProjectionExtractor
 {
@@ -94,21 +103,46 @@ public static class InventoryProjectionExtractor
         foreach (AggregatedItemRequirement requirement in requirements)
         {
             OwnedItemCount owned = inventory.Get(requirement.TemplateId);
-            double eligibleOwned = requirement.RequiresFoundInRaid ? owned.FoundInRaid : owned.Total;
 
-            double currentOutstanding = Math.Max(0d, requirement.CurrentRequired - eligibleOwned);
-            double remainingAfterCurrent = Math.Max(0d, eligibleOwned - requirement.CurrentRequired);
-            double futureOutstanding = Math.Max(0d, requirement.FutureRequired - remainingAfterCurrent);
+            double availableFir = Math.Max(0d, owned.FoundInRaid);
+            double availableNonFirOnly = Math.Max(0d, owned.Total - owned.FoundInRaid);
+
+            // Current requirements have first claim. FIR stock is reserved for FIR-only conditions first;
+            // any FIR surplus may then satisfy non-FIR conditions. This prevents double counting.
+            double currentFirAllocated = Math.Min(requirement.CurrentFirRequired, availableFir);
+            availableFir -= currentFirAllocated;
+            double currentFirOutstanding = Math.Max(0d, requirement.CurrentFirRequired - currentFirAllocated);
+
+            double currentNonFirPool = availableNonFirOnly + availableFir;
+            double currentNonFirAllocated = Math.Min(requirement.CurrentNonFirRequired, currentNonFirPool);
+            double currentNonFirOutstanding = Math.Max(0d, requirement.CurrentNonFirRequired - currentNonFirAllocated);
+
+            // Consume non-FIR-only stock before remaining FIR stock for generic requirements.
+            double consumeNonFirOnly = Math.Min(currentNonFirAllocated, availableNonFirOnly);
+            availableNonFirOnly -= consumeNonFirOnly;
+            double consumeFirForGeneric = currentNonFirAllocated - consumeNonFirOnly;
+            availableFir = Math.Max(0d, availableFir - consumeFirForGeneric);
+
+            double futureFirAllocated = Math.Min(requirement.FutureFirRequired, availableFir);
+            availableFir -= futureFirAllocated;
+            double futureFirOutstanding = Math.Max(0d, requirement.FutureFirRequired - futureFirAllocated);
+
+            double futureNonFirPool = availableNonFirOnly + availableFir;
+            double futureNonFirAllocated = Math.Min(requirement.FutureNonFirRequired, futureNonFirPool);
+            double futureNonFirOutstanding = Math.Max(0d, requirement.FutureNonFirRequired - futureNonFirAllocated);
 
             result.Add(new OutstandingItemRequirement(
                 requirement.TemplateId,
-                requirement.CurrentRequired,
-                requirement.FutureRequired,
+                requirement.CurrentFirRequired,
+                requirement.CurrentNonFirRequired,
+                requirement.FutureFirRequired,
+                requirement.FutureNonFirRequired,
                 owned.Total,
                 owned.FoundInRaid,
-                currentOutstanding,
-                futureOutstanding,
-                requirement.RequiresFoundInRaid,
+                currentFirOutstanding,
+                currentNonFirOutstanding,
+                futureFirOutstanding,
+                futureNonFirOutstanding,
                 requirement.CurrentQuestIds,
                 requirement.FutureQuestIds));
         }
