@@ -1,6 +1,6 @@
 # SPT Pause
 
-Standalone client-only raid pause for **SPT 4.1.x**. Current version: **0.1.0 (Phase 1)**.
+Standalone client-only raid pause for **SPT 4.1.x**. Current version: **0.1.1 (Phase 1 validation hardening)**.
 
 Press **P** during an offline raid to pause or resume. The key and options can be changed live in the BepInEx F12 configuration manager.
 
@@ -14,6 +14,8 @@ Press **P** during an offline raid to pause or resume. The key and options can b
 - keeps UI/inventory interaction available;
 - never activates in hideout or network sessions;
 - restores time scale, audio state and clocks on resume, plugin teardown or scene change;
+- always allows Resume even if `Enabled` is switched off in F12 while already paused;
+- keeps the timer-display choice captured for the active pause cycle, so live F12 changes cannot leave the panel in a mixed state;
 - performs reflection/object discovery only when the user presses the pause key; there is no background world scan.
 
 Optional audio pause is available in F12 and defaults to off, matching the legacy behavior.
@@ -26,4 +28,4 @@ Use the install-only [`runtime-pause`](https://github.com/AdmiralAM/spt-1/tree/r
 
 The pure state/clock transaction tests and the SPT 4.1.x client build run in CI. Physical in-raid validation remains the final milestone and does not block software work.
 
-See [Phase 1 runtime contract](docs/phase1-runtime-contract.md) for the compatibility mapping and acceptance checklist.
+See [Phase 1 runtime contract](docs/phase1-runtime-contract.md) for the compatibility mapping and [the raid validation matrix](docs/phase1-raid-validation.md) for the physical test sequence.
