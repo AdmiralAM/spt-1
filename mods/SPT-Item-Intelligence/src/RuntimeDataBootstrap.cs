@@ -395,8 +395,9 @@ namespace SPTItemIntelligence
             if (enumerable == null) yield break;
             foreach (object value in enumerable)
             {
-                object pairValue = Get(value, "Value");
-                yield return pairValue ?? value;
+                object key;
+                object pairValue;
+                yield return TryPair(value, out key, out pairValue) ? pairValue : value;
             }
         }
 
@@ -426,9 +427,9 @@ namespace SPTItemIntelligence
             int index = 0;
             foreach (object value in enumerable)
             {
-                object key = Get(value, "Key");
-                object pairValue = Get(value, "Value");
-                if (key != null) yield return new KeyValuePair<string, object>(ReadString(key), pairValue);
+                object key;
+                object pairValue;
+                if (TryPair(value, out key, out pairValue)) yield return new KeyValuePair<string, object>(ReadString(key), pairValue);
                 else yield return new KeyValuePair<string, object>((index++).ToString(), value);
             }
         }
@@ -500,6 +501,25 @@ namespace SPTItemIntelligence
             }
             value = null;
             return false;
+        }
+
+        static bool TryPair(object source, out object key, out object value)
+        {
+            key = null;
+            value = null;
+            if (source == null) return false;
+            try
+            {
+                Type type = source.GetType();
+                PropertyInfo keyProperty = type.GetProperty("Key", BindingFlags.Public | BindingFlags.Instance);
+                PropertyInfo valueProperty = type.GetProperty("Value", BindingFlags.Public | BindingFlags.Instance);
+                if (keyProperty == null || valueProperty == null || keyProperty.GetIndexParameters().Length != 0 || valueProperty.GetIndexParameters().Length != 0)
+                    return false;
+                key = keyProperty.GetValue(source, null);
+                value = NullToNull(valueProperty.GetValue(source, null));
+                return key != null;
+            }
+            catch { return false; }
         }
     }
 }
