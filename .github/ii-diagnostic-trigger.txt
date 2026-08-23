@@ -1,0 +1,1 @@
+Build Item Intelligence diagnostic artifact for JProperty runtime validation.
