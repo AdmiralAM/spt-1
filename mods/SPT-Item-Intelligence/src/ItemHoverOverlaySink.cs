@@ -263,7 +263,7 @@ namespace SPTItemIntelligence
 
             float maximumSize = Mathf.Max(12f, Mathf.Min(itemWidth, itemHeight) - 6f);
             float size = Mathf.Min(settings.MarkerSize, maximumSize);
-            marker = new Rect(left + settings.MarkerOffsetX, top + settings.MarkerOffsetY, size, size);
+            marker = new Rect(right - size - settings.MarkerOffsetX, top + settings.MarkerOffsetY, size, size);
             return marker.xMax > 0f && marker.yMax > 0f && marker.xMin < Screen.width && marker.yMin < Screen.height;
         }
 

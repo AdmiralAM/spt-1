@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection;
 using System.Threading;
 
@@ -173,7 +174,13 @@ namespace SPTItemIntelligence
             {
                 string id = JsonNode.ReadString(JsonNode.Get(quest, "qid", "QID", "questId", "_id"));
                 if (string.IsNullOrWhiteSpace(id)) continue;
-                progress[id.Trim()] = new QuestProgress(JsonNode.ReadString(JsonNode.Get(quest, "status", "Status")));
+                List<string> completed = new List<string>();
+                foreach (object conditionId in JsonNode.Values(JsonNode.Get(quest, "completedConditions", "CompletedConditions")))
+                {
+                    string normalized = JsonNode.ReadString(conditionId).Trim();
+                    if (normalized.Length > 0) completed.Add(normalized);
+                }
+                progress[id.Trim()] = new QuestProgress(JsonNode.ReadString(JsonNode.Get(quest, "status", "Status")), completed);
             }
 
             foreach (KeyValuePair<string, object> pair in JsonNode.Pairs(questTable))
@@ -182,6 +189,8 @@ namespace SPTItemIntelligence
                 string questId = JsonNode.ReadString(JsonNode.Get(quest, "_id", "id", "Id"));
                 if (string.IsNullOrWhiteSpace(questId)) questId = pair.Key;
                 if (string.IsNullOrWhiteSpace(questId)) continue;
+                string questLabel = JsonNode.ReadString(JsonNode.Get(quest, "QuestName", "questName", "name", "Name")).Trim();
+                if (questLabel.Length == 0) questLabel = "Quest " + questId;
 
                 QuestProgress state;
                 progress.TryGetValue(questId, out state);
@@ -193,6 +202,7 @@ namespace SPTItemIntelligence
                 for (int i = 0; i < parsed.Count; i++)
                 {
                     QuestCondition condition = parsed[i];
+                    if (state != null && state.IsConditionComplete(condition.Id)) continue;
                     if (condition.Kind == "finditem" && HasMatchingHandover(parsed, condition)) continue;
                     if (condition.Kind != "handoveritem" && condition.Kind != "finditem" &&
                         condition.Kind != "leaveitematlocation" && condition.Kind != "placebeacon") continue;
@@ -201,7 +211,7 @@ namespace SPTItemIntelligence
                     {
                         string target = condition.Targets[targetIndex];
                         if (target.Length == 0 || condition.Count <= 0) continue;
-                        output.Add(new RequirementContribution(target, source, condition.Count, 0, condition.FoundInRaid));
+                        output.Add(new RequirementContribution(target, source, condition.Count, 0, condition.FoundInRaid, label: questLabel));
                     }
                 }
             }
@@ -213,16 +223,17 @@ namespace SPTItemIntelligence
             foreach (object condition in JsonNode.Values(conditions))
             {
                 string kind = JsonNode.ReadString(JsonNode.Get(condition, "conditionType", "ConditionType")).Trim().ToLowerInvariant();
+                string id = JsonNode.ReadString(JsonNode.Get(condition, "id", "_id", "Id")).Trim();
                 int count = Math.Max(0, JsonNode.ReadInt(JsonNode.Get(condition, "value", "Value"), 0));
                 bool fir = JsonNode.ReadBool(JsonNode.Get(condition, "onlyFoundInRaid", "OnlyFoundInRaid"), false);
                 List<string> targets = new List<string>();
                 object targetNode = JsonNode.Get(condition, "target", "Target");
                 foreach (object target in JsonNode.ValuesOrSelf(targetNode))
                 {
-                    string id = RequirementContribution.NormalizeId(JsonNode.ReadString(target));
-                    if (id.Length != 0) targets.Add(id);
+                    string targetId = RequirementContribution.NormalizeId(JsonNode.ReadString(target));
+                    if (targetId.Length != 0) targets.Add(targetId);
                 }
-                result.Add(new QuestCondition(kind, count, fir, targets));
+                result.Add(new QuestCondition(id, kind, count, fir, targets));
             }
             return result;
         }
@@ -254,6 +265,7 @@ namespace SPTItemIntelligence
             foreach (object area in JsonNode.Values(areas))
             {
                 string type = JsonNode.ReadString(JsonNode.Get(area, "type", "Type", "_id", "id"));
+                string areaLabel = HideoutAreaName(type);
                 int currentLevel;
                 currentLevels.TryGetValue(type, out currentLevel);
                 foreach (KeyValuePair<string, object> stagePair in JsonNode.Pairs(JsonNode.Get(area, "stages", "Stages")))
@@ -267,7 +279,8 @@ namespace SPTItemIntelligence
                         string requirementType = JsonNode.ReadString(JsonNode.Get(requirement, "type", "Type", "requirementType", "RequirementType"));
                         if (templateId.Length == 0 || count <= 0) continue;
                         if (requirementType.Length != 0 && requirementType.IndexOf("item", StringComparison.OrdinalIgnoreCase) < 0 && requirementType != "0") continue;
-                        output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count));
+                        string label = areaLabel + " L" + stage.ToString(CultureInfo.InvariantCulture);
+                        output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count, label: label));
                     }
                 }
             }
@@ -276,24 +289,71 @@ namespace SPTItemIntelligence
         sealed class QuestProgress
         {
             readonly string status;
-            public QuestProgress(string status) { this.status = (status ?? string.Empty).Trim().ToLowerInvariant(); }
+            readonly HashSet<string> completedConditions;
+            public QuestProgress(string status, IEnumerable<string> completedConditions)
+            {
+                this.status = (status ?? string.Empty).Trim().ToLowerInvariant();
+                this.completedConditions = new HashSet<string>(completedConditions ?? new string[0], StringComparer.OrdinalIgnoreCase);
+            }
             public bool IsCurrent => status == "started" || status == "availableforfinish" || status == "2" || status == "3";
             public bool IsComplete => status == "success" || status == "fail" || status == "failed" || status == "4" || status == "5" || status == "7" || status == "8";
+            public bool IsConditionComplete(string conditionId) => !string.IsNullOrEmpty(conditionId) && completedConditions.Contains(conditionId);
         }
 
         sealed class QuestCondition
         {
-            public QuestCondition(string kind, int count, bool fir, List<string> targets)
+            public QuestCondition(string id, string kind, int count, bool fir, List<string> targets)
             {
+                Id = id ?? string.Empty;
                 Kind = kind ?? string.Empty;
                 Count = count;
                 FoundInRaid = fir;
                 Targets = targets ?? new List<string>();
             }
+            public string Id { get; }
             public string Kind { get; }
             public int Count { get; }
             public bool FoundInRaid { get; }
             public List<string> Targets { get; }
+        }
+
+        static string HideoutAreaName(string rawType)
+        {
+            int type;
+            if (!int.TryParse(rawType, NumberStyles.Integer, CultureInfo.InvariantCulture, out type))
+                return string.IsNullOrWhiteSpace(rawType) ? "Hideout" : rawType.Trim();
+            switch (type)
+            {
+                case 0: return "Vents";
+                case 1: return "Security";
+                case 2: return "Lavatory";
+                case 3: return "Stash";
+                case 4: return "Generator";
+                case 5: return "Heating";
+                case 6: return "Water Collector";
+                case 7: return "Medstation";
+                case 8: return "Nutrition Unit";
+                case 9: return "Rest Space";
+                case 10: return "Workbench";
+                case 11: return "Intelligence Center";
+                case 12: return "Shooting Range";
+                case 13: return "Library";
+                case 14: return "Scav Case";
+                case 15: return "Illumination";
+                case 16: return "Hall of Fame";
+                case 17: return "Air Filtering Unit";
+                case 18: return "Solar Power";
+                case 19: return "Booze Generator";
+                case 20: return "Bitcoin Farm";
+                case 21: return "Christmas Tree";
+                case 22: return "Defective Wall";
+                case 23: return "Gym";
+                case 24: return "Weapon Stand";
+                case 25: return "Weapon Stand 2";
+                case 26: return "Equipment Presets Stand";
+                case 27: return "Cultist Circle";
+                default: return "Hideout Area " + type.ToString(CultureInfo.InvariantCulture);
+            }
         }
     }
 

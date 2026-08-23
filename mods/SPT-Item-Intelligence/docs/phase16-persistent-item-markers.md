@@ -8,7 +8,7 @@ Phase 16 corrects the remaining mismatch between the Phase 15 preview and the ap
 - `ItemView.Init` registers or refreshes a pooled view and `ItemView.Kill` unregisters it;
 - pointer exit clears only hover detail state and never removes the marker;
 - hovering the item body does nothing; details appear only while the pointer is inside the marker rectangle;
-- the default marker position is the item cell's upper-left corner, with live F12 X/Y offsets;
+- the default marker position is the item cell's upper-right corner, with live F12 X/Y offsets;
 - pooled, killed or destroyed views cannot leave stale markers behind.
 
 ## Performance boundary

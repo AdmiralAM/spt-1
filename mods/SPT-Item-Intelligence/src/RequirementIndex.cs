@@ -18,6 +18,28 @@ namespace SPTItemIntelligence
         AlternativeMaximum
     }
 
+    public sealed class RequirementDetail
+    {
+        public RequirementDetail(RequirementSource source, string label, int remainingCount, bool foundInRaidRequired = false)
+        {
+            Source = source;
+            Label = NormalizeLabel(label);
+            RemainingCount = Math.Max(0, remainingCount);
+            FoundInRaidRequired = foundInRaidRequired;
+        }
+
+        public RequirementSource Source { get; }
+        public string Label { get; }
+        public int RemainingCount { get; }
+        public bool FoundInRaidRequired { get; }
+
+        static string NormalizeLabel(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return string.Empty;
+            return string.Join(" ", value.Trim().Split((char[])null, StringSplitOptions.RemoveEmptyEntries));
+        }
+    }
+
     [Flags]
     public enum RequirementReasonFlags
     {
@@ -37,7 +59,8 @@ namespace SPTItemIntelligence
             int satisfiedCount = 0,
             bool foundInRaidRequired = false,
             RequirementCombineMode combineMode = RequirementCombineMode.Additive,
-            string alternativeGroup = null)
+            string alternativeGroup = null,
+            string label = null)
         {
             TemplateId = NormalizeId(templateId);
             Source = source;
@@ -46,6 +69,7 @@ namespace SPTItemIntelligence
             FoundInRaidRequired = foundInRaidRequired;
             CombineMode = combineMode;
             AlternativeGroup = NormalizeGroup(alternativeGroup);
+            Label = string.IsNullOrWhiteSpace(label) ? string.Empty : label.Trim();
 
             if (TemplateId.Length == 0) throw new ArgumentException("A contribution requires a template id.", nameof(templateId));
             if (CombineMode == RequirementCombineMode.AlternativeMaximum && AlternativeGroup.Length == 0)
@@ -60,6 +84,7 @@ namespace SPTItemIntelligence
         public bool FoundInRaidRequired { get; }
         public RequirementCombineMode CombineMode { get; }
         public string AlternativeGroup { get; }
+        public string Label { get; }
 
         static string NormalizeGroup(string value)
         {
@@ -128,7 +153,7 @@ namespace SPTItemIntelligence
     public sealed class RequirementIndexEntry
     {
         internal static readonly RequirementIndexEntry Empty = new RequirementIndexEntry(
-            string.Empty, 0, 0, 0, 0, 0, 0, RequirementReasonFlags.None);
+            string.Empty, 0, 0, 0, 0, 0, 0, RequirementReasonFlags.None, null);
 
         internal RequirementIndexEntry(
             string templateId,
@@ -138,7 +163,8 @@ namespace SPTItemIntelligence
             int keepCount,
             int ownedCount,
             int surplusCount,
-            RequirementReasonFlags reasons)
+            RequirementReasonFlags reasons,
+            IEnumerable<RequirementDetail> details)
         {
             TemplateId = templateId;
             QuestNeededNow = questNeededNow;
@@ -148,6 +174,11 @@ namespace SPTItemIntelligence
             OwnedCount = ownedCount;
             SurplusCount = surplusCount;
             Reasons = reasons;
+            List<RequirementDetail> copied = new List<RequirementDetail>();
+            if (details != null)
+                foreach (RequirementDetail detail in details)
+                    if (detail != null && detail.RemainingCount > 0 && detail.Label.Length > 0) copied.Add(detail);
+            Details = copied.AsReadOnly();
         }
 
         public string TemplateId { get; }
@@ -158,6 +189,7 @@ namespace SPTItemIntelligence
         public int OwnedCount { get; }
         public int SurplusCount { get; }
         public RequirementReasonFlags Reasons { get; }
+        public IReadOnlyList<RequirementDetail> Details { get; }
         public bool RequiresFoundInRaid => (Reasons & RequirementReasonFlags.FoundInRaid) != 0;
         public bool HasRequirement => KeepCount > 0;
     }
@@ -245,6 +277,7 @@ namespace SPTItemIntelligence
         sealed class EntryAccumulator
         {
             readonly Dictionary<string, int> alternativeTotals = new Dictionary<string, int>(StringComparer.Ordinal);
+            readonly List<RequirementDetail> details = new List<RequirementDetail>();
             int additiveTotal;
 
             public int QuestNeededNow;
@@ -255,6 +288,8 @@ namespace SPTItemIntelligence
 
             public void Add(RequirementContribution contribution, int remaining)
             {
+                if (contribution.Label.Length > 0)
+                    details.Add(new RequirementDetail(contribution.Source, contribution.Label, remaining, contribution.FoundInRaidRequired));
                 switch (contribution.Source)
                 {
                     case RequirementSource.CurrentQuest:
@@ -296,7 +331,8 @@ namespace SPTItemIntelligence
                     keep,
                     OwnedCount,
                     surplus,
-                    Reasons);
+                    Reasons,
+                    details);
             }
         }
     }

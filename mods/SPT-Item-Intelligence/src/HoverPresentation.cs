@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 
 namespace SPTItemIntelligence
@@ -18,6 +19,8 @@ namespace SPTItemIntelligence
         public long TotalValue => Presentation.TotalValue;
         public long ValuePerSlot => Presentation.ValuePerSlot;
         public PriceSource BestPriceSource => Presentation.BestPriceSource;
+        public long BestUnitValue => Presentation.Price == null ? 0 : Presentation.Price.BestUnitValue;
+        public string BestTraderName => Presentation.Price == null ? string.Empty : Presentation.Price.TraderName;
         public ValueTier TotalTier => Presentation.TotalTier;
         public ValueTier PerSlotTier => Presentation.PerSlotTier;
         public bool IsSafeToSell => Presentation.IsSafeToSell;
@@ -28,6 +31,8 @@ namespace SPTItemIntelligence
         public int QuestNeededNow => Presentation.Requirement == null ? 0 : Presentation.Requirement.QuestNeededNow;
         public int QuestNeededLater => Presentation.Requirement == null ? 0 : Presentation.Requirement.QuestNeededLater;
         public int HideoutNeeded => Presentation.Requirement == null ? 0 : Presentation.Requirement.HideoutNeeded;
+        public IReadOnlyList<RequirementDetail> RequirementDetails =>
+            Presentation.Requirement == null ? ItemRequirementState.Empty.Details : Presentation.Requirement.Details;
     }
 
     public sealed class ItemHoverPresentationAdapter
