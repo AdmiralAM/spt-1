@@ -18,6 +18,7 @@ namespace SPTPause
         Action<string> logWarning;
         float previousTimeScale;
         bool previousAudioPause;
+        bool showTimerForCurrentPause;
 
         internal void Initialize(
             ConfigEntry<bool> enabledSetting,
@@ -40,7 +41,8 @@ namespace SPTPause
 
         void Update()
         {
-            if (state == null || enabledSetting == null || !enabledSetting.Value || !ShortcutPressed(toggleSetting.Value)) return;
+            if (state == null || enabledSetting == null || toggleSetting == null) return;
+            if (!PauseInputPolicy.AcceptToggle(ShortcutPressed(toggleSetting.Value), enabledSetting.Value, state.IsPaused)) return;
             if (state.IsPaused) Resume();
             else Pause();
         }
@@ -67,6 +69,7 @@ namespace SPTPause
                 context = candidate;
                 previousTimeScale = Time.timeScale;
                 previousAudioPause = AudioListener.pause;
+                showTimerForCurrentPause = showTimer;
                 PauseRuntime.ShowPausedText = showTimer;
                 PauseRuntime.IsPaused = true;
                 if (pauseAudio) AudioListener.pause = true;
@@ -84,12 +87,13 @@ namespace SPTPause
                 if (context != null) context.ShiftClocks(duration);
                 Time.timeScale = previousTimeScale;
                 AudioListener.pause = previousAudioPause;
-                if (context != null && showPausedTimerSetting != null && showPausedTimerSetting.Value)
+                if (context != null && showTimerForCurrentPause)
                 {
                     context.DisplayMainTimer();
                     StartCoroutine(HideTimerAfterDelay(context));
                 }
                 context = null;
+                showTimerForCurrentPause = false;
                 if (logInfo != null) logInfo("Raid resumed after " + duration.TotalSeconds.ToString("0.0") + " paused seconds.");
             });
         }
