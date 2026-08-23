@@ -20,6 +20,8 @@ namespace SPTItemIntelligence
         public long ValuePerSlot => Presentation.ValuePerSlot;
         public PriceSource BestPriceSource => Presentation.BestPriceSource;
         public long BestUnitValue => Presentation.Price == null ? 0 : Presentation.Price.BestUnitValue;
+        public long TraderUnitValue => Presentation.Price == null ? 0 : Presentation.Price.TraderUnitValue;
+        public long FleaUnitValue => Presentation.Price == null ? 0 : Presentation.Price.FleaUnitValue;
         public string BestTraderName => Presentation.Price == null ? string.Empty : Presentation.Price.TraderName;
         public ValueTier TotalTier => Presentation.TotalTier;
         public ValueTier PerSlotTier => Presentation.PerSlotTier;
