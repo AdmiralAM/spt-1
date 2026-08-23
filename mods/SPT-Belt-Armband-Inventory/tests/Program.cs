@@ -57,6 +57,11 @@ internal static class Program
         Assert(LootPriorityPlan.Build(LootItemKind.Other, true).SequenceEqual(new[] { "Backpack", "Vest", "Belt", "Pockets", "Secure" }), "general loot includes belt after vest");
         Assert(LootPriorityPlan.Build(LootItemKind.Other, false).SequenceEqual(new[] { "Backpack", "Vest", "Pockets", "Secure" }), "no belt preserves vanilla general priority");
 
+        Assert(ScavBeltPolicy.ShouldRestore(true, true, true), "deleted Scav ArmBand is restored for an equipped container belt");
+        Assert(!ScavBeltPolicy.ShouldRestore(true, true, false), "plain Scav armband remains vanilla-deleted");
+        Assert(!ScavBeltPolicy.ShouldRestore(true, false, false), "empty Scav ArmBand remains vanilla-deleted");
+        Assert(!ScavBeltPolicy.ShouldRestore(false, true, true), "already-visible ArmBand is not modified");
+
         Console.WriteLine("SPT Belt/Armband Inventory Phase 1: " + assertions + " assertions passed.");
     }
 
