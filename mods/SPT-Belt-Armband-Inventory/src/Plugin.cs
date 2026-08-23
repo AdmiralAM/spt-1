@@ -16,6 +16,7 @@ namespace SPTBeltArmbandInventory
         ConfigEntry<bool> modEnabled;
         ConfigEntry<BeltSlotPosition> position;
         DynamicBeltPatches patches;
+        LootPriorityPatches lootPatches;
 
         void Awake()
         {
@@ -39,6 +40,15 @@ namespace SPTBeltArmbandInventory
             {
                 patches.Dispose();
                 patches = null;
+                return;
+            }
+
+            lootPatches = new LootPriorityPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!lootPatches.TryInstall())
+            {
+                lootPatches.Dispose();
+                lootPatches = null;
+                Logger.LogWarning("Belt UI remains active, but automatic loot placement will use vanilla container priorities.");
             }
         }
 
@@ -56,6 +66,8 @@ namespace SPTBeltArmbandInventory
 
         void OnDestroy()
         {
+            if (lootPatches != null) lootPatches.Dispose();
+            lootPatches = null;
             if (patches != null) patches.Dispose();
             patches = null;
         }
