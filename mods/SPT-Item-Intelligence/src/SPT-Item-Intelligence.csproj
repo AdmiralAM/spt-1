@@ -4,7 +4,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <AssemblyName>SPT Item Intelligence v0.10.0</AssemblyName>
+    <AssemblyName>SPT Item Intelligence v0.10.1</AssemblyName>
     <RootNamespace>SPTItemIntelligence</RootNamespace>
     <Version>0.10.1</Version>
     <AssemblyVersion>0.10.1.0</AssemblyVersion>
