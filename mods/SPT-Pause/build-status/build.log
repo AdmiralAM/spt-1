@@ -1,0 +1,11 @@
+  Determining projects to restore...
+  Restored D:\a\spt-1\spt-1\mods\SPT-Pause\src\SPT-Pause.csproj (in 512 ms).
+D:\a\spt-1\spt-1\mods\SPT-Pause\src\PauseController.cs(100,35): error CS0266: Cannot implicitly convert type 'System.Collections.Generic.IEnumerable<UnityEngine.KeyCode>' to 'UnityEngine.KeyCode[]'. An explicit conversion exists (are you missing a cast?) [D:\a\spt-1\spt-1\mods\SPT-Pause\src\SPT-Pause.csproj]
+
+Build FAILED.
+
+D:\a\spt-1\spt-1\mods\SPT-Pause\src\PauseController.cs(100,35): error CS0266: Cannot implicitly convert type 'System.Collections.Generic.IEnumerable<UnityEngine.KeyCode>' to 'UnityEngine.KeyCode[]'. An explicit conversion exists (are you missing a cast?) [D:\a\spt-1\spt-1\mods\SPT-Pause\src\SPT-Pause.csproj]
+    0 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:02.81
