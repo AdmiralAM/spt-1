@@ -37,9 +37,9 @@ jobs:
       - name: Package runtime
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path runtime/BepInEx/plugins/'SPT Item Intelligence' | Out-Null
+          New-Item -ItemType Directory -Force -Path runtime/BepInEx/plugins/'SPT Item Intelligence v0.10.1' | Out-Null
           New-Item -ItemType Directory -Force -Path runtime/user/mods/'SPT Item Intelligence Server' | Out-Null
-          Copy-Item 'mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/SPT Item Intelligence.dll' 'runtime/BepInEx/plugins/SPT Item Intelligence/SPT Item Intelligence.dll'
+          Copy-Item 'mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/SPT Item Intelligence v0.10.1.dll' 'runtime/BepInEx/plugins/SPT Item Intelligence v0.10.1/SPT Item Intelligence v0.10.1.dll'
           Copy-Item 'mods/SPT-Item-Intelligence/server/bin/Release/net10.0/SPT Item Intelligence Server.dll' 'runtime/user/mods/SPT Item Intelligence Server/SPT Item Intelligence Server.dll'
       - uses: actions/upload-artifact@v4
         with:
