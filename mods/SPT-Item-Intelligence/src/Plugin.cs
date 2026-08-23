@@ -5,7 +5,7 @@ using BepInEx;
 
 namespace SPTItemIntelligence
 {
-    [BepInPlugin("com.admiralam.spt.itemintelligence", "SPT Item Intelligence", "0.7.0")]
+    [BepInPlugin("com.admiralam.spt.itemintelligence", "SPT Item Intelligence", "0.8.0")]
     public sealed class Plugin : BaseUnityPlugin
     {
         ItemHoverOverlaySink hoverSink;
@@ -14,6 +14,7 @@ namespace SPTItemIntelligence
         RequirementRuntimeBootstrap dataBootstrap;
         CancellationTokenSource dataCancellation;
         Task dataTask;
+        ItemIntelligenceUiSettings uiSettings;
 
         internal static ItemPresentationStore PresentationStore { get; private set; }
 
@@ -22,7 +23,8 @@ namespace SPTItemIntelligence
             if (ItemIntelligenceRegistry.Shared == null) throw new InvalidOperationException("Item Intelligence registry initialization failed.");
 
             PresentationStore = new ItemPresentationStore();
-            hoverSink = new ItemHoverOverlaySink();
+            uiSettings = new ItemIntelligenceUiSettings(Config);
+            hoverSink = new ItemHoverOverlaySink(uiSettings);
             hoverController = new ItemHoverRuntimeController(PresentationStore, hoverSink, null, CreateFallback);
             dataBootstrap = new RequirementRuntimeBootstrap(
                 new ReflectionSptSnapshotTransport(),
@@ -38,7 +40,7 @@ namespace SPTItemIntelligence
             hoverIntegration.TryInstall();
             StartDataLoad();
 
-            Logger.LogInfo("SPT Item Intelligence v0.7.0 loaded (Phase 14 anchored marker interaction)");
+            Logger.LogInfo("SPT Item Intelligence v0.8.0 loaded (Phase 15 requirement marker UX and F12 settings)");
         }
 
         ItemHoverText CreateFallback(string templateId)
@@ -78,6 +80,7 @@ namespace SPTItemIntelligence
             hoverIntegration = null;
             hoverController = null;
             hoverSink = null;
+            uiSettings = null;
             PresentationStore = null;
         }
     }
