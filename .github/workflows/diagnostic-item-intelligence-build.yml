@@ -1,9 +1,9 @@
 name: Diagnostic Item Intelligence Build
 
 on:
-  push:
+  pull_request:
     branches:
-      - diagnostic/item-intelligence-runtime-trace
+      - main
     paths:
       - '.github/workflows/diagnostic-item-intelligence-build.yml'
       - 'mods/SPT-Item-Intelligence/**'
