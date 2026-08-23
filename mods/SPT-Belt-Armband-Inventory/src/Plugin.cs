@@ -19,6 +19,7 @@ namespace SPTBeltArmbandInventory
         PanelRefreshPatches refreshPatches;
         LootPriorityPatches lootPatches;
         UnloadPriorityPatches unloadPatches;
+        ScavBeltPatches scavPatches;
 
         void Awake()
         {
@@ -68,6 +69,14 @@ namespace SPTBeltArmbandInventory
                 unloadPatches = null;
                 Logger.LogWarning("Belt UI remains active, but unload placement will use vanilla grid priorities.");
             }
+
+            scavPatches = new ScavBeltPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!scavPatches.TryInstall())
+            {
+                scavPatches.Dispose();
+                scavPatches = null;
+                Logger.LogWarning("PMC belt behavior remains active, but a Scav spawned with a container belt may retain vanilla ArmBand deletion behavior.");
+            }
         }
 
         void Update()
@@ -89,6 +98,8 @@ namespace SPTBeltArmbandInventory
 
         void OnDestroy()
         {
+            if (scavPatches != null) scavPatches.Dispose();
+            scavPatches = null;
             if (unloadPatches != null) unloadPatches.Dispose();
             unloadPatches = null;
             if (lootPatches != null) lootPatches.Dispose();
