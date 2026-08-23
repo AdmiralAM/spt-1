@@ -74,6 +74,10 @@ static class Program
         ItemDefinition cachedB = Resolve(registry, "cached", "IgnoredType", null);
         Expect(object.ReferenceEquals(cachedA, cachedB), "template definitions are cached");
 
+        ItemDefinition fastPathSeed = Resolve(registry, "fast-path", "BarterItem", null);
+        ItemDefinition fastPathHit = registry.Resolve(new FastPathItem());
+        Expect(object.ReferenceEquals(fastPathSeed, fastPathHit), "cached object resolution bypasses full descriptor reflection");
+
         int phase2Assertions = Phase2Tests.Run();
         int phase3Assertions = Phase3Tests.Run();
         int phase4Assertions = Phase4Tests.Run();
@@ -90,6 +94,12 @@ static class Program
     {
         assertions++;
         if (!condition) throw new InvalidOperationException("Assertion failed: " + message);
+    }
+
+    sealed class FastPathItem
+    {
+        public string _tpl = " FAST-PATH ";
+        public object Template => throw new InvalidOperationException("Full descriptor reflection should not run on a cache hit.");
     }
 
     sealed class FakeItem
