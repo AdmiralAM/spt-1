@@ -5,12 +5,6 @@ using UnityEngine;
 
 namespace SPTItemIntelligence
 {
-    public enum ItemValueMode
-    {
-        Vendor,
-        Flea
-    }
-
     public sealed class ItemIntelligenceUiSettings
     {
         readonly ConfigEntry<ItemTooltipMode> tooltipMode;
