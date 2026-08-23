@@ -24,7 +24,7 @@ namespace SPTItemIntelligence
 
             PresentationStore = new ItemPresentationStore();
             uiSettings = new ItemIntelligenceUiSettings(Config);
-            ItemHoverTextCache textCache = new ItemHoverTextCache();
+            ItemHoverTextCache textCache = new ItemHoverTextCache(valueModeProvider: () => uiSettings.ValueMode);
             hoverSink = new ItemHoverOverlaySink(uiSettings, PresentationStore, textCache, CreateFallback);
             uiSettings.Changed += hoverSink.Invalidate;
             hoverController = new ItemHoverRuntimeController(PresentationStore, hoverSink, textCache, CreateFallback);

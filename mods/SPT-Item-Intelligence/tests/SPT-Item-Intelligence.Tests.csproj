@@ -15,6 +15,7 @@
     <Compile Include="..\src\Pricing.cs" Link="Pricing.cs" />
     <Compile Include="..\src\PresentationState.cs" Link="PresentationState.cs" />
     <Compile Include="..\src\HoverPresentation.cs" Link="HoverPresentation.cs" />
+    <Compile Include="..\src\ItemValueMode.cs" Link="ItemValueMode.cs" />
     <Compile Include="..\src\HoverFormatting.cs" Link="HoverFormatting.cs" />
     <Compile Include="..\src\HoverRuntimeController.cs" Link="HoverRuntimeController.cs" />
     <Compile Include="..\src\Diagnostics.cs" Link="Diagnostics.cs" />

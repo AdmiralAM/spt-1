@@ -59,7 +59,7 @@ namespace SPTItemIntelligence
             HideoutLine = RequirementLine("Hideout", HideoutOwned, HideoutNeeded);
             QuestLaterLine = RequirementLine("Quest Later", QuestLaterOwned, QuestNeededLater);
             KeepLine = CountLine("Keep", KeepCount);
-            PerSlotLine = Secondary.Length == 0 ? string.Empty : "Per slot: " + Secondary;
+            PerSlotLine = string.Empty;
             OwnedLine = CountLine("Owned", OwnedCount);
             BestSourceLine = bestSource ?? string.Empty;
             List<string> details = new List<string>();
@@ -137,8 +137,6 @@ namespace SPTItemIntelligence
 
             if (mode == ItemTooltipMode.Detailed || mode == ItemTooltipMode.Full)
             {
-                if (TryLine(BestSourceLine, requestedIndex, ref current, out found)) return found;
-                if (TryLine(PerSlotLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(OwnedLine, requestedIndex, ref current, out found)) return found;
                 int detailLimit = mode == ItemTooltipMode.Full ? RequirementDetailLines.Count : DetailedRequirementCount;
                 for (int i = 0; i < detailLimit; i++)
@@ -175,14 +173,21 @@ namespace SPTItemIntelligence
     {
         public ItemHoverText Format(ItemHoverState hover)
         {
+            return Format(hover, ItemValueMode.Vendor);
+        }
+
+        public ItemHoverText Format(ItemHoverState hover, ItemValueMode valueMode)
+        {
             if (hover == null || !hover.HasData) return ItemHoverText.Empty;
 
-            string primary = hover.TotalValue > 0 ? FormatRoubles(hover.TotalValue) : string.Empty;
-            string secondary = hover.ValuePerSlot > 0 ? FormatRoubles(hover.ValuePerSlot) + "/slot" : string.Empty;
-            string bestSource = FormatBestSource(hover);
+            long unitValue = valueMode == ItemValueMode.Flea ? hover.FleaUnitValue : hover.TraderUnitValue;
+            string source = valueMode == ItemValueMode.Flea
+                ? "Flea"
+                : (string.IsNullOrWhiteSpace(hover.BestTraderName) ? "Vendor" : hover.BestTraderName.Trim());
+            string primary = unitValue > 0 ? FormatRoubles(unitValue) + " · " + source : string.Empty;
             return new ItemHoverText(
                 primary,
-                secondary,
+                string.Empty,
                 string.Empty,
                 hover.TemplateId,
                 hover.OwnedCount,
@@ -190,27 +195,8 @@ namespace SPTItemIntelligence
                 hover.QuestNeededLater,
                 hover.HideoutNeeded,
                 hover.KeepCount,
-                bestSource,
+                string.Empty,
                 FormatRequirementDetails(hover.RequirementDetails));
-        }
-
-        static string FormatBestSource(ItemHoverState hover)
-        {
-            if (hover == null || hover.BestUnitValue <= 0 || hover.BestPriceSource == PriceSource.None) return string.Empty;
-            string source;
-            switch (hover.BestPriceSource)
-            {
-                case PriceSource.Flea:
-                    source = "Flea";
-                    break;
-                case PriceSource.Trader:
-                    source = string.IsNullOrWhiteSpace(hover.BestTraderName) ? "Trader" : hover.BestTraderName.Trim();
-                    break;
-                default:
-                    source = "Handbook";
-                    break;
-            }
-            return "Best: " + source + " · " + FormatRoubles(hover.BestUnitValue) + "/unit";
         }
 
         static IEnumerable<string> FormatRequirementDetails(IReadOnlyList<RequirementDetail> details)
@@ -237,28 +223,35 @@ namespace SPTItemIntelligence
     public sealed class ItemHoverTextCache
     {
         readonly ItemHoverTextFormatter formatter;
+        readonly Func<ItemValueMode> valueModeProvider;
         readonly Dictionary<ItemPresentationState, ItemHoverText> cache = new Dictionary<ItemPresentationState, ItemHoverText>(ReferenceComparer.Instance);
         ItemPresentationIndex lastIndex;
+        ItemValueMode lastValueMode;
+        bool hasValueMode;
 
-        public ItemHoverTextCache(ItemHoverTextFormatter formatter = null)
+        public ItemHoverTextCache(ItemHoverTextFormatter formatter = null, Func<ItemValueMode> valueModeProvider = null)
         {
             this.formatter = formatter ?? new ItemHoverTextFormatter();
+            this.valueModeProvider = valueModeProvider ?? (() => ItemValueMode.Vendor);
         }
 
         public ItemHoverText Get(ItemHoverState hover, ItemPresentationIndex index)
         {
             if (hover == null || !hover.HasData) return ItemHoverText.Empty;
             ItemPresentationState presentation = hover.Presentation;
+            ItemValueMode valueMode = valueModeProvider();
 
-            if (!object.ReferenceEquals(lastIndex, index))
+            if (!object.ReferenceEquals(lastIndex, index) || !hasValueMode || valueMode != lastValueMode)
             {
                 cache.Clear();
                 lastIndex = index;
+                lastValueMode = valueMode;
+                hasValueMode = true;
             }
 
             ItemHoverText text;
             if (cache.TryGetValue(presentation, out text)) return text;
-            text = formatter.Format(hover);
+            text = formatter.Format(hover, valueMode);
             cache[presentation] = text;
             return text;
         }

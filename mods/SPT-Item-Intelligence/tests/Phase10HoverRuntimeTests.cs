@@ -17,8 +17,8 @@ static class Phase10HoverRuntimeTests
         ItemHoverRuntimeController controller = new ItemHoverRuntimeController(store, sink);
 
         ItemHoverText first = controller.OnHoverEnter(" ITEM-A ");
-        Expect(first.Primary == "24,000 ₽", "hover enter publishes cached presentation text", ref assertions);
-        Expect(first.Secondary == "12,000 ₽/slot", "hover runtime preserves price-per-slot", ref assertions);
+        Expect(first.Primary == "10,000 ₽ · Therapist", "hover enter publishes vendor-mode presentation text", ref assertions);
+        Expect(first.Secondary.Length == 0, "hover runtime omits price-per-slot", ref assertions);
         Expect(sink.ShowCount == 1 && sink.ClearCount == 0, "first hover emits one UI update", ref assertions);
         Expect(controller.HasActiveItem, "controller tracks active hovered template", ref assertions);
 
@@ -28,10 +28,10 @@ static class Phase10HoverRuntimeTests
 
         store.Refresh(ItemRequirementStateIndex.Empty, ItemPriceIndexBuilder.Build(new[]
         {
-            new ItemPriceInput("item-a", traderUnitValue: 10000, traderName: "Therapist", fleaUnitValue: 40000, width: 2, height: 1)
+            new ItemPriceInput("item-a", traderUnitValue: 15000, traderName: "Therapist", fleaUnitValue: 40000, width: 2, height: 1)
         }));
         ItemHoverText refreshed = controller.RefreshActive();
-        Expect(refreshed.Primary == "40,000 ₽", "snapshot refresh reprojects active item without polling", ref assertions);
+        Expect(refreshed.Primary == "15,000 ₽ · Therapist", "snapshot refresh reprojects active vendor value without polling", ref assertions);
         Expect(sink.ShowCount == 2, "changed snapshot publishes exactly one UI update", ref assertions);
 
         store.Refresh(ItemRequirementStateIndex.Empty, ItemPriceIndex.Empty);
