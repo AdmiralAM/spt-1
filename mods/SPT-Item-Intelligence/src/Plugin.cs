@@ -30,10 +30,11 @@ namespace SPTItemIntelligence
             hoverController = new ItemHoverRuntimeController(PresentationStore, hoverSink, textCache, CreateFallback);
             dataBootstrap = new RequirementRuntimeBootstrap(
                 new ReflectionSptSnapshotTransport(),
-                new ReflectionNewtonsoftSnapshotDecoder(),
-                new SptRequirementDataProjector(),
+                new ReflectionNewtonsoftSnapshotDecoder(message => Logger.LogInfo(message)),
+                new SptRequirementDataProjector(message => Logger.LogInfo(message)),
                 PresentationStore,
-                hoverController);
+                hoverController,
+                trace: message => Logger.LogInfo(message));
             hoverIntegration = new EftItemViewHoverIntegration(
                 hoverController,
                 message => Logger.LogInfo(message),
