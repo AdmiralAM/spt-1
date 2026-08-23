@@ -1,0 +1,1 @@
+R29 marker clipping regression: verifies Unity UI Text horizontal/vertical overflow is enabled for the attached marker glyph. Remove/keep as desired after runtime validation.
