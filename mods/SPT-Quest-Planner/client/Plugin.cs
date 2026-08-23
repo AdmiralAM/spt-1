@@ -2,14 +2,16 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BepInEx;
+using UnityEngine.SceneManagement;
 
 namespace SPTQuestPlanner.Client
 {
-    [BepInPlugin("com.admiralam.spt.questplanner", "SPT Quest Planner", "0.8.0")]
+    [BepInPlugin("com.admiralam.spt.questplanner", "SPT Quest Planner", "0.9.0")]
     public sealed class Plugin : BaseUnityPlugin
     {
         private CancellationTokenSource cancellation;
         private PlannerRefreshCoordinator refresh;
+        private PlannerRefreshScheduler scheduler;
         private Task initialLoad;
 
         internal static PlannerClientCache Cache { get; private set; }
@@ -23,9 +25,11 @@ namespace SPTQuestPlanner.Client
                 new ReflectionSptPlannerTransport(),
                 new ReflectionNewtonsoftPlannerDecoder(),
                 Cache);
+            scheduler = new PlannerRefreshScheduler(RequestStateRefreshImmediate, TimeSpan.FromMilliseconds(500));
             cancellation = new CancellationTokenSource();
+            SceneManager.activeSceneChanged += OnActiveSceneChanged;
             StartInitialLoad();
-            Logger.LogInfo("SPT Quest Planner v0.8.0 loaded (client cache foundation; no UI)");
+            Logger.LogInfo("SPT Quest Planner v0.9.0 loaded (bounded lifecycle refresh foundation; no UI)");
         }
 
         private void StartInitialLoad()
@@ -41,7 +45,20 @@ namespace SPTQuestPlanner.Client
             }, token);
         }
 
+        private void OnActiveSceneChanged(Scene previous, Scene next)
+        {
+            PlannerRefreshScheduler value = scheduler;
+            if (value == null) return;
+            value.Request("scene:" + SafeName(previous.name) + "->" + SafeName(next.name));
+        }
+
         internal void RequestStateRefresh(string reason)
+        {
+            PlannerRefreshScheduler value = scheduler;
+            if (value != null) value.Request(NormalizeReason(reason));
+        }
+
+        private void RequestStateRefreshImmediate(string reason)
         {
             PlannerRefreshCoordinator coordinator = refresh;
             CancellationTokenSource source = cancellation;
@@ -63,10 +80,18 @@ namespace SPTQuestPlanner.Client
             return string.IsNullOrWhiteSpace(reason) ? "unspecified" : reason.Trim();
         }
 
+        private static string SafeName(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? "unknown" : value.Trim();
+        }
+
         private void OnDestroy()
         {
+            SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+            if (scheduler != null) scheduler.Dispose();
             if (cancellation != null) cancellation.Cancel();
             initialLoad = null;
+            scheduler = null;
             refresh = null;
             cancellation = null;
             Cache = null;
