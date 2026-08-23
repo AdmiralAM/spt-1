@@ -683,7 +683,8 @@ namespace SPTItemIntelligence
             try
             {
                 Type type = source.GetType();
-                PropertyInfo keyProperty = type.GetProperty("Key", BindingFlags.Public | BindingFlags.Instance);
+                PropertyInfo keyProperty = type.GetProperty("Key", BindingFlags.Public | BindingFlags.Instance)
+                    ?? type.GetProperty("Name", BindingFlags.Public | BindingFlags.Instance);
                 PropertyInfo valueProperty = type.GetProperty("Value", BindingFlags.Public | BindingFlags.Instance);
                 if (keyProperty == null || valueProperty == null || keyProperty.GetIndexParameters().Length != 0 || valueProperty.GetIndexParameters().Length != 0)
                     return false;
