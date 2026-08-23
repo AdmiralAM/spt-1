@@ -81,6 +81,9 @@ static class Phase13RuntimeBootstrapTests
         ItemHoverText active = controller.OnHoverEnter("a");
         Expect(active.Primary == "2,000 ₽" && active.Secondary == "1,000 ₽/slot", "live Value and per-slot value reach hover formatting", ref assertions);
         Expect(active.Status.Length == 0 && active.QuestNowLine == "Quest Now: 2/2 ✓", "live requirement fulfillment reaches hover without sell labels", ref assertions);
+        ItemHoverText missingHideout = controller.OnHoverEnter("d");
+        Expect(missingHideout.HideoutLine == "Hideout: 0/6" && ItemMarkerPresentation.From(missingHideout).Kind == ItemMarkerKind.Hideout,
+            "numeric server hideout requirement reaches runtime marker classification", ref assertions);
         ItemHoverText unknown = controller.OnHoverEnter("unknown");
         Expect(unknown.Primary == "ITEM INTELLIGENCE" && unknown.Status == "NO REQUIREMENT DATA", "ready fallback is diagnostic", ref assertions);
 
@@ -117,7 +120,7 @@ static class Phase13RuntimeBootstrapTests
         {
             ["requirements"] = new object[]
             {
-                new Dictionary<string, object> { ["type"] = "Item", ["templateId"] = templateId, ["count"] = count }
+                new Dictionary<string, object> { ["type"] = 1, ["templateId"] = templateId, ["count"] = count }
             }
         };
     }
