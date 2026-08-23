@@ -17,7 +17,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "SPT Item Intelligence Server";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("0.4.0");
+    public SemanticVersioning.Version Version { get; init; } = new("0.5.0");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
@@ -31,6 +31,7 @@ public sealed class RequirementDataService(
     JsonUtil jsonUtil,
     ProfileHelper profileHelper,
     TemplateTable templateTable,
+    TradersTable traderTable,
     HideoutTable hideoutTable,
     HandbookHelper handbookHelper,
     TraderHelper traderHelper)
@@ -66,13 +67,29 @@ public sealed class RequirementDataService(
             result.Add(new ItemPriceSnapshotEntry(
                 templateId.ToString(),
                 ToLong(traderValue),
-                "Trader",
+                ResolveBestTraderName(fallbackValue),
                 ToLong(fleaValue),
                 ToLong(fallbackValue),
                 width,
                 height));
         }
         return result;
+    }
+
+    private string ResolveBestTraderName(double handbookValue)
+    {
+        double highestPrice = 1d;
+        string highestTrader = "Trader";
+        foreach (var (_, trader) in traderTable)
+        {
+            var traderBase = trader.Base;
+            var buyBackPercent = 100 - traderBase.LoyaltyLevels?.FirstOrDefault()?.BuyPriceCoefficient;
+            double price = Math.Round((buyBackPercent ?? 0) * (handbookValue / 100d), 0);
+            if (price <= highestPrice) continue;
+            highestPrice = price;
+            highestTrader = string.IsNullOrWhiteSpace(traderBase.Nickname) ? traderBase.Name : traderBase.Nickname;
+        }
+        return string.IsNullOrWhiteSpace(highestTrader) ? "Trader" : highestTrader;
     }
 
     private static long ToLong(double value)
@@ -102,7 +119,7 @@ public sealed class ItemIntelligenceLoadNotice(ISptLogger<ItemIntelligenceLoadNo
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        logger.Success("SPT Item Intelligence Server v0.4.0 loaded; requirement and price snapshot route ready");
+        logger.Success("SPT Item Intelligence Server v0.5.0 loaded; named trader and requirement-detail snapshot ready");
         return Task.CompletedTask;
     }
 }

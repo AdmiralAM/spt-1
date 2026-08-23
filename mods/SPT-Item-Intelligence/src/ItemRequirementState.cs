@@ -24,7 +24,8 @@ namespace SPTItemIntelligence
             0,
             RequirementReasonFlags.None,
             ItemRequirementDecision.None,
-            string.Empty);
+            string.Empty,
+            null);
 
         internal ItemRequirementState(
             string templateId,
@@ -36,7 +37,8 @@ namespace SPTItemIntelligence
             int surplusCount,
             RequirementReasonFlags reasons,
             ItemRequirementDecision decision,
-            string holdReason)
+            string holdReason,
+            IEnumerable<RequirementDetail> details = null)
         {
             TemplateId = templateId ?? string.Empty;
             OwnedCount = Math.Max(0, ownedCount);
@@ -48,6 +50,11 @@ namespace SPTItemIntelligence
             Reasons = reasons;
             Decision = decision;
             HoldReason = holdReason ?? string.Empty;
+            List<RequirementDetail> copied = new List<RequirementDetail>();
+            if (details != null)
+                foreach (RequirementDetail detail in details)
+                    if (detail != null && detail.RemainingCount > 0 && detail.Label.Length > 0) copied.Add(detail);
+            Details = copied.AsReadOnly();
         }
 
         public string TemplateId { get; }
@@ -60,6 +67,7 @@ namespace SPTItemIntelligence
         public RequirementReasonFlags Reasons { get; }
         public ItemRequirementDecision Decision { get; }
         public string HoldReason { get; }
+        public IReadOnlyList<RequirementDetail> Details { get; }
         public bool RequiresFoundInRaid => (Reasons & RequirementReasonFlags.FoundInRaid) != 0;
         public bool HasRequirement => KeepCount > 0;
         public bool IsSafeToSell => Decision == ItemRequirementDecision.SafeToSell;
@@ -125,7 +133,8 @@ namespace SPTItemIntelligence
                     entry.SurplusCount,
                     entry.Reasons,
                     decision,
-                    BuildHoldReason(entry));
+                    BuildHoldReason(entry),
+                    entry.Details);
             }
 
             return new ItemRequirementStateIndex(index.GeneratedAtUnixSeconds, states);

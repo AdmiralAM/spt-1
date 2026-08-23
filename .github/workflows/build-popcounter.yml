@@ -103,7 +103,7 @@ jobs:
           if(-not $downloaded){throw 'BepInEx download failed'}
           Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
 
-      - name: Validate Item Intelligence Phase 15
+      - name: Validate Item Intelligence Phase 18
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path 'mods/SPT-Item-Intelligence/build-status' | Out-Null
@@ -308,7 +308,7 @@ jobs:
           Copy-Item $itemServerSource $itemRoot -Recurse -Force
           [ordered]@{
             name='SPT Item Intelligence'; channel='runtime-item-intelligence'; version=$env:ITEM_VERSION;
-            phase='17'; spt_version='4.1.x'; source_commit=$stableSha; server_version=$env:ITEM_SERVER_VERSION;
+            phase='18'; spt_version='4.1.x'; source_commit=$stableSha; server_version=$env:ITEM_SERVER_VERSION;
             server_included=$true; contains_tactical_hud=$false; contains_pause=$false;
             contains_belt_armband_inventory=$false
           } | ConvertTo-Json | Set-Content (Join-Path $itemRoot 'runtime-manifest.json') -Encoding utf8
@@ -317,7 +317,7 @@ jobs:
 
           Ready-to-install standalone **SPT Item Intelligence v$env:ITEM_VERSION** for SPT **4.1.x**.
 
-          Copy this branch into the SPT root. Phase 17 keeps persistent requirement-colored ⓘ markers and adds a one-shot flea/trader/handbook Value snapshot with stack-aware total and per-slot values. Price never controls marker color. Physical in-game validation is still pending. This channel contains Item Intelligence only.
+          Copy this branch into the SPT root. Phase 18 keeps persistent top-right requirement-colored ⓘ markers, live stack-aware Value, the named winning flea/trader/handbook source and concrete quest/hideout target lines. Price never controls marker color. Physical in-game validation is still pending. This channel contains Item Intelligence only.
           Verified source commit: **$stableSha**.
           "@ | Set-Content (Join-Path $itemRoot 'README.md') -Encoding utf8
           git config user.name 'github-actions[bot]'

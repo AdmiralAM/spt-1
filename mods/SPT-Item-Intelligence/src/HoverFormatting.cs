@@ -31,7 +31,9 @@ namespace SPTItemIntelligence
             int questNeededNow,
             int questNeededLater,
             int hideoutNeeded,
-            int keepCount)
+            int keepCount,
+            string bestSource = null,
+            IEnumerable<string> requirementDetails = null)
         {
             Primary = primary ?? string.Empty;
             Secondary = secondary ?? string.Empty;
@@ -51,6 +53,12 @@ namespace SPTItemIntelligence
             PerSlotLine = Secondary.Length == 0 ? string.Empty : "Per slot: " + Secondary;
             OwnedLine = CountLine("Owned", OwnedCount);
             TemplateLine = TemplateId.Length == 0 ? string.Empty : "ID: " + TemplateId;
+            BestSourceLine = bestSource ?? string.Empty;
+            List<string> details = new List<string>();
+            if (requirementDetails != null)
+                foreach (string detail in requirementDetails)
+                    if (!string.IsNullOrWhiteSpace(detail)) details.Add(detail.Trim());
+            RequirementDetailLines = details.AsReadOnly();
         }
 
         public string Primary { get; }
@@ -70,6 +78,8 @@ namespace SPTItemIntelligence
         public string PerSlotLine { get; }
         public string OwnedLine { get; }
         public string TemplateLine { get; }
+        public string BestSourceLine { get; }
+        public IReadOnlyList<string> RequirementDetailLines { get; }
         public bool HasData => Primary.Length != 0 || Secondary.Length != 0 || Status.Length != 0 || KeepCount > 0;
         public bool IsDiagnostic =>
             string.Equals(Status, "LOADING ITEM DATA", StringComparison.OrdinalIgnoreCase) ||
@@ -108,8 +118,17 @@ namespace SPTItemIntelligence
 
             if (mode == ItemTooltipMode.Detailed || mode == ItemTooltipMode.Full)
             {
+                if (TryLine(BestSourceLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(PerSlotLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(OwnedLine, requestedIndex, ref current, out found)) return found;
+                int detailLimit = mode == ItemTooltipMode.Full ? RequirementDetailLines.Count : Math.Min(3, RequirementDetailLines.Count);
+                for (int i = 0; i < detailLimit; i++)
+                    if (TryLine(RequirementDetailLines[i], requestedIndex, ref current, out found)) return found;
+                if (mode == ItemTooltipMode.Detailed && RequirementDetailLines.Count > detailLimit)
+                {
+                    string more = "Requirements: +" + (RequirementDetailLines.Count - detailLimit).ToString(CultureInfo.InvariantCulture) + " more";
+                    if (TryLine(more, requestedIndex, ref current, out found)) return found;
+                }
             }
             if (mode == ItemTooltipMode.Full)
             {
@@ -145,6 +164,7 @@ namespace SPTItemIntelligence
             string primary = hover.TotalValue > 0 ? FormatRoubles(hover.TotalValue) : string.Empty;
             string secondary = hover.ValuePerSlot > 0 ? FormatRoubles(hover.ValuePerSlot) + "/slot" : string.Empty;
             string status = FormatStatus(hover);
+            string bestSource = FormatBestSource(hover);
             return new ItemHoverText(
                 primary,
                 secondary,
@@ -154,7 +174,43 @@ namespace SPTItemIntelligence
                 hover.QuestNeededNow,
                 hover.QuestNeededLater,
                 hover.HideoutNeeded,
-                hover.KeepCount);
+                hover.KeepCount,
+                bestSource,
+                FormatRequirementDetails(hover.RequirementDetails));
+        }
+
+        static string FormatBestSource(ItemHoverState hover)
+        {
+            if (hover == null || hover.BestUnitValue <= 0 || hover.BestPriceSource == PriceSource.None) return string.Empty;
+            string source;
+            switch (hover.BestPriceSource)
+            {
+                case PriceSource.Flea:
+                    source = "Flea";
+                    break;
+                case PriceSource.Trader:
+                    source = string.IsNullOrWhiteSpace(hover.BestTraderName) ? "Trader" : hover.BestTraderName.Trim();
+                    break;
+                default:
+                    source = "Handbook";
+                    break;
+            }
+            return "Best: " + source + " · " + FormatRoubles(hover.BestUnitValue) + "/unit";
+        }
+
+        static IEnumerable<string> FormatRequirementDetails(IReadOnlyList<RequirementDetail> details)
+        {
+            if (details == null) yield break;
+            for (int i = 0; i < details.Count; i++)
+            {
+                RequirementDetail detail = details[i];
+                if (detail == null || detail.RemainingCount <= 0 || detail.Label.Length == 0) continue;
+                string prefix = detail.Source == RequirementSource.CurrentQuest ? "Now" :
+                    detail.Source == RequirementSource.FutureQuest ? "Later" : "Hideout";
+                string line = prefix + ": " + detail.Label + " ×" + detail.RemainingCount.ToString(CultureInfo.InvariantCulture);
+                if (detail.FoundInRaidRequired) line += " · FIR";
+                yield return line;
+            }
         }
 
         static string FormatStatus(ItemHoverState hover)
