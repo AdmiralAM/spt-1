@@ -36,7 +36,8 @@ public sealed class RequirementDataService(
     TradersTable traderTable,
     HideoutTable hideoutTable,
     HandbookHelper handbookHelper,
-    ItemHelper itemHelper)
+    ItemHelper itemHelper,
+    PresetHelper presetHelper)
 {
     public ValueTask<string> BuildSnapshotAsync(MongoId sessionId, CancellationToken cancellationToken)
     {
@@ -62,31 +63,45 @@ public sealed class RequirementDataService(
             if (!string.Equals(item.Type, "Item", StringComparison.OrdinalIgnoreCase)) continue;
 
             templateTable.Prices.TryGetValue(templateId, out double fleaValue);
-            double fallbackValue = handbookHelper.GetTemplatePrice(templateId);
-            var trader = ResolveBestTrader(templateId, fallbackValue);
+            double handbookValue = handbookHelper.GetTemplatePrice(templateId);
+            double traderBasis = GetTraderValuationBasis(templateId, handbookValue);
+            var trader = ResolveBestTrader(templateId, traderBasis);
             int width = Math.Max(1, item.Properties?.Width ?? 1);
             int height = Math.Max(1, item.Properties?.Height ?? 1);
             result.Add(new ItemPriceSnapshotEntry(
                 templateId.ToString(),
                 ToLong(trader.Price),
                 trader.Name,
-                ToLong(fleaValue > 0 ? fleaValue : fallbackValue),
-                ToLong(fallbackValue),
+                ToLong(fleaValue > 0 ? fleaValue : handbookValue),
+                ToLong(handbookValue),
                 width,
                 height));
         }
         return result;
     }
 
-    // Match the established Item Valuation behaviour: handbook value multiplied by each
-    // eligible trader's LL1 buy-back coefficient, excluding Fence unless no regular trader buys it.
-    private (double Price, string Name) ResolveBestTrader(MongoId templateId, double handbookValue)
+    // Item Valuation prices default weapon/equipment presets as the sum of their children,
+    // rather than valuing only the bare root template. Mirror that established behaviour.
+    private double GetTraderValuationBasis(MongoId templateId, double handbookValue)
     {
-        var regular = ResolveBestTrader(templateId, handbookValue, includeFence: false);
-        return regular.Price > 0 ? regular : ResolveBestTrader(templateId, handbookValue, includeFence: true);
+        var preset = presetHelper.GetDefaultPreset(templateId);
+        if (preset?.Items is null || preset.Items.Count == 0) return handbookValue;
+
+        double total = 0;
+        foreach (var presetItem in preset.Items)
+            total += handbookHelper.GetTemplatePrice(presetItem.Template);
+        return total > 0 ? total : handbookValue;
     }
 
-    private (double Price, string Name) ResolveBestTrader(MongoId templateId, double handbookValue, bool includeFence)
+    // Match Item Valuation: eligible trader buy categories + LL1 buy-back coefficient,
+    // regular traders first, Fence only as fallback.
+    private (double Price, string Name) ResolveBestTrader(MongoId templateId, double valuationBasis)
+    {
+        var regular = ResolveBestTrader(templateId, valuationBasis, includeFence: false);
+        return regular.Price > 0 ? regular : ResolveBestTrader(templateId, valuationBasis, includeFence: true);
+    }
+
+    private (double Price, string Name) ResolveBestTrader(MongoId templateId, double valuationBasis, bool includeFence)
     {
         double highestPrice = 0;
         string highestTrader = "Trader";
@@ -102,7 +117,7 @@ public sealed class RequirementDataService(
             if (!accepts) continue;
 
             double coefficient = traderBase.LoyaltyLevels?.FirstOrDefault()?.BuyPriceCoefficient ?? 100d;
-            double price = Math.Round(Math.Max(0d, 100d - coefficient) * (handbookValue / 100d), 0);
+            double price = Math.Round(Math.Max(0d, 100d - coefficient) * (valuationBasis / 100d), 0);
             if (price <= highestPrice) continue;
 
             highestPrice = price;
