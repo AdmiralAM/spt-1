@@ -308,7 +308,7 @@ jobs:
           Copy-Item $itemServerSource $itemRoot -Recurse -Force
           [ordered]@{
             name='SPT Item Intelligence'; channel='runtime-item-intelligence'; version=$env:ITEM_VERSION;
-            phase='15'; spt_version='4.1.x'; source_commit=$stableSha; server_version=$env:ITEM_SERVER_VERSION;
+            phase='16'; spt_version='4.1.x'; source_commit=$stableSha; server_version=$env:ITEM_SERVER_VERSION;
             server_included=$true; contains_tactical_hud=$false; contains_pause=$false;
             contains_belt_armband_inventory=$false
           } | ConvertTo-Json | Set-Content (Join-Path $itemRoot 'runtime-manifest.json') -Encoding utf8
@@ -317,7 +317,7 @@ jobs:
 
           Ready-to-install standalone **SPT Item Intelligence v$env:ITEM_VERSION** for SPT **4.1.x**.
 
-          Copy this branch into the SPT root. Phase 15 uses one requirement-colored ⓘ marker, marker-only tooltip activation, Minimal/Normal/Detailed/Full content modes and live F12 controls for colors, size, opacity and offsets. The live Phase 13 data bootstrap remains unchanged. Physical in-game validation is still pending. This channel contains Item Intelligence only.
+          Copy this branch into the SPT root. Phase 16 keeps one requirement-colored ⓘ marker on every live item cell, opens details only over the marker, defaults to the upper-left corner, and retains Minimal/Normal/Detailed/Full content modes plus live F12 controls. The event-driven lifecycle adds no inventory polling or per-item GameObjects. Physical in-game validation is still pending. This channel contains Item Intelligence only.
           Verified source commit: **$stableSha**.
           "@ | Set-Content (Join-Path $itemRoot 'README.md') -Encoding utf8
           git config user.name 'github-actions[bot]'
