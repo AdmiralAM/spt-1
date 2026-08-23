@@ -1,18 +1,18 @@
   Determining projects to restore...
-  Restored D:\a\spt-1\spt-1\mods\SPT-Tactical-HUD\client\SPT-Tactical-HUD.csproj (in 8.71 sec).
+  Restored D:\a\spt-1\spt-1\mods\SPT-Tactical-HUD\client\SPT-Tactical-HUD.csproj (in 2.52 sec).
   SPT-Tactical-HUD -> D:\a\spt-1\spt-1\mods\SPT-Tactical-HUD\client\bin\Release\netstandard2.1\SPT Tactical HUD v1.13.2.dll
 
 Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:15.13
+Time Elapsed 00:00:05.53
   Determining projects to restore...
-  Restored D:\a\spt-1\spt-1\mods\SPT-Tactical-HUD\server\SPT-TacticalHUD-Server.csproj (in 4.24 sec).
+  Restored D:\a\spt-1\spt-1\mods\SPT-Tactical-HUD\server\SPT-TacticalHUD-Server.csproj (in 3.3 sec).
   SPT-TacticalHUD-Server -> D:\a\spt-1\spt-1\mods\SPT-Tactical-HUD\server\bin\Release\net10.0\SPT Tactical HUD Server.dll
 
 Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:11.56
+Time Elapsed 00:00:08.61
