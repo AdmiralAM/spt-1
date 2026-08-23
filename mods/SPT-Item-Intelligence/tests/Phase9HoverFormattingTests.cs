@@ -26,8 +26,11 @@ static class Phase9HoverFormattingTests
         ItemHoverState hover = adapter.OnHoverEnter("item-a");
         ItemHoverText first = cache.Get(hover, store.Current);
 
-        Expect(first.Primary == "32,000 ₽", "formats total value once for display", ref assertions);
-        Expect(first.Secondary == "16,000 ₽/slot", "formats value per slot", ref assertions);
+        Expect(first.Primary == "22,000 ₽ · Therapist", "vendor mode shows highest trader value and trader name", ref assertions);
+        Expect(first.Secondary.Length == 0, "per-slot value is omitted", ref assertions);
+        ItemHoverText flea = new ItemHoverTextFormatter().Format(hover, ItemValueMode.Flea);
+        Expect(flea.Primary == "32,000 ₽ · Flea", "flea mode shows flea value", ref assertions);
+        Expect(flea.Secondary.Length == 0, "flea mode also omits per-slot value", ref assertions);
         Expect(first.Status.Length == 0, "sell and surplus decisions stay out of user-facing hover text", ref assertions);
         Expect(object.ReferenceEquals(first, cache.Get(hover, store.Current)), "unchanged snapshot reuses formatted text object", ref assertions);
         Expect(object.ReferenceEquals(ItemHoverText.Empty, cache.Get(ItemHoverState.Empty, store.Current)), "empty hover is allocation-free", ref assertions);
