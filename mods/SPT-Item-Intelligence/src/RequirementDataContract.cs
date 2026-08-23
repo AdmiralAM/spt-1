@@ -6,6 +6,7 @@ namespace SPTItemIntelligence
     {
         public const int SchemaVersion = 2;
         public const string SnapshotRoute = "/spt-item-intelligence/v2/snapshot";
+        public const string RuntimeTraceTemplateId = "619cbfeb6b8a1b37a54eebfa";
     }
 
     public sealed class RequirementDataEnvelope
