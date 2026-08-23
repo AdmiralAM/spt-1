@@ -1,0 +1,243 @@
+using System;
+using System.Reflection;
+using System.Threading;
+
+namespace SPTQuestPlanner.Client
+{
+    public static class PlannerClientContract
+    {
+        public const string TopologyRoute = "/admiralam/quest-planner/topology";
+        public const string StateRoute = "/admiralam/quest-planner/state";
+        public const int SchemaVersion = 8;
+    }
+
+    public sealed class PlannerPayload
+    {
+        public PlannerPayload(int schemaVersion, long generatedAtUnixSeconds, string json)
+        {
+            SchemaVersion = schemaVersion;
+            GeneratedAtUnixSeconds = generatedAtUnixSeconds;
+            Json = json;
+        }
+
+        public int SchemaVersion { get; private set; }
+        public long GeneratedAtUnixSeconds { get; private set; }
+        public string Json { get; private set; }
+    }
+
+    public interface IPlannerTransport
+    {
+        string GetJson(string route);
+    }
+
+    public interface IPlannerPayloadDecoder
+    {
+        PlannerPayload DecodeTopology(string json);
+        PlannerPayload DecodeState(string json);
+    }
+
+    public sealed class ReflectionSptPlannerTransport : IPlannerTransport
+    {
+        public string GetJson(string route)
+        {
+            if (string.IsNullOrWhiteSpace(route)) throw new ArgumentException("Route is missing.", "route");
+            Type requestHandler = FindType("SPT.Common.Http.RequestHandler");
+            if (requestHandler == null) throw new InvalidOperationException("SPT RequestHandler is unavailable.");
+
+            MethodInfo getJson = null;
+            MethodInfo[] methods = requestHandler.GetMethods(BindingFlags.Public | BindingFlags.Static);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo candidate = methods[i];
+                ParameterInfo[] parameters = candidate.GetParameters();
+                if (candidate.Name == "GetJson" && candidate.ReturnType == typeof(string) &&
+                    parameters.Length == 1 && parameters[0].ParameterType == typeof(string))
+                {
+                    getJson = candidate;
+                    break;
+                }
+            }
+
+            if (getJson == null) throw new InvalidOperationException("SPT RequestHandler.GetJson(string) is unavailable.");
+            string json = getJson.Invoke(null, new object[] { route }) as string;
+            if (string.IsNullOrWhiteSpace(json) || string.Equals(json.Trim(), "null", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Quest Planner route returned an empty response: " + route);
+            return json;
+        }
+
+        private static Type FindType(string fullName)
+        {
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                try
+                {
+                    Type type = assemblies[i].GetType(fullName, false, false);
+                    if (type != null) return type;
+                }
+                catch { }
+            }
+            return null;
+        }
+    }
+
+    public sealed class ReflectionNewtonsoftPlannerDecoder : IPlannerPayloadDecoder
+    {
+        public PlannerPayload DecodeTopology(string json) { return Decode(json, false); }
+        public PlannerPayload DecodeState(string json) { return Decode(json, true); }
+
+        private static PlannerPayload Decode(string json, bool requireGeneratedAt)
+        {
+            if (string.IsNullOrWhiteSpace(json)) throw new ArgumentException("Payload JSON is missing.", "json");
+            Type tokenType = FindType("Newtonsoft.Json.Linq.JToken");
+            if (tokenType == null) throw new InvalidOperationException("Newtonsoft JSON runtime is unavailable.");
+            MethodInfo parse = tokenType.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(string) }, null);
+            if (parse == null) throw new InvalidOperationException("Newtonsoft JToken.Parse is unavailable.");
+            object root = parse.Invoke(null, new object[] { json });
+
+            int schema = ReadInt(Get(root, "schemaVersion"), 0);
+            if (schema != PlannerClientContract.SchemaVersion)
+                throw new InvalidOperationException("Unsupported Quest Planner schema " + schema + ".");
+
+            long generated = ReadLong(Get(root, "generatedAtUnixSeconds"), 0L);
+            if (requireGeneratedAt && generated <= 0L)
+                throw new InvalidOperationException("Quest Planner state payload has no generation timestamp.");
+            return new PlannerPayload(schema, generated, json);
+        }
+
+        private static object Get(object token, string name)
+        {
+            if (token == null) return null;
+            PropertyInfo item = token.GetType().GetProperty("Item", new[] { typeof(object) });
+            if (item != null)
+            {
+                try { return item.GetValue(token, new object[] { name }); } catch { }
+            }
+            PropertyInfo stringItem = token.GetType().GetProperty("Item", new[] { typeof(string) });
+            if (stringItem != null)
+            {
+                try { return stringItem.GetValue(token, new object[] { name }); } catch { }
+            }
+            return null;
+        }
+
+        private static int ReadInt(object token, int fallback)
+        {
+            string text = token == null ? null : token.ToString();
+            int value;
+            return int.TryParse(text, out value) ? value : fallback;
+        }
+
+        private static long ReadLong(object token, long fallback)
+        {
+            string text = token == null ? null : token.ToString();
+            long value;
+            return long.TryParse(text, out value) ? value : fallback;
+        }
+
+        private static Type FindType(string fullName)
+        {
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                try
+                {
+                    Type type = assemblies[i].GetType(fullName, false, false);
+                    if (type != null) return type;
+                }
+                catch { }
+            }
+            return null;
+        }
+    }
+
+    public sealed class PlannerClientCache
+    {
+        private readonly object gate = new object();
+        private PlannerPayload topology;
+        private PlannerPayload state;
+        private long revision;
+
+        public long Revision { get { lock (gate) return revision; } }
+        public bool HasTopology { get { lock (gate) return topology != null; } }
+        public bool HasState { get { lock (gate) return state != null; } }
+        public PlannerPayload Topology { get { lock (gate) return topology; } }
+        public PlannerPayload State { get { lock (gate) return state; } }
+
+        public void ReplaceTopology(PlannerPayload value)
+        {
+            if (value == null) throw new ArgumentNullException("value");
+            lock (gate) { topology = value; revision++; }
+        }
+
+        public void ReplaceState(PlannerPayload value)
+        {
+            if (value == null) throw new ArgumentNullException("value");
+            lock (gate)
+            {
+                if (state != null && value.GeneratedAtUnixSeconds < state.GeneratedAtUnixSeconds) return;
+                state = value;
+                revision++;
+            }
+        }
+    }
+
+    public sealed class PlannerRefreshCoordinator
+    {
+        private readonly IPlannerTransport transport;
+        private readonly IPlannerPayloadDecoder decoder;
+        private readonly PlannerClientCache cache;
+        private int refreshing;
+
+        public PlannerRefreshCoordinator(IPlannerTransport transport, IPlannerPayloadDecoder decoder, PlannerClientCache cache)
+        {
+            this.transport = transport ?? throw new ArgumentNullException("transport");
+            this.decoder = decoder ?? throw new ArgumentNullException("decoder");
+            this.cache = cache ?? throw new ArgumentNullException("cache");
+        }
+
+        public bool EnsureTopology(CancellationToken token, out string error)
+        {
+            error = null;
+            if (cache.HasTopology) return true;
+            token.ThrowIfCancellationRequested();
+            try
+            {
+                cache.ReplaceTopology(decoder.DecodeTopology(transport.GetJson(PlannerClientContract.TopologyRoute)));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.GetBaseException().Message;
+                return false;
+            }
+        }
+
+        public bool TryRefreshState(CancellationToken token, out string error)
+        {
+            error = null;
+            if (Interlocked.CompareExchange(ref refreshing, 1, 0) != 0)
+            {
+                error = "Refresh already in progress.";
+                return false;
+            }
+
+            try
+            {
+                token.ThrowIfCancellationRequested();
+                if (!EnsureTopology(token, out error)) return false;
+                cache.ReplaceState(decoder.DecodeState(transport.GetJson(PlannerClientContract.StateRoute)));
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.GetBaseException().Message;
+                return false;
+            }
+            finally
+            {
+                Volatile.Write(ref refreshing, 0);
+            }
+        }
+    }
+}
