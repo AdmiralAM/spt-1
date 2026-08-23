@@ -5,7 +5,7 @@ using BepInEx;
 
 namespace SPTItemIntelligence
 {
-    [BepInPlugin("com.admiralam.spt.itemintelligence", "SPT Item Intelligence", "0.6.0")]
+    [BepInPlugin("com.admiralam.spt.itemintelligence", "SPT Item Intelligence", "0.7.0")]
     public sealed class Plugin : BaseUnityPlugin
     {
         ItemHoverOverlaySink hoverSink;
@@ -33,11 +33,12 @@ namespace SPTItemIntelligence
             hoverIntegration = new EftItemViewHoverIntegration(
                 hoverController,
                 message => Logger.LogInfo(message),
-                message => Logger.LogWarning(message));
+                message => Logger.LogWarning(message),
+                hoverSink);
             hoverIntegration.TryInstall();
             StartDataLoad();
 
-            Logger.LogInfo("SPT Item Intelligence v0.6.0 loaded (Phase 13 live requirement bootstrap)");
+            Logger.LogInfo("SPT Item Intelligence v0.7.0 loaded (Phase 14 anchored marker interaction)");
         }
 
         ItemHoverText CreateFallback(string templateId)
