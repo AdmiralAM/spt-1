@@ -3407,3 +3407,109 @@ HUD optical QA:
 PASS: optical centering, category scale and 12/16px coverage
 [OK] no guarded hot-path allocation patterns detected
 Generated D:\a\spt-1\spt-1\mods\SPT-Tactical-HUD\build-status\hud-preview.png with 0.82x / 1.0x / 1.18x composition and 12/16/20px icon QA
+Collecting pillow
+  Downloading pillow-12.3.0-cp312-cp312-win_amd64.whl.metadata (9.3 kB)
+Downloading pillow-12.3.0-cp312-cp312-win_amd64.whl (7.2 MB)
+   ---------------------------------------- 7.2/7.2 MB 74.1 MB/s  0:00:00
+Installing collected packages: pillow
+Successfully installed pillow-12.3.0
+Generated D:\a\spt-1\spt-1\mods\SPT-Tactical-HUD\client\assets\hud-sprites.png (512, 384) from 43 mapped monochrome assets
+Normalized HUD optical scale/centering for 43 sprites
+D:\a\spt-1\spt-1\mods\SPT-Tactical-HUD\tools\check_hud_assets.py:41: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+  return sum(1 for v in a.getdata() if v >= 40)
+HUD asset QA:
+  usec      occupancy=0.635 border=0.000 micro12= 97px
+  bear      occupancy=0.530 border=0.000 micro12= 88px
+  scav      occupancy=0.531 border=0.000 micro12= 81px
+  boss      occupancy=0.569 border=0.000 micro12= 88px
+  raider    occupancy=0.584 border=0.000 micro12= 87px
+  water     occupancy=0.347 border=0.000 micro12= 53px
+  energy    occupancy=0.251 border=0.000 micro12= 35px
+  weight    occupancy=0.476 border=0.000 micro12= 69px
+  weight1   occupancy=0.135 border=0.000 micro12= 20px
+  weight2   occupancy=0.290 border=0.000 micro12= 38px
+  weight3   occupancy=0.431 border=0.000 micro12= 56px
+  head      occupancy=0.478 border=0.000 micro12= 69px
+  torso     occupancy=0.598 border=0.000 micro12= 88px
+  stomach   occupancy=0.605 border=0.000 micro12= 85px
+  left_arm  occupancy=0.589 border=0.000 micro12= 85px
+  right_arm occupancy=0.591 border=0.000 micro12= 86px
+  left_leg  occupancy=0.601 border=0.000 micro12= 88px
+  right_leg occupancy=0.597 border=0.000 micro12= 86px
+  self      occupancy=0.625 border=0.000 micro12= 92px
+  weapon_unknown occupancy=0.353 border=0.000 micro12= 20px
+  weapon_assault occupancy=0.456 border=0.000 micro12= 25px
+  weapon_carbine occupancy=0.509 border=0.000 micro12= 29px
+  weapon_smg occupancy=0.531 border=0.000 micro12= 28px
+  weapon_lmg occupancy=0.494 border=0.000 micro12= 30px
+  weapon_sniper occupancy=0.340 border=0.000 micro12= 35px
+  weapon_dmr occupancy=0.300 border=0.000 micro12= 31px
+  weapon_shotgun_pump occupancy=0.500 border=0.000 micro12= 31px
+  weapon_shotgun_semi occupancy=0.512 border=0.000 micro12= 23px
+  weapon_shotgun_sawedoff occupancy=0.526 border=0.000 micro12= 20px
+  weapon_pistol occupancy=0.522 border=0.000 micro12= 29px
+  weapon_revolver occupancy=0.519 border=0.000 micro12= 33px
+  weapon_launcher occupancy=0.432 border=0.000 micro12= 28px
+  weapon_frag occupancy=0.520 border=0.000 micro12= 27px
+  weapon_impact occupancy=0.584 border=0.000 micro12= 19px
+  weapon_incendiary occupancy=0.579 border=0.000 micro12= 15px
+  weapon_melee occupancy=0.566 border=0.000 micro12= 22px
+  weapon_throwing occupancy=0.441 border=0.000 micro12= 22px
+  weapon_bolt occupancy=0.213 border=0.000 micro12= 28px
+  weapon_pcc occupancy=0.358 border=0.000 micro12= 27px
+  weapon_special occupancy=0.489 border=0.000 micro12= 25px
+  weapon_crossbow occupancy=0.411 border=0.000 micro12= 43px
+  weapon_tool occupancy=0.388 border=0.000 micro12= 23px
+  weapon_explosive occupancy=0.416 border=0.000 micro12= 51px
+
+PASS: atlas geometry, cell padding, micro-scale visibility and faction silhouette separation
+D:\a\spt-1\spt-1\mods\SPT-Tactical-HUD\tools\check_hud_optics.py:32: DeprecationWarning: Image.Image.getdata is deprecated and will be removed in Pillow 14 (2027-10-15). Use get_flattened_data instead.
+  return sum(1 for v in a.getdata() if v >= threshold)
+HUD optical QA:
+  usec      bbox=53x58 center=(32.5,32.0) micro= 96/159
+  bear      bbox=47x58 center=(31.5,32.0) micro= 86/141
+  scav      bbox=51x58 center=(31.5,32.0) micro= 80/129
+  boss      bbox=51x58 center=(31.5,32.0) micro= 83/142
+  raider    bbox=51x58 center=(31.5,32.0) micro= 85/147
+  water     bbox=37x54 center=(32.5,32.0) micro= 52/ 89
+  energy    bbox=40x54 center=(32.0,32.0) micro= 35/ 63
+  weight    bbox=48x54 center=(32.0,32.0) micro= 67/126
+  weight1   bbox=50x17 center=(32.0,32.5) micro= 20/ 28
+  weight2   bbox=50x31 center=(32.0,31.5) micro= 38/ 58
+  weight3   bbox=50x44 center=(32.0,32.0) micro= 56/ 78
+  head      bbox=54x48 center=(32.0,32.0) micro= 68/106
+  torso     bbox=54x55 center=(32.0,31.5) micro= 87/150
+  stomach   bbox=54x55 center=(32.0,31.5) micro= 83/138
+  left_arm  bbox=54x54 center=(32.0,32.0) micro= 83/138
+  right_arm bbox=54x54 center=(32.0,32.0) micro= 83/142
+  left_leg  bbox=54x55 center=(32.0,31.5) micro= 88/146
+  right_leg bbox=54x55 center=(32.0,31.5) micro= 82/132
+  self      bbox=56x56 center=(32.0,32.0) micro= 90/148
+  weapon_unknown bbox=59x26 center=(31.5,36.0) micro= 20/ 29
+  weapon_assault bbox=60x40 center=(32.0,32.0) micro= 24/ 42
+  weapon_carbine bbox=60x40 center=(32.0,32.0) micro= 28/ 44
+  weapon_smg bbox=60x40 center=(32.0,32.0) micro= 26/ 43
+  weapon_lmg bbox=60x40 center=(32.0,32.0) micro= 29/ 50
+  weapon_sniper bbox=60x28 center=(32.0,32.0) micro= 34/ 61
+  weapon_dmr bbox=60x33 center=(32.0,32.5) micro= 29/ 52
+  weapon_shotgun_pump bbox=60x40 center=(32.0,32.0) micro= 28/ 43
+  weapon_shotgun_semi bbox=60x39 center=(32.0,31.5) micro= 23/ 30
+  weapon_shotgun_sawedoff bbox=60x39 center=(32.0,31.5) micro= 19/ 33
+  weapon_pistol bbox=60x39 center=(32.0,31.5) micro= 28/ 43
+  weapon_revolver bbox=58x40 center=(32.0,34.0) micro= 32/ 55
+  weapon_launcher bbox=60x34 center=(32.0,32.0) micro= 25/ 43
+  weapon_frag bbox=60x43 center=(32.0,31.5) micro= 26/ 43
+  weapon_impact bbox=60x43 center=(32.0,31.5) micro= 18/ 30
+  weapon_incendiary bbox=60x43 center=(32.0,31.5) micro= 14/ 27
+  weapon_melee bbox=60x43 center=(32.0,31.5) micro= 21/ 29
+  weapon_throwing bbox=51x44 center=(31.5,32.0) micro= 21/ 34
+  weapon_bolt bbox=60x21 center=(32.0,32.5) micro= 23/ 41
+  weapon_pcc bbox=60x35 center=(32.0,31.5) micro= 27/ 45
+  weapon_special bbox=60x40 center=(32.0,32.0) micro= 24/ 41
+  weapon_crossbow bbox=60x33 center=(32.0,32.5) micro= 40/ 67
+  weapon_tool bbox=60x35 center=(32.0,31.5) micro= 22/ 38
+  weapon_explosive bbox=60x36 center=(32.0,32.0) micro= 48/ 82
+
+PASS: optical centering, category scale and 12/16px coverage
+[OK] no guarded hot-path allocation patterns detected
+Generated D:\a\spt-1\spt-1\mods\SPT-Tactical-HUD\build-status\hud-preview.png with 0.82x / 1.0x / 1.18x composition and 12/16/20px icon QA
