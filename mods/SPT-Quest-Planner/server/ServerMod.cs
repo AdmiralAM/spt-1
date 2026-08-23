@@ -16,7 +16,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "SPT Quest Planner Server";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("0.4.0");
+    public SemanticVersioning.Version Version { get; init; } = new("0.5.0");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
@@ -38,16 +38,26 @@ public sealed class PlannerSnapshotService(
         object profile = profileHelper.GetPmcProfile(sessionId)!;
         QuestExtractionResult extraction = QuestExtractor.Extract(templateTable.Quests);
         PlayerProjection player = ProfileProjectionExtractor.Extract(profile);
+        InventoryProjection inventory = InventoryProjectionExtractor.Extract(profile);
         var (graph, validation) = PlannerGraph.Build(extraction.Nodes, extraction.Prerequisites);
         IReadOnlyDictionary<QuestState, int> stateCounts = ProfileProjectionExtractor.CountStates(extraction.Nodes, player);
         PlannerEvaluationResult evaluation = PlannerEvaluator.Evaluate(graph, extraction.ItemRequirements, player);
+        IReadOnlyList<OutstandingItemRequirement> outstanding =
+            InventoryProjectionExtractor.CalculateOutstanding(evaluation.ItemRequirements, inventory);
 
-        List<string> warnings = new(extraction.Warnings.Count + player.Warnings.Count + evaluation.Warnings.Count + 1);
+        List<string> warnings = new(
+            extraction.Warnings.Count +
+            player.Warnings.Count +
+            inventory.Warnings.Count +
+            evaluation.Warnings.Count + 2);
         warnings.AddRange(extraction.Warnings);
         warnings.AddRange(player.Warnings);
+        warnings.AddRange(inventory.Warnings);
         warnings.AddRange(evaluation.Warnings);
         if (extraction.Nodes.Count > 0 && player.QuestStates.Count == 0)
             warnings.Add("Quest database is populated but PMC quest-state projection is empty");
+        if (evaluation.ItemRequirements.Count > 0 && inventory.ByTemplate.Count == 0)
+            warnings.Add("Quest item requirements exist but PMC inventory projection is empty");
 
         PlannerSnapshotEnvelope envelope = new(
             PlannerDataContract.SchemaVersion,
@@ -58,9 +68,11 @@ public sealed class PlannerSnapshotService(
             extraction.Prerequisites,
             extraction.ItemRequirements,
             player,
+            inventory,
             stateCounts,
             validation,
             evaluation,
+            outstanding,
             warnings.Distinct(StringComparer.Ordinal).ToArray());
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -87,7 +99,7 @@ public sealed class QuestPlannerLoadNotice(ISptLogger<QuestPlannerLoadNotice> lo
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        logger.Success("SPT Quest Planner Server v0.4.0 loaded; quest evaluation and current/future requirement aggregation ready");
+        logger.Success("SPT Quest Planner Server v0.5.0 loaded; inventory ownership and outstanding requirement calculation ready");
         return Task.CompletedTask;
     }
 }
