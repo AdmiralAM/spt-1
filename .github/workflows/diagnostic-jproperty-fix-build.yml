@@ -1,0 +1,54 @@
+name: Diagnostic II JProperty Fix Build
+
+on:
+  push:
+    branches:
+      - diagnostic/item-intelligence-runtime-trace
+    paths:
+      - '.github/workflows/diagnostic-jproperty-fix-build.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Apply narrow JProperty fix in workspace
+        shell: pwsh
+        run: |
+          $path = 'mods/SPT-Item-Intelligence/src/RuntimeDataBootstrap.cs'
+          $text = Get-Content $path -Raw
+          $needle = 'PropertyInfo keyProperty = type.GetProperty("Key", BindingFlags.Public | BindingFlags.Instance);'
+          $replacement = 'PropertyInfo keyProperty = type.GetProperty("Key", BindingFlags.Public | BindingFlags.Instance) ?? type.GetProperty("Name", BindingFlags.Public | BindingFlags.Instance);'
+          if (-not $text.Contains($needle)) { throw 'Expected TryPair Key property line not found' }
+          $text = $text.Replace($needle, $replacement)
+          Set-Content $path $text -NoNewline
+          git diff -- mods/SPT-Item-Intelligence/src/RuntimeDataBootstrap.cs
+      - name: Download BepInEx 5
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path deps | Out-Null
+          Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
+          Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
+      - name: Test Item Intelligence
+        shell: pwsh
+        run: dotnet run --project mods/SPT-Item-Intelligence/tests/SPT-Item-Intelligence.Tests.csproj -c Release
+      - name: Build client and server
+        shell: pwsh
+        run: |
+          dotnet build mods/SPT-Item-Intelligence/src/SPT-Item-Intelligence.csproj -c Release
+          dotnet build mods/SPT-Item-Intelligence/server/SPT-Item-Intelligence.Server.csproj -c Release
+          New-Item -ItemType Directory -Force -Path diagnostic-package/BepInEx/plugins/'SPT Item Intelligence v0.10.1' | Out-Null
+          New-Item -ItemType Directory -Force -Path diagnostic-package/SPT_Runtime/user/mods/'SPT Item Intelligence Server' | Out-Null
+          Copy-Item 'mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/SPT Item Intelligence v0.10.1.dll' 'diagnostic-package/BepInEx/plugins/SPT Item Intelligence v0.10.1/SPT Item Intelligence v0.10.1.dll' -Force
+          Copy-Item 'mods/SPT-Item-Intelligence/server/bin/Release/net10.0/SPT Item Intelligence Server.dll' 'diagnostic-package/SPT_Runtime/user/mods/SPT Item Intelligence Server/SPT Item Intelligence Server.dll' -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: item-intelligence-jproperty-fix
+          path: diagnostic-package
+          if-no-files-found: error
