@@ -36,17 +36,21 @@ jobs:
           [xml]$serverProj = Get-Content 'mods/SPT-Tactical-HUD/server/SPT-TacticalHUD-Server.csproj'
           [xml]$itemProj = Get-Content 'mods/SPT-Item-Intelligence/src/SPT-Item-Intelligence.csproj'
           [xml]$itemServerProj = Get-Content 'mods/SPT-Item-Intelligence/server/SPT-Item-Intelligence.Server.csproj'
+          [xml]$pauseProj = Get-Content 'mods/SPT-Pause/src/SPT-Pause.csproj'
           $hudVersion = $hudProj.Project.PropertyGroup.Version
           $serverVersion = $serverProj.Project.PropertyGroup.Version
           $itemVersion = $itemProj.Project.PropertyGroup.Version
           $itemServerVersion = $itemServerProj.Project.PropertyGroup.Version
-          if([string]::IsNullOrWhiteSpace($hudVersion) -or [string]::IsNullOrWhiteSpace($itemVersion)){ throw 'Mod version missing' }
+          $pauseVersion = $pauseProj.Project.PropertyGroup.Version
+          if([string]::IsNullOrWhiteSpace($hudVersion) -or [string]::IsNullOrWhiteSpace($itemVersion) -or [string]::IsNullOrWhiteSpace($pauseVersion)){ throw 'Mod version missing' }
           "HUD_VERSION=$hudVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "HUD_NAME=SPT Tactical HUD v$hudVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "SERVER_VERSION=$serverVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "ITEM_VERSION=$itemVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "ITEM_SERVER_VERSION=$itemServerVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           "ITEM_NAME=SPT Item Intelligence v$itemVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "PAUSE_VERSION=$pauseVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "PAUSE_NAME=SPT Pause v$pauseVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           $serverChanged=$true
           git rev-parse "$env:GITHUB_SHA^" 2>$null | Out-Null
           if($LASTEXITCODE -eq 0){
@@ -104,11 +108,21 @@ jobs:
           "ITEM_TEST_EXIT_CODE=$testCode" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
           exit 0
 
+      - name: Validate Pause Phase 1
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path 'mods/SPT-Pause/build-status' | Out-Null
+          dotnet run --project mods/SPT-Pause/tests/SPT-Pause.Tests.csproj -c Release 2>&1 | Tee-Object -FilePath 'mods/SPT-Pause/build-status/test.log'
+          $testCode=$LASTEXITCODE
+          "PAUSE_TEST_EXIT_CODE=$testCode" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          exit 0
+
       - name: Build independent packages and capture logs
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path 'mods/SPT-Tactical-HUD/build-status' | Out-Null
           New-Item -ItemType Directory -Force -Path 'mods/SPT-Item-Intelligence/build-status' | Out-Null
+          New-Item -ItemType Directory -Force -Path 'mods/SPT-Pause/build-status' | Out-Null
           $ErrorActionPreference='Continue'
           dotnet build mods/SPT-Tactical-HUD/client/SPT-Tactical-HUD.csproj -c Release 2>&1 | Tee-Object -FilePath 'mods/SPT-Tactical-HUD/build-status/client-build.log'
           $hudCode=$LASTEXITCODE
@@ -118,16 +132,20 @@ jobs:
           $itemCode=$LASTEXITCODE
           dotnet build mods/SPT-Item-Intelligence/server/SPT-Item-Intelligence.Server.csproj -c Release 2>&1 | Tee-Object -FilePath 'mods/SPT-Item-Intelligence/build-status/server-build.log'
           $itemServerCode=$LASTEXITCODE
+          dotnet build mods/SPT-Pause/src/SPT-Pause.csproj -c Release 2>&1 | Tee-Object -FilePath 'mods/SPT-Pause/build-status/client-build.log'
+          $pauseCode=$LASTEXITCODE
           Get-Content 'mods/SPT-Tactical-HUD/build-status/client-build.log','mods/SPT-Tactical-HUD/build-status/server-build.log' | Set-Content 'mods/SPT-Tactical-HUD/build-status/build.log'
           Get-Content 'mods/SPT-Item-Intelligence/build-status/client-build.log','mods/SPT-Item-Intelligence/build-status/server-build.log' | Set-Content 'mods/SPT-Item-Intelligence/build-status/build.log'
-          $code=if(($hudCode -eq 0) -and ($serverCode -eq 0) -and ($itemCode -eq 0) -and ($itemServerCode -eq 0) -and ($env:ASSET_EXIT_CODE -eq '0') -and ($env:ITEM_TEST_EXIT_CODE -eq '0')){0}else{1}
+          Get-Content 'mods/SPT-Pause/build-status/client-build.log' | Set-Content 'mods/SPT-Pause/build-status/build.log'
+          $code=if(($hudCode -eq 0) -and ($serverCode -eq 0) -and ($itemCode -eq 0) -and ($itemServerCode -eq 0) -and ($pauseCode -eq 0) -and ($env:ASSET_EXIT_CODE -eq '0') -and ($env:ITEM_TEST_EXIT_CODE -eq '0') -and ($env:PAUSE_TEST_EXIT_CODE -eq '0')){0}else{1}
           "BUILD_EXIT_CODE=$code" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
 
           $hudDll="mods/SPT-Tactical-HUD/client/bin/Release/netstandard2.1/$env:HUD_NAME.dll"
           $serverDll='mods/SPT-Tactical-HUD/server/bin/Release/net10.0/SPT Tactical HUD Server.dll'
           $itemDll="mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/$env:ITEM_NAME.dll"
           $itemServerDll='mods/SPT-Item-Intelligence/server/bin/Release/net10.0/SPT Item Intelligence Server.dll'
-          if((Test-Path $hudDll) -and (Test-Path $serverDll) -and (Test-Path $itemDll) -and (Test-Path $itemServerDll)){
+          $pauseDll="mods/SPT-Pause/src/bin/Release/netstandard2.1/$env:PAUSE_NAME.dll"
+          if((Test-Path $hudDll) -and (Test-Path $serverDll) -and (Test-Path $itemDll) -and (Test-Path $itemServerDll) -and (Test-Path $pauseDll)){
             Remove-Item 'build-output' -Recurse -Force -ErrorAction SilentlyContinue
 
             $hudPackage="build-output/$env:HUD_NAME"
@@ -148,6 +166,11 @@ jobs:
             $itemServer="$itemPackage/SPT_Runtime/user/mods/SPT Item Intelligence Server"
             New-Item -ItemType Directory -Force -Path $itemServer | Out-Null
             Copy-Item $itemServerDll "$itemServer/SPT Item Intelligence Server.dll" -Force
+
+            $pausePackage="build-output/$env:PAUSE_NAME"
+            $pauseClient="$pausePackage/BepInEx/plugins/$env:PAUSE_NAME"
+            New-Item -ItemType Directory -Force -Path $pauseClient | Out-Null
+            Copy-Item $pauseDll "$pauseClient/$env:PAUSE_NAME.dll" -Force
           }
           exit 0
 
@@ -162,6 +185,8 @@ jobs:
           git add mods/SPT-Tactical-HUD/build-status/hud-preview.png
           git add mods/SPT-Item-Intelligence/build-status/build.log
           git add mods/SPT-Item-Intelligence/build-status/test.log
+          git add mods/SPT-Pause/build-status/build.log
+          git add mods/SPT-Pause/build-status/test.log
           git add -A build-output
           git diff --cached --quiet
           if($LASTEXITCODE -ne 0){git commit -m "Update SPT mod suite generated builds [skip ci]";git push}
@@ -182,6 +207,13 @@ jobs:
         with:
           name: SPT-Item-Intelligence-v${{ env.ITEM_VERSION }}
           path: build-output/${{ env.ITEM_NAME }}
+          if-no-files-found: error
+
+      - name: Upload Pause package
+        uses: actions/upload-artifact@v4
+        with:
+          name: SPT-Pause-v${{ env.PAUSE_VERSION }}
+          path: build-output/${{ env.PAUSE_NAME }}
           if-no-files-found: error
 
       - name: Publish stable and split runtime channels
@@ -207,7 +239,7 @@ jobs:
           [ordered]@{
             name='SPT Tactical HUD'; channel='runtime'; client_version=$env:HUD_VERSION;
             server_version=$env:SERVER_VERSION; spt_version='4.1.x'; source_commit=$stableSha;
-            server_included=$serverIncluded; contains_item_intelligence=$false
+            server_included=$serverIncluded; contains_item_intelligence=$false; contains_pause=$false
           } | ConvertTo-Json | Set-Content (Join-Path $hudRoot 'runtime-manifest.json') -Encoding utf8
           $serverInstruction=if($serverIncluded){'This package includes the optional server companion.'}else{'The optional server companion is unchanged; leave the installed server folder untouched.'}
           @"
@@ -241,7 +273,7 @@ jobs:
           [ordered]@{
             name='SPT Item Intelligence'; channel='runtime-item-intelligence'; version=$env:ITEM_VERSION;
             phase='15'; spt_version='4.1.x'; source_commit=$stableSha; server_version=$env:ITEM_SERVER_VERSION;
-            server_included=$true; contains_tactical_hud=$false
+            server_included=$true; contains_tactical_hud=$false; contains_pause=$false
           } | ConvertTo-Json | Set-Content (Join-Path $itemRoot 'runtime-manifest.json') -Encoding utf8
           @"
           # SPT Item Intelligence runtime
@@ -258,3 +290,34 @@ jobs:
           git push origin HEAD:refs/heads/runtime-item-intelligence --force
           Pop-Location
           git worktree remove $itemRoot --force
+
+          $pauseRoot=Join-Path $env:RUNNER_TEMP 'spt-pause-runtime'
+          git worktree add --detach $pauseRoot $stableSha
+          Push-Location $pauseRoot
+          git checkout --orphan "runtime-pause-publish-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          git rm -rf .
+          $pausePackage=Join-Path $env:GITHUB_WORKSPACE "build-output/$env:PAUSE_NAME"
+          $pauseSource=Join-Path $pausePackage "BepInEx/plugins/$env:PAUSE_NAME/$env:PAUSE_NAME.dll"
+          $pauseTarget=Join-Path $pauseRoot 'BepInEx/plugins/SPT Pause'
+          New-Item -ItemType Directory -Force -Path $pauseTarget | Out-Null
+          Copy-Item $pauseSource (Join-Path $pauseTarget 'SPT Pause.dll') -Force
+          [ordered]@{
+            name='SPT Pause'; channel='runtime-pause'; version=$env:PAUSE_VERSION;
+            phase='1'; spt_version='4.1.x'; source_commit=$stableSha; client_only=$true;
+            contains_tactical_hud=$false; contains_item_intelligence=$false
+          } | ConvertTo-Json | Set-Content (Join-Path $pauseRoot 'runtime-manifest.json') -Encoding utf8
+          @"
+          # SPT Pause runtime
+
+          Ready-to-install standalone **SPT Pause v$env:PAUSE_VERSION** for SPT **4.1.x**.
+
+          Copy this branch into the SPT root. Press P in an offline raid to pause/resume. Phase 1 freezes world ticks and Unity time, preserves the raid/display timers and time of day through reflected clock anchors, shows PAUSED on the raid timer, excludes hideout/network sessions and restores state on scene changes. Physical in-game validation is still pending. This channel contains Pause only.
+          Verified source commit: **$stableSha**.
+          "@ | Set-Content (Join-Path $pauseRoot 'README.md') -Encoding utf8
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m "Publish SPT Pause runtime v$env:PAUSE_VERSION"
+          git push origin HEAD:refs/heads/runtime-pause --force
+          Pop-Location
+          git worktree remove $pauseRoot --force
