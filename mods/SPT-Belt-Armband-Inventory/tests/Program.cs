@@ -50,6 +50,13 @@ internal static class Program
         Assert(fallback[fallback.Length - 1] == BeltSlotPlan.ArmBand, "missing pockets falls back safely");
         Assert(unusual.SequenceEqual(BeltSlotPlan.Build(unusual, BeltSlotPosition.BelowPockets, false)), "disabled fallback does not invent slots");
 
+        Assert(LootPriorityPlan.Build(LootItemKind.Magazine, true).SequenceEqual(new[] { "Vest", "Belt", "Pockets", "Backpack", "Secure" }), "magazines prioritize belt after vest");
+        Assert(LootPriorityPlan.Build(LootItemKind.Ammo, true).SequenceEqual(new[] { "Belt", "Vest", "Pockets", "Backpack", "Secure" }), "ammo prioritizes belt first");
+        Assert(LootPriorityPlan.Build(LootItemKind.Money, true).SequenceEqual(new[] { "Secure", "Backpack", "Vest", "Belt", "Pockets" }), "money keeps secure/backpack first and includes belt");
+        Assert(LootPriorityPlan.Build(LootItemKind.Throwable, true).SequenceEqual(new[] { "Pockets", "Belt", "Vest", "Backpack", "Secure" }), "throwables prioritize belt after pockets");
+        Assert(LootPriorityPlan.Build(LootItemKind.Other, true).SequenceEqual(new[] { "Backpack", "Vest", "Belt", "Pockets", "Secure" }), "general loot includes belt after vest");
+        Assert(LootPriorityPlan.Build(LootItemKind.Other, false).SequenceEqual(new[] { "Backpack", "Vest", "Pockets", "Secure" }), "no belt preserves vanilla general priority");
+
         Console.WriteLine("SPT Belt/Armband Inventory Phase 1: " + assertions + " assertions passed.");
     }
 

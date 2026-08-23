@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\src\BeltSlotPlan.cs" Link="BeltSlotPlan.cs" />
+    <Compile Include="..\src\LootPriorityPlan.cs" Link="LootPriorityPlan.cs" />
     <Compile Include="..\src\ReflectionTools.cs" Link="ReflectionTools.cs" />
   </ItemGroup>
 </Project>
