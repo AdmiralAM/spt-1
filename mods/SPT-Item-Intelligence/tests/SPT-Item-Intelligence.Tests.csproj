@@ -18,5 +18,6 @@
     <Compile Include="..\src\HoverFormatting.cs" Link="HoverFormatting.cs" />
     <Compile Include="..\src\HoverRuntimeController.cs" Link="HoverRuntimeController.cs" />
     <Compile Include="..\src\Diagnostics.cs" Link="Diagnostics.cs" />
+    <Compile Include="..\src\EftHoverIntegration.cs" Link="EftHoverIntegration.cs" />
   </ItemGroup>
 </Project>

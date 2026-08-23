@@ -64,7 +64,8 @@ static class Program
         int phase9Assertions = Phase9HoverFormattingTests.Run();
         int phase10Assertions = Phase10HoverRuntimeTests.Run();
         int phase11Assertions = Phase11DiagnosticsTests.Run();
-        Console.WriteLine("Item Intelligence: " + assertions + " Phase 1, " + phase2Assertions + " Phase 2, " + phase3Assertions + " Phase 3, " + phase4Assertions + " Phase 4, " + phase5Assertions + " Phase 5, " + phase6Assertions + " Phase 6, " + phase7Assertions + " Phase 7, " + phase8Assertions + " Phase 8, " + phase9Assertions + " Phase 9, " + phase10Assertions + " Phase 10 and " + phase11Assertions + " Phase 11 assertions passed.");
+        int phase12Assertions = Phase12EftHoverIntegrationTests.Run();
+        Console.WriteLine("Item Intelligence: " + assertions + " Phase 1, " + phase2Assertions + " Phase 2, " + phase3Assertions + " Phase 3, " + phase4Assertions + " Phase 4, " + phase5Assertions + " Phase 5, " + phase6Assertions + " Phase 6, " + phase7Assertions + " Phase 7, " + phase8Assertions + " Phase 8, " + phase9Assertions + " Phase 9, " + phase10Assertions + " Phase 10, " + phase11Assertions + " Phase 11 and " + phase12Assertions + " Phase 12 assertions passed.");
     }
 
     static ItemDefinition Resolve(ItemRegistry registry, string id, string type, IDictionary<string, object> signals) => registry.Resolve(new ItemDescriptor(id, null, "  Test   Item  ", " Test ", type, signals));
