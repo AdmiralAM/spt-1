@@ -7,14 +7,14 @@ namespace SPTItemIntelligence
         public static int Run()
         {
             int assertions = 0;
-            Expect(RequirementDataContract.SchemaVersion == 1, "schema version is stable", ref assertions);
-            Expect(RequirementDataContract.SnapshotRoute == "/spt-item-intelligence/v1/snapshot", "snapshot route is stable", ref assertions);
+            Expect(RequirementDataContract.SchemaVersion == 2, "live Value schema version is explicit", ref assertions);
+            Expect(RequirementDataContract.SnapshotRoute == "/spt-item-intelligence/v2/snapshot", "schema-v2 snapshot route is explicit", ref assertions);
 
             object profile = new object();
             object quests = new object();
             object hideout = new object();
             RequirementDataEnvelope ready = new RequirementDataEnvelope(123, profile, quests, hideout);
-            Expect(ready.schemaVersion == 1, "envelope carries schema version", ref assertions);
+            Expect(ready.schemaVersion == 2, "envelope carries schema version", ref assertions);
             Expect(ready.generatedAtUnixSeconds == 123, "envelope carries generation time", ref assertions);
             Expect(ready.profileReady, "profile readiness is explicit", ref assertions);
             Expect(object.ReferenceEquals(ready.profile, profile), "profile payload is preserved", ref assertions);

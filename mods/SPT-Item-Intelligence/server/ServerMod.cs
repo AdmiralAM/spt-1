@@ -3,6 +3,7 @@ using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers.Profile;
+using SPTarkov.Server.Core.Helpers.Traders;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Tables;
@@ -16,7 +17,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "SPT Item Intelligence Server";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("0.3.0");
+    public SemanticVersioning.Version Version { get; init; } = new("0.4.0");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
@@ -30,19 +31,55 @@ public sealed class RequirementDataService(
     JsonUtil jsonUtil,
     ProfileHelper profileHelper,
     TemplateTable templateTable,
-    HideoutTable hideoutTable)
+    HideoutTable hideoutTable,
+    HandbookHelper handbookHelper,
+    TraderHelper traderHelper)
 {
     public ValueTask<string> BuildSnapshotAsync(MongoId sessionId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         object? profile = profileHelper.GetPmcProfile(sessionId);
+        List<ItemPriceSnapshotEntry> prices = BuildPrices(cancellationToken);
         RequirementDataEnvelope envelope = new(
             DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
             profile!,
             templateTable.Quests,
-            hideoutTable);
+            hideoutTable,
+            prices);
         cancellationToken.ThrowIfCancellationRequested();
         return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+    }
+
+    private List<ItemPriceSnapshotEntry> BuildPrices(CancellationToken cancellationToken)
+    {
+        List<ItemPriceSnapshotEntry> result = new(templateTable.Prices.Count);
+        foreach (var (templateId, item) in templateTable.Items)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!string.Equals(item.Type, "Item", StringComparison.OrdinalIgnoreCase)) continue;
+
+            templateTable.Prices.TryGetValue(templateId, out double fleaValue);
+            double fallbackValue = handbookHelper.GetTemplatePrice(templateId);
+            double traderValue = traderHelper.GetHighestSellToTraderPrice(templateId);
+            int width = Math.Max(1, item.Properties.Width ?? 1);
+            int height = Math.Max(1, item.Properties.Height ?? 1);
+            result.Add(new ItemPriceSnapshotEntry(
+                templateId.ToString(),
+                ToLong(traderValue),
+                "Trader",
+                ToLong(fleaValue),
+                ToLong(fallbackValue),
+                width,
+                height));
+        }
+        return result;
+    }
+
+    private static long ToLong(double value)
+    {
+        if (double.IsNaN(value) || value <= 0) return 0;
+        if (double.IsPositiveInfinity(value) || value >= long.MaxValue) return long.MaxValue;
+        return (long)Math.Round(value);
     }
 }
 
@@ -65,7 +102,7 @@ public sealed class ItemIntelligenceLoadNotice(ISptLogger<ItemIntelligenceLoadNo
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        logger.Success("SPT Item Intelligence Server v0.3.0 loaded; requirement snapshot route ready");
+        logger.Success("SPT Item Intelligence Server v0.4.0 loaded; requirement and price snapshot route ready");
         return Task.CompletedTask;
     }
 }

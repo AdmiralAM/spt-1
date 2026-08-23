@@ -26,6 +26,8 @@ static class Phase6PricingTests
 
         ItemPriceState stack = ItemPriceEvaluator.Evaluate(new ItemPriceInput("stack", 1000, "Trader", 0, 0, 1, 1, 60));
         Expect(stack.TotalValue == 60000 && stack.ValuePerSlot == 60000, "stack count contributes to total and per-slot value");
+        ItemPriceState scaledStack = ItemPriceEvaluator.WithStackCount(flea, 10);
+        Expect(scaledStack.TotalValue == 420000 && scaledStack.ValuePerSlot == 105000, "registered item stack count rescales cached unit pricing");
 
         ValueTierThresholds defaults = new ValueTierThresholds();
         Expect(defaults.Resolve(14999) == ValueTier.White, "default white threshold");

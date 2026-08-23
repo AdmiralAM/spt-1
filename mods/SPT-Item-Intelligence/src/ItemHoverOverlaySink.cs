@@ -63,19 +63,22 @@ namespace SPTItemIntelligence
         public void RegisterView(object itemView, string templateId)
         {
             string normalized = RequirementContribution.NormalizeId(templateId);
+            int stackCount = EftItemTemplateIdResolver.ResolveStackCount(itemView);
             RectTransform target = ResolveRectTransform(itemView);
             if (itemView == null || normalized.Length == 0 || target == null) return;
 
             TrackedItemView existing;
             if (trackedViews.TryGetValue(itemView, out existing))
             {
+                if (existing.TemplateId == normalized && existing.StackCount == stackCount && object.ReferenceEquals(existing.Anchor, target)) return;
                 existing.TemplateId = normalized;
                 existing.Anchor = target;
-                existing.Text = ResolveText(normalized, store.Current);
+                existing.StackCount = stackCount;
+                existing.Text = ResolveText(normalized, stackCount, store.Current);
                 return;
             }
 
-            trackedViews[itemView] = new TrackedItemView(target, normalized, ResolveText(normalized, store.Current));
+            trackedViews[itemView] = new TrackedItemView(target, normalized, stackCount, ResolveText(normalized, stackCount, store.Current));
         }
 
         public void UnregisterView(object itemView)
@@ -171,18 +174,25 @@ namespace SPTItemIntelligence
             if (object.ReferenceEquals(index, renderedIndex) && version == renderedInvalidation) return;
 
             foreach (TrackedItemView tracked in trackedViews.Values)
-                tracked.Text = ResolveText(tracked.TemplateId, index);
+                tracked.Text = ResolveText(tracked.TemplateId, tracked.StackCount, index);
 
             renderedIndex = index;
             renderedInvalidation = version;
         }
 
-        ItemHoverText ResolveText(string templateId, ItemPresentationIndex index)
+        ItemHoverText ResolveText(string templateId, int stackCount, ItemPresentationIndex index)
         {
             ItemPresentationIndex safeIndex = index ?? ItemPresentationIndex.Empty;
             ItemPresentationState presentation = safeIndex.Get(templateId);
             if (presentation != ItemPresentationState.Empty)
+            {
+                if (presentation.Price != null && stackCount > 1)
+                    presentation = new ItemPresentationState(
+                        presentation.TemplateId,
+                        presentation.Requirement,
+                        ItemPriceEvaluator.WithStackCount(presentation.Price, stackCount));
                 return textCache.Get(new ItemHoverState(presentation), safeIndex) ?? ItemHoverText.Empty;
+            }
 
             if (fallbackFactory == null) return ItemHoverText.Empty;
             try { return fallbackFactory(templateId) ?? ItemHoverText.Empty; }
@@ -315,15 +325,17 @@ namespace SPTItemIntelligence
 
         sealed class TrackedItemView
         {
-            public TrackedItemView(RectTransform anchor, string templateId, ItemHoverText text)
+            public TrackedItemView(RectTransform anchor, string templateId, int stackCount, ItemHoverText text)
             {
                 Anchor = anchor;
                 TemplateId = templateId;
+                StackCount = Math.Max(1, stackCount);
                 Text = text ?? ItemHoverText.Empty;
             }
 
             public RectTransform Anchor { get; set; }
             public string TemplateId { get; set; }
+            public int StackCount { get; set; }
             public ItemHoverText Text { get; set; }
         }
 

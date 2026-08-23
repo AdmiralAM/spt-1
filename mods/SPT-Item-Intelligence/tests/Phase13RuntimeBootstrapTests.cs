@@ -50,7 +50,11 @@ static class Phase13RuntimeBootstrapTests
             }
         };
 
-        RequirementDataEnvelope envelope = new RequirementDataEnvelope(123, profile, quests, hideout);
+        object[] prices =
+        {
+            new ItemPriceSnapshotEntry("A", 1000, "Therapist", 2000, 500, 2, 1)
+        };
+        RequirementDataEnvelope envelope = new RequirementDataEnvelope(123, profile, quests, hideout, prices);
         RequirementProjection projection = new SptRequirementDataProjector().Project(envelope);
         Expect(projection.Owned.Count == 2, "owned templates projected", ref assertions);
         RequirementIndex index = RequirementIndexBuilder.Build(projection);
@@ -73,7 +77,9 @@ static class Phase13RuntimeBootstrapTests
         Expect(bootstrap.TryRefresh(CancellationToken.None, out error), "bootstrap succeeds", ref assertions);
         Expect(error == null && bootstrap.State == RequirementBootstrapState.Ready, "bootstrap publishes ready state", ref assertions);
         Expect(store.Get("a").Requirement.KeepCount == 2, "presentation store populated", ref assertions);
+        Expect(store.Get("a").Price.BestSource == PriceSource.Flea && store.Get("a").Price.TotalValue == 2000, "live flea/trader snapshot populates Value", ref assertions);
         ItemHoverText active = controller.OnHoverEnter("a");
+        Expect(active.Primary == "2,000 ₽" && active.Secondary == "1,000 ₽/slot", "live Value and per-slot value reach hover formatting", ref assertions);
         Expect(active.Status.StartsWith("SAFE TO SELL", StringComparison.Ordinal), "live presentation reaches hover", ref assertions);
         ItemHoverText unknown = controller.OnHoverEnter("unknown");
         Expect(unknown.Primary == "ITEM INTELLIGENCE" && unknown.Status == "NO REQUIREMENT DATA", "ready fallback is diagnostic", ref assertions);

@@ -31,6 +31,7 @@ static class Phase12EftHoverIntegrationTests
         Expect(EftItemTemplateIdResolver.Resolve(itemDictionary) == "jkl", "dictionary snapshot shape resolves", ref assertions);
         Expect(EftItemTemplateIdResolver.Resolve(null) == string.Empty, "null shape is safely ignored", ref assertions);
         Expect(EftItemTemplateIdResolver.Resolve(new object()) == string.Empty, "unknown shape is safely ignored", ref assertions);
+        Expect(EftItemTemplateIdResolver.ResolveStackCount(new StackItemView { Item = new StackItem { StackObjectsCount = 37 } }) == 37, "live stack count resolves from the item instance", ref assertions);
 
         List<EftItemViewHoverIntegration.HoverPatchTarget> targets = EftItemViewHoverIntegration.DiscoverTargets(new[]
         {
@@ -99,6 +100,8 @@ static class Phase12EftHoverIntegrationTests
     sealed class NestedItemView { public NestedItem Item; }
     sealed class NestedItem { public NestedTemplate Template; }
     sealed class NestedTemplate { public string _id; }
+    sealed class StackItemView { public StackItem Item; }
+    sealed class StackItem { public int StackObjectsCount; }
 
     sealed class FakeInventoryItemView
     {

@@ -80,11 +80,12 @@ namespace SPTItemIntelligence
             if (!JsonNode.ReadBool(JsonNode.Get(root, "profileReady"), !JsonNode.IsNull(profile))) profile = null;
             object quests = JsonNode.Get(root, "quests");
             object hideout = JsonNode.Get(root, "hideout");
-            if (JsonNode.IsNull(quests) || JsonNode.IsNull(hideout))
+            object prices = JsonNode.Get(root, "prices");
+            if (JsonNode.IsNull(quests) || JsonNode.IsNull(hideout) || JsonNode.IsNull(prices))
                 throw new InvalidOperationException("Requirement snapshot tables are incomplete.");
 
             long generated = JsonNode.ReadLong(JsonNode.Get(root, "generatedAtUnixSeconds"), 0);
-            return new RequirementDataEnvelope(generated, profile, quests, hideout);
+            return new RequirementDataEnvelope(generated, profile, quests, hideout, prices);
         }
 
         static Type FindType(string fullName)
@@ -100,6 +101,33 @@ namespace SPTItemIntelligence
                 catch { }
             }
             return null;
+        }
+    }
+
+    public interface IPriceDataProjector
+    {
+        ItemPriceIndex Project(object prices);
+    }
+
+    public sealed class SptPriceDataProjector : IPriceDataProjector
+    {
+        public ItemPriceIndex Project(object prices)
+        {
+            List<ItemPriceInput> inputs = new List<ItemPriceInput>();
+            foreach (object entry in JsonNode.Values(prices))
+            {
+                string templateId = RequirementContribution.NormalizeId(JsonNode.ReadString(JsonNode.Get(entry, "templateId", "TemplateId")));
+                if (templateId.Length == 0) continue;
+                inputs.Add(new ItemPriceInput(
+                    templateId,
+                    JsonNode.ReadLong(JsonNode.Get(entry, "traderUnitValue", "TraderUnitValue"), 0),
+                    JsonNode.ReadString(JsonNode.Get(entry, "traderName", "TraderName")),
+                    JsonNode.ReadLong(JsonNode.Get(entry, "fleaUnitValue", "FleaUnitValue"), 0),
+                    JsonNode.ReadLong(JsonNode.Get(entry, "fallbackUnitValue", "FallbackUnitValue"), 0),
+                    JsonNode.ReadInt(JsonNode.Get(entry, "width", "Width"), 1),
+                    JsonNode.ReadInt(JsonNode.Get(entry, "height", "Height"), 1)));
+            }
+            return ItemPriceIndexBuilder.Build(inputs);
         }
     }
 
@@ -281,6 +309,7 @@ namespace SPTItemIntelligence
         readonly IRequirementSnapshotTransport transport;
         readonly IRequirementSnapshotDecoder decoder;
         readonly IRequirementDataProjector projector;
+        readonly IPriceDataProjector priceProjector;
         readonly ItemPresentationStore presentationStore;
         readonly ItemHoverRuntimeController hoverController;
         int state = (int)RequirementBootstrapState.Loading;
@@ -291,13 +320,15 @@ namespace SPTItemIntelligence
             IRequirementSnapshotDecoder decoder,
             IRequirementDataProjector projector,
             ItemPresentationStore presentationStore,
-            ItemHoverRuntimeController hoverController)
+            ItemHoverRuntimeController hoverController,
+            IPriceDataProjector priceProjector = null)
         {
             this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
             this.decoder = decoder ?? throw new ArgumentNullException(nameof(decoder));
             this.projector = projector ?? throw new ArgumentNullException(nameof(projector));
             this.presentationStore = presentationStore ?? throw new ArgumentNullException(nameof(presentationStore));
             this.hoverController = hoverController ?? throw new ArgumentNullException(nameof(hoverController));
+            this.priceProjector = priceProjector ?? new SptPriceDataProjector();
         }
 
         public RequirementBootstrapState State => (RequirementBootstrapState)Volatile.Read(ref state);
@@ -317,8 +348,9 @@ namespace SPTItemIntelligence
                 RequirementProjection projection = projector.Project(snapshot);
                 RequirementIndex index = RequirementIndexBuilder.Build(projection);
                 ItemRequirementStateIndex requirements = ItemRequirementStateBuilder.Build(index);
+                ItemPriceIndex prices = priceProjector.Project(snapshot.prices);
                 cancellationToken.ThrowIfCancellationRequested();
-                presentationStore.Refresh(requirements, ItemPriceIndex.Empty);
+                presentationStore.Refresh(requirements, prices);
                 hoverController.RefreshActive();
                 Interlocked.Exchange(ref detail, "NO REQUIREMENT DATA");
                 Interlocked.Exchange(ref state, (int)RequirementBootstrapState.Ready);
