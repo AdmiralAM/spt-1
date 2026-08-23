@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\src\PauseStateMachine.cs" Link="PauseStateMachine.cs" />
+    <Compile Include="..\src\PauseInputPolicy.cs" Link="PauseInputPolicy.cs" />
     <Compile Include="..\src\ReflectionClockAnchors.cs" Link="ReflectionClockAnchors.cs" />
   </ItemGroup>
 </Project>

@@ -8,10 +8,20 @@ static class Program
     static void Main()
     {
         StateMachineIsTransactional();
+        DisabledSettingNeverTrapsAnActivePause();
         NamedTimerAnchorsShiftExactlyOnce();
         TimerPanelDateFieldShifts();
         TimeOfDayRealtimeAnchorShifts();
         Console.WriteLine("SPT Pause Phase 1: " + assertions + " assertions passed.");
+    }
+
+    static void DisabledSettingNeverTrapsAnActivePause()
+    {
+        Expect(!PauseInputPolicy.AcceptToggle(false, true, false), "no shortcut means no toggle");
+        Expect(!PauseInputPolicy.AcceptToggle(true, false, false), "disabled setting blocks a new pause");
+        Expect(PauseInputPolicy.AcceptToggle(true, true, false), "enabled setting allows a new pause");
+        Expect(PauseInputPolicy.AcceptToggle(true, false, true), "disabled setting still allows resume");
+        Expect(PauseInputPolicy.AcceptToggle(true, true, true), "enabled setting allows resume");
     }
 
     static void StateMachineIsTransactional()
