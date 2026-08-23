@@ -47,21 +47,28 @@ static class Phase12EftHoverIntegrationTests
             new ItemPriceInput("abc", traderUnitValue: 12000, fleaUnitValue: 24000)
         }));
         RecordingSink sink = new RecordingSink();
+        RecordingAnchorSink anchorSink = new RecordingAnchorSink();
         ItemHoverRuntimeController controller = new ItemHoverRuntimeController(store, sink);
         List<string> warnings = new List<string>();
-        EftItemViewHoverIntegration integration = new EftItemViewHoverIntegration(controller, null, warnings.Add);
+        EftItemViewHoverIntegration integration = new EftItemViewHoverIntegration(controller, null, warnings.Add, anchorSink);
 
-        Expect(integration.DispatchEnter(new DirectItemView { Item = new DirectItem { TemplateId = "ABC" } }), "resolved enter is dispatched", ref assertions);
+        DirectItemView hoveredView = new DirectItemView { Item = new DirectItem { TemplateId = "ABC" } };
+        Expect(integration.DispatchEnter(hoveredView), "resolved enter is dispatched", ref assertions);
         Expect(sink.ShowCount == 1 && sink.Last.Primary == "24,000 ₽", "dispatch reaches cached hover pipeline and sink", ref assertions);
+        Expect(object.ReferenceEquals(anchorSink.Last, hoveredView), "resolved enter binds the marker to the active ItemView", ref assertions);
         integration.DispatchExit();
         Expect(sink.ClearCount == 1 && !controller.HasActiveItem, "exit clears sink and active item", ref assertions);
+        Expect(anchorSink.ClearCount == 1 && anchorSink.Last == null, "exit clears the ItemView marker anchor", ref assertions);
 
         Expect(!integration.DispatchEnter(new object()), "unresolved enter is ignored", ref assertions);
+        Expect(anchorSink.ClearCount == 2, "unresolved ItemView clears a stale marker anchor", ref assertions);
         Expect(warnings.Count == 1, "unknown ItemView shape warns only once", ref assertions);
         integration.DispatchEnter(new object());
         Expect(warnings.Count == 1, "repeated unknown shape does not spam logs", ref assertions);
 
+        Expect(integration.DispatchEnter(hoveredView) && object.ReferenceEquals(anchorSink.Last, hoveredView), "marker anchor can be rebound before disposal", ref assertions);
         integration.Dispose();
+        Expect(anchorSink.Last == null, "dispose clears the marker anchor", ref assertions);
         Expect(!integration.DispatchEnter(new DirectItemView { Item = new DirectItem { TemplateId = "abc" } }), "disposed bridge rejects callbacks", ref assertions);
         Expect(!integration.IsInstalled && integration.PatchedMethodCount == 0, "dispose leaves bridge safely disabled", ref assertions);
 
@@ -96,5 +103,13 @@ static class Phase12EftHoverIntegrationTests
         public ItemHoverText Last = ItemHoverText.Empty;
         public void Show(ItemHoverText text) { ShowCount++; Last = text; }
         public void Clear() { ClearCount++; Last = ItemHoverText.Empty; }
+    }
+
+    sealed class RecordingAnchorSink : IItemHoverAnchorSink
+    {
+        public object Last;
+        public int ClearCount;
+        public void SetAnchor(object itemView) { Last = itemView; }
+        public void ClearAnchor() { ClearCount++; Last = null; }
     }
 }
