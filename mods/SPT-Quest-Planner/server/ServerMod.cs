@@ -16,7 +16,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "SPT Quest Planner Server";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("0.6.0");
+    public SemanticVersioning.Version Version { get; init; } = new("0.7.0");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
@@ -29,22 +29,70 @@ public record ModMetadata : IModMetadata
 public sealed class PlannerSnapshotService(
     JsonUtil jsonUtil,
     ProfileHelper profileHelper,
-    TemplateTable templateTable)
+    TemplateTable templateTable,
+    PlannerStaticDataCache staticDataCache)
 {
     public ValueTask<string> BuildSnapshotAsync(MongoId sessionId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        PlannerStaticData staticData = staticDataCache.Get();
+        QuestExtractionResult extraction = staticData.Extraction;
         object profile = profileHelper.GetPmcProfile(sessionId)!;
-        QuestExtractionResult extraction = QuestExtractor.Extract(templateTable.Quests);
         PlayerProjection player = ProfileProjectionExtractor.Extract(profile);
         InventoryProjection inventory = InventoryProjectionExtractor.Extract(profile);
-        var (graph, validation) = PlannerGraph.Build(extraction.Nodes, extraction.Prerequisites);
         IReadOnlyDictionary<QuestState, int> stateCounts = ProfileProjectionExtractor.CountStates(extraction.Nodes, player);
-        PlannerEvaluationResult evaluation = PlannerEvaluator.Evaluate(graph, extraction.ItemRequirements, player);
+        PlannerEvaluationResult evaluation = PlannerEvaluator.Evaluate(staticData.Graph, extraction.ItemRequirements, player);
         IReadOnlyList<OutstandingItemRequirement> outstanding =
             InventoryProjectionExtractor.CalculateOutstanding(evaluation.ItemRequirements, inventory);
 
+        IReadOnlyList<string> warnings = BuildWarnings(extraction, player, inventory, evaluation);
+        PlannerSnapshotEnvelope envelope = new(
+            PlannerDataContract.SchemaVersion,
+            DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            extraction.Nodes,
+            extraction.Prerequisites,
+            extraction.ItemRequirements,
+            player,
+            inventory,
+            stateCounts,
+            staticData.Validation,
+            evaluation,
+            outstanding,
+            warnings);
+
+        cancellationToken.ThrowIfCancellationRequested();
+        return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+    }
+
+    public ValueTask<string> BuildDiagnosticsAsync(MongoId sessionId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        PlannerStaticData staticData = staticDataCache.Get();
+        object profile = profileHelper.GetPmcProfile(sessionId)!;
+        PlayerProjection player = ProfileProjectionExtractor.Extract(profile);
+        InventoryProjection inventory = InventoryProjectionExtractor.Extract(profile);
+        PlannerEvaluationResult evaluation = PlannerEvaluator.Evaluate(staticData.Graph, staticData.Extraction.ItemRequirements, player);
+        IReadOnlyList<string> warnings = BuildWarnings(staticData.Extraction, player, inventory, evaluation);
+
+        PlannerDiagnosticsEnvelope envelope = new(
+            PlannerDataContract.SchemaVersion,
+            DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            profile,
+            templateTable.Quests,
+            warnings);
+
+        cancellationToken.ThrowIfCancellationRequested();
+        return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+    }
+
+    private static IReadOnlyList<string> BuildWarnings(
+        QuestExtractionResult extraction,
+        PlayerProjection player,
+        InventoryProjection inventory,
+        PlannerEvaluationResult evaluation)
+    {
         List<string> warnings = new(
             extraction.Warnings.Count +
             player.Warnings.Count +
@@ -58,25 +106,7 @@ public sealed class PlannerSnapshotService(
             warnings.Add("Quest database is populated but PMC quest-state projection is empty");
         if (evaluation.ItemRequirements.Count > 0 && inventory.ByTemplate.Count == 0)
             warnings.Add("Quest item requirements exist but PMC inventory projection is empty");
-
-        PlannerSnapshotEnvelope envelope = new(
-            PlannerDataContract.SchemaVersion,
-            DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-            profile,
-            templateTable.Quests,
-            extraction.Nodes,
-            extraction.Prerequisites,
-            extraction.ItemRequirements,
-            player,
-            inventory,
-            stateCounts,
-            validation,
-            evaluation,
-            outstanding,
-            warnings.Distinct(StringComparer.Ordinal).ToArray());
-
-        cancellationToken.ThrowIfCancellationRequested();
-        return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+        return warnings.Distinct(StringComparer.Ordinal).ToArray();
     }
 }
 
@@ -89,6 +119,11 @@ public sealed class QuestPlannerRouter(JsonUtil jsonUtil, PlannerSnapshotService
                 PlannerDataContract.SnapshotRoute,
                 async (url, info, sessionId, output, cancellationToken) =>
                     await snapshotService.BuildSnapshotAsync(sessionId, cancellationToken)
+            ),
+            new RouteAction(
+                PlannerDataContract.DiagnosticsRoute,
+                async (url, info, sessionId, output, cancellationToken) =>
+                    await snapshotService.BuildDiagnosticsAsync(sessionId, cancellationToken)
             )
         ])
 { }
@@ -99,7 +134,7 @@ public sealed class QuestPlannerLoadNotice(ISptLogger<QuestPlannerLoadNotice> lo
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        logger.Success("SPT Quest Planner Server v0.6.0 loaded; FIR-aware requirement allocation ready");
+        logger.Success("SPT Quest Planner Server v0.7.0 loaded; cached quest topology and compact snapshot route ready");
         return Task.CompletedTask;
     }
 }
