@@ -16,6 +16,7 @@ namespace SPTBeltArmbandInventory
         ConfigEntry<bool> modEnabled;
         ConfigEntry<BeltSlotPosition> position;
         DynamicBeltPatches patches;
+        PanelRefreshPatches refreshPatches;
         LootPriorityPatches lootPatches;
         UnloadPriorityPatches unloadPatches;
 
@@ -44,6 +45,14 @@ namespace SPTBeltArmbandInventory
                 return;
             }
 
+            refreshPatches = new PanelRefreshPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!refreshPatches.TryInstall())
+            {
+                refreshPatches.Dispose();
+                refreshPatches = null;
+                Logger.LogWarning("Belt UI remains active, but equipping/removing a belt while a container panel is already open may require reopening that screen.");
+            }
+
             lootPatches = new LootPriorityPatches(Logger.LogInfo, Logger.LogWarning);
             if (!lootPatches.TryInstall())
             {
@@ -59,6 +68,11 @@ namespace SPTBeltArmbandInventory
                 unloadPatches = null;
                 Logger.LogWarning("Belt UI remains active, but unload placement will use vanilla grid priorities.");
             }
+        }
+
+        void Update()
+        {
+            if (refreshPatches != null) PanelRefreshRuntime.Flush();
         }
 
         bool LegacyBeltSlotDetected()
@@ -79,6 +93,8 @@ namespace SPTBeltArmbandInventory
             unloadPatches = null;
             if (lootPatches != null) lootPatches.Dispose();
             lootPatches = null;
+            if (refreshPatches != null) refreshPatches.Dispose();
+            refreshPatches = null;
             if (patches != null) patches.Dispose();
             patches = null;
         }
