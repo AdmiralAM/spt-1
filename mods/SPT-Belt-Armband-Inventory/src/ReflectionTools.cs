@@ -41,10 +41,28 @@ namespace SPTBeltArmbandInventory
         {
             if (item == null) return false;
             if (ReadBoolean(item, "IsContainer")) return true;
+            if (HasAny(ReadMember(item, "Containers"))) return true;
+            if (HasAny(ReadMember(item, "Grids"))) return true;
 
-            object containers = ReadMember(item, "Containers");
-            if (containers == null) return false;
-            IEnumerable enumerable = containers as IEnumerable;
+            // EFT container items commonly expose their usable grids on Template rather than
+            // directly on the runtime Item instance. Pack 'n' Strap belts are grid-backed
+            // armband items, so checking only Item.Containers incorrectly classified them
+            // as plain armbands and prevented the belt row from ever appearing.
+            object template = ReadMember(item, "Template");
+            if (template != null)
+            {
+                if (ReadBoolean(template, "IsContainer")) return true;
+                if (HasAny(ReadMember(template, "Containers"))) return true;
+                if (HasAny(ReadMember(template, "Grids"))) return true;
+            }
+
+            return false;
+        }
+
+        static bool HasAny(object value)
+        {
+            if (value == null || value is string) return false;
+            IEnumerable enumerable = value as IEnumerable;
             if (enumerable == null) return false;
             IEnumerator enumerator = enumerable.GetEnumerator();
             try { return enumerator.MoveNext(); }

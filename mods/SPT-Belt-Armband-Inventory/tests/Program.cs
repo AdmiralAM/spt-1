@@ -40,6 +40,11 @@ internal static class Program
         Assert(!BeltSlotPlan.ShouldExposeBelt(false, true), "container flag alone is insufficient");
         Assert(BeltSlotPlan.ShouldExposeBelt(true, true), "equipped container exposes belt row");
 
+        Assert(ReflectionTools.HasContainers(new RuntimeContainer { IsContainer = true }), "runtime IsContainer flag is recognized");
+        Assert(ReflectionTools.HasContainers(new RuntimeGrids { Grids = new object[] { new object() } }), "runtime Grids are recognized");
+        Assert(ReflectionTools.HasContainers(new RuntimeTemplate { Template = new TemplateGrids { Grids = new object[] { new object() } } }), "template Grids are recognized for PackNStrap-style belts");
+        Assert(!ReflectionTools.HasContainers(new RuntimeTemplate { Template = new TemplateGrids { Grids = Array.Empty<object>() } }), "empty template grids stay non-container");
+
         string[] unusual = { BeltSlotPlan.TacticalVest, BeltSlotPlan.Backpack, BeltSlotPlan.SecuredContainer, BeltSlotPlan.Dogtag };
         string[] fallback = BeltSlotPlan.Build(unusual, BeltSlotPosition.AbovePockets, true);
         Assert(fallback[fallback.Length - 1] == BeltSlotPlan.ArmBand, "missing pockets falls back safely");
@@ -53,4 +58,9 @@ internal static class Program
         if (!condition) throw new InvalidOperationException("Assertion failed: " + message);
         assertions++;
     }
+
+    sealed class RuntimeContainer { public bool IsContainer { get; set; } }
+    sealed class RuntimeGrids { public object[] Grids { get; set; } }
+    sealed class RuntimeTemplate { public TemplateGrids Template { get; set; } }
+    sealed class TemplateGrids { public object[] Grids { get; set; } }
 }
