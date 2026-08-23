@@ -1,0 +1,32 @@
+name: Validate Item Intelligence SPT 4.1.3
+
+on:
+  push:
+    branches: [ compat/item-intelligence-spt-4.1.3 ]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Download BepInEx 5
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path deps | Out-Null
+          Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
+          Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
+      - name: Run Item Intelligence tests
+        shell: pwsh
+        run: dotnet run --project mods/SPT-Item-Intelligence/tests/SPT-Item-Intelligence.Tests.csproj -c Release
+      - name: Build Item Intelligence client
+        shell: pwsh
+        run: dotnet build mods/SPT-Item-Intelligence/src/SPT-Item-Intelligence.csproj -c Release
+      - name: Build Item Intelligence server against SPT 4.1.3
+        shell: pwsh
+        run: dotnet build mods/SPT-Item-Intelligence/server/SPT-Item-Intelligence.Server.csproj -c Release
