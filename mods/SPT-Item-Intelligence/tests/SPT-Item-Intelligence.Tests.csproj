@@ -14,5 +14,6 @@
     <Compile Include="..\src\ItemRequirementState.cs" Link="ItemRequirementState.cs" />
     <Compile Include="..\src\Pricing.cs" Link="Pricing.cs" />
     <Compile Include="..\src\PresentationState.cs" Link="PresentationState.cs" />
+    <Compile Include="..\src\HoverPresentation.cs" Link="HoverPresentation.cs" />
   </ItemGroup>
 </Project>
