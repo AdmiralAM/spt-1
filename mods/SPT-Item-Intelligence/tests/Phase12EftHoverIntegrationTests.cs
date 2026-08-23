@@ -38,8 +38,11 @@ static class Phase12EftHoverIntegrationTests
         });
         bool fakeFound = false;
         for (int i = 0; i < targets.Count; i++)
-            if (targets[i].Type == typeof(FakeInventoryItemView)) fakeFound = true;
-        Expect(fakeFound, "pointer enter/exit ItemView pair is discovered", ref assertions);
+            if (targets[i].Type == typeof(FakeInventoryItemView))
+            {
+                fakeFound = targets[i].Initialize.Name == "Init" && targets[i].Kill.Name == "Kill";
+            }
+        Expect(fakeFound, "ItemView pointer and lifecycle methods are discovered together", ref assertions);
 
         ItemPresentationStore store = new ItemPresentationStore();
         store.Refresh(ItemRequirementStateIndex.Empty, ItemPriceIndexBuilder.Build(new[]
@@ -48,17 +51,24 @@ static class Phase12EftHoverIntegrationTests
         }));
         RecordingSink sink = new RecordingSink();
         RecordingAnchorSink anchorSink = new RecordingAnchorSink();
+        RecordingRegistrySink registrySink = new RecordingRegistrySink();
         ItemHoverRuntimeController controller = new ItemHoverRuntimeController(store, sink);
         List<string> warnings = new List<string>();
-        EftItemViewHoverIntegration integration = new EftItemViewHoverIntegration(controller, null, warnings.Add, anchorSink);
+        EftItemViewHoverIntegration integration = new EftItemViewHoverIntegration(controller, null, warnings.Add, anchorSink, registrySink);
 
         DirectItemView hoveredView = new DirectItemView { Item = new DirectItem { TemplateId = "ABC" } };
+        Expect(integration.DispatchRegister(hoveredView), "initialized ItemView is registered without waiting for hover", ref assertions);
+        Expect(object.ReferenceEquals(registrySink.LastRegistered, hoveredView) && registrySink.LastTemplateId == "abc", "persistent marker registration keeps the normalized template id", ref assertions);
         Expect(integration.DispatchEnter(hoveredView), "resolved enter is dispatched", ref assertions);
         Expect(sink.ShowCount == 1 && sink.Last.Primary == "24,000 ₽", "dispatch reaches cached hover pipeline and sink", ref assertions);
         Expect(object.ReferenceEquals(anchorSink.Last, hoveredView), "resolved enter binds the marker to the active ItemView", ref assertions);
         integration.DispatchExit();
         Expect(sink.ClearCount == 1 && !controller.HasActiveItem, "exit clears sink and active item", ref assertions);
         Expect(anchorSink.ClearCount == 1 && anchorSink.Last == null, "exit clears the ItemView marker anchor", ref assertions);
+        Expect(registrySink.UnregisterCount == 0, "pointer exit does not remove the persistent marker", ref assertions);
+
+        integration.DispatchUnregister(hoveredView);
+        Expect(object.ReferenceEquals(registrySink.LastUnregistered, hoveredView) && registrySink.UnregisterCount == 1, "ItemView Kill removes its persistent marker", ref assertions);
 
         Expect(!integration.DispatchEnter(new object()), "unresolved enter is ignored", ref assertions);
         Expect(anchorSink.ClearCount == 2, "unresolved ItemView clears a stale marker anchor", ref assertions);
@@ -69,6 +79,7 @@ static class Phase12EftHoverIntegrationTests
         Expect(integration.DispatchEnter(hoveredView) && object.ReferenceEquals(anchorSink.Last, hoveredView), "marker anchor can be rebound before disposal", ref assertions);
         integration.Dispose();
         Expect(anchorSink.Last == null, "dispose clears the marker anchor", ref assertions);
+        Expect(registrySink.ClearCount == 1, "dispose clears every registered marker", ref assertions);
         Expect(!integration.DispatchEnter(new DirectItemView { Item = new DirectItem { TemplateId = "abc" } }), "disposed bridge rejects callbacks", ref assertions);
         Expect(!integration.IsInstalled && integration.PatchedMethodCount == 0, "dispose leaves bridge safely disabled", ref assertions);
 
@@ -92,6 +103,8 @@ static class Phase12EftHoverIntegrationTests
     sealed class FakeInventoryItemView
     {
         public DirectItem Item { get; set; }
+        public void Init() { }
+        public void Kill() { }
         public void OnPointerEnter(object eventData) { }
         public void OnPointerExit(object eventData) { }
     }
@@ -111,5 +124,17 @@ static class Phase12EftHoverIntegrationTests
         public int ClearCount;
         public void SetAnchor(object itemView) { Last = itemView; }
         public void ClearAnchor() { ClearCount++; Last = null; }
+    }
+
+    sealed class RecordingRegistrySink : IItemViewRegistrySink
+    {
+        public object LastRegistered;
+        public object LastUnregistered;
+        public string LastTemplateId;
+        public int UnregisterCount;
+        public int ClearCount;
+        public void RegisterView(object itemView, string templateId) { LastRegistered = itemView; LastTemplateId = templateId; }
+        public void UnregisterView(object itemView) { LastUnregistered = itemView; UnregisterCount++; }
+        public void ClearViews() { ClearCount++; }
     }
 }

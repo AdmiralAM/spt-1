@@ -30,8 +30,8 @@ namespace SPTItemIntelligence
             tooltipMode = config.Bind("Tooltip", "Mode", ItemTooltipMode.Normal, "Minimal: Value + Keep. Normal: adds Quest Now/Later and Hideout. Detailed: adds per-slot and owned counts. Full: adds decision and template id.");
             markerSize = config.Bind("Marker", "Size", 18f, new ConfigDescription("Marker size in pixels.", new AcceptableValueRange<float>(12f, 32f)));
             markerOpacity = config.Bind("Marker", "Opacity", 0.94f, new ConfigDescription("Marker opacity.", new AcceptableValueRange<float>(0.20f, 1f)));
-            markerOffsetX = config.Bind("Marker", "Offset X", -3f, new ConfigDescription("Horizontal offset from the item card top-right corner.", new AcceptableValueRange<float>(-40f, 40f)));
-            markerOffsetY = config.Bind("Marker", "Offset Y", 3f, new ConfigDescription("Vertical offset from the item card top-right corner.", new AcceptableValueRange<float>(-40f, 40f)));
+            markerOffsetX = config.Bind("Marker", "Offset X", 3f, new ConfigDescription("Horizontal offset from the item card top-left corner.", new AcceptableValueRange<float>(-40f, 40f)));
+            markerOffsetY = config.Bind("Marker", "Offset Y", 3f, new ConfigDescription("Vertical offset from the item card top-left corner.", new AcceptableValueRange<float>(-40f, 40f)));
 
             neutralColor = ColorEntry(config, "Neutral Color", "#607D95", "No active requirement.");
             questNowColor = ColorEntry(config, "Quest Now Color", "#D85B35", "Needed by an active quest.");

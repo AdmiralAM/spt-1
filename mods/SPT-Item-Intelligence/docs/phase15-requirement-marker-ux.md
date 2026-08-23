@@ -8,7 +8,7 @@ Phase 15 aligns the Item Intelligence presentation with the approved Discussion 
 - color represents requirement priority only: Quest Now → Quest Later → Hideout → generic Keep → Neutral;
 - Value, Safe to Sell and surplus never affect marker color;
 - Loading and Unavailable retain diagnostic colors;
-- the marker remains attached to the active item card and the tooltip opens only over the marker.
+- markers remain attached to their registered item cards and the tooltip opens only over the marker of the currently hovered item.
 
 ## Tooltip modes
 
@@ -35,4 +35,4 @@ Settings are read directly during the existing marker render path, so F12 change
 - no polling, item scans or per-item GameObjects;
 - immutable marker classifications are reused;
 - formatted tooltip strings remain cached with the immutable presentation snapshot;
-- F12 reads are constant-time and restricted to the active marker draw path.
+- F12 reads are constant-time and restricted to the marker draw path.

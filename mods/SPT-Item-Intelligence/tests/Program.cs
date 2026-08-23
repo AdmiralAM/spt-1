@@ -68,7 +68,8 @@ static class Program
         int phase13Assertions = Phase13RuntimeBootstrapTests.Run();
         int phase14Assertions = Phase14MarkerInteractionTests.Run();
         int phase15Assertions = Phase15RequirementMarkerUxTests.Run();
-        Console.WriteLine("Item Intelligence: " + assertions + " Phase 1, " + phase2Assertions + " Phase 2, " + phase3Assertions + " Phase 3, " + phase4Assertions + " Phase 4, " + phase5Assertions + " Phase 5, " + phase6Assertions + " Phase 6, " + phase7Assertions + " Phase 7, " + phase8Assertions + " Phase 8, " + phase9Assertions + " Phase 9, " + phase10Assertions + " Phase 10, " + phase11Assertions + " Phase 11, " + phase12Assertions + " Phase 12, " + phase13Assertions + " Phase 13, " + phase14Assertions + " Phase 14 and " + phase15Assertions + " Phase 15 assertions passed.");
+        int phase16Assertions = Phase16PersistentMarkerTests.Run();
+        Console.WriteLine("Item Intelligence: " + assertions + " Phase 1, " + phase2Assertions + " Phase 2, " + phase3Assertions + " Phase 3, " + phase4Assertions + " Phase 4, " + phase5Assertions + " Phase 5, " + phase6Assertions + " Phase 6, " + phase7Assertions + " Phase 7, " + phase8Assertions + " Phase 8, " + phase9Assertions + " Phase 9, " + phase10Assertions + " Phase 10, " + phase11Assertions + " Phase 11, " + phase12Assertions + " Phase 12, " + phase13Assertions + " Phase 13, " + phase14Assertions + " Phase 14, " + phase15Assertions + " Phase 15 and " + phase16Assertions + " Phase 16 assertions passed.");
     }
 
     static ItemDefinition Resolve(ItemRegistry registry, string id, string type, IDictionary<string, object> signals) => registry.Resolve(new ItemDescriptor(id, null, "  Test   Item  ", " Test ", type, signals));

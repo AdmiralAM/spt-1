@@ -5,11 +5,11 @@ This repository contains independent SPT mods. Each long-term product owns its s
 | Mod | Version | Scope | Install channel |
 | --- | --- | --- | --- |
 | [SPT Tactical HUD](mods/SPT-Tactical-HUD) | Client `1.13.2`; optional server `1.13.0` | Population, status and kill-feed HUD only | [`runtime`](https://github.com/AdmiralAM/spt-1/tree/runtime) |
-| [SPT Item Intelligence](mods/SPT-Item-Intelligence) | `0.8.0` | Requirement-colored ⓘ marker, tooltip modes and F12 UX controls, Phase 15 | [`runtime-item-intelligence`](https://github.com/AdmiralAM/spt-1/tree/runtime-item-intelligence) |
+| [SPT Item Intelligence](mods/SPT-Item-Intelligence) | `0.8.1` | Persistent per-cell requirement-colored ⓘ markers and marker-only tooltips, Phase 16 | [`runtime-item-intelligence`](https://github.com/AdmiralAM/spt-1/tree/runtime-item-intelligence) |
 | [SPT Pause](mods/SPT-Pause) | `0.1.1` | Offline raid pause with timer/time-of-day preservation, Phase 1 validation hardening | [`runtime-pause`](https://github.com/AdmiralAM/spt-1/tree/runtime-pause) |
 | [SPT Belt/Armband Inventory](mods/SPT-Belt-Armband-Inventory) | `0.1.0` | Event-driven container row for belts equipped in ArmBand, Phase 1 | [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband) |
 
-`SPT Tactical HUD v1.14.0` is retired: that number was created when Item Intelligence was mistakenly compiled into the HUD. The corrected current HUD is the complete stable **v1.13.2**, while the extracted Item Intelligence code started its own lifecycle at **v0.1.0** and now advances independently at **v0.8.0**.
+`SPT Tactical HUD v1.14.0` is retired: that number was created when Item Intelligence was mistakenly compiled into the HUD. The corrected current HUD is the complete stable **v1.13.2**, while the extracted Item Intelligence code started its own lifecycle at **v0.1.0** and now advances independently at **v0.8.1**.
 
 ## Repository channels
 

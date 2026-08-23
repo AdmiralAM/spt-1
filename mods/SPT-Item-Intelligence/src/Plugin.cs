@@ -5,7 +5,7 @@ using BepInEx;
 
 namespace SPTItemIntelligence
 {
-    [BepInPlugin("com.admiralam.spt.itemintelligence", "SPT Item Intelligence", "0.8.0")]
+    [BepInPlugin("com.admiralam.spt.itemintelligence", "SPT Item Intelligence", "0.8.1")]
     public sealed class Plugin : BaseUnityPlugin
     {
         ItemHoverOverlaySink hoverSink;
@@ -24,8 +24,9 @@ namespace SPTItemIntelligence
 
             PresentationStore = new ItemPresentationStore();
             uiSettings = new ItemIntelligenceUiSettings(Config);
-            hoverSink = new ItemHoverOverlaySink(uiSettings);
-            hoverController = new ItemHoverRuntimeController(PresentationStore, hoverSink, null, CreateFallback);
+            ItemHoverTextCache textCache = new ItemHoverTextCache();
+            hoverSink = new ItemHoverOverlaySink(uiSettings, PresentationStore, textCache, CreateFallback);
+            hoverController = new ItemHoverRuntimeController(PresentationStore, hoverSink, textCache, CreateFallback);
             dataBootstrap = new RequirementRuntimeBootstrap(
                 new ReflectionSptSnapshotTransport(),
                 new ReflectionNewtonsoftSnapshotDecoder(),
@@ -36,11 +37,12 @@ namespace SPTItemIntelligence
                 hoverController,
                 message => Logger.LogInfo(message),
                 message => Logger.LogWarning(message),
+                hoverSink,
                 hoverSink);
             hoverIntegration.TryInstall();
             StartDataLoad();
 
-            Logger.LogInfo("SPT Item Intelligence v0.8.0 loaded (Phase 15 requirement marker UX and F12 settings)");
+            Logger.LogInfo("SPT Item Intelligence v0.8.1 loaded (persistent per-item markers)");
         }
 
         ItemHoverText CreateFallback(string templateId)
@@ -62,6 +64,7 @@ namespace SPTItemIntelligence
                     Logger.LogInfo("Item Intelligence live requirement snapshot loaded: " + PresentationStore.Current.Count + " item states.");
                 else if (!token.IsCancellationRequested)
                     Logger.LogWarning("Item Intelligence live requirement snapshot unavailable; diagnostic hover remains active: " + error);
+                if (hoverSink != null) hoverSink.Invalidate();
             }, token);
         }
 
