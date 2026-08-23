@@ -5,7 +5,7 @@ using BepInEx;
 
 namespace SPTItemIntelligence
 {
-    [BepInPlugin("com.admiralam.spt.itemintelligence", "SPT Item Intelligence", "0.8.1")]
+    [BepInPlugin("com.admiralam.spt.itemintelligence", "SPT Item Intelligence", "0.9.0")]
     public sealed class Plugin : BaseUnityPlugin
     {
         ItemHoverOverlaySink hoverSink;
@@ -42,7 +42,7 @@ namespace SPTItemIntelligence
             hoverIntegration.TryInstall();
             StartDataLoad();
 
-            Logger.LogInfo("SPT Item Intelligence v0.8.1 loaded (persistent per-item markers)");
+            Logger.LogInfo("SPT Item Intelligence v0.9.0 loaded (persistent markers and live Value snapshot)");
         }
 
         ItemHoverText CreateFallback(string templateId)
