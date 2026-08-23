@@ -2,9 +2,11 @@ using SPTItemIntelligence;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
+using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Helpers.Profile;
 using SPTarkov.Server.Core.Helpers.Traders;
 using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Utils;
@@ -34,7 +36,8 @@ public sealed class RequirementDataService(
     TradersTable traderTable,
     HideoutTable hideoutTable,
     HandbookHelper handbookHelper,
-    TraderHelper traderHelper)
+    ItemHelper itemHelper,
+    PresetHelper presetHelper)
 {
     public ValueTask<string> BuildSnapshotAsync(MongoId sessionId, CancellationToken cancellationToken)
     {
@@ -60,37 +63,68 @@ public sealed class RequirementDataService(
             if (!string.Equals(item.Type, "Item", StringComparison.OrdinalIgnoreCase)) continue;
 
             templateTable.Prices.TryGetValue(templateId, out double fleaValue);
-            double fallbackValue = handbookHelper.GetTemplatePrice(templateId);
-            double traderValue = traderHelper.GetHighestSellToTraderPrice(templateId);
+            double handbookValue = handbookHelper.GetTemplatePrice(templateId);
+            double traderBasis = GetTraderValuationBasis(templateId, handbookValue);
+            var trader = ResolveBestTrader(templateId, traderBasis);
             int width = Math.Max(1, item.Properties?.Width ?? 1);
             int height = Math.Max(1, item.Properties?.Height ?? 1);
             result.Add(new ItemPriceSnapshotEntry(
                 templateId.ToString(),
-                ToLong(traderValue),
-                ResolveBestTraderName(fallbackValue),
-                ToLong(fleaValue),
-                ToLong(fallbackValue),
+                ToLong(trader.Price),
+                trader.Name,
+                ToLong(fleaValue > 0 ? fleaValue : handbookValue),
+                ToLong(handbookValue),
                 width,
                 height));
         }
         return result;
     }
 
-    private string ResolveBestTraderName(double handbookValue)
+    // Item Valuation prices default weapon/equipment presets as the sum of their children,
+    // rather than valuing only the bare root template. Mirror that established behaviour.
+    private double GetTraderValuationBasis(MongoId templateId, double handbookValue)
     {
-        double highestPrice = 1d;
+        var preset = presetHelper.GetDefaultPreset(templateId);
+        if (preset?.Items is null || preset.Items.Count == 0) return handbookValue;
+
+        double total = 0;
+        foreach (var presetItem in preset.Items)
+            total += handbookHelper.GetTemplatePrice(presetItem.Template);
+        return total > 0 ? total : handbookValue;
+    }
+
+    // Match Item Valuation: eligible trader buy categories + LL1 buy-back coefficient,
+    // regular traders first, Fence only as fallback.
+    private (double Price, string Name) ResolveBestTrader(MongoId templateId, double valuationBasis)
+    {
+        var regular = ResolveBestTrader(templateId, valuationBasis, includeFence: false);
+        return regular.Price > 0 ? regular : ResolveBestTrader(templateId, valuationBasis, includeFence: true);
+    }
+
+    private (double Price, string Name) ResolveBestTrader(MongoId templateId, double valuationBasis, bool includeFence)
+    {
+        double highestPrice = 0;
         string highestTrader = "Trader";
-        foreach (var (_, trader) in traderTable)
+        foreach (var (traderId, trader) in traderTable)
         {
+            bool isFence = traderId == Traders.FENCE;
+            if (isFence != includeFence) continue;
+
             var traderBase = trader.Base;
-            var buyBackPercent = 100 - traderBase.LoyaltyLevels?.FirstOrDefault()?.BuyPriceCoefficient;
-            double price = Math.Round((buyBackPercent ?? 0) * (handbookValue / 100d), 0);
+            var buy = traderBase.ItemsBuy;
+            if (buy is null) continue;
+            bool accepts = buy.IdList.Contains(templateId) || itemHelper.IsOfBaseclasses(templateId, buy.Category);
+            if (!accepts) continue;
+
+            double coefficient = traderBase.LoyaltyLevels?.FirstOrDefault()?.BuyPriceCoefficient ?? 100d;
+            double price = Math.Round(Math.Max(0d, 100d - coefficient) * (valuationBasis / 100d), 0);
             if (price <= highestPrice) continue;
+
             highestPrice = price;
             string nickname = (traderBase.Nickname ?? string.Empty).Trim();
             highestTrader = nickname.Length == 0 ? traderBase.Name : nickname;
         }
-        return string.IsNullOrWhiteSpace(highestTrader) ? "Trader" : highestTrader;
+        return (highestPrice, string.IsNullOrWhiteSpace(highestTrader) ? "Trader" : highestTrader);
     }
 
     private static long ToLong(double value)
