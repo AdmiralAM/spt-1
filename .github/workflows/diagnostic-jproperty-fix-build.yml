@@ -18,17 +18,6 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Apply narrow JProperty fix in workspace
-        shell: pwsh
-        run: |
-          $path = 'mods/SPT-Item-Intelligence/src/RuntimeDataBootstrap.cs'
-          $text = Get-Content $path -Raw
-          $needle = 'PropertyInfo keyProperty = type.GetProperty("Key", BindingFlags.Public | BindingFlags.Instance);'
-          $replacement = 'PropertyInfo keyProperty = type.GetProperty("Key", BindingFlags.Public | BindingFlags.Instance) ?? type.GetProperty("Name", BindingFlags.Public | BindingFlags.Instance);'
-          if (-not $text.Contains($needle)) { throw 'Expected TryPair Key property line not found' }
-          $text = $text.Replace($needle, $replacement)
-          Set-Content $path $text -NoNewline
-          git diff -- mods/SPT-Item-Intelligence/src/RuntimeDataBootstrap.cs
       - name: Download BepInEx 5
         shell: pwsh
         run: |
@@ -52,4 +41,3 @@ jobs:
           name: item-intelligence-jproperty-fix
           path: diagnostic-package
           if-no-files-found: error
-# trigger
