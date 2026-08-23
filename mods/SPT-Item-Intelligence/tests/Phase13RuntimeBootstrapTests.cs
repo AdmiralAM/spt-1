@@ -80,7 +80,7 @@ static class Phase13RuntimeBootstrapTests
         Expect(store.Get("a").Price.BestSource == PriceSource.Flea && store.Get("a").Price.TotalValue == 2000, "live flea/trader snapshot populates Value", ref assertions);
         ItemHoverText active = controller.OnHoverEnter("a");
         Expect(active.Primary == "2,000 ₽" && active.Secondary == "1,000 ₽/slot", "live Value and per-slot value reach hover formatting", ref assertions);
-        Expect(active.Status.StartsWith("SAFE TO SELL", StringComparison.Ordinal), "live presentation reaches hover", ref assertions);
+        Expect(active.Status.Length == 0 && active.QuestNowLine == "Quest Now: 2/2 ✓", "live requirement fulfillment reaches hover without sell labels", ref assertions);
         ItemHoverText unknown = controller.OnHoverEnter("unknown");
         Expect(unknown.Primary == "ITEM INTELLIGENCE" && unknown.Status == "NO REQUIREMENT DATA", "ready fallback is diagnostic", ref assertions);
 

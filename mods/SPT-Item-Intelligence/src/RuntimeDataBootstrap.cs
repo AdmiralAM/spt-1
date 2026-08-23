@@ -256,12 +256,20 @@ namespace SPTItemIntelligence
             object profileHideout = JsonNode.Get(profile, "Hideout", "hideout");
             foreach (object area in JsonNode.Values(JsonNode.Get(profileHideout, "Areas", "areas")))
             {
-                string type = JsonNode.ReadString(JsonNode.Get(area, "type", "Type"));
+                string type = JsonNode.ReadString(JsonNode.Get(area, "type", "Type", "_id", "id"));
                 if (type.Length == 0) continue;
-                currentLevels[type] = Math.Max(0, JsonNode.ReadInt(JsonNode.Get(area, "level", "Level"), 0));
+                int level = Math.Max(0, JsonNode.ReadInt(JsonNode.Get(area, "level", "Level"), 0));
+                if (JsonNode.ReadBool(JsonNode.Get(area, "constructing", "Constructing"), false)) level++;
+                int known;
+                if (!currentLevels.TryGetValue(type, out known) || level > known) currentLevels[type] = level;
             }
 
-            object areas = JsonNode.Get(hideoutTable, "areas", "Areas");
+            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "areas", "Areas"), currentLevels, output);
+            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "customAreas", "CustomAreas"), currentLevels, output);
+        }
+
+        static void ProjectHideoutAreas(object areas, Dictionary<string, int> currentLevels, List<RequirementContribution> output)
+        {
             foreach (object area in JsonNode.Values(areas))
             {
                 string type = JsonNode.ReadString(JsonNode.Get(area, "type", "Type", "_id", "id"));
@@ -434,8 +442,7 @@ namespace SPTItemIntelligence
 
         public ItemHoverText CreateFallback(string templateId)
         {
-            string normalized = RequirementContribution.NormalizeId(templateId);
-            return new ItemHoverText("ITEM INTELLIGENCE", normalized, Detail);
+            return new ItemHoverText("ITEM INTELLIGENCE", string.Empty, Detail);
         }
     }
 

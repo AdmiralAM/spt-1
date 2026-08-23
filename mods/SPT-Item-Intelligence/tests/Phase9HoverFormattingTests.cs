@@ -28,7 +28,7 @@ static class Phase9HoverFormattingTests
 
         Expect(first.Primary == "32,000 ₽", "formats total value once for display", ref assertions);
         Expect(first.Secondary == "16,000 ₽/slot", "formats value per slot", ref assertions);
-        Expect(first.Status == "SAFE TO SELL · surplus 1", "formats concise safe-to-sell status", ref assertions);
+        Expect(first.Status.Length == 0, "sell and surplus decisions stay out of user-facing hover text", ref assertions);
         Expect(object.ReferenceEquals(first, cache.Get(hover, store.Current)), "unchanged snapshot reuses formatted text object", ref assertions);
         Expect(object.ReferenceEquals(ItemHoverText.Empty, cache.Get(ItemHoverState.Empty, store.Current)), "empty hover is allocation-free", ref assertions);
 

@@ -9,7 +9,6 @@ namespace SPTItemIntelligence
 {
     public sealed class ItemHoverOverlaySink : IItemHoverViewSink, IItemHoverAnchorSink, IItemViewRegistrySink
     {
-        readonly Vector3[] worldCorners = new Vector3[4];
         readonly Dictionary<object, TrackedItemView> trackedViews = new Dictionary<object, TrackedItemView>(ReferenceComparer.Instance);
         readonly List<object> staleViews = new List<object>();
         readonly ItemIntelligenceUiSettings settings;
@@ -19,11 +18,9 @@ namespace SPTItemIntelligence
         ItemHoverText current = ItemHoverText.Empty;
         object hoveredView;
         ItemPresentationIndex renderedIndex;
-        GUIStyle markerStyle;
-        GUIStyle markerShadowStyle;
         int invalidationVersion;
         int renderedInvalidation = -1;
-        bool drawingDisabled;
+        bool tooltipDrawingDisabled;
 
         public ItemHoverOverlaySink(
             ItemIntelligenceUiSettings settings,
@@ -67,23 +64,28 @@ namespace SPTItemIntelligence
             RectTransform target = ResolveRectTransform(itemView);
             if (itemView == null || normalized.Length == 0 || target == null) return;
 
-            TrackedItemView existing;
-            if (trackedViews.TryGetValue(itemView, out existing))
+            TrackedItemView tracked;
+            if (!trackedViews.TryGetValue(itemView, out tracked))
             {
-                if (existing.TemplateId == normalized && existing.StackCount == stackCount && object.ReferenceEquals(existing.Anchor, target)) return;
-                existing.TemplateId = normalized;
-                existing.Anchor = target;
-                existing.StackCount = stackCount;
-                existing.Text = ResolveText(normalized, stackCount, store.Current);
-                return;
+                tracked = new TrackedItemView(target, normalized, stackCount, AttachedMarkerView.TryCreate(target));
+                trackedViews[itemView] = tracked;
+            }
+            else
+            {
+                tracked.TemplateId = normalized;
+                tracked.StackCount = Math.Max(1, stackCount);
+                if (!object.ReferenceEquals(tracked.Anchor, target) || tracked.Marker == null) tracked.ReplaceAnchor(target);
             }
 
-            trackedViews[itemView] = new TrackedItemView(target, normalized, stackCount, ResolveText(normalized, stackCount, store.Current));
+            tracked.Text = ResolveText(normalized, tracked.StackCount, store.Current);
+            tracked.Apply(settings);
         }
 
         public void UnregisterView(object itemView)
         {
             if (itemView == null) return;
+            TrackedItemView tracked;
+            if (trackedViews.TryGetValue(itemView, out tracked)) tracked.Dispose();
             trackedViews.Remove(itemView);
             if (object.ReferenceEquals(Volatile.Read(ref hoveredView), itemView))
             {
@@ -94,6 +96,7 @@ namespace SPTItemIntelligence
 
         public void ClearViews()
         {
+            foreach (TrackedItemView tracked in trackedViews.Values) tracked.Dispose();
             trackedViews.Clear();
             staleViews.Clear();
             renderedIndex = null;
@@ -108,74 +111,62 @@ namespace SPTItemIntelligence
 
         public void Draw()
         {
-            if (drawingDisabled) return;
+            if (tooltipDrawingDisabled) return;
             if (Event.current != null && Event.current.type != EventType.Repaint) return;
-            RefreshTrackedTextIfNeeded();
-            if (trackedViews.Count == 0) return;
+            RefreshTrackedViewsIfNeeded();
+
+            object activeView = Volatile.Read(ref hoveredView);
+            if (activeView == null) return;
+            TrackedItemView tracked;
+            if (!trackedViews.TryGetValue(activeView, out tracked) || tracked.Marker == null) return;
 
             try
             {
+                Rect markerRect;
+                if (!tracked.Marker.TryGetScreenRect(out markerRect)) return;
+                Vector2 mouse = Event.current == null
+                    ? new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)
+                    : Event.current.mousePosition;
+                if (!markerRect.Contains(mouse)) return;
+
                 int previousDepth = GUI.depth;
                 Color previousColor = GUI.color;
                 try
                 {
                     GUI.depth = -1000;
-                    Vector2 mouse = Event.current == null
-                        ? new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)
-                        : Event.current.mousePosition;
-                    object activeView = Volatile.Read(ref hoveredView);
-
-                    foreach (KeyValuePair<object, TrackedItemView> pair in trackedViews)
-                    {
-                        TrackedItemView tracked = pair.Value;
-                        try
-                        {
-                            if (!IsAlive(tracked.Anchor))
-                            {
-                                staleViews.Add(pair.Key);
-                                continue;
-                            }
-                            if (!tracked.Anchor.gameObject.activeInHierarchy) continue;
-
-                            Rect markerRect;
-                            if (!TryGetMarkerRect(tracked.Anchor, out markerRect)) continue;
-                            ItemMarkerPresentation marker = ItemMarkerPresentation.From(tracked.Text);
-                            if (!marker.IsVisible) continue;
-
-                            DrawMarker(markerRect, marker);
-                            if (object.ReferenceEquals(pair.Key, activeView) && markerRect.Contains(mouse))
-                                DrawDetails(markerRect, tracked.Text, settings.TooltipMode);
-                        }
-                        catch
-                        {
-                            staleViews.Add(pair.Key);
-                        }
-                    }
+                    GUI.color = Color.white;
+                    DrawDetails(markerRect, tracked.Text, settings.TooltipMode);
                 }
                 finally
                 {
                     GUI.color = previousColor;
                     GUI.depth = previousDepth;
                 }
-
-                RemoveStaleViews();
             }
             catch
             {
-                drawingDisabled = true;
-                ClearViews();
+                tooltipDrawingDisabled = true;
             }
         }
 
-        void RefreshTrackedTextIfNeeded()
+        void RefreshTrackedViewsIfNeeded()
         {
             ItemPresentationIndex index = store.Current;
             int version = Volatile.Read(ref invalidationVersion);
             if (object.ReferenceEquals(index, renderedIndex) && version == renderedInvalidation) return;
 
-            foreach (TrackedItemView tracked in trackedViews.Values)
+            foreach (KeyValuePair<object, TrackedItemView> pair in trackedViews)
+            {
+                TrackedItemView tracked = pair.Value;
+                if (!IsAlive(tracked.Anchor))
+                {
+                    staleViews.Add(pair.Key);
+                    continue;
+                }
                 tracked.Text = ResolveText(tracked.TemplateId, tracked.StackCount, index);
-
+                tracked.Apply(settings);
+            }
+            RemoveStaleViews();
             renderedIndex = index;
             renderedInvalidation = version;
         }
@@ -197,74 +188,6 @@ namespace SPTItemIntelligence
             if (fallbackFactory == null) return ItemHoverText.Empty;
             try { return fallbackFactory(templateId) ?? ItemHoverText.Empty; }
             catch { return ItemHoverText.Empty; }
-        }
-
-        void DrawMarker(Rect markerRect, ItemMarkerPresentation marker)
-        {
-            int fontSize = Mathf.Clamp(Mathf.RoundToInt(settings.MarkerSize * 0.78f), 10, 25);
-            MarkerStyle.fontSize = fontSize;
-            MarkerShadowStyle.fontSize = fontSize;
-
-            Color markerColor = settings.GetColor(marker.Kind);
-            markerColor.a = settings.MarkerOpacity;
-            MarkerStyle.normal.textColor = markerColor;
-            MarkerShadowStyle.normal.textColor = new Color(0f, 0f, 0f, markerColor.a * 0.82f);
-            GUI.color = Color.white;
-            GUI.Label(new Rect(markerRect.x + 1f, markerRect.y + 1f, markerRect.width, markerRect.height), marker.Glyph, MarkerShadowStyle);
-            GUI.Label(markerRect, marker.Glyph, MarkerStyle);
-        }
-
-        GUIStyle MarkerStyle
-        {
-            get
-            {
-                if (markerStyle != null) return markerStyle;
-                markerStyle = new GUIStyle(GUI.skin.label)
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontStyle = FontStyle.Bold
-                };
-                return markerStyle;
-            }
-        }
-
-        GUIStyle MarkerShadowStyle
-        {
-            get
-            {
-                if (markerShadowStyle != null) return markerShadowStyle;
-                markerShadowStyle = new GUIStyle(GUI.skin.label)
-                {
-                    alignment = TextAnchor.MiddleCenter,
-                    fontStyle = FontStyle.Bold
-                };
-                return markerShadowStyle;
-            }
-        }
-
-        bool TryGetMarkerRect(RectTransform target, out Rect marker)
-        {
-            target.GetWorldCorners(worldCorners);
-            Camera camera = ResolveCamera(target);
-            Vector2 bottomLeft = RectTransformUtility.WorldToScreenPoint(camera, worldCorners[0]);
-            Vector2 topRight = RectTransformUtility.WorldToScreenPoint(camera, worldCorners[2]);
-
-            float left = Mathf.Min(bottomLeft.x, topRight.x);
-            float right = Mathf.Max(bottomLeft.x, topRight.x);
-            float top = Screen.height - Mathf.Max(bottomLeft.y, topRight.y);
-            float bottom = Screen.height - Mathf.Min(bottomLeft.y, topRight.y);
-            float itemWidth = right - left;
-            float itemHeight = bottom - top;
-            if (itemWidth < 4f || itemHeight < 4f)
-            {
-                marker = default(Rect);
-                return false;
-            }
-
-            float maximumSize = Mathf.Max(12f, Mathf.Min(itemWidth, itemHeight) - 6f);
-            float size = Mathf.Min(settings.MarkerSize, maximumSize);
-            marker = new Rect(right - size - settings.MarkerOffsetX, top + settings.MarkerOffsetY, size, size);
-            return marker.xMax > 0f && marker.yMax > 0f && marker.xMin < Screen.width && marker.yMin < Screen.height;
         }
 
         static void DrawDetails(Rect marker, ItemHoverText text, ItemTooltipMode mode)
@@ -310,12 +233,6 @@ namespace SPTItemIntelligence
             catch { return false; }
         }
 
-        static Camera ResolveCamera(RectTransform target)
-        {
-            Canvas canvas = target.GetComponentInParent<Canvas>();
-            return canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
-        }
-
         void RemoveStaleViews()
         {
             if (staleViews.Count == 0) return;
@@ -323,20 +240,165 @@ namespace SPTItemIntelligence
             staleViews.Clear();
         }
 
-        sealed class TrackedItemView
+        sealed class TrackedItemView : IDisposable
         {
-            public TrackedItemView(RectTransform anchor, string templateId, int stackCount, ItemHoverText text)
+            public TrackedItemView(RectTransform anchor, string templateId, int stackCount, AttachedMarkerView marker)
             {
                 Anchor = anchor;
                 TemplateId = templateId;
                 StackCount = Math.Max(1, stackCount);
-                Text = text ?? ItemHoverText.Empty;
+                Marker = marker;
+                Text = ItemHoverText.Empty;
             }
 
-            public RectTransform Anchor { get; set; }
+            public RectTransform Anchor { get; private set; }
             public string TemplateId { get; set; }
             public int StackCount { get; set; }
             public ItemHoverText Text { get; set; }
+            public AttachedMarkerView Marker { get; private set; }
+
+            public void ReplaceAnchor(RectTransform anchor)
+            {
+                if (Marker != null) Marker.Dispose();
+                Anchor = anchor;
+                Marker = AttachedMarkerView.TryCreate(anchor);
+            }
+
+            public void Apply(ItemIntelligenceUiSettings settings)
+            {
+                if (Marker != null) Marker.Apply(ItemMarkerPresentation.From(Text), settings);
+            }
+
+            public void Dispose()
+            {
+                if (Marker != null) Marker.Dispose();
+                Marker = null;
+            }
+        }
+
+        sealed class AttachedMarkerView : IDisposable
+        {
+            static readonly Type textType = Type.GetType("UnityEngine.UI.Text, UnityEngine.UI", false);
+            static readonly Type outlineType = Type.GetType("UnityEngine.UI.Outline, UnityEngine.UI", false);
+            readonly Vector3[] worldCorners = new Vector3[4];
+            readonly GameObject markerObject;
+            readonly RectTransform rect;
+            readonly Component text;
+            readonly Component outline;
+
+            AttachedMarkerView(GameObject markerObject, RectTransform rect, Component text, Component outline)
+            {
+                this.markerObject = markerObject;
+                this.rect = rect;
+                this.text = text;
+                this.outline = outline;
+            }
+
+            public static AttachedMarkerView TryCreate(RectTransform anchor)
+            {
+                if (anchor == null || textType == null) return null;
+                try
+                {
+                    GameObject markerObject = new GameObject("SPTItemIntelligenceMarker", typeof(RectTransform));
+                    markerObject.layer = anchor.gameObject.layer;
+                    RectTransform rect = markerObject.transform as RectTransform;
+                    rect.SetParent(anchor, false);
+                    rect.anchorMin = new Vector2(0f, 1f);
+                    rect.anchorMax = new Vector2(0f, 1f);
+                    rect.pivot = new Vector2(0f, 1f);
+                    rect.localScale = Vector3.one;
+                    rect.localRotation = Quaternion.identity;
+
+                    Component text = markerObject.AddComponent(textType) as Component;
+                    Component outline = outlineType == null ? null : markerObject.AddComponent(outlineType) as Component;
+                    Set(text, "text", "ⓘ");
+                    Set(text, "fontStyle", FontStyle.Bold);
+                    Set(text, "alignment", Enum.Parse(PropertyType(text, "alignment"), "MiddleCenter"));
+                    Set(text, "raycastTarget", false);
+                    Set(text, "supportRichText", false);
+                    Set(text, "font", BuiltinFont());
+                    if (outline != null)
+                    {
+                        Set(outline, "effectColor", new Color(0f, 0f, 0f, 0.95f));
+                        Set(outline, "useGraphicAlpha", true);
+                    }
+                    rect.SetAsLastSibling();
+                    return new AttachedMarkerView(markerObject, rect, text, outline);
+                }
+                catch { return null; }
+            }
+
+            public void Apply(ItemMarkerPresentation presentation, ItemIntelligenceUiSettings settings)
+            {
+                if (markerObject == null || presentation == null || settings == null) return;
+                bool visible = presentation.IsVisible;
+                if (markerObject.activeSelf != visible) markerObject.SetActive(visible);
+                if (!visible) return;
+
+                float size = settings.MarkerSize;
+                rect.sizeDelta = new Vector2(size, size);
+                rect.anchoredPosition = new Vector2(settings.MarkerOffsetX, -settings.MarkerOffsetY);
+                Color color = settings.GetColor(presentation.Kind);
+                color.a = settings.MarkerOpacity;
+                Set(text, "text", presentation.Glyph);
+                Set(text, "fontSize", Mathf.Clamp(Mathf.RoundToInt(size * 0.88f), 9, 25));
+                Set(text, "color", color);
+                if (outline != null)
+                {
+                    float thickness = Mathf.Clamp(size * 0.085f, 1f, 2f);
+                    Set(outline, "effectDistance", new Vector2(thickness, -thickness));
+                }
+                rect.SetAsLastSibling();
+            }
+
+            public bool TryGetScreenRect(out Rect result)
+            {
+                result = default(Rect);
+                if (rect == null || markerObject == null || !markerObject.activeInHierarchy) return false;
+                rect.GetWorldCorners(worldCorners);
+                Canvas canvas = rect.GetComponentInParent<Canvas>();
+                Camera camera = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
+                Vector2 bottomLeft = RectTransformUtility.WorldToScreenPoint(camera, worldCorners[0]);
+                Vector2 topRight = RectTransformUtility.WorldToScreenPoint(camera, worldCorners[2]);
+                float left = Mathf.Min(bottomLeft.x, topRight.x);
+                float right = Mathf.Max(bottomLeft.x, topRight.x);
+                float top = Screen.height - Mathf.Max(bottomLeft.y, topRight.y);
+                float bottom = Screen.height - Mathf.Min(bottomLeft.y, topRight.y);
+                result = new Rect(left, top, right - left, bottom - top);
+                return result.width > 0f && result.height > 0f && result.xMax > 0f && result.yMax > 0f && result.xMin < Screen.width && result.yMin < Screen.height;
+            }
+
+            public void Dispose()
+            {
+                if (markerObject != null) UnityEngine.Object.Destroy(markerObject);
+            }
+
+            static Font BuiltinFont()
+            {
+                try { return Resources.GetBuiltinResource<Font>("Arial.ttf"); }
+                catch
+                {
+                    try { return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); }
+                    catch { return null; }
+                }
+            }
+
+            static Type PropertyType(object target, string name)
+            {
+                PropertyInfo property = target == null ? null : target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.Public);
+                return property == null ? typeof(int) : property.PropertyType;
+            }
+
+            static void Set(object target, string name, object value)
+            {
+                if (target == null || value == null) return;
+                try
+                {
+                    PropertyInfo property = target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.Public);
+                    if (property != null && property.CanWrite) property.SetValue(target, value, null);
+                }
+                catch { }
+            }
         }
 
         sealed class ReferenceComparer : IEqualityComparer<object>

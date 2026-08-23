@@ -317,7 +317,7 @@ jobs:
 
           Ready-to-install standalone **SPT Item Intelligence v$env:ITEM_VERSION** for SPT **4.1.x**.
 
-          Copy this branch into the SPT root. Phase 18 keeps persistent top-right requirement-colored ⓘ markers, live stack-aware Value, the named winning flea/trader/handbook source and concrete quest/hideout target lines. Price never controls marker color. Physical in-game validation is still pending. This channel contains Item Intelligence only.
+          Copy this branch into the SPT root. Phase 18 now uses persistent cell-attached upper-left ⓘ markers, owned/required fulfillment, live stack-aware Value, the named winning flea/trader/handbook source and concrete quest/hideout target lines. Only unmet requirements control color; ID, Safe to Sell and surplus stay out of user UI. Physical in-game validation is still pending. This channel contains Item Intelligence only.
           Verified source commit: **$stableSha**.
           "@ | Set-Content (Join-Path $itemRoot 'README.md') -Encoding utf8
           git config user.name 'github-actions[bot]'

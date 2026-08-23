@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Threading;
 
 namespace SPTItemIntelligence
 {
@@ -45,14 +44,23 @@ namespace SPTItemIntelligence
             HideoutNeeded = Math.Max(0, hideoutNeeded);
             KeepCount = Math.Max(0, keepCount);
 
+            int available = OwnedCount;
+            QuestNowOwned = Math.Min(available, QuestNeededNow);
+            available -= QuestNowOwned;
+            HideoutOwned = Math.Min(available, HideoutNeeded);
+            available -= HideoutOwned;
+            QuestLaterOwned = Math.Min(available, QuestNeededLater);
+            QuestNowMissing = QuestNeededNow - QuestNowOwned;
+            HideoutMissing = HideoutNeeded - HideoutOwned;
+            QuestLaterMissing = QuestNeededLater - QuestLaterOwned;
+
             ValueLine = Primary.Length == 0 ? string.Empty : "Value: " + Primary;
-            QuestNowLine = CountLine("Quest Now", QuestNeededNow);
-            QuestLaterLine = CountLine("Quest Later", QuestNeededLater);
-            HideoutLine = CountLine("Hideout", HideoutNeeded);
+            QuestNowLine = RequirementLine("Quest Now", QuestNowOwned, QuestNeededNow);
+            HideoutLine = RequirementLine("Hideout", HideoutOwned, HideoutNeeded);
+            QuestLaterLine = RequirementLine("Quest Later", QuestLaterOwned, QuestNeededLater);
             KeepLine = CountLine("Keep", KeepCount);
             PerSlotLine = Secondary.Length == 0 ? string.Empty : "Per slot: " + Secondary;
             OwnedLine = CountLine("Owned", OwnedCount);
-            TemplateLine = TemplateId.Length == 0 ? string.Empty : "ID: " + TemplateId;
             BestSourceLine = bestSource ?? string.Empty;
             List<string> details = new List<string>();
             if (requirementDetails != null)
@@ -74,6 +82,12 @@ namespace SPTItemIntelligence
         public int QuestNeededLater { get; }
         public int HideoutNeeded { get; }
         public int KeepCount { get; }
+        public int QuestNowOwned { get; }
+        public int HideoutOwned { get; }
+        public int QuestLaterOwned { get; }
+        public int QuestNowMissing { get; }
+        public int HideoutMissing { get; }
+        public int QuestLaterMissing { get; }
         public string ValueLine { get; }
         public string QuestNowLine { get; }
         public string QuestLaterLine { get; }
@@ -81,7 +95,6 @@ namespace SPTItemIntelligence
         public string KeepLine { get; }
         public string PerSlotLine { get; }
         public string OwnedLine { get; }
-        public string TemplateLine { get; }
         public string BestSourceLine { get; }
         public IReadOnlyList<string> RequirementDetailLines { get; }
         public int DetailedRequirementCount { get; }
@@ -117,8 +130,8 @@ namespace SPTItemIntelligence
             if (mode != ItemTooltipMode.Minimal)
             {
                 if (TryLine(QuestNowLine, requestedIndex, ref current, out found)) return found;
-                if (TryLine(QuestLaterLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(HideoutLine, requestedIndex, ref current, out found)) return found;
+                if (TryLine(QuestLaterLine, requestedIndex, ref current, out found)) return found;
             }
             if (TryLine(KeepLine, requestedIndex, ref current, out found)) return found;
 
@@ -132,12 +145,6 @@ namespace SPTItemIntelligence
                     if (TryLine(RequirementDetailLines[i], requestedIndex, ref current, out found)) return found;
                 if (mode == ItemTooltipMode.Detailed && TryLine(MoreRequirementsLine, requestedIndex, ref current, out found)) return found;
             }
-            if (mode == ItemTooltipMode.Full)
-            {
-                if (TryLine(Status, requestedIndex, ref current, out found)) return found;
-                if (TryLine(TemplateLine, requestedIndex, ref current, out found)) return found;
-            }
-
             if (current == 0 && requestedIndex == 0) return "No active requirements";
             return string.Empty;
         }
@@ -155,6 +162,13 @@ namespace SPTItemIntelligence
         {
             return count <= 0 ? string.Empty : label + " ×" + count.ToString(CultureInfo.InvariantCulture);
         }
+
+        static string RequirementLine(string label, int owned, int required)
+        {
+            if (required <= 0) return string.Empty;
+            string line = label + ": " + owned.ToString(CultureInfo.InvariantCulture) + "/" + required.ToString(CultureInfo.InvariantCulture);
+            return owned >= required ? line + " ✓" : line;
+        }
     }
 
     public sealed class ItemHoverTextFormatter
@@ -165,12 +179,11 @@ namespace SPTItemIntelligence
 
             string primary = hover.TotalValue > 0 ? FormatRoubles(hover.TotalValue) : string.Empty;
             string secondary = hover.ValuePerSlot > 0 ? FormatRoubles(hover.ValuePerSlot) + "/slot" : string.Empty;
-            string status = FormatStatus(hover);
             string bestSource = FormatBestSource(hover);
             return new ItemHoverText(
                 primary,
                 secondary,
-                status,
+                string.Empty,
                 hover.TemplateId,
                 hover.OwnedCount,
                 hover.QuestNeededNow,
@@ -213,14 +226,6 @@ namespace SPTItemIntelligence
                 if (detail.FoundInRaidRequired) line += " · FIR";
                 yield return line;
             }
-        }
-
-        static string FormatStatus(ItemHoverState hover)
-        {
-            if (hover.IsSafeToSell) return hover.SurplusCount > 0 ? "SAFE TO SELL · surplus " + hover.SurplusCount.ToString(CultureInfo.InvariantCulture) : "SAFE TO SELL";
-            if (!string.IsNullOrEmpty(hover.HoldReason)) return "KEEP · " + hover.HoldReason;
-            if (hover.KeepCount > 0) return "KEEP · " + hover.KeepCount.ToString(CultureInfo.InvariantCulture) + " needed";
-            return string.Empty;
         }
 
         static string FormatRoubles(long value)
