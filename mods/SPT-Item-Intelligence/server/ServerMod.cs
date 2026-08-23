@@ -34,7 +34,8 @@ public sealed class RequirementDataService(
     TradersTable traderTable,
     HideoutTable hideoutTable,
     HandbookHelper handbookHelper,
-    TraderHelper traderHelper)
+    TraderHelper traderHelper,
+    ISptLogger<RequirementDataService> logger)
 {
     public ValueTask<string> BuildSnapshotAsync(MongoId sessionId, CancellationToken cancellationToken)
     {
@@ -48,7 +49,12 @@ public sealed class RequirementDataService(
             hideoutTable,
             prices);
         cancellationToken.ThrowIfCancellationRequested();
-        return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+        string snapshot = jsonUtil.Serialize(envelope)!;
+        logger.Info("[II TRACE] server profileTplHits=" + Count(jsonUtil.Serialize(profile)!, RequirementDataContract.RuntimeTraceTemplateId)
+            + " hideoutTplHits=" + Count(jsonUtil.Serialize(hideoutTable)!, RequirementDataContract.RuntimeTraceTemplateId)
+            + " snapshotTplHits=" + Count(snapshot, RequirementDataContract.RuntimeTraceTemplateId)
+            + " snapshotChars=" + snapshot.Length);
+        return ValueTask.FromResult(snapshot);
     }
 
     private List<ItemPriceSnapshotEntry> BuildPrices(CancellationToken cancellationToken)
@@ -98,6 +104,18 @@ public sealed class RequirementDataService(
         if (double.IsNaN(value) || value <= 0) return 0;
         if (double.IsPositiveInfinity(value) || value >= long.MaxValue) return long.MaxValue;
         return (long)Math.Round(value);
+    }
+
+    private static int Count(string text, string value)
+    {
+        int count = 0;
+        int index = 0;
+        while ((index = text.IndexOf(value, index, StringComparison.OrdinalIgnoreCase)) >= 0)
+        {
+            count++;
+            index += value.Length;
+        }
+        return count;
     }
 }
 
