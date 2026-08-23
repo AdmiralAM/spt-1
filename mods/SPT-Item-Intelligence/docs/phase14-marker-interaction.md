@@ -1,6 +1,6 @@
 # Phase 14 — anchored marker interaction
 
-Phase 14 replaces the full-item floating tooltip interaction with a compact marker attached to the active EFT item card.
+Phase 14 introduced the marker-only interaction prototype. Phase 16 supersedes its single-hovered-view lifetime and upper-right placement with persistent per-view registration and an upper-left default.
 
 ## User interaction
 
