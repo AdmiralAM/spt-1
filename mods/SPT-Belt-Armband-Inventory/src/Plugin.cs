@@ -13,16 +13,16 @@ namespace SPTBeltArmbandInventory
         public const string PluginName = "SPT Belt Armband Inventory";
         public const string PluginVersion = "0.1.0";
 
-        ConfigEntry<bool> enabled;
+        ConfigEntry<bool> modEnabled;
         ConfigEntry<BeltSlotPosition> position;
         DynamicBeltPatches patches;
 
         void Awake()
         {
-            enabled = Config.Bind("General", "Enabled", true, "Enable Belt/Armband Inventory. Restart required.");
+            modEnabled = Config.Bind("General", "Enabled", true, "Enable Belt/Armband Inventory. Restart required.");
             position = Config.Bind("Layout", "Belt position", BeltSlotPosition.BelowPockets, "Place the belt row above or below Pockets. Restart required.");
 
-            if (!enabled.Value)
+            if (!modEnabled.Value)
             {
                 Logger.LogInfo("SPT Belt Armband Inventory is disabled in configuration.");
                 return;
