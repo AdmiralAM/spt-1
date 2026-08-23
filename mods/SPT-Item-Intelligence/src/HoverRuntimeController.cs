@@ -66,7 +66,11 @@ namespace SPTItemIntelligence
             if (templateId.Length == 0) return ItemHoverText.Empty;
 
             ItemHoverState hover = adapter.OnHoverEnter(templateId);
-            if (!hover.HasData) return PublishFallback(templateId);
+            if (!hover.HasData)
+            {
+                if (fallbackFactory == null) activeTemplateId = string.Empty;
+                return PublishFallback(templateId);
+            }
 
             activeTemplateId = hover.TemplateId;
             return Publish(hover);
