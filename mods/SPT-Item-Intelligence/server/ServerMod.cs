@@ -106,8 +106,9 @@ public sealed class RequirementDataService(
         return (long)Math.Round(value);
     }
 
-    private static int Count(string text, string value)
+    private static int Count(string? text, string value)
     {
+        if (string.IsNullOrEmpty(text) || string.IsNullOrEmpty(value)) return 0;
         int count = 0;
         int index = 0;
         while ((index = text.IndexOf(value, index, StringComparison.OrdinalIgnoreCase)) >= 0)
