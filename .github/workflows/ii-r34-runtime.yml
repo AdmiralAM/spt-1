@@ -1,0 +1,48 @@
+name: II R34 Runtime
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/ii-r34-runtime.yml'
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Download BepInEx 5
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path deps | Out-Null
+          Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
+          Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
+      - name: Test
+        shell: pwsh
+        run: dotnet run --project mods/SPT-Item-Intelligence/tests/SPT-Item-Intelligence.Tests.csproj -c Release
+      - name: Build client
+        shell: pwsh
+        run: dotnet build mods/SPT-Item-Intelligence/src/SPT-Item-Intelligence.csproj -c Release
+      - name: Build server
+        shell: pwsh
+        run: dotnet build mods/SPT-Item-Intelligence/server/SPT-Item-Intelligence.Server.csproj -c Release
+      - name: Stage R34 runtime
+        shell: pwsh
+        run: |
+          $root = 'SPT-Item-Intelligence-R34-SPT-4.1.3'
+          $clientDir = Join-Path $root 'BepInEx/plugins/SPT Item Intelligence R34'
+          $serverDir = Join-Path $root 'user/mods/SPT Item Intelligence Server R34'
+          New-Item -ItemType Directory -Force -Path $clientDir,$serverDir | Out-Null
+          $client = Get-ChildItem 'mods/SPT-Item-Intelligence/src/bin/Release' -Recurse -Filter 'SPT Item Intelligence*.dll' | Where-Object { $_.Name -notmatch 'Server' } | Select-Object -First 1
+          $server = Get-ChildItem 'mods/SPT-Item-Intelligence/server/bin/Release' -Recurse -Filter 'SPT Item Intelligence Server*.dll' | Select-Object -First 1
+          if (-not $client) { throw 'Client DLL not found' }
+          if (-not $server) { throw 'Server DLL not found' }
+          Copy-Item $client.FullName (Join-Path $clientDir 'SPT Item Intelligence R34.dll')
+          Copy-Item $server.FullName (Join-Path $serverDir 'SPT Item Intelligence Server R34.dll')
+          Set-Content -Path (Join-Path $root 'REVISION.txt') -Value "Item Intelligence R34`nSPT 4.1.3`nSource c273b156f2082506f0315dd5cdce27bc63ea5029"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SPT-Item-Intelligence-R34-SPT-4.1.3
+          path: SPT-Item-Intelligence-R34-SPT-4.1.3
+          if-no-files-found: error
