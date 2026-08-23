@@ -1,25 +1,44 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using UnityEngine;
 
 namespace SPTItemIntelligence
 {
-    public sealed class ItemHoverOverlaySink : IItemHoverViewSink, IItemHoverAnchorSink
+    public sealed class ItemHoverOverlaySink : IItemHoverViewSink, IItemHoverAnchorSink, IItemViewRegistrySink
     {
         readonly Vector3[] worldCorners = new Vector3[4];
+        readonly Dictionary<object, TrackedItemView> trackedViews = new Dictionary<object, TrackedItemView>(ReferenceComparer.Instance);
+        readonly List<object> staleViews = new List<object>();
         readonly ItemIntelligenceUiSettings settings;
+        readonly ItemPresentationStore store;
+        readonly ItemHoverTextCache textCache;
+        readonly Func<string, ItemHoverText> fallbackFactory;
         ItemHoverText current = ItemHoverText.Empty;
-        RectTransform anchor;
+        object hoveredView;
+        ItemPresentationIndex renderedIndex;
         GUIStyle markerStyle;
+        GUIStyle markerShadowStyle;
+        int invalidationVersion;
+        int renderedInvalidation = -1;
         bool drawingDisabled;
 
-        public ItemHoverOverlaySink(ItemIntelligenceUiSettings settings)
+        public ItemHoverOverlaySink(
+            ItemIntelligenceUiSettings settings,
+            ItemPresentationStore store,
+            ItemHoverTextCache textCache,
+            Func<string, ItemHoverText> fallbackFactory)
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            this.store = store ?? throw new ArgumentNullException(nameof(store));
+            this.textCache = textCache ?? throw new ArgumentNullException(nameof(textCache));
+            this.fallbackFactory = fallbackFactory;
         }
 
         public ItemHoverText Current => Volatile.Read(ref current);
+        internal int TrackedViewCount => trackedViews.Count;
 
         public void Show(ItemHoverText text)
         {
@@ -33,59 +52,156 @@ namespace SPTItemIntelligence
 
         public void SetAnchor(object itemView)
         {
-            Interlocked.Exchange(ref anchor, ResolveRectTransform(itemView));
+            Interlocked.Exchange(ref hoveredView, itemView);
         }
 
         public void ClearAnchor()
         {
-            Interlocked.Exchange(ref anchor, null);
+            Interlocked.Exchange(ref hoveredView, null);
+        }
+
+        public void RegisterView(object itemView, string templateId)
+        {
+            string normalized = RequirementContribution.NormalizeId(templateId);
+            RectTransform target = ResolveRectTransform(itemView);
+            if (itemView == null || normalized.Length == 0 || target == null) return;
+
+            TrackedItemView existing;
+            if (trackedViews.TryGetValue(itemView, out existing))
+            {
+                existing.TemplateId = normalized;
+                existing.Anchor = target;
+                existing.Text = ResolveText(normalized, store.Current);
+                return;
+            }
+
+            trackedViews[itemView] = new TrackedItemView(target, normalized, ResolveText(normalized, store.Current));
+        }
+
+        public void UnregisterView(object itemView)
+        {
+            if (itemView == null) return;
+            trackedViews.Remove(itemView);
+            if (object.ReferenceEquals(Volatile.Read(ref hoveredView), itemView))
+            {
+                ClearAnchor();
+                Clear();
+            }
+        }
+
+        public void ClearViews()
+        {
+            trackedViews.Clear();
+            staleViews.Clear();
+            renderedIndex = null;
+            ClearAnchor();
+            Clear();
+        }
+
+        public void Invalidate()
+        {
+            Interlocked.Increment(ref invalidationVersion);
         }
 
         public void Draw()
         {
             if (drawingDisabled) return;
-            ItemHoverText text = Current;
-            RectTransform target = Volatile.Read(ref anchor);
-            if (text == null || !text.HasData || target == null) return;
+            if (Event.current != null && Event.current.type != EventType.Repaint) return;
+            RefreshTrackedTextIfNeeded();
+            if (trackedViews.Count == 0) return;
 
             try
             {
-                Rect markerRect;
-                if (!TryGetMarkerRect(target, out markerRect)) return;
-
-                ItemMarkerPresentation marker = ItemMarkerPresentation.From(text);
-                if (!marker.IsVisible) return;
-
                 int previousDepth = GUI.depth;
                 Color previousColor = GUI.color;
                 try
                 {
                     GUI.depth = -1000;
-                    Color markerColor = settings.GetColor(marker.Kind);
-                    markerColor.a *= settings.MarkerOpacity;
-                    GUI.color = markerColor;
-                    GUI.DrawTexture(markerRect, Texture2D.whiteTexture);
-                    GUI.color = Color.white;
-                    GUI.Box(markerRect, GUIContent.none);
-                    GUI.Label(markerRect, marker.Glyph, MarkerStyle);
-
                     Vector2 mouse = Event.current == null
                         ? new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)
                         : Event.current.mousePosition;
-                    if (markerRect.Contains(mouse)) DrawDetails(markerRect, text, settings.TooltipMode);
+                    object activeView = Volatile.Read(ref hoveredView);
+
+                    foreach (KeyValuePair<object, TrackedItemView> pair in trackedViews)
+                    {
+                        TrackedItemView tracked = pair.Value;
+                        try
+                        {
+                            if (!IsAlive(tracked.Anchor))
+                            {
+                                staleViews.Add(pair.Key);
+                                continue;
+                            }
+                            if (!tracked.Anchor.gameObject.activeInHierarchy) continue;
+
+                            Rect markerRect;
+                            if (!TryGetMarkerRect(tracked.Anchor, out markerRect)) continue;
+                            ItemMarkerPresentation marker = ItemMarkerPresentation.From(tracked.Text);
+                            if (!marker.IsVisible) continue;
+
+                            DrawMarker(markerRect, marker);
+                            if (object.ReferenceEquals(pair.Key, activeView) && markerRect.Contains(mouse))
+                                DrawDetails(markerRect, tracked.Text, settings.TooltipMode);
+                        }
+                        catch
+                        {
+                            staleViews.Add(pair.Key);
+                        }
+                    }
                 }
                 finally
                 {
                     GUI.color = previousColor;
                     GUI.depth = previousDepth;
                 }
+
+                RemoveStaleViews();
             }
             catch
             {
                 drawingDisabled = true;
-                Clear();
-                ClearAnchor();
+                ClearViews();
             }
+        }
+
+        void RefreshTrackedTextIfNeeded()
+        {
+            ItemPresentationIndex index = store.Current;
+            int version = Volatile.Read(ref invalidationVersion);
+            if (object.ReferenceEquals(index, renderedIndex) && version == renderedInvalidation) return;
+
+            foreach (TrackedItemView tracked in trackedViews.Values)
+                tracked.Text = ResolveText(tracked.TemplateId, index);
+
+            renderedIndex = index;
+            renderedInvalidation = version;
+        }
+
+        ItemHoverText ResolveText(string templateId, ItemPresentationIndex index)
+        {
+            ItemPresentationIndex safeIndex = index ?? ItemPresentationIndex.Empty;
+            ItemPresentationState presentation = safeIndex.Get(templateId);
+            if (presentation != ItemPresentationState.Empty)
+                return textCache.Get(new ItemHoverState(presentation), safeIndex) ?? ItemHoverText.Empty;
+
+            if (fallbackFactory == null) return ItemHoverText.Empty;
+            try { return fallbackFactory(templateId) ?? ItemHoverText.Empty; }
+            catch { return ItemHoverText.Empty; }
+        }
+
+        void DrawMarker(Rect markerRect, ItemMarkerPresentation marker)
+        {
+            int fontSize = Mathf.Clamp(Mathf.RoundToInt(settings.MarkerSize * 0.78f), 10, 25);
+            MarkerStyle.fontSize = fontSize;
+            MarkerShadowStyle.fontSize = fontSize;
+
+            Color markerColor = settings.GetColor(marker.Kind);
+            markerColor.a = settings.MarkerOpacity;
+            MarkerStyle.normal.textColor = markerColor;
+            MarkerShadowStyle.normal.textColor = new Color(0f, 0f, 0f, markerColor.a * 0.82f);
+            GUI.color = Color.white;
+            GUI.Label(new Rect(markerRect.x + 1f, markerRect.y + 1f, markerRect.width, markerRect.height), marker.Glyph, MarkerShadowStyle);
+            GUI.Label(markerRect, marker.Glyph, MarkerStyle);
         }
 
         GUIStyle MarkerStyle
@@ -96,12 +212,23 @@ namespace SPTItemIntelligence
                 markerStyle = new GUIStyle(GUI.skin.label)
                 {
                     alignment = TextAnchor.MiddleCenter,
-                    fontStyle = FontStyle.Bold,
-                    fontSize = 13
+                    fontStyle = FontStyle.Bold
                 };
-                markerStyle.normal.textColor = Color.white;
-                markerStyle.fontSize = Mathf.Clamp(Mathf.RoundToInt(settings.MarkerSize * 0.66f), 10, 22);
                 return markerStyle;
+            }
+        }
+
+        GUIStyle MarkerShadowStyle
+        {
+            get
+            {
+                if (markerShadowStyle != null) return markerShadowStyle;
+                markerShadowStyle = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontStyle = FontStyle.Bold
+                };
+                return markerShadowStyle;
             }
         }
 
@@ -126,7 +253,7 @@ namespace SPTItemIntelligence
 
             float maximumSize = Mathf.Max(12f, Mathf.Min(itemWidth, itemHeight) - 6f);
             float size = Mathf.Min(settings.MarkerSize, maximumSize);
-            marker = new Rect(right - size + settings.MarkerOffsetX, top + settings.MarkerOffsetY, size, size);
+            marker = new Rect(left + settings.MarkerOffsetX, top + settings.MarkerOffsetY, size, size);
             return marker.xMax > 0f && marker.yMax > 0f && marker.xMin < Screen.width && marker.yMin < Screen.height;
         }
 
@@ -167,11 +294,44 @@ namespace SPTItemIntelligence
             catch { return null; }
         }
 
+        static bool IsAlive(RectTransform target)
+        {
+            try { return target != null && target.gameObject != null; }
+            catch { return false; }
+        }
+
         static Camera ResolveCamera(RectTransform target)
         {
             Canvas canvas = target.GetComponentInParent<Canvas>();
             return canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
         }
 
+        void RemoveStaleViews()
+        {
+            if (staleViews.Count == 0) return;
+            for (int i = 0; i < staleViews.Count; i++) UnregisterView(staleViews[i]);
+            staleViews.Clear();
+        }
+
+        sealed class TrackedItemView
+        {
+            public TrackedItemView(RectTransform anchor, string templateId, ItemHoverText text)
+            {
+                Anchor = anchor;
+                TemplateId = templateId;
+                Text = text ?? ItemHoverText.Empty;
+            }
+
+            public RectTransform Anchor { get; set; }
+            public string TemplateId { get; set; }
+            public ItemHoverText Text { get; set; }
+        }
+
+        sealed class ReferenceComparer : IEqualityComparer<object>
+        {
+            internal static readonly ReferenceComparer Instance = new ReferenceComparer();
+            public new bool Equals(object x, object y) => object.ReferenceEquals(x, y);
+            public int GetHashCode(object obj) => RuntimeHelpers.GetHashCode(obj);
+        }
     }
 }
