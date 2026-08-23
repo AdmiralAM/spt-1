@@ -1,4 +1,4 @@
 Hot-path guard failed:
 Plugin.cs: Unity per-frame Update loop (void Update()
 ScavBeltPatches.cs: inventory-controller replacement (ReplaceInventory)
-SPT Belt/Armband Inventory Phase 1: 29 assertions passed.
+SPT Belt/Armband Inventory Phase 1: 32 assertions passed.
