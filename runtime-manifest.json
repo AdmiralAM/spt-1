@@ -1,0 +1,12 @@
+{
+  "name": "SPT Pause",
+  "channel": "runtime-pause",
+  "version": "0.1.1",
+  "phase": "1",
+  "spt_version": "4.1.x",
+  "source_commit": "d8dc7f4da8466ea82f96432c92cc1c8f092e17f4",
+  "client_only": true,
+  "contains_tactical_hud": false,
+  "contains_item_intelligence": false,
+  "contains_belt_armband_inventory": false
+}
