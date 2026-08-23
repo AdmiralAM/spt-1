@@ -74,7 +74,7 @@ static class Phase12EftHoverIntegrationTests
         Expect(integration.DispatchRegister(hoveredView), "initialized ItemView is registered without waiting for hover", ref assertions);
         Expect(object.ReferenceEquals(registrySink.LastRegistered, hoveredView) && registrySink.LastTemplateId == "abc", "persistent marker registration keeps the normalized template id", ref assertions);
         Expect(integration.DispatchEnter(hoveredView), "resolved enter is dispatched", ref assertions);
-        Expect(sink.ShowCount == 1 && sink.Last.Primary == "24,000 ₽", "dispatch reaches cached hover pipeline and sink", ref assertions);
+        Expect(sink.ShowCount == 1 && sink.Last.Primary == "12,000 ₽ · Vendor", "dispatch reaches cached vendor-mode hover pipeline and sink", ref assertions);
         Expect(object.ReferenceEquals(anchorSink.Last, hoveredView), "resolved enter binds the marker to the active ItemView", ref assertions);
         integration.DispatchExit();
         Expect(sink.ClearCount == 1 && !controller.HasActiveItem, "exit clears sink and active item", ref assertions);
