@@ -25,6 +25,8 @@ namespace SPTItemIntelligence
         static readonly string[] templateIdMembers = { "TemplateId", "templateId", "Tpl", "tpl", "_tpl" };
         static readonly string[] templateMembers = { "Template", "template", "_template" };
         static readonly string[] templateObjectIdMembers = { "TemplateId", "templateId", "Id", "id", "_id", "Tpl", "tpl", "_tpl" };
+        static readonly string[] stackMembers = { "StackObjectsCount", "stackObjectsCount", "StackCount", "stackCount" };
+        static readonly string[] updateMembers = { "Upd", "upd", "Update", "update" };
         static readonly object cacheSync = new object();
         static readonly Dictionary<MemberCacheKey, MemberInfo> memberCache = new Dictionary<MemberCacheKey, MemberInfo>();
 
@@ -39,6 +41,17 @@ namespace SPTItemIntelligence
             object template = ReadFirst(item, templateMembers);
             string nested = ReadString(template, templateObjectIdMembers);
             return Normalize(nested);
+        }
+
+        public static int ResolveStackCount(object itemViewOrItem)
+        {
+            if (itemViewOrItem == null) return 1;
+            object item = ReadFirst(itemViewOrItem, itemMembers) ?? itemViewOrItem;
+            object value = ReadFirst(item, stackMembers);
+            if (value == null) value = ReadFirst(ReadFirst(item, updateMembers), stackMembers);
+            if (value == null) return 1;
+            try { return Math.Max(1, Convert.ToInt32(value, System.Globalization.CultureInfo.InvariantCulture)); }
+            catch { return 1; }
         }
 
         static string Normalize(string value)
