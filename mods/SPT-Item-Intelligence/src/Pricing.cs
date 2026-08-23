@@ -187,6 +187,20 @@ namespace SPTItemIntelligence
                 thresholds.Resolve(perSlot));
         }
 
+        public static ItemPriceState WithStackCount(ItemPriceState state, int stackCount, ValueTierThresholds thresholds = null)
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+            return Evaluate(new ItemPriceInput(
+                state.TemplateId,
+                state.TraderUnitValue,
+                state.TraderName,
+                state.FleaUnitValue,
+                state.FallbackUnitValue,
+                state.SlotCount,
+                1,
+                stackCount), thresholds);
+        }
+
         static int SaturatingMultiply(int left, int right)
         {
             long value = (long)left * right;
