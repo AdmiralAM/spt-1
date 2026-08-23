@@ -135,7 +135,7 @@ namespace SPTItemIntelligence
                 {
                     GUI.depth = -1000;
                     GUI.color = Color.white;
-                    DrawDetails(markerRect, tracked.Text, settings.TooltipMode);
+                    PolishedTooltipRenderer.Draw(markerRect, tracked.Text, settings);
                 }
                 finally
                 {
