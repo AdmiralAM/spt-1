@@ -1,4 +1,4 @@
-Unhandled exception. System.InvalidOperationException: Phase 10 assertion failed: missing item clears UI and active template
-   at Phase10HoverRuntimeTests.Expect(Boolean condition, String message, Int32& assertions) in D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\Phase10HoverRuntimeTests.cs:line 52
-   at Phase10HoverRuntimeTests.Run() in D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\Phase10HoverRuntimeTests.cs:line 39
-   at Program.Main() in D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\Program.cs:line 65
+Unhandled exception. System.InvalidOperationException: Phase 13 assertion failed: current quest projected
+   at Phase13RuntimeBootstrapTests.Expect(Boolean condition, String message, Int32& assertions) in D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\Phase13RuntimeBootstrapTests.cs:line 122
+   at Phase13RuntimeBootstrapTests.Run() in D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\Phase13RuntimeBootstrapTests.cs:line 58
+   at Program.Main() in D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\Program.cs:line 68
