@@ -15,6 +15,7 @@ namespace SPTItemIntelligence
         readonly ItemHoverPresentationAdapter adapter;
         readonly ItemHoverTextCache textCache;
         readonly IItemHoverViewSink sink;
+        readonly Func<string, ItemHoverText> fallbackFactory;
 
         string activeTemplateId = string.Empty;
         ItemHoverText activeText = ItemHoverText.Empty;
@@ -22,12 +23,14 @@ namespace SPTItemIntelligence
         public ItemHoverRuntimeController(
             ItemPresentationStore store,
             IItemHoverViewSink sink,
-            ItemHoverTextCache textCache = null)
+            ItemHoverTextCache textCache = null,
+            Func<string, ItemHoverText> fallbackFactory = null)
         {
             this.store = store ?? throw new ArgumentNullException(nameof(store));
             this.sink = sink ?? throw new ArgumentNullException(nameof(sink));
             adapter = new ItemHoverPresentationAdapter(store);
             this.textCache = textCache ?? new ItemHoverTextCache();
+            this.fallbackFactory = fallbackFactory;
         }
 
         public ItemHoverText ActiveText => Volatile.Read(ref activeText);
@@ -35,9 +38,16 @@ namespace SPTItemIntelligence
 
         public ItemHoverText OnHoverEnter(string templateId)
         {
-            ItemHoverState hover = adapter.OnHoverEnter(templateId);
-            activeTemplateId = hover.HasData ? hover.TemplateId : string.Empty;
-            return Publish(hover);
+            string normalized = RequirementContribution.NormalizeId(templateId);
+            ItemHoverState hover = adapter.OnHoverEnter(normalized);
+            if (hover.HasData)
+            {
+                activeTemplateId = hover.TemplateId;
+                return Publish(hover);
+            }
+
+            activeTemplateId = fallbackFactory == null ? string.Empty : normalized;
+            return PublishFallback(normalized);
         }
 
         public void OnHoverExit()
@@ -56,12 +66,7 @@ namespace SPTItemIntelligence
             if (templateId.Length == 0) return ItemHoverText.Empty;
 
             ItemHoverState hover = adapter.OnHoverEnter(templateId);
-            if (!hover.HasData)
-            {
-                activeTemplateId = string.Empty;
-                PublishClear();
-                return ItemHoverText.Empty;
-            }
+            if (!hover.HasData) return PublishFallback(templateId);
 
             activeTemplateId = hover.TemplateId;
             return Publish(hover);
@@ -75,10 +80,32 @@ namespace SPTItemIntelligence
                 PublishClear();
                 return ItemHoverText.Empty;
             }
+            return PublishText(next);
+        }
 
+        ItemHoverText PublishFallback(string templateId)
+        {
+            if (fallbackFactory == null || string.IsNullOrEmpty(templateId))
+            {
+                PublishClear();
+                return ItemHoverText.Empty;
+            }
+
+            ItemHoverText fallback;
+            try { fallback = fallbackFactory(templateId); }
+            catch { fallback = ItemHoverText.Empty; }
+            if (fallback == null || !fallback.HasData)
+            {
+                PublishClear();
+                return ItemHoverText.Empty;
+            }
+            return PublishText(fallback);
+        }
+
+        ItemHoverText PublishText(ItemHoverText next)
+        {
             ItemHoverText current = ActiveText;
             if (object.ReferenceEquals(current, next)) return next;
-
             Interlocked.Exchange(ref activeText, next);
             sink.Show(next);
             return next;

@@ -17,7 +17,7 @@ The split runtime channels prevent an update to one mod from silently installing
 | Mod | Client version | Server version | Runtime path |
 | --- | --- | --- | --- |
 | SPT Tactical HUD | `1.13.2` | `1.13.0` optional | `BepInEx/plugins/SPT Tactical HUD/` |
-| SPT Item Intelligence | `0.1.0` | none | `BepInEx/plugins/SPT Item Intelligence/` |
+| SPT Item Intelligence | `0.6.0` | `0.3.0` | `BepInEx/plugins/SPT Item Intelligence/` |
 
 Tactical HUD `1.14.0` is intentionally retired because it mixed the initial Item Intelligence source into the HUD assembly. No `1.14.0` runtime remains after the corrected publication.
 

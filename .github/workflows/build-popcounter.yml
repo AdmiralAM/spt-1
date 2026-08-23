@@ -95,7 +95,7 @@ jobs:
           if(-not $downloaded){throw 'BepInEx download failed'}
           Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
 
-      - name: Validate Item Intelligence Phase 12
+      - name: Validate Item Intelligence Phase 13
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path 'mods/SPT-Item-Intelligence/build-status' | Out-Null
@@ -240,7 +240,7 @@ jobs:
           Copy-Item $itemServerSource $itemRoot -Recurse -Force
           [ordered]@{
             name='SPT Item Intelligence'; channel='runtime-item-intelligence'; version=$env:ITEM_VERSION;
-            phase='12'; spt_version='4.1.x'; source_commit=$stableSha; server_version=$env:ITEM_SERVER_VERSION;
+            phase='13'; spt_version='4.1.x'; source_commit=$stableSha; server_version=$env:ITEM_SERVER_VERSION;
             server_included=$true; contains_tactical_hud=$false
           } | ConvertTo-Json | Set-Content (Join-Path $itemRoot 'runtime-manifest.json') -Encoding utf8
           @"
@@ -248,7 +248,7 @@ jobs:
 
           Ready-to-install standalone **SPT Item Intelligence v$env:ITEM_VERSION** for SPT **4.1.x**.
 
-          Copy this branch into the SPT root. Phase 12 includes the data/presentation pipeline, runtime EFT ItemView hover bridge, minimal overlay sink and native SPT 4.1 server companion. Physical in-game validation is still pending. This channel contains Item Intelligence only.
+          Copy this branch into the SPT root. Phase 13 adds one-shot live requirement bootstrap, profile/quest/hideout projection and a visible diagnostic fallback to the existing EFT ItemView hover bridge. Physical in-game validation is still pending. This channel contains Item Intelligence only.
           Verified source commit: **$stableSha**.
           "@ | Set-Content (Join-Path $itemRoot 'README.md') -Encoding utf8
           git config user.name 'github-actions[bot]'

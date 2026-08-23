@@ -1,0 +1,505 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Threading;
+
+namespace SPTItemIntelligence
+{
+    public interface IRequirementSnapshotTransport
+    {
+        string GetSnapshotJson();
+    }
+
+    public interface IRequirementSnapshotDecoder
+    {
+        RequirementDataEnvelope Decode(string json);
+    }
+
+    public sealed class ReflectionSptSnapshotTransport : IRequirementSnapshotTransport
+    {
+        public string GetSnapshotJson()
+        {
+            Type requestHandler = FindType("SPT.Common.Http.RequestHandler");
+            if (requestHandler == null) throw new InvalidOperationException("SPT RequestHandler is unavailable.");
+
+            MethodInfo getJson = null;
+            MethodInfo[] methods = requestHandler.GetMethods(BindingFlags.Public | BindingFlags.Static);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo candidate = methods[i];
+                ParameterInfo[] parameters = candidate.GetParameters();
+                if (candidate.Name == "GetJson" && candidate.ReturnType == typeof(string) &&
+                    parameters.Length == 1 && parameters[0].ParameterType == typeof(string))
+                {
+                    getJson = candidate;
+                    break;
+                }
+            }
+            if (getJson == null) throw new InvalidOperationException("SPT RequestHandler.GetJson(string) is unavailable.");
+
+            object response = getJson.Invoke(null, new object[] { RequirementDataContract.SnapshotRoute });
+            string json = response as string;
+            if (string.IsNullOrWhiteSpace(json) || string.Equals(json.Trim(), "null", StringComparison.OrdinalIgnoreCase))
+                throw new InvalidOperationException("Requirement snapshot response is empty.");
+            return json;
+        }
+
+        static Type FindType(string fullName)
+        {
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                try
+                {
+                    Type type = assemblies[i].GetType(fullName, false, false);
+                    if (type != null) return type;
+                }
+                catch { }
+            }
+            return null;
+        }
+    }
+
+    public sealed class ReflectionNewtonsoftSnapshotDecoder : IRequirementSnapshotDecoder
+    {
+        public RequirementDataEnvelope Decode(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) throw new ArgumentException("Snapshot JSON is missing.", nameof(json));
+            Type tokenType = FindType("Newtonsoft.Json.Linq.JToken");
+            if (tokenType == null) throw new InvalidOperationException("Newtonsoft JSON runtime is unavailable.");
+            MethodInfo parse = tokenType.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(string) }, null);
+            if (parse == null) throw new InvalidOperationException("Newtonsoft JToken.Parse is unavailable.");
+
+            object root = parse.Invoke(null, new object[] { json });
+            int schemaVersion = JsonNode.ReadInt(JsonNode.Get(root, "schemaVersion"), 0);
+            if (schemaVersion != RequirementDataContract.SchemaVersion)
+                throw new InvalidOperationException("Unsupported requirement snapshot schema " + schemaVersion + ".");
+
+            object profile = JsonNode.Get(root, "profile");
+            if (!JsonNode.ReadBool(JsonNode.Get(root, "profileReady"), !JsonNode.IsNull(profile))) profile = null;
+            object quests = JsonNode.Get(root, "quests");
+            object hideout = JsonNode.Get(root, "hideout");
+            if (JsonNode.IsNull(quests) || JsonNode.IsNull(hideout))
+                throw new InvalidOperationException("Requirement snapshot tables are incomplete.");
+
+            long generated = JsonNode.ReadLong(JsonNode.Get(root, "generatedAtUnixSeconds"), 0);
+            return new RequirementDataEnvelope(generated, profile, quests, hideout);
+        }
+
+        static Type FindType(string fullName)
+        {
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                try
+                {
+                    Type type = assemblies[i].GetType(fullName, false, false);
+                    if (type != null) return type;
+                }
+                catch { }
+            }
+            return null;
+        }
+    }
+
+    public sealed class SptRequirementDataProjector : IRequirementDataProjector
+    {
+        public RequirementProjection Project(RequirementDataEnvelope snapshot)
+        {
+            if (snapshot == null) throw new ArgumentNullException(nameof(snapshot));
+            if (!snapshot.profileReady) throw new InvalidOperationException("Profile is not ready.");
+
+            List<OwnedTemplateCount> owned = ProjectOwned(snapshot.profile);
+            List<RequirementContribution> contributions = new List<RequirementContribution>();
+            ProjectQuests(snapshot.profile, snapshot.quests, contributions);
+            ProjectHideout(snapshot.profile, snapshot.hideout, contributions);
+            return new RequirementProjection(snapshot.generatedAtUnixSeconds, owned, contributions);
+        }
+
+        static List<OwnedTemplateCount> ProjectOwned(object profile)
+        {
+            Dictionary<string, int> totals = new Dictionary<string, int>(StringComparer.Ordinal);
+            object inventory = JsonNode.Get(profile, "Inventory", "inventory");
+            object items = JsonNode.Get(inventory, "items", "Items");
+            foreach (object item in JsonNode.Values(items))
+            {
+                string templateId = RequirementContribution.NormalizeId(JsonNode.ReadString(JsonNode.Get(item, "_tpl", "tpl", "TemplateId")));
+                if (templateId.Length == 0) continue;
+                object upd = JsonNode.Get(item, "upd", "Upd");
+                int count = Math.Max(1, JsonNode.ReadInt(JsonNode.Get(upd, "StackObjectsCount", "stackObjectsCount"), 1));
+                int current;
+                totals.TryGetValue(templateId, out current);
+                totals[templateId] = current + count;
+            }
+
+            List<OwnedTemplateCount> result = new List<OwnedTemplateCount>(totals.Count);
+            foreach (KeyValuePair<string, int> pair in totals) result.Add(new OwnedTemplateCount(pair.Key, pair.Value));
+            return result;
+        }
+
+        static void ProjectQuests(object profile, object questTable, List<RequirementContribution> output)
+        {
+            Dictionary<string, QuestProgress> progress = new Dictionary<string, QuestProgress>(StringComparer.OrdinalIgnoreCase);
+            foreach (object quest in JsonNode.Values(JsonNode.Get(profile, "Quests", "quests")))
+            {
+                string id = JsonNode.ReadString(JsonNode.Get(quest, "qid", "QID", "questId", "_id"));
+                if (string.IsNullOrWhiteSpace(id)) continue;
+                progress[id.Trim()] = new QuestProgress(JsonNode.ReadString(JsonNode.Get(quest, "status", "Status")));
+            }
+
+            foreach (KeyValuePair<string, object> pair in JsonNode.Pairs(questTable))
+            {
+                object quest = pair.Value;
+                string questId = JsonNode.ReadString(JsonNode.Get(quest, "_id", "id", "Id"));
+                if (string.IsNullOrWhiteSpace(questId)) questId = pair.Key;
+                if (string.IsNullOrWhiteSpace(questId)) continue;
+
+                QuestProgress state;
+                progress.TryGetValue(questId, out state);
+                if (state != null && state.IsComplete) continue;
+                RequirementSource source = state != null && state.IsCurrent ? RequirementSource.CurrentQuest : RequirementSource.FutureQuest;
+
+                object conditions = JsonNode.Get(JsonNode.Get(quest, "conditions", "Conditions"), "AvailableForFinish", "availableForFinish");
+                List<QuestCondition> parsed = ParseQuestConditions(conditions);
+                for (int i = 0; i < parsed.Count; i++)
+                {
+                    QuestCondition condition = parsed[i];
+                    if (condition.Kind == "finditem" && HasMatchingHandover(parsed, condition)) continue;
+                    if (condition.Kind != "handoveritem" && condition.Kind != "finditem" &&
+                        condition.Kind != "leaveitematlocation" && condition.Kind != "placebeacon") continue;
+
+                    for (int targetIndex = 0; targetIndex < condition.Targets.Count; targetIndex++)
+                    {
+                        string target = condition.Targets[targetIndex];
+                        if (target.Length == 0 || condition.Count <= 0) continue;
+                        output.Add(new RequirementContribution(target, source, condition.Count, 0, condition.FoundInRaid));
+                    }
+                }
+            }
+        }
+
+        static List<QuestCondition> ParseQuestConditions(object conditions)
+        {
+            List<QuestCondition> result = new List<QuestCondition>();
+            foreach (object condition in JsonNode.Values(conditions))
+            {
+                string kind = JsonNode.ReadString(JsonNode.Get(condition, "conditionType", "ConditionType")).Trim().ToLowerInvariant();
+                int count = Math.Max(0, JsonNode.ReadInt(JsonNode.Get(condition, "value", "Value"), 0));
+                bool fir = JsonNode.ReadBool(JsonNode.Get(condition, "onlyFoundInRaid", "OnlyFoundInRaid"), false);
+                List<string> targets = new List<string>();
+                object targetNode = JsonNode.Get(condition, "target", "Target");
+                foreach (object target in JsonNode.ValuesOrSelf(targetNode))
+                {
+                    string id = RequirementContribution.NormalizeId(JsonNode.ReadString(target));
+                    if (id.Length != 0) targets.Add(id);
+                }
+                result.Add(new QuestCondition(kind, count, fir, targets));
+            }
+            return result;
+        }
+
+        static bool HasMatchingHandover(List<QuestCondition> conditions, QuestCondition find)
+        {
+            for (int i = 0; i < conditions.Count; i++)
+            {
+                QuestCondition candidate = conditions[i];
+                if (candidate.Kind != "handoveritem" || candidate.Count != find.Count) continue;
+                for (int f = 0; f < find.Targets.Count; f++)
+                    if (candidate.Targets.Contains(find.Targets[f])) return true;
+            }
+            return false;
+        }
+
+        static void ProjectHideout(object profile, object hideoutTable, List<RequirementContribution> output)
+        {
+            Dictionary<string, int> currentLevels = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            object profileHideout = JsonNode.Get(profile, "Hideout", "hideout");
+            foreach (object area in JsonNode.Values(JsonNode.Get(profileHideout, "Areas", "areas")))
+            {
+                string type = JsonNode.ReadString(JsonNode.Get(area, "type", "Type"));
+                if (type.Length == 0) continue;
+                currentLevels[type] = Math.Max(0, JsonNode.ReadInt(JsonNode.Get(area, "level", "Level"), 0));
+            }
+
+            object areas = JsonNode.Get(hideoutTable, "areas", "Areas");
+            foreach (object area in JsonNode.Values(areas))
+            {
+                string type = JsonNode.ReadString(JsonNode.Get(area, "type", "Type", "_id", "id"));
+                int currentLevel;
+                currentLevels.TryGetValue(type, out currentLevel);
+                foreach (KeyValuePair<string, object> stagePair in JsonNode.Pairs(JsonNode.Get(area, "stages", "Stages")))
+                {
+                    int stage = JsonNode.ReadInt(stagePair.Key, JsonNode.ReadInt(JsonNode.Get(stagePair.Value, "level", "Level"), 0));
+                    if (stage <= currentLevel) continue;
+                    foreach (object requirement in JsonNode.Values(JsonNode.Get(stagePair.Value, "requirements", "Requirements")))
+                    {
+                        string templateId = RequirementContribution.NormalizeId(JsonNode.ReadString(JsonNode.Get(requirement, "templateId", "TemplateId", "_tpl", "tpl")));
+                        int count = Math.Max(0, JsonNode.ReadInt(JsonNode.Get(requirement, "count", "Count", "value", "Value"), 0));
+                        string requirementType = JsonNode.ReadString(JsonNode.Get(requirement, "type", "Type", "requirementType", "RequirementType"));
+                        if (templateId.Length == 0 || count <= 0) continue;
+                        if (requirementType.Length != 0 && requirementType.IndexOf("item", StringComparison.OrdinalIgnoreCase) < 0 && requirementType != "0") continue;
+                        output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count));
+                    }
+                }
+            }
+        }
+
+        sealed class QuestProgress
+        {
+            readonly string status;
+            public QuestProgress(string status) { this.status = (status ?? string.Empty).Trim().ToLowerInvariant(); }
+            public bool IsCurrent => status == "started" || status == "availableforfinish" || status == "2" || status == "3";
+            public bool IsComplete => status == "success" || status == "fail" || status == "failed" || status == "4" || status == "5" || status == "7" || status == "8";
+        }
+
+        sealed class QuestCondition
+        {
+            public QuestCondition(string kind, int count, bool fir, List<string> targets)
+            {
+                Kind = kind ?? string.Empty;
+                Count = count;
+                FoundInRaid = fir;
+                Targets = targets ?? new List<string>();
+            }
+            public string Kind { get; }
+            public int Count { get; }
+            public bool FoundInRaid { get; }
+            public List<string> Targets { get; }
+        }
+    }
+
+    public enum RequirementBootstrapState
+    {
+        Loading,
+        Ready,
+        Unavailable
+    }
+
+    public sealed class RequirementRuntimeBootstrap
+    {
+        readonly IRequirementSnapshotTransport transport;
+        readonly IRequirementSnapshotDecoder decoder;
+        readonly IRequirementDataProjector projector;
+        readonly ItemPresentationStore presentationStore;
+        readonly ItemHoverRuntimeController hoverController;
+        int state = (int)RequirementBootstrapState.Loading;
+        string detail = "LOADING ITEM DATA";
+
+        public RequirementRuntimeBootstrap(
+            IRequirementSnapshotTransport transport,
+            IRequirementSnapshotDecoder decoder,
+            IRequirementDataProjector projector,
+            ItemPresentationStore presentationStore,
+            ItemHoverRuntimeController hoverController)
+        {
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
+            this.decoder = decoder ?? throw new ArgumentNullException(nameof(decoder));
+            this.projector = projector ?? throw new ArgumentNullException(nameof(projector));
+            this.presentationStore = presentationStore ?? throw new ArgumentNullException(nameof(presentationStore));
+            this.hoverController = hoverController ?? throw new ArgumentNullException(nameof(hoverController));
+        }
+
+        public RequirementBootstrapState State => (RequirementBootstrapState)Volatile.Read(ref state);
+        public string Detail => Volatile.Read(ref detail);
+
+        public bool TryRefresh(CancellationToken cancellationToken, out string error)
+        {
+            Interlocked.Exchange(ref state, (int)RequirementBootstrapState.Loading);
+            Interlocked.Exchange(ref detail, "LOADING ITEM DATA");
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                string json = transport.GetSnapshotJson();
+                cancellationToken.ThrowIfCancellationRequested();
+                RequirementDataEnvelope snapshot = decoder.Decode(json);
+                if (snapshot == null || !snapshot.profileReady) throw new InvalidOperationException("Profile is not ready.");
+                RequirementProjection projection = projector.Project(snapshot);
+                RequirementIndex index = RequirementIndexBuilder.Build(projection);
+                ItemRequirementStateIndex requirements = ItemRequirementStateBuilder.Build(index);
+                cancellationToken.ThrowIfCancellationRequested();
+                presentationStore.Refresh(requirements, ItemPriceIndex.Empty);
+                hoverController.RefreshActive();
+                Interlocked.Exchange(ref detail, "NO REQUIREMENT DATA");
+                Interlocked.Exchange(ref state, (int)RequirementBootstrapState.Ready);
+                error = null;
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                error = "Requirement data load was cancelled.";
+            }
+            catch (Exception exception)
+            {
+                error = exception.InnerException == null ? exception.Message : exception.InnerException.Message;
+            }
+
+            Interlocked.Exchange(ref detail, "DATA UNAVAILABLE");
+            Interlocked.Exchange(ref state, (int)RequirementBootstrapState.Unavailable);
+            hoverController.RefreshActive();
+            return false;
+        }
+
+        public ItemHoverText CreateFallback(string templateId)
+        {
+            string normalized = RequirementContribution.NormalizeId(templateId);
+            return new ItemHoverText("ITEM INTELLIGENCE", normalized, Detail);
+        }
+    }
+
+    static class JsonNode
+    {
+        public static object Get(object source, params string[] names)
+        {
+            if (source == null || IsNull(source)) return null;
+            IDictionary dictionary = source as IDictionary;
+            if (dictionary != null)
+            {
+                foreach (DictionaryEntry entry in dictionary)
+                    for (int i = 0; i < names.Length; i++)
+                        if (string.Equals(ReadString(entry.Key), names[i], StringComparison.OrdinalIgnoreCase)) return NullToNull(entry.Value);
+            }
+
+            Type type = source.GetType();
+            for (int i = 0; i < names.Length; i++)
+            {
+                object indexed;
+                if (TryIndexer(source, names[i], out indexed) && !IsNull(indexed)) return indexed;
+                const BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.IgnoreCase;
+                try
+                {
+                    PropertyInfo property = type.GetProperty(names[i], flags);
+                    if (property != null && property.GetIndexParameters().Length == 0) return NullToNull(property.GetValue(source, null));
+                }
+                catch { }
+                try
+                {
+                    FieldInfo field = type.GetField(names[i], flags);
+                    if (field != null) return NullToNull(field.GetValue(source));
+                }
+                catch { }
+            }
+            return null;
+        }
+
+        public static IEnumerable<object> Values(object source)
+        {
+            if (source == null || IsNull(source) || source is string) yield break;
+            IDictionary dictionary = source as IDictionary;
+            if (dictionary != null)
+            {
+                foreach (DictionaryEntry entry in dictionary) yield return NullToNull(entry.Value);
+                yield break;
+            }
+            IEnumerable enumerable = source as IEnumerable;
+            if (enumerable == null) yield break;
+            foreach (object value in enumerable)
+            {
+                object pairValue = Get(value, "Value");
+                yield return pairValue ?? value;
+            }
+        }
+
+        public static IEnumerable<object> ValuesOrSelf(object source)
+        {
+            if (source == null || IsNull(source)) yield break;
+            if (source is string || !IsArrayLike(source))
+            {
+                yield return source;
+                yield break;
+            }
+            foreach (object value in Values(source)) yield return value;
+        }
+
+        public static IEnumerable<KeyValuePair<string, object>> Pairs(object source)
+        {
+            if (source == null || IsNull(source) || source is string) yield break;
+            IDictionary dictionary = source as IDictionary;
+            if (dictionary != null)
+            {
+                foreach (DictionaryEntry entry in dictionary)
+                    yield return new KeyValuePair<string, object>(ReadString(entry.Key), NullToNull(entry.Value));
+                yield break;
+            }
+            IEnumerable enumerable = source as IEnumerable;
+            if (enumerable == null) yield break;
+            int index = 0;
+            foreach (object value in enumerable)
+            {
+                object key = Get(value, "Key");
+                object pairValue = Get(value, "Value");
+                if (key != null) yield return new KeyValuePair<string, object>(ReadString(key), pairValue);
+                else yield return new KeyValuePair<string, object>((index++).ToString(), value);
+            }
+        }
+
+        public static string ReadString(object value)
+        {
+            if (value == null || IsNull(value)) return string.Empty;
+            return value.ToString() ?? string.Empty;
+        }
+
+        public static int ReadInt(object value, int fallback)
+        {
+            int parsed;
+            return int.TryParse(ReadString(value), out parsed) ? parsed : fallback;
+        }
+
+        public static long ReadLong(object value, long fallback)
+        {
+            long parsed;
+            return long.TryParse(ReadString(value), out parsed) ? parsed : fallback;
+        }
+
+        public static bool ReadBool(object value, bool fallback)
+        {
+            bool parsed;
+            if (bool.TryParse(ReadString(value), out parsed)) return parsed;
+            int numeric;
+            return int.TryParse(ReadString(value), out numeric) ? numeric != 0 : fallback;
+        }
+
+        public static bool IsNull(object value)
+        {
+            if (value == null) return true;
+            try
+            {
+                PropertyInfo type = value.GetType().GetProperty("Type", BindingFlags.Public | BindingFlags.Instance);
+                object tokenType = type == null ? null : type.GetValue(value, null);
+                string name = tokenType == null ? string.Empty : tokenType.ToString();
+                return string.Equals(name, "Null", StringComparison.OrdinalIgnoreCase) || string.Equals(name, "Undefined", StringComparison.OrdinalIgnoreCase);
+            }
+            catch { return false; }
+        }
+
+        static object NullToNull(object value) { return IsNull(value) ? null : value; }
+
+        static bool IsArrayLike(object source)
+        {
+            if (source is IList || source is Array) return true;
+            string name = source.GetType().Name;
+            return name.IndexOf("Array", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        static bool TryIndexer(object source, string name, out object value)
+        {
+            PropertyInfo[] properties;
+            try { properties = source.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance); }
+            catch { value = null; return false; }
+            for (int i = 0; i < properties.Length; i++)
+            {
+                PropertyInfo property = properties[i];
+                ParameterInfo[] parameters = property.GetIndexParameters();
+                if (parameters.Length != 1 || (parameters[0].ParameterType != typeof(string) && parameters[0].ParameterType != typeof(object))) continue;
+                try
+                {
+                    value = property.GetValue(source, new object[] { name });
+                    if (value != null) return true;
+                }
+                catch { }
+            }
+            value = null;
+            return false;
+        }
+    }
+}
