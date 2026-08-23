@@ -3,7 +3,7 @@ namespace SPTQuestPlanner;
 public static class PlannerDataContract
 {
     public const string SnapshotRoute = "/admiralam/quest-planner/snapshot";
-    public const int SchemaVersion = 5;
+    public const int SchemaVersion = 6;
 }
 
 public sealed record PlannerSnapshotEnvelope(
