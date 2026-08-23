@@ -22,7 +22,7 @@ namespace SPTBeltArmbandInventory
 
         internal static void Track(object panel, object[] arguments)
         {
-            if (panel == null || arguments == null || refreshing) return;
+            if (panel == null || arguments == null) return;
             Forget(panel);
             Panels.Add(new PanelState
             {
