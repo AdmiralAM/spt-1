@@ -11,6 +11,7 @@ public static class Phase4Tests
         CurrentQuestProjection();
         CompletedContribution();
         FutureAndHideoutPolicies();
+        FutureQuestReserveAggregation();
         ExplicitCombinationModes();
         SurplusCalculation();
         StoreRetentionAndReplacement();
@@ -63,6 +64,22 @@ public static class Phase4Tests
             IncludeHideout = false
         });
         Expect(disabled.Count == 0, "future and hideout sources can be disabled before publication");
+    }
+
+    static void FutureQuestReserveAggregation()
+    {
+        RequirementIndexEntry entry = Build(
+            1021,
+            new[] { new OwnedTemplateCount("salewa", 5) },
+            new[]
+            {
+                new RequirementContribution("salewa", RequirementSource.FutureQuest, 5, label: "Future quest A"),
+                new RequirementContribution("salewa", RequirementSource.FutureQuest, 4, label: "Future quest B"),
+                new RequirementContribution("salewa", RequirementSource.FutureQuest, 2, label: "Future quest B")
+            }).Get("salewa");
+        Expect(entry.QuestNeededLater == 6, "future summary reserves the largest per-quest quantity instead of summing the whole quest database");
+        Expect(entry.KeepCount == 6, "future keep reserve follows the largest single future quest requirement");
+        Expect(entry.Details.Count == 3, "full future quest detail remains available after summary normalization");
     }
 
     static void ExplicitCombinationModes()
