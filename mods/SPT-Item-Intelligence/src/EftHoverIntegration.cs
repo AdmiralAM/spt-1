@@ -12,6 +12,13 @@ namespace SPTItemIntelligence
         void ClearAnchor();
     }
 
+    public interface IItemViewRegistrySink
+    {
+        void RegisterView(object itemView, string templateId);
+        void UnregisterView(object itemView);
+        void ClearViews();
+    }
+
     public static class EftItemTemplateIdResolver
     {
         static readonly string[] itemMembers = { "Item", "item", "ItemContext", "itemContext", "_item" };
@@ -159,9 +166,11 @@ namespace SPTItemIntelligence
 
         readonly ItemHoverRuntimeController controller;
         readonly IItemHoverAnchorSink anchorSink;
+        readonly IItemViewRegistrySink registrySink;
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         object harmony;
+        object activeItemView;
         MethodInfo unpatchSelf;
         bool disposed;
         int unresolvedTemplateReported;
@@ -170,12 +179,14 @@ namespace SPTItemIntelligence
             ItemHoverRuntimeController controller,
             Action<string> logInfo = null,
             Action<string> logWarning = null,
-            IItemHoverAnchorSink anchorSink = null)
+            IItemHoverAnchorSink anchorSink = null,
+            IItemViewRegistrySink registrySink = null)
         {
             this.controller = controller ?? throw new ArgumentNullException(nameof(controller));
             this.logInfo = logInfo;
             this.logWarning = logWarning;
             this.anchorSink = anchorSink;
+            this.registrySink = registrySink;
         }
 
         public bool IsInstalled { get; private set; }
@@ -207,15 +218,21 @@ namespace SPTItemIntelligence
 
                 MethodInfo enterPostfix = typeof(EftItemViewHoverIntegration).GetMethod(nameof(HoverEnterPostfix), BindingFlags.Static | BindingFlags.NonPublic);
                 MethodInfo exitPostfix = typeof(EftItemViewHoverIntegration).GetMethod(nameof(HoverExitPostfix), BindingFlags.Static | BindingFlags.NonPublic);
+                MethodInfo initPostfix = typeof(EftItemViewHoverIntegration).GetMethod(nameof(ItemViewInitPostfix), BindingFlags.Static | BindingFlags.NonPublic);
+                MethodInfo killPrefix = typeof(EftItemViewHoverIntegration).GetMethod(nameof(ItemViewKillPrefix), BindingFlags.Static | BindingFlags.NonPublic);
                 object enterPatch = harmonyMethodConstructor.Invoke(new object[] { enterPostfix });
                 object exitPatch = harmonyMethodConstructor.Invoke(new object[] { exitPostfix });
+                object initPatch = harmonyMethodConstructor.Invoke(new object[] { initPostfix });
+                object killPatch = harmonyMethodConstructor.Invoke(new object[] { killPrefix });
 
                 Interlocked.Exchange(ref active, this);
                 for (int i = 0; i < targets.Count; i++)
                 {
-                    Patch(patchMethod, targets[i].Enter, harmonyMethodType, enterPatch);
-                    Patch(patchMethod, targets[i].Exit, harmonyMethodType, exitPatch);
-                    PatchedMethodCount += 2;
+                    Patch(patchMethod, targets[i].Enter, harmonyMethodType, enterPatch, false);
+                    Patch(patchMethod, targets[i].Exit, harmonyMethodType, exitPatch, false);
+                    Patch(patchMethod, targets[i].Initialize, harmonyMethodType, initPatch, false);
+                    Patch(patchMethod, targets[i].Kill, harmonyMethodType, killPatch, true);
+                    PatchedMethodCount += 4;
                 }
 
                 unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
@@ -236,20 +253,43 @@ namespace SPTItemIntelligence
             string templateId = EftItemTemplateIdResolver.Resolve(itemView);
             if (templateId.Length == 0)
             {
+                Interlocked.Exchange(ref activeItemView, null);
                 if (anchorSink != null) anchorSink.ClearAnchor();
+                controller.OnHoverExit();
                 if (Interlocked.Exchange(ref unresolvedTemplateReported, 1) == 0 && logWarning != null)
                     logWarning("Item Intelligence could not resolve a template id from an EFT ItemView; this shape is ignored.");
                 return false;
             }
 
+            if (registrySink != null) registrySink.RegisterView(itemView, templateId);
+            Interlocked.Exchange(ref activeItemView, itemView);
             if (anchorSink != null) anchorSink.SetAnchor(itemView);
             controller.OnHoverEnter(templateId);
             return true;
         }
 
-        internal void DispatchExit()
+        internal bool DispatchRegister(object itemView)
+        {
+            if (disposed || registrySink == null) return false;
+            string templateId = EftItemTemplateIdResolver.Resolve(itemView);
+            if (templateId.Length == 0) return false;
+            registrySink.RegisterView(itemView, templateId);
+            return true;
+        }
+
+        internal void DispatchUnregister(object itemView)
+        {
+            if (disposed || itemView == null) return;
+            if (registrySink != null) registrySink.UnregisterView(itemView);
+            if (object.ReferenceEquals(Volatile.Read(ref activeItemView), itemView)) DispatchExit(itemView);
+        }
+
+        internal void DispatchExit(object itemView = null)
         {
             if (disposed) return;
+            object activeView = Volatile.Read(ref activeItemView);
+            if (itemView != null && activeView != null && !object.ReferenceEquals(activeView, itemView)) return;
+            Interlocked.Exchange(ref activeItemView, null);
             if (anchorSink != null) anchorSink.ClearAnchor();
             controller.OnHoverExit();
         }
@@ -270,8 +310,10 @@ namespace SPTItemIntelligence
 
                     MethodInfo enter = FindPointerMethod(type, "OnPointerEnter");
                     MethodInfo exit = FindPointerMethod(type, "OnPointerExit");
-                    if (enter == null || exit == null || !seenEnter.Add(enter)) continue;
-                    result.Add(new HoverPatchTarget(type, enter, exit));
+                    MethodInfo initialize = FindParameterlessMethod(type, "Init");
+                    MethodInfo kill = FindParameterlessMethod(type, "Kill");
+                    if (enter == null || exit == null || initialize == null || kill == null || !seenEnter.Add(enter)) continue;
+                    result.Add(new HoverPatchTarget(type, enter, exit, initialize, kill));
                 }
             }
             return result;
@@ -303,6 +345,17 @@ namespace SPTItemIntelligence
             return null;
         }
 
+        static MethodInfo FindParameterlessMethod(Type type, string name)
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            MethodInfo[] methods;
+            try { methods = type.GetMethods(flags); }
+            catch { return null; }
+            for (int i = 0; i < methods.Length; i++)
+                if (methods[i].Name == name && methods[i].GetParameters().Length == 0) return methods[i];
+            return null;
+        }
+
         static Type[] GetLoadableTypes(Assembly assembly)
         {
             if (assembly == null) return new Type[0];
@@ -326,13 +379,14 @@ namespace SPTItemIntelligence
             return null;
         }
 
-        void Patch(MethodInfo patchMethod, MethodInfo original, Type harmonyMethodType, object postfix)
+        void Patch(MethodInfo patchMethod, MethodInfo original, Type harmonyMethodType, object patch, bool prefix)
         {
             ParameterInfo[] parameters = patchMethod.GetParameters();
             object[] arguments = new object[parameters.Length];
             arguments[0] = original;
+            string patchParameter = prefix ? "prefix" : "postfix";
             for (int i = 1; i < parameters.Length; i++)
-                if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) arguments[i] = postfix;
+                if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, patchParameter, StringComparison.OrdinalIgnoreCase)) arguments[i] = patch;
             patchMethod.Invoke(harmony, arguments);
         }
 
@@ -359,10 +413,32 @@ namespace SPTItemIntelligence
         {
             EftItemViewHoverIntegration instance = Volatile.Read(ref active);
             if (instance == null) return;
-            try { instance.DispatchExit(); }
+            try { instance.DispatchExit(__instance); }
             catch (Exception exception)
             {
                 if (instance.logWarning != null) instance.logWarning("Item Intelligence hover exit failed safely: " + exception.Message);
+            }
+        }
+
+        static void ItemViewInitPostfix(object __instance)
+        {
+            EftItemViewHoverIntegration instance = Volatile.Read(ref active);
+            if (instance == null) return;
+            try { instance.DispatchRegister(__instance); }
+            catch (Exception exception)
+            {
+                if (instance.logWarning != null) instance.logWarning("Item Intelligence ItemView registration failed safely: " + exception.Message);
+            }
+        }
+
+        static void ItemViewKillPrefix(object __instance)
+        {
+            EftItemViewHoverIntegration instance = Volatile.Read(ref active);
+            if (instance == null) return;
+            try { instance.DispatchUnregister(__instance); }
+            catch (Exception exception)
+            {
+                if (instance.logWarning != null) instance.logWarning("Item Intelligence ItemView cleanup failed safely: " + exception.Message);
             }
         }
 
@@ -370,7 +446,9 @@ namespace SPTItemIntelligence
         {
             if (disposed) return;
             disposed = true;
+            Interlocked.Exchange(ref activeItemView, null);
             if (anchorSink != null) anchorSink.ClearAnchor();
+            if (registrySink != null) registrySink.ClearViews();
             controller.OnHoverExit();
             SafeUnpatch();
         }
@@ -391,16 +469,20 @@ namespace SPTItemIntelligence
 
         internal sealed class HoverPatchTarget
         {
-            public HoverPatchTarget(Type type, MethodInfo enter, MethodInfo exit)
+            public HoverPatchTarget(Type type, MethodInfo enter, MethodInfo exit, MethodInfo initialize, MethodInfo kill)
             {
                 Type = type;
                 Enter = enter;
                 Exit = exit;
+                Initialize = initialize;
+                Kill = kill;
             }
 
             public Type Type { get; }
             public MethodInfo Enter { get; }
             public MethodInfo Exit { get; }
+            public MethodInfo Initialize { get; }
+            public MethodInfo Kill { get; }
         }
     }
 }
