@@ -108,7 +108,8 @@ static class Phase18TooltipIntelligenceTests
                         {
                             ["requirements"] = new object[]
                             {
-                                new Dictionary<string, object> { ["type"] = "Item", ["templateId"] = bulbexId, ["count"] = 1 }
+                                new Dictionary<string, object> { ["type"] = 1, ["templateId"] = bulbexId, ["count"] = 1 },
+                                new Dictionary<string, object> { ["type"] = 0, ["templateId"] = "AREA_ONLY", ["count"] = 1 }
                             }
                         }
                     }
@@ -149,6 +150,7 @@ static class Phase18TooltipIntelligenceTests
         ItemHoverText bulbexText = new ItemHoverTextFormatter().Format(new ItemHoverState(bulbexStore.Get(bulbexId)));
         Expect(bulbexText.HideoutLine == "Hideout: 1/1 ✓", "fulfilled Bulbex hideout quantity remains visible", ref assertions);
         Expect(ItemMarkerPresentation.From(bulbexText).Kind == ItemMarkerKind.Default, "fulfilled Bulbex requirement uses default color", ref assertions);
+        Expect(bulbexIndex.Get("area_only") == RequirementIndexEntry.Empty, "numeric Area requirements are not projected as items", ref assertions);
         Expect(bulbexIndex.Get("custom").HideoutNeeded == 2, "custom hideout areas are projected", ref assertions);
 
         Dictionary<string, object> missingProfile = ProfileWithHideout(
