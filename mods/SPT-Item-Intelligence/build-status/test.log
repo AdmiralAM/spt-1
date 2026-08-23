@@ -1,2 +1,1 @@
-D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\Phase12EftHoverIntegrationTests.cs(87,27): warning CS0649: Field 'Phase12EftHoverIntegrationTests.FakeInventoryItemView.Item' is never assigned to, and will always have its default value null [D:\a\spt-1\spt-1\mods\SPT-Item-Intelligence\tests\SPT-Item-Intelligence.Tests.csproj]
 Item Intelligence: 24 Phase 1, 28 Phase 2, 12 Phase 3, 26 Phase 4, 14 Phase 5, 20 Phase 6, 10 Phase 7, 11 Phase 8, 6 Phase 9, 13 Phase 10, 14 Phase 11 and 15 Phase 12 assertions passed.
