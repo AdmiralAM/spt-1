@@ -20,6 +20,7 @@ namespace SPTBeltArmbandInventory
         LootPriorityPatches lootPatches;
         UnloadPriorityPatches unloadPatches;
         ScavBeltPatches scavPatches;
+        GrenadeSlotPatches grenadePatches;
 
         void Awake()
         {
@@ -77,6 +78,14 @@ namespace SPTBeltArmbandInventory
                 scavPatches = null;
                 Logger.LogWarning("PMC belt behavior remains active, but a Scav spawned with a container belt may retain vanilla ArmBand deletion behavior.");
             }
+
+            grenadePatches = new GrenadeSlotPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!grenadePatches.TryInstall())
+            {
+                grenadePatches.Dispose();
+                grenadePatches = null;
+                Logger.LogWarning("Belt storage remains active, but grenades inside the belt may not participate in vanilla G/fast-access selection.");
+            }
         }
 
         void Update()
@@ -98,6 +107,8 @@ namespace SPTBeltArmbandInventory
 
         void OnDestroy()
         {
+            if (grenadePatches != null) grenadePatches.Dispose();
+            grenadePatches = null;
             if (scavPatches != null) scavPatches.Dispose();
             scavPatches = null;
             if (unloadPatches != null) unloadPatches.Dispose();
