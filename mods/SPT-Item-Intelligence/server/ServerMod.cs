@@ -2,9 +2,11 @@ using SPTItemIntelligence;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
+using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Helpers.Profile;
 using SPTarkov.Server.Core.Helpers.Traders;
 using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Utils;
@@ -34,7 +36,7 @@ public sealed class RequirementDataService(
     TradersTable traderTable,
     HideoutTable hideoutTable,
     HandbookHelper handbookHelper,
-    TraderHelper traderHelper)
+    ItemHelper itemHelper)
 {
     public ValueTask<string> BuildSnapshotAsync(MongoId sessionId, CancellationToken cancellationToken)
     {
@@ -61,14 +63,14 @@ public sealed class RequirementDataService(
 
             templateTable.Prices.TryGetValue(templateId, out double fleaValue);
             double fallbackValue = handbookHelper.GetTemplatePrice(templateId);
-            double traderValue = traderHelper.GetHighestSellToTraderPrice(templateId);
+            var trader = ResolveBestTrader(templateId, fallbackValue);
             int width = Math.Max(1, item.Properties?.Width ?? 1);
             int height = Math.Max(1, item.Properties?.Height ?? 1);
             result.Add(new ItemPriceSnapshotEntry(
                 templateId.ToString(),
-                ToLong(traderValue),
-                ResolveBestTraderName(fallbackValue),
-                ToLong(fleaValue),
+                ToLong(trader.Price),
+                trader.Name,
+                ToLong(fleaValue > 0 ? fleaValue : fallbackValue),
                 ToLong(fallbackValue),
                 width,
                 height));
@@ -76,21 +78,38 @@ public sealed class RequirementDataService(
         return result;
     }
 
-    private string ResolveBestTraderName(double handbookValue)
+    // Match the established Item Valuation behaviour: handbook value multiplied by each
+    // eligible trader's LL1 buy-back coefficient, excluding Fence unless no regular trader buys it.
+    private (double Price, string Name) ResolveBestTrader(MongoId templateId, double handbookValue)
     {
-        double highestPrice = 1d;
+        var regular = ResolveBestTrader(templateId, handbookValue, includeFence: false);
+        return regular.Price > 0 ? regular : ResolveBestTrader(templateId, handbookValue, includeFence: true);
+    }
+
+    private (double Price, string Name) ResolveBestTrader(MongoId templateId, double handbookValue, bool includeFence)
+    {
+        double highestPrice = 0;
         string highestTrader = "Trader";
-        foreach (var (_, trader) in traderTable)
+        foreach (var (traderId, trader) in traderTable)
         {
+            bool isFence = traderId == Traders.FENCE;
+            if (isFence != includeFence) continue;
+
             var traderBase = trader.Base;
-            var buyBackPercent = 100 - traderBase.LoyaltyLevels?.FirstOrDefault()?.BuyPriceCoefficient;
-            double price = Math.Round((buyBackPercent ?? 0) * (handbookValue / 100d), 0);
+            var buy = traderBase.ItemsBuy;
+            if (buy is null) continue;
+            bool accepts = buy.IdList.Contains(templateId) || itemHelper.IsOfBaseclasses(templateId, buy.Category);
+            if (!accepts) continue;
+
+            double coefficient = traderBase.LoyaltyLevels?.FirstOrDefault()?.BuyPriceCoefficient ?? 100d;
+            double price = Math.Round(Math.Max(0d, 100d - coefficient) * (handbookValue / 100d), 0);
             if (price <= highestPrice) continue;
+
             highestPrice = price;
             string nickname = (traderBase.Nickname ?? string.Empty).Trim();
             highestTrader = nickname.Length == 0 ? traderBase.Name : nickname;
         }
-        return string.IsNullOrWhiteSpace(highestTrader) ? "Trader" : highestTrader;
+        return (highestPrice, string.IsNullOrWhiteSpace(highestTrader) ? "Trader" : highestTrader);
     }
 
     private static long ToLong(double value)
