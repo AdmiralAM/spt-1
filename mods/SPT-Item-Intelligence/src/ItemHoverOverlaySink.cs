@@ -316,6 +316,8 @@ namespace SPTItemIntelligence
                     Set(text, "alignment", Enum.Parse(PropertyType(text, "alignment"), "MiddleCenter"));
                     Set(text, "raycastTarget", false);
                     Set(text, "supportRichText", false);
+                    Set(text, "horizontalOverflow", Enum.Parse(PropertyType(text, "horizontalOverflow"), "Overflow"));
+                    Set(text, "verticalOverflow", Enum.Parse(PropertyType(text, "verticalOverflow"), "Overflow"));
                     Set(text, "font", BuiltinFont());
                     if (outline != null)
                     {
