@@ -22,6 +22,8 @@ public sealed record QuestObjectiveExtractionResult(
 public static class QuestObjectiveExtractor
 {
     private const int MaxConditionDepth = 12;
+    private const int MaxWrapperDepth = 8;
+    private static readonly string[] WrapperMemberNames = { "Value", "Values", "Items", "List", "Data" };
 
     public static QuestObjectiveExtractionResult Extract(object rawQuests)
     {
@@ -137,7 +139,7 @@ public static class QuestObjectiveExtractor
 
         foreach (object item in EnumerateValues(value))
         {
-            string? normalized = NormalizeLocationHint(Convert.ToString(item, CultureInfo.InvariantCulture));
+            string? normalized = NormalizeLocationHint(ScalarString(item));
             if (normalized is not null) output.Add(normalized);
         }
     }
@@ -150,7 +152,16 @@ public static class QuestObjectiveExtractor
             normalized.Equals("anywhere", StringComparison.OrdinalIgnoreCase) ||
             normalized.Equals("none", StringComparison.OrdinalIgnoreCase))
             return null;
+        if (LooksLikeTypeName(normalized) || normalized.Length > 128) return null;
         return normalized;
+    }
+
+    private static bool LooksLikeTypeName(string value)
+    {
+        return value.IndexOf("SPTarkov.", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               value.IndexOf("System.", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               value.IndexOf("ListOrT", StringComparison.OrdinalIgnoreCase) >= 0 ||
+               value.IndexOf('`') >= 0 || value.IndexOf('[') >= 0 || value.IndexOf(']') >= 0;
     }
 
     private static IEnumerable<object> EnumerateQuestObjects(object? rawQuests)
@@ -204,20 +215,51 @@ public static class QuestObjectiveExtractor
     private static bool LooksLikeQuest(object candidate) =>
         GetMemberValue(candidate, "_id") is not null || GetMemberValue(candidate, "id") is not null;
 
-    private static IEnumerable<object> EnumerateValues(object? value)
+    private static IEnumerable<object> EnumerateValues(object? value) => EnumerateValues(value, 0);
+
+    private static IEnumerable<object> EnumerateValues(object? value, int depth)
     {
-        if (value is null) yield break;
+        if (value is null || depth > MaxWrapperDepth) yield break;
         if (value is string)
         {
             yield return value;
             yield break;
         }
+        if (value is IDictionary dictionary)
+        {
+            foreach (DictionaryEntry entry in dictionary)
+                if (entry.Value is not null)
+                    foreach (object nested in EnumerateValues(entry.Value, depth + 1)) yield return nested;
+            yield break;
+        }
         if (value is IEnumerable enumerable)
         {
             foreach (object? item in enumerable)
-                if (item is not null) yield return item;
+                if (item is not null)
+                    foreach (object nested in EnumerateValues(item, depth + 1)) yield return nested;
             yield break;
         }
+
+        Type type = value.GetType();
+        bool wrapperLike = type.Name.IndexOf("ListOrT", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                           type.Namespace?.IndexOf("Utils.Json", StringComparison.OrdinalIgnoreCase) >= 0;
+        if (wrapperLike)
+        {
+            for (int i = 0; i < WrapperMemberNames.Length; i++)
+            {
+                object? nested = GetMemberValue(value, WrapperMemberNames[i]);
+                if (nested is null || ReferenceEquals(nested, value)) continue;
+                bool produced = false;
+                foreach (object item in EnumerateValues(nested, depth + 1))
+                {
+                    produced = true;
+                    yield return item;
+                }
+                if (produced) yield break;
+            }
+            yield break;
+        }
+
         yield return value;
     }
 
@@ -258,36 +300,51 @@ public static class QuestObjectiveExtractor
     {
         object? value = GetMemberValue(instance, name);
         if (value is null) return Array.Empty<string>();
-        if (value is string one) return string.IsNullOrWhiteSpace(one) ? Array.Empty<string>() : new[] { one };
 
         List<string> result = new();
         foreach (object item in EnumerateValues(value))
         {
-            string? converted = Convert.ToString(item, CultureInfo.InvariantCulture);
-            if (!string.IsNullOrWhiteSpace(converted)) result.Add(converted);
+            string? converted = ScalarString(item);
+            if (!string.IsNullOrWhiteSpace(converted) && !LooksLikeTypeName(converted)) result.Add(converted);
         }
-        return result;
+        return result.Distinct(StringComparer.Ordinal).ToArray();
     }
 
     private static string? GetString(object instance, string name)
     {
         object? value = GetMemberValue(instance, name);
         if (value is null) return null;
-        if (value is string text) return string.IsNullOrWhiteSpace(text) ? null : text;
+        foreach (object item in EnumerateValues(value))
+        {
+            string? converted = ScalarString(item);
+            if (!string.IsNullOrWhiteSpace(converted) && !LooksLikeTypeName(converted)) return converted;
+        }
+        return null;
+    }
+
+    private static string? ScalarString(object? value)
+    {
+        if (value is null) return null;
+        if (value is string text) return string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+        Type type = value.GetType();
+        if (!type.IsPrimitive && !type.IsEnum && value is not Guid && value is not decimal) return null;
         string? converted = Convert.ToString(value, CultureInfo.InvariantCulture);
-        return string.IsNullOrWhiteSpace(converted) ? null : converted;
+        return string.IsNullOrWhiteSpace(converted) ? null : converted.Trim();
     }
 
     private static double? GetNumber(object instance, string name)
     {
         object? value = GetMemberValue(instance, name);
         if (value is null) return null;
-        try { return Convert.ToDouble(value, CultureInfo.InvariantCulture); }
-        catch
+        foreach (object item in EnumerateValues(value))
         {
-            return double.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed)
-                ? parsed
-                : null;
+            try { return Convert.ToDouble(item, CultureInfo.InvariantCulture); }
+            catch
+            {
+                if (double.TryParse(ScalarString(item), NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed))
+                    return parsed;
+            }
         }
+        return null;
     }
 }
