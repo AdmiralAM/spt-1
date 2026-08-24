@@ -18,7 +18,7 @@ public sealed class PlannerRaidPlanRankerTests
     }
 
     [Fact]
-    public void QuestDensityFirstPreservesQuestCountAsPrimaryCriterion()
+    public void QuestDensityFirstPreservesQuestCountAsPrimaryCriterionForSpecificMaps()
     {
         PlannerRaidPlan ready = Plan("Customs", 4, ready: true, missingTemplates: 0);
         PlannerRaidPlan blocked = Plan("Woods", 6, ready: false, missingTemplates: 2);
@@ -27,6 +27,20 @@ public sealed class PlannerRaidPlanRankerTests
             new[] { ready, blocked }, PlannerRaidPlanRankingMode.QuestDensityFirst);
 
         Assert.Equal("Woods", ranked[0].LocationId);
+    }
+
+    [Theory]
+    [InlineData(PlannerRaidPlanRankingMode.ReadyFirst)]
+    [InlineData(PlannerRaidPlanRankingMode.QuestDensityFirst)]
+    public void AnyLocationPlanRemainsSupplementalEvenWhenDenser(PlannerRaidPlanRankingMode mode)
+    {
+        PlannerRaidPlan specific = Plan("Customs", 2, ready: false, missingTemplates: 2);
+        PlannerRaidPlan any = Plan(PlannerRaidOpportunityBuilder.AnyLocationId, 30, ready: true, missingTemplates: 0);
+
+        IReadOnlyList<PlannerRaidPlan> ranked = PlannerRaidPlanRanker.Rank(new[] { any, specific }, mode);
+
+        Assert.Equal("Customs", ranked[0].LocationId);
+        Assert.Equal(PlannerRaidOpportunityBuilder.AnyLocationId, ranked[1].LocationId);
     }
 
     [Fact]
