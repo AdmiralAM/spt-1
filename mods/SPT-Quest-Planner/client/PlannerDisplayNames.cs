@@ -11,8 +11,8 @@ namespace SPTQuestPlanner.Client
                 [PlannerRaidOpportunityBuilder.AnyLocationId] = "Any location",
 
                 // SPT 4.1 location Mongo IDs.
-                ["55f2d3fd4bdc2d5f408b4567"] = "Factory",
-                ["59fc81d786f774390775787e"] = "Factory",
+                ["55f2d3fd4bdc2d5f408b4567"] = "Factory (Day)",
+                ["59fc81d786f774390775787e"] = "Factory (Night)",
                 ["56f40101d2720b2a4d8b45d6"] = "Customs",
                 ["5704e3c2d2720bac5b8b4567"] = "Woods",
                 ["5704e4dad2720bb55b8b4567"] = "Lighthouse",
@@ -32,16 +32,16 @@ namespace SPTQuestPlanner.Client
                 ["rezervbase"] = "Reserve",
                 ["reserve"] = "Reserve",
                 ["interchange"] = "Interchange",
-                ["factory4_day"] = "Factory",
-                ["factory4_night"] = "Factory",
+                ["factory4_day"] = "Factory (Day)",
+                ["factory4_night"] = "Factory (Night)",
                 ["factory"] = "Factory",
                 ["laboratory"] = "The Lab",
                 ["lab"] = "The Lab",
                 ["lighthouse"] = "Lighthouse",
                 ["tarkovstreets"] = "Streets of Tarkov",
                 ["streets"] = "Streets of Tarkov",
-                ["sandbox"] = "Ground Zero",
-                ["sandbox_high"] = "Ground Zero",
+                ["sandbox"] = "Ground Zero (Level ≤ 20)",
+                ["sandbox_high"] = "Ground Zero (Level > 20)",
                 ["groundzero"] = "Ground Zero",
                 ["labyrinth"] = "Labyrinth"
             };
