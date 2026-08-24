@@ -25,6 +25,7 @@ namespace SPTBeltArmbandInventory
         SlotMergePatches slotMergePatches;
         PickupSlotPatches pickupPatches;
         PaymentSlotPatches paymentPatches;
+        EquipmentBuildValidationPatches buildValidationPatches;
 
         void Awake()
         {
@@ -122,6 +123,14 @@ namespace SPTBeltArmbandInventory
                 paymentPatches = null;
                 Logger.LogWarning("Belt storage remains active, but money/items inside the belt may not be considered by vanilla in-raid trader-service payments.");
             }
+
+            buildValidationPatches = new EquipmentBuildValidationPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!buildValidationPatches.TryInstall())
+            {
+                buildValidationPatches.Dispose();
+                buildValidationPatches = null;
+                Logger.LogWarning("Belt build/apply remains active, but missing belt contents may be classified under the Slots tab instead of Containers in Equipment Builds.");
+            }
         }
 
         void Update()
@@ -144,6 +153,8 @@ namespace SPTBeltArmbandInventory
 
         void OnDestroy()
         {
+            if (buildValidationPatches != null) buildValidationPatches.Dispose();
+            buildValidationPatches = null;
             if (paymentPatches != null) paymentPatches.Dispose();
             paymentPatches = null;
             if (pickupPatches != null) pickupPatches.Dispose();

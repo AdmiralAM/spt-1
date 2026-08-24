@@ -90,6 +90,14 @@ internal static class Program
         Assert(!PaymentSlotPolicy.ShouldIncludeBelt(true, false), "plain armband never becomes a payment slot");
         Assert(!PaymentSlotPolicy.ShouldIncludeBelt(false, true), "empty ArmBand never becomes a payment slot");
 
+        string[] vanillaBuildContainers = EquipmentBuildContainerPolicy.VanillaContainerSlots.ToArray();
+        string[] buildContainers = EquipmentBuildContainerPolicy.Build(vanillaBuildContainers);
+        Assert(buildContainers.SequenceEqual(new[] { BeltSlotPlan.TacticalVest, BeltSlotPlan.Pockets, BeltSlotPlan.Backpack, BeltSlotPlan.SecuredContainer, BeltSlotPlan.ArmBand }), "equipment-build container validation includes ArmBand after vanilla containers");
+        Assert(vanillaBuildContainers.SequenceEqual(EquipmentBuildContainerPolicy.VanillaContainerSlots), "equipment-build policy does not mutate the vanilla source array");
+        string[] changedBuildContainers = { BeltSlotPlan.TacticalVest, BeltSlotPlan.Pockets };
+        Assert(ReferenceEquals(changedBuildContainers, EquipmentBuildContainerPolicy.Build(changedBuildContainers)), "unexpected build-container shapes fail closed");
+        Assert(ReferenceEquals(buildContainers, EquipmentBuildContainerPolicy.Build(buildContainers)), "already-extended build-container list stays unchanged");
+
         var deathTree = new[]
         {
             new BeltInventoryNode("equipment", null, null),

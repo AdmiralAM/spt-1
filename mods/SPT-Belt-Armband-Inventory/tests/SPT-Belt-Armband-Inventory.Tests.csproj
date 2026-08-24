@@ -17,5 +17,6 @@
     <Compile Include="..\src\SlotMergePatches.cs" Link="SlotMergePatches.cs" />
     <Compile Include="..\src\PickupSlotPatches.cs" Link="PickupSlotPatches.cs" />
     <Compile Include="..\src\PaymentSlotPatches.cs" Link="PaymentSlotPatches.cs" />
+    <Compile Include="..\src\EquipmentBuildValidationPatches.cs" Link="EquipmentBuildValidationPatches.cs" />
   </ItemGroup>
 </Project>
