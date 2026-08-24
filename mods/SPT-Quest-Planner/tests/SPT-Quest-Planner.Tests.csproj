@@ -6,6 +6,7 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\src\PlannerDataContract.cs" Link="PlannerDataContract.cs" />
     <Compile Include="..\src\PlannerDomain.cs" Link="PlannerDomain.cs" />
     <Compile Include="..\src\PlannerEvaluation.cs" Link="PlannerEvaluation.cs" />
     <Compile Include="..\src\InventoryProjection.cs" Link="InventoryProjection.cs" />
