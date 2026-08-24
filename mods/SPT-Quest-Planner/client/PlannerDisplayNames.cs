@@ -8,6 +8,7 @@ namespace SPTQuestPlanner.Client
         private static readonly IReadOnlyDictionary<string, string> LocationNames =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
+                [PlannerRaidOpportunityBuilder.AnyLocationId] = "Any location",
                 ["bigmap"] = "Customs",
                 ["customs"] = "Customs",
                 ["woods"] = "Woods",
