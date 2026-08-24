@@ -34,6 +34,7 @@
     <Compile Include="..\client\PlannerAlternativeChoiceScorer.cs" Link="PlannerAlternativeChoiceScorer.cs" />
     <Compile Include="..\client\PlannerRoutePrioritizer.cs" Link="PlannerRoutePrioritizer.cs" />
     <Compile Include="..\client\PlannerCandidateSelector.cs" Link="PlannerCandidateSelector.cs" />
+    <Compile Include="..\client\PlannerRecommendationEngine.cs" Link="PlannerRecommendationEngine.cs" />
     <Compile Include="..\client\RefreshScheduler.cs" Link="RefreshScheduler.cs" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
