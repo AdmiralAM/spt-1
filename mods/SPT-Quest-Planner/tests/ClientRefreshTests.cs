@@ -7,7 +7,7 @@ namespace SPTQuestPlanner.Tests;
 public sealed class ClientRefreshTests
 {
     [Fact]
-    public void TopologyLoadsOnceWhileStateMayRefreshRepeatedly()
+    public void TopologyAndLocaleLoadOnceWhileStateMayRefreshRepeatedly()
     {
         FakeTransport transport = new();
         FakeDecoder decoder = new();
@@ -18,14 +18,17 @@ public sealed class ClientRefreshTests
         Assert.True(coordinator.TryRefreshState(CancellationToken.None, out string? secondError), secondError);
 
         Assert.Equal(1, transport.TopologyCalls);
+        Assert.Equal(1, transport.LocaleCalls);
         Assert.Equal(2, transport.StateCalls);
         Assert.True(cache.HasTopology);
+        Assert.True(cache.HasLocale);
         Assert.True(cache.HasState);
         Assert.NotNull(cache.TopologyIndex);
         Assert.NotNull(cache.RequirementIndex);
         Assert.NotNull(cache.LocationIndex);
+        Assert.NotNull(cache.LocaleIndex);
         Assert.NotNull(cache.Index);
-        Assert.Equal(3, cache.Revision);
+        Assert.Equal(4, cache.Revision);
     }
 
     [Fact]
@@ -46,6 +49,7 @@ public sealed class ClientRefreshTests
     private sealed class FakeTransport : IPlannerTransport
     {
         public int TopologyCalls { get; private set; }
+        public int LocaleCalls { get; private set; }
         public int StateCalls { get; private set; }
 
         public string GetJson(string route)
@@ -54,6 +58,12 @@ public sealed class ClientRefreshTests
             {
                 TopologyCalls++;
                 return "topology";
+            }
+
+            if (route == PlannerClientContract.LocaleRoute)
+            {
+                LocaleCalls++;
+                return "{\"schemaVersion\":9,\"locale\":\"en\",\"questNames\":{\"q1\":\"Quest One\"},\"itemNames\":{}}";
             }
 
             if (route == PlannerClientContract.StateRoute)
