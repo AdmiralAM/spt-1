@@ -1,3 +1,4 @@
+using System.Text;
 using SPTQuestPlanner.Client;
 using Xunit;
 
@@ -35,5 +36,33 @@ public sealed class PlannerTopologyIndexTests
         Assert.Single(index.GetQuest("q2")!.PrerequisiteQuestIds);
         Assert.Single(index.GetQuest("q2")!.RequiredTemplateIds);
         Assert.Single(index.GetItem("tpl-a")!.QuestIds);
+    }
+
+    [Fact]
+    public void MaterializesQuestManiacScaleLinearChain()
+    {
+        const int count = 1702;
+        StringBuilder json = new StringBuilder();
+        json.Append("{\"schemaVersion\":8,\"questNodes\":[");
+        for (int i = 0; i < count; i++)
+        {
+            if (i > 0) json.Append(',');
+            json.Append("{\"questId\":\"q").Append(i).Append("\",\"repeatable\":false}");
+        }
+        json.Append("],\"prerequisites\":[");
+        for (int i = 1; i < count; i++)
+        {
+            if (i > 1) json.Append(',');
+            json.Append("{\"sourceQuestId\":\"q").Append(i - 1).Append("\",\"targetQuestId\":\"q").Append(i).Append("\"}");
+        }
+        json.Append("],\"itemRequirements\":[]}");
+
+        PlannerTopologyIndex index = PlannerTopologyIndexBuilder.Build(json.ToString());
+
+        Assert.Equal(count, index.Quests.Count);
+        Assert.Empty(index.GetQuest("q0")!.PrerequisiteQuestIds);
+        Assert.Equal(new[] { "q1" }, index.GetQuest("q0")!.DependentQuestIds);
+        Assert.Equal(new[] { "q1700" }, index.GetQuest("q1701")!.PrerequisiteQuestIds);
+        Assert.Empty(index.GetQuest("q1701")!.DependentQuestIds);
     }
 }
