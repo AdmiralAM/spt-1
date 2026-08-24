@@ -1,4 +1,5 @@
 using SPTQuestPlanner.Client;
+using Xunit;
 
 namespace SPTQuestPlanner.Tests;
 
@@ -19,180 +20,160 @@ public sealed class PlannerPathItemPlannerTests
             1,
             new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal)
             {
-                ["q1"] = new PlannerQuestClientState("q1", 2, 1, true, true),
-                ["q2"] = new PlannerQuestClientState("q2", 1, 1, true, false)
+                ["q1"] = new PlannerQuestClientState("q1", 4, 2, true, true),
+                ["q2"] = new PlannerQuestClientState("q2", 4, 2, true, true)
             },
             new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal)
             {
-                ["tpl-a"] = new PlannerItemClientState("tpl-a", 0, 0, 4, 2, 0, 0)
+                ["tpl-a"] = new PlannerItemClientState("tpl-a", 3d, 0d, 2d, 1d, 1d, 0d)
             });
 
-        string json = """
-        {
-          "itemRequirements": [
-            { "questId": "q1", "conditionId": "c1", "templateIds": ["tpl-a"], "requiredCount": 3, "foundInRaid": true, "phase": "Finish" },
-            { "questId": "q2", "conditionId": "c2", "templateIds": ["tpl-a"], "requiredCount": 2, "foundInRaid": false, "phase": "Finish" }
-          ]
-        }
-        """;
+        var requirements = new PlannerRequirementIndex(
+            new Dictionary<string, IReadOnlyList<PlannerQuestItemRequirement>>(StringComparer.Ordinal)
+            {
+                ["q1"] = new[]
+                {
+                    new PlannerQuestItemRequirement("q1", "fir", new[] { "tpl-a" }, 1d, true, "Finish"),
+                    new PlannerQuestItemRequirement("q1", "generic", new[] { "tpl-a" }, 2d, false, "Finish")
+                },
+                ["q2"] = Array.Empty<PlannerQuestItemRequirement>()
+            });
 
-        var query = new PlannerQueryEngine(topology, state);
-        var planner = new PlannerPathItemPlanner(query, PlannerRequirementIndexBuilder.Build(json), state);
-        PlannerPathItemPlan plan = planner.BuildForTarget("q2");
+        PlannerPathItemPlan result = PlannerPathItemPlanner.BuildForTarget(topology, state, requirements, "q2");
 
-        Assert.True(plan.IsExact);
-        Assert.Equal(2, plan.ExactNeeds.Count);
-        Assert.Empty(plan.AlternativeNeeds);
-
-        PlannerPathItemNeed fir = Assert.Single(plan.ExactNeeds.Where(x => x.FoundInRaid));
-        Assert.Equal(3, fir.Required);
-        Assert.Equal(2, fir.OwnedEligible);
-        Assert.Equal(1, fir.Outstanding);
-
-        PlannerPathItemNeed generic = Assert.Single(plan.ExactNeeds.Where(x => !x.FoundInRaid));
-        Assert.Equal(2, generic.Required);
-        Assert.Equal(2, generic.OwnedEligible);
-        Assert.Equal(0, generic.Outstanding);
+        Assert.Single(result.ExactNeeds);
+        PlannerPathItemNeed need = result.ExactNeeds[0];
+        Assert.Equal("tpl-a", need.TemplateId);
+        Assert.Equal(3d, need.Required);
+        Assert.Equal(2d, need.OwnedEligible);
+        Assert.Equal(1d, need.Outstanding);
     }
 
     [Fact]
-    public void BuildForTarget_AllocatesAlternativeAcrossAcceptedTemplates()
+    public void BuildForTarget_AlternativeRequirementUsesCombinedOwnedTemplates()
     {
-        PlannerPathItemPlan plan = BuildSingleQuestPlan(
-            """
-            {
-              "itemRequirements": [
-                { "questId": "q1", "conditionId": "alt", "templateIds": ["tpl-a", "tpl-b"], "requiredCount": 3, "foundInRaid": false, "phase": "Finish" }
-              ]
-            }
-            """,
-            new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal)
-            {
-                ["tpl-a"] = Item("tpl-a", 1, 0),
-                ["tpl-b"] = Item("tpl-b", 2, 0)
-            });
-
-        Assert.True(plan.IsExact);
-        Assert.True(plan.IsFullyOwned);
-        Assert.Empty(plan.ExactNeeds);
-        PlannerAlternativeItemNeed alternative = Assert.Single(plan.AlternativeNeeds);
-        Assert.Equal(3, alternative.Requirement.RequiredCount);
-        Assert.Equal(3, alternative.OwnedAllocated);
-        Assert.Equal(0, alternative.Outstanding);
-        Assert.Equal(2, alternative.Allocations.Count);
-        Assert.Equal(1, Assert.Single(alternative.Allocations.Where(x => x.TemplateId == "tpl-a")).Allocated);
-        Assert.Equal(2, Assert.Single(alternative.Allocations.Where(x => x.TemplateId == "tpl-b")).Allocated);
-    }
-
-    [Fact]
-    public void BuildForTarget_ReassignsOverlappingAlternativesToMaximizeSatisfiedQuantity()
-    {
-        PlannerPathItemPlan plan = BuildSingleQuestPlan(
-            """
-            {
-              "itemRequirements": [
-                { "questId": "q1", "conditionId": "flex", "templateIds": ["tpl-a", "tpl-b"], "requiredCount": 2, "foundInRaid": false, "phase": "Finish" },
-                { "questId": "q1", "conditionId": "only-a", "templateIds": ["tpl-a"], "requiredCount": 2, "foundInRaid": false, "phase": "Finish" }
-              ]
-            }
-            """,
-            new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal)
-            {
-                ["tpl-a"] = Item("tpl-a", 2, 0),
-                ["tpl-b"] = Item("tpl-b", 2, 0)
-            });
-
-        Assert.True(plan.IsFullyOwned);
-        PlannerPathItemNeed exact = Assert.Single(plan.ExactNeeds);
-        Assert.Equal("tpl-a", exact.TemplateId);
-        Assert.Equal(2, exact.OwnedEligible);
-        Assert.Equal(0, exact.Outstanding);
-
-        PlannerAlternativeItemNeed flex = Assert.Single(plan.AlternativeNeeds);
-        Assert.Equal(2, flex.OwnedAllocated);
-        Assert.Equal(0, flex.Outstanding);
-        PlannerTemplateAllocation allocation = Assert.Single(flex.Allocations);
-        Assert.Equal("tpl-b", allocation.TemplateId);
-        Assert.Equal(2, allocation.Allocated);
-    }
-
-    [Fact]
-    public void BuildForTarget_ReservesFirStockForFirAlternativeBeforeGenericNeed()
-    {
-        PlannerPathItemPlan plan = BuildSingleQuestPlan(
-            """
-            {
-              "itemRequirements": [
-                { "questId": "q1", "conditionId": "fir-alt", "templateIds": ["tpl-a", "tpl-b"], "requiredCount": 2, "foundInRaid": true, "phase": "Finish" },
-                { "questId": "q1", "conditionId": "generic-a", "templateIds": ["tpl-a"], "requiredCount": 2, "foundInRaid": false, "phase": "Finish" }
-              ]
-            }
-            """,
-            new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal)
-            {
-                ["tpl-a"] = Item("tpl-a", 3, 1),
-                ["tpl-b"] = Item("tpl-b", 1, 1)
-            });
-
-        Assert.True(plan.IsFullyOwned);
-        PlannerAlternativeItemNeed fir = Assert.Single(plan.AlternativeNeeds);
-        Assert.Equal(2, fir.OwnedAllocated);
-        Assert.Equal(0, fir.Outstanding);
-        Assert.Equal(2, fir.Allocations.Sum(x => x.Allocated));
-
-        PlannerPathItemNeed generic = Assert.Single(plan.ExactNeeds);
-        Assert.False(generic.FoundInRaid);
-        Assert.Equal(2, generic.OwnedEligible);
-        Assert.Equal(0, generic.Outstanding);
-    }
-
-    [Fact]
-    public void BuildForTarget_ReportsExactOutstandingForAlternativeShortage()
-    {
-        PlannerPathItemPlan plan = BuildSingleQuestPlan(
-            """
-            {
-              "itemRequirements": [
-                { "questId": "q1", "conditionId": "alt", "templateIds": ["tpl-a", "tpl-b"], "requiredCount": 5, "foundInRaid": false, "phase": "Finish" }
-              ]
-            }
-            """,
-            new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal)
-            {
-                ["tpl-a"] = Item("tpl-a", 1, 0),
-                ["tpl-b"] = Item("tpl-b", 2, 0)
-            });
-
-        Assert.False(plan.IsFullyOwned);
-        PlannerAlternativeItemNeed alternative = Assert.Single(plan.AlternativeNeeds);
-        Assert.Equal(5, alternative.Requirement.RequiredCount);
-        Assert.Equal(3, alternative.OwnedAllocated);
-        Assert.Equal(2, alternative.Outstanding);
-    }
-
-    private static PlannerPathItemPlan BuildSingleQuestPlan(string requirementJson, IReadOnlyDictionary<string, PlannerItemClientState> items)
-    {
-        var topology = new PlannerTopologyIndex(
-            new Dictionary<string, PlannerTopologyQuest>(StringComparer.Ordinal)
-            {
-                ["q1"] = new PlannerTopologyQuest("q1", null, null, null, false, Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>())
-            },
-            new Dictionary<string, PlannerTopologyItem>(StringComparer.Ordinal));
+        var topology = SingleQuestTopology("q1", "tpl-a", "tpl-b");
         var state = new PlannerClientIndex(
             1,
             new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal)
             {
-                ["q1"] = new PlannerQuestClientState("q1", 2, 1, true, true)
+                ["q1"] = new PlannerQuestClientState("q1", 4, 2, true, true)
             },
-            items);
-        return new PlannerPathItemPlanner(
-            new PlannerQueryEngine(topology, state),
-            PlannerRequirementIndexBuilder.Build(requirementJson),
-            state).BuildForTarget("q1");
+            new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal)
+            {
+                ["tpl-a"] = new PlannerItemClientState("tpl-a", 0d, 0d, 1d, 0d, 0d, 0d),
+                ["tpl-b"] = new PlannerItemClientState("tpl-b", 0d, 0d, 2d, 0d, 0d, 0d)
+            });
+        var requirements = RequirementIndex("q1",
+            new PlannerQuestItemRequirement("q1", "alt", new[] { "tpl-a", "tpl-b" }, 3d, false, "Finish"));
+
+        PlannerPathItemPlan result = PlannerPathItemPlanner.BuildForTarget(topology, state, requirements, "q1");
+
+        PlannerAlternativeItemNeed alternative = Assert.Single(result.AlternativeNeeds);
+        Assert.Equal(3d, alternative.OwnedAllocated);
+        Assert.Equal(0d, alternative.Outstanding);
+        Assert.Equal(2, alternative.Allocations.Count);
     }
 
-    private static PlannerItemClientState Item(string templateId, double total, double fir)
+    [Fact]
+    public void BuildForTarget_OverlappingAlternativesRedistributeForMaximumCoverage()
     {
-        return new PlannerItemClientState(templateId, 0, 0, total, fir, 0, 0);
+        var topology = SingleQuestTopology("q1", "tpl-a", "tpl-b");
+        var state = new PlannerClientIndex(
+            1,
+            new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal)
+            {
+                ["q1"] = new PlannerQuestClientState("q1", 4, 2, true, true)
+            },
+            new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal)
+            {
+                ["tpl-a"] = new PlannerItemClientState("tpl-a", 0d, 0d, 2d, 0d, 0d, 0d),
+                ["tpl-b"] = new PlannerItemClientState("tpl-b", 0d, 0d, 2d, 0d, 0d, 0d)
+            });
+        var requirements = RequirementIndex("q1",
+            new PlannerQuestItemRequirement("q1", "flex", new[] { "tpl-a", "tpl-b" }, 2d, false, "Finish"),
+            new PlannerQuestItemRequirement("q1", "fixed", new[] { "tpl-a" }, 2d, false, "Finish"));
+
+        PlannerPathItemPlan result = PlannerPathItemPlanner.BuildForTarget(topology, state, requirements, "q1");
+
+        Assert.All(result.ExactNeeds, need => Assert.Equal(0d, need.Outstanding));
+        PlannerAlternativeItemNeed alternative = Assert.Single(result.AlternativeNeeds);
+        Assert.Equal(0d, alternative.Outstanding);
+        Assert.Contains(alternative.Allocations, allocation => allocation.TemplateId == "tpl-b" && allocation.Allocated == 2d);
+    }
+
+    [Fact]
+    public void BuildForTarget_FirStockIsReservedBeforeGenericRequirements()
+    {
+        var topology = SingleQuestTopology("q1", "tpl-a", "tpl-b");
+        var state = new PlannerClientIndex(
+            1,
+            new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal)
+            {
+                ["q1"] = new PlannerQuestClientState("q1", 4, 2, true, true)
+            },
+            new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal)
+            {
+                ["tpl-a"] = new PlannerItemClientState("tpl-a", 0d, 0d, 2d, 2d, 0d, 0d),
+                ["tpl-b"] = new PlannerItemClientState("tpl-b", 0d, 0d, 2d, 0d, 0d, 0d)
+            });
+        var requirements = RequirementIndex("q1",
+            new PlannerQuestItemRequirement("q1", "fir", new[] { "tpl-a" }, 2d, true, "Finish"),
+            new PlannerQuestItemRequirement("q1", "generic", new[] { "tpl-a", "tpl-b" }, 2d, false, "Finish"));
+
+        PlannerPathItemPlan result = PlannerPathItemPlanner.BuildForTarget(topology, state, requirements, "q1");
+
+        PlannerPathItemNeed fir = Assert.Single(result.ExactNeeds);
+        Assert.Equal(0d, fir.Outstanding);
+        PlannerAlternativeItemNeed generic = Assert.Single(result.AlternativeNeeds);
+        Assert.Equal(0d, generic.Outstanding);
+        Assert.Contains(generic.Allocations, allocation => allocation.TemplateId == "tpl-b" && allocation.Allocated == 2d);
+    }
+
+    [Fact]
+    public void BuildForTarget_AlternativeShortageReportsExactOutstanding()
+    {
+        var topology = SingleQuestTopology("q1", "tpl-a", "tpl-b");
+        var state = new PlannerClientIndex(
+            1,
+            new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal)
+            {
+                ["q1"] = new PlannerQuestClientState("q1", 4, 2, true, true)
+            },
+            new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal)
+            {
+                ["tpl-a"] = new PlannerItemClientState("tpl-a", 0d, 0d, 1d, 0d, 0d, 0d),
+                ["tpl-b"] = new PlannerItemClientState("tpl-b", 0d, 0d, 0d, 0d, 0d, 0d)
+            });
+        var requirements = RequirementIndex("q1",
+            new PlannerQuestItemRequirement("q1", "alt", new[] { "tpl-a", "tpl-b" }, 3d, false, "Finish"));
+
+        PlannerPathItemPlan result = PlannerPathItemPlanner.BuildForTarget(topology, state, requirements, "q1");
+
+        PlannerAlternativeItemNeed alternative = Assert.Single(result.AlternativeNeeds);
+        Assert.Equal(1d, alternative.OwnedAllocated);
+        Assert.Equal(2d, alternative.Outstanding);
+    }
+
+    private static PlannerTopologyIndex SingleQuestTopology(string questId, params string[] templates)
+    {
+        return new PlannerTopologyIndex(
+            new Dictionary<string, PlannerTopologyQuest>(StringComparer.Ordinal)
+            {
+                [questId] = new PlannerTopologyQuest(questId, null, null, null, false, Array.Empty<string>(), Array.Empty<string>(), templates)
+            },
+            templates.ToDictionary(
+                id => id,
+                id => new PlannerTopologyItem(id, new[] { questId }),
+                StringComparer.Ordinal));
+    }
+
+    private static PlannerRequirementIndex RequirementIndex(string questId, params PlannerQuestItemRequirement[] requirements)
+    {
+        return new PlannerRequirementIndex(
+            new Dictionary<string, IReadOnlyList<PlannerQuestItemRequirement>>(StringComparer.Ordinal)
+            {
+                [questId] = requirements
+            });
     }
 }
