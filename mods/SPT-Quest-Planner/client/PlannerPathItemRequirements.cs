@@ -180,16 +180,60 @@ namespace SPTQuestPlanner.Client
         public bool FoundInRaid { get; private set; }
     }
 
+    public sealed class PlannerTemplateAllocation
+    {
+        public PlannerTemplateAllocation(string templateId, double allocated)
+        {
+            TemplateId = templateId ?? string.Empty;
+            Allocated = Math.Max(0d, allocated);
+        }
+
+        public string TemplateId { get; private set; }
+        public double Allocated { get; private set; }
+    }
+
+    public sealed class PlannerAlternativeItemNeed
+    {
+        public PlannerAlternativeItemNeed(
+            PlannerQuestItemRequirement requirement,
+            double ownedAllocated,
+            double outstanding,
+            IReadOnlyList<PlannerTemplateAllocation> allocations)
+        {
+            Requirement = requirement ?? throw new ArgumentNullException("requirement");
+            OwnedAllocated = Math.Max(0d, ownedAllocated);
+            Outstanding = Math.Max(0d, outstanding);
+            Allocations = allocations ?? Array.Empty<PlannerTemplateAllocation>();
+        }
+
+        public PlannerQuestItemRequirement Requirement { get; private set; }
+        public double OwnedAllocated { get; private set; }
+        public double Outstanding { get; private set; }
+        public IReadOnlyList<PlannerTemplateAllocation> Allocations { get; private set; }
+        public bool IsSatisfied { get { return Outstanding <= 0.000001d; } }
+    }
+
     public sealed class PlannerPathItemPlan
     {
-        public PlannerPathItemPlan(IReadOnlyList<PlannerPathItemNeed> exactNeeds, IReadOnlyList<PlannerQuestItemRequirement> unresolvedAlternatives)
+        public PlannerPathItemPlan(
+            IReadOnlyList<PlannerPathItemNeed> exactNeeds,
+            IReadOnlyList<PlannerAlternativeItemNeed> alternativeNeeds)
         {
             ExactNeeds = exactNeeds ?? Array.Empty<PlannerPathItemNeed>();
-            UnresolvedAlternatives = unresolvedAlternatives ?? Array.Empty<PlannerQuestItemRequirement>();
+            AlternativeNeeds = alternativeNeeds ?? Array.Empty<PlannerAlternativeItemNeed>();
         }
 
         public IReadOnlyList<PlannerPathItemNeed> ExactNeeds { get; private set; }
-        public IReadOnlyList<PlannerQuestItemRequirement> UnresolvedAlternatives { get; private set; }
-        public bool IsExact { get { return UnresolvedAlternatives.Count == 0; } }
+        public IReadOnlyList<PlannerAlternativeItemNeed> AlternativeNeeds { get; private set; }
+        public bool IsExact { get { return true; } }
+        public bool IsFullyOwned
+        {
+            get
+            {
+                for (int i = 0; i < ExactNeeds.Count; i++) if (ExactNeeds[i].Outstanding > 0.000001d) return false;
+                for (int i = 0; i < AlternativeNeeds.Count; i++) if (!AlternativeNeeds[i].IsSatisfied) return false;
+                return true;
+            }
+        }
     }
 }
