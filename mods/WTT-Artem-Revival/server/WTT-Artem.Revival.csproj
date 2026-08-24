@@ -12,7 +12,13 @@
     <PackageReference Include="WTT-ServerCommonLib" Version="3.0.4" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="Resources\**\*" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
+  <Target Name="CopyArtemResources" AfterTargets="Build" Condition="Exists('$(ProjectDir)Resources')">
+    <ItemGroup>
+      <ArtemResources Include="$(ProjectDir)Resources\**\*.*" />
+    </ItemGroup>
+    <Copy
+      SourceFiles="@(ArtemResources)"
+      DestinationFiles="@(ArtemResources->'$(OutputPath)%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
+  </Target>
 </Project>
