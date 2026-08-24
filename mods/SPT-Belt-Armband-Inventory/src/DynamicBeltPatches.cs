@@ -75,24 +75,14 @@ namespace SPTBeltArmbandInventory
                 try
                 {
                     beltView.transform.SetParent(container, false);
-
-                    object parentContext = arguments.Length > 0 ? arguments[0] : null;
-                    object skills = FindArgumentByTypeName(arguments, "SkillManager");
-                    object insurance = arguments.Length > 4 ? arguments[4] : null;
-                    bool inRaid = FindBooleanArgument(arguments);
-                    object itemUiContext = ItemUiContextInstanceProperty.GetValue(null, null);
-
-                    SlotViewShowMethod.Invoke(beltView, new[]
+                    object[] showArguments = BuildSlotViewShowArguments(armBandSlot, arguments);
+                    if (showArguments == null)
                     {
-                        armBandSlot,
-                        parentContext,
-                        inventoryController,
-                        itemUiContext,
-                        skills,
-                        insurance,
-                        (object)!inRaid
-                    });
+                        LogWarning?.Invoke("B&A&HB UI: SlotView.Show arguments could not be resolved from the active ContainersPanel.Show call.");
+                        return;
+                    }
 
+                    SlotViewShowMethod.Invoke(beltView, showArguments);
                     TrySetHeaderText(beltView, "BELT");
                     beltView.gameObject.name = "BELT Slot";
                     PlaceBeltRow(views, beltView.transform);
@@ -101,7 +91,7 @@ namespace SPTBeltArmbandInventory
                     registered = true;
 
                     LogRows(views);
-                    LogInfo?.Invoke("B&A&HB UI PROOF: separate BELT SlotView created, bound to real ArmBand Slot, parented and registered in ContainersPanel; normal Gear Panel ArmBand was not modified.");
+                    LogInfo?.Invoke("B&A&HB UI PROOF: separate BELT SlotView created, type-bound to the active ContainersPanel context, parented and registered; normal Gear Panel ArmBand was not modified.");
                 }
                 finally
                 {
@@ -118,6 +108,84 @@ namespace SPTBeltArmbandInventory
             }
         }
 
+        static object[] BuildSlotViewShowArguments(object armBandSlot, object[] panelArguments)
+        {
+            if (SlotViewShowMethod == null || armBandSlot == null || panelArguments == null) return null;
+
+            ParameterInfo[] parameters = SlotViewShowMethod.GetParameters();
+            if (parameters.Length == 0) return null;
+
+            object[] result = new object[parameters.Length];
+            bool[] used = new bool[panelArguments.Length];
+            object itemUiContext = ItemUiContextInstanceProperty == null ? null : ItemUiContextInstanceProperty.GetValue(null, null);
+            bool inRaid = FindBooleanArgument(panelArguments);
+
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                Type targetType = parameters[i].ParameterType;
+                if (i == 0 && targetType.IsInstanceOfType(armBandSlot))
+                {
+                    result[i] = armBandSlot;
+                    continue;
+                }
+
+                if (targetType == typeof(bool))
+                {
+                    result[i] = !inRaid;
+                    continue;
+                }
+
+                if (itemUiContext != null && targetType.IsInstanceOfType(itemUiContext))
+                {
+                    result[i] = itemUiContext;
+                    continue;
+                }
+
+                int sourceIndex = FindCompatibleArgument(panelArguments, used, targetType);
+                if (sourceIndex >= 0)
+                {
+                    result[i] = panelArguments[sourceIndex];
+                    used[sourceIndex] = true;
+                    continue;
+                }
+
+                if (targetType.IsValueType && Nullable.GetUnderlyingType(targetType) == null)
+                {
+                    LogWarning?.Invoke("B&A&HB UI: unresolved required SlotView.Show parameter " + parameters[i].Name + " (" + targetType.FullName + ").");
+                    return null;
+                }
+
+                result[i] = null;
+            }
+
+            LogShowBinding(parameters, result);
+            return result;
+        }
+
+        static int FindCompatibleArgument(object[] arguments, bool[] used, Type targetType)
+        {
+            for (int i = 0; i < arguments.Length; i++)
+            {
+                if (used[i]) continue;
+                object value = arguments[i];
+                if (value == null) continue;
+                if (targetType.IsInstanceOfType(value)) return i;
+            }
+            return -1;
+        }
+
+        static void LogShowBinding(ParameterInfo[] parameters, object[] values)
+        {
+            if (LogInfo == null) return;
+            string summary = "B&A&HB UI BIND:";
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                object value = values[i];
+                summary += " " + parameters[i].Name + "=" + (value == null ? "<null>" : value.GetType().Name);
+            }
+            LogInfo(summary);
+        }
+
         static object FindArgument(object[] arguments, Type type)
         {
             if (type == null) return null;
@@ -132,16 +200,6 @@ namespace SPTBeltArmbandInventory
         static object FindArgumentForMethod(object[] arguments, MethodInfo method)
         {
             return method == null ? null : FindArgument(arguments, method.DeclaringType);
-        }
-
-        static object FindArgumentByTypeName(object[] arguments, string typeName)
-        {
-            for (int i = 0; i < arguments.Length; i++)
-            {
-                object value = arguments[i];
-                if (value != null && string.Equals(value.GetType().Name, typeName, StringComparison.Ordinal)) return value;
-            }
-            return null;
         }
 
         static bool FindBooleanArgument(object[] arguments)
