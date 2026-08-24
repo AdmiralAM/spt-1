@@ -9,6 +9,22 @@ namespace SPTQuestPlanner.Client
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
                 [PlannerRaidOpportunityBuilder.AnyLocationId] = "Any location",
+
+                // SPT 4.1 location Mongo IDs.
+                ["55f2d3fd4bdc2d5f408b4567"] = "Factory",
+                ["59fc81d786f774390775787e"] = "Factory",
+                ["56f40101d2720b2a4d8b45d6"] = "Customs",
+                ["5704e3c2d2720bac5b8b4567"] = "Woods",
+                ["5704e4dad2720bb55b8b4567"] = "Lighthouse",
+                ["5704e554d2720bac5b8b456e"] = "Shoreline",
+                ["5704e5fad2720bc05b8b4567"] = "Reserve",
+                ["5714dbc024597771384a510d"] = "Interchange",
+                ["5b0fc42d86f7744a585f9105"] = "The Lab",
+                ["5714dc692459777137212e12"] = "Streets of Tarkov",
+                ["653e6760052c01c1c805532f"] = "Ground Zero",
+                ["6733700029c367a3d40b02af"] = "Labyrinth",
+
+                // Target-name aliases used by quest conditions.
                 ["bigmap"] = "Customs",
                 ["customs"] = "Customs",
                 ["woods"] = "Woods",
@@ -26,7 +42,8 @@ namespace SPTQuestPlanner.Client
                 ["streets"] = "Streets of Tarkov",
                 ["sandbox"] = "Ground Zero",
                 ["sandbox_high"] = "Ground Zero",
-                ["groundzero"] = "Ground Zero"
+                ["groundzero"] = "Ground Zero",
+                ["labyrinth"] = "Labyrinth"
             };
 
         public static string Location(string locationId)
