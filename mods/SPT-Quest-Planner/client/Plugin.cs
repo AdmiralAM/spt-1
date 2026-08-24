@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 
 namespace SPTQuestPlanner.Client
 {
-    [BepInPlugin("com.admiralam.spt.questplanner", "Quest planner MOD SPT", "0.9.3")]
+    [BepInPlugin("com.admiralam.spt.questplanner", "Quest planner MOD SPT", "0.9.4")]
     public sealed class Plugin : BaseUnityPlugin
     {
         private static readonly PlannerCandidatePolicy RuntimeRecommendationPolicy =
@@ -20,6 +20,11 @@ namespace SPTQuestPlanner.Client
         private Task initialLoad;
         private PlannerRaidPlanWindow window;
         private ConfigEntry<KeyboardShortcut> toggleWindowKey;
+        private ConfigEntry<string> activeRaidLocation;
+        private ConfigEntry<string> progressionTargetQuest;
+        private ConfigEntry<PlannerRaidPlanRankingMode> rankingMode;
+        private ConfigEntry<PlannerWorkspaceMode> workspaceMode;
+        private ConfigEntry<bool> includeAvailableQuests;
 
         internal static PlannerClientCache Cache { get; private set; }
         internal static PlannerRaidPlanProvider RaidPlans { get; private set; }
@@ -32,7 +37,9 @@ namespace SPTQuestPlanner.Client
             Instance = this;
             Cache = new PlannerClientCache();
             RaidPlans = new PlannerRaidPlanProvider(Cache);
-            Presentation = new PlannerRaidPlanPresentationController(RaidPlans);
+
+            PlannerRaidPlanUiState uiState = ConfigurePlannerState();
+            Presentation = new PlannerRaidPlanPresentationController(RaidPlans, uiState);
             Recommendations = new PlannerRecommendationProvider(Cache);
             refresh = new PlannerRefreshCoordinator(
                 new ReflectionSptPlannerTransport(),
@@ -48,7 +55,59 @@ namespace SPTQuestPlanner.Client
             window = new PlannerRaidPlanWindow(Presentation, () => Cache == null ? 0L : Cache.Revision);
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
             StartInitialLoad();
-            Logger.LogInfo("Quest planner MOD SPT v0.9.3 loaded (planning workflow milestone).");
+            Logger.LogInfo("Quest planner MOD SPT v0.9.4 loaded.");
+        }
+
+        private PlannerRaidPlanUiState ConfigurePlannerState()
+        {
+            activeRaidLocation = Config.Bind(
+                "Planner state",
+                "Active raid location",
+                string.Empty,
+                "Persisted active raid plan location. Managed by Quest Planner UI.");
+            progressionTargetQuest = Config.Bind(
+                "Planner state",
+                "Progression target quest",
+                string.Empty,
+                "Persisted progression target quest. Managed by Quest Planner UI.");
+            rankingMode = Config.Bind(
+                "Planner state",
+                "Raid ranking",
+                PlannerRaidPlanRankingMode.ReadyFirst,
+                "Raid recommendation ranking preference.");
+            workspaceMode = Config.Bind(
+                "Planner state",
+                "Workspace",
+                PlannerWorkspaceMode.RaidPlanner,
+                "Last meaningful Quest Planner workspace.");
+            includeAvailableQuests = Config.Bind(
+                "Planner state",
+                "Include available quests",
+                false,
+                "Include available-but-not-active quests in raid planning.");
+
+            PlannerRaidPlanUiState state = new PlannerRaidPlanUiState();
+            state.RestoreDurableState(
+                activeRaidLocation.Value,
+                progressionTargetQuest.Value,
+                rankingMode.Value,
+                workspaceMode.Value,
+                includeAvailableQuests.Value);
+            state.Changed += OnPlannerStateChanged;
+            return state;
+        }
+
+        private void OnPlannerStateChanged()
+        {
+            PlannerRaidPlanPresentationController controller = Presentation;
+            PlannerRaidPlanUiState state = controller == null ? null : controller.UiState;
+            if (state == null) return;
+
+            if (activeRaidLocation != null) activeRaidLocation.Value = state.ActiveLocationId ?? string.Empty;
+            if (progressionTargetQuest != null) progressionTargetQuest.Value = state.ProgressionTargetQuestId ?? string.Empty;
+            if (rankingMode != null) rankingMode.Value = state.RankingMode;
+            if (workspaceMode != null) workspaceMode.Value = state.WorkspaceMode;
+            if (includeAvailableQuests != null) includeAvailableQuests.Value = state.IncludeAvailable;
         }
 
         private void Update()
@@ -135,7 +194,6 @@ namespace SPTQuestPlanner.Client
                 {
                     Logger.LogInfo("Quest Planner topology/state cache initialized; revision=" + cache.Revision + ".");
                     ValidateActivePlanAfterRefresh();
-                    LogRecommendationSummary("initial-load");
                 }
                 else if (!token.IsCancellationRequested)
                     Logger.LogWarning("Quest Planner initial cache load failed: " + error);
@@ -172,10 +230,7 @@ namespace SPTQuestPlanner.Client
                     if (presentation != null) presentation.Invalidate();
                     ValidateActivePlanAfterRefresh();
                     if (!token.IsCancellationRequested)
-                    {
-                        Logger.LogInfo("Quest Planner state refreshed (" + NormalizeReason(reason) + "); revision=" + cache.Revision + ".");
-                        LogRecommendationSummary(reason);
-                    }
+                        Logger.LogDebug("Quest Planner state refreshed (" + NormalizeReason(reason) + "); revision=" + cache.Revision + ".");
                 }
                 else if (!token.IsCancellationRequested && !string.Equals(error, "Refresh already in progress.", StringComparison.Ordinal))
                     Logger.LogWarning("Quest Planner state refresh failed (" + NormalizeReason(reason) + "): " + error);
@@ -188,38 +243,6 @@ namespace SPTQuestPlanner.Client
             PlannerClientCache cache = Cache;
             if (controller == null || cache == null) return;
             controller.GetActivePlanSnapshot(cache.Revision, 32);
-        }
-
-        private void LogRecommendationSummary(string reason)
-        {
-            try
-            {
-                PlannerRecommendationProvider provider = Recommendations;
-                if (provider == null) return;
-                PlannerRecommendationSnapshot snapshot = provider.Get(3, RuntimeRecommendationPolicy);
-                if (snapshot.Recommendations.Count == 0)
-                {
-                    Logger.LogInfo("Quest Planner recommendations (" + NormalizeReason(reason) + "): no actionable candidates.");
-                    return;
-                }
-
-                for (int i = 0; i < snapshot.Recommendations.Count; i++)
-                {
-                    PlannerRecommendationViewModel value = snapshot.Recommendations[i];
-                    Logger.LogInfo(
-                        "Quest Planner recommendation #" + value.Rank + ": " + value.QuestName +
-                        " | blockers=" + value.ImmediateBlockerCount +
-                        " | path=" + value.PathQuestCount +
-                        " | missing=" + Math.Round(value.TotalOutstanding, 2) +
-                        " | FIR=" + Math.Round(value.FirOutstanding, 2) +
-                        " | unlocks=" + value.ImmediateUnlockCount +
-                        " | owned=" + value.FullyOwned + ".");
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogWarning("Quest Planner recommendation summary unavailable: " + ex.GetBaseException().Message);
-            }
         }
 
         private static string NormalizeReason(string reason)
@@ -235,12 +258,20 @@ namespace SPTQuestPlanner.Client
         private void OnDestroy()
         {
             SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+            PlannerRaidPlanPresentationController presentation = Presentation;
+            if (presentation != null && presentation.UiState != null)
+                presentation.UiState.Changed -= OnPlannerStateChanged;
             if (scheduler != null) scheduler.Dispose();
             if (cancellation != null) cancellation.Cancel();
             if (window != null) window.Hide();
             initialLoad = null;
             window = null;
             toggleWindowKey = null;
+            activeRaidLocation = null;
+            progressionTargetQuest = null;
+            rankingMode = null;
+            workspaceMode = null;
+            includeAvailableQuests = null;
             scheduler = null;
             refresh = null;
             cancellation = null;
