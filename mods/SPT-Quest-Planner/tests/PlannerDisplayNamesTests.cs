@@ -42,4 +42,55 @@ public sealed class PlannerDisplayNamesTests
     {
         Assert.Equal(expected, PlannerDisplayNames.Objective(kind));
     }
+
+    [Theory]
+    [InlineData("AnyPmc", "PMC")]
+    [InlineData("Savage", "Scav")]
+    [InlineData("Usec", "USEC")]
+    [InlineData("Bear", "BEAR")]
+    [InlineData("bigmap", "Customs")]
+    public void SemanticTargetsUseReadableLabels(string target, string expected)
+    {
+        Assert.Equal(expected, PlannerDisplayNames.Target(target));
+    }
+
+    [Fact]
+    public void ObjectiveActionCombinesVerbAndSemanticTarget()
+    {
+        PlannerRaidObjective objective = new PlannerRaidObjective(
+            "q1",
+            "c1",
+            PlannerRaidObjectiveKind.Kill,
+            "Kills",
+            "bigmap",
+            new[] { "AnyPmc" },
+            false);
+
+        Assert.Equal("Kill PMC", PlannerDisplayNames.ObjectiveAction(objective));
+    }
+
+    [Fact]
+    public void ObjectiveActionUsesLocalizedItemNameWhenAvailable()
+    {
+        PlannerLocaleIndex locale = new PlannerLocaleIndex(
+            "en",
+            new System.Collections.Generic.Dictionary<string, string>(),
+            new System.Collections.Generic.Dictionary<string, string> { ["tpl-1"] = "Secure Flash Drive" });
+        PlannerRaidObjective objective = new PlannerRaidObjective(
+            "q1",
+            "c1",
+            PlannerRaidObjectiveKind.Find,
+            "FindItem",
+            "bigmap",
+            new[] { "tpl-1" },
+            false);
+
+        Assert.Equal("Find / Retrieve Secure Flash Drive", PlannerDisplayNames.ObjectiveAction(objective, locale));
+    }
+
+    [Fact]
+    public void RuntimeTypeTargetsAreSuppressed()
+    {
+        Assert.Equal(string.Empty, PlannerDisplayNames.Target("SPTarkov.Server.Core.Utils.Json.ListOrT`1[System.String]"));
+    }
 }
