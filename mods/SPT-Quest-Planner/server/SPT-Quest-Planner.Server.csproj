@@ -6,9 +6,9 @@
     <OutputType>Library</OutputType>
     <AssemblyName>SPT Quest Planner Server</AssemblyName>
     <RootNamespace>SPTQuestPlanner.Server</RootNamespace>
-    <Version>0.9.3</Version>
-    <AssemblyVersion>0.9.3.0</AssemblyVersion>
-    <FileVersion>0.9.3.0</FileVersion>
+    <Version>0.9.4</Version>
+    <AssemblyVersion>0.9.4.0</AssemblyVersion>
+    <FileVersion>0.9.4.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\src\PlannerDataContract.cs" Link="PlannerDataContract.cs" />
