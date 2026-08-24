@@ -1,11 +1,6 @@
 name: Quest Planner Validate
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'mods/SPT-Quest-Planner/.ci-trigger'
-      - '.github/workflows/quest-planner-validate.yml'
   pull_request:
     branches: [ main ]
     paths:
