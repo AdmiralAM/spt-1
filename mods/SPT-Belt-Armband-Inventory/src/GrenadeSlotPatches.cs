@@ -169,8 +169,10 @@ namespace SPTBeltArmbandInventory
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                if (harmony == null || patchMethod == null || harmonyMethodConstructor == null)
-                    return Fail("Harmony patch API is incompatible; belt grenade fast-access compatibility is disabled.");
+                MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
+                if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, harmonyMethodConstructor != null, rollback != null))
+                    return Fail("Harmony patch/rollback API is incompatible; belt grenade fast-access compatibility is disabled.");
+                unpatchSelf = rollback;
 
                 GrenadeSlotRuntime.LogWarning = logWarning;
                 GrenadeSlotRuntime.GetSlotMethod = getSlot;
@@ -184,7 +186,6 @@ namespace SPTBeltArmbandInventory
                 Patch(patchMethod, harmonyMethodType, getter, slotPostfix);
                 Patch(patchMethod, harmonyMethodType, grenadeList, listPostfix);
 
-                unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 if (logInfo != null) logInfo("Belt/Armband Inventory grenade fast-access compatibility installed.");
                 return true;
             }
