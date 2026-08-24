@@ -1,4 +1,4 @@
 Quest planner MOD SPT validation trigger
-baseline: 3d0fd16f687da14bb9097e013d27436ee42791cb
+baseline: 1db1e1921dda11481379385cc27ffd358b888db3
 workflow: explicit push gate
-reason: validate readable location/objective labels and display-label tests
+reason: validate quest-label resolver, readable raid objectives, and display-label coverage
