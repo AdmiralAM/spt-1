@@ -6,12 +6,15 @@ namespace SPTQuestPlanner.Client
     {
         private string selectedLocationId;
         private string activeLocationId;
+        private string progressionTargetQuestId;
         private PlannerRaidPlanRankingMode rankingMode = PlannerRaidPlanRankingMode.ReadyFirst;
         private bool includeAvailable;
 
         public string SelectedLocationId { get { return selectedLocationId; } }
         public string ActiveLocationId { get { return activeLocationId; } }
+        public string ProgressionTargetQuestId { get { return progressionTargetQuestId; } }
         public bool HasActivePlan { get { return !string.IsNullOrWhiteSpace(activeLocationId); } }
+        public bool HasProgressionTarget { get { return !string.IsNullOrWhiteSpace(progressionTargetQuestId); } }
         public PlannerRaidPlanRankingMode RankingMode { get { return rankingMode; } }
         public bool IncludeAvailable { get { return includeAvailable; } }
 
@@ -37,6 +40,16 @@ namespace SPTQuestPlanner.Client
         public void ClearActivePlan()
         {
             activeLocationId = null;
+        }
+
+        public void SelectProgressionTarget(string questId)
+        {
+            progressionTargetQuestId = string.IsNullOrWhiteSpace(questId) ? null : questId.Trim();
+        }
+
+        public void ClearProgressionTarget()
+        {
+            progressionTargetQuestId = null;
         }
 
         public PlannerRaidPlanCard ResolveSelection(PlannerRaidPlanViewModel viewModel)
