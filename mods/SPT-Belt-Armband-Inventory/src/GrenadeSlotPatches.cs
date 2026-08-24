@@ -25,6 +25,7 @@ namespace SPTBeltArmbandInventory
         internal static MethodInfo GetTopLevelItemsMethod;
         internal static MethodInfo ExaminedMethod;
         internal static Type GrenadeType;
+        static readonly RuntimeListOwnership Ownership = new RuntimeListOwnership();
 
         internal static void Normalize(object equipment, object result)
         {
@@ -41,14 +42,25 @@ namespace SPTBeltArmbandInventory
                 object item = ReflectionTools.ReadMember(armBandSlot, "ContainedItem");
                 bool include = GrenadeSlotPolicy.ShouldIncludeBelt(item != null, ReflectionTools.HasContainers(item));
                 int existing = IndexOfReference(list, armBandSlot);
+                bool owned = Ownership.Owns(equipment, list, armBandSlot);
 
                 if (include && existing < 0)
                 {
                     list.Add(armBandSlot);
+                    Ownership.Mark(equipment, list, armBandSlot);
                 }
-                else if (!include && existing >= 0)
+                else if (include && existing >= 0 && !owned)
+                {
+                    Ownership.Forget(equipment);
+                }
+                else if (!include && existing >= 0 && owned)
                 {
                     list.RemoveAt(existing);
+                    Ownership.Forget(equipment);
+                }
+                else if (!include)
+                {
+                    Ownership.Forget(equipment);
                 }
             }
             catch (Exception exception)
@@ -108,6 +120,7 @@ namespace SPTBeltArmbandInventory
 
         internal static void Reset()
         {
+            Ownership.Reset();
             LogWarning = null;
             GetSlotMethod = null;
             ArmBandValue = null;
