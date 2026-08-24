@@ -18,9 +18,11 @@ public sealed class IsItemKeptAfterDeathPatch : AbstractPatch
     [PatchPostfix]
     public static void Postfix(PmcData pmcData, Item itemToCheck, ref bool __result)
     {
-        if (__result || pmcData.Inventory?.Items is null) return;
+        if (__result) return;
+        var inventoryItems = pmcData.Inventory?.Items;
+        if (inventoryItems is null) return;
 
-        var nodes = pmcData.Inventory.Items.Select(item => new BeltInventoryNode(
+        var nodes = inventoryItems.Select(item => new BeltInventoryNode(
             item.Id.ToString(),
             item.ParentId?.ToString(),
             item.SlotId));
