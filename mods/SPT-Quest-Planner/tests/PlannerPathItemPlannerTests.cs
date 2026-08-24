@@ -41,12 +41,23 @@ public sealed class PlannerPathItemPlannerTests
 
         PlannerPathItemPlan result = Build(topology, state, requirements, "q2");
 
-        Assert.Single(result.ExactNeeds);
-        PlannerPathItemNeed need = result.ExactNeeds[0];
-        Assert.Equal("tpl-a", need.TemplateId);
-        Assert.Equal(3d, need.Required);
-        Assert.Equal(2d, need.OwnedEligible);
-        Assert.Equal(1d, need.Outstanding);
+        Assert.Equal(2, result.ExactNeeds.Count);
+        PlannerPathItemNeed fir = Assert.Single(result.ExactNeeds, need => need.FoundInRaid);
+        PlannerPathItemNeed generic = Assert.Single(result.ExactNeeds, need => !need.FoundInRaid);
+
+        Assert.Equal("tpl-a", fir.TemplateId);
+        Assert.Equal(1d, fir.Required);
+        Assert.Equal(1d, fir.OwnedEligible);
+        Assert.Equal(0d, fir.Outstanding);
+
+        Assert.Equal("tpl-a", generic.TemplateId);
+        Assert.Equal(2d, generic.Required);
+        Assert.Equal(1d, generic.OwnedEligible);
+        Assert.Equal(1d, generic.Outstanding);
+
+        Assert.Equal(3d, fir.Required + generic.Required);
+        Assert.Equal(2d, fir.OwnedEligible + generic.OwnedEligible);
+        Assert.Equal(1d, fir.Outstanding + generic.Outstanding);
     }
 
     [Fact]
