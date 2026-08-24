@@ -21,10 +21,12 @@ public sealed class PlannerStaticDataCache
     private static PlannerStaticData Build(TemplateTable templateTable)
     {
         QuestExtractionResult extraction = QuestExtractor.Extract(templateTable.Quests);
+        QuestObjectiveExtractionResult objectives = QuestObjectiveExtractor.Extract(templateTable.Quests);
         var (graph, validation) = PlannerGraph.Build(extraction.Nodes, extraction.Prerequisites);
 
         return new PlannerStaticData(
             extraction,
+            objectives,
             graph,
             validation);
     }
@@ -32,5 +34,6 @@ public sealed class PlannerStaticDataCache
 
 public sealed record PlannerStaticData(
     QuestExtractionResult Extraction,
+    QuestObjectiveExtractionResult ObjectiveExtraction,
     PlannerGraph Graph,
     PlannerGraphValidation Validation);
