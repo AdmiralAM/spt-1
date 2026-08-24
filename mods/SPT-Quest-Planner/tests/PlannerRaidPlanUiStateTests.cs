@@ -53,17 +53,20 @@ public sealed class PlannerRaidPlanUiStateTests
     }
 
     [Fact]
-    public void RankingAndAvailabilitySettingsAreExplicitAndStable()
+    public void RankingAvailabilityAndWorkspaceSettingsAreExplicitAndStable()
     {
         PlannerRaidPlanUiState state = new();
 
         Assert.Equal(PlannerRaidPlanRankingMode.ReadyFirst, state.RankingMode);
+        Assert.Equal(PlannerWorkspaceMode.RaidPlanner, state.WorkspaceMode);
         Assert.False(state.IncludeAvailable);
 
         state.SetRankingMode(PlannerRaidPlanRankingMode.QuestDensityFirst);
+        state.SetWorkspaceMode(PlannerWorkspaceMode.Progression);
         state.SetIncludeAvailable(true);
 
         Assert.Equal(PlannerRaidPlanRankingMode.QuestDensityFirst, state.RankingMode);
+        Assert.Equal(PlannerWorkspaceMode.Progression, state.WorkspaceMode);
         Assert.True(state.IncludeAvailable);
     }
 
