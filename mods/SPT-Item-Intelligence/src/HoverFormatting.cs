@@ -174,6 +174,7 @@ namespace SPTItemIntelligence
             }
 
             if (TryLine(ValueLine, requestedIndex, ref current, out found)) return found;
+            if (mode == ItemTooltipMode.Full && TryLine(Secondary, requestedIndex, ref current, out found)) return found;
             if (mode != ItemTooltipMode.Minimal)
             {
                 if (TryLine(QuestNowLine, requestedIndex, ref current, out found)) return found;
@@ -261,15 +262,18 @@ namespace SPTItemIntelligence
         {
             if (hover == null || !hover.HasData) return ItemHoverText.Empty;
 
-            long unitValue = valueMode == ItemValueMode.Flea ? hover.FleaUnitValue : hover.TraderUnitValue;
-            string source = valueMode == ItemValueMode.Flea
-                ? "Flea"
-                : (string.IsNullOrWhiteSpace(hover.BestTraderName) ? "Vendor" : hover.BestTraderName.Trim());
+            bool fleaPrimary = valueMode == ItemValueMode.Flea;
+            long unitValue = fleaPrimary ? hover.FleaUnitValue : hover.TraderUnitValue;
+            string trader = string.IsNullOrWhiteSpace(hover.BestTraderName) ? "Vendor" : hover.BestTraderName.Trim();
+            string source = fleaPrimary ? "Flea" : trader;
             string primary = unitValue > 0 ? FormatRoubles(unitValue) + " · " + source : string.Empty;
+            long alternateValue = fleaPrimary ? hover.TraderUnitValue : hover.FleaUnitValue;
+            string alternateSource = fleaPrimary ? trader : "Flea";
+            string secondary = alternateValue > 0 ? alternateSource + ": " + FormatRoubles(alternateValue) : string.Empty;
             FirRequirementState fir = FirRequirementRegistry.Get(hover.TemplateId);
             return new ItemHoverText(
                 primary,
-                string.Empty,
+                secondary,
                 string.Empty,
                 hover.TemplateId,
                 hover.OwnedCount,
