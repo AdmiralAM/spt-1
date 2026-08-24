@@ -80,37 +80,3 @@ jobs:
           name: quest-planner-server
           path: mods/SPT-Quest-Planner/server/bin/Release/net10.0/*.dll
           if-no-files-found: error
-
-  record:
-    name: Record Quest Planner validation evidence
-    if: ${{ always() && github.event_name == 'push' }}
-    needs: [tests, client, server]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: main
-      - name: Write validation result
-        shell: bash
-        run: |
-          mkdir -p mods/SPT-Quest-Planner/build-status
-          cat > mods/SPT-Quest-Planner/build-status/latest.txt <<EOF
-          Quest Planner validation
-          source_sha=${GITHUB_SHA}
-          run_id=${GITHUB_RUN_ID}
-          tests=${{ needs.tests.result }}
-          client=${{ needs.client.result }}
-          server=${{ needs.server.result }}
-          EOF
-      - name: Commit validation evidence
-        shell: bash
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add mods/SPT-Quest-Planner/build-status/latest.txt
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'Quest Planner validation evidence [skip ci]'
-          git push
