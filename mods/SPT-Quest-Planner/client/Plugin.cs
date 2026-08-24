@@ -56,7 +56,18 @@ namespace SPTQuestPlanner.Client
         private void OnGUI()
         {
             PlannerRaidPlanWindow value = window;
-            if (value != null) value.Draw();
+            if (value == null) return;
+            try
+            {
+                value.Draw();
+            }
+            catch (Exception ex)
+            {
+                // A malformed custom quest must not turn a presentation exception into
+                // repeated OnGUI failures every event/frame. Close the window and log once.
+                value.Hide();
+                Logger.LogError("Quest planner MOD SPT UI disabled after render failure: " + ex.GetBaseException().Message);
+            }
         }
 
         internal static PlannerRaidPlanCollection GetRaidPlans(
@@ -80,12 +91,17 @@ namespace SPTQuestPlanner.Client
 
         private void StartInitialLoad()
         {
-            CancellationToken token = cancellation.Token;
+            CancellationTokenSource source = cancellation;
+            PlannerRefreshCoordinator coordinator = refresh;
+            PlannerClientCache cache = Cache;
+            if (source == null || coordinator == null || cache == null) return;
+
+            CancellationToken token = source.Token;
             initialLoad = Task.Run(() =>
             {
                 string error;
-                if (refresh.TryRefreshState(token, out error))
-                    Logger.LogInfo("Quest Planner topology/state cache initialized; revision=" + Cache.Revision + ".");
+                if (coordinator.TryRefreshState(token, out error))
+                    Logger.LogInfo("Quest Planner topology/state cache initialized; revision=" + cache.Revision + ".");
                 else if (!token.IsCancellationRequested)
                     Logger.LogWarning("Quest Planner initial cache load failed: " + error);
             }, token);
@@ -108,7 +124,8 @@ namespace SPTQuestPlanner.Client
         {
             PlannerRefreshCoordinator coordinator = refresh;
             CancellationTokenSource source = cancellation;
-            if (coordinator == null || source == null || source.IsCancellationRequested) return;
+            PlannerClientCache cache = Cache;
+            if (coordinator == null || source == null || cache == null || source.IsCancellationRequested) return;
 
             CancellationToken token = source.Token;
             Task.Run(() =>
@@ -118,7 +135,8 @@ namespace SPTQuestPlanner.Client
                 {
                     PlannerRaidPlanPresentationController presentation = Presentation;
                     if (presentation != null) presentation.Invalidate();
-                    Logger.LogInfo("Quest Planner state refreshed (" + NormalizeReason(reason) + "); revision=" + Cache.Revision + ".");
+                    if (!token.IsCancellationRequested)
+                        Logger.LogInfo("Quest Planner state refreshed (" + NormalizeReason(reason) + "); revision=" + cache.Revision + ".");
                 }
                 else if (!token.IsCancellationRequested && !string.Equals(error, "Refresh already in progress.", StringComparison.Ordinal))
                     Logger.LogWarning("Quest Planner state refresh failed (" + NormalizeReason(reason) + "): " + error);
