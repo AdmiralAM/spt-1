@@ -95,8 +95,10 @@ namespace SPTBeltArmbandInventory
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                if (harmony == null || patchMethod == null || harmonyMethodConstructor == null)
-                    return Fail("Harmony patch API is incompatible; the mod remains disabled.");
+                MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
+                if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, harmonyMethodConstructor != null, rollback != null))
+                    return Fail("Harmony patch/rollback API is incompatible; the mod remains disabled.");
+                unpatchSelf = rollback;
 
                 object panelPrefix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PanelShowPrefix)) });
                 object panelFinalizer = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PanelShowFinalizer)) });
@@ -106,7 +108,6 @@ namespace SPTBeltArmbandInventory
                 object factoryFinalizer = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(SlotFactoryFinalizer)) });
                 Patch(patchMethod, harmonyMethodType, slotFactory, factoryPrefix, null, factoryFinalizer);
 
-                unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 if (logInfo != null) logInfo("Belt/Armband Inventory Phase 1 installed on SPT 4.1 ContainersPanel.");
                 return true;
             }
