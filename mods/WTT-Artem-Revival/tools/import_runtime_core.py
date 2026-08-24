@@ -21,6 +21,9 @@ ROUBLES_TPL = "5449016a4bdc2d6f028b456f"
 BAD_IMAGE = "/files/quest/icon/ARTT_3thumbnail.jpg"
 GOOD_IMAGE = "/files/quest/icon/ARTT_3thumbnail.png"
 TRADER_ID = "66bf757f27d0b097db0acea5"
+MODULE_ROOT = Path(__file__).resolve().parents[1]
+LOCALIZATION_ROOT = MODULE_ROOT / "localization"
+RUSSIAN_QUEST_PARTS = tuple(LOCALIZATION_ROOT.glob("ru-quests-*.json"))
 
 
 def load(path: Path):
@@ -102,6 +105,65 @@ def sync_success_quest_assort(resources: Path) -> list[str]:
     return repaired
 
 
+def load_russian_quest_locale() -> dict[str, str]:
+    """Load durable Russian quest source fragments and reject duplicate keys."""
+    if not RUSSIAN_QUEST_PARTS:
+        raise RuntimeError(f"no Russian quest locale fragments found in {LOCALIZATION_ROOT}")
+
+    merged: dict[str, str] = {}
+    for path in sorted(RUSSIAN_QUEST_PARTS):
+        payload = load(path)
+        if not isinstance(payload, dict):
+            raise RuntimeError(f"Russian locale fragment must be an object: {path}")
+        overlap = merged.keys() & payload.keys()
+        if overlap:
+            raise RuntimeError(
+                f"duplicate Russian quest locale keys in {path.name}: {', '.join(sorted(overlap))}"
+            )
+        merged.update(payload)
+    return merged
+
+
+def normalize_quest_locales(resources: Path) -> tuple[int, int]:
+    """Create real CommonLib locale codes (`en.json`, `ru.json`).
+
+    Legacy Artem named its English file `artemenglish.json`. CommonLib 3.x derives
+    the locale code from the filename, so that legacy name becomes an unknown
+    locale code and every real game locale falls back to English. The revival
+    normalizes English to `en.json` and writes a complete Russian `ru.json`.
+    """
+    locale_dir = resources / f"db/CustomQuests/{TRADER_ID}/Locales"
+    legacy_english = locale_dir / "artemenglish.json"
+    english_path = locale_dir / "en.json"
+    russian_path = locale_dir / "ru.json"
+
+    if legacy_english.is_file():
+        english = load(legacy_english)
+    elif english_path.is_file():
+        english = load(english_path)
+    else:
+        raise RuntimeError(f"Artem English quest locale not found in {locale_dir}")
+
+    russian = load_russian_quest_locale()
+    english_keys = set(english)
+    russian_keys = set(russian)
+    if english_keys != russian_keys:
+        missing = sorted(english_keys - russian_keys)
+        extra = sorted(russian_keys - english_keys)
+        raise RuntimeError(
+            "Russian quest locale key mismatch: "
+            f"missing={missing[:10]} extra={extra[:10]} "
+            f"(en={len(english_keys)}, ru={len(russian_keys)})"
+        )
+
+    save(english_path, english)
+    save(russian_path, russian)
+    if legacy_english.exists() and legacy_english != english_path:
+        legacy_english.unlink()
+
+    return len(english), len(russian)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("archive", type=Path, help="Path to authoritative 'artem main 1.zip'")
@@ -142,6 +204,7 @@ def main() -> int:
     image_fixes = patch_quest_image(output)
     sweden_added = restore_sweden_offer(output)
     quest_assort_repairs = sync_success_quest_assort(output)
+    en_keys, ru_keys = normalize_quest_locales(output)
 
     print(f"Imported Artem core from: {archive}")
     print(f"Output: {output}")
@@ -151,6 +214,7 @@ def main() -> int:
     print(f"QuestAssort success mappings repaired: {len(quest_assort_repairs)}")
     if quest_assort_repairs:
         print("QuestAssort repaired offers: " + ", ".join(quest_assort_repairs))
+    print(f"Quest locale keys: en={en_keys}, ru={ru_keys}")
     return 0
 
 
