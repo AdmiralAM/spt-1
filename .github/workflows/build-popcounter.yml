@@ -1,24 +1,10 @@
-name: Build SPT Mod Suite
+name: Publish SPT Mod Suite
 
 on:
-  push:
-    branches: [ main ]
-    paths-ignore:
-      - 'README.md'
-      - 'docs/**'
-      - '**/README.md'
-      - '**/docs/**'
-      - '.gitignore'
-      - 'build-output/**'
-      - 'mods/**/build-status/**'
   workflow_dispatch:
 
 permissions:
   contents: write
-
-concurrency:
-  group: spt-mod-suite-main-build
-  cancel-in-progress: false
 
 jobs:
   build:
