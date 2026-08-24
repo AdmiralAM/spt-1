@@ -78,7 +78,7 @@ jobs:
               Start-Sleep -Seconds 5
             }
           }
-          Expand-Archive deps/bepinex.zip -DestinationPath deps/BepInEx -Force
+          Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
           if (-not (Test-Path deps/BepInEx/core/BepInEx.dll)) { throw 'BepInEx.dll missing after extraction' }
 
       - name: Validate Tactical HUD assets and hot paths
