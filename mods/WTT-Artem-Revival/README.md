@@ -9,7 +9,7 @@ This module preserves Artem's authored trader, campaign, quest progression and u
 - port the server mod lifecycle and metadata to the SPT 4.1.x API;
 - target SPT 4.1.3 and the compatible WTT-ServerCommonLib 3.x line;
 - preserve the original Artem trader and quest campaign unless a concrete compatibility defect requires repair;
-- validate trader assort, quest unlocks, custom items, clothing, quest zones, locales, images and bundle manifest references;
+- validate trader assort, quest unlocks, custom items, clothing, zones, locales, images and bundle manifest references;
 - repair broken or stale content references rather than silently dropping content;
 - audit economy values and rewards after functional compatibility is proven;
 - classify large cosmetic/asset content into Core vs Optional candidates without automatically removing authored content;
@@ -44,7 +44,6 @@ The archived package remains authoritative for the user's complete content set. 
 ```text
 mods/WTT-Artem-Revival/
 ├─ README.md
-├─ .ci-trigger
 ├─ docs/
 │  ├─ revival-status.md
 │  └─ content-audit.md
