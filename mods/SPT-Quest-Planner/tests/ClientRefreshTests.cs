@@ -28,7 +28,22 @@ public sealed class ClientRefreshTests
         Assert.NotNull(cache.LocationIndex);
         Assert.NotNull(cache.LocaleIndex);
         Assert.NotNull(cache.Index);
-        Assert.Equal(4, cache.Revision);
+        Assert.Equal(3, cache.Revision); // topology + two state payloads; locale is presentation-only
+    }
+
+    [Fact]
+    public void ReplacingLocaleDoesNotChangePlanningRevision()
+    {
+        PlannerClientCache cache = new();
+        Assert.Equal(0, cache.Revision);
+
+        cache.ReplaceLocale(new PlannerLocaleIndex(
+            "en",
+            new Dictionary<string, string> { ["q1"] = "Quest One" },
+            new Dictionary<string, string>()));
+
+        Assert.True(cache.HasLocale);
+        Assert.Equal(0, cache.Revision);
     }
 
     [Fact]
