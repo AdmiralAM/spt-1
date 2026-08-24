@@ -144,6 +144,11 @@ namespace SPTQuestPlanner.Client
             return uiState.ResolveActivePlan(GetViewModel(cacheRevision, maxObjectivesPerCard));
         }
 
+        public PlannerSelectionSnapshot GetSelectionSnapshot(long cacheRevision)
+        {
+            return new PlannerSelectionSnapshot(cacheRevision, uiState.ActiveLocationId, uiState.ProgressionTargetQuestId);
+        }
+
         public void Invalidate()
         {
             cachedRevision = -1;
