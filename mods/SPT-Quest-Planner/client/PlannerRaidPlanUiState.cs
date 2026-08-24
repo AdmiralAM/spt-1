@@ -86,13 +86,19 @@ namespace SPTQuestPlanner.Client
 
         public PlannerRaidPlanCard ResolveActivePlan(PlannerRaidPlanViewModel viewModel)
         {
-            if (viewModel == null || viewModel.Cards.Count == 0 || string.IsNullOrWhiteSpace(activeLocationId)) return null;
+            if (string.IsNullOrWhiteSpace(activeLocationId)) return null;
+            if (viewModel == null || viewModel.Cards.Count == 0)
+            {
+                activeLocationId = null;
+                return null;
+            }
             for (int i = 0; i < viewModel.Cards.Count; i++)
             {
                 PlannerRaidPlanCard candidate = viewModel.Cards[i];
                 if (string.Equals(candidate.LocationId, activeLocationId, StringComparison.OrdinalIgnoreCase))
                     return candidate;
             }
+            activeLocationId = null;
             return null;
         }
     }
@@ -131,6 +137,7 @@ namespace SPTQuestPlanner.Client
             cachedIncludeAvailable = uiState.IncludeAvailable;
             cachedMaxObjectivesPerCard = maxObjectivesPerCard;
             uiState.ResolveSelection(cachedViewModel);
+            uiState.ResolveActivePlan(cachedViewModel);
             return cachedViewModel;
         }
 
