@@ -18,8 +18,8 @@ static class Phase27ValueIntelligenceTests
         ItemHoverText vendor = new ItemHoverTextFormatter().Format(hover, ItemValueMode.Vendor);
         Expect(vendor.ValueLine == "Value: 118,230 ₽ · Therapist", "selected vendor value remains the primary line", ref assertions);
         Expect(Contains(vendor, ItemTooltipMode.Full, "Flea: 142,479 ₽"), "Full includes the alternate flea value", ref assertions);
-        Expect(Contains(vendor, ItemTooltipMode.Full, "Per slot: 142,479 ₽"), "Full exposes cached best-value per-slot intelligence", ref assertions);
-        Expect(!Contains(vendor, ItemTooltipMode.Detailed, "Flea: 142,479 ₽") && !Contains(vendor, ItemTooltipMode.Detailed, "Per slot: 142,479 ₽"),
+        Expect(Contains(vendor, ItemTooltipMode.Full, "Per slot: 35,619 ₽"), "Full exposes cached best-value per-slot intelligence", ref assertions);
+        Expect(!Contains(vendor, ItemTooltipMode.Detailed, "Flea: 142,479 ₽") && !Contains(vendor, ItemTooltipMode.Detailed, "Per slot: 35,619 ₽"),
             "Detailed remains compact and does not inherit Full valuation rows", ref assertions);
 
         ItemHoverText flea = new ItemHoverTextFormatter().Format(hover, ItemValueMode.Flea);
