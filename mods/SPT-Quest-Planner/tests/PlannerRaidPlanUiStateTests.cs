@@ -120,6 +120,7 @@ public sealed class PlannerRaidPlanUiStateTests
             true,
             0,
             0,
+            0d,
             System.Array.Empty<PlannerRaidObjective>(),
             System.Array.Empty<PlannerRaidBringNeed>())).ToArray();
         return new PlannerRaidPlanViewModel(1, PlannerRaidPlanRankingMode.ReadyFirst, cards);
