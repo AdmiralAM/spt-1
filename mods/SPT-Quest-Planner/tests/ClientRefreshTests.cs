@@ -21,18 +21,22 @@ public sealed class ClientRefreshTests
         Assert.Equal(2, transport.StateCalls);
         Assert.True(cache.HasTopology);
         Assert.True(cache.HasState);
+        Assert.NotNull(cache.Index);
         Assert.Equal(3, cache.Revision); // topology once + two state swaps
     }
 
     [Fact]
-    public void OlderStatePayloadCannotReplaceNewerState()
+    public void OlderStatePayloadCannotReplaceNewerStateOrTypedIndex()
     {
         PlannerClientCache cache = new();
-        cache.ReplaceState(new PlannerPayload(8, 200, "new"));
-        cache.ReplaceState(new PlannerPayload(8, 100, "old"));
+        PlannerClientIndex newer = new(200, new Dictionary<string, PlannerQuestClientState>(), new Dictionary<string, PlannerItemClientState>());
+        PlannerClientIndex older = new(100, new Dictionary<string, PlannerQuestClientState>(), new Dictionary<string, PlannerItemClientState>());
+        cache.ReplaceState(new PlannerPayload(8, 200, "new"), newer);
+        cache.ReplaceState(new PlannerPayload(8, 100, "old"), older);
 
         Assert.Equal(200, cache.State!.GeneratedAtUnixSeconds);
         Assert.Equal("new", cache.State.Json);
+        Assert.Same(newer, cache.Index);
         Assert.Equal(1, cache.Revision);
     }
 
@@ -66,7 +70,11 @@ public sealed class ClientRefreshTests
         public PlannerPayload DecodeTopology(string json) =>
             new(PlannerClientContract.SchemaVersion, 0, json);
 
-        public PlannerPayload DecodeState(string json) =>
-            new(PlannerClientContract.SchemaVersion, ++stateRevision, json);
+        public PlannerPayload DecodeState(string json)
+        {
+            long generated = ++stateRevision;
+            string payload = "{\"schemaVersion\":8,\"generatedAtUnixSeconds\":" + generated + ",\"evaluation\":{\"quests\":{}},\"outstandingItems\":[]}";
+            return new PlannerPayload(PlannerClientContract.SchemaVersion, generated, payload);
+        }
     }
 }
