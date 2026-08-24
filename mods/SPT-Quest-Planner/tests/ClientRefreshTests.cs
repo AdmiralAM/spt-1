@@ -22,6 +22,7 @@ public sealed class ClientRefreshTests
         Assert.True(cache.HasTopology);
         Assert.True(cache.HasState);
         Assert.NotNull(cache.TopologyIndex);
+        Assert.NotNull(cache.RequirementIndex);
         Assert.NotNull(cache.Index);
         Assert.Equal(3, cache.Revision); // topology once + two state swaps
     }
