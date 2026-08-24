@@ -4,7 +4,8 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-      - 'mods/SPT-Pause/**'
+      - 'mods/SPT-Pause/src/**'
+      - 'mods/SPT-Pause/tests/**'
       - '.github/workflows/pause-validate.yml'
   workflow_dispatch:
 
