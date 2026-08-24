@@ -14,6 +14,7 @@ This is a multi-mod source repository. `main` is the authoritative development t
 | `runtime-item-intelligence` | Install-only Item Intelligence channel |
 | `runtime-pause` | Install-only Pause channel |
 | `runtime-belt-armband` | Install-only Belt/Armband Inventory channel |
+| `runtime-artem-revival` | Install-only Artem Revival core-overlay channel; large authored Bundles remain external |
 | `archive/v1.13.0` | Intentional frozen Tactical HUD `1.13.0` reserve |
 
 Feature, fix, diagnostic, build, and archaeology branches are temporary unless explicitly documented otherwise. They are not release channels and should be removed after their useful work is merged or superseded.
@@ -27,6 +28,7 @@ Long-term source modules under `mods/`:
 - `SPT-Pause`
 - `SPT-Belt-Armband-Inventory`
 - `SPT-Quest-Planner`
+- `WTT-Artem-Revival`
 
 The root `README.md` is the human-readable module index. Each module README owns its current scope, architecture, installation channel, and validation status. Detailed phase/revision documents are supporting history, not a second source of truth for current status.
 
@@ -54,15 +56,17 @@ The root `.gitignore` is the baseline guardrail. Workflows must not force-add ig
 
 CI may create `build-output/`, `build-status/`, dependency caches, previews, and other temporary files inside the runner workspace. Those paths are disposable CI state.
 
-Validated packages belong in GitHub Actions artifacts and, for maintained install channels, the corresponding runtime branch. The suite publication workflow advances `stable` to the validated source commit and rebuilds runtime branches from the package output produced during that run.
+Validated packages belong in GitHub Actions artifacts and, for maintained install channels, the corresponding runtime branch. The suite publication workflow advances `stable` to the validated source commit and rebuilds its managed runtime branches from package output produced during that run.
+
+`runtime-artem-revival` is an explicit module-specific exception because Artem's complete authored Unity bundle payload is external binary source material (~1.5 GB). Its runtime branch stores the validated installable core overlay and runtime metadata only; the module README documents the persistent external `Bundles/` requirement. Promotion of that branch must use a runtime candidate that has passed Artem module CI and user runtime validation.
 
 A generated asset may remain tracked only when it is an intentional maintained source/runtime asset and deterministic validation depends on the repository copy. Build logs and package copies are never evidence that needs a source commit; the Actions run already provides provenance.
 
 ## Promotion rule
 
-A commit may be promoted only after the validations required for the affected maintained modules succeed. Promotion must never depend on a follow-up commit whose only purpose is storing generated logs, package copies, trigger markers, or CI metadata.
+A commit/runtime candidate may be promoted only after the validations required for the affected maintained module succeed. Promotion must never depend on a follow-up commit whose only purpose is storing generated logs, package copies, trigger markers, or CI metadata.
 
-`stable` represents validated source. Runtime branches and Actions artifacts represent validated installable output.
+`stable` represents validated suite source. Runtime branches and Actions artifacts represent validated installable output.
 
 ## Documentation rule
 
