@@ -267,10 +267,9 @@ namespace SPTQuestPlanner.Client
                 {
                     PlannerRaidObjective objective = card.Objectives[i];
                     string progress = ObjectiveProgress(objective);
-                    string targets = FormatTargets(objective, locale);
                     string questLabel = PlannerQuestLabels.Resolve(topology, locale, objective.QuestId);
                     string focusMarker = uiState.HasProgressionTarget && string.Equals(objective.QuestId, uiState.ProgressionTargetQuestId, StringComparison.Ordinal) ? " [FOCUS]" : string.Empty;
-                    GUILayout.Label("□ " + PlannerDisplayNames.Objective(objective.Kind) + progress + targets + focusMarker);
+                    GUILayout.Label("□ " + PlannerDisplayNames.ObjectiveAction(objective, locale) + progress + focusMarker);
                     GUILayout.Label("    Quest: " + questLabel);
                 }
             }
@@ -292,7 +291,8 @@ namespace SPTQuestPlanner.Client
             for (int i = 0; i < card.BringNeeds.Count; i++)
             {
                 PlannerRaidBringNeed need = card.BringNeeds[i];
-                string itemLabel = locale == null ? need.TemplateId : locale.ItemName(need.TemplateId);
+                string itemLabel = PlannerDisplayNames.Target(need.TemplateId, locale);
+                if (string.IsNullOrWhiteSpace(itemLabel)) itemLabel = "required item";
                 if (need.Missing <= 0d)
                     GUILayout.Label("✓ " + itemLabel + " — enough owned (" + FormatNumber(need.Owned) + "/" + FormatNumber(need.Required) + ")");
                 else
@@ -435,14 +435,6 @@ namespace SPTQuestPlanner.Client
             if (!objective.HasProgress) return string.Empty;
             return " — " + FormatNumber(objective.CurrentValue ?? 0d) + "/" + FormatNumber(objective.RequiredValue ?? 0d) +
                    " done, " + FormatNumber(objective.RemainingValue ?? 0d) + " left";
-        }
-
-        private static string FormatTargets(PlannerRaidObjective objective, PlannerLocaleIndex locale)
-        {
-            if (objective.Targets.Count == 0) return string.Empty;
-            string[] labels = new string[objective.Targets.Count];
-            for (int i = 0; i < objective.Targets.Count; i++) labels[i] = locale == null ? objective.Targets[i] : locale.ItemName(objective.Targets[i]);
-            return "  [" + string.Join(", ", labels) + "]";
         }
 
         private static string FormatNumber(double value)
