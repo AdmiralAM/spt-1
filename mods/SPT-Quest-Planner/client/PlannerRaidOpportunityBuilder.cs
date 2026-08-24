@@ -64,7 +64,7 @@ namespace SPTQuestPlanner.Client
             if (maxObjectivesPerLocation <= 0) throw new ArgumentOutOfRangeException("maxObjectivesPerLocation");
 
             PlannerLocationObjective[] activeGlobal = locations.GlobalObjectives
-                .Where(value => IsRaidActionable(value) && IsRelevantQuest(state, value.QuestId, includeAvailable))
+                .Where(value => IsRaidActionable(value) && IsRelevantQuest(state, value.QuestId, includeAvailable) && !IsCompleted(state, value))
                 .ToArray();
 
             List<PlannerRaidOpportunity> result = new List<PlannerRaidOpportunity>();
@@ -74,7 +74,7 @@ namespace SPTQuestPlanner.Client
                 if (result.Count >= maxLocations) break;
 
                 List<PlannerLocationObjective> specific = pair.Value.Objectives
-                    .Where(value => IsRaidActionable(value) && IsRelevantQuest(state, value.QuestId, includeAvailable))
+                    .Where(value => IsRaidActionable(value) && IsRelevantQuest(state, value.QuestId, includeAvailable) && !IsCompleted(state, value))
                     .Take(maxObjectivesPerLocation)
                     .ToList();
                 if (specific.Count == 0) continue;
@@ -131,6 +131,20 @@ namespace SPTQuestPlanner.Client
             if (objective.Kind == PlannerObjectiveKind.LocationConstraint || objective.Kind == PlannerObjectiveKind.HandoverItem) return false;
             if (string.Equals(objective.ConditionType, "CounterCreator", StringComparison.OrdinalIgnoreCase)) return false;
             return true;
+        }
+
+        private static bool IsCompleted(PlannerClientIndex state, PlannerLocationObjective objective)
+        {
+            if (objective == null || !objective.RequiredValue.HasValue || objective.RequiredValue.Value <= 0d) return false;
+
+            PlannerConditionProgress progress = state.GetConditionProgress(objective.ConditionId);
+            if (progress == null && !string.IsNullOrWhiteSpace(objective.ParentConditionId))
+                progress = state.GetConditionProgress(objective.ParentConditionId);
+            if (progress == null) return false;
+            if (!string.IsNullOrWhiteSpace(progress.SourceQuestId) && !string.Equals(progress.SourceQuestId, objective.QuestId, StringComparison.Ordinal))
+                return false;
+
+            return progress.Value >= objective.RequiredValue.Value;
         }
 
         private static void AddUnique(
