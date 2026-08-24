@@ -94,6 +94,7 @@ namespace SPTQuestPlanner.Client
             }
 
             if (LooksLikeRuntimeType(normalized)) return string.Empty;
+            if (LooksLikeMongoId(normalized)) return "Unresolved quest target";
             return normalized;
         }
 
@@ -118,6 +119,18 @@ namespace SPTQuestPlanner.Client
                    value.IndexOf("System.", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    value.IndexOf("ListOrT", StringComparison.OrdinalIgnoreCase) >= 0 ||
                    value.IndexOf('`') >= 0;
+        }
+
+        private static bool LooksLikeMongoId(string value)
+        {
+            if (value == null || value.Length != 24) return false;
+            for (int i = 0; i < value.Length; i++)
+            {
+                char c = value[i];
+                bool hex = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+                if (!hex) return false;
+            }
+            return true;
         }
     }
 }
