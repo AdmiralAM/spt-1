@@ -37,7 +37,16 @@ namespace SPTItemIntelligence
 
     public sealed class ItemPriceSnapshotEntry
     {
-        public ItemPriceSnapshotEntry(string templateId, long traderUnitValue, string traderName, long fleaUnitValue, long fallbackUnitValue, int width, int height)
+        public ItemPriceSnapshotEntry(
+            string templateId,
+            long traderUnitValue,
+            string traderName,
+            long fleaUnitValue,
+            long fallbackUnitValue,
+            int width,
+            int height,
+            int craftCount = 0,
+            int barterCount = 0)
         {
             this.templateId = templateId ?? string.Empty;
             this.traderUnitValue = Math.Max(0, traderUnitValue);
@@ -46,6 +55,8 @@ namespace SPTItemIntelligence
             this.fallbackUnitValue = Math.Max(0, fallbackUnitValue);
             this.width = Math.Max(1, width);
             this.height = Math.Max(1, height);
+            this.craftCount = Math.Max(0, craftCount);
+            this.barterCount = Math.Max(0, barterCount);
         }
 
         public string templateId { get; }
@@ -55,5 +66,7 @@ namespace SPTItemIntelligence
         public long fallbackUnitValue { get; }
         public int width { get; }
         public int height { get; }
+        public int craftCount { get; }
+        public int barterCount { get; }
     }
 }
