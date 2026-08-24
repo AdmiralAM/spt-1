@@ -1,6 +1,0 @@
-Quest Planner validation
-source_sha=149e26dfca11feeabc31b9d601c45f4846bcf22e
-run_id=32719843450
-tests=success
-client=success
-server=success
