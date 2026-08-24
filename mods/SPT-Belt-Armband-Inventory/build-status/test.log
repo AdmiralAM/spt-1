@@ -11,4 +11,4 @@ D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\src\BeltDeathPolicy.cs(68,85): 
 D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\src\BeltDeathPolicy.cs(73,72): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\tests\SPT-Belt-Armband-Inventory.Tests.csproj]
 D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\src\BeltDeathPolicy.cs(73,113): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\tests\SPT-Belt-Armband-Inventory.Tests.csproj]
 D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\src\BeltDeathPolicy.cs(44,23): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\tests\SPT-Belt-Armband-Inventory.Tests.csproj]
-SPT Belt/Armband Inventory Phase 1: 42 assertions passed.
+SPT Belt/Armband Inventory Phase 1: 47 assertions passed.
