@@ -44,6 +44,7 @@ namespace SPTQuestPlanner.Client
         public int KnownProgressObjectiveCount { get { return Objectives.Count(value => value.HasProgress); } }
         public bool PreparationReady { get { return Preparation.Ready; } }
         public int MissingBringTemplateCount { get { return Preparation.MissingTemplateCount; } }
+        public int UnresolvedPreparationCount { get { return Preparation.UnresolvedNeeds.Count; } }
     }
 
     public static class PlannerRaidPlanBuilder
