@@ -32,6 +32,11 @@ namespace SPTBeltArmbandInventory
             result[result.Length - 1] = BeltSlotPlan.ArmBand;
             return result;
         }
+
+        internal static bool ShouldRestoreReference(object currentValue, object installedValue)
+        {
+            return installedValue != null && ReferenceEquals(currentValue, installedValue);
+        }
     }
 
     internal sealed class FastAccessSlotPatches : IDisposable
@@ -42,6 +47,10 @@ namespace SPTBeltArmbandInventory
         FieldInfo bindAvailableSlotsField;
         object originalFastAccessSlots;
         object originalBindAvailableSlots;
+        object installedFastAccessSlots;
+        object installedBindAvailableSlots;
+        bool wroteFastAccessSlots;
+        bool wroteBindAvailableSlots;
         bool installed;
 
         internal FastAccessSlotPatches(Action<string> logInfo, Action<string> logWarning)
@@ -67,13 +76,15 @@ namespace SPTBeltArmbandInventory
                 object armBand = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand, false);
                 originalFastAccessSlots = fastAccessSlotsField.GetValue(null);
                 originalBindAvailableSlots = bindAvailableSlotsField.GetValue(null);
-                object extendedFastAccess = AppendSlot(originalFastAccessSlots as Array, slotEnumType, armBand);
-                object extendedBindAvailable = AppendSlot(originalBindAvailableSlots as Array, slotEnumType, armBand);
-                if (extendedFastAccess == null || extendedBindAvailable == null)
+                installedFastAccessSlots = AppendSlot(originalFastAccessSlots as Array, slotEnumType, armBand);
+                installedBindAvailableSlots = AppendSlot(originalBindAvailableSlots as Array, slotEnumType, armBand);
+                if (installedFastAccessSlots == null || installedBindAvailableSlots == null)
                     return Fail("SPT 4.1 fast-access slot arrays could not be extended safely; belt fast-access slot compatibility is disabled.");
 
-                fastAccessSlotsField.SetValue(null, extendedFastAccess);
-                bindAvailableSlotsField.SetValue(null, extendedBindAvailable);
+                fastAccessSlotsField.SetValue(null, installedFastAccessSlots);
+                wroteFastAccessSlots = true;
+                bindAvailableSlotsField.SetValue(null, installedBindAvailableSlots);
+                wroteBindAvailableSlots = true;
                 installed = true;
 
                 if (logInfo != null) logInfo("Belt/Armband Inventory fast-access/reachability slot compatibility installed.");
@@ -81,7 +92,8 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                Dispose();
+                RestoreOwnedWrites();
+                ClearState();
                 return Fail("Belt fast-access slot compatibility installation failed safely: " + Unwrap(exception).Message);
             }
         }
@@ -111,6 +123,29 @@ namespace SPTBeltArmbandInventory
             return result;
         }
 
+        void RestoreOwnedWrites()
+        {
+            try
+            {
+                if (wroteBindAvailableSlots && bindAvailableSlotsField != null && originalBindAvailableSlots != null &&
+                    FastAccessSlotPolicy.ShouldRestoreReference(bindAvailableSlotsField.GetValue(null), installedBindAvailableSlots))
+                {
+                    bindAvailableSlotsField.SetValue(null, originalBindAvailableSlots);
+                }
+            }
+            catch { }
+
+            try
+            {
+                if (wroteFastAccessSlots && fastAccessSlotsField != null && originalFastAccessSlots != null &&
+                    FastAccessSlotPolicy.ShouldRestoreReference(fastAccessSlotsField.GetValue(null), installedFastAccessSlots))
+                {
+                    fastAccessSlotsField.SetValue(null, originalFastAccessSlots);
+                }
+            }
+            catch { }
+        }
+
         bool Fail(string message)
         {
             if (logWarning != null) logWarning(message);
@@ -119,22 +154,27 @@ namespace SPTBeltArmbandInventory
 
         public void Dispose()
         {
-            if (!installed) return;
-
-            try
+            if (!installed && !wroteFastAccessSlots && !wroteBindAvailableSlots)
             {
-                if (fastAccessSlotsField != null && originalFastAccessSlots != null)
-                    fastAccessSlotsField.SetValue(null, originalFastAccessSlots);
-                if (bindAvailableSlotsField != null && originalBindAvailableSlots != null)
-                    bindAvailableSlotsField.SetValue(null, originalBindAvailableSlots);
+                ClearState();
+                return;
             }
-            catch { }
 
+            RestoreOwnedWrites();
+            ClearState();
+        }
+
+        void ClearState()
+        {
             installed = false;
+            wroteFastAccessSlots = false;
+            wroteBindAvailableSlots = false;
             fastAccessSlotsField = null;
             bindAvailableSlotsField = null;
             originalFastAccessSlots = null;
             originalBindAvailableSlots = null;
+            installedFastAccessSlots = null;
+            installedBindAvailableSlots = null;
         }
 
         static Exception Unwrap(Exception exception)
