@@ -2,6 +2,8 @@
 
 A source repository for independent SPT 4.1.x mods. Each maintained module owns its source code, tests, documentation, versioning, and release lifecycle under `mods/`.
 
+> **Before development:** read [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/development-workflow.md`](docs/development-workflow.md). Independent module workstreams use separate branches, PRs, and module-specific CI. Repository-wide publication is a separate controlled operation.
+
 ## Modules
 
 | Module | Current state | Purpose | Install channel |
@@ -17,7 +19,7 @@ Tactical HUD `1.14.0` is retired. That build accidentally combined early Item In
 ## Repository channels
 
 - `main` — authoritative development source.
-- `stable` — source commit promoted after suite validation.
+- `stable` — source commit promoted after deliberate suite publication.
 - `runtime` — install-only Tactical HUD package.
 - `runtime-item-intelligence` — install-only Item Intelligence package.
 - `runtime-pause` — install-only Pause package.
@@ -38,4 +40,4 @@ Copy only the runtime package for the mod you want into the SPT root. Runtime pl
 
 Temporary feature, fix, diagnostic, and archaeology branches are removed after their useful work is merged or explicitly superseded. Active workstream branches are preserved until that determination is made.
 
-See [source/stable/runtime governance](docs/github-stable-runtime.md) and [branch hygiene](docs/branch-hygiene.md) for the maintenance rules used by **GitHub SPT**.
+Development follows [`CONTRIBUTING.md`](CONTRIBUTING.md). See also [development workflow](docs/development-workflow.md), [source/stable/runtime governance](docs/github-stable-runtime.md), and [branch hygiene](docs/branch-hygiene.md).
