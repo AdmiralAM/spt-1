@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace SPTQuestPlanner.Client
 {
+    // Validation build marker: F9 modal input blocker revision 2.
     public sealed class PlannerRaidPlanWindow
     {
         private const int WindowId = 0x51504C4E;
