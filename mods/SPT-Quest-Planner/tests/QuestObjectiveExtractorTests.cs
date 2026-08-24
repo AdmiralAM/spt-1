@@ -50,6 +50,49 @@ public sealed class QuestObjectiveExtractorTests
     }
 
     [Fact]
+    public void UnwrapsSptStyleListOrTAndMongoIdValues()
+    {
+        var raw = new
+        {
+            q1 = new
+            {
+                _id = new FakeMongoId("quest-mongo"),
+                location = "any",
+                conditions = new
+                {
+                    AvailableForStart = Array.Empty<object>(),
+                    AvailableForFinish = new object[]
+                    {
+                        new
+                        {
+                            id = new FakeMongoId("condition-mongo"),
+                            conditionType = "Location",
+                            target = new FakeListOrT<string>(new List<string> { "bigmap", "Woods" }, null)
+                        },
+                        new
+                        {
+                            id = new FakeMongoId("single-target"),
+                            conditionType = "Kills",
+                            target = new FakeListOrT<string>(null, "Savage")
+                        }
+                    }
+                }
+            }
+        };
+
+        QuestObjectiveExtractionResult result = QuestObjectiveExtractor.Extract(raw);
+
+        QuestObjectiveFact location = Assert.Single(result.Objectives, value => value.ConditionId == "condition-mongo");
+        Assert.Equal("quest-mongo", location.QuestId);
+        Assert.Equal(new[] { "bigmap", "Woods" }, location.Targets);
+        Assert.Contains("bigmap", location.LocationHints);
+        Assert.Contains("Woods", location.LocationHints);
+
+        QuestObjectiveFact kill = Assert.Single(result.Objectives, value => value.ConditionId == "single-target");
+        Assert.Equal(new[] { "Savage" }, kill.Targets);
+    }
+
+    [Fact]
     public void ChildThresholdOverridesParentThresholdWhenExplicit()
     {
         var raw = new
@@ -80,7 +123,7 @@ public sealed class QuestObjectiveExtractorTests
             }
         };
 
-        QuestObjectiveFact child = Assert.Single(QuestObjectiveExtractor.Extract(raw).Objectives.Where(value => value.ConditionId == "child"));
+        QuestObjectiveFact child = Assert.Single(QuestObjectiveExtractor.Extract(raw).Objectives, value => value.ConditionId == "child");
         Assert.Equal(3d, child.RequiredValue);
     }
 
@@ -108,5 +151,23 @@ public sealed class QuestObjectiveExtractorTests
         QuestObjectiveFact objective = Assert.Single(result.Objectives);
         Assert.Null(objective.QuestLocationHint);
         Assert.Empty(objective.LocationHints);
+    }
+
+    private readonly struct FakeMongoId
+    {
+        private readonly string value;
+        public FakeMongoId(string value) { this.value = value; }
+        public override string ToString() { return value; }
+    }
+
+    private sealed class FakeListOrT<T>
+    {
+        public FakeListOrT(List<T> list, T item)
+        {
+            List = list;
+            Item = item;
+        }
+        public List<T> List { get; private set; }
+        public T Item { get; private set; }
     }
 }
