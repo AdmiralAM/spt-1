@@ -140,6 +140,44 @@ public sealed class PlannerRaidOpportunityBuilderTests
         Assert.Equal(1, opportunity.FindCount);
     }
 
+    [Fact]
+    public void CompletedCounterObjectiveIsExcludedUsingParentCounterProgress()
+    {
+        PlannerLocationObjective kill = new(
+            "qKill", "kill-child", "Kills", "Finish", "kill-counter",
+            new[] { "Savage" }, new[] { "Customs" }, PlannerObjectiveKind.Kill, 5d);
+        PlannerLocationIndex locations = new(
+            new Dictionary<string, PlannerLocationBucket>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Customs"] = new PlannerLocationBucket("Customs", new[] { kill })
+            },
+            Array.Empty<PlannerLocationObjective>());
+        PlannerConditionProgress completed = new("kill-counter", "Elimination", 5d, "qKill");
+        PlannerClientIndex state = StateWithProgress(new[] { Quest("qKill", 4) }, completed);
+
+        Assert.Empty(PlannerRaidOpportunityBuilder.Build(locations, state));
+    }
+
+    [Fact]
+    public void PartialCounterObjectiveRemainsInRaidPlan()
+    {
+        PlannerLocationObjective kill = new(
+            "qKill", "kill-child", "Kills", "Finish", "kill-counter",
+            new[] { "Savage" }, new[] { "Customs" }, PlannerObjectiveKind.Kill, 5d);
+        PlannerLocationIndex locations = new(
+            new Dictionary<string, PlannerLocationBucket>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Customs"] = new PlannerLocationBucket("Customs", new[] { kill })
+            },
+            Array.Empty<PlannerLocationObjective>());
+        PlannerConditionProgress partial = new("kill-counter", "Elimination", 4d, "qKill");
+        PlannerClientIndex state = StateWithProgress(new[] { Quest("qKill", 4) }, partial);
+
+        PlannerRaidOpportunity opportunity = Assert.Single(PlannerRaidOpportunityBuilder.Build(locations, state));
+        Assert.Single(opportunity.Objectives);
+        Assert.Equal(1, opportunity.KillCount);
+    }
+
     private static PlannerLocationObjective Objective(string questId, string conditionId, string location)
     {
         return new PlannerLocationObjective(
@@ -154,9 +192,17 @@ public sealed class PlannerRaidOpportunityBuilderTests
 
     private static PlannerClientIndex State(params PlannerQuestClientState[] quests)
     {
+        return StateWithProgress(quests);
+    }
+
+    private static PlannerClientIndex StateWithProgress(
+        IEnumerable<PlannerQuestClientState> quests,
+        params PlannerConditionProgress[] progress)
+    {
         return new PlannerClientIndex(
             1,
             quests.ToDictionary(value => value.QuestId, value => value, StringComparer.Ordinal),
-            new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal));
+            new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal),
+            progress.ToDictionary(value => value.CounterId, value => value, StringComparer.Ordinal));
     }
 }
