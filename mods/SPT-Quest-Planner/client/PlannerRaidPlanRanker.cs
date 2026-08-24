@@ -24,7 +24,8 @@ namespace SPTQuestPlanner.Client
             if (mode == PlannerRaidPlanRankingMode.QuestDensityFirst)
             {
                 ordered = source
-                    .OrderByDescending(value => value.QuestCount)
+                    .OrderBy(value => IsAnyLocation(value) ? 1 : 0)
+                    .ThenByDescending(value => value.QuestCount)
                     .ThenByDescending(value => value.PreparationReady)
                     .ThenBy(value => value.MissingBringTemplateCount)
                     .ThenByDescending(value => value.ObjectiveCount)
@@ -34,7 +35,8 @@ namespace SPTQuestPlanner.Client
             else
             {
                 ordered = source
-                    .OrderByDescending(value => value.PreparationReady)
+                    .OrderBy(value => IsAnyLocation(value) ? 1 : 0)
+                    .ThenByDescending(value => value.PreparationReady)
                     .ThenBy(value => value.MissingBringTemplateCount)
                     .ThenByDescending(value => value.QuestCount)
                     .ThenByDescending(value => value.ObjectiveCount)
@@ -43,6 +45,14 @@ namespace SPTQuestPlanner.Client
             }
 
             return ordered.ToArray();
+        }
+
+        private static bool IsAnyLocation(PlannerRaidPlan value)
+        {
+            return value != null && string.Equals(
+                value.LocationId,
+                PlannerRaidOpportunityBuilder.AnyLocationId,
+                StringComparison.OrdinalIgnoreCase);
         }
     }
 }
