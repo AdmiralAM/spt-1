@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -10,15 +11,34 @@ namespace SPTBeltArmbandInventory
         {
             return succeeded && ownerMatches && armBandRoute && hasContainers;
         }
+
+        internal static bool ShouldClearSelected(bool isRemoval, bool selectedBelongsToRemovedBelt)
+        {
+            return isRemoval && selectedBelongsToRemovedBelt;
+        }
     }
 
     internal static class FastAccessBeltSyncRuntime
     {
+        sealed class PendingRefresh
+        {
+            internal readonly object View;
+            internal object RemovedContainer;
+
+            internal PendingRefresh(object view, object removedContainer)
+            {
+                View = view;
+                RemovedContainer = removedContainer;
+            }
+        }
+
         internal static Action<string> LogWarning;
         internal static FieldInfo ControllerField;
         internal static FieldInfo ItemUiContextField;
         internal static MethodInfo ShowMethod;
-        static readonly List<object> PendingViews = new List<object>();
+        internal static PropertyInfo TopPriorityGrenadeProperty;
+        internal static MethodInfo GetTopLevelItemsMethod;
+        static readonly List<PendingRefresh> PendingViews = new List<PendingRefresh>();
 
         internal static void Queue(object view, object eventArgs, bool added)
         {
@@ -46,9 +66,11 @@ namespace SPTBeltArmbandInventory
 
                 for (int i = 0; i < PendingViews.Count; i++)
                 {
-                    if (ReferenceEquals(PendingViews[i], view)) return;
+                    if (!ReferenceEquals(PendingViews[i].View, view)) continue;
+                    if (!added) PendingViews[i].RemovedContainer = item;
+                    return;
                 }
-                PendingViews.Add(view);
+                PendingViews.Add(new PendingRefresh(view, added ? null : item));
             }
             catch (Exception exception)
             {
@@ -60,16 +82,19 @@ namespace SPTBeltArmbandInventory
         {
             if (PendingViews.Count == 0 || ControllerField == null || ItemUiContextField == null || ShowMethod == null) return;
 
-            object[] views = PendingViews.ToArray();
+            PendingRefresh[] pending = PendingViews.ToArray();
             PendingViews.Clear();
-            for (int i = 0; i < views.Length; i++)
+            for (int i = 0; i < pending.Length; i++)
             {
-                object view = views[i];
+                PendingRefresh refresh = pending[i];
+                object view = refresh.View;
                 try
                 {
                     object controller = ControllerField.GetValue(view);
                     object context = ItemUiContextField.GetValue(view);
                     if (controller == null || context == null) continue;
+
+                    if (refresh.RemovedContainer != null) ClearRemovedBeltSelection(controller, refresh.RemovedContainer);
                     ShowMethod.Invoke(view, new[] { controller, context });
                 }
                 catch (Exception exception)
@@ -79,6 +104,32 @@ namespace SPTBeltArmbandInventory
             }
         }
 
+        static void ClearRemovedBeltSelection(object controller, object removedContainer)
+        {
+            if (TopPriorityGrenadeProperty == null || !TopPriorityGrenadeProperty.CanRead || !TopPriorityGrenadeProperty.CanWrite || GetTopLevelItemsMethod == null) return;
+
+            object inventory = ReflectionTools.ReadMember(controller, "Inventory");
+            object equipment = ReflectionTools.ReadMember(inventory, "Equipment");
+            if (equipment == null) return;
+
+            object selected = TopPriorityGrenadeProperty.GetValue(equipment, null);
+            if (selected == null) return;
+
+            IEnumerable items = GetTopLevelItemsMethod.Invoke(null, new[] { removedContainer }) as IEnumerable;
+            bool belongs = ContainsReference(items, selected);
+            if (FastAccessBeltSyncPolicy.ShouldClearSelected(true, belongs)) TopPriorityGrenadeProperty.SetValue(equipment, null, null);
+        }
+
+        static bool ContainsReference(IEnumerable items, object target)
+        {
+            if (items == null || target == null) return false;
+            foreach (object item in items)
+            {
+                if (ReferenceEquals(item, target)) return true;
+            }
+            return false;
+        }
+
         internal static void Reset()
         {
             PendingViews.Clear();
@@ -86,6 +137,8 @@ namespace SPTBeltArmbandInventory
             ControllerField = null;
             ItemUiContextField = null;
             ShowMethod = null;
+            TopPriorityGrenadeProperty = null;
+            GetTopLevelItemsMethod = null;
         }
 
         static void Warn(string message)
@@ -121,16 +174,19 @@ namespace SPTBeltArmbandInventory
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
                 Type viewType = ReflectionTools.FindType("EFT.UI.DragAndDrop.FastAccessGrenadeItemView");
-                if (harmonyType == null || harmonyMethodType == null || viewType == null)
-                    return Fail("SPT 4.1 FastAccessGrenadeItemView or Harmony was not found; live belt grenade synchronization is disabled.");
+                Type equipmentType = ReflectionTools.FindType("EFT.InventoryLogic.InventoryEquipment");
+                if (harmonyType == null || harmonyMethodType == null || viewType == null || equipmentType == null)
+                    return Fail("SPT 4.1 FastAccessGrenadeItemView/InventoryEquipment or Harmony was not found; live belt grenade synchronization is disabled.");
 
                 MethodInfo added = viewType.GetMethod("OnItemAdded", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 MethodInfo removed = viewType.GetMethod("OnItemRemoved", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 MethodInfo show = FindShowMethod(viewType);
                 FieldInfo controller = FindField(viewType, "InventoryController");
                 FieldInfo context = FindField(viewType, "ItemUiContext");
-                if (added == null || removed == null || show == null || controller == null || context == null)
-                    return Fail("SPT 4.1 grenade fast-access event shape changed; live belt grenade synchronization is disabled.");
+                PropertyInfo topPriority = equipmentType.GetProperty("TopPriorityGrenade", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                MethodInfo topLevelItems = FindTopLevelItemsMethod(viewType.Assembly);
+                if (added == null || removed == null || show == null || controller == null || context == null || topPriority == null || !topPriority.CanRead || !topPriority.CanWrite || topLevelItems == null)
+                    return Fail("SPT 4.1 grenade fast-access event/selection shape changed; live belt grenade synchronization is disabled.");
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
@@ -142,6 +198,8 @@ namespace SPTBeltArmbandInventory
                 FastAccessBeltSyncRuntime.ControllerField = controller;
                 FastAccessBeltSyncRuntime.ItemUiContextField = context;
                 FastAccessBeltSyncRuntime.ShowMethod = show;
+                FastAccessBeltSyncRuntime.TopPriorityGrenadeProperty = topPriority;
+                FastAccessBeltSyncRuntime.GetTopLevelItemsMethod = topLevelItems;
 
                 object addPostfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(AddedPostfix)) });
                 object removePostfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(RemovedPostfix)) });
@@ -179,6 +237,31 @@ namespace SPTBeltArmbandInventory
                 MethodInfo method = methods[i];
                 if (!string.Equals(method.Name, "Show", StringComparison.Ordinal) || method.ReturnType != typeof(void)) continue;
                 if (method.GetParameters().Length == 2) return method;
+            }
+            return null;
+        }
+
+        static MethodInfo FindTopLevelItemsMethod(Assembly assembly)
+        {
+            Type[] types;
+            try { types = assembly.GetTypes(); }
+            catch (ReflectionTypeLoadException exception) { types = exception.Types; }
+
+            for (int i = 0; i < types.Length; i++)
+            {
+                Type type = types[i];
+                if (type == null) continue;
+                MethodInfo[] methods;
+                try { methods = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic); }
+                catch { continue; }
+                for (int p = 0; p < methods.Length; p++)
+                {
+                    MethodInfo method = methods[p];
+                    if (!string.Equals(method.Name, "GetTopLevelItemsFromCollection", StringComparison.Ordinal)) continue;
+                    ParameterInfo[] parameters = method.GetParameters();
+                    if (parameters.Length != 1 || !typeof(IEnumerable).IsAssignableFrom(method.ReturnType)) continue;
+                    return method;
+                }
             }
             return null;
         }
