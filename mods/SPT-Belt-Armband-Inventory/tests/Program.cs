@@ -45,6 +45,16 @@ internal static class Program
         Assert(ReflectionTools.HasContainers(new RuntimeTemplate { Template = new TemplateGrids { Grids = new object[] { new object() } } }), "template Grids are recognized for PackNStrap-style belts");
         Assert(!ReflectionTools.HasContainers(new RuntimeTemplate { Template = new TemplateGrids { Grids = Array.Empty<object>() } }), "empty template grids stay non-container");
 
+        var propertyProbe = new MutablePropertyProbe { Value = "first" };
+        Assert((string)ReflectionTools.ReadMember(propertyProbe, "Value") == "first", "reflection cache reads properties");
+        propertyProbe.Value = "second";
+        Assert((string)ReflectionTools.ReadMember(propertyProbe, "Value") == "second", "cached property accessor reads current values");
+        var fieldProbe = new MutableFieldProbe { Value = 7 };
+        Assert((int)ReflectionTools.ReadMember(fieldProbe, "Value") == 7, "reflection cache reads fields");
+        fieldProbe.Value = 11;
+        Assert((int)ReflectionTools.ReadMember(fieldProbe, "Value") == 11, "cached field accessor reads current values");
+        Assert(ReflectionTools.ReadMember(fieldProbe, "Missing") == null, "missing members remain safe after lookup caching");
+
         string[] unusual = { BeltSlotPlan.TacticalVest, BeltSlotPlan.Backpack, BeltSlotPlan.SecuredContainer, BeltSlotPlan.Dogtag };
         string[] fallback = BeltSlotPlan.Build(unusual, BeltSlotPosition.AbovePockets, true);
         Assert(fallback[fallback.Length - 1] == BeltSlotPlan.ArmBand, "missing pockets falls back safely");
@@ -102,4 +112,6 @@ internal static class Program
     sealed class RuntimeGrids { public object[] Grids { get; set; } }
     sealed class RuntimeTemplate { public TemplateGrids Template { get; set; } }
     sealed class TemplateGrids { public object[] Grids { get; set; } }
+    sealed class MutablePropertyProbe { public string Value { get; set; } }
+    sealed class MutableFieldProbe { public int Value; }
 }
