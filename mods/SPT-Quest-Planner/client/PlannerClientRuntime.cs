@@ -8,7 +8,7 @@ namespace SPTQuestPlanner.Client
     {
         public const string TopologyRoute = "/admiralam/quest-planner/topology";
         public const string StateRoute = "/admiralam/quest-planner/state";
-        public const int SchemaVersion = 8;
+        public const int SchemaVersion = 9;
     }
 
     public sealed class PlannerPayload
@@ -19,17 +19,12 @@ namespace SPTQuestPlanner.Client
             GeneratedAtUnixSeconds = generatedAtUnixSeconds;
             Json = json;
         }
-
         public int SchemaVersion { get; private set; }
         public long GeneratedAtUnixSeconds { get; private set; }
         public string Json { get; private set; }
     }
 
-    public interface IPlannerTransport
-    {
-        string GetJson(string route);
-    }
-
+    public interface IPlannerTransport { string GetJson(string route); }
     public interface IPlannerPayloadDecoder
     {
         PlannerPayload DecodeTopology(string json);
@@ -43,12 +38,9 @@ namespace SPTQuestPlanner.Client
             if (string.IsNullOrWhiteSpace(route)) throw new ArgumentException("Route is missing.", "route");
             Type requestHandler = FindType("SPT.Common.Http.RequestHandler");
             if (requestHandler == null) throw new InvalidOperationException("SPT RequestHandler is unavailable.");
-
             MethodInfo getJson = null;
-            MethodInfo[] methods = requestHandler.GetMethods(BindingFlags.Public | BindingFlags.Static);
-            for (int i = 0; i < methods.Length; i++)
+            foreach (MethodInfo candidate in requestHandler.GetMethods(BindingFlags.Public | BindingFlags.Static))
             {
-                MethodInfo candidate = methods[i];
                 ParameterInfo[] parameters = candidate.GetParameters();
                 if (candidate.Name == "GetJson" && candidate.ReturnType == typeof(string) &&
                     parameters.Length == 1 && parameters[0].ParameterType == typeof(string))
@@ -57,7 +49,6 @@ namespace SPTQuestPlanner.Client
                     break;
                 }
             }
-
             if (getJson == null) throw new InvalidOperationException("SPT RequestHandler.GetJson(string) is unavailable.");
             string json = getJson.Invoke(null, new object[] { route }) as string;
             if (string.IsNullOrWhiteSpace(json) || string.Equals(json.Trim(), "null", StringComparison.OrdinalIgnoreCase))
@@ -67,14 +58,9 @@ namespace SPTQuestPlanner.Client
 
         private static Type FindType(string fullName)
         {
-            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            for (int i = 0; i < assemblies.Length; i++)
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                try
-                {
-                    Type type = assemblies[i].GetType(fullName, false, false);
-                    if (type != null) return type;
-                }
+                try { Type type = assembly.GetType(fullName, false, false); if (type != null) return type; }
                 catch { }
             }
             return null;
@@ -94,11 +80,9 @@ namespace SPTQuestPlanner.Client
             MethodInfo parse = tokenType.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(string) }, null);
             if (parse == null) throw new InvalidOperationException("Newtonsoft JToken.Parse is unavailable.");
             object root = parse.Invoke(null, new object[] { json });
-
             int schema = ReadInt(Get(root, "schemaVersion"), 0);
             if (schema != PlannerClientContract.SchemaVersion)
                 throw new InvalidOperationException("Unsupported Quest Planner schema " + schema + ".");
-
             long generated = ReadLong(Get(root, "generatedAtUnixSeconds"), 0L);
             if (requireGeneratedAt && generated <= 0L)
                 throw new InvalidOperationException("Quest Planner state payload has no generation timestamp.");
@@ -109,42 +93,18 @@ namespace SPTQuestPlanner.Client
         {
             if (token == null) return null;
             PropertyInfo item = token.GetType().GetProperty("Item", new[] { typeof(object) });
-            if (item != null)
-            {
-                try { return item.GetValue(token, new object[] { name }); } catch { }
-            }
+            if (item != null) { try { return item.GetValue(token, new object[] { name }); } catch { } }
             PropertyInfo stringItem = token.GetType().GetProperty("Item", new[] { typeof(string) });
-            if (stringItem != null)
-            {
-                try { return stringItem.GetValue(token, new object[] { name }); } catch { }
-            }
+            if (stringItem != null) { try { return stringItem.GetValue(token, new object[] { name }); } catch { } }
             return null;
         }
-
-        private static int ReadInt(object token, int fallback)
-        {
-            string text = token == null ? null : token.ToString();
-            int value;
-            return int.TryParse(text, out value) ? value : fallback;
-        }
-
-        private static long ReadLong(object token, long fallback)
-        {
-            string text = token == null ? null : token.ToString();
-            long value;
-            return long.TryParse(text, out value) ? value : fallback;
-        }
-
+        private static int ReadInt(object token, int fallback) { int value; return int.TryParse(token == null ? null : token.ToString(), out value) ? value : fallback; }
+        private static long ReadLong(object token, long fallback) { long value; return long.TryParse(token == null ? null : token.ToString(), out value) ? value : fallback; }
         private static Type FindType(string fullName)
         {
-            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            for (int i = 0; i < assemblies.Length; i++)
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                try
-                {
-                    Type type = assemblies[i].GetType(fullName, false, false);
-                    if (type != null) return type;
-                }
+                try { Type type = assembly.GetType(fullName, false, false); if (type != null) return type; }
                 catch { }
             }
             return null;
@@ -157,29 +117,37 @@ namespace SPTQuestPlanner.Client
         private PlannerPayload topology;
         private PlannerTopologyIndex topologyIndex;
         private PlannerRequirementIndex requirementIndex;
+        private PlannerLocationIndex locationIndex;
         private PlannerPayload state;
         private PlannerClientIndex index;
         private long revision;
 
         public long Revision { get { lock (gate) return revision; } }
-        public bool HasTopology { get { lock (gate) return topology != null && topologyIndex != null && requirementIndex != null; } }
+        public bool HasTopology { get { lock (gate) return topology != null && topologyIndex != null && requirementIndex != null && locationIndex != null; } }
         public bool HasState { get { lock (gate) return state != null && index != null; } }
         public PlannerPayload Topology { get { lock (gate) return topology; } }
         public PlannerTopologyIndex TopologyIndex { get { lock (gate) return topologyIndex; } }
         public PlannerRequirementIndex RequirementIndex { get { lock (gate) return requirementIndex; } }
+        public PlannerLocationIndex LocationIndex { get { lock (gate) return locationIndex; } }
         public PlannerPayload State { get { lock (gate) return state; } }
         public PlannerClientIndex Index { get { lock (gate) return index; } }
 
-        public void ReplaceTopology(PlannerPayload value, PlannerTopologyIndex typedIndex, PlannerRequirementIndex typedRequirements)
+        public void ReplaceTopology(
+            PlannerPayload value,
+            PlannerTopologyIndex typedIndex,
+            PlannerRequirementIndex typedRequirements,
+            PlannerLocationIndex typedLocations)
         {
             if (value == null) throw new ArgumentNullException("value");
             if (typedIndex == null) throw new ArgumentNullException("typedIndex");
             if (typedRequirements == null) throw new ArgumentNullException("typedRequirements");
+            if (typedLocations == null) throw new ArgumentNullException("typedLocations");
             lock (gate)
             {
                 topology = value;
                 topologyIndex = typedIndex;
                 requirementIndex = typedRequirements;
+                locationIndex = typedLocations;
                 revision++;
             }
         }
@@ -222,7 +190,8 @@ namespace SPTQuestPlanner.Client
                 PlannerPayload payload = decoder.DecodeTopology(transport.GetJson(PlannerClientContract.TopologyRoute));
                 PlannerTopologyIndex typedIndex = PlannerTopologyIndexBuilder.Build(payload.Json);
                 PlannerRequirementIndex typedRequirements = PlannerRequirementIndexBuilder.Build(payload.Json);
-                cache.ReplaceTopology(payload, typedIndex, typedRequirements);
+                PlannerLocationIndex typedLocations = PlannerLocationIndexBuilder.Build(payload.Json);
+                cache.ReplaceTopology(payload, typedIndex, typedRequirements, typedLocations);
                 return true;
             }
             catch (Exception ex)
@@ -240,7 +209,6 @@ namespace SPTQuestPlanner.Client
                 error = "Refresh already in progress.";
                 return false;
             }
-
             try
             {
                 token.ThrowIfCancellationRequested();
@@ -255,10 +223,7 @@ namespace SPTQuestPlanner.Client
                 error = ex.GetBaseException().Message;
                 return false;
             }
-            finally
-            {
-                Volatile.Write(ref refreshing, 0);
-            }
+            finally { Volatile.Write(ref refreshing, 0); }
         }
     }
 }
