@@ -1,0 +1,40 @@
+name: Belt Armband Inventory Validate
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mods/SPT-Belt-Armband-Inventory/src/**'
+      - 'mods/SPT-Belt-Armband-Inventory/server/**'
+      - 'mods/SPT-Belt-Armband-Inventory/tests/**'
+      - 'mods/SPT-Belt-Armband-Inventory/tools/**'
+      - '.github/workflows/belt-armband-validate.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: belt-armband-validate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Download BepInEx 5
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path deps | Out-Null
+          Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
+          Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
+      - name: Run Belt/Armband regression tests
+        shell: pwsh
+        run: dotnet run --project mods/SPT-Belt-Armband-Inventory/tests/SPT-Belt-Armband-Inventory.Tests.csproj -c Release
+      - name: Build Belt/Armband client
+        shell: pwsh
+        run: dotnet build mods/SPT-Belt-Armband-Inventory/src/SPT-Belt-Armband-Inventory.csproj -c Release
+      - name: Build Belt/Armband server
+        shell: pwsh
+        run: dotnet build mods/SPT-Belt-Armband-Inventory/server/SPT-Belt-Armband-Inventory.Server.csproj -c Release

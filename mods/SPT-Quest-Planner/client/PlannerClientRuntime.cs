@@ -8,6 +8,7 @@ namespace SPTQuestPlanner.Client
     {
         public const string TopologyRoute = "/admiralam/quest-planner/topology";
         public const string StateRoute = "/admiralam/quest-planner/state";
+        public const string LocaleRoute = "/admiralam/quest-planner/locales";
         public const int SchemaVersion = 9;
     }
 
@@ -118,17 +119,20 @@ namespace SPTQuestPlanner.Client
         private PlannerTopologyIndex topologyIndex;
         private PlannerRequirementIndex requirementIndex;
         private PlannerLocationIndex locationIndex;
+        private PlannerLocaleIndex localeIndex;
         private PlannerPayload state;
         private PlannerClientIndex index;
         private long revision;
 
         public long Revision { get { lock (gate) return revision; } }
         public bool HasTopology { get { lock (gate) return topology != null && topologyIndex != null && requirementIndex != null && locationIndex != null; } }
+        public bool HasLocale { get { lock (gate) return localeIndex != null; } }
         public bool HasState { get { lock (gate) return state != null && index != null; } }
         public PlannerPayload Topology { get { lock (gate) return topology; } }
         public PlannerTopologyIndex TopologyIndex { get { lock (gate) return topologyIndex; } }
         public PlannerRequirementIndex RequirementIndex { get { lock (gate) return requirementIndex; } }
         public PlannerLocationIndex LocationIndex { get { lock (gate) return locationIndex; } }
+        public PlannerLocaleIndex LocaleIndex { get { lock (gate) return localeIndex; } }
         public PlannerPayload State { get { lock (gate) return state; } }
         public PlannerClientIndex Index { get { lock (gate) return index; } }
 
@@ -152,6 +156,17 @@ namespace SPTQuestPlanner.Client
             }
         }
 
+        public void ReplaceLocale(PlannerLocaleIndex value)
+        {
+            if (value == null) throw new ArgumentNullException("value");
+            lock (gate)
+            {
+                // Locale data is presentation-only. It must not invalidate the derived
+                // planning cache or force a RaidPlan rebuild when labels arrive.
+                localeIndex = value;
+            }
+        }
+
         public void ReplaceState(PlannerPayload value, PlannerClientIndex typedIndex)
         {
             if (value == null) throw new ArgumentNullException("value");
@@ -172,6 +187,8 @@ namespace SPTQuestPlanner.Client
         private readonly IPlannerPayloadDecoder decoder;
         private readonly PlannerClientCache cache;
         private int refreshing;
+        private int localeAttempted;
+        private string localeError;
 
         public PlannerRefreshCoordinator(IPlannerTransport transport, IPlannerPayloadDecoder decoder, PlannerClientCache cache)
         {
@@ -179,6 +196,8 @@ namespace SPTQuestPlanner.Client
             this.decoder = decoder ?? throw new ArgumentNullException("decoder");
             this.cache = cache ?? throw new ArgumentNullException("cache");
         }
+
+        public string LocaleError { get { return localeError; } }
 
         public bool EnsureTopology(CancellationToken token, out string error)
         {
@@ -201,6 +220,28 @@ namespace SPTQuestPlanner.Client
             }
         }
 
+        public bool EnsureLocale(CancellationToken token, out string error)
+        {
+            error = localeError;
+            if (cache.HasLocale) return true;
+            if (Interlocked.CompareExchange(ref localeAttempted, 1, 0) != 0) return false;
+            token.ThrowIfCancellationRequested();
+            try
+            {
+                PlannerLocaleIndex locale = PlannerLocaleIndexBuilder.Build(transport.GetJson(PlannerClientContract.LocaleRoute));
+                cache.ReplaceLocale(locale);
+                localeError = null;
+                error = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                localeError = ex.GetBaseException().Message;
+                error = localeError;
+                return false;
+            }
+        }
+
         public bool TryRefreshState(CancellationToken token, out string error)
         {
             error = null;
@@ -213,6 +254,8 @@ namespace SPTQuestPlanner.Client
             {
                 token.ThrowIfCancellationRequested();
                 if (!EnsureTopology(token, out error)) return false;
+                string ignoredLocaleError;
+                EnsureLocale(token, out ignoredLocaleError); // presentation-only; one bounded attempt only
                 PlannerPayload payload = decoder.DecodeState(transport.GetJson(PlannerClientContract.StateRoute));
                 PlannerClientIndex typedIndex = PlannerClientIndexBuilder.Build(payload.Json);
                 cache.ReplaceState(payload, typedIndex);

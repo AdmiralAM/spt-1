@@ -4,6 +4,7 @@ public static class PlannerDataContract
 {
     public const string TopologyRoute = "/admiralam/quest-planner/topology";
     public const string StateRoute = "/admiralam/quest-planner/state";
+    public const string LocaleRoute = "/admiralam/quest-planner/locales";
     public const string SnapshotRoute = "/admiralam/quest-planner/snapshot";
     public const string DiagnosticsRoute = "/admiralam/quest-planner/diagnostics";
     public const int SchemaVersion = 9;
@@ -17,6 +18,12 @@ public sealed record PlannerTopologyEnvelope(
     IReadOnlyList<QuestObjectiveFact> QuestObjectives,
     PlannerGraphValidation GraphValidation,
     IReadOnlyList<string> Warnings);
+
+public sealed record PlannerLocaleEnvelope(
+    int SchemaVersion,
+    string Locale,
+    IReadOnlyDictionary<string, string> QuestNames,
+    IReadOnlyDictionary<string, string> ItemNames);
 
 public sealed record PlannerStateEnvelope(
     int SchemaVersion,

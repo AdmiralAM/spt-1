@@ -1,34 +1,75 @@
-# GitHub stable/runtime model
+# Source, stable, and runtime model
+
+## Purpose
+
+This is a multi-mod source repository. `main` is the authoritative development tree. Generated packages, transient validation logs, and CI run metadata are not source and must not be persisted in `main`.
 
 ## Branch roles
 
-| Branch | Contents | CI behavior |
-| --- | --- | --- |
-| `main` | Active source for every independent mod | Triggers the complete suite gate |
-| `stable` | Exact multi-mod commit that passed the gate | Advanced only after all builds and artifacts succeed |
-| `runtime` | Install-only SPT Tactical HUD | Rebuilt from scratch; never contains Item Intelligence |
-| `runtime-item-intelligence` | Install-only SPT Item Intelligence | Rebuilt from scratch; never contains Tactical HUD |
-| `archive/v1.13.0` | Frozen full Tactical HUD 1.13.0 reserve | Never advanced by CI |
+| Branch | Role |
+| --- | --- |
+| `main` | Active source, tests, maintained assets, workflows, and durable documentation |
+| `stable` | Source commit promoted after the suite validation/publish workflow succeeds |
+| `runtime` | Install-only Tactical HUD channel |
+| `runtime-item-intelligence` | Install-only Item Intelligence channel |
+| `runtime-pause` | Install-only Pause channel |
+| `runtime-belt-armband` | Install-only Belt/Armband Inventory channel |
+| `archive/v1.13.0` | Intentional frozen Tactical HUD `1.13.0` reserve |
 
-The split runtime channels prevent an update to one mod from silently installing the other. Each uses a version-independent BepInEx plugin directory while its assembly and manifest retain the real semantic version.
+Feature, fix, diagnostic, build, and archaeology branches are temporary unless explicitly documented otherwise. They are not release channels and should be removed after their useful work is merged or superseded.
 
-## Current releases
+## Current modules
 
-| Mod | Client version | Server version | Runtime path |
-| --- | --- | --- | --- |
-| SPT Tactical HUD | `1.13.2` | `1.13.0` optional | `BepInEx/plugins/SPT Tactical HUD/` |
-| SPT Item Intelligence | `0.6.0` | `0.3.0` | `BepInEx/plugins/SPT Item Intelligence/` |
+Long-term source modules under `mods/`:
 
-Tactical HUD `1.14.0` is intentionally retired because it mixed the initial Item Intelligence source into the HUD assembly. No `1.14.0` runtime remains after the corrected publication.
+- `SPT-Tactical-HUD`
+- `SPT-Item-Intelligence`
+- `SPT-Pause`
+- `SPT-Belt-Armband-Inventory`
+- `SPT-Quest-Planner`
 
-## Promotion gate
+The root `README.md` is the human-readable module index. Each module README owns its current scope, architecture, installation channel, and validation status. Detailed phase/revision documents are supporting history, not a second source of truth for current status.
 
-A source commit is promoted only after:
+## What belongs in `main`
 
-1. Tactical HUD asset generation, optics and hot-path checks pass;
-2. Item Intelligence regression assertions pass;
-3. Tactical HUD client, Tactical HUD server and Item Intelligence compile successfully;
-4. both independent install packages exist;
-5. both workflow artifacts upload successfully.
+Keep material required for development, review, maintenance, or reproducible publication:
 
-Only then does CI atomically advance `stable` and regenerate both runtime branches. Failed or superseded builds cannot replace a published channel.
+- source code and project/build definitions;
+- tests and deterministic validation tools;
+- maintained runtime/source assets;
+- GitHub workflow definitions;
+- durable architecture, compatibility, and maintenance documentation.
+
+Do not persist:
+
+- `bin/`, `obj/`, IDE state, dependency caches, or local environment files;
+- transient build/test logs and generated status directories;
+- CI run IDs or one-off trigger/evidence marker files;
+- temporary diagnostic dumps;
+- install ZIPs or duplicate compiled packages already represented by CI artifacts/runtime channels.
+
+The root `.gitignore` is the baseline guardrail. Workflows must not force-add ignored/generated material back into source history.
+
+## Build and publication
+
+CI may create `build-output/`, `build-status/`, dependency caches, previews, and other temporary files inside the runner workspace. Those paths are disposable CI state.
+
+Validated packages belong in GitHub Actions artifacts and, for maintained install channels, the corresponding runtime branch. The suite publication workflow advances `stable` to the validated source commit and rebuilds runtime branches from the package output produced during that run.
+
+A generated asset may remain tracked only when it is an intentional maintained source/runtime asset and deterministic validation depends on the repository copy. Build logs and package copies are never evidence that needs a source commit; the Actions run already provides provenance.
+
+## Promotion rule
+
+A commit may be promoted only after the validations required for the affected maintained modules succeed. Promotion must never depend on a follow-up commit whose only purpose is storing generated logs, package copies, trigger markers, or CI metadata.
+
+`stable` represents validated source. Runtime branches and Actions artifacts represent validated installable output.
+
+## Documentation rule
+
+Current-state documentation must describe what the repository contains now. Historical phase/revision notes may be retained when they explain design decisions or regression intent, but they must be clearly treated as history when later implementation has superseded them.
+
+Avoid status text that becomes false as soon as development advances: prefer version numbers from project metadata, explicit validation state, and links to current source/tests over prose such as "current phase" scattered across multiple files.
+
+## Historical note
+
+Tactical HUD `1.14.0` is retired because it mixed early Item Intelligence code into the HUD assembly. The maintained Tactical HUD line returned to the independent `1.13.x` model. Detailed historical release information belongs with the affected module rather than in repository-governance documentation.

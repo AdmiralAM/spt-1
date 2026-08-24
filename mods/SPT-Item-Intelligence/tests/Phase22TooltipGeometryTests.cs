@@ -19,7 +19,7 @@ static class Phase22TooltipGeometryTests
             "tooltip panel keeps a screen-edge safety margin", ref assertions);
         Expect(renderer.Contains("padding = new RectOffset(0, 0, 1, 2)"),
             "label geometry reserves vertical glyph room for ascenders and descenders", ref assertions);
-        Expect(renderer.Contains("float yCursor") && renderer.Contains("yCursor += rowHeights[i] + rowGap"),
+        Expect(renderer.Contains("float yCursor") && renderer.Contains("yCursor +=") && renderer.Contains("rowHeightBuffer[i] + rowGap"),
             "rows advance by measured height instead of a fixed line grid", ref assertions);
         Expect(renderer.Contains("minimumWidth = 200f * scale") && renderer.Contains("preferredMaximumWidth = 430f * scale"),
             "tooltip remains compact while retaining a bounded readable width", ref assertions);

@@ -1,0 +1,56 @@
+# OS / editor metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# .NET / C# build output
+**/bin/
+**/obj/
+*.dll
+*.pdb
+*.mdb
+*.cache
+
+# Node / TypeScript dependencies and generated output
+**/node_modules/
+**/dist/
+**/.npm/
+*.tsbuildinfo
+
+# Test / coverage output
+**/TestResults/
+**/coverage/
+**/coverage.*
+*.trx
+
+# CI / generated evidence and install packages
+build-output/
+**/build-status/
+
+# Logs / diagnostics / crash dumps
+*.log
+*.dmp
+*.tmp
+*.temp
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
+# Archives produced locally
+*.zip
+*.7z
+*.rar
+
+# Python/tooling caches occasionally used by maintenance scripts
+**/__pycache__/
+*.py[cod]
+.pytest_cache/

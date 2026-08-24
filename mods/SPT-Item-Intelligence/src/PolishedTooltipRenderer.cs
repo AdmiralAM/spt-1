@@ -9,6 +9,13 @@ namespace SPTItemIntelligence
         const float Gap = 8f;
         const float ScreenMargin = 6f;
 
+        static GUISkin cachedSkin;
+        static GUIStyle cachedLabel;
+        static GUIStyle cachedSemanticLabel;
+        static readonly GUIContent measureContent = new GUIContent();
+        static string[] lineBuffer = Array.Empty<string>();
+        static float[] rowHeightBuffer = Array.Empty<float>();
+
         public static void Draw(Rect marker, ItemHoverText text, ItemIntelligenceUiSettings settings)
         {
             if (text == null || settings == null) return;
@@ -17,6 +24,8 @@ namespace SPTItemIntelligence
             int lineCount = text.GetLineCount(mode);
             if (lineCount <= 0) return;
 
+            EnsureBuffers(lineCount);
+
             float scale = settings.TooltipScale;
             int fontSize = Mathf.RoundToInt(settings.TooltipFontSize * scale);
             float baseLineHeight = Mathf.Max(fontSize + 8f, 20f * scale);
@@ -24,25 +33,17 @@ namespace SPTItemIntelligence
             float verticalPadding = 7f * scale;
             float rowGap = 1f * scale;
 
-            GUIStyle label = new GUIStyle(GUI.skin.label)
-            {
-                fontSize = fontSize,
-                alignment = TextAnchor.UpperLeft,
-                clipping = TextClipping.Clip,
-                wordWrap = true,
-                richText = false,
-                padding = new RectOffset(0, 0, 1, 2)
-            };
-            GUIStyle semanticLabel = new GUIStyle(label) { richText = true };
+            GUIStyle label = GetLabelStyle(fontSize);
+            GUIStyle semanticLabel = GetSemanticLabelStyle(fontSize);
 
-            string[] lines = new string[lineCount];
             float naturalWidth = 0f;
             for (int i = 0; i < lineCount; i++)
             {
                 string line = DisplayLine(text.GetLine(mode, i), mode);
-                lines[i] = line;
+                lineBuffer[i] = line;
                 if (line.Length == 0) continue;
-                naturalWidth = Mathf.Max(naturalWidth, label.CalcSize(new GUIContent(line)).x);
+                measureContent.text = line;
+                naturalWidth = Mathf.Max(naturalWidth, label.CalcSize(measureContent).x);
             }
 
             float minimumWidth = 200f * scale;
@@ -52,20 +53,20 @@ namespace SPTItemIntelligence
             float width = Mathf.Clamp(naturalWidth + horizontalPadding * 2f, minimumWidth, maximumWidth);
             float textWidth = Mathf.Max(1f, width - horizontalPadding * 2f);
 
-            float[] rowHeights = new float[lineCount];
             float contentHeight = 0f;
             for (int i = 0; i < lineCount; i++)
             {
-                if (lines[i].Length == 0)
+                if (lineBuffer[i].Length == 0)
                 {
-                    rowHeights[i] = baseLineHeight;
+                    rowHeightBuffer[i] = baseLineHeight;
                 }
                 else
                 {
-                    float wrappedHeight = label.CalcHeight(new GUIContent(lines[i]), textWidth);
-                    rowHeights[i] = Mathf.Max(baseLineHeight, wrappedHeight + 2f * scale);
+                    measureContent.text = lineBuffer[i];
+                    float wrappedHeight = label.CalcHeight(measureContent, textWidth);
+                    rowHeightBuffer[i] = Mathf.Max(baseLineHeight, wrappedHeight + 2f * scale);
                 }
-                contentHeight += rowHeights[i];
+                contentHeight += rowHeightBuffer[i];
                 if (i + 1 < lineCount) contentHeight += rowGap;
             }
 
@@ -83,7 +84,7 @@ namespace SPTItemIntelligence
             float yCursor = y + verticalPadding;
             for (int i = 0; i < lineCount; i++)
             {
-                string line = lines[i];
+                string line = lineBuffer[i];
                 if (line.Length > 0)
                 {
                     Color semantic = ResolveColor(line, settings);
@@ -92,14 +93,50 @@ namespace SPTItemIntelligence
                     activeStyle.normal.textColor = Color.white;
                     string rendered = hasSemanticProgress ? ApplySemanticProgressColor(line, semantic) : line;
                     GUI.Label(
-                        new Rect(x + horizontalPadding, yCursor, textWidth, rowHeights[i]),
+                        new Rect(x + horizontalPadding, yCursor, textWidth, rowHeightBuffer[i]),
                         rendered,
                         activeStyle);
                 }
-                yCursor += rowHeights[i] + rowGap;
+                yCursor += rowHeightBuffer[i] + rowGap;
             }
 
             GUI.color = previous;
+        }
+
+        static GUIStyle GetLabelStyle(int fontSize)
+        {
+            GUISkin skin = GUI.skin;
+            if (cachedLabel == null || !object.ReferenceEquals(cachedSkin, skin))
+            {
+                cachedSkin = skin;
+                cachedLabel = new GUIStyle(skin.label)
+                {
+                    alignment = TextAnchor.UpperLeft,
+                    clipping = TextClipping.Clip,
+                    wordWrap = true,
+                    richText = false,
+                    padding = new RectOffset(0, 0, 1, 2)
+                };
+                cachedSemanticLabel = new GUIStyle(cachedLabel) { richText = true };
+            }
+            cachedLabel.fontSize = fontSize;
+            cachedSemanticLabel.fontSize = fontSize;
+            return cachedLabel;
+        }
+
+        static GUIStyle GetSemanticLabelStyle(int fontSize)
+        {
+            GetLabelStyle(fontSize);
+            return cachedSemanticLabel;
+        }
+
+        static void EnsureBuffers(int lineCount)
+        {
+            if (lineBuffer.Length >= lineCount) return;
+            int capacity = Math.Max(8, lineBuffer.Length == 0 ? 8 : lineBuffer.Length * 2);
+            while (capacity < lineCount) capacity *= 2;
+            lineBuffer = new string[capacity];
+            rowHeightBuffer = new float[capacity];
         }
 
         internal static string DisplayLine(string line, ItemTooltipMode mode)
@@ -175,16 +212,30 @@ namespace SPTItemIntelligence
             }
 
             int slash = line.IndexOf('/', start, end - start);
-            if (slash < 0)
+            if (slash < 0 || !TryParsePositiveInt(line, start, slash, out owned) || !TryParsePositiveInt(line, slash + 1, end, out required))
             {
                 cursor = end;
                 return false;
             }
 
-            bool parsed = int.TryParse(line.Substring(start, slash - start), out owned) &&
-                          int.TryParse(line.Substring(slash + 1, end - slash - 1), out required);
             cursor = end;
-            return parsed;
+            return true;
+        }
+
+        static bool TryParsePositiveInt(string text, int start, int end, out int value)
+        {
+            value = 0;
+            if (string.IsNullOrEmpty(text) || start < 0 || end <= start || end > text.Length) return false;
+
+            for (int i = start; i < end; i++)
+            {
+                char c = text[i];
+                if (c < '0' || c > '9') return false;
+                int digit = c - '0';
+                if (value > (int.MaxValue - digit) / 10) return false;
+                value = value * 10 + digit;
+            }
+            return true;
         }
 
         static bool TryFindNextRatio(string line, int startAt, out int start, out int end)

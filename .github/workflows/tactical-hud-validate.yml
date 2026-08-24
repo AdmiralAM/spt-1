@@ -1,0 +1,59 @@
+name: Tactical HUD Validate
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mods/SPT-Tactical-HUD/client/**'
+      - 'mods/SPT-Tactical-HUD/server/**'
+      - 'mods/SPT-Tactical-HUD/tools/**'
+      - '.github/workflows/tactical-hud-validate.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: tactical-hud-validate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate Tactical HUD assets and hot paths
+        shell: pwsh
+        run: |
+          python -m pip install --disable-pip-version-check pillow
+          python mods/SPT-Tactical-HUD/tools/generate_hud_sprites.py
+          python mods/SPT-Tactical-HUD/tools/normalize_hud_sprites.py
+          python mods/SPT-Tactical-HUD/tools/check_hud_assets.py
+          python mods/SPT-Tactical-HUD/tools/check_hud_optics.py
+          python mods/SPT-Tactical-HUD/tools/check_hud_hotpaths.py
+          python mods/SPT-Tactical-HUD/tools/generate_hud_preview.py
+
+      - name: Download BepInEx 5
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path deps | Out-Null
+          Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
+          Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
+
+      - name: Build Tactical HUD client
+        shell: pwsh
+        run: dotnet build mods/SPT-Tactical-HUD/client/SPT-Tactical-HUD.csproj -c Release --nologo
+
+      - name: Build Tactical HUD server
+        shell: pwsh
+        run: dotnet build mods/SPT-Tactical-HUD/server/SPT-TacticalHUD-Server.csproj -c Release --nologo
