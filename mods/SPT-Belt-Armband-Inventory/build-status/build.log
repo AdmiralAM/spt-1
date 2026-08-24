@@ -1,5 +1,5 @@
   Determining projects to restore...
-  Restored D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\src\SPT-Belt-Armband-Inventory.csproj (in 314 ms).
+  Restored D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\src\SPT-Belt-Armband-Inventory.csproj (in 301 ms).
 D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\src\BeltDeathPolicy.cs(17,22): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\src\SPT-Belt-Armband-Inventory.csproj]
 D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\src\BeltDeathPolicy.cs(18,22): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\src\SPT-Belt-Armband-Inventory.csproj]
 D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\src\BeltDeathPolicy.cs(9,51): warning CS8632: The annotation for nullable reference types should only be used in code within a '#nullable' annotations context. [D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\src\SPT-Belt-Armband-Inventory.csproj]
@@ -27,4 +27,4 @@ D:\a\spt-1\spt-1\mods\SPT-Belt-Armband-Inventory\src\BeltDeathPolicy.cs(44,23): 
     10 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:01.92
+Time Elapsed 00:00:01.91
