@@ -54,6 +54,8 @@ namespace SPTQuestPlanner.Client
             if (GUILayout.Button("X", GUILayout.Width(30f))) visible = false;
             GUILayout.EndHorizontal();
 
+            DrawControls(uiState);
+
             GUILayout.BeginHorizontal();
             DrawLocationList(viewModel, uiState);
             DrawDetails(selected);
@@ -61,6 +63,28 @@ namespace SPTQuestPlanner.Client
             GUILayout.EndVertical();
 
             GUI.DragWindow(new Rect(0f, 0f, windowRect.width - 140f, 24f));
+        }
+
+        private static void DrawControls(PlannerRaidPlanUiState uiState)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("Rank:", GUILayout.Width(38f));
+
+            bool readyFirst = uiState.RankingMode == PlannerRaidPlanRankingMode.ReadyFirst;
+            if (GUILayout.Toggle(readyFirst, "Ready first", "Button", GUILayout.Width(100f)) && !readyFirst)
+                uiState.SetRankingMode(PlannerRaidPlanRankingMode.ReadyFirst);
+
+            bool densityFirst = uiState.RankingMode == PlannerRaidPlanRankingMode.QuestDensityFirst;
+            if (GUILayout.Toggle(densityFirst, "Quest density", "Button", GUILayout.Width(110f)) && !densityFirst)
+                uiState.SetRankingMode(PlannerRaidPlanRankingMode.QuestDensityFirst);
+
+            GUILayout.Space(12f);
+            bool includeAvailable = GUILayout.Toggle(uiState.IncludeAvailable, "Include available quests", GUILayout.Width(160f));
+            if (includeAvailable != uiState.IncludeAvailable)
+                uiState.SetIncludeAvailable(includeAvailable);
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
         }
 
         private void DrawLocationList(PlannerRaidPlanViewModel viewModel, PlannerRaidPlanUiState uiState)
