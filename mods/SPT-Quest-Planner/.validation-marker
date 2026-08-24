@@ -1,4 +1,4 @@
 Quest planner MOD SPT validation-only marker
-baseline: 37efbca85b694e5c0b21b6cd101202532d21b3da
-purpose: validate locale revision decoupling and SPT 4.1.2 server target
-keepalive: 1
+baseline: c54c87423fb1865bbb925b9c10ba09ccf5846e35
+purpose: validate locale revision decoupling, SPT 4.1.2 server target, shutdown/UI fail-soft hardening
+keepalive: 2
