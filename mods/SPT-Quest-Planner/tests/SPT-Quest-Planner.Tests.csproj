@@ -14,6 +14,7 @@
     <Compile Include="..\client\PlannerClientRuntime.cs" Link="PlannerClientRuntime.cs" />
     <Compile Include="..\client\PlannerClientIndex.cs" Link="PlannerClientIndex.cs" />
     <Compile Include="..\client\PlannerTopologyIndex.cs" Link="PlannerTopologyIndex.cs" />
+    <Compile Include="..\client\PlannerQueryEngine.cs" Link="PlannerQueryEngine.cs" />
     <Compile Include="..\client\RefreshScheduler.cs" Link="RefreshScheduler.cs" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
