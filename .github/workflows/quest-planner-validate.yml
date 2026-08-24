@@ -1,5 +1,11 @@
 name: Quest Planner Validate
+
 on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'mods/SPT-Quest-Planner/**'
+      - '.github/workflows/quest-planner-validate.yml'
   pull_request:
     branches: [ main ]
     paths:
@@ -7,26 +13,62 @@ on:
       - '.github/workflows/quest-planner-validate.yml'
   workflow_dispatch:
 
+concurrency:
+  group: quest-planner-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
+    name: Quest Planner build and tests
     runs-on: windows-latest
+    timeout-minutes: 20
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+
       - name: Download BepInEx 5
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path deps | Out-Null
           Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
           Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
+
       - name: Run Quest Planner tests
         shell: pwsh
-        run: dotnet test mods/SPT-Quest-Planner/tests/SPT-Quest-Planner.Tests.csproj -c Release
+        run: dotnet test mods/SPT-Quest-Planner/tests/SPT-Quest-Planner.Tests.csproj -c Release --nologo
+
       - name: Build Quest Planner client
         shell: pwsh
-        run: dotnet build mods/SPT-Quest-Planner/client/SPT-Quest-Planner.Client.csproj -c Release
+        run: dotnet build mods/SPT-Quest-Planner/client/SPT-Quest-Planner.Client.csproj -c Release --nologo
+
       - name: Build Quest Planner server
         shell: pwsh
-        run: dotnet build mods/SPT-Quest-Planner/server/SPT-Quest-Planner.Server.csproj -c Release
+        run: dotnet build mods/SPT-Quest-Planner/server/SPT-Quest-Planner.Server.csproj -c Release --nologo
+
+      - name: Stage Quest Planner artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts/client | Out-Null
+          New-Item -ItemType Directory -Force -Path artifacts/server | Out-Null
+          Copy-Item 'mods/SPT-Quest-Planner/client/bin/Release/netstandard2.1/*.dll' artifacts/client/ -Force
+          Copy-Item 'mods/SPT-Quest-Planner/server/bin/Release/net10.0/*.dll' artifacts/server/ -Force
+
+      - name: Upload Quest Planner client
+        uses: actions/upload-artifact@v4
+        with:
+          name: quest-planner-client
+          path: artifacts/client
+          if-no-files-found: error
+
+      - name: Upload Quest Planner server
+        uses: actions/upload-artifact@v4
+        with:
+          name: quest-planner-server
+          path: artifacts/server
+          if-no-files-found: error
