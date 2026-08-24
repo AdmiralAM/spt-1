@@ -51,21 +51,40 @@ namespace SPTQuestPlanner.Client
         public double FutureOutstandingAfterCurrent { get; private set; }
     }
 
+    public sealed class PlannerConditionProgress
+    {
+        public PlannerConditionProgress(string counterId, string type, double value, string sourceQuestId)
+        {
+            CounterId = counterId ?? string.Empty;
+            Type = type;
+            Value = value;
+            SourceQuestId = sourceQuestId;
+        }
+
+        public string CounterId { get; private set; }
+        public string Type { get; private set; }
+        public double Value { get; private set; }
+        public string SourceQuestId { get; private set; }
+    }
+
     public sealed class PlannerClientIndex
     {
         public PlannerClientIndex(
             long generatedAtUnixSeconds,
             IReadOnlyDictionary<string, PlannerQuestClientState> quests,
-            IReadOnlyDictionary<string, PlannerItemClientState> items)
+            IReadOnlyDictionary<string, PlannerItemClientState> items,
+            IReadOnlyDictionary<string, PlannerConditionProgress> conditionProgress = null)
         {
             GeneratedAtUnixSeconds = generatedAtUnixSeconds;
             Quests = quests ?? new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal);
             Items = items ?? new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal);
+            ConditionProgress = conditionProgress ?? new Dictionary<string, PlannerConditionProgress>(StringComparer.Ordinal);
         }
 
         public long GeneratedAtUnixSeconds { get; private set; }
         public IReadOnlyDictionary<string, PlannerQuestClientState> Quests { get; private set; }
         public IReadOnlyDictionary<string, PlannerItemClientState> Items { get; private set; }
+        public IReadOnlyDictionary<string, PlannerConditionProgress> ConditionProgress { get; private set; }
 
         public PlannerQuestClientState GetQuest(string questId)
         {
@@ -77,6 +96,12 @@ namespace SPTQuestPlanner.Client
         {
             PlannerItemClientState value;
             return !string.IsNullOrWhiteSpace(templateId) && Items.TryGetValue(templateId, out value) ? value : null;
+        }
+
+        public PlannerConditionProgress GetConditionProgress(string counterId)
+        {
+            PlannerConditionProgress value;
+            return !string.IsNullOrWhiteSpace(counterId) && ConditionProgress.TryGetValue(counterId, out value) ? value : null;
         }
     }
 
@@ -125,7 +150,23 @@ namespace SPTQuestPlanner.Client
                     ReadDouble(Get(node, "futureOutstandingAfterCurrent"), 0d));
             }
 
-            return new PlannerClientIndex(generated, quests, items);
+            Dictionary<string, PlannerConditionProgress> progress = new Dictionary<string, PlannerConditionProgress>(StringComparer.Ordinal);
+            object player = Get(root, "player");
+            object counters = Get(player, "taskConditionCounters");
+            foreach (KeyValuePair<string, object> entry in Properties(counters))
+            {
+                object node = entry.Value;
+                string counterId = ReadString(Get(node, "counterId"));
+                if (string.IsNullOrWhiteSpace(counterId)) counterId = entry.Key;
+                if (string.IsNullOrWhiteSpace(counterId)) continue;
+                progress[counterId] = new PlannerConditionProgress(
+                    counterId,
+                    ReadString(Get(node, "type")),
+                    ReadDouble(Get(node, "value"), 0d),
+                    ReadString(Get(node, "sourceQuestId")));
+            }
+
+            return new PlannerClientIndex(generated, quests, items, progress);
         }
 
         private static object Get(object token, string name)
