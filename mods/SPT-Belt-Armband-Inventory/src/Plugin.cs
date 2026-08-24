@@ -21,6 +21,7 @@ namespace SPTBeltArmbandInventory
         UnloadPriorityPatches unloadPatches;
         ScavBeltPatches scavPatches;
         GrenadeSlotPatches grenadePatches;
+        SlotMergePatches slotMergePatches;
 
         void Awake()
         {
@@ -86,6 +87,14 @@ namespace SPTBeltArmbandInventory
                 grenadePatches = null;
                 Logger.LogWarning("Belt storage remains active, but grenades inside the belt may not participate in vanilla G/fast-access selection.");
             }
+
+            slotMergePatches = new SlotMergePatches(Logger.LogInfo, Logger.LogWarning);
+            if (!slotMergePatches.TryInstall())
+            {
+                slotMergePatches.Dispose();
+                slotMergePatches = null;
+                Logger.LogWarning("Belt storage remains active, but ArmBand parent/child merge semantics remain vanilla.");
+            }
         }
 
         void Update()
@@ -107,6 +116,8 @@ namespace SPTBeltArmbandInventory
 
         void OnDestroy()
         {
+            if (slotMergePatches != null) slotMergePatches.Dispose();
+            slotMergePatches = null;
             if (grenadePatches != null) grenadePatches.Dispose();
             grenadePatches = null;
             if (scavPatches != null) scavPatches.Dispose();
