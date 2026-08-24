@@ -1,20 +1,29 @@
 # SPT Belt/Armband Inventory
 
-Standalone client UI adapter for SPT 4.1.x. Phase 1 makes any container item equipped in `ArmBand` appear as a normal belt inventory row without adding items, changing profiles or depending on a specific content pack.
+Inventory extension for SPT 4.1.x that gives compatible container items equipped in the `ArmBand` slot belt-style inventory behavior. Current module version: **0.1.0**.
 
-## Phase 1
+The implementation is generic: it does not require a specific Pack 'n' Strap item ID or content class. Plain armbands remain ordinary armbands; container-capable items receive the additional inventory behavior.
 
-- container armband only; empty/plain armbands are not duplicated;
-- belt row above or below Pockets (F12, restart required);
-- all EFT screens backed by `ContainersPanel`;
-- runtime reflection for SPT 4.1 obfuscated members;
-- no per-frame polling or inventory-controller replacement;
-- safe conflict guard for legacy Trenchfoot-BeltSlot.
+## Current architecture
 
-Pack 'n' Strap compatibility is item-shape based. If that pack installs `Trenchfoot-BeltSlot.dll`, remove or disable the legacy DLL before using this replacement.
+The module now contains both client and server components:
 
-Phase 1 intentionally defers ctrl-click priority and same-screen live refresh. Close and reopen inventory after equipping or removing a belt.
+- `src/` — client-side inventory presentation, slot integration, quick-move/priority behavior, and compatibility patches;
+- `server/` — SPT 4.1.3 server integration, including belt persistence/death-policy behavior;
+- `tests/` — regression coverage for the current client/server contracts;
+- `tools/` — deterministic hot-path checks;
+- `docs/` — compatibility archaeology and runtime contracts.
 
-See [the runtime contract](docs/phase1-runtime-contract.md) for exact scope and acceptance checks.
+The client remains event/interaction driven; it does not use per-frame inventory polling. Runtime reflection is used where EFT/SPT client members are obfuscated and is resolved outside hot paths.
 
-The [archaeology note](docs/archaeology.md) records which old behavior was retained and which fragile patches were removed for SPT 4.1.
+## Compatibility
+
+The original Trenchfoot BeltSlot and Pack 'n' Strap implementations are archaeology/reference material, not runtime dependencies. If a legacy `Trenchfoot-BeltSlot.dll` is installed, remove or disable it before using this module to avoid two implementations patching the same inventory behavior.
+
+The server project targets the SPT 4.1.3 `SPTushonka.*` packages. See [archaeology and SPT 4.1 mapping](docs/archaeology.md) for the retained behavior and rejected legacy patch patterns.
+
+## Development status
+
+Belt/Armband Inventory is under active development. Historical Phase 1 documentation records the original presentation contract and should be read as design history where later source/tests have expanded the behavior beyond that baseline.
+
+Use the current source, regression tests, and active development branch as the authority for ongoing work. The `runtime-belt-armband` channel is the install-only publication channel for validated builds.
