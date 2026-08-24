@@ -28,7 +28,8 @@ namespace SPTQuestPlanner.Client
             string parentConditionId,
             IReadOnlyList<string> targets,
             IReadOnlyList<string> locationIds,
-            PlannerObjectiveKind kind)
+            PlannerObjectiveKind kind,
+            double? requiredValue = null)
         {
             QuestId = questId ?? string.Empty;
             ConditionId = conditionId ?? string.Empty;
@@ -38,6 +39,7 @@ namespace SPTQuestPlanner.Client
             Targets = targets ?? Array.Empty<string>();
             LocationIds = locationIds ?? Array.Empty<string>();
             Kind = kind;
+            RequiredValue = requiredValue;
         }
 
         public string QuestId { get; private set; }
@@ -48,6 +50,7 @@ namespace SPTQuestPlanner.Client
         public IReadOnlyList<string> Targets { get; private set; }
         public IReadOnlyList<string> LocationIds { get; private set; }
         public PlannerObjectiveKind Kind { get; private set; }
+        public double? RequiredValue { get; private set; }
     }
 
     public sealed class PlannerLocationBucket
@@ -108,7 +111,8 @@ namespace SPTQuestPlanner.Client
                     ReadString(Get(objective, "parentConditionId")),
                     ReadStrings(Get(objective, "targets")),
                     ReadStrings(Get(objective, "locationHints")),
-                    NormalizeLocation(ReadString(Get(objective, "questLocationHint")))));
+                    NormalizeLocation(ReadString(Get(objective, "questLocationHint"))),
+                    ReadNullableDouble(Get(objective, "requiredValue"))));
             }
 
             Dictionary<string, HashSet<string>> groupLocations = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
@@ -151,7 +155,8 @@ namespace SPTQuestPlanner.Client
                     value.ParentConditionId,
                     value.Targets,
                     locations,
-                    Classify(value.ConditionType));
+                    Classify(value.ConditionType),
+                    value.RequiredValue);
 
                 if (locations.Length == 0)
                 {
@@ -266,6 +271,7 @@ namespace SPTQuestPlanner.Client
         }
 
         private static string ReadString(object token) { return token == null ? null : token.ToString(); }
+        private static double? ReadNullableDouble(object token) { double value; return double.TryParse(ReadString(token), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out value) ? (double?)value : null; }
 
         private static Type FindType(string fullName)
         {
@@ -292,7 +298,8 @@ namespace SPTQuestPlanner.Client
                 string parentConditionId,
                 IReadOnlyList<string> targets,
                 IReadOnlyList<string> locationHints,
-                string questLocationHint)
+                string questLocationHint,
+                double? requiredValue)
             {
                 QuestId = questId;
                 ConditionId = conditionId;
@@ -302,6 +309,7 @@ namespace SPTQuestPlanner.Client
                 Targets = targets;
                 LocationHints = locationHints;
                 QuestLocationHint = questLocationHint;
+                RequiredValue = requiredValue;
             }
 
             public string QuestId;
@@ -312,6 +320,7 @@ namespace SPTQuestPlanner.Client
             public IReadOnlyList<string> Targets;
             public IReadOnlyList<string> LocationHints;
             public string QuestLocationHint;
+            public double? RequiredValue;
         }
     }
 }
