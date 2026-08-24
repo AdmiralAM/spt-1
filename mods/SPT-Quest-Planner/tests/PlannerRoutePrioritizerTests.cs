@@ -6,7 +6,23 @@ namespace SPTQuestPlanner.Tests;
 public sealed class PlannerRoutePrioritizerTests
 {
     [Fact]
-    public void FewerImmediateBlockersWinBeforeItemBurden()
+    public void ActiveQuestWinsBeforeAvailableEvenWhenAvailableHasLowerBurden()
+    {
+        PlannerRoutePrioritizer prioritizer = Create(
+            quests: new[] { Quest("active", Array.Empty<string>()), Quest("available", Array.Empty<string>()) },
+            states: new[] { State("active", 4), State("available", 3) },
+            requirements: new[] { Requirement("active", "active-item", "tpl-active", 5d, false) },
+            items: Array.Empty<PlannerItemClientState>());
+
+        IReadOnlyList<PlannerRoutePriority> ranked = prioritizer.Rank(new[] { "available", "active" });
+
+        Assert.Equal("active", ranked[0].TargetQuestId);
+        Assert.Equal(4, ranked[0].TargetDisposition);
+        Assert.Equal("available", ranked[1].TargetQuestId);
+    }
+
+    [Fact]
+    public void FewerImmediateBlockersWinBeforeItemBurdenWithinSameDisposition()
     {
         PlannerRoutePrioritizer prioritizer = Create(
             quests: new[]
@@ -17,7 +33,7 @@ public sealed class PlannerRoutePrioritizerTests
             },
             states: new[]
             {
-                State("open", 2), State("pre", 2), State("blocked", 1)
+                State("open", 2), State("pre", 2), State("blocked", 2)
             },
             requirements: new[]
             {
