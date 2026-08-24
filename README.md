@@ -17,7 +17,7 @@ This section is an authorship/provenance statement, not a software license grant
 | Module | Current state | Purpose | Install channel |
 | --- | --- | --- | --- |
 | [SPT Tactical HUD](mods/SPT-Tactical-HUD) | Client `1.13.2`; optional server `1.13.0` | Population, player-status, and kill-feed HUD | [`runtime`](https://github.com/AdmiralAM/spt-1/tree/runtime) |
-| [SPT Item Intelligence](mods/SPT-Item-Intelligence) | `0.10.1`; active development | Item requirement and value intelligence with persistent per-item markers | [`runtime-item-intelligence`](https://github.com/AdmiralAM/spt-1/tree/runtime-item-intelligence) |
+| [SPT Item Intelligence](mods/SPT-Item-Intelligence) | `0.11.0`; stable / maintenance-only | Requirement, FIR, valuation, craft/barter relevance, and persistent per-item markers | [`runtime-item-intelligence`](https://github.com/AdmiralAM/spt-1/tree/runtime-item-intelligence) |
 | [SPT Pause](mods/SPT-Pause) | `0.1.1`; validation pending | Offline-raid pause with raid-clock and time-of-day preservation | [`runtime-pause`](https://github.com/AdmiralAM/spt-1/tree/runtime-pause) |
 | [SPT Belt/Armband Inventory](mods/SPT-Belt-Armband-Inventory) | `0.1.0`; active development | Additional inventory/container behavior for the `ArmBand` equipment slot | [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband) |
 | [SPT Quest Planner](mods/SPT-Quest-Planner) | `0.9.4`; active UX/polish development | Persistent active raid planning plus quest progression recommendations | Development source / CI artifacts |
