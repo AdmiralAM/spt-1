@@ -14,6 +14,7 @@
     <Compile Include="..\src\GrenadeSlotPatches.cs" Link="GrenadeSlotPatches.cs" />
     <Compile Include="..\src\FastAccessBeltSyncPatches.cs" Link="FastAccessBeltSyncPatches.cs" />
     <Compile Include="..\src\FastAccessSlotPatches.cs" Link="FastAccessSlotPatches.cs" />
+    <Compile Include="..\src\RuntimeMutationPolicy.cs" Link="RuntimeMutationPolicy.cs" />
     <Compile Include="..\src\BeltDeathPolicy.cs" Link="BeltDeathPolicy.cs" />
     <Compile Include="..\src\SlotMergePatches.cs" Link="SlotMergePatches.cs" />
     <Compile Include="..\src\PickupSlotPatches.cs" Link="PickupSlotPatches.cs" />
