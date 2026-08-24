@@ -39,7 +39,7 @@ public sealed class PlannerPathItemPlannerTests
                 ["q2"] = Array.Empty<PlannerQuestItemRequirement>()
             });
 
-        PlannerPathItemPlan result = PlannerPathItemPlanner.BuildForTarget(topology, state, requirements, "q2");
+        PlannerPathItemPlan result = Build(topology, state, requirements, "q2");
 
         Assert.Single(result.ExactNeeds);
         PlannerPathItemNeed need = result.ExactNeeds[0];
@@ -67,7 +67,7 @@ public sealed class PlannerPathItemPlannerTests
         var requirements = RequirementIndex("q1",
             new PlannerQuestItemRequirement("q1", "alt", new[] { "tpl-a", "tpl-b" }, 3d, false, "Finish"));
 
-        PlannerPathItemPlan result = PlannerPathItemPlanner.BuildForTarget(topology, state, requirements, "q1");
+        PlannerPathItemPlan result = Build(topology, state, requirements, "q1");
 
         PlannerAlternativeItemNeed alternative = Assert.Single(result.AlternativeNeeds);
         Assert.Equal(3d, alternative.OwnedAllocated);
@@ -94,7 +94,7 @@ public sealed class PlannerPathItemPlannerTests
             new PlannerQuestItemRequirement("q1", "flex", new[] { "tpl-a", "tpl-b" }, 2d, false, "Finish"),
             new PlannerQuestItemRequirement("q1", "fixed", new[] { "tpl-a" }, 2d, false, "Finish"));
 
-        PlannerPathItemPlan result = PlannerPathItemPlanner.BuildForTarget(topology, state, requirements, "q1");
+        PlannerPathItemPlan result = Build(topology, state, requirements, "q1");
 
         Assert.All(result.ExactNeeds, need => Assert.Equal(0d, need.Outstanding));
         PlannerAlternativeItemNeed alternative = Assert.Single(result.AlternativeNeeds);
@@ -121,7 +121,7 @@ public sealed class PlannerPathItemPlannerTests
             new PlannerQuestItemRequirement("q1", "fir", new[] { "tpl-a" }, 2d, true, "Finish"),
             new PlannerQuestItemRequirement("q1", "generic", new[] { "tpl-a", "tpl-b" }, 2d, false, "Finish"));
 
-        PlannerPathItemPlan result = PlannerPathItemPlanner.BuildForTarget(topology, state, requirements, "q1");
+        PlannerPathItemPlan result = Build(topology, state, requirements, "q1");
 
         PlannerPathItemNeed fir = Assert.Single(result.ExactNeeds);
         Assert.Equal(0d, fir.Outstanding);
@@ -148,11 +148,22 @@ public sealed class PlannerPathItemPlannerTests
         var requirements = RequirementIndex("q1",
             new PlannerQuestItemRequirement("q1", "alt", new[] { "tpl-a", "tpl-b" }, 3d, false, "Finish"));
 
-        PlannerPathItemPlan result = PlannerPathItemPlanner.BuildForTarget(topology, state, requirements, "q1");
+        PlannerPathItemPlan result = Build(topology, state, requirements, "q1");
 
         PlannerAlternativeItemNeed alternative = Assert.Single(result.AlternativeNeeds);
         Assert.Equal(1d, alternative.OwnedAllocated);
         Assert.Equal(2d, alternative.Outstanding);
+    }
+
+    private static PlannerPathItemPlan Build(
+        PlannerTopologyIndex topology,
+        PlannerClientIndex state,
+        PlannerRequirementIndex requirements,
+        string targetQuestId)
+    {
+        var query = new PlannerQueryEngine(topology, state);
+        var planner = new PlannerPathItemPlanner(query, requirements, state);
+        return planner.BuildForTarget(targetQuestId);
     }
 
     private static PlannerTopologyIndex SingleQuestTopology(string questId, params string[] templates)
