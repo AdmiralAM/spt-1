@@ -64,15 +64,27 @@ public class WTTArtemHelper(
         var nickName = baseJson.Nickname;
         var location = baseJson.Location;
 
-        foreach (var (_, localeKvP) in locales)
+        foreach (var (localeCode, localeKvP) in locales)
         {
             localeKvP.AddTransformer(lazyloadedLocaleData =>
             {
-                lazyloadedLocaleData!.Add($"{newTraderId} FullName", fullName);
-                lazyloadedLocaleData.Add($"{newTraderId} FirstName", firstName);
-                if (nickName != null) lazyloadedLocaleData.Add($"{newTraderId} Nickname", nickName);
-                if (location != null) lazyloadedLocaleData.Add($"{newTraderId} Location", location);
-                lazyloadedLocaleData.Add($"{newTraderId} Description", description);
+                if (lazyloadedLocaleData == null)
+                {
+                    return lazyloadedLocaleData;
+                }
+
+                var isRussian = localeCode.Equals("ru", StringComparison.OrdinalIgnoreCase);
+                var localizedFullName = isRussian ? "Артём" : fullName;
+                var localizedFirstName = isRussian ? "Артём" : firstName;
+                var localizedNickname = isRussian ? "Артём" : nickName;
+                var localizedLocation = isRussian && location == "[REDACTED]" ? "[ЗАСЕКРЕЧЕНО]" : location;
+                var localizedDescription = isRussian && description == "[REDACTED]" ? "[ЗАСЕКРЕЧЕНО]" : description;
+
+                lazyloadedLocaleData[$"{newTraderId} FullName"] = localizedFullName;
+                lazyloadedLocaleData[$"{newTraderId} FirstName"] = localizedFirstName;
+                if (localizedNickname != null) lazyloadedLocaleData[$"{newTraderId} Nickname"] = localizedNickname;
+                if (localizedLocation != null) lazyloadedLocaleData[$"{newTraderId} Location"] = localizedLocation;
+                lazyloadedLocaleData[$"{newTraderId} Description"] = localizedDescription;
                 return lazyloadedLocaleData;
             });
         }
