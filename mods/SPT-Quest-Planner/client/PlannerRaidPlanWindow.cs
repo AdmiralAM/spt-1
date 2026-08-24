@@ -43,7 +43,11 @@ namespace SPTQuestPlanner.Client
             GUILayout.BeginVertical();
             GUILayout.BeginHorizontal();
             GUILayout.Label("Raid plans: " + viewModel.LocationCount + "   Ready: " + viewModel.ReadyLocationCount, GUILayout.ExpandWidth(true));
-            if (GUILayout.Button("Refresh view", GUILayout.Width(100f))) presentation.Invalidate();
+            if (GUILayout.Button("Refresh data", GUILayout.Width(100f)))
+            {
+                Plugin instance = Plugin.Instance;
+                if (instance != null) instance.RequestStateRefresh("ui-manual");
+            }
             if (GUILayout.Button("X", GUILayout.Width(30f))) visible = false;
             GUILayout.EndHorizontal();
 
