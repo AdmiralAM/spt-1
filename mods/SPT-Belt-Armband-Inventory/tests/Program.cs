@@ -75,6 +75,10 @@ internal static class Program
         Assert(GrenadeSlotPolicy.ShouldIncludeBelt(true, true), "container belt participates in grenade fast-access slots");
         Assert(!GrenadeSlotPolicy.ShouldIncludeBelt(true, false), "plain armband is never a grenade slot");
         Assert(!GrenadeSlotPolicy.ShouldIncludeBelt(false, true), "container flag without an equipped item is ignored");
+        Assert(GrenadeSlotPolicy.ShouldAppendGrenade(true, true, false), "examined belt grenade is appended to vanilla grenade enumeration");
+        Assert(!GrenadeSlotPolicy.ShouldAppendGrenade(false, true, false), "non-grenade belt item is ignored by grenade enumeration");
+        Assert(!GrenadeSlotPolicy.ShouldAppendGrenade(true, false, false), "unexamined belt grenade preserves vanilla examination filtering");
+        Assert(!GrenadeSlotPolicy.ShouldAppendGrenade(true, true, true), "existing grenade reference is not duplicated");
 
         Assert(PickupSlotPolicy.ShouldTry(true, true, false, true), "compatible container can fall back to ArmBand when vanilla pickup has no slot");
         Assert(!PickupSlotPolicy.ShouldTry(false, true, false, true), "vanilla pickup result always wins");
