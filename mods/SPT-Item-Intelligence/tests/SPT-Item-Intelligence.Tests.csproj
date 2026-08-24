@@ -12,6 +12,7 @@
     <Compile Include="..\src\RequirementDataContract.cs" Link="RequirementDataContract.cs" />
     <Compile Include="..\src\RequirementIndex.cs" Link="RequirementIndex.cs" />
     <Compile Include="..\src\ItemRequirementState.cs" Link="ItemRequirementState.cs" />
+    <Compile Include="..\src\ItemRelevanceRegistry.cs" Link="ItemRelevanceRegistry.cs" />
     <Compile Include="..\src\Pricing.cs" Link="Pricing.cs" />
     <Compile Include="..\src\PresentationState.cs" Link="PresentationState.cs" />
     <Compile Include="..\src\HoverPresentation.cs" Link="HoverPresentation.cs" />
@@ -21,6 +22,7 @@
     <Compile Include="..\src\Diagnostics.cs" Link="Diagnostics.cs" />
     <Compile Include="..\src\EftHoverIntegration.cs" Link="EftHoverIntegration.cs" />
     <Compile Include="..\src\RuntimeDataBootstrap.cs" Link="RuntimeDataBootstrap.cs" />
+    <Compile Include="..\src\RelevanceSnapshotDecoder.cs" Link="RelevanceSnapshotDecoder.cs" />
     <Compile Include="..\src\AqcQuestRequirementProjector.cs" Link="AqcQuestRequirementProjector.cs" />
     <Compile Include="..\src\FirRequirementRegistry.cs" Link="FirRequirementRegistry.cs" />
     <Compile Include="..\src\MarkerPresentation.cs" Link="MarkerPresentation.cs" />

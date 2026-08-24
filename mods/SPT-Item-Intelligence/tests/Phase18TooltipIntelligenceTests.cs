@@ -80,7 +80,8 @@ static class Phase18TooltipIntelligenceTests
         }));
         ItemHoverText text = new ItemHoverTextFormatter().Format(new ItemHoverState(store.Get("value")));
         Expect(text.Primary == "42,000 ₽ · Therapist", "vendor mode exposes named highest trader value", ref assertions);
-        Expect(text.Secondary.Length == 0, "vendor mode omits per-slot output", ref assertions);
+        Expect(text.Secondary == "Flea: 12,000 ₽", "vendor mode retains alternate flea value for Full", ref assertions);
+        Expect(Contains(text, ItemTooltipMode.Full, "Per slot: 21,000 ₽"), "full mode exposes value per slot", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Detailed, "Now: Signal - Part 1 ×2 · FIR"), "detailed mode names the active quest", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Detailed, "Hideout: Workbench L1 ×3"), "detailed mode names the hideout target", ref assertions);
 
@@ -89,7 +90,7 @@ static class Phase18TooltipIntelligenceTests
             new ItemPriceInput("FLEA", 10000, "Prapor", 51000, 9000)
         }));
         ItemHoverText flea = new ItemHoverTextFormatter().Format(new ItemHoverState(store.Get("flea")), ItemValueMode.Flea);
-        Expect(flea.Primary == "51,000 ₽ · Flea" && flea.Secondary.Length == 0, "flea mode exposes flea value without per-slot output", ref assertions);
+        Expect(flea.Primary == "51,000 ₽ · Flea" && flea.Secondary == "Prapor: 10,000 ₽", "flea mode retains named trader alternate value for Full", ref assertions);
 
         ItemHoverText bounded = new ItemHoverText("1 ₽", "", "", "bounded", 0, 0, 0, 0, 0, "", new[] { "A", "B", "C", "D" });
         Expect(Contains(bounded, ItemTooltipMode.Detailed, "Requirements: +1 more"), "detailed target list is bounded with a cached remainder line", ref assertions);

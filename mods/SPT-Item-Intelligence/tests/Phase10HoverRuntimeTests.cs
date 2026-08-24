@@ -18,7 +18,7 @@ static class Phase10HoverRuntimeTests
 
         ItemHoverText first = controller.OnHoverEnter(" ITEM-A ");
         Expect(first.Primary == "10,000 ₽ · Therapist", "hover enter publishes vendor-mode presentation text", ref assertions);
-        Expect(first.Secondary.Length == 0, "hover runtime omits price-per-slot", ref assertions);
+        Expect(first.Secondary == "Flea: 24,000 ₽", "hover runtime carries cached alternate flea valuation without extra runtime work", ref assertions);
         Expect(sink.ShowCount == 1 && sink.ClearCount == 0, "first hover emits one UI update", ref assertions);
         Expect(controller.HasActiveItem, "controller tracks active hovered template", ref assertions);
 

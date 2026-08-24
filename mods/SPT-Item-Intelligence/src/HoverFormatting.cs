@@ -35,7 +35,8 @@ namespace SPTItemIntelligence
             IEnumerable<string> requirementDetails = null,
             int ownedFoundInRaid = 0,
             int questNowFoundInRaid = 0,
-            int questLaterFoundInRaid = 0)
+            int questLaterFoundInRaid = 0,
+            string perSlotLine = null)
         {
             Primary = primary ?? string.Empty;
             Secondary = secondary ?? string.Empty;
@@ -87,11 +88,21 @@ namespace SPTItemIntelligence
             QuestLaterLine = RequirementLine(
                 "Quest Later", QuestLaterOwned, QuestNeededLater, QuestLaterFoundInRaidOwned, QuestLaterFoundInRaid);
             KeepLine = CountLine("Keep", KeepCount);
-            PerSlotLine = string.Empty;
-            OwnedLine = OwnedFoundInRaid > 0
+            PerSlotLine = perSlotLine ?? string.Empty;
+
+            ItemRelevanceState relevance = ItemRelevanceRegistry.Get(TemplateId);
+            string ownedLine = OwnedFoundInRaid > 0
                 ? "Owned ×" + OwnedCount.ToString(CultureInfo.InvariantCulture) + " · FIR ×" + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture)
                 : CountLine("Owned", OwnedCount);
+            if (relevance.OnYouCount > 0)
+            {
+                ownedLine = (ownedLine.Length == 0 ? string.Empty : ownedLine + " · ") +
+                    "On You ×" + relevance.OnYouCount.ToString(CultureInfo.InvariantCulture);
+            }
+            OwnedLine = ownedLine;
             BestSourceLine = bestSource ?? string.Empty;
+            CraftLine = CountLine("Craft", relevance.CraftCount);
+            BarterLine = CountLine("Barter", relevance.BarterCount);
 
             List<string> details = new List<string>();
             List<string> detailed = new List<string>();
@@ -140,6 +151,8 @@ namespace SPTItemIntelligence
         public string HideoutLine { get; }
         public string KeepLine { get; }
         public string PerSlotLine { get; }
+        public string CraftLine { get; }
+        public string BarterLine { get; }
         public string OwnedLine { get; }
         public string BestSourceLine { get; }
         public IReadOnlyList<string> RequirementDetailLines { get; }
@@ -174,6 +187,13 @@ namespace SPTItemIntelligence
             }
 
             if (TryLine(ValueLine, requestedIndex, ref current, out found)) return found;
+            if (mode == ItemTooltipMode.Full)
+            {
+                if (TryLine(Secondary, requestedIndex, ref current, out found)) return found;
+                if (TryLine(PerSlotLine, requestedIndex, ref current, out found)) return found;
+                if (TryLine(CraftLine, requestedIndex, ref current, out found)) return found;
+                if (TryLine(BarterLine, requestedIndex, ref current, out found)) return found;
+            }
             if (mode != ItemTooltipMode.Minimal)
             {
                 if (TryLine(QuestNowLine, requestedIndex, ref current, out found)) return found;
@@ -261,15 +281,24 @@ namespace SPTItemIntelligence
         {
             if (hover == null || !hover.HasData) return ItemHoverText.Empty;
 
-            long unitValue = valueMode == ItemValueMode.Flea ? hover.FleaUnitValue : hover.TraderUnitValue;
-            string source = valueMode == ItemValueMode.Flea
-                ? "Flea"
-                : (string.IsNullOrWhiteSpace(hover.BestTraderName) ? "Vendor" : hover.BestTraderName.Trim());
+            bool fleaPreferred = valueMode == ItemValueMode.Flea;
+            string trader = string.IsNullOrWhiteSpace(hover.BestTraderName) ? "Vendor" : hover.BestTraderName.Trim();
+            long preferredValue = fleaPreferred ? hover.FleaUnitValue : hover.TraderUnitValue;
+            string preferredSource = fleaPreferred ? "Flea" : trader;
+            long alternateValue = fleaPreferred ? hover.TraderUnitValue : hover.FleaUnitValue;
+            string alternateSource = fleaPreferred ? trader : "Flea";
+            bool useAlternateAsPrimary = preferredValue <= 0 && alternateValue > 0;
+            long unitValue = useAlternateAsPrimary ? alternateValue : preferredValue;
+            string source = useAlternateAsPrimary ? alternateSource : preferredSource;
             string primary = unitValue > 0 ? FormatRoubles(unitValue) + " · " + source : string.Empty;
+            string secondary = !useAlternateAsPrimary && alternateValue > 0
+                ? alternateSource + ": " + FormatRoubles(alternateValue)
+                : string.Empty;
+            string perSlot = hover.ValuePerSlot > 0 ? "Per slot: " + FormatRoubles(hover.ValuePerSlot) : string.Empty;
             FirRequirementState fir = FirRequirementRegistry.Get(hover.TemplateId);
             return new ItemHoverText(
                 primary,
-                string.Empty,
+                secondary,
                 string.Empty,
                 hover.TemplateId,
                 hover.OwnedCount,
@@ -281,7 +310,8 @@ namespace SPTItemIntelligence
                 FormatRequirementDetails(hover.RequirementDetails),
                 fir.OwnedFoundInRaid,
                 fir.QuestNowFoundInRaid,
-                fir.QuestLaterFoundInRaid);
+                fir.QuestLaterFoundInRaid,
+                perSlot);
         }
 
         static IEnumerable<string> FormatRequirementDetails(IReadOnlyList<RequirementDetail> details)

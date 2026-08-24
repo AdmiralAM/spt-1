@@ -20,17 +20,18 @@ static class Phase15RequirementMarkerUxTests
         Expect(text.GetLine(ItemTooltipMode.Normal, 3) == "Quest Later: 0/3", "future quest progress is explicit", ref assertions);
         Expect(text.GetLine(ItemTooltipMode.Normal, 4) == "Keep ×4", "aggregate keep count remains visible", ref assertions);
 
-        Expect(text.GetLineCount(ItemTooltipMode.Detailed) == 6, "detailed mode adds owned count without per-slot output", ref assertions);
+        Expect(text.GetLineCount(ItemTooltipMode.Detailed) == 6, "detailed mode adds owned count without Full-only value rows", ref assertions);
         Expect(text.GetLine(ItemTooltipMode.Detailed, 5) == "Owned ×5", "detailed mode adds owned count", ref assertions);
         for (int i = 0; i < text.GetLineCount(ItemTooltipMode.Detailed); i++)
-            Expect(text.GetLine(ItemTooltipMode.Detailed, i).IndexOf("Per slot", StringComparison.OrdinalIgnoreCase) < 0, "per-slot value is absent from detailed mode", ref assertions);
-        Expect(text.GetLineCount(ItemTooltipMode.Full) == 6, "full mode does not expose sell status, template id, or per-slot value", ref assertions);
+            Expect(text.GetLine(ItemTooltipMode.Detailed, i).IndexOf("21,000 ₽/slot", StringComparison.OrdinalIgnoreCase) < 0, "alternate value is absent from detailed mode", ref assertions);
+
+        Expect(text.GetLineCount(ItemTooltipMode.Full) == 7, "full mode adds the alternate value while keeping legacy status and template id hidden", ref assertions);
+        Expect(text.GetLine(ItemTooltipMode.Full, 1) == "21,000 ₽/slot", "full mode exposes the secondary value row", ref assertions);
         for (int i = 0; i < text.GetLineCount(ItemTooltipMode.Full); i++)
         {
             string line = text.GetLine(ItemTooltipMode.Full, i);
             Expect(line.IndexOf("SAFE TO SELL", StringComparison.OrdinalIgnoreCase) < 0, "safe-to-sell is absent from every user mode", ref assertions);
             Expect(line.IndexOf("SURPLUS", StringComparison.OrdinalIgnoreCase) < 0, "surplus is absent from every user mode", ref assertions);
-            Expect(line.IndexOf("Per slot", StringComparison.OrdinalIgnoreCase) < 0, "per-slot value is absent from every user mode", ref assertions);
             Expect(!line.StartsWith("ID:", StringComparison.OrdinalIgnoreCase), "template id is absent from every user mode", ref assertions);
         }
 

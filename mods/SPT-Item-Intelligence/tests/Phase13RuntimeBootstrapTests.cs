@@ -79,7 +79,7 @@ static class Phase13RuntimeBootstrapTests
         Expect(store.Get("a").Requirement.KeepCount == 2, "presentation store populated", ref assertions);
         Expect(store.Get("a").Price.BestSource == PriceSource.Flea && store.Get("a").Price.TotalValue == 2000, "live flea/trader snapshot populates Value", ref assertions);
         ItemHoverText active = controller.OnHoverEnter("a");
-        Expect(active.Primary == "1,000 ₽ · Therapist" && active.Secondary.Length == 0, "live vendor value reaches hover formatting without per-slot output", ref assertions);
+        Expect(active.Primary == "1,000 ₽ · Therapist" && active.Secondary == "Flea: 2,000 ₽", "live cached vendor and alternate flea values reach hover formatting", ref assertions);
         Expect(active.Status.Length == 0 && active.QuestNowLine == "Quest Now: 2/2 ✓", "live requirement fulfillment reaches hover without sell labels", ref assertions);
         ItemHoverText missingHideout = controller.OnHoverEnter("d");
         Expect(missingHideout.HideoutLine == "Hideout: 0/6" && ItemMarkerPresentation.From(missingHideout).Kind == ItemMarkerKind.Hideout,
