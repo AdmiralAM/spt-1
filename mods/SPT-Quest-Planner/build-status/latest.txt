@@ -1,6 +1,6 @@
 Quest Planner validation
-source_sha=cb0fa631f90c36755d0b027fff87a0bed57a8dee
-run_id=32717481663
-tests=failure
+source_sha=ddefbc5ee6c7199ccc00920cc44f4cd806f49929
+run_id=32718052537
+tests=success
 client=success
 server=success
