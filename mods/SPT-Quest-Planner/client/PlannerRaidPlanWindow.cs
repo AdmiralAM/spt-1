@@ -7,7 +7,7 @@ namespace SPTQuestPlanner.Client
     public sealed class PlannerRaidPlanWindow
     {
         private const int WindowId = 0x51504C4E;
-        private static readonly Color BackdropColor = new Color(0f, 0f, 0f, 0.45f);
+        private static readonly Color BackdropColor = new Color(0f, 0f, 0f, 0.50f);
         private static readonly Color WindowBackgroundColor = new Color(0.075f, 0.08f, 0.085f, 1f);
         private readonly PlannerRaidPlanPresentationController presentation;
         private readonly Func<long> revisionProvider;
