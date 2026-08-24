@@ -1,0 +1,4 @@
+Artem Revival MOD SPT validation trigger.
+
+Touch this file only when a validation run is required without changing implementation files.
+Target: SPT 4.1.3 / .NET 10 / WTT-ServerCommonLib 3.x.
