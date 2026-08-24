@@ -1,31 +1,41 @@
 # SPT Mod Suite
 
-This repository contains independent SPT mods. Each long-term product owns its source, documentation, tests and release version under `mods/`.
+A source repository for independent SPT 4.1.x mods. Each maintained module owns its source code, tests, documentation, versioning, and release lifecycle under `mods/`.
 
-| Mod | Version / state | Scope | Install channel |
+## Modules
+
+| Module | Current state | Purpose | Install channel |
 | --- | --- | --- | --- |
-| [SPT Tactical HUD](mods/SPT-Tactical-HUD) | Client `1.13.2`; optional server `1.13.0` | Population, status and kill-feed HUD only | [`runtime`](https://github.com/AdmiralAM/spt-1/tree/runtime) |
-| [SPT Item Intelligence](mods/SPT-Item-Intelligence) | `0.10.1` | Cell-attached requirement intelligence and item-value presentation | [`runtime-item-intelligence`](https://github.com/AdmiralAM/spt-1/tree/runtime-item-intelligence) |
-| [SPT Pause](mods/SPT-Pause) | `0.1.1` | Offline raid pause with timer/time-of-day preservation | [`runtime-pause`](https://github.com/AdmiralAM/spt-1/tree/runtime-pause) |
-| [SPT Belt/Armband Inventory](mods/SPT-Belt-Armband-Inventory) | `0.1.0` | Wearable utility/container inventory workstream | [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband) |
-| [SPT Quest Planner](mods/SPT-Quest-Planner) | Active development | Independent quest planning, route/path and presentation module | Development source only |
+| [SPT Tactical HUD](mods/SPT-Tactical-HUD) | Client `1.13.2`; optional server `1.13.0` | Population, player-status, and kill-feed HUD | [`runtime`](https://github.com/AdmiralAM/spt-1/tree/runtime) |
+| [SPT Item Intelligence](mods/SPT-Item-Intelligence) | `0.10.1`; active development | Item requirement and value intelligence with persistent per-item markers | [`runtime-item-intelligence`](https://github.com/AdmiralAM/spt-1/tree/runtime-item-intelligence) |
+| [SPT Pause](mods/SPT-Pause) | `0.1.1`; validation pending | Offline-raid pause with raid-clock and time-of-day preservation | [`runtime-pause`](https://github.com/AdmiralAM/spt-1/tree/runtime-pause) |
+| [SPT Belt/Armband Inventory](mods/SPT-Belt-Armband-Inventory) | `0.1.0`; active development | Additional inventory/container behavior for the `ArmBand` equipment slot | [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband) |
+| [SPT Quest Planner](mods/SPT-Quest-Planner) | `0.9.0`; active development | Quest topology, requirements, progression state, and raid planning | Development source / CI artifacts |
 
-`SPT Tactical HUD v1.14.0` is retired: that number was created when Item Intelligence was mistakenly compiled into the HUD. The corrected current HUD is the complete stable **v1.13.2**, while the extracted Item Intelligence code started its own lifecycle at **v0.1.0** and now advances independently at **v0.10.1**.
+Tactical HUD `1.14.0` is retired. That build accidentally combined early Item Intelligence code with the HUD. The maintained HUD line is `1.13.2`; Item Intelligence has an independent version and release lifecycle.
 
 ## Repository channels
 
-- `main` — active multi-mod development;
-- `stable` — exact CI-green source and build evidence for established current mods;
-- `runtime` — install-only **SPT Tactical HUD** package; it never contains Item Intelligence;
-- `runtime-item-intelligence` — install-only **SPT Item Intelligence** package; it never contains Tactical HUD;
-- `runtime-pause` — install-only **SPT Pause** package; it contains neither Tactical HUD nor Item Intelligence;
-- `runtime-belt-armband` — install-only **SPT Belt/Armband Inventory** package; it contains no other suite module;
-- `archive/v1.13.0` — frozen full Tactical HUD 1.13.0 reserve.
+- `main` — authoritative development source.
+- `stable` — source commit promoted after suite validation.
+- `runtime` — install-only Tactical HUD package.
+- `runtime-item-intelligence` — install-only Item Intelligence package.
+- `runtime-pause` — install-only Pause package.
+- `runtime-belt-armband` — install-only Belt/Armband Inventory package.
+- `archive/v1.13.0` — intentional frozen Tactical HUD `1.13.0` reserve.
 
-Downloads: [Tactical HUD ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime.zip) · [Item Intelligence ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-item-intelligence.zip) · [Pause ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-pause.zip) · [Belt/Armband Inventory ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip) · [Tactical HUD 1.13.0 reserve](https://github.com/AdmiralAM/spt-1/archive/refs/heads/archive/v1.13.0.zip)
+Runtime branches contain only installable files for their named module. They are generated from validated source and are not development branches.
 
-All runtime branches use stable, version-independent plugin directories. Copy only the branch for the mod you want into the SPT root.
+## Downloads
 
-## Repository hygiene
+[Tactical HUD](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime.zip) · [Item Intelligence](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-item-intelligence.zip) · [Pause](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-pause.zip) · [Belt/Armband Inventory](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip) · [Tactical HUD 1.13.0 archive](https://github.com/AdmiralAM/spt-1/archive/refs/heads/archive/v1.13.0.zip)
 
-Source, tests and durable documentation belong in `main`. Local IDE state, dependency caches, compiler output, logs, temporary diagnostics and locally produced archives are excluded by the root `.gitignore`. Generated deliverables or validation evidence should remain tracked only when a workflow explicitly depends on them; otherwise they belong in CI artifacts or release/runtime channels rather than the source tree.
+Copy only the runtime package for the mod you want into the SPT root. Runtime plugin directories are version-independent so an update can replace the previous installation cleanly.
+
+## Repository policy
+
+`main` contains source code, tests, maintained assets, build definitions, and durable documentation. Generated binaries, package copies, build/test logs, CI run metadata, temporary diagnostics, local IDE state, and dependency caches do not belong in source history.
+
+Temporary feature, fix, diagnostic, and archaeology branches are removed after their useful work is merged or explicitly superseded. Active workstream branches are preserved until that determination is made.
+
+See [source/stable/runtime governance](docs/github-stable-runtime.md) and [branch hygiene](docs/branch-hygiene.md) for the maintenance rules used by **GitHub SPT**.
