@@ -4,7 +4,9 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-      - 'mods/SPT-Item-Intelligence/**'
+      - 'mods/SPT-Item-Intelligence/src/**'
+      - 'mods/SPT-Item-Intelligence/server/**'
+      - 'mods/SPT-Item-Intelligence/tests/**'
       - '.github/workflows/item-intelligence-validate.yml'
   workflow_dispatch:
 
