@@ -90,7 +90,7 @@ jobs:
           dotnet-version: '10.0.x'
       - name: Build server
         shell: pwsh
-        run: dotnet build mods/SPT-Quest-Planner/../WTT-Artem-Revival/server/WTT-Artem.Revival.csproj -c Release --nologo
+        run: dotnet build mods/WTT-Artem-Revival/server/WTT-Artem.Revival.csproj -c Release --nologo
       - name: Upload server DLL
         uses: actions/upload-artifact@v4
         with:
