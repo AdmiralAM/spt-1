@@ -1,0 +1,32 @@
+name: Quest Planner Validate
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mods/SPT-Quest-Planner/**'
+      - '.github/workflows/quest-planner-validate.yml'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Download BepInEx 5
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path deps | Out-Null
+          Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
+          Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
+      - name: Run Quest Planner tests
+        shell: pwsh
+        run: dotnet test mods/SPT-Quest-Planner/tests/SPT-Quest-Planner.Tests.csproj -c Release
+      - name: Build Quest Planner client
+        shell: pwsh
+        run: dotnet build mods/SPT-Quest-Planner/client/SPT-Quest-Planner.Client.csproj -c Release
+      - name: Build Quest Planner server
+        shell: pwsh
+        run: dotnet build mods/SPT-Quest-Planner/server/SPT-Quest-Planner.Server.csproj -c Release
