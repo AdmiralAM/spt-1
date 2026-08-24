@@ -157,8 +157,33 @@ public static class QuestExtractor
             yield break;
         }
 
-        yield return rawQuests;
+        if (LooksLikeQuest(rawQuests))
+        {
+            yield return rawQuests;
+            yield break;
+        }
+
+        Type containerType = rawQuests.GetType();
+        foreach (PropertyInfo property in containerType.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+        {
+            if (property.GetIndexParameters().Length != 0) continue;
+            object? candidate;
+            try { candidate = property.GetValue(rawQuests); }
+            catch { continue; }
+            if (candidate is not null && LooksLikeQuest(candidate)) yield return candidate;
+        }
+
+        foreach (FieldInfo field in containerType.GetFields(BindingFlags.Instance | BindingFlags.Public))
+        {
+            object? candidate;
+            try { candidate = field.GetValue(rawQuests); }
+            catch { continue; }
+            if (candidate is not null && LooksLikeQuest(candidate)) yield return candidate;
+        }
     }
+
+    private static bool LooksLikeQuest(object candidate) =>
+        GetMemberValue(candidate, "_id") is not null || GetMemberValue(candidate, "id") is not null;
 
     private static IEnumerable<object> EnumerateValues(object? value)
     {
