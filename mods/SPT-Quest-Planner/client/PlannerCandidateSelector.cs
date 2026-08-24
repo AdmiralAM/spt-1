@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SPTQuestPlanner.Client
 {
@@ -37,22 +38,29 @@ namespace SPTQuestPlanner.Client
         public IReadOnlyList<string> Select(PlannerCandidatePolicy policy = null)
         {
             policy = policy ?? new PlannerCandidatePolicy();
-            List<string> result = new List<string>();
 
-            foreach (KeyValuePair<string, PlannerQuestClientState> entry in state.Quests)
+            // The installed quest set can contain thousands of reachable quests. That is normal and
+            // must not make recommendations fail. Select a bounded working set deterministically,
+            // prioritising what the player can act on now before speculative future progression.
+            return state.Quests.Values
+                .Where(quest => quest != null && !string.IsNullOrWhiteSpace(quest.QuestId) && Included(quest.Disposition, policy))
+                .OrderBy(quest => Priority(quest.Disposition))
+                .ThenBy(quest => quest.QuestId, StringComparer.Ordinal)
+                .Take(MaxCandidates)
+                .Select(quest => quest.QuestId)
+                .ToArray();
+        }
+
+        private static int Priority(int disposition)
+        {
+            switch (disposition)
             {
-                PlannerQuestClientState quest = entry.Value;
-                if (quest == null || string.IsNullOrWhiteSpace(quest.QuestId)) continue;
-                if (!Included(quest.Disposition, policy)) continue;
-
-                if (result.Count >= MaxCandidates)
-                    throw new InvalidOperationException("Quest candidate selection exceeds bounded candidate limit of " + MaxCandidates + ". Narrow the policy before ranking.");
-
-                result.Add(quest.QuestId);
+                case ActiveDisposition: return 0;
+                case AvailableDisposition: return 1;
+                case ReachableDisposition: return 2;
+                case BlockedDisposition: return 3;
+                default: return 4;
             }
-
-            result.Sort(StringComparer.Ordinal);
-            return result;
         }
 
         private static bool Included(int disposition, PlannerCandidatePolicy policy)
