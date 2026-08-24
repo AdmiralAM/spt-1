@@ -16,6 +16,7 @@
     <Compile Include="..\client\PlannerClientIndex.cs" Link="PlannerClientIndex.cs" />
     <Compile Include="..\client\PlannerTopologyIndex.cs" Link="PlannerTopologyIndex.cs" />
     <Compile Include="..\client\PlannerLocationIndex.cs" Link="PlannerLocationIndex.cs" />
+    <Compile Include="..\client\PlannerRaidObjective.cs" Link="PlannerRaidObjective.cs" />
     <Compile Include="..\client\PlannerRaidOpportunityBuilder.cs" Link="PlannerRaidOpportunityBuilder.cs" />
     <Compile Include="..\client\PlannerQueryEngine.cs" Link="PlannerQueryEngine.cs" />
     <Compile Include="..\client\PlannerPathItemRequirements.cs" Link="PlannerPathItemRequirements.cs" />
