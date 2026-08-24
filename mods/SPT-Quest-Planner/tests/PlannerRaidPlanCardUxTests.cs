@@ -81,6 +81,35 @@ public sealed class PlannerRaidPlanCardUxTests
         Assert.Contains("2 kills", card.ActionSummary);
     }
 
+    [Fact]
+    public void BestForQuestUsesFullQuestMembershipNotCompactObjectiveSlice()
+    {
+        PlannerRaidPlan woods = new PlannerRaidPlan(
+            "woods",
+            new[] { "focus-quest", "other" },
+            new[]
+            {
+                Objective("other", "c1", PlannerRaidObjectiveKind.Kill),
+                Objective("focus-quest", "c2", PlannerRaidObjectiveKind.Visit)
+            },
+            new PlannerRaidPreparation(System.Array.Empty<PlannerRaidBringNeed>(), System.Array.Empty<PlannerRaidUnresolvedBringNeed>()));
+        PlannerRaidPlan customs = new PlannerRaidPlan(
+            "bigmap",
+            new[] { "another" },
+            new[] { Objective("another", "c3", PlannerRaidObjectiveKind.Kill) },
+            new PlannerRaidPreparation(System.Array.Empty<PlannerRaidBringNeed>(), System.Array.Empty<PlannerRaidUnresolvedBringNeed>()));
+        PlannerRaidPlanViewModel viewModel = PlannerRaidPlanViewModelBuilder.Build(
+            new PlannerRaidPlanCollection(1, PlannerRaidPlanRankingMode.ReadyFirst, new[] { customs, woods }),
+            maxObjectivesPerCard: 1);
+
+        PlannerRaidPlanCard focused = viewModel.BestForQuest("focus-quest");
+
+        Assert.NotNull(focused);
+        Assert.Equal("woods", focused.LocationId);
+        Assert.True(focused.SupportsQuest("focus-quest"));
+        Assert.Null(viewModel.BestForQuest("not-present"));
+    }
+
     private static PlannerRaidObjective Objective(string questId, string conditionId, PlannerRaidObjectiveKind kind)
     {
         return new PlannerRaidObjective(
