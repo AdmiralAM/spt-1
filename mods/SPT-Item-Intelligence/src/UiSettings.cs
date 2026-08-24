@@ -23,6 +23,8 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<float> markerOpacity;
         readonly ConfigEntry<float> markerOffsetX;
         readonly ConfigEntry<float> markerOffsetY;
+        readonly ConfigEntry<bool> markerHalo;
+        readonly ConfigEntry<float> markerHaloStrength;
         readonly ConfigEntry<Color> defaultColor;
         readonly ConfigEntry<Color> questNowColor;
         readonly ConfigEntry<Color> hideoutColor;
@@ -57,6 +59,10 @@ namespace SPTItemIntelligence
                 new ConfigDescription("Horizontal offset from the selected edge. Positive values move inward; negative values move outward.", new AcceptableValueRange<float>(-80f, 80f)));
             markerOffsetY = config.Bind("Marker", "Offset Y", 3f,
                 new ConfigDescription("Vertical inset from the item cell upper edge; negative values move outward.", new AcceptableValueRange<float>(-40f, 40f)));
+            markerHalo = config.Bind("Marker", "Halo", false,
+                "Adds a soft diffuse same-color halo behind the marker. Disabled by default until visually accepted in runtime.");
+            markerHaloStrength = config.Bind("Marker", "Halo Strength", 0.22f,
+                new ConfigDescription("Opacity of the soft marker halo.", new AcceptableValueRange<float>(0f, 0.50f)));
 
             defaultColor = ColorEntry(config, "Marker Colors", "Default Color", new Color(0.90f, 0.90f, 0.90f), "No unmet requirement.");
             questNowColor = ColorEntry(config, "Marker Colors", "Quest Now Color", new Color(1.00f, 0.35f, 0.21f), "Unmet active quest requirement.");
@@ -77,6 +83,8 @@ namespace SPTItemIntelligence
             markerOpacity.SettingChanged += delegate { Touch(); };
             markerOffsetX.SettingChanged += delegate { Touch(); };
             markerOffsetY.SettingChanged += delegate { Touch(); };
+            markerHalo.SettingChanged += delegate { Touch(); };
+            markerHaloStrength.SettingChanged += delegate { Touch(); };
             defaultColor.SettingChanged += delegate { Touch(); };
             questNowColor.SettingChanged += delegate { Touch(); };
             hideoutColor.SettingChanged += delegate { Touch(); };
@@ -96,9 +104,8 @@ namespace SPTItemIntelligence
         public float MarkerOpacity => Mathf.Clamp01(markerOpacity.Value);
         public float MarkerOffsetX => Mathf.Clamp(markerOffsetX.Value, -80f, 80f);
         public float MarkerOffsetY => Mathf.Clamp(markerOffsetY.Value, -40f, 40f);
-        public bool MarkerGlow => false;
-        public float MarkerGlowStrength => 0f;
-        public float MarkerGlowRadius => 0f;
+        public bool MarkerHalo => markerHalo.Value;
+        public float MarkerHaloStrength => Mathf.Clamp(markerHaloStrength.Value, 0f, 0.50f);
         public Color CompleteColor => enoughColor.Value;
         public Color PartialColor => partialColor.Value;
         public Color MissingColor => missingColor.Value;
