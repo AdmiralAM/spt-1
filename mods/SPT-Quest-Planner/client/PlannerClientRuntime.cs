@@ -186,6 +186,8 @@ namespace SPTQuestPlanner.Client
         private readonly IPlannerPayloadDecoder decoder;
         private readonly PlannerClientCache cache;
         private int refreshing;
+        private int localeAttempted;
+        private string localeError;
 
         public PlannerRefreshCoordinator(IPlannerTransport transport, IPlannerPayloadDecoder decoder, PlannerClientCache cache)
         {
@@ -193,6 +195,8 @@ namespace SPTQuestPlanner.Client
             this.decoder = decoder ?? throw new ArgumentNullException("decoder");
             this.cache = cache ?? throw new ArgumentNullException("cache");
         }
+
+        public string LocaleError { get { return localeError; } }
 
         public bool EnsureTopology(CancellationToken token, out string error)
         {
@@ -217,18 +221,22 @@ namespace SPTQuestPlanner.Client
 
         public bool EnsureLocale(CancellationToken token, out string error)
         {
-            error = null;
+            error = localeError;
             if (cache.HasLocale) return true;
+            if (Interlocked.CompareExchange(ref localeAttempted, 1, 0) != 0) return false;
             token.ThrowIfCancellationRequested();
             try
             {
                 PlannerLocaleIndex locale = PlannerLocaleIndexBuilder.Build(transport.GetJson(PlannerClientContract.LocaleRoute));
                 cache.ReplaceLocale(locale);
+                localeError = null;
+                error = null;
                 return true;
             }
             catch (Exception ex)
             {
-                error = ex.GetBaseException().Message;
+                localeError = ex.GetBaseException().Message;
+                error = localeError;
                 return false;
             }
         }
@@ -245,8 +253,8 @@ namespace SPTQuestPlanner.Client
             {
                 token.ThrowIfCancellationRequested();
                 if (!EnsureTopology(token, out error)) return false;
-                string localeError;
-                EnsureLocale(token, out localeError); // presentation-only; locale failure must not block planner state
+                string ignoredLocaleError;
+                EnsureLocale(token, out ignoredLocaleError); // presentation-only; one bounded attempt only
                 PlannerPayload payload = decoder.DecodeState(transport.GetJson(PlannerClientContract.StateRoute));
                 PlannerClientIndex typedIndex = PlannerClientIndexBuilder.Build(payload.Json);
                 cache.ReplaceState(payload, typedIndex);
