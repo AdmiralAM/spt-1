@@ -156,6 +156,7 @@ namespace SPTQuestPlanner.Client
         private readonly object gate = new object();
         private PlannerPayload topology;
         private PlannerPayload state;
+        private PlannerClientIndex index;
         private long revision;
 
         public long Revision { get { lock (gate) return revision; } }
@@ -163,6 +164,7 @@ namespace SPTQuestPlanner.Client
         public bool HasState { get { lock (gate) return state != null; } }
         public PlannerPayload Topology { get { lock (gate) return topology; } }
         public PlannerPayload State { get { lock (gate) return state; } }
+        public PlannerClientIndex Index { get { lock (gate) return index; } }
 
         public void ReplaceTopology(PlannerPayload value)
         {
@@ -170,13 +172,15 @@ namespace SPTQuestPlanner.Client
             lock (gate) { topology = value; revision++; }
         }
 
-        public void ReplaceState(PlannerPayload value)
+        public void ReplaceState(PlannerPayload value, PlannerClientIndex typedIndex)
         {
             if (value == null) throw new ArgumentNullException("value");
+            if (typedIndex == null) throw new ArgumentNullException("typedIndex");
             lock (gate)
             {
                 if (state != null && value.GeneratedAtUnixSeconds < state.GeneratedAtUnixSeconds) return;
                 state = value;
+                index = typedIndex;
                 revision++;
             }
         }
@@ -226,7 +230,9 @@ namespace SPTQuestPlanner.Client
             {
                 token.ThrowIfCancellationRequested();
                 if (!EnsureTopology(token, out error)) return false;
-                cache.ReplaceState(decoder.DecodeState(transport.GetJson(PlannerClientContract.StateRoute)));
+                PlannerPayload payload = decoder.DecodeState(transport.GetJson(PlannerClientContract.StateRoute));
+                PlannerClientIndex typedIndex = PlannerClientIndexBuilder.Build(payload.Json);
+                cache.ReplaceState(payload, typedIndex);
                 return true;
             }
             catch (Exception ex)
