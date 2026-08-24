@@ -9,9 +9,16 @@ public sealed record PlayerQuestState(
     long? StartTime,
     long? StatusTimer);
 
+public sealed record PlayerTaskConditionCounter(
+    string CounterId,
+    string? Type,
+    double Value,
+    string? SourceQuestId);
+
 public sealed record PlayerProjection(
     int? Level,
     IReadOnlyDictionary<string, PlayerQuestState> QuestStates,
+    IReadOnlyDictionary<string, PlayerTaskConditionCounter> TaskConditionCounters,
     IReadOnlyList<string> Warnings)
 {
     public QuestState GetState(string questId) =>
@@ -25,6 +32,7 @@ public static class ProfileProjectionExtractor
         JsonElement root = JsonSerializer.SerializeToElement(profile);
         List<string> warnings = new();
         Dictionary<string, PlayerQuestState> states = new(StringComparer.Ordinal);
+        Dictionary<string, PlayerTaskConditionCounter> counters = ExtractTaskConditionCounters(root, warnings);
 
         int? level = null;
         if (TryGetPropertyInsensitive(root, "Info", out JsonElement info))
@@ -33,7 +41,7 @@ public static class ProfileProjectionExtractor
         if (!TryGetPropertyInsensitive(root, "Quests", out JsonElement quests) || quests.ValueKind != JsonValueKind.Array)
         {
             warnings.Add("PMC profile has no Quests array");
-            return new PlayerProjection(level, states, warnings);
+            return new PlayerProjection(level, states, counters, warnings);
         }
 
         foreach (JsonElement quest in quests.EnumerateArray())
@@ -60,7 +68,32 @@ public static class ProfileProjectionExtractor
                 GetLong(quest, "statusTimer"));
         }
 
-        return new PlayerProjection(level, states, warnings);
+        return new PlayerProjection(level, states, counters, warnings);
+    }
+
+    private static Dictionary<string, PlayerTaskConditionCounter> ExtractTaskConditionCounters(JsonElement root, List<string> warnings)
+    {
+        Dictionary<string, PlayerTaskConditionCounter> counters = new(StringComparer.Ordinal);
+        if (!TryGetPropertyInsensitive(root, "TaskConditionCounters", out JsonElement raw)) return counters;
+        if (raw.ValueKind != JsonValueKind.Object)
+        {
+            warnings.Add("PMC TaskConditionCounters is not an object");
+            return counters;
+        }
+
+        foreach (JsonProperty property in raw.EnumerateObject())
+        {
+            if (property.Value.ValueKind != JsonValueKind.Object) continue;
+            string counterId = GetString(property.Value, "id") ?? property.Name;
+            if (string.IsNullOrWhiteSpace(counterId)) continue;
+            counters[counterId] = new PlayerTaskConditionCounter(
+                counterId,
+                GetString(property.Value, "type"),
+                GetDouble(property.Value, "value") ?? 0d,
+                GetString(property.Value, "sourceId"));
+        }
+
+        return counters;
     }
 
     public static IReadOnlyDictionary<QuestState, int> CountStates(
@@ -95,6 +128,14 @@ public static class ProfileProjectionExtractor
         if (!TryGetPropertyInsensitive(element, name, out JsonElement value)) return null;
         if (value.ValueKind == JsonValueKind.Number && value.TryGetInt64(out long number)) return number;
         if (value.ValueKind == JsonValueKind.String && long.TryParse(value.GetString(), out number)) return number;
+        return null;
+    }
+
+    private static double? GetDouble(JsonElement element, string name)
+    {
+        if (!TryGetPropertyInsensitive(element, name, out JsonElement value)) return null;
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out double number)) return number;
+        if (value.ValueKind == JsonValueKind.String && double.TryParse(value.GetString(), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out number)) return number;
         return null;
     }
 
