@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Globalization;
+using System.Reflection;
 using System.Text.Json;
 
 namespace SPTQuestPlanner;
@@ -13,13 +15,12 @@ public static class QuestExtractor
 {
     public static QuestExtractionResult Extract(object rawQuests)
     {
-        JsonElement root = JsonSerializer.SerializeToElement(rawQuests);
         List<QuestNode> nodes = new();
         List<PrerequisiteEdge> prerequisites = new();
         List<ItemRequirement> items = new();
         List<string> warnings = new();
 
-        foreach (JsonElement quest in EnumerateQuestObjects(root))
+        foreach (JsonElement quest in EnumerateQuestObjects(rawQuests))
         {
             string? questId = GetString(quest, "_id") ?? GetString(quest, "id");
             if (string.IsNullOrWhiteSpace(questId))
@@ -140,19 +141,69 @@ public static class QuestExtractor
         _ => QuestState.Unknown
     };
 
-    private static IEnumerable<JsonElement> EnumerateQuestObjects(JsonElement root)
+    private static IEnumerable<JsonElement> EnumerateQuestObjects(object rawQuests)
     {
-        if (root.ValueKind == JsonValueKind.Array)
+        if (rawQuests is null) yield break;
+
+        // SPT 4.1.x stores TemplateTable.Quests as a dictionary keyed by MongoId.
+        // System.Text.Json cannot serialize MongoId dictionary keys as JSON property names,
+        // so never serialize the dictionary itself. Serialize only each quest value.
+        if (rawQuests is IDictionary dictionary)
         {
-            foreach (JsonElement element in root.EnumerateArray())
-                if (element.ValueKind == JsonValueKind.Object) yield return element;
+            foreach (DictionaryEntry entry in dictionary)
+            {
+                if (TrySerializeObject(entry.Value, out JsonElement quest))
+                    yield return quest;
+            }
             yield break;
         }
 
-        if (root.ValueKind != JsonValueKind.Object) yield break;
+        if (rawQuests is IEnumerable enumerable && rawQuests is not string)
+        {
+            foreach (object? entry in enumerable)
+            {
+                if (entry is null) continue;
 
-        foreach (JsonProperty property in root.EnumerateObject())
-            if (property.Value.ValueKind == JsonValueKind.Object) yield return property.Value;
+                // Covers generic KeyValuePair<MongoId, Quest> enumerables that do not expose IDictionary.
+                PropertyInfo? valueProperty = entry.GetType().GetProperty("Value", BindingFlags.Instance | BindingFlags.Public);
+                object? candidate = valueProperty is not null ? valueProperty.GetValue(entry) : entry;
+                if (TrySerializeObject(candidate, out JsonElement quest))
+                    yield return quest;
+            }
+            yield break;
+        }
+
+        if (TrySerializeObject(rawQuests, out JsonElement root))
+        {
+            if (root.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement element in root.EnumerateArray())
+                    if (element.ValueKind == JsonValueKind.Object) yield return element.Clone();
+            }
+            else if (root.ValueKind == JsonValueKind.Object)
+            {
+                yield return root;
+            }
+        }
+    }
+
+    private static bool TrySerializeObject(object? value, out JsonElement element)
+    {
+        if (value is null)
+        {
+            element = default;
+            return false;
+        }
+
+        JsonElement serialized = JsonSerializer.SerializeToElement(value, value.GetType());
+        if (serialized.ValueKind != JsonValueKind.Object)
+        {
+            element = default;
+            return false;
+        }
+
+        element = serialized.Clone();
+        return true;
     }
 
     private static IEnumerable<JsonElement> EnumerateArray(JsonElement element)
