@@ -22,7 +22,8 @@ namespace SPTQuestPlanner.Client
             int plantObjectiveCount = 0,
             int findObjectiveCount = 0,
             int extractObjectiveCount = 0,
-            string rankReason = null)
+            string rankReason = null,
+            IReadOnlyList<string> questIds = null)
         {
             Rank = rank;
             LocationId = locationId ?? string.Empty;
@@ -40,6 +41,7 @@ namespace SPTQuestPlanner.Client
             FindObjectiveCount = Math.Max(0, findObjectiveCount);
             ExtractObjectiveCount = Math.Max(0, extractObjectiveCount);
             RankReason = rankReason ?? string.Empty;
+            QuestIds = questIds ?? Array.Empty<string>();
         }
 
         public int Rank { get; private set; }
@@ -58,6 +60,15 @@ namespace SPTQuestPlanner.Client
         public int FindObjectiveCount { get; private set; }
         public int ExtractObjectiveCount { get; private set; }
         public string RankReason { get; private set; }
+        public IReadOnlyList<string> QuestIds { get; private set; }
+
+        public bool SupportsQuest(string questId)
+        {
+            if (string.IsNullOrWhiteSpace(questId)) return false;
+            for (int i = 0; i < QuestIds.Count; i++)
+                if (string.Equals(QuestIds[i], questId, StringComparison.Ordinal)) return true;
+            return false;
+        }
 
         public string PreparationLabel
         {
@@ -112,6 +123,14 @@ namespace SPTQuestPlanner.Client
         public int LocationCount { get { return Cards.Count; } }
         public int ReadyLocationCount { get { return Cards.Count(value => value.PreparationReady); } }
         public PlannerRaidPlanCard TopRecommendation { get { return Cards.Count == 0 ? null : Cards[0]; } }
+
+        public PlannerRaidPlanCard BestForQuest(string questId)
+        {
+            if (string.IsNullOrWhiteSpace(questId)) return null;
+            for (int i = 0; i < Cards.Count; i++)
+                if (Cards[i].SupportsQuest(questId)) return Cards[i];
+            return null;
+        }
     }
 
     public static class PlannerRaidPlanViewModelBuilder
@@ -138,7 +157,8 @@ namespace SPTQuestPlanner.Client
                     Count(plan, PlannerRaidObjectiveKind.Plant),
                     Count(plan, PlannerRaidObjectiveKind.Find),
                     Count(plan, PlannerRaidObjectiveKind.Extract),
-                    BuildRankReason(collection.RankingMode, plan)))
+                    BuildRankReason(collection.RankingMode, plan),
+                    plan.QuestIds.ToArray()))
                 .ToArray();
 
             return new PlannerRaidPlanViewModel(collection.GeneratedAtUnixSeconds, collection.RankingMode, cards);

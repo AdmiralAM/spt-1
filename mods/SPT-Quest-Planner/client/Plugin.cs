@@ -101,6 +101,7 @@ namespace SPTQuestPlanner.Client
         private void OnPlannerStateChanged()
         {
             Interlocked.Exchange(ref plannerStateDirty, 1);
+            AlignProgressionFocusRaidSelection();
         }
 
         private void PersistPlannerStateIfDirty()
@@ -169,6 +170,16 @@ namespace SPTQuestPlanner.Client
             return controller.GetViewModel(cache.Revision, maxObjectivesPerCard);
         }
 
+        internal static PlannerRaidPlanCard GetRaidForProgressionTarget(int maxObjectivesPerCard = 32)
+        {
+            PlannerRaidPlanPresentationController controller = Presentation;
+            PlannerClientCache cache = Cache;
+            if (controller == null || cache == null || controller.UiState == null || !controller.UiState.HasProgressionTarget)
+                return null;
+            PlannerRaidPlanViewModel viewModel = controller.GetViewModel(cache.Revision, Math.Max(1, maxObjectivesPerCard));
+            return viewModel.BestForQuest(controller.UiState.ProgressionTargetQuestId);
+        }
+
         internal static PlannerActivePlanSnapshot GetActiveRaidPlan(int maxObjectives = 32)
         {
             PlannerRaidPlanPresentationController controller = Presentation;
@@ -207,7 +218,7 @@ namespace SPTQuestPlanner.Client
                 if (coordinator.TryRefreshState(token, out error))
                 {
                     Logger.LogInfo("Quest Planner topology/state cache initialized; revision=" + cache.Revision + ".");
-                    ValidateActivePlanAfterRefresh();
+                    AlignPlannerSelectionsAfterRefresh();
                 }
                 else if (!token.IsCancellationRequested)
                     Logger.LogWarning("Quest Planner initial cache load failed: " + error);
@@ -242,7 +253,7 @@ namespace SPTQuestPlanner.Client
                 {
                     PlannerRaidPlanPresentationController presentation = Presentation;
                     if (presentation != null) presentation.Invalidate();
-                    ValidateActivePlanAfterRefresh();
+                    AlignPlannerSelectionsAfterRefresh();
                     if (!token.IsCancellationRequested)
                         Logger.LogDebug("Quest Planner state refreshed (" + NormalizeReason(reason) + "); revision=" + cache.Revision + ".");
                 }
@@ -251,12 +262,25 @@ namespace SPTQuestPlanner.Client
             }, token);
         }
 
-        private static void ValidateActivePlanAfterRefresh()
+        private static void AlignPlannerSelectionsAfterRefresh()
         {
             PlannerRaidPlanPresentationController controller = Presentation;
             PlannerClientCache cache = Cache;
             if (controller == null || cache == null) return;
             controller.GetActivePlanSnapshot(cache.Revision, 32);
+            AlignProgressionFocusRaidSelection();
+        }
+
+        private static void AlignProgressionFocusRaidSelection()
+        {
+            PlannerRaidPlanPresentationController controller = Presentation;
+            PlannerClientCache cache = Cache;
+            PlannerRaidPlanUiState state = controller == null ? null : controller.UiState;
+            if (controller == null || cache == null || state == null || !state.HasProgressionTarget) return;
+
+            PlannerRaidPlanViewModel viewModel = controller.GetViewModel(cache.Revision, 32);
+            PlannerRaidPlanCard focusedRaid = viewModel.BestForQuest(state.ProgressionTargetQuestId);
+            if (focusedRaid != null) state.SelectLocation(focusedRaid.LocationId);
         }
 
         private static string NormalizeReason(string reason)
