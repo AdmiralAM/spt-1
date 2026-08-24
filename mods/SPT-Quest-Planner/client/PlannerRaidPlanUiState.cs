@@ -2,12 +2,19 @@ using System;
 
 namespace SPTQuestPlanner.Client
 {
+    public enum PlannerWorkspaceMode
+    {
+        RaidPlanner = 0,
+        Progression = 1
+    }
+
     public sealed class PlannerRaidPlanUiState
     {
         private string selectedLocationId;
         private string activeLocationId;
         private string progressionTargetQuestId;
         private PlannerRaidPlanRankingMode rankingMode = PlannerRaidPlanRankingMode.ReadyFirst;
+        private PlannerWorkspaceMode workspaceMode = PlannerWorkspaceMode.RaidPlanner;
         private bool includeAvailable;
 
         public string SelectedLocationId { get { return selectedLocationId; } }
@@ -16,9 +23,11 @@ namespace SPTQuestPlanner.Client
         public bool HasActivePlan { get { return !string.IsNullOrWhiteSpace(activeLocationId); } }
         public bool HasProgressionTarget { get { return !string.IsNullOrWhiteSpace(progressionTargetQuestId); } }
         public PlannerRaidPlanRankingMode RankingMode { get { return rankingMode; } }
+        public PlannerWorkspaceMode WorkspaceMode { get { return workspaceMode; } }
         public bool IncludeAvailable { get { return includeAvailable; } }
 
         public void SetRankingMode(PlannerRaidPlanRankingMode value) { rankingMode = value; }
+        public void SetWorkspaceMode(PlannerWorkspaceMode value) { workspaceMode = value; }
         public void SetIncludeAvailable(bool value) { includeAvailable = value; }
 
         public void SelectLocation(string locationId)
