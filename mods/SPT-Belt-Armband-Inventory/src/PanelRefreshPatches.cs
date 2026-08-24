@@ -20,6 +20,29 @@ namespace SPTBeltArmbandInventory
         static bool pending;
         static bool refreshing;
 
+        static bool ShouldProject(object[] arguments)
+        {
+            if (arguments == null || BeltRuntime.GetSlotMethod == null || BeltRuntime.ArmBandValue == null) return false;
+            Type equipmentType = BeltRuntime.GetSlotMethod.DeclaringType;
+            for (int i = 0; i < arguments.Length; i++)
+            {
+                object argument = arguments[i];
+                if (argument == null || equipmentType == null || !equipmentType.IsInstanceOfType(argument)) continue;
+                try
+                {
+                    object slot = BeltRuntime.GetSlotMethod.Invoke(argument, new[] { BeltRuntime.ArmBandValue });
+                    object item = ReflectionTools.ReadMember(slot, "ContainedItem");
+                    return BeltSlotPlan.ShouldExposeBelt(item != null, ReflectionTools.HasContainers(item));
+                }
+                catch (Exception exception)
+                {
+                    if (LogWarning != null) LogWarning("Could not inspect ArmBand slot for BELT projection refresh: " + Unwrap(exception).Message);
+                    return false;
+                }
+            }
+            return false;
+        }
+
         internal static void Track(object panel, object[] arguments)
         {
             if (panel == null || arguments == null) return;
@@ -28,7 +51,7 @@ namespace SPTBeltArmbandInventory
             {
                 Panel = new WeakReference(panel),
                 Arguments = (object[])arguments.Clone(),
-                Exposed = BeltRuntime.ShouldExpose(arguments)
+                Exposed = ShouldProject(arguments)
             });
         }
 
@@ -54,7 +77,6 @@ namespace SPTBeltArmbandInventory
                 object slot = ReflectionTools.ReadMember(slotView, "Slot");
                 object id = ReflectionTools.ReadMember(slot, "ID");
                 if (id == null || !string.Equals(id.ToString(), BeltSlotPlan.ArmBand, StringComparison.Ordinal)) return;
-
                 pending = true;
             }
             catch (Exception exception)
@@ -80,7 +102,7 @@ namespace SPTBeltArmbandInventory
                 }
 
                 bool now;
-                try { now = BeltRuntime.ShouldExpose(state.Arguments); }
+                try { now = ShouldProject(state.Arguments); }
                 catch { continue; }
                 if (now == state.Exposed) continue;
 
@@ -89,10 +111,11 @@ namespace SPTBeltArmbandInventory
                     refreshing = true;
                     PanelCloseMethod.Invoke(panel, null);
                     PanelShowMethod.Invoke(panel, state.Arguments);
+                    state.Exposed = now;
                 }
                 catch (Exception exception)
                 {
-                    if (LogWarning != null) LogWarning("Could not refresh belt row after ArmBand change: " + Unwrap(exception).Message);
+                    if (LogWarning != null) LogWarning("Could not refresh BELT projection after ArmBand change: " + Unwrap(exception).Message);
                 }
                 finally
                 {
@@ -142,60 +165,45 @@ namespace SPTBeltArmbandInventory
                 Type equipmentType = ReflectionTools.FindType("EFT.InventoryLogic.InventoryEquipment");
                 Type slotViewType = ReflectionTools.FindType("EFT.UI.DragAndDrop.SlotView");
                 if (harmonyType == null || harmonyMethodType == null || panelType == null || equipmentType == null || slotViewType == null)
-                    return Fail("SPT 4.1 panel refresh types or Harmony were not found; dynamic belt-row refresh is disabled.");
+                    return Fail("SPT 4.1 panel refresh types or Harmony were not found; dynamic BELT projection refresh is disabled.");
 
                 MethodInfo panelShow = FindPanelShow(panelType, equipmentType);
                 MethodInfo panelClose = panelType.GetMethod("Close", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 MethodInfo addToSlot = FindSlotChangeMethod(slotViewType, "OnAddToSlot");
                 MethodInfo removeFromSlot = FindSlotChangeMethod(slotViewType, "OnRemoveFromSlot");
                 if (panelShow == null || panelClose == null || addToSlot == null || removeFromSlot == null)
-                    return Fail("SPT 4.1 SlotView/ContainersPanel shape changed; dynamic belt-row refresh is disabled.");
+                    return Fail("SPT 4.1 SlotView/ContainersPanel shape changed; dynamic BELT projection refresh is disabled.");
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                 MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, harmonyMethodConstructor != null, rollback != null))
-                    return Fail("Harmony patch/rollback API is incompatible; dynamic belt-row refresh is disabled.");
+                    return Fail("Harmony patch/rollback API is incompatible; dynamic BELT projection refresh is disabled.");
                 unpatchSelf = rollback;
 
                 PanelRefreshRuntime.PanelShowMethod = panelShow;
                 PanelRefreshRuntime.PanelCloseMethod = panelClose;
                 PanelRefreshRuntime.LogWarning = logWarning;
 
-                Patch(patchMethod, harmonyMethodType, panelShow, null,
-                    harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PanelShowPostfix)) }));
-                Patch(patchMethod, harmonyMethodType, panelClose, null,
-                    harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PanelClosePostfix)) }));
-                Patch(patchMethod, harmonyMethodType, addToSlot, null,
-                    harmonyMethodConstructor.Invoke(new object[] { Method(nameof(SlotChangedPostfix)) }));
-                Patch(patchMethod, harmonyMethodType, removeFromSlot, null,
-                    harmonyMethodConstructor.Invoke(new object[] { Method(nameof(SlotChangedPostfix)) }));
+                Patch(patchMethod, harmonyMethodType, panelShow, null, harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PanelShowPostfix)) }));
+                Patch(patchMethod, harmonyMethodType, panelClose, null, harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PanelClosePostfix)) }));
+                Patch(patchMethod, harmonyMethodType, addToSlot, null, harmonyMethodConstructor.Invoke(new object[] { Method(nameof(SlotChangedPostfix)) }));
+                Patch(patchMethod, harmonyMethodType, removeFromSlot, null, harmonyMethodConstructor.Invoke(new object[] { Method(nameof(SlotChangedPostfix)) }));
 
-                if (logInfo != null) logInfo("Belt/Armband Inventory dynamic ArmBand refresh installed.");
+                if (logInfo != null) logInfo("Belt/Armband Inventory dynamic BELT projection refresh installed.");
                 return true;
             }
             catch (Exception exception)
             {
                 Dispose();
-                return Fail("Dynamic belt-row refresh installation failed safely: " + exception.Message);
+                return Fail("Dynamic BELT projection refresh installation failed safely: " + exception.Message);
             }
         }
 
-        static void PanelShowPostfix(object __instance, object[] __args)
-        {
-            PanelRefreshRuntime.Track(__instance, __args);
-        }
-
-        static void PanelClosePostfix(object __instance)
-        {
-            PanelRefreshRuntime.Forget(__instance);
-        }
-
-        static void SlotChangedPostfix(object __instance, object[] __args)
-        {
-            PanelRefreshRuntime.NotifySlotChanged(__instance, __args);
-        }
+        static void PanelShowPostfix(object __instance, object[] __args) => PanelRefreshRuntime.Track(__instance, __args);
+        static void PanelClosePostfix(object __instance) => PanelRefreshRuntime.Forget(__instance);
+        static void SlotChangedPostfix(object __instance, object[] __args) => PanelRefreshRuntime.NotifySlotChanged(__instance, __args);
 
         static MethodInfo FindPanelShow(Type panelType, Type equipmentType)
         {
@@ -216,10 +224,7 @@ namespace SPTBeltArmbandInventory
             return method != null && method.GetParameters().Length == 2 ? method : null;
         }
 
-        static MethodInfo Method(string name)
-        {
-            return typeof(PanelRefreshPatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
-        }
+        static MethodInfo Method(string name) => typeof(PanelRefreshPatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
         {

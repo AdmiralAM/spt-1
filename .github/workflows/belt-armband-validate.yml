@@ -38,3 +38,18 @@ jobs:
       - name: Build Belt/Armband server
         shell: pwsh
         run: dotnet build mods/SPT-Belt-Armband-Inventory/server/SPT-Belt-Armband-Inventory.Server.csproj -c Release
+      - name: Stage B&A&HB runtime candidate
+        shell: pwsh
+        run: |
+          $root = 'artifact/B&A&HB-MOD-SPT-RC1'
+          New-Item -ItemType Directory -Force -Path "$root/BepInEx/plugins" | Out-Null
+          New-Item -ItemType Directory -Force -Path "$root/SPT_Runtime/user/mods/B&A&HB-MOD-SPT" | Out-Null
+          Copy-Item 'mods/SPT-Belt-Armband-Inventory/src/bin/Release/netstandard2.1/SPT Belt Armband Inventory v0.1.0.dll' "$root/BepInEx/plugins/"
+          Copy-Item 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT-Belt-Armband-Inventory.Server.dll' "$root/SPT_Runtime/user/mods/B&A&HB-MOD-SPT/"
+      - name: Upload B&A&HB runtime candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: B&A&HB-MOD-SPT-RC1
+          path: artifact/B&A&HB-MOD-SPT-RC1
+          if-no-files-found: error
+          retention-days: 14

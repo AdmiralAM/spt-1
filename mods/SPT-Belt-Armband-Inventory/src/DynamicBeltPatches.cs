@@ -1,68 +1,212 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine;
 
 namespace SPTBeltArmbandInventory
 {
     internal static class BeltRuntime
     {
         internal static BeltSlotPosition Position;
-        internal static FieldInfo SlotOrderField;
         internal static FieldInfo DefaultTemplateField;
-        internal static FieldInfo DogtagTemplateField;
+        internal static FieldInfo SlotViewsContainerField;
+        internal static FieldInfo SlotViewsDictionaryField;
         internal static MethodInfo GetSlotMethod;
+        internal static MethodInfo SlotViewShowMethod;
+        internal static MethodInfo IsAllowedToSeeSlotMethod;
+        internal static PropertyInfo ItemUiContextInstanceProperty;
         internal static object ArmBandValue;
+        internal static object PocketsValue;
+        internal static object BackpackValue;
+        internal static Action<string> LogInfo;
         internal static Action<string> LogWarning;
 
-        internal static bool ShouldExpose(object[] arguments)
+        internal static void AddBeltRow(object panel, object[] arguments)
         {
-            if (arguments == null || GetSlotMethod == null || ArmBandValue == null) return false;
-            for (int i = 0; i < arguments.Length; i++)
+            if (panel == null || arguments == null || GetSlotMethod == null || ArmBandValue == null) return;
+
+            try
             {
-                object argument = arguments[i];
-                if (argument == null || !GetSlotMethod.DeclaringType.IsInstanceOfType(argument)) continue;
+                object equipment = FindArgument(arguments, GetSlotMethod.DeclaringType);
+                if (equipment == null) return;
+
+                object armBandSlot = GetSlotMethod.Invoke(equipment, new[] { ArmBandValue });
+                object item = ReflectionTools.ReadMember(armBandSlot, "ContainedItem");
+                if (!BeltSlotPlan.ShouldExposeBelt(item != null, ReflectionTools.HasContainers(item))) return;
+
+                object inventoryController = FindArgumentForMethod(arguments, IsAllowedToSeeSlotMethod);
+                if (inventoryController != null && IsAllowedToSeeSlotMethod != null)
+                {
+                    object allowed = IsAllowedToSeeSlotMethod.Invoke(inventoryController, new[] { armBandSlot, ArmBandValue });
+                    if (allowed is bool && !(bool)allowed) return;
+                }
+
+                IDictionary views = SlotViewsDictionaryField.GetValue(panel) as IDictionary;
+                if (views == null)
+                {
+                    LogWarning?.Invoke("B&A&HB UI: ContainersPanel SlotView registry was unavailable after vanilla Show.");
+                    return;
+                }
+
+                if (views.Contains(ArmBandValue))
+                {
+                    LogWarning?.Invoke("B&A&HB UI: ContainersPanel already contains an ArmBand projection; refusing to overwrite another mod's row.");
+                    return;
+                }
+
+                UnityEngine.Object template = DefaultTemplateField.GetValue(panel) as UnityEngine.Object;
+                Transform container = SlotViewsContainerField.GetValue(panel) as Transform;
+                if (template == null || container == null)
+                {
+                    LogWarning?.Invoke("B&A&HB UI: default container SlotView template or row parent is unavailable.");
+                    return;
+                }
+
+                UnityEngine.Object clone = UnityEngine.Object.Instantiate(template);
+                Component beltView = clone as Component;
+                if (beltView == null)
+                {
+                    UnityEngine.Object.DestroyImmediate(clone);
+                    LogWarning?.Invoke("B&A&HB UI: cloned container template is not a Component/SlotView.");
+                    return;
+                }
+
+                bool registered = false;
                 try
                 {
-                    object slot = GetSlotMethod.Invoke(argument, new[] { ArmBandValue });
-                    object item = ReflectionTools.ReadMember(slot, "ContainedItem");
-                    return BeltSlotPlan.ShouldExposeBelt(item != null, ReflectionTools.HasContainers(item));
+                    beltView.transform.SetParent(container, false);
+
+                    object parentContext = arguments.Length > 0 ? arguments[0] : null;
+                    object skills = FindArgumentByTypeName(arguments, "SkillManager");
+                    object insurance = arguments.Length > 4 ? arguments[4] : null;
+                    bool inRaid = FindBooleanArgument(arguments);
+                    object itemUiContext = ItemUiContextInstanceProperty.GetValue(null, null);
+
+                    SlotViewShowMethod.Invoke(beltView, new[]
+                    {
+                        armBandSlot,
+                        parentContext,
+                        inventoryController,
+                        itemUiContext,
+                        skills,
+                        insurance,
+                        (object)!inRaid
+                    });
+
+                    TrySetHeaderText(beltView, "BELT");
+                    beltView.gameObject.name = "BELT Slot";
+                    PlaceBeltRow(views, beltView.transform);
+
+                    views.Add(ArmBandValue, beltView);
+                    registered = true;
+
+                    LogRows(views);
+                    LogInfo?.Invoke("B&A&HB UI PROOF: separate BELT SlotView created, bound to real ArmBand Slot, parented and registered in ContainersPanel; normal Gear Panel ArmBand was not modified.");
                 }
-                catch (Exception exception)
+                finally
                 {
-                    if (LogWarning != null) LogWarning("Could not inspect ArmBand item: " + exception.Message);
-                    return false;
+                    if (!registered)
+                    {
+                        TryCloseSlotView(beltView);
+                        UnityEngine.Object.DestroyImmediate(beltView.gameObject);
+                    }
                 }
             }
+            catch (Exception exception)
+            {
+                LogWarning?.Invoke("B&A&HB UI: could not create separate BELT row: " + Unwrap(exception).Message);
+            }
+        }
+
+        static object FindArgument(object[] arguments, Type type)
+        {
+            if (type == null) return null;
+            for (int i = 0; i < arguments.Length; i++)
+            {
+                object value = arguments[i];
+                if (value != null && type.IsInstanceOfType(value)) return value;
+            }
+            return null;
+        }
+
+        static object FindArgumentForMethod(object[] arguments, MethodInfo method)
+        {
+            return method == null ? null : FindArgument(arguments, method.DeclaringType);
+        }
+
+        static object FindArgumentByTypeName(object[] arguments, string typeName)
+        {
+            for (int i = 0; i < arguments.Length; i++)
+            {
+                object value = arguments[i];
+                if (value != null && string.Equals(value.GetType().Name, typeName, StringComparison.Ordinal)) return value;
+            }
+            return null;
+        }
+
+        static bool FindBooleanArgument(object[] arguments)
+        {
+            for (int i = arguments.Length - 1; i >= 0; i--)
+                if (arguments[i] is bool) return (bool)arguments[i];
             return false;
         }
 
-        internal static Array BuildOrder(Array current, bool expose)
+        static void PlaceBeltRow(IDictionary views, Transform belt)
         {
-            var names = new List<string>(current.Length);
-            for (int i = 0; i < current.Length; i++) names.Add(current.GetValue(i).ToString());
-            string[] planned = BeltSlotPlan.Build(names, Position, expose);
-            Type elementType = current.GetType().GetElementType();
-            Array result = Array.CreateInstance(elementType, planned.Length);
-            for (int i = 0; i < planned.Length; i++) result.SetValue(Enum.Parse(elementType, planned[i]), i);
-            return result;
+            object anchorKey = Position == BeltSlotPosition.AbovePockets ? PocketsValue : BackpackValue;
+            Component anchor = anchorKey == null ? null : views[anchorKey] as Component;
+            if (anchor == null) return;
+            belt.SetSiblingIndex(anchor.transform.GetSiblingIndex());
+        }
+
+        static void TrySetHeaderText(Component slotView, string text)
+        {
+            if (slotView == null) return;
+            FieldInfo headerField = slotView.GetType().GetField("_headerText", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            object header = headerField == null ? null : headerField.GetValue(slotView);
+            if (header == null) return;
+            PropertyInfo textProperty = header.GetType().GetProperty("text", BindingFlags.Instance | BindingFlags.Public);
+            if (textProperty != null && textProperty.CanWrite) textProperty.SetValue(header, text, null);
+        }
+
+        static void LogRows(IDictionary views)
+        {
+            if (LogInfo == null) return;
+            foreach (DictionaryEntry entry in views)
+            {
+                Component view = entry.Value as Component;
+                if (view == null) continue;
+                object slot = ReflectionTools.ReadMember(view, "Slot");
+                object slotId = ReflectionTools.ReadMember(slot, "ID");
+                object item = ReflectionTools.ReadMember(slot, "ContainedItem");
+                string parent = view.transform.parent == null ? "<null>" : view.transform.parent.name;
+                LogInfo("B&A&HB UI ROW: key=" + entry.Key
+                    + ", view=" + view.GetType().FullName
+                    + ", slot=" + (slotId ?? "<null>")
+                    + ", parent=" + parent
+                    + ", containerItem=" + (item != null && ReflectionTools.HasContainers(item)));
+            }
+        }
+
+        static void TryCloseSlotView(Component slotView)
+        {
+            try
+            {
+                MethodInfo close = slotView.GetType().GetMethod("Close", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
+                close?.Invoke(slotView, null);
+            }
+            catch { }
+        }
+
+        internal static Exception Unwrap(Exception exception)
+        {
+            TargetInvocationException invocation = exception as TargetInvocationException;
+            return invocation != null && invocation.InnerException != null ? invocation.InnerException : exception;
         }
     }
 
     internal sealed class DynamicBeltPatches : IDisposable
     {
-        sealed class MutationState
-        {
-            internal readonly object Original;
-            internal readonly object Installed;
-
-            internal MutationState(object original, object installed)
-            {
-                Original = original;
-                Installed = installed;
-            }
-        }
-
         const string HarmonyId = "com.admiralam.spt.belt-armband-inventory.runtime";
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
@@ -84,24 +228,35 @@ namespace SPTBeltArmbandInventory
                 Type panelType = ReflectionTools.FindType("EFT.UI.ContainersPanel");
                 Type equipmentType = ReflectionTools.FindType("EFT.InventoryLogic.InventoryEquipment");
                 Type slotEnumType = ReflectionTools.FindType("EFT.InventoryLogic.EquipmentSlot");
-                if (harmonyType == null || harmonyMethodType == null || panelType == null || equipmentType == null || slotEnumType == null)
-                    return Fail("SPT 4.1 inventory UI types or Harmony were not found; the mod remains disabled.");
+                Type slotViewType = ReflectionTools.FindType("EFT.UI.DragAndDrop.SlotView");
+                Type itemUiContextType = ReflectionTools.FindType("EFT.UI.ItemUiContext");
+                if (harmonyType == null || harmonyMethodType == null || panelType == null || equipmentType == null || slotEnumType == null || slotViewType == null || itemUiContextType == null)
+                    return Fail("SPT 4.1 inventory UI types or Harmony were not found; BELT presentation is disabled.");
 
-                FieldInfo orderField = FindSlotOrderField(panelType, slotEnumType);
                 MethodInfo panelShow = FindPanelShow(panelType, equipmentType);
-                MethodInfo slotFactory = FindSlotFactory(panelType, slotEnumType);
-                FieldInfo defaultTemplate = FindTemplateField(panelType, "default", slotFactory == null ? null : slotFactory.ReturnType);
-                FieldInfo dogtagTemplate = FindTemplateField(panelType, "dogtag", slotFactory == null ? null : slotFactory.ReturnType);
                 MethodInfo getSlot = equipmentType.GetMethod("GetSlot", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { slotEnumType }, null);
-                if (orderField == null || panelShow == null || slotFactory == null || defaultTemplate == null || dogtagTemplate == null || getSlot == null)
-                    return Fail("SPT 4.1 ContainersPanel shape changed; no partial patch was installed.");
+                FieldInfo defaultTemplate = FindField(panelType, "_defaultSlotTemplate", slotViewType);
+                FieldInfo slotViewsContainer = FindField(panelType, "_slotViewsContainer", typeof(Transform));
+                FieldInfo slotViewsDictionary = FindSlotViewsDictionary(panelType, slotEnumType, slotViewType);
+                MethodInfo slotViewShow = FindSlotViewShow(slotViewType);
+                PropertyInfo itemUiContextInstance = itemUiContextType.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                MethodInfo isAllowed = FindIsAllowedToSeeSlot(panelShow);
+
+                if (panelShow == null || getSlot == null || defaultTemplate == null || slotViewsContainer == null || slotViewsDictionary == null || slotViewShow == null || itemUiContextInstance == null)
+                    return Fail("SPT 4.1 ContainersPanel lifecycle boundary changed; separate BELT row was not installed.");
 
                 BeltRuntime.Position = position;
-                BeltRuntime.SlotOrderField = orderField;
                 BeltRuntime.DefaultTemplateField = defaultTemplate;
-                BeltRuntime.DogtagTemplateField = dogtagTemplate;
+                BeltRuntime.SlotViewsContainerField = slotViewsContainer;
+                BeltRuntime.SlotViewsDictionaryField = slotViewsDictionary;
                 BeltRuntime.GetSlotMethod = getSlot;
+                BeltRuntime.SlotViewShowMethod = slotViewShow;
+                BeltRuntime.IsAllowedToSeeSlotMethod = isAllowed;
+                BeltRuntime.ItemUiContextInstanceProperty = itemUiContextInstance;
                 BeltRuntime.ArmBandValue = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand);
+                BeltRuntime.PocketsValue = Enum.Parse(slotEnumType, BeltSlotPlan.Pockets);
+                BeltRuntime.BackpackValue = Enum.Parse(slotEnumType, BeltSlotPlan.Backpack);
+                BeltRuntime.LogInfo = logInfo;
                 BeltRuntime.LogWarning = logWarning;
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
@@ -109,193 +264,113 @@ namespace SPTBeltArmbandInventory
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                 MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, harmonyMethodConstructor != null, rollback != null))
-                    return Fail("Harmony patch/rollback API is incompatible; the mod remains disabled.");
+                    return Fail("Harmony patch/rollback API is incompatible; BELT presentation is disabled.");
                 unpatchSelf = rollback;
 
-                object panelPrefix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PanelShowPrefix)) });
-                object panelFinalizer = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PanelShowFinalizer)) });
-                Patch(patchMethod, harmonyMethodType, panelShow, panelPrefix, null, panelFinalizer);
+                object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PanelShowPostfix)) });
+                Patch(patchMethod, harmonyMethodType, panelShow, postfix);
 
-                object factoryPrefix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(SlotFactoryPrefix)) });
-                object factoryFinalizer = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(SlotFactoryFinalizer)) });
-                Patch(patchMethod, harmonyMethodType, slotFactory, factoryPrefix, null, factoryFinalizer);
-
-                if (logInfo != null) logInfo("Belt/Armband Inventory Phase 1 installed on SPT 4.1 ContainersPanel.");
+                logInfo?.Invoke("B&A&HB MOD SPT: separate ContainersPanel BELT projection installed; real inventory host remains ArmBand.");
                 return true;
             }
             catch (Exception exception)
             {
                 Dispose();
-                return Fail("Belt/Armband Inventory patch installation failed safely: " + exception.Message);
+                return Fail("BELT presentation installation failed safely: " + BeltRuntime.Unwrap(exception).Message);
             }
         }
 
-        static void PanelShowPrefix(object[] __args, ref object __state)
+        static void PanelShowPostfix(object __instance, object[] __args)
         {
-            try
-            {
-                Array current = BeltRuntime.SlotOrderField.GetValue(null) as Array;
-                if (current == null) return;
-                Array installed = BeltRuntime.BuildOrder(current, BeltRuntime.ShouldExpose(__args));
-                __state = new MutationState(current, installed);
-                BeltRuntime.SlotOrderField.SetValue(null, installed);
-            }
-            catch (Exception exception)
-            {
-                if (BeltRuntime.LogWarning != null) BeltRuntime.LogWarning("Could not prepare belt row: " + exception.Message);
-            }
-        }
-
-        static Exception PanelShowFinalizer(Exception __exception, object __state)
-        {
-            try
-            {
-                MutationState state = __state as MutationState;
-                if (state == null) return __exception;
-                object current = BeltRuntime.SlotOrderField.GetValue(null);
-                if (RuntimeMutationPolicy.ShouldRestore(current, state.Installed))
-                    BeltRuntime.SlotOrderField.SetValue(null, state.Original);
-            }
-            catch (Exception exception)
-            {
-                if (BeltRuntime.LogWarning != null) BeltRuntime.LogWarning("Could not restore container slot order: " + exception.Message);
-            }
-            return __exception;
-        }
-
-        static void SlotFactoryPrefix(object[] __args, object __instance, ref object __state)
-        {
-            if (__args == null || __args.Length == 0 || !string.Equals(__args[0].ToString(), BeltSlotPlan.ArmBand, StringComparison.Ordinal)) return;
-            try
-            {
-                object dogtagTemplate = BeltRuntime.DogtagTemplateField.GetValue(__instance);
-                object defaultTemplate = BeltRuntime.DefaultTemplateField.GetValue(__instance);
-                if (defaultTemplate == null) return;
-                __state = new MutationState(dogtagTemplate, defaultTemplate);
-                BeltRuntime.DogtagTemplateField.SetValue(__instance, defaultTemplate);
-            }
-            catch (Exception exception)
-            {
-                if (BeltRuntime.LogWarning != null) BeltRuntime.LogWarning("Could not select the container slot template: " + exception.Message);
-            }
-        }
-
-        static Exception SlotFactoryFinalizer(Exception __exception, object __instance, object __state)
-        {
-            try
-            {
-                MutationState state = __state as MutationState;
-                if (state == null) return __exception;
-                object current = BeltRuntime.DogtagTemplateField.GetValue(__instance);
-                if (RuntimeMutationPolicy.ShouldRestore(current, state.Installed))
-                    BeltRuntime.DogtagTemplateField.SetValue(__instance, state.Original);
-            }
-            catch (Exception exception)
-            {
-                if (BeltRuntime.LogWarning != null) BeltRuntime.LogWarning("Could not restore the dogtag slot template: " + exception.Message);
-            }
-            return __exception;
-        }
-
-        static FieldInfo FindSlotOrderField(Type panelType, Type enumType)
-        {
-            FieldInfo[] fields = panelType.GetFields(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-            for (int i = 0; i < fields.Length; i++)
-            {
-                FieldInfo field = fields[i];
-                if (!field.FieldType.IsArray || field.FieldType.GetElementType() != enumType) continue;
-                Array value = field.GetValue(null) as Array;
-                if (value == null) continue;
-                var names = new List<string>(value.Length);
-                for (int p = 0; p < value.Length; p++) names.Add(value.GetValue(p).ToString());
-                if (BeltSlotPlan.IsExpectedContainerPanelOrder(names)) return field;
-            }
-            return null;
+            BeltRuntime.AddBeltRow(__instance, __args);
         }
 
         static MethodInfo FindPanelShow(Type panelType, Type equipmentType)
         {
-            MethodInfo[] methods = panelType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            for (int i = 0; i < methods.Length; i++)
+            foreach (MethodInfo method in panelType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                MethodInfo method = methods[i];
                 if (method.Name != "Show") continue;
                 ParameterInfo[] parameters = method.GetParameters();
-                for (int p = 0; p < parameters.Length; p++) if (parameters[p].ParameterType == equipmentType) return method;
+                for (int i = 0; i < parameters.Length; i++)
+                    if (parameters[i].ParameterType == equipmentType) return method;
             }
             return null;
         }
 
-        static MethodInfo FindSlotFactory(Type panelType, Type slotEnumType)
+        static FieldInfo FindField(Type owner, string exactName, Type fieldType)
         {
-            MethodInfo[] methods = panelType.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic);
-            for (int i = 0; i < methods.Length; i++)
+            FieldInfo field = owner.GetField(exactName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            return field != null && fieldType.IsAssignableFrom(field.FieldType) ? field : null;
+        }
+
+        static FieldInfo FindSlotViewsDictionary(Type panelType, Type slotEnumType, Type slotViewType)
+        {
+            foreach (FieldInfo field in panelType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                MethodInfo method = methods[i];
-                ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length == 1 && parameters[0].ParameterType == slotEnumType && method.ReturnType.Name.IndexOf("SlotView", StringComparison.OrdinalIgnoreCase) >= 0) return method;
+                Type type = field.FieldType;
+                if (!type.IsGenericType) continue;
+                Type[] args = type.GetGenericArguments();
+                if (args.Length == 2 && args[0] == slotEnumType && slotViewType.IsAssignableFrom(args[1])) return field;
             }
             return null;
         }
 
-        static FieldInfo FindTemplateField(Type panelType, string nameHint, Type templateType)
+        static MethodInfo FindSlotViewShow(Type slotViewType)
         {
-            if (templateType == null) return null;
-            FieldInfo[] fields = panelType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-            for (int i = 0; i < fields.Length; i++)
+            foreach (MethodInfo method in slotViewType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                FieldInfo field = fields[i];
-                if (!templateType.IsAssignableFrom(field.FieldType)) continue;
-                if (field.Name.IndexOf(nameHint, StringComparison.OrdinalIgnoreCase) >= 0) return field;
+                if (method.Name != "Show") continue;
+                ParameterInfo[] p = method.GetParameters();
+                if (p.Length == 7 && string.Equals(p[0].ParameterType.Name, "Slot", StringComparison.Ordinal)) return method;
             }
             return null;
         }
 
-        static MethodInfo Method(string name)
+        static MethodInfo FindIsAllowedToSeeSlot(MethodInfo panelShow)
         {
-            return typeof(DynamicBeltPatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
+            if (panelShow == null) return null;
+            ParameterInfo[] parameters = panelShow.GetParameters();
+            Type controllerType = null;
+            for (int i = 0; i < parameters.Length; i++)
+                if (parameters[i].ParameterType.Name.IndexOf("InventoryController", StringComparison.OrdinalIgnoreCase) >= 0) controllerType = parameters[i].ParameterType;
+            if (controllerType == null) return null;
+
+            foreach (MethodInfo method in controllerType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (!string.Equals(method.Name, "IsAllowedToSeeSlot", StringComparison.Ordinal)) continue;
+                if (method.GetParameters().Length == 2) return method;
+            }
+            return null;
         }
+
+        static MethodInfo Method(string name) => typeof(DynamicBeltPatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
         {
-            MethodInfo[] methods = harmonyType.GetMethods(BindingFlags.Instance | BindingFlags.Public);
-            for (int i = 0; i < methods.Length; i++)
+            foreach (MethodInfo method in harmonyType.GetMethods(BindingFlags.Instance | BindingFlags.Public))
             {
-                MethodInfo method = methods[i];
                 if (method.Name != "Patch") continue;
                 ParameterInfo[] parameters = method.GetParameters();
                 if (parameters.Length < 2 || !typeof(MethodBase).IsAssignableFrom(parameters[0].ParameterType)) continue;
-                bool hasPrefix = false;
-                bool hasFinalizer = false;
-                for (int p = 1; p < parameters.Length; p++)
-                {
-                    if (parameters[p].ParameterType != harmonyMethodType) continue;
-                    if (string.Equals(parameters[p].Name, "prefix", StringComparison.OrdinalIgnoreCase)) hasPrefix = true;
-                    if (string.Equals(parameters[p].Name, "finalizer", StringComparison.OrdinalIgnoreCase)) hasFinalizer = true;
-                }
-                if (hasPrefix && hasFinalizer) return method;
+                for (int i = 1; i < parameters.Length; i++)
+                    if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) return method;
             }
             return null;
         }
 
-        void Patch(MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, object prefix, object postfix, object finalizer)
+        void Patch(MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, object postfix)
         {
             ParameterInfo[] parameters = patchMethod.GetParameters();
             object[] arguments = new object[parameters.Length];
             arguments[0] = original;
             for (int i = 1; i < parameters.Length; i++)
-            {
-                if (parameters[i].ParameterType != harmonyMethodType) continue;
-                if (string.Equals(parameters[i].Name, "prefix", StringComparison.OrdinalIgnoreCase)) arguments[i] = prefix;
-                else if (string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) arguments[i] = postfix;
-                else if (string.Equals(parameters[i].Name, "finalizer", StringComparison.OrdinalIgnoreCase)) arguments[i] = finalizer;
-            }
+                if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) arguments[i] = postfix;
             patchMethod.Invoke(harmony, arguments);
         }
 
         bool Fail(string message)
         {
-            if (logWarning != null) logWarning(message);
+            logWarning?.Invoke(message);
             return false;
         }
 
@@ -305,11 +380,17 @@ namespace SPTBeltArmbandInventory
             catch { }
             harmony = null;
             unpatchSelf = null;
-            BeltRuntime.SlotOrderField = null;
             BeltRuntime.DefaultTemplateField = null;
-            BeltRuntime.DogtagTemplateField = null;
+            BeltRuntime.SlotViewsContainerField = null;
+            BeltRuntime.SlotViewsDictionaryField = null;
             BeltRuntime.GetSlotMethod = null;
+            BeltRuntime.SlotViewShowMethod = null;
+            BeltRuntime.IsAllowedToSeeSlotMethod = null;
+            BeltRuntime.ItemUiContextInstanceProperty = null;
             BeltRuntime.ArmBandValue = null;
+            BeltRuntime.PocketsValue = null;
+            BeltRuntime.BackpackValue = null;
+            BeltRuntime.LogInfo = null;
             BeltRuntime.LogWarning = null;
         }
     }

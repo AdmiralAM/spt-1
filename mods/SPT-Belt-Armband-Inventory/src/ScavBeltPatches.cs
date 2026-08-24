@@ -113,21 +113,22 @@ namespace SPTBeltArmbandInventory
                 if (harmonyType == null || harmonyMethodType == null || controllerType == null)
                     return Fail("SPT 4.1 InventoryController or Harmony was not found; Scav belt compatibility is disabled.");
 
-                MethodInfo replaceInventory = controllerType.GetMethod("ReplaceInventory", BindingFlags.Instance | BindingFlags.NonPublic);
+                MethodInfo replaceInventory = FindReplaceInventory(controllerType);
                 if (replaceInventory == null)
-                    return Fail("SPT 4.1 InventoryController.ReplaceInventory shape changed; Scav belt compatibility is disabled.");
+                    return Fail("SPT 4.1 InventoryController.ReplaceInventory boundary was not found; Scav belt compatibility is disabled.");
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                if (harmony == null || patchMethod == null || harmonyMethodConstructor == null)
-                    return Fail("Harmony patch API is incompatible; Scav belt compatibility is disabled.");
+                MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
+                if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, harmonyMethodConstructor != null, rollback != null))
+                    return Fail("Harmony patch/rollback API is incompatible; Scav belt compatibility is disabled.");
+                unpatchSelf = rollback;
 
                 ScavBeltRuntime.LogWarning = logWarning;
                 object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(ReplaceInventoryPostfix)) });
                 Patch(patchMethod, harmonyMethodType, replaceInventory, postfix);
 
-                unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 if (logInfo != null) logInfo("Belt/Armband Inventory conditional Scav belt compatibility installed.");
                 return true;
             }
@@ -136,6 +137,23 @@ namespace SPTBeltArmbandInventory
                 Dispose();
                 return Fail("Scav belt compatibility installation failed safely: " + exception.Message);
             }
+        }
+
+        static MethodInfo FindReplaceInventory(Type controllerType)
+        {
+            MethodInfo[] methods = controllerType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo method = methods[i];
+                if (!string.Equals(method.Name, "ReplaceInventory", StringComparison.Ordinal)) continue;
+                ParameterInfo[] parameters = method.GetParameters();
+                if (parameters.Length != 1) continue;
+                Type parameterType = parameters[0].ParameterType;
+                if (string.Equals(parameterType.Name, "Inventory", StringComparison.Ordinal)
+                    || string.Equals(parameterType.FullName, "EFT.InventoryLogic.Inventory", StringComparison.Ordinal))
+                    return method;
+            }
+            return null;
         }
 
         static void ReplaceInventoryPostfix(object __instance)

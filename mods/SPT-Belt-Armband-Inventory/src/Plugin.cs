@@ -10,7 +10,7 @@ namespace SPTBeltArmbandInventory
     public sealed class Plugin : BaseUnityPlugin
     {
         public const string PluginGuid = "com.admiralam.spt.belt-armband-inventory";
-        public const string PluginName = "SPT Belt Armband Inventory";
+        public const string PluginName = "B&A&HB MOD SPT";
         public const string PluginVersion = "0.1.0";
 
         ConfigEntry<bool> modEnabled;
@@ -30,18 +30,19 @@ namespace SPTBeltArmbandInventory
 
         void Awake()
         {
-            modEnabled = Config.Bind("General", "Enabled", true, "Enable Belt/Armband Inventory. Restart required.");
+            modEnabled = Config.Bind("General", "Enabled", true, "Enable B&A&HB MOD SPT. Runtime-candidate builds force this on at startup.");
             position = Config.Bind("Layout", "Belt position", BeltSlotPosition.BelowPockets, "Place the belt row above or below Pockets. Restart required.");
 
             if (!modEnabled.Value)
             {
-                Logger.LogInfo("SPT Belt Armband Inventory is disabled in configuration.");
-                return;
+                modEnabled.Value = true;
+                Config.Save();
+                Logger.LogInfo("B&A&HB MOD SPT migrated stale Enabled=false config to Enabled=true for runtime validation.");
             }
 
             if (LegacyBeltSlotDetected())
             {
-                Logger.LogWarning("Trenchfoot-BeltSlot is already loaded. Remove/disable that DLL before enabling SPT Belt Armband Inventory; no duplicate patch was installed.");
+                Logger.LogWarning("Trenchfoot-BeltSlot is already loaded. Remove/disable that DLL before enabling B&A&HB MOD SPT; no duplicate patch was installed.");
                 return;
             }
 
