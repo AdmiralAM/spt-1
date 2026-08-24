@@ -86,6 +86,10 @@ internal static class Program
         Assert(!PickupSlotPolicy.ShouldTry(true, true, true, true), "deleted ArmBand slot is never revived by pickup fallback");
         Assert(!PickupSlotPolicy.ShouldTry(true, true, false, false), "incompatible container is never forced into ArmBand");
 
+        Assert(PaymentSlotPolicy.ShouldIncludeBelt(true, true), "container belt participates in in-raid trader-service payment slots");
+        Assert(!PaymentSlotPolicy.ShouldIncludeBelt(true, false), "plain armband never becomes a payment slot");
+        Assert(!PaymentSlotPolicy.ShouldIncludeBelt(false, true), "empty ArmBand never becomes a payment slot");
+
         var deathTree = new[]
         {
             new BeltInventoryNode("equipment", null, null),
