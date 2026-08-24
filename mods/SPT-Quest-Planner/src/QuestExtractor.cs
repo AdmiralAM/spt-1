@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Globalization;
 using System.Reflection;
-using System.Text.Json;
 
 namespace SPTQuestPlanner;
 
@@ -20,7 +19,7 @@ public static class QuestExtractor
         List<ItemRequirement> items = new();
         List<string> warnings = new();
 
-        foreach (JsonElement quest in EnumerateQuestObjects(rawQuests))
+        foreach (object quest in EnumerateQuestObjects(rawQuests))
         {
             string? questId = GetString(quest, "_id") ?? GetString(quest, "id");
             if (string.IsNullOrWhiteSpace(questId))
@@ -33,44 +32,40 @@ public static class QuestExtractor
             string? name = GetString(quest, "QuestName") ?? GetString(quest, "name");
             int? minimumLevel = null;
 
-            if (TryGetPropertyInsensitive(quest, "conditions", out JsonElement conditions))
+            object? conditions = GetMemberValue(quest, "conditions");
+            if (conditions is not null)
             {
-                if (TryGetPropertyInsensitive(conditions, "AvailableForStart", out JsonElement startConditions))
+                object? startConditions = GetMemberValue(conditions, "AvailableForStart");
+                foreach (object condition in EnumerateValues(startConditions))
                 {
-                    foreach (JsonElement condition in EnumerateArray(startConditions))
+                    string type = GetString(condition, "conditionType") ?? string.Empty;
+                    if (type.Equals("Level", StringComparison.OrdinalIgnoreCase))
                     {
-                        string type = GetString(condition, "conditionType") ?? string.Empty;
-                        if (type.Equals("Level", StringComparison.OrdinalIgnoreCase))
+                        double? value = GetNumber(condition, "value");
+                        if (value is not null && value >= 0)
+                            minimumLevel = Math.Max(minimumLevel ?? 0, (int)Math.Ceiling(value.Value));
+                    }
+                    else if (type.Equals("Quest", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string? sourceQuestId = GetString(condition, "target");
+                        if (string.IsNullOrWhiteSpace(sourceQuestId))
                         {
-                            double? value = GetNumber(condition, "value");
-                            if (value is not null && value >= 0)
-                                minimumLevel = Math.Max(minimumLevel ?? 0, (int)Math.Ceiling(value.Value));
+                            warnings.Add($"Quest {questId}: prerequisite condition without target skipped");
+                            continue;
                         }
-                        else if (type.Equals("Quest", StringComparison.OrdinalIgnoreCase))
+
+                        HashSet<QuestState> acceptedStates = new();
+                        foreach (object status in EnumerateValues(GetMemberValue(condition, "status")))
                         {
-                            string? sourceQuestId = GetString(condition, "target");
-                            if (string.IsNullOrWhiteSpace(sourceQuestId))
-                            {
-                                warnings.Add($"Quest {questId}: prerequisite condition without target skipped");
-                                continue;
-                            }
-
-                            HashSet<QuestState> acceptedStates = new();
-                            if (TryGetPropertyInsensitive(condition, "status", out JsonElement statusElement))
-                            {
-                                foreach (JsonElement status in EnumerateArray(statusElement))
-                                {
-                                    if (status.TryGetInt32(out int rawStatus))
-                                        acceptedStates.Add(MapQuestStatus(rawStatus));
-                                }
-                            }
-
-                            prerequisites.Add(new PrerequisiteEdge(
-                                sourceQuestId,
-                                questId,
-                                acceptedStates,
-                                GetString(condition, "id")));
+                            if (TryConvertInt(status, out int rawStatus))
+                                acceptedStates.Add(MapQuestStatus(rawStatus));
                         }
+
+                        prerequisites.Add(new PrerequisiteEdge(
+                            sourceQuestId,
+                            questId,
+                            acceptedStates,
+                            GetString(condition, "id")));
                     }
                 }
 
@@ -91,15 +86,13 @@ public static class QuestExtractor
 
     private static void ExtractItemRequirements(
         string questId,
-        JsonElement conditions,
+        object conditions,
         string propertyName,
         string phase,
         List<ItemRequirement> items,
         List<string> warnings)
     {
-        if (!TryGetPropertyInsensitive(conditions, propertyName, out JsonElement conditionArray)) return;
-
-        foreach (JsonElement condition in EnumerateArray(conditionArray))
+        foreach (object condition in EnumerateValues(GetMemberValue(conditions, propertyName)))
         {
             string type = GetString(condition, "conditionType") ?? string.Empty;
             if (!type.Equals("HandoverItem", StringComparison.OrdinalIgnoreCase) &&
@@ -141,20 +134,14 @@ public static class QuestExtractor
         _ => QuestState.Unknown
     };
 
-    private static IEnumerable<JsonElement> EnumerateQuestObjects(object rawQuests)
+    private static IEnumerable<object> EnumerateQuestObjects(object? rawQuests)
     {
         if (rawQuests is null) yield break;
 
-        // SPT 4.1.x stores TemplateTable.Quests as a dictionary keyed by MongoId.
-        // System.Text.Json cannot serialize MongoId dictionary keys as JSON property names,
-        // so never serialize the dictionary itself. Serialize only each quest value.
         if (rawQuests is IDictionary dictionary)
         {
             foreach (DictionaryEntry entry in dictionary)
-            {
-                if (TrySerializeObject(entry.Value, out JsonElement quest))
-                    yield return quest;
-            }
+                if (entry.Value is not null) yield return entry.Value;
             yield break;
         }
 
@@ -163,111 +150,121 @@ public static class QuestExtractor
             foreach (object? entry in enumerable)
             {
                 if (entry is null) continue;
-
-                // Covers generic KeyValuePair<MongoId, Quest> enumerables that do not expose IDictionary.
                 PropertyInfo? valueProperty = entry.GetType().GetProperty("Value", BindingFlags.Instance | BindingFlags.Public);
                 object? candidate = valueProperty is not null ? valueProperty.GetValue(entry) : entry;
-                if (TrySerializeObject(candidate, out JsonElement quest))
-                    yield return quest;
+                if (candidate is not null) yield return candidate;
             }
             yield break;
         }
 
-        if (TrySerializeObject(rawQuests, out JsonElement root))
+        yield return rawQuests;
+    }
+
+    private static IEnumerable<object> EnumerateValues(object? value)
+    {
+        if (value is null) yield break;
+        if (value is string)
         {
-            if (root.ValueKind == JsonValueKind.Array)
+            yield return value;
+            yield break;
+        }
+        if (value is IEnumerable enumerable)
+        {
+            foreach (object? item in enumerable)
+                if (item is not null) yield return item;
+            yield break;
+        }
+        yield return value;
+    }
+
+    private static object? GetMemberValue(object? instance, string name)
+    {
+        if (instance is null) return null;
+
+        if (instance is IDictionary dictionary)
+        {
+            foreach (DictionaryEntry entry in dictionary)
             {
-                foreach (JsonElement element in root.EnumerateArray())
-                    if (element.ValueKind == JsonValueKind.Object) yield return element.Clone();
-            }
-            else if (root.ValueKind == JsonValueKind.Object)
-            {
-                yield return root;
+                if (entry.Key?.ToString()?.Equals(name, StringComparison.OrdinalIgnoreCase) == true)
+                    return entry.Value;
             }
         }
-    }
 
-    private static bool TrySerializeObject(object? value, out JsonElement element)
-    {
-        if (value is null)
+        Type type = instance.GetType();
+        PropertyInfo? property = type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+            .FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && p.GetIndexParameters().Length == 0);
+        if (property is not null)
         {
-            element = default;
-            return false;
+            try { return property.GetValue(instance); }
+            catch { }
         }
 
-        JsonElement serialized = JsonSerializer.SerializeToElement(value, value.GetType());
-        if (serialized.ValueKind != JsonValueKind.Object)
+        FieldInfo? field = type.GetFields(BindingFlags.Instance | BindingFlags.Public)
+            .FirstOrDefault(f => f.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (field is not null)
         {
-            element = default;
-            return false;
+            try { return field.GetValue(instance); }
+            catch { }
         }
 
-        element = serialized.Clone();
-        return true;
-    }
-
-    private static IEnumerable<JsonElement> EnumerateArray(JsonElement element)
-    {
-        if (element.ValueKind != JsonValueKind.Array) yield break;
-        foreach (JsonElement child in element.EnumerateArray()) yield return child;
-    }
-
-    private static string? GetString(JsonElement element, string name)
-    {
-        if (!TryGetPropertyInsensitive(element, name, out JsonElement value)) return null;
-        return value.ValueKind switch
-        {
-            JsonValueKind.String => value.GetString(),
-            JsonValueKind.Number => value.GetRawText(),
-            _ => null
-        };
-    }
-
-    private static IReadOnlyList<string> GetStringList(JsonElement element, string name)
-    {
-        if (!TryGetPropertyInsensitive(element, name, out JsonElement value)) return Array.Empty<string>();
-        if (value.ValueKind == JsonValueKind.String)
-            return value.GetString() is { Length: > 0 } one ? new[] { one } : Array.Empty<string>();
-        if (value.ValueKind != JsonValueKind.Array) return Array.Empty<string>();
-
-        return value.EnumerateArray()
-            .Where(item => item.ValueKind == JsonValueKind.String)
-            .Select(item => item.GetString())
-            .Where(item => !string.IsNullOrWhiteSpace(item))
-            .Cast<string>()
-            .ToArray();
-    }
-
-    private static double? GetNumber(JsonElement element, string name)
-    {
-        if (!TryGetPropertyInsensitive(element, name, out JsonElement value)) return null;
-        if (value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out double number)) return number;
-        if (value.ValueKind == JsonValueKind.String &&
-            double.TryParse(value.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out number)) return number;
         return null;
     }
 
-    private static bool? GetBool(JsonElement element, string name)
+    private static string? GetString(object instance, string name)
     {
-        if (!TryGetPropertyInsensitive(element, name, out JsonElement value)) return null;
-        if (value.ValueKind == JsonValueKind.True) return true;
-        if (value.ValueKind == JsonValueKind.False) return false;
-        return null;
+        object? value = GetMemberValue(instance, name);
+        if (value is null) return null;
+        if (value is string text) return string.IsNullOrWhiteSpace(text) ? null : text;
+        string? converted = Convert.ToString(value, CultureInfo.InvariantCulture);
+        return string.IsNullOrWhiteSpace(converted) ? null : converted;
     }
 
-    private static bool TryGetPropertyInsensitive(JsonElement element, string name, out JsonElement value)
+    private static IReadOnlyList<string> GetStringList(object instance, string name)
     {
-        if (element.ValueKind == JsonValueKind.Object)
-        {
-            foreach (JsonProperty property in element.EnumerateObject())
-            {
-                if (!property.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) continue;
-                value = property.Value;
-                return true;
-            }
-        }
+        object? value = GetMemberValue(instance, name);
+        if (value is null) return Array.Empty<string>();
+        if (value is string one) return string.IsNullOrWhiteSpace(one) ? Array.Empty<string>() : new[] { one };
 
-        value = default;
-        return false;
+        List<string> result = new();
+        foreach (object item in EnumerateValues(value))
+        {
+            string? converted = Convert.ToString(item, CultureInfo.InvariantCulture);
+            if (!string.IsNullOrWhiteSpace(converted)) result.Add(converted);
+        }
+        return result;
+    }
+
+    private static double? GetNumber(object instance, string name)
+    {
+        object? value = GetMemberValue(instance, name);
+        if (value is null) return null;
+        try { return Convert.ToDouble(value, CultureInfo.InvariantCulture); }
+        catch
+        {
+            return double.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed)
+                ? parsed
+                : null;
+        }
+    }
+
+    private static bool? GetBool(object instance, string name)
+    {
+        object? value = GetMemberValue(instance, name);
+        if (value is null) return null;
+        if (value is bool boolean) return boolean;
+        return bool.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), out bool parsed) ? parsed : null;
+    }
+
+    private static bool TryConvertInt(object value, out int result)
+    {
+        try
+        {
+            result = Convert.ToInt32(value, CultureInfo.InvariantCulture);
+            return true;
+        }
+        catch
+        {
+            return int.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), NumberStyles.Integer, CultureInfo.InvariantCulture, out result);
+        }
     }
 }
