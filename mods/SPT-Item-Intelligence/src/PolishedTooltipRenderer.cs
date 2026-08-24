@@ -6,6 +6,7 @@ namespace SPTItemIntelligence
     internal static class PolishedTooltipRenderer
     {
         const float Gap = 8f;
+        const float ScreenMargin = 6f;
 
         public static void Draw(Rect marker, ItemHoverText text, ItemIntelligenceUiSettings settings)
         {
@@ -17,50 +18,79 @@ namespace SPTItemIntelligence
 
             float scale = settings.TooltipScale;
             int fontSize = Mathf.RoundToInt(settings.TooltipFontSize * scale);
-            float lineHeight = Mathf.Max(fontSize + 7f, 19f * scale);
-            float horizontalPadding = 12f * scale;
-            float verticalPadding = 8f * scale;
+            float baseLineHeight = Mathf.Max(fontSize + 8f, 20f * scale);
+            float horizontalPadding = 11f * scale;
+            float verticalPadding = 7f * scale;
+            float rowGap = 1f * scale;
 
             GUIStyle label = new GUIStyle(GUI.skin.label)
             {
                 fontSize = fontSize,
-                alignment = TextAnchor.MiddleLeft,
-                clipping = TextClipping.Overflow,
-                wordWrap = false,
+                alignment = TextAnchor.UpperLeft,
+                clipping = TextClipping.Clip,
+                wordWrap = true,
                 richText = false,
-                padding = new RectOffset(0, 0, 0, 1)
+                padding = new RectOffset(0, 0, 1, 2)
             };
 
-            float contentWidth = 0f;
+            string[] lines = new string[lineCount];
+            float naturalWidth = 0f;
             for (int i = 0; i < lineCount; i++)
             {
                 string line = DisplayLine(text.GetLine(mode, i), mode);
+                lines[i] = line;
                 if (line.Length == 0) continue;
-                contentWidth = Mathf.Max(contentWidth, label.CalcSize(new GUIContent(line)).x);
+                naturalWidth = Mathf.Max(naturalWidth, label.CalcSize(new GUIContent(line)).x);
             }
 
-            float width = Mathf.Clamp(contentWidth + horizontalPadding * 2f, 220f * scale, 430f * scale);
-            float height = verticalPadding * 2f + lineCount * lineHeight;
+            float minimumWidth = 200f * scale;
+            float preferredMaximumWidth = 430f * scale;
+            float screenMaximumWidth = Mathf.Max(minimumWidth, Screen.width - ScreenMargin * 2f);
+            float maximumWidth = Mathf.Min(preferredMaximumWidth, screenMaximumWidth);
+            float width = Mathf.Clamp(naturalWidth + horizontalPadding * 2f, minimumWidth, maximumWidth);
+            float textWidth = Mathf.Max(1f, width - horizontalPadding * 2f);
+
+            float[] rowHeights = new float[lineCount];
+            float contentHeight = 0f;
+            for (int i = 0; i < lineCount; i++)
+            {
+                if (lines[i].Length == 0)
+                {
+                    rowHeights[i] = baseLineHeight;
+                }
+                else
+                {
+                    float wrappedHeight = label.CalcHeight(new GUIContent(lines[i]), textWidth);
+                    rowHeights[i] = Mathf.Max(baseLineHeight, wrappedHeight + 2f * scale);
+                }
+                contentHeight += rowHeights[i];
+                if (i + 1 < lineCount) contentHeight += rowGap;
+            }
+
+            float height = verticalPadding * 2f + contentHeight;
             float x = marker.xMax + Gap;
-            if (x + width > Screen.width) x = marker.xMin - width - Gap;
-            x = Mathf.Clamp(x, 0f, Mathf.Max(0f, Screen.width - width));
-            float y = Mathf.Clamp(marker.yMin, 0f, Mathf.Max(0f, Screen.height - height));
+            if (x + width > Screen.width - ScreenMargin) x = marker.xMin - width - Gap;
+            x = Mathf.Clamp(x, ScreenMargin, Mathf.Max(ScreenMargin, Screen.width - ScreenMargin - width));
+            float y = Mathf.Clamp(marker.yMin, ScreenMargin, Mathf.Max(ScreenMargin, Screen.height - ScreenMargin - height));
 
             Color previous = GUI.color;
             GUI.color = new Color(1f, 1f, 1f, settings.TooltipOpacity);
             GUI.Box(new Rect(x, y, width, height), GUIContent.none);
             GUI.color = Color.white;
 
+            float yCursor = y + verticalPadding;
             for (int i = 0; i < lineCount; i++)
             {
-                string raw = text.GetLine(mode, i);
-                string line = DisplayLine(raw, mode);
-                if (line.Length == 0) continue;
-                label.normal.textColor = ResolveColor(line, settings);
-                GUI.Label(
-                    new Rect(x + horizontalPadding, y + verticalPadding + i * lineHeight, width - horizontalPadding * 2f, lineHeight + 2f),
-                    line,
-                    label);
+                string line = lines[i];
+                if (line.Length > 0)
+                {
+                    label.normal.textColor = ResolveColor(line, settings);
+                    GUI.Label(
+                        new Rect(x + horizontalPadding, yCursor, textWidth, rowHeights[i]),
+                        line,
+                        label);
+                }
+                yCursor += rowHeights[i] + rowGap;
             }
 
             GUI.color = previous;
