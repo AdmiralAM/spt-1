@@ -21,6 +21,7 @@ public sealed class ClientRefreshTests
         Assert.Equal(2, transport.StateCalls);
         Assert.True(cache.HasTopology);
         Assert.True(cache.HasState);
+        Assert.NotNull(cache.TopologyIndex);
         Assert.NotNull(cache.Index);
         Assert.Equal(3, cache.Revision); // topology once + two state swaps
     }
@@ -67,8 +68,11 @@ public sealed class ClientRefreshTests
     {
         private long stateRevision = 100;
 
-        public PlannerPayload DecodeTopology(string json) =>
-            new(PlannerClientContract.SchemaVersion, 0, json);
+        public PlannerPayload DecodeTopology(string json)
+        {
+            const string payload = "{\"schemaVersion\":8,\"questNodes\":[{\"questId\":\"q1\",\"repeatable\":false}],\"prerequisites\":[],\"itemRequirements\":[]}";
+            return new PlannerPayload(PlannerClientContract.SchemaVersion, 0, payload);
+        }
 
         public PlannerPayload DecodeState(string json)
         {
