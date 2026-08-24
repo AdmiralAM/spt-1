@@ -37,13 +37,17 @@ namespace SPTQuestPlanner.Client
 
         public void ActivateSelected()
         {
-            if (!string.IsNullOrWhiteSpace(selectedLocationId)) activeLocationId = selectedLocationId;
+            if (!string.IsNullOrWhiteSpace(selectedLocationId)) ActivateLocation(selectedLocationId);
         }
 
         public void ActivateLocation(string locationId)
         {
             activeLocationId = string.IsNullOrWhiteSpace(locationId) ? null : locationId.Trim();
-            if (!string.IsNullOrWhiteSpace(activeLocationId)) selectedLocationId = activeLocationId;
+            if (!string.IsNullOrWhiteSpace(activeLocationId))
+            {
+                selectedLocationId = activeLocationId;
+                workspaceMode = PlannerWorkspaceMode.RaidPlanner;
+            }
         }
 
         public void ClearActivePlan()
@@ -54,6 +58,7 @@ namespace SPTQuestPlanner.Client
         public void SelectProgressionTarget(string questId)
         {
             progressionTargetQuestId = string.IsNullOrWhiteSpace(questId) ? null : questId.Trim();
+            if (!string.IsNullOrWhiteSpace(progressionTargetQuestId)) workspaceMode = PlannerWorkspaceMode.Progression;
         }
 
         public void ClearProgressionTarget()
@@ -154,6 +159,23 @@ namespace SPTQuestPlanner.Client
         public PlannerSelectionSnapshot GetSelectionSnapshot(long cacheRevision)
         {
             return new PlannerSelectionSnapshot(cacheRevision, uiState.ActiveLocationId, uiState.ProgressionTargetQuestId);
+        }
+
+        public PlannerActivePlanSnapshot GetActivePlanSnapshot(long cacheRevision, int maxObjectivesPerCard = 32)
+        {
+            PlannerRaidPlanCard active = GetActiveCard(cacheRevision, maxObjectivesPerCard);
+            if (active == null) return PlannerActivePlanSnapshot.Empty(cacheRevision);
+            return new PlannerActivePlanSnapshot(
+                cacheRevision,
+                active.LocationId,
+                PlannerDisplayNames.Location(active.LocationId),
+                active.QuestCount,
+                active.ObjectiveCount,
+                active.PreparationReady,
+                active.MissingBringTemplateCount,
+                active.UnresolvedPreparationCount,
+                active.Objectives,
+                active.BringNeeds);
         }
 
         public void Invalidate()
