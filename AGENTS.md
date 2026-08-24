@@ -39,6 +39,20 @@ If the work is too small to justify its own Issue, it may be included in an exis
 
 Module CI proves the affected module. Keep triggers/path filters narrow.
 
+GitHub Actions minutes and runner capacity are finite repository resources even when account quota remains. Every development process must use them deliberately:
+
+- inspect code, repository state, and existing logs before triggering CI;
+- prefer module/path-scoped checks over repository-wide validation;
+- order validation fail-fast: cheap deterministic checks first, expensive builds/package work later;
+- after a failure, diagnose the first failed boundary before triggering another run;
+- rerun only the smallest necessary failed job/check when GitHub supports it;
+- never rerun an unchanged full workflow merely to see whether the same failure disappears;
+- do not duplicate validation already proven by another current check;
+- do not spend Windows-hosted runner time on documentation-only or otherwise irrelevant changes;
+- treat repeated failed-job minutes, redundant setup/download work, unnecessary full-suite runs, and broad triggers as CI hygiene defects to fix rather than normal operating cost.
+
+A larger Actions quota is capacity for useful work, not permission to waste runner time.
+
 `Publish SPT Mod Suite` is a manual release/publication controller. It may promote `stable` and rewrite install-only runtime channels. Treat it as a higher-level release operation, not a development check.
 
 ## Repository hygiene
