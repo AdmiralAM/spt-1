@@ -24,6 +24,7 @@ namespace SPTBeltArmbandInventory
         FastAccessBeltSyncPatches fastAccessSyncPatches;
         SlotMergePatches slotMergePatches;
         PickupSlotPatches pickupPatches;
+        PaymentSlotPatches paymentPatches;
 
         void Awake()
         {
@@ -113,6 +114,14 @@ namespace SPTBeltArmbandInventory
                 pickupPatches = null;
                 Logger.LogWarning("Belt storage remains active, but compatible container belts may not auto-equip into an empty ArmBand slot on pickup.");
             }
+
+            paymentPatches = new PaymentSlotPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!paymentPatches.TryInstall())
+            {
+                paymentPatches.Dispose();
+                paymentPatches = null;
+                Logger.LogWarning("Belt storage remains active, but money/items inside the belt may not be considered by vanilla in-raid trader-service payments.");
+            }
         }
 
         void Update()
@@ -135,6 +144,8 @@ namespace SPTBeltArmbandInventory
 
         void OnDestroy()
         {
+            if (paymentPatches != null) paymentPatches.Dispose();
+            paymentPatches = null;
             if (pickupPatches != null) pickupPatches.Dispose();
             pickupPatches = null;
             if (slotMergePatches != null) slotMergePatches.Dispose();
