@@ -47,7 +47,7 @@ public sealed class PlannerRaidOpportunityBuilderTests
     }
 
     [Fact]
-    public void GlobalActiveObjectiveIsAddedToEveryRelevantSpecificLocation()
+    public void GlobalActiveObjectiveGetsSeparateAnyLocationPlan()
     {
         PlannerLocationObjective globalKill = new(
             "qGlobal", "kill-any", "Kills", "Finish", null,
@@ -66,26 +66,30 @@ public sealed class PlannerRaidOpportunityBuilderTests
 
         IReadOnlyList<PlannerRaidOpportunity> result = PlannerRaidOpportunityBuilder.Build(locations, state);
 
-        Assert.Equal(2, result.Count);
-        Assert.All(result, value => Assert.Contains(value.Objectives, objective => objective.QuestId == "qGlobal"));
-        Assert.All(result, value => Assert.Equal(1, value.GlobalObjectiveCount));
-        Assert.All(result, value => Assert.Equal(1, value.KillCount));
-        Assert.All(result, value => Assert.Contains(value.RaidObjectives, objective => objective.QuestId == "qGlobal" && objective.Global));
+        Assert.Equal(3, result.Count);
+        PlannerRaidOpportunity any = Assert.Single(result.Where(value => value.LocationId == PlannerRaidOpportunityBuilder.AnyLocationId));
+        Assert.Single(any.Objectives);
+        Assert.Equal("qGlobal", any.Objectives[0].QuestId);
+        Assert.Equal(1, any.GlobalObjectiveCount);
+        Assert.Equal(1, any.KillCount);
+        Assert.All(result.Where(value => value.LocationId != PlannerRaidOpportunityBuilder.AnyLocationId), value => Assert.DoesNotContain(value.Objectives, objective => objective.QuestId == "qGlobal"));
     }
 
     [Fact]
-    public void ConstraintAndCounterContainerAreNotShownAsRaidTasks()
+    public void ConstraintCounterContainerAndUnknownOtherAreNotShownAsRaidTasks()
     {
         PlannerLocationObjective constraint = new(
             "q1", "loc", "Location", "Finish", "counter", new[] { "Customs" }, new[] { "Customs" }, PlannerObjectiveKind.LocationConstraint);
         PlannerLocationObjective container = new(
             "q1", "counter", "CounterCreator", "Finish", null, Array.Empty<string>(), new[] { "Customs" }, PlannerObjectiveKind.Other);
+        PlannerLocationObjective unknown = new(
+            "q1", "unknown", "SomeCustomCondition", "Finish", null, Array.Empty<string>(), new[] { "Customs" }, PlannerObjectiveKind.Other);
         PlannerLocationObjective kill = new(
             "q1", "kill", "Kills", "Finish", "counter", new[] { "Savage" }, new[] { "Customs" }, PlannerObjectiveKind.Kill);
         PlannerLocationIndex locations = new(
             new Dictionary<string, PlannerLocationBucket>(StringComparer.OrdinalIgnoreCase)
             {
-                ["Customs"] = new PlannerLocationBucket("Customs", new[] { constraint, container, kill })
+                ["Customs"] = new PlannerLocationBucket("Customs", new[] { constraint, container, unknown, kill })
             },
             Array.Empty<PlannerLocationObjective>());
 
@@ -97,7 +101,21 @@ public sealed class PlannerRaidOpportunityBuilderTests
     }
 
     [Fact]
-    public void GlobalHandoverIsNotCopiedIntoRaidPlans()
+    public void TypeNameGarbageIsNotTreatedAsLocation()
+    {
+        const string garbage = "SPTarkov.Server.Core.Utils.Json.ListOrT`1[System.String]";
+        PlannerLocationIndex locations = new(
+            new Dictionary<string, PlannerLocationBucket>(StringComparer.OrdinalIgnoreCase)
+            {
+                [garbage] = new PlannerLocationBucket(garbage, new[] { Objective("q1", "visit", garbage) })
+            },
+            Array.Empty<PlannerLocationObjective>());
+
+        Assert.Empty(PlannerRaidOpportunityBuilder.Build(locations, State(Quest("q1", 4))));
+    }
+
+    [Fact]
+    public void GlobalHandoverIsNotIncludedInAnyLocationPlan()
     {
         PlannerLocationObjective handover = new(
             "qHandover", "hand", "HandoverItem", "Finish", null,
@@ -114,12 +132,11 @@ public sealed class PlannerRaidOpportunityBuilderTests
             State(Quest("qCustoms", 4), Quest("qHandover", 4))));
 
         Assert.DoesNotContain(opportunity.Objectives, objective => objective.QuestId == "qHandover");
-        Assert.DoesNotContain(opportunity.RaidObjectives, objective => objective.QuestId == "qHandover");
-        Assert.Equal(0, opportunity.GlobalObjectiveCount);
+        Assert.Equal("Customs", opportunity.LocationId);
     }
 
     [Fact]
-    public void GlobalFindItemRemainsRaidActionable()
+    public void GlobalFindItemRemainsRaidActionableInAnyLocationPlan()
     {
         PlannerLocationObjective find = new(
             "qFind", "find", "FindItem", "Finish", null,
@@ -131,13 +148,14 @@ public sealed class PlannerRaidOpportunityBuilderTests
             },
             new[] { find });
 
-        PlannerRaidOpportunity opportunity = Assert.Single(PlannerRaidOpportunityBuilder.Build(
+        IReadOnlyList<PlannerRaidOpportunity> opportunities = PlannerRaidOpportunityBuilder.Build(
             locations,
-            State(Quest("qWoods", 4), Quest("qFind", 4))));
+            State(Quest("qWoods", 4), Quest("qFind", 4)));
 
-        Assert.Contains(opportunity.Objectives, objective => objective.QuestId == "qFind");
-        Assert.Equal(1, opportunity.GlobalObjectiveCount);
-        Assert.Equal(1, opportunity.FindCount);
+        PlannerRaidOpportunity any = Assert.Single(opportunities.Where(value => value.LocationId == PlannerRaidOpportunityBuilder.AnyLocationId));
+        Assert.Contains(any.Objectives, objective => objective.QuestId == "qFind");
+        Assert.Equal(1, any.GlobalObjectiveCount);
+        Assert.Equal(1, any.FindCount);
     }
 
     [Fact]
