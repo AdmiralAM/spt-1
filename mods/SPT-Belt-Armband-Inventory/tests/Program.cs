@@ -80,6 +80,9 @@ internal static class Program
         Assert(!GrenadeSlotPolicy.ShouldAppendGrenade(true, false, false), "unexamined belt grenade preserves vanilla examination filtering");
         Assert(!GrenadeSlotPolicy.ShouldAppendGrenade(true, true, true), "existing grenade reference is not duplicated");
 
+        Assert(HarmonyInstallPolicy.CanBegin(true, true, true, true), "Harmony mutations begin only when patch and rollback APIs are ready");
+        Assert(!HarmonyInstallPolicy.CanBegin(true, true, true, false), "Harmony mutations fail closed when rollback is unavailable");
+
         Assert(PickupSlotPolicy.ShouldTry(true, true, false, true), "compatible container can fall back to ArmBand when vanilla pickup has no slot");
         Assert(!PickupSlotPolicy.ShouldTry(false, true, false, true), "vanilla pickup result always wins");
         Assert(!PickupSlotPolicy.ShouldTry(true, false, false, true), "non-container item never uses belt pickup fallback");
