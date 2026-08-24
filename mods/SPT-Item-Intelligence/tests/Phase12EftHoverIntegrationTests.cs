@@ -58,6 +58,17 @@ static class Phase12EftHoverIntegrationTests
                 cellFound = targets[i].Initialize.Name == "SetItem" && targets[i].Initialize.GetParameters().Length == 1 && targets[i].Kill.Name == "Close";
         Expect(cellFound, "ItemCell parameterized lifecycle methods are discovered", ref assertions);
 
+        bool allTargetsAreDeclared = true;
+        for (int i = 0; i < targets.Count; i++)
+        {
+            EftItemViewHoverIntegration.HoverPatchTarget target = targets[i];
+            allTargetsAreDeclared &= target.Enter.DeclaringType == target.Enter.ReflectedType;
+            allTargetsAreDeclared &= target.Exit.DeclaringType == target.Exit.ReflectedType;
+            allTargetsAreDeclared &= target.Initialize.DeclaringType == target.Initialize.ReflectedType;
+            allTargetsAreDeclared &= target.Kill.DeclaringType == target.Kill.ReflectedType;
+        }
+        Expect(allTargetsAreDeclared, "Harmony targets are normalized to their actually declared methods", ref assertions);
+
         ItemPresentationStore store = new ItemPresentationStore();
         store.Refresh(ItemRequirementStateIndex.Empty, ItemPriceIndexBuilder.Build(new[]
         {

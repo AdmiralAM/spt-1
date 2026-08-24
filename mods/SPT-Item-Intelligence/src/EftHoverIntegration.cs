@@ -241,20 +241,36 @@ namespace SPTItemIntelligence
                 object exitPatch = harmonyMethodConstructor.Invoke(new object[] { exitPostfix });
                 object initPatch = harmonyMethodConstructor.Invoke(new object[] { initPostfix });
                 object killPatch = harmonyMethodConstructor.Invoke(new object[] { killPrefix });
+                HashSet<MethodInfo> patchedMethods = new HashSet<MethodInfo>();
 
                 Interlocked.Exchange(ref active, this);
                 for (int i = 0; i < targets.Count; i++)
                 {
-                    Patch(patchMethod, targets[i].Enter, harmonyMethodType, enterPatch, false);
-                    Patch(patchMethod, targets[i].Exit, harmonyMethodType, exitPatch, false);
-                    Patch(patchMethod, targets[i].Initialize, harmonyMethodType, initPatch, false);
-                    Patch(patchMethod, targets[i].Kill, harmonyMethodType, killPatch, true);
-                    PatchedMethodCount += 4;
+                    if (patchedMethods.Add(targets[i].Enter))
+                    {
+                        Patch(patchMethod, targets[i].Enter, harmonyMethodType, enterPatch, false);
+                        PatchedMethodCount++;
+                    }
+                    if (patchedMethods.Add(targets[i].Exit))
+                    {
+                        Patch(patchMethod, targets[i].Exit, harmonyMethodType, exitPatch, false);
+                        PatchedMethodCount++;
+                    }
+                    if (patchedMethods.Add(targets[i].Initialize))
+                    {
+                        Patch(patchMethod, targets[i].Initialize, harmonyMethodType, initPatch, false);
+                        PatchedMethodCount++;
+                    }
+                    if (patchedMethods.Add(targets[i].Kill))
+                    {
+                        Patch(patchMethod, targets[i].Kill, harmonyMethodType, killPatch, true);
+                        PatchedMethodCount++;
+                    }
                 }
 
                 unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 IsInstalled = PatchedMethodCount > 0;
-                if (IsInstalled && logInfo != null) logInfo("Item Intelligence hover integration installed on " + PatchedMethodCount + " EFT ItemView methods.");
+                if (IsInstalled && logInfo != null) logInfo("Item Intelligence hover integration installed on " + PatchedMethodCount + " unique EFT ItemView methods.");
                 return IsInstalled;
             }
             catch (Exception exception)
@@ -325,15 +341,31 @@ namespace SPTItemIntelligence
                     Type type = types[i];
                     if (type == null || !LooksLikeItemView(type)) continue;
 
-                    MethodInfo enter = FindPointerMethod(type, "OnPointerEnter");
-                    MethodInfo exit = FindPointerMethod(type, "OnPointerExit");
-                    MethodInfo initialize = FindLifecycleMethod(type, new[] { "Init", "Show", "SetItem" });
-                    MethodInfo kill = FindLifecycleMethod(type, new[] { "Kill", "OnDisable", "Close" });
+                    MethodInfo enter = NormalizeDeclaredMethod(FindPointerMethod(type, "OnPointerEnter"));
+                    MethodInfo exit = NormalizeDeclaredMethod(FindPointerMethod(type, "OnPointerExit"));
+                    MethodInfo initialize = NormalizeDeclaredMethod(FindLifecycleMethod(type, new[] { "Init", "Show", "SetItem" }));
+                    MethodInfo kill = NormalizeDeclaredMethod(FindLifecycleMethod(type, new[] { "Kill", "OnDisable", "Close" }));
                     if (enter == null || exit == null || initialize == null || kill == null || !seenEnter.Add(enter)) continue;
                     result.Add(new HoverPatchTarget(type, enter, exit, initialize, kill));
                 }
             }
             return result;
+        }
+
+        static MethodInfo NormalizeDeclaredMethod(MethodInfo method)
+        {
+            if (method == null || method.DeclaringType == null) return method;
+            if (method.ReflectedType == method.DeclaringType) return method;
+            try
+            {
+                ParameterInfo[] parameters = method.GetParameters();
+                Type[] parameterTypes = new Type[parameters.Length];
+                for (int i = 0; i < parameters.Length; i++) parameterTypes[i] = parameters[i].ParameterType;
+                const BindingFlags flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+                MethodInfo declared = method.DeclaringType.GetMethod(method.Name, flags, null, parameterTypes, null);
+                return declared ?? method;
+            }
+            catch { return method; }
         }
 
         static bool LooksLikeItemView(Type type)

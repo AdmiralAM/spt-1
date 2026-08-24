@@ -14,16 +14,18 @@ static class Phase21MarkerPolishTests
             "marker side exposes left/right choices", ref assertions);
         Expect(settings.Contains("AcceptableValueRange<float>(-80f, 80f)"),
             "horizontal marker offset has symmetric extended travel", ref assertions);
+        Expect(settings.Contains("Tooltip background opacity; 0 disables the background completely.") &&
+               settings.Contains("AcceptableValueRange<float>(0f, 1.00f)"),
+            "tooltip background can be fully disabled with zero opacity", ref assertions);
         Expect(overlay.Contains("settings.MarkerSide == ItemMarkerSide.Right"),
             "runtime placement switches by selected marker side", ref assertions);
         Expect(overlay.Contains("right ? -settings.MarkerOffsetX : settings.MarkerOffsetX"),
             "positive X offset moves inward from either selected edge", ref assertions);
         Expect(overlay.Contains("size * 0.78f"),
             "marker glyph is slightly smaller inside the same hit box", ref assertions);
-        Expect(settings.Contains("Glow Strength") && settings.Contains("Glow Radius") && overlay.Contains("settings.MarkerGlow"),
-            "marker glow is configurable and applied at runtime", ref assertions);
-        Expect(overlay.Contains("glowColor.a = settings.MarkerGlowStrength * settings.MarkerOpacity"),
-            "glow alpha follows configured strength and marker opacity", ref assertions);
+        Expect(!settings.Contains("Glow Strength") && !settings.Contains("Glow Radius") &&
+               settings.Contains("public bool MarkerGlow => false"),
+            "rejected glow controls are removed and runtime glow is disabled", ref assertions);
         return assertions;
     }
 
