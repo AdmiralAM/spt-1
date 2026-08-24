@@ -5,6 +5,11 @@ namespace SPTQuestPlanner.Client
 {
     public sealed class PlannerRecommendationViewModel
     {
+        private const int DispositionBlocked = 1;
+        private const int DispositionReachable = 2;
+        private const int DispositionAvailable = 3;
+        private const int DispositionActive = 4;
+
         public PlannerRecommendationViewModel(
             int rank,
             string questId,
@@ -53,6 +58,42 @@ namespace SPTQuestPlanner.Client
         public bool FullyOwned { get; private set; }
         public int ImmediateBlockerCount { get { return BlockerQuestIds.Count; } }
         public int ImmediateUnlockCount { get { return ImmediateUnlockQuestIds.Count; } }
+        public bool IsActive { get { return Disposition == DispositionActive; } }
+        public bool IsAvailable { get { return Disposition == DispositionAvailable; } }
+
+        public string StateLabel
+        {
+            get
+            {
+                switch (Disposition)
+                {
+                    case DispositionActive: return "ACTIVE";
+                    case DispositionAvailable: return "AVAILABLE";
+                    case DispositionReachable: return "LATER";
+                    case DispositionBlocked: return "BLOCKED";
+                    default: return "UNKNOWN";
+                }
+            }
+        }
+
+        public string ActionSummary
+        {
+            get
+            {
+                if (ImmediateBlockerCount > 0) return "Clear " + ImmediateBlockerCount + " blocker(s) first";
+                if (!FullyOwned)
+                    return "Need " + Format(TotalOutstanding) + " item(s)" + (FirOutstanding > 0d ? ", FIR " + Format(FirOutstanding) : string.Empty);
+                if (IsAvailable) return "Accept quest; item burden ready";
+                if (IsActive) return "Ready to push now";
+                return "Route is currently actionable";
+            }
+        }
+
+        private static string Format(double value)
+        {
+            double rounded = Math.Round(Math.Max(0d, value));
+            return Math.Abs(value - rounded) < 0.000001d ? rounded.ToString("0") : value.ToString("0.##");
+        }
     }
 
     public sealed class PlannerRecommendationViewModelBuilder
