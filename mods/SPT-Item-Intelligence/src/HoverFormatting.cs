@@ -281,14 +281,19 @@ namespace SPTItemIntelligence
         {
             if (hover == null || !hover.HasData) return ItemHoverText.Empty;
 
-            bool fleaPrimary = valueMode == ItemValueMode.Flea;
-            long unitValue = fleaPrimary ? hover.FleaUnitValue : hover.TraderUnitValue;
+            bool fleaPreferred = valueMode == ItemValueMode.Flea;
             string trader = string.IsNullOrWhiteSpace(hover.BestTraderName) ? "Vendor" : hover.BestTraderName.Trim();
-            string source = fleaPrimary ? "Flea" : trader;
+            long preferredValue = fleaPreferred ? hover.FleaUnitValue : hover.TraderUnitValue;
+            string preferredSource = fleaPreferred ? "Flea" : trader;
+            long alternateValue = fleaPreferred ? hover.TraderUnitValue : hover.FleaUnitValue;
+            string alternateSource = fleaPreferred ? trader : "Flea";
+            bool useAlternateAsPrimary = preferredValue <= 0 && alternateValue > 0;
+            long unitValue = useAlternateAsPrimary ? alternateValue : preferredValue;
+            string source = useAlternateAsPrimary ? alternateSource : preferredSource;
             string primary = unitValue > 0 ? FormatRoubles(unitValue) + " · " + source : string.Empty;
-            long alternateValue = fleaPrimary ? hover.TraderUnitValue : hover.FleaUnitValue;
-            string alternateSource = fleaPrimary ? trader : "Flea";
-            string secondary = alternateValue > 0 ? alternateSource + ": " + FormatRoubles(alternateValue) : string.Empty;
+            string secondary = !useAlternateAsPrimary && alternateValue > 0
+                ? alternateSource + ": " + FormatRoubles(alternateValue)
+                : string.Empty;
             string perSlot = hover.ValuePerSlot > 0 ? "Per slot: " + FormatRoubles(hover.ValuePerSlot) : string.Empty;
             FirRequirementState fir = FirRequirementRegistry.Get(hover.TemplateId);
             return new ItemHoverText(
