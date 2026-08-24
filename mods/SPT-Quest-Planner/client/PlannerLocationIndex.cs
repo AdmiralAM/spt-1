@@ -12,8 +12,10 @@ namespace SPTQuestPlanner.Client
         Kill = 1,
         Visit = 2,
         Extract = 3,
-        Item = 4,
-        LocationConstraint = 5
+        FindItem = 4,
+        HandoverItem = 5,
+        Plant = 6,
+        LocationConstraint = 7
     }
 
     public sealed class PlannerLocationObjective
@@ -109,8 +111,6 @@ namespace SPTQuestPlanner.Client
                     NormalizeLocation(ReadString(Get(objective, "questLocationHint")))));
             }
 
-            // CounterCreator-like groups often encode the actual objective and its Location
-            // constraint as sibling conditions. Share explicit location facts within the same parent group.
             Dictionary<string, HashSet<string>> groupLocations = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
             for (int i = 0; i < raw.Count; i++)
             {
@@ -198,8 +198,13 @@ namespace SPTQuestPlanner.Client
                 return PlannerObjectiveKind.Visit;
             if (value.Equals("ExitStatus", StringComparison.OrdinalIgnoreCase) || value.IndexOf("extract", StringComparison.OrdinalIgnoreCase) >= 0)
                 return PlannerObjectiveKind.Extract;
-            if (value.Equals("HandoverItem", StringComparison.OrdinalIgnoreCase) || value.Equals("FindItem", StringComparison.OrdinalIgnoreCase))
-                return PlannerObjectiveKind.Item;
+            if (value.Equals("FindItem", StringComparison.OrdinalIgnoreCase)) return PlannerObjectiveKind.FindItem;
+            if (value.Equals("HandoverItem", StringComparison.OrdinalIgnoreCase)) return PlannerObjectiveKind.HandoverItem;
+            if (value.Equals("PlaceBeacon", StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("LeaveItemAtLocation", StringComparison.OrdinalIgnoreCase) ||
+                value.Equals("PlaceItem", StringComparison.OrdinalIgnoreCase) ||
+                value.IndexOf("beacon", StringComparison.OrdinalIgnoreCase) >= 0)
+                return PlannerObjectiveKind.Plant;
             return PlannerObjectiveKind.Other;
         }
 
