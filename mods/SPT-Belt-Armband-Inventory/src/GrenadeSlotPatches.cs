@@ -59,7 +59,7 @@ namespace SPTBeltArmbandInventory
 
         internal static void AppendBeltGrenades(object inventoryController, object result)
         {
-            if (inventoryController == null || result == null || GetSlotMethod == null || ArmBandValue == null || GetTopLevelItemsMethod == null || GrenadeType == null) return;
+            if (inventoryController == null || result == null || GetSlotMethod == null || ArmBandValue == null || GetTopLevelItemsMethod == null || ExaminedMethod == null || GrenadeType == null) return;
 
             try
             {
@@ -93,7 +93,6 @@ namespace SPTBeltArmbandInventory
 
         static bool IsExamined(object inventoryController, object item)
         {
-            if (ExaminedMethod == null) return true;
             object value = ExaminedMethod.Invoke(inventoryController, new[] { item });
             return value is bool && (bool)value;
         }
@@ -152,7 +151,7 @@ namespace SPTBeltArmbandInventory
                 PropertyInfo property = equipmentType.GetProperty("GrenadeThrowingSlots", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 MethodInfo getter = property == null ? null : property.GetGetMethod(true);
                 MethodInfo getSlot = equipmentType.GetMethod("GetSlot", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { slotEnumType }, null);
-                MethodInfo grenadeList = FindStaticMethod(equipmentType.Assembly, "GetThrowablePriorityGrenadesList", equipmentType);
+                MethodInfo grenadeList = FindStaticMethod(equipmentType.Assembly, "GetThrowablePriorityGrenadesList");
                 if (getter == null || getSlot == null || grenadeList == null || !grenadeList.ReturnType.IsGenericType)
                     return Fail("SPT 4.1 grenade inventory shape changed; belt grenade fast-access compatibility is disabled.");
 
@@ -162,10 +161,10 @@ namespace SPTBeltArmbandInventory
 
                 Type grenadeType = listArguments[0];
                 Type controllerType = grenadeList.GetParameters()[0].ParameterType;
-                MethodInfo topLevelItems = FindTopLevelItemsMethod(equipmentType.Assembly, grenadeType);
+                MethodInfo topLevelItems = FindTopLevelItemsMethod(equipmentType.Assembly);
                 MethodInfo examined = FindExaminedMethod(controllerType, grenadeType);
-                if (topLevelItems == null)
-                    return Fail("SPT 4.1 top-level inventory enumeration shape changed; belt grenade enumeration is disabled.");
+                if (topLevelItems == null || examined == null)
+                    return Fail("SPT 4.1 grenade enumeration/examination shape changed; belt grenade enumeration is disabled.");
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
@@ -207,7 +206,7 @@ namespace SPTBeltArmbandInventory
             GrenadeSlotRuntime.AppendBeltGrenades(__args[0], __result);
         }
 
-        static MethodInfo FindStaticMethod(Assembly assembly, string name, Type equipmentType)
+        static MethodInfo FindStaticMethod(Assembly assembly, string name)
         {
             Type[] types;
             try { types = assembly.GetTypes(); }
@@ -233,7 +232,7 @@ namespace SPTBeltArmbandInventory
             return null;
         }
 
-        static MethodInfo FindTopLevelItemsMethod(Assembly assembly, Type grenadeType)
+        static MethodInfo FindTopLevelItemsMethod(Assembly assembly)
         {
             Type[] types;
             try { types = assembly.GetTypes(); }
