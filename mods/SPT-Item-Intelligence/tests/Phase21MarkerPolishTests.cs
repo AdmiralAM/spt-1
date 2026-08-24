@@ -23,9 +23,17 @@ static class Phase21MarkerPolishTests
             "positive X offset moves inward from either selected edge", ref assertions);
         Expect(overlay.Contains("size * 0.78f"),
             "marker glyph is slightly smaller inside the same hit box", ref assertions);
-        Expect(!settings.Contains("Glow Strength") && !settings.Contains("Glow Radius") &&
-               settings.Contains("public bool MarkerGlow => false"),
-            "rejected glow controls are removed and runtime glow is disabled", ref assertions);
+        Expect(!settings.Contains("Glow Strength") && !settings.Contains("Glow Radius") && !overlay.Contains("settings.MarkerGlow"),
+            "rejected Outline glow path stays removed", ref assertions);
+        Expect(settings.Contains("\"Halo\"") && settings.Contains("\"Halo Strength\"") &&
+               settings.Contains("AcceptableValueRange<float>(0f, 0.50f)"),
+            "soft halo exposes only a toggle and bounded strength control", ref assertions);
+        Expect(overlay.Contains("SPTItemIntelligenceHalo") && overlay.Contains("static Sprite haloSprite") &&
+               overlay.Contains("Texture2D texture = new Texture2D") && overlay.Contains("FilterMode.Bilinear"),
+            "halo is a reusable radial image layer rather than duplicated glyph outlines", ref assertions);
+        Expect(overlay.Contains("float haloSize = size * 1.70f") &&
+               overlay.Contains("haloColor.a = settings.MarkerHaloStrength * settings.MarkerOpacity"),
+            "halo spread follows marker size and inherits marker opacity semantics", ref assertions);
         return assertions;
     }
 
