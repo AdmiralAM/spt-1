@@ -55,7 +55,7 @@ public sealed class PlannerLocaleProjectionService(
             locale,
             questNames,
             itemNames);
-        return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+        return ValueTask.FromResult(PlannerTransportJson.Serialize(envelope));
     }
 }
 
