@@ -7,9 +7,15 @@ public sealed class PlannerDisplayNamesTests
 {
     [Theory]
     [InlineData("bigmap", "Customs")]
+    [InlineData("56f40101d2720b2a4d8b45d6", "Customs")]
+    [InlineData("5704e3c2d2720bac5b8b4567", "Woods")]
+    [InlineData("5714dbc024597771384a510d", "Interchange")]
+    [InlineData("653e6760052c01c1c805532f", "Ground Zero")]
+    [InlineData("6733700029c367a3d40b02af", "Labyrinth")]
     [InlineData("sandbox", "Ground Zero")]
     [InlineData("tarkovstreets", "Streets of Tarkov")]
     [InlineData("laboratory", "The Lab")]
+    [InlineData(PlannerRaidOpportunityBuilder.AnyLocationId, "Any location")]
     public void KnownLocationIdsUseReadableNames(string locationId, string expected)
     {
         Assert.Equal(expected, PlannerDisplayNames.Location(locationId));
