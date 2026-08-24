@@ -1,4 +1,4 @@
-Quest Planner validation trigger
-baseline: cf8037f766d8d1dbf657f4b0c4f16d7e6dc94e88
+Quest planner MOD SPT validation trigger
+baseline: e2fb5e3c69be0d797d31bf96c72d8cb19ba6ddbd
 workflow: explicit push gate
-reason: validate split FIR/generic exact-needs semantics
+reason: validate minimal raid plan UI shell and F9 toggle wiring
