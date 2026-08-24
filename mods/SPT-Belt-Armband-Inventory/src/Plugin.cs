@@ -22,6 +22,7 @@ namespace SPTBeltArmbandInventory
         ScavBeltPatches scavPatches;
         GrenadeSlotPatches grenadePatches;
         SlotMergePatches slotMergePatches;
+        PickupSlotPatches pickupPatches;
 
         void Awake()
         {
@@ -95,6 +96,14 @@ namespace SPTBeltArmbandInventory
                 slotMergePatches = null;
                 Logger.LogWarning("Belt storage remains active, but ArmBand parent/child merge semantics remain vanilla.");
             }
+
+            pickupPatches = new PickupSlotPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!pickupPatches.TryInstall())
+            {
+                pickupPatches.Dispose();
+                pickupPatches = null;
+                Logger.LogWarning("Belt storage remains active, but compatible container belts may not auto-equip into an empty ArmBand slot on pickup.");
+            }
         }
 
         void Update()
@@ -116,6 +125,8 @@ namespace SPTBeltArmbandInventory
 
         void OnDestroy()
         {
+            if (pickupPatches != null) pickupPatches.Dispose();
+            pickupPatches = null;
             if (slotMergePatches != null) slotMergePatches.Dispose();
             slotMergePatches = null;
             if (grenadePatches != null) grenadePatches.Dispose();
