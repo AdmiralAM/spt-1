@@ -1,32 +1,40 @@
 # SPT Quest Planner
 
-Standalone quest-planning module for SPT 4.1.x.
+Standalone quest-planning module for SPT 4.1.x. Current client/server version: **0.9.0**.
 
-This module is intentionally independent from SPT Item Intelligence, SPT Belt/Armband Inventory, SPT Pause, and SPT Tactical HUD. It may consume shared data only through narrow explicit contracts; it must not depend on another mod's UI, lifecycle, internal registries, or runtime controller.
+Quest Planner is independent from Item Intelligence, Belt/Armband Inventory, Pause, and Tactical HUD. It owns its data contracts, server extraction, domain model, client cache, tests, and presentation lifecycle.
 
-## Foundation phase
+## Purpose
 
-Initial work is architecture-only:
+The planner derives player-relative quest information from authoritative SPT data, including:
 
-- map the real SPT 4.1.x quest/profile/database/runtime data path;
-- define normalized quest, prerequisite, condition, item-requirement, trader, level and completion-state models;
-- distinguish current actionable requirements from future requirements;
-- build prerequisite graph and progression calculations outside presentation code;
-- keep all expensive graph/database work event-driven or cached; no per-frame planner recomputation;
-- establish a minimal independent server/client skeleton only after the runtime contracts are proven;
-- no planner UI design until the data model and update boundaries are stable.
+- quest topology and prerequisite chains;
+- active, available, completed, and future progression state;
+- quest conditions and item requirements;
+- outstanding-versus-owned requirement calculations;
+- readable quest/objective labels;
+- raid-oriented planning data and presentation.
+
+## Architecture
+
+- `server/` — extracts authoritative quest/profile data and exposes planner snapshots.
+- `src/` — shared contracts, normalized quest/domain models, extraction, projection, and evaluation logic.
+- `client/` — BepInEx client, bounded refresh/cache lifecycle, raid-plan provider, and planner presentation.
+- `tests/` — regression coverage for domain, extraction, projection, and presentation contracts.
+- `docs/` — architecture and durable design notes.
+
+The planner does not use per-frame server calls or full graph recomputation. Expensive topology/database work is cached or refreshed at bounded lifecycle events.
 
 ## Independence contract
 
-`mods/SPT-Quest-Planner/` owns its source, server component, tests, documentation, configuration and build lifecycle.
+Quest Planner must not depend on another SPT mod's UI classes, runtime controllers, or private registries. Shared data may be introduced only through a narrow, explicit, versioned contract when duplication is materially worse than the coupling.
 
-Forbidden architectural dependencies:
+Item Intelligence can expose similar quest/item facts, but it is not Quest Planner's source of truth.
 
-- direct references to Item Intelligence presentation/runtime classes;
-- calling Tactical HUD, Pause or Belt/Armband internals;
-- using another mod's static registries as the planner source of truth;
-- copying another module's cached state without a versioned contract.
+## Validation and publication
 
-Potential reuse is limited to stable DTO/HTTP-style contracts where doing so avoids duplicate server work. Quest Planner must still remain runnable and testable as its own module.
+Pull requests that change this module run the dedicated Quest Planner test/client/server workflow. CI build outputs are GitHub Actions artifacts and are not committed to `main`.
 
-See `docs/foundation-architecture.md` for the first-pass architecture and research targets.
+Quest Planner does not currently have a permanent install-only runtime branch in the suite publication workflow. Until that channel is deliberately added, use validated development builds/CI artifacts rather than treating another module's runtime branch as a distribution channel.
+
+See [foundation architecture](docs/foundation-architecture.md) for the original data-path and domain constraints. That document is architectural history; current source and tests are authoritative where implementation has advanced beyond the foundation milestone.
