@@ -117,7 +117,10 @@ namespace SPTQuestPlanner.Client
             if (card.KnownRemainingWork > 0d)
                 GUILayout.Label("Known remaining counter work: " + FormatNumber(card.KnownRemainingWork));
 
-            PlannerTopologyIndex topology = Plugin.Cache == null ? null : Plugin.Cache.TopologyIndex;
+            PlannerClientCache cache = Plugin.Cache;
+            PlannerTopologyIndex topology = cache == null ? null : cache.TopologyIndex;
+            PlannerLocaleIndex locale = cache == null ? null : cache.LocaleIndex;
+
             detailScroll = GUILayout.BeginScrollView(detailScroll, GUILayout.ExpandHeight(true));
             GUILayout.Space(6f);
             GUILayout.Label("Objectives");
@@ -128,8 +131,8 @@ namespace SPTQuestPlanner.Client
                     ? "  " + FormatNumber(objective.CurrentValue ?? 0d) + "/" + FormatNumber(objective.RequiredValue ?? 0d) +
                       " (remain " + FormatNumber(objective.RemainingValue ?? 0d) + ")"
                     : string.Empty;
-                string targets = objective.Targets.Count == 0 ? string.Empty : "  [" + string.Join(", ", objective.Targets) + "]";
-                string questLabel = PlannerQuestLabels.Resolve(topology, objective.QuestId);
+                string targets = FormatTargets(objective, locale);
+                string questLabel = PlannerQuestLabels.Resolve(topology, locale, objective.QuestId);
                 GUILayout.Label("• " + PlannerDisplayNames.Objective(objective.Kind) + " — " + questLabel + progress + targets);
             }
 
@@ -144,13 +147,26 @@ namespace SPTQuestPlanner.Client
                 for (int i = 0; i < card.BringNeeds.Count; i++)
                 {
                     PlannerRaidBringNeed need = card.BringNeeds[i];
-                    GUILayout.Label("• " + need.TemplateId + "  need " + FormatNumber(need.Required) +
+                    string itemLabel = locale == null ? need.TemplateId : locale.ItemName(need.TemplateId);
+                    GUILayout.Label("• " + itemLabel + "  need " + FormatNumber(need.Required) +
                                     " / owned " + FormatNumber(need.Owned) +
                                     " / missing " + FormatNumber(need.Missing));
                 }
             }
             GUILayout.EndScrollView();
             GUILayout.EndVertical();
+        }
+
+        private static string FormatTargets(PlannerRaidObjective objective, PlannerLocaleIndex locale)
+        {
+            if (objective.Targets.Count == 0) return string.Empty;
+            string[] labels = new string[objective.Targets.Count];
+            for (int i = 0; i < objective.Targets.Count; i++)
+            {
+                string target = objective.Targets[i];
+                labels[i] = locale == null ? target : locale.ItemName(target);
+            }
+            return "  [" + string.Join(", ", labels) + "]";
         }
 
         private static string FormatNumber(double value)
