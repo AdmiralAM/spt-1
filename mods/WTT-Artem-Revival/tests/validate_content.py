@@ -49,6 +49,7 @@ def main():
             fail(f"root offer {offer_id} has no loyalty level")
 
     prereq_edges = []
+    authored_success_unlocks = []
     for quest_id, quest in quests.items():
         image = quest.get("image", "")
         if image:
@@ -68,6 +69,7 @@ def main():
                 target = reward.get("target")
                 if target not in root_offers:
                     fail(f"quest {quest_id} unlocks missing assort offer {target}")
+                authored_success_unlocks.append((target, quest_id))
 
     # Directed-cycle check for quest prerequisites.
     graph = {qid: [] for qid in quests}
@@ -98,9 +100,18 @@ def main():
             if offer_id not in root_offers:
                 fail(f"quest assort {status} references missing offer {offer_id}")
 
+    success_mapping = quest_assort.get("success", {})
+    for offer_id, quest_id in authored_success_unlocks:
+        mapped = success_mapping.get(offer_id)
+        if mapped != quest_id:
+            fail(
+                f"quest {quest_id} authors Success AssortmentUnlock {offer_id}, "
+                f"but QuestAssort success maps it to {mapped!r}"
+            )
+
     print(
         f"OK: {len(quests)} quests, {len(prereq_edges)} prerequisite edges, "
-        f"{len(root_offers)} root offers"
+        f"{len(root_offers)} root offers, {len(authored_success_unlocks)} authored success unlocks"
     )
 
 
