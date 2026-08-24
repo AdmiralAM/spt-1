@@ -47,7 +47,7 @@ namespace SPTQuestPlanner.Client
             if (maxObjectivesPerLocation <= 0) throw new ArgumentOutOfRangeException("maxObjectivesPerLocation");
 
             PlannerLocationObjective[] activeGlobal = locations.GlobalObjectives
-                .Where(value => IsActionable(value) && IsRelevantQuest(state, value.QuestId, includeAvailable))
+                .Where(value => IsRaidActionable(value) && IsRelevantQuest(state, value.QuestId, includeAvailable))
                 .ToArray();
 
             List<PlannerRaidOpportunity> result = new List<PlannerRaidOpportunity>();
@@ -57,7 +57,7 @@ namespace SPTQuestPlanner.Client
                 if (result.Count >= maxLocations) break;
 
                 List<PlannerLocationObjective> specific = pair.Value.Objectives
-                    .Where(value => IsActionable(value) && IsRelevantQuest(state, value.QuestId, includeAvailable))
+                    .Where(value => IsRaidActionable(value) && IsRelevantQuest(state, value.QuestId, includeAvailable))
                     .Take(maxObjectivesPerLocation)
                     .ToList();
                 if (specific.Count == 0) continue;
@@ -100,10 +100,10 @@ namespace SPTQuestPlanner.Client
             return includeAvailable && quest.Disposition == DispositionAvailable;
         }
 
-        private static bool IsActionable(PlannerLocationObjective objective)
+        private static bool IsRaidActionable(PlannerLocationObjective objective)
         {
             if (objective == null || !string.Equals(objective.Phase, "Finish", StringComparison.OrdinalIgnoreCase)) return false;
-            if (objective.Kind == PlannerObjectiveKind.LocationConstraint) return false;
+            if (objective.Kind == PlannerObjectiveKind.LocationConstraint || objective.Kind == PlannerObjectiveKind.HandoverItem) return false;
             if (string.Equals(objective.ConditionType, "CounterCreator", StringComparison.OrdinalIgnoreCase)) return false;
             return true;
         }
