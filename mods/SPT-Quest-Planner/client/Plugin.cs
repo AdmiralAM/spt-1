@@ -21,6 +21,7 @@ namespace SPTQuestPlanner.Client
         internal static PlannerClientCache Cache { get; private set; }
         internal static PlannerRaidPlanProvider RaidPlans { get; private set; }
         internal static PlannerRaidPlanPresentationController Presentation { get; private set; }
+        internal static PlannerRecommendationProvider Recommendations { get; private set; }
         internal static Plugin Instance { get; private set; }
 
         private void Awake()
@@ -29,6 +30,7 @@ namespace SPTQuestPlanner.Client
             Cache = new PlannerClientCache();
             RaidPlans = new PlannerRaidPlanProvider(Cache);
             Presentation = new PlannerRaidPlanPresentationController(RaidPlans);
+            Recommendations = new PlannerRecommendationProvider(Cache);
             refresh = new PlannerRefreshCoordinator(
                 new ReflectionSptPlannerTransport(),
                 new ReflectionNewtonsoftPlannerDecoder(),
@@ -43,7 +45,7 @@ namespace SPTQuestPlanner.Client
             window = new PlannerRaidPlanWindow(Presentation, () => Cache == null ? 0L : Cache.Revision);
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
             StartInitialLoad();
-            Logger.LogInfo("Quest planner MOD SPT v0.9.0 loaded (raid-plan window + bounded lifecycle refresh).");
+            Logger.LogInfo("Quest planner MOD SPT v0.9.0 loaded (raid-plan window + recommendations + bounded lifecycle refresh).");
         }
 
         private void Update()
@@ -67,8 +69,6 @@ namespace SPTQuestPlanner.Client
             }
             catch (Exception ex)
             {
-                // A malformed custom quest must not turn a presentation exception into
-                // repeated OnGUI failures every event/frame. Close the window and log once.
                 value.Hide();
                 Logger.LogError("Quest planner MOD SPT UI disabled after render failure: " + ex.GetBaseException().Message);
             }
@@ -93,6 +93,14 @@ namespace SPTQuestPlanner.Client
             return controller.GetViewModel(cache.Revision, maxObjectivesPerCard);
         }
 
+        internal static PlannerRecommendationSnapshot GetRecommendations(int topN = 5, PlannerCandidatePolicy policy = null)
+        {
+            PlannerRecommendationProvider provider = Recommendations;
+            return provider == null
+                ? new PlannerRecommendationSnapshot(0L, 0L, Math.Max(1, topN), Array.Empty<PlannerRecommendationViewModel>())
+                : provider.Get(topN, policy);
+        }
+
         private void StartInitialLoad()
         {
             CancellationTokenSource source = cancellation;
@@ -105,7 +113,10 @@ namespace SPTQuestPlanner.Client
             {
                 string error;
                 if (coordinator.TryRefreshState(token, out error))
+                {
                     Logger.LogInfo("Quest Planner topology/state cache initialized; revision=" + cache.Revision + ".");
+                    LogRecommendationSummary("initial-load");
+                }
                 else if (!token.IsCancellationRequested)
                     Logger.LogWarning("Quest Planner initial cache load failed: " + error);
             }, token);
@@ -140,11 +151,46 @@ namespace SPTQuestPlanner.Client
                     PlannerRaidPlanPresentationController presentation = Presentation;
                     if (presentation != null) presentation.Invalidate();
                     if (!token.IsCancellationRequested)
+                    {
                         Logger.LogInfo("Quest Planner state refreshed (" + NormalizeReason(reason) + "); revision=" + cache.Revision + ".");
+                        LogRecommendationSummary(reason);
+                    }
                 }
                 else if (!token.IsCancellationRequested && !string.Equals(error, "Refresh already in progress.", StringComparison.Ordinal))
                     Logger.LogWarning("Quest Planner state refresh failed (" + NormalizeReason(reason) + "): " + error);
             }, token);
+        }
+
+        private void LogRecommendationSummary(string reason)
+        {
+            try
+            {
+                PlannerRecommendationProvider provider = Recommendations;
+                if (provider == null) return;
+                PlannerRecommendationSnapshot snapshot = provider.Get(3);
+                if (snapshot.Recommendations.Count == 0)
+                {
+                    Logger.LogInfo("Quest Planner recommendations (" + NormalizeReason(reason) + "): no current candidates.");
+                    return;
+                }
+
+                for (int i = 0; i < snapshot.Recommendations.Count; i++)
+                {
+                    PlannerRecommendationViewModel value = snapshot.Recommendations[i];
+                    Logger.LogInfo(
+                        "Quest Planner recommendation #" + value.Rank + ": " + value.QuestName +
+                        " | blockers=" + value.ImmediateBlockerCount +
+                        " | path=" + value.PathQuestCount +
+                        " | missing=" + Math.Round(value.TotalOutstanding, 2) +
+                        " | FIR=" + Math.Round(value.FirOutstanding, 2) +
+                        " | unlocks=" + value.ImmediateUnlockCount +
+                        " | owned=" + value.FullyOwned + ".");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogWarning("Quest Planner recommendation summary unavailable: " + ex.GetBaseException().Message);
+            }
         }
 
         private static string NormalizeReason(string reason)
@@ -169,6 +215,7 @@ namespace SPTQuestPlanner.Client
             scheduler = null;
             refresh = null;
             cancellation = null;
+            Recommendations = null;
             Presentation = null;
             RaidPlans = null;
             Cache = null;
