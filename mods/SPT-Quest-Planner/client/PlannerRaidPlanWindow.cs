@@ -7,6 +7,8 @@ namespace SPTQuestPlanner.Client
     public sealed class PlannerRaidPlanWindow
     {
         private const int WindowId = 0x51504C4E;
+        private static readonly Color BackdropColor = new Color(0f, 0f, 0f, 0.45f);
+        private static readonly Color WindowBackgroundColor = new Color(0.075f, 0.08f, 0.085f, 1f);
         private readonly PlannerRaidPlanPresentationController presentation;
         private readonly Func<long> revisionProvider;
         private Rect windowRect = new Rect(160f, 100f, 900f, 620f);
@@ -30,7 +32,39 @@ namespace SPTQuestPlanner.Client
         public void Draw()
         {
             if (!visible) return;
-            windowRect = GUI.Window(WindowId, windowRect, DrawWindow, "Quest planner MOD SPT");
+
+            DrawModalBackdrop();
+            DrawOpaqueWindowBackground(windowRect);
+            windowRect = GUI.ModalWindow(WindowId, windowRect, DrawWindow, "Quest planner MOD SPT");
+
+            Event current = Event.current;
+            if (current != null && IsPointerEvent(current.type))
+                current.Use();
+        }
+
+        private static void DrawModalBackdrop()
+        {
+            Color previous = GUI.color;
+            GUI.color = BackdropColor;
+            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture, ScaleMode.StretchToFill, true);
+            GUI.color = previous;
+        }
+
+        private static void DrawOpaqueWindowBackground(Rect rect)
+        {
+            Color previous = GUI.color;
+            GUI.color = WindowBackgroundColor;
+            GUI.DrawTexture(rect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true);
+            GUI.color = previous;
+        }
+
+        private static bool IsPointerEvent(EventType type)
+        {
+            return type == EventType.MouseDown ||
+                   type == EventType.MouseUp ||
+                   type == EventType.MouseDrag ||
+                   type == EventType.ScrollWheel ||
+                   type == EventType.ContextClick;
         }
 
         private void DrawWindow(int id)
