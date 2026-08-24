@@ -161,8 +161,9 @@ namespace SPTQuestPlanner.Client
             if (value == null) throw new ArgumentNullException("value");
             lock (gate)
             {
+                // Locale data is presentation-only. It must not invalidate the derived
+                // planning cache or force a RaidPlan rebuild when labels arrive.
                 localeIndex = value;
-                revision++;
             }
         }
 
