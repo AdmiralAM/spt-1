@@ -44,7 +44,7 @@ def main():
 
     importer = load_importer()
     assert importer.translate_label("Helmet Cover Black") == "чехол на шлем чёрный"
-    assert importer.translate_label("Ranger Green Hoodie") == "Ranger Green худи"
+    assert importer.translate_label("Ranger Green Hoodie") == "Ranger зелёный худи"
     assert importer.translate_label("CRYE Precision GEN.4 Combat Pants (Navy Blue)") == "CRYE Precision GEN.4 боевые брюки (тёмно-синий)"
     assert importer.translate_label("Sweden Patch") == "Sweden нашивка"
 
