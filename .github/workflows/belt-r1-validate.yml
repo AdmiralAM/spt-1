@@ -25,3 +25,6 @@ jobs:
       - name: Build Belt client
         shell: pwsh
         run: dotnet build mods/SPT-Belt-Armband-Inventory/src/SPT-Belt-Armband-Inventory.csproj -c Release
+      - name: Build Belt server
+        shell: pwsh
+        run: dotnet build mods/SPT-Belt-Armband-Inventory/server/SPT-Belt-Armband-Inventory.Server.csproj -c Release

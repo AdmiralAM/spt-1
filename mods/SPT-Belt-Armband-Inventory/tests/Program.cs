@@ -66,6 +66,23 @@ internal static class Program
         Assert(!GrenadeSlotPolicy.ShouldIncludeBelt(true, false), "plain armband is never a grenade slot");
         Assert(!GrenadeSlotPolicy.ShouldIncludeBelt(false, true), "container flag without an equipped item is ignored");
 
+        var deathTree = new[]
+        {
+            new BeltInventoryNode("equipment", null, null),
+            new BeltInventoryNode("belt", "equipment", BeltDeathPolicy.ArmBand),
+            new BeltInventoryNode("grid-item", "belt", "main"),
+            new BeltInventoryNode("nested-container", "belt", "main"),
+            new BeltInventoryNode("nested-item", "nested-container", "main"),
+            new BeltInventoryNode("vest", "equipment", "TacticalVest"),
+            new BeltInventoryNode("vest-item", "vest", "main")
+        };
+        var keptTree = BeltDeathPolicy.GetKeptTreeIds(deathTree);
+        Assert(keptTree.SetEquals(new[] { "belt", "grid-item", "nested-container", "nested-item" }), "death retention keeps exactly the ArmBand tree");
+        Assert(BeltDeathPolicy.ShouldKeep("nested-item", deathTree), "nested belt contents survive death");
+        Assert(!BeltDeathPolicy.ShouldKeep("vest-item", deathTree), "unrelated equipment contents keep vanilla death rules");
+        Assert(BeltDeathPolicy.FilterLostInsuredIds(new[] { "belt", "grid-item", "nested-item", "vest-item" }, deathTree).SequenceEqual(new[] { "vest-item" }), "insurance loss excludes belt root and descendants");
+        Assert(BeltDeathPolicy.GetKeptTreeIds(new[] { new BeltInventoryNode("vest", "equipment", "TacticalVest") }).Count == 0, "profiles without ArmBand are untouched");
+
         Console.WriteLine("SPT Belt/Armband Inventory Phase 1: " + assertions + " assertions passed.");
     }
 
