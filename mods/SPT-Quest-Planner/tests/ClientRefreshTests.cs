@@ -23,8 +23,9 @@ public sealed class ClientRefreshTests
         Assert.True(cache.HasState);
         Assert.NotNull(cache.TopologyIndex);
         Assert.NotNull(cache.RequirementIndex);
+        Assert.NotNull(cache.LocationIndex);
         Assert.NotNull(cache.Index);
-        Assert.Equal(3, cache.Revision); // topology once + two state swaps
+        Assert.Equal(3, cache.Revision);
     }
 
     [Fact]
@@ -33,8 +34,8 @@ public sealed class ClientRefreshTests
         PlannerClientCache cache = new();
         PlannerClientIndex newer = new(200, new Dictionary<string, PlannerQuestClientState>(), new Dictionary<string, PlannerItemClientState>());
         PlannerClientIndex older = new(100, new Dictionary<string, PlannerQuestClientState>(), new Dictionary<string, PlannerItemClientState>());
-        cache.ReplaceState(new PlannerPayload(8, 200, "new"), newer);
-        cache.ReplaceState(new PlannerPayload(8, 100, "old"), older);
+        cache.ReplaceState(new PlannerPayload(PlannerClientContract.SchemaVersion, 200, "new"), newer);
+        cache.ReplaceState(new PlannerPayload(PlannerClientContract.SchemaVersion, 100, "old"), older);
 
         Assert.Equal(200, cache.State!.GeneratedAtUnixSeconds);
         Assert.Equal("new", cache.State.Json);
@@ -71,14 +72,14 @@ public sealed class ClientRefreshTests
 
         public PlannerPayload DecodeTopology(string json)
         {
-            const string payload = "{\"schemaVersion\":8,\"questNodes\":[{\"questId\":\"q1\",\"repeatable\":false}],\"prerequisites\":[],\"itemRequirements\":[]}";
+            const string payload = "{\"schemaVersion\":9,\"questNodes\":[{\"questId\":\"q1\",\"repeatable\":false}],\"prerequisites\":[],\"itemRequirements\":[],\"questObjectives\":[]}";
             return new PlannerPayload(PlannerClientContract.SchemaVersion, 0, payload);
         }
 
         public PlannerPayload DecodeState(string json)
         {
             long generated = ++stateRevision;
-            string payload = "{\"schemaVersion\":8,\"generatedAtUnixSeconds\":" + generated + ",\"evaluation\":{\"quests\":{}},\"outstandingItems\":[]}";
+            string payload = "{\"schemaVersion\":9,\"generatedAtUnixSeconds\":" + generated + ",\"evaluation\":{\"quests\":{}},\"outstandingItems\":[]}";
             return new PlannerPayload(PlannerClientContract.SchemaVersion, generated, payload);
         }
     }
