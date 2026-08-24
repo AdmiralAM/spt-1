@@ -43,7 +43,8 @@ public sealed class RequirementDataService(
     {
         cancellationToken.ThrowIfCancellationRequested();
         object? profile = profileHelper.GetPmcProfile(sessionId);
-        List<ItemPriceSnapshotEntry> prices = BuildPrices(cancellationToken);
+        var relevance = BuildRelevance(cancellationToken);
+        List<ItemPriceSnapshotEntry> prices = BuildPrices(relevance.Craft, relevance.Barter, cancellationToken);
         RequirementDataEnvelope envelope = new(
             DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
             profile!,
@@ -54,7 +55,44 @@ public sealed class RequirementDataService(
         return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
     }
 
-    private List<ItemPriceSnapshotEntry> BuildPrices(CancellationToken cancellationToken)
+    private (Dictionary<MongoId, int> Craft, Dictionary<MongoId, int> Barter) BuildRelevance(CancellationToken cancellationToken)
+    {
+        Dictionary<MongoId, int> craft = new();
+        Dictionary<MongoId, int> barter = new();
+
+        foreach (var recipe in hideoutTable.Production.Recipes ?? [])
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            HashSet<MongoId> inputs = new();
+            foreach (var requirement in recipe.Requirements ?? [])
+            {
+                if (!requirement.TemplateId.HasValue) continue;
+                inputs.Add(requirement.TemplateId.Value);
+            }
+            foreach (MongoId templateId in inputs) Increment(craft, templateId);
+        }
+
+        foreach (var (_, trader) in traderTable)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (trader.Assort?.BarterScheme is null) continue;
+            foreach (var (_, alternatives) in trader.Assort.BarterScheme)
+            {
+                HashSet<MongoId> inputs = new();
+                foreach (var scheme in alternatives ?? [])
+                    foreach (var requirement in scheme ?? [])
+                        inputs.Add(requirement.Template);
+                foreach (MongoId templateId in inputs) Increment(barter, templateId);
+            }
+        }
+
+        return (craft, barter);
+    }
+
+    private List<ItemPriceSnapshotEntry> BuildPrices(
+        IReadOnlyDictionary<MongoId, int> craftCounts,
+        IReadOnlyDictionary<MongoId, int> barterCounts,
+        CancellationToken cancellationToken)
     {
         List<ItemPriceSnapshotEntry> result = new(templateTable.Prices.Count);
         foreach (var (templateId, item) in templateTable.Items)
@@ -68,6 +106,8 @@ public sealed class RequirementDataService(
             var trader = ResolveBestTrader(templateId, traderBasis);
             int width = Math.Max(1, item.Properties?.Width ?? 1);
             int height = Math.Max(1, item.Properties?.Height ?? 1);
+            craftCounts.TryGetValue(templateId, out int craftCount);
+            barterCounts.TryGetValue(templateId, out int barterCount);
             result.Add(new ItemPriceSnapshotEntry(
                 templateId.ToString(),
                 ToLong(trader.Price),
@@ -75,9 +115,17 @@ public sealed class RequirementDataService(
                 ToLong(fleaValue),
                 ToLong(handbookValue),
                 width,
-                height));
+                height,
+                craftCount,
+                barterCount));
         }
         return result;
+    }
+
+    private static void Increment(Dictionary<MongoId, int> counts, MongoId templateId)
+    {
+        counts.TryGetValue(templateId, out int current);
+        counts[templateId] = current == int.MaxValue ? int.MaxValue : current + 1;
     }
 
     // Item Valuation prices default weapon/equipment presets as the sum of their children,
@@ -154,7 +202,7 @@ public sealed class ItemIntelligenceLoadNotice(ISptLogger<ItemIntelligenceLoadNo
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        logger.Success("SPT Item Intelligence Server v0.10.1 loaded; named trader and requirement-detail snapshot ready");
+        logger.Success("SPT Item Intelligence Server v0.10.1 loaded; named trader, relevance and requirement-detail snapshot ready");
         return Task.CompletedTask;
     }
 }
