@@ -7,9 +7,10 @@
   "commonlib_version": "3.0.6",
   "source_commit": "b1a93bdd2c08e00fc88af3fb8aed0a72d160af96",
   "runtime_validated": true,
-  "core_overlay": true,
+  "compiled_server_included": true,
+  "authored_core_data_external": true,
   "bundles_included": false,
   "required_bundle_paths": 239,
-  "overlay_sha256": "050c48e079b1496ce666c41438b04d0a663d0539f085b37b9f454ff8871fd84c",
-  "full_candidate_sha256": "dacc93b21e06f6b19b1fca6998fb3a3161df58da680a21e333c21bc75a4a05d5"
+  "full_candidate_sha256": "dacc93b21e06f6b19b1fca6998fb3a3161df58da680a21e333c21bc75a4a05d5",
+  "validated_core_overlay_sha256": "050c48e079b1496ce666c41438b04d0a663d0539f085b37b9f454ff8871fd84c"
 }
