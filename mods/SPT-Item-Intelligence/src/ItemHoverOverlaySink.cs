@@ -262,20 +262,34 @@ namespace SPTItemIntelligence
         sealed class AttachedMarkerView : IDisposable
         {
             static readonly Type textType = Type.GetType("UnityEngine.UI.Text, UnityEngine.UI", false);
+            static readonly Type imageType = Type.GetType("UnityEngine.UI.Image, UnityEngine.UI", false);
             static readonly Type outlineType = Type.GetType("UnityEngine.UI.Outline, UnityEngine.UI", false);
+            static readonly object haloSpriteSync = new object();
+            static Sprite haloSprite;
             readonly Vector3[] worldCorners = new Vector3[4];
             readonly GameObject markerObject;
             readonly RectTransform rect;
             readonly Component text;
-            readonly Component glow;
+            readonly GameObject haloObject;
+            readonly RectTransform haloRect;
+            readonly Component haloImage;
             readonly Component outline;
 
-            AttachedMarkerView(GameObject markerObject, RectTransform rect, Component text, Component glow, Component outline)
+            AttachedMarkerView(
+                GameObject markerObject,
+                RectTransform rect,
+                Component text,
+                GameObject haloObject,
+                RectTransform haloRect,
+                Component haloImage,
+                Component outline)
             {
                 this.markerObject = markerObject;
                 this.rect = rect;
                 this.text = text;
-                this.glow = glow;
+                this.haloObject = haloObject;
+                this.haloRect = haloRect;
+                this.haloImage = haloImage;
                 this.outline = outline;
             }
 
@@ -284,6 +298,28 @@ namespace SPTItemIntelligence
                 if (anchor == null || textType == null) return null;
                 try
                 {
+                    GameObject haloObject = null;
+                    RectTransform haloRect = null;
+                    Component haloImage = null;
+                    Sprite sprite = HaloSprite();
+                    if (imageType != null && sprite != null)
+                    {
+                        haloObject = new GameObject("SPTItemIntelligenceHalo", typeof(RectTransform));
+                        haloObject.layer = anchor.gameObject.layer;
+                        haloRect = haloObject.transform as RectTransform;
+                        haloRect.SetParent(anchor, false);
+                        haloRect.anchorMin = new Vector2(0f, 1f);
+                        haloRect.anchorMax = new Vector2(0f, 1f);
+                        haloRect.pivot = new Vector2(0f, 1f);
+                        haloRect.localScale = Vector3.one;
+                        haloRect.localRotation = Quaternion.identity;
+                        haloImage = haloObject.AddComponent(imageType) as Component;
+                        Set(haloImage, "sprite", sprite);
+                        Set(haloImage, "raycastTarget", false);
+                        Set(haloImage, "preserveAspect", true);
+                        haloObject.SetActive(false);
+                    }
+
                     GameObject markerObject = new GameObject("SPTItemIntelligenceMarker", typeof(RectTransform));
                     markerObject.layer = anchor.gameObject.layer;
                     RectTransform rect = markerObject.transform as RectTransform;
@@ -295,7 +331,6 @@ namespace SPTItemIntelligence
                     rect.localRotation = Quaternion.identity;
 
                     Component text = markerObject.AddComponent(textType) as Component;
-                    Component glow = outlineType == null ? null : markerObject.AddComponent(outlineType) as Component;
                     Component outline = outlineType == null ? null : markerObject.AddComponent(outlineType) as Component;
                     Set(text, "text", "ⓘ");
                     Set(text, "fontStyle", FontStyle.Bold);
@@ -305,18 +340,14 @@ namespace SPTItemIntelligence
                     Set(text, "horizontalOverflow", Enum.Parse(PropertyType(text, "horizontalOverflow"), "Overflow"));
                     Set(text, "verticalOverflow", Enum.Parse(PropertyType(text, "verticalOverflow"), "Overflow"));
                     Set(text, "font", BuiltinFont());
-                    if (glow != null)
-                    {
-                        Set(glow, "useGraphicAlpha", false);
-                        Set(glow, "enabled", true);
-                    }
                     if (outline != null)
                     {
                         Set(outline, "effectColor", new Color(0f, 0f, 0f, 0.95f));
                         Set(outline, "useGraphicAlpha", true);
                     }
+                    if (haloRect != null) haloRect.SetAsLastSibling();
                     rect.SetAsLastSibling();
-                    return new AttachedMarkerView(markerObject, rect, text, glow, outline);
+                    return new AttachedMarkerView(markerObject, rect, text, haloObject, haloRect, haloImage, outline);
                 }
                 catch { return null; }
             }
@@ -326,16 +357,21 @@ namespace SPTItemIntelligence
                 if (markerObject == null || presentation == null || settings == null) return;
                 bool visible = presentation.IsVisible;
                 if (markerObject.activeSelf != visible) markerObject.SetActive(visible);
-                if (!visible) return;
+                if (!visible)
+                {
+                    if (haloObject != null && haloObject.activeSelf) haloObject.SetActive(false);
+                    return;
+                }
 
                 float size = settings.MarkerSize;
                 bool right = settings.MarkerSide == ItemMarkerSide.Right;
                 Vector2 anchor = right ? new Vector2(1f, 1f) : new Vector2(0f, 1f);
+                Vector2 position = new Vector2(right ? -settings.MarkerOffsetX : settings.MarkerOffsetX, -settings.MarkerOffsetY);
                 rect.anchorMin = anchor;
                 rect.anchorMax = anchor;
                 rect.pivot = anchor;
                 rect.sizeDelta = new Vector2(size, size);
-                rect.anchoredPosition = new Vector2(right ? -settings.MarkerOffsetX : settings.MarkerOffsetX, -settings.MarkerOffsetY);
+                rect.anchoredPosition = position;
 
                 Color color = settings.GetColor(presentation.Kind);
                 color.a = settings.MarkerOpacity;
@@ -343,19 +379,22 @@ namespace SPTItemIntelligence
                 Set(text, "fontSize", Mathf.Clamp(Mathf.RoundToInt(size * 0.78f), 8, 22));
                 Set(text, "color", color);
 
-                if (glow != null)
+                bool haloEnabled = haloObject != null && haloRect != null && haloImage != null && settings.MarkerHalo && settings.MarkerHaloStrength > 0f;
+                if (haloObject != null && haloObject.activeSelf != haloEnabled) haloObject.SetActive(haloEnabled);
+                if (haloEnabled)
                 {
-                    bool glowEnabled = settings.MarkerGlow && settings.MarkerGlowStrength > 0f;
-                    Set(glow, "enabled", glowEnabled);
-                    if (glowEnabled)
-                    {
-                        Color glowColor = color;
-                        glowColor.a = settings.MarkerGlowStrength * settings.MarkerOpacity;
-                        float radius = settings.MarkerGlowRadius;
-                        Set(glow, "effectColor", glowColor);
-                        Set(glow, "effectDistance", new Vector2(radius, -radius));
-                    }
+                    haloRect.anchorMin = anchor;
+                    haloRect.anchorMax = anchor;
+                    haloRect.pivot = anchor;
+                    float haloSize = size * 1.70f;
+                    haloRect.sizeDelta = new Vector2(haloSize, haloSize);
+                    haloRect.anchoredPosition = position;
+                    Color haloColor = color;
+                    haloColor.a = settings.MarkerHaloStrength * settings.MarkerOpacity;
+                    Set(haloImage, "color", haloColor);
+                    haloRect.SetAsLastSibling();
                 }
+
                 if (outline != null)
                 {
                     float thickness = Mathf.Clamp(size * 0.075f, 0.9f, 1.8f);
@@ -383,7 +422,49 @@ namespace SPTItemIntelligence
 
             public void Dispose()
             {
+                if (haloObject != null) UnityEngine.Object.Destroy(haloObject);
                 if (markerObject != null) UnityEngine.Object.Destroy(markerObject);
+            }
+
+            static Sprite HaloSprite()
+            {
+                if (haloSprite != null) return haloSprite;
+                lock (haloSpriteSync)
+                {
+                    if (haloSprite != null) return haloSprite;
+                    try
+                    {
+                        const int textureSize = 32;
+                        Texture2D texture = new Texture2D(textureSize, textureSize, TextureFormat.RGBA32, false);
+                        texture.name = "SPTItemIntelligenceHaloTexture";
+                        texture.hideFlags = HideFlags.HideAndDontSave;
+                        texture.filterMode = FilterMode.Bilinear;
+                        texture.wrapMode = TextureWrapMode.Clamp;
+                        Color32[] pixels = new Color32[textureSize * textureSize];
+                        for (int y = 0; y < textureSize; y++)
+                        {
+                            for (int x = 0; x < textureSize; x++)
+                            {
+                                float nx = ((x + 0.5f) / textureSize) * 2f - 1f;
+                                float ny = ((y + 0.5f) / textureSize) * 2f - 1f;
+                                float distance = Mathf.Sqrt(nx * nx + ny * ny);
+                                float alpha = Mathf.Clamp01(1f - distance);
+                                alpha = Mathf.SmoothStep(0f, 1f, alpha);
+                                pixels[(y * textureSize) + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f));
+                            }
+                        }
+                        texture.SetPixels32(pixels);
+                        texture.Apply(false, true);
+                        haloSprite = Sprite.Create(texture, new Rect(0f, 0f, textureSize, textureSize), new Vector2(0.5f, 0.5f), textureSize);
+                        haloSprite.name = "SPTItemIntelligenceHaloSprite";
+                        haloSprite.hideFlags = HideFlags.HideAndDontSave;
+                    }
+                    catch
+                    {
+                        haloSprite = null;
+                    }
+                }
+                return haloSprite;
             }
 
             static Font BuiltinFont()
