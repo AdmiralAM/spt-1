@@ -9,6 +9,20 @@ namespace SPTQuestPlanner.Client
         public PlannerRaidPlan(
             string locationId,
             IReadOnlyList<string> questIds,
+            IReadOnlyList<PlannerRaidObjective> objectives)
+            : this(
+                locationId,
+                questIds,
+                objectives,
+                new PlannerRaidPreparation(
+                    Array.Empty<PlannerRaidBringNeed>(),
+                    Array.Empty<PlannerRaidUnresolvedBringNeed>()))
+        {
+        }
+
+        public PlannerRaidPlan(
+            string locationId,
+            IReadOnlyList<string> questIds,
             IReadOnlyList<PlannerRaidObjective> objectives,
             PlannerRaidPreparation preparation)
         {
@@ -49,8 +63,7 @@ namespace SPTQuestPlanner.Client
             PlannerRaidPlan provisional = new PlannerRaidPlan(
                 opportunity.LocationId,
                 opportunity.QuestIds.ToArray(),
-                ordered,
-                new PlannerRaidPreparation(Array.Empty<PlannerRaidBringNeed>(), Array.Empty<PlannerRaidUnresolvedBringNeed>()));
+                ordered);
 
             PlannerRaidPreparation preparation = PlannerRaidPreparationBuilder.Build(provisional, state);
             return new PlannerRaidPlan(opportunity.LocationId, opportunity.QuestIds.ToArray(), ordered, preparation);
