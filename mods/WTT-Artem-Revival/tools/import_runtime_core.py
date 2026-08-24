@@ -20,6 +20,7 @@ SWEDEN_TPL = "6752641b1470fc33b675d59a"
 ROUBLES_TPL = "5449016a4bdc2d6f028b456f"
 BAD_IMAGE = "/files/quest/icon/ARTT_3thumbnail.jpg"
 GOOD_IMAGE = "/files/quest/icon/ARTT_3thumbnail.png"
+TRADER_ID = "66bf757f27d0b097db0acea5"
 
 
 def load(path: Path):
@@ -34,7 +35,7 @@ def save(path: Path, value):
 
 
 def patch_quest_image(resources: Path) -> int:
-    quest_path = resources / "db/CustomQuests/66bf757f27d0b097db0acea5/Quests/ArtemQuests.json"
+    quest_path = resources / f"db/CustomQuests/{TRADER_ID}/Quests/ArtemQuests.json"
     quests = load(quest_path)
     changed = 0
     for quest in quests.values():
@@ -69,6 +70,36 @@ def restore_sweden_offer(resources: Path) -> bool:
     assort["loyal_level_items"][SWEDEN_OFFER] = 1
     save(assort_path, assort)
     return True
+
+
+def sync_success_quest_assort(resources: Path) -> list[str]:
+    """Ensure every authored Success AssortmentUnlock is represented in QuestAssort.
+
+    This is additive on purpose. Existing QuestAssort-only entries are preserved
+    because they may be intentional hidden unlocks; only missing/mismatched reward
+    targets are repaired from the explicit quest reward declarations.
+    """
+    quest_path = resources / f"db/CustomQuests/{TRADER_ID}/Quests/ArtemQuests.json"
+    quest_assort_path = resources / f"db/CustomQuests/{TRADER_ID}/QuestAssort/Artem_QuestAssort.json"
+    quests = load(quest_path)
+    quest_assort = load(quest_assort_path)
+    success = quest_assort.setdefault("success", {})
+    repaired: list[str] = []
+
+    for quest_id, quest in quests.items():
+        for reward in quest.get("rewards", {}).get("Success", []):
+            if reward.get("type") != "AssortmentUnlock":
+                continue
+            offer_id = reward.get("target")
+            if not offer_id:
+                continue
+            if success.get(offer_id) != quest_id:
+                success[offer_id] = quest_id
+                repaired.append(offer_id)
+
+    if repaired:
+        save(quest_assort_path, quest_assort)
+    return repaired
 
 
 def main() -> int:
@@ -110,12 +141,16 @@ def main() -> int:
 
     image_fixes = patch_quest_image(output)
     sweden_added = restore_sweden_offer(output)
+    quest_assort_repairs = sync_success_quest_assort(output)
 
     print(f"Imported Artem core from: {archive}")
     print(f"Output: {output}")
-    print(f"Legacy DLL excluded: yes")
+    print("Legacy DLL excluded: yes")
     print(f"Quest image repairs: {image_fixes}")
     print(f"Sweden Patch offer restored: {'yes' if sweden_added else 'already present'}")
+    print(f"QuestAssort success mappings repaired: {len(quest_assort_repairs)}")
+    if quest_assort_repairs:
+        print("QuestAssort repaired offers: " + ", ".join(quest_assort_repairs))
     return 0
 
 
