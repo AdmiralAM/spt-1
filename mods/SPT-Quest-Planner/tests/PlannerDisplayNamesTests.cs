@@ -93,4 +93,14 @@ public sealed class PlannerDisplayNamesTests
     {
         Assert.Equal(string.Empty, PlannerDisplayNames.Target("SPTarkov.Server.Core.Utils.Json.ListOrT`1[System.String]"));
     }
+
+    [Fact]
+    public void UnresolvedMongoTargetDoesNotLeakRawId()
+    {
+        const string id = "5a13ef0686f7746e5a411744";
+        string label = PlannerDisplayNames.Target(id);
+
+        Assert.Equal("Unresolved quest target", label);
+        Assert.DoesNotContain(id, label);
+    }
 }
