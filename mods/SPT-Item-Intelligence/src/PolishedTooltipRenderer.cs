@@ -8,6 +8,9 @@ namespace SPTItemIntelligence
     {
         const float Gap = 8f;
         const float ScreenMargin = 6f;
+        const long PriceGreen = 50000;
+        const long PriceRed = 100000;
+        const long PriceGold = 250000;
 
         static GUISkin cachedSkin;
         static GUIStyle cachedLabel;
@@ -89,13 +92,13 @@ namespace SPTItemIntelligence
                 {
                     Color semantic = ResolveColor(line, settings);
                     bool hasSemanticProgress = semantic != Color.white && HasProgressRatio(line);
-                    GUIStyle activeStyle = hasSemanticProgress ? semanticLabel : label;
+                    bool hasPrice = TryReadRoubleAmount(line, out long price, out _, out _);
+                    GUIStyle activeStyle = hasSemanticProgress || hasPrice ? semanticLabel : label;
                     activeStyle.normal.textColor = Color.white;
-                    string rendered = hasSemanticProgress ? ApplySemanticProgressColor(line, semantic) : line;
-                    GUI.Label(
-                        new Rect(x + horizontalPadding, yCursor, textWidth, rowHeightBuffer[i]),
-                        rendered,
-                        activeStyle);
+                    string rendered = hasSemanticProgress
+                        ? ApplySemanticProgressColor(line, semantic)
+                        : hasPrice ? ApplyPriceAmountColor(line, ResolvePriceColor(price)) : line;
+                    GUI.Label(new Rect(x + horizontalPadding, yCursor, textWidth, rowHeightBuffer[i]), rendered, activeStyle);
                 }
                 yCursor += rowHeightBuffer[i] + rowGap;
             }
@@ -142,17 +145,14 @@ namespace SPTItemIntelligence
         internal static string DisplayLine(string line, ItemTooltipMode mode)
         {
             if (string.IsNullOrEmpty(line) || mode == ItemTooltipMode.Full) return line ?? string.Empty;
-
             const string firSeparator = " · FIR";
             int fir = line.IndexOf(firSeparator, StringComparison.OrdinalIgnoreCase);
-            if (fir >= 0) return line.Substring(0, fir);
-            return line;
+            return fir >= 0 ? line.Substring(0, fir) : line;
         }
 
         internal static Color ResolveColor(string line, ItemIntelligenceUiSettings settings)
         {
             if (string.IsNullOrEmpty(line) || settings == null) return Color.white;
-
             bool found = false;
             bool anyProgress = false;
             bool allComplete = true;
@@ -164,11 +164,60 @@ namespace SPTItemIntelligence
                 if (owned > 0) anyProgress = true;
                 if (owned < required) allComplete = false;
             }
-
             if (!found) return Color.white;
             if (allComplete) return settings.CompleteColor;
             if (!anyProgress) return settings.MissingColor;
             return settings.PartialColor;
+        }
+
+        internal static Color ResolvePriceColor(long value)
+        {
+            if (value >= PriceGold) return new Color(1f, 0.72f, 0.18f, 1f);
+            if (value >= PriceRed) return new Color(1f, 0.32f, 0.28f, 1f);
+            if (value >= PriceGreen) return new Color(0.38f, 0.90f, 0.42f, 1f);
+            return Color.white;
+        }
+
+        internal static string ApplyPriceAmountColor(string line, Color color)
+        {
+            if (!TryReadRoubleAmount(line, out _, out int start, out int end) || color == Color.white) return line ?? string.Empty;
+            string hex = ColorUtility.ToHtmlStringRGB(color);
+            return line.Substring(0, start) + "<color=#" + hex + ">" + line.Substring(start, end - start) + "</color>" + line.Substring(end);
+        }
+
+        internal static bool TryReadRoubleAmount(string line, out long value, out int start, out int end)
+        {
+            value = 0;
+            start = -1;
+            end = -1;
+            if (string.IsNullOrEmpty(line)) return false;
+
+            int rouble = line.IndexOf('₽');
+            if (rouble <= 0) return false;
+            int cursor = rouble - 1;
+            while (cursor >= 0 && char.IsWhiteSpace(line[cursor])) cursor--;
+            int numberEnd = cursor + 1;
+            while (cursor >= 0 && (char.IsDigit(line[cursor]) || line[cursor] == ',' || line[cursor] == ' ')) cursor--;
+            int numberStart = cursor + 1;
+            if (numberEnd <= numberStart) return false;
+
+            long parsed = 0;
+            bool hasDigit = false;
+            for (int i = numberStart; i < numberEnd; i++)
+            {
+                char c = line[i];
+                if (c == ',' || c == ' ') continue;
+                if (c < '0' || c > '9') return false;
+                hasDigit = true;
+                int digit = c - '0';
+                if (parsed > (long.MaxValue - digit) / 10) { parsed = long.MaxValue; break; }
+                parsed = parsed * 10 + digit;
+            }
+            if (!hasDigit) return false;
+            value = parsed;
+            start = numberStart;
+            end = rouble + 1;
+            return true;
         }
 
         internal static string ApplySemanticProgressColor(string line, Color color)
@@ -188,10 +237,8 @@ namespace SPTItemIntelligence
                 scan = end;
             }
             result.Append(line, cursor, line.Length - cursor);
-
             string colored = result.ToString();
-            if (colored.EndsWith("✓", StringComparison.Ordinal))
-                colored = colored.Substring(0, colored.Length - 1) + "<color=#" + hex + ">✓</color>";
+            if (colored.EndsWith("✓", StringComparison.Ordinal)) colored = colored.Substring(0, colored.Length - 1) + "<color=#" + hex + ">✓</color>";
             return colored;
         }
 
@@ -210,14 +257,12 @@ namespace SPTItemIntelligence
                 cursor = line == null ? 0 : line.Length;
                 return false;
             }
-
             int slash = line.IndexOf('/', start, end - start);
             if (slash < 0 || !TryParsePositiveInt(line, start, slash, out owned) || !TryParsePositiveInt(line, slash + 1, end, out required))
             {
                 cursor = end;
                 return false;
             }
-
             cursor = end;
             return true;
         }
@@ -226,7 +271,6 @@ namespace SPTItemIntelligence
         {
             value = 0;
             if (string.IsNullOrEmpty(text) || start < 0 || end <= start || end > text.Length) return false;
-
             for (int i = start; i < end; i++)
             {
                 char c = text[i];
@@ -243,27 +287,16 @@ namespace SPTItemIntelligence
             start = -1;
             end = -1;
             if (string.IsNullOrEmpty(line)) return false;
-
             for (int i = Math.Max(0, startAt); i < line.Length; i++)
             {
                 if (!char.IsDigit(line[i])) continue;
                 int firstEnd = i;
                 while (firstEnd < line.Length && char.IsDigit(line[firstEnd])) firstEnd++;
-                if (firstEnd >= line.Length || line[firstEnd] != '/')
-                {
-                    i = firstEnd;
-                    continue;
-                }
-
+                if (firstEnd >= line.Length || line[firstEnd] != '/') { i = firstEnd; continue; }
                 int secondStart = firstEnd + 1;
                 int secondEnd = secondStart;
                 while (secondEnd < line.Length && char.IsDigit(line[secondEnd])) secondEnd++;
-                if (secondEnd == secondStart)
-                {
-                    i = firstEnd;
-                    continue;
-                }
-
+                if (secondEnd == secondStart) { i = firstEnd; continue; }
                 start = i;
                 end = secondEnd;
                 return true;
