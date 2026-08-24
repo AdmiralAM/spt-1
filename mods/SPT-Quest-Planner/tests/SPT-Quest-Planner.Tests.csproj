@@ -21,6 +21,7 @@
     <Compile Include="..\client\PlannerRaidPlan.cs" Link="PlannerRaidPlan.cs" />
     <Compile Include="..\client\PlannerRaidPreparation.cs" Link="PlannerRaidPreparation.cs" />
     <Compile Include="..\client\PlannerRaidPlanRanker.cs" Link="PlannerRaidPlanRanker.cs" />
+    <Compile Include="..\client\PlannerRaidPlanCollection.cs" Link="PlannerRaidPlanCollection.cs" />
     <Compile Include="..\client\PlannerQueryEngine.cs" Link="PlannerQueryEngine.cs" />
     <Compile Include="..\client\PlannerPathItemRequirements.cs" Link="PlannerPathItemRequirements.cs" />
     <Compile Include="..\client\PlannerPathItemPlanner.cs" Link="PlannerPathItemPlanner.cs" />
