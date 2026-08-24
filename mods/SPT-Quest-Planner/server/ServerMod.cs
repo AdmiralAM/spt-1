@@ -16,7 +16,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "SPT Quest Planner Server";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("0.9.0");
+    public SemanticVersioning.Version Version { get; init; } = new("0.9.1");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
@@ -43,10 +43,7 @@ public sealed class PlannerSnapshotService(
             staticData.Extraction.ItemRequirements,
             staticData.ObjectiveExtraction.Objectives,
             staticData.Validation,
-            staticData.Extraction.Warnings
-                .Concat(staticData.ObjectiveExtraction.Warnings)
-                .Distinct(StringComparer.Ordinal)
-                .ToArray());
+            staticData.Extraction.Warnings.Concat(staticData.ObjectiveExtraction.Warnings).Distinct(StringComparer.Ordinal).ToArray());
         return ValueTask.FromResult(PlannerTransportJson.Serialize(envelope));
     }
 
@@ -78,7 +75,6 @@ public sealed class PlannerSnapshotService(
             state.Evaluation,
             state.OutstandingItems,
             state.Warnings);
-        cancellationToken.ThrowIfCancellationRequested();
         return ValueTask.FromResult(PlannerTransportJson.Serialize(envelope));
     }
 
@@ -86,18 +82,15 @@ public sealed class PlannerSnapshotService(
     {
         cancellationToken.ThrowIfCancellationRequested();
         PlannerStaticData staticData = staticDataCache.Get();
-        object profile = profileHelper.GetPmcProfile(sessionId)!;
-        PlayerProjection player = ProfileProjectionExtractor.Extract(profile);
-        InventoryProjection inventory = InventoryProjectionExtractor.Extract(profile);
-        PlannerEvaluationResult evaluation = PlannerEvaluator.Evaluate(staticData.Graph, staticData.Extraction.ItemRequirements, player);
-        IReadOnlyList<string> warnings = BuildWarnings(staticData, player, inventory, evaluation);
+        PlannerStateEnvelope state = BuildStateEnvelope(sessionId, staticData);
+        // Diagnostics deliberately exposes only normalized planner-safe projections.
+        // Raw SPT profile/quest tables contain MongoId-keyed dictionaries and are not transport-safe.
         PlannerDiagnosticsEnvelope envelope = new(
             PlannerDataContract.SchemaVersion,
             DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-            profile,
-            null!,
-            warnings);
-        cancellationToken.ThrowIfCancellationRequested();
+            state.Player,
+            new { questCount = staticData.Extraction.Nodes.Count, objectiveCount = staticData.ObjectiveExtraction.Objectives.Count },
+            state.Warnings);
         return ValueTask.FromResult(PlannerTransportJson.Serialize(envelope));
     }
 
@@ -109,8 +102,7 @@ public sealed class PlannerSnapshotService(
         InventoryProjection inventory = InventoryProjectionExtractor.Extract(profile);
         IReadOnlyDictionary<QuestState, int> stateCounts = ProfileProjectionExtractor.CountStates(extraction.Nodes, player);
         PlannerEvaluationResult evaluation = PlannerEvaluator.Evaluate(staticData.Graph, extraction.ItemRequirements, player);
-        IReadOnlyList<OutstandingItemRequirement> outstanding =
-            InventoryProjectionExtractor.CalculateOutstanding(evaluation.ItemRequirements, inventory);
+        IReadOnlyList<OutstandingItemRequirement> outstanding = InventoryProjectionExtractor.CalculateOutstanding(evaluation.ItemRequirements, inventory);
         IReadOnlyList<string> warnings = BuildWarnings(staticData, player, inventory, evaluation);
         return new PlannerStateEnvelope(
             PlannerDataContract.SchemaVersion,
@@ -123,19 +115,11 @@ public sealed class PlannerSnapshotService(
             warnings);
     }
 
-    private static IReadOnlyList<string> BuildWarnings(
-        PlannerStaticData staticData,
-        PlayerProjection player,
-        InventoryProjection inventory,
-        PlannerEvaluationResult evaluation)
+    private static IReadOnlyList<string> BuildWarnings(PlannerStaticData staticData, PlayerProjection player, InventoryProjection inventory, PlannerEvaluationResult evaluation)
     {
         QuestExtractionResult extraction = staticData.Extraction;
         List<string> warnings = new(
-            extraction.Warnings.Count +
-            staticData.ObjectiveExtraction.Warnings.Count +
-            player.Warnings.Count +
-            inventory.Warnings.Count +
-            evaluation.Warnings.Count + 2);
+            extraction.Warnings.Count + staticData.ObjectiveExtraction.Warnings.Count + player.Warnings.Count + inventory.Warnings.Count + evaluation.Warnings.Count + 2);
         warnings.AddRange(extraction.Warnings);
         warnings.AddRange(staticData.ObjectiveExtraction.Warnings);
         warnings.AddRange(player.Warnings);
@@ -154,22 +138,10 @@ public sealed class QuestPlannerRouter(JsonUtil jsonUtil, PlannerSnapshotService
     : StaticRouter(
         jsonUtil,
         [
-            new RouteAction(
-                PlannerDataContract.TopologyRoute,
-                async (url, info, sessionId, output, cancellationToken) =>
-                    await snapshotService.BuildTopologyAsync(cancellationToken)),
-            new RouteAction(
-                PlannerDataContract.StateRoute,
-                async (url, info, sessionId, output, cancellationToken) =>
-                    await snapshotService.BuildStateAsync(sessionId, cancellationToken)),
-            new RouteAction(
-                PlannerDataContract.SnapshotRoute,
-                async (url, info, sessionId, output, cancellationToken) =>
-                    await snapshotService.BuildSnapshotAsync(sessionId, cancellationToken)),
-            new RouteAction(
-                PlannerDataContract.DiagnosticsRoute,
-                async (url, info, sessionId, output, cancellationToken) =>
-                    await snapshotService.BuildDiagnosticsAsync(sessionId, cancellationToken))
+            new RouteAction(PlannerDataContract.TopologyRoute, async (url, info, sessionId, output, cancellationToken) => await snapshotService.BuildTopologyAsync(cancellationToken)),
+            new RouteAction(PlannerDataContract.StateRoute, async (url, info, sessionId, output, cancellationToken) => await snapshotService.BuildStateAsync(sessionId, cancellationToken)),
+            new RouteAction(PlannerDataContract.SnapshotRoute, async (url, info, sessionId, output, cancellationToken) => await snapshotService.BuildSnapshotAsync(sessionId, cancellationToken)),
+            new RouteAction(PlannerDataContract.DiagnosticsRoute, async (url, info, sessionId, output, cancellationToken) => await snapshotService.BuildDiagnosticsAsync(sessionId, cancellationToken))
         ])
 { }
 
@@ -179,7 +151,7 @@ public sealed class QuestPlannerLoadNotice(ISptLogger<QuestPlannerLoadNotice> lo
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        logger.Success("SPT Quest Planner Server v0.9.0 loaded; quest objective/location facts included in topology");
+        logger.Success("SPT Quest Planner Server v0.9.1 loaded; serialization-free topology/state projections active");
         return Task.CompletedTask;
     }
 }
