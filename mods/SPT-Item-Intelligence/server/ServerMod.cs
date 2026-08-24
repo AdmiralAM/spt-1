@@ -72,7 +72,7 @@ public sealed class RequirementDataService(
                 templateId.ToString(),
                 ToLong(trader.Price),
                 trader.Name,
-                ToLong(fleaValue > 0 ? fleaValue : handbookValue),
+                ToLong(fleaValue),
                 ToLong(handbookValue),
                 width,
                 height));
