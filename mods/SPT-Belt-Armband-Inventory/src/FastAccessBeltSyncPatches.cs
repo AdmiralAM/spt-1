@@ -5,6 +5,14 @@ using System.Reflection;
 
 namespace SPTBeltArmbandInventory
 {
+    internal static class HarmonyInstallPolicy
+    {
+        internal static bool CanBegin(bool harmonyReady, bool patchApiReady, bool methodConstructorReady, bool rollbackReady)
+        {
+            return harmonyReady && patchApiReady && methodConstructorReady && rollbackReady;
+        }
+    }
+
     internal static class FastAccessBeltSyncPolicy
     {
         internal static bool ShouldQueue(bool succeeded, bool ownerMatches, bool armBandRoute, bool hasContainers)
@@ -191,8 +199,10 @@ namespace SPTBeltArmbandInventory
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                if (harmony == null || patchMethod == null || harmonyMethodConstructor == null)
-                    return Fail("Harmony patch API is incompatible; live belt grenade synchronization is disabled.");
+                MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
+                if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, harmonyMethodConstructor != null, rollback != null))
+                    return Fail("Harmony patch/rollback API is incompatible; live belt grenade synchronization is disabled.");
+                unpatchSelf = rollback;
 
                 FastAccessBeltSyncRuntime.LogWarning = logWarning;
                 FastAccessBeltSyncRuntime.ControllerField = controller;
@@ -206,7 +216,6 @@ namespace SPTBeltArmbandInventory
                 Patch(patchMethod, harmonyMethodType, added, addPostfix);
                 Patch(patchMethod, harmonyMethodType, removed, removePostfix);
 
-                unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 if (logInfo != null) logInfo("Belt/Armband Inventory live grenade fast-access synchronization installed.");
                 return true;
             }
