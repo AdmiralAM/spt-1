@@ -5,7 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'mods/SPT-Belt-Armband-Inventory/**'
-      - '.github/workflows/belt-r1-validate.yml'
+      - '.github/workflows/belt-armband-validate.yml'
   workflow_dispatch:
 
 concurrency:
