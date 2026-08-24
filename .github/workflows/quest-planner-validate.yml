@@ -4,7 +4,10 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-      - 'mods/SPT-Quest-Planner/**'
+      - 'mods/SPT-Quest-Planner/client/**'
+      - 'mods/SPT-Quest-Planner/server/**'
+      - 'mods/SPT-Quest-Planner/src/**'
+      - 'mods/SPT-Quest-Planner/tests/**'
       - '.github/workflows/quest-planner-validate.yml'
   workflow_dispatch:
 
