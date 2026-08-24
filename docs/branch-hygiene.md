@@ -1,64 +1,60 @@
 # Branch hygiene
 
-This repository keeps branches only when they have a clear current role.
+This repository keeps branches only when they have a clear current role. Task branches are working state, not long-term archives.
 
 ## Permanent branches
 
-- `main` — active source of truth.
-- `stable` — CI-green source snapshot.
-- `runtime` — Tactical HUD install channel.
-- `runtime-item-intelligence` — Item Intelligence install channel.
-- `runtime-pause` — Pause install channel.
-- `runtime-belt-armband` — Belt/Armband install channel.
-- `archive/v1.13.0` — intentional frozen Tactical HUD reserve.
+- `main` — authoritative integrated source.
+- `stable` — deliberately promoted validated source snapshot.
+- `runtime` — Tactical HUD install-only publication channel.
+- `runtime-item-intelligence` — Item Intelligence install-only publication channel.
+- `runtime-pause` — Pause install-only publication channel.
+- `runtime-belt-armband` — Belt/Armband install-only publication channel.
+- `archive/v1.13.0` — intentional frozen Tactical HUD historical reserve.
 
-## Active development branches
+Additional permanent/runtime branches require an explicit repository-level reason and documentation update.
 
-Do not delete branches that are part of current workstreams or still carry unique changes under review. Current examples include:
+## Task branches
 
-- `artem-revival-spt-4.1.3`
-- `belt-runtime-candidate-poc`
-- current Item Intelligence R35-R38 work lines while they remain unmerged
-- any newly created Quest Planner, Belt/Armband, Item Intelligence, Pause, or Artem branch that is still being actively developed or validated
+Normal feature, fix, diagnostic, performance, compatibility, CI, and housekeeping work uses short-lived branches. Recommended namespaces include `feature/`, `fix/`, `diagnostic/`, `perf/`, `compat/`, `ci/`, and `chore/`.
 
-## Safe-to-delete rule
+A task branch exists only while its work is active, under review, awaiting required runtime validation, or still contains unique useful work that has not been deliberately preserved elsewhere.
 
-A temporary branch is safe to delete when comparison against `main` shows `ahead_by=0`: the branch is entirely contained in `main` and has no unique commits left.
+## Deletion rule
 
-Confirmed safe-to-delete Belt archaeology branches at the time of this audit:
+Delete a task branch when one of the following is proven:
 
-- `belt-armband-packnstrap-r10`
-- `belt-armband-packnstrap-r11`
-- `belt-armband-packnstrap-r12`
-- `belt-armband-packnstrap-r13`
-- `belt-armband-packnstrap-r14`
-- `belt-armband-packnstrap-r15`
-- `belt-armband-packnstrap-r16`
-- `belt-armband-packnstrap-r17`
-- `belt-armband-packnstrap-r18`
-- `belt-armband-packnstrap-r19`
-- `belt-armband-packnstrap-r20`
-- `belt-armband-packnstrap-r21`
-- `belt-armband-packnstrap-r22`
+- its useful result has been merged into `main`;
+- its temporary build/diagnostic purpose has expired;
+- it has been superseded by a later accepted implementation;
+- it is redundant with an intentional retained archive/publication channel;
+- its PR is closed and the branch carries no unique work that still needs preservation.
 
-## Needs review before deletion
+Do not require `ahead_by=0` as the only proof. Squash merges, rebases, superseded experiments, and diagnostic branches can legitimately retain unique commit SHAs after their useful content has already been preserved or intentionally discarded. Review content/PR history before deleting when ancestry alone is inconclusive.
 
-Do not delete merely because a branch is old. Branches with `ahead_by>0` still carry unique commits and require content review or explicit supersession evidence first.
+## Automatic cleanup
 
-Known examples:
+Repository setting **Automatically delete head branches** is enabled. After a normal merged PR, GitHub should remove its head branch automatically. This is the default cleanup mechanism for future task branches.
 
-- `belt-armband-packnstrap-r1`
-- `belt-armband-packnstrap-r22-rebased`
-- `belt-armband-packnstrap-r23`
-- historical Item Intelligence `fix/*`, `diagnostic/*`, `work/*`, `r35/*` through `r38/*` branches that still compare as diverged
-- `fix/pause-phase1-validation-hardening`
-- `feature/belt-armband-phase1`
+Repository cleanup should therefore focus on exceptions: old pre-policy branches, closed-unmerged experiments, abandoned diagnostics, intentional archives, and branches whose PR lifecycle did not trigger automatic deletion.
 
-## Working policy
+## Archive policy
 
-1. Prefer short-lived feature/fix/diagnostic branches.
-2. Merge or otherwise absorb validated work into `main`.
-3. Delete the temporary branch once `ahead_by=0` or once its unique work is explicitly superseded.
-4. Do not use branches as indefinite archives; intentional historical reserves must use the `archive/` namespace and be documented.
-5. Generated build branches are not development history. Runtime channels are rebuilt from validated source and may be force-updated by CI.
-6. Never delete an active workstream branch during repository cleanup.
+Do not keep ordinary task branches as historical souvenirs. Git and merged PR history already preserve normal development history.
+
+If a branch must be retained as a deliberate historical/recovery point:
+
+1. move/use the `archive/` namespace;
+2. document why it exists;
+3. keep the number of archive branches minimal;
+4. remove it when its recovery/historical purpose no longer justifies permanent retention.
+
+## Runtime/publication branches
+
+`stable` and `runtime-*` are controlled publication channels, not development branches. Do not make normal feature commits on them, open development work from them, or treat their force-updated history as source history.
+
+## Safety rule
+
+Never delete an active workstream branch or unique unmerged work merely for cosmetic cleanliness. When evidence is ambiguous, classify first; delete only after the branch's useful state is understood.
+
+One-time historical deletion queues belong in GitHub Issues, not in this durable policy document. See the active repository-cleanup Issue when a manual branch retirement pass is in progress.
