@@ -16,7 +16,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "SPT Quest Planner Server";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("0.9.1");
+    public SemanticVersioning.Version Version { get; init; } = new("0.9.2");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
@@ -83,8 +83,6 @@ public sealed class PlannerSnapshotService(
         cancellationToken.ThrowIfCancellationRequested();
         PlannerStaticData staticData = staticDataCache.Get();
         PlannerStateEnvelope state = BuildStateEnvelope(sessionId, staticData);
-        // Diagnostics deliberately exposes only normalized planner-safe projections.
-        // Raw SPT profile/quest tables contain MongoId-keyed dictionaries and are not transport-safe.
         PlannerDiagnosticsEnvelope envelope = new(
             PlannerDataContract.SchemaVersion,
             DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
@@ -151,7 +149,7 @@ public sealed class QuestPlannerLoadNotice(ISptLogger<QuestPlannerLoadNotice> lo
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        logger.Success("SPT Quest Planner Server v0.9.1 loaded; serialization-free topology/state projections active");
+        logger.Success("SPT Quest Planner Server v0.9.2 loaded; actionable raid-plan projections active");
         return Task.CompletedTask;
     }
 }
