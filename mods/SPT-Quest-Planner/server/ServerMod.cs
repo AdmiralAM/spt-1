@@ -47,7 +47,7 @@ public sealed class PlannerSnapshotService(
                 .Concat(staticData.ObjectiveExtraction.Warnings)
                 .Distinct(StringComparer.Ordinal)
                 .ToArray());
-        return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+        return ValueTask.FromResult(PlannerTransportJson.Serialize(envelope));
     }
 
     public ValueTask<string> BuildStateAsync(MongoId sessionId, CancellationToken cancellationToken)
@@ -56,7 +56,7 @@ public sealed class PlannerSnapshotService(
         PlannerStaticData staticData = staticDataCache.Get();
         PlannerStateEnvelope envelope = BuildStateEnvelope(sessionId, staticData);
         cancellationToken.ThrowIfCancellationRequested();
-        return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+        return ValueTask.FromResult(PlannerTransportJson.Serialize(envelope));
     }
 
     public ValueTask<string> BuildSnapshotAsync(MongoId sessionId, CancellationToken cancellationToken)
@@ -79,7 +79,7 @@ public sealed class PlannerSnapshotService(
             state.OutstandingItems,
             state.Warnings);
         cancellationToken.ThrowIfCancellationRequested();
-        return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+        return ValueTask.FromResult(PlannerTransportJson.Serialize(envelope));
     }
 
     public ValueTask<string> BuildDiagnosticsAsync(MongoId sessionId, CancellationToken cancellationToken)
@@ -95,10 +95,10 @@ public sealed class PlannerSnapshotService(
             PlannerDataContract.SchemaVersion,
             DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
             profile,
-            templateTable.Quests,
+            null!,
             warnings);
         cancellationToken.ThrowIfCancellationRequested();
-        return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+        return ValueTask.FromResult(PlannerTransportJson.Serialize(envelope));
     }
 
     private PlannerStateEnvelope BuildStateEnvelope(MongoId sessionId, PlannerStaticData staticData)
