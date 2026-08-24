@@ -1,11 +1,33 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace SPTBeltArmbandInventory
 {
     internal static class ReflectionTools
     {
+        sealed class MemberAccessor
+        {
+            internal readonly PropertyInfo Property;
+            internal readonly FieldInfo Field;
+
+            internal MemberAccessor(PropertyInfo property, FieldInfo field)
+            {
+                Property = property;
+                Field = field;
+            }
+
+            internal object Read(object instance)
+            {
+                if (Property != null) return Property.GetValue(instance, null);
+                return Field == null ? null : Field.GetValue(instance);
+            }
+        }
+
+        static readonly object MemberCacheLock = new object();
+        static readonly Dictionary<Tuple<Type, string>, MemberAccessor> MemberCache = new Dictionary<Tuple<Type, string>, MemberAccessor>();
+
         internal static Type FindType(string fullName)
         {
             Type direct = Type.GetType(fullName + ", Assembly-CSharp", false);
@@ -22,13 +44,27 @@ namespace SPTBeltArmbandInventory
 
         internal static object ReadMember(object instance, string preferredName)
         {
-            if (instance == null) return null;
-            Type type = instance.GetType();
-            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            PropertyInfo property = type.GetProperty(preferredName, flags);
-            if (property != null && property.GetIndexParameters().Length == 0) return property.GetValue(instance, null);
-            FieldInfo field = type.GetField(preferredName, flags);
-            return field == null ? null : field.GetValue(instance);
+            if (instance == null || string.IsNullOrEmpty(preferredName)) return null;
+            MemberAccessor accessor = GetAccessor(instance.GetType(), preferredName);
+            return accessor.Read(instance);
+        }
+
+        static MemberAccessor GetAccessor(Type type, string preferredName)
+        {
+            var key = Tuple.Create(type, preferredName);
+            lock (MemberCacheLock)
+            {
+                MemberAccessor cached;
+                if (MemberCache.TryGetValue(key, out cached)) return cached;
+
+                const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+                PropertyInfo property = type.GetProperty(preferredName, flags);
+                if (property != null && property.GetIndexParameters().Length != 0) property = null;
+                FieldInfo field = property == null ? type.GetField(preferredName, flags) : null;
+                cached = new MemberAccessor(property, field);
+                MemberCache.Add(key, cached);
+                return cached;
+            }
         }
 
         internal static bool ReadBoolean(object instance, string preferredName)
