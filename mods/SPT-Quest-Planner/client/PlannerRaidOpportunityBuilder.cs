@@ -10,12 +10,14 @@ namespace SPTQuestPlanner.Client
             string locationId,
             IReadOnlyList<string> questIds,
             IReadOnlyList<PlannerLocationObjective> objectives,
+            IReadOnlyList<PlannerRaidObjective> raidObjectives,
             int locationSpecificObjectiveCount,
             int globalObjectiveCount)
         {
             LocationId = locationId ?? string.Empty;
             QuestIds = questIds ?? Array.Empty<string>();
             Objectives = objectives ?? Array.Empty<PlannerLocationObjective>();
+            RaidObjectives = raidObjectives ?? Array.Empty<PlannerRaidObjective>();
             LocationSpecificObjectiveCount = locationSpecificObjectiveCount;
             GlobalObjectiveCount = globalObjectiveCount;
         }
@@ -23,10 +25,25 @@ namespace SPTQuestPlanner.Client
         public string LocationId { get; private set; }
         public IReadOnlyList<string> QuestIds { get; private set; }
         public IReadOnlyList<PlannerLocationObjective> Objectives { get; private set; }
+        public IReadOnlyList<PlannerRaidObjective> RaidObjectives { get; private set; }
         public int QuestCount { get { return QuestIds.Count; } }
         public int ObjectiveCount { get { return Objectives.Count; } }
         public int LocationSpecificObjectiveCount { get; private set; }
         public int GlobalObjectiveCount { get; private set; }
+        public int KillCount { get { return Count(PlannerRaidObjectiveKind.Kill); } }
+        public int VisitCount { get { return Count(PlannerRaidObjectiveKind.Visit); } }
+        public int PlantCount { get { return Count(PlannerRaidObjectiveKind.Plant); } }
+        public int FindCount { get { return Count(PlannerRaidObjectiveKind.Find); } }
+        public int ExtractCount { get { return Count(PlannerRaidObjectiveKind.Extract); } }
+        public int OtherCount { get { return Count(PlannerRaidObjectiveKind.Other); } }
+
+        private int Count(PlannerRaidObjectiveKind kind)
+        {
+            int count = 0;
+            for (int i = 0; i < RaidObjectives.Count; i++)
+                if (RaidObjectives[i].Kind == kind) count++;
+            return count;
+        }
     }
 
     public static class PlannerRaidOpportunityBuilder
@@ -76,10 +93,18 @@ namespace SPTQuestPlanner.Client
                     .OrderBy(value => value, StringComparer.Ordinal)
                     .ToArray();
 
+                PlannerRaidObjective[] raidObjectives = combined
+                    .Select(value => PlannerRaidObjectiveNormalizer.Normalize(value, pair.Key))
+                    .OrderBy(value => value.Kind)
+                    .ThenBy(value => value.QuestId, StringComparer.Ordinal)
+                    .ThenBy(value => value.ConditionId, StringComparer.Ordinal)
+                    .ToArray();
+
                 result.Add(new PlannerRaidOpportunity(
                     pair.Key,
                     questIds,
                     combined.ToArray(),
+                    raidObjectives,
                     specificCount,
                     globalCount));
             }
