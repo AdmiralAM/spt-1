@@ -4,6 +4,14 @@ A source repository for independent SPT 4.1.x mods. Each maintained module owns 
 
 > **Before development:** read [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/development-workflow.md`](docs/development-workflow.md). Independent module workstreams use separate branches, PRs, and module-specific CI. Repository-wide publication is a separate controlled operation.
 
+## Project authorship
+
+This repository and the active SPT Mod Suite development are maintained by **AdmiralAM**. Modules authored as part of this suite are developed and maintained here under AdmiralAM's project ownership unless a module explicitly documents different upstream authorship or provenance.
+
+`Artem Revival MOD SPT` is the important exception: it is a revival/compatibility workstream based on the pre-existing WTT Artem mod and its upstream content. Inclusion and maintenance of the revival in this repository do not claim original authorship of WTT Artem or its upstream assets/content. Module-specific documentation records that provenance where relevant.
+
+This section is an authorship/provenance statement, not a software license grant.
+
 ## Modules
 
 | Module | Current state | Purpose | Install channel |
