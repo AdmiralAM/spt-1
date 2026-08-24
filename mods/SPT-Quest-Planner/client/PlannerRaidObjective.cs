@@ -49,6 +49,7 @@ namespace SPTQuestPlanner.Client
         public static PlannerRaidObjective Normalize(PlannerLocationObjective objective, string effectiveLocationId)
         {
             if (objective == null) throw new ArgumentNullException("objective");
+            bool global = objective.LocationIds == null || objective.LocationIds.Count == 0;
             return new PlannerRaidObjective(
                 objective.QuestId,
                 objective.ConditionId,
@@ -56,7 +57,7 @@ namespace SPTQuestPlanner.Client
                 objective.ConditionType,
                 effectiveLocationId,
                 objective.Targets == null ? Array.Empty<string>() : objective.Targets.ToArray(),
-                objective.Global);
+                global);
         }
 
         public static PlannerRaidObjectiveKind Classify(string conditionType)
@@ -70,7 +71,7 @@ namespace SPTQuestPlanner.Client
             if (EqualsAny(type, "VisitPlace", "VisitLocation", "Zone", "EnterZone"))
                 return PlannerRaidObjectiveKind.Visit;
 
-            if (EqualsAny(type, "PlaceBeacon", "LeaveItemAtLocation", "PlantItem", "MarkObject"))
+            if (EqualsAny(type, "PlaceBeacon", "LeaveItemAtLocation", "PlaceItem", "PlantItem", "MarkObject"))
                 return PlannerRaidObjectiveKind.Plant;
 
             if (EqualsAny(type, "FindItem", "FindQuestItem", "PickupItem", "ObtainItem"))
