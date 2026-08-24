@@ -17,6 +17,8 @@ namespace SPTQuestPlanner.Client
         private PlannerWorkspaceMode workspaceMode = PlannerWorkspaceMode.RaidPlanner;
         private bool includeAvailable;
 
+        public event Action Changed;
+
         public string SelectedLocationId { get { return selectedLocationId; } }
         public string ActiveLocationId { get { return activeLocationId; } }
         public string ProgressionTargetQuestId { get { return progressionTargetQuestId; } }
@@ -26,13 +28,49 @@ namespace SPTQuestPlanner.Client
         public PlannerWorkspaceMode WorkspaceMode { get { return workspaceMode; } }
         public bool IncludeAvailable { get { return includeAvailable; } }
 
-        public void SetRankingMode(PlannerRaidPlanRankingMode value) { rankingMode = value; }
-        public void SetWorkspaceMode(PlannerWorkspaceMode value) { workspaceMode = value; }
-        public void SetIncludeAvailable(bool value) { includeAvailable = value; }
+        public void RestoreDurableState(
+            string activeLocation,
+            string progressionTarget,
+            PlannerRaidPlanRankingMode restoredRankingMode,
+            PlannerWorkspaceMode restoredWorkspaceMode,
+            bool restoredIncludeAvailable)
+        {
+            activeLocationId = NormalizeId(activeLocation);
+            progressionTargetQuestId = NormalizeId(progressionTarget);
+            rankingMode = restoredRankingMode;
+            workspaceMode = restoredWorkspaceMode;
+            includeAvailable = restoredIncludeAvailable;
+
+            if (workspaceMode == PlannerWorkspaceMode.Progression && !HasProgressionTarget)
+                workspaceMode = PlannerWorkspaceMode.RaidPlanner;
+            if (workspaceMode == PlannerWorkspaceMode.RaidPlanner && HasActivePlan)
+                selectedLocationId = activeLocationId;
+        }
+
+        public void SetRankingMode(PlannerRaidPlanRankingMode value)
+        {
+            if (rankingMode == value) return;
+            rankingMode = value;
+            NotifyChanged();
+        }
+
+        public void SetWorkspaceMode(PlannerWorkspaceMode value)
+        {
+            if (workspaceMode == value) return;
+            workspaceMode = value;
+            NotifyChanged();
+        }
+
+        public void SetIncludeAvailable(bool value)
+        {
+            if (includeAvailable == value) return;
+            includeAvailable = value;
+            NotifyChanged();
+        }
 
         public void SelectLocation(string locationId)
         {
-            selectedLocationId = string.IsNullOrWhiteSpace(locationId) ? null : locationId.Trim();
+            selectedLocationId = NormalizeId(locationId);
         }
 
         public void ActivateSelected()
@@ -42,28 +80,41 @@ namespace SPTQuestPlanner.Client
 
         public void ActivateLocation(string locationId)
         {
-            activeLocationId = string.IsNullOrWhiteSpace(locationId) ? null : locationId.Trim();
+            string normalized = NormalizeId(locationId);
+            bool changed = !string.Equals(activeLocationId, normalized, StringComparison.Ordinal) ||
+                           workspaceMode != PlannerWorkspaceMode.RaidPlanner;
+            activeLocationId = normalized;
             if (!string.IsNullOrWhiteSpace(activeLocationId))
             {
                 selectedLocationId = activeLocationId;
                 workspaceMode = PlannerWorkspaceMode.RaidPlanner;
             }
+            if (changed) NotifyChanged();
         }
 
         public void ClearActivePlan()
         {
+            if (activeLocationId == null) return;
             activeLocationId = null;
+            NotifyChanged();
         }
 
         public void SelectProgressionTarget(string questId)
         {
-            progressionTargetQuestId = string.IsNullOrWhiteSpace(questId) ? null : questId.Trim();
+            string normalized = NormalizeId(questId);
+            bool changed = !string.Equals(progressionTargetQuestId, normalized, StringComparison.Ordinal) ||
+                           (!string.IsNullOrWhiteSpace(normalized) && workspaceMode != PlannerWorkspaceMode.Progression);
+            progressionTargetQuestId = normalized;
             if (!string.IsNullOrWhiteSpace(progressionTargetQuestId)) workspaceMode = PlannerWorkspaceMode.Progression;
+            if (changed) NotifyChanged();
         }
 
         public void ClearProgressionTarget()
         {
+            if (progressionTargetQuestId == null) return;
             progressionTargetQuestId = null;
+            if (workspaceMode == PlannerWorkspaceMode.Progression) workspaceMode = PlannerWorkspaceMode.RaidPlanner;
+            NotifyChanged();
         }
 
         public PlannerRaidPlanCard ResolveSelection(PlannerRaidPlanViewModel viewModel)
@@ -95,6 +146,7 @@ namespace SPTQuestPlanner.Client
             if (viewModel == null || viewModel.Cards.Count == 0)
             {
                 activeLocationId = null;
+                NotifyChanged();
                 return null;
             }
             for (int i = 0; i < viewModel.Cards.Count; i++)
@@ -104,7 +156,19 @@ namespace SPTQuestPlanner.Client
                     return candidate;
             }
             activeLocationId = null;
+            NotifyChanged();
             return null;
+        }
+
+        private static string NormalizeId(string value)
+        {
+            return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+        }
+
+        private void NotifyChanged()
+        {
+            Action handler = Changed;
+            if (handler != null) handler();
         }
     }
 
