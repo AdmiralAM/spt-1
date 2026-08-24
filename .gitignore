@@ -30,6 +30,10 @@ Desktop.ini
 **/coverage.*
 *.trx
 
+# CI / generated evidence and install packages
+build-output/
+**/build-status/
+
 # Logs / diagnostics / crash dumps
 *.log
 *.dmp
@@ -50,7 +54,3 @@ Desktop.ini
 **/__pycache__/
 *.py[cod]
 .pytest_cache/
-
-# NOTE: build-output/ is intentionally not ignored yet because it is currently
-# tracked as part of the repository's existing delivery workflow. Its policy
-# should be changed only together with that workflow.
