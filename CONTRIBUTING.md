@@ -13,7 +13,30 @@ These documents define the repository operating model and are mandatory for ever
 
 The default lifecycle is:
 
-`Issue → dedicated short-lived branch → commits → Pull Request → module-specific CI → runtime/user validation when required → merge → delete temporary branch → cleanup/update docs`
+`Issue → dedicated short-lived branch → commits/pushes to that branch → Pull Request → module-specific CI → runtime/user validation when required → deliberate merge → delete temporary branch → cleanup/update docs`
+
+### `main` is an integration point, not a workspace
+
+Normal development, diagnostics, archaeology, experiments, temporary validation, and progress preservation belong on the workstream branch. Do not push intermediate work to `main` merely to save it, expose it to CI, or make it visible to another process.
+
+Merge into `main` only when there is a concrete integration need and the work has reached the appropriate acceptance/validation state. Likewise, do not repeatedly pull/rebase/merge `main` into a work branch without a reason. Synchronize when integration, conflict resolution, dependency uptake, or final validation actually requires it.
+
+Direct writes to `main` are exceptional repository/bootstrap/recovery operations, not the normal development path.
+
+### Use GitHub's native lifecycle tools
+
+Prefer the GitHub mechanism designed for the job instead of storing workflow state in source files or permanent branches:
+
+- **Issues** — meaningful bugs, features, research targets, validation gaps, and maintenance backlogs;
+- **short-lived branches** — isolated implementation/diagnostic work and progress preservation;
+- **Pull Requests** — review/integration gate and durable change record;
+- **Actions/checks** — automated module-specific validation;
+- **Actions artifacts** — transient compiled/test outputs;
+- **runtime branches** — deliberate install-only publication channels;
+- **labels/milestones** — backlog/release organization when they add useful structure;
+- **comments/checklists** — task evidence and review state that does not belong in source files.
+
+Do not create trigger/evidence files, generated-status commits, archive branches, or custom source-tree state when a native GitHub primitive already represents that state cleanly.
 
 ### Isolation is the default
 
@@ -36,11 +59,15 @@ Two to five independent module workstreams may run in parallel and must be able 
 
 Create or reuse an Issue for a meaningful bug, feature, validation gap, maintenance backlog, compatibility problem, or research target. Keep the Issue current enough that another developer can understand the objective, evidence, scope, non-goals, and stop/acceptance criteria.
 
+Stable modules may keep a low-priority polish/maintenance Issue rather than accumulating loose branches and scattered TODO notes.
+
 Do not create an Issue for every trivial edit. Small cleanup belongs in the relevant PR.
 
 ## Branches and Pull Requests
 
 Use one coherent short-lived branch per task. Prefer `feature/`, `fix/`, `diagnostic/`, `perf/`, or `chore/` prefixes.
+
+Push freely to the work branch when progress needs to be preserved, shared, or validated. That is what the branch is for.
 
 Open a Pull Request before normal integration into `main`. The PR is the merge gate and should record:
 
@@ -67,6 +94,10 @@ Runtime branches are install-only generated channels. They are not development b
 Completing a task includes removing material that became obsolete because of the task: temporary diagnostics, trigger files, generated evidence, dead branches, duplicate package copies, and superseded current-state documentation.
 
 Do not leave cleanup for a future repository-wide sweep when it can be safely completed with the work that created the obsolete material.
+
+The completion rule is:
+
+`implement → validate → integrate when needed → remove superseded material → update Issue/docs → delete temporary branch`
 
 ## Priority rule
 
