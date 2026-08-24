@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using BepInEx.Configuration;
 using UnityEngine;
 
@@ -15,6 +16,9 @@ namespace SPTQuestPlanner.Client
         private Vector2 locationScroll;
         private Vector2 detailScroll;
         private bool visible;
+        private GUIStyle opaqueWindowStyle;
+        private Texture2D opaqueWindowTexture;
+        private Behaviour blockedEventSystem;
 
         public PlannerRaidPlanWindow(
             PlannerRaidPlanPresentationController presentation,
@@ -26,20 +30,55 @@ namespace SPTQuestPlanner.Client
 
         public bool Visible { get { return visible; } }
 
-        public void Toggle() { visible = !visible; }
-        public void Hide() { visible = false; }
+        public void Toggle()
+        {
+            if (visible) Hide();
+            else visible = true;
+        }
+
+        public void Hide()
+        {
+            visible = false;
+            RestoreEftInput();
+        }
 
         public void Draw()
         {
             if (!visible) return;
 
+            EnsureEftInputBlocked();
+            EnsureOpaqueWindowStyle();
             DrawModalBackdrop();
-            DrawOpaqueWindowBackground(windowRect);
-            windowRect = GUI.ModalWindow(WindowId, windowRect, DrawWindow, "Quest planner MOD SPT");
+
+            Color previous = GUI.color;
+            GUI.color = Color.white;
+            windowRect = GUI.ModalWindow(WindowId, windowRect, DrawWindow, "Quest planner MOD SPT", opaqueWindowStyle);
+            GUI.color = previous;
 
             Event current = Event.current;
             if (current != null && IsPointerEvent(current.type))
                 current.Use();
+        }
+
+        private void EnsureOpaqueWindowStyle()
+        {
+            if (opaqueWindowStyle != null && opaqueWindowTexture != null) return;
+
+            opaqueWindowTexture = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+            opaqueWindowTexture.name = "QuestPlannerOpaqueWindow";
+            opaqueWindowTexture.hideFlags = HideFlags.HideAndDontSave;
+            opaqueWindowTexture.SetPixel(0, 0, WindowBackgroundColor);
+            opaqueWindowTexture.Apply(false, true);
+
+            opaqueWindowStyle = new GUIStyle(GUI.skin.window);
+            opaqueWindowStyle.normal.background = opaqueWindowTexture;
+            opaqueWindowStyle.onNormal.background = opaqueWindowTexture;
+            opaqueWindowStyle.hover.background = opaqueWindowTexture;
+            opaqueWindowStyle.onHover.background = opaqueWindowTexture;
+            opaqueWindowStyle.active.background = opaqueWindowTexture;
+            opaqueWindowStyle.onActive.background = opaqueWindowTexture;
+            opaqueWindowStyle.focused.background = opaqueWindowTexture;
+            opaqueWindowStyle.onFocused.background = opaqueWindowTexture;
         }
 
         private static void DrawModalBackdrop()
@@ -50,12 +89,60 @@ namespace SPTQuestPlanner.Client
             GUI.color = previous;
         }
 
-        private static void DrawOpaqueWindowBackground(Rect rect)
+        private void EnsureEftInputBlocked()
         {
-            Color previous = GUI.color;
-            GUI.color = WindowBackgroundColor;
-            GUI.DrawTexture(rect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true);
-            GUI.color = previous;
+            Behaviour current = ResolveCurrentEventSystem();
+            if (ReferenceEquals(current, blockedEventSystem))
+            {
+                if (current != null && current.enabled) current.enabled = false;
+                return;
+            }
+
+            RestoreEftInput();
+            if (current == null) return;
+
+            blockedEventSystem = current;
+            if (blockedEventSystem.enabled) blockedEventSystem.enabled = false;
+        }
+
+        private void RestoreEftInput()
+        {
+            Behaviour value = blockedEventSystem;
+            blockedEventSystem = null;
+            if (value == null) return;
+            try
+            {
+                if (!value.enabled) value.enabled = true;
+            }
+            catch { }
+        }
+
+        private static Behaviour ResolveCurrentEventSystem()
+        {
+            Type type = FindType("UnityEngine.EventSystems.EventSystem");
+            if (type == null) return null;
+
+            PropertyInfo currentProperty = type.GetProperty("current", BindingFlags.Public | BindingFlags.Static)
+                ?? type.GetProperty("Current", BindingFlags.Public | BindingFlags.Static);
+            if (currentProperty == null) return null;
+
+            try { return currentProperty.GetValue(null, null) as Behaviour; }
+            catch { return null; }
+        }
+
+        private static Type FindType(string fullName)
+        {
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                try
+                {
+                    Type type = assemblies[i].GetType(fullName, false, false);
+                    if (type != null) return type;
+                }
+                catch { }
+            }
+            return null;
         }
 
         private static bool IsPointerEvent(EventType type)
@@ -82,7 +169,7 @@ namespace SPTQuestPlanner.Client
                 Plugin instance = Plugin.Instance;
                 if (instance != null) instance.RequestStateRefresh("ui-manual");
             }
-            if (GUILayout.Button("X", GUILayout.Width(30f))) visible = false;
+            if (GUILayout.Button("X", GUILayout.Width(30f))) Hide();
             GUILayout.EndHorizontal();
 
             DrawControls(uiState);
