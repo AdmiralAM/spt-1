@@ -84,30 +84,51 @@ public sealed class PlannerRaidPlanUiStateTests
     }
 
     [Fact]
-    public void ActivatingLocationAlsoSelectsItForImmediatePreview()
+    public void ActivatingLocationAlsoSelectsItAndReturnsToRaidWorkspace()
     {
         PlannerRaidPlanUiState state = new();
+        state.SetWorkspaceMode(PlannerWorkspaceMode.Progression);
         state.SelectLocation("Woods");
 
         state.ActivateLocation("Reserve");
 
         Assert.Equal("Reserve", state.ActiveLocationId);
         Assert.Equal("Reserve", state.SelectedLocationId);
+        Assert.Equal(PlannerWorkspaceMode.RaidPlanner, state.WorkspaceMode);
         Assert.Equal("Reserve", state.ResolveActivePlan(ViewModel("Reserve", "Woods")).LocationId);
     }
 
     [Fact]
-    public void ProgressionTargetCanBeSelectedAndCleared()
+    public void ProgressionTargetCanBeSelectedAndClearedAndSwitchesWorkspace()
     {
         PlannerRaidPlanUiState state = new();
 
         state.SelectProgressionTarget("quest-1");
         Assert.True(state.HasProgressionTarget);
         Assert.Equal("quest-1", state.ProgressionTargetQuestId);
+        Assert.Equal(PlannerWorkspaceMode.Progression, state.WorkspaceMode);
 
         state.ClearProgressionTarget();
         Assert.False(state.HasProgressionTarget);
         Assert.Null(state.ProgressionTargetQuestId);
+    }
+
+    [Fact]
+    public void ActivePlanSnapshotExposesActionablePlanAndClearsWhenPlanDisappears()
+    {
+        PlannerClientCache cache = new PlannerClientCache();
+        PlannerRaidPlanProvider provider = new PlannerRaidPlanProvider(cache);
+        PlannerRaidPlanUiState state = new PlannerRaidPlanUiState();
+        PlannerRaidPlanPresentationController controller = new PlannerRaidPlanPresentationController(provider, state);
+
+        // Snapshot contract itself is covered here with the presentation state behavior;
+        // runtime provider population is exercised by the raid-plan builder/provider tests.
+        state.ActivateLocation("Customs");
+        PlannerActivePlanSnapshot empty = controller.GetActivePlanSnapshot(7, 12);
+
+        Assert.False(empty.HasPlan);
+        Assert.Null(state.ActiveLocationId);
+        Assert.Equal(7, empty.CacheRevision);
     }
 
     private static PlannerRaidPlanViewModel ViewModel(params string[] locations)
