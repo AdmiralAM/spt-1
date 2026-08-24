@@ -8,9 +8,12 @@ using UnityEngine.SceneManagement;
 
 namespace SPTQuestPlanner.Client
 {
-    [BepInPlugin("com.admiralam.spt.questplanner", "Quest planner MOD SPT", "0.9.1")]
+    [BepInPlugin("com.admiralam.spt.questplanner", "Quest planner MOD SPT", "0.9.2")]
     public sealed class Plugin : BaseUnityPlugin
     {
+        private static readonly PlannerCandidatePolicy RuntimeRecommendationPolicy =
+            new PlannerCandidatePolicy(includeActive: true, includeAvailable: true, includeReachable: false, includeBlocked: false);
+
         private CancellationTokenSource cancellation;
         private PlannerRefreshCoordinator refresh;
         private PlannerRefreshScheduler scheduler;
@@ -45,7 +48,7 @@ namespace SPTQuestPlanner.Client
             window = new PlannerRaidPlanWindow(Presentation, () => Cache == null ? 0L : Cache.Revision);
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
             StartInitialLoad();
-            Logger.LogInfo("Quest planner MOD SPT v0.9.1 loaded (transport/runtime/UI blocker fixes).");
+            Logger.LogInfo("Quest planner MOD SPT v0.9.2 loaded (actionable raid planning pass).");
         }
 
         private void Update()
@@ -98,7 +101,7 @@ namespace SPTQuestPlanner.Client
             PlannerRecommendationProvider provider = Recommendations;
             return provider == null
                 ? new PlannerRecommendationSnapshot(0L, 0L, Math.Max(1, topN), Array.Empty<PlannerRecommendationViewModel>())
-                : provider.Get(topN, policy);
+                : provider.Get(topN, policy ?? RuntimeRecommendationPolicy);
         }
 
         private void StartInitialLoad()
@@ -167,10 +170,10 @@ namespace SPTQuestPlanner.Client
             {
                 PlannerRecommendationProvider provider = Recommendations;
                 if (provider == null) return;
-                PlannerRecommendationSnapshot snapshot = provider.Get(3);
+                PlannerRecommendationSnapshot snapshot = provider.Get(3, RuntimeRecommendationPolicy);
                 if (snapshot.Recommendations.Count == 0)
                 {
-                    Logger.LogInfo("Quest Planner recommendations (" + NormalizeReason(reason) + "): no current candidates.");
+                    Logger.LogInfo("Quest Planner recommendations (" + NormalizeReason(reason) + "): no actionable candidates.");
                     return;
                 }
 
