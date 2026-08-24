@@ -11,7 +11,7 @@ namespace SPTQuestPlanner.Client
         private readonly PlannerRaidPlanPresentationController presentation;
         private readonly Func<long> revisionProvider;
         private readonly PlannerUiRaycastBlocker inputBlocker = new PlannerUiRaycastBlocker();
-        private Rect windowRect = new Rect(160f, 100f, 900f, 620f);
+        private Rect windowRect = new Rect(140f, 80f, 980f, 700f);
         private Vector2 locationScroll;
         private Vector2 detailScroll;
         private bool visible;
@@ -99,6 +99,8 @@ namespace SPTQuestPlanner.Client
             if (GUILayout.Button("X", GUILayout.Width(30f))) Hide();
             GUILayout.EndHorizontal();
 
+            DrawRecommendations();
+            GUILayout.Space(4f);
             DrawControls(uiState);
             GUILayout.BeginHorizontal();
             DrawLocationList(viewModel, uiState);
@@ -108,10 +110,45 @@ namespace SPTQuestPlanner.Client
             GUI.DragWindow(new Rect(0f, 0f, windowRect.width - 140f, 24f));
         }
 
+        private static void DrawRecommendations()
+        {
+            GUILayout.BeginVertical("box");
+            GUILayout.Label("Next quests");
+            try
+            {
+                PlannerRecommendationSnapshot snapshot = Plugin.GetRecommendations(3);
+                if (snapshot.Recommendations.Count == 0)
+                {
+                    GUILayout.Label("No actionable Active/Available quest recommendations.");
+                }
+                else
+                {
+                    for (int i = 0; i < snapshot.Recommendations.Count; i++)
+                    {
+                        PlannerRecommendationViewModel value = snapshot.Recommendations[i];
+                        string burden = value.FullyOwned
+                            ? "items ready"
+                            : "missing " + FormatNumber(value.TotalOutstanding) +
+                              (value.FirOutstanding > 0d ? " (FIR " + FormatNumber(value.FirOutstanding) + ")" : string.Empty);
+                        GUILayout.Label(
+                            "#" + value.Rank + "  " + value.QuestName +
+                            "   | blockers " + value.ImmediateBlockerCount +
+                            " | " + burden +
+                            " | unlocks " + value.ImmediateUnlockCount);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                GUILayout.Label("Recommendations unavailable: " + ex.GetBaseException().Message);
+            }
+            GUILayout.EndVertical();
+        }
+
         private static void DrawControls(PlannerRaidPlanUiState uiState)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Rank:", GUILayout.Width(38f));
+            GUILayout.Label("Raid ranking:", GUILayout.Width(78f));
             bool readyFirst = uiState.RankingMode == PlannerRaidPlanRankingMode.ReadyFirst;
             if (GUILayout.Toggle(readyFirst, "Ready first", "Button", GUILayout.Width(100f)) && !readyFirst)
                 uiState.SetRankingMode(PlannerRaidPlanRankingMode.ReadyFirst);
@@ -127,8 +164,8 @@ namespace SPTQuestPlanner.Client
 
         private void DrawLocationList(PlannerRaidPlanViewModel viewModel, PlannerRaidPlanUiState uiState)
         {
-            GUILayout.BeginVertical(GUILayout.Width(250f));
-            GUILayout.Label("Locations");
+            GUILayout.BeginVertical(GUILayout.Width(280f));
+            GUILayout.Label("Raid opportunities");
             locationScroll = GUILayout.BeginScrollView(locationScroll, GUILayout.ExpandHeight(true));
             for (int i = 0; i < viewModel.Cards.Count; i++)
             {
@@ -149,13 +186,13 @@ namespace SPTQuestPlanner.Client
             GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
             if (card == null)
             {
-                GUILayout.Label("No raid opportunities available for the current quest state.");
+                GUILayout.Label("No proven raid opportunities for the current Active quest state.");
                 GUILayout.EndVertical();
                 return;
             }
 
             GUILayout.Label(PlannerDisplayNames.Location(card.LocationId) + " — raid plan");
-            GUILayout.Label(card.QuestCount + " relevant quests   " + card.ObjectiveCount + " objectives");
+            GUILayout.Label(card.QuestCount + " relevant quests   " + card.ObjectiveCount + " proven objectives");
             GUILayout.Label(card.PreparationReady ? "Preparation: ready" : "Preparation: missing " + card.MissingBringTemplateCount + " required item type(s)");
             if (card.KnownRemainingWork > 0d) GUILayout.Label("Known remaining counter work: " + FormatNumber(card.KnownRemainingWork));
 
@@ -173,6 +210,9 @@ namespace SPTQuestPlanner.Client
                 string questLabel = PlannerQuestLabels.Resolve(topology, locale, objective.QuestId);
                 GUILayout.Label("• " + PlannerDisplayNames.Objective(objective.Kind) + " — " + questLabel + progress + targets);
             }
+
+            if (card.ObjectiveCount > card.Objectives.Count)
+                GUILayout.Label("… " + (card.ObjectiveCount - card.Objectives.Count) + " more objective(s) hidden from this compact view.");
 
             GUILayout.Space(10f);
             GUILayout.Label("Bring / preparation");
