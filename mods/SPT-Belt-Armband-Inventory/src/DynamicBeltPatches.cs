@@ -51,6 +51,18 @@ namespace SPTBeltArmbandInventory
 
     internal sealed class DynamicBeltPatches : IDisposable
     {
+        sealed class MutationState
+        {
+            internal readonly object Original;
+            internal readonly object Installed;
+
+            internal MutationState(object original, object installed)
+            {
+                Original = original;
+                Installed = installed;
+            }
+        }
+
         const string HarmonyId = "com.admiralam.spt.belt-armband-inventory.runtime";
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
@@ -123,9 +135,10 @@ namespace SPTBeltArmbandInventory
             try
             {
                 Array current = BeltRuntime.SlotOrderField.GetValue(null) as Array;
-                __state = current;
                 if (current == null) return;
-                BeltRuntime.SlotOrderField.SetValue(null, BeltRuntime.BuildOrder(current, BeltRuntime.ShouldExpose(__args)));
+                Array installed = BeltRuntime.BuildOrder(current, BeltRuntime.ShouldExpose(__args));
+                __state = new MutationState(current, installed);
+                BeltRuntime.SlotOrderField.SetValue(null, installed);
             }
             catch (Exception exception)
             {
@@ -137,8 +150,11 @@ namespace SPTBeltArmbandInventory
         {
             try
             {
-                Array original = __state as Array;
-                if (original != null) BeltRuntime.SlotOrderField.SetValue(null, original);
+                MutationState state = __state as MutationState;
+                if (state == null) return __exception;
+                object current = BeltRuntime.SlotOrderField.GetValue(null);
+                if (RuntimeMutationPolicy.ShouldRestore(current, state.Installed))
+                    BeltRuntime.SlotOrderField.SetValue(null, state.Original);
             }
             catch (Exception exception)
             {
@@ -154,8 +170,9 @@ namespace SPTBeltArmbandInventory
             {
                 object dogtagTemplate = BeltRuntime.DogtagTemplateField.GetValue(__instance);
                 object defaultTemplate = BeltRuntime.DefaultTemplateField.GetValue(__instance);
-                __state = dogtagTemplate;
-                if (defaultTemplate != null) BeltRuntime.DogtagTemplateField.SetValue(__instance, defaultTemplate);
+                if (defaultTemplate == null) return;
+                __state = new MutationState(dogtagTemplate, defaultTemplate);
+                BeltRuntime.DogtagTemplateField.SetValue(__instance, defaultTemplate);
             }
             catch (Exception exception)
             {
@@ -165,8 +182,14 @@ namespace SPTBeltArmbandInventory
 
         static Exception SlotFactoryFinalizer(Exception __exception, object __instance, object __state)
         {
-            if (__state == null) return __exception;
-            try { BeltRuntime.DogtagTemplateField.SetValue(__instance, __state); }
+            try
+            {
+                MutationState state = __state as MutationState;
+                if (state == null) return __exception;
+                object current = BeltRuntime.DogtagTemplateField.GetValue(__instance);
+                if (RuntimeMutationPolicy.ShouldRestore(current, state.Installed))
+                    BeltRuntime.DogtagTemplateField.SetValue(__instance, state.Original);
+            }
             catch (Exception exception)
             {
                 if (BeltRuntime.LogWarning != null) BeltRuntime.LogWarning("Could not restore the dogtag slot template: " + exception.Message);

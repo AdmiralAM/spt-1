@@ -83,6 +83,11 @@ internal static class Program
         Assert(HarmonyInstallPolicy.CanBegin(true, true, true, true), "Harmony mutations begin only when patch and rollback APIs are ready");
         Assert(!HarmonyInstallPolicy.CanBegin(true, true, true, false), "Harmony mutations fail closed when rollback is unavailable");
 
+        object installedMutation = new object();
+        Assert(RuntimeMutationPolicy.ShouldRestore(installedMutation, installedMutation), "temporary mutation restores while Belt still owns the installed value");
+        Assert(!RuntimeMutationPolicy.ShouldRestore(new object(), installedMutation), "temporary mutation does not overwrite a later replacement from another mod");
+        Assert(!RuntimeMutationPolicy.ShouldRestore(null, installedMutation), "temporary mutation does not restore after external clearing");
+
         Assert(PickupSlotPolicy.ShouldTry(true, true, false, true), "compatible container can fall back to ArmBand when vanilla pickup has no slot");
         Assert(!PickupSlotPolicy.ShouldTry(false, true, false, true), "vanilla pickup result always wins");
         Assert(!PickupSlotPolicy.ShouldTry(true, false, false, true), "non-container item never uses belt pickup fallback");
