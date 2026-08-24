@@ -9,7 +9,7 @@ static class Phase23SemanticColorTests
         string root = FindRepositoryRoot();
         string renderer = File.ReadAllText(Path.Combine(root, "mods", "SPT-Item-Intelligence", "src", "PolishedTooltipRenderer.cs"));
 
-        Expect(renderer.Contains("GUIStyle semanticLabel = new GUIStyle(label) { richText = true }"),
+        Expect(renderer.Contains("richText = false") && renderer.Contains("richText = true") && renderer.Contains("cachedSemanticLabel"),
             "semantic progress uses a dedicated rich-text style while ordinary labels remain plain", ref assertions);
         Expect(renderer.Contains("ApplySemanticProgressColor(line, semantic)"),
             "semantic formatting is applied only at render time", ref assertions);
