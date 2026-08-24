@@ -1,4 +1,4 @@
 Quest Planner validation trigger
-baseline: e2b70d426e7914638b0f646df78b3659c3a5aca6
+baseline: c0eabc6268de9c96846f1d3fb969a9141eb95c10
 workflow: explicit push gate
-reason: validate xUnit import and topology definite-assignment fixes
+reason: validate current xUnit v3 assertions and instance path planner API
