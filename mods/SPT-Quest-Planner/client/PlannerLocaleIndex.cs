@@ -57,14 +57,21 @@ namespace SPTQuestPlanner.Client
             if (token == null) return result;
             IEnumerable sequence = token as IEnumerable;
             if (sequence == null) return result;
+
             foreach (object entry in sequence)
             {
                 if (entry == null) continue;
-                PropertyInfo keyProperty = entry.GetType().GetProperty("Key");
-                PropertyInfo valueProperty = entry.GetType().GetProperty("Value");
-                if (keyProperty == null || valueProperty == null) continue;
-                string key = keyProperty.GetValue(entry, null) == null ? null : keyProperty.GetValue(entry, null).ToString();
-                string value = valueProperty.GetValue(entry, null) == null ? null : valueProperty.GetValue(entry, null).ToString();
+
+                Type entryType = entry.GetType();
+                PropertyInfo nameProperty = entryType.GetProperty("Name");
+                PropertyInfo keyProperty = entryType.GetProperty("Key");
+                PropertyInfo valueProperty = entryType.GetProperty("Value");
+                if (valueProperty == null || (nameProperty == null && keyProperty == null)) continue;
+
+                object keyObject = nameProperty != null ? nameProperty.GetValue(entry, null) : keyProperty.GetValue(entry, null);
+                object valueObject = valueProperty.GetValue(entry, null);
+                string key = keyObject == null ? null : keyObject.ToString();
+                string value = valueObject == null ? null : valueObject.ToString();
                 if (!string.IsNullOrWhiteSpace(key) && !string.IsNullOrWhiteSpace(value)) result[key] = value;
             }
             return result;
