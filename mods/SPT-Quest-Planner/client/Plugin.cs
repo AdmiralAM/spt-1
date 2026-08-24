@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 
 namespace SPTQuestPlanner.Client
 {
-    [BepInPlugin("com.admiralam.spt.questplanner", "Quest planner MOD SPT", "0.9.2")]
+    [BepInPlugin("com.admiralam.spt.questplanner", "Quest planner MOD SPT", "0.9.3")]
     public sealed class Plugin : BaseUnityPlugin
     {
         private static readonly PlannerCandidatePolicy RuntimeRecommendationPolicy =
@@ -44,11 +44,11 @@ namespace SPTQuestPlanner.Client
                 "UI",
                 "Toggle window",
                 new KeyboardShortcut(KeyCode.F9),
-                "Open or close Quest planner MOD SPT raid-plan window.");
+                "Open or close Quest Planner.");
             window = new PlannerRaidPlanWindow(Presentation, () => Cache == null ? 0L : Cache.Revision);
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
             StartInitialLoad();
-            Logger.LogInfo("Quest planner MOD SPT v0.9.2 loaded (actionable raid planning pass).");
+            Logger.LogInfo("Quest planner MOD SPT v0.9.3 loaded (planning workflow milestone).");
         }
 
         private void Update()
