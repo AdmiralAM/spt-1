@@ -16,6 +16,7 @@ namespace SPTQuestPlanner.Client
 
         internal static PlannerClientCache Cache { get; private set; }
         internal static PlannerRaidPlanProvider RaidPlans { get; private set; }
+        internal static PlannerRaidPlanPresentationController Presentation { get; private set; }
         internal static Plugin Instance { get; private set; }
 
         private void Awake()
@@ -23,6 +24,7 @@ namespace SPTQuestPlanner.Client
             Instance = this;
             Cache = new PlannerClientCache();
             RaidPlans = new PlannerRaidPlanProvider(Cache);
+            Presentation = new PlannerRaidPlanPresentationController(RaidPlans);
             refresh = new PlannerRefreshCoordinator(
                 new ReflectionSptPlannerTransport(),
                 new ReflectionNewtonsoftPlannerDecoder(),
@@ -31,7 +33,7 @@ namespace SPTQuestPlanner.Client
             cancellation = new CancellationTokenSource();
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
             StartInitialLoad();
-            Logger.LogInfo("SPT Quest Planner v0.9.0 loaded (raid-plan provider + bounded lifecycle refresh; no UI)");
+            Logger.LogInfo("SPT Quest Planner v0.9.0 loaded (raid-plan presentation foundation + bounded lifecycle refresh; no visual UI)");
         }
 
         internal static PlannerRaidPlanCollection GetRaidPlans(
@@ -42,6 +44,15 @@ namespace SPTQuestPlanner.Client
             return provider == null
                 ? new PlannerRaidPlanCollection(0L, rankingMode, Array.Empty<PlannerRaidPlan>())
                 : provider.Get(rankingMode, includeAvailable);
+        }
+
+        internal static PlannerRaidPlanViewModel GetRaidPlanViewModel(int maxObjectivesPerCard = 12)
+        {
+            PlannerRaidPlanPresentationController controller = Presentation;
+            PlannerClientCache cache = Cache;
+            if (controller == null || cache == null)
+                return new PlannerRaidPlanViewModel(0L, PlannerRaidPlanRankingMode.ReadyFirst, Array.Empty<PlannerRaidPlanCard>());
+            return controller.GetViewModel(cache.Revision, maxObjectivesPerCard);
         }
 
         private void StartInitialLoad()
@@ -81,7 +92,11 @@ namespace SPTQuestPlanner.Client
             {
                 string error;
                 if (coordinator.TryRefreshState(token, out error))
+                {
+                    PlannerRaidPlanPresentationController presentation = Presentation;
+                    if (presentation != null) presentation.Invalidate();
                     Logger.LogInfo("Quest Planner state refreshed (" + NormalizeReason(reason) + "); revision=" + Cache.Revision + ".");
+                }
                 else if (!token.IsCancellationRequested && !string.Equals(error, "Refresh already in progress.", StringComparison.Ordinal))
                     Logger.LogWarning("Quest Planner state refresh failed (" + NormalizeReason(reason) + "): " + error);
             }, token);
@@ -106,6 +121,7 @@ namespace SPTQuestPlanner.Client
             scheduler = null;
             refresh = null;
             cancellation = null;
+            Presentation = null;
             RaidPlans = null;
             Cache = null;
             Instance = null;
