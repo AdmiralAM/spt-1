@@ -78,8 +78,8 @@ jobs:
               Start-Sleep -Seconds 5
             }
           }
-          Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
-          if (-not (Test-Path deps/core/BepInEx.dll)) { throw 'BepInEx.dll missing after extraction' }
+          Expand-Archive deps/bepinex.zip -DestinationPath deps/BepInEx -Force
+          if (-not (Test-Path deps/BepInEx/core/BepInEx.dll)) { throw 'BepInEx.dll missing after extraction' }
 
       - name: Validate Tactical HUD assets and hot paths
         shell: pwsh
@@ -138,6 +138,7 @@ jobs:
           }
 
           function Write-PackageMetadata([string]$root, [hashtable]$manifest, [string[]]$lines) {
+            New-Item -ItemType Directory -Force -Path $root | Out-Null
             $manifest | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $root 'runtime-manifest.json') -Encoding utf8
             $lines -join "`n" | Set-Content (Join-Path $root 'README.md') -Encoding utf8
           }
@@ -148,54 +149,26 @@ jobs:
           Copy-RequiredFile "mods/SPT-Tactical-HUD/client/bin/Release/netstandard2.1/$env:HUD_ASSEMBLY.dll" (Join-Path $hudClient 'SPT Tactical HUD.dll')
           Copy-RequiredFile 'mods/SPT-Tactical-HUD/client/assets/hud-sprites.png' (Join-Path $hudClient 'assets/hud-sprites.png')
           Copy-RequiredFile "mods/SPT-Tactical-HUD/server/bin/Release/net10.0/$env:HUD_SERVER_ASSEMBLY.dll" (Join-Path $hudServer 'SPT Tactical HUD Server.dll')
-          Write-PackageMetadata $hudRoot ([ordered]@{
-            name='SPT Tactical HUD'; channel='runtime'; client_version=$env:HUD_VERSION; server_version=$env:HUD_SERVER_VERSION;
-            spt_version='4.1.x'; source_commit=$sourceSha; client_included=$true; server_included=$true
-          }) @(
-            '# SPT Tactical HUD runtime','',"Ready-to-install Tactical HUD $env:HUD_VERSION for SPT 4.1.x.",'',
-            'Copy this package into the SPT root. It contains the Tactical HUD client and server companion only.',
-            "Verified source commit: $sourceSha"
-          )
+          Write-PackageMetadata $hudRoot ([ordered]@{ name='SPT Tactical HUD'; channel='runtime'; client_version=$env:HUD_VERSION; server_version=$env:HUD_SERVER_VERSION; spt_version='4.1.x'; source_commit=$sourceSha; client_included=$true; server_included=$true }) @('# SPT Tactical HUD runtime','',"Ready-to-install Tactical HUD $env:HUD_VERSION for SPT 4.1.x.",'','Copy this package into the SPT root. It contains the Tactical HUD client and server companion only.',"Verified source commit: $sourceSha")
 
           $iiRoot = Join-Path $out 'SPT-Item-Intelligence'
           $iiClient = Join-Path $iiRoot 'BepInEx/plugins/SPT Item Intelligence'
           $iiServer = Join-Path $iiRoot 'SPT_Runtime/user/mods/SPT Item Intelligence Server'
           Copy-RequiredFile "mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/$env:II_ASSEMBLY.dll" (Join-Path $iiClient 'SPT Item Intelligence.dll')
           Copy-RequiredFile "mods/SPT-Item-Intelligence/server/bin/Release/net10.0/$env:II_SERVER_ASSEMBLY.dll" (Join-Path $iiServer 'SPT Item Intelligence Server.dll')
-          Write-PackageMetadata $iiRoot ([ordered]@{
-            name='SPT Item Intelligence'; channel='runtime-item-intelligence'; client_version=$env:II_VERSION; server_version=$env:II_SERVER_VERSION;
-            spt_version='4.1.x'; source_commit=$sourceSha; client_included=$true; server_included=$true
-          }) @(
-            '# SPT Item Intelligence runtime','',"Ready-to-install Item Intelligence $env:II_VERSION for SPT 4.1.x.",'',
-            'Copy this package into the SPT root. It contains Item Intelligence client and server components only.',
-            "Verified source commit: $sourceSha"
-          )
+          Write-PackageMetadata $iiRoot ([ordered]@{ name='SPT Item Intelligence'; channel='runtime-item-intelligence'; client_version=$env:II_VERSION; server_version=$env:II_SERVER_VERSION; spt_version='4.1.x'; source_commit=$sourceSha; client_included=$true; server_included=$true }) @('# SPT Item Intelligence runtime','',"Ready-to-install Item Intelligence $env:II_VERSION for SPT 4.1.x.",'','Copy this package into the SPT root. It contains Item Intelligence client and server components only.',"Verified source commit: $sourceSha")
 
           $pauseRoot = Join-Path $out 'SPT-Pause'
           $pauseClient = Join-Path $pauseRoot 'BepInEx/plugins/SPT Pause'
           Copy-RequiredFile "mods/SPT-Pause/src/bin/Release/netstandard2.1/$env:PAUSE_ASSEMBLY.dll" (Join-Path $pauseClient 'SPT Pause.dll')
-          Write-PackageMetadata $pauseRoot ([ordered]@{
-            name='SPT Pause'; channel='runtime-pause'; version=$env:PAUSE_VERSION; spt_version='4.1.x'; source_commit=$sourceSha;
-            client_included=$true; server_included=$false
-          }) @(
-            '# SPT Pause runtime','',"Ready-to-install SPT Pause $env:PAUSE_VERSION for SPT 4.1.x.",'',
-            'Copy this package into the SPT root. SPT Pause is client-only.',
-            "Verified source commit: $sourceSha"
-          )
+          Write-PackageMetadata $pauseRoot ([ordered]@{ name='SPT Pause'; channel='runtime-pause'; version=$env:PAUSE_VERSION; spt_version='4.1.x'; source_commit=$sourceSha; client_included=$true; server_included=$false }) @('# SPT Pause runtime','',"Ready-to-install SPT Pause $env:PAUSE_VERSION for SPT 4.1.x.",'','Copy this package into the SPT root. SPT Pause is client-only.',"Verified source commit: $sourceSha")
 
           $beltRoot = Join-Path $out 'SPT-Belt-Armband-Inventory'
           $beltClient = Join-Path $beltRoot 'BepInEx/plugins/SPT Belt Armband Inventory'
           $beltServer = Join-Path $beltRoot 'SPT_Runtime/user/mods/SPT Belt Armband Inventory Server'
           Copy-RequiredFile "mods/SPT-Belt-Armband-Inventory/src/bin/Release/netstandard2.1/$env:BELT_ASSEMBLY.dll" (Join-Path $beltClient 'SPT Belt Armband Inventory.dll')
           Copy-RequiredFile 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT-Belt-Armband-Inventory.Server.dll' (Join-Path $beltServer 'SPT Belt Armband Inventory Server.dll')
-          Write-PackageMetadata $beltRoot ([ordered]@{
-            name='SPT Belt Armband Inventory'; channel='runtime-belt-armband'; version=$env:BELT_VERSION; spt_version='4.1.x'; source_commit=$sourceSha;
-            client_included=$true; server_included=$true
-          }) @(
-            '# SPT Belt/Armband Inventory runtime','',"Ready-to-install Belt/Armband Inventory $env:BELT_VERSION for SPT 4.1.x.",'',
-            'Copy this package into the SPT root. It contains the current client and server components.',
-            "Verified source commit: $sourceSha"
-          )
+          Write-PackageMetadata $beltRoot ([ordered]@{ name='SPT Belt Armband Inventory'; channel='runtime-belt-armband'; version=$env:BELT_VERSION; spt_version='4.1.x'; source_commit=$sourceSha; client_included=$true; server_included=$true }) @('# SPT Belt/Armband Inventory runtime','',"Ready-to-install Belt/Armband Inventory $env:BELT_VERSION for SPT 4.1.x.",'','Copy this package into the SPT root. It contains the current client and server components.',"Verified source commit: $sourceSha")
 
       - name: Validate assembled runtime packages
         shell: pwsh
@@ -210,9 +183,7 @@ jobs:
             'build-output/SPT-Belt-Armband-Inventory/BepInEx/plugins/SPT Belt Armband Inventory/SPT Belt Armband Inventory.dll',
             'build-output/SPT-Belt-Armband-Inventory/SPT_Runtime/user/mods/SPT Belt Armband Inventory Server/SPT Belt Armband Inventory Server.dll'
           )
-          foreach ($path in $required) {
-            if (-not (Test-Path $path -PathType Leaf)) { throw "Runtime package contract missing: $path" }
-          }
+          foreach ($path in $required) { if (-not (Test-Path $path -PathType Leaf)) { throw "Runtime package contract missing: $path" } }
           foreach ($root in @('SPT-Tactical-HUD','SPT-Item-Intelligence','SPT-Pause','SPT-Belt-Armband-Inventory')) {
             foreach ($metadata in @('README.md','runtime-manifest.json')) {
               $path = "build-output/$root/$metadata"
@@ -264,9 +235,7 @@ jobs:
             try {
               git checkout --orphan "publish-$label-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT" | Out-Null
               git rm -rf . | Out-Null
-              Copy-Item (Join-Path $packageRoot '*') $worktree -Recurse -Force
-              git config user.name 'github-actions[bot]'
-              git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+              Copy-Item "$packageRoot/*" . -Recurse -Force
               git add -A
               git commit -m $message | Out-Null
               return (git rev-parse HEAD).Trim()
@@ -276,14 +245,14 @@ jobs:
             }
           }
 
-          $hudSha = New-RuntimeCommit 'hud' (Join-Path $env:GITHUB_WORKSPACE 'build-output/SPT-Tactical-HUD') "Publish Tactical HUD runtime v$env:HUD_VERSION"
-          $iiSha = New-RuntimeCommit 'ii' (Join-Path $env:GITHUB_WORKSPACE 'build-output/SPT-Item-Intelligence') "Publish Item Intelligence runtime v$env:II_VERSION"
-          $pauseSha = New-RuntimeCommit 'pause' (Join-Path $env:GITHUB_WORKSPACE 'build-output/SPT-Pause') "Publish Pause runtime v$env:PAUSE_VERSION"
-          $beltSha = New-RuntimeCommit 'belt' (Join-Path $env:GITHUB_WORKSPACE 'build-output/SPT-Belt-Armband-Inventory') "Publish Belt Armband Inventory runtime v$env:BELT_VERSION"
+          $hudCommit = New-RuntimeCommit 'hud' (Join-Path $PWD 'build-output/SPT-Tactical-HUD') 'Publish Tactical HUD runtime package'
+          $iiCommit = New-RuntimeCommit 'ii' (Join-Path $PWD 'build-output/SPT-Item-Intelligence') 'Publish Item Intelligence runtime package'
+          $pauseCommit = New-RuntimeCommit 'pause' (Join-Path $PWD 'build-output/SPT-Pause') 'Publish Pause runtime package'
+          $beltCommit = New-RuntimeCommit 'belt' (Join-Path $PWD 'build-output/SPT-Belt-Armband-Inventory') 'Publish Belt Armband Inventory runtime package'
 
-          git push --atomic --force origin `
-            "$sourceSha`:refs/heads/stable" `
-            "$hudSha`:refs/heads/runtime" `
-            "$iiSha`:refs/heads/runtime-item-intelligence" `
-            "$pauseSha`:refs/heads/runtime-pause" `
-            "$beltSha`:refs/heads/runtime-belt-armband"
+          git push origin --force --atomic \
+            "$sourceSha`:refs/heads/stable" \
+            "$hudCommit`:refs/heads/runtime" \
+            "$iiCommit`:refs/heads/runtime-item-intelligence" \
+            "$pauseCommit`:refs/heads/runtime-pause" \
+            "$beltCommit`:refs/heads/runtime-belt-armband"
