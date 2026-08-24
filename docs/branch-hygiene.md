@@ -10,6 +10,7 @@ This repository keeps branches only when they have a clear current role. Task br
 - `runtime-item-intelligence` — Item Intelligence install-only publication channel.
 - `runtime-pause` — Pause install-only publication channel.
 - `runtime-belt-armband` — Belt/Armband install-only publication channel.
+- `runtime-artem-revival` — Artem Revival install-only core-overlay publication channel; external Bundles are documented by the module.
 - `archive/v1.13.0` — intentional frozen Tactical HUD historical reserve.
 
 Additional permanent/runtime branches require an explicit repository-level reason and documentation update.
@@ -52,6 +53,8 @@ If a branch must be retained as a deliberate historical/recovery point:
 ## Runtime/publication branches
 
 `stable` and `runtime-*` are controlled publication channels, not development branches. Do not make normal feature commits on them, open development work from them, or treat their force-updated history as source history.
+
+`runtime-artem-revival` is intentionally retained because the validated Artem core overlay is small enough for an install channel while its approximately 1.5 GB authored Unity Bundles remain external. The branch must remain install-only and be updated only from a runtime-validated candidate.
 
 ## Safety rule
 
