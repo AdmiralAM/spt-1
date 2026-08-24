@@ -18,17 +18,19 @@ public sealed class HandleInsuredItemLostEventPatch : AbstractPatch
     [PatchPrefix]
     public static void Prefix(PmcData preRaidPmcProfile, EndLocalRaidRequestData request)
     {
-        if (request.LostInsuredItems is null || request.LostInsuredItems.Count == 0 || preRaidPmcProfile.Inventory?.Items is null)
+        var lostInsuredItems = request.LostInsuredItems;
+        var inventoryItems = preRaidPmcProfile.Inventory?.Items;
+        if (lostInsuredItems is null || !lostInsuredItems.Any() || inventoryItems is null)
             return;
 
-        var nodes = preRaidPmcProfile.Inventory.Items.Select(item => new BeltInventoryNode(
+        var nodes = inventoryItems.Select(item => new BeltInventoryNode(
             item.Id.ToString(),
             item.ParentId?.ToString(),
             item.SlotId));
         var kept = BeltDeathPolicy.GetKeptTreeIds(nodes);
         if (kept.Count == 0) return;
 
-        request.LostInsuredItems = request.LostInsuredItems
+        request.LostInsuredItems = lostInsuredItems
             .Where(item => !kept.Contains(item.Id.ToString()))
             .ToList();
     }
