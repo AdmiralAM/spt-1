@@ -139,11 +139,13 @@ namespace SPTQuestPlanner.Client
             while (pending.Count > 0)
             {
                 string currentId = pending.Pop();
-                if (!visited.Add(currentId)) continue;
+                if (visited.Contains(currentId)) continue;
+                if (IsCompleted(currentId)) continue;
+
+                visited.Add(currentId);
                 if (visited.Count > maxVisitedNodes)
                     throw new InvalidOperationException("Quest Planner query exceeded the configured node traversal limit.");
 
-                if (IsCompleted(currentId)) continue;
                 PlannerTopologyQuest current = topology.GetQuest(currentId);
                 if (current == null) continue;
                 for (int i = 0; i < current.PrerequisiteQuestIds.Count; i++)
