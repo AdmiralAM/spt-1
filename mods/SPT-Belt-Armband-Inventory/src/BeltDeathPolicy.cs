@@ -6,7 +6,7 @@ namespace SPTBeltArmbandInventory
 {
     public readonly struct BeltInventoryNode
     {
-        public BeltInventoryNode(string id, string parentId, string slotId)
+        public BeltInventoryNode(string id, string? parentId, string? slotId)
         {
             Id = id;
             ParentId = parentId;
@@ -14,15 +14,15 @@ namespace SPTBeltArmbandInventory
         }
 
         public string Id { get; }
-        public string ParentId { get; }
-        public string SlotId { get; }
+        public string? ParentId { get; }
+        public string? SlotId { get; }
     }
 
     public static class BeltDeathPolicy
     {
         public const string ArmBand = "ArmBand";
 
-        public static HashSet<string> GetKeptTreeIds(IEnumerable<BeltInventoryNode> nodes)
+        public static HashSet<string> GetKeptTreeIds(IEnumerable<BeltInventoryNode>? nodes)
         {
             BeltInventoryNode[] items = nodes == null ? Array.Empty<BeltInventoryNode>() : nodes.ToArray();
             BeltInventoryNode? belt = null;
@@ -41,11 +41,10 @@ namespace SPTBeltArmbandInventory
             var children = new Dictionary<string, List<string>>(StringComparer.Ordinal);
             for (int i = 0; i < items.Length; i++)
             {
-                string parentId = items[i].ParentId;
+                string? parentId = items[i].ParentId;
                 string id = items[i].Id;
                 if (string.IsNullOrEmpty(parentId) || string.IsNullOrEmpty(id)) continue;
-                List<string> list;
-                if (!children.TryGetValue(parentId, out list))
+                if (!children.TryGetValue(parentId, out var list))
                 {
                     list = new List<string>();
                     children[parentId] = list;
@@ -59,20 +58,19 @@ namespace SPTBeltArmbandInventory
             {
                 string current = pending.Pop();
                 if (!result.Add(current)) continue;
-                List<string> directChildren;
-                if (!children.TryGetValue(current, out directChildren)) continue;
+                if (!children.TryGetValue(current, out var directChildren)) continue;
                 for (int i = 0; i < directChildren.Count; i++) pending.Push(directChildren[i]);
             }
 
             return result;
         }
 
-        public static bool ShouldKeep(string itemId, IEnumerable<BeltInventoryNode> nodes)
+        public static bool ShouldKeep(string? itemId, IEnumerable<BeltInventoryNode>? nodes)
         {
             return !string.IsNullOrEmpty(itemId) && GetKeptTreeIds(nodes).Contains(itemId);
         }
 
-        public static string[] FilterLostInsuredIds(IEnumerable<string> lostIds, IEnumerable<BeltInventoryNode> nodes)
+        public static string[] FilterLostInsuredIds(IEnumerable<string>? lostIds, IEnumerable<BeltInventoryNode>? nodes)
         {
             var kept = GetKeptTreeIds(nodes);
             if (kept.Count == 0) return lostIds == null ? Array.Empty<string>() : lostIds.ToArray();
