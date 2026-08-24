@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 
 namespace SPTQuestPlanner.Client
 {
-    [BepInPlugin("com.admiralam.spt.questplanner", "Quest planner MOD SPT", "0.9.0")]
+    [BepInPlugin("com.admiralam.spt.questplanner", "Quest planner MOD SPT", "0.9.1")]
     public sealed class Plugin : BaseUnityPlugin
     {
         private CancellationTokenSource cancellation;
@@ -45,7 +45,7 @@ namespace SPTQuestPlanner.Client
             window = new PlannerRaidPlanWindow(Presentation, () => Cache == null ? 0L : Cache.Revision);
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
             StartInitialLoad();
-            Logger.LogInfo("Quest planner MOD SPT v0.9.0 loaded (raid-plan window + recommendations + bounded lifecycle refresh).");
+            Logger.LogInfo("Quest planner MOD SPT v0.9.1 loaded (transport/runtime/UI blocker fixes).");
         }
 
         private void Update()
