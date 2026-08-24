@@ -37,8 +37,9 @@ public sealed class PlannerLocationIndexTests
         """;
 
         PlannerLocationIndex index = PlannerLocationIndexBuilder.Build(json);
-        PlannerLocationBucket customs = Assert.NotNull(index.GetLocation("customs"));
-        PlannerLocationObjective kill = Assert.Single(customs.Objectives.Where(value => value.ConditionId == "kill"));
+        PlannerLocationBucket customs = index.GetLocation("customs");
+        Assert.NotNull(customs);
+        PlannerLocationObjective kill = Assert.Single(customs.Objectives, value => value.ConditionId == "kill");
         Assert.Equal(PlannerObjectiveKind.Kill, kill.Kind);
         Assert.Contains("customs", kill.LocationIds, StringComparer.OrdinalIgnoreCase);
     }
@@ -65,7 +66,8 @@ public sealed class PlannerLocationIndexTests
         """;
 
         PlannerLocationIndex index = PlannerLocationIndexBuilder.Build(json);
-        PlannerLocationBucket woods = Assert.NotNull(index.GetLocation("woods"));
+        PlannerLocationBucket woods = index.GetLocation("woods");
+        Assert.NotNull(woods);
         Assert.Single(woods.Objectives);
         Assert.Equal(PlannerObjectiveKind.Visit, woods.Objectives[0].Kind);
     }
