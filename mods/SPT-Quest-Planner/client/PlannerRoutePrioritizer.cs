@@ -68,13 +68,14 @@ namespace SPTQuestPlanner.Client
             foreach (string targetQuestId in targetQuestIds)
             {
                 if (string.IsNullOrWhiteSpace(targetQuestId) || !seen.Add(targetQuestId)) continue;
+                PlannerQuestClientState questState = state.GetQuest(targetQuestId);
+                if (questState == null) continue;
                 if (values.Count >= MaxCandidates)
                     throw new InvalidOperationException("Quest route prioritization exceeds bounded candidate limit of " + MaxCandidates + ".");
 
                 IReadOnlyList<string> path = query.GetIncompletePrerequisitePlan(targetQuestId);
                 PlannerPathItemPlan itemPlan = items.BuildForTarget(targetQuestId);
                 IReadOnlyList<string> blockers = query.GetImmediateBlockers(targetQuestId);
-                PlannerQuestClientState questState = state.GetQuest(targetQuestId);
 
                 double exactOutstanding = 0d;
                 double alternativeOutstanding = 0d;
@@ -96,7 +97,7 @@ namespace SPTQuestPlanner.Client
 
                 values.Add(new MutablePriority(
                     targetQuestId,
-                    questState == null ? 0 : questState.Disposition,
+                    questState.Disposition,
                     path.Count,
                     blockers.Count,
                     exactOutstanding,
