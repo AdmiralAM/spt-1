@@ -6,13 +6,7 @@ namespace SPTQuestPlanner.Client
 {
     public sealed class PlannerRaidOpportunity
     {
-        public PlannerRaidOpportunity(
-            string locationId,
-            IReadOnlyList<string> questIds,
-            IReadOnlyList<PlannerLocationObjective> objectives,
-            IReadOnlyList<PlannerRaidObjective> raidObjectives,
-            int locationSpecificObjectiveCount,
-            int globalObjectiveCount)
+        public PlannerRaidOpportunity(string locationId, IReadOnlyList<string> questIds, IReadOnlyList<PlannerLocationObjective> objectives, IReadOnlyList<PlannerRaidObjective> raidObjectives, int locationSpecificObjectiveCount, int globalObjectiveCount)
         {
             LocationId = locationId ?? string.Empty;
             QuestIds = questIds ?? Array.Empty<string>();
@@ -21,7 +15,6 @@ namespace SPTQuestPlanner.Client
             LocationSpecificObjectiveCount = locationSpecificObjectiveCount;
             GlobalObjectiveCount = globalObjectiveCount;
         }
-
         public string LocationId { get; private set; }
         public IReadOnlyList<string> QuestIds { get; private set; }
         public IReadOnlyList<PlannerLocationObjective> Objectives { get; private set; }
@@ -36,14 +29,7 @@ namespace SPTQuestPlanner.Client
         public int FindCount { get { return Count(PlannerRaidObjectiveKind.Find); } }
         public int ExtractCount { get { return Count(PlannerRaidObjectiveKind.Extract); } }
         public int OtherCount { get { return Count(PlannerRaidObjectiveKind.Other); } }
-
-        private int Count(PlannerRaidObjectiveKind kind)
-        {
-            int count = 0;
-            for (int i = 0; i < RaidObjectives.Count; i++)
-                if (RaidObjectives[i].Kind == kind) count++;
-            return count;
-        }
+        private int Count(PlannerRaidObjectiveKind kind) { int count = 0; for (int i = 0; i < RaidObjectives.Count; i++) if (RaidObjectives[i].Kind == kind) count++; return count; }
     }
 
     public static class PlannerRaidOpportunityBuilder
@@ -51,32 +37,19 @@ namespace SPTQuestPlanner.Client
         private const int DispositionAvailable = 3;
         private const int DispositionActive = 4;
 
-        public static IReadOnlyList<PlannerRaidOpportunity> Build(
-            PlannerLocationIndex locations,
-            PlannerClientIndex state,
-            bool includeAvailable = false,
-            int maxLocations = 64,
-            int maxObjectivesPerLocation = 512)
+        public static IReadOnlyList<PlannerRaidOpportunity> Build(PlannerLocationIndex locations, PlannerClientIndex state, bool includeAvailable = false, int maxLocations = 64, int maxObjectivesPerLocation = 512)
         {
             if (locations == null) throw new ArgumentNullException("locations");
             if (state == null) throw new ArgumentNullException("state");
             if (maxLocations <= 0) throw new ArgumentOutOfRangeException("maxLocations");
             if (maxObjectivesPerLocation <= 0) throw new ArgumentOutOfRangeException("maxObjectivesPerLocation");
 
-            PlannerLocationObjective[] activeGlobal = locations.GlobalObjectives
-                .Where(value => IsRaidActionable(value) && IsRelevantQuest(state, value.QuestId, includeAvailable) && !IsCompleted(state, value))
-                .ToArray();
-
+            PlannerLocationObjective[] activeGlobal = locations.GlobalObjectives.Where(value => IsRaidActionable(value) && IsRelevantQuest(state, value.QuestId, includeAvailable) && !IsCompleted(state, value)).ToArray();
             List<PlannerRaidOpportunity> result = new List<PlannerRaidOpportunity>();
-            foreach (KeyValuePair<string, PlannerLocationBucket> pair in locations.Locations
-                .OrderBy(value => value.Key, StringComparer.OrdinalIgnoreCase))
+            foreach (KeyValuePair<string, PlannerLocationBucket> pair in locations.Locations.OrderBy(value => value.Key, StringComparer.OrdinalIgnoreCase))
             {
                 if (result.Count >= maxLocations) break;
-
-                List<PlannerLocationObjective> specific = pair.Value.Objectives
-                    .Where(value => IsRaidActionable(value) && IsRelevantQuest(state, value.QuestId, includeAvailable) && !IsCompleted(state, value))
-                    .Take(maxObjectivesPerLocation)
-                    .ToList();
+                List<PlannerLocationObjective> specific = pair.Value.Objectives.Where(value => IsRaidActionable(value) && IsRelevantQuest(state, value.QuestId, includeAvailable) && !IsCompleted(state, value)).Take(maxObjectivesPerLocation).ToList();
                 if (specific.Count == 0) continue;
 
                 HashSet<string> identities = new HashSet<string>(StringComparer.Ordinal);
@@ -86,35 +59,12 @@ namespace SPTQuestPlanner.Client
                 AddUnique(combined, identities, activeGlobal, maxObjectivesPerLocation);
                 int globalCount = combined.Count - specificCount;
 
-                string[] questIds = combined
-                    .Select(value => value.QuestId)
-                    .Where(value => !string.IsNullOrWhiteSpace(value))
-                    .Distinct(StringComparer.Ordinal)
-                    .OrderBy(value => value, StringComparer.Ordinal)
-                    .ToArray();
-
-                PlannerRaidObjective[] raidObjectives = combined
-                    .Select(value => PlannerRaidObjectiveNormalizer.Normalize(value, pair.Key))
-                    .OrderBy(value => value.Kind)
-                    .ThenBy(value => value.QuestId, StringComparer.Ordinal)
-                    .ThenBy(value => value.ConditionId, StringComparer.Ordinal)
-                    .ToArray();
-
-                result.Add(new PlannerRaidOpportunity(
-                    pair.Key,
-                    questIds,
-                    combined.ToArray(),
-                    raidObjectives,
-                    specificCount,
-                    globalCount));
+                string[] questIds = combined.Select(value => value.QuestId).Where(value => !string.IsNullOrWhiteSpace(value)).Distinct(StringComparer.Ordinal).OrderBy(value => value, StringComparer.Ordinal).ToArray();
+                PlannerRaidObjective[] raidObjectives = combined.Select(value => PlannerRaidObjectiveNormalizer.Normalize(value, pair.Key, GetProgress(state, value))).OrderBy(value => value.Kind).ThenBy(value => value.QuestId, StringComparer.Ordinal).ThenBy(value => value.ConditionId, StringComparer.Ordinal).ToArray();
+                result.Add(new PlannerRaidOpportunity(pair.Key, questIds, combined.ToArray(), raidObjectives, specificCount, globalCount));
             }
 
-            return result
-                .OrderByDescending(value => value.QuestCount)
-                .ThenByDescending(value => value.LocationSpecificObjectiveCount)
-                .ThenByDescending(value => value.ObjectiveCount)
-                .ThenBy(value => value.LocationId, StringComparer.OrdinalIgnoreCase)
-                .ToArray();
+            return result.OrderByDescending(value => value.QuestCount).ThenByDescending(value => value.LocationSpecificObjectiveCount).ThenByDescending(value => value.ObjectiveCount).ThenBy(value => value.LocationId, StringComparer.OrdinalIgnoreCase).ToArray();
         }
 
         private static bool IsRelevantQuest(PlannerClientIndex state, string questId, bool includeAvailable)
@@ -133,25 +83,23 @@ namespace SPTQuestPlanner.Client
             return true;
         }
 
+        private static PlannerConditionProgress GetProgress(PlannerClientIndex state, PlannerLocationObjective objective)
+        {
+            if (objective == null) return null;
+            PlannerConditionProgress progress = state.GetConditionProgress(objective.ConditionId);
+            if (progress == null && !string.IsNullOrWhiteSpace(objective.ParentConditionId)) progress = state.GetConditionProgress(objective.ParentConditionId);
+            if (progress != null && !string.IsNullOrWhiteSpace(progress.SourceQuestId) && !string.Equals(progress.SourceQuestId, objective.QuestId, StringComparison.Ordinal)) return null;
+            return progress;
+        }
+
         private static bool IsCompleted(PlannerClientIndex state, PlannerLocationObjective objective)
         {
             if (objective == null || !objective.RequiredValue.HasValue || objective.RequiredValue.Value <= 0d) return false;
-
-            PlannerConditionProgress progress = state.GetConditionProgress(objective.ConditionId);
-            if (progress == null && !string.IsNullOrWhiteSpace(objective.ParentConditionId))
-                progress = state.GetConditionProgress(objective.ParentConditionId);
-            if (progress == null) return false;
-            if (!string.IsNullOrWhiteSpace(progress.SourceQuestId) && !string.Equals(progress.SourceQuestId, objective.QuestId, StringComparison.Ordinal))
-                return false;
-
-            return progress.Value >= objective.RequiredValue.Value;
+            PlannerConditionProgress progress = GetProgress(state, objective);
+            return progress != null && progress.Value >= objective.RequiredValue.Value;
         }
 
-        private static void AddUnique(
-            List<PlannerLocationObjective> output,
-            HashSet<string> identities,
-            IEnumerable<PlannerLocationObjective> source,
-            int limit)
+        private static void AddUnique(List<PlannerLocationObjective> output, HashSet<string> identities, IEnumerable<PlannerLocationObjective> source, int limit)
         {
             foreach (PlannerLocationObjective value in source)
             {
