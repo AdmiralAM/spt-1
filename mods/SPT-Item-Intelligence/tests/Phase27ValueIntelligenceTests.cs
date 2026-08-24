@@ -26,6 +26,21 @@ static class Phase27ValueIntelligenceTests
         Expect(flea.ValueLine == "Value: 142,479 ₽ · Flea", "selected flea value becomes the primary line", ref assertions);
         Expect(Contains(flea, ItemTooltipMode.Full, "Therapist: 118,230 ₽"), "Full preserves named best trader as the alternate source", ref assertions);
 
+        ItemPresentationStore fallbackStore = new ItemPresentationStore();
+        fallbackStore.Refresh(ItemRequirementStateIndex.Empty, ItemPriceIndexBuilder.Build(new[]
+        {
+            new ItemPriceInput("FLEA-ONLY", 0, "", 75000, 0),
+            new ItemPriceInput("TRADER-ONLY", 64000, "Mechanic", 0, 0)
+        }));
+        ItemHoverText vendorFallback = new ItemHoverTextFormatter().Format(
+            new ItemHoverState(fallbackStore.Get("flea-only")), ItemValueMode.Vendor);
+        Expect(vendorFallback.ValueLine == "Value: 75,000 ₽ · Flea" && vendorFallback.Secondary.Length == 0,
+            "unavailable selected vendor source falls back to flea instead of rendering an empty value tooltip", ref assertions);
+        ItemHoverText fleaFallback = new ItemHoverTextFormatter().Format(
+            new ItemHoverState(fallbackStore.Get("trader-only")), ItemValueMode.Flea);
+        Expect(fleaFallback.ValueLine == "Value: 64,000 ₽ · Mechanic" && fleaFallback.Secondary.Length == 0,
+            "unavailable selected flea source falls back to the named trader", ref assertions);
+
         string root = FindRepositoryRoot();
         string renderer = File.ReadAllText(Path.Combine(root, "mods", "SPT-Item-Intelligence", "src", "PolishedTooltipRenderer.cs"));
         Expect(renderer.Contains("const long PriceGreen = 50000") && renderer.Contains("const long PriceRed = 100000") && renderer.Contains("const long PriceGold = 250000"),
