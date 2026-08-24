@@ -23,12 +23,16 @@ These archives are intentionally not committed to this repository because they a
 
 ## Proven baseline
 
-Current audit evidence:
+Current exact-path audit evidence:
 
 - 239 entries are declared by `bundles.json`;
-- all 239 declared bundle basenames are present across the six bundle archives;
-- 20 physical bundle files are not referenced by the manifest and require later classification;
-- duplicate basenames exist for `artem_top_29.bundle`, `artem_top_30.bundle`, and `artem_top_31.bundle` and require provenance review before cleanup;
+- all 239 declared paths are physically present across the six bundle archives;
+- 262 physical `.bundle` files exist across the six archives;
+- 23 physical files are outside the manifest;
+- 20 of those 23 have basenames not referenced anywhere in the manifest;
+- 3 are path-collision copies in `Hands/` named `artem_top_29.bundle`, `artem_top_30.bundle`, and `artem_top_31.bundle`, while the manifest selects the distinct `Tops/` versions;
 - custom Artem gear is not automatically injected into PBS pools.
+
+No out-of-manifest file is deleted until runtime/package validation proves it stale.
 
 This document defines provenance only. It does not authorize removal or rebalance of original content.
