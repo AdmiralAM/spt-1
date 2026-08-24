@@ -1,5 +1,6 @@
+using System.Collections;
 using System.Globalization;
-using System.Text.Json;
+using System.Reflection;
 
 namespace SPTQuestPlanner;
 
@@ -24,17 +25,17 @@ public static class QuestObjectiveExtractor
 
     public static QuestObjectiveExtractionResult Extract(object rawQuests)
     {
-        JsonElement root = JsonSerializer.SerializeToElement(rawQuests);
         List<QuestObjectiveFact> objectives = new();
         List<string> warnings = new();
 
-        foreach (JsonElement quest in EnumerateQuestObjects(root))
+        foreach (object quest in EnumerateQuestObjects(rawQuests))
         {
             string? questId = GetString(quest, "_id") ?? GetString(quest, "id");
             if (string.IsNullOrWhiteSpace(questId)) continue;
 
             string? questLocation = NormalizeLocationHint(GetString(quest, "location"));
-            if (!TryGetPropertyInsensitive(quest, "conditions", out JsonElement conditions)) continue;
+            object? conditions = GetMemberValue(quest, "conditions");
+            if (conditions is null) continue;
 
             ExtractPhase(questId, questLocation, conditions, "AvailableForStart", "Start", objectives, warnings);
             ExtractPhase(questId, questLocation, conditions, "AvailableForFinish", "Finish", objectives, warnings);
@@ -46,23 +47,20 @@ public static class QuestObjectiveExtractor
     private static void ExtractPhase(
         string questId,
         string? questLocation,
-        JsonElement conditions,
+        object conditions,
         string propertyName,
         string phase,
         List<QuestObjectiveFact> output,
         List<string> warnings)
     {
-        if (!TryGetPropertyInsensitive(conditions, propertyName, out JsonElement roots) || roots.ValueKind != JsonValueKind.Array)
-            return;
-
-        foreach (JsonElement condition in roots.EnumerateArray())
+        foreach (object condition in EnumerateValues(GetMemberValue(conditions, propertyName)))
             ExtractCondition(questId, questLocation, condition, phase, null, null, 0, output, warnings);
     }
 
     private static void ExtractCondition(
         string questId,
         string? questLocation,
-        JsonElement condition,
+        object condition,
         string phase,
         string? parentConditionId,
         double? parentRequiredValue,
@@ -70,7 +68,6 @@ public static class QuestObjectiveExtractor
         List<QuestObjectiveFact> output,
         List<string> warnings)
     {
-        if (condition.ValueKind != JsonValueKind.Object) return;
         if (depth > MaxConditionDepth)
         {
             warnings.Add($"Quest {questId}: condition nesting exceeded {MaxConditionDepth}; deeper objective data skipped");
@@ -99,22 +96,19 @@ public static class QuestObjectiveExtractor
                 effectiveRequiredValue));
         }
 
-        if (TryGetPropertyInsensitive(condition, "counter", out JsonElement counter) && counter.ValueKind == JsonValueKind.Object &&
-            TryGetPropertyInsensitive(counter, "conditions", out JsonElement nested) && nested.ValueKind == JsonValueKind.Array)
+        object? counter = GetMemberValue(condition, "counter");
+        if (counter is not null)
         {
-            foreach (JsonElement child in nested.EnumerateArray())
+            foreach (object child in EnumerateValues(GetMemberValue(counter, "conditions")))
                 ExtractCondition(questId, questLocation, child, phase, conditionId, effectiveRequiredValue, depth + 1, output, warnings);
         }
 
-        if (TryGetPropertyInsensitive(condition, "conditions", out JsonElement directNested) && directNested.ValueKind == JsonValueKind.Array)
-        {
-            foreach (JsonElement child in directNested.EnumerateArray())
-                ExtractCondition(questId, questLocation, child, phase, conditionId, effectiveRequiredValue, depth + 1, output, warnings);
-        }
+        foreach (object child in EnumerateValues(GetMemberValue(condition, "conditions")))
+            ExtractCondition(questId, questLocation, child, phase, conditionId, effectiveRequiredValue, depth + 1, output, warnings);
     }
 
     private static IReadOnlyList<string> ExtractLocationHints(
-        JsonElement condition,
+        object condition,
         string conditionType,
         IReadOnlyList<string> targets)
     {
@@ -136,21 +130,14 @@ public static class QuestObjectiveExtractor
         return hints.Order(StringComparer.OrdinalIgnoreCase).ToArray();
     }
 
-    private static void AddLocationProperty(JsonElement condition, string propertyName, HashSet<string> output)
+    private static void AddLocationProperty(object condition, string propertyName, HashSet<string> output)
     {
-        if (!TryGetPropertyInsensitive(condition, propertyName, out JsonElement value)) return;
-        if (value.ValueKind == JsonValueKind.String)
-        {
-            string? normalized = NormalizeLocationHint(value.GetString());
-            if (normalized is not null) output.Add(normalized);
-            return;
-        }
+        object? value = GetMemberValue(condition, propertyName);
+        if (value is null) return;
 
-        if (value.ValueKind != JsonValueKind.Array) return;
-        foreach (JsonElement item in value.EnumerateArray())
+        foreach (object item in EnumerateValues(value))
         {
-            if (item.ValueKind != JsonValueKind.String) continue;
-            string? normalized = NormalizeLocationHint(item.GetString());
+            string? normalized = NormalizeLocationHint(Convert.ToString(item, CultureInfo.InvariantCulture));
             if (normalized is not null) output.Add(normalized);
         }
     }
@@ -166,62 +153,116 @@ public static class QuestObjectiveExtractor
         return normalized;
     }
 
-    private static IEnumerable<JsonElement> EnumerateQuestObjects(JsonElement root)
+    private static IEnumerable<object> EnumerateQuestObjects(object? rawQuests)
     {
-        if (root.ValueKind == JsonValueKind.Array)
+        if (rawQuests is null) yield break;
+
+        if (rawQuests is IDictionary dictionary)
         {
-            foreach (JsonElement element in root.EnumerateArray())
-                if (element.ValueKind == JsonValueKind.Object) yield return element;
+            foreach (DictionaryEntry entry in dictionary)
+                if (entry.Value is not null) yield return entry.Value;
             yield break;
         }
 
-        if (root.ValueKind != JsonValueKind.Object) yield break;
-        foreach (JsonProperty property in root.EnumerateObject())
-            if (property.Value.ValueKind == JsonValueKind.Object) yield return property.Value;
-    }
-
-    private static IReadOnlyList<string> GetStringList(JsonElement element, string name)
-    {
-        if (!TryGetPropertyInsensitive(element, name, out JsonElement value)) return Array.Empty<string>();
-        if (value.ValueKind == JsonValueKind.String)
-            return value.GetString() is { Length: > 0 } one ? new[] { one } : Array.Empty<string>();
-        if (value.ValueKind != JsonValueKind.Array) return Array.Empty<string>();
-        return value.EnumerateArray()
-            .Where(item => item.ValueKind == JsonValueKind.String)
-            .Select(item => item.GetString())
-            .Where(item => !string.IsNullOrWhiteSpace(item))
-            .Cast<string>()
-            .ToArray();
-    }
-
-    private static string? GetString(JsonElement element, string name)
-    {
-        if (!TryGetPropertyInsensitive(element, name, out JsonElement value)) return null;
-        return value.ValueKind == JsonValueKind.String ? value.GetString() : null;
-    }
-
-    private static double? GetNumber(JsonElement element, string name)
-    {
-        if (!TryGetPropertyInsensitive(element, name, out JsonElement value)) return null;
-        if (value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out double number)) return number;
-        if (value.ValueKind == JsonValueKind.String &&
-            double.TryParse(value.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out number)) return number;
-        return null;
-    }
-
-    private static bool TryGetPropertyInsensitive(JsonElement element, string name, out JsonElement value)
-    {
-        if (element.ValueKind == JsonValueKind.Object)
+        if (rawQuests is IEnumerable enumerable && rawQuests is not string)
         {
-            foreach (JsonProperty property in element.EnumerateObject())
+            foreach (object? entry in enumerable)
             {
-                if (!property.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) continue;
-                value = property.Value;
-                return true;
+                if (entry is null) continue;
+                PropertyInfo? valueProperty = entry.GetType().GetProperty("Value", BindingFlags.Instance | BindingFlags.Public);
+                object? candidate = valueProperty is not null ? valueProperty.GetValue(entry) : entry;
+                if (candidate is not null) yield return candidate;
+            }
+            yield break;
+        }
+
+        yield return rawQuests;
+    }
+
+    private static IEnumerable<object> EnumerateValues(object? value)
+    {
+        if (value is null) yield break;
+        if (value is string)
+        {
+            yield return value;
+            yield break;
+        }
+        if (value is IEnumerable enumerable)
+        {
+            foreach (object? item in enumerable)
+                if (item is not null) yield return item;
+            yield break;
+        }
+        yield return value;
+    }
+
+    private static object? GetMemberValue(object? instance, string name)
+    {
+        if (instance is null) return null;
+
+        if (instance is IDictionary dictionary)
+        {
+            foreach (DictionaryEntry entry in dictionary)
+            {
+                if (entry.Key?.ToString()?.Equals(name, StringComparison.OrdinalIgnoreCase) == true)
+                    return entry.Value;
             }
         }
 
-        value = default;
-        return false;
+        Type type = instance.GetType();
+        PropertyInfo? property = type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+            .FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && p.GetIndexParameters().Length == 0);
+        if (property is not null)
+        {
+            try { return property.GetValue(instance); }
+            catch { }
+        }
+
+        FieldInfo? field = type.GetFields(BindingFlags.Instance | BindingFlags.Public)
+            .FirstOrDefault(f => f.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        if (field is not null)
+        {
+            try { return field.GetValue(instance); }
+            catch { }
+        }
+
+        return null;
+    }
+
+    private static IReadOnlyList<string> GetStringList(object instance, string name)
+    {
+        object? value = GetMemberValue(instance, name);
+        if (value is null) return Array.Empty<string>();
+        if (value is string one) return string.IsNullOrWhiteSpace(one) ? Array.Empty<string>() : new[] { one };
+
+        List<string> result = new();
+        foreach (object item in EnumerateValues(value))
+        {
+            string? converted = Convert.ToString(item, CultureInfo.InvariantCulture);
+            if (!string.IsNullOrWhiteSpace(converted)) result.Add(converted);
+        }
+        return result;
+    }
+
+    private static string? GetString(object instance, string name)
+    {
+        object? value = GetMemberValue(instance, name);
+        if (value is null) return null;
+        if (value is string text) return string.IsNullOrWhiteSpace(text) ? null : text;
+        string? converted = Convert.ToString(value, CultureInfo.InvariantCulture);
+        return string.IsNullOrWhiteSpace(converted) ? null : converted;
+    }
+
+    private static double? GetNumber(object instance, string name)
+    {
+        object? value = GetMemberValue(instance, name);
+        if (value is null) return null;
+        try { return Convert.ToDouble(value, CultureInfo.InvariantCulture); }
+        catch
+        {
+            return double.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), NumberStyles.Float, CultureInfo.InvariantCulture, out double parsed)
+                ? parsed
+                : null;
+        }
     }
 }
