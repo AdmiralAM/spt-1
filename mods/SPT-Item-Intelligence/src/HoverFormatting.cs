@@ -80,6 +80,10 @@ namespace SPTItemIntelligence
                 : CountLine("Owned", OwnedCount);
             BestSourceLine = bestSource ?? string.Empty;
 
+            ItemRelevanceState relevance = ItemRelevanceRegistry.Get(TemplateId);
+            CraftLine = CountLine("Craft", relevance.CraftCount);
+            BarterLine = CountLine("Barter", relevance.BarterCount);
+
             List<string> details = new List<string>();
             List<string> detailed = new List<string>();
             if (requirementDetails != null)
@@ -127,6 +131,8 @@ namespace SPTItemIntelligence
         public string HideoutLine { get; }
         public string KeepLine { get; }
         public string PerSlotLine { get; }
+        public string CraftLine { get; }
+        public string BarterLine { get; }
         public string OwnedLine { get; }
         public string BestSourceLine { get; }
         public IReadOnlyList<string> RequirementDetailLines { get; }
@@ -162,6 +168,8 @@ namespace SPTItemIntelligence
             {
                 if (TryLine(Secondary, requestedIndex, ref current, out found)) return found;
                 if (TryLine(PerSlotLine, requestedIndex, ref current, out found)) return found;
+                if (TryLine(CraftLine, requestedIndex, ref current, out found)) return found;
+                if (TryLine(BarterLine, requestedIndex, ref current, out found)) return found;
             }
             if (mode != ItemTooltipMode.Minimal)
             {
