@@ -1,6 +1,6 @@
 # SPT Item Intelligence
 
-Standalone item-intelligence module for SPT 4.1.x. Stable client/server version: **0.10.1**. Physical SPT 4.1.3 runtime acceptance is complete; active feature development is closed. The module is now maintenance-only unless a concrete runtime defect or explicitly approved future enhancement justifies reopening work.
+Standalone item-intelligence module for SPT 4.1.x. Stable client/server version: **0.11.0**. Physical SPT 4.1.3 runtime acceptance is complete. Active feature development is closed; the module is maintenance-only unless a concrete runtime defect or explicitly approved future enhancement justifies reopening work.
 
 ## Purpose
 
@@ -8,44 +8,50 @@ Item Intelligence attaches persistent information markers to supported EFT item 
 
 Current presentation contracts include:
 
-- persistent per-item `ⓘ` markers;
-- requirement-priority states for current quests, hideout needs, future quests, and default/no unmet requirement;
+- persistent per-item `ⓘ` markers with optional soft radial halo;
+- requirement-priority states: `Quest Now → Hideout → Quest Later → Default`;
 - compact Minimal / Normal / Detailed / Full tooltip modes;
-- owned-versus-required counts and concrete quest/hideout targets;
-- stack-aware item value;
-- Flea or Best Trader value-source selection;
+- owned-versus-required counts, FIR-aware quest allocation, `Keep ×N`, and concrete quest/hideout targets;
+- simultaneous Flea and best named Trader valuation in Full mode;
+- value-per-slot in Full mode;
+- price-amount bands: below 50k white, 50k+ green, 100k+ red, 250k+ gold;
+- compact Full-only `Craft ×N` / `Barter ×N` relevance;
+- fallback to the available Flea/Trader source when the preferred source has no price;
 - semantic requirement colors;
-- optional soft radial marker halo using one shared texture layer;
 - F12 controls for marker appearance and tooltip presentation.
 
-Marker state is requirement-driven, not price-driven. Value data does not change requirement classification.
+Marker state remains requirement-driven, not price-driven. Price colors apply to valuation text only and do not change requirement classification.
 
 ## Data path
 
-The server publishes a bounded snapshot of authoritative SPT profile/database data. The client fetches that snapshot outside the render hot path, builds immutable/cached requirement and presentation indexes, and refreshes registered item markers when new data is published.
+The server publishes one bounded snapshot of authoritative SPT profile/database data. The client fetches that snapshot outside the render hot path, builds immutable/cached requirement, price, relevance, and presentation indexes, and refreshes registered item markers from those cached states.
 
-The requirement path is:
+`SPT profile/database → server snapshot → serialized payload → client bootstrap → cached indexes → presentation classification`
 
-`SPT profile/database → server snapshot → serialized payload → client bootstrap → requirement index → outstanding calculation → presentation classification`
-
-Runtime diagnostics are used only when a boundary in that path must be proven. Unit tests alone are not treated as proof of live SPT data flow.
+Craft/barter relevance is precomputed server-side from hideout recipes and trader barter schemes while the existing snapshot is built. No additional endpoint, hover request, per-frame inventory scan, or database polling is used.
 
 ## UI lifecycle and performance
 
-Supported `ItemView`/`ItemCell` lifecycle hooks register a child marker on each live item cell and remove it during cleanup. Hovering the item body does not open the Item Intelligence tooltip; the tooltip is associated with the marker itself.
+Supported `ItemView`/`ItemCell` lifecycle hooks register a child marker on each live item cell and remove it during cleanup. Hovering the item body does not open the Item Intelligence tooltip; the tooltip belongs to the marker itself.
 
-Network requests, reflection discovery, requirement aggregation, and text formatting are kept out of per-frame render paths. Cached state is invalidated only when the relevant source data or UI settings change.
+Network requests, reflection discovery, requirement aggregation, valuation work, and text formatting are kept out of per-frame render paths. Cached state is invalidated only when the relevant source data or UI settings change.
 
-The rejected legacy marker glow based on Unity UI `Outline` duplication was removed. The accepted halo is a single soft radial image layer rendered behind the glyph, backed by one shared/static texture and without per-frame texture generation or multi-pass glyph duplication.
+The accepted marker glow is a single soft radial image layer behind the glyph, backed by one shared/static texture. The rejected legacy Unity UI `Outline` duplication approach is not used.
 
 ## Version and naming
 
 The stable release uses one synchronized module version across both halves:
 
-- client: **SPT Item Intelligence 0.10.1**;
-- server: **SPT Item Intelligence Server 0.10.1**.
+- client: **SPT Item Intelligence 0.11.0**;
+- server: **SPT Item Intelligence Server 0.11.0**.
 
-Runtime folder and assembly names are intentionally retained for installation compatibility.
+Runtime folder and assembly installation names remain intentionally compatible with the existing package layout.
+
+## Deferred items
+
+`On You` is intentionally not part of 0.11.0. A one-shot profile implementation was removed because it could become stale after inventory/equipment changes; it should only return with a proven event-driven inventory lifecycle.
+
+Wishlist, prerequisite-distance, and encyclopedia-style item statistics remain optional future ideas, not active backlog or release blockers.
 
 ## Installation
 
