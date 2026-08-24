@@ -1,6 +1,6 @@
 # SPT Item Intelligence
 
-Standalone item-intelligence module for SPT 4.1.x. Current source version: **0.10.1**. The module remains under active development and runtime validation.
+Standalone item-intelligence module for SPT 4.1.x. Current source version: **0.10.1**. The module is functionally stable from physical SPT 4.1.3 runtime testing and is now in final polish / selective UX-evaluation mode rather than fundamental feature development.
 
 ## Purpose
 
@@ -33,6 +33,8 @@ Runtime diagnostics are used when a boundary in that path must be proven. Unit t
 Supported `ItemView`/`ItemCell` lifecycle hooks register a child marker on each live item cell and remove it during cleanup. Hovering the item body does not open the Item Intelligence tooltip; the tooltip is associated with the marker itself.
 
 Network requests, reflection discovery, requirement aggregation, and text formatting are kept out of per-frame render paths. Cached state is invalidated only when the relevant source data or UI settings change.
+
+The rejected legacy marker glow used Unity UI `Outline` duplication and produced visibly offset glyph copies in runtime. Any replacement halo must be a single soft radial layer rendered behind the glyph, preferably one shared/static sprite or texture reused by all markers. It must not add per-frame texture generation, multi-pass outline duplication, global scans, or network/reflection work. If a clean low-cost halo cannot be proven in runtime, glow remains disabled.
 
 ## Installation
 
