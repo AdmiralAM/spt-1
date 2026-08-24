@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="WTT-ServerCommonLib" Version="3.0.4" />
+    <PackageReference Include="WTT-ServerCommonLib" Version="3.0.6" />
   </ItemGroup>
 
   <Target Name="CopyArtemResources" AfterTargets="Build" Condition="Exists('$(ProjectDir)Resources')">
