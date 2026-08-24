@@ -12,6 +12,7 @@ namespace SPTItemIntelligence
         static GUISkin cachedSkin;
         static GUIStyle cachedLabel;
         static GUIStyle cachedSemanticLabel;
+        static readonly GUIContent measureContent = new GUIContent();
         static string[] lineBuffer = Array.Empty<string>();
         static float[] rowHeightBuffer = Array.Empty<float>();
 
@@ -41,7 +42,8 @@ namespace SPTItemIntelligence
                 string line = DisplayLine(text.GetLine(mode, i), mode);
                 lineBuffer[i] = line;
                 if (line.Length == 0) continue;
-                naturalWidth = Mathf.Max(naturalWidth, label.CalcSize(new GUIContent(line)).x);
+                measureContent.text = line;
+                naturalWidth = Mathf.Max(naturalWidth, label.CalcSize(measureContent).x);
             }
 
             float minimumWidth = 200f * scale;
@@ -60,7 +62,8 @@ namespace SPTItemIntelligence
                 }
                 else
                 {
-                    float wrappedHeight = label.CalcHeight(new GUIContent(lineBuffer[i]), textWidth);
+                    measureContent.text = lineBuffer[i];
+                    float wrappedHeight = label.CalcHeight(measureContent, textWidth);
                     rowHeightBuffer[i] = Mathf.Max(baseLineHeight, wrappedHeight + 2f * scale);
                 }
                 contentHeight += rowHeightBuffer[i];
