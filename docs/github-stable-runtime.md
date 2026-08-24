@@ -1,34 +1,72 @@
-# GitHub stable/runtime model
+# GitHub source / stable / runtime model
+
+## Purpose
+
+The repository is a multi-mod source repository. `main` is the authoritative development source tree. Generated build products, transient validation logs and CI run metadata are not source and should not be persisted in `main`.
 
 ## Branch roles
 
-| Branch | Contents | CI behavior |
-| --- | --- | --- |
-| `main` | Active source for every independent mod | Triggers the complete suite gate |
-| `stable` | Exact multi-mod commit that passed the gate | Advanced only after all builds and artifacts succeed |
-| `runtime` | Install-only SPT Tactical HUD | Rebuilt from scratch; never contains Item Intelligence |
-| `runtime-item-intelligence` | Install-only SPT Item Intelligence | Rebuilt from scratch; never contains Tactical HUD |
-| `archive/v1.13.0` | Frozen full Tactical HUD 1.13.0 reserve | Never advanced by CI |
+| Branch | Role |
+| --- | --- |
+| `main` | Active source, tests, maintained assets and documentation for independent mods |
+| `stable` | CI-green source commit promoted by the suite publication workflow |
+| `runtime` | Install-only SPT Tactical HUD channel |
+| `runtime-item-intelligence` | Install-only SPT Item Intelligence channel |
+| `runtime-pause` | Install-only SPT Pause channel |
+| `runtime-belt-armband` | Install-only SPT Belt/Armband Inventory channel |
+| `archive/v1.13.0` | Frozen Tactical HUD 1.13.0 reserve |
 
-The split runtime channels prevent an update to one mod from silently installing the other. Each uses a version-independent BepInEx plugin directory while its assembly and manifest retain the real semantic version.
+Feature, fix, diagnostic and archaeology branches are temporary development branches. They are not release channels and should be removed after their useful changes are merged, superseded or intentionally archived.
 
-## Current releases
+## Current module set
 
-| Mod | Client version | Server version | Runtime path |
-| --- | --- | --- | --- |
-| SPT Tactical HUD | `1.13.2` | `1.13.0` optional | `BepInEx/plugins/SPT Tactical HUD/` |
-| SPT Item Intelligence | `0.6.0` | `0.3.0` | `BepInEx/plugins/SPT Item Intelligence/` |
+The current source tree contains these independent long-term modules under `mods/`:
 
-Tactical HUD `1.14.0` is intentionally retired because it mixed the initial Item Intelligence source into the HUD assembly. No `1.14.0` runtime remains after the corrected publication.
+- `SPT-Tactical-HUD`
+- `SPT-Item-Intelligence`
+- `SPT-Pause`
+- `SPT-Belt-Armband-Inventory`
+- `SPT-Quest-Planner`
 
-## Promotion gate
+The root `README.md` is the canonical human-readable index for current versions and module scope. Module-specific READMEs own implementation and development details.
 
-A source commit is promoted only after:
+## Repository hygiene
 
-1. Tactical HUD asset generation, optics and hot-path checks pass;
-2. Item Intelligence regression assertions pass;
-3. Tactical HUD client, Tactical HUD server and Item Intelligence compile successfully;
-4. both independent install packages exist;
-5. both workflow artifacts upload successfully.
+`main` should contain only material that is useful for development, review, maintenance or reproducible publication.
 
-Only then does CI atomically advance `stable` and regenerate both runtime branches. Failed or superseded builds cannot replace a published channel.
+Keep in `main`:
+
+- source code;
+- project/build definitions;
+- tests and deterministic validation scripts;
+- maintained runtime assets that are part of a module's source package;
+- documentation;
+- GitHub workflow definitions.
+
+Do not persist in `main`:
+
+- `bin/`, `obj/`, IDE state or local dependency caches;
+- transient build/test logs;
+- CI run IDs or generated validation-status files;
+- temporary diagnostic dumps;
+- install ZIPs or duplicate compiled packages when the same output is already published as a CI artifact/runtime channel.
+
+The root `.gitignore` is the baseline guardrail. Workflows must also avoid force-adding ignored/generated material back into source history.
+
+## Build and publication model
+
+CI may create working directories such as `build-output/` and `build-status/` during a run. These are CI workspace data, not source-of-truth directories.
+
+Successful package outputs belong in GitHub Actions artifacts and, for maintained install channels, the corresponding runtime branch. A successful suite publication advances `stable` to the validated source commit and regenerates the relevant runtime branches from validated build output.
+
+The same compiled package should not also be committed to `main` merely as build evidence. GitHub Actions already records the workflow result and artifact provenance.
+
+## Promotion rule
+
+A source commit may be promoted only after the validations required for the affected maintained modules succeed. Promotion must never depend on a follow-up commit whose only purpose is storing generated logs, package copies or CI metadata.
+
+`stable` therefore represents validated source, while runtime branches and Actions artifacts represent validated installable output.
+
+## Historical note
+
+Tactical HUD `1.14.0` remains retired because it mixed early Item Intelligence code into the HUD assembly. The maintained Tactical HUD line returned to the independent `1.13.x` source/runtime model. Historical release details belong in the affected module documentation rather than in this repository-governance document.
