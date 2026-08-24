@@ -29,7 +29,12 @@ namespace SPTQuestPlanner.Client
         public void Toggle()
         {
             if (visible) Hide();
-            else visible = true;
+            else
+            {
+                visible = true;
+                PlannerRaidPlanUiState state = presentation.UiState;
+                if (state != null && state.HasActivePlan) state.SelectLocation(state.ActiveLocationId);
+            }
         }
 
         public void Hide()
@@ -148,7 +153,7 @@ namespace SPTQuestPlanner.Client
             GUILayout.BeginHorizontal("box");
             GUILayout.Label("ACTIVE RAID PLAN: " + PlannerDisplayNames.Location(active.LocationId) +
                             "  |  " + active.QuestCount + " quest(s) / " + active.ObjectiveCount + " objective(s)" +
-                            (active.PreparationReady ? "  |  PREP READY" : "  |  PREPARATION NEEDED"), GUILayout.ExpandWidth(true));
+                            "  |  " + PreparationStatus(active), GUILayout.ExpandWidth(true));
             if (GUILayout.Button("Clear", GUILayout.Width(60f))) uiState.ClearActivePlan();
             GUILayout.EndHorizontal();
         }
@@ -163,9 +168,7 @@ namespace SPTQuestPlanner.Client
             GUILayout.Label("RECOMMENDED RAID — " + PlannerDisplayNames.Location(recommended.LocationId));
             GUILayout.Label(recommended.QuestCount + " quest(s) / " + recommended.ObjectiveCount + " proven objective(s)");
             GUILayout.Label("Why: top-ranked combination of preparation readiness and actionable quest density.");
-            GUILayout.Label(recommended.PreparationReady
-                ? "Preparation: no proven bring-items are missing."
-                : "Preparation: missing " + recommended.MissingBringTemplateCount + " proven item type(s).");
+            GUILayout.Label(PreparationSummary(recommended));
             GUILayout.EndVertical();
 
             bool alreadyActive = active != null && string.Equals(active.LocationId, recommended.LocationId, StringComparison.OrdinalIgnoreCase);
@@ -203,9 +206,8 @@ namespace SPTQuestPlanner.Client
                 PlannerRaidPlanCard card = viewModel.Cards[i];
                 bool selected = string.Equals(card.LocationId, uiState.SelectedLocationId, StringComparison.OrdinalIgnoreCase);
                 bool active = string.Equals(card.LocationId, uiState.ActiveLocationId, StringComparison.OrdinalIgnoreCase);
-                string status = card.PreparationReady ? "PREP READY" : "MISSING " + card.MissingBringTemplateCount;
                 string label = (active ? "ACTIVE  " : "#" + card.Rank + "  ") + PlannerDisplayNames.Location(card.LocationId) + "\n" +
-                               card.QuestCount + " quest(s) / " + card.ObjectiveCount + " objective(s)  [" + status + "]";
+                               card.QuestCount + " quest(s) / " + card.ObjectiveCount + " objective(s)  [" + PreparationStatus(card) + "]";
                 if (GUILayout.Toggle(selected, label, "Button", GUILayout.MinHeight(48f)) && !selected)
                     uiState.SelectLocation(card.LocationId);
             }
@@ -231,9 +233,7 @@ namespace SPTQuestPlanner.Client
             GUILayout.EndHorizontal();
 
             GUILayout.Label(card.QuestCount + " relevant quest(s)   " + card.ObjectiveCount + " proven objective(s)");
-            GUILayout.Label(card.PreparationReady
-                ? "Preparation: no proven bring-items missing."
-                : "Preparation: missing " + card.MissingBringTemplateCount + " proven item type(s).");
+            GUILayout.Label(PreparationSummary(card));
             if (card.KnownRemainingWork > 0d) GUILayout.Label("Known remaining counter work: " + FormatNumber(card.KnownRemainingWork));
 
             PlannerClientCache cache = Plugin.Cache;
@@ -243,7 +243,7 @@ namespace SPTQuestPlanner.Client
 
             GUILayout.Space(6f);
             GUILayout.Label("BEFORE RAID");
-            if (card.BringNeeds.Count == 0) GUILayout.Label("✓ No proven bring-items required for this plan.");
+            if (card.BringNeeds.Count == 0) GUILayout.Label("✓ No exact proven bring-items are required for this plan.");
             else
             {
                 for (int i = 0; i < card.BringNeeds.Count; i++)
@@ -254,6 +254,8 @@ namespace SPTQuestPlanner.Client
                     GUILayout.Label(marker + itemLabel + "  need " + FormatNumber(need.Required) + " / owned " + FormatNumber(need.Owned) + " / missing " + FormatNumber(need.Missing));
                 }
             }
+            if (card.UnresolvedPreparationCount > 0)
+                GUILayout.Label("⚠ " + card.UnresolvedPreparationCount + " preparation requirement(s) need manual verification; the source condition allows multiple/ambiguous targets.");
 
             GUILayout.Space(10f);
             GUILayout.Label("IN RAID CHECKLIST");
@@ -283,7 +285,7 @@ namespace SPTQuestPlanner.Client
 
             try
             {
-                PlannerRecommendationSnapshot snapshot = Plugin.GetRecommendations(8);
+                PlannerRecommendationSnapshot snapshot = Plugin.GetRecommendations(32);
                 if (snapshot.Recommendations.Count == 0)
                 {
                     GUILayout.Label("No actionable Active/Available quest recommendations.");
@@ -292,11 +294,13 @@ namespace SPTQuestPlanner.Client
                 }
 
                 PlannerRecommendationViewModel selected = null;
+                int visibleCount = Math.Min(8, snapshot.Recommendations.Count);
                 for (int i = 0; i < snapshot.Recommendations.Count; i++)
                 {
                     PlannerRecommendationViewModel value = snapshot.Recommendations[i];
                     bool isTarget = string.Equals(value.QuestId, uiState.ProgressionTargetQuestId, StringComparison.Ordinal);
                     if (isTarget) selected = value;
+                    if (i >= visibleCount) continue;
 
                     string burden = value.FullyOwned
                         ? "items ready"
@@ -312,6 +316,7 @@ namespace SPTQuestPlanner.Client
                     }
                 }
 
+                if (uiState.HasProgressionTarget && selected == null) uiState.ClearProgressionTarget();
                 GUILayout.Space(8f);
                 DrawProgressionTarget(selected);
             }
@@ -344,6 +349,26 @@ namespace SPTQuestPlanner.Client
             if (target.Reasons.Count > 0)
                 GUILayout.Label("Why it ranks here: " + string.Join("; ", target.Reasons));
             GUILayout.EndVertical();
+        }
+
+        private static string PreparationStatus(PlannerRaidPlanCard card)
+        {
+            if (card == null) return "UNKNOWN";
+            if (card.PreparationReady) return "PREP READY";
+            if (card.MissingBringTemplateCount > 0 && card.UnresolvedPreparationCount > 0)
+                return "MISSING " + card.MissingBringTemplateCount + " + CHECK " + card.UnresolvedPreparationCount;
+            if (card.MissingBringTemplateCount > 0) return "MISSING " + card.MissingBringTemplateCount;
+            return "CHECK " + card.UnresolvedPreparationCount;
+        }
+
+        private static string PreparationSummary(PlannerRaidPlanCard card)
+        {
+            if (card == null) return "Preparation: unknown.";
+            if (card.PreparationReady) return "Preparation: no proven bring-items are missing.";
+            string result = "Preparation:";
+            if (card.MissingBringTemplateCount > 0) result += " missing " + card.MissingBringTemplateCount + " exact item type(s).";
+            if (card.UnresolvedPreparationCount > 0) result += " " + card.UnresolvedPreparationCount + " requirement(s) need manual verification.";
+            return result;
         }
 
         private static string FormatTargets(PlannerRaidObjective objective, PlannerLocaleIndex locale)
