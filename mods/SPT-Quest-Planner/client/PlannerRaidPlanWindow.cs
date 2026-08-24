@@ -96,7 +96,7 @@ namespace SPTQuestPlanner.Client
             {
                 PlannerRaidPlanCard card = viewModel.Cards[i];
                 bool selected = string.Equals(card.LocationId, uiState.SelectedLocationId, StringComparison.OrdinalIgnoreCase);
-                string label = "#" + card.Rank + "  " + card.LocationId + "\n" +
+                string label = "#" + card.Rank + "  " + PlannerDisplayNames.Location(card.LocationId) + "\n" +
                                card.QuestCount + " quests / " + card.ObjectiveCount + " objectives" +
                                (card.PreparationReady ? "  [READY]" : "  [MISSING " + card.MissingBringTemplateCount + "]");
                 if (GUILayout.Toggle(selected, label, "Button", GUILayout.MinHeight(48f)) && !selected)
@@ -116,7 +116,7 @@ namespace SPTQuestPlanner.Client
                 return;
             }
 
-            GUILayout.Label(card.LocationId + " — raid plan");
+            GUILayout.Label(PlannerDisplayNames.Location(card.LocationId) + " — raid plan");
             GUILayout.Label(card.QuestCount + " relevant quests   " + card.ObjectiveCount + " objectives");
             GUILayout.Label(card.PreparationReady
                 ? "Preparation: ready"
@@ -135,7 +135,7 @@ namespace SPTQuestPlanner.Client
                       " (remain " + FormatNumber(objective.RemainingValue ?? 0d) + ")"
                     : string.Empty;
                 string targets = objective.Targets.Count == 0 ? string.Empty : "  [" + string.Join(", ", objective.Targets) + "]";
-                GUILayout.Label("• " + objective.Kind + " — " + objective.ConditionType + progress + targets);
+                GUILayout.Label("• " + PlannerDisplayNames.Objective(objective.Kind) + progress + targets);
             }
 
             GUILayout.Space(10f);
