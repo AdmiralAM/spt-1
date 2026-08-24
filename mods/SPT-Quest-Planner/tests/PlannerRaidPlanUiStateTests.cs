@@ -71,6 +71,62 @@ public sealed class PlannerRaidPlanUiStateTests
     }
 
     [Fact]
+    public void RestoreDurableStateKeepsIntentionalStateButNotTransientPreview()
+    {
+        PlannerRaidPlanUiState state = new();
+
+        state.RestoreDurableState(
+            " Woods ",
+            " quest-42 ",
+            PlannerRaidPlanRankingMode.QuestDensityFirst,
+            PlannerWorkspaceMode.Progression,
+            true);
+
+        Assert.Equal("Woods", state.ActiveLocationId);
+        Assert.Equal("quest-42", state.ProgressionTargetQuestId);
+        Assert.Equal(PlannerRaidPlanRankingMode.QuestDensityFirst, state.RankingMode);
+        Assert.Equal(PlannerWorkspaceMode.Progression, state.WorkspaceMode);
+        Assert.True(state.IncludeAvailable);
+        Assert.Null(state.SelectedLocationId);
+    }
+
+    [Fact]
+    public void RestoreProgressionWorkspaceWithoutTargetFallsBackToRaidPlanner()
+    {
+        PlannerRaidPlanUiState state = new();
+
+        state.RestoreDurableState(
+            "Customs",
+            string.Empty,
+            PlannerRaidPlanRankingMode.ReadyFirst,
+            PlannerWorkspaceMode.Progression,
+            false);
+
+        Assert.Equal(PlannerWorkspaceMode.RaidPlanner, state.WorkspaceMode);
+        Assert.Equal("Customs", state.SelectedLocationId);
+    }
+
+    [Fact]
+    public void DurableStateMutationsRaiseChangedButPreviewSelectionDoesNot()
+    {
+        PlannerRaidPlanUiState state = new();
+        int changes = 0;
+        state.Changed += () => changes++;
+
+        state.SelectLocation("Customs");
+        Assert.Equal(0, changes);
+
+        state.ActivateSelected();
+        state.SetRankingMode(PlannerRaidPlanRankingMode.QuestDensityFirst);
+        state.SetIncludeAvailable(true);
+        state.SelectProgressionTarget("quest-1");
+        state.ClearProgressionTarget();
+        state.ClearActivePlan();
+
+        Assert.Equal(6, changes);
+    }
+
+    [Fact]
     public void ActiveRaidPlanPersistsIndependentlyFromPreviewSelection()
     {
         PlannerRaidPlanUiState state = new();
@@ -111,6 +167,7 @@ public sealed class PlannerRaidPlanUiStateTests
         state.ClearProgressionTarget();
         Assert.False(state.HasProgressionTarget);
         Assert.Null(state.ProgressionTargetQuestId);
+        Assert.Equal(PlannerWorkspaceMode.RaidPlanner, state.WorkspaceMode);
     }
 
     [Fact]
@@ -121,8 +178,6 @@ public sealed class PlannerRaidPlanUiStateTests
         PlannerRaidPlanUiState state = new PlannerRaidPlanUiState();
         PlannerRaidPlanPresentationController controller = new PlannerRaidPlanPresentationController(provider, state);
 
-        // Snapshot contract itself is covered here with the presentation state behavior;
-        // runtime provider population is exercised by the raid-plan builder/provider tests.
         state.ActivateLocation("Customs");
         PlannerActivePlanSnapshot empty = controller.GetActivePlanSnapshot(7, 12);
 
