@@ -96,4 +96,46 @@ public sealed class PlannerLocationIndexTests
         PlannerLocationObjective objective = Assert.Single(index.GlobalObjectives);
         Assert.Equal("q3", objective.QuestId);
     }
+
+    [Theory]
+    [InlineData("FindItem", PlannerObjectiveKind.FindItem)]
+    [InlineData("HandoverItem", PlannerObjectiveKind.HandoverItem)]
+    [InlineData("PlaceBeacon", PlannerObjectiveKind.Plant)]
+    [InlineData("LeaveItemAtLocation", PlannerObjectiveKind.Plant)]
+    [InlineData("ExitStatus", PlannerObjectiveKind.Extract)]
+    public void KnownConditionTypesMapToExplicitObjectiveKinds(string conditionType, PlannerObjectiveKind expected)
+    {
+        string json = "{\"schemaVersion\":9,\"questObjectives\":[{" +
+            "\"questId\":\"q\",\"conditionId\":\"c\",\"conditionType\":\"" + conditionType +
+            "\",\"phase\":\"Finish\",\"parentConditionId\":null,\"targets\":[],\"locationHints\":[],\"questLocationHint\":null}]}";
+
+        PlannerLocationIndex index = PlannerLocationIndexBuilder.Build(json);
+        PlannerLocationObjective objective = Assert.Single(index.GlobalObjectives);
+        Assert.Equal(expected, objective.Kind);
+    }
+
+    [Fact]
+    public void UnknownCustomConditionRemainsOther()
+    {
+        const string json = """
+        {
+          "schemaVersion": 9,
+          "questObjectives": [
+            {
+              "questId": "q-custom",
+              "conditionId": "custom",
+              "conditionType": "ModdedObjectiveX",
+              "phase": "Finish",
+              "parentConditionId": null,
+              "targets": [],
+              "locationHints": [],
+              "questLocationHint": null
+            }
+          ]
+        }
+        """;
+
+        PlannerLocationObjective objective = Assert.Single(PlannerLocationIndexBuilder.Build(json).GlobalObjectives);
+        Assert.Equal(PlannerObjectiveKind.Other, objective.Kind);
+    }
 }
