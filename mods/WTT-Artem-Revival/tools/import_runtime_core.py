@@ -24,6 +24,90 @@ TRADER_ID = "66bf757f27d0b097db0acea5"
 MODULE_ROOT = Path(__file__).resolve().parents[1]
 LOCALIZATION_ROOT = MODULE_ROOT / "localization"
 RUSSIAN_QUEST_PARTS = tuple(LOCALIZATION_ROOT.glob("ru-quests-*.json"))
+RUSSIAN_ITEM_DESCRIPTION_PARTS = tuple(LOCALIZATION_ROOT.glob("ru-item-descriptions-*.json"))
+
+LABEL_REPLACEMENTS = (
+    ("Night Vision Goggles", "ПНВ"),
+    ("Night Vision goggles", "ПНВ"),
+    ("NVG Battery Pack", "батарейный блок ПНВ"),
+    ("Ballistic Face Mask", "баллистическая маска"),
+    ("Ballsitic Face Mask", "баллистическая маска"),
+    ("Tactical Bump Helmet", "тактический защитный шлем"),
+    ("Tactical Helmet", "тактический шлем"),
+    ("High Cut Helmet", "высокообрезанный шлем"),
+    ("Ballistic Helmet", "баллистический шлем"),
+    ("Plate Carrier", "бронежилет"),
+    ("PLATE CARRIER", "БРОНЕЖИЛЕТ"),
+    ("plate carrier", "бронежилет"),
+    ("Body Armor", "бронежилет"),
+    ("body armor", "бронежилет"),
+    ("raid backpack", "рейдовый рюкзак"),
+    ("Raid Backpack", "рейдовый рюкзак"),
+    ("Helmet Cover", "чехол на шлем"),
+    ("Battery Pack", "батарейный блок"),
+    ("Scrim Net", "маскировочная сетка"),
+    ("Gas Mask", "противогаз"),
+    ("Face Mask", "маска"),
+    ("Skull Mask", "маска с черепом"),
+    ("Half-Mask", "полумаска"),
+    ("Balaclava", "балаклава"),
+    ("Headset", "гарнитура"),
+    ("Medical Box", "медицинский ящик"),
+    ("Item Case", "контейнер для предметов"),
+    ("Figure", "фигурка"),
+    ("Patch", "нашивка"),
+    ("COMBAT SHIRT", "БОЕВАЯ РУБАШКА"),
+    ("Combat Shirt", "боевая рубашка"),
+    ("T-Shirt", "футболка"),
+    ("T-shirt", "футболка"),
+    ("Hoodie", "худи"),
+    ("Flannel Shirt", "фланелевая рубашка"),
+    ("Urban Shirt", "городская рубашка"),
+    ("Rugby Shirt", "рубашка регби"),
+    ("Shirt", "рубашка"),
+    ("Ghillie Jacket", "маскировочная куртка"),
+    ("Bomber Jacket", "куртка-бомбер"),
+    ("Combat Pants", "боевые брюки"),
+    ("COMBAT PANTS", "БОЕВЫЕ БРЮКИ"),
+    ("TACTICAL PANTS", "ТАКТИЧЕСКИЕ БРЮКИ"),
+    ("Field Pants", "полевые брюки"),
+    ("Suit Pants", "брюки от костюма"),
+    ("Trousers", "брюки"),
+    ("Pants", "брюки"),
+    ("Jeans", "джинсы"),
+    ("Tracksuit", "спортивный костюм"),
+    ("Notch Lapel Suit", "костюм с лацканами"),
+    ("Business Casual", "деловой повседневный костюм"),
+)
+
+COLOR_REPLACEMENTS = (
+    ("Multicam Black", "Multicam Black"),
+    ("Multicam-Black", "Multicam Black"),
+    ("Multicam", "Multicam"),
+    ("Ranger Green", "Ranger Green"),
+    ("Digital Urban", "Digital Urban"),
+    ("M98 Woodland", "M98 Woodland"),
+    ("WOODLAND", "Woodland"),
+    ("Woodland", "Woodland"),
+    ("ALPINE", "Alpine"),
+    ("Alpine", "Alpine"),
+    ("Navy Blue", "тёмно-синий"),
+    ("Dark Blue", "тёмно-синий"),
+    ("Coyote", "койот"),
+    ("Olive", "оливковый"),
+    ("Grey", "серый"),
+    ("Gray", "серый"),
+    ("Black", "чёрный"),
+    ("White", "белый"),
+    ("Yellow", "жёлтый"),
+    ("Green", "зелёный"),
+    ("Brown", "коричневый"),
+    ("Cyan", "голубой"),
+    ("Red", "красный"),
+    ("Tanned", "песочный"),
+    ("Tan", "песочный"),
+    ("Dark", "тёмный"),
+)
 
 
 def load(path: Path):
@@ -35,6 +119,34 @@ def save(path: Path, value):
     with path.open("w", encoding="utf-8", newline="\n") as handle:
         json.dump(value, handle, indent=4, ensure_ascii=False)
         handle.write("\n")
+
+
+def load_fragment_map(paths: tuple[Path, ...], label: str) -> dict[str, str]:
+    if not paths:
+        raise RuntimeError(f"no {label} fragments found in {LOCALIZATION_ROOT}")
+
+    merged: dict[str, str] = {}
+    for path in sorted(paths):
+        payload = load(path)
+        if not isinstance(payload, dict):
+            raise RuntimeError(f"{label} fragment must be an object: {path}")
+        overlap = merged.keys() & payload.keys()
+        if overlap:
+            raise RuntimeError(
+                f"duplicate {label} keys in {path.name}: {', '.join(sorted(overlap)[:10])}"
+            )
+        merged.update(payload)
+    return merged
+
+
+def translate_label(value: str) -> str:
+    """Translate stable gear/clothing vocabulary while preserving brands/models."""
+    translated = value
+    for source, target in LABEL_REPLACEMENTS:
+        translated = translated.replace(source, target)
+    for source, target in COLOR_REPLACEMENTS:
+        translated = translated.replace(source, target)
+    return translated
 
 
 def patch_quest_image(resources: Path) -> int:
@@ -76,12 +188,7 @@ def restore_sweden_offer(resources: Path) -> bool:
 
 
 def sync_success_quest_assort(resources: Path) -> list[str]:
-    """Ensure every authored Success AssortmentUnlock is represented in QuestAssort.
-
-    This is additive on purpose. Existing QuestAssort-only entries are preserved
-    because they may be intentional hidden unlocks; only missing/mismatched reward
-    targets are repaired from the explicit quest reward declarations.
-    """
+    """Ensure every authored Success AssortmentUnlock is represented in QuestAssort."""
     quest_path = resources / f"db/CustomQuests/{TRADER_ID}/Quests/ArtemQuests.json"
     quest_assort_path = resources / f"db/CustomQuests/{TRADER_ID}/QuestAssort/Artem_QuestAssort.json"
     quests = load(quest_path)
@@ -105,33 +212,8 @@ def sync_success_quest_assort(resources: Path) -> list[str]:
     return repaired
 
 
-def load_russian_quest_locale() -> dict[str, str]:
-    """Load durable Russian quest source fragments and reject duplicate keys."""
-    if not RUSSIAN_QUEST_PARTS:
-        raise RuntimeError(f"no Russian quest locale fragments found in {LOCALIZATION_ROOT}")
-
-    merged: dict[str, str] = {}
-    for path in sorted(RUSSIAN_QUEST_PARTS):
-        payload = load(path)
-        if not isinstance(payload, dict):
-            raise RuntimeError(f"Russian locale fragment must be an object: {path}")
-        overlap = merged.keys() & payload.keys()
-        if overlap:
-            raise RuntimeError(
-                f"duplicate Russian quest locale keys in {path.name}: {', '.join(sorted(overlap))}"
-            )
-        merged.update(payload)
-    return merged
-
-
 def normalize_quest_locales(resources: Path) -> tuple[int, int]:
-    """Create real CommonLib locale codes (`en.json`, `ru.json`).
-
-    Legacy Artem named its English file `artemenglish.json`. CommonLib 3.x derives
-    the locale code from the filename, so that legacy name becomes an unknown
-    locale code and every real game locale falls back to English. The revival
-    normalizes English to `en.json` and writes a complete Russian `ru.json`.
-    """
+    """Normalize legacy English locale name and write complete Russian quest locale."""
     locale_dir = resources / f"db/CustomQuests/{TRADER_ID}/Locales"
     legacy_english = locale_dir / "artemenglish.json"
     english_path = locale_dir / "en.json"
@@ -144,7 +226,7 @@ def normalize_quest_locales(resources: Path) -> tuple[int, int]:
     else:
         raise RuntimeError(f"Artem English quest locale not found in {locale_dir}")
 
-    russian = load_russian_quest_locale()
+    russian = load_fragment_map(RUSSIAN_QUEST_PARTS, "Russian quest locale")
     english_keys = set(english)
     russian_keys = set(russian)
     if english_keys != russian_keys:
@@ -164,13 +246,81 @@ def normalize_quest_locales(resources: Path) -> tuple[int, int]:
     return len(english), len(russian)
 
 
+def localize_custom_items(resources: Path) -> int:
+    descriptions = load_fragment_map(
+        RUSSIAN_ITEM_DESCRIPTION_PARTS, "Russian item description"
+    )
+    item_dir = resources / "db/CustomItems"
+    changed = 0
+    uncovered_descriptions: set[str] = set()
+
+    for path in sorted(item_dir.glob("*.json")):
+        payload = load(path)
+        file_changed = False
+        for config in payload.values():
+            locales = config.setdefault("locales", {})
+            english = locales.get("en")
+            if not isinstance(english, dict):
+                continue
+
+            description = english.get("description", "") or ""
+            if description and description not in descriptions:
+                uncovered_descriptions.add(description)
+                continue
+
+            locales["ru"] = {
+                "name": translate_label(english.get("name", "") or ""),
+                "shortName": translate_label(english.get("shortName", "") or ""),
+                "description": descriptions.get(description, ""),
+            }
+            changed += 1
+            file_changed = True
+
+        if file_changed:
+            save(path, payload)
+
+    if uncovered_descriptions:
+        examples = sorted(uncovered_descriptions)[:3]
+        raise RuntimeError(
+            f"{len(uncovered_descriptions)} custom item descriptions lack Russian translation: {examples}"
+        )
+    return changed
+
+
+def localize_clothing(resources: Path) -> int:
+    clothing_dir = resources / "db/CustomClothing"
+    changed = 0
+
+    for path in sorted(clothing_dir.glob("*.json")):
+        payload = load(path)
+        file_changed = False
+        for config in payload:
+            locales = config.setdefault("locales", {})
+            english = locales.get("en")
+            if not isinstance(english, dict):
+                continue
+
+            english_name = english.get("name", "") or ""
+            english_description = english.get("description", "") or ""
+            locales["ru"] = {
+                "name": translate_label(english_name),
+                "description": translate_label(english_description),
+            }
+            changed += 1
+            file_changed = True
+
+        if file_changed:
+            save(path, payload)
+    return changed
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("archive", type=Path, help="Path to authoritative 'artem main 1.zip'")
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path(__file__).resolve().parents[1] / "server/Resources",
+        default=MODULE_ROOT / "server/Resources",
         help="Destination Resources directory",
     )
     args = parser.parse_args()
@@ -205,6 +355,8 @@ def main() -> int:
     sweden_added = restore_sweden_offer(output)
     quest_assort_repairs = sync_success_quest_assort(output)
     en_keys, ru_keys = normalize_quest_locales(output)
+    localized_items = localize_custom_items(output)
+    localized_clothing = localize_clothing(output)
 
     print(f"Imported Artem core from: {archive}")
     print(f"Output: {output}")
@@ -215,6 +367,8 @@ def main() -> int:
     if quest_assort_repairs:
         print("QuestAssort repaired offers: " + ", ".join(quest_assort_repairs))
     print(f"Quest locale keys: en={en_keys}, ru={ru_keys}")
+    print(f"Custom items with Russian locale: {localized_items}")
+    print(f"Clothing entries with Russian locale: {localized_clothing}")
     return 0
 
 
