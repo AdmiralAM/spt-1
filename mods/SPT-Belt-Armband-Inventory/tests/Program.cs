@@ -66,6 +66,12 @@ internal static class Program
         Assert(!GrenadeSlotPolicy.ShouldIncludeBelt(true, false), "plain armband is never a grenade slot");
         Assert(!GrenadeSlotPolicy.ShouldIncludeBelt(false, true), "container flag without an equipped item is ignored");
 
+        Assert(PickupSlotPolicy.ShouldTry(true, true, false, true), "compatible container can fall back to ArmBand when vanilla pickup has no slot");
+        Assert(!PickupSlotPolicy.ShouldTry(false, true, false, true), "vanilla pickup result always wins");
+        Assert(!PickupSlotPolicy.ShouldTry(true, false, false, true), "non-container item never uses belt pickup fallback");
+        Assert(!PickupSlotPolicy.ShouldTry(true, true, true, true), "deleted ArmBand slot is never revived by pickup fallback");
+        Assert(!PickupSlotPolicy.ShouldTry(true, true, false, false), "incompatible container is never forced into ArmBand");
+
         var deathTree = new[]
         {
             new BeltInventoryNode("equipment", null, null),

@@ -14,5 +14,6 @@
     <Compile Include="..\src\GrenadeSlotPatches.cs" Link="GrenadeSlotPatches.cs" />
     <Compile Include="..\src\BeltDeathPolicy.cs" Link="BeltDeathPolicy.cs" />
     <Compile Include="..\src\SlotMergePatches.cs" Link="SlotMergePatches.cs" />
+    <Compile Include="..\src\PickupSlotPatches.cs" Link="PickupSlotPatches.cs" />
   </ItemGroup>
 </Project>
