@@ -54,22 +54,32 @@ public sealed class PlannerRaidPlanRankerTests
         Assert.Equal("Customs", ranked[0].LocationId);
     }
 
-    private static PlannerRaidPlan Plan(string location, int questCount, bool ready, int missingTemplates)
+    [Fact]
+    public void ReadyFirstUsesUnresolvedPreparationCountBeforeQuestDensity()
+    {
+        PlannerRaidPlan fewerChecks = Plan("Customs", 2, ready: false, missingTemplates: 0, unresolved: 1);
+        PlannerRaidPlan moreChecks = Plan("Woods", 7, ready: false, missingTemplates: 0, unresolved: 4);
+
+        IReadOnlyList<PlannerRaidPlan> ranked = PlannerRaidPlanRanker.Rank(new[] { moreChecks, fewerChecks });
+
+        Assert.Equal("Customs", ranked[0].LocationId);
+        Assert.Equal(1, ranked[0].UnresolvedPreparationCount);
+    }
+
+    private static PlannerRaidPlan Plan(string location, int questCount, bool ready, int missingTemplates, int unresolved = 0)
     {
         string[] quests = Enumerable.Range(0, questCount).Select(i => location + "-q" + i).ToArray();
-        PlannerRaidPreparation preparation;
-        if (ready)
-        {
-            preparation = new PlannerRaidPreparation(Array.Empty<PlannerRaidBringNeed>(), Array.Empty<PlannerRaidUnresolvedBringNeed>());
-        }
-        else
-        {
-            PlannerRaidBringNeed[] needs = Enumerable.Range(0, missingTemplates)
+        PlannerRaidBringNeed[] needs = ready
+            ? Array.Empty<PlannerRaidBringNeed>()
+            : Enumerable.Range(0, missingTemplates)
                 .Select(i => new PlannerRaidBringNeed("tpl-" + i, 1d, 0d, 1d, quests))
                 .ToArray();
-            preparation = new PlannerRaidPreparation(needs, Array.Empty<PlannerRaidUnresolvedBringNeed>());
-        }
-
+        PlannerRaidUnresolvedBringNeed[] checks = ready
+            ? Array.Empty<PlannerRaidUnresolvedBringNeed>()
+            : Enumerable.Range(0, unresolved)
+                .Select(i => new PlannerRaidUnresolvedBringNeed(quests[0], "cond-" + i, "PlaceBeacon", new[] { "a", "b" }, 1d))
+                .ToArray();
+        PlannerRaidPreparation preparation = new PlannerRaidPreparation(needs, checks);
         return new PlannerRaidPlan(location, quests, Array.Empty<PlannerRaidObjective>(), preparation);
     }
 }
