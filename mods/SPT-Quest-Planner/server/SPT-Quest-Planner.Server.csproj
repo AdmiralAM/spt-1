@@ -6,14 +6,15 @@
     <OutputType>Library</OutputType>
     <AssemblyName>SPT Quest Planner Server</AssemblyName>
     <RootNamespace>SPTQuestPlanner.Server</RootNamespace>
-    <Version>0.8.0</Version>
-    <AssemblyVersion>0.8.0.0</AssemblyVersion>
-    <FileVersion>0.8.0.0</FileVersion>
+    <Version>0.9.0</Version>
+    <AssemblyVersion>0.9.0.0</AssemblyVersion>
+    <FileVersion>0.9.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\src\PlannerDataContract.cs" Link="PlannerDataContract.cs" />
     <Compile Include="..\src\PlannerDomain.cs" Link="PlannerDomain.cs" />
     <Compile Include="..\src\QuestExtractor.cs" Link="QuestExtractor.cs" />
+    <Compile Include="..\src\QuestObjectiveExtractor.cs" Link="QuestObjectiveExtractor.cs" />
     <Compile Include="..\src\ProfileProjection.cs" Link="ProfileProjection.cs" />
     <Compile Include="..\src\PlannerEvaluation.cs" Link="PlannerEvaluation.cs" />
     <Compile Include="..\src\InventoryProjection.cs" Link="InventoryProjection.cs" />
