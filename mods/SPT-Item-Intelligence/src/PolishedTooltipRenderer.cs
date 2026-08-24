@@ -212,16 +212,30 @@ namespace SPTItemIntelligence
             }
 
             int slash = line.IndexOf('/', start, end - start);
-            if (slash < 0)
+            if (slash < 0 || !TryParsePositiveInt(line, start, slash, out owned) || !TryParsePositiveInt(line, slash + 1, end, out required))
             {
                 cursor = end;
                 return false;
             }
 
-            bool parsed = int.TryParse(line.Substring(start, slash - start), out owned) &&
-                          int.TryParse(line.Substring(slash + 1, end - slash - 1), out required);
             cursor = end;
-            return parsed;
+            return true;
+        }
+
+        static bool TryParsePositiveInt(string text, int start, int end, out int value)
+        {
+            value = 0;
+            if (string.IsNullOrEmpty(text) || start < 0 || end <= start || end > text.Length) return false;
+
+            for (int i = start; i < end; i++)
+            {
+                char c = text[i];
+                if (c < '0' || c > '9') return false;
+                int digit = c - '0';
+                if (value > (int.MaxValue - digit) / 10) return false;
+                value = value * 10 + digit;
+            }
+            return true;
         }
 
         static bool TryFindNextRatio(string line, int startAt, out int start, out int end)
