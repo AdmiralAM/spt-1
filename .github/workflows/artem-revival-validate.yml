@@ -38,9 +38,11 @@ jobs:
           test -f mods/WTT-Artem-Revival/tools/import_runtime_core.py
           test -f mods/WTT-Artem-Revival/tools/audit_runtime_content.py
           test -f mods/WTT-Artem-Revival/tools/validate_bundle_archives.py
+          test -f mods/WTT-Artem-Revival/tools/repair_runtime_compat.py
           test -f mods/WTT-Artem-Revival/tests/validate_content.py
           test -f mods/WTT-Artem-Revival/tests/test_bundle_validator.py
           test -f mods/WTT-Artem-Revival/tests/test_localization.py
+          test -f mods/WTT-Artem-Revival/tests/test_runtime_compat_repairs.py
           grep -q 'SPT 4.1.3' mods/WTT-Artem-Revival/README.md
           grep -q 'Core' mods/WTT-Artem-Revival/docs/content-audit.md
 
@@ -56,13 +58,17 @@ jobs:
           python -m py_compile mods/WTT-Artem-Revival/tools/import_runtime_core.py
           python -m py_compile mods/WTT-Artem-Revival/tools/audit_runtime_content.py
           python -m py_compile mods/WTT-Artem-Revival/tools/validate_bundle_archives.py
+          python -m py_compile mods/WTT-Artem-Revival/tools/repair_runtime_compat.py
           python -m py_compile mods/WTT-Artem-Revival/tests/validate_content.py
           python -m py_compile mods/WTT-Artem-Revival/tests/test_bundle_validator.py
           python -m py_compile mods/WTT-Artem-Revival/tests/test_localization.py
+          python -m py_compile mods/WTT-Artem-Revival/tests/test_runtime_compat_repairs.py
       - name: Bundle validator regression test
         run: python mods/WTT-Artem-Revival/tests/test_bundle_validator.py
       - name: Localization source regression test
         run: python mods/WTT-Artem-Revival/tests/test_localization.py
+      - name: Runtime compatibility repair regression test
+        run: python mods/WTT-Artem-Revival/tests/test_runtime_compat_repairs.py
       - name: Validate JSON and imported runtime data when present
         shell: python
         run: |
@@ -88,6 +94,7 @@ jobs:
           if resources.exists():
               subprocess.run([sys.executable, str(root / 'tests' / 'validate_content.py')], check=True)
               subprocess.run([sys.executable, str(root / 'tools' / 'audit_runtime_content.py'), str(resources)], check=True)
+              subprocess.run([sys.executable, str(root / 'tools' / 'repair_runtime_compat.py'), str(resources)], check=True)
           else:
               print('Runtime Resources are external/reproducibly imported; content validator/auditor deferred until import/package stage.')
 
