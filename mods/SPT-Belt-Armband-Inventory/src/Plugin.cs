@@ -22,6 +22,7 @@ namespace SPTBeltArmbandInventory
         ScavBeltPatches scavPatches;
         GrenadeSlotPatches grenadePatches;
         FastAccessBeltSyncPatches fastAccessSyncPatches;
+        FastAccessSlotPatches fastAccessSlotPatches;
         SlotMergePatches slotMergePatches;
         PickupSlotPatches pickupPatches;
         PaymentSlotPatches paymentPatches;
@@ -100,6 +101,14 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Belt grenade enumeration remains active, but equipping/removing a loaded belt may require the grenade fast-access view to reopen before it reflects the change.");
             }
 
+            fastAccessSlotPatches = new FastAccessSlotPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!fastAccessSlotPatches.TryInstall())
+            {
+                fastAccessSlotPatches.Dispose();
+                fastAccessSlotPatches = null;
+                Logger.LogWarning("Belt storage remains active, but non-grenade consumables inside the belt may not participate in vanilla bind/reachable fast-access logic.");
+            }
+
             slotMergePatches = new SlotMergePatches(Logger.LogInfo, Logger.LogWarning);
             if (!slotMergePatches.TryInstall())
             {
@@ -161,6 +170,8 @@ namespace SPTBeltArmbandInventory
             pickupPatches = null;
             if (slotMergePatches != null) slotMergePatches.Dispose();
             slotMergePatches = null;
+            if (fastAccessSlotPatches != null) fastAccessSlotPatches.Dispose();
+            fastAccessSlotPatches = null;
             if (fastAccessSyncPatches != null) fastAccessSyncPatches.Dispose();
             fastAccessSyncPatches = null;
             if (grenadePatches != null) grenadePatches.Dispose();

@@ -98,6 +98,13 @@ internal static class Program
         Assert(ReferenceEquals(changedBuildContainers, EquipmentBuildContainerPolicy.Build(changedBuildContainers)), "unexpected build-container shapes fail closed");
         Assert(ReferenceEquals(buildContainers, EquipmentBuildContainerPolicy.Build(buildContainers)), "already-extended build-container list stays unchanged");
 
+        string[] vanillaFastAccess = { BeltSlotPlan.Pockets, BeltSlotPlan.TacticalVest };
+        string[] extendedFastAccess = FastAccessSlotPolicy.Extend(vanillaFastAccess);
+        Assert(extendedFastAccess.SequenceEqual(new[] { BeltSlotPlan.Pockets, BeltSlotPlan.TacticalVest, BeltSlotPlan.ArmBand }), "fast-access slot policy adds ArmBand after vanilla reachable containers");
+        Assert(vanillaFastAccess.SequenceEqual(new[] { BeltSlotPlan.Pockets, BeltSlotPlan.TacticalVest }), "fast-access slot policy does not mutate vanilla source array");
+        Assert(FastAccessSlotPolicy.Extend(extendedFastAccess).Count(x => x == BeltSlotPlan.ArmBand) == 1, "fast-access slot extension is idempotent");
+        Assert(FastAccessSlotPolicy.Extend(null) == null, "missing fast-access slot source fails closed");
+
         var deathTree = new[]
         {
             new BeltInventoryNode("equipment", null, null),
