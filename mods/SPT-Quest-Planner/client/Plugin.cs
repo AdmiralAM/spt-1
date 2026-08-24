@@ -96,6 +96,22 @@ namespace SPTQuestPlanner.Client
             return controller.GetViewModel(cache.Revision, maxObjectivesPerCard);
         }
 
+        internal static PlannerActivePlanSnapshot GetActiveRaidPlan(int maxObjectives = 32)
+        {
+            PlannerRaidPlanPresentationController controller = Presentation;
+            PlannerClientCache cache = Cache;
+            if (controller == null || cache == null) return PlannerActivePlanSnapshot.Empty(0L);
+            return controller.GetActivePlanSnapshot(cache.Revision, Math.Max(1, maxObjectives));
+        }
+
+        internal static PlannerSelectionSnapshot GetPlannerSelection()
+        {
+            PlannerRaidPlanPresentationController controller = Presentation;
+            PlannerClientCache cache = Cache;
+            if (controller == null || cache == null) return new PlannerSelectionSnapshot(0L, string.Empty, string.Empty);
+            return controller.GetSelectionSnapshot(cache.Revision);
+        }
+
         internal static PlannerRecommendationSnapshot GetRecommendations(int topN = 5, PlannerCandidatePolicy policy = null)
         {
             PlannerRecommendationProvider provider = Recommendations;
@@ -118,6 +134,7 @@ namespace SPTQuestPlanner.Client
                 if (coordinator.TryRefreshState(token, out error))
                 {
                     Logger.LogInfo("Quest Planner topology/state cache initialized; revision=" + cache.Revision + ".");
+                    ValidateActivePlanAfterRefresh();
                     LogRecommendationSummary("initial-load");
                 }
                 else if (!token.IsCancellationRequested)
@@ -153,6 +170,7 @@ namespace SPTQuestPlanner.Client
                 {
                     PlannerRaidPlanPresentationController presentation = Presentation;
                     if (presentation != null) presentation.Invalidate();
+                    ValidateActivePlanAfterRefresh();
                     if (!token.IsCancellationRequested)
                     {
                         Logger.LogInfo("Quest Planner state refreshed (" + NormalizeReason(reason) + "); revision=" + cache.Revision + ".");
@@ -162,6 +180,14 @@ namespace SPTQuestPlanner.Client
                 else if (!token.IsCancellationRequested && !string.Equals(error, "Refresh already in progress.", StringComparison.Ordinal))
                     Logger.LogWarning("Quest Planner state refresh failed (" + NormalizeReason(reason) + "): " + error);
             }, token);
+        }
+
+        private static void ValidateActivePlanAfterRefresh()
+        {
+            PlannerRaidPlanPresentationController controller = Presentation;
+            PlannerClientCache cache = Cache;
+            if (controller == null || cache == null) return;
+            controller.GetActivePlanSnapshot(cache.Revision, 32);
         }
 
         private void LogRecommendationSummary(string reason)
