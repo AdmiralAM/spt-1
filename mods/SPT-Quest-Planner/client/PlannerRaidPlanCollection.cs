@@ -41,7 +41,7 @@ namespace SPTQuestPlanner.Client
             PlannerRaidPlanRankingMode rankingMode = PlannerRaidPlanRankingMode.ReadyFirst,
             bool includeAvailable = false,
             int maxLocations = 64,
-            int maxObjectivesPerLocation = 512)
+            int maxObjectivesPerLocation = 128)
         {
             if (locations == null) throw new ArgumentNullException("locations");
             if (state == null) throw new ArgumentNullException("state");
