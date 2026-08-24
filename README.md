@@ -1,21 +1,29 @@
 # Artem Revival MOD SPT runtime
 
-Stable install-only **r5-RU-compat** overlay for **SPT 4.1.3**.
+Stable runtime baseline **r5-RU-compat** for **SPT 4.1.3**.
 
 Validated with WTT Server/Client CommonLib **3.0.6**. Source was integrated through PR #68 at commit `b1a93bdd2c08e00fc88af3fb8aed0a72d160af96`.
 
-## Install
+## What this channel preserves
 
-Download `Artem-Revival-SPT-4.1.3-r5-stable-overlay.zip` from this branch and extract it into the SPT root with replacement.
+This branch is the permanent install/runtime identity for the accepted Artem revival and contains the validated SPT 4.1.3 server DLL plus an immutable runtime manifest.
 
-It updates:
+The authored Artem database/assets are not duplicated here. They are preserved by the authoritative archived Artem core source set and the deterministic import/repair/localization tooling in `main` under `mods/WTT-Artem-Revival/`. The accepted complete runtime candidate is `r5-RU-compat` and its SHA-256 is recorded in `runtime-manifest.json`.
 
-`SPT_Runtime/user/mods/WTT-Artem Revival/`
+## Runtime location
 
-## External Bundles requirement
+The validated DLL belongs at:
 
-The authored Unity `Bundles/` payload is intentionally **not included** in this Git runtime channel. Keep the already assembled Artem `Bundles/` directory made from the six supplied bundle archives. All **239/239** manifest bundle paths were validated.
+```text
+SPT_Runtime/user/mods/WTT-Artem Revival/WTT-Artem.dll
+```
 
-The overlay also assumes the unchanged original Artem quest-image/avatar assets are already present from the base Artem core installation. Normal revival updates replace the DLL and maintained JSON/core data without duplicating the large asset payload.
+The installed Artem directory also retains the repaired r5 core data and the external `Bundles/` set used during validation.
 
-Do **not** restore the legacy SPT 4.0 `WTT-Artem.dll`; use the DLL in this stable overlay.
+## External assets
+
+The approximately 1.5 GB authored Unity `Bundles/` payload is intentionally not committed to Git. Keep the already assembled Artem `Bundles/` directory made from the six supplied bundle archives. All **239/239** manifest bundle paths were validated.
+
+Do **not** restore the legacy SPT 4.0 `WTT-Artem.dll`; the DLL in this runtime branch is the stable SPT 4.1.3 build.
+
+For development/reconstruction details, use `main:mods/WTT-Artem-Revival/` and PR #68. This branch is not a development branch.
