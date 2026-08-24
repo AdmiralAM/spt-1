@@ -4,39 +4,18 @@ using System.Globalization;
 
 namespace SPTItemIntelligence
 {
-    public enum ItemTooltipMode
-    {
-        Minimal,
-        Normal,
-        Detailed,
-        Full
-    }
+    public enum ItemTooltipMode { Minimal, Normal, Detailed, Full }
 
     public sealed class ItemHoverText
     {
         internal static readonly ItemHoverText Empty = new ItemHoverText(string.Empty, string.Empty, string.Empty);
 
         public ItemHoverText(string primary, string secondary, string status)
-            : this(primary, secondary, status, string.Empty, 0, 0, 0, 0, 0)
-        {
-        }
+            : this(primary, secondary, status, string.Empty, 0, 0, 0, 0, 0) { }
 
-        public ItemHoverText(
-            string primary,
-            string secondary,
-            string status,
-            string templateId,
-            int ownedCount,
-            int questNeededNow,
-            int questNeededLater,
-            int hideoutNeeded,
-            int keepCount,
-            string bestSource = null,
-            IEnumerable<string> requirementDetails = null,
-            int ownedFoundInRaid = 0,
-            int questNowFoundInRaid = 0,
-            int questLaterFoundInRaid = 0,
-            string perSlotLine = null)
+        public ItemHoverText(string primary, string secondary, string status, string templateId, int ownedCount, int questNeededNow,
+            int questNeededLater, int hideoutNeeded, int keepCount, string bestSource = null, IEnumerable<string> requirementDetails = null,
+            int ownedFoundInRaid = 0, int questNowFoundInRaid = 0, int questLaterFoundInRaid = 0, string perSlotLine = null)
         {
             Primary = primary ?? string.Empty;
             Secondary = secondary ?? string.Empty;
@@ -53,18 +32,14 @@ namespace SPTItemIntelligence
 
             int availableFir = OwnedFoundInRaid;
             int availableNonFir = Math.Max(0, OwnedCount - OwnedFoundInRaid);
-
             RequirementAllocation questNow = AllocateRequirement(QuestNeededNow, QuestNowFoundInRaid, ref availableFir, ref availableNonFir);
             QuestNowOwned = questNow.TotalOwned;
             QuestNowFoundInRaidOwned = questNow.FoundInRaidOwned;
-
             RequirementAllocation hideout = AllocateRequirement(HideoutNeeded, 0, ref availableFir, ref availableNonFir);
             HideoutOwned = hideout.TotalOwned;
-
             RequirementAllocation questLater = AllocateRequirement(QuestNeededLater, QuestLaterFoundInRaid, ref availableFir, ref availableNonFir);
             QuestLaterOwned = questLater.TotalOwned;
             QuestLaterFoundInRaidOwned = questLater.FoundInRaidOwned;
-
             QuestNowMissing = QuestNeededNow - QuestNowOwned;
             HideoutMissing = HideoutNeeded - HideoutOwned;
             QuestLaterMissing = QuestNeededLater - QuestLaterOwned;
@@ -75,12 +50,15 @@ namespace SPTItemIntelligence
             QuestLaterLine = RequirementLine("Quest Later", QuestLaterOwned, QuestNeededLater, QuestLaterFoundInRaidOwned, QuestLaterFoundInRaid);
             KeepLine = CountLine("Keep", KeepCount);
             PerSlotLine = perSlotLine ?? string.Empty;
-            OwnedLine = OwnedFoundInRaid > 0
-                ? "Owned ×" + OwnedCount.ToString(CultureInfo.InvariantCulture) + " · FIR ×" + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture)
-                : CountLine("Owned", OwnedCount);
-            BestSourceLine = bestSource ?? string.Empty;
 
             ItemRelevanceState relevance = ItemRelevanceRegistry.Get(TemplateId);
+            string owned = OwnedFoundInRaid > 0
+                ? "Owned ×" + OwnedCount.ToString(CultureInfo.InvariantCulture) + " · FIR ×" + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture)
+                : CountLine("Owned", OwnedCount);
+            if (relevance.OnYouCount > 0)
+                owned = (owned.Length == 0 ? string.Empty : owned + " · ") + "On You ×" + relevance.OnYouCount.ToString(CultureInfo.InvariantCulture);
+            OwnedLine = owned;
+            BestSourceLine = bestSource ?? string.Empty;
             CraftLine = CountLine("Craft", relevance.CraftCount);
             BarterLine = CountLine("Barter", relevance.BarterCount);
 
@@ -100,9 +78,7 @@ namespace SPTItemIntelligence
             int detailedVisible = Math.Min(3, detailed.Count);
             DetailedRequirementLines = detailed.GetRange(0, detailedVisible).AsReadOnly();
             DetailedRequirementCount = detailedVisible;
-            MoreRequirementsLine = detailed.Count > detailedVisible
-                ? "Requirements: +" + (detailed.Count - detailedVisible).ToString(CultureInfo.InvariantCulture) + " more"
-                : string.Empty;
+            MoreRequirementsLine = detailed.Count > detailedVisible ? "Requirements: +" + (detailed.Count - detailedVisible).ToString(CultureInfo.InvariantCulture) + " more" : string.Empty;
         }
 
         public string Primary { get; }
@@ -140,21 +116,16 @@ namespace SPTItemIntelligence
         public int DetailedRequirementCount { get; }
         public string MoreRequirementsLine { get; }
         public bool HasData => Primary.Length != 0 || Secondary.Length != 0 || Status.Length != 0 || KeepCount > 0;
-        public bool IsDiagnostic => string.Equals(Status, "LOADING ITEM DATA", StringComparison.OrdinalIgnoreCase) || string.Equals(Status, "NO REQUIREMENT DATA", StringComparison.OrdinalIgnoreCase) || string.Equals(Status, "DATA UNAVAILABLE", StringComparison.OrdinalIgnoreCase);
+        public bool IsDiagnostic => string.Equals(Status, "LOADING ITEM DATA", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(Status, "NO REQUIREMENT DATA", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(Status, "DATA UNAVAILABLE", StringComparison.OrdinalIgnoreCase);
 
-        public int GetLineCount(ItemTooltipMode mode)
-        {
-            int count = 0;
-            while (GetLine(mode, count).Length != 0) count++;
-            return count;
-        }
+        public int GetLineCount(ItemTooltipMode mode) { int count = 0; while (GetLine(mode, count).Length != 0) count++; return count; }
 
         public string GetLine(ItemTooltipMode mode, int requestedIndex)
         {
             if (requestedIndex < 0) return string.Empty;
-            int current = 0;
-            string found;
-
+            int current = 0; string found;
             if (IsDiagnostic)
             {
                 if (TryLine(Primary, requestedIndex, ref current, out found)) return found;
@@ -162,7 +133,6 @@ namespace SPTItemIntelligence
                 if (TryLine(Status, requestedIndex, ref current, out found)) return found;
                 return string.Empty;
             }
-
             if (TryLine(ValueLine, requestedIndex, ref current, out found)) return found;
             if (mode == ItemTooltipMode.Full)
             {
@@ -178,7 +148,6 @@ namespace SPTItemIntelligence
                 if (TryLine(QuestLaterLine, requestedIndex, ref current, out found)) return found;
             }
             if (TryLine(KeepLine, requestedIndex, ref current, out found)) return found;
-
             if (mode == ItemTooltipMode.Detailed || mode == ItemTooltipMode.Full)
             {
                 if (TryLine(OwnedLine, requestedIndex, ref current, out found)) return found;
@@ -194,27 +163,16 @@ namespace SPTItemIntelligence
         {
             int firRequired = Math.Min(required, Math.Max(0, foundInRaidRequired));
             int anyRequired = Math.Max(0, required - firRequired);
-            int firForFir = Math.Min(availableFir, firRequired);
-            availableFir -= firForFir;
-            int nonFirForAny = Math.Min(availableNonFir, anyRequired);
-            availableNonFir -= nonFirForAny;
+            int firForFir = Math.Min(availableFir, firRequired); availableFir -= firForFir;
+            int nonFirForAny = Math.Min(availableNonFir, anyRequired); availableNonFir -= nonFirForAny;
             int anyStillMissing = anyRequired - nonFirForAny;
-            int firForAny = Math.Min(availableFir, anyStillMissing);
-            availableFir -= firForAny;
+            int firForAny = Math.Min(availableFir, anyStillMissing); availableFir -= firForAny;
             return new RequirementAllocation(firForFir + nonFirForAny + firForAny, firForFir);
         }
 
         static bool TryLine(string line, int requestedIndex, ref int current, out string found)
-        {
-            found = string.Empty;
-            if (string.IsNullOrEmpty(line)) return false;
-            if (current++ != requestedIndex) return false;
-            found = line;
-            return true;
-        }
-
+        { found = string.Empty; if (string.IsNullOrEmpty(line)) return false; if (current++ != requestedIndex) return false; found = line; return true; }
         static string CountLine(string label, int count) => count <= 0 ? string.Empty : label + " ×" + count.ToString(CultureInfo.InvariantCulture);
-
         static string RequirementLine(string label, int owned, int required, int firOwned, int firRequired)
         {
             if (required <= 0) return string.Empty;
@@ -222,23 +180,16 @@ namespace SPTItemIntelligence
             if (firRequired > 0) line += " · FIR " + firOwned.ToString(CultureInfo.InvariantCulture) + "/" + firRequired.ToString(CultureInfo.InvariantCulture);
             return owned >= required && firOwned >= firRequired ? line + " ✓" : line;
         }
-
         readonly struct RequirementAllocation
-        {
-            public RequirementAllocation(int totalOwned, int foundInRaidOwned) { TotalOwned = totalOwned; FoundInRaidOwned = foundInRaidOwned; }
-            public int TotalOwned { get; }
-            public int FoundInRaidOwned { get; }
-        }
+        { public RequirementAllocation(int totalOwned, int foundInRaidOwned) { TotalOwned = totalOwned; FoundInRaidOwned = foundInRaidOwned; } public int TotalOwned { get; } public int FoundInRaidOwned { get; } }
     }
 
     public sealed class ItemHoverTextFormatter
     {
         public ItemHoverText Format(ItemHoverState hover) => Format(hover, ItemValueMode.Vendor);
-
         public ItemHoverText Format(ItemHoverState hover, ItemValueMode valueMode)
         {
             if (hover == null || !hover.HasData) return ItemHoverText.Empty;
-
             bool fleaPrimary = valueMode == ItemValueMode.Flea;
             long unitValue = fleaPrimary ? hover.FleaUnitValue : hover.TraderUnitValue;
             string trader = string.IsNullOrWhiteSpace(hover.BestTraderName) ? "Vendor" : hover.BestTraderName.Trim();
@@ -249,7 +200,9 @@ namespace SPTItemIntelligence
             string secondary = alternateValue > 0 ? alternateSource + ": " + FormatRoubles(alternateValue) : string.Empty;
             string perSlot = hover.ValuePerSlot > 0 ? "Per slot: " + FormatRoubles(hover.ValuePerSlot) : string.Empty;
             FirRequirementState fir = FirRequirementRegistry.Get(hover.TemplateId);
-            return new ItemHoverText(primary, secondary, string.Empty, hover.TemplateId, hover.OwnedCount, hover.QuestNeededNow, hover.QuestNeededLater, hover.HideoutNeeded, hover.KeepCount, string.Empty, FormatRequirementDetails(hover.RequirementDetails), fir.OwnedFoundInRaid, fir.QuestNowFoundInRaid, fir.QuestLaterFoundInRaid, perSlot);
+            return new ItemHoverText(primary, secondary, string.Empty, hover.TemplateId, hover.OwnedCount, hover.QuestNeededNow, hover.QuestNeededLater,
+                hover.HideoutNeeded, hover.KeepCount, string.Empty, FormatRequirementDetails(hover.RequirementDetails), fir.OwnedFoundInRaid,
+                fir.QuestNowFoundInRaid, fir.QuestLaterFoundInRaid, perSlot);
         }
 
         static IEnumerable<string> FormatRequirementDetails(IReadOnlyList<RequirementDetail> details)
@@ -263,12 +216,7 @@ namespace SPTItemIntelligence
                 if (detail == null || detail.RemainingCount <= 0 || detail.Label.Length == 0) continue;
                 string key = ((int)detail.Source).ToString(CultureInfo.InvariantCulture) + "|" + detail.Label + "|" + (detail.FoundInRaidRequired ? "1" : "0");
                 DetailAggregate aggregate;
-                if (!grouped.TryGetValue(key, out aggregate))
-                {
-                    aggregate = new DetailAggregate(detail.Source, detail.Label, detail.FoundInRaidRequired);
-                    grouped.Add(key, aggregate);
-                    ordered.Add(aggregate);
-                }
+                if (!grouped.TryGetValue(key, out aggregate)) { aggregate = new DetailAggregate(detail.Source, detail.Label, detail.FoundInRaidRequired); grouped.Add(key, aggregate); ordered.Add(aggregate); }
                 aggregate.RemainingCount += detail.RemainingCount;
             }
             for (int i = 0; i < ordered.Count; i++)
@@ -280,16 +228,8 @@ namespace SPTItemIntelligence
                 yield return line;
             }
         }
-
         sealed class DetailAggregate
-        {
-            public DetailAggregate(RequirementSource source, string label, bool foundInRaidRequired) { Source = source; Label = label; FoundInRaidRequired = foundInRaidRequired; }
-            public RequirementSource Source { get; }
-            public string Label { get; }
-            public bool FoundInRaidRequired { get; }
-            public int RemainingCount { get; set; }
-        }
-
+        { public DetailAggregate(RequirementSource source, string label, bool foundInRaidRequired) { Source = source; Label = label; FoundInRaidRequired = foundInRaidRequired; } public RequirementSource Source { get; } public string Label { get; } public bool FoundInRaidRequired { get; } public int RemainingCount { get; set; } }
         static string FormatRoubles(long value) => value.ToString("N0", CultureInfo.InvariantCulture) + " ₽";
     }
 
@@ -298,37 +238,17 @@ namespace SPTItemIntelligence
         readonly ItemHoverTextFormatter formatter;
         readonly Func<ItemValueMode> valueModeProvider;
         readonly Dictionary<ItemPresentationState, ItemHoverText> cache = new Dictionary<ItemPresentationState, ItemHoverText>(ReferenceComparer.Instance);
-        ItemPresentationIndex lastIndex;
-        ItemValueMode lastValueMode;
-        bool hasValueMode;
-
+        ItemPresentationIndex lastIndex; ItemValueMode lastValueMode; bool hasValueMode;
         public ItemHoverTextCache(ItemHoverTextFormatter formatter = null, Func<ItemValueMode> valueModeProvider = null)
-        {
-            this.formatter = formatter ?? new ItemHoverTextFormatter();
-            this.valueModeProvider = valueModeProvider ?? (() => ItemValueMode.Vendor);
-        }
-
+        { this.formatter = formatter ?? new ItemHoverTextFormatter(); this.valueModeProvider = valueModeProvider ?? (() => ItemValueMode.Vendor); }
         public ItemHoverText Get(ItemHoverState hover, ItemPresentationIndex index)
         {
             if (hover == null || !hover.HasData) return ItemHoverText.Empty;
-            ItemPresentationState presentation = hover.Presentation;
-            ItemValueMode valueMode = valueModeProvider();
-            if (!object.ReferenceEquals(lastIndex, index) || !hasValueMode || valueMode != lastValueMode)
-            {
-                cache.Clear(); lastIndex = index; lastValueMode = valueMode; hasValueMode = true;
-            }
-            ItemHoverText text;
-            if (cache.TryGetValue(presentation, out text)) return text;
-            text = formatter.Format(hover, valueMode);
-            cache[presentation] = text;
-            return text;
+            ItemPresentationState presentation = hover.Presentation; ItemValueMode valueMode = valueModeProvider();
+            if (!object.ReferenceEquals(lastIndex, index) || !hasValueMode || valueMode != lastValueMode) { cache.Clear(); lastIndex = index; lastValueMode = valueMode; hasValueMode = true; }
+            ItemHoverText text; if (cache.TryGetValue(presentation, out text)) return text; text = formatter.Format(hover, valueMode); cache[presentation] = text; return text;
         }
-
         sealed class ReferenceComparer : IEqualityComparer<ItemPresentationState>
-        {
-            internal static readonly ReferenceComparer Instance = new ReferenceComparer();
-            public bool Equals(ItemPresentationState x, ItemPresentationState y) => object.ReferenceEquals(x, y);
-            public int GetHashCode(ItemPresentationState obj) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
-        }
+        { internal static readonly ReferenceComparer Instance = new ReferenceComparer(); public bool Equals(ItemPresentationState x, ItemPresentationState y) => object.ReferenceEquals(x, y); public int GetHashCode(ItemPresentationState obj) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj); }
     }
 }
