@@ -113,13 +113,13 @@ namespace SPTQuestPlanner.Client
             foreach (object requirement in Values(Get(root, "itemRequirements")))
             {
                 string questId = ReadString(Get(requirement, "questId"));
-                MutableQuest quest;
+                MutableQuest quest = null;
                 bool knownQuest = !string.IsNullOrWhiteSpace(questId) && quests.TryGetValue(questId, out quest);
                 foreach (object templateNode in Values(Get(requirement, "templateIds")))
                 {
                     string templateId = ReadString(templateNode);
                     if (string.IsNullOrWhiteSpace(templateId)) continue;
-                    if (knownQuest) quest.RequiredTemplates.Add(templateId);
+                    if (knownQuest && quest != null) quest.RequiredTemplates.Add(templateId);
                     HashSet<string> linkedQuests;
                     if (!itemQuests.TryGetValue(templateId, out linkedQuests))
                     {
