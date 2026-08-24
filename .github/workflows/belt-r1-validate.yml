@@ -8,6 +8,10 @@ on:
       - '.github/workflows/belt-r1-validate.yml'
   workflow_dispatch:
 
+concurrency:
+  group: belt-armband-validate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     runs-on: windows-latest
