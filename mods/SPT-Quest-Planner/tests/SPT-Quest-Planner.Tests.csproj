@@ -12,6 +12,7 @@
     <Compile Include="..\src\ProfileProjection.cs" Link="ProfileProjection.cs" />
     <Compile Include="..\src\QuestExtractor.cs" Link="QuestExtractor.cs" />
     <Compile Include="..\src\QuestObjectiveExtractor.cs" Link="QuestObjectiveExtractor.cs" />
+    <Compile Include="..\src\PlannerTransportJson.cs" Link="PlannerTransportJson.cs" />
     <Compile Include="..\client\PlannerClientRuntime.cs" Link="PlannerClientRuntime.cs" />
     <Compile Include="..\client\PlannerClientIndex.cs" Link="PlannerClientIndex.cs" />
     <Compile Include="..\client\PlannerTopologyIndex.cs" Link="PlannerTopologyIndex.cs" />
