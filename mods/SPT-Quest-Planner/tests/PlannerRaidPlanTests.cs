@@ -29,7 +29,7 @@ public sealed class PlannerRaidPlanTests
     }
 
     [Fact]
-    public void RaidPlanAggregatesKnownRemainingWork()
+    public void RaidPlanAggregatesKnownRemainingWorkAndPreparation()
     {
         PlannerRaidOpportunity opportunity = new(
             "Customs",
@@ -38,17 +38,33 @@ public sealed class PlannerRaidPlanTests
             new[]
             {
                 new PlannerRaidObjective("q1", "kill", PlannerRaidObjectiveKind.Kill, "Kills", "Customs", Array.Empty<string>(), false, 5d, 3d),
-                new PlannerRaidObjective("q2", "visit", PlannerRaidObjectiveKind.Visit, "VisitPlace", "Customs", Array.Empty<string>(), false)
+                new PlannerRaidObjective("q2", "beacon", PlannerRaidObjectiveKind.Plant, "PlaceBeacon", "Customs", new[] { "tpl-marker" }, false, 2d, 1d)
             },
             2,
             0);
 
-        PlannerRaidPlan plan = PlannerRaidPlanBuilder.Build(opportunity);
+        PlannerClientIndex state = new(
+            1,
+            new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal),
+            new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal),
+            new Dictionary<string, PlannerConditionProgress>(StringComparer.Ordinal),
+            new Dictionary<string, PlannerOwnedItem>(StringComparer.Ordinal)
+            {
+                ["tpl-marker"] = new PlannerOwnedItem("tpl-marker", 1d, 0d)
+            });
+
+        PlannerRaidPlan plan = PlannerRaidPlanBuilder.Build(opportunity, state);
 
         Assert.Equal("Customs", plan.LocationId);
         Assert.Equal(2, plan.QuestCount);
         Assert.Equal(2, plan.ObjectiveCount);
-        Assert.Equal(1, plan.KnownProgressObjectiveCount);
-        Assert.Equal(2d, plan.KnownRemainingWork);
+        Assert.Equal(2, plan.KnownProgressObjectiveCount);
+        Assert.Equal(3d, plan.KnownRemainingWork);
+        Assert.True(plan.PreparationReady);
+        PlannerRaidBringNeed bring = Assert.Single(plan.Preparation.ExactNeeds);
+        Assert.Equal("tpl-marker", bring.TemplateId);
+        Assert.Equal(1d, bring.Required);
+        Assert.Equal(1d, bring.Owned);
+        Assert.Equal(0d, bring.Missing);
     }
 }
