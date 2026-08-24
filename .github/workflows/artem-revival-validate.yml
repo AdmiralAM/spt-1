@@ -40,6 +40,7 @@ jobs:
           test -f mods/WTT-Artem-Revival/tools/validate_bundle_archives.py
           test -f mods/WTT-Artem-Revival/tests/validate_content.py
           test -f mods/WTT-Artem-Revival/tests/test_bundle_validator.py
+          test -f mods/WTT-Artem-Revival/tests/test_localization.py
           grep -q 'SPT 4.1.3' mods/WTT-Artem-Revival/README.md
           grep -q 'Core' mods/WTT-Artem-Revival/docs/content-audit.md
 
@@ -57,8 +58,11 @@ jobs:
           python -m py_compile mods/WTT-Artem-Revival/tools/validate_bundle_archives.py
           python -m py_compile mods/WTT-Artem-Revival/tests/validate_content.py
           python -m py_compile mods/WTT-Artem-Revival/tests/test_bundle_validator.py
+          python -m py_compile mods/WTT-Artem-Revival/tests/test_localization.py
       - name: Bundle validator regression test
         run: python mods/WTT-Artem-Revival/tests/test_bundle_validator.py
+      - name: Localization source regression test
+        run: python mods/WTT-Artem-Revival/tests/test_localization.py
       - name: Validate JSON and imported runtime data when present
         shell: python
         run: |
