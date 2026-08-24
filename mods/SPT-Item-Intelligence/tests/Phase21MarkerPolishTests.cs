@@ -34,6 +34,10 @@ static class Phase21MarkerPolishTests
         Expect(overlay.Contains("float haloSize = size * 1.70f") &&
                overlay.Contains("haloColor.a = settings.MarkerHaloStrength * settings.MarkerOpacity"),
             "halo spread follows marker size and inherits marker opacity semantics", ref assertions);
+        Expect(overlay.Contains("haloRect.pivot = new Vector2(0.5f, 0.5f)") &&
+               overlay.Contains("right ? -size * 0.5f : size * 0.5f") &&
+               overlay.Contains("-size * 0.5f"),
+            "halo is centered on the marker glyph for both left and right anchoring", ref assertions);
         return assertions;
     }
 
