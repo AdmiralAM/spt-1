@@ -1,0 +1,130 @@
+name: Artem Revival Validate
+
+on:
+  push:
+    branches: [ main, artem-revival-spt-4.1.3 ]
+    paths:
+      - 'mods/WTT-Artem-Revival/**'
+      - '.github/workflows/artem-revival-validate.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mods/WTT-Artem-Revival/**'
+      - '.github/workflows/artem-revival-validate.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: artem-revival-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  workspace:
+    name: Revival workspace contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate module skeleton
+        shell: bash
+        run: |
+          test -f mods/WTT-Artem-Revival/README.md
+          test -f mods/WTT-Artem-Revival/docs/revival-status.md
+          test -f mods/WTT-Artem-Revival/docs/content-audit.md
+          grep -q 'SPT 4.1.3' mods/WTT-Artem-Revival/README.md
+          grep -q 'Core' mods/WTT-Artem-Revival/docs/content-audit.md
+
+  data:
+    name: Artem content structure
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate JSON when runtime data is present
+        shell: python
+        run: |
+          from pathlib import Path
+          import json, sys
+
+          root = Path('mods/WTT-Artem-Revival')
+          candidates = list(root.rglob('*.json'))
+          if not candidates:
+              print('No runtime JSON imported yet; foundation-only validation.')
+              sys.exit(0)
+
+          failed = []
+          for path in candidates:
+              try:
+                  with path.open('r', encoding='utf-8-sig') as f:
+                      json.load(f)
+              except Exception as exc:
+                  failed.append((str(path), str(exc)))
+
+          if failed:
+              for path, error in failed:
+                  print(f'INVALID JSON: {path}: {error}')
+              raise SystemExit(1)
+
+          print(f'Validated {len(candidates)} JSON files.')
+
+  server:
+    name: Artem .NET 10 server build
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Detect server project
+        id: detect
+        shell: pwsh
+        run: |
+          $project = Get-ChildItem 'mods/WTT-Artem-Revival' -Recurse -Filter '*.csproj' | Select-Object -First 1
+          if ($null -eq $project) {
+            'present=false' >> $env:GITHUB_OUTPUT
+            Write-Host 'No Artem csproj imported yet; foundation-only validation.'
+          } else {
+            'present=true' >> $env:GITHUB_OUTPUT
+            "project=$($project.FullName)" >> $env:GITHUB_OUTPUT
+          }
+      - name: Setup .NET 10
+        if: steps.detect.outputs.present == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build server
+        if: steps.detect.outputs.present == 'true'
+        shell: pwsh
+        run: dotnet build '${{ steps.detect.outputs.project }}' -c Release --nologo
+
+  tests:
+    name: Artem regression tests
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Detect test projects
+        id: detect
+        shell: pwsh
+        run: |
+          $projects = Get-ChildItem 'mods/WTT-Artem-Revival' -Recurse -Filter '*Tests.csproj'
+          if ($projects.Count -eq 0) {
+            'present=false' >> $env:GITHUB_OUTPUT
+            Write-Host 'No Artem test project imported yet; foundation-only validation.'
+          } else {
+            'present=true' >> $env:GITHUB_OUTPUT
+          }
+      - name: Setup .NET 10
+        if: steps.detect.outputs.present == 'true'
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Run tests
+        if: steps.detect.outputs.present == 'true'
+        shell: pwsh
+        run: |
+          Get-ChildItem 'mods/WTT-Artem-Revival' -Recurse -Filter '*Tests.csproj' | ForEach-Object {
+            dotnet test $_.FullName -c Release --nologo
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
