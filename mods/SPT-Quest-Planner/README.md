@@ -1,8 +1,21 @@
 # SPT Quest Planner
 
-Standalone quest-planning module for SPT 4.1.x. Current client/server version: **0.9.0**.
+Standalone quest-planning module for SPT 4.1.x. Current client version: **0.9.4**.
 
 Quest Planner is independent from Item Intelligence, Belt/Armband Inventory, Pause, and Tactical HUD. It owns its data contracts, server extraction, domain model, client cache, tests, and presentation lifecycle.
+
+## Current workflow
+
+The planner now exposes a user-facing planning loop rather than a debug-only data view:
+
+- **Recommended Raid** presents the top-ranked location with preparation context and a direct `Plan this raid` action.
+- **Active Raid Plan** is explicit and independent from temporary preview selection.
+- **Before Raid** shows exact proven bring-item needs, owned/missing quantities, and flags ambiguous preparation requirements for manual verification instead of pretending certainty.
+- **In Raid Checklist** presents compact proven objectives with progress, remaining work, quest labels, and target context.
+- **Progression** ranks actionable Active/Available quest candidates and lets the user keep a deliberate progression target.
+- Raid ranking, inclusion of available quests, active raid plan, progression target, and meaningful workspace choice are persisted through BepInEx config. Temporary preview selection remains intentionally transient.
+- Persisted plans are revalidated against refreshed quest state; stale active plans are cleared instead of surviving after they are no longer actionable.
+- Routine refresh/recommendation diagnostics are no longer emitted as normal info-level noise.
 
 ## Purpose
 
@@ -19,11 +32,11 @@ The planner derives player-relative quest information from authoritative SPT dat
 
 - `server/` — extracts authoritative quest/profile data and exposes planner snapshots.
 - `src/` — shared contracts, normalized quest/domain models, extraction, projection, and evaluation logic.
-- `client/` — BepInEx client, bounded refresh/cache lifecycle, raid-plan provider, and planner presentation.
-- `tests/` — regression coverage for domain, extraction, projection, and presentation contracts.
+- `client/` — BepInEx client, bounded refresh/cache lifecycle, raid-plan provider, durable planner state, and planner presentation.
+- `tests/` — regression coverage for domain, extraction, projection, ranking, preparation, and presentation-state contracts.
 - `docs/` — architecture and durable design notes.
 
-The planner does not use per-frame server calls or full graph recomputation. Expensive topology/database work is cached or refreshed at bounded lifecycle events.
+The planner does not use per-frame server calls or full graph recomputation. Expensive topology/database work is cached or refreshed at bounded lifecycle events. Planner-state persistence is event-driven and config writes are flushed on the Unity main thread rather than from refresh worker tasks.
 
 ## Independence contract
 
