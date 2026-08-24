@@ -1,26 +1,34 @@
 # SPT Quest Planner
 
-Standalone quest-planning module for SPT 4.1.x. Current client/server version: **0.9.0**.
+Standalone quest-planning module for SPT 4.1.x. Current client/server version: **0.9.4**.
 
-Quest Planner is independent from Item Intelligence, Belt/Armband Inventory, Pause, and Tactical HUD. It owns its data contracts, server extraction, domain model, client cache, tests, and presentation lifecycle.
+Quest Planner is independent from Item Intelligence, Belt/Armband Inventory, Pause, and Tactical HUD. It owns its data contracts, server extraction, domain model, client cache, tests, persistence, recommendation logic, and presentation lifecycle.
 
 ## Purpose
 
-The planner derives player-relative quest information from authoritative SPT data, including:
+The planner derives player-relative quest information from authoritative SPT data and turns it into two user-facing workflows:
+
+- **Plan a Raid** — rank actionable locations, explain why a raid is recommended, show preparation requirements, let the player select a persistent Active Raid Plan, and present a concise in-raid checklist.
+- **What to Do Next** — rank active/available quest progression targets, explain blockers/item burden/unlocks, and let the player keep a persistent progression focus.
+
+Under those workflows the planner owns:
 
 - quest topology and prerequisite chains;
 - active, available, completed, and future progression state;
 - quest conditions and item requirements;
 - outstanding-versus-owned requirement calculations;
-- readable quest/objective labels;
-- raid-oriented planning data and presentation.
+- readable quest/objective/location labels;
+- bounded candidate selection and recommendation ranking;
+- raid-oriented objective grouping and preparation checks;
+- persistent planner state for active raid/progression selections;
+- read-only selection/active-plan snapshots for future narrow integration with other modules.
 
 ## Architecture
 
 - `server/` — extracts authoritative quest/profile data and exposes planner snapshots.
 - `src/` — shared contracts, normalized quest/domain models, extraction, projection, and evaluation logic.
-- `client/` — BepInEx client, bounded refresh/cache lifecycle, raid-plan provider, and planner presentation.
-- `tests/` — regression coverage for domain, extraction, projection, and presentation contracts.
+- `client/` — BepInEx client, bounded refresh/cache lifecycle, recommendation engine, raid-plan provider, persistence, and planner presentation.
+- `tests/` — regression coverage for domain, extraction, projection, ranking, persistence semantics, and presentation contracts.
 - `docs/` — architecture and durable design notes.
 
 The planner does not use per-frame server calls or full graph recomputation. Expensive topology/database work is cached or refreshed at bounded lifecycle events.
@@ -29,7 +37,7 @@ The planner does not use per-frame server calls or full graph recomputation. Exp
 
 Quest Planner must not depend on another SPT mod's UI classes, runtime controllers, or private registries. Shared data may be introduced only through a narrow, explicit, versioned contract when duplication is materially worse than the coupling.
 
-Item Intelligence can expose similar quest/item facts, but it is not Quest Planner's source of truth.
+Item Intelligence can expose similar quest/item facts, but it is not Quest Planner's source of truth. The current client exposes read-only planner selection/active-plan snapshots so future integrations can consume planner decisions without owning planner internals.
 
 ## Validation and publication
 
