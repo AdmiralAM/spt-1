@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using UnityEngine;
 
 namespace SPTItemIntelligence
@@ -32,6 +33,7 @@ namespace SPTItemIntelligence
                 richText = false,
                 padding = new RectOffset(0, 0, 1, 2)
             };
+            GUIStyle semanticLabel = new GUIStyle(label) { richText = true };
 
             string[] lines = new string[lineCount];
             float naturalWidth = 0f;
@@ -84,11 +86,15 @@ namespace SPTItemIntelligence
                 string line = lines[i];
                 if (line.Length > 0)
                 {
-                    label.normal.textColor = ResolveColor(line, settings);
+                    Color semantic = ResolveColor(line, settings);
+                    bool hasSemanticProgress = semantic != Color.white && HasProgressRatio(line);
+                    GUIStyle activeStyle = hasSemanticProgress ? semanticLabel : label;
+                    activeStyle.normal.textColor = Color.white;
+                    string rendered = hasSemanticProgress ? ApplySemanticProgressColor(line, semantic) : line;
                     GUI.Label(
                         new Rect(x + horizontalPadding, yCursor, textWidth, rowHeights[i]),
-                        line,
-                        label);
+                        rendered,
+                        activeStyle);
                 }
                 yCursor += rowHeights[i] + rowGap;
             }
@@ -109,47 +115,109 @@ namespace SPTItemIntelligence
         internal static Color ResolveColor(string line, ItemIntelligenceUiSettings settings)
         {
             if (string.IsNullOrEmpty(line) || settings == null) return Color.white;
-            if (line.EndsWith("✓", StringComparison.Ordinal)) return settings.CompleteColor;
 
-            int colon = line.IndexOf(':');
-            int slash = line.IndexOf('/');
-            if (colon >= 0 && slash > colon)
+            bool found = false;
+            bool anyProgress = false;
+            bool allComplete = true;
+            int cursor = 0;
+            while (TryReadNextRatio(line, ref cursor, out int owned, out int required))
             {
-                int owned;
-                int required;
-                if (TryReadNumberBeforeSlash(line, colon + 1, slash, out owned) &&
-                    TryReadNumberAfterSlash(line, slash + 1, out required) && required > 0)
-                {
-                    if (owned <= 0) return settings.MissingColor;
-                    if (owned < required) return settings.PartialColor;
-                    return settings.CompleteColor;
-                }
+                if (required <= 0) continue;
+                found = true;
+                if (owned > 0) anyProgress = true;
+                if (owned < required) allComplete = false;
             }
 
-            return Color.white;
+            if (!found) return Color.white;
+            if (allComplete) return settings.CompleteColor;
+            if (!anyProgress) return settings.MissingColor;
+            return settings.PartialColor;
         }
 
-        static bool TryReadNumberBeforeSlash(string line, int start, int slash, out int value)
+        internal static string ApplySemanticProgressColor(string line, Color color)
         {
-            value = 0;
-            int first = -1;
-            for (int i = start; i < slash; i++)
+            if (string.IsNullOrEmpty(line)) return line ?? string.Empty;
+            string hex = ColorUtility.ToHtmlStringRGB(color);
+            StringBuilder result = new StringBuilder(line.Length + 48);
+            int cursor = 0;
+            int scan = 0;
+            while (TryFindNextRatio(line, scan, out int start, out int end))
+            {
+                result.Append(line, cursor, start - cursor);
+                result.Append("<color=#").Append(hex).Append('>');
+                result.Append(line, start, end - start);
+                result.Append("</color>");
+                cursor = end;
+                scan = end;
+            }
+            result.Append(line, cursor, line.Length - cursor);
+
+            string colored = result.ToString();
+            if (colored.EndsWith("✓", StringComparison.Ordinal))
+                colored = colored.Substring(0, colored.Length - 1) + "<color=#" + hex + ">✓</color>";
+            return colored;
+        }
+
+        static bool HasProgressRatio(string line)
+        {
+            int cursor = 0;
+            return TryReadNextRatio(line, ref cursor, out _, out _);
+        }
+
+        static bool TryReadNextRatio(string line, ref int cursor, out int owned, out int required)
+        {
+            owned = 0;
+            required = 0;
+            if (!TryFindNextRatio(line, cursor, out int start, out int end))
+            {
+                cursor = line == null ? 0 : line.Length;
+                return false;
+            }
+
+            int slash = line.IndexOf('/', start, end - start);
+            if (slash < 0)
+            {
+                cursor = end;
+                return false;
+            }
+
+            bool parsed = int.TryParse(line.Substring(start, slash - start), out owned) &&
+                          int.TryParse(line.Substring(slash + 1, end - slash - 1), out required);
+            cursor = end;
+            return parsed;
+        }
+
+        static bool TryFindNextRatio(string line, int startAt, out int start, out int end)
+        {
+            start = -1;
+            end = -1;
+            if (string.IsNullOrEmpty(line)) return false;
+
+            for (int i = Math.Max(0, startAt); i < line.Length; i++)
             {
                 if (!char.IsDigit(line[i])) continue;
-                first = i;
-                break;
-            }
-            if (first < 0) return false;
-            return int.TryParse(line.Substring(first, slash - first).Trim(), out value);
-        }
+                int firstEnd = i;
+                while (firstEnd < line.Length && char.IsDigit(line[firstEnd])) firstEnd++;
+                if (firstEnd >= line.Length || line[firstEnd] != '/')
+                {
+                    i = firstEnd;
+                    continue;
+                }
 
-        static bool TryReadNumberAfterSlash(string line, int start, out int value)
-        {
-            value = 0;
-            int end = start;
-            while (end < line.Length && char.IsDigit(line[end])) end++;
-            if (end == start) return false;
-            return int.TryParse(line.Substring(start, end - start), out value);
+                int secondStart = firstEnd + 1;
+                int secondEnd = secondStart;
+                while (secondEnd < line.Length && char.IsDigit(line[secondEnd])) secondEnd++;
+                if (secondEnd == secondStart)
+                {
+                    i = firstEnd;
+                    continue;
+                }
+
+                start = i;
+                end = secondEnd;
+                return true;
+            }
+            return false;
         }
     }
 }
