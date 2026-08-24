@@ -27,6 +27,7 @@ public sealed class PlannerRaidOpportunityBuilderTests
 
         Assert.Equal("Customs", result[0].LocationId);
         Assert.Equal(2, result[0].QuestCount);
+        Assert.Equal(2, result[0].VisitCount);
         Assert.Equal("Woods", result[1].LocationId);
     }
 
@@ -68,6 +69,8 @@ public sealed class PlannerRaidOpportunityBuilderTests
         Assert.Equal(2, result.Count);
         Assert.All(result, value => Assert.Contains(value.Objectives, objective => objective.QuestId == "qGlobal"));
         Assert.All(result, value => Assert.Equal(1, value.GlobalObjectiveCount));
+        Assert.All(result, value => Assert.Equal(1, value.KillCount));
+        Assert.All(result, value => Assert.Contains(value.RaidObjectives, objective => objective.QuestId == "qGlobal" && objective.Global));
     }
 
     [Fact]
@@ -77,7 +80,8 @@ public sealed class PlannerRaidOpportunityBuilderTests
             "q1", "loc", "Location", "Finish", "counter", new[] { "Customs" }, new[] { "Customs" }, PlannerObjectiveKind.LocationConstraint);
         PlannerLocationObjective container = new(
             "q1", "counter", "CounterCreator", "Finish", null, Array.Empty<string>(), new[] { "Customs" }, PlannerObjectiveKind.Other);
-        PlannerLocationObjective kill = Objective("q1", "kill", "Customs");
+        PlannerLocationObjective kill = new(
+            "q1", "kill", "Kills", "Finish", "counter", new[] { "Savage" }, new[] { "Customs" }, PlannerObjectiveKind.Kill);
         PlannerLocationIndex locations = new(
             new Dictionary<string, PlannerLocationBucket>(StringComparer.OrdinalIgnoreCase)
             {
@@ -88,6 +92,8 @@ public sealed class PlannerRaidOpportunityBuilderTests
         PlannerRaidOpportunity opportunity = Assert.Single(PlannerRaidOpportunityBuilder.Build(locations, State(Quest("q1", 4))));
         PlannerLocationObjective only = Assert.Single(opportunity.Objectives);
         Assert.Equal("kill", only.ConditionId);
+        Assert.Equal(1, opportunity.KillCount);
+        Assert.Equal(0, opportunity.OtherCount);
     }
 
     [Fact]
@@ -108,6 +114,7 @@ public sealed class PlannerRaidOpportunityBuilderTests
             State(Quest("qCustoms", 4), Quest("qHandover", 4))));
 
         Assert.DoesNotContain(opportunity.Objectives, objective => objective.QuestId == "qHandover");
+        Assert.DoesNotContain(opportunity.RaidObjectives, objective => objective.QuestId == "qHandover");
         Assert.Equal(0, opportunity.GlobalObjectiveCount);
     }
 
@@ -130,6 +137,7 @@ public sealed class PlannerRaidOpportunityBuilderTests
 
         Assert.Contains(opportunity.Objectives, objective => objective.QuestId == "qFind");
         Assert.Equal(1, opportunity.GlobalObjectiveCount);
+        Assert.Equal(1, opportunity.FindCount);
     }
 
     private static PlannerLocationObjective Objective(string questId, string conditionId, string location)
