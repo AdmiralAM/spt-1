@@ -29,6 +29,7 @@
     <Compile Include="..\client\PlannerRaidPlanProvider.cs" Link="PlannerRaidPlanProvider.cs" />
     <Compile Include="..\client\PlannerRaidPlanViewModel.cs" Link="PlannerRaidPlanViewModel.cs" />
     <Compile Include="..\client\PlannerRaidPlanUiState.cs" Link="PlannerRaidPlanUiState.cs" />
+    <Compile Include="..\client\PlannerSelectionSnapshot.cs" Link="PlannerSelectionSnapshot.cs" />
     <Compile Include="..\client\PlannerDisplayNames.cs" Link="PlannerDisplayNames.cs" />
     <Compile Include="..\client\PlannerQuestLabels.cs" Link="PlannerQuestLabels.cs" />
     <Compile Include="..\client\PlannerQueryEngine.cs" Link="PlannerQueryEngine.cs" />
