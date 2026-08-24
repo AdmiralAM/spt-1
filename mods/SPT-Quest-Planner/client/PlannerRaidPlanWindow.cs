@@ -7,7 +7,6 @@ namespace SPTQuestPlanner.Client
     public sealed class PlannerRaidPlanWindow
     {
         private const int WindowId = 0x51504C4E;
-        private static readonly Color BackdropColor = new Color(0f, 0f, 0f, 1f);
         private static readonly Color WindowBackgroundColor = new Color(0.075f, 0.08f, 0.085f, 1f);
         private readonly PlannerRaidPlanPresentationController presentation;
         private readonly Func<long> revisionProvider;
@@ -19,9 +18,7 @@ namespace SPTQuestPlanner.Client
         private GUIStyle opaqueWindowStyle;
         private Texture2D opaqueWindowTexture;
 
-        public PlannerRaidPlanWindow(
-            PlannerRaidPlanPresentationController presentation,
-            Func<long> revisionProvider)
+        public PlannerRaidPlanWindow(PlannerRaidPlanPresentationController presentation, Func<long> revisionProvider)
         {
             this.presentation = presentation ?? throw new ArgumentNullException("presentation");
             this.revisionProvider = revisionProvider ?? throw new ArgumentNullException("revisionProvider");
@@ -44,10 +41,8 @@ namespace SPTQuestPlanner.Client
         public void Draw()
         {
             if (!visible) return;
-
             inputBlocker.Ensure();
             EnsureOpaqueWindowStyle();
-            DrawModalBackdrop();
 
             Color previousColor = GUI.color;
             Color previousBackground = GUI.backgroundColor;
@@ -64,13 +59,11 @@ namespace SPTQuestPlanner.Client
         private void EnsureOpaqueWindowStyle()
         {
             if (opaqueWindowStyle != null && opaqueWindowTexture != null) return;
-
             opaqueWindowTexture = new Texture2D(1, 1, TextureFormat.RGBA32, false);
             opaqueWindowTexture.name = "QuestPlannerOpaqueWindow";
             opaqueWindowTexture.hideFlags = HideFlags.HideAndDontSave;
             opaqueWindowTexture.SetPixel(0, 0, WindowBackgroundColor);
             opaqueWindowTexture.Apply(false, true);
-
             opaqueWindowStyle = new GUIStyle(GUI.skin.window);
             opaqueWindowStyle.normal.background = opaqueWindowTexture;
             opaqueWindowStyle.onNormal.background = opaqueWindowTexture;
@@ -82,21 +75,10 @@ namespace SPTQuestPlanner.Client
             opaqueWindowStyle.onFocused.background = opaqueWindowTexture;
         }
 
-        private static void DrawModalBackdrop()
-        {
-            Color previous = GUI.color;
-            GUI.color = BackdropColor;
-            GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture, ScaleMode.StretchToFill, true);
-            GUI.color = previous;
-        }
-
         private static bool IsPointerEvent(EventType type)
         {
-            return type == EventType.MouseDown ||
-                   type == EventType.MouseUp ||
-                   type == EventType.MouseDrag ||
-                   type == EventType.ScrollWheel ||
-                   type == EventType.ContextClick;
+            return type == EventType.MouseDown || type == EventType.MouseUp || type == EventType.MouseDrag ||
+                   type == EventType.ScrollWheel || type == EventType.ContextClick;
         }
 
         private void DrawWindow(int id)
@@ -118,13 +100,11 @@ namespace SPTQuestPlanner.Client
             GUILayout.EndHorizontal();
 
             DrawControls(uiState);
-
             GUILayout.BeginHorizontal();
             DrawLocationList(viewModel, uiState);
             DrawDetails(selected);
             GUILayout.EndHorizontal();
             GUILayout.EndVertical();
-
             GUI.DragWindow(new Rect(0f, 0f, windowRect.width - 140f, 24f));
         }
 
@@ -132,20 +112,15 @@ namespace SPTQuestPlanner.Client
         {
             GUILayout.BeginHorizontal();
             GUILayout.Label("Rank:", GUILayout.Width(38f));
-
             bool readyFirst = uiState.RankingMode == PlannerRaidPlanRankingMode.ReadyFirst;
             if (GUILayout.Toggle(readyFirst, "Ready first", "Button", GUILayout.Width(100f)) && !readyFirst)
                 uiState.SetRankingMode(PlannerRaidPlanRankingMode.ReadyFirst);
-
             bool densityFirst = uiState.RankingMode == PlannerRaidPlanRankingMode.QuestDensityFirst;
             if (GUILayout.Toggle(densityFirst, "Quest density", "Button", GUILayout.Width(110f)) && !densityFirst)
                 uiState.SetRankingMode(PlannerRaidPlanRankingMode.QuestDensityFirst);
-
             GUILayout.Space(12f);
             bool includeAvailable = GUILayout.Toggle(uiState.IncludeAvailable, "Include available quests", GUILayout.Width(160f));
-            if (includeAvailable != uiState.IncludeAvailable)
-                uiState.SetIncludeAvailable(includeAvailable);
-
+            if (includeAvailable != uiState.IncludeAvailable) uiState.SetIncludeAvailable(includeAvailable);
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
@@ -181,26 +156,19 @@ namespace SPTQuestPlanner.Client
 
             GUILayout.Label(PlannerDisplayNames.Location(card.LocationId) + " — raid plan");
             GUILayout.Label(card.QuestCount + " relevant quests   " + card.ObjectiveCount + " objectives");
-            GUILayout.Label(card.PreparationReady
-                ? "Preparation: ready"
-                : "Preparation: missing " + card.MissingBringTemplateCount + " required item type(s)");
-            if (card.KnownRemainingWork > 0d)
-                GUILayout.Label("Known remaining counter work: " + FormatNumber(card.KnownRemainingWork));
+            GUILayout.Label(card.PreparationReady ? "Preparation: ready" : "Preparation: missing " + card.MissingBringTemplateCount + " required item type(s)");
+            if (card.KnownRemainingWork > 0d) GUILayout.Label("Known remaining counter work: " + FormatNumber(card.KnownRemainingWork));
 
             PlannerClientCache cache = Plugin.Cache;
             PlannerTopologyIndex topology = cache == null ? null : cache.TopologyIndex;
             PlannerLocaleIndex locale = cache == null ? null : cache.LocaleIndex;
-
             detailScroll = GUILayout.BeginScrollView(detailScroll, GUILayout.ExpandHeight(true));
             GUILayout.Space(6f);
             GUILayout.Label("Objectives");
             for (int i = 0; i < card.Objectives.Count; i++)
             {
                 PlannerRaidObjective objective = card.Objectives[i];
-                string progress = objective.HasProgress
-                    ? "  " + FormatNumber(objective.CurrentValue ?? 0d) + "/" + FormatNumber(objective.RequiredValue ?? 0d) +
-                      " (remain " + FormatNumber(objective.RemainingValue ?? 0d) + ")"
-                    : string.Empty;
+                string progress = objective.HasProgress ? "  " + FormatNumber(objective.CurrentValue ?? 0d) + "/" + FormatNumber(objective.RequiredValue ?? 0d) + " (remain " + FormatNumber(objective.RemainingValue ?? 0d) + ")" : string.Empty;
                 string targets = FormatTargets(objective, locale);
                 string questLabel = PlannerQuestLabels.Resolve(topology, locale, objective.QuestId);
                 GUILayout.Label("• " + PlannerDisplayNames.Objective(objective.Kind) + " — " + questLabel + progress + targets);
@@ -208,19 +176,14 @@ namespace SPTQuestPlanner.Client
 
             GUILayout.Space(10f);
             GUILayout.Label("Bring / preparation");
-            if (card.BringNeeds.Count == 0)
-            {
-                GUILayout.Label("No proven bring-items for this raid plan.");
-            }
+            if (card.BringNeeds.Count == 0) GUILayout.Label("No proven bring-items for this raid plan.");
             else
             {
                 for (int i = 0; i < card.BringNeeds.Count; i++)
                 {
                     PlannerRaidBringNeed need = card.BringNeeds[i];
                     string itemLabel = locale == null ? need.TemplateId : locale.ItemName(need.TemplateId);
-                    GUILayout.Label("• " + itemLabel + "  need " + FormatNumber(need.Required) +
-                                    " / owned " + FormatNumber(need.Owned) +
-                                    " / missing " + FormatNumber(need.Missing));
+                    GUILayout.Label("• " + itemLabel + "  need " + FormatNumber(need.Required) + " / owned " + FormatNumber(need.Owned) + " / missing " + FormatNumber(need.Missing));
                 }
             }
             GUILayout.EndScrollView();
@@ -231,11 +194,7 @@ namespace SPTQuestPlanner.Client
         {
             if (objective.Targets.Count == 0) return string.Empty;
             string[] labels = new string[objective.Targets.Count];
-            for (int i = 0; i < objective.Targets.Count; i++)
-            {
-                string target = objective.Targets[i];
-                labels[i] = locale == null ? target : locale.ItemName(target);
-            }
+            for (int i = 0; i < objective.Targets.Count; i++) labels[i] = locale == null ? objective.Targets[i] : locale.ItemName(objective.Targets[i]);
             return "  [" + string.Join(", ", labels) + "]";
         }
 
