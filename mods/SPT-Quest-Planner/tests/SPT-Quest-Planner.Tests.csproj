@@ -38,6 +38,7 @@
     <Compile Include="..\client\PlannerRecommendationViewModel.cs" Link="PlannerRecommendationViewModel.cs" />
     <Compile Include="..\client\PlannerRecommendationProvider.cs" Link="PlannerRecommendationProvider.cs" />
     <Compile Include="..\client\RefreshScheduler.cs" Link="RefreshScheduler.cs" />
+    <Compile Include="..\client\VisibleRefreshGate.cs" Link="VisibleRefreshGate.cs" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="xunit" Version="2.9.3" />

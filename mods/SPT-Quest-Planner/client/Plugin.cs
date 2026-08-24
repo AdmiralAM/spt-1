@@ -11,12 +11,15 @@ namespace SPTQuestPlanner.Client
     [BepInPlugin("com.admiralam.spt.questplanner", "Quest planner MOD SPT", "0.9.0")]
     public sealed class Plugin : BaseUnityPlugin
     {
+        private const float VisibleRefreshIntervalSeconds = 15f;
+
         private CancellationTokenSource cancellation;
         private PlannerRefreshCoordinator refresh;
         private PlannerRefreshScheduler scheduler;
         private Task initialLoad;
         private PlannerRaidPlanWindow window;
         private ConfigEntry<KeyboardShortcut> toggleWindowKey;
+        private readonly VisibleRefreshGate visibleRefreshGate = new VisibleRefreshGate(VisibleRefreshIntervalSeconds);
 
         internal static PlannerClientCache Cache { get; private set; }
         internal static PlannerRaidPlanProvider RaidPlans { get; private set; }
@@ -50,13 +53,27 @@ namespace SPTQuestPlanner.Client
 
         private void Update()
         {
-            ConfigEntry<KeyboardShortcut> key = toggleWindowKey;
             PlannerRaidPlanWindow value = window;
-            if (key == null || value == null || !key.Value.IsDown()) return;
+            if (value == null) return;
 
-            value.Toggle();
-            if (value.Visible)
-                RequestStateRefresh("ui-open");
+            ConfigEntry<KeyboardShortcut> key = toggleWindowKey;
+            if (key != null && key.Value.IsDown())
+            {
+                value.Toggle();
+                if (value.Visible)
+                {
+                    RequestStateRefresh("ui-open");
+                    visibleRefreshGate.Open(Time.unscaledTime);
+                }
+                else
+                {
+                    visibleRefreshGate.Close();
+                }
+            }
+
+            if (!value.Visible) return;
+            if (visibleRefreshGate.ShouldRefresh(Time.unscaledTime))
+                RequestStateRefresh("ui-visible-cadence");
         }
 
         private void OnGUI()
@@ -69,7 +86,10 @@ namespace SPTQuestPlanner.Client
             }
             catch (Exception ex)
             {
+                // A malformed custom quest must not turn a presentation exception into
+                // repeated OnGUI failures every event/frame. Close the window and log once.
                 value.Hide();
+                visibleRefreshGate.Close();
                 Logger.LogError("Quest planner MOD SPT UI disabled after render failure: " + ex.GetBaseException().Message);
             }
         }
@@ -209,6 +229,7 @@ namespace SPTQuestPlanner.Client
             if (scheduler != null) scheduler.Dispose();
             if (cancellation != null) cancellation.Cancel();
             if (window != null) window.Hide();
+            visibleRefreshGate.Close();
             initialLoad = null;
             window = null;
             toggleWindowKey = null;
