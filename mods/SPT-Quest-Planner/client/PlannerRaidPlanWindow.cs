@@ -105,11 +105,14 @@ namespace SPTQuestPlanner.Client
         private void DrawHeader(PlannerRaidPlanViewModel viewModel, PlannerRaidPlanUiState uiState)
         {
             GUILayout.BeginHorizontal();
+            PlannerRaidPlanCard focusedRaid = FocusedRaid(viewModel, uiState);
             string status = uiState.HasActivePlan
                 ? "Active plan: " + PlannerDisplayNames.Location(uiState.ActiveLocationId)
-                : viewModel.TopRecommendation == null
-                    ? "No raid plan available"
-                    : "Best raid: " + PlannerDisplayNames.Location(viewModel.TopRecommendation.LocationId);
+                : focusedRaid != null
+                    ? "Focus raid: " + PlannerDisplayNames.Location(focusedRaid.LocationId)
+                    : viewModel.TopRecommendation == null
+                        ? "No raid plan available"
+                        : "Best raid: " + PlannerDisplayNames.Location(viewModel.TopRecommendation.LocationId);
             GUILayout.Label(status, GUILayout.ExpandWidth(true));
             if (GUILayout.Button("Refresh", GUILayout.Width(75f)))
             {
@@ -162,7 +165,8 @@ namespace SPTQuestPlanner.Client
 
         private static void DrawRecommendedRaid(PlannerRaidPlanViewModel viewModel, PlannerRaidPlanUiState uiState)
         {
-            PlannerRaidPlanCard recommended = viewModel.TopRecommendation;
+            PlannerRaidPlanCard focused = FocusedRaid(viewModel, uiState);
+            PlannerRaidPlanCard recommended = focused ?? viewModel.TopRecommendation;
             if (recommended == null)
             {
                 GUILayout.BeginVertical("box");
@@ -174,9 +178,11 @@ namespace SPTQuestPlanner.Client
 
             GUILayout.BeginHorizontal("box");
             GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
-            GUILayout.Label("BEST RAID RIGHT NOW — " + PlannerDisplayNames.Location(recommended.LocationId));
+            GUILayout.Label((focused != null ? "BEST RAID FOR YOUR FOCUS — " : "BEST RAID RIGHT NOW — ") + PlannerDisplayNames.Location(recommended.LocationId));
             GUILayout.Label(PlanBenefit(recommended));
-            GUILayout.Label("Why this is #1: " + recommended.RankReason);
+            GUILayout.Label(focused != null
+                ? "Why: this is the highest-ranked raid that advances your focused quest."
+                : "Why this is #1: " + recommended.RankReason);
             GUILayout.Label("Preparation: " + recommended.PreparationLabel + ".");
             GUILayout.EndVertical();
             if (GUILayout.Button("USE THIS PLAN", GUILayout.Width(130f), GUILayout.Height(66f))) uiState.ActivateLocation(recommended.LocationId);
@@ -210,7 +216,8 @@ namespace SPTQuestPlanner.Client
                 PlannerRaidPlanCard card = viewModel.Cards[i];
                 bool selected = string.Equals(card.LocationId, uiState.SelectedLocationId, StringComparison.OrdinalIgnoreCase);
                 bool active = string.Equals(card.LocationId, uiState.ActiveLocationId, StringComparison.OrdinalIgnoreCase);
-                string prefix = active ? "CURRENT  " : "#" + card.Rank + "  ";
+                bool focus = uiState.HasProgressionTarget && card.SupportsQuest(uiState.ProgressionTargetQuestId);
+                string prefix = active ? "CURRENT  " : focus ? "FOCUS  #" + card.Rank + "  " : "#" + card.Rank + "  ";
                 string label = prefix + PlannerDisplayNames.Location(card.LocationId) + "\n" +
                                card.ActionSummary + "  •  " + card.PreparationLabel;
                 if (GUILayout.Toggle(selected, label, "Button", GUILayout.MinHeight(54f)) && !selected)
@@ -231,9 +238,10 @@ namespace SPTQuestPlanner.Client
             }
 
             bool isActive = active != null && string.Equals(active.LocationId, card.LocationId, StringComparison.OrdinalIgnoreCase);
+            bool advancesFocus = uiState.HasProgressionTarget && card.SupportsQuest(uiState.ProgressionTargetQuestId);
             GUILayout.BeginHorizontal();
             GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
-            GUILayout.Label(PlannerDisplayNames.Location(card.LocationId) + (isActive ? " — CURRENT PLAN" : " — preview"));
+            GUILayout.Label(PlannerDisplayNames.Location(card.LocationId) + (isActive ? " — CURRENT PLAN" : advancesFocus ? " — advances your focus" : " — preview"));
             GUILayout.Label(PlanBenefit(card));
             GUILayout.Label("Preparation: " + card.PreparationLabel + ".");
             GUILayout.EndVertical();
@@ -261,7 +269,8 @@ namespace SPTQuestPlanner.Client
                     string progress = ObjectiveProgress(objective);
                     string targets = FormatTargets(objective, locale);
                     string questLabel = PlannerQuestLabels.Resolve(topology, locale, objective.QuestId);
-                    GUILayout.Label("□ " + PlannerDisplayNames.Objective(objective.Kind) + progress + targets);
+                    string focusMarker = uiState.HasProgressionTarget && string.Equals(objective.QuestId, uiState.ProgressionTargetQuestId, StringComparison.Ordinal) ? " [FOCUS]" : string.Empty;
+                    GUILayout.Label("□ " + PlannerDisplayNames.Objective(objective.Kind) + progress + targets + focusMarker);
                     GUILayout.Label("    Quest: " + questLabel);
                 }
             }
@@ -369,6 +378,16 @@ namespace SPTQuestPlanner.Client
             if (GUILayout.Button("Clear focus", GUILayout.Width(85f), GUILayout.Height(42f))) uiState.ClearProgressionTarget();
             GUILayout.EndHorizontal();
 
+            PlannerRaidPlanCard focusRaid = Plugin.GetRaidForProgressionTarget();
+            if (focusRaid != null)
+            {
+                GUILayout.Space(5f);
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("RAID FOR THIS QUEST: " + PlannerDisplayNames.Location(focusRaid.LocationId) + " • " + focusRaid.ActionSummary, GUILayout.ExpandWidth(true));
+                if (GUILayout.Button("SHOW RAID", GUILayout.Width(95f))) uiState.SetWorkspaceMode(PlannerWorkspaceMode.RaidPlanner);
+                GUILayout.EndHorizontal();
+            }
+
             if (target.BlockerQuestNames.Count > 0)
             {
                 GUILayout.Space(5f);
@@ -389,6 +408,12 @@ namespace SPTQuestPlanner.Client
                 GUILayout.Label(string.Join(", ", target.ImmediateUnlockQuestNames));
             }
             GUILayout.EndVertical();
+        }
+
+        private static PlannerRaidPlanCard FocusedRaid(PlannerRaidPlanViewModel viewModel, PlannerRaidPlanUiState uiState)
+        {
+            if (viewModel == null || uiState == null || !uiState.HasProgressionTarget) return null;
+            return viewModel.BestForQuest(uiState.ProgressionTargetQuestId);
         }
 
         private static string PlanBenefit(PlannerRaidPlanCard card)
