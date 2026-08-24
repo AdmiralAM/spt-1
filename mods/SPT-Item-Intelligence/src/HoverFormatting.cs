@@ -35,7 +35,8 @@ namespace SPTItemIntelligence
             IEnumerable<string> requirementDetails = null,
             int ownedFoundInRaid = 0,
             int questNowFoundInRaid = 0,
-            int questLaterFoundInRaid = 0)
+            int questLaterFoundInRaid = 0,
+            string perSlotLine = null)
         {
             Primary = primary ?? string.Empty;
             Secondary = secondary ?? string.Empty;
@@ -53,26 +54,14 @@ namespace SPTItemIntelligence
             int availableFir = OwnedFoundInRaid;
             int availableNonFir = Math.Max(0, OwnedCount - OwnedFoundInRaid);
 
-            RequirementAllocation questNow = AllocateRequirement(
-                QuestNeededNow,
-                QuestNowFoundInRaid,
-                ref availableFir,
-                ref availableNonFir);
+            RequirementAllocation questNow = AllocateRequirement(QuestNeededNow, QuestNowFoundInRaid, ref availableFir, ref availableNonFir);
             QuestNowOwned = questNow.TotalOwned;
             QuestNowFoundInRaidOwned = questNow.FoundInRaidOwned;
 
-            RequirementAllocation hideout = AllocateRequirement(
-                HideoutNeeded,
-                0,
-                ref availableFir,
-                ref availableNonFir);
+            RequirementAllocation hideout = AllocateRequirement(HideoutNeeded, 0, ref availableFir, ref availableNonFir);
             HideoutOwned = hideout.TotalOwned;
 
-            RequirementAllocation questLater = AllocateRequirement(
-                QuestNeededLater,
-                QuestLaterFoundInRaid,
-                ref availableFir,
-                ref availableNonFir);
+            RequirementAllocation questLater = AllocateRequirement(QuestNeededLater, QuestLaterFoundInRaid, ref availableFir, ref availableNonFir);
             QuestLaterOwned = questLater.TotalOwned;
             QuestLaterFoundInRaidOwned = questLater.FoundInRaidOwned;
 
@@ -81,13 +70,11 @@ namespace SPTItemIntelligence
             QuestLaterMissing = QuestNeededLater - QuestLaterOwned;
 
             ValueLine = Primary.Length == 0 ? string.Empty : "Value: " + Primary;
-            QuestNowLine = RequirementLine(
-                "Quest Now", QuestNowOwned, QuestNeededNow, QuestNowFoundInRaidOwned, QuestNowFoundInRaid);
+            QuestNowLine = RequirementLine("Quest Now", QuestNowOwned, QuestNeededNow, QuestNowFoundInRaidOwned, QuestNowFoundInRaid);
             HideoutLine = RequirementLine("Hideout", HideoutOwned, HideoutNeeded, 0, 0);
-            QuestLaterLine = RequirementLine(
-                "Quest Later", QuestLaterOwned, QuestNeededLater, QuestLaterFoundInRaidOwned, QuestLaterFoundInRaid);
+            QuestLaterLine = RequirementLine("Quest Later", QuestLaterOwned, QuestNeededLater, QuestLaterFoundInRaidOwned, QuestLaterFoundInRaid);
             KeepLine = CountLine("Keep", KeepCount);
-            PerSlotLine = string.Empty;
+            PerSlotLine = perSlotLine ?? string.Empty;
             OwnedLine = OwnedFoundInRaid > 0
                 ? "Owned ×" + OwnedCount.ToString(CultureInfo.InvariantCulture) + " · FIR ×" + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture)
                 : CountLine("Owned", OwnedCount);
@@ -147,10 +134,7 @@ namespace SPTItemIntelligence
         public int DetailedRequirementCount { get; }
         public string MoreRequirementsLine { get; }
         public bool HasData => Primary.Length != 0 || Secondary.Length != 0 || Status.Length != 0 || KeepCount > 0;
-        public bool IsDiagnostic =>
-            string.Equals(Status, "LOADING ITEM DATA", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(Status, "NO REQUIREMENT DATA", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(Status, "DATA UNAVAILABLE", StringComparison.OrdinalIgnoreCase);
+        public bool IsDiagnostic => string.Equals(Status, "LOADING ITEM DATA", StringComparison.OrdinalIgnoreCase) || string.Equals(Status, "NO REQUIREMENT DATA", StringComparison.OrdinalIgnoreCase) || string.Equals(Status, "DATA UNAVAILABLE", StringComparison.OrdinalIgnoreCase);
 
         public int GetLineCount(ItemTooltipMode mode)
         {
@@ -174,7 +158,11 @@ namespace SPTItemIntelligence
             }
 
             if (TryLine(ValueLine, requestedIndex, ref current, out found)) return found;
-            if (mode == ItemTooltipMode.Full && TryLine(Secondary, requestedIndex, ref current, out found)) return found;
+            if (mode == ItemTooltipMode.Full)
+            {
+                if (TryLine(Secondary, requestedIndex, ref current, out found)) return found;
+                if (TryLine(PerSlotLine, requestedIndex, ref current, out found)) return found;
+            }
             if (mode != ItemTooltipMode.Minimal)
             {
                 if (TryLine(QuestNowLine, requestedIndex, ref current, out found)) return found;
@@ -187,32 +175,24 @@ namespace SPTItemIntelligence
             {
                 if (TryLine(OwnedLine, requestedIndex, ref current, out found)) return found;
                 IReadOnlyList<string> selected = mode == ItemTooltipMode.Full ? RequirementDetailLines : DetailedRequirementLines;
-                for (int i = 0; i < selected.Count; i++)
-                    if (TryLine(selected[i], requestedIndex, ref current, out found)) return found;
+                for (int i = 0; i < selected.Count; i++) if (TryLine(selected[i], requestedIndex, ref current, out found)) return found;
                 if (mode == ItemTooltipMode.Detailed && TryLine(MoreRequirementsLine, requestedIndex, ref current, out found)) return found;
             }
             if (current == 0 && requestedIndex == 0) return "No active requirements";
             return string.Empty;
         }
 
-        static RequirementAllocation AllocateRequirement(
-            int required,
-            int foundInRaidRequired,
-            ref int availableFir,
-            ref int availableNonFir)
+        static RequirementAllocation AllocateRequirement(int required, int foundInRaidRequired, ref int availableFir, ref int availableNonFir)
         {
             int firRequired = Math.Min(required, Math.Max(0, foundInRaidRequired));
             int anyRequired = Math.Max(0, required - firRequired);
-
             int firForFir = Math.Min(availableFir, firRequired);
             availableFir -= firForFir;
-
             int nonFirForAny = Math.Min(availableNonFir, anyRequired);
             availableNonFir -= nonFirForAny;
             int anyStillMissing = anyRequired - nonFirForAny;
             int firForAny = Math.Min(availableFir, anyStillMissing);
             availableFir -= firForAny;
-
             return new RequirementAllocation(firForFir + nonFirForAny + firForAny, firForFir);
         }
 
@@ -225,27 +205,19 @@ namespace SPTItemIntelligence
             return true;
         }
 
-        static string CountLine(string label, int count)
-        {
-            return count <= 0 ? string.Empty : label + " ×" + count.ToString(CultureInfo.InvariantCulture);
-        }
+        static string CountLine(string label, int count) => count <= 0 ? string.Empty : label + " ×" + count.ToString(CultureInfo.InvariantCulture);
 
         static string RequirementLine(string label, int owned, int required, int firOwned, int firRequired)
         {
             if (required <= 0) return string.Empty;
             string line = label + ": " + owned.ToString(CultureInfo.InvariantCulture) + "/" + required.ToString(CultureInfo.InvariantCulture);
-            if (firRequired > 0)
-                line += " · FIR " + firOwned.ToString(CultureInfo.InvariantCulture) + "/" + firRequired.ToString(CultureInfo.InvariantCulture);
+            if (firRequired > 0) line += " · FIR " + firOwned.ToString(CultureInfo.InvariantCulture) + "/" + firRequired.ToString(CultureInfo.InvariantCulture);
             return owned >= required && firOwned >= firRequired ? line + " ✓" : line;
         }
 
         readonly struct RequirementAllocation
         {
-            public RequirementAllocation(int totalOwned, int foundInRaidOwned)
-            {
-                TotalOwned = totalOwned;
-                FoundInRaidOwned = foundInRaidOwned;
-            }
+            public RequirementAllocation(int totalOwned, int foundInRaidOwned) { TotalOwned = totalOwned; FoundInRaidOwned = foundInRaidOwned; }
             public int TotalOwned { get; }
             public int FoundInRaidOwned { get; }
         }
@@ -253,10 +225,7 @@ namespace SPTItemIntelligence
 
     public sealed class ItemHoverTextFormatter
     {
-        public ItemHoverText Format(ItemHoverState hover)
-        {
-            return Format(hover, ItemValueMode.Vendor);
-        }
+        public ItemHoverText Format(ItemHoverState hover) => Format(hover, ItemValueMode.Vendor);
 
         public ItemHoverText Format(ItemHoverState hover, ItemValueMode valueMode)
         {
@@ -270,28 +239,14 @@ namespace SPTItemIntelligence
             long alternateValue = fleaPrimary ? hover.TraderUnitValue : hover.FleaUnitValue;
             string alternateSource = fleaPrimary ? trader : "Flea";
             string secondary = alternateValue > 0 ? alternateSource + ": " + FormatRoubles(alternateValue) : string.Empty;
+            string perSlot = hover.ValuePerSlot > 0 ? "Per slot: " + FormatRoubles(hover.ValuePerSlot) : string.Empty;
             FirRequirementState fir = FirRequirementRegistry.Get(hover.TemplateId);
-            return new ItemHoverText(
-                primary,
-                secondary,
-                string.Empty,
-                hover.TemplateId,
-                hover.OwnedCount,
-                hover.QuestNeededNow,
-                hover.QuestNeededLater,
-                hover.HideoutNeeded,
-                hover.KeepCount,
-                string.Empty,
-                FormatRequirementDetails(hover.RequirementDetails),
-                fir.OwnedFoundInRaid,
-                fir.QuestNowFoundInRaid,
-                fir.QuestLaterFoundInRaid);
+            return new ItemHoverText(primary, secondary, string.Empty, hover.TemplateId, hover.OwnedCount, hover.QuestNeededNow, hover.QuestNeededLater, hover.HideoutNeeded, hover.KeepCount, string.Empty, FormatRequirementDetails(hover.RequirementDetails), fir.OwnedFoundInRaid, fir.QuestNowFoundInRaid, fir.QuestLaterFoundInRaid, perSlot);
         }
 
         static IEnumerable<string> FormatRequirementDetails(IReadOnlyList<RequirementDetail> details)
         {
             if (details == null) yield break;
-
             List<DetailAggregate> ordered = new List<DetailAggregate>();
             Dictionary<string, DetailAggregate> grouped = new Dictionary<string, DetailAggregate>(StringComparer.Ordinal);
             for (int i = 0; i < details.Count; i++)
@@ -308,12 +263,10 @@ namespace SPTItemIntelligence
                 }
                 aggregate.RemainingCount += detail.RemainingCount;
             }
-
             for (int i = 0; i < ordered.Count; i++)
             {
                 DetailAggregate detail = ordered[i];
-                string prefix = detail.Source == RequirementSource.CurrentQuest ? "Now" :
-                    detail.Source == RequirementSource.FutureQuest ? "Later" : "Hideout";
+                string prefix = detail.Source == RequirementSource.CurrentQuest ? "Now" : detail.Source == RequirementSource.FutureQuest ? "Later" : "Hideout";
                 string line = prefix + ": " + detail.Label + " ×" + detail.RemainingCount.ToString(CultureInfo.InvariantCulture);
                 if (detail.FoundInRaidRequired) line += " · FIR";
                 yield return line;
@@ -322,22 +275,14 @@ namespace SPTItemIntelligence
 
         sealed class DetailAggregate
         {
-            public DetailAggregate(RequirementSource source, string label, bool foundInRaidRequired)
-            {
-                Source = source;
-                Label = label;
-                FoundInRaidRequired = foundInRaidRequired;
-            }
+            public DetailAggregate(RequirementSource source, string label, bool foundInRaidRequired) { Source = source; Label = label; FoundInRaidRequired = foundInRaidRequired; }
             public RequirementSource Source { get; }
             public string Label { get; }
             public bool FoundInRaidRequired { get; }
             public int RemainingCount { get; set; }
         }
 
-        static string FormatRoubles(long value)
-        {
-            return value.ToString("N0", CultureInfo.InvariantCulture) + " ₽";
-        }
+        static string FormatRoubles(long value) => value.ToString("N0", CultureInfo.InvariantCulture) + " ₽";
     }
 
     public sealed class ItemHoverTextCache
@@ -360,15 +305,10 @@ namespace SPTItemIntelligence
             if (hover == null || !hover.HasData) return ItemHoverText.Empty;
             ItemPresentationState presentation = hover.Presentation;
             ItemValueMode valueMode = valueModeProvider();
-
             if (!object.ReferenceEquals(lastIndex, index) || !hasValueMode || valueMode != lastValueMode)
             {
-                cache.Clear();
-                lastIndex = index;
-                lastValueMode = valueMode;
-                hasValueMode = true;
+                cache.Clear(); lastIndex = index; lastValueMode = valueMode; hasValueMode = true;
             }
-
             ItemHoverText text;
             if (cache.TryGetValue(presentation, out text)) return text;
             text = formatter.Format(hover, valueMode);
