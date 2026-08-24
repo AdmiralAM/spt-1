@@ -37,3 +37,19 @@ jobs:
       - name: Build Item Intelligence server
         shell: pwsh
         run: dotnet build mods/SPT-Item-Intelligence/server/SPT-Item-Intelligence.Server.csproj -c Release
+      - name: Stage Item Intelligence runtime test build
+        shell: pwsh
+        run: |
+          $clientDir = 'runtime-test/BepInEx/plugins/SPT Item Intelligence'
+          $serverDir = 'runtime-test/SPT_Runtime/user/mods/SPT Item Intelligence Server'
+          New-Item -ItemType Directory -Force -Path $clientDir | Out-Null
+          New-Item -ItemType Directory -Force -Path $serverDir | Out-Null
+          Copy-Item 'mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/SPT Item Intelligence v0.10.1.dll' "$clientDir/SPT Item Intelligence.dll"
+          Copy-Item 'mods/SPT-Item-Intelligence/server/bin/Release/net10.0/SPT Item Intelligence Server.dll' "$serverDir/SPT Item Intelligence Server.dll"
+      - name: Upload Item Intelligence runtime test build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Item-Intelligence-MOD-SPT-runtime-test
+          path: runtime-test/**
+          if-no-files-found: error
+          retention-days: 7

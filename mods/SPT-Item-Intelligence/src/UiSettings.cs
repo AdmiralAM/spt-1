@@ -23,9 +23,8 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<float> markerOpacity;
         readonly ConfigEntry<float> markerOffsetX;
         readonly ConfigEntry<float> markerOffsetY;
-        readonly ConfigEntry<bool> markerGlow;
-        readonly ConfigEntry<float> markerGlowStrength;
-        readonly ConfigEntry<float> markerGlowRadius;
+        readonly ConfigEntry<bool> markerHalo;
+        readonly ConfigEntry<float> markerHaloStrength;
         readonly ConfigEntry<Color> defaultColor;
         readonly ConfigEntry<Color> questNowColor;
         readonly ConfigEntry<Color> hideoutColor;
@@ -46,7 +45,7 @@ namespace SPTItemIntelligence
             tooltipScale = config.Bind("Tooltip", "Scale", 1.00f,
                 new ConfigDescription("Overall tooltip scale.", new AcceptableValueRange<float>(0.75f, 1.50f)));
             tooltipOpacity = config.Bind("Tooltip", "Opacity", 0.96f,
-                new ConfigDescription("Tooltip background opacity.", new AcceptableValueRange<float>(0.35f, 1.00f)));
+                new ConfigDescription("Tooltip background opacity; 0 disables the background completely.", new AcceptableValueRange<float>(0f, 1.00f)));
             tooltipFontSize = config.Bind("Tooltip", "Font Size", 13,
                 new ConfigDescription("Tooltip text size before Scale is applied.", new AcceptableValueRange<int>(11, 18)));
 
@@ -60,12 +59,10 @@ namespace SPTItemIntelligence
                 new ConfigDescription("Horizontal offset from the selected edge. Positive values move inward; negative values move outward.", new AcceptableValueRange<float>(-80f, 80f)));
             markerOffsetY = config.Bind("Marker", "Offset Y", 3f,
                 new ConfigDescription("Vertical inset from the item cell upper edge; negative values move outward.", new AcceptableValueRange<float>(-40f, 40f)));
-            markerGlow = config.Bind("Marker", "Glow", true,
-                "Adds a subtle same-color halo behind the marker.");
-            markerGlowStrength = config.Bind("Marker", "Glow Strength", 0.24f,
-                new ConfigDescription("Opacity of the marker halo.", new AcceptableValueRange<float>(0f, 0.75f)));
-            markerGlowRadius = config.Bind("Marker", "Glow Radius", 1.6f,
-                new ConfigDescription("Spread of the marker halo in pixels.", new AcceptableValueRange<float>(0.5f, 4f)));
+            markerHalo = config.Bind("Marker", "Halo", false,
+                "Adds a soft diffuse same-color halo behind the marker. Disabled by default until visually accepted in runtime.");
+            markerHaloStrength = config.Bind("Marker", "Halo Strength", 0.22f,
+                new ConfigDescription("Opacity of the soft marker halo.", new AcceptableValueRange<float>(0f, 0.50f)));
 
             defaultColor = ColorEntry(config, "Marker Colors", "Default Color", new Color(0.90f, 0.90f, 0.90f), "No unmet requirement.");
             questNowColor = ColorEntry(config, "Marker Colors", "Quest Now Color", new Color(1.00f, 0.35f, 0.21f), "Unmet active quest requirement.");
@@ -86,9 +83,8 @@ namespace SPTItemIntelligence
             markerOpacity.SettingChanged += delegate { Touch(); };
             markerOffsetX.SettingChanged += delegate { Touch(); };
             markerOffsetY.SettingChanged += delegate { Touch(); };
-            markerGlow.SettingChanged += delegate { Touch(); };
-            markerGlowStrength.SettingChanged += delegate { Touch(); };
-            markerGlowRadius.SettingChanged += delegate { Touch(); };
+            markerHalo.SettingChanged += delegate { Touch(); };
+            markerHaloStrength.SettingChanged += delegate { Touch(); };
             defaultColor.SettingChanged += delegate { Touch(); };
             questNowColor.SettingChanged += delegate { Touch(); };
             hideoutColor.SettingChanged += delegate { Touch(); };
@@ -108,9 +104,8 @@ namespace SPTItemIntelligence
         public float MarkerOpacity => Mathf.Clamp01(markerOpacity.Value);
         public float MarkerOffsetX => Mathf.Clamp(markerOffsetX.Value, -80f, 80f);
         public float MarkerOffsetY => Mathf.Clamp(markerOffsetY.Value, -40f, 40f);
-        public bool MarkerGlow => markerGlow.Value;
-        public float MarkerGlowStrength => Mathf.Clamp(markerGlowStrength.Value, 0f, 0.75f);
-        public float MarkerGlowRadius => Mathf.Clamp(markerGlowRadius.Value, 0.5f, 4f);
+        public bool MarkerHalo => markerHalo.Value;
+        public float MarkerHaloStrength => Mathf.Clamp(markerHaloStrength.Value, 0f, 0.50f);
         public Color CompleteColor => enoughColor.Value;
         public Color PartialColor => partialColor.Value;
         public Color MissingColor => missingColor.Value;
