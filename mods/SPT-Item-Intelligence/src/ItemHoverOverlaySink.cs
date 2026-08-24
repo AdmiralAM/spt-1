@@ -310,7 +310,7 @@ namespace SPTItemIntelligence
                         haloRect.SetParent(anchor, false);
                         haloRect.anchorMin = new Vector2(0f, 1f);
                         haloRect.anchorMax = new Vector2(0f, 1f);
-                        haloRect.pivot = new Vector2(0f, 1f);
+                        haloRect.pivot = new Vector2(0.5f, 0.5f);
                         haloRect.localScale = Vector3.one;
                         haloRect.localRotation = Quaternion.identity;
                         haloImage = haloObject.AddComponent(imageType) as Component;
@@ -385,10 +385,10 @@ namespace SPTItemIntelligence
                 {
                     haloRect.anchorMin = anchor;
                     haloRect.anchorMax = anchor;
-                    haloRect.pivot = anchor;
+                    haloRect.pivot = new Vector2(0.5f, 0.5f);
                     float haloSize = size * 1.70f;
                     haloRect.sizeDelta = new Vector2(haloSize, haloSize);
-                    haloRect.anchoredPosition = position;
+                    haloRect.anchoredPosition = position + new Vector2(right ? -size * 0.5f : size * 0.5f, -size * 0.5f);
                     Color haloColor = color;
                     haloColor.a = settings.MarkerHaloStrength * settings.MarkerOpacity;
                     Set(haloImage, "color", haloColor);
