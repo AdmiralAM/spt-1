@@ -4,7 +4,10 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-      - 'mods/SPT-Belt-Armband-Inventory/**'
+      - 'mods/SPT-Belt-Armband-Inventory/src/**'
+      - 'mods/SPT-Belt-Armband-Inventory/server/**'
+      - 'mods/SPT-Belt-Armband-Inventory/tests/**'
+      - 'mods/SPT-Belt-Armband-Inventory/tools/**'
       - '.github/workflows/belt-armband-validate.yml'
   workflow_dispatch:
 
