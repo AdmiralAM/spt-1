@@ -86,20 +86,17 @@ namespace SPTQuestPlanner.Client
             long revision = revisionProvider();
             PlannerRaidPlanViewModel viewModel = presentation.GetViewModel(revision, 12);
             PlannerRaidPlanUiState uiState = presentation.UiState;
-            PlannerRaidPlanCard selected = uiState.ResolveSelection(viewModel);
-            PlannerRaidPlanCard active = uiState.ResolveActivePlan(viewModel);
 
             GUILayout.BeginVertical();
             DrawHeader(viewModel);
-            DrawActivePlanBanner(active, uiState);
-            DrawRecommendedRaid(viewModel, uiState, active);
-            DrawRecommendations(uiState);
+            DrawWorkspaceTabs(uiState);
             GUILayout.Space(4f);
-            DrawControls(uiState);
-            GUILayout.BeginHorizontal();
-            DrawLocationList(viewModel, uiState);
-            DrawDetails(selected, active, uiState);
-            GUILayout.EndHorizontal();
+
+            if (uiState.WorkspaceMode == PlannerWorkspaceMode.Progression)
+                DrawProgressionWorkspace(uiState);
+            else
+                DrawRaidWorkspace(viewModel, uiState);
+
             GUILayout.EndVertical();
             GUI.DragWindow(new Rect(0f, 0f, windowRect.width - 140f, 24f));
         }
@@ -107,13 +104,41 @@ namespace SPTQuestPlanner.Client
         private void DrawHeader(PlannerRaidPlanViewModel viewModel)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Raid plans: " + viewModel.LocationCount + "   Ready: " + viewModel.ReadyLocationCount, GUILayout.ExpandWidth(true));
-            if (GUILayout.Button("Refresh data", GUILayout.Width(100f)))
+            GUILayout.Label("Quest Planner", GUILayout.ExpandWidth(true));
+            GUILayout.Label("Raid plans: " + viewModel.LocationCount + "   Prep ready: " + viewModel.ReadyLocationCount, GUILayout.Width(210f));
+            if (GUILayout.Button("Refresh", GUILayout.Width(75f)))
             {
                 Plugin instance = Plugin.Instance;
                 if (instance != null) instance.RequestStateRefresh("ui-manual");
             }
             if (GUILayout.Button("X", GUILayout.Width(30f))) Hide();
+            GUILayout.EndHorizontal();
+        }
+
+        private static void DrawWorkspaceTabs(PlannerRaidPlanUiState uiState)
+        {
+            GUILayout.BeginHorizontal();
+            bool raid = uiState.WorkspaceMode == PlannerWorkspaceMode.RaidPlanner;
+            if (GUILayout.Toggle(raid, "RAID PLANNER", "Button", GUILayout.Height(30f)) && !raid)
+                uiState.SetWorkspaceMode(PlannerWorkspaceMode.RaidPlanner);
+            bool progression = uiState.WorkspaceMode == PlannerWorkspaceMode.Progression;
+            if (GUILayout.Toggle(progression, "PROGRESSION", "Button", GUILayout.Height(30f)) && !progression)
+                uiState.SetWorkspaceMode(PlannerWorkspaceMode.Progression);
+            GUILayout.EndHorizontal();
+        }
+
+        private void DrawRaidWorkspace(PlannerRaidPlanViewModel viewModel, PlannerRaidPlanUiState uiState)
+        {
+            PlannerRaidPlanCard selected = uiState.ResolveSelection(viewModel);
+            PlannerRaidPlanCard active = uiState.ResolveActivePlan(viewModel);
+
+            DrawActivePlanBanner(active, uiState);
+            DrawRecommendedRaid(viewModel, uiState, active);
+            DrawRaidControls(uiState);
+
+            GUILayout.BeginHorizontal();
+            DrawLocationList(viewModel, uiState);
+            DrawDetails(selected, active, uiState);
             GUILayout.EndHorizontal();
         }
 
@@ -123,7 +148,7 @@ namespace SPTQuestPlanner.Client
             GUILayout.BeginHorizontal("box");
             GUILayout.Label("ACTIVE RAID PLAN: " + PlannerDisplayNames.Location(active.LocationId) +
                             "  |  " + active.QuestCount + " quest(s) / " + active.ObjectiveCount + " objective(s)" +
-                            (active.PreparationReady ? "  |  READY" : "  |  PREPARATION NEEDED"), GUILayout.ExpandWidth(true));
+                            (active.PreparationReady ? "  |  PREP READY" : "  |  PREPARATION NEEDED"), GUILayout.ExpandWidth(true));
             if (GUILayout.Button("Clear", GUILayout.Width(60f))) uiState.ClearActivePlan();
             GUILayout.EndHorizontal();
         }
@@ -136,99 +161,27 @@ namespace SPTQuestPlanner.Client
             GUILayout.BeginHorizontal("box");
             GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
             GUILayout.Label("RECOMMENDED RAID — " + PlannerDisplayNames.Location(recommended.LocationId));
-            GUILayout.Label(
-                recommended.QuestCount + " quest(s) / " + recommended.ObjectiveCount + " proven objective(s)  |  " +
-                (recommended.PreparationReady ? "ready to go" : "missing " + recommended.MissingBringTemplateCount + " preparation item type(s)"));
+            GUILayout.Label(recommended.QuestCount + " quest(s) / " + recommended.ObjectiveCount + " proven objective(s)");
+            GUILayout.Label("Why: top-ranked combination of preparation readiness and actionable quest density.");
+            GUILayout.Label(recommended.PreparationReady
+                ? "Preparation: no proven bring-items are missing."
+                : "Preparation: missing " + recommended.MissingBringTemplateCount + " proven item type(s).");
             GUILayout.EndVertical();
 
             bool alreadyActive = active != null && string.Equals(active.LocationId, recommended.LocationId, StringComparison.OrdinalIgnoreCase);
             GUI.enabled = !alreadyActive;
-            if (GUILayout.Button(alreadyActive ? "ACTIVE" : "PLAN THIS RAID", GUILayout.Width(135f), GUILayout.Height(38f)))
+            if (GUILayout.Button(alreadyActive ? "ACTIVE" : "PLAN THIS RAID", GUILayout.Width(135f), GUILayout.Height(54f)))
                 uiState.ActivateLocation(recommended.LocationId);
             GUI.enabled = true;
             GUILayout.EndHorizontal();
         }
 
-        private static void DrawRecommendations(PlannerRaidPlanUiState uiState)
-        {
-            GUILayout.BeginVertical("box");
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("WHAT TO DO NEXT", GUILayout.ExpandWidth(true));
-            if (uiState.HasProgressionTarget && GUILayout.Button("Clear target", GUILayout.Width(85f))) uiState.ClearProgressionTarget();
-            GUILayout.EndHorizontal();
-
-            try
-            {
-                PlannerRecommendationSnapshot snapshot = Plugin.GetRecommendations(3);
-                if (snapshot.Recommendations.Count == 0)
-                {
-                    GUILayout.Label("No actionable Active/Available quest recommendations.");
-                }
-                else
-                {
-                    PlannerRecommendationViewModel selected = null;
-                    for (int i = 0; i < snapshot.Recommendations.Count; i++)
-                    {
-                        PlannerRecommendationViewModel value = snapshot.Recommendations[i];
-                        if (string.Equals(value.QuestId, uiState.ProgressionTargetQuestId, StringComparison.Ordinal)) selected = value;
-
-                        string burden = value.FullyOwned
-                            ? "items ready"
-                            : "missing " + FormatNumber(value.TotalOutstanding) +
-                              (value.FirOutstanding > 0d ? " (FIR " + FormatNumber(value.FirOutstanding) + ")" : string.Empty);
-                        string label = "#" + value.Rank + "  " + value.QuestName +
-                                       "   | blockers " + value.ImmediateBlockerCount +
-                                       " | " + burden +
-                                       " | unlocks " + value.ImmediateUnlockCount;
-                        bool isTarget = string.Equals(value.QuestId, uiState.ProgressionTargetQuestId, StringComparison.Ordinal);
-                        if (GUILayout.Toggle(isTarget, label, "Button", GUILayout.MinHeight(26f)) && !isTarget)
-                            uiState.SelectProgressionTarget(value.QuestId);
-                    }
-
-                    if (selected == null && uiState.HasProgressionTarget)
-                    {
-                        for (int i = 0; i < snapshot.Recommendations.Count; i++)
-                        {
-                            if (string.Equals(snapshot.Recommendations[i].QuestId, uiState.ProgressionTargetQuestId, StringComparison.Ordinal))
-                            {
-                                selected = snapshot.Recommendations[i];
-                                break;
-                            }
-                        }
-                    }
-                    DrawProgressionTarget(selected);
-                }
-            }
-            catch (Exception ex)
-            {
-                GUILayout.Label("Recommendations unavailable: " + ex.GetBaseException().Message);
-            }
-            GUILayout.EndVertical();
-        }
-
-        private static void DrawProgressionTarget(PlannerRecommendationViewModel target)
-        {
-            if (target == null) return;
-            GUILayout.Space(4f);
-            GUILayout.Label("PROGRESSION TARGET — " + target.QuestName);
-            GUILayout.Label("Path: " + target.PathQuestCount + " incomplete quest(s)  |  blockers: " + target.ImmediateBlockerCount +
-                            "  |  missing items: " + FormatNumber(target.TotalOutstanding) +
-                            (target.FirOutstanding > 0d ? " (FIR " + FormatNumber(target.FirOutstanding) + ")" : string.Empty) +
-                            "  |  immediate unlocks: " + target.ImmediateUnlockCount);
-            if (target.BlockerQuestNames.Count > 0)
-                GUILayout.Label("Blockers: " + string.Join(" → ", target.BlockerQuestNames));
-            if (target.ImmediateUnlockQuestNames.Count > 0)
-                GUILayout.Label("Unlocks next: " + string.Join(", ", target.ImmediateUnlockQuestNames));
-            if (target.Reasons.Count > 0)
-                GUILayout.Label("Why: " + string.Join("; ", target.Reasons));
-        }
-
-        private static void DrawControls(PlannerRaidPlanUiState uiState)
+        private static void DrawRaidControls(PlannerRaidPlanUiState uiState)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Raid ranking:", GUILayout.Width(78f));
+            GUILayout.Label("Ranking:", GUILayout.Width(55f));
             bool readyFirst = uiState.RankingMode == PlannerRaidPlanRankingMode.ReadyFirst;
-            if (GUILayout.Toggle(readyFirst, "Ready first", "Button", GUILayout.Width(100f)) && !readyFirst)
+            if (GUILayout.Toggle(readyFirst, "Prep first", "Button", GUILayout.Width(95f)) && !readyFirst)
                 uiState.SetRankingMode(PlannerRaidPlanRankingMode.ReadyFirst);
             bool densityFirst = uiState.RankingMode == PlannerRaidPlanRankingMode.QuestDensityFirst;
             if (GUILayout.Toggle(densityFirst, "Quest density", "Button", GUILayout.Width(110f)) && !densityFirst)
@@ -250,9 +203,9 @@ namespace SPTQuestPlanner.Client
                 PlannerRaidPlanCard card = viewModel.Cards[i];
                 bool selected = string.Equals(card.LocationId, uiState.SelectedLocationId, StringComparison.OrdinalIgnoreCase);
                 bool active = string.Equals(card.LocationId, uiState.ActiveLocationId, StringComparison.OrdinalIgnoreCase);
+                string status = card.PreparationReady ? "PREP READY" : "MISSING " + card.MissingBringTemplateCount;
                 string label = (active ? "ACTIVE  " : "#" + card.Rank + "  ") + PlannerDisplayNames.Location(card.LocationId) + "\n" +
-                               card.QuestCount + " quest(s) / " + card.ObjectiveCount + " objective(s)" +
-                               (card.PreparationReady ? "  [READY]" : "  [MISSING " + card.MissingBringTemplateCount + "]");
+                               card.QuestCount + " quest(s) / " + card.ObjectiveCount + " objective(s)  [" + status + "]";
                 if (GUILayout.Toggle(selected, label, "Button", GUILayout.MinHeight(48f)) && !selected)
                     uiState.SelectLocation(card.LocationId);
             }
@@ -272,13 +225,15 @@ namespace SPTQuestPlanner.Client
 
             bool isActive = active != null && string.Equals(active.LocationId, card.LocationId, StringComparison.OrdinalIgnoreCase);
             GUILayout.BeginHorizontal();
-            GUILayout.Label(PlannerDisplayNames.Location(card.LocationId) + (isActive ? " — ACTIVE RAID PLAN" : " — raid preview"), GUILayout.ExpandWidth(true));
+            GUILayout.Label(PlannerDisplayNames.Location(card.LocationId) + (isActive ? " — ACTIVE RAID PLAN" : " — preview"), GUILayout.ExpandWidth(true));
             if (!isActive && GUILayout.Button("SET ACTIVE PLAN", GUILayout.Width(125f))) uiState.ActivateLocation(card.LocationId);
             if (isActive && GUILayout.Button("CLEAR ACTIVE", GUILayout.Width(100f))) uiState.ClearActivePlan();
             GUILayout.EndHorizontal();
 
             GUILayout.Label(card.QuestCount + " relevant quest(s)   " + card.ObjectiveCount + " proven objective(s)");
-            GUILayout.Label(card.PreparationReady ? "Preparation: READY" : "Preparation: missing " + card.MissingBringTemplateCount + " required item type(s)");
+            GUILayout.Label(card.PreparationReady
+                ? "Preparation: no proven bring-items missing."
+                : "Preparation: missing " + card.MissingBringTemplateCount + " proven item type(s).");
             if (card.KnownRemainingWork > 0d) GUILayout.Label("Known remaining counter work: " + FormatNumber(card.KnownRemainingWork));
 
             PlannerClientCache cache = Plugin.Cache;
@@ -315,6 +270,79 @@ namespace SPTQuestPlanner.Client
                 GUILayout.Label("… " + (card.ObjectiveCount - card.Objectives.Count) + " more objective(s) hidden from this compact view.");
 
             GUILayout.EndScrollView();
+            GUILayout.EndVertical();
+        }
+
+        private static void DrawProgressionWorkspace(PlannerRaidPlanUiState uiState)
+        {
+            GUILayout.BeginVertical("box");
+            GUILayout.BeginHorizontal();
+            GUILayout.Label("PROGRESSION — choose what you want to push next", GUILayout.ExpandWidth(true));
+            if (uiState.HasProgressionTarget && GUILayout.Button("Clear target", GUILayout.Width(85f))) uiState.ClearProgressionTarget();
+            GUILayout.EndHorizontal();
+
+            try
+            {
+                PlannerRecommendationSnapshot snapshot = Plugin.GetRecommendations(8);
+                if (snapshot.Recommendations.Count == 0)
+                {
+                    GUILayout.Label("No actionable Active/Available quest recommendations.");
+                    GUILayout.EndVertical();
+                    return;
+                }
+
+                PlannerRecommendationViewModel selected = null;
+                for (int i = 0; i < snapshot.Recommendations.Count; i++)
+                {
+                    PlannerRecommendationViewModel value = snapshot.Recommendations[i];
+                    bool isTarget = string.Equals(value.QuestId, uiState.ProgressionTargetQuestId, StringComparison.Ordinal);
+                    if (isTarget) selected = value;
+
+                    string burden = value.FullyOwned
+                        ? "items ready"
+                        : "missing " + FormatNumber(value.TotalOutstanding) +
+                          (value.FirOutstanding > 0d ? " / FIR " + FormatNumber(value.FirOutstanding) : string.Empty);
+                    string label = "#" + value.Rank + "  " + value.QuestName + "\n" +
+                                   "blockers " + value.ImmediateBlockerCount + "  |  " + burden +
+                                   "  |  path " + value.PathQuestCount + "  |  unlocks " + value.ImmediateUnlockCount;
+                    if (GUILayout.Toggle(isTarget, label, "Button", GUILayout.MinHeight(44f)) && !isTarget)
+                    {
+                        uiState.SelectProgressionTarget(value.QuestId);
+                        selected = value;
+                    }
+                }
+
+                GUILayout.Space(8f);
+                DrawProgressionTarget(selected);
+            }
+            catch (Exception ex)
+            {
+                GUILayout.Label("Recommendations unavailable: " + ex.GetBaseException().Message);
+            }
+            GUILayout.EndVertical();
+        }
+
+        private static void DrawProgressionTarget(PlannerRecommendationViewModel target)
+        {
+            if (target == null)
+            {
+                GUILayout.Label("Select a quest above to inspect its progression value and blockers.");
+                return;
+            }
+
+            GUILayout.BeginVertical("box");
+            GUILayout.Label("TARGET — " + target.QuestName);
+            GUILayout.Label("Incomplete path: " + target.PathQuestCount + " quest(s)");
+            GUILayout.Label("Immediate blockers: " + target.ImmediateBlockerCount);
+            GUILayout.Label("Outstanding items: " + FormatNumber(target.TotalOutstanding) +
+                            (target.FirOutstanding > 0d ? "  |  FIR: " + FormatNumber(target.FirOutstanding) : string.Empty));
+            GUILayout.Label("Immediate unlocks after completion: " + target.ImmediateUnlockCount);
+            if (target.BlockerQuestNames.Count > 0)
+                GUILayout.Label("Blockers: " + string.Join(" → ", target.BlockerQuestNames));
+            if (target.ImmediateUnlockQuestNames.Count > 0)
+                GUILayout.Label("Unlocks next: " + string.Join(", ", target.ImmediateUnlockQuestNames));
+            if (target.Reasons.Count > 0)
+                GUILayout.Label("Why it ranks here: " + string.Join("; ", target.Reasons));
             GUILayout.EndVertical();
         }
 
