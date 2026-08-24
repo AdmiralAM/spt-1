@@ -1,5 +1,6 @@
 name: Quest Planner Validate
 
+# Validation branch trigger: this comment intentionally exercises the pull_request workflow.
 on:
   push:
     branches: [ main ]
