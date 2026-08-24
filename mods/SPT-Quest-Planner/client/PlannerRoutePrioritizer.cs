@@ -42,6 +42,10 @@ namespace SPTQuestPlanner.Client
     public sealed class PlannerRoutePrioritizer
     {
         private const int MaxCandidates = 256;
+        private const int BlockedDisposition = 1;
+        private const int ReachableDisposition = 2;
+        private const int AvailableDisposition = 3;
+        private const int ActiveDisposition = 4;
         private const int CompletedDisposition = 5;
         private const double Epsilon = 0.000001d;
 
@@ -127,8 +131,8 @@ namespace SPTQuestPlanner.Client
 
         private static int Compare(MutablePriority a, MutablePriority b)
         {
-            int completed = IsCompleted(a).CompareTo(IsCompleted(b));
-            if (completed != 0) return completed;
+            int disposition = DispositionPriority(a.TargetDisposition).CompareTo(DispositionPriority(b.TargetDisposition));
+            if (disposition != 0) return disposition;
 
             int blockers = a.ImmediateBlockerCount.CompareTo(b.ImmediateBlockerCount);
             if (blockers != 0) return blockers;
@@ -148,9 +152,17 @@ namespace SPTQuestPlanner.Client
             return string.Compare(a.TargetQuestId, b.TargetQuestId, StringComparison.Ordinal);
         }
 
-        private static bool IsCompleted(MutablePriority value)
+        private static int DispositionPriority(int disposition)
         {
-            return value.TargetDisposition == CompletedDisposition;
+            switch (disposition)
+            {
+                case ActiveDisposition: return 0;
+                case AvailableDisposition: return 1;
+                case ReachableDisposition: return 2;
+                case BlockedDisposition: return 3;
+                case CompletedDisposition: return 5;
+                default: return 4;
+            }
         }
 
         private static int CompareDouble(double a, double b)
