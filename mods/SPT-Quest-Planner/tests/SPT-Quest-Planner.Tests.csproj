@@ -11,9 +11,11 @@
     <Compile Include="..\src\InventoryProjection.cs" Link="InventoryProjection.cs" />
     <Compile Include="..\src\ProfileProjection.cs" Link="ProfileProjection.cs" />
     <Compile Include="..\src\QuestExtractor.cs" Link="QuestExtractor.cs" />
+    <Compile Include="..\src\QuestObjectiveExtractor.cs" Link="QuestObjectiveExtractor.cs" />
     <Compile Include="..\client\PlannerClientRuntime.cs" Link="PlannerClientRuntime.cs" />
     <Compile Include="..\client\PlannerClientIndex.cs" Link="PlannerClientIndex.cs" />
     <Compile Include="..\client\PlannerTopologyIndex.cs" Link="PlannerTopologyIndex.cs" />
+    <Compile Include="..\client\PlannerLocationIndex.cs" Link="PlannerLocationIndex.cs" />
     <Compile Include="..\client\PlannerQueryEngine.cs" Link="PlannerQueryEngine.cs" />
     <Compile Include="..\client\PlannerPathItemRequirements.cs" Link="PlannerPathItemRequirements.cs" />
     <Compile Include="..\client\PlannerPathItemPlanner.cs" Link="PlannerPathItemPlanner.cs" />
