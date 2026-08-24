@@ -51,6 +51,20 @@ namespace SPTQuestPlanner.Client
         public double FutureOutstandingAfterCurrent { get; private set; }
     }
 
+    public sealed class PlannerOwnedItem
+    {
+        public PlannerOwnedItem(string templateId, double total, double foundInRaid)
+        {
+            TemplateId = templateId ?? string.Empty;
+            Total = Math.Max(0d, total);
+            FoundInRaid = Math.Max(0d, foundInRaid);
+        }
+
+        public string TemplateId { get; private set; }
+        public double Total { get; private set; }
+        public double FoundInRaid { get; private set; }
+    }
+
     public sealed class PlannerConditionProgress
     {
         public PlannerConditionProgress(string counterId, string type, double value, string sourceQuestId)
@@ -73,18 +87,21 @@ namespace SPTQuestPlanner.Client
             long generatedAtUnixSeconds,
             IReadOnlyDictionary<string, PlannerQuestClientState> quests,
             IReadOnlyDictionary<string, PlannerItemClientState> items,
-            IReadOnlyDictionary<string, PlannerConditionProgress> conditionProgress = null)
+            IReadOnlyDictionary<string, PlannerConditionProgress> conditionProgress = null,
+            IReadOnlyDictionary<string, PlannerOwnedItem> inventory = null)
         {
             GeneratedAtUnixSeconds = generatedAtUnixSeconds;
             Quests = quests ?? new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal);
             Items = items ?? new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal);
             ConditionProgress = conditionProgress ?? new Dictionary<string, PlannerConditionProgress>(StringComparer.Ordinal);
+            Inventory = inventory ?? new Dictionary<string, PlannerOwnedItem>(StringComparer.Ordinal);
         }
 
         public long GeneratedAtUnixSeconds { get; private set; }
         public IReadOnlyDictionary<string, PlannerQuestClientState> Quests { get; private set; }
         public IReadOnlyDictionary<string, PlannerItemClientState> Items { get; private set; }
         public IReadOnlyDictionary<string, PlannerConditionProgress> ConditionProgress { get; private set; }
+        public IReadOnlyDictionary<string, PlannerOwnedItem> Inventory { get; private set; }
 
         public PlannerQuestClientState GetQuest(string questId)
         {
@@ -96,6 +113,12 @@ namespace SPTQuestPlanner.Client
         {
             PlannerItemClientState value;
             return !string.IsNullOrWhiteSpace(templateId) && Items.TryGetValue(templateId, out value) ? value : null;
+        }
+
+        public PlannerOwnedItem GetOwnedItem(string templateId)
+        {
+            PlannerOwnedItem value;
+            return !string.IsNullOrWhiteSpace(templateId) && Inventory.TryGetValue(templateId, out value) ? value : null;
         }
 
         public PlannerConditionProgress GetConditionProgress(string counterId)
@@ -166,7 +189,22 @@ namespace SPTQuestPlanner.Client
                     ReadString(Get(node, "sourceQuestId")));
             }
 
-            return new PlannerClientIndex(generated, quests, items, progress);
+            Dictionary<string, PlannerOwnedItem> inventory = new Dictionary<string, PlannerOwnedItem>(StringComparer.Ordinal);
+            object inventoryNode = Get(root, "inventory");
+            object byTemplate = Get(inventoryNode, "byTemplate");
+            foreach (KeyValuePair<string, object> entry in Properties(byTemplate))
+            {
+                object node = entry.Value;
+                string templateId = ReadString(Get(node, "templateId"));
+                if (string.IsNullOrWhiteSpace(templateId)) templateId = entry.Key;
+                if (string.IsNullOrWhiteSpace(templateId)) continue;
+                inventory[templateId] = new PlannerOwnedItem(
+                    templateId,
+                    ReadDouble(Get(node, "total"), 0d),
+                    ReadDouble(Get(node, "foundInRaid"), 0d));
+            }
+
+            return new PlannerClientIndex(generated, quests, items, progress, inventory);
         }
 
         private static object Get(object token, string name)
