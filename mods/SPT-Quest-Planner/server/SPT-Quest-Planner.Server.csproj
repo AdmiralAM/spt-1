@@ -14,6 +14,7 @@
     <Compile Include="..\src\PlannerDataContract.cs" Link="PlannerDataContract.cs" />
     <Compile Include="..\src\PlannerDomain.cs" Link="PlannerDomain.cs" />
     <Compile Include="..\src\PlannerTransportJson.cs" Link="PlannerTransportJson.cs" />
+    <Compile Include="..\src\SptObjectReader.cs" Link="SptObjectReader.cs" />
     <Compile Include="..\src\QuestExtractor.cs" Link="QuestExtractor.cs" />
     <Compile Include="..\src\QuestObjectiveExtractor.cs" Link="QuestObjectiveExtractor.cs" />
     <Compile Include="..\src\ProfileProjection.cs" Link="ProfileProjection.cs" />
