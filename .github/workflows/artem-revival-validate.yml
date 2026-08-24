@@ -31,8 +31,11 @@ jobs:
           test -f mods/WTT-Artem-Revival/README.md
           test -f mods/WTT-Artem-Revival/docs/revival-status.md
           test -f mods/WTT-Artem-Revival/docs/content-audit.md
+          test -f mods/WTT-Artem-Revival/docs/content-classification.md
+          test -f mods/WTT-Artem-Revival/docs/economy-audit.md
           test -f mods/WTT-Artem-Revival/docs/repair-log.md
           test -f mods/WTT-Artem-Revival/tools/import_runtime_core.py
+          test -f mods/WTT-Artem-Revival/tools/audit_runtime_content.py
           test -f mods/WTT-Artem-Revival/tests/validate_content.py
           grep -q 'SPT 4.1.3' mods/WTT-Artem-Revival/README.md
           grep -q 'Core' mods/WTT-Artem-Revival/docs/content-audit.md
@@ -47,6 +50,7 @@ jobs:
       - name: Compile Python tooling
         run: |
           python -m py_compile mods/WTT-Artem-Revival/tools/import_runtime_core.py
+          python -m py_compile mods/WTT-Artem-Revival/tools/audit_runtime_content.py
           python -m py_compile mods/WTT-Artem-Revival/tests/validate_content.py
       - name: Validate JSON and imported runtime data when present
         shell: python
@@ -72,8 +76,9 @@ jobs:
           resources = root / 'server' / 'Resources'
           if resources.exists():
               subprocess.run([sys.executable, str(root / 'tests' / 'validate_content.py')], check=True)
+              subprocess.run([sys.executable, str(root / 'tools' / 'audit_runtime_content.py'), str(resources)], check=True)
           else:
-              print('Runtime Resources are external/reproducibly imported; content validator deferred until import/package stage.')
+              print('Runtime Resources are external/reproducibly imported; content validator/auditor deferred until import/package stage.')
 
           print(f'Validated {len(candidates)} committed JSON files.')
 
