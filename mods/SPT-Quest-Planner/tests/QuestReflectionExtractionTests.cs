@@ -55,7 +55,7 @@ public sealed class QuestReflectionExtractionTests
         QuestExtractionResult result = QuestExtractor.Extract(raw);
 
         QuestNode node = Assert.Single(result.Nodes);
-        Assert.Equal("q1", node.Id);
+        Assert.Equal("q1", node.QuestId);
         Assert.Equal(12, node.MinimumLevel);
         Assert.Single(result.Prerequisites);
         ItemRequirement requirement = Assert.Single(result.ItemRequirements);
@@ -100,7 +100,7 @@ public sealed class QuestReflectionExtractionTests
         Dictionary<NonStringKey, QuestFixture> raw = new() { [new NonStringKey("q2")] = quest };
         QuestObjectiveExtractionResult result = QuestObjectiveExtractor.Extract(raw);
 
-        QuestObjectiveFact child = Assert.Single(result.Objectives.Where(x => x.ConditionId == "child"));
+        QuestObjectiveFact child = Assert.Single(result.Objectives, x => x.ConditionId == "child");
         Assert.Equal("q2", child.QuestId);
         Assert.Equal("parent", child.ParentConditionId);
         Assert.Equal(3d, child.RequiredValue);
