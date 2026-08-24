@@ -155,21 +155,29 @@ namespace SPTQuestPlanner.Client
     {
         private readonly object gate = new object();
         private PlannerPayload topology;
+        private PlannerTopologyIndex topologyIndex;
         private PlannerPayload state;
         private PlannerClientIndex index;
         private long revision;
 
         public long Revision { get { lock (gate) return revision; } }
-        public bool HasTopology { get { lock (gate) return topology != null; } }
-        public bool HasState { get { lock (gate) return state != null; } }
+        public bool HasTopology { get { lock (gate) return topology != null && topologyIndex != null; } }
+        public bool HasState { get { lock (gate) return state != null && index != null; } }
         public PlannerPayload Topology { get { lock (gate) return topology; } }
+        public PlannerTopologyIndex TopologyIndex { get { lock (gate) return topologyIndex; } }
         public PlannerPayload State { get { lock (gate) return state; } }
         public PlannerClientIndex Index { get { lock (gate) return index; } }
 
-        public void ReplaceTopology(PlannerPayload value)
+        public void ReplaceTopology(PlannerPayload value, PlannerTopologyIndex typedIndex)
         {
             if (value == null) throw new ArgumentNullException("value");
-            lock (gate) { topology = value; revision++; }
+            if (typedIndex == null) throw new ArgumentNullException("typedIndex");
+            lock (gate)
+            {
+                topology = value;
+                topologyIndex = typedIndex;
+                revision++;
+            }
         }
 
         public void ReplaceState(PlannerPayload value, PlannerClientIndex typedIndex)
@@ -207,7 +215,9 @@ namespace SPTQuestPlanner.Client
             token.ThrowIfCancellationRequested();
             try
             {
-                cache.ReplaceTopology(decoder.DecodeTopology(transport.GetJson(PlannerClientContract.TopologyRoute)));
+                PlannerPayload payload = decoder.DecodeTopology(transport.GetJson(PlannerClientContract.TopologyRoute));
+                PlannerTopologyIndex typedIndex = PlannerTopologyIndexBuilder.Build(payload.Json);
+                cache.ReplaceTopology(payload, typedIndex);
                 return true;
             }
             catch (Exception ex)
