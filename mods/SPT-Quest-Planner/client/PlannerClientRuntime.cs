@@ -8,6 +8,7 @@ namespace SPTQuestPlanner.Client
     {
         public const string TopologyRoute = "/admiralam/quest-planner/topology";
         public const string StateRoute = "/admiralam/quest-planner/state";
+        public const string LocaleRoute = "/admiralam/quest-planner/locales";
         public const int SchemaVersion = 9;
     }
 
@@ -118,17 +119,20 @@ namespace SPTQuestPlanner.Client
         private PlannerTopologyIndex topologyIndex;
         private PlannerRequirementIndex requirementIndex;
         private PlannerLocationIndex locationIndex;
+        private PlannerLocaleIndex localeIndex;
         private PlannerPayload state;
         private PlannerClientIndex index;
         private long revision;
 
         public long Revision { get { lock (gate) return revision; } }
         public bool HasTopology { get { lock (gate) return topology != null && topologyIndex != null && requirementIndex != null && locationIndex != null; } }
+        public bool HasLocale { get { lock (gate) return localeIndex != null; } }
         public bool HasState { get { lock (gate) return state != null && index != null; } }
         public PlannerPayload Topology { get { lock (gate) return topology; } }
         public PlannerTopologyIndex TopologyIndex { get { lock (gate) return topologyIndex; } }
         public PlannerRequirementIndex RequirementIndex { get { lock (gate) return requirementIndex; } }
         public PlannerLocationIndex LocationIndex { get { lock (gate) return locationIndex; } }
+        public PlannerLocaleIndex LocaleIndex { get { lock (gate) return localeIndex; } }
         public PlannerPayload State { get { lock (gate) return state; } }
         public PlannerClientIndex Index { get { lock (gate) return index; } }
 
@@ -148,6 +152,16 @@ namespace SPTQuestPlanner.Client
                 topologyIndex = typedIndex;
                 requirementIndex = typedRequirements;
                 locationIndex = typedLocations;
+                revision++;
+            }
+        }
+
+        public void ReplaceLocale(PlannerLocaleIndex value)
+        {
+            if (value == null) throw new ArgumentNullException("value");
+            lock (gate)
+            {
+                localeIndex = value;
                 revision++;
             }
         }
@@ -201,6 +215,24 @@ namespace SPTQuestPlanner.Client
             }
         }
 
+        public bool EnsureLocale(CancellationToken token, out string error)
+        {
+            error = null;
+            if (cache.HasLocale) return true;
+            token.ThrowIfCancellationRequested();
+            try
+            {
+                PlannerLocaleIndex locale = PlannerLocaleIndexBuilder.Build(transport.GetJson(PlannerClientContract.LocaleRoute));
+                cache.ReplaceLocale(locale);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                error = ex.GetBaseException().Message;
+                return false;
+            }
+        }
+
         public bool TryRefreshState(CancellationToken token, out string error)
         {
             error = null;
@@ -213,6 +245,8 @@ namespace SPTQuestPlanner.Client
             {
                 token.ThrowIfCancellationRequested();
                 if (!EnsureTopology(token, out error)) return false;
+                string localeError;
+                EnsureLocale(token, out localeError); // presentation-only; locale failure must not block planner state
                 PlannerPayload payload = decoder.DecodeState(transport.GetJson(PlannerClientContract.StateRoute));
                 PlannerClientIndex typedIndex = PlannerClientIndexBuilder.Build(payload.Json);
                 cache.ReplaceState(payload, typedIndex);
