@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 
 namespace SPTQuestPlanner;
@@ -10,7 +11,8 @@ public sealed record QuestObjectiveFact(
     string? ParentConditionId,
     IReadOnlyList<string> Targets,
     IReadOnlyList<string> LocationHints,
-    string? QuestLocationHint);
+    string? QuestLocationHint,
+    double? RequiredValue);
 
 public sealed record QuestObjectiveExtractionResult(
     IReadOnlyList<QuestObjectiveFact> Objectives,
@@ -54,7 +56,7 @@ public static class QuestObjectiveExtractor
             return;
 
         foreach (JsonElement condition in roots.EnumerateArray())
-            ExtractCondition(questId, questLocation, condition, phase, null, 0, output, warnings);
+            ExtractCondition(questId, questLocation, condition, phase, null, null, 0, output, warnings);
     }
 
     private static void ExtractCondition(
@@ -63,6 +65,7 @@ public static class QuestObjectiveExtractor
         JsonElement condition,
         string phase,
         string? parentConditionId,
+        double? parentRequiredValue,
         int depth,
         List<QuestObjectiveFact> output,
         List<string> warnings)
@@ -78,8 +81,9 @@ public static class QuestObjectiveExtractor
         string conditionType = GetString(condition, "conditionType") ?? GetString(condition, "type") ?? string.Empty;
         IReadOnlyList<string> targets = GetStringList(condition, "target");
         IReadOnlyList<string> locationHints = ExtractLocationHints(condition, conditionType, targets);
+        double? ownRequiredValue = GetNumber(condition, "value");
+        double? effectiveRequiredValue = ownRequiredValue ?? parentRequiredValue;
 
-        // Level and Quest prerequisite conditions are graph metadata, not raid objectives.
         if (!conditionType.Equals("Level", StringComparison.OrdinalIgnoreCase) &&
             !conditionType.Equals("Quest", StringComparison.OrdinalIgnoreCase))
         {
@@ -91,22 +95,21 @@ public static class QuestObjectiveExtractor
                 parentConditionId,
                 targets,
                 locationHints,
-                questLocation));
+                questLocation,
+                effectiveRequiredValue));
         }
 
-        // CounterCreator and modded conditions commonly nest objective conditions inside counter.conditions.
         if (TryGetPropertyInsensitive(condition, "counter", out JsonElement counter) && counter.ValueKind == JsonValueKind.Object &&
             TryGetPropertyInsensitive(counter, "conditions", out JsonElement nested) && nested.ValueKind == JsonValueKind.Array)
         {
             foreach (JsonElement child in nested.EnumerateArray())
-                ExtractCondition(questId, questLocation, child, phase, conditionId, depth + 1, output, warnings);
+                ExtractCondition(questId, questLocation, child, phase, conditionId, effectiveRequiredValue, depth + 1, output, warnings);
         }
 
-        // Be tolerant of custom quest mods that place nested conditions directly under `conditions`.
         if (TryGetPropertyInsensitive(condition, "conditions", out JsonElement directNested) && directNested.ValueKind == JsonValueKind.Array)
         {
             foreach (JsonElement child in directNested.EnumerateArray())
-                ExtractCondition(questId, questLocation, child, phase, conditionId, depth + 1, output, warnings);
+                ExtractCondition(questId, questLocation, child, phase, conditionId, effectiveRequiredValue, depth + 1, output, warnings);
         }
     }
 
@@ -121,8 +124,6 @@ public static class QuestObjectiveExtractor
         AddLocationProperty(condition, "locationIds", hints);
         AddLocationProperty(condition, "locations", hints);
 
-        // In SPT/EFT quest data, an explicit Location condition may encode its location(s) in target.
-        // Do not apply this rule to arbitrary condition types because target can also be zone/item/bot IDs.
         if (conditionType.Equals("Location", StringComparison.OrdinalIgnoreCase))
         {
             foreach (string target in targets)
@@ -197,6 +198,15 @@ public static class QuestObjectiveExtractor
     {
         if (!TryGetPropertyInsensitive(element, name, out JsonElement value)) return null;
         return value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+    }
+
+    private static double? GetNumber(JsonElement element, string name)
+    {
+        if (!TryGetPropertyInsensitive(element, name, out JsonElement value)) return null;
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetDouble(out double number)) return number;
+        if (value.ValueKind == JsonValueKind.String &&
+            double.TryParse(value.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out number)) return number;
+        return null;
     }
 
     private static bool TryGetPropertyInsensitive(JsonElement element, string name, out JsonElement value)
