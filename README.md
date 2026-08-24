@@ -13,6 +13,7 @@ A source repository for independent SPT 4.1.x mods. Each maintained module owns 
 | [SPT Pause](mods/SPT-Pause) | `0.1.1`; validation pending | Offline-raid pause with raid-clock and time-of-day preservation | [`runtime-pause`](https://github.com/AdmiralAM/spt-1/tree/runtime-pause) |
 | [SPT Belt/Armband Inventory](mods/SPT-Belt-Armband-Inventory) | `0.1.0`; active development | Additional inventory/container behavior for the `ArmBand` equipment slot | [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband) |
 | [SPT Quest Planner](mods/SPT-Quest-Planner) | `0.9.0`; active development | Quest topology, requirements, progression state, and raid planning | Development source / CI artifacts |
+| [Artem Revival MOD SPT](mods/WTT-Artem-Revival) | `3.0.0`; SPT 4.1.3 runtime validated | Revived Artem trader, 23-quest campaign, gear and clothing | [`runtime-artem-revival`](https://github.com/AdmiralAM/spt-1/tree/runtime-artem-revival) |
 
 Tactical HUD `1.14.0` is retired. That build accidentally combined early Item Intelligence code with the HUD. The maintained HUD line is `1.13.2`; Item Intelligence has an independent version and release lifecycle.
 
@@ -24,15 +25,16 @@ Tactical HUD `1.14.0` is retired. That build accidentally combined early Item In
 - `runtime-item-intelligence` — install-only Item Intelligence package.
 - `runtime-pause` — install-only Pause package.
 - `runtime-belt-armband` — install-only Belt/Armband Inventory package.
+- `runtime-artem-revival` — install-only Artem Revival core overlay; the large authored `Bundles/` payload remains external.
 - `archive/v1.13.0` — intentional frozen Tactical HUD `1.13.0` reserve.
 
-Runtime branches contain only installable files for their named module. They are generated from validated source and are not development branches.
+Runtime branches contain only installable files for their named module. They are generated/promoted from validated source/runtime evidence and are not development branches.
 
 ## Downloads
 
-[Tactical HUD](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime.zip) · [Item Intelligence](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-item-intelligence.zip) · [Pause](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-pause.zip) · [Belt/Armband Inventory](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip) · [Tactical HUD 1.13.0 archive](https://github.com/AdmiralAM/spt-1/archive/refs/heads/archive/v1.13.0.zip)
+[Tactical HUD](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime.zip) · [Item Intelligence](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-item-intelligence.zip) · [Pause](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-pause.zip) · [Belt/Armband Inventory](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip) · [Artem Revival](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-artem-revival.zip) · [Tactical HUD 1.13.0 archive](https://github.com/AdmiralAM/spt-1/archive/refs/heads/archive/v1.13.0.zip)
 
-Copy only the runtime package for the mod you want into the SPT root. Runtime plugin directories are version-independent so an update can replace the previous installation cleanly.
+Copy only the runtime package for the mod you want into the SPT root. Artem Revival's runtime channel is a core overlay and requires the already-installed external Artem `Bundles/` set documented in the module README.
 
 ## Repository policy
 
