@@ -80,7 +80,8 @@ static class Program
         int phase25Assertions = Phase25GuiContentReuseTests.Run();
         int phase26Assertions = Phase26RatioParseAllocationTests.Run();
         int phase27Assertions = Phase27ValueIntelligenceTests.Run();
-        Console.WriteLine("Item Intelligence: " + assertions + " Phase 1, " + phase2Assertions + " Phase 2, " + phase3Assertions + " Phase 3, " + phase4Assertions + " Phase 4, " + phase5Assertions + " Phase 5, " + phase6Assertions + " Phase 6, " + phase7Assertions + " Phase 7, " + phase8Assertions + " Phase 8, " + phase9Assertions + " Phase 9, " + phase10Assertions + " Phase 10, " + phase11Assertions + " Phase 11, " + phase12Assertions + " Phase 12, " + phase13Assertions + " Phase 13, " + phase14Assertions + " Phase 14, " + phase15Assertions + " Phase 15, " + phase16Assertions + " Phase 16, " + phase17Assertions + " Phase 17, " + phase18Assertions + " Phase 18, " + phase19Assertions + " Phase 19, " + phase20Assertions + " Phase 20, " + phase21Assertions + " Phase 21, " + phase22Assertions + " Phase 22, " + phase23Assertions + " Phase 23, " + phase24Assertions + " Phase 24, " + phase25Assertions + " Phase 25, " + phase26Assertions + " Phase 26 and " + phase27Assertions + " Phase 27 assertions passed.");
+        int phase28Assertions = Phase28RelevanceIntelligenceTests.Run();
+        Console.WriteLine("Item Intelligence regression passed through Phase 28: " + phase28Assertions + " relevance assertions; prior phases remain green if execution reaches this line.");
     }
 
     static ItemDefinition Resolve(ItemRegistry registry, string id, string type, IDictionary<string, object> signals) => registry.Resolve(new ItemDescriptor(id, null, "  Test   Item  ", " Test ", type, signals));
