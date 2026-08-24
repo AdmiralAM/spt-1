@@ -50,7 +50,11 @@ namespace SPTQuestPlanner.Client
         {
             ConfigEntry<KeyboardShortcut> key = toggleWindowKey;
             PlannerRaidPlanWindow value = window;
-            if (key != null && value != null && key.Value.IsDown()) value.Toggle();
+            if (key == null || value == null || !key.Value.IsDown()) return;
+
+            value.Toggle();
+            if (value.Visible)
+                RequestStateRefresh("ui-open");
         }
 
         private void OnGUI()
