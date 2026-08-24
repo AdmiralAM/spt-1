@@ -57,11 +57,17 @@ The server-side startup telemetry reaches `startup complete` after loading 703 a
 - DevTac Ronin armor preset slot casing repaired for current item deserialization;
 - OPENLAND HEXAGON side soft-armor slot definitions restored to match its authored preset.
 
-## Bundles and package model
+## Bundles and runtime publication model
 
 The six supplied bundle archives are one logical `Bundles/` directory. All 239 paths referenced by `bundles.json` are present.
 
-The large Unity bundle payload remains external to normal Git source history. It is retained once in the installed Artem folder. The maintained `runtime-artem-revival` channel represents the validated core overlay and documents the external Bundles requirement.
+The accepted r5 runtime uses three preserved layers:
+
+- the validated SPT 4.1.3 server DLL;
+- repaired authored Artem core data reconstructed from the archived source set by the deterministic importer/repair/localization tooling in this module;
+- the external approximately 1.5 GB Unity `Bundles/` set retained in the installed Artem folder.
+
+The permanent `runtime-artem-revival` branch pins the validated server DLL plus a runtime manifest containing the accepted candidate identity and hashes. It deliberately does not duplicate the authored core data or Bundles and is therefore not a standalone full-install Git archive.
 
 ## Deferred work
 
