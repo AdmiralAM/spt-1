@@ -36,9 +36,11 @@ Artem is a server mod installed under:
 SPT_Runtime/user/mods/WTT-Artem Revival/
 ```
 
-The maintained runtime channel is `runtime-artem-revival`.
+The maintained stable runtime identity is `runtime-artem-revival`.
 
-The runtime channel contains the validated Artem core overlay. The large authored Unity `Bundles/` payload remains external because it is approximately 1.5 GB and is not appropriate for normal Git source history. The six supplied bundle archives together form one persistent `Bundles/` directory and do not need to be replaced by normal core updates unless the asset set changes explicitly.
+That branch pins the validated r5 server DLL plus a runtime manifest identifying the accepted candidate and hashes. It is deliberately **not** a standalone full Artem installation archive: the repaired authored core data remains tied to the archived Artem source set and the deterministic importer/repair/localization tooling in this module, while the approximately 1.5 GB Unity `Bundles/` payload remains external. The six supplied bundle archives together form one persistent `Bundles/` directory and do not need to be replaced by normal server-DLL updates unless the asset set changes explicitly.
+
+For an installed validated r5 setup, retain the repaired core data and `Bundles/` directory and use the DLL pinned by `runtime-artem-revival`. Do not restore the legacy SPT 4.0 DLL.
 
 ## Preserved scope
 
@@ -67,6 +69,6 @@ Economy rebalance and optional asset pruning remain separate future policy work.
 
 `mods/WTT-Artem-Revival/` is independent from Item Intelligence, Quest Planner, Belt/Armband Inventory, Pause and Tactical HUD. Other modules may consume ordinary SPT quest/item state created by Artem, but Artem does not depend on their internals.
 
-The archived full Artem package remains the authoritative archaeology/content source. The large Bundles set remains external; deterministic import/repair/validation tooling in this module records the maintained compatibility transformations.
+The archived full Artem package remains the authoritative archaeology/content source. The large Bundles set remains external; deterministic import/repair/validation tooling in this module records the maintained compatibility transformations. `runtime-artem-revival` is publication/runtime state only and is never used as a development branch.
 
 See `docs/revival-status.md`, `docs/repair-log.md`, `docs/campaign-audit.md`, `docs/content-audit.md` and `docs/economy-audit.md` for durable technical detail.

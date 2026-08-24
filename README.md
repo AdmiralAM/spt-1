@@ -25,16 +25,16 @@ Tactical HUD `1.14.0` is retired. That build accidentally combined early Item In
 - `runtime-item-intelligence` — install-only Item Intelligence package.
 - `runtime-pause` — install-only Pause package.
 - `runtime-belt-armband` — install-only Belt/Armband Inventory package.
-- `runtime-artem-revival` — install-only Artem Revival core overlay; the large authored `Bundles/` payload remains external.
+- `runtime-artem-revival` — stable Artem runtime identity containing the validated r5 server DLL and runtime manifest; authored Artem core data and the large Unity `Bundles/` payload remain external/reproducible from the module source contract.
 - `archive/v1.13.0` — intentional frozen Tactical HUD `1.13.0` reserve.
 
-Runtime branches contain only installable files for their named module. They are generated/promoted from validated source/runtime evidence and are not development branches.
+Runtime branches are publication/runtime channels, not development branches. Their exact package model is documented by the owning module.
 
 ## Downloads
 
-[Tactical HUD](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime.zip) · [Item Intelligence](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-item-intelligence.zip) · [Pause](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-pause.zip) · [Belt/Armband Inventory](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip) · [Artem Revival](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-artem-revival.zip) · [Tactical HUD 1.13.0 archive](https://github.com/AdmiralAM/spt-1/archive/refs/heads/archive/v1.13.0.zip)
+[Tactical HUD](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime.zip) · [Item Intelligence](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-item-intelligence.zip) · [Pause](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-pause.zip) · [Belt/Armband Inventory](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip) · [Tactical HUD 1.13.0 archive](https://github.com/AdmiralAM/spt-1/archive/refs/heads/archive/v1.13.0.zip)
 
-Copy only the runtime package for the mod you want into the SPT root. Artem Revival's runtime channel is a core overlay and requires the already-installed external Artem `Bundles/` set documented in the module README.
+Artem Revival is different from the self-contained runtime ZIP channels above: `runtime-artem-revival` pins the accepted r5 DLL/runtime manifest, while the repaired authored core data and already-assembled external `Bundles/` directory remain in the installed Artem folder. See the Artem module README for reconstruction/update details.
 
 ## Repository policy
 

@@ -9,8 +9,8 @@ This repository keeps branches only when they have a clear current role. Task br
 - `runtime` — Tactical HUD install-only publication channel.
 - `runtime-item-intelligence` — Item Intelligence install-only publication channel.
 - `runtime-pause` — Pause install-only publication channel.
-- `runtime-belt-armband` — Belt/Armband install-only publication channel.
-- `runtime-artem-revival` — Artem Revival install-only core-overlay publication channel; external Bundles are documented by the module.
+- `runtime-belt-armband` — Belt/Armband Inventory install-only publication channel.
+- `runtime-artem-revival` — Artem Revival stable runtime identity containing the validated server DLL and runtime manifest; authored core data/Bundles remain external and reproducible from the module contract.
 - `archive/v1.13.0` — intentional frozen Tactical HUD historical reserve.
 
 Additional permanent/runtime branches require an explicit repository-level reason and documentation update.
@@ -54,7 +54,7 @@ If a branch must be retained as a deliberate historical/recovery point:
 
 `stable` and `runtime-*` are controlled publication channels, not development branches. Do not make normal feature commits on them, open development work from them, or treat their force-updated history as source history.
 
-`runtime-artem-revival` is intentionally retained because the validated Artem core overlay is small enough for an install channel while its approximately 1.5 GB authored Unity Bundles remain external. The branch must remain install-only and be updated only from a runtime-validated candidate.
+`runtime-artem-revival` is intentionally retained because Artem has a validated runtime identity that must survive deletion of the short-lived revival work branch, while the authored runtime data and approximately 1.5 GB Unity Bundles are external source material. The branch pins the accepted server DLL plus manifest/hashes for `r5-RU-compat`; it is not a standalone full-install archive. It must remain publication-only and be updated only from a runtime-validated candidate.
 
 ## Safety rule
 
