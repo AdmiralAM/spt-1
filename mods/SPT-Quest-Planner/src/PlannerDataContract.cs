@@ -6,7 +6,7 @@ public static class PlannerDataContract
     public const string StateRoute = "/admiralam/quest-planner/state";
     public const string SnapshotRoute = "/admiralam/quest-planner/snapshot";
     public const string DiagnosticsRoute = "/admiralam/quest-planner/diagnostics";
-    public const int SchemaVersion = 8;
+    public const int SchemaVersion = 9;
 }
 
 public sealed record PlannerTopologyEnvelope(
@@ -14,6 +14,7 @@ public sealed record PlannerTopologyEnvelope(
     IReadOnlyList<QuestNode> QuestNodes,
     IReadOnlyList<PrerequisiteEdge> Prerequisites,
     IReadOnlyList<ItemRequirement> ItemRequirements,
+    IReadOnlyList<QuestObjectiveFact> QuestObjectives,
     PlannerGraphValidation GraphValidation,
     IReadOnlyList<string> Warnings);
 
@@ -35,6 +36,7 @@ public sealed record PlannerSnapshotEnvelope(
     IReadOnlyList<QuestNode> QuestNodes,
     IReadOnlyList<PrerequisiteEdge> Prerequisites,
     IReadOnlyList<ItemRequirement> ItemRequirements,
+    IReadOnlyList<QuestObjectiveFact> QuestObjectives,
     PlayerProjection Player,
     InventoryProjection Inventory,
     IReadOnlyDictionary<QuestState, int> StateCounts,
