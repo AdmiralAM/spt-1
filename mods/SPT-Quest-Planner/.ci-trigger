@@ -1,0 +1,3 @@
+Quest Planner validation trigger
+baseline: dbd0300c760f9249e44dfe7775050dde96587cc4
+workflow: explicit push gate
