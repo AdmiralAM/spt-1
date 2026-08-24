@@ -26,7 +26,7 @@ namespace SPTQuestPlanner.Client
                 ordered = source
                     .OrderByDescending(value => value.QuestCount)
                     .ThenByDescending(value => value.PreparationReady)
-                    .ThenBy(value => value.MissingPreparationTemplateCount)
+                    .ThenBy(value => value.MissingBringTemplateCount)
                     .ThenByDescending(value => value.ObjectiveCount)
                     .ThenBy(value => value.KnownRemainingWork)
                     .ThenBy(value => value.LocationId, StringComparer.OrdinalIgnoreCase);
@@ -35,7 +35,7 @@ namespace SPTQuestPlanner.Client
             {
                 ordered = source
                     .OrderByDescending(value => value.PreparationReady)
-                    .ThenBy(value => value.MissingPreparationTemplateCount)
+                    .ThenBy(value => value.MissingBringTemplateCount)
                     .ThenByDescending(value => value.QuestCount)
                     .ThenByDescending(value => value.ObjectiveCount)
                     .ThenBy(value => value.KnownRemainingWork)
