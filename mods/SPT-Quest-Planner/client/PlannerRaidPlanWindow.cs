@@ -11,7 +11,7 @@ namespace SPTQuestPlanner.Client
         private readonly PlannerRaidPlanPresentationController presentation;
         private readonly Func<long> revisionProvider;
         private readonly PlannerUiRaycastBlocker inputBlocker = new PlannerUiRaycastBlocker();
-        private Rect windowRect = new Rect(140f, 80f, 980f, 700f);
+        private Rect windowRect = new Rect(140f, 80f, 980f, 720f);
         private Vector2 locationScroll;
         private Vector2 detailScroll;
         private bool visible;
@@ -87,8 +87,25 @@ namespace SPTQuestPlanner.Client
             PlannerRaidPlanViewModel viewModel = presentation.GetViewModel(revision, 12);
             PlannerRaidPlanUiState uiState = presentation.UiState;
             PlannerRaidPlanCard selected = uiState.ResolveSelection(viewModel);
+            PlannerRaidPlanCard active = uiState.ResolveActivePlan(viewModel);
 
             GUILayout.BeginVertical();
+            DrawHeader(viewModel);
+            DrawActivePlanBanner(active, uiState);
+            DrawRecommendedRaid(viewModel, uiState, active);
+            DrawRecommendations();
+            GUILayout.Space(4f);
+            DrawControls(uiState);
+            GUILayout.BeginHorizontal();
+            DrawLocationList(viewModel, uiState);
+            DrawDetails(selected, active, uiState);
+            GUILayout.EndHorizontal();
+            GUILayout.EndVertical();
+            GUI.DragWindow(new Rect(0f, 0f, windowRect.width - 140f, 24f));
+        }
+
+        private void DrawHeader(PlannerRaidPlanViewModel viewModel)
+        {
             GUILayout.BeginHorizontal();
             GUILayout.Label("Raid plans: " + viewModel.LocationCount + "   Ready: " + viewModel.ReadyLocationCount, GUILayout.ExpandWidth(true));
             if (GUILayout.Button("Refresh data", GUILayout.Width(100f)))
@@ -98,22 +115,44 @@ namespace SPTQuestPlanner.Client
             }
             if (GUILayout.Button("X", GUILayout.Width(30f))) Hide();
             GUILayout.EndHorizontal();
+        }
 
-            DrawRecommendations();
-            GUILayout.Space(4f);
-            DrawControls(uiState);
-            GUILayout.BeginHorizontal();
-            DrawLocationList(viewModel, uiState);
-            DrawDetails(selected);
+        private static void DrawActivePlanBanner(PlannerRaidPlanCard active, PlannerRaidPlanUiState uiState)
+        {
+            if (active == null) return;
+            GUILayout.BeginHorizontal("box");
+            GUILayout.Label("ACTIVE RAID PLAN: " + PlannerDisplayNames.Location(active.LocationId) +
+                            "  |  " + active.QuestCount + " quest(s) / " + active.ObjectiveCount + " objective(s)" +
+                            (active.PreparationReady ? "  |  READY" : "  |  PREPARATION NEEDED"), GUILayout.ExpandWidth(true));
+            if (GUILayout.Button("Clear", GUILayout.Width(60f))) uiState.ClearActivePlan();
             GUILayout.EndHorizontal();
+        }
+
+        private static void DrawRecommendedRaid(PlannerRaidPlanViewModel viewModel, PlannerRaidPlanUiState uiState, PlannerRaidPlanCard active)
+        {
+            PlannerRaidPlanCard recommended = viewModel.TopRecommendation;
+            if (recommended == null) return;
+
+            GUILayout.BeginHorizontal("box");
+            GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
+            GUILayout.Label("RECOMMENDED RAID — " + PlannerDisplayNames.Location(recommended.LocationId));
+            GUILayout.Label(
+                recommended.QuestCount + " quest(s) / " + recommended.ObjectiveCount + " proven objective(s)  |  " +
+                (recommended.PreparationReady ? "ready to go" : "missing " + recommended.MissingBringTemplateCount + " preparation item type(s)"));
             GUILayout.EndVertical();
-            GUI.DragWindow(new Rect(0f, 0f, windowRect.width - 140f, 24f));
+
+            bool alreadyActive = active != null && string.Equals(active.LocationId, recommended.LocationId, StringComparison.OrdinalIgnoreCase);
+            GUI.enabled = !alreadyActive;
+            if (GUILayout.Button(alreadyActive ? "ACTIVE" : "PLAN THIS RAID", GUILayout.Width(135f), GUILayout.Height(38f)))
+                uiState.ActivateLocation(recommended.LocationId);
+            GUI.enabled = true;
+            GUILayout.EndHorizontal();
         }
 
         private static void DrawRecommendations()
         {
             GUILayout.BeginVertical("box");
-            GUILayout.Label("Next quests");
+            GUILayout.Label("WHAT TO DO NEXT");
             try
             {
                 PlannerRecommendationSnapshot snapshot = Plugin.GetRecommendations(3);
@@ -165,14 +204,15 @@ namespace SPTQuestPlanner.Client
         private void DrawLocationList(PlannerRaidPlanViewModel viewModel, PlannerRaidPlanUiState uiState)
         {
             GUILayout.BeginVertical(GUILayout.Width(280f));
-            GUILayout.Label("Raid opportunities");
+            GUILayout.Label("RAID OPTIONS");
             locationScroll = GUILayout.BeginScrollView(locationScroll, GUILayout.ExpandHeight(true));
             for (int i = 0; i < viewModel.Cards.Count; i++)
             {
                 PlannerRaidPlanCard card = viewModel.Cards[i];
                 bool selected = string.Equals(card.LocationId, uiState.SelectedLocationId, StringComparison.OrdinalIgnoreCase);
-                string label = "#" + card.Rank + "  " + PlannerDisplayNames.Location(card.LocationId) + "\n" +
-                               card.QuestCount + " quests / " + card.ObjectiveCount + " objectives" +
+                bool active = string.Equals(card.LocationId, uiState.ActiveLocationId, StringComparison.OrdinalIgnoreCase);
+                string label = (active ? "ACTIVE  " : "#" + card.Rank + "  ") + PlannerDisplayNames.Location(card.LocationId) + "\n" +
+                               card.QuestCount + " quest(s) / " + card.ObjectiveCount + " objective(s)" +
                                (card.PreparationReady ? "  [READY]" : "  [MISSING " + card.MissingBringTemplateCount + "]");
                 if (GUILayout.Toggle(selected, label, "Button", GUILayout.MinHeight(48f)) && !selected)
                     uiState.SelectLocation(card.LocationId);
@@ -181,7 +221,7 @@ namespace SPTQuestPlanner.Client
             GUILayout.EndVertical();
         }
 
-        private void DrawDetails(PlannerRaidPlanCard card)
+        private void DrawDetails(PlannerRaidPlanCard card, PlannerRaidPlanCard active, PlannerRaidPlanUiState uiState)
         {
             GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
             if (card == null)
@@ -191,41 +231,50 @@ namespace SPTQuestPlanner.Client
                 return;
             }
 
-            GUILayout.Label(PlannerDisplayNames.Location(card.LocationId) + " — raid plan");
-            GUILayout.Label(card.QuestCount + " relevant quests   " + card.ObjectiveCount + " proven objectives");
-            GUILayout.Label(card.PreparationReady ? "Preparation: ready" : "Preparation: missing " + card.MissingBringTemplateCount + " required item type(s)");
+            bool isActive = active != null && string.Equals(active.LocationId, card.LocationId, StringComparison.OrdinalIgnoreCase);
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(PlannerDisplayNames.Location(card.LocationId) + (isActive ? " — ACTIVE RAID PLAN" : " — raid preview"), GUILayout.ExpandWidth(true));
+            if (!isActive && GUILayout.Button("SET ACTIVE PLAN", GUILayout.Width(125f))) uiState.ActivateLocation(card.LocationId);
+            if (isActive && GUILayout.Button("CLEAR ACTIVE", GUILayout.Width(100f))) uiState.ClearActivePlan();
+            GUILayout.EndHorizontal();
+
+            GUILayout.Label(card.QuestCount + " relevant quest(s)   " + card.ObjectiveCount + " proven objective(s)");
+            GUILayout.Label(card.PreparationReady ? "Preparation: READY" : "Preparation: missing " + card.MissingBringTemplateCount + " required item type(s)");
             if (card.KnownRemainingWork > 0d) GUILayout.Label("Known remaining counter work: " + FormatNumber(card.KnownRemainingWork));
 
             PlannerClientCache cache = Plugin.Cache;
             PlannerTopologyIndex topology = cache == null ? null : cache.TopologyIndex;
             PlannerLocaleIndex locale = cache == null ? null : cache.LocaleIndex;
             detailScroll = GUILayout.BeginScrollView(detailScroll, GUILayout.ExpandHeight(true));
+
             GUILayout.Space(6f);
-            GUILayout.Label("Objectives");
-            for (int i = 0; i < card.Objectives.Count; i++)
-            {
-                PlannerRaidObjective objective = card.Objectives[i];
-                string progress = objective.HasProgress ? "  " + FormatNumber(objective.CurrentValue ?? 0d) + "/" + FormatNumber(objective.RequiredValue ?? 0d) + " (remain " + FormatNumber(objective.RemainingValue ?? 0d) + ")" : string.Empty;
-                string targets = FormatTargets(objective, locale);
-                string questLabel = PlannerQuestLabels.Resolve(topology, locale, objective.QuestId);
-                GUILayout.Label("• " + PlannerDisplayNames.Objective(objective.Kind) + " — " + questLabel + progress + targets);
-            }
-
-            if (card.ObjectiveCount > card.Objectives.Count)
-                GUILayout.Label("… " + (card.ObjectiveCount - card.Objectives.Count) + " more objective(s) hidden from this compact view.");
-
-            GUILayout.Space(10f);
-            GUILayout.Label("Bring / preparation");
-            if (card.BringNeeds.Count == 0) GUILayout.Label("No proven bring-items for this raid plan.");
+            GUILayout.Label("BEFORE RAID");
+            if (card.BringNeeds.Count == 0) GUILayout.Label("✓ No proven bring-items required for this plan.");
             else
             {
                 for (int i = 0; i < card.BringNeeds.Count; i++)
                 {
                     PlannerRaidBringNeed need = card.BringNeeds[i];
                     string itemLabel = locale == null ? need.TemplateId : locale.ItemName(need.TemplateId);
-                    GUILayout.Label("• " + itemLabel + "  need " + FormatNumber(need.Required) + " / owned " + FormatNumber(need.Owned) + " / missing " + FormatNumber(need.Missing));
+                    string marker = need.Missing <= 0d ? "✓ " : "⚠ ";
+                    GUILayout.Label(marker + itemLabel + "  need " + FormatNumber(need.Required) + " / owned " + FormatNumber(need.Owned) + " / missing " + FormatNumber(need.Missing));
                 }
             }
+
+            GUILayout.Space(10f);
+            GUILayout.Label("IN RAID CHECKLIST");
+            for (int i = 0; i < card.Objectives.Count; i++)
+            {
+                PlannerRaidObjective objective = card.Objectives[i];
+                string progress = objective.HasProgress ? "  " + FormatNumber(objective.CurrentValue ?? 0d) + "/" + FormatNumber(objective.RequiredValue ?? 0d) + " (remain " + FormatNumber(objective.RemainingValue ?? 0d) + ")" : string.Empty;
+                string targets = FormatTargets(objective, locale);
+                string questLabel = PlannerQuestLabels.Resolve(topology, locale, objective.QuestId);
+                GUILayout.Label("□ " + PlannerDisplayNames.Objective(objective.Kind) + " — " + questLabel + progress + targets);
+            }
+
+            if (card.ObjectiveCount > card.Objectives.Count)
+                GUILayout.Label("… " + (card.ObjectiveCount - card.Objectives.Count) + " more objective(s) hidden from this compact view.");
+
             GUILayout.EndScrollView();
             GUILayout.EndVertical();
         }
