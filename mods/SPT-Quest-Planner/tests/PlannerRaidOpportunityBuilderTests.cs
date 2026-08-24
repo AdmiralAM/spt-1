@@ -90,6 +90,48 @@ public sealed class PlannerRaidOpportunityBuilderTests
         Assert.Equal("kill", only.ConditionId);
     }
 
+    [Fact]
+    public void GlobalHandoverIsNotCopiedIntoRaidPlans()
+    {
+        PlannerLocationObjective handover = new(
+            "qHandover", "hand", "HandoverItem", "Finish", null,
+            new[] { "tpl" }, Array.Empty<string>(), PlannerObjectiveKind.HandoverItem);
+        PlannerLocationIndex locations = new(
+            new Dictionary<string, PlannerLocationBucket>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Customs"] = new PlannerLocationBucket("Customs", new[] { Objective("qCustoms", "visit", "Customs") })
+            },
+            new[] { handover });
+
+        PlannerRaidOpportunity opportunity = Assert.Single(PlannerRaidOpportunityBuilder.Build(
+            locations,
+            State(Quest("qCustoms", 4), Quest("qHandover", 4))));
+
+        Assert.DoesNotContain(opportunity.Objectives, objective => objective.QuestId == "qHandover");
+        Assert.Equal(0, opportunity.GlobalObjectiveCount);
+    }
+
+    [Fact]
+    public void GlobalFindItemRemainsRaidActionable()
+    {
+        PlannerLocationObjective find = new(
+            "qFind", "find", "FindItem", "Finish", null,
+            new[] { "tpl" }, Array.Empty<string>(), PlannerObjectiveKind.FindItem);
+        PlannerLocationIndex locations = new(
+            new Dictionary<string, PlannerLocationBucket>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Woods"] = new PlannerLocationBucket("Woods", new[] { Objective("qWoods", "visit", "Woods") })
+            },
+            new[] { find });
+
+        PlannerRaidOpportunity opportunity = Assert.Single(PlannerRaidOpportunityBuilder.Build(
+            locations,
+            State(Quest("qWoods", 4), Quest("qFind", 4))));
+
+        Assert.Contains(opportunity.Objectives, objective => objective.QuestId == "qFind");
+        Assert.Equal(1, opportunity.GlobalObjectiveCount);
+    }
+
     private static PlannerLocationObjective Objective(string questId, string conditionId, string location)
     {
         return new PlannerLocationObjective(
