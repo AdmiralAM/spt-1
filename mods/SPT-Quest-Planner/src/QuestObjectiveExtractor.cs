@@ -23,7 +23,7 @@ public static class QuestObjectiveExtractor
 {
     private const int MaxConditionDepth = 12;
     private const int MaxWrapperDepth = 8;
-    private static readonly string[] WrapperMemberNames = { "Value", "Values", "Items", "List", "Data" };
+    private static readonly string[] WrapperMemberNames = { "Item", "List", "Value", "Values", "Items", "Data" };
 
     public static QuestObjectiveExtractionResult Extract(object rawQuests)
     {
@@ -327,7 +327,9 @@ public static class QuestObjectiveExtractor
         if (value is null) return null;
         if (value is string text) return string.IsNullOrWhiteSpace(text) ? null : text.Trim();
         Type type = value.GetType();
-        if (!type.IsPrimitive && !type.IsEnum && value is not Guid && value is not decimal) return null;
+        bool scalar = type.IsPrimitive || type.IsEnum || type.IsValueType ||
+                      type.Name.IndexOf("MongoId", StringComparison.OrdinalIgnoreCase) >= 0;
+        if (!scalar) return null;
         string? converted = Convert.ToString(value, CultureInfo.InvariantCulture);
         return string.IsNullOrWhiteSpace(converted) ? null : converted.Trim();
     }
