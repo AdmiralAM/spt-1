@@ -24,15 +24,8 @@ namespace SPTQuestPlanner.Client
 
         public bool Visible { get { return visible; } }
 
-        public void Toggle()
-        {
-            visible = !visible;
-        }
-
-        public void Hide()
-        {
-            visible = false;
-        }
+        public void Toggle() { visible = !visible; }
+        public void Hide() { visible = false; }
 
         public void Draw()
         {
@@ -124,6 +117,7 @@ namespace SPTQuestPlanner.Client
             if (card.KnownRemainingWork > 0d)
                 GUILayout.Label("Known remaining counter work: " + FormatNumber(card.KnownRemainingWork));
 
+            PlannerTopologyIndex topology = Plugin.Cache == null ? null : Plugin.Cache.TopologyIndex;
             detailScroll = GUILayout.BeginScrollView(detailScroll, GUILayout.ExpandHeight(true));
             GUILayout.Space(6f);
             GUILayout.Label("Objectives");
@@ -135,7 +129,8 @@ namespace SPTQuestPlanner.Client
                       " (remain " + FormatNumber(objective.RemainingValue ?? 0d) + ")"
                     : string.Empty;
                 string targets = objective.Targets.Count == 0 ? string.Empty : "  [" + string.Join(", ", objective.Targets) + "]";
-                GUILayout.Label("• " + PlannerDisplayNames.Objective(objective.Kind) + progress + targets);
+                string questLabel = PlannerQuestLabels.Resolve(topology, objective.QuestId);
+                GUILayout.Label("• " + PlannerDisplayNames.Objective(objective.Kind) + " — " + questLabel + progress + targets);
             }
 
             GUILayout.Space(10f);
