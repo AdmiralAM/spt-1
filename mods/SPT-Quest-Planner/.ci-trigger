@@ -1,3 +1,4 @@
 Quest Planner validation trigger
-baseline: dbd0300c760f9249e44dfe7775050dde96587cc4
+baseline: e2b70d426e7914638b0f646df78b3659c3a5aca6
 workflow: explicit push gate
+reason: validate xUnit import and topology definite-assignment fixes
