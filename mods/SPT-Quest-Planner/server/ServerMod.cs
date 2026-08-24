@@ -16,7 +16,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "SPT Quest Planner Server";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("0.8.0");
+    public SemanticVersioning.Version Version { get; init; } = new("0.9.0");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
@@ -41,8 +41,12 @@ public sealed class PlannerSnapshotService(
             staticData.Extraction.Nodes,
             staticData.Extraction.Prerequisites,
             staticData.Extraction.ItemRequirements,
+            staticData.ObjectiveExtraction.Objectives,
             staticData.Validation,
-            staticData.Extraction.Warnings);
+            staticData.Extraction.Warnings
+                .Concat(staticData.ObjectiveExtraction.Warnings)
+                .Distinct(StringComparer.Ordinal)
+                .ToArray());
         return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
     }
 
@@ -66,6 +70,7 @@ public sealed class PlannerSnapshotService(
             staticData.Extraction.Nodes,
             staticData.Extraction.Prerequisites,
             staticData.Extraction.ItemRequirements,
+            staticData.ObjectiveExtraction.Objectives,
             state.Player,
             state.Inventory,
             state.StateCounts,
@@ -85,7 +90,7 @@ public sealed class PlannerSnapshotService(
         PlayerProjection player = ProfileProjectionExtractor.Extract(profile);
         InventoryProjection inventory = InventoryProjectionExtractor.Extract(profile);
         PlannerEvaluationResult evaluation = PlannerEvaluator.Evaluate(staticData.Graph, staticData.Extraction.ItemRequirements, player);
-        IReadOnlyList<string> warnings = BuildWarnings(staticData.Extraction, player, inventory, evaluation);
+        IReadOnlyList<string> warnings = BuildWarnings(staticData, player, inventory, evaluation);
         PlannerDiagnosticsEnvelope envelope = new(
             PlannerDataContract.SchemaVersion,
             DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
@@ -106,7 +111,7 @@ public sealed class PlannerSnapshotService(
         PlannerEvaluationResult evaluation = PlannerEvaluator.Evaluate(staticData.Graph, extraction.ItemRequirements, player);
         IReadOnlyList<OutstandingItemRequirement> outstanding =
             InventoryProjectionExtractor.CalculateOutstanding(evaluation.ItemRequirements, inventory);
-        IReadOnlyList<string> warnings = BuildWarnings(extraction, player, inventory, evaluation);
+        IReadOnlyList<string> warnings = BuildWarnings(staticData, player, inventory, evaluation);
         return new PlannerStateEnvelope(
             PlannerDataContract.SchemaVersion,
             DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
@@ -119,14 +124,20 @@ public sealed class PlannerSnapshotService(
     }
 
     private static IReadOnlyList<string> BuildWarnings(
-        QuestExtractionResult extraction,
+        PlannerStaticData staticData,
         PlayerProjection player,
         InventoryProjection inventory,
         PlannerEvaluationResult evaluation)
     {
+        QuestExtractionResult extraction = staticData.Extraction;
         List<string> warnings = new(
-            extraction.Warnings.Count + player.Warnings.Count + inventory.Warnings.Count + evaluation.Warnings.Count + 2);
+            extraction.Warnings.Count +
+            staticData.ObjectiveExtraction.Warnings.Count +
+            player.Warnings.Count +
+            inventory.Warnings.Count +
+            evaluation.Warnings.Count + 2);
         warnings.AddRange(extraction.Warnings);
+        warnings.AddRange(staticData.ObjectiveExtraction.Warnings);
         warnings.AddRange(player.Warnings);
         warnings.AddRange(inventory.Warnings);
         warnings.AddRange(evaluation.Warnings);
@@ -168,7 +179,7 @@ public sealed class QuestPlannerLoadNotice(ISptLogger<QuestPlannerLoadNotice> lo
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        logger.Success("SPT Quest Planner Server v0.8.0 loaded; split topology/state routes ready");
+        logger.Success("SPT Quest Planner Server v0.9.0 loaded; quest objective/location facts included in topology");
         return Task.CompletedTask;
     }
 }
