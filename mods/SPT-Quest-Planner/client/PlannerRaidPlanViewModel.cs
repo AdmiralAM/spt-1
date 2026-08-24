@@ -13,6 +13,7 @@ namespace SPTQuestPlanner.Client
             int objectiveCount,
             bool preparationReady,
             int missingBringTemplateCount,
+            int unresolvedPreparationCount,
             double knownRemainingWork,
             IReadOnlyList<PlannerRaidObjective> objectives,
             IReadOnlyList<PlannerRaidBringNeed> bringNeeds)
@@ -22,7 +23,8 @@ namespace SPTQuestPlanner.Client
             QuestCount = questCount;
             ObjectiveCount = objectiveCount;
             PreparationReady = preparationReady;
-            MissingBringTemplateCount = missingBringTemplateCount;
+            MissingBringTemplateCount = Math.Max(0, missingBringTemplateCount);
+            UnresolvedPreparationCount = Math.Max(0, unresolvedPreparationCount);
             KnownRemainingWork = Math.Max(0d, knownRemainingWork);
             Objectives = objectives ?? Array.Empty<PlannerRaidObjective>();
             BringNeeds = bringNeeds ?? Array.Empty<PlannerRaidBringNeed>();
@@ -34,6 +36,7 @@ namespace SPTQuestPlanner.Client
         public int ObjectiveCount { get; private set; }
         public bool PreparationReady { get; private set; }
         public int MissingBringTemplateCount { get; private set; }
+        public int UnresolvedPreparationCount { get; private set; }
         public double KnownRemainingWork { get; private set; }
         public IReadOnlyList<PlannerRaidObjective> Objectives { get; private set; }
         public IReadOnlyList<PlannerRaidBringNeed> BringNeeds { get; private set; }
@@ -74,6 +77,7 @@ namespace SPTQuestPlanner.Client
                     plan.ObjectiveCount,
                     plan.PreparationReady,
                     plan.MissingBringTemplateCount,
+                    plan.Preparation.UnresolvedNeeds.Count,
                     plan.KnownRemainingWork,
                     plan.Objectives.Take(maxObjectivesPerCard).ToArray(),
                     plan.Preparation.ExactNeeds.ToArray()))
