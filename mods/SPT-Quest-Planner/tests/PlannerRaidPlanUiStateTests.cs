@@ -52,6 +52,21 @@ public sealed class PlannerRaidPlanUiStateTests
         Assert.Null(state.SelectedLocationId);
     }
 
+    [Fact]
+    public void RankingAndAvailabilitySettingsAreExplicitAndStable()
+    {
+        PlannerRaidPlanUiState state = new();
+
+        Assert.Equal(PlannerRaidPlanRankingMode.ReadyFirst, state.RankingMode);
+        Assert.False(state.IncludeAvailable);
+
+        state.SetRankingMode(PlannerRaidPlanRankingMode.QuestDensityFirst);
+        state.SetIncludeAvailable(true);
+
+        Assert.Equal(PlannerRaidPlanRankingMode.QuestDensityFirst, state.RankingMode);
+        Assert.True(state.IncludeAvailable);
+    }
+
     private static PlannerRaidPlanViewModel ViewModel(params string[] locations)
     {
         PlannerRaidPlanCard[] cards = locations.Select((location, index) => new PlannerRaidPlanCard(
