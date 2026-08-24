@@ -25,6 +25,7 @@ namespace SPTQuestPlanner.Client
         private ConfigEntry<PlannerRaidPlanRankingMode> rankingMode;
         private ConfigEntry<PlannerWorkspaceMode> workspaceMode;
         private ConfigEntry<bool> includeAvailableQuests;
+        private int plannerStateDirty;
 
         internal static PlannerClientCache Cache { get; private set; }
         internal static PlannerRaidPlanProvider RaidPlans { get; private set; }
@@ -99,6 +100,17 @@ namespace SPTQuestPlanner.Client
 
         private void OnPlannerStateChanged()
         {
+            Interlocked.Exchange(ref plannerStateDirty, 1);
+        }
+
+        private void PersistPlannerStateIfDirty()
+        {
+            if (Interlocked.Exchange(ref plannerStateDirty, 0) == 0) return;
+            PersistPlannerState();
+        }
+
+        private void PersistPlannerState()
+        {
             PlannerRaidPlanPresentationController controller = Presentation;
             PlannerRaidPlanUiState state = controller == null ? null : controller.UiState;
             if (state == null) return;
@@ -112,6 +124,8 @@ namespace SPTQuestPlanner.Client
 
         private void Update()
         {
+            PersistPlannerStateIfDirty();
+
             ConfigEntry<KeyboardShortcut> key = toggleWindowKey;
             PlannerRaidPlanWindow value = window;
             if (key == null || value == null || !key.Value.IsDown()) return;
@@ -258,6 +272,7 @@ namespace SPTQuestPlanner.Client
         private void OnDestroy()
         {
             SceneManager.activeSceneChanged -= OnActiveSceneChanged;
+            PersistPlannerStateIfDirty();
             PlannerRaidPlanPresentationController presentation = Presentation;
             if (presentation != null && presentation.UiState != null)
                 presentation.UiState.Changed -= OnPlannerStateChanged;
