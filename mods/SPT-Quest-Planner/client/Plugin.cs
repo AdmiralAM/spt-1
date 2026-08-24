@@ -15,12 +15,14 @@ namespace SPTQuestPlanner.Client
         private Task initialLoad;
 
         internal static PlannerClientCache Cache { get; private set; }
+        internal static PlannerRaidPlanProvider RaidPlans { get; private set; }
         internal static Plugin Instance { get; private set; }
 
         private void Awake()
         {
             Instance = this;
             Cache = new PlannerClientCache();
+            RaidPlans = new PlannerRaidPlanProvider(Cache);
             refresh = new PlannerRefreshCoordinator(
                 new ReflectionSptPlannerTransport(),
                 new ReflectionNewtonsoftPlannerDecoder(),
@@ -29,7 +31,17 @@ namespace SPTQuestPlanner.Client
             cancellation = new CancellationTokenSource();
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
             StartInitialLoad();
-            Logger.LogInfo("SPT Quest Planner v0.9.0 loaded (bounded lifecycle refresh foundation; no UI)");
+            Logger.LogInfo("SPT Quest Planner v0.9.0 loaded (raid-plan provider + bounded lifecycle refresh; no UI)");
+        }
+
+        internal static PlannerRaidPlanCollection GetRaidPlans(
+            PlannerRaidPlanRankingMode rankingMode = PlannerRaidPlanRankingMode.ReadyFirst,
+            bool includeAvailable = false)
+        {
+            PlannerRaidPlanProvider provider = RaidPlans;
+            return provider == null
+                ? new PlannerRaidPlanCollection(0L, rankingMode, Array.Empty<PlannerRaidPlan>())
+                : provider.Get(rankingMode, includeAvailable);
         }
 
         private void StartInitialLoad()
@@ -94,6 +106,7 @@ namespace SPTQuestPlanner.Client
             scheduler = null;
             refresh = null;
             cancellation = null;
+            RaidPlans = null;
             Cache = null;
             Instance = null;
         }
