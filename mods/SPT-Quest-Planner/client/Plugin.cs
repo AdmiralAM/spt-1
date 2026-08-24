@@ -2,17 +2,21 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BepInEx;
+using BepInEx.Configuration;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 
 namespace SPTQuestPlanner.Client
 {
-    [BepInPlugin("com.admiralam.spt.questplanner", "SPT Quest Planner", "0.9.0")]
+    [BepInPlugin("com.admiralam.spt.questplanner", "Quest planner MOD SPT", "0.9.0")]
     public sealed class Plugin : BaseUnityPlugin
     {
         private CancellationTokenSource cancellation;
         private PlannerRefreshCoordinator refresh;
         private PlannerRefreshScheduler scheduler;
         private Task initialLoad;
+        private PlannerRaidPlanWindow window;
+        private ConfigEntry<KeyboardShortcut> toggleWindowKey;
 
         internal static PlannerClientCache Cache { get; private set; }
         internal static PlannerRaidPlanProvider RaidPlans { get; private set; }
@@ -31,9 +35,28 @@ namespace SPTQuestPlanner.Client
                 Cache);
             scheduler = new PlannerRefreshScheduler(RequestStateRefreshImmediate, TimeSpan.FromMilliseconds(500));
             cancellation = new CancellationTokenSource();
+            toggleWindowKey = Config.Bind(
+                "UI",
+                "Toggle window",
+                new KeyboardShortcut(KeyCode.F9),
+                "Open or close Quest planner MOD SPT raid-plan window.");
+            window = new PlannerRaidPlanWindow(Presentation, () => Cache == null ? 0L : Cache.Revision);
             SceneManager.activeSceneChanged += OnActiveSceneChanged;
             StartInitialLoad();
-            Logger.LogInfo("SPT Quest Planner v0.9.0 loaded (raid-plan presentation foundation + bounded lifecycle refresh; no visual UI)");
+            Logger.LogInfo("Quest planner MOD SPT v0.9.0 loaded (raid-plan window + bounded lifecycle refresh).");
+        }
+
+        private void Update()
+        {
+            ConfigEntry<KeyboardShortcut> key = toggleWindowKey;
+            PlannerRaidPlanWindow value = window;
+            if (key != null && value != null && key.Value.IsDown()) value.Toggle();
+        }
+
+        private void OnGUI()
+        {
+            PlannerRaidPlanWindow value = window;
+            if (value != null) value.Draw();
         }
 
         internal static PlannerRaidPlanCollection GetRaidPlans(
@@ -117,7 +140,10 @@ namespace SPTQuestPlanner.Client
             SceneManager.activeSceneChanged -= OnActiveSceneChanged;
             if (scheduler != null) scheduler.Dispose();
             if (cancellation != null) cancellation.Cancel();
+            if (window != null) window.Hide();
             initialLoad = null;
+            window = null;
+            toggleWindowKey = null;
             scheduler = null;
             refresh = null;
             cancellation = null;
