@@ -83,17 +83,34 @@ Remaining gate: actual SPT 4.1.3 server boot with CommonLib and the reconstructe
 
 Status: **static repairs complete; runtime evidence pending**
 
-No additional content repair is authorized until SPT runtime logs or campaign testing proves another defect.
+No additional compatibility repair is authorized until SPT runtime logs or campaign testing proves another defect.
 
 ### Phase 4 — Economy review
 
-Status: intentionally deferred until runtime/campaign gates pass.
+Status: **baseline audit complete / rebalance gated**
+
+- 281 root offers mapped;
+- 127 custom Artem templates sold as root offers;
+- 126 custom rouble offers and one custom barter offer;
+- LL distribution and quest reward families recorded;
+- placeholder handbook/flea prices identified as unsafe rebalance anchors;
+- unusual cross-trader standing and duplicate XP structures documented for campaign review.
+
+No prices or rewards have been changed. See `docs/economy-audit.md`.
 
 ### Phase 5 — Core / Optional assets
 
-Status: intentionally deferred.
+Status: **first-pass dependency classification complete / pruning gated**
 
-Exact bundle audit currently finds 23 physical files outside the manifest: 20 unique orphan-basename candidates plus three `Hands/` path-collision copies of `artem_top_29/30/31.bundle`. Nothing has been deleted.
+- custom item templates: 131;
+- campaign-required direct quest refs: 27;
+- additional core trader-catalog templates: 100;
+- orphan/stale candidates with no quest/assort/internal references: 4;
+- all 239 manifest bundle paths remain Core for the first stable revival;
+- 23 physical bundle files outside the manifest remain cleanup candidates;
+- no assets have been deleted.
+
+See `docs/content-classification.md`.
 
 ## Next hard gate
 
@@ -108,4 +125,6 @@ Install the first candidate into SPT 4.1.3 with WTT-ServerCommonLib 3.0.4 and th
 7. assort overwrite;
 8. client-side bundle resolution.
 
-The revival is not merge-ready until this runtime gate passes.
+After server/client boot passes, campaign smoke-testing must verify quest acceptance/completion/rewards/unlocks before any economy rebalance or optional-content removal is applied.
+
+The revival is not merge-ready until these runtime gates pass.
