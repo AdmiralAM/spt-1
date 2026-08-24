@@ -96,12 +96,8 @@ namespace SPTQuestPlanner.Client
             DrawHeader(viewModel, uiState);
             DrawWorkspaceTabs(uiState);
             GUILayout.Space(6f);
-
-            if (uiState.WorkspaceMode == PlannerWorkspaceMode.Progression)
-                DrawProgressionWorkspace(uiState);
-            else
-                DrawRaidWorkspace(viewModel, uiState);
-
+            if (uiState.WorkspaceMode == PlannerWorkspaceMode.Progression) DrawProgressionWorkspace(uiState);
+            else DrawRaidWorkspace(viewModel, uiState);
             GUILayout.EndVertical();
             GUI.DragWindow(new Rect(0f, 0f, windowRect.width - 140f, 24f));
         }
@@ -146,7 +142,6 @@ namespace SPTQuestPlanner.Client
 
             DrawRaidControls(uiState);
             GUILayout.Space(4f);
-
             GUILayout.BeginHorizontal();
             DrawLocationList(viewModel, uiState);
             DrawDetails(selected, active, uiState);
@@ -155,16 +150,14 @@ namespace SPTQuestPlanner.Client
 
         private static void DrawActivePlanBanner(PlannerRaidPlanCard active, PlannerRaidPlanUiState uiState)
         {
-            GUILayout.BeginVertical("box");
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal("box");
             GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
             GUILayout.Label("CURRENT RAID PLAN — " + PlannerDisplayNames.Location(active.LocationId));
             GUILayout.Label(PlanBenefit(active));
-            GUILayout.Label(PreparationSummary(active));
+            GUILayout.Label("Preparation: " + active.PreparationLabel + ".");
             GUILayout.EndVertical();
-            if (GUILayout.Button("Choose another raid", GUILayout.Width(135f), GUILayout.Height(48f))) uiState.ClearActivePlan();
+            if (GUILayout.Button("Choose another raid", GUILayout.Width(135f), GUILayout.Height(50f))) uiState.ClearActivePlan();
             GUILayout.EndHorizontal();
-            GUILayout.EndVertical();
         }
 
         private static void DrawRecommendedRaid(PlannerRaidPlanViewModel viewModel, PlannerRaidPlanUiState uiState)
@@ -183,9 +176,10 @@ namespace SPTQuestPlanner.Client
             GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
             GUILayout.Label("BEST RAID RIGHT NOW — " + PlannerDisplayNames.Location(recommended.LocationId));
             GUILayout.Label(PlanBenefit(recommended));
-            GUILayout.Label(PreparationSummary(recommended));
+            GUILayout.Label("Why this is #1: " + recommended.RankReason);
+            GUILayout.Label("Preparation: " + recommended.PreparationLabel + ".");
             GUILayout.EndVertical();
-            if (GUILayout.Button("USE THIS PLAN", GUILayout.Width(130f), GUILayout.Height(58f))) uiState.ActivateLocation(recommended.LocationId);
+            if (GUILayout.Button("USE THIS PLAN", GUILayout.Width(130f), GUILayout.Height(66f))) uiState.ActivateLocation(recommended.LocationId);
             GUILayout.EndHorizontal();
         }
 
@@ -208,7 +202,7 @@ namespace SPTQuestPlanner.Client
 
         private void DrawLocationList(PlannerRaidPlanViewModel viewModel, PlannerRaidPlanUiState uiState)
         {
-            GUILayout.BeginVertical(GUILayout.Width(285f));
+            GUILayout.BeginVertical(GUILayout.Width(305f));
             GUILayout.Label(uiState.HasActivePlan ? "OTHER RAID OPTIONS" : "RAID OPTIONS");
             locationScroll = GUILayout.BeginScrollView(locationScroll, GUILayout.ExpandHeight(true));
             for (int i = 0; i < viewModel.Cards.Count; i++)
@@ -218,8 +212,8 @@ namespace SPTQuestPlanner.Client
                 bool active = string.Equals(card.LocationId, uiState.ActiveLocationId, StringComparison.OrdinalIgnoreCase);
                 string prefix = active ? "CURRENT  " : "#" + card.Rank + "  ";
                 string label = prefix + PlannerDisplayNames.Location(card.LocationId) + "\n" +
-                               card.ObjectiveCount + " task(s) from " + card.QuestCount + " quest(s)  •  " + PreparationStatus(card);
-                if (GUILayout.Toggle(selected, label, "Button", GUILayout.MinHeight(50f)) && !selected)
+                               card.ActionSummary + "  •  " + card.PreparationLabel;
+                if (GUILayout.Toggle(selected, label, "Button", GUILayout.MinHeight(54f)) && !selected)
                     uiState.SelectLocation(card.LocationId);
             }
             GUILayout.EndScrollView();
@@ -241,8 +235,9 @@ namespace SPTQuestPlanner.Client
             GUILayout.BeginVertical(GUILayout.ExpandWidth(true));
             GUILayout.Label(PlannerDisplayNames.Location(card.LocationId) + (isActive ? " — CURRENT PLAN" : " — preview"));
             GUILayout.Label(PlanBenefit(card));
+            GUILayout.Label("Preparation: " + card.PreparationLabel + ".");
             GUILayout.EndVertical();
-            if (!isActive && GUILayout.Button(uiState.HasActivePlan ? "SWITCH TO THIS RAID" : "USE THIS PLAN", GUILayout.Width(145f), GUILayout.Height(44f)))
+            if (!isActive && GUILayout.Button(uiState.HasActivePlan ? "SWITCH TO THIS RAID" : "USE THIS PLAN", GUILayout.Width(145f), GUILayout.Height(50f)))
                 uiState.ActivateLocation(card.LocationId);
             GUILayout.EndHorizontal();
 
@@ -270,7 +265,6 @@ namespace SPTQuestPlanner.Client
                     GUILayout.Label("    Quest: " + questLabel);
                 }
             }
-
             if (card.ObjectiveCount > card.Objectives.Count)
                 GUILayout.Label("… plus " + (card.ObjectiveCount - card.Objectives.Count) + " additional mapped task(s).");
 
@@ -295,7 +289,6 @@ namespace SPTQuestPlanner.Client
                 else
                     GUILayout.Label("⚠ Get " + FormatNumber(need.Missing) + " more " + itemLabel);
             }
-
             if (card.UnresolvedPreparationCount > 0)
                 GUILayout.Label("⚠ Check " + card.UnresolvedPreparationCount + " ambiguous requirement(s) manually.");
         }
@@ -315,7 +308,6 @@ namespace SPTQuestPlanner.Client
 
                 PlannerRecommendationViewModel selected = ResolveProgressionTarget(snapshot, uiState);
                 PlannerRecommendationViewModel top = snapshot.Recommendations[0];
-
                 if (selected == null)
                 {
                     GUILayout.BeginHorizontal("box");
@@ -383,7 +375,6 @@ namespace SPTQuestPlanner.Client
                 GUILayout.Label("DO THESE FIRST");
                 for (int i = 0; i < target.BlockerQuestNames.Count; i++) GUILayout.Label("□ " + target.BlockerQuestNames[i]);
             }
-
             if (!target.FullyOwned)
             {
                 GUILayout.Space(5f);
@@ -391,7 +382,6 @@ namespace SPTQuestPlanner.Client
                 GUILayout.Label("Need " + FormatNumber(target.TotalOutstanding) + " item(s) across this path" +
                                 (target.FirOutstanding > 0d ? ", including " + FormatNumber(target.FirOutstanding) + " FIR" : string.Empty) + ".");
             }
-
             if (target.ImmediateUnlockQuestNames.Count > 0)
             {
                 GUILayout.Space(5f);
@@ -403,7 +393,8 @@ namespace SPTQuestPlanner.Client
 
         private static string PlanBenefit(PlannerRaidPlanCard card)
         {
-            return card == null ? string.Empty : "Advance " + card.ObjectiveCount + " task(s) across " + card.QuestCount + " quest(s) this raid.";
+            if (card == null) return string.Empty;
+            return "Advance " + card.ObjectiveCount + " task(s) across " + card.QuestCount + " quest(s) • " + card.ActionSummary + ".";
         }
 
         private static string ProgressionBenefit(PlannerRecommendationViewModel value)
@@ -414,29 +405,11 @@ namespace SPTQuestPlanner.Client
             return "Direct progression";
         }
 
-        private static string PreparationStatus(PlannerRaidPlanCard card)
-        {
-            if (card == null) return "Unknown";
-            if (card.PreparationReady) return "Ready";
-            if (card.MissingBringTemplateCount > 0 && card.UnresolvedPreparationCount > 0) return "Missing items + check requirements";
-            if (card.MissingBringTemplateCount > 0) return "Missing items";
-            return "Check requirements";
-        }
-
-        private static string PreparationSummary(PlannerRaidPlanCard card)
-        {
-            if (card == null) return "Preparation unknown.";
-            if (card.PreparationReady) return "Preparation: ready based on proven requirements.";
-            if (card.MissingBringTemplateCount > 0 && card.UnresolvedPreparationCount > 0)
-                return "Preparation: missing required items and " + card.UnresolvedPreparationCount + " requirement(s) need checking.";
-            if (card.MissingBringTemplateCount > 0) return "Preparation: missing " + card.MissingBringTemplateCount + " required item type(s).";
-            return "Preparation: " + card.UnresolvedPreparationCount + " requirement(s) need checking.";
-        }
-
         private static string ObjectiveProgress(PlannerRaidObjective objective)
         {
             if (!objective.HasProgress) return string.Empty;
-            return " — " + FormatNumber(objective.CurrentValue ?? 0d) + "/" + FormatNumber(objective.RequiredValue ?? 0d) + " done, " + FormatNumber(objective.RemainingValue ?? 0d) + " left";
+            return " — " + FormatNumber(objective.CurrentValue ?? 0d) + "/" + FormatNumber(objective.RequiredValue ?? 0d) +
+                   " done, " + FormatNumber(objective.RemainingValue ?? 0d) + " left";
         }
 
         private static string FormatTargets(PlannerRaidObjective objective, PlannerLocaleIndex locale)
