@@ -1,6 +1,6 @@
 # Artem Revival — Content Audit Baseline
 
-This file records structural findings from the archived Artem runtime package before any economy rebalance or optional-content pruning.
+This file records structural findings from the archived Artem runtime package before economy rebalance or optional-content pruning.
 
 ## Archived source set
 
@@ -22,7 +22,7 @@ The six bundle archives must never be interpreted as six independent mods.
 
 ## Content inventory
 
-Current archaeology counts:
+Archived runtime counts:
 
 - custom item definitions: 131;
 - custom clothing definitions: 64;
@@ -33,7 +33,9 @@ Current archaeology counts:
 - quest-success assortment mappings: 38;
 - bundle manifest entries: 239.
 
-All 280 root offers have barter schemes and loyalty levels in the archived assort structure.
+All 280 archived root offers have barter schemes and loyalty levels.
+
+After repair R4 (restored Sweden Patch offer), the revival assort becomes 703 item records / 281 root offers.
 
 ## Quest graph
 
@@ -41,55 +43,55 @@ Result:
 
 - no missing prerequisite quest IDs;
 - no dependency cycles detected;
-- authored chain is structurally recoverable and should be preserved during the compatibility port.
+- authored chain is structurally recoverable and is preserved during the compatibility port.
 
-### Known quest defects
+### Proven quest/content repairs
 
 #### Thumbnail extension mismatch
 
-`An Eye for an Eye` references:
+Quest `673f0f4d219756e158de7ab3` (`An Eye for an Eye`) references `ARTT_3thumbnail.jpg`, while the supplied asset is `ARTT_3thumbnail.png`.
 
-`ARTT_3thumbnail.jpg`
+Repair: normalize only this quest image reference to the existing `.png` asset.
 
-The supplied asset is:
+#### Missing Sweden Patch assortment offer
 
-`ARTT_3thumbnail.png`
+`Expanding Wardrobe` contains an `AssortmentUnlock` targeting offer ID `675267324707588d57c75972` with item template `6752641b1470fc33b675d59a`.
 
-Repair direction: normalize the quest image reference to the real asset unless runtime evidence proves an alternate image route exists.
+The TPL exists and is the authored **Sweden Patch** custom item, but the corresponding root trader offer is absent from archived `assort.json`. Adjacent quest-unlocked patches use a consistent LL1 offer pattern.
 
-#### Dangling assortment unlock
+Repair: restore the missing authored offer rather than deleting the quest reward:
 
-`Expanding Wardrobe` contains an `AssortmentUnlock` targeting offer ID:
+- offer ID: `675267324707588d57c75972`;
+- TPL: `6752641b1470fc33b675d59a`;
+- price: 200 RUB;
+- stock: 500;
+- buy limit: 3;
+- loyalty level: 1.
 
-`675267324707588d57c75972`
-
-with item template:
-
-`6752641b1470fc33b675d59a`
-
-The referenced offer ID is absent from the archived `assort.json` inventory. Do not substitute an arbitrary offer. Resolve the intended item/offer relationship first, then repair the reward or assort data with regression coverage.
+This repair is implemented deterministically by `tools/import_runtime_core.py` and guarded by `tests/validate_content.py`.
 
 ## Bundle integrity
 
-Manifest-to-physical resolution:
+Manifest-to-physical resolution uses the **exact manifest path**, not basename-only matching.
 
 - manifest entries: 239;
-- required entries physically present: 239;
-- missing required bundles: 0.
+- required exact paths physically present: 239;
+- missing required bundles: 0;
+- physical `.bundle` files across the six archives: 262;
+- physical files outside the manifest: 23.
 
-Therefore bundle absence is not currently a startup-root-cause candidate.
+Therefore bundle absence is not a startup-root-cause candidate.
 
 ### Cleanup candidates
 
-There are physical bundle files not registered by the current manifest. These are retained until dependency tracing is complete.
+The 23 out-of-manifest physical files divide into:
 
-Known duplicate basenames include:
+- 20 files whose basenames are not referenced anywhere by `bundles.json`;
+- 3 path-collision copies in `Hands/`: `artem_top_29.bundle`, `artem_top_30.bundle`, `artem_top_31.bundle`.
 
-- `artem_top_29.bundle`;
-- `artem_top_30.bundle`;
-- `artem_top_31.bundle`.
+The manifest selects the corresponding `Tops/artem_top_29.bundle`, `Tops/artem_top_30.bundle`, and `Tops/artem_top_31.bundle` files. The `Hands/` copies differ in size/CRC and remain retained for provenance review until runtime packaging tests confirm they are stale.
 
-Copies occur across supplied bundle groups and differ in file size. They require content/dependency comparison before any deletion.
+No bundle is deleted merely because it is currently outside the manifest.
 
 ## Classification policy
 
@@ -105,6 +107,6 @@ Nothing is moved into Optional or deleted solely because it is large.
 
 ## Economy policy
 
-Structural compatibility comes first. Existing reward and assort values are recorded during archaeology but are not normalized until the loader/content gates pass.
+Structural compatibility comes first. Existing reward and assort values are recorded during archaeology but are not normalized until loader/content/runtime gates pass.
 
 Artem custom gear is not automatically inserted into PBS loot/equipment pools.
