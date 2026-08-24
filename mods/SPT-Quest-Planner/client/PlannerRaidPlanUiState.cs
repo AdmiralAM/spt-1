@@ -12,15 +12,8 @@ namespace SPTQuestPlanner.Client
         public PlannerRaidPlanRankingMode RankingMode { get { return rankingMode; } }
         public bool IncludeAvailable { get { return includeAvailable; } }
 
-        public void SetRankingMode(PlannerRaidPlanRankingMode value)
-        {
-            rankingMode = value;
-        }
-
-        public void SetIncludeAvailable(bool value)
-        {
-            includeAvailable = value;
-        }
+        public void SetRankingMode(PlannerRaidPlanRankingMode value) { rankingMode = value; }
+        public void SetIncludeAvailable(bool value) { includeAvailable = value; }
 
         public void SelectLocation(string locationId)
         {
@@ -56,6 +49,9 @@ namespace SPTQuestPlanner.Client
         private readonly PlannerRaidPlanProvider provider;
         private readonly PlannerRaidPlanUiState uiState;
         private long cachedRevision = -1;
+        private PlannerRaidPlanRankingMode cachedRankingMode;
+        private bool cachedIncludeAvailable;
+        private int cachedMaxObjectivesPerCard = -1;
         private PlannerRaidPlanViewModel cachedViewModel;
 
         public PlannerRaidPlanPresentationController(PlannerRaidPlanProvider provider, PlannerRaidPlanUiState uiState = null)
@@ -68,13 +64,19 @@ namespace SPTQuestPlanner.Client
 
         public PlannerRaidPlanViewModel GetViewModel(long cacheRevision, int maxObjectivesPerCard = 12)
         {
+            if (maxObjectivesPerCard <= 0) throw new ArgumentOutOfRangeException("maxObjectivesPerCard");
             if (cachedViewModel != null && cachedRevision == cacheRevision &&
-                cachedViewModel.RankingMode == uiState.RankingMode)
+                cachedRankingMode == uiState.RankingMode &&
+                cachedIncludeAvailable == uiState.IncludeAvailable &&
+                cachedMaxObjectivesPerCard == maxObjectivesPerCard)
                 return cachedViewModel;
 
             PlannerRaidPlanCollection collection = provider.Get(uiState.RankingMode, uiState.IncludeAvailable);
             cachedViewModel = PlannerRaidPlanViewModelBuilder.Build(collection, maxObjectivesPerCard);
             cachedRevision = cacheRevision;
+            cachedRankingMode = uiState.RankingMode;
+            cachedIncludeAvailable = uiState.IncludeAvailable;
+            cachedMaxObjectivesPerCard = maxObjectivesPerCard;
             uiState.ResolveSelection(cachedViewModel);
             return cachedViewModel;
         }
@@ -87,6 +89,7 @@ namespace SPTQuestPlanner.Client
         public void Invalidate()
         {
             cachedRevision = -1;
+            cachedMaxObjectivesPerCard = -1;
             cachedViewModel = null;
         }
     }
