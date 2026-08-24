@@ -8,7 +8,7 @@ namespace SPTQuestPlanner.Tests
     public sealed class PlannerCandidateSelectorTests
     {
         [Fact]
-        public void DefaultPolicy_SelectsActiveAvailableAndReachableOnly()
+        public void DefaultPolicy_SelectsActiveAvailableAndReachableOnly_InPriorityOrder()
         {
             PlannerCandidateSelector selector = new PlannerCandidateSelector(State(
                 Quest("blocked", 1),
@@ -39,22 +39,28 @@ namespace SPTQuestPlanner.Tests
         }
 
         [Fact]
-        public void Selection_IsDeterministic()
+        public void Selection_IsDeterministicWithinPriorityBands()
         {
             PlannerCandidateSelector selector = new PlannerCandidateSelector(State(
-                Quest("z", 4), Quest("a", 3), Quest("m", 2)));
+                Quest("z-active", 4), Quest("a-available", 3), Quest("a-active", 4), Quest("m-reachable", 2)));
 
-            Assert.Equal(new[] { "a", "m", "z" }, selector.Select());
+            Assert.Equal(new[] { "a-active", "z-active", "a-available", "m-reachable" }, selector.Select());
         }
 
         [Fact]
-        public void Selection_RejectsUnboundedCandidateSet()
+        public void Selection_CapsHugeReachableSetInsteadOfFailing()
         {
             Dictionary<string, PlannerQuestClientState> quests = new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal);
-            for (int i = 0; i < 257; i++) quests["q" + i] = Quest("q" + i, 4);
+            quests["active"] = Quest("active", 4);
+            quests["available"] = Quest("available", 3);
+            for (int i = 0; i < 500; i++) quests["reachable-" + i.ToString("D3")] = Quest("reachable-" + i.ToString("D3"), 2);
             PlannerCandidateSelector selector = new PlannerCandidateSelector(new PlannerClientIndex(1, quests, null));
 
-            Assert.Throws<InvalidOperationException>(() => selector.Select());
+            IReadOnlyList<string> result = selector.Select();
+
+            Assert.Equal(256, result.Count);
+            Assert.Equal("active", result[0]);
+            Assert.Equal("available", result[1]);
         }
 
         private static PlannerClientIndex State(params PlannerQuestClientState[] quests)
