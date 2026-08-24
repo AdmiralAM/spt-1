@@ -7,17 +7,19 @@ namespace SPTItemIntelligence
 {
     public sealed class ItemRelevanceState
     {
-        internal static readonly ItemRelevanceState Empty = new ItemRelevanceState(0, 0);
+        internal static readonly ItemRelevanceState Empty = new ItemRelevanceState(0, 0, 0);
 
-        public ItemRelevanceState(int craftCount, int barterCount)
+        public ItemRelevanceState(int craftCount, int barterCount, int onYouCount = 0)
         {
             CraftCount = Math.Max(0, craftCount);
             BarterCount = Math.Max(0, barterCount);
+            OnYouCount = Math.Max(0, onYouCount);
         }
 
         public int CraftCount { get; }
         public int BarterCount { get; }
-        public bool HasData => CraftCount > 0 || BarterCount > 0;
+        public int OnYouCount { get; }
+        public bool HasData => CraftCount > 0 || BarterCount > 0 || OnYouCount > 0;
     }
 
     public static class ItemRelevanceRegistry
