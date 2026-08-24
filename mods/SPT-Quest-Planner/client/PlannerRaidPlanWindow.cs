@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using BepInEx.Configuration;
 using UnityEngine;
 
@@ -8,17 +7,17 @@ namespace SPTQuestPlanner.Client
     public sealed class PlannerRaidPlanWindow
     {
         private const int WindowId = 0x51504C4E;
-        private static readonly Color BackdropColor = new Color(0f, 0f, 0f, 0.45f);
+        private static readonly Color BackdropColor = new Color(0f, 0f, 0f, 1f);
         private static readonly Color WindowBackgroundColor = new Color(0.075f, 0.08f, 0.085f, 1f);
         private readonly PlannerRaidPlanPresentationController presentation;
         private readonly Func<long> revisionProvider;
+        private readonly PlannerUiRaycastBlocker inputBlocker = new PlannerUiRaycastBlocker();
         private Rect windowRect = new Rect(160f, 100f, 900f, 620f);
         private Vector2 locationScroll;
         private Vector2 detailScroll;
         private bool visible;
         private GUIStyle opaqueWindowStyle;
         private Texture2D opaqueWindowTexture;
-        private Behaviour blockedEventSystem;
 
         public PlannerRaidPlanWindow(
             PlannerRaidPlanPresentationController presentation,
@@ -39,25 +38,27 @@ namespace SPTQuestPlanner.Client
         public void Hide()
         {
             visible = false;
-            RestoreEftInput();
+            inputBlocker.Release();
         }
 
         public void Draw()
         {
             if (!visible) return;
 
-            EnsureEftInputBlocked();
+            inputBlocker.Ensure();
             EnsureOpaqueWindowStyle();
             DrawModalBackdrop();
 
-            Color previous = GUI.color;
+            Color previousColor = GUI.color;
+            Color previousBackground = GUI.backgroundColor;
             GUI.color = Color.white;
+            GUI.backgroundColor = Color.white;
             windowRect = GUI.ModalWindow(WindowId, windowRect, DrawWindow, "Quest planner MOD SPT", opaqueWindowStyle);
-            GUI.color = previous;
+            GUI.backgroundColor = previousBackground;
+            GUI.color = previousColor;
 
             Event current = Event.current;
-            if (current != null && IsPointerEvent(current.type))
-                current.Use();
+            if (current != null && IsPointerEvent(current.type)) current.Use();
         }
 
         private void EnsureOpaqueWindowStyle()
@@ -87,62 +88,6 @@ namespace SPTQuestPlanner.Client
             GUI.color = BackdropColor;
             GUI.DrawTexture(new Rect(0f, 0f, Screen.width, Screen.height), Texture2D.whiteTexture, ScaleMode.StretchToFill, true);
             GUI.color = previous;
-        }
-
-        private void EnsureEftInputBlocked()
-        {
-            Behaviour current = ResolveCurrentEventSystem();
-            if (ReferenceEquals(current, blockedEventSystem))
-            {
-                if (current != null && current.enabled) current.enabled = false;
-                return;
-            }
-
-            RestoreEftInput();
-            if (current == null) return;
-
-            blockedEventSystem = current;
-            if (blockedEventSystem.enabled) blockedEventSystem.enabled = false;
-        }
-
-        private void RestoreEftInput()
-        {
-            Behaviour value = blockedEventSystem;
-            blockedEventSystem = null;
-            if (value == null) return;
-            try
-            {
-                if (!value.enabled) value.enabled = true;
-            }
-            catch { }
-        }
-
-        private static Behaviour ResolveCurrentEventSystem()
-        {
-            Type type = FindType("UnityEngine.EventSystems.EventSystem");
-            if (type == null) return null;
-
-            PropertyInfo currentProperty = type.GetProperty("current", BindingFlags.Public | BindingFlags.Static)
-                ?? type.GetProperty("Current", BindingFlags.Public | BindingFlags.Static);
-            if (currentProperty == null) return null;
-
-            try { return currentProperty.GetValue(null, null) as Behaviour; }
-            catch { return null; }
-        }
-
-        private static Type FindType(string fullName)
-        {
-            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            for (int i = 0; i < assemblies.Length; i++)
-            {
-                try
-                {
-                    Type type = assemblies[i].GetType(fullName, false, false);
-                    if (type != null) return type;
-                }
-                catch { }
-            }
-            return null;
         }
 
         private static bool IsPointerEvent(EventType type)
