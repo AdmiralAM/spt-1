@@ -1,39 +1,27 @@
 # Economy Admiral runtime gate
 
-This document covers physical SPT 4.1.3 runtime acceptance for the current read-only Economy Admiral foundation.
+Physical acceptance target: **SPT 4.1.3**, current target mod stack, exact `economy-admiral-candidate` from PR #121.
 
-## Candidate contract
+## Audit / Normal gate
 
-Use the exact `economy-admiral-candidate` GitHub Actions artifact produced from the current PR head and install its contents under:
+Install the Actions candidate under `SPT_Runtime/user/mods/Economy Admiral/`, leave `mode=Audit` / `preset=Normal`, start SPT and allow all startup/PostLoad callbacks to finish. Then run the packaged `Validate-Runtime.ps1`.
 
-`SPT_Runtime/user/mods/Economy Admiral/`
-
-The module directory must contain `Economy-Admiral.dll`, `BUILD_INFO.json`, `config/config.json`, `README.md`, `RUNTIME_TEST.md`, and `Validate-Runtime.ps1`.
-
-## Test A — Audit / Normal
-
-1. Confirm `mode=Audit`, `preset=Normal`.
-2. Start SPT 4.1.3 normally with the target mod stack.
-3. Allow all startup/PostLoad callbacks to finish.
-4. Confirm there is no Economy Admiral startup/fatal error.
-5. Run `Validate-Runtime.ps1` from the installed Economy Admiral directory or pass its mod path explicitly.
-
-Expected result: exit code `0` and a green Economy Admiral PASS line.
-
-The validator requires:
+PASS requires:
 
 - runtime evidence schema v3;
 - exact packaged build identity;
-- pristine baseline capture at priority `1`;
+- pristine baseline captured at priority `1` before normal mod callbacks;
 - positive pristine quest count and consistent final/mod-added counts;
-- all **9 working reports** plus the runtime manifest;
-- pristine benchmark source in primary/utility/progression/constraint reports;
-- provenance delta with consistent pristine/final counts;
-- provenance-aware enforcement plan;
+- **9/9 working reports** plus runtime manifest;
+- `PristineStartupSnapshot` benchmark source in primary, utility, progression and constraint reports;
+- provenance delta consistent with manifest counts;
+- provenance-aware enforcement review plan;
 - identical before/after final-DB fingerprints;
 - `DatabaseUnchangedAcrossPipeline=true`;
 - `RuntimeGatePassed=true`;
-- zero mutations, no selected composite policy and no automatic mutation candidate.
+- zero mutations;
+- no selected composite policy;
+- no automatic mutation candidate.
 
 Working reports:
 
@@ -47,20 +35,12 @@ Working reports:
 8. `economy-admiral-target-proposals.json`
 9. `economy-admiral-enforcement-plan.json`
 
-`economy-admiral-runtime-evidence.json` is the manifest and is not included in the 9-report count.
+`economy-admiral-runtime-evidence.json` is the manifest, giving **10 JSON files total**.
 
-## Test B — Off
+## Off gate
 
-Run after Test A succeeds:
+After Audit passes: stop SPT, set `mode=Off`, remove/move existing reports, start SPT again, and confirm Economy Admiral generates no new reports.
 
-1. stop the server;
-2. set `mode=Off`;
-3. remove/move old `reports`;
-4. start the server again;
-5. confirm no Economy Admiral reports are regenerated.
+## Evidence
 
-## Evidence to retain
-
-Audit acceptance requires the complete `reports` directory (**10 JSON files**), same-run server log and installed `BUILD_INFO.json`.
-
-The evidence must be reviewed before selecting a composite policy or implementing any mutation transaction.
+Retain the complete 10-JSON `reports` directory, the same-run SPT server log and installed `BUILD_INFO.json`. This evidence is the gate before any composite policy selection or mutation transaction design.
