@@ -11,17 +11,23 @@ PASS requires:
 - runtime evidence schema v3;
 - exact packaged build identity;
 - pristine baseline captured at priority `1` before normal mod callbacks;
-- positive pristine quest count and consistent final/mod-added counts;
+- positive pristine quest count;
+- exact provenance partition with non-negative `added / modified / unchanged / removed` counts;
+- `modified + unchanged + removed = pristine`;
+- `added + modified + unchanged = final`;
 - **9/9 working reports** plus runtime manifest;
 - `PristineStartupSnapshot` benchmark source in primary, utility, progression and constraint reports;
-- provenance delta consistent with manifest counts;
-- provenance-aware enforcement review plan;
+- provenance delta exactly consistent with manifest counts;
+- enforcement plan schema v4 / mutation-eligibility policy v2;
+- `PristineUnchanged` candidates protected;
+- `PristineModified` reward eligibility limited to reward dimensions actually proven changed versus pristine;
+- unknown provenance blocked;
+- every `AutomaticMutationAllowed=false` and every `ProposedMutation=null`;
 - identical before/after final-DB fingerprints;
 - `DatabaseUnchangedAcrossPipeline=true`;
 - `RuntimeGatePassed=true`;
 - zero mutations;
-- no selected composite policy;
-- no automatic mutation candidate.
+- no selected composite policy.
 
 Working reports:
 
