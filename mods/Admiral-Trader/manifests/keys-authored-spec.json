@@ -102,7 +102,7 @@
       "map": "laboratory",
       "prerequisites": ["9c438fa48f645044ddc75e8d", "59a36c5ee68210f9154d94d0"],
       "objective": {"model": "possess-representative-keys", "representativeCount": 2, "sourceGroup": "keys-labs"},
-      "rewardBudget": {"xp": 22000, "rub": 80000, "standing": 0.03, "unlockSlots": 0}
+      "rewardBudget": {"xp": 20000, "rub": 80000, "standing": 0.03, "unlockSlots": 0}
     },
     {
       "id": "68a6527a3c73b2e85977d7a1",
