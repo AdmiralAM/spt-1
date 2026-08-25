@@ -10,47 +10,42 @@ Implemented now:
 
 - final DB scan at the SPT 4.1 `PostLoad` lifecycle boundary;
 - trader acquisition scan from final trader assort roots;
-- quest reward acquisition scan;
-- deterministic per-item acquisition aggregation;
-- initial acquisition-density rarity classification;
-- trader structural audit for malformed root offers;
-- quest reward value audit using final handbook prices;
-- vanilla quest reward raw median/P90 benchmark;
-- progression-normalized quest reward median/P90 benchmark;
-- restartable-quest raw and normalized reward outlier checks;
-- typed SPT 4.1 reward-utility inventory for XP, trader standing, trader unlocks, assortment unlocks, and production-scheme unlocks;
-- separate vanilla/restartable utility distributions and per-dimension vanilla-relative ratios;
-- explicit quest prerequisite graph with cycle detection, depth benchmarks and cached snapshot reuse;
+- quest reward acquisition scan and handbook-value audit;
+- deterministic per-item acquisition aggregation and initial rarity classification;
+- trader malformed-offer and source-saturation findings;
+- vanilla raw and progression-normalized quest reward benchmarks;
+- typed XP / standing / trader-unlock / assortment-unlock / production-unlock distributions;
+- per-dimension vanilla-relative utility ratios without ruble conversion;
+- explicit prerequisite graph with cycle detection, cached snapshot reuse and depth benchmarks;
 - structured final-DB quest constraint audit for timed, one-session, FIR, plant, distance and daytime constraints;
 - unified per-quest analysis view combining all measured dimensions without a composite score;
-- trader-source saturation findings;
+- observational cross-dimension flags for suspicious reward/structure combinations and restartable outliers;
 - functional `Easy / Normal / Hard / Custom` audit policies;
-- `Off / Audit / Enforce` mode contract;
-- deterministic JSON reports;
-- manual item overrides;
+- `Off / Audit / Enforce` contract with `Enforce` fail-closed/read-only;
+- deterministic JSON reports and manual item overrides;
 - future `RepeatedRaidLootDecay` policy represented but disabled by default.
 
-`Enforce` is intentionally fail-closed in this slice: selecting it produces an explicit warning and still performs only read-only analysis. No economy mutation is implemented yet.
+No economy mutation is implemented yet.
 
 ## SPT 4.1 architecture boundary
 
-SPT 4.1 uses directly injected database tables. Economy Admiral consumes final `TemplateTable` and `TradersTable` instances and runs at `OnLoadOrder.PostLoad + 1000`, after normal content registration.
+Economy Admiral consumes final injected `TemplateTable` and `TradersTable` instances at `OnLoadOrder.PostLoad + 1000`, after normal content registration.
 
 ## Reports
 
-Economy Admiral currently emits five deterministic reports under the mod directory:
+Five deterministic reports are emitted under the mod directory:
 
 - `reports/economy-admiral-audit.json` — acquisition, handbook-value and trader/quest findings;
 - `reports/economy-admiral-reward-utility.json` — XP, standing and unlock distributions/ratios;
-- `reports/economy-admiral-progression-graph.json` — explicit prerequisite graph, cycles and depth benchmarks;
+- `reports/economy-admiral-progression-graph.json` — prerequisite graph, cycles and depth benchmarks;
 - `reports/economy-admiral-quest-constraints.json` — structured objective constraints;
-- `reports/economy-admiral-quest-analysis.json` — unified observational view per quest.
+- `reports/economy-admiral-quest-analysis.json` — unified observational view and cross-dimension flags.
 
 All report paths are constrained to stay inside the mod directory.
 
 ## Unified quest analysis
 
-The unified report places the main measurable dimensions beside each other for the same quest:
+The unified report puts the main measurable dimensions beside each other for the same quest:
 
 - success-reward known handbook value;
 - XP and trader standing;
@@ -61,19 +56,30 @@ The unified report places the main measurable dimensions beside each other for t
 - timed / one-session / FIR / plant / distance / daytime constraint counts;
 - vanilla-relative ratios for handbook value, XP, standing, prerequisite depth and structured constraints.
 
-`CompositeScoreApplied = false` and `RewardAllowanceAffected = false` are explicit schema contracts. The report is intended to expose relationships and outliers before Economy Admiral chooses any cross-dimension weights.
+Sparse dimensions use positive-sample vanilla medians so zero-dominated distributions do not erase the baseline.
+
+Schema 2 adds observational flags including:
+
+- `HIGH_ITEM_VALUE_LOW_STRUCTURE`;
+- `HIGH_XP_LOW_DEPTH`;
+- `HIGH_STANDING_LOW_DEPTH`;
+- `RESTARTABLE_HIGH_ITEM_VALUE`;
+- `RESTARTABLE_HIGH_XP`;
+- `PREREQUISITE_CYCLE`.
+
+These are diagnostic classifications only. `CompositeScoreApplied = false`, `RewardAllowanceAffected = false`, and `OutlierFlagsAffectEnforcement = false` are explicit contracts.
 
 ## Reward budget model
 
-The main audit preserves raw handbook value and also computes a progression-normalized value from structured level and objective-count signals. The score is capped so extreme level gates or condition counts cannot create unlimited reward allowance.
+The main audit preserves raw handbook value and computes a second progression-normalized signal from structured level and objective-count inputs. Contributions are capped.
 
-Prerequisite depth and structured constraints are **not** currently included in this allowance. Their independent reports explicitly set `DepthAffectsRewardAllowance = false` and `ConstraintsAffectRewardAllowance = false`.
+Prerequisite depth and structured constraints are deliberately excluded from the current reward allowance. Their reports explicitly retain `DepthAffectsRewardAllowance = false` and `ConstraintsAffectRewardAllowance = false`.
 
 ## Typed reward utility benchmark
 
-Typed SPT rewards including `Experience`, `TraderStanding`, `TraderUnlock`, `AssortmentUnlock`, and `ProductionScheme` are measured directly. Vanilla and restartable distributions are separated. Sparse unlock medians use positive samples only.
+SPT reward types `Experience`, `TraderStanding`, `TraderUnlock`, `AssortmentUnlock`, and `ProductionScheme` are measured directly. Vanilla and restartable distributions are separated and sparse unlock medians use positive samples only.
 
-No reward utility is converted into rubles and no hidden cross-dimension utility score exists.
+No XP/standing/unlock dimension is converted into rubles and no hidden composite utility score exists.
 
 ## Configuration
 
@@ -105,9 +111,7 @@ Default configuration lives in `config/config.json`.
 }
 ```
 
-Preset audit thresholds:
-
-| Preset | raw normal quest | raw restartable | normalized normal | normalized restartable | trader saturation |
+| Preset | raw normal | raw restartable | normalized normal | normalized restartable | trader saturation |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Easy | 5.0x | 2.5x | 4.0x | 2.0x | 8 traders |
 | Normal | 3.0x | 1.5x | 2.5x | 1.25x | 6 traders |
@@ -116,24 +120,16 @@ Preset audit thresholds:
 
 ## Current limitations
 
-The MVP still does not provide:
-
-- an approved cross-dimension composite utility policy;
-- prerequisite-depth or constraint reward multipliers;
-- repeatable replacement-rate enforcement;
-- PBS adapter / trader normalization;
-- flea, world-loot, craft or insurance modeling;
-- active economy mutation.
-
-Those remain later work before `Enforce` may mutate final DB state.
+The MVP still lacks an approved cross-dimension composite policy, mutation-plan schema, repeatable replacement-rate enforcement, PBS adapter/trader normalization, and flea/world-loot/craft/insurance modeling.
 
 ## Planned next slices
 
 MVP remainder:
 
-- use the unified report to define explicit outlier classes across independent dimensions;
-- design an explicit configurable composite policy, retaining each raw dimension in the report;
-- define an enforcement plan and mutation-report schema without activating mutation;
+- move observational flag thresholds into an explicit policy/config surface instead of hard-coded prototype constants;
+- add deterministic flag counts/summary to the unified report;
+- define composite-policy candidates while preserving all raw dimensions;
+- define enforcement-plan and mutation-report schemas without activating mutation;
 - deterministic enforcement tests before `Enforce` can become active.
 
 Stage 2:
@@ -157,5 +153,3 @@ Stage 3:
 ## Development lifecycle
 
 `Issue -> feature branch -> PR -> Economy Admiral-specific CI -> runtime gate when required -> merge -> cleanup`
-
-Do not use the repository-wide publisher for ordinary Economy Admiral development validation.
