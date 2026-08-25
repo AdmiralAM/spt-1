@@ -39,10 +39,34 @@ Quest Planner must not depend on another SPT mod's UI classes, runtime controlle
 
 Item Intelligence can expose similar quest/item facts, but it is not Quest Planner's source of truth. The current client exposes read-only planner selection/active-plan snapshots so future integrations can consume planner decisions without owning planner internals.
 
-## Validation and publication
+## Validation and physical-test builds
 
-Pull requests that change this module run the dedicated Quest Planner test/client/server workflow. CI build outputs are GitHub Actions artifacts and are not committed to `main`.
+Pull requests that change this module run the dedicated [Quest Planner Validate](https://github.com/AdmiralAM/spt-1/actions/workflows/quest-planner-validate.yml) workflow. The workflow tests the domain/runtime contracts, builds the client and server from the exact candidate SHA, and produces one installable `quest-planner-runtime-v<version>-<sha>` GitHub Actions artifact.
 
-Quest Planner does not currently have a permanent install-only runtime branch in the suite publication workflow. Until that channel is deliberately added, use validated development builds/CI artifacts rather than treating another module's runtime branch as a distribution channel.
+The physical-test artifact contains:
+
+- `BepInEx/plugins/SPT-Quest-Planner/` — client DLL;
+- `SPT_Runtime/user/mods/SPT-Quest-Planner/` — server DLL;
+- `runtime-manifest.json` — version, exact source commit/PR/run provenance, automated-validation state, and runtime-validation state;
+- `README.md` — candidate install/status note.
+
+A candidate artifact is **not** runtime-accepted merely because CI passed. While Issue #80 remains open, `runtime_validation` must remain `pending` until the live SPT gate passes.
+
+### Current runtime gate
+
+Quest Planner 0.9.4 is feature-frozen pending physical validation. The live gate must verify:
+
+1. F9 initial load has no schema/empty-response errors;
+2. manual Refresh completes cleanly;
+3. quest/inventory changes are reflected after refresh;
+4. F9 can remain open long enough to expose any stale-open-window behavior without request spam/freezes;
+5. closing/reopening F9 preserves and revalidates Active Raid Plan/progression focus correctly;
+6. client/server logs contain no Quest Planner exceptions, schema mismatch, empty response, repeated-request spam, or stale-plan failures.
+
+PR #81 is historical evidence only. Its 15-second `VisibleRefreshGate` must not be merged/rebased wholesale. Port that bounded-refresh concept onto current source only if the live 0.9.4 test proves meaningful open-window staleness.
+
+### Permanent runtime channel
+
+`runtime-quest-planner` is reserved as the future install-only Quest Planner publication channel. It must **not** be populated with an unvalidated candidate. After a candidate passes the physical SPT gate, publication may deliberately promote that exact accepted package to `runtime-quest-planner` with `runtime_validation=passed` and explicit source provenance.
 
 See [foundation architecture](docs/foundation-architecture.md) for the original data-path and domain constraints. That document is architectural history; current source and tests are authoritative where implementation has advanced beyond the foundation milestone.
