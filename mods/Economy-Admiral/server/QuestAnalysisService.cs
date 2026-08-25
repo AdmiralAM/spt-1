@@ -31,21 +31,10 @@ public sealed class QuestAnalysisService(
         "6617beeaa9cfa777ca915b7c",
     };
 
-    private QuestAnalysisReport? snapshot;
-
-    public QuestAnalysisReport GetSnapshot()
-    {
-        return snapshot ?? throw new InvalidOperationException("Economy Admiral unified quest analysis has not run yet.");
-    }
-
-    public async Task RunAsync(CancellationToken cancellationToken)
+    public async Task<QuestAnalysisReport> RunAsync(CancellationToken cancellationToken)
     {
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(QuestAnalysisService).Assembly);
         var config = await LoadConfigAsync(modPath, cancellationToken);
-        if (config.Mode == EconomyMode.Off)
-        {
-            return;
-        }
 
         var policy = ResolvePolicy(config);
         var handbookPrices = templates.Handbook.Items
@@ -88,7 +77,6 @@ public sealed class QuestAnalysisService(
             VanillaRestartable = vanillaRestartable,
             Quests = rows,
         };
-        snapshot = report;
 
         var reportPath = Path.GetFullPath(Path.Combine(modPath, "reports", "economy-admiral-quest-analysis.json"));
         var modRoot = Path.GetFullPath(modPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
@@ -100,6 +88,7 @@ public sealed class QuestAnalysisService(
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
         await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
         logger.Info($"[Economy Admiral] unified quest analysis complete: {rows.Count} quests, {flagCounts.Values.Sum()} observational flags; report={reportPath}");
+        return report;
     }
 
     private static QuestAnalysisRow AddObservationalFlags(QuestAnalysisRow row, AuditPolicy policy)
