@@ -13,11 +13,11 @@ function Write-Json([string]$Name, [object]$Value) {
 
 $hash = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
 $headSha = '0123456789abcdef0123456789abcdef01234567'
-Write-Json 'economy-admiral-audit.json' @{ EnforcementApplied = $false }
-Write-Json 'economy-admiral-reward-utility.json' @{ SchemaVersion = 2 }
-Write-Json 'economy-admiral-progression-graph.json' @{ SchemaVersion = 2 }
-Write-Json 'economy-admiral-quest-constraints.json' @{ SchemaVersion = 1 }
-Write-Json 'economy-admiral-quest-analysis.json' @{ SchemaVersion = 3 }
+Write-Json 'economy-admiral-audit.json' @{ EnforcementApplied = $false; VanillaBenchmarkSource = 'PristineStartupSnapshot' }
+Write-Json 'economy-admiral-reward-utility.json' @{ SchemaVersion = 2; BenchmarkSource = 'PristineStartupSnapshot' }
+Write-Json 'economy-admiral-progression-graph.json' @{ SchemaVersion = 2; BenchmarkSource = 'PristineStartupSnapshot' }
+Write-Json 'economy-admiral-quest-constraints.json' @{ SchemaVersion = 1; BenchmarkSource = 'PristineStartupSnapshot' }
+Write-Json 'economy-admiral-quest-analysis.json' @{ SchemaVersion = 3; Note = 'Uses pristine startup baseline.' }
 Write-Json 'economy-admiral-composite-candidates.json' @{
     SelectedCandidate = $null
     AffectsRewardAllowance = $false
@@ -35,7 +35,7 @@ Write-Json 'economy-admiral-enforcement-plan.json' @{
     Candidates = @(@{ AutomaticMutationAllowed = $false; ProposedMutation = $null })
 }
 Write-Json 'economy-admiral-runtime-evidence.json' @{
-    SchemaVersion = 2
+    SchemaVersion = 3
     Mode = 'Audit'
     Preset = 'Normal'
     BuildIdentity = @{
@@ -45,6 +45,16 @@ Write-Json 'economy-admiral-runtime-evidence.json' @{
         ArtifactName = 'economy-admiral-candidate'
         CompilePackageVersion = '4.1.2'
         TargetRuntime = 'SPT 4.1.3'
+    }
+    Provenance = @{
+        CapturePriority = 1
+        PristineQuestCount = 100
+        FinalQuestCount = 125
+        ModAddedQuestCount = 25
+        PristineTraderCount = 10
+        FinalTraderCount = 14
+        BaselineCaptured = $true
+        BaselineNotLargerThanFinal = $true
     }
     ExpectedReportCount = 8
     PresentReportCount = 8
