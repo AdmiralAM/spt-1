@@ -20,16 +20,16 @@ $ManifestPath = Join-Path $ReportsPath 'economy-admiral-runtime-evidence.json'
 $expectedReports = @(
     'economy-admiral-audit.json', 'economy-admiral-reward-utility.json',
     'economy-admiral-progression-graph.json', 'economy-admiral-quest-constraints.json',
-    'economy-admiral-quest-analysis.json', 'economy-admiral-composite-candidates.json',
-    'economy-admiral-target-proposals.json', 'economy-admiral-enforcement-plan.json'
+    'economy-admiral-quest-analysis.json', 'economy-admiral-provenance-delta.json',
+    'economy-admiral-composite-candidates.json', 'economy-admiral-target-proposals.json',
+    'economy-admiral-enforcement-plan.json'
 )
 
 Write-Host "[Economy Admiral] validating runtime evidence in: $ReportsPath"
 $manifest = Read-Json $ManifestPath
-
 if ($manifest.SchemaVersion -ne 3) { Fail "runtime evidence SchemaVersion must be 3" }
-if ($manifest.ExpectedReportCount -ne 8) { Fail "ExpectedReportCount must be 8" }
-if ($manifest.PresentReportCount -ne 8) { Fail "PresentReportCount is $($manifest.PresentReportCount), expected 8" }
+if ($manifest.ExpectedReportCount -ne 9) { Fail "ExpectedReportCount must be 9" }
+if ($manifest.PresentReportCount -ne 9) { Fail "PresentReportCount is $($manifest.PresentReportCount), expected 9" }
 if ($manifest.AllExpectedReportsPresent -ne $true) { Fail "AllExpectedReportsPresent is not true" }
 if ($manifest.DatabaseUnchangedAcrossPipeline -ne $true) { Fail "DatabaseUnchangedAcrossPipeline is not true" }
 if ($manifest.ApplyMutations -ne $false) { Fail "runtime evidence says ApplyMutations=true" }
@@ -39,8 +39,7 @@ if ($manifest.RuntimeGatePassed -ne $true) { Fail "RuntimeGatePassed is not true
 $provenance = $manifest.Provenance
 if ($null -eq $provenance) { Fail "Provenance is missing" }
 if ($provenance.CapturePriority -ne 1) { Fail "unexpected pristine capture priority: $($provenance.CapturePriority)" }
-if ($provenance.BaselineCaptured -ne $true) { Fail "BaselineCaptured is not true" }
-if ($provenance.BaselineNotLargerThanFinal -ne $true) { Fail "BaselineNotLargerThanFinal is not true" }
+if ($provenance.BaselineCaptured -ne $true -or $provenance.BaselineNotLargerThanFinal -ne $true) { Fail "pristine baseline validity failed" }
 if ([int]$provenance.PristineQuestCount -le 0) { Fail "PristineQuestCount must be positive" }
 if ([int]$provenance.FinalQuestCount -lt [int]$provenance.PristineQuestCount) { Fail "FinalQuestCount is smaller than pristine baseline" }
 if ([int]$provenance.ModAddedQuestCount -ne ([int]$provenance.FinalQuestCount - [int]$provenance.PristineQuestCount)) { Fail "ModAddedQuestCount is inconsistent" }
@@ -63,35 +62,33 @@ foreach ($fileName in $expectedReports) { [void](Read-Json (Join-Path $ReportsPa
 $audit = Read-Json (Join-Path $ReportsPath 'economy-admiral-audit.json')
 if ($audit.EnforcementApplied -ne $false) { Fail "audit report says EnforcementApplied=true" }
 if ([string]$audit.VanillaBenchmarkSource -ne 'PristineStartupSnapshot') { Fail "primary audit is not bound to pristine benchmark" }
-
 $utility = Read-Json (Join-Path $ReportsPath 'economy-admiral-reward-utility.json')
 if ([string]$utility.BenchmarkSource -ne 'PristineStartupSnapshot') { Fail "reward utility is not bound to pristine benchmark" }
 $progression = Read-Json (Join-Path $ReportsPath 'economy-admiral-progression-graph.json')
 if ([string]$progression.BenchmarkSource -ne 'PristineStartupSnapshot') { Fail "progression graph is not bound to pristine benchmark" }
 $constraints = Read-Json (Join-Path $ReportsPath 'economy-admiral-quest-constraints.json')
 if ([string]$constraints.BenchmarkSource -ne 'PristineStartupSnapshot') { Fail "quest constraints are not bound to pristine benchmark" }
-
 $analysis = Read-Json (Join-Path $ReportsPath 'economy-admiral-quest-analysis.json')
 if ([string]$analysis.Note -notmatch 'pristine startup baseline') { Fail "unified analysis does not declare pristine provenance" }
+
+$delta = Read-Json (Join-Path $ReportsPath 'economy-admiral-provenance-delta.json')
+if ($delta.BaselineCapturePriority -ne 1) { Fail "provenance delta has wrong capture priority" }
+if ($delta.EnforcementAffected -ne $false) { Fail "provenance delta affects enforcement unexpectedly" }
+if ([int]$delta.PristineQuestCount -ne [int]$provenance.PristineQuestCount) { Fail "provenance delta pristine count disagrees with runtime manifest" }
+if ([int]$delta.FinalQuestCount -ne [int]$provenance.FinalQuestCount) { Fail "provenance delta final count disagrees with runtime manifest" }
 
 $composite = Read-Json (Join-Path $ReportsPath 'economy-admiral-composite-candidates.json')
 if ($null -ne $composite.SelectedCandidate) { Fail "composite policy candidate was selected unexpectedly" }
 if ($composite.AffectsRewardAllowance -ne $false -or $composite.AffectsEnforcement -ne $false) { Fail "composite candidate affects policy unexpectedly" }
-
 $targets = Read-Json (Join-Path $ReportsPath 'economy-admiral-target-proposals.json')
 if ($targets.ProposalsAreMutations -ne $false -or $targets.ApplyMutations -ne $false) { Fail "target proposals are mutating" }
 if ($null -ne $targets.SelectedCompositePolicy) { Fail "target proposals selected a composite policy unexpectedly" }
-foreach ($candidate in @($targets.Candidates)) {
-    if ($candidate.AutomaticMutationAllowed -ne $false -or $null -ne $candidate.ProposedMutation) { Fail "target candidate permits mutation" }
-}
-
+foreach ($candidate in @($targets.Candidates)) { if ($candidate.AutomaticMutationAllowed -ne $false -or $null -ne $candidate.ProposedMutation) { Fail "target candidate permits mutation" } }
 $plan = Read-Json (Join-Path $ReportsPath 'economy-admiral-enforcement-plan.json')
 if ($plan.ApplyMutations -ne $false -or $plan.MutationCount -ne 0) { Fail "enforcement plan is mutating" }
-foreach ($candidate in @($plan.Candidates)) {
-    if ($candidate.AutomaticMutationAllowed -ne $false -or $null -ne $candidate.ProposedMutation) { Fail "enforcement candidate permits mutation" }
-}
+foreach ($candidate in @($plan.Candidates)) { if ($candidate.AutomaticMutationAllowed -ne $false -or $null -ne $candidate.ProposedMutation) { Fail "enforcement candidate permits mutation" } }
 
-Pass "runtime gate valid; pristine baseline proven; exact CI build identified; DB unchanged; 8/8 reports present; zero mutations declared"
+Pass "runtime gate valid; pristine baseline + provenance delta proven; exact CI build identified; DB unchanged; 9/9 reports present; zero mutations declared"
 Write-Host "[Economy Admiral] build: $($build.HeadSha) / workflow $($build.WorkflowRunId)"
 Write-Host "[Economy Admiral] provenance: pristine=$($provenance.PristineQuestCount), final=$($provenance.FinalQuestCount), modAdded=$($provenance.ModAddedQuestCount)"
 Write-Host "[Economy Admiral] fingerprint: $beforeHash"
