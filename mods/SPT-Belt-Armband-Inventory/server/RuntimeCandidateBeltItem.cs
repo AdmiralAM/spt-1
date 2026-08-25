@@ -20,19 +20,33 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
     public const string RuntimeCandidateTpl = "68ac00000000000000000001";
     public const string RuntimeCandidateGridId = "68ac00000000000000000002";
 
+    // Discovery-gate artifact: custom taxonomy is intentionally disabled until
+    // the SPT 4.1.3 client inventory contracts are proven load-safe.
+    private const bool EnableCustomRuntimeTaxonomy = false;
+
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         if (!templateTable.Items.TryGetValue(SourceArmbandTpl, out var sourceItem)) throw new InvalidOperationException("B&A&HB RC source armband missing.");
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl) ?? throw new InvalidOperationException("B&A&HB RC source handbook entry missing.");
 
-        EnsureCustomParents();
-        EnsureArmBandAcceptsCustomBeltParent();
+        MongoId parentId;
+        if (EnableCustomRuntimeTaxonomy)
+        {
+            EnsureCustomParents();
+            EnsureArmBandAcceptsCustomBeltParent();
+            parentId = CustomBeltParentTpl;
+        }
+        else
+        {
+            parentId = sourceItem.Parent;
+            logger.Warning("B&A&HB LOAD-SAFE FAIL-CLOSED: custom belt parent/template taxonomy is disabled for the discovery artifact; RC remains on the vanilla armband taxonomy so /client/items cannot be blocked by an unregistered custom C# type.");
+        }
 
         var details = new NewItemFromCloneDetails
         {
             NewItemName = "B&A&HB Runtime Candidate Magazine Belt",
             ItemTplToClone = SourceArmbandTpl,
-            ParentId = CustomBeltParentTpl,
+            ParentId = parentId,
             NewId = RuntimeCandidateTpl,
             FleaPriceRoubles = 1000,
             HandbookPriceRoubles = 1000,
@@ -46,7 +60,7 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         };
         var result = customItemService.CreateItemFromClone(details);
         if (!result.Success) throw new InvalidOperationException($"B&A&HB RC item creation failed: {string.Join("; ", result.Errors)}");
-        logger.Success($"B&A&HB RC created: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid=1x2, filter=MAGAZINE.");
+        logger.Success($"B&A&HB RC created: tpl={RuntimeCandidateTpl}, parent={parentId}, grid=1x2, filter=MAGAZINE, customTaxonomy={EnableCustomRuntimeTaxonomy}.");
         return Task.CompletedTask;
     }
 
