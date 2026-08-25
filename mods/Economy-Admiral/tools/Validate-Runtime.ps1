@@ -1,6 +1,6 @@
 param(
     [Parameter(Mandatory = $false)]
-    [string]$ModPath = (Split-Path -Parent $PSScriptRoot)
+    [string]$ModPath = $PSScriptRoot
 )
 
 $ErrorActionPreference = 'Stop'
