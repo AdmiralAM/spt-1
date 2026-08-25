@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any
 
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
+SPECIAL_QUEST_ID = "f1368cb3b69c3a4917c4f206"
+SPECIAL_SAMPLE_TPL = "6217726288ed9f0845317459"
 
 
 def load_json(path: Path) -> Any:
@@ -59,8 +61,20 @@ def validate(committed: dict[str, dict[str, Any]], generated: dict[str, Any]) ->
             raise ValueError(f"Arsenal quest {qid} leaked item grind")
 
     deferred = generated.get("deferredRuntimeItems") or []
-    if len(deferred) != 1 or deferred[0].get("questId") != "f1368cb3b69c3a4917c4f206":
-        raise ValueError("Special Weapons sample must be the only deferred Arsenal runtime item")
+    if deferred:
+        raise ValueError(f"Arsenal runtime must have no deferred items before test candidate: {deferred}")
+
+    special_rewards = (templates[SPECIAL_QUEST_ID].get("rewards") or {}).get("Success") or []
+    special_items = [
+        reward for reward in special_rewards
+        if reward.get("type") == "Item"
+        and (reward.get("items") or [{}])[0].get("_tpl") == SPECIAL_SAMPLE_TPL
+    ]
+    if len(special_items) != 1:
+        raise ValueError("Special Weapons Munitions must contain exactly one explicit green RSP-30 sample reward")
+    sample_item = special_items[0]["items"][0]
+    if (sample_item.get("upd") or {}).get("StackObjectsCount") != 1:
+        raise ValueError("Special Weapons sample reward must remain exactly one unit")
 
 
 def main() -> int:
@@ -72,7 +86,7 @@ def main() -> int:
     expected_ids = {str(qid) for qid in (generated.get("templates") or {})}
     committed = load_committed(args.quest_dir, expected_ids)
     validate(committed, generated)
-    print("validated 21 committed Arsenal Protocol quest templates")
+    print("validated 21 committed Arsenal Protocol quest templates with resolved Special Weapons sample")
     return 0
 
 
