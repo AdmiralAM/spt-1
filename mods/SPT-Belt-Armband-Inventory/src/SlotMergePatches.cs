@@ -65,8 +65,9 @@ namespace SPTBeltArmbandInventory
                 {
                     inheritFromItem = Enum.Parse(parentMergeType, "InheritFromItem", false);
                 }
-                catch
+                catch (Exception exception)
                 {
+                    LogException("B&A&HB MERGE ENUM DIAG", exception);
                     return Fail("EParentMergeType.InheritFromItem was not found; ArmBand merge compatibility is disabled.");
                 }
 
@@ -80,15 +81,28 @@ namespace SPTBeltArmbandInventory
                 SlotMergeRuntime.InheritFromItemValue = inheritFromItem;
                 MethodInfo postfix = BuildPostfix(slotType, parentMergeType);
                 object hmPostfix = hmCtor.Invoke(new object[] { postfix });
-                Patch(patchMethod, harmonyMethodType, getter, hmPostfix);
+
+                try
+                {
+                    logInfo?.Invoke("B&A&HB MERGE PATCH DIAG: invoking Harmony Patch for " + getter + " with postfix " + postfix + ".");
+                    Patch(patchMethod, harmonyMethodType, getter, hmPostfix);
+                    logInfo?.Invoke("B&A&HB MERGE PATCH DIAG: Harmony Patch invocation returned successfully.");
+                }
+                catch (Exception patchException)
+                {
+                    LogException("B&A&HB MERGE PATCH DIAG failure", patchException);
+                    throw;
+                }
 
                 if (logInfo != null) logInfo("Belt/Armband Inventory slot merge compatibility installed via MergeContainerWithChildren postfix result override.");
                 return true;
             }
             catch (Exception exception)
             {
+                LogException("B&A&HB MERGE INSTALL DIAG", exception);
                 Dispose();
-                return Fail("ArmBand merge compatibility installation failed safely: " + exception.Message);
+                Exception root = Unwrap(exception);
+                return Fail("ArmBand merge compatibility installation failed safely: " + root.GetType().FullName + ": " + root.Message);
             }
         }
 
@@ -144,6 +158,23 @@ namespace SPTBeltArmbandInventory
             for (int i = 1; i < parameters.Length; i++)
                 if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) args[i] = postfix;
             patchMethod.Invoke(harmony, args);
+        }
+
+        static Exception Unwrap(Exception exception)
+        {
+            Exception current = exception;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null)
+                current = invocation.InnerException;
+            return current;
+        }
+
+        void LogException(string prefix, Exception exception)
+        {
+            Exception root = Unwrap(exception);
+            logWarning?.Invoke(prefix + " exception type=" + root.GetType().FullName);
+            logWarning?.Invoke(prefix + " message=" + root.Message);
+            if (!string.IsNullOrEmpty(root.StackTrace))
+                logWarning?.Invoke(prefix + " stack=" + root.StackTrace);
         }
 
         bool Fail(string message) { if (logWarning != null) logWarning(message); return false; }
