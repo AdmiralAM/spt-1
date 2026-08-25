@@ -12,6 +12,7 @@ public sealed class EconomyMod(
     RuntimeEvidenceService runtimeEvidenceService,
     EconomyAuditService auditService,
     PristineReportCorrectionService pristineReportCorrectionService,
+    PristinePrimaryFindingCorrectionService pristinePrimaryFindingCorrectionService,
     TypedQuestItemAccountingService typedQuestItemAccountingService,
     RewardUtilityAuditService rewardUtilityAuditService,
     QuestProgressionGraphService questProgressionGraphService,
@@ -39,6 +40,7 @@ public sealed class EconomyMod(
         await pristineReportCorrectionService.CorrectPrimaryMembershipAsync(vanillaBaseline, cancellationToken);
         await typedQuestItemAccountingService.RepairPrimaryAuditReportAsync(cancellationToken);
         await pristineReportCorrectionService.CorrectPrimaryBenchmarkAsync(vanillaBaseline, cancellationToken);
+        await pristinePrimaryFindingCorrectionService.RunAsync(cancellationToken);
 
         await rewardUtilityAuditService.RunAsync(cancellationToken);
         await pristineReportCorrectionService.CorrectRewardUtilityAsync(vanillaBaseline, cancellationToken);
