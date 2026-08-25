@@ -40,6 +40,7 @@ jobs:
               root / 'server' / 'EconomyConfig.cs',
               root / 'server' / 'EconomyMod.cs',
               root / 'server' / 'EconomyAuditService.cs',
+              root / 'server' / 'RewardUtilityAuditService.cs',
           ]
           missing = [str(path) for path in required if not path.is_file()]
           if missing:
@@ -70,6 +71,7 @@ jobs:
           source = (root / 'server' / 'EconomyMod.cs').read_text(encoding='utf-8')
           assert 'OnLoadOrder.PostLoad + 1000' in source
           assert 'namespace EconomyAdmiral;' in source
+          assert 'RewardUtilityAuditService' in source
 
           metadata = (root / 'server' / 'ModMetadata.cs').read_text(encoding='utf-8')
           assert 'Economy Admiral' in metadata
@@ -90,6 +92,18 @@ jobs:
               'SchemaVersion = 3',
           ]:
               assert invariant in audit, invariant
+
+          utility = (root / 'server' / 'RewardUtilityAuditService.cs').read_text(encoding='utf-8')
+          for invariant in [
+              'RewardType.Experience',
+              'RewardType.TraderStanding',
+              'RewardType.TraderUnlock',
+              'RewardType.AssortmentUnlock',
+              'RewardType.ProductionScheme',
+              'UtilityScoringApplied = false',
+              'economy-admiral-reward-utility.json',
+          ]:
+              assert invariant in utility, invariant
 
           print('Economy Admiral module contract OK')
 
