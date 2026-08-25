@@ -42,7 +42,15 @@ namespace SPTPause
         void Update()
         {
             if (state == null || enabledSetting == null || toggleSetting == null) return;
-            if (!PauseInputPolicy.AcceptToggle(ShortcutPressed(toggleSetting.Value), enabledSetting.Value, state.IsPaused)) return;
+
+            bool shortcutPressed = ShortcutPressed(toggleSetting.Value);
+            if (state.IsPaused && !shortcutPressed)
+            {
+                Input.ResetInputAxes();
+                return;
+            }
+
+            if (!PauseInputPolicy.AcceptToggle(shortcutPressed, enabledSetting.Value, state.IsPaused)) return;
             if (state.IsPaused) Resume();
             else Pause();
         }
@@ -72,6 +80,8 @@ namespace SPTPause
                 showTimerForCurrentPause = showTimer;
                 PauseRuntime.ShowPausedText = showTimer;
                 PauseRuntime.IsPaused = true;
+                context.SetPlayerInputPaused(true);
+                Input.ResetInputAxes();
                 if (pauseAudio) AudioListener.pause = true;
                 Time.timeScale = 0f;
                 if (showTimer) context.DisplayMainTimer();
@@ -83,6 +93,8 @@ namespace SPTPause
         {
             state.TryResume(duration =>
             {
+                Input.ResetInputAxes();
+                if (context != null) context.SetPlayerInputPaused(false);
                 PauseRuntime.IsPaused = false;
                 if (context != null) context.ShiftClocks(duration);
                 Time.timeScale = previousTimeScale;
