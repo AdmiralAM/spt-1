@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -30,6 +29,8 @@ namespace SPTBeltArmbandInventory
             Type gridLayoutComponent = Resolve("EFT.InventoryLogic.GridLayoutComponent");
             Type layoutInterface = Resolve("EFT.InventoryLogic.IGridLayoutComponentTemplate");
             Type jsonTypes = Resolve("EFT.InventoryLogic.JsonTypes");
+            Type itemFactory = Resolve("EFT.ItemFactory");
+            Type itemTemplate = Resolve("EFT.InventoryLogic.ItemTemplate");
 
             LogType("searchableTemplate", searchableTemplate);
             LogType("searchableItem", searchableItem);
@@ -51,36 +52,42 @@ namespace SPTBeltArmbandInventory
             if (itemConstructors != null) targetFields.Add(itemConstructors.MetadataToken);
 
             List<MethodBase> registrationMethods = FindMethodsReferencingFields(jsonTypes?.Assembly, targetFields);
-            if (registrationMethods.Count == 0)
-            {
-                logWarning?.Invoke("B&A&HB DISCOVERY: itemTypeInit=<unresolved>; no Assembly-CSharp method referencing JsonTypes registration tables was found.");
-            }
-            else
-            {
-                for (int i = 0; i < registrationMethods.Count && i < 12; i++)
-                    logInfo?.Invoke("B&A&HB DISCOVERY: itemTypeInitCandidate[" + i + "]=" + Describe(registrationMethods[i]));
-            }
+            for (int i = 0; i < registrationMethods.Count && i < 12; i++)
+                logInfo?.Invoke("B&A&HB DISCOVERY: itemTypeInitCandidate[" + i + "]=" + Describe(registrationMethods[i]));
 
-            FieldInfo serializationTypes = FindSerializationTypeList(jsonTypes?.Assembly, searchableTemplate, searchableItem);
-            logInfo?.Invoke("B&A&HB DISCOVERY: serializationTypeList=" + Describe(serializationTypes));
+            MethodBase jsonTypesCctor = jsonTypes?.TypeInitializer;
+            MethodBase createItem = itemFactory?.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+                .FirstOrDefault(m => string.Equals(m.Name, "CreateItem", StringComparison.Ordinal) && m.GetParameters().Length >= 2);
+            MethodBase keyToType = itemTemplate?.GetNestedTypes(BindingFlags.Public | BindingFlags.NonPublic)
+                .SelectMany(t => t.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+                .FirstOrDefault(m => string.Equals(m.Name, "KeyToType", StringComparison.Ordinal) && m.ReturnType == typeof(Type));
 
-            MethodBase preferredInit = ChooseRegistrationBoundary(registrationMethods, jsonTypes);
-            logInfo?.Invoke("B&A&HB DISCOVERY: itemTypeInit=" + Describe(preferredInit));
+            logInfo?.Invoke("B&A&HB DISCOVERY: primaryRegistrationInit=" + Describe(jsonTypesCctor));
+            logInfo?.Invoke("B&A&HB DISCOVERY: runtimeConstructionConsumer=" + Describe(createItem));
+            logInfo?.Invoke("B&A&HB DISCOVERY: templateResolutionConsumer=" + Describe(keyToType));
+            logInfo?.Invoke("B&A&HB DISCOVERY: serializationRegistry=<not-required-for-this-gate>; prior GClass3381/List_0 assumption retired.");
 
-            bool resolved = searchableTemplate != null
+            bool coreTypesResolved = searchableTemplate != null
                 && searchableItem != null
                 && gridLayoutComponent != null
-                && layoutInterface != null
-                && jsonTypes != null
+                && layoutInterface != null;
+            bool mappingTablesResolved = jsonTypes != null
                 && typeTable != null
                 && templateTypeTable != null
-                && itemConstructors != null
-                && preferredInit != null;
+                && itemConstructors != null;
+            bool nativeConsumersResolved = jsonTypesCctor != null && createItem != null && keyToType != null;
 
+            logInfo?.Invoke("B&A&HB DISCOVERY SUMMARY: coreTypes=" + coreTypesResolved
+                + ", mappingTables=" + mappingTablesResolved
+                + ", primaryInit=" + (jsonTypesCctor != null)
+                + ", createItemConsumer=" + (createItem != null)
+                + ", keyToTypeConsumer=" + (keyToType != null) + ".");
+
+            bool resolved = coreTypesResolved && mappingTablesResolved && nativeConsumersResolved;
             if (resolved)
-                logInfo?.Invoke("B&A&HB DISCOVERY PASS: SPT 4.1.3 searchable/container registration boundary resolved structurally. Custom taxonomy remains intentionally disabled for this load-safe artifact.");
+                logInfo?.Invoke("B&A&HB DISCOVERY PASS: SPT 4.1.3 JsonTypes registration/init boundary resolved. Custom taxonomy remains intentionally disabled for this load-safe artifact.");
             else
-                logWarning?.Invoke("B&A&HB DISCOVERY FAIL-CLOSED: one or more SPT 4.1.3 inventory boundaries remain unresolved. Custom taxonomy/type registration remains disabled; profile loading is not intentionally exposed to unknown taxonomy.");
+                logWarning?.Invoke("B&A&HB DISCOVERY FAIL-CLOSED: SPT 4.1.3 registration/init boundary is incomplete. Custom taxonomy/type registration remains disabled; profile loading remains protected.");
 
             return resolved;
         }
@@ -172,52 +179,13 @@ namespace SPTBeltArmbandInventory
             int score = 0;
             string name = method.Name ?? string.Empty;
             string type = method.DeclaringType?.FullName ?? string.Empty;
+            if (method.IsConstructor && method.IsStatic) score += 20;
             if (name.IndexOf("Init", StringComparison.OrdinalIgnoreCase) >= 0) score += 8;
             if (name.IndexOf("Type", StringComparison.OrdinalIgnoreCase) >= 0) score += 4;
             if (name.IndexOf("Item", StringComparison.OrdinalIgnoreCase) >= 0) score += 4;
             if (method.IsStatic) score += 2;
-            if (type.IndexOf("Inventory", StringComparison.OrdinalIgnoreCase) >= 0) score += 2;
+            if (type.IndexOf("JsonTypes", StringComparison.OrdinalIgnoreCase) >= 0) score += 8;
             return score;
-        }
-
-        static MethodBase ChooseRegistrationBoundary(List<MethodBase> methods, Type jsonTypes)
-        {
-            if (methods == null || methods.Count == 0) return null;
-            MethodBase exact = methods.FirstOrDefault(m => m.DeclaringType == jsonTypes && m.IsStatic);
-            return exact ?? methods[0];
-        }
-
-        FieldInfo FindSerializationTypeList(Assembly assembly, Type searchableTemplate, Type searchableItem)
-        {
-            if (assembly == null) return null;
-            foreach (Type type in SafeGetTypes(assembly))
-            {
-                foreach (FieldInfo field in type.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
-                {
-                    if (!typeof(IList).IsAssignableFrom(field.FieldType)) continue;
-                    IList list;
-                    try { list = field.GetValue(null) as IList; } catch { continue; }
-                    if (list == null || list.Count == 0) continue;
-
-                    bool hasTemplate = false;
-                    bool hasItem = false;
-                    int inspected = Math.Min(list.Count, 256);
-                    for (int i = 0; i < inspected; i++)
-                    {
-                        Type value = list[i] as Type;
-                        if (value == null) continue;
-                        if (searchableTemplate != null && (value == searchableTemplate || searchableTemplate.IsAssignableFrom(value))) hasTemplate = true;
-                        if (searchableItem != null && (value == searchableItem || searchableItem.IsAssignableFrom(value))) hasItem = true;
-                        if (hasTemplate && hasItem)
-                        {
-                            logInfo?.Invoke("B&A&HB DISCOVERY: serializationRegistry=" + type.AssemblyQualifiedName);
-                            return field;
-                        }
-                    }
-                }
-            }
-            logInfo?.Invoke("B&A&HB DISCOVERY: serializationRegistry=<unresolved>");
-            return null;
         }
 
         Type Resolve(string fullName)
