@@ -1,14 +1,22 @@
 {
   "schemaVersion": 1,
   "status": "draft",
+  "product": {
+    "modName": "Admiral Trader",
+    "modulePath": "mods/Admiral-Trader",
+    "traderWorkingName": "Admiral",
+    "traderWorkingNameRu": "Адмирал",
+    "traderId": null,
+    "traderIcon": "TBD"
+  },
   "source": {
     "repository": "Thirt3nth/Andrudis-Questmaniac",
     "commit": "4e15990ac18f469ef7818475ce8553bbbb7cebb4",
-    "questRoot": "db/QuestBundles"
+    "questRoot": "db/QuestBundles",
+    "role": "legacy-content-provenance"
   },
   "target": {
     "traderCount": 1,
-    "traderId": null,
     "loadModel": "explicit-manifest",
     "economyDataModel": "native-spt-assort-and-questassort"
   },

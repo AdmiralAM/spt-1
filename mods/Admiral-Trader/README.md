@@ -1,6 +1,13 @@
-# SPT Andrudis Curated
+# Admiral Trader
 
-Curated successor workstream for the legacy Andrudis/QuestManiac ecosystem.
+Official curated successor workstream for the legacy Andrudis/QuestManiac ecosystem.
+
+## Product identity
+
+- Mod name: **Admiral Trader**
+- Trader working name: **Admiral / Адмирал**
+- Trader icon/portrait and final character presentation: TBD
+- Legacy Andrudis/QuestManiac names are provenance/source references only and are not the target product identity.
 
 ## Current state
 
@@ -12,7 +19,7 @@ Work order:
 
 `source inventory -> quest graph -> manifest -> migration -> trader consolidation -> curated content -> reward normalization -> tests -> runtime`
 
-Tracked by repository Issue #115 and Draft PR #119.
+Tracked by repository Issue #115 and the active Draft PR for Admiral Trader.
 
 ## Design constraints
 
@@ -23,7 +30,7 @@ Tracked by repository Issue #115 and Draft PR #119.
 - Hideout-assistant content is excluded from the curated campaign.
 - Repetitive kill/headshot/FIR/handover ladders are not preserved wholesale.
 - Weapon and ammo progression form one progression domain because the pinned legacy graph contains intentional cross-bundle prerequisite edges between them.
-- Assort, quest-assort, reward, and unlock data should remain close to native SPT shapes so downstream economy auditing does not need an Andrudis-specific opaque format.
+- Assort, quest-assort, reward, and unlock data should remain close to native SPT shapes so downstream economy auditing does not need an Admiral-Trader-specific opaque format.
 
 ## Baselines and findings
 
@@ -38,10 +45,10 @@ Tracked by repository Issue #115 and Draft PR #119.
 Example:
 
 ```bash
-python mods/SPT-Andrudis-Curated/tools/build_inventory.py \
+python mods/Admiral-Trader/tools/build_inventory.py \
   /path/to/Andrudis-Questmaniac/db/QuestBundles \
-  --rules mods/SPT-Andrudis-Curated/manifests/campaign-manifest.json \
-  --output /tmp/andrudis-inventory.json
+  --rules mods/Admiral-Trader/manifests/campaign-manifest.json \
+  --output /tmp/admiral-trader-inventory.json
 ```
 
 The generated inventory is analysis output and must not be committed merely as CI/runtime evidence. Durable curation decisions belong in the campaign manifest, not generated reports.
@@ -51,7 +58,7 @@ The generated inventory is analysis output and must not be committed merely as C
 For the current gate:
 
 ```bash
-python -m unittest discover -s mods/SPT-Andrudis-Curated/tests -p 'test_*.py'
+python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 ```
 
 The module CI additionally checks the pinned legacy corpus and keeps the generated inventory only as a transient Actions artifact.

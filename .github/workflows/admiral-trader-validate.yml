@@ -1,17 +1,17 @@
-name: Andrudis Curated Validate
+name: Admiral Trader Validate
 
 on:
   pull_request:
     paths:
-      - 'mods/SPT-Andrudis-Curated/**'
-      - '.github/workflows/andrudis-curated-validate.yml'
+      - 'mods/Admiral-Trader/**'
+      - '.github/workflows/admiral-trader-validate.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: andrudis-curated-${{ github.event.pull_request.number || github.ref }}
+  group: admiral-trader-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -29,10 +29,10 @@ jobs:
           python-version: '3.12'
 
       - name: Run inventory/graph tests
-        run: python -m unittest discover -s mods/SPT-Andrudis-Curated/tests -p 'test_*.py'
+        run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 
       - name: Validate campaign manifest JSON
-        run: python -m json.tool mods/SPT-Andrudis-Curated/manifests/campaign-manifest.json > /dev/null
+        run: python -m json.tool mods/Admiral-Trader/manifests/campaign-manifest.json > /dev/null
 
       - name: Checkout pinned legacy corpus
         uses: actions/checkout@v4
@@ -44,17 +44,17 @@ jobs:
 
       - name: Build full legacy inventory and graph
         run: >-
-          python mods/SPT-Andrudis-Curated/tools/build_inventory.py
+          python mods/Admiral-Trader/tools/build_inventory.py
           legacy-andrudis/db/QuestBundles
-          --rules mods/SPT-Andrudis-Curated/manifests/campaign-manifest.json
-          --output build/andrudis-inventory.json
+          --rules mods/Admiral-Trader/manifests/campaign-manifest.json
+          --output build/admiral-trader-inventory.json
 
       - name: Enforce inventory gate
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          data = json.loads(Path('build/andrudis-inventory.json').read_text(encoding='utf-8'))
+          data = json.loads(Path('build/admiral-trader-inventory.json').read_text(encoding='utf-8'))
           summary = data['summary']
           print(json.dumps(summary, indent=2, ensure_ascii=False))
           blockers = {
@@ -74,7 +74,7 @@ jobs:
       - name: Upload transient inventory report
         uses: actions/upload-artifact@v4
         with:
-          name: andrudis-inventory-${{ github.event.pull_request.head.sha || github.sha }}
-          path: build/andrudis-inventory.json
+          name: admiral-trader-inventory-${{ github.event.pull_request.head.sha || github.sha }}
+          path: build/admiral-trader-inventory.json
           if-no-files-found: error
           retention-days: 7

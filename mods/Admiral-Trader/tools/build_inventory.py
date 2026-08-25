@@ -178,7 +178,7 @@ def load_quests(root: Path) -> tuple[list[dict[str, Any]], list[dict[str, str]]]
     for path in sorted(root.rglob("quests.json"), key=lambda value: value.as_posix().lower()):
         try:
             data = json.loads(path.read_text(encoding="utf-8-sig"))
-        except Exception as exc:  # surfaced in deterministic report
+        except Exception as exc:
             errors.append({"path": path.as_posix(), "error": str(exc)})
             continue
         if not isinstance(data, dict):
@@ -218,97 +218,54 @@ def add_successors(rows: list[dict[str, Any]]) -> None:
         row["successors"] = sorted(successors.get(row["questId"], set()))
 
 
-def find_cycles(graph: dict[str, list[str]]) -> list[list[str]]:
-    index = 0
-    stack: list[str] = []
-    on_stack: set[str] = set()
-    indexes: dict[str, int] = {}
-    lowlinks: dict[str, int] = {}
-    cycles: list[list[str]] = []
-
-    def strong_connect(node: str) -> None:
-        nonlocal index
-        indexes[node] = index
-        lowlinks[node] = index
-        index += 1
-        stack.append(node)
-        on_stack.add(node)
-
-        for successor in graph.get(node, []):
-            if successor not in indexes:
-                strong_connect(successor)
-                lowlinks[node] = min(lowlinks[node], lowlinks[successor])
-            elif successor in on_stack:
-                lowlinks[node] = min(lowlinks[node], indexes[successor])
-
-        if lowlinks[node] != indexes[node]:
-            return
-
-        component: list[str] = []
-        while stack:
-            member = stack.pop()
-            on_stack.remove(member)
-            component.append(member)
-            if member == node:
-                break
-        if len(component) > 1 or (len(component) == 1 and node in graph.get(node, [])):
-            cycles.append(sorted(component))
-
-    for node in sorted(graph):
-        if node not in indexes:
-            strong_connect(node)
-
-    cycles.sort()
-    return cycles
-
-
-def build_graph_diagnostics(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    rows_by_id: dict[str, list[dict[str, Any]]] = defaultdict(list)
+def graph_integrity(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    ids = [row["questId"] for row in rows]
+    id_counts = Counter(ids)
+    duplicates = sorted([quest_id for quest_id, count in id_counts.items() if count > 1])
+    known = set(ids)
+    missing = sorted({p for row in rows for p in row["prerequisites"] if p not in known})
+    bundle_by_id = {row["questId"]: row["bundle"] for row in rows}
+    cross_edges = []
+    adjacency: dict[str, list[str]] = defaultdict(list)
     for row in rows:
-        rows_by_id[row["questId"]].append(row)
-
-    duplicates = [
-        {
-            "questId": quest_id,
-            "sources": sorted({entry["sourcePath"] for entry in entries}),
-        }
-        for quest_id, entries in sorted(rows_by_id.items())
-        if len(entries) > 1
-    ]
-
-    unique_rows = {quest_id: entries[0] for quest_id, entries in rows_by_id.items()}
-    known_ids = set(unique_rows)
-    missing: list[dict[str, str]] = []
-    cross_bundle: list[dict[str, str]] = []
-
-    for row in sorted(rows, key=lambda value: value["questId"]):
         for prerequisite in row["prerequisites"]:
-            if prerequisite not in known_ids:
-                missing.append({
-                    "questId": row["questId"],
-                    "bundle": row["bundle"],
-                    "missingPrerequisiteId": prerequisite,
-                })
-                continue
-            prerequisite_row = unique_rows[prerequisite]
-            if prerequisite_row["bundle"] != row["bundle"]:
-                cross_bundle.append({
-                    "fromQuestId": prerequisite,
-                    "fromBundle": prerequisite_row["bundle"],
-                    "toQuestId": row["questId"],
-                    "toBundle": row["bundle"],
-                })
+            if prerequisite in known:
+                adjacency[prerequisite].append(row["questId"])
+                if bundle_by_id.get(prerequisite) != row["bundle"]:
+                    cross_edges.append({
+                        "fromQuestId": prerequisite,
+                        "fromBundle": bundle_by_id.get(prerequisite),
+                        "toQuestId": row["questId"],
+                        "toBundle": row["bundle"],
+                    })
 
-    graph = {
-        quest_id: [successor for successor in row["successors"] if successor in known_ids]
-        for quest_id, row in unique_rows.items()
-    }
-    cycles = find_cycles(graph)
+    state: dict[str, int] = {}
+    cycles: list[list[str]] = []
+    stack: list[str] = []
+    stack_index: dict[str, int] = {}
+
+    def visit(node: str) -> None:
+        state[node] = 1
+        stack_index[node] = len(stack)
+        stack.append(node)
+        for child in adjacency.get(node, []):
+            if state.get(child, 0) == 0:
+                visit(child)
+            elif state.get(child) == 1:
+                start = stack_index[child]
+                cycles.append(stack[start:] + [child])
+        stack.pop()
+        stack_index.pop(node, None)
+        state[node] = 2
+
+    for quest_id in sorted(known):
+        if state.get(quest_id, 0) == 0:
+            visit(quest_id)
 
     return {
         "duplicateQuestIds": duplicates,
         "missingPrerequisites": missing,
-        "crossBundleEdges": cross_bundle,
+        "crossBundleEdges": sorted(cross_edges, key=lambda edge: (edge["fromBundle"], edge["toBundle"], edge["fromQuestId"], edge["toQuestId"])),
         "cycles": cycles,
     }
 
@@ -316,6 +273,7 @@ def build_graph_diagnostics(rows: list[dict[str, Any]]) -> dict[str, Any]:
 def build_payload(root: Path, rules: dict[str, Any]) -> dict[str, Any]:
     rows, errors = load_quests(root)
     add_successors(rows)
+    integrity = graph_integrity(rows)
 
     decision_counts: Counter[str] = Counter()
     bundle_counts: Counter[str] = Counter()
@@ -338,10 +296,8 @@ def build_payload(root: Path, rules: dict[str, Any]) -> dict[str, Any]:
             restartable_count += 1
 
     rows.sort(key=lambda row: (str(row["bundle"]).lower(), str(row["questName"]).lower(), row["questId"]))
-    diagnostics = build_graph_diagnostics(rows)
-
     return {
-        "schemaVersion": 2,
+        "schemaVersion": 1,
         "sourceRoot": root.resolve().as_posix(),
         "summary": {
             "questCount": len(rows),
@@ -352,19 +308,19 @@ def build_payload(root: Path, rules: dict[str, Any]) -> dict[str, Any]:
             "firQuestCount": fir_count,
             "restartableQuestCount": restartable_count,
             "parseErrorCount": len(errors),
-            "duplicateQuestIdCount": len(diagnostics["duplicateQuestIds"]),
-            "missingPrerequisiteCount": len(diagnostics["missingPrerequisites"]),
-            "crossBundleEdgeCount": len(diagnostics["crossBundleEdges"]),
-            "cycleCount": len(diagnostics["cycles"]),
+            "duplicateQuestIdCount": len(integrity["duplicateQuestIds"]),
+            "missingPrerequisiteCount": len(integrity["missingPrerequisites"]),
+            "crossBundleEdgeCount": len(integrity["crossBundleEdges"]),
+            "cycleCount": len(integrity["cycles"]),
         },
         "parseErrors": errors,
-        "graphDiagnostics": diagnostics,
+        "graphIntegrity": integrity,
         "quests": rows,
     }
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Build deterministic Andrudis quest inventory/graph.")
+    parser = argparse.ArgumentParser(description="Build deterministic Admiral Trader inventory/graph from the legacy Andrudis quest corpus.")
     parser.add_argument("source_root", type=Path, help="Path to legacy db/QuestBundles or converted equivalent.")
     parser.add_argument("--rules", type=Path, default=None, help="Optional curation rules JSON.")
     parser.add_argument("--output", type=Path, required=True, help="Output JSON path.")

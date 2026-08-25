@@ -1,8 +1,12 @@
-# Andrudis Curated source baseline
+# Admiral Trader source baseline
 
 ## Purpose
 
 Record which references are authoritative for which part of the work before implementation crosses into SPT runtime code.
+
+## Product identity
+
+The maintained product/workstream name is **Admiral Trader**. The trader working name is **Admiral / Адмирал**. References to Andrudis/QuestManiac below describe legacy source provenance only.
 
 ## Legacy content source
 
@@ -14,18 +18,19 @@ Current compatibility reference:
 
 - `laurentmekka/AndrudisQuestManiac` — SPT 4.1 port. It proves that the old quest corpus can be converted/loaded on the 4.1 generation and documents repairs for removed items, invalid durability conditions, incomplete weapon rewards, and modular armour inserts.
 
-The legacy repositories are **content/data-model sources and compatibility references**, not target runtime architecture.
+The legacy repositories are **content/data-model sources and compatibility references**, not target runtime architecture or product identity.
 
 ## Target
 
 - SPT 4.1.x, with the project runtime currently using 4.1.3 references where an exact runtime package boundary is required.
 - .NET 10 server-mod generation, matching maintained server-side modules in this repository.
+- One trader: working display name `Admiral` / `Адмирал`.
 
 ## Runtime/API boundaries already evidenced
 
 The SPT 4.1 Andrudis port uses the current DI/load model (`IModMetadata`, `IOnLoad`, injected database tables, `ImageRouter`, `TraderConfig`, `RagfairConfig`) rather than the old 3.x server API.
 
-The maintained `WTT-Artem-Revival` module in this repository targets `net10.0` and consumes `WTT-ServerCommonLib` 3.0.6. This is evidence that the WTT 3.x server-common boundary is viable in the repository's current SPT generation; it is **not** yet a decision that Andrudis Curated must depend on WTT at runtime.
+The maintained `WTT-Artem-Revival` module in this repository targets `net10.0` and consumes `WTT-ServerCommonLib` 3.0.6. This is evidence that the WTT 3.x server-common boundary is viable in the repository's current SPT generation; it is **not** yet a decision that Admiral Trader must depend on WTT at runtime.
 
 `acidphantasm/scorpion-csharp` is a single-custom-trader architecture reference: explicit trader identity, explicit assort/quest-assort loading, lazy locale injection, and SPT 4.1 table/config boundaries. It is a code-pattern reference, not source to copy wholesale.
 
