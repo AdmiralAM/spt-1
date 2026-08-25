@@ -29,6 +29,7 @@
     <Compile Include="..\client\PlannerRaidDecisionDelta.cs" Link="PlannerRaidDecisionDelta.cs" />
     <Compile Include="..\client\PlannerRaidDecisionPolicy.cs" Link="PlannerRaidDecisionPolicy.cs" />
     <Compile Include="..\client\PlannerRaidDecisionSet.cs" Link="PlannerRaidDecisionSet.cs" />
+    <Compile Include="..\client\PlannerRaidDecisionExplanation.cs" Link="PlannerRaidDecisionExplanation.cs" />
     <Compile Include="..\client\PlannerRaidPlanCollection.cs" Link="PlannerRaidPlanCollection.cs" />
     <Compile Include="..\client\PlannerRaidPlanProvider.cs" Link="PlannerRaidPlanProvider.cs" />
     <Compile Include="..\client\PlannerRaidPlanViewModel.cs" Link="PlannerRaidPlanViewModel.cs" />
