@@ -10,6 +10,7 @@ public sealed class EconomyMod(
     EconomyRuntimeConfigService runtimeConfigService,
     RuntimeEvidenceService runtimeEvidenceService,
     EconomyAuditService auditService,
+    TypedQuestItemAccountingService typedQuestItemAccountingService,
     RewardUtilityAuditService rewardUtilityAuditService,
     QuestProgressionGraphService questProgressionGraphService,
     QuestConstraintAuditService questConstraintAuditService,
@@ -30,11 +31,13 @@ public sealed class EconomyMod(
         runtimeEvidenceService.CaptureBefore();
 
         await auditService.RunAsync(cancellationToken);
+        await typedQuestItemAccountingService.RepairPrimaryAuditReportAsync(cancellationToken);
         await rewardUtilityAuditService.RunAsync(cancellationToken);
         var progressionSnapshot = await questProgressionGraphService.RunAsync(cancellationToken);
         await questConstraintAuditService.RunAsync(cancellationToken);
 
         var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, cancellationToken);
+        questAnalysis = await typedQuestItemAccountingService.ApplyToUnifiedAnalysisAsync(questAnalysis, cancellationToken);
         await compositePolicyEvaluationService.RunAsync(questAnalysis, cancellationToken);
         await targetProposalService.RunAsync(questAnalysis, cancellationToken);
         await enforcementPlanService.RunAsync(questAnalysis, cancellationToken);
