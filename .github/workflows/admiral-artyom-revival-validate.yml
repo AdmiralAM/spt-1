@@ -43,9 +43,9 @@ jobs:
           test -f mods/Admiral-Artyom-Revival/tests/test_bundle_validator.py
           test -f mods/Admiral-Artyom-Revival/tests/test_localization.py
           test -f mods/Admiral-Artyom-Revival/tests/test_runtime_compat_repairs.py
-          grep -q 'Admiral Artyom Revival' mods/Admiral-Artyom-Revival/README.md
-          grep -q 'Current module version: **3.0.0**' mods/Admiral-Artyom-Revival/README.md
-          grep -q 'Core' mods/Admiral-Artyom-Revival/docs/content-audit.md
+          grep -Fq 'Admiral Artyom Revival' mods/Admiral-Artyom-Revival/README.md
+          grep -Fq 'Current module version: **3.0.0**' mods/Admiral-Artyom-Revival/README.md
+          grep -Fq 'Core' mods/Admiral-Artyom-Revival/docs/content-audit.md
 
   data:
     name: Artyom content/tooling integrity
