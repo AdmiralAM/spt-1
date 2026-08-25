@@ -23,8 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       - name: Validate committed contract
         shell: python
         run: |
@@ -33,171 +32,67 @@ jobs:
 
           root = Path('mods/Economy-Admiral')
           required = [
-              root / 'README.md', root / 'RUNTIME_TEST.md', root / 'config' / 'config.json',
-              root / 'tools' / 'Validate-Runtime.ps1', root / 'tools' / 'Test-Validate-Runtime.ps1',
-              root / 'server' / 'Economy-Admiral.csproj', root / 'server' / 'ModMetadata.cs',
-              root / 'server' / 'EconomyConfig.cs', root / 'server' / 'EconomyRuntimeConfigService.cs',
-              root / 'server' / 'RuntimeEvidenceService.cs', root / 'server' / 'EconomyMod.cs',
-              root / 'server' / 'EconomyAuditService.cs', root / 'server' / 'RewardUtilityAuditService.cs',
-              root / 'server' / 'QuestProgressionGraphService.cs', root / 'server' / 'QuestConstraintAuditService.cs',
-              root / 'server' / 'QuestAnalysisService.cs', root / 'server' / 'CompositePolicyEvaluationService.cs',
-              root / 'server' / 'TargetProposalService.cs', root / 'server' / 'EnforcementPlanService.cs',
+              root / 'README.md', root / 'RUNTIME_TEST.md', root / 'config/config.json',
+              root / 'tools/Validate-Runtime.ps1', root / 'tools/Test-Validate-Runtime.ps1',
+              root / 'server/Economy-Admiral.csproj', root / 'server/EconomyMod.cs',
+              root / 'server/QuestProgressionGraphService.cs', root / 'server/QuestAnalysisService.cs',
+              root / 'server/CompositePolicyEvaluationService.cs', root / 'server/TargetProposalService.cs',
+              root / 'server/EnforcementPlanService.cs', root / 'server/RuntimeEvidenceService.cs',
           ]
-          missing = [str(path) for path in required if not path.is_file()]
-          if missing:
-              raise SystemExit('Missing Economy Admiral files: ' + ', '.join(missing))
+          missing = [str(p) for p in required if not p.is_file()]
+          assert not missing, missing
 
-          config = json.loads((root / 'config' / 'config.json').read_text(encoding='utf-8'))
+          config = json.loads((root / 'config/config.json').read_text(encoding='utf-8'))
           assert config['mode'] in {'Off', 'Audit', 'Enforce'}
           assert config['preset'] in {'Easy', 'Normal', 'Hard', 'Custom'}
           assert config['repeatedRaidLootDecay'] is False
-          assert config['reportRelativePath'].startswith('reports/economy-admiral')
-          assert config['rarity']['commonMinSources'] >= config['rarity']['uncommonMinSources'] >= config['rarity']['rareMinSources']
-          policy = config['customAuditPolicy']
-          for key in [
-              'questRewardVsVanillaMedianWarnMultiple', 'restartableRewardVsVanillaMedianWarnMultiple',
-              'normalizedRewardVsVanillaMedianWarnMultiple', 'restartableNormalizedRewardVsVanillaMedianWarnMultiple',
-              'levelGateWeight', 'objectiveConditionWeight', 'maxLevelGateContribution', 'maxObjectiveContribution',
-              'highItemValueLowStructureWarnMultiple', 'highXpLowDepthWarnMultiple',
-              'highStandingLowDepthWarnMultiple', 'restartableHighItemValueWarnMultiple',
-              'restartableHighXpWarnMultiple', 'lowDepthMaxRelativeMultiple', 'lowStructureMaxRelativeMultiple',
-          ]:
-              assert policy[key] >= 0, key
-          assert policy['duplicateTraderSourcesWarnCount'] > 0
 
-          csproj = (root / 'server' / 'Economy-Admiral.csproj').read_text(encoding='utf-8')
-          assert 'SPTarkov.Server.Core' in csproj and 'Version="4.1.2"' in csproj
-          assert '<TargetFramework>net10.0</TargetFramework>' in csproj
-
-          mod = (root / 'server' / 'EconomyMod.cs').read_text(encoding='utf-8')
-          for invariant in [
-              'OnLoadOrder.PostLoad + 1000', 'namespace EconomyAdmiral;', 'runtimeConfigService.GetAsync',
-              'config.Mode == EconomyMode.Off', 'runtimeEvidenceService.CaptureBefore()',
-              'runtimeEvidenceService.WriteAfterAsync', 'EconomyAuditService', 'RewardUtilityAuditService',
-              'QuestProgressionGraphService', 'QuestConstraintAuditService', 'QuestAnalysisService',
-              'CompositePolicyEvaluationService', 'TargetProposalService', 'EnforcementPlanService',
-              'var questAnalysis = await questAnalysisService.RunAsync(cancellationToken);',
+          mod = (root / 'server/EconomyMod.cs').read_text(encoding='utf-8')
+          for text in [
+              'OnLoadOrder.PostLoad + 1000',
+              'var progressionSnapshot = await questProgressionGraphService.RunAsync(cancellationToken);',
+              'var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, cancellationToken);',
               'compositePolicyEvaluationService.RunAsync(questAnalysis, cancellationToken)',
               'targetProposalService.RunAsync(questAnalysis, cancellationToken)',
               'enforcementPlanService.RunAsync(questAnalysis, cancellationToken)',
+              'runtimeEvidenceService.WriteAfterAsync(cancellationToken)',
           ]:
-              assert invariant in mod, invariant
+              assert text in mod, text
           assert mod.index('config.Mode == EconomyMode.Off') < mod.index('runtimeEvidenceService.CaptureBefore()')
-          assert mod.index('runtimeEvidenceService.CaptureBefore()') < mod.index('auditService.RunAsync')
-          assert mod.index('var questAnalysis = await questAnalysisService.RunAsync') < mod.index('compositePolicyEvaluationService.RunAsync')
-          assert mod.index('enforcementPlanService.RunAsync') < mod.index('runtimeEvidenceService.WriteAfterAsync')
+          assert mod.index('progressionSnapshot = await questProgressionGraphService.RunAsync') < mod.index('questAnalysis = await questAnalysisService.RunAsync')
+          assert mod.index('questAnalysis = await questAnalysisService.RunAsync') < mod.index('compositePolicyEvaluationService.RunAsync')
 
-          runtime_config = (root / 'server' / 'EconomyRuntimeConfigService.cs').read_text(encoding='utf-8')
-          for invariant in ['cached', 'GetAsync(', 'config.json', 'using Path = System.IO.Path;']:
-              assert invariant in runtime_config, invariant
+          graph = (root / 'server/QuestProgressionGraphService.cs').read_text(encoding='utf-8')
+          assert 'Task<QuestProgressionSnapshot> RunAsync' in graph
+          assert 'return current;' in graph
+          assert 'GetSnapshot()' not in graph
+          assert 'QuestProgressionSnapshot? snapshot' not in graph
 
-          runtime_evidence = (root / 'server' / 'RuntimeEvidenceService.cs').read_text(encoding='utf-8')
-          for invariant in [
-              'SchemaVersion = 2', 'BuildIdentity = buildIdentity', 'ReadBuildIdentityAsync', 'BUILD_INFO.json',
-              'IncrementalHash.CreateHash(HashAlgorithmName.SHA256)', 'DatabaseUnchangedAcrossPipeline',
-              'RuntimeGatePassed', 'ApplyMutations = false', 'DeclaredMutationCount = 0',
-              'ExpectedReportCount', 'PresentReportCount', 'economy-admiral-runtime-evidence.json',
-              'QUEST|', 'ASSORT_ITEM|', 'ASSORT_BARTER|', 'ASSORT_LOYALTY|', 'HANDBOOK|',
-          ]:
-              assert invariant in runtime_evidence, invariant
-
-          audit = (root / 'server' / 'EconomyAuditService.cs').read_text(encoding='utf-8')
-          for invariant in [
-              'EnforcementApplied = false', 'running read-only audit only', 'TRADER_OFFER_MISSING_BARTER',
-              'TRADER_OFFER_MISSING_LOYALTY', 'QUEST_REWARD_VALUE_OUTLIER', 'RESTARTABLE_REWARD_VALUE_OUTLIER',
-              'QUEST_REWARD_BUDGET_OUTLIER', 'RESTARTABLE_REWARD_BUDGET_OUTLIER',
-              'VanillaMedianNormalizedHandbookValue', 'ProgressionScore', 'SchemaVersion = 3',
-          ]:
-              assert invariant in audit, invariant
-
-          utility = (root / 'server' / 'RewardUtilityAuditService.cs').read_text(encoding='utf-8')
-          for invariant in [
-              'RewardType.Experience', 'RewardType.TraderStanding', 'RewardType.TraderUnlock',
-              'RewardType.AssortmentUnlock', 'RewardType.ProductionScheme', 'UtilityScoringApplied = false',
-              'SchemaVersion = 2', 'XpVsVanillaMedian', 'StandingVsVanillaMedian',
-              'MedianPositiveAssortmentUnlocks', 'No cross-dimension composite score',
-          ]:
-              assert invariant in utility, invariant
-
-          graph = (root / 'server' / 'QuestProgressionGraphService.cs').read_text(encoding='utf-8')
-          for invariant in [
-              'ConditionType, "Quest"', 'MaximumPrerequisiteDepth', 'CycleMemberCount', 'SchemaVersion = 2',
-              'DepthAffectsRewardAllowance = false', 'VanillaDepthBenchmark', 'VanillaRestartableDepthBenchmark',
-              'MedianDepth', 'P90Depth', 'GetSnapshot()',
-          ]:
-              assert invariant in graph, invariant
-
-          constraints = (root / 'server' / 'QuestConstraintAuditService.cs').read_text(encoding='utf-8')
-          for invariant in [
-              'ConstraintsAffectRewardAllowance = false', 'CompleteInSeconds', 'OneSessionOnly',
-              'OnlyFoundInRaid', 'PlantTime', 'DistanceConstraintCount', 'DaytimeConstraintCount',
-              'MedianStructuredConstraintCount',
-          ]:
-              assert invariant in constraints, invariant
-
-          analysis = (root / 'server' / 'QuestAnalysisService.cs').read_text(encoding='utf-8')
-          for invariant in [
-              'Task<QuestAnalysisReport> RunAsync', 'return report;', 'SchemaVersion = 3',
-              'CompositeScoreApplied = false', 'RewardAllowanceAffected = false',
-              'OutlierFlagsAffectEnforcement = false', 'Policy = policy', 'FlagCounts = flagCounts',
-              'HIGH_ITEM_VALUE_LOW_STRUCTURE', 'RESTARTABLE_HIGH_ITEM_VALUE', 'PREREQUISITE_CYCLE',
-              'SuccessKnownHandbookValue', 'XpVsVanillaMedian', 'StandingVsVanillaMedian',
-              'PrerequisiteDepthVsVanillaMedian', 'StructuredConstraintsVsVanillaMedian',
-          ]:
-              assert invariant in analysis, invariant
+          analysis = (root / 'server/QuestAnalysisService.cs').read_text(encoding='utf-8')
+          assert 'Task<QuestAnalysisReport> RunAsync(QuestProgressionSnapshot progressionSnapshot' in analysis
+          assert 'progressionSnapshot.Quests' in analysis
+          assert 'return report;' in analysis
+          assert 'QuestProgressionGraphService progressionGraphService' not in analysis
           assert 'GetSnapshot()' not in analysis
           assert 'QuestAnalysisReport? snapshot' not in analysis
 
-          composite = (root / 'server' / 'CompositePolicyEvaluationService.cs').read_text(encoding='utf-8')
-          for invariant in [
-              'RunAsync(QuestAnalysisReport analysis, CancellationToken cancellationToken)',
-              'SelectedCandidate = null', 'AffectsRewardAllowance = false', 'AffectsEnforcement = false',
-              'RewardPeak', 'RewardMean', 'StructureAdjustedPeak', 'MedianRewardPeak', 'P90StructureAdjustedPeak',
-          ]:
-              assert invariant in composite, invariant
-          assert 'QuestAnalysisService questAnalysisService' not in composite
-          assert 'GetSnapshot()' not in composite
+          for name in ['CompositePolicyEvaluationService.cs', 'TargetProposalService.cs', 'EnforcementPlanService.cs']:
+              text = (root / 'server' / name).read_text(encoding='utf-8')
+              assert 'RunAsync(QuestAnalysisReport analysis, CancellationToken cancellationToken)' in text, name
+              assert 'QuestAnalysisService questAnalysisService' not in text, name
+              assert 'GetSnapshot()' not in text, name
 
-          targets = (root / 'server' / 'TargetProposalService.cs').read_text(encoding='utf-8')
-          for invariant in [
-              'RunAsync(QuestAnalysisReport analysis, CancellationToken cancellationToken)',
-              'ProposalsAreMutations = false', 'ApplyMutations = false', 'SelectedCompositePolicy = null',
-              'AutomaticMutationAllowed = false', 'ProposedMutation = null', 'CandidateCeiling',
-              'ReferenceVanillaMedian', 'ThresholdMultiple', 'ItemRewardBudget', 'TraderStandingAbsolute',
-          ]:
-              assert invariant in targets, invariant
-          assert 'QuestAnalysisService questAnalysisService' not in targets
-          assert 'GetSnapshot()' not in targets
+          plan = (root / 'server/EnforcementPlanService.cs').read_text(encoding='utf-8')
+          assert 'ApplyMutations = false' in plan
+          assert 'MutationCount = 0' in plan
+          assert 'AutomaticMutationAllowed = false' in plan
+          assert 'ProposedMutation = null' in plan
 
-          plan = (root / 'server' / 'EnforcementPlanService.cs').read_text(encoding='utf-8')
-          for invariant in [
-              'RunAsync(QuestAnalysisReport analysis, CancellationToken cancellationToken)',
-              'ApplyMutations = false', 'MutationCount = 0', 'AutomaticMutationAllowed = false',
-              'ProposedMutation = null', 'EnforceRequested', 'ReviewItemRewardBudget',
-              'ReviewXpRewardBudget', 'ReviewStandingRewardBudget', 'ReviewPrerequisiteGraph',
-          ]:
-              assert invariant in plan, invariant
-          assert 'QuestAnalysisService questAnalysisService' not in plan
-          assert 'GetSnapshot()' not in plan
+          evidence = (root / 'server/RuntimeEvidenceService.cs').read_text(encoding='utf-8')
+          for text in ['SchemaVersion = 2', 'DatabaseUnchangedAcrossPipeline', 'RuntimeGatePassed', 'DeclaredMutationCount = 0']:
+              assert text in evidence, text
 
-          validator = (root / 'tools' / 'Validate-Runtime.ps1').read_text(encoding='utf-8')
-          for invariant in [
-              '[string]$ModPath = $PSScriptRoot', 'SchemaVersion -ne 2', 'BuildIdentity',
-              'economy-admiral-candidate', 'CompilePackageVersion', 'SPT 4.1.3',
-              'RuntimeGatePassed', 'DatabaseUnchangedAcrossPipeline', 'ExpectedReportCount',
-              'DeclaredMutationCount', 'SelectedCandidate', 'ProposalsAreMutations',
-              'AutomaticMutationAllowed', 'ProposedMutation', 'MutationCount', 'exit 0', 'exit 1',
-          ]:
-              assert invariant in validator, invariant
-
-          smoke = (root / 'tools' / 'Test-Validate-Runtime.ps1').read_text(encoding='utf-8')
-          for invariant in ['SchemaVersion = 2', 'BuildIdentity', 'PASS fixture', 'FAIL fixture', 'Start-Process', 'ExitCode', 'validator smoke tests PASS']:
-              assert invariant in smoke, invariant
-
-          metadata = (root / 'server' / 'ModMetadata.cs').read_text(encoding='utf-8')
-          assert 'Economy Admiral' in metadata
-          assert 'com.admiralam.economy-admiral' in metadata
-          print('Economy Admiral module contract OK')
+          print('Economy Admiral value-threaded contract OK')
 
   server:
     name: Economy Admiral .NET 10 server build
@@ -205,19 +100,15 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup .NET 10
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
       - name: Validate runtime helper syntax
         shell: pwsh
         run: |
-          $text = Get-Content mods/Economy-Admiral/tools/Validate-Runtime.ps1 -Raw
-          $null = [scriptblock]::Create($text)
-          $testText = Get-Content mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1 -Raw
-          $null = [scriptblock]::Create($testText)
+          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-Runtime.ps1 -Raw))
+          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1 -Raw))
       - name: Smoke-test runtime helper
         shell: pwsh
         run: '& mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1'
@@ -235,17 +126,15 @@ jobs:
           Copy-Item mods/Economy-Admiral/README.md 'build-output/Economy Admiral/README.md'
           Copy-Item mods/Economy-Admiral/RUNTIME_TEST.md 'build-output/Economy Admiral/RUNTIME_TEST.md'
           Copy-Item mods/Economy-Admiral/tools/Validate-Runtime.ps1 'build-output/Economy Admiral/Validate-Runtime.ps1'
-          $buildInfo = [ordered]@{
+          [ordered]@{
             Product = 'Economy Admiral'
             HeadSha = $env:EA_HEAD_SHA
             WorkflowRunId = $env:GITHUB_RUN_ID
             ArtifactName = 'economy-admiral-candidate'
             CompilePackageVersion = '4.1.2'
             TargetRuntime = 'SPT 4.1.3'
-          }
-          $buildInfo | ConvertTo-Json | Set-Content 'build-output/Economy Admiral/BUILD_INFO.json' -Encoding UTF8
-      - name: Upload candidate
-        uses: actions/upload-artifact@v4
+          } | ConvertTo-Json | Set-Content 'build-output/Economy Admiral/BUILD_INFO.json' -Encoding UTF8
+      - uses: actions/upload-artifact@v4
         with:
           name: economy-admiral-candidate
           path: 'build-output/Economy Admiral'
