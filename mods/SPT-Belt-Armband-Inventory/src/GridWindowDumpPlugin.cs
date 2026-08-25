@@ -88,7 +88,8 @@ namespace SPTBeltArmbandInventory.Diagnostics
                 {
                     Component component = objects[i] as Component;
                     if (component == null || component.gameObject == null
-                        || !string.Equals(component.gameObject.name, TargetObjectName, StringComparison.Ordinal))
+                        || !string.Equals(component.gameObject.name, TargetObjectName, StringComparison.Ordinal)
+                        || !component.gameObject.activeInHierarchy)
                         continue;
 
                     WriteDump(component, null, "UNITY_OBJECT_SCAN (Show hook was not reached)");
@@ -518,3 +519,26 @@ namespace SPTBeltArmbandInventory.Diagnostics
             for (int i = 0; i < assemblies.Length; i++)
             {
                 Type type = assemblies[i].GetType(fullName, false);
+                if (type != null)
+                    return type;
+            }
+
+            return null;
+        }
+
+        private sealed class ReferenceComparer : IEqualityComparer<object>
+        {
+            public static readonly ReferenceComparer Instance = new ReferenceComparer();
+
+            public new bool Equals(object left, object right)
+            {
+                return ReferenceEquals(left, right);
+            }
+
+            public int GetHashCode(object value)
+            {
+                return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(value);
+            }
+        }
+    }
+}
