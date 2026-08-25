@@ -11,8 +11,6 @@ FAMILY_CLASSES = {
     "handguns": {"pistol", "revolver"},
     "smg-pdw": {"smg"},
     "shotguns": {"shotgun"},
-    # Keep battle/marksman carbines out of the assault family. SKS/SVT/Hunter-style
-    # weapons are curated separately instead of entering every assault objective.
     "assault-rifles": {"assaultRifle"},
     "marksman-battle": {"marksmanRifle"},
     "precision": {"sniperRifle"},
@@ -40,13 +38,7 @@ CALIBER_TOKENS = {
     ".338 Lapua": {"Caliber86x70"},
 }
 
-BLOCKED_AMMO_NAME_TOKENS = (
-    "shrapnel",
-    "fragment",
-    "explosion",
-    "fuze",
-    "fuse",
-)
+BLOCKED_AMMO_NAME_TOKENS = ("shrapnel", "fragment", "explosion", "fuze", "fuse")
 
 
 def props(item: dict[str, Any]) -> dict[str, Any]:
@@ -98,14 +90,10 @@ def is_explosive_or_fragment_ammo(item: dict[str, Any], family_id: str) -> bool:
     name = item_name(item, "").lower()
     if any(token in name for token in BLOCKED_AMMO_NAME_TOKENS):
         return True
-
     p = props(item)
     ammo_type = str(p.get("ammoType") or p.get("AmmoType") or "").lower()
     if ammo_type in {"grenade", "explosive", "fragment", "shrapnel"}:
         return True
-
-    # Special weapons are allowed as objective candidates, but their launcher/heavy
-    # ammunition must never become an automatic permanent unlock candidate.
     if family_id == "special-weapons":
         caliber = str(p.get("Caliber") or "").lower()
         if any(token in caliber for token in ("40x", "40mm", "26x", "flare", "grenade")):
@@ -116,7 +104,7 @@ def is_explosive_or_fragment_ammo(item: dict[str, Any], family_id: str) -> bool:
 def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
     items = normalize_items(items_raw)
     result: dict[str, Any] = {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "targetSptVersion": spec.get("targetSptVersion"),
         "sourceRole": "pinned-backend-item-candidate-resolution; exact-runtime-4.1.3-verification-required",
         "families": {},
@@ -147,17 +135,22 @@ def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
             p = props(item)
             weapon_class = str(p.get("weapClass") or "")
             weapon_caliber = str(p.get("ammoCaliber") or p.get("Caliber") or "")
-            if weapon_class in wanted_classes:
-                weapon_rows.append({
-                    "tpl": tpl,
-                    "name": item_name(item, tpl),
-                    "weapClass": weapon_class,
-                    "caliber": weapon_caliber,
-                })
-                if weapon_caliber:
-                    observed_weapon_calibers.add(weapon_caliber)
+            if weapon_class not in wanted_classes:
+                continue
+            # Explicit authored calibers are a curated allowlist. This prevents exotic
+            # or class-mislabelled weapons from widening normal family ammo capability.
+            if wanted_calibers and weapon_caliber and weapon_caliber not in wanted_calibers:
+                continue
+            weapon_rows.append({
+                "tpl": tpl,
+                "name": item_name(item, tpl),
+                "weapClass": weapon_class,
+                "caliber": weapon_caliber,
+            })
+            if weapon_caliber:
+                observed_weapon_calibers.add(weapon_caliber)
 
-        effective_calibers = set(wanted_calibers) | observed_weapon_calibers
+        effective_calibers = set(wanted_calibers) if wanted_calibers else observed_weapon_calibers
 
         for tpl, item in items.items():
             if not is_real_item(item):
@@ -168,7 +161,6 @@ def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
                 continue
             if "PenetrationPower" not in p and "Damage" not in p:
                 continue
-
             penetration = float(p.get("PenetrationPower") or 0)
             damage = float(p.get("Damage") or 0)
             row = {
@@ -214,25 +206,15 @@ def main() -> int:
     items = json.loads(args.items.read_text(encoding="utf-8-sig"))
     spec = json.loads(args.spec.read_text(encoding="utf-8"))
     pools = build_pools(items, spec)
-
     missing_weapons = [fid for fid, data in pools["families"].items() if data["weaponCount"] == 0]
     missing_ammo = [fid for fid, data in pools["families"].items() if fid != "special-weapons" and data["ammoCount"] == 0]
     if missing_weapons:
         raise SystemExit(f"no weapons resolved for families: {missing_weapons}; inspect observedWeaponClasses")
     if missing_ammo:
         raise SystemExit(f"no ammunition resolved for families: {missing_ammo}")
-
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(pools, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    summary = {
-        fid: {
-            "weapons": data["weaponCount"],
-            "ammo": data["ammoCount"],
-            "excludedAmmo": data["excludedAmmoCount"],
-            "tiers": data["ammoTierCounts"],
-        }
-        for fid, data in pools["families"].items()
-    }
+    summary = {fid: {"weapons": d["weaponCount"], "ammo": d["ammoCount"], "excludedAmmo": d["excludedAmmoCount"], "tiers": d["ammoTierCounts"]} for fid, d in pools["families"].items()}
     print(json.dumps(summary, sort_keys=True))
     return 0
 
