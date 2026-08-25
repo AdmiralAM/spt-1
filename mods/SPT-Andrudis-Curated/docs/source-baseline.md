@@ -1,0 +1,46 @@
+# Andrudis Curated source baseline
+
+## Purpose
+
+Record which references are authoritative for which part of the work before implementation crosses into SPT runtime code.
+
+## Legacy content source
+
+Primary content/data source:
+
+- `Thirt3nth/Andrudis-Questmaniac` — SPT 3.10-era repository containing the legacy `db/QuestBundles` tree and quest data.
+
+Current compatibility reference:
+
+- `laurentmekka/AndrudisQuestManiac` — SPT 4.1 port. It proves that the old quest corpus can be converted/loaded on the 4.1 generation and documents repairs for removed items, invalid durability conditions, incomplete weapon rewards, and modular armour inserts.
+
+The legacy repositories are **content/data-model sources and compatibility references**, not target runtime architecture.
+
+## Target
+
+- SPT 4.1.x, with the project runtime currently using 4.1.3 references where an exact runtime package boundary is required.
+- .NET 10 server-mod generation, matching maintained server-side modules in this repository.
+
+## Runtime/API boundaries already evidenced
+
+The SPT 4.1 Andrudis port uses the current DI/load model (`IModMetadata`, `IOnLoad`, injected database tables, `ImageRouter`, `TraderConfig`, `RagfairConfig`) rather than the old 3.x server API.
+
+The maintained `WTT-Artem-Revival` module in this repository targets `net10.0` and consumes `WTT-ServerCommonLib` 3.0.6. This is evidence that the WTT 3.x server-common boundary is viable in the repository's current SPT generation; it is **not** yet a decision that Andrudis Curated must depend on WTT at runtime.
+
+`acidphantasm/scorpion-csharp` is a single-custom-trader architecture reference: explicit trader identity, explicit assort/quest-assort loading, lazy locale injection, and SPT 4.1 table/config boundaries. It is a code-pattern reference, not source to copy wholesale.
+
+Current SPT trader JSON supplied from an installed SPT runtime is a native data-shape reference for `base.json`, `assort.json`, and `questassort.json`. Those runtime files are reference input and are not committed here.
+
+## Baseline viability conclusion
+
+The first gate does not require a runtime port. It operates only on legacy JSON and is therefore safe to implement independently of unresolved trader/migration runtime details.
+
+Before server implementation begins, re-prove the exact SPT 4.1.3 boundaries needed for:
+
+1. single trader registration and image/locales;
+2. quest insertion/loading;
+3. quest-assort unlocks;
+4. profile quest-state access required for migration;
+5. load order relative to other trader/quest mods and the future Economy MOD.
+
+If any of those boundaries cannot be proven from current source/package/runtime references, stop at that boundary rather than guessing.

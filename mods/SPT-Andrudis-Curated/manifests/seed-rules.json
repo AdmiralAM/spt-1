@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "description": "Provisional first-pass curation rules. These seed graph review; they are not the final campaign manifest.",
+  "rules": [
+    { "match": { "bundleContains": "Hideout Assistant" }, "decision": "DROP", "reason": "Hideout quests are explicitly out of curated scope." },
+    { "match": { "bundleEquals": "Weapon Mastery" }, "decision": "MIGRATION_ONLY", "reason": "Large specific-weapon elimination grind; do not expose to new profiles." },
+    { "match": { "bundleEquals": "Errand Boy" }, "decision": "MIGRATION_ONLY", "reason": "Large handover/busywork family with container reward inflation." },
+    { "match": { "bundleContains": "Legend" }, "decision": "MIGRATION_ONLY", "reason": "Mass gear-restriction elimination ladders are legacy busywork." },
+    { "match": { "bundleEquals": "Headless PMC" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map headshot ladder." },
+    { "match": { "bundleEquals": "Headless Raider" }, "decision": "MIGRATION_ONLY", "reason": "Escalating headshot ladder." },
+    { "match": { "bundleEquals": "Headless Rogue" }, "decision": "MIGRATION_ONLY", "reason": "Escalating headshot ladder." },
+    { "match": { "bundleEquals": "Headless Scav" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map headshot ladder." },
+    { "match": { "bundleEquals": "PMC Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map kill ladder." },
+    { "match": { "bundleEquals": "Raider Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating kill ladder." },
+    { "match": { "bundleEquals": "Rogue Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating kill ladder." },
+    { "match": { "bundleEquals": "Scav Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map kill ladder." },
+    { "match": { "bundleEquals": "Boss Follower Hunt" }, "decision": "MERGE", "reason": "Potential authored target family, but ten-step escalation should collapse to milestones." },
+    { "match": { "bundleEquals": "Boss Hunt" }, "decision": "MERGE", "reason": "Potential authored target family, but ten-step escalation should collapse to milestones." },
+    { "match": { "bundleEquals": "Cultists Hunt" }, "decision": "MERGE", "reason": "Potential authored target family, but ten-step escalation should collapse to milestones." },
+    { "match": { "bundleEquals": "Sniper Life" }, "decision": "MERGE", "reason": "Keep the capability fantasy, collapse repetitive distance ladders." },
+    { "match": { "bundleEquals": "Survivalist" }, "decision": "MERGE", "reason": "Strong survival theme but significant vanilla overlap/repetition." },
+    { "match": { "bundleEquals": "Ammo Proficiency" }, "decision": "REWRITE", "reason": "Core ammo capability progression is desired, but legacy chain/rewards must be rebuilt." },
+    { "match": { "bundleEquals": "Weapon Proficiency" }, "decision": "REWRITE", "reason": "Core weapon-family progression is desired, but six-trader/tier structure must be consolidated." },
+    { "match": { "bundleEquals": "Deep Pockets" }, "decision": "REWRITE", "reason": "Candidate equipment progression; reward/unlock chain needs consolidation." },
+    { "match": { "bundleEquals": "Iron Head" }, "decision": "REWRITE", "reason": "Candidate equipment progression; reward/unlock chain needs consolidation." },
+    { "match": { "bundleEquals": "Juggernaut" }, "decision": "REWRITE", "reason": "Candidate equipment progression; reward/unlock chain needs consolidation." },
+    { "match": { "bundleEquals": "Meds Proficiency" }, "decision": "REWRITE", "reason": "Candidate capability progression; audit against vanilla and economy." },
+    { "match": { "bundleEquals": "Stims Proficiency" }, "decision": "REWRITE", "reason": "Candidate capability progression; high-value consumables require controlled unlocks." },
+    { "match": { "bundleEquals": "Tarkov Mule" }, "decision": "REWRITE", "reason": "Candidate equipment progression; consolidate backpack unlock path." },
+    { "match": { "bundleEquals": "Ultrasound" }, "decision": "REWRITE", "reason": "Candidate equipment progression; consolidate headset unlock path." },
+    { "match": { "bundleEquals": "Keys Proficiency" }, "decision": "KEEP", "reason": "Small authored progression candidate; keep pending graph/vanilla-overlap audit." }
+  ]
+}

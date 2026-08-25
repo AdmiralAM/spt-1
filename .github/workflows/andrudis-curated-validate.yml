@@ -1,0 +1,35 @@
+name: Andrudis Curated Validate
+
+on:
+  pull_request:
+    paths:
+      - 'mods/SPT-Andrudis-Curated/**'
+      - '.github/workflows/andrudis-curated-validate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: andrudis-curated-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  inventory-tool-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run inventory/graph tests
+        run: python -m unittest discover -s mods/SPT-Andrudis-Curated/tests -p 'test_*.py'
+
+      - name: Validate seed rules JSON
+        run: python -m json.tool mods/SPT-Andrudis-Curated/manifests/seed-rules.json > /dev/null
