@@ -9,9 +9,9 @@ namespace WTTArtem;
 public record ModMetadata : IModMetadata
 {
     public string ModGuid { get; init; } = "com.crackbone.artem-wtt";
-    public string Name { get; init; } = "Artem";
+    public string Name { get; init; } = "Admiral Artyom Revival";
     public string Author { get; init; } = "Crackbone";
-    public List<string>? Contributors { get; init; } = ["Crackbone", "The WTT Team", "Artem Revival MOD SPT"];
+    public List<string>? Contributors { get; init; } = ["Crackbone", "The WTT Team", "AdmiralAM"];
     public Version Version { get; init; } = new(typeof(ModMetadata).Assembly.GetName().Version!.ToString(3));
     public Range SptVersion { get; init; } = new("~4.1.0");
     public bool HasPrepatcher { get; init; }

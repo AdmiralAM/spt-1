@@ -20,6 +20,20 @@ Before changing code or repository infrastructure:
 4. create a dedicated short-lived branch;
 5. identify the module-specific validation path before changing shared CI.
 
+## Module identity and versioning
+
+Every maintained module has one explicit **official product name** and one authoritative semantic version (`MAJOR.MINOR.PATCH`) for each independently shipped component.
+
+- The module README must state the official product name and current version near the top.
+- Project/package metadata (`<Version>`, assembly/file version, server metadata where applicable) is the authoritative machine-readable version and must agree with the README.
+- Client/server components that are one release unit use the same module version. If components intentionally have different version lines, as with Tactical HUD client/server, the README and root module index must state both explicitly.
+- A leading `v` is presentation syntax for release/tag labels (`v1.0.0`); it is not part of the semantic version stored in project/package metadata.
+- Product names do not contain a version unless a compatibility-constrained artifact filename deliberately does so. If an assembly/artifact name embeds a version, that embedded value must match project metadata in the same commit.
+- Directory names, GUIDs, namespaces, endpoints, runtime branch names, upstream names, and other established technical identifiers may remain unchanged when renaming them would create migration/compatibility risk. Such retained identifiers must be documented as compatibility/provenance identifiers and must not be presented as the current product name.
+- Any PR that changes a product name or version must update the module README, root module index, affected manifests/build metadata, workflow/package naming, and durable current-state docs in the same integration slice.
+
+Do not invent a new version merely to make documentation look current. Version changes represent actual release/version decisions owned by the module workstream.
+
 ## Issues
 
 Use an Issue for a meaningful bug, feature, compatibility problem, validation gap, maintenance backlog, or research target. Record the objective, evidence/current state, scope/non-goals, acceptance or stop criteria, and links to resulting PRs/follow-ups.
@@ -38,6 +52,7 @@ Recommended prefixes:
 - `fix/` — corrective work;
 - `diagnostic/` — temporary evidence/instrumentation;
 - `perf/` — measured performance work;
+- `research/` — bounded research/prototype work that may preserve unique evidence but is still temporary;
 - `chore/` — repository/CI/documentation maintenance;
 - `archive/` — intentional documented historical reserve only.
 

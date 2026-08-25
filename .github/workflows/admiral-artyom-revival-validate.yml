@@ -1,0 +1,125 @@
+name: Admiral Artyom Revival Validate
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'mods/Admiral-Artyom-Revival/**'
+      - '.github/workflows/admiral-artyom-revival-validate.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mods/Admiral-Artyom-Revival/**'
+      - '.github/workflows/admiral-artyom-revival-validate.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: admiral-artyom-revival-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  workspace:
+    name: Revival workspace contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate module skeleton
+        shell: bash
+        run: |
+          test -f mods/Admiral-Artyom-Revival/README.md
+          test -f mods/Admiral-Artyom-Revival/docs/revival-status.md
+          test -f mods/Admiral-Artyom-Revival/docs/content-audit.md
+          test -f mods/Admiral-Artyom-Revival/docs/content-classification.md
+          test -f mods/Admiral-Artyom-Revival/docs/economy-audit.md
+          test -f mods/Admiral-Artyom-Revival/docs/repair-log.md
+          test -f mods/Admiral-Artyom-Revival/docs/campaign-audit.md
+          test -f mods/Admiral-Artyom-Revival/tools/import_runtime_core.py
+          test -f mods/Admiral-Artyom-Revival/tools/audit_runtime_content.py
+          test -f mods/Admiral-Artyom-Revival/tools/validate_bundle_archives.py
+          test -f mods/Admiral-Artyom-Revival/tools/repair_runtime_compat.py
+          test -f mods/Admiral-Artyom-Revival/tests/validate_content.py
+          test -f mods/Admiral-Artyom-Revival/tests/test_bundle_validator.py
+          test -f mods/Admiral-Artyom-Revival/tests/test_localization.py
+          test -f mods/Admiral-Artyom-Revival/tests/test_runtime_compat_repairs.py
+          grep -q 'Admiral Artyom Revival' mods/Admiral-Artyom-Revival/README.md
+          grep -q 'Current module version: **3.0.0**' mods/Admiral-Artyom-Revival/README.md
+          grep -q 'Core' mods/Admiral-Artyom-Revival/docs/content-audit.md
+
+  data:
+    name: Artyom content/tooling integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Compile Python tooling and tests
+        run: |
+          python -m py_compile mods/Admiral-Artyom-Revival/tools/import_runtime_core.py
+          python -m py_compile mods/Admiral-Artyom-Revival/tools/audit_runtime_content.py
+          python -m py_compile mods/Admiral-Artyom-Revival/tools/validate_bundle_archives.py
+          python -m py_compile mods/Admiral-Artyom-Revival/tools/repair_runtime_compat.py
+          python -m py_compile mods/Admiral-Artyom-Revival/tests/validate_content.py
+          python -m py_compile mods/Admiral-Artyom-Revival/tests/test_bundle_validator.py
+          python -m py_compile mods/Admiral-Artyom-Revival/tests/test_localization.py
+          python -m py_compile mods/Admiral-Artyom-Revival/tests/test_runtime_compat_repairs.py
+      - name: Bundle validator regression test
+        run: python mods/Admiral-Artyom-Revival/tests/test_bundle_validator.py
+      - name: Localization source regression test
+        run: python mods/Admiral-Artyom-Revival/tests/test_localization.py
+      - name: Runtime compatibility repair regression test
+        run: python mods/Admiral-Artyom-Revival/tests/test_runtime_compat_repairs.py
+      - name: Validate JSON and imported runtime data when present
+        shell: python
+        run: |
+          from pathlib import Path
+          import json, subprocess, sys
+
+          root = Path('mods/Admiral-Artyom-Revival')
+          candidates = list(root.rglob('*.json'))
+          failed = []
+          for path in candidates:
+              try:
+                  with path.open('r', encoding='utf-8-sig') as f:
+                      json.load(f)
+              except Exception as exc:
+                  failed.append((str(path), str(exc)))
+
+          if failed:
+              for path, error in failed:
+                  print(f'INVALID JSON: {path}: {error}')
+              raise SystemExit(1)
+
+          resources = root / 'server' / 'Resources'
+          if resources.exists():
+              subprocess.run([sys.executable, str(root / 'tests' / 'validate_content.py')], check=True)
+              subprocess.run([sys.executable, str(root / 'tools' / 'audit_runtime_content.py'), str(resources)], check=True)
+              subprocess.run([sys.executable, str(root / 'tools' / 'repair_runtime_compat.py'), str(resources)], check=True)
+          else:
+              print('Runtime Resources are external/reproducibly imported; content validator/auditor deferred until import/package stage.')
+
+          print(f'Validated {len(candidates)} committed JSON files.')
+
+  server:
+    name: Admiral Artyom Revival .NET 10 server build
+    needs: [workspace, data]
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build server
+        shell: pwsh
+        run: dotnet build 'mods/Admiral-Artyom-Revival/server/Admiral-Artyom-Revival.csproj' -c Release --nologo
+      - name: Upload server DLL
+        uses: actions/upload-artifact@v4
+        with:
+          name: admiral-artyom-revival-server
+          path: 'mods/Admiral-Artyom-Revival/server/bin/Release/net10.0/Admiral Artyom Revival.dll'
+          if-no-files-found: error
+          retention-days: 14

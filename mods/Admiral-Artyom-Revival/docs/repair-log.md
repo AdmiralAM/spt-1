@@ -1,6 +1,6 @@
-# Artem Revival repair log
+# Admiral Artyom Revival — repair log
 
-This log records only repairs backed by direct runtime/content evidence. Speculative cleanup belongs in audit notes, not in the revival patch set.
+This log records only repairs backed by direct runtime/content evidence for Admiral Artyom Revival. Speculative cleanup belongs in audit notes, not in the compatibility patch set.
 
 ## R1 — SPT 4.1 server lifecycle
 
@@ -12,7 +12,7 @@ This log records only repairs backed by direct runtime/content evidence. Specula
 
 ## R2 — CommonLib dependency line
 
-**Problem:** Artem relies on WTT CommonLib item, quest-zone, quest, clothing and bundle services.
+**Problem:** upstream Artem content relies on WTT CommonLib item, quest-zone, quest, clothing and bundle services.
 
 **Repair:** use WTT-ServerCommonLib `3.0.6` as the maintained build/runtime baseline while retaining metadata compatibility with the `~3.0.0` CommonLib line.
 
@@ -46,7 +46,7 @@ Affected authored rewards include `Expanding Wardrobe`, `Puppets`, and `Gatherin
 
 ## R6 — SPT 4.1.3 armor preset compatibility
 
-**Problem:** runtime logs showed six Artem `Item deserialization error` failures:
+**Problem:** runtime logs showed six upstream Artem `Item deserialization error` failures:
 
 - two DevTac Ronin variants used `Helmet_eyes` / `Helmet_jaw` preset slot names while their templates declared lowercase `helmet_eyes` / `helmet_jaw`;
 - OPENLAND HEXAGON referenced `Soft_armor_left` / `soft_armor_right` preset children without defining those slots on the custom template.
@@ -57,7 +57,7 @@ Affected authored rewards include `Expanding Wardrobe`, `Puppets`, and `Gatherin
 
 ## R7 — Russian localization compatibility
 
-**Problem:** the legacy quest locale filename `artemenglish.json` is not a valid CommonLib locale code and Artem lacked Russian coverage.
+**Problem:** the legacy quest locale filename `artemenglish.json` is not a valid CommonLib locale code and upstream Artem lacked Russian coverage.
 
 **Repair:** normalize quest locales to `en.json` / `ru.json`; add Russian source for all 204 quest keys, all 131 custom item entries, all 64 clothing entries and trader identity text.
 

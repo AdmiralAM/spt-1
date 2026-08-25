@@ -1,4 +1,4 @@
-# Artem Revival — Core / Campaign / Optional Classification
+# Admiral Artyom Revival — Core / Campaign / Optional Classification
 
 Classification is dependency-driven and intentionally conservative. No content is removed by this document.
 
@@ -61,9 +61,9 @@ Therefore:
 
 After runtime/campaign verification, the intended packaging split is:
 
-- **Full** — complete authored Artem revival;
+- **Full** — complete authored upstream Artem content maintained by Admiral Artyom Revival;
 - **Core** — trader + campaign + all transitive asset dependencies;
 - **Optional Cosmetics** — proven removable clothing/cosmetic sets;
 - **Removed/Archive** — proven stale/orphan physical assets only.
 
-The first stable 4.1.3 candidate remains **Full**. This avoids silently changing Artem's identity while compatibility is still being proven.
+The first stable 4.1.3 candidate remains **Full**. This avoids silently changing the upstream Artem content identity while compatibility is still being proven.
