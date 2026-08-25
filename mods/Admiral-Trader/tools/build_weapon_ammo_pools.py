@@ -17,7 +17,8 @@ FAMILY_CLASSES = {
     "special-weapons": {"machinegun", "grenadeLauncher", "specialWeapon"},
 }
 
-# Normalize human-authored caliber hints to tokens typically used by EFT item templates.
+# Normalize human-authored caliber hints to tokens used by EFT item templates.
+# Aliases are intentionally conservative; observed weapon calibers are also folded into each family at runtime.
 CALIBER_TOKENS = {
     "9x18": {"Caliber9x18PM"},
     "9x19": {"Caliber9x19PARA"},
@@ -31,7 +32,7 @@ CALIBER_TOKENS = {
     "5.45x39": {"Caliber545x39"},
     "5.56x45": {"Caliber556x45NATO"},
     "7.62x39": {"Caliber762x39"},
-    ".300 Blackout": {"Caliber366TKM", "Caliber300BLK"},
+    ".300 Blackout": {"Caliber762x35", "Caliber300BLK"},
     "7.62x51": {"Caliber762x51"},
     "7.62x54": {"Caliber762x54R"},
     "6.8x51": {"Caliber68x51"},
@@ -116,8 +117,6 @@ def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
                     observed_weapon_calibers.add(weapon_caliber)
 
         effective_calibers = set(wanted_calibers) | observed_weapon_calibers
-        if family_id == "special-weapons" and not effective_calibers:
-            effective_calibers = observed_weapon_calibers
 
         for tpl, item in items.items():
             p = props(item)
