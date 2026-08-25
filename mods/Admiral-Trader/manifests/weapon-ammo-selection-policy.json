@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "status": "selection-policy",
+  "targetSptVersion": "4.1.3",
+  "purpose": "Select exactly one restrained permanent ammunition capability per normal weapon family; Special Weapons never receives a permanent ammunition unlock.",
+  "globalRules": {
+    "permanentUnlockFamilies": 6,
+    "maximumPermanentUnlocksPerFamily": 1,
+    "specialWeaponsPermanentUnlocks": 0,
+    "selectionTier": "controlled",
+    "highEndPermanentUnlock": false,
+    "sampleBeforeUnlock": true,
+    "finitePerReset": true,
+    "selectionStrategy": "highest penetration candidate inside family-specific permanent penetration ceiling; ties prefer higher damage then deterministic tpl order",
+    "exactRuntimeVerificationRequired": "SPT 4.1.3"
+  },
+  "families": {
+    "handguns": {"maxPermanentPenetration": 36, "sampleUnits": 40, "stockPerReset": 80, "buyRestriction": 80},
+    "smg-pdw": {"maxPermanentPenetration": 38, "sampleUnits": 40, "stockPerReset": 80, "buyRestriction": 80},
+    "shotguns": {"maxPermanentPenetration": 37, "sampleUnits": 30, "stockPerReset": 40, "buyRestriction": 40},
+    "assault-rifles": {"maxPermanentPenetration": 40, "sampleUnits": 40, "stockPerReset": 80, "buyRestriction": 80},
+    "marksman-battle": {"maxPermanentPenetration": 42, "sampleUnits": 30, "stockPerReset": 60, "buyRestriction": 60},
+    "precision": {"maxPermanentPenetration": 43, "sampleUnits": 20, "stockPerReset": 40, "buyRestriction": 40},
+    "special-weapons": {"maxPermanentPenetration": null, "sampleUnits": 1, "stockPerReset": 0, "buyRestriction": 0, "permanentUnlock": false}
+  }
+}
