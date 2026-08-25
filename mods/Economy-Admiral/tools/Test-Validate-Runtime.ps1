@@ -18,11 +18,18 @@ Write-Json 'economy-admiral-reward-utility.json' @{ SchemaVersion = 2; Benchmark
 Write-Json 'economy-admiral-progression-graph.json' @{ SchemaVersion = 2; BenchmarkSource = 'PristineStartupSnapshot' }
 Write-Json 'economy-admiral-quest-constraints.json' @{ SchemaVersion = 1; BenchmarkSource = 'PristineStartupSnapshot' }
 Write-Json 'economy-admiral-quest-analysis.json' @{ SchemaVersion = 3; Note = 'Uses pristine startup baseline.' }
-Write-Json 'economy-admiral-composite-candidates.json' @{
-    SelectedCandidate = $null
-    AffectsRewardAllowance = $false
-    AffectsEnforcement = $false
+Write-Json 'economy-admiral-provenance-delta.json' @{
+    SchemaVersion = 1
+    BaselineCapturePriority = 1
+    PristineQuestCount = 100
+    FinalQuestCount = 125
+    ModAddedQuestCount = 25
+    PristineModifiedQuestCount = 10
+    PristineUnchangedQuestCount = 90
+    RemovedPristineQuestCount = 0
+    EnforcementAffected = $false
 }
+Write-Json 'economy-admiral-composite-candidates.json' @{ SelectedCandidate = $null; AffectsRewardAllowance = $false; AffectsEnforcement = $false }
 Write-Json 'economy-admiral-target-proposals.json' @{
     ProposalsAreMutations = $false
     ApplyMutations = $false
@@ -56,8 +63,8 @@ Write-Json 'economy-admiral-runtime-evidence.json' @{
         BaselineCaptured = $true
         BaselineNotLargerThanFinal = $true
     }
-    ExpectedReportCount = 8
-    PresentReportCount = 8
+    ExpectedReportCount = 9
+    PresentReportCount = 9
     AllExpectedReportsPresent = $true
     DatabaseFingerprintBefore = @{ Sha256 = $hash }
     DatabaseFingerprintAfter = @{ Sha256 = $hash }
