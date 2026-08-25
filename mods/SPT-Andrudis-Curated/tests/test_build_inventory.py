@@ -57,8 +57,11 @@ class InventoryTests(unittest.TestCase):
             payload = MODULE.build_payload(root, rules)
             by_id = {row["questId"]: row for row in payload["quests"]}
 
+            self.assertEqual(payload["schemaVersion"], 2)
             self.assertEqual(payload["summary"]["questCount"], 2)
             self.assertEqual(payload["summary"]["decisionCounts"], {"MERGE": 2})
+            self.assertEqual(payload["summary"]["missingPrerequisiteCount"], 0)
+            self.assertEqual(payload["summary"]["cycleCount"], 0)
             self.assertEqual(by_id["q1"]["successors"], ["q2"])
             self.assertEqual(by_id["q2"]["prerequisites"], ["q1"])
             self.assertEqual(by_id["q1"]["objectives"]["killRoles"], ["bossKilla"])
@@ -88,6 +91,43 @@ class InventoryTests(unittest.TestCase):
         self.assertTrue(objectives["firRequired"])
         self.assertEqual(objectives["maxObjectiveValue"], 3.0)
         self.assertEqual(rewards["items"], [{"tpl": "reward-a", "count": 5}])
+
+    def test_graph_diagnostics_find_missing_cross_bundle_and_cycle(self):
+        rows = [
+            {
+                "questId": "a",
+                "bundle": "One",
+                "sourcePath": "One/t/quests.json",
+                "prerequisites": ["b", "missing"],
+                "successors": ["b"],
+            },
+            {
+                "questId": "b",
+                "bundle": "Two",
+                "sourcePath": "Two/t/quests.json",
+                "prerequisites": ["a"],
+                "successors": ["a"],
+            },
+        ]
+
+        diagnostics = MODULE.build_graph_diagnostics(rows)
+
+        self.assertEqual(len(diagnostics["missingPrerequisites"]), 1)
+        self.assertEqual(len(diagnostics["crossBundleEdges"]), 2)
+        self.assertEqual(diagnostics["cycles"], [["a", "b"]])
+
+    def test_duplicate_ids_are_reported(self):
+        rows = [
+            {"questId": "same", "bundle": "One", "sourcePath": "One/a/quests.json", "prerequisites": [], "successors": []},
+            {"questId": "same", "bundle": "Two", "sourcePath": "Two/b/quests.json", "prerequisites": [], "successors": []},
+        ]
+
+        diagnostics = MODULE.build_graph_diagnostics(rows)
+
+        self.assertEqual(diagnostics["duplicateQuestIds"], [{
+            "questId": "same",
+            "sources": ["One/a/quests.json", "Two/b/quests.json"],
+        }])
 
     def test_invalid_rule_decision_fails_closed(self):
         with self.assertRaises(ValueError):
