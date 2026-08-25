@@ -46,14 +46,18 @@ jobs:
           if len(quest_files) != 31:
               raise SystemExit(f'expected 31 packaged quest templates, got {len(quest_files)}')
 
+          quests = []
           quest_ids = []
           access_count = 0
           arsenal_count = 0
           for path in quest_files:
               quest = json.loads(path.read_text(encoding='utf-8-sig'))
+              quests.append(quest)
               quest_ids.append(quest['_id'])
               if quest['traderId'] != 'd5c27bb3169f8dfbc13f6b69':
                   raise SystemExit(f'{path.name}: trader id drift')
+              if not str(quest.get('QuestName') or '').strip():
+                  raise SystemExit(f'{path.name}: missing QuestName fallback')
 
               finish = (quest.get('conditions') or {}).get('AvailableForFinish') or []
               if len(finish) != 1:
@@ -78,7 +82,9 @@ jobs:
               if not path.is_file():
                   raise SystemExit(f'missing packaged locale: {path}')
               payload = json.loads(path.read_text(encoding='utf-8-sig'))
-              for qid in quest_ids:
-                  if f'{qid} name' not in payload:
-                      raise SystemExit(f'{locale}: missing name for {qid}')
+              for quest in quests:
+                  qid = quest['_id']
+                  finish = quest['conditions']['AvailableForFinish'][0]
+                  if finish.get('conditionType') == 'FindItem' and f'{qid} name' not in payload:
+                      raise SystemExit(f'{locale}: Access Protocol locale missing name for {qid}')
           PY
