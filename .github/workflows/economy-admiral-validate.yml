@@ -34,7 +34,7 @@ jobs:
           root = Path('mods/Economy-Admiral')
           required = [
               root / 'README.md', root / 'RUNTIME_TEST.md', root / 'config' / 'config.json',
-              root / 'tools' / 'Validate-Runtime.ps1',
+              root / 'tools' / 'Validate-Runtime.ps1', root / 'tools' / 'Test-Validate-Runtime.ps1',
               root / 'server' / 'Economy-Admiral.csproj', root / 'server' / 'ModMetadata.cs',
               root / 'server' / 'EconomyConfig.cs', root / 'server' / 'EconomyRuntimeConfigService.cs',
               root / 'server' / 'RuntimeEvidenceService.cs', root / 'server' / 'EconomyMod.cs',
@@ -160,11 +160,15 @@ jobs:
 
           validator = (root / 'tools' / 'Validate-Runtime.ps1').read_text(encoding='utf-8')
           for invariant in [
-              'RuntimeGatePassed', 'DatabaseUnchangedAcrossPipeline', 'ExpectedReportCount',
-              'DeclaredMutationCount', 'SelectedCandidate', 'ProposalsAreMutations',
+              '[string]$ModPath = $PSScriptRoot', 'RuntimeGatePassed', 'DatabaseUnchangedAcrossPipeline',
+              'ExpectedReportCount', 'DeclaredMutationCount', 'SelectedCandidate', 'ProposalsAreMutations',
               'AutomaticMutationAllowed', 'ProposedMutation', 'MutationCount', 'exit 0', 'exit 1',
           ]:
               assert invariant in validator, invariant
+
+          smoke = (root / 'tools' / 'Test-Validate-Runtime.ps1').read_text(encoding='utf-8')
+          for invariant in ['PASS fixture', 'FAIL fixture', 'Start-Process', 'ExitCode', 'validator smoke tests PASS']:
+              assert invariant in smoke, invariant
 
           metadata = (root / 'server' / 'ModMetadata.cs').read_text(encoding='utf-8')
           assert 'Economy Admiral' in metadata
@@ -188,6 +192,11 @@ jobs:
         run: |
           $text = Get-Content mods/Economy-Admiral/tools/Validate-Runtime.ps1 -Raw
           $null = [scriptblock]::Create($text)
+          $testText = Get-Content mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1 -Raw
+          $null = [scriptblock]::Create($testText)
+      - name: Smoke-test runtime helper
+        shell: pwsh
+        run: '& mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1'
       - name: Build server
         shell: pwsh
         run: dotnet build mods/Economy-Admiral/server/Economy-Admiral.csproj -c Release --nologo
