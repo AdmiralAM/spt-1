@@ -36,7 +36,10 @@ namespace SPTItemIntelligence
             int ownedFoundInRaid = 0,
             int questNowFoundInRaid = 0,
             int questLaterFoundInRaid = 0,
-            string perSlotLine = null)
+            string perSlotLine = null,
+            string bestSellLine = null,
+            string bestTraderLine = null,
+            string fleaPriceLine = null)
         {
             Primary = primary ?? string.Empty;
             Secondary = secondary ?? string.Empty;
@@ -82,6 +85,9 @@ namespace SPTItemIntelligence
             QuestLaterMissing = QuestNeededLater - QuestLaterOwned;
 
             ValueLine = Primary.Length == 0 ? string.Empty : "Value: " + Primary;
+            BestSellLine = bestSellLine ?? string.Empty;
+            BestTraderLine = bestTraderLine ?? string.Empty;
+            FleaPriceLine = fleaPriceLine ?? string.Empty;
             QuestNowLine = RequirementLine(
                 "Quest Now", QuestNowOwned, QuestNeededNow, QuestNowFoundInRaidOwned, QuestNowFoundInRaid);
             HideoutLine = RequirementLine("Hideout", HideoutOwned, HideoutNeeded, 0, 0);
@@ -146,6 +152,9 @@ namespace SPTItemIntelligence
         public int HideoutMissing { get; }
         public int QuestLaterMissing { get; }
         public string ValueLine { get; }
+        public string BestSellLine { get; }
+        public string BestTraderLine { get; }
+        public string FleaPriceLine { get; }
         public string QuestNowLine { get; }
         public string QuestLaterLine { get; }
         public string HideoutLine { get; }
@@ -186,14 +195,20 @@ namespace SPTItemIntelligence
                 return string.Empty;
             }
 
-            if (TryLine(ValueLine, requestedIndex, ref current, out found)) return found;
             if (mode == ItemTooltipMode.Full)
             {
-                if (TryLine(Secondary, requestedIndex, ref current, out found)) return found;
+                if (TryLine(BestSellLine, requestedIndex, ref current, out found)) return found;
+                if (TryLine(BestTraderLine, requestedIndex, ref current, out found)) return found;
+                if (TryLine(FleaPriceLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(PerSlotLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(CraftLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(BarterLine, requestedIndex, ref current, out found)) return found;
             }
+            else if (TryLine(ValueLine, requestedIndex, ref current, out found))
+            {
+                return found;
+            }
+
             if (mode != ItemTooltipMode.Minimal)
             {
                 if (TryLine(QuestNowLine, requestedIndex, ref current, out found)) return found;
@@ -294,7 +309,23 @@ namespace SPTItemIntelligence
             string secondary = !useAlternateAsPrimary && alternateValue > 0
                 ? alternateSource + ": " + FormatRoubles(alternateValue)
                 : string.Empty;
-            string perSlot = hover.ValuePerSlot > 0 ? "Per slot: " + FormatRoubles(hover.ValuePerSlot) : string.Empty;
+
+            string bestSell = string.Empty;
+            if (hover.BestPriceSource == PriceSource.Flea && hover.FleaUnitValue > 0)
+                bestSell = "Best sell: Flea";
+            else if (hover.BestPriceSource == PriceSource.Trader && hover.TraderUnitValue > 0)
+                bestSell = "Best sell: " + trader;
+
+            string bestTrader = hover.TraderUnitValue > 0
+                ? "Best trader: " + trader + " · " + FormatRoubles(hover.TraderUnitValue)
+                : string.Empty;
+            string fleaPrice = hover.FleaUnitValue > 0
+                ? "Flea: " + FormatRoubles(hover.FleaUnitValue)
+                : string.Empty;
+            string perSlot = hover.ValuePerSlot > 0
+                ? "Per slot: " + FormatRoubles(hover.ValuePerSlot)
+                : string.Empty;
+
             FirRequirementState fir = FirRequirementRegistry.Get(hover.TemplateId);
             return new ItemHoverText(
                 primary,
@@ -311,7 +342,10 @@ namespace SPTItemIntelligence
                 fir.OwnedFoundInRaid,
                 fir.QuestNowFoundInRaid,
                 fir.QuestLaterFoundInRaid,
-                perSlot);
+                perSlot,
+                bestSell,
+                bestTrader,
+                fleaPrice);
         }
 
         static IEnumerable<string> FormatRequirementDetails(IReadOnlyList<RequirementDetail> details)

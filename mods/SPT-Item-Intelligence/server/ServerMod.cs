@@ -19,7 +19,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "SPT Item Intelligence Server";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("0.11.0");
+    public SemanticVersioning.Version Version { get; init; } = new("0.12.0");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
@@ -202,7 +202,7 @@ public sealed class ItemIntelligenceLoadNotice(ISptLogger<ItemIntelligenceLoadNo
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        logger.Success("SPT Item Intelligence Server v0.11.0 loaded; named trader, relevance and requirement-detail snapshot ready");
+        logger.Success("SPT Item Intelligence Server v0.12.0 loaded; named trader, relevance and requirement-detail snapshot ready");
         return Task.CompletedTask;
     }
 }

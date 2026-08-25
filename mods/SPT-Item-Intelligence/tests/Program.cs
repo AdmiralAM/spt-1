@@ -81,7 +81,8 @@ static class Program
         int phase26Assertions = Phase26RatioParseAllocationTests.Run();
         int phase27Assertions = Phase27ValueIntelligenceTests.Run();
         int phase28Assertions = Phase28RelevanceIntelligenceTests.Run();
-        Console.WriteLine("Item Intelligence regression passed through Phase 28: " + phase28Assertions + " relevance assertions; prior phases remain green if execution reaches this line.");
+        int phase29Assertions = Phase29QuickSellReferenceTests.Run();
+        Console.WriteLine("Item Intelligence regression passed through Phase 29: " + phase29Assertions + " QuickSell-reference assertions; prior phases remain green if execution reaches this line.");
     }
 
     static ItemDefinition Resolve(ItemRegistry registry, string id, string type, IDictionary<string, object> signals) => registry.Resolve(new ItemDescriptor(id, null, "  Test   Item  ", " Test ", type, signals));

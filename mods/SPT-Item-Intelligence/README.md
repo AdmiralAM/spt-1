@@ -1,6 +1,6 @@
 # SPT Item Intelligence
 
-Standalone item-intelligence module for SPT 4.1.x. Stable client/server version: **0.11.0**. Physical SPT 4.1.3 runtime acceptance is complete. Active feature development is closed; the module is maintenance-only unless a concrete runtime defect or explicitly approved future enhancement justifies reopening work.
+Standalone item-intelligence module for SPT 4.1.x. Stable client/server version: **0.12.0**. Physical SPT 4.1.3 runtime acceptance is complete. Active feature development is closed; the module is maintenance-only unless a concrete runtime defect or explicitly approved future enhancement justifies reopening work.
 
 ## Purpose
 
@@ -12,8 +12,8 @@ Current presentation contracts include:
 - requirement-priority states: `Quest Now → Hideout → Quest Later → Default`;
 - compact Minimal / Normal / Detailed / Full tooltip modes;
 - owned-versus-required counts, FIR-aware quest allocation, `Keep ×N`, and concrete quest/hideout targets;
-- simultaneous Flea and best named Trader valuation in Full mode;
-- value-per-slot in Full mode;
+- Full-mode sell decision rows: `Best sell`, `Best trader`, `Flea`, and `Per slot`;
+- best sell destination is derived from already-precomputed trader/flea pricing state rather than recalculated during hover;
 - price-amount bands: below 50k white, 50k+ green, 100k+ red, 250k+ gold;
 - compact Full-only `Craft ×N` / `Barter ×N` relevance;
 - fallback to the available Flea/Trader source when the preferred source has no price;
@@ -28,13 +28,13 @@ The server publishes one bounded snapshot of authoritative SPT profile/database 
 
 `SPT profile/database → server snapshot → serialized payload → client bootstrap → cached indexes → presentation classification`
 
-Craft/barter relevance is precomputed server-side from hideout recipes and trader barter schemes while the existing snapshot is built. No additional endpoint, hover request, per-frame inventory scan, or database polling is used.
+Craft/barter relevance and trader/flea valuation are precomputed while the existing snapshot is built. No additional endpoint, hover request, per-frame inventory scan, database polling, or transaction execution is used.
 
 ## UI lifecycle and performance
 
 Supported `ItemView`/`ItemCell` lifecycle hooks register a child marker on each live item cell and remove it during cleanup. Hovering the item body does not open the Item Intelligence tooltip; the tooltip belongs to the marker itself.
 
-Network requests, reflection discovery, requirement aggregation, valuation work, and text formatting are kept out of per-frame render paths. Cached state is invalidated only when the relevant source data or UI settings change.
+Network requests, reflection discovery, requirement aggregation, valuation work, and expensive text formatting are kept out of per-frame render paths. Cached state is invalidated only when the relevant source data or UI settings change. Full-mode display stripping and rich-text price/semantic strings use bounded caches so steady-state GUI repaint reuses prepared strings instead of rebuilding them every frame.
 
 The accepted marker glow is a single soft radial image layer behind the glyph, backed by one shared/static texture. The rejected legacy Unity UI `Outline` duplication approach is not used.
 
@@ -42,16 +42,16 @@ The accepted marker glow is a single soft radial image layer behind the glyph, b
 
 The stable release uses one synchronized module version across both halves:
 
-- client: **SPT Item Intelligence 0.11.0**;
-- server: **SPT Item Intelligence Server 0.11.0**.
+- client: **SPT Item Intelligence 0.12.0**;
+- server: **SPT Item Intelligence Server 0.12.0**.
 
 Runtime folder and assembly installation names remain intentionally compatible with the existing package layout.
 
 ## Deferred items
 
-`On You` is intentionally not part of 0.11.0. A one-shot profile implementation was removed because it could become stale after inventory/equipment changes; it should only return with a proven event-driven inventory lifecycle.
+`On You` is intentionally not part of 0.12.0. A one-shot profile implementation was removed because it could become stale after inventory/equipment changes; it should only return with a proven event-driven inventory lifecycle.
 
-Wishlist, prerequisite-distance, and encyclopedia-style item statistics remain optional future ideas, not active backlog or release blockers.
+Wishlist, prerequisite-distance, encyclopedia-style item statistics, and direct selling actions remain optional future ideas, not active backlog or release blockers.
 
 ## Installation
 

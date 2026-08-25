@@ -44,7 +44,7 @@ jobs:
           $serverDir = 'runtime-test/SPT_Runtime/user/mods/SPT Item Intelligence Server'
           New-Item -ItemType Directory -Force -Path $clientDir | Out-Null
           New-Item -ItemType Directory -Force -Path $serverDir | Out-Null
-          Copy-Item 'mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/SPT Item Intelligence v0.11.0.dll' "$clientDir/SPT Item Intelligence.dll"
+          Copy-Item 'mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/SPT Item Intelligence v0.12.0.dll' "$clientDir/SPT Item Intelligence.dll"
           Copy-Item 'mods/SPT-Item-Intelligence/server/bin/Release/net10.0/SPT Item Intelligence Server.dll' "$serverDir/SPT Item Intelligence Server.dll"
       - name: Upload Item Intelligence runtime test build
         uses: actions/upload-artifact@v4
