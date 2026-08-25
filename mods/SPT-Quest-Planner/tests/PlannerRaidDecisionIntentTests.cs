@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using SPTQuestPlanner.Client;
 using Xunit;
 
@@ -21,6 +22,47 @@ namespace SPTQuestPlanner.Tests
             Assert.Equal(PlannerRaidDecisionOutcome.Abstain, baseline.Outcome);
             Assert.Equal(PlannerRaidDecisionOutcome.PreferLeft, intentional.Outcome);
             Assert.Contains("progression focus", intentional.Reason);
+        }
+
+        [Fact]
+        public void FutureFocusQuestResolvesRaidThroughIncompletePrerequisitePath()
+        {
+            PlannerTopologyQuest prerequisite = Quest("prereq", dependents: new[] { "future" });
+            PlannerTopologyQuest future = Quest("future", prerequisites: new[] { "prereq" });
+            PlannerTopologyIndex topology = Topology(prerequisite, future);
+            PlannerClientIndex state = EmptyState();
+
+            PlannerRaidDecisionIntent intent = PlannerRaidDecisionIntentBuilder.Build("future", topology, state);
+            PlannerRaidDecisionSignals pathRaid = Signals(new[] { "prereq" }, unlocks: 0, missing: 0);
+            PlannerRaidDecisionSignals unrelatedRaid = Signals(new[] { "other" }, unlocks: 0, missing: 0);
+
+            PlannerRaidDecision decision = PlannerRaidDecisionIntentPolicy.Decide(pathRaid, unrelatedRaid, intent);
+
+            Assert.True(intent.HasFocusPath);
+            Assert.Contains("prereq", intent.FocusPathQuestIds);
+            Assert.Contains("future", intent.FocusPathQuestIds);
+            Assert.Equal(PlannerRaidDecisionOutcome.PreferLeft, decision.Outcome);
+            Assert.Contains("prerequisite path", decision.Evidence[0]);
+        }
+
+        [Fact]
+        public void CompletedPrerequisiteDropsOutOfFutureFocusPath()
+        {
+            PlannerTopologyQuest prerequisite = Quest("prereq", dependents: new[] { "future" });
+            PlannerTopologyQuest future = Quest("future", prerequisites: new[] { "prereq" });
+            PlannerTopologyIndex topology = Topology(prerequisite, future);
+            PlannerClientIndex state = new PlannerClientIndex(
+                0,
+                new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal)
+                {
+                    ["prereq"] = new PlannerQuestClientState("prereq", 5, 0, true, false)
+                },
+                new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal));
+
+            PlannerRaidDecisionIntent intent = PlannerRaidDecisionIntentBuilder.Build("future", topology, state);
+
+            Assert.DoesNotContain("prereq", intent.FocusPathQuestIds);
+            Assert.Contains("future", intent.FocusPathQuestIds);
         }
 
         [Fact]
@@ -49,6 +91,39 @@ namespace SPTQuestPlanner.Tests
                 0,
                 nonRepeatableQuestIds: questIds,
                 immediateUnlockQuestIds: unlocks > 0 ? new[] { "next" } : Array.Empty<string>());
+        }
+
+        private static PlannerTopologyQuest Quest(
+            string id,
+            IReadOnlyList<string> prerequisites = null,
+            IReadOnlyList<string> dependents = null)
+        {
+            return new PlannerTopologyQuest(
+                id,
+                null,
+                null,
+                null,
+                false,
+                prerequisites ?? Array.Empty<string>(),
+                dependents ?? Array.Empty<string>(),
+                Array.Empty<string>());
+        }
+
+        private static PlannerTopologyIndex Topology(params PlannerTopologyQuest[] quests)
+        {
+            Dictionary<string, PlannerTopologyQuest> values = new Dictionary<string, PlannerTopologyQuest>(StringComparer.Ordinal);
+            foreach (PlannerTopologyQuest quest in quests) values[quest.QuestId] = quest;
+            return new PlannerTopologyIndex(
+                values,
+                new Dictionary<string, PlannerTopologyItem>(StringComparer.Ordinal));
+        }
+
+        private static PlannerClientIndex EmptyState()
+        {
+            return new PlannerClientIndex(
+                0,
+                new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal),
+                new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal));
         }
     }
 }
