@@ -111,7 +111,7 @@
       "minimumLevel": 35,
       "map": "laboratory",
       "prerequisites": ["a8b05eb5c5f0e67ee881df52"],
-      "objective": {"model": "labs-access-proof", "representativeCount": 1, "sourceGroup": "keys-labs-clearance"},
+      "objective": {"model": "labs-access-proof", "representativeCount": 1, "sourceGroup": "keys-labs-clearance", "sourceKeyPoolGroup": "keys-labs"},
       "rewardBudget": {"xp": 28000, "rub": 120000, "standing": 0.03, "unlockSlots": 1}
     }
   ]
