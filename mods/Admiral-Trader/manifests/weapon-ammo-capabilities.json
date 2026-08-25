@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "status": "runtime-candidate-contract",
   "targetSptVersion": "4.1.3",
-  "runtimeVerification": "pending-exact-4.1.3-item-db-gate",
+  "runtimeVerification": "pending-exact-4.1.3-runtime-gate",
   "families": {
     "handguns": {"tpl":"5cc80f53e4a949000e1ea4f8","name":"5.7x28mm L191","caliber":"Caliber57x28","penetration":33,"damage":53,"sampleUnits":40,"stockPerReset":80,"buyRestriction":80},
     "smg-pdw": {"tpl":"5efb0cabfb3e451d70735af5","name":".45 ACP AP","caliber":"Caliber1143x23ACP","penetration":38,"damage":66,"sampleUnits":40,"stockPerReset":80,"buyRestriction":80},
@@ -10,6 +10,6 @@
     "assault-rifles": {"tpl":"59e6906286f7746c9f75e847","name":"5.56x45mm M856A1","caliber":"Caliber556x45NATO","penetration":38,"damage":52,"sampleUnits":40,"stockPerReset":80,"buyRestriction":80},
     "marksman-battle": {"tpl":"5a608bf24f39f98ffc77720e","name":"7.62x51mm M62 Tracer","caliber":"Caliber762x51","penetration":42,"damage":82,"sampleUnits":30,"stockPerReset":60,"buyRestriction":60},
     "precision": {"tpl":"5fc382c1016cce60e8341b20","name":".338 Lapua Magnum UPZ","caliber":"Caliber86x70","penetration":32,"damage":142,"sampleUnits":20,"stockPerReset":40,"buyRestriction":40},
-    "special-weapons": {"permanentUnlock":false,"sampleUnits":1,"reason":"sample-only; no permanent explosive/heavy ammunition unlock"}
+    "special-weapons": {"tpl":"6217726288ed9f0845317459","name":"RSP-30 reactive signal cartridge (Green)","permanentUnlock":false,"sampleUnits":1,"reason":"sample-only signalling capability; no permanent explosive/heavy ammunition unlock"}
   }
 }
