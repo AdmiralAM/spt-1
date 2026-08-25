@@ -119,7 +119,7 @@ public sealed class AdmiralTraderRegistration(
         }
     }
 
-    private static RuntimeRegistrationManifest LoadRuntimeManifest(string modPath)
+    internal static RuntimeRegistrationManifest LoadRuntimeManifest(string modPath)
     {
         string path = IOPath.Combine(modPath, "manifests", "runtime-manifest.json");
         if (!File.Exists(path))
