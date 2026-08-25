@@ -41,6 +41,12 @@ public sealed record AuditPolicy
 {
     public double QuestRewardVsVanillaMedianWarnMultiple { get; init; } = 3.0;
     public double RestartableRewardVsVanillaMedianWarnMultiple { get; init; } = 1.5;
+    public double NormalizedRewardVsVanillaMedianWarnMultiple { get; init; } = 2.5;
+    public double RestartableNormalizedRewardVsVanillaMedianWarnMultiple { get; init; } = 1.25;
+    public double LevelGateWeight { get; init; } = 0.05;
+    public double ObjectiveConditionWeight { get; init; } = 0.35;
+    public double MaxLevelGateContribution { get; init; } = 3.0;
+    public double MaxObjectiveContribution { get; init; } = 5.0;
     public int DuplicateTraderSourcesWarnCount { get; init; } = 6;
 }
 
