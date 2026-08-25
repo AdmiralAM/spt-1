@@ -110,9 +110,12 @@ jobs:
               'PristineQuestCount', 'ModAddedQuestCount', 'PristineModifiedQuestCount', 'PristineUnchangedQuestCount',
               'RemovedPristineQuestCount', 'CountsConsistent', 'DatabaseUnchangedAcrossPipeline', 'DeclaredMutationCount = 0',
               'QuestProvenanceDeltaReport questProvenance',
+              'TRADER={quest.Value.TraderId}', 'RESTARTABLE={quest.Value.Restartable}',
+              'JsonSerializer.Serialize(quest.Value.Conditions)', 'REWARDS={JsonSerializer.Serialize(quest.Value.Rewards)}',
           ]:
               assert text in evidence, text
           assert 'FinalQuestCount - vanillaBaseline.QuestCount' not in evidence
+          assert 'Add($"QUEST|{quest.Key}|{JsonSerializer.Serialize(quest.Value.Rewards)}")' not in evidence
 
           validator = (root / 'tools/Validate-Runtime.ps1').read_text(encoding='utf-8')
           for text in [
@@ -134,7 +137,7 @@ jobs:
           ]:
               assert text in smoke, text
 
-          print('Economy Admiral exact provenance + dimension-scoped fail-closed mutation eligibility contract OK')
+          print('Economy Admiral exact provenance + expanded zero-mutation fingerprint + dimension-scoped fail-closed eligibility contract OK')
 
   server:
     name: Economy Admiral .NET 10 server build
