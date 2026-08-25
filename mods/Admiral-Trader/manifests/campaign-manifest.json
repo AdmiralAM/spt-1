@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "status": "draft",
+  "product": {
+    "modName": "Admiral Trader",
+    "modGuid": "com.admiralam.spt.admiraltrader",
+    "modulePath": "mods/Admiral-Trader",
+    "traderWorkingName": "Admiral",
+    "traderWorkingNameRu": "Адмирал",
+    "traderId": "d5c27bb3169f8dfbc13f6b69",
+    "traderIdDerivation": "first-24-hex-of-sha256(modGuid)",
+    "traderIcon": "TBD"
+  },
+  "source": {
+    "repository": "Thirt3nth/Andrudis-Questmaniac",
+    "commit": "4e15990ac18f469ef7818475ce8553bbbb7cebb4",
+    "questRoot": "db/QuestBundles",
+    "role": "legacy-content-provenance"
+  },
+  "target": {
+    "traderCount": 1,
+    "loadModel": "explicit-manifest",
+    "economyDataModel": "native-spt-assort-and-questassort"
+  },
+  "migrationPolicy": {
+    "implementationStrategy": "template-suppression-completion-bridge",
+    "directProfileWrites": "forbidden-until-exact-4.1.3-boundary-proven",
+    "restartableLegacyDefault": "exclude-from-completion-bridge",
+    "newProfile": {
+      "legacyQuestExposure": "none",
+      "curatedQuestExposure": "manifest-only"
+    },
+    "existingProfile": {
+      "activeLegacyQuest": "allow-finish-via-retained-closed-start-template",
+      "completedLegacyQuest": "preserve-history",
+      "failedLegacyQuest": "preserve-history-no-restart-by-default",
+      "unstartedLegacyQuest": "suppress-by-absence-or-closed-start-template",
+      "staleLegacyProfileRecord": "preserve-no-direct-mutation-pending-4.1.3-proof",
+      "deprecatedSuccessor": "block-by-not-loading-template",
+      "curatedSuccessor": "grant-only-through-curated-graph"
+    }
+  },
+  "progressionDomains": {
+    "weaponAmmo": {
+      "bundles": ["Weapon Proficiency", "Ammo Proficiency"],
+      "strategy": "rewrite-as-one-domain",
+      "reason": "The pinned legacy graph contains intentional Weapon Proficiency -> Ammo Proficiency prerequisite edges; separating the domains would break progression semantics.",
+      "target": "Short weapon-family chains followed by capability-based ammo samples and controlled unlocks. High-end ammunition must not become an unlimited reward or trader faucet."
+    },
+    "equipment": {
+      "bundles": ["Deep Pockets", "Iron Head", "Juggernaut", "Tarkov Mule", "Ultrasound"],
+      "strategy": "rewrite-and-consolidate"
+    },
+    "medical": {
+      "bundles": ["Meds Proficiency", "Stims Proficiency"],
+      "strategy": "rewrite-and-economy-audit"
+    },
+    "authoredHunts": {
+      "bundles": ["Boss Follower Hunt", "Boss Hunt", "Cultists Hunt", "Sniper Life", "Survivalist"],
+      "strategy": "merge-to-milestones"
+    },
+    "keys": {
+      "bundles": ["Keys Proficiency"],
+      "strategy": "keep-pending-vanilla-overlap-audit"
+    }
+  },
+  "rules": [
+    { "match": { "bundleContains": "Hideout Assistant" }, "decision": "DROP", "reason": "Hideout quests are explicitly out of curated scope." },
+    { "match": { "bundleEquals": "Weapon Mastery" }, "decision": "MIGRATION_ONLY", "reason": "Large specific-weapon elimination grind; do not expose to new profiles." },
+    { "match": { "bundleEquals": "Errand Boy" }, "decision": "MIGRATION_ONLY", "reason": "Large handover/busywork family with container reward inflation." },
+    { "match": { "bundleContains": "Legend" }, "decision": "MIGRATION_ONLY", "reason": "Mass gear-restriction elimination ladders are legacy busywork." },
+    { "match": { "bundleEquals": "Headless PMC" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map headshot ladder." },
+    { "match": { "bundleEquals": "Headless Raider" }, "decision": "MIGRATION_ONLY", "reason": "Escalating headshot ladder." },
+    { "match": { "bundleEquals": "Headless Rogue" }, "decision": "MIGRATION_ONLY", "reason": "Escalating headshot ladder." },
+    { "match": { "bundleEquals": "Headless Scav" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map headshot ladder." },
+    { "match": { "bundleEquals": "PMC Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map kill ladder." },
+    { "match": { "bundleEquals": "Raider Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating kill ladder." },
+    { "match": { "bundleEquals": "Rogue Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating kill ladder." },
+    { "match": { "bundleEquals": "Scav Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map kill ladder." },
+    { "match": { "bundleEquals": "Boss Follower Hunt" }, "decision": "MERGE", "reason": "Retain the target fantasy but collapse the ten-step escalation to curated milestones." },
+    { "match": { "bundleEquals": "Boss Hunt" }, "decision": "MERGE", "reason": "Retain the target fantasy but collapse the ten-step escalation to curated milestones." },
+    { "match": { "bundleEquals": "Cultists Hunt" }, "decision": "MERGE", "reason": "Retain the target fantasy but collapse the ten-step escalation to curated milestones." },
+    { "match": { "bundleEquals": "Sniper Life" }, "decision": "MERGE", "reason": "Keep the capability fantasy while collapsing repetitive distance ladders." },
+    { "match": { "bundleEquals": "Survivalist" }, "decision": "MERGE", "reason": "Strong survival theme but significant repetition and probable vanilla overlap." },
+    { "match": { "bundleEquals": "Ammo Proficiency" }, "decision": "REWRITE", "reason": "Core ammo capability progression is desired, but legacy chain/rewards must be rebuilt with Weapon Proficiency as one domain." },
+    { "match": { "bundleEquals": "Weapon Proficiency" }, "decision": "REWRITE", "reason": "Core weapon-family progression is desired, but six-trader/tier structure must be consolidated with Ammo Proficiency as one domain." },
+    { "match": { "bundleEquals": "Deep Pockets" }, "decision": "REWRITE", "reason": "Candidate equipment progression; reward/unlock chain needs consolidation." },
+    { "match": { "bundleEquals": "Iron Head" }, "decision": "REWRITE", "reason": "Candidate equipment progression; reward/unlock chain needs consolidation." },
+    { "match": { "bundleEquals": "Juggernaut" }, "decision": "REWRITE", "reason": "Candidate equipment progression; reward/unlock chain needs consolidation." },
+    { "match": { "bundleEquals": "Meds Proficiency" }, "decision": "REWRITE", "reason": "Candidate capability progression; audit against vanilla and economy." },
+    { "match": { "bundleEquals": "Stims Proficiency" }, "decision": "REWRITE", "reason": "Candidate capability progression; high-value consumables require controlled unlocks." },
+    { "match": { "bundleEquals": "Tarkov Mule" }, "decision": "REWRITE", "reason": "Candidate equipment progression; consolidate backpack unlock path." },
+    { "match": { "bundleEquals": "Ultrasound" }, "decision": "REWRITE", "reason": "Candidate equipment progression; consolidate headset unlock path." },
+    { "match": { "bundleEquals": "Keys Proficiency" }, "decision": "KEEP", "reason": "Small authored progression candidate; retain pending vanilla-overlap and reward audit." }
+  ]
+}

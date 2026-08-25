@@ -1,4 +1,4 @@
-name: Pause Validate
+name: Pause Admiral Validate
 
 on:
   pull_request:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: pause-validate-${{ github.event.pull_request.number || github.ref }}
+  group: pause-admiral-validate-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -18,8 +18,10 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
+      - name: Checkout exact test commit
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
@@ -33,10 +35,27 @@ jobs:
           Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
           Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
 
-      - name: Run Pause regression tests
+      - name: Run Pause Admiral regression tests
         shell: pwsh
         run: dotnet run --project mods/SPT-Pause/tests/SPT-Pause.Tests.csproj -c Release
 
-      - name: Build Pause client
+      - name: Build Pause Admiral client
         shell: pwsh
         run: dotnet build mods/SPT-Pause/src/SPT-Pause.csproj -c Release --nologo
+
+      - name: Package Pause Admiral runtime test artifact
+        shell: pwsh
+        run: |
+          $source = 'mods/SPT-Pause/src/bin/Release/netstandard2.1/Pause Admiral.dll'
+          if (-not (Test-Path $source)) { throw "Built Pause Admiral DLL not found: $source" }
+          $target = '.artifacts/Pause-Admiral/BepInEx/plugins/Pause Admiral'
+          New-Item -ItemType Directory -Force -Path $target | Out-Null
+          Copy-Item $source (Join-Path $target 'Pause Admiral.dll')
+
+      - name: Upload exact-SHA Pause Admiral runtime test artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Pause-Admiral-v1-test-${{ github.event.pull_request.head.sha || github.sha }}
+          path: .artifacts/Pause-Admiral/
+          if-no-files-found: error
+          retention-days: 14

@@ -1,0 +1,136 @@
+name: Admiral Trader Validate
+
+on:
+  pull_request:
+    paths:
+      - 'mods/Admiral-Trader/**'
+      - '.github/workflows/admiral-trader-validate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admiral-trader-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  admiral-trader-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Run Admiral Trader analysis and migration tests
+        run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
+
+      - name: Validate maintained manifests and stable trader identity
+        run: |
+          python -m json.tool mods/Admiral-Trader/manifests/campaign-manifest.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/reward-policy.json > /dev/null
+          python - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          data = json.loads(Path('mods/Admiral-Trader/manifests/campaign-manifest.json').read_text(encoding='utf-8'))
+          product = data['product']
+          expected = hashlib.sha256(product['modGuid'].encode()).hexdigest()[:24]
+          if product['traderId'] != expected:
+              raise SystemExit(f"trader id drift: {product['traderId']} != {expected}")
+          if len(product['traderId']) != 24 or any(ch not in '0123456789abcdef' for ch in product['traderId']):
+              raise SystemExit('trader id is not lower-case 24-hex')
+          PY
+
+      - name: Build server runtime foundation
+        run: dotnet build mods/Admiral-Trader/server/AdmiralTrader.Server.csproj -c Release
+
+      - name: Checkout pinned legacy corpus
+        uses: actions/checkout@v4
+        with:
+          repository: Thirt3nth/Andrudis-Questmaniac
+          ref: 4e15990ac18f469ef7818475ce8553bbbb7cebb4
+          path: legacy-andrudis
+          fetch-depth: 1
+
+      - name: Build full legacy inventory and graph
+        run: >-
+          python mods/Admiral-Trader/tools/build_inventory.py
+          legacy-andrudis/db/QuestBundles
+          --rules mods/Admiral-Trader/manifests/campaign-manifest.json
+          --output build/admiral-trader-inventory.json
+
+      - name: Enforce inventory and identity gate
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('build/admiral-trader-inventory.json').read_text(encoding='utf-8'))
+          manifest = json.loads(Path('mods/Admiral-Trader/manifests/campaign-manifest.json').read_text(encoding='utf-8'))
+          summary = data['summary']
+          print(json.dumps(summary, indent=2, ensure_ascii=False))
+          blockers = {
+              'parseErrorCount': summary['parseErrorCount'],
+              'unclassifiedCount': summary['unclassifiedCount'],
+              'duplicateQuestIdCount': summary['duplicateQuestIdCount'],
+              'missingPrerequisiteCount': summary['missingPrerequisiteCount'],
+              'cycleCount': summary['cycleCount'],
+          }
+          failed = {key: value for key, value in blockers.items() if value != 0}
+          if failed:
+              raise SystemExit(f'inventory gate failed: {failed}')
+          if summary['crossBundleEdgeCount'] != 23:
+              raise SystemExit(f"pinned corpus cross-bundle edge count changed: {summary['crossBundleEdgeCount']} != 23")
+          trader_id = manifest['product']['traderId']
+          if trader_id in summary['legacyTraderCounts']:
+              raise SystemExit(f'Admiral trader id collides with legacy trader id: {trader_id}')
+          if any(row['questId'] == trader_id for row in data['quests']):
+              raise SystemExit(f'Admiral trader id collides with legacy quest id: {trader_id}')
+          PY
+
+      - name: Fetch pinned official vanilla quest database
+        run: >-
+          curl --fail --location --retry 3
+          --output build/vanilla-quests.json
+          https://raw.githubusercontent.com/sp-tarkov/server-csharp/fe74b07c6361e2c6d1532dc21ba1c3b981d88d93/Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json
+
+      - name: Build vanilla reward benchmark
+        run: >-
+          python mods/Admiral-Trader/tools/build_reward_benchmark.py
+          build/vanilla-quests.json
+          --output build/vanilla-reward-benchmark.json
+
+      - name: Enforce vanilla benchmark gate
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('build/vanilla-reward-benchmark.json').read_text(encoding='utf-8'))
+          summary = data['summary']
+          if summary['questCount'] < 400:
+              raise SystemExit(f"vanilla benchmark unexpectedly small: {summary['questCount']}")
+          if summary['xp']['count'] != summary['questCount']:
+              raise SystemExit('vanilla XP distribution does not cover every quest')
+          if not data.get('questTypeBuckets'):
+              raise SystemExit('vanilla benchmark has no quest-type distributions')
+          PY
+
+      - name: Upload transient analysis reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: admiral-trader-analysis-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            build/admiral-trader-inventory.json
+            build/vanilla-reward-benchmark.json
+          if-no-files-found: error
+          retention-days: 7
