@@ -63,6 +63,82 @@ namespace SPTQuestPlanner.Tests
             Assert.Contains("Only one", result.Reason);
         }
 
+        [Fact]
+        public void ProgressionFocusCanCollapseMultiMapFrontierToFocusedRaid()
+        {
+            PlannerRaidDecisionSet result = PlannerRaidDecisionSetBuilder.Build(
+                new[]
+                {
+                    FocusCandidate("Customs", "setup", unlocks: 2, missing: 1),
+                    FocusCandidate("Reserve", "reserve-main", unlocks: 0, missing: 0),
+                    FocusCandidate("Woods", "woods-main", unlocks: 1, missing: 0)
+                },
+                new PlannerRaidDecisionIntent("setup"));
+
+            Assert.True(result.HasUniqueRecommendation);
+            Assert.NotNull(result.Recommendation);
+            Assert.Equal("Customs", result.Recommendation!.LocationId);
+            Assert.Contains("progression focus", result.Reason, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void MultipleFocusedMapsRemainHonestFrontierWhenTradeoffsConflict()
+        {
+            PlannerRaidDecisionSet result = PlannerRaidDecisionSetBuilder.Build(
+                new[]
+                {
+                    FocusCandidate("Customs", "shared-focus", unlocks: 2, missing: 1),
+                    FocusCandidate("Shoreline", "shared-focus", unlocks: 0, missing: 0),
+                    FocusCandidate("Reserve", "other", unlocks: 3, missing: 0)
+                },
+                new PlannerRaidDecisionIntent("shared-focus"));
+
+            Assert.False(result.HasUniqueRecommendation);
+            Assert.Equal(2, result.Contenders.Count);
+            Assert.Contains(result.Contenders, value => value.LocationId == "Customs");
+            Assert.Contains(result.Contenders, value => value.LocationId == "Shoreline");
+            Assert.DoesNotContain(result.Contenders, value => value.LocationId == "Reserve");
+            Assert.Contains("progression focus", result.Reason, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
+        public void MissingFocusFallsBackToConservativeFrontier()
+        {
+            PlannerRaidDecisionSet result = PlannerRaidDecisionSetBuilder.Build(
+                new[]
+                {
+                    FocusCandidate("Customs", "setup", unlocks: 2, missing: 1),
+                    FocusCandidate("Reserve", "reserve-main", unlocks: 0, missing: 0)
+                },
+                new PlannerRaidDecisionIntent("not-in-current-raids"));
+
+            Assert.False(result.HasUniqueRecommendation);
+            Assert.Equal(2, result.Contenders.Count);
+        }
+
+        private static PlannerRaidDecisionCandidate FocusCandidate(
+            string locationId,
+            string questId,
+            int unlocks = 0,
+            int missing = 0)
+        {
+            return new PlannerRaidDecisionCandidate(
+                locationId,
+                new PlannerRaidDecisionSignals(
+                    1,
+                    0,
+                    Array.Empty<PlannerRaidActionOverlap>(),
+                    unlocks,
+                    missing,
+                    0,
+                    0,
+                    1,
+                    1d,
+                    new[] { questId },
+                    Array.Empty<string>(),
+                    Array.Empty<string>()));
+        }
+
         private static PlannerRaidDecisionCandidate Candidate(
             string locationId,
             int nonRepeatable = 0,
