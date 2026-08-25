@@ -50,6 +50,10 @@ namespace SPTBeltArmbandInventory.Diagnostics
                     MethodInfo method = methods[i];
                     if (!string.Equals(method.Name, "Show", StringComparison.Ordinal) || method.IsAbstract || method.ContainsGenericParameters)
                         continue;
+                    // Do not capture Window<T>.Show(): GridWindow's real overload calls it first,
+                    // before _item, _itemContext and _containedGrids are initialized.
+                    if (method.DeclaringType != gridWindowType)
+                        continue;
 
                     object postfix = harmonyMethodConstructor.Invoke(new object[] { factory });
                     patchMethod.Invoke(harmony, new[] { method, null, postfix, null, null });
