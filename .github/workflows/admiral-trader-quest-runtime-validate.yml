@@ -43,17 +43,35 @@ jobs:
           quest_dir = out / 'db/quests'
           locale_dir = out / 'db/locales'
           quest_files = sorted(quest_dir.glob('*.json')) if quest_dir.is_dir() else []
-          if len(quest_files) != 10:
-              raise SystemExit(f'expected 10 packaged quest templates, got {len(quest_files)}')
+          if len(quest_files) != 31:
+              raise SystemExit(f'expected 31 packaged quest templates, got {len(quest_files)}')
 
           quest_ids = []
+          access_count = 0
+          arsenal_count = 0
           for path in quest_files:
               quest = json.loads(path.read_text(encoding='utf-8-sig'))
               quest_ids.append(quest['_id'])
               if quest['traderId'] != 'd5c27bb3169f8dfbc13f6b69':
                   raise SystemExit(f'{path.name}: trader id drift')
+
+              finish = (quest.get('conditions') or {}).get('AvailableForFinish') or []
+              if len(finish) != 1:
+                  raise SystemExit(f'{path.name}: expected exactly one finish condition')
+              condition_type = finish[0].get('conditionType')
+              if condition_type == 'FindItem':
+                  access_count += 1
+              elif condition_type == 'CounterCreator':
+                  arsenal_count += 1
+              else:
+                  raise SystemExit(f'{path.name}: unsupported finish condition {condition_type!r}')
+
           if len(quest_ids) != len(set(quest_ids)):
               raise SystemExit('packaged quest ids are not unique')
+          if access_count != 10 or arsenal_count != 21:
+              raise SystemExit(
+                  f'packaged quest mix drifted: Access={access_count}/10, Arsenal={arsenal_count}/21'
+              )
 
           for locale in ('en.json', 'ru.json'):
               path = locale_dir / locale
