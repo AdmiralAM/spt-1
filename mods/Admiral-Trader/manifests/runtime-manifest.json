@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "traderId": "d5c27bb3169f8dfbc13f6b69",
+  "registrationEnabled": false,
+  "registrationGate": {
+    "reason": "Trader registration remains disabled until the approved portrait asset and first curated assort are present together.",
+    "requiredBeforeEnable": [
+      "approved trader portrait",
+      "native base.json validated",
+      "curated assort contains at least one reviewed offer",
+      "questassort references only loaded curated quest ids",
+      "module CI green on exact head"
+    ]
+  },
+  "data": {
+    "base": "db/base.json",
+    "assort": "db/assort.json",
+    "questAssort": "db/questassort.json",
+    "avatar": "assets/d5c27bb3169f8dfbc13f6b69.jpg"
+  }
+}
