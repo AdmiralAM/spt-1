@@ -90,6 +90,7 @@ jobs:
               'VanillaMedianNormalizedHandbookValue',
               'ProgressionScore',
               'SchemaVersion = 3',
+              'using Path = System.IO.Path;',
           ]:
               assert invariant in audit, invariant
 
@@ -101,6 +102,12 @@ jobs:
               'RewardType.AssortmentUnlock',
               'RewardType.ProductionScheme',
               'UtilityScoringApplied = false',
+              'SchemaVersion = 2',
+              'XpVsVanillaMedian',
+              'StandingVsVanillaMedian',
+              'MedianPositiveAssortmentUnlocks',
+              'No cross-dimension composite score',
+              'using Path = System.IO.Path;',
               'economy-admiral-reward-utility.json',
           ]:
               assert invariant in utility, invariant
