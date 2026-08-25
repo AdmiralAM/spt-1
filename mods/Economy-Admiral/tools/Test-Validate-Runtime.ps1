@@ -22,11 +22,11 @@ Write-Json 'economy-admiral-provenance-delta.json' @{
     SchemaVersion = 1
     BaselineCapturePriority = 1
     PristineQuestCount = 100
-    FinalQuestCount = 125
+    FinalQuestCount = 123
     ModAddedQuestCount = 25
     PristineModifiedQuestCount = 10
-    PristineUnchangedQuestCount = 90
-    RemovedPristineQuestCount = 0
+    PristineUnchangedQuestCount = 88
+    RemovedPristineQuestCount = 2
     EnforcementAffected = $false
 }
 Write-Json 'economy-admiral-composite-candidates.json' @{ SelectedCandidate = $null; AffectsRewardAllowance = $false; AffectsEnforcement = $false }
@@ -56,12 +56,15 @@ Write-Json 'economy-admiral-runtime-evidence.json' @{
     Provenance = @{
         CapturePriority = 1
         PristineQuestCount = 100
-        FinalQuestCount = 125
+        FinalQuestCount = 123
         ModAddedQuestCount = 25
+        PristineModifiedQuestCount = 10
+        PristineUnchangedQuestCount = 88
+        RemovedPristineQuestCount = 2
         PristineTraderCount = 10
         FinalTraderCount = 14
         BaselineCaptured = $true
-        BaselineNotLargerThanFinal = $true
+        CountsConsistent = $true
     }
     ExpectedReportCount = 9
     PresentReportCount = 9
