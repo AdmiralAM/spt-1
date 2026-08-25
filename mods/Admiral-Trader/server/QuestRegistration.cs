@@ -23,6 +23,20 @@ public sealed class AdmiralQuestRegistration(
     private const int ExpectedArsenalQuestCount = 21;
     private const int ExpectedQuestCount = ExpectedAccessQuestCount + ExpectedArsenalQuestCount;
 
+    private static readonly string[] RequiredLocaleFields =
+    [
+        "name",
+        "description",
+        "note",
+        "startedMessageText",
+        "successMessageText",
+        "failMessageText",
+        "acceptPlayerMessage",
+        "declinePlayerMessage",
+        "completePlayerMessage",
+        "changeQuestMessageText"
+    ];
+
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -42,7 +56,7 @@ public sealed class AdmiralQuestRegistration(
         foreach (var (questId, quest) in quests)
             templateTable.Quests.Add(questId, quest);
 
-        RegisterQuestLocales(modPath);
+        RegisterQuestLocales(modPath, quests);
         logger.Success($"Registered {quests.Count} authored Admiral quests");
         return Task.CompletedTask;
     }
@@ -82,6 +96,8 @@ public sealed class AdmiralQuestRegistration(
                 throw new InvalidDataException($"Quest dictionary key/id mismatch: {questId} != {quest.Id}");
             if (quest.TraderId.ToString() != RuntimeIdentity.TraderId)
                 throw new InvalidDataException($"Quest {questId} has unexpected trader id {quest.TraderId}");
+            if (string.IsNullOrWhiteSpace(quest.QuestName))
+                throw new InvalidDataException($"Quest {questId} has no authored QuestName fallback");
             if (quest.Conditions.AvailableForFinish is not { Count: 1 } finishConditions)
                 throw new InvalidDataException($"Quest {questId} must have exactly one finish condition");
 
@@ -130,12 +146,15 @@ public sealed class AdmiralQuestRegistration(
                 $"Cannot register Admiral quests: {collisions.Count} quest id collision(s): {string.Join(", ", collisions)}");
     }
 
-    private void RegisterQuestLocales(string modPath)
+    private void RegisterQuestLocales(string modPath, Dictionary<MongoId, Quest> quests)
     {
         Dictionary<string, string> english =
             modHelper.GetJsonDataFromFile<Dictionary<string, string>>(modPath, "db/locales/en.json");
         Dictionary<string, string> russian =
             modHelper.GetJsonDataFromFile<Dictionary<string, string>>(modPath, "db/locales/ru.json");
+
+        EnsureLocaleCoverage(english, quests);
+        EnsureLocaleCoverage(russian, quests);
 
         foreach (var (localeCode, localeKvP) in localesTable.Global)
         {
@@ -152,6 +171,30 @@ public sealed class AdmiralQuestRegistration(
 
                 return lazyLoadedLocaleData;
             });
+        }
+    }
+
+    private static void EnsureLocaleCoverage(Dictionary<string, string> locale, Dictionary<MongoId, Quest> quests)
+    {
+        foreach (var (questId, quest) in quests)
+        {
+            string id = questId.ToString();
+            string title = quest.QuestName ?? id;
+            foreach (string field in RequiredLocaleFields)
+            {
+                string key = $"{id} {field}";
+                if (locale.ContainsKey(key))
+                    continue;
+
+                locale[key] = field switch
+                {
+                    "name" => title,
+                    "description" => title,
+                    "startedMessageText" or "acceptPlayerMessage" => title,
+                    "successMessageText" or "completePlayerMessage" => $"{title} complete.",
+                    _ => string.Empty
+                };
+            }
         }
     }
 }
