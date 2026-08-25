@@ -1,10 +1,10 @@
-# Artem Revival runtime source set
+# Admiral Artyom Revival — runtime source set
 
-The revival is reconstructed from one authoritative Artem runtime installation split for transport into seven independent ZIP archives.
+Admiral Artyom Revival is reconstructed from one authoritative upstream WTT-Artem runtime installation split for transport into seven independent ZIP archives.
 
 ## Core/base
 
-`artem main 1.zip` is the authoritative runtime/core package. It contains the trader database, assort, custom items, clothing, quest zones, quests, locales, quest images, trader image, `bundles.json`, and the legacy SPT 4.0-era `WTT-Artem.dll`.
+`artem main 1.zip` is the authoritative upstream runtime/core package. It contains the trader database, assort, custom items, clothing, quest zones, quests, locales, quest images, trader image, `bundles.json`, and the legacy SPT 4.0-era `WTT-Artem.dll`.
 
 The legacy DLL is evidence only and must never be copied into a 4.1.3 package. `tools/import_runtime_core.py` imports the remaining runtime content into `server/Resources` and applies only proven deterministic repairs.
 

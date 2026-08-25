@@ -1,10 +1,10 @@
-# Artem Revival — Content Audit Baseline
+# Admiral Artyom Revival — Content Audit Baseline
 
-This file records structural findings from the archived Artem runtime package before economy rebalance or optional-content pruning.
+This file records structural findings from the archived upstream WTT-Artem runtime package before economy rebalance or optional-content pruning.
 
 ## Archived source set
 
-The supplied mod is physically split only for upload/storage. Treat it as one logical mod:
+The supplied upstream mod is physically split only for upload/storage. Treat it as one logical source set:
 
 ```text
 WTT-Artem/
@@ -35,7 +35,7 @@ Archived runtime counts:
 
 All 280 archived root offers have barter schemes and loyalty levels.
 
-After repair R4 (restored Sweden Patch offer), the revival assort becomes 703 item records / 281 root offers.
+After repair R4 (restored Sweden Patch offer), Admiral Artyom Revival's maintained assort becomes 703 item records / 281 root offers.
 
 ## Quest graph
 
@@ -95,7 +95,7 @@ No bundle is deleted merely because it is currently outside the manifest.
 
 ## Classification policy
 
-Every Artem asset/content record should eventually receive one of these classifications:
+Every upstream Artem asset/content record should eventually receive one of these classifications:
 
 - **Core** — required for trader/campaign/runtime identity;
 - **Campaign-required** — directly or transitively required by quest progression/rewards/unlocks;

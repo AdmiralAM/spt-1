@@ -7,17 +7,17 @@ This repository keeps branches only when they have a clear current role. Task br
 - `main` — authoritative integrated source.
 - `stable` — deliberately promoted validated source snapshot.
 - `runtime` — Tactical HUD install-only publication channel.
-- `runtime-item-intelligence` — Item Intelligence install-only publication channel.
-- `runtime-pause` — Pause install-only publication channel.
+- `runtime-item-intelligence` — Item Intelligence Admiral install-only publication channel; retained compatibility branch name.
+- `runtime-pause` — Pause Admiral install-only publication channel.
 - `runtime-belt-armband` — Belt/Armband Inventory install-only publication channel.
-- `runtime-artem-revival` — Artem Revival stable runtime identity containing the validated server DLL and runtime manifest; authored core data/Bundles remain external and reproducible from the module contract.
+- `runtime-artem-revival` — Admiral Artyom Revival stable publication identity; retained compatibility branch name, with authored core data/Bundles external and reproducible from the module contract.
 - `archive/v1.13.0` — intentional frozen Tactical HUD historical reserve.
 
 Additional permanent/runtime branches require an explicit repository-level reason and documentation update.
 
 ## Task branches
 
-Normal feature, fix, diagnostic, performance, compatibility, CI, and housekeeping work uses short-lived branches. Recommended namespaces include `feature/`, `fix/`, `diagnostic/`, `perf/`, `compat/`, `ci/`, and `chore/`.
+Normal feature, fix, diagnostic, performance, compatibility, CI, research, and housekeeping work uses short-lived branches. Recommended namespaces include `feature/`, `fix/`, `diagnostic/`, `perf/`, `compat/`, `ci/`, `research/`, and `chore/`.
 
 A task branch exists only while its work is active, under review, awaiting required runtime validation, or still contains unique useful work that has not been deliberately preserved elsewhere.
 
@@ -54,10 +54,10 @@ If a branch must be retained as a deliberate historical/recovery point:
 
 `stable` and `runtime-*` are controlled publication channels, not development branches. Do not make normal feature commits on them, open development work from them, or treat their force-updated history as source history.
 
-`runtime-artem-revival` is intentionally retained because Artem has a validated runtime identity that must survive deletion of the short-lived revival work branch, while the authored runtime data and approximately 1.5 GB Unity Bundles are external source material. The branch pins the accepted server DLL plus manifest/hashes for `r5-RU-compat`; it is not a standalone full-install archive. It must remain publication-only and be updated only from a runtime-validated candidate.
+`runtime-artem-revival` is intentionally retained as the publication compatibility identifier for **Admiral Artyom Revival**. It pins the accepted server identity plus manifest/hashes for `r5-RU-compat`; authored upstream runtime data and approximately 1.5 GB Unity Bundles remain external source material. The branch is not a standalone full-install archive. It must remain publication-only and be updated only from a runtime-validated candidate.
 
 ## Safety rule
 
 Never delete an active workstream branch or unique unmerged work merely for cosmetic cleanliness. When evidence is ambiguous, classify first; delete only after the branch's useful state is understood.
 
-One-time historical deletion queues belong in GitHub Issues, not in this durable policy document. See the active repository-cleanup Issue when a manual branch retirement pass is in progress.
+One-time historical deletion queues belong in GitHub Issues or an explicit manual cleanup report, not in this durable policy document.

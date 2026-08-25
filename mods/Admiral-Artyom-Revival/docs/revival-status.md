@@ -1,10 +1,10 @@
-# Artem Revival — SPT 4.1.3 Status
+# Admiral Artyom Revival — SPT 4.1.3 Status
 
 ## Result
 
-**Stable runtime baseline: r5-RU-compat — PASS on SPT 4.1.3.**
+**Module version: 3.0.0. Stable runtime baseline: r5-RU-compat — PASS on SPT 4.1.3.**
 
-The archived WTT-Artem package has been successfully revived for the SPT 4.1/.NET 10 server stack while preserving the authored trader, 23-quest campaign, unique equipment and clothing set.
+The archived upstream WTT-Artem package has been successfully revived as **Admiral Artyom Revival** for the SPT 4.1/.NET 10 server stack while preserving the authored Artem trader, 23-quest campaign, unique equipment and clothing set.
 
 ## Validated environment
 
@@ -17,18 +17,18 @@ The archived WTT-Artem package has been successfully revived for the SPT 4.1/.NE
 
 The accepted user runtime test confirmed:
 
-1. Artem mod discovery and dependency resolution;
+1. Admiral Artyom Revival mod discovery and dependency resolution;
 2. custom item creation;
 3. custom quest-zone creation;
-4. trader registration;
+4. Artem trader registration;
 5. custom quest loading;
 6. custom clothing loading;
 7. trader assort application;
 8. client bundle discovery with all 239 required bundles already present;
 9. Russian quest/item/clothing/trader localization;
 10. trader and quest UI usability;
-11. no recurrence of the previously observed Artem armor deserialization errors;
-12. no recurrence of the previously observed Artem clothing/ArmBandView warning set in the accepted test.
+11. no recurrence of the previously observed upstream Artem armor deserialization errors;
+12. no recurrence of the previously observed upstream Artem clothing/ArmBandView warning set in the accepted test.
 
 The server-side startup telemetry reaches `startup complete` after loading 703 assort item records.
 
@@ -63,11 +63,11 @@ The six supplied bundle archives are one logical `Bundles/` directory. All 239 p
 
 The accepted r5 runtime uses three preserved layers:
 
-- the validated SPT 4.1.3 server DLL;
-- repaired authored Artem core data reconstructed from the archived source set by the deterministic importer/repair/localization tooling in this module;
-- the external approximately 1.5 GB Unity `Bundles/` set retained in the installed Artem folder.
+- the validated SPT 4.1.3 Admiral Artyom Revival server build;
+- repaired authored upstream Artem core data reconstructed from the archived source set by deterministic importer/repair/localization tooling in this module;
+- the external approximately 1.5 GB Unity `Bundles/` set retained in the installed Admiral Artyom Revival folder.
 
-The permanent `runtime-artem-revival` branch pins the validated server DLL plus a runtime manifest containing the accepted candidate identity and hashes. It deliberately does not duplicate the authored core data or Bundles and is therefore not a standalone full-install Git archive.
+The permanent `runtime-artem-revival` branch name is retained as a publication compatibility identifier. It pins the validated server identity plus a runtime manifest containing the accepted candidate identity and hashes. It deliberately does not duplicate the authored core data or Bundles and is therefore not a standalone full-install Git archive.
 
 ## Deferred work
 

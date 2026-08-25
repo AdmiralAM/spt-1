@@ -1,6 +1,6 @@
-# Artem Revival — Economy Audit
+# Admiral Artyom Revival — Economy Audit
 
-This audit is based on the repaired authoritative runtime core. It records the economy before rebalance; it does not change prices, rewards, loyalty levels, flea behavior, or PBS integration.
+This audit is based on the repaired authoritative upstream runtime core. It records the economy before rebalance; it does not change prices, rewards, loyalty levels, flea behavior, or PBS integration.
 
 ## Trader catalog baseline
 
@@ -47,7 +47,7 @@ Cross-trader standing is plausible authored progression and must not be deleted 
 Economy changes are gated behind runtime and campaign smoke tests. When that gate opens:
 
 1. keep patches/cosmetics inexpensive unless scarcity/progression requires otherwise;
-2. price functional armor/rigs/backpacks against comparable SPT items, not Artem's placeholder handbook values;
+2. price functional armor/rigs/backpacks against comparable SPT items, not upstream placeholder handbook values;
 3. preserve meaningful quest unlock pacing;
 4. inspect buy limits/stock together with price;
 5. evaluate reward value as a whole (cash + items + unlocks + standing + XP), not cash in isolation;

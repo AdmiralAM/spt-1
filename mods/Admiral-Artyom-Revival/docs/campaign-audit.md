@@ -1,6 +1,6 @@
-# Artem Revival — Campaign Audit
+# Admiral Artyom Revival — Campaign Audit
 
-Static campaign audit of the repaired authoritative Artem core for SPT 4.1.3.
+Static campaign audit of the repaired authoritative upstream WTT-Artem core maintained by Admiral Artyom Revival for SPT 4.1.3.
 
 ## Graph and coverage
 
@@ -14,7 +14,7 @@ The authored quest graph is structurally recoverable and is preserved.
 
 ## Condition coverage
 
-The campaign uses handovers, kill counters, visit-place counters, map/location constraints, beacon placement, leave-item-at-location conditions, one level gate and one trader-loyalty gate. Custom zone definitions are present for all Artem-owned zone IDs referenced by the campaign. Several other zone IDs (`pr_scout_base`, `bomj_place`, `peace_027_area`) are external/vanilla references and therefore require SPT 4.1.3 runtime validation rather than being synthesized inside Artem.
+The campaign uses handovers, kill counters, visit-place counters, map/location constraints, beacon placement, leave-item-at-location conditions, one level gate and one trader-loyalty gate. Custom zone definitions are present for all Artem-owned zone IDs referenced by the campaign. Several other zone IDs (`pr_scout_base`, `bomj_place`, `peace_027_area`) are external/vanilla references and therefore require SPT 4.1.3 runtime validation rather than being synthesized inside the module.
 
 ## Reward/QuestAssort consistency
 
