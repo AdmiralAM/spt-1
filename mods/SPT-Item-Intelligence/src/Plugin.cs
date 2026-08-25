@@ -5,7 +5,7 @@ using BepInEx;
 
 namespace SPTItemIntelligence
 {
-    [BepInPlugin("com.admiralam.spt.itemintelligence", "SPT Item Intelligence", "0.12.0")]
+    [BepInPlugin("com.admiralam.spt.itemintelligence", "Item Intelligence Admiral", "1.0.0")]
     public sealed class Plugin : BaseUnityPlugin
     {
         ItemHoverOverlaySink hoverSink;
@@ -20,7 +20,7 @@ namespace SPTItemIntelligence
 
         void Awake()
         {
-            if (ItemIntelligenceRegistry.Shared == null) throw new InvalidOperationException("Item Intelligence registry initialization failed.");
+            if (ItemIntelligenceRegistry.Shared == null) throw new InvalidOperationException("Item Intelligence Admiral registry initialization failed.");
 
             PresentationStore = new ItemPresentationStore();
             uiSettings = new ItemIntelligenceUiSettings(Config);
@@ -43,14 +43,14 @@ namespace SPTItemIntelligence
             hoverIntegration.TryInstall();
             StartDataLoad();
 
-            Logger.LogInfo("SPT Item Intelligence v0.12.0 loaded (cell-attached requirement intelligence)");
+            Logger.LogInfo("Item Intelligence Admiral v1.0.0 loaded (cell-attached requirement intelligence)");
         }
 
         ItemHoverText CreateFallback(string templateId)
         {
             RequirementRuntimeBootstrap bootstrap = dataBootstrap;
             return bootstrap == null
-                ? new ItemHoverText("ITEM INTELLIGENCE", string.Empty, "DATA UNAVAILABLE")
+                ? new ItemHoverText("ITEM INTELLIGENCE ADMIRAL", string.Empty, "DATA UNAVAILABLE")
                 : bootstrap.CreateFallback(templateId);
         }
 
@@ -62,9 +62,9 @@ namespace SPTItemIntelligence
             {
                 string error;
                 if (dataBootstrap.TryRefresh(token, out error))
-                    Logger.LogInfo("Item Intelligence live requirement snapshot loaded: " + PresentationStore.Current.Count + " item states.");
+                    Logger.LogInfo("Item Intelligence Admiral live requirement snapshot loaded: " + PresentationStore.Current.Count + " item states.");
                 else if (!token.IsCancellationRequested)
-                    Logger.LogWarning("Item Intelligence live requirement snapshot unavailable; diagnostic hover remains active: " + error);
+                    Logger.LogWarning("Item Intelligence Admiral live requirement snapshot unavailable; diagnostic hover remains active: " + error);
                 if (hoverSink != null) hoverSink.Invalidate();
             }, token);
         }
