@@ -18,28 +18,37 @@ public sealed class EnforcementPlanService(
         PropertyNameCaseInsensitive = true,
     };
 
-    public async Task RunAsync(QuestAnalysisReport analysis, CancellationToken cancellationToken)
+    public async Task RunAsync(QuestAnalysisReport analysis, QuestProvenanceDeltaReport provenance, CancellationToken cancellationToken)
     {
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(EnforcementPlanService).Assembly);
         var config = await LoadConfigAsync(modPath, cancellationToken);
+        var provenanceByQuest = provenance.Quests.ToDictionary(row => row.QuestId, StringComparer.Ordinal);
 
         var candidates = analysis.Quests
             .Where(row => row.ObservationalFlags.Count > 0)
             .OrderBy(row => row.QuestId, StringComparer.Ordinal)
-            .Select(BuildCandidate)
+            .Select(row => BuildCandidate(row, provenanceByQuest.GetValueOrDefault(row.QuestId)))
             .ToList();
+
+        var countsByProvenance = candidates
+            .GroupBy(candidate => candidate.ProvenanceClass, StringComparer.Ordinal)
+            .OrderBy(group => group.Key, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
 
         var plan = new EnforcementPlanReport
         {
-            SchemaVersion = 1,
+            SchemaVersion = 2,
             Mode = config.Mode.ToString(),
             Preset = config.Preset.ToString(),
             SourceAnalysisSchemaVersion = analysis.SchemaVersion,
+            SourceProvenanceSchemaVersion = provenance.SchemaVersion,
+            ProvenanceAware = true,
             EnforceRequested = config.Mode == EconomyMode.Enforce,
             ApplyMutations = false,
             MutationCount = 0,
             CandidateCount = candidates.Count,
-            Note = "Fail-closed planning artifact only. Candidates are derived from the explicitly passed unified audit report; no target reward values are invented and no final DB records are mutated.",
+            CandidateCountsByProvenance = countsByProvenance,
+            Note = "Fail-closed planning artifact only. Every review candidate is annotated with pristine/modded provenance. Provenance is evidence for later policy design, not authorization to mutate final DB records.",
             Candidates = candidates,
         };
 
@@ -48,16 +57,12 @@ public sealed class EnforcementPlanService(
         await File.WriteAllTextAsync(planPath, JsonSerializer.Serialize(plan, JsonOptions), cancellationToken);
 
         if (plan.EnforceRequested)
-        {
-            logger.Warning($"[Economy Admiral] Enforce requested but remains fail-closed: {plan.CandidateCount} review candidates, 0 mutations; plan={planPath}");
-        }
+            logger.Warning($"[Economy Admiral] Enforce requested but remains fail-closed: {plan.CandidateCount} provenance-aware review candidates, 0 mutations; plan={planPath}");
         else
-        {
-            logger.Info($"[Economy Admiral] enforcement plan audit complete: {plan.CandidateCount} review candidates, 0 mutations; plan={planPath}");
-        }
+            logger.Info($"[Economy Admiral] enforcement plan audit complete: {plan.CandidateCount} provenance-aware review candidates, 0 mutations; plan={planPath}");
     }
 
-    private static EnforcementPlanCandidate BuildCandidate(QuestAnalysisRow row)
+    private static EnforcementPlanCandidate BuildCandidate(QuestAnalysisRow row, QuestProvenanceDeltaRow? provenance)
     {
         var actions = new SortedSet<string>(StringComparer.Ordinal);
         foreach (var flag in row.ObservationalFlags)
@@ -65,28 +70,24 @@ public sealed class EnforcementPlanService(
             switch (flag)
             {
                 case "HIGH_ITEM_VALUE_LOW_STRUCTURE":
-                case "RESTARTABLE_HIGH_ITEM_VALUE":
-                    actions.Add("ReviewItemRewardBudget");
-                    break;
+                case "RESTARTABLE_HIGH_ITEM_VALUE": actions.Add("ReviewItemRewardBudget"); break;
                 case "HIGH_XP_LOW_DEPTH":
-                case "RESTARTABLE_HIGH_XP":
-                    actions.Add("ReviewXpRewardBudget");
-                    break;
-                case "HIGH_STANDING_LOW_DEPTH":
-                    actions.Add("ReviewStandingRewardBudget");
-                    break;
-                case "PREREQUISITE_CYCLE":
-                    actions.Add("ReviewPrerequisiteGraph");
-                    break;
+                case "RESTARTABLE_HIGH_XP": actions.Add("ReviewXpRewardBudget"); break;
+                case "HIGH_STANDING_LOW_DEPTH": actions.Add("ReviewStandingRewardBudget"); break;
+                case "PREREQUISITE_CYCLE": actions.Add("ReviewPrerequisiteGraph"); break;
             }
         }
 
+        var provenanceClass = provenance?.Provenance ?? "Unknown";
         return new EnforcementPlanCandidate
         {
             QuestId = row.QuestId,
             QuestName = row.QuestName,
             TraderId = row.TraderId,
             Restartable = row.Restartable,
+            ProvenanceClass = provenanceClass,
+            PristineUntouched = string.Equals(provenanceClass, "PristineUnchanged", StringComparison.Ordinal),
+            ChangedDimensions = provenance?.ChangedDimensions ?? [],
             ReasonFlags = row.ObservationalFlags.OrderBy(value => value, StringComparer.Ordinal).ToList(),
             ProposedReviewActions = actions.ToList(),
             AutomaticMutationAllowed = false,
@@ -98,21 +99,14 @@ public sealed class EnforcementPlanService(
     {
         var path = Path.GetFullPath(Path.Combine(modPath, relativePath));
         var root = Path.GetFullPath(modPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException("Economy Admiral report path must stay inside the mod directory.");
-        }
+        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Economy Admiral report path must stay inside the mod directory.");
         return path;
     }
 
     private static async Task<EconomyConfig> LoadConfigAsync(string modPath, CancellationToken cancellationToken)
     {
         var configPath = Path.Combine(modPath, "config", "config.json");
-        if (!File.Exists(configPath))
-        {
-            return new EconomyConfig();
-        }
-
+        if (!File.Exists(configPath)) return new EconomyConfig();
         await using var stream = File.OpenRead(configPath);
         return await JsonSerializer.DeserializeAsync<EconomyConfig>(stream, JsonOptions, cancellationToken) ?? new EconomyConfig();
     }
@@ -124,10 +118,13 @@ public sealed record EnforcementPlanReport
     public required string Mode { get; init; }
     public required string Preset { get; init; }
     public required int SourceAnalysisSchemaVersion { get; init; }
+    public required int SourceProvenanceSchemaVersion { get; init; }
+    public required bool ProvenanceAware { get; init; }
     public required bool EnforceRequested { get; init; }
     public required bool ApplyMutations { get; init; }
     public required int MutationCount { get; init; }
     public required int CandidateCount { get; init; }
+    public required Dictionary<string, int> CandidateCountsByProvenance { get; init; }
     public required string Note { get; init; }
     public required List<EnforcementPlanCandidate> Candidates { get; init; }
 }
@@ -138,6 +135,9 @@ public sealed record EnforcementPlanCandidate
     public required string QuestName { get; init; }
     public required string TraderId { get; init; }
     public required bool Restartable { get; init; }
+    public required string ProvenanceClass { get; init; }
+    public required bool PristineUntouched { get; init; }
+    public required List<string> ChangedDimensions { get; init; }
     public required List<string> ReasonFlags { get; init; }
     public required List<string> ProposedReviewActions { get; init; }
     public required bool AutomaticMutationAllowed { get; init; }
