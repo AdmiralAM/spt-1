@@ -169,7 +169,7 @@ namespace SPTBeltArmbandInventory
                 if (state.SlotsChanged && EquipmentSlotsField != null && state.OriginalSlots != null)
                 {
                     Array current = EquipmentSlotsField.GetValue(null) as Array;
-                    if (ReferenceEquals(current, state.ProjectedSlots))
+                    if (RuntimeMutationPolicy.ShouldRestore(current, state.ProjectedSlots))
                         EquipmentSlotsField.SetValue(null, state.OriginalSlots);
                     else
                         LogWarning?.Invoke("B&A&HB UI: ContainersPanel slot sequence changed externally; leaving the newer value untouched.");
