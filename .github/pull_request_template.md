@@ -22,6 +22,17 @@
 - [ ] No shared CI concurrency group was introduced with unrelated workstreams.
 - [ ] This PR does not invoke or depend on `Publish SPT Mod Suite` merely for development validation.
 
+## Runtime test handoff
+
+<!-- Required when asking the user to test an Actions artifact or runtime package. Delete or mark N/A for docs-only/no-runtime PRs. -->
+
+- PR / branch / commit SHA:
+- Artifact or runtime branch:
+- Install layout:
+- Focused checklist:
+- Required returned evidence:
+- Pass/fail decision rule:
+
 ## Repository hygiene
 
 - [ ] No generated build/test logs, CI metadata, temporary trigger/evidence files, dependency caches, or package copies were added to source history.
