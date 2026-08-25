@@ -200,7 +200,6 @@ namespace SPTBeltArmbandInventory
 
             TrySetHeaderText(registered, "BELT");
             registered.gameObject.name = "BELT Slot";
-            PlaceBeltRow(views, registered.transform);
             LogInfo?.Invoke("B&A&HB UI PROOF: ContainersPanel created, bound and registered the BELT row through its native SlotView lifecycle; only the ArmBand slot template selection was intercepted.");
         }
 
@@ -249,14 +248,6 @@ namespace SPTBeltArmbandInventory
                 if (value != null && type.IsInstanceOfType(value)) return value;
             }
             return null;
-        }
-
-        static void PlaceBeltRow(IDictionary views, Transform belt)
-        {
-            object anchorKey = Position == BeltSlotPosition.AbovePockets ? PocketsValue : BackpackValue;
-            Component anchor = anchorKey == null ? null : views[anchorKey] as Component;
-            if (anchor == null) return;
-            belt.SetSiblingIndex(anchor.transform.GetSiblingIndex());
         }
 
         static void TrySetHeaderText(Component slotView, string text)
