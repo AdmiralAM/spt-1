@@ -8,16 +8,14 @@ namespace SPTEconomy;
 
 [Injectable]
 public sealed class CompositePolicyEvaluationService(
-    QuestAnalysisService questAnalysisService,
     ModHelper modHelper,
     ISptLogger<CompositePolicyEvaluationService> logger
 )
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    public async Task RunAsync(CancellationToken cancellationToken)
+    public async Task RunAsync(QuestAnalysisReport analysis, CancellationToken cancellationToken)
     {
-        var analysis = questAnalysisService.GetSnapshot();
         var rows = analysis.Quests
             .OrderBy(row => row.QuestId, StringComparer.Ordinal)
             .Select(BuildRow)
