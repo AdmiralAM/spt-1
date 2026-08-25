@@ -53,24 +53,31 @@ jobs:
           mods/Admiral-Trader/manifests/weapon-ammo-selection-policy.json
           --output build/admiral-trader-weapon-ammo-selection.json
 
-      - name: Enforce committed capability selection and safety contract
+      - name: Enforce capability and curated weapon-pool contracts
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          pools = json.loads(Path('build/admiral-trader-weapon-ammo-pools.json').read_text(encoding='utf-8'))
-          selection = json.loads(Path('build/admiral-trader-weapon-ammo-selection.json').read_text(encoding='utf-8'))
-          committed = json.loads(Path('mods/Admiral-Trader/manifests/weapon-ammo-capabilities.json').read_text(encoding='utf-8'))
-          if pools.get('targetSptVersion') != '4.1.3' or selection.get('targetSptVersion') != '4.1.3' or committed.get('targetSptVersion') != '4.1.3':
-              raise SystemExit('weapon/ammo runtime contract lost SPT 4.1.3 target')
-          if len(pools['families']) != 7:
-              raise SystemExit('expected seven weapon families')
+          pools = json.loads(Path('build/admiral-trader-weapon-ammo-pools.json').read_text())
+          selection = json.loads(Path('build/admiral-trader-weapon-ammo-selection.json').read_text())
+          committed = json.loads(Path('mods/Admiral-Trader/manifests/weapon-ammo-capabilities.json').read_text())
+          runtime_pools = json.loads(Path('mods/Admiral-Trader/manifests/weapon-family-runtime-pools.json').read_text())
+          for data in (pools, selection, committed, runtime_pools):
+              if data.get('targetSptVersion') != '4.1.3':
+                  raise SystemExit('weapon/ammo runtime contract lost SPT 4.1.3 target')
+          if set(runtime_pools['families']) != set(pools['families']):
+              raise SystemExit('runtime weapon family set drifted from resolved family set')
           permanent = 0
           for family_id, family in pools['families'].items():
+              candidate_ids = {row['tpl'] for row in family.get('weapons', [])}
+              frozen_ids = runtime_pools['families'][family_id]
+              if not frozen_ids or len(frozen_ids) != len(set(frozen_ids)):
+                  raise SystemExit(f'{family_id}: empty or duplicate curated weapon pool')
+              missing = sorted(set(frozen_ids) - candidate_ids)
+              if missing:
+                  raise SystemExit(f'{family_id}: curated weapon TPLs not present in resolved candidate pool: {missing}')
               selected = selection['families'][family_id]
               frozen = committed['families'][family_id]
-              if family['weaponCount'] == 0:
-                  raise SystemExit(f'{family_id}: no weapon candidates')
               if family_id == 'special-weapons':
                   if selected.get('permanentUnlock') or frozen.get('permanentUnlock') is not False:
                       raise SystemExit('special weapons may not receive a permanent ammunition unlock')
@@ -96,7 +103,7 @@ jobs:
           mods/Admiral-Trader/manifests/weapon-ammo-runtime-plan.json
           mods/Admiral-Trader/manifests/weapon-ammo-authored-spec.json
           mods/Admiral-Trader/manifests/weapon-ammo-capabilities.json
-          build/admiral-trader-weapon-ammo-pools.json
+          mods/Admiral-Trader/manifests/weapon-family-runtime-pools.json
           --output build/admiral-trader-weapon-ammo-runtime.json
 
       - name: Enforce runtime quest contract
@@ -104,7 +111,8 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          data = json.loads(Path('build/admiral-trader-weapon-ammo-runtime.json').read_text(encoding='utf-8'))
+          data = json.loads(Path('build/admiral-trader-weapon-ammo-runtime.json').read_text())
+          runtime_pools = json.loads(Path('mods/Admiral-Trader/manifests/weapon-family-runtime-pools.json').read_text())
           templates = data['templates']
           if len(templates) != 21:
               raise SystemExit(f'expected 21 native weapon-ammo quests, got {len(templates)}')
@@ -119,6 +127,8 @@ jobs:
               kill = finish[0]['counter']['conditions'][0]
               if kill.get('conditionType') != 'Kills' or not kill.get('weapon'):
                   raise SystemExit(f'{qid}: family weapon filter missing')
+              if any(not isinstance(tpl, str) or len(tpl) != 24 for tpl in kill['weapon']):
+                  raise SystemExit(f'{qid}: malformed weapon TPL in objective pool')
           PY
 
       - name: Upload transient runtime evidence
