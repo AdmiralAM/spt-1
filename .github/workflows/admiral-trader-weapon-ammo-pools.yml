@@ -106,13 +106,12 @@ jobs:
           mods/Admiral-Trader/manifests/weapon-family-runtime-pools.json
           --output build/admiral-trader-weapon-ammo-runtime.json
 
-      - name: Enforce runtime quest contract
+      - name: Enforce generated runtime quest contract
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           data = json.loads(Path('build/admiral-trader-weapon-ammo-runtime.json').read_text())
-          runtime_pools = json.loads(Path('mods/Admiral-Trader/manifests/weapon-family-runtime-pools.json').read_text())
           templates = data['templates']
           if len(templates) != 21:
               raise SystemExit(f'expected 21 native weapon-ammo quests, got {len(templates)}')
@@ -130,6 +129,12 @@ jobs:
               if any(not isinstance(tpl, str) or len(tpl) != 24 for tpl in kill['weapon']):
                   raise SystemExit(f'{qid}: malformed weapon TPL in objective pool')
           PY
+
+      - name: Validate committed Arsenal runtime equals compiler output
+        run: >-
+          python mods/Admiral-Trader/tools/validate_committed_arsenal_runtime.py
+          mods/Admiral-Trader/db/quests
+          build/admiral-trader-weapon-ammo-runtime.json
 
       - name: Upload transient runtime evidence
         uses: actions/upload-artifact@v4
