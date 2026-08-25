@@ -46,11 +46,11 @@ $manifest = Get-Content $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
 if ($manifest.targetSptVersion -ne '4.1.3') {
     throw "runtime-manifest target drift: $($manifest.targetSptVersion)"
 }
-if ($manifest.registrationEnabled -ne $true) {
-    throw "runtime-manifest publication gate is disabled; this branch is not yet a runnable test candidate"
+if ($manifest.registrationEnabled -ne $false) {
+    throw "Source manifest must remain fail-closed; registrationEnabled must be false before staging"
 }
-if ($manifest.publicationMode -ne 'test-candidate') {
-    throw "runtime-manifest publicationMode must be test-candidate for this builder"
+if ($manifest.publicationMode -ne 'test-candidate-source') {
+    throw "Source manifest publicationMode must be test-candidate-source"
 }
 
 Write-Host "Building Admiral Trader against exact SPT Server.Core $coreVersion from $runtimeRoot"
@@ -76,6 +76,12 @@ Copy-Item $dll (Join-Path $stageMod 'Admiral Trader Server.dll')
 Copy-Item (Join-Path $moduleRoot 'db') (Join-Path $stageMod 'db') -Recurse
 Copy-Item (Join-Path $moduleRoot 'manifests') (Join-Path $stageMod 'manifests') -Recurse
 
+$stagedManifestPath = Join-Path $stageMod 'manifests\runtime-manifest.json'
+$stagedManifest = Get-Content $stagedManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$stagedManifest.registrationEnabled = $true
+$stagedManifest.publicationMode = 'test-candidate'
+$stagedManifest | ConvertTo-Json -Depth 20 | Set-Content $stagedManifestPath -Encoding UTF8
+
 $junk = Get-ChildItem $stageRoot -Recurse -File | Where-Object {
     $_.Extension -in @('.pdb', '.log', '.zip') -or $_.Name -match '(^|[-_.])(tmp|temp)([-_.]|$)'
 }
@@ -83,8 +89,8 @@ if ($junk) {
     throw "Candidate staging contains forbidden temporary/debug artifacts: $($junk.FullName -join ', ')"
 }
 
-$stagedManifest = Get-Content (Join-Path $stageMod 'manifests\runtime-manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
-if ($stagedManifest.registrationEnabled -ne $true -or $stagedManifest.targetSptVersion -ne '4.1.3') {
+$stagedManifest = Get-Content $stagedManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
+if ($stagedManifest.registrationEnabled -ne $true -or $stagedManifest.targetSptVersion -ne '4.1.3' -or $stagedManifest.publicationMode -ne 'test-candidate') {
     throw "Staged candidate manifest is not an enabled SPT 4.1.3 test candidate"
 }
 
