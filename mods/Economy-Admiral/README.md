@@ -18,10 +18,12 @@ Implemented now:
 - vanilla quest reward raw median/P90 benchmark;
 - progression-normalized quest reward median/P90 benchmark;
 - restartable-quest raw and normalized reward outlier checks;
+- typed SPT 4.1 reward-utility inventory for XP, trader standing, trader unlocks, assortment unlocks, and production-scheme unlocks;
+- separate vanilla/restartable utility distributions without arbitrary ruble conversion;
 - trader-source saturation findings;
 - functional `Easy / Normal / Hard / Custom` audit policies;
 - `Off / Audit / Enforce` mode contract;
-- deterministic JSON report;
+- deterministic JSON reports;
 - manual item overrides;
 - future `RepeatedRaidLootDecay` policy represented but disabled by default.
 
@@ -76,7 +78,7 @@ Manual overrides are keyed by item template ID.
 
 ## Reward budget model
 
-The audit preserves the raw handbook-value benchmark and adds a second, progression-normalized signal. It intentionally uses only structured final-DB data rather than subjective text interpretation.
+The main audit preserves the raw handbook-value benchmark and adds a second, progression-normalized signal. It intentionally uses only structured final-DB data rather than subjective text interpretation.
 
 For each quest it records:
 
@@ -96,9 +98,19 @@ and the normalized value is:
 
 Default weights are conservative and capped. This prevents a quest with an extreme level gate or a very large number of conditions from receiving an unlimited reward allowance. Restartable quests are benchmarked separately where vanilla samples exist and use stricter warning thresholds.
 
-This is still an audit proxy, not a claim that condition count equals true gameplay difficulty. Later scoring can add explicit time, risk, prerequisite depth, unlock utility and replacement-rate inputs without changing the final-DB scanner.
+This is still an audit proxy, not a claim that condition count equals true gameplay difficulty.
 
-## Report
+## Typed reward utility benchmark
+
+SPT 4.1 exposes typed quest rewards including `Experience`, `TraderStanding`, `TraderUnlock`, `AssortmentUnlock`, and `ProductionScheme`. Economy Admiral audits those directly in a second deterministic report:
+
+`reports/economy-admiral-reward-utility.json`
+
+For each quest the utility report records success-reward XP, trader standing, and distinct unlock targets. It also calculates vanilla and vanilla-restartable median/P90 distributions where meaningful.
+
+**No unified utility score is applied yet.** XP, standing, and unlocks are deliberately not converted into rubles or handbook value in this slice. The purpose of this pass is to establish real vanilla distributions before selecting weights.
+
+## Main report
 
 Default output:
 
@@ -127,15 +139,15 @@ The schema-3 report records:
 - trader-source saturation findings;
 - exact policy thresholds and normalization model used for the report.
 
-The report path is constrained to remain inside the mod directory.
+Both report paths are constrained to remain inside the mod directory.
 
 ## Current limitations
 
 The current budget still does not fully price:
 
-- trader standing;
-- skill/experience rewards;
-- assort/unlock value;
+- XP relative utility versus item value;
+- trader standing relative utility;
+- assort/trader/production unlock utility;
 - FIR/progression utility;
 - actual duration or combat risk;
 - prerequisite-chain depth;
@@ -154,9 +166,9 @@ The architecture keeps acquisition scanning, benchmarking, findings, presets, an
 
 MVP remainder:
 
-- broader reward-budget model beyond handbook-priced item rewards;
-- unlock/standing/XP utility accounting;
+- derive XP/standing/unlock weighting from the typed vanilla distributions;
 - prerequisite-depth and structured risk/time signals where reliable;
+- broader acquisition/value weighting;
 - explicit enforcement rules and mutation report;
 - deterministic enforcement tests before `Enforce` can become active.
 
