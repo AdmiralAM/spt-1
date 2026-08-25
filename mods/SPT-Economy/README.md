@@ -15,8 +15,9 @@ Implemented now:
 - initial acquisition-density rarity classification;
 - trader structural audit for malformed root offers;
 - quest reward value audit using final handbook prices;
-- vanilla quest reward median/P90 benchmark;
-- restartable-quest reward outlier checks;
+- vanilla quest reward raw median/P90 benchmark;
+- progression-normalized quest reward median/P90 benchmark;
+- restartable-quest raw and normalized reward outlier checks;
 - trader-source saturation findings;
 - functional `Easy / Normal / Hard / Custom` audit policies;
 - `Off / Audit / Enforce` mode contract;
@@ -50,32 +51,52 @@ Default configuration lives in `config/config.json`.
   "customAuditPolicy": {
     "questRewardVsVanillaMedianWarnMultiple": 3.0,
     "restartableRewardVsVanillaMedianWarnMultiple": 1.5,
+    "normalizedRewardVsVanillaMedianWarnMultiple": 2.5,
+    "restartableNormalizedRewardVsVanillaMedianWarnMultiple": 1.25,
+    "levelGateWeight": 0.05,
+    "objectiveConditionWeight": 0.35,
+    "maxLevelGateContribution": 3.0,
+    "maxObjectiveContribution": 5.0,
     "duplicateTraderSourcesWarnCount": 6
   },
   "manualOverrides": {}
 }
 ```
 
-Preset audit policies currently resolve as follows:
+Preset audit thresholds currently resolve as follows:
 
-| Preset | normal quest warning | restartable warning/error | trader-source saturation |
-| --- | ---: | ---: | ---: |
-| Easy | 5.0x vanilla median | 2.5x vanilla median | 8 traders |
-| Normal | 3.0x vanilla median | 1.5x vanilla median | 6 traders |
-| Hard | 2.0x vanilla median | 1.25x vanilla median | 4 traders |
-| Custom | `customAuditPolicy` | `customAuditPolicy` | `customAuditPolicy` |
+| Preset | raw normal quest | raw restartable | normalized normal | normalized restartable | trader saturation |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Easy | 5.0x | 2.5x | 4.0x | 2.0x | 8 traders |
+| Normal | 3.0x | 1.5x | 2.5x | 1.25x | 6 traders |
+| Hard | 2.0x | 1.25x | 1.75x | 1.10x | 4 traders |
+| Custom | config | config | config | config | config |
 
-Manual overrides are keyed by item template ID. Example:
+Manual overrides are keyed by item template ID.
 
-```json
-"manualOverrides": {
-  "0123456789abcdef01234567": {
-    "rarity": "Rare",
-    "ignore": false,
-    "note": "curated progression exception"
-  }
-}
-```
+## Reward budget model
+
+The audit preserves the raw handbook-value benchmark and adds a second, progression-normalized signal. It intentionally uses only structured final-DB data rather than subjective text interpretation.
+
+For each quest it records:
+
+- required player level inferred from `AvailableForStart` level conditions;
+- count of `AvailableForFinish` and `Success` conditions;
+- a capped progression score;
+- raw known handbook reward value;
+- progression-normalized handbook reward value.
+
+The current score is:
+
+`1 + capped(level gate contribution) + capped(objective-condition contribution)`
+
+and the normalized value is:
+
+`known handbook reward value / progression score`
+
+Default weights are conservative and capped. This prevents a quest with an extreme level gate or a very large number of conditions from receiving an unlimited reward allowance. Restartable quests are benchmarked separately where vanilla samples exist and use stricter warning thresholds.
+
+This is still an audit proxy, not a claim that condition count equals true gameplay difficulty. Later scoring can add explicit time, risk, prerequisite depth, unlock utility and replacement-rate inputs without changing the final-DB scanner.
 
 ## Report
 
@@ -83,7 +104,7 @@ Default output:
 
 `reports/economy-audit.json`
 
-The schema-2 report records:
+The schema-3 report records:
 
 - total template items and handbook-priced items;
 - quest and trader counts;
@@ -95,30 +116,35 @@ The schema-2 report records:
 - per-trader root-offer audit summaries;
 - root offers missing barter schemes or loyalty mappings;
 - per-quest reward item counts and known handbook value;
+- required level, objective-condition count and progression score;
+- progression-normalized handbook reward value;
 - reward records without handbook prices;
-- vanilla non-restartable median and P90 reward-value benchmark;
-- vanilla restartable median where samples exist;
-- reward-value outlier findings;
+- vanilla raw median/P90 benchmark;
+- vanilla normalized median/P90 benchmark;
+- vanilla restartable raw/normalized medians where samples exist;
+- raw reward-value outlier findings;
+- progression-normalized reward-budget outlier findings;
 - trader-source saturation findings;
-- exact policy thresholds used for the report.
+- exact policy thresholds and normalization model used for the report.
 
 The report path is constrained to remain inside the mod directory.
 
-## Benchmark limitations
+## Current limitations
 
-The current benchmark deliberately uses **handbook value of item rewards**. It is deterministic and useful for detecting gross reward inflation, but it is not yet a complete reward budget. It does not yet fully price:
+The current budget still does not fully price:
 
 - trader standing;
 - skill/experience rewards;
-- unlock value;
+- assort/unlock value;
 - FIR/progression utility;
-- quest difficulty, duration, risk, or prerequisite depth;
+- actual duration or combat risk;
+- prerequisite-chain depth;
 - repeatable replacement rate;
 - flea scarcity or world-loot rarity.
 
 Those dimensions belong in later MVP/Stage 2 scoring before Economy is allowed to enforce changes.
 
-## Rarity model in this slice
+## Rarity model
 
 The first classifier is intentionally simple and deterministic: it uses the number of distinct trader and quest-reward acquisition sources for an item. This is an audit signal, not the final economic rarity model.
 
@@ -128,9 +154,9 @@ The architecture keeps acquisition scanning, benchmarking, findings, presets, an
 
 MVP remainder:
 
-- richer acquisition/value weighting;
-- quest difficulty/time/risk/progression scoring;
-- broader reward-budget model beyond handbook-priced items;
+- broader reward-budget model beyond handbook-priced item rewards;
+- unlock/standing/XP utility accounting;
+- prerequisite-depth and structured risk/time signals where reliable;
 - explicit enforcement rules and mutation report;
 - deterministic enforcement tests before `Enforce` can become active.
 
