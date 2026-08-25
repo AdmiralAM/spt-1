@@ -28,6 +28,36 @@ static void MustFail(string name, EconomyConfig config)
     throw new InvalidOperationException($"Expected config '{name}' to fail validation.");
 }
 
+static void JsonMustPass(string name, string json)
+{
+    try
+    {
+        var config = EconomyConfigJsonLoader.Deserialize(json);
+        EconomyConfigValidator.Validate(config);
+        Console.WriteLine($"PASS {name}");
+    }
+    catch (Exception exception)
+    {
+        throw new InvalidOperationException($"Expected JSON fixture '{name}' to pass but it failed: {exception.Message}", exception);
+    }
+}
+
+static void JsonMustFail(string name, string json)
+{
+    try
+    {
+        var config = EconomyConfigJsonLoader.Deserialize(json);
+        EconomyConfigValidator.Validate(config);
+    }
+    catch (InvalidOperationException)
+    {
+        Console.WriteLine($"PASS {name}");
+        return;
+    }
+
+    throw new InvalidOperationException($"Expected JSON fixture '{name}' to fail validation.");
+}
+
 MustPass("defaults", new EconomyConfig());
 MustPass("supported exceptional override", new EconomyConfig
 {
@@ -87,5 +117,20 @@ MustFail("zero duplicate trader threshold", new EconomyConfig
 {
     CustomAuditPolicy = new() { DuplicateTraderSourcesWarnCount = 0 },
 });
+MustFail("null rarity object", new EconomyConfig { Rarity = null! });
+MustFail("null policy object", new EconomyConfig { CustomAuditPolicy = null! });
+MustFail("null overrides object", new EconomyConfig { ManualOverrides = null! });
+
+JsonMustPass("minimal JSON", "{}");
+JsonMustPass("case-insensitive known keys", "{\"MODE\":\"Audit\",\"PRESET\":\"Normal\"}");
+JsonMustFail("numeric mode", "{\"mode\":1}");
+JsonMustFail("numeric preset", "{\"preset\":2}");
+JsonMustFail("unknown mode string", "{\"mode\":\"Explode\"}");
+JsonMustFail("unknown top-level property", "{\"mode\":\"Audit\",\"mysterySetting\":true}");
+JsonMustFail("non-object root", "[]");
+JsonMustFail("null rarity JSON", "{\"rarity\":null}");
+JsonMustFail("null policy JSON", "{\"customAuditPolicy\":null}");
+JsonMustFail("null overrides JSON", "{\"manualOverrides\":null}");
+JsonMustFail("null override entry JSON", "{\"manualOverrides\":{\"fixture-template\":null}}");
 
 Console.WriteLine("Economy Admiral config validation smoke PASS");
