@@ -297,7 +297,7 @@ namespace SPTItemIntelligence
             if (hover == null || !hover.HasData) return ItemHoverText.Empty;
 
             bool fleaPreferred = valueMode == ItemValueMode.Flea;
-            string trader = string.IsNullOrWhiteSpace(hover.BestTraderName) ? "Trader" : hover.BestTraderName.Trim();
+            string trader = string.IsNullOrWhiteSpace(hover.BestTraderName) ? "Vendor" : hover.BestTraderName.Trim();
             long preferredValue = fleaPreferred ? hover.FleaUnitValue : hover.TraderUnitValue;
             string preferredSource = fleaPreferred ? "Flea" : trader;
             long alternateValue = fleaPreferred ? hover.TraderUnitValue : hover.FleaUnitValue;
