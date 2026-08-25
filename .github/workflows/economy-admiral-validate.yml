@@ -61,7 +61,7 @@ jobs:
               'questAnalysis = await baselineProvenanceCorrectionService.ApplyToUnifiedAnalysisAsync(questAnalysis, vanillaBaseline, cancellationToken);',
               'var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);',
               'enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken)',
-              'runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, cancellationToken)',
+              'runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, cancellationToken)',
           ]:
               assert text in mod, text
           assert mod.index('config.Mode == EconomyMode.Off') < mod.index('vanillaBaselineService.GetSnapshot()')
@@ -101,14 +101,26 @@ jobs:
               assert text in plan, text
 
           evidence = (root / 'server/RuntimeEvidenceService.cs').read_text(encoding='utf-8')
-          for text in ['SchemaVersion = 3', 'economy-admiral-provenance-delta.json', 'RuntimeProvenanceEvidence', 'PristineQuestCount', 'ModAddedQuestCount', 'DatabaseUnchangedAcrossPipeline', 'DeclaredMutationCount = 0']:
+          for text in [
+              'SchemaVersion = 3', 'economy-admiral-provenance-delta.json', 'RuntimeProvenanceEvidence',
+              'PristineQuestCount', 'ModAddedQuestCount', 'PristineModifiedQuestCount', 'PristineUnchangedQuestCount',
+              'RemovedPristineQuestCount', 'CountsConsistent', 'DatabaseUnchangedAcrossPipeline', 'DeclaredMutationCount = 0',
+              'QuestProvenanceDeltaReport questProvenance',
+          ]:
               assert text in evidence, text
+          assert 'FinalQuestCount - vanillaBaseline.QuestCount' not in evidence
 
           validator = (root / 'tools/Validate-Runtime.ps1').read_text(encoding='utf-8')
-          assert "ExpectedReportCount -ne 9" in validator
-          assert "economy-admiral-provenance-delta.json" in validator
+          for text in ['ExpectedReportCount -ne 9', 'economy-admiral-provenance-delta.json', 'CountsConsistent', 'RemovedPristineQuestCount', 'pristine provenance partition is inconsistent', 'final provenance partition is inconsistent']:
+              assert text in validator, text
+          assert 'BaselineNotLargerThanFinal' not in validator
+          assert 'FinalQuestCount - [int]$provenance.PristineQuestCount' not in validator
 
-          print('Economy Admiral pristine provenance + provenance-aware fail-closed enforcement contract OK')
+          smoke = (root / 'tools/Test-Validate-Runtime.ps1').read_text(encoding='utf-8')
+          for text in ['RemovedPristineQuestCount = 2', 'CountsConsistent = $true', 'FinalQuestCount = 123']:
+              assert text in smoke, text
+
+          print('Economy Admiral exact pristine provenance + provenance-aware fail-closed enforcement contract OK')
 
   server:
     name: Economy Admiral .NET 10 server build
