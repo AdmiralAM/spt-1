@@ -1,10 +1,11 @@
 # Admiral Trader
 
-Official curated successor workstream for the legacy Andrudis/QuestManiac ecosystem.
+Official curated successor workstream for the legacy Andrudis/QuestManiac ecosystem. Current module version: **0.1.0**.
 
 ## Product identity
 
 - Mod name: **Admiral Trader**
+- Module version: **0.1.0**
 - Trader working name: **Admiral / Адмирал**
 - Trader icon/portrait and final character presentation: TBD
 - Legacy Andrudis/QuestManiac names are provenance/source references only and are not the target product identity.
