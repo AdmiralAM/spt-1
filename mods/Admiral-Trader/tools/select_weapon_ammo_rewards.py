@@ -7,13 +7,19 @@ from pathlib import Path
 from typing import Any
 
 
-def choose_candidate(ammo: list[dict[str, Any]], ceiling: float) -> dict[str, Any]:
+def choose_candidate(ammo: list[dict[str, Any]], ceiling: float, preferred_calibers: list[str] | None = None) -> dict[str, Any]:
+    preferred = set(preferred_calibers or [])
     eligible = [
         row for row in ammo
-        if row.get("tier") == "controlled" and float(row.get("penetration") or 0) <= ceiling
+        if row.get("tier") == "controlled"
+        and float(row.get("penetration") or 0) <= ceiling
+        and (not preferred or str(row.get("caliber")) in preferred)
     ]
     if not eligible:
-        raise ValueError(f"no controlled ammunition candidate at or below penetration ceiling {ceiling}")
+        raise ValueError(
+            f"no controlled ammunition candidate at or below penetration ceiling {ceiling} "
+            f"for preferred calibers {sorted(preferred)}"
+        )
     eligible.sort(key=lambda row: (-float(row.get("penetration") or 0), -float(row.get("damage") or 0), str(row.get("tpl"))))
     return eligible[0]
 
@@ -22,9 +28,9 @@ def build_selection(pools: dict[str, Any], policy: dict[str, Any]) -> dict[str, 
     if pools.get("targetSptVersion") != "4.1.3" or policy.get("targetSptVersion") != "4.1.3":
         raise ValueError("weapon/ammo selection must remain targeted to SPT 4.1.3")
     output: dict[str, Any] = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "targetSptVersion": "4.1.3",
-        "sourceRole": "deterministic-candidate-selection; exact-runtime-4.1.3-template-verification-required",
+        "sourceRole": "deterministic-family-distinct-candidate-selection; exact-runtime-4.1.3-template-verification-required",
         "families": {},
     }
     for family_id, family_policy in policy["families"].items():
@@ -38,7 +44,11 @@ def build_selection(pools: dict[str, Any], policy: dict[str, Any]) -> dict[str, 
                 "reason": "explosive/heavy ammunition is sample-only and never becomes a permanent Admiral faucet"
             }
             continue
-        selected = choose_candidate(pool.get("ammo") or [], float(family_policy["maxPermanentPenetration"]))
+        selected = choose_candidate(
+            pool.get("ammo") or [],
+            float(family_policy["maxPermanentPenetration"]),
+            [str(x) for x in family_policy.get("preferredCalibers") or []],
+        )
         output["families"][family_id] = {
             "permanentUnlock": True,
             "tpl": selected["tpl"],
@@ -50,7 +60,8 @@ def build_selection(pools: dict[str, Any], policy: dict[str, Any]) -> dict[str, 
             "sampleUnits": int(family_policy["sampleUnits"]),
             "stockPerReset": int(family_policy["stockPerReset"]),
             "buyRestriction": int(family_policy["buyRestriction"]),
-            "penetrationCeiling": family_policy["maxPermanentPenetration"]
+            "penetrationCeiling": family_policy["maxPermanentPenetration"],
+            "preferredCalibers": family_policy.get("preferredCalibers") or []
         }
     permanent = [x for x in output["families"].values() if x.get("permanentUnlock")]
     if len(permanent) != int(policy["globalRules"]["permanentUnlockFamilies"]):
@@ -59,7 +70,7 @@ def build_selection(pools: dict[str, Any], policy: dict[str, Any]) -> dict[str, 
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Select controlled Admiral ammunition rewards from resolved candidate pools")
+    parser = argparse.ArgumentParser(description="Select family-distinct controlled Admiral ammunition rewards from resolved candidate pools")
     parser.add_argument("pools", type=Path)
     parser.add_argument("policy", type=Path)
     parser.add_argument("--output", type=Path, required=True)
