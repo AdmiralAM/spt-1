@@ -12,6 +12,7 @@ function Write-Json([string]$Name, [object]$Value) {
 }
 
 $hash = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
+$headSha = '0123456789abcdef0123456789abcdef01234567'
 Write-Json 'economy-admiral-audit.json' @{ EnforcementApplied = $false }
 Write-Json 'economy-admiral-reward-utility.json' @{ SchemaVersion = 2 }
 Write-Json 'economy-admiral-progression-graph.json' @{ SchemaVersion = 2 }
@@ -34,9 +35,17 @@ Write-Json 'economy-admiral-enforcement-plan.json' @{
     Candidates = @(@{ AutomaticMutationAllowed = $false; ProposedMutation = $null })
 }
 Write-Json 'economy-admiral-runtime-evidence.json' @{
-    SchemaVersion = 1
+    SchemaVersion = 2
     Mode = 'Audit'
     Preset = 'Normal'
+    BuildIdentity = @{
+        Product = 'Economy Admiral'
+        HeadSha = $headSha
+        WorkflowRunId = '123456789'
+        ArtifactName = 'economy-admiral-candidate'
+        CompilePackageVersion = '4.1.2'
+        TargetRuntime = 'SPT 4.1.3'
+    }
     ExpectedReportCount = 8
     PresentReportCount = 8
     AllExpectedReportsPresent = $true
@@ -49,9 +58,7 @@ Write-Json 'economy-admiral-runtime-evidence.json' @{
 }
 
 & (Join-Path $mod 'Validate-Runtime.ps1')
-if ($LASTEXITCODE -ne 0) {
-    throw "Validator PASS fixture returned exit code $LASTEXITCODE"
-}
+if ($LASTEXITCODE -ne 0) { throw "Validator PASS fixture returned exit code $LASTEXITCODE" }
 
 $manifestPath = Join-Path $reports 'economy-admiral-runtime-evidence.json'
 $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
@@ -61,8 +68,6 @@ $manifest.RuntimeGatePassed = $false
 $manifest | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $manifestPath -Encoding UTF8
 
 $process = Start-Process -FilePath 'pwsh' -ArgumentList @('-NoProfile', '-File', (Join-Path $mod 'Validate-Runtime.ps1')) -Wait -PassThru
-if ($process.ExitCode -eq 0) {
-    throw 'Validator FAIL fixture unexpectedly returned exit code 0'
-}
+if ($process.ExitCode -eq 0) { throw 'Validator FAIL fixture unexpectedly returned exit code 0' }
 
 Write-Host '[Economy Admiral] validator smoke tests PASS'
