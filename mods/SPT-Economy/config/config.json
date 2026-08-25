@@ -11,6 +11,12 @@
   "customAuditPolicy": {
     "questRewardVsVanillaMedianWarnMultiple": 3.0,
     "restartableRewardVsVanillaMedianWarnMultiple": 1.5,
+    "normalizedRewardVsVanillaMedianWarnMultiple": 2.5,
+    "restartableNormalizedRewardVsVanillaMedianWarnMultiple": 1.25,
+    "levelGateWeight": 0.05,
+    "objectiveConditionWeight": 0.35,
+    "maxLevelGateContribution": 3.0,
+    "maxObjectiveContribution": 5.0,
     "duplicateTraderSourcesWarnCount": 6
   },
   "manualOverrides": {}
