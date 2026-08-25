@@ -68,6 +68,25 @@ def source_key_pool(
     return sorted(pool)
 
 
+def bounded_key_pool(quest: dict[str, Any], source_pool: list[str]) -> list[str]:
+    objective = quest.get("objective") or {}
+    representative_count = int(objective.get("representativeCount", 1))
+    maximum_size = int(objective.get("maximumTargetPoolSize", 0))
+    if maximum_size <= 0:
+        raise ValueError(f"authored quest {quest.get('slug')} must define a positive maximumTargetPoolSize")
+    if maximum_size < representative_count:
+        raise ValueError(
+            f"authored quest {quest.get('slug')} maximumTargetPoolSize {maximum_size} "
+            f"is below representativeCount {representative_count}"
+        )
+    if len(source_pool) < representative_count:
+        raise ValueError(
+            f"authored quest {quest.get('slug')} source pool has {len(source_pool)} targets, "
+            f"below representativeCount {representative_count}"
+        )
+    return source_pool[:maximum_size]
+
+
 def condition_id(slug: str, role: str, index: int = 0) -> str:
     return mongo_id(f"admiral-keys:{slug}:condition:{role}:{index}")
 
@@ -222,8 +241,6 @@ def build_payload(
     key_pools: dict[str, list[str]] = {}
     deferred_unlocks: list[dict[str, Any]] = []
 
-    # Build source pools once. Some late-game authored milestones intentionally
-    # reuse a validated earlier source pool instead of inventing a synthetic item.
     source_pools: dict[str, list[str]] = {}
     for group_id, group in groups.items():
         source_pools[group_id] = source_key_pool(
@@ -246,13 +263,14 @@ def build_payload(
         pool_source = str(objective.get("sourceKeyPoolGroup") or slug)
         if pool_source not in source_pools:
             raise KeyError(f"authored quest {slug} references unknown source key pool group: {pool_source}")
-        pool = source_pools[pool_source]
-        if not pool:
+        source_pool = source_pools[pool_source]
+        if not source_pool:
             raise ValueError(
                 f"authored quest {slug} has no usable FindItem source pool; "
                 f"set objective.sourceKeyPoolGroup to a validated key-bearing group"
             )
 
+        pool = bounded_key_pool(quest, source_pool)
         key_pools[slug] = pool
         template, unlock_count = build_template(quest, pool)
         templates[str(quest["id"])] = template
