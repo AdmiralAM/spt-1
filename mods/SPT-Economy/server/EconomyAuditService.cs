@@ -1,10 +1,12 @@
 using System.Text.Json;
 using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 
 namespace SPTEconomy;
 
+[Injectable]
 public sealed class EconomyAuditService(
     TemplateTable templates,
     TradersTable traders,
@@ -175,8 +177,8 @@ public sealed class EconomyAuditService(
             Rarity = manualOverride?.Rarity ?? ClassifyRarity(sourceCount, config.Rarity),
             Ignored = manualOverride?.Ignore ?? false,
             OverrideNote = manualOverride?.Note,
-            TraderSources = acquisition.TraderSources.Order(StringComparer.Ordinal).ToList(),
-            QuestRewardSources = acquisition.QuestRewardSources.Order(StringComparer.Ordinal).ToList(),
+            TraderSources = acquisition.TraderSources.OrderBy(value => value, StringComparer.Ordinal).ToList(),
+            QuestRewardSources = acquisition.QuestRewardSources.OrderBy(value => value, StringComparer.Ordinal).ToList(),
         };
     }
 
