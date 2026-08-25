@@ -61,7 +61,8 @@
     },
     "keys": {
       "bundles": ["Keys Proficiency"],
-      "strategy": "keep-pending-vanilla-overlap-audit"
+      "strategy": "merge-and-rewrite-map-milestones",
+      "target": "Collapse 27 repetitive legacy key quests to an authored map-based chain; remove money/key-hoarding ladders and legacy assort unlock inflation."
     }
   },
   "rules": [
@@ -82,6 +83,7 @@
     { "match": { "bundleEquals": "Cultists Hunt" }, "decision": "MERGE", "reason": "Retain the target fantasy but collapse the ten-step escalation to curated milestones." },
     { "match": { "bundleEquals": "Sniper Life" }, "decision": "MERGE", "reason": "Keep the capability fantasy while collapsing repetitive distance ladders." },
     { "match": { "bundleEquals": "Survivalist" }, "decision": "MERGE", "reason": "Strong survival theme but significant repetition and probable vanilla overlap." },
+    { "match": { "bundleEquals": "Keys Proficiency" }, "decision": "MERGE", "reason": "Audit found repetitive per-map Burglar/Key Master/Locksmith ladders, extreme collection-value requirements, and nine legacy assort unlock rewards; preserve the key-progression theme but rebuild it as a short map-based chain." },
     { "match": { "bundleEquals": "Ammo Proficiency" }, "decision": "REWRITE", "reason": "Core ammo capability progression is desired, but legacy chain/rewards must be rebuilt with Weapon Proficiency as one domain." },
     { "match": { "bundleEquals": "Weapon Proficiency" }, "decision": "REWRITE", "reason": "Core weapon-family progression is desired, but six-trader/tier structure must be consolidated with Ammo Proficiency as one domain." },
     { "match": { "bundleEquals": "Deep Pockets" }, "decision": "REWRITE", "reason": "Candidate equipment progression; reward/unlock chain needs consolidation." },
@@ -90,7 +92,6 @@
     { "match": { "bundleEquals": "Meds Proficiency" }, "decision": "REWRITE", "reason": "Candidate capability progression; audit against vanilla and economy." },
     { "match": { "bundleEquals": "Stims Proficiency" }, "decision": "REWRITE", "reason": "Candidate capability progression; high-value consumables require controlled unlocks." },
     { "match": { "bundleEquals": "Tarkov Mule" }, "decision": "REWRITE", "reason": "Candidate equipment progression; consolidate backpack unlock path." },
-    { "match": { "bundleEquals": "Ultrasound" }, "decision": "REWRITE", "reason": "Candidate equipment progression; consolidate headset unlock path." },
-    { "match": { "bundleEquals": "Keys Proficiency" }, "decision": "KEEP", "reason": "Small authored progression candidate; retain pending vanilla-overlap and reward audit." }
+    { "match": { "bundleEquals": "Ultrasound" }, "decision": "REWRITE", "reason": "Candidate equipment progression; consolidate headset unlock path." }
   ]
 }

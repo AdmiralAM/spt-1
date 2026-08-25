@@ -41,6 +41,7 @@ jobs:
           python -m json.tool mods/Admiral-Trader/manifests/campaign-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/reward-policy.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/runtime-manifest.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/curated-quest-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/base.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/assort.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/questassort.json > /dev/null
@@ -135,6 +136,40 @@ jobs:
               raise SystemExit(f'Admiral trader id collides with legacy quest id: {trader_id}')
           PY
 
+      - name: Materialize direct-publish legacy quest source set
+        run: >-
+          python mods/Admiral-Trader/tools/materialize_quest_templates.py
+          build/admiral-trader-inventory.json
+          legacy-andrudis/db/QuestBundles
+          --output build/admiral-trader-curated-materialization.json
+
+      - name: Enforce curated quest planning gate
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          inventory = json.loads(Path('build/admiral-trader-inventory.json').read_text(encoding='utf-8'))
+          materialized = json.loads(Path('build/admiral-trader-curated-materialization.json').read_text(encoding='utf-8'))
+          plan = json.loads(Path('mods/Admiral-Trader/manifests/curated-quest-manifest.json').read_text(encoding='utf-8'))
+          summary = materialized['summary']
+          if summary['curatedTemplateCount'] != 0:
+              raise SystemExit(f"legacy template unexpectedly marked direct-publish: {summary['curatedTemplateCount']}")
+          if summary['accidentalDeprecatedTemplateCount'] != 0:
+              raise SystemExit('deprecated quest leaked into direct-publish runtime set')
+          key_rows = [row for row in inventory['quests'] if row['bundle'] == 'Keys Proficiency']
+          if len(key_rows) != 27 or any(row['curationDecision'] != 'MERGE' for row in key_rows):
+              raise SystemExit('Keys Proficiency must contain exactly 27 MERGE source quests')
+          source_ids = [str(qid) for group in plan['groups'] for qid in group['sourceQuestIds']]
+          if len(source_ids) != len(set(source_ids)):
+              raise SystemExit('curated key plan contains duplicate legacy source ids')
+          expected_ids = {row['questId'] for row in key_rows}
+          planned_ids = set(source_ids)
+          if planned_ids != expected_ids:
+              raise SystemExit(f'curated key plan coverage mismatch; missing={sorted(expected_ids-planned_ids)} extra={sorted(planned_ids-expected_ids)}')
+          if len(plan['groups']) > plan['targetQuestCountMax']:
+              raise SystemExit('curated key plan exceeds target quest count')
+          PY
+
       - name: Fetch pinned official vanilla quest database
         run: >-
           curl --fail --location --retry 3
@@ -168,6 +203,7 @@ jobs:
           name: admiral-trader-analysis-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             build/admiral-trader-inventory.json
+            build/admiral-trader-curated-materialization.json
             build/vanilla-reward-benchmark.json
           if-no-files-found: error
           retention-days: 7
