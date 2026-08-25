@@ -32,6 +32,7 @@
     <Compile Include="..\client\PlannerRaidDecisionExplanation.cs" Link="PlannerRaidDecisionExplanation.cs" />
     <Compile Include="..\client\PlannerRaidDecisionPresentation.cs" Link="PlannerRaidDecisionPresentation.cs" />
     <Compile Include="..\client\PlannerRaidDecisionIntent.cs" Link="PlannerRaidDecisionIntent.cs" />
+    <Compile Include="..\client\PlannerRaidFocusEvidence.cs" Link="PlannerRaidFocusEvidence.cs" />
     <Compile Include="..\client\PlannerRaidPlanCollection.cs" Link="PlannerRaidPlanCollection.cs" />
     <Compile Include="..\client\PlannerRaidPlanProvider.cs" Link="PlannerRaidPlanProvider.cs" />
     <Compile Include="..\client\PlannerRaidPlanViewModel.cs" Link="PlannerRaidPlanViewModel.cs" />
