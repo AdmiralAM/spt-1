@@ -36,7 +36,10 @@ namespace SPTQuestPlanner.Client
             int unresolvedPreparationCount,
             int unknownObjectiveCount,
             int objectiveCount,
-            double knownRemainingWork)
+            double knownRemainingWork,
+            IReadOnlyList<string> nonRepeatableQuestIds = null,
+            IReadOnlyList<string> repeatableQuestIds = null,
+            IReadOnlyList<string> immediateUnlockQuestIds = null)
         {
             NonRepeatableQuestCount = Math.Max(0, nonRepeatableQuestCount);
             RepeatableQuestCount = Math.Max(0, repeatableQuestCount);
@@ -47,6 +50,9 @@ namespace SPTQuestPlanner.Client
             UnknownObjectiveCount = Math.Max(0, unknownObjectiveCount);
             ObjectiveCount = Math.Max(0, objectiveCount);
             KnownRemainingWork = Math.Max(0d, knownRemainingWork);
+            NonRepeatableQuestIds = nonRepeatableQuestIds ?? Array.Empty<string>();
+            RepeatableQuestIds = repeatableQuestIds ?? Array.Empty<string>();
+            ImmediateUnlockQuestIds = immediateUnlockQuestIds ?? Array.Empty<string>();
         }
 
         public int NonRepeatableQuestCount { get; private set; }
@@ -58,6 +64,9 @@ namespace SPTQuestPlanner.Client
         public int UnknownObjectiveCount { get; private set; }
         public int ObjectiveCount { get; private set; }
         public double KnownRemainingWork { get; private set; }
+        public IReadOnlyList<string> NonRepeatableQuestIds { get; private set; }
+        public IReadOnlyList<string> RepeatableQuestIds { get; private set; }
+        public IReadOnlyList<string> ImmediateUnlockQuestIds { get; private set; }
 
         public int CrossQuestOverlapGroupCount { get { return ActionOverlaps.Count; } }
         public int MaxOverlappingQuestCount
@@ -93,17 +102,19 @@ namespace SPTQuestPlanner.Client
             if (topology == null) throw new ArgumentNullException("topology");
             if (state == null) throw new ArgumentNullException("state");
 
-            int nonRepeatableQuestCount = 0;
-            int repeatableQuestCount = 0;
+            List<string> nonRepeatableQuestIds = new List<string>();
+            List<string> repeatableQuestIds = new List<string>();
             HashSet<string> seenQuestIds = new HashSet<string>(StringComparer.Ordinal);
             for (int i = 0; i < plan.QuestIds.Count; i++)
             {
                 string questId = plan.QuestIds[i];
                 if (string.IsNullOrWhiteSpace(questId) || !seenQuestIds.Add(questId)) continue;
                 PlannerTopologyQuest quest = topology.GetQuest(questId);
-                if (quest != null && quest.Repeatable) repeatableQuestCount++;
-                else nonRepeatableQuestCount++;
+                if (quest != null && quest.Repeatable) repeatableQuestIds.Add(questId);
+                else nonRepeatableQuestIds.Add(questId);
             }
+            nonRepeatableQuestIds.Sort(StringComparer.Ordinal);
+            repeatableQuestIds.Sort(StringComparer.Ordinal);
 
             Dictionary<string, MutableOverlap> overlapBySignature = new Dictionary<string, MutableOverlap>(StringComparer.Ordinal);
             int unknownObjectiveCount = 0;
@@ -159,17 +170,22 @@ namespace SPTQuestPlanner.Client
                 for (int i = 0; i < unlocks.Count; i++)
                     if (!string.IsNullOrWhiteSpace(unlocks[i])) immediateUnlocks.Add(unlocks[i]);
             }
+            string[] immediateUnlockQuestIds = immediateUnlocks.ToArray();
+            Array.Sort(immediateUnlockQuestIds, StringComparer.Ordinal);
 
             return new PlannerRaidDecisionSignals(
-                nonRepeatableQuestCount,
-                repeatableQuestCount,
+                nonRepeatableQuestIds.Count,
+                repeatableQuestIds.Count,
                 actionOverlaps.ToArray(),
-                immediateUnlocks.Count,
+                immediateUnlockQuestIds.Length,
                 plan.MissingBringTemplateCount,
                 plan.UnresolvedPreparationCount,
                 unknownObjectiveCount,
                 plan.ObjectiveCount,
-                plan.KnownRemainingWork);
+                plan.KnownRemainingWork,
+                nonRepeatableQuestIds.ToArray(),
+                repeatableQuestIds.ToArray(),
+                immediateUnlockQuestIds);
         }
 
         private static string BuildActionSignature(PlannerRaidObjective objective)
