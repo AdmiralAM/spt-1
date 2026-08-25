@@ -29,11 +29,11 @@ namespace SPTPause
             {
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
-                if (harmonyType == null || harmonyMethodType == null) return Fail("Harmony is unavailable; SPT Pause remains disabled.");
+                if (harmonyType == null || harmonyMethodType == null) return Fail("Harmony is unavailable; Pause Admiral remains disabled.");
 
                 Type gameWorld = ReflectionTools.FindType("EFT.GameWorld");
                 Type timerPanel = ReflectionTools.FindType("EFT.UI.BattleTimer.TimerPanel");
-                if (gameWorld == null || timerPanel == null) return Fail("SPT 4.1 world/timer types were not found; SPT Pause remains disabled.");
+                if (gameWorld == null || timerPanel == null) return Fail("SPT 4.1 world/timer types were not found; Pause Admiral remains disabled.");
 
                 MethodInfo worldTick = gameWorld.GetMethod("DoWorldTick", BindingFlags.Instance | BindingFlags.Public, null, new[] { typeof(float) }, null);
                 MethodInfo otherWorldTick = gameWorld.GetMethod("DoOtherWorldTick", BindingFlags.Instance | BindingFlags.Public, null, new[] { typeof(float) }, null);
@@ -54,13 +54,13 @@ namespace SPTPause
                 Patch(patchMethod, harmonyMethodType, updateTimer, timerPatch);
 
                 unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
-                if (logInfo != null) logInfo("SPT Pause installed on SPT 4.1 world ticks and raid timer UI.");
+                if (logInfo != null) logInfo("Pause Admiral installed on SPT 4.1 world ticks and raid timer UI.");
                 return true;
             }
             catch (Exception exception)
             {
                 Dispose();
-                return Fail("SPT Pause patch installation failed safely: " + exception.Message);
+                return Fail("Pause Admiral patch installation failed safely: " + exception.Message);
             }
         }
 

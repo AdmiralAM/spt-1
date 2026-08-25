@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 namespace SPTPause
 {
-    [BepInPlugin("com.admiralam.spt.pause", "SPT Pause", "0.1.1")]
+    [BepInPlugin("com.admiralam.spt.pause", "Pause Admiral", "1.0.0")]
     public sealed class Plugin : BaseUnityPlugin
     {
         DynamicPausePatches patches;
@@ -24,7 +24,7 @@ namespace SPTPause
             controller = gameObject.AddComponent<PauseController>();
             controller.Initialize(enabled, toggle, pauseAudio, showPausedTimer, message => Logger.LogInfo(message), message => Logger.LogWarning(message));
             SceneManager.sceneLoaded += OnSceneLoaded;
-            Logger.LogInfo("SPT Pause v0.1.1 loaded (Phase 1 validation hardening, SPT 4.1.x).");
+            Logger.LogInfo("Pause Admiral v1.0.0 loaded (SPT 4.1.x).");
         }
 
         void OnSceneLoaded(Scene scene, LoadSceneMode mode)
