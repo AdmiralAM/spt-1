@@ -11,17 +11,47 @@
     <FileVersion>0.1.0.0</FileVersion>
     <SptRuntimeTarget>4.1.3</SptRuntimeTarget>
     <SptPublishedApiBaseline>4.1.2</SptPublishedApiBaseline>
+    <UseExactSptRuntime Condition="'$(SptRuntimeLibDir)' != ''">true</UseExactSptRuntime>
+    <UseExactSptRuntime Condition="'$(SptRuntimeLibDir)' == ''">false</UseExactSptRuntime>
   </PropertyGroup>
 
-  <!-- SPT 4.1.3 is the required runtime target. The SPTarkov NuGet feed currently publishes
-       the server API only through 4.1.2, so CI compilation uses that nearest published API
-       baseline. Exact 4.1.3 compatibility is a separate runtime/evidence gate and must not be
-       represented by a nonexistent NuGet package version. -->
-  <ItemGroup>
+  <!-- Source CI compiles against the nearest published API package. A physical/runtime candidate
+       must pass SptRuntimeLibDir and is then compiled against the actual SPT 4.1.3 assemblies.
+       This distinction is intentional: SPT validates the referenced Server.Core version at load. -->
+  <ItemGroup Condition="'$(UseExactSptRuntime)' != 'true'">
     <PackageReference Include="SPTarkov.Common" Version="$(SptPublishedApiBaseline)" />
     <PackageReference Include="SPTarkov.DI" Version="$(SptPublishedApiBaseline)" />
     <PackageReference Include="SPTarkov.Server.Core" Version="$(SptPublishedApiBaseline)" />
   </ItemGroup>
+
+  <ItemGroup Condition="'$(UseExactSptRuntime)' == 'true'">
+    <Reference Include="SPTarkov.Common">
+      <HintPath>$(SptRuntimeLibDir)\SPTarkov.Common.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SPTarkov.DI">
+      <HintPath>$(SptRuntimeLibDir)\SPTarkov.DI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SPTarkov.Server.Core">
+      <HintPath>$(SptRuntimeLibDir)\SPTarkov.Server.Core.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="SemanticVersioning">
+      <HintPath>$(SptRuntimeLibDir)\SemanticVersioning.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="JetBrains.Annotations">
+      <HintPath>$(SptRuntimeLibDir)\JetBrains.Annotations.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="ValidateExactSptRuntimeReferences" BeforeTargets="ResolveReferences" Condition="'$(UseExactSptRuntime)' == 'true'">
+    <Error Condition="!Exists('$(SptRuntimeLibDir)\SPTarkov.Server.Core.dll')" Text="Exact SPT build requested but SPTarkov.Server.Core.dll is missing from SptRuntimeLibDir=$(SptRuntimeLibDir)" />
+    <Error Condition="!Exists('$(SptRuntimeLibDir)\SPTarkov.Common.dll')" Text="Exact SPT build requested but SPTarkov.Common.dll is missing from SptRuntimeLibDir=$(SptRuntimeLibDir)" />
+    <Error Condition="!Exists('$(SptRuntimeLibDir)\SPTarkov.DI.dll')" Text="Exact SPT build requested but SPTarkov.DI.dll is missing from SptRuntimeLibDir=$(SptRuntimeLibDir)" />
+  </Target>
 
   <ItemGroup>
     <Content Include="..\manifests\campaign-manifest.json" Link="manifests\campaign-manifest.json" CopyToOutputDirectory="PreserveNewest" />
