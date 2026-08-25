@@ -41,6 +41,7 @@ jobs:
               root / 'server' / 'EconomyMod.cs',
               root / 'server' / 'EconomyAuditService.cs',
               root / 'server' / 'RewardUtilityAuditService.cs',
+              root / 'server' / 'QuestProgressionGraphService.cs',
           ]
           missing = [str(path) for path in required if not path.is_file()]
           if missing:
@@ -72,6 +73,7 @@ jobs:
           assert 'OnLoadOrder.PostLoad + 1000' in source
           assert 'namespace EconomyAdmiral;' in source
           assert 'RewardUtilityAuditService' in source
+          assert 'QuestProgressionGraphService' in source
 
           metadata = (root / 'server' / 'ModMetadata.cs').read_text(encoding='utf-8')
           assert 'Economy Admiral' in metadata
@@ -111,6 +113,16 @@ jobs:
               'economy-admiral-reward-utility.json',
           ]:
               assert invariant in utility, invariant
+
+          graph = (root / 'server' / 'QuestProgressionGraphService.cs').read_text(encoding='utf-8')
+          for invariant in [
+              'ConditionType, "Quest"',
+              'MaximumPrerequisiteDepth',
+              'CycleMemberCount',
+              'economy-admiral-progression-graph.json',
+              'using Path = System.IO.Path;',
+          ]:
+              assert invariant in graph, invariant
 
           print('Economy Admiral module contract OK')
 
