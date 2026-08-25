@@ -73,6 +73,18 @@ Do not ask the user to perform physical/runtime testing from source code, a PR d
 
 Test candidates belong in GitHub Actions artifacts while they are under review. Do not update `main`, `stable`, or a `runtime-*` publication branch with a candidate until the required validation gate has passed and the promotion is deliberate.
 
+## Gate-based runtime handoff
+
+Do not use the user as a debugger loop. Agents must not publish a new runtime artifact for every internal hypothesis, blind guess, or micro-patch.
+
+Before requesting user runtime testing, complete all feasible discovery, source/log inspection, static analysis, compile checks, and local validation. If the implementation depends on an unknown runtime/API boundary, resolve that boundary from available references, source, logs, artifacts, or a narrow diagnostic before asking for physical testing. If the boundary cannot be proven, stop and report the blocker instead of handing off a speculative build.
+
+A runtime artifact may be handed off only when it answers one clear physical question. State the single gate being tested, such as load safety, runtime type proof, functional Gate A, or regression confirmation. The handoff must include expected log lines or visible behavior and a pass/fail rule.
+
+Load safety comes first. If a candidate can break profile loading, game loading, taxonomy registration, or startup, it must fail closed before handoff. Do not expose unsafe runtime data or ask the user to confirm a known startup-blocking state.
+
+When a runtime gate fails, do not immediately issue another artifact. First explain the failed boundary, the evidence that proves it, and the next smallest gate. User physical testing is reserved for defined gates, not internal patch iteration.
+
 ## Issues and Pull Requests
 
 Issues define durable scope: objective, evidence/current state, allowed work, non-goals, stop condition, runtime checklist when needed, and acceptance criteria.

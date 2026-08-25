@@ -31,11 +31,15 @@
 - PR / branch / commit SHA:
 - Successful workflow run:
 - Downloadable artifact or deliberate runtime branch:
+- Single runtime gate being tested:
 - Install layout:
 - Focused checklist:
 - Required returned evidence:
 - Pass/fail decision rule:
 - [ ] I am not asking for runtime testing from CI success alone; the named artifact/package exists for the exact commit above.
+- [ ] This handoff answers one clear physical question and is not an internal micro-patch/debug loop.
+- [ ] Unknown runtime/API boundaries were resolved from references, source, logs, artifacts, or narrow diagnostics before requesting physical testing.
+- [ ] Load safety was considered first; this artifact is not expected to block profile/game loading or startup.
 
 ## Repository hygiene
 
