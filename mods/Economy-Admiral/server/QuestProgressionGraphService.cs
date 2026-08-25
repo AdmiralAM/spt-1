@@ -31,7 +31,44 @@ public sealed class QuestProgressionGraphService(
         "6617beeaa9cfa777ca915b7c",
     };
 
+    private QuestProgressionSnapshot? snapshot;
+
+    public QuestProgressionSnapshot GetSnapshot()
+    {
+        return snapshot ??= Analyze();
+    }
+
     public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        var current = GetSnapshot();
+        var report = new QuestProgressionGraphReport
+        {
+            SchemaVersion = 2,
+            DepthAffectsRewardAllowance = false,
+            QuestCount = current.Quests.Count,
+            QuestsWithPrerequisites = current.Quests.Count(row => row.DirectPrerequisiteCount > 0),
+            MaximumObservedDepth = current.MaximumObservedDepth,
+            CycleMemberCount = current.CycleMembers.Count,
+            CycleMembers = current.CycleMembers,
+            VanillaDepthBenchmark = current.VanillaDepthBenchmark,
+            VanillaRestartableDepthBenchmark = current.VanillaRestartableDepthBenchmark,
+            Quests = current.Quests,
+        };
+
+        var modPath = modHelper.GetAbsolutePathToModFolder(typeof(QuestProgressionGraphService).Assembly);
+        var reportPath = Path.GetFullPath(Path.Combine(modPath, "reports", "economy-admiral-progression-graph.json"));
+        var modRoot = Path.GetFullPath(modPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        if (!reportPath.StartsWith(modRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Economy Admiral progression graph report path must stay inside the mod directory.");
+        }
+
+        Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
+        await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
+        logger.Info($"[Economy Admiral] quest progression graph complete: {report.QuestCount} quests, maxDepth={report.MaximumObservedDepth}, cycleMembers={report.CycleMemberCount}; report={reportPath}");
+    }
+
+    private QuestProgressionSnapshot Analyze()
     {
         var questIds = templates.Quests.Keys
             .Select(id => id.ToString())
@@ -64,12 +101,10 @@ public sealed class QuestProgressionGraphService(
                 DirectPrerequisiteCount = prerequisiteMap[questId].Count,
                 DirectPrerequisites = prerequisiteMap[questId],
                 MaximumPrerequisiteDepth = depth,
-                IsCycleMember = cycleMembers.Contains(questId),
+                IsCycleMember = false,
             });
         }
 
-        // Cycle membership can be discovered while later rows are traversed. Re-project once so every row
-        // reflects the final cycle-member set rather than the set state at that row's original creation time.
         rows = rows
             .Select(row => row with { IsCycleMember = cycleMembers.Contains(row.QuestId) })
             .ToList();
@@ -85,31 +120,14 @@ public sealed class QuestProgressionGraphService(
             .OrderBy(value => value)
             .ToList();
 
-        var report = new QuestProgressionGraphReport
+        return new QuestProgressionSnapshot
         {
-            SchemaVersion = 2,
-            DepthAffectsRewardAllowance = false,
-            QuestCount = rows.Count,
-            QuestsWithPrerequisites = rows.Count(row => row.DirectPrerequisiteCount > 0),
             MaximumObservedDepth = rows.Count == 0 ? 0 : rows.Max(row => row.MaximumPrerequisiteDepth),
-            CycleMemberCount = cycleMembers.Count,
             CycleMembers = cycleMembers.OrderBy(value => value, StringComparer.Ordinal).ToList(),
             VanillaDepthBenchmark = BuildDepthBenchmark(vanillaDepths),
             VanillaRestartableDepthBenchmark = BuildDepthBenchmark(vanillaRestartableDepths),
             Quests = rows,
         };
-
-        var modPath = modHelper.GetAbsolutePathToModFolder(typeof(QuestProgressionGraphService).Assembly);
-        var reportPath = Path.GetFullPath(Path.Combine(modPath, "reports", "economy-admiral-progression-graph.json"));
-        var modRoot = Path.GetFullPath(modPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        if (!reportPath.StartsWith(modRoot, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException("Economy Admiral progression graph report path must stay inside the mod directory.");
-        }
-
-        Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
-        await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
-        logger.Info($"[Economy Admiral] quest progression graph complete: {report.QuestCount} quests, maxDepth={report.MaximumObservedDepth}, cycleMembers={report.CycleMemberCount}; report={reportPath}");
     }
 
     private static QuestDepthBenchmark BuildDepthBenchmark(IReadOnlyList<double> sortedDepths)
@@ -248,6 +266,15 @@ public sealed class QuestProgressionGraphService(
         var fraction = position - lower;
         return Math.Round(sortedValues[lower] + ((sortedValues[upper] - sortedValues[lower]) * fraction), 2);
     }
+}
+
+public sealed record QuestProgressionSnapshot
+{
+    public required int MaximumObservedDepth { get; init; }
+    public required List<string> CycleMembers { get; init; }
+    public required QuestDepthBenchmark VanillaDepthBenchmark { get; init; }
+    public required QuestDepthBenchmark VanillaRestartableDepthBenchmark { get; init; }
+    public required List<QuestProgressionGraphRow> Quests { get; init; }
 }
 
 public sealed record QuestProgressionGraphReport
