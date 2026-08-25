@@ -54,8 +54,17 @@ jobs:
           assert config['rarity']['uncommonMinSources'] >= config['rarity']['rareMinSources']
 
           policy = config['customAuditPolicy']
-          assert policy['questRewardVsVanillaMedianWarnMultiple'] > 0
-          assert policy['restartableRewardVsVanillaMedianWarnMultiple'] > 0
+          for key in [
+              'questRewardVsVanillaMedianWarnMultiple',
+              'restartableRewardVsVanillaMedianWarnMultiple',
+              'normalizedRewardVsVanillaMedianWarnMultiple',
+              'restartableNormalizedRewardVsVanillaMedianWarnMultiple',
+              'levelGateWeight',
+              'objectiveConditionWeight',
+              'maxLevelGateContribution',
+              'maxObjectiveContribution',
+          ]:
+              assert policy[key] >= 0, key
           assert policy['duplicateTraderSourcesWarnCount'] > 0
 
           source = (root / 'server' / 'EconomyMod.cs').read_text(encoding='utf-8')
@@ -69,7 +78,11 @@ jobs:
               'TRADER_OFFER_MISSING_LOYALTY',
               'QUEST_REWARD_VALUE_OUTLIER',
               'RESTARTABLE_REWARD_VALUE_OUTLIER',
-              'VanillaMedianHandbookValue',
+              'QUEST_REWARD_BUDGET_OUTLIER',
+              'RESTARTABLE_REWARD_BUDGET_OUTLIER',
+              'VanillaMedianNormalizedHandbookValue',
+              'ProgressionScore',
+              'SchemaVersion = 3',
           ]:
               assert invariant in audit, invariant
 
