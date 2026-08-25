@@ -14,6 +14,7 @@ public sealed class EconomyMod(
     QuestConstraintAuditService questConstraintAuditService,
     QuestAnalysisService questAnalysisService,
     CompositePolicyEvaluationService compositePolicyEvaluationService,
+    TargetProposalService targetProposalService,
     EnforcementPlanService enforcementPlanService
 ) : IOnLoad
 {
@@ -31,6 +32,7 @@ public sealed class EconomyMod(
         await questConstraintAuditService.RunAsync(cancellationToken);
         await questAnalysisService.RunAsync(cancellationToken);
         await compositePolicyEvaluationService.RunAsync(cancellationToken);
+        await targetProposalService.RunAsync(cancellationToken);
         await enforcementPlanService.RunAsync(cancellationToken);
     }
 }
