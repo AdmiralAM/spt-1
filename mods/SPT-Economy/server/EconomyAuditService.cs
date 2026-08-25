@@ -20,6 +20,20 @@ public sealed class EconomyAuditService(
         PropertyNameCaseInsensitive = true,
     };
 
+    private static readonly HashSet<string> VanillaTraderIds = new(StringComparer.Ordinal)
+    {
+        "54cb50c76803fa8b248b4571", // Prapor
+        "54cb57776803fa99248b456e", // Therapist
+        "579dc571d53a0658a154fbec", // Fence
+        "58330581ace78e27b8b10cee", // Skier
+        "5935c25fb3acc3127c3d8cd9", // Peacekeeper
+        "5a7c2eca46aef81a7ca2145d", // Mechanic
+        "5ac3b934156ae10c4430e83c", // Ragman
+        "5c0647fdd443bc2504c2d371", // Jaeger
+        "638f541a29ffd1183d187f57", // Lightkeeper
+        "6617beeaa9cfa777ca915b7c", // Ref
+    };
+
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(EconomyAuditService).Assembly);
@@ -36,9 +50,18 @@ public sealed class EconomyAuditService(
             logger.Warning("[SPT Economy] mode=Enforce requested, but enforcement is not implemented in this slice; running read-only audit only");
         }
 
+        var policy = ResolvePolicy(config);
+        var handbookPrices = templates.Handbook.Items
+            .Where(item => item.Price is > 0)
+            .GroupBy(item => item.Id.ToString(), StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.First().Price!.Value, StringComparer.Ordinal);
+
+        var findings = new List<AuditFinding>();
         var acquisitions = new Dictionary<string, MutableAcquisition>(StringComparer.Ordinal);
-        ScanTraderAcquisition(acquisitions);
-        ScanQuestRewards(acquisitions);
+        var traderAudits = ScanTraderAcquisition(acquisitions, findings);
+        var questAudits = ScanQuestRewards(acquisitions, handbookPrices);
+        var benchmark = BuildVanillaBenchmark(questAudits);
+        AddQuestAuditFindings(questAudits, benchmark, policy, findings);
 
         var items = acquisitions
             .OrderBy(pair => pair.Key, StringComparer.Ordinal)
@@ -46,16 +69,32 @@ public sealed class EconomyAuditService(
             .Where(item => !item.Ignored)
             .ToList();
 
+        foreach (var item in items.Where(item => item.TraderSources.Count >= policy.DuplicateTraderSourcesWarnCount))
+        {
+            findings.Add(new AuditFinding
+            {
+                Severity = "Warning",
+                Code = "TRADER_SOURCE_SATURATION",
+                SubjectType = "Item",
+                SubjectId = item.TemplateId,
+                Detail = $"Item is sold by {item.TraderSources.Count} traders.",
+                Metric = item.TraderSources.Count,
+                Threshold = policy.DuplicateTraderSourcesWarnCount,
+            });
+        }
+
         var report = new EconomyAuditReport
         {
-            SchemaVersion = 1,
+            SchemaVersion = 2,
             Mode = config.Mode.ToString(),
             Preset = config.Preset.ToString(),
             EnforcementApplied = false,
             RepeatedRaidLootDecay = config.RepeatedRaidLootDecay,
+            Policy = policy,
             Database = new DatabaseSummary
             {
                 TemplateItems = templates.Items.Count,
+                HandbookItemsWithPrice = handbookPrices.Count,
                 Quests = templates.Quests.Count,
                 Traders = traders.Count,
                 TraderAssortRecords = traders.Values.Sum(trader => trader.Assort.Items.Count),
@@ -66,6 +105,14 @@ public sealed class EconomyAuditService(
                 TraderSourceEdges = items.Sum(item => item.TraderSources.Count),
                 QuestRewardSourceEdges = items.Sum(item => item.QuestRewardSources.Count),
             },
+            VanillaQuestRewardBenchmark = benchmark,
+            TraderAudits = traderAudits,
+            QuestRewardAudits = questAudits,
+            Findings = findings
+                .OrderBy(finding => finding.Code, StringComparer.Ordinal)
+                .ThenBy(finding => finding.SubjectType, StringComparer.Ordinal)
+                .ThenBy(finding => finding.SubjectId, StringComparer.Ordinal)
+                .ToList(),
             Items = items,
         };
 
@@ -79,64 +126,222 @@ public sealed class EconomyAuditService(
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
         await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
 
-        logger.Info($"[SPT Economy] final DB audit complete: {report.Database.TemplateItems} templates, {report.Database.Traders} traders, {report.Database.Quests} quests, {items.Count} items with trader/quest acquisition; report={reportPath}");
+        logger.Info($"[SPT Economy] final DB audit complete: {report.Database.TemplateItems} templates, {report.Database.Traders} traders, {report.Database.Quests} quests, {items.Count} items with trader/quest acquisition, {report.Findings.Count} findings; report={reportPath}");
     }
 
-    private void ScanTraderAcquisition(Dictionary<string, MutableAcquisition> acquisitions)
+    private List<TraderAudit> ScanTraderAcquisition(
+        Dictionary<string, MutableAcquisition> acquisitions,
+        List<AuditFinding> findings
+    )
     {
+        var audits = new List<TraderAudit>();
+
         foreach (var traderPair in traders.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
         {
             var traderId = traderPair.Key.ToString();
             var assort = traderPair.Value.Assort;
+            var roots = assort.Items
+                .Where(item => string.Equals(item.ParentId, "hideout", StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
-            foreach (var item in assort.Items.Where(item => string.Equals(item.ParentId, "hideout", StringComparison.OrdinalIgnoreCase)))
+            var missingBarter = 0;
+            var missingLoyalty = 0;
+
+            foreach (var item in roots)
             {
                 var templateId = item.Template.ToString();
-                if (string.IsNullOrWhiteSpace(templateId))
+                if (!string.IsNullOrWhiteSpace(templateId))
                 {
-                    continue;
+                    GetOrCreate(acquisitions, templateId).TraderSources.Add(traderId);
                 }
 
-                GetOrCreate(acquisitions, templateId).TraderSources.Add(traderId);
+                if (!assort.BarterScheme.ContainsKey(item.Id))
+                {
+                    missingBarter++;
+                    findings.Add(new AuditFinding
+                    {
+                        Severity = "Error",
+                        Code = "TRADER_OFFER_MISSING_BARTER",
+                        SubjectType = "TraderOffer",
+                        SubjectId = $"{traderId}:{item.Id}",
+                        Detail = "Root trader offer has no barter scheme.",
+                    });
+                }
+
+                if (!assort.LoyalLevelItems.ContainsKey(item.Id))
+                {
+                    missingLoyalty++;
+                    findings.Add(new AuditFinding
+                    {
+                        Severity = "Error",
+                        Code = "TRADER_OFFER_MISSING_LOYALTY",
+                        SubjectType = "TraderOffer",
+                        SubjectId = $"{traderId}:{item.Id}",
+                        Detail = "Root trader offer has no loyalty-level mapping.",
+                    });
+                }
             }
+
+            audits.Add(new TraderAudit
+            {
+                TraderId = traderId,
+                TraderName = traderPair.Value.Base.Name,
+                RootOffers = roots.Count,
+                MissingBarterSchemes = missingBarter,
+                MissingLoyaltyMappings = missingLoyalty,
+            });
         }
+
+        return audits;
     }
 
-    private void ScanQuestRewards(Dictionary<string, MutableAcquisition> acquisitions)
+    private List<QuestRewardAudit> ScanQuestRewards(
+        Dictionary<string, MutableAcquisition> acquisitions,
+        IReadOnlyDictionary<string, double> handbookPrices
+    )
     {
+        var audits = new List<QuestRewardAudit>();
+
         foreach (var questPair in templates.Quests.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
         {
-            if (questPair.Value.Rewards is null)
+            var quest = questPair.Value;
+            var questId = questPair.Key.ToString();
+            var traderId = quest.TraderId.ToString();
+            var rewardItems = new List<RewardItemValue>();
+
+            if (quest.Rewards is not null)
+            {
+                var rewards = JsonSerializer.SerializeToElement(quest.Rewards);
+                rewardItems.AddRange(FindRewardItems(rewards));
+            }
+
+            foreach (var templateId in rewardItems.Select(item => item.TemplateId).Distinct(StringComparer.Ordinal))
+            {
+                GetOrCreate(acquisitions, templateId).QuestRewardSources.Add(questId);
+            }
+
+            var knownValue = 0d;
+            var unknownPriceItems = 0;
+            foreach (var rewardItem in rewardItems)
+            {
+                if (handbookPrices.TryGetValue(rewardItem.TemplateId, out var price))
+                {
+                    knownValue += price * rewardItem.Count;
+                }
+                else
+                {
+                    unknownPriceItems++;
+                }
+            }
+
+            audits.Add(new QuestRewardAudit
+            {
+                QuestId = questId,
+                QuestName = quest.QuestName ?? quest.Name,
+                TraderId = traderId,
+                IsVanillaTraderQuest = VanillaTraderIds.Contains(traderId),
+                Restartable = quest.Restartable,
+                RewardItemRecords = rewardItems.Count,
+                DistinctRewardTemplates = rewardItems.Select(item => item.TemplateId).Distinct(StringComparer.Ordinal).Count(),
+                KnownHandbookValue = Math.Round(knownValue, 2),
+                UnknownPriceItemRecords = unknownPriceItems,
+            });
+        }
+
+        return audits;
+    }
+
+    private static QuestRewardBenchmark BuildVanillaBenchmark(IReadOnlyCollection<QuestRewardAudit> questAudits)
+    {
+        var values = questAudits
+            .Where(audit => audit.IsVanillaTraderQuest && !audit.Restartable && audit.KnownHandbookValue > 0)
+            .Select(audit => audit.KnownHandbookValue)
+            .OrderBy(value => value)
+            .ToList();
+
+        var restartableValues = questAudits
+            .Where(audit => audit.IsVanillaTraderQuest && audit.Restartable && audit.KnownHandbookValue > 0)
+            .Select(audit => audit.KnownHandbookValue)
+            .OrderBy(value => value)
+            .ToList();
+
+        return new QuestRewardBenchmark
+        {
+            VanillaQuestSamples = values.Count,
+            VanillaMedianHandbookValue = Percentile(values, 0.50),
+            VanillaP90HandbookValue = Percentile(values, 0.90),
+            VanillaRestartableSamples = restartableValues.Count,
+            VanillaRestartableMedianHandbookValue = Percentile(restartableValues, 0.50),
+        };
+    }
+
+    private static void AddQuestAuditFindings(
+        IReadOnlyCollection<QuestRewardAudit> questAudits,
+        QuestRewardBenchmark benchmark,
+        AuditPolicy policy,
+        List<AuditFinding> findings
+    )
+    {
+        foreach (var audit in questAudits)
+        {
+            if (audit.UnknownPriceItemRecords > 0)
+            {
+                findings.Add(new AuditFinding
+                {
+                    Severity = "Info",
+                    Code = "QUEST_REWARD_UNPRICED_ITEMS",
+                    SubjectType = "Quest",
+                    SubjectId = audit.QuestId,
+                    Detail = $"Quest reward contains {audit.UnknownPriceItemRecords} item records without handbook prices.",
+                    Metric = audit.UnknownPriceItemRecords,
+                });
+            }
+
+            var baseline = audit.Restartable && benchmark.VanillaRestartableMedianHandbookValue > 0
+                ? benchmark.VanillaRestartableMedianHandbookValue
+                : benchmark.VanillaMedianHandbookValue;
+            if (baseline <= 0 || audit.KnownHandbookValue <= 0)
             {
                 continue;
             }
 
-            var questId = questPair.Key.ToString();
-            var rewards = JsonSerializer.SerializeToElement(questPair.Value.Rewards);
-            foreach (var templateId in FindTemplateIds(rewards))
+            var multiple = audit.Restartable
+                ? policy.RestartableRewardVsVanillaMedianWarnMultiple
+                : policy.QuestRewardVsVanillaMedianWarnMultiple;
+            var threshold = baseline * multiple;
+            if (audit.KnownHandbookValue > threshold)
             {
-                GetOrCreate(acquisitions, templateId).QuestRewardSources.Add(questId);
+                findings.Add(new AuditFinding
+                {
+                    Severity = audit.Restartable ? "Error" : "Warning",
+                    Code = audit.Restartable ? "RESTARTABLE_REWARD_VALUE_OUTLIER" : "QUEST_REWARD_VALUE_OUTLIER",
+                    SubjectType = "Quest",
+                    SubjectId = audit.QuestId,
+                    Detail = $"Known handbook reward value {audit.KnownHandbookValue:0.##} exceeds the vanilla median benchmark threshold.",
+                    Metric = audit.KnownHandbookValue,
+                    Threshold = Math.Round(threshold, 2),
+                });
             }
         }
     }
 
-    private static IEnumerable<string> FindTemplateIds(JsonElement element)
+    private static IEnumerable<RewardItemValue> FindRewardItems(JsonElement element)
     {
         switch (element.ValueKind)
         {
             case JsonValueKind.Object:
+                if (element.TryGetProperty("_tpl", out var tpl) && tpl.ValueKind == JsonValueKind.String)
+                {
+                    var templateId = tpl.GetString();
+                    if (!string.IsNullOrWhiteSpace(templateId))
+                    {
+                        yield return new RewardItemValue(templateId, FindStackCount(element));
+                    }
+                }
+
                 foreach (var property in element.EnumerateObject())
                 {
-                    if (property.NameEquals("_tpl") && property.Value.ValueKind == JsonValueKind.String)
-                    {
-                        var value = property.Value.GetString();
-                        if (!string.IsNullOrWhiteSpace(value))
-                        {
-                            yield return value;
-                        }
-                    }
-
-                    foreach (var nested in FindTemplateIds(property.Value))
+                    foreach (var nested in FindRewardItems(property.Value))
                     {
                         yield return nested;
                     }
@@ -146,13 +351,36 @@ public sealed class EconomyAuditService(
             case JsonValueKind.Array:
                 foreach (var item in element.EnumerateArray())
                 {
-                    foreach (var nested in FindTemplateIds(item))
+                    foreach (var nested in FindRewardItems(item))
                     {
                         yield return nested;
                     }
                 }
                 break;
         }
+    }
+
+    private static double FindStackCount(JsonElement item)
+    {
+        if (!item.TryGetProperty("upd", out var upd) || upd.ValueKind != JsonValueKind.Object)
+        {
+            return 1d;
+        }
+
+        if (TryGetNumber(upd, "StackObjectsCount", out var count) || TryGetNumber(upd, "stackObjectsCount", out count))
+        {
+            return Math.Max(1d, count);
+        }
+
+        return 1d;
+    }
+
+    private static bool TryGetNumber(JsonElement element, string propertyName, out double value)
+    {
+        value = 0;
+        return element.TryGetProperty(propertyName, out var property)
+            && property.ValueKind == JsonValueKind.Number
+            && property.TryGetDouble(out value);
     }
 
     private static MutableAcquisition GetOrCreate(Dictionary<string, MutableAcquisition> acquisitions, string templateId)
@@ -202,6 +430,51 @@ public sealed class EconomyAuditService(
         return "Exceptional";
     }
 
+    private static AuditPolicy ResolvePolicy(EconomyConfig config)
+    {
+        return config.Preset switch
+        {
+            EconomyPreset.Easy => new AuditPolicy
+            {
+                QuestRewardVsVanillaMedianWarnMultiple = 5.0,
+                RestartableRewardVsVanillaMedianWarnMultiple = 2.5,
+                DuplicateTraderSourcesWarnCount = 8,
+            },
+            EconomyPreset.Hard => new AuditPolicy
+            {
+                QuestRewardVsVanillaMedianWarnMultiple = 2.0,
+                RestartableRewardVsVanillaMedianWarnMultiple = 1.25,
+                DuplicateTraderSourcesWarnCount = 4,
+            },
+            EconomyPreset.Custom => config.CustomAuditPolicy,
+            _ => new AuditPolicy(),
+        };
+    }
+
+    private static double Percentile(IReadOnlyList<double> sortedValues, double percentile)
+    {
+        if (sortedValues.Count == 0)
+        {
+            return 0;
+        }
+
+        if (sortedValues.Count == 1)
+        {
+            return Math.Round(sortedValues[0], 2);
+        }
+
+        var position = (sortedValues.Count - 1) * percentile;
+        var lower = (int)Math.Floor(position);
+        var upper = (int)Math.Ceiling(position);
+        if (lower == upper)
+        {
+            return Math.Round(sortedValues[lower], 2);
+        }
+
+        var fraction = position - lower;
+        return Math.Round(sortedValues[lower] + ((sortedValues[upper] - sortedValues[lower]) * fraction), 2);
+    }
+
     private static async Task<EconomyConfig> LoadConfigAsync(string modPath, CancellationToken cancellationToken)
     {
         var configPath = Path.Combine(modPath, "config", "config.json");
@@ -220,6 +493,8 @@ public sealed class EconomyAuditService(
         public HashSet<string> TraderSources { get; } = new(StringComparer.Ordinal);
         public HashSet<string> QuestRewardSources { get; } = new(StringComparer.Ordinal);
     }
+
+    private sealed record RewardItemValue(string TemplateId, double Count);
 }
 
 public sealed record EconomyAuditReport
@@ -229,14 +504,20 @@ public sealed record EconomyAuditReport
     public required string Preset { get; init; }
     public required bool EnforcementApplied { get; init; }
     public required bool RepeatedRaidLootDecay { get; init; }
+    public required AuditPolicy Policy { get; init; }
     public required DatabaseSummary Database { get; init; }
     public required AcquisitionSummary Acquisition { get; init; }
+    public required QuestRewardBenchmark VanillaQuestRewardBenchmark { get; init; }
+    public required List<TraderAudit> TraderAudits { get; init; }
+    public required List<QuestRewardAudit> QuestRewardAudits { get; init; }
+    public required List<AuditFinding> Findings { get; init; }
     public required List<ItemAcquisitionReport> Items { get; init; }
 }
 
 public sealed record DatabaseSummary
 {
     public required int TemplateItems { get; init; }
+    public required int HandbookItemsWithPrice { get; init; }
     public required int Quests { get; init; }
     public required int Traders { get; init; }
     public required int TraderAssortRecords { get; init; }
@@ -247,6 +528,48 @@ public sealed record AcquisitionSummary
     public required int ItemsWithKnownAcquisition { get; init; }
     public required int TraderSourceEdges { get; init; }
     public required int QuestRewardSourceEdges { get; init; }
+}
+
+public sealed record QuestRewardBenchmark
+{
+    public required int VanillaQuestSamples { get; init; }
+    public required double VanillaMedianHandbookValue { get; init; }
+    public required double VanillaP90HandbookValue { get; init; }
+    public required int VanillaRestartableSamples { get; init; }
+    public required double VanillaRestartableMedianHandbookValue { get; init; }
+}
+
+public sealed record TraderAudit
+{
+    public required string TraderId { get; init; }
+    public required string TraderName { get; init; }
+    public required int RootOffers { get; init; }
+    public required int MissingBarterSchemes { get; init; }
+    public required int MissingLoyaltyMappings { get; init; }
+}
+
+public sealed record QuestRewardAudit
+{
+    public required string QuestId { get; init; }
+    public required string QuestName { get; init; }
+    public required string TraderId { get; init; }
+    public required bool IsVanillaTraderQuest { get; init; }
+    public required bool Restartable { get; init; }
+    public required int RewardItemRecords { get; init; }
+    public required int DistinctRewardTemplates { get; init; }
+    public required double KnownHandbookValue { get; init; }
+    public required int UnknownPriceItemRecords { get; init; }
+}
+
+public sealed record AuditFinding
+{
+    public required string Severity { get; init; }
+    public required string Code { get; init; }
+    public required string SubjectType { get; init; }
+    public required string SubjectId { get; init; }
+    public required string Detail { get; init; }
+    public double? Metric { get; init; }
+    public double? Threshold { get; init; }
 }
 
 public sealed record ItemAcquisitionReport
