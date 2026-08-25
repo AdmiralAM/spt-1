@@ -6,5 +6,10 @@ namespace SPTPause
         {
             return shortcutPressed && (enabled || isPaused);
         }
+
+        public static bool SuppressGameplayInput(bool isPaused, bool togglePressed)
+        {
+            return isPaused && !togglePressed;
+        }
     }
 }
