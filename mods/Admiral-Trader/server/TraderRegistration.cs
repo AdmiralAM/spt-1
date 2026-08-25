@@ -26,6 +26,8 @@ public sealed class AdmiralTraderRegistration(
     LocaleTable localesTable,
     ISptLogger<AdmiralTraderRegistration> logger) : IOnLoad
 {
+    private const string TestPlaceholderAvatar = "/files/quest/icon/5a27cafa86f77424e20615d6.jpg";
+
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -44,18 +46,14 @@ public sealed class AdmiralTraderRegistration(
 
     private void RegisterTrader(string modPath)
     {
-        string avatarPath = IOPath.Combine(modPath, "assets", $"{RuntimeIdentity.TraderId}.jpg");
-        if (!File.Exists(avatarPath))
-            throw new FileNotFoundException("Admiral Trader registration is enabled but the approved trader portrait is missing", avatarPath);
-
         TraderBase traderBase = modHelper.GetJsonDataFromFile<TraderBase>(modPath, "db/base.json");
         TraderAssort assort = modHelper.GetJsonDataFromFile<TraderAssort>(modPath, "db/assort.json");
         Dictionary<string, Dictionary<MongoId, MongoId>> questAssort =
             modHelper.GetJsonDataFromFile<Dictionary<string, Dictionary<MongoId, MongoId>>>(modPath, "db/questassort.json");
 
         ValidateTraderData(traderBase, assort, questAssort);
+        RegisterAvatarRoute(modPath, traderBase);
 
-        imageRouter.AddRoute(traderBase.Avatar!.Replace(".jpg", string.Empty, StringComparison.OrdinalIgnoreCase), avatarPath);
         traderConfig.UpdateTime.Add(new UpdateTime
         {
             TraderId = traderBase.Id,
@@ -76,6 +74,26 @@ public sealed class AdmiralTraderRegistration(
 
         AddLocales(traderBase);
         logger.Success($"Admiral Trader registered with id {traderBase.Id} and {assort.Items.Count} assort item records");
+    }
+
+    private void RegisterAvatarRoute(string modPath, TraderBase traderBase)
+    {
+        string avatar = traderBase.Avatar!;
+        if (string.Equals(avatar, TestPlaceholderAvatar, StringComparison.Ordinal))
+        {
+            logger.Warning("Admiral Trader is using the built-in test placeholder avatar; final portrait is intentionally deferred");
+            return;
+        }
+
+        string expectedCustomRoute = $"/files/trader/avatar/{RuntimeIdentity.TraderId}.jpg";
+        if (!string.Equals(avatar, expectedCustomRoute, StringComparison.Ordinal))
+            throw new InvalidDataException($"Admiral Trader has an unsupported avatar route: {avatar}");
+
+        string avatarPath = IOPath.Combine(modPath, "assets", $"{RuntimeIdentity.TraderId}.jpg");
+        if (!File.Exists(avatarPath))
+            throw new FileNotFoundException("Admiral Trader custom portrait route is configured but the portrait asset is missing", avatarPath);
+
+        imageRouter.AddRoute(avatar.Replace(".jpg", string.Empty, StringComparison.OrdinalIgnoreCase), avatarPath);
     }
 
     private static void ValidateTraderData(
