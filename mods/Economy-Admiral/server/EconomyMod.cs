@@ -8,12 +8,14 @@ namespace EconomyAdmiral;
 [Injectable(TypePriority = OnLoadOrder.PostLoad + 1000), UsedImplicitly]
 public sealed class EconomyMod(
     EconomyAuditService auditService,
-    RewardUtilityAuditService rewardUtilityAuditService
+    RewardUtilityAuditService rewardUtilityAuditService,
+    QuestProgressionGraphService questProgressionGraphService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
     {
         await auditService.RunAsync(cancellationToken);
         await rewardUtilityAuditService.RunAsync(cancellationToken);
+        await questProgressionGraphService.RunAsync(cancellationToken);
     }
 }
