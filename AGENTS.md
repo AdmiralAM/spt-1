@@ -60,12 +60,14 @@ Any PR or chat handoff that asks for user testing must provide:
 
 - module name and affected SPT version;
 - PR number, branch name, and exact commit SHA;
-- successful workflow/run or artifact source;
+- successful workflow/run that produced the exact test build;
 - artifact name and whether it is transient Actions output or a maintained `runtime-*` package;
 - exact install layout, including `BepInEx/plugins` and/or `SPT_Runtime/user/mods` paths;
 - focused test checklist;
 - exact logs/screenshots/results to return, including `BepInEx/LogOutput.log` when client runtime evidence is needed;
 - explicit pass/fail decision rule.
+
+Do not ask the user to perform physical/runtime testing from source code, a PR diff, a branch name, or a CI success alone. A runtime-test request is valid only after a downloadable artifact or deliberate `runtime-*` package exists for the exact commit being tested. If the workflow passed but produced no artifact, stop and fix the packaging/handoff workflow first.
 
 Test candidates belong in GitHub Actions artifacts while they are under review. Do not update `main`, `stable`, or a `runtime-*` publication branch with a candidate until the required validation gate has passed and the promotion is deliberate.
 
