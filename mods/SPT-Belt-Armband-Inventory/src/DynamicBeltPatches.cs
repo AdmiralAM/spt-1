@@ -557,14 +557,15 @@ namespace SPTBeltArmbandInventory
                 if (opcode.OperandType == targetOperand && position + 4 <= il.Length)
                 {
                     int token = BitConverter.ToInt32(il, position);
+                    MemberInfo member = null;
                     try
                     {
-                        MemberInfo member = targetOperand == OperandType.InlineMethod
+                        member = targetOperand == OperandType.InlineMethod
                             ? source.Module.ResolveMethod(token)
                             : source.Module.ResolveField(token);
-                        if (member != null) yield return member;
                     }
                     catch { }
+                    if (member != null) yield return member;
                 }
                 position += size;
             }
