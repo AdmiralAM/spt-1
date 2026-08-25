@@ -31,8 +31,10 @@ jobs:
       - name: Run inventory/graph and reward benchmark tests
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 
-      - name: Validate campaign manifest JSON
-        run: python -m json.tool mods/Admiral-Trader/manifests/campaign-manifest.json > /dev/null
+      - name: Validate maintained manifests
+        run: |
+          python -m json.tool mods/Admiral-Trader/manifests/campaign-manifest.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/reward-policy.json > /dev/null
 
       - name: Checkout pinned legacy corpus
         uses: actions/checkout@v4
