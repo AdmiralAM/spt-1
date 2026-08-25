@@ -33,12 +33,10 @@ public sealed class AdmiralQuestRegistration(
 
         Dictionary<MongoId, Quest> quests = LoadQuests(modPath);
         ValidateQuests(quests);
+        PreflightQuestIds(quests);
 
         foreach (var (questId, quest) in quests)
-        {
-            if (!templateTable.Quests.TryAdd(questId, quest))
-                throw new InvalidOperationException($"Cannot register Admiral quest {questId}: quest id already exists");
-        }
+            templateTable.Quests.Add(questId, quest);
 
         RegisterQuestLocales(modPath);
         logger.Success($"Registered {quests.Count} authored Admiral quests");
@@ -88,6 +86,18 @@ public sealed class AdmiralQuestRegistration(
             if (finish.Target is null || finish.Value is null || finish.Value <= 0)
                 throw new InvalidDataException($"Quest {questId} has an invalid key objective");
         }
+    }
+
+    private void PreflightQuestIds(Dictionary<MongoId, Quest> quests)
+    {
+        List<MongoId> collisions = quests.Keys
+            .Where(templateTable.Quests.ContainsKey)
+            .OrderBy(id => id.ToString(), StringComparer.Ordinal)
+            .ToList();
+
+        if (collisions.Count != 0)
+            throw new InvalidOperationException(
+                $"Cannot register Admiral quests: {collisions.Count} quest id collision(s): {string.Join(", ", collisions)}");
     }
 
     private void RegisterQuestLocales(string modPath)
