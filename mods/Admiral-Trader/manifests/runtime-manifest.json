@@ -4,11 +4,11 @@
   "traderId": "d5c27bb3169f8dfbc13f6b69",
   "targetSptVersion": "4.1.3",
   "publishedApiCompileBaseline": "4.1.2",
-  "publicationMode": "test-candidate",
-  "registrationEnabled": true,
+  "publicationMode": "test-candidate-source",
+  "registrationEnabled": false,
   "mergeRequiresRuntimeEvidence": true,
   "registrationGate": {
-    "reason": "Registration is enabled only on the isolated SPT 4.1.3 test-candidate branch so the exact runtime can prove trader, quest, item and assort integration before merge.",
+    "reason": "Source remains fail-closed. The exact-runtime candidate builder creates an enabled staging manifest only after verifying SPTarkov.Server.Core 4.1.3.",
     "satisfiedBeforeCandidate": [
       "single Admiral trader architecture",
       "31 authored native quest templates",
