@@ -49,6 +49,7 @@ public sealed class RuntimeEvidenceService(
         var config = await runtimeConfigService.GetAsync(cancellationToken);
         var after = CaptureFingerprint();
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(RuntimeEvidenceService).Assembly);
+        var buildIdentity = await ReadBuildIdentityAsync(modPath, cancellationToken);
         var reportDirectory = SafePath(modPath, "reports");
 
         var reportFiles = ExpectedReports
@@ -70,10 +71,11 @@ public sealed class RuntimeEvidenceService(
 
         var manifest = new RuntimeEvidenceManifest
         {
-            SchemaVersion = 1,
+            SchemaVersion = 2,
             GeneratedAtUtc = DateTimeOffset.UtcNow,
             Mode = config.Mode.ToString(),
             Preset = config.Preset.ToString(),
+            BuildIdentity = buildIdentity,
             ExpectedReportCount = ExpectedReports.Length,
             PresentReportCount = reportFiles.Count(report => report.Exists && report.SizeBytes > 0),
             AllExpectedReportsPresent = allReportsPresent,
@@ -83,7 +85,7 @@ public sealed class RuntimeEvidenceService(
             ApplyMutations = false,
             DeclaredMutationCount = 0,
             RuntimeGatePassed = databaseUnchanged && allReportsPresent,
-            Note = "Runtime evidence for the current read-only MVP. The fingerprint covers item identities, handbook prices, quest rewards and trader assort structures before/after the Economy Admiral pipeline.",
+            Note = "Runtime evidence for the current read-only MVP. The fingerprint covers item identities, handbook prices, quest rewards and trader assort structures before/after the Economy Admiral pipeline. BuildIdentity binds packaged CI candidates to the exact head/workflow when BUILD_INFO.json is present.",
             Reports = reportFiles,
         };
 
@@ -103,7 +105,19 @@ public sealed class RuntimeEvidenceService(
             return;
         }
 
-        logger.Info($"[Economy Admiral] runtime evidence PASS: DB unchanged and {manifest.PresentReportCount}/{manifest.ExpectedReportCount} reports present; manifest={manifestPath}");
+        logger.Info($"[Economy Admiral] runtime evidence PASS: DB unchanged and {manifest.PresentReportCount}/{manifest.ExpectedReportCount} reports present; build={buildIdentity?.HeadSha ?? "local/unknown"}; manifest={manifestPath}");
+    }
+
+    private static async Task<RuntimeBuildIdentity?> ReadBuildIdentityAsync(string modPath, CancellationToken cancellationToken)
+    {
+        var path = SafePath(modPath, "BUILD_INFO.json");
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        await using var stream = File.OpenRead(path);
+        return await JsonSerializer.DeserializeAsync<RuntimeBuildIdentity>(stream, JsonOptions, cancellationToken);
     }
 
     private RuntimeFingerprint CaptureFingerprint()
@@ -183,6 +197,7 @@ public sealed record RuntimeEvidenceManifest
     public required DateTimeOffset GeneratedAtUtc { get; init; }
     public required string Mode { get; init; }
     public required string Preset { get; init; }
+    public RuntimeBuildIdentity? BuildIdentity { get; init; }
     public required int ExpectedReportCount { get; init; }
     public required int PresentReportCount { get; init; }
     public required bool AllExpectedReportsPresent { get; init; }
@@ -194,6 +209,16 @@ public sealed record RuntimeEvidenceManifest
     public required bool RuntimeGatePassed { get; init; }
     public required string Note { get; init; }
     public required List<RuntimeReportEvidence> Reports { get; init; }
+}
+
+public sealed record RuntimeBuildIdentity
+{
+    public required string Product { get; init; }
+    public required string HeadSha { get; init; }
+    public required string WorkflowRunId { get; init; }
+    public required string ArtifactName { get; init; }
+    public required string CompilePackageVersion { get; init; }
+    public required string TargetRuntime { get; init; }
 }
 
 public sealed record RuntimeFingerprint
