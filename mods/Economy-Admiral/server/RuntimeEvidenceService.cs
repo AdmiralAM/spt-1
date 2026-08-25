@@ -39,7 +39,7 @@ public sealed class RuntimeEvidenceService(
         before = CaptureFingerprint();
     }
 
-    public async Task WriteAfterAsync(CancellationToken cancellationToken)
+    public async Task WriteAfterAsync(VanillaBaselineSnapshot vanillaBaseline, CancellationToken cancellationToken)
     {
         if (before is null)
         {
@@ -68,14 +68,28 @@ public sealed class RuntimeEvidenceService(
 
         var databaseUnchanged = string.Equals(before.Sha256, after.Sha256, StringComparison.Ordinal);
         var allReportsPresent = reportFiles.All(report => report.Exists && report.SizeBytes > 0);
+        var finalQuestCount = after.QuestCount;
+        var provenance = new RuntimeProvenanceEvidence
+        {
+            CapturePriority = vanillaBaseline.CapturePriority,
+            PristineQuestCount = vanillaBaseline.QuestCount,
+            FinalQuestCount = finalQuestCount,
+            ModAddedQuestCount = Math.Max(0, finalQuestCount - vanillaBaseline.QuestCount),
+            PristineTraderCount = vanillaBaseline.TraderCount,
+            FinalTraderCount = after.TraderCount,
+            BaselineCaptured = vanillaBaseline.QuestCount > 0,
+            BaselineNotLargerThanFinal = vanillaBaseline.QuestCount <= finalQuestCount,
+        };
+        var provenanceValid = provenance.BaselineCaptured && provenance.BaselineNotLargerThanFinal;
 
         var manifest = new RuntimeEvidenceManifest
         {
-            SchemaVersion = 2,
+            SchemaVersion = 3,
             GeneratedAtUtc = DateTimeOffset.UtcNow,
             Mode = config.Mode.ToString(),
             Preset = config.Preset.ToString(),
             BuildIdentity = buildIdentity,
+            Provenance = provenance,
             ExpectedReportCount = ExpectedReports.Length,
             PresentReportCount = reportFiles.Count(report => report.Exists && report.SizeBytes > 0),
             AllExpectedReportsPresent = allReportsPresent,
@@ -84,8 +98,8 @@ public sealed class RuntimeEvidenceService(
             DatabaseUnchangedAcrossPipeline = databaseUnchanged,
             ApplyMutations = false,
             DeclaredMutationCount = 0,
-            RuntimeGatePassed = databaseUnchanged && allReportsPresent,
-            Note = "Runtime evidence for the current read-only MVP. The fingerprint covers item identities, handbook prices, quest rewards and trader assort structures before/after the Economy Admiral pipeline. BuildIdentity binds packaged CI candidates to the exact head/workflow when BUILD_INFO.json is present.",
+            RuntimeGatePassed = databaseUnchanged && allReportsPresent && provenanceValid,
+            Note = "Runtime evidence for the read-only MVP. The final-DB fingerprint proves zero mutation across the late Economy Admiral pipeline. Provenance proves a non-empty pristine quest baseline was captured before normal mod callbacks and is not larger than the final modded quest table.",
             Reports = reportFiles,
         };
 
@@ -105,7 +119,13 @@ public sealed class RuntimeEvidenceService(
             return;
         }
 
-        logger.Info($"[Economy Admiral] runtime evidence PASS: DB unchanged and {manifest.PresentReportCount}/{manifest.ExpectedReportCount} reports present; build={buildIdentity?.HeadSha ?? "local/unknown"}; manifest={manifestPath}");
+        if (!provenanceValid)
+        {
+            logger.Error($"[Economy Admiral] runtime evidence FAILED: pristine provenance invalid; pristineQuests={provenance.PristineQuestCount}, finalQuests={provenance.FinalQuestCount}; manifest={manifestPath}");
+            return;
+        }
+
+        logger.Info($"[Economy Admiral] runtime evidence PASS: DB unchanged, {manifest.PresentReportCount}/{manifest.ExpectedReportCount} reports present, pristineQuests={provenance.PristineQuestCount}, finalQuests={provenance.FinalQuestCount}, modAddedQuests={provenance.ModAddedQuestCount}; build={buildIdentity?.HeadSha ?? "local/unknown"}; manifest={manifestPath}");
     }
 
     private static async Task<RuntimeBuildIdentity?> ReadBuildIdentityAsync(string modPath, CancellationToken cancellationToken)
@@ -132,38 +152,16 @@ public sealed class RuntimeEvidenceService(
             lineCount++;
         }
 
-        foreach (var item in templates.Items.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
-        {
-            Add($"ITEM|{item.Key}");
-        }
-
-        foreach (var handbook in templates.Handbook.Items.OrderBy(item => item.Id.ToString(), StringComparer.Ordinal))
-        {
-            Add($"HANDBOOK|{handbook.Id}|{handbook.Price}");
-        }
-
-        foreach (var quest in templates.Quests.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
-        {
-            Add($"QUEST|{quest.Key}|{JsonSerializer.Serialize(quest.Value.Rewards)}");
-        }
+        foreach (var item in templates.Items.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)) Add($"ITEM|{item.Key}");
+        foreach (var handbook in templates.Handbook.Items.OrderBy(item => item.Id.ToString(), StringComparer.Ordinal)) Add($"HANDBOOK|{handbook.Id}|{handbook.Price}");
+        foreach (var quest in templates.Quests.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)) Add($"QUEST|{quest.Key}|{JsonSerializer.Serialize(quest.Value.Rewards)}");
 
         foreach (var trader in traders.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
         {
             var traderId = trader.Key.ToString();
-            foreach (var item in trader.Value.Assort.Items.OrderBy(item => item.Id.ToString(), StringComparer.Ordinal))
-            {
-                Add($"ASSORT_ITEM|{traderId}|{item.Id}|{item.Template}|{item.ParentId}");
-            }
-
-            foreach (var barter in trader.Value.Assort.BarterScheme.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
-            {
-                Add($"ASSORT_BARTER|{traderId}|{barter.Key}|{JsonSerializer.Serialize(barter.Value)}");
-            }
-
-            foreach (var loyalty in trader.Value.Assort.LoyalLevelItems.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
-            {
-                Add($"ASSORT_LOYALTY|{traderId}|{loyalty.Key}|{loyalty.Value}");
-            }
+            foreach (var item in trader.Value.Assort.Items.OrderBy(item => item.Id.ToString(), StringComparer.Ordinal)) Add($"ASSORT_ITEM|{traderId}|{item.Id}|{item.Template}|{item.ParentId}");
+            foreach (var barter in trader.Value.Assort.BarterScheme.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)) Add($"ASSORT_BARTER|{traderId}|{barter.Key}|{JsonSerializer.Serialize(barter.Value)}");
+            foreach (var loyalty in trader.Value.Assort.LoyalLevelItems.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)) Add($"ASSORT_LOYALTY|{traderId}|{loyalty.Key}|{loyalty.Value}");
         }
 
         return new RuntimeFingerprint
@@ -182,11 +180,7 @@ public sealed class RuntimeEvidenceService(
     {
         var path = Path.GetFullPath(Path.Combine(modPath, relativePath));
         var root = Path.GetFullPath(modPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException("Economy Admiral runtime evidence path must stay inside the mod directory.");
-        }
-
+        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("Economy Admiral runtime evidence path must stay inside the mod directory.");
         return path;
     }
 }
@@ -198,6 +192,7 @@ public sealed record RuntimeEvidenceManifest
     public required string Mode { get; init; }
     public required string Preset { get; init; }
     public RuntimeBuildIdentity? BuildIdentity { get; init; }
+    public required RuntimeProvenanceEvidence Provenance { get; init; }
     public required int ExpectedReportCount { get; init; }
     public required int PresentReportCount { get; init; }
     public required bool AllExpectedReportsPresent { get; init; }
@@ -209,6 +204,18 @@ public sealed record RuntimeEvidenceManifest
     public required bool RuntimeGatePassed { get; init; }
     public required string Note { get; init; }
     public required List<RuntimeReportEvidence> Reports { get; init; }
+}
+
+public sealed record RuntimeProvenanceEvidence
+{
+    public required int CapturePriority { get; init; }
+    public required int PristineQuestCount { get; init; }
+    public required int FinalQuestCount { get; init; }
+    public required int ModAddedQuestCount { get; init; }
+    public required int PristineTraderCount { get; init; }
+    public required int FinalTraderCount { get; init; }
+    public required bool BaselineCaptured { get; init; }
+    public required bool BaselineNotLargerThanFinal { get; init; }
 }
 
 public sealed record RuntimeBuildIdentity
