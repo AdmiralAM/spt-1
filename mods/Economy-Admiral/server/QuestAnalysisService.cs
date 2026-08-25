@@ -17,7 +17,11 @@ public sealed class QuestAnalysisService(
     ISptLogger<QuestAnalysisService> logger
 )
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNameCaseInsensitive = true,
+    };
 
     private static readonly HashSet<string> VanillaTraderIds = new(StringComparer.Ordinal)
     {
@@ -29,6 +33,14 @@ public sealed class QuestAnalysisService(
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
+        var modPath = modHelper.GetAbsolutePathToModFolder(typeof(QuestAnalysisService).Assembly);
+        var config = await LoadConfigAsync(modPath, cancellationToken);
+        if (config.Mode == EconomyMode.Off)
+        {
+            return;
+        }
+
+        var policy = ResolvePolicy(config);
         var handbookPrices = templates.Handbook.Items
             .Where(item => item.Price is > 0)
             .GroupBy(item => item.Id.ToString(), StringComparer.Ordinal)
@@ -46,22 +58,30 @@ public sealed class QuestAnalysisService(
         var vanillaRestartable = BuildBaseline(rawRows.Where(row => row.IsVanillaTraderQuest && row.Restartable).ToList());
         var rows = rawRows
             .Select(row => AddRelativeSignals(row, row.Restartable && vanillaRestartable.QuestSamples > 0 ? vanillaRestartable : vanilla))
-            .Select(AddObservationalFlags)
+            .Select(row => AddObservationalFlags(row, policy))
             .ToList();
+
+        var flagCounts = rows
+            .SelectMany(row => row.ObservationalFlags)
+            .GroupBy(flag => flag, StringComparer.Ordinal)
+            .OrderBy(group => group.Key, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
 
         var report = new QuestAnalysisReport
         {
-            SchemaVersion = 2,
+            SchemaVersion = 3,
+            Preset = config.Preset.ToString(),
             CompositeScoreApplied = false,
             RewardAllowanceAffected = false,
             OutlierFlagsAffectEnforcement = false,
+            Policy = policy,
+            FlagCounts = flagCounts,
             Note = "Unified observational quest view. Reward value, typed utility, prerequisite depth and structured constraints remain separate dimensions; no cross-dimension score, reward multiplier or enforcement action is applied. Sparse dimensions use positive-sample medians for relative ratios.",
             Vanilla = vanilla,
             VanillaRestartable = vanillaRestartable,
             Quests = rows,
         };
 
-        var modPath = modHelper.GetAbsolutePathToModFolder(typeof(QuestAnalysisService).Assembly);
         var reportPath = Path.GetFullPath(Path.Combine(modPath, "reports", "economy-admiral-quest-analysis.json"));
         var modRoot = Path.GetFullPath(modPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         if (!reportPath.StartsWith(modRoot, StringComparison.OrdinalIgnoreCase))
@@ -71,26 +91,80 @@ public sealed class QuestAnalysisService(
 
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
         await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
-        logger.Info($"[Economy Admiral] unified quest analysis complete: {rows.Count} quests; report={reportPath}");
+        logger.Info($"[Economy Admiral] unified quest analysis complete: {rows.Count} quests, {flagCounts.Values.Sum()} observational flags; report={reportPath}");
     }
 
-    private static QuestAnalysisRow AddObservationalFlags(QuestAnalysisRow row)
+    private static QuestAnalysisRow AddObservationalFlags(QuestAnalysisRow row, AuditPolicy policy)
     {
         var flags = new List<string>();
-        if (row.HandbookValueVsVanillaMedian is >= 3.0 && row.PrerequisiteDepthVsVanillaMedian is null or <= 1.0 && row.StructuredConstraintsVsVanillaMedian is null or <= 1.0)
+        var lowDepth = row.PrerequisiteDepthVsVanillaMedian is null || row.PrerequisiteDepthVsVanillaMedian <= policy.LowDepthMaxRelativeMultiple;
+        var lowStructure = row.StructuredConstraintsVsVanillaMedian is null || row.StructuredConstraintsVsVanillaMedian <= policy.LowStructureMaxRelativeMultiple;
+
+        if (row.HandbookValueVsVanillaMedian >= policy.HighItemValueLowStructureWarnMultiple && lowDepth && lowStructure)
             flags.Add("HIGH_ITEM_VALUE_LOW_STRUCTURE");
-        if (row.XpVsVanillaMedian is >= 3.0 && row.PrerequisiteDepthVsVanillaMedian is null or <= 1.0)
+        if (row.XpVsVanillaMedian >= policy.HighXpLowDepthWarnMultiple && lowDepth)
             flags.Add("HIGH_XP_LOW_DEPTH");
-        if (row.StandingVsVanillaMedian is >= 3.0 && row.PrerequisiteDepthVsVanillaMedian is null or <= 1.0)
+        if (row.StandingVsVanillaMedian >= policy.HighStandingLowDepthWarnMultiple && lowDepth)
             flags.Add("HIGH_STANDING_LOW_DEPTH");
-        if (row.Restartable && row.HandbookValueVsVanillaMedian is >= 2.0)
+        if (row.Restartable && row.HandbookValueVsVanillaMedian >= policy.RestartableHighItemValueWarnMultiple)
             flags.Add("RESTARTABLE_HIGH_ITEM_VALUE");
-        if (row.Restartable && row.XpVsVanillaMedian is >= 2.0)
+        if (row.Restartable && row.XpVsVanillaMedian >= policy.RestartableHighXpWarnMultiple)
             flags.Add("RESTARTABLE_HIGH_XP");
         if (row.IsPrerequisiteCycleMember)
             flags.Add("PREREQUISITE_CYCLE");
 
         return row with { ObservationalFlags = flags };
+    }
+
+    private static AuditPolicy ResolvePolicy(EconomyConfig config)
+    {
+        return config.Preset switch
+        {
+            EconomyPreset.Easy => new AuditPolicy
+            {
+                QuestRewardVsVanillaMedianWarnMultiple = 5.0,
+                RestartableRewardVsVanillaMedianWarnMultiple = 2.5,
+                NormalizedRewardVsVanillaMedianWarnMultiple = 4.0,
+                RestartableNormalizedRewardVsVanillaMedianWarnMultiple = 2.0,
+                DuplicateTraderSourcesWarnCount = 8,
+                HighItemValueLowStructureWarnMultiple = 4.0,
+                HighXpLowDepthWarnMultiple = 4.0,
+                HighStandingLowDepthWarnMultiple = 4.0,
+                RestartableHighItemValueWarnMultiple = 3.0,
+                RestartableHighXpWarnMultiple = 3.0,
+                LowDepthMaxRelativeMultiple = 1.0,
+                LowStructureMaxRelativeMultiple = 1.0,
+            },
+            EconomyPreset.Hard => new AuditPolicy
+            {
+                QuestRewardVsVanillaMedianWarnMultiple = 2.0,
+                RestartableRewardVsVanillaMedianWarnMultiple = 1.25,
+                NormalizedRewardVsVanillaMedianWarnMultiple = 1.75,
+                RestartableNormalizedRewardVsVanillaMedianWarnMultiple = 1.10,
+                DuplicateTraderSourcesWarnCount = 4,
+                HighItemValueLowStructureWarnMultiple = 2.0,
+                HighXpLowDepthWarnMultiple = 2.0,
+                HighStandingLowDepthWarnMultiple = 2.0,
+                RestartableHighItemValueWarnMultiple = 1.5,
+                RestartableHighXpWarnMultiple = 1.5,
+                LowDepthMaxRelativeMultiple = 1.25,
+                LowStructureMaxRelativeMultiple = 1.25,
+            },
+            EconomyPreset.Custom => config.CustomAuditPolicy,
+            _ => new AuditPolicy(),
+        };
+    }
+
+    private static async Task<EconomyConfig> LoadConfigAsync(string modPath, CancellationToken cancellationToken)
+    {
+        var configPath = Path.Combine(modPath, "config", "config.json");
+        if (!File.Exists(configPath))
+        {
+            return new EconomyConfig();
+        }
+
+        await using var stream = File.OpenRead(configPath);
+        return await JsonSerializer.DeserializeAsync<EconomyConfig>(stream, JsonOptions, cancellationToken) ?? new EconomyConfig();
     }
 
     private static QuestAnalysisRow BuildRow(
@@ -180,6 +254,7 @@ public sealed class QuestAnalysisService(
     }
 
     private static double MedianPositive(IEnumerable<double> values) => Percentile(values.Where(value => value > 0).OrderBy(value => value).ToList(), 0.50);
+    private static bool IsAtOrAbove(double? value, double threshold) => value.HasValue && value.Value >= threshold;
     private static double? Ratio(double value, double baseline) => value > 0 && baseline > 0 ? Math.Round(value / baseline, 4) : null;
 
     private static int CountTargets(IEnumerable<Reward> rewards, RewardType type) => rewards
@@ -241,9 +316,12 @@ public sealed class QuestAnalysisService(
 public sealed record QuestAnalysisReport
 {
     public required int SchemaVersion { get; init; }
+    public required string Preset { get; init; }
     public required bool CompositeScoreApplied { get; init; }
     public required bool RewardAllowanceAffected { get; init; }
     public required bool OutlierFlagsAffectEnforcement { get; init; }
+    public required AuditPolicy Policy { get; init; }
+    public required Dictionary<string, int> FlagCounts { get; init; }
     public required string Note { get; init; }
     public required QuestAnalysisBaseline Vanilla { get; init; }
     public required QuestAnalysisBaseline VanillaRestartable { get; init; }
