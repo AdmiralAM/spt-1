@@ -24,14 +24,28 @@ public sealed class EconomyRuntimeConfigService(ModHelper modHelper)
 
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(EconomyRuntimeConfigService).Assembly);
         var configPath = Path.Combine(modPath, "config", "config.json");
+        EconomyConfig config;
+
         if (!File.Exists(configPath))
         {
-            return cached = new EconomyConfig();
+            config = new EconomyConfig();
+        }
+        else
+        {
+            try
+            {
+                await using var stream = File.OpenRead(configPath);
+                config = await JsonSerializer.DeserializeAsync<EconomyConfig>(stream, JsonOptions, cancellationToken)
+                    ?? throw new InvalidOperationException("Economy Admiral config: config.json deserialized to null.");
+            }
+            catch (JsonException exception)
+            {
+                throw new InvalidOperationException("Economy Admiral config: config.json is invalid JSON or contains an unsupported enum/value type.", exception);
+            }
         }
 
-        await using var stream = File.OpenRead(configPath);
-        cached = await JsonSerializer.DeserializeAsync<EconomyConfig>(stream, JsonOptions, cancellationToken)
-            ?? new EconomyConfig();
+        EconomyConfigValidator.Validate(config);
+        cached = config;
         return cached;
     }
 }
