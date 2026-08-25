@@ -36,6 +36,7 @@ jobs:
               root / 'tools/Validate-Runtime.ps1', root / 'tools/Test-Validate-Runtime.ps1',
               root / 'server/Economy-Admiral.csproj', root / 'server/EconomyMod.cs',
               root / 'server/TypedQuestItemAccountingService.cs',
+              root / 'server/VanillaBaselineService.cs', root / 'server/BaselineProvenanceCorrectionService.cs',
               root / 'server/QuestProgressionGraphService.cs', root / 'server/QuestAnalysisService.cs',
               root / 'server/CompositePolicyEvaluationService.cs', root / 'server/TargetProposalService.cs',
               root / 'server/EnforcementPlanService.cs', root / 'server/RuntimeEvidenceService.cs',
@@ -51,21 +52,46 @@ jobs:
           mod = (root / 'server/EconomyMod.cs').read_text(encoding='utf-8')
           for text in [
               'OnLoadOrder.PostLoad + 1000',
+              'VanillaBaselineService vanillaBaselineService',
+              'var vanillaBaseline = vanillaBaselineService.GetSnapshot();',
               'TypedQuestItemAccountingService typedQuestItemAccountingService',
               'typedQuestItemAccountingService.RepairPrimaryAuditReportAsync(cancellationToken)',
               'var progressionSnapshot = await questProgressionGraphService.RunAsync(cancellationToken);',
               'var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, cancellationToken);',
               'questAnalysis = await typedQuestItemAccountingService.ApplyToUnifiedAnalysisAsync(questAnalysis, cancellationToken);',
+              'questAnalysis = await baselineProvenanceCorrectionService.ApplyToUnifiedAnalysisAsync(questAnalysis, vanillaBaseline, cancellationToken);',
               'compositePolicyEvaluationService.RunAsync(questAnalysis, cancellationToken)',
               'targetProposalService.RunAsync(questAnalysis, cancellationToken)',
               'enforcementPlanService.RunAsync(questAnalysis, cancellationToken)',
               'runtimeEvidenceService.WriteAfterAsync(cancellationToken)',
           ]:
               assert text in mod, text
-          assert mod.index('config.Mode == EconomyMode.Off') < mod.index('runtimeEvidenceService.CaptureBefore()')
+          assert mod.index('config.Mode == EconomyMode.Off') < mod.index('vanillaBaselineService.GetSnapshot()')
+          assert mod.index('vanillaBaselineService.GetSnapshot()') < mod.index('runtimeEvidenceService.CaptureBefore()')
           assert mod.index('auditService.RunAsync') < mod.index('RepairPrimaryAuditReportAsync')
           assert mod.index('progressionSnapshot = await questProgressionGraphService.RunAsync') < mod.index('questAnalysis = await questAnalysisService.RunAsync')
-          assert mod.index('ApplyToUnifiedAnalysisAsync') < mod.index('compositePolicyEvaluationService.RunAsync')
+          assert mod.index('typedQuestItemAccountingService.ApplyToUnifiedAnalysisAsync') < mod.index('baselineProvenanceCorrectionService.ApplyToUnifiedAnalysisAsync')
+          assert mod.index('baselineProvenanceCorrectionService.ApplyToUnifiedAnalysisAsync') < mod.index('compositePolicyEvaluationService.RunAsync')
+
+          baseline = (root / 'server/VanillaBaselineService.cs').read_text(encoding='utf-8')
+          for text in [
+              'Injectable(InjectionType.Singleton, TypePriority = OnLoadOrder.Watermark + 1)',
+              'RewardType.Experience', 'RewardType.TraderStanding', 'reward.Items',
+              'item.Template.ToString()', 'item.Upd?.StackObjectsCount',
+              'MaximumPrerequisiteDepth', 'StructuredConstraintCount',
+              'VanillaBaselineSnapshot GetSnapshot()',
+          ]:
+              assert text in baseline, text
+          assert 'VanillaTraderIds' not in baseline
+
+          provenance = (root / 'server/BaselineProvenanceCorrectionService.cs').read_text(encoding='utf-8')
+          for text in [
+              'VanillaBaselineSnapshot baselineSnapshot',
+              'baselineSnapshot.QuestIds.Contains(row.QuestId)',
+              'vanilla membership is quest-ID provenance, not trader-ID inference',
+              'ApplyToUnifiedAnalysisAsync',
+          ]:
+              assert text in provenance, text
 
           typed_items = (root / 'server/TypedQuestItemAccountingService.cs').read_text(encoding='utf-8')
           for text in [
@@ -108,7 +134,7 @@ jobs:
           for text in ['SchemaVersion = 2', 'DatabaseUnchangedAcrossPipeline', 'RuntimeGatePassed', 'DeclaredMutationCount = 0']:
               assert text in evidence, text
 
-          print('Economy Admiral value-threaded + typed reward-item contract OK')
+          print('Economy Admiral value-threaded + typed reward-item + pristine provenance contract OK')
 
   server:
     name: Economy Admiral .NET 10 server build
