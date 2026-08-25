@@ -19,7 +19,8 @@ Implemented now:
 - progression-normalized quest reward median/P90 benchmark;
 - restartable-quest raw and normalized reward outlier checks;
 - typed SPT 4.1 reward-utility inventory for XP, trader standing, trader unlocks, assortment unlocks, and production-scheme unlocks;
-- separate vanilla/restartable utility distributions without arbitrary ruble conversion;
+- separate vanilla/restartable utility distributions;
+- per-dimension vanilla-relative utility multiples without arbitrary ruble conversion or hidden composite weights;
 - trader-source saturation findings;
 - functional `Easy / Normal / Hard / Custom` audit policies;
 - `Off / Audit / Enforce` mode contract;
@@ -106,9 +107,11 @@ SPT 4.1 exposes typed quest rewards including `Experience`, `TraderStanding`, `T
 
 `reports/economy-admiral-reward-utility.json`
 
-For each quest the utility report records success-reward XP, trader standing, and distinct unlock targets. It also calculates vanilla and vanilla-restartable median/P90 distributions where meaningful.
+For each quest the utility report records success-reward XP, trader standing, and distinct unlock targets. It calculates vanilla and vanilla-restartable median/P90 distributions. For sparse unlock dimensions, medians are calculated only across quests that actually contain that unlock type so a zero-dominated distribution does not destroy the baseline.
 
-**No unified utility score is applied yet.** XP, standing, and unlocks are deliberately not converted into rubles or handbook value in this slice. The purpose of this pass is to establish real vanilla distributions before selecting weights.
+Schema 2 additionally records per-quest dimensionless ratios such as `XpVsVanillaMedian` and `StandingVsVanillaMedian`. Restartable quests use the restartable vanilla benchmark where samples exist and otherwise fall back to the normal vanilla benchmark.
+
+**No unified utility score is applied yet.** These ratios are kept separate by dimension. XP, standing, and unlocks are deliberately not converted into rubles, and no cross-dimension weighting is hidden in the audit. A future composite policy must be explicit, configurable, and justified against these measured distributions.
 
 ## Main report
 
@@ -145,9 +148,7 @@ Both report paths are constrained to remain inside the mod directory.
 
 The current budget still does not fully price:
 
-- XP relative utility versus item value;
-- trader standing relative utility;
-- assort/trader/production unlock utility;
+- cross-dimension XP/standing/unlock utility versus item value;
 - FIR/progression utility;
 - actual duration or combat risk;
 - prerequisite-chain depth;
@@ -166,7 +167,7 @@ The architecture keeps acquisition scanning, benchmarking, findings, presets, an
 
 MVP remainder:
 
-- derive XP/standing/unlock weighting from the typed vanilla distributions;
+- design an explicit configurable composite utility policy from the measured per-dimension ratios;
 - prerequisite-depth and structured risk/time signals where reliable;
 - broader acquisition/value weighting;
 - explicit enforcement rules and mutation report;
