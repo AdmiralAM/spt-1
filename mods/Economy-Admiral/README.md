@@ -4,11 +4,12 @@
 
 ## Current status
 
-The module is in its first MVP: **read-only final-database economy analysis plus fail-closed enforcement planning**.
+The first MVP is a **read-only final-database economy analysis and fail-closed enforcement-planning pipeline**.
 
 Implemented now:
 
-- final DB scan at the SPT 4.1 `PostLoad` lifecycle boundary;
+- final DB scan at `OnLoadOrder.PostLoad + 1000`;
+- centralized runtime config gate: `Off` returns before any analysis pass runs;
 - trader acquisition scan and deterministic per-item acquisition aggregation;
 - handbook-value quest reward audit and vanilla raw/normalized benchmarks;
 - typed XP / standing / trader-unlock / assortment-unlock / production-unlock distributions;
@@ -17,27 +18,31 @@ Implemented now:
 - structured quest constraint audit for timed, one-session, FIR, plant, distance and daytime constraints;
 - unified per-quest analysis view;
 - configurable observational cross-dimension flags;
+- explicit composite-policy candidate evaluation with no selected candidate;
+- deterministic non-mutating target envelopes derived from vanilla medians and resolved policy thresholds;
 - fail-closed enforcement-plan report derived from the in-memory unified analysis snapshot;
 - functional `Easy / Normal / Hard / Custom` policies;
 - `Off / Audit / Enforce` contract with **zero active mutations**;
 - deterministic JSON reports and manual item overrides;
 - future `RepeatedRaidLootDecay` policy represented but disabled by default.
 
-`Enforce` does not mutate the final DB in this MVP. It produces an explicit warning and a review plan with `ApplyMutations = false` and `MutationCount = 0`.
+`Enforce` does not mutate the final DB in this MVP. It produces review/planning artifacts while retaining `ApplyMutations = false` and `MutationCount = 0`.
 
 ## SPT 4.1 architecture boundary
 
-Economy Admiral consumes final injected `TemplateTable` and `TradersTable` instances at `OnLoadOrder.PostLoad + 1000`, after normal content registration.
+Economy Admiral consumes final injected `TemplateTable` and `TradersTable` instances after normal content registration. `EconomyRuntimeConfigService` loads the runtime config once for the top-level module gate; `Mode.Off` exits before the first audit service executes.
 
 ## Reports
 
-Economy Admiral emits six deterministic reports under the mod directory:
+Economy Admiral currently emits eight deterministic reports under the mod directory when analysis is enabled:
 
 - `reports/economy-admiral-audit.json` — acquisition, handbook-value and trader/quest findings;
 - `reports/economy-admiral-reward-utility.json` — XP, standing and unlock distributions/ratios;
 - `reports/economy-admiral-progression-graph.json` — prerequisite graph, cycles and depth benchmarks;
 - `reports/economy-admiral-quest-constraints.json` — structured objective constraints;
 - `reports/economy-admiral-quest-analysis.json` — unified observational view and cross-dimension flags;
+- `reports/economy-admiral-composite-candidates.json` — explicit candidate composite metrics, with no candidate selected;
+- `reports/economy-admiral-target-proposals.json` — non-mutating review ceilings for flagged dimensions;
 - `reports/economy-admiral-enforcement-plan.json` — fail-closed review candidates and proposed review actions.
 
 All report paths are constrained to stay inside the mod directory.
@@ -66,7 +71,45 @@ Current observational flags:
 - `RESTARTABLE_HIGH_XP`;
 - `PREREQUISITE_CYCLE`.
 
-The unified report records resolved policy thresholds and deterministic `FlagCounts`. `CompositeScoreApplied = false`, `RewardAllowanceAffected = false`, and `OutlierFlagsAffectEnforcement = false` remain explicit schema contracts.
+The report records resolved policy thresholds and deterministic `FlagCounts`. `CompositeScoreApplied = false`, `RewardAllowanceAffected = false`, and `OutlierFlagsAffectEnforcement = false` remain explicit contracts.
+
+## Composite policy candidates
+
+Economy Admiral evaluates multiple dimensionless candidates without selecting one as policy:
+
+- `RewardPeak` — maximum available handbook/XP/standing vanilla-relative ratio;
+- `RewardMean` — mean of the available positive reward-dimension ratios;
+- `StructureAdjustedPeak` — `RewardPeak` divided by measured structural support, floored so structure never inflates the score.
+
+Vanilla and restartable median/P90 distributions are emitted for comparison. The composite report explicitly keeps:
+
+- `SelectedCandidate = null`;
+- `AffectsRewardAllowance = false`;
+- `AffectsEnforcement = false`.
+
+This lets the candidates be inspected against real final-DB data before any one formula is promoted to policy.
+
+## Target envelopes
+
+For flagged quests, `economy-admiral-target-proposals.json` derives deterministic **review ceilings**, not mutation instructions.
+
+Each envelope records:
+
+- current measured value;
+- applicable vanilla median;
+- resolved policy multiple;
+- `CandidateCeiling = vanilla median × policy multiple`;
+- a dimension-specific interpretation.
+
+Supported envelope dimensions currently include item reward handbook-value budget, XP, and absolute trader standing. Item budget ceilings do not select replacement item templates, and trader-standing envelopes do not change sign/direction.
+
+The target-proposal contract remains:
+
+- `ProposalsAreMutations = false`;
+- `ApplyMutations = false`;
+- `SelectedCompositePolicy = null`;
+- `AutomaticMutationAllowed = false`;
+- `ProposedMutation = null`.
 
 ## Enforcement plan
 
@@ -79,7 +122,7 @@ Flagged quests become review candidates with actions such as:
 - `ReviewStandingRewardBudget`;
 - `ReviewPrerequisiteGraph`.
 
-The plan deliberately contains no invented target reward values. Every candidate has `AutomaticMutationAllowed = false` and `ProposedMutation = null`.
+The plan deliberately contains no invented mutations. Every candidate has `AutomaticMutationAllowed = false` and `ProposedMutation = null`.
 
 ## Configuration
 
@@ -118,7 +161,7 @@ Default configuration lives in `config/config.json`.
 }
 ```
 
-Easy raises cross-dimension warning thresholds; Hard lowers them and treats moderately shallow/low-structure quests more aggressively. Custom uses the explicit configuration above.
+Easy raises cross-dimension warning thresholds; Hard lowers them and treats moderately shallow/low-structure quests more aggressively. Custom uses the explicit configuration.
 
 ## Reward budget model
 
@@ -126,15 +169,17 @@ The main audit preserves raw handbook value and computes a second progression-no
 
 Prerequisite depth and structured constraints remain excluded from the active reward allowance. Their reports explicitly retain `DepthAffectsRewardAllowance = false` and `ConstraintsAffectRewardAllowance = false`.
 
-Typed XP/standing/unlock dimensions are also not converted into rubles and are not merged into a hidden utility score.
+Typed XP/standing/unlock dimensions are not converted into rubles and are not merged into a hidden utility score.
 
 ## Current limitations
 
 The MVP still lacks:
 
-- an approved cross-dimension composite utility formula;
-- numeric proposed mutation targets;
-- mutation execution and rollback/reporting;
+- an approved composite-policy formula;
+- concrete item-template replacement logic;
+- active mutation execution;
+- mutation transaction/rollback reporting;
+- runtime proof of all reports against the target mod stack;
 - repeatable replacement-rate enforcement;
 - PBS adapter / trader normalization;
 - flea, world-loot, craft and insurance modeling.
@@ -143,10 +188,10 @@ The MVP still lacks:
 
 MVP remainder:
 
-- evaluate explicit composite-policy candidates while preserving every raw input dimension;
-- define target-generation rules for proposed mutations without applying them;
-- add mutation-report/rollback contract;
-- deterministic enforcement tests before any mutation path can be enabled.
+- runtime-audit the exact compiled candidate against the target SPT/mod stack and inspect real report distributions;
+- use those reports to decide whether any composite candidate deserves promotion;
+- define mutation transaction / rollback / before-after report contracts;
+- add deterministic enforcement tests before any mutation path can be enabled.
 
 Stage 2:
 
