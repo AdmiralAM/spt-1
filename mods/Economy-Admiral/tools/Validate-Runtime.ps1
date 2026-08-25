@@ -39,10 +39,11 @@ if ($manifest.RuntimeGatePassed -ne $true) { Fail "RuntimeGatePassed is not true
 $provenance = $manifest.Provenance
 if ($null -eq $provenance) { Fail "Provenance is missing" }
 if ($provenance.CapturePriority -ne 1) { Fail "unexpected pristine capture priority: $($provenance.CapturePriority)" }
-if ($provenance.BaselineCaptured -ne $true -or $provenance.BaselineNotLargerThanFinal -ne $true) { Fail "pristine baseline validity failed" }
+if ($provenance.BaselineCaptured -ne $true -or $provenance.CountsConsistent -ne $true) { Fail "pristine provenance validity failed" }
 if ([int]$provenance.PristineQuestCount -le 0) { Fail "PristineQuestCount must be positive" }
-if ([int]$provenance.FinalQuestCount -lt [int]$provenance.PristineQuestCount) { Fail "FinalQuestCount is smaller than pristine baseline" }
-if ([int]$provenance.ModAddedQuestCount -ne ([int]$provenance.FinalQuestCount - [int]$provenance.PristineQuestCount)) { Fail "ModAddedQuestCount is inconsistent" }
+if ([int]$provenance.ModAddedQuestCount -lt 0 -or [int]$provenance.PristineModifiedQuestCount -lt 0 -or [int]$provenance.PristineUnchangedQuestCount -lt 0 -or [int]$provenance.RemovedPristineQuestCount -lt 0) { Fail "provenance counts must be non-negative" }
+if (([int]$provenance.PristineModifiedQuestCount + [int]$provenance.PristineUnchangedQuestCount + [int]$provenance.RemovedPristineQuestCount) -ne [int]$provenance.PristineQuestCount) { Fail "pristine provenance partition is inconsistent" }
+if (([int]$provenance.ModAddedQuestCount + [int]$provenance.PristineModifiedQuestCount + [int]$provenance.PristineUnchangedQuestCount) -ne [int]$provenance.FinalQuestCount) { Fail "final provenance partition is inconsistent" }
 
 $build = $manifest.BuildIdentity
 if ($null -eq $build) { Fail "BuildIdentity is missing; use the packaged CI candidate" }
@@ -74,8 +75,9 @@ if ([string]$analysis.Note -notmatch 'pristine startup baseline') { Fail "unifie
 $delta = Read-Json (Join-Path $ReportsPath 'economy-admiral-provenance-delta.json')
 if ($delta.BaselineCapturePriority -ne 1) { Fail "provenance delta has wrong capture priority" }
 if ($delta.EnforcementAffected -ne $false) { Fail "provenance delta affects enforcement unexpectedly" }
-if ([int]$delta.PristineQuestCount -ne [int]$provenance.PristineQuestCount) { Fail "provenance delta pristine count disagrees with runtime manifest" }
-if ([int]$delta.FinalQuestCount -ne [int]$provenance.FinalQuestCount) { Fail "provenance delta final count disagrees with runtime manifest" }
+foreach ($name in @('PristineQuestCount','FinalQuestCount','ModAddedQuestCount','PristineModifiedQuestCount','PristineUnchangedQuestCount','RemovedPristineQuestCount')) {
+    if ([int]$delta.$name -ne [int]$provenance.$name) { Fail "provenance delta $name disagrees with runtime manifest" }
+}
 
 $composite = Read-Json (Join-Path $ReportsPath 'economy-admiral-composite-candidates.json')
 if ($null -ne $composite.SelectedCandidate) { Fail "composite policy candidate was selected unexpectedly" }
@@ -88,9 +90,9 @@ $plan = Read-Json (Join-Path $ReportsPath 'economy-admiral-enforcement-plan.json
 if ($plan.ApplyMutations -ne $false -or $plan.MutationCount -ne 0) { Fail "enforcement plan is mutating" }
 foreach ($candidate in @($plan.Candidates)) { if ($candidate.AutomaticMutationAllowed -ne $false -or $null -ne $candidate.ProposedMutation) { Fail "enforcement candidate permits mutation" } }
 
-Pass "runtime gate valid; pristine baseline + provenance delta proven; exact CI build identified; DB unchanged; 9/9 reports present; zero mutations declared"
+Pass "runtime gate valid; pristine baseline + exact provenance delta proven; exact CI build identified; DB unchanged; 9/9 reports present; zero mutations declared"
 Write-Host "[Economy Admiral] build: $($build.HeadSha) / workflow $($build.WorkflowRunId)"
-Write-Host "[Economy Admiral] provenance: pristine=$($provenance.PristineQuestCount), final=$($provenance.FinalQuestCount), modAdded=$($provenance.ModAddedQuestCount)"
+Write-Host "[Economy Admiral] provenance: pristine=$($provenance.PristineQuestCount), final=$($provenance.FinalQuestCount), added=$($provenance.ModAddedQuestCount), modified=$($provenance.PristineModifiedQuestCount), unchanged=$($provenance.PristineUnchangedQuestCount), removed=$($provenance.RemovedPristineQuestCount)"
 Write-Host "[Economy Admiral] fingerprint: $beforeHash"
 Write-Host "[Economy Admiral] mode/preset: $($manifest.Mode) / $($manifest.Preset)"
 exit 0
