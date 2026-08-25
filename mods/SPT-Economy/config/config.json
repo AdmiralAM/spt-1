@@ -1,0 +1,12 @@
+{
+  "mode": "Audit",
+  "preset": "Normal",
+  "reportRelativePath": "reports/economy-audit.json",
+  "repeatedRaidLootDecay": false,
+  "rarity": {
+    "commonMinSources": 8,
+    "uncommonMinSources": 4,
+    "rareMinSources": 2
+  },
+  "manualOverrides": {}
+}
