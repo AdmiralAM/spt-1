@@ -7,6 +7,7 @@ using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Tables;
+using IOPath = System.IO.Path;
 
 namespace AdmiralTrader.Server;
 
@@ -45,7 +46,7 @@ public sealed class AdmiralQuestRegistration(
 
     private Dictionary<MongoId, Quest> LoadQuests(string modPath)
     {
-        string questDirectory = Path.Combine(modPath, "db", "quests");
+        string questDirectory = IOPath.Combine(modPath, "db", "quests");
         if (!Directory.Exists(questDirectory))
             throw new DirectoryNotFoundException($"Admiral quest directory is missing: {questDirectory}");
 
@@ -55,7 +56,7 @@ public sealed class AdmiralQuestRegistration(
 
         foreach (string file in files)
         {
-            string relativePath = Path.GetRelativePath(modPath, file).Replace('\\', '/');
+            string relativePath = IOPath.GetRelativePath(modPath, file).Replace('\\', '/');
             Quest quest = modHelper.GetJsonDataFromFile<Quest>(modPath, relativePath);
             if (!quests.TryAdd(quest.Id, quest))
                 throw new InvalidDataException($"Duplicate Admiral quest id {quest.Id} in {relativePath}");
