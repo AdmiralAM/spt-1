@@ -6,6 +6,7 @@ using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using IOPath = System.IO.Path;
 
@@ -94,7 +95,7 @@ public sealed class AdmiralQuestRegistration(
 
             if (string.Equals(finish.ConditionType, "CounterCreator", StringComparison.Ordinal))
             {
-                if (!string.Equals(quest.Type, "Elimination", StringComparison.Ordinal))
+                if (quest.Type != QuestTypeEnum.Elimination)
                     throw new InvalidDataException($"Arsenal quest {questId} must be Elimination, got {quest.Type}");
                 arsenalCount++;
                 continue;
