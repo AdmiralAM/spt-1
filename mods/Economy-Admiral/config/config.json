@@ -1,7 +1,7 @@
 {
   "mode": "Audit",
   "preset": "Normal",
-  "reportRelativePath": "reports/economy-audit.json",
+  "reportRelativePath": "reports/economy-admiral-audit.json",
   "repeatedRaidLootDecay": false,
   "rarity": {
     "commonMinSources": 8,
