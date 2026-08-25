@@ -28,8 +28,6 @@ namespace SPTBeltArmbandInventory
         internal static object BackpackValue;
         internal static Action<string> LogInfo;
         internal static Action<string> LogWarning;
-        internal static Array OriginalEquipmentSlots;
-        internal static Array InstalledEquipmentSlots;
 
         static object activePanel;
         static Component trackedClone;
@@ -37,22 +35,76 @@ namespace SPTBeltArmbandInventory
 
         internal static object BeginPanelShow(object panel, object[] arguments)
         {
-            if (panel == null) return null;
+            if (panel == null || arguments == null || GetSlotMethod == null || ArmBandValue == null || EquipmentSlotsField == null) return null;
 
-            activePanel = panel;
-            trackedClone = null;
-            factoryObserved = false;
-            return new PanelShowState { Panel = panel, Completed = false };
+            try
+            {
+                object equipment = FindArgument(arguments, GetSlotMethod.DeclaringType);
+                if (equipment == null) return null;
+
+                object armBandSlot = GetSlotMethod.Invoke(equipment, new[] { ArmBandValue });
+                object item = ReflectionTools.ReadMember(armBandSlot, "ContainedItem");
+                bool hasContainer = ReflectionTools.HasContainers(item);
+                if (!BeltSlotPlan.ShouldExposeBelt(item != null, hasContainer))
+                {
+                    LogInfo?.Invoke("B&A&HB UI DIAG: ContainersPanel skipped BELT projection; ArmBandItem="
+                        + (item == null ? "<null>" : item.GetType().FullName) + ", hasContainer=" + hasContainer + ".");
+                    return null;
+                }
+
+                Array original = EquipmentSlotsField.GetValue(null) as Array;
+                if (original == null)
+                {
+                    LogWarning?.Invoke("B&A&HB UI: ContainersPanel equipment-slot sequence was unavailable; BELT row was not projected.");
+                    return null;
+                }
+
+                PanelShowState state = new PanelShowState
+                {
+                    Panel = panel,
+                    OriginalSlots = original,
+                    SlotsChanged = false,
+                    Completed = false
+                };
+
+                if (!Contains(original, ArmBandValue))
+                {
+                    Array projected = InsertArmBand(original);
+                    if (projected == null)
+                    {
+                        LogWarning?.Invoke("B&A&HB UI: could not construct temporary ContainersPanel slot sequence; BELT row was not projected.");
+                        return null;
+                    }
+
+                    EquipmentSlotsField.SetValue(null, projected);
+                    state.SlotsChanged = true;
+                }
+
+                activePanel = panel;
+                trackedClone = null;
+                factoryObserved = false;
+                LogInfo?.Invoke("B&A&HB UI DIAG: ContainersPanel prepared BELT projection; insertedArmBand="
+                    + state.SlotsChanged + ", originalContainsArmBand=" + Contains(original, ArmBandValue) + ".");
+                return state;
+            }
+            catch (Exception exception)
+            {
+                LogWarning?.Invoke("B&A&HB UI: could not prepare ContainersPanel BELT projection: " + Unwrap(exception).Message);
+                activePanel = null;
+                trackedClone = null;
+                return null;
+            }
         }
 
         internal static object TryCreateArmBandSlotView(object panel, object slotName)
         {
             if (panel == null || slotName == null || ArmBandValue == null || DefaultTemplateField == null) return null;
-            if (!slotName.Equals(ArmBandValue)) return null;
+            if (!ReferenceEquals(panel, activePanel) || !slotName.Equals(ArmBandValue)) return null;
 
             try
             {
                 factoryObserved = true;
+                LogInfo?.Invoke("B&A&HB UI DIAG: ContainersPanel requested ArmBand SlotView factory.");
                 UnityEngine.Object template = DefaultTemplateField.GetValue(panel) as UnityEngine.Object;
                 if (template == null)
                 {
@@ -87,6 +139,8 @@ namespace SPTBeltArmbandInventory
             try
             {
                 if (!ReferenceEquals(panel, state.Panel) || !ReferenceEquals(panel, activePanel)) return;
+                LogInfo?.Invoke("B&A&HB UI DIAG: ContainersPanel completed BELT projection; factoryObserved="
+                    + factoryObserved + ", trackedClone=" + (trackedClone == null ? "<null>" : trackedClone.GetType().FullName) + ".");
                 try
                 {
                     ValidateAndLabelBeltRow(panel);
@@ -127,51 +181,47 @@ namespace SPTBeltArmbandInventory
 
         static void ValidateAndLabelBeltRow(object panel)
         {
-            if (SlotViewsDictionaryField == null) return;
+            if (trackedClone == null || SlotViewsDictionaryField == null)
+            {
+                LogWarning?.Invoke("B&A&HB UI DIAG: BELT row validation had no tracked SlotView clone; factoryObserved="
+                    + factoryObserved + ".");
+                return;
+            }
 
             IDictionary views = SlotViewsDictionaryField.GetValue(panel) as IDictionary;
-            Component registered = views != null && views.Contains(ArmBandValue) ? views[ArmBandValue] as Component : null;
-            if (registered == null)
+            if (views == null || !views.Contains(ArmBandValue))
             {
-                LogWarning?.Invoke("B&A&HB UI: ContainersPanel has no registered ArmBand SlotView. The panel was initialized before the global slot sequence could be applied.");
+                LogWarning?.Invoke("B&A&HB UI: ContainersPanel did not register the intercepted ArmBand SlotView.");
+                return;
+            }
+
+            Component registered = views[ArmBandValue] as Component;
+            if (!ReferenceEquals(registered, trackedClone))
+            {
+                LogWarning?.Invoke("B&A&HB UI: ArmBand SlotView registry entry was not the tracked default-template clone; leaving it untouched.");
                 return;
             }
 
             object slot = ReflectionTools.ReadMember(registered, "Slot");
             object slotId = ReflectionTools.ReadMember(slot, "ID");
             object item = ReflectionTools.ReadMember(slot, "ContainedItem");
-            bool expose = slot != null && slotId != null && string.Equals(slotId.ToString(), BeltSlotPlan.ArmBand, StringComparison.Ordinal)
-                && BeltSlotPlan.ShouldExposeBelt(item != null, ReflectionTools.HasContainers(item));
-
-            registered.gameObject.SetActive(expose);
-            if (!expose) return;
+            if (slot == null || slotId == null || !string.Equals(slotId.ToString(), BeltSlotPlan.ArmBand, StringComparison.Ordinal)
+                || !BeltSlotPlan.ShouldExposeBelt(item != null, ReflectionTools.HasContainers(item)))
+            {
+                LogWarning?.Invoke("B&A&HB UI: intercepted SlotView was not bound to a container ArmBand slot; leaving it untouched.");
+                return;
+            }
 
             Transform expectedParent = SlotViewsContainerField == null ? null : SlotViewsContainerField.GetValue(panel) as Transform;
             if (expectedParent != null && registered.transform.parent != expectedParent)
             {
-                LogWarning?.Invoke("B&A&HB UI: registered ArmBand SlotView is outside the active ContainersPanel row parent; leaving layout untouched.");
+                LogWarning?.Invoke("B&A&HB UI: intercepted ArmBand SlotView is outside the active ContainersPanel row parent; leaving layout untouched.");
                 return;
             }
 
             TrySetHeaderText(registered, "BELT");
             registered.gameObject.name = "BELT Slot";
-            LogInfo?.Invoke("B&A&HB UI PROOF: ContainersPanel created, bound and registered the BELT row through its native SlotView lifecycle.");
-        }
-
-        internal static Array EnsureArmBandInGlobalSlotSequence(Array source)
-        {
-            return source == null || Contains(source, ArmBandValue) ? source : InsertArmBand(source);
-        }
-
-        internal static void RestoreGlobalSlotSequence()
-        {
-            try
-            {
-                if (EquipmentSlotsField == null || OriginalEquipmentSlots == null || InstalledEquipmentSlots == null) return;
-                if (ReferenceEquals(EquipmentSlotsField.GetValue(null), InstalledEquipmentSlots))
-                    EquipmentSlotsField.SetValue(null, OriginalEquipmentSlots);
-            }
-            catch { }
+            LogInfo?.Invoke("B&A&HB UI PROOF: ContainersPanel created, bound and registered the BELT row through its native SlotView lifecycle; only the ArmBand slot template selection was intercepted.");
         }
 
         static Array InsertArmBand(Array source)
@@ -242,8 +292,6 @@ namespace SPTBeltArmbandInventory
             activePanel = null;
             trackedClone = null;
             factoryObserved = false;
-            OriginalEquipmentSlots = null;
-            InstalledEquipmentSlots = null;
             DefaultTemplateField = null;
             EquipmentSlotsField = null;
             SlotViewsContainerField = null;
@@ -308,14 +356,6 @@ namespace SPTBeltArmbandInventory
                 BeltRuntime.LogInfo = logInfo;
                 BeltRuntime.LogWarning = logWarning;
 
-                Array originalSlots = equipmentSlots.GetValue(null) as Array;
-                Array installedSlots = BeltRuntime.EnsureArmBandInGlobalSlotSequence(originalSlots);
-                if (originalSlots == null || installedSlots == null)
-                    return Fail("SPT 4.1 ContainersPanel slot sequence was unavailable; BELT projection was not installed.");
-                BeltRuntime.OriginalEquipmentSlots = originalSlots;
-                BeltRuntime.InstalledEquipmentSlots = installedSlots;
-                if (!ReferenceEquals(originalSlots, installedSlots)) equipmentSlots.SetValue(null, installedSlots);
-
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
@@ -333,7 +373,7 @@ namespace SPTBeltArmbandInventory
                 Patch(patchMethod, harmonyMethodType, panelShow, showPrefix, showPostfix, showFinalizer);
 
                 logInfo?.Invoke("B&A&HB MOD SPT: ContainersPanel-native BELT projection installed; real inventory host remains ArmBand.");
-                logInfo?.Invoke("B&A&HB UI: installed global ContainersPanel ArmBand slot sequence; slotFactory="
+                logInfo?.Invoke("B&A&HB UI: selected ContainersPanel Show-consumed boundaries: slotFactory="
                     + slotFactory + ", equipmentSlots=" + equipmentSlots + ".");
                 return true;
             }
@@ -640,7 +680,6 @@ namespace SPTBeltArmbandInventory
             catch { }
             harmony = null;
             unpatchSelf = null;
-            BeltRuntime.RestoreGlobalSlotSequence();
             BeltRuntime.Reset();
         }
     }
