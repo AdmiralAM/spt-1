@@ -6,6 +6,7 @@ These instructions apply to every automated or interactive development process w
 
 Before making changes, read:
 
+- `AGENTS.md`
 - `CONTRIBUTING.md`
 - `docs/development-workflow.md`
 - `docs/github-stable-runtime.md`
@@ -13,6 +14,20 @@ Before making changes, read:
 - the affected module's README and relevant durable docs.
 
 Do not begin implementation from stale assumptions when newer repository state, Issues, Pull Requests, runtime evidence, or user direction exists.
+
+## Source-of-truth check
+
+Before writing code, changing CI, publishing artifacts, or telling a user which build to test, establish the current authority for the affected module:
+
+- check `main` for integrated source state;
+- check active Issues for objective, allowed scope, non-goals, stop condition, and acceptance criteria;
+- check active Pull Requests for in-flight implementation, draft/merge status, head branch, head SHA, runtime gate, and validation status;
+- check the relevant `runtime-*` branch only as an install/publication channel, not as development source;
+- check recent Actions artifacts only when a PR/build explicitly points to the matching commit SHA.
+
+Never assume work is merged because a PR exists, a branch exists, or a chat says a build was made. Name the PR number, branch, commit SHA, and artifact/run being used when giving runtime-test instructions.
+
+If repo evidence conflicts with chat memory, the repository state and latest explicit user direction win. Stop and report the conflict instead of guessing.
 
 ## Mandatory isolation
 
@@ -31,9 +46,36 @@ Parallel development of multiple modules is normal and must remain safe.
 
 ## Required lifecycle
 
-`Issue → branch → implementation/diagnostics → PR → module CI → runtime validation if required → merge → delete temporary branch → remove obsolete temporary material → update current-state docs`
+`Issue -> branch -> implementation/diagnostics -> PR -> module CI -> runtime validation if required -> merge -> delete temporary branch -> remove obsolete temporary material -> update current-state docs`
 
 If the work is too small to justify its own Issue, it may be included in an existing coherent Issue/PR, but it still follows branch/PR isolation.
+
+A failed runtime gate does not authorize feature expansion or redesign. Diagnose the first proven failing boundary, make the smallest corrective change, rerun the minimum necessary validation, and keep unrelated work out of the PR.
+
+## Runtime gates and test artifacts
+
+SPT/EFT runtime behavior is proven only by the required physical/user runtime evidence for that module. CI is necessary but not a substitute when an Issue or PR defines a runtime gate.
+
+Any PR or chat handoff that asks for user testing must provide:
+
+- module name and affected SPT version;
+- PR number, branch name, and exact commit SHA;
+- successful workflow/run or artifact source;
+- artifact name and whether it is transient Actions output or a maintained `runtime-*` package;
+- exact install layout, including `BepInEx/plugins` and/or `SPT_Runtime/user/mods` paths;
+- focused test checklist;
+- exact logs/screenshots/results to return, including `BepInEx/LogOutput.log` when client runtime evidence is needed;
+- explicit pass/fail decision rule.
+
+Test candidates belong in GitHub Actions artifacts while they are under review. Do not update `main`, `stable`, or a `runtime-*` publication branch with a candidate until the required validation gate has passed and the promotion is deliberate.
+
+## Issues and Pull Requests
+
+Issues define durable scope: objective, evidence/current state, allowed work, non-goals, stop condition, runtime checklist when needed, and acceptance criteria.
+
+Pull Requests are integration gates and durable change records. A PR must state affected module, linked Issue/objective, changes, explicit non-goals, validation, runtime gate status, and post-merge cleanup. Keep a PR draft while its required runtime evidence is absent.
+
+Do not use source files, generated commits, or permanent branches as substitutes for Issue/PR comments, checklists, Actions checks, or Actions artifacts.
 
 ## CI and publication
 
