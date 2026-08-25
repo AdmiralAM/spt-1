@@ -130,16 +130,15 @@ namespace SPTBeltArmbandInventory
                     string fullName = itemType.FullName ?? itemType.Name;
                     bool customBelt = fullName.IndexOf("SPTBeltArmbandInventory.Runtime.CustomBelt", StringComparison.OrdinalIgnoreCase) >= 0
                         && fullName.IndexOf("EFT.InventoryLogic.ArmBand", StringComparison.OrdinalIgnoreCase) < 0;
-                    object layoutName = template == null ? null : (Read(template, "LayoutName") ?? Read(template, "Layout"));
                     bool customTemplate = template != null && (template.GetType().FullName ?? template.GetType().Name).IndexOf("SPTBeltArmbandInventory.Runtime.CustomBeltTemplate", StringComparison.OrdinalIgnoreCase) >= 0;
-                    bool layoutOk = customTemplate && layoutName != null && !string.IsNullOrWhiteSpace(layoutName.ToString());
+                    bool nativeGeneratedLayout = customTemplate && !ContainsTypeName(Read(item, "Components"), "GridLayoutComponent");
 
                     Log?.Invoke("B&A&HB TYPE PROOF 1/6 PASS: ArmBand.ContainedItem is RC tpl=" + tpl + ", instanceType=" + fullName + ".");
                     Log?.Invoke("B&A&HB TYPE PROOF 2/6 " + (customBelt ? "PASS" : "FAIL") + ": concrete client item type=" + fullName + "; customBeltExpected=true.");
                     Log?.Invoke("B&A&HB TYPE PROOF 3/6 " + ((isContainer && searchable && containerContract) ? "PASS" : "FAIL") + ": IsContainer=" + isContainer + ", searchable=" + searchable + ", containerContract=" + containerContract + ".");
                     Log?.Invoke("B&A&HB TYPE PROOF 4/6 " + (exactGrid ? "PASS" : "FAIL") + ": client-visible grid/container count=" + gridCount + "; dimensions=" + dimensions + "; expected=1x2.");
-                    Log?.Invoke("B&A&HB TYPE PROOF 5/6 " + (layoutOk ? "PASS" : "FAIL") + ": templateType=" + (template == null ? "<null>" : template.GetType().FullName) + ", layout=" + (layoutName ?? "<null>") + ".");
-                    Log?.Invoke("B&A&HB TYPE PROOF 6/6 " + (customBelt && isContainer && searchable && containerContract && exactGrid && layoutOk ? "PASS" : "FAIL") + ": no-vanilla-ArmBand-fallback runtime-type gate.");
+                    Log?.Invoke("B&A&HB TYPE PROOF 5/6 " + (nativeGeneratedLayout ? "PASS" : "FAIL") + ": templateType=" + (template == null ? "<null>" : template.GetType().FullName) + ", renderer=default GeneratedGridsView, customGridLayoutComponent=false.");
+                    Log?.Invoke("B&A&HB TYPE PROOF 6/6 " + (customBelt && isContainer && searchable && containerContract && exactGrid && nativeGeneratedLayout ? "PASS" : "FAIL") + ": no-vanilla-ArmBand-fallback runtime-type gate.");
                 }
                 catch (Exception ex)
                 {
@@ -171,6 +170,17 @@ namespace SPTBeltArmbandInventory
                     if (value != null) return value;
                 }
                 return null;
+            }
+
+            static bool ContainsTypeName(object values, string typeName)
+            {
+                if (!(values is System.Collections.IEnumerable enumerable)) return false;
+                foreach (object value in enumerable)
+                {
+                    if (value != null && (value.GetType().FullName ?? value.GetType().Name).IndexOf(typeName, StringComparison.OrdinalIgnoreCase) >= 0)
+                        return true;
+                }
+                return false;
             }
 
             static bool ToBool(object value) { return value is bool && (bool)value; }

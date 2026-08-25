@@ -9,7 +9,6 @@ namespace SPTBeltArmbandInventory
     {
         internal const string CustomTemplateParentId = "68ac00000000000000000004";
         internal const string CustomBeltParentId = "68ac00000000000000000005";
-        internal const string LayoutName = "B&A&HB-RC-1x2";
 
         const string HarmonyId = "com.admiralam.spt.belt-armband-inventory.runtime-types";
 
@@ -113,11 +112,9 @@ namespace SPTBeltArmbandInventory
                 Type searchableTemplate = ReflectionTools.FindType("EFT.InventoryLogic.SearchableItemTemplate");
                 Type searchableItem = ReflectionTools.FindType("EFT.InventoryLogic.SearchableItem");
                 Type itemType = ReflectionTools.FindType("EFT.InventoryLogic.Item");
-                Type gridLayoutComponent = ReflectionTools.FindType("EFT.InventoryLogic.GridLayoutComponent");
-                Type layoutInterface = ReflectionTools.FindType("EFT.InventoryLogic.IGridLayoutComponentTemplate");
-                if (searchableTemplate == null || searchableItem == null || itemType == null || gridLayoutComponent == null || layoutInterface == null)
+                if (searchableTemplate == null || searchableItem == null || itemType == null)
                 {
-                    LogWarning?.Invoke("B&A&HB RUNTIME TYPE: searchable item/template/grid-layout contract types were not found.");
+                    LogWarning?.Invoke("B&A&HB RUNTIME TYPE: searchable item/template contract types were not found.");
                     return false;
                 }
 
@@ -125,8 +122,8 @@ namespace SPTBeltArmbandInventory
                 AssemblyBuilder assembly = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
                 ModuleBuilder module = assembly.DefineDynamicModule(assemblyName.Name);
 
-                CustomTemplateType = BuildTemplateType(module, searchableTemplate, layoutInterface);
-                CustomBeltItemType = BuildItemType(module, searchableItem, itemType, gridLayoutComponent, CustomTemplateType);
+                CustomTemplateType = BuildTemplateType(module, searchableTemplate);
+                CustomBeltItemType = BuildItemType(module, searchableItem, CustomTemplateType);
                 customItemConstructor = CustomBeltItemType.GetConstructor(new[] { typeof(string), CustomTemplateType });
                 if (customItemConstructor == null) throw new InvalidOperationException("generated custom belt constructor missing");
             }
@@ -136,15 +133,13 @@ namespace SPTBeltArmbandInventory
             return true;
         }
 
-        static Type BuildTemplateType(ModuleBuilder module, Type searchableTemplate, Type layoutInterface)
+        static Type BuildTemplateType(ModuleBuilder module, Type searchableTemplate)
         {
             TypeBuilder builder = module.DefineType(
                 "SPTBeltArmbandInventory.Runtime.CustomBeltTemplate",
                 TypeAttributes.Public | TypeAttributes.Class,
-                searchableTemplate,
-                new[] { layoutInterface });
+                searchableTemplate);
 
-            FieldBuilder layout = builder.DefineField("_runtimeLayoutName", typeof(string), FieldAttributes.Private);
             ConstructorInfo baseCtor = searchableTemplate.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
             if (baseCtor == null) throw new InvalidOperationException("SearchableItemTemplate parameterless constructor not found");
 
@@ -152,35 +147,12 @@ namespace SPTBeltArmbandInventory
             ILGenerator cil = ctor.GetILGenerator();
             cil.Emit(OpCodes.Ldarg_0);
             cil.Emit(OpCodes.Call, baseCtor);
-            cil.Emit(OpCodes.Ldarg_0);
-            cil.Emit(OpCodes.Ldstr, RuntimeCustomBeltTypePatches.LayoutName);
-            cil.Emit(OpCodes.Stfld, layout);
             cil.Emit(OpCodes.Ret);
-
-            PropertyBuilder property = builder.DefineProperty("LayoutName", PropertyAttributes.None, typeof(string), Type.EmptyTypes);
-            MethodBuilder getter = builder.DefineMethod("get_LayoutName", MethodAttributes.Public | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.SpecialName, typeof(string), Type.EmptyTypes);
-            ILGenerator gil = getter.GetILGenerator();
-            gil.Emit(OpCodes.Ldarg_0);
-            gil.Emit(OpCodes.Ldfld, layout);
-            gil.Emit(OpCodes.Ret);
-            property.SetGetMethod(getter);
-
-            MethodBuilder setter = builder.DefineMethod("set_LayoutName", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName, typeof(void), new[] { typeof(string) });
-            ILGenerator sil = setter.GetILGenerator();
-            sil.Emit(OpCodes.Ldarg_0);
-            sil.Emit(OpCodes.Ldarg_1);
-            sil.Emit(OpCodes.Stfld, layout);
-            sil.Emit(OpCodes.Ret);
-            property.SetSetMethod(setter);
-
-            PropertyInfo interfaceLayout = layoutInterface.GetProperty("LayoutName", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            MethodInfo interfaceGetter = interfaceLayout == null ? null : interfaceLayout.GetGetMethod(true);
-            if (interfaceGetter != null) builder.DefineMethodOverride(getter, interfaceGetter);
 
             return builder.CreateType();
         }
 
-        static Type BuildItemType(ModuleBuilder module, Type searchableItem, Type itemType, Type gridLayoutComponent, Type customTemplate)
+        static Type BuildItemType(ModuleBuilder module, Type searchableItem, Type customTemplate)
         {
             TypeBuilder builder = module.DefineType(
                 "SPTBeltArmbandInventory.Runtime.CustomBeltSearchableContainer",
@@ -190,30 +162,12 @@ namespace SPTBeltArmbandInventory
             ConstructorInfo baseCtor = FindItemBaseConstructor(searchableItem, customTemplate);
             if (baseCtor == null) throw new InvalidOperationException("SearchableItem(string, searchable template) constructor not found");
 
-            ConstructorInfo gridCtor = FindGridLayoutConstructor(gridLayoutComponent, searchableItem, customTemplate);
-            if (gridCtor == null) throw new InvalidOperationException("GridLayoutComponent(item, template) constructor not found");
-
-            MemberInfo components = FindComponentsMember(searchableItem);
-            if (components == null) throw new InvalidOperationException("SearchableItemItemClass Components collection not found");
-            Type componentsType = components is PropertyInfo cp ? cp.PropertyType : ((FieldInfo)components).FieldType;
-            MethodInfo add = FindAddMethod(componentsType, gridLayoutComponent);
-            if (add == null) throw new InvalidOperationException("Components.Add(GridLayoutComponent) boundary not found");
-
             ConstructorBuilder ctor = builder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, new[] { typeof(string), customTemplate });
             ILGenerator il = ctor.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldarg_2);
             il.Emit(OpCodes.Call, baseCtor);
-
-            il.Emit(OpCodes.Ldarg_0);
-            if (components is PropertyInfo property) il.Emit(OpCodes.Call, property.GetGetMethod(true));
-            else il.Emit(OpCodes.Ldfld, (FieldInfo)components);
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldarg_2);
-            il.Emit(OpCodes.Newobj, gridCtor);
-            il.Emit(OpCodes.Callvirt, add);
-            if (add.ReturnType != typeof(void)) il.Emit(OpCodes.Pop);
             il.Emit(OpCodes.Ret);
 
             return builder.CreateType();
@@ -226,42 +180,6 @@ namespace SPTBeltArmbandInventory
                 ParameterInfo[] p = ctor.GetParameters();
                 if (p.Length != 2 || p[0].ParameterType != typeof(string)) continue;
                 if (p[1].ParameterType.IsAssignableFrom(customTemplate)) return ctor;
-            }
-            return null;
-        }
-
-        static ConstructorInfo FindGridLayoutConstructor(Type componentType, Type searchableItem, Type customTemplate)
-        {
-            foreach (ConstructorInfo ctor in componentType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-            {
-                ParameterInfo[] p = ctor.GetParameters();
-                if (p.Length != 2) continue;
-                if (!p[0].ParameterType.IsAssignableFrom(searchableItem)) continue;
-                if (!p[1].ParameterType.IsAssignableFrom(customTemplate)) continue;
-                return ctor;
-            }
-            return null;
-        }
-
-        static MemberInfo FindComponentsMember(Type type)
-        {
-            for (Type current = type; current != null; current = current.BaseType)
-            {
-                PropertyInfo p = current.GetProperty("Components", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                if (p != null && p.GetGetMethod(true) != null) return p;
-                FieldInfo f = current.GetField("Components", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                if (f != null) return f;
-            }
-            return null;
-        }
-
-        static MethodInfo FindAddMethod(Type collectionType, Type componentType)
-        {
-            foreach (MethodInfo method in collectionType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-            {
-                if (method.Name != "Add") continue;
-                ParameterInfo[] p = method.GetParameters();
-                if (p.Length == 1 && p[0].ParameterType.IsAssignableFrom(componentType)) return method;
             }
             return null;
         }
