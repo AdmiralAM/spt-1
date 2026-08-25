@@ -77,18 +77,21 @@ namespace SPTBeltArmbandInventory.Diagnostics
             DynamicMethod postfix = new DynamicMethod(
                 "GridWindowFullDumpPostfix",
                 typeof(void),
-                new[] { originalMethod.DeclaringType },
+                new[] { originalMethod.DeclaringType, typeof(object[]) },
                 typeof(GridWindowDumpPlugin),
                 true);
             postfix.DefineParameter(1, ParameterAttributes.None, "__instance");
+            postfix.DefineParameter(2, ParameterAttributes.None, "__args");
             ILGenerator il = postfix.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldstr, originalMethod.ToString());
             il.Emit(OpCodes.Call, typeof(GridWindowDumpPlugin).GetMethod(nameof(Probe), BindingFlags.Static | BindingFlags.NonPublic));
             il.Emit(OpCodes.Ret);
             return postfix;
         }
 
-        private static void Probe(object target)
+        private static void Probe(object target, object[] args, string showSignature)
         {
             GridWindowDumpPlugin current = instance;
             if (current == null || current.dumped || target == null)
@@ -98,7 +101,7 @@ namespace SPTBeltArmbandInventory.Diagnostics
             if (component == null || !string.Equals(component.gameObject.name, TargetObjectName, StringComparison.Ordinal))
                 return;
 
-            current.WriteDump(component);
+            current.WriteDump(component, args, showSignature);
             current.dumped = true;
         }
 
@@ -142,7 +145,7 @@ namespace SPTBeltArmbandInventory.Diagnostics
                 instance = null;
         }
 
-        private void WriteDump(UnityEngine.Object target)
+        private void WriteDump(UnityEngine.Object target, object[] args, string showSignature)
         {
             try
             {
@@ -155,6 +158,16 @@ namespace SPTBeltArmbandInventory.Diagnostics
                 output.AppendLine("SPT_ROOT=" + Paths.GameRootPath);
                 output.AppendLine("TARGET_TYPE=" + target.GetType().AssemblyQualifiedName);
                 output.AppendLine("TARGET_NAME=" + target.name);
+                output.AppendLine("SHOW_SIGNATURE=" + showSignature);
+                output.AppendLine("SHOW_ARGUMENT_COUNT=" + (args == null ? "<null>" : args.Length.ToString()));
+                if (args != null)
+                {
+                    for (int i = 0; i < args.Length; i++)
+                    {
+                        object argument = args[i];
+                        output.AppendLine("SHOW_ARGUMENT[" + i + "]=" + DescribeArgument(argument));
+                    }
+                }
                 output.AppendLine();
 
                 DumpObject(output, "GRID_WINDOW", target, visited, 0, 3);
@@ -173,6 +186,47 @@ namespace SPTBeltArmbandInventory.Diagnostics
             catch (Exception exception)
             {
                 Logger.LogError("[GRID-DUMP] FAILED: " + exception);
+            }
+        }
+
+        private static string DescribeArgument(object value)
+        {
+            if (value == null)
+                return "<null>";
+
+            try
+            {
+                Type type = value.GetType();
+                string text = "type=" + (type.FullName ?? type.Name);
+                if (value is UnityEngine.Object unityObject)
+                    text += ", unityName=\"" + unityObject.name + "\"";
+
+                foreach (string memberName in new[] { "TemplateId", "Tpl", "Id", "Item", "Template", "Grid", "ItemContext", "Owner" })
+                {
+                    try
+                    {
+                        PropertyInfo property = type.GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        if (property != null && property.GetIndexParameters().Length == 0)
+                        {
+                            object nested = property.GetValue(value, null);
+                            text += ", " + memberName + "=" + SafeValue(nested);
+                            continue;
+                        }
+
+                        FieldInfo field = type.GetField(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                        if (field != null)
+                            text += ", " + memberName + "=" + SafeValue(field.GetValue(value));
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                return text;
+            }
+            catch
+            {
+                return "type=" + value.GetType().FullName;
             }
         }
 
