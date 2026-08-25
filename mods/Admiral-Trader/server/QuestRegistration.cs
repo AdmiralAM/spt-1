@@ -31,8 +31,7 @@ public sealed class AdmiralQuestRegistration(
             return Task.CompletedTask;
         }
 
-        Dictionary<MongoId, Quest> quests =
-            modHelper.GetJsonDataFromFile<Dictionary<MongoId, Quest>>(modPath, "db/quests.json");
+        Dictionary<MongoId, Quest> quests = LoadQuests(modPath);
         ValidateQuests(quests);
 
         foreach (var (questId, quest) in quests)
@@ -44,6 +43,27 @@ public sealed class AdmiralQuestRegistration(
         RegisterQuestLocales(modPath);
         logger.Success($"Registered {quests.Count} authored Admiral quests");
         return Task.CompletedTask;
+    }
+
+    private Dictionary<MongoId, Quest> LoadQuests(string modPath)
+    {
+        string questDirectory = Path.Combine(modPath, "db", "quests");
+        if (!Directory.Exists(questDirectory))
+            throw new DirectoryNotFoundException($"Admiral quest directory is missing: {questDirectory}");
+
+        string[] files = Directory.GetFiles(questDirectory, "*.json", SearchOption.TopDirectoryOnly);
+        Array.Sort(files, StringComparer.Ordinal);
+        Dictionary<MongoId, Quest> quests = new();
+
+        foreach (string file in files)
+        {
+            string relativePath = Path.GetRelativePath(modPath, file).Replace('\\', '/');
+            Quest quest = modHelper.GetJsonDataFromFile<Quest>(modPath, relativePath);
+            if (!quests.TryAdd(quest.Id, quest))
+                throw new InvalidDataException($"Duplicate Admiral quest id {quest.Id} in {relativePath}");
+        }
+
+        return quests;
     }
 
     private static void ValidateQuests(Dictionary<MongoId, Quest> quests)
