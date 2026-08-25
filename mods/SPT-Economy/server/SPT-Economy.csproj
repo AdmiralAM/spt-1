@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>SPTEconomy</RootNamespace>
+    <AssemblyName>SPT-Economy</AssemblyName>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SPTarkov.Server.Core" Version="4.1.2" />
+  </ItemGroup>
+
+  <Target Name="CopyEconomyConfig" AfterTargets="Build" Condition="Exists('$(ProjectDir)..\config\config.json')">
+    <MakeDir Directories="$(OutputPath)config" />
+    <Copy SourceFiles="$(ProjectDir)..\config\config.json" DestinationFolder="$(OutputPath)config" SkipUnchangedFiles="true" />
+  </Target>
+</Project>
