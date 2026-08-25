@@ -37,15 +37,16 @@ Write-Json 'economy-admiral-target-proposals.json' @{
     Candidates = @(@{ AutomaticMutationAllowed = $false; ProposedMutation = $null })
 }
 Write-Json 'economy-admiral-enforcement-plan.json' @{
-    SchemaVersion = 3
-    MutationEligibilityPolicyVersion = 1
+    SchemaVersion = 4
+    MutationEligibilityPolicyVersion = 2
     ApplyMutations = $false
     MutationCount = 0
     Candidates = @(
-        @{ ProvenanceClass = 'PristineUnchanged'; MutationEligibilityClass = 'ProtectedPristine'; PotentialAutomaticMutationEligible = $false; AutomaticMutationAllowed = $false; ProposedMutation = $null },
-        @{ ProvenanceClass = 'ModAdded'; MutationEligibilityClass = 'PolicyEligibleModAdded'; PotentialAutomaticMutationEligible = $true; AutomaticMutationAllowed = $false; ProposedMutation = $null },
-        @{ ProvenanceClass = 'PristineModified'; MutationEligibilityClass = 'PolicyEligibleModifiedPristine'; PotentialAutomaticMutationEligible = $true; AutomaticMutationAllowed = $false; ProposedMutation = $null },
-        @{ ProvenanceClass = 'Unknown'; MutationEligibilityClass = 'BlockedUnknownProvenance'; PotentialAutomaticMutationEligible = $false; AutomaticMutationAllowed = $false; ProposedMutation = $null }
+        @{ ProvenanceClass = 'PristineUnchanged'; MutationEligibilityClass = 'ProtectedPristine'; PotentialAutomaticMutationEligible = $false; PotentialMutationDimensions = @(); ChangedDimensions = @(); AutomaticMutationAllowed = $false; ProposedMutation = $null },
+        @{ ProvenanceClass = 'ModAdded'; MutationEligibilityClass = 'PolicyEligibleModAdded'; PotentialAutomaticMutationEligible = $true; PotentialMutationDimensions = @('ItemRewardBudget','Experience'); ChangedDimensions = @('QuestAdded'); AutomaticMutationAllowed = $false; ProposedMutation = $null },
+        @{ ProvenanceClass = 'PristineModified'; MutationEligibilityClass = 'PolicyEligibleModifiedPristine'; PotentialAutomaticMutationEligible = $true; PotentialMutationDimensions = @('Experience'); ChangedDimensions = @('Experience','ObjectiveConditionCount'); AutomaticMutationAllowed = $false; ProposedMutation = $null },
+        @{ ProvenanceClass = 'PristineModified'; MutationEligibilityClass = 'ProtectedUnchangedRewardDimensions'; PotentialAutomaticMutationEligible = $false; PotentialMutationDimensions = @(); ChangedDimensions = @('ObjectiveConditionCount'); AutomaticMutationAllowed = $false; ProposedMutation = $null },
+        @{ ProvenanceClass = 'Unknown'; MutationEligibilityClass = 'BlockedUnknownProvenance'; PotentialAutomaticMutationEligible = $false; PotentialMutationDimensions = @(); ChangedDimensions = @(); AutomaticMutationAllowed = $false; ProposedMutation = $null }
     )
 }
 Write-Json 'economy-admiral-runtime-evidence.json' @{
