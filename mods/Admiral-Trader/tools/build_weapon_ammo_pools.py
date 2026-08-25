@@ -11,14 +11,14 @@ FAMILY_CLASSES = {
     "handguns": {"pistol", "revolver"},
     "smg-pdw": {"smg"},
     "shotguns": {"shotgun"},
-    "assault-rifles": {"assaultRifle", "assaultCarbine"},
+    # Keep battle/marksman carbines out of the assault family. SKS/SVT/Hunter-style
+    # weapons are curated separately instead of entering every assault objective.
+    "assault-rifles": {"assaultRifle"},
     "marksman-battle": {"marksmanRifle"},
     "precision": {"sniperRifle"},
     "special-weapons": {"machinegun", "grenadeLauncher", "specialWeapon"},
 }
 
-# Normalize human-authored caliber hints to tokens used by EFT item templates.
-# Aliases are intentionally conservative; observed weapon calibers are also folded into each family at runtime.
 CALIBER_TOKENS = {
     "9x18": {"Caliber9x18PM"},
     "9x19": {"Caliber9x19PARA"},
@@ -40,6 +40,14 @@ CALIBER_TOKENS = {
     ".338 Lapua": {"Caliber86x70"},
 }
 
+BLOCKED_AMMO_NAME_TOKENS = (
+    "shrapnel",
+    "fragment",
+    "explosion",
+    "fuze",
+    "fuse",
+)
+
 
 def props(item: dict[str, Any]) -> dict[str, Any]:
     value = item.get("_props")
@@ -51,7 +59,16 @@ def item_name(item: dict[str, Any], tpl: str) -> str:
         value = item.get(key)
         if value:
             return str(value)
+    p = props(item)
+    for key in ("Name", "ShortName"):
+        value = p.get(key)
+        if value:
+            return str(value)
     return tpl
+
+
+def is_real_item(item: dict[str, Any]) -> bool:
+    return str(item.get("_type") or "").lower() == "item"
 
 
 def normalize_items(raw: Any) -> dict[str, dict[str, Any]]:
@@ -77,17 +94,38 @@ def ammo_tier(penetration: float) -> str:
     return "standard"
 
 
+def is_explosive_or_fragment_ammo(item: dict[str, Any], family_id: str) -> bool:
+    name = item_name(item, "").lower()
+    if any(token in name for token in BLOCKED_AMMO_NAME_TOKENS):
+        return True
+
+    p = props(item)
+    ammo_type = str(p.get("ammoType") or p.get("AmmoType") or "").lower()
+    if ammo_type in {"grenade", "explosive", "fragment", "shrapnel"}:
+        return True
+
+    # Special weapons are allowed as objective candidates, but their launcher/heavy
+    # ammunition must never become an automatic permanent unlock candidate.
+    if family_id == "special-weapons":
+        caliber = str(p.get("Caliber") or "").lower()
+        if any(token in caliber for token in ("40x", "40mm", "26x", "flare", "grenade")):
+            return True
+    return False
+
+
 def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
     items = normalize_items(items_raw)
     result: dict[str, Any] = {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "targetSptVersion": spec.get("targetSptVersion"),
-        "sourceRole": "official-item-db-candidate-resolution; exact-runtime-4.1.3-verification-still-required",
+        "sourceRole": "pinned-backend-item-candidate-resolution; exact-runtime-4.1.3-verification-required",
         "families": {},
     }
 
     class_counts: Counter[str] = Counter()
     for item in items.values():
+        if not is_real_item(item):
+            continue
         weapon_class = props(item).get("weapClass")
         if weapon_class:
             class_counts[str(weapon_class)] += 1
@@ -100,9 +138,12 @@ def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
 
         weapon_rows: list[dict[str, Any]] = []
         ammo_rows: list[dict[str, Any]] = []
+        excluded_ammo_rows: list[dict[str, Any]] = []
         observed_weapon_calibers: set[str] = set()
 
         for tpl, item in items.items():
+            if not is_real_item(item):
+                continue
             p = props(item)
             weapon_class = str(p.get("weapClass") or "")
             weapon_caliber = str(p.get("ammoCaliber") or p.get("Caliber") or "")
@@ -119,26 +160,34 @@ def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
         effective_calibers = set(wanted_calibers) | observed_weapon_calibers
 
         for tpl, item in items.items():
+            if not is_real_item(item):
+                continue
             p = props(item)
             caliber = str(p.get("Caliber") or "")
             if not caliber or caliber not in effective_calibers:
                 continue
-            # Ammo templates expose penetration/damage; weapons do not.
             if "PenetrationPower" not in p and "Damage" not in p:
                 continue
+
             penetration = float(p.get("PenetrationPower") or 0)
             damage = float(p.get("Damage") or 0)
-            ammo_rows.append({
+            row = {
                 "tpl": tpl,
                 "name": item_name(item, tpl),
                 "caliber": caliber,
                 "penetration": penetration,
                 "damage": damage,
                 "tier": ammo_tier(penetration),
-            })
+            }
+            if is_explosive_or_fragment_ammo(item, family_id):
+                row["reason"] = "fragment/explosive/heavy ammo excluded from automatic unlock candidates"
+                excluded_ammo_rows.append(row)
+                continue
+            ammo_rows.append(row)
 
         weapon_rows.sort(key=lambda row: (row["weapClass"], row["caliber"], row["name"], row["tpl"]))
         ammo_rows.sort(key=lambda row: (row["caliber"], row["penetration"], row["damage"], row["name"], row["tpl"]))
+        excluded_ammo_rows.sort(key=lambda row: (row["caliber"], row["name"], row["tpl"]))
         tiers = Counter(row["tier"] for row in ammo_rows)
         result["families"][family_id] = {
             "requestedWeaponClasses": sorted(wanted_classes),
@@ -146,16 +195,18 @@ def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
             "resolvedCalibers": sorted(effective_calibers),
             "weaponCount": len(weapon_rows),
             "ammoCount": len(ammo_rows),
+            "excludedAmmoCount": len(excluded_ammo_rows),
             "ammoTierCounts": dict(sorted(tiers.items())),
             "weapons": weapon_rows,
             "ammo": ammo_rows,
+            "excludedAmmo": excluded_ammo_rows,
         }
 
     return result
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Resolve Admiral weapon/ammo candidates from an SPT item database")
+    parser = argparse.ArgumentParser(description="Resolve Admiral weapon/ammo candidates from a pinned EFT backend item database")
     parser.add_argument("items", type=Path)
     parser.add_argument("spec", type=Path)
     parser.add_argument("--output", type=Path, required=True)
@@ -173,7 +224,15 @@ def main() -> int:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(pools, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    summary = {fid: {"weapons": d["weaponCount"], "ammo": d["ammoCount"], "tiers": d["ammoTierCounts"]} for fid, d in pools["families"].items()}
+    summary = {
+        fid: {
+            "weapons": data["weaponCount"],
+            "ammo": data["ammoCount"],
+            "excludedAmmo": data["excludedAmmoCount"],
+            "tiers": data["ammoTierCounts"],
+        }
+        for fid, data in pools["families"].items()
+    }
     print(json.dumps(summary, sort_keys=True))
     return 0
 
