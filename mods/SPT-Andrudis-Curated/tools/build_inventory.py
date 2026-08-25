@@ -218,6 +218,101 @@ def add_successors(rows: list[dict[str, Any]]) -> None:
         row["successors"] = sorted(successors.get(row["questId"], set()))
 
 
+def find_cycles(graph: dict[str, list[str]]) -> list[list[str]]:
+    index = 0
+    stack: list[str] = []
+    on_stack: set[str] = set()
+    indexes: dict[str, int] = {}
+    lowlinks: dict[str, int] = {}
+    cycles: list[list[str]] = []
+
+    def strong_connect(node: str) -> None:
+        nonlocal index
+        indexes[node] = index
+        lowlinks[node] = index
+        index += 1
+        stack.append(node)
+        on_stack.add(node)
+
+        for successor in graph.get(node, []):
+            if successor not in indexes:
+                strong_connect(successor)
+                lowlinks[node] = min(lowlinks[node], lowlinks[successor])
+            elif successor in on_stack:
+                lowlinks[node] = min(lowlinks[node], indexes[successor])
+
+        if lowlinks[node] != indexes[node]:
+            return
+
+        component: list[str] = []
+        while stack:
+            member = stack.pop()
+            on_stack.remove(member)
+            component.append(member)
+            if member == node:
+                break
+        if len(component) > 1 or (len(component) == 1 and node in graph.get(node, [])):
+            cycles.append(sorted(component))
+
+    for node in sorted(graph):
+        if node not in indexes:
+            strong_connect(node)
+
+    cycles.sort()
+    return cycles
+
+
+def build_graph_diagnostics(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    rows_by_id: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for row in rows:
+        rows_by_id[row["questId"]].append(row)
+
+    duplicates = [
+        {
+            "questId": quest_id,
+            "sources": sorted({entry["sourcePath"] for entry in entries}),
+        }
+        for quest_id, entries in sorted(rows_by_id.items())
+        if len(entries) > 1
+    ]
+
+    unique_rows = {quest_id: entries[0] for quest_id, entries in rows_by_id.items()}
+    known_ids = set(unique_rows)
+    missing: list[dict[str, str]] = []
+    cross_bundle: list[dict[str, str]] = []
+
+    for row in sorted(rows, key=lambda value: value["questId"]):
+        for prerequisite in row["prerequisites"]:
+            if prerequisite not in known_ids:
+                missing.append({
+                    "questId": row["questId"],
+                    "bundle": row["bundle"],
+                    "missingPrerequisiteId": prerequisite,
+                })
+                continue
+            prerequisite_row = unique_rows[prerequisite]
+            if prerequisite_row["bundle"] != row["bundle"]:
+                cross_bundle.append({
+                    "fromQuestId": prerequisite,
+                    "fromBundle": prerequisite_row["bundle"],
+                    "toQuestId": row["questId"],
+                    "toBundle": row["bundle"],
+                })
+
+    graph = {
+        quest_id: [successor for successor in row["successors"] if successor in known_ids]
+        for quest_id, row in unique_rows.items()
+    }
+    cycles = find_cycles(graph)
+
+    return {
+        "duplicateQuestIds": duplicates,
+        "missingPrerequisites": missing,
+        "crossBundleEdges": cross_bundle,
+        "cycles": cycles,
+    }
+
+
 def build_payload(root: Path, rules: dict[str, Any]) -> dict[str, Any]:
     rows, errors = load_quests(root)
     add_successors(rows)
@@ -243,8 +338,10 @@ def build_payload(root: Path, rules: dict[str, Any]) -> dict[str, Any]:
             restartable_count += 1
 
     rows.sort(key=lambda row: (str(row["bundle"]).lower(), str(row["questName"]).lower(), row["questId"]))
+    diagnostics = build_graph_diagnostics(rows)
+
     return {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "sourceRoot": root.resolve().as_posix(),
         "summary": {
             "questCount": len(rows),
@@ -255,8 +352,13 @@ def build_payload(root: Path, rules: dict[str, Any]) -> dict[str, Any]:
             "firQuestCount": fir_count,
             "restartableQuestCount": restartable_count,
             "parseErrorCount": len(errors),
+            "duplicateQuestIdCount": len(diagnostics["duplicateQuestIds"]),
+            "missingPrerequisiteCount": len(diagnostics["missingPrerequisites"]),
+            "crossBundleEdgeCount": len(diagnostics["crossBundleEdges"]),
+            "cycleCount": len(diagnostics["cycles"]),
         },
         "parseErrors": errors,
+        "graphDiagnostics": diagnostics,
         "quests": rows,
     }
 
