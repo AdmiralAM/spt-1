@@ -36,11 +36,11 @@ jobs:
               root / 'README.md', root / 'config' / 'config.json',
               root / 'server' / 'Economy-Admiral.csproj', root / 'server' / 'ModMetadata.cs',
               root / 'server' / 'EconomyConfig.cs', root / 'server' / 'EconomyRuntimeConfigService.cs',
-              root / 'server' / 'EconomyMod.cs', root / 'server' / 'EconomyAuditService.cs',
-              root / 'server' / 'RewardUtilityAuditService.cs', root / 'server' / 'QuestProgressionGraphService.cs',
-              root / 'server' / 'QuestConstraintAuditService.cs', root / 'server' / 'QuestAnalysisService.cs',
-              root / 'server' / 'CompositePolicyEvaluationService.cs', root / 'server' / 'TargetProposalService.cs',
-              root / 'server' / 'EnforcementPlanService.cs',
+              root / 'server' / 'RuntimeEvidenceService.cs', root / 'server' / 'EconomyMod.cs',
+              root / 'server' / 'EconomyAuditService.cs', root / 'server' / 'RewardUtilityAuditService.cs',
+              root / 'server' / 'QuestProgressionGraphService.cs', root / 'server' / 'QuestConstraintAuditService.cs',
+              root / 'server' / 'QuestAnalysisService.cs', root / 'server' / 'CompositePolicyEvaluationService.cs',
+              root / 'server' / 'TargetProposalService.cs', root / 'server' / 'EnforcementPlanService.cs',
           ]
           missing = [str(path) for path in required if not path.is_file()]
           if missing:
@@ -75,13 +75,29 @@ jobs:
           assert 'namespace EconomyAdmiral;' in source
           assert 'runtimeConfigService.GetAsync' in source
           assert 'config.Mode == EconomyMode.Off' in source
+          assert 'runtimeEvidenceService.CaptureBefore()' in source
+          assert 'runtimeEvidenceService.WriteAfterAsync' in source
           services = [
-              'RewardUtilityAuditService', 'QuestProgressionGraphService', 'QuestConstraintAuditService',
-              'QuestAnalysisService', 'CompositePolicyEvaluationService', 'TargetProposalService', 'EnforcementPlanService'
+              'RuntimeEvidenceService', 'RewardUtilityAuditService', 'QuestProgressionGraphService',
+              'QuestConstraintAuditService', 'QuestAnalysisService', 'CompositePolicyEvaluationService',
+              'TargetProposalService', 'EnforcementPlanService'
           ]
           for service in services:
               assert service in source, service
-          assert source.index('config.Mode == EconomyMode.Off') < source.index('auditService.RunAsync')
+          assert source.index('config.Mode == EconomyMode.Off') < source.index('runtimeEvidenceService.CaptureBefore()')
+          assert source.index('runtimeEvidenceService.CaptureBefore()') < source.index('auditService.RunAsync')
+          assert source.index('enforcementPlanService.RunAsync') < source.index('runtimeEvidenceService.WriteAfterAsync')
+
+          runtime_evidence = (root / 'server' / 'RuntimeEvidenceService.cs').read_text(encoding='utf-8')
+          for invariant in [
+              'IncrementalHash.CreateHash(HashAlgorithmName.SHA256)',
+              'DatabaseUnchangedAcrossPipeline', 'RuntimeGatePassed', 'ApplyMutations = false',
+              'DeclaredMutationCount = 0', 'ExpectedReportCount', 'PresentReportCount',
+              'economy-admiral-runtime-evidence.json', 'economy-admiral-enforcement-plan.json',
+              'QUEST|', 'ASSORT_ITEM|', 'ASSORT_BARTER|', 'ASSORT_LOYALTY|', 'HANDBOOK|',
+              'using Path = System.IO.Path;',
+          ]:
+              assert invariant in runtime_evidence, invariant
 
           metadata = (root / 'server' / 'ModMetadata.cs').read_text(encoding='utf-8')
           assert 'Economy Admiral' in metadata
