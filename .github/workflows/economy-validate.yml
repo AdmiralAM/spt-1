@@ -1,0 +1,92 @@
+name: Economy Validate
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'mods/SPT-Economy/**'
+      - '.github/workflows/economy-validate.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mods/SPT-Economy/**'
+      - '.github/workflows/economy-validate.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: economy-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract:
+    name: Economy module contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Validate committed contract
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          root = Path('mods/SPT-Economy')
+          required = [
+              root / 'README.md',
+              root / 'config' / 'config.json',
+              root / 'server' / 'SPT-Economy.csproj',
+              root / 'server' / 'ModMetadata.cs',
+              root / 'server' / 'EconomyConfig.cs',
+              root / 'server' / 'EconomyMod.cs',
+              root / 'server' / 'EconomyAuditService.cs',
+          ]
+          missing = [str(path) for path in required if not path.is_file()]
+          if missing:
+              raise SystemExit('Missing Economy files: ' + ', '.join(missing))
+
+          config = json.loads((root / 'config' / 'config.json').read_text(encoding='utf-8'))
+          assert config['mode'] in {'Off', 'Audit', 'Enforce'}
+          assert config['preset'] in {'Easy', 'Normal', 'Hard', 'Custom'}
+          assert config['repeatedRaidLootDecay'] is False
+          assert config['reportRelativePath'].startswith('reports/')
+          assert config['rarity']['commonMinSources'] >= config['rarity']['uncommonMinSources']
+          assert config['rarity']['uncommonMinSources'] >= config['rarity']['rareMinSources']
+
+          source = (root / 'server' / 'EconomyMod.cs').read_text(encoding='utf-8')
+          assert 'OnLoadOrder.PostLoad + 1000' in source
+
+          audit = (root / 'server' / 'EconomyAuditService.cs').read_text(encoding='utf-8')
+          assert 'EnforcementApplied = false' in audit
+          assert 'running read-only audit only' in audit
+          print('Economy module contract OK')
+
+  server:
+    name: Economy .NET 10 server build
+    needs: [contract]
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build server
+        shell: pwsh
+        run: dotnet build mods/SPT-Economy/server/SPT-Economy.csproj -c Release --nologo
+      - name: Stage candidate
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path build-output/SPT-Economy/config | Out-Null
+          Copy-Item mods/SPT-Economy/server/bin/Release/net10.0/SPT-Economy.dll build-output/SPT-Economy/SPT-Economy.dll
+          Copy-Item mods/SPT-Economy/config/config.json build-output/SPT-Economy/config/config.json
+          Copy-Item mods/SPT-Economy/README.md build-output/SPT-Economy/README.md
+      - name: Upload candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: spt-economy-candidate
+          path: build-output/SPT-Economy
+          if-no-files-found: error
+          retention-days: 14
