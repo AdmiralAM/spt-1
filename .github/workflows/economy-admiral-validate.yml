@@ -119,6 +119,12 @@ jobs:
               'ConditionType, "Quest"',
               'MaximumPrerequisiteDepth',
               'CycleMemberCount',
+              'SchemaVersion = 2',
+              'DepthAffectsRewardAllowance = false',
+              'VanillaDepthBenchmark',
+              'VanillaRestartableDepthBenchmark',
+              'MedianDepth',
+              'P90Depth',
               'economy-admiral-progression-graph.json',
               'using Path = System.IO.Path;',
           ]:
