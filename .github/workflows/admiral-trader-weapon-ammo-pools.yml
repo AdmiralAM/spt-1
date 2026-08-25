@@ -83,6 +83,8 @@ jobs:
                       raise SystemExit('special weapons may not receive a permanent ammunition unlock')
                   if selected.get('sampleUnits') != 1 or frozen.get('sampleUnits') != 1:
                       raise SystemExit('special weapons sample must remain exactly one unit')
+                  if frozen.get('tpl') != '6217726288ed9f0845317459':
+                      raise SystemExit('special weapons safe sample TPL drift')
                   continue
               keys = ('tpl','caliber','penetration','damage','sampleUnits','stockPerReset','buyRestriction')
               drift = {key: (selected.get(key), frozen.get(key)) for key in keys if selected.get(key) != frozen.get(key)}
@@ -115,8 +117,8 @@ jobs:
           templates = data['templates']
           if len(templates) != 21:
               raise SystemExit(f'expected 21 native weapon-ammo quests, got {len(templates)}')
-          if len(data['deferredRuntimeItems']) != 1:
-              raise SystemExit('only the Special Weapons sample item may remain deferred')
+          if data.get('deferredRuntimeItems'):
+              raise SystemExit(f"runtime items must be fully resolved before test candidate: {data['deferredRuntimeItems']}")
           for qid, quest in templates.items():
               if quest['traderId'] != 'd5c27bb3169f8dfbc13f6b69' or quest['restartable']:
                   raise SystemExit(f'{qid}: invalid Admiral ownership/restartability')
@@ -128,6 +130,14 @@ jobs:
                   raise SystemExit(f'{qid}: family weapon filter missing')
               if any(not isinstance(tpl, str) or len(tpl) != 24 for tpl in kill['weapon']):
                   raise SystemExit(f'{qid}: malformed weapon TPL in objective pool')
+          special = templates['f1368cb3b69c3a4917c4f206']
+          samples = [
+              reward for reward in special['rewards']['Success']
+              if reward.get('type') == 'Item'
+              and (reward.get('items') or [{}])[0].get('_tpl') == '6217726288ed9f0845317459'
+          ]
+          if len(samples) != 1 or samples[0]['items'][0]['upd']['StackObjectsCount'] != 1:
+              raise SystemExit('Special Weapons safe sample reward is missing or not exactly one unit')
           PY
 
       - name: Validate committed Arsenal runtime equals compiler output
