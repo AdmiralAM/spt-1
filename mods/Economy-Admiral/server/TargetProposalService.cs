@@ -8,16 +8,14 @@ namespace SPTEconomy;
 
 [Injectable]
 public sealed class TargetProposalService(
-    QuestAnalysisService questAnalysisService,
     ModHelper modHelper,
     ISptLogger<TargetProposalService> logger
 )
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    public async Task RunAsync(CancellationToken cancellationToken)
+    public async Task RunAsync(QuestAnalysisReport analysis, CancellationToken cancellationToken)
     {
-        var analysis = questAnalysisService.GetSnapshot();
         var proposals = analysis.Quests
             .Where(row => row.ObservationalFlags.Count > 0)
             .OrderBy(row => row.QuestId, StringComparer.Ordinal)
@@ -57,14 +55,8 @@ public sealed class TargetProposalService(
             var multiple = row.Restartable
                 ? policy.RestartableHighItemValueWarnMultiple
                 : policy.HighItemValueLowStructureWarnMultiple;
-            AddEnvelope(
-                envelopes,
-                "ItemRewardBudget",
-                row.SuccessKnownHandbookValue,
-                baseline.MedianSuccessHandbookValue,
-                multiple,
-                "Known handbook-value budget ceiling; does not select replacement item templates."
-            );
+            AddEnvelope(envelopes, "ItemRewardBudget", row.SuccessKnownHandbookValue, baseline.MedianSuccessHandbookValue, multiple,
+                "Known handbook-value budget ceiling; does not select replacement item templates.");
         }
 
         if (row.ObservationalFlags.Contains("HIGH_XP_LOW_DEPTH", StringComparer.Ordinal)
@@ -73,26 +65,15 @@ public sealed class TargetProposalService(
             var multiple = row.Restartable
                 ? policy.RestartableHighXpWarnMultiple
                 : policy.HighXpLowDepthWarnMultiple;
-            AddEnvelope(
-                envelopes,
-                "Experience",
-                row.Experience,
-                baseline.MedianXp,
-                multiple,
-                "XP ceiling candidate derived from the applicable vanilla median and resolved warning multiple."
-            );
+            AddEnvelope(envelopes, "Experience", row.Experience, baseline.MedianXp, multiple,
+                "XP ceiling candidate derived from the applicable vanilla median and resolved warning multiple.");
         }
 
         if (row.ObservationalFlags.Contains("HIGH_STANDING_LOW_DEPTH", StringComparer.Ordinal))
         {
-            AddEnvelope(
-                envelopes,
-                "TraderStandingAbsolute",
-                Math.Abs(row.TraderStanding),
-                baseline.MedianAbsoluteStanding,
+            AddEnvelope(envelopes, "TraderStandingAbsolute", Math.Abs(row.TraderStanding), baseline.MedianAbsoluteStanding,
                 policy.HighStandingLowDepthWarnMultiple,
-                "Absolute trader-standing ceiling candidate; sign/direction is intentionally not mutated."
-            );
+                "Absolute trader-standing ceiling candidate; sign/direction is intentionally not mutated.");
         }
 
         return new QuestTargetProposal
@@ -108,14 +89,8 @@ public sealed class TargetProposalService(
         };
     }
 
-    private static void AddEnvelope(
-        List<TargetEnvelope> target,
-        string dimension,
-        double currentValue,
-        double vanillaMedian,
-        double thresholdMultiple,
-        string interpretation
-    )
+    private static void AddEnvelope(List<TargetEnvelope> target, string dimension, double currentValue, double vanillaMedian,
+        double thresholdMultiple, string interpretation)
     {
         if (currentValue <= 0 || vanillaMedian <= 0 || thresholdMultiple <= 0)
         {
