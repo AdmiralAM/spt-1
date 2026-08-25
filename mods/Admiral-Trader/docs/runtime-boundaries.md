@@ -4,7 +4,7 @@
 
 - SPT 4.1.x; current project runtime evidence is SPT 4.1.3.
 - Server-side implementation target is .NET 10, matching maintained repository server mods.
-- Official NuGet packages currently top out at `SPTarkov.Server.Core` / `SPTarkov.Common` / `SPTarkov.DI` 4.1.2, while the installed runtime is 4.1.3. Therefore NuGet compile proof is valid for the 4.1.2 public API surface, but exact 4.1.3 write/migration behavior must be proven from the 4.1.3 runtime assemblies/references before profile mutation is implemented.
+- Official NuGet packages currently top out at `SPTarkov.Server.Core` / `SPTarkov.Common` / `SPTarkov.DI` 4.1.2, while the installed runtime is 4.1.3. Therefore NuGet compile proof is valid for the 4.1.2 public API surface, but exact 4.1.3 profile-write behavior must be proven from the runtime assemblies/references before direct profile mutation is implemented.
 
 ## Single trader registration boundary — proven
 
@@ -35,21 +35,56 @@ Its profile projection reads the PMC profile `Quests` collection and establishes
 - timing metadata: `startTime`, `statusTimer`;
 - task progress: `TaskConditionCounters` including `id`, `type`, `value`, `sourceId`.
 
-This proves that Admiral Trader can classify existing-profile legacy quests as active/completed/failed/unstarted from the current PMC profile boundary without inventing a new persistence model.
+This proves that Admiral Trader can classify existing-profile legacy quests without inventing a new persistence model.
 
-## Migration write boundary — not yet proven
+## Native acceptance/profile semantics — proven on current upstream source
 
-Read access is proven. Directly mutating profile quest records or intercepting successor issuance is a separate boundary and must be proven against the exact 4.1.3 runtime assembly set before implementation.
+Pinned inspection of current `sp-tarkov/server-csharp` source shows:
 
-Required proof before profile writes:
+- `QuestController.AcceptQuest(...)` checks `pmcData.Quests` for the accepted quest id;
+- when no profile record exists, it calls `QuestHelper.GetQuestReadyForProfile(...)` and adds the returned `QuestStatus` to `pmcData.Quests`;
+- `GetQuestReadyForProfile(...)` creates the profile record in `Started` state, except a quest with an `AvailableAfter` delay can enter `AvailableAfter` state;
+- therefore normal unstarted quests are not represented in `profile.Quests` merely because they are visible/available to start.
 
-1. exact native type for the PMC quest-state collection on SPT 4.1.3;
-2. safe mutation point/load order for suppressing unstarted deprecated legacy quests;
-3. safe mechanism for preserving active legacy quests while preventing deprecated successors;
-4. whether blocking successors is best implemented by filtering loaded quest templates, rewriting prerequisites, or profile-state mutation;
-5. persistence/save behavior after any mutation.
+This sharply reduces the migration problem: for the normal case, absence of a profile record is a reliable unstarted signal.
 
-Until these are proven, migration remains manifest/design only.
+## Existing-profile completion bridge — proven design boundary
+
+Current `QuestHelper.GetClientQuests(...)` iterates server quest templates and checks the PMC profile before normal start-condition filtering. When a matching `profile.Quests` record exists, the quest template is returned to the client regardless of its start conditions.
+
+This enables a no-profile-write migration design:
+
+1. retain only legacy templates required to finish already accepted profile quests;
+2. close their normal `AvailableForStart` path so a new/no-record profile cannot start them;
+3. omit deprecated successor templates from the loaded quest database;
+4. keep new Admiral Trader progression on new curated ids/edges.
+
+The detailed contract is in `docs/migration-contract.md`.
+
+## Important status edge cases
+
+`GetClientQuests(...)` returns a matching profile quest regardless of status. Therefore a stale existing profile record cannot be hidden solely by changing `AvailableForStart`.
+
+Known native profile-state creation also includes `AvailableAfter` for delayed accepted quests, and restartable failed quests can reuse an existing profile record when accepted again. These cases must be explicitly classified before migration runtime publication.
+
+Default safety policy:
+
+- active/completable accepted legacy quest: eligible for completion bridge;
+- no profile record: suppress legacy template from normal start;
+- restartable legacy quest: bridge-disabled until explicitly supported;
+- stale/non-active profile record: preserve, do not mutate, and do not claim full suppression until exact 4.1.3 behavior is validated.
+
+## Direct migration write boundary — intentionally deferred
+
+The preferred migration path above avoids direct profile writes for the primary existing-profile case. Directly deleting or rewriting `pmcData.Quests` remains unauthorized until exact SPT 4.1.3 runtime assembly/persistence behavior is proven.
+
+Required proof before any direct profile write:
+
+1. exact native type/API surface in the installed 4.1.3 runtime;
+2. safe mutation point/load order;
+3. save/persistence behavior;
+4. behavior for delayed and restartable states;
+5. recovery behavior if the mod is removed after migration.
 
 ## Runtime evidence
 
@@ -57,4 +92,4 @@ Project SPT logs from the current environment report `Server: 4.1.3` and show ma
 
 ## Decision
 
-The next implementation may safely use the one-trader registration/read-profile boundaries above. It must not yet write PMC quest state. The next technical gate is to prove successor suppression/profile mutation semantics from exact 4.1.3 runtime references, then implement the smallest deterministic migration layer.
+The next implementation may safely proceed with one-trader registration, profile classification, and a template-suppression completion bridge without direct PMC profile writes. Before a runtime package is published, the bridge must be mechanically validated against retained-template/start-gate/successor rules, then checked once on the exact 4.1.3 runtime at a defined gate.
