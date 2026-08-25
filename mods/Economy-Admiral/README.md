@@ -1,6 +1,6 @@
-# SPT Economy
+# Economy Admiral
 
-SPT Economy is a server-side economy audit/enforcement workstream for SPT 4.1.x.
+**Economy Admiral** is a server-side economy audit/enforcement mod for SPT 4.1.x.
 
 ## Current status
 
@@ -29,7 +29,7 @@ Implemented now:
 
 ## SPT 4.1 architecture boundary
 
-SPT 4.1 removed the old `DatabaseService.GetTables()` model. Database tables are injected directly. Economy consumes the final `TemplateTable` and `TradersTable` instances and runs after normal load work at `OnLoadOrder.PostLoad + 1000`.
+SPT 4.1 removed the old `DatabaseService.GetTables()` model. Database tables are injected directly. Economy Admiral consumes the final `TemplateTable` and `TradersTable` instances and runs after normal load work at `OnLoadOrder.PostLoad + 1000`.
 
 This is deliberate: the audit observes trader, quest, item, handbook, and mod-added data after other content mods have completed normal registration rather than scanning an early vanilla-only snapshot.
 
@@ -41,7 +41,7 @@ Default configuration lives in `config/config.json`.
 {
   "mode": "Audit",
   "preset": "Normal",
-  "reportRelativePath": "reports/economy-audit.json",
+  "reportRelativePath": "reports/economy-admiral-audit.json",
   "repeatedRaidLootDecay": false,
   "rarity": {
     "commonMinSources": 8,
@@ -102,7 +102,7 @@ This is still an audit proxy, not a claim that condition count equals true gamep
 
 Default output:
 
-`reports/economy-audit.json`
+`reports/economy-admiral-audit.json`
 
 The schema-3 report records:
 
@@ -142,7 +142,7 @@ The current budget still does not fully price:
 - repeatable replacement rate;
 - flea scarcity or world-loot rarity.
 
-Those dimensions belong in later MVP/Stage 2 scoring before Economy is allowed to enforce changes.
+Those dimensions belong in later MVP/Stage 2 scoring before Economy Admiral is allowed to enforce changes.
 
 ## Rarity model
 
@@ -182,6 +182,6 @@ Stage 3:
 
 This module follows repository policy:
 
-`Issue -> feature branch -> PR -> Economy-specific CI -> runtime gate when required -> merge -> cleanup`
+`Issue -> feature branch -> PR -> Economy Admiral-specific CI -> runtime gate when required -> merge -> cleanup`
 
-Do not use the repository-wide publisher for ordinary Economy development validation.
+Do not use the repository-wide publisher for ordinary Economy Admiral development validation.
