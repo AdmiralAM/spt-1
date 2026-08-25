@@ -37,9 +37,16 @@ Write-Json 'economy-admiral-target-proposals.json' @{
     Candidates = @(@{ AutomaticMutationAllowed = $false; ProposedMutation = $null })
 }
 Write-Json 'economy-admiral-enforcement-plan.json' @{
+    SchemaVersion = 3
+    MutationEligibilityPolicyVersion = 1
     ApplyMutations = $false
     MutationCount = 0
-    Candidates = @(@{ AutomaticMutationAllowed = $false; ProposedMutation = $null })
+    Candidates = @(
+        @{ ProvenanceClass = 'PristineUnchanged'; MutationEligibilityClass = 'ProtectedPristine'; PotentialAutomaticMutationEligible = $false; AutomaticMutationAllowed = $false; ProposedMutation = $null },
+        @{ ProvenanceClass = 'ModAdded'; MutationEligibilityClass = 'PolicyEligibleModAdded'; PotentialAutomaticMutationEligible = $true; AutomaticMutationAllowed = $false; ProposedMutation = $null },
+        @{ ProvenanceClass = 'PristineModified'; MutationEligibilityClass = 'PolicyEligibleModifiedPristine'; PotentialAutomaticMutationEligible = $true; AutomaticMutationAllowed = $false; ProposedMutation = $null },
+        @{ ProvenanceClass = 'Unknown'; MutationEligibilityClass = 'BlockedUnknownProvenance'; PotentialAutomaticMutationEligible = $false; AutomaticMutationAllowed = $false; ProposedMutation = $null }
+    )
 }
 Write-Json 'economy-admiral-runtime-evidence.json' @{
     SchemaVersion = 3
