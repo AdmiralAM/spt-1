@@ -27,6 +27,7 @@ public sealed class RuntimeEvidenceService(
         "economy-admiral-progression-graph.json",
         "economy-admiral-quest-constraints.json",
         "economy-admiral-quest-analysis.json",
+        "economy-admiral-provenance-delta.json",
         "economy-admiral-composite-candidates.json",
         "economy-admiral-target-proposals.json",
         "economy-admiral-enforcement-plan.json",
@@ -34,51 +35,36 @@ public sealed class RuntimeEvidenceService(
 
     private RuntimeFingerprint? before;
 
-    public void CaptureBefore()
-    {
-        before = CaptureFingerprint();
-    }
+    public void CaptureBefore() => before = CaptureFingerprint();
 
     public async Task WriteAfterAsync(VanillaBaselineSnapshot vanillaBaseline, CancellationToken cancellationToken)
     {
-        if (before is null)
-        {
-            throw new InvalidOperationException("Economy Admiral runtime evidence requires CaptureBefore() before the analysis pipeline.");
-        }
+        if (before is null) throw new InvalidOperationException("Economy Admiral runtime evidence requires CaptureBefore() before the analysis pipeline.");
 
         var config = await runtimeConfigService.GetAsync(cancellationToken);
         var after = CaptureFingerprint();
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(RuntimeEvidenceService).Assembly);
         var buildIdentity = await ReadBuildIdentityAsync(modPath, cancellationToken);
         var reportDirectory = SafePath(modPath, "reports");
-
-        var reportFiles = ExpectedReports
-            .Select(fileName =>
-            {
-                var path = Path.Combine(reportDirectory, fileName);
-                var exists = File.Exists(path);
-                return new RuntimeReportEvidence
-                {
-                    FileName = fileName,
-                    Exists = exists,
-                    SizeBytes = exists ? new FileInfo(path).Length : 0,
-                };
-            })
-            .ToList();
+        var reportFiles = ExpectedReports.Select(fileName =>
+        {
+            var path = Path.Combine(reportDirectory, fileName);
+            var exists = File.Exists(path);
+            return new RuntimeReportEvidence { FileName = fileName, Exists = exists, SizeBytes = exists ? new FileInfo(path).Length : 0 };
+        }).ToList();
 
         var databaseUnchanged = string.Equals(before.Sha256, after.Sha256, StringComparison.Ordinal);
         var allReportsPresent = reportFiles.All(report => report.Exists && report.SizeBytes > 0);
-        var finalQuestCount = after.QuestCount;
         var provenance = new RuntimeProvenanceEvidence
         {
             CapturePriority = vanillaBaseline.CapturePriority,
             PristineQuestCount = vanillaBaseline.QuestCount,
-            FinalQuestCount = finalQuestCount,
-            ModAddedQuestCount = Math.Max(0, finalQuestCount - vanillaBaseline.QuestCount),
+            FinalQuestCount = after.QuestCount,
+            ModAddedQuestCount = Math.Max(0, after.QuestCount - vanillaBaseline.QuestCount),
             PristineTraderCount = vanillaBaseline.TraderCount,
             FinalTraderCount = after.TraderCount,
             BaselineCaptured = vanillaBaseline.QuestCount > 0,
-            BaselineNotLargerThanFinal = vanillaBaseline.QuestCount <= finalQuestCount,
+            BaselineNotLargerThanFinal = vanillaBaseline.QuestCount <= after.QuestCount,
         };
         var provenanceValid = provenance.BaselineCaptured && provenance.BaselineNotLargerThanFinal;
 
@@ -112,13 +98,11 @@ public sealed class RuntimeEvidenceService(
             logger.Error($"[Economy Admiral] runtime evidence FAILED: final DB fingerprint changed across the read-only pipeline; manifest={manifestPath}");
             return;
         }
-
         if (!allReportsPresent)
         {
             logger.Warning($"[Economy Admiral] runtime evidence incomplete: {manifest.PresentReportCount}/{manifest.ExpectedReportCount} expected reports present; manifest={manifestPath}");
             return;
         }
-
         if (!provenanceValid)
         {
             logger.Error($"[Economy Admiral] runtime evidence FAILED: pristine provenance invalid; pristineQuests={provenance.PristineQuestCount}, finalQuests={provenance.FinalQuestCount}; manifest={manifestPath}");
@@ -131,11 +115,7 @@ public sealed class RuntimeEvidenceService(
     private static async Task<RuntimeBuildIdentity?> ReadBuildIdentityAsync(string modPath, CancellationToken cancellationToken)
     {
         var path = SafePath(modPath, "BUILD_INFO.json");
-        if (!File.Exists(path))
-        {
-            return null;
-        }
-
+        if (!File.Exists(path)) return null;
         await using var stream = File.OpenRead(path);
         return await JsonSerializer.DeserializeAsync<RuntimeBuildIdentity>(stream, JsonOptions, cancellationToken);
     }
@@ -144,7 +124,6 @@ public sealed class RuntimeEvidenceService(
     {
         using var incremental = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
         var lineCount = 0;
-
         void Add(string value)
         {
             incremental.AppendData(Encoding.UTF8.GetBytes(value));
@@ -155,7 +134,6 @@ public sealed class RuntimeEvidenceService(
         foreach (var item in templates.Items.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)) Add($"ITEM|{item.Key}");
         foreach (var handbook in templates.Handbook.Items.OrderBy(item => item.Id.ToString(), StringComparer.Ordinal)) Add($"HANDBOOK|{handbook.Id}|{handbook.Price}");
         foreach (var quest in templates.Quests.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)) Add($"QUEST|{quest.Key}|{JsonSerializer.Serialize(quest.Value.Rewards)}");
-
         foreach (var trader in traders.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
         {
             var traderId = trader.Key.ToString();
