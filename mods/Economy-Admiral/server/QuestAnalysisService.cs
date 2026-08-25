@@ -31,6 +31,13 @@ public sealed class QuestAnalysisService(
         "6617beeaa9cfa777ca915b7c",
     };
 
+    private QuestAnalysisReport? snapshot;
+
+    public QuestAnalysisReport GetSnapshot()
+    {
+        return snapshot ?? throw new InvalidOperationException("Economy Admiral unified quest analysis has not run yet.");
+    }
+
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(QuestAnalysisService).Assembly);
@@ -81,6 +88,7 @@ public sealed class QuestAnalysisService(
             VanillaRestartable = vanillaRestartable,
             Quests = rows,
         };
+        snapshot = report;
 
         var reportPath = Path.GetFullPath(Path.Combine(modPath, "reports", "economy-admiral-quest-analysis.json"));
         var modRoot = Path.GetFullPath(modPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
@@ -254,7 +262,6 @@ public sealed class QuestAnalysisService(
     }
 
     private static double MedianPositive(IEnumerable<double> values) => Percentile(values.Where(value => value > 0).OrderBy(value => value).ToList(), 0.50);
-    private static bool IsAtOrAbove(double? value, double threshold) => value.HasValue && value.Value >= threshold;
     private static double? Ratio(double value, double baseline) => value > 0 && baseline > 0 ? Math.Round(value / baseline, 4) : null;
 
     private static int CountTargets(IEnumerable<Reward> rewards, RewardType type) => rewards
