@@ -8,24 +8,33 @@ The PR head must satisfy all Admiral Trader workflows. Source `runtime-manifest.
 
 Final trader portrait/character art is intentionally outside this gate. The candidate uses the explicit built-in placeholder route declared in `base.json` and the runtime manifest.
 
+The physical candidate must be built from a clean Git checkout of the exact tested PR head. The builder records source and runtime provenance and refuses a dirty working tree so runtime evidence cannot accidentally describe a different source state than CI.
+
 ## Build against the exact runtime
 
-From the repository checkout at the exact candidate PR head:
+From the repository checkout at the exact candidate PR head, copy the 40-character head SHA shown by PR #151 and pass it explicitly:
 
 ```powershell
-pwsh -File .\mods\Admiral-Trader\tools\build_spt413_test_candidate.ps1 -SptRoot "C:\Path\To\SPT"
+pwsh -File .\mods\Admiral-Trader\tools\build_spt413_test_candidate.ps1 `
+  -SptRoot "C:\Path\To\SPT" `
+  -ExpectedHeadSha "<PR-151-HEAD-SHA>"
 ```
 
 The script accepts either the game root or `SPT_Runtime` itself. It must:
 
-1. locate the real `SPTarkov.Server.Core.dll`;
-2. reject any assembly whose version is not `4.1.3.x`;
-3. compile `Admiral Trader Server.dll` against those exact runtime assemblies, not the 4.1.2 NuGet baseline;
-4. create `build/admiral-trader-test-candidate/SPT_Runtime/user/mods/Admiral-Trader`;
-5. enable registration only in the staged manifest;
-6. reject temporary/debug artifacts in the staged package.
+1. verify the checkout is a clean Git working tree;
+2. verify the current commit matches `-ExpectedHeadSha`;
+3. locate the real `SPTarkov.Server.Core.dll`;
+4. reject any assembly whose version is not `4.1.3.x`;
+5. compile `Admiral Trader Server.dll` against those exact runtime assemblies, not the 4.1.2 NuGet baseline;
+6. create `build/admiral-trader-test-candidate/SPT_Runtime/user/mods/Admiral-Trader`;
+7. enable registration only in the staged manifest;
+8. write `candidate-provenance.json` with the full source SHA, Server.Core version/SHA-256 and built Admiral server DLL SHA-256;
+9. reject temporary/debug artifacts in the staged package.
 
 Add `-Install` only when the staged candidate is ready to be placed in `SPT_Runtime/user/mods/Admiral-Trader`.
+
+Before starting SPT, open the staged `candidate-provenance.json` and verify `sourceHeadSha` is exactly the PR head being tested. Keep this small JSON file with the runtime evidence; do not commit it back to the source branch.
 
 ## Server-only smoke gate
 
@@ -78,12 +87,15 @@ The completion-bridge behavior remains a separate migration acceptance item if a
 
 Retain only the evidence needed to make a merge decision:
 
+- `candidate-provenance.json` from the exact staged/installed package;
 - SPT server log from the candidate startup/test session;
 - screenshot or concise observation confirming one Admiral trader and readable quest UI;
 - any exception stack trace in full if the server/client fails;
 - for unlock checks, the quest ID and observed offer result.
 
-Do not commit runtime logs, profile copies, generated build folders, screenshots or ZIP packages to the source branch.
+The server log and provenance must describe the same test run and source head. If the candidate is rebuilt, discard evidence from the older candidate rather than mixing runs.
+
+Do not commit runtime logs, profile copies, generated build folders, screenshots, provenance files or ZIP packages to the source branch.
 
 ## Merge rule
 
