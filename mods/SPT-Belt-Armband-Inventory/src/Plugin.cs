@@ -15,6 +15,7 @@ namespace SPTBeltArmbandInventory
 
         ConfigEntry<bool> modEnabled;
         ConfigEntry<BeltSlotPosition> position;
+        RuntimeCustomBeltTypePatches runtimeTypePatches;
         DynamicBeltPatches patches;
         PanelRefreshPatches refreshPatches;
         LootPriorityPatches lootPatches;
@@ -43,6 +44,15 @@ namespace SPTBeltArmbandInventory
             if (LegacyBeltSlotDetected())
             {
                 Logger.LogWarning("Trenchfoot-BeltSlot is already loaded. Remove/disable that DLL before enabling B&A&HB MOD SPT; no duplicate patch was installed.");
+                return;
+            }
+
+            runtimeTypePatches = new RuntimeCustomBeltTypePatches(Logger.LogInfo, Logger.LogWarning);
+            if (!runtimeTypePatches.TryInstall())
+            {
+                runtimeTypePatches.Dispose();
+                runtimeTypePatches = null;
+                Logger.LogWarning("B&A&HB runtime-type proof disabled: custom searchable belt item/template registration did not install.");
                 return;
             }
 
@@ -187,6 +197,8 @@ namespace SPTBeltArmbandInventory
             refreshPatches = null;
             if (patches != null) patches.Dispose();
             patches = null;
+            if (runtimeTypePatches != null) runtimeTypePatches.Dispose();
+            runtimeTypePatches = null;
         }
     }
 }
