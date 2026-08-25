@@ -31,16 +31,9 @@ public sealed class QuestProgressionGraphService(
         "6617beeaa9cfa777ca915b7c",
     };
 
-    private QuestProgressionSnapshot? snapshot;
-
-    public QuestProgressionSnapshot GetSnapshot()
+    public async Task<QuestProgressionSnapshot> RunAsync(CancellationToken cancellationToken)
     {
-        return snapshot ??= Analyze();
-    }
-
-    public async Task RunAsync(CancellationToken cancellationToken)
-    {
-        var current = GetSnapshot();
+        var current = Analyze();
         var report = new QuestProgressionGraphReport
         {
             SchemaVersion = 2,
@@ -66,6 +59,7 @@ public sealed class QuestProgressionGraphService(
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
         await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
         logger.Info($"[Economy Admiral] quest progression graph complete: {report.QuestCount} quests, maxDepth={report.MaximumObservedDepth}, cycleMembers={report.CycleMemberCount}; report={reportPath}");
+        return current;
     }
 
     private QuestProgressionSnapshot Analyze()
