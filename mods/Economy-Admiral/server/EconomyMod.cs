@@ -6,10 +6,14 @@ using SPTEconomy;
 namespace EconomyAdmiral;
 
 [Injectable(TypePriority = OnLoadOrder.PostLoad + 1000), UsedImplicitly]
-public sealed class EconomyMod(EconomyAuditService auditService) : IOnLoad
+public sealed class EconomyMod(
+    EconomyAuditService auditService,
+    RewardUtilityAuditService rewardUtilityAuditService
+) : IOnLoad
 {
-    public Task OnLoadAsync(CancellationToken cancellationToken)
+    public async Task OnLoadAsync(CancellationToken cancellationToken)
     {
-        return auditService.RunAsync(cancellationToken);
+        await auditService.RunAsync(cancellationToken);
+        await rewardUtilityAuditService.RunAsync(cancellationToken);
     }
 }
