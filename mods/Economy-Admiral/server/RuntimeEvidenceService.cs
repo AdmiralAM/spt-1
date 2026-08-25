@@ -101,7 +101,7 @@ public sealed class RuntimeEvidenceService(
             ApplyMutations = false,
             DeclaredMutationCount = 0,
             RuntimeGatePassed = databaseUnchanged && allReportsPresent && provenanceValid,
-            Note = "Read-only runtime evidence. Provenance counts are taken from the explicit pristine-vs-final quest delta, not inferred from final-minus-pristine arithmetic; this remains correct when pristine quests are removed.",
+            Note = "Read-only runtime evidence. The final-DB fingerprint covers quest trader/restartability/conditions/rewards plus item identities, handbook prices and trader assort surfaces. Provenance counts come from the explicit pristine-vs-final quest delta.",
             Reports = reportFiles,
         };
 
@@ -149,7 +149,13 @@ public sealed class RuntimeEvidenceService(
 
         foreach (var item in templates.Items.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)) Add($"ITEM|{item.Key}");
         foreach (var handbook in templates.Handbook.Items.OrderBy(item => item.Id.ToString(), StringComparer.Ordinal)) Add($"HANDBOOK|{handbook.Id}|{handbook.Price}");
-        foreach (var quest in templates.Quests.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)) Add($"QUEST|{quest.Key}|{JsonSerializer.Serialize(quest.Value.Rewards)}");
+        foreach (var quest in templates.Quests.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
+        {
+            Add(
+                $"QUEST|{quest.Key}|TRADER={quest.Value.TraderId}|RESTARTABLE={quest.Value.Restartable}|" +
+                $"CONDITIONS={JsonSerializer.Serialize(quest.Value.Conditions)}|REWARDS={JsonSerializer.Serialize(quest.Value.Rewards)}"
+            );
+        }
         foreach (var trader in traders.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
         {
             var traderId = trader.Key.ToString();
