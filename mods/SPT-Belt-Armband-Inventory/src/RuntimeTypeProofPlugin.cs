@@ -6,7 +6,6 @@ using BepInEx;
 
 namespace SPTBeltArmbandInventory
 {
-    // Diagnostic-only companion plugin for PR #64 Gate A. It does not mutate item/container behavior.
     [BepInPlugin("com.admiralam.spt.belt-armband-inventory.runtime-type-proof", "B&A&HB Runtime Type Proof", "0.1.0")]
     public sealed class RuntimeTypeProofPlugin : BaseUnityPlugin
     {
@@ -123,18 +122,24 @@ namespace SPTBeltArmbandInventory
                     object template = Read(item, "Template");
                     object grids = Read(item, "Grids") ?? Read(item, "Containers");
                     int gridCount = Count(grids);
+                    string dimensions = DescribeGrids(grids);
+                    bool exactGrid = gridCount == 1 && string.Equals(dimensions, "1x2", StringComparison.Ordinal);
                     bool isContainer = ToBool(Read(item, "IsContainer"));
                     bool searchable = NameChainContains(itemType, "Searchable") || InterfaceContains(itemType, "Searchable");
                     bool containerContract = NameChainContains(itemType, "Container") || InterfaceContains(itemType, "Container") || isContainer;
-                    bool customBelt = itemType.FullName.IndexOf("Belt", StringComparison.OrdinalIgnoreCase) >= 0 && itemType.FullName.IndexOf("ArmBand", StringComparison.OrdinalIgnoreCase) < 0;
+                    string fullName = itemType.FullName ?? itemType.Name;
+                    bool customBelt = fullName.IndexOf("SPTBeltArmbandInventory.Runtime.CustomBelt", StringComparison.OrdinalIgnoreCase) >= 0
+                        && fullName.IndexOf("EFT.InventoryLogic.ArmBand", StringComparison.OrdinalIgnoreCase) < 0;
                     object layoutName = template == null ? null : (Read(template, "LayoutName") ?? Read(template, "Layout"));
+                    bool customTemplate = template != null && (template.GetType().FullName ?? template.GetType().Name).IndexOf("SPTBeltArmbandInventory.Runtime.CustomBeltTemplate", StringComparison.OrdinalIgnoreCase) >= 0;
+                    bool layoutOk = customTemplate && layoutName != null && !string.IsNullOrWhiteSpace(layoutName.ToString());
 
-                    Log?.Invoke("B&A&HB TYPE PROOF 1/6 PASS: ArmBand.ContainedItem is RC tpl=" + tpl + ", instanceType=" + itemType.FullName + ".");
-                    Log?.Invoke("B&A&HB TYPE PROOF 2/6 " + (customBelt ? "PASS" : "FAIL") + ": concrete client item type=" + itemType.FullName + "; customBeltExpected=true.");
+                    Log?.Invoke("B&A&HB TYPE PROOF 1/6 PASS: ArmBand.ContainedItem is RC tpl=" + tpl + ", instanceType=" + fullName + ".");
+                    Log?.Invoke("B&A&HB TYPE PROOF 2/6 " + (customBelt ? "PASS" : "FAIL") + ": concrete client item type=" + fullName + "; customBeltExpected=true.");
                     Log?.Invoke("B&A&HB TYPE PROOF 3/6 " + ((isContainer && searchable && containerContract) ? "PASS" : "FAIL") + ": IsContainer=" + isContainer + ", searchable=" + searchable + ", containerContract=" + containerContract + ".");
-                    Log?.Invoke("B&A&HB TYPE PROOF 4/6 " + (gridCount > 0 ? "PASS" : "FAIL") + ": client-visible grid/container count=" + gridCount + "; dimensions=" + DescribeGrids(grids) + ".");
-                    Log?.Invoke("B&A&HB TYPE PROOF 5/6 " + (template != null && layoutName != null ? "PASS" : "FAIL") + ": templateType=" + (template == null ? "<null>" : template.GetType().FullName) + ", layout=" + (layoutName ?? "<null>") + ".");
-                    Log?.Invoke("B&A&HB TYPE PROOF 6/6 " + (customBelt && isContainer && searchable && gridCount > 0 && template != null && layoutName != null ? "PASS" : "FAIL") + ": no-vanilla-ArmBand-fallback runtime-type gate.");
+                    Log?.Invoke("B&A&HB TYPE PROOF 4/6 " + (exactGrid ? "PASS" : "FAIL") + ": client-visible grid/container count=" + gridCount + "; dimensions=" + dimensions + "; expected=1x2.");
+                    Log?.Invoke("B&A&HB TYPE PROOF 5/6 " + (layoutOk ? "PASS" : "FAIL") + ": templateType=" + (template == null ? "<null>" : template.GetType().FullName) + ", layout=" + (layoutName ?? "<null>") + ".");
+                    Log?.Invoke("B&A&HB TYPE PROOF 6/6 " + (customBelt && isContainer && searchable && containerContract && exactGrid && layoutOk ? "PASS" : "FAIL") + ": no-vanilla-ArmBand-fallback runtime-type gate.");
                 }
                 catch (Exception ex)
                 {
@@ -148,10 +153,24 @@ namespace SPTBeltArmbandInventory
             {
                 if (target == null) return null;
                 Type t = target.GetType();
-                PropertyInfo p = t.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                if (p != null && p.GetIndexParameters().Length == 0) return p.GetValue(target, null);
-                FieldInfo f = t.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                return f == null ? null : f.GetValue(target);
+                for (Type current = t; current != null; current = current.BaseType)
+                {
+                    PropertyInfo p = current.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                    if (p != null && p.GetIndexParameters().Length == 0) return p.GetValue(target, null);
+                    FieldInfo f = current.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                    if (f != null) return f.GetValue(target);
+                }
+                return null;
+            }
+
+            static object ReadAny(object target, params string[] names)
+            {
+                for (int i = 0; i < names.Length; i++)
+                {
+                    object value = Read(target, names[i]);
+                    if (value != null) return value;
+                }
+                return null;
             }
 
             static bool ToBool(object value) { return value is bool && (bool)value; }
@@ -181,9 +200,18 @@ namespace SPTBeltArmbandInventory
                 string result = ""; int i = 0;
                 foreach (object g in e)
                 {
-                    object props = Read(g, "Properties") ?? g;
-                    object h = Read(props, "CellsH") ?? Read(props, "Width");
-                    object v = Read(props, "CellsV") ?? Read(props, "Height");
+                    object props = ReadAny(g, "Properties", "Props", "Template") ?? g;
+                    object h = ReadAny(props, "CellsH", "cellsH", "Width", "GridWidth", "WidthOfGrid", "X");
+                    object v = ReadAny(props, "CellsV", "cellsV", "Height", "GridHeight", "HeightOfGrid", "Y");
+                    if (h == null || v == null)
+                    {
+                        object size = ReadAny(props, "Size", "GridSize", "Dimensions");
+                        if (size != null)
+                        {
+                            h ??= ReadAny(size, "X", "x", "Width");
+                            v ??= ReadAny(size, "Y", "y", "Height");
+                        }
+                    }
                     if (i++ > 0) result += ",";
                     result += (h ?? "?") + "x" + (v ?? "?");
                 }
