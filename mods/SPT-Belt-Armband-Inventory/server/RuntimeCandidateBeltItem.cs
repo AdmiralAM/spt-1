@@ -14,6 +14,9 @@ namespace SPTBeltArmbandInventory.Server;
 public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, CustomItemService customItemService, ISptLogger<RuntimeCandidateBeltItem> logger) : IOnLoad
 {
     public static readonly MongoId SourceArmbandTpl = new("5b3f3af486f774679e752c1f");
+    public static readonly MongoId DefaultInventoryTpl = new("55d7217a4bdc2d86028b456d");
+    public static readonly MongoId CustomTemplateParentTpl = new("68ac00000000000000000004");
+    public static readonly MongoId CustomBeltParentTpl = new("68ac00000000000000000005");
     public const string RuntimeCandidateTpl = "68ac00000000000000000001";
     public const string RuntimeCandidateGridId = "68ac00000000000000000002";
 
@@ -21,11 +24,15 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
     {
         if (!templateTable.Items.TryGetValue(SourceArmbandTpl, out var sourceItem)) throw new InvalidOperationException("B&A&HB RC source armband missing.");
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl) ?? throw new InvalidOperationException("B&A&HB RC source handbook entry missing.");
+
+        EnsureCustomParents();
+        EnsureArmBandAcceptsCustomBeltParent();
+
         var details = new NewItemFromCloneDetails
         {
             NewItemName = "B&A&HB Runtime Candidate Magazine Belt",
             ItemTplToClone = SourceArmbandTpl,
-            ParentId = sourceItem.Parent,
+            ParentId = CustomBeltParentTpl,
             NewId = RuntimeCandidateTpl,
             FleaPriceRoubles = 1000,
             HandbookPriceRoubles = 1000,
@@ -39,7 +46,45 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         };
         var result = customItemService.CreateItemFromClone(details);
         if (!result.Success) throw new InvalidOperationException($"B&A&HB RC item creation failed: {string.Join("; ", result.Errors)}");
-        logger.Success($"B&A&HB RC created: tpl={RuntimeCandidateTpl}, grid=1x2, filter=MAGAZINE.");
+        logger.Success($"B&A&HB RC created: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid=1x2, filter=MAGAZINE.");
         return Task.CompletedTask;
+    }
+
+    private void EnsureCustomParents()
+    {
+        if (!templateTable.Items.ContainsKey(CustomTemplateParentTpl))
+        {
+            templateTable.Items[CustomTemplateParentTpl] = new TemplateItem
+            {
+                Id = CustomTemplateParentTpl,
+                Name = "BAndHBSearchableContainerTemplate",
+                Parent = new MongoId("566162e44bdc2d3f298b4573"),
+                Type = "Node",
+                Properties = new TemplateItemProperties()
+            };
+        }
+
+        if (!templateTable.Items.ContainsKey(CustomBeltParentTpl))
+        {
+            templateTable.Items[CustomBeltParentTpl] = new TemplateItem
+            {
+                Id = CustomBeltParentTpl,
+                Name = "BAndHBCustomBeltItem",
+                Parent = CustomTemplateParentTpl,
+                Type = "Node",
+                Properties = new TemplateItemProperties()
+            };
+        }
+    }
+
+    private void EnsureArmBandAcceptsCustomBeltParent()
+    {
+        if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
+            throw new InvalidOperationException("B&A&HB RC default inventory template missing.");
+
+        var armBand = inventory.Properties?.Slots?.FirstOrDefault(x => string.Equals(x.Name, "ArmBand", StringComparison.Ordinal));
+        var filter = armBand?.Properties?.Filters?.FirstOrDefault()?.Filter;
+        if (filter == null) throw new InvalidOperationException("B&A&HB RC ArmBand slot filter missing.");
+        if (!filter.Contains(CustomBeltParentTpl)) filter.Add(CustomBeltParentTpl);
     }
 }
