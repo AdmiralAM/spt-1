@@ -1,0 +1,75 @@
+name: Admiral Trader Weapon Ammo Pools
+
+on:
+  pull_request:
+    paths:
+      - 'mods/Admiral-Trader/**'
+      - '.github/workflows/admiral-trader-weapon-ammo-pools.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admiral-trader-weapon-ammo-pools-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  resolve-pools:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run Admiral Trader unit tests
+        run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
+
+      - name: Fetch pinned EFT backend item mirror
+        run: |
+          mkdir -p build
+          curl --fail --location --retry 3 \
+            --output build/backend-items.json \
+            https://raw.githubusercontent.com/carlsmei/tarkovdata/08649f48a43fe8f4bea311b23a224a278a26492b/items.json
+          python -m json.tool build/backend-items.json > /dev/null
+
+      - name: Resolve weapon and ammo candidate pools
+        run: >-
+          python mods/Admiral-Trader/tools/build_weapon_ammo_pools.py
+          build/backend-items.json
+          mods/Admiral-Trader/manifests/weapon-ammo-authored-spec.json
+          --output build/admiral-trader-weapon-ammo-pools.json
+
+      - name: Enforce pool safety contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          pools = json.loads(Path('build/admiral-trader-weapon-ammo-pools.json').read_text(encoding='utf-8'))
+          if pools.get('targetSptVersion') != '4.1.3':
+              raise SystemExit('weapon/ammo pools lost SPT 4.1.3 target')
+          families = pools['families']
+          if len(families) != 7:
+              raise SystemExit(f'expected seven weapon families, got {len(families)}')
+          for family_id, family in families.items():
+              if family['weaponCount'] == 0:
+                  raise SystemExit(f'{family_id}: no weapon candidates')
+              if family_id != 'special-weapons' and family['ammoCount'] == 0:
+                  raise SystemExit(f'{family_id}: no ammo candidates')
+              if family_id != 'special-weapons' and family['ammoTierCounts'].get('standard', 0) == 0:
+                  raise SystemExit(f'{family_id}: no standard ammo tier; candidate resolver likely drifted')
+          PY
+
+      - name: Upload transient candidate pools
+        uses: actions/upload-artifact@v4
+        with:
+          name: admiral-trader-weapon-ammo-pools-${{ github.event.pull_request.head.sha || github.sha }}
+          path: build/admiral-trader-weapon-ammo-pools.json
+          if-no-files-found: error
+          retention-days: 7
