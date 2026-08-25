@@ -135,6 +135,28 @@ jobs:
               raise SystemExit(f'Admiral trader id collides with legacy quest id: {trader_id}')
           PY
 
+      - name: Materialize curated quest source set
+        run: >-
+          python mods/Admiral-Trader/tools/materialize_quest_templates.py
+          build/admiral-trader-inventory.json
+          legacy-andrudis/db/QuestBundles
+          --output build/admiral-trader-curated-materialization.json
+
+      - name: Enforce curated quest materialization gate
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('build/admiral-trader-curated-materialization.json').read_text(encoding='utf-8'))
+          summary = data['summary']
+          if summary['curatedTemplateCount'] != 27:
+              raise SystemExit(f"expected 27 KEEP templates, got {summary['curatedTemplateCount']}")
+          if summary['accidentalDeprecatedTemplateCount'] != 0:
+              raise SystemExit('deprecated quest leaked into curated runtime set')
+          if summary['externalCuratedPrerequisiteCount'] != 0:
+              raise SystemExit(f"KEEP set is not prerequisite-closed: {data['diagnostics']['externalCuratedPrerequisites']}")
+          PY
+
       - name: Fetch pinned official vanilla quest database
         run: >-
           curl --fail --location --retry 3
@@ -168,6 +190,7 @@ jobs:
           name: admiral-trader-analysis-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             build/admiral-trader-inventory.json
+            build/admiral-trader-curated-materialization.json
             build/vanilla-reward-benchmark.json
           if-no-files-found: error
           retention-days: 7
