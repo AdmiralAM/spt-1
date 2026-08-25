@@ -34,21 +34,27 @@ public sealed class EnforcementPlanService(
             .GroupBy(candidate => candidate.ProvenanceClass, StringComparer.Ordinal)
             .OrderBy(group => group.Key, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+        var countsByEligibility = candidates
+            .GroupBy(candidate => candidate.MutationEligibilityClass, StringComparer.Ordinal)
+            .OrderBy(group => group.Key, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
 
         var plan = new EnforcementPlanReport
         {
-            SchemaVersion = 2,
+            SchemaVersion = 3,
             Mode = config.Mode.ToString(),
             Preset = config.Preset.ToString(),
             SourceAnalysisSchemaVersion = analysis.SchemaVersion,
             SourceProvenanceSchemaVersion = provenance.SchemaVersion,
             ProvenanceAware = true,
+            MutationEligibilityPolicyVersion = 1,
             EnforceRequested = config.Mode == EconomyMode.Enforce,
             ApplyMutations = false,
             MutationCount = 0,
             CandidateCount = candidates.Count,
             CandidateCountsByProvenance = countsByProvenance,
-            Note = "Fail-closed planning artifact only. Every review candidate is annotated with pristine/modded provenance. Provenance is evidence for later policy design, not authorization to mutate final DB records.",
+            CandidateCountsByEligibility = countsByEligibility,
+            Note = "Fail-closed planning artifact only. PristineUnchanged quests are protected from future automatic mutation by default. ModAdded and PristineModified quests are only policy-eligible candidates, never authorized mutations. Unknown provenance is blocked. AutomaticMutationAllowed remains false for every row until a separate mutation policy is explicitly approved and implemented.",
             Candidates = candidates,
         };
 
@@ -79,6 +85,7 @@ public sealed class EnforcementPlanService(
         }
 
         var provenanceClass = provenance?.Provenance ?? "Unknown";
+        var eligibility = ResolveMutationEligibility(provenanceClass);
         return new EnforcementPlanCandidate
         {
             QuestId = row.QuestId,
@@ -87,6 +94,9 @@ public sealed class EnforcementPlanService(
             Restartable = row.Restartable,
             ProvenanceClass = provenanceClass,
             PristineUntouched = string.Equals(provenanceClass, "PristineUnchanged", StringComparison.Ordinal),
+            MutationEligibilityClass = eligibility.Class,
+            PotentialAutomaticMutationEligible = eligibility.PotentiallyEligible,
+            MutationEligibilityReason = eligibility.Reason,
             ChangedDimensions = provenance?.ChangedDimensions ?? [],
             ReasonFlags = row.ObservationalFlags.OrderBy(value => value, StringComparer.Ordinal).ToList(),
             ProposedReviewActions = actions.ToList(),
@@ -94,6 +104,14 @@ public sealed class EnforcementPlanService(
             ProposedMutation = null,
         };
     }
+
+    private static MutationEligibility ResolveMutationEligibility(string provenanceClass) => provenanceClass switch
+    {
+        "ModAdded" => new MutationEligibility("PolicyEligibleModAdded", true, "Quest was added after the pristine startup snapshot; future automatic mutation may be considered only after an explicit approved policy."),
+        "PristineModified" => new MutationEligibility("PolicyEligibleModifiedPristine", true, "A pristine quest was modified by the final mod stack; future automatic mutation may be considered only for dimensions proven changed and only after an explicit approved policy."),
+        "PristineUnchanged" => new MutationEligibility("ProtectedPristine", false, "Quest matches the pristine startup snapshot and is protected from automatic mutation by default."),
+        _ => new MutationEligibility("BlockedUnknownProvenance", false, "Quest provenance is not proven; automatic mutation is blocked."),
+    };
 
     private static string SafePath(string modPath, string relativePath)
     {
@@ -110,6 +128,8 @@ public sealed class EnforcementPlanService(
         await using var stream = File.OpenRead(configPath);
         return await JsonSerializer.DeserializeAsync<EconomyConfig>(stream, JsonOptions, cancellationToken) ?? new EconomyConfig();
     }
+
+    private sealed record MutationEligibility(string Class, bool PotentiallyEligible, string Reason);
 }
 
 public sealed record EnforcementPlanReport
@@ -120,11 +140,13 @@ public sealed record EnforcementPlanReport
     public required int SourceAnalysisSchemaVersion { get; init; }
     public required int SourceProvenanceSchemaVersion { get; init; }
     public required bool ProvenanceAware { get; init; }
+    public required int MutationEligibilityPolicyVersion { get; init; }
     public required bool EnforceRequested { get; init; }
     public required bool ApplyMutations { get; init; }
     public required int MutationCount { get; init; }
     public required int CandidateCount { get; init; }
     public required Dictionary<string, int> CandidateCountsByProvenance { get; init; }
+    public required Dictionary<string, int> CandidateCountsByEligibility { get; init; }
     public required string Note { get; init; }
     public required List<EnforcementPlanCandidate> Candidates { get; init; }
 }
@@ -137,6 +159,9 @@ public sealed record EnforcementPlanCandidate
     public required bool Restartable { get; init; }
     public required string ProvenanceClass { get; init; }
     public required bool PristineUntouched { get; init; }
+    public required string MutationEligibilityClass { get; init; }
+    public required bool PotentialAutomaticMutationEligible { get; init; }
+    public required string MutationEligibilityReason { get; init; }
     public required List<string> ChangedDimensions { get; init; }
     public required List<string> ReasonFlags { get; init; }
     public required List<string> ProposedReviewActions { get; init; }
