@@ -11,6 +11,7 @@ namespace SPTEconomy;
 [Injectable(InjectionType.Singleton, TypePriority = OnLoadOrder.Watermark + 1)]
 public sealed class VanillaBaselineService(
     TemplateTable templates,
+    TradersTable traders,
     EconomyRuntimeConfigService runtimeConfigService,
     ISptLogger<VanillaBaselineService> logger
 ) : IOnLoad
@@ -52,7 +53,7 @@ public sealed class VanillaBaselineService(
             var successItemValue = CalculateItemValue(successRewards, handbookPrices);
             var allItemValue = CalculateItemValue(allRewards, handbookPrices);
             var objectiveConditions = EnumerateObjectiveConditions(quest).ToList();
-            var counters = objectiveConditions
+            var counterConditions = objectiveConditions
                 .Where(condition => condition.Counter?.Conditions is not null)
                 .SelectMany(condition => condition.Counter!.Conditions!)
                 .ToList();
@@ -75,7 +76,7 @@ public sealed class VanillaBaselineService(
                 DirectPrerequisiteCount = prerequisiteMap[questId].Count,
                 MaximumPrerequisiteDepth = depth,
                 IsPrerequisiteCycleMember = false,
-                StructuredConstraintCount = CountStructuredConstraints(objectiveConditions, counters),
+                StructuredConstraintCount = CountStructuredConstraints(objectiveConditions, counterConditions),
             });
         }
 
@@ -84,13 +85,13 @@ public sealed class VanillaBaselineService(
         {
             CapturePriority = OnLoadOrder.Watermark + 1,
             QuestCount = rows.Count,
-            TraderCount = templates.Traders?.Count ?? 0,
+            TraderCount = traders.Count,
             HandbookItemCount = handbookPrices.Count,
             QuestIds = rows.Select(row => row.QuestId).ToHashSet(StringComparer.Ordinal),
             Quests = rows,
         };
 
-        logger.Info($"[Economy Admiral] pristine vanilla baseline captured before normal mod callbacks: quests={snapshot.QuestCount}, handbookPrices={snapshot.HandbookItemCount}, priority={snapshot.CapturePriority}");
+        logger.Info($"[Economy Admiral] pristine vanilla baseline captured before normal mod callbacks: quests={snapshot.QuestCount}, traders={snapshot.TraderCount}, handbookPrices={snapshot.HandbookItemCount}, priority={snapshot.CapturePriority}");
     }
 
     public VanillaBaselineSnapshot GetSnapshot() => snapshot
@@ -159,17 +160,17 @@ public sealed class VanillaBaselineService(
 
     private static int CountStructuredConstraints(
         IReadOnlyCollection<QuestCondition> objectiveConditions,
-        IReadOnlyCollection<QuestCondition> counters
+        IReadOnlyCollection<QuestConditionCounterCondition> counterConditions
     )
     {
         var timed = objectiveConditions.Count(condition => condition.CompleteInSeconds is > 0)
-            + counters.Count(condition => condition.CompleteInSeconds is > 0);
+            + counterConditions.Count(condition => condition.CompleteInSeconds is > 0);
         var oneSession = objectiveConditions.Count(condition => condition.OneSessionOnly == true)
-            + counters.Count(condition => condition.ResetOnSessionEnd == true);
+            + counterConditions.Count(condition => condition.ResetOnSessionEnd == true);
         var fir = objectiveConditions.Count(condition => condition.OnlyFoundInRaid == true);
         var plant = objectiveConditions.Count(condition => condition.PlantTime is > 0);
-        var distance = counters.Count(condition => condition.Distance?.Value is > 0);
-        var daytime = counters.Count(condition => condition.Daytime is not null);
+        var distance = counterConditions.Count(condition => condition.Distance?.Value is > 0);
+        var daytime = counterConditions.Count(condition => condition.Daytime is not null);
         return timed + oneSession + fir + plant + distance + daytime;
     }
 
