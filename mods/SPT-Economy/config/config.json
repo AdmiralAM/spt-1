@@ -8,5 +8,10 @@
     "uncommonMinSources": 4,
     "rareMinSources": 2
   },
+  "customAuditPolicy": {
+    "questRewardVsVanillaMedianWarnMultiple": 3.0,
+    "restartableRewardVsVanillaMedianWarnMultiple": 1.5,
+    "duplicateTraderSourcesWarnCount": 6
+  },
   "manualOverrides": {}
 }
