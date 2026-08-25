@@ -209,13 +209,13 @@ namespace SPTBeltArmbandInventory.Diagnostics
                         if (property != null && property.GetIndexParameters().Length == 0)
                         {
                             object nested = property.GetValue(value, null);
-                            text += ", " + memberName + "=" + SafeValue(nested);
+                            text += ", " + memberName + "=" + FormatValue(nested);
                             continue;
                         }
 
                         FieldInfo field = type.GetField(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                         if (field != null)
-                            text += ", " + memberName + "=" + SafeValue(field.GetValue(value));
+                            text += ", " + memberName + "=" + FormatValue(field.GetValue(value));
                     }
                     catch
                     {
