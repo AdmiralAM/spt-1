@@ -87,10 +87,20 @@ if ($targets.ProposalsAreMutations -ne $false -or $targets.ApplyMutations -ne $f
 if ($null -ne $targets.SelectedCompositePolicy) { Fail "target proposals selected a composite policy unexpectedly" }
 foreach ($candidate in @($targets.Candidates)) { if ($candidate.AutomaticMutationAllowed -ne $false -or $null -ne $candidate.ProposedMutation) { Fail "target candidate permits mutation" } }
 $plan = Read-Json (Join-Path $ReportsPath 'economy-admiral-enforcement-plan.json')
+if ($plan.SchemaVersion -ne 3) { Fail "enforcement plan SchemaVersion must be 3" }
+if ($plan.MutationEligibilityPolicyVersion -ne 1) { Fail "unexpected mutation eligibility policy version" }
 if ($plan.ApplyMutations -ne $false -or $plan.MutationCount -ne 0) { Fail "enforcement plan is mutating" }
-foreach ($candidate in @($plan.Candidates)) { if ($candidate.AutomaticMutationAllowed -ne $false -or $null -ne $candidate.ProposedMutation) { Fail "enforcement candidate permits mutation" } }
+foreach ($candidate in @($plan.Candidates)) {
+    if ($candidate.AutomaticMutationAllowed -ne $false -or $null -ne $candidate.ProposedMutation) { Fail "enforcement candidate permits mutation" }
+    switch ([string]$candidate.ProvenanceClass) {
+        'PristineUnchanged' { if ($candidate.MutationEligibilityClass -ne 'ProtectedPristine' -or $candidate.PotentialAutomaticMutationEligible -ne $false) { Fail "pristine unchanged candidate is not protected" } }
+        'ModAdded' { if ($candidate.MutationEligibilityClass -ne 'PolicyEligibleModAdded' -or $candidate.PotentialAutomaticMutationEligible -ne $true) { Fail "mod-added eligibility classification is inconsistent" } }
+        'PristineModified' { if ($candidate.MutationEligibilityClass -ne 'PolicyEligibleModifiedPristine' -or $candidate.PotentialAutomaticMutationEligible -ne $true) { Fail "modified-pristine eligibility classification is inconsistent" } }
+        default { if ($candidate.MutationEligibilityClass -ne 'BlockedUnknownProvenance' -or $candidate.PotentialAutomaticMutationEligible -ne $false) { Fail "unknown provenance is not blocked" } }
+    }
+}
 
-Pass "runtime gate valid; pristine baseline + exact provenance delta proven; exact CI build identified; DB unchanged; 9/9 reports present; zero mutations declared"
+Pass "runtime gate valid; pristine baseline + exact provenance delta + fail-closed mutation eligibility proven; exact CI build identified; DB unchanged; 9/9 reports present; zero mutations declared"
 Write-Host "[Economy Admiral] build: $($build.HeadSha) / workflow $($build.WorkflowRunId)"
 Write-Host "[Economy Admiral] provenance: pristine=$($provenance.PristineQuestCount), final=$($provenance.FinalQuestCount), added=$($provenance.ModAddedQuestCount), modified=$($provenance.PristineModifiedQuestCount), unchanged=$($provenance.PristineUnchangedQuestCount), removed=$($provenance.RemovedPristineQuestCount)"
 Write-Host "[Economy Admiral] fingerprint: $beforeHash"
