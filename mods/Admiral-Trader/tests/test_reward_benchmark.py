@@ -11,7 +11,8 @@ SPEC.loader.exec_module(MODULE)
 
 
 class RewardBenchmarkTests(unittest.TestCase):
-    def test_extracts_level_bucket_and_reward_distributions(self):
+    def test_extracts_level_type_currency_and_reward_distributions(self):
+        rub = "5449016a4bdc2d6f028b456f"
         raw = {
             "q1": {
                 "_id": "q1",
@@ -27,7 +28,10 @@ class RewardBenchmarkTests(unittest.TestCase):
                         {"type": "TraderStanding", "value": "0.02"},
                         {
                             "type": "Item",
-                            "items": [{"_tpl": "rub", "upd": {"StackObjectsCount": 15000}}],
+                            "items": [
+                                {"_tpl": rub, "upd": {"StackObjectsCount": 15000}},
+                                {"_tpl": "physical-a", "upd": {"StackObjectsCount": 3}},
+                            ],
                         },
                     ]
                 },
@@ -44,6 +48,7 @@ class RewardBenchmarkTests(unittest.TestCase):
                     "Success": [
                         {"type": "Experience", "value": 3000},
                         {"type": "AssortmentUnlock", "target": "x"},
+                        {"type": "ProductionScheme", "target": "craft-x"},
                     ]
                 },
             },
@@ -51,13 +56,17 @@ class RewardBenchmarkTests(unittest.TestCase):
 
         result = MODULE.build_benchmark(raw)
 
+        self.assertEqual(result["schemaVersion"], 2)
         self.assertEqual(result["summary"]["questCount"], 2)
         self.assertEqual(result["summary"]["questTypes"], {"Completion": 1, "Elimination": 1})
         self.assertEqual(result["summary"]["xp"]["median"], 2000.0)
         self.assertEqual(result["levelBuckets"]["01-10"]["questCount"], 1)
         self.assertEqual(result["levelBuckets"]["21-30"]["questCount"], 1)
-        self.assertEqual(result["summary"]["topRewardItemTemplates"], [{"tpl": "rub", "units": 15000.0}])
-        self.assertEqual(result["summary"]["unlocks"]["max"], 1.0)
+        self.assertEqual(result["questTypeBuckets"]["Elimination"]["questCount"], 1)
+        self.assertEqual(result["summary"]["currency"]["RUB"]["max"], 15000.0)
+        self.assertEqual(result["summary"]["physicalItemRecords"]["max"], 1.0)
+        self.assertEqual(result["summary"]["topPhysicalRewardTemplates"], [{"tpl": "physical-a", "units": 3.0}])
+        self.assertEqual(result["summary"]["unlocks"]["max"], 2.0)
 
     def test_nested_quest_container_is_supported(self):
         raw = {"templates": {"quests": [{"_id": "q1", "conditions": {}, "rewards": {"Success": []}}]}}
