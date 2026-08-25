@@ -21,6 +21,7 @@ Implemented now:
 - explicit composite-policy candidate evaluation with no selected candidate;
 - deterministic non-mutating target envelopes derived from vanilla medians and resolved policy thresholds;
 - fail-closed enforcement-plan report derived from the in-memory unified analysis snapshot;
+- runtime evidence manifest with before/after SHA-256 fingerprinting of the analyzed economy DB surfaces;
 - functional `Easy / Normal / Hard / Custom` policies;
 - `Off / Audit / Enforce` contract with **zero active mutations**;
 - deterministic JSON reports and manual item overrides;
@@ -34,7 +35,7 @@ Economy Admiral consumes final injected `TemplateTable` and `TradersTable` insta
 
 ## Reports
 
-Economy Admiral currently emits eight deterministic reports under the mod directory when analysis is enabled:
+Economy Admiral emits eight analysis/planning reports plus one runtime-evidence manifest when analysis is enabled:
 
 - `reports/economy-admiral-audit.json` — acquisition, handbook-value and trader/quest findings;
 - `reports/economy-admiral-reward-utility.json` — XP, standing and unlock distributions/ratios;
@@ -43,9 +44,33 @@ Economy Admiral currently emits eight deterministic reports under the mod direct
 - `reports/economy-admiral-quest-analysis.json` — unified observational view and cross-dimension flags;
 - `reports/economy-admiral-composite-candidates.json` — explicit candidate composite metrics, with no candidate selected;
 - `reports/economy-admiral-target-proposals.json` — non-mutating review ceilings for flagged dimensions;
-- `reports/economy-admiral-enforcement-plan.json` — fail-closed review candidates and proposed review actions.
+- `reports/economy-admiral-enforcement-plan.json` — fail-closed review candidates and proposed review actions;
+- `reports/economy-admiral-runtime-evidence.json` — runtime gate manifest proving report presence and comparing before/after economy fingerprints.
 
 All report paths are constrained to stay inside the mod directory.
+
+## Runtime evidence gate
+
+`RuntimeEvidenceService` captures a deterministic SHA-256 fingerprint **before** the first analysis service and again **after** the enforcement-plan service. The fingerprint covers the current mutation-relevant surfaces:
+
+- item template identities;
+- handbook item identities/prices;
+- quest reward structures;
+- trader assort items;
+- trader barter schemes;
+- trader loyalty mappings.
+
+The runtime manifest records both hashes, canonical-line counts and structural DB counts. It also verifies that all eight expected analysis/planning reports exist and are non-empty.
+
+The runtime gate is considered passed only when:
+
+- `DatabaseUnchangedAcrossPipeline = true`;
+- `AllExpectedReportsPresent = true`;
+- `ApplyMutations = false`;
+- `DeclaredMutationCount = 0`;
+- `RuntimeGatePassed = true`.
+
+This is stronger than a compile-only claim: on the target SPT/mod stack it provides direct before/after evidence that the current Economy Admiral pipeline did not modify the economy surfaces it audits.
 
 ## Unified quest analysis
 
@@ -179,7 +204,7 @@ The MVP still lacks:
 - concrete item-template replacement logic;
 - active mutation execution;
 - mutation transaction/rollback reporting;
-- runtime proof of all reports against the target mod stack;
+- physical runtime evidence from the target SPT/mod stack;
 - repeatable replacement-rate enforcement;
 - PBS adapter / trader normalization;
 - flea, world-loot, craft and insurance modeling.
@@ -188,8 +213,9 @@ The MVP still lacks:
 
 MVP remainder:
 
-- runtime-audit the exact compiled candidate against the target SPT/mod stack and inspect real report distributions;
-- use those reports to decide whether any composite candidate deserves promotion;
+- run the exact compiled candidate against the target SPT/mod stack;
+- inspect `economy-admiral-runtime-evidence.json` and the eight generated analysis/planning reports;
+- use real distributions to decide whether any composite candidate deserves promotion;
 - define mutation transaction / rollback / before-after report contracts;
 - add deterministic enforcement tests before any mutation path can be enabled.
 
