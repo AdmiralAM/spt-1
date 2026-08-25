@@ -114,6 +114,15 @@ The planner must be allowed to say:
 
 Forced ranking creates fake value. A recommendation should require a meaningful decision delta.
 
+The first prototype decision policy therefore uses **conservative dominance rather than a weighted score**:
+
+- raw objective count and raw remaining-work totals are not decisive dimensions;
+- a candidate can be preferred when it has one or more proven advantages and no competing disadvantage across the current decision dimensions;
+- if each candidate has at least one proven advantage, the policy abstains and exposes the trade-off instead of inventing a numeric winner;
+- if no meaningful proven dimension differs, the policy abstains as a true tie.
+
+This is intentionally conservative. Future policy-specific priorities may be justified by realistic scenarios or user-selected goals, but they must remain explicit and testable rather than hidden inside arbitrary weights.
+
 ## Ranking model direction
 
 Do not replace the current raw-count ranker with another monolithic weighted score. Build an explainable **decision profile** for each candidate and compare profiles in stable layers.
@@ -168,14 +177,15 @@ Pure deterministic model, not wired into runtime ranking:
 
 Purpose: prove that the data already available in 0.9.4 can support a unique recommendation model.
 
-### Slice B — explainable comparator
+### Slice B — explainable comparator and abstention policy
 
-After runtime gate #80 is accepted:
+Prototype now exists as research-only code:
 
-- compare decision profiles;
-- include explicit abstention threshold/tie behavior;
-- generate structured reasons and alternative deltas;
-- keep old ranker available behind tests until migration is proven.
+- compare decision profiles without using raw objective density as decisive evidence;
+- emit structured deltas for `WHY THIS / WHY NOT`;
+- prefer only when one candidate has a proven dominance pattern;
+- abstain on ties or competing advantages;
+- keep old ranker untouched until runtime gate #80 permits behavior changes.
 
 ### Slice C — UX
 
@@ -199,11 +209,12 @@ The product model is not accepted until it handles at least these scenarios:
 
 1. **Raw density loses to synergy** — map A has many unrelated objectives; map B has fewer objectives but one action advances two active non-repeatable quests. B should be explainably preferred when other factors are comparable.
 2. **Unlock bottleneck wins** — a modest quest that immediately opens several blocked quests outranks a dead-end side task when both are executable.
-3. **Preparation reverses choice** — higher-leverage raid with missing required preparation can lose to a ready alternative.
+3. **Preparation reverses choice** — higher-leverage raid with missing required preparation can lose to a ready alternative when the progression upside does not clearly dominate the friction.
 4. **Repeatable inflation loses** — several repeatables do not beat one meaningful non-repeatable progression path solely by count.
 5. **Unknown semantics reduce confidence** — custom/unknown objectives do not create fabricated synergy.
 6. **Near tie abstains** — candidates with no meaningful proven delta produce no forced recommendation.
-7. **Modded-data advantage** — a custom SPT quest or altered prerequisite chain changes the recommendation without requiring an external dataset update.
+7. **Conflicting advantages abstain** — unlock leverage on one side and lower preparation friction on the other remain an explicit player trade-off until a justified policy selects a priority.
+8. **Modded-data advantage** — a custom SPT quest or altered prerequisite chain changes the recommendation without requiring an external dataset update.
 
 ## Product success criterion
 
