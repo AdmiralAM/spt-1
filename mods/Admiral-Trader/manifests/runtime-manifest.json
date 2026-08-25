@@ -1,25 +1,41 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "traderId": "d5c27bb3169f8dfbc13f6b69",
   "targetSptVersion": "4.1.3",
   "publishedApiCompileBaseline": "4.1.2",
-  "registrationEnabled": false,
+  "publicationMode": "test-candidate",
+  "registrationEnabled": true,
+  "mergeRequiresRuntimeEvidence": true,
   "registrationGate": {
-    "reason": "Trader registration remains disabled until the approved portrait asset and first curated assort are present together and the exact SPT 4.1.3 runtime gate is satisfied.",
-    "requiredBeforeEnable": [
-      "approved trader portrait",
-      "native base.json validated",
-      "curated assort contains at least one reviewed offer",
-      "questassort references only loaded curated quest ids",
-      "module CI green on exact head",
-      "SPT 4.1.3 runtime compatibility proven"
+    "reason": "Registration is enabled only on the isolated SPT 4.1.3 test-candidate branch so the exact runtime can prove trader, quest, item and assort integration before merge.",
+    "satisfiedBeforeCandidate": [
+      "single Admiral trader architecture",
+      "31 authored native quest templates",
+      "explicit EN/RU quest locales",
+      "seven reviewed finite quest-gated offers",
+      "Special Weapons sample-only reward with no permanent offer",
+      "source/module CI validation",
+      "fail-fast exact-runtime item TPL validation",
+      "exact-runtime assembly build path"
+    ],
+    "requiredBeforeMerge": [
+      "build against SPTarkov.Server.Core 4.1.3 runtime assembly",
+      "server starts without Admiral errors",
+      "exact-runtime TPL gate passes",
+      "one Admiral trader appears",
+      "31 quests deserialize and publish",
+      "EN/RU locales do not expose raw keys",
+      "seven quest-gated offers load with finite limits",
+      "new profile exposes no legacy trader zoo or legacy quests"
     ]
   },
   "data": {
     "base": "db/base.json",
     "assort": "db/assort.json",
     "questAssort": "db/questassort.json",
-    "avatar": "assets/d5c27bb3169f8dfbc13f6b69.jpg"
+    "avatarMode": "built-in-test-placeholder",
+    "avatar": "/files/quest/icon/5a27cafa86f77424e20615d6.jpg",
+    "finalPortraitDeferred": true
   }
 }
