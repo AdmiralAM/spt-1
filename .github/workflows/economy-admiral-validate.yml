@@ -94,9 +94,11 @@ jobs:
           plan = (root / 'server/EnforcementPlanService.cs').read_text(encoding='utf-8')
           for text in [
               'RunAsync(QuestAnalysisReport analysis, QuestProvenanceDeltaReport provenance, CancellationToken cancellationToken)',
-              'SchemaVersion = 3', 'ProvenanceAware = true', 'CandidateCountsByProvenance', 'CandidateCountsByEligibility',
-              'MutationEligibilityPolicyVersion = 1', 'MutationEligibilityClass', 'PotentialAutomaticMutationEligible',
-              'ProtectedPristine', 'PolicyEligibleModAdded', 'PolicyEligibleModifiedPristine', 'BlockedUnknownProvenance',
+              'SchemaVersion = 4', 'ProvenanceAware = true', 'CandidateCountsByProvenance', 'CandidateCountsByEligibility',
+              'MutationEligibilityPolicyVersion = 2', 'MutationEligibilityClass', 'PotentialAutomaticMutationEligible',
+              'PotentialMutationDimensions', 'ResolvePotentialMutationDimensions', 'SuccessItemHandbookValue',
+              'ProtectedPristine', 'PolicyEligibleModAdded', 'ReviewOnlyModAdded', 'PolicyEligibleModifiedPristine',
+              'ProtectedUnchangedRewardDimensions', 'BlockedUnknownProvenance',
               'ProvenanceClass', 'PristineUntouched', 'ChangedDimensions',
               'ApplyMutations = false', 'MutationCount = 0', 'AutomaticMutationAllowed = false', 'ProposedMutation = null',
           ]:
@@ -116,8 +118,9 @@ jobs:
           for text in [
               'ExpectedReportCount -ne 9', 'economy-admiral-provenance-delta.json', 'CountsConsistent',
               'RemovedPristineQuestCount', 'pristine provenance partition is inconsistent', 'final provenance partition is inconsistent',
-              'enforcement plan SchemaVersion must be 3', 'MutationEligibilityPolicyVersion', 'ProtectedPristine',
-              'PolicyEligibleModAdded', 'PolicyEligibleModifiedPristine', 'BlockedUnknownProvenance',
+              'enforcement plan SchemaVersion must be 4', 'MutationEligibilityPolicyVersion', 'PotentialMutationDimensions',
+              'ProtectedPristine', 'PolicyEligibleModAdded', 'ReviewOnlyModAdded', 'PolicyEligibleModifiedPristine',
+              'ProtectedUnchangedRewardDimensions', 'BlockedUnknownProvenance', 'is not proven changed',
           ]:
               assert text in validator, text
           assert 'BaselineNotLargerThanFinal' not in validator
@@ -126,12 +129,12 @@ jobs:
           smoke = (root / 'tools/Test-Validate-Runtime.ps1').read_text(encoding='utf-8')
           for text in [
               'RemovedPristineQuestCount = 2', 'CountsConsistent = $true', 'FinalQuestCount = 123',
-              "ProvenanceClass = 'PristineUnchanged'", "MutationEligibilityClass = 'ProtectedPristine'",
-              "ProvenanceClass = 'ModAdded'", "ProvenanceClass = 'PristineModified'", "ProvenanceClass = 'Unknown'",
+              "MutationEligibilityPolicyVersion = 2", "PotentialMutationDimensions = @('ItemRewardBudget','Experience')",
+              "MutationEligibilityClass = 'ProtectedUnchangedRewardDimensions'",
           ]:
               assert text in smoke, text
 
-          print('Economy Admiral exact provenance + fail-closed mutation eligibility contract OK')
+          print('Economy Admiral exact provenance + dimension-scoped fail-closed mutation eligibility contract OK')
 
   server:
     name: Economy Admiral .NET 10 server build
