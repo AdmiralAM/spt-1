@@ -24,6 +24,8 @@ PASS requires:
 - unknown provenance blocked;
 - every `AutomaticMutationAllowed=false` and every `ProposedMutation=null`;
 - identical before/after final-DB fingerprints;
+- quest fingerprint coverage includes trader identity, restartability, full conditions and full rewards;
+- fingerprint also covers item identities, handbook prices and trader assort items/barter/loyalty mappings;
 - `DatabaseUnchangedAcrossPipeline=true`;
 - `RuntimeGatePassed=true`;
 - zero mutations;
