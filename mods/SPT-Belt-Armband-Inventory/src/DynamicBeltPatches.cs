@@ -126,7 +126,14 @@ namespace SPTBeltArmbandInventory
             try
             {
                 if (!ReferenceEquals(panel, state.Panel) || !ReferenceEquals(panel, activePanel)) return;
-                ValidateAndLabelBeltRow(panel);
+                try
+                {
+                    ValidateAndLabelBeltRow(panel);
+                }
+                catch (Exception exception)
+                {
+                    LogWarning?.Invoke("B&A&HB UI: BELT row was created through the native ContainersPanel lifecycle, but post-Show validation/decoration failed safely: " + Unwrap(exception).Message);
+                }
             }
             finally
             {
