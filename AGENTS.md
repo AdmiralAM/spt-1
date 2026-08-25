@@ -83,6 +83,8 @@ Do not use source files, generated commits, or permanent branches as substitutes
 
 Module CI proves the affected module. Keep triggers/path filters narrow.
 
+Green checks with annotations or warnings are not automatically clean. Review every annotation before requesting runtime testing or merging. A warned build may be used for runtime testing only after the warnings are classified as non-blocking for that exact artifact. Before merge, warnings must be fixed or explicitly documented as accepted follow-up debt with the reason they do not affect the gate being evaluated.
+
 GitHub Actions minutes and runner capacity are finite repository resources even when account quota remains. Every development process must use them deliberately:
 
 - inspect code, repository state, and existing logs before triggering CI;
