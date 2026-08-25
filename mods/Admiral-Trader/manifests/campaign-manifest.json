@@ -3,10 +3,12 @@
   "status": "draft",
   "product": {
     "modName": "Admiral Trader",
+    "modGuid": "com.admiralam.spt.admiraltrader",
     "modulePath": "mods/Admiral-Trader",
     "traderWorkingName": "Admiral",
     "traderWorkingNameRu": "Адмирал",
-    "traderId": null,
+    "traderId": "d5c27bb3169f8dfbc13f6b69",
+    "traderIdDerivation": "first-24-hex-of-sha256(modGuid)",
     "traderIcon": "TBD"
   },
   "source": {
