@@ -53,12 +53,26 @@ jobs:
           assert config['rarity']['commonMinSources'] >= config['rarity']['uncommonMinSources']
           assert config['rarity']['uncommonMinSources'] >= config['rarity']['rareMinSources']
 
+          policy = config['customAuditPolicy']
+          assert policy['questRewardVsVanillaMedianWarnMultiple'] > 0
+          assert policy['restartableRewardVsVanillaMedianWarnMultiple'] > 0
+          assert policy['duplicateTraderSourcesWarnCount'] > 0
+
           source = (root / 'server' / 'EconomyMod.cs').read_text(encoding='utf-8')
           assert 'OnLoadOrder.PostLoad + 1000' in source
 
           audit = (root / 'server' / 'EconomyAuditService.cs').read_text(encoding='utf-8')
-          assert 'EnforcementApplied = false' in audit
-          assert 'running read-only audit only' in audit
+          for invariant in [
+              'EnforcementApplied = false',
+              'running read-only audit only',
+              'TRADER_OFFER_MISSING_BARTER',
+              'TRADER_OFFER_MISSING_LOYALTY',
+              'QUEST_REWARD_VALUE_OUTLIER',
+              'RESTARTABLE_REWARD_VALUE_OUTLIER',
+              'VanillaMedianHandbookValue',
+          ]:
+              assert invariant in audit, invariant
+
           print('Economy module contract OK')
 
   server:
