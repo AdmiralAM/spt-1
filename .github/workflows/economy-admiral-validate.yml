@@ -33,16 +33,11 @@ jobs:
 
           root = Path('mods/Economy-Admiral')
           required = [
-              root / 'README.md',
-              root / 'config' / 'config.json',
-              root / 'server' / 'Economy-Admiral.csproj',
-              root / 'server' / 'ModMetadata.cs',
-              root / 'server' / 'EconomyConfig.cs',
-              root / 'server' / 'EconomyMod.cs',
-              root / 'server' / 'EconomyAuditService.cs',
-              root / 'server' / 'RewardUtilityAuditService.cs',
-              root / 'server' / 'QuestProgressionGraphService.cs',
-              root / 'server' / 'QuestConstraintAuditService.cs',
+              root / 'README.md', root / 'config' / 'config.json',
+              root / 'server' / 'Economy-Admiral.csproj', root / 'server' / 'ModMetadata.cs',
+              root / 'server' / 'EconomyConfig.cs', root / 'server' / 'EconomyMod.cs',
+              root / 'server' / 'EconomyAuditService.cs', root / 'server' / 'RewardUtilityAuditService.cs',
+              root / 'server' / 'QuestProgressionGraphService.cs', root / 'server' / 'QuestConstraintAuditService.cs',
               root / 'server' / 'QuestAnalysisService.cs',
           ]
           missing = [str(path) for path in required if not path.is_file()]
@@ -54,20 +49,18 @@ jobs:
           assert config['preset'] in {'Easy', 'Normal', 'Hard', 'Custom'}
           assert config['repeatedRaidLootDecay'] is False
           assert config['reportRelativePath'].startswith('reports/economy-admiral')
-          assert config['rarity']['commonMinSources'] >= config['rarity']['uncommonMinSources']
-          assert config['rarity']['uncommonMinSources'] >= config['rarity']['rareMinSources']
+          assert config['rarity']['commonMinSources'] >= config['rarity']['uncommonMinSources'] >= config['rarity']['rareMinSources']
 
           policy = config['customAuditPolicy']
-          for key in [
-              'questRewardVsVanillaMedianWarnMultiple',
-              'restartableRewardVsVanillaMedianWarnMultiple',
-              'normalizedRewardVsVanillaMedianWarnMultiple',
-              'restartableNormalizedRewardVsVanillaMedianWarnMultiple',
-              'levelGateWeight',
-              'objectiveConditionWeight',
-              'maxLevelGateContribution',
-              'maxObjectiveContribution',
-          ]:
+          nonnegative = [
+              'questRewardVsVanillaMedianWarnMultiple', 'restartableRewardVsVanillaMedianWarnMultiple',
+              'normalizedRewardVsVanillaMedianWarnMultiple', 'restartableNormalizedRewardVsVanillaMedianWarnMultiple',
+              'levelGateWeight', 'objectiveConditionWeight', 'maxLevelGateContribution', 'maxObjectiveContribution',
+              'highItemValueLowStructureWarnMultiple', 'highXpLowDepthWarnMultiple',
+              'highStandingLowDepthWarnMultiple', 'restartableHighItemValueWarnMultiple',
+              'restartableHighXpWarnMultiple', 'lowDepthMaxRelativeMultiple', 'lowStructureMaxRelativeMultiple',
+          ]
+          for key in nonnegative:
               assert policy[key] >= 0, key
           assert policy['duplicateTraderSourcesWarnCount'] > 0
 
@@ -95,20 +88,19 @@ jobs:
           utility = (root / 'server' / 'RewardUtilityAuditService.cs').read_text(encoding='utf-8')
           for invariant in [
               'RewardType.Experience', 'RewardType.TraderStanding', 'RewardType.TraderUnlock',
-              'RewardType.AssortmentUnlock', 'RewardType.ProductionScheme',
-              'UtilityScoringApplied = false', 'SchemaVersion = 2',
-              'XpVsVanillaMedian', 'StandingVsVanillaMedian', 'MedianPositiveAssortmentUnlocks',
-              'No cross-dimension composite score', 'using Path = System.IO.Path;',
-              'economy-admiral-reward-utility.json',
+              'RewardType.AssortmentUnlock', 'RewardType.ProductionScheme', 'UtilityScoringApplied = false',
+              'SchemaVersion = 2', 'XpVsVanillaMedian', 'StandingVsVanillaMedian',
+              'MedianPositiveAssortmentUnlocks', 'No cross-dimension composite score',
+              'economy-admiral-reward-utility.json', 'using Path = System.IO.Path;',
           ]:
               assert invariant in utility, invariant
 
           graph = (root / 'server' / 'QuestProgressionGraphService.cs').read_text(encoding='utf-8')
           for invariant in [
               'ConditionType, "Quest"', 'MaximumPrerequisiteDepth', 'CycleMemberCount',
-              'SchemaVersion = 2', 'DepthAffectsRewardAllowance = false',
-              'VanillaDepthBenchmark', 'VanillaRestartableDepthBenchmark', 'MedianDepth', 'P90Depth',
-              'GetSnapshot()', 'economy-admiral-progression-graph.json', 'using Path = System.IO.Path;',
+              'SchemaVersion = 2', 'DepthAffectsRewardAllowance = false', 'VanillaDepthBenchmark',
+              'VanillaRestartableDepthBenchmark', 'MedianDepth', 'P90Depth', 'GetSnapshot()',
+              'economy-admiral-progression-graph.json', 'using Path = System.IO.Path;',
           ]:
               assert invariant in graph, invariant
 
@@ -123,7 +115,10 @@ jobs:
 
           analysis = (root / 'server' / 'QuestAnalysisService.cs').read_text(encoding='utf-8')
           for invariant in [
-              'CompositeScoreApplied = false', 'RewardAllowanceAffected = false',
+              'SchemaVersion = 3', 'CompositeScoreApplied = false', 'RewardAllowanceAffected = false',
+              'OutlierFlagsAffectEnforcement = false', 'Policy = policy', 'FlagCounts = flagCounts',
+              'HighItemValueLowStructureWarnMultiple', 'RestartableHighXpWarnMultiple',
+              'HIGH_ITEM_VALUE_LOW_STRUCTURE', 'RESTARTABLE_HIGH_ITEM_VALUE', 'PREREQUISITE_CYCLE',
               'SuccessKnownHandbookValue', 'XpVsVanillaMedian', 'StandingVsVanillaMedian',
               'PrerequisiteDepthVsVanillaMedian', 'StructuredConstraintsVsVanillaMedian',
               'GetSnapshot()', 'economy-admiral-quest-analysis.json', 'using Path = System.IO.Path;',
