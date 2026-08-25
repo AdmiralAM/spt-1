@@ -341,8 +341,7 @@ namespace SPTBeltArmbandInventory
                     return Fail("Harmony patch/rollback API is incompatible; BELT presentation is disabled.");
                 unpatchSelf = rollback;
 
-                MethodInfo factoryPrefix = BuildFactoryPrefix(panelType, slotEnumType, slotViewType);
-                object factoryPrefixPatch = harmonyMethodConstructor.Invoke(new object[] { factoryPrefix });
+                object factoryPrefixPatch = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(FactoryPrefixFactory)) });
                 Patch(patchMethod, harmonyMethodType, slotFactory, factoryPrefixPatch, null, null);
 
                 object showPrefix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PanelShowPrefix)) });
@@ -374,6 +373,17 @@ namespace SPTBeltArmbandInventory
         {
             BeltRuntime.RestorePanelShow(__state);
             return __exception;
+        }
+
+        static MethodInfo FactoryPrefixFactory(MethodBase original)
+        {
+            MethodInfo originalMethod = original as MethodInfo;
+            if (originalMethod == null || originalMethod.DeclaringType == null) return null;
+
+            ParameterInfo[] parameters = originalMethod.GetParameters();
+            if (parameters.Length != 1) return null;
+
+            return BuildFactoryPrefix(originalMethod.DeclaringType, parameters[0].ParameterType, originalMethod.ReturnType);
         }
 
         static MethodInfo BuildFactoryPrefix(Type panelType, Type slotEnumType, Type slotViewType)
