@@ -32,10 +32,11 @@ jobs:
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 
       - name: Fetch pinned official SPT item database
-        run: >-
-          curl --fail --location --retry 3
-          --output build/spt-items.json
-          https://raw.githubusercontent.com/sp-tarkov/server-csharp/fe74b07c6361e2c6d1532dc21ba1c3b981d88d93/Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/items.json
+        run: |
+          mkdir -p build
+          curl --fail --location --retry 3 \
+            --output build/spt-items.json \
+            https://raw.githubusercontent.com/sp-tarkov/server-csharp/fe74b07c6361e2c6d1532dc21ba1c3b981d88d93/Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/items.json
 
       - name: Resolve weapon and ammo candidate pools
         run: >-
@@ -60,7 +61,7 @@ jobs:
                   raise SystemExit(f'{family_id}: no weapon candidates')
               if family_id != 'special-weapons' and family['ammoCount'] == 0:
                   raise SystemExit(f'{family_id}: no ammo candidates')
-              if family_id not in {'special-weapons'} and family['ammoTierCounts'].get('standard', 0) == 0:
+              if family_id != 'special-weapons' and family['ammoTierCounts'].get('standard', 0) == 0:
                   raise SystemExit(f'{family_id}: no standard ammo tier; candidate resolver likely drifted')
           PY
 
