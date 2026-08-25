@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace SPTEconomy;
+namespace EconomyAdmiral;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum EconomyMode
@@ -23,7 +23,7 @@ public sealed record EconomyConfig
 {
     public EconomyMode Mode { get; init; } = EconomyMode.Audit;
     public EconomyPreset Preset { get; init; } = EconomyPreset.Normal;
-    public string ReportRelativePath { get; init; } = "reports/economy-audit.json";
+    public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
     public bool RepeatedRaidLootDecay { get; init; } = false;
     public RarityThresholds Rarity { get; init; } = new();
     public AuditPolicy CustomAuditPolicy { get; init; } = new();
