@@ -11,7 +11,8 @@ public sealed class EconomyMod(
     RewardUtilityAuditService rewardUtilityAuditService,
     QuestProgressionGraphService questProgressionGraphService,
     QuestConstraintAuditService questConstraintAuditService,
-    QuestAnalysisService questAnalysisService
+    QuestAnalysisService questAnalysisService,
+    EnforcementPlanService enforcementPlanService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
@@ -21,5 +22,6 @@ public sealed class EconomyMod(
         await questProgressionGraphService.RunAsync(cancellationToken);
         await questConstraintAuditService.RunAsync(cancellationToken);
         await questAnalysisService.RunAsync(cancellationToken);
+        await enforcementPlanService.RunAsync(cancellationToken);
     }
 }
