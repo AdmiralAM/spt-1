@@ -8,6 +8,7 @@ namespace EconomyAdmiral;
 [Injectable(TypePriority = OnLoadOrder.PostLoad + 1000), UsedImplicitly]
 public sealed class EconomyMod(
     EconomyRuntimeConfigService runtimeConfigService,
+    VanillaBaselineService vanillaBaselineService,
     RuntimeEvidenceService runtimeEvidenceService,
     EconomyAuditService auditService,
     TypedQuestItemAccountingService typedQuestItemAccountingService,
@@ -15,6 +16,7 @@ public sealed class EconomyMod(
     QuestProgressionGraphService questProgressionGraphService,
     QuestConstraintAuditService questConstraintAuditService,
     QuestAnalysisService questAnalysisService,
+    BaselineProvenanceCorrectionService baselineProvenanceCorrectionService,
     CompositePolicyEvaluationService compositePolicyEvaluationService,
     TargetProposalService targetProposalService,
     EnforcementPlanService enforcementPlanService
@@ -28,6 +30,7 @@ public sealed class EconomyMod(
             return;
         }
 
+        var vanillaBaseline = vanillaBaselineService.GetSnapshot();
         runtimeEvidenceService.CaptureBefore();
 
         await auditService.RunAsync(cancellationToken);
@@ -38,6 +41,7 @@ public sealed class EconomyMod(
 
         var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, cancellationToken);
         questAnalysis = await typedQuestItemAccountingService.ApplyToUnifiedAnalysisAsync(questAnalysis, cancellationToken);
+        questAnalysis = await baselineProvenanceCorrectionService.ApplyToUnifiedAnalysisAsync(questAnalysis, vanillaBaseline, cancellationToken);
         await compositePolicyEvaluationService.RunAsync(questAnalysis, cancellationToken);
         await targetProposalService.RunAsync(questAnalysis, cancellationToken);
         await enforcementPlanService.RunAsync(questAnalysis, cancellationToken);
