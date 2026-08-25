@@ -1,0 +1,108 @@
+using System;
+using SPTQuestPlanner.Client;
+using Xunit;
+
+namespace SPTQuestPlanner.Tests
+{
+    public sealed class PlannerRaidDecisionSetTests
+    {
+        [Fact]
+        public void UniqueUndominatedCandidateBecomesRecommendation()
+        {
+            PlannerRaidDecisionSet result = PlannerRaidDecisionSetBuilder.Build(new[]
+            {
+                Candidate("Customs", nonRepeatable: 2, overlapGroups: 1, maxOverlap: 2, unlocks: 1),
+                Candidate("Reserve", nonRepeatable: 1),
+                Candidate("Shoreline", nonRepeatable: 1, missing: 1)
+            });
+
+            Assert.True(result.HasUniqueRecommendation);
+            Assert.NotNull(result.Recommendation);
+            Assert.Equal("Customs", result.Recommendation!.LocationId);
+            Assert.Single(result.Contenders);
+        }
+
+        [Fact]
+        public void ConflictingTradeoffsProduceFrontierAndAbstention()
+        {
+            PlannerRaidDecisionSet result = PlannerRaidDecisionSetBuilder.Build(new[]
+            {
+                Candidate("Customs", nonRepeatable: 2, unlocks: 2, missing: 1),
+                Candidate("Reserve", nonRepeatable: 2, unlocks: 0, missing: 0)
+            });
+
+            Assert.False(result.HasUniqueRecommendation);
+            Assert.Null(result.Recommendation);
+            Assert.Equal(2, result.Contenders.Count);
+            Assert.Contains("undominated", result.Reason);
+        }
+
+        [Fact]
+        public void RawDensityDoesNotRemoveCandidateFromFrontier()
+        {
+            PlannerRaidDecisionSet result = PlannerRaidDecisionSetBuilder.Build(new[]
+            {
+                Candidate("ManyTasks", objectiveCount: 10),
+                Candidate("FewTasks", objectiveCount: 2)
+            });
+
+            Assert.False(result.HasUniqueRecommendation);
+            Assert.Equal(2, result.Contenders.Count);
+        }
+
+        [Fact]
+        public void SingleCandidateIsReturnedWithoutInventedComparison()
+        {
+            PlannerRaidDecisionSet result = PlannerRaidDecisionSetBuilder.Build(new[]
+            {
+                Candidate("Factory", nonRepeatable: 1)
+            });
+
+            Assert.True(result.HasUniqueRecommendation);
+            Assert.Equal("Factory", result.Recommendation!.LocationId);
+            Assert.Contains("Only one", result.Reason);
+        }
+
+        private static PlannerRaidDecisionCandidate Candidate(
+            string locationId,
+            int nonRepeatable = 0,
+            int repeatable = 0,
+            int overlapGroups = 0,
+            int maxOverlap = 0,
+            int unlocks = 0,
+            int missing = 0,
+            int unresolved = 0,
+            int unknown = 0,
+            int objectiveCount = 0)
+        {
+            PlannerRaidActionOverlap[] overlaps;
+            if (overlapGroups <= 0)
+            {
+                overlaps = Array.Empty<PlannerRaidActionOverlap>();
+            }
+            else
+            {
+                overlaps = new PlannerRaidActionOverlap[overlapGroups];
+                for (int i = 0; i < overlaps.Length; i++)
+                {
+                    string[] questIds = new string[Math.Max(2, maxOverlap)];
+                    for (int q = 0; q < questIds.Length; q++) questIds[q] = locationId + "-q" + i + "-" + q;
+                    overlaps[i] = new PlannerRaidActionOverlap("sig-" + i, PlannerRaidObjectiveKind.Kill, questIds, questIds.Length);
+                }
+            }
+
+            return new PlannerRaidDecisionCandidate(
+                locationId,
+                new PlannerRaidDecisionSignals(
+                    nonRepeatable,
+                    repeatable,
+                    overlaps,
+                    unlocks,
+                    missing,
+                    unresolved,
+                    unknown,
+                    objectiveCount,
+                    0d));
+        }
+    }
+}
