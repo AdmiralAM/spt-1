@@ -21,16 +21,20 @@
     "economyDataModel": "native-spt-assort-and-questassort"
   },
   "migrationPolicy": {
+    "implementationStrategy": "template-suppression-completion-bridge",
+    "directProfileWrites": "forbidden-until-exact-4.1.3-boundary-proven",
+    "restartableLegacyDefault": "exclude-from-completion-bridge",
     "newProfile": {
       "legacyQuestExposure": "none",
       "curatedQuestExposure": "manifest-only"
     },
     "existingProfile": {
-      "activeLegacyQuest": "allow-finish",
+      "activeLegacyQuest": "allow-finish-via-retained-closed-start-template",
       "completedLegacyQuest": "preserve-history",
-      "failedLegacyQuest": "preserve-history",
-      "unstartedLegacyQuest": "suppress",
-      "deprecatedSuccessor": "block",
+      "failedLegacyQuest": "preserve-history-no-restart-by-default",
+      "unstartedLegacyQuest": "suppress-by-absence-or-closed-start-template",
+      "staleLegacyProfileRecord": "preserve-no-direct-mutation-pending-4.1.3-proof",
+      "deprecatedSuccessor": "block-by-not-loading-template",
       "curatedSuccessor": "grant-only-through-curated-graph"
     }
   },
