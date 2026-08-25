@@ -148,13 +148,11 @@ public sealed class AdmiralQuestRegistration(
 
     private void RegisterQuestLocales(string modPath, Dictionary<MongoId, Quest> quests)
     {
-        Dictionary<string, string> english =
-            modHelper.GetJsonDataFromFile<Dictionary<string, string>>(modPath, "db/locales/en.json");
-        Dictionary<string, string> russian =
-            modHelper.GetJsonDataFromFile<Dictionary<string, string>>(modPath, "db/locales/ru.json");
+        Dictionary<string, string> english = LoadLocaleSet(modPath, "en.json", "arsenal-en.json");
+        Dictionary<string, string> russian = LoadLocaleSet(modPath, "ru.json", "arsenal-ru.json");
 
-        EnsureLocaleCoverage(english, quests);
-        EnsureLocaleCoverage(russian, quests);
+        EnsureLocaleCoverage("en", english, quests);
+        EnsureLocaleCoverage("ru", russian, quests);
 
         foreach (var (localeCode, localeKvP) in localesTable.Global)
         {
@@ -174,26 +172,36 @@ public sealed class AdmiralQuestRegistration(
         }
     }
 
-    private static void EnsureLocaleCoverage(Dictionary<string, string> locale, Dictionary<MongoId, Quest> quests)
+    private Dictionary<string, string> LoadLocaleSet(string modPath, params string[] localeFiles)
     {
-        foreach (var (questId, quest) in quests)
+        Dictionary<string, string> merged = new(StringComparer.Ordinal);
+        foreach (string localeFile in localeFiles)
+        {
+            Dictionary<string, string> source =
+                modHelper.GetJsonDataFromFile<Dictionary<string, string>>(modPath, $"db/locales/{localeFile}");
+            foreach (var (key, value) in source)
+            {
+                if (!merged.TryAdd(key, value))
+                    throw new InvalidDataException($"Duplicate Admiral locale key {key} while loading {localeFile}");
+            }
+        }
+
+        return merged;
+    }
+
+    private static void EnsureLocaleCoverage(
+        string localeCode,
+        Dictionary<string, string> locale,
+        Dictionary<MongoId, Quest> quests)
+    {
+        foreach (MongoId questId in quests.Keys)
         {
             string id = questId.ToString();
-            string title = quest.QuestName ?? id;
             foreach (string field in RequiredLocaleFields)
             {
                 string key = $"{id} {field}";
-                if (locale.ContainsKey(key))
-                    continue;
-
-                locale[key] = field switch
-                {
-                    "name" => title,
-                    "description" => title,
-                    "startedMessageText" or "acceptPlayerMessage" => title,
-                    "successMessageText" or "completePlayerMessage" => $"{title} complete.",
-                    _ => string.Empty
-                };
+                if (!locale.ContainsKey(key))
+                    throw new InvalidDataException($"Admiral locale {localeCode} is missing required key {key}");
             }
         }
     }
