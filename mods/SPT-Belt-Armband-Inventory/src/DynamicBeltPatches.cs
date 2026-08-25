@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
@@ -309,6 +310,7 @@ namespace SPTBeltArmbandInventory
         const string HarmonyId = "com.admiralam.spt.belt-armband-inventory.runtime";
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
+        static readonly Dictionary<short, OpCode> OpCodesByValue = BuildOpcodeMap();
         object harmony;
         MethodInfo unpatchSelf;
 
@@ -332,10 +334,10 @@ namespace SPTBeltArmbandInventory
                     return Fail("SPT 4.1 inventory UI types or Harmony were not found; BELT presentation is disabled.");
 
                 MethodInfo panelShow = FindPanelShow(panelType, equipmentType);
-                MethodInfo slotFactory = FindSlotFactory(panelType, slotEnumType, slotViewType);
+                MethodInfo slotFactory = FindSlotFactory(panelType, panelShow, slotEnumType, slotViewType);
                 MethodInfo getSlot = equipmentType.GetMethod("GetSlot", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { slotEnumType }, null);
                 FieldInfo defaultTemplate = FindField(panelType, "_defaultSlotTemplate", slotViewType);
-                FieldInfo equipmentSlots = FindEquipmentSlotsField(panelType, slotEnumType);
+                FieldInfo equipmentSlots = FindEquipmentSlotsField(panelType, panelShow, slotEnumType);
                 FieldInfo slotViewsContainer = FindField(panelType, "_slotViewsContainer", typeof(Transform));
                 FieldInfo slotViewsDictionary = FindSlotViewsDictionary(panelType, slotEnumType, slotViewType);
 
@@ -371,6 +373,8 @@ namespace SPTBeltArmbandInventory
                 Patch(patchMethod, harmonyMethodType, panelShow, showPrefix, showPostfix, showFinalizer);
 
                 logInfo?.Invoke("B&A&HB MOD SPT: ContainersPanel-native BELT projection installed; real inventory host remains ArmBand.");
+                logInfo?.Invoke("B&A&HB UI: selected ContainersPanel Show-consumed boundaries: slotFactory="
+                    + slotFactory + ", equipmentSlots=" + equipmentSlots + ".");
                 return true;
             }
             catch (Exception exception)
@@ -455,33 +459,155 @@ namespace SPTBeltArmbandInventory
             return null;
         }
 
-        static MethodInfo FindSlotFactory(Type panelType, Type slotEnumType, Type slotViewType)
+        static MethodInfo FindSlotFactory(Type panelType, MethodInfo panelShow, Type slotEnumType, Type slotViewType)
         {
             MethodInfo match = null;
+            foreach (MethodBase reference in ReferencedMethods(panelShow))
+            {
+                MethodInfo method = reference as MethodInfo;
+                if (!IsSlotFactory(method, panelType, slotEnumType, slotViewType)) continue;
+                if (match != null && match != method) return null;
+                match = method;
+            }
+            if (match != null) return match;
+
             foreach (MethodInfo method in panelType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length != 1 || parameters[0].ParameterType != slotEnumType) continue;
-                if (!slotViewType.IsAssignableFrom(method.ReturnType)) continue;
-                if (match != null) return null;
+                if (!IsSlotFactory(method, panelType, slotEnumType, slotViewType)) continue;
+                if (match != null && match != method) return null;
                 match = method;
             }
             return match;
         }
 
-        static FieldInfo FindEquipmentSlotsField(Type panelType, Type slotEnumType)
+        static bool IsSlotFactory(MethodInfo method, Type panelType, Type slotEnumType, Type slotViewType)
         {
-            FieldInfo exact = panelType.GetField("equipmentSlot_0", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-            if (exact != null && exact.FieldType.IsArray && exact.FieldType.GetElementType() == slotEnumType) return exact;
+            if (method == null || method.DeclaringType == null || !method.DeclaringType.IsAssignableFrom(panelType)) return false;
+            ParameterInfo[] parameters = method.GetParameters();
+            return parameters.Length == 1 && parameters[0].ParameterType == slotEnumType && slotViewType.IsAssignableFrom(method.ReturnType);
+        }
 
+        static FieldInfo FindEquipmentSlotsField(Type panelType, MethodInfo panelShow, Type slotEnumType)
+        {
             FieldInfo match = null;
+            foreach (FieldInfo field in ReferencedFields(panelShow))
+            {
+                if (!IsEquipmentSlotsField(field, panelType, slotEnumType)) continue;
+                if (match != null && match != field) return null;
+                match = field;
+            }
+            if (match != null) return match;
+
+            FieldInfo exact = panelType.GetField("equipmentSlot_0", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            if (IsEquipmentSlotsField(exact, panelType, slotEnumType)) return exact;
+
             foreach (FieldInfo field in panelType.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                if (!field.FieldType.IsArray || field.FieldType.GetElementType() != slotEnumType) continue;
-                if (match != null) return null;
+                if (!IsEquipmentSlotsField(field, panelType, slotEnumType)) continue;
+                if (match != null && match != field) return null;
                 match = field;
             }
             return match;
+        }
+
+        static bool IsEquipmentSlotsField(FieldInfo field, Type panelType, Type slotEnumType)
+        {
+            return field != null && field.IsStatic && field.DeclaringType != null && field.DeclaringType.IsAssignableFrom(panelType)
+                && field.FieldType.IsArray && field.FieldType.GetElementType() == slotEnumType;
+        }
+
+        static IEnumerable<MethodBase> ReferencedMethods(MethodBase source)
+        {
+            foreach (MemberInfo member in ReferencedMembers(source, OperandType.InlineMethod))
+            {
+                MethodBase method = member as MethodBase;
+                if (method != null) yield return method;
+            }
+        }
+
+        static IEnumerable<FieldInfo> ReferencedFields(MethodBase source)
+        {
+            foreach (MemberInfo member in ReferencedMembers(source, OperandType.InlineField))
+            {
+                FieldInfo field = member as FieldInfo;
+                if (field != null) yield return field;
+            }
+        }
+
+        static IEnumerable<MemberInfo> ReferencedMembers(MethodBase source, OperandType targetOperand)
+        {
+            MethodBody body;
+            try { body = source == null ? null : source.GetMethodBody(); } catch { yield break; }
+            byte[] il;
+            try { il = body == null ? null : body.GetILAsByteArray(); } catch { yield break; }
+            if (il == null) yield break;
+
+            int position = 0;
+            while (position < il.Length)
+            {
+                OpCode opcode;
+                byte first = il[position++];
+                if (first == 0xFE)
+                {
+                    if (position >= il.Length || !OpCodesByValue.TryGetValue(unchecked((short)(0xFE00 | il[position++])), out opcode)) yield break;
+                }
+                else if (!OpCodesByValue.TryGetValue(first, out opcode)) yield break;
+
+                int size = OperandSize(opcode.OperandType, il, position);
+                if (opcode.OperandType == targetOperand && position + 4 <= il.Length)
+                {
+                    int token = BitConverter.ToInt32(il, position);
+                    try
+                    {
+                        MemberInfo member = targetOperand == OperandType.InlineMethod
+                            ? source.Module.ResolveMethod(token)
+                            : source.Module.ResolveField(token);
+                        if (member != null) yield return member;
+                    }
+                    catch { }
+                }
+                position += size;
+            }
+        }
+
+        static int OperandSize(OperandType type, byte[] il, int position)
+        {
+            switch (type)
+            {
+                case OperandType.InlineNone: return 0;
+                case OperandType.ShortInlineBrTarget:
+                case OperandType.ShortInlineI:
+                case OperandType.ShortInlineVar: return 1;
+                case OperandType.InlineVar: return 2;
+                case OperandType.InlineBrTarget:
+                case OperandType.InlineField:
+                case OperandType.InlineI:
+                case OperandType.InlineMethod:
+                case OperandType.InlineSig:
+                case OperandType.InlineString:
+                case OperandType.InlineTok:
+                case OperandType.InlineType:
+                case OperandType.ShortInlineR: return 4;
+                case OperandType.InlineI8:
+                case OperandType.InlineR: return 8;
+                case OperandType.InlineSwitch:
+                    return position + 4 > il.Length ? 0 : 4 + Math.Max(0, BitConverter.ToInt32(il, position)) * 4;
+                default: return 0;
+            }
+        }
+
+        static Dictionary<short, OpCode> BuildOpcodeMap()
+        {
+            var map = new Dictionary<short, OpCode>();
+            foreach (FieldInfo field in typeof(OpCodes).GetFields(BindingFlags.Static | BindingFlags.Public))
+            {
+                if (field.FieldType == typeof(OpCode))
+                {
+                    OpCode opcode = (OpCode)field.GetValue(null);
+                    map[opcode.Value] = opcode;
+                }
+            }
+            return map;
         }
 
         static FieldInfo FindField(Type owner, string exactName, Type fieldType)
