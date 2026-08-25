@@ -95,13 +95,16 @@ jobs:
               'questTypes': summary['questTypes'],
               'xp': summary['xp'],
               'standing': summary['standing'],
-              'itemRecords': summary['itemRecords'],
+              'physicalItemRecords': summary['physicalItemRecords'],
+              'currency': summary['currency'],
               'unlocks': summary['unlocks'],
           }, indent=2, ensure_ascii=False))
           if summary['questCount'] < 400:
               raise SystemExit(f"vanilla benchmark unexpectedly small: {summary['questCount']}")
           if summary['xp']['count'] != summary['questCount']:
               raise SystemExit('vanilla XP distribution does not cover every quest')
+          if not data.get('questTypeBuckets'):
+              raise SystemExit('vanilla benchmark has no quest-type distributions')
           PY
 
       - name: Upload transient analysis reports
