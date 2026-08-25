@@ -9,7 +9,8 @@ namespace EconomyAdmiral;
 public sealed class EconomyMod(
     EconomyAuditService auditService,
     RewardUtilityAuditService rewardUtilityAuditService,
-    QuestProgressionGraphService questProgressionGraphService
+    QuestProgressionGraphService questProgressionGraphService,
+    QuestConstraintAuditService questConstraintAuditService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
@@ -17,5 +18,6 @@ public sealed class EconomyMod(
         await auditService.RunAsync(cancellationToken);
         await rewardUtilityAuditService.RunAsync(cancellationToken);
         await questProgressionGraphService.RunAsync(cancellationToken);
+        await questConstraintAuditService.RunAsync(cancellationToken);
     }
 }
