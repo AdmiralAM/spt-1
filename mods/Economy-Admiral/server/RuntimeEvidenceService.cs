@@ -1,0 +1,215 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using Path = System.IO.Path;
+using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Helpers.Server;
+using SPTarkov.Server.Core.Models.Spt.Tables;
+
+namespace SPTEconomy;
+
+[Injectable]
+public sealed class RuntimeEvidenceService(
+    TemplateTable templates,
+    TradersTable traders,
+    EconomyRuntimeConfigService runtimeConfigService,
+    ModHelper modHelper,
+    ISptLogger<RuntimeEvidenceService> logger
+)
+{
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+
+    private static readonly string[] ExpectedReports =
+    [
+        "economy-admiral-audit.json",
+        "economy-admiral-reward-utility.json",
+        "economy-admiral-progression-graph.json",
+        "economy-admiral-quest-constraints.json",
+        "economy-admiral-quest-analysis.json",
+        "economy-admiral-composite-candidates.json",
+        "economy-admiral-target-proposals.json",
+        "economy-admiral-enforcement-plan.json",
+    ];
+
+    private RuntimeFingerprint? before;
+
+    public void CaptureBefore()
+    {
+        before = CaptureFingerprint();
+    }
+
+    public async Task WriteAfterAsync(CancellationToken cancellationToken)
+    {
+        if (before is null)
+        {
+            throw new InvalidOperationException("Economy Admiral runtime evidence requires CaptureBefore() before the analysis pipeline.");
+        }
+
+        var config = await runtimeConfigService.GetAsync(cancellationToken);
+        var after = CaptureFingerprint();
+        var modPath = modHelper.GetAbsolutePathToModFolder(typeof(RuntimeEvidenceService).Assembly);
+        var reportDirectory = SafePath(modPath, "reports");
+
+        var reportFiles = ExpectedReports
+            .Select(fileName =>
+            {
+                var path = Path.Combine(reportDirectory, fileName);
+                var exists = File.Exists(path);
+                return new RuntimeReportEvidence
+                {
+                    FileName = fileName,
+                    Exists = exists,
+                    SizeBytes = exists ? new FileInfo(path).Length : 0,
+                };
+            })
+            .ToList();
+
+        var databaseUnchanged = string.Equals(before.Sha256, after.Sha256, StringComparison.Ordinal);
+        var allReportsPresent = reportFiles.All(report => report.Exists && report.SizeBytes > 0);
+
+        var manifest = new RuntimeEvidenceManifest
+        {
+            SchemaVersion = 1,
+            GeneratedAtUtc = DateTimeOffset.UtcNow,
+            Mode = config.Mode.ToString(),
+            Preset = config.Preset.ToString(),
+            ExpectedReportCount = ExpectedReports.Length,
+            PresentReportCount = reportFiles.Count(report => report.Exists && report.SizeBytes > 0),
+            AllExpectedReportsPresent = allReportsPresent,
+            DatabaseFingerprintBefore = before,
+            DatabaseFingerprintAfter = after,
+            DatabaseUnchangedAcrossPipeline = databaseUnchanged,
+            ApplyMutations = false,
+            DeclaredMutationCount = 0,
+            RuntimeGatePassed = databaseUnchanged && allReportsPresent,
+            Note = "Runtime evidence for the current read-only MVP. The fingerprint covers item identities, handbook prices, quest rewards and trader assort structures before/after the Economy Admiral pipeline.",
+            Reports = reportFiles,
+        };
+
+        var manifestPath = SafePath(modPath, "reports/economy-admiral-runtime-evidence.json");
+        Directory.CreateDirectory(Path.GetDirectoryName(manifestPath)!);
+        await File.WriteAllTextAsync(manifestPath, JsonSerializer.Serialize(manifest, JsonOptions), cancellationToken);
+
+        if (!databaseUnchanged)
+        {
+            logger.Error($"[Economy Admiral] runtime evidence FAILED: final DB fingerprint changed across the read-only pipeline; manifest={manifestPath}");
+            return;
+        }
+
+        if (!allReportsPresent)
+        {
+            logger.Warning($"[Economy Admiral] runtime evidence incomplete: {manifest.PresentReportCount}/{manifest.ExpectedReportCount} expected reports present; manifest={manifestPath}");
+            return;
+        }
+
+        logger.Info($"[Economy Admiral] runtime evidence PASS: DB unchanged and {manifest.PresentReportCount}/{manifest.ExpectedReportCount} reports present; manifest={manifestPath}");
+    }
+
+    private RuntimeFingerprint CaptureFingerprint()
+    {
+        using var incremental = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+        var lineCount = 0;
+
+        void Add(string value)
+        {
+            incremental.AppendData(Encoding.UTF8.GetBytes(value));
+            incremental.AppendData([0x0A]);
+            lineCount++;
+        }
+
+        foreach (var item in templates.Items.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
+        {
+            Add($"ITEM|{item.Key}");
+        }
+
+        foreach (var handbook in templates.Handbook.Items.OrderBy(item => item.Id.ToString(), StringComparer.Ordinal))
+        {
+            Add($"HANDBOOK|{handbook.Id}|{handbook.Price}");
+        }
+
+        foreach (var quest in templates.Quests.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
+        {
+            Add($"QUEST|{quest.Key}|{JsonSerializer.Serialize(quest.Value.Rewards)}");
+        }
+
+        foreach (var trader in traders.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
+        {
+            var traderId = trader.Key.ToString();
+            foreach (var item in trader.Value.Assort.Items.OrderBy(item => item.Id.ToString(), StringComparer.Ordinal))
+            {
+                Add($"ASSORT_ITEM|{traderId}|{item.Id}|{item.Template}|{item.ParentId}");
+            }
+
+            foreach (var barter in trader.Value.Assort.BarterScheme.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
+            {
+                Add($"ASSORT_BARTER|{traderId}|{barter.Key}|{JsonSerializer.Serialize(barter.Value)}");
+            }
+
+            foreach (var loyalty in trader.Value.Assort.LoyalLevelItems.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
+            {
+                Add($"ASSORT_LOYALTY|{traderId}|{loyalty.Key}|{loyalty.Value}");
+            }
+        }
+
+        return new RuntimeFingerprint
+        {
+            Sha256 = Convert.ToHexString(incremental.GetHashAndReset()).ToLowerInvariant(),
+            CanonicalLineCount = lineCount,
+            TemplateItemCount = templates.Items.Count,
+            HandbookItemCount = templates.Handbook.Items.Count,
+            QuestCount = templates.Quests.Count,
+            TraderCount = traders.Count,
+            TraderAssortItemCount = traders.Values.Sum(trader => trader.Assort.Items.Count),
+        };
+    }
+
+    private static string SafePath(string modPath, string relativePath)
+    {
+        var path = Path.GetFullPath(Path.Combine(modPath, relativePath));
+        var root = Path.GetFullPath(modPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        if (!path.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException("Economy Admiral runtime evidence path must stay inside the mod directory.");
+        }
+
+        return path;
+    }
+}
+
+public sealed record RuntimeEvidenceManifest
+{
+    public required int SchemaVersion { get; init; }
+    public required DateTimeOffset GeneratedAtUtc { get; init; }
+    public required string Mode { get; init; }
+    public required string Preset { get; init; }
+    public required int ExpectedReportCount { get; init; }
+    public required int PresentReportCount { get; init; }
+    public required bool AllExpectedReportsPresent { get; init; }
+    public required RuntimeFingerprint DatabaseFingerprintBefore { get; init; }
+    public required RuntimeFingerprint DatabaseFingerprintAfter { get; init; }
+    public required bool DatabaseUnchangedAcrossPipeline { get; init; }
+    public required bool ApplyMutations { get; init; }
+    public required int DeclaredMutationCount { get; init; }
+    public required bool RuntimeGatePassed { get; init; }
+    public required string Note { get; init; }
+    public required List<RuntimeReportEvidence> Reports { get; init; }
+}
+
+public sealed record RuntimeFingerprint
+{
+    public required string Sha256 { get; init; }
+    public required int CanonicalLineCount { get; init; }
+    public required int TemplateItemCount { get; init; }
+    public required int HandbookItemCount { get; init; }
+    public required int QuestCount { get; init; }
+    public required int TraderCount { get; init; }
+    public required int TraderAssortItemCount { get; init; }
+}
+
+public sealed record RuntimeReportEvidence
+{
+    public required string FileName { get; init; }
+    public required bool Exists { get; init; }
+    public required long SizeBytes { get; init; }
+}
