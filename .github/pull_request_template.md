@@ -17,6 +17,7 @@
 - [ ] CI annotations/warnings were reviewed and are fixed, or explicitly classified as non-blocking/follow-up debt.
 - [ ] Runtime/user validation is complete, or the remaining runtime gate is explicitly documented.
 - [ ] Existing logs/results were inspected before triggering reruns.
+- [ ] If this PR ports or uses an old reference/mod/branch, baseline viability was checked and documented before implementation.
 - [ ] Any failure was diagnosed at the first failed boundary before rerunning.
 - [ ] No unnecessary repository-wide/full-suite validation was used.
 - [ ] No unrelated module behavior was changed.
