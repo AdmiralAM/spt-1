@@ -65,8 +65,31 @@ namespace SPTBeltArmbandInventory
                 PropertyInfo property = slotType.GetProperty("MergeContainerWithChildren", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 MethodInfo getter = property == null ? null : property.GetGetMethod(true);
                 FieldInfo backing = slotType.GetField("<MergeContainerWithChildren>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
-                if (getter == null || backing == null || !backing.FieldType.IsEnum || !Enum.GetNames(backing.FieldType).Contains("InheritFromItem"))
-                    return Fail("SPT 4.1 Slot.MergeContainerWithChildren shape changed; ArmBand merge compatibility is disabled.");
+
+                bool getterFound = getter != null;
+                bool backingFound = backing != null;
+                bool backingIsEnum = backingFound && backing.FieldType.IsEnum;
+                bool inheritFromItemFound = backingIsEnum && Enum.GetNames(backing.FieldType).Contains("InheritFromItem");
+
+                LogShapeCondition(1, getterFound,
+                    getterFound
+                        ? "MergeContainerWithChildren getter found: " + getter
+                        : "MergeContainerWithChildren property/getter not found.");
+                LogShapeCondition(2, backingFound,
+                    backingFound
+                        ? "backing field found: " + backing.FieldType.FullName
+                        : "<MergeContainerWithChildren>k__BackingField not found.");
+                LogShapeCondition(3, backingIsEnum,
+                    backingFound
+                        ? "backing field IsEnum=" + backing.FieldType.IsEnum + ", type=" + backing.FieldType.FullName
+                        : "cannot be true because backing field is missing.");
+                LogShapeCondition(4, inheritFromItemFound,
+                    backingIsEnum
+                        ? "enum values=[" + string.Join(",", Enum.GetNames(backing.FieldType)) + "]"
+                        : "cannot be true because backing field is missing or is not an enum.");
+
+                if (!getterFound || !backingFound || !backingIsEnum || !inheritFromItemFound)
+                    return Fail("SPT 4.1 Slot.MergeContainerWithChildren shape diagnostics complete; one or more required conditions failed, so ArmBand merge compatibility remains safely disabled.");
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
@@ -85,6 +108,19 @@ namespace SPTBeltArmbandInventory
             {
                 Dispose();
                 return Fail("ArmBand merge compatibility installation failed safely: " + exception.Message);
+            }
+        }
+
+        void LogShapeCondition(int condition, bool passed, string detail)
+        {
+            string message = "B&A&HB MERGE DIAG " + condition + "/4 " + (passed ? "PASS" : "FAIL") + ": " + detail;
+            if (passed)
+            {
+                if (logInfo != null) logInfo(message);
+            }
+            else
+            {
+                if (logWarning != null) logWarning(message);
             }
         }
 
