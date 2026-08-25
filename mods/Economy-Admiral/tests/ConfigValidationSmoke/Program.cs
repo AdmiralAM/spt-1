@@ -1,0 +1,91 @@
+using SPTEconomy;
+
+static void MustPass(string name, EconomyConfig config)
+{
+    try
+    {
+        EconomyConfigValidator.Validate(config);
+        Console.WriteLine($"PASS {name}");
+    }
+    catch (Exception exception)
+    {
+        throw new InvalidOperationException($"Expected config '{name}' to pass but it failed: {exception.Message}", exception);
+    }
+}
+
+static void MustFail(string name, EconomyConfig config)
+{
+    try
+    {
+        EconomyConfigValidator.Validate(config);
+    }
+    catch (InvalidOperationException)
+    {
+        Console.WriteLine($"PASS {name}");
+        return;
+    }
+
+    throw new InvalidOperationException($"Expected config '{name}' to fail validation.");
+}
+
+MustPass("defaults", new EconomyConfig());
+MustPass("supported exceptional override", new EconomyConfig
+{
+    ManualOverrides = new Dictionary<string, ManualItemOverride>(StringComparer.Ordinal)
+    {
+        ["fixture-template"] = new() { Rarity = "Exceptional" },
+    },
+});
+
+MustFail("empty report path", new EconomyConfig { ReportRelativePath = " " });
+MustFail("rooted report path", new EconomyConfig { ReportRelativePath = Path.GetFullPath("outside.json") });
+MustFail("parent traversal slash", new EconomyConfig { ReportRelativePath = "reports/../outside.json" });
+MustFail("parent traversal backslash", new EconomyConfig { ReportRelativePath = "reports\\..\\outside.json" });
+MustFail("zero rare threshold", new EconomyConfig
+{
+    Rarity = new() { CommonMinSources = 8, UncommonMinSources = 4, RareMinSources = 0 },
+});
+MustFail("unordered rarity thresholds", new EconomyConfig
+{
+    Rarity = new() { CommonMinSources = 4, UncommonMinSources = 4, RareMinSources = 2 },
+});
+MustFail("unsupported manual rarity", new EconomyConfig
+{
+    ManualOverrides = new Dictionary<string, ManualItemOverride>(StringComparer.Ordinal)
+    {
+        ["fixture-template"] = new() { Rarity = "VeryRare" },
+    },
+});
+MustFail("empty manual override id", new EconomyConfig
+{
+    ManualOverrides = new Dictionary<string, ManualItemOverride>(StringComparer.Ordinal)
+    {
+        [""] = new() { Rarity = "Rare" },
+    },
+});
+MustFail("zero warning multiple", new EconomyConfig
+{
+    CustomAuditPolicy = new() { QuestRewardVsVanillaMedianWarnMultiple = 0 },
+});
+MustFail("negative warning multiple", new EconomyConfig
+{
+    CustomAuditPolicy = new() { HighXpLowDepthWarnMultiple = -1 },
+});
+MustFail("nan policy value", new EconomyConfig
+{
+    CustomAuditPolicy = new() { RestartableHighXpWarnMultiple = double.NaN },
+});
+MustFail("positive infinity policy value", new EconomyConfig
+{
+    CustomAuditPolicy = new() { LowDepthMaxRelativeMultiple = double.PositiveInfinity },
+});
+MustFail("negative structural weight", new EconomyConfig
+{
+    CustomAuditPolicy = new() { ObjectiveConditionWeight = -0.01 },
+});
+MustFail("zero duplicate trader threshold", new EconomyConfig
+{
+    CustomAuditPolicy = new() { DuplicateTraderSourcesWarnCount = 0 },
+});
+
+Console.WriteLine("Economy Admiral config validation smoke PASS");
