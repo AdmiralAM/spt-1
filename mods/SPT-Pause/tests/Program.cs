@@ -9,6 +9,7 @@ static class Program
     {
         StateMachineIsTransactional();
         DisabledSettingNeverTrapsAnActivePause();
+        PausedInputIsSuppressedUntilToggle();
         NamedTimerAnchorsShiftExactlyOnce();
         TimerPanelDateFieldShifts();
         TimeOfDayRealtimeAnchorShifts();
@@ -22,6 +23,13 @@ static class Program
         Expect(PauseInputPolicy.AcceptToggle(true, true, false), "enabled setting allows a new pause");
         Expect(PauseInputPolicy.AcceptToggle(true, false, true), "disabled setting still allows resume");
         Expect(PauseInputPolicy.AcceptToggle(true, true, true), "enabled setting allows resume");
+    }
+
+    static void PausedInputIsSuppressedUntilToggle()
+    {
+        Expect(!PauseInputPolicy.SuppressGameplayInput(false, false), "gameplay input is untouched while running");
+        Expect(PauseInputPolicy.SuppressGameplayInput(true, false), "gameplay input is suppressed while paused");
+        Expect(!PauseInputPolicy.SuppressGameplayInput(true, true), "pause toggle is allowed through to resume");
     }
 
     static void StateMachineIsTransactional()
