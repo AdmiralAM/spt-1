@@ -13,6 +13,7 @@ namespace SPTBeltArmbandInventory
         {
             internal object Panel;
             internal Array OriginalSlots;
+            internal Array ProjectedSlots;
             internal bool SlotsChanged;
             internal bool Completed;
         }
@@ -63,6 +64,7 @@ namespace SPTBeltArmbandInventory
                 {
                     Panel = panel,
                     OriginalSlots = original,
+                    ProjectedSlots = null,
                     SlotsChanged = false,
                     Completed = false
                 };
@@ -77,6 +79,7 @@ namespace SPTBeltArmbandInventory
                     }
 
                     EquipmentSlotsField.SetValue(null, projected);
+                    state.ProjectedSlots = projected;
                     state.SlotsChanged = true;
                 }
 
@@ -164,7 +167,13 @@ namespace SPTBeltArmbandInventory
             try
             {
                 if (state.SlotsChanged && EquipmentSlotsField != null && state.OriginalSlots != null)
-                    EquipmentSlotsField.SetValue(null, state.OriginalSlots);
+                {
+                    Array current = EquipmentSlotsField.GetValue(null) as Array;
+                    if (ReferenceEquals(current, state.ProjectedSlots))
+                        EquipmentSlotsField.SetValue(null, state.OriginalSlots);
+                    else
+                        LogWarning?.Invoke("B&A&HB UI: ContainersPanel slot sequence changed externally; leaving the newer value untouched.");
+                }
             }
             catch (Exception exception)
             {
