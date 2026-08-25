@@ -21,6 +21,7 @@ Implemented now:
 - typed SPT 4.1 reward-utility inventory for XP, trader standing, trader unlocks, assortment unlocks, and production-scheme unlocks;
 - separate vanilla/restartable utility distributions;
 - per-dimension vanilla-relative utility multiples without arbitrary ruble conversion or hidden composite weights;
+- explicit quest prerequisite graph with direct prerequisite edges, cycle detection, maximum prerequisite depth, and vanilla depth benchmarks;
 - trader-source saturation findings;
 - functional `Easy / Normal / Hard / Custom` audit policies;
 - `Off / Audit / Enforce` mode contract;
@@ -113,6 +114,24 @@ Schema 2 additionally records per-quest dimensionless ratios such as `XpVsVanill
 
 **No unified utility score is applied yet.** These ratios are kept separate by dimension. XP, standing, and unlocks are deliberately not converted into rubles, and no cross-dimension weighting is hidden in the audit. A future composite policy must be explicit, configurable, and justified against these measured distributions.
 
+## Quest prerequisite graph
+
+Economy Admiral builds a third deterministic report from explicit `AvailableForStart` quest prerequisites:
+
+`reports/economy-admiral-progression-graph.json`
+
+It records, per quest:
+
+- direct prerequisite quest IDs;
+- direct prerequisite count;
+- maximum prerequisite-chain depth;
+- whether the quest participates in a detected prerequisite cycle;
+- vanilla-trader and restartable classification.
+
+Schema 2 adds separate vanilla and vanilla-restartable depth benchmarks with sample count, median, P90, and maximum observed depth. Cycle members are excluded from those depth distributions.
+
+`DepthAffectsRewardAllowance` is explicitly **false**. Prerequisite depth is currently an observed progression dimension only; Economy Admiral does not yet grant a larger reward budget merely because a quest sits deeper in a chain. Any future weight must be justified against the measured vanilla distribution first.
+
 ## Main report
 
 Default output:
@@ -142,16 +161,16 @@ The schema-3 report records:
 - trader-source saturation findings;
 - exact policy thresholds and normalization model used for the report.
 
-Both report paths are constrained to remain inside the mod directory.
+All report paths are constrained to remain inside the mod directory.
 
 ## Current limitations
 
 The current budget still does not fully price:
 
 - cross-dimension XP/standing/unlock utility versus item value;
+- prerequisite depth as a reward-budget dimension;
 - FIR/progression utility;
 - actual duration or combat risk;
-- prerequisite-chain depth;
 - repeatable replacement rate;
 - flea scarcity or world-loot rarity.
 
@@ -167,8 +186,9 @@ The architecture keeps acquisition scanning, benchmarking, findings, presets, an
 
 MVP remainder:
 
+- surface prerequisite depth beside reward metrics without changing reward allowance;
 - design an explicit configurable composite utility policy from the measured per-dimension ratios;
-- prerequisite-depth and structured risk/time signals where reliable;
+- add structured risk/time signals only where the final DB exposes them reliably;
 - broader acquisition/value weighting;
 - explicit enforcement rules and mutation report;
 - deterministic enforcement tests before `Enforce` can become active.
