@@ -38,7 +38,8 @@ jobs:
               root / 'server' / 'EconomyConfig.cs', root / 'server' / 'EconomyMod.cs',
               root / 'server' / 'EconomyAuditService.cs', root / 'server' / 'RewardUtilityAuditService.cs',
               root / 'server' / 'QuestProgressionGraphService.cs', root / 'server' / 'QuestConstraintAuditService.cs',
-              root / 'server' / 'QuestAnalysisService.cs', root / 'server' / 'EnforcementPlanService.cs',
+              root / 'server' / 'QuestAnalysisService.cs', root / 'server' / 'CompositePolicyEvaluationService.cs',
+              root / 'server' / 'EnforcementPlanService.cs',
           ]
           missing = [str(path) for path in required if not path.is_file()]
           if missing:
@@ -67,7 +68,7 @@ jobs:
           source = (root / 'server' / 'EconomyMod.cs').read_text(encoding='utf-8')
           assert 'OnLoadOrder.PostLoad + 1000' in source
           assert 'namespace EconomyAdmiral;' in source
-          for service in ['RewardUtilityAuditService', 'QuestProgressionGraphService', 'QuestConstraintAuditService', 'QuestAnalysisService', 'EnforcementPlanService']:
+          for service in ['RewardUtilityAuditService', 'QuestProgressionGraphService', 'QuestConstraintAuditService', 'QuestAnalysisService', 'CompositePolicyEvaluationService', 'EnforcementPlanService']:
               assert service in source, service
 
           metadata = (root / 'server' / 'ModMetadata.cs').read_text(encoding='utf-8')
@@ -125,9 +126,18 @@ jobs:
           ]:
               assert invariant in analysis, invariant
 
+          composite = (root / 'server' / 'CompositePolicyEvaluationService.cs').read_text(encoding='utf-8')
+          for invariant in [
+              'SelectedCandidate = null', 'AffectsRewardAllowance = false', 'AffectsEnforcement = false',
+              'RewardPeak', 'RewardMean', 'StructureAdjustedPeak',
+              'MedianRewardPeak', 'P90StructureAdjustedPeak',
+              'economy-admiral-composite-candidates.json', 'using Path = System.IO.Path;',
+          ]:
+              assert invariant in composite, invariant
+
           plan = (root / 'server' / 'EnforcementPlanService.cs').read_text(encoding='utf-8')
           for invariant in [
-              'ApplyMutations = false', 'MutationCount = 0', 'AutomaticMutationAllowed = false',
+              'GetSnapshot()', 'ApplyMutations = false', 'MutationCount = 0', 'AutomaticMutationAllowed = false',
               'ProposedMutation = null', 'EnforceRequested', 'ReviewItemRewardBudget',
               'ReviewXpRewardBudget', 'ReviewStandingRewardBudget', 'ReviewPrerequisiteGraph',
               'economy-admiral-enforcement-plan.json', 'using Path = System.IO.Path;',
