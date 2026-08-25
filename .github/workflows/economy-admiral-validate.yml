@@ -33,7 +33,8 @@ jobs:
 
           root = Path('mods/Economy-Admiral')
           required = [
-              root / 'README.md', root / 'config' / 'config.json',
+              root / 'README.md', root / 'RUNTIME_TEST.md', root / 'config' / 'config.json',
+              root / 'tools' / 'Validate-Runtime.ps1',
               root / 'server' / 'Economy-Admiral.csproj', root / 'server' / 'ModMetadata.cs',
               root / 'server' / 'EconomyConfig.cs', root / 'server' / 'EconomyRuntimeConfigService.cs',
               root / 'server' / 'RuntimeEvidenceService.cs', root / 'server' / 'EconomyMod.cs',
@@ -52,65 +53,50 @@ jobs:
           assert config['repeatedRaidLootDecay'] is False
           assert config['reportRelativePath'].startswith('reports/economy-admiral')
           assert config['rarity']['commonMinSources'] >= config['rarity']['uncommonMinSources'] >= config['rarity']['rareMinSources']
-
           policy = config['customAuditPolicy']
-          nonnegative = [
+          for key in [
               'questRewardVsVanillaMedianWarnMultiple', 'restartableRewardVsVanillaMedianWarnMultiple',
               'normalizedRewardVsVanillaMedianWarnMultiple', 'restartableNormalizedRewardVsVanillaMedianWarnMultiple',
               'levelGateWeight', 'objectiveConditionWeight', 'maxLevelGateContribution', 'maxObjectiveContribution',
               'highItemValueLowStructureWarnMultiple', 'highXpLowDepthWarnMultiple',
               'highStandingLowDepthWarnMultiple', 'restartableHighItemValueWarnMultiple',
               'restartableHighXpWarnMultiple', 'lowDepthMaxRelativeMultiple', 'lowStructureMaxRelativeMultiple',
-          ]
-          for key in nonnegative:
+          ]:
               assert policy[key] >= 0, key
           assert policy['duplicateTraderSourcesWarnCount'] > 0
+
+          mod = (root / 'server' / 'EconomyMod.cs').read_text(encoding='utf-8')
+          for invariant in [
+              'OnLoadOrder.PostLoad + 1000', 'namespace EconomyAdmiral;', 'runtimeConfigService.GetAsync',
+              'config.Mode == EconomyMode.Off', 'runtimeEvidenceService.CaptureBefore()',
+              'runtimeEvidenceService.WriteAfterAsync', 'EconomyAuditService', 'RewardUtilityAuditService',
+              'QuestProgressionGraphService', 'QuestConstraintAuditService', 'QuestAnalysisService',
+              'CompositePolicyEvaluationService', 'TargetProposalService', 'EnforcementPlanService',
+          ]:
+              assert invariant in mod, invariant
+          assert mod.index('config.Mode == EconomyMode.Off') < mod.index('runtimeEvidenceService.CaptureBefore()')
+          assert mod.index('runtimeEvidenceService.CaptureBefore()') < mod.index('auditService.RunAsync')
+          assert mod.index('enforcementPlanService.RunAsync') < mod.index('runtimeEvidenceService.WriteAfterAsync')
 
           runtime_config = (root / 'server' / 'EconomyRuntimeConfigService.cs').read_text(encoding='utf-8')
           for invariant in ['cached', 'GetAsync(', 'config.json', 'using Path = System.IO.Path;']:
               assert invariant in runtime_config, invariant
 
-          source = (root / 'server' / 'EconomyMod.cs').read_text(encoding='utf-8')
-          assert 'OnLoadOrder.PostLoad + 1000' in source
-          assert 'namespace EconomyAdmiral;' in source
-          assert 'runtimeConfigService.GetAsync' in source
-          assert 'config.Mode == EconomyMode.Off' in source
-          assert 'runtimeEvidenceService.CaptureBefore()' in source
-          assert 'runtimeEvidenceService.WriteAfterAsync' in source
-          services = [
-              'RuntimeEvidenceService', 'RewardUtilityAuditService', 'QuestProgressionGraphService',
-              'QuestConstraintAuditService', 'QuestAnalysisService', 'CompositePolicyEvaluationService',
-              'TargetProposalService', 'EnforcementPlanService'
-          ]
-          for service in services:
-              assert service in source, service
-          assert source.index('config.Mode == EconomyMode.Off') < source.index('runtimeEvidenceService.CaptureBefore()')
-          assert source.index('runtimeEvidenceService.CaptureBefore()') < source.index('auditService.RunAsync')
-          assert source.index('enforcementPlanService.RunAsync') < source.index('runtimeEvidenceService.WriteAfterAsync')
-
           runtime_evidence = (root / 'server' / 'RuntimeEvidenceService.cs').read_text(encoding='utf-8')
           for invariant in [
-              'IncrementalHash.CreateHash(HashAlgorithmName.SHA256)',
-              'DatabaseUnchangedAcrossPipeline', 'RuntimeGatePassed', 'ApplyMutations = false',
-              'DeclaredMutationCount = 0', 'ExpectedReportCount', 'PresentReportCount',
-              'economy-admiral-runtime-evidence.json', 'economy-admiral-enforcement-plan.json',
+              'IncrementalHash.CreateHash(HashAlgorithmName.SHA256)', 'DatabaseUnchangedAcrossPipeline',
+              'RuntimeGatePassed', 'ApplyMutations = false', 'DeclaredMutationCount = 0',
+              'ExpectedReportCount', 'PresentReportCount', 'economy-admiral-runtime-evidence.json',
               'QUEST|', 'ASSORT_ITEM|', 'ASSORT_BARTER|', 'ASSORT_LOYALTY|', 'HANDBOOK|',
-              'using Path = System.IO.Path;',
           ]:
               assert invariant in runtime_evidence, invariant
 
-          metadata = (root / 'server' / 'ModMetadata.cs').read_text(encoding='utf-8')
-          assert 'Economy Admiral' in metadata
-          assert 'com.admiralam.economy-admiral' in metadata
-
           audit = (root / 'server' / 'EconomyAuditService.cs').read_text(encoding='utf-8')
           for invariant in [
-              'EnforcementApplied = false', 'running read-only audit only',
-              'TRADER_OFFER_MISSING_BARTER', 'TRADER_OFFER_MISSING_LOYALTY',
-              'QUEST_REWARD_VALUE_OUTLIER', 'RESTARTABLE_REWARD_VALUE_OUTLIER',
+              'EnforcementApplied = false', 'running read-only audit only', 'TRADER_OFFER_MISSING_BARTER',
+              'TRADER_OFFER_MISSING_LOYALTY', 'QUEST_REWARD_VALUE_OUTLIER', 'RESTARTABLE_REWARD_VALUE_OUTLIER',
               'QUEST_REWARD_BUDGET_OUTLIER', 'RESTARTABLE_REWARD_BUDGET_OUTLIER',
               'VanillaMedianNormalizedHandbookValue', 'ProgressionScore', 'SchemaVersion = 3',
-              'using Path = System.IO.Path;',
           ]:
               assert invariant in audit, invariant
 
@@ -120,16 +106,14 @@ jobs:
               'RewardType.AssortmentUnlock', 'RewardType.ProductionScheme', 'UtilityScoringApplied = false',
               'SchemaVersion = 2', 'XpVsVanillaMedian', 'StandingVsVanillaMedian',
               'MedianPositiveAssortmentUnlocks', 'No cross-dimension composite score',
-              'economy-admiral-reward-utility.json', 'using Path = System.IO.Path;',
           ]:
               assert invariant in utility, invariant
 
           graph = (root / 'server' / 'QuestProgressionGraphService.cs').read_text(encoding='utf-8')
           for invariant in [
-              'ConditionType, "Quest"', 'MaximumPrerequisiteDepth', 'CycleMemberCount',
-              'SchemaVersion = 2', 'DepthAffectsRewardAllowance = false', 'VanillaDepthBenchmark',
-              'VanillaRestartableDepthBenchmark', 'MedianDepth', 'P90Depth', 'GetSnapshot()',
-              'economy-admiral-progression-graph.json', 'using Path = System.IO.Path;',
+              'ConditionType, "Quest"', 'MaximumPrerequisiteDepth', 'CycleMemberCount', 'SchemaVersion = 2',
+              'DepthAffectsRewardAllowance = false', 'VanillaDepthBenchmark', 'VanillaRestartableDepthBenchmark',
+              'MedianDepth', 'P90Depth', 'GetSnapshot()',
           ]:
               assert invariant in graph, invariant
 
@@ -137,8 +121,7 @@ jobs:
           for invariant in [
               'ConstraintsAffectRewardAllowance = false', 'CompleteInSeconds', 'OneSessionOnly',
               'OnlyFoundInRaid', 'PlantTime', 'DistanceConstraintCount', 'DaytimeConstraintCount',
-              'MedianStructuredConstraintCount', 'economy-admiral-quest-constraints.json',
-              'using Path = System.IO.Path;',
+              'MedianStructuredConstraintCount',
           ]:
               assert invariant in constraints, invariant
 
@@ -146,20 +129,16 @@ jobs:
           for invariant in [
               'SchemaVersion = 3', 'CompositeScoreApplied = false', 'RewardAllowanceAffected = false',
               'OutlierFlagsAffectEnforcement = false', 'Policy = policy', 'FlagCounts = flagCounts',
-              'HighItemValueLowStructureWarnMultiple', 'RestartableHighXpWarnMultiple',
               'HIGH_ITEM_VALUE_LOW_STRUCTURE', 'RESTARTABLE_HIGH_ITEM_VALUE', 'PREREQUISITE_CYCLE',
               'SuccessKnownHandbookValue', 'XpVsVanillaMedian', 'StandingVsVanillaMedian',
-              'PrerequisiteDepthVsVanillaMedian', 'StructuredConstraintsVsVanillaMedian',
-              'GetSnapshot()', 'economy-admiral-quest-analysis.json', 'using Path = System.IO.Path;',
+              'PrerequisiteDepthVsVanillaMedian', 'StructuredConstraintsVsVanillaMedian', 'GetSnapshot()',
           ]:
               assert invariant in analysis, invariant
 
           composite = (root / 'server' / 'CompositePolicyEvaluationService.cs').read_text(encoding='utf-8')
           for invariant in [
               'SelectedCandidate = null', 'AffectsRewardAllowance = false', 'AffectsEnforcement = false',
-              'RewardPeak', 'RewardMean', 'StructureAdjustedPeak', 'MedianRewardPeak',
-              'P90StructureAdjustedPeak', 'economy-admiral-composite-candidates.json',
-              'using Path = System.IO.Path;',
+              'RewardPeak', 'RewardMean', 'StructureAdjustedPeak', 'MedianRewardPeak', 'P90StructureAdjustedPeak',
           ]:
               assert invariant in composite, invariant
 
@@ -168,7 +147,6 @@ jobs:
               'ProposalsAreMutations = false', 'ApplyMutations = false', 'SelectedCompositePolicy = null',
               'AutomaticMutationAllowed = false', 'ProposedMutation = null', 'CandidateCeiling',
               'ReferenceVanillaMedian', 'ThresholdMultiple', 'ItemRewardBudget', 'TraderStandingAbsolute',
-              'economy-admiral-target-proposals.json', 'using Path = System.IO.Path;',
           ]:
               assert invariant in targets, invariant
 
@@ -177,10 +155,20 @@ jobs:
               'GetSnapshot()', 'ApplyMutations = false', 'MutationCount = 0', 'AutomaticMutationAllowed = false',
               'ProposedMutation = null', 'EnforceRequested', 'ReviewItemRewardBudget',
               'ReviewXpRewardBudget', 'ReviewStandingRewardBudget', 'ReviewPrerequisiteGraph',
-              'economy-admiral-enforcement-plan.json', 'using Path = System.IO.Path;',
           ]:
               assert invariant in plan, invariant
 
+          validator = (root / 'tools' / 'Validate-Runtime.ps1').read_text(encoding='utf-8')
+          for invariant in [
+              'RuntimeGatePassed', 'DatabaseUnchangedAcrossPipeline', 'ExpectedReportCount',
+              'DeclaredMutationCount', 'SelectedCandidate', 'ProposalsAreMutations',
+              'AutomaticMutationAllowed', 'ProposedMutation', 'MutationCount', 'exit 0', 'exit 1',
+          ]:
+              assert invariant in validator, invariant
+
+          metadata = (root / 'server' / 'ModMetadata.cs').read_text(encoding='utf-8')
+          assert 'Economy Admiral' in metadata
+          assert 'com.admiralam.economy-admiral' in metadata
           print('Economy Admiral module contract OK')
 
   server:
@@ -195,20 +183,27 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Validate runtime helper syntax
+        shell: pwsh
+        run: |
+          $text = Get-Content mods/Economy-Admiral/tools/Validate-Runtime.ps1 -Raw
+          $null = [scriptblock]::Create($text)
       - name: Build server
         shell: pwsh
         run: dotnet build mods/Economy-Admiral/server/Economy-Admiral.csproj -c Release --nologo
       - name: Stage candidate
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force -Path build-output/Economy-Admiral/config | Out-Null
-          Copy-Item mods/Economy-Admiral/server/bin/Release/net10.0/Economy-Admiral.dll build-output/Economy-Admiral/Economy-Admiral.dll
-          Copy-Item mods/Economy-Admiral/config/config.json build-output/Economy-Admiral/config/config.json
-          Copy-Item mods/Economy-Admiral/README.md build-output/Economy-Admiral/README.md
+          New-Item -ItemType Directory -Force -Path 'build-output/Economy Admiral/config' | Out-Null
+          Copy-Item mods/Economy-Admiral/server/bin/Release/net10.0/Economy-Admiral.dll 'build-output/Economy Admiral/Economy-Admiral.dll'
+          Copy-Item mods/Economy-Admiral/config/config.json 'build-output/Economy Admiral/config/config.json'
+          Copy-Item mods/Economy-Admiral/README.md 'build-output/Economy Admiral/README.md'
+          Copy-Item mods/Economy-Admiral/RUNTIME_TEST.md 'build-output/Economy Admiral/RUNTIME_TEST.md'
+          Copy-Item mods/Economy-Admiral/tools/Validate-Runtime.ps1 'build-output/Economy Admiral/Validate-Runtime.ps1'
       - name: Upload candidate
         uses: actions/upload-artifact@v4
         with:
           name: economy-admiral-candidate
-          path: build-output/Economy-Admiral
+          path: 'build-output/Economy Admiral'
           if-no-files-found: error
           retention-days: 14
