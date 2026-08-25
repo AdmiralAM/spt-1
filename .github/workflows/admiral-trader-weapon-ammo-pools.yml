@@ -36,7 +36,8 @@ jobs:
           mkdir -p build
           curl --fail --location --retry 3 \
             --output build/spt-items.json \
-            https://raw.githubusercontent.com/sp-tarkov/server-csharp/fe74b07c6361e2c6d1532dc21ba1c3b981d88d93/Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/items.json
+            https://media.githubusercontent.com/media/sp-tarkov/server-csharp/fe74b07c6361e2c6d1532dc21ba1c3b981d88d93/Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/items.json
+          python -m json.tool build/spt-items.json > /dev/null
 
       - name: Resolve weapon and ammo candidate pools
         run: >-
