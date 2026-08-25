@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace EconomyAdmiral;
+namespace SPTEconomy;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum EconomyMode
