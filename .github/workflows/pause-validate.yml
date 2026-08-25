@@ -18,8 +18,10 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
+      - name: Checkout exact test commit
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
@@ -53,7 +55,7 @@ jobs:
       - name: Upload exact-SHA Pause runtime test artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SPT-Pause-test-${{ github.sha }}
+          name: SPT-Pause-test-${{ github.event.pull_request.head.sha || github.sha }}
           path: .artifacts/SPT-Pause/
           if-no-files-found: error
           retention-days: 14
