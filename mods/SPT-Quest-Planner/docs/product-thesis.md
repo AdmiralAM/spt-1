@@ -15,6 +15,22 @@ The neighboring tools are already strong at **information display**:
 
 Quest Planner must therefore not compete on showing more quest information. Its product is **decision compression**: combine global quest topology, current profile state, preparation state and objective overlap into a small number of explainable next-action choices.
 
+## Competitive reality
+
+The concept is not globally unique. External Tarkov companion tools now exist that rank maps, group compatible quests, visualize dependency leverage, or recommend a next quest. Examples observed during research include RaidIQ, QEFT-style quest-tree prioritizers, TarkovQuestie and broader companion sites with quest optimizers.
+
+That means the defensible advantage cannot be "we invented best-next-quest".
+
+The SPT-native advantage is different:
+
+1. **Authoritative live profile state** — no manual checkbox maintenance is required when the server already knows the PMC state.
+2. **Authoritative modded quest graph** — recommendations can use the actual final SPT runtime database, including installed custom traders/quest packs that public live-Tarkov datasets may not know.
+3. **Local/offline operation** — no dependence on an external account, website, live API or current wipe dataset for the core decision.
+4. **Exact SPT preparation state** — the planner can reason against the real local inventory/profile snapshot instead of a manually maintained checklist.
+5. **Runtime-safe interoperability** — the result can later be exposed as a narrow local decision snapshot to other SPT mods without duplicating their UI responsibilities.
+
+If Quest Planner cannot exploit those SPT-native advantages, an external web planner is likely a better product and this mod should be reconsidered.
+
 ## Core user question
 
 > Given what is active or reachable now, what is the highest-value next raid or progression action, why is it better than the alternatives, and what must I prepare first?
@@ -23,9 +39,9 @@ A useful answer must change a decision the player would otherwise have to derive
 
 ## Unique value proposition
 
-The unique unit of value is not a quest, marker, item or objective. It is a **cross-quest decision**.
+The unique unit of value is not a quest, marker, item or objective. It is a **cross-quest decision over the player's actual modded SPT state**.
 
-Quest Planner should be the only layer that deliberately reasons across:
+Quest Planner should be the only local layer that deliberately reasons across:
 
 1. **Concurrency** — multiple quests/objectives that can advance in the same raid.
 2. **Action overlap** — one action that advances multiple quests, not merely several unrelated objectives on one map.
@@ -44,6 +60,8 @@ If the planner can only say:
 - "this map has the most quests";
 
 then the mod has no defensible reason to exist. That is counting, not planning.
+
+Likewise, if its recommendation can be reproduced from a public quest database plus a manually selected active-quest list, the SPT-native implementation is not yet earning its maintenance cost.
 
 ## Recommendation contract
 
@@ -185,9 +203,12 @@ The product model is not accepted until it handles at least these scenarios:
 4. **Repeatable inflation loses** — several repeatables do not beat one meaningful non-repeatable progression path solely by count.
 5. **Unknown semantics reduce confidence** — custom/unknown objectives do not create fabricated synergy.
 6. **Near tie abstains** — candidates with no meaningful proven delta produce no forced recommendation.
+7. **Modded-data advantage** — a custom SPT quest or altered prerequisite chain changes the recommendation without requiring an external dataset update.
 
 ## Product success criterion
 
 Quest Planner is successful when a player can open it for 10–20 seconds and receive a defensible answer to a planning question that would otherwise require mentally joining the Tasks screen, map, inventory requirements and quest prerequisite graph.
+
+The stronger criterion is that the answer remains correct for the player's **actual installed SPT quest ecosystem**, not merely vanilla live Tarkov.
 
 If it cannot do that, it should be reduced or retired rather than expanded.
