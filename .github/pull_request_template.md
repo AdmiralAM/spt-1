@@ -27,11 +27,13 @@
 <!-- Required when asking the user to test an Actions artifact or runtime package. Delete or mark N/A for docs-only/no-runtime PRs. -->
 
 - PR / branch / commit SHA:
-- Artifact or runtime branch:
+- Successful workflow run:
+- Downloadable artifact or deliberate runtime branch:
 - Install layout:
 - Focused checklist:
 - Required returned evidence:
 - Pass/fail decision rule:
+- [ ] I am not asking for runtime testing from CI success alone; the named artifact/package exists for the exact commit above.
 
 ## Repository hygiene
 
