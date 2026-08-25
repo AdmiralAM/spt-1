@@ -31,8 +31,8 @@ jobs:
       - name: Run inventory/graph tests
         run: python -m unittest discover -s mods/SPT-Andrudis-Curated/tests -p 'test_*.py'
 
-      - name: Validate seed rules JSON
-        run: python -m json.tool mods/SPT-Andrudis-Curated/manifests/seed-rules.json > /dev/null
+      - name: Validate campaign manifest JSON
+        run: python -m json.tool mods/SPT-Andrudis-Curated/manifests/campaign-manifest.json > /dev/null
 
       - name: Checkout pinned legacy corpus
         uses: actions/checkout@v4
@@ -46,18 +46,29 @@ jobs:
         run: >-
           python mods/SPT-Andrudis-Curated/tools/build_inventory.py
           legacy-andrudis/db/QuestBundles
-          --rules mods/SPT-Andrudis-Curated/manifests/seed-rules.json
+          --rules mods/SPT-Andrudis-Curated/manifests/campaign-manifest.json
           --output build/andrudis-inventory.json
 
-      - name: Print inventory summary
+      - name: Enforce inventory gate
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           data = json.loads(Path('build/andrudis-inventory.json').read_text(encoding='utf-8'))
-          print(json.dumps(data['summary'], indent=2, ensure_ascii=False))
-          if data['summary']['parseErrorCount'] != 0:
-              raise SystemExit('legacy corpus contains parse errors')
+          summary = data['summary']
+          print(json.dumps(summary, indent=2, ensure_ascii=False))
+          blockers = {
+              'parseErrorCount': summary['parseErrorCount'],
+              'unclassifiedCount': summary['unclassifiedCount'],
+              'duplicateQuestIdCount': summary['duplicateQuestIdCount'],
+              'missingPrerequisiteCount': summary['missingPrerequisiteCount'],
+              'cycleCount': summary['cycleCount'],
+          }
+          failed = {key: value for key, value in blockers.items() if value != 0}
+          if failed:
+              raise SystemExit(f'inventory gate failed: {failed}')
+          if summary['crossBundleEdgeCount'] != 23:
+              raise SystemExit(f"pinned corpus cross-bundle edge count changed: {summary['crossBundleEdgeCount']} != 23")
           PY
 
       - name: Upload transient inventory report
