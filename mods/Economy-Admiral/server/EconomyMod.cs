@@ -11,6 +11,7 @@ public sealed class EconomyMod(
     VanillaBaselineService vanillaBaselineService,
     RuntimeEvidenceService runtimeEvidenceService,
     EconomyAuditService auditService,
+    PristineReportCorrectionService pristineReportCorrectionService,
     TypedQuestItemAccountingService typedQuestItemAccountingService,
     RewardUtilityAuditService rewardUtilityAuditService,
     QuestProgressionGraphService questProgressionGraphService,
@@ -34,10 +35,18 @@ public sealed class EconomyMod(
         runtimeEvidenceService.CaptureBefore();
 
         await auditService.RunAsync(cancellationToken);
+        await pristineReportCorrectionService.CorrectPrimaryMembershipAsync(vanillaBaseline, cancellationToken);
         await typedQuestItemAccountingService.RepairPrimaryAuditReportAsync(cancellationToken);
+        await pristineReportCorrectionService.CorrectPrimaryBenchmarkAsync(vanillaBaseline, cancellationToken);
+
         await rewardUtilityAuditService.RunAsync(cancellationToken);
+        await pristineReportCorrectionService.CorrectRewardUtilityAsync(vanillaBaseline, cancellationToken);
+
         var progressionSnapshot = await questProgressionGraphService.RunAsync(cancellationToken);
+        await pristineReportCorrectionService.CorrectProgressionGraphAsync(vanillaBaseline, cancellationToken);
+
         await questConstraintAuditService.RunAsync(cancellationToken);
+        await pristineReportCorrectionService.CorrectConstraintsAsync(vanillaBaseline, cancellationToken);
 
         var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, cancellationToken);
         questAnalysis = await typedQuestItemAccountingService.ApplyToUnifiedAnalysisAsync(questAnalysis, cancellationToken);
