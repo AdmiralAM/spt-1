@@ -31,10 +31,10 @@ public sealed class EconomyMod(
 
         await auditService.RunAsync(cancellationToken);
         await rewardUtilityAuditService.RunAsync(cancellationToken);
-        await questProgressionGraphService.RunAsync(cancellationToken);
+        var progressionSnapshot = await questProgressionGraphService.RunAsync(cancellationToken);
         await questConstraintAuditService.RunAsync(cancellationToken);
 
-        var questAnalysis = await questAnalysisService.RunAsync(cancellationToken);
+        var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, cancellationToken);
         await compositePolicyEvaluationService.RunAsync(questAnalysis, cancellationToken);
         await targetProposalService.RunAsync(questAnalysis, cancellationToken);
         await enforcementPlanService.RunAsync(questAnalysis, cancellationToken);
