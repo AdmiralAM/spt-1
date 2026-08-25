@@ -11,17 +11,20 @@ Official curated successor workstream for the legacy Andrudis/QuestManiac ecosys
 
 ## Current state
 
-The inventory / quest-graph / campaign-manifest / migration / reward-benchmark foundation is established. Runtime materialization is now in progress on Draft PR #138.
+The inventory / quest-graph / campaign-manifest / migration / reward-benchmark foundation is established. The exact SPT 4.1.3 test-candidate gate is isolated in Draft PR #151 under Issue #146.
 
 The current authored runtime set contains **31 quests**:
 
 - 10 **Access Protocol** quests replacing the legacy key-collection ladder with compact non-FIR capability checks;
 - 21 **Arsenal Protocol** quests across seven independent weapon families, with Qualification → Fieldwork → Munitions progression;
-- six controlled ammunition capability rewards/unlocks; Special Weapons remains sample-only/deferred until exact SPT 4.1.3 item proof.
+- six controlled ammunition capability rewards/unlocks;
+- **Special Weapons** now has one explicit green RSP-30 sample reward and no permanent assort unlock.
 
-The server runtime validates the mixed 10 + 21 quest registry, trader identity, quest IDs and objective shapes before publication. Missing authored locale entries fail over to deterministic QuestName-based runtime text so incomplete localization cannot expose raw locale keys; complete authored EN/RU text remains a polish target before final publication.
+The server runtime validates the mixed 10 + 21 quest registry, trader identity, quest IDs, objective shapes and all referenced runtime item TPLs before publication. Missing authored locale entries fail over to deterministic QuestName-based runtime text so incomplete localization cannot expose raw locale keys; complete authored EN/RU text remains a polish target before final publication.
 
-Live trader registration remains **fail-closed** through `runtime-manifest.json`. No runtime/user test is requested until the package is mechanically complete, module CI is green, and one defined SPT 4.1.3 physical gate has a downloadable exact-head artifact.
+Source registration remains **fail-closed** through `runtime-manifest.json`. The exact-runtime builder is the only supported path that creates an enabled test candidate, and it must compile against the user's real SPT 4.1.3 assemblies. Candidate staging now records source HEAD, clean-tree state, SPT Server.Core version/SHA-256 and built Admiral DLL SHA-256 in `candidate-provenance.json` so live evidence can be tied to the exact CI-tested source head.
+
+All Admiral Trader source/module workflows are expected to be green before physical handoff. Merge remains blocked until one defined SPT 4.1.3 physical runtime gate provides accepted build/start/UI evidence.
 
 The target remains one NPC, one curated campaign, deterministic migration behavior, and reward/unlock data that remains inspectable by Economy Admiral.
 
@@ -29,7 +32,7 @@ Work order:
 
 `source inventory -> quest graph -> manifest -> migration -> trader consolidation -> curated content -> reward normalization -> tests -> runtime`
 
-Tracked by repository Issue #115 and Draft PR #138.
+Tracked by repository Issue #115; the active runtime gate is Issue #146 / Draft PR #151.
 
 ## Design constraints
 
@@ -50,6 +53,7 @@ Tracked by repository Issue #115 and Draft PR #138.
 - [`docs/inventory-findings.md`](docs/inventory-findings.md) records the full-corpus gate results.
 - [`docs/runtime-boundaries.md`](docs/runtime-boundaries.md) records proven and intentionally unproven SPT runtime boundaries.
 - [`docs/migration-contract.md`](docs/migration-contract.md) defines the no-profile-write legacy completion bridge and its safety limits.
+- [`docs/spt413-test-candidate.md`](docs/spt413-test-candidate.md) is the exact SPT 4.1.3 physical-runtime handoff/evidence contract.
 - [`manifests/campaign-manifest.json`](manifests/campaign-manifest.json) is the maintained source of truth for campaign classification and migration policy.
 
 The legacy quest database itself remains external source material and is not copied wholesale into this repository.
@@ -61,6 +65,8 @@ The legacy quest database itself remains external source material and is not cop
 `tools/build_reward_benchmark.py` consumes native-style vanilla quest JSON and builds descriptive reward distributions by level bucket, including XP, standing, item counts and unlock counts. It intentionally does not invent a ruble valuation for arbitrary item rewards; economic valuation remains a separate layer that Economy Admiral can supply.
 
 `tools/build_weapon_ammo_runtime_templates.py` compiles the maintained Arsenal Protocol plan, authored specification, capability selections and frozen runtime weapon-family pools into deterministic native SPT quest templates.
+
+`tools/build_spt413_test_candidate.ps1` validates a clean exact-head checkout, compiles against real SPT 4.1.3 runtime assemblies, stages an enabled test-only package and emits candidate provenance hashes for the physical gate.
 
 The CI uses the official pinned `sp-tarkov/server-csharp` vanilla `quests.json` as the reward benchmark source and independently validates committed runtime materialization against compiler output.
 
@@ -78,6 +84,7 @@ Module-specific CI additionally:
 - validates frozen weapon-family pools and controlled ammo capability selections;
 - builds the .NET 10 server runtime against the nearest published SPTarkov package line;
 - validates the packaged 31-quest mixed runtime layout;
+- validates the exact-runtime candidate/provenance source contract;
 - keeps generated reports only as transient Actions artifacts.
 
-Runtime validation remains deferred until a mechanically complete exact-head SPT 4.1.3 test artifact is available for one defined physical gate.
+Final runtime validation requires the exact-head SPT 4.1.3 physical gate defined in `docs/spt413-test-candidate.md`.
