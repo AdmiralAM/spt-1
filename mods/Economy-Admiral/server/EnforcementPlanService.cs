@@ -8,7 +8,6 @@ namespace SPTEconomy;
 
 [Injectable]
 public sealed class EnforcementPlanService(
-    QuestAnalysisService questAnalysisService,
     ModHelper modHelper,
     ISptLogger<EnforcementPlanService> logger
 )
@@ -19,16 +18,11 @@ public sealed class EnforcementPlanService(
         PropertyNameCaseInsensitive = true,
     };
 
-    public async Task RunAsync(CancellationToken cancellationToken)
+    public async Task RunAsync(QuestAnalysisReport analysis, CancellationToken cancellationToken)
     {
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(EnforcementPlanService).Assembly);
         var config = await LoadConfigAsync(modPath, cancellationToken);
-        if (config.Mode == EconomyMode.Off)
-        {
-            return;
-        }
 
-        var analysis = questAnalysisService.GetSnapshot();
         var candidates = analysis.Quests
             .Where(row => row.ObservationalFlags.Count > 0)
             .OrderBy(row => row.QuestId, StringComparer.Ordinal)
@@ -45,7 +39,7 @@ public sealed class EnforcementPlanService(
             ApplyMutations = false,
             MutationCount = 0,
             CandidateCount = candidates.Count,
-            Note = "Fail-closed planning artifact only. Candidates are derived from the in-memory unified audit snapshot; no target reward values are invented and no final DB records are mutated.",
+            Note = "Fail-closed planning artifact only. Candidates are derived from the explicitly passed unified audit report; no target reward values are invented and no final DB records are mutated.",
             Candidates = candidates,
         };
 
