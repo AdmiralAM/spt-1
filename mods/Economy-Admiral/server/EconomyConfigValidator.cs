@@ -7,7 +7,7 @@ public static class EconomyConfigValidator
         "Common",
         "Uncommon",
         "Rare",
-        "VeryRare",
+        "Exceptional",
     };
 
     public static void Validate(EconomyConfig config)
