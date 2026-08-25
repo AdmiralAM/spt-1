@@ -20,6 +20,7 @@ namespace SPTBeltArmbandInventory.Diagnostics
         private const string TargetTypeName = "EFT.UI.GridWindow";
         private const string TargetObjectName = "Grid Window Template(Clone)";
         private bool dumped;
+        private Type gridWindowType;
         private object harmony;
         private MethodInfo unpatchSelf;
         private static GridWindowDumpPlugin instance;
@@ -29,7 +30,7 @@ namespace SPTBeltArmbandInventory.Diagnostics
             instance = this;
             try
             {
-                Type gridWindowType = FindType(TargetTypeName);
+                gridWindowType = FindType(TargetTypeName);
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
                 if (gridWindowType == null || harmonyType == null || harmonyMethodType == null)
@@ -66,11 +67,55 @@ namespace SPTBeltArmbandInventory.Diagnostics
                     throw new InvalidOperationException("No GridWindow.Show overloads were found");
 
                 Logger.LogInfo("[GRID-DUMP] Armed on " + patched + " GridWindow.Show overload(s). Open the empty Belt window once.");
+                WriteMarker();
             }
             catch (Exception exception)
             {
                 Exception root = Unwrap(exception);
                 Logger.LogError("[GRID-DUMP] INSTALL FAILED: " + root.GetType().FullName + ": " + root.Message);
+            }
+        }
+
+        private void Update()
+        {
+            if (dumped || gridWindowType == null)
+                return;
+
+            try
+            {
+                UnityEngine.Object[] objects = Resources.FindObjectsOfTypeAll(gridWindowType);
+                for (int i = 0; i < objects.Length; i++)
+                {
+                    Component component = objects[i] as Component;
+                    if (component == null || component.gameObject == null
+                        || !string.Equals(component.gameObject.name, TargetObjectName, StringComparison.Ordinal))
+                        continue;
+
+                    WriteDump(component, null, "UNITY_OBJECT_SCAN (Show hook was not reached)");
+                    dumped = true;
+                    break;
+                }
+            }
+            catch (Exception exception)
+            {
+                Logger.LogError("[GRID-DUMP] OBJECT SCAN FAILED: " + exception);
+            }
+        }
+
+        private void WriteMarker()
+        {
+            try
+            {
+                string path = Path.Combine(Paths.GameRootPath, "GridWindow_dump.txt");
+                File.WriteAllText(path,
+                    "B&A&HB GRIDWINDOW DUMP ARMED\r\nUTC=" + DateTime.UtcNow.ToString("O")
+                    + "\r\nSPT_ROOT=" + Paths.GameRootPath + "\r\n",
+                    new UTF8Encoding(false));
+                Logger.LogInfo("[GRID-DUMP] MARKER: " + path);
+            }
+            catch (Exception exception)
+            {
+                Logger.LogError("[GRID-DUMP] MARKER FAILED: " + exception);
             }
         }
 
@@ -473,26 +518,3 @@ namespace SPTBeltArmbandInventory.Diagnostics
             for (int i = 0; i < assemblies.Length; i++)
             {
                 Type type = assemblies[i].GetType(fullName, false);
-                if (type != null)
-                    return type;
-            }
-
-            return null;
-        }
-
-        private sealed class ReferenceComparer : IEqualityComparer<object>
-        {
-            public static readonly ReferenceComparer Instance = new ReferenceComparer();
-
-            public new bool Equals(object left, object right)
-            {
-                return ReferenceEquals(left, right);
-            }
-
-            public int GetHashCode(object value)
-            {
-                return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(value);
-            }
-        }
-    }
-}
