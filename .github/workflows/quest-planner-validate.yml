@@ -16,12 +16,19 @@ on:
       - 'mods/SPT-Quest-Planner/server/**'
       - 'mods/SPT-Quest-Planner/src/**'
       - 'mods/SPT-Quest-Planner/tests/**'
+      - 'mods/SPT-Quest-Planner/README.md'
       - '.github/workflows/quest-planner-validate.yml'
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: quest-planner-validate-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+
+env:
+  QUEST_PLANNER_VERSION: '0.9.4'
 
 jobs:
   tests:
@@ -29,8 +36,10 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
+      - name: Checkout exact candidate
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
@@ -44,8 +53,10 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
+      - name: Checkout exact candidate
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
@@ -54,8 +65,18 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path deps | Out-Null
-          Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
+          $url = 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip'
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            try {
+              Invoke-WebRequest $url -OutFile deps/bepinex.zip
+              break
+            } catch {
+              if ($attempt -eq 3) { throw }
+              Start-Sleep -Seconds 5
+            }
+          }
           Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
+          if (-not (Test-Path deps/BepInEx/core/BepInEx.dll)) { throw 'BepInEx.dll missing after extraction' }
       - name: Build client
         shell: pwsh
         run: dotnet build mods/SPT-Quest-Planner/client/SPT-Quest-Planner.Client.csproj -c Release --nologo
@@ -65,14 +86,17 @@ jobs:
           name: quest-planner-client
           path: mods/SPT-Quest-Planner/client/bin/Release/netstandard2.1/*.dll
           if-no-files-found: error
+          retention-days: 30
 
   server:
     name: Quest Planner server build
     runs-on: windows-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout
+      - name: Checkout exact candidate
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
@@ -86,11 +110,13 @@ jobs:
           name: quest-planner-server
           path: mods/SPT-Quest-Planner/server/bin/Release/net10.0/*.dll
           if-no-files-found: error
+          retention-days: 30
 
   package:
-    name: Quest Planner runtime package
+    name: Quest Planner physical-test package
     needs: [tests, client, server]
     runs-on: windows-latest
+    timeout-minutes: 10
     steps:
       - name: Download client
         uses: actions/download-artifact@v4
@@ -101,13 +127,66 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: quest-planner-server
-          path: package/SPT/user/mods/SPT-Quest-Planner
+          path: package/SPT_Runtime/user/mods/SPT-Quest-Planner
+      - name: Write candidate provenance
+        shell: pwsh
+        run: |
+          $sourceSha = '${{ github.event.pull_request.head.sha || github.sha }}'
+          $prNumber = '${{ github.event.pull_request.number }}'
+          if ([string]::IsNullOrWhiteSpace($prNumber)) { $prNumber = $null }
+          $manifest = [ordered]@{
+            module = 'SPT Quest Planner'
+            version = $env:QUEST_PLANNER_VERSION
+            spt_version = '4.1.x'
+            source_commit = $sourceSha
+            pull_request = $prNumber
+            workflow = 'Quest Planner Validate'
+            workflow_run_id = '${{ github.run_id }}'
+            workflow_run_attempt = '${{ github.run_attempt }}'
+            automated_validation = 'passed'
+            runtime_validation = 'pending'
+            publication_state = 'physical-test-candidate'
+            install_roots = @(
+              'BepInEx/plugins/SPT-Quest-Planner',
+              'SPT_Runtime/user/mods/SPT-Quest-Planner'
+            )
+          }
+          $manifest | ConvertTo-Json -Depth 4 | Set-Content package/runtime-manifest.json -Encoding utf8
+          @(
+            '# SPT Quest Planner physical-test candidate',
+            '',
+            "Version: $env:QUEST_PLANNER_VERSION",
+            "Source commit: $sourceSha",
+            "GitHub Actions run: ${{ github.run_id }}",
+            'Runtime validation: PENDING',
+            '',
+            'Copy the contents of this archive into the SPT root.',
+            'Do not treat this candidate as runtime-accepted until the physical SPT gate passes.'
+          ) | Set-Content package/README.md -Encoding utf8
+      - name: Validate installable package contract
+        shell: pwsh
+        run: |
+          $required = @(
+            'package/runtime-manifest.json',
+            'package/README.md'
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path $path -PathType Leaf)) { throw "Missing physical-test package file: $path" }
+          }
+          $clientDlls = @(Get-ChildItem 'package/BepInEx/plugins/SPT-Quest-Planner' -Filter '*.dll' -File)
+          $serverDlls = @(Get-ChildItem 'package/SPT_Runtime/user/mods/SPT-Quest-Planner' -Filter '*.dll' -File)
+          if ($clientDlls.Count -lt 1) { throw 'Quest Planner client DLL missing from physical-test package' }
+          if ($serverDlls.Count -lt 1) { throw 'Quest Planner server DLL missing from physical-test package' }
+          $manifest = Get-Content package/runtime-manifest.json -Raw | ConvertFrom-Json
+          if ($manifest.version -ne $env:QUEST_PLANNER_VERSION) { throw 'Quest Planner package version mismatch' }
+          if ($manifest.runtime_validation -ne 'pending') { throw 'Physical-test candidate must remain runtime_validation=pending' }
       - name: Show package
         shell: pwsh
         run: Get-ChildItem package -Recurse | Select-Object FullName,Length
-      - name: Upload installable package
+      - name: Upload installable physical-test package
         uses: actions/upload-artifact@v4
         with:
-          name: quest-planner-runtime
+          name: quest-planner-runtime-v${{ env.QUEST_PLANNER_VERSION }}-${{ github.event.pull_request.head.sha || github.sha }}
           path: package/**
           if-no-files-found: error
+          retention-days: 30
