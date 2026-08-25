@@ -46,14 +46,16 @@ public sealed class QuestAnalysisService(
         var vanillaRestartable = BuildBaseline(rawRows.Where(row => row.IsVanillaTraderQuest && row.Restartable).ToList());
         var rows = rawRows
             .Select(row => AddRelativeSignals(row, row.Restartable && vanillaRestartable.QuestSamples > 0 ? vanillaRestartable : vanilla))
+            .Select(AddObservationalFlags)
             .ToList();
 
         var report = new QuestAnalysisReport
         {
-            SchemaVersion = 1,
+            SchemaVersion = 2,
             CompositeScoreApplied = false,
             RewardAllowanceAffected = false,
-            Note = "Unified observational quest view. Reward value, typed utility, prerequisite depth and structured constraints remain separate dimensions; no cross-dimension score or reward multiplier is applied. Sparse dimensions use positive-sample medians for relative ratios.",
+            OutlierFlagsAffectEnforcement = false,
+            Note = "Unified observational quest view. Reward value, typed utility, prerequisite depth and structured constraints remain separate dimensions; no cross-dimension score, reward multiplier or enforcement action is applied. Sparse dimensions use positive-sample medians for relative ratios.",
             Vanilla = vanilla,
             VanillaRestartable = vanillaRestartable,
             Quests = rows,
@@ -70,6 +72,25 @@ public sealed class QuestAnalysisService(
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
         await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
         logger.Info($"[Economy Admiral] unified quest analysis complete: {rows.Count} quests; report={reportPath}");
+    }
+
+    private static QuestAnalysisRow AddObservationalFlags(QuestAnalysisRow row)
+    {
+        var flags = new List<string>();
+        if (row.HandbookValueVsVanillaMedian is >= 3.0 && row.PrerequisiteDepthVsVanillaMedian is null or <= 1.0 && row.StructuredConstraintsVsVanillaMedian is null or <= 1.0)
+            flags.Add("HIGH_ITEM_VALUE_LOW_STRUCTURE");
+        if (row.XpVsVanillaMedian is >= 3.0 && row.PrerequisiteDepthVsVanillaMedian is null or <= 1.0)
+            flags.Add("HIGH_XP_LOW_DEPTH");
+        if (row.StandingVsVanillaMedian is >= 3.0 && row.PrerequisiteDepthVsVanillaMedian is null or <= 1.0)
+            flags.Add("HIGH_STANDING_LOW_DEPTH");
+        if (row.Restartable && row.HandbookValueVsVanillaMedian is >= 2.0)
+            flags.Add("RESTARTABLE_HIGH_ITEM_VALUE");
+        if (row.Restartable && row.XpVsVanillaMedian is >= 2.0)
+            flags.Add("RESTARTABLE_HIGH_XP");
+        if (row.IsPrerequisiteCycleMember)
+            flags.Add("PREREQUISITE_CYCLE");
+
+        return row with { ObservationalFlags = flags };
     }
 
     private static QuestAnalysisRow BuildRow(
@@ -129,6 +150,7 @@ public sealed class QuestAnalysisService(
             PlantConditionCount = plant,
             DistanceConstraintCount = distance,
             DaytimeConstraintCount = daytime,
+            ObservationalFlags = [],
         };
     }
 
@@ -221,6 +243,7 @@ public sealed record QuestAnalysisReport
     public required int SchemaVersion { get; init; }
     public required bool CompositeScoreApplied { get; init; }
     public required bool RewardAllowanceAffected { get; init; }
+    public required bool OutlierFlagsAffectEnforcement { get; init; }
     public required string Note { get; init; }
     public required QuestAnalysisBaseline Vanilla { get; init; }
     public required QuestAnalysisBaseline VanillaRestartable { get; init; }
@@ -262,6 +285,7 @@ public sealed record QuestAnalysisRow
     public required int PlantConditionCount { get; init; }
     public required int DistanceConstraintCount { get; init; }
     public required int DaytimeConstraintCount { get; init; }
+    public required List<string> ObservationalFlags { get; init; }
     public double? HandbookValueVsVanillaMedian { get; init; }
     public double? XpVsVanillaMedian { get; init; }
     public double? StandingVsVanillaMedian { get; init; }
