@@ -40,3 +40,20 @@ jobs:
       - name: Build Pause client
         shell: pwsh
         run: dotnet build mods/SPT-Pause/src/SPT-Pause.csproj -c Release --nologo
+
+      - name: Package Pause runtime test artifact
+        shell: pwsh
+        run: |
+          $source = 'mods/SPT-Pause/src/bin/Release/netstandard2.1/SPT Pause v0.1.1.dll'
+          if (-not (Test-Path $source)) { throw "Built Pause DLL not found: $source" }
+          $target = '.artifacts/SPT-Pause/BepInEx/plugins/SPT Pause'
+          New-Item -ItemType Directory -Force -Path $target | Out-Null
+          Copy-Item $source (Join-Path $target 'SPT Pause.dll')
+
+      - name: Upload exact-SHA Pause runtime test artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SPT-Pause-test-${{ github.sha }}
+          path: .artifacts/SPT-Pause/
+          if-no-files-found: error
+          retention-days: 14
