@@ -48,8 +48,8 @@ jobs:
 
           quests = []
           quest_ids = []
-          access_count = 0
-          arsenal_count = 0
+          access_ids = []
+          arsenal_ids = []
           for path in quest_files:
               quest = json.loads(path.read_text(encoding='utf-8-sig'))
               quests.append(quest)
@@ -64,27 +64,42 @@ jobs:
                   raise SystemExit(f'{path.name}: expected exactly one finish condition')
               condition_type = finish[0].get('conditionType')
               if condition_type == 'FindItem':
-                  access_count += 1
+                  access_ids.append(quest['_id'])
               elif condition_type == 'CounterCreator':
-                  arsenal_count += 1
+                  arsenal_ids.append(quest['_id'])
               else:
                   raise SystemExit(f'{path.name}: unsupported finish condition {condition_type!r}')
 
           if len(quest_ids) != len(set(quest_ids)):
               raise SystemExit('packaged quest ids are not unique')
-          if access_count != 10 or arsenal_count != 21:
+          if len(access_ids) != 10 or len(arsenal_ids) != 21:
               raise SystemExit(
-                  f'packaged quest mix drifted: Access={access_count}/10, Arsenal={arsenal_count}/21'
+                  f'packaged quest mix drifted: Access={len(access_ids)}/10, Arsenal={len(arsenal_ids)}/21'
               )
 
-          for locale in ('en.json', 'ru.json'):
-              path = locale_dir / locale
-              if not path.is_file():
-                  raise SystemExit(f'missing packaged locale: {path}')
-              payload = json.loads(path.read_text(encoding='utf-8-sig'))
-              for quest in quests:
-                  qid = quest['_id']
-                  finish = quest['conditions']['AvailableForFinish'][0]
-                  if finish.get('conditionType') == 'FindItem' and f'{qid} name' not in payload:
-                      raise SystemExit(f'{locale}: Access Protocol locale missing name for {qid}')
+          required_fields = (
+              'name', 'description', 'note', 'startedMessageText', 'successMessageText',
+              'failMessageText', 'acceptPlayerMessage', 'declinePlayerMessage',
+              'completePlayerMessage', 'changeQuestMessageText'
+          )
+          locale_sets = {
+              'en': ('en.json', 'arsenal-en.json'),
+              'ru': ('ru.json', 'arsenal-ru.json'),
+          }
+          for locale_code, files in locale_sets.items():
+              merged = {}
+              for filename in files:
+                  path = locale_dir / filename
+                  if not path.is_file():
+                      raise SystemExit(f'missing packaged locale: {path}')
+                  payload = json.loads(path.read_text(encoding='utf-8-sig'))
+                  overlap = set(merged) & set(payload)
+                  if overlap:
+                      raise SystemExit(f'{filename}: duplicate locale keys across files: {sorted(overlap)[:5]}')
+                  merged.update(payload)
+              for qid in quest_ids:
+                  for field in required_fields:
+                      key = f'{qid} {field}'
+                      if key not in merged:
+                          raise SystemExit(f'{locale_code}: missing required locale key {key}')
           PY
