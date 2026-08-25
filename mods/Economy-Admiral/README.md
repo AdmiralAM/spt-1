@@ -22,6 +22,7 @@ Implemented now:
 - separate vanilla/restartable utility distributions;
 - per-dimension vanilla-relative utility multiples without arbitrary ruble conversion or hidden composite weights;
 - explicit quest prerequisite graph with direct prerequisite edges, cycle detection, maximum prerequisite depth, and vanilla depth benchmarks;
+- structured quest-constraint audit for time, one-session, FIR, plant, distance, and daytime constraints;
 - trader-source saturation findings;
 - functional `Easy / Normal / Hard / Custom` audit policies;
 - `Off / Audit / Enforce` mode contract;
@@ -116,7 +117,7 @@ Schema 2 additionally records per-quest dimensionless ratios such as `XpVsVanill
 
 ## Quest prerequisite graph
 
-Economy Admiral builds a third deterministic report from explicit `AvailableForStart` quest prerequisites:
+Economy Admiral builds a deterministic report from explicit `AvailableForStart` quest prerequisites:
 
 `reports/economy-admiral-progression-graph.json`
 
@@ -128,9 +129,26 @@ It records, per quest:
 - whether the quest participates in a detected prerequisite cycle;
 - vanilla-trader and restartable classification.
 
-Schema 2 adds separate vanilla and vanilla-restartable depth benchmarks with sample count, median, P90, and maximum observed depth. Cycle members are excluded from those depth distributions.
+Schema 2 adds separate vanilla and vanilla-restartable depth benchmarks with sample count, median, P90, and maximum observed depth. Cycle members are excluded from those depth distributions. The analyzer is exposed as a reusable cached snapshot so future reward analysis can consume the same graph result instead of duplicating prerequisite logic.
 
-`DepthAffectsRewardAllowance` is explicitly **false**. Prerequisite depth is currently an observed progression dimension only; Economy Admiral does not yet grant a larger reward budget merely because a quest sits deeper in a chain. Any future weight must be justified against the measured vanilla distribution first.
+`DepthAffectsRewardAllowance` is explicitly **false**. Prerequisite depth is currently an observed progression dimension only; Economy Admiral does not yet grant a larger reward budget merely because a quest sits deeper in a chain.
+
+## Structured quest constraints
+
+A separate final-DB audit records machine-readable execution constraints:
+
+`reports/economy-admiral-quest-constraints.json`
+
+The pass inspects objective conditions and nested counter conditions for:
+
+- `completeInSeconds` timing constraints;
+- `oneSessionOnly` / reset-on-session-end constraints;
+- `onlyFoundInRaid` requirements;
+- `plantTime` requirements;
+- explicit counter distance constraints;
+- daytime constraints.
+
+It emits vanilla and vanilla-restartable distributions for structured-constraint counts plus positive timing and distance samples. `ConstraintsAffectRewardAllowance` is explicitly **false**. These signals are observations only; they are not yet converted into a difficulty or reward multiplier.
 
 ## Main report
 
@@ -169,8 +187,9 @@ The current budget still does not fully price:
 
 - cross-dimension XP/standing/unlock utility versus item value;
 - prerequisite depth as a reward-budget dimension;
-- FIR/progression utility;
-- actual duration or combat risk;
+- structured quest constraints as a reward-budget dimension;
+- broader FIR/progression utility;
+- actual gameplay duration or combat risk beyond explicit DB constraints;
 - repeatable replacement rate;
 - flea scarcity or world-loot rarity.
 
@@ -186,9 +205,8 @@ The architecture keeps acquisition scanning, benchmarking, findings, presets, an
 
 MVP remainder:
 
-- surface prerequisite depth beside reward metrics without changing reward allowance;
-- design an explicit configurable composite utility policy from the measured per-dimension ratios;
-- add structured risk/time signals only where the final DB exposes them reliably;
+- surface shared progression/constraint observations beside reward metrics without changing reward allowance;
+- design an explicit configurable composite utility policy from measured per-dimension ratios;
 - broader acquisition/value weighting;
 - explicit enforcement rules and mutation report;
 - deterministic enforcement tests before `Enforce` can become active.
