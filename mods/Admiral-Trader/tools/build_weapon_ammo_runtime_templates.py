@@ -94,15 +94,17 @@ def authored_index(spec: dict[str, Any]) -> dict[str, Any]:
 def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: dict[str, Any], runtime_pools: dict[str, Any]) -> dict[str, Any]:
     if any(x.get("targetSptVersion") != "4.1.3" for x in (plan, spec, capabilities, runtime_pools)):
         raise ValueError("all weapon-ammo runtime inputs must target SPT 4.1.3")
-    authored = authored_index(spec); templates: dict[str, dict[str, Any]] = {}; deferred = []
+    authored = authored_index(spec); templates: dict[str, dict[str, Any]] = {}
     for quest in plan.get("quests") or []:
         slug, family = str(quest["slug"]), str(quest["family"])
         stage = authored["stagesBySlug"][slug]
         weapon_ids = list(dict.fromkeys(str(x) for x in runtime_pools["families"].get(family, [])))
         capability = capabilities["families"].get(family)
-        if family == "special-weapons" and quest["stage"] == "munitions":
-            deferred.append({"questId": quest["id"], "slug": slug,
-                             "reason": "special sample TPL requires exact SPT 4.1.3 runtime item verification"})
+        if quest["stage"] == "munitions" and int(stage.get("sampleAmmoUnits", 0)) > 0:
+            if not isinstance(capability, dict) or not capability.get("tpl"):
+                raise ValueError(f"{family}: Munitions sample TPL is unresolved")
+            if family == "special-weapons" and capability.get("permanentUnlock") is not False:
+                raise ValueError("Special Weapons sample must never imply a permanent unlock")
         name = f"Arsenal Protocol: {authored['displayByFamily'][family]} - {str(quest['stage']).title()}"; qid = str(quest["id"])
         templates[qid] = {
             "QuestName": name, "_id": qid, "canShowNotificationsInGame": True,
@@ -114,12 +116,12 @@ def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: di
             "startedMessageText": f"{qid} startedMessageText", "successMessageText": f"{qid} successMessageText",
             "acceptPlayerMessage": f"{qid} acceptPlayerMessage", "acceptanceAndFinishingSource": "eft",
             "declinePlayerMessage": f"{qid} declinePlayerMessage", "completePlayerMessage": f"{qid} completePlayerMessage",
-            "rewards": {"Started": [], "Success": success_rewards(slug, stage, capability if quest["stage"] == "munitions" and family != "special-weapons" else None), "Fail": []},
+            "rewards": {"Started": [], "Success": success_rewards(slug, stage, capability if quest["stage"] == "munitions" else None), "Fail": []},
             "side": "Pmc",
         }
     if len(templates) != 21:
         raise ValueError(f"expected 21 runtime templates, got {len(templates)}")
-    return {"schemaVersion": 2, "targetSptVersion": "4.1.3", "templates": templates, "deferredRuntimeItems": deferred}
+    return {"schemaVersion": 3, "targetSptVersion": "4.1.3", "templates": templates, "deferredRuntimeItems": []}
 
 
 def main() -> int:
