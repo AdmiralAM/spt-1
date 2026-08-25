@@ -53,48 +53,81 @@ jobs:
           mods/Admiral-Trader/manifests/weapon-ammo-selection-policy.json
           --output build/admiral-trader-weapon-ammo-selection.json
 
-      - name: Enforce pool and selection safety contract
+      - name: Enforce committed capability selection and safety contract
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           pools = json.loads(Path('build/admiral-trader-weapon-ammo-pools.json').read_text(encoding='utf-8'))
           selection = json.loads(Path('build/admiral-trader-weapon-ammo-selection.json').read_text(encoding='utf-8'))
-          if pools.get('targetSptVersion') != '4.1.3' or selection.get('targetSptVersion') != '4.1.3':
-              raise SystemExit('weapon/ammo selection lost SPT 4.1.3 target')
-          families = pools['families']
-          if len(families) != 7:
-              raise SystemExit(f'expected seven weapon families, got {len(families)}')
+          committed = json.loads(Path('mods/Admiral-Trader/manifests/weapon-ammo-capabilities.json').read_text(encoding='utf-8'))
+          if pools.get('targetSptVersion') != '4.1.3' or selection.get('targetSptVersion') != '4.1.3' or committed.get('targetSptVersion') != '4.1.3':
+              raise SystemExit('weapon/ammo runtime contract lost SPT 4.1.3 target')
+          if len(pools['families']) != 7:
+              raise SystemExit('expected seven weapon families')
           permanent = 0
-          for family_id, family in families.items():
+          for family_id, family in pools['families'].items():
+              selected = selection['families'][family_id]
+              frozen = committed['families'][family_id]
               if family['weaponCount'] == 0:
                   raise SystemExit(f'{family_id}: no weapon candidates')
-              selected = selection['families'][family_id]
               if family_id == 'special-weapons':
-                  if selected.get('permanentUnlock'):
+                  if selected.get('permanentUnlock') or frozen.get('permanentUnlock') is not False:
                       raise SystemExit('special weapons may not receive a permanent ammunition unlock')
-                  if selected.get('sampleUnits') != 1:
+                  if selected.get('sampleUnits') != 1 or frozen.get('sampleUnits') != 1:
                       raise SystemExit('special weapons sample must remain exactly one unit')
                   continue
-              if family['ammoCount'] == 0:
-                  raise SystemExit(f'{family_id}: no ammo candidates')
-              if not selected.get('permanentUnlock') or selected.get('tier') != 'controlled':
-                  raise SystemExit(f'{family_id}: selected reward is not a controlled permanent unlock')
-              if selected['penetration'] > selected['penetrationCeiling']:
-                  raise SystemExit(f'{family_id}: selected penetration exceeds family ceiling')
+              keys = ('tpl','caliber','penetration','damage','sampleUnits','stockPerReset','buyRestriction')
+              drift = {key: (selected.get(key), frozen.get(key)) for key in keys if selected.get(key) != frozen.get(key)}
+              if drift:
+                  raise SystemExit(f'{family_id}: committed capability drift: {drift}')
+              if selected.get('tier') != 'controlled' or selected['penetration'] > selected['penetrationCeiling']:
+                  raise SystemExit(f'{family_id}: unsafe capability selection')
               if selected['stockPerReset'] <= 0 or selected['buyRestriction'] <= 0:
-                  raise SystemExit(f'{family_id}: permanent unlock must remain finite')
+                  raise SystemExit(f'{family_id}: unlock must remain finite')
               permanent += 1
           if permanent != 6:
               raise SystemExit(f'expected exactly six permanent ammo unlocks, got {permanent}')
           PY
 
-      - name: Upload transient candidate and selection reports
+      - name: Compile native weapon-ammo runtime quest templates
+        run: >-
+          python mods/Admiral-Trader/tools/build_weapon_ammo_runtime_templates.py
+          mods/Admiral-Trader/manifests/weapon-ammo-runtime-plan.json
+          mods/Admiral-Trader/manifests/weapon-ammo-authored-spec.json
+          mods/Admiral-Trader/manifests/weapon-ammo-capabilities.json
+          build/admiral-trader-weapon-ammo-pools.json
+          --output build/admiral-trader-weapon-ammo-runtime.json
+
+      - name: Enforce runtime quest contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('build/admiral-trader-weapon-ammo-runtime.json').read_text(encoding='utf-8'))
+          templates = data['templates']
+          if len(templates) != 21:
+              raise SystemExit(f'expected 21 native weapon-ammo quests, got {len(templates)}')
+          if len(data['deferredRuntimeItems']) != 1:
+              raise SystemExit('only the Special Weapons sample item may remain deferred')
+          for qid, quest in templates.items():
+              if quest['traderId'] != 'd5c27bb3169f8dfbc13f6b69' or quest['restartable']:
+                  raise SystemExit(f'{qid}: invalid Admiral ownership/restartability')
+              finish = quest['conditions']['AvailableForFinish']
+              if len(finish) != 1 or finish[0].get('conditionType') != 'CounterCreator':
+                  raise SystemExit(f'{qid}: must have one native CounterCreator elimination objective')
+              kill = finish[0]['counter']['conditions'][0]
+              if kill.get('conditionType') != 'Kills' or not kill.get('weapon'):
+                  raise SystemExit(f'{qid}: family weapon filter missing')
+          PY
+
+      - name: Upload transient runtime evidence
         uses: actions/upload-artifact@v4
         with:
-          name: admiral-trader-weapon-ammo-selection-${{ github.event.pull_request.head.sha || github.sha }}
+          name: admiral-trader-weapon-ammo-runtime-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             build/admiral-trader-weapon-ammo-pools.json
             build/admiral-trader-weapon-ammo-selection.json
+            build/admiral-trader-weapon-ammo-runtime.json
           if-no-files-found: error
           retention-days: 7
