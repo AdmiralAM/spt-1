@@ -40,6 +40,15 @@ internal static class Program
         Assert(!BeltSlotPlan.ShouldExposeBelt(false, true), "container flag alone is insufficient");
         Assert(BeltSlotPlan.ShouldExposeBelt(true, true), "equipped container exposes belt row");
 
+        Assert(AccessoryCategoryPolicy.IsSupported(AccessoryCategory.ArmBand), "ArmBand category is supported");
+        Assert(AccessoryCategoryPolicy.IsSupported(AccessoryCategory.Belt), "Belt category is supported");
+        Assert(AccessoryCategoryPolicy.IsSupported(AccessoryCategory.HeadBand), "HeadBand category is supported");
+        Assert(AccessoryCategoryPolicy.Capacity(AccessoryCategory.HeadBand) == AccessoryCapacityBand.Micro, "HeadBand uses micro capacity band");
+        Assert(AccessoryCategoryPolicy.Capacity(AccessoryCategory.ArmBand) == AccessoryCapacityBand.Compact, "ArmBand uses compact capacity band");
+        Assert(AccessoryCategoryPolicy.Capacity(AccessoryCategory.Belt) == AccessoryCapacityBand.Expanded, "Belt uses expanded capacity band");
+        Assert(!AccessoryCategoryPolicy.CanExposeContainer(AccessoryCategory.Belt, false, true), "category alone cannot expose an empty host");
+        Assert(AccessoryCategoryPolicy.CanExposeContainer(AccessoryCategory.HeadBand, true, true), "container-capable HeadBand may expose a row");
+
         Assert(ReflectionTools.HasContainers(new RuntimeContainer { IsContainer = true }), "runtime IsContainer flag is recognized");
         Assert(ReflectionTools.HasContainers(new RuntimeGrids { Grids = new object[] { new object() } }), "runtime Grids are recognized");
         Assert(ReflectionTools.HasContainers(new RuntimeTemplate { Template = new TemplateGrids { Grids = new object[] { new object() } } }), "template Grids are recognized for PackNStrap-style belts");
