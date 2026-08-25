@@ -17,7 +17,14 @@
     "objectiveConditionWeight": 0.35,
     "maxLevelGateContribution": 3.0,
     "maxObjectiveContribution": 5.0,
-    "duplicateTraderSourcesWarnCount": 6
+    "duplicateTraderSourcesWarnCount": 6,
+    "highItemValueLowStructureWarnMultiple": 3.0,
+    "highXpLowDepthWarnMultiple": 3.0,
+    "highStandingLowDepthWarnMultiple": 3.0,
+    "restartableHighItemValueWarnMultiple": 2.0,
+    "restartableHighXpWarnMultiple": 2.0,
+    "lowDepthMaxRelativeMultiple": 1.0,
+    "lowStructureMaxRelativeMultiple": 1.0
   },
   "manualOverrides": {}
 }
