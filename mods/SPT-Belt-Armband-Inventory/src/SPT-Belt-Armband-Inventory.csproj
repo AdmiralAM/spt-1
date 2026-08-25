@@ -16,5 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="GridWindowDumpPlugin.cs" />
+    <Compile Remove="RuntimeInventoryBoundaryDiscovery.cs" />
+    <Compile Remove="RuntimeTypeProofPlugin.cs" />
   </ItemGroup>
 </Project>
