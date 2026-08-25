@@ -44,14 +44,16 @@ public sealed class QuestAnalysisService(
 
         var vanilla = BuildBaseline(rawRows.Where(row => row.IsVanillaTraderQuest && !row.Restartable).ToList());
         var vanillaRestartable = BuildBaseline(rawRows.Where(row => row.IsVanillaTraderQuest && row.Restartable).ToList());
-        var rows = rawRows.Select(row => AddRelativeSignals(row, row.Restartable && vanillaRestartable.QuestSamples > 0 ? vanillaRestartable : vanilla)).ToList();
+        var rows = rawRows
+            .Select(row => AddRelativeSignals(row, row.Restartable && vanillaRestartable.QuestSamples > 0 ? vanillaRestartable : vanilla))
+            .ToList();
 
         var report = new QuestAnalysisReport
         {
             SchemaVersion = 1,
             CompositeScoreApplied = false,
             RewardAllowanceAffected = false,
-            Note = "Unified observational quest view. Reward value, typed utility, prerequisite depth and structured constraints remain separate dimensions; no cross-dimension score or reward multiplier is applied.",
+            Note = "Unified observational quest view. Reward value, typed utility, prerequisite depth and structured constraints remain separate dimensions; no cross-dimension score or reward multiplier is applied. Sparse dimensions use positive-sample medians for relative ratios.",
             Vanilla = vanilla,
             VanillaRestartable = vanillaRestartable,
             Quests = rows,
@@ -138,8 +140,8 @@ public sealed class QuestAnalysisService(
             MedianSuccessHandbookValue = MedianPositive(rows.Select(row => row.SuccessKnownHandbookValue)),
             MedianXp = MedianPositive(rows.Select(row => row.Experience)),
             MedianAbsoluteStanding = MedianPositive(rows.Select(row => Math.Abs(row.TraderStanding))),
-            MedianPrerequisiteDepth = Percentile(rows.Where(row => !row.IsPrerequisiteCycleMember).Select(row => (double)row.MaximumPrerequisiteDepth).OrderBy(value => value).ToList(), 0.50),
-            MedianStructuredConstraintCount = Percentile(rows.Select(row => (double)row.StructuredConstraintCount).OrderBy(value => value).ToList(), 0.50),
+            MedianPrerequisiteDepth = MedianPositive(rows.Where(row => !row.IsPrerequisiteCycleMember).Select(row => (double)row.MaximumPrerequisiteDepth)),
+            MedianStructuredConstraintCount = MedianPositive(rows.Select(row => (double)row.StructuredConstraintCount)),
         };
     }
 
