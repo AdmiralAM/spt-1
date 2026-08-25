@@ -1,123 +1,169 @@
 # Economy Admiral
 
-**Economy Admiral** is a server-side economy audit/enforcement mod for SPT 4.1.x. The current physical acceptance target is **SPT 4.1.3**.
+**Economy Admiral** is a server-side economy analysis and enforcement-policy mod for SPT 4.1.x. The current physical target is **SPT 4.1.3**.
 
 ## Current status
 
-The first MVP is a **read-only final-database economy analysis and fail-closed enforcement-planning pipeline**.
+The current MVP is a **read-only, provenance-aware economy audit and fail-closed enforcement-planning pipeline**. No final DB mutation is enabled.
 
-Implemented now:
+Already implemented:
 
-- final DB scan at `OnLoadOrder.PostLoad + 1000`;
-- centralized runtime config gate: `Off` returns before any analysis pass runs;
-- trader acquisition scan and deterministic per-item acquisition aggregation;
-- handbook-value quest reward audit and vanilla raw/normalized benchmarks;
-- typed XP / standing / trader-unlock / assortment-unlock / production-unlock distributions;
-- per-dimension vanilla-relative ratios without ruble conversion;
-- explicit prerequisite graph with cycle detection, cached snapshot reuse and depth benchmarks;
-- structured quest constraint audit for timed, one-session, FIR, plant, distance and daytime constraints;
-- unified per-quest analysis view;
-- configurable observational cross-dimension flags;
-- explicit composite-policy candidate evaluation with no selected candidate;
-- deterministic non-mutating target envelopes derived from vanilla medians and resolved policy thresholds;
-- fail-closed enforcement-plan report derived from the in-memory unified analysis snapshot;
-- runtime evidence manifest with before/after SHA-256 fingerprinting of the analyzed economy DB surfaces;
-- exact packaged CI build identity propagated into runtime evidence;
-- functional `Easy / Normal / Hard / Custom` policies;
-- `Off / Audit / Enforce` contract with **zero active mutations**;
-- deterministic JSON reports and manual item overrides;
-- future `RepeatedRaidLootDecay` policy represented but disabled by default.
+- pristine startup snapshot at `OnLoadOrder.Watermark + 1`;
+- final modded DB analysis at `OnLoadOrder.PostLoad + 1000`;
+- centralized `Off` gate;
+- typed trader and quest acquisition accounting;
+- typed quest item reward accounting through `Reward.Items`, `Item.Template` and `Upd.StackObjectsCount`;
+- rarity classification and manual item overrides;
+- trader malformed-offer and source-saturation audit;
+- pristine vanilla reward-value benchmark;
+- XP, trader standing and unlock utility dimensions;
+- prerequisite graph, cycle detection and depth metrics;
+- timed / one-session / FIR / plant / distance / daytime constraint metrics;
+- unified per-quest analysis;
+- configurable `Easy / Normal / Hard / Custom` observational policy;
+- `Off / Audit / Enforce` modes, with `Enforce` still fail-closed;
+- candidate composite metrics without a selected policy;
+- non-mutating target envelopes;
+- quest provenance delta (`PristineUnchanged / PristineModified / ModAdded / removed`);
+- provenance-aware enforcement review plan;
+- before/after SHA-256 final-DB fingerprint;
+- exact GitHub Actions build identity in runtime evidence;
+- packaged runtime validator with synthetic PASS/FAIL smoke tests;
+- `RepeatedRaidLootDecay` represented as a future optional policy and **OFF by default**.
 
-`Enforce` does not mutate the final DB in this MVP. It produces review/planning artifacts while retaining `ApplyMutations = false` and `MutationCount = 0`.
+## Why pristine provenance exists
 
-## SPT 4.1 architecture boundary
+A final-DB quest cannot be called “vanilla” merely because its trader ID belongs to Prapor, Therapist, Jaeger, etc. Mods can add quests to vanilla traders and can modify existing vanilla quests. That polluted the first benchmark implementation.
 
-Economy Admiral consumes final injected `TemplateTable` and `TradersTable` instances after normal content registration. `EconomyRuntimeConfigService` loads the runtime config once for the top-level module gate; `Mode.Off` exits before the first audit service executes.
+Economy Admiral now captures an immutable baseline **before normal mod callbacks** and compares that snapshot to the final PostLoad database.
 
-The maintained public NuGet compile boundary is `SPTarkov.Server.Core 4.1.2` on .NET 10. The physical runtime acceptance target is SPT 4.1.3; the package embeds both values in `BUILD_INFO.json` so runtime evidence is tied to the actual candidate used.
+`VanillaBaselineService` is an explicit DI singleton at priority `1`. It records pristine quest IDs and the raw dimensions needed for later benchmarking:
 
-## Installation for the current runtime gate
+- success/all item handbook value;
+- XP and trader standing;
+- trader / assortment / production unlock counts;
+- required level and objective count;
+- prerequisite edges/depth/cycles;
+- structured constraint dimensions;
+- pristine quest/trader/handbook counts.
 
-Use the exact `economy-admiral-candidate` Actions artifact from PR #121.
+The final analysis therefore uses quest-ID provenance rather than trader-ID inference.
 
-Create:
+## SPT architecture boundary
 
-`SPT_Runtime/user/mods/Economy Admiral/`
+The public compile boundary remains `SPTarkov.Server.Core 4.1.2` on .NET 10. Physical acceptance is against SPT **4.1.3**. `BUILD_INFO.json` records both boundaries and the exact PR head/workflow run.
 
-Then extract the **contents of the candidate ZIP into that directory**. The installed folder must contain:
+Load order:
 
-- `Economy-Admiral.dll`;
-- `BUILD_INFO.json`;
-- `config/config.json`;
-- `README.md`;
-- `RUNTIME_TEST.md`;
-- `Validate-Runtime.ps1`.
+1. `Watermark + 1` — capture pristine baseline;
+2. normal SPT/mod startup callbacks mutate/register content;
+3. `PostLoad + 1000` — analyze the final DB;
+4. write reports and verify no Economy Admiral DB mutation occurred.
 
-Do not extract those files directly into the SPT root. `RUNTIME_TEST.md` contains the exact Audit-mode and Off-mode physical acceptance procedure.
+Critical intermediate state is passed explicitly as values. The old transient-DI snapshot dependency that caused the first runtime crash is not used in the analysis chain.
+
+## Analysis pipeline
+
+With `mode != Off`:
+
+1. read runtime config and obtain the already-captured pristine baseline;
+2. capture final-DB fingerprint-before;
+3. run primary final-DB acquisition/trader/quest audit;
+4. reclassify primary quest membership by pristine quest IDs;
+5. apply typed item-reward accounting;
+6. replace primary vanilla benchmark with pristine values;
+7. run and pristine-correct reward utility report;
+8. run and pristine-correct progression graph report;
+9. run and pristine-correct structured constraint report;
+10. build unified quest analysis;
+11. apply typed item values and pristine relative baselines;
+12. calculate quest provenance delta;
+13. evaluate non-selected composite candidates;
+14. derive non-mutating target envelopes;
+15. build provenance-aware fail-closed enforcement review plan;
+16. capture fingerprint-after and write runtime evidence.
 
 ## Reports
 
-Economy Admiral emits eight analysis/planning reports plus one runtime-evidence manifest when analysis is enabled:
+Economy Admiral currently emits **9 working reports plus 1 runtime manifest**:
 
-- `reports/economy-admiral-audit.json` — acquisition, handbook-value and trader/quest findings;
-- `reports/economy-admiral-reward-utility.json` — XP, standing and unlock distributions/ratios;
-- `reports/economy-admiral-progression-graph.json` — prerequisite graph, cycles and depth benchmarks;
-- `reports/economy-admiral-quest-constraints.json` — structured objective constraints;
-- `reports/economy-admiral-quest-analysis.json` — unified observational view and cross-dimension flags;
-- `reports/economy-admiral-composite-candidates.json` — explicit candidate composite metrics, with no candidate selected;
-- `reports/economy-admiral-target-proposals.json` — non-mutating review ceilings for flagged dimensions;
-- `reports/economy-admiral-enforcement-plan.json` — fail-closed review candidates and proposed review actions;
-- `reports/economy-admiral-runtime-evidence.json` — runtime gate manifest proving report presence and comparing before/after economy fingerprints.
+1. `reports/economy-admiral-audit.json`
+   - acquisition graph, trader audit, quest item reward values and pristine reward benchmark.
+2. `reports/economy-admiral-reward-utility.json`
+   - XP, standing and unlock distributions/ratios using the pristine baseline.
+3. `reports/economy-admiral-progression-graph.json`
+   - prerequisite graph, cycles and pristine depth benchmark.
+4. `reports/economy-admiral-quest-constraints.json`
+   - structured constraints and pristine constraint benchmark.
+5. `reports/economy-admiral-quest-analysis.json`
+   - unified dimensions, pristine-relative ratios and observational flags.
+6. `reports/economy-admiral-provenance-delta.json`
+   - `PristineUnchanged`, `PristineModified`, `ModAdded`, removed pristine IDs, changed dimensions and trader grouping.
+7. `reports/economy-admiral-composite-candidates.json`
+   - candidate dimensionless composite metrics; no candidate selected.
+8. `reports/economy-admiral-target-proposals.json`
+   - review ceilings only; no mutation instructions.
+9. `reports/economy-admiral-enforcement-plan.json`
+   - provenance-aware review candidates; zero mutations.
+10. `reports/economy-admiral-runtime-evidence.json`
+   - schema-v3 manifest over the working reports, pristine provenance and DB fingerprints.
 
-All report paths are constrained to stay inside the mod directory.
+All report paths are constrained to the mod directory.
 
 ## Runtime evidence gate
 
-`RuntimeEvidenceService` captures a deterministic SHA-256 fingerprint **before** the first analysis service and again **after** the enforcement-plan service. The fingerprint covers the current mutation-relevant surfaces:
+Runtime evidence schema **v3** requires:
 
-- item template identities;
-- handbook item identities/prices;
-- quest reward structures;
-- trader assort items;
-- trader barter schemes;
-- trader loyalty mappings.
-
-Runtime-evidence schema v2 also imports packaged `BUILD_INFO.json` and records:
-
-- product identity;
-- exact PR head SHA;
-- GitHub Actions workflow run id;
-- artifact name;
-- NuGet compile package version;
-- target runtime version.
-
-The runtime manifest records both DB hashes, canonical-line counts and structural DB counts. It also verifies that all eight expected analysis/planning reports exist and are non-empty.
-
-The runtime gate is considered passed only when:
-
-- packaged build identity is present and accepted by `Validate-Runtime.ps1`;
+- exact packaged `BuildIdentity`;
+- pristine capture priority `1`;
+- positive `PristineQuestCount`;
+- consistent `FinalQuestCount` and `ModAddedQuestCount`;
+- all **9/9** working reports present and non-empty;
+- `PristineStartupSnapshot` benchmark source in the primary/utility/progression/constraint reports;
+- provenance delta counts consistent with the runtime manifest;
+- identical before/after final-DB SHA-256 fingerprints;
 - `DatabaseUnchangedAcrossPipeline = true`;
-- `AllExpectedReportsPresent = true`;
 - `ApplyMutations = false`;
 - `DeclaredMutationCount = 0`;
 - `RuntimeGatePassed = true`.
 
-This is stronger than a compile-only claim: on the target SPT/mod stack it provides direct before/after evidence that the current Economy Admiral pipeline did not modify the economy surfaces it audits, while identifying exactly which DLL produced the evidence.
+The fingerprint covers item identities, handbook prices, quest rewards and trader assort/barter/loyalty structures.
+
+## Quest provenance delta
+
+Every final quest is classified as:
+
+- `PristineUnchanged` — existed in the early snapshot and the tracked economic/progression dimensions did not change;
+- `PristineModified` — existed in pristine SPT but one or more tracked dimensions changed by final PostLoad;
+- `ModAdded` — absent from pristine SPT and present in the final DB.
+
+Pristine quest IDs missing from the final DB are reported separately as removed.
+
+Tracked change dimensions include:
+
+- restartability;
+- success item handbook value;
+- XP;
+- trader standing;
+- unlock counts;
+- objective count;
+- prerequisite count/depth/cycle membership;
+- structured constraint count.
+
+The delta report is observational: `EnforcementAffected = false`.
 
 ## Unified quest analysis
 
-For each quest the unified report places the main measured dimensions together:
+Each quest exposes:
 
-- success-reward known handbook value;
-- XP and trader standing;
-- trader / assortment / production unlock counts;
-- direct prerequisites and maximum prerequisite depth;
+- success-reward handbook value;
+- XP and standing;
+- trader / assortment / production unlocks;
+- direct prerequisite count and maximum depth;
 - prerequisite-cycle membership;
 - objective count;
-- timed / one-session / FIR / plant / distance / daytime constraint counts;
-- vanilla-relative ratios for handbook value, XP, standing, prerequisite depth and structured constraints.
-
-Sparse dimensions use positive-sample vanilla medians so zero-dominated distributions do not erase the baseline.
+- structured constraint counts;
+- vanilla-relative ratios based on the pristine startup snapshot.
 
 Current observational flags:
 
@@ -128,39 +174,35 @@ Current observational flags:
 - `RESTARTABLE_HIGH_XP`;
 - `PREREQUISITE_CYCLE`.
 
-The report records resolved policy thresholds and deterministic `FlagCounts`. `CompositeScoreApplied = false`, `RewardAllowanceAffected = false`, and `OutlierFlagsAffectEnforcement = false` remain explicit contracts.
+These flags do not directly change reward allowance or DB records.
 
-## Composite policy candidates
+## Composite candidates
 
-Economy Admiral evaluates multiple dimensionless candidates without selecting one as policy:
+Current candidates are intentionally non-authoritative:
 
-- `RewardPeak` — maximum available handbook/XP/standing vanilla-relative ratio;
-- `RewardMean` — mean of the available positive reward-dimension ratios;
-- `StructureAdjustedPeak` — `RewardPeak` divided by measured structural support, floored so structure never inflates the score.
+- `RewardPeak`;
+- `RewardMean`;
+- `StructureAdjustedPeak`.
 
-Vanilla and restartable median/P90 distributions are emitted for comparison. The composite report explicitly keeps:
+Contract:
 
 - `SelectedCandidate = null`;
 - `AffectsRewardAllowance = false`;
 - `AffectsEnforcement = false`.
 
-This lets the candidates be inspected against real final-DB data before any one formula is promoted to policy.
+No candidate will be promoted until pristine-provenance runtime distributions are reviewed.
 
 ## Target envelopes
 
-For flagged quests, `economy-admiral-target-proposals.json` derives deterministic **review ceilings**, not mutation instructions.
+For flagged dimensions the planner can calculate a deterministic review ceiling from the applicable pristine median and resolved policy multiple.
 
-Each envelope records:
+Supported dimensions currently include:
 
-- current measured value;
-- applicable vanilla median;
-- resolved policy multiple;
-- `CandidateCeiling = vanilla median × policy multiple`;
-- a dimension-specific interpretation.
+- item reward handbook-value budget;
+- XP;
+- absolute trader standing.
 
-Supported envelope dimensions currently include item reward handbook-value budget, XP, and absolute trader standing. Item budget ceilings do not select replacement item templates, and trader-standing envelopes do not change sign/direction.
-
-The target-proposal contract remains:
+Contract:
 
 - `ProposalsAreMutations = false`;
 - `ApplyMutations = false`;
@@ -170,20 +212,26 @@ The target-proposal contract remains:
 
 ## Enforcement plan
 
-The enforcement planner consumes the **in-memory** unified analysis snapshot; JSON files are output artifacts, not an internal service-to-service API.
+The enforcement plan is schema v2 and is **provenance-aware**. Every review candidate records:
 
-Flagged quests become review candidates with actions such as:
+- `ProvenanceClass`;
+- `PristineUntouched`;
+- `ChangedDimensions`;
+- reason flags;
+- proposed review actions.
 
-- `ReviewItemRewardBudget`;
-- `ReviewXpRewardBudget`;
-- `ReviewStandingRewardBudget`;
-- `ReviewPrerequisiteGraph`.
+The report also exposes candidate counts by provenance class. This is preparation for policy design only.
 
-The plan deliberately contains no invented mutations. Every candidate has `AutomaticMutationAllowed = false` and `ProposedMutation = null`.
+Hard contract:
+
+- `ApplyMutations = false`;
+- `MutationCount = 0`;
+- every `AutomaticMutationAllowed = false`;
+- every `ProposedMutation = null`.
 
 ## Configuration
 
-Default configuration lives in `config/config.json`.
+Default config: `config/config.json`.
 
 ```json
 {
@@ -218,38 +266,30 @@ Default configuration lives in `config/config.json`.
 }
 ```
 
-Easy raises cross-dimension warning thresholds; Hard lowers them and treats moderately shallow/low-structure quests more aggressively. Custom uses the explicit configuration.
+Easy raises warning thresholds; Hard lowers them; Custom uses explicit values.
 
-## Reward budget model
+## Current gate
 
-The main audit preserves raw handbook value and computes a second progression-normalized signal from structured level and objective-count inputs. Contributions are capped.
+Earlier physical runtime acceptance proved:
 
-Prerequisite depth and structured constraints remain excluded from the active reward allowance. Their reports explicitly retain `DepthAffectsRewardAllowance = false` and `ConstraintsAffectRewardAllowance = false`.
+- the value-threaded pipeline starts successfully on the target SPT 4.1.3 stack;
+- typed quest-item accounting works on the real final DB;
+- before/after final-DB fingerprint remains unchanged;
+- zero mutations are applied.
 
-Typed XP/standing/unlock dimensions are not converted into rubles and are not merged into a hidden utility score.
+The **next** physical gate is specifically for the new pristine-provenance architecture. It must verify the early baseline count, corrected pristine benchmarks, provenance delta and provenance-aware enforcement plan while retaining the zero-mutation fingerprint.
 
-## Current limitations
+Until that evidence exists, no composite candidate is selected and no mutation transaction is implemented.
 
-The MVP still lacks:
+## Planned next stages
 
-- physical runtime evidence from the target SPT/mod stack;
-- an approved composite-policy formula based on those real distributions;
-- concrete item-template replacement logic;
-- active mutation execution;
-- mutation transaction/rollback reporting;
-- repeatable replacement-rate enforcement;
-- PBS adapter / trader normalization;
-- flea, world-loot, craft and insurance modeling.
+After pristine-provenance runtime acceptance:
 
-## Planned next slices
-
-MVP remainder:
-
-- run the exact compiled candidate against the target SPT 4.1.3/mod stack;
-- inspect `economy-admiral-runtime-evidence.json` and the eight generated analysis/planning reports;
-- use real distributions to decide whether any composite candidate deserves promotion;
-- define mutation transaction / rollback / before-after report contracts;
-- add deterministic enforcement tests before any mutation path can be enabled.
+- inspect mod-added vs pristine-modified outliers by trader/source;
+- choose or reject composite policy candidates from real distributions;
+- define explicit protection/default policy for untouched pristine quests;
+- design mutation transaction + rollback + before/after report contracts;
+- implement the first deterministic enforcement rule behind explicit policy/config gates.
 
 Stage 2:
 
@@ -267,8 +307,8 @@ Stage 3:
 - insurance;
 - optional Vagabond-like progression policies.
 
-`RepeatedRaidLootDecay` remains **OFF by default** and unimplemented.
+`RepeatedRaidLootDecay` remains **OFF by default**.
 
 ## Development lifecycle
 
-`Issue -> feature branch -> PR -> Economy Admiral-specific CI -> runtime gate when required -> merge -> cleanup`
+`Issue -> feature branch -> draft PR -> Economy Admiral CI -> physical runtime gate when required -> review -> merge -> cleanup`
