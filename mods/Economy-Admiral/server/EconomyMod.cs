@@ -46,6 +46,6 @@ public sealed class EconomyMod(
         await targetProposalService.RunAsync(questAnalysis, cancellationToken);
         await enforcementPlanService.RunAsync(questAnalysis, cancellationToken);
 
-        await runtimeEvidenceService.WriteAfterAsync(cancellationToken);
+        await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, cancellationToken);
     }
 }
