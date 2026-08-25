@@ -21,10 +21,7 @@ public sealed class VanillaBaselineService(
     public async Task OnLoadAsync(CancellationToken cancellationToken)
     {
         var config = await runtimeConfigService.GetAsync(cancellationToken);
-        if (config.Mode == EconomyMode.Off)
-        {
-            return;
-        }
+        if (config.Mode == EconomyMode.Off) return;
 
         var handbookPrices = templates.Handbook.Items
             .Where(item => item.Price is > 0)
@@ -34,11 +31,7 @@ public sealed class VanillaBaselineService(
         var questIds = templates.Quests.Keys.Select(id => id.ToString()).ToHashSet(StringComparer.Ordinal);
         var prerequisiteMap = templates.Quests
             .OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)
-            .ToDictionary(
-                pair => pair.Key.ToString(),
-                pair => ExtractPrerequisites(pair.Value, questIds),
-                StringComparer.Ordinal
-            );
+            .ToDictionary(pair => pair.Key.ToString(), pair => ExtractPrerequisites(pair.Value, questIds), StringComparer.Ordinal);
 
         var memo = new Dictionary<string, int>(StringComparer.Ordinal);
         var cycleMembers = new HashSet<string>(StringComparer.Ordinal);
@@ -57,6 +50,7 @@ public sealed class VanillaBaselineService(
                 .Where(condition => condition.Counter?.Conditions is not null)
                 .SelectMany(condition => condition.Counter!.Conditions!)
                 .ToList();
+            var constraint = CalculateConstraintMetrics(objectiveConditions, counterConditions);
             var depth = CalculateDepth(questId, prerequisiteMap, memo, new HashSet<string>(StringComparer.Ordinal), cycleMembers);
 
             rows.Add(new VanillaQuestBaselineRow
@@ -76,7 +70,15 @@ public sealed class VanillaBaselineService(
                 DirectPrerequisiteCount = prerequisiteMap[questId].Count,
                 MaximumPrerequisiteDepth = depth,
                 IsPrerequisiteCycleMember = false,
-                StructuredConstraintCount = CountStructuredConstraints(objectiveConditions, counterConditions),
+                TimedConditionCount = constraint.Timed,
+                OneSessionConditionCount = constraint.OneSession,
+                FoundInRaidConditionCount = constraint.Fir,
+                PlantConditionCount = constraint.Plant,
+                DistanceConstraintCount = constraint.Distance,
+                DaytimeConstraintCount = constraint.Daytime,
+                StructuredConstraintCount = constraint.Total,
+                StrictestCompletionTimeSeconds = constraint.StrictestTime,
+                LongestDistanceConstraint = constraint.LongestDistance,
             });
         }
 
@@ -97,50 +99,28 @@ public sealed class VanillaBaselineService(
     public VanillaBaselineSnapshot GetSnapshot() => snapshot
         ?? throw new InvalidOperationException("Economy Admiral pristine vanilla baseline was not captured before final analysis.");
 
-    private static (double KnownValue, int UnknownRecords) CalculateItemValue(
-        IEnumerable<Reward> rewards,
-        IReadOnlyDictionary<string, double> handbookPrices
-    )
+    private static (double KnownValue, int UnknownRecords) CalculateItemValue(IEnumerable<Reward> rewards, IReadOnlyDictionary<string, double> handbookPrices)
     {
         var known = 0d;
         var unknown = 0;
         foreach (var item in rewards.Where(reward => reward.Items is not null).SelectMany(reward => reward.Items!))
         {
             var templateId = item.Template.ToString();
-            if (string.IsNullOrWhiteSpace(templateId))
-            {
-                continue;
-            }
-
+            if (string.IsNullOrWhiteSpace(templateId)) continue;
             var count = Math.Max(1d, item.Upd?.StackObjectsCount ?? 1d);
-            if (handbookPrices.TryGetValue(templateId, out var price))
-            {
-                known += price * count;
-            }
-            else
-            {
-                unknown++;
-            }
+            if (handbookPrices.TryGetValue(templateId, out var price)) known += price * count;
+            else unknown++;
         }
         return (known, unknown);
     }
 
     private static IEnumerable<Reward> EnumerateRewards(Quest quest, bool successOnly)
     {
-        if (quest.Rewards is null)
-        {
-            yield break;
-        }
+        if (quest.Rewards is null) yield break;
         foreach (var pair in quest.Rewards)
         {
-            if (successOnly && !string.Equals(pair.Key, "Success", StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-            foreach (var reward in pair.Value)
-            {
-                yield return reward;
-            }
+            if (successOnly && !string.Equals(pair.Key, "Success", StringComparison.OrdinalIgnoreCase)) continue;
+            foreach (var reward in pair.Value) yield return reward;
         }
     }
 
@@ -158,28 +138,36 @@ public sealed class VanillaBaselineService(
             foreach (var condition in quest.Conditions.Success) yield return condition;
     }
 
-    private static int CountStructuredConstraints(
-        IReadOnlyCollection<QuestCondition> objectiveConditions,
+    private static ConstraintMetrics CalculateConstraintMetrics(
+        IReadOnlyCollection<QuestCondition> conditions,
         IReadOnlyCollection<QuestConditionCounterCondition> counterConditions
     )
     {
-        var timed = objectiveConditions.Count(condition => condition.CompleteInSeconds is > 0)
+        var timed = conditions.Count(condition => condition.CompleteInSeconds is > 0)
             + counterConditions.Count(condition => condition.CompleteInSeconds is > 0);
-        var oneSession = objectiveConditions.Count(condition => condition.OneSessionOnly == true)
+        var oneSession = conditions.Count(condition => condition.OneSessionOnly == true)
             + counterConditions.Count(condition => condition.ResetOnSessionEnd == true);
-        var fir = objectiveConditions.Count(condition => condition.OnlyFoundInRaid == true);
-        var plant = objectiveConditions.Count(condition => condition.PlantTime is > 0);
+        var fir = conditions.Count(condition => condition.OnlyFoundInRaid == true);
+        var plant = conditions.Count(condition => condition.PlantTime is > 0);
         var distance = counterConditions.Count(condition => condition.Distance?.Value is > 0);
         var daytime = counterConditions.Count(condition => condition.Daytime is not null);
-        return timed + oneSession + fir + plant + distance + daytime;
+        var strictestTime = conditions
+            .Where(condition => condition.CompleteInSeconds is > 0)
+            .Select(condition => condition.CompleteInSeconds!.Value)
+            .Concat(counterConditions.Where(condition => condition.CompleteInSeconds is > 0).Select(condition => (double)condition.CompleteInSeconds!.Value))
+            .DefaultIfEmpty(0)
+            .Min();
+        var longestDistance = counterConditions
+            .Where(condition => condition.Distance?.Value is > 0)
+            .Select(condition => condition.Distance!.Value!.Value)
+            .DefaultIfEmpty(0)
+            .Max();
+        return new ConstraintMetrics(timed, oneSession, fir, plant, distance, daytime, timed + oneSession + fir + plant + distance + daytime, Math.Round(strictestTime, 2), Math.Round(longestDistance, 2));
     }
 
     private static int ExtractRequiredLevel(IEnumerable<QuestCondition>? conditions)
     {
-        if (conditions is null)
-        {
-            return 1;
-        }
+        if (conditions is null) return 1;
         var levels = conditions
             .Where(condition => string.Equals(condition.ConditionType, "Level", StringComparison.OrdinalIgnoreCase) && condition.Value.HasValue)
             .Select(condition => Math.Max(1, (int)Math.Ceiling(condition.Value!.Value)))
@@ -189,22 +177,13 @@ public sealed class VanillaBaselineService(
 
     private static List<string> ExtractPrerequisites(Quest quest, IReadOnlySet<string> knownQuestIds)
     {
-        if (quest.Conditions.AvailableForStart is null)
-        {
-            return [];
-        }
+        if (quest.Conditions.AvailableForStart is null) return [];
         var result = new HashSet<string>(StringComparer.Ordinal);
         foreach (var condition in quest.Conditions.AvailableForStart)
         {
-            if (!string.Equals(condition.ConditionType, "Quest", StringComparison.OrdinalIgnoreCase) || condition.Target is null)
-            {
-                continue;
-            }
+            if (!string.Equals(condition.ConditionType, "Quest", StringComparison.OrdinalIgnoreCase) || condition.Target is null) continue;
             var element = JsonSerializer.SerializeToElement(condition.Target);
-            foreach (var target in ExtractStrings(element))
-            {
-                if (knownQuestIds.Contains(target)) result.Add(target);
-            }
+            foreach (var target in ExtractStrings(element)) if (knownQuestIds.Contains(target)) result.Add(target);
         }
         return result.OrderBy(value => value, StringComparer.Ordinal).ToList();
     }
@@ -218,23 +197,15 @@ public sealed class VanillaBaselineService(
                 if (!string.IsNullOrWhiteSpace(value)) yield return value;
                 break;
             case JsonValueKind.Array:
-                foreach (var item in element.EnumerateArray())
-                    foreach (var nested in ExtractStrings(item)) yield return nested;
+                foreach (var item in element.EnumerateArray()) foreach (var nested in ExtractStrings(item)) yield return nested;
                 break;
             case JsonValueKind.Object:
-                foreach (var property in element.EnumerateObject())
-                    foreach (var nested in ExtractStrings(property.Value)) yield return nested;
+                foreach (var property in element.EnumerateObject()) foreach (var nested in ExtractStrings(property.Value)) yield return nested;
                 break;
         }
     }
 
-    private static int CalculateDepth(
-        string questId,
-        IReadOnlyDictionary<string, List<string>> prerequisiteMap,
-        Dictionary<string, int> memo,
-        HashSet<string> visiting,
-        HashSet<string> cycleMembers
-    )
+    private static int CalculateDepth(string questId, IReadOnlyDictionary<string, List<string>> prerequisiteMap, Dictionary<string, int> memo, HashSet<string> visiting, HashSet<string> cycleMembers)
     {
         if (memo.TryGetValue(questId, out var cached)) return cached;
         if (!visiting.Add(questId))
@@ -253,6 +224,8 @@ public sealed class VanillaBaselineService(
         memo[questId] = depth;
         return depth;
     }
+
+    private sealed record ConstraintMetrics(int Timed, int OneSession, int Fir, int Plant, int Distance, int Daytime, int Total, double StrictestTime, double LongestDistance);
 }
 
 public sealed record VanillaBaselineSnapshot
@@ -282,5 +255,13 @@ public sealed record VanillaQuestBaselineRow
     public required int DirectPrerequisiteCount { get; init; }
     public required int MaximumPrerequisiteDepth { get; init; }
     public required bool IsPrerequisiteCycleMember { get; init; }
+    public required int TimedConditionCount { get; init; }
+    public required int OneSessionConditionCount { get; init; }
+    public required int FoundInRaidConditionCount { get; init; }
+    public required int PlantConditionCount { get; init; }
+    public required int DistanceConstraintCount { get; init; }
+    public required int DaytimeConstraintCount { get; init; }
     public required int StructuredConstraintCount { get; init; }
+    public required double StrictestCompletionTimeSeconds { get; init; }
+    public required double LongestDistanceConstraint { get; init; }
 }
