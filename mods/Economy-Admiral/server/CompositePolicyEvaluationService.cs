@@ -71,10 +71,10 @@ public sealed class CompositePolicyEvaluationService(
         var rewardRatios = Positive(row.HandbookValueVsVanillaMedian, row.XpVsVanillaMedian, row.StandingVsVanillaMedian);
         var structureRatios = Positive(row.PrerequisiteDepthVsVanillaMedian, row.StructuredConstraintsVsVanillaMedian);
 
-        var rewardPeak = rewardRatios.Count == 0 ? null : Math.Round(rewardRatios.Max(), 4);
-        var rewardMean = rewardRatios.Count == 0 ? null : Math.Round(rewardRatios.Average(), 4);
+        double? rewardPeak = rewardRatios.Count == 0 ? null : Math.Round(rewardRatios.Max(), 4);
+        double? rewardMean = rewardRatios.Count == 0 ? null : Math.Round(rewardRatios.Average(), 4);
         var structureSupport = structureRatios.Count == 0 ? 1d : Math.Max(1d, structureRatios.Average());
-        var structureAdjustedPeak = rewardPeak.HasValue ? Math.Round(rewardPeak.Value / structureSupport, 4) : null;
+        double? structureAdjustedPeak = rewardPeak.HasValue ? Math.Round(rewardPeak.Value / structureSupport, 4) : null;
 
         return new CompositePolicyQuestRow
         {
