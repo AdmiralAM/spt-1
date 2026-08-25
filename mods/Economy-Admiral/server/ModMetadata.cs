@@ -3,15 +3,15 @@ using SPTarkov.Server.Core.Models.Spt.Mod;
 using Range = SemanticVersioning.Range;
 using Version = SemanticVersioning.Version;
 
-namespace SPTEconomy;
+namespace EconomyAdmiral;
 
 [UsedImplicitly]
 public record ModMetadata : IModMetadata
 {
-    public string ModGuid { get; init; } = "com.admiralam.spt-economy";
-    public string Name { get; init; } = "SPT Economy";
+    public string ModGuid { get; init; } = "com.admiralam.economy-admiral";
+    public string Name { get; init; } = "Economy Admiral";
     public string Author { get; init; } = "AdmiralAM";
-    public List<string>? Contributors { get; init; } = ["Economy MOD SPT"];
+    public List<string>? Contributors { get; init; } = ["Economy Admiral"];
     public Version Version { get; init; } = new(typeof(ModMetadata).Assembly.GetName().Version!.ToString(3));
     public Range SptVersion { get; init; } = new("~4.1.0");
     public bool HasPrepatcher { get; init; }
