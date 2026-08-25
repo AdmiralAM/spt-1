@@ -8,6 +8,7 @@ namespace SPTEconomy;
 
 [Injectable]
 public sealed class EnforcementPlanService(
+    QuestAnalysisService questAnalysisService,
     ModHelper modHelper,
     ISptLogger<EnforcementPlanService> logger
 )
@@ -27,16 +28,7 @@ public sealed class EnforcementPlanService(
             return;
         }
 
-        var analysisPath = SafePath(modPath, "reports/economy-admiral-quest-analysis.json");
-        if (!File.Exists(analysisPath))
-        {
-            throw new InvalidOperationException("Economy Admiral enforcement plan requires the unified quest analysis report from the same PostLoad pass.");
-        }
-
-        await using var analysisStream = File.OpenRead(analysisPath);
-        var analysis = await JsonSerializer.DeserializeAsync<QuestAnalysisReport>(analysisStream, JsonOptions, cancellationToken)
-            ?? throw new InvalidOperationException("Economy Admiral could not deserialize unified quest analysis for enforcement planning.");
-
+        var analysis = questAnalysisService.GetSnapshot();
         var candidates = analysis.Quests
             .Where(row => row.ObservationalFlags.Count > 0)
             .OrderBy(row => row.QuestId, StringComparer.Ordinal)
@@ -48,11 +40,12 @@ public sealed class EnforcementPlanService(
             SchemaVersion = 1,
             Mode = config.Mode.ToString(),
             Preset = config.Preset.ToString(),
+            SourceAnalysisSchemaVersion = analysis.SchemaVersion,
             EnforceRequested = config.Mode == EconomyMode.Enforce,
             ApplyMutations = false,
             MutationCount = 0,
             CandidateCount = candidates.Count,
-            Note = "Fail-closed planning artifact only. Candidates are derived from audit flags, but no target reward values are invented and no final DB records are mutated.",
+            Note = "Fail-closed planning artifact only. Candidates are derived from the in-memory unified audit snapshot; no target reward values are invented and no final DB records are mutated.",
             Candidates = candidates,
         };
 
@@ -136,6 +129,7 @@ public sealed record EnforcementPlanReport
     public required int SchemaVersion { get; init; }
     public required string Mode { get; init; }
     public required string Preset { get; init; }
+    public required int SourceAnalysisSchemaVersion { get; init; }
     public required bool EnforceRequested { get; init; }
     public required bool ApplyMutations { get; init; }
     public required int MutationCount { get; init; }
