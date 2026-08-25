@@ -1,6 +1,9 @@
 # SPT Belt/Armband Inventory
 
-Inventory extension for SPT 4.1.x that gives compatible container items equipped in the `ArmBand` slot belt-style inventory behavior. Current module version: **0.1.0**.
+Inventory extension for SPT 4.1.x that gives compatible accessory containers
+ArmBand/Belt/HeadBand-style inventory behavior. The validated runtime currently
+uses `ArmBand` as its host; Belt and HeadBand are the next category foundations.
+Current module version: **0.1.0**.
 
 The implementation is generic: it does not require a specific Pack 'n' Strap item ID or content class. Plain armbands remain ordinary armbands; container-capable items receive the additional inventory behavior.
 
@@ -13,6 +16,7 @@ The module now contains both client and server components:
 - `tests/` — regression coverage for the current client/server contracts;
 - `tools/` — deterministic hot-path checks;
 - `docs/` — compatibility archaeology and runtime contracts.
+- `docs/accessory-taxonomy.md` — shared category, capacity and UI geometry contract.
 
 The client remains event/interaction driven; it does not use per-frame inventory polling. Runtime reflection is used where EFT/SPT client members are obfuscated and is resolved outside hot paths.
 
