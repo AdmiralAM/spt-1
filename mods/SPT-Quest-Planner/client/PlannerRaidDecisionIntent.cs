@@ -8,16 +8,20 @@ namespace SPTQuestPlanner.Client
     {
         public PlannerRaidDecisionIntent(
             string focusQuestId = null,
-            IReadOnlyList<string> focusPathQuestIds = null)
+            IReadOnlyList<string> focusPathQuestIds = null,
+            IReadOnlyList<string> focusFrontierQuestIds = null)
         {
             FocusQuestId = focusQuestId == null ? string.Empty : focusQuestId.Trim();
             FocusPathQuestIds = Normalize(focusPathQuestIds);
+            FocusFrontierQuestIds = Normalize(focusFrontierQuestIds);
         }
 
         public string FocusQuestId { get; private set; }
         public IReadOnlyList<string> FocusPathQuestIds { get; private set; }
+        public IReadOnlyList<string> FocusFrontierQuestIds { get; private set; }
         public bool HasFocusQuest { get { return !string.IsNullOrWhiteSpace(FocusQuestId); } }
         public bool HasFocusPath { get { return FocusPathQuestIds.Count > 0; } }
+        public bool HasExecutableFocusFrontier { get { return FocusFrontierQuestIds.Count > 0; } }
 
         private static IReadOnlyList<string> Normalize(IReadOnlyList<string> values)
         {
@@ -46,7 +50,14 @@ namespace SPTQuestPlanner.Client
             string normalized = focusQuestId.Trim();
             PlannerQueryEngine query = new PlannerQueryEngine(topology, state);
             IReadOnlyList<string> path = query.GetIncompletePrerequisitePlan(normalized);
-            return new PlannerRaidDecisionIntent(normalized, path);
+            List<string> frontier = new List<string>();
+            for (int i = 0; i < path.Count; i++)
+            {
+                string questId = path[i];
+                if (query.GetImmediateBlockers(questId).Count == 0) frontier.Add(questId);
+            }
+
+            return new PlannerRaidDecisionIntent(normalized, path, frontier.ToArray());
         }
     }
 
@@ -71,13 +82,16 @@ namespace SPTQuestPlanner.Client
                     string matchedQuestId = leftSupports ? leftMatch : rightMatch;
                     return new PlannerRaidDecision(
                         leftSupports ? PlannerRaidDecisionOutcome.PreferLeft : PlannerRaidDecisionOutcome.PreferRight,
-                        intent.HasFocusPath
-                            ? "Player progression focus selects a candidate that advances the focused quest path."
-                            : "Player progression focus explicitly selects a candidate that advances the focused quest.",
+                        intent.HasExecutableFocusFrontier
+                            ? "Player progression focus selects a candidate that advances an executable frontier quest on the focused path."
+                            : intent.HasFocusPath
+                                ? "Player progression focus selects a candidate that advances the focused quest path."
+                                : "Player progression focus explicitly selects a candidate that advances the focused quest.",
                         new[]
                         {
                             (leftSupports ? "LEFT" : "RIGHT") + ": advances " + matchedQuestId +
-                            (intent.HasFocusPath ? " on the prerequisite path to " + intent.FocusQuestId : string.Empty)
+                            (intent.HasFocusPath ? " on the prerequisite path to " + intent.FocusQuestId : string.Empty) +
+                            (intent.HasExecutableFocusFrontier ? "; quest is on the current executable focus frontier" : string.Empty)
                         });
                 }
             }
@@ -98,6 +112,18 @@ namespace SPTQuestPlanner.Client
         {
             matchedQuestId = string.Empty;
             if (signals == null || intent == null || !intent.HasFocusQuest) return false;
+
+            if (intent.HasExecutableFocusFrontier)
+            {
+                for (int p = 0; p < intent.FocusFrontierQuestIds.Count; p++)
+                {
+                    string frontierQuestId = intent.FocusFrontierQuestIds[p];
+                    if (!ContainsQuest(signals, frontierQuestId)) continue;
+                    matchedQuestId = frontierQuestId;
+                    return true;
+                }
+                return false;
+            }
 
             if (intent.HasFocusPath)
             {
