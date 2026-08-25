@@ -28,7 +28,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run inventory/graph tests
+      - name: Run inventory/graph and reward benchmark tests
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 
       - name: Validate campaign manifest JSON
@@ -71,10 +71,45 @@ jobs:
               raise SystemExit(f"pinned corpus cross-bundle edge count changed: {summary['crossBundleEdgeCount']} != 23")
           PY
 
-      - name: Upload transient inventory report
+      - name: Fetch pinned official vanilla quest database
+        run: >-
+          curl --fail --location --retry 3
+          --output build/vanilla-quests.json
+          https://raw.githubusercontent.com/sp-tarkov/server-csharp/fe74b07c6361e2c6d1532dc21ba1c3b981d88d93/Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json
+
+      - name: Build vanilla reward benchmark
+        run: >-
+          python mods/Admiral-Trader/tools/build_reward_benchmark.py
+          build/vanilla-quests.json
+          --output build/vanilla-reward-benchmark.json
+
+      - name: Enforce vanilla benchmark gate
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('build/vanilla-reward-benchmark.json').read_text(encoding='utf-8'))
+          summary = data['summary']
+          print(json.dumps({
+              'questCount': summary['questCount'],
+              'questTypes': summary['questTypes'],
+              'xp': summary['xp'],
+              'standing': summary['standing'],
+              'itemRecords': summary['itemRecords'],
+              'unlocks': summary['unlocks'],
+          }, indent=2, ensure_ascii=False))
+          if summary['questCount'] < 400:
+              raise SystemExit(f"vanilla benchmark unexpectedly small: {summary['questCount']}")
+          if summary['xp']['count'] != summary['questCount']:
+              raise SystemExit('vanilla XP distribution does not cover every quest')
+          PY
+
+      - name: Upload transient analysis reports
         uses: actions/upload-artifact@v4
         with:
-          name: admiral-trader-inventory-${{ github.event.pull_request.head.sha || github.sha }}
-          path: build/admiral-trader-inventory.json
+          name: admiral-trader-analysis-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            build/admiral-trader-inventory.json
+            build/vanilla-reward-benchmark.json
           if-no-files-found: error
           retention-days: 7
