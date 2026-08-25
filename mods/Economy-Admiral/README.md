@@ -1,6 +1,6 @@
 # Economy Admiral
 
-**Economy Admiral** is a server-side economy audit/enforcement mod for SPT 4.1.x.
+**Economy Admiral** is a server-side economy audit/enforcement mod for SPT 4.1.x. The current physical acceptance target is **SPT 4.1.3**.
 
 ## Current status
 
@@ -22,6 +22,7 @@ Implemented now:
 - deterministic non-mutating target envelopes derived from vanilla medians and resolved policy thresholds;
 - fail-closed enforcement-plan report derived from the in-memory unified analysis snapshot;
 - runtime evidence manifest with before/after SHA-256 fingerprinting of the analyzed economy DB surfaces;
+- exact packaged CI build identity propagated into runtime evidence;
 - functional `Easy / Normal / Hard / Custom` policies;
 - `Off / Audit / Enforce` contract with **zero active mutations**;
 - deterministic JSON reports and manual item overrides;
@@ -32,6 +33,27 @@ Implemented now:
 ## SPT 4.1 architecture boundary
 
 Economy Admiral consumes final injected `TemplateTable` and `TradersTable` instances after normal content registration. `EconomyRuntimeConfigService` loads the runtime config once for the top-level module gate; `Mode.Off` exits before the first audit service executes.
+
+The maintained public NuGet compile boundary is `SPTarkov.Server.Core 4.1.2` on .NET 10. The physical runtime acceptance target is SPT 4.1.3; the package embeds both values in `BUILD_INFO.json` so runtime evidence is tied to the actual candidate used.
+
+## Installation for the current runtime gate
+
+Use the exact `economy-admiral-candidate` Actions artifact from PR #121.
+
+Create:
+
+`SPT_Runtime/user/mods/Economy Admiral/`
+
+Then extract the **contents of the candidate ZIP into that directory**. The installed folder must contain:
+
+- `Economy-Admiral.dll`;
+- `BUILD_INFO.json`;
+- `config/config.json`;
+- `README.md`;
+- `RUNTIME_TEST.md`;
+- `Validate-Runtime.ps1`.
+
+Do not extract those files directly into the SPT root. `RUNTIME_TEST.md` contains the exact Audit-mode and Off-mode physical acceptance procedure.
 
 ## Reports
 
@@ -60,17 +82,27 @@ All report paths are constrained to stay inside the mod directory.
 - trader barter schemes;
 - trader loyalty mappings.
 
-The runtime manifest records both hashes, canonical-line counts and structural DB counts. It also verifies that all eight expected analysis/planning reports exist and are non-empty.
+Runtime-evidence schema v2 also imports packaged `BUILD_INFO.json` and records:
+
+- product identity;
+- exact PR head SHA;
+- GitHub Actions workflow run id;
+- artifact name;
+- NuGet compile package version;
+- target runtime version.
+
+The runtime manifest records both DB hashes, canonical-line counts and structural DB counts. It also verifies that all eight expected analysis/planning reports exist and are non-empty.
 
 The runtime gate is considered passed only when:
 
+- packaged build identity is present and accepted by `Validate-Runtime.ps1`;
 - `DatabaseUnchangedAcrossPipeline = true`;
 - `AllExpectedReportsPresent = true`;
 - `ApplyMutations = false`;
 - `DeclaredMutationCount = 0`;
 - `RuntimeGatePassed = true`.
 
-This is stronger than a compile-only claim: on the target SPT/mod stack it provides direct before/after evidence that the current Economy Admiral pipeline did not modify the economy surfaces it audits.
+This is stronger than a compile-only claim: on the target SPT/mod stack it provides direct before/after evidence that the current Economy Admiral pipeline did not modify the economy surfaces it audits, while identifying exactly which DLL produced the evidence.
 
 ## Unified quest analysis
 
@@ -200,11 +232,11 @@ Typed XP/standing/unlock dimensions are not converted into rubles and are not me
 
 The MVP still lacks:
 
-- an approved composite-policy formula;
+- physical runtime evidence from the target SPT/mod stack;
+- an approved composite-policy formula based on those real distributions;
 - concrete item-template replacement logic;
 - active mutation execution;
 - mutation transaction/rollback reporting;
-- physical runtime evidence from the target SPT/mod stack;
 - repeatable replacement-rate enforcement;
 - PBS adapter / trader normalization;
 - flea, world-loot, craft and insurance modeling.
@@ -213,7 +245,7 @@ The MVP still lacks:
 
 MVP remainder:
 
-- run the exact compiled candidate against the target SPT/mod stack;
+- run the exact compiled candidate against the target SPT 4.1.3/mod stack;
 - inspect `economy-admiral-runtime-evidence.json` and the eight generated analysis/planning reports;
 - use real distributions to decide whether any composite candidate deserves promotion;
 - define mutation transaction / rollback / before-after report contracts;
