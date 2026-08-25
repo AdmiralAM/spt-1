@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace SPTBeltArmbandInventory
 {
@@ -106,7 +107,6 @@ namespace SPTBeltArmbandInventory
             LocalBuilder boxedResult = il.DeclareLocal(typeof(object));
 
             il.Emit(OpCodes.Ldarg_1);
-            il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldobj, parentMergeType);
             il.Emit(OpCodes.Box, parentMergeType);
             il.Emit(OpCodes.Stloc, boxedResult);
@@ -115,6 +115,7 @@ namespace SPTBeltArmbandInventory
             il.Emit(OpCodes.Ldloca_S, boxedResult);
             il.Emit(OpCodes.Call, typeof(SlotMergeRuntime).GetMethod(nameof(SlotMergeRuntime.OverrideResult), BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
 
+            il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldloc, boxedResult);
             il.Emit(OpCodes.Unbox_Any, parentMergeType);
             il.Emit(OpCodes.Stobj, parentMergeType);
