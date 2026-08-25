@@ -44,7 +44,7 @@ namespace SPTPause
             if (state == null || enabledSetting == null || toggleSetting == null) return;
 
             bool shortcutPressed = ShortcutPressed(toggleSetting.Value);
-            if (state.IsPaused && !shortcutPressed)
+            if (PauseInputPolicy.SuppressGameplayInput(state.IsPaused, shortcutPressed))
             {
                 Input.ResetInputAxes();
                 return;
