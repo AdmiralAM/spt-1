@@ -37,9 +37,14 @@ public sealed class RuntimeEvidenceService(
 
     public void CaptureBefore() => before = CaptureFingerprint();
 
-    public async Task WriteAfterAsync(VanillaBaselineSnapshot vanillaBaseline, CancellationToken cancellationToken)
+    public async Task WriteAfterAsync(
+        VanillaBaselineSnapshot vanillaBaseline,
+        QuestProvenanceDeltaReport questProvenance,
+        CancellationToken cancellationToken
+    )
     {
-        if (before is null) throw new InvalidOperationException("Economy Admiral runtime evidence requires CaptureBefore() before the analysis pipeline.");
+        if (before is null)
+            throw new InvalidOperationException("Economy Admiral runtime evidence requires CaptureBefore() before the analysis pipeline.");
 
         var config = await runtimeConfigService.GetAsync(cancellationToken);
         var after = CaptureFingerprint();
@@ -50,7 +55,12 @@ public sealed class RuntimeEvidenceService(
         {
             var path = Path.Combine(reportDirectory, fileName);
             var exists = File.Exists(path);
-            return new RuntimeReportEvidence { FileName = fileName, Exists = exists, SizeBytes = exists ? new FileInfo(path).Length : 0 };
+            return new RuntimeReportEvidence
+            {
+                FileName = fileName,
+                Exists = exists,
+                SizeBytes = exists ? new FileInfo(path).Length : 0,
+            };
         }).ToList();
 
         var databaseUnchanged = string.Equals(before.Sha256, after.Sha256, StringComparison.Ordinal);
@@ -58,15 +68,21 @@ public sealed class RuntimeEvidenceService(
         var provenance = new RuntimeProvenanceEvidence
         {
             CapturePriority = vanillaBaseline.CapturePriority,
-            PristineQuestCount = vanillaBaseline.QuestCount,
-            FinalQuestCount = after.QuestCount,
-            ModAddedQuestCount = Math.Max(0, after.QuestCount - vanillaBaseline.QuestCount),
+            PristineQuestCount = questProvenance.PristineQuestCount,
+            FinalQuestCount = questProvenance.FinalQuestCount,
+            ModAddedQuestCount = questProvenance.ModAddedQuestCount,
+            PristineModifiedQuestCount = questProvenance.PristineModifiedQuestCount,
+            PristineUnchangedQuestCount = questProvenance.PristineUnchangedQuestCount,
+            RemovedPristineQuestCount = questProvenance.RemovedPristineQuestCount,
             PristineTraderCount = vanillaBaseline.TraderCount,
             FinalTraderCount = after.TraderCount,
             BaselineCaptured = vanillaBaseline.QuestCount > 0,
-            BaselineNotLargerThanFinal = vanillaBaseline.QuestCount <= after.QuestCount,
+            CountsConsistent = questProvenance.PristineQuestCount == vanillaBaseline.QuestCount
+                && questProvenance.FinalQuestCount == after.QuestCount
+                && questProvenance.PristineModifiedQuestCount + questProvenance.PristineUnchangedQuestCount + questProvenance.RemovedPristineQuestCount == questProvenance.PristineQuestCount
+                && questProvenance.ModAddedQuestCount + questProvenance.PristineModifiedQuestCount + questProvenance.PristineUnchangedQuestCount == questProvenance.FinalQuestCount,
         };
-        var provenanceValid = provenance.BaselineCaptured && provenance.BaselineNotLargerThanFinal;
+        var provenanceValid = provenance.BaselineCaptured && provenance.CountsConsistent;
 
         var manifest = new RuntimeEvidenceManifest
         {
@@ -85,7 +101,7 @@ public sealed class RuntimeEvidenceService(
             ApplyMutations = false,
             DeclaredMutationCount = 0,
             RuntimeGatePassed = databaseUnchanged && allReportsPresent && provenanceValid,
-            Note = "Runtime evidence for the read-only MVP. The final-DB fingerprint proves zero mutation across the late Economy Admiral pipeline. Provenance proves a non-empty pristine quest baseline was captured before normal mod callbacks and is not larger than the final modded quest table.",
+            Note = "Read-only runtime evidence. Provenance counts are taken from the explicit pristine-vs-final quest delta, not inferred from final-minus-pristine arithmetic; this remains correct when pristine quests are removed.",
             Reports = reportFiles,
         };
 
@@ -95,7 +111,7 @@ public sealed class RuntimeEvidenceService(
 
         if (!databaseUnchanged)
         {
-            logger.Error($"[Economy Admiral] runtime evidence FAILED: final DB fingerprint changed across the read-only pipeline; manifest={manifestPath}");
+            logger.Error($"[Economy Admiral] runtime evidence FAILED: final DB fingerprint changed across read-only pipeline; manifest={manifestPath}");
             return;
         }
         if (!allReportsPresent)
@@ -105,11 +121,11 @@ public sealed class RuntimeEvidenceService(
         }
         if (!provenanceValid)
         {
-            logger.Error($"[Economy Admiral] runtime evidence FAILED: pristine provenance invalid; pristineQuests={provenance.PristineQuestCount}, finalQuests={provenance.FinalQuestCount}; manifest={manifestPath}");
+            logger.Error($"[Economy Admiral] runtime evidence FAILED: provenance counts inconsistent; pristine={provenance.PristineQuestCount}, final={provenance.FinalQuestCount}, added={provenance.ModAddedQuestCount}, modified={provenance.PristineModifiedQuestCount}, unchanged={provenance.PristineUnchangedQuestCount}, removed={provenance.RemovedPristineQuestCount}; manifest={manifestPath}");
             return;
         }
 
-        logger.Info($"[Economy Admiral] runtime evidence PASS: DB unchanged, {manifest.PresentReportCount}/{manifest.ExpectedReportCount} reports present, pristineQuests={provenance.PristineQuestCount}, finalQuests={provenance.FinalQuestCount}, modAddedQuests={provenance.ModAddedQuestCount}; build={buildIdentity?.HeadSha ?? "local/unknown"}; manifest={manifestPath}");
+        logger.Info($"[Economy Admiral] runtime evidence PASS: DB unchanged, {manifest.PresentReportCount}/{manifest.ExpectedReportCount} reports present, pristine={provenance.PristineQuestCount}, final={provenance.FinalQuestCount}, added={provenance.ModAddedQuestCount}, modified={provenance.PristineModifiedQuestCount}, removed={provenance.RemovedPristineQuestCount}; build={buildIdentity?.HeadSha ?? "local/unknown"}; manifest={manifestPath}");
     }
 
     private static async Task<RuntimeBuildIdentity?> ReadBuildIdentityAsync(string modPath, CancellationToken cancellationToken)
@@ -190,10 +206,13 @@ public sealed record RuntimeProvenanceEvidence
     public required int PristineQuestCount { get; init; }
     public required int FinalQuestCount { get; init; }
     public required int ModAddedQuestCount { get; init; }
+    public required int PristineModifiedQuestCount { get; init; }
+    public required int PristineUnchangedQuestCount { get; init; }
+    public required int RemovedPristineQuestCount { get; init; }
     public required int PristineTraderCount { get; init; }
     public required int FinalTraderCount { get; init; }
     public required bool BaselineCaptured { get; init; }
-    public required bool BaselineNotLargerThanFinal { get; init; }
+    public required bool CountsConsistent { get; init; }
 }
 
 public sealed record RuntimeBuildIdentity
