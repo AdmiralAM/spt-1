@@ -23,7 +23,8 @@ Implemented:
 - candidate composite metrics with no selected policy;
 - non-mutating target envelopes;
 - quest provenance delta (`PristineUnchanged / PristineModified / ModAdded / removed`);
-- provenance-aware enforcement review plan;
+- exact provenance partition validation in runtime evidence;
+- provenance-aware, dimension-scoped mutation-eligibility classification;
 - before/after SHA-256 final-DB fingerprint;
 - exact GitHub Actions build identity and runtime validator;
 - future `RepeatedRaidLootDecay` represented and **OFF by default**.
@@ -60,11 +61,11 @@ With `mode != Off`:
 5. replace primary reward benchmark with pristine values;
 6. generate and pristine-correct utility/progression/constraint reports;
 7. build unified quest analysis and apply pristine-relative ratios;
-8. calculate quest provenance delta;
+8. calculate exact quest provenance delta;
 9. evaluate non-selected composite candidates;
 10. derive non-mutating target envelopes;
-11. build provenance-aware fail-closed enforcement review plan;
-12. capture fingerprint-after and write runtime evidence.
+11. build provenance-aware, dimension-scoped fail-closed enforcement review plan;
+12. capture fingerprint-after and write runtime evidence using the exact provenance delta.
 
 ## Reports
 
@@ -90,10 +91,12 @@ Runtime evidence schema **v3** requires:
 - exact packaged build identity;
 - pristine capture priority `1`;
 - positive pristine quest count;
-- consistent final/mod-added quest counts;
+- exact non-negative provenance counts;
+- `modified + unchanged + removed = pristine`;
+- `added + modified + unchanged = final`;
 - all **9/9** working reports;
 - `PristineStartupSnapshot` benchmark provenance in primary/utility/progression/constraint reports;
-- provenance-delta counts consistent with the manifest;
+- provenance-delta counts exactly equal to runtime-manifest counts;
 - identical before/after final-DB fingerprints;
 - zero declared mutations and `RuntimeGatePassed = true`.
 
@@ -140,7 +143,18 @@ Target envelopes support item reward budget, XP and absolute standing, but:
 - every `AutomaticMutationAllowed = false`;
 - every `ProposedMutation = null`.
 
-Enforcement plan schema v2 adds `ProvenanceClass`, `PristineUntouched`, `ChangedDimensions` and candidate counts by provenance. It still has `ApplyMutations = false` and `MutationCount = 0`.
+Enforcement plan schema **v4** is provenance-aware and uses mutation-eligibility policy **v2**. Every flagged quest is classified before any future mutation implementation:
+
+- `ProtectedPristine` — `PristineUnchanged`, never automatically eligible by default;
+- `PolicyEligibleModAdded` — mod-added quest with at least one flagged reward dimension;
+- `ReviewOnlyModAdded` — mod-added quest with no currently mapped reward mutation dimension;
+- `PolicyEligibleModifiedPristine` — pristine quest where a flagged reward dimension is also proven changed by the mod stack;
+- `ProtectedUnchangedRewardDimensions` — pristine quest was modified, but the flagged reward dimensions themselves were not changed;
+- `BlockedUnknownProvenance` — provenance cannot be proven.
+
+`PotentialMutationDimensions` is limited to `ItemRewardBudget`, `Experience`, and `TraderStanding`. For `PristineModified`, each potential dimension must map to a proven changed source dimension (`SuccessItemHandbookValue`, `Experience`, or `TraderStanding`). Structural changes alone never make reward fields eligible.
+
+This is still **classification only**: `AutomaticMutationAllowed = false`, `ApplyMutations = false`, `MutationCount = 0`, and `ProposedMutation = null` remain mandatory.
 
 ## Configuration
 
@@ -150,7 +164,7 @@ Default config is `config/config.json`; default mode/preset are `Audit / Normal`
 
 Earlier runtime testing already proved the value-threaded pipeline, typed quest-item accounting and zero-mutation fingerprint on the target SPT 4.1.3 stack.
 
-The next runtime test is specifically for **pristine provenance**. It must prove early baseline capture, corrected benchmark distributions, provenance delta, provenance-aware enforcement review, 9/9 reports and unchanged final DB.
+The next runtime test is specifically for **pristine provenance and dimension-scoped eligibility**. It must prove early baseline capture, corrected benchmark distributions, exact provenance partition, safe eligibility classifications, 9/9 reports and unchanged final DB.
 
 No composite policy or mutation path is promoted before that evidence is reviewed.
 
@@ -160,7 +174,7 @@ After pristine-provenance acceptance:
 
 - analyze `ModAdded` vs `PristineModified` outliers by trader/source;
 - select/reject composite policy candidates from real distributions;
-- define explicit default protection for untouched pristine quests;
+- define explicit first mutation policy only for provenance/dimension-eligible reward fields;
 - design mutation transaction + rollback + before/after evidence;
 - implement the first deterministic enforcement rule behind explicit config gates.
 
