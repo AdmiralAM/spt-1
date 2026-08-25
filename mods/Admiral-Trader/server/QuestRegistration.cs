@@ -6,6 +6,7 @@ using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using IOPath = System.IO.Path;
 
@@ -18,7 +19,23 @@ public sealed class AdmiralQuestRegistration(
     LocaleTable localesTable,
     ISptLogger<AdmiralQuestRegistration> logger) : IOnLoad
 {
-    private const int ExpectedQuestCount = 10;
+    private const int ExpectedAccessQuestCount = 10;
+    private const int ExpectedArsenalQuestCount = 21;
+    private const int ExpectedQuestCount = ExpectedAccessQuestCount + ExpectedArsenalQuestCount;
+
+    private static readonly string[] RequiredLocaleFields =
+    [
+        "name",
+        "description",
+        "note",
+        "startedMessageText",
+        "successMessageText",
+        "failMessageText",
+        "acceptPlayerMessage",
+        "declinePlayerMessage",
+        "completePlayerMessage",
+        "changeQuestMessageText"
+    ];
 
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
@@ -39,7 +56,7 @@ public sealed class AdmiralQuestRegistration(
         foreach (var (questId, quest) in quests)
             templateTable.Quests.Add(questId, quest);
 
-        RegisterQuestLocales(modPath);
+        RegisterQuestLocales(modPath, quests);
         logger.Success($"Registered {quests.Count} authored Admiral quests");
         return Task.CompletedTask;
     }
@@ -70,23 +87,51 @@ public sealed class AdmiralQuestRegistration(
         if (quests.Count != ExpectedQuestCount)
             throw new InvalidDataException($"Expected {ExpectedQuestCount} authored Admiral quests, got {quests.Count}");
 
+        int accessCount = 0;
+        int arsenalCount = 0;
+
         foreach (var (questId, quest) in quests)
         {
             if (quest.Id != questId)
                 throw new InvalidDataException($"Quest dictionary key/id mismatch: {questId} != {quest.Id}");
             if (quest.TraderId.ToString() != RuntimeIdentity.TraderId)
                 throw new InvalidDataException($"Quest {questId} has unexpected trader id {quest.TraderId}");
+            if (string.IsNullOrWhiteSpace(quest.QuestName))
+                throw new InvalidDataException($"Quest {questId} has no authored QuestName fallback");
             if (quest.Conditions.AvailableForFinish is not { Count: 1 } finishConditions)
                 throw new InvalidDataException($"Quest {questId} must have exactly one finish condition");
 
             QuestCondition finish = finishConditions[0];
-            if (!string.Equals(finish.ConditionType, "FindItem", StringComparison.Ordinal))
-                throw new InvalidDataException($"Quest {questId} finish condition must be FindItem, got {finish.ConditionType}");
-            if (finish.OnlyFoundInRaid is not false)
-                throw new InvalidDataException($"Quest {questId} must not require found-in-raid keys");
-            if (finish.Target is null || finish.Value is null || finish.Value <= 0)
-                throw new InvalidDataException($"Quest {questId} has an invalid key objective");
+            if (string.Equals(finish.ConditionType, "FindItem", StringComparison.Ordinal))
+            {
+                ValidateAccessQuest(questId, finish);
+                accessCount++;
+                continue;
+            }
+
+            if (string.Equals(finish.ConditionType, "CounterCreator", StringComparison.Ordinal))
+            {
+                if (quest.Type != QuestTypeEnum.Elimination)
+                    throw new InvalidDataException($"Arsenal quest {questId} must be Elimination, got {quest.Type}");
+                arsenalCount++;
+                continue;
+            }
+
+            throw new InvalidDataException(
+                $"Quest {questId} has unsupported finish condition {finish.ConditionType}; expected FindItem or CounterCreator");
         }
+
+        if (accessCount != ExpectedAccessQuestCount || arsenalCount != ExpectedArsenalQuestCount)
+            throw new InvalidDataException(
+                $"Admiral quest mix drifted: Access={accessCount}/{ExpectedAccessQuestCount}, Arsenal={arsenalCount}/{ExpectedArsenalQuestCount}");
+    }
+
+    private static void ValidateAccessQuest(MongoId questId, QuestCondition finish)
+    {
+        if (finish.OnlyFoundInRaid is not false)
+            throw new InvalidDataException($"Access quest {questId} must not require found-in-raid keys");
+        if (finish.Target is null || finish.Value is null || finish.Value <= 0)
+            throw new InvalidDataException($"Access quest {questId} has an invalid key objective");
     }
 
     private void PreflightQuestIds(Dictionary<MongoId, Quest> quests)
@@ -101,12 +146,13 @@ public sealed class AdmiralQuestRegistration(
                 $"Cannot register Admiral quests: {collisions.Count} quest id collision(s): {string.Join(", ", collisions)}");
     }
 
-    private void RegisterQuestLocales(string modPath)
+    private void RegisterQuestLocales(string modPath, Dictionary<MongoId, Quest> quests)
     {
-        Dictionary<string, string> english =
-            modHelper.GetJsonDataFromFile<Dictionary<string, string>>(modPath, "db/locales/en.json");
-        Dictionary<string, string> russian =
-            modHelper.GetJsonDataFromFile<Dictionary<string, string>>(modPath, "db/locales/ru.json");
+        Dictionary<string, string> english = LoadLocaleSet(modPath, "en.json", "arsenal-en.json");
+        Dictionary<string, string> russian = LoadLocaleSet(modPath, "ru.json", "arsenal-ru.json");
+
+        EnsureLocaleCoverage("en", english, quests);
+        EnsureLocaleCoverage("ru", russian, quests);
 
         foreach (var (localeCode, localeKvP) in localesTable.Global)
         {
@@ -123,6 +169,40 @@ public sealed class AdmiralQuestRegistration(
 
                 return lazyLoadedLocaleData;
             });
+        }
+    }
+
+    private Dictionary<string, string> LoadLocaleSet(string modPath, params string[] localeFiles)
+    {
+        Dictionary<string, string> merged = new(StringComparer.Ordinal);
+        foreach (string localeFile in localeFiles)
+        {
+            Dictionary<string, string> source =
+                modHelper.GetJsonDataFromFile<Dictionary<string, string>>(modPath, $"db/locales/{localeFile}");
+            foreach (var (key, value) in source)
+            {
+                if (!merged.TryAdd(key, value))
+                    throw new InvalidDataException($"Duplicate Admiral locale key {key} while loading {localeFile}");
+            }
+        }
+
+        return merged;
+    }
+
+    private static void EnsureLocaleCoverage(
+        string localeCode,
+        Dictionary<string, string> locale,
+        Dictionary<MongoId, Quest> quests)
+    {
+        foreach (MongoId questId in quests.Keys)
+        {
+            string id = questId.ToString();
+            foreach (string field in RequiredLocaleFields)
+            {
+                string key = $"{id} {field}";
+                if (!locale.ContainsKey(key))
+                    throw new InvalidDataException($"Admiral locale {localeCode} is missing required key {key}");
+            }
         }
     }
 }
