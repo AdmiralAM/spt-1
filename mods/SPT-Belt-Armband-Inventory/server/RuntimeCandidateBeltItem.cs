@@ -20,9 +20,9 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
     public const string RuntimeCandidateTpl = "68ac00000000000000000001";
     public const string RuntimeCandidateGridId = "68ac00000000000000000002";
 
-    // Discovery-gate artifact: custom taxonomy is intentionally disabled until
-    // the SPT 4.1.3 client inventory contracts are proven load-safe.
-    private const bool EnableCustomRuntimeTaxonomy = false;
+    // Client runtime type registration passed its load-safe gate before this
+    // server taxonomy is enabled. This selects the registered custom belt type.
+    private const bool EnableCustomRuntimeTaxonomy = true;
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
