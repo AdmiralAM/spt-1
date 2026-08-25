@@ -12,7 +12,6 @@ namespace SPTEconomy;
 [Injectable]
 public sealed class QuestAnalysisService(
     TemplateTable templates,
-    QuestProgressionGraphService progressionGraphService,
     ModHelper modHelper,
     ISptLogger<QuestAnalysisService> logger
 )
@@ -31,7 +30,7 @@ public sealed class QuestAnalysisService(
         "6617beeaa9cfa777ca915b7c",
     };
 
-    public async Task<QuestAnalysisReport> RunAsync(CancellationToken cancellationToken)
+    public async Task<QuestAnalysisReport> RunAsync(QuestProgressionSnapshot progressionSnapshot, CancellationToken cancellationToken)
     {
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(QuestAnalysisService).Assembly);
         var config = await LoadConfigAsync(modPath, cancellationToken);
@@ -42,7 +41,7 @@ public sealed class QuestAnalysisService(
             .GroupBy(item => item.Id.ToString(), StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.First().Price!.Value, StringComparer.Ordinal);
 
-        var progression = progressionGraphService.GetSnapshot().Quests
+        var progression = progressionSnapshot.Quests
             .ToDictionary(row => row.QuestId, StringComparer.Ordinal);
 
         var rawRows = templates.Quests
