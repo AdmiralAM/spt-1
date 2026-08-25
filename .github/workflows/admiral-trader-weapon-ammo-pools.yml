@@ -31,25 +31,18 @@ jobs:
       - name: Run Admiral Trader unit tests
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 
-      - name: Checkout pinned official SPT item database through LFS
-        uses: actions/checkout@v4
-        with:
-          repository: sp-tarkov/server-csharp
-          ref: fe74b07c6361e2c6d1532dc21ba1c3b981d88d93
-          path: official-spt
-          fetch-depth: 1
-          lfs: true
-          sparse-checkout: |
-            Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/items.json
-          sparse-checkout-cone-mode: false
-
-      - name: Validate official item database payload
-        run: python -m json.tool official-spt/Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/items.json > /dev/null
+      - name: Fetch pinned EFT backend item mirror
+        run: |
+          mkdir -p build
+          curl --fail --location --retry 3 \
+            --output build/backend-items.json \
+            https://raw.githubusercontent.com/carlsmei/tarkovdata/08649f48a43fe8f4bea311b23a224a278a26492b/items.json
+          python -m json.tool build/backend-items.json > /dev/null
 
       - name: Resolve weapon and ammo candidate pools
         run: >-
           python mods/Admiral-Trader/tools/build_weapon_ammo_pools.py
-          official-spt/Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/items.json
+          build/backend-items.json
           mods/Admiral-Trader/manifests/weapon-ammo-authored-spec.json
           --output build/admiral-trader-weapon-ammo-pools.json
 
