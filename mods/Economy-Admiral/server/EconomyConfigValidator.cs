@@ -25,6 +25,19 @@ public static class EconomyConfigValidator
             throw new InvalidOperationException("Economy Admiral config: ReportRelativePath must remain inside the mod folder.");
         }
 
+        if (config.Rarity is null)
+        {
+            throw new InvalidOperationException("Economy Admiral config: Rarity must be an object.");
+        }
+        if (config.CustomAuditPolicy is null)
+        {
+            throw new InvalidOperationException("Economy Admiral config: CustomAuditPolicy must be an object.");
+        }
+        if (config.ManualOverrides is null)
+        {
+            throw new InvalidOperationException("Economy Admiral config: ManualOverrides must be an object.");
+        }
+
         ValidateRarity(config.Rarity);
         ValidatePolicy(config.CustomAuditPolicy);
 
@@ -34,7 +47,10 @@ public static class EconomyConfigValidator
             {
                 throw new InvalidOperationException("Economy Admiral config: ManualOverrides cannot contain an empty template id.");
             }
-
+            if (itemOverride is null)
+            {
+                throw new InvalidOperationException($"Economy Admiral config: manual override '{templateId}' must be an object.");
+            }
             if (itemOverride.Rarity is not null && !AllowedRarities.Contains(itemOverride.Rarity))
             {
                 throw new InvalidOperationException($"Economy Admiral config: unsupported manual rarity '{itemOverride.Rarity}' for template '{templateId}'.");
@@ -48,7 +64,6 @@ public static class EconomyConfigValidator
         {
             throw new InvalidOperationException("Economy Admiral config: rarity source thresholds must be positive.");
         }
-
         if (!(rarity.CommonMinSources > rarity.UncommonMinSources && rarity.UncommonMinSources > rarity.RareMinSources))
         {
             throw new InvalidOperationException("Economy Admiral config: rarity thresholds must satisfy Common > Uncommon > Rare.");
