@@ -15,6 +15,8 @@ Before making changes, read:
 
 Do not begin implementation from stale assumptions when newer repository state, Issues, Pull Requests, runtime evidence, or user direction exists.
 
+When using an old mod, external repository, previous implementation, old branch, or other reference as a baseline, perform a baseline viability check before implementation. Identify the reference source and version, the current target version, affected runtime/API boundaries, known incompatible dependencies, whether the reference is product inspiration, data-model source, code port, or runtime behavior proof, and the minimal proof that the baseline boundary still exists on the target version. If that foundation cannot be proven, stop and report instead of spending implementation effort porting an unvalidated reference.
+
 ## Source-of-truth check
 
 Before writing code, changing CI, publishing artifacts, or telling a user which build to test, establish the current authority for the affected module:
