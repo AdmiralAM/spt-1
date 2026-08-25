@@ -25,7 +25,7 @@ def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
-def load_committed_quests(directory: Path) -> dict[str, dict[str, Any]]:
+def load_committed_quests(directory: Path, expected_ids: set[str] | None = None) -> dict[str, dict[str, Any]]:
     files = sorted(directory.glob("*.json"))
     quests: dict[str, dict[str, Any]] = {}
     for path in files:
@@ -35,6 +35,8 @@ def load_committed_quests(directory: Path) -> dict[str, dict[str, Any]]:
         qid = str(quest.get("_id") or "")
         if len(qid) != 24:
             raise ValueError(f"quest file has malformed _id: {path}: {qid}")
+        if expected_ids is not None and qid not in expected_ids:
+            continue
         if qid in quests:
             raise ValueError(f"duplicate committed quest id: {qid}")
         quests[qid] = quest
@@ -81,22 +83,24 @@ def validate_runtime(
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate committed Admiral quest runtime against regenerated templates.")
+    parser = argparse.ArgumentParser(description="Validate committed Access Protocol runtime against regenerated Access templates.")
     parser.add_argument("quest_dir", type=Path)
     parser.add_argument("generated_runtime", type=Path)
     parser.add_argument("english_locale", type=Path)
     parser.add_argument("russian_locale", type=Path)
     args = parser.parse_args()
 
-    committed = load_committed_quests(args.quest_dir)
     generated = load_json(args.generated_runtime)
+    generated_templates = generated.get("templates") or {}
+    expected_ids = {str(qid) for qid in generated_templates}
+    committed = load_committed_quests(args.quest_dir, expected_ids)
     english = load_json(args.english_locale)
     russian = load_json(args.russian_locale)
     validate_runtime(committed, generated, english, russian)
 
     if len(committed) != 10:
-        raise ValueError(f"expected 10 committed authored quests, got {len(committed)}")
-    print(f"validated {len(committed)} committed Admiral quest templates")
+        raise ValueError(f"expected 10 committed Access Protocol quests, got {len(committed)}")
+    print(f"validated {len(committed)} committed Access Protocol quest templates")
     return 0
 
 
