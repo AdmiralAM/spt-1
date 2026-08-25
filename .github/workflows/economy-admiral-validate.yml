@@ -209,6 +209,8 @@ jobs:
         run: dotnet build mods/Economy-Admiral/server/Economy-Admiral.csproj -c Release --nologo
       - name: Stage candidate
         shell: pwsh
+        env:
+          EA_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           New-Item -ItemType Directory -Force -Path 'build-output/Economy Admiral/config' | Out-Null
           Copy-Item mods/Economy-Admiral/server/bin/Release/net10.0/Economy-Admiral.dll 'build-output/Economy Admiral/Economy-Admiral.dll'
@@ -218,7 +220,7 @@ jobs:
           Copy-Item mods/Economy-Admiral/tools/Validate-Runtime.ps1 'build-output/Economy Admiral/Validate-Runtime.ps1'
           $buildInfo = [ordered]@{
             Product = 'Economy Admiral'
-            HeadSha = $env:GITHUB_SHA
+            HeadSha = $env:EA_HEAD_SHA
             WorkflowRunId = $env:GITHUB_RUN_ID
             ArtifactName = 'economy-admiral-candidate'
             CompilePackageVersion = '4.1.2'
