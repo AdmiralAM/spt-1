@@ -1,6 +1,7 @@
 using JetBrains.Annotations;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
+using SPTEconomy;
 
 namespace EconomyAdmiral;
 
