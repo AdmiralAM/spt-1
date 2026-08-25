@@ -27,17 +27,20 @@ static class Phase9HoverFormattingTests
         ItemHoverText first = cache.Get(hover, store.Current);
 
         Expect(first.Primary == "22,000 ₽ · Therapist", "vendor mode shows highest trader value and trader name", ref assertions);
-        Expect(first.Secondary == "Flea: 32,000 ₽", "vendor mode preformats flea as the alternate Full value", ref assertions);
+        Expect(first.Secondary == "Flea: 32,000 ₽", "vendor mode retains prepared flea alternate data", ref assertions);
         Expect(!Contains(first, ItemTooltipMode.Detailed, "Flea: 32,000 ₽"), "alternate value stays out of Detailed mode", ref assertions);
-        Expect(Contains(first, ItemTooltipMode.Full, "Flea: 32,000 ₽"), "Full mode exposes flea alongside selected trader value", ref assertions);
+        Expect(Contains(first, ItemTooltipMode.Full, "Best sell: Flea"), "Full mode exposes prepared best sell destination", ref assertions);
+        Expect(Contains(first, ItemTooltipMode.Full, "Best trader: Therapist · 22,000 ₽"), "Full mode exposes best trader sell price", ref assertions);
+        Expect(Contains(first, ItemTooltipMode.Full, "Flea: 32,000 ₽"), "Full mode exposes flea alongside trader value", ref assertions);
 
         ItemHoverText flea = new ItemHoverTextFormatter().Format(hover, ItemValueMode.Flea);
         Expect(flea.Primary == "32,000 ₽ · Flea", "flea mode shows flea value", ref assertions);
-        Expect(flea.Secondary == "Therapist: 22,000 ₽", "flea mode preformats best trader as the alternate Full value", ref assertions);
-        Expect(!Contains(flea, ItemTooltipMode.Normal, "Therapist: 22,000 ₽"), "alternate trader value stays Full-only", ref assertions);
-        Expect(Contains(flea, ItemTooltipMode.Full, "Therapist: 22,000 ₽"), "Full mode exposes best trader alongside selected flea value", ref assertions);
+        Expect(flea.Secondary == "Therapist: 22,000 ₽", "flea mode retains prepared best trader alternate data", ref assertions);
+        Expect(!Contains(flea, ItemTooltipMode.Normal, "Best trader: Therapist · 22,000 ₽"), "best trader decision row stays Full-only", ref assertions);
+        Expect(Contains(flea, ItemTooltipMode.Full, "Best trader: Therapist · 22,000 ₽"), "Full mode exposes best trader alongside selected flea value", ref assertions);
+        Expect(Contains(flea, ItemTooltipMode.Full, "Best sell: Flea"), "preferred compact source does not alter best sell decision", ref assertions);
 
-        Expect(first.Status.Length == 0, "sell and surplus decisions stay out of user-facing hover text", ref assertions);
+        Expect(first.Status.Length == 0, "sell and surplus decisions stay out of legacy status text", ref assertions);
         Expect(object.ReferenceEquals(first, cache.Get(hover, store.Current)), "unchanged snapshot reuses formatted text object", ref assertions);
         Expect(object.ReferenceEquals(ItemHoverText.Empty, cache.Get(ItemHoverState.Empty, store.Current)), "empty hover is allocation-free", ref assertions);
 
