@@ -4,28 +4,26 @@
 
 ## Current status
 
-The module is in its first MVP: **read-only final-database economy audit**.
+The module is in its first MVP: **read-only final-database economy analysis plus fail-closed enforcement planning**.
 
 Implemented now:
 
 - final DB scan at the SPT 4.1 `PostLoad` lifecycle boundary;
-- trader acquisition scan from final trader assort roots;
-- quest reward acquisition scan and handbook-value audit;
-- deterministic per-item acquisition aggregation and initial rarity classification;
-- trader malformed-offer and source-saturation findings;
-- vanilla raw and progression-normalized quest reward benchmarks;
+- trader acquisition scan and deterministic per-item acquisition aggregation;
+- handbook-value quest reward audit and vanilla raw/normalized benchmarks;
 - typed XP / standing / trader-unlock / assortment-unlock / production-unlock distributions;
-- per-dimension vanilla-relative utility ratios without ruble conversion;
+- per-dimension vanilla-relative ratios without ruble conversion;
 - explicit prerequisite graph with cycle detection, cached snapshot reuse and depth benchmarks;
-- structured final-DB quest constraint audit for timed, one-session, FIR, plant, distance and daytime constraints;
-- unified per-quest analysis view combining all measured dimensions without a composite score;
-- observational cross-dimension flags for suspicious reward/structure combinations and restartable outliers;
-- functional `Easy / Normal / Hard / Custom` audit policies;
-- `Off / Audit / Enforce` contract with `Enforce` fail-closed/read-only;
+- structured quest constraint audit for timed, one-session, FIR, plant, distance and daytime constraints;
+- unified per-quest analysis view;
+- configurable observational cross-dimension flags;
+- fail-closed enforcement-plan report derived from the in-memory unified analysis snapshot;
+- functional `Easy / Normal / Hard / Custom` policies;
+- `Off / Audit / Enforce` contract with **zero active mutations**;
 - deterministic JSON reports and manual item overrides;
 - future `RepeatedRaidLootDecay` policy represented but disabled by default.
 
-No economy mutation is implemented yet.
+`Enforce` does not mutate the final DB in this MVP. It produces an explicit warning and a review plan with `ApplyMutations = false` and `MutationCount = 0`.
 
 ## SPT 4.1 architecture boundary
 
@@ -33,19 +31,20 @@ Economy Admiral consumes final injected `TemplateTable` and `TradersTable` insta
 
 ## Reports
 
-Five deterministic reports are emitted under the mod directory:
+Economy Admiral emits six deterministic reports under the mod directory:
 
 - `reports/economy-admiral-audit.json` — acquisition, handbook-value and trader/quest findings;
 - `reports/economy-admiral-reward-utility.json` — XP, standing and unlock distributions/ratios;
 - `reports/economy-admiral-progression-graph.json` — prerequisite graph, cycles and depth benchmarks;
 - `reports/economy-admiral-quest-constraints.json` — structured objective constraints;
-- `reports/economy-admiral-quest-analysis.json` — unified observational view and cross-dimension flags.
+- `reports/economy-admiral-quest-analysis.json` — unified observational view and cross-dimension flags;
+- `reports/economy-admiral-enforcement-plan.json` — fail-closed review candidates and proposed review actions.
 
 All report paths are constrained to stay inside the mod directory.
 
 ## Unified quest analysis
 
-The unified report puts the main measurable dimensions beside each other for the same quest:
+For each quest the unified report places the main measured dimensions together:
 
 - success-reward known handbook value;
 - XP and trader standing;
@@ -58,7 +57,7 @@ The unified report puts the main measurable dimensions beside each other for the
 
 Sparse dimensions use positive-sample vanilla medians so zero-dominated distributions do not erase the baseline.
 
-Schema 2 adds observational flags including:
+Current observational flags:
 
 - `HIGH_ITEM_VALUE_LOW_STRUCTURE`;
 - `HIGH_XP_LOW_DEPTH`;
@@ -67,19 +66,20 @@ Schema 2 adds observational flags including:
 - `RESTARTABLE_HIGH_XP`;
 - `PREREQUISITE_CYCLE`.
 
-These are diagnostic classifications only. `CompositeScoreApplied = false`, `RewardAllowanceAffected = false`, and `OutlierFlagsAffectEnforcement = false` are explicit contracts.
+The unified report records resolved policy thresholds and deterministic `FlagCounts`. `CompositeScoreApplied = false`, `RewardAllowanceAffected = false`, and `OutlierFlagsAffectEnforcement = false` remain explicit schema contracts.
 
-## Reward budget model
+## Enforcement plan
 
-The main audit preserves raw handbook value and computes a second progression-normalized signal from structured level and objective-count inputs. Contributions are capped.
+The enforcement planner consumes the **in-memory** unified analysis snapshot; JSON files are output artifacts, not an internal service-to-service API.
 
-Prerequisite depth and structured constraints are deliberately excluded from the current reward allowance. Their reports explicitly retain `DepthAffectsRewardAllowance = false` and `ConstraintsAffectRewardAllowance = false`.
+Flagged quests become review candidates with actions such as:
 
-## Typed reward utility benchmark
+- `ReviewItemRewardBudget`;
+- `ReviewXpRewardBudget`;
+- `ReviewStandingRewardBudget`;
+- `ReviewPrerequisiteGraph`.
 
-SPT reward types `Experience`, `TraderStanding`, `TraderUnlock`, `AssortmentUnlock`, and `ProductionScheme` are measured directly. Vanilla and restartable distributions are separated and sparse unlock medians use positive samples only.
-
-No XP/standing/unlock dimension is converted into rubles and no hidden composite utility score exists.
+The plan deliberately contains no invented target reward values. Every candidate has `AutomaticMutationAllowed = false` and `ProposedMutation = null`.
 
 ## Configuration
 
@@ -105,32 +105,48 @@ Default configuration lives in `config/config.json`.
     "objectiveConditionWeight": 0.35,
     "maxLevelGateContribution": 3.0,
     "maxObjectiveContribution": 5.0,
-    "duplicateTraderSourcesWarnCount": 6
+    "duplicateTraderSourcesWarnCount": 6,
+    "highItemValueLowStructureWarnMultiple": 3.0,
+    "highXpLowDepthWarnMultiple": 3.0,
+    "highStandingLowDepthWarnMultiple": 3.0,
+    "restartableHighItemValueWarnMultiple": 2.0,
+    "restartableHighXpWarnMultiple": 2.0,
+    "lowDepthMaxRelativeMultiple": 1.0,
+    "lowStructureMaxRelativeMultiple": 1.0
   },
   "manualOverrides": {}
 }
 ```
 
-| Preset | raw normal | raw restartable | normalized normal | normalized restartable | trader saturation |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Easy | 5.0x | 2.5x | 4.0x | 2.0x | 8 traders |
-| Normal | 3.0x | 1.5x | 2.5x | 1.25x | 6 traders |
-| Hard | 2.0x | 1.25x | 1.75x | 1.10x | 4 traders |
-| Custom | config | config | config | config | config |
+Easy raises cross-dimension warning thresholds; Hard lowers them and treats moderately shallow/low-structure quests more aggressively. Custom uses the explicit configuration above.
+
+## Reward budget model
+
+The main audit preserves raw handbook value and computes a second progression-normalized signal from structured level and objective-count inputs. Contributions are capped.
+
+Prerequisite depth and structured constraints remain excluded from the active reward allowance. Their reports explicitly retain `DepthAffectsRewardAllowance = false` and `ConstraintsAffectRewardAllowance = false`.
+
+Typed XP/standing/unlock dimensions are also not converted into rubles and are not merged into a hidden utility score.
 
 ## Current limitations
 
-The MVP still lacks an approved cross-dimension composite policy, mutation-plan schema, repeatable replacement-rate enforcement, PBS adapter/trader normalization, and flea/world-loot/craft/insurance modeling.
+The MVP still lacks:
+
+- an approved cross-dimension composite utility formula;
+- numeric proposed mutation targets;
+- mutation execution and rollback/reporting;
+- repeatable replacement-rate enforcement;
+- PBS adapter / trader normalization;
+- flea, world-loot, craft and insurance modeling.
 
 ## Planned next slices
 
 MVP remainder:
 
-- move observational flag thresholds into an explicit policy/config surface instead of hard-coded prototype constants;
-- add deterministic flag counts/summary to the unified report;
-- define composite-policy candidates while preserving all raw dimensions;
-- define enforcement-plan and mutation-report schemas without activating mutation;
-- deterministic enforcement tests before `Enforce` can become active.
+- evaluate explicit composite-policy candidates while preserving every raw input dimension;
+- define target-generation rules for proposed mutations without applying them;
+- add mutation-report/rollback contract;
+- deterministic enforcement tests before any mutation path can be enabled.
 
 Stage 2:
 
