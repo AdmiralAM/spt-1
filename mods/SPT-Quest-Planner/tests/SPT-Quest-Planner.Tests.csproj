@@ -26,6 +26,7 @@
     <Compile Include="..\client\PlannerRaidPreparation.cs" Link="PlannerRaidPreparation.cs" />
     <Compile Include="..\client\PlannerRaidPlanRanker.cs" Link="PlannerRaidPlanRanker.cs" />
     <Compile Include="..\client\PlannerRaidDecisionSignals.cs" Link="PlannerRaidDecisionSignals.cs" />
+    <Compile Include="..\client\PlannerRaidDecisionDelta.cs" Link="PlannerRaidDecisionDelta.cs" />
     <Compile Include="..\client\PlannerRaidPlanCollection.cs" Link="PlannerRaidPlanCollection.cs" />
     <Compile Include="..\client\PlannerRaidPlanProvider.cs" Link="PlannerRaidPlanProvider.cs" />
     <Compile Include="..\client\PlannerRaidPlanViewModel.cs" Link="PlannerRaidPlanViewModel.cs" />
