@@ -15,7 +15,16 @@ public static class EconomyConfigJsonLoader
     {
         try
         {
-            ValidateEnumTokenTypes(json);
+            using var document = JsonDocument.Parse(json);
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+            {
+                throw new JsonException("Economy Admiral config root must be a JSON object.");
+            }
+
+            ValidateNoDuplicateProperties(document.RootElement, "config");
+            ValidateStringProperty(document.RootElement, "mode");
+            ValidateStringProperty(document.RootElement, "preset");
+
             return JsonSerializer.Deserialize<EconomyConfig>(json, JsonOptions)
                 ?? throw new InvalidOperationException("Economy Admiral config: config.json deserialized to null.");
         }
@@ -28,16 +37,32 @@ public static class EconomyConfigJsonLoader
         }
     }
 
-    private static void ValidateEnumTokenTypes(string json)
+    private static void ValidateNoDuplicateProperties(JsonElement element, string path)
     {
-        using var document = JsonDocument.Parse(json);
-        if (document.RootElement.ValueKind != JsonValueKind.Object)
+        if (element.ValueKind == JsonValueKind.Object)
         {
-            throw new JsonException("Economy Admiral config root must be a JSON object.");
+            var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var property in element.EnumerateObject())
+            {
+                if (!names.Add(property.Name))
+                {
+                    throw new JsonException($"Economy Admiral config: duplicate property '{property.Name}' at '{path}'.");
+                }
+
+                ValidateNoDuplicateProperties(property.Value, $"{path}.{property.Name}");
+            }
+            return;
         }
 
-        ValidateStringProperty(document.RootElement, "mode");
-        ValidateStringProperty(document.RootElement, "preset");
+        if (element.ValueKind == JsonValueKind.Array)
+        {
+            var index = 0;
+            foreach (var item in element.EnumerateArray())
+            {
+                ValidateNoDuplicateProperties(item, $"{path}[{index}]");
+                index++;
+            }
+        }
     }
 
     private static void ValidateStringProperty(JsonElement root, string propertyName)
