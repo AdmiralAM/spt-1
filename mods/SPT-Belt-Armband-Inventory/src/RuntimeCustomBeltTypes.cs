@@ -31,9 +31,8 @@ namespace SPTBeltArmbandInventory
                 RuntimeCustomBeltTypes.LogInfo = logInfo;
                 RuntimeCustomBeltTypes.LogWarning = logWarning;
                 if (!RuntimeCustomBeltTypes.BuildAndRegister()) return false;
-                if (!InstallItemTypeInitPostfix()) return false;
 
-                logInfo?.Invoke("B&A&HB RUNTIME TYPE: custom searchable belt item/template mapping installed for RC parent " + CustomBeltParentId + ".");
+                logInfo?.Invoke("B&A&HB RUNTIME TYPE: custom searchable belt item/template mappings registered directly in SPT 4.1.3 JsonTypes for RC parent " + CustomBeltParentId + ".");
                 return true;
             }
             catch (Exception exception)
@@ -111,11 +110,11 @@ namespace SPTBeltArmbandInventory
         {
             if (CustomTemplateType == null || CustomBeltItemType == null)
             {
-                Type searchableTemplate = ReflectionTools.FindType("EFT.InventoryLogic.SearchableItemTemplateClass");
-                Type searchableItem = ReflectionTools.FindType("EFT.InventoryLogic.SearchableItemItemClass");
+                Type searchableTemplate = ReflectionTools.FindType("EFT.InventoryLogic.SearchableItemTemplate");
+                Type searchableItem = ReflectionTools.FindType("EFT.InventoryLogic.SearchableItem");
                 Type itemType = ReflectionTools.FindType("EFT.InventoryLogic.Item");
                 Type gridLayoutComponent = ReflectionTools.FindType("EFT.InventoryLogic.GridLayoutComponent");
-                Type layoutInterface = ReflectionTools.FindType("GInterface391");
+                Type layoutInterface = ReflectionTools.FindType("EFT.InventoryLogic.IGridLayoutComponentTemplate");
                 if (searchableTemplate == null || searchableItem == null || itemType == null || gridLayoutComponent == null || layoutInterface == null)
                 {
                     LogWarning?.Invoke("B&A&HB RUNTIME TYPE: searchable item/template/grid-layout contract types were not found.");
@@ -147,7 +146,7 @@ namespace SPTBeltArmbandInventory
 
             FieldBuilder layout = builder.DefineField("_runtimeLayoutName", typeof(string), FieldAttributes.Private);
             ConstructorInfo baseCtor = searchableTemplate.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
-            if (baseCtor == null) throw new InvalidOperationException("SearchableItemTemplateClass parameterless constructor not found");
+            if (baseCtor == null) throw new InvalidOperationException("SearchableItemTemplate parameterless constructor not found");
 
             ConstructorBuilder ctor = builder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, Type.EmptyTypes);
             ILGenerator cil = ctor.GetILGenerator();
@@ -189,7 +188,7 @@ namespace SPTBeltArmbandInventory
                 searchableItem);
 
             ConstructorInfo baseCtor = FindItemBaseConstructor(searchableItem, customTemplate);
-            if (baseCtor == null) throw new InvalidOperationException("SearchableItemItemClass(string, searchable template) constructor not found");
+            if (baseCtor == null) throw new InvalidOperationException("SearchableItem(string, searchable template) constructor not found");
 
             ConstructorInfo gridCtor = FindGridLayoutConstructor(gridLayoutComponent, searchableItem, customTemplate);
             if (gridCtor == null) throw new InvalidOperationException("GridLayoutComponent(item, template) constructor not found");
