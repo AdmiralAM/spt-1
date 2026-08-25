@@ -1,0 +1,120 @@
+name: Admiral Trader SPT 4.1.3 Candidate
+
+on:
+  pull_request:
+    paths:
+      - 'mods/Admiral-Trader/**'
+      - '.github/workflows/admiral-trader-spt413-candidate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admiral-trader-spt413-candidate-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  candidate-source-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Validate test-candidate source contract
+        shell: python
+        run: |
+          import json
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          root = Path('mods/Admiral-Trader')
+          runtime = json.loads((root / 'manifests/runtime-manifest.json').read_text(encoding='utf-8'))
+          base = json.loads((root / 'db/base.json').read_text(encoding='utf-8'))
+          capabilities = json.loads((root / 'manifests/weapon-ammo-capabilities.json').read_text(encoding='utf-8'))
+          assort = json.loads((root / 'db/assort.json').read_text(encoding='utf-8'))
+          questassort = json.loads((root / 'db/questassort.json').read_text(encoding='utf-8'))
+
+          if runtime.get('targetSptVersion') != '4.1.3':
+              raise SystemExit('candidate lost exact SPT 4.1.3 runtime target')
+          if runtime.get('publishedApiCompileBaseline') != '4.1.2':
+              raise SystemExit('published source compile baseline drift')
+          if runtime.get('publicationMode') != 'test-candidate-source':
+              raise SystemExit('source publicationMode must be test-candidate-source')
+          if runtime.get('registrationEnabled') is not False:
+              raise SystemExit('source tree must remain fail-closed; only staged candidate may enable registration')
+          if runtime.get('mergeRequiresRuntimeEvidence') is not True:
+              raise SystemExit('candidate must require physical runtime evidence before merge')
+
+          data = runtime.get('data') or {}
+          placeholder = '/files/quest/icon/5a27cafa86f77424e20615d6.jpg'
+          if data.get('avatarMode') != 'built-in-test-placeholder' or data.get('avatar') != placeholder:
+              raise SystemExit('candidate avatar mode/route drift')
+          if base.get('avatar') != placeholder:
+              raise SystemExit('base.json must use the explicit non-final test placeholder route')
+          if data.get('finalPortraitDeferred') is not True:
+              raise SystemExit('test placeholder must not be represented as final portrait')
+
+          special = (capabilities.get('families') or {}).get('special-weapons') or {}
+          if special.get('tpl') != '6217726288ed9f0845317459' or special.get('sampleUnits') != 1:
+              raise SystemExit('Special Weapons safe sample drift')
+          if special.get('permanentUnlock') is not False:
+              raise SystemExit('Special Weapons may not receive a permanent unlock')
+
+          if len(assort.get('items') or []) != 7 or len((questassort.get('Success') or {})) != 7:
+              raise SystemExit('candidate must retain exactly seven finite quest-gated offers')
+          quest_files = list((root / 'db/quests').glob('*.json'))
+          if len(quest_files) != 31:
+              raise SystemExit(f'candidate must contain 31 authored quests, got {len(quest_files)}')
+
+          project = ET.parse(root / 'server/AdmiralTrader.Server.csproj').getroot()
+          props = {node.tag: (node.text or '').strip() for group in project.findall('PropertyGroup') for node in group}
+          if props.get('SptRuntimeTarget') != '4.1.3' or props.get('SptPublishedApiBaseline') != '4.1.2':
+              raise SystemExit('csproj runtime/baseline contract drift')
+          exact_refs = {
+              ref.attrib.get('Include')
+              for group in project.findall('ItemGroup')
+              if "UseExactSptRuntime" in group.attrib.get('Condition', '')
+              for ref in group.findall('Reference')
+          }
+          required_refs = {'SPTarkov.Common', 'SPTarkov.DI', 'SPTarkov.Server.Core'}
+          if not required_refs.issubset(exact_refs):
+              raise SystemExit(f'exact-runtime reference path incomplete: {sorted(required_refs-exact_refs)}')
+
+      - name: Validate exact-runtime builder PowerShell syntax
+        shell: pwsh
+        run: |
+          $tokens = $null
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'mods/Admiral-Trader/tools/build_spt413_test_candidate.ps1'),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count -ne 0) {
+            $errors | ForEach-Object { Write-Error $_.Message }
+            exit 1
+          }
+
+      - name: Build source against published API baseline
+        run: dotnet build mods/Admiral-Trader/server/AdmiralTrader.Server.csproj -c Release
+
+      - name: Validate exact-runtime guard source is packaged in assembly build
+        shell: bash
+        run: |
+          test -f 'mods/Admiral-Trader/server/RuntimeDataValidation.cs'
+          grep -Fq 'templateTable.Items.ContainsKey' 'mods/Admiral-Trader/server/RuntimeDataValidation.cs'
+          grep -Fq '4.1.3' 'mods/Admiral-Trader/tools/build_spt413_test_candidate.ps1'
+          grep -Fq 'SptRuntimeLibDir' 'mods/Admiral-Trader/tools/build_spt413_test_candidate.ps1'
