@@ -43,6 +43,7 @@ jobs:
               root / 'server' / 'RewardUtilityAuditService.cs',
               root / 'server' / 'QuestProgressionGraphService.cs',
               root / 'server' / 'QuestConstraintAuditService.cs',
+              root / 'server' / 'QuestAnalysisService.cs',
           ]
           missing = [str(path) for path in required if not path.is_file()]
           if missing:
@@ -73,9 +74,8 @@ jobs:
           source = (root / 'server' / 'EconomyMod.cs').read_text(encoding='utf-8')
           assert 'OnLoadOrder.PostLoad + 1000' in source
           assert 'namespace EconomyAdmiral;' in source
-          assert 'RewardUtilityAuditService' in source
-          assert 'QuestProgressionGraphService' in source
-          assert 'QuestConstraintAuditService' in source
+          for service in ['RewardUtilityAuditService', 'QuestProgressionGraphService', 'QuestConstraintAuditService', 'QuestAnalysisService']:
+              assert service in source, service
 
           metadata = (root / 'server' / 'ModMetadata.cs').read_text(encoding='utf-8')
           assert 'Economy Admiral' in metadata
@@ -83,70 +83,52 @@ jobs:
 
           audit = (root / 'server' / 'EconomyAuditService.cs').read_text(encoding='utf-8')
           for invariant in [
-              'EnforcementApplied = false',
-              'running read-only audit only',
-              'TRADER_OFFER_MISSING_BARTER',
-              'TRADER_OFFER_MISSING_LOYALTY',
-              'QUEST_REWARD_VALUE_OUTLIER',
-              'RESTARTABLE_REWARD_VALUE_OUTLIER',
-              'QUEST_REWARD_BUDGET_OUTLIER',
-              'RESTARTABLE_REWARD_BUDGET_OUTLIER',
-              'VanillaMedianNormalizedHandbookValue',
-              'ProgressionScore',
-              'SchemaVersion = 3',
+              'EnforcementApplied = false', 'running read-only audit only',
+              'TRADER_OFFER_MISSING_BARTER', 'TRADER_OFFER_MISSING_LOYALTY',
+              'QUEST_REWARD_VALUE_OUTLIER', 'RESTARTABLE_REWARD_VALUE_OUTLIER',
+              'QUEST_REWARD_BUDGET_OUTLIER', 'RESTARTABLE_REWARD_BUDGET_OUTLIER',
+              'VanillaMedianNormalizedHandbookValue', 'ProgressionScore', 'SchemaVersion = 3',
               'using Path = System.IO.Path;',
           ]:
               assert invariant in audit, invariant
 
           utility = (root / 'server' / 'RewardUtilityAuditService.cs').read_text(encoding='utf-8')
           for invariant in [
-              'RewardType.Experience',
-              'RewardType.TraderStanding',
-              'RewardType.TraderUnlock',
-              'RewardType.AssortmentUnlock',
-              'RewardType.ProductionScheme',
-              'UtilityScoringApplied = false',
-              'SchemaVersion = 2',
-              'XpVsVanillaMedian',
-              'StandingVsVanillaMedian',
-              'MedianPositiveAssortmentUnlocks',
-              'No cross-dimension composite score',
-              'using Path = System.IO.Path;',
+              'RewardType.Experience', 'RewardType.TraderStanding', 'RewardType.TraderUnlock',
+              'RewardType.AssortmentUnlock', 'RewardType.ProductionScheme',
+              'UtilityScoringApplied = false', 'SchemaVersion = 2',
+              'XpVsVanillaMedian', 'StandingVsVanillaMedian', 'MedianPositiveAssortmentUnlocks',
+              'No cross-dimension composite score', 'using Path = System.IO.Path;',
               'economy-admiral-reward-utility.json',
           ]:
               assert invariant in utility, invariant
 
           graph = (root / 'server' / 'QuestProgressionGraphService.cs').read_text(encoding='utf-8')
           for invariant in [
-              'ConditionType, "Quest"',
-              'MaximumPrerequisiteDepth',
-              'CycleMemberCount',
-              'SchemaVersion = 2',
-              'DepthAffectsRewardAllowance = false',
-              'VanillaDepthBenchmark',
-              'VanillaRestartableDepthBenchmark',
-              'MedianDepth',
-              'P90Depth',
-              'GetSnapshot()',
-              'economy-admiral-progression-graph.json',
-              'using Path = System.IO.Path;',
+              'ConditionType, "Quest"', 'MaximumPrerequisiteDepth', 'CycleMemberCount',
+              'SchemaVersion = 2', 'DepthAffectsRewardAllowance = false',
+              'VanillaDepthBenchmark', 'VanillaRestartableDepthBenchmark', 'MedianDepth', 'P90Depth',
+              'GetSnapshot()', 'economy-admiral-progression-graph.json', 'using Path = System.IO.Path;',
           ]:
               assert invariant in graph, invariant
 
           constraints = (root / 'server' / 'QuestConstraintAuditService.cs').read_text(encoding='utf-8')
           for invariant in [
-              'ConstraintsAffectRewardAllowance = false',
-              'CompleteInSeconds',
-              'OneSessionOnly',
-              'OnlyFoundInRaid',
-              'PlantTime',
-              'DistanceConstraintCount',
-              'DaytimeConstraintCount',
-              'MedianStructuredConstraintCount',
-              'economy-admiral-quest-constraints.json',
+              'ConstraintsAffectRewardAllowance = false', 'CompleteInSeconds', 'OneSessionOnly',
+              'OnlyFoundInRaid', 'PlantTime', 'DistanceConstraintCount', 'DaytimeConstraintCount',
+              'MedianStructuredConstraintCount', 'economy-admiral-quest-constraints.json',
               'using Path = System.IO.Path;',
           ]:
               assert invariant in constraints, invariant
+
+          analysis = (root / 'server' / 'QuestAnalysisService.cs').read_text(encoding='utf-8')
+          for invariant in [
+              'CompositeScoreApplied = false', 'RewardAllowanceAffected = false',
+              'SuccessKnownHandbookValue', 'XpVsVanillaMedian', 'StandingVsVanillaMedian',
+              'PrerequisiteDepthVsVanillaMedian', 'StructuredConstraintsVsVanillaMedian',
+              'GetSnapshot()', 'economy-admiral-quest-analysis.json', 'using Path = System.IO.Path;',
+          ]:
+              assert invariant in analysis, invariant
 
           print('Economy Admiral module contract OK')
 
