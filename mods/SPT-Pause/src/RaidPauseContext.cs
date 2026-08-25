@@ -9,11 +9,15 @@ namespace SPTPause
     {
         readonly List<ReflectionClockAnchors> anchors;
         readonly List<object> mainTimerPanels;
+        readonly Behaviour playerOwner;
+        readonly bool playerOwnerWasEnabled;
 
-        RaidPauseContext(List<ReflectionClockAnchors> anchors, List<object> mainTimerPanels)
+        RaidPauseContext(List<ReflectionClockAnchors> anchors, List<object> mainTimerPanels, Behaviour playerOwner)
         {
             this.anchors = anchors;
             this.mainTimerPanels = mainTimerPanels;
+            this.playerOwner = playerOwner;
+            playerOwnerWasEnabled = playerOwner != null && playerOwner.enabled;
         }
 
         internal static bool TryCreate(out RaidPauseContext context, out string reason)
@@ -38,9 +42,21 @@ namespace SPTPause
 
             Type gameWorldType = ReflectionTools.FindType("EFT.GameWorld");
             object gameWorld = ReflectionTools.FindObject(gameWorldType);
-            if (gameWorld == null || ReflectionTools.GetMember(gameWorld, "MainPlayer") == null)
+            object mainPlayer = ReflectionTools.GetMember(gameWorld, "MainPlayer");
+            if (gameWorld == null || mainPlayer == null)
             {
                 reason = "The raid world is not ready yet.";
+                return false;
+            }
+
+            Behaviour playerOwner = null;
+            Type playerOwnerType = ReflectionTools.FindType("EFT.GamePlayerOwner");
+            Component mainPlayerComponent = mainPlayer as Component;
+            if (playerOwnerType != null && mainPlayerComponent != null)
+                playerOwner = mainPlayerComponent.GetComponent(playerOwnerType) as Behaviour;
+            if (playerOwner == null)
+            {
+                reason = "The local player input owner could not be resolved safely; pause was not applied.";
                 return false;
             }
 
@@ -72,8 +88,14 @@ namespace SPTPause
                 }
             }
 
-            context = new RaidPauseContext(anchors, mainTimerPanels);
+            context = new RaidPauseContext(anchors, mainTimerPanels, playerOwner);
             return true;
+        }
+
+        internal void SetPlayerInputPaused(bool paused)
+        {
+            if (playerOwner == null) return;
+            playerOwner.enabled = paused ? false : playerOwnerWasEnabled;
         }
 
         internal void ShiftClocks(TimeSpan duration)
