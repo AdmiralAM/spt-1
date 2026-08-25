@@ -30,6 +30,7 @@ namespace SPTBeltArmbandInventory
 
         static object activePanel;
         static Component trackedClone;
+        static bool factoryObserved;
 
         internal static object BeginPanelShow(object panel, object[] arguments)
         {
@@ -42,7 +43,13 @@ namespace SPTBeltArmbandInventory
 
                 object armBandSlot = GetSlotMethod.Invoke(equipment, new[] { ArmBandValue });
                 object item = ReflectionTools.ReadMember(armBandSlot, "ContainedItem");
-                if (!BeltSlotPlan.ShouldExposeBelt(item != null, ReflectionTools.HasContainers(item))) return null;
+                bool hasContainer = ReflectionTools.HasContainers(item);
+                if (!BeltSlotPlan.ShouldExposeBelt(item != null, hasContainer))
+                {
+                    LogInfo?.Invoke("B&A&HB UI DIAG: ContainersPanel skipped BELT projection; ArmBandItem="
+                        + (item == null ? "<null>" : item.GetType().FullName) + ", hasContainer=" + hasContainer + ".");
+                    return null;
+                }
 
                 Array original = EquipmentSlotsField.GetValue(null) as Array;
                 if (original == null)
@@ -74,6 +81,9 @@ namespace SPTBeltArmbandInventory
 
                 activePanel = panel;
                 trackedClone = null;
+                factoryObserved = false;
+                LogInfo?.Invoke("B&A&HB UI DIAG: ContainersPanel prepared BELT projection; insertedArmBand="
+                    + state.SlotsChanged + ", originalContainsArmBand=" + Contains(original, ArmBandValue) + ".");
                 return state;
             }
             catch (Exception exception)
@@ -92,6 +102,8 @@ namespace SPTBeltArmbandInventory
 
             try
             {
+                factoryObserved = true;
+                LogInfo?.Invoke("B&A&HB UI DIAG: ContainersPanel requested ArmBand SlotView factory.");
                 UnityEngine.Object template = DefaultTemplateField.GetValue(panel) as UnityEngine.Object;
                 if (template == null)
                 {
@@ -126,6 +138,8 @@ namespace SPTBeltArmbandInventory
             try
             {
                 if (!ReferenceEquals(panel, state.Panel) || !ReferenceEquals(panel, activePanel)) return;
+                LogInfo?.Invoke("B&A&HB UI DIAG: ContainersPanel completed BELT projection; factoryObserved="
+                    + factoryObserved + ", trackedClone=" + (trackedClone == null ? "<null>" : trackedClone.GetType().FullName) + ".");
                 try
                 {
                     ValidateAndLabelBeltRow(panel);
@@ -160,12 +174,18 @@ namespace SPTBeltArmbandInventory
                 state.Completed = true;
                 if (ReferenceEquals(activePanel, state.Panel)) activePanel = null;
                 trackedClone = null;
+                factoryObserved = false;
             }
         }
 
         static void ValidateAndLabelBeltRow(object panel)
         {
-            if (trackedClone == null || SlotViewsDictionaryField == null) return;
+            if (trackedClone == null || SlotViewsDictionaryField == null)
+            {
+                LogWarning?.Invoke("B&A&HB UI DIAG: BELT row validation had no tracked SlotView clone; factoryObserved="
+                    + factoryObserved + ".");
+                return;
+            }
 
             IDictionary views = SlotViewsDictionaryField.GetValue(panel) as IDictionary;
             if (views == null || !views.Contains(ArmBandValue))
@@ -270,6 +290,7 @@ namespace SPTBeltArmbandInventory
         {
             activePanel = null;
             trackedClone = null;
+            factoryObserved = false;
             DefaultTemplateField = null;
             EquipmentSlotsField = null;
             SlotViewsContainerField = null;
