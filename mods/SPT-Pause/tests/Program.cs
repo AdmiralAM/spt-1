@@ -13,7 +13,7 @@ static class Program
         NamedTimerAnchorsShiftExactlyOnce();
         TimerPanelDateFieldShifts();
         TimeOfDayRealtimeAnchorShifts();
-        Console.WriteLine("SPT Pause Phase 1: " + assertions + " assertions passed.");
+        Console.WriteLine("Pause Admiral v1: " + assertions + " assertions passed.");
     }
 
     static void DisabledSettingNeverTrapsAnActivePause()
