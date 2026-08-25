@@ -1,4 +1,4 @@
-name: Admiral Trader Weapon Ammo Audit
+name: Admiral Trader Weapon Ammo
 
 on:
   pull_request:
@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  audit-weapon-ammo:
+  weapon-ammo:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact PR head
@@ -30,6 +30,9 @@ jobs:
 
       - name: Run Admiral Trader unit tests
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
+
+      - name: Validate authored weapon-ammo manifest syntax
+        run: python -m json.tool mods/Admiral-Trader/manifests/weapon-ammo-authored-spec.json > /dev/null
 
       - name: Checkout pinned legacy corpus
         uses: actions/checkout@v4
@@ -62,17 +65,22 @@ jobs:
           counts = summary['bundleQuestCounts']
           if set(counts) != {'Weapon Proficiency', 'Ammo Proficiency'}:
               raise SystemExit(f'weapon/ammo audit bundle drift: {counts}')
-          if summary['questCount'] < 50:
-              raise SystemExit(f'weapon/ammo corpus unexpectedly small: {summary["questCount"]}')
+          if summary['questCount'] != 438:
+              raise SystemExit(f'weapon/ammo corpus drift: {summary["questCount"]} != 438')
           if summary['crossBundleEdgeCount'] != 23:
               raise SystemExit(f'weapon/ammo cross-bundle edge drift: {summary["crossBundleEdgeCount"]} != 23')
-          if summary['totalAssortmentUnlocks'] == 0:
-              raise SystemExit('legacy weapon/ammo audit unexpectedly contains no assortment unlocks')
-          if summary['firQuestCount'] == 0:
-              raise SystemExit('legacy weapon/ammo audit unexpectedly contains no FIR objectives')
+          if summary['totalAssortmentUnlocks'] != 768:
+              raise SystemExit(f'legacy unlock count drift: {summary["totalAssortmentUnlocks"]} != 768')
           PY
 
-      - name: Upload weapon-ammo audit
+      - name: Validate compact authored progression against legacy audit and reward policy
+        run: >-
+          python mods/Admiral-Trader/tools/validate_weapon_ammo_authored_spec.py
+          mods/Admiral-Trader/manifests/weapon-ammo-authored-spec.json
+          mods/Admiral-Trader/manifests/reward-policy.json
+          --audit build/admiral-trader-weapon-ammo-audit.json
+
+      - name: Upload weapon-ammo evidence
         uses: actions/upload-artifact@v4
         with:
           name: admiral-trader-weapon-ammo-${{ github.event.pull_request.head.sha || github.sha }}
