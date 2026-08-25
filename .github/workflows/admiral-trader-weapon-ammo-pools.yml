@@ -46,30 +46,55 @@ jobs:
           mods/Admiral-Trader/manifests/weapon-ammo-authored-spec.json
           --output build/admiral-trader-weapon-ammo-pools.json
 
-      - name: Enforce pool safety contract
+      - name: Select controlled ammo capability rewards
+        run: >-
+          python mods/Admiral-Trader/tools/select_weapon_ammo_rewards.py
+          build/admiral-trader-weapon-ammo-pools.json
+          mods/Admiral-Trader/manifests/weapon-ammo-selection-policy.json
+          --output build/admiral-trader-weapon-ammo-selection.json
+
+      - name: Enforce pool and selection safety contract
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
           pools = json.loads(Path('build/admiral-trader-weapon-ammo-pools.json').read_text(encoding='utf-8'))
-          if pools.get('targetSptVersion') != '4.1.3':
-              raise SystemExit('weapon/ammo pools lost SPT 4.1.3 target')
+          selection = json.loads(Path('build/admiral-trader-weapon-ammo-selection.json').read_text(encoding='utf-8'))
+          if pools.get('targetSptVersion') != '4.1.3' or selection.get('targetSptVersion') != '4.1.3':
+              raise SystemExit('weapon/ammo selection lost SPT 4.1.3 target')
           families = pools['families']
           if len(families) != 7:
               raise SystemExit(f'expected seven weapon families, got {len(families)}')
+          permanent = 0
           for family_id, family in families.items():
               if family['weaponCount'] == 0:
                   raise SystemExit(f'{family_id}: no weapon candidates')
-              if family_id != 'special-weapons' and family['ammoCount'] == 0:
+              selected = selection['families'][family_id]
+              if family_id == 'special-weapons':
+                  if selected.get('permanentUnlock'):
+                      raise SystemExit('special weapons may not receive a permanent ammunition unlock')
+                  if selected.get('sampleUnits') != 1:
+                      raise SystemExit('special weapons sample must remain exactly one unit')
+                  continue
+              if family['ammoCount'] == 0:
                   raise SystemExit(f'{family_id}: no ammo candidates')
-              if family_id != 'special-weapons' and family['ammoTierCounts'].get('standard', 0) == 0:
-                  raise SystemExit(f'{family_id}: no standard ammo tier; candidate resolver likely drifted')
+              if not selected.get('permanentUnlock') or selected.get('tier') != 'controlled':
+                  raise SystemExit(f'{family_id}: selected reward is not a controlled permanent unlock')
+              if selected['penetration'] > selected['penetrationCeiling']:
+                  raise SystemExit(f'{family_id}: selected penetration exceeds family ceiling')
+              if selected['stockPerReset'] <= 0 or selected['buyRestriction'] <= 0:
+                  raise SystemExit(f'{family_id}: permanent unlock must remain finite')
+              permanent += 1
+          if permanent != 6:
+              raise SystemExit(f'expected exactly six permanent ammo unlocks, got {permanent}')
           PY
 
-      - name: Upload transient candidate pools
+      - name: Upload transient candidate and selection reports
         uses: actions/upload-artifact@v4
         with:
-          name: admiral-trader-weapon-ammo-pools-${{ github.event.pull_request.head.sha || github.sha }}
-          path: build/admiral-trader-weapon-ammo-pools.json
+          name: admiral-trader-weapon-ammo-selection-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            build/admiral-trader-weapon-ammo-pools.json
+            build/admiral-trader-weapon-ammo-selection.json
           if-no-files-found: error
           retention-days: 7
