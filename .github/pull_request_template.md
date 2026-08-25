@@ -14,6 +14,7 @@
 ## Validation
 
 - [ ] Module-specific automated tests/builds passed where applicable.
+- [ ] CI annotations/warnings were reviewed and are fixed, or explicitly classified as non-blocking/follow-up debt.
 - [ ] Runtime/user validation is complete, or the remaining runtime gate is explicitly documented.
 - [ ] Existing logs/results were inspected before triggering reruns.
 - [ ] Any failure was diagnosed at the first failed boundary before rerunning.
