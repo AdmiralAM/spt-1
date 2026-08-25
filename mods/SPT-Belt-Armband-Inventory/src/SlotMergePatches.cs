@@ -79,12 +79,12 @@ namespace SPTBeltArmbandInventory
                     return Fail("Harmony patch API is incompatible; ArmBand merge compatibility is disabled.");
 
                 SlotMergeRuntime.InheritFromItemValue = inheritFromItem;
-                MethodInfo postfix = BuildPostfix(slotType, parentMergeType);
-                object hmPostfix = hmCtor.Invoke(new object[] { postfix });
+                MethodInfo postfixFactory = Method(nameof(PostfixFactory));
+                object hmPostfix = hmCtor.Invoke(new object[] { postfixFactory });
 
                 try
                 {
-                    logInfo?.Invoke("B&A&HB MERGE PATCH DIAG: invoking Harmony Patch for " + getter + " with postfix " + postfix + ".");
+                    logInfo?.Invoke("B&A&HB MERGE PATCH DIAG: invoking Harmony Patch for " + getter + " with postfix factory " + postfixFactory + ".");
                     Patch(patchMethod, harmonyMethodType, getter, hmPostfix);
                     logInfo?.Invoke("B&A&HB MERGE PATCH DIAG: Harmony Patch invocation returned successfully.");
                 }
@@ -94,7 +94,7 @@ namespace SPTBeltArmbandInventory
                     throw;
                 }
 
-                if (logInfo != null) logInfo("Belt/Armband Inventory slot merge compatibility installed via MergeContainerWithChildren postfix result override.");
+                if (logInfo != null) logInfo("ArmBand merge compatibility installed via MergeContainerWithChildren postfix result override.");
                 return true;
             }
             catch (Exception exception)
@@ -104,6 +104,13 @@ namespace SPTBeltArmbandInventory
                 Exception root = Unwrap(exception);
                 return Fail("ArmBand merge compatibility installation failed safely: " + root.GetType().FullName + ": " + root.Message);
             }
+        }
+
+        static MethodInfo PostfixFactory(MethodBase original)
+        {
+            MethodInfo originalMethod = original as MethodInfo;
+            if (originalMethod == null || originalMethod.DeclaringType == null || originalMethod.ReturnType == typeof(void)) return null;
+            return BuildPostfix(originalMethod.DeclaringType, originalMethod.ReturnType);
         }
 
         static MethodInfo BuildPostfix(Type slotType, Type parentMergeType)
@@ -136,6 +143,8 @@ namespace SPTBeltArmbandInventory
             il.Emit(OpCodes.Ret);
             return method;
         }
+
+        static MethodInfo Method(string name) => typeof(SlotMergePatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
         {
