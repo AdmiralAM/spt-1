@@ -6,10 +6,13 @@ on:
       - 'mods/Admiral-Trader/manifests/keys-authored-spec.json'
       - 'mods/Admiral-Trader/manifests/curated-quest-manifest.json'
       - 'mods/Admiral-Trader/manifests/campaign-manifest.json'
+      - 'mods/Admiral-Trader/db/quests/**'
+      - 'mods/Admiral-Trader/db/locales/**'
       - 'mods/Admiral-Trader/tools/build_inventory.py'
       - 'mods/Admiral-Trader/tools/build_reward_benchmark.py'
       - 'mods/Admiral-Trader/tools/build_keys_runtime_templates.py'
       - 'mods/Admiral-Trader/tools/validate_keys_authored_spec.py'
+      - 'mods/Admiral-Trader/tools/validate_committed_quest_runtime.py'
       - 'mods/Admiral-Trader/tests/test_build_keys_runtime_templates.py'
       - '.github/workflows/admiral-trader-authored-keys-validate.yml'
   workflow_dispatch:
@@ -38,10 +41,15 @@ jobs:
       - name: Run Admiral Trader Python tests
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 
-      - name: Validate authored manifest JSON
+      - name: Validate authored and runtime JSON
         run: |
           python -m json.tool mods/Admiral-Trader/manifests/keys-authored-spec.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/curated-quest-manifest.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/db/locales/en.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/db/locales/ru.json > /dev/null
+          for quest in mods/Admiral-Trader/db/quests/*.json; do
+            python -m json.tool "$quest" > /dev/null
+          done
 
       - name: Checkout pinned legacy corpus
         uses: actions/checkout@v4
@@ -77,7 +85,7 @@ jobs:
           mods/Admiral-Trader/manifests/curated-quest-manifest.json
           build/vanilla-reward-benchmark.json
 
-      - name: Compile authored keys to draft native templates
+      - name: Compile authored keys to native templates
         run: >-
           python mods/Admiral-Trader/tools/build_keys_runtime_templates.py
           mods/Admiral-Trader/manifests/keys-authored-spec.json
@@ -86,7 +94,7 @@ jobs:
           legacy-andrudis/db/QuestBundles
           --output build/admiral-trader-keys-runtime.json
 
-      - name: Enforce draft runtime-template gate
+      - name: Enforce authored runtime-template gate
         run: |
           python - <<'PY'
           import json
@@ -97,6 +105,8 @@ jobs:
               raise SystemExit(f"expected 10 authored key templates, got {summary['templateCount']}")
           if summary['minimumKeyPoolSize'] < 1:
               raise SystemExit('authored key template has empty source key pool')
+          if summary['maximumKeyPoolSize'] > 9:
+              raise SystemExit(f"authored key target pool is too broad: {summary['maximumKeyPoolSize']}")
           if summary['deferredUnlockSlotCount'] != 1:
               raise SystemExit(f"expected exactly one deferred final unlock, got {summary['deferredUnlockSlotCount']}")
           for qid, quest in data['templates'].items():
@@ -113,6 +123,14 @@ jobs:
               if any(len(str(tpl)) != 24 for tpl in pool):
                   raise SystemExit(f'{qid}: malformed key target in source pool')
           PY
+
+      - name: Validate committed runtime equals compiler output
+        run: >-
+          python mods/Admiral-Trader/tools/validate_committed_quest_runtime.py
+          mods/Admiral-Trader/db/quests
+          build/admiral-trader-keys-runtime.json
+          mods/Admiral-Trader/db/locales/en.json
+          mods/Admiral-Trader/db/locales/ru.json
 
       - name: Upload transient authored template audit
         uses: actions/upload-artifact@v4

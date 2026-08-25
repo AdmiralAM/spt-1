@@ -21,7 +21,7 @@
       "minimumLevel": 5,
       "map": "any",
       "prerequisites": [],
-      "objective": {"model": "possess-representative-keys", "representativeCount": 2, "sourceGroup": "keys-intro"},
+      "objective": {"model": "possess-representative-keys", "representativeCount": 2, "maximumTargetPoolSize": 6, "sourceGroup": "keys-intro"},
       "rewardBudget": {"xp": 4500, "rub": 15000, "standing": 0.01, "unlockSlots": 0}
     },
     {
@@ -31,7 +31,7 @@
       "minimumLevel": 8,
       "map": "factory4_day",
       "prerequisites": ["5d404ebd654de4efecef71d2"],
-      "objective": {"model": "possess-representative-keys", "representativeCount": 1, "sourceGroup": "keys-factory"},
+      "objective": {"model": "possess-representative-keys", "representativeCount": 1, "maximumTargetPoolSize": 3, "sourceGroup": "keys-factory"},
       "rewardBudget": {"xp": 5000, "rub": 20000, "standing": 0.01, "unlockSlots": 0}
     },
     {
@@ -41,7 +41,7 @@
       "minimumLevel": 10,
       "map": "bigmap",
       "prerequisites": ["5d404ebd654de4efecef71d2"],
-      "objective": {"model": "possess-representative-keys", "representativeCount": 2, "sourceGroup": "keys-customs"},
+      "objective": {"model": "possess-representative-keys", "representativeCount": 2, "maximumTargetPoolSize": 6, "sourceGroup": "keys-customs"},
       "rewardBudget": {"xp": 6500, "rub": 25000, "standing": 0.02, "unlockSlots": 0}
     },
     {
@@ -51,7 +51,7 @@
       "minimumLevel": 12,
       "map": "woods",
       "prerequisites": ["5d404ebd654de4efecef71d2"],
-      "objective": {"model": "possess-representative-keys", "representativeCount": 1, "sourceGroup": "keys-woods"},
+      "objective": {"model": "possess-representative-keys", "representativeCount": 1, "maximumTargetPoolSize": 3, "sourceGroup": "keys-woods"},
       "rewardBudget": {"xp": 7500, "rub": 25000, "standing": 0.02, "unlockSlots": 0}
     },
     {
@@ -61,7 +61,7 @@
       "minimumLevel": 15,
       "map": "interchange",
       "prerequisites": ["5d404ebd654de4efecef71d2"],
-      "objective": {"model": "possess-representative-keys", "representativeCount": 2, "sourceGroup": "keys-interchange"},
+      "objective": {"model": "possess-representative-keys", "representativeCount": 2, "maximumTargetPoolSize": 6, "sourceGroup": "keys-interchange"},
       "rewardBudget": {"xp": 8500, "rub": 30000, "standing": 0.02, "unlockSlots": 0}
     },
     {
@@ -71,7 +71,7 @@
       "minimumLevel": 17,
       "map": "shoreline",
       "prerequisites": ["5d404ebd654de4efecef71d2"],
-      "objective": {"model": "possess-representative-keys", "representativeCount": 3, "sourceGroup": "keys-shoreline"},
+      "objective": {"model": "possess-representative-keys", "representativeCount": 3, "maximumTargetPoolSize": 9, "sourceGroup": "keys-shoreline"},
       "rewardBudget": {"xp": 10000, "rub": 40000, "standing": 0.02, "unlockSlots": 0}
     },
     {
@@ -81,7 +81,7 @@
       "minimumLevel": 22,
       "map": "rezervbase",
       "prerequisites": ["5d404ebd654de4efecef71d2"],
-      "objective": {"model": "possess-representative-keys", "representativeCount": 3, "sourceGroup": "keys-reserve"},
+      "objective": {"model": "possess-representative-keys", "representativeCount": 3, "maximumTargetPoolSize": 9, "sourceGroup": "keys-reserve"},
       "rewardBudget": {"xp": 15000, "rub": 50000, "standing": 0.03, "unlockSlots": 0}
     },
     {
@@ -91,7 +91,7 @@
       "minimumLevel": 25,
       "map": "lighthouse",
       "prerequisites": ["5d404ebd654de4efecef71d2"],
-      "objective": {"model": "possess-representative-keys", "representativeCount": 2, "sourceGroup": "keys-lighthouse"},
+      "objective": {"model": "possess-representative-keys", "representativeCount": 2, "maximumTargetPoolSize": 6, "sourceGroup": "keys-lighthouse"},
       "rewardBudget": {"xp": 17000, "rub": 60000, "standing": 0.03, "unlockSlots": 0}
     },
     {
@@ -101,7 +101,7 @@
       "minimumLevel": 30,
       "map": "laboratory",
       "prerequisites": ["9c438fa48f645044ddc75e8d", "59a36c5ee68210f9154d94d0"],
-      "objective": {"model": "possess-representative-keys", "representativeCount": 2, "sourceGroup": "keys-labs"},
+      "objective": {"model": "possess-representative-keys", "representativeCount": 2, "maximumTargetPoolSize": 6, "sourceGroup": "keys-labs"},
       "rewardBudget": {"xp": 20000, "rub": 80000, "standing": 0.03, "unlockSlots": 0}
     },
     {
@@ -111,7 +111,7 @@
       "minimumLevel": 35,
       "map": "laboratory",
       "prerequisites": ["a8b05eb5c5f0e67ee881df52"],
-      "objective": {"model": "labs-access-proof", "representativeCount": 1, "sourceGroup": "keys-labs-clearance", "sourceKeyPoolGroup": "keys-labs"},
+      "objective": {"model": "labs-access-proof", "representativeCount": 1, "maximumTargetPoolSize": 3, "sourceGroup": "keys-labs-clearance", "sourceKeyPoolGroup": "keys-labs"},
       "rewardBudget": {"xp": 28000, "rub": 120000, "standing": 0.03, "unlockSlots": 1}
     }
   ]

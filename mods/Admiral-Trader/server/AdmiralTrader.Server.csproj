@@ -24,5 +24,7 @@
     <Content Include="..\db\base.json" Link="db\base.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\assort.json" Link="db\assort.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\questassort.json" Link="db\questassort.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\db\quests\*.json" Link="db\quests\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\db\locales\*.json" Link="db\locales\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
