@@ -11,15 +11,25 @@ Official curated successor workstream for the legacy Andrudis/QuestManiac ecosys
 
 ## Current state
 
-Development has passed the initial **inventory / quest-graph / campaign-manifest** foundation and is now closing the **migration contract + vanilla reward benchmark** gate. No runtime mod is published from this module yet.
+The inventory / quest-graph / campaign-manifest / migration / reward-benchmark foundation is established. Runtime materialization is now in progress on Draft PR #138.
 
-The target is one NPC, one curated campaign, deterministic migration behavior, and reward/unlock data that remains inspectable by Economy Admiral.
+The current authored runtime set contains **31 quests**:
+
+- 10 **Access Protocol** quests replacing the legacy key-collection ladder with compact non-FIR capability checks;
+- 21 **Arsenal Protocol** quests across seven independent weapon families, with Qualification → Fieldwork → Munitions progression;
+- six controlled ammunition capability rewards/unlocks; Special Weapons remains sample-only/deferred until exact SPT 4.1.3 item proof.
+
+The server runtime validates the mixed 10 + 21 quest registry, trader identity, quest IDs and objective shapes before publication. Missing authored locale entries fail over to deterministic QuestName-based runtime text so incomplete localization cannot expose raw locale keys; complete authored EN/RU text remains a polish target before final publication.
+
+Live trader registration remains **fail-closed** through `runtime-manifest.json`. No runtime/user test is requested until the package is mechanically complete, module CI is green, and one defined SPT 4.1.3 physical gate has a downloadable exact-head artifact.
+
+The target remains one NPC, one curated campaign, deterministic migration behavior, and reward/unlock data that remains inspectable by Economy Admiral.
 
 Work order:
 
 `source inventory -> quest graph -> manifest -> migration -> trader consolidation -> curated content -> reward normalization -> tests -> runtime`
 
-Tracked by repository Issue #115 and Draft PR #122.
+Tracked by repository Issue #115 and Draft PR #138.
 
 ## Design constraints
 
@@ -50,20 +60,24 @@ The legacy quest database itself remains external source material and is not cop
 
 `tools/build_reward_benchmark.py` consumes native-style vanilla quest JSON and builds descriptive reward distributions by level bucket, including XP, standing, item counts and unlock counts. It intentionally does not invent a ruble valuation for arbitrary item rewards; economic valuation remains a separate layer that Economy Admiral can supply.
 
-The CI uses the official pinned `sp-tarkov/server-csharp` vanilla `quests.json` as the reward benchmark source.
+`tools/build_weapon_ammo_runtime_templates.py` compiles the maintained Arsenal Protocol plan, authored specification, capability selections and frozen runtime weapon-family pools into deterministic native SPT quest templates.
+
+The CI uses the official pinned `sp-tarkov/server-csharp` vanilla `quests.json` as the reward benchmark source and independently validates committed runtime materialization against compiler output.
 
 ## Validation
-
-For the current gate:
 
 ```bash
 python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 ```
 
-`Admiral Trader Validate` additionally:
+Module-specific CI additionally:
 
 - checks the pinned 4,862-quest legacy corpus and graph invariants;
 - builds the official vanilla reward benchmark from a pinned SPT source revision;
+- validates Access Protocol and Arsenal Protocol compiler output;
+- validates frozen weapon-family pools and controlled ammo capability selections;
+- builds the .NET 10 server runtime against the nearest published SPTarkov package line;
+- validates the packaged 31-quest mixed runtime layout;
 - keeps generated reports only as transient Actions artifacts.
 
-Runtime validation is intentionally deferred until a mechanically validated migration/trader candidate is ready for one defined physical gate.
+Runtime validation remains deferred until a mechanically complete exact-head SPT 4.1.3 test artifact is available for one defined physical gate.
