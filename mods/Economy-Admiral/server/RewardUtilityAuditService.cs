@@ -34,21 +34,32 @@ public sealed class RewardUtilityAuditService(
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
-        var rows = templates.Quests
+        var rawRows = templates.Quests
             .OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)
             .Select(pair => BuildQuestRow(pair.Key.ToString(), pair.Value))
             .ToList();
 
-        var vanilla = rows.Where(row => row.IsVanillaTraderQuest && !row.Restartable).ToList();
-        var vanillaRestartable = rows.Where(row => row.IsVanillaTraderQuest && row.Restartable).ToList();
+        var vanilla = rawRows.Where(row => row.IsVanillaTraderQuest && !row.Restartable).ToList();
+        var vanillaRestartable = rawRows.Where(row => row.IsVanillaTraderQuest && row.Restartable).ToList();
+        var vanillaBenchmark = BuildBenchmark(vanilla);
+        var vanillaRestartableBenchmark = BuildBenchmark(vanillaRestartable);
+
+        var rows = rawRows
+            .Select(row => AddRelativeMetrics(
+                row,
+                row.Restartable && vanillaRestartableBenchmark.QuestSamples > 0
+                    ? vanillaRestartableBenchmark
+                    : vanillaBenchmark
+            ))
+            .ToList();
 
         var report = new RewardUtilityAuditReport
         {
-            SchemaVersion = 1,
+            SchemaVersion = 2,
             UtilityScoringApplied = false,
-            Note = "Typed SPT 4.1 reward inventory/benchmark only. XP, standing and unlocks are not converted into ruble value in this slice.",
-            Vanilla = BuildBenchmark(vanilla),
-            VanillaRestartable = BuildBenchmark(vanillaRestartable),
+            Note = "Typed SPT 4.1 reward benchmark with per-dimension vanilla-relative multiples. No cross-dimension composite score and no ruble conversion are applied.",
+            Vanilla = vanillaBenchmark,
+            VanillaRestartable = vanillaRestartableBenchmark,
             Quests = rows,
         };
 
@@ -97,7 +108,34 @@ public sealed class RewardUtilityAuditService(
             TraderUnlocks = traderUnlocks,
             AssortmentUnlocks = assortmentUnlocks,
             ProductionSchemeUnlocks = productionUnlocks,
+            XpVsVanillaMedian = null,
+            StandingVsVanillaMedian = null,
+            TraderUnlocksVsVanillaMedian = null,
+            AssortmentUnlocksVsVanillaMedian = null,
+            ProductionUnlocksVsVanillaMedian = null,
         };
+    }
+
+    private static QuestRewardUtilityRow AddRelativeMetrics(QuestRewardUtilityRow row, RewardUtilityBenchmark benchmark)
+    {
+        return row with
+        {
+            XpVsVanillaMedian = RatioOrNull(row.Experience, benchmark.MedianXp),
+            StandingVsVanillaMedian = RatioOrNull(Math.Abs(row.TraderStanding), benchmark.MedianAbsoluteStanding),
+            TraderUnlocksVsVanillaMedian = RatioOrNull(row.TraderUnlocks, benchmark.MedianPositiveTraderUnlocks),
+            AssortmentUnlocksVsVanillaMedian = RatioOrNull(row.AssortmentUnlocks, benchmark.MedianPositiveAssortmentUnlocks),
+            ProductionUnlocksVsVanillaMedian = RatioOrNull(row.ProductionSchemeUnlocks, benchmark.MedianPositiveProductionSchemeUnlocks),
+        };
+    }
+
+    private static double? RatioOrNull(double value, double baseline)
+    {
+        if (value <= 0 || baseline <= 0)
+        {
+            return null;
+        }
+
+        return Math.Round(value / baseline, 4);
     }
 
     private static int CountDistinctTargets(IEnumerable<Reward> rewards, RewardType type)
@@ -113,9 +151,9 @@ public sealed class RewardUtilityAuditService(
     {
         var xp = rows.Where(row => row.Experience > 0).Select(row => row.Experience).OrderBy(value => value).ToList();
         var standing = rows.Where(row => row.TraderStanding != 0).Select(row => Math.Abs(row.TraderStanding)).OrderBy(value => value).ToList();
-        var traderUnlocks = rows.Select(row => (double)row.TraderUnlocks).OrderBy(value => value).ToList();
-        var assortmentUnlocks = rows.Select(row => (double)row.AssortmentUnlocks).OrderBy(value => value).ToList();
-        var productionUnlocks = rows.Select(row => (double)row.ProductionSchemeUnlocks).OrderBy(value => value).ToList();
+        var traderUnlocks = rows.Where(row => row.TraderUnlocks > 0).Select(row => (double)row.TraderUnlocks).OrderBy(value => value).ToList();
+        var assortmentUnlocks = rows.Where(row => row.AssortmentUnlocks > 0).Select(row => (double)row.AssortmentUnlocks).OrderBy(value => value).ToList();
+        var productionUnlocks = rows.Where(row => row.ProductionSchemeUnlocks > 0).Select(row => (double)row.ProductionSchemeUnlocks).OrderBy(value => value).ToList();
 
         return new RewardUtilityBenchmark
         {
@@ -126,12 +164,15 @@ public sealed class RewardUtilityAuditService(
             StandingSamples = standing.Count,
             MedianAbsoluteStanding = Percentile(standing, 0.50),
             P90AbsoluteStanding = Percentile(standing, 0.90),
-            MedianTraderUnlocks = Percentile(traderUnlocks, 0.50),
-            P90TraderUnlocks = Percentile(traderUnlocks, 0.90),
-            MedianAssortmentUnlocks = Percentile(assortmentUnlocks, 0.50),
-            P90AssortmentUnlocks = Percentile(assortmentUnlocks, 0.90),
-            MedianProductionSchemeUnlocks = Percentile(productionUnlocks, 0.50),
-            P90ProductionSchemeUnlocks = Percentile(productionUnlocks, 0.90),
+            TraderUnlockQuestSamples = traderUnlocks.Count,
+            MedianPositiveTraderUnlocks = Percentile(traderUnlocks, 0.50),
+            P90PositiveTraderUnlocks = Percentile(traderUnlocks, 0.90),
+            AssortmentUnlockQuestSamples = assortmentUnlocks.Count,
+            MedianPositiveAssortmentUnlocks = Percentile(assortmentUnlocks, 0.50),
+            P90PositiveAssortmentUnlocks = Percentile(assortmentUnlocks, 0.90),
+            ProductionSchemeUnlockQuestSamples = productionUnlocks.Count,
+            MedianPositiveProductionSchemeUnlocks = Percentile(productionUnlocks, 0.50),
+            P90PositiveProductionSchemeUnlocks = Percentile(productionUnlocks, 0.90),
         };
     }
 
@@ -179,12 +220,15 @@ public sealed record RewardUtilityBenchmark
     public required int StandingSamples { get; init; }
     public required double MedianAbsoluteStanding { get; init; }
     public required double P90AbsoluteStanding { get; init; }
-    public required double MedianTraderUnlocks { get; init; }
-    public required double P90TraderUnlocks { get; init; }
-    public required double MedianAssortmentUnlocks { get; init; }
-    public required double P90AssortmentUnlocks { get; init; }
-    public required double MedianProductionSchemeUnlocks { get; init; }
-    public required double P90ProductionSchemeUnlocks { get; init; }
+    public required int TraderUnlockQuestSamples { get; init; }
+    public required double MedianPositiveTraderUnlocks { get; init; }
+    public required double P90PositiveTraderUnlocks { get; init; }
+    public required int AssortmentUnlockQuestSamples { get; init; }
+    public required double MedianPositiveAssortmentUnlocks { get; init; }
+    public required double P90PositiveAssortmentUnlocks { get; init; }
+    public required int ProductionSchemeUnlockQuestSamples { get; init; }
+    public required double MedianPositiveProductionSchemeUnlocks { get; init; }
+    public required double P90PositiveProductionSchemeUnlocks { get; init; }
 }
 
 public sealed record QuestRewardUtilityRow
@@ -200,4 +244,9 @@ public sealed record QuestRewardUtilityRow
     public required int TraderUnlocks { get; init; }
     public required int AssortmentUnlocks { get; init; }
     public required int ProductionSchemeUnlocks { get; init; }
+    public required double? XpVsVanillaMedian { get; init; }
+    public required double? StandingVsVanillaMedian { get; init; }
+    public required double? TraderUnlocksVsVanillaMedian { get; init; }
+    public required double? AssortmentUnlocksVsVanillaMedian { get; init; }
+    public required double? ProductionUnlocksVsVanillaMedian { get; init; }
 }
