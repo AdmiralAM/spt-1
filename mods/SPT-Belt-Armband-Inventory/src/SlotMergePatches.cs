@@ -14,7 +14,46 @@ namespace SPTBeltArmbandInventory
 
     internal static class SlotMergeRuntime
     {
+        internal static Action<string> LogInfo;
         internal static Action<string> LogWarning;
+        internal static FieldInfo[] CandidateFields;
+        static bool candidateValuesLogged;
+
+        internal static void Observe(object slot)
+        {
+            if (slot == null || candidateValuesLogged) return;
+            try
+            {
+                string id = ReflectionTools.ReadMember(slot, "ID") as string;
+                if (!SlotMergePolicy.ShouldForce(id)) return;
+
+                candidateValuesLogged = true;
+                FieldInfo[] fields = CandidateFields ?? new FieldInfo[0];
+                if (fields.Length == 0)
+                {
+                    LogInfo?.Invoke("B&A&HB MERGE STORAGE RUNTIME: ArmBand slot observed; no EParentMergeType instance fields exist to read.");
+                    return;
+                }
+
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    FieldInfo field = fields[i];
+                    try
+                    {
+                        object value = field.GetValue(slot);
+                        LogInfo?.Invoke("B&A&HB MERGE STORAGE RUNTIME field[" + i + "] " + field.Name + "=" + (value == null ? "<null>" : value.ToString()));
+                    }
+                    catch (Exception exception)
+                    {
+                        LogWarning?.Invoke("B&A&HB MERGE STORAGE RUNTIME field[" + i + "] " + field.Name + " read failed safely: " + exception.Message);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                LogWarning?.Invoke("B&A&HB MERGE STORAGE RUNTIME ArmBand observation failed safely: " + exception.Message);
+            }
+        }
 
         internal static void Prepare(object slot)
         {
@@ -35,6 +74,14 @@ namespace SPTBeltArmbandInventory
             {
                 if (LogWarning != null) LogWarning("Could not normalize ArmBand merge behavior: " + exception.Message);
             }
+        }
+
+        internal static void Reset()
+        {
+            LogInfo = null;
+            LogWarning = null;
+            CandidateFields = null;
+            candidateValuesLogged = false;
         }
     }
 
@@ -59,11 +106,13 @@ namespace SPTBeltArmbandInventory
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
                 Type slotType = ReflectionTools.FindType("EFT.InventoryLogic.Slot");
+                Type parentMergeType = ReflectionTools.FindType("EFT.InventoryLogic.EParentMergeType");
                 if (harmonyType == null || harmonyMethodType == null || slotType == null)
                     return Fail("SPT 4.1 Slot or Harmony was not found; ArmBand merge compatibility is disabled.");
 
                 PropertyInfo property = slotType.GetProperty("MergeContainerWithChildren", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 MethodInfo getter = property == null ? null : property.GetGetMethod(true);
+                MethodInfo setter = property == null ? null : property.GetSetMethod(true);
                 FieldInfo backing = slotType.GetField("<MergeContainerWithChildren>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
 
                 bool getterFound = getter != null;
@@ -88,19 +137,44 @@ namespace SPTBeltArmbandInventory
                         ? "enum values=[" + string.Join(",", Enum.GetNames(backing.FieldType)) + "]"
                         : "cannot be true because backing field is missing or is not an enum.");
 
-                if (!getterFound || !backingFound || !backingIsEnum || !inheritFromItemFound)
-                    return Fail("SPT 4.1 Slot.MergeContainerWithChildren shape diagnostics complete; one or more required conditions failed, so ArmBand merge compatibility remains safely disabled.");
+                logInfo?.Invoke("B&A&HB MERGE STORAGE DIAG property type=" + (property == null || property.PropertyType == null ? "<missing>" : property.PropertyType.FullName));
+                logInfo?.Invoke("B&A&HB MERGE STORAGE DIAG getter=" + (getter == null ? "<missing>" : getter.ToString()));
+                logInfo?.Invoke("B&A&HB MERGE STORAGE DIAG setter=" + (setter == null ? "<missing>" : setter.ToString()));
+
+                FieldInfo[] candidateFields = parentMergeType == null
+                    ? new FieldInfo[0]
+                    : slotType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                        .Where(field => field.FieldType == parentMergeType)
+                        .ToArray();
+
+                logInfo?.Invoke("B&A&HB MERGE STORAGE DIAG EParentMergeType=" + (parentMergeType == null ? "<missing>" : parentMergeType.FullName) + ", candidate field count=" + candidateFields.Length);
+                for (int i = 0; i < candidateFields.Length; i++)
+                    logInfo?.Invoke("B&A&HB MERGE STORAGE DIAG field[" + i + "] name=" + candidateFields[i].Name + ", visibility=" + FieldVisibility(candidateFields[i]));
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo hmCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                if (harmony == null || patchMethod == null || hmCtor == null)
+                unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
+                if (harmony == null || patchMethod == null || hmCtor == null || unpatchSelf == null)
                     return Fail("Harmony patch API is incompatible; ArmBand merge compatibility is disabled.");
 
+                SlotMergeRuntime.LogInfo = logInfo;
                 SlotMergeRuntime.LogWarning = logWarning;
+                SlotMergeRuntime.CandidateFields = candidateFields;
+
+                if (!getterFound)
+                    return Fail("SPT 4.1 Slot.MergeContainerWithChildren getter is unavailable; storage diagnostics cannot observe ArmBand runtime values and compatibility remains safely disabled.");
+
+                if (!backingFound || !backingIsEnum || !inheritFromItemFound)
+                {
+                    object diagnosticPrefix = hmCtor.Invoke(new object[] { Method(nameof(DiagnosticPrefix)) });
+                    Patch(patchMethod, harmonyMethodType, getter, diagnosticPrefix);
+                    logInfo?.Invoke("B&A&HB MERGE STORAGE DIAG runtime observer installed on getter; it only logs ArmBand candidate-field values and does not mutate merge behavior.");
+                    return Fail("SPT 4.1 Slot.MergeContainerWithChildren storage path is not proven; ArmBand merge compatibility remains safely disabled while diagnostic observation is active.");
+                }
+
                 object prefix = hmCtor.Invoke(new object[] { Method(nameof(Prefix)) });
                 Patch(patchMethod, harmonyMethodType, getter, prefix);
-                unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 if (logInfo != null) logInfo("Belt/Armband Inventory slot merge compatibility installed.");
                 return true;
             }
@@ -124,6 +198,17 @@ namespace SPTBeltArmbandInventory
             }
         }
 
+        static string FieldVisibility(FieldInfo field)
+        {
+            if (field.IsPublic) return "public";
+            if (field.IsPrivate) return "private";
+            if (field.IsFamily) return "protected";
+            if (field.IsAssembly) return "internal";
+            if (field.IsFamilyOrAssembly) return "protected internal";
+            return "other";
+        }
+
+        static void DiagnosticPrefix(object __instance) { SlotMergeRuntime.Observe(__instance); }
         static void Prefix(object __instance) { SlotMergeRuntime.Prepare(__instance); }
 
         static MethodInfo Method(string name) => typeof(SlotMergePatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
@@ -158,7 +243,7 @@ namespace SPTBeltArmbandInventory
             try { if (harmony != null && unpatchSelf != null) unpatchSelf.Invoke(harmony, null); } catch { }
             harmony = null;
             unpatchSelf = null;
-            SlotMergeRuntime.LogWarning = null;
+            SlotMergeRuntime.Reset();
         }
     }
 }
