@@ -33,3 +33,37 @@ jobs:
 
       - name: Validate seed rules JSON
         run: python -m json.tool mods/SPT-Andrudis-Curated/manifests/seed-rules.json > /dev/null
+
+      - name: Checkout pinned legacy corpus
+        uses: actions/checkout@v4
+        with:
+          repository: Thirt3nth/Andrudis-Questmaniac
+          ref: 4e15990ac18f469ef7818475ce8553bbbb7cebb4
+          path: legacy-andrudis
+          fetch-depth: 1
+
+      - name: Build full legacy inventory and graph
+        run: >-
+          python mods/SPT-Andrudis-Curated/tools/build_inventory.py
+          legacy-andrudis/db/QuestBundles
+          --rules mods/SPT-Andrudis-Curated/manifests/seed-rules.json
+          --output build/andrudis-inventory.json
+
+      - name: Print inventory summary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('build/andrudis-inventory.json').read_text(encoding='utf-8'))
+          print(json.dumps(data['summary'], indent=2, ensure_ascii=False))
+          if data['summary']['parseErrorCount'] != 0:
+              raise SystemExit('legacy corpus contains parse errors')
+          PY
+
+      - name: Upload transient inventory report
+        uses: actions/upload-artifact@v4
+        with:
+          name: andrudis-inventory-${{ github.event.pull_request.head.sha || github.sha }}
+          path: build/andrudis-inventory.json
+          if-no-files-found: error
+          retention-days: 7
