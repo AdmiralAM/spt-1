@@ -58,7 +58,11 @@ class KeysRuntimeTemplateTests(unittest.TestCase):
                     "minimumLevel": 10,
                     "map": "bigmap",
                     "prerequisites": ["aaaaaaaaaaaaaaaaaaaaaaaa"],
-                    "objective": {"representativeCount": 2, "sourceGroup": "keys-test"},
+                    "objective": {
+                        "representativeCount": 2,
+                        "maximumTargetPoolSize": 2,
+                        "sourceGroup": "keys-test",
+                    },
                     "rewardBudget": {"xp": 8000, "rub": 25000, "standing": 0.02, "unlockSlots": 1},
                 }
             ]
@@ -67,10 +71,11 @@ class KeysRuntimeTemplateTests(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def test_source_pool_uses_find_item_only(self):
+    def test_source_pool_uses_find_item_only_and_is_bounded(self):
         payload = MODULE.build_payload(self.spec, self.plan, self.inventory, self.root)
-        self.assertEqual(payload["sourceKeyPools"]["keys-test"], ["key-a", "key-b", "key-c"])
+        self.assertEqual(payload["sourceKeyPools"]["keys-test"], ["key-a", "key-b"])
         self.assertNotIn(MODULE.RUB_TPL, payload["sourceKeyPools"]["keys-test"])
+        self.assertEqual(payload["summary"]["maximumKeyPoolSize"], 2)
 
     def test_native_template_keeps_keys_and_removes_money_handover(self):
         payload = MODULE.build_payload(self.spec, self.plan, self.inventory, self.root)
@@ -78,6 +83,7 @@ class KeysRuntimeTemplateTests(unittest.TestCase):
         finish = template["conditions"]["AvailableForFinish"]
         self.assertEqual(len(finish), 1)
         self.assertEqual(finish[0]["conditionType"], "FindItem")
+        self.assertEqual(finish[0]["target"], ["key-a", "key-b"])
         self.assertEqual(finish[0]["value"], 2)
         self.assertFalse(finish[0]["onlyFoundInRaid"])
         self.assertEqual(template["traderId"], MODULE.TRADER_ID)
@@ -92,6 +98,11 @@ class KeysRuntimeTemplateTests(unittest.TestCase):
         self.assertEqual(rub_reward["items"][0]["_tpl"], MODULE.RUB_TPL)
         self.assertEqual(rub_reward["items"][0]["upd"]["StackObjectsCount"], 25000)
         self.assertEqual(payload["summary"]["deferredUnlockSlotCount"], 1)
+
+    def test_target_pool_bound_cannot_be_smaller_than_required_count(self):
+        self.spec["quests"][0]["objective"]["maximumTargetPoolSize"] = 1
+        with self.assertRaisesRegex(ValueError, "below representativeCount"):
+            MODULE.build_payload(self.spec, self.plan, self.inventory, self.root)
 
 
 if __name__ == "__main__":
