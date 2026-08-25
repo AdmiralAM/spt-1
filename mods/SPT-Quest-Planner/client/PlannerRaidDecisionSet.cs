@@ -86,8 +86,8 @@ namespace SPTQuestPlanner.Client
 
             if (frontier.Count == 1)
             {
-                string reason = intent != null && intent.HasFocusQuest && Supports(frontier[0].Signals, intent.FocusQuestId)
-                    ? "Player progression focus resolves the candidate frontier toward a raid that advances the focused quest."
+                string reason = intent != null && PlannerRaidDecisionIntentPolicy.Supports(frontier[0].Signals, intent)
+                    ? "Player progression focus resolves the candidate frontier toward a raid that advances the focused quest path."
                     : "One candidate is undominated by every alternative under the proven decision dimensions.";
                 return new PlannerRaidDecisionSet(frontier[0], frontier.ToArray(), reason);
             }
@@ -96,15 +96,6 @@ namespace SPTQuestPlanner.Client
                 ? frontier.Count + " candidates still advance or remain compatible with the progression focus; expose their trade-offs instead of forcing a best raid."
                 : frontier.Count + " candidates remain undominated; expose their trade-offs instead of forcing a best raid.";
             return new PlannerRaidDecisionSet(null, frontier.ToArray(), frontierReason);
-        }
-
-        private static bool Supports(PlannerRaidDecisionSignals signals, string questId)
-        {
-            for (int i = 0; i < signals.NonRepeatableQuestIds.Count; i++)
-                if (string.Equals(signals.NonRepeatableQuestIds[i], questId, StringComparison.Ordinal)) return true;
-            for (int i = 0; i < signals.RepeatableQuestIds.Count; i++)
-                if (string.Equals(signals.RepeatableQuestIds[i], questId, StringComparison.Ordinal)) return true;
-            return false;
         }
     }
 }
