@@ -127,6 +127,8 @@ JsonMustFail("numeric mode", "{\"mode\":1}");
 JsonMustFail("numeric preset", "{\"preset\":2}");
 JsonMustFail("unknown mode string", "{\"mode\":\"Explode\"}");
 JsonMustFail("unknown top-level property", "{\"mode\":\"Audit\",\"mysterySetting\":true}");
+JsonMustFail("duplicate top-level key", "{\"mode\":\"Audit\",\"MODE\":\"Off\"}");
+JsonMustFail("duplicate nested key", "{\"rarity\":{\"commonMinSources\":8,\"COMMONMINSOURCES\":9}}");
 JsonMustFail("non-object root", "[]");
 JsonMustFail("null rarity JSON", "{\"rarity\":null}");
 JsonMustFail("null policy JSON", "{\"customAuditPolicy\":null}");
