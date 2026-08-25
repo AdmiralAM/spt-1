@@ -18,7 +18,9 @@ public sealed class AdmiralQuestRegistration(
     LocaleTable localesTable,
     ISptLogger<AdmiralQuestRegistration> logger) : IOnLoad
 {
-    private const int ExpectedQuestCount = 10;
+    private const int ExpectedAccessQuestCount = 10;
+    private const int ExpectedArsenalQuestCount = 21;
+    private const int ExpectedQuestCount = ExpectedAccessQuestCount + ExpectedArsenalQuestCount;
 
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
@@ -70,6 +72,9 @@ public sealed class AdmiralQuestRegistration(
         if (quests.Count != ExpectedQuestCount)
             throw new InvalidDataException($"Expected {ExpectedQuestCount} authored Admiral quests, got {quests.Count}");
 
+        int accessCount = 0;
+        int arsenalCount = 0;
+
         foreach (var (questId, quest) in quests)
         {
             if (quest.Id != questId)
@@ -80,13 +85,36 @@ public sealed class AdmiralQuestRegistration(
                 throw new InvalidDataException($"Quest {questId} must have exactly one finish condition");
 
             QuestCondition finish = finishConditions[0];
-            if (!string.Equals(finish.ConditionType, "FindItem", StringComparison.Ordinal))
-                throw new InvalidDataException($"Quest {questId} finish condition must be FindItem, got {finish.ConditionType}");
-            if (finish.OnlyFoundInRaid is not false)
-                throw new InvalidDataException($"Quest {questId} must not require found-in-raid keys");
-            if (finish.Target is null || finish.Value is null || finish.Value <= 0)
-                throw new InvalidDataException($"Quest {questId} has an invalid key objective");
+            if (string.Equals(finish.ConditionType, "FindItem", StringComparison.Ordinal))
+            {
+                ValidateAccessQuest(questId, finish);
+                accessCount++;
+                continue;
+            }
+
+            if (string.Equals(finish.ConditionType, "CounterCreator", StringComparison.Ordinal))
+            {
+                if (!string.Equals(quest.Type, "Elimination", StringComparison.Ordinal))
+                    throw new InvalidDataException($"Arsenal quest {questId} must be Elimination, got {quest.Type}");
+                arsenalCount++;
+                continue;
+            }
+
+            throw new InvalidDataException(
+                $"Quest {questId} has unsupported finish condition {finish.ConditionType}; expected FindItem or CounterCreator");
         }
+
+        if (accessCount != ExpectedAccessQuestCount || arsenalCount != ExpectedArsenalQuestCount)
+            throw new InvalidDataException(
+                $"Admiral quest mix drifted: Access={accessCount}/{ExpectedAccessQuestCount}, Arsenal={arsenalCount}/{ExpectedArsenalQuestCount}");
+    }
+
+    private static void ValidateAccessQuest(MongoId questId, QuestCondition finish)
+    {
+        if (finish.OnlyFoundInRaid is not false)
+            throw new InvalidDataException($"Access quest {questId} must not require found-in-raid keys");
+        if (finish.Target is null || finish.Value is null || finish.Value <= 0)
+            throw new InvalidDataException($"Access quest {questId} has an invalid key objective");
     }
 
     private void PreflightQuestIds(Dictionary<MongoId, Quest> quests)
