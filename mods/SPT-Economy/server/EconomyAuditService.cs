@@ -2,6 +2,7 @@ using System.Text.Json;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers.Server;
+using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 
 namespace SPTEconomy;
@@ -59,7 +60,7 @@ public sealed class EconomyAuditService(
         var findings = new List<AuditFinding>();
         var acquisitions = new Dictionary<string, MutableAcquisition>(StringComparer.Ordinal);
         var traderAudits = ScanTraderAcquisition(acquisitions, findings);
-        var questAudits = ScanQuestRewards(acquisitions, handbookPrices);
+        var questAudits = ScanQuestRewards(acquisitions, handbookPrices, policy);
         var benchmark = BuildVanillaBenchmark(questAudits);
         AddQuestAuditFindings(questAudits, benchmark, policy, findings);
 
@@ -85,11 +86,12 @@ public sealed class EconomyAuditService(
 
         var report = new EconomyAuditReport
         {
-            SchemaVersion = 2,
+            SchemaVersion = 3,
             Mode = config.Mode.ToString(),
             Preset = config.Preset.ToString(),
             EnforcementApplied = false,
             RepeatedRaidLootDecay = config.RepeatedRaidLootDecay,
+            RewardNormalizationModel = "knownHandbookValue / (1 + cappedLevelGate*levelGateWeight + cappedObjectiveCount*objectiveConditionWeight)",
             Policy = policy,
             Database = new DatabaseSummary
             {
@@ -197,7 +199,8 @@ public sealed class EconomyAuditService(
 
     private List<QuestRewardAudit> ScanQuestRewards(
         Dictionary<string, MutableAcquisition> acquisitions,
-        IReadOnlyDictionary<string, double> handbookPrices
+        IReadOnlyDictionary<string, double> handbookPrices,
+        AuditPolicy policy
     )
     {
         var audits = new List<QuestRewardAudit>();
@@ -234,6 +237,11 @@ public sealed class EconomyAuditService(
                 }
             }
 
+            var requiredLevel = ExtractRequiredLevel(quest.Conditions.AvailableForStart);
+            var objectiveConditionCount = (quest.Conditions.AvailableForFinish?.Count ?? 0) + (quest.Conditions.Success?.Count ?? 0);
+            var progressionScore = CalculateProgressionScore(requiredLevel, objectiveConditionCount, policy);
+            var normalizedValue = progressionScore > 0 ? knownValue / progressionScore : knownValue;
+
             audits.Add(new QuestRewardAudit
             {
                 QuestId = questId,
@@ -241,9 +249,13 @@ public sealed class EconomyAuditService(
                 TraderId = traderId,
                 IsVanillaTraderQuest = VanillaTraderIds.Contains(traderId),
                 Restartable = quest.Restartable,
+                RequiredLevel = requiredLevel,
+                ObjectiveConditionCount = objectiveConditionCount,
+                ProgressionScore = Math.Round(progressionScore, 4),
                 RewardItemRecords = rewardItems.Count,
                 DistinctRewardTemplates = rewardItems.Select(item => item.TemplateId).Distinct(StringComparer.Ordinal).Count(),
                 KnownHandbookValue = Math.Round(knownValue, 2),
+                NormalizedHandbookValue = Math.Round(normalizedValue, 2),
                 UnknownPriceItemRecords = unknownPriceItems,
             });
         }
@@ -258,10 +270,19 @@ public sealed class EconomyAuditService(
             .Select(audit => audit.KnownHandbookValue)
             .OrderBy(value => value)
             .ToList();
-
+        var normalizedValues = questAudits
+            .Where(audit => audit.IsVanillaTraderQuest && !audit.Restartable && audit.NormalizedHandbookValue > 0)
+            .Select(audit => audit.NormalizedHandbookValue)
+            .OrderBy(value => value)
+            .ToList();
         var restartableValues = questAudits
             .Where(audit => audit.IsVanillaTraderQuest && audit.Restartable && audit.KnownHandbookValue > 0)
             .Select(audit => audit.KnownHandbookValue)
+            .OrderBy(value => value)
+            .ToList();
+        var restartableNormalizedValues = questAudits
+            .Where(audit => audit.IsVanillaTraderQuest && audit.Restartable && audit.NormalizedHandbookValue > 0)
+            .Select(audit => audit.NormalizedHandbookValue)
             .OrderBy(value => value)
             .ToList();
 
@@ -270,8 +291,11 @@ public sealed class EconomyAuditService(
             VanillaQuestSamples = values.Count,
             VanillaMedianHandbookValue = Percentile(values, 0.50),
             VanillaP90HandbookValue = Percentile(values, 0.90),
+            VanillaMedianNormalizedHandbookValue = Percentile(normalizedValues, 0.50),
+            VanillaP90NormalizedHandbookValue = Percentile(normalizedValues, 0.90),
             VanillaRestartableSamples = restartableValues.Count,
             VanillaRestartableMedianHandbookValue = Percentile(restartableValues, 0.50),
+            VanillaRestartableMedianNormalizedHandbookValue = Percentile(restartableNormalizedValues, 0.50),
         };
     }
 
@@ -297,32 +321,108 @@ public sealed class EconomyAuditService(
                 });
             }
 
-            var baseline = audit.Restartable && benchmark.VanillaRestartableMedianHandbookValue > 0
-                ? benchmark.VanillaRestartableMedianHandbookValue
-                : benchmark.VanillaMedianHandbookValue;
-            if (baseline <= 0 || audit.KnownHandbookValue <= 0)
-            {
-                continue;
-            }
-
-            var multiple = audit.Restartable
-                ? policy.RestartableRewardVsVanillaMedianWarnMultiple
-                : policy.QuestRewardVsVanillaMedianWarnMultiple;
-            var threshold = baseline * multiple;
-            if (audit.KnownHandbookValue > threshold)
-            {
-                findings.Add(new AuditFinding
-                {
-                    Severity = audit.Restartable ? "Error" : "Warning",
-                    Code = audit.Restartable ? "RESTARTABLE_REWARD_VALUE_OUTLIER" : "QUEST_REWARD_VALUE_OUTLIER",
-                    SubjectType = "Quest",
-                    SubjectId = audit.QuestId,
-                    Detail = $"Known handbook reward value {audit.KnownHandbookValue:0.##} exceeds the vanilla median benchmark threshold.",
-                    Metric = audit.KnownHandbookValue,
-                    Threshold = Math.Round(threshold, 2),
-                });
-            }
+            AddRawRewardFinding(audit, benchmark, policy, findings);
+            AddNormalizedRewardFinding(audit, benchmark, policy, findings);
         }
+    }
+
+    private static void AddRawRewardFinding(
+        QuestRewardAudit audit,
+        QuestRewardBenchmark benchmark,
+        AuditPolicy policy,
+        List<AuditFinding> findings
+    )
+    {
+        var baseline = audit.Restartable && benchmark.VanillaRestartableMedianHandbookValue > 0
+            ? benchmark.VanillaRestartableMedianHandbookValue
+            : benchmark.VanillaMedianHandbookValue;
+        if (baseline <= 0 || audit.KnownHandbookValue <= 0)
+        {
+            return;
+        }
+
+        var multiple = audit.Restartable
+            ? policy.RestartableRewardVsVanillaMedianWarnMultiple
+            : policy.QuestRewardVsVanillaMedianWarnMultiple;
+        var threshold = baseline * multiple;
+        if (audit.KnownHandbookValue <= threshold)
+        {
+            return;
+        }
+
+        findings.Add(new AuditFinding
+        {
+            Severity = audit.Restartable ? "Error" : "Warning",
+            Code = audit.Restartable ? "RESTARTABLE_REWARD_VALUE_OUTLIER" : "QUEST_REWARD_VALUE_OUTLIER",
+            SubjectType = "Quest",
+            SubjectId = audit.QuestId,
+            Detail = $"Known handbook reward value {audit.KnownHandbookValue:0.##} exceeds the vanilla median benchmark threshold.",
+            Metric = audit.KnownHandbookValue,
+            Threshold = Math.Round(threshold, 2),
+        });
+    }
+
+    private static void AddNormalizedRewardFinding(
+        QuestRewardAudit audit,
+        QuestRewardBenchmark benchmark,
+        AuditPolicy policy,
+        List<AuditFinding> findings
+    )
+    {
+        var baseline = audit.Restartable && benchmark.VanillaRestartableMedianNormalizedHandbookValue > 0
+            ? benchmark.VanillaRestartableMedianNormalizedHandbookValue
+            : benchmark.VanillaMedianNormalizedHandbookValue;
+        if (baseline <= 0 || audit.NormalizedHandbookValue <= 0)
+        {
+            return;
+        }
+
+        var multiple = audit.Restartable
+            ? policy.RestartableNormalizedRewardVsVanillaMedianWarnMultiple
+            : policy.NormalizedRewardVsVanillaMedianWarnMultiple;
+        var threshold = baseline * multiple;
+        if (audit.NormalizedHandbookValue <= threshold)
+        {
+            return;
+        }
+
+        findings.Add(new AuditFinding
+        {
+            Severity = audit.Restartable ? "Error" : "Warning",
+            Code = audit.Restartable ? "RESTARTABLE_REWARD_BUDGET_OUTLIER" : "QUEST_REWARD_BUDGET_OUTLIER",
+            SubjectType = "Quest",
+            SubjectId = audit.QuestId,
+            Detail = $"Progression-normalized reward value {audit.NormalizedHandbookValue:0.##} exceeds the vanilla normalized median threshold.",
+            Metric = audit.NormalizedHandbookValue,
+            Threshold = Math.Round(threshold, 2),
+        });
+    }
+
+    private static int ExtractRequiredLevel(IEnumerable<QuestCondition>? conditions)
+    {
+        if (conditions is null)
+        {
+            return 1;
+        }
+
+        var levels = conditions
+            .Where(condition => string.Equals(condition.ConditionType, "Level", StringComparison.OrdinalIgnoreCase) && condition.Value.HasValue)
+            .Select(condition => Math.Max(1, (int)Math.Ceiling(condition.Value!.Value)))
+            .ToList();
+        return levels.Count == 0 ? 1 : levels.Max();
+    }
+
+    private static double CalculateProgressionScore(int requiredLevel, int objectiveConditionCount, AuditPolicy policy)
+    {
+        var levelContribution = Math.Min(
+            Math.Max(0, requiredLevel - 1) * Math.Max(0, policy.LevelGateWeight),
+            Math.Max(0, policy.MaxLevelGateContribution)
+        );
+        var objectiveContribution = Math.Min(
+            Math.Max(1, objectiveConditionCount) * Math.Max(0, policy.ObjectiveConditionWeight),
+            Math.Max(0, policy.MaxObjectiveContribution)
+        );
+        return 1d + levelContribution + objectiveContribution;
     }
 
     private static IEnumerable<RewardItemValue> FindRewardItems(JsonElement element)
@@ -438,12 +538,16 @@ public sealed class EconomyAuditService(
             {
                 QuestRewardVsVanillaMedianWarnMultiple = 5.0,
                 RestartableRewardVsVanillaMedianWarnMultiple = 2.5,
+                NormalizedRewardVsVanillaMedianWarnMultiple = 4.0,
+                RestartableNormalizedRewardVsVanillaMedianWarnMultiple = 2.0,
                 DuplicateTraderSourcesWarnCount = 8,
             },
             EconomyPreset.Hard => new AuditPolicy
             {
                 QuestRewardVsVanillaMedianWarnMultiple = 2.0,
                 RestartableRewardVsVanillaMedianWarnMultiple = 1.25,
+                NormalizedRewardVsVanillaMedianWarnMultiple = 1.75,
+                RestartableNormalizedRewardVsVanillaMedianWarnMultiple = 1.10,
                 DuplicateTraderSourcesWarnCount = 4,
             },
             EconomyPreset.Custom => config.CustomAuditPolicy,
@@ -504,6 +608,7 @@ public sealed record EconomyAuditReport
     public required string Preset { get; init; }
     public required bool EnforcementApplied { get; init; }
     public required bool RepeatedRaidLootDecay { get; init; }
+    public required string RewardNormalizationModel { get; init; }
     public required AuditPolicy Policy { get; init; }
     public required DatabaseSummary Database { get; init; }
     public required AcquisitionSummary Acquisition { get; init; }
@@ -535,8 +640,11 @@ public sealed record QuestRewardBenchmark
     public required int VanillaQuestSamples { get; init; }
     public required double VanillaMedianHandbookValue { get; init; }
     public required double VanillaP90HandbookValue { get; init; }
+    public required double VanillaMedianNormalizedHandbookValue { get; init; }
+    public required double VanillaP90NormalizedHandbookValue { get; init; }
     public required int VanillaRestartableSamples { get; init; }
     public required double VanillaRestartableMedianHandbookValue { get; init; }
+    public required double VanillaRestartableMedianNormalizedHandbookValue { get; init; }
 }
 
 public sealed record TraderAudit
@@ -555,9 +663,13 @@ public sealed record QuestRewardAudit
     public required string TraderId { get; init; }
     public required bool IsVanillaTraderQuest { get; init; }
     public required bool Restartable { get; init; }
+    public required int RequiredLevel { get; init; }
+    public required int ObjectiveConditionCount { get; init; }
+    public required double ProgressionScore { get; init; }
     public required int RewardItemRecords { get; init; }
     public required int DistinctRewardTemplates { get; init; }
     public required double KnownHandbookValue { get; init; }
+    public required double NormalizedHandbookValue { get; init; }
     public required int UnknownPriceItemRecords { get; init; }
 }
 
