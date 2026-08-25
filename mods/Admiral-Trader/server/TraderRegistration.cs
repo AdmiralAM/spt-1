@@ -11,6 +11,7 @@ using SPTarkov.Server.Core.Models.Spt.Config;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Routers;
 using SPTarkov.Server.Core.Utils;
+using IOPath = System.IO.Path;
 
 namespace AdmiralTrader.Server;
 
@@ -43,7 +44,7 @@ public sealed class AdmiralTraderRegistration(
 
     private void RegisterTrader(string modPath)
     {
-        string avatarPath = Path.Combine(modPath, "assets", $"{RuntimeIdentity.TraderId}.jpg");
+        string avatarPath = IOPath.Combine(modPath, "assets", $"{RuntimeIdentity.TraderId}.jpg");
         if (!File.Exists(avatarPath))
             throw new FileNotFoundException("Admiral Trader registration is enabled but the approved trader portrait is missing", avatarPath);
 
@@ -120,7 +121,7 @@ public sealed class AdmiralTraderRegistration(
 
     private static RuntimeRegistrationManifest LoadRuntimeManifest(string modPath)
     {
-        string path = Path.Combine(modPath, "manifests", "runtime-manifest.json");
+        string path = IOPath.Combine(modPath, "manifests", "runtime-manifest.json");
         if (!File.Exists(path))
             throw new FileNotFoundException("Admiral Trader runtime manifest is missing", path);
 
