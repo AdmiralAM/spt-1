@@ -39,6 +39,21 @@ namespace SPTBeltArmbandInventory
                 unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 object postfix = hmCtor.Invoke(new object[] { typeof(RuntimeTypeProofPlugin).GetMethod(nameof(PostfixFactory), BindingFlags.Static | BindingFlags.NonPublic) });
                 patch.Invoke(harmony, new[] { show, null, postfix, null, null });
+
+                Type searchableItemViewType = ReflectionTools.FindType("EFT.UI.DragAndDrop.SearchableItemView");
+                MethodInfo searchableShow = FindSingleShow(searchableItemViewType);
+                if (searchableShow != null)
+                {
+                    object openPostfix = hmCtor.Invoke(new object[] { typeof(RuntimeTypeProofPlugin).GetMethod(nameof(OpenRoutePostfixFactory), BindingFlags.Static | BindingFlags.NonPublic) });
+                    patch.Invoke(harmony, new[] { searchableShow, null, openPostfix, null, null });
+                    RuntimeTypeProof.OpenRouteMethod = searchableShow;
+                    Logger.LogInfo("B&A&HB OPEN ROUTE DIAG: native SearchableItemView hook installed: " + searchableShow + ".");
+                }
+                else
+                {
+                    Logger.LogWarning("B&A&HB OPEN ROUTE DIAG: unique SearchableItemView.Show boundary was not found; native open-route tracing is disabled.");
+                }
+
                 Logger.LogInfo("B&A&HB TYPE PROOF: ContainersPanel.Show runtime-type diagnostics installed.");
             }
             catch (Exception ex)
@@ -46,6 +61,34 @@ namespace SPTBeltArmbandInventory
                 Exception root = Unwrap(ex);
                 Logger.LogWarning("B&A&HB TYPE PROOF INSTALL FAIL: " + root.GetType().FullName + ": " + root.Message);
             }
+        }
+
+        static MethodInfo FindSingleShow(Type viewType)
+        {
+            if (viewType == null) return null;
+            MethodInfo match = null;
+            foreach (MethodInfo method in viewType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (method.Name != "Show") continue;
+                if (match != null) return null;
+                match = method;
+            }
+            return match;
+        }
+
+        static MethodInfo OpenRoutePostfixFactory(MethodBase original)
+        {
+            MethodInfo method = original as MethodInfo;
+            if (method == null || method.DeclaringType == null) return null;
+            DynamicMethod dm = new DynamicMethod("BeltOpenRouteProofPostfix", typeof(void), new[] { typeof(object), typeof(object[]) }, typeof(RuntimeTypeProofPlugin), true);
+            dm.DefineParameter(1, ParameterAttributes.None, "__instance");
+            dm.DefineParameter(2, ParameterAttributes.None, "__args");
+            ILGenerator il = dm.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Call, typeof(RuntimeTypeProof).GetMethod(nameof(RuntimeTypeProof.ProbeOpenRoute), BindingFlags.Static | BindingFlags.NonPublic));
+            il.Emit(OpCodes.Ret);
+            return dm;
         }
 
         static MethodInfo PostfixFactory(MethodBase original)
@@ -100,6 +143,34 @@ namespace SPTBeltArmbandInventory
             internal static Action<string> Log;
             internal static Action<string> Warn;
             static bool emitted;
+            static bool openRouteEmitted;
+            internal static MethodInfo OpenRouteMethod;
+
+            internal static void ProbeOpenRoute(object instance, object[] args)
+            {
+                if (openRouteEmitted) return;
+                try
+                {
+                    object item = FindRcItem(args) ?? FindRcItem(instance);
+                    if (item == null) return;
+                    openRouteEmitted = true;
+
+                    object template = Read(item, "Template");
+                    object grids = Read(item, "Grids") ?? Read(item, "Containers");
+                    object layout = template == null ? null : (Read(template, "LayoutName") ?? Read(template, "Layout"));
+                    Log?.Invoke("B&A&HB OPEN ROUTE 1/3 PASS: native SearchableItemView received RC; view="
+                        + (instance == null ? "<null>" : instance.GetType().FullName) + "; method=" + OpenRouteMethod + ".");
+                    Log?.Invoke("B&A&HB OPEN ROUTE 2/3: layout=" + (layout ?? "<null>") + "; grids=" + DescribeGrids(grids)
+                        + "; gridTypes=" + DescribeTypes(grids) + ".");
+                    Log?.Invoke("B&A&HB OPEN ROUTE 3/3: view grid/layout members=" + DescribeRelevantMembers(instance) + ".");
+                }
+                catch (Exception ex)
+                {
+                    Exception root = ex;
+                    while (root is TargetInvocationException && root.InnerException != null) root = root.InnerException;
+                    Warn?.Invoke("B&A&HB OPEN ROUTE DIAG FAIL: " + root.GetType().FullName + ": " + root.Message);
+                }
+            }
 
             internal static void Probe(object[] args)
             {
@@ -147,6 +218,57 @@ namespace SPTBeltArmbandInventory
                     while (root is TargetInvocationException && root.InnerException != null) root = root.InnerException;
                     Warn?.Invoke("B&A&HB TYPE PROOF FAIL: " + root.GetType().FullName + ": " + root.Message + (root.StackTrace == null ? "" : "\n" + root.StackTrace));
                 }
+            }
+
+            static object FindRcItem(object target)
+            {
+                IEnumerable values = target as IEnumerable;
+                if (values == null) values = new[] { target };
+                foreach (object value in values)
+                {
+                    if (value == null) continue;
+                    string tpl = Convert.ToString(Read(value, "TemplateId") ?? Read(value, "Tpl"));
+                    if (string.Equals(tpl, RcTpl, StringComparison.OrdinalIgnoreCase)) return value;
+                    foreach (FieldInfo field in value.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                    {
+                        object nested = field.GetValue(value);
+                        string nestedTpl = Convert.ToString(Read(nested, "TemplateId") ?? Read(nested, "Tpl"));
+                        if (string.Equals(nestedTpl, RcTpl, StringComparison.OrdinalIgnoreCase)) return nested;
+                    }
+                }
+                return null;
+            }
+
+            static string DescribeTypes(object values)
+            {
+                IEnumerable enumerable = values as IEnumerable;
+                if (enumerable == null) return "<none>";
+                string result = ""; int count = 0;
+                foreach (object value in enumerable)
+                {
+                    if (count++ > 0) result += ",";
+                    result += value == null ? "<null>" : value.GetType().FullName;
+                }
+                return result.Length == 0 ? "<none>" : result;
+            }
+
+            static string DescribeRelevantMembers(object target)
+            {
+                if (target == null) return "<null>";
+                string result = ""; int count = 0;
+                for (Type type = target.GetType(); type != null; type = type.BaseType)
+                {
+                    foreach (FieldInfo field in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                    {
+                        string name = field.Name;
+                        if (name.IndexOf("grid", StringComparison.OrdinalIgnoreCase) < 0 && name.IndexOf("layout", StringComparison.OrdinalIgnoreCase) < 0 && name.IndexOf("container", StringComparison.OrdinalIgnoreCase) < 0) continue;
+                        if (count++ >= 8) return result + ",...";
+                        object value = field.GetValue(target);
+                        if (result.Length > 0) result += "; ";
+                        result += name + "=" + (value == null ? "<null>" : value.GetType().FullName);
+                    }
+                }
+                return result.Length == 0 ? "<none>" : result;
             }
 
             static object Read(object target, string name)
