@@ -48,6 +48,15 @@ public sealed record AuditPolicy
     public double MaxLevelGateContribution { get; init; } = 3.0;
     public double MaxObjectiveContribution { get; init; } = 5.0;
     public int DuplicateTraderSourcesWarnCount { get; init; } = 6;
+
+    // Unified quest-analysis flags. These remain audit-only until enforcement is explicitly implemented.
+    public double HighItemValueLowStructureWarnMultiple { get; init; } = 3.0;
+    public double HighXpLowDepthWarnMultiple { get; init; } = 3.0;
+    public double HighStandingLowDepthWarnMultiple { get; init; } = 3.0;
+    public double RestartableHighItemValueWarnMultiple { get; init; } = 2.0;
+    public double RestartableHighXpWarnMultiple { get; init; } = 2.0;
+    public double LowDepthMaxRelativeMultiple { get; init; } = 1.0;
+    public double LowStructureMaxRelativeMultiple { get; init; } = 1.0;
 }
 
 public sealed record ManualItemOverride
