@@ -42,6 +42,7 @@ jobs:
               root / 'server' / 'EconomyAuditService.cs',
               root / 'server' / 'RewardUtilityAuditService.cs',
               root / 'server' / 'QuestProgressionGraphService.cs',
+              root / 'server' / 'QuestConstraintAuditService.cs',
           ]
           missing = [str(path) for path in required if not path.is_file()]
           if missing:
@@ -74,6 +75,7 @@ jobs:
           assert 'namespace EconomyAdmiral;' in source
           assert 'RewardUtilityAuditService' in source
           assert 'QuestProgressionGraphService' in source
+          assert 'QuestConstraintAuditService' in source
 
           metadata = (root / 'server' / 'ModMetadata.cs').read_text(encoding='utf-8')
           assert 'Economy Admiral' in metadata
@@ -125,10 +127,26 @@ jobs:
               'VanillaRestartableDepthBenchmark',
               'MedianDepth',
               'P90Depth',
+              'GetSnapshot()',
               'economy-admiral-progression-graph.json',
               'using Path = System.IO.Path;',
           ]:
               assert invariant in graph, invariant
+
+          constraints = (root / 'server' / 'QuestConstraintAuditService.cs').read_text(encoding='utf-8')
+          for invariant in [
+              'ConstraintsAffectRewardAllowance = false',
+              'CompleteInSeconds',
+              'OneSessionOnly',
+              'OnlyFoundInRaid',
+              'PlantTime',
+              'DistanceConstraintCount',
+              'DaytimeConstraintCount',
+              'MedianStructuredConstraintCount',
+              'economy-admiral-quest-constraints.json',
+              'using Path = System.IO.Path;',
+          ]:
+              assert invariant in constraints, invariant
 
           print('Economy Admiral module contract OK')
 
