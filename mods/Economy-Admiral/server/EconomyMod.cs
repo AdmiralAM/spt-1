@@ -8,6 +8,7 @@ namespace EconomyAdmiral;
 [Injectable(TypePriority = OnLoadOrder.PostLoad + 1000), UsedImplicitly]
 public sealed class EconomyMod(
     EconomyRuntimeConfigService runtimeConfigService,
+    RuntimeEvidenceService runtimeEvidenceService,
     EconomyAuditService auditService,
     RewardUtilityAuditService rewardUtilityAuditService,
     QuestProgressionGraphService questProgressionGraphService,
@@ -26,6 +27,8 @@ public sealed class EconomyMod(
             return;
         }
 
+        runtimeEvidenceService.CaptureBefore();
+
         await auditService.RunAsync(cancellationToken);
         await rewardUtilityAuditService.RunAsync(cancellationToken);
         await questProgressionGraphService.RunAsync(cancellationToken);
@@ -34,5 +37,7 @@ public sealed class EconomyMod(
         await compositePolicyEvaluationService.RunAsync(cancellationToken);
         await targetProposalService.RunAsync(cancellationToken);
         await enforcementPlanService.RunAsync(cancellationToken);
+
+        await runtimeEvidenceService.WriteAfterAsync(cancellationToken);
     }
 }
