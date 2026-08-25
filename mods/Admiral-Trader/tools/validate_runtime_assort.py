@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 import json
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSORT_PATH = ROOT / "db" / "assort.json"
 QUESTASSORT_PATH = ROOT / "db" / "questassort.json"
 QUEST_DIR = ROOT / "db" / "quests"
+RUNTIME_MANIFEST_PATH = ROOT / "manifests" / "runtime-manifest.json"
+CSPROJ_PATH = ROOT / "server" / "AdmiralTrader.Server.csproj"
 
+EXPECTED_RUNTIME_TARGET = "4.1.3"
+EXPECTED_PUBLISHED_API_BASELINE = "4.1.2"
 EXPECTED_OFFER_ID = "ad1000000000000000000001"
 EXPECTED_ITEM_TPL = "5c94bbff86f7747ee735c08f"
 EXPECTED_CLEARANCE_QUEST = "68a6527a3c73b2e85977d7a1"
@@ -17,7 +22,31 @@ def fail(message: str) -> None:
     raise SystemExit(message)
 
 
+def validate_runtime_target() -> None:
+    runtime = json.loads(RUNTIME_MANIFEST_PATH.read_text(encoding="utf-8"))
+    if runtime.get("targetSptVersion") != EXPECTED_RUNTIME_TARGET:
+        fail(f"runtime target drift: {runtime.get('targetSptVersion')} != {EXPECTED_RUNTIME_TARGET}")
+    if runtime.get("publishedApiCompileBaseline") != EXPECTED_PUBLISHED_API_BASELINE:
+        fail("published API compile baseline drift")
+
+    root = ET.parse(CSPROJ_PATH).getroot()
+    props = {child.tag: (child.text or "").strip() for group in root.findall("PropertyGroup") for child in group}
+    if props.get("SptRuntimeTarget") != EXPECTED_RUNTIME_TARGET:
+        fail("csproj SptRuntimeTarget drift")
+    if props.get("SptPublishedApiBaseline") != EXPECTED_PUBLISHED_API_BASELINE:
+        fail("csproj SptPublishedApiBaseline drift")
+
+    package_versions = []
+    for group in root.findall("ItemGroup"):
+        for package in group.findall("PackageReference"):
+            if package.attrib.get("Include", "").startswith("SPTarkov."):
+                package_versions.append(package.attrib.get("Version"))
+    if not package_versions or any(version != "$(SptPublishedApiBaseline)" for version in package_versions):
+        fail(f"SPT package references must use the published API baseline property: {package_versions}")
+
+
 def main() -> None:
+    validate_runtime_target()
     assort = json.loads(ASSORT_PATH.read_text(encoding="utf-8"))
     questassort = json.loads(QUESTASSORT_PATH.read_text(encoding="utf-8"))
 
@@ -66,7 +95,7 @@ def main() -> None:
     if EXPECTED_CLEARANCE_QUEST not in quest_ids:
         fail("questassort references a missing Clearance quest template")
 
-    print("Admiral Trader runtime assort contract OK: 1 Clearance-gated LL4 Labs access offer")
+    print("Admiral Trader SPT 4.1.3 target + runtime assort contract OK")
 
 
 if __name__ == "__main__":
