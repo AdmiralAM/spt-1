@@ -41,20 +41,20 @@ public sealed class EnforcementPlanService(
 
         var plan = new EnforcementPlanReport
         {
-            SchemaVersion = 3,
+            SchemaVersion = 4,
             Mode = config.Mode.ToString(),
             Preset = config.Preset.ToString(),
             SourceAnalysisSchemaVersion = analysis.SchemaVersion,
             SourceProvenanceSchemaVersion = provenance.SchemaVersion,
             ProvenanceAware = true,
-            MutationEligibilityPolicyVersion = 1,
+            MutationEligibilityPolicyVersion = 2,
             EnforceRequested = config.Mode == EconomyMode.Enforce,
             ApplyMutations = false,
             MutationCount = 0,
             CandidateCount = candidates.Count,
             CandidateCountsByProvenance = countsByProvenance,
             CandidateCountsByEligibility = countsByEligibility,
-            Note = "Fail-closed planning artifact only. PristineUnchanged quests are protected from future automatic mutation by default. ModAdded and PristineModified quests are only policy-eligible candidates, never authorized mutations. Unknown provenance is blocked. AutomaticMutationAllowed remains false for every row until a separate mutation policy is explicitly approved and implemented.",
+            Note = "Fail-closed planning artifact only. PristineUnchanged quests are protected. ModAdded quests can only become policy-eligible for flagged reward dimensions. PristineModified quests can only become policy-eligible where the same reward dimension is proven changed versus the pristine snapshot. Structural-only changes never authorize reward mutation. Unknown provenance is blocked. AutomaticMutationAllowed remains false for every row.",
             Candidates = candidates,
         };
 
@@ -85,7 +85,9 @@ public sealed class EnforcementPlanService(
         }
 
         var provenanceClass = provenance?.Provenance ?? "Unknown";
-        var eligibility = ResolveMutationEligibility(provenanceClass);
+        var changedDimensions = provenance?.ChangedDimensions ?? [];
+        var potentialMutationDimensions = ResolvePotentialMutationDimensions(provenanceClass, changedDimensions, actions);
+        var eligibility = ResolveMutationEligibility(provenanceClass, potentialMutationDimensions.Count);
         return new EnforcementPlanCandidate
         {
             QuestId = row.QuestId,
@@ -96,8 +98,9 @@ public sealed class EnforcementPlanService(
             PristineUntouched = string.Equals(provenanceClass, "PristineUnchanged", StringComparison.Ordinal),
             MutationEligibilityClass = eligibility.Class,
             PotentialAutomaticMutationEligible = eligibility.PotentiallyEligible,
+            PotentialMutationDimensions = potentialMutationDimensions,
             MutationEligibilityReason = eligibility.Reason,
-            ChangedDimensions = provenance?.ChangedDimensions ?? [],
+            ChangedDimensions = changedDimensions,
             ReasonFlags = row.ObservationalFlags.OrderBy(value => value, StringComparer.Ordinal).ToList(),
             ProposedReviewActions = actions.ToList(),
             AutomaticMutationAllowed = false,
@@ -105,10 +108,46 @@ public sealed class EnforcementPlanService(
         };
     }
 
-    private static MutationEligibility ResolveMutationEligibility(string provenanceClass) => provenanceClass switch
+    private static List<string> ResolvePotentialMutationDimensions(
+        string provenanceClass,
+        IReadOnlyCollection<string> changedDimensions,
+        IReadOnlyCollection<string> reviewActions
+    )
     {
-        "ModAdded" => new MutationEligibility("PolicyEligibleModAdded", true, "Quest was added after the pristine startup snapshot; future automatic mutation may be considered only after an explicit approved policy."),
-        "PristineModified" => new MutationEligibility("PolicyEligibleModifiedPristine", true, "A pristine quest was modified by the final mod stack; future automatic mutation may be considered only for dimensions proven changed and only after an explicit approved policy."),
+        if (string.Equals(provenanceClass, "PristineUnchanged", StringComparison.Ordinal)
+            || string.Equals(provenanceClass, "Unknown", StringComparison.Ordinal))
+        {
+            return [];
+        }
+
+        var dimensions = new SortedSet<string>(StringComparer.Ordinal);
+        var modAdded = string.Equals(provenanceClass, "ModAdded", StringComparison.Ordinal);
+
+        if (reviewActions.Contains("ReviewItemRewardBudget", StringComparer.Ordinal)
+            && (modAdded || changedDimensions.Contains("SuccessItemHandbookValue", StringComparer.Ordinal)))
+        {
+            dimensions.Add("ItemRewardBudget");
+        }
+        if (reviewActions.Contains("ReviewXpRewardBudget", StringComparer.Ordinal)
+            && (modAdded || changedDimensions.Contains("Experience", StringComparer.Ordinal)))
+        {
+            dimensions.Add("Experience");
+        }
+        if (reviewActions.Contains("ReviewStandingRewardBudget", StringComparer.Ordinal)
+            && (modAdded || changedDimensions.Contains("TraderStanding", StringComparer.Ordinal)))
+        {
+            dimensions.Add("TraderStanding");
+        }
+
+        return dimensions.ToList();
+    }
+
+    private static MutationEligibility ResolveMutationEligibility(string provenanceClass, int potentialDimensionCount) => provenanceClass switch
+    {
+        "ModAdded" when potentialDimensionCount > 0 => new MutationEligibility("PolicyEligibleModAdded", true, "Quest was added after the pristine startup snapshot and has flagged reward dimensions. Future automatic mutation may be considered only for the listed potential dimensions after an explicit approved policy."),
+        "ModAdded" => new MutationEligibility("ReviewOnlyModAdded", false, "Quest was added after the pristine startup snapshot, but no currently flagged reward dimension maps to a future mutation dimension."),
+        "PristineModified" when potentialDimensionCount > 0 => new MutationEligibility("PolicyEligibleModifiedPristine", true, "A pristine quest was modified by the final mod stack. Only listed reward dimensions that are both flagged and proven changed may ever be considered by an explicit approved policy."),
+        "PristineModified" => new MutationEligibility("ProtectedUnchangedRewardDimensions", false, "The pristine quest was modified, but none of the currently flagged reward dimensions are proven changed versus the pristine snapshot."),
         "PristineUnchanged" => new MutationEligibility("ProtectedPristine", false, "Quest matches the pristine startup snapshot and is protected from automatic mutation by default."),
         _ => new MutationEligibility("BlockedUnknownProvenance", false, "Quest provenance is not proven; automatic mutation is blocked."),
     };
@@ -161,6 +200,7 @@ public sealed record EnforcementPlanCandidate
     public required bool PristineUntouched { get; init; }
     public required string MutationEligibilityClass { get; init; }
     public required bool PotentialAutomaticMutationEligible { get; init; }
+    public required List<string> PotentialMutationDimensions { get; init; }
     public required string MutationEligibilityReason { get; init; }
     public required List<string> ChangedDimensions { get; init; }
     public required List<string> ReasonFlags { get; init; }
