@@ -4,6 +4,7 @@
 
 - SPT 4.1.x; current project runtime evidence is SPT 4.1.3.
 - Server-side implementation target is .NET 10, matching maintained repository server mods.
+- Official NuGet packages currently top out at `SPTarkov.Server.Core` / `SPTarkov.Common` / `SPTarkov.DI` 4.1.2, while the installed runtime is 4.1.3. Therefore NuGet compile proof is valid for the 4.1.2 public API surface, but exact 4.1.3 write/migration behavior must be proven from the 4.1.3 runtime assemblies/references before profile mutation is implemented.
 
 ## Single trader registration boundary — proven
 
@@ -25,7 +26,7 @@ The maintained Artem path uses `WTT-ServerCommonLib` custom quest loading after 
 
 ## PMC profile quest-state boundary — proven read boundary
 
-The maintained `SPT-Quest-Planner` server module injects `SPTarkov.Server.Core.Helpers.Profile.ProfileHelper` and calls `GetPmcProfile(sessionId)` on SPT `~4.1.0`.
+The maintained `SPT-Quest-Planner` server module injects `SPTarkov.Server.Core.Helpers.Profile.ProfileHelper` and calls `GetPmcProfile(sessionId)` on the SPT 4.1 package line.
 
 Its profile projection reads the PMC profile `Quests` collection and establishes the fields required for migration classification:
 
@@ -38,11 +39,11 @@ This proves that Admiral Trader can classify existing-profile legacy quests as a
 
 ## Migration write boundary — not yet proven
 
-Read access is proven. Directly mutating profile quest records or intercepting successor issuance is a separate boundary and must be proven before implementation.
+Read access is proven. Directly mutating profile quest records or intercepting successor issuance is a separate boundary and must be proven against the exact 4.1.3 runtime assembly set before implementation.
 
 Required proof before profile writes:
 
-1. exact native type for the PMC quest-state collection on the current SPT 4.1.3 package;
+1. exact native type for the PMC quest-state collection on SPT 4.1.3;
 2. safe mutation point/load order for suppressing unstarted deprecated legacy quests;
 3. safe mechanism for preserving active legacy quests while preventing deprecated successors;
 4. whether blocking successors is best implemented by filtering loaded quest templates, rewriting prerequisites, or profile-state mutation;
@@ -56,4 +57,4 @@ Project SPT logs from the current environment report `Server: 4.1.3` and show ma
 
 ## Decision
 
-The next implementation may safely use the one-trader registration/read-profile boundaries above. It must not yet write PMC quest state. The next technical gate is to prove successor suppression/profile mutation semantics, then implement the smallest deterministic migration layer.
+The next implementation may safely use the one-trader registration/read-profile boundaries above. It must not yet write PMC quest state. The next technical gate is to prove successor suppression/profile mutation semantics from exact 4.1.3 runtime references, then implement the smallest deterministic migration layer.
