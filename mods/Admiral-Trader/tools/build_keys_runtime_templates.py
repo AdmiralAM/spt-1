@@ -42,6 +42,8 @@ def source_key_pool(
     inventory_by_id: dict[str, dict[str, Any]],
     source_root: Path,
     cache: dict[str, dict[str, dict[str, Any]]],
+    *,
+    allow_empty: bool = False,
 ) -> list[str]:
     pool: set[str] = set()
     for source_id in group.get("sourceQuestIds") or []:
@@ -61,7 +63,7 @@ def source_key_pool(
         if template is None:
             raise KeyError(f"quest {qid} absent from {source_path}")
         pool.update(find_item_targets(template))
-    if not pool:
+    if not pool and not allow_empty:
         raise ValueError(f"curated group {group.get('id')} produced an empty key pool")
     return sorted(pool)
 
@@ -166,7 +168,6 @@ def success_rewards(quest: dict[str, Any]) -> tuple[list[dict[str, Any]], int]:
 
 def build_template(quest: dict[str, Any], key_pool: list[str]) -> tuple[dict[str, Any], int]:
     qid = str(quest["id"])
-    slug = str(quest["slug"])
     rewards, deferred_unlocks = success_rewards(quest)
     template = {
         "QuestName": str(quest["name"]),
@@ -221,6 +222,18 @@ def build_payload(
     key_pools: dict[str, list[str]] = {}
     deferred_unlocks: list[dict[str, Any]] = []
 
+    # Build source pools once. Some late-game authored milestones intentionally
+    # reuse a validated earlier source pool instead of inventing a synthetic item.
+    source_pools: dict[str, list[str]] = {}
+    for group_id, group in groups.items():
+        source_pools[group_id] = source_key_pool(
+            group,
+            inventory_by_id,
+            source_root,
+            cache,
+            allow_empty=True,
+        )
+
     for quest in spec.get("quests") or []:
         if not isinstance(quest, dict):
             continue
@@ -228,7 +241,18 @@ def build_payload(
         group = groups.get(slug)
         if group is None:
             raise KeyError(f"no curated source group for authored quest {slug}")
-        pool = source_key_pool(group, inventory_by_id, source_root, cache)
+
+        objective = quest.get("objective") or {}
+        pool_source = str(objective.get("sourceKeyPoolGroup") or slug)
+        if pool_source not in source_pools:
+            raise KeyError(f"authored quest {slug} references unknown source key pool group: {pool_source}")
+        pool = source_pools[pool_source]
+        if not pool:
+            raise ValueError(
+                f"authored quest {slug} has no usable FindItem source pool; "
+                f"set objective.sourceKeyPoolGroup to a validated key-bearing group"
+            )
+
         key_pools[slug] = pool
         template, unlock_count = build_template(quest, pool)
         templates[str(quest["id"])] = template
