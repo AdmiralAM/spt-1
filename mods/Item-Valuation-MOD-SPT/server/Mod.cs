@@ -5,7 +5,9 @@ using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers.Items;
+using SPTarkov.Server.Core.Helpers.Ragfair;
 using SPTarkov.Server.Core.Helpers.Server;
+using SPTarkov.Server.Core.Helpers.Traders;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Mod;
@@ -44,7 +46,12 @@ public sealed record ValueColorConfig
     public double VioletMaxValue { get; init; } = 100000;
     public double RedMaxValue { get; init; } = 250000;
 
-    // Deliberately subdued colours: readable tier separation without bright inventory tiles.
+    public double AmmoLightGreenMaxPen { get; init; } = 15;
+    public double AmmoGreenMaxPen { get; init; } = 26;
+    public double AmmoNavyMaxPen { get; init; } = 35;
+    public double AmmoVioletMaxPen { get; init; } = 44;
+    public double AmmoRedMaxPen { get; init; } = 54;
+
     public string LightGreenColor { get; init; } = "#526B3F";
     public string GreenColor { get; init; } = "#294F31";
     public string NavyColor { get; init; } = "#253552";
@@ -60,9 +67,14 @@ public sealed record ValueColorConfig
               GreenMaxValue < NavyMaxValue &&
               NavyMaxValue < VioletMaxValue &&
               VioletMaxValue < RedMaxValue))
-        {
-            throw new InvalidDataException("Item Valuation thresholds must be non-negative and strictly ascending.");
-        }
+            throw new InvalidDataException("Item Valuation money thresholds must be non-negative and strictly ascending.");
+
+        if (!(0 <= AmmoLightGreenMaxPen &&
+              AmmoLightGreenMaxPen < AmmoGreenMaxPen &&
+              AmmoGreenMaxPen < AmmoNavyMaxPen &&
+              AmmoNavyMaxPen < AmmoVioletMaxPen &&
+              AmmoVioletMaxPen < AmmoRedMaxPen))
+            throw new InvalidDataException("Item Valuation ammo penetration thresholds must be non-negative and strictly ascending.");
 
         string[] colors = [LightGreenColor, GreenColor, NavyColor, VioletColor, RedColor, GoldColor];
         if (colors.Any(string.IsNullOrWhiteSpace))
@@ -70,9 +82,9 @@ public sealed record ValueColorConfig
     }
 }
 
-public static class ValueTierClassifier
+public static class TierClassifier
 {
-    public static string? GetColor(double value, ValueColorConfig config)
+    public static string? GetMoneyColor(double value, ValueColorConfig config)
     {
         if (value < config.TintStartValue) return null;
         if (value < config.LightGreenMaxValue) return config.LightGreenColor;
@@ -82,13 +94,27 @@ public static class ValueTierClassifier
         if (value < config.RedMaxValue) return config.RedColor;
         return config.GoldColor;
     }
+
+    public static string GetAmmoColor(double penetration, ValueColorConfig config)
+    {
+        if (penetration <= config.AmmoLightGreenMaxPen) return config.LightGreenColor;
+        if (penetration <= config.AmmoGreenMaxPen) return config.GreenColor;
+        if (penetration <= config.AmmoNavyMaxPen) return config.NavyColor;
+        if (penetration <= config.AmmoVioletMaxPen) return config.VioletColor;
+        if (penetration <= config.AmmoRedMaxPen) return config.RedColor;
+        return config.GoldColor;
+    }
 }
 
 [Injectable(TypePriority = OnLoadOrder.PostLoad), UsedImplicitly]
 public sealed class ItemValuationBackgroundLoader(
     ModHelper modHelper,
     TemplateTable templateTable,
+    TradersTable tradersTable,
     ItemHelper itemHelper,
+    HandbookHelper handbookHelper,
+    PresetHelper presetHelper,
+    RagfairServerHelper ragfairServerHelper,
     ISptLogger<ItemValuationBackgroundLoader> logger) : IOnLoad
 {
     private static readonly MongoId[] TotalValueBaseClasses =
@@ -105,72 +131,136 @@ public sealed class ItemValuationBackgroundLoader(
         ValueColorConfig config = LoadConfig(modHelper);
         config.Validate();
 
-        Dictionary<MongoId, double> handbookPrices = BuildHandbookPriceIndex(templateTable);
-        int colored = 0;
+        int coloredMoney = 0;
+        int coloredAmmo = 0;
         int preserved = 0;
-        int totalValueItems = 0;
-        int perSlotItems = 0;
-        int fallbackPrices = 0;
+        int traderWon = 0;
+        int fleaWon = 0;
+        int handbookFallback = 0;
 
         foreach ((MongoId templateId, var item) in templateTable.Items)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var properties = item.Properties;
-            if (properties?.Width is not > 0 || properties.Height is not > 0)
+            if (properties is null)
                 continue;
 
-            double price;
-            if (!templateTable.Prices.TryGetValue(templateId, out price) || price <= 0)
+            if (itemHelper.IsOfBaseclass(templateId, BaseClasses.AMMO))
             {
-                if (!handbookPrices.TryGetValue(templateId, out price) || price <= 0)
-                    continue;
-                fallbackPrices++;
+                double penetration = properties.PenetrationPower ?? 0;
+                properties.BackgroundColor = TierClassifier.GetAmmoColor(penetration, config);
+                coloredAmmo++;
+                continue;
+            }
+
+            if (properties.Width is not > 0 || properties.Height is not > 0)
+                continue;
+
+            (double value, ValueSource source) = ResolveEconomicValue(templateId);
+            if (value <= 0)
+                continue;
+
+            switch (source)
+            {
+                case ValueSource.Trader: traderWon++; break;
+                case ValueSource.Flea: fleaWon++; break;
+                case ValueSource.Handbook: handbookFallback++; break;
             }
 
             double valuation;
             if (itemHelper.IsOfBaseclasses(templateId, TotalValueBaseClasses))
             {
-                valuation = price;
-                totalValueItems++;
+                valuation = value;
             }
             else
             {
                 long slots = (long)properties.Width.Value * properties.Height.Value;
                 if (slots <= 0)
                     continue;
-
-                valuation = Math.Round(price / slots, MidpointRounding.AwayFromZero);
-                perSlotItems++;
+                valuation = Math.Round(value / slots, MidpointRounding.AwayFromZero);
             }
 
-            string? color = ValueTierClassifier.GetColor(valuation, config);
+            string? color = TierClassifier.GetMoneyColor(valuation, config);
             if (color is null)
             {
-                // Under 10k: preserve the template's original/default background exactly.
                 preserved++;
                 continue;
             }
 
             properties.BackgroundColor = color;
-            colored++;
+            coloredMoney++;
         }
 
         logger.Success(
-            $"{RuntimeIdentity.ProductName} {RuntimeIdentity.Version}: colored {colored} templates once at server load; " +
-            $"preserved {preserved} below tint threshold; {totalValueItems} total-value / {perSlotItems} per-slot valuations; " +
-            $"{fallbackPrices} handbook fallbacks; no client patches or runtime polling");
+            $"{RuntimeIdentity.ProductName} {RuntimeIdentity.Version}: money-colored {coloredMoney}, ammo-colored {coloredAmmo}, " +
+            $"preserved {preserved} below money threshold; value source wins trader={traderWon}, flea={fleaWon}, handbook={handbookFallback}; " +
+            "single PostLoad pass, BackgroundColor only, no client patches or runtime polling");
         return Task.CompletedTask;
     }
 
-    private static Dictionary<MongoId, double> BuildHandbookPriceIndex(TemplateTable templateTable)
+    private (double Value, ValueSource Source) ResolveEconomicValue(MongoId templateId)
     {
-        Dictionary<MongoId, double> index = new(templateTable.Handbook.Items.Count);
-        foreach (var handbookItem in templateTable.Handbook.Items)
+        double handbookValue = handbookHelper.GetTemplatePrice(templateId);
+        double traderBasis = GetTraderValuationBasis(templateId, handbookValue);
+        double traderValue = ResolveBestTraderPrice(templateId, traderBasis);
+
+        double fleaValue = 0;
+        if (templateTable.Prices.TryGetValue(templateId, out double tablePrice) && tablePrice > 0)
         {
-            if (handbookItem.Price is > 0)
-                index[handbookItem.Id] = handbookItem.Price.Value;
+            var itemResult = itemHelper.GetItem(templateId);
+            if (itemResult.Key && ragfairServerHelper.IsItemValidRagfairItem(itemResult))
+                fleaValue = tablePrice;
         }
-        return index;
+
+        if (traderValue > 0 && traderValue >= fleaValue)
+            return (traderValue, ValueSource.Trader);
+        if (fleaValue > 0)
+            return (fleaValue, ValueSource.Flea);
+        if (handbookValue > 0)
+            return (handbookValue, ValueSource.Handbook);
+        return (0, ValueSource.None);
+    }
+
+    private double GetTraderValuationBasis(MongoId templateId, double handbookValue)
+    {
+        var preset = presetHelper.GetDefaultPreset(templateId);
+        if (preset?.Items is null || preset.Items.Count == 0)
+            return handbookValue;
+
+        double total = 0;
+        foreach (var presetItem in preset.Items)
+            total += handbookHelper.GetTemplatePrice(presetItem.Template);
+        return total > 0 ? total : handbookValue;
+    }
+
+    private double ResolveBestTraderPrice(MongoId templateId, double valuationBasis)
+    {
+        double regular = ResolveBestTraderPrice(templateId, valuationBasis, includeFence: false);
+        return regular > 0 ? regular : ResolveBestTraderPrice(templateId, valuationBasis, includeFence: true);
+    }
+
+    private double ResolveBestTraderPrice(MongoId templateId, double valuationBasis, bool includeFence)
+    {
+        double highestPrice = 0;
+        foreach (var (traderId, trader) in tradersTable)
+        {
+            bool isFence = traderId == Traders.FENCE;
+            if (isFence != includeFence)
+                continue;
+
+            var traderBase = trader.Base;
+            var buy = traderBase.ItemsBuy;
+            if (buy is null)
+                continue;
+            if (!buy.IdList.Contains(templateId) && !itemHelper.IsOfBaseclasses(templateId, buy.Category))
+                continue;
+
+            double coefficient = traderBase.LoyaltyLevels?.FirstOrDefault()?.BuyPriceCoefficient ?? 100d;
+            double price = Math.Round(Math.Max(0d, 100d - coefficient) * (valuationBasis / 100d), 0);
+            if (price > highestPrice)
+                highestPrice = price;
+        }
+        return highestPrice;
     }
 
     private static ValueColorConfig LoadConfig(ModHelper modHelper)
@@ -184,5 +274,13 @@ public sealed class ItemValuationBackgroundLoader(
             File.ReadAllText(configPath),
             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         return config ?? throw new InvalidDataException("Item Valuation MOD SPT config could not be parsed.");
+    }
+
+    private enum ValueSource
+    {
+        None,
+        Trader,
+        Flea,
+        Handbook
     }
 }
