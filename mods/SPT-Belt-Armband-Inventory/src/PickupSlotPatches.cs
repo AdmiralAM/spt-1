@@ -8,7 +8,14 @@ namespace SPTBeltArmbandInventory
     {
         internal static bool ShouldTry(bool vanillaMissing, bool hasContainers, bool slotDeleted, bool compatible)
         {
-            return vanillaMissing && hasContainers && !slotDeleted && compatible;
+            return vanillaMissing
+                && !slotDeleted
+                && compatible
+                && AccessoryCapabilityPolicy.CanUse(
+                    AccessoryCategory.ArmBand,
+                    AccessoryCapability.PickupFallback,
+                    true,
+                    hasContainers);
         }
     }
 

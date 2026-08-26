@@ -56,7 +56,11 @@ namespace SPTBeltArmbandInventory
 
         internal static bool ShouldExposeBelt(bool hasItem, bool isContainer)
         {
-            return AccessoryCategoryPolicy.CanActivateRuntime(AccessoryCategory.ArmBand, hasItem, isContainer);
+            return AccessoryCapabilityPolicy.CanUse(
+                AccessoryCategory.ArmBand,
+                AccessoryCapability.PanelProjection,
+                hasItem,
+                isContainer);
         }
 
         static bool Contains(IReadOnlyList<string> slots, string expected)

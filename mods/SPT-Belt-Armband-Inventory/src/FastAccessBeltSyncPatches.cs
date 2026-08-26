@@ -17,7 +17,14 @@ namespace SPTBeltArmbandInventory
     {
         internal static bool ShouldQueue(bool succeeded, bool ownerMatches, bool armBandRoute, bool hasContainers)
         {
-            return succeeded && ownerMatches && armBandRoute && hasContainers;
+            return succeeded
+                && ownerMatches
+                && armBandRoute
+                && AccessoryCapabilityPolicy.CanUse(
+                    AccessoryCategory.ArmBand,
+                    AccessoryCapability.FastAccess,
+                    true,
+                    hasContainers);
         }
 
         internal static bool ShouldClearSelected(bool isRemoval, bool selectedBelongsToRemovedBelt)

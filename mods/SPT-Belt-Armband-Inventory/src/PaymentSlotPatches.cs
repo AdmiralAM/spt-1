@@ -8,7 +8,11 @@ namespace SPTBeltArmbandInventory
     {
         internal static bool ShouldIncludeBelt(bool hasItem, bool hasContainers)
         {
-            return hasItem && hasContainers;
+            return AccessoryCapabilityPolicy.CanUse(
+                AccessoryCategory.ArmBand,
+                AccessoryCapability.PaymentSource,
+                hasItem,
+                hasContainers);
         }
     }
 

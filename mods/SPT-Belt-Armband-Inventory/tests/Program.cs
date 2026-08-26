@@ -56,6 +56,15 @@ internal static class Program
         Assert(!AccessoryCategoryPolicy.CanActivateRuntime(AccessoryCategory.HeadBand, true, true), "concept-only HeadBand cannot activate an invented runtime host");
         Assert(!AccessoryCategoryPolicy.CanExposeContainer((AccessoryCategory)99, true, true), "unknown category fails closed");
         Assert(!AccessoryCategoryPolicy.CanActivateRuntime((AccessoryCategory)99, true, true), "unknown category cannot activate runtime behavior");
+        Assert(AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.PanelProjection), "validated ArmBand owns the panel projection capability");
+        Assert(AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.PaymentSource | AccessoryCapability.FastAccess), "capabilities may be checked as a required set");
+        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.Belt, AccessoryCapability.PanelProjection), "concept-only Belt has no runtime capabilities");
+        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.HeadBand, AccessoryCapability.FastAccess), "concept-only HeadBand has no runtime capabilities");
+        Assert(!AccessoryCapabilityPolicy.Has((AccessoryCategory)99, AccessoryCapability.PanelProjection), "unknown category has no capabilities");
+        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.None), "empty capability request fails closed");
+        Assert(AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess, true, true), "validated container host may use an assigned capability");
+        Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess, true, false), "assigned capability still requires a container item");
+        Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.Belt, AccessoryCapability.GrenadeAccess, true, true), "concept-only category cannot activate a capability");
 
         Assert(AccessoryGridPolicy.IsValid(1, 2), "1x2 grid is valid");
         Assert(AccessoryGridPolicy.IsExactShape(1, 2, 1, 2), "1x2 grid keeps one-column geometry");
