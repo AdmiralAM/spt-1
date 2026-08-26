@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../server/Economy-Admiral.csproj" />
+    <Compile Include="../../server/EconomyConfig.cs" Link="Production/EconomyConfig.cs" />
+    <Compile Include="../../server/EconomyConfigJsonLoader.cs" Link="Production/EconomyConfigJsonLoader.cs" />
+    <Compile Include="../../server/EconomyConfigValidator.cs" Link="Production/EconomyConfigValidator.cs" />
   </ItemGroup>
 </Project>
