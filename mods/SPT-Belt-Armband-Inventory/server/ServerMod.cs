@@ -1,3 +1,4 @@
+using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Spt.Mod;
@@ -21,12 +22,25 @@ public record ModMetadata : IModMetadata
 }
 
 [Injectable(InjectionType = InjectionType.Singleton)]
-public sealed class BeltServerRegistration : IOnLoad
+public sealed class BeltServerRegistration(ISptLogger<BeltServerRegistration> logger) : IOnLoad
 {
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        new IsItemKeptAfterDeathPatch().Enable();
-        new HandleInsuredItemLostEventPatch().Enable();
+        TryEnable("death retention", () => new IsItemKeptAfterDeathPatch().Enable());
+        TryEnable("insurance retention", () => new HandleInsuredItemLostEventPatch().Enable());
         return Task.CompletedTask;
+    }
+
+    private void TryEnable(string label, Action enable)
+    {
+        try
+        {
+            enable();
+            logger.Success($"B&A&HB server {label} patch installed.");
+        }
+        catch (Exception exception)
+        {
+            logger.Warning($"B&A&HB server {label} patch failed safely: {exception.GetType().Name}: {exception.Message}");
+        }
     }
 }
