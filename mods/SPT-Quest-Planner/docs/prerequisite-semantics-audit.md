@@ -46,6 +46,23 @@ Consequences:
 
 This distinction is essential for progression focus: the planner should answer which prerequisite conditions still need player action, not list every structural ancestor that is not labelled `Success`.
 
+### Terminal prerequisite-state conflict
+
+A second state-semantic case is now explicit rather than hidden inside `blocked`.
+
+When all of the following are true:
+
+1. source quest `S` is non-repeatable;
+2. the authoritative profile says `S` is already Completed/Success;
+3. target edge `S -> T` does not accept `Success`;
+4. the edge is not already satisfied by the current source state;
+
+the planner records a **terminal prerequisite-state conflict**.
+
+This is not ordinary remaining work: normal forward progression cannot move a completed non-repeatable quest back into an earlier accepted state such as `Started`. A selected progression focus containing such a conflict must abstain instead of falling back to an unrelated globally attractive raid and pretending that raid advances the chosen goal.
+
+Repeatable sources are deliberately excluded from this terminal claim because another cycle may make an earlier state reachable again.
+
 ### Immediate unlock
 
 Completion of source quest `S` may only claim target quest `T` as an immediate modeled unlock when all of the following are proven:
@@ -69,14 +86,13 @@ The extractor records whether the `AvailableForStart` set is fully modeled for h
 
 This is deliberate under-claiming. It is safer for the product to say that eligibility is unresolved than to recommend a raid on a false unlock premise.
 
-## Remaining semantic diagnostics
+## Remaining semantic diagnostic: configured delay
 
-Two cases should remain explicit research questions rather than being guessed into normal actionable work:
+An edge whose source state is accepted but whose `availableAfter` is non-zero may require no further quest work while still delaying target availability. The planner already prevents such an edge from creating an `immediate unlock` claim.
 
-1. **Configured delay** — an edge whose source state is accepted but whose `availableAfter` is non-zero may require no further quest work while still delaying target availability. Without a proven remaining-timer source, the planner can safely know that the edge is delayed-by-contract but must not invent an exact countdown.
-2. **Terminal state mismatch** — a completed non-repeatable source whose target condition accepts only an earlier state such as `Started` is not ordinary remaining work. It may represent an unsatisfiable/malformed modded condition and should eventually be surfaced as a diagnostic instead of being presented as something the player can simply progress again.
+The remaining research question is presentation/evidence precision: without a proven remaining-timer source, the planner can safely know that the dependency is delayed-by-contract but must not invent an exact countdown or assert that the delay is still pending after it may already have elapsed.
 
-Until these cases have dedicated evidence models, they must not produce optimistic `immediate`, `reachable`, or focus-preference claims.
+Until a trustworthy timer source is proven, configured delay should remain explanatory context and must not produce optimistic `immediate` or focus-preference evidence.
 
 ## Product consequence
 
@@ -84,14 +100,15 @@ This audit strengthens the product thesis rather than weakening it: the useful p
 
 - structural prerequisite relation;
 - currently unsatisfied prerequisite condition;
+- terminal prerequisite-state conflict;
 - current authoritative actionability;
 - modeled hypothetical reachability;
 - configured delayed dependency;
 - proven immediate unlock;
-- unresolved or contradictory eligibility.
+- unresolved eligibility.
 
 Those states must not be collapsed into one `unlocked` boolean.
 
 ## Performance constraints
 
-The richer edge semantics are carried in the existing topology snapshot and cached client index. State-semantic traversal remains iterative and bounded by the existing query traversal limit. No new route, polling loop, runtime scan, Harmony patch, or external dependency is required.
+The richer edge semantics are carried in the existing topology snapshot and cached client index. State-semantic traversal remains iterative and bounded by the existing query traversal limit. Terminal-conflict checks are local to a quest's prerequisite edges. No new route, polling loop, runtime scan, Harmony patch, or external dependency is required.
