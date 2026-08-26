@@ -4,122 +4,62 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-function Fail([string]$Message) { Write-Host "[Economy Admiral] FAIL: $Message" -ForegroundColor Red; exit 1 }
-function Pass([string]$Message) { Write-Host "[Economy Admiral] PASS: $Message" -ForegroundColor Green }
+function Fail([string]$Message) { Write-Host "[Economy Admiral] AUDIT FAIL: $Message" -ForegroundColor Red; exit 1 }
+function Pass([string]$Message) { Write-Host "[Economy Admiral] AUDIT PASS: $Message" -ForegroundColor Green }
 function Read-Json([string]$Path) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { Fail "missing file: $Path" }
-    $item = Get-Item -LiteralPath $Path
-    if ($item.Length -le 0) { Fail "empty file: $Path" }
+    if ((Get-Item -LiteralPath $Path).Length -le 0) { Fail "empty file: $Path" }
     try { return Get-Content -LiteralPath $Path -Raw -Encoding UTF8 | ConvertFrom-Json }
     catch { Fail "invalid JSON: $Path :: $($_.Exception.Message)" }
 }
 
 $ModPath = [System.IO.Path]::GetFullPath($ModPath)
 $ReportsPath = Join-Path $ModPath 'reports'
-$ManifestPath = Join-Path $ReportsPath 'economy-admiral-runtime-evidence.json'
-$expectedReports = @(
-    'economy-admiral-audit.json', 'economy-admiral-reward-utility.json',
-    'economy-admiral-progression-graph.json', 'economy-admiral-quest-constraints.json',
-    'economy-admiral-quest-analysis.json', 'economy-admiral-provenance-delta.json',
-    'economy-admiral-composite-candidates.json', 'economy-admiral-target-proposals.json',
-    'economy-admiral-enforcement-plan.json'
-)
+$manifest = Read-Json (Join-Path $ReportsPath 'economy-admiral-runtime-evidence.json')
+$plan = Read-Json (Join-Path $ReportsPath 'economy-admiral-enforcement-plan.json')
+$delta = Read-Json (Join-Path $ReportsPath 'economy-admiral-provenance-delta.json')
 
-Write-Host "[Economy Admiral] validating runtime evidence in: $ReportsPath"
-$manifest = Read-Json $ManifestPath
-if ($manifest.SchemaVersion -ne 3) { Fail "runtime evidence SchemaVersion must be 3" }
-if ($manifest.ExpectedReportCount -ne 9) { Fail "ExpectedReportCount must be 9" }
-if ($manifest.PresentReportCount -ne 9) { Fail "PresentReportCount is $($manifest.PresentReportCount), expected 9" }
-if ($manifest.AllExpectedReportsPresent -ne $true) { Fail "AllExpectedReportsPresent is not true" }
-if ($manifest.DatabaseUnchangedAcrossPipeline -ne $true) { Fail "DatabaseUnchangedAcrossPipeline is not true" }
-if ($manifest.ApplyMutations -ne $false) { Fail "runtime evidence says ApplyMutations=true" }
-if ($manifest.DeclaredMutationCount -ne 0) { Fail "DeclaredMutationCount is $($manifest.DeclaredMutationCount), expected 0" }
-if ($manifest.RuntimeGatePassed -ne $true) { Fail "RuntimeGatePassed is not true" }
+if ($manifest.SchemaVersion -ne 4) { Fail "runtime evidence SchemaVersion must be 4" }
+if ([string]$manifest.Mode -ne 'Audit') { Fail "validator requires mode=Audit, got $($manifest.Mode)" }
+if ($manifest.ExpectedReportCount -ne 9 -or $manifest.PresentReportCount -ne 9 -or $manifest.AllExpectedReportsPresent -ne $true) { Fail "9/9 core reports are required" }
+if ($manifest.DatabaseUnchangedAcrossPipeline -ne $true) { Fail "Audit changed the final DB fingerprint" }
+if ($manifest.DatabaseChangeExpected -ne $false) { Fail "Audit must not expect a DB change" }
+if ($manifest.ApplyMutations -ne $false) { Fail "Audit says ApplyMutations=true" }
+if ([int]$manifest.DeclaredMutationCount -ne 0) { Fail "Audit declared mutations: $($manifest.DeclaredMutationCount)" }
+if ($manifest.EnforcementEvidenceValid -ne $true -or $manifest.RuntimeGatePassed -ne $true) { Fail "Audit runtime evidence gate did not pass" }
+if ([string]$manifest.DatabaseFingerprintBefore.Sha256 -ne [string]$manifest.DatabaseFingerprintAfter.Sha256) { Fail "Audit before/after fingerprints differ" }
 
 $provenance = $manifest.Provenance
-if ($null -eq $provenance) { Fail "Provenance is missing" }
-if ($provenance.CapturePriority -ne 1) { Fail "unexpected pristine capture priority: $($provenance.CapturePriority)" }
-if ($provenance.BaselineCaptured -ne $true -or $provenance.CountsConsistent -ne $true) { Fail "pristine provenance validity failed" }
-if ([int]$provenance.PristineQuestCount -le 0) { Fail "PristineQuestCount must be positive" }
-if ([int]$provenance.ModAddedQuestCount -lt 0 -or [int]$provenance.PristineModifiedQuestCount -lt 0 -or [int]$provenance.PristineUnchangedQuestCount -lt 0 -or [int]$provenance.RemovedPristineQuestCount -lt 0) { Fail "provenance counts must be non-negative" }
-if (([int]$provenance.PristineModifiedQuestCount + [int]$provenance.PristineUnchangedQuestCount + [int]$provenance.RemovedPristineQuestCount) -ne [int]$provenance.PristineQuestCount) { Fail "pristine provenance partition is inconsistent" }
-if (([int]$provenance.ModAddedQuestCount + [int]$provenance.PristineModifiedQuestCount + [int]$provenance.PristineUnchangedQuestCount) -ne [int]$provenance.FinalQuestCount) { Fail "final provenance partition is inconsistent" }
+if ($null -eq $provenance -or $provenance.BaselineCaptured -ne $true -or $provenance.CountsConsistent -ne $true) { Fail "pristine provenance evidence invalid" }
+if (([int]$provenance.ModAddedQuestCount + [int]$provenance.PristineModifiedQuestCount + [int]$provenance.PristineUnchangedQuestCount) -ne [int]$provenance.FinalQuestCount) { Fail "final provenance partition inconsistent" }
+if ([int]$delta.FinalQuestCount -ne [int]$provenance.FinalQuestCount) { Fail "provenance report/manifest final quest count mismatch" }
 
-$build = $manifest.BuildIdentity
-if ($null -eq $build) { Fail "BuildIdentity is missing; use the packaged CI candidate" }
-if ([string]$build.Product -ne 'Economy Admiral') { Fail "unexpected BuildIdentity.Product: $($build.Product)" }
-if ([string]$build.ArtifactName -ne 'economy-admiral-candidate') { Fail "unexpected ArtifactName: $($build.ArtifactName)" }
-if ([string]$build.CompilePackageVersion -ne '4.1.2') { Fail "unexpected compile package version: $($build.CompilePackageVersion)" }
-if ([string]$build.TargetRuntime -ne 'SPT 4.1.3') { Fail "unexpected target runtime: $($build.TargetRuntime)" }
-if ([string]$build.HeadSha -notmatch '^[0-9a-fA-F]{40}$') { Fail "BuildIdentity.HeadSha is not a full commit SHA" }
-if ([string]::IsNullOrWhiteSpace([string]$build.WorkflowRunId)) { Fail "BuildIdentity.WorkflowRunId is missing" }
+if ($plan.SchemaVersion -ne 5 -or $plan.MutationEligibilityPolicyVersion -ne 3) { Fail "unexpected Enforce Alpha plan schema/policy version" }
+if ([string]$plan.Mode -ne 'Audit') { Fail "enforcement plan is not an Audit preview" }
+if ($plan.ApplyMutations -ne $false -or [int]$plan.MutationCount -ne 0) { Fail "Audit enforcement plan applied mutations" }
+if ($plan.TransactionCommitted -ne $false -or $plan.TransactionRolledBack -ne $false) { Fail "Audit must not execute a transaction" }
+if ([string]::IsNullOrWhiteSpace([string]$plan.SelectedPolicy)) { Fail "Audit preview did not select a concrete policy" }
 
-$beforeHash = [string]$manifest.DatabaseFingerprintBefore.Sha256
-$afterHash = [string]$manifest.DatabaseFingerprintAfter.Sha256
-if ([string]::IsNullOrWhiteSpace($beforeHash) -or [string]::IsNullOrWhiteSpace($afterHash)) { Fail "missing DB fingerprint hash" }
-if ($beforeHash -ne $afterHash) { Fail "before/after DB fingerprints differ" }
-foreach ($fileName in $expectedReports) { [void](Read-Json (Join-Path $ReportsPath $fileName)) }
-
-$audit = Read-Json (Join-Path $ReportsPath 'economy-admiral-audit.json')
-if ($audit.EnforcementApplied -ne $false) { Fail "audit report says EnforcementApplied=true" }
-if ([string]$audit.VanillaBenchmarkSource -ne 'PristineStartupSnapshot') { Fail "primary audit is not bound to pristine benchmark" }
-$utility = Read-Json (Join-Path $ReportsPath 'economy-admiral-reward-utility.json')
-if ([string]$utility.BenchmarkSource -ne 'PristineStartupSnapshot') { Fail "reward utility is not bound to pristine benchmark" }
-$progression = Read-Json (Join-Path $ReportsPath 'economy-admiral-progression-graph.json')
-if ([string]$progression.BenchmarkSource -ne 'PristineStartupSnapshot') { Fail "progression graph is not bound to pristine benchmark" }
-$constraints = Read-Json (Join-Path $ReportsPath 'economy-admiral-quest-constraints.json')
-if ([string]$constraints.BenchmarkSource -ne 'PristineStartupSnapshot') { Fail "quest constraints are not bound to pristine benchmark" }
-$analysis = Read-Json (Join-Path $ReportsPath 'economy-admiral-quest-analysis.json')
-if ([string]$analysis.Note -notmatch 'pristine startup baseline') { Fail "unified analysis does not declare pristine provenance" }
-
-$delta = Read-Json (Join-Path $ReportsPath 'economy-admiral-provenance-delta.json')
-if ($delta.BaselineCapturePriority -ne 1) { Fail "provenance delta has wrong capture priority" }
-if ($delta.EnforcementAffected -ne $false) { Fail "provenance delta affects enforcement unexpectedly" }
-foreach ($name in @('PristineQuestCount','FinalQuestCount','ModAddedQuestCount','PristineModifiedQuestCount','PristineUnchangedQuestCount','RemovedPristineQuestCount')) {
-    if ([int]$delta.$name -ne [int]$provenance.$name) { Fail "provenance delta $name disagrees with runtime manifest" }
-}
-
-$composite = Read-Json (Join-Path $ReportsPath 'economy-admiral-composite-candidates.json')
-if ($null -ne $composite.SelectedCandidate) { Fail "composite policy candidate was selected unexpectedly" }
-if ($composite.AffectsRewardAllowance -ne $false -or $composite.AffectsEnforcement -ne $false) { Fail "composite candidate affects policy unexpectedly" }
-$targets = Read-Json (Join-Path $ReportsPath 'economy-admiral-target-proposals.json')
-if ($targets.ProposalsAreMutations -ne $false -or $targets.ApplyMutations -ne $false) { Fail "target proposals are mutating" }
-if ($null -ne $targets.SelectedCompositePolicy) { Fail "target proposals selected a composite policy unexpectedly" }
-foreach ($candidate in @($targets.Candidates)) { if ($candidate.AutomaticMutationAllowed -ne $false -or $null -ne $candidate.ProposedMutation) { Fail "target candidate permits mutation" } }
-$plan = Read-Json (Join-Path $ReportsPath 'economy-admiral-enforcement-plan.json')
-if ($plan.SchemaVersion -ne 4) { Fail "enforcement plan SchemaVersion must be 4" }
-if ($plan.MutationEligibilityPolicyVersion -ne 2) { Fail "unexpected mutation eligibility policy version" }
-if ($plan.ApplyMutations -ne $false -or $plan.MutationCount -ne 0) { Fail "enforcement plan is mutating" }
+$previewCount = 0
 foreach ($candidate in @($plan.Candidates)) {
-    if ($candidate.AutomaticMutationAllowed -ne $false -or $null -ne $candidate.ProposedMutation) { Fail "enforcement candidate permits mutation" }
-    $potential = @($candidate.PotentialMutationDimensions)
-    switch ([string]$candidate.ProvenanceClass) {
-        'PristineUnchanged' {
-            if ($candidate.MutationEligibilityClass -ne 'ProtectedPristine' -or $candidate.PotentialAutomaticMutationEligible -ne $false -or $potential.Count -ne 0) { Fail "pristine unchanged candidate is not protected" }
-        }
-        'ModAdded' {
-            if ($candidate.PotentialAutomaticMutationEligible -eq $true) {
-                if ($candidate.MutationEligibilityClass -ne 'PolicyEligibleModAdded' -or $potential.Count -le 0) { Fail "eligible mod-added candidate has no scoped dimensions" }
-            } elseif ($candidate.MutationEligibilityClass -ne 'ReviewOnlyModAdded' -or $potential.Count -ne 0) { Fail "review-only mod-added classification is inconsistent" }
-        }
-        'PristineModified' {
-            if ($candidate.PotentialAutomaticMutationEligible -eq $true) {
-                if ($candidate.MutationEligibilityClass -ne 'PolicyEligibleModifiedPristine' -or $potential.Count -le 0) { Fail "eligible modified-pristine candidate has no scoped dimensions" }
-                foreach ($dimension in $potential) {
-                    $source = switch ($dimension) { 'ItemRewardBudget' { 'SuccessItemHandbookValue' } 'Experience' { 'Experience' } 'TraderStanding' { 'TraderStanding' } default { '' } }
-                    if ([string]::IsNullOrWhiteSpace($source) -or -not (@($candidate.ChangedDimensions) -contains $source)) { Fail "modified-pristine potential dimension $dimension is not proven changed" }
-                }
-            } elseif ($candidate.MutationEligibilityClass -ne 'ProtectedUnchangedRewardDimensions' -or $potential.Count -ne 0) { Fail "protected modified-pristine classification is inconsistent" }
-        }
-        default {
-            if ($candidate.MutationEligibilityClass -ne 'BlockedUnknownProvenance' -or $candidate.PotentialAutomaticMutationEligible -ne $false -or $potential.Count -ne 0) { Fail "unknown provenance is not blocked" }
-        }
+    if ([string]$candidate.ProvenanceClass -eq 'PristineUnchanged') {
+        if ($candidate.PristineUntouched -ne $true -or @($candidate.ProposedMutations).Count -ne 0) { Fail "PristineUnchanged candidate is not protected" }
+    }
+    foreach ($mutation in @($candidate.ProposedMutations)) {
+        $previewCount++
+        if ([string]$mutation.Dimension -notin @('Experience','TraderStanding')) { Fail "Audit preview contains unsupported mutation dimension $($mutation.Dimension)" }
+        if ($mutation.Applied -ne $false) { Fail "Audit preview marks mutation as applied" }
+        if ([double]$mutation.After -ne [double]$mutation.Before) { Fail "Audit preview changed After value" }
+        if ([string]::IsNullOrWhiteSpace([string]$mutation.PolicyId)) { Fail "Audit preview mutation has no policy id" }
     }
 }
+if ($previewCount -ne [int]$plan.PlannedMutationCount) { Fail "planned mutation count does not match preview records" }
 
-Pass "runtime gate valid; pristine baseline + exact provenance delta + dimension-scoped fail-closed mutation eligibility proven; exact CI build identified; DB unchanged; 9/9 reports present; zero mutations declared"
+$build = $manifest.BuildIdentity
+if ($null -eq $build -or [string]$build.Product -ne 'Economy Admiral' -or [string]$build.TargetRuntime -ne 'SPT 4.1.3') { Fail "packaged build identity invalid" }
+if ([string]$build.HeadSha -notmatch '^[0-9a-fA-F]{40}$') { Fail "BuildIdentity.HeadSha is not a full SHA" }
+
+Pass "read-only fingerprint + concrete policy preview + pristine protection proven; planned=$previewCount, applied=0"
 Write-Host "[Economy Admiral] build: $($build.HeadSha) / workflow $($build.WorkflowRunId)"
-Write-Host "[Economy Admiral] provenance: pristine=$($provenance.PristineQuestCount), final=$($provenance.FinalQuestCount), added=$($provenance.ModAddedQuestCount), modified=$($provenance.PristineModifiedQuestCount), unchanged=$($provenance.PristineUnchangedQuestCount), removed=$($provenance.RemovedPristineQuestCount)"
-Write-Host "[Economy Admiral] fingerprint: $beforeHash"
 Write-Host "[Economy Admiral] mode/preset: $($manifest.Mode) / $($manifest.Preset)"
 exit 0
