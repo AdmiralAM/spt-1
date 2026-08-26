@@ -83,6 +83,7 @@ var fractionalStack = ItemRewardStackPlanner.Plan(currentCount: 2.5, unitHandboo
 Require(!fractionalStack.Eligible && fractionalStack.Reason == "NonIntegralStackCount", "non-integral stack counts must be blocked");
 
 var itemStackCount = 10d;
+var itemRewardValue = 10d;
 var itemStackTx = NumericRewardTransactionCore.Execute([
     new NumericRewardTransactionRequest
     {
@@ -90,16 +91,27 @@ var itemStackTx = NumericRewardTransactionCore.Execute([
         Dimension = "ItemRewardStackCount",
         ExpectedBefore = 10,
         Target = 4,
-        Slots = [new NumericRewardSlot(() => itemStackCount, value => itemStackCount = value)],
+        Slots = [new NumericRewardSlot(
+            () =>
+            {
+                Require(Math.Abs(itemStackCount - itemRewardValue) < 0.001, "item stack/read value representations must remain synchronized");
+                return itemStackCount;
+            },
+            value =>
+            {
+                itemStackCount = value;
+                itemRewardValue = value;
+            })],
     },
 ]);
 Require(itemStackTx.Committed && !itemStackTx.RolledBack, "bounded single-stack item transaction must commit");
-Require(itemStackCount == 4, "bounded item stack transaction must reach exact integer count");
+Require(itemStackCount == 4 && itemRewardValue == 4, "bounded item stack transaction must update stack count and Reward.Value together");
 Require(!NumericRewardTransactionCore.NeedsMutation(itemStackCount, 4, false), "bounded item stack second pass must be idempotent");
 
 var mixedXp = 9000d;
 var mixedStanding = 0.20d;
 var mixedItemStack = 10d;
+var mixedItemRewardValue = 10d;
 var itemFailOnce = true;
 var mixedRollback = NumericRewardTransactionCore.Execute([
     new NumericRewardTransactionRequest
@@ -125,7 +137,11 @@ var mixedRollback = NumericRewardTransactionCore.Execute([
         ExpectedBefore = 10,
         Target = 4,
         Slots = [new NumericRewardSlot(
-            () => mixedItemStack,
+            () =>
+            {
+                Require(Math.Abs(mixedItemStack - mixedItemRewardValue) < 0.001, "mixed item representations must remain synchronized");
+                return mixedItemStack;
+            },
             value =>
             {
                 if (itemFailOnce)
@@ -134,6 +150,7 @@ var mixedRollback = NumericRewardTransactionCore.Execute([
                     throw new InvalidOperationException("synthetic item-stack setter failure");
                 }
                 mixedItemStack = value;
+                mixedItemRewardValue = value;
             })],
     },
 ]);
@@ -141,6 +158,6 @@ Require(!mixedRollback.Committed && mixedRollback.RolledBack, "mixed numeric/ite
 Require(mixedRollback.Results.Count == 0, "mixed rolled-back batch must publish no committed mutations");
 Require(Math.Abs(mixedXp - 9000) < 0.001, "mixed rollback must restore earlier XP mutation");
 Require(Math.Abs(mixedStanding - 0.20) < 0.00001, "mixed rollback must restore earlier standing mutation");
-Require(Math.Abs(mixedItemStack - 10) < 0.001, "mixed rollback must restore failing item stack mutation");
+Require(Math.Abs(mixedItemStack - 10) < 0.001 && Math.Abs(mixedItemRewardValue - 10) < 0.001, "mixed rollback must restore both item quantity representations");
 
 Console.WriteLine("Economy Admiral Enforce transaction + bounded item stack planner smoke PASS");
