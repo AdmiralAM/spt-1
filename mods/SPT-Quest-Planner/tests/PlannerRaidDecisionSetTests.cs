@@ -82,16 +82,23 @@ namespace SPTQuestPlanner.Tests
         }
 
         [Fact]
-        public void MultipleFocusedMapsRemainHonestFrontierWhenTradeoffsConflict()
+        public void MultipleFocusedMapsRemainHonestFrontierWhenGoalSpecificTradeoffsConflict()
         {
+            PlannerRaidDecisionIntent intent = new PlannerRaidDecisionIntent(
+                "future-goal",
+                new[] { "shared-focus", "next", "future-goal" },
+                new[] { "shared-focus" },
+                new[] { "shared-focus" },
+                Array.Empty<string>());
+
             PlannerRaidDecisionSet result = PlannerRaidDecisionSetBuilder.Build(
                 new[]
                 {
-                    FocusCandidate("Customs", "shared-focus", unlocks: 2, missing: 1),
+                    FocusCandidate("Customs", "shared-focus", unlocks: 1, missing: 1, unlockQuestId: "next"),
                     FocusCandidate("Shoreline", "shared-focus", unlocks: 0, missing: 0),
-                    FocusCandidate("Reserve", "other", unlocks: 3, missing: 0)
+                    FocusCandidate("Reserve", "other", unlocks: 3, missing: 0, unlockQuestId: "unrelated")
                 },
-                new PlannerRaidDecisionIntent("shared-focus"));
+                intent);
 
             Assert.False(result.HasUniqueRecommendation);
             Assert.Equal(2, result.Contenders.Count);
@@ -120,7 +127,8 @@ namespace SPTQuestPlanner.Tests
             string locationId,
             string questId,
             int unlocks = 0,
-            int missing = 0)
+            int missing = 0,
+            string unlockQuestId = null)
         {
             return new PlannerRaidDecisionCandidate(
                 locationId,
@@ -136,7 +144,9 @@ namespace SPTQuestPlanner.Tests
                     1d,
                     new[] { questId },
                     Array.Empty<string>(),
-                    Array.Empty<string>()));
+                    unlocks > 0 && !string.IsNullOrWhiteSpace(unlockQuestId)
+                        ? new[] { unlockQuestId }
+                        : Array.Empty<string>()));
         }
 
         private static PlannerRaidDecisionCandidate Candidate(
