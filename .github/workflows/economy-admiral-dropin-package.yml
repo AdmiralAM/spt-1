@@ -1,0 +1,73 @@
+name: Economy Admiral Drop-in Package
+
+on:
+  push:
+    branches:
+      - 'fix/economy-admiral-dropin-packaging'
+    paths:
+      - 'mods/Economy-Admiral/**'
+      - '.github/workflows/economy-admiral-dropin-package.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: economy-admiral-dropin-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build Economy Admiral server
+        shell: pwsh
+        run: dotnet build mods/Economy-Admiral/server/Economy-Admiral.csproj -c Release --nologo
+
+      - name: Stage SPT-root drop-in package
+        shell: pwsh
+        env:
+          EA_HEAD_SHA: ${{ github.sha }}
+        run: |
+          $packageRoot = 'build-output/economy-admiral-dropin'
+          $modRoot = Join-Path $packageRoot 'user/mods/Economy Admiral'
+          New-Item -ItemType Directory -Force -Path (Join-Path $modRoot 'config') | Out-Null
+
+          Copy-Item mods/Economy-Admiral/server/bin/Release/net10.0/Economy-Admiral.dll (Join-Path $modRoot 'Economy-Admiral.dll')
+          Copy-Item mods/Economy-Admiral/config/config.json (Join-Path $modRoot 'config/config.json')
+          Copy-Item mods/Economy-Admiral/README.md (Join-Path $modRoot 'README.md')
+          Copy-Item mods/Economy-Admiral/RUNTIME_TEST.md (Join-Path $modRoot 'RUNTIME_TEST.md')
+          Copy-Item mods/Economy-Admiral/tools/Validate-Runtime.ps1 (Join-Path $modRoot 'Validate-Runtime.ps1')
+          Copy-Item mods/Economy-Admiral/tools/Validate-PrimaryParity.ps1 (Join-Path $modRoot 'Validate-PrimaryParity.ps1')
+
+          [ordered]@{
+            Product = 'Economy Admiral'
+            HeadSha = $env:EA_HEAD_SHA
+            WorkflowRunId = $env:GITHUB_RUN_ID
+            ArtifactName = 'economy-admiral-spt413-dropin'
+            CompilePackageVersion = '4.1.2'
+            TargetRuntime = 'SPT 4.1.3'
+            InstallRelativePath = 'user/mods/Economy Admiral'
+            InstallInstruction = 'Extract archive contents into the SPT root; user merges with the existing user directory.'
+          } | ConvertTo-Json | Set-Content (Join-Path $modRoot 'BUILD_INFO.json') -Encoding UTF8
+
+      - name: Validate exact SPT ModLoader layout
+        shell: pwsh
+        run: '& mods/Economy-Admiral/tools/Validate-PackageLayout.ps1 -PackageRoot build-output/economy-admiral-dropin'
+
+      - name: Show packaged tree
+        shell: pwsh
+        run: Get-ChildItem -LiteralPath build-output/economy-admiral-dropin -Recurse | Select-Object FullName
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: economy-admiral-spt413-dropin
+          path: build-output/economy-admiral-dropin
+          if-no-files-found: error
+          retention-days: 14
