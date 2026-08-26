@@ -16,7 +16,7 @@ namespace SPTBeltArmbandInventory
         {
             logWarning = warning;
             MethodInfo target = FindTarget(equipmentType);
-            getSlot = equipmentType.GetMethod("GetSlot", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { slotEnumType }, null);
+            getSlot = ReflectionTools.FindInstanceMethod(equipmentType, "GetSlot", null, slotEnumType);
             if (target == null || getSlot == null || !target.ReturnType.IsGenericType)
                 return Fail("SPT 4.1 GetPrioritizedContainersForLoot shape was not found; belt loot priority was not patched.");
 
@@ -47,11 +47,8 @@ namespace SPTBeltArmbandInventory
                 object equipment = __args[0];
                 object beltItem = GetContainedItem(equipment, armBandValue);
                 bool hasContainers = ReflectionTools.HasContainers(beltItem);
-                if (!AccessoryCapabilityPolicy.CanUse(
-                    AccessoryCategory.ArmBand,
-                    AccessoryCapability.LootPriority,
-                    beltItem != null,
-                    hasContainers)) return;
+                string templateId = GetTemplateId(beltItem);
+                if (!hasContainers || !WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.LootPriority)) return;
 
                 List<object> belt = ReadContainers(beltItem);
                 if (belt.Count == 0) return;
@@ -83,8 +80,17 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                if (logWarning != null) logWarning("Could not extend loot priority with belt containers: " + exception.Message);
+                if (logWarning != null) logWarning("Could not extend loot priority with wearable containers: " + exception.Message);
             }
+        }
+
+        static string GetTemplateId(object item)
+        {
+            if (item == null) return null;
+            object stringTemplateId = ReflectionTools.ReadMember(item, "StringTemplateId");
+            if (stringTemplateId is string direct && !string.IsNullOrEmpty(direct)) return direct;
+            object templateId = ReflectionTools.ReadMember(item, "TemplateId");
+            return templateId?.ToString();
         }
 
         static MethodInfo FindTarget(Type equipmentType)
