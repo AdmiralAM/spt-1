@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace SPTQuestPlanner.Client
 {
@@ -19,15 +18,18 @@ namespace SPTQuestPlanner.Client
         public PlannerCapabilityDecisionValue(
             PlannerCapabilityDecisionValueKind kind,
             bool provesBeyondPrerequisiteNavigation,
+            bool countsTowardKeepCandidate,
             IReadOnlyList<string> evidence)
         {
             Kind = kind;
             ProvesBeyondPrerequisiteNavigation = provesBeyondPrerequisiteNavigation;
+            CountsTowardKeepCandidate = countsTowardKeepCandidate;
             Evidence = evidence ?? Array.Empty<string>();
         }
 
         public PlannerCapabilityDecisionValueKind Kind { get; private set; }
         public bool ProvesBeyondPrerequisiteNavigation { get; private set; }
+        public bool CountsTowardKeepCandidate { get; private set; }
         public IReadOnlyList<string> Evidence { get; private set; }
     }
 
@@ -43,20 +45,23 @@ namespace SPTQuestPlanner.Client
                     return Value(
                         PlannerCapabilityDecisionValueKind.GoalAlreadyResolved,
                         true,
-                        "Planner proves the selected capability gate is already completed and avoids redundant progression work.");
+                        false,
+                        "Planner proves the selected capability gate is already completed and avoids redundant progression work, but this correctness alone does not justify keeping the mod.");
 
                 case PlannerCapabilityGoalPresentationKind.WaitingForAvailability:
                     return Value(
                         PlannerCapabilityDecisionValueKind.UnnecessaryRaidAvoided,
                         true,
-                        "The selected progression path is waiting on availability; no raid work is required for that branch now.");
+                        true,
+                        "The selected progression path is waiting on availability; Planner prevents a pointless raid for that goal right now.");
 
                 case PlannerCapabilityGoalPresentationKind.EvidenceIncomplete:
                 case PlannerCapabilityGoalPresentationKind.ProgressionConflict:
                     return Value(
                         PlannerCapabilityDecisionValueKind.UnsupportedDecisionPrevented,
                         true,
-                        "Planner refuses to fabricate a route when authoritative progression evidence is incomplete or contradictory.");
+                        false,
+                        "Planner refuses to fabricate a route when authoritative progression evidence is incomplete or contradictory; this is required correctness, not sufficient KEEP evidence.");
 
                 case PlannerCapabilityGoalPresentationKind.RaidDecision:
                     return ClassifyRaidDecision(presentation.RaidDecision);
@@ -64,6 +69,7 @@ namespace SPTQuestPlanner.Client
                 default:
                     return Value(
                         PlannerCapabilityDecisionValueKind.NavigationOnly,
+                        false,
                         false,
                         "No decision value beyond locating the current prerequisite has been proven.");
             }
@@ -75,6 +81,7 @@ namespace SPTQuestPlanner.Client
                 return Value(
                     PlannerCapabilityDecisionValueKind.NavigationOnly,
                     false,
+                    false,
                     "Actionable prerequisite work exists, but no comparative raid evidence was supplied.");
 
             if (raid.Kind == PlannerRaidDecisionPresentationKind.SeveralGoodOptions)
@@ -83,10 +90,12 @@ namespace SPTQuestPlanner.Client
                     return Value(
                         PlannerCapabilityDecisionValueKind.TradeoffClarified,
                         true,
+                        true,
                         "Planner exposes competing proven advantages instead of forcing an arbitrary winner.");
 
                 return Value(
                     PlannerCapabilityDecisionValueKind.NavigationOnly,
+                    false,
                     false,
                     "Several raid options remain, but no meaningful trade-off beyond prerequisite location has been proven.");
             }
@@ -98,18 +107,18 @@ namespace SPTQuestPlanner.Client
                     evidence.Add("The selected raid combines compatible work across multiple quests.");
                 if (raid.Primary.HasProgressionLeverage)
                     evidence.Add("The selected raid has proven immediate progression leverage on the focused path.");
-                if (!raid.Primary.PreparationReady)
-                    evidence.Add("The recommendation includes explicit preparation friction rather than assuming readiness.");
 
                 if (evidence.Count > 0)
                     return new PlannerCapabilityDecisionValue(
                         PlannerCapabilityDecisionValueKind.DecisionChanged,
+                        true,
                         true,
                         evidence.ToArray());
             }
 
             return Value(
                 PlannerCapabilityDecisionValueKind.NavigationOnly,
+                false,
                 false,
                 "The result identifies where prerequisite work can be done, but no additional decision-changing evidence is proven.");
         }
@@ -136,9 +145,10 @@ namespace SPTQuestPlanner.Client
         private static PlannerCapabilityDecisionValue Value(
             PlannerCapabilityDecisionValueKind kind,
             bool beyondNavigation,
+            bool countsTowardKeep,
             string evidence)
         {
-            return new PlannerCapabilityDecisionValue(kind, beyondNavigation, new[] { evidence });
+            return new PlannerCapabilityDecisionValue(kind, beyondNavigation, countsTowardKeep, new[] { evidence });
         }
     }
 }
