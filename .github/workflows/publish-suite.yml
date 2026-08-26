@@ -157,7 +157,7 @@ jobs:
           $beltClient = Join-Path $beltRoot 'BepInEx/plugins/SPT Belt Armband Inventory'
           $beltServer = Join-Path $beltRoot 'SPT_Runtime/user/mods/SPT Belt Armband Inventory Server'
           Copy-RequiredFile "mods/SPT-Belt-Armband-Inventory/src/bin/Release/netstandard2.1/$env:BELT_ASSEMBLY.dll" (Join-Path $beltClient 'SPT Belt Armband Inventory.dll')
-          Copy-RequiredFile 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT-Belt-Armband-Inventory.Server.dll' (Join-Path $beltServer 'SPT Belt Armband Inventory Server.dll')
+          Copy-RequiredFile 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT Belt Armband Inventory Server.dll' (Join-Path $beltServer 'SPT Belt Armband Inventory Server.dll')
           Write-PackageMetadata $beltRoot ([ordered]@{ name='SPT Belt Armband Inventory'; channel='runtime-belt-armband'; version=$env:BELT_VERSION; spt_version='4.1.x'; source_commit=$sourceSha; client_included=$true; server_included=$true }) @('# SPT Belt/Armband Inventory runtime','',"Ready-to-install Belt/Armband Inventory $env:BELT_VERSION for SPT 4.1.x.",'','Copy this package into the SPT root. It contains the current client and server components.',"Verified source commit: $sourceSha")
 
       - name: Validate assembled runtime packages
