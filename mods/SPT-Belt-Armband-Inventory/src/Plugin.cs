@@ -3,6 +3,7 @@ using System.Collections;
 using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
+using UnityEngine;
 
 namespace SPTBeltArmbandInventory
 {
@@ -26,6 +27,7 @@ namespace SPTBeltArmbandInventory
         PickupSlotPatches pickupPatches;
         PaymentSlotPatches paymentPatches;
         EquipmentBuildValidationPatches buildValidationPatches;
+        Coroutine deferredRuntimePump;
 
         void Awake()
         {
@@ -61,6 +63,10 @@ namespace SPTBeltArmbandInventory
                 gridWindowSizingPatches.Dispose();
                 gridWindowSizingPatches = null;
                 Logger.LogWarning("Belt storage remains active, but the ArmBand GridWindow may keep vanilla minimum window dimensions.");
+            }
+            else
+            {
+                GridWindowSizingRuntime.RequestFlush = EnsureDeferredRuntimePump;
             }
 
             lootPatches = new LootPriorityPatches(Logger.LogInfo, Logger.LogWarning);
@@ -101,6 +107,10 @@ namespace SPTBeltArmbandInventory
                 fastAccessSyncPatches.Dispose();
                 fastAccessSyncPatches = null;
                 Logger.LogWarning("Belt grenade enumeration remains active, but equipping/removing a loaded belt may require the grenade fast-access view to reopen before it reflects the change.");
+            }
+            else
+            {
+                FastAccessBeltSyncRuntime.RequestFlush = EnsureDeferredRuntimePump;
             }
 
             fastAccessSlotPatches = new FastAccessSlotPatches(Logger.LogInfo, Logger.LogWarning);
@@ -144,10 +154,32 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        void Update()
+        void EnsureDeferredRuntimePump()
         {
-            if (gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending) GridWindowSizingRuntime.Flush();
-            if (fastAccessSyncPatches != null && FastAccessBeltSyncRuntime.HasPending) FastAccessBeltSyncRuntime.Flush();
+            if (deferredRuntimePump == null)
+                deferredRuntimePump = StartCoroutine(FlushDeferredRuntimeWork());
+        }
+
+        IEnumerator FlushDeferredRuntimeWork()
+        {
+            // Preserve the previous next-frame behavior without keeping an idle
+            // MonoBehaviour.Update callback alive for the lifetime of the plugin.
+            yield return null;
+
+            while ((gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending)
+                || (fastAccessSyncPatches != null && FastAccessBeltSyncRuntime.HasPending))
+            {
+                if (gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending)
+                    GridWindowSizingRuntime.Flush();
+                if (fastAccessSyncPatches != null && FastAccessBeltSyncRuntime.HasPending)
+                    FastAccessBeltSyncRuntime.Flush();
+
+                if ((gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending)
+                    || (fastAccessSyncPatches != null && FastAccessBeltSyncRuntime.HasPending))
+                    yield return null;
+            }
+
+            deferredRuntimePump = null;
         }
 
         bool LegacyBeltSlotDetected()
@@ -164,6 +196,12 @@ namespace SPTBeltArmbandInventory
 
         void OnDestroy()
         {
+            if (deferredRuntimePump != null)
+            {
+                StopCoroutine(deferredRuntimePump);
+                deferredRuntimePump = null;
+            }
+
             if (buildValidationPatches != null) buildValidationPatches.Dispose();
             buildValidationPatches = null;
             if (paymentPatches != null) paymentPatches.Dispose();
