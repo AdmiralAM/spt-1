@@ -3,12 +3,12 @@
   "product": "Admiral Trader",
   "traderId": "d5c27bb3169f8dfbc13f6b69",
   "targetSptVersion": "4.1.3",
-  "publishedApiCompileBaseline": "4.1.2",
+  "publishedApiCompileBaseline": "4.1.3",
   "publicationMode": "test-candidate-source",
   "registrationEnabled": false,
   "mergeRequiresRuntimeEvidence": true,
   "registrationGate": {
-    "reason": "Source remains fail-closed. The exact-runtime candidate builder creates an enabled staging manifest only after verifying SPTarkov.Server.Core 4.1.3.",
+    "reason": "Source remains fail-closed. SPT 4.1.3 server API packages are published as SPTushonka.* while retaining SPTarkov.* assembly identities; CI may now build an exact-version installable candidate, and the local exact-runtime builder remains available for byte-exact runtime proof.",
     "satisfiedBeforeCandidate": [
       "single Admiral trader architecture",
       "31 authored native quest templates",
@@ -17,10 +17,11 @@
       "Special Weapons sample-only reward with no permanent offer",
       "source/module CI validation",
       "fail-fast exact-runtime item TPL validation",
-      "exact-runtime assembly build path"
+      "SPTushonka 4.1.3 compile path",
+      "exact-runtime assembly override build path"
     ],
     "requiredBeforeMerge": [
-      "build against SPTarkov.Server.Core 4.1.3 runtime assembly",
+      "installable exact-head SPT 4.1.3 candidate artifact exists",
       "server starts without Admiral errors",
       "exact-runtime TPL gate passes",
       "one Admiral trader appears",
