@@ -5,7 +5,7 @@ using SPTBeltArmbandInventory;
 
 internal static class ReflectionAmbiguityRegression
 {
-    sealed class BaseProbe
+    class BaseProbe
     {
         public string Value => "base";
         public virtual string VirtualValue => "base-virtual";
@@ -21,10 +21,6 @@ internal static class ReflectionAmbiguityRegression
     internal static void Run()
     {
         var probe = new DerivedProbe();
-
-        // The exact legacy pattern used by ReflectionTools.CreateAccessor throws on
-        // hidden members. Keep the reproduction in the regression so this failure
-        // cannot silently return in a future cleanup.
         bool legacyAmbiguous = false;
         try
         {
