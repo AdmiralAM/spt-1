@@ -36,6 +36,7 @@ Generated build output is never a source of truth and is not committed to the mo
 The final package installs to:
 
 - `BepInEx/plugins/Admiral Tactical HUD/Admiral Tactical HUD.dll`
-- `user/mods/Admiral Tactical HUD/Admiral Tactical HUD Server.dll`
+- `BepInEx/plugins/Admiral Tactical HUD/assets/hud-sprites.png`
+- `SPT_Runtime/user/mods/Admiral Tactical HUD/Admiral Tactical HUD Server.dll`
 
-Copy the packaged `BepInEx/` and `user/` folders into the SPT root. Future `1.13.3` rebuilds use the same stable paths and replace the existing files in place.
+Copy the packaged `BepInEx/` and `SPT_Runtime/` folders into the SPT root. Future `1.13.3` rebuilds use the same stable paths and replace the existing files in place.
