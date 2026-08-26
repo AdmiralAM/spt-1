@@ -20,33 +20,19 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
     public const string RuntimeCandidateTpl = RuntimeIdentity.CandidateItemId;
     public const string RuntimeCandidateGridId = RuntimeIdentity.CandidateGridId;
 
-    // Client runtime type registration passed its load-safe gate before this
-    // server taxonomy is enabled. This selects the registered custom belt type.
-    private const bool EnableCustomRuntimeTaxonomy = true;
-
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        if (!templateTable.Items.TryGetValue(SourceArmbandTpl, out var sourceItem)) throw new InvalidOperationException("B&A&HB RC source armband missing.");
+        if (!templateTable.Items.ContainsKey(SourceArmbandTpl)) throw new InvalidOperationException("B&A&HB RC source armband missing.");
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl) ?? throw new InvalidOperationException("B&A&HB RC source handbook entry missing.");
 
-        MongoId parentId;
-        if (EnableCustomRuntimeTaxonomy)
-        {
-            EnsureCustomParents();
-            EnsureArmBandAcceptsCustomBeltParent();
-            parentId = CustomBeltParentTpl;
-        }
-        else
-        {
-            parentId = sourceItem.Parent;
-            logger.Warning("B&A&HB LOAD-SAFE FAIL-CLOSED: custom belt parent/template taxonomy is disabled for the discovery artifact; RC remains on the vanilla armband taxonomy so /client/items cannot be blocked by an unregistered custom C# type.");
-        }
+        EnsureCustomParents();
+        EnsureArmBandAcceptsCustomBeltParent();
 
         var details = new NewItemFromCloneDetails
         {
             NewItemName = "B&A&HB Runtime Candidate Magazine Belt",
             ItemTplToClone = SourceArmbandTpl,
-            ParentId = parentId,
+            ParentId = CustomBeltParentTpl,
             NewId = RuntimeCandidateTpl,
             FleaPriceRoubles = 1000,
             HandbookPriceRoubles = 1000,
@@ -60,7 +46,7 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         };
         var result = customItemService.CreateItemFromClone(details);
         if (!result.Success) throw new InvalidOperationException($"B&A&HB RC item creation failed: {string.Join("; ", result.Errors)}");
-        logger.Success($"B&A&HB RC created: tpl={RuntimeCandidateTpl}, parent={parentId}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE, customTaxonomy={EnableCustomRuntimeTaxonomy}.");
+        logger.Success($"B&A&HB RC created: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
         return Task.CompletedTask;
     }
 
