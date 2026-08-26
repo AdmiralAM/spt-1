@@ -9,7 +9,8 @@
     "traderWorkingNameRu": "Адмирал",
     "traderId": "d5c27bb3169f8dfbc13f6b69",
     "traderIdDerivation": "first-24-hex-of-sha256(modGuid)",
-    "traderIcon": "TBD"
+    "traderIcon": "official-white-naval-tunic-portrait",
+    "traderIconContract": "manifests/identity-assets.json"
   },
   "source": {
     "repository": "Thirt3nth/Andrudis-Questmaniac",
@@ -20,7 +21,8 @@
   "target": {
     "traderCount": 1,
     "loadModel": "explicit-manifest",
-    "economyDataModel": "native-spt-assort-and-questassort"
+    "economyDataModel": "native-spt-assort-and-questassort",
+    "questCountPolicy": "no-artificial-cap-quality-gated-expansion"
   },
   "migrationPolicy": {
     "implementationStrategy": "template-suppression-completion-bridge",
@@ -45,11 +47,11 @@
       "bundles": ["Weapon Proficiency", "Ammo Proficiency"],
       "strategy": "rewrite-as-one-domain",
       "reason": "The pinned legacy graph contains intentional Weapon Proficiency -> Ammo Proficiency prerequisite edges; separating the domains would break progression semantics.",
-      "target": "Short weapon-family chains followed by capability-based ammo samples and controlled unlocks. High-end ammunition must not become an unlimited reward or trader faucet."
+      "target": "Use the current family backbone plus additional authored weapon/project contracts where they add distinct gameplay value; capability-based ammo samples and controlled unlocks remain bounded. High-end ammunition must not become an unlimited reward or trader faucet."
     },
     "equipment": {
       "bundles": ["Deep Pockets", "Iron Head", "Juggernaut", "Tarkov Mule", "Ultrasound"],
-      "strategy": "rewrite-and-consolidate"
+      "strategy": "rewrite-and-consolidate-by-quality"
     },
     "medical": {
       "bundles": ["Meds Proficiency", "Stims Proficiency"],
@@ -57,41 +59,41 @@
     },
     "authoredHunts": {
       "bundles": ["Boss Follower Hunt", "Boss Hunt", "Cultists Hunt", "Sniper Life", "Survivalist"],
-      "strategy": "merge-to-milestones"
+      "strategy": "re-author-distinct-milestones-and-operations"
     },
     "keys": {
       "bundles": ["Keys Proficiency"],
-      "strategy": "merge-and-rewrite-map-milestones",
-      "target": "Collapse 27 repetitive legacy key quests to an authored map-based chain; remove money/key-hoarding ladders and legacy assort unlock inflation."
+      "strategy": "rewrite-map-access-and-intelligence-contracts",
+      "target": "Remove repetitive Burglar/Key Master/Locksmith duplication, money/key-hoarding ladders and unlock inflation while retaining or expanding any access concepts that support distinct authored operations. The current ten Access quests are a backbone, not a maximum."
     }
   },
   "rules": [
-    { "match": { "bundleContains": "Hideout Assistant" }, "decision": "DROP", "reason": "Hideout quests are explicitly out of curated scope." },
-    { "match": { "bundleEquals": "Weapon Mastery" }, "decision": "MIGRATION_ONLY", "reason": "Large specific-weapon elimination grind; do not expose to new profiles." },
-    { "match": { "bundleEquals": "Errand Boy" }, "decision": "MIGRATION_ONLY", "reason": "Large handover/busywork family with container reward inflation." },
-    { "match": { "bundleContains": "Legend" }, "decision": "MIGRATION_ONLY", "reason": "Mass gear-restriction elimination ladders are legacy busywork." },
-    { "match": { "bundleEquals": "Headless PMC" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map headshot ladder." },
-    { "match": { "bundleEquals": "Headless Raider" }, "decision": "MIGRATION_ONLY", "reason": "Escalating headshot ladder." },
-    { "match": { "bundleEquals": "Headless Rogue" }, "decision": "MIGRATION_ONLY", "reason": "Escalating headshot ladder." },
-    { "match": { "bundleEquals": "Headless Scav" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map headshot ladder." },
-    { "match": { "bundleEquals": "PMC Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map kill ladder." },
-    { "match": { "bundleEquals": "Raider Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating kill ladder." },
-    { "match": { "bundleEquals": "Rogue Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating kill ladder." },
-    { "match": { "bundleEquals": "Scav Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map kill ladder." },
-    { "match": { "bundleEquals": "Boss Follower Hunt" }, "decision": "MERGE", "reason": "Retain the target fantasy but collapse the ten-step escalation to curated milestones." },
-    { "match": { "bundleEquals": "Boss Hunt" }, "decision": "MERGE", "reason": "Retain the target fantasy but collapse the ten-step escalation to curated milestones." },
-    { "match": { "bundleEquals": "Cultists Hunt" }, "decision": "MERGE", "reason": "Retain the target fantasy but collapse the ten-step escalation to curated milestones." },
-    { "match": { "bundleEquals": "Sniper Life" }, "decision": "MERGE", "reason": "Keep the capability fantasy while collapsing repetitive distance ladders." },
-    { "match": { "bundleEquals": "Survivalist" }, "decision": "MERGE", "reason": "Strong survival theme but significant repetition and probable vanilla overlap." },
-    { "match": { "bundleEquals": "Keys Proficiency" }, "decision": "MERGE", "reason": "Audit found repetitive per-map Burglar/Key Master/Locksmith ladders, extreme collection-value requirements, and nine legacy assort unlock rewards; preserve the key-progression theme but rebuild it as a short map-based chain." },
-    { "match": { "bundleEquals": "Ammo Proficiency" }, "decision": "REWRITE", "reason": "Core ammo capability progression is desired, but legacy chain/rewards must be rebuilt with Weapon Proficiency as one domain." },
-    { "match": { "bundleEquals": "Weapon Proficiency" }, "decision": "REWRITE", "reason": "Core weapon-family progression is desired, but six-trader/tier structure must be consolidated with Ammo Proficiency as one domain." },
-    { "match": { "bundleEquals": "Deep Pockets" }, "decision": "REWRITE", "reason": "Candidate equipment progression; reward/unlock chain needs consolidation." },
-    { "match": { "bundleEquals": "Iron Head" }, "decision": "REWRITE", "reason": "Candidate equipment progression; reward/unlock chain needs consolidation." },
-    { "match": { "bundleEquals": "Juggernaut" }, "decision": "REWRITE", "reason": "Candidate equipment progression; reward/unlock chain needs consolidation." },
-    { "match": { "bundleEquals": "Meds Proficiency" }, "decision": "REWRITE", "reason": "Candidate capability progression; audit against vanilla and economy." },
-    { "match": { "bundleEquals": "Stims Proficiency" }, "decision": "REWRITE", "reason": "Candidate capability progression; high-value consumables require controlled unlocks." },
-    { "match": { "bundleEquals": "Tarkov Mule" }, "decision": "REWRITE", "reason": "Candidate equipment progression; consolidate backpack unlock path." },
-    { "match": { "bundleEquals": "Ultrasound" }, "decision": "REWRITE", "reason": "Candidate equipment progression; consolidate headset unlock path." }
+    { "match": { "bundleContains": "Hideout Assistant" }, "decision": "DROP", "reason": "Hideout quests are explicitly out of curated scope unless a future quest independently passes the current authored admission test for a non-hideout purpose." },
+    { "match": { "bundleEquals": "Weapon Mastery" }, "decision": "MIGRATION_ONLY", "reason": "The raw bundle is dominated by specific-weapon elimination grind. Individual concepts may return only as independently re-authored Admiral contracts." },
+    { "match": { "bundleEquals": "Errand Boy" }, "decision": "MIGRATION_ONLY", "reason": "The raw family is dominated by handover/busywork and reward inflation. Individual concepts require independent re-authoring." },
+    { "match": { "bundleContains": "Legend" }, "decision": "MIGRATION_ONLY", "reason": "Mass gear-restriction elimination ladders are legacy busywork; only distinct authored concepts may be reintroduced." },
+    { "match": { "bundleEquals": "Headless PMC" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map headshot ladder; no direct publication." },
+    { "match": { "bundleEquals": "Headless Raider" }, "decision": "MIGRATION_ONLY", "reason": "Escalating headshot ladder; no direct publication." },
+    { "match": { "bundleEquals": "Headless Rogue" }, "decision": "MIGRATION_ONLY", "reason": "Escalating headshot ladder; no direct publication." },
+    { "match": { "bundleEquals": "Headless Scav" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map headshot ladder; no direct publication." },
+    { "match": { "bundleEquals": "PMC Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map kill ladder; no direct publication." },
+    { "match": { "bundleEquals": "Raider Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating kill ladder; no direct publication." },
+    { "match": { "bundleEquals": "Rogue Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating kill ladder; no direct publication." },
+    { "match": { "bundleEquals": "Scav Hunt" }, "decision": "MIGRATION_ONLY", "reason": "Escalating per-map kill ladder; no direct publication." },
+    { "match": { "bundleEquals": "Boss Follower Hunt" }, "decision": "MERGE", "reason": "Retain the target fantasy and re-author distinct follower operations; remove count-only escalation rather than imposing a quest-count ceiling." },
+    { "match": { "bundleEquals": "Boss Hunt" }, "decision": "MERGE", "reason": "Retain boss-operation concepts and meaningful milestones; remove count-only escalation rather than minimizing quest count for its own sake." },
+    { "match": { "bundleEquals": "Cultists Hunt" }, "decision": "MERGE", "reason": "Retain the cultist-operation fantasy where conditions/context/payoff are distinct; reject repeated counter escalation." },
+    { "match": { "bundleEquals": "Sniper Life" }, "decision": "MERGE", "reason": "Keep precision-operation concepts while replacing repetitive distance ladders with authored field conditions and milestones." },
+    { "match": { "bundleEquals": "Survivalist" }, "decision": "MERGE", "reason": "Strong survival theme merits re-authoring, but vanilla overlap and repeated restriction patterns require per-quest admission review." },
+    { "match": { "bundleEquals": "Keys Proficiency" }, "decision": "MERGE", "reason": "Audit found repetitive Burglar/Key Master/Locksmith ladders, extreme collection-value requirements and legacy unlock inflation. Preserve and expand worthwhile access/intelligence concepts without a fixed quest-count target." },
+    { "match": { "bundleEquals": "Ammo Proficiency" }, "decision": "REWRITE", "reason": "Core ammo capability progression is desired, but legacy chain/rewards must be rebuilt with Weapon Proficiency as one domain and Economy Admiral pressure checks." },
+    { "match": { "bundleEquals": "Weapon Proficiency" }, "decision": "REWRITE", "reason": "Core weapon-family progression is desired, but six-trader/tier structure must be consolidated with Ammo Proficiency. Current three-stage family chains are a backbone, not a maximum." },
+    { "match": { "bundleEquals": "Deep Pockets" }, "decision": "REWRITE", "reason": "Candidate equipment/project progression; retain distinct authored milestones and consolidate only repetitive unlock steps." },
+    { "match": { "bundleEquals": "Iron Head" }, "decision": "REWRITE", "reason": "Candidate protective-equipment progression; evaluate each concept for distinct field purpose and overlap." },
+    { "match": { "bundleEquals": "Juggernaut" }, "decision": "REWRITE", "reason": "Candidate heavy-protection progression; reward/unlock path requires authored milestones and Economy Admiral review." },
+    { "match": { "bundleEquals": "Meds Proficiency" }, "decision": "REWRITE", "reason": "Candidate medical capability progression; audit against vanilla, Artem/Scorpion overlap and Economy Admiral pressure." },
+    { "match": { "bundleEquals": "Stims Proficiency" }, "decision": "REWRITE", "reason": "Candidate medical capability progression; high-value consumables require controlled samples/unlocks and economy review." },
+    { "match": { "bundleEquals": "Tarkov Mule" }, "decision": "REWRITE", "reason": "Candidate expedition-loadout progression; preserve distinct project/field milestones and avoid a generic backpack unlock ladder." },
+    { "match": { "bundleEquals": "Ultrasound" }, "decision": "REWRITE", "reason": "Candidate reconnaissance/hearing progression; preserve distinct field-use concepts and avoid a generic headset unlock ladder." }
   ]
 }
