@@ -12,6 +12,7 @@ public sealed record AdmiralTraderOfferAdapterEvidence
     public required int BuyRestrictionPerReset { get; init; }
     public required AcquisitionSourceEvidence Source { get; init; }
     public required RenewableSupplyCapacityEvidence Capacity { get; init; }
+    public EffectiveQuestGateEvidence? EffectiveGate { get; init; }
 }
 
 public static class AdmiralTraderItemAdapter
@@ -134,6 +135,36 @@ public static class AdmiralTraderItemAdapter
         }
 
         return results.OrderBy(result => result.OfferId, StringComparer.Ordinal).ToList();
+    }
+
+    public static IReadOnlyList<AdmiralTraderOfferAdapterEvidence> ApplyEffectiveQuestGates(
+        IEnumerable<AdmiralTraderOfferAdapterEvidence> offers,
+        IEnumerable<QuestGateNode> questGraph
+    )
+    {
+        ArgumentNullException.ThrowIfNull(offers);
+        ArgumentNullException.ThrowIfNull(questGraph);
+
+        var graph = questGraph.ToList();
+        return offers
+            .Select(offer =>
+            {
+                var gate = EffectiveQuestGateEvidenceResolver.Resolve(offer.QuestGateId, graph);
+                if (!gate.CompleteQuestGraphEvidence || !gate.EffectiveMinimumLevel.HasValue)
+                {
+                    throw new InvalidOperationException(
+                        $"Economy Admiral Admiral Trader adapter: effective quest gate for offer '{offer.OfferId}' is incomplete."
+                    );
+                }
+
+                return offer with
+                {
+                    EffectiveGate = gate,
+                    Source = offer.Source with { EarliestProgressionLevel = gate.EffectiveMinimumLevel },
+                };
+            })
+            .OrderBy(offer => offer.OfferId, StringComparer.Ordinal)
+            .ToList();
     }
 
     private static string RequireJson(string value, string name)
