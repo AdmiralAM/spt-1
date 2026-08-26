@@ -24,7 +24,8 @@ Before this audit:
 1. server extraction retained accepted source states but discarded `availableAfter`;
 2. the topology payload already contained accepted states, but the client index reduced each edge to source/target quest IDs;
 3. `GetImmediateUnlocksIfCompleted()` assumed every edge meant `source Success unlocks target immediately`;
-4. hypothetical reachability modeled Level + Quest conditions while silently ignoring other populated `AvailableForStart` condition types.
+4. hypothetical reachability modeled Level + Quest conditions while silently ignoring other populated `AvailableForStart` condition types;
+5. future-goal ancestor/path traversal still treated `not Completed` as equivalent to `prerequisite condition remains unsatisfied`.
 
 That was sufficient for graph visualization but too weak for decision support.
 
@@ -32,7 +33,18 @@ That was sufficient for graph visualization but too weak for decision support.
 
 ### Structural path
 
-A `Quest` start condition still creates a structural prerequisite edge. The future-goal closure may use that edge to explain that a quest lies on the selected goal's prerequisite path.
+A `Quest` start condition still creates a structural prerequisite edge. Structural topology remains useful for dependency inspection, but **remaining future work is state-semantic** rather than a static ancestor closure.
+
+`GetIncompletePrerequisitePlan()` and `GetIncompleteAncestors()` traverse an edge only when that edge's accepted source-state set does not accept the source quest's effective current profile state.
+
+Consequences:
+
+- if target `T` accepts source `S` in `Started` and `S` is Active/Started, `S` is not remaining prerequisite work for `T`;
+- if `T` requires `S = Success` while `S` is Active/Started, `S` remains on the plan;
+- once an edge is satisfied, historical ancestors behind that edge are not dragged into the selected future-goal plan merely because those quests are not themselves represented as current work;
+- mixed branches recurse only through currently unsatisfied prerequisite conditions.
+
+This distinction is essential for progression focus: the planner should answer which prerequisite conditions still need player action, not list every structural ancestor that is not labelled `Success`.
 
 ### Immediate unlock
 
@@ -57,18 +69,29 @@ The extractor records whether the `AvailableForStart` set is fully modeled for h
 
 This is deliberate under-claiming. It is safer for the product to say that eligibility is unresolved than to recommend a raid on a false unlock premise.
 
+## Remaining semantic diagnostics
+
+Two cases should remain explicit research questions rather than being guessed into normal actionable work:
+
+1. **Configured delay** — an edge whose source state is accepted but whose `availableAfter` is non-zero may require no further quest work while still delaying target availability. Without a proven remaining-timer source, the planner can safely know that the edge is delayed-by-contract but must not invent an exact countdown.
+2. **Terminal state mismatch** — a completed non-repeatable source whose target condition accepts only an earlier state such as `Started` is not ordinary remaining work. It may represent an unsatisfiable/malformed modded condition and should eventually be surfaced as a diagnostic instead of being presented as something the player can simply progress again.
+
+Until these cases have dedicated evidence models, they must not produce optimistic `immediate`, `reachable`, or focus-preference claims.
+
 ## Product consequence
 
 This audit strengthens the product thesis rather than weakening it: the useful planner is not a generic dependency graph. It is an evidence-bounded decision layer that distinguishes:
 
 - structural prerequisite relation;
+- currently unsatisfied prerequisite condition;
 - current authoritative actionability;
 - modeled hypothetical reachability;
+- configured delayed dependency;
 - proven immediate unlock;
-- unresolved eligibility.
+- unresolved or contradictory eligibility.
 
 Those states must not be collapsed into one `unlocked` boolean.
 
 ## Performance constraints
 
-The richer edge semantics are carried in the existing topology snapshot and cached client index. No new route, polling loop, runtime scan, Harmony patch, or external dependency is required.
+The richer edge semantics are carried in the existing topology snapshot and cached client index. State-semantic traversal remains iterative and bounded by the existing query traversal limit. No new route, polling loop, runtime scan, Harmony patch, or external dependency is required.
