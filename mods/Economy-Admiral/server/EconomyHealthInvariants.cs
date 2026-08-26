@@ -214,9 +214,14 @@ public static class EconomyHealthInvariantEvaluator
             return Result(input, EconomyHealthInvariantKind.AttributionConfidence, EconomyInvariantState.Unknown, "Attribution evidence or required confidence is incomplete.");
         }
 
-        if (input.AttributionState.Value != EconomyAttributionResolutionState.Attributed)
+        if (input.AttributionState.Value == EconomyAttributionResolutionState.Unknown)
         {
-            return Result(input, EconomyHealthInvariantKind.AttributionConfidence, EconomyInvariantState.Fail, $"Attribution state is {input.AttributionState.Value}, not uniquely attributed.");
+            return Result(input, EconomyHealthInvariantKind.AttributionConfidence, EconomyInvariantState.Unknown, "Attribution owner is unknown.");
+        }
+
+        if (input.AttributionState.Value == EconomyAttributionResolutionState.Conflict)
+        {
+            return Result(input, EconomyHealthInvariantKind.AttributionConfidence, EconomyInvariantState.Fail, "Attribution evidence contains a top-confidence owner conflict.");
         }
 
         var failed = input.AttributionConfidence.Value < input.MinimumRequiredAttributionConfidence.Value;
