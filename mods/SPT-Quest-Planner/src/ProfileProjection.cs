@@ -89,11 +89,31 @@ public static class ProfileProjectionExtractor
 
         foreach (KeyValuePair<string, object> entry in SptObjectReader.Entries(raw))
         {
-            if (!int.TryParse(entry.Key, out int rawStatus)) continue;
+            int? rawStatus = ParseRawQuestStatusKey(entry.Key);
+            if (!rawStatus.HasValue) continue;
             long? timestamp = SptObjectReader.Long(entry.Value);
-            if (timestamp.HasValue) timers[rawStatus] = timestamp.Value;
+            if (timestamp.HasValue) timers[rawStatus.Value] = timestamp.Value;
         }
         return timers;
+    }
+
+    private static int? ParseRawQuestStatusKey(string key)
+    {
+        if (int.TryParse(key, out int numeric) && numeric >= 0 && numeric <= 9) return numeric;
+        return key?.Trim().ToLowerInvariant() switch
+        {
+            "locked" => 0,
+            "availableforstart" => 1,
+            "started" => 2,
+            "availableforfinish" => 3,
+            "success" => 4,
+            "fail" => 5,
+            "failrestartable" => 6,
+            "markedasfailed" => 7,
+            "expired" => 8,
+            "availableafter" => 9,
+            _ => null
+        };
     }
 
     private static Dictionary<string, PlayerTaskConditionCounter> ExtractTaskConditionCounters(object profile, List<string> warnings)
