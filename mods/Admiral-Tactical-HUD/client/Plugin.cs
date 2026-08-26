@@ -11,7 +11,7 @@ using UnityEngine.SceneManagement;
 
 namespace SPTPopCounter
 {
-    [BepInPlugin("com.admiralam.spt.tacticalhud", "SPT Tactical HUD", "1.13.3")]
+    [BepInPlugin("com.admiralam.tacticalhud", "Admiral Tactical HUD", "1.13.3")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         ConfigEntry<bool> workAlways, editMode, popEnabled, statusEnabled, statusOutside, killEnabled, showVersion, killDiagnostics;
@@ -130,7 +130,7 @@ namespace SPTPopCounter
             killMax = Config.Bind("Kill Feed", "Max Entries", 3,
                 new ConfigDescription("Lines", new AcceptableValueRange<int>(1, 6)));
 
-            Logger.LogInfo("SPT Tactical HUD v1.13.3 loaded (optimized runtime, HUD state " + mode + ")");
+            Logger.LogInfo("Admiral Tactical HUD v1.13.3 loaded (optimized runtime, HUD state " + mode + ")");
         }
 
         ConfigEntry<string> Layout(string s) => Config.Bind(s, "Layout", "Horizontal",
