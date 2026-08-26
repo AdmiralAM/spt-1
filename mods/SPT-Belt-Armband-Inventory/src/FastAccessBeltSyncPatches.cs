@@ -201,15 +201,23 @@ namespace SPTBeltArmbandInventory
                 if (harmonyType == null || harmonyMethodType == null || viewType == null || equipmentType == null)
                     return Fail("SPT 4.1 FastAccessGrenadeItemView/InventoryEquipment or Harmony was not found; live belt grenade synchronization is disabled.");
 
-                MethodInfo added = viewType.GetMethod("OnItemAdded", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                MethodInfo removed = viewType.GetMethod("OnItemRemoved", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                MethodInfo added = FindHandler(viewType, "IAddHandler", "OnItemAdded");
+                MethodInfo removed = FindHandler(viewType, "IRemoveHandler", "OnItemRemoved");
                 MethodInfo show = FindShowMethod(viewType);
-                FieldInfo controller = FindField(viewType, "InventoryController");
-                FieldInfo context = FindField(viewType, "ItemUiContext");
-                PropertyInfo topPriority = equipmentType.GetProperty("TopPriorityGrenade", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                ParameterInfo[] showParameters = show == null ? Array.Empty<ParameterInfo>() : show.GetParameters();
+                FieldInfo controller = showParameters.Length == 2 ? FindField(viewType, showParameters[0].ParameterType, "InventoryController") : null;
+                FieldInfo context = showParameters.Length == 2 ? FindField(viewType, showParameters[1].ParameterType, "ItemUiContext") : null;
+                PropertyInfo topPriority = FindProperty(equipmentType, "TopPriorityGrenade");
                 MethodInfo topLevelItems = FindTopLevelItemsMethod(viewType.Assembly);
                 if (added == null || removed == null || show == null || controller == null || context == null || topPriority == null || !topPriority.CanRead || !topPriority.CanWrite || topLevelItems == null)
-                    return Fail("SPT 4.1 grenade fast-access event/selection shape changed; live belt grenade synchronization is disabled.");
+                    return Fail("SPT 4.1 grenade fast-access boundary is incomplete; live belt grenade synchronization is disabled."
+                        + " added=" + Describe(added)
+                        + ", removed=" + Describe(removed)
+                        + ", show=" + Describe(show)
+                        + ", controller=" + Describe(controller)
+                        + ", context=" + Describe(context)
+                        + ", topPriority=" + Describe(topPriority)
+                        + ", topLevelItems=" + Describe(topLevelItems) + ".");
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
@@ -265,6 +273,34 @@ namespace SPTBeltArmbandInventory
             return null;
         }
 
+        internal static MethodInfo FindHandler(Type viewType, string interfaceName, string methodName)
+        {
+            if (viewType == null || string.IsNullOrEmpty(interfaceName) || string.IsNullOrEmpty(methodName)) return null;
+
+            Type[] interfaces;
+            try { interfaces = viewType.GetInterfaces(); }
+            catch { interfaces = Array.Empty<Type>(); }
+            for (int i = 0; i < interfaces.Length; i++)
+            {
+                Type contract = interfaces[i];
+                if (!string.Equals(contract.Name, interfaceName, StringComparison.Ordinal)
+                    && !EndsWith(contract.FullName, "." + interfaceName)) continue;
+
+                InterfaceMapping map;
+                try { map = viewType.GetInterfaceMap(contract); }
+                catch { continue; }
+                for (int p = 0; p < map.InterfaceMethods.Length; p++)
+                    if (EndsWith(map.InterfaceMethods[p].Name, methodName)) return map.TargetMethods[p];
+            }
+
+            MethodInfo[] methods;
+            try { methods = viewType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic); }
+            catch { return null; }
+            for (int i = 0; i < methods.Length; i++)
+                if (EndsWith(methods[i].Name, methodName) && methods[i].GetParameters().Length > 0) return methods[i];
+            return null;
+        }
+
         static MethodInfo FindTopLevelItemsMethod(Assembly assembly)
         {
             Type[] types = ReflectionTools.GetTypes(assembly);
@@ -279,7 +315,7 @@ namespace SPTBeltArmbandInventory
                 for (int p = 0; p < methods.Length; p++)
                 {
                     MethodInfo method = methods[p];
-                    if (!string.Equals(method.Name, "GetTopLevelItemsFromCollection", StringComparison.Ordinal)) continue;
+                    if (!EndsWith(method.Name, "GetTopLevelItemsFromCollection")) continue;
                     ParameterInfo[] parameters = method.GetParameters();
                     if (parameters.Length != 1 || !typeof(IEnumerable).IsAssignableFrom(method.ReturnType)) continue;
                     return method;
@@ -288,14 +324,46 @@ namespace SPTBeltArmbandInventory
             return null;
         }
 
-        static FieldInfo FindField(Type type, string name)
+        internal static FieldInfo FindField(Type type, Type valueType, string preferredName)
+        {
+            FieldInfo match = null;
+            int matches = 0;
+            for (Type current = type; current != null; current = current.BaseType)
+            {
+                FieldInfo[] fields;
+                try { fields = current.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly); }
+                catch { continue; }
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    FieldInfo field = fields[i];
+                    if (valueType == null || !valueType.IsAssignableFrom(field.FieldType)) continue;
+                    if (string.Equals(field.Name, preferredName, StringComparison.Ordinal)
+                        || field.Name.IndexOf(preferredName, StringComparison.Ordinal) >= 0) return field;
+                    match = field;
+                    matches++;
+                }
+            }
+            return matches == 1 ? match : null;
+        }
+
+        static PropertyInfo FindProperty(Type type, string name)
         {
             for (Type current = type; current != null; current = current.BaseType)
             {
-                FieldInfo field = current.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                if (field != null) return field;
+                PropertyInfo property = current.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                if (property != null) return property;
             }
             return null;
+        }
+
+        static bool EndsWith(string value, string suffix)
+        {
+            return value != null && value.EndsWith(suffix, StringComparison.Ordinal);
+        }
+
+        static string Describe(MemberInfo member)
+        {
+            return member == null ? "<missing>" : member.DeclaringType?.FullName + "." + member.Name;
         }
 
         static MethodInfo Method(string name)

@@ -151,6 +151,10 @@ internal static class Program
         Assert(!PickupSlotPolicy.ShouldTry(true, false, false, true), "non-container item never uses belt pickup fallback");
         Assert(!PickupSlotPolicy.ShouldTry(true, true, true, true), "deleted ArmBand slot is never revived by pickup fallback");
         Assert(!PickupSlotPolicy.ShouldTry(true, true, false, false), "incompatible container is never forced into ArmBand");
+        System.Reflection.MethodInfo pickupPostfix = PickupSlotPatches.BuildPostfix(typeof(PickupAddressProbe), typeof(PickupEquipmentProbe), typeof(PickupItemProbe));
+        System.Reflection.ParameterInfo[] pickupParameters = pickupPostfix.GetParameters();
+        Assert(pickupParameters.Length == 3 && pickupParameters[0].Name == "__result", "pickup postfix binds the result by Harmony contract");
+        Assert(pickupParameters[1].Name == "__0" && pickupParameters[2].Name == "__1", "pickup postfix binds obfuscated EFT arguments positionally");
 
         Assert(PaymentSlotPolicy.ShouldIncludeBelt(true, true), "container belt participates in in-raid trader-service payment slots");
         Assert(!PaymentSlotPolicy.ShouldIncludeBelt(true, false), "plain armband never becomes a payment slot");
@@ -203,4 +207,7 @@ internal static class Program
     sealed class TemplateGrids { public object[] Grids { get; set; } }
     sealed class MutablePropertyProbe { public string Value { get; set; } }
     sealed class MutableFieldProbe { public int Value; }
+    sealed class PickupAddressProbe { }
+    sealed class PickupEquipmentProbe { }
+    sealed class PickupItemProbe { }
 }

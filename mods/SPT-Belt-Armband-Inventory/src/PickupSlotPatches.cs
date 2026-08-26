@@ -166,12 +166,14 @@ namespace SPTBeltArmbandInventory
             return null;
         }
 
-        static MethodInfo BuildPostfix(Type resultType, Type equipmentType, Type itemType)
+        internal static MethodInfo BuildPostfix(Type resultType, Type equipmentType, Type itemType)
         {
             DynamicMethod method = new DynamicMethod("BeltPickupPostfix", typeof(void), new[] { resultType.MakeByRefType(), equipmentType, itemType }, typeof(PickupSlotPatches), true);
             method.DefineParameter(1, ParameterAttributes.None, "__result");
-            method.DefineParameter(2, ParameterAttributes.None, "equipment");
-            method.DefineParameter(3, ParameterAttributes.None, "item");
+            // EFT argument names are obfuscated. Harmony's positional aliases
+            // remain stable even when those metadata names change.
+            method.DefineParameter(2, ParameterAttributes.None, "__0");
+            method.DefineParameter(3, ParameterAttributes.None, "__1");
             ILGenerator il = method.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_0);
