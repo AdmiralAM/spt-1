@@ -71,6 +71,9 @@ namespace SPTQuestPlanner.Tests
             Assert.Equal(PlannerCapabilityDecisionValueKind.DecisionChanged, snapshot.DecisionValue);
             Assert.True(snapshot.CountsTowardKeepCandidate);
             Assert.DoesNotContain("reserve", snapshot.AlternativeLocationIds);
+            Assert.True(snapshot.HasFreshnessProvenance);
+            Assert.Equal(cache.Revision, snapshot.SourceRevision);
+            Assert.Equal(1000, snapshot.GeneratedAtUnixSeconds);
         }
 
         [Fact]
