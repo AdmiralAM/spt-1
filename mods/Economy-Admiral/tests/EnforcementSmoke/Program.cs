@@ -82,4 +82,19 @@ Require(!singleItem.Eligible && singleItem.Reason == "SingleItemCannotBeReducedW
 var fractionalStack = ItemRewardStackPlanner.Plan(currentCount: 2.5, unitHandbookPrice: 25000, budgetCap: 10000);
 Require(!fractionalStack.Eligible && fractionalStack.Reason == "NonIntegralStackCount", "non-integral stack counts must be blocked");
 
+var itemStackCount = 10d;
+var itemStackTx = NumericRewardTransactionCore.Execute([
+    new NumericRewardTransactionRequest
+    {
+        QuestId = "single-stack-item-outlier",
+        Dimension = "ItemRewardStackCount",
+        ExpectedBefore = 10,
+        Target = 4,
+        Slots = [new NumericRewardSlot(() => itemStackCount, value => itemStackCount = value)],
+    },
+]);
+Require(itemStackTx.Committed && !itemStackTx.RolledBack, "bounded single-stack item transaction must commit");
+Require(itemStackCount == 4, "bounded item stack transaction must reach exact integer count");
+Require(!NumericRewardTransactionCore.NeedsMutation(itemStackCount, 4, false), "bounded item stack second pass must be idempotent");
+
 Console.WriteLine("Economy Admiral Enforce transaction + bounded item stack planner smoke PASS");
