@@ -88,7 +88,7 @@ jobs:
               'RewardType.Experience','RewardType.TraderStanding','PolicyEligibleModAdded','PolicyEligibleModifiedPristine',
               'ProtectedPristine','ProtectedUnchangedRewardDimensions','BlockedUnknownProvenance',
               'changedDimensions.Contains("Experience"','changedDimensions.Contains("TraderStanding"','changedDimensions.Contains("SuccessItemHandbookValue"',
-              'ItemRewardStackPlanner.Plan','item.Upd.StackObjectsCount = value','ItemRewardStackCount',
+              'ItemRewardStackPlanner.Plan','item.Upd.StackObjectsCount = value','reward.Value = value','ReadSynchronizedItemQuantity','Item Reward.Value/StackObjectsCount mismatch','ItemRewardStackCount',
               'ManualExactQuestRewardTargetV1','QuestRewardOverrides','PlannedMutationCount','TransactionCommitted','TransactionRolledBack',
               'Before','Current','Target','After',
           ]:
@@ -104,7 +104,7 @@ jobs:
           for text in ['BudgetBelowOneItemFloor','AlreadyWithinBudget','NonIntegralStackCount','SingleItemCannotBeReducedWithoutStructuralRemoval']:
               assert text in planner, text
           transaction_smoke = (root / 'tests/EnforcementSmoke/Program.cs').read_text(encoding='utf-8')
-          for text in ['successful transaction must commit','second automatic pass must be idempotent','synthetic setter failure','must roll back whole batch','earlier standing mutation must be restored','single known-price stack above budget must be eligible','planner must block cases requiring item removal/template replacement']:
+          for text in ['successful transaction must commit','second automatic pass must be idempotent','synthetic setter failure','must roll back whole batch','earlier standing mutation must be restored','single known-price stack above budget must be eligible','planner must block cases requiring item removal/template replacement','update stack count and Reward.Value together','restore both item quantity representations']:
               assert text in transaction_smoke, text
 
           evidence = (root / 'server/RuntimeEvidenceService.cs').read_text(encoding='utf-8')
@@ -115,7 +115,7 @@ jobs:
           for text in ['validator requires mode=Audit','DatabaseUnchangedAcrossPipeline','PlannedMutationCount','PristineUnchanged candidate is not protected']:
               assert text in audit_validator, text
           enforce_validator = (root / 'tools/Validate-Enforce.ps1').read_text(encoding='utf-8')
-          for text in ['validator requires mode=Enforce','Alpha requires at least one applied mutation','After != Target','PristineUnchanged candidate was mutated','fingerprint changed']:
+          for text in ['validator requires mode=Enforce','Alpha requires at least one applied mutation','After != Target','PristineUnchanged candidate was mutated','fingerprint changed','ItemRewardStackCount','PresetSingleStackItemBudgetCapV1']:
               assert text in enforce_validator, text
 
           config_source = (root / 'server/EconomyConfig.cs').read_text(encoding='utf-8')
