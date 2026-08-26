@@ -33,8 +33,8 @@ jobs:
       - name: Resolve module versions
         shell: pwsh
         run: |
-          [xml]$hud = Get-Content 'mods/SPT-Tactical-HUD/client/SPT-Tactical-HUD.csproj'
-          [xml]$hudServer = Get-Content 'mods/SPT-Tactical-HUD/server/SPT-TacticalHUD-Server.csproj'
+          [xml]$hud = Get-Content 'mods/Admiral-Tactical-HUD/client/Admiral-Tactical-HUD.csproj'
+          [xml]$hudServer = Get-Content 'mods/Admiral-Tactical-HUD/server/Admiral-Tactical-HUD-Server.csproj'
           [xml]$ii = Get-Content 'mods/SPT-Item-Intelligence/src/SPT-Item-Intelligence.csproj'
           [xml]$iiServer = Get-Content 'mods/SPT-Item-Intelligence/server/SPT-Item-Intelligence.Server.csproj'
           [xml]$pause = Get-Content 'mods/SPT-Pause/src/SPT-Pause.csproj'
@@ -77,16 +77,16 @@ jobs:
           Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
           if (-not (Test-Path deps/BepInEx/core/BepInEx.dll)) { throw 'BepInEx.dll missing after extraction' }
 
-      - name: Validate Tactical HUD assets and hot paths
+      - name: Validate Admiral Tactical HUD assets and hot paths
         shell: pwsh
         run: |
           python -m pip install --disable-pip-version-check pillow
-          python mods/SPT-Tactical-HUD/tools/generate_hud_sprites.py
-          python mods/SPT-Tactical-HUD/tools/normalize_hud_sprites.py
-          python mods/SPT-Tactical-HUD/tools/check_hud_assets.py
-          python mods/SPT-Tactical-HUD/tools/check_hud_optics.py
-          python mods/SPT-Tactical-HUD/tools/check_hud_hotpaths.py
-          python mods/SPT-Tactical-HUD/tools/generate_hud_preview.py
+          python mods/Admiral-Tactical-HUD/tools/generate_hud_sprites.py
+          python mods/Admiral-Tactical-HUD/tools/normalize_hud_sprites.py
+          python mods/Admiral-Tactical-HUD/tools/check_hud_assets.py
+          python mods/Admiral-Tactical-HUD/tools/check_hud_optics.py
+          python mods/Admiral-Tactical-HUD/tools/check_hud_hotpaths.py
+          python mods/Admiral-Tactical-HUD/tools/generate_hud_preview.py
 
       - name: Run Item Intelligence regression tests
         shell: pwsh
@@ -105,8 +105,8 @@ jobs:
       - name: Build published and stable-source components
         shell: pwsh
         run: |
-          dotnet build mods/SPT-Tactical-HUD/client/SPT-Tactical-HUD.csproj -c Release --nologo
-          dotnet build mods/SPT-Tactical-HUD/server/SPT-TacticalHUD-Server.csproj -c Release --nologo
+          dotnet build mods/Admiral-Tactical-HUD/client/Admiral-Tactical-HUD.csproj -c Release --nologo
+          dotnet build mods/Admiral-Tactical-HUD/server/Admiral-Tactical-HUD-Server.csproj -c Release --nologo
           dotnet build mods/SPT-Item-Intelligence/src/SPT-Item-Intelligence.csproj -c Release --nologo
           dotnet build mods/SPT-Item-Intelligence/server/SPT-Item-Intelligence.Server.csproj -c Release --nologo
           dotnet build mods/SPT-Pause/src/SPT-Pause.csproj -c Release --nologo
@@ -133,13 +133,13 @@ jobs:
             $lines -join "`n" | Set-Content (Join-Path $root 'README.md') -Encoding utf8
           }
 
-          $hudRoot = Join-Path $out 'SPT-Tactical-HUD'
-          $hudClient = Join-Path $hudRoot 'BepInEx/plugins/SPT Tactical HUD'
-          $hudServer = Join-Path $hudRoot 'SPT_Runtime/user/mods/SPT Tactical HUD Server'
-          Copy-RequiredFile "mods/SPT-Tactical-HUD/client/bin/Release/netstandard2.1/$env:HUD_ASSEMBLY.dll" (Join-Path $hudClient 'SPT Tactical HUD.dll')
-          Copy-RequiredFile 'mods/SPT-Tactical-HUD/client/assets/hud-sprites.png' (Join-Path $hudClient 'assets/hud-sprites.png')
-          Copy-RequiredFile "mods/SPT-Tactical-HUD/server/bin/Release/net10.0/$env:HUD_SERVER_ASSEMBLY.dll" (Join-Path $hudServer 'SPT Tactical HUD Server.dll')
-          Write-PackageMetadata $hudRoot ([ordered]@{ name='SPT Tactical HUD'; channel='runtime'; client_version=$env:HUD_VERSION; server_version=$env:HUD_SERVER_VERSION; spt_version='4.1.x'; source_commit=$sourceSha; client_included=$true; server_included=$true }) @('# SPT Tactical HUD runtime','',"Ready-to-install Tactical HUD $env:HUD_VERSION for SPT 4.1.x.",'','Copy this package into the SPT root. It contains the Tactical HUD client and server companion only.',"Verified source commit: $sourceSha")
+          $hudRoot = Join-Path $out 'Admiral-Tactical-HUD'
+          $hudClient = Join-Path $hudRoot 'BepInEx/plugins/Admiral Tactical HUD'
+          $hudServer = Join-Path $hudRoot 'user/mods/Admiral Tactical HUD'
+          Copy-RequiredFile "mods/Admiral-Tactical-HUD/client/bin/Release/netstandard2.1/$env:HUD_ASSEMBLY.dll" (Join-Path $hudClient 'Admiral Tactical HUD.dll')
+          Copy-RequiredFile 'mods/Admiral-Tactical-HUD/client/assets/hud-sprites.png' (Join-Path $hudClient 'assets/hud-sprites.png')
+          Copy-RequiredFile "mods/Admiral-Tactical-HUD/server/bin/Release/net10.0/$env:HUD_SERVER_ASSEMBLY.dll" (Join-Path $hudServer 'Admiral Tactical HUD Server.dll')
+          Write-PackageMetadata $hudRoot ([ordered]@{ name='Admiral Tactical HUD'; channel='runtime'; client_version=$env:HUD_VERSION; server_version=$env:HUD_SERVER_VERSION; spt_version='4.1.x'; source_commit=$sourceSha; client_included=$true; server_included=$true }) @('# Admiral Tactical HUD runtime','',"Ready-to-install Admiral Tactical HUD $env:HUD_VERSION for SPT 4.1.x.",'','Copy this package into the SPT root. It contains the client and server companion only.',"Verified source commit: $sourceSha")
 
           $iiRoot = Join-Path $out 'SPT-Item-Intelligence'
           $iiClient = Join-Path $iiRoot 'BepInEx/plugins/SPT Item Intelligence'
@@ -164,9 +164,9 @@ jobs:
         shell: pwsh
         run: |
           $required = @(
-            'build-output/SPT-Tactical-HUD/BepInEx/plugins/SPT Tactical HUD/SPT Tactical HUD.dll',
-            'build-output/SPT-Tactical-HUD/BepInEx/plugins/SPT Tactical HUD/assets/hud-sprites.png',
-            'build-output/SPT-Tactical-HUD/SPT_Runtime/user/mods/SPT Tactical HUD Server/SPT Tactical HUD Server.dll',
+            'build-output/Admiral-Tactical-HUD/BepInEx/plugins/Admiral Tactical HUD/Admiral Tactical HUD.dll',
+            'build-output/Admiral-Tactical-HUD/BepInEx/plugins/Admiral Tactical HUD/assets/hud-sprites.png',
+            'build-output/Admiral-Tactical-HUD/user/mods/Admiral Tactical HUD/Admiral Tactical HUD Server.dll',
             'build-output/SPT-Item-Intelligence/BepInEx/plugins/SPT Item Intelligence/SPT Item Intelligence.dll',
             'build-output/SPT-Item-Intelligence/SPT_Runtime/user/mods/SPT Item Intelligence Server/SPT Item Intelligence Server.dll',
             'build-output/SPT-Pause/BepInEx/plugins/SPT Pause/SPT Pause.dll',
@@ -174,18 +174,18 @@ jobs:
             'build-output/SPT-Belt-Armband-Inventory/SPT_Runtime/user/mods/SPT Belt Armband Inventory Server/SPT Belt Armband Inventory Server.dll'
           )
           foreach ($path in $required) { if (-not (Test-Path $path -PathType Leaf)) { throw "Runtime package contract missing: $path" } }
-          foreach ($root in @('SPT-Tactical-HUD','SPT-Item-Intelligence','SPT-Pause','SPT-Belt-Armband-Inventory')) {
+          foreach ($root in @('Admiral-Tactical-HUD','SPT-Item-Intelligence','SPT-Pause','SPT-Belt-Armband-Inventory')) {
             foreach ($metadata in @('README.md','runtime-manifest.json')) {
               $path = "build-output/$root/$metadata"
               if (-not (Test-Path $path -PathType Leaf)) { throw "Package metadata missing: $path" }
             }
           }
 
-      - name: Upload Tactical HUD package
+      - name: Upload Admiral Tactical HUD package
         uses: actions/upload-artifact@v4
         with:
-          name: SPT-Tactical-HUD-v${{ env.HUD_VERSION }}
-          path: build-output/SPT-Tactical-HUD/**
+          name: Admiral-Tactical-HUD-v${{ env.HUD_VERSION }}
+          path: build-output/Admiral-Tactical-HUD/**
           if-no-files-found: error
 
       - name: Upload Item Intelligence package
@@ -235,7 +235,7 @@ jobs:
             }
           }
 
-          $hudCommit = New-RuntimeCommit 'hud' (Join-Path $PWD 'build-output/SPT-Tactical-HUD') 'Publish Tactical HUD runtime package'
+          $hudCommit = New-RuntimeCommit 'hud' (Join-Path $PWD 'build-output/Admiral-Tactical-HUD') 'Publish Admiral Tactical HUD runtime package'
           $iiCommit = New-RuntimeCommit 'ii' (Join-Path $PWD 'build-output/SPT-Item-Intelligence') 'Publish Item Intelligence runtime package'
           $pauseCommit = New-RuntimeCommit 'pause' (Join-Path $PWD 'build-output/SPT-Pause') 'Publish Pause runtime package'
           $beltCommit = New-RuntimeCommit 'belt' (Join-Path $PWD 'build-output/SPT-Belt-Armband-Inventory') 'Publish Belt Armband Inventory runtime package'
