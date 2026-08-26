@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "stockClass": "Baseline",
+  "status": "GameplayAlphaSeed",
+  "providerPins": {
+    "vanillaSpt413": {
+      "repository": "sp-tarkov/server-csharp",
+      "commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93"
+    },
+    "scorpion": {
+      "repository": "acidphantasm/scorpion-csharp",
+      "commit": "7d1bed766f859f227680377acc1e20c8f97b09bf"
+    },
+    "artem": {
+      "repository": "WelcomeToThursday/WTT-Artem",
+      "commit": "ee5b7c13a1980ff961ed0b2c1d8764574377b2bf"
+    }
+  },
+  "offers": [
+    {
+      "offerId": "ad2000000000000000000001",
+      "tpl": "5f4f9eb969cdc30ff33f09db",
+      "role": "navigation",
+      "overlapPolicy": "Documented",
+      "uniquenessRationale": "Navigation equipment belongs to Admiral's expedition-preparation identity. Any vanilla overlap is acceptable only as bounded first-contact mission preparation; Scorpion/Artem direct duplication is not intended.",
+      "priceRub": 42000,
+      "stockPerReset": 4,
+      "buyRestriction": 1,
+      "loyaltyLevel": 1,
+      "questGate": null
+    },
+    {
+      "offerId": "ad2000000000000000000002",
+      "tpl": "5c12688486f77426843c7d32",
+      "role": "expedition-support",
+      "overlapPolicy": "Documented",
+      "uniquenessRationale": "Paracord is treated as bounded expedition support rather than generic barter stock. Any vanilla overlap is intentional; Scorpion/Artem direct duplication is not intended.",
+      "priceRub": 32000,
+      "stockPerReset": 6,
+      "buyRestriction": 2,
+      "loyaltyLevel": 1,
+      "questGate": null
+    },
+    {
+      "offerId": "ad2000000000000000000003",
+      "tpl": "61605d88ffa6e502ac5e7eeb",
+      "role": "reconnaissance",
+      "overlapPolicy": "Documented",
+      "uniquenessRationale": "A handheld rangefinder is characteristic reconnaissance equipment for Admiral. Any vanilla overlap is accepted as a bounded specialist alternative; Scorpion/Artem direct duplication is not intended.",
+      "priceRub": 68000,
+      "stockPerReset": 3,
+      "buyRestriction": 1,
+      "loyaltyLevel": 1,
+      "questGate": null
+    },
+    {
+      "offerId": "ad2000000000000000000004",
+      "tpl": "5991b51486f77447b112d44f",
+      "role": "field-marking",
+      "overlapPolicy": "Documented",
+      "uniquenessRationale": "Field markers are mission-preparation consumables and fit Admiral's contract/logistics role. Vanilla duplication is expected and bounded; Scorpion/Artem trader duplication is not intended.",
+      "priceRub": 16500,
+      "stockPerReset": 12,
+      "buyRestriction": 4,
+      "loyaltyLevel": 1,
+      "questGate": null
+    }
+  ]
+}
