@@ -11,7 +11,7 @@ Official curated successor workstream for the legacy Andrudis/QuestManiac ecosys
 
 ## Current state
 
-The inventory / quest-graph / campaign-manifest / migration / reward-benchmark foundation is established. The exact SPT 4.1.3 test-candidate gate is isolated in Draft PR #151 under Issue #146.
+The inventory / quest-graph / campaign-manifest / migration / reward-benchmark foundation is established. The exact SPT 4.1.3 test-candidate gate is isolated in Draft PR #151 under Issue #146; post-candidate concept and static-policy work continues separately so the exact physical candidate remains immutable.
 
 The current authored runtime set contains **31 quests**:
 
@@ -19,6 +19,8 @@ The current authored runtime set contains **31 quests**:
 - 21 **Arsenal Protocol** quests across seven independent weapon families, with Qualification → Fieldwork → Munitions progression;
 - six controlled ammunition capability rewards/unlocks;
 - **Special Weapons** now has one explicit green RSP-30 sample reward and no permanent assort unlock.
+
+Admiral's product role is **capability broker**, not general-purpose shop: prove a capability, receive a bounded privilege, then use that privilege in the wider SPT progression. `docs/gameplay-doctrine.md` defines that design contract and `manifests/gameplay-policy.json` encodes its currently enforceable campaign/logistics invariants for automated regression tests.
 
 The server runtime validates the mixed 10 + 21 quest registry, trader identity, quest IDs, objective shapes and all referenced runtime item TPLs before publication. Missing authored locale entries fail over to deterministic QuestName-based runtime text so incomplete localization cannot expose raw locale keys; complete authored EN/RU text remains a polish target before final publication.
 
@@ -32,7 +34,7 @@ Work order:
 
 `source inventory -> quest graph -> manifest -> migration -> trader consolidation -> curated content -> reward normalization -> tests -> runtime`
 
-Tracked by repository Issue #115; the active runtime gate is Issue #146 / Draft PR #151.
+Tracked by repository Issue #115; the active runtime gate is Issue #146 / Draft PR #151. Post-candidate doctrine/policy work is isolated from that exact-head gate.
 
 ## Design constraints
 
@@ -46,9 +48,12 @@ Tracked by repository Issue #115; the active runtime gate is Issue #146 / Draft 
 - Repetitive kill/headshot/FIR/handover ladders are not preserved wholesale.
 - Weapon and ammo progression form one progression domain because the pinned legacy graph contains intentional cross-bundle prerequisite edges between them.
 - Assort, quest-assort, reward, and unlock data remain close to native SPT shapes so downstream economy auditing does not require an Admiral-Trader-specific opaque format.
+- Permanent Admiral offers must remain finite, quest-gated, and family-specific; Special Weapons remains sample-only unless a later design decision explicitly changes the doctrine and its machine policy together.
 
 ## Baselines and findings
 
+- [`docs/gameplay-doctrine.md`](docs/gameplay-doctrine.md) defines Admiral's player-facing purpose, quest admission test, anti-goals, balance invariants, and preferred expansion directions.
+- [`manifests/gameplay-policy.json`](manifests/gameplay-policy.json) is the machine-readable subset of that doctrine used to prevent campaign/logistics drift.
 - [`docs/source-baseline.md`](docs/source-baseline.md) defines which external references are authoritative for which boundary.
 - [`docs/inventory-findings.md`](docs/inventory-findings.md) records the full-corpus gate results.
 - [`docs/runtime-boundaries.md`](docs/runtime-boundaries.md) records proven and intentionally unproven SPT runtime boundaries.
@@ -82,7 +87,8 @@ Module-specific CI additionally:
 - builds the official vanilla reward benchmark from a pinned SPT source revision;
 - validates Access Protocol and Arsenal Protocol compiler output;
 - validates frozen weapon-family pools and controlled ammo capability selections;
-- builds the .NET 10 server runtime against the nearest published SPTarkov package line;
+- enforces the machine-readable gameplay policy against authored specs and packaged assort/questassort data;
+- builds the .NET 10 server runtime against the published SPTushonka 4.1.3 package line;
 - validates the packaged 31-quest mixed runtime layout;
 - validates the exact-runtime candidate/provenance source contract;
 - keeps generated reports only as transient Actions artifacts.
