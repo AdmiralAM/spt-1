@@ -39,6 +39,35 @@ namespace SPTQuestPlanner.Client
             return result;
         }
 
+        public IReadOnlyList<PlannerTopologyPrerequisite> GetTerminalPrerequisiteConflicts(string questId)
+        {
+            PlannerTopologyQuest quest = topology.GetQuest(questId);
+            if (quest == null) return Array.Empty<PlannerTopologyPrerequisite>();
+
+            List<PlannerTopologyPrerequisite> conflicts = new List<PlannerTopologyPrerequisite>();
+            for (int i = 0; i < quest.PrerequisiteEdges.Count; i++)
+            {
+                PlannerTopologyPrerequisite prerequisite = quest.PrerequisiteEdges[i];
+                if (IsPrerequisiteSatisfied(prerequisite)) continue;
+                if (prerequisite.AcceptsProfileState(SuccessProfileState)) continue;
+
+                PlannerTopologyQuest sourceQuest = topology.GetQuest(prerequisite.SourceQuestId);
+                if (sourceQuest == null || sourceQuest.Repeatable) continue;
+                PlannerQuestClientState sourceState = state.GetQuest(prerequisite.SourceQuestId);
+                if (sourceState == null || sourceState.Disposition != CompletedDisposition) continue;
+
+                conflicts.Add(prerequisite);
+            }
+
+            conflicts.Sort((a, b) =>
+            {
+                int source = string.Compare(a.SourceQuestId, b.SourceQuestId, StringComparison.Ordinal);
+                if (source != 0) return source;
+                return string.Compare(a.TargetQuestId, b.TargetQuestId, StringComparison.Ordinal);
+            });
+            return conflicts.ToArray();
+        }
+
         public IReadOnlyList<string> GetImmediateUnlocksIfCompleted(string questId)
         {
             PlannerTopologyQuest completedQuest = topology.GetQuest(questId);
