@@ -18,6 +18,20 @@ namespace SPTQuestPlanner.Client
             if (intent == null || !intent.HasFocusQuest)
                 return PlannerRaidDecisionPolicy.Decide(left, right);
 
+            if (intent.HasTerminalFocusConflict)
+            {
+                List<string> conflicts = new List<string>();
+                for (int i = 0; i < intent.FocusTerminalConflictEdges.Count; i++)
+                {
+                    PlannerTopologyPrerequisite edge = intent.FocusTerminalConflictEdges[i];
+                    conflicts.Add("FOCUS CONFLICT: " + edge.SourceQuestId + " -> " + edge.TargetQuestId + " does not accept the source's terminal Success state.");
+                }
+                return new PlannerRaidDecision(
+                    PlannerRaidDecisionOutcome.Abstain,
+                    "Selected progression focus contains a terminal prerequisite-state conflict; do not recommend unrelated raid work as if it advanced the goal.",
+                    conflicts.ToArray());
+            }
+
             PlannerRaidFocusEvidence leftEvidence = PlannerRaidFocusEvidenceBuilder.Build(left, intent);
             PlannerRaidFocusEvidence rightEvidence = PlannerRaidFocusEvidenceBuilder.Build(right, intent);
 
