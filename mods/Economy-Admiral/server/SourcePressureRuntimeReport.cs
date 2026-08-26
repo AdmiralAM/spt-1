@@ -17,6 +17,26 @@ public static class SourcePressureRuntimeReportBuilder
     public static SourcePressureRuntimeReport Build(AdmiralTraderRuntimeAdapterReport admiralTrader)
     {
         ArgumentNullException.ThrowIfNull(admiralTrader);
+        ArgumentNullException.ThrowIfNull(admiralTrader.Offers);
+
+        if (string.IsNullOrWhiteSpace(admiralTrader.ModGuid))
+        {
+            throw new InvalidOperationException("Economy Admiral source pressure: adapter modGuid must not be empty.");
+        }
+        if (!admiralTrader.Installed && (admiralTrader.Offers.Count != 0 || admiralTrader.OfferCount != 0 || admiralTrader.BoundedRenewableOfferCount != 0))
+        {
+            throw new InvalidOperationException("Economy Admiral source pressure: a not-installed adapter cannot carry offer evidence.");
+        }
+        if (admiralTrader.Installed && admiralTrader.OfferCount != admiralTrader.Offers.Count)
+        {
+            throw new InvalidOperationException("Economy Admiral source pressure: adapter OfferCount does not match supplied offers.");
+        }
+
+        var boundedOfferCount = admiralTrader.Offers.Count(offer => offer.Capacity.SupplyBound == RenewableSupplyBound.Bounded);
+        if (admiralTrader.Installed && admiralTrader.BoundedRenewableOfferCount != boundedOfferCount)
+        {
+            throw new InvalidOperationException("Economy Admiral source pressure: adapter bounded-offer count does not match supplied capacity evidence.");
+        }
 
         var sources = admiralTrader.Installed
             ? admiralTrader.Offers.Select(offer => offer.Source).ToList()
@@ -25,7 +45,7 @@ public static class SourcePressureRuntimeReportBuilder
             ? admiralTrader.Offers.Select(offer => offer.Capacity).ToList()
             : new List<RenewableSupplyCapacityEvidence>();
         var loadedAdapters = admiralTrader.Installed
-            ? new[] { admiralTrader.ModGuid }
+            ? new[] { admiralTrader.ModGuid.Trim() }
             : Array.Empty<string>();
 
         return new SourcePressureRuntimeReport
