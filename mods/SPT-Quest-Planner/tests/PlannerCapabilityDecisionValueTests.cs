@@ -16,7 +16,8 @@ namespace SPTQuestPlanner.Tests
                     Explanation("customs"),
                     Array.Empty<PlannerRaidDecisionExplanation>(),
                     "Best next raid",
-                    "Only the focused prerequisite is present."));
+                    "Only the focused prerequisite is present.",
+                    1));
 
             PlannerCapabilityDecisionValue value = PlannerCapabilityDecisionValueClassifier.Classify(presentation);
 
@@ -26,7 +27,7 @@ namespace SPTQuestPlanner.Tests
         }
 
         [Fact]
-        public void CrossQuestSynergyProvesDecisionChangingKeepValue()
+        public void CrossQuestSynergyProvesDecisionChangingKeepValueOnlyAfterComparison()
         {
             PlannerRaidActionOverlap overlap = new PlannerRaidActionOverlap(
                 "kill|customs|pmc",
@@ -40,14 +41,40 @@ namespace SPTQuestPlanner.Tests
                     Explanation("customs", overlaps: new[] { overlap }),
                     Array.Empty<PlannerRaidDecisionExplanation>(),
                     "Best next raid",
-                    "Shared action changes the preferred raid."));
+                    "Shared action changes the preferred raid.",
+                    2));
 
             PlannerCapabilityDecisionValue value = PlannerCapabilityDecisionValueClassifier.Classify(presentation);
 
             Assert.Equal(PlannerCapabilityDecisionValueKind.DecisionChanged, value.Kind);
             Assert.True(value.ProvesBeyondPrerequisiteNavigation);
             Assert.True(value.CountsTowardKeepCandidate);
-            Assert.Contains(value.Evidence, item => item.Contains("combines compatible work", StringComparison.OrdinalIgnoreCase));
+            Assert.Contains(value.Evidence, item => item.Contains("competing raid candidate", StringComparison.OrdinalIgnoreCase));
+        }
+
+        [Fact]
+        public void SynergyOnOnlyAvailableRaidDoesNotPretendPlayerChoiceChanged()
+        {
+            PlannerRaidActionOverlap overlap = new PlannerRaidActionOverlap(
+                "kill|customs|pmc",
+                PlannerRaidObjectiveKind.Kill,
+                new[] { "focused", "side" },
+                2);
+            PlannerCapabilityGoalPresentation presentation = Presentation(
+                PlannerCapabilityGoalPresentationKind.RaidDecision,
+                new PlannerRaidDecisionPresentation(
+                    PlannerRaidDecisionPresentationKind.BestNextRaid,
+                    Explanation("customs", overlaps: new[] { overlap }),
+                    Array.Empty<PlannerRaidDecisionExplanation>(),
+                    "Best next raid",
+                    "Only one raid candidate exists.",
+                    1));
+
+            PlannerCapabilityDecisionValue value = PlannerCapabilityDecisionValueClassifier.Classify(presentation);
+
+            Assert.Equal(PlannerCapabilityDecisionValueKind.NavigationOnly, value.Kind);
+            Assert.False(value.ProvesBeyondPrerequisiteNavigation);
+            Assert.False(value.CountsTowardKeepCandidate);
         }
 
         [Fact]
@@ -64,7 +91,8 @@ namespace SPTQuestPlanner.Tests
                         Explanation("woods", preparationReady: true)
                     },
                     "Several good options",
-                    "One option has lower preparation friction."));
+                    "One option has lower preparation friction.",
+                    2));
 
             PlannerCapabilityDecisionValue value = PlannerCapabilityDecisionValueClassifier.Classify(presentation);
 
@@ -87,7 +115,8 @@ namespace SPTQuestPlanner.Tests
                         Explanation("woods", evidenceCoverage: 0.5d)
                     },
                     "Several good options",
-                    "One option has less complete evidence."));
+                    "One option has less complete evidence.",
+                    2));
 
             PlannerCapabilityDecisionValue value = PlannerCapabilityDecisionValueClassifier.Classify(presentation);
 
@@ -109,7 +138,8 @@ namespace SPTQuestPlanner.Tests
                         Explanation("woods")
                     },
                     "Several good options",
-                    "One option has unresolved preparation evidence."));
+                    "One option has unresolved preparation evidence.",
+                    2));
 
             PlannerCapabilityDecisionValue value = PlannerCapabilityDecisionValueClassifier.Classify(presentation);
 
