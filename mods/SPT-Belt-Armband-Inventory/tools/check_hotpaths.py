@@ -39,9 +39,9 @@ if pickup.exists() and pickup.name not in removed:
         violations.append("PickupSlotPatches.cs: Alt-pickup Resolve hot path could not be located")
     else:
         resolve = text[start:end]
-        for token in ("GetMethods(", "GetMethod(", "GetProperty(", "GetField(", "MethodInfo", ".Invoke(", "Enum.Parse", "Activator."):
+        for token in ("GetMethods(", "GetMethod(", "GetProperty(", "GetField(", "MethodInfo", "PropertyInfo", "FieldInfo", "Enum.Parse", "Activator."):
             if token in resolve:
-                violations.append(f"PickupSlotPatches.cs: Alt-pickup Resolve performs runtime reflection/allocation ({token})")
+                violations.append(f"PickupSlotPatches.cs: Alt-pickup Resolve performs runtime reflection/discovery ({token})")
 
 if violations:
     raise SystemExit("Hot-path guard failed:\n" + "\n".join(violations))
