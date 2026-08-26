@@ -26,12 +26,18 @@ namespace SPTQuestPlanner.Client
             PlannerTopologyQuest quest = topology.GetQuest(questId);
             if (quest == null) return Array.Empty<string>();
 
-            List<string> result = new List<string>();
-            for (int i = 0; i < quest.PrerequisiteQuestIds.Count; i++)
+            HashSet<string> blockers = new HashSet<string>(StringComparer.Ordinal);
+            for (int i = 0; i < quest.PrerequisiteEdges.Count; i++)
             {
-                string prerequisiteId = quest.PrerequisiteQuestIds[i];
-                if (!IsCompleted(prerequisiteId)) result.Add(prerequisiteId);
+                PlannerTopologyPrerequisite prerequisite = quest.PrerequisiteEdges[i];
+                int sourceProfileState = EffectiveProfileState(state.GetQuest(prerequisite.SourceQuestId));
+                if (!prerequisite.AcceptsProfileState(sourceProfileState))
+                    blockers.Add(prerequisite.SourceQuestId);
             }
+
+            string[] result = new string[blockers.Count];
+            blockers.CopyTo(result);
+            Array.Sort(result, StringComparer.Ordinal);
             return result;
         }
 
