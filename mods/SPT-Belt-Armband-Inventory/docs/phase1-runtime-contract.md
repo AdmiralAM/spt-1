@@ -1,30 +1,59 @@
 # Phase 1 runtime contract
 
-Target: SPT 4.1.x client UI.
+Target: SPT 4.1.3 client + server runtime.
 
-## Included
+## Core implementation
 
-- Detect any equipped `ArmBand` item that exposes inventory containers; no Pack 'n' Strap type dependency.
-- Add one belt row beside Pockets only while a container armband is rendered.
-- Use the normal container slot template instead of the dogtag/armband template.
-- Cover every screen that delegates container rendering to EFT's `ContainersPanel` (player inventory, loot, insurance, equipment builds and profile views).
-- Configure the row above or below Pockets in F12; restart required.
-- Discover the SPT 4.1 slot-order field structurally, not by its obfuscated name.
-- Restore every temporarily changed EFT field in a Harmony finalizer, including when the original UI method throws.
-- Perform no `Update`, per-frame polling, scene scan, inventory replacement or profile mutation.
-- Refuse to double-patch when legacy `Trenchfoot-BeltSlot` is already loaded.
+- The equipment host is the real EFT `ArmBand` slot.
+- The RC belt has a dedicated custom searchable item/template runtime identity.
+- The client registers that identity directly in the SPT 4.1.3 `JsonTypes` item/template/constructor tables before inventory data is consumed.
+- The RC exposes exactly one native `1x2` grid filtered to `MAGAZINE`.
+- Opening the equipped RC uses EFT's native searchable-item `GridWindow` and `GeneratedGridsView`; there is no production `ContainersPanel` BELT-row projection.
+- `Slot.MergeContainerWithChildren` returns `InheritFromItem` for `ArmBand` so the equipped root and children follow the container lifecycle together.
+- Ordinary armbands remain ordinary armbands. Container behavior is capability/runtime-contract gated.
 
-## Deliberately deferred
+## Lifecycle coverage
 
-- Adding custom belt items or changing server database filters.
-- Ctrl-click/quick-move priority into belt grids.
-- Live refresh when a belt is equipped while the same inventory screen remains open; close and reopen the screen in Phase 1.
-- Physical validation against the user's exact SPT 4.1.2 install and mod stack.
+The ArmBand-hosted container is integrated with:
 
-## Acceptance checks
+- native grid open / insert / remove behavior;
+- loot placement priority;
+- unload placement priority;
+- automatic pickup fallback into an empty compatible ArmBand slot;
+- grenade enumeration and fast-access refresh;
+- generic bind/reachability slot lists;
+- payment-source enumeration;
+- equipment-build container validation;
+- Scav ArmBand host restoration;
+- death retention and insurance-loss filtering for the RC root and descendants only.
 
-1. Empty/plain armband: no duplicate container row.
-2. Container armband: one row in the configured position.
-3. Closing the panel or an exception restores the original static slot order and dogtag template.
-4. With legacy BeltSlot present, this plugin logs a conflict and installs no Harmony patches.
-5. Automated state/order tests pass and the client project builds without an `Assembly-CSharp` compile dependency.
+Every optional client integration fails soft. Server lifecycle patch registration is isolated so one SPT boundary failure does not prevent server startup.
+
+## Performance contract
+
+- No `ItemView.Update` polling.
+- No production `MonoBehaviour.Update` loop.
+- No scene-wide `FindObjectsOfType` scan.
+- No hierarchy-wide polling.
+- Deferred UI work is event-triggered only and terminates when its pending queue is empty.
+- Compact RC `GridWindow` sizing retries are bounded to a short 30-frame window only after an RC window is actually observed.
+- Reflection type/member discovery is cached where it is reused.
+
+The CI hot-path guard rejects reintroduction of the prohibited polling patterns.
+
+## Current acceptance gate
+
+Phase 1 is not complete until one exact-SHA artifact passes a continuous physical lifecycle test:
+
+1. client/server start without B&A&HB errors;
+2. RC equips into `ArmBand`;
+3. RC opens as a native searchable container;
+4. the visible grid is exactly `1x2` and contains no filler cells;
+5. a magazine can be removed and inserted again;
+6. close/reopen preserves the content state;
+7. unequip/re-equip preserves the loaded belt;
+8. automatic pickup can route a compatible RC into an empty ArmBand slot;
+9. grenade/fast-access state refreshes after loaded-belt equip/remove;
+10. profile/raid boundary persistence retains the RC and its children without duplication or loss.
+
+Only after this gate passes should PR #64 stop being a diagnostic/runtime candidate and Phase 2 wearable expansion begin.
