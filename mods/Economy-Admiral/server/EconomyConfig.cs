@@ -25,6 +25,7 @@ public sealed record EconomyConfig
     public EconomyPreset Preset { get; init; } = EconomyPreset.Normal;
     public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
     public bool RepeatedRaidLootDecay { get; init; } = false;
+    public bool EnableItemRewardStackNormalization { get; init; } = false;
     public RarityThresholds Rarity { get; init; } = new();
     public AuditPolicy CustomAuditPolicy { get; init; } = new();
     public Dictionary<string, ManualItemOverride> ManualOverrides { get; init; } = new(StringComparer.Ordinal);
