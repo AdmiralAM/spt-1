@@ -6,10 +6,10 @@ namespace SPTBeltArmbandInventory
 {
     internal static class SlotMergePolicy
     {
-        internal static bool ShouldForce(string slotId, bool hasContainedItem, bool containedItemIsRuntimeCandidate)
+        internal static bool ShouldForce(string slotId, bool hasContainedItem, bool containedItemIsRegisteredWearable)
         {
             if (!string.Equals(slotId, BeltSlotPlan.ArmBand, StringComparison.Ordinal)) return false;
-            return !hasContainedItem || containedItemIsRuntimeCandidate;
+            return !hasContainedItem || containedItemIsRegisteredWearable;
         }
     }
 
@@ -24,17 +24,13 @@ namespace SPTBeltArmbandInventory
             if (slot == null || InheritFromItemValue == null) return;
             try
             {
-                // MergeContainerWithChildren is queried for many EFT slots during profile
-                // reconstruction. Exit before touching ContainedItem/template metadata unless
-                // this is the actual ArmBand host; otherwise a single optional compatibility
-                // patch becomes global reflection work during inventory construction.
                 string id = ReflectionTools.ReadMember(slot, "ID") as string;
                 if (!string.Equals(id, BeltSlotPlan.ArmBand, StringComparison.Ordinal)) return;
 
                 object containedItem = ReflectionTools.ReadMember(slot, "ContainedItem");
                 bool hasContainedItem = containedItem != null;
-                bool containedItemIsRuntimeCandidate = hasContainedItem && IsRuntimeCandidate(containedItem);
-                if (!SlotMergePolicy.ShouldForce(id, hasContainedItem, containedItemIsRuntimeCandidate)) return;
+                bool containedItemIsRegisteredWearable = hasContainedItem && IsRegisteredWearable(containedItem);
+                if (!SlotMergePolicy.ShouldForce(id, hasContainedItem, containedItemIsRegisteredWearable)) return;
                 result = InheritFromItemValue;
             }
             catch (Exception exception)
@@ -49,13 +45,13 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static bool IsRuntimeCandidate(object item)
+        static bool IsRegisteredWearable(object item)
         {
             object stringTemplateId = ReflectionTools.ReadMember(item, "StringTemplateId");
-            if (AccessoryGridPolicy.IsRuntimeCandidateTemplate(stringTemplateId as string)) return true;
+            if (stringTemplateId is string direct && WearableItemDescriptorRegistry.IsRegistered(direct)) return true;
 
             object templateId = ReflectionTools.ReadMember(item, "TemplateId");
-            return templateId != null && AccessoryGridPolicy.IsRuntimeCandidateTemplate(templateId.ToString());
+            return templateId != null && WearableItemDescriptorRegistry.IsRegistered(templateId.ToString());
         }
 
         static Exception Unwrap(Exception exception)
@@ -125,7 +121,7 @@ namespace SPTBeltArmbandInventory
                 object hmPostfix = hmCtor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
                 Patch(patchMethod, harmonyMethodType, getter, hmPostfix);
 
-                logInfo?.Invoke("ArmBand merge compatibility installed via RC-scoped MergeContainerWithChildren result override.");
+                logInfo?.Invoke("ArmBand merge compatibility installed via registered-wearable-scoped MergeContainerWithChildren result override.");
                 return true;
             }
             catch (Exception exception)
