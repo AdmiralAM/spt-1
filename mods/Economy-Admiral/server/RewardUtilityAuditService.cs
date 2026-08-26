@@ -3,49 +3,44 @@ using Path = System.IO.Path;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers.Server;
-using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Enums;
-using SPTarkov.Server.Core.Models.Spt.Tables;
 
 namespace SPTEconomy;
 
 [Injectable]
 public sealed class RewardUtilityAuditService(
-    TemplateTable templates,
     ModHelper modHelper,
     ISptLogger<RewardUtilityAuditService> logger
 )
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    public async Task RunAsync(VanillaBaselineSnapshot baselineSnapshot, CancellationToken cancellationToken)
+    public async Task RunAsync(
+        QuestAnalysisReport analysis,
+        VanillaBaselineSnapshot baselineSnapshot,
+        CancellationToken cancellationToken)
     {
         if (baselineSnapshot.QuestCount <= 0)
             throw new InvalidOperationException("Economy Admiral reward utility requires a non-empty pristine startup snapshot.");
 
-        var rawRows = templates.Quests
-            .OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)
-            .Select(pair => BuildQuestRow(pair.Key.ToString(), pair.Value, baselineSnapshot.QuestIds.Contains(pair.Key.ToString())))
-            .ToList();
-
         var vanillaBenchmark = BuildBenchmark(baselineSnapshot.Quests.Where(row => !row.Restartable).ToList());
         var vanillaRestartableBenchmark = BuildBenchmark(baselineSnapshot.Quests.Where(row => row.Restartable).ToList());
 
-        var rows = rawRows
-            .Select(row => AddRelativeMetrics(
+        var rows = analysis.Quests
+            .OrderBy(row => row.QuestId, StringComparer.Ordinal)
+            .Select(row => BuildRow(
                 row,
                 row.Restartable && vanillaRestartableBenchmark.QuestSamples > 0
                     ? vanillaRestartableBenchmark
-                    : vanillaBenchmark
-            ))
+                    : vanillaBenchmark))
             .ToList();
 
         var report = new RewardUtilityAuditReport
         {
-            SchemaVersion = 2,
+            SchemaVersion = 3,
             UtilityScoringApplied = false,
             BenchmarkSource = "PristineStartupSnapshot",
-            Note = $"Typed final SPT 4.1 reward rows measured directly against pristine startup quest-ID provenance captured at priority {baselineSnapshot.CapturePriority}. No correction overlay, cross-dimension composite score, or ruble conversion is applied.",
+            SourceAnalysisSchemaVersion = analysis.SchemaVersion,
+            Note = $"Projection of the unified typed final-quest analysis against pristine startup reward benchmarks captured at priority {baselineSnapshot.CapturePriority}. No second TemplateTable quest scan, correction overlay, composite score, or ruble conversion is applied.",
             Vanilla = vanillaBenchmark,
             VanillaRestartable = vanillaRestartableBenchmark,
             Quests = rows,
@@ -59,47 +54,21 @@ public sealed class RewardUtilityAuditService(
 
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
         await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
-        logger.Info($"[Economy Admiral] typed reward utility audit complete from pristine baseline: finalQuests={rows.Count}, pristineQuests={baselineSnapshot.QuestCount}; report={reportPath}");
+        logger.Info($"[Economy Admiral] reward utility projection complete: finalQuests={rows.Count}, pristineQuests={baselineSnapshot.QuestCount}; report={reportPath}");
     }
 
-    private static QuestRewardUtilityRow BuildQuestRow(string questId, Quest quest, bool isVanilla)
+    private static QuestRewardUtilityRow BuildRow(QuestAnalysisRow row, RewardUtilityBenchmark benchmark) => new()
     {
-        var successRewards = quest.Rewards is null
-            ? []
-            : quest.Rewards
-                .Where(pair => string.Equals(pair.Key, "Success", StringComparison.OrdinalIgnoreCase))
-                .SelectMany(pair => pair.Value)
-                .ToList();
-
-        var experience = successRewards.Where(reward => reward.Type == RewardType.Experience).Sum(reward => reward.Value ?? 0d);
-        var standing = successRewards.Where(reward => reward.Type == RewardType.TraderStanding).Sum(reward => reward.Value ?? 0d);
-        var traderUnlocks = CountDistinctTargets(successRewards, RewardType.TraderUnlock);
-        var assortmentUnlocks = CountDistinctTargets(successRewards, RewardType.AssortmentUnlock);
-        var productionUnlocks = CountDistinctTargets(successRewards, RewardType.ProductionScheme);
-
-        return new QuestRewardUtilityRow
-        {
-            QuestId = questId,
-            QuestName = quest.QuestName ?? quest.Name,
-            TraderId = quest.TraderId.ToString(),
-            IsVanillaTraderQuest = isVanilla,
-            Restartable = quest.Restartable,
-            SuccessRewardRecords = successRewards.Count,
-            Experience = Math.Round(experience, 2),
-            TraderStanding = Math.Round(standing, 4),
-            TraderUnlocks = traderUnlocks,
-            AssortmentUnlocks = assortmentUnlocks,
-            ProductionSchemeUnlocks = productionUnlocks,
-            XpVsVanillaMedian = null,
-            StandingVsVanillaMedian = null,
-            TraderUnlocksVsVanillaMedian = null,
-            AssortmentUnlocksVsVanillaMedian = null,
-            ProductionUnlocksVsVanillaMedian = null,
-        };
-    }
-
-    private static QuestRewardUtilityRow AddRelativeMetrics(QuestRewardUtilityRow row, RewardUtilityBenchmark benchmark) => row with
-    {
+        QuestId = row.QuestId,
+        QuestName = row.QuestName,
+        TraderId = row.TraderId,
+        IsVanillaTraderQuest = row.IsVanillaTraderQuest,
+        Restartable = row.Restartable,
+        Experience = row.Experience,
+        TraderStanding = row.TraderStanding,
+        TraderUnlocks = row.TraderUnlocks,
+        AssortmentUnlocks = row.AssortmentUnlocks,
+        ProductionSchemeUnlocks = row.ProductionSchemeUnlocks,
         XpVsVanillaMedian = RatioOrNull(row.Experience, benchmark.MedianXp),
         StandingVsVanillaMedian = RatioOrNull(Math.Abs(row.TraderStanding), benchmark.MedianAbsoluteStanding),
         TraderUnlocksVsVanillaMedian = RatioOrNull(row.TraderUnlocks, benchmark.MedianPositiveTraderUnlocks),
@@ -110,12 +79,6 @@ public sealed class RewardUtilityAuditService(
     private static double? RatioOrNull(double value, double baseline) => value > 0 && baseline > 0
         ? Math.Round(value / baseline, 4)
         : null;
-
-    private static int CountDistinctTargets(IEnumerable<Reward> rewards, RewardType type) => rewards
-        .Where(reward => reward.Type == type && !string.IsNullOrWhiteSpace(reward.Target))
-        .Select(reward => reward.Target!)
-        .Distinct(StringComparer.Ordinal)
-        .Count();
 
     private static RewardUtilityBenchmark BuildBenchmark(IReadOnlyCollection<VanillaQuestBaselineRow> rows)
     {
@@ -166,6 +129,7 @@ public sealed record RewardUtilityAuditReport
     public required int SchemaVersion { get; init; }
     public required bool UtilityScoringApplied { get; init; }
     public required string BenchmarkSource { get; init; }
+    public required int SourceAnalysisSchemaVersion { get; init; }
     public required string Note { get; init; }
     public required RewardUtilityBenchmark Vanilla { get; init; }
     public required RewardUtilityBenchmark VanillaRestartable { get; init; }
@@ -199,7 +163,6 @@ public sealed record QuestRewardUtilityRow
     public required string TraderId { get; init; }
     public required bool IsVanillaTraderQuest { get; init; }
     public required bool Restartable { get; init; }
-    public required int SuccessRewardRecords { get; init; }
     public required double Experience { get; init; }
     public required double TraderStanding { get; init; }
     public required int TraderUnlocks { get; init; }
