@@ -28,17 +28,17 @@ public sealed class EconomyMod(
         var vanillaBaseline = vanillaBaselineService.GetSnapshot();
         runtimeEvidenceService.CaptureBefore();
 
-        // Core reports read typed final DB state directly against the immutable pristine snapshot.
-        // Accepted proof/correction layers and future cross-mod source-pressure adapters are not on startup path.
+        // Primary acquisition and progression need their own source scans. Unified analysis is the
+        // single final-quest metric scan; utility/constraint reports are projections from that snapshot.
         await auditService.RunAsync(vanillaBaseline, cancellationToken);
-        await rewardUtilityAuditService.RunAsync(vanillaBaseline, cancellationToken);
         var progressionSnapshot = await questProgressionGraphService.RunAsync(vanillaBaseline, cancellationToken);
-        await questConstraintAuditService.RunAsync(vanillaBaseline, cancellationToken);
-
         var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, vanillaBaseline, cancellationToken);
+
+        await rewardUtilityAuditService.RunAsync(questAnalysis, vanillaBaseline, cancellationToken);
+        await questConstraintAuditService.RunAsync(questAnalysis, vanillaBaseline, cancellationToken);
+
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
         var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
-
         await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
     }
 }
