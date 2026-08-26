@@ -42,6 +42,19 @@ class ExactRuntimeHandoffContractTests(unittest.TestCase):
             self.assertNotIn("StartsWith($expected", text, path.name)
             self.assertIn("$sourceHead -ne $expected", text, path.name)
 
+    def test_wrapper_installs_only_after_final_archive_validation(self):
+        text = SCRIPT.read_text(encoding="utf-8")
+        builder_call = "& $builder -SptRoot $SptRoot -ExpectedHeadSha $expected"
+        self.assertIn(builder_call, text)
+        self.assertNotIn("& $builder -SptRoot $SptRoot -ExpectedHeadSha $expected -Install", text)
+
+        checksum = text.index("$artifactSha256 = (Get-FileHash $artifactPath -Algorithm SHA256)")
+        install = text.index("if ($Install) {", checksum)
+        archive_validation = text.index("Exact-runtime archive contains forbidden build/debug junk.")
+        self.assertGreater(install, archive_validation)
+        self.assertGreater(install, checksum)
+        self.assertIn("Installed fully validated exact-runtime test candidate", text[install:])
+
 
 if __name__ == "__main__":
     unittest.main()
