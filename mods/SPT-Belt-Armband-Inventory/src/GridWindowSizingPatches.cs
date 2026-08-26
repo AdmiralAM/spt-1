@@ -9,15 +9,23 @@ namespace SPTBeltArmbandInventory
 {
     internal static class GridWindowSizingRuntime
     {
-        // A specific RC OpenItem event may request only a few deferred passes
+        // A specific wearable OpenItem event may request only a few deferred passes
         // while Unity finishes that one window. There is no idle polling.
         const int MaxDeferredAttempts = 8;
 
         sealed class PendingWindow
         {
             internal readonly WeakReference Window;
+            internal readonly int Columns;
+            internal readonly int Rows;
             internal int Attempts;
-            internal PendingWindow(object window) { Window = new WeakReference(window); }
+
+            internal PendingWindow(object window, int columns, int rows)
+            {
+                Window = new WeakReference(window);
+                Columns = columns;
+                Rows = rows;
+            }
         }
 
         internal static Action<string> LogWarning;
@@ -41,11 +49,11 @@ namespace SPTBeltArmbandInventory
                 if (!Equals(windowType, GridWindowType)) return;
 
                 object item = ReflectionTools.ReadMember(windowData, "Item");
-                if (!IsRuntimeCandidate(item)) return;
+                if (!TryResolveDescriptor(item, out WearableItemDescriptor descriptor)) return;
 
                 object window = ReflectionTools.ReadMember(windowData, "Window");
                 if (window == null || !GridWindowType.IsInstanceOfType(window)) return;
-                ObserveWindow(window);
+                ObserveWindow(window, descriptor.GridColumns, descriptor.GridRows);
             }
             catch (Exception exception)
             {
@@ -54,9 +62,9 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static void ObserveWindow(object window)
+        static void ObserveWindow(object window, int columns, int rows)
         {
-            if (TryAdjust(window)) return;
+            if (TryAdjust(window, columns, rows)) return;
             for (int i = 0; i < PendingWindows.Count; i++)
             {
                 object existing = PendingWindows[i].Window.Target;
@@ -69,7 +77,7 @@ namespace SPTBeltArmbandInventory
                 RequestFlush?.Invoke();
                 return;
             }
-            PendingWindows.Add(new PendingWindow(window));
+            PendingWindows.Add(new PendingWindow(window, columns, rows));
             RequestFlush?.Invoke();
         }
 
@@ -80,12 +88,12 @@ namespace SPTBeltArmbandInventory
             {
                 PendingWindow pending = PendingWindows[i];
                 object window = pending.Window.Target;
-                if (window == null || TryAdjust(window) || ++pending.Attempts >= MaxDeferredAttempts)
+                if (window == null || TryAdjust(window, pending.Columns, pending.Rows) || ++pending.Attempts >= MaxDeferredAttempts)
                     PendingWindows.RemoveAt(i--);
             }
         }
 
-        static bool TryAdjust(object window)
+        static bool TryAdjust(object window, int columns, int rows)
         {
             Component component = window as Component;
             if (component == null || component.gameObject == null || !component.gameObject.activeInHierarchy) return false;
@@ -93,12 +101,11 @@ namespace SPTBeltArmbandInventory
             RectTransform rect = component.transform as RectTransform;
             if (rect == null || rect.rect.width <= 0f || rect.rect.height <= 0f) return false;
 
-            // Grid geometry is part of the shared runtime contract. Do not scan
-            // the Unity hierarchy to rediscover dimensions that are already known.
-            // This removes the old artificial 96px minimum and sizes the native
-            // GridWindow directly to cells + normal EFT window chrome.
-            float width = AccessoryGridPolicy.ExactWindowWidth(RuntimeIdentity.CandidateGridColumns);
-            float height = AccessoryGridPolicy.ExactWindowHeight(RuntimeIdentity.CandidateGridRows);
+            // Geometry comes from the registered item descriptor. No Unity hierarchy
+            // scan is needed, and no artificial minimum is allowed: native window
+            // chrome + exact declared cell extent only.
+            float width = AccessoryGridPolicy.ExactWindowWidth(columns);
+            float height = AccessoryGridPolicy.ExactWindowHeight(rows);
             if (width <= 0f || height <= 0f) return false;
 
             if (Math.Abs(rect.rect.width - width) >= 0.5f)
@@ -110,13 +117,20 @@ namespace SPTBeltArmbandInventory
             return true;
         }
 
-        internal static bool IsRuntimeCandidate(object item)
+        internal static bool TryResolveDescriptor(object item, out WearableItemDescriptor descriptor)
         {
+            descriptor = null;
             if (item == null) return false;
             object stringTemplateId = ReflectionTools.ReadMember(item, "StringTemplateId");
-            if (AccessoryGridPolicy.IsRuntimeCandidateTemplate(stringTemplateId as string)) return true;
+            if (stringTemplateId is string direct && WearableItemDescriptorRegistry.TryGet(direct, out descriptor)) return true;
             object templateId = ReflectionTools.ReadMember(item, "TemplateId");
-            return templateId != null && AccessoryGridPolicy.IsRuntimeCandidateTemplate(templateId.ToString());
+            return templateId != null && WearableItemDescriptorRegistry.TryGet(templateId.ToString(), out descriptor);
+        }
+
+        internal static bool IsRuntimeCandidate(object item)
+        {
+            return TryResolveDescriptor(item, out WearableItemDescriptor descriptor)
+                && string.Equals(descriptor.TemplateId, RuntimeIdentity.CandidateItemId, StringComparison.Ordinal);
         }
 
         static void ApplyLayoutElement(GameObject gameObject, float width, float height)
@@ -133,7 +147,7 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                LogWarning?.Invoke("Could not apply exact-fit ArmBand GridWindow layout element: " + Unwrap(exception).Message);
+                LogWarning?.Invoke("Could not apply exact-fit wearable GridWindow layout element: " + Unwrap(exception).Message);
             }
         }
 
@@ -188,34 +202,34 @@ namespace SPTBeltArmbandInventory
                 Type compoundItemType = ReflectionTools.FindType("EFT.InventoryLogic.CompoundItem");
                 Type itemContextType = ReflectionTools.FindType("EFT.InventoryLogic.ItemContext");
                 if (harmonyType == null || harmonyMethodType == null || itemUiContextType == null || gridWindowType == null || compoundItemType == null || itemContextType == null)
-                    return Fail("SPT 4.1 ItemUiContext.OpenItem/GridWindow boundary was not found; exact-fit ArmBand window sizing is disabled.");
+                    return Fail("SPT 4.1 ItemUiContext.OpenItem/GridWindow boundary was not found; exact-fit wearable window sizing is disabled.");
 
                 MethodInfo openItem = ReflectionTools.FindInstanceMethod(itemUiContextType, "OpenItem", typeof(void), compoundItemType, itemContextType);
                 if (openItem == null)
-                    return Fail("SPT 4.1 ItemUiContext.OpenItem(CompoundItem, ItemContext) boundary was not found; exact-fit ArmBand window sizing is disabled.");
+                    return Fail("SPT 4.1 ItemUiContext.OpenItem(CompoundItem, ItemContext) boundary was not found; exact-fit wearable window sizing is disabled.");
 
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                 unpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
                 if (!HarmonyInstallPolicy.CanBegin(true, patchMethod != null, harmonyMethodConstructor != null, unpatchSelf != null))
-                    return Fail("Harmony patch API is incompatible; exact-fit ArmBand window sizing is disabled.");
+                    return Fail("Harmony patch API is incompatible; exact-fit wearable window sizing is disabled.");
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
-                if (harmony == null) return Fail("Harmony instance creation failed; exact-fit ArmBand window sizing is disabled.");
+                if (harmony == null) return Fail("Harmony instance creation failed; exact-fit wearable window sizing is disabled.");
 
                 GridWindowSizingRuntime.LogWarning = logWarning;
                 GridWindowSizingRuntime.GridWindowType = gridWindowType;
                 object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
                 Patch(patchMethod, harmonyMethodType, openItem, postfix);
 
-                logInfo?.Invoke("B&A&HB exact-fit ArmBand GridWindow sizing installed on ItemUiContext.OpenItem(CompoundItem, ItemContext).");
+                logInfo?.Invoke("B&A&HB exact-fit wearable GridWindow sizing installed on ItemUiContext.OpenItem(CompoundItem, ItemContext).");
                 return true;
             }
             catch (Exception exception)
             {
                 Dispose();
                 Exception root = Unwrap(exception);
-                return Fail("Exact-fit ArmBand GridWindow sizing installation failed safely: " + root.GetType().FullName + ": " + root.Message);
+                return Fail("Exact-fit wearable GridWindow sizing installation failed safely: " + root.GetType().FullName + ": " + root.Message);
             }
         }
 
@@ -224,7 +238,7 @@ namespace SPTBeltArmbandInventory
             MethodInfo originalMethod = original as MethodInfo;
             if (originalMethod == null || originalMethod.DeclaringType == null) return null;
             DynamicMethod postfix = new DynamicMethod(
-                "ExactFitArmBandOpenItemPostfix",
+                "ExactFitWearableOpenItemPostfix",
                 typeof(void),
                 new[] { originalMethod.DeclaringType },
                 typeof(GridWindowSizingPatches),
