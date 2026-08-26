@@ -109,21 +109,29 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
         var properties = grid.Properties;
         if (!string.Equals(grid.Name, GridName, StringComparison.Ordinal)
             || !string.Equals(grid.Id.ToString(), GridId, StringComparison.Ordinal)
+            || !string.Equals(grid.Parent?.ToString(), TemplateId, StringComparison.Ordinal)
+            || !string.Equals(grid.Prototype?.ToString(), GridPrototype, StringComparison.Ordinal)
             || properties == null
             || properties.CellsH != RuntimeIdentity.WristWalletGridColumns
-            || properties.CellsV != RuntimeIdentity.WristWalletGridRows)
-            throw new InvalidOperationException("B&A&HB Wrist Wallet ID collision: grid identity or 1x1 geometry differs.");
+            || properties.CellsV != RuntimeIdentity.WristWalletGridRows
+            || properties.MinCount != 0
+            || properties.MaxCount != 0
+            || properties.MaxWeight != 0
+            || properties.IsSortingTable == true)
+            throw new InvalidOperationException("B&A&HB Wrist Wallet ID collision: grid identity, geometry, or limits differ from the exact 1x1 contract.");
 
         var filters = properties.Filters?.ToArray();
         if (filters == null || filters.Length != 1)
             throw new InvalidOperationException("B&A&HB Wrist Wallet ID collision: expected one currency filter group.");
 
         var included = filters[0].Filter?.ToArray();
+        var excluded = filters[0].ExcludedFilter?.ToArray();
         if (included == null
             || included.Length != 3
             || !included.Contains(Money.ROUBLES)
             || !included.Contains(Money.DOLLARS)
-            || !included.Contains(Money.EUROS))
-            throw new InvalidOperationException("B&A&HB Wrist Wallet ID collision: currency filter differs from RUB/USD/EUR contract.");
+            || !included.Contains(Money.EUROS)
+            || (excluded != null && excluded.Length != 0))
+            throw new InvalidOperationException("B&A&HB Wrist Wallet ID collision: filter differs from exact RUB/USD/EUR-only contract.");
     }
 }
