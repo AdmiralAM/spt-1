@@ -73,6 +73,12 @@ jobs:
           assert mod.index('CorrectPrimaryMembershipAsync') < mod.index('RepairPrimaryAuditReportAsync') < mod.index('CorrectPrimaryBenchmarkAsync')
           assert mod.index('baselineProvenanceCorrectionService.ApplyToUnifiedAnalysisAsync') < mod.index('questProvenanceDeltaService.RunAsync') < mod.index('compositePolicyEvaluationService.RunAsync')
 
+          audit = (root / 'server/EconomyAuditService.cs').read_text(encoding='utf-8')
+          assert 'EconomyRuntimeConfigService runtimeConfigService' in audit
+          assert 'runtimeConfigService.GetAsync(cancellationToken)' in audit
+          assert 'LoadConfigAsync' not in audit
+          assert 'Path.Combine(modPath, "config", "config.json")' not in audit
+
           baseline = (root / 'server/VanillaBaselineService.cs').read_text(encoding='utf-8')
           for text in ['Injectable(InjectionType.Singleton, TypePriority = OnLoadOrder.Watermark + 1)', 'reward.Items', 'item.Template.ToString()', 'item.Upd?.StackObjectsCount', 'MaximumPrerequisiteDepth', 'TimedConditionCount', 'LongestDistanceConstraint', 'VanillaBaselineSnapshot GetSnapshot()']:
               assert text in baseline, text
@@ -154,7 +160,7 @@ jobs:
           ]:
               assert text in smoke, text
 
-          print('Economy Admiral provenance + zero-mutation + parity + fail-closed eligibility contract OK')
+          print('Economy Admiral provenance + zero-mutation + parity + single-config-read + fail-closed eligibility contract OK')
 
   server:
     name: Economy Admiral .NET 10 server build
