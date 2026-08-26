@@ -18,8 +18,7 @@ config = json.loads(CONFIG.read_text(encoding="utf-8"))
 source = SOURCE.read_text(encoding="utf-8")
 project = PROJECT.read_text(encoding="utf-8")
 
-expected_thresholds = [10000, 25000, 50000, 75000, 100000, 250000]
-actual_thresholds = [
+money_thresholds = [
     config["tintStartValue"],
     config["lightGreenMaxValue"],
     config["greenMaxValue"],
@@ -27,8 +26,18 @@ actual_thresholds = [
     config["violetMaxValue"],
     config["redMaxValue"],
 ]
-if actual_thresholds != expected_thresholds:
-    fail(f"default tier thresholds drifted: {actual_thresholds}")
+if money_thresholds != [10000, 25000, 50000, 75000, 100000, 250000]:
+    fail(f"money tier thresholds drifted: {money_thresholds}")
+
+ammo_thresholds = [
+    config["ammoLightGreenMaxPen"],
+    config["ammoGreenMaxPen"],
+    config["ammoNavyMaxPen"],
+    config["ammoVioletMaxPen"],
+    config["ammoRedMaxPen"],
+]
+if ammo_thresholds != [15, 26, 35, 44, 54]:
+    fail(f"ammo penetration thresholds drifted: {ammo_thresholds}")
 
 expected_colors = ["#526B3F", "#294F31", "#253552", "#4A3854", "#5A2C31", "#5C4825"]
 actual_colors = [
@@ -44,44 +53,47 @@ if actual_colors != expected_colors:
 
 required_fragments = [
     "OnLoadOrder.PostLoad",
-    "templateTable.Prices.TryGetValue",
-    "templateTable.Handbook.Items",
+    "BaseClasses.AMMO",
+    "properties.PenetrationPower",
+    "TierClassifier.GetAmmoColor",
+    "TierClassifier.GetMoneyColor",
     "BaseClasses.WEAPON",
     "BaseClasses.KEY",
     "BaseClasses.ARMORED_EQUIPMENT",
     "BaseClasses.VEST",
-    "itemHelper.IsOfBaseclasses(templateId, TotalValueBaseClasses)",
-    "Math.Round(price / slots, MidpointRounding.AwayFromZero)",
-    "if (value < config.TintStartValue) return null",
-    "if (color is null)",
+    "ResolveEconomicValue",
+    "ResolveBestTraderPrice",
+    "ragfairServerHelper.IsItemValidRagfairItem",
+    "templateTable.Prices.TryGetValue",
+    "presetHelper.GetDefaultPreset",
+    "handbookHelper.GetTemplatePrice",
+    "Math.Round(value / slots, MidpointRounding.AwayFromZero)",
     "properties.BackgroundColor = color",
     '"com.acidphantasm.itemvaluation"',
 ]
 for fragment in required_fragments:
     if fragment not in source:
-        fail(f"required background-only contract fragment missing: {fragment}")
+        fail(f"required contract fragment missing: {fragment}")
 
-# These legacy behaviours are specifically forbidden. BaseClasses/ItemHelper are allowed only
-# for the four lightweight total-value category checks above.
 forbidden_patterns = {
     "Harmony/client patching": r"\bHarmony\b|ModulePatch|BepInPlugin",
     "per-frame Unity callbacks": r"\bUpdate\s*\(|\bLateUpdate\s*\(",
     "polling/timers": r"setInterval|System\.Threading\.Timer|PeriodicTimer|Task\.Delay",
     "locale/name mutation": r"LocaleTable|ShortName\s*=|Description\s*=|\.Name\s*=",
-    "legacy semantic valuation": r"PenetrationPower|ArmorClass|RagfairServerHelper|TradersTable|PresetHelper|ResolveBestTrader|GetHighestTrader",
+    "armor semantic coloring": r"ArmorClass|validArmourSlots|GetArmourColour|GetMinMaxArmorPlateClass",
+    "flea-ban override color": r"FleaBannedColour|ColourFleaBanned",
     "client ItemView hook": r"ItemView",
 }
 for label, pattern in forbidden_patterns.items():
     if re.search(pattern, source):
         fail(f"forbidden {label} code found: {pattern}")
 
-# Ammo must not regain a special penetration or category path; its monetary value follows the
-# ordinary per-slot path (normally 1x1).
-if "BaseClasses.AMMO" in source:
-    fail("ammo must not have a special category valuation path")
+# Penetration is allowed only as the ammo tier input. Damage text/stat mutation must remain absent.
+if re.search(r"\bDamage\b|DamageAndPen|ShortName", source):
+    fail("ammo damage/name legacy behavior returned")
 
 assignments = re.findall(r"properties\.([A-Za-z0-9_]+)\s*=", source)
-if assignments != ["BackgroundColor"]:
+if assignments != ["BackgroundColor", "BackgroundColor"]:
     fail(f"template mutation surface must be BackgroundColor only; found {assignments}")
 
 if "<SptRuntimeTarget>4.1.3</SptRuntimeTarget>" not in project:
