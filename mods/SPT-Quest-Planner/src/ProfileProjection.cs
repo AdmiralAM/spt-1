@@ -5,7 +5,19 @@ public sealed record PlayerQuestState(
     QuestState State,
     int RawStatus,
     long? StartTime,
-    long? StatusTimer);
+    long? StatusTimer)
+{
+    // SPT stores delayed quest availability as an absolute Unix timestamp on the quest status.
+    // Keep the legacy scalar StatusTimer field for compatibility, but do not use it as the
+    // authoritative delayed-unlock timestamp.
+    public long? AvailableAfterUnixSeconds { get; init; }
+
+    // Exact per-status transition timestamps when exposed by the profile. Keys are raw
+    // QuestStatus values; values are Unix timestamps. This is provenance/debug evidence,
+    // not a replacement for AvailableAfterUnixSeconds.
+    public IReadOnlyDictionary<int, long> StatusTimers { get; init; } =
+        new Dictionary<int, long>();
+}
 
 public sealed record PlayerTaskConditionCounter(
     string CounterId,
@@ -49,16 +61,39 @@ public static class ProfileProjectionExtractor
             QuestState state = rawStatus >= 0 ? QuestExtractor.MapQuestStatus(rawStatus) : QuestState.Unknown;
             if (rawStatus < 0) warnings.Add($"PMC quest {questId}: missing status");
 
+            long? legacyStatusTimer = SptObjectReader.Long(SptObjectReader.Get(quest, "statusTimer"));
+            long? availableAfter = SptObjectReader.Long(SptObjectReader.Get(quest, "availableAfter", "AvailableAfter"));
+            IReadOnlyDictionary<int, long> statusTimers = ExtractStatusTimers(
+                SptObjectReader.Get(quest, "statusTimers", "StatusTimers"));
+
             states[questId] = new PlayerQuestState(
                 questId,
                 state,
                 rawStatus,
                 SptObjectReader.Long(SptObjectReader.Get(quest, "startTime")),
-                SptObjectReader.Long(SptObjectReader.Get(quest, "statusTimer")));
+                legacyStatusTimer)
+            {
+                AvailableAfterUnixSeconds = availableAfter,
+                StatusTimers = statusTimers
+            };
         }
 
         if (!sawQuest && quests is null) warnings.Add("PMC profile has no Quests array");
         return new PlayerProjection(level, states, counters, warnings.Distinct(StringComparer.Ordinal).ToArray());
+    }
+
+    private static IReadOnlyDictionary<int, long> ExtractStatusTimers(object? raw)
+    {
+        Dictionary<int, long> timers = new();
+        if (raw is null) return timers;
+
+        foreach (KeyValuePair<string, object> entry in SptObjectReader.Entries(raw))
+        {
+            if (!int.TryParse(entry.Key, out int rawStatus)) continue;
+            long? timestamp = SptObjectReader.Long(entry.Value);
+            if (timestamp.HasValue) timers[rawStatus] = timestamp.Value;
+        }
+        return timers;
     }
 
     private static Dictionary<string, PlayerTaskConditionCounter> ExtractTaskConditionCounters(object profile, List<string> warnings)
