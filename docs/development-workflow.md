@@ -26,7 +26,7 @@ Every maintained module has one explicit **official product name** and one autho
 
 - The module README must state the official product name and current version near the top.
 - Project/package metadata (`<Version>`, assembly/file version, server metadata where applicable) is the authoritative machine-readable version and must agree with the README.
-- Client/server components that are one release unit use the same module version. If components intentionally have different version lines, as with Tactical HUD client/server, the README and root module index must state both explicitly.
+- Client/server components that are one release unit use the same module version. Components may use different version lines only when that split is an intentional, documented release contract.
 - A leading `v` is presentation syntax for release/tag labels (`v1.0.0`); it is not part of the semantic version stored in project/package metadata.
 - Product names do not contain a version unless a compatibility-constrained artifact filename deliberately does so. If an assembly/artifact name embeds a version, that embedded value must match project metadata in the same commit.
 - Directory names, GUIDs, namespaces, endpoints, runtime branch names, upstream names, and other established technical identifiers may remain unchanged when renaming them would create migration/compatibility risk. Such retained identifiers must be documented as compatibility/provenance identifiers and must not be presented as the current product name.
