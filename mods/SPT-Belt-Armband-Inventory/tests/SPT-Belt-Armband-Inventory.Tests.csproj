@@ -10,6 +10,7 @@
     <Compile Include="..\src\AccessoryCategory.cs" Link="AccessoryCategory.cs" />
     <Compile Include="..\src\AccessoryCapability.cs" Link="AccessoryCapability.cs" />
     <Compile Include="..\src\AccessoryGridPolicy.cs" Link="AccessoryGridPolicy.cs" />
+    <Compile Include="..\src\WearableDescriptor.cs" Link="WearableDescriptor.cs" />
     <Compile Include="..\src\BeltSlotPlan.cs" Link="BeltSlotPlan.cs" />
     <Compile Include="..\src\LootPriorityPlan.cs" Link="LootPriorityPlan.cs" />
     <Compile Include="..\src\ReflectionTools.cs" Link="ReflectionTools.cs" />
