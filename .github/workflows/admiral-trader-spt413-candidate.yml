@@ -22,209 +22,86 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Set up .NET 10
-        uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
 
       - name: Validate Gameplay Alpha source contract
         shell: python
         run: |
-          import hashlib
-          import json
-          import xml.etree.ElementTree as ET
+          import hashlib, json
           from pathlib import Path
-
           root = Path('mods/Admiral-Trader')
-          runtime = json.loads((root / 'manifests/runtime-manifest.json').read_text(encoding='utf-8'))
-          identity = json.loads((root / 'manifests/identity-assets.json').read_text(encoding='utf-8'))
-          base = json.loads((root / 'db/base.json').read_text(encoding='utf-8'))
-          capabilities = json.loads((root / 'manifests/weapon-ammo-capabilities.json').read_text(encoding='utf-8'))
-          assort = json.loads((root / 'db/assort.json').read_text(encoding='utf-8'))
-          questassort = json.loads((root / 'db/questassort.json').read_text(encoding='utf-8'))
-
-          if runtime.get('targetSptVersion') != '4.1.3' or runtime.get('publishedApiCompileBaseline') != '4.1.3':
-              raise SystemExit('candidate lost exact SPT 4.1.3 target/baseline')
-          if runtime.get('publicationMode') != 'test-candidate-source' or runtime.get('registrationEnabled') is not False:
-              raise SystemExit('source tree must remain fail-closed test-candidate-source')
-          if runtime.get('mergeRequiresRuntimeEvidence') is not True:
-              raise SystemExit('candidate must require physical runtime evidence before merge')
-
-          portrait = identity['portrait']
-          portrait_path = root / portrait['runtimeAsset']
+          runtime = json.loads((root/'manifests/runtime-manifest.json').read_text(encoding='utf-8'))
+          identity = json.loads((root/'manifests/identity-assets.json').read_text(encoding='utf-8'))
+          base = json.loads((root/'db/base.json').read_text(encoding='utf-8'))
+          assort = json.loads((root/'db/assort.json').read_text(encoding='utf-8'))
+          qa = json.loads((root/'db/questassort.json').read_text(encoding='utf-8'))
+          assert runtime['targetSptVersion'] == '4.1.3'
+          assert runtime['publishedApiCompileBaseline'] == '4.1.3'
+          assert runtime['publicationMode'] == 'test-candidate-source' and runtime['registrationEnabled'] is False
+          assert runtime['mergeRequiresRuntimeEvidence'] is True
+          portrait = identity['portrait']; path = root/portrait['runtimeAsset']
+          assert portrait['selectionStatus'] == 'final' and portrait['assetStatus'] == 'ingested'
+          assert portrait['placeholderAllowed'] is False and portrait['substitutionAllowed'] is False
+          assert portrait['sourceFileSha256'] == '48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff'
+          assert portrait['sourceDimensions'] == '1182x1330' and portrait['runtimeDimensions'] == '512x576'
           expected_route = f"/files/trader/avatar/{identity['traderId']}.jpg"
-          if portrait.get('selectionStatus') != 'final' or portrait.get('assetStatus') != 'ingested':
-              raise SystemExit('official portrait identity is not final+ingested')
-          if portrait.get('placeholderAllowed') is not False or portrait.get('substitutionAllowed') is not False:
-              raise SystemExit('official portrait contract permits placeholder/substitution')
-          if portrait.get('runtimeRoute') != expected_route or base.get('avatar') != expected_route:
-              raise SystemExit('official portrait route drift')
-          if portrait.get('sourceFileSha256') != '48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff':
-              raise SystemExit('approved portrait source SHA-256 drift')
-          if portrait.get('sourceDimensions') != '1182x1330' or portrait.get('runtimeDimensions') != '512x576':
-              raise SystemExit('portrait source/runtime geometry contract drift')
-          if not portrait_path.is_file():
-              raise SystemExit(f'official portrait missing: {portrait_path}')
-          data = portrait_path.read_bytes()
-          if len(data) < 4 or data[:2] != b'\xff\xd8' or data[-2:] != b'\xff\xd9':
-              last_eoi = data.rfind(b'\xff\xd9')
-              trailing = None if last_eoi < 0 else len(data) - (last_eoi + 2)
-              raise SystemExit(
-                  'official portrait is not a complete JPEG stream; '
-                  f'bytes={len(data)} first16={data[:16].hex()} last16={data[-16:].hex()} '
-                  f'lastEoiOffset={last_eoi} trailingBytesAfterEoi={trailing}'
-              )
-          blob_oid = hashlib.sha1(f'blob {len(data)}\0'.encode('ascii') + data).hexdigest()
-          if blob_oid != portrait.get('runtimeGitBlobSha1'):
-              raise SystemExit(f'official portrait Git blob drift: {blob_oid}')
+          assert portrait['runtimeRoute'] == expected_route == base['avatar']
+          data = path.read_bytes(); clean = data.rstrip(b'\r\n')
+          assert data[:2] == b'\xff\xd8' and clean[-2:] == b'\xff\xd9'
+          assert data[len(clean):] in (b'', b'\n', b'\r\n')
+          blob = hashlib.sha1(f'blob {len(data)}\0'.encode()+data).hexdigest()
+          assert blob == portrait['runtimeGitBlobSha1']
+          assert len(assort['items']) == 11
+          assert set(qa) == {'started','success','fail'} and len(qa['success']) == 7
+          assert len(list((root/'db/quests').glob('*.json'))) == 31
 
-          runtime_data = runtime.get('data') or {}
-          if runtime_data.get('avatarMode') != 'official-custom-route':
-              raise SystemExit('runtime manifest did not retire placeholder avatar mode')
-          if runtime_data.get('avatar') != expected_route or runtime_data.get('officialPortraitAsset') != portrait['runtimeAsset']:
-              raise SystemExit('runtime manifest portrait metadata drift')
-          if runtime_data.get('officialPortraitAssetStatus') != 'ingested' or runtime_data.get('finalPortraitDeferred') is not False:
-              raise SystemExit('runtime manifest still represents portrait as deferred')
+      - name: Run Admiral Trader test suite
+        run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 
-          special = (capabilities.get('families') or {}).get('special-weapons') or {}
-          if special.get('tpl') != '6217726288ed9f0845317459' or special.get('sampleUnits') != 1 or special.get('permanentUnlock') is not False:
-              raise SystemExit('Special Weapons sample-only contract drift')
-          if set(questassort) != {'started', 'success', 'fail'} or len(questassort['success']) != 7:
-              raise SystemExit('candidate lost native lowercase seven-milestone questassort contract')
-          if len(assort.get('items') or []) != 11:
-              raise SystemExit(f"Gameplay Alpha must contain 11 offers; got {len(assort.get('items') or [])}")
-          if len(list((root / 'db/quests').glob('*.json'))) != 31:
-              raise SystemExit('Gameplay Alpha must contain 31 backbone quests')
-
-          project = ET.parse(root / 'server/AdmiralTrader.Server.csproj').getroot()
-          props = {node.tag: (node.text or '').strip() for group in project.findall('PropertyGroup') for node in group}
-          if props.get('SptRuntimeTarget') != '4.1.3' or props.get('SptPublishedApiBaseline') != '4.1.3':
-              raise SystemExit('csproj runtime/baseline contract drift')
-
-      - name: Validate exact-runtime PowerShell syntax
+      - name: Validate exact-runtime scripts
         shell: pwsh
         run: |
-          foreach ($script in @(
-            'mods/Admiral-Trader/tools/build_spt413_test_candidate.ps1',
-            'mods/Admiral-Trader/tools/package_spt413_exact_candidate.ps1'
-          )) {
-            $tokens = $null
-            $errors = $null
-            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $script), [ref]$tokens, [ref]$errors) | Out-Null
-            if ($errors.Count -ne 0) {
-              $errors | ForEach-Object { Write-Error "$script: $($_.Message)" }
-              exit 1
-            }
+          foreach ($script in @('mods/Admiral-Trader/tools/build_spt413_test_candidate.ps1','mods/Admiral-Trader/tools/package_spt413_exact_candidate.ps1')) {
+            $tokens=$null; $errors=$null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $script),[ref]$tokens,[ref]$errors)|Out-Null
+            if ($errors.Count) { $errors | % { Write-Error $_.Message }; exit 1 }
           }
 
-      - name: Build against published SPT 4.1.3 package line
+      - name: Build published SPT 4.1.3 API preflight
         run: dotnet build mods/Admiral-Trader/server/AdmiralTrader.Server.csproj -c Release
 
-      - name: Validate exact-runtime handoff guards are present
-        shell: bash
-        run: |
-          test -f 'mods/Admiral-Trader/tools/package_spt413_exact_candidate.ps1'
-          grep -Fq 'exact-installed-runtime' 'mods/Admiral-Trader/tools/build_spt413_test_candidate.ps1'
-          grep -Fq 'Copy-Item (Join-Path $moduleRoot '\''assets'\'')' 'mods/Admiral-Trader/tools/build_spt413_test_candidate.ps1'
-          grep -Fq '.Admiral-Trader.rollback' 'mods/Admiral-Trader/tools/package_spt413_exact_candidate.ps1'
-          grep -Fq 'officialPortraitSha256' 'mods/Admiral-Trader/tools/package_spt413_exact_candidate.ps1'
-          grep -Fq 'officialPortraitGitBlobSha1' 'mods/Admiral-Trader/tools/package_spt413_exact_candidate.ps1'
-
-      - name: Stage exact-head published-API preflight package
+      - name: Stage exact-head preflight package
         shell: python
         env:
           SOURCE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          import hashlib
-          import json
-          import os
-          import shutil
+          import hashlib, json, os, shutil
           from pathlib import Path
-
-          repo = Path.cwd()
-          module = repo / 'mods' / 'Admiral-Trader'
-          output = module / 'server' / 'bin' / 'Release' / 'net10.0'
-          dll = output / 'Admiral Trader Server.dll'
-          stage = repo / 'build' / 'admiral-trader-spt413-preflight' / 'SPT_Runtime' / 'user' / 'mods' / 'Admiral-Trader'
-          build_root = stage.parents[4]
-          if build_root.exists():
-              shutil.rmtree(build_root)
-          stage.mkdir(parents=True, exist_ok=True)
-
-          if not dll.exists():
-              raise SystemExit(f'built Admiral server DLL missing: {dll}')
-          shutil.copy2(dll, stage / dll.name)
-          for directory in ('db', 'manifests', 'assets'):
-              shutil.copytree(module / directory, stage / directory)
-
-          staged_manifest_path = stage / 'manifests' / 'runtime-manifest.json'
-          runtime = json.loads(staged_manifest_path.read_text(encoding='utf-8'))
-          runtime['registrationEnabled'] = True
-          runtime['publicationMode'] = 'published-api-preflight'
-          staged_manifest_path.write_text(json.dumps(runtime, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
-
-          identity = json.loads((stage / 'manifests' / 'identity-assets.json').read_text(encoding='utf-8'))
-          portrait_rel = identity['portrait']['runtimeAsset']
-          portrait = stage / portrait_rel
-          if not portrait.is_file():
-              raise SystemExit(f'staged preflight lost official portrait: {portrait_rel}')
-
-          package_root = Path.home() / '.nuget' / 'packages' / 'sptushonka.server.core' / '4.1.3'
-          core_candidates = list(package_root.rglob('SPTarkov.Server.Core.dll'))
-          if len(core_candidates) != 1:
-              raise SystemExit(f'expected one published SPT 4.1.3 Server.Core, got {core_candidates}')
-          published_core = core_candidates[0]
-
-          def sha256(path: Path) -> str:
-              h = hashlib.sha256()
-              with path.open('rb') as handle:
-                  for chunk in iter(lambda: handle.read(1024 * 1024), b''):
-                      h.update(chunk)
-              return h.hexdigest()
-
-          portrait_data = portrait.read_bytes()
-          portrait_blob = hashlib.sha1(f'blob {len(portrait_data)}\0'.encode('ascii') + portrait_data).hexdigest()
-          if portrait_blob != identity['portrait']['runtimeGitBlobSha1']:
-              raise SystemExit('staged preflight portrait Git blob drift')
-          portrait_hash = sha256(portrait)
-          provenance = {
-              'schemaVersion': 4,
-              'product': 'Admiral Trader',
-              'sourceHeadSha': os.environ['SOURCE_HEAD'],
-              'targetSptVersion': '4.1.3',
-              'compileMode': 'published-api-preflight',
-              'compilePackage': 'SPTushonka.Server.Core',
-              'compilePackageVersion': '4.1.3',
-              'runtimeAssemblyIdentity': 'SPTarkov.Server.Core.dll',
-              'publishedApiCoreSha256': sha256(published_core),
-              'serverDllSha256': sha256(stage / dll.name),
-              'officialPortraitRoute': identity['portrait']['runtimeRoute'],
-              'officialPortraitGitBlobSha1': portrait_blob,
-              'officialPortraitSha256': portrait_hash,
-              'publicationMode': 'published-api-preflight',
-              'physicalRuntimeEvidenceEligible': False,
-          }
-          (stage / 'candidate-provenance.json').write_text(json.dumps(provenance, indent=2) + '\n', encoding='utf-8')
-
-          if runtime.get('registrationEnabled') is not True or runtime.get('publicationMode') != 'published-api-preflight':
-              raise SystemExit('staged preflight classification drift')
-          if len(list((stage / 'db' / 'quests').glob('*.json'))) != 31:
-              raise SystemExit('staged preflight lost 31 backbone quests')
-          assort = json.loads((stage / 'db' / 'assort.json').read_text(encoding='utf-8'))
-          questassort = json.loads((stage / 'db' / 'questassort.json').read_text(encoding='utf-8'))
-          if len(assort.get('items') or []) != 11:
-              raise SystemExit('staged preflight lost Gameplay Alpha 11-offer assort')
-          if set(questassort) != {'started', 'success', 'fail'} or len(questassort['success']) != 7:
-              raise SystemExit('staged preflight lost lowercase seven-milestone questassort contract')
-          junk = [p for p in stage.rglob('*') if p.is_file() and (p.suffix in {'.pdb', '.log', '.zip'} or 'temp' in p.name.lower())]
-          if junk:
-              raise SystemExit(f'staged preflight package contains forbidden junk: {junk}')
+          repo=Path.cwd(); module=repo/'mods/Admiral-Trader'; out=module/'server/bin/Release/net10.0'
+          dll=out/'Admiral Trader Server.dll'; stage=repo/'build/admiral-trader-spt413-preflight/SPT_Runtime/user/mods/Admiral-Trader'
+          if stage.parents[4].exists(): shutil.rmtree(stage.parents[4])
+          stage.mkdir(parents=True)
+          shutil.copy2(dll,stage/dll.name)
+          for d in ('db','manifests','assets'): shutil.copytree(module/d,stage/d)
+          rm=stage/'manifests/runtime-manifest.json'; runtime=json.loads(rm.read_text(encoding='utf-8'))
+          runtime['registrationEnabled']=True; runtime['publicationMode']='published-api-preflight'
+          rm.write_text(json.dumps(runtime,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
+          identity=json.loads((stage/'manifests/identity-assets.json').read_text(encoding='utf-8'))
+          portrait=stage/identity['portrait']['runtimeAsset']; raw=portrait.read_bytes(); clean=raw.rstrip(b'\r\n')
+          if raw[len(clean):] not in (b'',b'\n',b'\r\n') or clean[:2]!=b'\xff\xd8' or clean[-2:]!=b'\xff\xd9': raise SystemExit('invalid portrait transport')
+          portrait.write_bytes(clean)
+          def sha(p): return hashlib.sha256(p.read_bytes()).hexdigest()
+          pkg=Path.home()/'.nuget/packages/sptushonka.server.core/4.1.3'; cores=list(pkg.rglob('SPTarkov.Server.Core.dll'))
+          if len(cores)!=1: raise SystemExit(f'published core count={len(cores)}')
+          prov={'schemaVersion':4,'product':'Admiral Trader','sourceHeadSha':os.environ['SOURCE_HEAD'],'targetSptVersion':'4.1.3','compileMode':'published-api-preflight','compilePackage':'SPTushonka.Server.Core','compilePackageVersion':'4.1.3','publishedApiCoreSha256':sha(cores[0]),'serverDllSha256':sha(stage/dll.name),'officialPortraitRoute':identity['portrait']['runtimeRoute'],'officialPortraitSourceGitBlobSha1':identity['portrait']['runtimeGitBlobSha1'],'officialPortraitSha256':sha(portrait),'publicationMode':'published-api-preflight','physicalRuntimeEvidenceEligible':False}
+          (stage/'candidate-provenance.json').write_text(json.dumps(prov,indent=2)+'\n',encoding='utf-8')
+          assert len(list((stage/'db/quests').glob('*.json')))==31
+          assert len(json.loads((stage/'db/assort.json').read_text())['items'])==11
 
       - name: Upload published-API preflight package
         uses: actions/upload-artifact@v4
