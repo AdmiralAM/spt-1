@@ -134,6 +134,8 @@ $artifactSha256 = (Get-FileHash $artifactPath -Algorithm SHA256).Hash.ToLowerInv
 
 # Installation is the final side effect. At this point source HEAD, exact-runtime
 # provenance, staged content, archive layout, and archive hash have all passed.
+# The live directory is replaced transactionally with a rollback backup so an
+# install-time filesystem failure cannot leave the runtime missing/partial.
 if ($Install) {
     $root = (Resolve-Path $SptRoot).Path
     $runtimeRoot = if (Test-Path (Join-Path $root 'SPTarkov.Server.Core.dll')) {
@@ -143,12 +145,64 @@ if ($Install) {
     } else {
         throw 'Cannot resolve SPT runtime root for final validated install.'
     }
-    $destination = Join-Path $runtimeRoot 'user\mods\Admiral-Trader'
-    if (Test-Path $destination) {
-        Remove-Item $destination -Recurse -Force
+
+    $modsRoot = Join-Path $runtimeRoot 'user\mods'
+    $destination = Join-Path $modsRoot 'Admiral-Trader'
+    $incoming = Join-Path $modsRoot '.Admiral-Trader.incoming'
+    $backup = Join-Path $modsRoot '.Admiral-Trader.rollback'
+    New-Item $modsRoot -ItemType Directory -Force | Out-Null
+
+    foreach ($scratch in @($incoming, $backup)) {
+        if (Test-Path $scratch) {
+            Remove-Item $scratch -Recurse -Force
+        }
     }
-    New-Item (Split-Path $destination -Parent) -ItemType Directory -Force | Out-Null
-    Copy-Item $stageMod $destination -Recurse
+
+    Copy-Item $stageMod $incoming -Recurse
+    foreach ($requiredRelative in @(
+        'candidate-provenance.json',
+        'Admiral Trader Server.dll',
+        'manifests\runtime-manifest.json',
+        'db\questassort.json'
+    )) {
+        if (-not (Test-Path (Join-Path $incoming $requiredRelative))) {
+            Remove-Item $incoming -Recurse -Force -ErrorAction SilentlyContinue
+            throw "Prepared install tree is incomplete: missing $requiredRelative"
+        }
+    }
+
+    $incomingDllSha256 = (Get-FileHash (Join-Path $incoming 'Admiral Trader Server.dll') -Algorithm SHA256).Hash.ToLowerInvariant()
+    if ($incomingDllSha256 -ne $provenance.serverDllSha256) {
+        Remove-Item $incoming -Recurse -Force -ErrorAction SilentlyContinue
+        throw "Prepared install DLL hash drift: provenance=$($provenance.serverDllSha256) actual=$incomingDllSha256"
+    }
+
+    $hadExistingInstall = Test-Path $destination
+    try {
+        if ($hadExistingInstall) {
+            Move-Item $destination $backup
+        }
+        Move-Item $incoming $destination
+    }
+    catch {
+        if (Test-Path $destination) {
+            Remove-Item $destination -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        if ($hadExistingInstall -and (Test-Path $backup)) {
+            Move-Item $backup $destination -ErrorAction SilentlyContinue
+        }
+        if (Test-Path $incoming) {
+            Remove-Item $incoming -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        throw
+    }
+
+    if (Test-Path $backup) {
+        Remove-Item $backup -Recurse -Force
+    }
+    if (Test-Path $incoming) {
+        Remove-Item $incoming -Recurse -Force
+    }
     Write-Host "Installed fully validated exact-runtime test candidate to: $destination"
 }
 
