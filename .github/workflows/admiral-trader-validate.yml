@@ -71,9 +71,11 @@ jobs:
           required_assort = {'items', 'barter_scheme', 'loyal_level_items'}
           if not required_assort.issubset(assort):
               raise SystemExit(f'assort missing native collections: {sorted(required_assort - set(assort))}')
-          for key in ('Started', 'Success', 'Fail'):
-              if key not in questassort or not isinstance(questassort[key], dict):
-                  raise SystemExit(f'questassort missing native collection: {key}')
+          native_status_keys = {'started', 'success', 'fail'}
+          if set(questassort) != native_status_keys:
+              raise SystemExit(f'questassort must contain exact native lowercase collections: {sorted(native_status_keys)}; got={sorted(questassort)}')
+          if not all(isinstance(questassort[key], dict) for key in native_status_keys):
+              raise SystemExit('questassort native status collections must all be dictionaries')
           PY
 
       - name: Build server runtime foundation against SPT 4.1.3
