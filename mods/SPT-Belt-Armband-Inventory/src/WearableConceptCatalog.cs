@@ -39,13 +39,15 @@ namespace SPTBeltArmbandInventory
         internal AccessoryCapacityBand Capacity { get; }
         internal WearableFilterDomain FilterDomains { get; }
         internal AccessoryCapability IntendedCapabilities { get; }
+        internal bool RuntimeEnabled { get; }
 
         internal WearableConceptDescriptor(
             WearableConceptId id,
             AccessoryCategory category,
             AccessoryCapacityBand capacity,
             WearableFilterDomain filterDomains,
-            AccessoryCapability intendedCapabilities)
+            AccessoryCapability intendedCapabilities,
+            bool runtimeEnabled = false)
         {
             if (filterDomains == WearableFilterDomain.None) throw new ArgumentOutOfRangeException(nameof(filterDomains));
             Id = id;
@@ -53,6 +55,7 @@ namespace SPTBeltArmbandInventory
             Capacity = capacity;
             FilterDomains = filterDomains;
             IntendedCapabilities = intendedCapabilities;
+            RuntimeEnabled = runtimeEnabled;
         }
 
         internal bool Allows(WearableFilterDomain domain)
@@ -142,7 +145,8 @@ namespace SPTBeltArmbandInventory
         internal static bool CanActivateRuntime(WearableConceptId id)
         {
             WearableConceptDescriptor descriptor = Get(id);
-            return AccessoryCategoryPolicy.HostState(descriptor.Category) == AccessoryHostState.Validated;
+            return descriptor.RuntimeEnabled
+                && AccessoryCategoryPolicy.HostState(descriptor.Category) == AccessoryHostState.Validated;
         }
     }
 }
