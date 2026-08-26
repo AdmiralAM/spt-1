@@ -17,6 +17,7 @@ The module now contains both client and server components:
 - `tools/` — deterministic hot-path checks;
 - `docs/` — compatibility archaeology and runtime contracts.
 - `docs/accessory-taxonomy.md` — shared category, capacity and UI geometry contract.
+- `docs/product-concept.md` — product purpose, balance rules and activation gates for ArmBand, Belt and HeadBand.
 
 The client remains event/interaction driven; it does not use per-frame inventory polling. Runtime reflection is used where EFT/SPT client members are obfuscated and is resolved outside hot paths.
 
