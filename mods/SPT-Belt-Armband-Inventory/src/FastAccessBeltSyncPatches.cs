@@ -48,6 +48,7 @@ namespace SPTBeltArmbandInventory
         }
 
         internal static Action<string> LogWarning;
+        internal static Action RequestFlush;
         internal static FieldInfo ControllerField;
         internal static FieldInfo ItemUiContextField;
         internal static MethodInfo ShowMethod;
@@ -94,9 +95,11 @@ namespace SPTBeltArmbandInventory
                     }
                     if (!ReferenceEquals(pendingView, view)) continue;
                     if (!added) PendingViews[i].RemovedContainer = item;
+                    RequestFlush?.Invoke();
                     return;
                 }
                 PendingViews.Add(new PendingRefresh(view, added ? null : item));
+                RequestFlush?.Invoke();
             }
             catch (Exception exception)
             {
@@ -162,6 +165,7 @@ namespace SPTBeltArmbandInventory
         {
             PendingViews.Clear();
             LogWarning = null;
+            RequestFlush = null;
             ControllerField = null;
             ItemUiContextField = null;
             ShowMethod = null;
