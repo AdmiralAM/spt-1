@@ -61,5 +61,30 @@ namespace SPTBeltArmbandInventory
         {
             return ExactWindowHeight(rows, 0f);
         }
+
+        // Historical helper retained only so older regression coverage still
+        // compiles while the production GridWindow route uses ExactWindow*.
+        // Do not use these minimum-clamped helpers for wearable runtime sizing.
+        internal static float CompactWindowWidth(int columns, float measuredGridWidth)
+        {
+            float exact = ExactWindowWidth(columns, measuredGridWidth);
+            return exact > 0f && exact < 96f ? 96f : exact;
+        }
+
+        internal static float CompactWindowWidth(int columns)
+        {
+            return CompactWindowWidth(columns, 0f);
+        }
+
+        internal static float CompactWindowHeight(int rows, float measuredGridHeight)
+        {
+            float exact = ExactWindowHeight(rows, measuredGridHeight);
+            return exact > 0f && exact < 136f ? 136f : exact;
+        }
+
+        internal static float CompactWindowHeight(int rows)
+        {
+            return CompactWindowHeight(rows, 0f);
+        }
     }
 }
