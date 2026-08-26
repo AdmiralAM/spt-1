@@ -56,10 +56,12 @@ public static class QuestExtractor
                         }
 
                         HashSet<QuestState> acceptedStates = new();
+                        HashSet<int> acceptedRawStatuses = new();
                         foreach (object status in EnumerateValues(GetMemberValue(condition, "status")))
                         {
-                            if (TryConvertInt(status, out int rawStatus))
-                                acceptedStates.Add(MapQuestStatus(rawStatus));
+                            if (!TryConvertInt(status, out int rawStatus)) continue;
+                            acceptedRawStatuses.Add(rawStatus);
+                            acceptedStates.Add(MapQuestStatus(rawStatus));
                         }
 
                         int availableAfterSeconds = 0;
@@ -72,7 +74,8 @@ public static class QuestExtractor
                             questId,
                             acceptedStates,
                             GetString(condition, "id"),
-                            availableAfterSeconds));
+                            availableAfterSeconds,
+                            acceptedRawStatuses));
                     }
                     else
                     {
