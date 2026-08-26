@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -13,32 +14,46 @@ namespace SPTBeltArmbandInventory
         sealed class PendingWindow
         {
             internal readonly WeakReference Window;
-            internal readonly bool RuntimeCandidateObserved;
             internal int Attempts;
-
-            internal PendingWindow(object window, bool runtimeCandidateObserved)
-            {
-                Window = new WeakReference(window);
-                RuntimeCandidateObserved = runtimeCandidateObserved;
-            }
+            internal PendingWindow(object window) { Window = new WeakReference(window); }
         }
 
         internal static Action<string> LogWarning;
         internal static Action RequestFlush;
+        internal static Type GridWindowType;
         static readonly List<PendingWindow> PendingWindows = new List<PendingWindow>();
 
-        internal static bool HasPending
+        internal static bool HasPending => PendingWindows.Count != 0;
+
+        internal static void ObserveItemUiContext(object itemUiContext)
         {
-            get { return PendingWindows.Count != 0; }
+            if (itemUiContext == null || GridWindowType == null) return;
+            try
+            {
+                IList windows = ReflectionTools.ReadMember(itemUiContext, "_windows") as IList;
+                if (windows == null || windows.Count == 0) return;
+
+                object windowData = windows[windows.Count - 1];
+                if (windowData == null) return;
+                object windowType = ReflectionTools.ReadMember(windowData, "WindowType");
+                if (!Equals(windowType, GridWindowType)) return;
+
+                object item = ReflectionTools.ReadMember(windowData, "Item");
+                if (!IsRuntimeCandidate(item)) return;
+
+                object window = ReflectionTools.ReadMember(windowData, "Window");
+                if (window == null || !GridWindowType.IsInstanceOfType(window)) return;
+                ObserveWindow(window);
+            }
+            catch (Exception exception)
+            {
+                LogWarning?.Invoke("B&A&HB compact window observation failed closed: " + Unwrap(exception).GetType().FullName + ": " + Unwrap(exception).Message);
+            }
         }
 
-        internal static void Observe(object window, object[] args)
+        static void ObserveWindow(object window)
         {
-            if (window == null) return;
-            bool runtimeCandidateObserved = ContainsRuntimeCandidate(args) || IsRuntimeCandidate(ReadWindowItem(window));
-            if (!runtimeCandidateObserved) return;
-            if (TryAdjust(window, true)) return;
-
+            if (TryAdjust(window)) return;
             for (int i = 0; i < PendingWindows.Count; i++)
             {
                 object existing = PendingWindows[i].Window.Target;
@@ -51,59 +66,26 @@ namespace SPTBeltArmbandInventory
                 RequestFlush?.Invoke();
                 return;
             }
-
-            PendingWindows.Add(new PendingWindow(window, runtimeCandidateObserved));
+            PendingWindows.Add(new PendingWindow(window));
             RequestFlush?.Invoke();
         }
 
         internal static void Flush()
         {
             if (PendingWindows.Count == 0) return;
-
             for (int i = 0; i < PendingWindows.Count; i++)
             {
                 PendingWindow pending = PendingWindows[i];
                 object window = pending.Window.Target;
-                if (window == null)
-                {
-                    PendingWindows.RemoveAt(i--);
-                    continue;
-                }
-
-                if (TryAdjust(window, pending.RuntimeCandidateObserved) || ++pending.Attempts >= MaxDeferredAttempts)
+                if (window == null || TryAdjust(window) || ++pending.Attempts >= MaxDeferredAttempts)
                     PendingWindows.RemoveAt(i--);
             }
         }
 
-        internal static void Reset()
-        {
-            PendingWindows.Clear();
-            LogWarning = null;
-            RequestFlush = null;
-        }
-
-        static bool ContainsRuntimeCandidate(object[] args)
-        {
-            if (args == null) return false;
-            for (int i = 0; i < args.Length; i++)
-            {
-                object value = args[i];
-                if (IsRuntimeCandidate(value)) return true;
-
-                object item = ReflectionTools.ReadMember(value, "Item");
-                if (IsRuntimeCandidate(item)) return true;
-
-                object contained = ReflectionTools.ReadMember(value, "ContainedItem");
-                if (IsRuntimeCandidate(contained)) return true;
-            }
-            return false;
-        }
-
-        static bool TryAdjust(object window, bool runtimeCandidateObserved)
+        static bool TryAdjust(object window)
         {
             Component component = window as Component;
             if (component == null || component.gameObject == null || !component.gameObject.activeInHierarchy) return false;
-            if (!runtimeCandidateObserved && !IsRuntimeCandidate(ReadWindowItem(window))) return false;
 
             RectTransform rect = component.transform as RectTransform;
             if (rect == null) return false;
@@ -118,25 +100,11 @@ namespace SPTBeltArmbandInventory
             return true;
         }
 
-        static object ReadWindowItem(object window)
-        {
-            object item = ReflectionTools.ReadMember(window, "_item");
-            if (item != null) return item;
-
-            object context = ReflectionTools.ReadMember(window, "_itemContext");
-            item = ReflectionTools.ReadMember(context, "Item");
-            if (item != null) return item;
-
-            object source = ReflectionTools.ReadMember(context, "_source");
-            return ReflectionTools.ReadMember(source, "Item");
-        }
-
         internal static bool IsRuntimeCandidate(object item)
         {
             if (item == null) return false;
             object stringTemplateId = ReflectionTools.ReadMember(item, "StringTemplateId");
             if (AccessoryGridPolicy.IsRuntimeCandidateTemplate(stringTemplateId as string)) return true;
-
             object templateId = ReflectionTools.ReadMember(item, "TemplateId");
             return templateId != null && AccessoryGridPolicy.IsRuntimeCandidateTemplate(templateId.ToString());
         }
@@ -148,7 +116,6 @@ namespace SPTBeltArmbandInventory
                 Type layoutElementType = Type.GetType("UnityEngine.UI.LayoutElement, UnityEngine.UI", false);
                 Component layout = layoutElementType == null ? null : gameObject.GetComponent(layoutElementType);
                 if (layout == null) return;
-
                 SetFloat(layout, "minWidth", width);
                 SetFloat(layout, "preferredWidth", width);
                 SetFloat(layout, "minHeight", height);
@@ -156,14 +123,33 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                if (LogWarning != null) LogWarning("Could not apply compact ArmBand GridWindow layout element: " + exception.Message);
+                LogWarning?.Invoke("Could not apply compact ArmBand GridWindow layout element: " + Unwrap(exception).Message);
             }
         }
 
         static void SetFloat(object target, string propertyName, float value)
         {
-            PropertyInfo property = target.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            if (property != null && property.CanWrite) property.SetValue(target, value, null);
+            PropertyInfo property = ReflectionTools.FindInstanceProperty(target?.GetType(), propertyName, typeof(float));
+            if (property != null && property.CanWrite)
+            {
+                try { property.SetValue(target, value, null); }
+                catch (Exception exception) { LogWarning?.Invoke("B&A&HB compact layout property failed closed: " + propertyName + ": " + Unwrap(exception).Message); }
+            }
+        }
+
+        static Exception Unwrap(Exception exception)
+        {
+            Exception current = exception;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null) current = invocation.InnerException;
+            return current;
+        }
+
+        internal static void Reset()
+        {
+            PendingWindows.Clear();
+            LogWarning = null;
+            RequestFlush = null;
+            GridWindowType = null;
         }
     }
 
@@ -187,33 +173,32 @@ namespace SPTBeltArmbandInventory
             {
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
+                Type itemUiContextType = ReflectionTools.FindType("EFT.UI.ItemUiContext");
                 Type gridWindowType = ReflectionTools.FindType("EFT.UI.GridWindow");
-                if (harmonyType == null || harmonyMethodType == null || gridWindowType == null)
-                    return Fail("SPT 4.1 GridWindow or Harmony was not found; compact ArmBand window sizing is disabled.");
+                Type compoundItemType = ReflectionTools.FindType("EFT.InventoryLogic.CompoundItem");
+                Type itemContextType = ReflectionTools.FindType("EFT.InventoryLogic.ItemContext");
+                if (harmonyType == null || harmonyMethodType == null || itemUiContextType == null || gridWindowType == null || compoundItemType == null || itemContextType == null)
+                    return Fail("SPT 4.1 ItemUiContext.OpenItem/GridWindow boundary was not found; compact ArmBand window sizing is disabled.");
+
+                MethodInfo openItem = ReflectionTools.FindInstanceMethod(itemUiContextType, "OpenItem", typeof(void), compoundItemType, itemContextType);
+                if (openItem == null)
+                    return Fail("SPT 4.1 ItemUiContext.OpenItem(CompoundItem, ItemContext) boundary was not found; compact ArmBand window sizing is disabled.");
 
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
-                if (patchMethod == null || harmonyMethodConstructor == null || unpatchSelf == null)
+                unpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
+                if (!HarmonyInstallPolicy.CanBegin(true, patchMethod != null, harmonyMethodConstructor != null, unpatchSelf != null))
                     return Fail("Harmony patch API is incompatible; compact ArmBand window sizing is disabled.");
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
-                object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
-                int patched = 0;
-                MethodInfo[] methods = gridWindowType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                for (int i = 0; i < methods.Length; i++)
-                {
-                    MethodInfo method = methods[i];
-                    if (!IsGridWindowShow(method)) continue;
-                    Patch(patchMethod, harmonyMethodType, method, postfix);
-                    patched++;
-                }
-
-                if (patched == 0)
-                    return Fail("SPT 4.1 GridWindow declares no patchable Show overload; compact ArmBand window sizing is disabled.");
+                if (harmony == null) return Fail("Harmony instance creation failed; compact ArmBand window sizing is disabled.");
 
                 GridWindowSizingRuntime.LogWarning = logWarning;
-                if (logInfo != null) logInfo("B&A&HB compact ArmBand GridWindow sizing installed on " + patched + " declared Show overload(s).");
+                GridWindowSizingRuntime.GridWindowType = gridWindowType;
+                object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
+                Patch(patchMethod, harmonyMethodType, openItem, postfix);
+
+                logInfo?.Invoke("B&A&HB compact ArmBand GridWindow sizing installed on ItemUiContext.OpenItem(CompoundItem, ItemContext).");
                 return true;
             }
             catch (Exception exception)
@@ -224,37 +209,37 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static bool IsGridWindowShow(MethodInfo method)
-        {
-            if (method == null || !string.Equals(method.Name, "Show", StringComparison.Ordinal) || method.IsAbstract || method.ContainsGenericParameters) return false;
-            return method.ReturnType == typeof(void);
-        }
-
         static MethodInfo PostfixFactory(MethodBase original)
         {
             MethodInfo originalMethod = original as MethodInfo;
             if (originalMethod == null || originalMethod.DeclaringType == null) return null;
-
             DynamicMethod postfix = new DynamicMethod(
-                "CompactArmBandGridWindowPostfix",
+                "CompactArmBandOpenItemPostfix",
                 typeof(void),
-                new[] { originalMethod.DeclaringType, typeof(object[]) },
+                new[] { originalMethod.DeclaringType },
                 typeof(GridWindowSizingPatches),
                 true);
             postfix.DefineParameter(1, ParameterAttributes.None, "__instance");
-            postfix.DefineParameter(2, ParameterAttributes.None, "__args");
-
             ILGenerator il = postfix.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldarg_1);
-            il.Emit(OpCodes.Call, typeof(GridWindowSizingRuntime).GetMethod(nameof(GridWindowSizingRuntime.Observe), BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
+            il.Emit(OpCodes.Call, typeof(GridWindowSizingRuntime).GetMethod(nameof(GridWindowSizingRuntime.ObserveItemUiContext), BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
             il.Emit(OpCodes.Ret);
             return postfix;
         }
 
         static MethodInfo Method(string name)
         {
-            return typeof(GridWindowSizingPatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
+            MethodInfo[] methods = typeof(GridWindowSizingPatches).GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            for (int i = 0; i < methods.Length; i++) if (string.Equals(methods[i].Name, name, StringComparison.Ordinal)) return methods[i];
+            return null;
+        }
+
+        static MethodInfo FindZeroArgInstanceMethod(Type type, string name)
+        {
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal) && methods[i].GetParameters().Length == 0) return methods[i];
+            return null;
         }
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
@@ -285,12 +270,11 @@ namespace SPTBeltArmbandInventory
         static Exception Unwrap(Exception exception)
         {
             Exception current = exception;
-            while (current is TargetInvocationException invocation && invocation.InnerException != null)
-                current = invocation.InnerException;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null) current = invocation.InnerException;
             return current;
         }
 
-        bool Fail(string message) { if (logWarning != null) logWarning(message); return false; }
+        bool Fail(string message) { logWarning?.Invoke(message); return false; }
 
         public void Dispose()
         {
