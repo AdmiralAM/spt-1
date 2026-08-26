@@ -6,6 +6,9 @@ namespace SPTQuestPlanner.Client
     public sealed class PlannerQueryEngine
     {
         private const int CompletedDisposition = 5;
+        private const int ActiveDisposition = 4;
+        private const int AvailableDisposition = 3;
+        private const int SuccessProfileState = 4;
         private readonly PlannerTopologyIndex topology;
         private readonly PlannerClientIndex state;
         private readonly int maxVisitedNodes;
@@ -37,26 +40,56 @@ namespace SPTQuestPlanner.Client
             PlannerTopologyQuest completedQuest = topology.GetQuest(questId);
             if (completedQuest == null) return Array.Empty<string>();
 
-            List<string> result = new List<string>();
-            for (int i = 0; i < completedQuest.DependentQuestIds.Count; i++)
+            HashSet<string> result = new HashSet<string>(StringComparer.Ordinal);
+            for (int i = 0; i < completedQuest.DependentEdges.Count; i++)
             {
-                string dependentId = completedQuest.DependentQuestIds[i];
-                PlannerTopologyQuest dependent = topology.GetQuest(dependentId);
-                if (dependent == null) continue;
+                PlannerTopologyPrerequisite completedEdge = completedQuest.DependentEdges[i];
+                if (!string.Equals(completedEdge.SourceQuestId, questId, StringComparison.Ordinal)) continue;
+                if (!completedEdge.AcceptsProfileState(SuccessProfileState)) continue;
+                if (completedEdge.AvailableAfterSeconds > 0) continue;
 
-                bool unlocked = true;
-                for (int p = 0; p < dependent.PrerequisiteQuestIds.Count; p++)
+                PlannerTopologyQuest dependent = topology.GetQuest(completedEdge.TargetQuestId);
+                if (dependent == null || !dependent.StartConditionCoverageComplete) continue;
+
+                PlannerQuestClientState dependentState = state.GetQuest(dependent.QuestId);
+                if (dependentState != null)
                 {
-                    string prerequisiteId = dependent.PrerequisiteQuestIds[p];
-                    if (string.Equals(prerequisiteId, questId, StringComparison.Ordinal)) continue;
-                    if (IsCompleted(prerequisiteId)) continue;
-                    unlocked = false;
-                    break;
+                    if (!dependentState.LevelGateSatisfied) continue;
+                    if (dependentState.Disposition == ActiveDisposition ||
+                        dependentState.Disposition == AvailableDisposition ||
+                        dependentState.Disposition == CompletedDisposition)
+                        continue;
                 }
 
-                if (unlocked) result.Add(dependentId);
+                bool unlocked = true;
+                for (int p = 0; p < dependent.PrerequisiteEdges.Count; p++)
+                {
+                    PlannerTopologyPrerequisite prerequisite = dependent.PrerequisiteEdges[p];
+                    if (string.Equals(prerequisite.SourceQuestId, questId, StringComparison.Ordinal))
+                    {
+                        if (!prerequisite.AcceptsProfileState(SuccessProfileState) || prerequisite.AvailableAfterSeconds > 0)
+                        {
+                            unlocked = false;
+                            break;
+                        }
+                        continue;
+                    }
+
+                    int sourceProfileState = EffectiveProfileState(state.GetQuest(prerequisite.SourceQuestId));
+                    if (!prerequisite.AcceptsProfileState(sourceProfileState))
+                    {
+                        unlocked = false;
+                        break;
+                    }
+                }
+
+                if (unlocked) result.Add(dependent.QuestId);
             }
-            return result;
+
+            string[] ordered = new string[result.Count];
+            result.CopyTo(ordered);
+            Array.Sort(ordered, StringComparer.Ordinal);
+            return ordered;
         }
 
         public IReadOnlyList<string> GetIncompletePrerequisitePlan(string targetQuestId)
@@ -153,6 +186,17 @@ namespace SPTQuestPlanner.Client
             }
 
             return visited;
+        }
+
+        private static int EffectiveProfileState(PlannerQuestClientState questState)
+        {
+            if (questState == null) return 0;
+            if (questState.ProfileState >= 0 && questState.ProfileState <= 5 && questState.ProfileState != 0)
+                return questState.ProfileState;
+            if (questState.Disposition == CompletedDisposition) return 4;
+            if (questState.Disposition == ActiveDisposition) return 3;
+            if (questState.Disposition == AvailableDisposition) return 2;
+            return questState.ProfileState;
         }
 
         private bool IsCompleted(string questId)
