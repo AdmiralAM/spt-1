@@ -46,11 +46,11 @@ public sealed record ValueColorConfig
     public double VioletMaxValue { get; init; } = 100000;
     public double RedMaxValue { get; init; } = 250000;
 
-    public double AmmoLightGreenMaxPen { get; init; } = 15;
-    public double AmmoGreenMaxPen { get; init; } = 26;
-    public double AmmoNavyMaxPen { get; init; } = 35;
-    public double AmmoVioletMaxPen { get; init; } = 44;
-    public double AmmoRedMaxPen { get; init; } = 54;
+    public double AmmoTintStartPen { get; init; } = 10;
+    public double AmmoLightGreenMaxPen { get; init; } = 20;
+    public double AmmoNavyMaxPen { get; init; } = 40;
+    public double AmmoVioletMaxPen { get; init; } = 50;
+    public double AmmoRedMaxPen { get; init; } = 70;
 
     public string LightGreenColor { get; init; } = "#526B3F";
     public string GreenColor { get; init; } = "#294F31";
@@ -66,8 +66,8 @@ public sealed record ValueColorConfig
               NavyMaxValue < VioletMaxValue && VioletMaxValue < RedMaxValue))
             throw new InvalidDataException("Item Valuation money thresholds must be non-negative and strictly ascending.");
 
-        if (!(0 <= AmmoLightGreenMaxPen && AmmoLightGreenMaxPen < AmmoGreenMaxPen &&
-              AmmoGreenMaxPen < AmmoNavyMaxPen && AmmoNavyMaxPen < AmmoVioletMaxPen &&
+        if (!(0 <= AmmoTintStartPen && AmmoTintStartPen < AmmoLightGreenMaxPen &&
+              AmmoLightGreenMaxPen < AmmoNavyMaxPen && AmmoNavyMaxPen < AmmoVioletMaxPen &&
               AmmoVioletMaxPen < AmmoRedMaxPen))
             throw new InvalidDataException("Item Valuation ammo penetration thresholds must be non-negative and strictly ascending.");
 
@@ -90,10 +90,10 @@ public static class TierClassifier
         return config.GoldColor;
     }
 
-    public static string GetAmmoColor(double penetration, ValueColorConfig config)
+    public static string? GetAmmoColor(double penetration, ValueColorConfig config)
     {
+        if (penetration < config.AmmoTintStartPen) return null;
         if (penetration <= config.AmmoLightGreenMaxPen) return config.LightGreenColor;
-        if (penetration <= config.AmmoGreenMaxPen) return config.GreenColor;
         if (penetration <= config.AmmoNavyMaxPen) return config.NavyColor;
         if (penetration <= config.AmmoVioletMaxPen) return config.VioletColor;
         if (penetration <= config.AmmoRedMaxPen) return config.RedColor;
@@ -143,7 +143,13 @@ public sealed class ItemValuationBackgroundLoader(
             if (itemHelper.IsOfBaseclass(templateId, BaseClasses.AMMO))
             {
                 double penetration = properties.PenetrationPower ?? 0;
-                properties.BackgroundColor = TierClassifier.GetAmmoColor(penetration, config);
+                string? ammoColor = TierClassifier.GetAmmoColor(penetration, config);
+                if (ammoColor is null)
+                {
+                    preserved++;
+                    continue;
+                }
+                properties.BackgroundColor = ammoColor;
                 coloredAmmo++;
                 continue;
             }
@@ -188,7 +194,7 @@ public sealed class ItemValuationBackgroundLoader(
 
         logger.Success(
             $"{RuntimeIdentity.ProductName} {RuntimeIdentity.Version}: money-colored {coloredMoney}, ammo-colored {coloredAmmo}, " +
-            $"preserved {preserved} below money threshold; value source wins trader={traderWon}, flea={fleaWon}, handbook={handbookFallback}; " +
+            $"preserved {preserved} below money/ammo tint thresholds; value source wins trader={traderWon}, flea={fleaWon}, handbook={handbookFallback}; " +
             "single PostLoad pass, BackgroundColor only, no client patches or runtime polling");
         return Task.CompletedTask;
     }
