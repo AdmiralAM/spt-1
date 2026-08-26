@@ -37,6 +37,7 @@
     <Compile Include="..\client\PlannerRaidFocusEvidence.cs" Link="PlannerRaidFocusEvidence.cs" />
     <Compile Include="..\client\PlannerRaidFocusedDecisionPolicy.cs" Link="PlannerRaidFocusedDecisionPolicy.cs" />
     <Compile Include="..\client\PlannerCapabilityGoal.cs" Link="PlannerCapabilityGoal.cs" />
+    <Compile Include="..\client\PlannerCapabilityGoalCatalog.cs" Link="PlannerCapabilityGoalCatalog.cs" />
     <Compile Include="..\client\PlannerAdmiralCapabilityContractAdapter.cs" Link="PlannerAdmiralCapabilityContractAdapter.cs" />
     <Compile Include="..\client\PlannerCapabilityGoalPresentation.cs" Link="PlannerCapabilityGoalPresentation.cs" />
     <Compile Include="..\client\PlannerCapabilityDecisionValue.cs" Link="PlannerCapabilityDecisionValue.cs" />
