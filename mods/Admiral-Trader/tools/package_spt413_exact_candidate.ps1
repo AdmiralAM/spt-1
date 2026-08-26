@@ -24,7 +24,9 @@ if ($expected -notmatch '^[0-9a-f]{40}$') {
     throw 'ExpectedHeadSha must be the full 40-character hexadecimal Git SHA.'
 }
 
-& $builder -SptRoot $SptRoot -ExpectedHeadSha $expected -Install:$Install
+# Always stage first. Installation is intentionally deferred until every wrapper
+# provenance/tree/archive validation below has succeeded.
+& $builder -SptRoot $SptRoot -ExpectedHeadSha $expected
 if ($LASTEXITCODE -ne 0) {
     throw "Exact-runtime candidate builder failed with exit code $LASTEXITCODE"
 }
@@ -129,6 +131,26 @@ finally {
 
 $artifactSha256 = (Get-FileHash $artifactPath -Algorithm SHA256).Hash.ToLowerInvariant()
 "$artifactSha256  $artifactName" | Set-Content $shaPath -Encoding ascii
+
+# Installation is the final side effect. At this point source HEAD, exact-runtime
+# provenance, staged content, archive layout, and archive hash have all passed.
+if ($Install) {
+    $root = (Resolve-Path $SptRoot).Path
+    $runtimeRoot = if (Test-Path (Join-Path $root 'SPTarkov.Server.Core.dll')) {
+        $root
+    } elseif (Test-Path (Join-Path $root 'SPT_Runtime\SPTarkov.Server.Core.dll')) {
+        Join-Path $root 'SPT_Runtime'
+    } else {
+        throw 'Cannot resolve SPT runtime root for final validated install.'
+    }
+    $destination = Join-Path $runtimeRoot 'user\mods\Admiral-Trader'
+    if (Test-Path $destination) {
+        Remove-Item $destination -Recurse -Force
+    }
+    New-Item (Split-Path $destination -Parent) -ItemType Directory -Force | Out-Null
+    Copy-Item $stageMod $destination -Recurse
+    Write-Host "Installed fully validated exact-runtime test candidate to: $destination"
+}
 
 Write-Host "Exact-runtime candidate package ready: $artifactPath"
 Write-Host "Candidate SHA-256: $artifactSha256"
