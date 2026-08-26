@@ -10,12 +10,8 @@ namespace SPTBeltArmbandInventory
         internal const string CustomTemplateParentId = "68ac00000000000000000004";
         internal const string CustomBeltParentId = "68ac00000000000000000005";
 
-        const string HarmonyId = "com.admiralam.spt.belt-armband-inventory.runtime-types";
-
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
-        object harmony;
-        MethodInfo unpatchSelf;
 
         internal RuntimeCustomBeltTypePatches(Action<string> logInfo, Action<string> logWarning)
         {
@@ -43,44 +39,6 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        bool InstallItemTypeInitPostfix()
-        {
-            Type registryType = ReflectionTools.FindType("GClass3381");
-            Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
-            Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
-            if (registryType == null || harmonyType == null || harmonyMethodType == null)
-            {
-                logWarning?.Invoke("B&A&HB RUNTIME TYPE: SPT 4.1.3 item-type initialization registry or Harmony not found.");
-                return false;
-            }
-
-            MethodInfo init = registryType.GetMethod("Init", BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            MethodInfo patch = FindPatchMethod(harmonyType, harmonyMethodType);
-            ConstructorInfo hmCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-            if (init == null || patch == null || hmCtor == null)
-            {
-                logWarning?.Invoke("B&A&HB RUNTIME TYPE: GClass3381.Init/Harmony patch boundary changed.");
-                return false;
-            }
-
-            harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
-            unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
-            object postfix = hmCtor.Invoke(new object[] { typeof(RuntimeCustomBeltTypes).GetMethod(nameof(RuntimeCustomBeltTypes.AfterItemTypeInit), BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public) });
-            patch.Invoke(harmony, new[] { (MethodBase)init, null, postfix, null, null });
-            return true;
-        }
-
-        static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
-        {
-            foreach (MethodInfo method in harmonyType.GetMethods(BindingFlags.Instance | BindingFlags.Public))
-            {
-                if (method.Name != "Patch") continue;
-                ParameterInfo[] p = method.GetParameters();
-                if (p.Length == 5 && p[0].ParameterType == typeof(MethodBase) && p[1].ParameterType == harmonyMethodType) return method;
-            }
-            return null;
-        }
-
         static Exception Unwrap(Exception exception)
         {
             Exception current = exception;
@@ -90,9 +48,7 @@ namespace SPTBeltArmbandInventory
 
         public void Dispose()
         {
-            try { if (harmony != null && unpatchSelf != null) unpatchSelf.Invoke(harmony, null); } catch { }
-            harmony = null;
-            unpatchSelf = null;
+            RuntimeCustomBeltTypes.ReleaseLogging(logInfo, logWarning);
         }
     }
 
@@ -217,20 +173,10 @@ namespace SPTBeltArmbandInventory
             constructors[RuntimeCustomBeltTypePatches.CustomBeltParentId] = factory.CreateDelegate(delegateType);
         }
 
-        internal static void AfterItemTypeInit()
+        internal static void ReleaseLogging(Action<string> logInfo, Action<string> logWarning)
         {
-            try
-            {
-                RegisterJsonMappings();
-                EnsureSerializationTypes();
-                LogInfo?.Invoke("B&A&HB RUNTIME TYPE: SPT 4.1.3 item-type initialization retained custom belt/template registration.");
-            }
-            catch (Exception exception)
-            {
-                Exception root = exception;
-                while (root is TargetInvocationException invocation && invocation.InnerException != null) root = invocation.InnerException;
-                LogWarning?.Invoke("B&A&HB RUNTIME TYPE INIT FAIL: " + root.GetType().FullName + ": " + root.Message);
-            }
+            if (Equals(LogInfo, logInfo)) LogInfo = null;
+            if (Equals(LogWarning, logWarning)) LogWarning = null;
         }
 
         static void EnsureSerializationTypes()

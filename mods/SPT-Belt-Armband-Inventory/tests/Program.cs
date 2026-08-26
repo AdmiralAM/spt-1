@@ -104,6 +104,17 @@ internal static class Program
         Assert(!RuntimeMutationPolicy.ShouldRestore(new object(), installedMutation), "temporary mutation does not overwrite a later replacement from another mod");
         Assert(!RuntimeMutationPolicy.ShouldRestore(null, installedMutation), "temporary mutation does not restore after external clearing");
 
+        Action<string> ownedInfoLogger = _ => { };
+        Action<string> ownedWarningLogger = _ => { };
+        Action<string> replacementLogger = _ => { };
+        RuntimeCustomBeltTypes.LogInfo = ownedInfoLogger;
+        RuntimeCustomBeltTypes.LogWarning = ownedWarningLogger;
+        RuntimeCustomBeltTypes.ReleaseLogging(replacementLogger, ownedWarningLogger);
+        Assert(ReferenceEquals(RuntimeCustomBeltTypes.LogInfo, ownedInfoLogger), "runtime type cleanup preserves a later or foreign info logger");
+        Assert(RuntimeCustomBeltTypes.LogWarning == null, "runtime type cleanup releases its owned warning logger");
+        RuntimeCustomBeltTypes.ReleaseLogging(ownedInfoLogger, null);
+        Assert(RuntimeCustomBeltTypes.LogInfo == null, "runtime type cleanup releases its owned info logger");
+
         Assert(PickupSlotPolicy.ShouldTry(true, true, false, true), "compatible container can fall back to ArmBand when vanilla pickup has no slot");
         Assert(!PickupSlotPolicy.ShouldTry(false, true, false, true), "vanilla pickup result always wins");
         Assert(!PickupSlotPolicy.ShouldTry(true, false, false, true), "non-container item never uses belt pickup fallback");
