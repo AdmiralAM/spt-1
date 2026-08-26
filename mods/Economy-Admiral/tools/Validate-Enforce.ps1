@@ -20,9 +20,9 @@ $manifest = Read-Json (Join-Path $ReportsPath 'economy-admiral-runtime-evidence.
 $plan = Read-Json (Join-Path $ReportsPath 'economy-admiral-enforcement-plan.json')
 $delta = Read-Json (Join-Path $ReportsPath 'economy-admiral-provenance-delta.json')
 
-if ($manifest.SchemaVersion -ne 4) { Fail "runtime evidence SchemaVersion must be 4" }
+if ($manifest.SchemaVersion -ne 5) { Fail "runtime evidence SchemaVersion must be 5" }
 if ([string]$manifest.Mode -ne 'Enforce') { Fail "validator requires mode=Enforce, got $($manifest.Mode)" }
-if ($manifest.ExpectedReportCount -ne 9 -or $manifest.PresentReportCount -ne 9 -or $manifest.AllExpectedReportsPresent -ne $true) { Fail "9/9 core reports are required" }
+if ($manifest.ExpectedReportCount -ne 7 -or $manifest.PresentReportCount -ne 7 -or $manifest.AllExpectedReportsPresent -ne $true) { Fail "7/7 core reports are required" }
 if ($manifest.ApplyMutations -ne $true) { Fail "Enforce runtime evidence says ApplyMutations=false" }
 if ($manifest.EnforcementEvidenceValid -ne $true -or $manifest.RuntimeGatePassed -ne $true) { Fail "Enforce runtime evidence gate did not pass" }
 if ($manifest.DatabaseChangeExpected -ne $true) { Fail "test Alpha requires a real DB change" }
