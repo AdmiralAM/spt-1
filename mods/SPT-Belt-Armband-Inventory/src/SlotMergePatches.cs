@@ -67,39 +67,28 @@ namespace SPTBeltArmbandInventory
                 }
                 catch (Exception exception)
                 {
-                    LogException("B&A&HB MERGE ENUM DIAG", exception);
+                    LogException("B&A&HB MERGE ENUM", exception);
                     return Fail("EParentMergeType.InheritFromItem was not found; ArmBand merge compatibility is disabled.");
                 }
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo hmCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
-                if (harmony == null || patchMethod == null || hmCtor == null || unpatchSelf == null)
-                    return Fail("Harmony patch API is incompatible; ArmBand merge compatibility is disabled.");
+                MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
+                if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, hmCtor != null, rollback != null))
+                    return Fail("Harmony patch/rollback API is incompatible; ArmBand merge compatibility is disabled.");
+                unpatchSelf = rollback;
 
                 SlotMergeRuntime.InheritFromItemValue = inheritFromItem;
-                MethodInfo postfixFactory = Method(nameof(PostfixFactory));
-                object hmPostfix = hmCtor.Invoke(new object[] { postfixFactory });
-
-                try
-                {
-                    logInfo?.Invoke("B&A&HB MERGE PATCH DIAG: invoking Harmony Patch for " + getter + " with postfix factory " + postfixFactory + ".");
-                    Patch(patchMethod, harmonyMethodType, getter, hmPostfix);
-                    logInfo?.Invoke("B&A&HB MERGE PATCH DIAG: Harmony Patch invocation returned successfully.");
-                }
-                catch (Exception patchException)
-                {
-                    LogException("B&A&HB MERGE PATCH DIAG failure", patchException);
-                    throw;
-                }
+                object hmPostfix = hmCtor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
+                Patch(patchMethod, harmonyMethodType, getter, hmPostfix);
 
                 if (logInfo != null) logInfo("ArmBand merge compatibility installed via MergeContainerWithChildren postfix result override.");
                 return true;
             }
             catch (Exception exception)
             {
-                LogException("B&A&HB MERGE INSTALL DIAG", exception);
+                LogException("B&A&HB MERGE INSTALL", exception);
                 Dispose();
                 Exception root = Unwrap(exception);
                 return Fail("ArmBand merge compatibility installation failed safely: " + root.GetType().FullName + ": " + root.Message);
