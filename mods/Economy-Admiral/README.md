@@ -1,187 +1,102 @@
 # Economy Admiral
 
-**Economy Admiral** is a server-side economy analysis and enforcement-policy mod for SPT 4.1.x. The current physical target is **SPT 4.1.3**.
+Economy Admiral is an SPT 4.1.3 server-side economy normalization mod. The physically accepted Alpha mutates only numeric quest rewards (`Experience` and `TraderStanding`) under strict pristine/provenance and transaction safety rules.
 
-## Current status
+## Current product state
 
-The current MVP is a **read-only, provenance-aware economy audit and fail-closed enforcement-planning pipeline**. No final DB mutation is enabled.
+### Physically accepted Enforce Alpha
 
-Implemented:
+The accepted Alpha is the narrow Experience/TraderStanding slice. It has been physically exercised on SPT 4.1.3 with Audit read-only proof, real Enforce DB mutations, pristine protection, exact target verification, rollback/idempotence smoke coverage, and Off-mode proof.
 
-- pristine startup snapshot at `OnLoadOrder.Watermark + 1`;
-- final modded DB analysis at `OnLoadOrder.PostLoad + 1000`;
-- centralized `Off` gate;
-- typed trader/quest acquisition and typed quest-item reward accounting;
-- rarity classification and manual item overrides;
-- trader malformed-offer/source-saturation audit;
-- pristine vanilla reward, XP, standing, unlock, progression and constraint benchmarks;
-- prerequisite graph/cycle/depth analysis;
-- timed / one-session / FIR / plant / distance / daytime constraints;
-- unified per-quest analysis and configurable observational flags;
-- `Easy / Normal / Hard / Custom` policies;
-- `Off / Audit / Enforce`, with `Enforce` still fail-closed;
-- candidate composite metrics with no selected policy;
-- non-mutating target envelopes;
-- quest provenance delta (`PristineUnchanged / PristineModified / ModAdded / removed`);
-- exact provenance partition validation in runtime evidence;
-- provenance-aware, dimension-scoped mutation-eligibility classification;
-- before/after SHA-256 final-DB fingerprint;
-- exact GitHub Actions build identity and runtime validator;
-- future `RepeatedRaidLootDecay` represented and **OFF by default**.
+Default configuration remains conservative:
 
-## Pristine provenance
+```json
+{
+  "mode": "Audit",
+  "preset": "Normal",
+  "enableItemRewardStackNormalization": false
+}
+```
 
-Trader ID is not sufficient to identify vanilla content: mods can add quests to vanilla traders or modify existing vanilla quests. Economy Admiral therefore captures an immutable baseline before normal mod callbacks and compares it to the final PostLoad DB.
+`Audit` previews policy decisions without mutating the final SPT DB. `Enforce` activates only dimensions allowed by the selected product contract and provenance gates. `Off` skips the Economy Admiral pipeline.
 
-`VanillaBaselineService` is an explicit singleton at priority `1`. It captures pristine quest IDs and the raw dimensions required for benchmarking: reward handbook value, XP, standing, unlocks, required level/objectives, prerequisite structure, cycles and structured constraints.
+### Post-Alpha bounded item-stack slice
 
-Final “vanilla” membership is quest-ID provenance, not trader-ID inference.
+A new opt-in slice can reduce the quantity of a **single existing stackable Success item reward** when it is a policy outlier. It is deliberately disabled by default:
 
-## SPT boundary
+```json
+"enableItemRewardStackNormalization": false
+```
 
-Public compile boundary: `SPTarkov.Server.Core 4.1.2` / .NET 10. Physical runtime target: **SPT 4.1.3**. `BUILD_INFO.json` records the exact head/workflow plus both boundaries.
+When explicitly enabled, Economy Admiral may reduce `ItemRewardStackCount` only when all of the following are true:
 
-Load order:
+- the quest is `ModAdded`, or it is `PristineModified` with `SuccessItemHandbookValue` proven changed;
+- the quest is flagged by the item reward budget policy;
+- the Success reward contains exactly one Item reward item;
+- that item has a known positive handbook price;
+- the current stack count is a finite integer greater than one;
+- `Reward.Value` and `Upd.StackObjectsCount` are both present/finite and equal before mutation;
+- the calculated budget target can be reached by lowering the existing stack count to an integer of at least one.
 
-1. priority `1` — pristine baseline;
-2. normal SPT/mod callbacks;
-3. `PostLoad + 1000` — final DB analysis;
-4. reports + zero-mutation runtime evidence.
+The transaction writes `Reward.Value` and `Upd.StackObjectsCount` together, verifies them through a synchronized read, and restores both on rollback. If the original fields disagree, the candidate is blocked/fails preflight instead of being repaired implicitly.
 
-Critical intermediate state is value-threaded; the old transient-DI snapshot dependency is not used.
+This slice does **not**:
 
-## Pipeline
+- replace `_tpl` item templates;
+- add/remove reward records;
+- delete the last item to satisfy a budget;
+- mutate structural quest fields;
+- bypass pristine/unknown provenance protection;
+- enable broad item reward replacement logic.
 
-With `mode != Off`:
+## Provenance safety
 
-1. obtain pristine baseline and capture final-DB fingerprint-before;
-2. run primary acquisition/trader/quest audit;
-3. correct quest membership by pristine IDs;
-4. apply typed reward-item accounting;
-5. replace primary reward benchmark with pristine values;
-6. generate and pristine-correct utility/progression/constraint reports;
-7. build unified quest analysis and apply pristine-relative ratios;
-8. calculate exact quest provenance delta;
-9. evaluate non-selected composite candidates;
-10. derive non-mutating target envelopes;
-11. build provenance-aware, dimension-scoped fail-closed enforcement review plan;
-12. capture fingerprint-after and write runtime evidence using the exact provenance delta.
+- `PristineUnchanged`: never mutate.
+- `ModAdded`: only policy-flagged supported dimensions may mutate.
+- `PristineModified`: a dimension may mutate only when the corresponding pristine delta proves that dimension changed.
+- unknown provenance: block.
+- manual overrides do not bypass provenance safety.
 
-## Reports
+For the opt-in item-stack slice, `ItemRewardStackCount` on `PristineModified` maps to the proven delta dimension `SuccessItemHandbookValue`.
 
-**9 working reports + 1 runtime manifest:**
+## Numeric policy
 
-1. `economy-admiral-audit.json`
-2. `economy-admiral-reward-utility.json`
-3. `economy-admiral-progression-graph.json`
-4. `economy-admiral-quest-constraints.json`
-5. `economy-admiral-quest-analysis.json`
-6. `economy-admiral-provenance-delta.json`
-7. `economy-admiral-composite-candidates.json`
-8. `economy-admiral-target-proposals.json`
-9. `economy-admiral-enforcement-plan.json`
-10. `economy-admiral-runtime-evidence.json` — manifest over the 9 working reports.
+Easy / Normal / Hard / Custom resolve concrete thresholds and target caps. Automatic normalization only reduces outliers; it never raises a normal reward. Manual quest reward overrides remain available for exact Experience/TraderStanding targets:
 
-All paths are constrained to the mod directory.
+```json
+"questRewardOverrides": {
+  "QUEST_ID": {
+    "allowAutomaticMutation": true,
+    "experienceTarget": 3000,
+    "traderStandingTarget": 0.03,
+    "note": "optional"
+  }
+}
+```
 
-## Runtime gate
+## Transaction contract
 
-Runtime evidence schema **v3** requires:
+All active reward mutations share the production `NumericRewardTransactionCore`:
 
-- exact packaged build identity;
-- pristine capture priority `1`;
-- positive pristine quest count;
-- exact non-negative provenance counts;
-- `modified + unchanged + removed = pristine`;
-- `added + modified + unchanged = final`;
-- all **9/9** working reports;
-- `PristineStartupSnapshot` benchmark provenance in primary/utility/progression/constraint reports;
-- provenance-delta counts exactly equal to runtime-manifest counts;
-- identical before/after final-DB fingerprints;
-- zero declared mutations and `RuntimeGatePassed = true`.
+1. deterministic requests;
+2. journal original values before the first write;
+3. apply;
+4. verify exact target;
+5. rollback the whole batch on any failure;
+6. verify rollback.
 
-## Provenance delta
+Experience, TraderStanding and the opt-in single-stack item quantity therefore participate in the same all-or-nothing batch. CI smoke tests include successful commits, same-state idempotence, synthetic failures, full rollback of earlier numeric mutations, item-stack commit, and mixed XP/standing/item rollback.
 
-Final quests are classified as:
+## Runtime validators
 
-- `PristineUnchanged`;
-- `PristineModified`;
-- `ModAdded`.
+Packaged candidates include:
 
-Removed pristine IDs are listed separately. Tracked changes include restartability, item reward value, XP, standing, unlocks, objectives, prerequisite structure/cycles and structured constraints.
+- `Validate-Runtime.ps1` — Audit/read-only contract;
+- `Validate-Enforce.ps1` — Enforce mutation contract; automatically recognizes Alpha-only schema 5/policy 3 and opt-in item-stack schema 6/policy 4;
+- `Validate-PrimaryParity.ps1` — typed final DB + pristine startup primary audit parity.
 
-`EnforcementAffected = false` remains explicit.
+Physical runtime validation is reserved for meaningful SPT gates; ordinary code/contract changes should be proven through CI/smoke tests first.
 
-## Unified analysis and policy flags
+## Scope boundaries
 
-The unified view exposes item reward value, XP/standing, unlocks, prerequisite structure, constraints and pristine-relative ratios.
-
-Current flags:
-
-- `HIGH_ITEM_VALUE_LOW_STRUCTURE`;
-- `HIGH_XP_LOW_DEPTH`;
-- `HIGH_STANDING_LOW_DEPTH`;
-- `RESTARTABLE_HIGH_ITEM_VALUE`;
-- `RESTARTABLE_HIGH_XP`;
-- `PREREQUISITE_CYCLE`.
-
-Flags remain observational.
-
-## Composite / target / enforcement contracts
-
-Composite candidates: `RewardPeak`, `RewardMean`, `StructureAdjustedPeak`.
-
-- `SelectedCandidate = null`;
-- `AffectsRewardAllowance = false`;
-- `AffectsEnforcement = false`.
-
-Target envelopes support item reward budget, XP and absolute standing, but:
-
-- `ProposalsAreMutations = false`;
-- `ApplyMutations = false`;
-- `SelectedCompositePolicy = null`;
-- every `AutomaticMutationAllowed = false`;
-- every `ProposedMutation = null`.
-
-Enforcement plan schema **v4** is provenance-aware and uses mutation-eligibility policy **v2**. Every flagged quest is classified before any future mutation implementation:
-
-- `ProtectedPristine` — `PristineUnchanged`, never automatically eligible by default;
-- `PolicyEligibleModAdded` — mod-added quest with at least one flagged reward dimension;
-- `ReviewOnlyModAdded` — mod-added quest with no currently mapped reward mutation dimension;
-- `PolicyEligibleModifiedPristine` — pristine quest where a flagged reward dimension is also proven changed by the mod stack;
-- `ProtectedUnchangedRewardDimensions` — pristine quest was modified, but the flagged reward dimensions themselves were not changed;
-- `BlockedUnknownProvenance` — provenance cannot be proven.
-
-`PotentialMutationDimensions` is limited to `ItemRewardBudget`, `Experience`, and `TraderStanding`. For `PristineModified`, each potential dimension must map to a proven changed source dimension (`SuccessItemHandbookValue`, `Experience`, or `TraderStanding`). Structural changes alone never make reward fields eligible.
-
-This is still **classification only**: `AutomaticMutationAllowed = false`, `ApplyMutations = false`, `MutationCount = 0`, and `ProposedMutation = null` remain mandatory.
-
-## Configuration
-
-Default config is `config/config.json`; default mode/preset are `Audit / Normal`. Easy raises warning thresholds, Hard lowers them, Custom uses explicit values. `RepeatedRaidLootDecay` remains `false`.
-
-## Current physical gate
-
-Earlier runtime testing already proved the value-threaded pipeline, typed quest-item accounting and zero-mutation fingerprint on the target SPT 4.1.3 stack.
-
-The next runtime test is specifically for **pristine provenance and dimension-scoped eligibility**. It must prove early baseline capture, corrected benchmark distributions, exact provenance partition, safe eligibility classifications, 9/9 reports and unchanged final DB.
-
-No composite policy or mutation path is promoted before that evidence is reviewed.
-
-## Next stages
-
-After pristine-provenance acceptance:
-
-- analyze `ModAdded` vs `PristineModified` outliers by trader/source;
-- select/reject composite policy candidates from real distributions;
-- define explicit first mutation policy only for provenance/dimension-eligible reward fields;
-- design mutation transaction + rollback + before/after evidence;
-- implement the first deterministic enforcement rule behind explicit config gates.
-
-Stage 2: PBS adapter, trader normalization, Scorpion / Artem / Andrudis integration, repeatable reward enforcement and replacement-rate model.
-
-Stage 3: world loot, flea, craft, insurance and optional Vagabond-like progression policies.
-
-## Development lifecycle
-
-`Issue -> feature branch -> draft PR -> Economy Admiral CI -> physical runtime gate when required -> review -> merge -> cleanup`
+Economy Admiral does not currently expand into PBS, world loot, flea, crafts, insurance, Scorpion, Artem, Andrudis, generic attribution/replacement graphs, or Admiral Trader stock architecture. Those domains are separate future decisions and are not prerequisites for the current quest reward normalization line.
