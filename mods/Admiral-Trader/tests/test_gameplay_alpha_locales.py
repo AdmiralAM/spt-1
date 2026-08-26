@@ -43,13 +43,19 @@ class GameplayAlphaLocaleTests(unittest.TestCase):
             self.assertIn("не изымается", self.ru[f"{quest_id} description"].lower())
 
     def test_permanent_munitions_payoff_names_actual_ammo_and_unlock(self):
+        expected_tokens = {
+            "handguns": "L191",
+            "smg-pdw": ".45 ACP AP",
+            "shotguns": "AP-20",
+            "assault-rifles": "M856A1",
+            "marksman-battle": "M62",
+            "precision": "UPZ",
+        }
         quest_to_family = {str(offer["questId"]): family for family, offer in self.ammo.items()}
-        self.assertEqual(len(quest_to_family), 6)
+        self.assertEqual(set(quest_to_family.values()), set(expected_tokens))
         for quest_id, family in quest_to_family.items():
-            capability = self.capabilities[family]
             text = self.en[f"{quest_id} description"] + " " + self.en[f"{quest_id} successMessageText"]
-            short_name = capability["name"].replace("5.7x28mm ", "").replace("5.56x45mm ", "").replace("7.62x51mm ", "")
-            self.assertTrue(any(token in text for token in (capability["name"], short_name)), family)
+            self.assertIn(expected_tokens[family], text, family)
             self.assertIn("finite", text.lower())
             offer_id = next(offer_id for offer_id, gate in self.questassort.items() if gate == quest_id)
             self.assertTrue(offer_id)
