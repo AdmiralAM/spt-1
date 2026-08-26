@@ -137,6 +137,18 @@ public static class AdmiralTraderItemAdapter
         return results.OrderBy(result => result.OfferId, StringComparer.Ordinal).ToList();
     }
 
+    public static IReadOnlyList<AdmiralTraderOfferAdapterEvidence> ParseAndApplyEffectiveQuestGates(
+        string assortJson,
+        string questAssortJson,
+        AdmiralTraderAdapterContract policy,
+        IEnumerable<string> authoredQuestJsonRecords
+    )
+    {
+        var offers = ParseOffers(assortJson, questAssortJson, policy);
+        var questGraph = QuestGateJsonParser.ParseMany(authoredQuestJsonRecords);
+        return ApplyEffectiveQuestGates(offers, questGraph);
+    }
+
     public static IReadOnlyList<AdmiralTraderOfferAdapterEvidence> ApplyEffectiveQuestGates(
         IEnumerable<AdmiralTraderOfferAdapterEvidence> offers,
         IEnumerable<QuestGateNode> questGraph
