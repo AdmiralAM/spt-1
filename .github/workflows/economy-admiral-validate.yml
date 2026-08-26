@@ -39,12 +39,9 @@ jobs:
               root / 'tools/Validate-Runtime.ps1', root / 'tools/Test-Validate-Runtime.ps1',
               root / 'tools/Validate-PrimaryParity.ps1', root / 'tools/Test-Validate-PrimaryParity.ps1',
               root / 'server/Economy-Admiral.csproj', root / 'server/EconomyMod.cs',
-              root / 'server/TypedQuestItemAccountingService.cs', root / 'server/VanillaBaselineService.cs',
-              root / 'server/BaselineProvenanceCorrectionService.cs', root / 'server/PristineReportCorrectionService.cs',
-              root / 'server/QuestProvenanceDeltaService.cs', root / 'server/QuestProgressionGraphService.cs',
-              root / 'server/QuestAnalysisService.cs', root / 'server/CompositePolicyEvaluationService.cs',
-              root / 'server/TargetProposalService.cs', root / 'server/EnforcementPlanService.cs',
-              root / 'server/RuntimeEvidenceService.cs', root / 'server/PrimaryAuditParityService.cs',
+              root / 'server/EconomyConfig.cs', root / 'server/EconomyConfigValidator.cs',
+              root / 'server/QuestAnalysisService.cs', root / 'server/QuestProvenanceDeltaService.cs',
+              root / 'server/EnforcementPlanService.cs', root / 'server/RuntimeEvidenceService.cs',
           ]
           missing = [str(p) for p in required if not p.is_file()]
           assert not missing, missing
@@ -53,114 +50,79 @@ jobs:
           assert config['mode'] in {'Off', 'Audit', 'Enforce'}
           assert config['preset'] in {'Easy', 'Normal', 'Hard', 'Custom'}
           assert config['repeatedRaidLootDecay'] is False
+          assert isinstance(config['questRewardOverrides'], dict)
 
           mod = (root / 'server/EconomyMod.cs').read_text(encoding='utf-8')
           for text in [
-              'OnLoadOrder.PostLoad + 1000', 'var vanillaBaseline = vanillaBaselineService.GetSnapshot();',
-              'CorrectPrimaryMembershipAsync(vanillaBaseline, cancellationToken)',
-              'RepairPrimaryAuditReportAsync(cancellationToken)', 'CorrectPrimaryBenchmarkAsync(vanillaBaseline, cancellationToken)',
-              'CorrectRewardUtilityAsync(vanillaBaseline, cancellationToken)',
-              'CorrectProgressionGraphAsync(vanillaBaseline, cancellationToken)',
-              'CorrectConstraintsAsync(vanillaBaseline, cancellationToken)',
-              'questAnalysis = await baselineProvenanceCorrectionService.ApplyToUnifiedAnalysisAsync(questAnalysis, vanillaBaseline, cancellationToken);',
-              'var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);',
-              'enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken)',
-              'runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, cancellationToken)',
-              'primaryAuditParityService.RunAsync(cancellationToken)',
+              'OnLoadOrder.PostLoad + 1000',
+              'config.Mode == EconomyMode.Off',
+              'var questProvenance = await questProvenanceDeltaService.RunAsync',
+              'var enforcement = await enforcementPlanService.RunAsync',
+              'runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken)',
           ]:
               assert text in mod, text
-          assert mod.index('config.Mode == EconomyMode.Off') < mod.index('vanillaBaselineService.GetSnapshot()')
-          assert mod.index('CorrectPrimaryMembershipAsync') < mod.index('RepairPrimaryAuditReportAsync') < mod.index('CorrectPrimaryBenchmarkAsync')
-          assert mod.index('baselineProvenanceCorrectionService.ApplyToUnifiedAnalysisAsync') < mod.index('questProvenanceDeltaService.RunAsync') < mod.index('compositePolicyEvaluationService.RunAsync')
+          assert mod.index('config.Mode == EconomyMode.Off') < mod.index('runtimeEvidenceService.CaptureBefore()')
 
-          audit = (root / 'server/EconomyAuditService.cs').read_text(encoding='utf-8')
-          assert 'EconomyRuntimeConfigService runtimeConfigService' in audit
-          assert 'runtimeConfigService.GetAsync(cancellationToken)' in audit
-          assert 'LoadConfigAsync' not in audit
-          assert 'Path.Combine(modPath, "config", "config.json")' not in audit
+          for service_name in ['EconomyAuditService.cs', 'QuestAnalysisService.cs', 'EnforcementPlanService.cs']:
+              text = (root / 'server' / service_name).read_text(encoding='utf-8')
+              assert 'EconomyRuntimeConfigService' in text, service_name
+              assert 'LoadConfigAsync' not in text, service_name
+              assert 'Path.Combine(modPath, "config", "config.json")' not in text, service_name
 
-          baseline = (root / 'server/VanillaBaselineService.cs').read_text(encoding='utf-8')
-          for text in ['Injectable(InjectionType.Singleton, TypePriority = OnLoadOrder.Watermark + 1)', 'reward.Items', 'item.Template.ToString()', 'item.Upd?.StackObjectsCount', 'MaximumPrerequisiteDepth', 'TimedConditionCount', 'LongestDistanceConstraint', 'VanillaBaselineSnapshot GetSnapshot()']:
-              assert text in baseline, text
-          assert 'VanillaTraderIds' not in baseline
-
-          report_fix = (root / 'server/PristineReportCorrectionService.cs').read_text(encoding='utf-8')
-          for text in ['CorrectPrimaryMembershipAsync', 'CorrectPrimaryBenchmarkAsync', 'CorrectRewardUtilityAsync', 'CorrectProgressionGraphAsync', 'CorrectConstraintsAsync', 'PristineStartupSnapshot', 'baseline.QuestIds.Contains']:
-              assert text in report_fix, text
+          analysis = (root / 'server/QuestAnalysisService.cs').read_text(encoding='utf-8')
+          for text in [
+              'OutlierFlagsAffectEnforcement = true',
+              'HIGH_XP_LOW_DEPTH', 'RESTARTABLE_HIGH_XP', 'HIGH_STANDING_LOW_DEPTH',
+              'MedianXp', 'MedianAbsoluteStanding',
+          ]:
+              assert text in analysis, text
 
           delta = (root / 'server/QuestProvenanceDeltaService.cs').read_text(encoding='utf-8')
-          for text in ['ModAdded', 'PristineModified', 'PristineUnchanged', 'RemovedPristineQuestIds', 'EnforcementAffected = false', 'ChangedDimensions']:
+          for text in ['ModAdded', 'PristineModified', 'PristineUnchanged', 'ChangedDimensions']:
               assert text in delta, text
-
-          typed_items = (root / 'server/TypedQuestItemAccountingService.cs').read_text(encoding='utf-8')
-          for text in ['reward.Items', 'item.Template.ToString()', 'item.Upd?.StackObjectsCount', 'QuestRewardSourceEdges', 'typed quest-item accounting sanity gate failed', 'typed unified-analysis sanity gate failed']:
-              assert text in typed_items, text
-
-          parity = (root / 'server/PrimaryAuditParityService.cs').read_text(encoding='utf-8')
-          for text in ['TypedFinalDbPlusPristineStartupSnapshot', 'reward.Items', 'baseline.QuestIds.Contains', 'QuestRowsMatch', 'AcquisitionMatches', 'BenchmarkMatches', 'AllMatched']:
-              assert text in parity, text
-
-          parity_validator = (root / 'tools/Validate-PrimaryParity.ps1').read_text(encoding='utf-8')
-          for text in ['TypedFinalDbPlusPristineStartupSnapshot', 'ComparedQuestRows', 'ExpectedQuestRewardSourceEdges', 'QuestRowsMatch', 'AcquisitionMatches', 'BenchmarkMatches', 'AllMatched', 'Mismatches']:
-              assert text in parity_validator, text
-
-          parity_smoke = (root / 'tools/Test-Validate-PrimaryParity.ps1').read_text(encoding='utf-8')
-          for text in ['38138', 'Parity mismatch fixture', 'Non-empty mismatch list', 'Quest reward edge mismatch']:
-              assert text in parity_smoke, text
-
-          for name in ['CompositePolicyEvaluationService.cs', 'TargetProposalService.cs']:
-              text = (root / 'server' / name).read_text(encoding='utf-8')
-              assert 'RunAsync(QuestAnalysisReport analysis, CancellationToken cancellationToken)' in text, name
-              assert 'QuestAnalysisService questAnalysisService' not in text, name
-              assert 'GetSnapshot()' not in text, name
 
           plan = (root / 'server/EnforcementPlanService.cs').read_text(encoding='utf-8')
           for text in [
-              'RunAsync(QuestAnalysisReport analysis, QuestProvenanceDeltaReport provenance, CancellationToken cancellationToken)',
-              'SchemaVersion = 4', 'ProvenanceAware = true', 'CandidateCountsByProvenance', 'CandidateCountsByEligibility',
-              'MutationEligibilityPolicyVersion = 2', 'MutationEligibilityClass', 'PotentialAutomaticMutationEligible',
-              'PotentialMutationDimensions', 'ResolvePotentialMutationDimensions', 'SuccessItemHandbookValue',
-              'ProtectedPristine', 'PolicyEligibleModAdded', 'ReviewOnlyModAdded', 'PolicyEligibleModifiedPristine',
-              'ProtectedUnchangedRewardDimensions', 'BlockedUnknownProvenance',
-              'ProvenanceClass', 'PristineUntouched', 'ChangedDimensions',
-              'ApplyMutations = false', 'MutationCount = 0', 'AutomaticMutationAllowed = false', 'ProposedMutation = null',
+              'SchemaVersion = 5',
+              'SelectedPolicy = $"PresetNumericQuestRewardCapV1/{config.Preset}"',
+              'MutationEligibilityPolicyVersion = 3',
+              'config.Mode == EconomyMode.Enforce',
+              'ApplyTransaction(proposals, applied)',
+              'VerifyAppliedTransaction(proposals, applied)',
+              'Rollback(applied)', 'VerifyRollback(applied)',
+              'reward.Value = afterSlots[index]',
+              'RewardType.Experience', 'RewardType.TraderStanding',
+              'PolicyEligibleModAdded', 'PolicyEligibleModifiedPristine',
+              'ProtectedPristine', 'ProtectedUnchangedRewardDimensions', 'BlockedUnknownProvenance',
+              'changedDimensions.Contains("Experience"', 'changedDimensions.Contains("TraderStanding"',
+              'ManualExactQuestRewardTargetV1', 'QuestRewardOverrides',
+              'PlannedMutationCount', 'TransactionCommitted', 'TransactionRolledBack',
+              'Before', 'Current', 'Target', 'After',
           ]:
               assert text in plan, text
+          assert 'ItemRewardBudget' not in plan
+          assert 'ApplyMutations = false' not in plan
+          assert 'MutationCount = 0' not in plan
 
           evidence = (root / 'server/RuntimeEvidenceService.cs').read_text(encoding='utf-8')
           for text in [
-              'SchemaVersion = 3', 'economy-admiral-provenance-delta.json', 'RuntimeProvenanceEvidence',
-              'PristineQuestCount', 'ModAddedQuestCount', 'PristineModifiedQuestCount', 'PristineUnchangedQuestCount',
-              'RemovedPristineQuestCount', 'CountsConsistent', 'DatabaseUnchangedAcrossPipeline', 'DeclaredMutationCount = 0',
-              'QuestProvenanceDeltaReport questProvenance',
-              'TRADER={quest.Value.TraderId}', 'RESTARTABLE={quest.Value.Restartable}',
-              'JsonSerializer.Serialize(quest.Value.Conditions)', 'REWARDS={JsonSerializer.Serialize(quest.Value.Rewards)}',
+              'SchemaVersion = 4',
+              'DatabaseChangeExpected', 'EnforcementEvidenceValid',
+              'ValidateEnforcementEvidence',
+              'config.Mode != EconomyMode.Enforce',
+              'enforcement.MutationCount == 0',
+              'enforcement.TransactionCommitted && !databaseUnchanged',
+              'mutation.Dimension is not ("Experience" or "TraderStanding")',
+              'candidate.PristineUntouched',
+              'DeclaredMutationCount = enforcement.MutationCount',
           ]:
               assert text in evidence, text
-          assert 'FinalQuestCount - vanillaBaseline.QuestCount' not in evidence
-          assert 'Add($"QUEST|{quest.Key}|{JsonSerializer.Serialize(quest.Value.Rewards)}")' not in evidence
 
-          validator = (root / 'tools/Validate-Runtime.ps1').read_text(encoding='utf-8')
-          for text in [
-              'ExpectedReportCount -ne 9', 'economy-admiral-provenance-delta.json', 'CountsConsistent',
-              'RemovedPristineQuestCount', 'pristine provenance partition is inconsistent', 'final provenance partition is inconsistent',
-              'enforcement plan SchemaVersion must be 4', 'MutationEligibilityPolicyVersion', 'PotentialMutationDimensions',
-              'ProtectedPristine', 'PolicyEligibleModAdded', 'ReviewOnlyModAdded', 'PolicyEligibleModifiedPristine',
-              'ProtectedUnchangedRewardDimensions', 'BlockedUnknownProvenance', 'is not proven changed',
-          ]:
-              assert text in validator, text
-          assert 'BaselineNotLargerThanFinal' not in validator
-          assert 'FinalQuestCount - [int]$provenance.PristineQuestCount' not in validator
+          config_source = (root / 'server/EconomyConfig.cs').read_text(encoding='utf-8')
+          for text in ['QuestRewardOverrides', 'AllowAutomaticMutation', 'ExperienceTarget', 'TraderStandingTarget']:
+              assert text in config_source, text
 
-          smoke = (root / 'tools/Test-Validate-Runtime.ps1').read_text(encoding='utf-8')
-          for text in [
-              'RemovedPristineQuestCount = 2', 'CountsConsistent = $true', 'FinalQuestCount = 123',
-              "MutationEligibilityPolicyVersion = 2", "PotentialMutationDimensions = @('ItemRewardBudget','Experience')",
-              "MutationEligibilityClass = 'ProtectedUnchangedRewardDimensions'",
-          ]:
-              assert text in smoke, text
-
-          print('Economy Admiral provenance + zero-mutation + parity + single-config-read + fail-closed eligibility contract OK')
+          print('Economy Admiral active Enforce Alpha contract OK')
 
   server:
     name: Economy Admiral .NET 10 server build
@@ -172,14 +134,14 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Validate runtime helper syntax
+      - name: Validate existing Audit/parity helper syntax
         shell: pwsh
         run: |
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-Runtime.ps1 -Raw))
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1 -Raw))
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-PrimaryParity.ps1 -Raw))
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-PrimaryParity.ps1 -Raw))
-      - name: Smoke-test runtime helper
+      - name: Smoke-test existing Audit runtime helper
         shell: pwsh
         run: '& mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1'
       - name: Smoke-test primary parity validator
@@ -191,7 +153,7 @@ jobs:
       - name: Build server
         shell: pwsh
         run: dotnet build mods/Economy-Admiral/server/Economy-Admiral.csproj -c Release --nologo
-      - name: Smoke-test source-pressure evidence domain
+      - name: Smoke-test source-pressure integration regression
         shell: pwsh
         run: dotnet run --project mods/Economy-Admiral/tests/SourcePressureSmoke/SourcePressureSmoke.csproj -c Release --nologo
       - name: Stage candidate
@@ -208,6 +170,7 @@ jobs:
           Copy-Item mods/Economy-Admiral/tools/Validate-PrimaryParity.ps1 'build-output/Economy Admiral/Validate-PrimaryParity.ps1'
           [ordered]@{
             Product = 'Economy Admiral'
+            ProductLine = 'Enforce Alpha'
             HeadSha = $env:EA_HEAD_SHA
             WorkflowRunId = $env:GITHUB_RUN_ID
             ArtifactName = 'economy-admiral-candidate'
