@@ -15,13 +15,15 @@ public sealed record QuestNode(
     string? TraderId,
     string? NameKey,
     int? MinimumLevel,
-    bool Repeatable);
+    bool Repeatable,
+    bool StartConditionCoverageComplete = true);
 
 public sealed record PrerequisiteEdge(
     string SourceQuestId,
     string TargetQuestId,
     IReadOnlySet<QuestState> AcceptedSourceStates,
-    string? GroupId = null);
+    string? GroupId = null,
+    int AvailableAfterSeconds = 0);
 
 public sealed record ItemRequirement(
     string QuestId,
