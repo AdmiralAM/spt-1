@@ -1,0 +1,12 @@
+{
+  "name": "Item Valuation MOD SPT",
+  "channel": "runtime-item-valuation",
+  "version": "1.0.0",
+  "spt_version": "4.1.3",
+  "source_commit": "fad9a0bae59380e4c8a22f5381e9b036e517ffd0",
+  "release_metadata_commit": "619df6014504f530dae6a1d96d9297443745b471",
+  "artifact_sha256": "3051a0aeafdb59dc745a993b7e2472a9d141e08f7c8145556ade2bd3be9825db",
+  "server_only": true,
+  "client_plugin_included": false,
+  "runtime_validated": true
+}
