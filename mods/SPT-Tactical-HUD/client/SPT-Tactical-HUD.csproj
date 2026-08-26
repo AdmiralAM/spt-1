@@ -4,11 +4,11 @@
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <AssemblyName>SPT Tactical HUD v1.13.2</AssemblyName>
+    <AssemblyName>SPT Tactical HUD v1.13.3</AssemblyName>
     <RootNamespace>SPTPopCounter</RootNamespace>
-    <Version>1.13.2</Version>
-    <AssemblyVersion>1.13.2.0</AssemblyVersion>
-    <FileVersion>1.13.2.0</FileVersion>
+    <Version>1.13.3</Version>
+    <AssemblyVersion>1.13.3.0</AssemblyVersion>
+    <FileVersion>1.13.3.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="BepInEx"><HintPath>..\..\..\deps\BepInEx\core\BepInEx.dll</HintPath><Private>false</Private></Reference>
