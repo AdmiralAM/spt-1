@@ -28,6 +28,7 @@ public sealed record EconomyConfig
     public RarityThresholds Rarity { get; init; } = new();
     public AuditPolicy CustomAuditPolicy { get; init; } = new();
     public Dictionary<string, ManualItemOverride> ManualOverrides { get; init; } = new(StringComparer.Ordinal);
+    public Dictionary<string, ManualQuestRewardOverride> QuestRewardOverrides { get; init; } = new(StringComparer.Ordinal);
 }
 
 public sealed record RarityThresholds
@@ -49,7 +50,6 @@ public sealed record AuditPolicy
     public double MaxObjectiveContribution { get; init; } = 5.0;
     public int DuplicateTraderSourcesWarnCount { get; init; } = 6;
 
-    // Unified quest-analysis flags. These remain audit-only until enforcement is explicitly implemented.
     public double HighItemValueLowStructureWarnMultiple { get; init; } = 3.0;
     public double HighXpLowDepthWarnMultiple { get; init; } = 3.0;
     public double HighStandingLowDepthWarnMultiple { get; init; } = 3.0;
@@ -63,5 +63,17 @@ public sealed record ManualItemOverride
 {
     public string? Rarity { get; init; }
     public bool? Ignore { get; init; }
+    public string? Note { get; init; }
+}
+
+public sealed record ManualQuestRewardOverride
+{
+    // false = explicit deny; true = explicitly allow when provenance + flagged-dimension gates also pass.
+    public bool? AllowAutomaticMutation { get; init; }
+
+    // Exact total Success reward targets. Null keeps preset-derived target.
+    public double? ExperienceTarget { get; init; }
+    public double? TraderStandingTarget { get; init; }
+
     public string? Note { get; init; }
 }
