@@ -36,7 +36,7 @@ internal static class SourcePressureRuntimeReportSmoke
             })
             .ToArray();
 
-        var loaded = SourcePressureRuntimeReportBuilder.Build(new AdmiralTraderRuntimeAdapterReport
+        var loadedInput = new AdmiralTraderRuntimeAdapterReport
         {
             Installed = true,
             ModGuid = "com.admiralam.spt.admiraltrader",
@@ -46,7 +46,8 @@ internal static class SourcePressureRuntimeReportSmoke
             MinimumEffectiveProgressionLevel = 5,
             MaximumEffectiveProgressionLevel = 11,
             Offers = offers,
-        });
+        };
+        var loaded = SourcePressureRuntimeReportBuilder.Build(loadedInput);
 
         Require(loaded.SchemaVersion == 1, "schema version mismatch");
         Require(loaded.EvidenceCoverage == "ExplicitAdaptersOnly", "coverage must remain explicit-adapters-only");
@@ -59,18 +60,24 @@ internal static class SourcePressureRuntimeReportSmoke
         Require(loaded.Capacity.All(item => item.HasOnlyKnownBoundedRenewablePaths), "all maintained adapter paths must remain bounded");
         Require(loaded.Items.Select(item => item.ItemTemplateId).SequenceEqual(loaded.Items.Select(item => item.ItemTemplateId).OrderBy(value => value, StringComparer.Ordinal)), "item report ordering must be deterministic");
 
-        var absent = SourcePressureRuntimeReportBuilder.Build(new AdmiralTraderRuntimeAdapterReport
+        var absentInput = new AdmiralTraderRuntimeAdapterReport
         {
             Installed = false,
             ModGuid = "com.admiralam.spt.admiraltrader",
             AttributionConfidence = "ExplicitAdapter",
             Offers = Array.Empty<AdmiralTraderOfferAdapterEvidence>(),
-        });
+        };
+        var absent = SourcePressureRuntimeReportBuilder.Build(absentInput);
 
         Require(absent.EvidenceCoverage == "ExplicitAdaptersOnly", "empty report must not claim full-economy coverage");
         Require(absent.LoadedAdapterCount == 0 && absent.LoadedAdapters.Count == 0, "not-installed adapter must not be reported as loaded");
         Require(absent.SourceCount == 0 && absent.CapacityEvidenceCount == 0, "not-installed adapter must not fabricate evidence");
         Require(absent.Items.Count == 0 && absent.Capacity.Count == 0, "not-installed state must produce empty observational summaries");
+
+        MustFail("empty modGuid", () => SourcePressureRuntimeReportBuilder.Build(loadedInput with { ModGuid = " " }));
+        MustFail("installed OfferCount mismatch", () => SourcePressureRuntimeReportBuilder.Build(loadedInput with { OfferCount = 6 }));
+        MustFail("installed bounded count mismatch", () => SourcePressureRuntimeReportBuilder.Build(loadedInput with { BoundedRenewableOfferCount = 6 }));
+        MustFail("not-installed carrying offers", () => SourcePressureRuntimeReportBuilder.Build(absentInput with { Offers = offers, OfferCount = 7, BoundedRenewableOfferCount = 7 }));
 
         Console.WriteLine("Economy Admiral runtime source-pressure report smoke PASS");
     }
@@ -81,5 +88,19 @@ internal static class SourcePressureRuntimeReportSmoke
         {
             throw new InvalidOperationException($"Economy Admiral runtime source-pressure report smoke: {message}");
         }
+    }
+
+    private static void MustFail(string name, Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (InvalidOperationException)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException($"Economy Admiral runtime source-pressure report smoke expected '{name}' to fail.");
     }
 }
