@@ -3,36 +3,52 @@ using Path = System.IO.Path;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers.Server;
-using SPTarkov.Server.Core.Models.Eft.Common.Tables;
-using SPTarkov.Server.Core.Models.Spt.Tables;
 
 namespace SPTEconomy;
 
 [Injectable]
 public sealed class QuestConstraintAuditService(
-    TemplateTable templates,
     ModHelper modHelper,
     ISptLogger<QuestConstraintAuditService> logger
 )
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    public async Task RunAsync(VanillaBaselineSnapshot baselineSnapshot, CancellationToken cancellationToken)
+    public async Task RunAsync(
+        QuestAnalysisReport analysis,
+        VanillaBaselineSnapshot baselineSnapshot,
+        CancellationToken cancellationToken)
     {
         if (baselineSnapshot.QuestCount <= 0)
             throw new InvalidOperationException("Economy Admiral quest constraint audit requires a non-empty pristine startup snapshot.");
 
-        var rows = templates.Quests
-            .OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)
-            .Select(pair => BuildRow(pair.Key.ToString(), pair.Value, baselineSnapshot.QuestIds.Contains(pair.Key.ToString())))
+        var rows = analysis.Quests
+            .OrderBy(row => row.QuestId, StringComparer.Ordinal)
+            .Select(row => new QuestConstraintRow
+            {
+                QuestId = row.QuestId,
+                QuestName = row.QuestName,
+                TraderId = row.TraderId,
+                IsVanillaTraderQuest = row.IsVanillaTraderQuest,
+                Restartable = row.Restartable,
+                ObjectiveConditionCount = row.ObjectiveConditionCount,
+                TimedConditionCount = row.TimedConditionCount,
+                OneSessionConditionCount = row.OneSessionConditionCount,
+                FoundInRaidConditionCount = row.FoundInRaidConditionCount,
+                PlantConditionCount = row.PlantConditionCount,
+                DistanceConstraintCount = row.DistanceConstraintCount,
+                DaytimeConstraintCount = row.DaytimeConstraintCount,
+                StructuredConstraintCount = row.StructuredConstraintCount,
+            })
             .ToList();
 
         var report = new QuestConstraintAuditReport
         {
-            SchemaVersion = 1,
+            SchemaVersion = 2,
             ConstraintsAffectRewardAllowance = false,
             BenchmarkSource = "PristineStartupSnapshot",
-            Note = $"Structured final-DB quest constraints measured directly against pristine startup quest-ID provenance captured at priority {baselineSnapshot.CapturePriority}. No correction overlay, text interpretation, or reward multiplier is applied.",
+            SourceAnalysisSchemaVersion = analysis.SchemaVersion,
+            Note = $"Projection of structured constraint counts already captured by unified final-quest analysis, measured against pristine startup benchmarks captured at priority {baselineSnapshot.CapturePriority}. No second TemplateTable quest scan or correction overlay is applied.",
             Vanilla = BuildBenchmark(baselineSnapshot.Quests.Where(row => !row.Restartable).ToList()),
             VanillaRestartable = BuildBenchmark(baselineSnapshot.Quests.Where(row => row.Restartable).ToList()),
             Quests = rows,
@@ -46,64 +62,7 @@ public sealed class QuestConstraintAuditService(
 
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
         await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
-        logger.Info($"[Economy Admiral] quest constraint audit complete from pristine baseline: finalQuests={rows.Count}, pristineQuests={baselineSnapshot.QuestCount}; report={reportPath}");
-    }
-
-    private static QuestConstraintRow BuildRow(string questId, Quest quest, bool isVanilla)
-    {
-        var conditions = EnumerateObjectiveConditions(quest).ToList();
-        var counterConditions = conditions
-            .Where(condition => condition.Counter?.Conditions is not null)
-            .SelectMany(condition => condition.Counter!.Conditions!)
-            .ToList();
-
-        var timed = conditions.Count(condition => condition.CompleteInSeconds is > 0)
-            + counterConditions.Count(condition => condition.CompleteInSeconds is > 0);
-        var oneSession = conditions.Count(condition => condition.OneSessionOnly == true)
-            + counterConditions.Count(condition => condition.ResetOnSessionEnd == true);
-        var fir = conditions.Count(condition => condition.OnlyFoundInRaid == true);
-        var plant = conditions.Count(condition => condition.PlantTime is > 0);
-        var distance = counterConditions.Count(condition => condition.Distance?.Value is > 0);
-        var daytime = counterConditions.Count(condition => condition.Daytime is not null);
-
-        var strictestTimeSeconds = conditions
-            .Where(condition => condition.CompleteInSeconds is > 0)
-            .Select(condition => condition.CompleteInSeconds!.Value)
-            .Concat(counterConditions.Where(condition => condition.CompleteInSeconds is > 0).Select(condition => (double)condition.CompleteInSeconds!.Value))
-            .DefaultIfEmpty(0)
-            .Min();
-        var longestDistance = counterConditions
-            .Where(condition => condition.Distance?.Value is > 0)
-            .Select(condition => condition.Distance!.Value!.Value)
-            .DefaultIfEmpty(0)
-            .Max();
-
-        return new QuestConstraintRow
-        {
-            QuestId = questId,
-            QuestName = quest.QuestName ?? quest.Name,
-            TraderId = quest.TraderId.ToString(),
-            IsVanillaTraderQuest = isVanilla,
-            Restartable = quest.Restartable,
-            ObjectiveConditionCount = conditions.Count,
-            TimedConditionCount = timed,
-            OneSessionConditionCount = oneSession,
-            FoundInRaidConditionCount = fir,
-            PlantConditionCount = plant,
-            DistanceConstraintCount = distance,
-            DaytimeConstraintCount = daytime,
-            StructuredConstraintCount = timed + oneSession + fir + plant + distance + daytime,
-            StrictestCompletionTimeSeconds = Math.Round(strictestTimeSeconds, 2),
-            LongestDistanceConstraint = Math.Round(longestDistance, 2),
-        };
-    }
-
-    private static IEnumerable<QuestCondition> EnumerateObjectiveConditions(Quest quest)
-    {
-        if (quest.Conditions.AvailableForFinish is not null)
-            foreach (var condition in quest.Conditions.AvailableForFinish) yield return condition;
-        if (quest.Conditions.Success is not null)
-            foreach (var condition in quest.Conditions.Success) yield return condition;
+        logger.Info($"[Economy Admiral] quest constraint projection complete: finalQuests={rows.Count}, pristineQuests={baselineSnapshot.QuestCount}; report={reportPath}");
     }
 
     private static QuestConstraintBenchmark BuildBenchmark(IReadOnlyCollection<VanillaQuestBaselineRow> rows)
@@ -153,6 +112,7 @@ public sealed record QuestConstraintAuditReport
     public required int SchemaVersion { get; init; }
     public required bool ConstraintsAffectRewardAllowance { get; init; }
     public required string BenchmarkSource { get; init; }
+    public required int SourceAnalysisSchemaVersion { get; init; }
     public required string Note { get; init; }
     public required QuestConstraintBenchmark Vanilla { get; init; }
     public required QuestConstraintBenchmark VanillaRestartable { get; init; }
@@ -193,6 +153,4 @@ public sealed record QuestConstraintRow
     public required int DistanceConstraintCount { get; init; }
     public required int DaytimeConstraintCount { get; init; }
     public required int StructuredConstraintCount { get; init; }
-    public required double StrictestCompletionTimeSeconds { get; init; }
-    public required double LongestDistanceConstraint { get; init; }
 }
