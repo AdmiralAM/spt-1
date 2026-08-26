@@ -6,7 +6,7 @@ namespace SPTBeltArmbandInventory
 {
     public readonly struct BeltInventoryNode
     {
-        public BeltInventoryNode(string id, string? parentId, string? slotId, string? templateId = null)
+        public BeltInventoryNode(string id, string parentId, string slotId, string templateId = null)
         {
             Id = id;
             ParentId = parentId;
@@ -15,9 +15,9 @@ namespace SPTBeltArmbandInventory
         }
 
         public string Id { get; }
-        public string? ParentId { get; }
-        public string? SlotId { get; }
-        public string? TemplateId { get; }
+        public string ParentId { get; }
+        public string SlotId { get; }
+        public string TemplateId { get; }
     }
 
     public static class BeltDeathPolicy
@@ -27,42 +27,42 @@ namespace SPTBeltArmbandInventory
         // Legacy pure-policy overloads remain for historical regression coverage.
         // Production server patches use the explicit-template overloads below so
         // an ordinary ArmBand can never gain belt death/insurance retention.
-        public static HashSet<string> GetKeptTreeIds(IEnumerable<BeltInventoryNode>? nodes)
+        public static HashSet<string> GetKeptTreeIds(IEnumerable<BeltInventoryNode> nodes)
         {
             return GetKeptTreeIdsCore(nodes, null, false);
         }
 
-        public static bool ShouldKeep(string? itemId, IEnumerable<BeltInventoryNode>? nodes)
+        public static bool ShouldKeep(string itemId, IEnumerable<BeltInventoryNode> nodes)
         {
             return !string.IsNullOrEmpty(itemId) && GetKeptTreeIds(nodes).Contains(itemId);
         }
 
-        public static string[] FilterLostInsuredIds(IEnumerable<string>? lostIds, IEnumerable<BeltInventoryNode>? nodes)
+        public static string[] FilterLostInsuredIds(IEnumerable<string> lostIds, IEnumerable<BeltInventoryNode> nodes)
         {
             var kept = GetKeptTreeIds(nodes);
             if (kept.Count == 0) return lostIds == null ? Array.Empty<string>() : lostIds.ToArray();
             return (lostIds ?? Array.Empty<string>()).Where(id => !kept.Contains(id)).ToArray();
         }
 
-        public static HashSet<string> GetKeptTreeIds(IEnumerable<BeltInventoryNode>? nodes, string? protectedRootTemplateId)
+        public static HashSet<string> GetKeptTreeIds(IEnumerable<BeltInventoryNode> nodes, string protectedRootTemplateId)
         {
             return GetKeptTreeIdsCore(nodes, protectedRootTemplateId, true);
         }
 
-        public static bool ShouldKeep(string? itemId, IEnumerable<BeltInventoryNode>? nodes, string? protectedRootTemplateId)
+        public static bool ShouldKeep(string itemId, IEnumerable<BeltInventoryNode> nodes, string protectedRootTemplateId)
         {
             return !string.IsNullOrEmpty(itemId)
                 && GetKeptTreeIds(nodes, protectedRootTemplateId).Contains(itemId);
         }
 
-        public static string[] FilterLostInsuredIds(IEnumerable<string>? lostIds, IEnumerable<BeltInventoryNode>? nodes, string? protectedRootTemplateId)
+        public static string[] FilterLostInsuredIds(IEnumerable<string> lostIds, IEnumerable<BeltInventoryNode> nodes, string protectedRootTemplateId)
         {
             var kept = GetKeptTreeIds(nodes, protectedRootTemplateId);
             if (kept.Count == 0) return lostIds == null ? Array.Empty<string>() : lostIds.ToArray();
             return (lostIds ?? Array.Empty<string>()).Where(id => !kept.Contains(id)).ToArray();
         }
 
-        static HashSet<string> GetKeptTreeIdsCore(IEnumerable<BeltInventoryNode>? nodes, string? protectedRootTemplateId, bool requireTemplateMatch)
+        static HashSet<string> GetKeptTreeIdsCore(IEnumerable<BeltInventoryNode> nodes, string protectedRootTemplateId, bool requireTemplateMatch)
         {
             var result = new HashSet<string>(StringComparer.Ordinal);
             if (requireTemplateMatch && string.IsNullOrEmpty(protectedRootTemplateId)) return result;
@@ -82,7 +82,7 @@ namespace SPTBeltArmbandInventory
             var children = new Dictionary<string, List<string>>(StringComparer.Ordinal);
             for (int i = 0; i < items.Length; i++)
             {
-                string? parentId = items[i].ParentId;
+                string parentId = items[i].ParentId;
                 string id = items[i].Id;
                 if (string.IsNullOrEmpty(parentId) || string.IsNullOrEmpty(id)) continue;
                 if (!children.TryGetValue(parentId, out var list))
