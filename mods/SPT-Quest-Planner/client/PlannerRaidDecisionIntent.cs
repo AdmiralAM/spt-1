@@ -9,35 +9,48 @@ namespace SPTQuestPlanner.Client
         public PlannerRaidDecisionIntent(
             string focusQuestId = null,
             IReadOnlyList<string> focusPathQuestIds = null,
-            IReadOnlyList<string> focusFrontierQuestIds = null)
+            IReadOnlyList<string> focusFrontierQuestIds = null,
+            IReadOnlyList<string> focusActionableQuestIds = null,
+            IReadOnlyList<string> focusEligibilityUnknownQuestIds = null)
         {
             FocusQuestId = focusQuestId == null ? string.Empty : focusQuestId.Trim();
             FocusPathQuestIds = Normalize(focusPathQuestIds);
             FocusFrontierQuestIds = Normalize(focusFrontierQuestIds);
+            FocusActionableQuestIds = Normalize(focusActionableQuestIds);
+            FocusEligibilityUnknownQuestIds = Normalize(focusEligibilityUnknownQuestIds);
         }
 
         public string FocusQuestId { get; private set; }
         public IReadOnlyList<string> FocusPathQuestIds { get; private set; }
+        // Quest-prerequisite frontier: no incomplete quest prerequisite remains. This does not by itself prove availability.
         public IReadOnlyList<string> FocusFrontierQuestIds { get; private set; }
+        // Actionable frontier: prerequisite-ready plus authoritative profile evaluation says Active or Available.
+        public IReadOnlyList<string> FocusActionableQuestIds { get; private set; }
+        // Prerequisite-ready nodes for which profile eligibility is not present in the current state snapshot.
+        public IReadOnlyList<string> FocusEligibilityUnknownQuestIds { get; private set; }
         public bool HasFocusQuest { get { return !string.IsNullOrWhiteSpace(FocusQuestId); } }
         public bool HasFocusPath { get { return FocusPathQuestIds.Count > 0; } }
-        public bool HasExecutableFocusFrontier { get { return FocusFrontierQuestIds.Count > 0; } }
+        public bool HasFocusFrontier { get { return FocusFrontierQuestIds.Count > 0; } }
+        public bool HasActionableFocusFrontier { get { return FocusActionableQuestIds.Count > 0; } }
+        public bool HasUnknownFocusEligibility { get { return FocusEligibilityUnknownQuestIds.Count > 0; } }
 
         private static IReadOnlyList<string> Normalize(IReadOnlyList<string> values)
         {
             if (values == null || values.Count == 0) return Array.Empty<string>();
-            string[] result = values
+            return values
                 .Where(value => !string.IsNullOrWhiteSpace(value))
                 .Select(value => value.Trim())
                 .Distinct(StringComparer.Ordinal)
                 .OrderBy(value => value, StringComparer.Ordinal)
                 .ToArray();
-            return result;
         }
     }
 
     public static class PlannerRaidDecisionIntentBuilder
     {
+        private const int AvailableDisposition = 3;
+        private const int ActiveDisposition = 4;
+
         public static PlannerRaidDecisionIntent Build(
             string focusQuestId,
             PlannerTopologyIndex topology,
@@ -51,13 +64,34 @@ namespace SPTQuestPlanner.Client
             PlannerQueryEngine query = new PlannerQueryEngine(topology, state);
             IReadOnlyList<string> path = query.GetIncompletePrerequisitePlan(normalized);
             List<string> frontier = new List<string>();
+            List<string> actionable = new List<string>();
+            List<string> eligibilityUnknown = new List<string>();
+
             for (int i = 0; i < path.Count; i++)
             {
                 string questId = path[i];
-                if (query.GetImmediateBlockers(questId).Count == 0) frontier.Add(questId);
+                // Missing topology cannot be claimed as a real frontier quest.
+                if (topology.GetQuest(questId) == null) continue;
+                if (query.GetImmediateBlockers(questId).Count != 0) continue;
+
+                frontier.Add(questId);
+                PlannerQuestClientState questState = state.GetQuest(questId);
+                if (questState == null)
+                {
+                    eligibilityUnknown.Add(questId);
+                    continue;
+                }
+
+                if (questState.Disposition == ActiveDisposition || questState.Disposition == AvailableDisposition)
+                    actionable.Add(questId);
             }
 
-            return new PlannerRaidDecisionIntent(normalized, path, frontier.ToArray());
+            return new PlannerRaidDecisionIntent(
+                normalized,
+                path,
+                frontier.ToArray(),
+                actionable.ToArray(),
+                eligibilityUnknown.ToArray());
         }
     }
 
@@ -82,16 +116,14 @@ namespace SPTQuestPlanner.Client
                     string matchedQuestId = leftSupports ? leftMatch : rightMatch;
                     return new PlannerRaidDecision(
                         leftSupports ? PlannerRaidDecisionOutcome.PreferLeft : PlannerRaidDecisionOutcome.PreferRight,
-                        intent.HasExecutableFocusFrontier
-                            ? "Player progression focus selects a candidate that advances an executable frontier quest on the focused path."
-                            : intent.HasFocusPath
-                                ? "Player progression focus selects a candidate that advances the focused quest path."
-                                : "Player progression focus explicitly selects a candidate that advances the focused quest.",
+                        intent.HasActionableFocusFrontier
+                            ? "Player progression focus selects a candidate that advances an actionable quest on the focused path."
+                            : "Player progression focus explicitly selects a candidate that advances the focused quest.",
                         new[]
                         {
                             (leftSupports ? "LEFT" : "RIGHT") + ": advances " + matchedQuestId +
                             (intent.HasFocusPath ? " on the prerequisite path to " + intent.FocusQuestId : string.Empty) +
-                            (intent.HasExecutableFocusFrontier ? "; quest is on the current executable focus frontier" : string.Empty)
+                            (intent.HasActionableFocusFrontier ? "; profile evaluation confirms the quest is active or available now" : string.Empty)
                         });
                 }
             }
@@ -113,30 +145,22 @@ namespace SPTQuestPlanner.Client
             matchedQuestId = string.Empty;
             if (signals == null || intent == null || !intent.HasFocusQuest) return false;
 
-            if (intent.HasExecutableFocusFrontier)
-            {
-                for (int p = 0; p < intent.FocusFrontierQuestIds.Count; p++)
-                {
-                    string frontierQuestId = intent.FocusFrontierQuestIds[p];
-                    if (!ContainsQuest(signals, frontierQuestId)) continue;
-                    matchedQuestId = frontierQuestId;
-                    return true;
-                }
-                return false;
-            }
-
             if (intent.HasFocusPath)
             {
-                for (int p = 0; p < intent.FocusPathQuestIds.Count; p++)
+                // A future/blocked goal may override the conservative policy only with authoritative
+                // profile evidence that a prerequisite-ready path quest is actually active/available.
+                if (!intent.HasActionableFocusFrontier) return false;
+                for (int p = 0; p < intent.FocusActionableQuestIds.Count; p++)
                 {
-                    string pathQuestId = intent.FocusPathQuestIds[p];
-                    if (!ContainsQuest(signals, pathQuestId)) continue;
-                    matchedQuestId = pathQuestId;
+                    string questId = intent.FocusActionableQuestIds[p];
+                    if (!ContainsQuest(signals, questId)) continue;
+                    matchedQuestId = questId;
                     return true;
                 }
                 return false;
             }
 
+            // Direct manually supplied focus remains supported for the already-established active-focus workflow.
             if (!ContainsQuest(signals, intent.FocusQuestId)) return false;
             matchedQuestId = intent.FocusQuestId;
             return true;
