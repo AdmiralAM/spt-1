@@ -81,6 +81,10 @@ internal static class Program
         fieldProbe.Value = 11;
         Assert((int)ReflectionTools.ReadMember(fieldProbe, "Value") == 11, "cached field accessor reads current values");
         Assert(ReflectionTools.ReadMember(fieldProbe, "Missing") == null, "missing members remain safe after lookup caching");
+        Type resolvedProgramType = ReflectionTools.FindType(typeof(Program).FullName);
+        Assert(ReferenceEquals(resolvedProgramType, typeof(Program)), "type lookup resolves loaded assemblies");
+        Assert(ReferenceEquals(ReflectionTools.FindType(typeof(Program).FullName), resolvedProgramType), "positive type lookup cache preserves the resolved type");
+        Assert(ReflectionTools.FindType(null) == null, "empty type lookup fails closed");
 
         string[] unusual = { BeltSlotPlan.TacticalVest, BeltSlotPlan.Backpack, BeltSlotPlan.SecuredContainer, BeltSlotPlan.Dogtag };
         string[] fallback = BeltSlotPlan.Build(unusual, BeltSlotPosition.AbovePockets, true);

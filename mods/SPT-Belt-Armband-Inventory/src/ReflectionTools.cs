@@ -1,6 +1,6 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 namespace SPTBeltArmbandInventory
@@ -25,21 +25,31 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static readonly object MemberCacheLock = new object();
-        static readonly Dictionary<Tuple<Type, string>, MemberAccessor> MemberCache = new Dictionary<Tuple<Type, string>, MemberAccessor>();
+        static readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, MemberAccessor>> MemberCache =
+            new ConcurrentDictionary<Type, ConcurrentDictionary<string, MemberAccessor>>();
+        static readonly ConcurrentDictionary<string, Type> TypeCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal);
 
         internal static Type FindType(string fullName)
         {
+            if (string.IsNullOrEmpty(fullName)) return null;
+            Type cached;
+            if (TypeCache.TryGetValue(fullName, out cached)) return cached;
+
             Type direct = Type.GetType(fullName + ", Assembly-CSharp", false);
-            if (direct != null) return direct;
+            if (direct != null) return CacheType(fullName, direct);
 
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
             for (int i = 0; i < assemblies.Length; i++)
             {
                 Type found = assemblies[i].GetType(fullName, false);
-                if (found != null) return found;
+                if (found != null) return CacheType(fullName, found);
             }
             return null;
+        }
+
+        static Type CacheType(string fullName, Type type)
+        {
+            return TypeCache.GetOrAdd(fullName, type);
         }
 
         internal static object ReadMember(object instance, string preferredName)
@@ -51,20 +61,19 @@ namespace SPTBeltArmbandInventory
 
         static MemberAccessor GetAccessor(Type type, string preferredName)
         {
-            var key = Tuple.Create(type, preferredName);
-            lock (MemberCacheLock)
-            {
-                MemberAccessor cached;
-                if (MemberCache.TryGetValue(key, out cached)) return cached;
+            ConcurrentDictionary<string, MemberAccessor> members = MemberCache.GetOrAdd(
+                type,
+                _ => new ConcurrentDictionary<string, MemberAccessor>(StringComparer.Ordinal));
+            return members.GetOrAdd(preferredName, name => CreateAccessor(type, name));
+        }
 
-                const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-                PropertyInfo property = type.GetProperty(preferredName, flags);
-                if (property != null && property.GetIndexParameters().Length != 0) property = null;
-                FieldInfo field = property == null ? type.GetField(preferredName, flags) : null;
-                cached = new MemberAccessor(property, field);
-                MemberCache.Add(key, cached);
-                return cached;
-            }
+        static MemberAccessor CreateAccessor(Type type, string preferredName)
+        {
+            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+            PropertyInfo property = type.GetProperty(preferredName, flags);
+            if (property != null && property.GetIndexParameters().Length != 0) property = null;
+            FieldInfo field = property == null ? type.GetField(preferredName, flags) : null;
+            return new MemberAccessor(property, field);
         }
 
         internal static bool ReadBoolean(object instance, string preferredName)
