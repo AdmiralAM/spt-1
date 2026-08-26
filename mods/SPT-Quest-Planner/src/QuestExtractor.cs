@@ -31,6 +31,7 @@ public static class QuestExtractor
             string? traderId = GetString(quest, "traderId");
             string? name = GetString(quest, "QuestName") ?? GetString(quest, "name");
             int? minimumLevel = null;
+            HashSet<string> unsupportedStartConditionTypes = new(StringComparer.OrdinalIgnoreCase);
 
             object? conditions = GetMemberValue(quest, "conditions");
             if (conditions is not null)
@@ -61,11 +62,21 @@ public static class QuestExtractor
                                 acceptedStates.Add(MapQuestStatus(rawStatus));
                         }
 
+                        int availableAfterSeconds = 0;
+                        double? availableAfter = GetNumber(condition, "availableAfter");
+                        if (availableAfter is not null && availableAfter > 0)
+                            availableAfterSeconds = (int)Math.Min(int.MaxValue, Math.Ceiling(availableAfter.Value));
+
                         prerequisites.Add(new PrerequisiteEdge(
                             sourceQuestId,
                             questId,
                             acceptedStates,
-                            GetString(condition, "id")));
+                            GetString(condition, "id"),
+                            availableAfterSeconds));
+                    }
+                    else
+                    {
+                        unsupportedStartConditionTypes.Add(string.IsNullOrWhiteSpace(type) ? "<missing>" : type);
                     }
                 }
 
@@ -73,12 +84,20 @@ public static class QuestExtractor
                 ExtractItemRequirements(questId, conditions, "AvailableForFinish", "Finish", items, warnings);
             }
 
+            if (unsupportedStartConditionTypes.Count > 0)
+            {
+                warnings.Add(
+                    $"Quest {questId}: AvailableForStart condition type(s) not modeled for hypothetical reachability: " +
+                    string.Join(", ", unsupportedStartConditionTypes.Order(StringComparer.OrdinalIgnoreCase)));
+            }
+
             nodes.Add(new QuestNode(
                 questId,
                 traderId,
                 name,
                 minimumLevel,
-                Repeatable: false));
+                Repeatable: false,
+                StartConditionCoverageComplete: unsupportedStartConditionTypes.Count == 0));
         }
 
         return new QuestExtractionResult(nodes, prerequisites, items, warnings);
