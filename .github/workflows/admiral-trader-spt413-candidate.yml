@@ -73,7 +73,13 @@ jobs:
               raise SystemExit(f'official portrait missing: {portrait_path}')
           data = portrait_path.read_bytes()
           if len(data) < 4 or data[:2] != b'\xff\xd8' or data[-2:] != b'\xff\xd9':
-              raise SystemExit('official portrait is not a complete JPEG stream')
+              last_eoi = data.rfind(b'\xff\xd9')
+              trailing = None if last_eoi < 0 else len(data) - (last_eoi + 2)
+              raise SystemExit(
+                  'official portrait is not a complete JPEG stream; '
+                  f'bytes={len(data)} first16={data[:16].hex()} last16={data[-16:].hex()} '
+                  f'lastEoiOffset={last_eoi} trailingBytesAfterEoi={trailing}'
+              )
           blob_oid = hashlib.sha1(f'blob {len(data)}\0'.encode('ascii') + data).hexdigest()
           if blob_oid != portrait.get('runtimeGitBlobSha1'):
               raise SystemExit(f'official portrait Git blob drift: {blob_oid}')
