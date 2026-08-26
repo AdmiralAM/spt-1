@@ -1,1 +1,118 @@
-Õø¥yÈZÚ)ìz»b¢{>Ù×¥zØ¨ÇW6–ær5F&¶÷bä6öÖÖöâäÖöFVÇ2äÆövv–æs°§W6–ær5F&¶÷bäD’äææ÷FF–öç3°§W6–ær5F&¶÷bå6W'fW"ä6÷&RäD“°§W6–ær5F&¶÷bå6W'fW"ä6÷&RäÖöFVÇ2ä6öÖÖöã°§W6–ær5F&¶÷bå6W'fW"ä6÷&RäÖöFVÇ2äVgBä6öÖÖöâåF&ÆW3°§W6–ær5F&¶÷bå6W'fW"ä6÷&RäÖöFVÇ2äVçV×3°§W6–ær5F&¶÷bå6W'fW"ä6÷&RäÖöFVÇ2å7BäÖöC°§W6–ær5F&¶÷bå6W'fW"ä6÷&RäÖöFVÇ2å7BåF&ÆW3°§W6–ær5F&¶÷bå6W'fW"ä6÷&Rå6W'f–6W2äÖöFF–ærä7W7FöÓ° ¦æÖW76R5D&VÇD&Ö&æD–çfVçF÷'’å6W'fW#° ¥´–æ¦V7F&ÆR…G—U&–÷&—G’ÒöäÆöD÷&FW"å&VÆöB²•Ğ§V&Æ–26VÆVB6Æ72'VçF–ÖT6æF–FFT&VÇD—FVÒ…FV×ÆFUF&ÆRFV×ÆFUF&ÆRÂ7W7FöÔ—FVÕ6W'f–6R7W7FöÔ—FVÕ6W'f–6RÂ•7DÆövvW#Å'VçF–ÖT6æF–FFT&VÇD—FVÓâÆövvW"’¢”öäÆö@§°¢V&Æ–27FF–2&VFöæÇ’Ööævô–B6÷W&6T&Ö&æEGÂÒæWr‚#V#6c6cCƒfcssCcs–SsS&3b"“°¢V&Æ–27FF–2&VFöæÇ’Ööævô–BFVfVÇD–çfVçF÷'•GÂÒæWr‚#SVCs#vF&F3&Cƒc#†#CSfB"“°¢V&Æ–27FF–2&VFöæÇ’Ööævô–B7W7FöÕFV×ÆFU&VçEGÂÒæWr…'VçF–ÖT–FVçF—G’å6V&6†&ÆUFV×ÆFU&VçD–B“°¢V&Æ–27FF–2&VFöæÇ’Ööævô–B7W7FöÔ&VÇE&VçEGÂÒæWr…'VçF–ÖT–FVçF—G’ä&VÇD—FVÕ&VçD–B“°¢V&Æ–26öç7B7G&–ær'VçF–ÖT6æF–FFUGÂÒ'VçF–ÖT–FVçF—G’ä6æF–FFT—FVÔ–C°¢V&Æ–26öç7B7G&–ær'VçF–ÖT6æF–FFTw&–D–BÒ'VçF–ÖT–FVçF—G’ä6æF–FFTw&–D–C° ¢V&Æ–2F6²öäÆöD7–æ2„6æ6VÆÆF–öåFö¶Vâ6æ6VÆÆF–öåFö¶VâÒFVfVÇB¢°¢–b‚FV×ÆFUF&ÆRä—FV×2ä6öçF–ç4¶W’…6÷W&6T&Ö&æEGÂ’’F‡&÷ræWr–çfÆ–D÷W&F–öäW†6WF–öâ‚$"dd„"$26÷W&6R&Ö&æBÖ—76–ærâ"“°¢f"†æF&öö´—FVÒÒFV×ÆFUF&ÆRä†æF&öö²ä—FV×2äf—'7D÷$FVfVÇB‡‚Óâ‚ä–BÓÒ6÷W&6T&Ö&æEGÂ’óòF‡&÷ræWr–çfÆ–D÷W&F–öäW†6WF–öâ‚$"dd„"$26÷W&6R†æF&öö²VçG'’Ö—76–ærâ"“° ¢Vç7W&T7W7FöÕ&VçG2‚“°¢Vç7W&T&Ô&æD66WG47W7FöÔ&VÇE&VçB‚“°¢–b‡FV×ÆFUF&ÆRä—FV×2åG'”vWEfÇVR†æWrÖöævô–B…'VçF–ÖT6æF–FFUGÂ’Â÷WBf"W†—7F–æt6æF–FFR’¢°¢fÆ–FFTW†—7F–æt6æF–FFR†W†—7F–æt6æF–FFR“°¢ÆövvW"å7V66W72‚B$"dd„"$2&WF–æVBW†—7F–ærfÆ–FFVB—FVÓ¢GÃ×µ'VçF–ÖT6æF–FFUGÇÒÂ&VçC×´7W7FöÔ&VÇE&VçEGÇÒÂw&–C×µ'VçF–ÖT–FVçF—G’ä6æF–FFTw&–D6öÇVÖç7×‡µ'VçF–ÖT–FVçF—G’ä6æF–FFTw&–E&÷w7ÒÂf–ÇFW#ÔÔt¤”äRâ"“°¢&WGW&âF6²ä6ö×ÆWFVEF6³°¢Ğ ¢f"FWF–Ç2ÒæWræWt—FVÔg&öÔ6ÆöæTFWF–Ç0¢°¢æWt—FVÔæÖRÒ$"dd„"'VçF–ÖR6æF–FFRÖv¦–æR&VÇB"À¢—FVÕGÅFô6ÆöæRÒ6÷W&6T&Ö&æEGÂÀ¢&VçD–BÒ7W7FöÔ&VÇE&VçEGÂÀ¢æWt–BÒ'VçF–ÖT6æF–FFUGÂÀ¢fÆV&–6U&÷V&ÆW2ÒÀ¢†æF&ööµ&–6U&÷V&ÆW2ÒÀ¢†æF&ööµ&VçD–BÒ†æF&öö´—FVÒå&VçD–BÀ¢Æö6ÆW2ÒæWrF–7F–öæ'“Ç7G&–ærÂÆö6ÆTFWF–Ç3â²²&Vâ%ÒÒæWrÆö6ÆTFWF–Ç2²æÖRÒ$"dd„"'VçF–ÖR6æF–FFRÖv¦–æR&VÇB"Â6†÷'DæÖRÒ$"dd„"&VÇB$2"ÂFW67&—F–öâÒ$Ö–æ–ÖÂƒ"Öv¦–æR&VÇB'VçF–ÖR6æF–FFRâ"ÒÒÀ¢÷fW'&–FU&÷W'F–W2ÒæWrFV×ÆFT—FVÕ&÷W'F–W0¢°¢&6¶w&÷VæD6öÆ÷"Ò&&ÇVR"ÂW†Ö–æVD'”FVfVÇBÒG'VRÀ¢w&–G2Ò¶æWrw&–B²æÖRÒ&Ö–â"Â–BÒ'VçF–ÖT6æF–FFTw&–D–BÂ&VçBÒ'VçF–ÖT6æF–FFUGÂÂ&÷F÷G—RÒ#SVC3#–3#F&F3&Cƒ“&c†#CScr"Â&÷W'F–W2ÒæWrw&–E&÷W'F–W2²6VÆÇ4‚Ò'VçF–ÖT–FVçF—G’ä6æF–FFTw&–D6öÇVÖç2Â6VÆÇ5bÒ'VçF–ÖT–FVçF—G’ä6æF–FFTw&–E&÷w2ÂÖ–ä6÷VçBÒÂÖ„6÷VçBÒÂÖ…vV–v‡BÒÂ—56÷'F–æuF&ÆRÒfÇ6RÂf–ÇFW'2Ò¶æWrw&–Df–ÇFW"²f–ÇFW"Ò´&6T6Æ76W2äÔt¤”äUÒÂW†6ÇVFVDf–ÇFW"ÒµÒÕÒÒÕĞ¢Ğ¢Ó°¢f"&W7VÇBÒ7W7FöÔ—FVÕ6W'f–6Rä7&VFT—FVÔg&öÔ6ÆöæR†FWF–Ç2“°¢–b‚&W7VÇBå7V66W72’F‡&÷ræWr–çfÆ–D÷W&F–öäW†6WF–öâ‚B$"dd„"$2—FVÒ7&VF–öâf–ÆVC¢·7G&–ærä¦ö–â‚#²"Â&W7VÇBäW'&÷'2—Ò"“°¢ÆövvW"å7V66W72‚B$"dd„"$27&VFVC¢GÃ×µ'VçF–ÖT6æF–FFUGÇÒÂ&VçC×´7W7FöÔ&VÇE&VçEGÇÒÂw&–C×µ'VçF–ÖT–FVçF—G’ä6æF–FFTw&–D6öÇVÖç7×‡µ'VçF–ÖT–FVçF—G’ä6æF–FFTw&–E&÷w7ÒÂf–ÇFW#ÔÔt¤”äRâ"“°¢&WGW&âF6²ä6ö×ÆWFVEF6³°¢Ğ ¢&—fFR7FF–2fö–BfÆ–FFTW†—7F–æt6æF–FFR…FV×ÆFT—FVÒ6æF–FFR¢°¢–b‚WVÇ2†6æF–FFRå&VçBÂ7W7FöÔ&VÇE&VçEGÂ’¢F‡&÷ræWr–çfÆ–D÷W&F–öäW†6WF–öâ‚$"dd„"$2—FVÒ”B6öÆÆ—6–öã¢W†—7F–ær—FVÒW6W2F–ffW&VçB&VçBâ"“° ¢f"w&–G2Ò6æF–FFRå&÷W'F–W3òäw&–G3°¢–b†w&–G2ÓÒçVÆÂÇÂw&–G2ä6÷VçB‚’Ò¢F‡&÷ræWr–çfÆ–D÷W&F–öäW†6WF–öâ‚$"dd„"$2—FVÒ”B6öÆÆ—6–öã¢W†—7F–ær—FVÒFöW2æ÷BFV6Æ&RW†7FÇ’öæRw&–Bâ"“° ¢f"w&–BÒw&–G2å6–ævÆR‚“°¢f"&÷W'F–W2Òw&–Bå&÷W'F–W3°¢–b‚7G&–æräWVÇ2†w&–Bä–BåFõ7G&–ær‚’Â'VçF–ÖT6æF–FFTw&–D–BÂ7G&–æt6ö×&—6öâä÷&F–æÂ¢ÇÂ&÷W'F–W2ÓÒçVÆÀ¢ÇÂ&÷W'F–W2ä6VÆÇ4‚Ò'VçF–ÖT–FVçF—G’ä6æF–FFTw&–D6öÇVÖç0¢ÇÂ&÷W'F–W2ä6VÆÇ5bÒ'VçF–ÖT–FVçF—G’ä6æF–FFTw&–E&÷w2¢F‡&÷ræWr–çfÆ–D÷W&F–öäW†6WF–öâ‚$"dd„"$2—FVÒ”B6öÆÆ—6–öã¢W†—7F–ærw&–B–FVçF—G’÷"vVöÖWG'’F–ffW'2g&öÒF†R6†&VB'VçF–ÖR6öçG&7Bâ"“° ¢f"f–ÇFW'2Ò&÷W'F–W2äf–ÇFW'3°¢–b†f–ÇFW'2ÓÒçVÆÂÇÂf–ÇFW'2äç’‡‚Óâ‚äf–ÇFW#òä6öçF–ç2„&6T6Æ76W2äÔt¤”äR’ÓÒG'VR’¢F‡&÷ræWr–çfÆ–D÷W&F–öäW†6WF–öâ‚$"dd„"$2—FVÒ”B6öÆÆ—6–öã¢W†—7F–ærw&–BFöW2æ÷B&WF–âF†RÔt¤”äRf–ÇFW"â"“°¢Ğ ¢&—fFRfö–BVç7W&T7W7FöÕ&VçG2‚¢°¢–b‚FV×ÆFUF&ÆRä—FV×2ä6öçF–ç4¶W’„7W7FöÕFV×ÆFU&VçEGÂ’¢°¢FV×ÆFUF&ÆRä—FV×5´7W7FöÕFV×ÆFU&VçEGÅÒÒæWrFV×ÆFT—FVĞ¢°¢–BÒ7W7FöÕFV×ÆFU&VçEGÂÀ¢æÖRÒ$$æD„%6V&6†&ÆT6öçF–æW%FV×ÆFR"À¢&VçBÒæWrÖöævô–B‚#Sccc&SCF&F3&C6c#“†#CSs2"’À¢G—RÒ$æöFR"À¢&÷W'F–W2ÒæWrFV×ÆFT—FVÕ&÷W'F–W2‚¢Ó°¢Ğ ¢–b‚FV×ÆFUF&ÆRä—FV×2ä6öçF–ç4¶W’„7W7FöÔ&VÇE&VçEGÂ’¢°¢FV×ÆFUF&ÆRä—FV×5´7W7FöÔ&VÇE&VçEGÅÒÒæWrFV×ÆFT—FVĞ¢°¢–BÒ7W7FöÔ&VÇE&VçEGÂÀ¢æÖRÒ$$æD„$7W7FöÔ&VÇD—FVÒ"À¢&VçBÒ7W7FöÕFV×ÆFU&VçEGÂÀ¢G—RÒ$æöFR"À¢&÷W'F–W2ÒæWrFV×ÆFT—FVÕ&÷W'F–W2‚¢Ó°¢Ğ¢Ğ ¢&—fFRfö–BVç7W&T&Ô&æD66WG47W7FöÔ&VÇE&VçB‚¢°¢–b‚FV×ÆFUF&ÆRä—FV×2åG'”vWEfÇVR„FVfVÇD–çfVçF÷'•GÂÂ÷WBf"–çfVçF÷'’’¢F‡&÷ræWr–çfÆ–D÷W&F–öäW†6WF–öâ‚$"dd„"$2FVfVÇB–çfVçF÷'’FV×ÆFRÖ—76–ærâ"“° ¢f"&Ô&æBÒ–çfVçF÷'’å&÷W'F–W3òå6Æ÷G3òäf—'7D÷$FVfVÇB‡‚Óâ7G&–æräWVÇ2‡‚äæÖRÂ$&Ô&æB"Â7G&–æt6ö×&—6öâä÷&F–æÂ’“°¢f"f–ÇFW"Ò&Ô&æCòå&÷W'F–W3òäf–ÇFW'3òäf—'7D÷$FVfVÇB‚“òäf–ÇFW#°¢–b†f–ÇFW"ÓÒçVÆÂ’F‡&÷ræWr–çfÆ–D÷W&F–öäW†6WF–öâ‚$"dd„"$2&Ô&æB6Æ÷Bf–ÇFW"Ö—76–ærâ"“°¢–b‚f–ÇFW"ä6öçF–ç2„7W7FöÔ&VÇE&VçEGÂ’’f–ÇFW"äFB„7W7FöÔ&VÇE&VçEGÂ“°¢Ğ§Ğ
+using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.DI;
+using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+using SPTarkov.Server.Core.Models.Enums;
+using SPTarkov.Server.Core.Models.Spt.Mod;
+using SPTarkov.Server.Core.Models.Spt.Tables;
+using SPTarkov.Server.Core.Services.Modding.Custom;
+
+namespace SPTBeltArmbandInventory.Server;
+
+[Injectable(TypePriority = OnLoadOrder.Preload + 1)]
+public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, CustomItemService customItemService, ISptLogger<RuntimeCandidateBeltItem> logger) : IOnLoad
+{
+    public static readonly MongoId SourceArmbandTpl = new("5b3f3af486f774679e752c1f");
+    public static readonly MongoId DefaultInventoryTpl = new("55d7217a4bdc2d86028b456d");
+    public static readonly MongoId CustomTemplateParentTpl = new(RuntimeIdentity.SearchableTemplateParentId);
+    public static readonly MongoId CustomBeltParentTpl = new(RuntimeIdentity.BeltItemParentId);
+    public const string RuntimeCandidateTpl = RuntimeIdentity.CandidateItemId;
+    public const string RuntimeCandidateGridId = RuntimeIdentity.CandidateGridId;
+
+    public Task OnLoadAsync(CancellationToken cancellationToken = default)
+    {
+        if (!templateTable.Items.ContainsKey(SourceArmbandTpl)) throw new InvalidOperationException("B&A&HB RC source armband missing.");
+        var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl) ?? throw new InvalidOperationException("B&A&HB RC source handbook entry missing.");
+
+        EnsureCustomParents();
+        EnsureArmBandAcceptsCustomBeltParent();
+        if (templateTable.Items.TryGetValue(new MongoId(RuntimeCandidateTpl), out var existingCandidate))
+        {
+            ValidateExistingCandidate(existingCandidate);
+            logger.Success($"B&A&HB RC retained existing validated item: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
+            return Task.CompletedTask;
+        }
+
+        var details = new NewItemFromCloneDetails
+        {
+            NewItemName = "B&A&HB Runtime Candidate Magazine Belt",
+            ItemTplToClone = SourceArmbandTpl,
+            ParentId = CustomBeltParentTpl,
+            NewId = RuntimeCandidateTpl,
+            FleaPriceRoubles = 1000,
+            HandbookPriceRoubles = 1000,
+            HandbookParentId = handbookItem.ParentId,
+            Locales = new Dictionary<string, LocaleDetails> { ["en"] = new LocaleDetails { Name = "B&A&HB Runtime Candidate Magazine Belt", ShortName = "B&A&HB Belt RC", Description = "Minimal 1x2 magazine belt runtime candidate." } },
+            OverrideProperties = new TemplateItemProperties
+            {
+                BackgroundColor = "blue", ExaminedByDefault = true,
+                Grids = [new Grid { Name = "main", Id = RuntimeCandidateGridId, Parent = RuntimeCandidateTpl, Prototype = "55d329c24bdc2d892f8b4567", Properties = new GridProperties { CellsH = RuntimeIdentity.CandidateGridColumns, CellsV = RuntimeIdentity.CandidateGridRows, MinCount = 0, MaxCount = 0, MaxWeight = 0, IsSortingTable = false, Filters = [new GridFilter { Filter = [BaseClasses.MAGAZINE], ExcludedFilter = [] }] } }]
+            }
+        };
+        var result = customItemService.CreateItemFromClone(details);
+        if (!result.Success) throw new InvalidOperationException($"B&A&HB RC item creation failed: {string.Join("; ", result.Errors)}");
+        logger.Success($"B&A&HB RC created: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
+        return Task.CompletedTask;
+    }
+
+    private static void ValidateExistingCandidate(TemplateItem candidate)
+    {
+        if (!Equals(candidate.Parent, CustomBeltParentTpl))
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing item uses a different parent.");
+
+        var grids = candidate.Properties?.Grids;
+        if (grids == null || grids.Count() != 1)
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing item does not declare exactly one grid.");
+
+        var grid = grids.Single();
+        var properties = grid.Properties;
+        if (!string.Equals(grid.Id.ToString(), RuntimeCandidateGridId, StringComparison.Ordinal)
+            || properties == null
+            || properties.CellsH != RuntimeIdentity.CandidateGridColumns
+            || properties.CellsV != RuntimeIdentity.CandidateGridRows)
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid identity or geometry differs from the shared runtime contract.");
+
+        var filters = properties.Filters;
+        if (filters == null || !filters.Any(x => x.Filter?.Contains(BaseClasses.MAGAZINE) == true))
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid does not retain the MAGAZINE filter.");
+    }
+
+    private void EnsureCustomParents()
+    {
+        if (!templateTable.Items.ContainsKey(CustomTemplateParentTpl))
+        {
+            templateTable.Items[CustomTemplateParentTpl] = new TemplateItem
+            {
+                Id = CustomTemplateParentTpl,
+                Name = "BAndHBSearchableContainerTemplate",
+                Parent = new MongoId("566162e44bdc2d3f298b4573"),
+                Type = "Node",
+                Properties = new TemplateItemProperties()
+            };
+        }
+
+        if (!templateTable.Items.ContainsKey(CustomBeltParentTpl))
+        {
+            templateTable.Items[CustomBeltParentTpl] = new TemplateItem
+            {
+                Id = CustomBeltParentTpl,
+                Name = "BAndHBCustomBeltItem",
+                Parent = CustomTemplateParentTpl,
+                Type = "Node",
+                Properties = new TemplateItemProperties()
+            };
+        }
+    }
+
+    private void EnsureArmBandAcceptsCustomBeltParent()
+    {
+        if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
+            throw new InvalidOperationException("B&A&HB RC default inventory template missing.");
+
+        var armBand = inventory.Properties?.Slots?.FirstOrDefault(x => string.Equals(x.Name, "ArmBand", StringComparison.Ordinal));
+        var filter = armBand?.Properties?.Filters?.FirstOrDefault()?.Filter;
+        if (filter == null) throw new InvalidOperationException("B&A&HB RC ArmBand slot filter missing.");
+        if (!filter.Contains(CustomBeltParentTpl)) filter.Add(CustomBeltParentTpl);
+    }
+}
