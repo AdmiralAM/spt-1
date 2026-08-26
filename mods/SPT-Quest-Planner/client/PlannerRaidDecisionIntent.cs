@@ -11,13 +11,15 @@ namespace SPTQuestPlanner.Client
             IReadOnlyList<string> focusPathQuestIds = null,
             IReadOnlyList<string> focusFrontierQuestIds = null,
             IReadOnlyList<string> focusActionableQuestIds = null,
-            IReadOnlyList<string> focusEligibilityUnknownQuestIds = null)
+            IReadOnlyList<string> focusEligibilityUnknownQuestIds = null,
+            IReadOnlyList<PlannerTopologyPrerequisite> focusTerminalConflictEdges = null)
         {
             FocusQuestId = focusQuestId == null ? string.Empty : focusQuestId.Trim();
             FocusPathQuestIds = Normalize(focusPathQuestIds);
             FocusFrontierQuestIds = Normalize(focusFrontierQuestIds);
             FocusActionableQuestIds = Normalize(focusActionableQuestIds);
             FocusEligibilityUnknownQuestIds = Normalize(focusEligibilityUnknownQuestIds);
+            FocusTerminalConflictEdges = NormalizeEdges(focusTerminalConflictEdges);
         }
 
         public string FocusQuestId { get; private set; }
@@ -28,11 +30,14 @@ namespace SPTQuestPlanner.Client
         public IReadOnlyList<string> FocusActionableQuestIds { get; private set; }
         // Prerequisite-ready nodes for which profile eligibility is not present in the current state snapshot.
         public IReadOnlyList<string> FocusEligibilityUnknownQuestIds { get; private set; }
+        // Non-repeatable source is already terminal Success, but the target edge does not accept Success.
+        public IReadOnlyList<PlannerTopologyPrerequisite> FocusTerminalConflictEdges { get; private set; }
         public bool HasFocusQuest { get { return !string.IsNullOrWhiteSpace(FocusQuestId); } }
         public bool HasFocusPath { get { return FocusPathQuestIds.Count > 0; } }
         public bool HasFocusFrontier { get { return FocusFrontierQuestIds.Count > 0; } }
         public bool HasActionableFocusFrontier { get { return FocusActionableQuestIds.Count > 0; } }
         public bool HasUnknownFocusEligibility { get { return FocusEligibilityUnknownQuestIds.Count > 0; } }
+        public bool HasTerminalFocusConflict { get { return FocusTerminalConflictEdges.Count > 0; } }
 
         private static IReadOnlyList<string> Normalize(IReadOnlyList<string> values)
         {
@@ -42,6 +47,23 @@ namespace SPTQuestPlanner.Client
                 .Select(value => value.Trim())
                 .Distinct(StringComparer.Ordinal)
                 .OrderBy(value => value, StringComparer.Ordinal)
+                .ToArray();
+        }
+
+        private static IReadOnlyList<PlannerTopologyPrerequisite> NormalizeEdges(IReadOnlyList<PlannerTopologyPrerequisite> values)
+        {
+            if (values == null || values.Count == 0) return Array.Empty<PlannerTopologyPrerequisite>();
+            Dictionary<string, PlannerTopologyPrerequisite> unique = new Dictionary<string, PlannerTopologyPrerequisite>(StringComparer.Ordinal);
+            for (int i = 0; i < values.Count; i++)
+            {
+                PlannerTopologyPrerequisite edge = values[i];
+                if (edge == null) continue;
+                string key = edge.SourceQuestId + "\u001f" + edge.TargetQuestId;
+                if (!unique.ContainsKey(key)) unique[key] = edge;
+            }
+            return unique.Values
+                .OrderBy(value => value.SourceQuestId, StringComparer.Ordinal)
+                .ThenBy(value => value.TargetQuestId, StringComparer.Ordinal)
                 .ToArray();
         }
     }
@@ -66,12 +88,17 @@ namespace SPTQuestPlanner.Client
             List<string> frontier = new List<string>();
             List<string> actionable = new List<string>();
             List<string> eligibilityUnknown = new List<string>();
+            List<PlannerTopologyPrerequisite> terminalConflicts = new List<PlannerTopologyPrerequisite>();
 
             for (int i = 0; i < path.Count; i++)
             {
                 string questId = path[i];
                 // Missing topology cannot be claimed as a real frontier quest.
                 if (topology.GetQuest(questId) == null) continue;
+
+                IReadOnlyList<PlannerTopologyPrerequisite> conflicts = query.GetTerminalPrerequisiteConflicts(questId);
+                for (int c = 0; c < conflicts.Count; c++) terminalConflicts.Add(conflicts[c]);
+
                 if (query.GetImmediateBlockers(questId).Count != 0) continue;
 
                 frontier.Add(questId);
@@ -91,7 +118,8 @@ namespace SPTQuestPlanner.Client
                 path,
                 frontier.ToArray(),
                 actionable.ToArray(),
-                eligibilityUnknown.ToArray());
+                eligibilityUnknown.ToArray(),
+                terminalConflicts.ToArray());
         }
     }
 
@@ -120,6 +148,7 @@ namespace SPTQuestPlanner.Client
         {
             matchedQuestId = string.Empty;
             if (signals == null || intent == null || !intent.HasFocusQuest) return false;
+            if (intent.HasTerminalFocusConflict) return false;
 
             if (intent.HasFocusPath)
             {
