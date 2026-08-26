@@ -52,8 +52,8 @@ internal static class AdmiralTraderItemAdapterSmoke
 
         const string questAssortJson = """
         {
-          "Started": {},
-          "Success": {
+          "started": {},
+          "success": {
             "ad1000000000000000000001":"68a6527a3c73b2e85977d7a1",
             "6cf0fc22a55417075c5af23e":"8cba3e2ec639a4aa2c26c4da",
             "67d5501fb925a7836b99f112":"43d9544a09d068476a1a18df",
@@ -62,7 +62,7 @@ internal static class AdmiralTraderItemAdapterSmoke
             "07efd6dee267ec18ed830dd6":"7564e60e4c1c2f1b67a594a4",
             "731e65964d324bc545a1b839":"cd2641c70bede98dac3945d0"
           },
-          "Fail": {}
+          "fail": {}
         }
         """;
 
@@ -76,7 +76,7 @@ internal static class AdmiralTraderItemAdapterSmoke
         Require(offers.All(offer => offer.Source.EarliestProgressionLevel is null), "quest progression must not be fabricated before quest graph evidence is supplied");
         Require(offers.All(offer => offer.Source.ProvenanceClass == "ExplicitAdapter"), "adapter evidence must carry explicit attribution confidence");
         Require(offers.All(offer => offer.Capacity.SupplyBound == RenewableSupplyBound.Bounded), "all maintained offers must map to bounded capacity evidence");
-        Require(offers.All(offer => !string.IsNullOrWhiteSpace(offer.QuestGateId)), "every offer must have explicit Success quest gate");
+        Require(offers.All(offer => !string.IsNullOrWhiteSpace(offer.QuestGateId)), "every offer must have explicit success quest gate");
         Require(offers.Single(offer => offer.OfferId == "ad1000000000000000000001").QuestGateId == "68a6527a3c73b2e85977d7a1", "Labs access gate mapping mismatch");
 
         var sourcePressure = SourcePressureEvidenceAnalyzer.Analyze(offers.Select(offer => offer.Source));
@@ -84,11 +84,12 @@ internal static class AdmiralTraderItemAdapterSmoke
         Require(sourcePressure.Count == 7, "each maintained offer item should enter source pressure evidence");
         Require(bounded.Count == 7 && bounded.All(item => item.HasOnlyKnownBoundedRenewablePaths), "maintained Admiral Trader offers must remain bounded-only in isolated adapter evidence");
 
+        MustFail("PascalCase questassort regression", () => AdmiralTraderItemAdapter.ParseOffers(assortJson, questAssortJson.Replace("\"success\"", "\"Success\"", StringComparison.Ordinal), policy));
         MustFail("unlimited drift", () => AdmiralTraderItemAdapter.ParseOffers(assortJson.Replace("\"UnlimitedCount\":false", "\"UnlimitedCount\":true", StringComparison.Ordinal), questAssortJson, policy));
         MustFail("missing quest gate", () => AdmiralTraderItemAdapter.ParseOffers(assortJson, questAssortJson.Replace("\"ad1000000000000000000001\":\"68a6527a3c73b2e85977d7a1\",", "", StringComparison.Ordinal), policy));
         MustFail("loyalty drift", () => AdmiralTraderItemAdapter.ParseOffers(assortJson.Replace("\"ad1000000000000000000001\":1", "\"ad1000000000000000000001\":2", StringComparison.Ordinal), questAssortJson, policy));
         MustFail("stock cap drift", () => AdmiralTraderItemAdapter.ParseOffers(assortJson.Replace("\"StackObjectsCount\":80", "\"StackObjectsCount\":81", StringComparison.Ordinal), questAssortJson, policy));
-        MustFail("extra quest mapping", () => AdmiralTraderItemAdapter.ParseOffers(assortJson, questAssortJson.Replace("\"Success\": {", "\"Success\": {\"orphan\":\"quest\",", StringComparison.Ordinal), policy));
+        MustFail("extra quest mapping", () => AdmiralTraderItemAdapter.ParseOffers(assortJson, questAssortJson.Replace("\"success\": {", "\"success\": {\"orphan\":\"quest\",", StringComparison.Ordinal), policy));
 
         Console.WriteLine("Economy Admiral Admiral Trader item adapter smoke PASS");
     }
