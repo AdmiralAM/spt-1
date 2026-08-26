@@ -37,6 +37,7 @@ jobs:
           required = [
               root / 'README.md', root / 'RUNTIME_TEST.md', root / 'config/config.json',
               root / 'tools/Validate-Runtime.ps1', root / 'tools/Test-Validate-Runtime.ps1',
+              root / 'tools/Validate-Enforce.ps1', root / 'tools/Test-Validate-Enforce.ps1',
               root / 'tools/Validate-PrimaryParity.ps1', root / 'tools/Test-Validate-PrimaryParity.ps1',
               root / 'server/Economy-Admiral.csproj', root / 'server/EconomyMod.cs',
               root / 'server/EconomyConfig.cs', root / 'server/EconomyConfigValidator.cs',
@@ -56,8 +57,7 @@ jobs:
 
           mod = (root / 'server/EconomyMod.cs').read_text(encoding='utf-8')
           for text in [
-              'OnLoadOrder.PostLoad + 1000',
-              'config.Mode == EconomyMode.Off',
+              'OnLoadOrder.PostLoad + 1000', 'config.Mode == EconomyMode.Off',
               'var questProvenance = await questProvenanceDeltaService.RunAsync',
               'var enforcement = await enforcementPlanService.RunAsync',
               'runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken)',
@@ -72,33 +72,23 @@ jobs:
               assert 'Path.Combine(modPath, "config", "config.json")' not in text, service_name
 
           analysis = (root / 'server/QuestAnalysisService.cs').read_text(encoding='utf-8')
-          for text in [
-              'OutlierFlagsAffectEnforcement = true',
-              'HIGH_XP_LOW_DEPTH', 'RESTARTABLE_HIGH_XP', 'HIGH_STANDING_LOW_DEPTH',
-              'MedianXp', 'MedianAbsoluteStanding',
-          ]:
+          for text in ['OutlierFlagsAffectEnforcement = true','HIGH_XP_LOW_DEPTH','RESTARTABLE_HIGH_XP','HIGH_STANDING_LOW_DEPTH','MedianXp','MedianAbsoluteStanding']:
               assert text in analysis, text
 
           delta = (root / 'server/QuestProvenanceDeltaService.cs').read_text(encoding='utf-8')
-          for text in ['ModAdded', 'PristineModified', 'PristineUnchanged', 'ChangedDimensions']:
+          for text in ['ModAdded','PristineModified','PristineUnchanged','ChangedDimensions']:
               assert text in delta, text
 
           plan = (root / 'server/EnforcementPlanService.cs').read_text(encoding='utf-8')
           for text in [
-              'SchemaVersion = 5',
-              'SelectedPolicy = $"PresetNumericQuestRewardCapV1/{config.Preset}"',
-              'MutationEligibilityPolicyVersion = 3',
-              'config.Mode == EconomyMode.Enforce',
-              'NumericRewardTransactionCore.Execute(BuildTransactionRequests(proposals))',
-              'new NumericRewardSlot(', 'value => reward.Value = value',
-              'NumericRewardTransactionCore.NeedsMutation',
-              'RewardType.Experience', 'RewardType.TraderStanding',
-              'PolicyEligibleModAdded', 'PolicyEligibleModifiedPristine',
-              'ProtectedPristine', 'ProtectedUnchangedRewardDimensions', 'BlockedUnknownProvenance',
-              'changedDimensions.Contains("Experience"', 'changedDimensions.Contains("TraderStanding"',
-              'ManualExactQuestRewardTargetV1', 'QuestRewardOverrides',
-              'PlannedMutationCount', 'TransactionCommitted', 'TransactionRolledBack',
-              'Before', 'Current', 'Target', 'After',
+              'SchemaVersion = 5','SelectedPolicy = $"PresetNumericQuestRewardCapV1/{config.Preset}"','MutationEligibilityPolicyVersion = 3',
+              'config.Mode == EconomyMode.Enforce','NumericRewardTransactionCore.Execute(BuildTransactionRequests(proposals))',
+              'new NumericRewardSlot(','value => reward.Value = value','NumericRewardTransactionCore.NeedsMutation',
+              'RewardType.Experience','RewardType.TraderStanding','PolicyEligibleModAdded','PolicyEligibleModifiedPristine',
+              'ProtectedPristine','ProtectedUnchangedRewardDimensions','BlockedUnknownProvenance',
+              'changedDimensions.Contains("Experience"','changedDimensions.Contains("TraderStanding"',
+              'ManualExactQuestRewardTargetV1','QuestRewardOverrides','PlannedMutationCount','TransactionCommitted','TransactionRolledBack',
+              'Before','Current','Target','After',
           ]:
               assert text in plan, text
           assert 'dimensions.Add("ItemRewardBudget")' not in plan
@@ -106,29 +96,25 @@ jobs:
           assert 'MutationCount = 0' not in plan
 
           transaction = (root / 'server/NumericRewardTransactionCore.cs').read_text(encoding='utf-8')
-          for text in ['Journal before first write', 'Rollback(journal)', 'VerifyRollback(journal)', 'NeedsMutation', 'Experience', 'TraderStanding']:
+          for text in ['Journal before first write','Rollback(journal)','VerifyRollback(journal)','NeedsMutation','Experience','TraderStanding']:
               assert text in transaction, text
-
           transaction_smoke = (root / 'tests/EnforcementSmoke/Program.cs').read_text(encoding='utf-8')
-          for text in ['successful transaction must commit', 'second automatic pass must be idempotent', 'synthetic setter failure', 'must roll back whole batch', 'earlier standing mutation must be restored']:
+          for text in ['successful transaction must commit','second automatic pass must be idempotent','synthetic setter failure','must roll back whole batch','earlier standing mutation must be restored']:
               assert text in transaction_smoke, text
 
           evidence = (root / 'server/RuntimeEvidenceService.cs').read_text(encoding='utf-8')
-          for text in [
-              'SchemaVersion = 4',
-              'DatabaseChangeExpected', 'EnforcementEvidenceValid',
-              'ValidateEnforcementEvidence',
-              'config.Mode != EconomyMode.Enforce',
-              'enforcement.MutationCount == 0',
-              'enforcement.TransactionCommitted && !databaseUnchanged',
-              'mutation.Dimension is not ("Experience" or "TraderStanding")',
-              'candidate.PristineUntouched',
-              'DeclaredMutationCount = enforcement.MutationCount',
-          ]:
+          for text in ['SchemaVersion = 4','DatabaseChangeExpected','EnforcementEvidenceValid','ValidateEnforcementEvidence','config.Mode != EconomyMode.Enforce','enforcement.MutationCount == 0','enforcement.TransactionCommitted && !databaseUnchanged','mutation.Dimension is not ("Experience" or "TraderStanding")','candidate.PristineUntouched','DeclaredMutationCount = enforcement.MutationCount']:
               assert text in evidence, text
 
+          audit_validator = (root / 'tools/Validate-Runtime.ps1').read_text(encoding='utf-8')
+          for text in ['validator requires mode=Audit','DatabaseUnchangedAcrossPipeline','PlannedMutationCount','PristineUnchanged candidate is not protected']:
+              assert text in audit_validator, text
+          enforce_validator = (root / 'tools/Validate-Enforce.ps1').read_text(encoding='utf-8')
+          for text in ['validator requires mode=Enforce','Alpha requires at least one applied mutation','After != Target','PristineUnchanged candidate was mutated','fingerprint changed']:
+              assert text in enforce_validator, text
+
           config_source = (root / 'server/EconomyConfig.cs').read_text(encoding='utf-8')
-          for text in ['QuestRewardOverrides', 'AllowAutomaticMutation', 'ExperienceTarget', 'TraderStandingTarget']:
+          for text in ['QuestRewardOverrides','AllowAutomaticMutation','ExperienceTarget','TraderStandingTarget']:
               assert text in config_source, text
 
           print('Economy Admiral active Enforce Alpha contract OK')
@@ -143,16 +129,21 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Validate existing Audit/parity helper syntax
+      - name: Validate runtime helper syntax
         shell: pwsh
         run: |
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-Runtime.ps1 -Raw))
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1 -Raw))
+          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-Enforce.ps1 -Raw))
+          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-Enforce.ps1 -Raw))
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-PrimaryParity.ps1 -Raw))
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-PrimaryParity.ps1 -Raw))
-      - name: Smoke-test existing Audit runtime helper
+      - name: Smoke-test Audit runtime contract
         shell: pwsh
         run: '& mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1'
+      - name: Smoke-test Enforce runtime contract
+        shell: pwsh
+        run: '& mods/Economy-Admiral/tools/Test-Validate-Enforce.ps1'
       - name: Smoke-test primary parity validator
         shell: pwsh
         run: '& mods/Economy-Admiral/tools/Test-Validate-PrimaryParity.ps1'
@@ -179,6 +170,7 @@ jobs:
           Copy-Item mods/Economy-Admiral/README.md 'build-output/Economy Admiral/README.md'
           Copy-Item mods/Economy-Admiral/RUNTIME_TEST.md 'build-output/Economy Admiral/RUNTIME_TEST.md'
           Copy-Item mods/Economy-Admiral/tools/Validate-Runtime.ps1 'build-output/Economy Admiral/Validate-Runtime.ps1'
+          Copy-Item mods/Economy-Admiral/tools/Validate-Enforce.ps1 'build-output/Economy Admiral/Validate-Enforce.ps1'
           Copy-Item mods/Economy-Admiral/tools/Validate-PrimaryParity.ps1 'build-output/Economy Admiral/Validate-PrimaryParity.ps1'
           [ordered]@{
             Product = 'Economy Admiral'
