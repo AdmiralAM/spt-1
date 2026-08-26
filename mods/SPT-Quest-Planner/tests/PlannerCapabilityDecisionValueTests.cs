@@ -74,6 +74,50 @@ namespace SPTQuestPlanner.Tests
         }
 
         [Fact]
+        public void EvidenceCoverageDifferenceAloneDoesNotCountAsKeepWorthyTradeoff()
+        {
+            PlannerCapabilityGoalPresentation presentation = Presentation(
+                PlannerCapabilityGoalPresentationKind.RaidDecision,
+                new PlannerRaidDecisionPresentation(
+                    PlannerRaidDecisionPresentationKind.SeveralGoodOptions,
+                    null,
+                    new[]
+                    {
+                        Explanation("customs", evidenceCoverage: 1d),
+                        Explanation("woods", evidenceCoverage: 0.5d)
+                    },
+                    "Several good options",
+                    "One option has less complete evidence."));
+
+            PlannerCapabilityDecisionValue value = PlannerCapabilityDecisionValueClassifier.Classify(presentation);
+
+            Assert.Equal(PlannerCapabilityDecisionValueKind.NavigationOnly, value.Kind);
+            Assert.False(value.CountsTowardKeepCandidate);
+        }
+
+        [Fact]
+        public void UnresolvedPreparationDifferenceAloneDoesNotCountAsKeepWorthyTradeoff()
+        {
+            PlannerCapabilityGoalPresentation presentation = Presentation(
+                PlannerCapabilityGoalPresentationKind.RaidDecision,
+                new PlannerRaidDecisionPresentation(
+                    PlannerRaidDecisionPresentationKind.SeveralGoodOptions,
+                    null,
+                    new[]
+                    {
+                        Explanation("customs", unresolved: 1),
+                        Explanation("woods")
+                    },
+                    "Several good options",
+                    "One option has unresolved preparation evidence."));
+
+            PlannerCapabilityDecisionValue value = PlannerCapabilityDecisionValueClassifier.Classify(presentation);
+
+            Assert.Equal(PlannerCapabilityDecisionValueKind.NavigationOnly, value.Kind);
+            Assert.False(value.CountsTowardKeepCandidate);
+        }
+
+        [Fact]
         public void WaitingStateCountsAsAvoidingUnnecessaryRaidAndKeepEvidence()
         {
             PlannerCapabilityDecisionValue value = PlannerCapabilityDecisionValueClassifier.Classify(
@@ -129,7 +173,9 @@ namespace SPTQuestPlanner.Tests
             PlannerRaidActionOverlap[] overlaps = null,
             string[] unlocks = null,
             bool preparationReady = true,
-            int missing = 0)
+            int missing = 0,
+            int unresolved = 0,
+            double evidenceCoverage = 1d)
         {
             return new PlannerRaidDecisionExplanation(
                 location,
@@ -138,8 +184,8 @@ namespace SPTQuestPlanner.Tests
                 unlocks ?? Array.Empty<string>(),
                 preparationReady,
                 missing,
-                0,
-                1d,
+                unresolved,
+                evidenceCoverage,
                 Array.Empty<string>());
         }
     }
