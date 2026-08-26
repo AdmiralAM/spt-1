@@ -71,9 +71,12 @@ jobs:
           required_assort = {'items', 'barter_scheme', 'loyal_level_items'}
           if not required_assort.issubset(assort):
               raise SystemExit(f'assort missing native collections: {sorted(required_assort - set(assort))}')
-          for key in ('Started', 'Success', 'Fail'):
-              if key not in questassort or not isinstance(questassort[key], dict):
-                  raise SystemExit(f'questassort missing native collection: {key}')
+          expected_states = {'started', 'success', 'fail'}
+          if set(questassort) != expected_states:
+              raise SystemExit(f'questassort state-key drift: expected={sorted(expected_states)} actual={sorted(questassort)}')
+          for key in expected_states:
+              if not isinstance(questassort[key], dict):
+                  raise SystemExit(f'questassort native collection is not an object: {key}')
           PY
 
       - name: Build server runtime foundation against SPT 4.1.3
