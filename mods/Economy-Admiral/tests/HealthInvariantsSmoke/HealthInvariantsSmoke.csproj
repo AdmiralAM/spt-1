@@ -9,5 +9,6 @@
   <ItemGroup>
     <Compile Include="../../server/EconomyAttributionEvidence.cs" Link="EconomyAttributionEvidence.cs" />
     <Compile Include="../../server/EconomyHealthInvariants.cs" Link="EconomyHealthInvariants.cs" />
+    <Compile Include="../../server/EconomyPolicyPreviewEvidence.cs" Link="EconomyPolicyPreviewEvidence.cs" />
   </ItemGroup>
 </Project>
