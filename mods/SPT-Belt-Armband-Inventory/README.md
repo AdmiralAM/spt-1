@@ -7,6 +7,12 @@ Current module version: **0.1.0**.
 
 The implementation is generic: it does not require a specific Pack 'n' Strap item ID or content class. Plain armbands remain ordinary armbands; container-capable items receive the additional inventory behavior.
 
+The validated ArmBand candidate opens through EFT's native searchable-item
+`GridWindow` and default `GeneratedGridsView`. Its declared `1x2` grid therefore
+renders as exactly two cells. The earlier experimental `ContainersPanel` BELT-row
+projection is not installed: it was superseded after runtime proof showed that
+the native container window owns the correct grid lifecycle.
+
 ## Current architecture
 
 The module now contains both client and server components:

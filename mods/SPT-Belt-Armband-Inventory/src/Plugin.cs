@@ -14,10 +14,7 @@ namespace SPTBeltArmbandInventory
         public const string PluginVersion = "0.1.0";
 
         ConfigEntry<bool> modEnabled;
-        ConfigEntry<BeltSlotPosition> position;
         RuntimeCustomBeltTypePatches runtimeTypePatches;
-        DynamicBeltPatches patches;
-        PanelRefreshPatches refreshPatches;
         LootPriorityPatches lootPatches;
         UnloadPriorityPatches unloadPatches;
         ScavBeltPatches scavPatches;
@@ -32,7 +29,6 @@ namespace SPTBeltArmbandInventory
         void Awake()
         {
             modEnabled = Config.Bind("General", "Enabled", true, "Enable B&A&HB MOD SPT. Runtime-candidate builds force this on at startup.");
-            position = Config.Bind("Layout", "Belt position", BeltSlotPosition.BelowPockets, "Place the belt row above or below Pockets. Restart required.");
 
             if (!modEnabled.Value)
             {
@@ -56,21 +52,7 @@ namespace SPTBeltArmbandInventory
                 return;
             }
 
-            patches = new DynamicBeltPatches(Logger.LogInfo, Logger.LogWarning);
-            if (!patches.TryInstall(position.Value))
-            {
-                patches.Dispose();
-                patches = null;
-                return;
-            }
-
-            refreshPatches = new PanelRefreshPatches(Logger.LogInfo, Logger.LogWarning);
-            if (!refreshPatches.TryInstall())
-            {
-                refreshPatches.Dispose();
-                refreshPatches = null;
-                Logger.LogWarning("Belt UI remains active, but equipping/removing a belt while a container panel is already open may require reopening that screen.");
-            }
+            Logger.LogInfo("B&A&HB ArmBand presentation uses the native searchable-item GridWindow and GeneratedGridsView; legacy ContainersPanel BELT-row projection is disabled.");
 
             lootPatches = new LootPriorityPatches(Logger.LogInfo, Logger.LogWarning);
             if (!lootPatches.TryInstall())
@@ -155,7 +137,6 @@ namespace SPTBeltArmbandInventory
 
         void Update()
         {
-            if (refreshPatches != null) PanelRefreshRuntime.Flush();
             if (fastAccessSyncPatches != null) FastAccessBeltSyncRuntime.Flush();
         }
 
@@ -193,10 +174,6 @@ namespace SPTBeltArmbandInventory
             unloadPatches = null;
             if (lootPatches != null) lootPatches.Dispose();
             lootPatches = null;
-            if (refreshPatches != null) refreshPatches.Dispose();
-            refreshPatches = null;
-            if (patches != null) patches.Dispose();
-            patches = null;
             if (runtimeTypePatches != null) runtimeTypePatches.Dispose();
             runtimeTypePatches = null;
         }
