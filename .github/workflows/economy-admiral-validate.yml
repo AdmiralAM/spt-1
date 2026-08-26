@@ -42,6 +42,8 @@ jobs:
               root / 'server/EconomyConfig.cs', root / 'server/EconomyConfigValidator.cs',
               root / 'server/QuestAnalysisService.cs', root / 'server/QuestProvenanceDeltaService.cs',
               root / 'server/EnforcementPlanService.cs', root / 'server/RuntimeEvidenceService.cs',
+              root / 'server/NumericRewardTransactionCore.cs',
+              root / 'tests/EnforcementSmoke/EnforcementSmoke.csproj', root / 'tests/EnforcementSmoke/Program.cs',
           ]
           missing = [str(p) for p in required if not p.is_file()]
           assert not missing, missing
@@ -100,10 +102,17 @@ jobs:
               'Before', 'Current', 'Target', 'After',
           ]:
               assert text in plan, text
-          # Item rewards may remain visible as review-only actions, but they must never enter a mutation dimension.
           assert 'dimensions.Add("ItemRewardBudget")' not in plan
           assert 'ApplyMutations = false' not in plan
           assert 'MutationCount = 0' not in plan
+
+          transaction = (root / 'server/NumericRewardTransactionCore.cs').read_text(encoding='utf-8')
+          for text in ['Journal before first write', 'Rollback(journal)', 'VerifyRollback(journal)', 'NeedsMutation', 'Experience', 'TraderStanding']:
+              assert text in transaction, text
+
+          transaction_smoke = (root / 'tests/EnforcementSmoke/Program.cs').read_text(encoding='utf-8')
+          for text in ['successful transaction must commit', 'second automatic pass must be idempotent', 'synthetic setter failure', 'must roll back whole batch', 'earlier standing mutation must be restored']:
+              assert text in transaction_smoke, text
 
           evidence = (root / 'server/RuntimeEvidenceService.cs').read_text(encoding='utf-8')
           for text in [
@@ -154,6 +163,9 @@ jobs:
       - name: Build server
         shell: pwsh
         run: dotnet build mods/Economy-Admiral/server/Economy-Admiral.csproj -c Release --nologo
+      - name: Smoke-test Enforce transaction commit, rollback and idempotence
+        shell: pwsh
+        run: dotnet run --project mods/Economy-Admiral/tests/EnforcementSmoke/EnforcementSmoke.csproj -c Release --nologo
       - name: Smoke-test source-pressure integration regression
         shell: pwsh
         run: dotnet run --project mods/Economy-Admiral/tests/SourcePressureSmoke/SourcePressureSmoke.csproj -c Release --nologo
