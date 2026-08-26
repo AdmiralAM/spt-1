@@ -55,6 +55,29 @@ class ExactRuntimeHandoffContractTests(unittest.TestCase):
         self.assertGreater(install, checksum)
         self.assertIn("Installed fully validated exact-runtime test candidate", text[install:])
 
+    def test_final_install_is_prepared_then_rollback_safe_swapped(self):
+        text = SCRIPT.read_text(encoding="utf-8")
+        install = text.index("if ($Install) {")
+        block = text[install:]
+
+        self.assertIn(".Admiral-Trader.incoming", block)
+        self.assertIn(".Admiral-Trader.rollback", block)
+        self.assertIn("Copy-Item $stageMod $incoming -Recurse", block)
+        self.assertIn("Prepared install tree is incomplete", block)
+        self.assertIn("Prepared install DLL hash drift", block)
+        self.assertIn("Move-Item $destination $backup", block)
+        self.assertIn("Move-Item $incoming $destination", block)
+        self.assertIn("Move-Item $backup $destination -ErrorAction SilentlyContinue", block)
+
+        copy_incoming = block.index("Copy-Item $stageMod $incoming -Recurse")
+        backup_existing = block.index("Move-Item $destination $backup")
+        activate_incoming = block.index("Move-Item $incoming $destination")
+        rollback = block.index("Move-Item $backup $destination -ErrorAction SilentlyContinue")
+        self.assertLess(copy_incoming, backup_existing)
+        self.assertLess(backup_existing, activate_incoming)
+        self.assertGreater(rollback, activate_incoming)
+        self.assertNotIn("Remove-Item $destination -Recurse -Force\n    Copy-Item $stageMod $destination -Recurse", block)
+
 
 if __name__ == "__main__":
     unittest.main()
