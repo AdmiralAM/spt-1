@@ -24,21 +24,57 @@ namespace SPTBeltArmbandInventory
     {
         public const string ArmBand = "ArmBand";
 
+        // Legacy pure-policy overloads remain for historical regression coverage.
+        // Production server patches use the explicit-template overloads below so
+        // an ordinary ArmBand can never gain belt death/insurance retention.
+        public static HashSet<string> GetKeptTreeIds(IEnumerable<BeltInventoryNode>? nodes)
+        {
+            return GetKeptTreeIdsCore(nodes, null, false);
+        }
+
+        public static bool ShouldKeep(string? itemId, IEnumerable<BeltInventoryNode>? nodes)
+        {
+            return !string.IsNullOrEmpty(itemId) && GetKeptTreeIds(nodes).Contains(itemId);
+        }
+
+        public static string[] FilterLostInsuredIds(IEnumerable<string>? lostIds, IEnumerable<BeltInventoryNode>? nodes)
+        {
+            var kept = GetKeptTreeIds(nodes);
+            if (kept.Count == 0) return lostIds == null ? Array.Empty<string>() : lostIds.ToArray();
+            return (lostIds ?? Array.Empty<string>()).Where(id => !kept.Contains(id)).ToArray();
+        }
+
         public static HashSet<string> GetKeptTreeIds(IEnumerable<BeltInventoryNode>? nodes, string? protectedRootTemplateId)
         {
+            return GetKeptTreeIdsCore(nodes, protectedRootTemplateId, true);
+        }
+
+        public static bool ShouldKeep(string? itemId, IEnumerable<BeltInventoryNode>? nodes, string? protectedRootTemplateId)
+        {
+            return !string.IsNullOrEmpty(itemId)
+                && GetKeptTreeIds(nodes, protectedRootTemplateId).Contains(itemId);
+        }
+
+        public static string[] FilterLostInsuredIds(IEnumerable<string>? lostIds, IEnumerable<BeltInventoryNode>? nodes, string? protectedRootTemplateId)
+        {
+            var kept = GetKeptTreeIds(nodes, protectedRootTemplateId);
+            if (kept.Count == 0) return lostIds == null ? Array.Empty<string>() : lostIds.ToArray();
+            return (lostIds ?? Array.Empty<string>()).Where(id => !kept.Contains(id)).ToArray();
+        }
+
+        static HashSet<string> GetKeptTreeIdsCore(IEnumerable<BeltInventoryNode>? nodes, string? protectedRootTemplateId, bool requireTemplateMatch)
+        {
             var result = new HashSet<string>(StringComparer.Ordinal);
-            if (string.IsNullOrEmpty(protectedRootTemplateId)) return result;
+            if (requireTemplateMatch && string.IsNullOrEmpty(protectedRootTemplateId)) return result;
 
             BeltInventoryNode[] items = nodes == null ? Array.Empty<BeltInventoryNode>() : nodes.ToArray();
             BeltInventoryNode? belt = null;
             for (int i = 0; i < items.Length; i++)
             {
-                if (string.Equals(items[i].SlotId, ArmBand, StringComparison.Ordinal)
-                    && string.Equals(items[i].TemplateId, protectedRootTemplateId, StringComparison.Ordinal))
-                {
-                    belt = items[i];
-                    break;
-                }
+                if (!string.Equals(items[i].SlotId, ArmBand, StringComparison.Ordinal)) continue;
+                if (requireTemplateMatch && !string.Equals(items[i].TemplateId, protectedRootTemplateId, StringComparison.Ordinal)) continue;
+                belt = items[i];
+                break;
             }
 
             if (!belt.HasValue || string.IsNullOrEmpty(belt.Value.Id)) return result;
@@ -68,19 +104,6 @@ namespace SPTBeltArmbandInventory
             }
 
             return result;
-        }
-
-        public static bool ShouldKeep(string? itemId, IEnumerable<BeltInventoryNode>? nodes, string? protectedRootTemplateId)
-        {
-            return !string.IsNullOrEmpty(itemId)
-                && GetKeptTreeIds(nodes, protectedRootTemplateId).Contains(itemId);
-        }
-
-        public static string[] FilterLostInsuredIds(IEnumerable<string>? lostIds, IEnumerable<BeltInventoryNode>? nodes, string? protectedRootTemplateId)
-        {
-            var kept = GetKeptTreeIds(nodes, protectedRootTemplateId);
-            if (kept.Count == 0) return lostIds == null ? Array.Empty<string>() : lostIds.ToArray();
-            return (lostIds ?? Array.Empty<string>()).Where(id => !kept.Contains(id)).ToArray();
         }
     }
 }
