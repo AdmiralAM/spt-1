@@ -7,7 +7,7 @@ internal static class ReflectionAmbiguityRegression
 {
     class BaseProbe
     {
-        public string Value => "base";
+        public int Value => 7;
         public virtual string VirtualValue => "base-virtual";
     }
 
