@@ -22,9 +22,11 @@ The current authored runtime set contains **31 quests**:
 
 The server runtime validates the mixed 10 + 21 quest registry, trader identity, quest IDs, objective shapes and all referenced runtime item TPLs before publication. Missing authored locale entries fail over to deterministic QuestName-based runtime text so incomplete localization cannot expose raw locale keys; complete authored EN/RU text remains a polish target before final publication.
 
-Source registration remains **fail-closed** through `runtime-manifest.json`. The exact-runtime builder is the only supported path that creates an enabled test candidate, and it must compile against the user's real SPT 4.1.3 assemblies. Candidate staging now records source HEAD, clean-tree state, SPT Server.Core version/SHA-256 and built Admiral DLL SHA-256 in `candidate-provenance.json` so live evidence can be tied to the exact CI-tested source head.
+Source registration remains **fail-closed** through `runtime-manifest.json`. The exact-runtime builder is the only supported path that creates a physical-test-eligible candidate, and it must compile against the user's real SPT 4.1.3 assemblies. Candidate staging records source HEAD, clean-tree state, installed SPT Server.Core version/SHA-256 and built Admiral DLL SHA-256 in `candidate-provenance.json` so live evidence can be tied to the exact CI-tested source head.
 
-All Admiral Trader source/module workflows are expected to be green before physical handoff. Merge remains blocked until one defined SPT 4.1.3 physical runtime gate provides accepted build/start/UI evidence.
+GitHub Actions also produces an installable **published-API preflight** package from the exact PR head. That package is useful for deterministic packaging/schema checks, but it is deliberately marked `physicalRuntimeEvidenceEligible=false` and must not be represented as the exact-runtime candidate. Its provenance records `publishedApiCoreSha256`, not `runtimeCoreSha256`.
+
+All Admiral Trader source/module workflows are expected to be green before physical handoff. Merge remains blocked until one defined SPT 4.1.3 physical runtime gate provides accepted exact-runtime build/start/UI evidence.
 
 The target remains one NPC, one curated campaign, deterministic migration behavior, and reward/unlock data that remains inspectable by Economy Admiral.
 
@@ -32,7 +34,7 @@ Work order:
 
 `source inventory -> quest graph -> manifest -> migration -> trader consolidation -> curated content -> reward normalization -> tests -> runtime`
 
-Tracked by repository Issue #115; the active runtime gate is Issue #146 / Draft PR #151.
+Tracked by repository Issue #115; the active runtime gate is Issue #146 / Draft PR #151. Runtime regressions are tracked separately, including #180 (questassort lowercase contract) and #181 (published-API versus exact-runtime provenance boundary).
 
 ## Design constraints
 
@@ -66,7 +68,7 @@ The legacy quest database itself remains external source material and is not cop
 
 `tools/build_weapon_ammo_runtime_templates.py` compiles the maintained Arsenal Protocol plan, authored specification, capability selections and frozen runtime weapon-family pools into deterministic native SPT quest templates.
 
-`tools/build_spt413_test_candidate.ps1` validates a clean exact-head checkout, compiles against real SPT 4.1.3 runtime assemblies, stages an enabled test-only package and emits candidate provenance hashes for the physical gate.
+`tools/build_spt413_test_candidate.ps1` validates a clean exact-head checkout, compiles against real SPT 4.1.3 runtime assemblies, stages an enabled test-only package and emits exact-runtime candidate provenance hashes for the physical gate.
 
 The CI uses the official pinned `sp-tarkov/server-csharp` vanilla `quests.json` as the reward benchmark source and independently validates committed runtime materialization against compiler output.
 
@@ -82,9 +84,10 @@ Module-specific CI additionally:
 - builds the official vanilla reward benchmark from a pinned SPT source revision;
 - validates Access Protocol and Arsenal Protocol compiler output;
 - validates frozen weapon-family pools and controlled ammo capability selections;
-- builds the .NET 10 server runtime against the nearest published SPTarkov package line;
+- builds the .NET 10 server runtime against the published SPTushonka 4.1.3 API package line;
 - validates the packaged 31-quest mixed runtime layout;
 - validates the exact-runtime candidate/provenance source contract;
+- stages one clearly named published-API preflight artifact that is not eligible to stand in for physical runtime evidence;
 - keeps generated reports only as transient Actions artifacts.
 
 Final runtime validation requires the exact-head SPT 4.1.3 physical gate defined in `docs/spt413-test-candidate.md`.
