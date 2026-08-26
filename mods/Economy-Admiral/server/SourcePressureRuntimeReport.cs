@@ -23,28 +23,33 @@ public static class SourcePressureRuntimeReportBuilder
         {
             throw new InvalidOperationException("Economy Admiral source pressure: adapter modGuid must not be empty.");
         }
-        if (!admiralTrader.Installed && (admiralTrader.Offers.Count != 0 || admiralTrader.OfferCount != 0 || admiralTrader.BoundedRenewableOfferCount != 0))
+        if (!admiralTrader.Installed && admiralTrader.ContractAvailable)
         {
-            throw new InvalidOperationException("Economy Admiral source pressure: a not-installed adapter cannot carry offer evidence.");
+            throw new InvalidOperationException("Economy Admiral source pressure: a not-installed adapter cannot have an available contract.");
         }
-        if (admiralTrader.Installed && admiralTrader.OfferCount != admiralTrader.Offers.Count)
+        if (!admiralTrader.ContractAvailable && (admiralTrader.Offers.Count != 0 || admiralTrader.OfferCount != 0 || admiralTrader.BoundedRenewableOfferCount != 0))
+        {
+            throw new InvalidOperationException("Economy Admiral source pressure: unavailable adapter contract cannot carry offer evidence.");
+        }
+        if (admiralTrader.ContractAvailable && admiralTrader.OfferCount != admiralTrader.Offers.Count)
         {
             throw new InvalidOperationException("Economy Admiral source pressure: adapter OfferCount does not match supplied offers.");
         }
 
         var boundedOfferCount = admiralTrader.Offers.Count(offer => offer.Capacity.SupplyBound == RenewableSupplyBound.Bounded);
-        if (admiralTrader.Installed && admiralTrader.BoundedRenewableOfferCount != boundedOfferCount)
+        if (admiralTrader.ContractAvailable && admiralTrader.BoundedRenewableOfferCount != boundedOfferCount)
         {
             throw new InvalidOperationException("Economy Admiral source pressure: adapter bounded-offer count does not match supplied capacity evidence.");
         }
 
-        var sources = admiralTrader.Installed
+        var evidenceUsable = admiralTrader.Installed && admiralTrader.ContractAvailable;
+        var sources = evidenceUsable
             ? admiralTrader.Offers.Select(offer => offer.Source).ToList()
             : new List<AcquisitionSourceEvidence>();
-        var capacities = admiralTrader.Installed
+        var capacities = evidenceUsable
             ? admiralTrader.Offers.Select(offer => offer.Capacity).ToList()
             : new List<RenewableSupplyCapacityEvidence>();
-        var loadedAdapters = admiralTrader.Installed
+        var loadedAdapters = evidenceUsable
             ? new[] { admiralTrader.ModGuid.Trim() }
             : Array.Empty<string>();
 
