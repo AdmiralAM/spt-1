@@ -21,6 +21,8 @@ public sealed class AdmiralQuestRegistration(
 {
     private const int ExpectedAccessQuestCount = 10;
     private const int ExpectedArsenalQuestCount = 21;
+    private const int ExpectedArsenalReadinessQuestCount = 7;
+    private const int ExpectedArsenalCombatQuestCount = 14;
     private const int ExpectedQuestCount = ExpectedAccessQuestCount + ExpectedArsenalQuestCount;
 
     private static readonly string[] RequiredLocaleFields =
@@ -88,7 +90,8 @@ public sealed class AdmiralQuestRegistration(
             throw new InvalidDataException($"Expected {ExpectedQuestCount} authored Admiral quests, got {quests.Count}");
 
         int accessCount = 0;
-        int arsenalCount = 0;
+        int arsenalReadinessCount = 0;
+        int arsenalCombatCount = 0;
 
         foreach (var (questId, quest) in quests)
         {
@@ -102,18 +105,31 @@ public sealed class AdmiralQuestRegistration(
                 throw new InvalidDataException($"Quest {questId} must have exactly one finish condition");
 
             QuestCondition finish = finishConditions[0];
+            bool isArsenal = quest.QuestName.StartsWith("Arsenal Protocol:", StringComparison.Ordinal);
+
             if (string.Equals(finish.ConditionType, "FindItem", StringComparison.Ordinal))
             {
-                ValidateAccessQuest(questId, finish);
-                accessCount++;
+                ValidateNonFirItemProof(questId, finish);
+                if (isArsenal)
+                {
+                    if (quest.Type != QuestTypeEnum.PickUp)
+                        throw new InvalidDataException($"Arsenal Qualification {questId} must be PickUp, got {quest.Type}");
+                    arsenalReadinessCount++;
+                }
+                else
+                {
+                    accessCount++;
+                }
                 continue;
             }
 
             if (string.Equals(finish.ConditionType, "CounterCreator", StringComparison.Ordinal))
             {
+                if (!isArsenal)
+                    throw new InvalidDataException($"Non-Arsenal quest {questId} unexpectedly uses CounterCreator");
                 if (quest.Type != QuestTypeEnum.Elimination)
-                    throw new InvalidDataException($"Arsenal quest {questId} must be Elimination, got {quest.Type}");
-                arsenalCount++;
+                    throw new InvalidDataException($"Arsenal combat quest {questId} must be Elimination, got {quest.Type}");
+                arsenalCombatCount++;
                 continue;
             }
 
@@ -121,17 +137,21 @@ public sealed class AdmiralQuestRegistration(
                 $"Quest {questId} has unsupported finish condition {finish.ConditionType}; expected FindItem or CounterCreator");
         }
 
-        if (accessCount != ExpectedAccessQuestCount || arsenalCount != ExpectedArsenalQuestCount)
+        if (accessCount != ExpectedAccessQuestCount
+            || arsenalReadinessCount != ExpectedArsenalReadinessQuestCount
+            || arsenalCombatCount != ExpectedArsenalCombatQuestCount)
             throw new InvalidDataException(
-                $"Admiral quest mix drifted: Access={accessCount}/{ExpectedAccessQuestCount}, Arsenal={arsenalCount}/{ExpectedArsenalQuestCount}");
+                $"Admiral quest mix drifted: Access={accessCount}/{ExpectedAccessQuestCount}, " +
+                $"ArsenalReadiness={arsenalReadinessCount}/{ExpectedArsenalReadinessQuestCount}, " +
+                $"ArsenalCombat={arsenalCombatCount}/{ExpectedArsenalCombatQuestCount}");
     }
 
-    private static void ValidateAccessQuest(MongoId questId, QuestCondition finish)
+    private static void ValidateNonFirItemProof(MongoId questId, QuestCondition finish)
     {
         if (finish.OnlyFoundInRaid is not false)
-            throw new InvalidDataException($"Access quest {questId} must not require found-in-raid keys");
+            throw new InvalidDataException($"Item-proof quest {questId} must not require found-in-raid items");
         if (finish.Target is null || finish.Value is null || finish.Value <= 0)
-            throw new InvalidDataException($"Access quest {questId} has an invalid key objective");
+            throw new InvalidDataException($"Item-proof quest {questId} has an invalid objective");
     }
 
     private void PreflightQuestIds(Dictionary<MongoId, Quest> quests)
