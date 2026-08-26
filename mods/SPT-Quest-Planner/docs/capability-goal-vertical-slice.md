@@ -42,6 +42,21 @@ The Planner must not infer this contract from trader names, LL, item names or pr
 - unbounded/unknown supply cannot carry fabricated finite limits;
 - missing external economy evidence may reduce the explanation but must not block ordinary quest-goal planning.
 
+## Optional explicit adapter boundary
+
+`PlannerAdmiralCapabilityContractAdapter` proves that the maintained Admiral Trader `economy-admiral-contract.json` can be consumed without a hard runtime dependency on Admiral Trader or Economy Admiral.
+
+The adapter is intentionally narrow:
+
+- current supported contract is Admiral Trader schema v2 for SPT 4.1.3;
+- it maps finite permanent `renewableOffers` into bounded renewable capability goals;
+- it maps sample-only `oneTimeRewards` into one-time capability goals;
+- duplicate capability families fail rather than selecting an arbitrary source;
+- schema/product/version/supply drift fails closed;
+- the client keeps no compile-time Newtonsoft package dependency: optional JSON is parsed through the Newtonsoft runtime already present in SPT, following the existing Planner reflection boundary.
+
+If the external contract is absent, Planner remains an ordinary quest/future-goal planner. No other mod is required to load Quest Planner.
+
 ## Reuse, not a second planner
 
 `PlannerCapabilityGoalBuilder` converts the explicit capability gate into the existing `PlannerRaidDecisionIntentBuilder` workflow. All prerequisite semantics remain owned by the quest-goal engine:
@@ -55,6 +70,20 @@ The Planner must not infer this contract from trader names, LL, item names or pr
 - conservative Best / Several / None decisions.
 
 Capability data does not receive its own ranking weights.
+
+## Capability decision presentation
+
+`PlannerCapabilityGoalPresentation` is the composition boundary for the KEEP/KILL UX. It keeps the goal, gate, supply result and current decision in one object instead of requiring the UI to join several unrelated panels.
+
+It exposes five explicit states:
+
+1. `RaidDecision` — actionable focused work exists; the ordinary focused raid decision supplies Best / Several / None semantics.
+2. `WaitingForAvailability` — no raid work is required for the selected waiting branch right now.
+3. `EvidenceIncomplete` — prerequisite-ready work exists but authoritative eligibility evidence is missing.
+4. `ProgressionConflict` — the selected goal has a terminal prerequisite-state contradiction; no route is fabricated.
+5. `NoActionProven` — Planner cannot currently prove useful work for the goal.
+
+The result summary separately states whether completing the gate yields bounded renewable access, an unbounded renewable source, a one-time sample, or an unproven supply result.
 
 ## First test scenarios
 
