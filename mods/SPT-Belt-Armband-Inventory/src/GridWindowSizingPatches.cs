@@ -31,7 +31,7 @@ namespace SPTBeltArmbandInventory
         internal static void Observe(object window, object[] args)
         {
             if (window == null) return;
-            if (!IsRuntimeCandidate(args != null && args.Length > 0 ? args[0] : null) && !IsRuntimeCandidate(ReadWindowItem(window))) return;
+            if (!ContainsRuntimeCandidate(args) && !IsRuntimeCandidate(ReadWindowItem(window))) return;
             if (TryAdjust(window)) return;
 
             for (int i = 0; i < PendingWindows.Count; i++)
@@ -49,6 +49,20 @@ namespace SPTBeltArmbandInventory
 
             PendingWindows.Add(new PendingWindow(window));
             RequestFlush?.Invoke();
+        }
+
+        static bool ContainsRuntimeCandidate(object[] args)
+        {
+            if (args == null) return false;
+            for (int i = 0; i < args.Length; i++)
+            {
+                object value = args[i];
+                if (IsRuntimeCandidate(value)) return true;
+
+                object item = ReflectionTools.ReadMember(value, "Item");
+                if (IsRuntimeCandidate(item)) return true;
+            }
+            return false;
         }
 
         internal static void Flush()
@@ -188,10 +202,10 @@ namespace SPTBeltArmbandInventory
                 }
 
                 if (patched == 0)
-                    return Fail("SPT 4.1 GridWindow.Show shape changed; compact ArmBand window sizing is disabled.");
+                    return Fail("SPT 4.1 GridWindow.Show boundary was not found; compact ArmBand window sizing is disabled.");
 
                 GridWindowSizingRuntime.LogWarning = logWarning;
-                if (logInfo != null) logInfo("B&A&HB compact ArmBand GridWindow sizing installed.");
+                if (logInfo != null) logInfo("B&A&HB compact ArmBand GridWindow sizing installed on " + patched + " Show overload(s).");
                 return true;
             }
             catch (Exception exception)
@@ -202,13 +216,13 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static bool IsGridWindowShow(MethodInfo method)
+        internal static bool IsGridWindowShow(MethodInfo method)
         {
-            if (method == null || !string.Equals(method.Name, "Show", StringComparison.Ordinal) || method.IsAbstract || method.ContainsGenericParameters) return false;
-            ParameterInfo[] parameters = method.GetParameters();
-            return method.ReturnType == typeof(void)
-                && parameters.Length > 0
-                && parameters[0].ParameterType.FullName == "EFT.InventoryLogic.CompoundItem";
+            return method != null
+                && string.Equals(method.Name, "Show", StringComparison.Ordinal)
+                && !method.IsAbstract
+                && !method.ContainsGenericParameters
+                && method.ReturnType == typeof(void);
         }
 
         static MethodInfo PostfixFactory(MethodBase original)
