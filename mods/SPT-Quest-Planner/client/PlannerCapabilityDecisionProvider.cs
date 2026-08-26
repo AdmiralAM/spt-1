@@ -10,7 +10,10 @@ namespace SPTQuestPlanner.Client
         private readonly PlannerClientCache cache;
         private readonly object gate = new object();
         private readonly Dictionary<string, CachedDecision> cached = new Dictionary<string, CachedDecision>(StringComparer.Ordinal);
+        private readonly Dictionary<bool, IReadOnlyList<PlannerRaidDecisionCandidate>> cachedCandidates =
+            new Dictionary<bool, IReadOnlyList<PlannerRaidDecisionCandidate>>();
         private long cachedRevision = -1;
+        private PlannerClientDelayIndex cachedDelayIndex;
 
         public PlannerCapabilityDecisionProvider(PlannerClientCache cache)
         {
@@ -37,10 +40,7 @@ namespace SPTQuestPlanner.Client
                 if (!TryCapture(out captured, out error)) return false;
 
                 if (captured.Revision != cachedRevision)
-                {
-                    cachedRevision = captured.Revision;
-                    cached.Clear();
-                }
+                    ResetRevision(captured.Revision);
 
                 string key = BuildKey(definition, includeAvailable);
                 CachedDecision existing;
@@ -63,6 +63,14 @@ namespace SPTQuestPlanner.Client
                     return false;
                 }
             }
+        }
+
+        private void ResetRevision(long revision)
+        {
+            cachedRevision = revision;
+            cached.Clear();
+            cachedCandidates.Clear();
+            cachedDelayIndex = null;
         }
 
         private bool TryCapture(out CacheCapture captured, out string error)
@@ -94,7 +102,7 @@ namespace SPTQuestPlanner.Client
             return false;
         }
 
-        private static PlannerCapabilityDecisionSnapshot Build(
+        private PlannerCapabilityDecisionSnapshot Build(
             PlannerCapabilityGoalDefinition definition,
             bool includeAvailable,
             CacheCapture captured)
@@ -103,30 +111,13 @@ namespace SPTQuestPlanner.Client
                 definition,
                 captured.Topology,
                 captured.State);
-            PlannerClientDelayIndex delays = PlannerClientDelayIndexBuilder.Build(captured.StatePayload.Json);
+            PlannerClientDelayIndex delays = GetDelayIndex(captured);
             PlannerRaidFocusDelayEvidence delayEvidence = PlannerRaidFocusDelayEvidenceBuilder.Build(goal.QuestIntent, delays);
 
             PlannerRaidDecisionPresentation raidPresentation = null;
             if (goal.HasActionableQuestWork)
             {
-                IReadOnlyList<PlannerRaidOpportunity> opportunities = PlannerRaidOpportunityBuilder.Build(
-                    captured.Locations,
-                    captured.State,
-                    includeAvailable,
-                    64,
-                    128);
-
-                List<PlannerRaidDecisionCandidate> candidates = new List<PlannerRaidDecisionCandidate>();
-                for (int i = 0; i < opportunities.Count; i++)
-                {
-                    PlannerRaidPlan plan = PlannerRaidPlanBuilder.Build(opportunities[i], captured.State);
-                    PlannerRaidDecisionSignals signals = PlannerRaidDecisionSignalBuilder.Build(
-                        plan,
-                        captured.Topology,
-                        captured.State);
-                    candidates.Add(new PlannerRaidDecisionCandidate(plan.LocationId, signals));
-                }
-
+                IReadOnlyList<PlannerRaidDecisionCandidate> candidates = GetCandidates(includeAvailable, captured);
                 PlannerRaidDecisionSet set = PlannerRaidDecisionSetBuilder.Build(candidates, goal.QuestIntent);
                 raidPresentation = PlannerRaidDecisionPresentationBuilder.Build(set);
             }
@@ -139,6 +130,42 @@ namespace SPTQuestPlanner.Client
                 presentation,
                 captured.Revision,
                 captured.State.GeneratedAtUnixSeconds);
+        }
+
+        private PlannerClientDelayIndex GetDelayIndex(CacheCapture captured)
+        {
+            if (cachedDelayIndex == null)
+                cachedDelayIndex = PlannerClientDelayIndexBuilder.Build(captured.StatePayload.Json);
+            return cachedDelayIndex;
+        }
+
+        private IReadOnlyList<PlannerRaidDecisionCandidate> GetCandidates(
+            bool includeAvailable,
+            CacheCapture captured)
+        {
+            IReadOnlyList<PlannerRaidDecisionCandidate> existing;
+            if (cachedCandidates.TryGetValue(includeAvailable, out existing)) return existing;
+
+            IReadOnlyList<PlannerRaidOpportunity> opportunities = PlannerRaidOpportunityBuilder.Build(
+                captured.Locations,
+                captured.State,
+                includeAvailable,
+                64,
+                128);
+            List<PlannerRaidDecisionCandidate> candidates = new List<PlannerRaidDecisionCandidate>(opportunities.Count);
+            for (int i = 0; i < opportunities.Count; i++)
+            {
+                PlannerRaidPlan plan = PlannerRaidPlanBuilder.Build(opportunities[i], captured.State);
+                PlannerRaidDecisionSignals signals = PlannerRaidDecisionSignalBuilder.Build(
+                    plan,
+                    captured.Topology,
+                    captured.State);
+                candidates.Add(new PlannerRaidDecisionCandidate(plan.LocationId, signals));
+            }
+
+            PlannerRaidDecisionCandidate[] built = candidates.ToArray();
+            cachedCandidates[includeAvailable] = built;
+            return built;
         }
 
         private static string BuildKey(PlannerCapabilityGoalDefinition definition, bool includeAvailable)
