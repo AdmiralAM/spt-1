@@ -23,7 +23,8 @@ public sealed record PrerequisiteEdge(
     string TargetQuestId,
     IReadOnlySet<QuestState> AcceptedSourceStates,
     string? GroupId = null,
-    int AvailableAfterSeconds = 0);
+    int AvailableAfterSeconds = 0,
+    IReadOnlySet<int>? AcceptedSourceRawStatuses = null);
 
 public sealed record ItemRequirement(
     string QuestId,
