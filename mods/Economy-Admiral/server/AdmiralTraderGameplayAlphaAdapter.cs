@@ -55,7 +55,8 @@ public static class AdmiralTraderGameplayAlphaAdapter
             var stock = upd.GetProperty("StackObjectsCount").GetInt32();
             var buy = upd.GetProperty("BuyRestrictionMax").GetInt32();
             Require(stock > 0 && buy > 0 && stock <= maxStock, $"invalid bounded supply for '{offerId}'.");
-            Require(loyalty.TryGetProperty(offerId, out var ll) && ll.TryGetInt32(out var loyaltyLevel), $"missing loyalty mapping for '{offerId}'.");
+            if (!loyalty.TryGetProperty(offerId, out var ll) || !ll.TryGetInt32(out var loyaltyLevel))
+                throw new InvalidOperationException($"Economy Admiral Admiral Trader Gameplay Alpha adapter: missing loyalty mapping for '{offerId}'.");
 
             if (baselineById.TryGetValue(offerId, out var baseline))
             {
