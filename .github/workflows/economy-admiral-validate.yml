@@ -2,7 +2,10 @@ name: Economy Admiral Validate
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+      - 'feature/economy-admiral-*'
+      - 'chore/economy-admiral-*'
     paths:
       - 'mods/Economy-Admiral/**'
       - '.github/workflows/economy-admiral-validate.yml'
