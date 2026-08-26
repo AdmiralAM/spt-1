@@ -17,27 +17,17 @@ public sealed class QuestProgressionGraphService(
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    private static readonly HashSet<string> VanillaTraderIds = new(StringComparer.Ordinal)
+    public async Task<QuestProgressionSnapshot> RunAsync(VanillaBaselineSnapshot baselineSnapshot, CancellationToken cancellationToken)
     {
-        "54cb50c76803fa8b248b4571",
-        "54cb57776803fa99248b456e",
-        "579dc571d53a0658a154fbec",
-        "58330581ace78e27b8b10cee",
-        "5935c25fb3acc3127c3d8cd9",
-        "5a7c2eca46aef81a7ca2145d",
-        "5ac3b934156ae10c4430e83c",
-        "5c0647fdd443bc2504c2d371",
-        "638f541a29ffd1183d187f57",
-        "6617beeaa9cfa777ca915b7c",
-    };
+        if (baselineSnapshot.QuestCount <= 0)
+            throw new InvalidOperationException("Economy Admiral progression graph requires a non-empty pristine startup snapshot.");
 
-    public async Task<QuestProgressionSnapshot> RunAsync(CancellationToken cancellationToken)
-    {
-        var current = Analyze();
+        var current = Analyze(baselineSnapshot);
         var report = new QuestProgressionGraphReport
         {
             SchemaVersion = 2,
             DepthAffectsRewardAllowance = false,
+            BenchmarkSource = "PristineStartupSnapshot",
             QuestCount = current.Quests.Count,
             QuestsWithPrerequisites = current.Quests.Count(row => row.DirectPrerequisiteCount > 0),
             MaximumObservedDepth = current.MaximumObservedDepth,
@@ -52,29 +42,20 @@ public sealed class QuestProgressionGraphService(
         var reportPath = Path.GetFullPath(Path.Combine(modPath, "reports", "economy-admiral-progression-graph.json"));
         var modRoot = Path.GetFullPath(modPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         if (!reportPath.StartsWith(modRoot, StringComparison.OrdinalIgnoreCase))
-        {
             throw new InvalidOperationException("Economy Admiral progression graph report path must stay inside the mod directory.");
-        }
 
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
         await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
-        logger.Info($"[Economy Admiral] quest progression graph complete: {report.QuestCount} quests, maxDepth={report.MaximumObservedDepth}, cycleMembers={report.CycleMemberCount}; report={reportPath}");
+        logger.Info($"[Economy Admiral] quest progression graph complete from pristine baseline: finalQuests={report.QuestCount}, pristineQuests={baselineSnapshot.QuestCount}, maxDepth={report.MaximumObservedDepth}, cycleMembers={report.CycleMemberCount}; report={reportPath}");
         return current;
     }
 
-    private QuestProgressionSnapshot Analyze()
+    private QuestProgressionSnapshot Analyze(VanillaBaselineSnapshot baselineSnapshot)
     {
-        var questIds = templates.Quests.Keys
-            .Select(id => id.ToString())
-            .ToHashSet(StringComparer.Ordinal);
-
+        var questIds = templates.Quests.Keys.Select(id => id.ToString()).ToHashSet(StringComparer.Ordinal);
         var prerequisiteMap = templates.Quests
             .OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)
-            .ToDictionary(
-                pair => pair.Key.ToString(),
-                pair => ExtractPrerequisites(pair.Value, questIds),
-                StringComparer.Ordinal
-            );
+            .ToDictionary(pair => pair.Key.ToString(), pair => ExtractPrerequisites(pair.Value, questIds), StringComparer.Ordinal);
 
         var memo = new Dictionary<string, int>(StringComparer.Ordinal);
         var cycleMembers = new HashSet<string>(StringComparer.Ordinal);
@@ -83,14 +64,13 @@ public sealed class QuestProgressionGraphService(
         foreach (var pair in templates.Quests.OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal))
         {
             var questId = pair.Key.ToString();
-            var traderId = pair.Value.TraderId.ToString();
             var depth = CalculateDepth(questId, prerequisiteMap, memo, new HashSet<string>(StringComparer.Ordinal), cycleMembers);
             rows.Add(new QuestProgressionGraphRow
             {
                 QuestId = questId,
                 QuestName = pair.Value.QuestName ?? pair.Value.Name,
-                TraderId = traderId,
-                IsVanillaTraderQuest = VanillaTraderIds.Contains(traderId),
+                TraderId = pair.Value.TraderId.ToString(),
+                IsVanillaTraderQuest = baselineSnapshot.QuestIds.Contains(questId),
                 Restartable = pair.Value.Restartable,
                 DirectPrerequisiteCount = prerequisiteMap[questId].Count,
                 DirectPrerequisites = prerequisiteMap[questId],
@@ -99,17 +79,15 @@ public sealed class QuestProgressionGraphService(
             });
         }
 
-        rows = rows
-            .Select(row => row with { IsCycleMember = cycleMembers.Contains(row.QuestId) })
-            .ToList();
+        rows = rows.Select(row => row with { IsCycleMember = cycleMembers.Contains(row.QuestId) }).ToList();
 
-        var vanillaDepths = rows
-            .Where(row => row.IsVanillaTraderQuest && !row.Restartable && !row.IsCycleMember)
+        var vanillaDepths = baselineSnapshot.Quests
+            .Where(row => !row.Restartable && !row.IsPrerequisiteCycleMember)
             .Select(row => (double)row.MaximumPrerequisiteDepth)
             .OrderBy(value => value)
             .ToList();
-        var vanillaRestartableDepths = rows
-            .Where(row => row.IsVanillaTraderQuest && row.Restartable && !row.IsCycleMember)
+        var vanillaRestartableDepths = baselineSnapshot.Quests
+            .Where(row => row.Restartable && !row.IsPrerequisiteCycleMember)
             .Select(row => (double)row.MaximumPrerequisiteDepth)
             .OrderBy(value => value)
             .ToList();
@@ -124,42 +102,25 @@ public sealed class QuestProgressionGraphService(
         };
     }
 
-    private static QuestDepthBenchmark BuildDepthBenchmark(IReadOnlyList<double> sortedDepths)
+    private static QuestDepthBenchmark BuildDepthBenchmark(IReadOnlyList<double> sortedDepths) => new()
     {
-        return new QuestDepthBenchmark
-        {
-            QuestSamples = sortedDepths.Count,
-            MedianDepth = Percentile(sortedDepths, 0.50),
-            P90Depth = Percentile(sortedDepths, 0.90),
-            MaximumDepth = sortedDepths.Count == 0 ? 0 : (int)sortedDepths[^1],
-        };
-    }
+        QuestSamples = sortedDepths.Count,
+        MedianDepth = Percentile(sortedDepths, 0.50),
+        P90Depth = Percentile(sortedDepths, 0.90),
+        MaximumDepth = sortedDepths.Count == 0 ? 0 : (int)sortedDepths[^1],
+    };
 
     private static List<string> ExtractPrerequisites(Quest quest, IReadOnlySet<string> knownQuestIds)
     {
-        if (quest.Conditions.AvailableForStart is null)
-        {
-            return [];
-        }
-
+        if (quest.Conditions.AvailableForStart is null) return [];
         var result = new HashSet<string>(StringComparer.Ordinal);
         foreach (var condition in quest.Conditions.AvailableForStart)
         {
-            if (!string.Equals(condition.ConditionType, "Quest", StringComparison.OrdinalIgnoreCase) || condition.Target is null)
-            {
-                continue;
-            }
-
+            if (!string.Equals(condition.ConditionType, "Quest", StringComparison.OrdinalIgnoreCase) || condition.Target is null) continue;
             var targetElement = JsonSerializer.SerializeToElement(condition.Target);
             foreach (var target in ExtractStrings(targetElement))
-            {
-                if (knownQuestIds.Contains(target))
-                {
-                    result.Add(target);
-                }
-            }
+                if (knownQuestIds.Contains(target)) result.Add(target);
         }
-
         return result.OrderBy(value => value, StringComparer.Ordinal).ToList();
     }
 
@@ -169,28 +130,15 @@ public sealed class QuestProgressionGraphService(
         {
             case JsonValueKind.String:
                 var value = element.GetString();
-                if (!string.IsNullOrWhiteSpace(value))
-                {
-                    yield return value;
-                }
+                if (!string.IsNullOrWhiteSpace(value)) yield return value;
                 break;
             case JsonValueKind.Array:
                 foreach (var item in element.EnumerateArray())
-                {
-                    foreach (var nested in ExtractStrings(item))
-                    {
-                        yield return nested;
-                    }
-                }
+                    foreach (var nested in ExtractStrings(item)) yield return nested;
                 break;
             case JsonValueKind.Object:
                 foreach (var property in element.EnumerateObject())
-                {
-                    foreach (var nested in ExtractStrings(property.Value))
-                    {
-                        yield return nested;
-                    }
-                }
+                    foreach (var nested in ExtractStrings(property.Value)) yield return nested;
                 break;
         }
     }
@@ -200,20 +148,12 @@ public sealed class QuestProgressionGraphService(
         IReadOnlyDictionary<string, List<string>> prerequisiteMap,
         Dictionary<string, int> memo,
         HashSet<string> visiting,
-        HashSet<string> cycleMembers
-    )
+        HashSet<string> cycleMembers)
     {
-        if (memo.TryGetValue(questId, out var cached))
-        {
-            return cached;
-        }
-
+        if (memo.TryGetValue(questId, out var cached)) return cached;
         if (!visiting.Add(questId))
         {
-            foreach (var member in visiting)
-            {
-                cycleMembers.Add(member);
-            }
+            foreach (var member in visiting) cycleMembers.Add(member);
             cycleMembers.Add(questId);
             return 0;
         }
@@ -221,15 +161,8 @@ public sealed class QuestProgressionGraphService(
         var maxParentDepth = 0;
         prerequisiteMap.TryGetValue(questId, out var prerequisites);
         if (prerequisites is not null)
-        {
             foreach (var prerequisite in prerequisites)
-            {
-                maxParentDepth = Math.Max(
-                    maxParentDepth,
-                    CalculateDepth(prerequisite, prerequisiteMap, memo, visiting, cycleMembers)
-                );
-            }
-        }
+                maxParentDepth = Math.Max(maxParentDepth, CalculateDepth(prerequisite, prerequisiteMap, memo, visiting, cycleMembers));
 
         visiting.Remove(questId);
         var depth = (prerequisites?.Count ?? 0) == 0 ? 0 : maxParentDepth + 1;
@@ -239,24 +172,12 @@ public sealed class QuestProgressionGraphService(
 
     private static double Percentile(IReadOnlyList<double> sortedValues, double percentile)
     {
-        if (sortedValues.Count == 0)
-        {
-            return 0;
-        }
-
-        if (sortedValues.Count == 1)
-        {
-            return Math.Round(sortedValues[0], 2);
-        }
-
+        if (sortedValues.Count == 0) return 0;
+        if (sortedValues.Count == 1) return Math.Round(sortedValues[0], 2);
         var position = (sortedValues.Count - 1) * percentile;
         var lower = (int)Math.Floor(position);
         var upper = (int)Math.Ceiling(position);
-        if (lower == upper)
-        {
-            return Math.Round(sortedValues[lower], 2);
-        }
-
+        if (lower == upper) return Math.Round(sortedValues[lower], 2);
         var fraction = position - lower;
         return Math.Round(sortedValues[lower] + ((sortedValues[upper] - sortedValues[lower]) * fraction), 2);
     }
@@ -275,6 +196,7 @@ public sealed record QuestProgressionGraphReport
 {
     public required int SchemaVersion { get; init; }
     public required bool DepthAffectsRewardAllowance { get; init; }
+    public required string BenchmarkSource { get; init; }
     public required int QuestCount { get; init; }
     public required int QuestsWithPrerequisites { get; init; }
     public required int MaximumObservedDepth { get; init; }
