@@ -23,6 +23,7 @@ namespace SPTBeltArmbandInventory
         FastAccessSlotPatches fastAccessSlotPatches;
         SlotMergePatches slotMergePatches;
         PickupSlotPatches pickupPatches;
+        PaymentSlotPatches paymentPatches;
         EquipmentBuildValidationPatches buildValidationPatches;
         Coroutine deferredRuntimePump;
 
@@ -49,18 +50,18 @@ namespace SPTBeltArmbandInventory
             {
                 runtimeTypePatches.Dispose();
                 runtimeTypePatches = null;
-                Logger.LogWarning("B&A&HB #2 runtime type registration failed; client belt behavior is disabled for this session.");
+                Logger.LogWarning("B&A&HB #2 runtime type registration failed; client wearable-container behavior is disabled for this session.");
                 return;
             }
 
-            Logger.LogInfo("B&A&HB #2 ArmBand presentation uses the native searchable-item GridWindow and GeneratedGridsView; legacy ContainersPanel BELT-row projection is disabled.");
+            Logger.LogInfo("B&A&HB #2 wearable presentation uses the native searchable-item GridWindow and GeneratedGridsView; legacy ContainersPanel BELT-row projection is disabled.");
 
             gridWindowSizingPatches = new GridWindowSizingPatches(Logger.LogInfo, Logger.LogWarning);
             if (!gridWindowSizingPatches.TryInstall())
             {
                 gridWindowSizingPatches.Dispose();
                 gridWindowSizingPatches = null;
-                Logger.LogWarning("Belt storage remains active, but the ArmBand GridWindow may keep vanilla minimum window dimensions.");
+                Logger.LogWarning("Wearable storage remains active, but GridWindow sizing may keep vanilla minimum dimensions.");
             }
             else
             {
@@ -72,7 +73,7 @@ namespace SPTBeltArmbandInventory
             {
                 lootPatches.Dispose();
                 lootPatches = null;
-                Logger.LogWarning("Belt storage remains active, but automatic loot placement will use vanilla container priorities.");
+                Logger.LogWarning("Wearable storage remains active, but automatic loot placement will use vanilla container priorities.");
             }
 
             unloadPatches = new UnloadPriorityPatches(Logger.LogInfo, Logger.LogWarning);
@@ -80,7 +81,7 @@ namespace SPTBeltArmbandInventory
             {
                 unloadPatches.Dispose();
                 unloadPatches = null;
-                Logger.LogWarning("Belt storage remains active, but unload placement will use vanilla grid priorities.");
+                Logger.LogWarning("Wearable storage remains active, but unload placement will use vanilla grid priorities.");
             }
 
             scavPatches = new ScavBeltPatches(Logger.LogInfo, Logger.LogWarning);
@@ -88,7 +89,7 @@ namespace SPTBeltArmbandInventory
             {
                 scavPatches.Dispose();
                 scavPatches = null;
-                Logger.LogWarning("PMC belt behavior remains active, but a Scav spawned with a container belt may retain vanilla ArmBand deletion behavior.");
+                Logger.LogWarning("PMC wearable behavior remains active, but a Scav spawned with a container ArmBand may retain vanilla ArmBand deletion behavior.");
             }
 
             fastAccessSlotPatches = new FastAccessSlotPatches(Logger.LogInfo, Logger.LogWarning);
@@ -96,7 +97,7 @@ namespace SPTBeltArmbandInventory
             {
                 fastAccessSlotPatches.Dispose();
                 fastAccessSlotPatches = null;
-                Logger.LogWarning("Belt storage remains active, but magazines inside the belt may not participate in vanilla reachable-container reload logic.");
+                Logger.LogWarning("Wearable storage remains active, but magazines inside the magazine belt may not participate in vanilla reachable-container reload logic.");
             }
 
             slotMergePatches = new SlotMergePatches(Logger.LogInfo, Logger.LogWarning);
@@ -104,7 +105,7 @@ namespace SPTBeltArmbandInventory
             {
                 slotMergePatches.Dispose();
                 slotMergePatches = null;
-                Logger.LogWarning("Belt storage remains active, but ArmBand parent/child merge semantics remain vanilla.");
+                Logger.LogWarning("Wearable storage remains active, but ArmBand parent/child merge semantics remain vanilla.");
             }
 
             pickupPatches = new PickupSlotPatches(Logger.LogInfo, Logger.LogWarning);
@@ -112,7 +113,15 @@ namespace SPTBeltArmbandInventory
             {
                 pickupPatches.Dispose();
                 pickupPatches = null;
-                Logger.LogWarning("Belt storage remains active, but compatible container belts may not auto-equip into an empty ArmBand slot on pickup.");
+                Logger.LogWarning("Wearable storage remains active, but compatible wearable items may not auto-equip into an empty ArmBand slot on pickup.");
+            }
+
+            paymentPatches = new PaymentSlotPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!paymentPatches.TryInstall())
+            {
+                paymentPatches.Dispose();
+                paymentPatches = null;
+                Logger.LogWarning("Wearable storage remains active, but Wrist Wallet currency may not participate in vanilla payment-source enumeration.");
             }
 
             buildValidationPatches = new EquipmentBuildValidationPatches(Logger.LogInfo, Logger.LogWarning);
@@ -120,10 +129,10 @@ namespace SPTBeltArmbandInventory
             {
                 buildValidationPatches.Dispose();
                 buildValidationPatches = null;
-                Logger.LogWarning("Belt build/apply remains active, but missing belt contents may be classified under the Slots tab instead of Containers in Equipment Builds.");
+                Logger.LogWarning("Wearable build/apply remains active, but missing wearable contents may be classified under Slots instead of Containers in Equipment Builds.");
             }
 
-            Logger.LogInfo("B&A&HB #2 Phase 1 magazine-belt core initialized without idle polling.");
+            Logger.LogInfo("B&A&HB #2 wearable-container core initialized without idle polling.");
         }
 
         void EnsureDeferredRuntimePump()
@@ -179,6 +188,8 @@ namespace SPTBeltArmbandInventory
             }
             if (buildValidationPatches != null) buildValidationPatches.Dispose();
             buildValidationPatches = null;
+            if (paymentPatches != null) paymentPatches.Dispose();
+            paymentPatches = null;
             if (pickupPatches != null) pickupPatches.Dispose();
             pickupPatches = null;
             if (slotMergePatches != null) slotMergePatches.Dispose();
