@@ -90,7 +90,7 @@ jobs:
               'ApplyTransaction(proposals, applied)',
               'VerifyAppliedTransaction(proposals, applied)',
               'Rollback(applied)', 'VerifyRollback(applied)',
-              'reward.Value = afterSlots[index]',
+              'rewards[index].Value = afterSlots[index]',
               'RewardType.Experience', 'RewardType.TraderStanding',
               'PolicyEligibleModAdded', 'PolicyEligibleModifiedPristine',
               'ProtectedPristine', 'ProtectedUnchangedRewardDimensions', 'BlockedUnknownProvenance',
