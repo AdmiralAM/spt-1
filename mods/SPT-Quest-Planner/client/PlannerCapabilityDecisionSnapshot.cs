@@ -19,7 +19,9 @@ namespace SPTQuestPlanner.Client
             IReadOnlyList<string> unknownQuestIds,
             string resultSummary,
             string caution,
-            IReadOnlyList<string> decisionEvidence)
+            IReadOnlyList<string> decisionEvidence,
+            long sourceRevision = -1,
+            long generatedAtUnixSeconds = 0)
         {
             CapabilityId = capabilityId ?? string.Empty;
             GateQuestId = gateQuestId ?? string.Empty;
@@ -34,6 +36,8 @@ namespace SPTQuestPlanner.Client
             ResultSummary = resultSummary ?? string.Empty;
             Caution = caution ?? string.Empty;
             DecisionEvidence = Normalize(decisionEvidence);
+            SourceRevision = sourceRevision;
+            GeneratedAtUnixSeconds = Math.Max(0L, generatedAtUnixSeconds);
         }
 
         public string CapabilityId { get; private set; }
@@ -49,9 +53,12 @@ namespace SPTQuestPlanner.Client
         public string ResultSummary { get; private set; }
         public string Caution { get; private set; }
         public IReadOnlyList<string> DecisionEvidence { get; private set; }
+        public long SourceRevision { get; private set; }
+        public long GeneratedAtUnixSeconds { get; private set; }
 
         public bool HasPrimaryRaid { get { return !string.IsNullOrWhiteSpace(PrimaryLocationId); } }
         public bool HasAlternatives { get { return AlternativeLocationIds.Count > 0; } }
+        public bool HasFreshnessProvenance { get { return SourceRevision >= 0 && GeneratedAtUnixSeconds > 0; } }
 
         private static IReadOnlyList<string> Normalize(IReadOnlyList<string> values)
         {
@@ -68,6 +75,14 @@ namespace SPTQuestPlanner.Client
     public static class PlannerCapabilityDecisionSnapshotBuilder
     {
         public static PlannerCapabilityDecisionSnapshot Build(PlannerCapabilityGoalPresentation presentation)
+        {
+            return Build(presentation, -1, 0);
+        }
+
+        public static PlannerCapabilityDecisionSnapshot Build(
+            PlannerCapabilityGoalPresentation presentation,
+            long sourceRevision,
+            long generatedAtUnixSeconds)
         {
             if (presentation == null) throw new ArgumentNullException("presentation");
 
@@ -107,7 +122,9 @@ namespace SPTQuestPlanner.Client
                 presentation.UnknownQuestIds,
                 presentation.ResultSummary,
                 presentation.Caution,
-                value.Evidence);
+                value.Evidence,
+                sourceRevision,
+                generatedAtUnixSeconds);
         }
     }
 }
