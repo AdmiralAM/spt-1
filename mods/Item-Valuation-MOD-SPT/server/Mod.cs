@@ -61,18 +61,13 @@ public sealed record ValueColorConfig
 
     public void Validate()
     {
-        if (!(0 <= TintStartValue &&
-              TintStartValue < LightGreenMaxValue &&
-              LightGreenMaxValue < GreenMaxValue &&
-              GreenMaxValue < NavyMaxValue &&
-              NavyMaxValue < VioletMaxValue &&
-              VioletMaxValue < RedMaxValue))
+        if (!(0 <= TintStartValue && TintStartValue < LightGreenMaxValue &&
+              LightGreenMaxValue < GreenMaxValue && GreenMaxValue < NavyMaxValue &&
+              NavyMaxValue < VioletMaxValue && VioletMaxValue < RedMaxValue))
             throw new InvalidDataException("Item Valuation money thresholds must be non-negative and strictly ascending.");
 
-        if (!(0 <= AmmoLightGreenMaxPen &&
-              AmmoLightGreenMaxPen < AmmoGreenMaxPen &&
-              AmmoGreenMaxPen < AmmoNavyMaxPen &&
-              AmmoNavyMaxPen < AmmoVioletMaxPen &&
+        if (!(0 <= AmmoLightGreenMaxPen && AmmoLightGreenMaxPen < AmmoGreenMaxPen &&
+              AmmoGreenMaxPen < AmmoNavyMaxPen && AmmoNavyMaxPen < AmmoVioletMaxPen &&
               AmmoVioletMaxPen < AmmoRedMaxPen))
             throw new InvalidDataException("Item Valuation ammo penetration thresholds must be non-negative and strictly ascending.");
 
@@ -112,7 +107,6 @@ public sealed class ItemValuationBackgroundLoader(
     TemplateTable templateTable,
     TradersTable tradersTable,
     ItemHelper itemHelper,
-    HandbookHelper handbookHelper,
     PresetHelper presetHelper,
     RagfairServerHelper ragfairServerHelper,
     ISptLogger<ItemValuationBackgroundLoader> logger) : IOnLoad
@@ -130,6 +124,7 @@ public sealed class ItemValuationBackgroundLoader(
         cancellationToken.ThrowIfCancellationRequested();
         ValueColorConfig config = LoadConfig(modHelper);
         config.Validate();
+        Dictionary<MongoId, double> handbookPrices = BuildHandbookPriceIndex(templateTable);
 
         int coloredMoney = 0;
         int coloredAmmo = 0;
@@ -156,7 +151,7 @@ public sealed class ItemValuationBackgroundLoader(
             if (properties.Width is not > 0 || properties.Height is not > 0)
                 continue;
 
-            (double value, ValueSource source) = ResolveEconomicValue(templateId);
+            (double value, ValueSource source) = ResolveEconomicValue(templateId, handbookPrices);
             if (value <= 0)
                 continue;
 
@@ -198,18 +193,19 @@ public sealed class ItemValuationBackgroundLoader(
         return Task.CompletedTask;
     }
 
-    private (double Value, ValueSource Source) ResolveEconomicValue(MongoId templateId)
+    private (double Value, ValueSource Source) ResolveEconomicValue(
+        MongoId templateId,
+        IReadOnlyDictionary<MongoId, double> handbookPrices)
     {
-        double handbookValue = handbookHelper.GetTemplatePrice(templateId);
-        double traderBasis = GetTraderValuationBasis(templateId, handbookValue);
+        handbookPrices.TryGetValue(templateId, out double handbookValue);
+        double traderBasis = GetTraderValuationBasis(templateId, handbookValue, handbookPrices);
         double traderValue = ResolveBestTraderPrice(templateId, traderBasis);
 
         double fleaValue = 0;
-        if (templateTable.Prices.TryGetValue(templateId, out double tablePrice) && tablePrice > 0)
+        if (templateTable.Prices.TryGetValue(templateId, out double tablePrice) && tablePrice > 0 &&
+            ragfairServerHelper.IsItemValidRagfairItem(itemHelper.GetItem(templateId)))
         {
-            var itemResult = itemHelper.GetItem(templateId);
-            if (itemResult.Key && ragfairServerHelper.IsItemValidRagfairItem(itemResult))
-                fleaValue = tablePrice;
+            fleaValue = tablePrice;
         }
 
         if (traderValue > 0 && traderValue >= fleaValue)
@@ -221,7 +217,10 @@ public sealed class ItemValuationBackgroundLoader(
         return (0, ValueSource.None);
     }
 
-    private double GetTraderValuationBasis(MongoId templateId, double handbookValue)
+    private double GetTraderValuationBasis(
+        MongoId templateId,
+        double handbookValue,
+        IReadOnlyDictionary<MongoId, double> handbookPrices)
     {
         var preset = presetHelper.GetDefaultPreset(templateId);
         if (preset?.Items is null || preset.Items.Count == 0)
@@ -229,7 +228,8 @@ public sealed class ItemValuationBackgroundLoader(
 
         double total = 0;
         foreach (var presetItem in preset.Items)
-            total += handbookHelper.GetTemplatePrice(presetItem.Template);
+            if (handbookPrices.TryGetValue(presetItem.Template, out double childValue))
+                total += childValue;
         return total > 0 ? total : handbookValue;
     }
 
@@ -261,6 +261,15 @@ public sealed class ItemValuationBackgroundLoader(
                 highestPrice = price;
         }
         return highestPrice;
+    }
+
+    private static Dictionary<MongoId, double> BuildHandbookPriceIndex(TemplateTable templateTable)
+    {
+        Dictionary<MongoId, double> index = new(templateTable.Handbook.Items.Count);
+        foreach (var handbookItem in templateTable.Handbook.Items)
+            if (handbookItem.Price is > 0)
+                index[handbookItem.Id] = handbookItem.Price.Value;
+        return index;
     }
 
     private static ValueColorConfig LoadConfig(ModHelper modHelper)
