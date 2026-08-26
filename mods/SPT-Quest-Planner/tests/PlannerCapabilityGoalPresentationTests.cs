@@ -35,6 +35,22 @@ namespace SPTQuestPlanner.Tests
         }
 
         [Fact]
+        public void CompletedCapabilityGateIsReportedAsAlreadyUnlocked()
+        {
+            PlannerCapabilityGoal goal = Goal(new PlannerRaidDecisionIntent("gate"), gateAlreadyCompleted: true);
+
+            PlannerCapabilityGoalPresentation result = PlannerCapabilityGoalPresentationBuilder.Build(
+                goal,
+                null,
+                EmptyDelay());
+
+            Assert.Equal(PlannerCapabilityGoalPresentationKind.CapabilityAlreadyUnlocked, result.Kind);
+            Assert.Empty(result.ActionableQuestIds);
+            Assert.Contains("already completed", result.Caution, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("bounded renewable capability", result.ResultSummary, StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Fact]
         public void WaitingOnlyGoalDoesNotInventRaidWork()
         {
             PlannerCapabilityGoal goal = Goal(
@@ -78,7 +94,7 @@ namespace SPTQuestPlanner.Tests
         }
 
         [Fact]
-        public void TerminalConflictWinsOverAllOtherPresentationStates()
+        public void TerminalConflictWinsOverOtherIncompleteProgressionStates()
         {
             PlannerTopologyPrerequisite conflict = new PlannerTopologyPrerequisite(
                 "done-source",
@@ -103,7 +119,7 @@ namespace SPTQuestPlanner.Tests
             Assert.Contains("conflict", result.Caution, StringComparison.OrdinalIgnoreCase);
         }
 
-        private static PlannerCapabilityGoal Goal(PlannerRaidDecisionIntent intent)
+        private static PlannerCapabilityGoal Goal(PlannerRaidDecisionIntent intent, bool gateAlreadyCompleted = false)
         {
             PlannerCapabilityGoalDefinition definition = new PlannerCapabilityGoalDefinition(
                 "assault-rifles",
@@ -114,7 +130,7 @@ namespace SPTQuestPlanner.Tests
                 80,
                 80,
                 "test");
-            return new PlannerCapabilityGoal(definition, intent);
+            return new PlannerCapabilityGoal(definition, intent, gateAlreadyCompleted);
         }
 
         private static PlannerRaidFocusDelayEvidence EmptyDelay()
