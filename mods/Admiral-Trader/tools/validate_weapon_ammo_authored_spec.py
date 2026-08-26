@@ -8,6 +8,11 @@ from typing import Any
 
 EXPECTED_TARGET = "4.1.3"
 EXPECTED_FAMILY_IDS = {"handguns","smg-pdw","shotguns","assault-rifles","marksman-battle","precision","special-weapons"}
+EXPECTED_STAGE_MODELS = {
+    "Qualification": "family-readiness-possession",
+    "Fieldwork": "family-eliminations",
+    "Munitions": "capability-caliber-eliminations",
+}
 
 
 def fail(message: str) -> None:
@@ -30,6 +35,13 @@ def validate(spec: dict[str, Any], reward_policy: dict[str, Any], audit: dict[st
         fail("weapon/ammo quests may grant at most one permanent unlock")
     if int(rules.get("maximumFamilyQuestCount", -1)) != 3:
         fail("weapon/ammo family chains must remain capped at three quests")
+
+    stage_model = spec.get("stageModel") or []
+    actual_models = {str(row.get("stage")): str(row.get("objectiveModel")) for row in stage_model if isinstance(row, dict)}
+    if actual_models != EXPECTED_STAGE_MODELS:
+        fail(f"Arsenal stage objective models drift: {actual_models}")
+    if len(set(actual_models.values())) != 3:
+        fail("Arsenal stages must use three distinct objective models")
 
     families = spec.get("families") or []
     ids = [str(family.get("id")) for family in families]
@@ -57,9 +69,18 @@ def validate(spec: dict[str, Any], reward_policy: dict[str, Any], audit: dict[st
             if not slug or slug in slugs:
                 fail(f"duplicate/empty weapon-ammo slug: {slug}")
             slugs.add(slug)
-            kills = int(stage.get("kills", 0))
-            if kills <= 0 or kills > 25:
-                fail(f"{slug}: kill objective exceeds compact-chain budget: {kills}")
+
+            if index == 0:
+                readiness = int(stage.get("readinessCount", 0))
+                if readiness != 1:
+                    fail(f"{slug}: Qualification must require possession of exactly one family weapon")
+                if "kills" in stage:
+                    fail(f"{slug}: Qualification must not regress to a kill-count objective")
+            else:
+                kills = int(stage.get("kills", 0))
+                if kills <= 0 or kills > 25:
+                    fail(f"{slug}: elimination objective exceeds compact-chain budget: {kills}")
+
             xp, rub, standing = float(stage.get("xp", 0)), float(stage.get("rub", 0)), float(stage.get("standing", 0))
             if xp <= 0 or xp > p75_xp:
                 fail(f"{slug}: XP {xp} outside ordinary p75 ceiling {p75_xp}")
