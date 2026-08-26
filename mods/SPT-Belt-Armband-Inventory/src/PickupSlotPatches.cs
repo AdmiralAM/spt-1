@@ -130,15 +130,14 @@ namespace SPTBeltArmbandInventory
                 if (target == null || target.ReturnType.IsValueType)
                     return Fail("SPT 4.1 FindSlotToPickUp(InventoryEquipment, Item) shape changed; automatic belt pickup is disabled.");
 
-                MethodInfo postfixMethod = BuildPostfix(target.ReturnType, equipmentType, itemType);
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo hmCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                if (harmony == null || patchMethod == null || hmCtor == null || postfixMethod == null)
+                if (harmony == null || patchMethod == null || hmCtor == null)
                     return Fail("Harmony patch API is incompatible; automatic belt pickup is disabled.");
 
                 PickupSlotRuntime.LogWarning = logWarning;
-                object postfix = hmCtor.Invoke(new object[] { postfixMethod });
+                object postfix = hmCtor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
                 Patch(patchMethod, harmonyMethodType, target, postfix);
                 unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 if (logInfo != null) logInfo("Belt/Armband Inventory automatic pickup compatibility installed.");
@@ -166,25 +165,52 @@ namespace SPTBeltArmbandInventory
             return null;
         }
 
-        internal static MethodInfo BuildPostfix(Type resultType, Type equipmentType, Type itemType)
+        static MethodInfo PostfixFactory(MethodBase original)
         {
-            DynamicMethod method = new DynamicMethod("BeltPickupPostfix", typeof(void), new[] { resultType.MakeByRefType(), equipmentType, itemType }, typeof(PickupSlotPatches), true);
+            MethodInfo originalMethod = original as MethodInfo;
+            if (originalMethod == null || originalMethod.ReturnType == typeof(void) || originalMethod.ReturnType.IsValueType) return null;
+            return BuildPostfix(originalMethod.ReturnType);
+        }
+
+        internal static MethodInfo BuildPostfix(Type resultType)
+        {
+            DynamicMethod method = new DynamicMethod("BeltPickupPostfix", typeof(void), new[] { resultType.MakeByRefType(), typeof(object[]) }, typeof(PickupSlotPatches), true);
             method.DefineParameter(1, ParameterAttributes.None, "__result");
-            // EFT argument names are obfuscated. Harmony's positional aliases
-            // remain stable even when those metadata names change.
-            method.DefineParameter(2, ParameterAttributes.None, "__0");
-            method.DefineParameter(3, ParameterAttributes.None, "__1");
+            // Bind the original call as an argument array. This avoids depending on
+            // obfuscated EFT parameter names and avoids HarmonyX edge-cases around
+            // positional aliases on a direct dynamic postfix.
+            method.DefineParameter(2, ParameterAttributes.None, "__args");
             ILGenerator il = method.GetILGenerator();
+            Label end = il.DefineLabel();
+
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Brfalse_S, end);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldlen);
+            il.Emit(OpCodes.Conv_I4);
+            il.Emit(OpCodes.Ldc_I4_2);
+            il.Emit(OpCodes.Blt_S, end);
+
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldind_Ref);
             il.Emit(OpCodes.Ldarg_1);
-            il.Emit(OpCodes.Ldarg_2);
+            il.Emit(OpCodes.Ldc_I4_0);
+            il.Emit(OpCodes.Ldelem_Ref);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldc_I4_1);
+            il.Emit(OpCodes.Ldelem_Ref);
             il.Emit(OpCodes.Call, typeof(PickupSlotRuntime).GetMethod("Resolve", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
             il.Emit(OpCodes.Castclass, resultType);
             il.Emit(OpCodes.Stind_Ref);
+            il.MarkLabel(end);
             il.Emit(OpCodes.Ret);
             return method;
+        }
+
+        static MethodInfo Method(string name)
+        {
+            return typeof(PickupSlotPatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
         }
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)

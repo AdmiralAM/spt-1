@@ -15,6 +15,7 @@ namespace SPTBeltArmbandInventory
 
         ConfigEntry<bool> modEnabled;
         RuntimeCustomBeltTypePatches runtimeTypePatches;
+        GridWindowSizingPatches gridWindowSizingPatches;
         LootPriorityPatches lootPatches;
         UnloadPriorityPatches unloadPatches;
         ScavBeltPatches scavPatches;
@@ -53,6 +54,14 @@ namespace SPTBeltArmbandInventory
             }
 
             Logger.LogInfo("B&A&HB ArmBand presentation uses the native searchable-item GridWindow and GeneratedGridsView; legacy ContainersPanel BELT-row projection is disabled.");
+
+            gridWindowSizingPatches = new GridWindowSizingPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!gridWindowSizingPatches.TryInstall())
+            {
+                gridWindowSizingPatches.Dispose();
+                gridWindowSizingPatches = null;
+                Logger.LogWarning("Belt storage remains active, but the ArmBand GridWindow may keep vanilla minimum window dimensions.");
+            }
 
             lootPatches = new LootPriorityPatches(Logger.LogInfo, Logger.LogWarning);
             if (!lootPatches.TryInstall())
@@ -137,6 +146,7 @@ namespace SPTBeltArmbandInventory
 
         void Update()
         {
+            if (gridWindowSizingPatches != null) GridWindowSizingRuntime.Flush();
             if (fastAccessSyncPatches != null) FastAccessBeltSyncRuntime.Flush();
         }
 
@@ -174,6 +184,8 @@ namespace SPTBeltArmbandInventory
             unloadPatches = null;
             if (lootPatches != null) lootPatches.Dispose();
             lootPatches = null;
+            if (gridWindowSizingPatches != null) gridWindowSizingPatches.Dispose();
+            gridWindowSizingPatches = null;
             if (runtimeTypePatches != null) runtimeTypePatches.Dispose();
             runtimeTypePatches = null;
         }

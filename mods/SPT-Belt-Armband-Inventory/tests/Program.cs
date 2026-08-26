@@ -72,9 +72,13 @@ internal static class Program
         Assert(AccessoryGridPolicy.CellCount(1, 2) == 2, "1x2 grid declares exactly two cells");
         Assert(AccessoryGridPolicy.FitsDeclaredCapacity(1, 2, 2), "1x2 grid accepts two items");
         Assert(!AccessoryGridPolicy.FitsDeclaredCapacity(1, 2, 3), "1x2 grid rejects a third item");
+        Assert(Math.Abs(AccessoryGridPolicy.CompactWindowWidth(1, 63f) - 96f) < 0.01f, "compact 1x2 window width is clamped to the compact minimum");
+        Assert(Math.Abs(AccessoryGridPolicy.CompactWindowHeight(2, 126f) - 168f) < 0.01f, "compact 1x2 window height follows two measured cells plus chrome padding");
         Assert(RuntimeIdentity.CandidateGridColumns == 1 && RuntimeIdentity.CandidateGridRows == 2, "shared runtime contract preserves the proven one-column two-row grid");
         Assert(RuntimeCustomBeltTypePatches.CustomTemplateParentId == RuntimeIdentity.SearchableTemplateParentId, "client template registration uses the shared runtime identity");
         Assert(RuntimeCustomBeltTypePatches.CustomBeltParentId == RuntimeIdentity.BeltItemParentId, "client item registration uses the shared runtime identity");
+        Assert(AccessoryGridPolicy.IsRuntimeCandidateTemplate(RuntimeIdentity.CandidateItemId), "compact GridWindow sizing is owned by the RC template id");
+        Assert(!AccessoryGridPolicy.IsRuntimeCandidateTemplate("5449016a4bdc2d6f028b456f"), "compact GridWindow sizing ignores vanilla templates");
         string[] runtimeIds = { RuntimeIdentity.CandidateItemId, RuntimeIdentity.CandidateGridId, RuntimeIdentity.CandidateAssortId, RuntimeIdentity.SearchableTemplateParentId, RuntimeIdentity.BeltItemParentId };
         Assert(runtimeIds.Distinct(StringComparer.Ordinal).Count() == runtimeIds.Length, "shared runtime identifiers are unique");
         Assert(runtimeIds.All(x => x.Length == 24 && x.All(Uri.IsHexDigit)), "shared runtime identifiers remain valid Mongo-style hex IDs");
@@ -151,10 +155,10 @@ internal static class Program
         Assert(!PickupSlotPolicy.ShouldTry(true, false, false, true), "non-container item never uses belt pickup fallback");
         Assert(!PickupSlotPolicy.ShouldTry(true, true, true, true), "deleted ArmBand slot is never revived by pickup fallback");
         Assert(!PickupSlotPolicy.ShouldTry(true, true, false, false), "incompatible container is never forced into ArmBand");
-        System.Reflection.MethodInfo pickupPostfix = PickupSlotPatches.BuildPostfix(typeof(PickupAddressProbe), typeof(PickupEquipmentProbe), typeof(PickupItemProbe));
+        System.Reflection.MethodInfo pickupPostfix = PickupSlotPatches.BuildPostfix(typeof(PickupAddressProbe));
         System.Reflection.ParameterInfo[] pickupParameters = pickupPostfix.GetParameters();
-        Assert(pickupParameters.Length == 3 && pickupParameters[0].Name == "__result", "pickup postfix binds the result by Harmony contract");
-        Assert(pickupParameters[1].Name == "__0" && pickupParameters[2].Name == "__1", "pickup postfix binds obfuscated EFT arguments positionally");
+        Assert(pickupParameters.Length == 2 && pickupParameters[0].Name == "__result", "pickup postfix binds the result by Harmony contract");
+        Assert(pickupParameters[1].Name == "__args", "pickup postfix reads obfuscated EFT arguments from Harmony's stable argument array");
 
         Assert(PaymentSlotPolicy.ShouldIncludeBelt(true, true), "container belt participates in in-raid trader-service payment slots");
         Assert(!PaymentSlotPolicy.ShouldIncludeBelt(true, false), "plain armband never becomes a payment slot");
