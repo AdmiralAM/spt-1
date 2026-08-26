@@ -40,6 +40,8 @@ public sealed record ItemSourcePressureEvidence
     public required bool HasRenewablePath { get; init; }
     public int? EarliestProgressionLevel { get; init; }
     public required bool SingleSourceDominated { get; init; }
+    public required AcquisitionChannel? DominantChannel { get; init; }
+    public required double DominantChannelSourceShare { get; init; }
     public required List<ChannelSourceSummary> Channels { get; init; }
     public required List<string> ProvenanceClasses { get; init; }
 }
@@ -139,6 +141,11 @@ public static class SourcePressureEvidenceAnalyzer
             })
             .ToList();
 
+        var dominant = channels
+            .OrderByDescending(channel => channel.SourceCount)
+            .ThenBy(channel => channel.Channel)
+            .FirstOrDefault();
+
         return new ItemSourcePressureEvidence
         {
             ItemTemplateId = group.Key,
@@ -150,6 +157,8 @@ public static class SourcePressureEvidenceAnalyzer
             HasRenewablePath = renewableCount > 0,
             EarliestProgressionLevel = knownLevels.Count == 0 ? null : knownLevels.Min(),
             SingleSourceDominated = sourceCount == 1,
+            DominantChannel = dominant?.Channel,
+            DominantChannelSourceShare = dominant is null || sourceCount == 0 ? 0 : Math.Round((double)dominant.SourceCount / sourceCount, 6),
             Channels = channels,
             ProvenanceClasses = sources
                 .Select(source => source.ProvenanceClass)
