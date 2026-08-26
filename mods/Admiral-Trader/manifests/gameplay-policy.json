@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "productRole": "capability-broker",
   "campaign": {
     "expectedQuestCount": 31,
@@ -20,6 +20,17 @@
     "questUnlockLoyaltyLevel": 1,
     "specialWeaponsPermanentOfferAllowed": false,
     "specialWeaponsSampleOnly": true
+  },
+  "loyalty": {
+    "role": "relationship-status-only",
+    "capabilityAuthority": false,
+    "standingMayBypassQuestGates": false,
+    "salesSumMayGateProgression": false,
+    "servicesMayUnlockByLoyalty": false,
+    "priceAdvantagesMayUnlockByLoyalty": false,
+    "expectedTierCount": 4,
+    "expectedStandingThresholds": [0, 0.1, 0.3, 0.55],
+    "authoredCampaignStandingTotal": 0.65
   },
   "accessProtocol": {
     "consumePlayerKeys": false,
