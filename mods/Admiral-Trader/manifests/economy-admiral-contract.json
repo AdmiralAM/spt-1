@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "owner": "Admiral Trader",
+  "targetSptVersion": "4.1.3",
+  "traderId": "d5c27bb3169f8dfbc13f6b69",
+  "integration": {
+    "consumer": "Economy Admiral",
+    "adapterConfidence": "ExplicitAdapter",
+    "progressionAuthority": "quest-gate",
+    "loyaltyRole": "metadata-only-for-current-capability-offers",
+    "priceAuthority": "Economy Admiral may revalue prices and reward budgets while preserving declared progression/supply semantics unless a future explicit cross-mod policy changes them",
+    "preserveByDefault": [
+      "questGate",
+      "renewabilityClass",
+      "finiteStockPerReset",
+      "finiteBuyRestrictionPerReset",
+      "sampleOnlyVsPermanent",
+      "capabilityFamily"
+    ]
+  },
+  "renewableOffers": [
+    {
+      "offerId": "ad1000000000000000000001",
+      "itemTpl": "5c94bbff86f7747ee735c08f",
+      "protocol": "Access Protocol",
+      "capabilityFamily": "labs-access",
+      "sourceType": "TraderPurchase",
+      "renewability": "Bounded",
+      "permanent": true,
+      "questGateId": "68a6527a3c73b2e85977d7a1",
+      "effectiveProgressionSource": "questGate",
+      "loyaltyLevel": 1,
+      "stockPerReset": 1,
+      "buyRestrictionPerReset": 1,
+      "price": {"currencyTpl": "5449016a4bdc2d6f028b456f", "amount": 166000}
+    },
+    {
+      "offerId": "6cf0fc22a55417075c5af23e",
+      "itemTpl": "5cc80f53e4a949000e1ea4f8",
+      "protocol": "Arsenal Protocol",
+      "capabilityFamily": "handguns",
+      "sourceType": "TraderPurchase",
+      "renewability": "Bounded",
+      "permanent": true,
+      "questGateId": "8cba3e2ec639a4aa2c26c4da",
+      "effectiveProgressionSource": "questGate",
+      "loyaltyLevel": 1,
+      "stockPerReset": 80,
+      "buyRestrictionPerReset": 80,
+      "price": {"currencyTpl": "5449016a4bdc2d6f028b456f", "amount": 400}
+    },
+    {
+      "offerId": "67d5501fb925a7836b99f112",
+      "itemTpl": "5efb0cabfb3e451d70735af5",
+      "protocol": "Arsenal Protocol",
+      "capabilityFamily": "smg-pdw",
+      "sourceType": "TraderPurchase",
+      "renewability": "Bounded",
+      "permanent": true,
+      "questGateId": "43d9544a09d068476a1a18df",
+      "effectiveProgressionSource": "questGate",
+      "loyaltyLevel": 1,
+      "stockPerReset": 80,
+      "buyRestrictionPerReset": 80,
+      "price": {"currencyTpl": "5449016a4bdc2d6f028b456f", "amount": 850}
+    },
+    {
+      "offerId": "ece0342652b331ac065d2e5a",
+      "itemTpl": "5d6e68a8a4b9360b6c0d54e2",
+      "protocol": "Arsenal Protocol",
+      "capabilityFamily": "shotguns",
+      "sourceType": "TraderPurchase",
+      "renewability": "Bounded",
+      "permanent": true,
+      "questGateId": "8d8d81032315f4fdc5a06798",
+      "effectiveProgressionSource": "questGate",
+      "loyaltyLevel": 1,
+      "stockPerReset": 40,
+      "buyRestrictionPerReset": 40,
+      "price": {"currencyTpl": "5449016a4bdc2d6f028b456f", "amount": 1150}
+    },
+    {
+      "offerId": "b71182859e5958fd12c02e89",
+      "itemTpl": "59e6906286f7746c9f75e847",
+      "protocol": "Arsenal Protocol",
+      "capabilityFamily": "assault-rifles",
+      "sourceType": "TraderPurchase",
+      "renewability": "Bounded",
+      "permanent": true,
+      "questGateId": "f6e51dc4e50e47ee9af50a4d",
+      "effectiveProgressionSource": "questGate",
+      "loyaltyLevel": 1,
+      "stockPerReset": 80,
+      "buyRestrictionPerReset": 80,
+      "price": {"currencyTpl": "5449016a4bdc2d6f028b456f", "amount": 550}
+    },
+    {
+      "offerId": "07efd6dee267ec18ed830dd6",
+      "itemTpl": "5a608bf24f39f98ffc77720e",
+      "protocol": "Arsenal Protocol",
+      "capabilityFamily": "marksman-battle",
+      "sourceType": "TraderPurchase",
+      "renewability": "Bounded",
+      "permanent": true,
+      "questGateId": "7564e60e4c1c2f1b67a594a4",
+      "effectiveProgressionSource": "questGate",
+      "loyaltyLevel": 1,
+      "stockPerReset": 60,
+      "buyRestrictionPerReset": 60,
+      "price": {"currencyTpl": "5449016a4bdc2d6f028b456f", "amount": 550}
+    },
+    {
+      "offerId": "731e65964d324bc545a1b839",
+      "itemTpl": "5fc382c1016cce60e8341b20",
+      "protocol": "Arsenal Protocol",
+      "capabilityFamily": "precision",
+      "sourceType": "TraderPurchase",
+      "renewability": "Bounded",
+      "permanent": true,
+      "questGateId": "cd2641c70bede98dac3945d0",
+      "effectiveProgressionSource": "questGate",
+      "loyaltyLevel": 1,
+      "stockPerReset": 40,
+      "buyRestrictionPerReset": 40,
+      "price": {"currencyTpl": "5449016a4bdc2d6f028b456f", "amount": 1050}
+    }
+  ],
+  "oneTimeRewards": [
+    {
+      "itemTpl": "6217726288ed9f0845317459",
+      "protocol": "Arsenal Protocol",
+      "capabilityFamily": "special-weapons",
+      "sourceType": "QuestReward",
+      "renewability": "OneTime",
+      "permanent": false,
+      "sampleOnly": true,
+      "questId": "f1368cb3b69c3a4917c4f206",
+      "units": 1
+    }
+  ]
+}
