@@ -9,9 +9,6 @@ namespace SPTBeltArmbandInventory
         internal static bool ShouldForce(string slotId, bool hasContainedItem, bool containedItemIsContainer)
         {
             if (!string.Equals(slotId, BeltSlotPlan.ArmBand, StringComparison.Ordinal)) return false;
-
-            // Keep the empty ArmBand destination compatible with container-belt moves,
-            // but do not rewrite merge semantics for an already-equipped plain armband.
             return !hasContainedItem || containedItemIsContainer;
         }
     }
@@ -19,21 +16,48 @@ namespace SPTBeltArmbandInventory
     internal static class SlotMergeRuntime
     {
         internal static object InheritFromItemValue;
+        internal static Action<string> LogWarning;
+        static bool runtimeFailureLogged;
 
         internal static void OverrideResult(object slot, ref object result)
         {
             if (slot == null || InheritFromItemValue == null) return;
-            string id = ReflectionTools.ReadMember(slot, "ID") as string;
-            object containedItem = ReflectionTools.ReadMember(slot, "ContainedItem");
-            bool hasContainedItem = containedItem != null;
-            bool containedItemIsContainer = hasContainedItem && ReflectionTools.HasContainers(containedItem);
-            if (!SlotMergePolicy.ShouldForce(id, hasContainedItem, containedItemIsContainer)) return;
-            result = InheritFromItemValue;
+            try
+            {
+                string id = ReflectionTools.ReadMember(slot, "ID") as string;
+                object containedItem = ReflectionTools.ReadMember(slot, "ContainedItem");
+                bool hasContainedItem = containedItem != null;
+                bool containedItemIsContainer = hasContainedItem && ReflectionTools.HasContainers(containedItem);
+                if (!SlotMergePolicy.ShouldForce(id, hasContainedItem, containedItemIsContainer)) return;
+                result = InheritFromItemValue;
+            }
+            catch (Exception exception)
+            {
+                if (!runtimeFailureLogged)
+                {
+                    runtimeFailureLogged = true;
+                    Exception root = Unwrap(exception);
+                    LogWarning?.Invoke("B&A&HB MERGE RUNTIME FAIL-CLOSED: " + root.GetType().FullName + ": " + root.Message
+                        + (string.IsNullOrEmpty(root.StackTrace) ? "" : "\n" + root.StackTrace));
+                }
+                // This compatibility layer is optional. Any unexpected runtime shape
+                // leaves the vanilla getter result untouched and must not abort profile load.
+            }
+        }
+
+        static Exception Unwrap(Exception exception)
+        {
+            Exception current = exception;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null)
+                current = invocation.InnerException;
+            return current;
         }
 
         internal static void Reset()
         {
             InheritFromItemValue = null;
+            LogWarning = null;
+            runtimeFailureLogged = false;
         }
     }
 
@@ -62,16 +86,13 @@ namespace SPTBeltArmbandInventory
                 if (harmonyType == null || harmonyMethodType == null || slotType == null || parentMergeType == null)
                     return Fail("SPT 4.1 Slot/EParentMergeType or Harmony was not found; ArmBand merge compatibility is disabled.");
 
-                PropertyInfo property = slotType.GetProperty("MergeContainerWithChildren", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                PropertyInfo property = ReflectionTools.FindInstanceProperty(slotType, "MergeContainerWithChildren", parentMergeType);
                 MethodInfo getter = property == null ? null : property.GetGetMethod(true);
-                if (getter == null || getter.ReturnType != parentMergeType)
+                if (getter == null)
                     return Fail("SPT 4.1 Slot.MergeContainerWithChildren getter shape changed; ArmBand merge compatibility is disabled.");
 
                 object inheritFromItem;
-                try
-                {
-                    inheritFromItem = Enum.Parse(parentMergeType, "InheritFromItem", false);
-                }
+                try { inheritFromItem = Enum.Parse(parentMergeType, "InheritFromItem", false); }
                 catch (Exception exception)
                 {
                     LogException("B&A&HB MERGE ENUM", exception);
@@ -81,16 +102,17 @@ namespace SPTBeltArmbandInventory
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo hmCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
+                MethodInfo rollback = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
                 if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, hmCtor != null, rollback != null))
                     return Fail("Harmony patch/rollback API is incompatible; ArmBand merge compatibility is disabled.");
                 unpatchSelf = rollback;
 
                 SlotMergeRuntime.InheritFromItemValue = inheritFromItem;
+                SlotMergeRuntime.LogWarning = logWarning;
                 object hmPostfix = hmCtor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
                 Patch(patchMethod, harmonyMethodType, getter, hmPostfix);
 
-                if (logInfo != null) logInfo("ArmBand merge compatibility installed via container-aware MergeContainerWithChildren result override.");
+                logInfo?.Invoke("ArmBand merge compatibility installed via container-aware MergeContainerWithChildren result override.");
                 return true;
             }
             catch (Exception exception)
@@ -122,16 +144,13 @@ namespace SPTBeltArmbandInventory
 
             ILGenerator il = method.GetILGenerator();
             LocalBuilder boxedResult = il.DeclareLocal(typeof(object));
-
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldobj, parentMergeType);
             il.Emit(OpCodes.Box, parentMergeType);
             il.Emit(OpCodes.Stloc, boxedResult);
-
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldloca_S, boxedResult);
             il.Emit(OpCodes.Call, typeof(SlotMergeRuntime).GetMethod(nameof(SlotMergeRuntime.OverrideResult), BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
-
             il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Ldloc, boxedResult);
             il.Emit(OpCodes.Unbox_Any, parentMergeType);
@@ -140,7 +159,21 @@ namespace SPTBeltArmbandInventory
             return method;
         }
 
-        static MethodInfo Method(string name) => typeof(SlotMergePatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
+        static MethodInfo Method(string name)
+        {
+            MethodInfo[] methods = typeof(SlotMergePatches).GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal)) return methods[i];
+            return null;
+        }
+
+        static MethodInfo FindZeroArgInstanceMethod(Type type, string name)
+        {
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal) && methods[i].GetParameters().Length == 0) return methods[i];
+            return null;
+        }
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
         {
@@ -178,11 +211,10 @@ namespace SPTBeltArmbandInventory
             Exception root = Unwrap(exception);
             logWarning?.Invoke(prefix + " exception type=" + root.GetType().FullName);
             logWarning?.Invoke(prefix + " message=" + root.Message);
-            if (!string.IsNullOrEmpty(root.StackTrace))
-                logWarning?.Invoke(prefix + " stack=" + root.StackTrace);
+            if (!string.IsNullOrEmpty(root.StackTrace)) logWarning?.Invoke(prefix + " stack=" + root.StackTrace);
         }
 
-        bool Fail(string message) { if (logWarning != null) logWarning(message); return false; }
+        bool Fail(string message) { logWarning?.Invoke(message); return false; }
 
         public void Dispose()
         {
