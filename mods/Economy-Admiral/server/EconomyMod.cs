@@ -11,7 +11,6 @@ public sealed class EconomyMod(
     VanillaBaselineService vanillaBaselineService,
     RuntimeEvidenceService runtimeEvidenceService,
     EconomyAuditService auditService,
-    PristineReportCorrectionService pristineReportCorrectionService,
     PrimaryAuditParityService primaryAuditParityService,
     RewardUtilityAuditService rewardUtilityAuditService,
     QuestProgressionGraphService questProgressionGraphService,
@@ -34,15 +33,13 @@ public sealed class EconomyMod(
         var vanillaBaseline = vanillaBaselineService.GetSnapshot();
         runtimeEvidenceService.CaptureBefore();
 
-        // Core typed reports use final DB state directly against the immutable pristine startup snapshot.
+        // Core reports read typed final DB state directly against the immutable pristine snapshot.
+        // No report correction/reparse/rewrite layer remains on the runtime path.
         await auditService.RunAsync(vanillaBaseline, cancellationToken);
         await primaryAuditParityService.RunAsync(cancellationToken);
         await rewardUtilityAuditService.RunAsync(vanillaBaseline, cancellationToken);
-
         var progressionSnapshot = await questProgressionGraphService.RunAsync(vanillaBaseline, cancellationToken);
-
-        await questConstraintAuditService.RunAsync(cancellationToken);
-        await pristineReportCorrectionService.CorrectConstraintsAsync(vanillaBaseline, cancellationToken);
+        await questConstraintAuditService.RunAsync(vanillaBaseline, cancellationToken);
 
         var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, vanillaBaseline, cancellationToken);
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
