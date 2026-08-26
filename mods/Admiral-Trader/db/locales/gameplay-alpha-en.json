@@ -1,0 +1,75 @@
+{
+  "59ca4829e098dfafa03888d2 description": "Confirm sidearm readiness by possessing one approved sidearm. No FIR requirement and no handover.",
+  "59ca4829e098dfafa03888d2 startedMessageText": "Before I judge your field work, show me that you actually maintain a usable sidearm. Keep it; I only need proof of readiness.",
+  "59ca4829e098dfafa03888d2 acceptPlayerMessage": "Before I judge your field work, show me that you actually maintain a usable sidearm. Keep it; I only need proof of readiness.",
+  "59ca4829e098dfafa03888d2 successMessageText": "Sidearm readiness confirmed. Now prove you can use the family under field conditions.",
+  "59ca4829e098dfafa03888d2 completePlayerMessage": "Sidearm readiness confirmed. Now prove you can use the family under field conditions.",
+
+  "ad9233f54a7132d905d6f29d description": "Confirm SMG / PDW readiness by possessing one approved weapon. No FIR requirement and no handover.",
+  "ad9233f54a7132d905d6f29d startedMessageText": "Show me that an SMG or PDW is already part of your working kit. Keep it; this is a readiness check, not a delivery.",
+  "ad9233f54a7132d905d6f29d acceptPlayerMessage": "Show me that an SMG or PDW is already part of your working kit. Keep it; this is a readiness check, not a delivery.",
+  "ad9233f54a7132d905d6f29d successMessageText": "SMG / PDW readiness confirmed. Field work comes next.",
+  "ad9233f54a7132d905d6f29d completePlayerMessage": "SMG / PDW readiness confirmed. Field work comes next.",
+
+  "5f62a924076e4b7c2320f2e8 description": "Confirm shotgun readiness by possessing one approved shotgun. No FIR requirement and no handover.",
+  "5f62a924076e4b7c2320f2e8 startedMessageText": "Show me a shotgun you can actually deploy. Keep it; I am checking readiness, not collecting hardware.",
+  "5f62a924076e4b7c2320f2e8 acceptPlayerMessage": "Show me a shotgun you can actually deploy. Keep it; I am checking readiness, not collecting hardware.",
+  "5f62a924076e4b7c2320f2e8 successMessageText": "Shotgun readiness confirmed. Put the family to work in the field.",
+  "5f62a924076e4b7c2320f2e8 completePlayerMessage": "Shotgun readiness confirmed. Put the family to work in the field.",
+
+  "4ada822d634041a721b346d5 description": "Confirm assault-rifle readiness by possessing one approved rifle. No FIR requirement and no handover.",
+  "4ada822d634041a721b346d5 startedMessageText": "Show me that you maintain a serviceable assault rifle. Keep it; this only establishes that the capability exists.",
+  "4ada822d634041a721b346d5 acceptPlayerMessage": "Show me that you maintain a serviceable assault rifle. Keep it; this only establishes that the capability exists.",
+  "4ada822d634041a721b346d5 successMessageText": "Assault-rifle readiness confirmed. Field proof comes next.",
+  "4ada822d634041a721b346d5 completePlayerMessage": "Assault-rifle readiness confirmed. Field proof comes next.",
+
+  "2568ee0bfe2ee12f24d78f45 description": "Confirm marksman / battle-rifle readiness by possessing one approved weapon. No FIR requirement and no handover.",
+  "2568ee0bfe2ee12f24d78f45 startedMessageText": "Show me that you have a marksman or battle rifle ready for deployment. Keep it; I only need proof of capability.",
+  "2568ee0bfe2ee12f24d78f45 acceptPlayerMessage": "Show me that you have a marksman or battle rifle ready for deployment. Keep it; I only need proof of capability.",
+  "2568ee0bfe2ee12f24d78f45 successMessageText": "Marksman / battle-rifle readiness confirmed. Now demonstrate it under pressure.",
+  "2568ee0bfe2ee12f24d78f45 completePlayerMessage": "Marksman / battle-rifle readiness confirmed. Now demonstrate it under pressure.",
+
+  "a0d05e28971f1ba57639b97d description": "Confirm precision-rifle readiness by possessing one approved rifle. No FIR requirement and no handover.",
+  "a0d05e28971f1ba57639b97d startedMessageText": "Precision work starts before the shot. Show me a rifle you can actually field. Keep it; this is a readiness check.",
+  "a0d05e28971f1ba57639b97d acceptPlayerMessage": "Precision work starts before the shot. Show me a rifle you can actually field. Keep it; this is a readiness check.",
+  "a0d05e28971f1ba57639b97d successMessageText": "Precision-rifle readiness confirmed. Field proof is next.",
+  "a0d05e28971f1ba57639b97d completePlayerMessage": "Precision-rifle readiness confirmed. Field proof is next.",
+
+  "cb8a202d7107f39d860ccb38 description": "Confirm special-weapons readiness by possessing one approved special weapon. No FIR requirement and no handover.",
+  "cb8a202d7107f39d860ccb38 startedMessageText": "Special equipment is not something I issue on faith. Show me that you already maintain an approved platform. Keep it.",
+  "cb8a202d7107f39d860ccb38 acceptPlayerMessage": "Special equipment is not something I issue on faith. Show me that you already maintain an approved platform. Keep it.",
+  "cb8a202d7107f39d860ccb38 successMessageText": "Special-weapons readiness confirmed. The next stages prove actual use.",
+  "cb8a202d7107f39d860ccb38 completePlayerMessage": "Special-weapons readiness confirmed. The next stages prove actual use.",
+
+  "8cba3e2ec639a4aa2c26c4da description": "Complete the sidearms capability track. Reward: a 40-round L191 sample and a finite renewable L191 allotment from Admiral.",
+  "8cba3e2ec639a4aa2c26c4da successMessageText": "Sidearms capability confirmed. You received an L191 sample; a finite L191 allotment is now available from my stock each reset.",
+  "8cba3e2ec639a4aa2c26c4da completePlayerMessage": "Sidearms capability confirmed. You received an L191 sample; a finite L191 allotment is now available from my stock each reset.",
+
+  "43d9544a09d068476a1a18df description": "Complete the SMG / PDW capability track. Reward: a 40-round .45 ACP AP sample and a finite renewable .45 ACP AP allotment from Admiral.",
+  "43d9544a09d068476a1a18df successMessageText": "SMG / PDW capability confirmed. You received a .45 ACP AP sample; a finite allotment is now available from my stock each reset.",
+  "43d9544a09d068476a1a18df completePlayerMessage": "SMG / PDW capability confirmed. You received a .45 ACP AP sample; a finite allotment is now available from my stock each reset.",
+
+  "8d8d81032315f4fdc5a06798 description": "Complete the shotgun capability track. Reward: a 30-round AP-20 sample and a finite renewable AP-20 allotment from Admiral.",
+  "8d8d81032315f4fdc5a06798 successMessageText": "Shotgun capability confirmed. You received an AP-20 sample; a finite AP-20 allotment is now available from my stock each reset.",
+  "8d8d81032315f4fdc5a06798 completePlayerMessage": "Shotgun capability confirmed. You received an AP-20 sample; a finite AP-20 allotment is now available from my stock each reset.",
+
+  "f6e51dc4e50e47ee9af50a4d description": "Complete the assault-rifle capability track. Reward: a 40-round M856A1 sample and a finite renewable M856A1 allotment from Admiral.",
+  "f6e51dc4e50e47ee9af50a4d successMessageText": "Assault-rifle capability confirmed. You received an M856A1 sample; a finite M856A1 allotment is now available from my stock each reset.",
+  "f6e51dc4e50e47ee9af50a4d completePlayerMessage": "Assault-rifle capability confirmed. You received an M856A1 sample; a finite M856A1 allotment is now available from my stock each reset.",
+
+  "7564e60e4c1c2f1b67a594a4 description": "Complete the marksman / battle-rifle capability track. Reward: a 30-round M62 Tracer sample and a finite renewable M62 allotment from Admiral.",
+  "7564e60e4c1c2f1b67a594a4 successMessageText": "Marksman / battle-rifle capability confirmed. You received an M62 sample; a finite M62 allotment is now available from my stock each reset.",
+  "7564e60e4c1c2f1b67a594a4 completePlayerMessage": "Marksman / battle-rifle capability confirmed. You received an M62 sample; a finite M62 allotment is now available from my stock each reset.",
+
+  "cd2641c70bede98dac3945d0 description": "Complete the precision-rifle capability track. Reward: a 20-round .338 Lapua Magnum UPZ sample and a finite renewable UPZ allotment from Admiral.",
+  "cd2641c70bede98dac3945d0 successMessageText": "Precision-rifle capability confirmed. You received a .338 UPZ sample; a finite UPZ allotment is now available from my stock each reset.",
+  "cd2641c70bede98dac3945d0 completePlayerMessage": "Precision-rifle capability confirmed. You received a .338 UPZ sample; a finite UPZ allotment is now available from my stock each reset.",
+
+  "f1368cb3b69c3a4917c4f206 description": "Complete the Special Weapons track. Reward: one green RSP-30 signal cartridge sample. This track does not unlock renewable special-weapon ammunition.",
+  "f1368cb3b69c3a4917c4f206 successMessageText": "Special-weapons capability confirmed. One green RSP-30 signal cartridge is issued as a sample. No permanent ammunition offer is unlocked.",
+  "f1368cb3b69c3a4917c4f206 completePlayerMessage": "Special-weapons capability confirmed. One green RSP-30 signal cartridge is issued as a sample. No permanent ammunition offer is unlocked.",
+
+  "68a6527a3c73b2e85977d7a1 description": "Prove operational Laboratory access. Completion unlocks Admiral's finite Laboratory access-card offer.",
+  "68a6527a3c73b2e85977d7a1 successMessageText": "Clearance confirmed. My Laboratory access-card offer is now unlocked: one card per reset, subject to the listed price.",
+  "68a6527a3c73b2e85977d7a1 completePlayerMessage": "Clearance confirmed. My Laboratory access-card offer is now unlocked: one card per reset, subject to the listed price."
+}
