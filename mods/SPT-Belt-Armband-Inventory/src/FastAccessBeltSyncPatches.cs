@@ -141,14 +141,25 @@ namespace SPTBeltArmbandInventory
 
             object inventory = ReflectionTools.ReadMember(controller, "Inventory");
             object equipment = ReflectionTools.ReadMember(inventory, "Equipment");
-            if (equipment == null) return;
+            object selectedOwner = ResolveSelectedGrenadeOwner(controller, inventory, equipment, TopPriorityGrenadeProperty);
+            if (selectedOwner == null) return;
 
-            object selected = TopPriorityGrenadeProperty.GetValue(equipment, null);
+            object selected = TopPriorityGrenadeProperty.GetValue(selectedOwner, null);
             if (selected == null) return;
 
             IEnumerable items = GetTopLevelItemsMethod.Invoke(null, new[] { removedContainer }) as IEnumerable;
             bool belongs = ContainsReference(items, selected);
-            if (FastAccessBeltSyncPolicy.ShouldClearSelected(true, belongs)) TopPriorityGrenadeProperty.SetValue(equipment, null, null);
+            if (FastAccessBeltSyncPolicy.ShouldClearSelected(true, belongs)) TopPriorityGrenadeProperty.SetValue(selectedOwner, null, null);
+        }
+
+        static object ResolveSelectedGrenadeOwner(object controller, object inventory, object equipment, PropertyInfo property)
+        {
+            Type declaringType = property == null ? null : property.DeclaringType;
+            if (declaringType == null) return null;
+            if (equipment != null && declaringType.IsInstanceOfType(equipment)) return equipment;
+            if (inventory != null && declaringType.IsInstanceOfType(inventory)) return inventory;
+            if (controller != null && declaringType.IsInstanceOfType(controller)) return controller;
+            return null;
         }
 
         static bool ContainsReference(IEnumerable items, object target)
@@ -216,7 +227,7 @@ namespace SPTBeltArmbandInventory
                 ParameterInfo[] showParameters = show == null ? Array.Empty<ParameterInfo>() : show.GetParameters();
                 FieldInfo controller = showParameters.Length == 2 ? FindField(viewType, showParameters[0].ParameterType, "InventoryController") : null;
                 FieldInfo context = showParameters.Length == 2 ? FindField(viewType, showParameters[1].ParameterType, "ItemUiContext") : null;
-                PropertyInfo topPriority = FindProperty(equipmentType, "TopPriorityGrenade");
+                PropertyInfo topPriority = FindTopPriorityGrenadeProperty(viewType.Assembly, equipmentType);
                 MethodInfo topLevelItems = FindTopLevelItemsMethod(viewType.Assembly);
                 if (added == null || removed == null || show == null || controller == null || context == null)
                     return Fail("SPT 4.1 grenade fast-access boundary is incomplete; live belt grenade synchronization is disabled."
@@ -238,6 +249,10 @@ namespace SPTBeltArmbandInventory
                         logWarning("SPT 4.1 grenade fast-access selected-grenade boundary was not found; live ArmBand refresh will install without selected grenade cleanup on removal."
                             + " topPriority=" + degradedTopPriority
                             + ", topLevelItems=" + degradedTopLevelItems + ".");
+                }
+                else if (logInfo != null)
+                {
+                    logInfo("B&A&HB selected grenade boundary resolved at " + Describe(topPriority) + ".");
                 }
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
@@ -320,6 +335,34 @@ namespace SPTBeltArmbandInventory
             for (int i = 0; i < methods.Length; i++)
                 if (EndsWith(methods[i].Name, methodName) && methods[i].GetParameters().Length > 0) return methods[i];
             return null;
+        }
+
+        static PropertyInfo FindTopPriorityGrenadeProperty(Assembly assembly, Type equipmentType)
+        {
+            PropertyInfo direct = FindProperty(equipmentType, "TopPriorityGrenade");
+            if (IsUsableProperty(direct)) return direct;
+
+            PropertyInfo only = null;
+            int matches = 0;
+            Type[] types = ReflectionTools.GetTypes(assembly);
+            for (int i = 0; i < types.Length; i++)
+            {
+                Type type = types[i];
+                if (type == null) continue;
+                PropertyInfo property;
+                try { property = type.GetProperty("TopPriorityGrenade", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly); }
+                catch { continue; }
+                if (!IsUsableProperty(property)) continue;
+                if (equipmentType != null && property.DeclaringType != null && property.DeclaringType.IsAssignableFrom(equipmentType)) return property;
+                only = property;
+                matches++;
+            }
+            return matches == 1 ? only : null;
+        }
+
+        static bool IsUsableProperty(PropertyInfo property)
+        {
+            return property != null && property.CanRead && property.CanWrite && property.GetIndexParameters().Length == 0;
         }
 
         static MethodInfo FindTopLevelItemsMethod(Assembly assembly)
