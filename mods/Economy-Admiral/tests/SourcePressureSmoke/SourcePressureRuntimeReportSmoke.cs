@@ -39,6 +39,8 @@ internal static class SourcePressureRuntimeReportSmoke
         var loadedInput = new AdmiralTraderRuntimeAdapterReport
         {
             Installed = true,
+            ContractAvailable = true,
+            ContractState = "LoadedPrototypeContract",
             ModGuid = "com.admiralam.spt.admiraltrader",
             AttributionConfidence = "ExplicitAdapter",
             OfferCount = offers.Length,
@@ -63,21 +65,30 @@ internal static class SourcePressureRuntimeReportSmoke
         var absentInput = new AdmiralTraderRuntimeAdapterReport
         {
             Installed = false,
+            ContractAvailable = false,
+            ContractState = "NotInstalled",
             ModGuid = "com.admiralam.spt.admiraltrader",
             AttributionConfidence = "ExplicitAdapter",
             Offers = Array.Empty<AdmiralTraderOfferAdapterEvidence>(),
         };
         var absent = SourcePressureRuntimeReportBuilder.Build(absentInput);
+        Require(absent.LoadedAdapterCount == 0 && absent.SourceCount == 0 && absent.CapacityEvidenceCount == 0, "not-installed adapter must not fabricate evidence");
 
-        Require(absent.EvidenceCoverage == "ExplicitAdaptersOnly", "empty report must not claim full-economy coverage");
-        Require(absent.LoadedAdapterCount == 0 && absent.LoadedAdapters.Count == 0, "not-installed adapter must not be reported as loaded");
-        Require(absent.SourceCount == 0 && absent.CapacityEvidenceCount == 0, "not-installed adapter must not fabricate evidence");
-        Require(absent.Items.Count == 0 && absent.Capacity.Count == 0, "not-installed state must produce empty observational summaries");
+        var degradedInput = absentInput with
+        {
+            Installed = true,
+            ContractState = "ContractUnavailable",
+            ContractDiagnostic = "missing gameplay-policy",
+        };
+        var degraded = SourcePressureRuntimeReportBuilder.Build(degradedInput);
+        Require(degraded.LoadedAdapterCount == 0, "contract-unavailable adapter must not be counted as usable evidence");
+        Require(degraded.SourceCount == 0 && degraded.CapacityEvidenceCount == 0, "contract-unavailable adapter must suppress source-pressure evidence");
 
         MustFail("empty modGuid", () => SourcePressureRuntimeReportBuilder.Build(loadedInput with { ModGuid = " " }));
         MustFail("installed OfferCount mismatch", () => SourcePressureRuntimeReportBuilder.Build(loadedInput with { OfferCount = 6 }));
         MustFail("installed bounded count mismatch", () => SourcePressureRuntimeReportBuilder.Build(loadedInput with { BoundedRenewableOfferCount = 6 }));
-        MustFail("not-installed carrying offers", () => SourcePressureRuntimeReportBuilder.Build(absentInput with { Offers = offers, OfferCount = 7, BoundedRenewableOfferCount = 7 }));
+        MustFail("not-installed contract available", () => SourcePressureRuntimeReportBuilder.Build(absentInput with { ContractAvailable = true }));
+        MustFail("unavailable contract carrying offers", () => SourcePressureRuntimeReportBuilder.Build(degradedInput with { Offers = offers, OfferCount = 7, BoundedRenewableOfferCount = 7 }));
 
         Console.WriteLine("Economy Admiral runtime source-pressure report smoke PASS");
     }
