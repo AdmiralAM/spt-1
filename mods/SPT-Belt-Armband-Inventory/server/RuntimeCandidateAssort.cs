@@ -18,11 +18,36 @@ public sealed class RuntimeCandidateAssort(TradersTable tradersTable, ISptLogger
     {
         var trader = tradersTable.GetValueOrDefault(RagmanTraderId) ?? throw new InvalidOperationException("B&A&HB RC could not find Ragman.");
         var id = new MongoId(AssortItemId);
-        if (trader.Assort.Items.Exists(x => x.Id == id)) return Task.CompletedTask;
+        var existing = trader.Assort.Items.FirstOrDefault(x => x.Id == id);
+        if (existing != null)
+        {
+            ValidateExistingAssort();
+            logger.Success("B&A&HB RC retained existing validated Ragman LL1 offer for 1,000 RUB.");
+            return Task.CompletedTask;
+        }
         trader.Assort.Items.Add(new Item { Id = id, Template = new MongoId(RuntimeCandidateBeltItem.RuntimeCandidateTpl), ParentId = "hideout", SlotId = "hideout", Upd = new Upd { UnlimitedCount = true, StackObjectsCount = 999999 } });
         trader.Assort.BarterScheme[id] = [[new BarterScheme { Count = 1000, Template = Money.ROUBLES }]];
         trader.Assort.LoyalLevelItems[id] = 1;
         logger.Success("B&A&HB RC added to Ragman LL1 for 1,000 RUB.");
         return Task.CompletedTask;
+
+        void ValidateExistingAssort()
+        {
+            if (existing == null) throw new InvalidOperationException("B&A&HB RC assort validation received no existing offer.");
+            if (!Equals(existing.Template, new MongoId(RuntimeCandidateBeltItem.RuntimeCandidateTpl))
+                || !string.Equals(existing.ParentId, "hideout", StringComparison.Ordinal)
+                || !string.Equals(existing.SlotId, "hideout", StringComparison.Ordinal))
+                throw new InvalidOperationException("B&A&HB RC assort ID collision: existing offer points to a different item or hierarchy.");
+
+            if (!trader.Assort.BarterScheme.TryGetValue(id, out var schemes)
+                || schemes.Count != 1
+                || schemes[0].Count != 1
+                || !Equals(schemes[0][0].Template, Money.ROUBLES)
+                || schemes[0][0].Count != 1000)
+                throw new InvalidOperationException("B&A&HB RC assort ID collision: existing offer does not cost exactly 1,000 RUB.");
+
+            if (!trader.Assort.LoyalLevelItems.TryGetValue(id, out var loyaltyLevel) || loyaltyLevel != 1)
+                throw new InvalidOperationException("B&A&HB RC assort ID collision: existing offer is not registered at Ragman LL1.");
+        }
     }
 }
