@@ -52,7 +52,8 @@ public static class SourcePressureEvidenceAnalyzer
 
         var normalized = sources
             .Select(ValidateAndNormalize)
-            .DistinctBy(source => (source.ItemTemplateId, source.SourceId, source.Channel))
+            .GroupBy(source => (source.ItemTemplateId, source.SourceId, source.Channel))
+            .Select(ResolveDuplicateIdentity)
             .OrderBy(source => source.ItemTemplateId, StringComparer.Ordinal)
             .ThenBy(source => source.Channel)
             .ThenBy(source => source.SourceId, StringComparer.Ordinal)
@@ -95,6 +96,26 @@ public static class SourcePressureEvidenceAnalyzer
             SourceId = source.SourceId.Trim(),
             ProvenanceClass = source.ProvenanceClass.Trim(),
         };
+    }
+
+    private static AcquisitionSourceEvidence ResolveDuplicateIdentity(
+        IGrouping<(string ItemTemplateId, string SourceId, AcquisitionChannel Channel), AcquisitionSourceEvidence> group
+    )
+    {
+        var candidates = group.ToList();
+        var first = candidates[0];
+
+        if (candidates.Any(candidate =>
+            candidate.Renewable != first.Renewable
+            || candidate.EarliestProgressionLevel != first.EarliestProgressionLevel
+            || !string.Equals(candidate.ProvenanceClass, first.ProvenanceClass, StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException(
+                $"Economy Admiral source pressure: conflicting evidence for item '{first.ItemTemplateId}', source '{first.SourceId}', channel '{first.Channel}'."
+            );
+        }
+
+        return first;
     }
 
     private static ItemSourcePressureEvidence BuildItemEvidence(IGrouping<string, AcquisitionSourceEvidence> group)
