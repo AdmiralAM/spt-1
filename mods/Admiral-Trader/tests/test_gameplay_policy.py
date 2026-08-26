@@ -26,16 +26,30 @@ class GameplayPolicyTests(unittest.TestCase):
         cls.questassort = load(DB / "questassort.json")
         cls.base = load(DB / "base.json")
 
-    def test_campaign_shape_matches_doctrine(self):
+    def test_campaign_shape_matches_current_backbone_without_artificial_cap(self):
         campaign = self.policy["campaign"]
+        current_count = len(self.access["quests"]) + len(self.arsenal["quests"])
         self.assertEqual(len(self.access["quests"]), campaign["accessQuestCount"])
         self.assertEqual(len(self.arsenal["quests"]), campaign["arsenalQuestCount"])
-        self.assertEqual(
-            len(self.access["quests"]) + len(self.arsenal["quests"]),
-            campaign["expectedQuestCount"],
-        )
+        self.assertGreaterEqual(current_count, campaign["minimumAuthoredQuestCount"])
+        self.assertIsNone(campaign["questCountArtificialCap"])
         self.assertFalse(campaign["repeatableQuestsAllowed"])
         self.assertFalse(campaign["foundInRaidBusyworkAllowed"])
+        self.assertFalse(campaign["rawTechnicalObjectiveTextAllowed"])
+
+    def test_gameplay_alpha_requires_non_quest_gated_baseline_stock(self):
+        stock = self.policy["traderStock"]
+        self.assertTrue(stock["baselineStockRequired"])
+        self.assertFalse(stock["baselineOffersMustBeQuestGated"])
+        self.assertTrue(stock["baselineOffersMustBeFinite"])
+        self.assertTrue(stock["relationshipStockAllowed"])
+        self.assertTrue(stock["milestoneOffersMayBeQuestGated"])
+        self.assertTrue(stock["milestoneOffersMustBeFinite"])
+        self.assertFalse(stock["generalPurposeSupermarketAllowed"])
+        self.assertEqual(
+            set(stock["directOverlapAuditRequired"]),
+            {"vanilla", "Scorpion", "Artem"},
+        )
 
     def test_access_protocol_avoids_collection_busywork(self):
         rules = self.access["designRules"]
@@ -103,13 +117,14 @@ class GameplayPolicyTests(unittest.TestCase):
         self.assertFalse(self.ammo["specialWeapons"]["permanentOffer"])
         self.assertTrue(self.ammo["specialWeapons"]["sampleOnly"])
 
-    def test_trader_logistics_are_finite_quest_gated_and_bounded(self):
+    def test_current_milestone_logistics_are_finite_quest_gated_and_bounded(self):
         logistics = self.policy["logistics"]
         items = self.assort["items"]
-        success = self.questassort["Success"]
-        self.assertEqual(len(items), logistics["expectedPermanentOfferCount"])
-        self.assertEqual(len(success), logistics["expectedPermanentOfferCount"])
-        self.assertEqual(len(self.ammo["offers"]), logistics["expectedAmmoPermanentOfferCount"])
+        success = self.questassort["success"]
+        self.assertEqual(set(self.questassort), {"started", "success", "fail"})
+        self.assertEqual(len(items), logistics["expectedMilestonePermanentOfferCount"])
+        self.assertEqual(len(success), logistics["expectedMilestonePermanentOfferCount"])
+        self.assertEqual(len(self.ammo["offers"]), logistics["expectedAmmoMilestoneOfferCount"])
 
         item_ids = {item["_id"] for item in items}
         self.assertEqual(set(success), item_ids)
@@ -150,10 +165,11 @@ class GameplayPolicyTests(unittest.TestCase):
         logistics = self.policy["logistics"]
         tiers = self.base["loyaltyLevels"]
 
-        self.assertEqual(loyalty["role"], "relationship-status-only")
+        self.assertEqual(loyalty["role"], "relationship-status")
         self.assertFalse(loyalty["capabilityAuthority"])
         self.assertFalse(loyalty["standingMayBypassQuestGates"])
         self.assertFalse(loyalty["salesSumMayGateProgression"])
+        self.assertTrue(loyalty["relationshipStockMayUseLoyalty"])
         self.assertFalse(loyalty["servicesMayUnlockByLoyalty"])
         self.assertFalse(loyalty["priceAdvantagesMayUnlockByLoyalty"])
         self.assertEqual(len(tiers), loyalty["expectedTierCount"])
@@ -163,10 +179,10 @@ class GameplayPolicyTests(unittest.TestCase):
         self.assertFalse(self.base["repair"]["availability"])
         self.assertFalse(self.base["insurance"]["availability"])
 
-        offer_ids = {item["_id"] for item in self.assort["items"]}
-        self.assertEqual(set(self.questassort["Success"]), offer_ids)
+        milestone_offer_ids = {item["_id"] for item in self.assort["items"]}
+        self.assertEqual(set(self.questassort["success"]), milestone_offer_ids)
         self.assertEqual(
-            {self.assort["loyal_level_items"][offer_id] for offer_id in offer_ids},
+            {self.assort["loyal_level_items"][offer_id] for offer_id in milestone_offer_ids},
             {logistics["questUnlockLoyaltyLevel"]},
         )
 
@@ -180,6 +196,13 @@ class GameplayPolicyTests(unittest.TestCase):
         self.assertEqual(total, loyalty["authoredCampaignStandingTotal"])
         self.assertGreaterEqual(total, max(loyalty["expectedStandingThresholds"]))
 
+    def test_reward_communication_policy_rejects_hidden_payoff_design(self):
+        reward = self.policy["rewardCommunication"]
+        self.assertTrue(reward["importantUnlockMustBeExplainedInQuestText"])
+        self.assertTrue(reward["standingMustBePlayerLegible"])
+        self.assertFalse(reward["genericMoneyOnlyPreferred"])
+        self.assertTrue(reward["distinctiveItemOrSamplePreferredForMilestones"])
+
     def test_ammo_offer_manifest_matches_packaged_assort(self):
         packaged_by_tpl = {item["_tpl"]: item for item in self.assort["items"]}
         for family, offer in self.ammo["offers"].items():
@@ -188,7 +211,7 @@ class GameplayPolicyTests(unittest.TestCase):
             self.assertEqual(item["upd"]["BuyRestrictionMax"], offer["buyRestriction"], family)
             price = self.assort["barter_scheme"][item["_id"]][0][0]["count"]
             self.assertEqual(price, offer["priceRub"], family)
-            self.assertEqual(self.questassort["Success"][item["_id"]], offer["questId"], family)
+            self.assertEqual(self.questassort["success"][item["_id"]], offer["questId"], family)
 
 
 if __name__ == "__main__":
