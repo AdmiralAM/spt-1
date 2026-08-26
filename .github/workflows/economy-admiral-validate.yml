@@ -169,6 +169,9 @@ jobs:
       - name: Smoke-test attribution evidence domain
         shell: pwsh
         run: dotnet run --project mods/Economy-Admiral/tests/AttributionEvidenceSmoke/AttributionEvidenceSmoke.csproj -c Release --nologo
+      - name: Smoke-test health invariant domain
+        shell: pwsh
+        run: dotnet run --project mods/Economy-Admiral/tests/HealthInvariantsSmoke/HealthInvariantsSmoke.csproj -c Release --nologo
       - name: Stage candidate
         shell: pwsh
         env:
