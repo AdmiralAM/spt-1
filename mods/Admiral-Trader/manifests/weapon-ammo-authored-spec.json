@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "status": "authored-spec",
   "domain": "weaponAmmo",
   "traderId": "d5c27bb3169f8dfbc13f6b69",
@@ -20,7 +20,9 @@
     "controlledAmmoUnlocksOnly": true,
     "highEndAmmoUnlimited": false,
     "maximumPermanentUnlocksPerQuest": 1,
-    "maximumFamilyQuestCount": 3,
+    "currentBackboneStagesPerFamily": 3,
+    "questCountPolicy": "no-artificial-cap-quality-gated-expansion",
+    "preserveStrongAuthoredConceptsRegardlessOfCampaignSize": true,
     "containerRewards": false,
     "specialWeaponPermanentAmmoUnlock": false
   },
