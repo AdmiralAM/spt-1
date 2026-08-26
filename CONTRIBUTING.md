@@ -15,6 +15,16 @@ The default lifecycle is:
 
 `Issue → dedicated short-lived branch → commits/pushes to that branch → Pull Request → module-specific CI → runtime/user validation when required → deliberate merge → delete temporary branch → cleanup/update docs`
 
+### Product identity is a repository contract
+
+Every maintained module has one official product name and authoritative version metadata. Before changing either, establish the current README and machine-readable project/package authority.
+
+Current product name/version must agree across the root module index, module README, affected project/package metadata, maintained runtime/publication manifest, workflow/package display naming, and durable current-state documentation. Runtime README/display identity follows the official product name.
+
+Established technical identifiers such as directory names, GUIDs, namespaces, endpoints, binary names, upstream names, and runtime branch names may remain when changing them would create compatibility or migration risk. Their compatibility/provenance role must be documented explicitly; they must not be presented as the current product name.
+
+Do not invent version bumps for documentation cleanup. A rename/version PR must update all affected identity surfaces in the same coherent integration slice or document the exact compatibility exception.
+
 ### `main` is an integration point, not a workspace
 
 Normal development, diagnostics, archaeology, experiments, temporary validation, and progress preservation belong on the workstream branch. Do not push intermediate work to `main` merely to save it, expose it to CI, or make it visible to another process.
@@ -87,13 +97,22 @@ Development validation is module-specific and independent. A module workflow mus
 
 The repository-wide **Publish SPT Mod Suite** workflow is a controlled publication operation, not ordinary development CI. It is manual-only unless the repository policy is deliberately changed. Do not invoke, modify, or depend on it merely to validate a feature branch.
 
-Runtime branches are install-only generated channels. They are not development branches.
+Runtime branches are install-only generated channels. They are not development branches. Their maintained manifests and human-readable runtime identity must use the official product name; compatibility branch/binary identifiers may remain only under the documented identity rules above.
 
 ## Clean-as-you-go
 
 Completing a task includes removing material that became obsolete because of the task: temporary diagnostics, trigger files, generated evidence, dead branches, duplicate package copies, and superseded current-state documentation.
 
 Do not leave cleanup for a future repository-wide sweep when it can be safely completed with the work that created the obsolete material.
+
+For branch cleanup, classify every candidate before deletion:
+
+- `delete-now` — no unique useful work remains and the branch is merged, expired, superseded, or deliberately discarded;
+- `retain-active` — active work, review, or required runtime validation still depends on it;
+- `retain-evidence` — unique useful evidence/recovery state remains and the retention reason is documented;
+- `manual-action` — deletion/cleanup is justified but the available interface cannot perform it safely.
+
+When classification is ambiguous, retain and investigate. One-time cleanup queues/evidence belong in Issues, PR comments, or explicit manual reports rather than durable source files.
 
 The completion rule is:
 

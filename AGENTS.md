@@ -31,6 +31,18 @@ Never assume work is merged because a PR exists, a branch exists, or a chat says
 
 If repo evidence conflicts with chat memory, the repository state and latest explicit user direction win. Stop and report the conflict instead of guessing.
 
+## Product identity and version contract
+
+Every maintained module has one official product name and authoritative version metadata. Treat those values as repository contracts, not cosmetic prose.
+
+- Before changing a module name or version, identify its current README and machine-readable package/project metadata authority.
+- Current product names and versions must agree across the root module index, module README, affected project/package metadata, maintained runtime/publication manifest, workflow/package display naming, and durable current-state documentation.
+- Runtime README/display identity must use the official product name.
+- Historical upstream names, directory names, GUIDs, namespaces, endpoints, binary names, and runtime branch names may remain only when they are required for compatibility/provenance and that retained role is documented explicitly.
+- Do not silently treat a compatibility identifier as the current product name.
+- Do not invent a version bump merely to normalize documentation. Version changes are release decisions owned by the affected module workstream.
+- A rename/version PR must update all affected identity surfaces in the same integration slice or explicitly document a compatibility exception.
+
 ## Mandatory isolation
 
 Treat every SPT mod/workstream as independent by default.
@@ -120,6 +132,15 @@ A larger Actions quota is capacity for useful work, not permission to waste runn
 Generated binaries, build/test logs, CI metadata, one-off trigger/evidence files, dependency caches, temporary diagnostics, obsolete package copies, and dead branches do not belong in the long-term source tree.
 
 Clean up safely as part of completing the work. Never remove active working data or unique unmerged changes merely for cosmetic cleanliness.
+
+For every branch-cleanup pass, classify each candidate explicitly before deletion:
+
+- `delete-now` — useful state is merged, expired, superseded, or deliberately discarded and no unique work remains;
+- `retain-active` — active implementation, review, or required runtime validation still depends on it;
+- `retain-evidence` — unique useful evidence/recovery material remains and its retention reason is documented;
+- `manual-action` — cleanup is justified but the available GitHub interface cannot perform the required ref operation safely.
+
+Ambiguous branches are never `delete-now`. Cleanup queues and one-time evidence belong in Issues, PR comments, or explicit manual reports, not permanent source-tree files.
 
 ## Priority
 
