@@ -44,28 +44,16 @@ public sealed class EnforcementPlanService(
             .ThenBy(mutation => mutation.Dimension, StringComparer.Ordinal)
             .ToList();
 
-        var applied = new List<AppliedRewardMutation>();
-        var rolledBack = false;
-        string? transactionError = null;
-
-        if (config.Mode == EconomyMode.Enforce && proposals.Count > 0)
+        NumericRewardTransactionOutcome transaction = new()
         {
-            try
-            {
-                ApplyTransaction(proposals, applied);
-                VerifyAppliedTransaction(proposals, applied);
-            }
-            catch (Exception exception)
-            {
-                rolledBack = true;
-                transactionError = exception.Message;
-                Rollback(applied);
-                VerifyRollback(applied);
-                applied.Clear();
-            }
-        }
+            Committed = false,
+            RolledBack = false,
+            Results = Array.Empty<NumericRewardTransactionResult>(),
+        };
+        if (config.Mode == EconomyMode.Enforce && proposals.Count > 0)
+            transaction = NumericRewardTransactionCore.Execute(BuildTransactionRequests(proposals));
 
-        var appliedByKey = applied.ToDictionary(
+        var appliedByKey = transaction.Results.ToDictionary(
             entry => MutationKey(entry.QuestId, entry.Dimension),
             StringComparer.Ordinal);
         var finalizedCandidates = candidates
@@ -105,10 +93,10 @@ public sealed class EnforcementPlanService(
             EnforceRequested = config.Mode == EconomyMode.Enforce,
             ApplyMutations = config.Mode == EconomyMode.Enforce,
             PlannedMutationCount = proposals.Count,
-            MutationCount = applied.Count,
-            TransactionCommitted = config.Mode == EconomyMode.Enforce && proposals.Count > 0 && !rolledBack,
-            TransactionRolledBack = rolledBack,
-            TransactionError = transactionError,
+            MutationCount = transaction.Results.Count,
+            TransactionCommitted = config.Mode == EconomyMode.Enforce && proposals.Count > 0 && transaction.Committed,
+            TransactionRolledBack = transaction.RolledBack,
+            TransactionError = transaction.Error,
             CandidateCount = finalizedCandidates.Count,
             CandidateCountsByProvenance = countsByProvenance,
             CandidateCountsByEligibility = countsByEligibility,
@@ -124,10 +112,10 @@ public sealed class EnforcementPlanService(
 
         if (config.Mode == EconomyMode.Enforce)
         {
-            if (rolledBack)
-                logger.Error($"[Economy Admiral] Enforce transaction rolled back: planned={proposals.Count}, error={transactionError}; plan={planPath}");
+            if (transaction.RolledBack)
+                logger.Error($"[Economy Admiral] Enforce transaction rolled back: planned={proposals.Count}, error={transaction.Error}; plan={planPath}");
             else
-                logger.Warning($"[Economy Admiral] Enforce committed: planned={proposals.Count}, mutations={applied.Count}; plan={planPath}");
+                logger.Warning($"[Economy Admiral] Enforce committed: planned={proposals.Count}, mutations={transaction.Results.Count}; plan={planPath}");
         }
         else
         {
@@ -135,6 +123,32 @@ public sealed class EnforcementPlanService(
         }
 
         return report;
+    }
+
+    private IReadOnlyList<NumericRewardTransactionRequest> BuildTransactionRequests(IReadOnlyList<NumericRewardMutation> proposals)
+    {
+        var requests = new List<NumericRewardTransactionRequest>(proposals.Count);
+        foreach (var proposal in proposals)
+        {
+            if (!templates.Quests.TryGetValue(proposal.QuestId, out var quest))
+                throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' disappeared from final DB.");
+
+            var rewards = GetSuccessRewards(quest, proposal.Dimension).ToList();
+            if (rewards.Count == 0)
+                throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' has no Success {proposal.Dimension} reward records.");
+
+            requests.Add(new NumericRewardTransactionRequest
+            {
+                QuestId = proposal.QuestId,
+                Dimension = proposal.Dimension,
+                ExpectedBefore = proposal.Before,
+                Target = proposal.Target,
+                Slots = rewards.Select(reward => new NumericRewardSlot(
+                    () => reward.Value ?? 0d,
+                    value => reward.Value = value)).ToList(),
+            });
+        }
+        return requests;
     }
 
     private static EnforcementPlanCandidate BuildCandidate(
@@ -173,13 +187,13 @@ public sealed class EnforcementPlanService(
             if (potentialMutationDimensions.Contains("Experience", StringComparer.Ordinal))
             {
                 var target = ResolveExperienceTarget(row, analysis, manualOverride);
-                if (target is { } xpTarget && ShouldPlan(row.Experience, xpTarget, manualOverride?.ExperienceTarget is not null))
+                if (target is { } xpTarget && NumericRewardTransactionCore.NeedsMutation(row.Experience, xpTarget, manualOverride?.ExperienceTarget is not null))
                     mutations.Add(BuildMutation(row, "Experience", row.Experience, xpTarget, manualOverride?.ExperienceTarget is not null));
             }
             if (potentialMutationDimensions.Contains("TraderStanding", StringComparer.Ordinal))
             {
                 var target = ResolveStandingTarget(row, analysis, manualOverride);
-                if (target is { } standingTarget && ShouldPlan(row.TraderStanding, standingTarget, manualOverride?.TraderStandingTarget is not null))
+                if (target is { } standingTarget && NumericRewardTransactionCore.NeedsMutation(row.TraderStanding, standingTarget, manualOverride?.TraderStandingTarget is not null))
                     mutations.Add(BuildMutation(row, "TraderStanding", row.TraderStanding, standingTarget, manualOverride?.TraderStandingTarget is not null));
             }
         }
@@ -251,40 +265,6 @@ public sealed class EnforcementPlanService(
         return Math.Round(Math.CopySign(magnitude, row.TraderStanding), 4);
     }
 
-    private static bool ShouldPlan(double current, double target, bool manualExact)
-    {
-        if (!double.IsFinite(current) || !double.IsFinite(target)) return false;
-        if (manualExact) return Math.Abs(current - target) > 0.0000001;
-        return Math.Abs(current) > Math.Abs(target) + 0.0000001;
-    }
-
-    private void ApplyTransaction(IReadOnlyList<NumericRewardMutation> proposals, List<AppliedRewardMutation> applied)
-    {
-        foreach (var proposal in proposals)
-        {
-            if (!templates.Quests.TryGetValue(proposal.QuestId, out var quest))
-                throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' disappeared from final DB.");
-
-            var rewards = GetSuccessRewards(quest, proposal.Dimension).ToList();
-            if (rewards.Count == 0)
-                throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' has no Success {proposal.Dimension} reward records.");
-
-            var beforeSlots = rewards.Select(reward => reward.Value ?? 0d).ToArray();
-            var beforeTotal = beforeSlots.Sum();
-            if (Math.Abs(beforeTotal - proposal.Before) > Tolerance(proposal.Dimension))
-                throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' {proposal.Dimension} drifted between analysis and apply: analysis={proposal.Before}, db={beforeTotal}.");
-
-            var afterSlots = ScaleSlots(beforeSlots, proposal.Target, proposal.Dimension);
-            var entry = new AppliedRewardMutation(proposal.QuestId, proposal.Dimension, rewards, beforeSlots, afterSlots, proposal.Before, proposal.Target, proposal.Before);
-            applied.Add(entry);
-
-            for (var index = 0; index < rewards.Count; index++)
-                rewards[index].Value = afterSlots[index];
-
-            entry.After = rewards.Sum(reward => reward.Value ?? 0d);
-        }
-    }
-
     private static IEnumerable<Reward> GetSuccessRewards(Quest quest, string dimension)
     {
         if (quest.Rewards is null) yield break;
@@ -294,60 +274,6 @@ public sealed class EnforcementPlanService(
             if (!string.Equals(pair.Key, "Success", StringComparison.OrdinalIgnoreCase)) continue;
             foreach (var reward in pair.Value)
                 if (reward.Type == type) yield return reward;
-        }
-    }
-
-    private static double[] ScaleSlots(IReadOnlyList<double> before, double target, string dimension)
-    {
-        if (before.Count == 0) throw new InvalidOperationException("Cannot scale an empty reward set.");
-        var total = before.Sum();
-        if (Math.Abs(total) < 0.0000001)
-        {
-            if (before.Count != 1) throw new InvalidOperationException("Cannot deterministically distribute a non-zero target across multiple zero-valued reward records.");
-            return [Round(target, dimension)];
-        }
-
-        var result = new double[before.Count];
-        var assigned = 0d;
-        for (var index = 0; index < before.Count - 1; index++)
-        {
-            result[index] = Round(before[index] / total * target, dimension);
-            assigned += result[index];
-        }
-        result[^1] = Round(target - assigned, dimension);
-        return result;
-    }
-
-    private static void VerifyAppliedTransaction(IReadOnlyList<NumericRewardMutation> proposals, IReadOnlyList<AppliedRewardMutation> applied)
-    {
-        if (applied.Count != proposals.Count)
-            throw new InvalidOperationException($"Enforce applied count mismatch: planned={proposals.Count}, applied={applied.Count}.");
-
-        foreach (var entry in applied)
-        {
-            var actual = entry.Rewards.Sum(reward => reward.Value ?? 0d);
-            if (Math.Abs(actual - entry.Target) > Tolerance(entry.Dimension))
-                throw new InvalidOperationException($"Enforce verification failed for '{entry.QuestId}' {entry.Dimension}: target={entry.Target}, actual={actual}.");
-        }
-    }
-
-    private static void Rollback(IEnumerable<AppliedRewardMutation> applied)
-    {
-        foreach (var entry in applied.Reverse())
-            for (var index = 0; index < entry.Rewards.Count; index++)
-                entry.Rewards[index].Value = entry.BeforeSlots[index];
-    }
-
-    private static void VerifyRollback(IEnumerable<AppliedRewardMutation> applied)
-    {
-        foreach (var entry in applied)
-        {
-            for (var index = 0; index < entry.Rewards.Count; index++)
-            {
-                var actual = entry.Rewards[index].Value ?? 0d;
-                if (Math.Abs(actual - entry.BeforeSlots[index]) > Tolerance(entry.Dimension))
-                    throw new InvalidOperationException($"Economy Admiral rollback verification failed for '{entry.QuestId}' {entry.Dimension} slot {index}.");
-            }
         }
     }
 
@@ -394,30 +320,7 @@ public sealed class EnforcementPlanService(
     }
 
     private static string MutationKey(string questId, string dimension) => $"{questId}\u001f{dimension}";
-    private static double Round(double value, string dimension) => Math.Round(value, dimension == "Experience" ? 0 : 4);
-    private static double Tolerance(string dimension) => dimension == "Experience" ? 0.001 : 0.00001;
-
     private sealed record MutationEligibility(string Class, bool PotentiallyEligible, string Reason);
-
-    private sealed class AppliedRewardMutation(
-        string questId,
-        string dimension,
-        List<Reward> rewards,
-        double[] beforeSlots,
-        double[] afterSlots,
-        double before,
-        double target,
-        double after)
-    {
-        public string QuestId { get; } = questId;
-        public string Dimension { get; } = dimension;
-        public List<Reward> Rewards { get; } = rewards;
-        public double[] BeforeSlots { get; } = beforeSlots;
-        public double[] AfterSlots { get; } = afterSlots;
-        public double Before { get; } = before;
-        public double Target { get; } = target;
-        public double After { get; set; } = after;
-    }
 }
 
 public sealed record EnforcementPlanReport
