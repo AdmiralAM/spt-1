@@ -20,9 +20,12 @@ namespace SPTBeltArmbandInventory
         }
 
         internal static Action<string> LogWarning;
-        internal static Type GridWindowType;
         static readonly List<PendingWindow> PendingWindows = new List<PendingWindow>();
-        static int scanFrame;
+
+        internal static bool HasPending
+        {
+            get { return PendingWindows.Count != 0; }
+        }
 
         internal static void Observe(object window, object[] args)
         {
@@ -46,7 +49,6 @@ namespace SPTBeltArmbandInventory
 
         internal static void Flush()
         {
-            ScanActiveWindows();
             if (PendingWindows.Count == 0) return;
 
             for (int i = 0; i < PendingWindows.Count; i++)
@@ -68,24 +70,6 @@ namespace SPTBeltArmbandInventory
         {
             PendingWindows.Clear();
             LogWarning = null;
-            GridWindowType = null;
-            scanFrame = 0;
-        }
-
-        static void ScanActiveWindows()
-        {
-            if (GridWindowType == null || ++scanFrame % 15 != 0) return;
-
-            UnityEngine.Object[] objects;
-            try { objects = Resources.FindObjectsOfTypeAll(GridWindowType); }
-            catch { return; }
-
-            for (int i = 0; i < objects.Length; i++)
-            {
-                Component component = objects[i] as Component;
-                if (component == null || component.gameObject == null || !component.gameObject.activeInHierarchy) continue;
-                TryAdjust(component);
-            }
         }
 
         static bool TryAdjust(object window)
@@ -97,37 +81,14 @@ namespace SPTBeltArmbandInventory
             RectTransform rect = component.transform as RectTransform;
             if (rect == null) return false;
 
-            Vector2 gridSize = MeasureVisibleGrid(component);
-            float width = AccessoryGridPolicy.CompactWindowWidth(RuntimeIdentity.CandidateGridColumns, gridSize.x);
-            float height = AccessoryGridPolicy.CompactWindowHeight(RuntimeIdentity.CandidateGridRows, gridSize.y);
+            float width = AccessoryGridPolicy.CompactWindowWidth(RuntimeIdentity.CandidateGridColumns);
+            float height = AccessoryGridPolicy.CompactWindowHeight(RuntimeIdentity.CandidateGridRows);
             if (Math.Abs(rect.rect.width - width) < 0.5f && Math.Abs(rect.rect.height - height) < 0.5f) return true;
 
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
             ApplyLayoutElement(component.gameObject, width, height);
             return true;
-        }
-
-        static Vector2 MeasureVisibleGrid(Component root)
-        {
-            Component[] components;
-            try { components = root.GetComponentsInChildren<Component>(true); }
-            catch { return Vector2.zero; }
-
-            Vector2 best = Vector2.zero;
-            for (int i = 0; i < components.Length; i++)
-            {
-                Component component = components[i];
-                if (component == null || component.GetType().FullName != "EFT.UI.DragAndDrop.GridView") continue;
-                RectTransform rect = component.transform as RectTransform;
-                if (rect == null) continue;
-
-                float width = rect.rect.width > 0f ? rect.rect.width : rect.sizeDelta.x;
-                float height = rect.rect.height > 0f ? rect.rect.height : rect.sizeDelta.y;
-                if (width <= 0f || height <= 0f) continue;
-                if (width * height > best.x * best.y) best = new Vector2(width, height);
-            }
-            return best;
         }
 
         static object ReadWindowItem(object window)
@@ -225,7 +186,6 @@ namespace SPTBeltArmbandInventory
                     return Fail("SPT 4.1 GridWindow.Show shape changed; compact ArmBand window sizing is disabled.");
 
                 GridWindowSizingRuntime.LogWarning = logWarning;
-                GridWindowSizingRuntime.GridWindowType = gridWindowType;
                 if (logInfo != null) logInfo("B&A&HB compact ArmBand GridWindow sizing installed.");
                 return true;
             }
@@ -241,7 +201,9 @@ namespace SPTBeltArmbandInventory
         {
             if (method == null || !string.Equals(method.Name, "Show", StringComparison.Ordinal) || method.IsAbstract || method.ContainsGenericParameters) return false;
             ParameterInfo[] parameters = method.GetParameters();
-            return parameters.Length == 5 && parameters[0].ParameterType.FullName == "EFT.InventoryLogic.CompoundItem";
+            return method.ReturnType == typeof(void)
+                && parameters.Length > 0
+                && parameters[0].ParameterType.FullName == "EFT.InventoryLogic.CompoundItem";
         }
 
         static MethodInfo PostfixFactory(MethodBase original)

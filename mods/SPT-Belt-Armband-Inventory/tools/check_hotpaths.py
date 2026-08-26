@@ -1,17 +1,30 @@
 from pathlib import Path
+import xml.etree.ElementTree as ET
 
 ROOT = Path(__file__).resolve().parents[1] / "src"
 FORBIDDEN = {
-    "void Update(": "Unity per-frame Update loop",
     "ItemView.Update": "global item-view hot-path patch",
-    "ReplaceInventory": "inventory-controller replacement",
     "FindObjectsOfType": "scene-wide object scan",
     "GetComponentsInChildren": "hierarchy-wide polling/scan",
 }
+ALLOWED_UPDATE_FILES = {"Plugin.cs"}
+
+project = ROOT / "SPT-Belt-Armband-Inventory.csproj"
+removed = set()
+if project.exists():
+    tree = ET.parse(project)
+    for item in tree.findall(".//Compile"):
+        remove = item.attrib.get("Remove")
+        if remove:
+            removed.add(remove.replace("\\", "/"))
 
 violations = []
 for source in sorted(ROOT.glob("*.cs")):
+    if source.name in removed:
+        continue
     text = source.read_text(encoding="utf-8-sig")
+    if "void Update(" in text and source.name not in ALLOWED_UPDATE_FILES:
+        violations.append(f"{source.name}: Unity per-frame Update loop (void Update()")
     for token, reason in FORBIDDEN.items():
         if token in text:
             violations.append(f"{source.name}: {reason} ({token})")

@@ -146,8 +146,8 @@ namespace SPTBeltArmbandInventory
 
         void Update()
         {
-            if (gridWindowSizingPatches != null) GridWindowSizingRuntime.Flush();
-            if (fastAccessSyncPatches != null) FastAccessBeltSyncRuntime.Flush();
+            if (gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending) GridWindowSizingRuntime.Flush();
+            if (fastAccessSyncPatches != null && FastAccessBeltSyncRuntime.HasPending) FastAccessBeltSyncRuntime.Flush();
         }
 
         bool LegacyBeltSlotDetected()

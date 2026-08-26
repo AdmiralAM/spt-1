@@ -73,7 +73,9 @@ internal static class Program
         Assert(AccessoryGridPolicy.FitsDeclaredCapacity(1, 2, 2), "1x2 grid accepts two items");
         Assert(!AccessoryGridPolicy.FitsDeclaredCapacity(1, 2, 3), "1x2 grid rejects a third item");
         Assert(Math.Abs(AccessoryGridPolicy.CompactWindowWidth(1, 63f) - 96f) < 0.01f, "compact 1x2 window width is clamped to the compact minimum");
-        Assert(Math.Abs(AccessoryGridPolicy.CompactWindowHeight(2, 126f) - 168f) < 0.01f, "compact 1x2 window height follows two measured cells plus chrome padding");
+        Assert(Math.Abs(AccessoryGridPolicy.CompactWindowWidth(1) - 96f) < 0.01f, "compact 1x2 window width can be computed without runtime hierarchy measurement");
+        Assert(Math.Abs(AccessoryGridPolicy.CompactWindowHeight(2, 126f) - 160f) < 0.01f, "compact 1x2 window height follows two cells plus minimal native chrome padding");
+        Assert(Math.Abs(AccessoryGridPolicy.CompactWindowHeight(2) - 160f) < 0.01f, "compact 1x2 window height can be computed without runtime hierarchy measurement");
         Assert(RuntimeIdentity.CandidateGridColumns == 1 && RuntimeIdentity.CandidateGridRows == 2, "shared runtime contract preserves the proven one-column two-row grid");
         Assert(RuntimeCustomBeltTypePatches.CustomTemplateParentId == RuntimeIdentity.SearchableTemplateParentId, "client template registration uses the shared runtime identity");
         Assert(RuntimeCustomBeltTypePatches.CustomBeltParentId == RuntimeIdentity.BeltItemParentId, "client item registration uses the shared runtime identity");

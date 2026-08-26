@@ -6,9 +6,9 @@ namespace SPTBeltArmbandInventory
     {
         internal const float CellPixels = 63f;
         internal const float WindowHorizontalPadding = 24f;
-        internal const float WindowVerticalPadding = 42f;
+        internal const float WindowVerticalPadding = 34f;
         internal const float MinimumWindowWidth = 96f;
-        internal const float MinimumWindowHeight = 150f;
+        internal const float MinimumWindowHeight = 136f;
 
         internal static bool IsValid(int columns, int rows)
         {
@@ -45,11 +45,21 @@ namespace SPTBeltArmbandInventory
             return width < MinimumWindowWidth ? MinimumWindowWidth : width;
         }
 
+        internal static float CompactWindowWidth(int columns)
+        {
+            return CompactWindowWidth(columns, 0f);
+        }
+
         internal static float CompactWindowHeight(int rows, float measuredGridHeight)
         {
             float gridHeight = measuredGridHeight > 0f ? measuredGridHeight : rows * CellPixels;
             float height = gridHeight + WindowVerticalPadding;
             return height < MinimumWindowHeight ? MinimumWindowHeight : height;
+        }
+
+        internal static float CompactWindowHeight(int rows)
+        {
+            return CompactWindowHeight(rows, 0f);
         }
     }
 }

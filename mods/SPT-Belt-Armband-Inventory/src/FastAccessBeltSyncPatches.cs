@@ -55,6 +55,11 @@ namespace SPTBeltArmbandInventory
         internal static MethodInfo GetTopLevelItemsMethod;
         static readonly List<PendingRefresh> PendingViews = new List<PendingRefresh>();
 
+        internal static bool HasPending
+        {
+            get { return PendingViews.Count != 0; }
+        }
+
         internal static void Queue(object view, object eventArgs, bool added)
         {
             if (view == null || eventArgs == null || ControllerField == null || ShowMethod == null) return;
