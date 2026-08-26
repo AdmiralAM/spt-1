@@ -1,4 +1,5 @@
 import json
+import math
 import unittest
 from collections import defaultdict
 from pathlib import Path
@@ -127,6 +128,22 @@ class GameplayPolicyTests(unittest.TestCase):
                 self.assort["loyal_level_items"][item["_id"]],
                 logistics["questUnlockLoyaltyLevel"],
             )
+
+        ammo_units = sum(offer["stockPerReset"] for offer in self.ammo["offers"].values())
+        full_reset_spend = sum(
+            offer["stockPerReset"] * offer["priceRub"]
+            for offer in self.ammo["offers"].values()
+        )
+        self.assertLessEqual(ammo_units, logistics["maximumAmmoUnitsAcrossPermanentOffersPerReset"])
+        self.assertLessEqual(full_reset_spend, logistics["maximumAmmoFullResetSpendRub"])
+
+        pricing = self.ammo["pricing"]
+        self.assertLessEqual(pricing["multiplier"], logistics["maximumReferencePriceMultiplier"])
+        for family, offer in self.ammo["offers"].items():
+            rounded_expected = math.ceil(
+                offer["referenceRub"] * pricing["multiplier"] / pricing["roundUpToRub"]
+            ) * pricing["roundUpToRub"]
+            self.assertEqual(offer["priceRub"], rounded_expected, family)
 
     def test_loyalty_is_relationship_status_not_capability_authority(self):
         loyalty = self.policy["loyalty"]
