@@ -2,9 +2,7 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$SptRoot,
 
-    [string]$ExpectedHeadSha = '',
-
-    [switch]$Install
+    [string]$ExpectedHeadSha = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -174,13 +172,4 @@ if (
 
 Write-Host "Candidate staged at: $stageRoot"
 Write-Host "Candidate provenance: source=$sourceHead compileMode=exact-installed-runtime runtimeCore=$coreVersion runtimeCoreSha256=$coreSha256"
-
-if ($Install) {
-    $destination = Join-Path $runtimeRoot 'user\mods\Admiral-Trader'
-    if (Test-Path $destination) {
-        Remove-Item $destination -Recurse -Force
-    }
-    New-Item (Split-Path $destination -Parent) -ItemType Directory -Force | Out-Null
-    Copy-Item $stageMod $destination -Recurse
-    Write-Host "Installed test candidate to: $destination"
-}
+Write-Host "Staging-only builder completed. Use package_spt413_exact_candidate.ps1 for validated archive creation and optional rollback-safe installation."
