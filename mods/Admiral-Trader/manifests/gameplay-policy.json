@@ -1,39 +1,63 @@
 {
-  "schemaVersion": 3,
-  "productRole": "capability-broker",
+  "schemaVersion": 4,
+  "productRole": "specialist-trader-and-capability-broker",
   "campaign": {
-    "expectedQuestCount": 31,
+    "minimumAuthoredQuestCount": 31,
+    "questCountArtificialCap": null,
     "accessQuestCount": 10,
     "arsenalQuestCount": 21,
     "weaponFamilyCount": 7,
     "stagesPerWeaponFamily": 3,
     "familyChainsIndependent": true,
     "repeatableQuestsAllowed": false,
-    "foundInRaidBusyworkAllowed": false
+    "foundInRaidBusyworkAllowed": false,
+    "rawTechnicalObjectiveTextAllowed": false
+  },
+  "traderStock": {
+    "baselineStockRequired": true,
+    "baselineOffersMustBeQuestGated": false,
+    "baselineOffersMustBeFinite": true,
+    "relationshipStockAllowed": true,
+    "milestoneOffersMayBeQuestGated": true,
+    "milestoneOffersMustBeFinite": true,
+    "directOverlapAuditRequired": [
+      "vanilla",
+      "Scorpion",
+      "Artem"
+    ],
+    "identity": "expeditionary-procurement-and-specialist-field-logistics",
+    "generalPurposeSupermarketAllowed": false
   },
   "logistics": {
-    "expectedPermanentOfferCount": 7,
-    "expectedAmmoPermanentOfferCount": 6,
+    "expectedMilestonePermanentOfferCount": 7,
+    "expectedAmmoMilestoneOfferCount": 6,
     "maximumPermanentOfferStockPerReset": 80,
     "maximumAmmoUnitsAcrossPermanentOffersPerReset": 400,
     "maximumAmmoFullResetSpendRub": 300000,
     "maximumReferencePriceMultiplier": 1.3,
-    "offersMustBeQuestGated": true,
+    "milestoneOffersMustBeQuestGated": true,
     "offersMustBeFinite": true,
     "questUnlockLoyaltyLevel": 1,
     "specialWeaponsPermanentOfferAllowed": false,
     "specialWeaponsSampleOnly": true
   },
   "loyalty": {
-    "role": "relationship-status-only",
+    "role": "relationship-status",
     "capabilityAuthority": false,
     "standingMayBypassQuestGates": false,
     "salesSumMayGateProgression": false,
+    "relationshipStockMayUseLoyalty": true,
     "servicesMayUnlockByLoyalty": false,
     "priceAdvantagesMayUnlockByLoyalty": false,
     "expectedTierCount": 4,
     "expectedStandingThresholds": [0, 0.1, 0.3, 0.55],
     "authoredCampaignStandingTotal": 0.65
+  },
+  "rewardCommunication": {
+    "importantUnlockMustBeExplainedInQuestText": true,
+    "standingMustBePlayerLegible": true,
+    "genericMoneyOnlyPreferred": false,
+    "distinctiveItemOrSamplePreferredForMilestones": true
   },
   "accessProtocol": {
     "consumePlayerKeys": false,
