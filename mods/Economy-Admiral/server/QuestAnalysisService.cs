@@ -23,19 +23,16 @@ public sealed class QuestAnalysisService(
         PropertyNameCaseInsensitive = true,
     };
 
-    private static readonly HashSet<string> VanillaTraderIds = new(StringComparer.Ordinal)
+    public async Task<QuestAnalysisReport> RunAsync(
+        QuestProgressionSnapshot progressionSnapshot,
+        VanillaBaselineSnapshot vanillaBaseline,
+        CancellationToken cancellationToken)
     {
-        "54cb50c76803fa8b248b4571", "54cb57776803fa99248b456e", "579dc571d53a0658a154fbec",
-        "58330581ace78e27b8b10cee", "5935c25fb3acc3127c3d8cd9", "5a7c2eca46aef81a7ca2145d",
-        "5ac3b934156ae10c4430e83c", "5c0647fdd443bc2504c2d371", "638f541a29ffd1183d187f57",
-        "6617beeaa9cfa777ca915b7c",
-    };
+        if (vanillaBaseline.QuestCount <= 0 || vanillaBaseline.Quests.Count <= 0)
+            throw new InvalidOperationException("Economy Admiral unified analysis requires a non-empty pristine startup baseline.");
 
-    public async Task<QuestAnalysisReport> RunAsync(QuestProgressionSnapshot progressionSnapshot, CancellationToken cancellationToken)
-    {
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(QuestAnalysisService).Assembly);
         var config = await runtimeConfigService.GetAsync(cancellationToken);
-
         var policy = ResolvePolicy(config);
         var handbookPrices = templates.Handbook.Items
             .Where(item => item.Price is > 0)
@@ -45,14 +42,19 @@ public sealed class QuestAnalysisService(
         var progression = progressionSnapshot.Quests
             .ToDictionary(row => row.QuestId, StringComparer.Ordinal);
 
-        var rawRows = templates.Quests
-            .OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)
-            .Select(pair => BuildRow(pair.Key.ToString(), pair.Value, handbookPrices, progression))
-            .ToList();
+        var vanilla = BuildBaseline(vanillaBaseline.Quests.Where(row => !row.Restartable).ToList());
+        var vanillaRestartable = BuildBaseline(vanillaBaseline.Quests.Where(row => row.Restartable).ToList());
+        if (vanilla.QuestSamples <= 0)
+            throw new InvalidOperationException("Economy Admiral unified analysis pristine non-restartable benchmark is empty.");
 
-        var vanilla = BuildBaseline(rawRows.Where(row => row.IsVanillaTraderQuest && !row.Restartable).ToList());
-        var vanillaRestartable = BuildBaseline(rawRows.Where(row => row.IsVanillaTraderQuest && row.Restartable).ToList());
-        var rows = rawRows
+        var rows = templates.Quests
+            .OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)
+            .Select(pair => BuildRow(
+                pair.Key.ToString(),
+                pair.Value,
+                handbookPrices,
+                progression,
+                vanillaBaseline.QuestIds.Contains(pair.Key.ToString())))
             .Select(row => AddRelativeSignals(row, row.Restartable && vanillaRestartable.QuestSamples > 0 ? vanillaRestartable : vanilla))
             .Select(row => AddObservationalFlags(row, policy))
             .ToList();
@@ -65,14 +67,14 @@ public sealed class QuestAnalysisService(
 
         var report = new QuestAnalysisReport
         {
-            SchemaVersion = 3,
+            SchemaVersion = 4,
             Preset = config.Preset.ToString(),
             CompositeScoreApplied = false,
             RewardAllowanceAffected = false,
             OutlierFlagsAffectEnforcement = true,
             Policy = policy,
             FlagCounts = flagCounts,
-            Note = "Unified quest analysis snapshot reused by preview and Enforce. XP/standing outlier flags can feed the active numeric reward policy; item rewards and structural dimensions remain non-mutating in Alpha.",
+            Note = $"Unified immutable final-quest analysis built directly from typed SPT rewards and pristine startup benchmark captured at priority {vanillaBaseline.CapturePriority}. Vanilla membership is pristine quest-ID provenance; no hardcoded trader inference or post-analysis correction overlay is used.",
             Vanilla = vanilla,
             VanillaRestartable = vanillaRestartable,
             Quests = rows,
@@ -85,7 +87,10 @@ public sealed class QuestAnalysisService(
 
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
         await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
-        logger.Info($"[Economy Admiral] unified quest analysis complete: {rows.Count} quests, {flagCounts.Values.Sum()} observational flags; report={reportPath}");
+        logger.Info(
+            $"[Economy Admiral] unified typed/pristine analysis complete: finalQuests={rows.Count}, pristineQuests={vanillaBaseline.QuestCount}, " +
+            $"modAddedQuests={rows.Count(row => !row.IsVanillaTraderQuest)}, flags={flagCounts.Values.Sum()}; report={reportPath}"
+        );
         return report;
     }
 
@@ -154,15 +159,30 @@ public sealed class QuestAnalysisService(
         string questId,
         Quest quest,
         IReadOnlyDictionary<string, double> handbookPrices,
-        IReadOnlyDictionary<string, QuestProgressionGraphRow> progression)
+        IReadOnlyDictionary<string, QuestProgressionGraphRow> progression,
+        bool isPristineQuestId)
     {
         var successRewards = quest.Rewards is null
             ? []
-            : quest.Rewards.Where(pair => string.Equals(pair.Key, "Success", StringComparison.OrdinalIgnoreCase)).SelectMany(pair => pair.Value).ToList();
+            : quest.Rewards
+                .Where(pair => string.Equals(pair.Key, "Success", StringComparison.OrdinalIgnoreCase))
+                .SelectMany(pair => pair.Value)
+                .ToList();
 
-        var rewardItems = FindRewardItems(JsonSerializer.SerializeToElement(successRewards)).ToList();
-        var knownValue = rewardItems.Sum(item => handbookPrices.TryGetValue(item.TemplateId, out var price) ? price * item.Count : 0d);
-        var unknownPriceItems = rewardItems.Count(item => !handbookPrices.ContainsKey(item.TemplateId));
+        var rewardItems = successRewards
+            .Where(reward => reward.Items is not null)
+            .SelectMany(reward => reward.Items!)
+            .ToList();
+        var knownValue = 0d;
+        var unknownPriceItems = 0;
+        foreach (var item in rewardItems)
+        {
+            var templateId = item.Template.ToString();
+            if (string.IsNullOrWhiteSpace(templateId)) continue;
+            var count = Math.Max(1d, item.Upd?.StackObjectsCount ?? 1d);
+            if (handbookPrices.TryGetValue(templateId, out var price)) knownValue += price * count;
+            else unknownPriceItems++;
+        }
 
         var experience = successRewards.Where(reward => reward.Type == RewardType.Experience).Sum(reward => reward.Value ?? 0d);
         var standing = successRewards.Where(reward => reward.Type == RewardType.TraderStanding).Sum(reward => reward.Value ?? 0d);
@@ -171,22 +191,26 @@ public sealed class QuestAnalysisService(
         var productionUnlocks = CountTargets(successRewards, RewardType.ProductionScheme);
 
         var objectiveConditions = EnumerateObjectiveConditions(quest).ToList();
-        var counters = objectiveConditions.Where(condition => condition.Counter?.Conditions is not null).SelectMany(condition => condition.Counter!.Conditions!).ToList();
-        var timed = objectiveConditions.Count(condition => condition.CompleteInSeconds is > 0) + counters.Count(condition => condition.CompleteInSeconds is > 0);
-        var oneSession = objectiveConditions.Count(condition => condition.OneSessionOnly == true) + counters.Count(condition => condition.ResetOnSessionEnd == true);
+        var counters = objectiveConditions
+            .Where(condition => condition.Counter?.Conditions is not null)
+            .SelectMany(condition => condition.Counter!.Conditions!)
+            .ToList();
+        var timed = objectiveConditions.Count(condition => condition.CompleteInSeconds is > 0)
+            + counters.Count(condition => condition.CompleteInSeconds is > 0);
+        var oneSession = objectiveConditions.Count(condition => condition.OneSessionOnly == true)
+            + counters.Count(condition => condition.ResetOnSessionEnd == true);
         var fir = objectiveConditions.Count(condition => condition.OnlyFoundInRaid == true);
         var plant = objectiveConditions.Count(condition => condition.PlantTime is > 0);
         var distance = counters.Count(condition => condition.Distance?.Value is > 0);
         var daytime = counters.Count(condition => condition.Daytime is not null);
 
         progression.TryGetValue(questId, out var graph);
-        var traderId = quest.TraderId.ToString();
         return new QuestAnalysisRow
         {
             QuestId = questId,
             QuestName = quest.QuestName ?? quest.Name,
-            TraderId = traderId,
-            IsVanillaTraderQuest = VanillaTraderIds.Contains(traderId),
+            TraderId = quest.TraderId.ToString(),
+            IsVanillaTraderQuest = isPristineQuestId,
             Restartable = quest.Restartable,
             SuccessKnownHandbookValue = Math.Round(knownValue, 2),
             UnknownPriceRewardItemRecords = unknownPriceItems,
@@ -210,7 +234,7 @@ public sealed class QuestAnalysisService(
         };
     }
 
-    private static QuestAnalysisBaseline BuildBaseline(IReadOnlyCollection<QuestAnalysisRow> rows)
+    private static QuestAnalysisBaseline BuildBaseline(IReadOnlyCollection<VanillaQuestBaselineRow> rows)
     {
         return new QuestAnalysisBaseline
         {
@@ -235,14 +259,24 @@ public sealed class QuestAnalysisService(
         };
     }
 
-    private static double MedianPositive(IEnumerable<double> values) => Percentile(values.Where(value => value > 0).OrderBy(value => value).ToList(), 0.50);
-    private static double? Ratio(double value, double baseline) => value > 0 && baseline > 0 ? Math.Round(value / baseline, 4) : null;
+    private static double MedianPositive(IEnumerable<double> values)
+    {
+        return Percentile(values.Where(value => value > 0).OrderBy(value => value).ToList(), 0.50);
+    }
 
-    private static int CountTargets(IEnumerable<Reward> rewards, RewardType type) => rewards
-        .Where(reward => reward.Type == type && !string.IsNullOrWhiteSpace(reward.Target))
-        .Select(reward => reward.Target!)
-        .Distinct(StringComparer.Ordinal)
-        .Count();
+    private static double? Ratio(double value, double baseline)
+    {
+        return value > 0 && baseline > 0 ? Math.Round(value / baseline, 4) : null;
+    }
+
+    private static int CountTargets(IEnumerable<Reward> rewards, RewardType type)
+    {
+        return rewards
+            .Where(reward => reward.Type == type && !string.IsNullOrWhiteSpace(reward.Target))
+            .Select(reward => reward.Target!)
+            .Distinct(StringComparer.Ordinal)
+            .Count();
+    }
 
     private static IEnumerable<QuestCondition> EnumerateObjectiveConditions(Quest quest)
     {
@@ -250,34 +284,6 @@ public sealed class QuestAnalysisService(
             foreach (var condition in quest.Conditions.AvailableForFinish) yield return condition;
         if (quest.Conditions.Success is not null)
             foreach (var condition in quest.Conditions.Success) yield return condition;
-    }
-
-    private static IEnumerable<RewardItemValue> FindRewardItems(JsonElement element)
-    {
-        switch (element.ValueKind)
-        {
-            case JsonValueKind.Object:
-                if (element.TryGetProperty("_tpl", out var tpl) && tpl.ValueKind == JsonValueKind.String)
-                {
-                    var templateId = tpl.GetString();
-                    if (!string.IsNullOrWhiteSpace(templateId)) yield return new RewardItemValue(templateId, FindStackCount(element));
-                }
-                foreach (var property in element.EnumerateObject())
-                    foreach (var nested in FindRewardItems(property.Value)) yield return nested;
-                break;
-            case JsonValueKind.Array:
-                foreach (var item in element.EnumerateArray())
-                    foreach (var nested in FindRewardItems(item)) yield return nested;
-                break;
-        }
-    }
-
-    private static double FindStackCount(JsonElement item)
-    {
-        if (!item.TryGetProperty("upd", out var upd) || upd.ValueKind != JsonValueKind.Object) return 1d;
-        foreach (var key in new[] { "StackObjectsCount", "stackObjectsCount" })
-            if (upd.TryGetProperty(key, out var count) && count.ValueKind == JsonValueKind.Number && count.TryGetDouble(out var value)) return Math.Max(1d, value);
-        return 1d;
     }
 
     private static double Percentile(IReadOnlyList<double> values, double percentile)
@@ -290,8 +296,6 @@ public sealed class QuestAnalysisService(
         if (lower == upper) return Math.Round(values[lower], 4);
         return Math.Round(values[lower] + ((values[upper] - values[lower]) * (position - lower)), 4);
     }
-
-    private sealed record RewardItemValue(string TemplateId, double Count);
 }
 
 public sealed record QuestAnalysisReport
