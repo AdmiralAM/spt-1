@@ -14,6 +14,11 @@ public static class EconomyConfigValidator
     {
         ArgumentNullException.ThrowIfNull(config);
 
+        if (config.RepeatedRaidLootDecay)
+        {
+            throw new InvalidOperationException("Economy Admiral config: RepeatedRaidLootDecay is not implemented and must remain false.");
+        }
+
         if (string.IsNullOrWhiteSpace(config.ReportRelativePath))
         {
             throw new InvalidOperationException("Economy Admiral config: ReportRelativePath must not be empty.");
