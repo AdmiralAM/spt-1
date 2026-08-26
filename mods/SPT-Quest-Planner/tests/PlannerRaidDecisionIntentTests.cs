@@ -25,12 +25,12 @@ namespace SPTQuestPlanner.Tests
         }
 
         [Fact]
-        public void FutureFocusQuestResolvesRaidThroughIncompletePrerequisitePath()
+        public void FutureFocusUsesProfileConfirmedActionablePrerequisite()
         {
             PlannerTopologyQuest prerequisite = Quest("prereq", dependents: new[] { "future" });
             PlannerTopologyQuest future = Quest("future", prerequisites: new[] { "prereq" });
             PlannerTopologyIndex topology = Topology(prerequisite, future);
-            PlannerClientIndex state = EmptyState();
+            PlannerClientIndex state = QuestState(("prereq", 4), ("future", 2));
 
             PlannerRaidDecisionIntent intent = PlannerRaidDecisionIntentBuilder.Build("future", topology, state);
             PlannerRaidDecisionSignals pathRaid = Signals(new[] { "prereq" }, unlocks: 0, missing: 0);
@@ -39,68 +39,99 @@ namespace SPTQuestPlanner.Tests
             PlannerRaidDecision decision = PlannerRaidDecisionIntentPolicy.Decide(pathRaid, unrelatedRaid, intent);
 
             Assert.True(intent.HasFocusPath);
-            Assert.True(intent.HasExecutableFocusFrontier);
-            Assert.Contains("prereq", intent.FocusPathQuestIds);
-            Assert.Contains("future", intent.FocusPathQuestIds);
+            Assert.True(intent.HasFocusFrontier);
+            Assert.True(intent.HasActionableFocusFrontier);
             Assert.Equal(new[] { "prereq" }, intent.FocusFrontierQuestIds);
+            Assert.Equal(new[] { "prereq" }, intent.FocusActionableQuestIds);
+            Assert.Empty(intent.FocusEligibilityUnknownQuestIds);
             Assert.Equal(PlannerRaidDecisionOutcome.PreferLeft, decision.Outcome);
             Assert.Contains("prerequisite path", decision.Evidence[0]);
-            Assert.Contains("executable focus frontier", decision.Evidence[0]);
+            Assert.Contains("active or available now", decision.Evidence[0]);
         }
 
         [Fact]
-        public void MultiBranchFocusOnlyTreatsCurrentlyExecutablePathNodesAsIntentSupport()
+        public void PrerequisiteReadyButProfileBlockedQuestCannotResolveFocusConflict()
+        {
+            PlannerTopologyQuest prerequisite = Quest("prereq", dependents: new[] { "future" });
+            PlannerTopologyQuest future = Quest("future", prerequisites: new[] { "prereq" });
+            PlannerTopologyIndex topology = Topology(prerequisite, future);
+            PlannerRaidDecisionIntent intent = PlannerRaidDecisionIntentBuilder.Build(
+                "future",
+                topology,
+                QuestState(("prereq", 1), ("future", 1)));
+
+            PlannerRaidDecisionSignals pathRaid = Signals(new[] { "prereq" }, unlocks: 1, missing: 1);
+            PlannerRaidDecisionSignals readyAlternative = Signals(new[] { "other" }, unlocks: 0, missing: 0);
+            PlannerRaidDecision decision = PlannerRaidDecisionIntentPolicy.Decide(pathRaid, readyAlternative, intent);
+
+            Assert.Equal(new[] { "prereq" }, intent.FocusFrontierQuestIds);
+            Assert.Empty(intent.FocusActionableQuestIds);
+            Assert.False(PlannerRaidDecisionIntentPolicy.Supports(pathRaid, intent));
+            Assert.Equal(PlannerRaidDecisionOutcome.Abstain, decision.Outcome);
+        }
+
+        [Fact]
+        public void MissingProfileEligibilityIsUnknownNotExecutableEvidence()
+        {
+            PlannerTopologyQuest prerequisite = Quest("prereq", dependents: new[] { "future" });
+            PlannerTopologyQuest future = Quest("future", prerequisites: new[] { "prereq" });
+            PlannerTopologyIndex topology = Topology(prerequisite, future);
+            PlannerRaidDecisionIntent intent = PlannerRaidDecisionIntentBuilder.Build("future", topology, EmptyState());
+
+            PlannerRaidDecisionSignals pathRaid = Signals(new[] { "prereq" }, unlocks: 1, missing: 1);
+            PlannerRaidDecisionSignals readyAlternative = Signals(new[] { "other" }, unlocks: 0, missing: 0);
+            PlannerRaidDecision decision = PlannerRaidDecisionIntentPolicy.Decide(pathRaid, readyAlternative, intent);
+
+            Assert.Equal(new[] { "prereq" }, intent.FocusFrontierQuestIds);
+            Assert.Empty(intent.FocusActionableQuestIds);
+            Assert.Equal(new[] { "prereq" }, intent.FocusEligibilityUnknownQuestIds);
+            Assert.True(intent.HasUnknownFocusEligibility);
+            Assert.False(PlannerRaidDecisionIntentPolicy.Supports(pathRaid, intent));
+            Assert.Equal(PlannerRaidDecisionOutcome.Abstain, decision.Outcome);
+        }
+
+        [Fact]
+        public void MultiBranchFocusOnlyTreatsProfileActionablePathNodesAsIntentSupport()
         {
             PlannerTopologyQuest a1 = Quest("a1", dependents: new[] { "a" });
             PlannerTopologyQuest a = Quest("a", prerequisites: new[] { "a1" }, dependents: new[] { "target" });
             PlannerTopologyQuest b = Quest("b", dependents: new[] { "target" });
             PlannerTopologyQuest target = Quest("target", prerequisites: new[] { "a", "b" });
             PlannerTopologyIndex topology = Topology(a1, a, b, target);
-            PlannerRaidDecisionIntent intent = PlannerRaidDecisionIntentBuilder.Build("target", topology, EmptyState());
+            PlannerRaidDecisionIntent intent = PlannerRaidDecisionIntentBuilder.Build(
+                "target",
+                topology,
+                QuestState(("a1", 4), ("a", 2), ("b", 3), ("target", 2)));
 
             Assert.Equal(new[] { "a1", "b" }, intent.FocusFrontierQuestIds);
+            Assert.Equal(new[] { "a1", "b" }, intent.FocusActionableQuestIds);
             Assert.Contains("a", intent.FocusPathQuestIds);
 
             PlannerRaidDecisionSignals blockedInnerNodeRaid = Signals(new[] { "a" }, unlocks: 1, missing: 1);
             PlannerRaidDecisionSignals unrelatedReadyRaid = Signals(new[] { "other" }, unlocks: 0, missing: 0);
-            PlannerRaidDecision blockedDecision = PlannerRaidDecisionIntentPolicy.Decide(
-                blockedInnerNodeRaid,
-                unrelatedReadyRaid,
-                intent);
-
-            Assert.Equal(PlannerRaidDecisionOutcome.Abstain, blockedDecision.Outcome);
             Assert.False(PlannerRaidDecisionIntentPolicy.Supports(blockedInnerNodeRaid, intent));
 
-            PlannerRaidDecisionSignals executableFrontierRaid = Signals(new[] { "a1" }, unlocks: 1, missing: 1);
-            PlannerRaidDecision frontierDecision = PlannerRaidDecisionIntentPolicy.Decide(
-                executableFrontierRaid,
-                unrelatedReadyRaid,
-                intent);
-
-            Assert.Equal(PlannerRaidDecisionOutcome.PreferLeft, frontierDecision.Outcome);
-            Assert.True(PlannerRaidDecisionIntentPolicy.Supports(executableFrontierRaid, intent));
+            PlannerRaidDecisionSignals actionableRaid = Signals(new[] { "a1" }, unlocks: 1, missing: 1);
+            PlannerRaidDecision decision = PlannerRaidDecisionIntentPolicy.Decide(actionableRaid, unrelatedReadyRaid, intent);
+            Assert.Equal(PlannerRaidDecisionOutcome.PreferLeft, decision.Outcome);
+            Assert.True(PlannerRaidDecisionIntentPolicy.Supports(actionableRaid, intent));
         }
 
         [Fact]
-        public void CompletingFrontierPrerequisiteAdvancesFocusFrontierDeterministically()
+        public void CompletingFrontierPrerequisiteAdvancesActionableFocusFrontierDeterministically()
         {
             PlannerTopologyQuest a1 = Quest("a1", dependents: new[] { "a" });
             PlannerTopologyQuest a = Quest("a", prerequisites: new[] { "a1" }, dependents: new[] { "target" });
             PlannerTopologyQuest b = Quest("b", dependents: new[] { "target" });
             PlannerTopologyQuest target = Quest("target", prerequisites: new[] { "a", "b" });
             PlannerTopologyIndex topology = Topology(a1, a, b, target);
-            PlannerClientIndex state = new PlannerClientIndex(
-                0,
-                new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal)
-                {
-                    ["a1"] = new PlannerQuestClientState("a1", 5, 0, true, false)
-                },
-                new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal));
+            PlannerClientIndex state = QuestState(("a1", 5), ("a", 3), ("b", 4), ("target", 2));
 
             PlannerRaidDecisionIntent intent = PlannerRaidDecisionIntentBuilder.Build("target", topology, state);
 
             Assert.DoesNotContain("a1", intent.FocusPathQuestIds);
             Assert.Equal(new[] { "a", "b" }, intent.FocusFrontierQuestIds);
+            Assert.Equal(new[] { "a", "b" }, intent.FocusActionableQuestIds);
         }
 
         [Fact]
@@ -109,19 +140,14 @@ namespace SPTQuestPlanner.Tests
             PlannerTopologyQuest prerequisite = Quest("prereq", dependents: new[] { "future" });
             PlannerTopologyQuest future = Quest("future", prerequisites: new[] { "prereq" });
             PlannerTopologyIndex topology = Topology(prerequisite, future);
-            PlannerClientIndex state = new PlannerClientIndex(
-                0,
-                new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal)
-                {
-                    ["prereq"] = new PlannerQuestClientState("prereq", 5, 0, true, false)
-                },
-                new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal));
+            PlannerClientIndex state = QuestState(("prereq", 5), ("future", 3));
 
             PlannerRaidDecisionIntent intent = PlannerRaidDecisionIntentBuilder.Build("future", topology, state);
 
             Assert.DoesNotContain("prereq", intent.FocusPathQuestIds);
             Assert.Contains("future", intent.FocusPathQuestIds);
             Assert.Equal(new[] { "future" }, intent.FocusFrontierQuestIds);
+            Assert.Equal(new[] { "future" }, intent.FocusActionableQuestIds);
         }
 
         [Fact]
@@ -175,6 +201,25 @@ namespace SPTQuestPlanner.Tests
             return new PlannerTopologyIndex(
                 values,
                 new Dictionary<string, PlannerTopologyItem>(StringComparer.Ordinal));
+        }
+
+        private static PlannerClientIndex QuestState(params (string questId, int disposition)[] values)
+        {
+            Dictionary<string, PlannerQuestClientState> quests = new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal);
+            for (int i = 0; i < values.Length; i++)
+            {
+                (string questId, int disposition) value = values[i];
+                quests[value.questId] = new PlannerQuestClientState(
+                    value.questId,
+                    value.disposition,
+                    0,
+                    true,
+                    value.disposition >= 3);
+            }
+            return new PlannerClientIndex(
+                0,
+                quests,
+                new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal));
         }
 
         private static PlannerClientIndex EmptyState()
