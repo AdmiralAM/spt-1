@@ -15,6 +15,7 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
 {
     public static readonly MongoId SourceArmbandTpl = new("5b3f3af486f774679e752c1f");
     public static readonly MongoId DefaultInventoryTpl = new("55d7217a4bdc2d86028b456d");
+    private static readonly MongoId SearchableItemBaseTpl = new("566162e44bdc2d3f298b4573");
     public static readonly MongoId CustomTemplateParentTpl = new(RuntimeIdentity.SearchableTemplateParentId);
     public static readonly MongoId CustomBeltParentTpl = new(RuntimeIdentity.BeltItemParentId);
     public const string RuntimeCandidateTpl = RuntimeIdentity.CandidateItemId;
@@ -80,29 +81,30 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
 
     private void EnsureCustomParents()
     {
-        if (!templateTable.Items.ContainsKey(CustomTemplateParentTpl))
+        EnsureCustomParent(CustomTemplateParentTpl, "BAndHBSearchableContainerTemplate", SearchableItemBaseTpl);
+        EnsureCustomParent(CustomBeltParentTpl, "BAndHBCustomBeltItem", CustomTemplateParentTpl);
+    }
+
+    private void EnsureCustomParent(MongoId id, string name, MongoId parent)
+    {
+        if (!templateTable.Items.TryGetValue(id, out var existing))
         {
-            templateTable.Items[CustomTemplateParentTpl] = new TemplateItem
+            templateTable.Items[id] = new TemplateItem
             {
-                Id = CustomTemplateParentTpl,
-                Name = "BAndHBSearchableContainerTemplate",
-                Parent = new MongoId("566162e44bdc2d3f298b4573"),
+                Id = id,
+                Name = name,
+                Parent = parent,
                 Type = "Node",
                 Properties = new TemplateItemProperties()
             };
+            return;
         }
 
-        if (!templateTable.Items.ContainsKey(CustomBeltParentTpl))
-        {
-            templateTable.Items[CustomBeltParentTpl] = new TemplateItem
-            {
-                Id = CustomBeltParentTpl,
-                Name = "BAndHBCustomBeltItem",
-                Parent = CustomTemplateParentTpl,
-                Type = "Node",
-                Properties = new TemplateItemProperties()
-            };
-        }
+        if (!Equals(existing.Id, id)
+            || !Equals(existing.Parent, parent)
+            || !string.Equals(existing.Name, name, StringComparison.Ordinal)
+            || !string.Equals(existing.Type, "Node", StringComparison.Ordinal))
+            throw new InvalidOperationException($"B&A&HB custom parent ID collision: {id} does not match the registered taxonomy contract.");
     }
 
     private void EnsureArmBandAcceptsCustomBeltParent()
