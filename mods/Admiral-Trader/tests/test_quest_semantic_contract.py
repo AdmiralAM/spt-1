@@ -81,12 +81,26 @@ class QuestSemanticContractTests(unittest.TestCase):
 
     def test_reward_and_text_contracts_do_not_claim_nonexistent_item_unlocks(self):
         unlock_quests = set(self.questassort.values())
+        positive_unlock_phrases = (
+            "completion unlocks",
+            "now unlocked",
+            "now available",
+            "is now unlocked",
+            "allotment is now available",
+            "offer is now unlocked",
+        )
         for quest in self.quests:
             qid = quest["_id"]
             text = " ".join(self.en.get(f"{qid} {field}", "") for field in ("description", "successMessageText", "completePlayerMessage")).lower()
-            claims_unlock = "unlock" in text or "now available" in text
+            claims_unlock = any(phrase in text for phrase in positive_unlock_phrases)
             if claims_unlock:
                 self.assertIn(qid, unlock_quests, qid)
+
+    def test_special_weapons_negative_unlock_statement_matches_backend(self):
+        qid = "f1368cb3b69c3a4917c4f206"
+        text = " ".join(self.en.get(f"{qid} {field}", "") for field in ("description", "successMessageText", "completePlayerMessage")).lower()
+        self.assertTrue("does not unlock" in text or "no permanent ammunition offer is unlocked" in text)
+        self.assertNotIn(qid, set(self.questassort.values()))
 
 
 if __name__ == "__main__":
