@@ -27,7 +27,6 @@ Long-term source modules currently integrated under `mods/`:
 - `SPT-Item-Intelligence`
 - `SPT-Pause`
 - `SPT-Belt-Armband-Inventory`
-- `SPT-Quest-Planner`
 - `Admiral-Trader`
 - `Admiral-Artyom-Revival`
 
