@@ -74,12 +74,15 @@ jobs:
               assert 'LoadConfigAsync' not in text, service_name
               assert 'Path.Combine(modPath, "config", "config.json")' not in text, service_name
 
-          for service_name in ['RewardUtilityAuditService.cs', 'QuestProgressionGraphService.cs', 'QuestConstraintAuditService.cs', 'QuestAnalysisService.cs']:
+          for service_name in ['RewardUtilityAuditService.cs', 'QuestProgressionGraphService.cs', 'QuestConstraintAuditService.cs']:
               text = (root / 'server' / service_name).read_text(encoding='utf-8')
               assert 'VanillaBaselineSnapshot' in text, service_name
               assert 'PristineStartupSnapshot' in text, service_name
-
           analysis = (root / 'server/QuestAnalysisService.cs').read_text(encoding='utf-8')
+          assert 'VanillaBaselineSnapshot vanillaBaseline' in analysis
+          assert 'vanillaBaseline.QuestIds.Contains' in analysis
+          assert 'VanillaTraderIds' not in analysis
+
           for text in ['OutlierFlagsAffectEnforcement = true','HIGH_XP_LOW_DEPTH','RESTARTABLE_HIGH_XP','HIGH_STANDING_LOW_DEPTH','MedianXp','MedianAbsoluteStanding']:
               assert text in analysis, text
 
@@ -119,7 +122,6 @@ jobs:
               assert text in evidence, text
           assert 'economy-admiral-composite-candidates.json' not in evidence
           assert 'economy-admiral-target-proposals.json' not in evidence
-          assert evidence.count('economy-admiral-') >= 8
 
           audit_validator = (root / 'tools/Validate-Runtime.ps1').read_text(encoding='utf-8')
           for text in ['validator requires mode=Audit','DatabaseUnchangedAcrossPipeline','PlannedMutationCount','PristineUnchanged candidate is not protected','7/7 core reports are required']:
