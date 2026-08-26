@@ -64,11 +64,11 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         if (!Equals(candidate.Parent, CustomBeltParentTpl))
             throw new InvalidOperationException("B&A&HB RC item ID collision: existing item uses a different parent.");
 
-        var grids = candidate.Properties?.Grids;
-        if (grids == null || grids.Count() != 1)
+        var grids = candidate.Properties?.Grids?.ToArray();
+        if (grids == null || grids.Length != 1)
             throw new InvalidOperationException("B&A&HB RC item ID collision: existing item does not declare exactly one grid.");
 
-        var grid = grids.Single();
+        var grid = grids[0];
         var properties = grid.Properties;
         if (!string.Equals(grid.Name, RuntimeCandidateGridName, StringComparison.Ordinal)
             || !string.Equals(grid.Id.ToString(), RuntimeCandidateGridId, StringComparison.Ordinal)
@@ -80,18 +80,20 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
             || properties.MinCount != 0
             || properties.MaxCount != 0
             || properties.MaxWeight != 0
-            || properties.IsSortingTable)
+            || properties.IsSortingTable == true)
             throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid identity, geometry, or limits differ from the shared runtime contract.");
 
-        var filters = properties.Filters;
-        if (filters == null || filters.Count != 1)
+        var filters = properties.Filters?.ToArray();
+        if (filters == null || filters.Length != 1)
             throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid does not declare exactly one filter group.");
 
         var filter = filters[0];
-        if (filter.Filter == null
-            || filter.Filter.Count != 1
-            || !filter.Filter.Contains(BaseClasses.MAGAZINE)
-            || (filter.ExcludedFilter != null && filter.ExcludedFilter.Count != 0))
+        var included = filter.Filter?.ToArray();
+        var excluded = filter.ExcludedFilter?.ToArray();
+        if (included == null
+            || included.Length != 1
+            || !included.Contains(BaseClasses.MAGAZINE)
+            || (excluded != null && excluded.Length != 0))
             throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid does not retain the exact MAGAZINE-only filter.");
     }
 
