@@ -28,6 +28,7 @@ namespace SPTBeltArmbandInventory
 
         void Awake()
         {
+            ReflectionTools.LogWarning = Logger.LogWarning;
             modEnabled = Config.Bind("General", "Enabled", true, "Enable B&A&HB #2 MOD SPT. Runtime-candidate builds force this on at startup.");
 
             if (!modEnabled.Value)
@@ -90,11 +91,6 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("PMC belt behavior remains active, but a Scav spawned with a container belt may retain vanilla ArmBand deletion behavior.");
             }
 
-            // The current RC accepts magazines only. Grenade-view synchronization
-            // and payment-source patches are intentionally not installed in Phase 1;
-            // those capabilities return with the first concrete wearable variant that
-            // can actually contain those item classes.
-
             fastAccessSlotPatches = new FastAccessSlotPatches(Logger.LogInfo, Logger.LogWarning);
             if (!fastAccessSlotPatches.TryInstall())
             {
@@ -132,23 +128,17 @@ namespace SPTBeltArmbandInventory
 
         void EnsureDeferredRuntimePump()
         {
-            if (deferredRuntimePump == null)
-                deferredRuntimePump = StartCoroutine(FlushDeferredRuntimeWork());
+            if (deferredRuntimePump == null) deferredRuntimePump = StartCoroutine(FlushDeferredRuntimeWork());
         }
 
         IEnumerator FlushDeferredRuntimeWork()
         {
-            // Event-triggered only: no idle MonoBehaviour.Update callback survives
-            // after the compact-window queue has drained.
             yield return null;
-
             while (gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending)
             {
                 GridWindowSizingRuntime.Flush();
-                if (gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending)
-                    yield return null;
+                if (gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending) yield return null;
             }
-
             deferredRuntimePump = null;
         }
 
@@ -157,11 +147,27 @@ namespace SPTBeltArmbandInventory
             try
             {
                 Type chainloader = Type.GetType("BepInEx.Bootstrap.Chainloader, BepInEx", false);
-                PropertyInfo pluginInfos = chainloader == null ? null : chainloader.GetProperty("PluginInfos", BindingFlags.Static | BindingFlags.Public);
+                PropertyInfo pluginInfos = ReflectionTools.FindInstanceProperty(chainloader, "PluginInfos");
+                if (pluginInfos == null && chainloader != null)
+                {
+                    PropertyInfo[] properties = chainloader.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                    for (int i = 0; i < properties.Length; i++)
+                    {
+                        if (string.Equals(properties[i].Name, "PluginInfos", StringComparison.Ordinal))
+                        {
+                            pluginInfos = properties[i];
+                            break;
+                        }
+                    }
+                }
                 IDictionary dictionary = pluginInfos == null ? null : pluginInfos.GetValue(null, null) as IDictionary;
                 return dictionary != null && (dictionary.Contains("com.trenchfoot.beltslot") || dictionary.Contains("BeltSlot"));
             }
-            catch { return false; }
+            catch (Exception exception)
+            {
+                Logger.LogWarning("B&A&HB legacy-plugin discovery failed closed: " + exception.GetType().FullName + ": " + exception.Message);
+                return false;
+            }
         }
 
         void OnDestroy()
@@ -171,7 +177,6 @@ namespace SPTBeltArmbandInventory
                 StopCoroutine(deferredRuntimePump);
                 deferredRuntimePump = null;
             }
-
             if (buildValidationPatches != null) buildValidationPatches.Dispose();
             buildValidationPatches = null;
             if (pickupPatches != null) pickupPatches.Dispose();
@@ -190,6 +195,7 @@ namespace SPTBeltArmbandInventory
             gridWindowSizingPatches = null;
             if (runtimeTypePatches != null) runtimeTypePatches.Dispose();
             runtimeTypePatches = null;
+            ReflectionTools.ResetDiagnostics();
         }
     }
 }
