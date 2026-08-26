@@ -135,7 +135,7 @@ jobs:
 
           $hudRoot = Join-Path $out 'Admiral-Tactical-HUD'
           $hudClient = Join-Path $hudRoot 'BepInEx/plugins/Admiral Tactical HUD'
-          $hudServer = Join-Path $hudRoot 'user/mods/Admiral Tactical HUD'
+          $hudServer = Join-Path $hudRoot 'SPT_Runtime/user/mods/Admiral Tactical HUD'
           Copy-RequiredFile "mods/Admiral-Tactical-HUD/client/bin/Release/netstandard2.1/$env:HUD_ASSEMBLY.dll" (Join-Path $hudClient 'Admiral Tactical HUD.dll')
           Copy-RequiredFile 'mods/Admiral-Tactical-HUD/client/assets/hud-sprites.png' (Join-Path $hudClient 'assets/hud-sprites.png')
           Copy-RequiredFile "mods/Admiral-Tactical-HUD/server/bin/Release/net10.0/$env:HUD_SERVER_ASSEMBLY.dll" (Join-Path $hudServer 'Admiral Tactical HUD Server.dll')
@@ -166,7 +166,7 @@ jobs:
           $required = @(
             'build-output/Admiral-Tactical-HUD/BepInEx/plugins/Admiral Tactical HUD/Admiral Tactical HUD.dll',
             'build-output/Admiral-Tactical-HUD/BepInEx/plugins/Admiral Tactical HUD/assets/hud-sprites.png',
-            'build-output/Admiral-Tactical-HUD/user/mods/Admiral Tactical HUD/Admiral Tactical HUD Server.dll',
+            'build-output/Admiral-Tactical-HUD/SPT_Runtime/user/mods/Admiral Tactical HUD/Admiral Tactical HUD Server.dll',
             'build-output/SPT-Item-Intelligence/BepInEx/plugins/SPT Item Intelligence/SPT Item Intelligence.dll',
             'build-output/SPT-Item-Intelligence/SPT_Runtime/user/mods/SPT Item Intelligence Server/SPT Item Intelligence Server.dll',
             'build-output/SPT-Pause/BepInEx/plugins/SPT Pause/SPT Pause.dll',
