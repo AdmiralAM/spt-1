@@ -1,15 +1,15 @@
-# SPT Tactical HUD
+# Admiral Tactical HUD
 
-Stable HUD module for SPT 4.1.x.
+Stable tactical HUD module for SPT 4.1.x.
 
 | Component | Version |
 | --- | --- |
-| Client | `1.13.2` |
-| Optional server companion | `1.13.0` |
+| Client | `1.13.3` |
+| Server companion | `1.13.3` |
 
 ## Scope
 
-Tactical HUD owns only HUD functionality:
+Admiral Tactical HUD owns only HUD functionality:
 
 - population display;
 - player status display;
@@ -17,21 +17,25 @@ Tactical HUD owns only HUD functionality:
 - HUD edit mode;
 - HUD assets and their validation/optimization pipeline.
 
-Item Intelligence, Pause, Belt/Armband Inventory, Quest Planner, and other non-HUD systems are independent modules.
+The `1.13.3` line is the only maintained version. Legacy Tactical HUD version records and retired combined HUD/Item-Intelligence concepts are not part of the maintained package.
 
-The maintained `1.13.2` client preserves the verified Tactical HUD behavior after the accidental `1.14.0` HUD/Item-Intelligence combination was retired.
+## Kill feed
+
+Kill-feed rows use compact weapon names instead of weapon-class icons. The runtime resolves the weapon once when the death is captured, normalizes it to a short readable form (for example `AK-105`, `M4A1`, `MP7A2`), and renders that text with a compact system font, dark outline and shadow. Role, hit-location and status iconography remains unchanged.
 
 ## Source layout
 
 - `client/` — BepInEx client source and maintained HUD assets.
-- `server/` — optional SPT server companion.
+- `server/` — SPT server companion.
 - `tools/` — deterministic asset, optics, and hot-path validation tools.
-- `docs/` — Tactical HUD-specific design and maintenance notes.
 
-CI may create transient `build-status/` data while validating the module. That directory is generated workspace output and is not part of the source tree.
+Generated build output is never a source of truth and is not committed to the module tree.
 
-The approved 2048×1536 source board is preserved losslessly as 43 named 256×256 cells under `client/assets/source/approved-cells/`. The atlas generator uses those cells to reproduce the approved HUD sprites without keeping a single fragile multi-megabyte source image.
+## Runtime installation
 
-## Installation
+The final package installs to:
 
-Use the install-only [`runtime`](https://github.com/AdmiralAM/spt-1/tree/runtime) channel. Copy its contents into the SPT root. The version-independent `BepInEx/plugins/SPT Tactical HUD/` directory is intended to be overwritten by later Tactical HUD updates.
+- `BepInEx/plugins/Admiral Tactical HUD/Admiral Tactical HUD.dll`
+- `user/mods/Admiral Tactical HUD/Admiral Tactical HUD Server.dll`
+
+Copy the packaged `BepInEx/` and `user/` folders into the SPT root. Future `1.13.3` rebuilds use the same stable paths and replace the existing files in place.
