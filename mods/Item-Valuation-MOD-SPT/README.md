@@ -1,8 +1,9 @@
 # Item Valuation MOD SPT
 
-**Version:** 0.1.0  
+**Version:** 1.0.0  
 **Runtime target:** SPT 4.1.3  
-**Issue:** #198
+**Issue:** #198 (completed)  
+**Implementation PR:** #199 (merged)
 
 A deliberately narrow server-only rework of AcidPhantasm Item Valuation focused only on inventory-cell background coloring.
 
@@ -83,7 +84,7 @@ The general palette remains intentionally dark and desaturated.
 
 There is no green ammo tier.
 
-Thresholds and colors are configurable in `config/config.json`. The current installation already provides ColorConverterAPI for custom HEX background values; this mod itself remains server-only.
+Thresholds and colors are configurable in `config/config.json`. The current installation provides ColorConverterAPI for custom HEX background values; this mod itself remains server-only.
 
 ## Deliberately removed
 
@@ -106,7 +107,7 @@ After `OnLoadAsync` returns there is no timer, subscription, retained per-frame 
 
 ## Installation / migration
 
-This module is intentionally incompatible with the original `com.acidphantasm.itemvaluation`. Remove the original Item Valuation server mod before installing the candidate under:
+This module is intentionally incompatible with the original `com.acidphantasm.itemvaluation`. Remove the original Item Valuation server mod before installing release 1.0.0 under:
 
 `SPT_Runtime/user/mods/Item Valuation MOD SPT/`
 
@@ -118,4 +119,4 @@ No file is installed under `BepInEx/plugins` by this module.
 
 ## Validation state
 
-Source/static/build validation is automated by `.github/workflows/item-valuation-mod-spt-validate.yml`. Exact SPT 4.1.3 visual behavior remains a physical runtime gate.
+Release 1.0.0 is accepted for SPT 4.1.3. Source/static/build validation is automated by `.github/workflows/item-valuation-mod-spt-validate.yml`, and runtime validation was completed against the current mod stack before development closure.
