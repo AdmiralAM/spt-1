@@ -54,12 +54,7 @@ var protectedPristine = EconomyHealthInvariantEvaluator.Evaluate(new EconomyHeal
 Require(Find(protectedPristine, EconomyHealthInvariantKind.ProtectedPristine).State == EconomyInvariantState.Fail, "Untouched pristine must fail protection invariant.");
 Require(protectedPristine.FutureAutomaticActionBlocked, "Protected pristine must block future automatic action.");
 
-var lastRenewableRemoved = healthy with
-{
-    SubjectId = "item-no-renewable",
-    Invariants = healthy.Invariants,
-};
-lastRenewableRemoved = EconomyHealthInvariantEvaluator.Evaluate(new EconomyHealthInvariantInput
+var lastRenewableRemoved = EconomyHealthInvariantEvaluator.Evaluate(new EconomyHealthInvariantInput
 {
     SubjectType = "Item",
     SubjectId = "item-no-renewable",
@@ -139,8 +134,7 @@ var weakAttribution = EconomyHealthInvariantEvaluator.Evaluate(new EconomyHealth
 });
 Require(Find(weakAttribution, EconomyHealthInvariantKind.AttributionConfidence).State == EconomyInvariantState.Fail, "Heuristic attribution must not satisfy declared-ownership requirement.");
 
-var conflictAttribution = weakAttribution;
-conflictAttribution = EconomyHealthInvariantEvaluator.Evaluate(new EconomyHealthInvariantInput
+var conflictAttribution = EconomyHealthInvariantEvaluator.Evaluate(new EconomyHealthInvariantInput
 {
     SubjectType = "TraderOffer",
     SubjectId = "offer-conflict",
@@ -159,6 +153,28 @@ conflictAttribution = EconomyHealthInvariantEvaluator.Evaluate(new EconomyHealth
     MinimumRequiredAttributionConfidence = EconomyAttributionConfidence.DeclaredOwnership,
 });
 Require(Find(conflictAttribution, EconomyHealthInvariantKind.AttributionConfidence).State == EconomyInvariantState.Fail, "Conflicting attribution must fail even at sufficient confidence class.");
+
+var unknownAttribution = EconomyHealthInvariantEvaluator.Evaluate(new EconomyHealthInvariantInput
+{
+    SubjectType = "TraderOffer",
+    SubjectId = "offer-unknown",
+    Dimension = "Availability",
+    PristineUntouched = false,
+    HadRenewablePathBefore = true,
+    HasRenewablePathAfter = true,
+    EarliestProgressionLevelBefore = 10,
+    EarliestProgressionLevelAfter = 10,
+    AllowedProgressionDelay = 0,
+    ChannelConcentrationHhiBefore = 1.0,
+    ChannelConcentrationHhiAfter = 1.0,
+    AllowedConcentrationIncrease = 0,
+    AttributionState = EconomyAttributionResolutionState.Unknown,
+    AttributionConfidence = EconomyAttributionConfidence.Unknown,
+    MinimumRequiredAttributionConfidence = EconomyAttributionConfidence.DeclaredOwnership,
+});
+Require(Find(unknownAttribution, EconomyHealthInvariantKind.AttributionConfidence).State == EconomyInvariantState.Unknown, "Unknown attribution must remain Unknown, not measured Fail.");
+Require(unknownAttribution.FutureAutomaticActionBlocked, "Unknown attribution must still fail closed for future automatic action.");
+Require(!unknownAttribution.HasFailure, "Unknown attribution must remain distinct from conflict/weak-confidence failure.");
 
 var unknown = EconomyHealthInvariantEvaluator.Evaluate(new EconomyHealthInvariantInput
 {
