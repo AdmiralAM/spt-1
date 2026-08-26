@@ -14,7 +14,7 @@ Accepted evidence includes:
 - production transaction smoke: commit, rollback and same-state idempotence;
 - primary audit: typed final DB + pristine startup parity physically proven (`final=5362`, `pristine=558`, `compared=5362`, `questRewardEdges=38176`).
 
-The accepted Alpha evidence remains authoritative even while later opt-in slices are developed behind default-off gates.
+The accepted parity proof is historical acceptance evidence. Its shadow service and standalone parity validator have been retired from the active runtime after the direct typed/pristine path replaced the old correction chain.
 
 ## Standard packaged validators
 
@@ -23,17 +23,16 @@ From the installed `Economy Admiral` folder:
 ```powershell
 .\Validate-Runtime.ps1
 .\Validate-Enforce.ps1
-.\Validate-PrimaryParity.ps1
 ```
 
-`Validate-Runtime.ps1` is for `mode=Audit` and requires no committed mutations.
+`Validate-Runtime.ps1` is for `mode=Audit`, requires runtime-evidence schema 5, all seven core reports, pristine provenance consistency, an unchanged DB fingerprint, and no committed mutations.
 
-`Validate-Enforce.ps1` is for `mode=Enforce`. It recognizes:
+`Validate-Enforce.ps1` is for `mode=Enforce`. It also requires the seven-report schema-5 runtime manifest and recognizes:
 
-- schema 5 / mutation policy 3: accepted Alpha (`Experience`, `TraderStanding` only);
-- schema 6 / mutation policy 4: opt-in bounded single-stack item normalization in addition to numeric Alpha dimensions.
+- enforcement-plan schema 5 / mutation policy 3: accepted Alpha (`Experience`, `TraderStanding` only);
+- enforcement-plan schema 6 / mutation policy 4: opt-in bounded single-stack item normalization in addition to numeric Alpha dimensions.
 
-`Validate-PrimaryParity.ps1` verifies typed final DB primary audit accounting against the pristine startup snapshot. This parity has already been physically accepted and should not be re-requested for unrelated changes.
+Do not re-request primary parity for unrelated changes. The physical parity gate already served its purpose and is preserved in project history rather than re-run on every server start.
 
 ## Opt-in bounded item-stack gate
 
