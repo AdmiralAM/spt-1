@@ -4,11 +4,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
-    <AssemblyName>SPT Tactical HUD Server</AssemblyName>
-    <RootNamespace>SPTTacticalHUD.Server</RootNamespace>
-    <Version>1.13.0</Version>
-    <AssemblyVersion>1.13.0.0</AssemblyVersion>
-    <FileVersion>1.13.0.0</FileVersion>
+    <AssemblyName>Admiral Tactical HUD Server</AssemblyName>
+    <RootNamespace>AdmiralTacticalHUD.Server</RootNamespace>
+    <Version>1.13.3</Version>
+    <AssemblyVersion>1.13.3.0</AssemblyVersion>
+    <FileVersion>1.13.3.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="SPTarkov.Common" Version="4.1.2" />
