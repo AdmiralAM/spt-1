@@ -25,9 +25,10 @@ public sealed class IsItemKeptAfterDeathPatch : AbstractPatch
         var nodes = inventoryItems.Select(item => new BeltInventoryNode(
             item.Id.ToString(),
             item.ParentId?.ToString(),
-            item.SlotId));
+            item.SlotId,
+            item.Template.ToString()));
 
-        if (BeltDeathPolicy.ShouldKeep(itemToCheck.Id.ToString(), nodes))
+        if (BeltDeathPolicy.ShouldKeep(itemToCheck.Id.ToString(), nodes, RuntimeCandidateBeltItem.RuntimeCandidateTpl))
             __result = true;
     }
 }
