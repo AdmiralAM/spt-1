@@ -51,20 +51,6 @@ namespace SPTBeltArmbandInventory
             RequestFlush?.Invoke();
         }
 
-        static bool ContainsRuntimeCandidate(object[] args)
-        {
-            if (args == null) return false;
-            for (int i = 0; i < args.Length; i++)
-            {
-                object value = args[i];
-                if (IsRuntimeCandidate(value)) return true;
-
-                object item = ReflectionTools.ReadMember(value, "Item");
-                if (IsRuntimeCandidate(item)) return true;
-            }
-            return false;
-        }
-
         internal static void Flush()
         {
             if (PendingWindows.Count == 0) return;
@@ -89,6 +75,23 @@ namespace SPTBeltArmbandInventory
             PendingWindows.Clear();
             LogWarning = null;
             RequestFlush = null;
+        }
+
+        static bool ContainsRuntimeCandidate(object[] args)
+        {
+            if (args == null) return false;
+            for (int i = 0; i < args.Length; i++)
+            {
+                object value = args[i];
+                if (IsRuntimeCandidate(value)) return true;
+
+                object item = ReflectionTools.ReadMember(value, "Item");
+                if (IsRuntimeCandidate(item)) return true;
+
+                object contained = ReflectionTools.ReadMember(value, "ContainedItem");
+                if (IsRuntimeCandidate(contained)) return true;
+            }
+            return false;
         }
 
         static bool TryAdjust(object window)
@@ -192,7 +195,7 @@ namespace SPTBeltArmbandInventory
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
                 int patched = 0;
-                MethodInfo[] methods = gridWindowType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                MethodInfo[] methods = gridWindowType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
                 for (int i = 0; i < methods.Length; i++)
                 {
                     MethodInfo method = methods[i];
@@ -202,10 +205,10 @@ namespace SPTBeltArmbandInventory
                 }
 
                 if (patched == 0)
-                    return Fail("SPT 4.1 GridWindow.Show boundary was not found; compact ArmBand window sizing is disabled.");
+                    return Fail("SPT 4.1 GridWindow declares no patchable Show overload; compact ArmBand window sizing is disabled.");
 
                 GridWindowSizingRuntime.LogWarning = logWarning;
-                if (logInfo != null) logInfo("B&A&HB compact ArmBand GridWindow sizing installed on " + patched + " Show overload(s).");
+                if (logInfo != null) logInfo("B&A&HB compact ArmBand GridWindow sizing installed on " + patched + " declared Show overload(s).");
                 return true;
             }
             catch (Exception exception)
@@ -216,13 +219,10 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        internal static bool IsGridWindowShow(MethodInfo method)
+        static bool IsGridWindowShow(MethodInfo method)
         {
-            return method != null
-                && string.Equals(method.Name, "Show", StringComparison.Ordinal)
-                && !method.IsAbstract
-                && !method.ContainsGenericParameters
-                && method.ReturnType == typeof(void);
+            if (method == null || !string.Equals(method.Name, "Show", StringComparison.Ordinal) || method.IsAbstract || method.ContainsGenericParameters) return false;
+            return method.ReturnType == typeof(void);
         }
 
         static MethodInfo PostfixFactory(MethodBase original)
