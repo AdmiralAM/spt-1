@@ -27,8 +27,11 @@ Long-term source modules currently integrated under `mods/`:
 - `SPT-Item-Intelligence`
 - `SPT-Pause`
 - `SPT-Belt-Armband-Inventory`
+- `Item-Valuation-MOD-SPT`
 - `Admiral-Trader`
 - `Admiral-Artyom-Revival`
+
+`Item-Valuation-MOD-SPT` remains a development/CI-artifact module until its SPT 4.1.3 physical runtime gate passes; it has no permanent runtime branch yet.
 
 The root `README.md` is the human-readable module index. Each module README owns its current product name, version, scope, architecture, installation channel, and validation status. Project/package metadata is the machine-readable version authority. Detailed phase/revision documents are supporting history, not a second source of truth for current status.
 
