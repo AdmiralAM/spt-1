@@ -42,6 +42,14 @@ class ExactRuntimeHandoffContractTests(unittest.TestCase):
             self.assertNotIn("StartsWith($expected", text, path.name)
             self.assertIn("$sourceHead -ne $expected", text, path.name)
 
+    def test_builder_is_staging_only_and_cannot_bypass_validated_wrapper_install(self):
+        text = BUILDER.read_text(encoding="utf-8")
+        self.assertNotIn("[switch]$Install", text)
+        self.assertNotIn("if ($Install) {", text)
+        self.assertNotIn("Remove-Item $destination -Recurse -Force", text)
+        self.assertIn("Staging-only builder completed", text)
+        self.assertIn("package_spt413_exact_candidate.ps1", text)
+
     def test_wrapper_installs_only_after_final_archive_validation(self):
         text = SCRIPT.read_text(encoding="utf-8")
         builder_call = "& $builder -SptRoot $SptRoot -ExpectedHeadSha $expected"
