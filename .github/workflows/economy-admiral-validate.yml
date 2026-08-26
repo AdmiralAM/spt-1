@@ -64,6 +64,8 @@ jobs:
               'runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken)',
           ]:
               assert text in mod, text
+          for forbidden in ['PristineReportCorrectionService', 'PrimaryAuditParityService', 'CompositePolicyEvaluationService', 'TargetProposalService']:
+              assert forbidden not in mod, forbidden
           assert mod.index('config.Mode == EconomyMode.Off') < mod.index('runtimeEvidenceService.CaptureBefore()')
 
           for service_name in ['EconomyAuditService.cs', 'QuestAnalysisService.cs', 'EnforcementPlanService.cs']:
@@ -71,6 +73,11 @@ jobs:
               assert 'EconomyRuntimeConfigService' in text, service_name
               assert 'LoadConfigAsync' not in text, service_name
               assert 'Path.Combine(modPath, "config", "config.json")' not in text, service_name
+
+          for service_name in ['RewardUtilityAuditService.cs', 'QuestProgressionGraphService.cs', 'QuestConstraintAuditService.cs', 'QuestAnalysisService.cs']:
+              text = (root / 'server' / service_name).read_text(encoding='utf-8')
+              assert 'VanillaBaselineSnapshot' in text, service_name
+              assert 'PristineStartupSnapshot' in text, service_name
 
           analysis = (root / 'server/QuestAnalysisService.cs').read_text(encoding='utf-8')
           for text in ['OutlierFlagsAffectEnforcement = true','HIGH_XP_LOW_DEPTH','RESTARTABLE_HIGH_XP','HIGH_STANDING_LOW_DEPTH','MedianXp','MedianAbsoluteStanding']:
@@ -108,21 +115,24 @@ jobs:
               assert text in transaction_smoke, text
 
           evidence = (root / 'server/RuntimeEvidenceService.cs').read_text(encoding='utf-8')
-          for text in ['SchemaVersion = 4','DatabaseChangeExpected','EnforcementEvidenceValid','ValidateEnforcementEvidence','config.Mode != EconomyMode.Enforce','enforcement.MutationCount == 0','enforcement.TransactionCommitted && !databaseUnchanged','allowedDimensions','ItemRewardStackCount','SuccessItemHandbookValue','candidate.PristineUntouched','DeclaredMutationCount = enforcement.MutationCount']:
+          for text in ['SchemaVersion = 5','DatabaseChangeExpected','EnforcementEvidenceValid','ValidateEnforcementEvidence','config.Mode != EconomyMode.Enforce','enforcement.MutationCount == 0','enforcement.TransactionCommitted && !databaseUnchanged','allowedDimensions','ItemRewardStackCount','SuccessItemHandbookValue','candidate.PristineUntouched','DeclaredMutationCount = enforcement.MutationCount']:
               assert text in evidence, text
+          assert 'economy-admiral-composite-candidates.json' not in evidence
+          assert 'economy-admiral-target-proposals.json' not in evidence
+          assert evidence.count('economy-admiral-') >= 8
 
           audit_validator = (root / 'tools/Validate-Runtime.ps1').read_text(encoding='utf-8')
-          for text in ['validator requires mode=Audit','DatabaseUnchangedAcrossPipeline','PlannedMutationCount','PristineUnchanged candidate is not protected']:
+          for text in ['validator requires mode=Audit','DatabaseUnchangedAcrossPipeline','PlannedMutationCount','PristineUnchanged candidate is not protected','7/7 core reports are required']:
               assert text in audit_validator, text
           enforce_validator = (root / 'tools/Validate-Enforce.ps1').read_text(encoding='utf-8')
-          for text in ['validator requires mode=Enforce','Alpha requires at least one applied mutation','After != Target','PristineUnchanged candidate was mutated','fingerprint changed','ItemRewardStackCount','PresetSingleStackItemBudgetCapV1']:
+          for text in ['validator requires mode=Enforce','Alpha requires at least one applied mutation','After != Target','PristineUnchanged candidate was mutated','fingerprint changed','ItemRewardStackCount','PresetSingleStackItemBudgetCapV1','7/7 core reports are required']:
               assert text in enforce_validator, text
 
           config_source = (root / 'server/EconomyConfig.cs').read_text(encoding='utf-8')
           for text in ['QuestRewardOverrides','AllowAutomaticMutation','ExperienceTarget','TraderStandingTarget','EnableItemRewardStackNormalization']:
               assert text in config_source, text
 
-          print('Economy Admiral Enforce Alpha + opt-in bounded item-stack contract OK')
+          print('Economy Admiral Enforce + seven-report direct pristine contract OK')
 
   server:
     name: Economy Admiral .NET 10 server build
