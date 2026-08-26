@@ -5,82 +5,126 @@ Official curated successor workstream for the legacy Andrudis/QuestManiac ecosys
 ## Product identity
 
 - Mod name: **Admiral Trader**
-- Trader working name: **Admiral / Адмирал**
-- Trader icon/portrait and final character presentation: TBD
+- Trader name: **Admiral / Адмирал**
+- Official trader portrait: **selected** — the final/latest bust portrait from the `Генерация иконок адмирала` workstream showing Admiral in a white naval tunic.
+- Exact portrait binary: awaiting handoff into this repository; substitution/regeneration is not allowed. The maintained contract is [`manifests/identity-assets.json`](manifests/identity-assets.json).
 - Legacy Andrudis/QuestManiac names are provenance/source references only and are not the target product identity.
 
-## Current state
+## Gameplay Alpha direction
 
-The inventory / quest-graph / campaign-manifest / migration / reward-benchmark foundation is established. The exact SPT 4.1.3 test-candidate gate is isolated in Draft PR #151 under Issue #146; post-candidate concept and static-policy work continues separately so the exact physical candidate remains immutable.
+Admiral is a **full specialist trader with an authored campaign and capability-broker functions**, not an empty quest-unlock terminal and not a preserved QuestManiac content dump.
+
+His target role is **expeditionary procurement and specialist field logistics**. The player-facing loop is:
+
+`trade -> build relationship -> take authored contracts -> earn milestones/capabilities -> expand specialist access`
+
+The current 31 quests are a runtime/gameplay backbone, not a final quest-count target. Quest count has no artificial ceiling: expansion is quality-gated by authored purpose, objective variety, progression value and meaningful payoff.
+
+## Current stock model
+
+Gameplay Alpha uses three stock layers:
+
+1. **Baseline/Core** — visible from first contact, finite and not quest-gated.
+2. **Relationship** — specialist stock may use player level plus Admiral standing/loyalty where appropriate.
+3. **Milestone/Capability** — high-value privileges may be explicitly quest-gated and remain finite/buy-limited.
+
+The current materialized assort contains **11 offers**:
+
+- **4 baseline offers** available without a quest gate;
+- **7 milestone offers**: Laboratory access plus six controlled ammunition capability offers.
+
+Baseline candidates are audited against pinned vanilla SPT 4.1.3, Scorpion and Artem references. Current pinned overlap validation reports zero direct baseline duplicates with Scorpion or Artem.
+
+Special Weapons remains sample-only: its current Munitions milestone awards one green RSP-30 signal cartridge and does not create renewable heavy/explosive ammunition supply.
+
+## Current campaign backbone
 
 The current authored runtime set contains **31 quests**:
 
-- 10 **Access Protocol** quests replacing the legacy key-collection ladder with compact non-FIR capability checks;
-- 21 **Arsenal Protocol** quests across seven independent weapon families, with distinct Qualification → Fieldwork → Munitions proofs;
-- Qualification is non-FIR/non-consumptive possession of one compatible family weapon;
-- Fieldwork is family weapon use in combat;
-- six normal Munitions tracks add the selected capability-caliber combat constraint before the controlled ammunition unlock;
-- six controlled ammunition capability rewards/unlocks;
-- **Special Weapons** uses the same three-stage structure but ends in one explicit green RSP-30 sample reward and no permanent assort unlock.
+- 10 **Access Protocol** quests;
+- 21 **Arsenal Protocol** quests across seven weapon families;
+- current Arsenal backbone: Qualification -> Fieldwork -> Munitions;
+- Qualification is a non-FIR, non-consumptive readiness/possession proof;
+- Fieldwork is family-specific combat use;
+- six normal Munitions tracks add capability-caliber field proof and a controlled ammunition milestone;
+- Special Weapons ends in a one-unit RSP-30 sample and no permanent ammo offer.
 
-Admiral's product role is **capability broker**, not general-purpose shop: prove a capability, receive a bounded privilege, then use that privilege in the wider SPT progression. `docs/gameplay-doctrine.md` defines that design contract and `manifests/gameplay-policy.json` encodes its currently enforceable campaign/logistics invariants for automated regression tests.
+This structure is explicitly **not** a future campaign cap. Strong Andrudis concepts, unique objectives, authored chains, presets and milestone rewards may add many more quests after passing the current quest-admission rules.
 
-Trader loyalty is deliberately non-authoritative: standing represents overall relationship/status only. All capability offers remain LL1 plus explicit quest gates, there is no sales-sum grind, loyalty tiers do not change purchase prices, and repair/insurance remain disabled. `docs/loyalty-role.md` records the rationale and static boundary.
+## Player-facing quest contract
 
-The server runtime validates the mixed 10 Access + 7 Arsenal readiness + 14 Arsenal combat registry, trader identity, quest IDs, objective shapes and all referenced runtime item TPLs before publication. Missing authored locale entries fail over to deterministic QuestName-based runtime text so incomplete localization cannot expose raw locale keys; complete authored EN/RU text remains a polish target before final publication.
+Every quest must make **Why / What / Context / Payoff** understandable in EN/RU. Raw TPLs, condition IDs and opaque technical objective text are prohibited as final UI.
 
-Source registration remains **fail-closed** through `runtime-manifest.json`. The exact-runtime builder is the only supported path that creates an enabled test candidate, and it must compile against the user's real SPT 4.1.3 assemblies. Candidate staging records source HEAD, clean-tree state, SPT Server.Core version/SHA-256 and built Admiral DLL SHA-256 in `candidate-provenance.json` so live evidence can be tied to the exact CI-tested source head.
+Gameplay Alpha now maintains:
 
-All Admiral Trader source/module workflows are expected to be green before physical handoff. Merge remains blocked until one defined SPT 4.1.3 physical runtime gate provides accepted build/start/UI evidence.
+- dedicated EN/RU locale text for every current finish-condition ID;
+- quest-level Gameplay Alpha prose overrides where the original skeleton text did not match actual mechanics;
+- explicit communication of capability unlocks and sample rewards;
+- runtime-generated Admiral standing context derived from actual `TraderStanding` reward records;
+- semantic regression checks linking objective mechanics, objective locales, item/standing rewards and `questassort` unlocks.
 
-The target remains one NPC, one curated campaign, deterministic migration behavior, and reward/unlock data that remains inspectable by Economy Admiral.
+## Loyalty / standing
 
-Work order:
+Standing represents relationship/status. It does **not** replace explicit milestone proof and sales-sum grind is forbidden.
 
-`source inventory -> quest graph -> manifest -> migration -> trader consolidation -> curated content -> reward normalization -> tests -> runtime`
+Current loyalty thresholds are level + standing based, with no sales-sum requirement. Capability gates remain authored quest gates where declared; relationship stock may use loyalty in future slices.
 
-Tracked by repository Issue #115; the active runtime gate is Issue #146 / Draft PR #151. Post-candidate doctrine/policy work is isolated from that exact-head gate.
+## Economy Admiral boundary
 
-## Design constraints
+Admiral Trader owns:
 
-- Six legacy custom traders are a source-data concern, not the target runtime architecture.
-- New-profile content must be explicitly selected; directory enumeration must not implicitly activate content.
-- Removed legacy quests must not create successor chains on existing profiles.
-- Already-accepted legacy quests should finish through the template-suppression completion bridge without direct profile mutation whenever possible.
-- Direct PMC profile writes remain forbidden until the exact SPT 4.1.3 mutation/persistence boundary is proven.
-- Restartable legacy quests are excluded from the completion bridge by default.
-- Hideout-assistant content is excluded from the curated campaign.
-- Repetitive kill/headshot/FIR/handover ladders are not preserved wholesale.
-- Weapon and ammo progression form one progression domain because the pinned legacy graph contains intentional cross-bundle prerequisite edges between them.
-- Assort, quest-assort, reward, and unlock data remain close to native SPT shapes so downstream economy auditing does not require an Admiral-Trader-specific opaque format.
-- Permanent Admiral offers must remain finite, quest-gated, and family-specific; Special Weapons remains sample-only unless a later design decision explicitly changes the doctrine and its machine policy together.
-- Loyalty standing must not become a second capability gate or bypass explicit quest proof.
+- authored quest/progression semantics;
+- Baseline / Relationship / Milestone stock classification;
+- quest and standing gates;
+- finite stock/buy ceilings;
+- sample/permanent capability semantics;
+- ownership/provenance declarations.
 
-## Baselines and findings
+**Economy Admiral** owns global source-pressure analysis, reward/price benchmarking and normalization, provenance/health checks and any future approved economy enforcement. Admiral Trader therefore keeps its data native-shaped and publishes explicit integration contracts instead of implementing a second global economy engine.
 
-- [`docs/gameplay-doctrine.md`](docs/gameplay-doctrine.md) defines Admiral's player-facing purpose, quest admission test, anti-goals, balance invariants, and preferred expansion directions.
-- [`docs/loyalty-role.md`](docs/loyalty-role.md) defines standing/loyalty as relationship status rather than capability authority.
-- [`manifests/gameplay-policy.json`](manifests/gameplay-policy.json) is the machine-readable subset of those contracts used to prevent campaign/logistics/loyalty drift.
-- [`docs/source-baseline.md`](docs/source-baseline.md) defines which external references are authoritative for which boundary.
-- [`docs/inventory-findings.md`](docs/inventory-findings.md) records the full-corpus gate results.
-- [`docs/runtime-boundaries.md`](docs/runtime-boundaries.md) records proven and intentionally unproven SPT runtime boundaries.
-- [`docs/migration-contract.md`](docs/migration-contract.md) defines the no-profile-write legacy completion bridge and its safety limits.
-- [`docs/spt413-test-candidate.md`](docs/spt413-test-candidate.md) is the exact SPT 4.1.3 physical-runtime handoff/evidence contract.
-- [`manifests/campaign-manifest.json`](manifests/campaign-manifest.json) is the maintained source of truth for campaign classification and migration policy.
+Gameplay Alpha changes that add baseline/relationship stock must remain compatible with Economy Admiral Issue #197; Economy Admiral must not infer that every Admiral offer is quest-gated or that renewable offer count is permanently seven.
 
-The legacy quest database itself remains external source material and is not copied wholesale into this repository.
+## Andrudis curation
 
-## Analysis tools
+QuestManiac/Andrudis is source material, not a runtime dependency of the target product. The intended integration mode allows the legacy mod to be disabled while one Admiral replaces its useful authored value.
 
-`tools/build_inventory.py` walks the pinned legacy `db/QuestBundles` tree, builds a deterministic predecessor/successor graph, reports graph-integrity anomalies, summarizes objectives/rewards, and applies the maintained campaign rules.
+Preserve or re-author:
 
-`tools/build_reward_benchmark.py` consumes native-style vanilla quest JSON and builds descriptive reward distributions by level bucket, including XP, standing, item counts and unlock counts. It intentionally does not invent a ruble valuation for arbitrary item rewards; economic valuation remains a separate layer that Economy Admiral can supply.
+- strong authored concepts and narrative chains;
+- unusual objectives;
+- unique weapon/preset ideas;
+- meaningful milestone rewards and specialist capabilities.
 
-`tools/build_weapon_ammo_runtime_templates.py` compiles the maintained Arsenal Protocol plan, authored specification, capability selections and frozen runtime weapon-family pools into deterministic native SPT quest templates.
+Remove or rewrite:
 
-`tools/build_spt413_test_candidate.ps1` validates a clean exact-head checkout, compiles against real SPT 4.1.3 runtime assemblies, stages an enabled test-only package and emits candidate provenance hashes for the physical gate.
+- literal and low-value vanilla duplicates;
+- empty count-escalation ladders;
+- excessive FIR/handover busywork;
+- purposeless hideout chores;
+- reward faucets.
 
-The CI uses the official pinned `sp-tarkov/server-csharp` vanilla `quests.json` as the reward benchmark source and independently validates committed runtime materialization against compiler output.
+Curation optimizes **quality density**, not minimum quest count.
+
+## SPT 4.1.3 runtime safety
+
+Admiral Trader is currently server-side and targets **SPT 4.1.3**. Source registration remains fail-closed through `runtime-manifest.json`.
+
+The server/runtime validation layer checks trader identity, native lowercase `questassort` states (`started / success / fail`), quest/objective shapes, referenced item TPLs, assort contracts and locale coverage. The earlier physical PascalCase `questassort` startup failure is retained as a regression boundary.
+
+The exact-runtime builder compiles against the user's real SPT 4.1.3 runtime assemblies and records source/runtime provenance before physical testing. CI is necessary but does not substitute for physical SPT runtime evidence.
+
+The official portrait is creatively selected, but source currently retains the built-in test placeholder until the **exact selected binary** is handed off and committed at the maintained identity route. A similar/recreated portrait is not an acceptable substitute.
+
+## Key maintained contracts
+
+- [`docs/gameplay-doctrine.md`](docs/gameplay-doctrine.md) — current gameplay purpose, stock layers, quest admission test and anti-goals.
+- [`manifests/gameplay-policy.json`](manifests/gameplay-policy.json) — machine-readable gameplay invariants.
+- [`manifests/identity-assets.json`](manifests/identity-assets.json) — official Admiral identity/portrait selection contract.
+- [`manifests/baseline-stock.json`](manifests/baseline-stock.json) — baseline stock classification and overlap rationale.
+- [`manifests/reward-policy.json`](manifests/reward-policy.json) — vanilla-benchmarked reward envelopes.
+- [`docs/source-baseline.md`](docs/source-baseline.md) — pinned external reference authority.
+- [`docs/migration-contract.md`](docs/migration-contract.md) — legacy migration/suppression safety boundary.
+- [`docs/spt413-test-candidate.md`](docs/spt413-test-candidate.md) — exact physical runtime handoff/evidence contract.
 
 ## Validation
 
@@ -88,17 +132,6 @@ The CI uses the official pinned `sp-tarkov/server-csharp` vanilla `quests.json` 
 python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 ```
 
-Module-specific CI additionally:
+Module CI additionally validates the pinned legacy corpus/graph, vanilla reward benchmark, current Access/Arsenal materialization, weapon/ammo pools, native SPT quest/assort contracts, Gameplay Alpha quest semantics, baseline stock overlap against pinned references, .NET 10 SPT 4.1.3 server compilation, package layout/provenance and fail-closed runtime boundaries.
 
-- checks the pinned 4,862-quest legacy corpus and graph invariants;
-- builds the official vanilla reward benchmark from a pinned SPT source revision;
-- validates Access Protocol and Arsenal Protocol compiler output;
-- validates the 7 readiness + 14 combat Arsenal objective mix and six caliber-constrained Munitions proofs;
-- validates frozen weapon-family pools and controlled ammo capability selections;
-- enforces the machine-readable gameplay policy against authored specs, loyalty/base data and packaged assort/questassort data;
-- builds the .NET 10 server runtime against the published SPTushonka 4.1.3 package line;
-- validates the packaged 31-quest mixed runtime layout;
-- validates the exact-runtime candidate/provenance source contract;
-- keeps generated reports only as transient Actions artifacts.
-
-Final runtime validation requires the exact-head SPT 4.1.3 physical gate defined in `docs/spt413-test-candidate.md`.
+Active Gameplay Alpha work is tracked by Issue #192 / Draft PR #193. Economy Admiral stock-class compatibility is tracked separately by Issue #197.
