@@ -69,7 +69,8 @@ jobs:
               raise SystemExit('runtime weapon family set drifted from resolved family set')
           permanent = 0
           for family_id, family in pools['families'].items():
-              candidate_ids = {row['tpl'] for row in family.get('weapons', [])}
+              resolved_weapons = {row['tpl']: row for row in family.get('weapons', [])}
+              candidate_ids = set(resolved_weapons)
               frozen_ids = runtime_pools['families'][family_id]
               if not frozen_ids or len(frozen_ids) != len(set(frozen_ids)):
                   raise SystemExit(f'{family_id}: empty or duplicate curated weapon pool')
@@ -94,6 +95,15 @@ jobs:
                   raise SystemExit(f'{family_id}: unsafe capability selection')
               if selected['stockPerReset'] <= 0 or selected['buyRestriction'] <= 0:
                   raise SystemExit(f'{family_id}: unlock must remain finite')
+              capability_caliber = frozen.get('caliber')
+              compatible_frozen = [
+                  tpl for tpl in frozen_ids
+                  if resolved_weapons[tpl].get('caliber') == capability_caliber
+              ]
+              if not compatible_frozen:
+                  raise SystemExit(
+                      f'{family_id}: Munitions caliber {capability_caliber!r} is impossible with curated runtime weapon pool'
+                  )
               permanent += 1
           if permanent != 6:
               raise SystemExit(f'expected exactly six permanent ammo unlocks, got {permanent}')
