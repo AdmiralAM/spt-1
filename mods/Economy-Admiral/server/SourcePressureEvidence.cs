@@ -38,10 +38,14 @@ public sealed record ItemSourcePressureEvidence
     public required int OneTimeSourceCount { get; init; }
     public required double RenewableSourceShare { get; init; }
     public required bool HasRenewablePath { get; init; }
+    public required int RenewableChannelCount { get; init; }
+    public required bool SingleRenewableSourceRisk { get; init; }
     public int? EarliestProgressionLevel { get; init; }
     public required bool SingleSourceDominated { get; init; }
     public required AcquisitionChannel? DominantChannel { get; init; }
     public required double DominantChannelSourceShare { get; init; }
+    public required double ChannelConcentrationHhi { get; init; }
+    public required double EffectiveChannelCount { get; init; }
     public required List<ChannelSourceSummary> Channels { get; init; }
     public required List<string> ProvenanceClasses { get; init; }
 }
@@ -146,6 +150,11 @@ public static class SourcePressureEvidenceAnalyzer
             .ThenBy(channel => channel.Channel)
             .FirstOrDefault();
 
+        var channelConcentration = sourceCount == 0
+            ? 0d
+            : channels.Sum(channel => Math.Pow((double)channel.SourceCount / sourceCount, 2));
+        var effectiveChannelCount = channelConcentration <= 0 ? 0d : 1d / channelConcentration;
+
         return new ItemSourcePressureEvidence
         {
             ItemTemplateId = group.Key,
@@ -155,10 +164,14 @@ public static class SourcePressureEvidenceAnalyzer
             OneTimeSourceCount = sourceCount - renewableCount,
             RenewableSourceShare = sourceCount == 0 ? 0 : Math.Round((double)renewableCount / sourceCount, 6),
             HasRenewablePath = renewableCount > 0,
+            RenewableChannelCount = channels.Count(channel => channel.RenewableSourceCount > 0),
+            SingleRenewableSourceRisk = renewableCount == 1,
             EarliestProgressionLevel = knownLevels.Count == 0 ? null : knownLevels.Min(),
             SingleSourceDominated = sourceCount == 1,
             DominantChannel = dominant?.Channel,
             DominantChannelSourceShare = dominant is null || sourceCount == 0 ? 0 : Math.Round((double)dominant.SourceCount / sourceCount, 6),
+            ChannelConcentrationHhi = Math.Round(channelConcentration, 6),
+            EffectiveChannelCount = Math.Round(effectiveChannelCount, 6),
             Channels = channels,
             ProvenanceClasses = sources
                 .Select(source => source.ProvenanceClass)
