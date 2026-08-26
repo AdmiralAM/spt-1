@@ -9,6 +9,7 @@ namespace SPTQuestPlanner.Client
         private const int ActiveDisposition = 4;
         private const int AvailableDisposition = 3;
         private const int SuccessProfileState = 4;
+        private const int RawSuccessStatus = 4;
         private readonly PlannerTopologyIndex topology;
         private readonly PlannerClientIndex state;
         private readonly int maxVisitedNodes;
@@ -49,7 +50,7 @@ namespace SPTQuestPlanner.Client
             {
                 PlannerTopologyPrerequisite prerequisite = quest.PrerequisiteEdges[i];
                 if (IsPrerequisiteSatisfied(prerequisite)) continue;
-                if (prerequisite.AcceptsProfileState(SuccessProfileState)) continue;
+                if (AcceptsHypotheticalSuccess(prerequisite)) continue;
 
                 PlannerTopologyQuest sourceQuest = topology.GetQuest(prerequisite.SourceQuestId);
                 if (sourceQuest == null || sourceQuest.Repeatable) continue;
@@ -78,7 +79,7 @@ namespace SPTQuestPlanner.Client
             {
                 PlannerTopologyPrerequisite completedEdge = completedQuest.DependentEdges[i];
                 if (!string.Equals(completedEdge.SourceQuestId, questId, StringComparison.Ordinal)) continue;
-                if (!completedEdge.AcceptsProfileState(SuccessProfileState)) continue;
+                if (!AcceptsHypotheticalSuccess(completedEdge)) continue;
                 if (completedEdge.AvailableAfterSeconds > 0) continue;
 
                 PlannerTopologyQuest dependent = topology.GetQuest(completedEdge.TargetQuestId);
@@ -97,7 +98,7 @@ namespace SPTQuestPlanner.Client
                     PlannerTopologyPrerequisite prerequisite = dependent.PrerequisiteEdges[p];
                     if (string.Equals(prerequisite.SourceQuestId, questId, StringComparison.Ordinal))
                     {
-                        if (!prerequisite.AcceptsProfileState(SuccessProfileState) || prerequisite.AvailableAfterSeconds > 0)
+                        if (!AcceptsHypotheticalSuccess(prerequisite) || prerequisite.AvailableAfterSeconds > 0)
                         {
                             unlocked = false;
                             break;
@@ -222,8 +223,19 @@ namespace SPTQuestPlanner.Client
 
         private bool IsPrerequisiteSatisfied(PlannerTopologyPrerequisite prerequisite)
         {
-            int sourceProfileState = EffectiveProfileState(state.GetQuest(prerequisite.SourceQuestId));
+            PlannerQuestClientState source = state.GetQuest(prerequisite.SourceQuestId);
+            if (prerequisite.HasRawProfileStatusContract && source != null && source.RawProfileStatus >= 0)
+                return prerequisite.AcceptsRawProfileStatus(source.RawProfileStatus);
+
+            int sourceProfileState = EffectiveProfileState(source);
             return prerequisite.AcceptsProfileState(sourceProfileState);
+        }
+
+        private static bool AcceptsHypotheticalSuccess(PlannerTopologyPrerequisite prerequisite)
+        {
+            if (prerequisite.HasRawProfileStatusContract)
+                return prerequisite.AcceptsRawProfileStatus(RawSuccessStatus);
+            return prerequisite.AcceptsProfileState(SuccessProfileState);
         }
 
         private static int EffectiveProfileState(PlannerQuestClientState questState)
