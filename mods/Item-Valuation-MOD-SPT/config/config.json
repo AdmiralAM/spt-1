@@ -5,6 +5,13 @@
   "navyMaxValue": 75000,
   "violetMaxValue": 100000,
   "redMaxValue": 250000,
+
+  "ammoLightGreenMaxPen": 15,
+  "ammoGreenMaxPen": 26,
+  "ammoNavyMaxPen": 35,
+  "ammoVioletMaxPen": 44,
+  "ammoRedMaxPen": 54,
+
   "lightGreenColor": "#526B3F",
   "greenColor": "#294F31",
   "navyColor": "#253552",
