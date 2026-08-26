@@ -71,8 +71,15 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                if (LogWarning != null) LogWarning("Could not include belt in equipment-build container validation: " + Unwrap(exception).Message);
+                logFail("Could not include wearable ArmBand in equipment-build container validation", exception);
             }
+        }
+
+        static void logFail(string message, Exception exception)
+        {
+            if (LogWarning == null) return;
+            Exception root = Unwrap(exception);
+            LogWarning(message + ": " + root.GetType().FullName + ": " + root.Message);
         }
 
         internal static void Reset()
@@ -85,8 +92,9 @@ namespace SPTBeltArmbandInventory
 
         static Exception Unwrap(Exception exception)
         {
-            TargetInvocationException invocation = exception as TargetInvocationException;
-            return invocation != null && invocation.InnerException != null ? invocation.InnerException : exception;
+            Exception current = exception;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null) current = invocation.InnerException;
+            return current;
         }
     }
 
@@ -113,11 +121,11 @@ namespace SPTBeltArmbandInventory
                 Type screenType = ReflectionTools.FindType("EFT.UI.EquipmentBuildsScreen");
                 Type slotEnumType = ReflectionTools.FindType("EFT.InventoryLogic.EquipmentSlot");
                 if (harmonyType == null || harmonyMethodType == null || screenType == null || slotEnumType == null)
-                    return Fail("SPT 4.1 EquipmentBuildsScreen/EquipmentSlot or Harmony was not found; belt build-container validation is disabled.");
+                    return Fail("SPT 4.1 EquipmentBuildsScreen/EquipmentSlot or Harmony was not found; wearable build-container validation is disabled.");
 
-                MethodInfo awake = screenType.GetMethod("Awake", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                MethodInfo awake = ReflectionTools.FindInstanceMethod(screenType, "Awake", typeof(void));
                 if (awake == null)
-                    return Fail("SPT 4.1 EquipmentBuildsScreen.Awake shape changed; belt build-container validation is disabled.");
+                    return Fail("SPT 4.1 EquipmentBuildsScreen.Awake() shape changed; wearable build-container validation is disabled.");
 
                 FieldInfo[] fields = screenType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 int count = 0;
@@ -126,7 +134,7 @@ namespace SPTBeltArmbandInventory
                     if (fields[i].FieldType.IsArray && fields[i].FieldType.GetElementType() == slotEnumType) count++;
                 }
                 if (count == 0)
-                    return Fail("SPT 4.1 equipment-build slot arrays were not found; belt build-container validation is disabled.");
+                    return Fail("SPT 4.1 equipment-build slot arrays were not found; wearable build-container validation is disabled.");
 
                 FieldInfo[] candidates = new FieldInfo[count];
                 int index = 0;
@@ -138,9 +146,9 @@ namespace SPTBeltArmbandInventory
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
+                MethodInfo rollback = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
                 if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, harmonyMethodConstructor != null, rollback != null))
-                    return Fail("Harmony patch/rollback API is incompatible; belt build-container validation is disabled.");
+                    return Fail("Harmony patch/rollback API is incompatible; wearable build-container validation is disabled.");
                 unpatchSelf = rollback;
 
                 EquipmentBuildValidationRuntime.LogWarning = logWarning;
@@ -148,17 +156,17 @@ namespace SPTBeltArmbandInventory
                 EquipmentBuildValidationRuntime.SlotEnumType = slotEnumType;
                 EquipmentBuildValidationRuntime.ArmBandValue = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand, false);
 
-                object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(Postfix)) });
+                object postfix = harmonyMethodConstructor.Invoke(new object[] { FindOwnDeclaredMethod(nameof(Postfix)) });
                 Patch(patchMethod, harmonyMethodType, awake, postfix);
 
-                if (logInfo != null) logInfo("Belt/Armband Inventory equipment-build container validation installed.");
+                logInfo?.Invoke("B&A&HB equipment-build container validation installed with ambiguity-safe startup bindings.");
                 return true;
             }
             catch (Exception exception)
             {
                 Dispose();
                 Exception root = Unwrap(exception);
-                return Fail("Belt equipment-build validation installation failed safely: " + root.GetType().FullName + ": " + root.Message);
+                return Fail("Wearable equipment-build validation installation failed safely: " + root.GetType().FullName + ": " + root.Message);
             }
         }
 
@@ -167,9 +175,20 @@ namespace SPTBeltArmbandInventory
             EquipmentBuildValidationRuntime.Normalize(__instance);
         }
 
-        static MethodInfo Method(string name)
+        static MethodInfo FindOwnDeclaredMethod(string name)
         {
-            return typeof(EquipmentBuildValidationPatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
+            MethodInfo[] methods = typeof(EquipmentBuildValidationPatches).GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal) && methods[i].GetParameters().Length == 1) return methods[i];
+            return null;
+        }
+
+        static MethodInfo FindZeroArgInstanceMethod(Type type, string name)
+        {
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal) && methods[i].GetParameters().Length == 0) return methods[i];
+            return null;
         }
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
@@ -211,7 +230,7 @@ namespace SPTBeltArmbandInventory
 
         bool Fail(string message)
         {
-            if (logWarning != null) logWarning(message);
+            logWarning?.Invoke(message);
             return false;
         }
 
