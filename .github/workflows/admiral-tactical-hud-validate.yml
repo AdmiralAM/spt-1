@@ -63,10 +63,11 @@ jobs:
         run: |
           $root = 'artifacts/Admiral-Tactical-HUD-1.13.3'
           $client = Join-Path $root 'BepInEx/plugins/Admiral Tactical HUD'
-          $server = Join-Path $root 'user/mods/Admiral Tactical HUD'
+          $server = Join-Path $root 'SPT_Runtime/user/mods/Admiral Tactical HUD'
           New-Item -ItemType Directory -Force -Path $client | Out-Null
           New-Item -ItemType Directory -Force -Path $server | Out-Null
           Copy-Item 'mods/Admiral-Tactical-HUD/client/bin/Release/netstandard2.1/Admiral Tactical HUD.dll' (Join-Path $client 'Admiral Tactical HUD.dll')
+          Copy-Item 'mods/Admiral-Tactical-HUD/client/assets/hud-sprites.png' (Join-Path $client 'assets/hud-sprites.png')
           Copy-Item 'mods/Admiral-Tactical-HUD/server/bin/Release/net10.0/Admiral Tactical HUD Server.dll' (Join-Path $server 'Admiral Tactical HUD Server.dll')
           Copy-Item 'mods/Admiral-Tactical-HUD/README.md' (Join-Path $server 'README.md')
 
