@@ -4,6 +4,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "tools" / "package_spt413_exact_candidate.ps1"
+BUILDER = ROOT / "tools" / "build_spt413_test_candidate.ps1"
 
 
 class ExactRuntimeHandoffContractTests(unittest.TestCase):
@@ -32,6 +33,14 @@ class ExactRuntimeHandoffContractTests(unittest.TestCase):
         self.assertIn("Compress-Archive", text)
         self.assertIn("SPT_Runtime/user/mods/Admiral-Trader", text)
         self.assertIn("SHA-256", text)
+
+    def test_exact_runtime_handoff_requires_full_40_character_head_sha(self):
+        for path in (SCRIPT, BUILDER):
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("^[0-9a-f]{40}$", text, path.name)
+            self.assertNotIn("^[0-9a-f]{7,40}$", text, path.name)
+            self.assertNotIn("StartsWith($expected", text, path.name)
+            self.assertIn("$sourceHead -ne $expected", text, path.name)
 
 
 if __name__ == "__main__":
