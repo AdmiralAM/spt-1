@@ -20,25 +20,25 @@ internal static class Program
         Assert(!BeltSlotPlan.IsExpectedContainerPanelOrder(new[] { BeltSlotPlan.Pockets }), "rejects unrelated enum arrays");
 
         string[] above = BeltSlotPlan.Build(Vanilla, BeltSlotPosition.AbovePockets, true);
-        Assert(Array.IndexOf(above, BeltSlotPlan.ArmBand) + 1 == Array.IndexOf(above, BeltSlotPlan.Pockets), "places belt above pockets");
-        Assert(above.Length == Vanilla.Length + 1, "adds exactly one belt row");
+        Assert(Array.IndexOf(above, BeltSlotPlan.ArmBand) + 1 == Array.IndexOf(above, BeltSlotPlan.Pockets), "legacy layout helper places ArmBand above pockets");
+        Assert(above.Length == Vanilla.Length + 1, "legacy layout helper adds exactly one ArmBand row");
 
         string[] below = BeltSlotPlan.Build(Vanilla, BeltSlotPosition.BelowPockets, true);
-        Assert(Array.IndexOf(below, BeltSlotPlan.ArmBand) == Array.IndexOf(below, BeltSlotPlan.Pockets) + 1, "places belt below pockets");
-        Assert(below.Length == Vanilla.Length + 1, "below layout adds exactly one row");
+        Assert(Array.IndexOf(below, BeltSlotPlan.ArmBand) == Array.IndexOf(below, BeltSlotPlan.Pockets) + 1, "legacy layout helper places ArmBand below pockets");
+        Assert(below.Length == Vanilla.Length + 1, "legacy below layout adds exactly one row");
 
         string[] duplicateInput = Vanilla.Concat(new[] { BeltSlotPlan.ArmBand, BeltSlotPlan.ArmBand }).ToArray();
         string[] normalized = BeltSlotPlan.Build(duplicateInput, BeltSlotPosition.BelowPockets, true);
-        Assert(normalized.Count(x => x == BeltSlotPlan.ArmBand) == 1, "layout is idempotent");
+        Assert(normalized.Count(x => x == BeltSlotPlan.ArmBand) == 1, "legacy layout helper is idempotent");
 
         string[] hidden = BeltSlotPlan.Build(duplicateInput, BeltSlotPosition.AbovePockets, false);
-        Assert(!hidden.Contains(BeltSlotPlan.ArmBand), "plain armband removes duplicate belt row");
-        Assert(hidden.SequenceEqual(Vanilla), "hidden layout preserves vanilla order");
+        Assert(!hidden.Contains(BeltSlotPlan.ArmBand), "legacy hidden layout removes duplicate ArmBand row");
+        Assert(hidden.SequenceEqual(Vanilla), "legacy hidden layout preserves vanilla order");
 
-        Assert(!BeltSlotPlan.ShouldExposeBelt(false, false), "empty slot stays hidden");
-        Assert(!BeltSlotPlan.ShouldExposeBelt(true, false), "plain armband stays hidden");
+        Assert(!BeltSlotPlan.ShouldExposeBelt(false, false), "empty slot never exposes legacy panel projection");
+        Assert(!BeltSlotPlan.ShouldExposeBelt(true, false), "plain armband never exposes legacy panel projection");
         Assert(!BeltSlotPlan.ShouldExposeBelt(false, true), "container flag alone is insufficient");
-        Assert(BeltSlotPlan.ShouldExposeBelt(true, true), "equipped container exposes belt row");
+        Assert(!BeltSlotPlan.ShouldExposeBelt(true, true), "Phase 1 native GridWindow path keeps legacy panel projection disabled");
 
         Assert(AccessoryCategoryPolicy.IsSupported(AccessoryCategory.ArmBand), "ArmBand category is supported");
         Assert(AccessoryCategoryPolicy.IsSupported(AccessoryCategory.Belt), "Belt category is supported");
@@ -50,21 +50,25 @@ internal static class Program
         Assert(AccessoryCategoryPolicy.HostState(AccessoryCategory.Belt) == AccessoryHostState.ConceptOnly, "Belt remains concept-only until its EFT host boundary is proven");
         Assert(AccessoryCategoryPolicy.HostState(AccessoryCategory.HeadBand) == AccessoryHostState.ConceptOnly, "HeadBand remains concept-only until its EFT host boundary is proven");
         Assert(!AccessoryCategoryPolicy.CanExposeContainer(AccessoryCategory.Belt, false, true), "category alone cannot expose an empty host");
-        Assert(AccessoryCategoryPolicy.CanExposeContainer(AccessoryCategory.HeadBand, true, true), "container-capable HeadBand may expose a row");
+        Assert(AccessoryCategoryPolicy.CanExposeContainer(AccessoryCategory.HeadBand, true, true), "container-capable HeadBand may expose a row conceptually");
         Assert(AccessoryCategoryPolicy.CanActivateRuntime(AccessoryCategory.ArmBand, true, true), "validated ArmBand container can activate its runtime route");
         Assert(!AccessoryCategoryPolicy.CanActivateRuntime(AccessoryCategory.Belt, true, true), "concept-only Belt cannot activate an invented runtime host");
         Assert(!AccessoryCategoryPolicy.CanActivateRuntime(AccessoryCategory.HeadBand, true, true), "concept-only HeadBand cannot activate an invented runtime host");
         Assert(!AccessoryCategoryPolicy.CanExposeContainer((AccessoryCategory)99, true, true), "unknown category fails closed");
         Assert(!AccessoryCategoryPolicy.CanActivateRuntime((AccessoryCategory)99, true, true), "unknown category cannot activate runtime behavior");
-        Assert(AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.PanelProjection), "validated ArmBand owns the panel projection capability");
-        Assert(AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.PaymentSource | AccessoryCapability.FastAccess), "capabilities may be checked as a required set");
+
+        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.PanelProjection), "native GridWindow Phase 1 does not own legacy panel projection");
+        Assert(AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess), "magazine belt retains reachable-container fast access");
+        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.PaymentSource), "magazine-only RC does not install payment-source behavior");
+        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess), "magazine-only RC does not install grenade behavior");
         Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.Belt, AccessoryCapability.PanelProjection), "concept-only Belt has no runtime capabilities");
         Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.HeadBand, AccessoryCapability.FastAccess), "concept-only HeadBand has no runtime capabilities");
         Assert(!AccessoryCapabilityPolicy.Has((AccessoryCategory)99, AccessoryCapability.PanelProjection), "unknown category has no capabilities");
         Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.None), "empty capability request fails closed");
-        Assert(AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess, true, true), "validated container host may use an assigned capability");
-        Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess, true, false), "assigned capability still requires a container item");
-        Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.Belt, AccessoryCapability.GrenadeAccess, true, true), "concept-only category cannot activate a capability");
+        Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess, true, true), "disabled grenade capability cannot activate on the magazine RC");
+        Assert(AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess, true, true), "assigned fast-access capability activates only for a real container");
+        Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess, true, false), "fast-access capability still requires a container item");
+        Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.Belt, AccessoryCapability.FastAccess, true, true), "concept-only category cannot activate a capability");
 
         Assert(AccessoryGridPolicy.IsValid(1, 2), "1x2 grid is valid");
         Assert(AccessoryGridPolicy.IsExactShape(1, 2, 1, 2), "1x2 grid keeps one-column geometry");
@@ -87,7 +91,7 @@ internal static class Program
 
         Assert(ReflectionTools.HasContainers(new RuntimeContainer { IsContainer = true }), "runtime IsContainer flag is recognized");
         Assert(ReflectionTools.HasContainers(new RuntimeGrids { Grids = new object[] { new object() } }), "runtime Grids are recognized");
-        Assert(ReflectionTools.HasContainers(new RuntimeTemplate { Template = new TemplateGrids { Grids = new object[] { new object() } } }), "template Grids are recognized for PackNStrap-style belts");
+        Assert(ReflectionTools.HasContainers(new RuntimeTemplate { Template = new TemplateGrids { Grids = new object[] { new object() } } }), "template Grids are recognized for searchable belts");
         Assert(!ReflectionTools.HasContainers(new RuntimeTemplate { Template = new TemplateGrids { Grids = Array.Empty<object>() } }), "empty template grids stay non-container");
 
         var propertyProbe = new MutablePropertyProbe { Value = "first" };
@@ -110,14 +114,14 @@ internal static class Program
 
         string[] unusual = { BeltSlotPlan.TacticalVest, BeltSlotPlan.Backpack, BeltSlotPlan.SecuredContainer, BeltSlotPlan.Dogtag };
         string[] fallback = BeltSlotPlan.Build(unusual, BeltSlotPosition.AbovePockets, true);
-        Assert(fallback[fallback.Length - 1] == BeltSlotPlan.ArmBand, "missing pockets falls back safely");
-        Assert(unusual.SequenceEqual(BeltSlotPlan.Build(unusual, BeltSlotPosition.BelowPockets, false)), "disabled fallback does not invent slots");
+        Assert(fallback[fallback.Length - 1] == BeltSlotPlan.ArmBand, "legacy helper missing-pockets case falls back safely");
+        Assert(unusual.SequenceEqual(BeltSlotPlan.Build(unusual, BeltSlotPosition.BelowPockets, false)), "disabled legacy helper does not invent slots");
 
         Assert(LootPriorityPlan.Build(LootItemKind.Magazine, true).SequenceEqual(new[] { "Vest", "Belt", "Pockets", "Backpack", "Secure" }), "magazines prioritize belt after vest");
-        Assert(LootPriorityPlan.Build(LootItemKind.Ammo, true).SequenceEqual(new[] { "Belt", "Vest", "Pockets", "Backpack", "Secure" }), "ammo prioritizes belt first");
-        Assert(LootPriorityPlan.Build(LootItemKind.Money, true).SequenceEqual(new[] { "Secure", "Backpack", "Vest", "Belt", "Pockets" }), "money keeps secure/backpack first and includes belt");
-        Assert(LootPriorityPlan.Build(LootItemKind.Throwable, true).SequenceEqual(new[] { "Pockets", "Belt", "Vest", "Backpack", "Secure" }), "throwables prioritize belt after pockets");
-        Assert(LootPriorityPlan.Build(LootItemKind.Other, true).SequenceEqual(new[] { "Backpack", "Vest", "Belt", "Pockets", "Secure" }), "general loot includes belt after vest");
+        Assert(LootPriorityPlan.Build(LootItemKind.Ammo, true).SequenceEqual(new[] { "Belt", "Vest", "Pockets", "Backpack", "Secure" }), "ammo priority helper remains available for future variants");
+        Assert(LootPriorityPlan.Build(LootItemKind.Money, true).SequenceEqual(new[] { "Secure", "Backpack", "Vest", "Belt", "Pockets" }), "money helper keeps secure/backpack first");
+        Assert(LootPriorityPlan.Build(LootItemKind.Throwable, true).SequenceEqual(new[] { "Pockets", "Belt", "Vest", "Backpack", "Secure" }), "throwable helper remains deterministic for future variants");
+        Assert(LootPriorityPlan.Build(LootItemKind.Other, true).SequenceEqual(new[] { "Backpack", "Vest", "Belt", "Pockets", "Secure" }), "general loot helper includes belt after vest");
         Assert(LootPriorityPlan.Build(LootItemKind.Other, false).SequenceEqual(new[] { "Backpack", "Vest", "Pockets", "Secure" }), "no belt preserves vanilla general priority");
 
         Assert(ScavBeltPolicy.ShouldRestore(true, true, true), "deleted Scav ArmBand is restored for an equipped container belt");
@@ -125,12 +129,12 @@ internal static class Program
         Assert(!ScavBeltPolicy.ShouldRestore(true, false, false), "empty Scav ArmBand remains vanilla-deleted");
         Assert(!ScavBeltPolicy.ShouldRestore(false, true, true), "already-visible ArmBand is not modified");
 
-        Assert(GrenadeSlotPolicy.ShouldIncludeBelt(true, true), "container belt participates in grenade fast-access slots");
+        Assert(!GrenadeSlotPolicy.ShouldIncludeBelt(true, true), "magazine-only Phase 1 disables grenade-slot participation");
         Assert(!GrenadeSlotPolicy.ShouldIncludeBelt(true, false), "plain armband is never a grenade slot");
         Assert(!GrenadeSlotPolicy.ShouldIncludeBelt(false, true), "container flag without an equipped item is ignored");
-        Assert(GrenadeSlotPolicy.ShouldAppendGrenade(true, true, false), "examined belt grenade is appended to vanilla grenade enumeration");
-        Assert(!GrenadeSlotPolicy.ShouldAppendGrenade(false, true, false), "non-grenade belt item is ignored by grenade enumeration");
-        Assert(!GrenadeSlotPolicy.ShouldAppendGrenade(true, false, false), "unexamined belt grenade preserves vanilla examination filtering");
+        Assert(!GrenadeSlotPolicy.ShouldAppendGrenade(true, true, false), "grenade enumeration is dormant until a grenade-capable wearable exists");
+        Assert(!GrenadeSlotPolicy.ShouldAppendGrenade(false, true, false), "non-grenade item is ignored by grenade enumeration");
+        Assert(!GrenadeSlotPolicy.ShouldAppendGrenade(true, false, false), "unexamined grenade preserves vanilla filtering");
         Assert(!GrenadeSlotPolicy.ShouldAppendGrenade(true, true, true), "existing grenade reference is not duplicated");
 
         Assert(HarmonyInstallPolicy.CanBegin(true, true, true, true), "Harmony mutations begin only when patch and rollback APIs are ready");
@@ -162,7 +166,7 @@ internal static class Program
         Assert(pickupParameters.Length == 2 && pickupParameters[0].Name == "__result", "pickup postfix binds the result by Harmony contract");
         Assert(pickupParameters[1].Name == "__args", "pickup postfix reads obfuscated EFT arguments from Harmony's stable argument array");
 
-        Assert(PaymentSlotPolicy.ShouldIncludeBelt(true, true), "container belt participates in in-raid trader-service payment slots");
+        Assert(!PaymentSlotPolicy.ShouldIncludeBelt(true, true), "magazine-only Phase 1 disables payment-source participation");
         Assert(!PaymentSlotPolicy.ShouldIncludeBelt(true, false), "plain armband never becomes a payment slot");
         Assert(!PaymentSlotPolicy.ShouldIncludeBelt(false, true), "empty ArmBand never becomes a payment slot");
 
@@ -192,10 +196,10 @@ internal static class Program
             new BeltInventoryNode("vest-item", "vest", "main")
         };
         var keptTree = BeltDeathPolicy.GetKeptTreeIds(deathTree);
-        Assert(keptTree.SetEquals(new[] { "belt", "grid-item", "nested-container", "nested-item" }), "death retention keeps exactly the ArmBand tree");
-        Assert(BeltDeathPolicy.ShouldKeep("nested-item", deathTree), "nested belt contents survive death");
+        Assert(keptTree.SetEquals(new[] { "belt", "grid-item", "nested-container", "nested-item" }), "legacy death-policy helper keeps exactly the ArmBand tree");
+        Assert(BeltDeathPolicy.ShouldKeep("nested-item", deathTree), "legacy helper keeps nested belt contents");
         Assert(!BeltDeathPolicy.ShouldKeep("vest-item", deathTree), "unrelated equipment contents keep vanilla death rules");
-        Assert(BeltDeathPolicy.FilterLostInsuredIds(new[] { "belt", "grid-item", "nested-item", "vest-item" }, deathTree).SequenceEqual(new[] { "vest-item" }), "insurance loss excludes belt root and descendants");
+        Assert(BeltDeathPolicy.FilterLostInsuredIds(new[] { "belt", "grid-item", "nested-item", "vest-item" }, deathTree).SequenceEqual(new[] { "vest-item" }), "legacy insurance helper excludes the ArmBand tree");
         Assert(BeltDeathPolicy.GetKeptTreeIds(new[] { new BeltInventoryNode("vest", "equipment", "TacticalVest") }).Count == 0, "profiles without ArmBand are untouched");
 
         Console.WriteLine("SPT Belt/Armband Inventory Phase 1: " + assertions + " assertions passed.");
