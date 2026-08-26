@@ -133,20 +133,22 @@ namespace SPTBeltArmbandInventory
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo hmCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                if (harmony == null || patchMethod == null || hmCtor == null)
-                    return Fail("Harmony patch API is incompatible; automatic belt pickup is disabled.");
+                MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
+                if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, hmCtor != null, rollback != null))
+                    return Fail("Harmony patch/rollback API is incompatible; automatic belt pickup is disabled.");
+                unpatchSelf = rollback;
 
                 PickupSlotRuntime.LogWarning = logWarning;
                 object postfix = hmCtor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
                 Patch(patchMethod, harmonyMethodType, target, postfix);
-                unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 if (logInfo != null) logInfo("Belt/Armband Inventory automatic pickup compatibility installed.");
                 return true;
             }
             catch (Exception exception)
             {
                 Dispose();
-                return Fail("Automatic belt pickup compatibility installation failed safely: " + exception.Message);
+                Exception root = Unwrap(exception);
+                return Fail("Automatic belt pickup compatibility installation failed safely: " + root.GetType().FullName + ": " + root.Message);
             }
         }
 
@@ -176,9 +178,6 @@ namespace SPTBeltArmbandInventory
         {
             DynamicMethod method = new DynamicMethod("BeltPickupPostfix", typeof(void), new[] { resultType.MakeByRefType(), typeof(object[]) }, typeof(PickupSlotPatches), true);
             method.DefineParameter(1, ParameterAttributes.None, "__result");
-            // Bind the original call as an argument array. This avoids depending on
-            // obfuscated EFT parameter names and avoids HarmonyX edge-cases around
-            // positional aliases on a direct dynamic postfix.
             method.DefineParameter(2, ParameterAttributes.None, "__args");
             ILGenerator il = method.GetILGenerator();
             Label end = il.DefineLabel();
@@ -234,6 +233,14 @@ namespace SPTBeltArmbandInventory
             for (int i = 1; i < p.Length; i++)
                 if (p[i].ParameterType == harmonyMethodType && string.Equals(p[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) args[i] = postfix;
             patchMethod.Invoke(harmony, args);
+        }
+
+        static Exception Unwrap(Exception exception)
+        {
+            Exception current = exception;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null)
+                current = invocation.InnerException;
+            return current;
         }
 
         bool Fail(string message) { if (logWarning != null) logWarning(message); return false; }
