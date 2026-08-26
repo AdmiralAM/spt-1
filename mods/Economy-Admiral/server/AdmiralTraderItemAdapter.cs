@@ -43,8 +43,8 @@ public static class AdmiralTraderItemAdapter
         var loyalty = RequireProperty(assortRoot, "loyal_level_items");
         RequireObject(loyalty, "loyal_level_items");
 
-        var success = RequireProperty(questRoot, "Success");
-        RequireObject(success, "questassort.Success");
+        var success = RequireProperty(questRoot, "success");
+        RequireObject(success, "questassort.success");
 
         var results = new List<AdmiralTraderOfferAdapterEvidence>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
@@ -89,7 +89,7 @@ public static class AdmiralTraderItemAdapter
 
             if (!success.TryGetProperty(offerId, out var questValue) || questValue.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(questValue.GetString()))
             {
-                throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: offer '{offerId}' is not explicitly quest-gated by Success mapping.");
+                throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: offer '{offerId}' is not explicitly quest-gated by native lowercase success mapping.");
             }
 
             var questGateId = questValue.GetString()!;
@@ -131,7 +131,7 @@ public static class AdmiralTraderItemAdapter
         var offerKeys = results.Select(result => result.OfferId).OrderBy(value => value, StringComparer.Ordinal).ToList();
         if (!successKeys.SequenceEqual(offerKeys, StringComparer.Ordinal))
         {
-            throw new InvalidOperationException("Economy Admiral Admiral Trader adapter: questassort.Success must map exactly the maintained permanent offers.");
+            throw new InvalidOperationException("Economy Admiral Admiral Trader adapter: questassort.success must map exactly the maintained permanent offers.");
         }
 
         return results.OrderBy(result => result.OfferId, StringComparer.Ordinal).ToList();
