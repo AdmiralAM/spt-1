@@ -8,6 +8,8 @@ namespace SPTBeltArmbandInventory
 {
     internal static class GridWindowSizingRuntime
     {
+        const int MaxDeferredAttempts = 30;
+
         sealed class PendingWindow
         {
             internal readonly WeakReference Window;
@@ -68,7 +70,7 @@ namespace SPTBeltArmbandInventory
                     continue;
                 }
 
-                if (TryAdjust(window, pending.RuntimeCandidateObserved) || ++pending.Attempts >= 120)
+                if (TryAdjust(window, pending.RuntimeCandidateObserved) || ++pending.Attempts >= MaxDeferredAttempts)
                     PendingWindows.RemoveAt(i--);
             }
         }
