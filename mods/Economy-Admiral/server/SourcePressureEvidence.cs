@@ -41,6 +41,11 @@ public sealed record ItemSourcePressureEvidence
     public required int RenewableChannelCount { get; init; }
     public required bool SingleRenewableSourceRisk { get; init; }
     public int? EarliestProgressionLevel { get; init; }
+    public int? EarliestRenewableProgressionLevel { get; init; }
+    public required int KnownProgressionSourceCount { get; init; }
+    public required int UnknownProgressionSourceCount { get; init; }
+    public required double ProgressionEvidenceCoverage { get; init; }
+    public required bool HasCompleteProgressionEvidence { get; init; }
     public required bool SingleSourceDominated { get; init; }
     public required AcquisitionChannel? DominantChannel { get; init; }
     public required double DominantChannelSourceShare { get; init; }
@@ -129,10 +134,18 @@ public static class SourcePressureEvidenceAnalyzer
         var sources = group.ToList();
         var renewableCount = sources.Count(source => source.Renewable);
         var sourceCount = sources.Count;
-        var knownLevels = sources
+        var knownProgressionSources = sources
             .Where(source => source.EarliestProgressionLevel.HasValue)
+            .ToList();
+        var knownLevels = knownProgressionSources
             .Select(source => source.EarliestProgressionLevel!.Value)
             .ToList();
+        var knownRenewableLevels = knownProgressionSources
+            .Where(source => source.Renewable)
+            .Select(source => source.EarliestProgressionLevel!.Value)
+            .ToList();
+        var knownProgressionCount = knownProgressionSources.Count;
+        var unknownProgressionCount = sourceCount - knownProgressionCount;
 
         var channels = sources
             .GroupBy(source => source.Channel)
@@ -167,6 +180,11 @@ public static class SourcePressureEvidenceAnalyzer
             RenewableChannelCount = channels.Count(channel => channel.RenewableSourceCount > 0),
             SingleRenewableSourceRisk = renewableCount == 1,
             EarliestProgressionLevel = knownLevels.Count == 0 ? null : knownLevels.Min(),
+            EarliestRenewableProgressionLevel = knownRenewableLevels.Count == 0 ? null : knownRenewableLevels.Min(),
+            KnownProgressionSourceCount = knownProgressionCount,
+            UnknownProgressionSourceCount = unknownProgressionCount,
+            ProgressionEvidenceCoverage = sourceCount == 0 ? 0 : Math.Round((double)knownProgressionCount / sourceCount, 6),
+            HasCompleteProgressionEvidence = sourceCount > 0 && unknownProgressionCount == 0,
             SingleSourceDominated = sourceCount == 1,
             DominantChannel = dominant?.Channel,
             DominantChannelSourceShare = dominant is null || sourceCount == 0 ? 0 : Math.Round((double)dominant.SourceCount / sourceCount, 6),
