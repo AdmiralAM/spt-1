@@ -11,6 +11,13 @@ namespace SPTBeltArmbandInventory
             return hasContainers
                 && WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.PaymentSource);
         }
+
+        // Historical Phase 1 contract retained for regression compatibility:
+        // the magazine RC itself never becomes a payment source.
+        internal static bool ShouldIncludeBelt(bool hasItem, bool hasContainers)
+        {
+            return hasItem && ShouldIncludeWearable(RuntimeIdentity.CandidateItemId, hasContainers);
+        }
     }
 
     internal static class PaymentSlotRuntime
