@@ -4,41 +4,46 @@
 **Runtime target:** SPT 4.1.3  
 **Issue:** #198
 
-A deliberately narrow server-only rework of the useful background-color behavior from acidphantasm's Item Valuation, using both the current C# implementation and the earlier server mod as behavioral references.
+A deliberately narrow server-only rework of AcidPhantasm Item Valuation focused only on inventory-cell background coloring.
 
 ## Scope
 
-The module performs one operation:
+The module performs one operation during server `PostLoad`:
 
-`item monetary value -> category valuation rule -> color tier -> TemplateItem.Properties.BackgroundColor`
+`item -> valuation rule -> tier -> TemplateItem.Properties.BackgroundColor`
 
-It runs once during server `PostLoad`. There is no client plugin and no runtime UI code.
+There is no ItemView patch, client runtime loop, tooltip mutation, or name mutation.
 
-## Price source
+## Economic value source
 
-1. `TemplateTable.Prices` is the primary source. SPT already loads this item-price table, so the module performs a constant-time dictionary lookup instead of calculating trader/flea prices itself.
-2. `TemplateTable.Handbook.Items[].Price` is indexed once and used only when the primary table has no positive price for a template.
-3. Items without a positive price or valid positive `Width`/`Height` are left untouched.
+For non-ammunition items, the module uses the best realizable value:
 
-Item Intelligence is not a hard dependency. Its richer price snapshot remains independent; coupling Item Valuation to that request-time service would add dependency and work without improving this one-time startup classification.
+`effective value = max(best eligible trader sell value, usable flea value)`
 
-## Valuation semantics
+- Flea value comes from `TemplateTable.Prices` only when the item is valid for Ragfair.
+- Trader value uses the best eligible trader buy price. Regular traders are checked first; Fence is fallback-only.
+- Default weapon/equipment presets use the summed handbook value of preset children as the trader valuation basis, matching the established Item Valuation behavior.
+- Handbook value is used only when neither usable flea nor trader value is available.
 
-The background always represents monetary value; the old penetration/armor-class semantics are removed.
+This deliberately avoids treating raw flea-table price as the sole definition of item worth.
 
-| Item group | Value used for tiering |
+Item Intelligence remains independent and is not a hard dependency. Both mods use the same underlying SPT price/trader data model, but Item Valuation performs its one startup classification without requesting or retaining the Item Intelligence snapshot.
+
+## Category rules
+
+| Item group | Tier input |
 | --- | --- |
-| Weapons | total item template value |
-| Armor and armored rigs | total item template value |
-| Keys | total item template value |
-| Ordinary loot, barter items, consumables, weapon parts/mods and other normal items | value per inventory slot (`price / Width / Height`) |
-| Ammo | monetary value only; because ammunition templates are normally 1x1, this effectively remains the monetary template value rather than penetration |
+| Weapons | effective **total value** |
+| Armor / armored rigs | effective **total value** |
+| Keys | effective **total value** |
+| Ordinary loot, barter items, consumables, weapon parts/mods and other normal items | effective **value per inventory slot** |
+| Ammunition | **penetration power**, not monetary value |
 
-This avoids penalizing physically large weapons/armor while retaining the useful value-density signal for normal loot.
+The economic rules therefore answer “how valuable is this loot?”, while ammunition colors answer “how capable is this round against armor?”.
 
-## Default tiers
+## Money tiers
 
-The palette is intentionally dark and desaturated so inventory cells remain readable and do not become bright UI blocks.
+The palette is intentionally dark and desaturated.
 
 | Valuation | Background behavior |
 | ---: | --- |
@@ -50,29 +55,42 @@ The palette is intentionally dark and desaturated so inventory cells remain read
 | 100,000–249,999 | muted red `#5A2C31` |
 | >= 250,000 | muted gold `#5C4825` |
 
-Thresholds and colors are configurable in `config/config.json`. The current installation already provides ColorConverterAPI for custom HEX background values; this mod itself remains server-only and does not ship or patch a client color converter.
+## Ammo penetration tiers
+
+The penetration boundaries retain AcidPhantasm's established progression while using this mod's subdued six-color palette.
+
+| Penetration | Background |
+| ---: | --- |
+| <= 15 | muted light green `#526B3F` |
+| 16–26 | muted green `#294F31` |
+| 27–35 | muted navy `#253552` |
+| 36–44 | muted violet `#4A3854` |
+| 45–54 | muted red `#5A2C31` |
+| > 54 | muted gold `#5C4825` |
+
+Thresholds and colors are configurable in `config/config.json`. The current installation already provides ColorConverterAPI for custom HEX background values; this mod itself remains server-only.
 
 ## Deliberately removed
 
-The rework contains no damage/penetration display, name/short-name/locale mutation, tooltip price text, penetration-based ammo coloring, armor-class/plate coloring, flea-ban coloring, trader-price calculation, preset calculation, live-flea integration, timers, polling, repeated template scans, Harmony patches, `ItemView` patches/scans, `Update`, or `LateUpdate`.
+The rework contains no damage/penetration text in names, short-name mutation, locale/description/tooltip price text, armor-class/plate coloring, flea-ban override color, live-flea refresh loop, timers, polling, repeated template scans, Harmony patches, ItemView hooks, `Update`, or `LateUpdate`.
 
-This means it does not compete with UI Fixes, CompatibilityHighlighter, Item Intelligence, Task Item Indicator, ArmorClassIcon, CaliberUnderName, Foldables, or FastSell for client UI hooks. Those mods retain ownership of their overlays and ItemView behavior; this module only changes the server template background color field already consumed by EFT.
+It therefore does not compete with UI Fixes, CompatibilityHighlighter, Item Intelligence, Task Item Indicator, ArmorClassIcon, CaliberUnderName, Foldables, or FastSell for client UI hooks.
 
 ## Runtime cost
 
-The only work is at server load:
+All work occurs once during server startup:
 
-- create a temporary handbook price dictionary;
-- walk the template dictionary once;
-- do at most two price lookups and one lightweight category test per eligible template;
-- divide by slot area only for the ordinary/per-slot group;
-- classify one tier and assign `BackgroundColor` only when valuation is at least 10,000.
+- walk the item-template dictionary once;
+- ammo: classify penetration directly;
+- non-ammo: resolve flea/trader/handbook effective value;
+- divide by slot area only for ordinary loot;
+- assign only `BackgroundColor`.
 
-After `OnLoadAsync` returns there is no timer, event subscription, client component, retained valuation cache, or frame-time work.
+After `OnLoadAsync` returns there is no timer, subscription, retained per-frame cache, or frame-time work.
 
 ## Installation / migration
 
-This module is intentionally incompatible with the original `com.acidphantasm.itemvaluation`. Remove the original Item Valuation server mod before installing the candidate. The new module belongs under:
+This module is intentionally incompatible with the original `com.acidphantasm.itemvaluation`. Remove the original Item Valuation server mod before installing the candidate under:
 
 `SPT_Runtime/user/mods/Item Valuation MOD SPT/`
 
@@ -80,8 +98,8 @@ No file is installed under `BepInEx/plugins` by this module.
 
 ## Provenance
 
-`acidphantasm/itemvaluation-csharp` and `acidphantasm/acidphantasm-itemvaluation` are behavioral references. This module is a new SPT 4.1.x C# implementation and does not carry forward their legacy feature code.
+`acidphantasm/itemvaluation-csharp` and `acidphantasm/acidphantasm-itemvaluation` are behavioral references. This module is a new SPT 4.1.x C# implementation and does not carry forward their legacy UI/information feature code.
 
 ## Validation state
 
-Source/static/build validation is automated by `.github/workflows/item-valuation-mod-spt-validate.yml`. Exact SPT 4.1.3 visual behavior remains a physical runtime gate: successful CI is not by itself runtime acceptance.
+Source/static/build validation is automated by `.github/workflows/item-valuation-mod-spt-validate.yml`. Exact SPT 4.1.3 visual behavior remains a physical runtime gate.
