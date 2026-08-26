@@ -22,10 +22,11 @@ namespace SPTQuestPlanner.Tests
 
             Assert.Equal(PlannerCapabilityDecisionValueKind.NavigationOnly, value.Kind);
             Assert.False(value.ProvesBeyondPrerequisiteNavigation);
+            Assert.False(value.CountsTowardKeepCandidate);
         }
 
         [Fact]
-        public void CrossQuestSynergyProvesDecisionChangingValue()
+        public void CrossQuestSynergyProvesDecisionChangingKeepValue()
         {
             PlannerRaidActionOverlap overlap = new PlannerRaidActionOverlap(
                 "kill|customs|pmc",
@@ -45,11 +46,12 @@ namespace SPTQuestPlanner.Tests
 
             Assert.Equal(PlannerCapabilityDecisionValueKind.DecisionChanged, value.Kind);
             Assert.True(value.ProvesBeyondPrerequisiteNavigation);
+            Assert.True(value.CountsTowardKeepCandidate);
             Assert.Contains(value.Evidence, item => item.Contains("combines compatible work", StringComparison.OrdinalIgnoreCase));
         }
 
         [Fact]
-        public void PreparationDifferenceAcrossFrontierClarifiesTradeoff()
+        public void PreparationDifferenceAcrossFrontierClarifiesKeepWorthyTradeoff()
         {
             PlannerCapabilityGoalPresentation presentation = Presentation(
                 PlannerCapabilityGoalPresentationKind.RaidDecision,
@@ -68,37 +70,41 @@ namespace SPTQuestPlanner.Tests
 
             Assert.Equal(PlannerCapabilityDecisionValueKind.TradeoffClarified, value.Kind);
             Assert.True(value.ProvesBeyondPrerequisiteNavigation);
+            Assert.True(value.CountsTowardKeepCandidate);
         }
 
         [Fact]
-        public void WaitingStateCountsAsAvoidingUnnecessaryRaid()
+        public void WaitingStateCountsAsAvoidingUnnecessaryRaidAndKeepEvidence()
         {
             PlannerCapabilityDecisionValue value = PlannerCapabilityDecisionValueClassifier.Classify(
                 Presentation(PlannerCapabilityGoalPresentationKind.WaitingForAvailability, null));
 
             Assert.Equal(PlannerCapabilityDecisionValueKind.UnnecessaryRaidAvoided, value.Kind);
             Assert.True(value.ProvesBeyondPrerequisiteNavigation);
+            Assert.True(value.CountsTowardKeepCandidate);
         }
 
         [Fact]
-        public void CompletedCapabilityCountsAsResolvedGoalState()
+        public void CompletedCapabilityIsCorrectButDoesNotByItselfJustifyKeepingMod()
         {
             PlannerCapabilityDecisionValue value = PlannerCapabilityDecisionValueClassifier.Classify(
                 Presentation(PlannerCapabilityGoalPresentationKind.CapabilityAlreadyUnlocked, null));
 
             Assert.Equal(PlannerCapabilityDecisionValueKind.GoalAlreadyResolved, value.Kind);
             Assert.True(value.ProvesBeyondPrerequisiteNavigation);
+            Assert.False(value.CountsTowardKeepCandidate);
         }
 
         [Theory]
         [InlineData(PlannerCapabilityGoalPresentationKind.EvidenceIncomplete)]
         [InlineData(PlannerCapabilityGoalPresentationKind.ProgressionConflict)]
-        public void UnsupportedRouteIsPreventedRatherThanInvented(PlannerCapabilityGoalPresentationKind kind)
+        public void UnsupportedRoutePreventionIsCorrectnessNotKeepProof(PlannerCapabilityGoalPresentationKind kind)
         {
             PlannerCapabilityDecisionValue value = PlannerCapabilityDecisionValueClassifier.Classify(Presentation(kind, null));
 
             Assert.Equal(PlannerCapabilityDecisionValueKind.UnsupportedDecisionPrevented, value.Kind);
             Assert.True(value.ProvesBeyondPrerequisiteNavigation);
+            Assert.False(value.CountsTowardKeepCandidate);
         }
 
         private static PlannerCapabilityGoalPresentation Presentation(
