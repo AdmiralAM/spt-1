@@ -11,23 +11,34 @@ namespace SPTQuestPlanner.Client
             string sourceQuestId,
             string targetQuestId,
             IReadOnlyList<int> acceptedProfileStates,
-            int availableAfterSeconds)
+            int availableAfterSeconds,
+            IReadOnlyList<int> acceptedRawProfileStatuses = null)
         {
             SourceQuestId = sourceQuestId ?? string.Empty;
             TargetQuestId = targetQuestId ?? string.Empty;
             AcceptedProfileStates = acceptedProfileStates ?? Array.Empty<int>();
+            AcceptedRawProfileStatuses = acceptedRawProfileStatuses ?? Array.Empty<int>();
             AvailableAfterSeconds = Math.Max(0, availableAfterSeconds);
         }
 
         public string SourceQuestId { get; private set; }
         public string TargetQuestId { get; private set; }
         public IReadOnlyList<int> AcceptedProfileStates { get; private set; }
+        public IReadOnlyList<int> AcceptedRawProfileStatuses { get; private set; }
         public int AvailableAfterSeconds { get; private set; }
+        public bool HasRawProfileStatusContract { get { return AcceptedRawProfileStatuses.Count > 0; } }
 
         public bool AcceptsProfileState(int profileState)
         {
             for (int i = 0; i < AcceptedProfileStates.Count; i++)
                 if (AcceptedProfileStates[i] == profileState) return true;
+            return false;
+        }
+
+        public bool AcceptsRawProfileStatus(int rawProfileStatus)
+        {
+            for (int i = 0; i < AcceptedRawProfileStatuses.Count; i++)
+                if (AcceptedRawProfileStatuses[i] == rawProfileStatus) return true;
             return false;
         }
     }
@@ -78,7 +89,7 @@ namespace SPTQuestPlanner.Client
         {
             PlannerTopologyPrerequisite[] result = new PlannerTopologyPrerequisite[sourceQuestIds.Count];
             for (int i = 0; i < result.Length; i++)
-                result[i] = new PlannerTopologyPrerequisite(sourceQuestIds[i], targetQuestId, new[] { 4 }, 0);
+                result[i] = new PlannerTopologyPrerequisite(sourceQuestIds[i], targetQuestId, new[] { 4 }, 0, new[] { 4 });
             return result;
         }
 
@@ -88,7 +99,7 @@ namespace SPTQuestPlanner.Client
         {
             PlannerTopologyPrerequisite[] result = new PlannerTopologyPrerequisite[targetQuestIds.Count];
             for (int i = 0; i < result.Length; i++)
-                result[i] = new PlannerTopologyPrerequisite(sourceQuestId, targetQuestIds[i], new[] { 4 }, 0);
+                result[i] = new PlannerTopologyPrerequisite(sourceQuestId, targetQuestIds[i], new[] { 4 }, 0, new[] { 4 });
             return result;
         }
     }
@@ -162,12 +173,14 @@ namespace SPTQuestPlanner.Client
                     quests.TryGetValue(source, out sourceQuest) && quests.TryGetValue(target, out targetQuest))
                 {
                     int[] acceptedProfileStates = ReadProfileStates(Get(edge, "acceptedSourceStates"));
+                    int[] acceptedRawProfileStatuses = ReadRawStatuses(Get(edge, "acceptedSourceRawStatuses"));
                     int availableAfterSeconds = Math.Max(0, ReadInt(Get(edge, "availableAfterSeconds"), 0));
                     PlannerTopologyPrerequisite prerequisite = new PlannerTopologyPrerequisite(
                         source,
                         target,
                         acceptedProfileStates,
-                        availableAfterSeconds);
+                        availableAfterSeconds,
+                        acceptedRawProfileStatuses);
 
                     targetQuest.Prerequisites.Add(source);
                     sourceQuest.Dependents.Add(target);
@@ -251,6 +264,18 @@ namespace SPTQuestPlanner.Client
             {
                 int parsed;
                 if (TryReadProfileState(node, out parsed) && !values.Contains(parsed)) values.Add(parsed);
+            }
+            values.Sort();
+            return values.ToArray();
+        }
+
+        private static int[] ReadRawStatuses(object token)
+        {
+            List<int> values = new List<int>();
+            foreach (object node in Values(token))
+            {
+                int parsed;
+                if (int.TryParse(ReadString(node), out parsed) && parsed >= 0 && parsed <= 9 && !values.Contains(parsed)) values.Add(parsed);
             }
             values.Sort();
             return values.ToArray();
