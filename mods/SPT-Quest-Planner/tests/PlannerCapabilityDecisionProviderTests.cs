@@ -35,7 +35,7 @@ namespace SPTQuestPlanner.Tests
             cache.ReplaceTopology(
                 new PlannerPayload(PlannerClientContract.SchemaVersion, 0, "{}"),
                 topology,
-                new PlannerRequirementIndex(new Dictionary<string, IReadOnlyList<PlannerTopologyRequirement>>(StringComparer.Ordinal)),
+                new PlannerRequirementIndex(new Dictionary<string, IReadOnlyList<PlannerQuestItemRequirement>>(StringComparer.Ordinal)),
                 locations);
 
             PlannerClientIndex state = State(
