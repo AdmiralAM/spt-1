@@ -7,7 +7,8 @@ Official curated successor workstream for the legacy Andrudis/QuestManiac ecosys
 - Mod name: **Admiral Trader**
 - Trader name: **Admiral / Адмирал**
 - Official trader portrait: **final and ingested** — the exact user-approved `1182x1330` bust portrait from the `Генерация иконок адмирала` workstream showing Admiral in a white naval tunic.
-- Approved source SHA-256: `48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff`. Runtime uses only the technically resized/encoded `512x576` JPEG at the maintained trader-avatar route; substitution, regeneration and placeholder fallback are not allowed. The maintained contract is [`manifests/identity-assets.json`](manifests/identity-assets.json).
+- Approved source SHA-256: `48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff`.
+- Runtime portrait: technical-only `512x576` JPEG encoding, Git blob `0cd9db6776b246c08eb9ae0f1ac3e79c2a486966`, SHA-256 `701a79cb4e88053b0bb26492cf9c88b2d9276fa317975f0e1768ea43af5f8889`; substitution, regeneration and placeholder fallback are forbidden. The maintained contract is [`manifests/identity-assets.json`](manifests/identity-assets.json).
 - Legacy Andrudis/QuestManiac names are provenance/source references only and are not the target product identity.
 
 ## Gameplay Alpha direction
