@@ -1,16 +1,44 @@
 # Economy Admiral runtime gate
 
-Physical acceptance target: **SPT 4.1.3**, current target mod stack, exact `economy-admiral-candidate` artifact from PR #202 / its exact-head CI run.
+Physical acceptance target: **SPT 4.1.3**, current target mod stack, exact `economy-admiral-spt413-dropin` artifact from the packaging-fix PR / its exact-head CI run.
+
+## INSTALL — exact SPT layout
+
+The Actions artifact is a **SPT-root drop-in package**. Its archive root must contain exactly:
+
+```text
+user/
+└── mods/
+    └── Economy Admiral/
+        ├── Economy-Admiral.dll
+        ├── BUILD_INFO.json
+        ├── README.md
+        ├── RUNTIME_TEST.md
+        ├── Validate-Runtime.ps1
+        ├── Validate-PrimaryParity.ps1
+        └── config/
+            └── config.json
+```
+
+Installation:
+
+1. Stop SPT.
+2. Delete or move the previous `SPT_Runtime/user/mods/Economy Admiral` folder so stale DLLs/files cannot survive the test.
+3. Extract the **contents of the artifact archive directly into `SPT_Runtime`**. The archive's top-level `user` directory merges with the existing `SPT_Runtime/user` directory.
+4. Verify before startup that this exact file exists:
+   `SPT_Runtime/user/mods/Economy Admiral/Economy-Admiral.dll`.
+5. Do **not** create another nested `Economy Admiral` directory and do not copy only the inner files by guessing.
+
+If SPT reports `No Assemblies found in path: ...\user\mods\Economy Admiral`, the package/install layout is invalid and the runtime gate is not a valid Economy Admiral test.
 
 ## Audit / Normal gate
 
-1. Install the exact Actions candidate under `SPT_Runtime/user/mods/Economy Admiral/`.
-2. Keep `mode=Audit` and `preset=Normal`.
-3. Keep the current target mod stack enabled, including Admiral Trader when testing the explicit adapter path.
-4. Remove or archive old Economy Admiral reports so evidence cannot be mixed across runs.
-5. Start SPT and allow all startup/PostLoad callbacks to finish.
-6. Run the packaged `Validate-Runtime.ps1` from the Economy Admiral mod folder.
-7. Run the packaged `Validate-PrimaryParity.ps1` from the same folder.
+1. Keep `mode=Audit` and `preset=Normal`.
+2. Keep the current target mod stack enabled, including Admiral Trader when testing the explicit adapter path.
+3. Remove or archive old Economy Admiral reports so evidence cannot be mixed across runs.
+4. Start SPT and allow all startup/PostLoad callbacks to finish.
+5. Run the packaged `Validate-Runtime.ps1` from the Economy Admiral mod folder.
+6. Run the packaged `Validate-PrimaryParity.ps1` from the same folder.
 
 Both validators must exit with code `0` on the **same SPT run**.
 
@@ -97,13 +125,13 @@ Only after both Audit gates pass:
 4. start SPT again;
 5. confirm Economy Admiral generates no new reports and performs no audit pipeline work.
 
-## Evidence to return
+## RETURN — evidence to send back
 
 Retain and return together:
 
-- the complete same-run `reports/` directory;
+- the complete same-run `SPT_Runtime/user/mods/Economy Admiral/reports/` directory;
 - same-run SPT server log;
-- installed `BUILD_INFO.json`;
+- installed `SPT_Runtime/user/mods/Economy Admiral/BUILD_INFO.json`;
 - console output (or transcript) from `Validate-Runtime.ps1`;
 - console output (or transcript) from `Validate-PrimaryParity.ps1`.
 
