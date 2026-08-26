@@ -7,17 +7,21 @@ namespace SPTQuestPlanner.Client
     public sealed class PlannerRaidFocusEvidence
     {
         public PlannerRaidFocusEvidence(
-            IReadOnlyList<string> matchedFrontierQuestIds,
-            IReadOnlyList<string> focusedImmediateUnlockQuestIds)
+            IReadOnlyList<string> matchedActionableQuestIds,
+            IReadOnlyList<string> focusedImmediateUnlockQuestIds,
+            IReadOnlyList<string> eligibilityUnknownQuestIds)
         {
-            MatchedFrontierQuestIds = matchedFrontierQuestIds ?? Array.Empty<string>();
+            MatchedActionableQuestIds = matchedActionableQuestIds ?? Array.Empty<string>();
             FocusedImmediateUnlockQuestIds = focusedImmediateUnlockQuestIds ?? Array.Empty<string>();
+            EligibilityUnknownQuestIds = eligibilityUnknownQuestIds ?? Array.Empty<string>();
         }
 
-        public IReadOnlyList<string> MatchedFrontierQuestIds { get; private set; }
+        public IReadOnlyList<string> MatchedActionableQuestIds { get; private set; }
         public IReadOnlyList<string> FocusedImmediateUnlockQuestIds { get; private set; }
-        public bool AdvancesExecutableFocus { get { return MatchedFrontierQuestIds.Count > 0; } }
+        public IReadOnlyList<string> EligibilityUnknownQuestIds { get; private set; }
+        public bool AdvancesActionableFocus { get { return MatchedActionableQuestIds.Count > 0; } }
         public bool HasFocusedImmediateLeverage { get { return FocusedImmediateUnlockQuestIds.Count > 0; } }
+        public bool HasEligibilityUnknowns { get { return EligibilityUnknownQuestIds.Count > 0; } }
     }
 
     public static class PlannerRaidFocusEvidenceBuilder
@@ -28,7 +32,7 @@ namespace SPTQuestPlanner.Client
         {
             if (signals == null) throw new ArgumentNullException("signals");
             if (intent == null || !intent.HasFocusQuest)
-                return new PlannerRaidFocusEvidence(Array.Empty<string>(), Array.Empty<string>());
+                return new PlannerRaidFocusEvidence(Array.Empty<string>(), Array.Empty<string>(), Array.Empty<string>());
 
             HashSet<string> candidateQuestIds = new HashSet<string>(StringComparer.Ordinal);
             for (int i = 0; i < signals.NonRepeatableQuestIds.Count; i++)
@@ -36,11 +40,11 @@ namespace SPTQuestPlanner.Client
             for (int i = 0; i < signals.RepeatableQuestIds.Count; i++)
                 candidateQuestIds.Add(signals.RepeatableQuestIds[i]);
 
-            IEnumerable<string> actionableFocusIds = intent.HasExecutableFocusFrontier
-                ? intent.FocusFrontierQuestIds
-                : intent.HasFocusPath
-                    ? intent.FocusPathQuestIds
-                    : new[] { intent.FocusQuestId };
+            IEnumerable<string> actionableFocusIds;
+            if (intent.HasFocusPath)
+                actionableFocusIds = intent.FocusActionableQuestIds;
+            else
+                actionableFocusIds = new[] { intent.FocusQuestId };
 
             string[] matches = actionableFocusIds
                 .Where(candidateQuestIds.Contains)
@@ -57,7 +61,10 @@ namespace SPTQuestPlanner.Client
                 .OrderBy(value => value, StringComparer.Ordinal)
                 .ToArray();
 
-            return new PlannerRaidFocusEvidence(matches, focusedUnlocks);
+            return new PlannerRaidFocusEvidence(
+                matches,
+                focusedUnlocks,
+                intent.FocusEligibilityUnknownQuestIds.ToArray());
         }
     }
 }
