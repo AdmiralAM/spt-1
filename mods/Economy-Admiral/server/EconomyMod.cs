@@ -29,20 +29,17 @@ public sealed class EconomyMod(
     {
         var config = await runtimeConfigService.GetAsync(cancellationToken);
         if (config.Mode == EconomyMode.Off)
-        {
             return;
-        }
 
         var vanillaBaseline = vanillaBaselineService.GetSnapshot();
         runtimeEvidenceService.CaptureBefore();
 
-        // Primary audit and unified quest analysis now read typed final DB state directly
-        // against the immutable pristine startup snapshot; no primary/unified correction overlays.
+        // Primary audit, reward utility and unified analysis read final typed DB state directly
+        // against the immutable pristine startup snapshot; no post-write correction overlays.
         await auditService.RunAsync(vanillaBaseline, cancellationToken);
         await primaryAuditParityService.RunAsync(cancellationToken);
 
-        await rewardUtilityAuditService.RunAsync(cancellationToken);
-        await pristineReportCorrectionService.CorrectRewardUtilityAsync(vanillaBaseline, cancellationToken);
+        await rewardUtilityAuditService.RunAsync(vanillaBaseline, cancellationToken);
 
         var progressionSnapshot = await questProgressionGraphService.RunAsync(cancellationToken);
         await pristineReportCorrectionService.CorrectProgressionGraphAsync(vanillaBaseline, cancellationToken);
