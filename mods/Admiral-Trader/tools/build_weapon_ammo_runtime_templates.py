@@ -37,9 +37,31 @@ def start_conditions(quest: dict[str, Any], authored: dict[str, Any]) -> list[di
     return result
 
 
-def elimination_condition(slug: str, kills: int, weapon_ids: list[str]) -> dict[str, Any]:
+def readiness_condition(slug: str, weapon_ids: list[str], count: int = 1) -> dict[str, Any]:
     if not weapon_ids:
         raise ValueError(f"{slug}: empty weapon pool")
+    if count <= 0:
+        raise ValueError(f"{slug}: readiness count must be positive")
+    return {
+        "id": ident(slug, "readiness"), "conditionType": "FindItem", "dogtagLevel": 0,
+        "dynamicLocale": False, "globalQuestCounterId": "", "index": 0,
+        "isEncoded": False, "maxDurability": 100, "minDurability": 0,
+        "onlyFoundInRaid": False, "parentId": "", "target": weapon_ids,
+        "value": count, "visibilityConditions": [],
+    }
+
+
+def elimination_condition(
+    slug: str,
+    kills: int,
+    weapon_ids: list[str],
+    weapon_calibers: list[str] | None = None,
+) -> dict[str, Any]:
+    if not weapon_ids:
+        raise ValueError(f"{slug}: empty weapon pool")
+    if kills <= 0:
+        raise ValueError(f"{slug}: elimination count must be positive")
+    calibers = list(dict.fromkeys(str(x) for x in (weapon_calibers or []) if x))
     return {
         "id": ident(slug, "counter"), "index": 0, "dynamicLocale": False,
         "globalQuestCounterId": "", "visibilityConditions": [], "parentId": "", "value": kills,
@@ -52,13 +74,32 @@ def elimination_condition(slug: str, kills: int, weapon_ids: list[str]) -> dict[
                 "compareMethod": ">=", "value": 1, "weapon": weapon_ids,
                 "distance": {"value": 0, "compareMethod": ">="},
                 "weaponModsInclusive": [], "weaponModsExclusive": [],
-                "enemyEquipmentInclusive": [], "enemyEquipmentExclusive": [], "weaponCaliber": [],
+                "enemyEquipmentInclusive": [], "enemyEquipmentExclusive": [], "weaponCaliber": calibers,
                 "savageRole": [], "bodyPart": [], "daytime": {"from": 0, "to": 0},
                 "conditionType": "Kills", "enemyHealthEffects": [], "resetOnSessionEnd": False,
             }],
         },
         "completeInSeconds": 0, "conditionType": "CounterCreator",
     }
+
+
+def finish_condition(
+    quest: dict[str, Any],
+    stage: dict[str, Any],
+    weapon_ids: list[str],
+    capability: dict[str, Any] | None,
+) -> dict[str, Any]:
+    stage_name = str(quest["stage"])
+    slug = str(quest["slug"])
+    if stage_name == "qualification":
+        return readiness_condition(slug, weapon_ids, int(stage.get("readinessCount", 1)))
+    if stage_name == "fieldwork":
+        return elimination_condition(slug, int(stage["kills"]), weapon_ids)
+    if stage_name == "munitions":
+        caliber = str((capability or {}).get("caliber") or "")
+        calibers = [caliber] if caliber else []
+        return elimination_condition(slug, int(stage["kills"]), weapon_ids, calibers)
+    raise ValueError(f"{slug}: unsupported Arsenal stage {stage_name}")
 
 
 def success_rewards(slug: str, stage: dict[str, Any], capability: dict[str, Any] | None) -> list[dict[str, Any]]:
@@ -108,10 +149,11 @@ def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: di
         name = f"Arsenal Protocol: {authored['displayByFamily'][family]} - {str(quest['stage']).title()}"; qid = str(quest["id"])
         templates[qid] = {
             "QuestName": name, "_id": qid, "canShowNotificationsInGame": True,
-            "conditions": {"AvailableForFinish": [elimination_condition(slug, int(stage["kills"]), weapon_ids)],
+            "conditions": {"AvailableForFinish": [finish_condition(quest, stage, weapon_ids, capability)],
                            "AvailableForStart": start_conditions(quest, authored), "Started": [], "Success": [], "Fail": []},
             "description": f"{qid} description", "failMessageText": f"{qid} failMessageText", "name": f"{qid} name",
-            "note": f"{qid} note", "traderId": TRADER_ID, "location": "any", "image": QUEST_ICON, "type": "Elimination",
+            "note": f"{qid} note", "traderId": TRADER_ID, "location": "any", "image": QUEST_ICON,
+            "type": "PickUp" if quest["stage"] == "qualification" else "Elimination",
             "isKey": False, "restartable": False, "instantComplete": False, "secretQuest": False,
             "startedMessageText": f"{qid} startedMessageText", "successMessageText": f"{qid} successMessageText",
             "acceptPlayerMessage": f"{qid} acceptPlayerMessage", "acceptanceAndFinishingSource": "eft",
@@ -121,7 +163,7 @@ def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: di
         }
     if len(templates) != 21:
         raise ValueError(f"expected 21 runtime templates, got {len(templates)}")
-    return {"schemaVersion": 3, "targetSptVersion": "4.1.3", "templates": templates, "deferredRuntimeItems": []}
+    return {"schemaVersion": 4, "targetSptVersion": "4.1.3", "templates": templates, "deferredRuntimeItems": []}
 
 
 def main() -> int:
