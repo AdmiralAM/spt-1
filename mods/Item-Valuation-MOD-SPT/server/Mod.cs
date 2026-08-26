@@ -19,7 +19,7 @@ public static class RuntimeIdentity
 {
     public const string ModGuid = "com.admiralam.spt.itemvaluation";
     public const string ProductName = "Item Valuation MOD SPT";
-    public const string Version = "0.1.0";
+    public const string Version = "1.0.0";
 }
 
 public record ModMetadata : IModMetadata
