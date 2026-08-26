@@ -40,8 +40,8 @@ public sealed class RuntimeEvidenceService(
     public async Task WriteAfterAsync(
         VanillaBaselineSnapshot vanillaBaseline,
         QuestProvenanceDeltaReport questProvenance,
-        CancellationToken cancellationToken
-    )
+        EnforcementPlanReport enforcement,
+        CancellationToken cancellationToken)
     {
         if (before is null)
             throw new InvalidOperationException("Economy Admiral runtime evidence requires CaptureBefore() before the analysis pipeline.");
@@ -83,10 +83,11 @@ public sealed class RuntimeEvidenceService(
                 && questProvenance.ModAddedQuestCount + questProvenance.PristineModifiedQuestCount + questProvenance.PristineUnchangedQuestCount == questProvenance.FinalQuestCount,
         };
         var provenanceValid = provenance.BaselineCaptured && provenance.CountsConsistent;
+        var enforcementValid = ValidateEnforcementEvidence(config, enforcement, databaseUnchanged);
 
         var manifest = new RuntimeEvidenceManifest
         {
-            SchemaVersion = 3,
+            SchemaVersion = 4,
             GeneratedAtUtc = DateTimeOffset.UtcNow,
             Mode = config.Mode.ToString(),
             Preset = config.Preset.ToString(),
@@ -98,10 +99,14 @@ public sealed class RuntimeEvidenceService(
             DatabaseFingerprintBefore = before,
             DatabaseFingerprintAfter = after,
             DatabaseUnchangedAcrossPipeline = databaseUnchanged,
-            ApplyMutations = false,
-            DeclaredMutationCount = 0,
-            RuntimeGatePassed = databaseUnchanged && allReportsPresent && provenanceValid,
-            Note = "Read-only runtime evidence. The final-DB fingerprint covers quest trader/restartability/conditions/rewards plus item identities, handbook prices and trader assort surfaces. Provenance counts come from the explicit pristine-vs-final quest delta.",
+            DatabaseChangeExpected = config.Mode == EconomyMode.Enforce && enforcement.MutationCount > 0,
+            ApplyMutations = enforcement.ApplyMutations,
+            DeclaredMutationCount = enforcement.MutationCount,
+            EnforcementEvidenceValid = enforcementValid,
+            RuntimeGatePassed = allReportsPresent && provenanceValid && enforcementValid,
+            Note = config.Mode == EconomyMode.Enforce
+                ? "Enforce runtime evidence: a DB fingerprint change is valid only when the committed enforcement report declares one or more applied Experience/TraderStanding mutations. A zero-mutation Enforce run must leave the DB unchanged."
+                : "Audit runtime evidence: DB must remain unchanged and the enforcement report may contain preview proposals but zero applied mutations.",
             Reports = reportFiles,
         };
 
@@ -109,11 +114,6 @@ public sealed class RuntimeEvidenceService(
         Directory.CreateDirectory(Path.GetDirectoryName(manifestPath)!);
         await File.WriteAllTextAsync(manifestPath, JsonSerializer.Serialize(manifest, JsonOptions), cancellationToken);
 
-        if (!databaseUnchanged)
-        {
-            logger.Error($"[Economy Admiral] runtime evidence FAILED: final DB fingerprint changed across read-only pipeline; manifest={manifestPath}");
-            return;
-        }
         if (!allReportsPresent)
         {
             logger.Warning($"[Economy Admiral] runtime evidence incomplete: {manifest.PresentReportCount}/{manifest.ExpectedReportCount} expected reports present; manifest={manifestPath}");
@@ -124,8 +124,37 @@ public sealed class RuntimeEvidenceService(
             logger.Error($"[Economy Admiral] runtime evidence FAILED: provenance counts inconsistent; pristine={provenance.PristineQuestCount}, final={provenance.FinalQuestCount}, added={provenance.ModAddedQuestCount}, modified={provenance.PristineModifiedQuestCount}, unchanged={provenance.PristineUnchangedQuestCount}, removed={provenance.RemovedPristineQuestCount}; manifest={manifestPath}");
             return;
         }
+        if (!enforcementValid)
+        {
+            logger.Error($"[Economy Admiral] runtime evidence FAILED: mode={config.Mode}, fingerprintChanged={!databaseUnchanged}, planned={enforcement.PlannedMutationCount}, applied={enforcement.MutationCount}, rolledBack={enforcement.TransactionRolledBack}; manifest={manifestPath}");
+            return;
+        }
 
-        logger.Info($"[Economy Admiral] runtime evidence PASS: DB unchanged, {manifest.PresentReportCount}/{manifest.ExpectedReportCount} reports present, pristine={provenance.PristineQuestCount}, final={provenance.FinalQuestCount}, added={provenance.ModAddedQuestCount}, modified={provenance.PristineModifiedQuestCount}, removed={provenance.RemovedPristineQuestCount}; build={buildIdentity?.HeadSha ?? "local/unknown"}; manifest={manifestPath}");
+        logger.Info($"[Economy Admiral] runtime evidence PASS: mode={config.Mode}, fingerprintChanged={!databaseUnchanged}, mutations={enforcement.MutationCount}, {manifest.PresentReportCount}/{manifest.ExpectedReportCount} reports present; build={buildIdentity?.HeadSha ?? "local/unknown"}; manifest={manifestPath}");
+    }
+
+    private static bool ValidateEnforcementEvidence(EconomyConfig config, EnforcementPlanReport enforcement, bool databaseUnchanged)
+    {
+        if (enforcement.TransactionRolledBack || enforcement.MutationCount < 0 || enforcement.PlannedMutationCount < enforcement.MutationCount)
+            return false;
+
+        var applied = enforcement.Candidates.SelectMany(candidate => candidate.ProposedMutations).Where(mutation => mutation.Applied).ToList();
+        if (applied.Count != enforcement.MutationCount)
+            return false;
+        if (applied.Any(mutation => mutation.Dimension is not ("Experience" or "TraderStanding")))
+            return false;
+        if (enforcement.Candidates.Any(candidate => candidate.PristineUntouched && candidate.ProposedMutations.Any(mutation => mutation.Applied)))
+            return false;
+
+        if (config.Mode != EconomyMode.Enforce)
+            return !enforcement.ApplyMutations && enforcement.MutationCount == 0 && databaseUnchanged;
+
+        if (!enforcement.ApplyMutations)
+            return false;
+        if (enforcement.MutationCount == 0)
+            return databaseUnchanged;
+
+        return enforcement.TransactionCommitted && !databaseUnchanged;
     }
 
     private static async Task<RuntimeBuildIdentity?> ReadBuildIdentityAsync(string modPath, CancellationToken cancellationToken)
@@ -199,8 +228,10 @@ public sealed record RuntimeEvidenceManifest
     public required RuntimeFingerprint DatabaseFingerprintBefore { get; init; }
     public required RuntimeFingerprint DatabaseFingerprintAfter { get; init; }
     public required bool DatabaseUnchangedAcrossPipeline { get; init; }
+    public required bool DatabaseChangeExpected { get; init; }
     public required bool ApplyMutations { get; init; }
     public required int DeclaredMutationCount { get; init; }
+    public required bool EnforcementEvidenceValid { get; init; }
     public required bool RuntimeGatePassed { get; init; }
     public required string Note { get; init; }
     public required List<RuntimeReportEvidence> Reports { get; init; }
