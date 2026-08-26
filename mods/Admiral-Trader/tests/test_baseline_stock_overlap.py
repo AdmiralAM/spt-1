@@ -1,4 +1,6 @@
 import importlib.util
+import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -16,6 +18,16 @@ class BaselineStockOverlapTests(unittest.TestCase):
             {"_id": "child", "_tpl": "b" * 24, "parentId": "root"},
         ]}
         self.assertEqual(module.root_tpls_from_assort(data), {"a" * 24})
+
+    def test_repeated_provider_names_union_multiple_assorts(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            first = root / "first.json"
+            second = root / "second.json"
+            first.write_text(json.dumps({"items": [{"_id": "1", "_tpl": "a" * 24, "parentId": "hideout"}]}), encoding="utf-8")
+            second.write_text(json.dumps({"items": [{"_id": "2", "_tpl": "b" * 24, "parentId": "hideout"}]}), encoding="utf-8")
+            providers = module.merge_provider_assorts([("vanilla", first), ("vanilla", second)])
+            self.assertEqual(providers, {"vanilla": {"a" * 24, "b" * 24}})
 
     def test_documented_overlap_is_reported(self):
         proposal = {
