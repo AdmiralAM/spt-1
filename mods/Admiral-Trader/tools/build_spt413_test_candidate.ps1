@@ -24,7 +24,7 @@ if ($gitRoot -ne $repoRoot) {
     throw "Resolved Git root does not match repository root: git=$gitRoot repo=$repoRoot"
 }
 
-$sourceHead = (& git -C $repoRoot rev-parse HEAD).Trim()
+$sourceHead = (& git -C $repoRoot rev-parse HEAD).Trim().ToLowerInvariant()
 if ($LASTEXITCODE -ne 0 -or $sourceHead -notmatch '^[0-9a-f]{40}$') {
     throw "Unable to resolve a full source HEAD SHA for candidate provenance."
 }
@@ -39,10 +39,10 @@ if ($dirty.Count -ne 0) {
 
 if (-not [string]::IsNullOrWhiteSpace($ExpectedHeadSha)) {
     $expected = $ExpectedHeadSha.Trim().ToLowerInvariant()
-    if ($expected -notmatch '^[0-9a-f]{7,40}$') {
-        throw "ExpectedHeadSha must be a 7-40 character hexadecimal Git SHA."
+    if ($expected -notmatch '^[0-9a-f]{40}$') {
+        throw "ExpectedHeadSha must be the full 40-character hexadecimal Git SHA."
     }
-    if (-not $sourceHead.StartsWith($expected, [System.StringComparison]::OrdinalIgnoreCase)) {
+    if ($sourceHead -ne $expected) {
         throw "Candidate source HEAD mismatch: expected $expected, found $sourceHead"
     }
 }
