@@ -16,6 +16,11 @@ concurrency:
 
 jobs:
   candidate-source-gate:
+    # Automatic candidate publication is reserved for integration/runtime-gate PRs
+    # targeting main. Stacked/post-candidate PRs still receive their normal module
+    # validation but cannot publish an artifact that could be mistaken for Gate A.
+    # workflow_dispatch remains available for a deliberate candidate build.
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.base.ref == 'main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout exact PR head
