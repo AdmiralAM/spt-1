@@ -65,4 +65,21 @@ Require(NumericRewardTransactionCore.NeedsMutation(9000, 3000, false), "automati
 Require(!NumericRewardTransactionCore.NeedsMutation(2500, 3000, false), "automatic policy must never increase a normal value");
 Require(NumericRewardTransactionCore.NeedsMutation(2500, 3000, true), "manual exact target may intentionally change either direction");
 
-Console.WriteLine("Economy Admiral Enforce transaction smoke PASS");
+var itemPlan = ItemRewardStackPlanner.Plan(currentCount: 10, unitHandbookPrice: 25000, budgetCap: 100000);
+Require(itemPlan.Eligible, "single known-price stack above budget must be eligible");
+Require(itemPlan.TargetCount == 4, "item stack target must use floor(budget/unit price)");
+Require(itemPlan.TargetHandbookValue == 100000, "item stack target value must stay within budget");
+
+var alreadyNormalItem = ItemRewardStackPlanner.Plan(currentCount: 3, unitHandbookPrice: 25000, budgetCap: 100000);
+Require(!alreadyNormalItem.Eligible && alreadyNormalItem.Reason == "AlreadyWithinBudget", "normal item stack must not be increased or changed");
+
+var structuralRemovalRequired = ItemRewardStackPlanner.Plan(currentCount: 5, unitHandbookPrice: 25000, budgetCap: 10000);
+Require(!structuralRemovalRequired.Eligible && structuralRemovalRequired.Reason == "BudgetBelowOneItemFloor", "planner must block cases requiring item removal/template replacement");
+
+var singleItem = ItemRewardStackPlanner.Plan(currentCount: 1, unitHandbookPrice: 25000, budgetCap: 10000);
+Require(!singleItem.Eligible && singleItem.Reason == "SingleItemCannotBeReducedWithoutStructuralRemoval", "single-item rewards must remain structural-protected");
+
+var fractionalStack = ItemRewardStackPlanner.Plan(currentCount: 2.5, unitHandbookPrice: 25000, budgetCap: 10000);
+Require(!fractionalStack.Eligible && fractionalStack.Reason == "NonIntegralStackCount", "non-integral stack counts must be blocked");
+
+Console.WriteLine("Economy Admiral Enforce transaction + bounded item stack planner smoke PASS");
