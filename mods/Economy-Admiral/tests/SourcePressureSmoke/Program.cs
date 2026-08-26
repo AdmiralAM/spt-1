@@ -153,4 +153,26 @@ MustFail("empty provenance", () => SourcePressureEvidenceAnalyzer.Analyze(new[]
     },
 }));
 
+MustFail("conflicting duplicate source identity", () => SourcePressureEvidenceAnalyzer.Analyze(new[]
+{
+    new AcquisitionSourceEvidence
+    {
+        ItemTemplateId = "item",
+        SourceId = "same-source",
+        Channel = AcquisitionChannel.TraderPurchase,
+        Renewable = true,
+        EarliestProgressionLevel = 1,
+        ProvenanceClass = "ModAdded",
+    },
+    new AcquisitionSourceEvidence
+    {
+        ItemTemplateId = "item",
+        SourceId = "same-source",
+        Channel = AcquisitionChannel.TraderPurchase,
+        Renewable = false,
+        EarliestProgressionLevel = 1,
+        ProvenanceClass = "ModAdded",
+    },
+}));
+
 Console.WriteLine("Economy Admiral source pressure smoke PASS");
