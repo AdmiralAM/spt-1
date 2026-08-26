@@ -122,9 +122,13 @@ def main() -> None:
     if (ammo_policy.get("specialWeapons") or {}).get("permanentOffer") is not False:
         fail("Special Weapons must not receive a permanent offer")
 
-    success = questassort.get("Success")
+    native_status_keys = {"started", "success", "fail"}
+    if set(questassort) != native_status_keys:
+        fail(f"questassort must contain exactly native lowercase status keys {sorted(native_status_keys)}; got {sorted(questassort)}")
+
+    success = questassort.get("success")
     if not isinstance(success, dict) or set(success) != expected_ids:
-        fail("questassort.Success must contain exactly the seven materialized quest-gated offers")
+        fail("questassort.success must contain exactly the seven materialized quest-gated offers")
     if success.get(LABS_OFFER_ID) != LABS_CLEARANCE_QUEST:
         fail("Labs offer is not gated by Access Protocol: Clearance success")
 
@@ -143,7 +147,7 @@ def main() -> None:
         if success.get(offer_id) != str(policy["questId"]):
             fail(f"{family}: questassort success gate drift")
 
-    for state in ("Started", "Fail"):
+    for state in ("started", "fail"):
         mapping = questassort.get(state)
         if not isinstance(mapping, dict) or mapping:
             fail(f"questassort.{state} must remain empty")
@@ -166,7 +170,7 @@ def main() -> None:
         if float(level.get("minStanding", -1)) != standing:
             fail(f"Admiral LL{index}: standing threshold drift")
 
-    print("Admiral Trader SPT 4.1.3 target + SPTushonka 4.1.3 API + seven-offer quest assort contract OK")
+    print("Admiral Trader SPT 4.1.3 target + native lowercase questassort + seven-offer contract OK")
 
 
 if __name__ == "__main__":
