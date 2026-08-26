@@ -1,7 +1,19 @@
 {
-  "schemaVersion": 1,
-  "status": "draft",
+  "schemaVersion": 2,
+  "status": "gameplay-alpha-static-audited",
   "product": "Admiral Trader",
+  "currentAudit": {
+    "contract": "manifests/gameplay-alpha-reward-audit.json",
+    "runtimeScope": "31 committed Gameplay Alpha backbone quests",
+    "acceptanceBoundary": "static authored-vs-materialized reward parity only; physical SPT 4.1.3 Gate A remains required",
+    "totalExperience": 350500,
+    "totalRub": 1245000,
+    "totalTraderStanding": 0.65,
+    "permanentUnlockCount": 7,
+    "maximumSingleQuestExperience": 28000,
+    "maximumSingleQuestRub": 120000,
+    "maximumSingleQuestStanding": 0.03
+  },
   "benchmark": {
     "sourceRepository": "sp-tarkov/server-csharp",
     "sourceCommit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
