@@ -62,18 +62,13 @@ public static class PlannerEvaluator
 
             foreach (PrerequisiteEdge edge in prerequisiteEdges)
             {
-                QuestState sourceState = player.GetState(edge.SourceQuestId);
-                if (edge.AcceptedSourceStates.Count == 0)
-                {
-                    prerequisitesSatisfied = false;
-                    blockers.Add(edge.SourceQuestId);
-                    warnings.Add($"Quest {node.QuestId}: prerequisite {edge.SourceQuestId} has no accepted source states; treated as blocking");
-                    continue;
-                }
-
-                if (edge.AcceptedSourceStates.Contains(sourceState)) continue;
+                if (PrerequisiteSatisfied(edge, player)) continue;
                 prerequisitesSatisfied = false;
                 blockers.Add(edge.SourceQuestId);
+
+                bool hasRawContract = edge.AcceptedSourceRawStatuses is { Count: > 0 };
+                if (!hasRawContract && edge.AcceptedSourceStates.Count == 0)
+                    warnings.Add($"Quest {node.QuestId}: prerequisite {edge.SourceQuestId} has no accepted source states; treated as blocking");
             }
 
             if (!node.StartConditionCoverageComplete && profileState is QuestState.Locked or QuestState.Unknown)
@@ -96,6 +91,18 @@ public static class PlannerEvaluator
 
         IReadOnlyList<AggregatedItemRequirement> aggregated = AggregateRequirements(requirements, evaluations);
         return new PlannerEvaluationResult(evaluations, aggregated, warnings.Distinct(StringComparer.Ordinal).ToArray());
+    }
+
+    private static bool PrerequisiteSatisfied(PrerequisiteEdge edge, PlayerProjection player)
+    {
+        if (edge.AcceptedSourceRawStatuses is { Count: > 0 })
+        {
+            if (!player.QuestStates.TryGetValue(edge.SourceQuestId, out PlayerQuestState? source)) return false;
+            return edge.AcceptedSourceRawStatuses.Contains(source.RawStatus);
+        }
+
+        if (edge.AcceptedSourceStates.Count == 0) return false;
+        return edge.AcceptedSourceStates.Contains(player.GetState(edge.SourceQuestId));
     }
 
     private static PlannerQuestDisposition Classify(
