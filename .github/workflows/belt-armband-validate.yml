@@ -1,4 +1,4 @@
-name: B&A&HB #2 MOD SPT Validate
+name: 'B&A&HB #2 MOD SPT Validate'
 
 on:
   pull_request:
@@ -31,19 +31,19 @@ jobs:
           New-Item -ItemType Directory -Force -Path deps | Out-Null
           Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
           Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
-      - name: Run B&A&HB #2 hot-path guard
+      - name: 'Run B&A&HB #2 hot-path guard'
         shell: pwsh
         run: python mods/SPT-Belt-Armband-Inventory/tools/check_hotpaths.py
-      - name: Run B&A&HB #2 regression tests
+      - name: 'Run B&A&HB #2 regression tests'
         shell: pwsh
         run: dotnet run --project mods/SPT-Belt-Armband-Inventory/tests/SPT-Belt-Armband-Inventory.Tests.csproj -c Release
-      - name: Build B&A&HB #2 client
+      - name: 'Build B&A&HB #2 client'
         shell: pwsh
         run: dotnet build mods/SPT-Belt-Armband-Inventory/src/SPT-Belt-Armband-Inventory.csproj -c Release
-      - name: Build B&A&HB #2 server
+      - name: 'Build B&A&HB #2 server'
         shell: pwsh
         run: dotnet build mods/SPT-Belt-Armband-Inventory/server/SPT-Belt-Armband-Inventory.Server.csproj -c Release
-      - name: Stage B&A&HB #2 runtime candidate
+      - name: 'Stage B&A&HB #2 runtime candidate'
         shell: pwsh
         run: |
           $root = 'artifact/B&A&HB #2 MOD SPT RC1'
@@ -51,7 +51,7 @@ jobs:
           New-Item -ItemType Directory -Force -Path "$root/SPT_Runtime/user/mods/B&A&HB #2 MOD SPT" | Out-Null
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/src/bin/Release/netstandard2.1/SPT Belt Armband Inventory v0.1.0.dll' "$root/BepInEx/plugins/"
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT-Belt-Armband-Inventory.Server.dll' "$root/SPT_Runtime/user/mods/B&A&HB #2 MOD SPT/"
-      - name: Upload B&A&HB #2 runtime candidate
+      - name: 'Upload B&A&HB #2 runtime candidate'
         uses: actions/upload-artifact@v4
         with:
           name: 'B&A&HB #2 MOD SPT RC1'
