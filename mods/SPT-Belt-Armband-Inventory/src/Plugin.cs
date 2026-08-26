@@ -39,6 +39,10 @@ namespace SPTBeltArmbandInventory
                 Logger.LogInfo("B&A&HB #2 MOD SPT migrated stale Enabled=false config to Enabled=true for runtime validation.");
             }
 
+            // One-shot evidence collection only. This never activates Belt/HeadBand
+            // runtime slots and performs no polling or repeated reflection.
+            HostBoundaryDiscovery.Log(Logger.LogInfo, Logger.LogWarning);
+
             if (LegacyBeltSlotDetected())
             {
                 Logger.LogWarning("Trenchfoot-BeltSlot is already loaded. Remove/disable that DLL before enabling B&A&HB #2 MOD SPT; no duplicate patch was installed.");
