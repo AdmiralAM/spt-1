@@ -20,8 +20,16 @@ namespace SPTBeltArmbandInventory
 
             internal object Read(object instance)
             {
-                if (Property != null) return Property.GetValue(instance, null);
-                return Field == null ? null : Field.GetValue(instance);
+                try
+                {
+                    if (Property != null) return Property.GetValue(instance, null);
+                    return Field == null ? null : Field.GetValue(instance);
+                }
+                catch
+                {
+                    // Optional reflection access must never be able to abort profile load.
+                    return null;
+                }
             }
         }
 
@@ -76,11 +84,86 @@ namespace SPTBeltArmbandInventory
 
         static MemberAccessor CreateAccessor(Type type, string preferredName)
         {
-            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            PropertyInfo property = type.GetProperty(preferredName, flags);
-            if (property != null && property.GetIndexParameters().Length != 0) property = null;
-            FieldInfo field = property == null ? type.GetField(preferredName, flags) : null;
-            return new MemberAccessor(property, field);
+            // Never call Type.GetProperty(name, flags) here. EFT frequently hides members
+            // in derived/obfuscated types and that API throws AmbiguousMatchException when
+            // multiple inherited members share the same name. Walk each declaring type and
+            // inspect DeclaredOnly members instead; nearest derived member wins deterministically.
+            for (Type current = type; current != null; current = current.BaseType)
+            {
+                PropertyInfo[] properties;
+                try { properties = current.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly); }
+                catch { properties = Array.Empty<PropertyInfo>(); }
+
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    PropertyInfo property = properties[i];
+                    if (!string.Equals(property.Name, preferredName, StringComparison.Ordinal)) continue;
+                    if (property.GetIndexParameters().Length != 0) continue;
+                    return new MemberAccessor(property, null);
+                }
+
+                FieldInfo[] fields;
+                try { fields = current.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly); }
+                catch { fields = Array.Empty<FieldInfo>(); }
+
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    FieldInfo field = fields[i];
+                    if (string.Equals(field.Name, preferredName, StringComparison.Ordinal))
+                        return new MemberAccessor(null, field);
+                }
+            }
+
+            return new MemberAccessor(null, null);
+        }
+
+        internal static PropertyInfo FindInstanceProperty(Type type, string name, Type returnType = null)
+        {
+            if (type == null || string.IsNullOrEmpty(name)) return null;
+            for (Type current = type; current != null; current = current.BaseType)
+            {
+                PropertyInfo[] properties;
+                try { properties = current.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly); }
+                catch { continue; }
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    PropertyInfo property = properties[i];
+                    if (!string.Equals(property.Name, name, StringComparison.Ordinal)) continue;
+                    if (property.GetIndexParameters().Length != 0) continue;
+                    if (returnType != null && property.PropertyType != returnType) continue;
+                    return property;
+                }
+            }
+            return null;
+        }
+
+        internal static MethodInfo FindInstanceMethod(Type type, string name, Type returnType, params Type[] parameterTypes)
+        {
+            if (type == null || string.IsNullOrEmpty(name)) return null;
+            Type[] expected = parameterTypes ?? Type.EmptyTypes;
+            for (Type current = type; current != null; current = current.BaseType)
+            {
+                MethodInfo[] methods;
+                try { methods = current.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly); }
+                catch { continue; }
+                for (int i = 0; i < methods.Length; i++)
+                {
+                    MethodInfo method = methods[i];
+                    if (!string.Equals(method.Name, name, StringComparison.Ordinal) || method.ContainsGenericParameters) continue;
+                    if (returnType != null && method.ReturnType != returnType) continue;
+                    ParameterInfo[] parameters = method.GetParameters();
+                    if (parameters.Length != expected.Length) continue;
+                    bool match = true;
+                    for (int p = 0; p < parameters.Length; p++)
+                    {
+                        if (parameters[p].ParameterType == expected[p]) continue;
+                        match = false;
+                        break;
+                    }
+                    if (match) return method;
+                }
+            }
+            return null;
         }
 
         internal static Type[] GetTypes(Assembly assembly)
@@ -109,10 +192,6 @@ namespace SPTBeltArmbandInventory
             if (HasAny(ReadMember(item, "Containers"))) return true;
             if (HasAny(ReadMember(item, "Grids"))) return true;
 
-            // EFT container items commonly expose their usable grids on Template rather than
-            // directly on the runtime Item instance. Pack 'n' Strap belts are grid-backed
-            // armband items, so checking only Item.Containers incorrectly classified them
-            // as plain armbands and prevented the belt row from ever appearing.
             object template = ReadMember(item, "Template");
             if (template != null)
             {
@@ -133,6 +212,7 @@ namespace SPTBeltArmbandInventory
             if (enumerable == null) return false;
             IEnumerator enumerator = enumerable.GetEnumerator();
             try { return enumerator.MoveNext(); }
+            catch { return false; }
             finally
             {
                 IDisposable disposable = enumerator as IDisposable;
