@@ -27,6 +27,12 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
 
         EnsureCustomParents();
         EnsureArmBandAcceptsCustomBeltParent();
+        if (templateTable.Items.TryGetValue(new MongoId(RuntimeCandidateTpl), out var existingCandidate))
+        {
+            ValidateExistingCandidate(existingCandidate);
+            logger.Success($"B&A&HB RC retained existing validated item: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
+            return Task.CompletedTask;
+        }
 
         var details = new NewItemFromCloneDetails
         {
@@ -48,6 +54,28 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         if (!result.Success) throw new InvalidOperationException($"B&A&HB RC item creation failed: {string.Join("; ", result.Errors)}");
         logger.Success($"B&A&HB RC created: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
         return Task.CompletedTask;
+    }
+
+    private static void ValidateExistingCandidate(TemplateItem candidate)
+    {
+        if (!Equals(candidate.Parent, CustomBeltParentTpl))
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing item uses a different parent.");
+
+        var grids = candidate.Properties?.Grids;
+        if (grids == null || grids.Count != 1)
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing item does not declare exactly one grid.");
+
+        var grid = grids[0];
+        var properties = grid.Properties;
+        if (!string.Equals(grid.Id.ToString(), RuntimeCandidateGridId, StringComparison.Ordinal)
+            || properties == null
+            || properties.CellsH != RuntimeIdentity.CandidateGridColumns
+            || properties.CellsV != RuntimeIdentity.CandidateGridRows)
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid identity or geometry differs from the shared runtime contract.");
+
+        var filters = properties.Filters;
+        if (filters == null || !filters.Any(x => x.Filter?.Contains(BaseClasses.MAGAZINE) == true))
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid does not retain the MAGAZINE filter.");
     }
 
     private void EnsureCustomParents()
