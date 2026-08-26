@@ -14,6 +14,85 @@ namespace SPTQuestPlanner.Tests
             const string setup = "setup";
             const string gate = "gate";
 
+            PlannerClientCache cache = ReadyCache(fieldwork, setup, gate);
+            PlannerCapabilityGoalDefinition definition = Definition(gate);
+
+            PlannerCapabilityDecisionProvider provider = new PlannerCapabilityDecisionProvider(cache);
+            PlannerCapabilityDecisionSnapshot snapshot;
+            string error;
+
+            Assert.True(provider.TryGet(definition, out snapshot, out error));
+            Assert.Null(error);
+            Assert.NotNull(snapshot);
+            Assert.Equal("customs", snapshot.PrimaryLocationId);
+            Assert.Equal(PlannerCapabilityDecisionValueKind.DecisionChanged, snapshot.DecisionValue);
+            Assert.True(snapshot.CountsTowardKeepCandidate);
+            Assert.DoesNotContain("reserve", snapshot.AlternativeLocationIds);
+            Assert.True(snapshot.HasFreshnessProvenance);
+            Assert.Equal(cache.Revision, snapshot.SourceRevision);
+            Assert.Equal(1000, snapshot.GeneratedAtUnixSeconds);
+        }
+
+        [Fact]
+        public void ProviderInvalidatesDerivedDecisionWhenCacheRevisionAdvances()
+        {
+            const string fieldwork = "fieldwork";
+            const string setup = "setup";
+            const string gate = "gate";
+
+            PlannerClientCache cache = ReadyCache(fieldwork, setup, gate);
+            PlannerCapabilityDecisionProvider provider = new PlannerCapabilityDecisionProvider(cache);
+            PlannerCapabilityGoalDefinition definition = Definition(gate);
+
+            PlannerCapabilityDecisionSnapshot first;
+            string error;
+            Assert.True(provider.TryGet(definition, out first, out error));
+            long firstRevision = first.SourceRevision;
+            Assert.Equal(1000, first.GeneratedAtUnixSeconds);
+
+            PlannerClientIndex refreshedState = StateAt(
+                2000,
+                Active(fieldwork),
+                Active(setup),
+                Locked(gate),
+                Active("reserve-a"),
+                Active("reserve-b"),
+                Active("reserve-c"));
+            cache.ReplaceState(
+                new PlannerPayload(
+                    PlannerClientContract.SchemaVersion,
+                    2000,
+                    StateJsonAt(2000, fieldwork, setup, gate, "reserve-a", "reserve-b", "reserve-c")),
+                refreshedState);
+
+            PlannerCapabilityDecisionSnapshot second;
+            Assert.True(provider.TryGet(definition, out second, out error));
+            Assert.True(second.SourceRevision > firstRevision);
+            Assert.Equal(cache.Revision, second.SourceRevision);
+            Assert.Equal(2000, second.GeneratedAtUnixSeconds);
+            Assert.NotSame(first, second);
+        }
+
+        [Fact]
+        public void ProviderFailsCleanlyBeforeCachedStateIsReady()
+        {
+            PlannerClientCache cache = new PlannerClientCache();
+            PlannerCapabilityDecisionProvider provider = new PlannerCapabilityDecisionProvider(cache);
+            PlannerCapabilityGoalDefinition definition = new PlannerCapabilityGoalDefinition(
+                "capability",
+                "gate",
+                "test",
+                PlannerCapabilitySupplyKind.OneTimeSample);
+
+            PlannerCapabilityDecisionSnapshot snapshot;
+            string error;
+            Assert.False(provider.TryGet(definition, out snapshot, out error));
+            Assert.Null(snapshot);
+            Assert.Contains("not ready", error, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static PlannerClientCache ReadyCache(string fieldwork, string setup, string gate)
+        {
             PlannerClientCache cache = new PlannerClientCache();
             PlannerTopologyIndex topology = Topology(
                 Quest(fieldwork, Array.Empty<string>(), new[] { gate }),
@@ -38,19 +117,26 @@ namespace SPTQuestPlanner.Tests
                 new PlannerRequirementIndex(new Dictionary<string, IReadOnlyList<PlannerQuestItemRequirement>>(StringComparer.Ordinal)),
                 locations);
 
-            PlannerClientIndex state = State(
+            PlannerClientIndex state = StateAt(
+                1000,
                 Active(fieldwork),
                 Active(setup),
                 Locked(gate),
                 Active("reserve-a"),
                 Active("reserve-b"),
                 Active("reserve-c"));
-            string stateJson = StateJson(fieldwork, setup, gate, "reserve-a", "reserve-b", "reserve-c");
             cache.ReplaceState(
-                new PlannerPayload(PlannerClientContract.SchemaVersion, 1000, stateJson),
+                new PlannerPayload(
+                    PlannerClientContract.SchemaVersion,
+                    1000,
+                    StateJsonAt(1000, fieldwork, setup, gate, "reserve-a", "reserve-b", "reserve-c")),
                 state);
+            return cache;
+        }
 
-            PlannerCapabilityGoalDefinition definition = new PlannerCapabilityGoalDefinition(
+        private static PlannerCapabilityGoalDefinition Definition(string gate)
+        {
+            return new PlannerCapabilityGoalDefinition(
                 "controlled-ammo",
                 gate,
                 "test",
@@ -59,39 +145,6 @@ namespace SPTQuestPlanner.Tests
                 80,
                 80,
                 "test-contract");
-
-            PlannerCapabilityDecisionProvider provider = new PlannerCapabilityDecisionProvider(cache);
-            PlannerCapabilityDecisionSnapshot snapshot;
-            string error;
-
-            Assert.True(provider.TryGet(definition, out snapshot, out error));
-            Assert.Null(error);
-            Assert.NotNull(snapshot);
-            Assert.Equal("customs", snapshot.PrimaryLocationId);
-            Assert.Equal(PlannerCapabilityDecisionValueKind.DecisionChanged, snapshot.DecisionValue);
-            Assert.True(snapshot.CountsTowardKeepCandidate);
-            Assert.DoesNotContain("reserve", snapshot.AlternativeLocationIds);
-            Assert.True(snapshot.HasFreshnessProvenance);
-            Assert.Equal(cache.Revision, snapshot.SourceRevision);
-            Assert.Equal(1000, snapshot.GeneratedAtUnixSeconds);
-        }
-
-        [Fact]
-        public void ProviderFailsCleanlyBeforeCachedStateIsReady()
-        {
-            PlannerClientCache cache = new PlannerClientCache();
-            PlannerCapabilityDecisionProvider provider = new PlannerCapabilityDecisionProvider(cache);
-            PlannerCapabilityGoalDefinition definition = new PlannerCapabilityGoalDefinition(
-                "capability",
-                "gate",
-                "test",
-                PlannerCapabilitySupplyKind.OneTimeSample);
-
-            PlannerCapabilityDecisionSnapshot snapshot;
-            string error;
-            Assert.False(provider.TryGet(definition, out snapshot, out error));
-            Assert.Null(snapshot);
-            Assert.Contains("not ready", error, StringComparison.OrdinalIgnoreCase);
         }
 
         private static PlannerTopologyQuest Quest(string id, IReadOnlyList<string> prerequisites, IReadOnlyList<string> dependents)
@@ -164,14 +217,14 @@ namespace SPTQuestPlanner.Tests
             return new PlannerQuestClientState(questId, 1, 1, true, false, 0);
         }
 
-        private static PlannerClientIndex State(params PlannerQuestClientState[] quests)
+        private static PlannerClientIndex StateAt(long generatedAt, params PlannerQuestClientState[] quests)
         {
             Dictionary<string, PlannerQuestClientState> values = new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal);
             foreach (PlannerQuestClientState quest in quests) values[quest.QuestId] = quest;
-            return new PlannerClientIndex(1000, values, new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal));
+            return new PlannerClientIndex(generatedAt, values, new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal));
         }
 
-        private static string StateJson(params string[] questIds)
+        private static string StateJsonAt(long generatedAt, params string[] questIds)
         {
             List<string> entries = new List<string>();
             foreach (string id in questIds)
@@ -181,7 +234,7 @@ namespace SPTQuestPlanner.Tests
             }
             return "{" +
                 "\"schemaVersion\":" + PlannerClientContract.SchemaVersion + "," +
-                "\"generatedAtUnixSeconds\":1000," +
+                "\"generatedAtUnixSeconds\":" + generatedAt + "," +
                 "\"player\":{\"questStates\":{" + string.Join(",", entries) + "}}" +
                 "}";
         }
