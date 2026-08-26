@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace SPTBeltArmbandInventory
 {
@@ -12,7 +13,6 @@ namespace SPTBeltArmbandInventory
                 && WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.ScavHostRestoration);
         }
 
-        // Historical Phase 1 compatibility wrapper for the magazine RC regression surface.
         internal static bool ShouldRestore(bool deleted, bool hasItem, bool hasContainers)
         {
             return hasItem && ShouldRestore(RuntimeIdentity.CandidateItemId, deleted, hasContainers);
@@ -22,88 +22,67 @@ namespace SPTBeltArmbandInventory
     internal static class ScavBeltRuntime
     {
         internal static Action<string> LogWarning;
+        internal static Func<object, object> ReadInventory;
+        internal static Func<object, object> ReadEquipment;
+        internal static Func<object, object, object> GetSlot;
+        internal static Func<object, object> ReadContainedItem;
+        internal static Func<object, bool> ReadDeleted;
+        internal static Action<object, bool> WriteDeleted;
+        internal static Func<object, string> ReadTemplateId;
+        internal static object ArmBandValue;
+        static bool runtimeFailureLogged;
 
         internal static void RestoreContainerBeltSlot(object inventoryController)
         {
-            if (inventoryController == null) return;
+            if (inventoryController == null || ReadInventory == null || ReadEquipment == null || GetSlot == null
+                || ReadContainedItem == null || ReadDeleted == null || WriteDeleted == null || ReadTemplateId == null || ArmBandValue == null) return;
 
             try
             {
-                object inventory = ReflectionTools.ReadMember(inventoryController, "Inventory");
-                object equipment = ReflectionTools.ReadMember(inventory, "Equipment");
+                object inventory = ReadInventory(inventoryController);
+                object equipment = inventory == null ? null : ReadEquipment(inventory);
                 if (equipment == null) return;
 
-                MethodInfo getSlot = FindGetSlot(equipment.GetType());
-                if (getSlot == null) return;
-
-                Type slotEnumType = getSlot.GetParameters()[0].ParameterType;
-                object armBand = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand, false);
-                object slot = getSlot.Invoke(equipment, new[] { armBand });
+                object slot = GetSlot(equipment, ArmBandValue);
                 if (slot == null) return;
 
-                object item = ReflectionTools.ReadMember(slot, "ContainedItem");
-                bool deleted = ReflectionTools.ReadBoolean(slot, "Deleted");
-                string templateId = GetTemplateId(item);
+                object item = ReadContainedItem(slot);
+                bool deleted = ReadDeleted(slot);
+                string templateId = item == null ? null : ReadTemplateId(item);
                 if (!ScavBeltPolicy.ShouldRestore(templateId, deleted, ReflectionTools.HasContainers(item))) return;
 
-                if (!WriteBoolean(slot, "Deleted", false))
-                {
-                    if (LogWarning != null) LogWarning("Scav wearable container detected, but ArmBand.Deleted could not be restored.");
-                }
+                WriteDeleted(slot, false);
             }
             catch (Exception exception)
             {
-                if (LogWarning != null) LogWarning("Could not restore Scav wearable ArmBand slot: " + Unwrap(exception).Message);
+                if (!runtimeFailureLogged)
+                {
+                    runtimeFailureLogged = true;
+                    Exception root = Unwrap(exception);
+                    LogWarning?.Invoke("B&A&HB SCAV RUNTIME FAIL-CLOSED: " + root.GetType().FullName + ": " + root.Message);
+                }
             }
         }
 
-        static string GetTemplateId(object item)
+        internal static void Reset()
         {
-            if (item == null) return null;
-            object stringTemplateId = ReflectionTools.ReadMember(item, "StringTemplateId");
-            if (stringTemplateId is string direct && !string.IsNullOrEmpty(direct)) return direct;
-            object templateId = ReflectionTools.ReadMember(item, "TemplateId");
-            return templateId?.ToString();
-        }
-
-        static MethodInfo FindGetSlot(Type equipmentType)
-        {
-            MethodInfo[] methods = equipmentType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            for (int i = 0; i < methods.Length; i++)
-            {
-                MethodInfo method = methods[i];
-                if (method.Name != "GetSlot") continue;
-                ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length == 1 && parameters[0].ParameterType.IsEnum) return method;
-            }
-            return null;
-        }
-
-        static bool WriteBoolean(object instance, string name, bool value)
-        {
-            if (instance == null) return false;
-            const BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-            Type type = instance.GetType();
-            PropertyInfo property = type.GetProperty(name, flags);
-            if (property != null && property.CanWrite && property.PropertyType == typeof(bool))
-            {
-                property.SetValue(instance, value, null);
-                return true;
-            }
-
-            FieldInfo field = type.GetField(name, flags);
-            if (field != null && field.FieldType == typeof(bool))
-            {
-                field.SetValue(instance, value);
-                return true;
-            }
-            return false;
+            LogWarning = null;
+            ReadInventory = null;
+            ReadEquipment = null;
+            GetSlot = null;
+            ReadContainedItem = null;
+            ReadDeleted = null;
+            WriteDeleted = null;
+            ReadTemplateId = null;
+            ArmBandValue = null;
+            runtimeFailureLogged = false;
         }
 
         static Exception Unwrap(Exception exception)
         {
-            TargetInvocationException invocation = exception as TargetInvocationException;
-            return invocation != null && invocation.InnerException != null ? invocation.InnerException : exception;
+            Exception current = exception;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null) current = invocation.InnerException;
+            return current;
         }
     }
 
@@ -128,50 +107,169 @@ namespace SPTBeltArmbandInventory
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
                 Type controllerType = ReflectionTools.FindType("EFT.InventoryLogic.InventoryController");
-                if (harmonyType == null || harmonyMethodType == null || controllerType == null)
-                    return Fail("SPT 4.1 InventoryController or Harmony was not found; Scav wearable compatibility is disabled.");
+                Type inventoryType = ReflectionTools.FindType("EFT.InventoryLogic.Inventory");
+                Type equipmentType = ReflectionTools.FindType("EFT.InventoryLogic.InventoryEquipment");
+                Type equipmentSlotType = ReflectionTools.FindType("EFT.InventoryLogic.EquipmentSlot");
+                Type slotType = ReflectionTools.FindType("EFT.InventoryLogic.Slot");
+                Type itemType = ReflectionTools.FindType("EFT.InventoryLogic.Item");
+                if (harmonyType == null || harmonyMethodType == null || controllerType == null || inventoryType == null
+                    || equipmentType == null || equipmentSlotType == null || slotType == null || itemType == null)
+                    return Fail("SPT 4.1 Scav inventory types or Harmony were not found; Scav wearable compatibility is disabled.");
 
-                MethodInfo replaceInventory = FindReplaceInventory(controllerType);
-                if (replaceInventory == null)
-                    return Fail("SPT 4.1 InventoryController.ReplaceInventory boundary was not found; Scav wearable compatibility is disabled.");
+                MethodInfo replaceInventory = FindReplaceInventory(controllerType, inventoryType);
+                PropertyInfo inventoryProperty = ReflectionTools.FindInstanceProperty(controllerType, "Inventory", inventoryType);
+                PropertyInfo equipmentProperty = ReflectionTools.FindInstanceProperty(inventoryType, "Equipment", equipmentType);
+                MethodInfo getSlot = ReflectionTools.FindInstanceMethod(equipmentType, "GetSlot", slotType, equipmentSlotType);
+                PropertyInfo containedItem = ReflectionTools.FindInstanceProperty(slotType, "ContainedItem", itemType);
+                PropertyInfo deleted = ReflectionTools.FindInstanceProperty(slotType, "Deleted", typeof(bool));
+                PropertyInfo templateId = ReflectionTools.FindInstanceProperty(itemType, "StringTemplateId", typeof(string));
+                if (replaceInventory == null || inventoryProperty == null || equipmentProperty == null || getSlot == null
+                    || containedItem == null || deleted == null || !deleted.CanWrite || templateId == null)
+                    return Fail("SPT 4.1 Scav wearable boundary is incomplete; compatibility is disabled.");
+
+                Func<object, object> readInventory = BuildObjectReader(controllerType, inventoryProperty, "BAndHBScavInventory");
+                Func<object, object> readEquipment = BuildObjectReader(inventoryType, equipmentProperty, "BAndHBScavEquipment");
+                Func<object, object, object> getSlotDelegate = BuildBinaryObjectCall(equipmentType, equipmentSlotType, getSlot);
+                Func<object, object> readContainedItem = BuildObjectReader(slotType, containedItem, "BAndHBScavContainedItem");
+                Func<object, bool> readDeleted = BuildBoolReader(slotType, deleted);
+                Action<object, bool> writeDeleted = BuildBoolWriter(slotType, deleted);
+                Func<object, string> readTemplateId = BuildStringReader(itemType, templateId);
+                if (readInventory == null || readEquipment == null || getSlotDelegate == null || readContainedItem == null
+                    || readDeleted == null || writeDeleted == null || readTemplateId == null)
+                    return Fail("SPT 4.1 Scav wearable delegates could not be bound; compatibility is disabled.");
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
+                MethodInfo rollback = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
                 if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, harmonyMethodConstructor != null, rollback != null))
                     return Fail("Harmony patch/rollback API is incompatible; Scav wearable compatibility is disabled.");
                 unpatchSelf = rollback;
 
                 ScavBeltRuntime.LogWarning = logWarning;
-                object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(ReplaceInventoryPostfix)) });
+                ScavBeltRuntime.ReadInventory = readInventory;
+                ScavBeltRuntime.ReadEquipment = readEquipment;
+                ScavBeltRuntime.GetSlot = getSlotDelegate;
+                ScavBeltRuntime.ReadContainedItem = readContainedItem;
+                ScavBeltRuntime.ReadDeleted = readDeleted;
+                ScavBeltRuntime.WriteDeleted = writeDeleted;
+                ScavBeltRuntime.ReadTemplateId = readTemplateId;
+                ScavBeltRuntime.ArmBandValue = Enum.Parse(equipmentSlotType, BeltSlotPlan.ArmBand, false);
+
+                object postfix = harmonyMethodConstructor.Invoke(new object[] { FindOwnDeclaredMethod(nameof(ReplaceInventoryPostfix)) });
                 Patch(patchMethod, harmonyMethodType, replaceInventory, postfix);
 
-                if (logInfo != null) logInfo("B&A&HB item-descriptor scoped Scav ArmBand compatibility installed.");
+                logInfo?.Invoke("B&A&HB item-descriptor scoped Scav ArmBand compatibility installed with startup-bound delegates.");
                 return true;
             }
             catch (Exception exception)
             {
                 Dispose();
-                return Fail("Scav wearable compatibility installation failed safely: " + exception.Message);
+                Exception root = Unwrap(exception);
+                return Fail("Scav wearable compatibility installation failed safely: " + root.GetType().FullName + ": " + root.Message);
             }
         }
 
-        static MethodInfo FindReplaceInventory(Type controllerType)
+        static MethodInfo FindReplaceInventory(Type controllerType, Type inventoryType)
         {
             MethodInfo[] methods = controllerType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             for (int i = 0; i < methods.Length; i++)
             {
                 MethodInfo method = methods[i];
-                if (!string.Equals(method.Name, "ReplaceInventory", StringComparison.Ordinal)) continue;
+                if (!string.Equals(method.Name, "ReplaceInventory", StringComparison.Ordinal) || method.ReturnType != typeof(void)) continue;
                 ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length != 1) continue;
-                Type parameterType = parameters[0].ParameterType;
-                if (string.Equals(parameterType.Name, "Inventory", StringComparison.Ordinal)
-                    || string.Equals(parameterType.FullName, "EFT.InventoryLogic.Inventory", StringComparison.Ordinal))
-                    return method;
+                if (parameters.Length == 1 && parameters[0].ParameterType == inventoryType) return method;
             }
             return null;
+        }
+
+        static Func<object, object> BuildObjectReader(Type declaringType, PropertyInfo property, string name)
+        {
+            MethodInfo getter = property?.GetGetMethod(true);
+            if (getter == null) return null;
+            try
+            {
+                DynamicMethod dm = new DynamicMethod(name, typeof(object), new[] { typeof(object) }, typeof(ScavBeltPatches), true);
+                ILGenerator il = dm.GetILGenerator();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Castclass, declaringType);
+                il.Emit(getter.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, getter);
+                if (getter.ReturnType.IsValueType) il.Emit(OpCodes.Box, getter.ReturnType);
+                il.Emit(OpCodes.Ret);
+                return (Func<object, object>)dm.CreateDelegate(typeof(Func<object, object>));
+            }
+            catch { return null; }
+        }
+
+        static Func<object, object, object> BuildBinaryObjectCall(Type declaringType, Type argumentType, MethodInfo method)
+        {
+            try
+            {
+                DynamicMethod dm = new DynamicMethod("BAndHBScavGetSlot", typeof(object), new[] { typeof(object), typeof(object) }, typeof(ScavBeltPatches), true);
+                ILGenerator il = dm.GetILGenerator();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Castclass, declaringType);
+                il.Emit(OpCodes.Ldarg_1);
+                if (argumentType.IsValueType) il.Emit(OpCodes.Unbox_Any, argumentType);
+                else il.Emit(OpCodes.Castclass, argumentType);
+                il.Emit(method.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, method);
+                if (method.ReturnType.IsValueType) il.Emit(OpCodes.Box, method.ReturnType);
+                il.Emit(OpCodes.Ret);
+                return (Func<object, object, object>)dm.CreateDelegate(typeof(Func<object, object, object>));
+            }
+            catch { return null; }
+        }
+
+        static Func<object, bool> BuildBoolReader(Type declaringType, PropertyInfo property)
+        {
+            MethodInfo getter = property?.GetGetMethod(true);
+            if (getter == null || getter.ReturnType != typeof(bool)) return null;
+            try
+            {
+                DynamicMethod dm = new DynamicMethod("BAndHBScavDeletedRead", typeof(bool), new[] { typeof(object) }, typeof(ScavBeltPatches), true);
+                ILGenerator il = dm.GetILGenerator();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Castclass, declaringType);
+                il.Emit(getter.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, getter);
+                il.Emit(OpCodes.Ret);
+                return (Func<object, bool>)dm.CreateDelegate(typeof(Func<object, bool>));
+            }
+            catch { return null; }
+        }
+
+        static Action<object, bool> BuildBoolWriter(Type declaringType, PropertyInfo property)
+        {
+            MethodInfo setter = property?.GetSetMethod(true);
+            if (setter == null || property.PropertyType != typeof(bool)) return null;
+            try
+            {
+                DynamicMethod dm = new DynamicMethod("BAndHBScavDeletedWrite", typeof(void), new[] { typeof(object), typeof(bool) }, typeof(ScavBeltPatches), true);
+                ILGenerator il = dm.GetILGenerator();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Castclass, declaringType);
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(setter.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, setter);
+                il.Emit(OpCodes.Ret);
+                return (Action<object, bool>)dm.CreateDelegate(typeof(Action<object, bool>));
+            }
+            catch { return null; }
+        }
+
+        static Func<object, string> BuildStringReader(Type declaringType, PropertyInfo property)
+        {
+            MethodInfo getter = property?.GetGetMethod(true);
+            if (getter == null || getter.ReturnType != typeof(string)) return null;
+            try
+            {
+                DynamicMethod dm = new DynamicMethod("BAndHBScavTemplateId", typeof(string), new[] { typeof(object) }, typeof(ScavBeltPatches), true);
+                ILGenerator il = dm.GetILGenerator();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Castclass, declaringType);
+                il.Emit(getter.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, getter);
+                il.Emit(OpCodes.Ret);
+                return (Func<object, string>)dm.CreateDelegate(typeof(Func<object, string>));
+            }
+            catch { return null; }
         }
 
         static void ReplaceInventoryPostfix(object __instance)
@@ -179,9 +277,20 @@ namespace SPTBeltArmbandInventory
             ScavBeltRuntime.RestoreContainerBeltSlot(__instance);
         }
 
-        static MethodInfo Method(string name)
+        static MethodInfo FindOwnDeclaredMethod(string name)
         {
-            return typeof(ScavBeltPatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
+            MethodInfo[] methods = typeof(ScavBeltPatches).GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal) && methods[i].GetParameters().Length == 1) return methods[i];
+            return null;
+        }
+
+        static MethodInfo FindZeroArgInstanceMethod(Type type, string name)
+        {
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal) && methods[i].GetParameters().Length == 0) return methods[i];
+            return null;
         }
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
@@ -194,10 +303,7 @@ namespace SPTBeltArmbandInventory
                 ParameterInfo[] parameters = method.GetParameters();
                 if (parameters.Length < 2 || !typeof(MethodBase).IsAssignableFrom(parameters[0].ParameterType)) continue;
                 for (int p = 1; p < parameters.Length; p++)
-                {
-                    if (parameters[p].ParameterType == harmonyMethodType && string.Equals(parameters[p].Name, "postfix", StringComparison.OrdinalIgnoreCase))
-                        return method;
-                }
+                    if (parameters[p].ParameterType == harmonyMethodType && string.Equals(parameters[p].Name, "postfix", StringComparison.OrdinalIgnoreCase)) return method;
             }
             return null;
         }
@@ -208,17 +314,21 @@ namespace SPTBeltArmbandInventory
             object[] arguments = new object[parameters.Length];
             arguments[0] = original;
             for (int i = 1; i < parameters.Length; i++)
-            {
-                if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase))
-                    arguments[i] = postfix;
-            }
+                if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) arguments[i] = postfix;
             patchMethod.Invoke(harmony, arguments);
         }
 
         bool Fail(string message)
         {
-            if (logWarning != null) logWarning(message);
+            logWarning?.Invoke(message);
             return false;
+        }
+
+        static Exception Unwrap(Exception exception)
+        {
+            Exception current = exception;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null) current = invocation.InnerException;
+            return current;
         }
 
         public void Dispose()
@@ -227,7 +337,7 @@ namespace SPTBeltArmbandInventory
             catch { }
             harmony = null;
             unpatchSelf = null;
-            ScavBeltRuntime.LogWarning = null;
+            ScavBeltRuntime.Reset();
         }
     }
 }
