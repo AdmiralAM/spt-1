@@ -97,4 +97,50 @@ Require(itemStackTx.Committed && !itemStackTx.RolledBack, "bounded single-stack 
 Require(itemStackCount == 4, "bounded item stack transaction must reach exact integer count");
 Require(!NumericRewardTransactionCore.NeedsMutation(itemStackCount, 4, false), "bounded item stack second pass must be idempotent");
 
+var mixedXp = 9000d;
+var mixedStanding = 0.20d;
+var mixedItemStack = 10d;
+var itemFailOnce = true;
+var mixedRollback = NumericRewardTransactionCore.Execute([
+    new NumericRewardTransactionRequest
+    {
+        QuestId = "mixed-xp",
+        Dimension = "Experience",
+        ExpectedBefore = 9000,
+        Target = 3000,
+        Slots = [new NumericRewardSlot(() => mixedXp, value => mixedXp = value)],
+    },
+    new NumericRewardTransactionRequest
+    {
+        QuestId = "mixed-standing",
+        Dimension = "TraderStanding",
+        ExpectedBefore = 0.20,
+        Target = 0.05,
+        Slots = [new NumericRewardSlot(() => mixedStanding, value => mixedStanding = value)],
+    },
+    new NumericRewardTransactionRequest
+    {
+        QuestId = "mixed-item-failure",
+        Dimension = "ItemRewardStackCount",
+        ExpectedBefore = 10,
+        Target = 4,
+        Slots = [new NumericRewardSlot(
+            () => mixedItemStack,
+            value =>
+            {
+                if (itemFailOnce)
+                {
+                    itemFailOnce = false;
+                    throw new InvalidOperationException("synthetic item-stack setter failure");
+                }
+                mixedItemStack = value;
+            })],
+    },
+]);
+Require(!mixedRollback.Committed && mixedRollback.RolledBack, "mixed numeric/item failure must roll back the whole batch");
+Require(mixedRollback.Results.Count == 0, "mixed rolled-back batch must publish no committed mutations");
+Require(Math.Abs(mixedXp - 9000) < 0.001, "mixed rollback must restore earlier XP mutation");
+Require(Math.Abs(mixedStanding - 0.20) < 0.00001, "mixed rollback must restore earlier standing mutation");
+Require(Math.Abs(mixedItemStack - 10) < 0.001, "mixed rollback must restore failing item stack mutation");
+
 Console.WriteLine("Economy Admiral Enforce transaction + bounded item stack planner smoke PASS");
