@@ -123,8 +123,10 @@ namespace SPTBeltArmbandInventory
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                if (harmony == null || patchMethod == null || harmonyMethodConstructor == null)
-                    return Fail("Harmony patch API is incompatible; belt payment compatibility is disabled.");
+                MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
+                if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, harmonyMethodConstructor != null, rollback != null))
+                    return Fail("Harmony patch/rollback API is incompatible; belt payment compatibility is disabled.");
+                unpatchSelf = rollback;
 
                 PaymentSlotRuntime.LogWarning = logWarning;
                 PaymentSlotRuntime.GetSlotMethod = getSlot;
@@ -133,14 +135,14 @@ namespace SPTBeltArmbandInventory
                 object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(Postfix)) });
                 Patch(patchMethod, harmonyMethodType, getter, postfix);
 
-                unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 if (logInfo != null) logInfo("Belt/Armband Inventory payment-slot compatibility installed.");
                 return true;
             }
             catch (Exception exception)
             {
                 Dispose();
-                return Fail("Belt payment compatibility installation failed safely: " + exception.Message);
+                Exception root = Unwrap(exception);
+                return Fail("Belt payment compatibility installation failed safely: " + root.GetType().FullName + ": " + root.Message);
             }
         }
 
@@ -181,6 +183,14 @@ namespace SPTBeltArmbandInventory
                 if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) arguments[i] = postfix;
             }
             patchMethod.Invoke(harmony, arguments);
+        }
+
+        static Exception Unwrap(Exception exception)
+        {
+            Exception current = exception;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null)
+                current = invocation.InnerException;
+            return current;
         }
 
         bool Fail(string message)
