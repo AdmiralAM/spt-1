@@ -40,14 +40,7 @@ When explicitly enabled, Economy Admiral may reduce `ItemRewardStackCount` only 
 
 The transaction writes `Reward.Value` and `Upd.StackObjectsCount` together, verifies them through a synchronized read, and restores both on rollback. If the original fields disagree, the candidate is blocked/fails preflight instead of being repaired implicitly.
 
-This slice does **not**:
-
-- replace `_tpl` item templates;
-- add/remove reward records;
-- delete the last item to satisfy a budget;
-- mutate structural quest fields;
-- bypass pristine/unknown provenance protection;
-- enable broad item reward replacement logic.
+This slice does **not** replace `_tpl` item templates, add/remove reward records, delete the last item to satisfy a budget, mutate structural quest fields, bypass provenance protection, or enable generic item replacement logic.
 
 ## Provenance safety
 
@@ -85,14 +78,26 @@ All active reward mutations share the production `NumericRewardTransactionCore`:
 5. rollback the whole batch on any failure;
 6. verify rollback.
 
-Experience, TraderStanding and the opt-in single-stack item quantity therefore participate in the same all-or-nothing batch. CI smoke tests include successful commits, same-state idempotence, synthetic failures, full rollback of earlier numeric mutations, item-stack commit, and mixed XP/standing/item rollback.
+Experience, TraderStanding and the opt-in single-stack item quantity therefore participate in the same all-or-nothing batch. CI smoke tests include successful commits, same-state idempotence, synthetic failures, full rollback of earlier numeric mutations, synchronized item-stack commit, and mixed XP/standing/item rollback restoring both item quantity representations.
 
-## Runtime validators
+## SPT boundary and load order
 
-Packaged candidates include:
+Compile boundary: `SPTarkov.Server.Core 4.1.2` / .NET 10. Physical runtime target: **SPT 4.1.3**. Packaged candidates carry exact head/workflow identity in `BUILD_INFO.json`.
+
+Load order remains:
+
+1. priority `OnLoadOrder.Watermark + 1` — pristine startup baseline;
+2. normal SPT/mod callbacks;
+3. `PostLoad + 1000` — final modded DB analysis and optional enforcement.
+
+The primary audit now reads typed final DB state directly against the pristine snapshot; the old primary correction/repair cascade is no longer on the runtime path.
+
+## Runtime outputs and validators
+
+Core reports remain under the mod-local `reports/` directory. Packaged candidates include:
 
 - `Validate-Runtime.ps1` — Audit/read-only contract;
-- `Validate-Enforce.ps1` — Enforce mutation contract; automatically recognizes Alpha-only schema 5/policy 3 and opt-in item-stack schema 6/policy 4;
+- `Validate-Enforce.ps1` — Enforce mutation contract; recognizes Alpha schema 5/policy 3 and opt-in item-stack schema 6/policy 4;
 - `Validate-PrimaryParity.ps1` — typed final DB + pristine startup primary audit parity.
 
 Physical runtime validation is reserved for meaningful SPT gates; ordinary code/contract changes should be proven through CI/smoke tests first.
@@ -100,3 +105,5 @@ Physical runtime validation is reserved for meaningful SPT gates; ordinary code/
 ## Scope boundaries
 
 Economy Admiral does not currently expand into PBS, world loot, flea, crafts, insurance, Scorpion, Artem, Andrudis, generic attribution/replacement graphs, or Admiral Trader stock architecture. Those domains are separate future decisions and are not prerequisites for the current quest reward normalization line.
+
+Development lifecycle: `single active branch/PR -> CI -> physical runtime gate only when genuinely required -> stabilize -> continue product work`.
