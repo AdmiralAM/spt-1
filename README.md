@@ -16,33 +16,26 @@ Versions below are the module versions declared by current source metadata. A le
 
 | Module | Version / state | Purpose | Install channel |
 | --- | --- | --- | --- |
-| [SPT Tactical HUD](mods/SPT-Tactical-HUD) | client `1.13.2`; optional server `1.13.0` | Population, player-status, and kill-feed HUD | `runtime` |
+| [Admiral Tactical HUD](mods/Admiral-Tactical-HUD) | `1.13.3`; stable-final candidate | Population, player-status, compact weapon-name kill feed | final CI package / runtime promotion |
 | [Item Intelligence Admiral](mods/SPT-Item-Intelligence) | `1.0.0`; stable / maintenance-only | Requirement, FIR, valuation, craft/barter relevance, and persistent per-item markers | `runtime-item-intelligence` |
 | [Pause Admiral](mods/SPT-Pause) | `1.0.0`; stable / runtime validated | Offline-raid pause with raid-clock/time-of-day preservation and paused-input suppression | `runtime-pause` |
 | [SPT Belt/Armband Inventory](mods/SPT-Belt-Armband-Inventory) | `0.1.0`; active development | Additional inventory/container behavior for the `ArmBand` equipment slot | `runtime-belt-armband` |
 | [Admiral Trader](mods/Admiral-Trader) | `0.1.0`; active development | Curated successor campaign/trader for the legacy Andrudis/QuestManiac ecosystem | Development source / CI artifacts |
 | [Admiral Artyom Revival](mods/Admiral-Artyom-Revival) | `3.0.0`; SPT 4.1.3 runtime validated | Maintained revival of WTT-Artem trader, 23-quest campaign, gear and clothing | `runtime-artem-revival` |
 
-Tactical HUD `1.14.0` is retired. That build accidentally combined early Item Intelligence code with the HUD. The maintained HUD line is `1.13.2`; Item Intelligence Admiral has an independent version and release lifecycle.
+Admiral Tactical HUD has one maintained line: **1.13.3**. Older Tactical HUD versions and the retired combined HUD/Item-Intelligence experiment are not maintained products and must not be used as runtime sources.
 
 ## Repository channels
 
 - `main` — authoritative development source.
 - `stable` — source commit promoted after deliberate suite publication.
-- `runtime` — install-only Tactical HUD package.
+- `runtime` — install-only Admiral Tactical HUD publication channel after final acceptance.
 - `runtime-item-intelligence` — install-only Item Intelligence Admiral package; branch name retained as a compatibility identifier.
 - `runtime-pause` — install-only Pause Admiral package.
 - `runtime-belt-armband` — install-only Belt/Armband Inventory package.
-- `runtime-artem-revival` — stable Admiral Artyom Revival publication identity; branch name retained as an established compatibility identifier.
-- `archive/v1.13.0` — intentional frozen Tactical HUD `1.13.0` reserve.
+- `runtime-artem-revival` — stable Admiral Artyom Revival publication identity.
 
-Runtime branches are publication/runtime channels, not development branches. Their exact package model is documented by the owning module.
-
-## Downloads
-
-Runtime branches provide the maintained install packages for Tactical HUD, Item Intelligence Admiral, Pause Admiral, Belt/Armband Inventory, and the validated server identity for Admiral Artyom Revival. Tactical HUD `1.13.0` remains preserved under `archive/v1.13.0`.
-
-Admiral Artyom Revival differs from the self-contained runtime ZIP channels: `runtime-artem-revival` pins the accepted r5 server identity while repaired authored core data and the external Unity `Bundles/` set remain governed by the module's reconstruction/update contract.
+Runtime branches are publication/runtime channels, not development branches.
 
 ## Repository policy
 
