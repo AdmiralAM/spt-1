@@ -1,40 +1,72 @@
-# SPT Belt/Armband Inventory
+# B&A&HB #2 MOD SPT
 
-Inventory extension for SPT 4.1.x that gives compatible accessory containers
-ArmBand/Belt/HeadBand-style inventory behavior. The validated runtime currently
-uses `ArmBand` as its host; Belt and HeadBand are the next category foundations.
+Wearable inventory extension for SPT 4.1.x. The current validated implementation
+uses the real EFT `ArmBand` equipment slot as the host for a dedicated searchable
+container item. Belt and HeadBand remain later product categories; they are not
+activated until the ArmBand implementation passes its full physical lifecycle gate.
+
 Current module version: **0.1.0**.
 
-The implementation is generic: it does not require a specific Pack 'n' Strap item ID or content class. Plain armbands remain ordinary armbands; container-capable items receive the additional inventory behavior.
+## Phase 1: magazine belt on ArmBand
 
-The validated ArmBand candidate opens through EFT's native searchable-item
-`GridWindow` and default `GeneratedGridsView`. Its declared `1x2` grid therefore
-renders as exactly two cells. The earlier experimental `ContainersPanel` BELT-row
-projection is not installed: it was superseded after runtime proof showed that
-the native container window owns the correct grid lifecycle.
+The current RC is intentionally narrow:
 
-## Current architecture
+- dedicated custom searchable item/template runtime identity;
+- real `ArmBand` equipment host;
+- one exact native `1x2` grid;
+- `MAGAZINE`-only filter;
+- native EFT `GridWindow` + `GeneratedGridsView` presentation;
+- compact RC-only window sizing;
+- loot/unload priority integration;
+- reachable-container / reload integration;
+- automatic pickup fallback into an empty compatible ArmBand slot;
+- equipment-build, Scav, merge, death and insurance lifecycle handling.
 
-The module now contains both client and server components:
+Ordinary armbands remain ordinary armbands. The old experimental `ContainersPanel`
+BELT-row projection is not installed in production.
 
-- `src/` — client-side inventory presentation, slot integration, quick-move/priority behavior, and compatibility patches;
-- `server/` — SPT 4.1.3 server integration, including belt persistence/death-policy behavior;
-- `tests/` — regression coverage for the current client/server contracts;
-- `tools/` — deterministic hot-path checks;
-- `docs/` — compatibility archaeology and runtime contracts.
-- `docs/accessory-taxonomy.md` — shared category, capacity and UI geometry contract.
-- `docs/product-concept.md` — product purpose, balance rules and activation gates for ArmBand, Belt and HeadBand.
+Grenade-view and payment-source patches are deliberately dormant in Phase 1 because
+the current RC cannot contain grenades or money. Those capabilities return only when
+a concrete later wearable variant requires them.
 
-The client remains event/interaction driven; it does not use per-frame inventory polling. Runtime reflection is used where EFT/SPT client members are obfuscated and is resolved outside hot paths.
+## Performance contract
+
+The client is interaction/event driven:
+
+- no `ItemView.Update` polling;
+- no production `MonoBehaviour.Update` loop;
+- no scene-wide object scans;
+- no hierarchy-wide polling;
+- deferred compact-window work only after an RC window is observed;
+- deferred work is bounded and terminates when its queue drains;
+- reusable reflection lookups are cached.
+
+CI runs a deterministic hot-path guard before tests/builds to reject regression to
+those patterns.
+
+## Repository layout
+
+- `src/` — client runtime type registration and ArmBand inventory integrations;
+- `server/` — SPT 4.1.3 item/trader/lifecycle integration;
+- `tests/` — regression coverage for the current runtime contracts;
+- `tools/` — hot-path validation;
+- `docs/` — runtime architecture, archaeology and later wearable design.
 
 ## Compatibility
 
-The original Trenchfoot BeltSlot and Pack 'n' Strap implementations are archaeology/reference material, not runtime dependencies. If a legacy `Trenchfoot-BeltSlot.dll` is installed, remove or disable it before using this module to avoid two implementations patching the same inventory behavior.
+Pack 'n' Strap and Trenchfoot BeltSlot are reference/archaeology sources, not runtime
+dependencies. If legacy `Trenchfoot-BeltSlot.dll` is installed, remove or disable it
+before using this module so two implementations do not patch the same host behavior.
 
-The server project targets the SPT 4.1.3 `SPTushonka.*` packages. See [archaeology and SPT 4.1 mapping](docs/archaeology.md) for the retained behavior and rejected legacy patch patterns.
+The server project targets SPT 4.1.3 `SPTushonka.*` packages.
 
-## Development status
+## Current gate
 
-Belt/Armband Inventory is under active development. Historical Phase 1 documentation records the original presentation contract and should be read as design history where later source/tests have expanded the behavior beyond that baseline.
+PR #64 remains a runtime candidate until one exact-SHA artifact passes the complete
+ArmBand lifecycle in one continuous physical test: open the native `1x2` window,
+remove/insert a magazine, close/reopen, unequip/re-equip loaded, auto-pickup into an
+empty ArmBand, use magazine reachability/reload, and cross profile/raid persistence
+without duplication or loss.
 
-Use the current source, regression tests, and active development branch as the authority for ongoing work. The `runtime-belt-armband` channel is the install-only publication channel for validated builds.
+Only after that gate passes does development move on to the broader Belt / Armband /
+HeadBand product concept.
