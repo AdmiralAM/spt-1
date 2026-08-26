@@ -1,122 +1,76 @@
-# Economy Admiral — Enforce Alpha runtime gate
+# Economy Admiral runtime testing
 
-Physical acceptance target: **SPT 4.1.3**, exact `economy-admiral-candidate` artifact built from PR #207 exact head.
+Physical SPT 4.1.3 tests are reserved for product gates that cannot be adequately proven in CI. Do not repeat runtime tests for documentation-only changes, source cleanup, parity already physically accepted, or ordinary transaction/planner regressions covered by automated smoke tests.
 
-The packaged default remains `mode=Audit`. Do not edit the DLL or mix reports between runs.
+## Accepted Alpha evidence
 
-## Install
+The narrow Experience/TraderStanding Enforce Alpha is already physically accepted on SPT 4.1.3.
 
-Install the candidate at the same SPT 4.1.3 mod location already used by the target stack:
+Accepted evidence includes:
 
-`SPT_Runtime/user/mods/Economy Admiral/`
+- Audit / Normal: read-only DB fingerprint, concrete policy preview, `planned=88`, `applied=0`;
+- Enforce / Normal: real Experience/TraderStanding mutations, `applied=88`, fingerprint changed, exact targets, pristine protection;
+- Off: pipeline disabled;
+- production transaction smoke: commit, rollback and same-state idempotence;
+- primary audit: typed final DB + pristine startup parity physically proven (`final=5362`, `pristine=558`, `compared=5362`, `questRewardEdges=38176`).
 
-Before every test run, remove/archive the previous `reports/` directory.
+The accepted Alpha evidence remains authoritative even while later opt-in slices are developed behind default-off gates.
 
-## Run A — Audit / Normal
+## Standard packaged validators
 
-1. Keep `mode=Audit`, `preset=Normal`.
-2. Start SPT and let all PostLoad callbacks finish.
-3. Run `Validate-Runtime.ps1` from the Economy Admiral folder.
-4. Run `Validate-PrimaryParity.ps1` from the same folder.
+From the installed `Economy Admiral` folder:
 
-Acceptance:
-
-- SPT starts successfully;
-- `Validate-Runtime.ps1` exits `0`;
-- Audit before/after DB fingerprints are identical;
-- `MutationCount = 0`;
-- a concrete `SelectedPolicy` exists;
-- eligible XP / TraderStanding proposals may be present, but every proposal has `Applied=false` and `After=Before`;
-- `PristineUnchanged` has no proposed mutation;
-- primary typed/pristine parity remains PASS.
-
-## Run B — Enforce / Normal
-
-Only after Run A passes:
-
-1. Stop SPT.
-2. Set `mode=Enforce`, keep `preset=Normal`.
-3. Remove/archive Run A reports.
-4. Start SPT again and let PostLoad finish.
-5. Run `Validate-Enforce.ps1`.
-
-Acceptance for the first Alpha physical proof:
-
-- SPT starts successfully;
-- a concrete `SelectedPolicy = PresetNumericQuestRewardCapV1/Normal` is recorded;
-- `ApplyMutations=true`;
-- `PlannedMutationCount >= MutationCount`;
-- **`MutationCount > 0`**;
-- transaction committed and did not roll back;
-- DB fingerprint changed;
-- every applied dimension is only `Experience` or `TraderStanding`;
-- every applied record contains exact `Before`, `Current`, `Target`, `After`;
-- `Before = Current` and `After = Target` within dimension tolerance;
-- an automatic policy never increases reward magnitude;
-- `PristineUnchanged` remains untouched;
-- a `PristineModified` field may change only when that exact dimension is present in `ChangedDimensions`;
-- unknown provenance is never mutated;
-- declared mutation count equals the number of applied records.
-
-If the current target stack happens to contain no automatically eligible numeric outlier, use a **known ModAdded quest** from the Audit plan and add an exact `questRewardOverrides` target for an existing XP or TraderStanding reward. A manual exact target does not bypass provenance protection: pristine/unknown quests remain blocked.
-
-Example shape only — use an actual ModAdded quest id and a value appropriate for the observed Audit record:
-
-```json
-"questRewardOverrides": {
-  "ACTUAL_MOD_ADDED_QUEST_ID": {
-    "allowAutomaticMutation": true,
-    "experienceTarget": 3000,
-    "traderStandingTarget": null,
-    "note": "Alpha physical mutation proof"
-  }
-}
+```powershell
+.\Validate-Runtime.ps1
+.\Validate-Enforce.ps1
+.\Validate-PrimaryParity.ps1
 ```
 
-## Idempotence / rollback evidence
+`Validate-Runtime.ps1` is for `mode=Audit` and requires no committed mutations.
 
-CI executes the exact production transaction core used by Enforce and proves:
+`Validate-Enforce.ps1` is for `mode=Enforce`. It recognizes:
 
-- committed XP normalization reaches target;
-- once current value equals the automatic target, `NeedsMutation=false` on a second pass over the same DB state;
-- a synthetic failure after an earlier mutation rolls back the entire batch;
-- all original slot values are verified after rollback.
+- schema 5 / mutation policy 3: accepted Alpha (`Experience`, `TraderStanding` only);
+- schema 6 / mutation policy 4: opt-in bounded single-stack item normalization in addition to numeric Alpha dimensions.
 
-The physical first-Alpha run additionally proves the typed SPT `Reward.Value` mutation path against the real SPT 4.1.3 DB.
+`Validate-PrimaryParity.ps1` verifies typed final DB primary audit accounting against the pristine startup snapshot. This parity has already been physically accepted and should not be re-requested for unrelated changes.
 
-## Run C — Off
+## Opt-in bounded item-stack gate
 
-1. Stop SPT.
-2. Set `mode=Off`.
-3. Remove/archive existing reports.
-4. Start SPT.
-5. Economy Admiral must generate no new reports and must perform no analysis or mutation pipeline work.
+The config switch is deliberately false by default:
 
-## Reports/evidence to return
+```json
+"enableItemRewardStackNormalization": false
+```
 
-Return together from the same physical run:
+Before any future physical promotion of this slice, CI must already prove:
 
-- complete `reports/` directory;
-- same-run SPT server log;
-- installed `BUILD_INFO.json`;
-- validator console output:
-  - Run A: `Validate-Runtime.ps1` + `Validate-PrimaryParity.ps1`;
-  - Run B: `Validate-Enforce.ps1`.
+- SPT server build with writable `Reward.Value` and `Upd.StackObjectsCount`;
+- only one existing Success Item reward item is eligible;
+- known positive handbook price;
+- finite integral stack count > 1;
+- budget target floors to an integer >= 1;
+- normal stacks are no-ops;
+- cases requiring deletion/template replacement are blocked;
+- `Reward.Value == Upd.StackObjectsCount` before item mutation;
+- both quantity representations change together;
+- transaction verification re-checks synchronization;
+- mixed XP/standing/item failure rolls the whole batch back and restores both item quantity representations;
+- PristineUnchanged and unknown provenance remain protected;
+- PristineModified item mutation requires `SuccessItemHandbookValue` in its changed dimensions;
+- `Validate-Enforce.ps1` accepts a valid item-stack fixture and rejects an unproven modified-pristine fixture.
 
-Core reports remain:
+Only after all of that is green does a physical SPT test become meaningful. A physical item-stack test, if eventually required, should be a single candidate run proving a real eligible mod-added stack changes `Before -> Target -> After` while the quest reward remains internally synchronized and all protected content remains untouched.
 
-1. `economy-admiral-audit.json`
-2. `economy-admiral-reward-utility.json`
-3. `economy-admiral-progression-graph.json`
-4. `economy-admiral-quest-constraints.json`
-5. `economy-admiral-quest-analysis.json`
-6. `economy-admiral-provenance-delta.json`
-7. `economy-admiral-composite-candidates.json`
-8. `economy-admiral-target-proposals.json`
-9. `economy-admiral-enforcement-plan.json`
-10. `economy-admiral-runtime-evidence.json`
-11. `economy-admiral-primary-parity.json`
+## Procedure when a physical gate is actually requested
 
-Admiral Trader adapter/source-pressure reports are supplemental only and do not gate the XP/standing Alpha.
+The test request must always provide:
 
-Do not mix reports from different runs or artifacts.
+1. exact 40-character candidate SHA;
+2. exact workflow run and artifact identity;
+3. exact install target;
+4. exact config keys to change;
+5. exact server/validator commands;
+6. minimal output that must be returned.
+
+Do not ask the user to infer what to test.
