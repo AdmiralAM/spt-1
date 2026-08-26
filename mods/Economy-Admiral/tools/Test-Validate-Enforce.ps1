@@ -52,4 +52,30 @@ $manifest | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $manifestPath -E
 $process = Start-Process -FilePath 'pwsh' -ArgumentList @('-NoProfile','-File',(Join-Path $mod 'Validate-Enforce.ps1')) -Wait -PassThru
 if ($process.ExitCode -eq 0) { throw 'Enforce pristine-mutation fixture unexpectedly passed' }
 
+# Opt-in bounded item-stack fixture: one ModAdded item mutation and one proven PristineModified item-value mutation.
+Write-Json 'economy-admiral-enforcement-plan.json' @{
+    SchemaVersion=6; Mode='Enforce'; Preset='Normal'; SelectedPolicy='PresetNumericQuestRewardCapV1+SingleStackItemBudgetCapV1/Normal'; MutationEligibilityPolicyVersion=4
+    EnforceRequested=$true; ApplyMutations=$true; PlannedMutationCount=2; MutationCount=2; TransactionCommitted=$true; TransactionRolledBack=$false; TransactionError=$null
+    Candidates=@(
+        @{ ProvenanceClass='ModAdded'; PristineUntouched=$false; ChangedDimensions=@('QuestAdded'); ProposedMutations=@(
+            @{ QuestId='mod-item'; Dimension='ItemRewardStackCount'; PolicyId='PresetSingleStackItemBudgetCapV1'; Before=10; Current=10; Target=4; After=4; Applied=$true; ManualOverride=$false }
+        ) },
+        @{ ProvenanceClass='PristineModified'; PristineUntouched=$false; ChangedDimensions=@('SuccessItemHandbookValue'); ProposedMutations=@(
+            @{ QuestId='modified-item'; Dimension='ItemRewardStackCount'; PolicyId='PresetSingleStackItemBudgetCapV1'; Before=8; Current=8; Target=3; After=3; Applied=$true; ManualOverride=$false }
+        ) },
+        @{ ProvenanceClass='PristineUnchanged'; PristineUntouched=$true; ChangedDimensions=@(); ProposedMutations=@() }
+    )
+}
+$manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
+$manifest.DeclaredMutationCount = 2
+$manifest | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $manifestPath -Encoding UTF8
+& (Join-Path $mod 'Validate-Enforce.ps1')
+if ($LASTEXITCODE -ne 0) { throw "Enforce bounded item-stack PASS fixture returned exit code $LASTEXITCODE" }
+
+$itemPlan = Get-Content -LiteralPath $planPath -Raw | ConvertFrom-Json
+$itemPlan.Candidates[1].ChangedDimensions = @('Experience')
+$itemPlan | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $planPath -Encoding UTF8
+$process = Start-Process -FilePath 'pwsh' -ArgumentList @('-NoProfile','-File',(Join-Path $mod 'Validate-Enforce.ps1')) -Wait -PassThru
+if ($process.ExitCode -eq 0) { throw 'Enforce unproven PristineModified item-stack fixture unexpectedly passed' }
+
 Write-Host '[Economy Admiral] Enforce runtime validator smoke PASS'
