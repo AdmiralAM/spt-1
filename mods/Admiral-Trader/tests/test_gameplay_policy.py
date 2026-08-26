@@ -19,9 +19,11 @@ class GameplayPolicyTests(unittest.TestCase):
         cls.policy = load(MANIFESTS / "gameplay-policy.json")
         cls.access = load(MANIFESTS / "keys-authored-spec.json")
         cls.arsenal = load(MANIFESTS / "weapon-ammo-runtime-plan.json")
+        cls.arsenal_spec = load(MANIFESTS / "weapon-ammo-authored-spec.json")
         cls.ammo = load(MANIFESTS / "ammo-offer-policy.json")
         cls.assort = load(DB / "assort.json")
         cls.questassort = load(DB / "questassort.json")
+        cls.base = load(DB / "base.json")
 
     def test_campaign_shape_matches_doctrine(self):
         campaign = self.policy["campaign"]
@@ -125,6 +127,41 @@ class GameplayPolicyTests(unittest.TestCase):
                 self.assort["loyal_level_items"][item["_id"]],
                 logistics["questUnlockLoyaltyLevel"],
             )
+
+    def test_loyalty_is_relationship_status_not_capability_authority(self):
+        loyalty = self.policy["loyalty"]
+        logistics = self.policy["logistics"]
+        tiers = self.base["loyaltyLevels"]
+
+        self.assertEqual(loyalty["role"], "relationship-status-only")
+        self.assertFalse(loyalty["capabilityAuthority"])
+        self.assertFalse(loyalty["standingMayBypassQuestGates"])
+        self.assertFalse(loyalty["salesSumMayGateProgression"])
+        self.assertFalse(loyalty["servicesMayUnlockByLoyalty"])
+        self.assertFalse(loyalty["priceAdvantagesMayUnlockByLoyalty"])
+        self.assertEqual(len(tiers), loyalty["expectedTierCount"])
+        self.assertEqual([row["minStanding"] for row in tiers], loyalty["expectedStandingThresholds"])
+        self.assertTrue(all(row["minSalesSum"] == 0 for row in tiers))
+        self.assertEqual(len({row["buy_price_coef"] for row in tiers}), 1)
+        self.assertFalse(self.base["repair"]["availability"])
+        self.assertFalse(self.base["insurance"]["availability"])
+
+        offer_ids = {item["_id"] for item in self.assort["items"]}
+        self.assertEqual(set(self.questassort["Success"]), offer_ids)
+        self.assertEqual(
+            {self.assort["loyal_level_items"][offer_id] for offer_id in offer_ids},
+            {logistics["questUnlockLoyaltyLevel"]},
+        )
+
+        access_standing = sum(q["rewardBudget"]["standing"] for q in self.access["quests"])
+        arsenal_standing = sum(
+            stage["standing"]
+            for family in self.arsenal_spec["families"]
+            for stage in family["stages"]
+        )
+        total = round(access_standing + arsenal_standing, 8)
+        self.assertEqual(total, loyalty["authoredCampaignStandingTotal"])
+        self.assertGreaterEqual(total, max(loyalty["expectedStandingThresholds"]))
 
     def test_ammo_offer_manifest_matches_packaged_assort(self):
         packaged_by_tpl = {item["_tpl"]: item for item in self.assort["items"]}
