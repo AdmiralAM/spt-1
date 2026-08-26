@@ -19,9 +19,9 @@ $manifest = Read-Json (Join-Path $ReportsPath 'economy-admiral-runtime-evidence.
 $plan = Read-Json (Join-Path $ReportsPath 'economy-admiral-enforcement-plan.json')
 $delta = Read-Json (Join-Path $ReportsPath 'economy-admiral-provenance-delta.json')
 
-if ($manifest.SchemaVersion -ne 4) { Fail "runtime evidence SchemaVersion must be 4" }
+if ($manifest.SchemaVersion -ne 5) { Fail "runtime evidence SchemaVersion must be 5" }
 if ([string]$manifest.Mode -ne 'Audit') { Fail "validator requires mode=Audit, got $($manifest.Mode)" }
-if ($manifest.ExpectedReportCount -ne 9 -or $manifest.PresentReportCount -ne 9 -or $manifest.AllExpectedReportsPresent -ne $true) { Fail "9/9 core reports are required" }
+if ($manifest.ExpectedReportCount -ne 7 -or $manifest.PresentReportCount -ne 7 -or $manifest.AllExpectedReportsPresent -ne $true) { Fail "7/7 core reports are required" }
 if ($manifest.DatabaseUnchangedAcrossPipeline -ne $true) { Fail "Audit changed the final DB fingerprint" }
 if ($manifest.DatabaseChangeExpected -ne $false) { Fail "Audit must not expect a DB change" }
 if ($manifest.ApplyMutations -ne $false) { Fail "Audit says ApplyMutations=true" }
