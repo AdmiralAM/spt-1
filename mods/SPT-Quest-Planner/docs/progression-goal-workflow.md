@@ -19,8 +19,8 @@ This is a high-value SPT-native workflow because the answer depends on the actua
 5. A prerequisite-ready quest that is still profile-blocked (for example by level or another evaluated condition) remains path context but cannot resolve a recommendation conflict.
 6. A frontier quest missing from the current profile evaluation is marked **eligibility unknown**, not assumed actionable.
 7. Current raid candidates are checked against the actionable focus frontier, not every incomplete ancestor equally.
-8. If one actionable focused candidate remains undominated, it becomes the focused recommendation.
-9. If several actionable focused candidates have conflicting proven advantages, Planner keeps them as a frontier and exposes the trade-off.
+8. If only one candidate advances the actionable focus frontier, focus may select it over an otherwise comparable unrelated candidate.
+9. If several candidates advance the actionable focus frontier, they are compared again using only proven focus-compatible dimensions before any global tie-breaker is allowed.
 10. As prerequisites and other gates change, the actionable frontier advances from the next state snapshot.
 11. If no current raid advances an actionable focus frontier quest, Planner falls back to the conservative global decision model rather than inventing a connection.
 
@@ -42,6 +42,22 @@ The incomplete path is `A1, A, B, T`. The quest-prerequisite frontier is `A1, B`
 
 After `A1` is completed and `A` becomes Available, the actionable frontier can advance to `A`. This is graph + profile semantics, not a depth score or arbitrary weight.
 
+## Comparing multiple actionable branches
+
+A second ambiguity appears when several maps all advance different quests on the actionable focus frontier. Merely saying that both candidates "support focus" is insufficient: falling straight back to a global ranking can let unrelated quest counts or unrelated unlocks decide a player-selected goal.
+
+The focused comparator therefore uses conservative dominance again. Proven focused dimensions are:
+
+1. **actionable focused quests advanced by the raid** — advancing two currently actionable branches is a real goal-specific advantage over advancing one;
+2. **focused cross-quest action overlap** — a shared action is relevant when at least one participating quest is on the actionable focus frontier;
+3. **focused-path immediate unlocks** — only immediate unlocks that remain on the selected target's incomplete path count as goal-specific leverage;
+4. **preparation friction** — proven missing or unresolved preparation can counterbalance focused leverage;
+5. **evidence coverage** — unknown semantics remain explicit uncertainty rather than silently becoming useful work.
+
+No numeric weights are assigned. If one candidate has at least one focused advantage and no competing focused disadvantage, it may win. If one has focused unlock leverage while another has lower preparation friction, Planner **abstains** and keeps both as good options. Only when focused evidence is equivalent may the existing conservative global model act as a secondary tie-breaker.
+
+This distinction matters because player intent constrains the optimization target; it should not erase real trade-offs, but unrelated generic evidence should not override a proven conflict inside the chosen goal.
+
 ## Why this is materially different
 
 This is not "track quest X". The focused quest may be future/blocked and absent from every current raid.
@@ -50,6 +66,10 @@ The planner is useful when it can say, conceptually:
 
 > You cannot work on X directly yet. Customs advances prerequisite Y, and your current SPT profile confirms Y is available now on the remaining path to X; Reserve does useful work but does not move the selected progression goal.
 
+Or, for parallel branches:
+
+> Customs advances two actionable prerequisites on the path to X, while Woods advances one. If both are equally prepared and understood, Customs has a proven focused advantage. If Customs needs a missing key and Woods is ready, there is no forced winner; the trade-off is explicit.
+
 That decision requires joining:
 
 - final modded quest topology;
@@ -57,7 +77,9 @@ That decision requires joining:
 - quest-prerequisite frontier;
 - authoritative Active/Available eligibility;
 - current actionable raid objectives;
-- optional preparation/readiness evidence.
+- cross-quest shared-action evidence;
+- focused-path unlock evidence;
+- preparation/readiness evidence.
 
 ## Policy constraints
 
@@ -72,15 +94,17 @@ It must not:
 - fabricate prerequisite relationships from quest names or trader identity;
 - bypass unknown topology;
 - turn raw objective density into focused relevance;
+- count an unrelated global unlock as focused-path leverage;
+- let unrelated generic evidence override conflicting focused evidence;
 - force a winner between two focused-frontier raids that still have real conflicting trade-offs.
 
 The full prerequisite path and quest-prerequisite frontier are retained for explanation and diagnostics. Focus preference is granted only through the profile-confirmed actionable frontier for future/blocked goals.
 
 ## Runtime cost
 
-No new server data is required. `PlannerQueryEngine.GetIncompletePrerequisitePlan`, `GetImmediateBlockers`, and the existing cached `PlannerQuestClientState.Disposition` provide the required topology and profile evidence.
+No new server data is required. `PlannerQueryEngine.GetIncompletePrerequisitePlan`, `GetImmediateBlockers`, the existing cached `PlannerQuestClientState.Disposition`, raid decision signals and action-overlap groups provide the required evidence.
 
-No per-frame polling, global runtime scan, new route, or cross-module dependency is justified for this workflow.
+The focused comparison is bounded by the existing candidate/frontier sizes. No per-frame polling, global runtime scan, new route, or cross-module dependency is justified for this workflow.
 
 ## Acceptance scenarios
 
@@ -91,6 +115,10 @@ No per-frame polling, global runtime scan, new route, or cross-module dependency
 - parallel prerequisite branches distinguish graph-ready roots from their actionable subset;
 - completing one frontier prerequisite advances the actionable frontier deterministically when the next profile snapshot makes its dependent available;
 - completed prerequisites disappear from the focus path automatically;
-- two maps that both advance the actionable focus frontier remain a trade-off frontier when one has leverage and the other has lower preparation friction;
+- a raid advancing two actionable focused branches can dominate one advancing only one branch when no focused disadvantage exists;
+- shared-action overlap involving an actionable focused quest is valid focused evidence;
+- an immediate unlock counts as focused leverage only when that unlock is still on the selected target path;
+- focused unlock leverage versus lower preparation friction remains `Several good options` rather than a forced winner;
+- equivalent focused evidence may fall back to the global conservative model as a secondary tie-breaker;
 - a focus with no currently actionable frontier does not falsely label unrelated work as relevant;
 - a mod-added or rewired prerequisite changes the focused recommendation from the final SPT topology without an external data update.
