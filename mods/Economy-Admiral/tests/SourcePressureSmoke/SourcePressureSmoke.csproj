@@ -11,6 +11,7 @@
     <Compile Include="../../server/BoundedSupplyEvidence.cs" Link="BoundedSupplyEvidence.cs" />
     <Compile Include="../../server/AdmiralTraderAdapterEvidence.cs" Link="AdmiralTraderAdapterEvidence.cs" />
     <Compile Include="../../server/AdmiralTraderItemAdapter.cs" Link="AdmiralTraderItemAdapter.cs" />
+    <Compile Include="../../server/AdmiralTraderGameplayAlphaAdapter.cs" Link="AdmiralTraderGameplayAlphaAdapter.cs" />
     <Compile Include="../../server/AdmiralTraderRuntimeAdapterReport.cs" Link="AdmiralTraderRuntimeAdapterReport.cs" />
     <Compile Include="../../server/SourcePressureRuntimeReport.cs" Link="SourcePressureRuntimeReport.cs" />
     <Compile Include="../../server/EffectiveQuestGateEvidence.cs" Link="EffectiveQuestGateEvidence.cs" />
