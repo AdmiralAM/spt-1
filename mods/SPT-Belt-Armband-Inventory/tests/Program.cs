@@ -66,6 +66,9 @@ internal static class Program
         Assert(RuntimeIdentity.CandidateGridColumns == 1 && RuntimeIdentity.CandidateGridRows == 2, "shared runtime contract preserves the proven one-column two-row grid");
         Assert(RuntimeCustomBeltTypePatches.CustomTemplateParentId == RuntimeIdentity.SearchableTemplateParentId, "client template registration uses the shared runtime identity");
         Assert(RuntimeCustomBeltTypePatches.CustomBeltParentId == RuntimeIdentity.BeltItemParentId, "client item registration uses the shared runtime identity");
+        string[] runtimeIds = { RuntimeIdentity.CandidateItemId, RuntimeIdentity.CandidateGridId, RuntimeIdentity.CandidateAssortId, RuntimeIdentity.SearchableTemplateParentId, RuntimeIdentity.BeltItemParentId };
+        Assert(runtimeIds.Distinct(StringComparer.Ordinal).Count() == runtimeIds.Length, "shared runtime identifiers are unique");
+        Assert(runtimeIds.All(x => x.Length == 24 && x.All(Uri.IsHexDigit)), "shared runtime identifiers remain valid Mongo-style hex IDs");
 
         Assert(ReflectionTools.HasContainers(new RuntimeContainer { IsContainer = true }), "runtime IsContainer flag is recognized");
         Assert(ReflectionTools.HasContainers(new RuntimeGrids { Grids = new object[] { new object() } }), "runtime Grids are recognized");

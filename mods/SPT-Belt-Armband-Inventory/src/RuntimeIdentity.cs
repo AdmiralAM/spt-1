@@ -7,6 +7,7 @@ namespace SPTBeltArmbandInventory
     {
         internal const string CandidateItemId = "68ac00000000000000000001";
         internal const string CandidateGridId = "68ac00000000000000000002";
+        internal const string CandidateAssortId = "68ac00000000000000000003";
         internal const string SearchableTemplateParentId = "68ac00000000000000000004";
         internal const string BeltItemParentId = "68ac00000000000000000005";
 

@@ -41,8 +41,8 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
             ItemTplToClone = SourceArmbandTpl,
             ParentId = CustomBeltParentTpl,
             NewId = RuntimeCandidateTpl,
-            FleaPriceRoubles = 1000,
-            HandbookPriceRoubles = 1000,
+            FleaPriceRoubles = RuntimeCandidateOfferContract.PriceRoubles,
+            HandbookPriceRoubles = RuntimeCandidateOfferContract.PriceRoubles,
             HandbookParentId = handbookItem.ParentId,
             Locales = new Dictionary<string, LocaleDetails> { ["en"] = new LocaleDetails { Name = "B&A&HB Runtime Candidate Magazine Belt", ShortName = "B&A&HB Belt RC", Description = "Minimal 1x2 magazine belt runtime candidate." } },
             OverrideProperties = new TemplateItemProperties
