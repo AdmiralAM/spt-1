@@ -100,7 +100,8 @@ jobs:
               'Before', 'Current', 'Target', 'After',
           ]:
               assert text in plan, text
-          assert 'ItemRewardBudget' not in plan
+          # Item rewards may remain visible as review-only actions, but they must never enter a mutation dimension.
+          assert 'dimensions.Add("ItemRewardBudget")' not in plan
           assert 'ApplyMutations = false' not in plan
           assert 'MutationCount = 0' not in plan
 
