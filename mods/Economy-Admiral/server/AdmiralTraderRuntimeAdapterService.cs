@@ -26,6 +26,8 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
             report = new AdmiralTraderRuntimeAdapterReport
             {
                 Installed = false,
+                ContractAvailable = false,
+                ContractState = "NotInstalled",
                 ModGuid = AdmiralTraderInstallationLocator.ExpectedModGuid,
                 AttributionConfidence = AdmiralTraderAdapterEvidence.AttributionConfidence,
                 Offers = Array.Empty<AdmiralTraderOfferAdapterEvidence>(),
@@ -33,55 +35,73 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
         }
         else
         {
-            var gameplayPolicyPath = RequireFile(traderModPath, "manifests", "gameplay-policy.json");
-            var assortPath = RequireFile(traderModPath, "db", "assort.json");
-            var questAssortPath = RequireFile(traderModPath, "db", "questassort.json");
-            var questsPath = Path.Combine(traderModPath, "db", "quests");
-            if (!Directory.Exists(questsPath))
+            var gameplayPolicyPath = Path.Combine(traderModPath, "manifests", "gameplay-policy.json");
+            if (!File.Exists(gameplayPolicyPath))
             {
-                throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: db/quests directory is missing.");
+                report = new AdmiralTraderRuntimeAdapterReport
+                {
+                    Installed = true,
+                    ContractAvailable = false,
+                    ContractState = "ContractUnavailable",
+                    ContractDiagnostic = "Admiral Trader is installed but manifests/gameplay-policy.json is absent; explicit source-pressure evidence is suppressed until a supported machine-readable contract is present.",
+                    ModGuid = AdmiralTraderInstallationLocator.ExpectedModGuid,
+                    AttributionConfidence = AdmiralTraderAdapterEvidence.AttributionConfidence,
+                    Offers = Array.Empty<AdmiralTraderOfferAdapterEvidence>(),
+                };
             }
-
-            var policy = AdmiralTraderAdapterEvidence.ParseGameplayPolicy(await File.ReadAllTextAsync(gameplayPolicyPath, cancellationToken));
-            var assortJson = await File.ReadAllTextAsync(assortPath, cancellationToken);
-            var questAssortJson = await File.ReadAllTextAsync(questAssortPath, cancellationToken);
-            var questFiles = Directory.EnumerateFiles(questsPath, "*.json", SearchOption.TopDirectoryOnly)
-                .OrderBy(path => path, StringComparer.Ordinal)
-                .ToArray();
-            if (questFiles.Length == 0)
+            else
             {
-                throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: no authored quest JSON records were found.");
+                var assortPath = RequireFile(traderModPath, "db", "assort.json");
+                var questAssortPath = RequireFile(traderModPath, "db", "questassort.json");
+                var questsPath = Path.Combine(traderModPath, "db", "quests");
+                if (!Directory.Exists(questsPath))
+                {
+                    throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: db/quests directory is missing.");
+                }
+
+                var policy = AdmiralTraderAdapterEvidence.ParseGameplayPolicy(await File.ReadAllTextAsync(gameplayPolicyPath, cancellationToken));
+                var assortJson = await File.ReadAllTextAsync(assortPath, cancellationToken);
+                var questAssortJson = await File.ReadAllTextAsync(questAssortPath, cancellationToken);
+                var questFiles = Directory.EnumerateFiles(questsPath, "*.json", SearchOption.TopDirectoryOnly)
+                    .OrderBy(path => path, StringComparer.Ordinal)
+                    .ToArray();
+                if (questFiles.Length == 0)
+                {
+                    throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: no authored quest JSON records were found.");
+                }
+
+                var authoredQuestJson = new List<string>(questFiles.Length);
+                foreach (var path in questFiles)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    authoredQuestJson.Add(await File.ReadAllTextAsync(path, cancellationToken));
+                }
+
+                var offers = AdmiralTraderItemAdapter.ParseAndApplyEffectiveQuestGates(
+                    assortJson,
+                    questAssortJson,
+                    policy,
+                    authoredQuestJson);
+
+                if (offers.Any(offer => offer.EffectiveGate is null || offer.Source.EarliestProgressionLevel is null))
+                {
+                    throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: enriched offer evidence is incomplete.");
+                }
+
+                report = new AdmiralTraderRuntimeAdapterReport
+                {
+                    Installed = true,
+                    ContractAvailable = true,
+                    ContractState = "LoadedPrototypeContract",
+                    ModGuid = AdmiralTraderInstallationLocator.ExpectedModGuid,
+                    AttributionConfidence = AdmiralTraderAdapterEvidence.AttributionConfidence,
+                    OfferCount = offers.Count,
+                    BoundedRenewableOfferCount = offers.Count(offer => offer.Capacity.SupplyBound == RenewableSupplyBound.Bounded),
+                    MinimumEffectiveProgressionLevel = offers.Min(offer => offer.Source.EarliestProgressionLevel),
+                    MaximumEffectiveProgressionLevel = offers.Max(offer => offer.Source.EarliestProgressionLevel),
+                    Offers = offers,
+                };
             }
-
-            var authoredQuestJson = new List<string>(questFiles.Length);
-            foreach (var path in questFiles)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                authoredQuestJson.Add(await File.ReadAllTextAsync(path, cancellationToken));
-            }
-
-            var offers = AdmiralTraderItemAdapter.ParseAndApplyEffectiveQuestGates(
-                assortJson,
-                questAssortJson,
-                policy,
-                authoredQuestJson);
-
-            if (offers.Any(offer => offer.EffectiveGate is null || offer.Source.EarliestProgressionLevel is null))
-            {
-                throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: enriched offer evidence is incomplete.");
-            }
-
-            report = new AdmiralTraderRuntimeAdapterReport
-            {
-                Installed = true,
-                ModGuid = AdmiralTraderInstallationLocator.ExpectedModGuid,
-                AttributionConfidence = AdmiralTraderAdapterEvidence.AttributionConfidence,
-                OfferCount = offers.Count,
-                BoundedRenewableOfferCount = offers.Count(offer => offer.Capacity.SupplyBound == RenewableSupplyBound.Bounded),
-                MinimumEffectiveProgressionLevel = offers.Min(offer => offer.Source.EarliestProgressionLevel),
-                MaximumEffectiveProgressionLevel = offers.Max(offer => offer.Source.EarliestProgressionLevel),
-                Offers = offers,
-            };
         }
 
         var reportDirectory = Path.GetDirectoryName(Path.Combine(economyModPath, config.ReportRelativePath))
