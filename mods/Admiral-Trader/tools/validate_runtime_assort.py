@@ -13,7 +13,8 @@ AMMO_POLICY_PATH = ROOT / "manifests" / "ammo-offer-policy.json"
 CSPROJ_PATH = ROOT / "server" / "AdmiralTrader.Server.csproj"
 
 EXPECTED_RUNTIME_TARGET = "4.1.3"
-EXPECTED_PUBLISHED_API_BASELINE = "4.1.2"
+EXPECTED_PUBLISHED_API_BASELINE = "4.1.3"
+EXPECTED_PACKAGE_PREFIX = "SPTushonka."
 LABS_OFFER_ID = "ad1000000000000000000001"
 LABS_ITEM_TPL = "5c94bbff86f7747ee735c08f"
 LABS_CLEARANCE_QUEST = "68a6527a3c73b2e85977d7a1"
@@ -46,13 +47,18 @@ def validate_runtime_target() -> None:
     if props.get("SptPublishedApiBaseline") != EXPECTED_PUBLISHED_API_BASELINE:
         fail("csproj SptPublishedApiBaseline drift")
 
-    package_versions = []
+    package_refs = []
     for group in root.findall("ItemGroup"):
         for package in group.findall("PackageReference"):
-            if package.attrib.get("Include", "").startswith("SPTarkov."):
-                package_versions.append(package.attrib.get("Version"))
-    if not package_versions or any(version != "$(SptPublishedApiBaseline)" for version in package_versions):
-        fail(f"SPT package references must use the published API baseline property: {package_versions}")
+            include = package.attrib.get("Include", "")
+            if include.startswith(EXPECTED_PACKAGE_PREFIX):
+                package_refs.append((include, package.attrib.get("Version")))
+    required = {"SPTushonka.Common", "SPTushonka.DI", "SPTushonka.Server.Core"}
+    actual = {name for name, _ in package_refs}
+    if actual != required:
+        fail(f"SPT 4.1.3 package identity drift: expected={sorted(required)} actual={sorted(actual)}")
+    if any(version != "$(SptPublishedApiBaseline)" for _, version in package_refs):
+        fail(f"SPT package references must use the published API baseline property: {package_refs}")
 
 
 def validate_single_rub_offer(offer_id: str, item: dict, barter: dict, loyalty: dict, *, tpl: str, price: int, stock: int, buy_limit: int) -> None:
@@ -160,7 +166,7 @@ def main() -> None:
         if float(level.get("minStanding", -1)) != standing:
             fail(f"Admiral LL{index}: standing threshold drift")
 
-    print("Admiral Trader SPT 4.1.3 target + seven-offer quest assort contract OK")
+    print("Admiral Trader SPT 4.1.3 target + SPTushonka 4.1.3 API + seven-offer quest assort contract OK")
 
 
 if __name__ == "__main__":
