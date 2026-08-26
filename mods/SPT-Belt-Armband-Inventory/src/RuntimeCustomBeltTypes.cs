@@ -48,6 +48,7 @@ namespace SPTBeltArmbandInventory
 
         public void Dispose()
         {
+            RuntimeCustomBeltTypes.RollbackJsonMappings();
             RuntimeCustomBeltTypes.ReleaseLogging(logInfo, logWarning);
         }
     }
@@ -60,6 +61,18 @@ namespace SPTBeltArmbandInventory
         internal static Type CustomBeltItemType;
 
         static ConstructorInfo customItemConstructor;
+        static IDictionary ownedTypeTable;
+        static IDictionary ownedTemplateTable;
+        static IDictionary ownedConstructors;
+        static object previousItemType;
+        static object previousTemplateParentType;
+        static object previousBeltTemplateType;
+        static object previousConstructor;
+        static object installedConstructor;
+        static bool hadItemType;
+        static bool hadTemplateParentType;
+        static bool hadBeltTemplateType;
+        static bool hadConstructor;
 
         internal static bool BuildAndRegister()
         {
@@ -85,7 +98,6 @@ namespace SPTBeltArmbandInventory
             }
 
             RegisterJsonMappings();
-            EnsureSerializationTypes();
             return true;
         }
 
@@ -158,10 +170,6 @@ namespace SPTBeltArmbandInventory
             if (typeTable == null || templateTable == null || constructors == null)
                 throw new InvalidOperationException("JsonTypes mapping tables unavailable");
 
-            typeTable[RuntimeCustomBeltTypePatches.CustomBeltParentId] = CustomBeltItemType;
-            templateTable[RuntimeCustomBeltTypePatches.CustomTemplateParentId] = CustomTemplateType;
-            templateTable[RuntimeCustomBeltTypePatches.CustomBeltParentId] = CustomTemplateType;
-
             Type delegateType = constructors.GetType().GetGenericArguments()[1];
             DynamicMethod factory = new DynamicMethod("CreateBAndHBBelt", itemType, new[] { typeof(string), typeof(object) }, typeof(RuntimeCustomBeltTypes), true);
             ILGenerator il = factory.GetILGenerator();
@@ -170,23 +178,83 @@ namespace SPTBeltArmbandInventory
             il.Emit(OpCodes.Castclass, CustomTemplateType);
             il.Emit(OpCodes.Newobj, customItemConstructor);
             il.Emit(OpCodes.Ret);
-            constructors[RuntimeCustomBeltTypePatches.CustomBeltParentId] = factory.CreateDelegate(delegateType);
+            object constructorDelegate = factory.CreateDelegate(delegateType);
+
+            RequireAvailable(typeTable, RuntimeCustomBeltTypePatches.CustomBeltParentId, CustomBeltItemType, "item type");
+            RequireAvailable(templateTable, RuntimeCustomBeltTypePatches.CustomTemplateParentId, CustomTemplateType, "template parent type");
+            RequireAvailable(templateTable, RuntimeCustomBeltTypePatches.CustomBeltParentId, CustomTemplateType, "belt template type");
+            if (constructors.Contains(RuntimeCustomBeltTypePatches.CustomBeltParentId))
+                throw new InvalidOperationException("JsonTypes item-constructor id collision for " + RuntimeCustomBeltTypePatches.CustomBeltParentId);
+
+            ownedTypeTable = typeTable;
+            ownedTemplateTable = templateTable;
+            ownedConstructors = constructors;
+            hadItemType = typeTable.Contains(RuntimeCustomBeltTypePatches.CustomBeltParentId);
+            hadTemplateParentType = templateTable.Contains(RuntimeCustomBeltTypePatches.CustomTemplateParentId);
+            hadBeltTemplateType = templateTable.Contains(RuntimeCustomBeltTypePatches.CustomBeltParentId);
+            hadConstructor = constructors.Contains(RuntimeCustomBeltTypePatches.CustomBeltParentId);
+            previousItemType = hadItemType ? typeTable[RuntimeCustomBeltTypePatches.CustomBeltParentId] : null;
+            previousTemplateParentType = hadTemplateParentType ? templateTable[RuntimeCustomBeltTypePatches.CustomTemplateParentId] : null;
+            previousBeltTemplateType = hadBeltTemplateType ? templateTable[RuntimeCustomBeltTypePatches.CustomBeltParentId] : null;
+            previousConstructor = hadConstructor ? constructors[RuntimeCustomBeltTypePatches.CustomBeltParentId] : null;
+            installedConstructor = constructorDelegate;
+
+            try
+            {
+                typeTable[RuntimeCustomBeltTypePatches.CustomBeltParentId] = CustomBeltItemType;
+                templateTable[RuntimeCustomBeltTypePatches.CustomTemplateParentId] = CustomTemplateType;
+                templateTable[RuntimeCustomBeltTypePatches.CustomBeltParentId] = CustomTemplateType;
+                constructors[RuntimeCustomBeltTypePatches.CustomBeltParentId] = constructorDelegate;
+            }
+            catch
+            {
+                RollbackJsonMappings();
+                throw;
+            }
+        }
+
+        static void RequireAvailable(IDictionary table, string key, object expected, string label)
+        {
+            if (!table.Contains(key)) return;
+            object current = table[key];
+            if (ReferenceEquals(current, expected)) return;
+            throw new InvalidOperationException("JsonTypes " + label + " id collision for " + key);
+        }
+
+        internal static void RollbackJsonMappings()
+        {
+            RestoreOwned(ownedConstructors, RuntimeCustomBeltTypePatches.CustomBeltParentId, installedConstructor, hadConstructor, previousConstructor);
+            RestoreOwned(ownedTemplateTable, RuntimeCustomBeltTypePatches.CustomBeltParentId, CustomTemplateType, hadBeltTemplateType, previousBeltTemplateType);
+            RestoreOwned(ownedTemplateTable, RuntimeCustomBeltTypePatches.CustomTemplateParentId, CustomTemplateType, hadTemplateParentType, previousTemplateParentType);
+            RestoreOwned(ownedTypeTable, RuntimeCustomBeltTypePatches.CustomBeltParentId, CustomBeltItemType, hadItemType, previousItemType);
+
+            ownedTypeTable = null;
+            ownedTemplateTable = null;
+            ownedConstructors = null;
+            previousItemType = null;
+            previousTemplateParentType = null;
+            previousBeltTemplateType = null;
+            previousConstructor = null;
+            installedConstructor = null;
+            hadItemType = false;
+            hadTemplateParentType = false;
+            hadBeltTemplateType = false;
+            hadConstructor = false;
+        }
+
+        static void RestoreOwned(IDictionary table, string key, object installed, bool hadPrevious, object previous)
+        {
+            if (table == null || installed == null || !table.Contains(key)) return;
+            object current = table[key];
+            if (!ReferenceEquals(current, installed)) return;
+            if (hadPrevious) table[key] = previous;
+            else table.Remove(key);
         }
 
         internal static void ReleaseLogging(Action<string> logInfo, Action<string> logWarning)
         {
             if (Equals(LogInfo, logInfo)) LogInfo = null;
             if (Equals(LogWarning, logWarning)) LogWarning = null;
-        }
-
-        static void EnsureSerializationTypes()
-        {
-            Type registry = ReflectionTools.FindType("GClass3381");
-            FieldInfo listField = registry == null ? null : registry.GetField("List_0", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-            IList list = listField == null ? null : listField.GetValue(null) as IList;
-            if (list == null) return;
-            if (!list.Contains(CustomTemplateType)) list.Add(CustomTemplateType);
-            if (!list.Contains(CustomBeltItemType)) list.Add(CustomBeltItemType);
         }
     }
 }
