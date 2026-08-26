@@ -5,6 +5,7 @@ using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+using SPTarkov.Server.Core.Models.Spt.Tables;
 
 namespace SPTEconomy;
 
@@ -34,10 +35,10 @@ public sealed record PrimaryAuditParityReport
 }
 
 /// <summary>
-/// Shadow verifier for #139. It independently recomputes the primary audit's reward/provenance
-/// facts from typed SPT records plus the pristine startup snapshot and compares them with the
-/// already-corrected primary JSON report. It never mutates TemplateTable/TradersTable and does
-/// not replace the existing correction pipeline until runtime parity is proven.
+/// Shadow verifier for #139. Recomputes primary reward/provenance facts directly from typed final
+/// SPT DB records plus the pristine startup snapshot, then compares them with the corrected primary
+/// report. This is observational only and does not replace the correction pipeline until runtime
+/// parity has been demonstrated.
 /// </summary>
 [Injectable]
 public sealed class PrimaryAuditParityService(
@@ -58,22 +59,20 @@ public sealed class PrimaryAuditParityService(
         var modPath = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
         var primaryPath = SafePath(modPath, config.ReportRelativePath);
         if (!File.Exists(primaryPath))
-        {
             throw new InvalidOperationException("Economy Admiral primary parity: corrected primary audit report is missing.");
-        }
 
         var root = JsonNode.Parse(await File.ReadAllTextAsync(primaryPath, cancellationToken))?.AsObject()
             ?? throw new InvalidOperationException("Economy Admiral primary parity: primary audit report could not be parsed.");
-        var questRows = root["QuestRewardAudits"]?.AsArray()
-            ?? throw new InvalidOperationException("Economy Admiral primary parity: QuestRewardAudits is missing.");
-        var reportRows = questRows.OfType<JsonObject>()
+        var reportRows = (root["QuestRewardAudits"]?.AsArray()
+            ?? throw new InvalidOperationException("Economy Admiral primary parity: QuestRewardAudits is missing."))
+            .OfType<JsonObject>()
             .ToDictionary(row => ReadString(row, "QuestId"), row => row, StringComparer.Ordinal);
 
         var handbookPrices = templates.Handbook.Items
             .Where(item => item.Price is > 0)
             .GroupBy(item => item.Id.ToString(), StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.First().Price!.Value, StringComparer.Ordinal);
-
+        var finalQuestIds = templates.Quests.Keys.Select(key => key.ToString()).ToHashSet(StringComparer.Ordinal);
         var mismatches = new List<PrimaryAuditParityMismatch>();
         var expectedRewardSources = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
         var compared = 0;
@@ -91,7 +90,7 @@ public sealed class PrimaryAuditParityService(
             compared++;
             var rewards = EnumerateRewards(pair.Value).ToList();
             var items = rewards.Where(reward => reward.Items is not null).SelectMany(reward => reward.Items!).ToList();
-            var templatesForQuest = new HashSet<string>(StringComparer.Ordinal);
+            var distinctTemplates = new HashSet<string>(StringComparer.Ordinal);
             var knownValue = 0d;
             var unknown = 0;
 
@@ -99,7 +98,7 @@ public sealed class PrimaryAuditParityService(
             {
                 var templateId = item.Template.ToString();
                 if (string.IsNullOrWhiteSpace(templateId)) continue;
-                templatesForQuest.Add(templateId);
+                distinctTemplates.Add(templateId);
                 if (!expectedRewardSources.TryGetValue(templateId, out var quests))
                 {
                     quests = new HashSet<string>(StringComparer.Ordinal);
@@ -117,40 +116,36 @@ public sealed class PrimaryAuditParityService(
             var progressionScore = CalculateProgressionScore(requiredLevel, objectiveCount, policy);
             var normalized = progressionScore > 0 ? knownValue / progressionScore : knownValue;
 
-            Compare(mismatches, questId, "IsVanillaTraderQuest", baseline.QuestIds.Contains(questId), ReadBool(reported, "IsVanillaTraderQuest"));
-            Compare(mismatches, questId, "Restartable", pair.Value.Restartable, ReadBool(reported, "Restartable"));
-            Compare(mismatches, questId, "RequiredLevel", requiredLevel, ReadInt(reported, "RequiredLevel"));
-            Compare(mismatches, questId, "ObjectiveConditionCount", objectiveCount, ReadInt(reported, "ObjectiveConditionCount"));
-            Compare(mismatches, questId, "RewardItemRecords", items.Count, ReadInt(reported, "RewardItemRecords"));
-            Compare(mismatches, questId, "DistinctRewardTemplates", templatesForQuest.Count, ReadInt(reported, "DistinctRewardTemplates"));
-            Compare(mismatches, questId, "UnknownPriceItemRecords", unknown, ReadInt(reported, "UnknownPriceItemRecords"));
-            CompareDouble(mismatches, questId, "ProgressionScore", Math.Round(progressionScore, 4), ReadDouble(reported, "ProgressionScore"));
-            CompareDouble(mismatches, questId, "KnownHandbookValue", Math.Round(knownValue, 2), ReadDouble(reported, "KnownHandbookValue"));
-            CompareDouble(mismatches, questId, "NormalizedHandbookValue", Math.Round(normalized, 2), ReadDouble(reported, "NormalizedHandbookValue"));
+            CompareQuest(mismatches, questId, "IsVanillaTraderQuest", baseline.QuestIds.Contains(questId), ReadBool(reported, "IsVanillaTraderQuest"));
+            CompareQuest(mismatches, questId, "Restartable", pair.Value.Restartable, ReadBool(reported, "Restartable"));
+            CompareQuest(mismatches, questId, "RequiredLevel", requiredLevel, ReadInt(reported, "RequiredLevel"));
+            CompareQuest(mismatches, questId, "ObjectiveConditionCount", objectiveCount, ReadInt(reported, "ObjectiveConditionCount"));
+            CompareQuest(mismatches, questId, "RewardItemRecords", items.Count, ReadInt(reported, "RewardItemRecords"));
+            CompareQuest(mismatches, questId, "DistinctRewardTemplates", distinctTemplates.Count, ReadInt(reported, "DistinctRewardTemplates"));
+            CompareQuest(mismatches, questId, "UnknownPriceItemRecords", unknown, ReadInt(reported, "UnknownPriceItemRecords"));
+            CompareQuestDouble(mismatches, questId, "ProgressionScore", Math.Round(progressionScore, 4), ReadDouble(reported, "ProgressionScore"));
+            CompareQuestDouble(mismatches, questId, "KnownHandbookValue", Math.Round(knownValue, 2), ReadDouble(reported, "KnownHandbookValue"));
+            CompareQuestDouble(mismatches, questId, "NormalizedHandbookValue", Math.Round(normalized, 2), ReadDouble(reported, "NormalizedHandbookValue"));
         }
 
-        foreach (var reportQuestId in reportRows.Keys.Where(id => !templates.Quests.Keys.Any(key => string.Equals(key.ToString(), id, StringComparison.Ordinal))))
-        {
+        foreach (var reportQuestId in reportRows.Keys.Where(id => !finalQuestIds.Contains(id)))
             AddMismatch(mismatches, "Quest", reportQuestId, "UnexpectedReportRow", "false", "true");
-        }
 
         var expectedQuestEdges = expectedRewardSources.Values.Sum(quests => quests.Count);
         var acquisition = root["Acquisition"]?.AsObject()
             ?? throw new InvalidOperationException("Economy Admiral primary parity: Acquisition is missing.");
         var reportedQuestEdges = ReadInt(acquisition, "QuestRewardSourceEdges");
         if (expectedQuestEdges != reportedQuestEdges)
-        {
             AddMismatch(mismatches, "Acquisition", "global", "QuestRewardSourceEdges", expectedQuestEdges.ToString(), reportedQuestEdges.ToString());
-        }
 
         var expectedBenchmark = BuildBenchmark(baseline, policy);
         var reportedBenchmark = root["VanillaQuestRewardBenchmark"]?.AsObject()
             ?? throw new InvalidOperationException("Economy Admiral primary parity: VanillaQuestRewardBenchmark is missing.");
         CompareBenchmark(mismatches, expectedBenchmark, reportedBenchmark);
 
-        var benchmarkMatches = mismatches.All(mismatch => mismatch.Scope != "Benchmark");
-        var acquisitionMatches = mismatches.All(mismatch => mismatch.Scope != "Acquisition");
-        var questRowsMatch = mismatches.All(mismatch => mismatch.Scope != "Quest");
+        if (!string.Equals(root["VanillaBenchmarkSource"]?.GetValue<string>(), "PristineStartupSnapshot", StringComparison.Ordinal))
+            AddMismatch(mismatches, "Benchmark", "global", "VanillaBenchmarkSource", "PristineStartupSnapshot", root["VanillaBenchmarkSource"]?.ToJsonString() ?? "null");
+
         var report = new PrimaryAuditParityReport
         {
             FinalQuestCount = templates.Quests.Count,
@@ -158,9 +153,9 @@ public sealed class PrimaryAuditParityService(
             ComparedQuestRows = compared,
             ExpectedQuestRewardSourceEdges = expectedQuestEdges,
             ReportedQuestRewardSourceEdges = reportedQuestEdges,
-            BenchmarkMatches = benchmarkMatches,
-            AcquisitionMatches = acquisitionMatches,
-            QuestRowsMatch = questRowsMatch,
+            BenchmarkMatches = mismatches.All(mismatch => mismatch.Scope != "Benchmark"),
+            AcquisitionMatches = mismatches.All(mismatch => mismatch.Scope != "Acquisition"),
+            QuestRowsMatch = mismatches.All(mismatch => mismatch.Scope != "Quest"),
             AllMatched = mismatches.Count == 0,
             Mismatches = mismatches
                 .OrderBy(mismatch => mismatch.Scope, StringComparer.Ordinal)
@@ -175,13 +170,9 @@ public sealed class PrimaryAuditParityService(
         await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
 
         if (report.AllMatched)
-        {
             logger.Info($"[Economy Admiral] source-correct primary audit parity PASS: quests={compared}, questRewardEdges={expectedQuestEdges}; report={reportPath}");
-        }
         else
-        {
-            logger.Warning($"[Economy Admiral] source-correct primary audit parity MISMATCH: mismatches={mismatches.Count}, retained={report.Mismatches.Count}; report={reportPath}");
-        }
+            logger.Warning($"[Economy Admiral] source-correct primary audit parity MISMATCH: total={mismatches.Count}, retained={report.Mismatches.Count}; report={reportPath}");
 
         return report;
     }
@@ -278,29 +269,39 @@ public sealed class PrimaryAuditParityService(
 
     private static void CompareBenchmark(List<PrimaryAuditParityMismatch> mismatches, QuestRewardBenchmark expected, JsonObject actual)
     {
-        Compare(mismatches, "Benchmark", "VanillaQuestSamples", expected.VanillaQuestSamples, ReadInt(actual, "VanillaQuestSamples"));
-        Compare(mismatches, "Benchmark", "VanillaRestartableSamples", expected.VanillaRestartableSamples, ReadInt(actual, "VanillaRestartableSamples"));
-        CompareDouble(mismatches, "Benchmark", "VanillaMedianHandbookValue", expected.VanillaMedianHandbookValue, ReadDouble(actual, "VanillaMedianHandbookValue"));
-        CompareDouble(mismatches, "Benchmark", "VanillaP90HandbookValue", expected.VanillaP90HandbookValue, ReadDouble(actual, "VanillaP90HandbookValue"));
-        CompareDouble(mismatches, "Benchmark", "VanillaMedianNormalizedHandbookValue", expected.VanillaMedianNormalizedHandbookValue, ReadDouble(actual, "VanillaMedianNormalizedHandbookValue"));
-        CompareDouble(mismatches, "Benchmark", "VanillaP90NormalizedHandbookValue", expected.VanillaP90NormalizedHandbookValue, ReadDouble(actual, "VanillaP90NormalizedHandbookValue"));
-        CompareDouble(mismatches, "Benchmark", "VanillaRestartableMedianHandbookValue", expected.VanillaRestartableMedianHandbookValue, ReadDouble(actual, "VanillaRestartableMedianHandbookValue"));
-        CompareDouble(mismatches, "Benchmark", "VanillaRestartableMedianNormalizedHandbookValue", expected.VanillaRestartableMedianNormalizedHandbookValue, ReadDouble(actual, "VanillaRestartableMedianNormalizedHandbookValue"));
+        CompareBenchmarkInt(mismatches, "VanillaQuestSamples", expected.VanillaQuestSamples, ReadInt(actual, "VanillaQuestSamples"));
+        CompareBenchmarkInt(mismatches, "VanillaRestartableSamples", expected.VanillaRestartableSamples, ReadInt(actual, "VanillaRestartableSamples"));
+        CompareBenchmarkDouble(mismatches, "VanillaMedianHandbookValue", expected.VanillaMedianHandbookValue, ReadDouble(actual, "VanillaMedianHandbookValue"));
+        CompareBenchmarkDouble(mismatches, "VanillaP90HandbookValue", expected.VanillaP90HandbookValue, ReadDouble(actual, "VanillaP90HandbookValue"));
+        CompareBenchmarkDouble(mismatches, "VanillaMedianNormalizedHandbookValue", expected.VanillaMedianNormalizedHandbookValue, ReadDouble(actual, "VanillaMedianNormalizedHandbookValue"));
+        CompareBenchmarkDouble(mismatches, "VanillaP90NormalizedHandbookValue", expected.VanillaP90NormalizedHandbookValue, ReadDouble(actual, "VanillaP90NormalizedHandbookValue"));
+        CompareBenchmarkDouble(mismatches, "VanillaRestartableMedianHandbookValue", expected.VanillaRestartableMedianHandbookValue, ReadDouble(actual, "VanillaRestartableMedianHandbookValue"));
+        CompareBenchmarkDouble(mismatches, "VanillaRestartableMedianNormalizedHandbookValue", expected.VanillaRestartableMedianNormalizedHandbookValue, ReadDouble(actual, "VanillaRestartableMedianNormalizedHandbookValue"));
     }
 
-    private static void Compare(List<PrimaryAuditParityMismatch> mismatches, string subjectId, string field, bool expected, bool actual)
+    private static void CompareQuest(List<PrimaryAuditParityMismatch> mismatches, string questId, string field, bool expected, bool actual)
     {
-        if (expected != actual) AddMismatch(mismatches, "Quest", subjectId, field, expected.ToString(), actual.ToString());
+        if (expected != actual) AddMismatch(mismatches, "Quest", questId, field, expected.ToString(), actual.ToString());
     }
 
-    private static void Compare(List<PrimaryAuditParityMismatch> mismatches, string subjectId, string field, int expected, int actual)
+    private static void CompareQuest(List<PrimaryAuditParityMismatch> mismatches, string questId, string field, int expected, int actual)
     {
-        if (expected != actual) AddMismatch(mismatches, "Quest", subjectId, field, expected.ToString(), actual.ToString());
+        if (expected != actual) AddMismatch(mismatches, "Quest", questId, field, expected.ToString(), actual.ToString());
     }
 
-    private static void CompareDouble(List<PrimaryAuditParityMismatch> mismatches, string subjectId, string field, double expected, double actual)
+    private static void CompareQuestDouble(List<PrimaryAuditParityMismatch> mismatches, string questId, string field, double expected, double actual)
     {
-        if (Math.Abs(expected - actual) > 0.005d) AddMismatch(mismatches, subjectId == "Benchmark" ? "Benchmark" : "Quest", subjectId, field, expected.ToString("0.####"), actual.ToString("0.####"));
+        if (Math.Abs(expected - actual) > 0.005d) AddMismatch(mismatches, "Quest", questId, field, expected.ToString("0.####"), actual.ToString("0.####"));
+    }
+
+    private static void CompareBenchmarkInt(List<PrimaryAuditParityMismatch> mismatches, string field, int expected, int actual)
+    {
+        if (expected != actual) AddMismatch(mismatches, "Benchmark", "global", field, expected.ToString(), actual.ToString());
+    }
+
+    private static void CompareBenchmarkDouble(List<PrimaryAuditParityMismatch> mismatches, string field, double expected, double actual)
+    {
+        if (Math.Abs(expected - actual) > 0.005d) AddMismatch(mismatches, "Benchmark", "global", field, expected.ToString("0.####"), actual.ToString("0.####"));
     }
 
     private static void AddMismatch(List<PrimaryAuditParityMismatch> mismatches, string scope, string subjectId, string field, string expected, string actual) => mismatches.Add(new PrimaryAuditParityMismatch
