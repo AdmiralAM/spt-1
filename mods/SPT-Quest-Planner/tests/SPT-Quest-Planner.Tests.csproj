@@ -41,6 +41,7 @@
     <Compile Include="..\client\PlannerCapabilityGoalPresentation.cs" Link="PlannerCapabilityGoalPresentation.cs" />
     <Compile Include="..\client\PlannerCapabilityDecisionValue.cs" Link="PlannerCapabilityDecisionValue.cs" />
     <Compile Include="..\client\PlannerCapabilityDecisionSnapshot.cs" Link="PlannerCapabilityDecisionSnapshot.cs" />
+    <Compile Include="..\client\PlannerCapabilityDecisionProvider.cs" Link="PlannerCapabilityDecisionProvider.cs" />
     <Compile Include="..\client\PlannerRaidPlanCollection.cs" Link="PlannerRaidPlanCollection.cs" />
     <Compile Include="..\client\PlannerRaidPlanProvider.cs" Link="PlannerRaidPlanProvider.cs" />
     <Compile Include="..\client\PlannerRaidPlanViewModel.cs" Link="PlannerRaidPlanViewModel.cs" />
