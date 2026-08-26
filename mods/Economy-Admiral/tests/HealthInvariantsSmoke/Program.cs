@@ -11,6 +11,36 @@ static void Require(bool condition, string message)
 static EconomyHealthInvariantResult Find(EconomyHealthInvariantEvaluation evaluation, EconomyHealthInvariantKind kind)
     => evaluation.Invariants.Single(result => result.Kind == kind);
 
+static EconomyPolicyPreviewCandidateInput PreviewCandidate(EconomyHealthInvariantEvaluation health) => new()
+{
+    CandidateId = "candidate-preview",
+    PolicyId = "Normal",
+    SubjectType = health.SubjectType,
+    SubjectId = health.SubjectId,
+    Dimension = health.Dimension,
+    AnomalyReason = "Candidate exceeds pristine-relative acquisition-pressure envelope.",
+    BaselineSource = "PristineStartupSnapshot",
+    CurrentValue = 10,
+    TargetValue = 7,
+    ProjectedValue = 7,
+    Health = health,
+};
+
+static void MustFail(string name, Action action)
+{
+    try
+    {
+        action();
+    }
+    catch (InvalidOperationException)
+    {
+        Console.WriteLine($"PASS {name}");
+        return;
+    }
+
+    throw new InvalidOperationException($"Expected '{name}' to fail.");
+}
+
 var healthy = EconomyHealthInvariantEvaluator.Evaluate(new EconomyHealthInvariantInput
 {
     SubjectType = "Item",
@@ -199,4 +229,35 @@ Require(unknown.FutureAutomaticActionBlocked, "Unknown invariant state must fail
 Require(!unknown.HasFailure, "Unknown evidence should remain distinct from measured failure.");
 Require(unknown.AllKnownInvariantsPass, "Known non-pristine invariant may pass while unknowns still block action.");
 
-Console.WriteLine("Economy Admiral health invariants smoke PASS");
+var previewable = EconomyPolicyPreviewEvidenceBuilder.Build(PreviewCandidate(healthy));
+Require(previewable.Disposition == EconomyPolicyPreviewDisposition.Previewable, "Passing complete health evidence should produce Previewable disposition.");
+Require(previewable.BlockingReasons.Count == 0 && previewable.UnknownReasons.Count == 0, "Previewable decision must have no blocking/unknown reasons.");
+Require(previewable.ProjectedDelta == -3 && !previewable.IsNoOp, "Preview projection delta mismatch.");
+Require(!previewable.MutationAuthorized, "Preview domain must never authorize mutation.");
+
+var blockedPreview = EconomyPolicyPreviewEvidenceBuilder.Build(PreviewCandidate(protectedPristine));
+Require(blockedPreview.Disposition == EconomyPolicyPreviewDisposition.Blocked, "Failed health invariant must produce Blocked disposition.");
+Require(blockedPreview.BlockingReasons.Any(reason => reason.StartsWith("ProtectedPristine:", StringComparison.Ordinal)), "Blocked preview must expose exact invariant reason.");
+Require(!blockedPreview.MutationAuthorized, "Blocked preview must never authorize mutation.");
+
+var incompletePreview = EconomyPolicyPreviewEvidenceBuilder.Build(PreviewCandidate(unknown));
+Require(incompletePreview.Disposition == EconomyPolicyPreviewDisposition.IncompleteEvidence, "Unknown health evidence must produce IncompleteEvidence disposition.");
+Require(incompletePreview.UnknownReasons.Count > 0, "Incomplete preview must preserve unknown reasons.");
+Require(!incompletePreview.MutationAuthorized, "Incomplete preview must never authorize mutation.");
+
+var noOpPreview = EconomyPolicyPreviewEvidenceBuilder.Build(PreviewCandidate(healthy) with { TargetValue = 10, ProjectedValue = 10 });
+Require(noOpPreview.IsNoOp && noOpPreview.ProjectedDelta == 0, "Equal current/projected values must be explicit no-op evidence.");
+
+var reversedHealthy = healthy with { Invariants = healthy.Invariants.AsEnumerable().Reverse().ToList() };
+var deterministicPreview = EconomyPolicyPreviewEvidenceBuilder.Build(PreviewCandidate(reversedHealthy));
+Require(
+    previewable.HealthInvariants.Select(result => result.Kind).SequenceEqual(deterministicPreview.HealthInvariants.Select(result => result.Kind)),
+    "Preview invariant ordering must be deterministic regardless of input ordering."
+);
+
+MustFail("preview subject mismatch", () => EconomyPolicyPreviewEvidenceBuilder.Build(PreviewCandidate(healthy) with { SubjectId = "different-item" }));
+MustFail("preview non-finite value", () => EconomyPolicyPreviewEvidenceBuilder.Build(PreviewCandidate(healthy) with { CurrentValue = double.NaN }));
+MustFail("preview empty policy id", () => EconomyPolicyPreviewEvidenceBuilder.Build(PreviewCandidate(healthy) with { PolicyId = " " }));
+MustFail("preview inconsistent health summary", () => EconomyPolicyPreviewEvidenceBuilder.Build(PreviewCandidate(healthy with { HasFailure = true })));
+
+Console.WriteLine("Economy Admiral health invariants + policy preview smoke PASS");
