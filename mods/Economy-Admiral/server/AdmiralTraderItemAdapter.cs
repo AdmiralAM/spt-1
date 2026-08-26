@@ -6,7 +6,9 @@ public sealed record AdmiralTraderOfferAdapterEvidence
 {
     public required string OfferId { get; init; }
     public required string ItemTemplateId { get; init; }
-    public required string QuestGateId { get; init; }
+    public string StockClass { get; init; } = "Milestone";
+    public string GateKind { get; init; } = "Quest";
+    public string? QuestGateId { get; init; }
     public required int LoyaltyLevel { get; init; }
     public required int StockPerReset { get; init; }
     public required int BuyRestrictionPerReset { get; init; }
@@ -17,221 +19,84 @@ public sealed record AdmiralTraderOfferAdapterEvidence
 
 public static class AdmiralTraderItemAdapter
 {
-    public static IReadOnlyList<AdmiralTraderOfferAdapterEvidence> ParseOffers(
-        string assortJson,
-        string questAssortJson,
-        AdmiralTraderAdapterContract policy
-    )
+    public static IReadOnlyList<AdmiralTraderOfferAdapterEvidence> ParseOffers(string assortJson, string questAssortJson, AdmiralTraderAdapterContract policy)
     {
         ArgumentNullException.ThrowIfNull(policy);
         AdmiralTraderAdapterEvidence.ValidateMaintainedContract(policy);
-
         using var assortDocument = JsonDocument.Parse(RequireJson(assortJson, "assort"));
         using var questDocument = JsonDocument.Parse(RequireJson(questAssortJson, "questassort"));
-
         var assortRoot = assortDocument.RootElement;
         var questRoot = questDocument.RootElement;
-        RequireObject(assortRoot, "assort root");
-        RequireObject(questRoot, "questassort root");
-
         var items = RequireProperty(assortRoot, "items");
-        if (items.ValueKind != JsonValueKind.Array)
-        {
-            throw new InvalidOperationException("Economy Admiral Admiral Trader adapter: assort.items must be an array.");
-        }
-
         var loyalty = RequireProperty(assortRoot, "loyal_level_items");
-        RequireObject(loyalty, "loyal_level_items");
-
         var success = RequireProperty(questRoot, "success");
-        RequireObject(success, "questassort.success");
+        if (items.ValueKind != JsonValueKind.Array || loyalty.ValueKind != JsonValueKind.Object || success.ValueKind != JsonValueKind.Object)
+            throw new InvalidOperationException("Economy Admiral Admiral Trader adapter: malformed legacy assort/questassort collections.");
 
         var results = new List<AdmiralTraderOfferAdapterEvidence>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
-
         foreach (var item in items.EnumerateArray())
         {
-            RequireObject(item, "assort item");
             var offerId = RequireString(item, "_id");
             var templateId = RequireString(item, "_tpl");
-            if (!seen.Add(offerId))
-            {
-                throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: duplicate offer id '{offerId}'.");
-            }
-
+            if (!seen.Add(offerId)) throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: duplicate offer id '{offerId}'.");
             var upd = RequireProperty(item, "upd");
-            RequireObject(upd, $"upd for offer '{offerId}'");
             var unlimited = RequireBool(upd, "UnlimitedCount");
             var stock = RequireInt(upd, "StackObjectsCount");
             var buyRestriction = RequireInt(upd, "BuyRestrictionMax");
-
-            if (unlimited)
-            {
-                throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: maintained offer '{offerId}' unexpectedly became unlimited.");
-            }
-            if (stock < 1 || buyRestriction < 1)
-            {
-                throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: offer '{offerId}' requires positive stock and buy restriction.");
-            }
-            if (stock > policy.MaximumPermanentOfferStockPerReset)
-            {
-                throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: offer '{offerId}' exceeds maintained stock cap {policy.MaximumPermanentOfferStockPerReset}.");
-            }
-
-            if (!loyalty.TryGetProperty(offerId, out var loyaltyValue) || !loyaltyValue.TryGetInt32(out var loyaltyLevel))
-            {
-                throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: offer '{offerId}' is missing loyalty mapping.");
-            }
-            if (loyaltyLevel != policy.QuestUnlockLoyaltyLevel)
-            {
-                throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: offer '{offerId}' loyalty level drifted from maintained quest-unlock level {policy.QuestUnlockLoyaltyLevel}.");
-            }
-
+            if (unlimited || stock < 1 || buyRestriction < 1 || stock > policy.MaximumPermanentOfferStockPerReset)
+                throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: invalid bounded supply for offer '{offerId}'.");
+            if (!loyalty.TryGetProperty(offerId, out var loyaltyValue) || !loyaltyValue.TryGetInt32(out var loyaltyLevel) || loyaltyLevel != policy.QuestUnlockLoyaltyLevel)
+                throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: loyalty drift for offer '{offerId}'.");
             if (!success.TryGetProperty(offerId, out var questValue) || questValue.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(questValue.GetString()))
-            {
-                throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: offer '{offerId}' is not explicitly quest-gated by native lowercase success mapping.");
-            }
-
-            var questGateId = questValue.GetString()!;
-            results.Add(new AdmiralTraderOfferAdapterEvidence
-            {
-                OfferId = offerId,
-                ItemTemplateId = templateId,
-                QuestGateId = questGateId,
-                LoyaltyLevel = loyaltyLevel,
-                StockPerReset = stock,
-                BuyRestrictionPerReset = buyRestriction,
-                Source = new AcquisitionSourceEvidence
-                {
-                    ItemTemplateId = templateId,
-                    SourceId = $"admiral-trader:{offerId}",
-                    Channel = AcquisitionChannel.TraderPurchase,
-                    Renewable = true,
-                    EarliestProgressionLevel = null,
-                    ProvenanceClass = AdmiralTraderAdapterEvidence.AttributionConfidence,
-                },
-                Capacity = new RenewableSupplyCapacityEvidence
-                {
-                    ItemTemplateId = templateId,
-                    SourceId = $"admiral-trader:{offerId}",
-                    Channel = AcquisitionChannel.TraderPurchase,
-                    SupplyBound = RenewableSupplyBound.Bounded,
-                    MaxUnitsPerReset = stock,
-                    MaxAcquisitionsPerReset = buyRestriction,
-                },
-            });
+                throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: offer '{offerId}' is not explicitly quest-gated.");
+            results.Add(BuildEvidence(offerId, templateId, "Milestone", "Quest", questValue.GetString(), loyaltyLevel, stock, buyRestriction, null));
         }
 
         if (results.Count != policy.ExpectedPermanentOfferCount)
-        {
             throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: expected {policy.ExpectedPermanentOfferCount} maintained offers but found {results.Count}.");
-        }
-
-        var successKeys = success.EnumerateObject().Select(property => property.Name).OrderBy(value => value, StringComparer.Ordinal).ToList();
-        var offerKeys = results.Select(result => result.OfferId).OrderBy(value => value, StringComparer.Ordinal).ToList();
+        var successKeys = success.EnumerateObject().Select(p => p.Name).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+        var offerKeys = results.Select(r => r.OfferId).OrderBy(x => x, StringComparer.Ordinal).ToArray();
         if (!successKeys.SequenceEqual(offerKeys, StringComparer.Ordinal))
-        {
-            throw new InvalidOperationException("Economy Admiral Admiral Trader adapter: questassort.success must map exactly the maintained permanent offers.");
-        }
-
-        return results.OrderBy(result => result.OfferId, StringComparer.Ordinal).ToList();
+            throw new InvalidOperationException("Economy Admiral Admiral Trader adapter: questassort.success must map exactly the maintained legacy offers.");
+        return results.OrderBy(r => r.OfferId, StringComparer.Ordinal).ToArray();
     }
 
-    public static IReadOnlyList<AdmiralTraderOfferAdapterEvidence> ParseAndApplyEffectiveQuestGates(
-        string assortJson,
-        string questAssortJson,
-        AdmiralTraderAdapterContract policy,
-        IEnumerable<string> authoredQuestJsonRecords
-    )
-    {
-        var offers = ParseOffers(assortJson, questAssortJson, policy);
-        var questGraph = QuestGateJsonParser.ParseMany(authoredQuestJsonRecords);
-        return ApplyEffectiveQuestGates(offers, questGraph);
-    }
+    public static IReadOnlyList<AdmiralTraderOfferAdapterEvidence> ParseAndApplyEffectiveQuestGates(string assortJson, string questAssortJson, AdmiralTraderAdapterContract policy, IEnumerable<string> authoredQuestJsonRecords)
+        => ApplyEffectiveQuestGates(ParseOffers(assortJson, questAssortJson, policy), QuestGateJsonParser.ParseMany(authoredQuestJsonRecords));
 
-    public static IReadOnlyList<AdmiralTraderOfferAdapterEvidence> ApplyEffectiveQuestGates(
-        IEnumerable<AdmiralTraderOfferAdapterEvidence> offers,
-        IEnumerable<QuestGateNode> questGraph
-    )
+    public static IReadOnlyList<AdmiralTraderOfferAdapterEvidence> ApplyEffectiveQuestGates(IEnumerable<AdmiralTraderOfferAdapterEvidence> offers, IEnumerable<QuestGateNode> questGraph)
     {
-        ArgumentNullException.ThrowIfNull(offers);
-        ArgumentNullException.ThrowIfNull(questGraph);
-
         var graph = questGraph.ToList();
-        return offers
-            .Select(offer =>
-            {
-                var gate = EffectiveQuestGateEvidenceResolver.Resolve(offer.QuestGateId, graph);
-                if (!gate.CompleteQuestGraphEvidence || !gate.EffectiveMinimumLevel.HasValue)
-                {
-                    throw new InvalidOperationException(
-                        $"Economy Admiral Admiral Trader adapter: effective quest gate for offer '{offer.OfferId}' is incomplete."
-                    );
-                }
-
-                return offer with
-                {
-                    EffectiveGate = gate,
-                    Source = offer.Source with { EarliestProgressionLevel = gate.EffectiveMinimumLevel },
-                };
-            })
-            .OrderBy(offer => offer.OfferId, StringComparer.Ordinal)
-            .ToList();
-    }
-
-    private static string RequireJson(string value, string name)
-    {
-        if (string.IsNullOrWhiteSpace(value))
+        return offers.Select(offer =>
         {
-            throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: {name} JSON must not be empty.");
-        }
-        return value;
+            if (!string.Equals(offer.GateKind, "Quest", StringComparison.Ordinal)) return offer;
+            if (string.IsNullOrWhiteSpace(offer.QuestGateId)) throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: quest gate missing for '{offer.OfferId}'.");
+            var gate = EffectiveQuestGateEvidenceResolver.Resolve(offer.QuestGateId, graph);
+            if (!gate.CompleteQuestGraphEvidence || !gate.EffectiveMinimumLevel.HasValue)
+                throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: effective quest gate for offer '{offer.OfferId}' is incomplete.");
+            return offer with { EffectiveGate = gate, Source = offer.Source with { EarliestProgressionLevel = gate.EffectiveMinimumLevel } };
+        }).OrderBy(o => o.OfferId, StringComparer.Ordinal).ToArray();
     }
 
-    private static JsonElement RequireProperty(JsonElement parent, string name)
-    {
-        if (!parent.TryGetProperty(name, out var value))
+    internal static AdmiralTraderOfferAdapterEvidence BuildEvidence(string offerId, string templateId, string stockClass, string gateKind, string? questGateId, int loyaltyLevel, int stock, int buyRestriction, int? earliestLevel)
+        => new()
         {
-            throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: required property '{name}' is missing.");
-        }
-        return value;
-    }
+            OfferId = offerId,
+            ItemTemplateId = templateId,
+            StockClass = stockClass,
+            GateKind = gateKind,
+            QuestGateId = questGateId,
+            LoyaltyLevel = loyaltyLevel,
+            StockPerReset = stock,
+            BuyRestrictionPerReset = buyRestriction,
+            Source = new AcquisitionSourceEvidence { ItemTemplateId = templateId, SourceId = $"admiral-trader:{offerId}", Channel = AcquisitionChannel.TraderPurchase, Renewable = true, EarliestProgressionLevel = earliestLevel, ProvenanceClass = AdmiralTraderAdapterEvidence.AttributionConfidence },
+            Capacity = new RenewableSupplyCapacityEvidence { ItemTemplateId = templateId, SourceId = $"admiral-trader:{offerId}", Channel = AcquisitionChannel.TraderPurchase, SupplyBound = RenewableSupplyBound.Bounded, MaxUnitsPerReset = stock, MaxAcquisitionsPerReset = buyRestriction },
+        };
 
-    private static void RequireObject(JsonElement value, string name)
-    {
-        if (value.ValueKind != JsonValueKind.Object)
-        {
-            throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: {name} must be an object.");
-        }
-    }
-
-    private static string RequireString(JsonElement parent, string name)
-    {
-        var value = RequireProperty(parent, name);
-        if (value.ValueKind != JsonValueKind.String || string.IsNullOrWhiteSpace(value.GetString()))
-        {
-            throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: '{name}' must be a non-empty string.");
-        }
-        return value.GetString()!;
-    }
-
-    private static int RequireInt(JsonElement parent, string name)
-    {
-        var value = RequireProperty(parent, name);
-        if (!value.TryGetInt32(out var result))
-        {
-            throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: '{name}' must be an integer.");
-        }
-        return result;
-    }
-
-    private static bool RequireBool(JsonElement parent, string name)
-    {
-        var value = RequireProperty(parent, name);
-        if (value.ValueKind is not (JsonValueKind.True or JsonValueKind.False))
-        {
-            throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: '{name}' must be boolean.");
-        }
-        return value.GetBoolean();
-    }
+    private static string RequireJson(string value, string name) => string.IsNullOrWhiteSpace(value) ? throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: {name} JSON must not be empty.") : value;
+    private static JsonElement RequireProperty(JsonElement parent, string name) => parent.TryGetProperty(name, out var value) ? value : throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: required property '{name}' is missing.");
+    private static string RequireString(JsonElement parent, string name) { var v = RequireProperty(parent, name); return v.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(v.GetString()) ? v.GetString()! : throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: '{name}' must be a non-empty string."); }
+    private static int RequireInt(JsonElement parent, string name) { var v = RequireProperty(parent, name); return v.TryGetInt32(out var n) ? n : throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: '{name}' must be an integer."); }
+    private static bool RequireBool(JsonElement parent, string name) { var v = RequireProperty(parent, name); return v.ValueKind is JsonValueKind.True or JsonValueKind.False ? v.GetBoolean() : throw new InvalidOperationException($"Economy Admiral Admiral Trader adapter: '{name}' must be boolean."); }
 }
