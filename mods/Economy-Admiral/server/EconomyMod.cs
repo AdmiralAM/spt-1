@@ -10,7 +10,7 @@ public sealed class EconomyMod(
     EconomyRuntimeConfigService runtimeConfigService,
     VanillaBaselineService vanillaBaselineService,
     RuntimeEvidenceService runtimeEvidenceService,
-    DirectPrimaryAuditService primaryAuditService,
+    EconomyAuditService auditService,
     PristineReportCorrectionService pristineReportCorrectionService,
     TypedQuestItemAccountingService typedQuestItemAccountingService,
     PrimaryAuditParityService primaryAuditParityService,
@@ -39,8 +39,8 @@ public sealed class EconomyMod(
         runtimeEvidenceService.CaptureBefore();
 
         // Physical SPT 4.1.3 parity proved that typed final DB + pristine startup snapshot
-        // is source-correct. Build the primary report directly from those sources.
-        await primaryAuditService.RunAsync(vanillaBaseline, cancellationToken);
+        // is source-correct. The primary report is now built directly from those sources.
+        await auditService.RunAsync(vanillaBaseline, cancellationToken);
         await primaryAuditParityService.RunAsync(cancellationToken);
 
         await rewardUtilityAuditService.RunAsync(cancellationToken);
