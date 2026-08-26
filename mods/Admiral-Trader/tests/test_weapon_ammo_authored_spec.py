@@ -30,7 +30,7 @@ class WeaponAmmoAuthoredSpecTests(unittest.TestCase):
                 "id": family_id,
                 "minimumLevel": 5,
                 "stages": [
-                    {"slug": f"{family_id}-q", "minimumLevel": 5, "kills": 8, "xp": 5000, "rub": 15000, "standing": 0.01},
+                    {"slug": f"{family_id}-q", "minimumLevel": 5, "readinessCount": 1, "xp": 5000, "rub": 15000, "standing": 0.01},
                     {"slug": f"{family_id}-f", "minimumLevel": 10, "kills": 15, "xp": 8000, "rub": 25000, "standing": 0.02},
                     {"slug": f"{family_id}-m", "minimumLevel": 15, "kills": 20, "xp": 12000, "rub": 35000, "standing": 0.02, "sampleAmmoUnits": sample_units, "unlockSlots": unlock_slots},
                 ],
@@ -39,6 +39,11 @@ class WeaponAmmoAuthoredSpecTests(unittest.TestCase):
             "targetSptVersion": "4.1.3",
             "domain": "weaponAmmo",
             "legacySource": {"questCount": 438, "assortmentUnlockCount": 768, "crossBundleEdgeCount": 23},
+            "stageModel": [
+                {"stage": "Qualification", "objectiveModel": "family-readiness-possession"},
+                {"stage": "Fieldwork", "objectiveModel": "family-eliminations"},
+                {"stage": "Munitions", "objectiveModel": "capability-caliber-eliminations"},
+            ],
             "designRules": {
                 "legacyTemplateReuse": False,
                 "foundInRaidRequired": False,
@@ -60,6 +65,20 @@ class WeaponAmmoAuthoredSpecTests(unittest.TestCase):
         self.assertEqual(result["familyCount"], 7)
         self.assertEqual(result["questCount"], 21)
         self.assertEqual(result["unlockCount"], 6)
+
+    def test_rejects_three_count_only_stage_models(self):
+        spec_data = self.make_spec()
+        for row in spec_data["stageModel"]:
+            row["objectiveModel"] = "family-eliminations"
+        with self.assertRaises(SystemExit):
+            module.validate(spec_data, self.make_policy())
+
+    def test_rejects_kill_count_on_qualification(self):
+        spec_data = self.make_spec()
+        qualification = spec_data["families"][0]["stages"][0]
+        qualification["kills"] = 8
+        with self.assertRaises(SystemExit):
+            module.validate(spec_data, self.make_policy())
 
     def test_rejects_unlock_on_qualification(self):
         spec_data = self.make_spec()
