@@ -37,13 +37,14 @@ jobs:
           required = [
               root / 'README.md', root / 'RUNTIME_TEST.md', root / 'config/config.json',
               root / 'tools/Validate-Runtime.ps1', root / 'tools/Test-Validate-Runtime.ps1',
+              root / 'tools/Validate-PrimaryParity.ps1', root / 'tools/Test-Validate-PrimaryParity.ps1',
               root / 'server/Economy-Admiral.csproj', root / 'server/EconomyMod.cs',
               root / 'server/TypedQuestItemAccountingService.cs', root / 'server/VanillaBaselineService.cs',
               root / 'server/BaselineProvenanceCorrectionService.cs', root / 'server/PristineReportCorrectionService.cs',
               root / 'server/QuestProvenanceDeltaService.cs', root / 'server/QuestProgressionGraphService.cs',
               root / 'server/QuestAnalysisService.cs', root / 'server/CompositePolicyEvaluationService.cs',
               root / 'server/TargetProposalService.cs', root / 'server/EnforcementPlanService.cs',
-              root / 'server/RuntimeEvidenceService.cs',
+              root / 'server/RuntimeEvidenceService.cs', root / 'server/PrimaryAuditParityService.cs',
           ]
           missing = [str(p) for p in required if not p.is_file()]
           assert not missing, missing
@@ -65,6 +66,7 @@ jobs:
               'var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);',
               'enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken)',
               'runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, cancellationToken)',
+              'primaryAuditParityService.RunAsync(cancellationToken)',
           ]:
               assert text in mod, text
           assert mod.index('config.Mode == EconomyMode.Off') < mod.index('vanillaBaselineService.GetSnapshot()')
@@ -87,6 +89,18 @@ jobs:
           typed_items = (root / 'server/TypedQuestItemAccountingService.cs').read_text(encoding='utf-8')
           for text in ['reward.Items', 'item.Template.ToString()', 'item.Upd?.StackObjectsCount', 'QuestRewardSourceEdges', 'typed quest-item accounting sanity gate failed', 'typed unified-analysis sanity gate failed']:
               assert text in typed_items, text
+
+          parity = (root / 'server/PrimaryAuditParityService.cs').read_text(encoding='utf-8')
+          for text in ['TypedFinalDbPlusPristineStartupSnapshot', 'reward.Items', 'baseline.QuestIds.Contains', 'QuestRowsMatch', 'AcquisitionMatches', 'BenchmarkMatches', 'AllMatched']:
+              assert text in parity, text
+
+          parity_validator = (root / 'tools/Validate-PrimaryParity.ps1').read_text(encoding='utf-8')
+          for text in ['TypedFinalDbPlusPristineStartupSnapshot', 'ComparedQuestRows', 'ExpectedQuestRewardSourceEdges', 'QuestRowsMatch', 'AcquisitionMatches', 'BenchmarkMatches', 'AllMatched', 'Mismatches']:
+              assert text in parity_validator, text
+
+          parity_smoke = (root / 'tools/Test-Validate-PrimaryParity.ps1').read_text(encoding='utf-8')
+          for text in ['38138', 'Parity mismatch fixture', 'Non-empty mismatch list', 'Quest reward edge mismatch']:
+              assert text in parity_smoke, text
 
           for name in ['CompositePolicyEvaluationService.cs', 'TargetProposalService.cs']:
               text = (root / 'server' / name).read_text(encoding='utf-8')
@@ -140,7 +154,7 @@ jobs:
           ]:
               assert text in smoke, text
 
-          print('Economy Admiral exact provenance + expanded zero-mutation fingerprint + dimension-scoped fail-closed eligibility contract OK')
+          print('Economy Admiral provenance + zero-mutation + parity + fail-closed eligibility contract OK')
 
   server:
     name: Economy Admiral .NET 10 server build
@@ -157,9 +171,14 @@ jobs:
         run: |
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-Runtime.ps1 -Raw))
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1 -Raw))
+          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-PrimaryParity.ps1 -Raw))
+          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-PrimaryParity.ps1 -Raw))
       - name: Smoke-test runtime helper
         shell: pwsh
         run: '& mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1'
+      - name: Smoke-test primary parity validator
+        shell: pwsh
+        run: '& mods/Economy-Admiral/tools/Test-Validate-PrimaryParity.ps1'
       - name: Smoke-test config validation
         shell: pwsh
         run: dotnet run --project mods/Economy-Admiral/tests/ConfigValidationSmoke/ConfigValidationSmoke.csproj -c Release --nologo
@@ -180,6 +199,7 @@ jobs:
           Copy-Item mods/Economy-Admiral/README.md 'build-output/Economy Admiral/README.md'
           Copy-Item mods/Economy-Admiral/RUNTIME_TEST.md 'build-output/Economy Admiral/RUNTIME_TEST.md'
           Copy-Item mods/Economy-Admiral/tools/Validate-Runtime.ps1 'build-output/Economy Admiral/Validate-Runtime.ps1'
+          Copy-Item mods/Economy-Admiral/tools/Validate-PrimaryParity.ps1 'build-output/Economy Admiral/Validate-PrimaryParity.ps1'
           [ordered]@{
             Product = 'Economy Admiral'
             HeadSha = $env:EA_HEAD_SHA
