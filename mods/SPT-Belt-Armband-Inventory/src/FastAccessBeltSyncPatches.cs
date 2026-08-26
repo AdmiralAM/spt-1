@@ -209,7 +209,7 @@ namespace SPTBeltArmbandInventory
                 FieldInfo context = showParameters.Length == 2 ? FindField(viewType, showParameters[1].ParameterType, "ItemUiContext") : null;
                 PropertyInfo topPriority = FindProperty(equipmentType, "TopPriorityGrenade");
                 MethodInfo topLevelItems = FindTopLevelItemsMethod(viewType.Assembly);
-                if (added == null || removed == null || show == null || controller == null || context == null || topPriority == null || !topPriority.CanRead || !topPriority.CanWrite || topLevelItems == null)
+                if (added == null || removed == null || show == null || controller == null || context == null)
                     return Fail("SPT 4.1 grenade fast-access boundary is incomplete; live belt grenade synchronization is disabled."
                         + " added=" + Describe(added)
                         + ", removed=" + Describe(removed)
@@ -218,6 +218,18 @@ namespace SPTBeltArmbandInventory
                         + ", context=" + Describe(context)
                         + ", topPriority=" + Describe(topPriority)
                         + ", topLevelItems=" + Describe(topLevelItems) + ".");
+
+                if (topPriority == null || !topPriority.CanRead || !topPriority.CanWrite || topLevelItems == null)
+                {
+                    string degradedTopPriority = Describe(topPriority);
+                    string degradedTopLevelItems = Describe(topLevelItems);
+                    topPriority = null;
+                    topLevelItems = null;
+                    if (logWarning != null)
+                        logWarning("SPT 4.1 grenade fast-access selected-grenade boundary was not found; live ArmBand refresh will install without selected grenade cleanup on removal."
+                            + " topPriority=" + degradedTopPriority
+                            + ", topLevelItems=" + degradedTopLevelItems + ".");
+                }
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);

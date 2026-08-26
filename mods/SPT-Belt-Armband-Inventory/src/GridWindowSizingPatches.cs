@@ -20,7 +20,9 @@ namespace SPTBeltArmbandInventory
         }
 
         internal static Action<string> LogWarning;
+        internal static Type GridWindowType;
         static readonly List<PendingWindow> PendingWindows = new List<PendingWindow>();
+        static int scanFrame;
 
         internal static void Observe(object window, object[] args)
         {
@@ -44,6 +46,7 @@ namespace SPTBeltArmbandInventory
 
         internal static void Flush()
         {
+            ScanActiveWindows();
             if (PendingWindows.Count == 0) return;
 
             for (int i = 0; i < PendingWindows.Count; i++)
@@ -65,6 +68,24 @@ namespace SPTBeltArmbandInventory
         {
             PendingWindows.Clear();
             LogWarning = null;
+            GridWindowType = null;
+            scanFrame = 0;
+        }
+
+        static void ScanActiveWindows()
+        {
+            if (GridWindowType == null || ++scanFrame % 15 != 0) return;
+
+            UnityEngine.Object[] objects;
+            try { objects = Resources.FindObjectsOfTypeAll(GridWindowType); }
+            catch { return; }
+
+            for (int i = 0; i < objects.Length; i++)
+            {
+                Component component = objects[i] as Component;
+                if (component == null || component.gameObject == null || !component.gameObject.activeInHierarchy) continue;
+                TryAdjust(component);
+            }
         }
 
         static bool TryAdjust(object window)
@@ -204,6 +225,7 @@ namespace SPTBeltArmbandInventory
                     return Fail("SPT 4.1 GridWindow.Show shape changed; compact ArmBand window sizing is disabled.");
 
                 GridWindowSizingRuntime.LogWarning = logWarning;
+                GridWindowSizingRuntime.GridWindowType = gridWindowType;
                 if (logInfo != null) logInfo("B&A&HB compact ArmBand GridWindow sizing installed.");
                 return true;
             }
