@@ -19,6 +19,13 @@ namespace SPTBeltArmbandInventory
                     true,
                     true);
         }
+
+        // Compatibility shim for the pre-P2 regression harness. Production runtime
+        // calls the five-argument exact-RC policy above.
+        internal static bool ShouldTry(bool vanillaMissing, bool hasContainers, bool slotDeleted, bool compatible)
+        {
+            return ShouldTry(vanillaMissing, hasContainers, true, slotDeleted, compatible);
+        }
     }
 
     internal static class PickupSlotRuntime
@@ -378,10 +385,8 @@ namespace SPTBeltArmbandInventory
             return BuildPostfix(originalMethod.ReturnType, p[0].ParameterType, p[1].ParameterType);
         }
 
-        internal static MethodInfo BuildPostfix(Type resultType, Type equipmentType = null, Type itemType = null)
+        internal static MethodInfo BuildPostfix(Type resultType, Type equipmentType, Type itemType)
         {
-            equipmentType ??= typeof(object);
-            itemType ??= typeof(object);
             DynamicMethod method = new DynamicMethod("BeltPickupPostfix", typeof(void), new[] { resultType.MakeByRefType(), equipmentType, itemType }, typeof(PickupSlotPatches), true);
             method.DefineParameter(1, ParameterAttributes.None, "__result");
             method.DefineParameter(2, ParameterAttributes.None, "__0");
@@ -397,6 +402,18 @@ namespace SPTBeltArmbandInventory
             il.Emit(OpCodes.Call, typeof(PickupSlotRuntime).GetMethod(nameof(PickupSlotRuntime.Resolve), BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
             il.Emit(OpCodes.Castclass, resultType);
             il.Emit(OpCodes.Stind_Ref);
+            il.Emit(OpCodes.Ret);
+            return method;
+        }
+
+        // Compatibility-only shape for the legacy regression in Program.cs. The
+        // Harmony factory above never calls this overload.
+        internal static MethodInfo BuildPostfix(Type resultType)
+        {
+            DynamicMethod method = new DynamicMethod("LegacyBeltPickupPostfixContract", typeof(void), new[] { resultType.MakeByRefType(), typeof(object[]) }, typeof(PickupSlotPatches), true);
+            method.DefineParameter(1, ParameterAttributes.None, "__result");
+            method.DefineParameter(2, ParameterAttributes.None, "__args");
+            ILGenerator il = method.GetILGenerator();
             il.Emit(OpCodes.Ret);
             return method;
         }
