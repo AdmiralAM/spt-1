@@ -9,10 +9,9 @@ namespace SPTBeltArmbandInventory
 {
     internal static class GridWindowSizingRuntime
     {
-        // This is not idle polling. A specific RC OpenItem event may request at
-        // most a few deferred layout passes while Unity finishes that one window.
+        // A specific RC OpenItem event may request only a few deferred passes
+        // while Unity finishes that one window. There is no idle polling.
         const int MaxDeferredAttempts = 8;
-        const float GridMeasureTolerance = 1.5f;
 
         sealed class PendingWindow
         {
@@ -94,12 +93,12 @@ namespace SPTBeltArmbandInventory
             RectTransform rect = component.transform as RectTransform;
             if (rect == null || rect.rect.width <= 0f || rect.rect.height <= 0f) return false;
 
-            float measuredGridWidth;
-            float measuredGridHeight;
-            if (!TryMeasureDeclaredGrid(rect, out measuredGridWidth, out measuredGridHeight)) return false;
-
-            float width = AccessoryGridPolicy.ExactWindowWidth(RuntimeIdentity.CandidateGridColumns, measuredGridWidth);
-            float height = AccessoryGridPolicy.ExactWindowHeight(RuntimeIdentity.CandidateGridRows, measuredGridHeight);
+            // Grid geometry is part of the shared runtime contract. Do not scan
+            // the Unity hierarchy to rediscover dimensions that are already known.
+            // This removes the old artificial 96px minimum and sizes the native
+            // GridWindow directly to cells + normal EFT window chrome.
+            float width = AccessoryGridPolicy.ExactWindowWidth(RuntimeIdentity.CandidateGridColumns);
+            float height = AccessoryGridPolicy.ExactWindowHeight(RuntimeIdentity.CandidateGridRows);
             if (width <= 0f || height <= 0f) return false;
 
             if (Math.Abs(rect.rect.width - width) >= 0.5f)
@@ -109,33 +108,6 @@ namespace SPTBeltArmbandInventory
 
             ApplyLayoutElement(component.gameObject, width, height);
             return true;
-        }
-
-        static bool TryMeasureDeclaredGrid(RectTransform window, out float width, out float height)
-        {
-            width = 0f;
-            height = 0f;
-
-            float expectedWidth = RuntimeIdentity.CandidateGridColumns * AccessoryGridPolicy.CellPixels;
-            float expectedHeight = RuntimeIdentity.CandidateGridRows * AccessoryGridPolicy.CellPixels;
-
-            // Local, event-scoped hierarchy inspection of this one GridWindow only.
-            // No scene/global scan and no persistent hierarchy polling is used.
-            RectTransform[] descendants = window.GetComponentsInChildren<RectTransform>(true);
-            for (int i = 0; i < descendants.Length; i++)
-            {
-                RectTransform candidate = descendants[i];
-                if (candidate == null || ReferenceEquals(candidate, window) || !candidate.gameObject.activeInHierarchy) continue;
-                float candidateWidth = candidate.rect.width;
-                float candidateHeight = candidate.rect.height;
-                if (Math.Abs(candidateWidth - expectedWidth) > GridMeasureTolerance) continue;
-                if (Math.Abs(candidateHeight - expectedHeight) > GridMeasureTolerance) continue;
-                width = candidateWidth;
-                height = candidateHeight;
-                return true;
-            }
-
-            return false;
         }
 
         internal static bool IsRuntimeCandidate(object item)
