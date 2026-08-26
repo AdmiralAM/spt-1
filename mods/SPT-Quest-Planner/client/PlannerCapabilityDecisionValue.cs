@@ -86,18 +86,18 @@ namespace SPTQuestPlanner.Client
 
             if (raid.Kind == PlannerRaidDecisionPresentationKind.SeveralGoodOptions)
             {
-                if (HasMeaningfulAlternativeDifference(raid.Alternatives))
+                if (HasGameplayTradeoff(raid.Alternatives))
                     return Value(
                         PlannerCapabilityDecisionValueKind.TradeoffClarified,
                         true,
                         true,
-                        "Planner exposes competing proven advantages instead of forcing an arbitrary winner.");
+                        "Planner exposes competing proven gameplay advantages instead of forcing an arbitrary winner.");
 
                 return Value(
                     PlannerCapabilityDecisionValueKind.NavigationOnly,
                     false,
                     false,
-                    "Several raid options remain, but no meaningful trade-off beyond prerequisite location has been proven.");
+                    "Several raid options remain, but no gameplay trade-off beyond prerequisite location has been proven.");
             }
 
             if (raid.Kind == PlannerRaidDecisionPresentationKind.BestNextRaid && raid.Primary != null)
@@ -123,7 +123,7 @@ namespace SPTQuestPlanner.Client
                 "The result identifies where prerequisite work can be done, but no additional decision-changing evidence is proven.");
         }
 
-        private static bool HasMeaningfulAlternativeDifference(IReadOnlyList<PlannerRaidDecisionExplanation> alternatives)
+        private static bool HasGameplayTradeoff(IReadOnlyList<PlannerRaidDecisionExplanation> alternatives)
         {
             if (alternatives == null || alternatives.Count < 2) return false;
 
@@ -136,8 +136,6 @@ namespace SPTQuestPlanner.Client
                 if (first.HasProgressionLeverage != other.HasProgressionLeverage) return true;
                 if (first.PreparationReady != other.PreparationReady) return true;
                 if (first.MissingPreparationTemplateCount != other.MissingPreparationTemplateCount) return true;
-                if (first.UnresolvedPreparationCount != other.UnresolvedPreparationCount) return true;
-                if (Math.Abs(first.EvidenceCoverage - other.EvidenceCoverage) > 0.000001d) return true;
             }
             return false;
         }
