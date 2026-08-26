@@ -76,7 +76,14 @@ public static class PlannerEvaluator
                 blockers.Add(edge.SourceQuestId);
             }
 
-            PlannerQuestDisposition disposition = Classify(profileState, levelSatisfied, prerequisitesSatisfied);
+            if (!node.StartConditionCoverageComplete && profileState is QuestState.Locked or QuestState.Unknown)
+                warnings.Add($"Quest {node.QuestId}: hypothetical reachability suppressed because AvailableForStart contains unsupported condition types");
+
+            PlannerQuestDisposition disposition = Classify(
+                profileState,
+                levelSatisfied,
+                prerequisitesSatisfied,
+                node.StartConditionCoverageComplete);
 
             evaluations[node.QuestId] = new QuestEvaluation(
                 node.QuestId,
@@ -94,7 +101,8 @@ public static class PlannerEvaluator
     private static PlannerQuestDisposition Classify(
         QuestState profileState,
         bool levelSatisfied,
-        bool prerequisitesSatisfied)
+        bool prerequisitesSatisfied,
+        bool startConditionCoverageComplete)
     {
         return profileState switch
         {
@@ -103,7 +111,7 @@ public static class PlannerEvaluator
             QuestState.Available => PlannerQuestDisposition.Available,
             QuestState.Failed => PlannerQuestDisposition.Failed,
             QuestState.Unknown => PlannerQuestDisposition.Unknown,
-            _ when levelSatisfied && prerequisitesSatisfied => PlannerQuestDisposition.Reachable,
+            _ when levelSatisfied && prerequisitesSatisfied && startConditionCoverageComplete => PlannerQuestDisposition.Reachable,
             _ => PlannerQuestDisposition.Blocked
         };
     }
