@@ -55,16 +55,24 @@ class WeaponAmmoAuthoredSpecTests(unittest.TestCase):
                 "sampleAmmoBeforeUnlock": True,
                 "controlledAmmoUnlocksOnly": True,
                 "maximumPermanentUnlocksPerQuest": 1,
-                "maximumFamilyQuestCount": 3,
+                "currentBackboneStagesPerFamily": 3,
+                "questCountPolicy": "no-artificial-cap-quality-gated-expansion",
+                "preserveStrongAuthoredConceptsRegardlessOfCampaignSize": True,
             },
             "families": families,
         }
 
-    def test_accepts_compact_seven_family_model(self):
+    def test_accepts_current_seven_family_backbone(self):
         result = module.validate(self.make_spec(), self.make_policy())
         self.assertEqual(result["familyCount"], 7)
         self.assertEqual(result["questCount"], 21)
         self.assertEqual(result["unlockCount"], 6)
+
+    def test_rejects_artificial_count_cap_policy_drift(self):
+        spec_data = self.make_spec()
+        spec_data["designRules"]["questCountPolicy"] = "fixed-cap"
+        with self.assertRaises(SystemExit):
+            module.validate(spec_data, self.make_policy())
 
     def test_rejects_three_count_only_stage_models(self):
         spec_data = self.make_spec()
