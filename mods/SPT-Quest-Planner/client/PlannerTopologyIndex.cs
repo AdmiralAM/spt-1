@@ -5,6 +5,33 @@ using System.Reflection;
 
 namespace SPTQuestPlanner.Client
 {
+    public sealed class PlannerTopologyPrerequisite
+    {
+        public PlannerTopologyPrerequisite(
+            string sourceQuestId,
+            string targetQuestId,
+            IReadOnlyList<int> acceptedProfileStates,
+            int availableAfterSeconds)
+        {
+            SourceQuestId = sourceQuestId ?? string.Empty;
+            TargetQuestId = targetQuestId ?? string.Empty;
+            AcceptedProfileStates = acceptedProfileStates ?? Array.Empty<int>();
+            AvailableAfterSeconds = Math.Max(0, availableAfterSeconds);
+        }
+
+        public string SourceQuestId { get; private set; }
+        public string TargetQuestId { get; private set; }
+        public IReadOnlyList<int> AcceptedProfileStates { get; private set; }
+        public int AvailableAfterSeconds { get; private set; }
+
+        public bool AcceptsProfileState(int profileState)
+        {
+            for (int i = 0; i < AcceptedProfileStates.Count; i++)
+                if (AcceptedProfileStates[i] == profileState) return true;
+            return false;
+        }
+    }
+
     public sealed class PlannerTopologyQuest
     {
         public PlannerTopologyQuest(
@@ -15,7 +42,10 @@ namespace SPTQuestPlanner.Client
             bool repeatable,
             IReadOnlyList<string> prerequisiteQuestIds,
             IReadOnlyList<string> dependentQuestIds,
-            IReadOnlyList<string> requiredTemplateIds)
+            IReadOnlyList<string> requiredTemplateIds,
+            bool startConditionCoverageComplete = true,
+            IReadOnlyList<PlannerTopologyPrerequisite> prerequisiteEdges = null,
+            IReadOnlyList<PlannerTopologyPrerequisite> dependentEdges = null)
         {
             QuestId = questId ?? string.Empty;
             TraderId = traderId;
@@ -25,6 +55,9 @@ namespace SPTQuestPlanner.Client
             PrerequisiteQuestIds = prerequisiteQuestIds ?? Array.Empty<string>();
             DependentQuestIds = dependentQuestIds ?? Array.Empty<string>();
             RequiredTemplateIds = requiredTemplateIds ?? Array.Empty<string>();
+            StartConditionCoverageComplete = startConditionCoverageComplete;
+            PrerequisiteEdges = prerequisiteEdges ?? BuildDefaultPrerequisiteEdges(QuestId, PrerequisiteQuestIds);
+            DependentEdges = dependentEdges ?? BuildDefaultDependentEdges(QuestId, DependentQuestIds);
         }
 
         public string QuestId { get; private set; }
@@ -35,6 +68,29 @@ namespace SPTQuestPlanner.Client
         public IReadOnlyList<string> PrerequisiteQuestIds { get; private set; }
         public IReadOnlyList<string> DependentQuestIds { get; private set; }
         public IReadOnlyList<string> RequiredTemplateIds { get; private set; }
+        public bool StartConditionCoverageComplete { get; private set; }
+        public IReadOnlyList<PlannerTopologyPrerequisite> PrerequisiteEdges { get; private set; }
+        public IReadOnlyList<PlannerTopologyPrerequisite> DependentEdges { get; private set; }
+
+        private static IReadOnlyList<PlannerTopologyPrerequisite> BuildDefaultPrerequisiteEdges(
+            string targetQuestId,
+            IReadOnlyList<string> sourceQuestIds)
+        {
+            PlannerTopologyPrerequisite[] result = new PlannerTopologyPrerequisite[sourceQuestIds.Count];
+            for (int i = 0; i < result.Length; i++)
+                result[i] = new PlannerTopologyPrerequisite(sourceQuestIds[i], targetQuestId, new[] { 4 }, 0);
+            return result;
+        }
+
+        private static IReadOnlyList<PlannerTopologyPrerequisite> BuildDefaultDependentEdges(
+            string sourceQuestId,
+            IReadOnlyList<string> targetQuestIds)
+        {
+            PlannerTopologyPrerequisite[] result = new PlannerTopologyPrerequisite[targetQuestIds.Count];
+            for (int i = 0; i < result.Length; i++)
+                result[i] = new PlannerTopologyPrerequisite(sourceQuestId, targetQuestIds[i], new[] { 4 }, 0);
+            return result;
+        }
     }
 
     public sealed class PlannerTopologyItem
@@ -92,7 +148,8 @@ namespace SPTQuestPlanner.Client
                     ReadString(Get(node, "traderId")),
                     ReadString(Get(node, "nameKey")),
                     ReadNullableInt(Get(node, "minimumLevel")),
-                    ReadBool(Get(node, "repeatable"), false));
+                    ReadBool(Get(node, "repeatable"), false),
+                    ReadBool(Get(node, "startConditionCoverageComplete"), true));
             }
 
             foreach (object edge in Values(Get(root, "prerequisites")))
@@ -104,8 +161,18 @@ namespace SPTQuestPlanner.Client
                 if (!string.IsNullOrWhiteSpace(source) && !string.IsNullOrWhiteSpace(target) &&
                     quests.TryGetValue(source, out sourceQuest) && quests.TryGetValue(target, out targetQuest))
                 {
+                    int[] acceptedProfileStates = ReadProfileStates(Get(edge, "acceptedSourceStates"));
+                    int availableAfterSeconds = Math.Max(0, ReadInt(Get(edge, "availableAfterSeconds"), 0));
+                    PlannerTopologyPrerequisite prerequisite = new PlannerTopologyPrerequisite(
+                        source,
+                        target,
+                        acceptedProfileStates,
+                        availableAfterSeconds);
+
                     targetQuest.Prerequisites.Add(source);
                     sourceQuest.Dependents.Add(target);
+                    targetQuest.PrerequisiteEdges.Add(prerequisite);
+                    sourceQuest.DependentEdges.Add(prerequisite);
                 }
             }
 
@@ -142,7 +209,10 @@ namespace SPTQuestPlanner.Client
                     value.Repeatable,
                     Sorted(value.Prerequisites),
                     Sorted(value.Dependents),
-                    Sorted(value.RequiredTemplates));
+                    Sorted(value.RequiredTemplates),
+                    value.StartConditionCoverageComplete,
+                    SortedEdges(value.PrerequisiteEdges),
+                    SortedEdges(value.DependentEdges));
             }
 
             Dictionary<string, PlannerTopologyItem> frozenItems = new Dictionary<string, PlannerTopologyItem>(StringComparer.Ordinal);
@@ -158,6 +228,46 @@ namespace SPTQuestPlanner.Client
             values.CopyTo(result);
             Array.Sort(result, StringComparer.Ordinal);
             return result;
+        }
+
+        private static PlannerTopologyPrerequisite[] SortedEdges(List<PlannerTopologyPrerequisite> values)
+        {
+            PlannerTopologyPrerequisite[] result = values.ToArray();
+            Array.Sort(result, (a, b) =>
+            {
+                int source = string.Compare(a.SourceQuestId, b.SourceQuestId, StringComparison.Ordinal);
+                if (source != 0) return source;
+                int target = string.Compare(a.TargetQuestId, b.TargetQuestId, StringComparison.Ordinal);
+                if (target != 0) return target;
+                return a.AvailableAfterSeconds.CompareTo(b.AvailableAfterSeconds);
+            });
+            return result;
+        }
+
+        private static int[] ReadProfileStates(object token)
+        {
+            List<int> values = new List<int>();
+            foreach (object node in Values(token))
+            {
+                int parsed;
+                if (TryReadProfileState(node, out parsed) && !values.Contains(parsed)) values.Add(parsed);
+            }
+            values.Sort();
+            return values.ToArray();
+        }
+
+        private static bool TryReadProfileState(object token, out int value)
+        {
+            string text = ReadString(token);
+            if (int.TryParse(text, out value)) return value >= 0 && value <= 5;
+            if (string.Equals(text, "Unknown", StringComparison.OrdinalIgnoreCase)) { value = 0; return true; }
+            if (string.Equals(text, "Locked", StringComparison.OrdinalIgnoreCase)) { value = 1; return true; }
+            if (string.Equals(text, "Available", StringComparison.OrdinalIgnoreCase)) { value = 2; return true; }
+            if (string.Equals(text, "Started", StringComparison.OrdinalIgnoreCase)) { value = 3; return true; }
+            if (string.Equals(text, "Success", StringComparison.OrdinalIgnoreCase)) { value = 4; return true; }
+            if (string.Equals(text, "Failed", StringComparison.OrdinalIgnoreCase)) { value = 5; return true; }
+            value = 0;
+            return false;
         }
 
         private static object Parse(string json)
@@ -195,6 +305,7 @@ namespace SPTQuestPlanner.Client
 
         private static string ReadString(object token) { return token == null ? null : token.ToString(); }
         private static bool ReadBool(object token, bool fallback) { bool value; return bool.TryParse(ReadString(token), out value) ? value : fallback; }
+        private static int ReadInt(object token, int fallback) { int value; return int.TryParse(ReadString(token), out value) ? value : fallback; }
         private static int? ReadNullableInt(object token) { int value; return int.TryParse(ReadString(token), out value) ? (int?)value : null; }
 
         private static Type FindType(string fullName)
@@ -214,13 +325,20 @@ namespace SPTQuestPlanner.Client
 
         private sealed class MutableQuest
         {
-            public MutableQuest(string questId, string traderId, string nameKey, int? minimumLevel, bool repeatable)
+            public MutableQuest(
+                string questId,
+                string traderId,
+                string nameKey,
+                int? minimumLevel,
+                bool repeatable,
+                bool startConditionCoverageComplete)
             {
                 QuestId = questId;
                 TraderId = traderId;
                 NameKey = nameKey;
                 MinimumLevel = minimumLevel;
                 Repeatable = repeatable;
+                StartConditionCoverageComplete = startConditionCoverageComplete;
             }
 
             public string QuestId;
@@ -228,9 +346,12 @@ namespace SPTQuestPlanner.Client
             public string NameKey;
             public int? MinimumLevel;
             public bool Repeatable;
+            public bool StartConditionCoverageComplete;
             public HashSet<string> Prerequisites = new HashSet<string>(StringComparer.Ordinal);
             public HashSet<string> Dependents = new HashSet<string>(StringComparer.Ordinal);
             public HashSet<string> RequiredTemplates = new HashSet<string>(StringComparer.Ordinal);
+            public List<PlannerTopologyPrerequisite> PrerequisiteEdges = new List<PlannerTopologyPrerequisite>();
+            public List<PlannerTopologyPrerequisite> DependentEdges = new List<PlannerTopologyPrerequisite>();
         }
     }
 }
