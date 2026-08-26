@@ -36,6 +36,11 @@ public sealed class RuntimeCandidateAssort(TradersTable tradersTable, ISptLogger
                 || !string.Equals(existing.SlotId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal))
                 throw new InvalidOperationException("B&A&HB RC assort ID collision: existing offer points to a different item or hierarchy.");
 
+            if (existing.Upd == null
+                || existing.Upd.UnlimitedCount != true
+                || existing.Upd.StackObjectsCount != RuntimeCandidateOfferContract.UnlimitedStock)
+                throw new InvalidOperationException("B&A&HB RC assort ID collision: existing offer stock policy differs from the runtime-candidate contract.");
+
             if (!trader.Assort.BarterScheme.TryGetValue(id, out var schemes)
                 || schemes.Count != 1
                 || schemes[0].Count != 1
