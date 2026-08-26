@@ -52,6 +52,20 @@ public sealed record ValueColorConfig
     public double AmmoVioletMaxPen { get; init; } = 50;
     public double AmmoRedMaxPen { get; init; } = 70;
 
+    // Restored from AcidPhantasm's dedicated key scale.
+    public double KeyBadMaxValue { get; init; } = 10000;
+    public double KeyPoorMaxValue { get; init; } = 20000;
+    public double KeyFairMaxValue { get; init; } = 30000;
+    public double KeyGoodMaxValue { get; init; } = 50000;
+    public double KeyVeryGoodMaxValue { get; init; } = 75000;
+    public string KeyBadColor { get; init; } = "#404040";
+    public string KeyPoorColor { get; init; } = "#a3a3a3";
+    public string KeyFairColor { get; init; } = "#0c3b08";
+    public string KeyGoodColor { get; init; } = "#08083b";
+    public string KeyVeryGoodColor { get; init; } = "#590b5e";
+    public string KeyExceptionalColor { get; init; } = "#5e470b";
+    public string KeyFleaBannedColor { get; init; } = "#660415";
+
     public string LightGreenColor { get; init; } = "#526B3F";
     public string GreenColor { get; init; } = "#294F31";
     public string NavyColor { get; init; } = "#253552";
@@ -71,7 +85,17 @@ public sealed record ValueColorConfig
               AmmoVioletMaxPen < AmmoRedMaxPen))
             throw new InvalidDataException("Item Valuation ammo penetration thresholds must be non-negative and strictly ascending.");
 
-        string[] colors = [LightGreenColor, GreenColor, NavyColor, VioletColor, RedColor, GoldColor];
+        if (!(0 <= KeyBadMaxValue && KeyBadMaxValue < KeyPoorMaxValue &&
+              KeyPoorMaxValue < KeyFairMaxValue && KeyFairMaxValue < KeyGoodMaxValue &&
+              KeyGoodMaxValue < KeyVeryGoodMaxValue))
+            throw new InvalidDataException("Item Valuation key thresholds must be non-negative and strictly ascending.");
+
+        string[] colors =
+        [
+            LightGreenColor, GreenColor, NavyColor, VioletColor, RedColor, GoldColor,
+            KeyBadColor, KeyPoorColor, KeyFairColor, KeyGoodColor, KeyVeryGoodColor,
+            KeyExceptionalColor, KeyFleaBannedColor
+        ];
         if (colors.Any(string.IsNullOrWhiteSpace))
             throw new InvalidDataException("Item Valuation colors must not be empty.");
     }
@@ -99,6 +123,18 @@ public static class TierClassifier
         if (penetration <= config.AmmoRedMaxPen) return config.RedColor;
         return config.GoldColor;
     }
+
+    public static string GetKeyColor(double price, bool validFleaItem, ValueColorConfig config)
+    {
+        // Original key behavior: flea-banned keys override the monetary tier.
+        if (!validFleaItem) return config.KeyFleaBannedColor;
+        if (price < config.KeyBadMaxValue) return config.KeyBadColor;
+        if (price < config.KeyPoorMaxValue) return config.KeyPoorColor;
+        if (price < config.KeyFairMaxValue) return config.KeyFairColor;
+        if (price < config.KeyGoodMaxValue) return config.KeyGoodColor;
+        if (price < config.KeyVeryGoodMaxValue) return config.KeyVeryGoodColor;
+        return config.KeyExceptionalColor;
+    }
 }
 
 [Injectable(TypePriority = OnLoadOrder.PostLoad), UsedImplicitly]
@@ -114,7 +150,6 @@ public sealed class ItemValuationBackgroundLoader(
     private static readonly MongoId[] TotalValueBaseClasses =
     [
         BaseClasses.WEAPON,
-        BaseClasses.KEY,
         BaseClasses.ARMORED_EQUIPMENT,
         BaseClasses.VEST
     ];
@@ -128,6 +163,7 @@ public sealed class ItemValuationBackgroundLoader(
 
         int coloredMoney = 0;
         int coloredAmmo = 0;
+        int coloredKeys = 0;
         int preserved = 0;
         int traderWon = 0;
         int fleaWon = 0;
@@ -151,6 +187,21 @@ public sealed class ItemValuationBackgroundLoader(
                 }
                 properties.BackgroundColor = ammoColor;
                 coloredAmmo++;
+                continue;
+            }
+
+            if (itemHelper.IsOfBaseclass(templateId, BaseClasses.KEY))
+            {
+                double keyPrice;
+                if (!templateTable.Prices.TryGetValue(templateId, out keyPrice) || keyPrice <= 0)
+                {
+                    if (!handbookPrices.TryGetValue(templateId, out keyPrice) || keyPrice <= 0)
+                        continue;
+                }
+
+                bool validFleaItem = ragfairServerHelper.IsItemValidRagfairItem(itemHelper.GetItem(templateId));
+                properties.BackgroundColor = TierClassifier.GetKeyColor(keyPrice, validFleaItem, config);
+                coloredKeys++;
                 continue;
             }
 
@@ -193,7 +244,7 @@ public sealed class ItemValuationBackgroundLoader(
         }
 
         logger.Success(
-            $"{RuntimeIdentity.ProductName} {RuntimeIdentity.Version}: money-colored {coloredMoney}, ammo-colored {coloredAmmo}, " +
+            $"{RuntimeIdentity.ProductName} {RuntimeIdentity.Version}: money-colored {coloredMoney}, ammo-colored {coloredAmmo}, key-colored {coloredKeys}, " +
             $"preserved {preserved} below money/ammo tint thresholds; value source wins trader={traderWon}, flea={fleaWon}, handbook={handbookFallback}; " +
             "single PostLoad pass, BackgroundColor only, no client patches or runtime polling");
         return Task.CompletedTask;
