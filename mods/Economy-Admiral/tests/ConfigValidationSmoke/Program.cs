@@ -57,6 +57,7 @@ static void JsonMustFail(string name, string json)
 }
 
 MustPass("defaults", new EconomyConfig());
+MustPass("opt-in bounded item stack normalization", new EconomyConfig { EnableItemRewardStackNormalization = true });
 foreach (var preset in Enum.GetValues<EconomyPreset>()) MustPass($"preset {preset}", new EconomyConfig { Preset = preset });
 MustPass("supported exceptional override", new EconomyConfig
 {
@@ -99,6 +100,7 @@ MustFail("null overrides object", new EconomyConfig { ManualOverrides = null! })
 
 JsonMustPass("minimal JSON", "{}");
 JsonMustPass("case-insensitive known keys", "{\"MODE\":\"Audit\",\"PRESET\":\"Normal\"}");
+JsonMustPass("opt-in bounded item stack JSON", "{\"enableItemRewardStackNormalization\":true}");
 foreach (var preset in new[] { "Easy", "Normal", "Hard", "Custom" }) JsonMustPass($"JSON preset {preset}", $"{{\"preset\":\"{preset}\"}}");
 JsonMustFail("enabled repeated raid loot decay", "{\"repeatedRaidLootDecay\":true}");
 JsonMustFail("numeric mode", "{\"mode\":1}");
