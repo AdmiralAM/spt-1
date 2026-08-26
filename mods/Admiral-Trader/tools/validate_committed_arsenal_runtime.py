@@ -30,6 +30,30 @@ def load_committed(directory: Path, expected_ids: set[str]) -> dict[str, dict[st
     return result
 
 
+def validate_readiness(qid: str, quest: dict[str, Any], finish: dict[str, Any]) -> None:
+    if quest.get("type") != "PickUp":
+        raise ValueError(f"Arsenal Qualification {qid} must use PickUp quest type")
+    if finish.get("conditionType") != "FindItem":
+        raise ValueError(f"Arsenal Qualification {qid} must use FindItem readiness proof")
+    if finish.get("onlyFoundInRaid") is not False:
+        raise ValueError(f"Arsenal Qualification {qid} must not require FIR")
+    if finish.get("value") != 1 or not finish.get("target"):
+        raise ValueError(f"Arsenal Qualification {qid} must require one weapon from a non-empty family pool")
+
+
+def validate_elimination(qid: str, quest: dict[str, Any], finish: dict[str, Any]) -> None:
+    if quest.get("type") != "Elimination":
+        raise ValueError(f"Arsenal combat quest {qid} must use Elimination quest type")
+    if finish.get("conditionType") != "CounterCreator":
+        raise ValueError(f"Arsenal combat quest {qid} must contain one CounterCreator")
+    counter_conditions = (finish.get("counter") or {}).get("conditions") or []
+    if len(counter_conditions) != 1:
+        raise ValueError(f"Arsenal combat quest {qid} must contain one counter condition")
+    kill = counter_conditions[0]
+    if kill.get("conditionType") != "Kills" or not kill.get("weapon"):
+        raise ValueError(f"Arsenal combat quest {qid} has invalid Kills weapon filter")
+
+
 def validate(committed: dict[str, dict[str, Any]], generated: dict[str, Any]) -> None:
     templates = generated.get("templates") or {}
     if len(templates) != 21:
@@ -39,26 +63,38 @@ def validate(committed: dict[str, dict[str, Any]], generated: dict[str, Any]) ->
         extra = sorted(set(committed) - set(templates))
         raise ValueError(f"Arsenal committed/generated id drift; missing={missing}; extra={extra}")
 
+    readiness_count = 0
+    combat_count = 0
+    caliber_proof_count = 0
     for qid in sorted(templates):
         quest = committed[qid]
         if quest != templates[qid]:
             raise ValueError(f"committed Arsenal quest differs from compiler output: {qid}")
         if quest.get("traderId") != TRADER_ID:
             raise ValueError(f"Arsenal quest {qid} trader id drift")
-        if quest.get("restartable") is not False or quest.get("type") != "Elimination":
-            raise ValueError(f"Arsenal quest {qid} type/restartability drift")
+        if quest.get("restartable") is not False:
+            raise ValueError(f"Arsenal quest {qid} restartability drift")
         finish = (quest.get("conditions") or {}).get("AvailableForFinish") or []
-        if len(finish) != 1 or finish[0].get("conditionType") != "CounterCreator":
-            raise ValueError(f"Arsenal quest {qid} must contain one CounterCreator")
-        counter_conditions = (finish[0].get("counter") or {}).get("conditions") or []
-        if len(counter_conditions) != 1:
-            raise ValueError(f"Arsenal quest {qid} must contain one counter condition")
-        kill = counter_conditions[0]
-        if kill.get("conditionType") != "Kills" or not kill.get("weapon"):
-            raise ValueError(f"Arsenal quest {qid} has invalid Kills weapon filter")
-        finish_types = {condition.get("conditionType") for condition in finish}
-        if "FindItem" in finish_types or "HandoverItem" in finish_types:
-            raise ValueError(f"Arsenal quest {qid} leaked item grind")
+        if len(finish) != 1:
+            raise ValueError(f"Arsenal quest {qid} must contain exactly one finish condition")
+        condition = finish[0]
+        if condition.get("conditionType") == "FindItem":
+            validate_readiness(qid, quest, condition)
+            readiness_count += 1
+            continue
+
+        validate_elimination(qid, quest, condition)
+        combat_count += 1
+        kill = ((condition.get("counter") or {}).get("conditions") or [{}])[0]
+        if kill.get("weaponCaliber"):
+            caliber_proof_count += 1
+
+    if readiness_count != 7:
+        raise ValueError(f"expected seven Arsenal Qualification readiness proofs, got {readiness_count}")
+    if combat_count != 14:
+        raise ValueError(f"expected fourteen Arsenal combat quests, got {combat_count}")
+    if caliber_proof_count != 6:
+        raise ValueError(f"expected six caliber-constrained Munitions proofs, got {caliber_proof_count}")
 
     deferred = generated.get("deferredRuntimeItems") or []
     if deferred:
@@ -86,7 +122,7 @@ def main() -> int:
     expected_ids = {str(qid) for qid in (generated.get("templates") or {})}
     committed = load_committed(args.quest_dir, expected_ids)
     validate(committed, generated)
-    print("validated 21 committed Arsenal Protocol quest templates with resolved Special Weapons sample")
+    print("validated 21 committed Arsenal Protocol templates: 7 readiness + 14 combat, 6 caliber-constrained Munitions proofs")
     return 0
 
 
