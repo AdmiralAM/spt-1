@@ -30,12 +30,12 @@ namespace SPTBeltArmbandInventory
     {
         sealed class PendingRefresh
         {
-            internal readonly object View;
+            internal readonly WeakReference View;
             internal object RemovedContainer;
 
             internal PendingRefresh(object view, object removedContainer)
             {
-                View = view;
+                View = new WeakReference(view);
                 RemovedContainer = removedContainer;
             }
         }
@@ -74,7 +74,13 @@ namespace SPTBeltArmbandInventory
 
                 for (int i = 0; i < PendingViews.Count; i++)
                 {
-                    if (!ReferenceEquals(PendingViews[i].View, view)) continue;
+                    object pendingView = PendingViews[i].View.Target;
+                    if (pendingView == null)
+                    {
+                        PendingViews.RemoveAt(i--);
+                        continue;
+                    }
+                    if (!ReferenceEquals(pendingView, view)) continue;
                     if (!added) PendingViews[i].RemovedContainer = item;
                     return;
                 }
@@ -88,14 +94,16 @@ namespace SPTBeltArmbandInventory
 
         internal static void Flush()
         {
-            if (PendingViews.Count == 0 || ControllerField == null || ItemUiContextField == null || ShowMethod == null) return;
+            if (PendingViews.Count == 0) return;
 
             PendingRefresh[] pending = PendingViews.ToArray();
             PendingViews.Clear();
+            if (ControllerField == null || ItemUiContextField == null || ShowMethod == null) return;
             for (int i = 0; i < pending.Length; i++)
             {
                 PendingRefresh refresh = pending[i];
-                object view = refresh.View;
+                object view = refresh.View.Target;
+                if (view == null) continue;
                 try
                 {
                     object controller = ControllerField.GetValue(view);

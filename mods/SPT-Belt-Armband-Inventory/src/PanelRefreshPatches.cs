@@ -87,6 +87,7 @@ namespace SPTBeltArmbandInventory
 
         internal static void Flush()
         {
+            PruneDeadPanels();
             if (!pending || refreshing || PanelShowMethod == null || PanelCloseMethod == null) return;
             pending = false;
 
@@ -115,12 +116,21 @@ namespace SPTBeltArmbandInventory
                 }
                 catch (Exception exception)
                 {
+                    Panels.Remove(state);
                     if (LogWarning != null) LogWarning("Could not refresh BELT projection after ArmBand change: " + Unwrap(exception).Message);
                 }
                 finally
                 {
                     refreshing = false;
                 }
+            }
+        }
+
+        static void PruneDeadPanels()
+        {
+            for (int i = Panels.Count - 1; i >= 0; i--)
+            {
+                if (Panels[i].Panel.Target == null) Panels.RemoveAt(i);
             }
         }
 
