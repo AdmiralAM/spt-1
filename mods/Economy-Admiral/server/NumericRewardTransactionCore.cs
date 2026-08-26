@@ -4,6 +4,42 @@ public sealed class NumericRewardSlot(Func<double> read, Action<double> write)
 {
     public double Read() => read();
     public void Write(double value) => write(value);
+
+    public static NumericRewardSlot SynchronizedPair(
+        Func<double> primaryRead,
+        Action<double> primaryWrite,
+        Func<double> mirrorRead,
+        Action<double> mirrorWrite,
+        string label,
+        double tolerance = 0.001)
+    {
+        ArgumentNullException.ThrowIfNull(primaryRead);
+        ArgumentNullException.ThrowIfNull(primaryWrite);
+        ArgumentNullException.ThrowIfNull(mirrorRead);
+        ArgumentNullException.ThrowIfNull(mirrorWrite);
+        if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Synchronized numeric slot label must not be empty.", nameof(label));
+        if (!double.IsFinite(tolerance) || tolerance < 0) throw new ArgumentOutOfRangeException(nameof(tolerance));
+
+        double ReadSynchronized()
+        {
+            var primary = primaryRead();
+            var mirror = mirrorRead();
+            if (!double.IsFinite(primary) || !double.IsFinite(mirror))
+                throw new InvalidOperationException($"{label} synchronized values must be finite: primary={primary}, mirror={mirror}.");
+            if (Math.Abs(primary - mirror) > tolerance)
+                throw new InvalidOperationException($"{label} synchronized values mismatch: primary={primary}, mirror={mirror}.");
+            return primary;
+        }
+
+        void WriteSynchronized(double value)
+        {
+            if (!double.IsFinite(value)) throw new InvalidOperationException($"{label} synchronized write value must be finite.");
+            primaryWrite(value);
+            mirrorWrite(value);
+        }
+
+        return new NumericRewardSlot(ReadSynchronized, WriteSynchronized);
+    }
 }
 
 public sealed record NumericRewardTransactionRequest
