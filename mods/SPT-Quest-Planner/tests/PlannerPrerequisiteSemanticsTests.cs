@@ -9,7 +9,7 @@ namespace SPTQuestPlanner.Tests
     public sealed class PlannerPrerequisiteSemanticsTests
     {
         [Fact]
-        public void Extract_PreservesAcceptedStatusesAndAvailableAfter()
+        public void Extract_PreservesAcceptedStatusesRawStatusesAndAvailableAfter()
         {
             var quests = new Dictionary<string, object>
             {
@@ -21,7 +21,7 @@ namespace SPTQuestPlanner.Tests
                         ["conditionType"] = "Quest",
                         ["id"] = "edge",
                         ["target"] = "source",
-                        ["status"] = new object[] { 2, 4 },
+                        ["status"] = new object[] { 2, 3, 4 },
                         ["availableAfter"] = 3600
                     }
                 })
@@ -32,7 +32,58 @@ namespace SPTQuestPlanner.Tests
             PrerequisiteEdge edge = Assert.Single(result.Prerequisites);
             Assert.Contains(QuestState.Started, edge.AcceptedSourceStates);
             Assert.Contains(QuestState.Success, edge.AcceptedSourceStates);
+            Assert.Equal(new[] { 2, 3, 4 }, edge.AcceptedSourceRawStatuses);
             Assert.Equal(3600, edge.AvailableAfterSeconds);
+        }
+
+        [Fact]
+        public void Evaluate_DistinguishesRawStartedFromAvailableForFinish()
+        {
+            PrerequisiteEdge edge = new PrerequisiteEdge(
+                "source",
+                "target",
+                new HashSet<QuestState> { QuestState.Started },
+                AcceptedSourceRawStatuses: new HashSet<int> { 3 });
+            (PlannerGraph graph, _) = PlannerGraph.Build(
+                new[]
+                {
+                    new QuestNode("source", null, null, null, false),
+                    new QuestNode("target", null, null, null, false)
+                },
+                new[] { edge });
+
+            PlayerProjection rawStarted = Projection(
+                new PlayerQuestState("source", QuestState.Started, 2, null, null));
+            PlayerProjection rawFinish = Projection(
+                new PlayerQuestState("source", QuestState.Started, 3, null, null));
+
+            PlannerEvaluationResult startedResult = PlannerEvaluator.Evaluate(graph, Array.Empty<ItemRequirement>(), rawStarted);
+            PlannerEvaluationResult finishResult = PlannerEvaluator.Evaluate(graph, Array.Empty<ItemRequirement>(), rawFinish);
+
+            Assert.False(startedResult.Quests["target"].PrerequisitesSatisfied);
+            Assert.Equal(PlannerQuestDisposition.Blocked, startedResult.Quests["target"].Disposition);
+            Assert.True(finishResult.Quests["target"].PrerequisitesSatisfied);
+            Assert.Equal(PlannerQuestDisposition.Reachable, finishResult.Quests["target"].Disposition);
+        }
+
+        [Fact]
+        public void ClientQuery_DistinguishesRawStartedFromAvailableForFinish()
+        {
+            PlannerTopologyPrerequisite edge = new PlannerTopologyPrerequisite(
+                "source", "target", new[] { 3 }, 0, new[] { 3 });
+            PlannerTopologyIndex topology = Topology(
+                QuestNodeClient("source", Array.Empty<PlannerTopologyPrerequisite>(), new[] { edge }),
+                QuestNodeClient("target", new[] { edge }, Array.Empty<PlannerTopologyPrerequisite>()));
+
+            PlannerClientIndex rawStarted = ClientState(
+                new PlannerQuestClientState("source", 4, 3, true, true, rawProfileStatus: 2),
+                new PlannerQuestClientState("target", 1, 1, true, false, rawProfileStatus: 0));
+            PlannerClientIndex rawFinish = ClientState(
+                new PlannerQuestClientState("source", 4, 3, true, true, rawProfileStatus: 3),
+                new PlannerQuestClientState("target", 1, 1, true, false, rawProfileStatus: 0));
+
+            Assert.Equal(new[] { "source" }, new PlannerQueryEngine(topology, rawStarted).GetImmediateBlockers("target"));
+            Assert.Empty(new PlannerQueryEngine(topology, rawFinish).GetImmediateBlockers("target"));
         }
 
         [Fact]
@@ -125,6 +176,24 @@ namespace SPTQuestPlanner.Tests
                 new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal));
 
             Assert.Empty(new PlannerQueryEngine(topology, state).GetImmediateUnlocksIfCompleted("source"));
+        }
+
+        private static PlayerProjection Projection(params PlayerQuestState[] states)
+        {
+            Dictionary<string, PlayerQuestState> quests = new Dictionary<string, PlayerQuestState>(StringComparer.Ordinal);
+            foreach (PlayerQuestState state in states) quests[state.QuestId] = state;
+            return new PlayerProjection(
+                99,
+                quests,
+                new Dictionary<string, PlayerTaskConditionCounter>(StringComparer.Ordinal),
+                Array.Empty<string>());
+        }
+
+        private static PlannerClientIndex ClientState(params PlannerQuestClientState[] states)
+        {
+            Dictionary<string, PlannerQuestClientState> quests = new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal);
+            foreach (PlannerQuestClientState state in states) quests[state.QuestId] = state;
+            return new PlannerClientIndex(0, quests, new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal));
         }
 
         private static Dictionary<string, object> Quest(string id, IReadOnlyList<object> startConditions)
