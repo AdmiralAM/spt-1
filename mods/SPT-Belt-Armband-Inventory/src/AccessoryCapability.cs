@@ -18,19 +18,17 @@ namespace SPTBeltArmbandInventory
         ScavHostRestoration = 1 << 9
     }
 
-    // Runtime hosting and gameplay integrations are separate decisions. A proven
-    // equipment host does not implicitly authorize every integration, and a
-    // concept-only category cannot activate a capability by itself.
+    // Phase 1 is deliberately a magazine-only ArmBand container. Keep only the
+    // integrations that are useful for that exact item. Grenade/payment/panel
+    // projection capabilities stay defined for later variants but are not active
+    // until a concrete wearable actually needs them.
     internal static class AccessoryCapabilityPolicy
     {
         const AccessoryCapability ValidatedArmBandCapabilities =
-            AccessoryCapability.PanelProjection |
             AccessoryCapability.LootPriority |
             AccessoryCapability.UnloadPriority |
-            AccessoryCapability.GrenadeAccess |
             AccessoryCapability.FastAccess |
             AccessoryCapability.PickupFallback |
-            AccessoryCapability.PaymentSource |
             AccessoryCapability.BuildValidation |
             AccessoryCapability.DeathRetention |
             AccessoryCapability.ScavHostRestoration;
