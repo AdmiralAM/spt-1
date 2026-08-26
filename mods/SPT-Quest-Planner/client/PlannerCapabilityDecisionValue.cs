@@ -102,11 +102,18 @@ namespace SPTQuestPlanner.Client
 
             if (raid.Kind == PlannerRaidDecisionPresentationKind.BestNextRaid && raid.Primary != null)
             {
+                if (!raid.WasComparativeDecision)
+                    return Value(
+                        PlannerCapabilityDecisionValueKind.NavigationOnly,
+                        false,
+                        false,
+                        "The only available raid candidate may contain useful synergy or leverage, but no competing player choice was changed.");
+
                 List<string> evidence = new List<string>();
                 if (raid.Primary.HasCrossQuestSynergy)
-                    evidence.Add("The selected raid combines compatible work across multiple quests.");
+                    evidence.Add("The selected raid combines compatible work across multiple quests and wins over at least one competing raid candidate.");
                 if (raid.Primary.HasProgressionLeverage)
-                    evidence.Add("The selected raid has proven immediate progression leverage on the focused path.");
+                    evidence.Add("The selected raid has proven immediate progression leverage on the focused path and wins over at least one competing raid candidate.");
 
                 if (evidence.Count > 0)
                     return new PlannerCapabilityDecisionValue(
