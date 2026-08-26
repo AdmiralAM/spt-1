@@ -28,16 +28,27 @@ if ammo_thresholds != [10, 20, 40, 50, 70]:
 if "ammoGreenMaxPen" in config:
     fail("ammo green tier must remain absent")
 
+key_thresholds = [config["keyBadMaxValue"], config["keyPoorMaxValue"], config["keyFairMaxValue"], config["keyGoodMaxValue"], config["keyVeryGoodMaxValue"]]
+if key_thresholds != [10000, 20000, 30000, 50000, 75000]:
+    fail(f"original key thresholds drifted: {key_thresholds}")
+
 expected_colors = ["#526B3F", "#294F31", "#253552", "#4A3854", "#5A2C31", "#5C4825"]
 actual_colors = [config["lightGreenColor"], config["greenColor"], config["navyColor"], config["violetColor"], config["redColor"], config["goldColor"]]
 if actual_colors != expected_colors:
     fail(f"default tier colors drifted: {actual_colors}")
 
+expected_key_colors = ["#404040", "#a3a3a3", "#0c3b08", "#08083b", "#590b5e", "#5e470b", "#660415"]
+actual_key_colors = [config["keyBadColor"], config["keyPoorColor"], config["keyFairColor"], config["keyGoodColor"], config["keyVeryGoodColor"], config["keyExceptionalColor"], config["keyFleaBannedColor"]]
+if actual_key_colors != expected_key_colors:
+    fail(f"original key colors drifted: {actual_key_colors}")
+
 required_fragments = [
     "OnLoadOrder.PostLoad", "BaseClasses.AMMO", "properties.PenetrationPower",
-    "TierClassifier.GetAmmoColor", "TierClassifier.GetMoneyColor",
+    "TierClassifier.GetAmmoColor", "TierClassifier.GetMoneyColor", "TierClassifier.GetKeyColor",
     "if (penetration < config.AmmoTintStartPen) return null",
     "BaseClasses.WEAPON", "BaseClasses.KEY", "BaseClasses.ARMORED_EQUIPMENT", "BaseClasses.VEST",
+    "if (!validFleaItem) return config.KeyFleaBannedColor",
+    "templateTable.Prices.TryGetValue(templateId, out keyPrice)",
     "ResolveEconomicValue", "ResolveBestTraderPrice", "ragfairServerHelper.IsItemValidRagfairItem",
     "templateTable.Prices.TryGetValue", "presetHelper.GetDefaultPreset", "BuildHandbookPriceIndex",
     "templateTable.Handbook.Items", "Math.Round(value / slots, MidpointRounding.AwayFromZero)",
@@ -53,7 +64,7 @@ forbidden_patterns = {
     "polling/timers": r"setInterval|System\.Threading\.Timer|PeriodicTimer|Task\.Delay",
     "locale/name mutation": r"LocaleTable|ShortName\s*=|Description\s*=|\.Name\s*=",
     "armor semantic coloring": r"ArmorClass|validArmourSlots|GetArmourColour|GetMinMaxArmorPlateClass",
-    "flea-ban override color": r"FleaBannedColour|ColourFleaBanned",
+    "generic flea-ban override": r"FleaBannedColour|ColourFleaBannedItems|ColourFleaBannedAmmo|ColourFleaBannedArmour",
     "client ItemView hook": r"ItemView",
     "ammo green tier": r"AmmoGreenMaxPen",
 }
@@ -65,7 +76,7 @@ if re.search(r"\bDamage\b|DamageAndPen|ShortName", source):
     fail("ammo damage/name legacy behavior returned")
 
 assignments = re.findall(r"properties\.([A-Za-z0-9_]+)\s*=", source)
-if assignments != ["BackgroundColor", "BackgroundColor"]:
+if assignments != ["BackgroundColor", "BackgroundColor", "BackgroundColor"]:
     fail(f"template mutation surface must be BackgroundColor only; found {assignments}")
 
 if "<SptRuntimeTarget>4.1.3</SptRuntimeTarget>" not in project:
