@@ -13,6 +13,7 @@ public sealed class EconomyAuditService(
     TemplateTable templates,
     TradersTable traders,
     ModHelper modHelper,
+    EconomyRuntimeConfigService runtimeConfigService,
     ISptLogger<EconomyAuditService> logger
 )
 {
@@ -39,7 +40,7 @@ public sealed class EconomyAuditService(
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(EconomyAuditService).Assembly);
-        var config = await LoadConfigAsync(modPath, cancellationToken);
+        var config = await runtimeConfigService.GetAsync(cancellationToken);
 
         if (config.Mode == EconomyMode.Off)
         {
@@ -578,19 +579,6 @@ public sealed class EconomyAuditService(
 
         var fraction = position - lower;
         return Math.Round(sortedValues[lower] + ((sortedValues[upper] - sortedValues[lower]) * fraction), 2);
-    }
-
-    private static async Task<EconomyConfig> LoadConfigAsync(string modPath, CancellationToken cancellationToken)
-    {
-        var configPath = Path.Combine(modPath, "config", "config.json");
-        if (!File.Exists(configPath))
-        {
-            return new EconomyConfig();
-        }
-
-        await using var stream = File.OpenRead(configPath);
-        return await JsonSerializer.DeserializeAsync<EconomyConfig>(stream, JsonOptions, cancellationToken)
-            ?? new EconomyConfig();
     }
 
     private sealed class MutableAcquisition
