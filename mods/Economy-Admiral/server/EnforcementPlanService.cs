@@ -60,7 +60,6 @@ public sealed class EnforcementPlanService(
             }
             catch (Exception exception)
             {
-                // Preflight happens before NumericRewardTransactionCore gets any writable slots, so no DB field has been changed.
                 transaction = new NumericRewardTransactionOutcome
                 {
                     Committed = false,
@@ -122,7 +121,7 @@ public sealed class EnforcementPlanService(
             CandidateCountsByProvenance = countsByProvenance,
             CandidateCountsByEligibility = countsByEligibility,
             Note = itemStackEnabled
-                ? "Opt-in post-Alpha enforcement: Experience/TraderStanding plus only a single known-price Success reward-item stack may be reduced. Item templates, reward records and structural quest fields are never added, removed or replaced. Pristine/unknown provenance protection remains mandatory."
+                ? "Opt-in post-Alpha enforcement: Experience/TraderStanding plus only a single known-price Success reward-item stack may be reduced. Reward.Value and Upd.StackObjectsCount are required to agree before mutation and are changed/restored together. Item templates, reward records and structural quest fields are never added, removed or replaced. Pristine/unknown provenance protection remains mandatory."
                 : config.Mode == EconomyMode.Enforce
                     ? "Active Alpha enforcement: only numeric Success Experience and TraderStanding rewards may be changed. PristineUnchanged and unknown provenance remain protected; PristineModified requires the exact reward dimension to be proven changed. Item rewards and structural quest fields remain preview-only/non-mutating."
                     : "Audit preview: deterministic Experience/TraderStanding proposals are emitted but the final DB is not mutated.",
@@ -158,14 +157,17 @@ public sealed class EnforcementPlanService(
 
             if (proposal.Dimension == "ItemRewardStackCount")
             {
-                var items = GetSuccessRewardItems(quest).ToList();
-                if (items.Count != 1)
-                    throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' item-stack mutation requires exactly one Success reward item record; actual={items.Count}.");
+                var records = GetSuccessItemRewardRecords(quest);
+                if (records.Count != 1)
+                    throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' item-stack mutation requires exactly one Success Item reward record containing exactly one item; actual item records={records.Count}.");
 
-                var item = items[0];
+                var record = records[0];
+                var reward = record.Reward;
+                var item = record.Item;
                 if (item.Upd is null)
                     throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' item-stack mutation requires writable Upd.StackObjectsCount.");
 
+                EnsureSynchronizedItemQuantity(proposal.QuestId, reward, item);
                 requests.Add(new NumericRewardTransactionRequest
                 {
                     QuestId = proposal.QuestId,
@@ -173,11 +175,12 @@ public sealed class EnforcementPlanService(
                     ExpectedBefore = proposal.Before,
                     Target = proposal.Target,
                     Slots = [new NumericRewardSlot(
-                        () => item.Upd?.StackObjectsCount ?? 1d,
+                        () => ReadSynchronizedItemQuantity(proposal.QuestId, reward, item),
                         value =>
                         {
                             if (item.Upd is null) throw new InvalidOperationException("Reward item Upd disappeared during item-stack transaction.");
                             item.Upd.StackObjectsCount = value;
+                            reward.Value = value;
                         })],
                 });
                 continue;
@@ -287,12 +290,18 @@ public sealed class EnforcementPlanService(
         IReadOnlyDictionary<string, double> handbookPrices)
     {
         if (!templates.Quests.TryGetValue(row.QuestId, out var quest)) return null;
-        var items = GetSuccessRewardItems(quest).ToList();
-        if (items.Count != 1) return null;
+        var records = GetSuccessItemRewardRecords(quest);
+        if (records.Count != 1) return null;
 
-        var item = items[0];
+        var record = records[0];
+        var item = record.Item;
+        var reward = record.Reward;
         var templateId = item.Template.ToString();
         if (string.IsNullOrWhiteSpace(templateId) || !handbookPrices.TryGetValue(templateId, out var unitPrice)) return null;
+
+        var currentCount = item.Upd?.StackObjectsCount ?? 1d;
+        if (!double.IsFinite(currentCount) || reward.Value is not { } rewardValue || !double.IsFinite(rewardValue)) return null;
+        if (Math.Abs(rewardValue - currentCount) > 0.001) return null;
 
         var baseline = row.Restartable && analysis.VanillaRestartable.QuestSamples > 0
             ? analysis.VanillaRestartable
@@ -303,7 +312,6 @@ public sealed class EnforcementPlanService(
             ? analysis.Policy.RestartableHighItemValueWarnMultiple
             : analysis.Policy.HighItemValueLowStructureWarnMultiple;
         var budgetCap = baseline.MedianSuccessHandbookValue * multiple;
-        var currentCount = item.Upd?.StackObjectsCount ?? 1d;
         var plan = ItemRewardStackPlanner.Plan(currentCount, unitPrice, budgetCap);
         if (!plan.Eligible || plan.TargetCount is null) return null;
 
@@ -379,18 +387,37 @@ public sealed class EnforcementPlanService(
         }
     }
 
-    private static IEnumerable<Item> GetSuccessRewardItems(Quest quest)
+    private static List<ItemRewardRecord> GetSuccessItemRewardRecords(Quest quest)
     {
-        if (quest.Rewards is null) yield break;
+        var records = new List<ItemRewardRecord>();
+        if (quest.Rewards is null) return records;
         foreach (var pair in quest.Rewards)
         {
             if (!string.Equals(pair.Key, "Success", StringComparison.OrdinalIgnoreCase)) continue;
             foreach (var reward in pair.Value)
             {
-                if (reward.Items is null) continue;
-                foreach (var item in reward.Items) yield return item;
+                if (reward.Type != RewardType.Item || reward.Items is null) continue;
+                foreach (var item in reward.Items) records.Add(new ItemRewardRecord(reward, item));
             }
         }
+        return records;
+    }
+
+    private static double ReadSynchronizedItemQuantity(string questId, Reward reward, Item item)
+    {
+        EnsureSynchronizedItemQuantity(questId, reward, item);
+        return item.Upd?.StackObjectsCount ?? 1d;
+    }
+
+    private static void EnsureSynchronizedItemQuantity(string questId, Reward reward, Item item)
+    {
+        if (item.Upd is null)
+            throw new InvalidOperationException($"Enforce quest '{questId}' item reward has no Upd object.");
+        var stackCount = item.Upd.StackObjectsCount ?? 1d;
+        if (reward.Value is not { } rewardValue || !double.IsFinite(rewardValue) || !double.IsFinite(stackCount))
+            throw new InvalidOperationException($"Enforce quest '{questId}' item reward quantity is not finite/present.");
+        if (Math.Abs(rewardValue - stackCount) > 0.001)
+            throw new InvalidOperationException($"Enforce quest '{questId}' Item Reward.Value/StackObjectsCount mismatch: value={rewardValue}, stack={stackCount}.");
     }
 
     private IReadOnlyDictionary<string, double> BuildHandbookPrices() => templates.Handbook.Items
@@ -448,6 +475,7 @@ public sealed class EnforcementPlanService(
 
     private static string MutationKey(string questId, string dimension) => $"{questId}\u001f{dimension}";
     private sealed record MutationEligibility(string Class, bool PotentiallyEligible, string Reason);
+    private sealed record ItemRewardRecord(Reward Reward, Item Item);
 }
 
 public sealed record EnforcementPlanReport
