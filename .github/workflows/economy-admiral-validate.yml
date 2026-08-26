@@ -38,7 +38,6 @@ jobs:
               root / 'README.md', root / 'RUNTIME_TEST.md', root / 'config/config.json',
               root / 'tools/Validate-Runtime.ps1', root / 'tools/Test-Validate-Runtime.ps1',
               root / 'tools/Validate-Enforce.ps1', root / 'tools/Test-Validate-Enforce.ps1',
-              root / 'tools/Validate-PrimaryParity.ps1', root / 'tools/Test-Validate-PrimaryParity.ps1',
               root / 'server/Economy-Admiral.csproj', root / 'server/EconomyMod.cs',
               root / 'server/EconomyConfig.cs', root / 'server/EconomyConfigValidator.cs',
               root / 'server/QuestAnalysisService.cs', root / 'server/QuestProvenanceDeltaService.cs',
@@ -48,6 +47,18 @@ jobs:
           ]
           missing = [str(p) for p in required if not p.is_file()]
           assert not missing, missing
+
+          retired = [
+              root / 'server/PristineReportCorrectionService.cs',
+              root / 'server/BaselineProvenanceCorrectionService.cs',
+              root / 'server/TypedQuestItemAccountingService.cs',
+              root / 'server/PrimaryAuditParityService.cs',
+              root / 'server/CompositePolicyEvaluationService.cs',
+              root / 'server/TargetProposalService.cs',
+              root / 'tools/Validate-PrimaryParity.ps1',
+              root / 'tools/Test-Validate-PrimaryParity.ps1',
+          ]
+          assert not [str(p) for p in retired if p.exists()], 'retired runtime/proof files still present'
 
           config = json.loads((root / 'config/config.json').read_text(encoding='utf-8'))
           assert config['mode'] in {'Off', 'Audit', 'Enforce'}
@@ -82,7 +93,6 @@ jobs:
           assert 'VanillaBaselineSnapshot vanillaBaseline' in analysis
           assert 'vanillaBaseline.QuestIds.Contains' in analysis
           assert 'VanillaTraderIds' not in analysis
-
           for text in ['OutlierFlagsAffectEnforcement = true','HIGH_XP_LOW_DEPTH','RESTARTABLE_HIGH_XP','HIGH_STANDING_LOW_DEPTH','MedianXp','MedianAbsoluteStanding']:
               assert text in analysis, text
 
@@ -153,17 +163,12 @@ jobs:
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1 -Raw))
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-Enforce.ps1 -Raw))
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-Enforce.ps1 -Raw))
-          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-PrimaryParity.ps1 -Raw))
-          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-PrimaryParity.ps1 -Raw))
       - name: Smoke-test Audit runtime contract
         shell: pwsh
         run: '& mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1'
       - name: Smoke-test Enforce runtime contract
         shell: pwsh
         run: '& mods/Economy-Admiral/tools/Test-Validate-Enforce.ps1'
-      - name: Smoke-test primary parity validator
-        shell: pwsh
-        run: '& mods/Economy-Admiral/tools/Test-Validate-PrimaryParity.ps1'
       - name: Smoke-test config validation
         shell: pwsh
         run: dotnet run --project mods/Economy-Admiral/tests/ConfigValidationSmoke/ConfigValidationSmoke.csproj -c Release --nologo
@@ -188,7 +193,6 @@ jobs:
           Copy-Item mods/Economy-Admiral/RUNTIME_TEST.md 'build-output/Economy Admiral/RUNTIME_TEST.md'
           Copy-Item mods/Economy-Admiral/tools/Validate-Runtime.ps1 'build-output/Economy Admiral/Validate-Runtime.ps1'
           Copy-Item mods/Economy-Admiral/tools/Validate-Enforce.ps1 'build-output/Economy Admiral/Validate-Enforce.ps1'
-          Copy-Item mods/Economy-Admiral/tools/Validate-PrimaryParity.ps1 'build-output/Economy Admiral/Validate-PrimaryParity.ps1'
           [ordered]@{
             Product = 'Economy Admiral'
             ProductLine = 'Enforce Alpha'
