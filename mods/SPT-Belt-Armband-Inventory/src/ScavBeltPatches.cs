@@ -5,14 +5,17 @@ namespace SPTBeltArmbandInventory
 {
     internal static class ScavBeltPolicy
     {
-        internal static bool ShouldRestore(bool deleted, bool hasItem, bool hasContainers)
+        internal static bool ShouldRestore(string templateId, bool deleted, bool hasContainers)
         {
             return deleted
-                && AccessoryCapabilityPolicy.CanUse(
-                    AccessoryCategory.ArmBand,
-                    AccessoryCapability.ScavHostRestoration,
-                    hasItem,
-                    hasContainers);
+                && hasContainers
+                && WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.ScavHostRestoration);
+        }
+
+        // Historical Phase 1 compatibility wrapper for the magazine RC regression surface.
+        internal static bool ShouldRestore(bool deleted, bool hasItem, bool hasContainers)
+        {
+            return hasItem && ShouldRestore(RuntimeIdentity.CandidateItemId, deleted, hasContainers);
         }
     }
 
@@ -40,17 +43,27 @@ namespace SPTBeltArmbandInventory
 
                 object item = ReflectionTools.ReadMember(slot, "ContainedItem");
                 bool deleted = ReflectionTools.ReadBoolean(slot, "Deleted");
-                if (!ScavBeltPolicy.ShouldRestore(deleted, item != null, ReflectionTools.HasContainers(item))) return;
+                string templateId = GetTemplateId(item);
+                if (!ScavBeltPolicy.ShouldRestore(templateId, deleted, ReflectionTools.HasContainers(item))) return;
 
                 if (!WriteBoolean(slot, "Deleted", false))
                 {
-                    if (LogWarning != null) LogWarning("Scav container belt detected, but ArmBand.Deleted could not be restored.");
+                    if (LogWarning != null) LogWarning("Scav wearable container detected, but ArmBand.Deleted could not be restored.");
                 }
             }
             catch (Exception exception)
             {
-                if (LogWarning != null) LogWarning("Could not restore Scav container belt slot: " + Unwrap(exception).Message);
+                if (LogWarning != null) LogWarning("Could not restore Scav wearable ArmBand slot: " + Unwrap(exception).Message);
             }
+        }
+
+        static string GetTemplateId(object item)
+        {
+            if (item == null) return null;
+            object stringTemplateId = ReflectionTools.ReadMember(item, "StringTemplateId");
+            if (stringTemplateId is string direct && !string.IsNullOrEmpty(direct)) return direct;
+            object templateId = ReflectionTools.ReadMember(item, "TemplateId");
+            return templateId?.ToString();
         }
 
         static MethodInfo FindGetSlot(Type equipmentType)
@@ -116,31 +129,31 @@ namespace SPTBeltArmbandInventory
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
                 Type controllerType = ReflectionTools.FindType("EFT.InventoryLogic.InventoryController");
                 if (harmonyType == null || harmonyMethodType == null || controllerType == null)
-                    return Fail("SPT 4.1 InventoryController or Harmony was not found; Scav belt compatibility is disabled.");
+                    return Fail("SPT 4.1 InventoryController or Harmony was not found; Scav wearable compatibility is disabled.");
 
                 MethodInfo replaceInventory = FindReplaceInventory(controllerType);
                 if (replaceInventory == null)
-                    return Fail("SPT 4.1 InventoryController.ReplaceInventory boundary was not found; Scav belt compatibility is disabled.");
+                    return Fail("SPT 4.1 InventoryController.ReplaceInventory boundary was not found; Scav wearable compatibility is disabled.");
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                 MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, harmonyMethodConstructor != null, rollback != null))
-                    return Fail("Harmony patch/rollback API is incompatible; Scav belt compatibility is disabled.");
+                    return Fail("Harmony patch/rollback API is incompatible; Scav wearable compatibility is disabled.");
                 unpatchSelf = rollback;
 
                 ScavBeltRuntime.LogWarning = logWarning;
                 object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(ReplaceInventoryPostfix)) });
                 Patch(patchMethod, harmonyMethodType, replaceInventory, postfix);
 
-                if (logInfo != null) logInfo("Belt/Armband Inventory conditional Scav belt compatibility installed.");
+                if (logInfo != null) logInfo("B&A&HB item-descriptor scoped Scav ArmBand compatibility installed.");
                 return true;
             }
             catch (Exception exception)
             {
                 Dispose();
-                return Fail("Scav belt compatibility installation failed safely: " + exception.Message);
+                return Fail("Scav wearable compatibility installation failed safely: " + exception.Message);
             }
         }
 
