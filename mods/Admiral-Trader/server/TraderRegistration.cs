@@ -109,9 +109,10 @@ public sealed class AdmiralTraderRegistration(
             throw new InvalidDataException("base.json trader avatar route is missing");
         if (assort.Items is null || assort.BarterScheme is null || assort.LoyalLevelItems is null)
             throw new InvalidDataException("assort.json is missing a required native collection");
-        foreach (string requiredKey in new[] { "Started", "Success", "Fail" })
-            if (!questAssort.ContainsKey(requiredKey))
-                throw new InvalidDataException($"questassort.json missing required key: {requiredKey}");
+
+        string[] requiredKeys = ["started", "success", "fail"];
+        if (questAssort.Count != requiredKeys.Length || requiredKeys.Any(key => !questAssort.ContainsKey(key)))
+            throw new InvalidDataException($"questassort.json must contain exactly the native lowercase status keys: {string.Join(", ", requiredKeys)}");
     }
 
     private void AddLocales(TraderBase traderBase)
