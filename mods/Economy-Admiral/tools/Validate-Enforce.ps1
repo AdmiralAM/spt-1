@@ -78,7 +78,7 @@ foreach ($candidate in @($plan.Candidates)) {
             $itemApplied++
             if (-not $itemStackMode) { Fail "item stack mutation appeared under Alpha-only schema" }
             if ([string]$mutation.PolicyId -ne 'PresetSingleStackItemBudgetCapV1') { Fail "item stack mutation used unexpected policy $($mutation.PolicyId)" }
-            if ([double]$mutation.Target -lt 1 -or -not (Near ([double]$mutation.Target ([Math]::Round([double]$mutation.Target)) 0.000001)) { Fail "item stack target must be an integer >= 1" }
+            if ([double]$mutation.Target -lt 1 -or -not (Near ([double]$mutation.Target) ([Math]::Round([double]$mutation.Target)) 0.000001)) { Fail "item stack target must be an integer >= 1" }
         }
     }
 }
