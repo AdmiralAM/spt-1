@@ -25,18 +25,21 @@ namespace SPTBeltArmbandInventory
                     if (Property != null) return Property.GetValue(instance, null);
                     return Field == null ? null : Field.GetValue(instance);
                 }
-                catch
+                catch (Exception exception)
                 {
-                    // Optional reflection access must never be able to abort profile load.
+                    ReportFailureOnce(instance?.GetType(), Property?.Name ?? Field?.Name, "read", exception);
                     return null;
                 }
             }
         }
 
+        internal static Action<string> LogWarning;
+
         static readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, MemberAccessor>> MemberCache =
             new ConcurrentDictionary<Type, ConcurrentDictionary<string, MemberAccessor>>();
         static readonly ConcurrentDictionary<string, Type> TypeCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal);
         static readonly ConcurrentDictionary<Assembly, Type[]> AssemblyTypesCache = new ConcurrentDictionary<Assembly, Type[]>();
+        static readonly ConcurrentDictionary<string, byte> ReportedDiagnostics = new ConcurrentDictionary<string, byte>(StringComparer.Ordinal);
 
         internal static Type FindType(string fullName)
         {
@@ -64,8 +67,16 @@ namespace SPTBeltArmbandInventory
         internal static object ReadMember(object instance, string preferredName)
         {
             if (instance == null || string.IsNullOrEmpty(preferredName)) return null;
-            MemberAccessor accessor = GetAccessor(instance.GetType(), preferredName);
-            return accessor.Read(instance);
+            try
+            {
+                MemberAccessor accessor = GetAccessor(instance.GetType(), preferredName);
+                return accessor.Read(instance);
+            }
+            catch (Exception exception)
+            {
+                ReportFailureOnce(instance.GetType(), preferredName, "resolve", exception);
+                return null;
+            }
         }
 
         static MemberAccessor GetAccessor(Type type, string preferredName)
@@ -84,10 +95,10 @@ namespace SPTBeltArmbandInventory
 
         static MemberAccessor CreateAccessor(Type type, string preferredName)
         {
-            // Never call Type.GetProperty(name, flags) here. EFT frequently hides members
-            // in derived/obfuscated types and that API throws AmbiguousMatchException when
-            // multiple inherited members share the same name. Walk each declaring type and
-            // inspect DeclaredOnly members instead; nearest derived member wins deterministically.
+            PropertyInfo selectedProperty = null;
+            FieldInfo selectedField = null;
+            int sameNameMembers = 0;
+
             for (Type current = type; current != null; current = current.BaseType)
             {
                 PropertyInfo[] properties;
@@ -99,7 +110,8 @@ namespace SPTBeltArmbandInventory
                     PropertyInfo property = properties[i];
                     if (!string.Equals(property.Name, preferredName, StringComparison.Ordinal)) continue;
                     if (property.GetIndexParameters().Length != 0) continue;
-                    return new MemberAccessor(property, null);
+                    sameNameMembers++;
+                    if (selectedProperty == null && selectedField == null) selectedProperty = property;
                 }
 
                 FieldInfo[] fields;
@@ -109,17 +121,23 @@ namespace SPTBeltArmbandInventory
                 for (int i = 0; i < fields.Length; i++)
                 {
                     FieldInfo field = fields[i];
-                    if (string.Equals(field.Name, preferredName, StringComparison.Ordinal))
-                        return new MemberAccessor(null, field);
+                    if (!string.Equals(field.Name, preferredName, StringComparison.Ordinal)) continue;
+                    sameNameMembers++;
+                    if (selectedProperty == null && selectedField == null) selectedField = field;
                 }
             }
 
-            return new MemberAccessor(null, null);
+            if (sameNameMembers > 1)
+                ReportAmbiguityPreventedOnce(type, preferredName, sameNameMembers, selectedProperty as MemberInfo ?? selectedField);
+
+            return new MemberAccessor(selectedProperty, selectedField);
         }
 
         internal static PropertyInfo FindInstanceProperty(Type type, string name, Type returnType = null)
         {
             if (type == null || string.IsNullOrEmpty(name)) return null;
+            PropertyInfo selected = null;
+            int matches = 0;
             for (Type current = type; current != null; current = current.BaseType)
             {
                 PropertyInfo[] properties;
@@ -131,16 +149,20 @@ namespace SPTBeltArmbandInventory
                     if (!string.Equals(property.Name, name, StringComparison.Ordinal)) continue;
                     if (property.GetIndexParameters().Length != 0) continue;
                     if (returnType != null && property.PropertyType != returnType) continue;
-                    return property;
+                    matches++;
+                    if (selected == null) selected = property;
                 }
             }
-            return null;
+            if (matches > 1) ReportAmbiguityPreventedOnce(type, name, matches, selected);
+            return selected;
         }
 
         internal static MethodInfo FindInstanceMethod(Type type, string name, Type returnType, params Type[] parameterTypes)
         {
             if (type == null || string.IsNullOrEmpty(name)) return null;
             Type[] expected = parameterTypes ?? Type.EmptyTypes;
+            MethodInfo selected = null;
+            int matches = 0;
             for (Type current = type; current != null; current = current.BaseType)
             {
                 MethodInfo[] methods;
@@ -160,10 +182,48 @@ namespace SPTBeltArmbandInventory
                         match = false;
                         break;
                     }
-                    if (match) return method;
+                    if (!match) continue;
+                    matches++;
+                    if (selected == null) selected = method;
                 }
             }
-            return null;
+            if (matches > 1) ReportAmbiguityPreventedOnce(type, name, matches, selected);
+            return selected;
+        }
+
+        static void ReportAmbiguityPreventedOnce(Type type, string memberName, int matches, MemberInfo selected)
+        {
+            if (LogWarning == null) return;
+            string typeName = type?.FullName ?? "<null>";
+            string key = "ambiguous|" + typeName + "|" + memberName;
+            if (!ReportedDiagnostics.TryAdd(key, 0)) return;
+            string selectedName = selected == null ? "<none>" : (selected.DeclaringType?.FullName + "." + selected.Name);
+            LogWarning("B&A&HB REFLECTION AMBIGUITY PREVENTED: type=" + typeName
+                + ", member=" + memberName
+                + ", matches=" + matches
+                + ", selected=" + selectedName
+                + ". Caller stack:\n" + Environment.StackTrace);
+        }
+
+        static void ReportFailureOnce(Type type, string memberName, string stage, Exception exception)
+        {
+            if (LogWarning == null || exception == null) return;
+            Exception root = exception;
+            while (root is TargetInvocationException invocation && invocation.InnerException != null) root = invocation.InnerException;
+            string typeName = type?.FullName ?? "<null>";
+            string key = "failure|" + stage + "|" + typeName + "|" + memberName + "|" + root.GetType().FullName;
+            if (!ReportedDiagnostics.TryAdd(key, 0)) return;
+            LogWarning("B&A&HB REFLECTION FAIL-CLOSED: stage=" + stage
+                + ", type=" + typeName
+                + ", member=" + (memberName ?? "<null>")
+                + ", exception=" + root.GetType().FullName + ": " + root.Message
+                + (string.IsNullOrEmpty(root.StackTrace) ? "" : "\n" + root.StackTrace));
+        }
+
+        internal static void ResetDiagnostics()
+        {
+            LogWarning = null;
+            ReportedDiagnostics.Clear();
         }
 
         internal static Type[] GetTypes(Assembly assembly)
@@ -199,7 +259,6 @@ namespace SPTBeltArmbandInventory
                 if (HasAny(ReadMember(template, "Containers"))) return true;
                 if (HasAny(ReadMember(template, "Grids"))) return true;
             }
-
             return false;
         }
 
@@ -210,8 +269,12 @@ namespace SPTBeltArmbandInventory
             if (collection != null) return collection.Count > 0;
             IEnumerable enumerable = value as IEnumerable;
             if (enumerable == null) return false;
-            IEnumerator enumerator = enumerable.GetEnumerator();
-            try { return enumerator.MoveNext(); }
+            IEnumerator enumerator = null;
+            try
+            {
+                enumerator = enumerable.GetEnumerator();
+                return enumerator.MoveNext();
+            }
             catch { return false; }
             finally
             {
