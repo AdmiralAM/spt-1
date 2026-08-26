@@ -160,6 +160,9 @@ jobs:
       - name: Smoke-test runtime helper
         shell: pwsh
         run: '& mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1'
+      - name: Smoke-test config validation
+        shell: pwsh
+        run: dotnet run --project mods/Economy-Admiral/tests/ConfigValidationSmoke/ConfigValidationSmoke.csproj -c Release --nologo
       - name: Build server
         shell: pwsh
         run: dotnet build mods/Economy-Admiral/server/Economy-Admiral.csproj -c Release --nologo
