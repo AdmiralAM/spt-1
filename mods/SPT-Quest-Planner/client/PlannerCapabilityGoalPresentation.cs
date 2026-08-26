@@ -10,7 +10,8 @@ namespace SPTQuestPlanner.Client
         RaidDecision = 1,
         WaitingForAvailability = 2,
         EvidenceIncomplete = 3,
-        ProgressionConflict = 4
+        ProgressionConflict = 4,
+        CapabilityAlreadyUnlocked = 5
     }
 
     public sealed class PlannerCapabilityGoalPresentation
@@ -80,7 +81,12 @@ namespace SPTQuestPlanner.Client
             PlannerCapabilityGoalPresentationKind kind;
             string caution = string.Empty;
 
-            if (intent.HasTerminalFocusConflict)
+            if (goal.GateAlreadyCompleted)
+            {
+                kind = PlannerCapabilityGoalPresentationKind.CapabilityAlreadyUnlocked;
+                caution = "The capability gate quest is already completed; no progression action is required to unlock it.";
+            }
+            else if (intent.HasTerminalFocusConflict)
             {
                 kind = PlannerCapabilityGoalPresentationKind.ProgressionConflict;
                 caution = "The selected capability path contains a prerequisite-state conflict; Planner cannot prove a valid route.";
