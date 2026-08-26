@@ -21,17 +21,21 @@ namespace SPTQuestPlanner.Client
         public PlannerRaidDecisionSet(
             PlannerRaidDecisionCandidate recommendation,
             IReadOnlyList<PlannerRaidDecisionCandidate> contenders,
-            string reason)
+            string reason,
+            int sourceCandidateCount = 0)
         {
             Recommendation = recommendation;
             Contenders = contenders ?? Array.Empty<PlannerRaidDecisionCandidate>();
             Reason = reason ?? string.Empty;
+            SourceCandidateCount = Math.Max(0, sourceCandidateCount);
         }
 
         public PlannerRaidDecisionCandidate Recommendation { get; private set; }
         public IReadOnlyList<PlannerRaidDecisionCandidate> Contenders { get; private set; }
         public string Reason { get; private set; }
+        public int SourceCandidateCount { get; private set; }
         public bool HasUniqueRecommendation { get { return Recommendation != null; } }
+        public bool WasComparativeDecision { get { return SourceCandidateCount > 1; } }
     }
 
     public static class PlannerRaidDecisionSetBuilder
@@ -57,9 +61,9 @@ namespace SPTQuestPlanner.Client
             if (source.Length > MaxCandidates)
                 throw new InvalidOperationException("Quest Planner decision set exceeds bounded candidate limit of " + MaxCandidates + ".");
             if (source.Length == 0)
-                return new PlannerRaidDecisionSet(null, Array.Empty<PlannerRaidDecisionCandidate>(), "No raid candidates are currently available.");
+                return new PlannerRaidDecisionSet(null, Array.Empty<PlannerRaidDecisionCandidate>(), "No raid candidates are currently available.", 0);
             if (source.Length == 1)
-                return new PlannerRaidDecisionSet(source[0], source, "Only one raid candidate is currently available.");
+                return new PlannerRaidDecisionSet(source[0], source, "Only one raid candidate is currently available.", 1);
 
             List<PlannerRaidDecisionCandidate> frontier = new List<PlannerRaidDecisionCandidate>();
             for (int i = 0; i < source.Length; i++)
@@ -89,13 +93,13 @@ namespace SPTQuestPlanner.Client
                 string reason = intent != null && PlannerRaidDecisionIntentPolicy.Supports(frontier[0].Signals, intent)
                     ? "Player progression focus resolves the candidate frontier toward a raid that advances the focused quest path."
                     : "One candidate is undominated by every alternative under the proven decision dimensions.";
-                return new PlannerRaidDecisionSet(frontier[0], frontier.ToArray(), reason);
+                return new PlannerRaidDecisionSet(frontier[0], frontier.ToArray(), reason, source.Length);
             }
 
             string frontierReason = intent != null && intent.HasFocusQuest
                 ? frontier.Count + " candidates still advance or remain compatible with the progression focus; expose their trade-offs instead of forcing a best raid."
                 : frontier.Count + " candidates remain undominated; expose their trade-offs instead of forcing a best raid.";
-            return new PlannerRaidDecisionSet(null, frontier.ToArray(), frontierReason);
+            return new PlannerRaidDecisionSet(null, frontier.ToArray(), frontierReason, source.Length);
         }
     }
 }
