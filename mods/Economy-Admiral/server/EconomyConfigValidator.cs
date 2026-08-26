@@ -24,9 +24,9 @@ public static class EconomyConfigValidator
         {
             throw new InvalidOperationException("Economy Admiral config: ReportRelativePath must remain inside the mod folder.");
         }
-        if (config.Rarity is null || config.CustomAuditPolicy is null || config.ManualOverrides is null)
+        if (config.Rarity is null || config.CustomAuditPolicy is null || config.ManualOverrides is null || config.QuestRewardOverrides is null)
         {
-            throw new InvalidOperationException("Economy Admiral config: Rarity, CustomAuditPolicy and ManualOverrides must be objects.");
+            throw new InvalidOperationException("Economy Admiral config: Rarity, CustomAuditPolicy, ManualOverrides and QuestRewardOverrides must be objects.");
         }
 
         if (config.Rarity.CommonMinSources < 1 || config.Rarity.UncommonMinSources < 1 || config.Rarity.RareMinSources < 1
@@ -64,6 +64,22 @@ public static class EconomyConfigValidator
             if (itemOverride.Rarity is not null && !AllowedRarities.Contains(itemOverride.Rarity))
             {
                 throw new InvalidOperationException($"Economy Admiral config: unsupported manual rarity '{itemOverride.Rarity}' for template '{templateId}'.");
+            }
+        }
+
+        foreach (var (questId, questOverride) in config.QuestRewardOverrides)
+        {
+            if (string.IsNullOrWhiteSpace(questId) || questOverride is null)
+            {
+                throw new InvalidOperationException("Economy Admiral config: quest reward overrides require non-empty quest ids and object values.");
+            }
+            if (questOverride.ExperienceTarget is { } xp)
+            {
+                ValidateNonNegativeFinite(xp, $"QuestRewardOverrides[{questId}].ExperienceTarget");
+            }
+            if (questOverride.TraderStandingTarget is { } standing && !double.IsFinite(standing))
+            {
+                throw new InvalidOperationException($"Economy Admiral config: QuestRewardOverrides[{questId}].TraderStandingTarget must be finite.");
             }
         }
     }
