@@ -1,37 +1,13 @@
-using System.Text.Json;
-using Path = System.IO.Path;
 using SPTarkov.DI.Annotations;
-using SPTarkov.Server.Core.Helpers.Server;
 
 namespace SPTEconomy;
 
 [Injectable]
-public sealed class EconomyRuntimeConfigService(ModHelper modHelper)
+public sealed class EconomyRuntimeConfigService(EconomyConfig config)
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
+    public Task<EconomyConfig> GetAsync(CancellationToken cancellationToken)
     {
-        PropertyNameCaseInsensitive = true,
-    };
-
-    private EconomyConfig? cached;
-
-    public async Task<EconomyConfig> GetAsync(CancellationToken cancellationToken)
-    {
-        if (cached is not null)
-        {
-            return cached;
-        }
-
-        var modPath = modHelper.GetAbsolutePathToModFolder(typeof(EconomyRuntimeConfigService).Assembly);
-        var configPath = Path.Combine(modPath, "config", "config.json");
-        if (!File.Exists(configPath))
-        {
-            return cached = new EconomyConfig();
-        }
-
-        await using var stream = File.OpenRead(configPath);
-        cached = await JsonSerializer.DeserializeAsync<EconomyConfig>(stream, JsonOptions, cancellationToken)
-            ?? new EconomyConfig();
-        return cached;
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(config);
     }
 }
