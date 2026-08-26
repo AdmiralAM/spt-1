@@ -183,16 +183,17 @@ public static class BoundedSupplyEvidenceAnalyzer
         var unknown = evidence.Count - bounded - unbounded;
         var known = bounded + unbounded;
         var complete = evidence.Count > 0 && unknown == 0;
+        var boundedOnly = complete && bounded > 0 && unbounded == 0;
 
         var boundedEvidence = evidence
             .Where(capacity => capacity?.SupplyBound == RenewableSupplyBound.Bounded)
             .Select(capacity => capacity!)
             .ToList();
 
-        int? totalUnits = boundedEvidence.Count > 0 && boundedEvidence.All(capacity => capacity.MaxUnitsPerReset.HasValue)
+        int? totalUnits = boundedOnly && boundedEvidence.All(capacity => capacity.MaxUnitsPerReset.HasValue)
             ? boundedEvidence.Sum(capacity => capacity.MaxUnitsPerReset!.Value)
             : null;
-        int? totalAcquisitions = boundedEvidence.Count > 0 && boundedEvidence.All(capacity => capacity.MaxAcquisitionsPerReset.HasValue)
+        int? totalAcquisitions = boundedOnly && boundedEvidence.All(capacity => capacity.MaxAcquisitionsPerReset.HasValue)
             ? boundedEvidence.Sum(capacity => capacity.MaxAcquisitionsPerReset!.Value)
             : null;
 
@@ -206,7 +207,7 @@ public static class BoundedSupplyEvidenceAnalyzer
             CapacityEvidenceCoverage = sources.Count == 0 ? 0 : Math.Round((double)known / sources.Count, 6),
             HasCompleteCapacityEvidence = complete,
             HasKnownUnboundedRenewablePath = unbounded > 0,
-            HasOnlyKnownBoundedRenewablePaths = complete && bounded > 0 && unbounded == 0,
+            HasOnlyKnownBoundedRenewablePaths = boundedOnly,
             TotalKnownMaxUnitsPerReset = totalUnits,
             TotalKnownMaxAcquisitionsPerReset = totalAcquisitions,
         };
