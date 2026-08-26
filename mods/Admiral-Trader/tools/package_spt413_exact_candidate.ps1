@@ -18,9 +18,7 @@ $builder = Join-Path $PSScriptRoot 'build_spt413_test_candidate.ps1'
 if (-not (Test-Path $builder)) { throw "Exact-runtime builder is missing: $builder" }
 
 $expected = $ExpectedHeadSha.Trim().ToLowerInvariant()
-if ($expected -notmatch '^[0-9a-f]{40}$') {
-    throw 'ExpectedHeadSha must be the full 40-character hexadecimal Git SHA.'
-}
+if ($expected -notmatch '^[0-9a-f]{40}$') { throw 'ExpectedHeadSha must be the full 40-character hexadecimal Git SHA.' }
 
 & $builder -SptRoot $SptRoot -ExpectedHeadSha $expected
 if ($LASTEXITCODE -ne 0) { throw "Exact-runtime candidate builder failed with exit code $LASTEXITCODE" }
@@ -51,6 +49,8 @@ if ($provenance.physicalRuntimeEvidenceEligible -ne $true) { throw 'Refusing to 
 if ([string]::IsNullOrWhiteSpace([string]$provenance.runtimeCoreSha256) -or $provenance.runtimeCoreSha256 -notmatch '^[0-9a-f]{64}$') { throw 'Exact-runtime provenance must contain a 64-hex runtimeCoreSha256.' }
 if ($null -ne $provenance.PSObject.Properties['publishedApiCoreSha256']) { throw 'Exact-runtime candidate must not contain publishedApiCoreSha256.' }
 if ([string]::IsNullOrWhiteSpace([string]$provenance.serverDllSha256) -or $provenance.serverDllSha256 -notmatch '^[0-9a-f]{64}$') { throw 'Exact-runtime provenance must contain a 64-hex serverDllSha256.' }
+if ([string]::IsNullOrWhiteSpace([string]$provenance.officialPortraitSha256) -or $provenance.officialPortraitSha256 -notmatch '^[0-9a-f]{64}$') { throw 'Exact-runtime provenance must contain a 64-hex officialPortraitSha256.' }
+if ([string]::IsNullOrWhiteSpace([string]$provenance.officialPortraitGitBlobSha1) -or $provenance.officialPortraitGitBlobSha1 -notmatch '^[0-9a-f]{40}$') { throw 'Exact-runtime provenance must contain a 40-hex officialPortraitGitBlobSha1.' }
 
 $actualServerDllSha256 = (Get-FileHash $serverDllPath -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($actualServerDllSha256 -ne $provenance.serverDllSha256) { throw "Staged Admiral server DLL hash drift: provenance=$($provenance.serverDllSha256) actual=$actualServerDllSha256" }
@@ -66,8 +66,8 @@ $portraitPath = Join-Path $stageMod ($portraitRelative -replace '/', '\')
 if (-not (Test-Path $portraitPath)) { throw "Exact-runtime staging is missing official portrait: $portraitRelative" }
 if ($base.avatar -ne $portraitRoute) { throw "Portrait route drift: base=$($base.avatar) identity=$portraitRoute" }
 if ($portraitRoute -ne "/files/trader/avatar/$($identity.traderId).jpg") { throw "Official portrait route is not bound to trader id: $portraitRoute" }
+if ([string]$identity.portrait.runtimeGitBlobSha1 -ne [string]$provenance.officialPortraitGitBlobSha1) { throw 'Staged portrait Git blob identity drift between identity and provenance.' }
 $portraitSha256 = (Get-FileHash $portraitPath -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($portraitSha256 -ne [string]$identity.portrait.runtimeSha256) { throw "Staged official portrait hash drift: manifest=$($identity.portrait.runtimeSha256) actual=$portraitSha256" }
 if ($portraitSha256 -ne [string]$provenance.officialPortraitSha256) { throw "Staged official portrait provenance drift: provenance=$($provenance.officialPortraitSha256) actual=$portraitSha256" }
 if ([string]$provenance.officialPortraitRoute -ne $portraitRoute) { throw "Staged official portrait route provenance drift: provenance=$($provenance.officialPortraitRoute) identity=$portraitRoute" }
 $portraitBytes = [System.IO.File]::ReadAllBytes($portraitPath)
@@ -100,9 +100,7 @@ try {
         'SPT_Runtime/user/mods/Admiral-Trader/db/questassort.json',
         "SPT_Runtime/user/mods/Admiral-Trader/$portraitRelative"
     )
-    foreach ($entry in $requiredEntries) {
-        if ($entries -notcontains $entry) { throw "Exact-runtime archive layout is invalid; missing $entry" }
-    }
+    foreach ($entry in $requiredEntries) { if ($entries -notcontains $entry) { throw "Exact-runtime archive layout is invalid; missing $entry" } }
     if (@($entries | Where-Object { $_ -match '(^|/)(bin|obj)/' -or $_ -match '\.(pdb|log|zip)$' }).Count -ne 0) { throw 'Exact-runtime archive contains forbidden build/debug junk.' }
 }
 finally { $archive.Dispose() }
