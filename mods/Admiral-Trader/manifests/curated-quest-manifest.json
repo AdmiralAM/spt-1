@@ -1,77 +1,29 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "status": "planning",
   "sourceBundle": "Keys Proficiency",
   "sourceQuestCount": 27,
-  "targetQuestCountMax": 10,
+  "currentBackboneQuestCount": 10,
+  "questCountPolicy": "no-artificial-cap-quality-gated-expansion",
   "globalRules": {
     "publishLegacyTemplateUnchanged": false,
     "allowMoneyCollectionLadders": false,
     "allowCollectEveryKeyObjectives": false,
     "allowLegacyAssortUnlockRewards": false,
+    "preserveStrongAuthoredConceptsRegardlessOfCampaignSize": true,
     "rewardPolicy": "manifests/reward-policy.json",
     "traderId": "d5c27bb3169f8dfbc13f6b69"
   },
   "groups": [
-    {
-      "id": "keys-intro",
-      "target": "rewrite",
-      "sourceQuestIds": ["b953f47abe86cad41ccb4fa5", "ebbb0c35ebed24cac01f360c"],
-      "intent": "Introduce key progression once, without a global key-hoarding or high-value cash handover ladder."
-    },
-    {
-      "id": "keys-factory",
-      "target": "rewrite",
-      "sourceQuestIds": ["a4de75c32db70fbbaf4dcd30"],
-      "intent": "One compact Factory key milestone."
-    },
-    {
-      "id": "keys-customs",
-      "target": "merge",
-      "sourceQuestIds": ["401c3132c17aaf23ae44eee5", "8ff612f74b9ebff5fdcbcb87", "bffaa8d5bab1ed33fe5c84b4", "062ff7f3bba9565cca432087"],
-      "intent": "Collapse Burglar, Key Master, Dorms Locksmith and Misc Locksmith into one Customs progression milestone."
-    },
-    {
-      "id": "keys-woods",
-      "target": "rewrite",
-      "sourceQuestIds": ["1db42bc17ae1d88cdace4473"],
-      "intent": "One compact Woods key milestone."
-    },
-    {
-      "id": "keys-interchange",
-      "target": "merge",
-      "sourceQuestIds": ["84b920232da3099ce13ecebc", "b58ad59a97668017689d190b", "c6099a56bd93369bb8aaf5a6"],
-      "intent": "Collapse the Interchange Burglar/Key Master/Locksmith ladder to one milestone."
-    },
-    {
-      "id": "keys-shoreline",
-      "target": "merge",
-      "sourceQuestIds": ["c27da4f54175813918c9eb87", "a89ea70d5f9e4fd53f5b1e38", "80d30d71ca06804e1f2ddffc", "ed03aa9b40ef1ccabbc7e97c", "d3edd3cc318d4d97527df6fc"],
-      "intent": "Collapse five Shoreline key ladders to one Resort-focused milestone."
-    },
-    {
-      "id": "keys-reserve",
-      "target": "merge",
-      "sourceQuestIds": ["1ad44caae8966123ed9bd23f", "1e850f9ac1d8c165c6b3fa2c", "daf8fed62c7149c8eacab0c2", "8c0158124bacdfb825a4eb3b"],
-      "intent": "Collapse four Reserve key ladders to one military-base milestone."
-    },
-    {
-      "id": "keys-lighthouse",
-      "target": "merge",
-      "sourceQuestIds": ["0f964cda16d9f0921e9b35ca", "ed5565eddefc2d51d1dfe307"],
-      "intent": "Collapse Lighthouse Burglar/Locksmith to one milestone."
-    },
-    {
-      "id": "keys-labs",
-      "target": "merge",
-      "sourceQuestIds": ["faf940bce6b437c0ff7a054c", "a346bde73130eeebdb7ce288", "c76abff83a1abf42d85d12fd"],
-      "intent": "One Labs key-access milestone before clearance progression."
-    },
-    {
-      "id": "keys-labs-clearance",
-      "target": "rewrite",
-      "sourceQuestIds": ["4f1a4e5e46cfa85e706c2783", "62f518bb3cebd4a7b010016e"],
-      "intent": "Replace Contractor/Supervisor access inflation with one controlled end-of-domain milestone; legacy assort unlock rewards are not inherited."
-    }
+    {"id":"keys-intro","target":"rewrite","sourceQuestIds":["b953f47abe86cad41ccb4fa5","ebbb0c35ebed24cac01f360c"],"intent":"Introduce key progression once, without a global key-hoarding or high-value cash handover ladder."},
+    {"id":"keys-factory","target":"rewrite","sourceQuestIds":["a4de75c32db70fbbaf4dcd30"],"intent":"One compact Factory key milestone in the current backbone; future distinct authored Factory operations remain allowed."},
+    {"id":"keys-customs","target":"merge","sourceQuestIds":["401c3132c17aaf23ae44eee5","8ff612f74b9ebff5fdcbcb87","bffaa8d5bab1ed33fe5c84b4","062ff7f3bba9565cca432087"],"intent":"Collapse repetitive Customs key ladders into one backbone milestone without prohibiting distinct future contracts."},
+    {"id":"keys-woods","target":"rewrite","sourceQuestIds":["1db42bc17ae1d88cdace4473"],"intent":"One compact Woods key milestone in the current backbone; expansion remains quality-gated rather than count-gated."},
+    {"id":"keys-interchange","target":"merge","sourceQuestIds":["84b920232da3099ce13ecebc","b58ad59a97668017689d190b","c6099a56bd93369bb8aaf5a6"],"intent":"Collapse repetitive Interchange key ladders to one backbone milestone while retaining room for distinct authored operations."},
+    {"id":"keys-shoreline","target":"merge","sourceQuestIds":["c27da4f54175813918c9eb87","a89ea70d5f9e4fd53f5b1e38","80d30d71ca06804e1f2ddffc","ed03aa9b40ef1ccabbc7e97c","d3edd3cc318d4d97527df6fc"],"intent":"Collapse repetitive Shoreline key ladders to one Resort-focused backbone milestone; preserve separately authored narrative or operational concepts that justify their own quest."},
+    {"id":"keys-reserve","target":"merge","sourceQuestIds":["1ad44caae8966123ed9bd23f","1e850f9ac1d8c165c6b3fa2c","daf8fed62c7149c8eacab0c2","8c0158124bacdfb825a4eb3b"],"intent":"Collapse repetitive Reserve key ladders to one military-base backbone milestone without imposing a future quest-count ceiling."},
+    {"id":"keys-lighthouse","target":"merge","sourceQuestIds":["0f964cda16d9f0921e9b35ca","ed5565eddefc2d51d1dfe307"],"intent":"Collapse Lighthouse Burglar/Locksmith repetition to one backbone milestone; distinct authored Lighthouse operations remain eligible."},
+    {"id":"keys-labs","target":"merge","sourceQuestIds":["faf940bce6b437c0ff7a054c","a346bde73130eeebdb7ce288","c76abff83a1abf42d85d12fd"],"intent":"One Labs key-access backbone milestone before clearance progression; additional high-value Labs operations may exist when mechanically and narratively distinct."},
+    {"id":"keys-labs-clearance","target":"rewrite","sourceQuestIds":["4f1a4e5e46cfa85e706c2783","62f518bb3cebd4a7b010016e"],"intent":"Replace Contractor/Supervisor access inflation with one controlled backbone milestone; legacy assort unlock rewards are not inherited."}
   ]
 }
