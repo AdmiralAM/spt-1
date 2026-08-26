@@ -45,13 +45,15 @@ namespace SPTBeltArmbandInventory
                     RuntimeIdentity.CandidateGridRows,
                     WearableDescriptorRegistry.Get(AccessoryCategory.ArmBand).Capabilities),
 
+                // Phase 2 proof stays deliberately narrow: exact-fit 1x1 storage,
+                // currency filter and payment-source visibility. Pickup/fast-access
+                // are not advertised until independently proven for this item.
                 [RuntimeIdentity.WristWalletItemId] = new WearableItemDescriptor(
                     RuntimeIdentity.WristWalletItemId,
                     AccessoryCategory.ArmBand,
                     RuntimeIdentity.WristWalletGridColumns,
                     RuntimeIdentity.WristWalletGridRows,
                     AccessoryCapability.PaymentSource |
-                    AccessoryCapability.PickupFallback |
                     AccessoryCapability.BuildValidation)
             };
 
