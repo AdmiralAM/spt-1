@@ -22,7 +22,8 @@ public sealed class EconomyMod(
     QuestProvenanceDeltaService questProvenanceDeltaService,
     CompositePolicyEvaluationService compositePolicyEvaluationService,
     TargetProposalService targetProposalService,
-    EnforcementPlanService enforcementPlanService
+    EnforcementPlanService enforcementPlanService,
+    AdmiralTraderRuntimeAdapterService admiralTraderRuntimeAdapterService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
@@ -56,6 +57,7 @@ public sealed class EconomyMod(
         questAnalysis = await baselineProvenanceCorrectionService.ApplyToUnifiedAnalysisAsync(questAnalysis, vanillaBaseline, cancellationToken);
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
 
+        await admiralTraderRuntimeAdapterService.RunAsync(config, cancellationToken);
         await compositePolicyEvaluationService.RunAsync(questAnalysis, cancellationToken);
         await targetProposalService.RunAsync(questAnalysis, cancellationToken);
         await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
