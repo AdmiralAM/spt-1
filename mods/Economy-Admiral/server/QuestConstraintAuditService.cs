@@ -17,37 +17,24 @@ public sealed class QuestConstraintAuditService(
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
-    private static readonly HashSet<string> VanillaTraderIds = new(StringComparer.Ordinal)
+    public async Task RunAsync(VanillaBaselineSnapshot baselineSnapshot, CancellationToken cancellationToken)
     {
-        "54cb50c76803fa8b248b4571",
-        "54cb57776803fa99248b456e",
-        "579dc571d53a0658a154fbec",
-        "58330581ace78e27b8b10cee",
-        "5935c25fb3acc3127c3d8cd9",
-        "5a7c2eca46aef81a7ca2145d",
-        "5ac3b934156ae10c4430e83c",
-        "5c0647fdd443bc2504c2d371",
-        "638f541a29ffd1183d187f57",
-        "6617beeaa9cfa777ca915b7c",
-    };
+        if (baselineSnapshot.QuestCount <= 0)
+            throw new InvalidOperationException("Economy Admiral quest constraint audit requires a non-empty pristine startup snapshot.");
 
-    public async Task RunAsync(CancellationToken cancellationToken)
-    {
         var rows = templates.Quests
             .OrderBy(pair => pair.Key.ToString(), StringComparer.Ordinal)
-            .Select(pair => BuildRow(pair.Key.ToString(), pair.Value))
+            .Select(pair => BuildRow(pair.Key.ToString(), pair.Value, baselineSnapshot.QuestIds.Contains(pair.Key.ToString())))
             .ToList();
-
-        var vanilla = rows.Where(row => row.IsVanillaTraderQuest && !row.Restartable).ToList();
-        var vanillaRestartable = rows.Where(row => row.IsVanillaTraderQuest && row.Restartable).ToList();
 
         var report = new QuestConstraintAuditReport
         {
             SchemaVersion = 1,
             ConstraintsAffectRewardAllowance = false,
-            Note = "Structured final-DB quest constraints only. No text interpretation and no reward multiplier is applied.",
-            Vanilla = BuildBenchmark(vanilla),
-            VanillaRestartable = BuildBenchmark(vanillaRestartable),
+            BenchmarkSource = "PristineStartupSnapshot",
+            Note = $"Structured final-DB quest constraints measured directly against pristine startup quest-ID provenance captured at priority {baselineSnapshot.CapturePriority}. No correction overlay, text interpretation, or reward multiplier is applied.",
+            Vanilla = BuildBenchmark(baselineSnapshot.Quests.Where(row => !row.Restartable).ToList()),
+            VanillaRestartable = BuildBenchmark(baselineSnapshot.Quests.Where(row => row.Restartable).ToList()),
             Quests = rows,
         };
 
@@ -55,16 +42,14 @@ public sealed class QuestConstraintAuditService(
         var reportPath = Path.GetFullPath(Path.Combine(modPath, "reports", "economy-admiral-quest-constraints.json"));
         var modRoot = Path.GetFullPath(modPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         if (!reportPath.StartsWith(modRoot, StringComparison.OrdinalIgnoreCase))
-        {
             throw new InvalidOperationException("Economy Admiral quest constraint report path must stay inside the mod directory.");
-        }
 
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
         await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
-        logger.Info($"[Economy Admiral] quest constraint audit complete: {rows.Count} quests; report={reportPath}");
+        logger.Info($"[Economy Admiral] quest constraint audit complete from pristine baseline: finalQuests={rows.Count}, pristineQuests={baselineSnapshot.QuestCount}; report={reportPath}");
     }
 
-    private static QuestConstraintRow BuildRow(string questId, Quest quest)
+    private static QuestConstraintRow BuildRow(string questId, Quest quest, bool isVanilla)
     {
         var conditions = EnumerateObjectiveConditions(quest).ToList();
         var counterConditions = conditions
@@ -80,7 +65,6 @@ public sealed class QuestConstraintAuditService(
         var plant = conditions.Count(condition => condition.PlantTime is > 0);
         var distance = counterConditions.Count(condition => condition.Distance?.Value is > 0);
         var daytime = counterConditions.Count(condition => condition.Daytime is not null);
-        var constrained = timed + oneSession + fir + plant + distance + daytime;
 
         var strictestTimeSeconds = conditions
             .Where(condition => condition.CompleteInSeconds is > 0)
@@ -88,20 +72,18 @@ public sealed class QuestConstraintAuditService(
             .Concat(counterConditions.Where(condition => condition.CompleteInSeconds is > 0).Select(condition => (double)condition.CompleteInSeconds!.Value))
             .DefaultIfEmpty(0)
             .Min();
-
         var longestDistance = counterConditions
             .Where(condition => condition.Distance?.Value is > 0)
             .Select(condition => condition.Distance!.Value!.Value)
             .DefaultIfEmpty(0)
             .Max();
 
-        var traderId = quest.TraderId.ToString();
         return new QuestConstraintRow
         {
             QuestId = questId,
             QuestName = quest.QuestName ?? quest.Name,
-            TraderId = traderId,
-            IsVanillaTraderQuest = VanillaTraderIds.Contains(traderId),
+            TraderId = quest.TraderId.ToString(),
+            IsVanillaTraderQuest = isVanilla,
             Restartable = quest.Restartable,
             ObjectiveConditionCount = conditions.Count,
             TimedConditionCount = timed,
@@ -110,7 +92,7 @@ public sealed class QuestConstraintAuditService(
             PlantConditionCount = plant,
             DistanceConstraintCount = distance,
             DaytimeConstraintCount = daytime,
-            StructuredConstraintCount = constrained,
+            StructuredConstraintCount = timed + oneSession + fir + plant + distance + daytime,
             StrictestCompletionTimeSeconds = Math.Round(strictestTimeSeconds, 2),
             LongestDistanceConstraint = Math.Round(longestDistance, 2),
         };
@@ -119,23 +101,12 @@ public sealed class QuestConstraintAuditService(
     private static IEnumerable<QuestCondition> EnumerateObjectiveConditions(Quest quest)
     {
         if (quest.Conditions.AvailableForFinish is not null)
-        {
-            foreach (var condition in quest.Conditions.AvailableForFinish)
-            {
-                yield return condition;
-            }
-        }
-
+            foreach (var condition in quest.Conditions.AvailableForFinish) yield return condition;
         if (quest.Conditions.Success is not null)
-        {
-            foreach (var condition in quest.Conditions.Success)
-            {
-                yield return condition;
-            }
-        }
+            foreach (var condition in quest.Conditions.Success) yield return condition;
     }
 
-    private static QuestConstraintBenchmark BuildBenchmark(IReadOnlyCollection<QuestConstraintRow> rows)
+    private static QuestConstraintBenchmark BuildBenchmark(IReadOnlyCollection<VanillaQuestBaselineRow> rows)
     {
         var constraintCounts = rows.Select(row => (double)row.StructuredConstraintCount).OrderBy(value => value).ToList();
         var timedCounts = rows.Select(row => (double)row.TimedConditionCount).OrderBy(value => value).ToList();
@@ -166,24 +137,12 @@ public sealed class QuestConstraintAuditService(
 
     private static double Percentile(IReadOnlyList<double> sortedValues, double percentile)
     {
-        if (sortedValues.Count == 0)
-        {
-            return 0;
-        }
-
-        if (sortedValues.Count == 1)
-        {
-            return Math.Round(sortedValues[0], 2);
-        }
-
+        if (sortedValues.Count == 0) return 0;
+        if (sortedValues.Count == 1) return Math.Round(sortedValues[0], 2);
         var position = (sortedValues.Count - 1) * percentile;
         var lower = (int)Math.Floor(position);
         var upper = (int)Math.Ceiling(position);
-        if (lower == upper)
-        {
-            return Math.Round(sortedValues[lower], 2);
-        }
-
+        if (lower == upper) return Math.Round(sortedValues[lower], 2);
         var fraction = position - lower;
         return Math.Round(sortedValues[lower] + ((sortedValues[upper] - sortedValues[lower]) * fraction), 2);
     }
@@ -193,6 +152,7 @@ public sealed record QuestConstraintAuditReport
 {
     public required int SchemaVersion { get; init; }
     public required bool ConstraintsAffectRewardAllowance { get; init; }
+    public required string BenchmarkSource { get; init; }
     public required string Note { get; init; }
     public required QuestConstraintBenchmark Vanilla { get; init; }
     public required QuestConstraintBenchmark VanillaRestartable { get; init; }
