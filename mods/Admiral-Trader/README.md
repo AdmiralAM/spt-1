@@ -6,8 +6,8 @@ Official curated successor workstream for the legacy Andrudis/QuestManiac ecosys
 
 - Mod name: **Admiral Trader**
 - Trader name: **Admiral / Адмирал**
-- Official trader portrait: **selected** — the final/latest bust portrait from the `Генерация иконок адмирала` workstream showing Admiral in a white naval tunic.
-- Exact portrait binary: awaiting handoff into this repository; substitution/regeneration is not allowed. The maintained contract is [`manifests/identity-assets.json`](manifests/identity-assets.json).
+- Official trader portrait: **final and ingested** — the exact user-approved `1182x1330` bust portrait from the `Генерация иконок адмирала` workstream showing Admiral in a white naval tunic.
+- Approved source SHA-256: `48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff`. Runtime uses only the technically resized/encoded `512x576` JPEG at the maintained trader-avatar route; substitution, regeneration and placeholder fallback are not allowed. The maintained contract is [`manifests/identity-assets.json`](manifests/identity-assets.json).
 - Legacy Andrudis/QuestManiac names are provenance/source references only and are not the target product identity.
 
 ## Gameplay Alpha direction
@@ -113,7 +113,7 @@ The server/runtime validation layer checks trader identity, native lowercase `qu
 
 The exact-runtime builder compiles against the user's real SPT 4.1.3 runtime assemblies and records source/runtime provenance before physical testing. CI is necessary but does not substitute for physical SPT runtime evidence.
 
-The official portrait is creatively selected, but source currently retains the built-in test placeholder until the **exact selected binary** is handed off and committed at the maintained identity route. A similar/recreated portrait is not an acceptable substitute.
+The official portrait source has been physically recovered and ingested. Source metadata locks the approved `1182x1330` image by SHA-256, while the runtime package locks the technical `512x576` JPEG by Git blob identity and records its exact package SHA-256 in candidate provenance. `base.json` and runtime metadata use only `/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg`; placeholder/substitute portrait paths are not accepted.
 
 ## Key maintained contracts
 
