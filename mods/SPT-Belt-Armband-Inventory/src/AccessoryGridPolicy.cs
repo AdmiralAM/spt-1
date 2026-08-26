@@ -1,14 +1,14 @@
 namespace SPTBeltArmbandInventory
 {
     // Pure geometry rules. They describe the declared grid, not a Unity prefab.
-    // The runtime must render the declared dimensions without adding filler cells.
+    // The runtime must render the declared dimensions without filler cells or
+    // artificial minimum window dimensions. The only non-grid space is the
+    // same native GridWindow chrome used by ordinary EFT containers.
     internal static class AccessoryGridPolicy
     {
         internal const float CellPixels = 63f;
-        internal const float WindowHorizontalPadding = 24f;
-        internal const float WindowVerticalPadding = 34f;
-        internal const float MinimumWindowWidth = 96f;
-        internal const float MinimumWindowHeight = 136f;
+        internal const float WindowHorizontalChrome = 24f;
+        internal const float WindowVerticalChrome = 34f;
 
         internal static bool IsValid(int columns, int rows)
         {
@@ -38,28 +38,28 @@ namespace SPTBeltArmbandInventory
             return string.Equals(templateId, RuntimeIdentity.CandidateItemId, System.StringComparison.Ordinal);
         }
 
-        internal static float CompactWindowWidth(int columns, float measuredGridWidth)
+        internal static float ExactWindowWidth(int columns, float measuredGridWidth)
         {
+            if (columns <= 0) return 0f;
             float gridWidth = measuredGridWidth > 0f ? measuredGridWidth : columns * CellPixels;
-            float width = gridWidth + WindowHorizontalPadding;
-            return width < MinimumWindowWidth ? MinimumWindowWidth : width;
+            return gridWidth + WindowHorizontalChrome;
         }
 
-        internal static float CompactWindowWidth(int columns)
+        internal static float ExactWindowWidth(int columns)
         {
-            return CompactWindowWidth(columns, 0f);
+            return ExactWindowWidth(columns, 0f);
         }
 
-        internal static float CompactWindowHeight(int rows, float measuredGridHeight)
+        internal static float ExactWindowHeight(int rows, float measuredGridHeight)
         {
+            if (rows <= 0) return 0f;
             float gridHeight = measuredGridHeight > 0f ? measuredGridHeight : rows * CellPixels;
-            float height = gridHeight + WindowVerticalPadding;
-            return height < MinimumWindowHeight ? MinimumWindowHeight : height;
+            return gridHeight + WindowVerticalChrome;
         }
 
-        internal static float CompactWindowHeight(int rows)
+        internal static float ExactWindowHeight(int rows)
         {
-            return CompactWindowHeight(rows, 0f);
+            return ExactWindowHeight(rows, 0f);
         }
     }
 }
