@@ -19,6 +19,12 @@ namespace SPTBeltArmbandInventory
         Expanded
     }
 
+    internal enum AccessoryHostState
+    {
+        ConceptOnly,
+        Validated
+    }
+
     internal static class AccessoryCategoryPolicy
     {
         internal static AccessoryCapacityBand Capacity(AccessoryCategory category)
@@ -29,8 +35,10 @@ namespace SPTBeltArmbandInventory
                     return AccessoryCapacityBand.Micro;
                 case AccessoryCategory.Belt:
                     return AccessoryCapacityBand.Expanded;
-                default:
+                case AccessoryCategory.ArmBand:
                     return AccessoryCapacityBand.Compact;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(category), category, null);
             }
         }
 
@@ -38,7 +46,22 @@ namespace SPTBeltArmbandInventory
         {
             // Category does not override the runtime item contract. A cosmetic or
             // empty host must never become a container row by category alone.
-            return hasItem && isContainer;
+            return IsSupported(category) && hasItem && isContainer;
+        }
+
+        internal static AccessoryHostState HostState(AccessoryCategory category)
+        {
+            if (!IsSupported(category)) throw new ArgumentOutOfRangeException(nameof(category), category, null);
+            return category == AccessoryCategory.ArmBand
+                ? AccessoryHostState.Validated
+                : AccessoryHostState.ConceptOnly;
+        }
+
+        internal static bool CanActivateRuntime(AccessoryCategory category, bool hasItem, bool isContainer)
+        {
+            return IsSupported(category)
+                && HostState(category) == AccessoryHostState.Validated
+                && CanExposeContainer(category, hasItem, isContainer);
         }
 
         internal static bool IsSupported(AccessoryCategory category)

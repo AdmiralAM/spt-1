@@ -11,6 +11,12 @@ deliberately independent from model meshes and from any particular trader item.
 | `Belt` | waist-mounted general utility | future validated belt host | expected | use the same searchable compound-item contract, with capacity driven by its real grid definition |
 | `HeadBand` | head-mounted compact utility | future validated head/face host | optional | use the same item contract, but keep capacity and interaction deliberately smaller than a Belt |
 
+Category support and runtime-host validation are separate states. All three
+categories are part of the design contract, but only `ArmBand` currently has a
+validated SPT 4.1.3 host boundary. `Belt` and `HeadBand` must remain
+`ConceptOnly` in code until their real equipment host, serialization and UI
+lifecycle are proven together.
+
 The category is a gameplay/UI concept. It must not be inferred from a mesh name,
 trader ID, or a single vanilla parent template. Runtime behavior is selected by
 the registered client item type plus the validated equipment host.
