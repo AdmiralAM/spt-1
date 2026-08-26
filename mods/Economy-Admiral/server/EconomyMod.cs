@@ -16,8 +16,6 @@ public sealed class EconomyMod(
     QuestConstraintAuditService questConstraintAuditService,
     QuestAnalysisService questAnalysisService,
     QuestProvenanceDeltaService questProvenanceDeltaService,
-    CompositePolicyEvaluationService compositePolicyEvaluationService,
-    TargetProposalService targetProposalService,
     EnforcementPlanService enforcementPlanService,
     AdmiralTraderRuntimeAdapterService admiralTraderRuntimeAdapterService,
     SourcePressureRuntimeReportService sourcePressureRuntimeReportService
@@ -33,7 +31,7 @@ public sealed class EconomyMod(
         runtimeEvidenceService.CaptureBefore();
 
         // Core reports read typed final DB state directly against the immutable pristine snapshot.
-        // The old report correction chain and accepted primary-parity shadow verifier are not on the runtime path.
+        // Accepted shadow/correction layers and legacy composite/target report passes are not on the runtime path.
         await auditService.RunAsync(vanillaBaseline, cancellationToken);
         await rewardUtilityAuditService.RunAsync(vanillaBaseline, cancellationToken);
         var progressionSnapshot = await questProgressionGraphService.RunAsync(vanillaBaseline, cancellationToken);
@@ -45,10 +43,7 @@ public sealed class EconomyMod(
         var admiralTraderReport = await admiralTraderRuntimeAdapterService.RunAsync(config, cancellationToken);
         await sourcePressureRuntimeReportService.RunAsync(config, admiralTraderReport, cancellationToken);
 
-        await compositePolicyEvaluationService.RunAsync(questAnalysis, cancellationToken);
-        await targetProposalService.RunAsync(questAnalysis, cancellationToken);
         var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
-
         await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
     }
 }
