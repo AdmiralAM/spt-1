@@ -26,8 +26,6 @@ public sealed class AdmiralTraderRegistration(
     LocaleTable localesTable,
     ISptLogger<AdmiralTraderRegistration> logger) : IOnLoad
 {
-    private const string TestPlaceholderAvatar = "/files/quest/icon/5a27cafa86f77424e20615d6.jpg";
-
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -79,19 +77,13 @@ public sealed class AdmiralTraderRegistration(
     private void RegisterAvatarRoute(string modPath, TraderBase traderBase)
     {
         string avatar = traderBase.Avatar!;
-        if (string.Equals(avatar, TestPlaceholderAvatar, StringComparison.Ordinal))
-        {
-            logger.Warning("Admiral Trader is using the built-in test placeholder avatar; final portrait is intentionally deferred");
-            return;
-        }
-
         string expectedCustomRoute = $"/files/trader/avatar/{RuntimeIdentity.TraderId}.jpg";
         if (!string.Equals(avatar, expectedCustomRoute, StringComparison.Ordinal))
-            throw new InvalidDataException($"Admiral Trader has an unsupported avatar route: {avatar}");
+            throw new InvalidDataException($"Admiral Trader must use the official portrait route; actual route: {avatar}");
 
         string avatarPath = IOPath.Combine(modPath, "assets", $"{RuntimeIdentity.TraderId}.jpg");
         if (!File.Exists(avatarPath))
-            throw new FileNotFoundException("Admiral Trader custom portrait route is configured but the portrait asset is missing", avatarPath);
+            throw new FileNotFoundException("Admiral Trader official portrait asset is missing", avatarPath);
 
         imageRouter.AddRoute(avatar.Replace(".jpg", string.Empty, StringComparison.OrdinalIgnoreCase), avatarPath);
     }
