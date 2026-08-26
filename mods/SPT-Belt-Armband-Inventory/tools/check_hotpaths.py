@@ -42,12 +42,13 @@ def guard_region(path_name, start_token, end_token, label):
     for token in (
         "GetMethods(", "GetMethod(", "GetProperty(", "GetField(",
         "MethodInfo", "PropertyInfo", "FieldInfo", "Enum.Parse", "Activator.",
-        ".Invoke("
+        "MethodBase.Invoke", "MethodInfo.Invoke", "PropertyInfo.GetValue", "FieldInfo.GetValue"
     ):
         if token in region:
             violations.append(f"{path_name}: {label} performs runtime reflection/discovery ({token})")
 
 # Interaction/lifecycle hot paths must use startup-bound delegates and cached values.
+# Delegate calls (including ?.Invoke on Action loggers) are allowed; reflection Invoke is not.
 guard_region(
     "PickupSlotPatches.cs",
     "internal static object Resolve(",
