@@ -10,6 +10,17 @@ Final trader portrait/character art is intentionally outside this gate. The cand
 
 The physical candidate must be built from the exact tested PR head against SPT 4.1.3 runtime assemblies. Build provenance must record the source head and exact runtime binary hashes so runtime evidence cannot describe a different source/runtime pair than the one accepted by CI.
 
+## Candidate publication topology
+
+Ordinary Admiral Trader validation and installable runtime-candidate publication are intentionally different CI concerns.
+
+- Module validation continues on Admiral source/path changes, including stacked post-candidate PRs.
+- Automatic `Admiral Trader SPT 4.1.3 Candidate` publication is reserved for pull requests whose base branch is `main`.
+- A PR stacked on another feature/runtime-gate branch must not automatically stage or upload a candidate artifact; such an artifact could be mistaken for the accepted Gate A package.
+- `workflow_dispatch` remains available when a candidate build is deliberately requested outside the automatic main-targeted topology.
+
+A successful validation workflow on a stacked PR therefore does **not** imply that a new physical runtime candidate should exist. The accepted Gate A source/artifact pair remains whatever exact head was explicitly handed off under this document until a later candidate is deliberately cut.
+
 ## Mandatory artifact boundary
 
 A user runtime handoff is **not valid** from a source checkout, PR diff, branch name, or green source workflow alone.
