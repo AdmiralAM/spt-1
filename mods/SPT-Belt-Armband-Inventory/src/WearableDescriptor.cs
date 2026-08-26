@@ -44,19 +44,19 @@ namespace SPTBeltArmbandInventory
                     AccessoryCapability.DeathRetention |
                     AccessoryCapability.ScavHostRestoration),
 
-                // Belt and HeadBand are intentionally descriptor-only until their EFT
-                // host boundaries are proven. Keeping them in the registry lets policy
-                // become data-driven without activating invented runtime slots.
+                // Dedicated identities are fixed product requirements. They remain
+                // fail-closed until the SPT 4.1.3 injection/serialization boundary is
+                // proven, but no code may reinterpret them as vanilla equipment slots.
                 [AccessoryCategory.Belt] = new WearableDescriptor(
                     AccessoryCategory.Belt,
-                    null,
+                    DedicatedWearableSlotContract.BeltSlotId,
                     AccessoryCapacityBand.Expanded,
                     AccessoryHostState.ConceptOnly,
                     AccessoryCapability.None),
 
                 [AccessoryCategory.HeadBand] = new WearableDescriptor(
                     AccessoryCategory.HeadBand,
-                    null,
+                    DedicatedWearableSlotContract.HeadBandSlotId,
                     AccessoryCapacityBand.Micro,
                     AccessoryHostState.ConceptOnly,
                     AccessoryCapability.None)
