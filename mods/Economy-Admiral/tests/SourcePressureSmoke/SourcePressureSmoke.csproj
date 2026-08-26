@@ -12,5 +12,6 @@
     <Compile Include="../../server/AdmiralTraderAdapterEvidence.cs" Link="AdmiralTraderAdapterEvidence.cs" />
     <Compile Include="../../server/AdmiralTraderItemAdapter.cs" Link="AdmiralTraderItemAdapter.cs" />
     <Compile Include="../../server/EffectiveQuestGateEvidence.cs" Link="EffectiveQuestGateEvidence.cs" />
+    <Compile Include="../../server/QuestGateJsonParser.cs" Link="QuestGateJsonParser.cs" />
   </ItemGroup>
 </Project>
