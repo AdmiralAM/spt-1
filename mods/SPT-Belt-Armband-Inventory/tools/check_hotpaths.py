@@ -47,7 +47,7 @@ def guard_region(path_name, start_token, end_token, label):
         if token in region:
             violations.append(f"{path_name}: {label} performs runtime reflection/discovery ({token})")
 
-# Interaction/runtime hot paths must use startup-bound delegates and cached values.
+# Interaction/lifecycle hot paths must use startup-bound delegates and cached values.
 guard_region(
     "PickupSlotPatches.cs",
     "internal static object Resolve(",
@@ -58,8 +58,13 @@ guard_region(
     "internal static void Normalize(",
     "static int IndexOfReference",
     "payment Normalize")
+guard_region(
+    "ScavBeltPatches.cs",
+    "internal static void RestoreContainerBeltSlot(",
+    "internal static void Reset()",
+    "Scav lifecycle restore")
 
 if violations:
     raise SystemExit("Hot-path guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; Alt-pickup and payment hot paths are startup-bound)")
+print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; interaction/lifecycle hot paths are startup-bound)")
