@@ -26,5 +26,6 @@
     "lowDepthMaxRelativeMultiple": 1.0,
     "lowStructureMaxRelativeMultiple": 1.0
   },
-  "manualOverrides": {}
+  "manualOverrides": {},
+  "questRewardOverrides": {}
 }
