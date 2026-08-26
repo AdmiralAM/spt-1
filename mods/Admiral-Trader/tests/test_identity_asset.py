@@ -6,12 +6,45 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
 EXPECTED_ROUTE = f"/files/trader/avatar/{TRADER_ID}.jpg"
-EXPECTED_RUNTIME_SHA256 = "2c78721915489107142da0d0f434e450fdec564658af979933d1503a0a114061"
+EXPECTED_RUNTIME_SHA256 = "70dac83bc2faa5333d33c7cfee370271a6cf9f05e918e933e0853068dca3e02f"
 EXPECTED_SOURCE_SHA256 = "48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff"
+EXPECTED_DIMENSIONS = (512, 576)
 
 
 def load(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def jpeg_dimensions(data: bytes):
+    if len(data) < 4 or data[:2] != b"\xff\xd8" or data[-2:] != b"\xff\xd9":
+        raise AssertionError("portrait is not a complete JPEG stream")
+    offset = 2
+    sof_markers = {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF}
+    while offset + 4 <= len(data):
+        if data[offset] != 0xFF:
+            offset += 1
+            continue
+        while offset < len(data) and data[offset] == 0xFF:
+            offset += 1
+        if offset >= len(data):
+            break
+        marker = data[offset]
+        offset += 1
+        if marker in (0xD8, 0xD9) or 0xD0 <= marker <= 0xD7:
+            continue
+        if offset + 2 > len(data):
+            break
+        length = int.from_bytes(data[offset:offset + 2], "big")
+        if length < 2 or offset + length > len(data):
+            raise AssertionError("portrait JPEG contains an invalid marker length")
+        if marker in sof_markers:
+            if length < 7:
+                raise AssertionError("portrait JPEG SOF marker is truncated")
+            height = int.from_bytes(data[offset + 3:offset + 5], "big")
+            width = int.from_bytes(data[offset + 5:offset + 7], "big")
+            return width, height
+        offset += length
+    raise AssertionError("portrait JPEG has no SOF dimensions")
 
 
 class IdentityAssetTests(unittest.TestCase):
@@ -29,12 +62,15 @@ class IdentityAssetTests(unittest.TestCase):
         self.assertFalse(portrait["placeholderAllowed"])
         self.assertEqual(portrait["sourceFileSha256"], EXPECTED_SOURCE_SHA256)
 
-    def test_runtime_asset_exists_and_matches_locked_hash(self):
+    def test_runtime_asset_exists_and_matches_locked_hash_and_geometry(self):
         self.assertTrue(self.asset.is_file())
-        digest = hashlib.sha256(self.asset.read_bytes()).hexdigest()
+        data = self.asset.read_bytes()
+        digest = hashlib.sha256(data).hexdigest()
         self.assertEqual(digest, EXPECTED_RUNTIME_SHA256)
         self.assertEqual(self.identity["portrait"]["runtimeSha256"], digest)
-        self.assertGreater(self.asset.stat().st_size, 50_000)
+        self.assertGreater(len(data), 10_000)
+        self.assertEqual(jpeg_dimensions(data), EXPECTED_DIMENSIONS)
+        self.assertEqual(self.identity["portrait"]["runtimeDimensions"], "512x576")
 
     def test_base_uses_only_official_portrait_route(self):
         self.assertEqual(self.base["avatar"], EXPECTED_ROUTE)
