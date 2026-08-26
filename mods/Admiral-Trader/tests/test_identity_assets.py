@@ -21,27 +21,30 @@ class IdentityAssetContractTests(unittest.TestCase):
         self.assertEqual(self.identity["traderId"], "d5c27bb3169f8dfbc13f6b69")
         self.assertEqual(self.identity["officialName"], {"en": "Admiral", "ru": "Адмирал"})
 
-    def test_portrait_selection_is_final_but_binary_is_not_substitutable(self):
+    def test_portrait_selection_and_binary_are_final(self):
         portrait = self.identity["portrait"]
-        self.assertEqual(portrait["selectionStatus"], "selected")
-        self.assertIn("white naval tunic", portrait["description"].lower())
+        self.assertEqual(portrait["selectionStatus"], "final")
+        self.assertEqual(portrait["assetStatus"], "ingested")
+        self.assertIn("white naval dress tunic", portrait["description"].lower())
         self.assertEqual(portrait["sourceConversation"], "Генерация иконок адмирала")
         self.assertFalse(portrait["substitutionAllowed"])
-        self.assertFalse(portrait["placeholderIsCreativeFallback"])
+        self.assertFalse(portrait["placeholderAllowed"])
 
-    def test_target_asset_and_route_are_bound_to_trader_id(self):
+    def test_runtime_asset_and_route_are_bound_to_trader_id(self):
         portrait = self.identity["portrait"]
         trader_id = self.identity["traderId"]
-        self.assertEqual(portrait["targetAsset"], f"assets/{trader_id}.jpg")
-        self.assertEqual(portrait["targetRoute"], f"/files/trader/avatar/{trader_id}.jpg")
+        self.assertEqual(portrait["runtimeAsset"], f"assets/{trader_id}.jpg")
+        self.assertEqual(portrait["runtimeRoute"], f"/files/trader/avatar/{trader_id}.jpg")
+        self.assertEqual(self.base["avatar"], portrait["runtimeRoute"])
 
-    def test_pending_binary_handoff_keeps_source_fail_closed_on_placeholder(self):
+    def test_runtime_manifest_has_no_placeholder_state(self):
         portrait = self.identity["portrait"]
         data = self.runtime["data"]
-        self.assertEqual(portrait["assetStatus"], "awaiting-exact-binary-handoff")
-        self.assertEqual(data["avatarMode"], "built-in-test-placeholder")
-        self.assertEqual(self.base["avatar"], data["avatar"])
-        self.assertNotEqual(data["avatar"], portrait["targetRoute"])
+        self.assertEqual(data["avatarMode"], "official-custom-route")
+        self.assertEqual(data["avatar"], portrait["runtimeRoute"])
+        self.assertEqual(data["officialPortraitAssetStatus"], "ingested")
+        self.assertEqual(data["officialPortraitAsset"], portrait["runtimeAsset"])
+        self.assertFalse(data["finalPortraitDeferred"])
 
 
 if __name__ == "__main__":
