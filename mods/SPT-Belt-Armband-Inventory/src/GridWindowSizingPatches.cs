@@ -11,11 +11,13 @@ namespace SPTBeltArmbandInventory
         sealed class PendingWindow
         {
             internal readonly WeakReference Window;
+            internal readonly bool RuntimeCandidateObserved;
             internal int Attempts;
 
-            internal PendingWindow(object window)
+            internal PendingWindow(object window, bool runtimeCandidateObserved)
             {
                 Window = new WeakReference(window);
+                RuntimeCandidateObserved = runtimeCandidateObserved;
             }
         }
 
@@ -31,8 +33,9 @@ namespace SPTBeltArmbandInventory
         internal static void Observe(object window, object[] args)
         {
             if (window == null) return;
-            if (!ContainsRuntimeCandidate(args) && !IsRuntimeCandidate(ReadWindowItem(window))) return;
-            if (TryAdjust(window)) return;
+            bool runtimeCandidateObserved = ContainsRuntimeCandidate(args) || IsRuntimeCandidate(ReadWindowItem(window));
+            if (!runtimeCandidateObserved) return;
+            if (TryAdjust(window, true)) return;
 
             for (int i = 0; i < PendingWindows.Count; i++)
             {
@@ -47,7 +50,7 @@ namespace SPTBeltArmbandInventory
                 return;
             }
 
-            PendingWindows.Add(new PendingWindow(window));
+            PendingWindows.Add(new PendingWindow(window, runtimeCandidateObserved));
             RequestFlush?.Invoke();
         }
 
@@ -65,7 +68,7 @@ namespace SPTBeltArmbandInventory
                     continue;
                 }
 
-                if (TryAdjust(window) || ++pending.Attempts >= 120)
+                if (TryAdjust(window, pending.RuntimeCandidateObserved) || ++pending.Attempts >= 120)
                     PendingWindows.RemoveAt(i--);
             }
         }
@@ -94,11 +97,11 @@ namespace SPTBeltArmbandInventory
             return false;
         }
 
-        static bool TryAdjust(object window)
+        static bool TryAdjust(object window, bool runtimeCandidateObserved)
         {
             Component component = window as Component;
             if (component == null || component.gameObject == null || !component.gameObject.activeInHierarchy) return false;
-            if (!IsRuntimeCandidate(ReadWindowItem(window))) return false;
+            if (!runtimeCandidateObserved && !IsRuntimeCandidate(ReadWindowItem(window))) return false;
 
             RectTransform rect = component.transform as RectTransform;
             if (rect == null) return false;
