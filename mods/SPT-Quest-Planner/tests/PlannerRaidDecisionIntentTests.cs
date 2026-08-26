@@ -45,8 +45,8 @@ namespace SPTQuestPlanner.Tests
             Assert.Equal(new[] { "prereq" }, intent.FocusActionableQuestIds);
             Assert.Empty(intent.FocusEligibilityUnknownQuestIds);
             Assert.Equal(PlannerRaidDecisionOutcome.PreferLeft, decision.Outcome);
-            Assert.Contains("prerequisite path", decision.Evidence[0]);
-            Assert.Contains("active or available now", decision.Evidence[0]);
+            Assert.Contains("advances actionable focused quest", decision.Evidence[0], StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("prereq", decision.Evidence[0]);
         }
 
         [Fact]
