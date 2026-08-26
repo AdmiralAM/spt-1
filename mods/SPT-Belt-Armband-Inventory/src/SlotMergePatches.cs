@@ -6,9 +6,13 @@ namespace SPTBeltArmbandInventory
 {
     internal static class SlotMergePolicy
     {
-        internal static bool ShouldForce(string slotId)
+        internal static bool ShouldForce(string slotId, bool hasContainedItem, bool containedItemIsContainer)
         {
-            return string.Equals(slotId, BeltSlotPlan.ArmBand, StringComparison.Ordinal);
+            if (!string.Equals(slotId, BeltSlotPlan.ArmBand, StringComparison.Ordinal)) return false;
+
+            // Keep the empty ArmBand destination compatible with container-belt moves,
+            // but do not rewrite merge semantics for an already-equipped plain armband.
+            return !hasContainedItem || containedItemIsContainer;
         }
     }
 
@@ -20,7 +24,10 @@ namespace SPTBeltArmbandInventory
         {
             if (slot == null || InheritFromItemValue == null) return;
             string id = ReflectionTools.ReadMember(slot, "ID") as string;
-            if (!SlotMergePolicy.ShouldForce(id)) return;
+            object containedItem = ReflectionTools.ReadMember(slot, "ContainedItem");
+            bool hasContainedItem = containedItem != null;
+            bool containedItemIsContainer = hasContainedItem && ReflectionTools.HasContainers(containedItem);
+            if (!SlotMergePolicy.ShouldForce(id, hasContainedItem, containedItemIsContainer)) return;
             result = InheritFromItemValue;
         }
 
@@ -83,7 +90,7 @@ namespace SPTBeltArmbandInventory
                 object hmPostfix = hmCtor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
                 Patch(patchMethod, harmonyMethodType, getter, hmPostfix);
 
-                if (logInfo != null) logInfo("ArmBand merge compatibility installed via MergeContainerWithChildren postfix result override.");
+                if (logInfo != null) logInfo("ArmBand merge compatibility installed via container-aware MergeContainerWithChildren result override.");
                 return true;
             }
             catch (Exception exception)
