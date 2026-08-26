@@ -15,6 +15,8 @@
     <PackageReference Include="UnityEngine.Modules" Version="2021.3.33"><PrivateAssets>all</PrivateAssets></PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Remove="DynamicBeltPatches.cs" />
+    <Compile Remove="PanelRefreshPatches.cs" />
     <Compile Remove="GridWindowDumpPlugin.cs" />
     <Compile Remove="RuntimeBoundaryDiscoveryPlugin.cs" />
     <Compile Remove="RuntimeInventoryBoundaryDiscovery.cs" />
