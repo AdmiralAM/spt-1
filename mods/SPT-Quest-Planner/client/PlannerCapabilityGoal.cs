@@ -82,14 +82,17 @@ namespace SPTQuestPlanner.Client
     {
         public PlannerCapabilityGoal(
             PlannerCapabilityGoalDefinition definition,
-            PlannerRaidDecisionIntent questIntent)
+            PlannerRaidDecisionIntent questIntent,
+            bool gateAlreadyCompleted = false)
         {
             Definition = definition ?? throw new ArgumentNullException("definition");
             QuestIntent = questIntent ?? throw new ArgumentNullException("questIntent");
+            GateAlreadyCompleted = gateAlreadyCompleted;
         }
 
         public PlannerCapabilityGoalDefinition Definition { get; private set; }
         public PlannerRaidDecisionIntent QuestIntent { get; private set; }
+        public bool GateAlreadyCompleted { get; private set; }
         public bool HasActionableQuestWork { get { return QuestIntent.HasActionableFocusFrontier; } }
         public bool HasEligibilityUnknowns { get { return QuestIntent.HasUnknownFocusEligibility; } }
         public bool HasTerminalConflict { get { return QuestIntent.HasTerminalFocusConflict; } }
@@ -97,6 +100,8 @@ namespace SPTQuestPlanner.Client
 
     public static class PlannerCapabilityGoalBuilder
     {
+        private const int CompletedDisposition = 5;
+
         public static PlannerCapabilityGoal Build(
             PlannerCapabilityGoalDefinition definition,
             PlannerTopologyIndex topology,
@@ -112,7 +117,9 @@ namespace SPTQuestPlanner.Client
                 definition.GateQuestId,
                 topology,
                 state);
-            return new PlannerCapabilityGoal(definition, intent);
+            PlannerQuestClientState gateState = state.GetQuest(definition.GateQuestId);
+            bool gateAlreadyCompleted = gateState != null && gateState.Disposition == CompletedDisposition;
+            return new PlannerCapabilityGoal(definition, intent, gateAlreadyCompleted);
         }
     }
 }
