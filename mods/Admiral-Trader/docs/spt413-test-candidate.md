@@ -8,22 +8,29 @@ The PR head must satisfy all Admiral Trader workflows. Source `runtime-manifest.
 
 Final trader portrait/character art is intentionally outside this gate. The candidate uses the explicit built-in placeholder route declared in `base.json` and the runtime manifest.
 
-The physical candidate must be built from a clean Git checkout of the exact tested PR head. The builder records source and runtime provenance and refuses a dirty working tree so runtime evidence cannot accidentally describe a different source state than CI.
+The physical candidate must be built from the exact tested PR head against SPT 4.1.3 runtime assemblies. Build provenance must record the source head and exact runtime binary hashes so runtime evidence cannot describe a different source/runtime pair than the one accepted by CI.
 
-## Build against the exact runtime
+## Mandatory artifact boundary
 
-From the repository checkout at the exact candidate PR head, copy the 40-character head SHA shown by PR #151 and pass it explicitly:
+A user runtime handoff is **not valid** from a source checkout, PR diff, branch name, or green source workflow alone.
 
-```powershell
-pwsh -File .\mods\Admiral-Trader\tools\build_spt413_test_candidate.ps1 `
-  -SptRoot "C:\Path\To\SPT" `
-  -ExpectedHeadSha "<PR-151-HEAD-SHA>"
-```
+Before asking for any physical SPT test, the exact PR head must have a downloadable GitHub Actions artifact (or deliberately promoted runtime package) that contains the installable Admiral Trader candidate produced from the exact SPT 4.1.3 runtime build path. The handoff must name:
 
-The script accepts either the game root or `SPT_Runtime` itself. It must:
+- PR number and branch;
+- exact 40-character source SHA;
+- successful workflow/run ID;
+- exact artifact name;
+- expected install layout;
+- candidate provenance file contained in the package.
+
+If source CI is green but no installable artifact exists, the gate remains **repo-side incomplete** and no user test is requested.
+
+## Exact-runtime build contract
+
+The maintained builder is `tools/build_spt413_test_candidate.ps1`. When executed in the controlled packaging environment it must:
 
 1. verify the checkout is a clean Git working tree;
-2. verify the current commit matches `-ExpectedHeadSha`;
+2. verify the current commit matches the expected PR head SHA;
 3. locate the real `SPTarkov.Server.Core.dll`;
 4. reject any assembly whose version is not `4.1.3.x`;
 5. compile `Admiral Trader Server.dll` against those exact runtime assemblies, not the 4.1.2 NuGet baseline;
@@ -32,9 +39,7 @@ The script accepts either the game root or `SPT_Runtime` itself. It must:
 8. write `candidate-provenance.json` with the full source SHA, Server.Core version/SHA-256 and built Admiral server DLL SHA-256;
 9. reject temporary/debug artifacts in the staged package.
 
-Add `-Install` only when the staged candidate is ready to be placed in `SPT_Runtime/user/mods/Admiral-Trader`.
-
-Before starting SPT, open the staged `candidate-provenance.json` and verify `sourceHeadSha` is exactly the PR head being tested. Keep this small JSON file with the runtime evidence; do not commit it back to the source branch.
+The published artifact must preserve that staged layout. `candidate-provenance.json` must travel with the runtime evidence and must not be committed back to the source branch.
 
 ## Server-only smoke gate
 
@@ -99,4 +104,4 @@ Do not commit runtime logs, profile copies, generated build folders, screenshots
 
 ## Merge rule
 
-PR #151 must remain unmerged until exact SPT 4.1.3 build/start evidence is accepted. Source CI alone proves schema/tooling/package structure, not the final server assembly version or live quest/trader behavior.
+PR #151 must remain Draft/unmerged until an exact-head installable SPT 4.1.3 artifact exists and its physical build/start/UI evidence is accepted. Source CI alone proves schema/tooling/package structure, not the final server assembly version or live quest/trader behavior.
