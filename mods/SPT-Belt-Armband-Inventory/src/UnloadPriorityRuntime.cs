@@ -16,7 +16,7 @@ namespace SPTBeltArmbandInventory
         {
             logWarning = warning;
             MethodInfo target = FindTarget(equipmentType);
-            getSlot = equipmentType.GetMethod("GetSlot", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { slotEnumType }, null);
+            getSlot = ReflectionTools.FindInstanceMethod(equipmentType, "GetSlot", null, slotEnumType);
             if (target == null || getSlot == null || !target.ReturnType.IsGenericType)
                 return Fail("SPT 4.1 GetPrioritizedGridsForUnloadedObject shape was not found; belt unload priority was not patched.");
 
@@ -49,11 +49,8 @@ namespace SPTBeltArmbandInventory
                 object slot = getSlot.Invoke(equipment, new[] { armBandValue });
                 object beltItem = ReflectionTools.ReadMember(slot, "ContainedItem");
                 bool hasContainers = ReflectionTools.HasContainers(beltItem);
-                if (!AccessoryCapabilityPolicy.CanUse(
-                    AccessoryCategory.ArmBand,
-                    AccessoryCapability.UnloadPriority,
-                    beltItem != null,
-                    hasContainers)) return;
+                string templateId = GetTemplateId(beltItem);
+                if (!AccessoryCapabilityPolicy.CanUse(templateId, AccessoryCapability.UnloadPriority, beltItem != null, hasContainers)) return;
 
                 List<object> beltGrids = ReadBeltGrids(beltItem);
                 if (beltGrids.Count == 0) return;
@@ -74,8 +71,17 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                if (logWarning != null) logWarning("Could not extend unload-grid priority with belt grids: " + exception.Message);
+                if (logWarning != null) logWarning("Could not extend unload-grid priority with wearable grids: " + exception.Message);
             }
+        }
+
+        static string GetTemplateId(object item)
+        {
+            if (item == null) return null;
+            object stringTemplateId = ReflectionTools.ReadMember(item, "StringTemplateId");
+            if (stringTemplateId is string direct && !string.IsNullOrEmpty(direct)) return direct;
+            object templateId = ReflectionTools.ReadMember(item, "TemplateId");
+            return templateId?.ToString();
         }
 
         static List<object> ReadBeltGrids(object beltItem)
