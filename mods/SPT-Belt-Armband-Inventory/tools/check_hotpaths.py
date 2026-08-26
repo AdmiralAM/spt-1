@@ -28,22 +28,38 @@ for source in sorted(ROOT.glob("*.cs")):
         if token in text:
             violations.append(f"{source.name}: {reason} ({token})")
 
-# Alt-pickup runs on an interaction path. Discovery is allowed during TryInstall,
-# but Resolve itself must use only startup-bound delegates and cached values.
-pickup = ROOT / "PickupSlotPatches.cs"
-if pickup.exists() and pickup.name not in removed:
-    text = pickup.read_text(encoding="utf-8-sig")
-    start = text.find("internal static object Resolve(")
-    end = text.find("internal static void Reset()", start)
+def guard_region(path_name, start_token, end_token, label):
+    path = ROOT / path_name
+    if not path.exists() or path.name in removed:
+        return
+    text = path.read_text(encoding="utf-8-sig")
+    start = text.find(start_token)
+    end = text.find(end_token, start)
     if start < 0 or end < 0:
-        violations.append("PickupSlotPatches.cs: Alt-pickup Resolve hot path could not be located")
-    else:
-        resolve = text[start:end]
-        for token in ("GetMethods(", "GetMethod(", "GetProperty(", "GetField(", "MethodInfo", "PropertyInfo", "FieldInfo", "Enum.Parse", "Activator."):
-            if token in resolve:
-                violations.append(f"PickupSlotPatches.cs: Alt-pickup Resolve performs runtime reflection/discovery ({token})")
+        violations.append(f"{path_name}: {label} hot path could not be located")
+        return
+    region = text[start:end]
+    for token in (
+        "GetMethods(", "GetMethod(", "GetProperty(", "GetField(",
+        "MethodInfo", "PropertyInfo", "FieldInfo", "Enum.Parse", "Activator.",
+        ".Invoke("
+    ):
+        if token in region:
+            violations.append(f"{path_name}: {label} performs runtime reflection/discovery ({token})")
+
+# Interaction/runtime hot paths must use startup-bound delegates and cached values.
+guard_region(
+    "PickupSlotPatches.cs",
+    "internal static object Resolve(",
+    "internal static void Reset()",
+    "Alt-pickup Resolve")
+guard_region(
+    "PaymentSlotPatches.cs",
+    "internal static void Normalize(",
+    "static int IndexOfReference",
+    "payment Normalize")
 
 if violations:
     raise SystemExit("Hot-path guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; Alt-pickup Resolve is startup-bound)")
+print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; Alt-pickup and payment hot paths are startup-bound)")
