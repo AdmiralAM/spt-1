@@ -36,6 +36,11 @@ def validate(spec: dict[str, Any], plan: dict[str, Any], benchmark: dict[str, An
     if spec.get("traderId") != TRADER_ID:
         errors.append("authored spec trader id drift")
 
+    if plan.get("questCountPolicy") != "no-artificial-cap-quality-gated-expansion":
+        errors.append("curated plan must not impose an artificial quest-count cap")
+    if int(plan.get("currentBackboneQuestCount", 0)) != 10:
+        errors.append("current Access backbone count must remain 10 until an explicit expansion slice changes it")
+
     plan_groups = plan.get("groups") or []
     expected_slugs = {str(group.get("id")) for group in plan_groups if isinstance(group, dict)}
     slugs = [str(quest.get("slug")) for quest in quests if isinstance(quest, dict)]
@@ -47,8 +52,8 @@ def validate(spec: dict[str, Any], plan: dict[str, Any], benchmark: dict[str, An
         errors.append("duplicate authored quest id")
     if set(slugs) != expected_slugs:
         errors.append(f"authored group coverage mismatch: expected={sorted(expected_slugs)} actual={sorted(set(slugs))}")
-    if len(quests) > int(plan.get("targetQuestCountMax", 0)):
-        errors.append("authored quest count exceeds curated plan maximum")
+    if len(quests) != int(plan.get("currentBackboneQuestCount", -1)):
+        errors.append("authored Access backbone count drift")
 
     by_id = {str(quest.get("id")): quest for quest in quests if isinstance(quest, dict)}
     id_set = set(by_id)
@@ -100,7 +105,6 @@ def validate(spec: dict[str, Any], plan: dict[str, Any], benchmark: dict[str, An
         if unlock_slots and slug != "keys-labs-clearance":
             errors.append(f"{slug}: permanent unlock reserved for final clearance milestone")
 
-    # Detect prerequisite cycles.
     state: dict[str, int] = {}
     def visit(qid: str) -> None:
         if state.get(qid) == 1:
@@ -117,7 +121,6 @@ def validate(spec: dict[str, Any], plan: dict[str, Any], benchmark: dict[str, An
     for qid in sorted(by_id):
         visit(qid)
 
-    # Anti-grind structure: map milestones are not serialized into one mandatory chain.
     intro_id = derived_id("keys-intro")
     for slug in ("keys-factory", "keys-customs", "keys-woods", "keys-interchange", "keys-shoreline", "keys-reserve", "keys-lighthouse"):
         quest = next((row for row in quests if row.get("slug") == slug), None)
