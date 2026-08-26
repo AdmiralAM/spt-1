@@ -10,40 +10,55 @@ A deliberately narrow server-only rework of AcidPhantasm Item Valuation focused 
 
 The module performs one operation during server `PostLoad`:
 
-`item -> valuation rule -> tier -> TemplateItem.Properties.BackgroundColor`
+`item -> category valuation rule -> tier -> TemplateItem.Properties.BackgroundColor`
 
 There is no ItemView patch, client runtime loop, tooltip mutation, or name mutation.
-
-## Economic value source
-
-For non-ammunition items, the module uses the best realizable value:
-
-`effective value = max(best eligible trader sell value, usable flea value)`
-
-- Flea value comes from `TemplateTable.Prices` only when the item is valid for Ragfair.
-- Trader value uses the best eligible trader buy price. Regular traders are checked first; Fence is fallback-only.
-- Default weapon/equipment presets use the summed handbook value of preset children as the trader valuation basis, matching the established Item Valuation behavior.
-- Handbook value is used only when neither usable flea nor trader value is available.
-
-This deliberately avoids treating raw flea-table price as the sole definition of item worth.
-
-Item Intelligence remains independent and is not a hard dependency. Both mods use the same underlying SPT price/trader data model, but Item Valuation performs its one startup classification without requesting or retaining the Item Intelligence snapshot.
 
 ## Category rules
 
 | Item group | Tier input |
 | --- | --- |
-| Weapons | effective **total value** |
-| Armor / armored rigs | effective **total value** |
-| Keys | effective **total value** |
-| Ordinary loot, barter items, consumables, weapon parts/mods and other normal items | effective **value per inventory slot** |
+| Weapons | best realizable **total economic value** |
+| Armor / armored rigs | best realizable **total economic value** |
+| Keys | restored original AcidPhantasm **key-specific price logic** |
+| Ordinary loot, barter items, consumables, weapon parts/mods and other normal items | best realizable **value per inventory slot** |
 | Ammunition | **penetration power**, not monetary value |
 
-The economic rules therefore answer “how valuable is this loot?”, while ammunition colors answer “how capable is this round against armor?”.
+## Economic value source for normal non-key items
 
-## Money tiers
+`effective value = max(best eligible trader sell value, usable flea value)`
 
-The palette is intentionally dark and desaturated.
+- Flea value comes from `TemplateTable.Prices` only when the item is valid for Ragfair.
+- Trader value uses the best eligible trader buy price. Regular traders are checked first; Fence is fallback-only.
+- Default weapon/equipment presets use the summed handbook value of preset children as the trader valuation basis.
+- Handbook value is fallback when neither usable flea nor trader value exists.
+
+Item Intelligence remains independent and is not a hard dependency.
+
+## Keys — restored original logic
+
+Keys deliberately bypass the general `max(trader, flea)` valuation path. Matching AcidPhantasm's original behavior:
+
+1. use the full `TemplateTable.Prices` value when present;
+2. otherwise use handbook price;
+3. classify by the original dedicated key thresholds;
+4. if the key is not a valid flea item, apply the original flea-banned key override color.
+
+| Key price | Background |
+| ---: | --- |
+| < 10,000 | `#404040` |
+| 10,000–19,999 | `#a3a3a3` |
+| 20,000–29,999 | `#0c3b08` |
+| 30,000–49,999 | `#08083b` |
+| 50,000–74,999 | `#590b5e` |
+| >= 75,000 | `#5e470b` |
+| flea-banned key | `#660415` override |
+
+Only the background-color behavior is restored; key descriptions/tooltips remain untouched.
+
+## Money tiers for other economic items
+
+The general palette remains intentionally dark and desaturated.
 
 | Valuation | Background behavior |
 | ---: | --- |
@@ -57,24 +72,24 @@ The palette is intentionally dark and desaturated.
 
 ## Ammo penetration tiers
 
-The penetration boundaries retain AcidPhantasm's established progression while using this mod's subdued six-color palette.
-
-| Penetration | Background |
+| Penetration | Background behavior |
 | ---: | --- |
-| <= 15 | muted light green `#526B3F` |
-| 16–26 | muted green `#294F31` |
-| 27–35 | muted navy `#253552` |
-| 36–44 | muted violet `#4A3854` |
-| 45–54 | muted red `#5A2C31` |
-| > 54 | muted gold `#5C4825` |
+| < 10 | preserve original/default background |
+| 10–20 | muted light green `#526B3F` |
+| >20–40 | muted navy `#253552` |
+| >40–50 | muted violet `#4A3854` |
+| >50–70 | muted red `#5A2C31` |
+| >70 | muted gold `#5C4825` |
+
+There is no green ammo tier.
 
 Thresholds and colors are configurable in `config/config.json`. The current installation already provides ColorConverterAPI for custom HEX background values; this mod itself remains server-only.
 
 ## Deliberately removed
 
-The rework contains no damage/penetration text in names, short-name mutation, locale/description/tooltip price text, armor-class/plate coloring, flea-ban override color, live-flea refresh loop, timers, polling, repeated template scans, Harmony patches, ItemView hooks, `Update`, or `LateUpdate`.
+The rework contains no damage/penetration text in names, short-name mutation, locale/description/tooltip price text, armor-class/plate coloring, generic flea-ban override color, live-flea refresh loop, timers, polling, repeated template scans, Harmony patches, ItemView hooks, `Update`, or `LateUpdate`.
 
-It therefore does not compete with UI Fixes, CompatibilityHighlighter, Item Intelligence, Task Item Indicator, ArmorClassIcon, CaliberUnderName, Foldables, or FastSell for client UI hooks.
+The only restored flea-ban override is the original key-specific one described above.
 
 ## Runtime cost
 
@@ -82,7 +97,8 @@ All work occurs once during server startup:
 
 - walk the item-template dictionary once;
 - ammo: classify penetration directly;
-- non-ammo: resolve flea/trader/handbook effective value;
+- keys: price-table/handbook lookup plus key-specific classification;
+- other non-ammo: resolve flea/trader/handbook effective value;
 - divide by slot area only for ordinary loot;
 - assign only `BackgroundColor`.
 
