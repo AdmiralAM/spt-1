@@ -20,6 +20,8 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
     public static readonly MongoId CustomBeltParentTpl = new(RuntimeIdentity.BeltItemParentId);
     public const string RuntimeCandidateTpl = RuntimeIdentity.CandidateItemId;
     public const string RuntimeCandidateGridId = RuntimeIdentity.CandidateGridId;
+    private const string RuntimeCandidateGridName = "main";
+    private const string RuntimeCandidateGridPrototype = "55d329c24bdc2d892f8b4567";
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
@@ -48,7 +50,7 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
             OverrideProperties = new TemplateItemProperties
             {
                 BackgroundColor = "blue", ExaminedByDefault = true,
-                Grids = [new Grid { Name = "main", Id = RuntimeCandidateGridId, Parent = RuntimeCandidateTpl, Prototype = "55d329c24bdc2d892f8b4567", Properties = new GridProperties { CellsH = RuntimeIdentity.CandidateGridColumns, CellsV = RuntimeIdentity.CandidateGridRows, MinCount = 0, MaxCount = 0, MaxWeight = 0, IsSortingTable = false, Filters = [new GridFilter { Filter = [BaseClasses.MAGAZINE], ExcludedFilter = [] }] } }]
+                Grids = [new Grid { Name = RuntimeCandidateGridName, Id = RuntimeCandidateGridId, Parent = RuntimeCandidateTpl, Prototype = RuntimeCandidateGridPrototype, Properties = new GridProperties { CellsH = RuntimeIdentity.CandidateGridColumns, CellsV = RuntimeIdentity.CandidateGridRows, MinCount = 0, MaxCount = 0, MaxWeight = 0, IsSortingTable = false, Filters = [new GridFilter { Filter = [BaseClasses.MAGAZINE], ExcludedFilter = [] }] } }]
             }
         };
         var result = customItemService.CreateItemFromClone(details);
@@ -68,15 +70,29 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
 
         var grid = grids.Single();
         var properties = grid.Properties;
-        if (!string.Equals(grid.Id.ToString(), RuntimeCandidateGridId, StringComparison.Ordinal)
+        if (!string.Equals(grid.Name, RuntimeCandidateGridName, StringComparison.Ordinal)
+            || !string.Equals(grid.Id.ToString(), RuntimeCandidateGridId, StringComparison.Ordinal)
+            || !string.Equals(grid.Parent?.ToString(), RuntimeCandidateTpl, StringComparison.Ordinal)
+            || !string.Equals(grid.Prototype?.ToString(), RuntimeCandidateGridPrototype, StringComparison.Ordinal)
             || properties == null
             || properties.CellsH != RuntimeIdentity.CandidateGridColumns
-            || properties.CellsV != RuntimeIdentity.CandidateGridRows)
-            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid identity or geometry differs from the shared runtime contract.");
+            || properties.CellsV != RuntimeIdentity.CandidateGridRows
+            || properties.MinCount != 0
+            || properties.MaxCount != 0
+            || properties.MaxWeight != 0
+            || properties.IsSortingTable)
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid identity, geometry, or limits differ from the shared runtime contract.");
 
         var filters = properties.Filters;
-        if (filters == null || !filters.Any(x => x.Filter?.Contains(BaseClasses.MAGAZINE) == true))
-            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid does not retain the MAGAZINE filter.");
+        if (filters == null || filters.Count != 1)
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid does not declare exactly one filter group.");
+
+        var filter = filters[0];
+        if (filter.Filter == null
+            || filter.Filter.Count != 1
+            || !filter.Filter.Contains(BaseClasses.MAGAZINE)
+            || (filter.ExcludedFilter != null && filter.ExcludedFilter.Count != 0))
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid does not retain the exact MAGAZINE-only filter.");
     }
 
     private void EnsureCustomParents()
