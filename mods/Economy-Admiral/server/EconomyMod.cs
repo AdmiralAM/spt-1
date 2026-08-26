@@ -16,9 +16,7 @@ public sealed class EconomyMod(
     QuestConstraintAuditService questConstraintAuditService,
     QuestAnalysisService questAnalysisService,
     QuestProvenanceDeltaService questProvenanceDeltaService,
-    EnforcementPlanService enforcementPlanService,
-    AdmiralTraderRuntimeAdapterService admiralTraderRuntimeAdapterService,
-    SourcePressureRuntimeReportService sourcePressureRuntimeReportService
+    EnforcementPlanService enforcementPlanService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
@@ -31,7 +29,7 @@ public sealed class EconomyMod(
         runtimeEvidenceService.CaptureBefore();
 
         // Core reports read typed final DB state directly against the immutable pristine snapshot.
-        // Accepted shadow/correction layers and legacy composite/target report passes are not on the runtime path.
+        // Accepted proof/correction layers and future cross-mod source-pressure adapters are not on startup path.
         await auditService.RunAsync(vanillaBaseline, cancellationToken);
         await rewardUtilityAuditService.RunAsync(vanillaBaseline, cancellationToken);
         var progressionSnapshot = await questProgressionGraphService.RunAsync(vanillaBaseline, cancellationToken);
@@ -39,11 +37,8 @@ public sealed class EconomyMod(
 
         var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, vanillaBaseline, cancellationToken);
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
-
-        var admiralTraderReport = await admiralTraderRuntimeAdapterService.RunAsync(config, cancellationToken);
-        await sourcePressureRuntimeReportService.RunAsync(config, admiralTraderReport, cancellationToken);
-
         var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
+
         await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
     }
 }
