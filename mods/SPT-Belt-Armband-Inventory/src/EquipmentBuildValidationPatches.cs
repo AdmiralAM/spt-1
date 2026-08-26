@@ -138,8 +138,10 @@ namespace SPTBeltArmbandInventory
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                if (harmony == null || patchMethod == null || harmonyMethodConstructor == null)
-                    return Fail("Harmony patch API is incompatible; belt build-container validation is disabled.");
+                MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
+                if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, harmonyMethodConstructor != null, rollback != null))
+                    return Fail("Harmony patch/rollback API is incompatible; belt build-container validation is disabled.");
+                unpatchSelf = rollback;
 
                 EquipmentBuildValidationRuntime.LogWarning = logWarning;
                 EquipmentBuildValidationRuntime.CandidateFields = candidates;
@@ -149,14 +151,14 @@ namespace SPTBeltArmbandInventory
                 object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(Postfix)) });
                 Patch(patchMethod, harmonyMethodType, awake, postfix);
 
-                unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 if (logInfo != null) logInfo("Belt/Armband Inventory equipment-build container validation installed.");
                 return true;
             }
             catch (Exception exception)
             {
                 Dispose();
-                return Fail("Belt equipment-build validation installation failed safely: " + exception.Message);
+                Exception root = Unwrap(exception);
+                return Fail("Belt equipment-build validation installation failed safely: " + root.GetType().FullName + ": " + root.Message);
             }
         }
 
@@ -197,6 +199,14 @@ namespace SPTBeltArmbandInventory
                 if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) arguments[i] = postfix;
             }
             patchMethod.Invoke(harmony, arguments);
+        }
+
+        static Exception Unwrap(Exception exception)
+        {
+            Exception current = exception;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null)
+                current = invocation.InnerException;
+            return current;
         }
 
         bool Fail(string message)
