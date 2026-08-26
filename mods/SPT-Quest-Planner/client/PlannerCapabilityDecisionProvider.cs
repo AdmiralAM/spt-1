@@ -54,7 +54,7 @@ namespace SPTQuestPlanner.Client
 
                 try
                 {
-                    PlannerCapabilityDecisionSnapshot built = Build(definition, includeAvailable);
+                    PlannerCapabilityDecisionSnapshot built = Build(definition, includeAvailable, revision);
                     cached[key] = new CachedDecision(built);
                     snapshot = built;
                     return true;
@@ -69,7 +69,8 @@ namespace SPTQuestPlanner.Client
 
         private PlannerCapabilityDecisionSnapshot Build(
             PlannerCapabilityGoalDefinition definition,
-            bool includeAvailable)
+            bool includeAvailable,
+            long sourceRevision)
         {
             PlannerTopologyIndex topology = cache.TopologyIndex;
             PlannerLocationIndex locations = cache.LocationIndex;
@@ -106,7 +107,10 @@ namespace SPTQuestPlanner.Client
                 goal,
                 raidPresentation,
                 delayEvidence);
-            return PlannerCapabilityDecisionSnapshotBuilder.Build(presentation);
+            return PlannerCapabilityDecisionSnapshotBuilder.Build(
+                presentation,
+                sourceRevision,
+                state.GeneratedAtUnixSeconds);
         }
 
         private static string BuildKey(PlannerCapabilityGoalDefinition definition, bool includeAvailable)
