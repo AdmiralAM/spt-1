@@ -12,46 +12,48 @@ namespace SPTBeltArmbandInventory
                 Type equipmentSlotType = ReflectionTools.FindType("EFT.InventoryLogic.EquipmentSlot");
                 if (equipmentSlotType == null || !equipmentSlotType.IsEnum)
                 {
-                    logWarning?.Invoke("B&A&HB HOST DISCOVERY FAIL-CLOSED: EFT.InventoryLogic.EquipmentSlot enum was not found. Belt/HeadBand remain ConceptOnly.");
+                    logWarning?.Invoke("B&A&HB SLOT IMPLEMENTATION DISCOVERY FAIL-CLOSED: EFT.InventoryLogic.EquipmentSlot enum was not found. Dedicated Belt/HeadBand identities remain fixed but inactive.");
                     return;
                 }
 
                 string[] names = Enum.GetNames(equipmentSlotType);
-                List<string> beltCandidates = new List<string>();
-                List<string> headBandCandidates = new List<string>();
-
+                List<string> anchors = new List<string>();
                 for (int i = 0; i < names.Length; i++)
                 {
                     string name = names[i];
-                    if (Contains(name, "belt") || Contains(name, "waist")) beltCandidates.Add(name);
-                    if (Contains(name, "head") || Contains(name, "band") || Contains(name, "face") || Contains(name, "ear")) headBandCandidates.Add(name);
+                    if (string.Equals(name, DedicatedWearableSlotContract.Belt.UiAnchor, StringComparison.Ordinal)
+                        || string.Equals(name, "Backpack", StringComparison.Ordinal)
+                        || string.Equals(name, DedicatedWearableSlotContract.HeadBand.UiAnchor, StringComparison.Ordinal))
+                        anchors.Add(name);
                 }
 
-                string exactBeltHost = HostBoundaryPolicy.FindExactHost(AccessoryCategory.Belt, names);
-                string exactHeadBandHost = HostBoundaryPolicy.FindExactHost(AccessoryCategory.HeadBand, names);
+                bool pockets = ContainsExact(names, "Pockets");
+                bool backpack = ContainsExact(names, "Backpack");
+                bool headwear = ContainsExact(names, "Headwear");
 
-                logInfo?.Invoke("B&A&HB HOST DISCOVERY: EquipmentSlot count=" + names.Length
-                    + "; Belt candidates=" + Format(beltCandidates)
-                    + "; HeadBand candidates=" + Format(headBandCandidates) + ".");
-                logInfo?.Invoke("B&A&HB HOST DISCOVERY EXACT: Belt=" + (exactBeltHost ?? "<none>")
-                    + "; HeadBand=" + (exactHeadBandHost ?? "<none>") + ".");
+                logInfo?.Invoke("B&A&HB SLOT IMPLEMENTATION DISCOVERY: EquipmentSlot count=" + names.Length
+                    + "; required vanilla UI anchors=" + Format(anchors) + ".");
+                logInfo?.Invoke("B&A&HB DEDICATED SLOT CONTRACT: Belt=" + DedicatedWearableSlotContract.BeltSlotId
+                    + " after Pockets=" + pockets + ", before Backpack=" + backpack
+                    + "; HeadBand=" + DedicatedWearableSlotContract.HeadBandSlotId
+                    + " before Headwear=" + headwear + ".");
 
-                // Headwear/FaceCover/Earpiece are deliberately not accepted merely
-                // because they look related: silently consuming those slots would alter
-                // vanilla helmet/face/ear equipment semantics. A plausible Belt-like
-                // enum name is likewise evidence only until its UI/lifecycle contract is proven.
-                logInfo?.Invoke("B&A&HB HOST DISCOVERY: Belt=ConceptOnly, HeadBand=ConceptOnly; no runtime slot activation performed.");
+                if (!pockets || !backpack || !headwear)
+                    logWarning?.Invoke("B&A&HB SLOT IMPLEMENTATION DISCOVERY FAIL-CLOSED: one or more required UI anchors are absent; dedicated slot injection must not activate.");
             }
             catch (Exception exception)
             {
-                logWarning?.Invoke("B&A&HB HOST DISCOVERY FAIL-CLOSED: " + exception.GetType().FullName + ": " + exception.Message
-                    + ". Belt/HeadBand remain ConceptOnly.");
+                logWarning?.Invoke("B&A&HB SLOT IMPLEMENTATION DISCOVERY FAIL-CLOSED: " + exception.GetType().FullName + ": " + exception.Message
+                    + ". Dedicated slot identities remain fixed but inactive.");
             }
         }
 
-        static bool Contains(string value, string token)
+        static bool ContainsExact(string[] values, string target)
         {
-            return value != null && value.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0;
+            if (values == null) return false;
+            for (int i = 0; i < values.Length; i++)
+                if (string.Equals(values[i], target, StringComparison.Ordinal)) return true;
+            return false;
         }
 
         static string Format(List<string> values)
