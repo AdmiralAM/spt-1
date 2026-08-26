@@ -6,13 +6,20 @@ namespace SPTQuestPlanner.Client
 {
     public sealed class PlannerQuestClientState
     {
-        public PlannerQuestClientState(string questId, int disposition, int profileState, bool levelGateSatisfied, bool prerequisitesSatisfied)
+        public PlannerQuestClientState(
+            string questId,
+            int disposition,
+            int profileState,
+            bool levelGateSatisfied,
+            bool prerequisitesSatisfied,
+            int rawProfileStatus = -1)
         {
             QuestId = questId ?? string.Empty;
             Disposition = disposition;
             ProfileState = profileState;
             LevelGateSatisfied = levelGateSatisfied;
             PrerequisitesSatisfied = prerequisitesSatisfied;
+            RawProfileStatus = rawProfileStatus;
         }
 
         public string QuestId { get; private set; }
@@ -20,6 +27,7 @@ namespace SPTQuestPlanner.Client
         public int ProfileState { get; private set; }
         public bool LevelGateSatisfied { get; private set; }
         public bool PrerequisitesSatisfied { get; private set; }
+        public int RawProfileStatus { get; private set; }
     }
 
     public sealed class PlannerItemClientState
@@ -140,6 +148,18 @@ namespace SPTQuestPlanner.Client
             object root = parse.Invoke(null, new object[] { stateJson });
 
             long generated = ReadLong(Get(root, "generatedAtUnixSeconds"), 0L);
+            object player = Get(root, "player");
+            Dictionary<string, int> rawQuestStatuses = new Dictionary<string, int>(StringComparer.Ordinal);
+            object playerQuestStates = Get(player, "questStates");
+            foreach (KeyValuePair<string, object> entry in Properties(playerQuestStates))
+            {
+                object node = entry.Value;
+                string questId = ReadString(Get(node, "questId"));
+                if (string.IsNullOrWhiteSpace(questId)) questId = entry.Key;
+                if (string.IsNullOrWhiteSpace(questId)) continue;
+                rawQuestStatuses[questId] = ReadInt(Get(node, "rawStatus"), -1);
+            }
+
             Dictionary<string, PlannerQuestClientState> quests = new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal);
             object evaluation = Get(root, "evaluation");
             object questMap = Get(evaluation, "quests");
@@ -149,12 +169,15 @@ namespace SPTQuestPlanner.Client
                 string questId = ReadString(Get(node, "questId"));
                 if (string.IsNullOrWhiteSpace(questId)) questId = entry.Key;
                 if (string.IsNullOrWhiteSpace(questId)) continue;
+                int rawStatus;
+                if (!rawQuestStatuses.TryGetValue(questId, out rawStatus)) rawStatus = -1;
                 quests[questId] = new PlannerQuestClientState(
                     questId,
                     ReadInt(Get(node, "disposition"), 0),
                     ReadInt(Get(node, "profileState"), 0),
                     ReadBool(Get(node, "levelGateSatisfied"), false),
-                    ReadBool(Get(node, "prerequisitesSatisfied"), false));
+                    ReadBool(Get(node, "prerequisitesSatisfied"), false),
+                    rawStatus);
             }
 
             Dictionary<string, PlannerItemClientState> items = new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal);
@@ -174,7 +197,6 @@ namespace SPTQuestPlanner.Client
             }
 
             Dictionary<string, PlannerConditionProgress> progress = new Dictionary<string, PlannerConditionProgress>(StringComparer.Ordinal);
-            object player = Get(root, "player");
             object counters = Get(player, "taskConditionCounters");
             foreach (KeyValuePair<string, object> entry in Properties(counters))
             {
