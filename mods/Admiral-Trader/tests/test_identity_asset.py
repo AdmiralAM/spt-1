@@ -21,8 +21,8 @@ def git_blob_sha1(data: bytes):
 
 
 def jpeg_dimensions(data: bytes):
-    if len(data) < 4 or data[:2] != b"\xff\xd8" or data[-2:] != b"\xff\xd9":
-        raise AssertionError("portrait is not a complete JPEG stream")
+    if len(data) < 4 or data[:2] != b"\xff\xd8" or data.rstrip(b"\r\n")[-2:] != b"\xff\xd9":
+        raise AssertionError("portrait is not a complete JPEG stream with at most a newline transport tail")
     offset = 2
     sof_markers = {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF}
     while offset + 4 <= len(data):
