@@ -27,10 +27,24 @@ namespace SPTBeltArmbandInventory
                 : AccessoryCapability.None;
         }
 
+        internal static AccessoryCapability Capabilities(string templateId)
+        {
+            return WearableItemDescriptorRegistry.TryGet(templateId, out WearableItemDescriptor descriptor)
+                ? descriptor.Capabilities
+                : AccessoryCapability.None;
+        }
+
         internal static bool Has(AccessoryCategory category, AccessoryCapability capability)
         {
             if (capability == AccessoryCapability.None) return false;
             AccessoryCapability available = Capabilities(category);
+            return (available & capability) == capability;
+        }
+
+        internal static bool Has(string templateId, AccessoryCapability capability)
+        {
+            if (capability == AccessoryCapability.None) return false;
+            AccessoryCapability available = Capabilities(templateId);
             return (available & capability) == capability;
         }
 
@@ -42,6 +56,17 @@ namespace SPTBeltArmbandInventory
         {
             return Has(category, capability)
                 && AccessoryCategoryPolicy.CanActivateRuntime(category, hasItem, isContainer);
+        }
+
+        internal static bool CanUse(
+            string templateId,
+            AccessoryCapability capability,
+            bool hasItem,
+            bool isContainer)
+        {
+            if (!WearableItemDescriptorRegistry.TryGet(templateId, out WearableItemDescriptor descriptor)) return false;
+            return Has(templateId, capability)
+                && AccessoryCategoryPolicy.CanActivateRuntime(descriptor.Category, hasItem, isContainer);
         }
     }
 }
