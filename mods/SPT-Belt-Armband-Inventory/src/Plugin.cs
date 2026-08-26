@@ -20,12 +20,9 @@ namespace SPTBeltArmbandInventory
         LootPriorityPatches lootPatches;
         UnloadPriorityPatches unloadPatches;
         ScavBeltPatches scavPatches;
-        GrenadeSlotPatches grenadePatches;
-        FastAccessBeltSyncPatches fastAccessSyncPatches;
         FastAccessSlotPatches fastAccessSlotPatches;
         SlotMergePatches slotMergePatches;
         PickupSlotPatches pickupPatches;
-        PaymentSlotPatches paymentPatches;
         EquipmentBuildValidationPatches buildValidationPatches;
         Coroutine deferredRuntimePump;
 
@@ -51,7 +48,7 @@ namespace SPTBeltArmbandInventory
             {
                 runtimeTypePatches.Dispose();
                 runtimeTypePatches = null;
-                Logger.LogWarning("B&A&HB runtime-type proof disabled: custom searchable belt item/template registration did not install.");
+                Logger.LogWarning("B&A&HB runtime type registration failed; client belt behavior is disabled for this session.");
                 return;
             }
 
@@ -74,7 +71,7 @@ namespace SPTBeltArmbandInventory
             {
                 lootPatches.Dispose();
                 lootPatches = null;
-                Logger.LogWarning("Belt UI remains active, but automatic loot placement will use vanilla container priorities.");
+                Logger.LogWarning("Belt storage remains active, but automatic loot placement will use vanilla container priorities.");
             }
 
             unloadPatches = new UnloadPriorityPatches(Logger.LogInfo, Logger.LogWarning);
@@ -82,7 +79,7 @@ namespace SPTBeltArmbandInventory
             {
                 unloadPatches.Dispose();
                 unloadPatches = null;
-                Logger.LogWarning("Belt UI remains active, but unload placement will use vanilla grid priorities.");
+                Logger.LogWarning("Belt storage remains active, but unload placement will use vanilla grid priorities.");
             }
 
             scavPatches = new ScavBeltPatches(Logger.LogInfo, Logger.LogWarning);
@@ -93,32 +90,17 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("PMC belt behavior remains active, but a Scav spawned with a container belt may retain vanilla ArmBand deletion behavior.");
             }
 
-            grenadePatches = new GrenadeSlotPatches(Logger.LogInfo, Logger.LogWarning);
-            if (!grenadePatches.TryInstall())
-            {
-                grenadePatches.Dispose();
-                grenadePatches = null;
-                Logger.LogWarning("Belt storage remains active, but grenades inside the belt may not participate in vanilla G/fast-access selection.");
-            }
-
-            fastAccessSyncPatches = new FastAccessBeltSyncPatches(Logger.LogInfo, Logger.LogWarning);
-            if (!fastAccessSyncPatches.TryInstall())
-            {
-                fastAccessSyncPatches.Dispose();
-                fastAccessSyncPatches = null;
-                Logger.LogWarning("Belt grenade enumeration remains active, but equipping/removing a loaded belt may require the grenade fast-access view to reopen before it reflects the change.");
-            }
-            else
-            {
-                FastAccessBeltSyncRuntime.RequestFlush = EnsureDeferredRuntimePump;
-            }
+            // The current RC accepts magazines only. Grenade-view synchronization
+            // and payment-source patches are intentionally not installed in Phase 1;
+            // those capabilities return with the first concrete wearable variant that
+            // can actually contain those item classes.
 
             fastAccessSlotPatches = new FastAccessSlotPatches(Logger.LogInfo, Logger.LogWarning);
             if (!fastAccessSlotPatches.TryInstall())
             {
                 fastAccessSlotPatches.Dispose();
                 fastAccessSlotPatches = null;
-                Logger.LogWarning("Belt storage remains active, but non-grenade consumables inside the belt may not participate in vanilla bind/reachable fast-access logic.");
+                Logger.LogWarning("Belt storage remains active, but magazines inside the belt may not participate in vanilla reachable-container reload logic.");
             }
 
             slotMergePatches = new SlotMergePatches(Logger.LogInfo, Logger.LogWarning);
@@ -137,14 +119,6 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Belt storage remains active, but compatible container belts may not auto-equip into an empty ArmBand slot on pickup.");
             }
 
-            paymentPatches = new PaymentSlotPatches(Logger.LogInfo, Logger.LogWarning);
-            if (!paymentPatches.TryInstall())
-            {
-                paymentPatches.Dispose();
-                paymentPatches = null;
-                Logger.LogWarning("Belt storage remains active, but money/items inside the belt may not be considered by vanilla in-raid trader-service payments.");
-            }
-
             buildValidationPatches = new EquipmentBuildValidationPatches(Logger.LogInfo, Logger.LogWarning);
             if (!buildValidationPatches.TryInstall())
             {
@@ -152,6 +126,8 @@ namespace SPTBeltArmbandInventory
                 buildValidationPatches = null;
                 Logger.LogWarning("Belt build/apply remains active, but missing belt contents may be classified under the Slots tab instead of Containers in Equipment Builds.");
             }
+
+            Logger.LogInfo("B&A&HB Phase 1 magazine-belt core initialized without idle polling.");
         }
 
         void EnsureDeferredRuntimePump()
@@ -162,20 +138,14 @@ namespace SPTBeltArmbandInventory
 
         IEnumerator FlushDeferredRuntimeWork()
         {
-            // Preserve the previous next-frame behavior without keeping an idle
-            // MonoBehaviour.Update callback alive for the lifetime of the plugin.
+            // Event-triggered only: no idle MonoBehaviour.Update callback survives
+            // after the compact-window queue has drained.
             yield return null;
 
-            while ((gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending)
-                || (fastAccessSyncPatches != null && FastAccessBeltSyncRuntime.HasPending))
+            while (gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending)
             {
+                GridWindowSizingRuntime.Flush();
                 if (gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending)
-                    GridWindowSizingRuntime.Flush();
-                if (fastAccessSyncPatches != null && FastAccessBeltSyncRuntime.HasPending)
-                    FastAccessBeltSyncRuntime.Flush();
-
-                if ((gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending)
-                    || (fastAccessSyncPatches != null && FastAccessBeltSyncRuntime.HasPending))
                     yield return null;
             }
 
@@ -204,18 +174,12 @@ namespace SPTBeltArmbandInventory
 
             if (buildValidationPatches != null) buildValidationPatches.Dispose();
             buildValidationPatches = null;
-            if (paymentPatches != null) paymentPatches.Dispose();
-            paymentPatches = null;
             if (pickupPatches != null) pickupPatches.Dispose();
             pickupPatches = null;
             if (slotMergePatches != null) slotMergePatches.Dispose();
             slotMergePatches = null;
             if (fastAccessSlotPatches != null) fastAccessSlotPatches.Dispose();
             fastAccessSlotPatches = null;
-            if (fastAccessSyncPatches != null) fastAccessSyncPatches.Dispose();
-            fastAccessSyncPatches = null;
-            if (grenadePatches != null) grenadePatches.Dispose();
-            grenadePatches = null;
             if (scavPatches != null) scavPatches.Dispose();
             scavPatches = null;
             if (unloadPatches != null) unloadPatches.Dispose();
