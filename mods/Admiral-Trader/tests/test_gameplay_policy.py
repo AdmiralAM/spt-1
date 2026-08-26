@@ -22,9 +22,22 @@ class GameplayPolicyTests(unittest.TestCase):
         cls.arsenal = load(MANIFESTS / "weapon-ammo-runtime-plan.json")
         cls.arsenal_spec = load(MANIFESTS / "weapon-ammo-authored-spec.json")
         cls.ammo = load(MANIFESTS / "ammo-offer-policy.json")
+        cls.baseline = load(MANIFESTS / "baseline-stock.json")
         cls.assort = load(DB / "assort.json")
         cls.questassort = load(DB / "questassort.json")
         cls.base = load(DB / "base.json")
+
+    @classmethod
+    def baseline_offer_ids(cls):
+        return {row["offerId"] for row in cls.baseline["offers"]}
+
+    @classmethod
+    def root_items_by_id(cls):
+        return {item["_id"]: item for item in cls.assort["items"] if item["parentId"] == "hideout"}
+
+    @classmethod
+    def milestone_offer_ids(cls):
+        return set(cls.root_items_by_id()) - cls.baseline_offer_ids()
 
     def test_campaign_shape_matches_current_backbone_without_artificial_cap(self):
         campaign = self.policy["campaign"]
@@ -39,6 +52,8 @@ class GameplayPolicyTests(unittest.TestCase):
 
     def test_gameplay_alpha_requires_non_quest_gated_baseline_stock(self):
         stock = self.policy["traderStock"]
+        baseline_ids = self.baseline_offer_ids()
+        roots = self.root_items_by_id()
         self.assertTrue(stock["baselineStockRequired"])
         self.assertFalse(stock["baselineOffersMustBeQuestGated"])
         self.assertTrue(stock["baselineOffersMustBeFinite"])
@@ -46,10 +61,17 @@ class GameplayPolicyTests(unittest.TestCase):
         self.assertTrue(stock["milestoneOffersMayBeQuestGated"])
         self.assertTrue(stock["milestoneOffersMustBeFinite"])
         self.assertFalse(stock["generalPurposeSupermarketAllowed"])
-        self.assertEqual(
-            set(stock["directOverlapAuditRequired"]),
-            {"vanilla", "Scorpion", "Artem"},
-        )
+        self.assertEqual(set(stock["directOverlapAuditRequired"]), {"vanilla", "Scorpion", "Artem"})
+        self.assertTrue(baseline_ids)
+        self.assertTrue(baseline_ids.issubset(roots))
+        self.assertTrue(baseline_ids.isdisjoint(self.questassort["success"]))
+        for offer in self.baseline["offers"]:
+            self.assertIsNone(offer["questGate"])
+            item = roots[offer["offerId"]]
+            self.assertFalse(item["upd"]["UnlimitedCount"])
+            self.assertEqual(item["upd"]["StackObjectsCount"], offer["stockPerReset"])
+            self.assertEqual(item["upd"]["BuyRestrictionMax"], offer["buyRestriction"])
+            self.assertEqual(self.assort["loyal_level_items"][offer["offerId"]], offer["loyaltyLevel"])
 
     def test_access_protocol_avoids_collection_busywork(self):
         rules = self.access["designRules"]
@@ -63,11 +85,7 @@ class GameplayPolicyTests(unittest.TestCase):
         clearance = [q for q in self.access["quests"] if q["id"] == clearance_id]
         self.assertEqual(len(clearance), 1)
         for quest in self.access["quests"]:
-            expected = (
-                access_policy["labsClearanceUnlockSlots"]
-                if quest["id"] == clearance_id
-                else access_policy["otherAccessUnlockSlots"]
-            )
+            expected = access_policy["labsClearanceUnlockSlots"] if quest["id"] == clearance_id else access_policy["otherAccessUnlockSlots"]
             self.assertEqual(quest["rewardBudget"]["unlockSlots"], expected)
 
     def test_arsenal_families_are_independent_three_stage_tracks(self):
@@ -90,22 +108,14 @@ class GameplayPolicyTests(unittest.TestCase):
             self.assertEqual(set(stage_map), set(stage_order))
             self.assertEqual(stage_map[stage_order[0]]["prerequisites"], [])
             for previous, current in zip(stage_order, stage_order[1:]):
-                self.assertEqual(
-                    stage_map[current]["prerequisites"],
-                    [stage_map[previous]["id"]],
-                    msg=f"{family} must advance only inside its own track",
-                )
+                self.assertEqual(stage_map[current]["prerequisites"], [stage_map[previous]["id"]], msg=f"{family} must advance only inside its own track")
             for quest in quests:
                 for prerequisite in quest["prerequisites"]:
                     self.assertEqual(id_to_family[prerequisite], family)
 
     def test_permanent_ammo_unlocks_exist_only_for_munitions_stage(self):
         arsenal_policy = self.policy["arsenalProtocol"]
-        munitions = {
-            q["family"]: q["id"]
-            for q in self.arsenal["quests"]
-            if q["stage"] == arsenal_policy["permanentUnlockStage"]
-        }
+        munitions = {q["family"]: q["id"] for q in self.arsenal["quests"] if q["stage"] == arsenal_policy["permanentUnlockStage"]}
         offers = self.ammo["offers"]
         expected_families = set(arsenal_policy["familiesWithPermanentAmmoOffer"])
         self.assertEqual(set(offers), expected_families)
@@ -119,45 +129,34 @@ class GameplayPolicyTests(unittest.TestCase):
 
     def test_current_milestone_logistics_are_finite_quest_gated_and_bounded(self):
         logistics = self.policy["logistics"]
-        items = self.assort["items"]
+        roots = self.root_items_by_id()
+        milestone_ids = self.milestone_offer_ids()
         success = self.questassort["success"]
         self.assertEqual(set(self.questassort), {"started", "success", "fail"})
-        self.assertEqual(len(items), logistics["expectedMilestonePermanentOfferCount"])
+        self.assertEqual(len(milestone_ids), logistics["expectedMilestonePermanentOfferCount"])
         self.assertEqual(len(success), logistics["expectedMilestonePermanentOfferCount"])
         self.assertEqual(len(self.ammo["offers"]), logistics["expectedAmmoMilestoneOfferCount"])
+        self.assertEqual(set(success), milestone_ids)
 
-        item_ids = {item["_id"] for item in items}
-        self.assertEqual(set(success), item_ids)
-        for item in items:
+        for offer_id in milestone_ids:
+            item = roots[offer_id]
             upd = item["upd"]
             self.assertFalse(upd["UnlimitedCount"])
             self.assertGreater(upd["StackObjectsCount"], 0)
             self.assertGreater(upd["BuyRestrictionMax"], 0)
-            self.assertLessEqual(
-                upd["StackObjectsCount"], logistics["maximumPermanentOfferStockPerReset"]
-            )
-            self.assertLessEqual(
-                upd["BuyRestrictionMax"], logistics["maximumPermanentOfferStockPerReset"]
-            )
-            self.assertEqual(
-                self.assort["loyal_level_items"][item["_id"]],
-                logistics["questUnlockLoyaltyLevel"],
-            )
+            self.assertLessEqual(upd["StackObjectsCount"], logistics["maximumPermanentOfferStockPerReset"])
+            self.assertLessEqual(upd["BuyRestrictionMax"], logistics["maximumPermanentOfferStockPerReset"])
+            self.assertEqual(self.assort["loyal_level_items"][offer_id], logistics["questUnlockLoyaltyLevel"])
 
         ammo_units = sum(offer["stockPerReset"] for offer in self.ammo["offers"].values())
-        full_reset_spend = sum(
-            offer["stockPerReset"] * offer["priceRub"]
-            for offer in self.ammo["offers"].values()
-        )
+        full_reset_spend = sum(offer["stockPerReset"] * offer["priceRub"] for offer in self.ammo["offers"].values())
         self.assertLessEqual(ammo_units, logistics["maximumAmmoUnitsAcrossPermanentOffersPerReset"])
         self.assertLessEqual(full_reset_spend, logistics["maximumAmmoFullResetSpendRub"])
 
         pricing = self.ammo["pricing"]
         self.assertLessEqual(pricing["multiplier"], logistics["maximumReferencePriceMultiplier"])
         for family, offer in self.ammo["offers"].items():
-            rounded_expected = math.ceil(
-                offer["referenceRub"] * pricing["multiplier"] / pricing["roundUpToRub"]
-            ) * pricing["roundUpToRub"]
+            rounded_expected = math.ceil(offer["referenceRub"] * pricing["multiplier"] / pricing["roundUpToRub"]) * pricing["roundUpToRub"]
             self.assertEqual(offer["priceRub"], rounded_expected, family)
 
     def test_loyalty_is_relationship_status_not_capability_authority(self):
@@ -179,19 +178,14 @@ class GameplayPolicyTests(unittest.TestCase):
         self.assertFalse(self.base["repair"]["availability"])
         self.assertFalse(self.base["insurance"]["availability"])
 
-        milestone_offer_ids = {item["_id"] for item in self.assort["items"]}
-        self.assertEqual(set(self.questassort["success"]), milestone_offer_ids)
-        self.assertEqual(
-            {self.assort["loyal_level_items"][offer_id] for offer_id in milestone_offer_ids},
-            {logistics["questUnlockLoyaltyLevel"]},
-        )
+        baseline_ids = self.baseline_offer_ids()
+        milestone_ids = self.milestone_offer_ids()
+        self.assertTrue(baseline_ids.isdisjoint(self.questassort["success"]))
+        self.assertEqual(set(self.questassort["success"]), milestone_ids)
+        self.assertEqual({self.assort["loyal_level_items"][offer_id] for offer_id in milestone_ids}, {logistics["questUnlockLoyaltyLevel"]})
 
         access_standing = sum(q["rewardBudget"]["standing"] for q in self.access["quests"])
-        arsenal_standing = sum(
-            stage["standing"]
-            for family in self.arsenal_spec["families"]
-            for stage in family["stages"]
-        )
+        arsenal_standing = sum(stage["standing"] for family in self.arsenal_spec["families"] for stage in family["stages"])
         total = round(access_standing + arsenal_standing, 8)
         self.assertEqual(total, loyalty["authoredCampaignStandingTotal"])
         self.assertGreaterEqual(total, max(loyalty["expectedStandingThresholds"]))
