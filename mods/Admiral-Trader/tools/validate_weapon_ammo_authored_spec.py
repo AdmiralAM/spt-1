@@ -33,15 +33,19 @@ def validate(spec: dict[str, Any], reward_policy: dict[str, Any], audit: dict[st
         fail("ammo capability must remain sample + controlled unlock")
     if int(rules.get("maximumPermanentUnlocksPerQuest", -1)) != 1:
         fail("weapon/ammo quests may grant at most one permanent unlock")
-    if int(rules.get("maximumFamilyQuestCount", -1)) != 3:
-        fail("weapon/ammo family chains must remain capped at three quests")
+    if int(rules.get("currentBackboneStagesPerFamily", -1)) != 3:
+        fail("current Arsenal backbone must retain three stages per family")
+    if rules.get("questCountPolicy") != "no-artificial-cap-quality-gated-expansion":
+        fail("Arsenal quest policy must allow quality-gated expansion without an artificial count cap")
+    if rules.get("preserveStrongAuthoredConceptsRegardlessOfCampaignSize") is not True:
+        fail("strong authored concepts must remain eligible regardless of campaign size")
 
     stage_model = spec.get("stageModel") or []
     actual_models = {str(row.get("stage")): str(row.get("objectiveModel")) for row in stage_model if isinstance(row, dict)}
     if actual_models != EXPECTED_STAGE_MODELS:
         fail(f"Arsenal stage objective models drift: {actual_models}")
     if len(set(actual_models.values())) != 3:
-        fail("Arsenal stages must use three distinct objective models")
+        fail("Arsenal backbone stages must use three distinct objective models")
 
     families = spec.get("families") or []
     ids = [str(family.get("id")) for family in families]
@@ -58,8 +62,8 @@ def validate(spec: dict[str, Any], reward_policy: dict[str, Any], audit: dict[st
     for family in families:
         family_id = str(family.get("id"))
         stages = family.get("stages") or []
-        if len(stages) != 3:
-            fail(f"family {family_id} must contain exactly three stages")
+        if len(stages) != int(rules["currentBackboneStagesPerFamily"]):
+            fail(f"family {family_id} current backbone must contain three stages")
         levels = [int(stage.get("minimumLevel", -1)) for stage in stages]
         if levels != sorted(levels) or levels[0] < int(family.get("minimumLevel", -1)):
             fail(f"family {family_id} has invalid level progression")
@@ -79,7 +83,7 @@ def validate(spec: dict[str, Any], reward_policy: dict[str, Any], audit: dict[st
             else:
                 kills = int(stage.get("kills", 0))
                 if kills <= 0 or kills > 25:
-                    fail(f"{slug}: elimination objective exceeds compact-chain budget: {kills}")
+                    fail(f"{slug}: elimination objective exceeds current backbone budget: {kills}")
 
             xp, rub, standing = float(stage.get("xp", 0)), float(stage.get("rub", 0)), float(stage.get("standing", 0))
             if xp <= 0 or xp > p75_xp:
@@ -104,7 +108,7 @@ def validate(spec: dict[str, Any], reward_policy: dict[str, Any], audit: dict[st
             unlock_count += unlock_slots
 
     if quest_count != 21:
-        fail(f"weapon/ammo authored quest count must remain 21, got {quest_count}")
+        fail(f"current weapon/ammo backbone must remain 21 quests until an explicit expansion slice changes the runtime set, got {quest_count}")
     if unlock_count != 6:
         fail(f"weapon/ammo authored permanent unlock budget must remain 6, got {unlock_count}")
     if audit is not None:
