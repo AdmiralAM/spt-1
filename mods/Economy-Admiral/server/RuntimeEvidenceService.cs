@@ -105,7 +105,9 @@ public sealed class RuntimeEvidenceService(
             EnforcementEvidenceValid = enforcementValid,
             RuntimeGatePassed = allReportsPresent && provenanceValid && enforcementValid,
             Note = config.Mode == EconomyMode.Enforce
-                ? "Enforce runtime evidence: a DB fingerprint change is valid only when the committed enforcement report declares one or more applied Experience/TraderStanding mutations. A zero-mutation Enforce run must leave the DB unchanged."
+                ? config.EnableItemRewardStackNormalization
+                    ? "Enforce runtime evidence: committed mutations may include Experience, TraderStanding, and the opt-in single-stack ItemRewardStackCount dimension. Item templates/records remain structural-protected. A zero-mutation Enforce run must leave the DB unchanged."
+                    : "Enforce runtime evidence: a DB fingerprint change is valid only when the committed enforcement report declares one or more applied Experience/TraderStanding mutations. A zero-mutation Enforce run must leave the DB unchanged."
                 : "Audit runtime evidence: DB must remain unchanged and the enforcement report may contain preview proposals but zero applied mutations.",
             Reports = reportFiles,
         };
@@ -141,10 +143,31 @@ public sealed class RuntimeEvidenceService(
         var applied = enforcement.Candidates.SelectMany(candidate => candidate.ProposedMutations).Where(mutation => mutation.Applied).ToList();
         if (applied.Count != enforcement.MutationCount)
             return false;
-        if (applied.Any(mutation => mutation.Dimension is not ("Experience" or "TraderStanding")))
+
+        var allowedDimensions = config.EnableItemRewardStackNormalization
+            ? new HashSet<string>(["Experience", "TraderStanding", "ItemRewardStackCount"], StringComparer.Ordinal)
+            : new HashSet<string>(["Experience", "TraderStanding"], StringComparer.Ordinal);
+        if (applied.Any(mutation => !allowedDimensions.Contains(mutation.Dimension)))
             return false;
+
         if (enforcement.Candidates.Any(candidate => candidate.PristineUntouched && candidate.ProposedMutations.Any(mutation => mutation.Applied)))
             return false;
+
+        foreach (var candidate in enforcement.Candidates.Where(candidate => candidate.ProvenanceClass == "PristineModified"))
+        {
+            foreach (var mutation in candidate.ProposedMutations.Where(mutation => mutation.Applied))
+            {
+                var provenDimension = mutation.Dimension switch
+                {
+                    "Experience" => "Experience",
+                    "TraderStanding" => "TraderStanding",
+                    "ItemRewardStackCount" => "SuccessItemHandbookValue",
+                    _ => string.Empty,
+                };
+                if (string.IsNullOrEmpty(provenDimension) || !candidate.ChangedDimensions.Contains(provenDimension, StringComparer.Ordinal))
+                    return false;
+            }
+        }
 
         if (config.Mode != EconomyMode.Enforce)
             return !enforcement.ApplyMutations && enforcement.MutationCount == 0 && databaseUnchanged;

@@ -31,11 +31,12 @@ public sealed class EnforcementPlanService(
         var config = await runtimeConfigService.GetAsync(cancellationToken);
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(EnforcementPlanService).Assembly);
         var provenanceByQuest = provenance.Quests.ToDictionary(row => row.QuestId, StringComparer.Ordinal);
+        var handbookPrices = BuildHandbookPrices();
 
         var candidates = analysis.Quests
             .Where(row => row.ObservationalFlags.Count > 0 || config.QuestRewardOverrides.ContainsKey(row.QuestId))
             .OrderBy(row => row.QuestId, StringComparer.Ordinal)
-            .Select(row => BuildCandidate(row, provenanceByQuest.GetValueOrDefault(row.QuestId), analysis, config))
+            .Select(row => BuildCandidate(row, provenanceByQuest.GetValueOrDefault(row.QuestId), analysis, config, handbookPrices))
             .ToList();
 
         var proposals = candidates
@@ -97,16 +98,19 @@ public sealed class EnforcementPlanService(
             .OrderBy(group => group.Key, StringComparer.Ordinal)
             .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
 
+        var itemStackEnabled = config.EnableItemRewardStackNormalization;
         var report = new EnforcementPlanReport
         {
-            SchemaVersion = 5,
+            SchemaVersion = itemStackEnabled ? 6 : 5,
             Mode = config.Mode.ToString(),
             Preset = config.Preset.ToString(),
-            SelectedPolicy = $"PresetNumericQuestRewardCapV1/{config.Preset}",
+            SelectedPolicy = itemStackEnabled
+                ? $"PresetNumericQuestRewardCapV1+SingleStackItemBudgetCapV1/{config.Preset}"
+                : $"PresetNumericQuestRewardCapV1/{config.Preset}",
             SourceAnalysisSchemaVersion = analysis.SchemaVersion,
             SourceProvenanceSchemaVersion = provenance.SchemaVersion,
             ProvenanceAware = true,
-            MutationEligibilityPolicyVersion = 3,
+            MutationEligibilityPolicyVersion = itemStackEnabled ? 4 : 3,
             EnforceRequested = config.Mode == EconomyMode.Enforce,
             ApplyMutations = config.Mode == EconomyMode.Enforce,
             PlannedMutationCount = proposals.Count,
@@ -117,9 +121,11 @@ public sealed class EnforcementPlanService(
             CandidateCount = finalizedCandidates.Count,
             CandidateCountsByProvenance = countsByProvenance,
             CandidateCountsByEligibility = countsByEligibility,
-            Note = config.Mode == EconomyMode.Enforce
-                ? "Active Alpha enforcement: only numeric Success Experience and TraderStanding rewards may be changed. PristineUnchanged and unknown provenance remain protected; PristineModified requires the exact reward dimension to be proven changed. Item rewards and structural quest fields remain preview-only/non-mutating."
-                : "Audit preview: deterministic Experience/TraderStanding proposals are emitted but the final DB is not mutated.",
+            Note = itemStackEnabled
+                ? "Opt-in post-Alpha enforcement: Experience/TraderStanding plus only a single known-price Success reward-item stack may be reduced. Item templates, reward records and structural quest fields are never added, removed or replaced. Pristine/unknown provenance protection remains mandatory."
+                : config.Mode == EconomyMode.Enforce
+                    ? "Active Alpha enforcement: only numeric Success Experience and TraderStanding rewards may be changed. PristineUnchanged and unknown provenance remain protected; PristineModified requires the exact reward dimension to be proven changed. Item rewards and structural quest fields remain preview-only/non-mutating."
+                    : "Audit preview: deterministic Experience/TraderStanding proposals are emitted but the final DB is not mutated.",
             Candidates = finalizedCandidates,
         };
 
@@ -150,6 +156,33 @@ public sealed class EnforcementPlanService(
             if (!templates.Quests.TryGetValue(proposal.QuestId, out var quest))
                 throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' disappeared from final DB.");
 
+            if (proposal.Dimension == "ItemRewardStackCount")
+            {
+                var items = GetSuccessRewardItems(quest).ToList();
+                if (items.Count != 1)
+                    throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' item-stack mutation requires exactly one Success reward item record; actual={items.Count}.");
+
+                var item = items[0];
+                if (item.Upd is null)
+                    throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' item-stack mutation requires writable Upd.StackObjectsCount.");
+
+                requests.Add(new NumericRewardTransactionRequest
+                {
+                    QuestId = proposal.QuestId,
+                    Dimension = proposal.Dimension,
+                    ExpectedBefore = proposal.Before,
+                    Target = proposal.Target,
+                    Slots = [new NumericRewardSlot(
+                        () => item.Upd?.StackObjectsCount ?? 1d,
+                        value =>
+                        {
+                            if (item.Upd is null) throw new InvalidOperationException("Reward item Upd disappeared during item-stack transaction.");
+                            item.Upd.StackObjectsCount = value;
+                        })],
+                });
+                continue;
+            }
+
             var rewards = GetSuccessRewards(quest, proposal.Dimension).ToList();
             if (rewards.Count == 0)
                 throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' has no Success {proposal.Dimension} reward records.");
@@ -168,11 +201,12 @@ public sealed class EnforcementPlanService(
         return requests;
     }
 
-    private static EnforcementPlanCandidate BuildCandidate(
+    private EnforcementPlanCandidate BuildCandidate(
         QuestAnalysisRow row,
         QuestProvenanceDeltaRow? provenance,
         QuestAnalysisReport analysis,
-        EconomyConfig config)
+        EconomyConfig config,
+        IReadOnlyDictionary<string, double> handbookPrices)
     {
         var actions = new SortedSet<string>(StringComparer.Ordinal);
         foreach (var flag in row.ObservationalFlags)
@@ -194,7 +228,11 @@ public sealed class EnforcementPlanService(
 
         var provenanceClass = provenance?.Provenance ?? "Unknown";
         var changedDimensions = provenance?.ChangedDimensions ?? [];
-        var potentialMutationDimensions = ResolvePotentialMutationDimensions(provenanceClass, changedDimensions, actions);
+        var potentialMutationDimensions = ResolvePotentialMutationDimensions(
+            provenanceClass,
+            changedDimensions,
+            actions,
+            config.EnableItemRewardStackNormalization);
         var eligibility = ResolveMutationEligibility(provenanceClass, potentialMutationDimensions.Count);
         var manualDenied = manualOverride?.AllowAutomaticMutation == false;
 
@@ -212,6 +250,11 @@ public sealed class EnforcementPlanService(
                 var target = ResolveStandingTarget(row, analysis, manualOverride);
                 if (target is { } standingTarget && NumericRewardTransactionCore.NeedsMutation(row.TraderStanding, standingTarget, manualOverride?.TraderStandingTarget is not null))
                     mutations.Add(BuildMutation(row, "TraderStanding", row.TraderStanding, standingTarget, manualOverride?.TraderStandingTarget is not null));
+            }
+            if (potentialMutationDimensions.Contains("ItemRewardStackCount", StringComparer.Ordinal))
+            {
+                var itemMutation = BuildItemStackMutation(row, analysis, handbookPrices);
+                if (itemMutation is not null) mutations.Add(itemMutation);
             }
         }
 
@@ -235,6 +278,48 @@ public sealed class EnforcementPlanService(
             AutomaticMutationAllowed = mutations.Count > 0,
             ProposedMutations = mutations,
             ProposedMutation = mutations.Count == 0 ? null : mutations,
+        };
+    }
+
+    private NumericRewardMutation? BuildItemStackMutation(
+        QuestAnalysisRow row,
+        QuestAnalysisReport analysis,
+        IReadOnlyDictionary<string, double> handbookPrices)
+    {
+        if (!templates.Quests.TryGetValue(row.QuestId, out var quest)) return null;
+        var items = GetSuccessRewardItems(quest).ToList();
+        if (items.Count != 1) return null;
+
+        var item = items[0];
+        var templateId = item.Template.ToString();
+        if (string.IsNullOrWhiteSpace(templateId) || !handbookPrices.TryGetValue(templateId, out var unitPrice)) return null;
+
+        var baseline = row.Restartable && analysis.VanillaRestartable.QuestSamples > 0
+            ? analysis.VanillaRestartable
+            : analysis.Vanilla;
+        if (baseline.MedianSuccessHandbookValue <= 0) return null;
+
+        var multiple = row.Restartable && row.ObservationalFlags.Contains("RESTARTABLE_HIGH_ITEM_VALUE", StringComparer.Ordinal)
+            ? analysis.Policy.RestartableHighItemValueWarnMultiple
+            : analysis.Policy.HighItemValueLowStructureWarnMultiple;
+        var budgetCap = baseline.MedianSuccessHandbookValue * multiple;
+        var currentCount = item.Upd?.StackObjectsCount ?? 1d;
+        var plan = ItemRewardStackPlanner.Plan(currentCount, unitPrice, budgetCap);
+        if (!plan.Eligible || plan.TargetCount is null) return null;
+
+        return new NumericRewardMutation
+        {
+            QuestId = row.QuestId,
+            QuestName = row.QuestName,
+            Dimension = "ItemRewardStackCount",
+            RewardType = "Item",
+            PolicyId = "PresetSingleStackItemBudgetCapV1",
+            Before = Math.Round(plan.CurrentCount, 0),
+            Current = Math.Round(plan.CurrentCount, 0),
+            Target = Math.Round(plan.TargetCount.Value, 0),
+            After = Math.Round(plan.CurrentCount, 0),
+            ManualOverride = false,
+            Applied = false,
         };
     }
 
@@ -294,10 +379,30 @@ public sealed class EnforcementPlanService(
         }
     }
 
+    private static IEnumerable<Item> GetSuccessRewardItems(Quest quest)
+    {
+        if (quest.Rewards is null) yield break;
+        foreach (var pair in quest.Rewards)
+        {
+            if (!string.Equals(pair.Key, "Success", StringComparison.OrdinalIgnoreCase)) continue;
+            foreach (var reward in pair.Value)
+            {
+                if (reward.Items is null) continue;
+                foreach (var item in reward.Items) yield return item;
+            }
+        }
+    }
+
+    private IReadOnlyDictionary<string, double> BuildHandbookPrices() => templates.Handbook.Items
+        .Where(item => item.Price is > 0)
+        .GroupBy(item => item.Id.ToString(), StringComparer.Ordinal)
+        .ToDictionary(group => group.Key, group => group.First().Price!.Value, StringComparer.Ordinal);
+
     private static List<string> ResolvePotentialMutationDimensions(
         string provenanceClass,
         IReadOnlyCollection<string> changedDimensions,
-        IReadOnlyCollection<string> reviewActions)
+        IReadOnlyCollection<string> reviewActions,
+        bool allowItemStackMutation)
     {
         if (string.Equals(provenanceClass, "PristineUnchanged", StringComparison.Ordinal)
             || string.Equals(provenanceClass, "Unknown", StringComparison.Ordinal))
@@ -314,15 +419,20 @@ public sealed class EnforcementPlanService(
             && (modAdded || changedDimensions.Contains("TraderStanding", StringComparer.Ordinal)))
             dimensions.Add("TraderStanding");
 
+        if (allowItemStackMutation
+            && reviewActions.Contains("ReviewItemRewardBudget", StringComparer.Ordinal)
+            && (modAdded || changedDimensions.Contains("SuccessItemHandbookValue", StringComparer.Ordinal)))
+            dimensions.Add("ItemRewardStackCount");
+
         return dimensions.ToList();
     }
 
     private static MutationEligibility ResolveMutationEligibility(string provenanceClass, int potentialDimensionCount) => provenanceClass switch
     {
-        "ModAdded" when potentialDimensionCount > 0 => new MutationEligibility("PolicyEligibleModAdded", true, "Mod-added quest has explicitly flagged/manual numeric reward dimensions. Only Experience/TraderStanding in the listed dimensions may be changed."),
-        "ModAdded" => new MutationEligibility("ReviewOnlyModAdded", false, "Mod-added quest has no eligible numeric Experience/TraderStanding dimension."),
+        "ModAdded" when potentialDimensionCount > 0 => new MutationEligibility("PolicyEligibleModAdded", true, "Mod-added quest has explicitly flagged/manual reward dimensions. Only the listed dimensions may be changed."),
+        "ModAdded" => new MutationEligibility("ReviewOnlyModAdded", false, "Mod-added quest has no eligible enforcement dimension."),
         "PristineModified" when potentialDimensionCount > 0 => new MutationEligibility("PolicyEligibleModifiedPristine", true, "Only reward dimensions both requested by policy/manual override and proven changed versus pristine may be changed."),
-        "PristineModified" => new MutationEligibility("ProtectedUnchangedRewardDimensions", false, "Pristine quest changed structurally or in other dimensions, but the requested numeric reward dimension is not proven changed."),
+        "PristineModified" => new MutationEligibility("ProtectedUnchangedRewardDimensions", false, "Pristine quest changed structurally or in other dimensions, but the requested reward dimension is not proven changed."),
         "PristineUnchanged" => new MutationEligibility("ProtectedPristine", false, "Quest matches pristine startup snapshot and is never automatically mutated."),
         _ => new MutationEligibility("BlockedUnknownProvenance", false, "Quest provenance is not proven; automatic mutation is blocked."),
     };

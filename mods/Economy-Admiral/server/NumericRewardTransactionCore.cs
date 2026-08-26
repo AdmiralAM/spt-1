@@ -96,6 +96,15 @@ public static class NumericRewardTransactionCore
     {
         if (before.Count == 0) throw new InvalidOperationException("Cannot scale an empty reward set.");
         if (!double.IsFinite(target)) throw new InvalidOperationException("Numeric reward target must be finite.");
+
+        if (dimension == "ItemRewardStackCount")
+        {
+            if (before.Count != 1) throw new InvalidOperationException("Item stack mutation supports exactly one writable reward-item stack.");
+            if (target < 1 || Math.Abs(target - Math.Round(target, 0)) > 0.000001)
+                throw new InvalidOperationException("Item reward stack target must be an integer >= 1.");
+            return [Math.Round(target, 0)];
+        }
+
         var total = before.Sum();
         if (Math.Abs(total) < 0.0000001)
         {
@@ -124,7 +133,8 @@ public static class NumericRewardTransactionCore
     private static void ValidateRequest(NumericRewardTransactionRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.QuestId)) throw new InvalidOperationException("Transaction quest id must not be empty.");
-        if (request.Dimension is not ("Experience" or "TraderStanding")) throw new InvalidOperationException($"Unsupported numeric reward dimension '{request.Dimension}'.");
+        if (request.Dimension is not ("Experience" or "TraderStanding" or "ItemRewardStackCount"))
+            throw new InvalidOperationException($"Unsupported numeric reward dimension '{request.Dimension}'.");
         if (request.Slots.Count == 0) throw new InvalidOperationException($"'{request.QuestId}' {request.Dimension} has no writable slots.");
         if (!double.IsFinite(request.ExpectedBefore) || !double.IsFinite(request.Target)) throw new InvalidOperationException("Transaction values must be finite.");
     }
@@ -147,7 +157,7 @@ public static class NumericRewardTransactionCore
             }
     }
 
-    private static double Round(double value, string dimension) => Math.Round(value, dimension == "Experience" ? 0 : 4);
-    private static double Tolerance(string dimension) => dimension == "Experience" ? 0.001 : 0.00001;
+    private static double Round(double value, string dimension) => Math.Round(value, dimension is "Experience" or "ItemRewardStackCount" ? 0 : 4);
+    private static double Tolerance(string dimension) => dimension is "Experience" or "ItemRewardStackCount" ? 0.001 : 0.00001;
     private sealed record JournalEntry(NumericRewardTransactionRequest Request, double[] BeforeSlots);
 }

@@ -43,7 +43,7 @@ jobs:
               root / 'server/EconomyConfig.cs', root / 'server/EconomyConfigValidator.cs',
               root / 'server/QuestAnalysisService.cs', root / 'server/QuestProvenanceDeltaService.cs',
               root / 'server/EnforcementPlanService.cs', root / 'server/RuntimeEvidenceService.cs',
-              root / 'server/NumericRewardTransactionCore.cs',
+              root / 'server/NumericRewardTransactionCore.cs', root / 'server/ItemRewardStackPlanner.cs',
               root / 'tests/EnforcementSmoke/EnforcementSmoke.csproj', root / 'tests/EnforcementSmoke/Program.cs',
           ]
           missing = [str(p) for p in required if not p.is_file()]
@@ -53,6 +53,7 @@ jobs:
           assert config['mode'] in {'Off', 'Audit', 'Enforce'}
           assert config['preset'] in {'Easy', 'Normal', 'Hard', 'Custom'}
           assert config['repeatedRaidLootDecay'] is False
+          assert config['enableItemRewardStackNormalization'] is False
           assert isinstance(config['questRewardOverrides'], dict)
 
           mod = (root / 'server/EconomyMod.cs').read_text(encoding='utf-8')
@@ -76,17 +77,18 @@ jobs:
               assert text in analysis, text
 
           delta = (root / 'server/QuestProvenanceDeltaService.cs').read_text(encoding='utf-8')
-          for text in ['ModAdded','PristineModified','PristineUnchanged','ChangedDimensions']:
+          for text in ['ModAdded','PristineModified','PristineUnchanged','ChangedDimensions','SuccessItemHandbookValue']:
               assert text in delta, text
 
           plan = (root / 'server/EnforcementPlanService.cs').read_text(encoding='utf-8')
           for text in [
-              'SchemaVersion = 5','SelectedPolicy = $"PresetNumericQuestRewardCapV1/{config.Preset}"','MutationEligibilityPolicyVersion = 3',
+              'SchemaVersion = itemStackEnabled ? 6 : 5','PresetSingleStackItemBudgetCapV1','MutationEligibilityPolicyVersion = itemStackEnabled ? 4 : 3',
               'config.Mode == EconomyMode.Enforce','var requests = BuildTransactionRequests(proposals);','NumericRewardTransactionCore.Execute(requests)',
               'new NumericRewardSlot(','value => reward.Value = value','NumericRewardTransactionCore.NeedsMutation',
               'RewardType.Experience','RewardType.TraderStanding','PolicyEligibleModAdded','PolicyEligibleModifiedPristine',
               'ProtectedPristine','ProtectedUnchangedRewardDimensions','BlockedUnknownProvenance',
-              'changedDimensions.Contains("Experience"','changedDimensions.Contains("TraderStanding"',
+              'changedDimensions.Contains("Experience"','changedDimensions.Contains("TraderStanding"','changedDimensions.Contains("SuccessItemHandbookValue"',
+              'ItemRewardStackPlanner.Plan','item.Upd.StackObjectsCount = value','ItemRewardStackCount',
               'ManualExactQuestRewardTargetV1','QuestRewardOverrides','PlannedMutationCount','TransactionCommitted','TransactionRolledBack',
               'Before','Current','Target','After',
           ]:
@@ -96,14 +98,17 @@ jobs:
           assert 'MutationCount = 0' not in plan
 
           transaction = (root / 'server/NumericRewardTransactionCore.cs').read_text(encoding='utf-8')
-          for text in ['Journal before first write','Rollback(journal)','VerifyRollback(journal)','NeedsMutation','Experience','TraderStanding']:
+          for text in ['Journal before first write','Rollback(journal)','VerifyRollback(journal)','NeedsMutation','Experience','TraderStanding','ItemRewardStackCount','exactly one writable reward-item stack']:
               assert text in transaction, text
+          planner = (root / 'server/ItemRewardStackPlanner.cs').read_text(encoding='utf-8')
+          for text in ['BudgetBelowOneItemFloor','AlreadyWithinBudget','NonIntegralStackCount','SingleItemCannotBeReducedWithoutStructuralRemoval']:
+              assert text in planner, text
           transaction_smoke = (root / 'tests/EnforcementSmoke/Program.cs').read_text(encoding='utf-8')
-          for text in ['successful transaction must commit','second automatic pass must be idempotent','synthetic setter failure','must roll back whole batch','earlier standing mutation must be restored']:
+          for text in ['successful transaction must commit','second automatic pass must be idempotent','synthetic setter failure','must roll back whole batch','earlier standing mutation must be restored','single known-price stack above budget must be eligible','planner must block cases requiring item removal/template replacement']:
               assert text in transaction_smoke, text
 
           evidence = (root / 'server/RuntimeEvidenceService.cs').read_text(encoding='utf-8')
-          for text in ['SchemaVersion = 4','DatabaseChangeExpected','EnforcementEvidenceValid','ValidateEnforcementEvidence','config.Mode != EconomyMode.Enforce','enforcement.MutationCount == 0','enforcement.TransactionCommitted && !databaseUnchanged','mutation.Dimension is not ("Experience" or "TraderStanding")','candidate.PristineUntouched','DeclaredMutationCount = enforcement.MutationCount']:
+          for text in ['SchemaVersion = 4','DatabaseChangeExpected','EnforcementEvidenceValid','ValidateEnforcementEvidence','config.Mode != EconomyMode.Enforce','enforcement.MutationCount == 0','enforcement.TransactionCommitted && !databaseUnchanged','allowedDimensions','ItemRewardStackCount','SuccessItemHandbookValue','candidate.PristineUntouched','DeclaredMutationCount = enforcement.MutationCount']:
               assert text in evidence, text
 
           audit_validator = (root / 'tools/Validate-Runtime.ps1').read_text(encoding='utf-8')
@@ -114,10 +119,10 @@ jobs:
               assert text in enforce_validator, text
 
           config_source = (root / 'server/EconomyConfig.cs').read_text(encoding='utf-8')
-          for text in ['QuestRewardOverrides','AllowAutomaticMutation','ExperienceTarget','TraderStandingTarget']:
+          for text in ['QuestRewardOverrides','AllowAutomaticMutation','ExperienceTarget','TraderStandingTarget','EnableItemRewardStackNormalization']:
               assert text in config_source, text
 
-          print('Economy Admiral active Enforce Alpha contract OK')
+          print('Economy Admiral Enforce Alpha + opt-in bounded item-stack contract OK')
 
   server:
     name: Economy Admiral .NET 10 server build
@@ -153,7 +158,7 @@ jobs:
       - name: Build server
         shell: pwsh
         run: dotnet build mods/Economy-Admiral/server/Economy-Admiral.csproj -c Release --nologo
-      - name: Smoke-test Enforce transaction commit, rollback and idempotence
+      - name: Smoke-test Enforce transaction commit, rollback, idempotence, and bounded item planning
         shell: pwsh
         run: dotnet run --project mods/Economy-Admiral/tests/EnforcementSmoke/EnforcementSmoke.csproj -c Release --nologo
       - name: Smoke-test source-pressure integration regression

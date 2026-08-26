@@ -3,6 +3,7 @@
   "preset": "Normal",
   "reportRelativePath": "reports/economy-admiral-audit.json",
   "repeatedRaidLootDecay": false,
+  "enableItemRewardStackNormalization": false,
   "rarity": {
     "commonMinSources": 8,
     "uncommonMinSources": 4,
