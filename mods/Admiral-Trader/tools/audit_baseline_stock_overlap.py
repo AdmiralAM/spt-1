@@ -42,6 +42,20 @@ def parse_provider(value: str) -> tuple[str, Path]:
     return name, Path(path)
 
 
+def merge_provider_assorts(provider_specs: list[tuple[str, Path]]) -> dict[str, set[str]]:
+    """Union any number of assort files under one logical provider name.
+
+    Vanilla SPT stores one assort per trader, while third-party traders usually use
+    one file. Treating repeated NAME=PATH entries as a union lets the audit compare
+    Admiral against the entire vanilla trader surface without fabricating a merged
+    source file in the repository.
+    """
+    providers: dict[str, set[str]] = {}
+    for name, path in provider_specs:
+        providers.setdefault(name, set()).update(root_tpls_from_assort(load_json(path)))
+    return providers
+
+
 def audit(proposal: dict[str, Any], providers: dict[str, set[str]]) -> dict[str, Any]:
     if proposal.get("schemaVersion") != 1:
         raise ValueError("baseline proposal schemaVersion must be 1")
@@ -107,11 +121,7 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
 
-    provider_sets: dict[str, set[str]] = {}
-    for name, path in args.provider:
-        if name in provider_sets:
-            raise SystemExit(f"duplicate provider name: {name}")
-        provider_sets[name] = root_tpls_from_assort(load_json(path))
+    provider_sets = merge_provider_assorts(args.provider)
     if not provider_sets:
         raise SystemExit("at least one --provider NAME=PATH is required")
 
