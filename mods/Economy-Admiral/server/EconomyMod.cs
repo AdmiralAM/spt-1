@@ -12,13 +12,11 @@ public sealed class EconomyMod(
     RuntimeEvidenceService runtimeEvidenceService,
     EconomyAuditService auditService,
     PristineReportCorrectionService pristineReportCorrectionService,
-    TypedQuestItemAccountingService typedQuestItemAccountingService,
     PrimaryAuditParityService primaryAuditParityService,
     RewardUtilityAuditService rewardUtilityAuditService,
     QuestProgressionGraphService questProgressionGraphService,
     QuestConstraintAuditService questConstraintAuditService,
     QuestAnalysisService questAnalysisService,
-    BaselineProvenanceCorrectionService baselineProvenanceCorrectionService,
     QuestProvenanceDeltaService questProvenanceDeltaService,
     CompositePolicyEvaluationService compositePolicyEvaluationService,
     TargetProposalService targetProposalService,
@@ -38,8 +36,8 @@ public sealed class EconomyMod(
         var vanillaBaseline = vanillaBaselineService.GetSnapshot();
         runtimeEvidenceService.CaptureBefore();
 
-        // Physical SPT 4.1.3 parity proved that typed final DB + pristine startup snapshot
-        // is source-correct. The primary report is now built directly from those sources.
+        // Primary audit and unified quest analysis now read typed final DB state directly
+        // against the immutable pristine startup snapshot; no primary/unified correction overlays.
         await auditService.RunAsync(vanillaBaseline, cancellationToken);
         await primaryAuditParityService.RunAsync(cancellationToken);
 
@@ -52,16 +50,14 @@ public sealed class EconomyMod(
         await questConstraintAuditService.RunAsync(cancellationToken);
         await pristineReportCorrectionService.CorrectConstraintsAsync(vanillaBaseline, cancellationToken);
 
-        var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, cancellationToken);
-        questAnalysis = await typedQuestItemAccountingService.ApplyToUnifiedAnalysisAsync(questAnalysis, cancellationToken);
-        questAnalysis = await baselineProvenanceCorrectionService.ApplyToUnifiedAnalysisAsync(questAnalysis, vanillaBaseline, cancellationToken);
+        var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, vanillaBaseline, cancellationToken);
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
 
-        // Cross-mod integration remains observational and is no longer on the critical path for Enforce policy.
+        // Cross-mod integration remains observational and is not on the Enforce policy critical path.
         var admiralTraderReport = await admiralTraderRuntimeAdapterService.RunAsync(config, cancellationToken);
         await sourcePressureRuntimeReportService.RunAsync(config, admiralTraderReport, cancellationToken);
 
-        // Legacy observational reports remain available during Alpha, but only the enforcement service below may mutate DB state.
+        // Legacy observational outputs stay available, but only EnforcementPlanService may mutate DB state.
         await compositePolicyEvaluationService.RunAsync(questAnalysis, cancellationToken);
         await targetProposalService.RunAsync(questAnalysis, cancellationToken);
         var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
