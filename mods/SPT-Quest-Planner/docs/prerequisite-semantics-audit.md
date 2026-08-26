@@ -11,55 +11,78 @@ Current SPT quest documentation states that every `AvailableForStart` condition 
 For a `Quest` start condition:
 
 - `target` identifies the source quest;
-- `status[]` is the set of source-quest statuses accepted by that single condition;
+- `status[]` is the set of **raw SPT quest statuses** accepted by that single condition;
 - `availableAfter` delays availability after the relevant source-quest transition;
 - several `Quest` start conditions are all mandatory because all top-level start conditions must be met.
 
-This means the planner's structural prerequisite graph can remain conjunctive, but an edge is not semantically just `source -> target`.
+Raw status identity matters. SPT distinguishes, among others, `Started = 2`, `AvailableForFinish = 3`, and `Success = 4`. Quest Planner's normalized `QuestState` intentionally collapses some raw states for ordinary disposition/UI purposes, but that normalization is **not valid evidence for prerequisite `status[]` evaluation**.
+
+This means the planner's structural prerequisite graph can remain conjunctive, but an edge is not semantically just `source -> target`, and its accepted statuses must retain raw provenance.
 
 ## Previous loss of information
 
-Before this audit:
+Before this audit was completed:
 
-1. server extraction retained accepted source states but discarded `availableAfter`;
-2. the topology payload already contained accepted states, but the client index reduced each edge to source/target quest IDs;
+1. server extraction retained normalized accepted source states but originally discarded `availableAfter`;
+2. the topology payload's normalized states were initially reduced client-side to source/target IDs;
 3. `GetImmediateUnlocksIfCompleted()` assumed every edge meant `source Success unlocks target immediately`;
 4. hypothetical reachability modeled Level + Quest conditions while silently ignoring other populated `AvailableForStart` condition types;
-5. future-goal ancestor/path traversal still treated `not Completed` as equivalent to `prerequisite condition remains unsatisfied`.
+5. future-goal ancestor/path traversal treated `not Completed` as equivalent to `prerequisite condition remains unsatisfied`;
+6. most importantly, prerequisite `status[]` was evaluated through normalized `QuestState`, which conflated raw `Started = 2` and raw `AvailableForFinish = 3` as the same internal `Started` state.
 
-That was sufficient for graph visualization but too weak for decision support.
+The last point is a provenance bug rather than a ranking-policy problem. A condition that explicitly accepts raw status `3` must not become satisfied merely because the source is raw status `2`.
+
+## Raw-status provenance contract
+
+Prerequisite truth now uses exact raw status when that provenance is present.
+
+The server keeps both representations:
+
+- normalized `AcceptedSourceStates` for compatibility, display and legacy/synthetic model use;
+- exact `AcceptedSourceRawStatuses` for authoritative prerequisite semantics.
+
+The player snapshot already carries each quest's raw profile status. The client index now retains that raw value alongside normalized `ProfileState` and `Disposition`.
+
+Evaluation rule:
+
+1. when an edge has an exact raw-status contract and the source profile exposes raw status, compare raw-to-raw;
+2. normalized state is only a compatibility fallback for legacy/synthetic test edges or states where raw provenance is genuinely unavailable;
+3. hypothetical completion uses raw `Success = 4` when the edge has a raw contract;
+4. terminal-conflict detection uses the same exact-success rule.
+
+This preserves useful normalization for UI while preventing it from corrupting quest-condition truth.
 
 ## Conservative contract after the audit
 
-### Structural path
+### State-semantic future path
 
-A `Quest` start condition still creates a structural prerequisite edge. Structural topology remains useful for dependency inspection, but **remaining future work is state-semantic** rather than a static ancestor closure.
+A `Quest` start condition creates a structural prerequisite edge. Structural topology remains useful for dependency inspection, but **remaining future work is state-semantic** rather than a static ancestor closure.
 
-`GetIncompletePrerequisitePlan()` and `GetIncompleteAncestors()` traverse an edge only when that edge's accepted source-state set does not accept the source quest's effective current profile state.
+`GetIncompletePrerequisitePlan()` and `GetIncompleteAncestors()` traverse an edge only when that edge's accepted status set does not accept the source quest's current authoritative state. When raw provenance exists, that means the exact raw SPT status.
 
 Consequences:
 
-- if target `T` accepts source `S` in `Started` and `S` is Active/Started, `S` is not remaining prerequisite work for `T`;
-- if `T` requires `S = Success` while `S` is Active/Started, `S` remains on the plan;
-- once an edge is satisfied, historical ancestors behind that edge are not dragged into the selected future-goal plan merely because those quests are not themselves represented as current work;
+- if target `T` accepts source `S` at the source's exact current raw status, `S` is not remaining prerequisite work for `T`;
+- if `T` requires raw `Success = 4` while `S` is still an earlier active state, `S` remains on the plan;
+- once an edge is satisfied, historical ancestors behind that edge are not dragged into the selected future-goal plan;
 - mixed branches recurse only through currently unsatisfied prerequisite conditions.
 
 This distinction is essential for progression focus: the planner should answer which prerequisite conditions still need player action, not list every structural ancestor that is not labelled `Success`.
 
 ### Terminal prerequisite-state conflict
 
-A second state-semantic case is now explicit rather than hidden inside `blocked`.
+A second state-semantic case is explicit rather than hidden inside `blocked`.
 
 When all of the following are true:
 
 1. source quest `S` is non-repeatable;
 2. the authoritative profile says `S` is already Completed/Success;
-3. target edge `S -> T` does not accept `Success`;
+3. target edge `S -> T` does not accept raw `Success = 4` when raw provenance is present (or normalized Success only for a legacy edge);
 4. the edge is not already satisfied by the current source state;
 
 the planner records a **terminal prerequisite-state conflict**.
 
-This is not ordinary remaining work: normal forward progression cannot move a completed non-repeatable quest back into an earlier accepted state such as `Started`. A selected progression focus containing such a conflict must abstain instead of falling back to an unrelated globally attractive raid and pretending that raid advances the chosen goal.
+This is not ordinary remaining work: normal forward progression cannot move a completed non-repeatable quest back into an earlier accepted state. A selected progression focus containing such a conflict must abstain instead of falling back to an unrelated globally attractive raid and pretending that raid advances the chosen goal.
 
 Repeatable sources are deliberately excluded from this terminal claim because another cycle may make an earlier state reachable again.
 
@@ -67,9 +90,9 @@ Repeatable sources are deliberately excluded from this terminal claim because an
 
 Completion of source quest `S` may only claim target quest `T` as an immediate modeled unlock when all of the following are proven:
 
-1. the `S -> T` condition accepts `Success`;
+1. the `S -> T` condition accepts raw `Success = 4` when raw provenance is available;
 2. its `availableAfter` is zero;
-3. every other quest prerequisite condition on `T` accepts the other source quest's current profile state;
+3. every other quest prerequisite condition on `T` accepts the other source quest's exact current raw status when available;
 4. the target level gate is satisfied when that information is present;
 5. all populated `AvailableForStart` condition types on `T` are modeled by the planner;
 6. `T` is not already Active, Available, or Completed.
@@ -99,6 +122,7 @@ Until a trustworthy timer source is proven, configured delay should remain expla
 This audit strengthens the product thesis rather than weakening it: the useful planner is not a generic dependency graph. It is an evidence-bounded decision layer that distinguishes:
 
 - structural prerequisite relation;
+- exact raw prerequisite-state contract;
 - currently unsatisfied prerequisite condition;
 - terminal prerequisite-state conflict;
 - current authoritative actionability;
@@ -107,8 +131,8 @@ This audit strengthens the product thesis rather than weakening it: the useful p
 - proven immediate unlock;
 - unresolved eligibility.
 
-Those states must not be collapsed into one `unlocked` boolean.
+Those states must not be collapsed into one `unlocked` boolean or one normalized quest-state enum.
 
 ## Performance constraints
 
-The richer edge semantics are carried in the existing topology snapshot and cached client index. State-semantic traversal remains iterative and bounded by the existing query traversal limit. Terminal-conflict checks are local to a quest's prerequisite edges. No new route, polling loop, runtime scan, Harmony patch, or external dependency is required.
+The richer edge semantics are carried in the existing topology snapshot and cached client index. State-semantic traversal remains iterative and bounded by the existing query traversal limit. Terminal-conflict checks are local to a quest's prerequisite edges. Raw-status comparison is constant-time over the tiny accepted-status set for an edge. No new route, polling loop, runtime scan, Harmony patch, or external dependency is required.
