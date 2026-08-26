@@ -104,31 +104,7 @@ namespace SPTQuestPlanner.Client
         {
             if (left == null) throw new ArgumentNullException("left");
             if (right == null) throw new ArgumentNullException("right");
-
-            if (intent != null && intent.HasFocusQuest)
-            {
-                string leftMatch;
-                string rightMatch;
-                bool leftSupports = TryGetFocusMatch(left, intent, out leftMatch);
-                bool rightSupports = TryGetFocusMatch(right, intent, out rightMatch);
-                if (leftSupports != rightSupports)
-                {
-                    string matchedQuestId = leftSupports ? leftMatch : rightMatch;
-                    return new PlannerRaidDecision(
-                        leftSupports ? PlannerRaidDecisionOutcome.PreferLeft : PlannerRaidDecisionOutcome.PreferRight,
-                        intent.HasActionableFocusFrontier
-                            ? "Player progression focus selects a candidate that advances an actionable quest on the focused path."
-                            : "Player progression focus explicitly selects a candidate that advances the focused quest.",
-                        new[]
-                        {
-                            (leftSupports ? "LEFT" : "RIGHT") + ": advances " + matchedQuestId +
-                            (intent.HasFocusPath ? " on the prerequisite path to " + intent.FocusQuestId : string.Empty) +
-                            (intent.HasActionableFocusFrontier ? "; profile evaluation confirms the quest is active or available now" : string.Empty)
-                        });
-                }
-            }
-
-            return PlannerRaidDecisionPolicy.Decide(left, right);
+            return PlannerRaidFocusedDecisionPolicy.Decide(left, right, intent);
         }
 
         public static bool Supports(PlannerRaidDecisionSignals signals, PlannerRaidDecisionIntent intent)
