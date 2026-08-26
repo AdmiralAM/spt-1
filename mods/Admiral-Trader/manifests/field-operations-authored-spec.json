@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "status": "authored-pre-runtime",
+  "product": "Admiral Trader",
+  "policy": {
+    "artificialQuestCountCap": null,
+    "directLegacyTemplateCopy": false,
+    "requireWhyWhatContextPayoff": true,
+    "materializeOnlyAfterSpt413ConditionProof": true,
+    "economyReviewOwner": "Economy Admiral"
+  },
+  "operations": [
+    {
+      "id": "SO-HVT-01",
+      "domain": "Special Operations",
+      "workingName": "Broken Command",
+      "workingNameRu": "Нарушенная цепь командования",
+      "legacyThemeSources": ["Boss Hunt", "Boss Follower Hunt"],
+      "target": {
+        "kind": "SavageRole",
+        "role": "bossGluhar",
+        "displayName": "Glukhar",
+        "operationalContext": "Reserve command node"
+      },
+      "why": "Admiral wants a single deliberate strike against a militarized command threat rather than a generic boss body-count ladder.",
+      "what": "Eliminate Glukhar once as the high-value target of the operation.",
+      "context": "The contract treats Glukhar and his Reserve network as one command problem. Repeating the same kill with larger counters is explicitly not progression.",
+      "payoff": "Milestone standing plus a distinctive specialist reward or stock privilege selected only after Economy Admiral and vanilla reward review.",
+      "mechanic": {
+        "outerConditionType": "CounterCreator",
+        "counterConditionType": "Kills",
+        "target": "Savage",
+        "savageRole": ["bossGluhar"],
+        "requiredCount": 1,
+        "oneSessionOnly": false,
+        "repeatable": false
+      },
+      "conditionEvidence": {
+        "counterCreatorKillsEnvelope": "already used by current Admiral Arsenal runtime backbone",
+        "specificSavageRoleShape": "observed in pinned Andrudis legacy source",
+        "specificSavageRoleSourceCommit": "4e15990ac18f469ef7818475ce8553bbbb7cebb4",
+        "spt413SpecificSavageRoleRuntimeProof": "pending"
+      },
+      "reward": {
+        "state": "economy-review-required",
+        "mustInclude": ["Experience", "TraderStanding", "meaningful visible item or stock payoff"],
+        "moneyOnlyAllowed": false,
+        "permanentHighEndAmmoFaucetAllowed": false,
+        "containerRewardAllowed": "milestone-only-after-economy-review"
+      },
+      "runtime": {
+        "materialize": false,
+        "blockers": [
+          "prove bossGluhar savageRole condition against SPT 4.1.3 runtime/native reference",
+          "select vanilla-benchmarked reward envelope with Economy Admiral",
+          "write EN/RU objective and briefing/completion locales",
+          "confirm no duplicate objective with vanilla/Scorpion/Artem quest content"
+        ]
+      }
+    }
+  ]
+}
