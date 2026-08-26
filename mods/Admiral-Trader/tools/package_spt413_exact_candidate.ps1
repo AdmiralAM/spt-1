@@ -19,7 +19,12 @@ if (-not (Test-Path $builder)) {
     throw "Exact-runtime builder is missing: $builder"
 }
 
-& $builder -SptRoot $SptRoot -ExpectedHeadSha $ExpectedHeadSha -Install:$Install
+$expected = $ExpectedHeadSha.Trim().ToLowerInvariant()
+if ($expected -notmatch '^[0-9a-f]{40}$') {
+    throw 'ExpectedHeadSha must be the full 40-character hexadecimal Git SHA.'
+}
+
+& $builder -SptRoot $SptRoot -ExpectedHeadSha $expected -Install:$Install
 if ($LASTEXITCODE -ne 0) {
     throw "Exact-runtime candidate builder failed with exit code $LASTEXITCODE"
 }
@@ -29,8 +34,7 @@ if ($LASTEXITCODE -ne 0 -or $sourceHead -notmatch '^[0-9a-f]{40}$') {
     throw 'Unable to resolve exact source HEAD after candidate build.'
 }
 
-$expected = $ExpectedHeadSha.Trim().ToLowerInvariant()
-if (-not $sourceHead.StartsWith($expected, [System.StringComparison]::OrdinalIgnoreCase)) {
+if ($sourceHead -ne $expected) {
     throw "Post-build source HEAD mismatch: expected $expected, found $sourceHead"
 }
 
