@@ -34,15 +34,12 @@ public sealed class EconomyMod(
         var vanillaBaseline = vanillaBaselineService.GetSnapshot();
         runtimeEvidenceService.CaptureBefore();
 
-        // Primary audit, reward utility and unified analysis read final typed DB state directly
-        // against the immutable pristine startup snapshot; no post-write correction overlays.
+        // Core typed reports use final DB state directly against the immutable pristine startup snapshot.
         await auditService.RunAsync(vanillaBaseline, cancellationToken);
         await primaryAuditParityService.RunAsync(cancellationToken);
-
         await rewardUtilityAuditService.RunAsync(vanillaBaseline, cancellationToken);
 
-        var progressionSnapshot = await questProgressionGraphService.RunAsync(cancellationToken);
-        await pristineReportCorrectionService.CorrectProgressionGraphAsync(vanillaBaseline, cancellationToken);
+        var progressionSnapshot = await questProgressionGraphService.RunAsync(vanillaBaseline, cancellationToken);
 
         await questConstraintAuditService.RunAsync(cancellationToken);
         await pristineReportCorrectionService.CorrectConstraintsAsync(vanillaBaseline, cancellationToken);
@@ -50,11 +47,9 @@ public sealed class EconomyMod(
         var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, vanillaBaseline, cancellationToken);
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
 
-        // Cross-mod integration remains observational and is not on the Enforce policy critical path.
         var admiralTraderReport = await admiralTraderRuntimeAdapterService.RunAsync(config, cancellationToken);
         await sourcePressureRuntimeReportService.RunAsync(config, admiralTraderReport, cancellationToken);
 
-        // Legacy observational outputs stay available, but only EnforcementPlanService may mutate DB state.
         await compositePolicyEvaluationService.RunAsync(questAnalysis, cancellationToken);
         await targetProposalService.RunAsync(questAnalysis, cancellationToken);
         var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
