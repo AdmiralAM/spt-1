@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "productRole": "capability-broker",
+  "campaign": {
+    "expectedQuestCount": 31,
+    "accessQuestCount": 10,
+    "arsenalQuestCount": 21,
+    "weaponFamilyCount": 7,
+    "stagesPerWeaponFamily": 3,
+    "familyChainsIndependent": true,
+    "repeatableQuestsAllowed": false,
+    "foundInRaidBusyworkAllowed": false
+  },
+  "logistics": {
+    "expectedPermanentOfferCount": 7,
+    "expectedAmmoPermanentOfferCount": 6,
+    "maximumPermanentOfferStockPerReset": 80,
+    "offersMustBeQuestGated": true,
+    "offersMustBeFinite": true,
+    "questUnlockLoyaltyLevel": 1,
+    "specialWeaponsPermanentOfferAllowed": false,
+    "specialWeaponsSampleOnly": true
+  },
+  "accessProtocol": {
+    "consumePlayerKeys": false,
+    "foundInRaidRequired": false,
+    "genericCollectionObjectivesAllowed": false,
+    "labsClearanceQuestId": "68a6527a3c73b2e85977d7a1",
+    "labsClearanceUnlockSlots": 1,
+    "otherAccessUnlockSlots": 0
+  },
+  "arsenalProtocol": {
+    "stageOrder": ["qualification", "fieldwork", "munitions"],
+    "permanentUnlockStage": "munitions",
+    "crossFamilyPrerequisitesAllowed": false,
+    "handoverAmmoObjectivesAllowed": false,
+    "familiesWithPermanentAmmoOffer": [
+      "handguns",
+      "smg-pdw",
+      "shotguns",
+      "assault-rifles",
+      "marksman-battle",
+      "precision"
+    ],
+    "sampleOnlyFamilies": ["special-weapons"]
+  }
+}
