@@ -52,7 +52,6 @@ var input = new[]
         EarliestProgressionLevel = 10,
         ProvenanceClass = "ModAdded",
     },
-    // Exact duplicate edge must not inflate pressure evidence.
     new AcquisitionSourceEvidence
     {
         ItemTemplateId = "item-a",
@@ -86,7 +85,7 @@ var input = new[]
         SourceId = "trader-c:offer-2",
         Channel = AcquisitionChannel.TraderPurchase,
         Renewable = true,
-        EarliestProgressionLevel = 2,
+        EarliestProgressionLevel = null,
         ProvenanceClass = "ModAdded",
     },
     new AcquisitionSourceEvidence
@@ -131,6 +130,11 @@ Require(a.HasRenewablePath, "item-a should retain renewable acquisition.");
 Require(a.RenewableChannelCount == 2, "item-a renewable channel count mismatch.");
 Require(!a.SingleRenewableSourceRisk, "item-a has two renewable sources and should not expose single-renewable risk.");
 Require(a.EarliestProgressionLevel == 1, "item-a earliest progression level mismatch.");
+Require(a.EarliestRenewableProgressionLevel == 1, "item-a earliest renewable progression level mismatch.");
+Require(a.KnownProgressionSourceCount == 3, "item-a known progression count mismatch.");
+Require(a.UnknownProgressionSourceCount == 0, "item-a unknown progression count mismatch.");
+Require(a.ProgressionEvidenceCoverage == 1.0, "item-a progression coverage mismatch.");
+Require(a.HasCompleteProgressionEvidence, "item-a progression evidence should be complete.");
 Require(!a.SingleSourceDominated, "item-a should not be single-source dominated.");
 Require(a.DominantChannel == AcquisitionChannel.TraderPurchase, "item-a dominant channel tie must resolve deterministically by enum order.");
 Require(a.DominantChannelSourceShare == 0.333333, "item-a dominant channel share mismatch.");
@@ -146,6 +150,11 @@ Require(!b.HasRenewablePath, "item-b should have no renewable path.");
 Require(b.RenewableChannelCount == 0, "item-b renewable channel count mismatch.");
 Require(!b.SingleRenewableSourceRisk, "zero renewable sources is not the single-renewable-source state.");
 Require(b.EarliestProgressionLevel is null, "unknown progression level must remain unknown.");
+Require(b.EarliestRenewableProgressionLevel is null, "item-b has no renewable progression path.");
+Require(b.KnownProgressionSourceCount == 0, "item-b known progression count mismatch.");
+Require(b.UnknownProgressionSourceCount == 1, "item-b unknown progression count mismatch.");
+Require(b.ProgressionEvidenceCoverage == 0.0, "item-b progression coverage must remain zero.");
+Require(!b.HasCompleteProgressionEvidence, "item-b must expose incomplete progression evidence.");
 Require(b.DominantChannel == AcquisitionChannel.QuestReward, "item-b dominant channel mismatch.");
 Require(b.DominantChannelSourceShare == 1.0, "item-b dominant channel share mismatch.");
 Require(b.ChannelConcentrationHhi == 1.0, "item-b channel HHI mismatch.");
@@ -159,12 +168,21 @@ Require(c.DominantChannel == AcquisitionChannel.TraderPurchase, "item-c dominant
 Require(c.DominantChannelSourceShare == 0.666667, "item-c channel concentration mismatch.");
 Require(c.ChannelConcentrationHhi == 0.555556, "item-c channel HHI mismatch.");
 Require(c.EffectiveChannelCount == 1.8, "item-c effective channel count mismatch.");
+Require(c.EarliestProgressionLevel == 1, "item-c earliest known progression mismatch.");
+Require(c.EarliestRenewableProgressionLevel == 1, "item-c earliest known renewable progression mismatch.");
+Require(c.KnownProgressionSourceCount == 2, "item-c known progression count mismatch.");
+Require(c.UnknownProgressionSourceCount == 1, "item-c unknown progression count mismatch.");
+Require(c.ProgressionEvidenceCoverage == 0.666667, "item-c progression coverage mismatch.");
+Require(!c.HasCompleteProgressionEvidence, "item-c must expose partial progression evidence.");
 
 var d = result.Single(item => item.ItemTemplateId == "item-d");
 Require(d.SourceCount == 2, "item-d source count mismatch.");
 Require(d.RenewableSourceCount == 1, "item-d renewable source count mismatch.");
 Require(d.RenewableChannelCount == 1, "item-d renewable channel count mismatch.");
 Require(d.SingleRenewableSourceRisk, "item-d must expose a raw single-renewable-source risk state.");
+Require(d.EarliestProgressionLevel == 3, "item-d earliest progression mismatch.");
+Require(d.EarliestRenewableProgressionLevel == 6, "item-d renewable gate must remain distinct from an earlier one-time reward.");
+Require(d.ProgressionEvidenceCoverage == 1.0 && d.HasCompleteProgressionEvidence, "item-d progression evidence should be complete.");
 Require(d.ChannelConcentrationHhi == 0.5, "item-d channel HHI mismatch.");
 Require(d.EffectiveChannelCount == 2.0, "item-d effective channel count mismatch.");
 
@@ -188,6 +206,14 @@ Require(
 Require(
     result.Select(item => item.SingleRenewableSourceRisk).SequenceEqual(reversed.Select(item => item.SingleRenewableSourceRisk)),
     "Renewable resilience evidence must be deterministic regardless of input order."
+);
+Require(
+    result.Select(item => item.ProgressionEvidenceCoverage).SequenceEqual(reversed.Select(item => item.ProgressionEvidenceCoverage)),
+    "Progression coverage must be deterministic regardless of input order."
+);
+Require(
+    result.Select(item => item.EarliestRenewableProgressionLevel).SequenceEqual(reversed.Select(item => item.EarliestRenewableProgressionLevel)),
+    "Renewable progression evidence must be deterministic regardless of input order."
 );
 
 MustFail("empty item id", () => SourcePressureEvidenceAnalyzer.Analyze(new[]
