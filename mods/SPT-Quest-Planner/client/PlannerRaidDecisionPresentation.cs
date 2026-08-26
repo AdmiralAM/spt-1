@@ -18,13 +18,15 @@ namespace SPTQuestPlanner.Client
             PlannerRaidDecisionExplanation primary,
             IReadOnlyList<PlannerRaidDecisionExplanation> alternatives,
             string headline,
-            string summary)
+            string summary,
+            int comparisonCandidateCount = 0)
         {
             Kind = kind;
             Primary = primary;
             Alternatives = alternatives ?? Array.Empty<PlannerRaidDecisionExplanation>();
             Headline = headline ?? string.Empty;
             Summary = summary ?? string.Empty;
+            ComparisonCandidateCount = Math.Max(0, comparisonCandidateCount);
         }
 
         public PlannerRaidDecisionPresentationKind Kind { get; private set; }
@@ -32,6 +34,8 @@ namespace SPTQuestPlanner.Client
         public IReadOnlyList<PlannerRaidDecisionExplanation> Alternatives { get; private set; }
         public string Headline { get; private set; }
         public string Summary { get; private set; }
+        public int ComparisonCandidateCount { get; private set; }
+        public bool WasComparativeDecision { get { return ComparisonCandidateCount > 1; } }
     }
 
     public static class PlannerRaidDecisionPresentationBuilder
@@ -51,7 +55,8 @@ namespace SPTQuestPlanner.Client
                     primary,
                     Array.Empty<PlannerRaidDecisionExplanation>(),
                     "Best next raid",
-                    set.Reason);
+                    set.Reason,
+                    set.SourceCandidateCount);
             }
 
             PlannerRaidDecisionExplanation[] contenders = set.Contenders
@@ -66,7 +71,8 @@ namespace SPTQuestPlanner.Client
                     null,
                     contenders,
                     "Several good options",
-                    set.Reason);
+                    set.Reason,
+                    set.SourceCandidateCount);
             }
 
             return new PlannerRaidDecisionPresentation(
@@ -76,7 +82,8 @@ namespace SPTQuestPlanner.Client
                 "No meaningful recommendation",
                 string.IsNullOrWhiteSpace(set.Reason)
                     ? "No proven decision advantage is currently available."
-                    : set.Reason);
+                    : set.Reason,
+                set.SourceCandidateCount);
         }
     }
 }
