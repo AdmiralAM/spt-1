@@ -1,5 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using SPTQuestPlanner.Client;
 using Xunit;
 
@@ -34,6 +36,35 @@ namespace SPTQuestPlanner.Tests
         }
 
         [Fact]
+        public void MultipleGoalsOnSameRevisionReuseSharedDelayAndRaidDerivations()
+        {
+            const string fieldwork = "fieldwork";
+            const string setup = "setup";
+            const string gate = "gate";
+
+            PlannerClientCache cache = ReadyCache(fieldwork, setup, gate);
+            PlannerCapabilityDecisionProvider provider = new PlannerCapabilityDecisionProvider(cache);
+            PlannerCapabilityDecisionSnapshot first;
+            PlannerCapabilityDecisionSnapshot second;
+            string error;
+
+            Assert.True(provider.TryGet(Definition(gate, "controlled-ammo-a"), out first, out error));
+            object firstDelay = PrivateField(provider, "cachedDelayIndex");
+            IDictionary firstCandidates = Assert.IsAssignableFrom<IDictionary>(PrivateField(provider, "cachedCandidates"));
+            object firstCandidateSet = firstCandidates[false];
+
+            Assert.True(provider.TryGet(Definition(gate, "controlled-ammo-b"), out second, out error));
+            object secondDelay = PrivateField(provider, "cachedDelayIndex");
+            IDictionary secondCandidates = Assert.IsAssignableFrom<IDictionary>(PrivateField(provider, "cachedCandidates"));
+            object secondCandidateSet = secondCandidates[false];
+
+            Assert.NotSame(first, second);
+            Assert.Same(firstDelay, secondDelay);
+            Assert.Same(firstCandidateSet, secondCandidateSet);
+            Assert.Equal(first.SourceRevision, second.SourceRevision);
+        }
+
+        [Fact]
         public void ProviderInvalidatesDerivedDecisionWhenCacheRevisionAdvances()
         {
             const string fieldwork = "fieldwork";
@@ -48,6 +79,9 @@ namespace SPTQuestPlanner.Tests
             string error;
             Assert.True(provider.TryGet(definition, out first, out error));
             long firstRevision = first.SourceRevision;
+            object firstDelay = PrivateField(provider, "cachedDelayIndex");
+            IDictionary firstCandidates = Assert.IsAssignableFrom<IDictionary>(PrivateField(provider, "cachedCandidates"));
+            object firstCandidateSet = firstCandidates[false];
             Assert.Equal(1000, first.GeneratedAtUnixSeconds);
 
             PlannerClientIndex refreshedState = StateAt(
@@ -71,6 +105,9 @@ namespace SPTQuestPlanner.Tests
             Assert.Equal(cache.Revision, second.SourceRevision);
             Assert.Equal(2000, second.GeneratedAtUnixSeconds);
             Assert.NotSame(first, second);
+            Assert.NotSame(firstDelay, PrivateField(provider, "cachedDelayIndex"));
+            IDictionary secondCandidates = Assert.IsAssignableFrom<IDictionary>(PrivateField(provider, "cachedCandidates"));
+            Assert.NotSame(firstCandidateSet, secondCandidates[false]);
         }
 
         [Fact]
@@ -89,6 +126,15 @@ namespace SPTQuestPlanner.Tests
             Assert.False(provider.TryGet(definition, out snapshot, out error));
             Assert.Null(snapshot);
             Assert.Contains("not ready", error, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static object PrivateField(object instance, string name)
+        {
+            FieldInfo field = instance.GetType().GetField(name, BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.NotNull(field);
+            object value = field.GetValue(instance);
+            Assert.NotNull(value);
+            return value;
         }
 
         private static PlannerClientCache ReadyCache(string fieldwork, string setup, string gate)
@@ -134,10 +180,10 @@ namespace SPTQuestPlanner.Tests
             return cache;
         }
 
-        private static PlannerCapabilityGoalDefinition Definition(string gate)
+        private static PlannerCapabilityGoalDefinition Definition(string gate, string capabilityId = "controlled-ammo")
         {
             return new PlannerCapabilityGoalDefinition(
-                "controlled-ammo",
+                capabilityId,
                 gate,
                 "test",
                 PlannerCapabilitySupplyKind.BoundedRenewable,
