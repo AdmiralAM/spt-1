@@ -10,12 +10,11 @@ This is a multi-mod source repository. `main` is the authoritative development t
 | --- | --- |
 | `main` | Active source, tests, maintained assets, workflows, and durable documentation |
 | `stable` | Source commit promoted after deliberate suite validation/publication |
-| `runtime` | Install-only Tactical HUD channel |
+| `runtime` | Install-only Admiral Tactical HUD channel |
 | `runtime-item-intelligence` | Install-only Item Intelligence Admiral channel; retained compatibility branch name |
 | `runtime-pause` | Install-only Pause Admiral channel |
 | `runtime-belt-armband` | Install-only Belt/Armband Inventory channel |
 | `runtime-artem-revival` | Stable Admiral Artyom Revival publication identity; retained compatibility branch name |
-| `archive/v1.13.0` | Intentional frozen Tactical HUD `1.13.0` reserve |
 
 Feature, fix, diagnostic, research, build, and archaeology branches are temporary unless explicitly documented otherwise. They are not release channels and should be removed after their useful work is merged or superseded.
 
@@ -23,7 +22,7 @@ Feature, fix, diagnostic, research, build, and archaeology branches are temporar
 
 Long-term source modules currently integrated under `mods/`:
 
-- `SPT-Tactical-HUD`
+- `Admiral-Tactical-HUD`
 - `SPT-Item-Intelligence`
 - `SPT-Pause`
 - `SPT-Belt-Armband-Inventory`
@@ -76,8 +75,6 @@ Current-state documentation must describe what the repository contains now. Hist
 
 Current product names and versions must agree between the root module index, module README, build/package metadata and maintained runtime manifest. Historical/upstream names or compatibility identifiers may remain only where their retained role is explicit. See `docs/development-workflow.md` for the complete naming/version contract.
 
+Admiral Tactical HUD has one maintained release line: `1.13.3`. Older Tactical HUD builds are superseded and are not maintained publication sources.
+
 Avoid status text that becomes false as soon as development advances: prefer explicit version metadata, validation state, and links to current source/tests over prose such as "current phase" scattered across multiple files.
-
-## Historical note
-
-Tactical HUD `1.14.0` is retired because it mixed early Item Intelligence code into the HUD assembly. The maintained Tactical HUD line returned to the independent `1.13.x` model. Detailed historical release information belongs with the affected module rather than in repository-governance documentation.
