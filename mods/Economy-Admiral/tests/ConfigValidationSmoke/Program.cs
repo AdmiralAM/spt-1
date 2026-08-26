@@ -59,6 +59,10 @@ static void JsonMustFail(string name, string json)
 }
 
 MustPass("defaults", new EconomyConfig());
+foreach (var preset in Enum.GetValues<EconomyPreset>())
+{
+    MustPass($"preset {preset}", new EconomyConfig { Preset = preset });
+}
 MustPass("supported exceptional override", new EconomyConfig
 {
     ManualOverrides = new Dictionary<string, ManualItemOverride>(StringComparer.Ordinal)
@@ -67,6 +71,7 @@ MustPass("supported exceptional override", new EconomyConfig
     },
 });
 
+MustFail("unimplemented repeated raid loot decay", new EconomyConfig { RepeatedRaidLootDecay = true });
 MustFail("empty report path", new EconomyConfig { ReportRelativePath = " " });
 MustFail("rooted report path", new EconomyConfig { ReportRelativePath = Path.GetFullPath("outside.json") });
 MustFail("parent traversal slash", new EconomyConfig { ReportRelativePath = "reports/../outside.json" });
@@ -123,9 +128,15 @@ MustFail("null overrides object", new EconomyConfig { ManualOverrides = null! })
 
 JsonMustPass("minimal JSON", "{}");
 JsonMustPass("case-insensitive known keys", "{\"MODE\":\"Audit\",\"PRESET\":\"Normal\"}");
+foreach (var preset in new[] { "Easy", "Normal", "Hard", "Custom" })
+{
+    JsonMustPass($"JSON preset {preset}", $"{{\"preset\":\"{preset}\"}}");
+}
+JsonMustFail("enabled repeated raid loot decay", "{\"repeatedRaidLootDecay\":true}");
 JsonMustFail("numeric mode", "{\"mode\":1}");
 JsonMustFail("numeric preset", "{\"preset\":2}");
 JsonMustFail("unknown mode string", "{\"mode\":\"Explode\"}");
+JsonMustFail("unknown preset string", "{\"preset\":\"Nightmare\"}");
 JsonMustFail("unknown top-level property", "{\"mode\":\"Audit\",\"mysterySetting\":true}");
 JsonMustFail("duplicate top-level key", "{\"mode\":\"Audit\",\"MODE\":\"Off\"}");
 JsonMustFail("duplicate nested key", "{\"rarity\":{\"commonMinSources\":8,\"COMMONMINSOURCES\":9}}");
