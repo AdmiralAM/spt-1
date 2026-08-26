@@ -23,7 +23,7 @@ Write-Json 'economy-admiral-enforcement-plan.json' @{
     )
 }
 Write-Json 'economy-admiral-runtime-evidence.json' @{
-    SchemaVersion=4; Mode='Enforce'; Preset='Normal'; ExpectedReportCount=9; PresentReportCount=9; AllExpectedReportsPresent=$true
+    SchemaVersion=5; Mode='Enforce'; Preset='Normal'; ExpectedReportCount=7; PresentReportCount=7; AllExpectedReportsPresent=$true
     DatabaseFingerprintBefore=@{Sha256=$before}; DatabaseFingerprintAfter=@{Sha256=$after}; DatabaseUnchangedAcrossPipeline=$false; DatabaseChangeExpected=$true
     ApplyMutations=$true; DeclaredMutationCount=2; EnforcementEvidenceValid=$true; RuntimeGatePassed=$true
     BuildIdentity=@{ Product='Economy Admiral'; HeadSha=$headSha; WorkflowRunId='123456789'; ArtifactName='economy-admiral-candidate'; CompilePackageVersion='4.1.2'; TargetRuntime='SPT 4.1.3' }
