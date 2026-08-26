@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "status": "static-contract",
+  "product": "Admiral Trader",
+  "scope": "current-31-quest-gameplay-alpha-backbone",
+  "sourceOfTruth": {
+    "access": "manifests/keys-authored-spec.json",
+    "arsenal": "manifests/weapon-ammo-authored-spec.json + manifests/weapon-ammo-runtime-plan.json",
+    "runtime": "db/quests/*.json",
+    "unlockMap": "db/questassort.json",
+    "policy": "manifests/reward-policy.json"
+  },
+  "expected": {
+    "questCount": 31,
+    "accessQuestCount": 10,
+    "arsenalQuestCount": 21,
+    "totalExperience": 350500,
+    "totalRub": 1245000,
+    "totalTraderStanding": 0.65,
+    "permanentUnlockCount": 7,
+    "ammoPermanentUnlockCount": 6,
+    "specialWeaponsPermanentUnlockCount": 0,
+    "munitionsSampleRewardCount": 7,
+    "maximumSingleQuestExperience": 28000,
+    "maximumSingleQuestRub": 120000,
+    "maximumSingleQuestStanding": 0.03
+  },
+  "vanillaEnvelope": {
+    "benchmarkQuestCount": 558,
+    "overallP90Experience": 39930,
+    "overallP90Rub": 170600,
+    "overallP90Standing": 0.04,
+    "rule": "current Gameplay Alpha backbone must remain below these overall p90 ceilings unless an explicit exceptional-reward review is introduced"
+  },
+  "antiFaucet": {
+    "repeatableQuestsAllowed": false,
+    "moneyOnlyMilestonePreferred": false,
+    "specialWeaponsSampleOnly": true,
+    "highEndAmmoUnlimited": false,
+    "maximumPermanentUnlocksPerQuest": 1,
+    "runtimeRewardMustMatchAuthoredBudget": true
+  }
+}
