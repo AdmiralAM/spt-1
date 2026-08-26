@@ -119,17 +119,44 @@ jobs:
               raise SystemExit(f'expected 21 native weapon-ammo quests, got {len(templates)}')
           if data.get('deferredRuntimeItems'):
               raise SystemExit(f"runtime items must be fully resolved before test candidate: {data['deferredRuntimeItems']}")
+
+          readiness = 0
+          combat = 0
+          caliber_proofs = 0
           for qid, quest in templates.items():
               if quest['traderId'] != 'd5c27bb3169f8dfbc13f6b69' or quest['restartable']:
                   raise SystemExit(f'{qid}: invalid Admiral ownership/restartability')
               finish = quest['conditions']['AvailableForFinish']
-              if len(finish) != 1 or finish[0].get('conditionType') != 'CounterCreator':
-                  raise SystemExit(f'{qid}: must have one native CounterCreator elimination objective')
-              kill = finish[0]['counter']['conditions'][0]
+              if len(finish) != 1:
+                  raise SystemExit(f'{qid}: must have exactly one finish objective')
+              condition = finish[0]
+              if condition.get('conditionType') == 'FindItem':
+                  if quest.get('type') != 'PickUp' or condition.get('onlyFoundInRaid') is not False:
+                      raise SystemExit(f'{qid}: invalid non-FIR readiness objective')
+                  targets = condition.get('target') or []
+                  if condition.get('value') != 1 or not targets:
+                      raise SystemExit(f'{qid}: readiness must require one family weapon')
+                  if any(not isinstance(tpl, str) or len(tpl) != 24 for tpl in targets):
+                      raise SystemExit(f'{qid}: malformed readiness weapon TPL')
+                  readiness += 1
+                  continue
+
+              if condition.get('conditionType') != 'CounterCreator' or quest.get('type') != 'Elimination':
+                  raise SystemExit(f'{qid}: unsupported Arsenal objective shape')
+              kill = condition['counter']['conditions'][0]
               if kill.get('conditionType') != 'Kills' or not kill.get('weapon'):
                   raise SystemExit(f'{qid}: family weapon filter missing')
               if any(not isinstance(tpl, str) or len(tpl) != 24 for tpl in kill['weapon']):
                   raise SystemExit(f'{qid}: malformed weapon TPL in objective pool')
+              combat += 1
+              if kill.get('weaponCaliber'):
+                  caliber_proofs += 1
+
+          if readiness != 7 or combat != 14 or caliber_proofs != 6:
+              raise SystemExit(
+                  f'Arsenal objective mix drift: readiness={readiness}/7, combat={combat}/14, caliber={caliber_proofs}/6'
+              )
+
           special = templates['f1368cb3b69c3a4917c4f206']
           samples = [
               reward for reward in special['rewards']['Success']
