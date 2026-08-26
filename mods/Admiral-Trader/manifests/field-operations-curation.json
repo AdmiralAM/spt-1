@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "status": "gameplay-alpha-plan",
+  "source": {
+    "repository": "Thirt3nth/Andrudis-Questmaniac",
+    "commit": "4e15990ac18f469ef7818475ce8553bbbb7cebb4",
+    "role": "legacy-theme-source-only"
+  },
+  "principles": {
+    "copyLegacyQuestTemplates": false,
+    "preserveThemeNotNumericLadder": true,
+    "artificialQuestCountCap": null,
+    "requireWhyWhatContextPayoff": true,
+    "genericCounterEscalationAllowed": false,
+    "sameObjectiveWithLargerNumberAllowed": false,
+    "sameObjectiveWithIncrementalDistanceAllowed": false,
+    "genericYouKnowTheDrillTextAllowed": false,
+    "economyNormalizationOwner": "Economy Admiral"
+  },
+  "legacyFindings": [
+    {
+      "bundle": "Boss Hunt",
+      "decision": "REAUTHOR",
+      "finding": "Legacy progression repeats the same multi-boss elimination objective through escalating xN counts with effectively identical briefing text.",
+      "preserve": ["high-risk target hunting", "boss-specific operational preparation", "milestone fantasy"],
+      "reject": ["x1/x2/x3/... count ladder", "generic briefing", "same target set repeated only for larger totals"]
+    },
+    {
+      "bundle": "Cultists Hunt",
+      "decision": "REAUTHOR",
+      "finding": "Legacy progression repeats Sectant Priest/Warrior elimination through escalating 1/2/5/10/15/20/27/35/50/75 counts with identical briefing structure.",
+      "preserve": ["night-operation identity", "cultist threat", "special-operation atmosphere"],
+      "reject": ["raw cultist kill ladder", "generic briefing", "reward escalation solely for higher kill count"]
+    },
+    {
+      "bundle": "Sniper Life",
+      "decision": "REAUTHOR",
+      "finding": "Legacy progression advances primarily by repeating the same target kill at incremental distance thresholds such as 50m, 60m, 70m and onward.",
+      "preserve": ["precision capability", "long-range reconnaissance", "discipline-specific field proof"],
+      "reject": ["10m distance staircase", "same target/objective repeated at the next distance threshold"]
+    },
+    {
+      "bundle": "Survivalist",
+      "decision": "REAUTHOR",
+      "finding": "Legacy progression repeats map survival counters such as x2/x5/x10, including failure-on-non-survived variants, with generic briefing text.",
+      "preserve": ["extraction discipline", "map endurance", "risk-managed field operations"],
+      "reject": ["survive N raids ladder", "same map repeated only for a larger count"]
+    }
+  ],
+  "authoredArchetypes": [
+    {
+      "id": "FO-RECON-01",
+      "domain": "Field Operations",
+      "workingName": "Reconnaissance Contract",
+      "purpose": "Prove that the player can enter a selected operational area, gather a meaningful field result and leave successfully rather than merely accumulate raid completions.",
+      "mechanicShape": ["location-specific objective", "survived extraction"],
+      "rewardIntent": ["standing", "field-logistics item or barter access"],
+      "legacyThemes": ["Survivalist"],
+      "repeatable": false
+    },
+    {
+      "id": "FO-PRECISION-01",
+      "domain": "Field Operations",
+      "workingName": "Precision Interdiction",
+      "purpose": "Demonstrate controlled long-range capability in one authored scenario instead of climbing a distance staircase.",
+      "mechanicShape": ["precision-weapon family", "meaningful minimum range", "bounded target count", "selected target class or map context"],
+      "rewardIntent": ["standing", "precision project component or controlled capability progression"],
+      "legacyThemes": ["Sniper Life"],
+      "repeatable": false
+    },
+    {
+      "id": "SO-NIGHT-01",
+      "domain": "Special Operations",
+      "workingName": "Night Watch",
+      "purpose": "Investigate and disrupt a cultist threat as a contextual night operation, not as a 1-to-75 elimination ladder.",
+      "mechanicShape": ["cultist target class", "night-operation context", "bounded eliminations"],
+      "rewardIntent": ["standing", "distinctive night-operation equipment/sample"],
+      "legacyThemes": ["Cultists Hunt"],
+      "repeatable": false
+    },
+    {
+      "id": "SO-HVT-01",
+      "domain": "Special Operations",
+      "workingName": "High-Value Target",
+      "purpose": "Use a specific boss threat as the objective of an authored contract with target-specific context and payoff rather than requiring repeated kills of every boss.",
+      "mechanicShape": ["named boss or tightly related target set", "target-specific operational condition", "single milestone completion"],
+      "rewardIntent": ["standing", "distinctive milestone reward or specialist stock access"],
+      "legacyThemes": ["Boss Hunt", "Boss Follower Hunt"],
+      "repeatable": false
+    }
+  ],
+  "runtimeGate": {
+    "materializeInThisPlan": false,
+    "requirementsBeforeRuntime": [
+      "exact SPT 4.1.3 condition shape selected and validated",
+      "EN/RU authored Why/What/Context/Payoff text exists",
+      "reward envelope compared with vanilla and Economy Admiral evidence",
+      "objective is materially distinct from adjacent Admiral quests",
+      "no hidden dependency on legacy trader IDs or legacy quest templates"
+    ]
+  }
+}
