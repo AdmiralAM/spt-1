@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "traderId": "d5c27bb3169f8dfbc13f6b69",
   "officialName": {
@@ -7,14 +7,19 @@
     "ru": "Адмирал"
   },
   "portrait": {
-    "selectionStatus": "selected",
-    "description": "Official Admiral trader portrait: final selected bust portrait in a white naval tunic.",
+    "selectionStatus": "final",
+    "description": "Official Admiral trader portrait: final selected bust portrait in a white naval dress tunic.",
     "sourceConversation": "Генерация иконок адмирала",
-    "sourceSelection": "latest white-naval-tunic portrait",
-    "assetStatus": "awaiting-exact-binary-handoff",
-    "targetAsset": "assets/d5c27bb3169f8dfbc13f6b69.jpg",
-    "targetRoute": "/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg",
+    "sourceSelection": "latest white-naval-tunic portrait confirmed by user",
+    "sourceFileSha256": "48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff",
+    "sourceDimensions": "1182x1330",
+    "assetStatus": "ingested",
+    "runtimeAsset": "assets/d5c27bb3169f8dfbc13f6b69.jpg",
+    "runtimeRoute": "/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg",
+    "runtimeDimensions": "512x576",
+    "runtimeSha256": "2c78721915489107142da0d0f434e450fdec564658af979933d1503a0a114061",
+    "runtimeTransform": "technical resize and JPEG encoding only; no regeneration, redrawing, substitution, or compositional change",
     "substitutionAllowed": false,
-    "placeholderIsCreativeFallback": false
+    "placeholderAllowed": false
   }
 }
