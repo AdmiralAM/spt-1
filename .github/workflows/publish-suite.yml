@@ -39,8 +39,6 @@ jobs:
           [xml]$iiServer = Get-Content 'mods/SPT-Item-Intelligence/server/SPT-Item-Intelligence.Server.csproj'
           [xml]$pause = Get-Content 'mods/SPT-Pause/src/SPT-Pause.csproj'
           [xml]$belt = Get-Content 'mods/SPT-Belt-Armband-Inventory/src/SPT-Belt-Armband-Inventory.csproj'
-          [xml]$questClient = Get-Content 'mods/SPT-Quest-Planner/client/SPT-Quest-Planner.Client.csproj'
-          [xml]$questServer = Get-Content 'mods/SPT-Quest-Planner/server/SPT-Quest-Planner.Server.csproj'
 
           $values = [ordered]@{
             HUD_VERSION = [string]$hud.Project.PropertyGroup.Version
@@ -55,8 +53,6 @@ jobs:
             PAUSE_ASSEMBLY = [string]$pause.Project.PropertyGroup.AssemblyName
             BELT_VERSION = [string]$belt.Project.PropertyGroup.Version
             BELT_ASSEMBLY = [string]$belt.Project.PropertyGroup.AssemblyName
-            QUEST_CLIENT_VERSION = [string]$questClient.Project.PropertyGroup.Version
-            QUEST_SERVER_VERSION = [string]$questServer.Project.PropertyGroup.Version
           }
 
           foreach ($entry in $values.GetEnumerator()) {
@@ -106,10 +102,6 @@ jobs:
           python mods/SPT-Belt-Armband-Inventory/tools/check_hotpaths.py
           dotnet run --project mods/SPT-Belt-Armband-Inventory/tests/SPT-Belt-Armband-Inventory.Tests.csproj -c Release
 
-      - name: Run Quest Planner regression tests
-        shell: pwsh
-        run: dotnet test mods/SPT-Quest-Planner/tests/SPT-Quest-Planner.Tests.csproj -c Release --nologo
-
       - name: Build published and stable-source components
         shell: pwsh
         run: |
@@ -120,8 +112,6 @@ jobs:
           dotnet build mods/SPT-Pause/src/SPT-Pause.csproj -c Release --nologo
           dotnet build mods/SPT-Belt-Armband-Inventory/src/SPT-Belt-Armband-Inventory.csproj -c Release --nologo
           dotnet build mods/SPT-Belt-Armband-Inventory/server/SPT-Belt-Armband-Inventory.Server.csproj -c Release --nologo
-          dotnet build mods/SPT-Quest-Planner/client/SPT-Quest-Planner.Client.csproj -c Release --nologo
-          dotnet build mods/SPT-Quest-Planner/server/SPT-Quest-Planner.Server.csproj -c Release --nologo
 
       - name: Assemble deterministic runtime packages
         shell: pwsh
