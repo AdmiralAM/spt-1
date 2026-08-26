@@ -26,8 +26,9 @@ public sealed class HandleInsuredItemLostEventPatch : AbstractPatch
         var nodes = inventoryItems.Select(item => new BeltInventoryNode(
             item.Id.ToString(),
             item.ParentId?.ToString(),
-            item.SlotId));
-        var kept = BeltDeathPolicy.GetKeptTreeIds(nodes);
+            item.SlotId,
+            item.Template.ToString()));
+        var kept = BeltDeathPolicy.GetKeptTreeIds(nodes, RuntimeCandidateBeltItem.RuntimeCandidateTpl);
         if (kept.Count == 0) return;
 
         request.LostInsuredItems = lostInsuredItems
