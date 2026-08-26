@@ -88,7 +88,7 @@ public sealed class PlannerQueryEngineTests
     {
         Dictionary<string, PlannerQuestClientState> quests = new Dictionary<string, PlannerQuestClientState>(StringComparer.Ordinal);
         foreach ((string id, int disposition) in definitions)
-            quests[id] = new PlannerQuestClientState(id, disposition, 0, false, false);
+            quests[id] = new PlannerQuestClientState(id, disposition, 0, true, false);
         return new PlannerClientIndex(1, quests, new Dictionary<string, PlannerItemClientState>(StringComparer.Ordinal));
     }
 }
