@@ -18,7 +18,7 @@ The player question becomes stronger than `which quest next?`:
 
 > What should I do now if my actual goal is to gain capability X?
 
-Quest Planner owns only the decision path from that goal to current raid work. Admiral Trader remains authority for its gates/capability identity. Economy Admiral remains authority for supply pressure, normalization and policy.
+Quest Planner owns only the decision path from that goal to current raid work. External modules remain authority for their published facts.
 
 ## Generic input contract
 
@@ -44,9 +44,9 @@ The Planner must not infer this contract from trader names, LL, item names or pr
 
 ## Optional explicit adapter boundary
 
-`PlannerAdmiralCapabilityContractAdapter` proves that the maintained Admiral Trader `economy-admiral-contract.json` can be consumed without a hard runtime dependency on Admiral Trader or Economy Admiral.
+`PlannerAdmiralCapabilityContractAdapter` proves that a maintained external capability contract can be consumed without a hard runtime dependency on its source module.
 
-The adapter is intentionally narrow:
+The current adapter is intentionally narrow:
 
 - current supported contract is Admiral Trader schema v2 for SPT 4.1.3;
 - it maps finite permanent `renewableOffers` into bounded renewable capability goals;
@@ -75,17 +75,42 @@ Capability data does not receive its own ranking weights.
 
 `PlannerCapabilityGoalPresentation` is the composition boundary for the KEEP/KILL UX. It keeps the goal, gate, supply result and current decision in one object instead of requiring the UI to join several unrelated panels.
 
-It exposes five explicit states:
+It exposes six explicit states:
 
 1. `RaidDecision` — actionable focused work exists; the ordinary focused raid decision supplies Best / Several / None semantics.
 2. `WaitingForAvailability` — no raid work is required for the selected waiting branch right now.
 3. `EvidenceIncomplete` — prerequisite-ready work exists but authoritative eligibility evidence is missing.
 4. `ProgressionConflict` — the selected goal has a terminal prerequisite-state contradiction; no route is fabricated.
-5. `NoActionProven` — Planner cannot currently prove useful work for the goal.
+5. `CapabilityAlreadyUnlocked` — the authoritative gate quest is already Completed, so Planner must not confuse success with lack of evidence.
+6. `NoActionProven` — Planner cannot currently prove useful work for the goal.
 
 The result summary separately states whether completing the gate yields bounded renewable access, an unbounded renewable source, a one-time sample, or an unproven supply result.
 
-## First test scenarios
+## KEEP/KILL scenario classes
+
+The first candidate is not considered useful merely because it can render a capability chain. It must distinguish decision classes that actually change player behavior.
+
+### Decision-changing shared-action case
+
+Two locations can both advance the selected capability path. One also advances another live quest through the same proven action. The Planner may prefer that raid even when the alternative has much higher raw objective density.
+
+This is a useful decision because the answer cannot be obtained by counting quests on maps.
+
+### Honest preparation trade-off
+
+One raid advances a focused-path unlock but has a proven preparation cost; another advances a parallel mandatory branch and is ready now. The Planner must return `Several good options` rather than burying player preference under a hidden weight.
+
+This is useful only if the UI makes the trade-off immediately understandable.
+
+### Waiting-only progression
+
+If all remaining work for the selected capability is in authoritative delayed availability, the correct answer is `no raid action required for this goal now`, not a filler raid recommendation.
+
+### Already-unlocked goal
+
+If the gate quest is Completed, the result is `CapabilityAlreadyUnlocked`. This must remain distinct from `NoActionProven` and from waiting/unknown states.
+
+## First content candidates
 
 ### Controlled ammo capability
 
@@ -115,7 +140,7 @@ The first candidate should answer in one compact surface:
 
 - `GOAL`: capability/access selected;
 - `GET IT BY`: exact gate quest;
-- `DO NOW`: one raid recommendation, several honest alternatives, waiting-only state, or no proven action;
+- `DO NOW`: one raid recommendation, several honest alternatives, waiting-only state, already-unlocked state, or no proven action;
 - `WHY`: focused shared action / focused unlock / readiness evidence;
 - `AFTER`: next focused step or gate completion;
 - `RESULT`: proven capability/supply semantics when external evidence exists;
@@ -130,6 +155,8 @@ Do not keep Quest Planner because its graph model is technically sophisticated. 
 ### KEEP candidate
 
 After selecting an actual capability goal, the player can determine the next useful action in roughly 10-15 seconds and the answer joins information that would otherwise require several independent surfaces: locked quest chain, current profile availability, raid overlap/preparation and the meaning of the final unlock.
+
+At least one live test must demonstrate a genuinely decision-changing output: shared-action preference, preparation trade-off, waiting-only result, or another case where the answer is not merely `do the prerequisite quest`.
 
 ### KILL candidate
 
