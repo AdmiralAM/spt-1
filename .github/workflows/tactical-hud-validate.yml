@@ -57,3 +57,26 @@ jobs:
       - name: Build Tactical HUD server
         shell: pwsh
         run: dotnet build mods/SPT-Tactical-HUD/server/SPT-TacticalHUD-Server.csproj -c Release --nologo
+
+      - name: Stage Tactical HUD runtime candidate
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts/tactical-hud/BepInEx/plugins | Out-Null
+          Copy-Item 'mods/SPT-Tactical-HUD/client/bin/Release/netstandard2.1/SPT Tactical HUD v1.13.3.dll' 'artifacts/tactical-hud/BepInEx/plugins/SPT Tactical HUD v1.13.3.dll'
+          @'
+          SPT Tactical HUD 1.13.3 runtime acceptance candidate (PR #195)
+
+          Install:
+          1. Back up/remove the existing SPT Tactical HUD client DLL from BepInEx/plugins.
+          2. Copy BepInEx/plugins/SPT Tactical HUD v1.13.3.dll from this package into the SPT root.
+          3. Keep the existing server mod in user/mods; server code is unchanged by this candidate.
+          4. Start SPT and verify the BepInEx log reports SPT Tactical HUD v1.13.3.
+          '@ | Set-Content -Encoding UTF8 artifacts/tactical-hud/TEST-INSTALL.txt
+
+      - name: Upload Tactical HUD runtime candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: SPT-Tactical-HUD-1.13.3-runtime-candidate
+          path: artifacts/tactical-hud
+          if-no-files-found: error
+          retention-days: 7
