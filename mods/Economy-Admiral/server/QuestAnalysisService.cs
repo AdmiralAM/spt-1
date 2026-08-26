@@ -12,6 +12,7 @@ namespace SPTEconomy;
 [Injectable]
 public sealed class QuestAnalysisService(
     TemplateTable templates,
+    EconomyRuntimeConfigService runtimeConfigService,
     ModHelper modHelper,
     ISptLogger<QuestAnalysisService> logger
 )
@@ -33,7 +34,7 @@ public sealed class QuestAnalysisService(
     public async Task<QuestAnalysisReport> RunAsync(QuestProgressionSnapshot progressionSnapshot, CancellationToken cancellationToken)
     {
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(QuestAnalysisService).Assembly);
-        var config = await LoadConfigAsync(modPath, cancellationToken);
+        var config = await runtimeConfigService.GetAsync(cancellationToken);
 
         var policy = ResolvePolicy(config);
         var handbookPrices = templates.Handbook.Items
@@ -68,10 +69,10 @@ public sealed class QuestAnalysisService(
             Preset = config.Preset.ToString(),
             CompositeScoreApplied = false,
             RewardAllowanceAffected = false,
-            OutlierFlagsAffectEnforcement = false,
+            OutlierFlagsAffectEnforcement = true,
             Policy = policy,
             FlagCounts = flagCounts,
-            Note = "Unified observational quest view. Reward value, typed utility, prerequisite depth and structured constraints remain separate dimensions; no cross-dimension score, reward multiplier or enforcement action is applied. Sparse dimensions use positive-sample medians for relative ratios.",
+            Note = "Unified quest analysis snapshot reused by preview and Enforce. XP/standing outlier flags can feed the active numeric reward policy; item rewards and structural dimensions remain non-mutating in Alpha.",
             Vanilla = vanilla,
             VanillaRestartable = vanillaRestartable,
             Quests = rows,
@@ -80,9 +81,7 @@ public sealed class QuestAnalysisService(
         var reportPath = Path.GetFullPath(Path.Combine(modPath, "reports", "economy-admiral-quest-analysis.json"));
         var modRoot = Path.GetFullPath(modPath).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         if (!reportPath.StartsWith(modRoot, StringComparison.OrdinalIgnoreCase))
-        {
             throw new InvalidOperationException("Economy Admiral unified quest analysis report path must stay inside the mod directory.");
-        }
 
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
         await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
@@ -151,24 +150,11 @@ public sealed class QuestAnalysisService(
         };
     }
 
-    private static async Task<EconomyConfig> LoadConfigAsync(string modPath, CancellationToken cancellationToken)
-    {
-        var configPath = Path.Combine(modPath, "config", "config.json");
-        if (!File.Exists(configPath))
-        {
-            return new EconomyConfig();
-        }
-
-        await using var stream = File.OpenRead(configPath);
-        return await JsonSerializer.DeserializeAsync<EconomyConfig>(stream, JsonOptions, cancellationToken) ?? new EconomyConfig();
-    }
-
     private static QuestAnalysisRow BuildRow(
         string questId,
         Quest quest,
         IReadOnlyDictionary<string, double> handbookPrices,
-        IReadOnlyDictionary<string, QuestProgressionGraphRow> progression
-    )
+        IReadOnlyDictionary<string, QuestProgressionGraphRow> progression)
     {
         var successRewards = quest.Rewards is null
             ? []
