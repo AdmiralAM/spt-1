@@ -7,5 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="../../server/NumericRewardTransactionCore.cs" Link="NumericRewardTransactionCore.cs" />
+    <Compile Include="../../server/ItemRewardStackPlanner.cs" Link="ItemRewardStackPlanner.cs" />
   </ItemGroup>
 </Project>
