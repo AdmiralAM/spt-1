@@ -6,13 +6,18 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
 EXPECTED_ROUTE = f"/files/trader/avatar/{TRADER_ID}.jpg"
-EXPECTED_RUNTIME_SHA256 = "70dac83bc2faa5333d33c7cfee370271a6cf9f05e918e933e0853068dca3e02f"
+EXPECTED_RUNTIME_GIT_BLOB_SHA1 = "854e015bab09e6bf7f0ff051c6d1362a2afc3d9c"
 EXPECTED_SOURCE_SHA256 = "48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff"
 EXPECTED_DIMENSIONS = (512, 576)
 
 
 def load(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def git_blob_sha1(data: bytes):
+    header = f"blob {len(data)}\0".encode("ascii")
+    return hashlib.sha1(header + data).hexdigest()
 
 
 def jpeg_dimensions(data: bytes):
@@ -61,13 +66,14 @@ class IdentityAssetTests(unittest.TestCase):
         self.assertFalse(portrait["substitutionAllowed"])
         self.assertFalse(portrait["placeholderAllowed"])
         self.assertEqual(portrait["sourceFileSha256"], EXPECTED_SOURCE_SHA256)
+        self.assertEqual(portrait["sourceDimensions"], "1182x1330")
 
-    def test_runtime_asset_exists_and_matches_locked_hash_and_geometry(self):
+    def test_runtime_asset_exists_and_matches_locked_blob_and_geometry(self):
         self.assertTrue(self.asset.is_file())
         data = self.asset.read_bytes()
-        digest = hashlib.sha256(data).hexdigest()
-        self.assertEqual(digest, EXPECTED_RUNTIME_SHA256)
-        self.assertEqual(self.identity["portrait"]["runtimeSha256"], digest)
+        blob_oid = git_blob_sha1(data)
+        self.assertEqual(blob_oid, EXPECTED_RUNTIME_GIT_BLOB_SHA1)
+        self.assertEqual(self.identity["portrait"]["runtimeGitBlobSha1"], blob_oid)
         self.assertGreater(len(data), 10_000)
         self.assertEqual(jpeg_dimensions(data), EXPECTED_DIMENSIONS)
         self.assertEqual(self.identity["portrait"]["runtimeDimensions"], "512x576")
@@ -75,10 +81,7 @@ class IdentityAssetTests(unittest.TestCase):
     def test_base_uses_only_official_portrait_route(self):
         self.assertEqual(self.base["avatar"], EXPECTED_ROUTE)
         self.assertEqual(self.identity["portrait"]["runtimeRoute"], EXPECTED_ROUTE)
-        self.assertEqual(
-            self.identity["portrait"]["runtimeAsset"],
-            f"assets/{TRADER_ID}.jpg",
-        )
+        self.assertEqual(self.identity["portrait"]["runtimeAsset"], f"assets/{TRADER_ID}.jpg")
 
 
 if __name__ == "__main__":
