@@ -51,7 +51,24 @@ public sealed class EnforcementPlanService(
             Results = Array.Empty<NumericRewardTransactionResult>(),
         };
         if (config.Mode == EconomyMode.Enforce && proposals.Count > 0)
-            transaction = NumericRewardTransactionCore.Execute(BuildTransactionRequests(proposals));
+        {
+            try
+            {
+                var requests = BuildTransactionRequests(proposals);
+                transaction = NumericRewardTransactionCore.Execute(requests);
+            }
+            catch (Exception exception)
+            {
+                // Preflight happens before NumericRewardTransactionCore gets any writable slots, so no DB field has been changed.
+                transaction = new NumericRewardTransactionOutcome
+                {
+                    Committed = false,
+                    RolledBack = true,
+                    Error = $"Enforce preflight failed before writes: {exception.Message}",
+                    Results = Array.Empty<NumericRewardTransactionResult>(),
+                };
+            }
+        }
 
         var appliedByKey = transaction.Results.ToDictionary(
             entry => MutationKey(entry.QuestId, entry.Dimension),
@@ -113,7 +130,7 @@ public sealed class EnforcementPlanService(
         if (config.Mode == EconomyMode.Enforce)
         {
             if (transaction.RolledBack)
-                logger.Error($"[Economy Admiral] Enforce transaction rolled back: planned={proposals.Count}, error={transaction.Error}; plan={planPath}");
+                logger.Error($"[Economy Admiral] Enforce transaction rolled back/aborted: planned={proposals.Count}, error={transaction.Error}; plan={planPath}");
             else
                 logger.Warning($"[Economy Admiral] Enforce committed: planned={proposals.Count}, mutations={transaction.Results.Count}; plan={planPath}");
         }
