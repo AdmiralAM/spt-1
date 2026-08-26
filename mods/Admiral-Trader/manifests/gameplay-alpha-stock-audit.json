@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "status": "static-contract",
+  "product": "Admiral Trader",
+  "scope": "current-11-offer-gameplay-alpha-assort",
+  "expected": {
+    "totalRootOfferCount": 11,
+    "baselineOfferCount": 4,
+    "milestoneOfferCount": 7,
+    "relationshipOfferCount": 0,
+    "baselineGlobalStockUnits": 25,
+    "baselinePlayerBuyLimitUnits": 8,
+    "baselineGlobalStockRubValue": 762000,
+    "baselinePlayerFullBuyRub": 240000,
+    "clearanceMilestoneRub": 166000,
+    "ammoMilestoneOfferCount": 6,
+    "ammoUnitsPerReset": 380,
+    "ammoFullResetSpendRub": 265000,
+    "milestonePlayerFullBuyRub": 431000,
+    "allCurrentOffersPlayerFullBuyRub": 671000
+  },
+  "policyHeadroom": {
+    "ammoUnitCeiling": 400,
+    "ammoUnitHeadroom": 20,
+    "ammoUnitUtilization": 0.95,
+    "ammoSpendCeilingRub": 300000,
+    "ammoSpendHeadroomRub": 35000,
+    "ammoSpendUtilization": 0.8833333333,
+    "note": "Current ammo capability stock remains legal but unit-count headroom is deliberately small; any future permanent ammo offer or stock increase requires explicit re-budgeting rather than silent expansion."
+  },
+  "classification": {
+    "baseline": "finite, non-quest-gated first-contact specialist logistics with personal buy limits",
+    "milestone": "finite, authored quest-gated capability stock",
+    "relationship": "allowed by policy but intentionally absent before post-Gate-A implementation",
+    "specialWeapons": "sample-only; no permanent trader offer"
+  }
+}
