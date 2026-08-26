@@ -1,21 +1,31 @@
 # Economy Admiral runtime gate
 
-Physical acceptance target: **SPT 4.1.3**, current target mod stack, exact `economy-admiral-candidate` from PR #121.
+Physical acceptance target: **SPT 4.1.3**, current target mod stack, exact `economy-admiral-candidate` artifact from PR #202 / its exact-head CI run.
 
 ## Audit / Normal gate
 
-Install the Actions candidate under `SPT_Runtime/user/mods/Economy Admiral/`, leave `mode=Audit` / `preset=Normal`, start SPT and allow all startup/PostLoad callbacks to finish. Then run the packaged `Validate-Runtime.ps1`.
+1. Install the exact Actions candidate under `SPT_Runtime/user/mods/Economy Admiral/`.
+2. Keep `mode=Audit` and `preset=Normal`.
+3. Keep the current target mod stack enabled, including Admiral Trader when testing the explicit adapter path.
+4. Remove or archive old Economy Admiral reports so evidence cannot be mixed across runs.
+5. Start SPT and allow all startup/PostLoad callbacks to finish.
+6. Run the packaged `Validate-Runtime.ps1` from the Economy Admiral mod folder.
+7. Run the packaged `Validate-PrimaryParity.ps1` from the same folder.
 
-PASS requires:
+Both validators must exit with code `0` on the **same SPT run**.
+
+## Gate A — provenance / zero mutation
+
+`Validate-Runtime.ps1` PASS requires:
 
 - runtime evidence schema v3;
-- exact packaged build identity;
+- exact packaged build identity matching installed `BUILD_INFO.json`;
 - pristine baseline captured at priority `1` before normal mod callbacks;
 - positive pristine quest count;
 - exact provenance partition with non-negative `added / modified / unchanged / removed` counts;
 - `modified + unchanged + removed = pristine`;
 - `added + modified + unchanged = final`;
-- **9/9 working reports** plus runtime manifest;
+- all 9 legacy/core working reports plus runtime manifest present;
 - `PristineStartupSnapshot` benchmark source in primary, utility, progression and constraint reports;
 - provenance delta exactly consistent with manifest counts;
 - enforcement plan schema v4 / mutation-eligibility policy v2;
@@ -28,10 +38,40 @@ PASS requires:
 - fingerprint also covers item identities, handbook prices and trader assort items/barter/loyalty mappings;
 - `DatabaseUnchangedAcrossPipeline=true`;
 - `RuntimeGatePassed=true`;
-- zero mutations;
+- zero declared mutations;
 - no selected composite policy.
 
-Working reports:
+## Gate B — source-correct primary parity
+
+`Validate-PrimaryParity.ps1` validates `reports/economy-admiral-primary-parity.json` independently of Gate A.
+
+PASS requires:
+
+- `SchemaVersion = 1`;
+- `ExpectedSource = TypedFinalDbPlusPristineStartupSnapshot`;
+- positive final and pristine quest counts;
+- `ComparedQuestRows = FinalQuestCount`;
+- `ExpectedQuestRewardSourceEdges = ReportedQuestRewardSourceEdges`;
+- `QuestRowsMatch = true`;
+- `AcquisitionMatches = true`;
+- `BenchmarkMatches = true`;
+- `AllMatched = true`;
+- `Mismatches = []`.
+
+Gate B is the physical evidence required before #139 may remove the legacy JSON-recursive reward extraction, hardcoded vanilla-trader membership, or correction-overlay chain. A clean DB fingerprint does **not** substitute for parity, and parity does **not** substitute for the zero-mutation fingerprint.
+
+## Admiral Trader integration evidence
+
+When Admiral Trader is installed, retain the same-run adapter/source-pressure reports as supplemental evidence. They must show:
+
+- Admiral Trader discovered through its maintained stable `modGuid` contract;
+- explicit-adapter attribution rather than heuristic attribution;
+- finite/bounded supply evidence preserved for its maintained offers;
+- effective progression derived from authored quest gates;
+- LL1 remains assort metadata and is not used as the effective progression fallback;
+- no adapter contract drift/fail-open behavior.
+
+## Core reports
 
 1. `economy-admiral-audit.json`
 2. `economy-admiral-reward-utility.json`
@@ -42,13 +82,29 @@ Working reports:
 7. `economy-admiral-composite-candidates.json`
 8. `economy-admiral-target-proposals.json`
 9. `economy-admiral-enforcement-plan.json`
+10. `economy-admiral-runtime-evidence.json` — runtime manifest
+11. `economy-admiral-primary-parity.json` — independent source-correct parity evidence
 
-`economy-admiral-runtime-evidence.json` is the manifest, giving **10 JSON files total**.
+Adapter/source-pressure JSON files are supplemental and should be retained when generated; they are not counted inside the 11-file core gate above.
 
 ## Off gate
 
-After Audit passes: stop SPT, set `mode=Off`, remove/move existing reports, start SPT again, and confirm Economy Admiral generates no new reports.
+Only after both Audit gates pass:
 
-## Evidence
+1. stop SPT;
+2. set `mode=Off`;
+3. remove or move existing Economy Admiral reports;
+4. start SPT again;
+5. confirm Economy Admiral generates no new reports and performs no audit pipeline work.
 
-Retain the complete 10-JSON `reports` directory, the same-run SPT server log and installed `BUILD_INFO.json`. This evidence is the gate before any composite policy selection or mutation transaction design.
+## Evidence to return
+
+Retain and return together:
+
+- the complete same-run `reports/` directory;
+- same-run SPT server log;
+- installed `BUILD_INFO.json`;
+- console output (or transcript) from `Validate-Runtime.ps1`;
+- console output (or transcript) from `Validate-PrimaryParity.ps1`.
+
+Do not mix reports from different SPT runs or from a different Economy Admiral artifact. This evidence is the acceptance gate before removing #139 correction overlays or advancing toward any active mutation transaction.
