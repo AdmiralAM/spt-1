@@ -1,3 +1,4 @@
+using System.Text.Json;
 using SPTEconomy;
 
 static void Require(bool condition, string message)
@@ -119,8 +120,10 @@ Require(deduplicated.State == EconomyAttributionResolutionState.Attributed, "Ide
 Require(deduplicated.OwnerId == "mod-observed", "Observed owner mismatch.");
 Require(deduplicated.ClaimCount == 1, "Exact duplicate claims must de-duplicate.");
 
-var reversed = EconomyAttributionEvidenceAnalyzer.Analyze(claims.Reverse()).ToList();
-Require(result.SequenceEqual(reversed), "Attribution output must be independent of input ordering.");
+var reversed = EconomyAttributionEvidenceAnalyzer.Analyze(claims.Reverse());
+var forwardJson = JsonSerializer.Serialize(result);
+var reversedJson = JsonSerializer.Serialize(reversed);
+Require(string.Equals(forwardJson, reversedJson, StringComparison.Ordinal), "Attribution output must be independent of input ordering.");
 
 MustFail("unknown confidence with owner", () => EconomyAttributionEvidenceAnalyzer.Analyze(new[]
 {
