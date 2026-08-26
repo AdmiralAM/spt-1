@@ -82,7 +82,7 @@ jobs:
           plan = (root / 'server/EnforcementPlanService.cs').read_text(encoding='utf-8')
           for text in [
               'SchemaVersion = 5','SelectedPolicy = $"PresetNumericQuestRewardCapV1/{config.Preset}"','MutationEligibilityPolicyVersion = 3',
-              'config.Mode == EconomyMode.Enforce','NumericRewardTransactionCore.Execute(BuildTransactionRequests(proposals))',
+              'config.Mode == EconomyMode.Enforce','var requests = BuildTransactionRequests(proposals);','NumericRewardTransactionCore.Execute(requests)',
               'new NumericRewardSlot(','value => reward.Value = value','NumericRewardTransactionCore.NeedsMutation',
               'RewardType.Experience','RewardType.TraderStanding','PolicyEligibleModAdded','PolicyEligibleModifiedPristine',
               'ProtectedPristine','ProtectedUnchangedRewardDimensions','BlockedUnknownProvenance',
