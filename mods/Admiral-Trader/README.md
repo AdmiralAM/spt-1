@@ -16,15 +16,20 @@ The inventory / quest-graph / campaign-manifest / migration / reward-benchmark f
 The current authored runtime set contains **31 quests**:
 
 - 10 **Access Protocol** quests replacing the legacy key-collection ladder with compact non-FIR capability checks;
-- 21 **Arsenal Protocol** quests across seven independent weapon families, with Qualification → Fieldwork → Munitions progression;
+- 21 **Arsenal Protocol** quests across seven independent weapon families, with distinct Qualification → Fieldwork → Munitions proofs;
+- Qualification is non-FIR/non-consumptive possession of one compatible family weapon;
+- Fieldwork is family weapon use in combat;
+- six normal Munitions tracks add the selected capability-caliber combat constraint before the controlled ammunition unlock;
 - six controlled ammunition capability rewards/unlocks;
-- **Special Weapons** now has one explicit green RSP-30 sample reward and no permanent assort unlock.
+- **Special Weapons** uses the same three-stage structure but ends in one explicit green RSP-30 sample reward and no permanent assort unlock.
 
 Admiral's product role is **capability broker**, not general-purpose shop: prove a capability, receive a bounded privilege, then use that privilege in the wider SPT progression. `docs/gameplay-doctrine.md` defines that design contract and `manifests/gameplay-policy.json` encodes its currently enforceable campaign/logistics invariants for automated regression tests.
 
-The server runtime validates the mixed 10 + 21 quest registry, trader identity, quest IDs, objective shapes and all referenced runtime item TPLs before publication. Missing authored locale entries fail over to deterministic QuestName-based runtime text so incomplete localization cannot expose raw locale keys; complete authored EN/RU text remains a polish target before final publication.
+Trader loyalty is deliberately non-authoritative: standing represents overall relationship/status only. All capability offers remain LL1 plus explicit quest gates, there is no sales-sum grind, loyalty tiers do not change purchase prices, and repair/insurance remain disabled. `docs/loyalty-role.md` records the rationale and static boundary.
 
-Source registration remains **fail-closed** through `runtime-manifest.json`. The exact-runtime builder is the only supported path that creates an enabled test candidate, and it must compile against the user's real SPT 4.1.3 assemblies. Candidate staging now records source HEAD, clean-tree state, SPT Server.Core version/SHA-256 and built Admiral DLL SHA-256 in `candidate-provenance.json` so live evidence can be tied to the exact CI-tested source head.
+The server runtime validates the mixed 10 Access + 7 Arsenal readiness + 14 Arsenal combat registry, trader identity, quest IDs, objective shapes and all referenced runtime item TPLs before publication. Missing authored locale entries fail over to deterministic QuestName-based runtime text so incomplete localization cannot expose raw locale keys; complete authored EN/RU text remains a polish target before final publication.
+
+Source registration remains **fail-closed** through `runtime-manifest.json`. The exact-runtime builder is the only supported path that creates an enabled test candidate, and it must compile against the user's real SPT 4.1.3 assemblies. Candidate staging records source HEAD, clean-tree state, SPT Server.Core version/SHA-256 and built Admiral DLL SHA-256 in `candidate-provenance.json` so live evidence can be tied to the exact CI-tested source head.
 
 All Admiral Trader source/module workflows are expected to be green before physical handoff. Merge remains blocked until one defined SPT 4.1.3 physical runtime gate provides accepted build/start/UI evidence.
 
@@ -49,11 +54,13 @@ Tracked by repository Issue #115; the active runtime gate is Issue #146 / Draft 
 - Weapon and ammo progression form one progression domain because the pinned legacy graph contains intentional cross-bundle prerequisite edges between them.
 - Assort, quest-assort, reward, and unlock data remain close to native SPT shapes so downstream economy auditing does not require an Admiral-Trader-specific opaque format.
 - Permanent Admiral offers must remain finite, quest-gated, and family-specific; Special Weapons remains sample-only unless a later design decision explicitly changes the doctrine and its machine policy together.
+- Loyalty standing must not become a second capability gate or bypass explicit quest proof.
 
 ## Baselines and findings
 
 - [`docs/gameplay-doctrine.md`](docs/gameplay-doctrine.md) defines Admiral's player-facing purpose, quest admission test, anti-goals, balance invariants, and preferred expansion directions.
-- [`manifests/gameplay-policy.json`](manifests/gameplay-policy.json) is the machine-readable subset of that doctrine used to prevent campaign/logistics drift.
+- [`docs/loyalty-role.md`](docs/loyalty-role.md) defines standing/loyalty as relationship status rather than capability authority.
+- [`manifests/gameplay-policy.json`](manifests/gameplay-policy.json) is the machine-readable subset of those contracts used to prevent campaign/logistics/loyalty drift.
 - [`docs/source-baseline.md`](docs/source-baseline.md) defines which external references are authoritative for which boundary.
 - [`docs/inventory-findings.md`](docs/inventory-findings.md) records the full-corpus gate results.
 - [`docs/runtime-boundaries.md`](docs/runtime-boundaries.md) records proven and intentionally unproven SPT runtime boundaries.
@@ -86,8 +93,9 @@ Module-specific CI additionally:
 - checks the pinned 4,862-quest legacy corpus and graph invariants;
 - builds the official vanilla reward benchmark from a pinned SPT source revision;
 - validates Access Protocol and Arsenal Protocol compiler output;
+- validates the 7 readiness + 14 combat Arsenal objective mix and six caliber-constrained Munitions proofs;
 - validates frozen weapon-family pools and controlled ammo capability selections;
-- enforces the machine-readable gameplay policy against authored specs and packaged assort/questassort data;
+- enforces the machine-readable gameplay policy against authored specs, loyalty/base data and packaged assort/questassort data;
 - builds the .NET 10 server runtime against the published SPTushonka 4.1.3 package line;
 - validates the packaged 31-quest mixed runtime layout;
 - validates the exact-runtime candidate/provenance source contract;
