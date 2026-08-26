@@ -20,6 +20,7 @@ namespace SPTBeltArmbandInventory
         }
 
         internal static Action<string> LogWarning;
+        internal static Action RequestFlush;
         static readonly List<PendingWindow> PendingWindows = new List<PendingWindow>();
 
         internal static bool HasPending
@@ -41,10 +42,13 @@ namespace SPTBeltArmbandInventory
                     PendingWindows.RemoveAt(i--);
                     continue;
                 }
-                if (ReferenceEquals(existing, window)) return;
+                if (!ReferenceEquals(existing, window)) continue;
+                RequestFlush?.Invoke();
+                return;
             }
 
             PendingWindows.Add(new PendingWindow(window));
+            RequestFlush?.Invoke();
         }
 
         internal static void Flush()
@@ -70,6 +74,7 @@ namespace SPTBeltArmbandInventory
         {
             PendingWindows.Clear();
             LogWarning = null;
+            RequestFlush = null;
         }
 
         static bool TryAdjust(object window)
