@@ -18,26 +18,12 @@ namespace SPTBeltArmbandInventory
         ScavHostRestoration = 1 << 9
     }
 
-    // Phase 1 is deliberately a magazine-only ArmBand container. Keep only the
-    // integrations that are useful for that exact item. Grenade/payment/panel
-    // projection capabilities stay defined for later variants but are not active
-    // until a concrete wearable actually needs them.
     internal static class AccessoryCapabilityPolicy
     {
-        const AccessoryCapability ValidatedArmBandCapabilities =
-            AccessoryCapability.LootPriority |
-            AccessoryCapability.UnloadPriority |
-            AccessoryCapability.FastAccess |
-            AccessoryCapability.PickupFallback |
-            AccessoryCapability.BuildValidation |
-            AccessoryCapability.DeathRetention |
-            AccessoryCapability.ScavHostRestoration;
-
         internal static AccessoryCapability Capabilities(AccessoryCategory category)
         {
-            if (!AccessoryCategoryPolicy.IsSupported(category)) return AccessoryCapability.None;
-            return category == AccessoryCategory.ArmBand
-                ? ValidatedArmBandCapabilities
+            return WearableDescriptorRegistry.TryGet(category, out WearableDescriptor descriptor)
+                ? descriptor.Capabilities
                 : AccessoryCapability.None;
         }
 
