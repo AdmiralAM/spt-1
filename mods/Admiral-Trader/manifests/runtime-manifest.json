@@ -13,8 +13,9 @@
       "single Admiral trader architecture",
       "31 authored native quest templates",
       "explicit EN/RU quest locales",
-      "seven reviewed finite quest-gated offers",
+      "four finite baseline offers plus seven finite milestone offers",
       "Special Weapons sample-only reward with no permanent offer",
+      "official Admiral portrait identity selected",
       "source/module CI validation",
       "fail-fast exact-runtime item TPL validation",
       "SPTushonka 4.1.3 compile path",
@@ -25,9 +26,9 @@
       "server starts without Admiral errors",
       "exact-runtime TPL gate passes",
       "one Admiral trader appears",
-      "31 quests deserialize and publish",
+      "31 current backbone quests deserialize and publish",
       "EN/RU locales do not expose raw keys",
-      "seven quest-gated offers load with finite limits",
+      "four baseline offers and seven milestone offers load with finite limits",
       "new profile exposes no legacy trader zoo or legacy quests"
     ]
   },
@@ -37,6 +38,10 @@
     "questAssort": "db/questassort.json",
     "avatarMode": "built-in-test-placeholder",
     "avatar": "/files/quest/icon/5a27cafa86f77424e20615d6.jpg",
+    "officialPortraitSelected": true,
+    "officialPortraitContract": "manifests/identity-assets.json",
+    "officialPortraitAssetStatus": "awaiting-exact-binary-handoff",
+    "officialPortraitTargetRoute": "/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg",
     "finalPortraitDeferred": true
   }
 }
