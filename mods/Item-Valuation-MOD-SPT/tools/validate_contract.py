@@ -22,9 +22,11 @@ money_thresholds = [config["tintStartValue"], config["lightGreenMaxValue"], conf
 if money_thresholds != [10000, 25000, 50000, 75000, 100000, 250000]:
     fail(f"money tier thresholds drifted: {money_thresholds}")
 
-ammo_thresholds = [config["ammoLightGreenMaxPen"], config["ammoGreenMaxPen"], config["ammoNavyMaxPen"], config["ammoVioletMaxPen"], config["ammoRedMaxPen"]]
-if ammo_thresholds != [15, 26, 35, 44, 54]:
+ammo_thresholds = [config["ammoTintStartPen"], config["ammoLightGreenMaxPen"], config["ammoNavyMaxPen"], config["ammoVioletMaxPen"], config["ammoRedMaxPen"]]
+if ammo_thresholds != [10, 20, 40, 50, 70]:
     fail(f"ammo penetration thresholds drifted: {ammo_thresholds}")
+if "ammoGreenMaxPen" in config:
+    fail("ammo green tier must remain absent")
 
 expected_colors = ["#526B3F", "#294F31", "#253552", "#4A3854", "#5A2C31", "#5C4825"]
 actual_colors = [config["lightGreenColor"], config["greenColor"], config["navyColor"], config["violetColor"], config["redColor"], config["goldColor"]]
@@ -32,25 +34,14 @@ if actual_colors != expected_colors:
     fail(f"default tier colors drifted: {actual_colors}")
 
 required_fragments = [
-    "OnLoadOrder.PostLoad",
-    "BaseClasses.AMMO",
-    "properties.PenetrationPower",
-    "TierClassifier.GetAmmoColor",
-    "TierClassifier.GetMoneyColor",
-    "BaseClasses.WEAPON",
-    "BaseClasses.KEY",
-    "BaseClasses.ARMORED_EQUIPMENT",
-    "BaseClasses.VEST",
-    "ResolveEconomicValue",
-    "ResolveBestTraderPrice",
-    "ragfairServerHelper.IsItemValidRagfairItem",
-    "templateTable.Prices.TryGetValue",
-    "presetHelper.GetDefaultPreset",
-    "BuildHandbookPriceIndex",
-    "templateTable.Handbook.Items",
-    "Math.Round(value / slots, MidpointRounding.AwayFromZero)",
-    "properties.BackgroundColor = color",
-    '"com.acidphantasm.itemvaluation"',
+    "OnLoadOrder.PostLoad", "BaseClasses.AMMO", "properties.PenetrationPower",
+    "TierClassifier.GetAmmoColor", "TierClassifier.GetMoneyColor",
+    "if (penetration < config.AmmoTintStartPen) return null",
+    "BaseClasses.WEAPON", "BaseClasses.KEY", "BaseClasses.ARMORED_EQUIPMENT", "BaseClasses.VEST",
+    "ResolveEconomicValue", "ResolveBestTraderPrice", "ragfairServerHelper.IsItemValidRagfairItem",
+    "templateTable.Prices.TryGetValue", "presetHelper.GetDefaultPreset", "BuildHandbookPriceIndex",
+    "templateTable.Handbook.Items", "Math.Round(value / slots, MidpointRounding.AwayFromZero)",
+    "properties.BackgroundColor = color", '"com.acidphantasm.itemvaluation"',
 ]
 for fragment in required_fragments:
     if fragment not in source:
@@ -64,6 +55,7 @@ forbidden_patterns = {
     "armor semantic coloring": r"ArmorClass|validArmourSlots|GetArmourColour|GetMinMaxArmorPlateClass",
     "flea-ban override color": r"FleaBannedColour|ColourFleaBanned",
     "client ItemView hook": r"ItemView",
+    "ammo green tier": r"AmmoGreenMaxPen",
 }
 for label, pattern in forbidden_patterns.items():
     if re.search(pattern, source):
