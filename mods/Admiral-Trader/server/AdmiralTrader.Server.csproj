@@ -57,6 +57,9 @@
     <Content Include="..\manifests\campaign-manifest.json" Link="manifests\campaign-manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\manifests\reward-policy.json" Link="manifests\reward-policy.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\manifests\runtime-manifest.json" Link="manifests\runtime-manifest.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\manifests\gameplay-policy.json" Link="manifests\gameplay-policy.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\manifests\baseline-stock.json" Link="manifests\baseline-stock.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\manifests\ammo-offer-policy.json" Link="manifests\ammo-offer-policy.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\base.json" Link="db\base.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\assort.json" Link="db\assort.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\questassort.json" Link="db\questassort.json" CopyToOutputDirectory="PreserveNewest" />
