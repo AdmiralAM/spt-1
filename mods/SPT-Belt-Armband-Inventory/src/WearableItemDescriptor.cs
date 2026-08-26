@@ -26,6 +26,11 @@ namespace SPTBeltArmbandInventory
             GridRows = gridRows;
             Capabilities = capabilities;
         }
+
+        internal bool Has(AccessoryCapability capability)
+        {
+            return capability != AccessoryCapability.None && (Capabilities & capability) == capability;
+        }
     }
 
     internal static class WearableItemDescriptorRegistry
@@ -38,7 +43,16 @@ namespace SPTBeltArmbandInventory
                     AccessoryCategory.ArmBand,
                     RuntimeIdentity.CandidateGridColumns,
                     RuntimeIdentity.CandidateGridRows,
-                    WearableDescriptorRegistry.Get(AccessoryCategory.ArmBand).Capabilities)
+                    WearableDescriptorRegistry.Get(AccessoryCategory.ArmBand).Capabilities),
+
+                [RuntimeIdentity.WristWalletItemId] = new WearableItemDescriptor(
+                    RuntimeIdentity.WristWalletItemId,
+                    AccessoryCategory.ArmBand,
+                    RuntimeIdentity.WristWalletGridColumns,
+                    RuntimeIdentity.WristWalletGridRows,
+                    AccessoryCapability.PaymentSource |
+                    AccessoryCapability.PickupFallback |
+                    AccessoryCapability.BuildValidation)
             };
 
         internal static bool TryGet(string templateId, out WearableItemDescriptor descriptor)
@@ -54,6 +68,11 @@ namespace SPTBeltArmbandInventory
         internal static bool IsRegistered(string templateId)
         {
             return TryGet(templateId, out _);
+        }
+
+        internal static bool HasCapability(string templateId, AccessoryCapability capability)
+        {
+            return TryGet(templateId, out WearableItemDescriptor descriptor) && descriptor.Has(capability);
         }
     }
 }
