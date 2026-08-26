@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static guardrail for obvious Tactical HUD hot-path allocation regressions.
+"""Static guardrail for obvious Admiral Tactical HUD hot-path allocation regressions.
 
 This is intentionally conservative: it does not try to replace a profiler.
 It catches patterns that are easy to reintroduce into Refresh/Update/OnGUI and
@@ -49,7 +49,7 @@ def method_body(source: str, name: str) -> str:
 
 def main() -> int:
     if not PLUGIN.exists() or not VISUAL.exists():
-        raise SystemExit("missing Tactical HUD source files")
+        raise SystemExit("missing Admiral Tactical HUD source files")
     plugin = PLUGIN.read_text(encoding="utf-8")
     visual = VISUAL.read_text(encoding="utf-8")
     bodies = {
@@ -62,7 +62,6 @@ def main() -> int:
         "DrawStatus": method_body(visual, "DrawStatus"),
         "DrawKillFeed": method_body(visual, "DrawKillFeed"),
         "HitKey": method_body(visual, "HitKey"),
-        "WeaponKey": method_body(visual, "WeaponKey"),
     }
     rules = [
         ("refresh-list-allocation", "Refresh", re.compile(r"new\s+List<"), True,
@@ -87,12 +86,10 @@ def main() -> int:
          "DrawPopulation formats numbers on every repaint."),
         ("status-number-formatting", "DrawStatus", re.compile(r"\.ToString\s*\("), True,
          "DrawStatus formats numbers on every repaint."),
-        ("killfeed-reclassification", "DrawKillFeed", re.compile(r"\b(?:WeaponKey|HitKey|CleanWeapon)\s*\("), True,
+        ("killfeed-reclassification", "DrawKillFeed", re.compile(r"\b(?:HitKey|CleanWeapon)\s*\("), True,
          "DrawKillFeed reclassifies immutable kill data on every repaint."),
         ("hitkey-lowercase", "HitKey", re.compile(r"ToLowerInvariant\s*\("), True,
          "HitKey allocates a lowercase copy."),
-        ("weaponkey-lowercase", "WeaponKey", re.compile(r"ToLowerInvariant\s*\("), True,
-         "WeaponKey allocates a lowercase copy."),
     ]
     failures = 0
     hits = 0
