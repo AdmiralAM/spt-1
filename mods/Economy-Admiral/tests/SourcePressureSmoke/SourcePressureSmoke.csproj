@@ -8,5 +8,6 @@
 
   <ItemGroup>
     <Compile Include="../../server/SourcePressureEvidence.cs" Link="SourcePressureEvidence.cs" />
+    <Compile Include="../../server/BoundedSupplyEvidence.cs" Link="BoundedSupplyEvidence.cs" />
   </ItemGroup>
 </Project>
