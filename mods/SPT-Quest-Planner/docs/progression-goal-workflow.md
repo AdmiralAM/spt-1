@@ -56,6 +56,21 @@ The focused comparator therefore uses conservative dominance again. Proven focus
 
 No numeric weights are assigned. If one candidate has at least one focused advantage and no competing focused disadvantage, it may win. If one has focused unlock leverage while another has lower preparation friction, Planner **abstains** and keeps both as good options. Only when focused evidence is equivalent may the existing conservative global model act as a secondary tie-breaker.
 
+### Parallel-frontier no-winner rule
+
+For ordinary prerequisite conjunctions, parallel actionable branches are all mandatory work on the path to the selected goal. The topology does **not** prove that a deeper branch, a longer remaining branch, or a branch with more descendants is strategically more important. Those quantities are structural shape, not player cost or urgency.
+
+Therefore Planner must not derive priority from:
+
+- remaining path depth;
+- number of descendants;
+- number of nodes behind a branch;
+- arbitrary "bottleneck" labels based only on graph size.
+
+Two equally actionable mandatory branches with otherwise equivalent focused evidence remain **Several good options**, even if one branch visually has a longer chain behind it. Symmetry may be broken only by additional proven evidence already in the model: advancing multiple actionable focused quests in one raid, focused shared-action overlap, a focused-path immediate unlock that actually becomes available when this quest completes, preparation friction, evidence coverage, or an equivalent-focus global conservative tie-breaker.
+
+This negative rule is deliberate. A longer branch may be trivial while a short branch may contain a hard objective, key requirement or player-specific difficulty that the current authoritative data does not encode. Pretending otherwise would reintroduce an opaque score under a graph-theory name.
+
 This distinction matters because player intent constrains the optimization target; it should not erase real trade-offs, but unrelated generic evidence should not override a proven conflict inside the chosen goal.
 
 ## Why this is materially different
@@ -96,6 +111,7 @@ It must not:
 - turn raw objective density into focused relevance;
 - count an unrelated global unlock as focused-path leverage;
 - let unrelated generic evidence override conflicting focused evidence;
+- rank one mandatory parallel branch above another solely from path depth, descendant count or graph size;
 - force a winner between two focused-frontier raids that still have real conflicting trade-offs.
 
 The full prerequisite path and quest-prerequisite frontier are retained for explanation and diagnostics. Focus preference is granted only through the profile-confirmed actionable frontier for future/blocked goals.
@@ -119,6 +135,8 @@ The focused comparison is bounded by the existing candidate/frontier sizes. No p
 - shared-action overlap involving an actionable focused quest is valid focused evidence;
 - an immediate unlock counts as focused leverage only when that unlock is still on the selected target path;
 - focused unlock leverage versus lower preparation friction remains `Several good options` rather than a forced winner;
+- two mandatory actionable branches with otherwise equal evidence remain tied regardless of asymmetric remaining path depth;
+- a focused-path immediate unlock may break that symmetry when it is genuinely available after the candidate quest completes;
 - equivalent focused evidence may fall back to the global conservative model as a secondary tie-breaker;
 - a focus with no currently actionable frontier does not falsely label unrelated work as relevant;
 - a mod-added or rewired prerequisite changes the focused recommendation from the final SPT topology without an external data update.
