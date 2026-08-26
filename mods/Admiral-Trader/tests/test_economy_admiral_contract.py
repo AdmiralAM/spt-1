@@ -19,8 +19,13 @@ class EconomyAdmiralContractTests(unittest.TestCase):
         cls.assort = load(ROOT / "db" / "assort.json")
         cls.questassort = load(ROOT / "db" / "questassort.json")
         cls.quest_dir = ROOT / "db" / "quests"
+        cls.quests = {}
+        for path in cls.quest_dir.glob("*.json"):
+            quest = load(path)
+            cls.quests[str(quest.get("_id"))] = quest
 
     def test_identity_and_adapter_semantics(self):
+        self.assertEqual(self.contract["schemaVersion"], 2)
         self.assertEqual(self.contract["product"], "Admiral Trader")
         self.assertEqual(self.contract["owner"], "Admiral Trader")
         self.assertEqual(self.contract["targetSptVersion"], "4.1.3")
@@ -28,6 +33,7 @@ class EconomyAdmiralContractTests(unittest.TestCase):
         self.assertEqual(self.contract["integration"]["consumer"], "Economy Admiral")
         self.assertEqual(self.contract["integration"]["adapterConfidence"], "ExplicitAdapter")
         self.assertEqual(self.contract["integration"]["progressionAuthority"], "quest-gate")
+        self.assertIn("effectiveProgressionLevel", self.contract["integration"]["preserveByDefault"])
 
     def test_all_seven_renewable_offers_match_runtime_assort(self):
         offers = self.contract["renewableOffers"]
@@ -58,13 +64,13 @@ class EconomyAdmiralContractTests(unittest.TestCase):
             self.assertEqual(price["count"], row["price"]["amount"])
             self.assertEqual(price["_tpl"], RUB_TPL)
 
-    def test_every_gate_references_committed_admiral_quest(self):
-        quest_ids = set()
-        for path in self.quest_dir.glob("*.json"):
-            quest = load(path)
-            quest_ids.add(str(quest.get("_id")))
+    def test_every_gate_references_committed_admiral_quest_and_level(self):
         for row in self.contract["renewableOffers"]:
-            self.assertIn(row["questGateId"], quest_ids)
+            quest_id = row["questGateId"]
+            self.assertIn(quest_id, self.quests)
+            quest = self.quests[quest_id]
+            self.assertEqual(row["effectiveProgressionLevel"], quest["conditions"]["AvailableForStart"][0]["value"])
+            self.assertGreaterEqual(row["effectiveProgressionLevel"], 1)
 
     def test_special_weapons_is_one_time_sample_only(self):
         rewards = self.contract["oneTimeRewards"]
@@ -78,8 +84,8 @@ class EconomyAdmiralContractTests(unittest.TestCase):
         self.assertEqual(row["units"], 1)
         self.assertNotIn(SPECIAL_TPL, {offer["itemTpl"] for offer in self.contract["renewableOffers"]})
 
-        quest_path = next(self.quest_dir.glob(f"*-{SPECIAL_QUEST}.json"))
-        quest = load(quest_path)
+        quest = self.quests[SPECIAL_QUEST]
+        self.assertEqual(row["effectiveProgressionLevel"], quest["conditions"]["AvailableForStart"][0]["value"])
         matching = []
         for reward in quest["rewards"]["Success"]:
             for item in reward.get("items") or []:
@@ -92,7 +98,14 @@ class EconomyAdmiralContractTests(unittest.TestCase):
         for row in self.contract["renewableOffers"]:
             self.assertEqual(row["loyaltyLevel"], 1)
             self.assertTrue(row["questGateId"])
+            self.assertGreater(row["effectiveProgressionLevel"], row["loyaltyLevel"])
         self.assertEqual(self.contract["integration"]["loyaltyRole"], "metadata-only-for-current-capability-offers")
+
+    def test_contract_is_declared_as_runtime_package_content(self):
+        project = (ROOT / "server" / "AdmiralTrader.Server.csproj").read_text(encoding="utf-8-sig")
+        self.assertIn('..\\manifests\\economy-admiral-contract.json', project)
+        self.assertIn('Link="manifests\\economy-admiral-contract.json"', project)
+        self.assertIn('CopyToOutputDirectory="PreserveNewest"', project)
 
 
 if __name__ == "__main__":
