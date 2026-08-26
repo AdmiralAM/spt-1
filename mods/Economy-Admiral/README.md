@@ -80,25 +80,38 @@ All active reward mutations share the production `NumericRewardTransactionCore`:
 
 Experience, TraderStanding and the opt-in single-stack item quantity therefore participate in the same all-or-nothing batch. CI smoke tests include successful commits, same-state idempotence, synthetic failures, full rollback of earlier numeric mutations, synchronized item-stack commit, and mixed XP/standing/item rollback restoring both item quantity representations.
 
-## SPT boundary and load order
+## SPT boundary and lean runtime path
 
 Compile boundary: `SPTarkov.Server.Core 4.1.2` / .NET 10. Physical runtime target: **SPT 4.1.3**. Packaged candidates carry exact head/workflow identity in `BUILD_INFO.json`.
 
 Load order remains:
 
-1. priority `OnLoadOrder.Watermark + 1` — pristine startup baseline;
+1. priority `OnLoadOrder.Watermark + 1` — immutable pristine startup baseline;
 2. normal SPT/mod callbacks;
 3. `PostLoad + 1000` — final modded DB analysis and optional enforcement.
 
-The primary audit now reads typed final DB state directly against the pristine snapshot; the old primary correction/repair cascade is no longer on the runtime path.
+Primary audit, reward utility, progression, constraints and unified quest analysis now consume typed final DB state directly against the pristine snapshot. The old report correction/reparse/rewrite chain, primary parity shadow scan, composite candidate pass and target-envelope pass are no longer on the runtime path.
 
 ## Runtime outputs and validators
 
-Core reports remain under the mod-local `reports/` directory. Packaged candidates include:
+Runtime evidence schema **5** requires exactly seven core reports under the mod-local `reports/` directory:
+
+1. `economy-admiral-audit.json`
+2. `economy-admiral-reward-utility.json`
+3. `economy-admiral-progression-graph.json`
+4. `economy-admiral-quest-constraints.json`
+5. `economy-admiral-quest-analysis.json`
+6. `economy-admiral-provenance-delta.json`
+7. `economy-admiral-enforcement-plan.json`
+
+`economy-admiral-runtime-evidence.json` is the manifest over those seven reports.
+
+Packaged candidates include only active runtime validators:
 
 - `Validate-Runtime.ps1` — Audit/read-only contract;
-- `Validate-Enforce.ps1` — Enforce mutation contract; recognizes Alpha schema 5/policy 3 and opt-in item-stack schema 6/policy 4;
-- `Validate-PrimaryParity.ps1` — typed final DB + pristine startup primary audit parity.
+- `Validate-Enforce.ps1` — Enforce mutation contract; recognizes Alpha schema 5/policy 3 and opt-in item-stack schema 6/policy 4.
+
+The old primary parity shadow verifier and validator were retired after physical SPT 4.1.3 parity was proven. Their accepted evidence remains recorded in project history; they are not repeated on every server start or shipped as a misleading runtime command.
 
 Physical runtime validation is reserved for meaningful SPT gates; ordinary code/contract changes should be proven through CI/smoke tests first.
 
