@@ -9,6 +9,7 @@ namespace SPTBeltArmbandInventory
         internal static string[] Extend(string[] source)
         {
             if (source == null) return null;
+            if (!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess)) return source;
 
             int existing = -1;
             for (int i = 0; i < source.Length; i++)

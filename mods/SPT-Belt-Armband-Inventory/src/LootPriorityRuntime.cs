@@ -46,7 +46,12 @@ namespace SPTBeltArmbandInventory
                 if (__args == null || __args.Length < 2 || __args[0] == null || __result == null) return;
                 object equipment = __args[0];
                 object beltItem = GetContainedItem(equipment, armBandValue);
-                if (!ReflectionTools.HasContainers(beltItem)) return;
+                bool hasContainers = ReflectionTools.HasContainers(beltItem);
+                if (!AccessoryCapabilityPolicy.CanUse(
+                    AccessoryCategory.ArmBand,
+                    AccessoryCapability.LootPriority,
+                    beltItem != null,
+                    hasContainers)) return;
 
                 List<object> belt = ReadContainers(beltItem);
                 if (belt.Count == 0) return;

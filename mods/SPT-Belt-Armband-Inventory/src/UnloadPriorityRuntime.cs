@@ -48,7 +48,12 @@ namespace SPTBeltArmbandInventory
                 object equipment = __args[0];
                 object slot = getSlot.Invoke(equipment, new[] { armBandValue });
                 object beltItem = ReflectionTools.ReadMember(slot, "ContainedItem");
-                if (!ReflectionTools.HasContainers(beltItem)) return;
+                bool hasContainers = ReflectionTools.HasContainers(beltItem);
+                if (!AccessoryCapabilityPolicy.CanUse(
+                    AccessoryCategory.ArmBand,
+                    AccessoryCapability.UnloadPriority,
+                    beltItem != null,
+                    hasContainers)) return;
 
                 List<object> beltGrids = ReadBeltGrids(beltItem);
                 if (beltGrids.Count == 0) return;

@@ -7,7 +7,12 @@ namespace SPTBeltArmbandInventory
     {
         internal static bool ShouldRestore(bool deleted, bool hasItem, bool hasContainers)
         {
-            return deleted && hasItem && hasContainers;
+            return deleted
+                && AccessoryCapabilityPolicy.CanUse(
+                    AccessoryCategory.ArmBand,
+                    AccessoryCapability.ScavHostRestoration,
+                    hasItem,
+                    hasContainers);
         }
     }
 

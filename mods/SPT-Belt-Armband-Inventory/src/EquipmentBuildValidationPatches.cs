@@ -15,6 +15,7 @@ namespace SPTBeltArmbandInventory
 
         internal static string[] Build(string[] current)
         {
+            if (!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.BuildValidation)) return current;
             if (!IsVanillaContainerList(current)) return current;
 
             string[] result = new string[current.Length + 1];

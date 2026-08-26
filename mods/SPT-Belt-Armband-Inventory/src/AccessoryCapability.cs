@@ -14,7 +14,8 @@ namespace SPTBeltArmbandInventory
         PickupFallback = 1 << 5,
         PaymentSource = 1 << 6,
         BuildValidation = 1 << 7,
-        DeathRetention = 1 << 8
+        DeathRetention = 1 << 8,
+        ScavHostRestoration = 1 << 9
     }
 
     // Runtime hosting and gameplay integrations are separate decisions. A proven
@@ -31,7 +32,8 @@ namespace SPTBeltArmbandInventory
             AccessoryCapability.PickupFallback |
             AccessoryCapability.PaymentSource |
             AccessoryCapability.BuildValidation |
-            AccessoryCapability.DeathRetention;
+            AccessoryCapability.DeathRetention |
+            AccessoryCapability.ScavHostRestoration;
 
         internal static AccessoryCapability Capabilities(AccessoryCategory category)
         {
