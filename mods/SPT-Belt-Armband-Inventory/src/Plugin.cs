@@ -11,7 +11,7 @@ namespace SPTBeltArmbandInventory
     public sealed class Plugin : BaseUnityPlugin
     {
         public const string PluginGuid = "com.admiralam.spt.belt-armband-inventory";
-        public const string PluginName = "B&A&HB MOD SPT";
+        public const string PluginName = "B&A&HB #2 MOD SPT";
         public const string PluginVersion = "0.1.0";
 
         ConfigEntry<bool> modEnabled;
@@ -28,18 +28,18 @@ namespace SPTBeltArmbandInventory
 
         void Awake()
         {
-            modEnabled = Config.Bind("General", "Enabled", true, "Enable B&A&HB MOD SPT. Runtime-candidate builds force this on at startup.");
+            modEnabled = Config.Bind("General", "Enabled", true, "Enable B&A&HB #2 MOD SPT. Runtime-candidate builds force this on at startup.");
 
             if (!modEnabled.Value)
             {
                 modEnabled.Value = true;
                 Config.Save();
-                Logger.LogInfo("B&A&HB MOD SPT migrated stale Enabled=false config to Enabled=true for runtime validation.");
+                Logger.LogInfo("B&A&HB #2 MOD SPT migrated stale Enabled=false config to Enabled=true for runtime validation.");
             }
 
             if (LegacyBeltSlotDetected())
             {
-                Logger.LogWarning("Trenchfoot-BeltSlot is already loaded. Remove/disable that DLL before enabling B&A&HB MOD SPT; no duplicate patch was installed.");
+                Logger.LogWarning("Trenchfoot-BeltSlot is already loaded. Remove/disable that DLL before enabling B&A&HB #2 MOD SPT; no duplicate patch was installed.");
                 return;
             }
 
@@ -48,11 +48,11 @@ namespace SPTBeltArmbandInventory
             {
                 runtimeTypePatches.Dispose();
                 runtimeTypePatches = null;
-                Logger.LogWarning("B&A&HB runtime type registration failed; client belt behavior is disabled for this session.");
+                Logger.LogWarning("B&A&HB #2 runtime type registration failed; client belt behavior is disabled for this session.");
                 return;
             }
 
-            Logger.LogInfo("B&A&HB ArmBand presentation uses the native searchable-item GridWindow and GeneratedGridsView; legacy ContainersPanel BELT-row projection is disabled.");
+            Logger.LogInfo("B&A&HB #2 ArmBand presentation uses the native searchable-item GridWindow and GeneratedGridsView; legacy ContainersPanel BELT-row projection is disabled.");
 
             gridWindowSizingPatches = new GridWindowSizingPatches(Logger.LogInfo, Logger.LogWarning);
             if (!gridWindowSizingPatches.TryInstall())
@@ -127,7 +127,7 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Belt build/apply remains active, but missing belt contents may be classified under the Slots tab instead of Containers in Equipment Builds.");
             }
 
-            Logger.LogInfo("B&A&HB Phase 1 magazine-belt core initialized without idle polling.");
+            Logger.LogInfo("B&A&HB #2 Phase 1 magazine-belt core initialized without idle polling.");
         }
 
         void EnsureDeferredRuntimePump()
