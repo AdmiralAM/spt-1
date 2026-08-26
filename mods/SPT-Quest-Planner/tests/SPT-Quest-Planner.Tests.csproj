@@ -11,6 +11,7 @@
     <Compile Include="..\src\PlannerEvaluation.cs" Link="PlannerEvaluation.cs" />
     <Compile Include="..\src\InventoryProjection.cs" Link="InventoryProjection.cs" />
     <Compile Include="..\src\ProfileProjection.cs" Link="ProfileProjection.cs" />
+    <Compile Include="..\src\PlannerQuestDelayTiming.cs" Link="PlannerQuestDelayTiming.cs" />
     <Compile Include="..\src\SptObjectReader.cs" Link="SptObjectReader.cs" />
     <Compile Include="..\src\QuestExtractor.cs" Link="QuestExtractor.cs" />
     <Compile Include="..\src\QuestObjectiveExtractor.cs" Link="QuestObjectiveExtractor.cs" />
