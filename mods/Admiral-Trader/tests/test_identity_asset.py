@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
 EXPECTED_ROUTE = f"/files/trader/avatar/{TRADER_ID}.jpg"
-EXPECTED_RUNTIME_GIT_BLOB_SHA1 = "854e015bab09e6bf7f0ff051c6d1362a2afc3d9c"
+EXPECTED_RUNTIME_GIT_BLOB_SHA1 = "0cd9db6776b246c08eb9ae0f1ac3e79c2a486966"
 EXPECTED_SOURCE_SHA256 = "48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff"
 EXPECTED_DIMENSIONS = (512, 576)
 
@@ -21,8 +21,8 @@ def git_blob_sha1(data: bytes):
 
 
 def jpeg_dimensions(data: bytes):
-    if len(data) < 4 or data[:2] != b"\xff\xd8" or data.rstrip(b"\r\n")[-2:] != b"\xff\xd9":
-        raise AssertionError("portrait is not a complete JPEG stream with at most a newline transport tail")
+    if len(data) < 4 or data[:2] != b"\xff\xd8" or data[-2:] != b"\xff\xd9":
+        raise AssertionError("portrait is not a complete JPEG stream")
     offset = 2
     sof_markers = {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF}
     while offset + 4 <= len(data):
