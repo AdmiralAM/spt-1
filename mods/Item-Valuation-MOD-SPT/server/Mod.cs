@@ -4,8 +4,10 @@ using JetBrains.Annotations;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
+using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 
@@ -35,30 +37,34 @@ public record ModMetadata : IModMetadata
 
 public sealed record ValueColorConfig
 {
-    public double BadMaxValuePerSlot { get; init; } = 5000;
-    public double PoorMaxValuePerSlot { get; init; } = 10000;
-    public double FairMaxValuePerSlot { get; init; } = 15000;
-    public double GoodMaxValuePerSlot { get; init; } = 25000;
-    public double VeryGoodMaxValuePerSlot { get; init; } = 35000;
-    public string BadColor { get; init; } = "#404040";
-    public string PoorColor { get; init; } = "#a3a3a3";
-    public string FairColor { get; init; } = "#0c3b08";
-    public string GoodColor { get; init; } = "#08083b";
-    public string VeryGoodColor { get; init; } = "#590b5e";
-    public string ExceptionalColor { get; init; } = "#5e470b";
+    public double TintStartValue { get; init; } = 10000;
+    public double LightGreenMaxValue { get; init; } = 25000;
+    public double GreenMaxValue { get; init; } = 50000;
+    public double NavyMaxValue { get; init; } = 75000;
+    public double VioletMaxValue { get; init; } = 100000;
+    public double RedMaxValue { get; init; } = 250000;
+
+    // Deliberately subdued colours: readable tier separation without bright inventory tiles.
+    public string LightGreenColor { get; init; } = "#526B3F";
+    public string GreenColor { get; init; } = "#294F31";
+    public string NavyColor { get; init; } = "#253552";
+    public string VioletColor { get; init; } = "#4A3854";
+    public string RedColor { get; init; } = "#5A2C31";
+    public string GoldColor { get; init; } = "#5C4825";
 
     public void Validate()
     {
-        if (!(0 <= BadMaxValuePerSlot &&
-              BadMaxValuePerSlot < PoorMaxValuePerSlot &&
-              PoorMaxValuePerSlot < FairMaxValuePerSlot &&
-              FairMaxValuePerSlot < GoodMaxValuePerSlot &&
-              GoodMaxValuePerSlot < VeryGoodMaxValuePerSlot))
+        if (!(0 <= TintStartValue &&
+              TintStartValue < LightGreenMaxValue &&
+              LightGreenMaxValue < GreenMaxValue &&
+              GreenMaxValue < NavyMaxValue &&
+              NavyMaxValue < VioletMaxValue &&
+              VioletMaxValue < RedMaxValue))
         {
-            throw new InvalidDataException("Item Valuation value-per-slot thresholds must be non-negative and strictly ascending.");
+            throw new InvalidDataException("Item Valuation thresholds must be non-negative and strictly ascending.");
         }
 
-        string[] colors = [BadColor, PoorColor, FairColor, GoodColor, VeryGoodColor, ExceptionalColor];
+        string[] colors = [LightGreenColor, GreenColor, NavyColor, VioletColor, RedColor, GoldColor];
         if (colors.Any(string.IsNullOrWhiteSpace))
             throw new InvalidDataException("Item Valuation colors must not be empty.");
     }
@@ -66,14 +72,15 @@ public sealed record ValueColorConfig
 
 public static class ValueTierClassifier
 {
-    public static string GetColor(double valuePerSlot, ValueColorConfig config)
+    public static string? GetColor(double value, ValueColorConfig config)
     {
-        if (valuePerSlot <= config.BadMaxValuePerSlot) return config.BadColor;
-        if (valuePerSlot <= config.PoorMaxValuePerSlot) return config.PoorColor;
-        if (valuePerSlot <= config.FairMaxValuePerSlot) return config.FairColor;
-        if (valuePerSlot <= config.GoodMaxValuePerSlot) return config.GoodColor;
-        if (valuePerSlot <= config.VeryGoodMaxValuePerSlot) return config.VeryGoodColor;
-        return config.ExceptionalColor;
+        if (value < config.TintStartValue) return null;
+        if (value < config.LightGreenMaxValue) return config.LightGreenColor;
+        if (value < config.GreenMaxValue) return config.GreenColor;
+        if (value < config.NavyMaxValue) return config.NavyColor;
+        if (value < config.VioletMaxValue) return config.VioletColor;
+        if (value < config.RedMaxValue) return config.RedColor;
+        return config.GoldColor;
     }
 }
 
@@ -81,8 +88,17 @@ public static class ValueTierClassifier
 public sealed class ItemValuationBackgroundLoader(
     ModHelper modHelper,
     TemplateTable templateTable,
+    ItemHelper itemHelper,
     ISptLogger<ItemValuationBackgroundLoader> logger) : IOnLoad
 {
+    private static readonly MongoId[] TotalValueBaseClasses =
+    [
+        BaseClasses.WEAPON,
+        BaseClasses.KEY,
+        BaseClasses.ARMORED_EQUIPMENT,
+        BaseClasses.VEST
+    ];
+
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -91,6 +107,9 @@ public sealed class ItemValuationBackgroundLoader(
 
         Dictionary<MongoId, double> handbookPrices = BuildHandbookPriceIndex(templateTable);
         int colored = 0;
+        int preserved = 0;
+        int totalValueItems = 0;
+        int perSlotItems = 0;
         int fallbackPrices = 0;
 
         foreach ((MongoId templateId, var item) in templateTable.Items)
@@ -108,16 +127,38 @@ public sealed class ItemValuationBackgroundLoader(
                 fallbackPrices++;
             }
 
-            long slots = (long)properties.Width.Value * properties.Height.Value;
-            if (slots <= 0)
-                continue;
+            double valuation;
+            if (itemHelper.IsOfBaseclasses(templateId, TotalValueBaseClasses))
+            {
+                valuation = price;
+                totalValueItems++;
+            }
+            else
+            {
+                long slots = (long)properties.Width.Value * properties.Height.Value;
+                if (slots <= 0)
+                    continue;
 
-            double valuePerSlot = Math.Round(price / slots, MidpointRounding.AwayFromZero);
-            properties.BackgroundColor = ValueTierClassifier.GetColor(valuePerSlot, config);
+                valuation = Math.Round(price / slots, MidpointRounding.AwayFromZero);
+                perSlotItems++;
+            }
+
+            string? color = ValueTierClassifier.GetColor(valuation, config);
+            if (color is null)
+            {
+                // Under 10k: preserve the template's original/default background exactly.
+                preserved++;
+                continue;
+            }
+
+            properties.BackgroundColor = color;
             colored++;
         }
 
-        logger.Success($"{RuntimeIdentity.ProductName} {RuntimeIdentity.Version}: colored {colored} item templates once at server load ({fallbackPrices} handbook fallbacks); no client patches or runtime polling");
+        logger.Success(
+            $"{RuntimeIdentity.ProductName} {RuntimeIdentity.Version}: colored {colored} templates once at server load; " +
+            $"preserved {preserved} below tint threshold; {totalValueItems} total-value / {perSlotItems} per-slot valuations; " +
+            $"{fallbackPrices} handbook fallbacks; no client patches or runtime polling");
         return Task.CompletedTask;
     }
 
