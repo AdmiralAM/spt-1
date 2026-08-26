@@ -60,12 +60,15 @@ public sealed class EconomyMod(
         questAnalysis = await baselineProvenanceCorrectionService.ApplyToUnifiedAnalysisAsync(questAnalysis, vanillaBaseline, cancellationToken);
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
 
+        // Cross-mod integration remains observational and is no longer on the critical path for Enforce policy.
         var admiralTraderReport = await admiralTraderRuntimeAdapterService.RunAsync(config, cancellationToken);
         await sourcePressureRuntimeReportService.RunAsync(config, admiralTraderReport, cancellationToken);
+
+        // Legacy observational reports remain available during Alpha, but only the enforcement service below may mutate DB state.
         await compositePolicyEvaluationService.RunAsync(questAnalysis, cancellationToken);
         await targetProposalService.RunAsync(questAnalysis, cancellationToken);
-        await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
+        var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
 
-        await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, cancellationToken);
+        await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
     }
 }
