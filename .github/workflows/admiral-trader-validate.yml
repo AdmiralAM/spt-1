@@ -172,8 +172,11 @@ jobs:
           planned_ids = set(source_ids)
           if planned_ids != expected_ids:
               raise SystemExit(f'curated key plan coverage mismatch; missing={sorted(expected_ids-planned_ids)} extra={sorted(planned_ids-expected_ids)}')
-          if len(plan['groups']) > plan['targetQuestCountMax']:
-              raise SystemExit('curated key plan exceeds target quest count')
+          backbone_count = int(plan.get('currentBackboneQuestCount', 0))
+          if backbone_count <= 0 or len(plan['groups']) != backbone_count:
+              raise SystemExit(f"current key backbone drift: groups={len(plan['groups'])} declared={backbone_count}")
+          if plan.get('questCountPolicy') != 'no-artificial-cap-quality-gated-expansion':
+              raise SystemExit('curated key plan must not reintroduce an artificial future quest cap')
           PY
 
       - name: Fetch pinned official vanilla quest database
