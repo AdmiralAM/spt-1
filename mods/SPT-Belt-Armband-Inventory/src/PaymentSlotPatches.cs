@@ -6,13 +6,10 @@ namespace SPTBeltArmbandInventory
 {
     internal static class PaymentSlotPolicy
     {
-        internal static bool ShouldIncludeBelt(bool hasItem, bool hasContainers)
+        internal static bool ShouldIncludeWearable(string templateId, bool hasContainers)
         {
-            return AccessoryCapabilityPolicy.CanUse(
-                AccessoryCategory.ArmBand,
-                AccessoryCapability.PaymentSource,
-                hasItem,
-                hasContainers);
+            return hasContainers
+                && WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.PaymentSource);
         }
     }
 
@@ -36,7 +33,8 @@ namespace SPTBeltArmbandInventory
                 if (armBandSlot == null) return;
 
                 object item = ReflectionTools.ReadMember(armBandSlot, "ContainedItem");
-                bool include = PaymentSlotPolicy.ShouldIncludeBelt(item != null, ReflectionTools.HasContainers(item));
+                string templateId = GetTemplateId(item);
+                bool include = PaymentSlotPolicy.ShouldIncludeWearable(templateId, item != null && ReflectionTools.HasContainers(item));
                 int existing = IndexOfReference(list, armBandSlot);
                 bool owned = Ownership.Owns(equipment, list, armBandSlot);
 
@@ -61,16 +59,23 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                if (LogWarning != null) LogWarning("Could not normalize payment slots for belt: " + Unwrap(exception).Message);
+                if (LogWarning != null) LogWarning("Could not normalize payment slots for wearable: " + Unwrap(exception).Message);
             }
+        }
+
+        static string GetTemplateId(object item)
+        {
+            if (item == null) return null;
+            object stringTemplateId = ReflectionTools.ReadMember(item, "StringTemplateId");
+            if (stringTemplateId is string direct && !string.IsNullOrEmpty(direct)) return direct;
+            object templateId = ReflectionTools.ReadMember(item, "TemplateId");
+            return templateId?.ToString();
         }
 
         static int IndexOfReference(IList list, object target)
         {
             for (int i = 0; i < list.Count; i++)
-            {
                 if (ReferenceEquals(list[i], target)) return i;
-            }
             return -1;
         }
 
@@ -112,20 +117,20 @@ namespace SPTBeltArmbandInventory
                 Type equipmentType = ReflectionTools.FindType("EFT.InventoryLogic.InventoryEquipment");
                 Type slotEnumType = ReflectionTools.FindType("EFT.InventoryLogic.EquipmentSlot");
                 if (harmonyType == null || harmonyMethodType == null || equipmentType == null || slotEnumType == null)
-                    return Fail("SPT 4.1 InventoryEquipment/EquipmentSlot or Harmony was not found; belt payment compatibility is disabled.");
+                    return Fail("SPT 4.1 InventoryEquipment/EquipmentSlot or Harmony was not found; wearable payment compatibility is disabled.");
 
-                PropertyInfo property = equipmentType.GetProperty("PaymentSlots", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                PropertyInfo property = ReflectionTools.FindInstanceProperty(equipmentType, "PaymentSlots");
                 MethodInfo getter = property == null ? null : property.GetGetMethod(true);
-                MethodInfo getSlot = equipmentType.GetMethod("GetSlot", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { slotEnumType }, null);
+                MethodInfo getSlot = ReflectionTools.FindInstanceMethod(equipmentType, "GetSlot", null, slotEnumType);
                 if (getter == null || getSlot == null)
-                    return Fail("SPT 4.1 payment-slot inventory shape changed; belt payment compatibility is disabled.");
+                    return Fail("SPT 4.1 payment-slot inventory shape changed; wearable payment compatibility is disabled.");
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
+                MethodInfo rollback = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
                 if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, harmonyMethodConstructor != null, rollback != null))
-                    return Fail("Harmony patch/rollback API is incompatible; belt payment compatibility is disabled.");
+                    return Fail("Harmony patch/rollback API is incompatible; wearable payment compatibility is disabled.");
                 unpatchSelf = rollback;
 
                 PaymentSlotRuntime.LogWarning = logWarning;
@@ -135,14 +140,14 @@ namespace SPTBeltArmbandInventory
                 object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(Postfix)) });
                 Patch(patchMethod, harmonyMethodType, getter, postfix);
 
-                if (logInfo != null) logInfo("Belt/Armband Inventory payment-slot compatibility installed.");
+                if (logInfo != null) logInfo("B&A&HB wearable payment-source compatibility installed (item-descriptor scoped).");
                 return true;
             }
             catch (Exception exception)
             {
                 Dispose();
                 Exception root = Unwrap(exception);
-                return Fail("Belt payment compatibility installation failed safely: " + root.GetType().FullName + ": " + root.Message);
+                return Fail("Wearable payment compatibility installation failed safely: " + root.GetType().FullName + ": " + root.Message);
             }
         }
 
@@ -153,7 +158,18 @@ namespace SPTBeltArmbandInventory
 
         static MethodInfo Method(string name)
         {
-            return typeof(PaymentSlotPatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
+            MethodInfo[] methods = typeof(PaymentSlotPatches).GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal)) return methods[i];
+            return null;
+        }
+
+        static MethodInfo FindZeroArgInstanceMethod(Type type, string name)
+        {
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal) && methods[i].GetParameters().Length == 0) return methods[i];
+            return null;
         }
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
@@ -166,9 +182,7 @@ namespace SPTBeltArmbandInventory
                 ParameterInfo[] parameters = method.GetParameters();
                 if (parameters.Length < 2 || !typeof(MethodBase).IsAssignableFrom(parameters[0].ParameterType)) continue;
                 for (int p = 1; p < parameters.Length; p++)
-                {
                     if (parameters[p].ParameterType == harmonyMethodType && string.Equals(parameters[p].Name, "postfix", StringComparison.OrdinalIgnoreCase)) return method;
-                }
             }
             return null;
         }
@@ -179,9 +193,7 @@ namespace SPTBeltArmbandInventory
             object[] arguments = new object[parameters.Length];
             arguments[0] = original;
             for (int i = 1; i < parameters.Length; i++)
-            {
                 if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) arguments[i] = postfix;
-            }
             patchMethod.Invoke(harmony, arguments);
         }
 
