@@ -1,13 +1,14 @@
 {
-  "badMaxValuePerSlot": 5000,
-  "poorMaxValuePerSlot": 10000,
-  "fairMaxValuePerSlot": 15000,
-  "goodMaxValuePerSlot": 25000,
-  "veryGoodMaxValuePerSlot": 35000,
-  "badColor": "#404040",
-  "poorColor": "#a3a3a3",
-  "fairColor": "#0c3b08",
-  "goodColor": "#08083b",
-  "veryGoodColor": "#590b5e",
-  "exceptionalColor": "#5e470b"
+  "tintStartValue": 10000,
+  "lightGreenMaxValue": 25000,
+  "greenMaxValue": 50000,
+  "navyMaxValue": 75000,
+  "violetMaxValue": 100000,
+  "redMaxValue": 250000,
+  "lightGreenColor": "#526B3F",
+  "greenColor": "#294F31",
+  "navyColor": "#253552",
+  "violetColor": "#4A3854",
+  "redColor": "#5A2C31",
+  "goldColor": "#5C4825"
 }
