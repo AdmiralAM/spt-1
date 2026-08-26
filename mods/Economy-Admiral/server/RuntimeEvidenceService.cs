@@ -28,8 +28,6 @@ public sealed class RuntimeEvidenceService(
         "economy-admiral-quest-constraints.json",
         "economy-admiral-quest-analysis.json",
         "economy-admiral-provenance-delta.json",
-        "economy-admiral-composite-candidates.json",
-        "economy-admiral-target-proposals.json",
         "economy-admiral-enforcement-plan.json",
     ];
 
@@ -87,7 +85,7 @@ public sealed class RuntimeEvidenceService(
 
         var manifest = new RuntimeEvidenceManifest
         {
-            SchemaVersion = 4,
+            SchemaVersion = 5,
             GeneratedAtUtc = DateTimeOffset.UtcNow,
             Mode = config.Mode.ToString(),
             Preset = config.Preset.ToString(),
@@ -106,9 +104,9 @@ public sealed class RuntimeEvidenceService(
             RuntimeGatePassed = allReportsPresent && provenanceValid && enforcementValid,
             Note = config.Mode == EconomyMode.Enforce
                 ? config.EnableItemRewardStackNormalization
-                    ? "Enforce runtime evidence: committed mutations may include Experience, TraderStanding, and the opt-in single-stack ItemRewardStackCount dimension. Item templates/records remain structural-protected. A zero-mutation Enforce run must leave the DB unchanged."
-                    : "Enforce runtime evidence: a DB fingerprint change is valid only when the committed enforcement report declares one or more applied Experience/TraderStanding mutations. A zero-mutation Enforce run must leave the DB unchanged."
-                : "Audit runtime evidence: DB must remain unchanged and the enforcement report may contain preview proposals but zero applied mutations.",
+                    ? "Enforce runtime evidence: seven core reports; committed mutations may include Experience, TraderStanding, and the opt-in single-stack ItemRewardStackCount dimension. Item templates/records remain structural-protected. A zero-mutation Enforce run must leave the DB unchanged."
+                    : "Enforce runtime evidence: seven core reports; a DB fingerprint change is valid only when the committed enforcement report declares one or more applied Experience/TraderStanding mutations. A zero-mutation Enforce run must leave the DB unchanged."
+                : "Audit runtime evidence: seven core reports; DB must remain unchanged and the enforcement report may contain preview proposals but zero applied mutations.",
             Reports = reportFiles,
         };
 
