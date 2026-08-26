@@ -18,36 +18,16 @@ config = json.loads(CONFIG.read_text(encoding="utf-8"))
 source = SOURCE.read_text(encoding="utf-8")
 project = PROJECT.read_text(encoding="utf-8")
 
-money_thresholds = [
-    config["tintStartValue"],
-    config["lightGreenMaxValue"],
-    config["greenMaxValue"],
-    config["navyMaxValue"],
-    config["violetMaxValue"],
-    config["redMaxValue"],
-]
+money_thresholds = [config["tintStartValue"], config["lightGreenMaxValue"], config["greenMaxValue"], config["navyMaxValue"], config["violetMaxValue"], config["redMaxValue"]]
 if money_thresholds != [10000, 25000, 50000, 75000, 100000, 250000]:
     fail(f"money tier thresholds drifted: {money_thresholds}")
 
-ammo_thresholds = [
-    config["ammoLightGreenMaxPen"],
-    config["ammoGreenMaxPen"],
-    config["ammoNavyMaxPen"],
-    config["ammoVioletMaxPen"],
-    config["ammoRedMaxPen"],
-]
+ammo_thresholds = [config["ammoLightGreenMaxPen"], config["ammoGreenMaxPen"], config["ammoNavyMaxPen"], config["ammoVioletMaxPen"], config["ammoRedMaxPen"]]
 if ammo_thresholds != [15, 26, 35, 44, 54]:
     fail(f"ammo penetration thresholds drifted: {ammo_thresholds}")
 
 expected_colors = ["#526B3F", "#294F31", "#253552", "#4A3854", "#5A2C31", "#5C4825"]
-actual_colors = [
-    config["lightGreenColor"],
-    config["greenColor"],
-    config["navyColor"],
-    config["violetColor"],
-    config["redColor"],
-    config["goldColor"],
-]
+actual_colors = [config["lightGreenColor"], config["greenColor"], config["navyColor"], config["violetColor"], config["redColor"], config["goldColor"]]
 if actual_colors != expected_colors:
     fail(f"default tier colors drifted: {actual_colors}")
 
@@ -66,7 +46,8 @@ required_fragments = [
     "ragfairServerHelper.IsItemValidRagfairItem",
     "templateTable.Prices.TryGetValue",
     "presetHelper.GetDefaultPreset",
-    "handbookHelper.GetTemplatePrice",
+    "BuildHandbookPriceIndex",
+    "templateTable.Handbook.Items",
     "Math.Round(value / slots, MidpointRounding.AwayFromZero)",
     "properties.BackgroundColor = color",
     '"com.acidphantasm.itemvaluation"',
@@ -88,7 +69,6 @@ for label, pattern in forbidden_patterns.items():
     if re.search(pattern, source):
         fail(f"forbidden {label} code found: {pattern}")
 
-# Penetration is allowed only as the ammo tier input. Damage text/stat mutation must remain absent.
 if re.search(r"\bDamage\b|DamageAndPen|ShortName", source):
     fail("ammo damage/name legacy behavior returned")
 
