@@ -166,6 +166,9 @@ jobs:
       - name: Smoke-test source-pressure evidence domain
         shell: pwsh
         run: dotnet run --project mods/Economy-Admiral/tests/SourcePressureSmoke/SourcePressureSmoke.csproj -c Release --nologo
+      - name: Smoke-test replacement comparability evidence
+        shell: pwsh
+        run: dotnet run --project mods/Economy-Admiral/tests/ReplacementComparabilitySmoke/ReplacementComparabilitySmoke.csproj -c Release --nologo
       - name: Stage candidate
         shell: pwsh
         env:
