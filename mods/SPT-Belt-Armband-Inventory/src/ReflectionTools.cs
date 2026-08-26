@@ -28,6 +28,7 @@ namespace SPTBeltArmbandInventory
         static readonly ConcurrentDictionary<Type, ConcurrentDictionary<string, MemberAccessor>> MemberCache =
             new ConcurrentDictionary<Type, ConcurrentDictionary<string, MemberAccessor>>();
         static readonly ConcurrentDictionary<string, Type> TypeCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal);
+        static readonly ConcurrentDictionary<Assembly, Type[]> AssemblyTypesCache = new ConcurrentDictionary<Assembly, Type[]>();
 
         internal static Type FindType(string fullName)
         {
@@ -61,10 +62,16 @@ namespace SPTBeltArmbandInventory
 
         static MemberAccessor GetAccessor(Type type, string preferredName)
         {
-            ConcurrentDictionary<string, MemberAccessor> members = MemberCache.GetOrAdd(
-                type,
-                _ => new ConcurrentDictionary<string, MemberAccessor>(StringComparer.Ordinal));
-            return members.GetOrAdd(preferredName, name => CreateAccessor(type, name));
+            ConcurrentDictionary<string, MemberAccessor> members;
+            if (!MemberCache.TryGetValue(type, out members))
+            {
+                var createdMembers = new ConcurrentDictionary<string, MemberAccessor>(StringComparer.Ordinal);
+                members = MemberCache.GetOrAdd(type, createdMembers);
+            }
+
+            MemberAccessor accessor;
+            if (members.TryGetValue(preferredName, out accessor)) return accessor;
+            return members.GetOrAdd(preferredName, CreateAccessor(type, preferredName));
         }
 
         static MemberAccessor CreateAccessor(Type type, string preferredName)
@@ -74,6 +81,19 @@ namespace SPTBeltArmbandInventory
             if (property != null && property.GetIndexParameters().Length != 0) property = null;
             FieldInfo field = property == null ? type.GetField(preferredName, flags) : null;
             return new MemberAccessor(property, field);
+        }
+
+        internal static Type[] GetTypes(Assembly assembly)
+        {
+            if (assembly == null) return Array.Empty<Type>();
+            Type[] cached;
+            if (AssemblyTypesCache.TryGetValue(assembly, out cached)) return cached;
+
+            Type[] discovered;
+            try { discovered = assembly.GetTypes(); }
+            catch (ReflectionTypeLoadException exception) { discovered = exception.Types ?? Array.Empty<Type>(); }
+            catch { discovered = Array.Empty<Type>(); }
+            return AssemblyTypesCache.GetOrAdd(assembly, discovered);
         }
 
         internal static bool ReadBoolean(object instance, string preferredName)
@@ -107,6 +127,8 @@ namespace SPTBeltArmbandInventory
         static bool HasAny(object value)
         {
             if (value == null || value is string) return false;
+            ICollection collection = value as ICollection;
+            if (collection != null) return collection.Count > 0;
             IEnumerable enumerable = value as IEnumerable;
             if (enumerable == null) return false;
             IEnumerator enumerator = enumerable.GetEnumerator();

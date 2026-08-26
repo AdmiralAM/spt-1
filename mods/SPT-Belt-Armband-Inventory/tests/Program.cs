@@ -88,6 +88,10 @@ internal static class Program
         Assert(ReferenceEquals(resolvedProgramType, typeof(Program)), "type lookup resolves loaded assemblies");
         Assert(ReferenceEquals(ReflectionTools.FindType(typeof(Program).FullName), resolvedProgramType), "positive type lookup cache preserves the resolved type");
         Assert(ReflectionTools.FindType(null) == null, "empty type lookup fails closed");
+        Type[] discoveredTypes = ReflectionTools.GetTypes(typeof(Program).Assembly);
+        Assert(discoveredTypes.Contains(typeof(Program)), "assembly discovery includes loaded test types");
+        Assert(ReferenceEquals(ReflectionTools.GetTypes(typeof(Program).Assembly), discoveredTypes), "assembly type discovery reuses one cached snapshot");
+        Assert(ReflectionTools.GetTypes(null).Length == 0, "missing assembly discovery fails closed");
 
         string[] unusual = { BeltSlotPlan.TacticalVest, BeltSlotPlan.Backpack, BeltSlotPlan.SecuredContainer, BeltSlotPlan.Dogtag };
         string[] fallback = BeltSlotPlan.Build(unusual, BeltSlotPosition.AbovePockets, true);

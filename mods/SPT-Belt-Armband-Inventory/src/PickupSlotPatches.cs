@@ -146,8 +146,9 @@ namespace SPTBeltArmbandInventory
 
         static MethodInfo FindTarget(Type equipmentType, Type itemType)
         {
-            foreach (Type type in equipmentType.Assembly.GetTypes())
+            foreach (Type type in ReflectionTools.GetTypes(equipmentType.Assembly))
             {
+                if (type == null) continue;
                 foreach (MethodInfo method in type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
                 {
                     if (method.Name != "FindSlotToPickUp") continue;

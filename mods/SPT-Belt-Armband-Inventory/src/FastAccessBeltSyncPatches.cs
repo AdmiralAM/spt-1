@@ -260,9 +260,7 @@ namespace SPTBeltArmbandInventory
 
         static MethodInfo FindTopLevelItemsMethod(Assembly assembly)
         {
-            Type[] types;
-            try { types = assembly.GetTypes(); }
-            catch (ReflectionTypeLoadException exception) { types = exception.Types; }
+            Type[] types = ReflectionTools.GetTypes(assembly);
 
             for (int i = 0; i < types.Length; i++)
             {

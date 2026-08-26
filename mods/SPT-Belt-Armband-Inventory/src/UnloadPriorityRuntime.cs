@@ -86,9 +86,7 @@ namespace SPTBeltArmbandInventory
         static MethodInfo FindTarget(Type equipmentType)
         {
             Assembly assembly = equipmentType.Assembly;
-            Type[] types;
-            try { types = assembly.GetTypes(); }
-            catch (ReflectionTypeLoadException exception) { types = exception.Types; }
+            Type[] types = ReflectionTools.GetTypes(assembly);
 
             for (int i = 0; i < types.Length; i++)
             {
