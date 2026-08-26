@@ -18,6 +18,7 @@
     <Compile Include="..\src\FastAccessSlotPatches.cs" Link="FastAccessSlotPatches.cs" />
     <Compile Include="..\src\RuntimeMutationPolicy.cs" Link="RuntimeMutationPolicy.cs" />
     <Compile Include="..\src\RuntimeCustomBeltTypes.cs" Link="RuntimeCustomBeltTypes.cs" />
+    <Compile Include="..\src\RuntimeIdentity.cs" Link="RuntimeIdentity.cs" />
     <Compile Include="..\src\RuntimeListOwnership.cs" Link="RuntimeListOwnership.cs" />
     <Compile Include="..\src\BeltDeathPolicy.cs" Link="BeltDeathPolicy.cs" />
     <Compile Include="..\src\SlotMergePatches.cs" Link="SlotMergePatches.cs" />

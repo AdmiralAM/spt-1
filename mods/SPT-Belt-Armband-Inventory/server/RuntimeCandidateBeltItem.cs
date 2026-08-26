@@ -15,10 +15,10 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
 {
     public static readonly MongoId SourceArmbandTpl = new("5b3f3af486f774679e752c1f");
     public static readonly MongoId DefaultInventoryTpl = new("55d7217a4bdc2d86028b456d");
-    public static readonly MongoId CustomTemplateParentTpl = new("68ac00000000000000000004");
-    public static readonly MongoId CustomBeltParentTpl = new("68ac00000000000000000005");
-    public const string RuntimeCandidateTpl = "68ac00000000000000000001";
-    public const string RuntimeCandidateGridId = "68ac00000000000000000002";
+    public static readonly MongoId CustomTemplateParentTpl = new(RuntimeIdentity.SearchableTemplateParentId);
+    public static readonly MongoId CustomBeltParentTpl = new(RuntimeIdentity.BeltItemParentId);
+    public const string RuntimeCandidateTpl = RuntimeIdentity.CandidateItemId;
+    public const string RuntimeCandidateGridId = RuntimeIdentity.CandidateGridId;
 
     // Client runtime type registration passed its load-safe gate before this
     // server taxonomy is enabled. This selects the registered custom belt type.
@@ -55,12 +55,12 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
             OverrideProperties = new TemplateItemProperties
             {
                 BackgroundColor = "blue", ExaminedByDefault = true,
-                Grids = [new Grid { Name = "main", Id = RuntimeCandidateGridId, Parent = RuntimeCandidateTpl, Prototype = "55d329c24bdc2d892f8b4567", Properties = new GridProperties { CellsH = 1, CellsV = 2, MinCount = 0, MaxCount = 0, MaxWeight = 0, IsSortingTable = false, Filters = [new GridFilter { Filter = [BaseClasses.MAGAZINE], ExcludedFilter = [] }] } }]
+                Grids = [new Grid { Name = "main", Id = RuntimeCandidateGridId, Parent = RuntimeCandidateTpl, Prototype = "55d329c24bdc2d892f8b4567", Properties = new GridProperties { CellsH = RuntimeIdentity.CandidateGridColumns, CellsV = RuntimeIdentity.CandidateGridRows, MinCount = 0, MaxCount = 0, MaxWeight = 0, IsSortingTable = false, Filters = [new GridFilter { Filter = [BaseClasses.MAGAZINE], ExcludedFilter = [] }] } }]
             }
         };
         var result = customItemService.CreateItemFromClone(details);
         if (!result.Success) throw new InvalidOperationException($"B&A&HB RC item creation failed: {string.Join("; ", result.Errors)}");
-        logger.Success($"B&A&HB RC created: tpl={RuntimeCandidateTpl}, parent={parentId}, grid=1x2, filter=MAGAZINE, customTaxonomy={EnableCustomRuntimeTaxonomy}.");
+        logger.Success($"B&A&HB RC created: tpl={RuntimeCandidateTpl}, parent={parentId}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE, customTaxonomy={EnableCustomRuntimeTaxonomy}.");
         return Task.CompletedTask;
     }
 

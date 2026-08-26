@@ -55,6 +55,9 @@ internal static class Program
         Assert(AccessoryGridPolicy.CellCount(1, 2) == 2, "1x2 grid declares exactly two cells");
         Assert(AccessoryGridPolicy.FitsDeclaredCapacity(1, 2, 2), "1x2 grid accepts two items");
         Assert(!AccessoryGridPolicy.FitsDeclaredCapacity(1, 2, 3), "1x2 grid rejects a third item");
+        Assert(RuntimeIdentity.CandidateGridColumns == 1 && RuntimeIdentity.CandidateGridRows == 2, "shared runtime contract preserves the proven one-column two-row grid");
+        Assert(RuntimeCustomBeltTypePatches.CustomTemplateParentId == RuntimeIdentity.SearchableTemplateParentId, "client template registration uses the shared runtime identity");
+        Assert(RuntimeCustomBeltTypePatches.CustomBeltParentId == RuntimeIdentity.BeltItemParentId, "client item registration uses the shared runtime identity");
 
         Assert(ReflectionTools.HasContainers(new RuntimeContainer { IsContainer = true }), "runtime IsContainer flag is recognized");
         Assert(ReflectionTools.HasContainers(new RuntimeGrids { Grids = new object[] { new object() } }), "runtime Grids are recognized");

@@ -7,8 +7,8 @@ namespace SPTBeltArmbandInventory
 {
     internal sealed class RuntimeCustomBeltTypePatches : IDisposable
     {
-        internal const string CustomTemplateParentId = "68ac00000000000000000004";
-        internal const string CustomBeltParentId = "68ac00000000000000000005";
+        internal const string CustomTemplateParentId = RuntimeIdentity.SearchableTemplateParentId;
+        internal const string CustomBeltParentId = RuntimeIdentity.BeltItemParentId;
 
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;

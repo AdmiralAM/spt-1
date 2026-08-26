@@ -15,5 +15,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\src\BeltDeathPolicy.cs" Link="BeltDeathPolicy.cs" />
+    <Compile Include="..\src\RuntimeIdentity.cs" Link="RuntimeIdentity.cs" />
   </ItemGroup>
 </Project>

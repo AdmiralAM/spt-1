@@ -9,7 +9,7 @@ namespace SPTBeltArmbandInventory
     [BepInPlugin("com.admiralam.spt.belt-armband-inventory.runtime-type-proof", "B&A&HB Runtime Type Proof", "0.1.0")]
     public sealed class RuntimeTypeProofPlugin : BaseUnityPlugin
     {
-        const string RcTpl = "68ac00000000000000000001";
+        const string RcTpl = RuntimeIdentity.CandidateItemId;
         object harmony;
         MethodInfo unpatchSelf;
 
