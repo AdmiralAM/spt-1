@@ -72,6 +72,44 @@ namespace SPTQuestPlanner.Tests
             Assert.Equal(PlannerRaidDecisionOutcome.PreferLeft, decision.Outcome);
         }
 
+        [Fact]
+        public void ParallelMandatoryBranchesDoNotGainPriorityFromPathDepthAlone()
+        {
+            PlannerRaidDecisionIntent intent = new PlannerRaidDecisionIntent(
+                "goal",
+                new[] { "a", "a-next", "a-later", "b", "goal" },
+                new[] { "a", "b" },
+                new[] { "a", "b" },
+                Array.Empty<string>());
+            PlannerRaidDecisionSignals left = Signals(new[] { "a" });
+            PlannerRaidDecisionSignals right = Signals(new[] { "b" });
+
+            PlannerRaidDecision decision = PlannerRaidFocusedDecisionPolicy.Decide(left, right, intent);
+
+            Assert.Equal(PlannerRaidDecisionOutcome.Abstain, decision.Outcome);
+            Assert.False(decision.HasRecommendation);
+        }
+
+        [Fact]
+        public void FocusedPathImmediateUnlockCanBreakParallelBranchSymmetry()
+        {
+            PlannerRaidDecisionIntent intent = new PlannerRaidDecisionIntent(
+                "goal",
+                new[] { "a", "a-next", "b", "goal" },
+                new[] { "a", "b" },
+                new[] { "a", "b" },
+                Array.Empty<string>());
+            PlannerRaidDecisionSignals left = Signals(
+                new[] { "a" },
+                immediateUnlocks: new[] { "a-next" });
+            PlannerRaidDecisionSignals right = Signals(new[] { "b" });
+
+            PlannerRaidDecision decision = PlannerRaidFocusedDecisionPolicy.Decide(left, right, intent);
+
+            Assert.Equal(PlannerRaidDecisionOutcome.PreferLeft, decision.Outcome);
+            Assert.Contains("focused-path immediate unlock", string.Join(" | ", decision.Evidence));
+        }
+
         private static PlannerRaidDecisionIntent Intent(string goal, params string[] actionable)
         {
             string[] path = new string[actionable.Length + 1];
