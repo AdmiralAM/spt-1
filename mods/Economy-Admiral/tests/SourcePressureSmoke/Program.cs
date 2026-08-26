@@ -71,10 +71,37 @@ var input = new[]
         EarliestProgressionLevel = null,
         ProvenanceClass = "PristineModified",
     },
+    new AcquisitionSourceEvidence
+    {
+        ItemTemplateId = "item-c",
+        SourceId = "trader-c:offer-1",
+        Channel = AcquisitionChannel.TraderPurchase,
+        Renewable = true,
+        EarliestProgressionLevel = 1,
+        ProvenanceClass = "ModAdded",
+    },
+    new AcquisitionSourceEvidence
+    {
+        ItemTemplateId = "item-c",
+        SourceId = "trader-c:offer-2",
+        Channel = AcquisitionChannel.TraderPurchase,
+        Renewable = true,
+        EarliestProgressionLevel = 2,
+        ProvenanceClass = "ModAdded",
+    },
+    new AcquisitionSourceEvidence
+    {
+        ItemTemplateId = "item-c",
+        SourceId = "quest-c",
+        Channel = AcquisitionChannel.QuestReward,
+        Renewable = false,
+        EarliestProgressionLevel = 4,
+        ProvenanceClass = "ModAdded",
+    },
 };
 
 var result = SourcePressureEvidenceAnalyzer.Analyze(input);
-Require(result.Count == 2, "Expected two item summaries.");
+Require(result.Count == 3, "Expected three item summaries.");
 
 var a = result.Single(item => item.ItemTemplateId == "item-a");
 Require(a.SourceCount == 3, "item-a source count should deduplicate identical edges.");
@@ -85,6 +112,8 @@ Require(a.RenewableSourceShare == 0.666667, "item-a renewable share mismatch.");
 Require(a.HasRenewablePath, "item-a should retain renewable acquisition.");
 Require(a.EarliestProgressionLevel == 1, "item-a earliest progression level mismatch.");
 Require(!a.SingleSourceDominated, "item-a should not be single-source dominated.");
+Require(a.DominantChannel == AcquisitionChannel.TraderPurchase, "item-a dominant channel tie must resolve deterministically by enum order.");
+Require(a.DominantChannelSourceShare == 0.333333, "item-a dominant channel share mismatch.");
 Require(a.ProvenanceClasses.SequenceEqual(new[] { "ModAdded", "PristineUnchanged" }), "item-a provenance ordering mismatch.");
 Require(a.Channels.Single(channel => channel.Channel == AcquisitionChannel.Craft).RenewableSourceCount == 1, "craft channel summary mismatch.");
 
@@ -93,6 +122,14 @@ Require(b.SourceCount == 1, "item-b source count mismatch.");
 Require(b.SingleSourceDominated, "item-b should be single-source dominated.");
 Require(!b.HasRenewablePath, "item-b should have no renewable path.");
 Require(b.EarliestProgressionLevel is null, "unknown progression level must remain unknown.");
+Require(b.DominantChannel == AcquisitionChannel.QuestReward, "item-b dominant channel mismatch.");
+Require(b.DominantChannelSourceShare == 1.0, "item-b dominant channel share mismatch.");
+
+var c = result.Single(item => item.ItemTemplateId == "item-c");
+Require(c.SourceCount == 3, "item-c source count mismatch.");
+Require(c.ChannelCount == 2, "item-c channel count mismatch.");
+Require(c.DominantChannel == AcquisitionChannel.TraderPurchase, "item-c dominant channel mismatch.");
+Require(c.DominantChannelSourceShare == 0.666667, "item-c channel concentration mismatch.");
 
 var reversed = SourcePressureEvidenceAnalyzer.Analyze(input.Reverse());
 Require(
@@ -102,6 +139,10 @@ Require(
 Require(
     result.Select(item => item.SourceCount).SequenceEqual(reversed.Select(item => item.SourceCount)),
     "Source counts must be deterministic regardless of input order."
+);
+Require(
+    result.Select(item => item.DominantChannelSourceShare).SequenceEqual(reversed.Select(item => item.DominantChannelSourceShare)),
+    "Channel concentration must be deterministic regardless of input order."
 );
 
 MustFail("empty item id", () => SourcePressureEvidenceAnalyzer.Analyze(new[]
