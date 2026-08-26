@@ -65,14 +65,18 @@ jobs:
               raise SystemExit('official portrait contract permits placeholder/substitution')
           if portrait.get('runtimeRoute') != expected_route or base.get('avatar') != expected_route:
               raise SystemExit('official portrait route drift')
+          if portrait.get('sourceFileSha256') != '48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff':
+              raise SystemExit('approved portrait source SHA-256 drift')
+          if portrait.get('sourceDimensions') != '1182x1330' or portrait.get('runtimeDimensions') != '512x576':
+              raise SystemExit('portrait source/runtime geometry contract drift')
           if not portrait_path.is_file():
               raise SystemExit(f'official portrait missing: {portrait_path}')
           data = portrait_path.read_bytes()
           if len(data) < 4 or data[:2] != b'\xff\xd8' or data[-2:] != b'\xff\xd9':
               raise SystemExit('official portrait is not a complete JPEG stream')
-          digest = hashlib.sha256(data).hexdigest()
-          if digest != portrait.get('runtimeSha256'):
-              raise SystemExit(f'official portrait SHA-256 drift: {digest}')
+          blob_oid = hashlib.sha1(f'blob {len(data)}\0'.encode('ascii') + data).hexdigest()
+          if blob_oid != portrait.get('runtimeGitBlobSha1'):
+              raise SystemExit(f'official portrait Git blob drift: {blob_oid}')
 
           runtime_data = runtime.get('data') or {}
           if runtime_data.get('avatarMode') != 'official-custom-route':
@@ -85,7 +89,6 @@ jobs:
           special = (capabilities.get('families') or {}).get('special-weapons') or {}
           if special.get('tpl') != '6217726288ed9f0845317459' or special.get('sampleUnits') != 1 or special.get('permanentUnlock') is not False:
               raise SystemExit('Special Weapons sample-only contract drift')
-
           if set(questassort) != {'started', 'success', 'fail'} or len(questassort['success']) != 7:
               raise SystemExit('candidate lost native lowercase seven-milestone questassort contract')
           if len(assort.get('items') or []) != 11:
@@ -125,6 +128,7 @@ jobs:
           grep -Fq 'Copy-Item (Join-Path $moduleRoot '\''assets'\'')' 'mods/Admiral-Trader/tools/build_spt413_test_candidate.ps1'
           grep -Fq '.Admiral-Trader.rollback' 'mods/Admiral-Trader/tools/package_spt413_exact_candidate.ps1'
           grep -Fq 'officialPortraitSha256' 'mods/Admiral-Trader/tools/package_spt413_exact_candidate.ps1'
+          grep -Fq 'officialPortraitGitBlobSha1' 'mods/Admiral-Trader/tools/package_spt413_exact_candidate.ps1'
 
       - name: Stage exact-head published-API preflight package
         shell: python
@@ -178,9 +182,11 @@ jobs:
                       h.update(chunk)
               return h.hexdigest()
 
+          portrait_data = portrait.read_bytes()
+          portrait_blob = hashlib.sha1(f'blob {len(portrait_data)}\0'.encode('ascii') + portrait_data).hexdigest()
+          if portrait_blob != identity['portrait']['runtimeGitBlobSha1']:
+              raise SystemExit('staged preflight portrait Git blob drift')
           portrait_hash = sha256(portrait)
-          if portrait_hash != identity['portrait']['runtimeSha256']:
-              raise SystemExit('staged preflight portrait SHA-256 drift')
           provenance = {
               'schemaVersion': 4,
               'product': 'Admiral Trader',
@@ -193,6 +199,7 @@ jobs:
               'publishedApiCoreSha256': sha256(published_core),
               'serverDllSha256': sha256(stage / dll.name),
               'officialPortraitRoute': identity['portrait']['runtimeRoute'],
+              'officialPortraitGitBlobSha1': portrait_blob,
               'officialPortraitSha256': portrait_hash,
               'publicationMode': 'published-api-preflight',
               'physicalRuntimeEvidenceEligible': False,
