@@ -56,9 +56,9 @@ jobs:
           assert data[len(clean):] in (b'', b'\n', b'\r\n')
           blob = hashlib.sha1(f'blob {len(data)}\0'.encode()+data).hexdigest()
           assert blob == portrait['runtimeGitBlobSha1']
-          assert len(assort['items']) == 17
+          assert len(assort['items']) == 11
           assert set(qa) == {'started','success','fail'} and len(qa['success']) == 7
-          assert len(list((root/'db/quests').glob('*.json'))) == 32
+          assert len(list((root/'db/quests').glob('*.json'))) == 31
 
       - name: Run Admiral Trader test suite
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
@@ -100,8 +100,8 @@ jobs:
           if len(cores)!=1: raise SystemExit(f'published core count={len(cores)}')
           prov={'schemaVersion':4,'product':'Admiral Trader','sourceHeadSha':os.environ['SOURCE_HEAD'],'targetSptVersion':'4.1.3','compileMode':'published-api-preflight','compilePackage':'SPTushonka.Server.Core','compilePackageVersion':'4.1.3','publishedApiCoreSha256':sha(cores[0]),'serverDllSha256':sha(stage/dll.name),'officialPortraitRoute':identity['portrait']['runtimeRoute'],'officialPortraitSourceGitBlobSha1':identity['portrait']['runtimeGitBlobSha1'],'officialPortraitSha256':sha(portrait),'publicationMode':'published-api-preflight','physicalRuntimeEvidenceEligible':False}
           (stage/'candidate-provenance.json').write_text(json.dumps(prov,indent=2)+'\n',encoding='utf-8')
-          assert len(list((stage/'db/quests').glob('*.json')))==32
-          assert len(json.loads((stage/'db/assort.json').read_text())['items'])==17
+          assert len(list((stage/'db/quests').glob('*.json')))==31
+          assert len(json.loads((stage/'db/assort.json').read_text())['items'])==11
 
       - name: Upload published-API preflight package
         uses: actions/upload-artifact@v4

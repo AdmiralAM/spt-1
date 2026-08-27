@@ -43,15 +43,14 @@ jobs:
           quest_dir = out / 'db/quests'
           locale_dir = out / 'db/locales'
           quest_files = sorted(quest_dir.glob('*.json')) if quest_dir.is_dir() else []
-          if len(quest_files) < 32:
-              raise SystemExit(f'expected at least 32 packaged quest templates, got {len(quest_files)}')
+          if len(quest_files) != 31:
+              raise SystemExit(f'expected 31 packaged quest templates, got {len(quest_files)}')
 
           quests = []
           quest_ids = []
           access_ids = []
           arsenal_readiness_ids = []
           arsenal_combat_ids = []
-          field_operation_ids = []
           caliber_proof_ids = []
           for path in quest_files:
               quest = json.loads(path.read_text(encoding='utf-8-sig'))
@@ -63,7 +62,6 @@ jobs:
               if not quest_name.strip():
                   raise SystemExit(f'{path.name}: missing QuestName fallback')
               is_arsenal = quest_name.startswith('Arsenal Protocol:')
-              is_field_operation = quest_name.startswith('Field Operation:')
 
               finish = (quest.get('conditions') or {}).get('AvailableForFinish') or []
               if len(finish) != 1:
@@ -75,8 +73,6 @@ jobs:
                       raise SystemExit(f'{path.name}: item proof must be non-FIR')
                   if not condition.get('target') or not condition.get('value') or condition.get('value') <= 0:
                       raise SystemExit(f'{path.name}: malformed item proof')
-                  if is_field_operation:
-                      raise SystemExit(f'{path.name}: field operation cannot be a sole FindItem proof')
                   if is_arsenal:
                       if quest.get('type') != 'PickUp' or condition.get('value') != 1:
                           raise SystemExit(f'{path.name}: malformed Arsenal readiness proof')
@@ -84,26 +80,17 @@ jobs:
                   else:
                       access_ids.append(quest['_id'])
               elif condition_type == 'CounterCreator':
-                  if quest.get('type') != 'Elimination':
-                      raise SystemExit(f'{path.name}: CounterCreator quest must be Elimination')
+                  if not is_arsenal or quest.get('type') != 'Elimination':
+                      raise SystemExit(f'{path.name}: CounterCreator must be Arsenal combat')
                   counter_conditions = (condition.get('counter') or {}).get('conditions') or []
                   if len(counter_conditions) != 1:
                       raise SystemExit(f'{path.name}: expected one combat counter condition')
                   kill = counter_conditions[0]
-                  if kill.get('conditionType') != 'Kills':
-                      raise SystemExit(f'{path.name}: malformed kill counter')
-                  if is_arsenal:
-                      if not kill.get('weapon'):
-                          raise SystemExit(f'{path.name}: malformed Arsenal kill filter')
-                      arsenal_combat_ids.append(quest['_id'])
-                      if kill.get('weaponCaliber'):
-                          caliber_proof_ids.append(quest['_id'])
-                  elif is_field_operation:
-                      if kill.get('target') != 'Savage' or not kill.get('savageRole'):
-                          raise SystemExit(f'{path.name}: field operation requires a specific Savage role')
-                      field_operation_ids.append(quest['_id'])
-                  else:
-                      raise SystemExit(f'{path.name}: unclassified CounterCreator quest')
+                  if kill.get('conditionType') != 'Kills' or not kill.get('weapon'):
+                      raise SystemExit(f'{path.name}: malformed Arsenal kill filter')
+                  arsenal_combat_ids.append(quest['_id'])
+                  if kill.get('weaponCaliber'):
+                      caliber_proof_ids.append(quest['_id'])
               else:
                   raise SystemExit(f'{path.name}: unsupported finish condition {condition_type!r}')
 
@@ -111,13 +98,11 @@ jobs:
               raise SystemExit('packaged quest ids are not unique')
           if len(access_ids) != 10 or len(arsenal_readiness_ids) != 7 or len(arsenal_combat_ids) != 14:
               raise SystemExit(
-                  'packaged backbone quest mix drifted: '
+                  'packaged quest mix drifted: '
                   f'Access={len(access_ids)}/10, '
                   f'ArsenalReadiness={len(arsenal_readiness_ids)}/7, '
                   f'ArsenalCombat={len(arsenal_combat_ids)}/14'
               )
-          if len(field_operation_ids) < 1:
-              raise SystemExit('expected at least one packaged authored field operation')
           if len(caliber_proof_ids) != 6:
               raise SystemExit(f'expected six packaged caliber-constrained Munitions proofs, got {len(caliber_proof_ids)}')
 
@@ -127,8 +112,8 @@ jobs:
               'completePlayerMessage', 'changeQuestMessageText'
           )
           locale_sets = {
-              'en': ('en.json', 'arsenal-en.json', 'operations-en.json'),
-              'ru': ('ru.json', 'arsenal-ru.json', 'operations-ru.json'),
+              'en': ('en.json', 'arsenal-en.json'),
+              'ru': ('ru.json', 'arsenal-ru.json'),
           }
           for locale_code, files in locale_sets.items():
               merged = {}

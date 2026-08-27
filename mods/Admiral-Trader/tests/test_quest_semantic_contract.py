@@ -18,21 +18,17 @@ class QuestSemanticContractTests(unittest.TestCase):
         cls.quest_by_id = {q["_id"]: q for q in cls.quests}
         cls.en = {}
         cls.ru = {}
-        for name in ("en.json", "arsenal-en.json", "operations-en.json", "gameplay-alpha-en.json", "objectives-en.json"):
+        for name in ("en.json", "arsenal-en.json", "gameplay-alpha-en.json", "objectives-en.json"):
             cls.en.update(load(LOCALE_DIR / name))
-        for name in ("ru.json", "arsenal-ru.json", "operations-ru.json", "gameplay-alpha-ru.json", "objectives-ru.json"):
+        for name in ("ru.json", "arsenal-ru.json", "gameplay-alpha-ru.json", "objectives-ru.json"):
             cls.ru.update(load(LOCALE_DIR / name))
         cls.questassort = load(ROOT / "db" / "questassort.json")["success"]
         cls.capabilities = load(ROOT / "manifests" / "weapon-ammo-capabilities.json")["families"]
         cls.ammo_offers = load(ROOT / "manifests" / "ammo-offer-policy.json")["offers"]
 
-    def test_expected_backbone_is_exact_and_operations_expand_it(self):
-        backbone = [q for q in self.quests if not q.get("QuestName", "").startswith("Field Operation:")]
-        operations = [q for q in self.quests if q.get("QuestName", "").startswith("Field Operation:")]
-        self.assertEqual(len(backbone), 31)
-        self.assertEqual(len({q["_id"] for q in backbone}), 31)
-        self.assertGreaterEqual(len(operations), 1)
-        self.assertEqual(len(self.quest_by_id), len(self.quests))
+    def test_expected_backbone_is_exact(self):
+        self.assertEqual(len(self.quests), 31)
+        self.assertEqual(len(self.quest_by_id), 31)
 
     def test_every_finish_condition_has_player_facing_objective(self):
         for quest in self.quests:
@@ -60,19 +56,6 @@ class QuestSemanticContractTests(unittest.TestCase):
             else:
                 self.fail(f"unknown Arsenal stage naming: {name}")
 
-    def test_field_operations_are_specific_nonrepeatable_eliminations(self):
-        operations = [q for q in self.quests if q.get("QuestName", "").startswith("Field Operation:")]
-        for quest in operations:
-            self.assertEqual(quest.get("type"), "Elimination")
-            self.assertFalse(quest.get("restartable"), quest["_id"])
-            finish = quest["conditions"]["AvailableForFinish"][0]
-            self.assertEqual(finish.get("conditionType"), "CounterCreator")
-            self.assertEqual(finish.get("value"), 1)
-            kills = (finish.get("counter") or {}).get("conditions") or []
-            self.assertEqual(len(kills), 1)
-            self.assertEqual(kills[0].get("target"), "Savage")
-            self.assertTrue(kills[0].get("savageRole"))
-
     def test_munitions_unlocks_match_backend_payoff(self):
         quest_to_offer = {quest_id: offer_id for offer_id, quest_id in self.questassort.items()}
         expected_munitions = set()
@@ -99,13 +82,18 @@ class QuestSemanticContractTests(unittest.TestCase):
     def test_reward_and_text_contracts_do_not_claim_nonexistent_item_unlocks(self):
         unlock_quests = set(self.questassort.values())
         positive_unlock_phrases = (
-            "completion unlocks", "now unlocked", "now available", "is now unlocked",
-            "allotment is now available", "offer is now unlocked",
+            "completion unlocks",
+            "now unlocked",
+            "now available",
+            "is now unlocked",
+            "allotment is now available",
+            "offer is now unlocked",
         )
         for quest in self.quests:
             qid = quest["_id"]
             text = " ".join(self.en.get(f"{qid} {field}", "") for field in ("description", "successMessageText", "completePlayerMessage")).lower()
-            if any(phrase in text for phrase in positive_unlock_phrases):
+            claims_unlock = any(phrase in text for phrase in positive_unlock_phrases)
+            if claims_unlock:
                 self.assertIn(qid, unlock_quests, qid)
 
     def test_special_weapons_negative_unlock_statement_matches_backend(self):

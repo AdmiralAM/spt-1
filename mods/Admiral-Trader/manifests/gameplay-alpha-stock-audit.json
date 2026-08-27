@@ -1,36 +1,24 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "status": "static-contract",
   "product": "Admiral Trader",
-  "scope": "post-gate-a-relationship-stock",
+  "scope": "current-11-offer-gameplay-alpha-assort",
   "expected": {
-    "totalRootOfferCount": 17,
+    "totalRootOfferCount": 11,
     "baselineOfferCount": 4,
-    "relationshipOfferCount": 6,
     "milestoneOfferCount": 7,
+    "relationshipOfferCount": 0,
     "baselineGlobalStockUnits": 25,
     "baselinePlayerBuyLimitUnits": 8,
     "baselineGlobalStockRubValue": 762000,
     "baselinePlayerFullBuyRub": 240000,
-    "relationshipGlobalStockUnits": 17,
-    "relationshipPlayerBuyLimitUnits": 6,
-    "relationshipGlobalStockRubValue": 1295000,
-    "relationshipPlayerFullBuyRub": 547000,
     "clearanceMilestoneRub": 166000,
     "ammoMilestoneOfferCount": 6,
     "ammoUnitsPerReset": 380,
     "ammoFullResetSpendRub": 265000,
     "milestonePlayerFullBuyRub": 431000,
-    "allCurrentOffersPlayerFullBuyRub": 1218000
+    "allCurrentOffersPlayerFullBuyRub": 671000
   },
-  "relationshipOffers": [
-    {"offerId":"ad3000000000000000000001","tpl":"5d0375ff86f774186372f685","name":"Military cable","role":"field-comms-cabling","loyaltyLevel":2,"priceRub":52000,"stockPerReset":4,"buyRestriction":1},
-    {"offerId":"ad3000000000000000000002","tpl":"5d0376a486f7747d8050965c","name":"Military circuit board","role":"field-electronics-repair","loyaltyLevel":2,"priceRub":52000,"stockPerReset":4,"buyRestriction":1},
-    {"offerId":"ad3000000000000000000003","tpl":"5d0377ce86f774186372f689","name":"Iridium military thermal vision module","role":"sensor-maintenance","loyaltyLevel":3,"priceRub":105000,"stockPerReset":3,"buyRestriction":1},
-    {"offerId":"ad3000000000000000000004","tpl":"5d03784a86f774203e7e0c4d","name":"Military gyrotachometer","role":"navigation-instrumentation","loyaltyLevel":3,"priceRub":78000,"stockPerReset":3,"buyRestriction":1},
-    {"offerId":"ad3000000000000000000005","tpl":"5d0378d486f77420421a5ff4","name":"Military power filter","role":"field-power-conditioning","loyaltyLevel":4,"priceRub":70000,"stockPerReset":2,"buyRestriction":1},
-    {"offerId":"ad3000000000000000000006","tpl":"5d03775b86f774203e7e0c4b","name":"Phased array element","role":"advanced-sensor-array","loyaltyLevel":4,"priceRub":190000,"stockPerReset":1,"buyRestriction":1}
-  ],
   "policyHeadroom": {
     "ammoUnitCeiling": 400,
     "ammoUnitHeadroom": 20,
@@ -38,12 +26,12 @@
     "ammoSpendCeilingRub": 300000,
     "ammoSpendHeadroomRub": 35000,
     "ammoSpendUtilization": 0.8833333333,
-    "note": "Relationship stock adds bounded field-electronics convenience only; permanent ammunition headroom is unchanged."
+    "note": "Current ammo capability stock remains legal but unit-count headroom is deliberately small; any future permanent ammo offer or stock increase requires explicit re-budgeting rather than silent expansion."
   },
   "classification": {
     "baseline": "finite, non-quest-gated first-contact specialist logistics with personal buy limits",
-    "relationship": "finite LL2-LL4 specialist field-electronics stock gated by Admiral standing/loyalty; no quest gate and no sales-sum grind",
-    "milestone": "finite authored quest-gated capability stock",
+    "milestone": "finite, authored quest-gated capability stock",
+    "relationship": "allowed by policy but intentionally absent before post-Gate-A implementation",
     "specialWeapons": "sample-only; no permanent trader offer"
   }
 }

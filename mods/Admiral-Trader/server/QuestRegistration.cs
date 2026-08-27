@@ -20,9 +20,10 @@ public sealed class AdmiralQuestRegistration(
     ISptLogger<AdmiralQuestRegistration> logger) : IOnLoad
 {
     private const int ExpectedAccessQuestCount = 10;
+    private const int ExpectedArsenalQuestCount = 21;
     private const int ExpectedArsenalReadinessQuestCount = 7;
     private const int ExpectedArsenalCombatQuestCount = 14;
-    private const int MinimumFieldOperationQuestCount = 1;
+    private const int ExpectedQuestCount = ExpectedAccessQuestCount + ExpectedArsenalQuestCount;
 
     private static readonly string[] RequiredLocaleFields =
     [
@@ -85,10 +86,12 @@ public sealed class AdmiralQuestRegistration(
 
     private static void ValidateQuests(Dictionary<MongoId, Quest> quests)
     {
+        if (quests.Count != ExpectedQuestCount)
+            throw new InvalidDataException($"Expected {ExpectedQuestCount} authored Admiral quests, got {quests.Count}");
+
         int accessCount = 0;
         int arsenalReadinessCount = 0;
         int arsenalCombatCount = 0;
-        int fieldOperationCount = 0;
 
         foreach (var (questId, quest) in quests)
         {
@@ -103,7 +106,6 @@ public sealed class AdmiralQuestRegistration(
 
             QuestCondition finish = finishConditions[0];
             bool isArsenal = quest.QuestName.StartsWith("Arsenal Protocol:", StringComparison.Ordinal);
-            bool isFieldOperation = quest.QuestName.StartsWith("Field Operation:", StringComparison.Ordinal);
 
             if (string.Equals(finish.ConditionType, "FindItem", StringComparison.Ordinal))
             {
@@ -114,28 +116,20 @@ public sealed class AdmiralQuestRegistration(
                         throw new InvalidDataException($"Arsenal Qualification {questId} must be PickUp, got {quest.Type}");
                     arsenalReadinessCount++;
                 }
-                else if (!isFieldOperation)
-                {
-                    accessCount++;
-                }
                 else
                 {
-                    throw new InvalidDataException($"Field operation {questId} must not use FindItem as its sole finish condition");
+                    accessCount++;
                 }
                 continue;
             }
 
             if (string.Equals(finish.ConditionType, "CounterCreator", StringComparison.Ordinal))
             {
+                if (!isArsenal)
+                    throw new InvalidDataException($"Non-Arsenal quest {questId} unexpectedly uses CounterCreator");
                 if (quest.Type != QuestTypeEnum.Elimination)
-                    throw new InvalidDataException($"Combat quest {questId} must be Elimination, got {quest.Type}");
-
-                if (isArsenal)
-                    arsenalCombatCount++;
-                else if (isFieldOperation)
-                    fieldOperationCount++;
-                else
-                    throw new InvalidDataException($"Unclassified quest {questId} unexpectedly uses CounterCreator");
+                    throw new InvalidDataException($"Arsenal combat quest {questId} must be Elimination, got {quest.Type}");
+                arsenalCombatCount++;
                 continue;
             }
 
@@ -145,13 +139,11 @@ public sealed class AdmiralQuestRegistration(
 
         if (accessCount != ExpectedAccessQuestCount
             || arsenalReadinessCount != ExpectedArsenalReadinessQuestCount
-            || arsenalCombatCount != ExpectedArsenalCombatQuestCount
-            || fieldOperationCount < MinimumFieldOperationQuestCount)
+            || arsenalCombatCount != ExpectedArsenalCombatQuestCount)
             throw new InvalidDataException(
                 $"Admiral quest mix drifted: Access={accessCount}/{ExpectedAccessQuestCount}, " +
                 $"ArsenalReadiness={arsenalReadinessCount}/{ExpectedArsenalReadinessQuestCount}, " +
-                $"ArsenalCombat={arsenalCombatCount}/{ExpectedArsenalCombatQuestCount}, " +
-                $"FieldOperations={fieldOperationCount} (minimum {MinimumFieldOperationQuestCount})");
+                $"ArsenalCombat={arsenalCombatCount}/{ExpectedArsenalCombatQuestCount}");
     }
 
     private static void ValidateNonFirItemProof(MongoId questId, QuestCondition finish)
@@ -176,8 +168,8 @@ public sealed class AdmiralQuestRegistration(
 
     private void RegisterQuestLocales(string modPath, Dictionary<MongoId, Quest> quests)
     {
-        Dictionary<string, string> english = LoadLocaleSet(modPath, "en.json", "arsenal-en.json", "operations-en.json");
-        Dictionary<string, string> russian = LoadLocaleSet(modPath, "ru.json", "arsenal-ru.json", "operations-ru.json");
+        Dictionary<string, string> english = LoadLocaleSet(modPath, "en.json", "arsenal-en.json");
+        Dictionary<string, string> russian = LoadLocaleSet(modPath, "ru.json", "arsenal-ru.json");
 
         EnsureLocaleCoverage("en", english, quests);
         EnsureLocaleCoverage("ru", russian, quests);

@@ -3,18 +3,13 @@ import argparse
 import json
 from pathlib import Path
 
-EXPECTED_OFFER_COUNT = 17
-MINIMUM_QUEST_COUNT = 32
-EXPECTED_BACKBONE_QUEST_COUNT = 31
+EXPECTED_OFFER_COUNT = 11
+EXPECTED_QUEST_COUNT = 31
 EXPECTED_QUESTASSORT_STATES = {"started", "success", "fail"}
 EXPECTED_MILESTONE_UNLOCKS = 7
 REQUIRED_LOCALES = {
     "en.json",
     "ru.json",
-    "arsenal-en.json",
-    "arsenal-ru.json",
-    "operations-en.json",
-    "operations-ru.json",
     "gameplay-alpha-en.json",
     "gameplay-alpha-ru.json",
     "objectives-en.json",
@@ -40,9 +35,11 @@ def validate(root: Path, require_enabled: bool) -> None:
     manifests = root / "manifests"
     locales = db / "locales"
     quests = db / "quests"
+
     runtime = load_json(manifests / "runtime-manifest.json")
     assort = load_json(db / "assort.json")
     questassort = load_json(db / "questassort.json")
+
     if runtime.get("targetSptVersion") != "4.1.3":
         fail(f"candidate target drift: {runtime.get('targetSptVersion')} != 4.1.3")
     if require_enabled:
@@ -50,11 +47,13 @@ def validate(root: Path, require_enabled: bool) -> None:
             fail("staged candidate must set registrationEnabled=true")
         if runtime.get("publicationMode") != "test-candidate":
             fail(f"staged candidate publicationMode drift: {runtime.get('publicationMode')}")
+
     items = assort.get("items")
     barter = assort.get("barter_scheme")
     loyalty = assort.get("loyal_level_items")
     if not isinstance(items, list) or not isinstance(barter, dict) or not isinstance(loyalty, dict):
         fail("candidate assort native collections have invalid types")
+
     roots = [row for row in items if isinstance(row, dict) and row.get("parentId") == "hideout"]
     root_ids = [row.get("_id") for row in roots]
     if len(roots) != EXPECTED_OFFER_COUNT:
@@ -64,6 +63,7 @@ def validate(root: Path, require_enabled: bool) -> None:
     root_id_set = set(root_ids)
     if set(barter) != root_id_set or set(loyalty) != root_id_set:
         fail("candidate assort root/barter/loyalty key sets do not match exactly")
+
     if not isinstance(questassort, dict) or set(questassort) != EXPECTED_QUESTASSORT_STATES:
         fail(f"candidate questassort must use exact native lowercase states {sorted(EXPECTED_QUESTASSORT_STATES)}")
     for state in EXPECTED_QUESTASSORT_STATES:
@@ -75,40 +75,33 @@ def validate(root: Path, require_enabled: bool) -> None:
         fail(f"candidate must contain exactly {EXPECTED_MILESTONE_UNLOCKS} milestone unlock mappings; found {len(questassort['success'])}")
     if not set(questassort["success"]).issubset(root_id_set):
         fail("candidate questassort.success references a non-offer ID")
+
     quest_files = sorted(quests.glob("*.json")) if quests.is_dir() else []
-    if len(quest_files) < MINIMUM_QUEST_COUNT:
-        fail(f"candidate must contain at least {MINIMUM_QUEST_COUNT} current quest templates; found {len(quest_files)}")
+    if len(quest_files) != EXPECTED_QUEST_COUNT:
+        fail(f"candidate must contain exactly {EXPECTED_QUEST_COUNT} current quest templates; found {len(quest_files)}")
     quest_ids = set()
-    field_operation_count = 0
     for path in quest_files:
         quest = load_json(path)
         quest_id = str(quest.get("_id") or "")
         if not quest_id or quest_id in quest_ids:
             fail(f"candidate quest template has missing/duplicate _id: {path}")
         quest_ids.add(quest_id)
-        if str(quest.get("QuestName") or "").startswith("Field Operation:"):
-            field_operation_count += 1
-    if field_operation_count < 1:
-        fail("candidate must contain at least one materialized authored Field Operation")
-    if len(quest_files) - field_operation_count < EXPECTED_BACKBONE_QUEST_COUNT:
-        fail(
-            f"candidate lost stable quest backbone: non-operation quests={len(quest_files) - field_operation_count}, "
-            f"expected at least {EXPECTED_BACKBONE_QUEST_COUNT}"
-        )
     missing_unlock_quests = sorted(set(map(str, questassort["success"].values())) - quest_ids)
     if missing_unlock_quests:
         fail(f"candidate milestone unlocks reference missing quest templates: {missing_unlock_quests}")
+
     missing_locales = sorted(name for name in REQUIRED_LOCALES if not (locales / name).is_file())
     if missing_locales:
-        fail(f"candidate is missing required EN/RU locale files: {missing_locales}")
+        fail(f"candidate is missing required EN/RU Gameplay Alpha/objective locale files: {missing_locales}")
     for name in REQUIRED_LOCALES:
         data = load_json(locales / name)
         if not isinstance(data, dict) or not data:
             fail(f"candidate locale is empty or not an object: {name}")
+
     print(
         "Admiral Trader candidate tree OK: "
         f"target=4.1.3 offers={EXPECTED_OFFER_COUNT} milestoneUnlocks={EXPECTED_MILESTONE_UNLOCKS} "
-        f"quests={len(quest_files)} fieldOperations={field_operation_count} locales={len(REQUIRED_LOCALES)} enabled={require_enabled}"
+        f"quests={EXPECTED_QUEST_COUNT} locales={len(REQUIRED_LOCALES)} enabled={require_enabled}"
     )
 
 
