@@ -31,5 +31,10 @@
     <Compile Include="..\src\PickupSlotPatches.cs" Link="PickupSlotPatches.cs" />
     <Compile Include="..\src\PaymentSlotPatches.cs" Link="PaymentSlotPatches.cs" />
     <Compile Include="..\src\EquipmentBuildValidationPatches.cs" Link="EquipmentBuildValidationPatches.cs" />
+    <Compile Include="..\server\PersistentIdentityManifest.cs" Link="PersistentIdentityManifest.cs" />
+    <Compile Include="..\server\ProfileCleanupPolicy.cs" Link="ProfileCleanupPolicy.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\profile-safety\persistent-identities.json" Link="persistent-identities.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
