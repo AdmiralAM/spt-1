@@ -19,6 +19,8 @@ namespace SPTBeltArmbandInventory
         RuntimeCustomHeadBandTypePatches runtimeHeadBandTypePatches;
         DedicatedEquipmentSlotPatches dedicatedEquipmentSlotPatches;
         DedicatedSlotPresentationPatches dedicatedSlotPresentationPatches;
+        DedicatedSlotLocalizationPatches dedicatedSlotLocalizationPatches;
+        HeadwearCompatibilityPatches headwearCompatibilityPatches;
         BeltContainersPanelProjectionPatches beltContainersPanelProjectionPatches;
         GridWindowSizingPatches gridWindowSizingPatches;
         LootPriorityPatches lootPatches;
@@ -91,6 +93,22 @@ namespace SPTBeltArmbandInventory
                 dedicatedSlotPresentationPatches.Dispose();
                 dedicatedSlotPresentationPatches = null;
                 Logger.LogWarning("Dedicated Belt/HeadBand equipment data remains active, but visible captions/HeadBand placement could not bind to SlotView.Show for this session.");
+            }
+
+            dedicatedSlotLocalizationPatches = new DedicatedSlotLocalizationPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!dedicatedSlotLocalizationPatches.TryInstall())
+            {
+                dedicatedSlotLocalizationPatches.Dispose();
+                dedicatedSlotLocalizationPatches = null;
+                Logger.LogWarning("Dedicated wearable slots remain active, but Belt/HeadBand captions may use the English fallback for this session.");
+            }
+
+            headwearCompatibilityPatches = new HeadwearCompatibilityPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!headwearCompatibilityPatches.TryInstall())
+            {
+                headwearCompatibilityPatches.Dispose();
+                headwearCompatibilityPatches = null;
+                Logger.LogWarning("Dedicated HeadBand remains active, but vanilla Headwear may still show a misleading compatibility highlight for Emergency HeadBand.");
             }
 
             beltContainersPanelProjectionPatches = new BeltContainersPanelProjectionPatches(Logger.LogInfo, Logger.LogWarning);
@@ -265,6 +283,10 @@ namespace SPTBeltArmbandInventory
             gridWindowSizingPatches = null;
             if (beltContainersPanelProjectionPatches != null) beltContainersPanelProjectionPatches.Dispose();
             beltContainersPanelProjectionPatches = null;
+            if (headwearCompatibilityPatches != null) headwearCompatibilityPatches.Dispose();
+            headwearCompatibilityPatches = null;
+            if (dedicatedSlotLocalizationPatches != null) dedicatedSlotLocalizationPatches.Dispose();
+            dedicatedSlotLocalizationPatches = null;
             if (dedicatedSlotPresentationPatches != null) dedicatedSlotPresentationPatches.Dispose();
             dedicatedSlotPresentationPatches = null;
             if (dedicatedEquipmentSlotPatches != null) dedicatedEquipmentSlotPatches.Dispose();
