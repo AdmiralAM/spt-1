@@ -11,8 +11,8 @@ static class Phase23SemanticColorTests
 
         Expect(renderer.Contains("richText = false") && renderer.Contains("richText = true") && renderer.Contains("cachedSemanticLabel"),
             "semantic progress uses a dedicated rich-text style while ordinary labels remain plain", ref assertions);
-        Expect(renderer.Contains("ApplySemanticProgressColor(line, semantic)"),
-            "semantic formatting is applied only at render time", ref assertions);
+        Expect(renderer.Contains("GetCachedSemanticLine(line, semantic)") && renderer.Contains("ApplySemanticProgressColor(line, color)"),
+            "semantic formatting remains render-time presentation but steady-state repaint reuses its cached rendered string", ref assertions);
         Expect(renderer.Contains("TryReadNextRatio") && renderer.Contains("while (TryReadNextRatio"),
             "semantic state scans every progress ratio instead of trusting only the first", ref assertions);
         Expect(renderer.Contains("if (allComplete) return settings.CompleteColor") &&

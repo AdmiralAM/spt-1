@@ -1,0 +1,37 @@
+{
+  "QuestName": "Access Protocol: Customs",
+  "_id": "cba3374f11375c4e7eea9efe",
+  "acceptPlayerMessage": "cba3374f11375c4e7eea9efe acceptPlayerMessage",
+  "acceptanceAndFinishingSource": "eft",
+  "canShowNotificationsInGame": true,
+  "changeQuestMessageText": "cba3374f11375c4e7eea9efe changeQuestMessageText",
+  "completePlayerMessage": "cba3374f11375c4e7eea9efe completePlayerMessage",
+  "conditions": {
+    "AvailableForFinish": [
+      {
+        "id": "487eb052e8d42c0af1d6da22",
+        "conditionType": "FindItem",
+        "dogtagLevel": 0,
+        "dynamicLocale": false,
+        "globalQuestCounterId": "",
+        "index": 0,
+        "isEncoded": false,
+        "maxDurability": 100,
+        "minDurability": 0,
+        "onlyFoundInRaid": false,
+        "parentId": "",
+        "target": ["5448ba0b4bdc2d02308b456c","5672c92d4bdc2d180f8b4567","5780cda02459777b272ede61","5780cf692459777de4559321","5780cf722459777a5108b9a1","5780cf7f2459777de4559322"],
+        "value": 2,
+        "visibilityConditions": []
+      }
+    ],
+    "AvailableForStart": [
+      {"id":"9ea184fb3d022ae927670cba","conditionType":"Level","compareMethod":">=","value":10,"dynamicLocale":false,"index":0,"parentId":"","globalQuestCounterId":""},
+      {"id":"0fe7f189ed19735d3e3e3aa8","conditionType":"Quest","dynamicLocale":false,"globalQuestCounterId":"","index":1,"parentId":"","status":[4],"target":"5d404ebd654de4efecef71d2"}
+    ],
+    "Started": [], "Success": [], "Fail": []
+  },
+  "declinePlayerMessage":"cba3374f11375c4e7eea9efe declinePlayerMessage","description":"cba3374f11375c4e7eea9efe description","failMessageText":"cba3374f11375c4e7eea9efe failMessageText","image":"/files/quest/icon/5a29222486f77456f50d09e7.jpg","instantComplete":false,"isKey":false,"location":"bigmap","name":"cba3374f11375c4e7eea9efe name","note":"cba3374f11375c4e7eea9efe note","restartable":false,
+  "rewards":{"Fail":[],"Started":[],"Success":[{"id":"e6a8b099679972b0de7d3c27","index":0,"type":"Experience","value":6500},{"id":"d6a41f215b602c57143631a4","index":1,"type":"TraderStanding","target":"d5c27bb3169f8dfbc13f6b69","value":0.02},{"id":"80d81a12a430f4ed631c64ca","index":2,"type":"Item","value":25000,"target":"d20647e1e8e5609ac97bc265","items":[{"_id":"d20647e1e8e5609ac97bc265","_tpl":"5449016a4bdc2d6f028b456f","upd":{"StackObjectsCount":25000}}]}]},
+  "secretQuest":false,"side":"Pmc","startedMessageText":"cba3374f11375c4e7eea9efe startedMessageText","successMessageText":"cba3374f11375c4e7eea9efe successMessageText","traderId":"d5c27bb3169f8dfbc13f6b69","type":"PickUp"
+}

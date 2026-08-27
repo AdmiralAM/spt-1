@@ -1,0 +1,34 @@
+{
+  "tintStartValue": 10000,
+  "lightGreenMaxValue": 25000,
+  "greenMaxValue": 50000,
+  "navyMaxValue": 75000,
+  "violetMaxValue": 100000,
+  "redMaxValue": 250000,
+
+  "ammoTintStartPen": 10,
+  "ammoLightGreenMaxPen": 20,
+  "ammoNavyMaxPen": 40,
+  "ammoVioletMaxPen": 50,
+  "ammoRedMaxPen": 70,
+
+  "keyBadMaxValue": 10000,
+  "keyPoorMaxValue": 20000,
+  "keyFairMaxValue": 30000,
+  "keyGoodMaxValue": 50000,
+  "keyVeryGoodMaxValue": 75000,
+  "keyBadColor": "#404040",
+  "keyPoorColor": "#a3a3a3",
+  "keyFairColor": "#0c3b08",
+  "keyGoodColor": "#08083b",
+  "keyVeryGoodColor": "#590b5e",
+  "keyExceptionalColor": "#5e470b",
+  "keyFleaBannedColor": "#660415",
+
+  "lightGreenColor": "#526B3F",
+  "greenColor": "#294F31",
+  "navyColor": "#253552",
+  "violetColor": "#4A3854",
+  "redColor": "#5A2C31",
+  "goldColor": "#5C4825"
+}

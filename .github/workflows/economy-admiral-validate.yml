@@ -1,0 +1,224 @@
+name: Economy Admiral Validate
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/economy-admiral-*'
+      - 'chore/economy-admiral-*'
+    paths:
+      - 'mods/Economy-Admiral/**'
+      - '.github/workflows/economy-admiral-validate.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mods/Economy-Admiral/**'
+      - '.github/workflows/economy-admiral-validate.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: economy-admiral-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contract:
+    name: Economy Admiral module contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate committed contract
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          root = Path('mods/Economy-Admiral')
+          required = [
+              root / 'README.md', root / 'RUNTIME_TEST.md', root / 'config/config.json',
+              root / 'tools/Validate-Runtime.ps1', root / 'tools/Test-Validate-Runtime.ps1',
+              root / 'tools/Validate-Enforce.ps1', root / 'tools/Test-Validate-Enforce.ps1',
+              root / 'server/Economy-Admiral.csproj', root / 'server/EconomyMod.cs',
+              root / 'server/EconomyConfig.cs', root / 'server/EconomyConfigValidator.cs',
+              root / 'server/QuestAnalysisService.cs', root / 'server/QuestProvenanceDeltaService.cs',
+              root / 'server/EnforcementPlanService.cs', root / 'server/RuntimeEvidenceService.cs',
+              root / 'server/NumericRewardTransactionCore.cs', root / 'server/ItemRewardStackPlanner.cs',
+              root / 'tests/EnforcementSmoke/EnforcementSmoke.csproj', root / 'tests/EnforcementSmoke/Program.cs',
+          ]
+          missing = [str(p) for p in required if not p.is_file()]
+          assert not missing, missing
+
+          retired = [
+              root / 'server/PristineReportCorrectionService.cs',
+              root / 'server/BaselineProvenanceCorrectionService.cs',
+              root / 'server/TypedQuestItemAccountingService.cs',
+              root / 'server/PrimaryAuditParityService.cs',
+              root / 'server/CompositePolicyEvaluationService.cs',
+              root / 'server/TargetProposalService.cs',
+              root / 'tools/Validate-PrimaryParity.ps1',
+              root / 'tools/Test-Validate-PrimaryParity.ps1',
+          ]
+          assert not [str(p) for p in retired if p.exists()], 'retired runtime/proof files still present'
+
+          config = json.loads((root / 'config/config.json').read_text(encoding='utf-8'))
+          assert config['mode'] in {'Off', 'Audit', 'Enforce'}
+          assert config['preset'] in {'Easy', 'Normal', 'Hard', 'Custom'}
+          assert config['repeatedRaidLootDecay'] is False
+          assert config['enableItemRewardStackNormalization'] is False
+          assert isinstance(config['questRewardOverrides'], dict)
+
+          mod = (root / 'server/EconomyMod.cs').read_text(encoding='utf-8')
+          for text in [
+              'OnLoadOrder.PostLoad + 1000', 'config.Mode == EconomyMode.Off',
+              'var questProvenance = await questProvenanceDeltaService.RunAsync',
+              'var enforcement = await enforcementPlanService.RunAsync',
+              'runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken)',
+          ]:
+              assert text in mod, text
+          for forbidden in [
+              'PristineReportCorrectionService','PrimaryAuditParityService','CompositePolicyEvaluationService','TargetProposalService',
+              'AdmiralTraderRuntimeAdapterService','SourcePressureRuntimeReportService'
+          ]:
+              assert forbidden not in mod, forbidden
+          assert mod.index('config.Mode == EconomyMode.Off') < mod.index('runtimeEvidenceService.CaptureBefore()')
+          assert mod.index('questAnalysisService.RunAsync') < mod.index('rewardUtilityAuditService.RunAsync')
+          assert mod.index('questAnalysisService.RunAsync') < mod.index('questConstraintAuditService.RunAsync')
+
+          for service_name in ['EconomyAuditService.cs', 'QuestAnalysisService.cs', 'EnforcementPlanService.cs']:
+              text = (root / 'server' / service_name).read_text(encoding='utf-8')
+              assert 'EconomyRuntimeConfigService' in text, service_name
+              assert 'LoadConfigAsync' not in text, service_name
+              assert 'Path.Combine(modPath, "config", "config.json")' not in text, service_name
+
+          progression = (root / 'server/QuestProgressionGraphService.cs').read_text(encoding='utf-8')
+          assert 'VanillaBaselineSnapshot' in progression
+          assert 'PristineStartupSnapshot' in progression
+
+          for service_name in ['RewardUtilityAuditService.cs', 'QuestConstraintAuditService.cs']:
+              text = (root / 'server' / service_name).read_text(encoding='utf-8')
+              assert 'VanillaBaselineSnapshot' in text, service_name
+              assert 'PristineStartupSnapshot' in text, service_name
+              assert 'QuestAnalysisReport analysis' in text, service_name
+              assert 'SourceAnalysisSchemaVersion = analysis.SchemaVersion' in text, service_name
+              assert 'TemplateTable templates' not in text, f'{service_name} regressed to a direct final-DB quest dependency'
+
+          analysis = (root / 'server/QuestAnalysisService.cs').read_text(encoding='utf-8')
+          assert 'VanillaBaselineSnapshot vanillaBaseline' in analysis
+          assert 'vanillaBaseline.QuestIds.Contains' in analysis
+          assert 'VanillaTraderIds' not in analysis
+          for text in ['OutlierFlagsAffectEnforcement = true','HIGH_XP_LOW_DEPTH','RESTARTABLE_HIGH_XP','HIGH_STANDING_LOW_DEPTH','MedianXp','MedianAbsoluteStanding']:
+              assert text in analysis, text
+
+          delta = (root / 'server/QuestProvenanceDeltaService.cs').read_text(encoding='utf-8')
+          for text in ['ModAdded','PristineModified','PristineUnchanged','ChangedDimensions','SuccessItemHandbookValue']:
+              assert text in delta, text
+
+          plan = (root / 'server/EnforcementPlanService.cs').read_text(encoding='utf-8')
+          for text in [
+              'SchemaVersion = itemStackEnabled ? 6 : 5','PresetSingleStackItemBudgetCapV1','MutationEligibilityPolicyVersion = itemStackEnabled ? 4 : 3',
+              'config.Mode == EconomyMode.Enforce','var requests = BuildTransactionRequests(proposals, handbookPrices);','NumericRewardTransactionCore.Execute(requests)',
+              'new NumericRewardSlot(','value => reward.Value = value','NumericRewardTransactionCore.NeedsMutation',
+              'RewardType.Experience','RewardType.TraderStanding','PolicyEligibleModAdded','PolicyEligibleModifiedPristine',
+              'ProtectedPristine','ProtectedUnchangedRewardDimensions','BlockedUnknownProvenance',
+              'changedDimensions.Contains("Experience"','changedDimensions.Contains("TraderStanding"','changedDimensions.Contains("SuccessItemHandbookValue"',
+              'ItemRewardStackPlanner.PlanWithinBundle','GetSingleAutomaticMutableSuccessItemRewardRecord','CalculateImmutableSuccessItemHandbookValue',
+              'item.Upd.StackObjectsCount = value','reward.Value = value','ReadSynchronizedItemQuantity','Item Reward.Value/StackObjectsCount mismatch','ItemRewardStackCount',
+              'ManualExactQuestRewardTargetV1','QuestRewardOverrides','PlannedMutationCount','TransactionCommitted','TransactionRolledBack',
+              'Before','Current','Target','After',
+          ]:
+              assert text in plan, text
+          assert 'dimensions.Add("ItemRewardBudget")' not in plan
+          assert 'ApplyMutations = false' not in plan
+          assert 'MutationCount = 0' not in plan
+
+          transaction = (root / 'server/NumericRewardTransactionCore.cs').read_text(encoding='utf-8')
+          for text in ['Journal before first write','Rollback(journal)','VerifyRollback(journal)','NeedsMutation','Experience','TraderStanding','ItemRewardStackCount','exactly one writable reward-item stack']:
+              assert text in transaction, text
+          planner = (root / 'server/ItemRewardStackPlanner.cs').read_text(encoding='utf-8')
+          for text in ['PlanWithinBundle','ImmutableRewardsConsumeBudget','BudgetBelowOneItemFloor','AlreadyWithinBudget','NonIntegralStackCount','SingleItemCannotBeReducedWithoutStructuralRemoval']:
+              assert text in planner, text
+          transaction_smoke = (root / 'tests/EnforcementSmoke/Program.cs').read_text(encoding='utf-8')
+          for text in ['successful transaction must commit','second automatic pass must be idempotent','synthetic setter failure','must roll back whole batch','earlier standing mutation must be restored','single known-price stack above budget must be eligible','whole-bundle planner must reserve immutable reward value','planner must block cases requiring item removal/template replacement','update stack count and Reward.Value together','restore both item quantity representations']:
+              assert text in transaction_smoke, text
+
+          evidence = (root / 'server/RuntimeEvidenceService.cs').read_text(encoding='utf-8')
+          for text in ['SchemaVersion = 5','DatabaseChangeExpected','EnforcementEvidenceValid','ValidateEnforcementEvidence','config.Mode != EconomyMode.Enforce','enforcement.MutationCount == 0','enforcement.TransactionCommitted && !databaseUnchanged','allowedDimensions','ItemRewardStackCount','SuccessItemHandbookValue','candidate.PristineUntouched','DeclaredMutationCount = enforcement.MutationCount']:
+              assert text in evidence, text
+          assert 'economy-admiral-composite-candidates.json' not in evidence
+          assert 'economy-admiral-target-proposals.json' not in evidence
+
+          audit_validator = (root / 'tools/Validate-Runtime.ps1').read_text(encoding='utf-8')
+          for text in ['validator requires mode=Audit','DatabaseUnchangedAcrossPipeline','PlannedMutationCount','PristineUnchanged candidate is not protected','7/7 core reports are required']:
+              assert text in audit_validator, text
+          enforce_validator = (root / 'tools/Validate-Enforce.ps1').read_text(encoding='utf-8')
+          for text in ['validator requires mode=Enforce','Alpha requires at least one applied mutation','After != Target','PristineUnchanged candidate was mutated','fingerprint changed','ItemRewardStackCount','PresetSingleStackItemBudgetCapV1','7/7 core reports are required']:
+              assert text in enforce_validator, text
+
+          config_source = (root / 'server/EconomyConfig.cs').read_text(encoding='utf-8')
+          for text in ['QuestRewardOverrides','AllowAutomaticMutation','ExperienceTarget','TraderStandingTarget','EnableItemRewardStackNormalization']:
+              assert text in config_source, text
+
+          print('Economy Admiral Enforce + seven-report single-analysis + whole-bundle item wiring contract OK')
+
+  server:
+    name: Economy Admiral .NET 10 server build
+    needs: [contract]
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Validate runtime helper syntax
+        shell: pwsh
+        run: |
+          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-Runtime.ps1 -Raw))
+          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1 -Raw))
+          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-Enforce.ps1 -Raw))
+          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-Enforce.ps1 -Raw))
+      - name: Smoke-test Audit runtime contract
+        shell: pwsh
+        run: '& mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1'
+      - name: Smoke-test Enforce runtime contract
+        shell: pwsh
+        run: '& mods/Economy-Admiral/tools/Test-Validate-Enforce.ps1'
+      - name: Smoke-test config validation
+        shell: pwsh
+        run: dotnet run --project mods/Economy-Admiral/tests/ConfigValidationSmoke/ConfigValidationSmoke.csproj -c Release --nologo
+      - name: Build server
+        shell: pwsh
+        run: dotnet build mods/Economy-Admiral/server/Economy-Admiral.csproj -c Release --nologo
+      - name: Smoke-test Enforce transaction commit, rollback, idempotence, and bounded item planning
+        shell: pwsh
+        run: dotnet run --project mods/Economy-Admiral/tests/EnforcementSmoke/EnforcementSmoke.csproj -c Release --nologo
+      - name: Smoke-test source-pressure integration regression
+        shell: pwsh
+        run: dotnet run --project mods/Economy-Admiral/tests/SourcePressureSmoke/SourcePressureSmoke.csproj -c Release --nologo
+      - name: Stage candidate
+        shell: pwsh
+        env:
+          EA_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          New-Item -ItemType Directory -Force -Path 'build-output/Economy Admiral/config' | Out-Null
+          Copy-Item mods/Economy-Admiral/server/bin/Release/net10.0/Economy-Admiral.dll 'build-output/Economy Admiral/Economy-Admiral.dll'
+          Copy-Item mods/Economy-Admiral/config/config.json 'build-output/Economy Admiral/config/config.json'
+          Copy-Item mods/Economy-Admiral/README.md 'build-output/Economy Admiral/README.md'
+          Copy-Item mods/Economy-Admiral/RUNTIME_TEST.md 'build-output/Economy Admiral/RUNTIME_TEST.md'
+          Copy-Item mods/Economy-Admiral/tools/Validate-Runtime.ps1 'build-output/Economy Admiral/Validate-Runtime.ps1'
+          Copy-Item mods/Economy-Admiral/tools/Validate-Enforce.ps1 'build-output/Economy Admiral/Validate-Enforce.ps1'
+          [ordered]@{
+            Product = 'Economy Admiral'
+            ProductLine = 'Enforce Alpha'
+            HeadSha = $env:EA_HEAD_SHA
+            WorkflowRunId = $env:GITHUB_RUN_ID
+            ArtifactName = 'economy-admiral-candidate'
+            CompilePackageVersion = '4.1.2'
+            TargetRuntime = 'SPT 4.1.3'
+          } | ConvertTo-Json | Set-Content 'build-output/Economy Admiral/BUILD_INFO.json' -Encoding UTF8
+      - uses: actions/upload-artifact@v4
+        with:
+          name: economy-admiral-candidate
+          path: 'build-output/Economy Admiral'
+          if-no-files-found: error
+          retention-days: 14

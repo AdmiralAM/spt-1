@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
 
@@ -11,11 +12,15 @@ namespace SPTItemIntelligence
         const long PriceGreen = 50000;
         const long PriceRed = 100000;
         const long PriceGold = 250000;
+        const int RenderCacheLimit = 1024;
 
         static GUISkin cachedSkin;
         static GUIStyle cachedLabel;
         static GUIStyle cachedSemanticLabel;
         static readonly GUIContent measureContent = new GUIContent();
+        static readonly Dictionary<string, string> displayLineCache = new Dictionary<string, string>(StringComparer.Ordinal);
+        static readonly Dictionary<string, string> priceRenderCache = new Dictionary<string, string>(StringComparer.Ordinal);
+        static readonly Dictionary<SemanticLineKey, string> semanticRenderCache = new Dictionary<SemanticLineKey, string>();
         static string[] lineBuffer = Array.Empty<string>();
         static float[] rowHeightBuffer = Array.Empty<float>();
 
@@ -96,8 +101,8 @@ namespace SPTItemIntelligence
                     GUIStyle activeStyle = hasSemanticProgress || hasPrice ? semanticLabel : label;
                     activeStyle.normal.textColor = Color.white;
                     string rendered = hasSemanticProgress
-                        ? ApplySemanticProgressColor(line, semantic)
-                        : hasPrice ? ApplyPriceAmountColor(line, ResolvePriceColor(price)) : line;
+                        ? GetCachedSemanticLine(line, semantic)
+                        : hasPrice ? GetCachedPriceLine(line, price) : line;
                     GUI.Label(new Rect(x + horizontalPadding, yCursor, textWidth, rowHeightBuffer[i]), rendered, activeStyle);
                 }
                 yCursor += rowHeightBuffer[i] + rowGap;
@@ -147,7 +152,13 @@ namespace SPTItemIntelligence
             if (string.IsNullOrEmpty(line) || mode == ItemTooltipMode.Full) return line ?? string.Empty;
             const string firSeparator = " · FIR";
             int fir = line.IndexOf(firSeparator, StringComparison.OrdinalIgnoreCase);
-            return fir >= 0 ? line.Substring(0, fir) : line;
+            if (fir < 0) return line;
+
+            string cached;
+            if (displayLineCache.TryGetValue(line, out cached)) return cached;
+            cached = line.Substring(0, fir);
+            AddBounded(displayLineCache, line, cached);
+            return cached;
         }
 
         internal static Color ResolveColor(string line, ItemIntelligenceUiSettings settings)
@@ -176,6 +187,38 @@ namespace SPTItemIntelligence
             if (value >= PriceRed) return new Color(1f, 0.32f, 0.28f, 1f);
             if (value >= PriceGreen) return new Color(0.38f, 0.90f, 0.42f, 1f);
             return Color.white;
+        }
+
+        static string GetCachedPriceLine(string line, long value)
+        {
+            string cached;
+            if (priceRenderCache.TryGetValue(line, out cached)) return cached;
+            cached = ApplyPriceAmountColor(line, ResolvePriceColor(value));
+            AddBounded(priceRenderCache, line, cached);
+            return cached;
+        }
+
+        static string GetCachedSemanticLine(string line, Color color)
+        {
+            SemanticLineKey key = new SemanticLineKey(line, PackColor(color));
+            string cached;
+            if (semanticRenderCache.TryGetValue(key, out cached)) return cached;
+            cached = ApplySemanticProgressColor(line, color);
+            if (semanticRenderCache.Count >= RenderCacheLimit) semanticRenderCache.Clear();
+            semanticRenderCache[key] = cached;
+            return cached;
+        }
+
+        static void AddBounded(Dictionary<string, string> cache, string key, string value)
+        {
+            if (cache.Count >= RenderCacheLimit) cache.Clear();
+            cache[key] = value;
+        }
+
+        static uint PackColor(Color color)
+        {
+            Color32 packed = color;
+            return ((uint)packed.r << 24) | ((uint)packed.g << 16) | ((uint)packed.b << 8) | packed.a;
         }
 
         internal static string ApplyPriceAmountColor(string line, Color color)
@@ -238,7 +281,8 @@ namespace SPTItemIntelligence
             }
             result.Append(line, cursor, line.Length - cursor);
             string colored = result.ToString();
-            if (colored.EndsWith("✓", StringComparison.Ordinal)) colored = colored.Substring(0, colored.Length - 1) + "<color=#" + hex + ">✓</color>";
+            if (colored.EndsWith("✓", StringComparison.Ordinal))
+                colored = colored.Substring(0, colored.Length - 1) + "<color=#" + hex + ">✓</color>";
             return colored;
         }
 
@@ -302,6 +346,36 @@ namespace SPTItemIntelligence
                 return true;
             }
             return false;
+        }
+
+        readonly struct SemanticLineKey : IEquatable<SemanticLineKey>
+        {
+            readonly string line;
+            readonly uint color;
+
+            public SemanticLineKey(string line, uint color)
+            {
+                this.line = line ?? string.Empty;
+                this.color = color;
+            }
+
+            public bool Equals(SemanticLineKey other)
+            {
+                return color == other.color && string.Equals(line, other.line, StringComparison.Ordinal);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is SemanticLineKey && Equals((SemanticLineKey)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return ((line == null ? 0 : StringComparer.Ordinal.GetHashCode(line)) * 397) ^ (int)color;
+                }
+            }
         }
     }
 }

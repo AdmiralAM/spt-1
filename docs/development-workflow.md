@@ -20,6 +20,20 @@ Before changing code or repository infrastructure:
 4. create a dedicated short-lived branch;
 5. identify the module-specific validation path before changing shared CI.
 
+## Module identity and versioning
+
+Every maintained module has one explicit **official product name** and one authoritative semantic version (`MAJOR.MINOR.PATCH`) for each independently shipped component.
+
+- The module README must state the official product name and current version near the top.
+- Project/package metadata (`<Version>`, assembly/file version, server metadata where applicable) is the authoritative machine-readable version and must agree with the README.
+- Client/server components that are one release unit use the same module version. If components intentionally have different version lines, as with Tactical HUD client/server, the README and root module index must state both explicitly.
+- A leading `v` is presentation syntax for release/tag labels (`v1.0.0`); it is not part of the semantic version stored in project/package metadata.
+- Product names do not contain a version unless a compatibility-constrained artifact filename deliberately does so. If an assembly/artifact name embeds a version, that embedded value must match project metadata in the same commit.
+- Directory names, GUIDs, namespaces, endpoints, runtime branch names, upstream names, and other established technical identifiers may remain unchanged when renaming them would create migration/compatibility risk. Such retained identifiers must be documented as compatibility/provenance identifiers and must not be presented as the current product name.
+- Any PR that changes a product name or version must update the module README, root module index, affected manifests/build metadata, workflow/package naming, and durable current-state docs in the same integration slice.
+
+Do not invent a new version merely to make documentation look current. Version changes represent actual release/version decisions owned by the module workstream.
+
 ## Issues
 
 Use an Issue for a meaningful bug, feature, compatibility problem, validation gap, maintenance backlog, or research target. Record the objective, evidence/current state, scope/non-goals, acceptance or stop criteria, and links to resulting PRs/follow-ups.
@@ -38,6 +52,7 @@ Recommended prefixes:
 - `fix/` — corrective work;
 - `diagnostic/` — temporary evidence/instrumentation;
 - `perf/` — measured performance work;
+- `research/` — bounded research/prototype work that may preserve unique evidence but is still temporary;
 - `chore/` — repository/CI/documentation maintenance;
 - `archive/` — intentional documented historical reserve only.
 
@@ -65,6 +80,39 @@ A PR can remain open while work/validation continues. Its existence does not imp
 ## Validation and deliberate integration
 
 Automated tests/builds prove only what they execute. SPT/EFT runtime behavior is not considered proven when runtime evidence is required but absent.
+
+### Autonomous work packages
+
+A work package is the user-facing unit of authorization and completion. It contains multiple ordered gates under one product objective. Agents may not choose a two-minute internal action and relabel it as the package.
+
+The normal package is:
+
+`inspect authority -> implement gate 1 -> validate/fix -> implement gate 2 -> validate/fix -> complete remaining recorded gates -> package -> integrate/clean up when authorized -> final handoff`
+
+The PR/Issue records the complete ordered gate list before work begins. Passing one gate automatically activates the next. Intermediate commits, CI runs, documentation updates and PR maintenance preserve evidence; they are not separate user handoffs and do not require another `continue` message.
+
+End the package only when its final acceptance condition is met, a real external decision/permission is required, or a physical runtime boundary is genuinely unavoidable. A docs-only cleanup discovered during product implementation stays internal to the package and must not replace the next product gate.
+
+### Product roadmaps and continuation after candidates
+
+Each active module keeps one durable roadmap above its individual work packages:
+
+`current product state -> active package -> runtime gate if required -> successor package -> release candidate -> stable release`
+
+The roadmap records final stable acceptance, ordered phases, the active phase, and PASS/FAIL transitions. The current PR must link that roadmap and name its successor package. This prevents an agent from treating a green artifact as the final version or from asking the user to decide a next step that was already planned.
+
+Artifact classes have distinct meanings:
+
+- `diagnostic` proves one unknown boundary and is never a release;
+- `runtime-candidate` tests a bounded functional package;
+- `release-candidate` has completed planned functionality and awaits final regression/runtime acceptance;
+- `release` satisfies the roadmap's stable criteria and deliberate publication requirements.
+
+When runtime evidence arrives, consume it as part of the active roadmap. PASS activates the recorded successor package automatically. FAIL reopens the same package for evidence-driven remediation. Neither result is a reason to emit a status-only response and wait for `next step`. Creating the next branch/PR, updating the Issue, fixing code, validating, packaging and cleanup continue autonomously when already covered by the roadmap.
+
+Only stop between phases when the roadmap names a real product decision, external dependency, missing permission, or unavoidable physical gate. Do not use a normal branch/PR boundary as a conversational stop.
+
+An unfinished module must not silently fall into `parked` state. `Parked` requires an explicit user pause or a roadmap-level product decision hold. A dependency-gated future package is `queued`; it does not become the current authority and does not block unrelated active phases. Complete all unblocked preparation and continue the current roadmap package. When a package completes, select the next eligible recorded successor automatically.
 
 Merge into `main` only when there is a concrete integration need and the task has reached its required acceptance/validation state. Do not merge merely to preserve progress, obtain a build artifact, expose work to another process, or clean up a branch.
 

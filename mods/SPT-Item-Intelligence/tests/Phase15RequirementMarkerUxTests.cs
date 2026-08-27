@@ -25,8 +25,10 @@ static class Phase15RequirementMarkerUxTests
         for (int i = 0; i < text.GetLineCount(ItemTooltipMode.Detailed); i++)
             Expect(text.GetLine(ItemTooltipMode.Detailed, i).IndexOf("21,000 ₽/slot", StringComparison.OrdinalIgnoreCase) < 0, "alternate value is absent from detailed mode", ref assertions);
 
-        Expect(text.GetLineCount(ItemTooltipMode.Full) == 7, "full mode adds the alternate value while keeping legacy status and template id hidden", ref assertions);
-        Expect(text.GetLine(ItemTooltipMode.Full, 1) == "21,000 ₽/slot", "full mode exposes the secondary value row", ref assertions);
+        // This manually constructed text has no prepared sell-decision rows. Full therefore tests
+        // requirement/marker semantics only; the formatter-backed pricing contract is covered by
+        // Phase 27/29 using real ItemPriceState inputs.
+        Expect(text.GetLineCount(ItemTooltipMode.Full) == 5, "full mode keeps requirement detail while legacy status and template id remain hidden", ref assertions);
         for (int i = 0; i < text.GetLineCount(ItemTooltipMode.Full); i++)
         {
             string line = text.GetLine(ItemTooltipMode.Full, i);
