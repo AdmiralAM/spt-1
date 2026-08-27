@@ -162,6 +162,34 @@ Require(exactManualTx.Committed && !exactManualTx.RolledBack, "manual exact sing
 Require(exactManualStack == 7 && exactManualRewardValue == 7, "manual exact target must update Reward.Value and stack count together");
 Require(!NumericRewardTransactionCore.NeedsMutation(exactManualStack, 7, true), "manual exact item target must be idempotent on the second pass");
 
+var manualBundleStack = 6d;
+var manualBundleRewardValue = 6d;
+var immutableBundleItemCount = 1d;
+var immutableBundleRewardValue = 1d;
+var manualBundleTx = NumericRewardTransactionCore.Execute([
+    new NumericRewardTransactionRequest
+    {
+        QuestId = "manual-bundle-item",
+        Dimension = "ItemRewardStackCount",
+        ExpectedBefore = 6,
+        Target = 3,
+        Slots = [new NumericRewardSlot(
+            () =>
+            {
+                Require(Math.Abs(manualBundleStack - manualBundleRewardValue) < 0.001, "manual bundle selected stack representations must remain synchronized");
+                return manualBundleStack;
+            },
+            value =>
+            {
+                manualBundleStack = value;
+                manualBundleRewardValue = value;
+            })],
+    },
+]);
+Require(manualBundleTx.Committed && !manualBundleTx.RolledBack, "manual exact bundle-selected stack transaction must commit");
+Require(manualBundleStack == 3 && manualBundleRewardValue == 3, "manual bundle target must update only the selected synchronized stack");
+Require(immutableBundleItemCount == 1 && immutableBundleRewardValue == 1, "manual bundle target must leave other item rewards immutable");
+
 var mixedXp = 9000d;
 var mixedStanding = 0.20d;
 var mixedItemStack = 10d;
