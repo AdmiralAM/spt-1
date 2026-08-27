@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
 EXPECTED_ROUTE = f"/files/trader/avatar/{TRADER_ID}.jpg"
-EXPECTED_RUNTIME_GIT_BLOB_SHA1 = "854e015bab09e6bf7f0ff051c6d1362a2afc3d9c"
+EXPECTED_RUNTIME_GIT_BLOB_SHA1 = "8637f5fe359eb447ce88effc68681230df62bd8a"
 EXPECTED_SOURCE_SHA256 = "48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff"
 EXPECTED_DIMENSIONS = (512, 576)
 
@@ -21,35 +21,32 @@ def git_blob_sha1(data: bytes):
 
 
 def jpeg_dimensions(data: bytes):
-    clean = data.rstrip(b"\r\n")
-    if data[len(clean):] not in (b"", b"\n", b"\r\n"):
-        raise AssertionError("portrait contains unsupported bytes after JPEG EOI")
-    if len(clean) < 4 or clean[:2] != b"\xff\xd8" or clean[-2:] != b"\xff\xd9":
+    if len(data) < 4 or data[:2] != b"\xff\xd8" or data[-2:] != b"\xff\xd9":
         raise AssertionError("portrait is not a complete JPEG stream")
     offset = 2
     sof_markers = {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF}
-    while offset + 4 <= len(clean):
-        if clean[offset] != 0xFF:
+    while offset + 4 <= len(data):
+        if data[offset] != 0xFF:
             offset += 1
             continue
-        while offset < len(clean) and clean[offset] == 0xFF:
+        while offset < len(data) and data[offset] == 0xFF:
             offset += 1
-        if offset >= len(clean):
+        if offset >= len(data):
             break
-        marker = clean[offset]
+        marker = data[offset]
         offset += 1
         if marker in (0xD8, 0xD9) or 0xD0 <= marker <= 0xD7:
             continue
-        if offset + 2 > len(clean):
+        if offset + 2 > len(data):
             break
-        length = int.from_bytes(clean[offset:offset + 2], "big")
-        if length < 2 or offset + length > len(clean):
+        length = int.from_bytes(data[offset:offset + 2], "big")
+        if length < 2 or offset + length > len(data):
             raise AssertionError("portrait JPEG contains an invalid marker length")
         if marker in sof_markers:
             if length < 7:
                 raise AssertionError("portrait JPEG SOF marker is truncated")
-            height = int.from_bytes(clean[offset + 3:offset + 5], "big")
-            width = int.from_bytes(clean[offset + 5:offset + 7], "big")
+            height = int.from_bytes(data[offset + 3:offset + 5], "big")
+            width = int.from_bytes(data[offset + 5:offset + 7], "big")
             return width, height
         offset += length
     raise AssertionError("portrait JPEG has no SOF dimensions")
