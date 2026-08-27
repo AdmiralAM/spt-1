@@ -26,7 +26,9 @@ class IdentityAssetContractTests(unittest.TestCase):
         self.assertEqual(portrait["selectionStatus"], "final")
         self.assertEqual(portrait["assetStatus"], "ingested")
         self.assertIn("white naval dress tunic", portrait["description"].lower())
-        self.assertEqual(portrait["sourceConversation"], "Генерация иконок адмирала")
+        self.assertEqual(portrait["sourceConversation"], "current Admiral Trader chat")
+        self.assertEqual(portrait["sourceFileSha256"], "2387fb3d6bc9b8a0ec677789959d7007f108744e72d7cf809ed945d459428cda")
+        self.assertEqual(portrait["sourceDimensions"], "1365x1536")
         self.assertFalse(portrait["substitutionAllowed"])
         self.assertFalse(portrait["placeholderAllowed"])
 

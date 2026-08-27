@@ -6,9 +6,9 @@ Official curated successor workstream for the legacy Andrudis/QuestManiac ecosys
 
 - Mod name: **Admiral Trader**
 - Trader name: **Admiral / Адмирал**
-- Official trader portrait: **final and ingested** — the exact user-approved `1182x1330` bust portrait from the `Генерация иконок адмирала` workstream showing Admiral in a white naval tunic.
-- Approved source SHA-256: `48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff`.
-- Runtime portrait: technical-only `512x576` JPEG encoding, Git blob `0cd9db6776b246c08eb9ae0f1ac3e79c2a486966`, SHA-256 `701a79cb4e88053b0bb26492cf9c88b2d9276fa317975f0e1768ea43af5f8889`; substitution, regeneration and placeholder fallback are forbidden. The maintained contract is [`manifests/identity-assets.json`](manifests/identity-assets.json).
+- Official trader portrait: **final and ingested** — the exact user-approved `1365x1536` source portrait supplied in the current Admiral Trader chat, showing Admiral in a white naval tunic.
+- Approved source SHA-256: `2387fb3d6bc9b8a0ec677789959d7007f108744e72d7cf809ed945d459428cda`.
+- Runtime portrait: technical-only `512x576` JPEG encoding, Git blob `064ce3461d4bce2139a6264001c3f97aedd2dcb3`, SHA-256 `bd690db99bb182bbf0ac55aefeccdd730fc10627f87439c225100fe7d064ebaf`; substitution, regeneration and placeholder fallback are forbidden. The maintained contract is [`manifests/identity-assets.json`](manifests/identity-assets.json).
 - Legacy Andrudis/QuestManiac names are provenance/source references only and are not the target product identity.
 
 ## Gameplay Alpha direction
@@ -114,7 +114,7 @@ The server/runtime validation layer checks trader identity, native lowercase `qu
 
 The exact-runtime builder compiles against the user's real SPT 4.1.3 runtime assemblies and records source/runtime provenance before physical testing. CI is necessary but does not substitute for physical SPT runtime evidence.
 
-The official portrait source has been physically recovered and ingested. Source metadata locks the approved `1182x1330` image by SHA-256, while the runtime package locks the technical `512x576` JPEG by Git blob identity and records its exact package SHA-256 in candidate provenance. `base.json` and runtime metadata use only `/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg`; placeholder/substitute portrait paths are not accepted.
+The official portrait source has been physically recovered from the current chat and ingested. Source metadata locks the exact approved `1365x1536` source image by SHA-256, while the runtime package locks the technical `512x576` JPEG by Git blob identity and records its exact package SHA-256 in candidate provenance. `base.json` and runtime metadata use only `/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg`; placeholder/substitute portrait paths are not accepted.
 
 ## Key maintained contracts
 
