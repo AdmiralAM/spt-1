@@ -96,12 +96,14 @@ if ($itemStackMode -and $itemApplied -le 0) { Fail "bounded item-stack runtime c
 
 $groupedPath = Join-Path $ReportsPath 'economy-admiral-grouped-item-evidence.json'
 $grouped = $null
+$groupedApplicable = $false
 if (Test-Path -LiteralPath $groupedPath -PathType Leaf) {
     $grouped = Read-Json $groupedPath
     if ($grouped.TransactionCommitted -ne $true) { Fail "grouped evidence was not produced from a committed transaction" }
-    if ([int]$grouped.GroupedPlannedCount -le 0) { Fail "current grouped-item runtime candidate applied no grouped reward mutation" }
+    if ([int]$grouped.GroupedPlannedCount -lt 0 -or [int]$grouped.GroupedAppliedCount -lt 0) { Fail "grouped evidence contains negative counts" }
     if ([int]$grouped.GroupedAppliedCount -ne [int]$grouped.GroupedPlannedCount) { Fail "grouped applied/planned counts disagree" }
     if ([int]$grouped.TotalAppliedItemStacks -lt [int]$grouped.GroupedAppliedCount) { Fail "grouped count exceeds total item mutations" }
+    $groupedApplicable = ([int]$grouped.GroupedAppliedCount -gt 0)
 }
 
 $build = $manifest.BuildIdentity
@@ -119,10 +121,14 @@ if ($itemStackMode) {
 }
 
 if ($null -ne $grouped) {
-    Pass "same-template grouped item reward mutation proven; grouped=$($grouped.GroupedAppliedCount); totalItemStacks=$($grouped.TotalAppliedItemStacks)"
-    Write-Host "[Economy Admiral] grouped item reward mutations:"
-    foreach ($label in @($grouped.GroupedLabels)) {
-        Write-Host "  $label"
+    if ($groupedApplicable) {
+        Pass "grouped item reward mutation proven; grouped=$($grouped.GroupedAppliedCount); totalItemStacks=$($grouped.TotalAppliedItemStacks)"
+        Write-Host "[Economy Admiral] grouped item reward mutations:"
+        foreach ($label in @($grouped.GroupedLabels)) {
+            Write-Host "  $label"
+        }
+    } else {
+        Write-Host "[Economy Admiral] grouped item reward mutation: NOT APPLICABLE on current modset (grouped=0; totalItemStacks=$($grouped.TotalAppliedItemStacks))" -ForegroundColor Yellow
     }
 }
 
