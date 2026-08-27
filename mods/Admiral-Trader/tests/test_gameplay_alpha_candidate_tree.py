@@ -19,7 +19,8 @@ class GameplayAlphaCandidateTreeTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, msg=result.stdout + result.stderr)
         self.assertIn("offers=11", result.stdout)
         self.assertIn("milestoneUnlocks=7", result.stdout)
-        self.assertIn("quests=31", result.stdout)
+        self.assertIn("quests=32", result.stdout)
+        self.assertIn("fieldOperations=1", result.stdout)
 
 
 if __name__ == "__main__":
