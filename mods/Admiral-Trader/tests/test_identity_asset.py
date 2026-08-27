@@ -21,32 +21,35 @@ def git_blob_sha1(data: bytes):
 
 
 def jpeg_dimensions(data: bytes):
-    if len(data) < 4 or data[:2] != b"\xff\xd8" or data[-2:] != b"\xff\xd9":
+    clean = data.rstrip(b"\r\n")
+    if data[len(clean):] not in (b"", b"\n", b"\r\n"):
+        raise AssertionError("portrait contains unsupported bytes after JPEG EOI")
+    if len(clean) < 4 or clean[:2] != b"\xff\xd8" or clean[-2:] != b"\xff\xd9":
         raise AssertionError("portrait is not a complete JPEG stream")
     offset = 2
     sof_markers = {0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF}
-    while offset + 4 <= len(data):
-        if data[offset] != 0xFF:
+    while offset + 4 <= len(clean):
+        if clean[offset] != 0xFF:
             offset += 1
             continue
-        while offset < len(data) and data[offset] == 0xFF:
+        while offset < len(clean) and clean[offset] == 0xFF:
             offset += 1
-        if offset >= len(data):
+        if offset >= len(clean):
             break
-        marker = data[offset]
+        marker = clean[offset]
         offset += 1
         if marker in (0xD8, 0xD9) or 0xD0 <= marker <= 0xD7:
             continue
-        if offset + 2 > len(data):
+        if offset + 2 > len(clean):
             break
-        length = int.from_bytes(data[offset:offset + 2], "big")
-        if length < 2 or offset + length > len(data):
+        length = int.from_bytes(clean[offset:offset + 2], "big")
+        if length < 2 or offset + length > len(clean):
             raise AssertionError("portrait JPEG contains an invalid marker length")
         if marker in sof_markers:
             if length < 7:
                 raise AssertionError("portrait JPEG SOF marker is truncated")
-            height = int.from_bytes(data[offset + 3:offset + 5], "big")
-            width = int.from_bytes(data[offset + 5:offset + 7], "big")
+            height = int.from_bytes(clean[offset + 3:offset + 5], "big")
+            width = int.from_bytes(clean[offset + 5:offset + 7], "big")
             return width, height
         offset += length
     raise AssertionError("portrait JPEG has no SOF dimensions")
