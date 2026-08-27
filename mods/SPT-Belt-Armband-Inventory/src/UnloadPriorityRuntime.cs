@@ -9,6 +9,7 @@ namespace SPTBeltArmbandInventory
     {
         static MethodInfo getSlot;
         static object armBandValue;
+        static object dedicatedBeltValue;
         static Type gridType;
         static Action<string> logWarning;
 
@@ -18,14 +19,14 @@ namespace SPTBeltArmbandInventory
             MethodInfo target = FindTarget(equipmentType);
             getSlot = ReflectionTools.FindInstanceMethod(equipmentType, "GetSlot", null, slotEnumType);
             if (target == null || getSlot == null || !target.ReturnType.IsGenericType)
-                return Fail("SPT 4.1 GetPrioritizedGridsForUnloadedObject shape was not found; belt unload priority was not patched.");
+                return Fail("SPT 4.1 GetPrioritizedGridsForUnloadedObject shape was not found; wearable unload priority was not patched.");
 
             Type[] genericArguments = target.ReturnType.GetGenericArguments();
-            if (genericArguments.Length != 1)
-                return Fail("SPT 4.1 unload-grid return type changed; belt unload priority was not patched.");
+            if (genericArguments.Length != 1) return Fail("SPT 4.1 unload-grid return type changed; wearable unload priority was not patched.");
 
             gridType = genericArguments[0];
             armBandValue = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand);
+            dedicatedBeltValue = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedBeltEquipmentSlotValue);
             MethodInfo postfixMethod = typeof(UnloadPriorityRuntime).GetMethod(nameof(Postfix), BindingFlags.Static | BindingFlags.NonPublic);
             object postfix = harmonyMethodConstructor.Invoke(new object[] { postfixMethod });
             Patch(harmony, patchMethod, harmonyMethodType, target, postfix);
@@ -36,6 +37,7 @@ namespace SPTBeltArmbandInventory
         {
             getSlot = null;
             armBandValue = null;
+            dedicatedBeltValue = null;
             gridType = null;
             logWarning = null;
         }
@@ -46,66 +48,64 @@ namespace SPTBeltArmbandInventory
             {
                 if (__args == null || __args.Length == 0 || __args[0] == null || __result == null) return;
                 object equipment = __args[0];
-                object slot = getSlot.Invoke(equipment, new[] { armBandValue });
-                object beltItem = ReflectionTools.ReadMember(slot, "ContainedItem");
-                bool hasContainers = ReflectionTools.HasContainers(beltItem);
-                string templateId = GetTemplateId(beltItem);
-                if (!AccessoryCapabilityPolicy.CanUse(templateId, AccessoryCapability.UnloadPriority, beltItem != null, hasContainers)) return;
-
-                List<object> beltGrids = ReadBeltGrids(beltItem);
-                if (beltGrids.Count == 0) return;
+                List<object> wearableGrids = ReadCapabilityGrids(equipment, armBandValue);
+                AppendUnique(wearableGrids, ReadCapabilityGrids(equipment, dedicatedBeltValue));
+                if (wearableGrids.Count == 0) return;
 
                 object rebuilt = Activator.CreateInstance(typeof(List<>).MakeGenericType(gridType));
                 IList list = rebuilt as IList;
                 if (list == null) return;
 
-                IEnumerable vanilla = __result as IEnumerable;
-                if (vanilla != null)
-                {
+                if (__result is IEnumerable vanilla)
                     foreach (object entry in vanilla)
                         if (entry != null && gridType.IsInstanceOfType(entry)) list.Add(entry);
-                }
 
-                for (int i = 0; i < beltGrids.Count; i++) list.Add(beltGrids[i]);
+                for (int i = 0; i < wearableGrids.Count; i++) if (!list.Contains(wearableGrids[i])) list.Add(wearableGrids[i]);
                 __result = rebuilt;
             }
             catch (Exception exception)
             {
-                if (logWarning != null) logWarning("Could not extend unload-grid priority with wearable grids: " + exception.Message);
+                logWarning?.Invoke("Could not extend unload-grid priority with wearable grids: " + exception.Message);
             }
+        }
+
+        static List<object> ReadCapabilityGrids(object equipment, object slotValue)
+        {
+            var result = new List<object>();
+            if (equipment == null || slotValue == null) return result;
+            object slot = getSlot.Invoke(equipment, new[] { slotValue });
+            object item = ReflectionTools.ReadMember(slot, "ContainedItem");
+            bool hasContainers = ReflectionTools.HasContainers(item);
+            string templateId = GetTemplateId(item);
+            if (!hasContainers || !WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.UnloadPriority)) return result;
+            IEnumerable grids = ReflectionTools.ReadMember(item, "Grids") as IEnumerable;
+            if (grids == null) return result;
+            foreach (object grid in grids) if (grid != null && gridType.IsInstanceOfType(grid)) result.Add(grid);
+            return result;
+        }
+
+        static void AppendUnique(List<object> target, List<object> source)
+        {
+            for (int i = 0; i < source.Count; i++) if (!target.Contains(source[i])) target.Add(source[i]);
         }
 
         static string GetTemplateId(object item)
         {
             if (item == null) return null;
-            object stringTemplateId = ReflectionTools.ReadMember(item, "StringTemplateId");
-            if (stringTemplateId is string direct && !string.IsNullOrEmpty(direct)) return direct;
-            object templateId = ReflectionTools.ReadMember(item, "TemplateId");
-            return templateId?.ToString();
-        }
-
-        static List<object> ReadBeltGrids(object beltItem)
-        {
-            var result = new List<object>();
-            IEnumerable grids = ReflectionTools.ReadMember(beltItem, "Grids") as IEnumerable;
-            if (grids == null) return result;
-            foreach (object grid in grids)
-                if (grid != null && gridType.IsInstanceOfType(grid)) result.Add(grid);
-            return result;
+            object direct = ReflectionTools.ReadMember(item, "StringTemplateId");
+            if (direct is string value && !string.IsNullOrEmpty(value)) return value;
+            return ReflectionTools.ReadMember(item, "TemplateId")?.ToString();
         }
 
         static MethodInfo FindTarget(Type equipmentType)
         {
-            Assembly assembly = equipmentType.Assembly;
-            Type[] types = ReflectionTools.GetTypes(assembly);
-
+            Type[] types = ReflectionTools.GetTypes(equipmentType.Assembly);
             for (int i = 0; i < types.Length; i++)
             {
                 Type type = types[i];
                 if (type == null) continue;
                 MethodInfo[] methods;
-                try { methods = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic); }
-                catch { continue; }
+                try { methods = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic); } catch { continue; }
                 for (int p = 0; p < methods.Length; p++)
                 {
                     MethodInfo method = methods[p];
@@ -123,16 +123,13 @@ namespace SPTBeltArmbandInventory
             object[] arguments = new object[parameters.Length];
             arguments[0] = original;
             for (int i = 1; i < parameters.Length; i++)
-            {
-                if (parameters[i].ParameterType != harmonyMethodType) continue;
-                if (string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) arguments[i] = postfix;
-            }
+                if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) arguments[i] = postfix;
             patchMethod.Invoke(harmony, arguments);
         }
 
         static bool Fail(string message)
         {
-            if (logWarning != null) logWarning(message);
+            logWarning?.Invoke(message);
             Reset();
             return false;
         }
