@@ -69,12 +69,38 @@ var itemPlan = ItemRewardStackPlanner.Plan(currentCount: 10, unitHandbookPrice: 
 Require(itemPlan.Eligible, "single known-price stack above budget must be eligible");
 Require(itemPlan.TargetCount == 4, "item stack target must use floor(budget/unit price)");
 Require(itemPlan.TargetHandbookValue == 100000, "item stack target value must stay within budget");
+Require(itemPlan.TargetBundleHandbookValue == 100000, "single-stack bundle target must equal stack target when no immutable rewards exist");
+
+var bundledItemPlan = ItemRewardStackPlanner.PlanWithinBundle(
+    currentCount: 10,
+    unitHandbookPrice: 25000,
+    immutableHandbookValue: 30000,
+    budgetCap: 100000);
+Require(bundledItemPlan.Eligible, "one mutable stack plus immutable item rewards must be budgetable");
+Require(bundledItemPlan.TargetCount == 2, "whole-bundle planner must reserve immutable reward value before sizing mutable stack");
+Require(bundledItemPlan.TargetHandbookValue == 50000, "mutable stack target value must reflect only the changed stack");
+Require(bundledItemPlan.TargetBundleHandbookValue == 80000, "whole reward bundle must remain within cap after stack reduction");
+Require(bundledItemPlan.Reason == "SingleMutableKnownPriceStackCanBeReducedWithinWholeBundleBudget", "bundle-aware plan must identify bounded mutable-stack policy");
+
+var immutableConsumesBudget = ItemRewardStackPlanner.PlanWithinBundle(
+    currentCount: 10,
+    unitHandbookPrice: 25000,
+    immutableHandbookValue: 90000,
+    budgetCap: 100000);
+Require(!immutableConsumesBudget.Eligible && immutableConsumesBudget.Reason == "ImmutableRewardsConsumeBudget", "planner must block instead of deleting the mutable reward when fixed rewards leave no one-item budget");
+
+var nonFiniteImmutable = ItemRewardStackPlanner.PlanWithinBundle(
+    currentCount: 10,
+    unitHandbookPrice: 25000,
+    immutableHandbookValue: double.NaN,
+    budgetCap: 100000);
+Require(!nonFiniteImmutable.Eligible && nonFiniteImmutable.Reason == "NonFiniteInput", "unknown/non-finite immutable bundle value must block mutation");
 
 var alreadyNormalItem = ItemRewardStackPlanner.Plan(currentCount: 3, unitHandbookPrice: 25000, budgetCap: 100000);
 Require(!alreadyNormalItem.Eligible && alreadyNormalItem.Reason == "AlreadyWithinBudget", "normal item stack must not be increased or changed");
 
 var structuralRemovalRequired = ItemRewardStackPlanner.Plan(currentCount: 5, unitHandbookPrice: 25000, budgetCap: 10000);
-Require(!structuralRemovalRequired.Eligible && structuralRemovalRequired.Reason == "BudgetBelowOneItemFloor", "planner must block cases requiring item removal/template replacement");
+Require(!structuralRemovalRequired.Eligible && structuralRemovalRequired.Reason == "ImmutableRewardsConsumeBudget", "planner must block cases requiring item removal/template replacement");
 
 var singleItem = ItemRewardStackPlanner.Plan(currentCount: 1, unitHandbookPrice: 25000, budgetCap: 10000);
 Require(!singleItem.Eligible && singleItem.Reason == "SingleItemCannotBeReducedWithoutStructuralRemoval", "single-item rewards must remain structural-protected");
@@ -217,4 +243,4 @@ Require(rollbackFailure.Results.Count == 0, "unproven rollback must publish no c
 Require(rollbackFailure.Error?.Contains("Rollback could not be proven", StringComparison.Ordinal) == true, "unproven rollback must carry explicit rollback failure evidence");
 Require(Math.Abs(unrecoverable - 50) < 0.001, "synthetic unrecoverable state must demonstrate why rollback cannot be claimed");
 
-Console.WriteLine("Economy Admiral Enforce transaction + bounded/manual item stack planner + rollback-proof smoke PASS");
+Console.WriteLine("Economy Admiral Enforce transaction + whole-bundle bounded/manual item stack planner + rollback-proof smoke PASS");
