@@ -6,6 +6,7 @@
 
 - Affected module(s):
 - Explicit non-goals:
+- Persistent profile impact (`none` or exact IDs/state written):
 
 ## Changes
 
@@ -33,6 +34,7 @@
 - Successful workflow run:
 - Downloadable artifact or deliberate runtime branch:
 - Artifact digest / package checksum:
+- User gate state (`none` / `queued` / `active` / `passed` / `failed`):
 - Single runtime gate being tested:
 - Install layout:
 - Focused checklist:
@@ -43,6 +45,21 @@
 - [ ] This handoff answers one clear physical question and is not an internal micro-patch/debug loop.
 - [ ] Unknown runtime/API boundaries were resolved from references, source, logs, artifacts, or narrow diagnostics before requesting physical testing.
 - [ ] Load safety was considered first; this artifact is not expected to block profile/game loading or startup.
+- [ ] No other PR currently owns the single active user runtime-test window, or the user explicitly authorized parallel tests.
+- [ ] Related checks were batched into one short milestone session instead of per-commit requests.
+- [ ] CI is green and warnings are classified; red/incomplete work is not being handed to the user.
+
+## Persistent profile safety
+
+<!-- Required when the PR can serialize mod-owned IDs/state. Mark N/A only when it truly has no profile impact. -->
+
+- Persistent identity manifest:
+- Historically distributed IDs covered:
+- Backup-first recovery/uninstall path:
+- Recovery regression / evidence:
+- [ ] No distributed persistent ID was renamed, reused, or omitted from recovery ownership.
+- [ ] Disabling/removing/downgrading this candidate is not expected to strand the user's profile.
+- [ ] No unresolved profile-load/save incident exists for this workstream.
 
 ## Repository hygiene
 

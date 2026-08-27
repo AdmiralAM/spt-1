@@ -25,6 +25,33 @@ Every runtime-test handoff must name:
 
 Do not ask for runtime testing from a branch, PR diff, source tree, or CI success alone.
 
+## Manual-test budget and scheduling
+
+Manual runtime testing is the final physical gate for a milestone candidate, not a per-turn development loop.
+
+1. There may be only one outstanding active user runtime gate repository-wide unless the user explicitly authorizes parallel tests.
+2. A workstream with red CI, unresolved warnings, incomplete implementation, or no exact downloadable artifact cannot request user action.
+3. Related runtime checks must be batched into one short session, normally 10-15 minutes or less.
+4. Other candidates remain `queued`; their agents continue every task that can be completed without physical evidence.
+5. A new test request after a previous run requires a material change to the same runtime boundary and fresh green automated evidence.
+6. Validators and evidence scripts must consume normal runtime output when possible. They must not create repeated user chores whose only purpose is proving the validator itself.
+
+Every PR that has a physical gate records one state: `none`, `queued`, `active`, `passed`, or `failed`. Moving a gate from `queued` to `active` requires confirming that no other active PR already owns the user test window.
+
+## Profile-affecting candidates
+
+Before distributing a candidate that can persist custom item, slot, trader, quest, assort, build, insurance, mail, or inventory identity:
+
+- list all current and historically distributed persistent IDs in a machine-readable manifest;
+- keep those IDs immutable and never reuse them;
+- provide a backup-first, ownership-scoped recovery/uninstall tool in the artifact;
+- prove recovery is idempotent and preserves unrelated data;
+- state the exact profile impact and recovery readiness in the handoff.
+
+Generic SPT options that remove invalid traders/items or repair inventory structure do not replace module-owned recovery. If a candidate can leave the profile unloadable after disable, removal, downgrade, or failed registration, it is not eligible for runtime handoff.
+
+Any reported profile-load/save incident immediately suspends feature development and new runtime-test requests for that workstream. Recovery of the affected profile and prevention of recurrence become the sole gate.
+
 ## Static-only stop condition
 
 After an artifact-only/runtime-candidate instruction, a follow-up that only adds documentation, validators, guards, tests, or manifests is incomplete unless it also produces or fixes the artifact workflow/package.

@@ -103,6 +103,31 @@ Load safety comes first. If a candidate can break profile loading, game loading,
 
 When a runtime gate fails, do not immediately issue another artifact. First explain the failed boundary, the evidence that proves it, and the next smallest gate. User physical testing is reserved for defined gates, not internal patch iteration.
 
+## User runtime-test budget
+
+Manual SPT/EFT testing is a scarce integration resource, not a routine validation step.
+
+- By default, the repository may have only one outstanding user runtime-test request across all active mod workstreams. A second request requires explicit user authorization.
+- Before asking for a runtime test, inspect active PRs and Issues for an existing outstanding user gate. If one exists, continue all work that does not depend on physical evidence and queue the new gate instead of asking the user again.
+- Red, incomplete, warning-unclassified, or artifact-less work must never be handed to the user. Restore deterministic CI first.
+- Do not request a new physical run after every commit, patch, validator, or artifact. Accumulate related checks into one milestone candidate and one focused test session, normally no longer than 10-15 minutes.
+- A user run must answer a product/runtime question that cannot be resolved from source, references, existing logs, automated tests, or artifact inspection. It must not exist merely to validate a validator or generate progress evidence.
+- Do not stop feasible implementation, diagnosis, packaging, or documentation work merely because a user gate is queued. Stop only at the exact boundary that genuinely requires physical evidence.
+- After a PASS or FAIL, consume the evidence once. Do not ask the user to repeat the same gate unless a material fix changed the tested boundary and all automated evidence is green again.
+
+The active PR must record whether its user gate is `none`, `queued`, `active`, `passed`, or `failed`. Only one PR may normally use `active`; all others remain `queued` without requesting user action.
+
+## Persistent profile safety
+
+Changes that can serialize mod-owned identity into an SPT profile are high-risk. This includes item templates and instances, custom slots, trader IDs, quest IDs/state, assort references, builds, insurance, mail, and nested inventory trees.
+
+- Before distributing such a candidate, maintain an immutable machine-readable identity manifest covering every persistent ID used by all distributed candidates, including retired/experimental IDs.
+- The same candidate must provide an ownership-scoped disable/uninstall/recovery path, a backup-first procedure, and deterministic regression coverage. Generic SPT cleanup flags are not a substitute for module-owned recovery.
+- Never rename, reuse, or silently drop a persistent ID after an artifact containing it has been distributed.
+- A runtime handoff must state profile impact and recovery readiness. If removal or downgrade can strand a profile, the artifact is not ready for user testing.
+- When a profile-load or save corruption incident is reported, freeze feature expansion for the responsible workstream. The only allowed work is evidence capture, ownership attribution, recovery, prevention, and CI/package proof until the affected profile is recoverable and the defect cannot recur.
+- Do not ask the user to launch another candidate against the affected profile as a diagnostic shortcut. Work from a backup/copy, existing logs, and offline inspection first.
+
 ## Issues and Pull Requests
 
 Issues define durable scope: objective, evidence/current state, allowed work, non-goals, stop condition, runtime checklist when needed, and acceptance criteria.
