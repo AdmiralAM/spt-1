@@ -39,9 +39,9 @@
   "note": "5d404ebd654de4efecef71d2 note",
   "restartable": false,
   "rewards": {"Fail": [], "Started": [], "Success": [
-    {"availableInGameEditions": [], "id": "554c9244523740b48040091b", "index": 0, "type": "Experience", "unknown": false, "value": 4500},
-    {"availableInGameEditions": [], "id": "68ffc0929ac866232bbcb9bd", "index": 1, "type": "TraderStanding", "target": "d5c27bb3169f8dfbc13f6b69", "unknown": false, "value": 0.01},
-    {"availableInGameEditions": [], "findInRaid": false, "id": "aa5d04898d1ed07c9e6ad0fe", "index": 2, "type": "Item", "unknown": false, "value": 15000, "target": "bfbf4843e589f7c00cc373a7", "items": [{"_id": "bfbf4843e589f7c00cc373a7", "_tpl": "5449016a4bdc2d6f028b456f", "upd": {"StackObjectsCount": 15000}}]}
+    {"id": "554c9244523740b48040091b", "index": 0, "type": "Experience", "value": 4500},
+    {"id": "68ffc0929ac866232bbcb9bd", "index": 1, "type": "TraderStanding", "target": "d5c27bb3169f8dfbc13f6b69", "value": 0.01},
+    {"id": "aa5d04898d1ed07c9e6ad0fe", "index": 2, "type": "Item", "value": 15000, "target": "bfbf4843e589f7c00cc373a7", "items": [{"_id": "bfbf4843e589f7c00cc373a7", "_tpl": "5449016a4bdc2d6f028b456f", "upd": {"StackObjectsCount": 15000}}]}
   ]},
   "secretQuest": false,
   "side": "Pmc",
