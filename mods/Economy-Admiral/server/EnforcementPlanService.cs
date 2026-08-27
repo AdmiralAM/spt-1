@@ -441,11 +441,25 @@ public sealed class EnforcementPlanService(
         foreach (var reward in GetSuccessItemRewards(quest))
         {
             var items = reward.Items?.ToList();
-            if (items is null || items.Count != 1) continue;
+            if (items is null || items.Count == 0) continue;
+
+            if (items.Count != 1)
+            {
+                if (items.Any(item => item.Upd?.StackObjectsCount is { } count && double.IsFinite(count) && count > 1))
+                    return null;
+                continue;
+            }
+
             var record = new ItemRewardRecord(reward, items[0]);
-            if (!TryReadSynchronizedItemQuantity(record, out var count) || count <= 1) continue;
+            var stackCount = record.Item.Upd?.StackObjectsCount;
+            var rewardValue = record.Reward.Value;
+            var stackShaped = (stackCount is { } stack && double.IsFinite(stack) && stack > 1)
+                || (rewardValue is { } value && double.IsFinite(value) && value > 1);
+            if (!stackShaped) continue;
+
+            if (!TryReadSynchronizedItemQuantity(record, out var count) || count <= 1) return null;
             var rounded = Math.Round(count, 0);
-            if (Math.Abs(count - rounded) > 0.000001) continue;
+            if (Math.Abs(count - rounded) > 0.000001) return null;
             candidates.Add(record);
             if (candidates.Count > 1) return null;
         }
