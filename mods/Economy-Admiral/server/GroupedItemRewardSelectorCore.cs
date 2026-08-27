@@ -13,7 +13,9 @@ public static class GroupedItemRewardSelectorCore
 {
     private const double IntegerTolerance = 0.000001;
 
-    public static GroupedItemRewardSelection Select(IReadOnlyList<GroupedItemRewardEntry> entries)
+    public static GroupedItemRewardSelection Select(
+        IReadOnlyList<GroupedItemRewardEntry> entries,
+        bool requireKnownHandbookPrice = true)
     {
         ArgumentNullException.ThrowIfNull(entries);
         if (entries.Count == 0) return Block("EmptyItemRewardRecord");
@@ -35,17 +37,22 @@ public static class GroupedItemRewardSelectorCore
             if (Math.Abs(entry.Count - rounded) > IntegerTolerance)
                 return Block("NonIntegralStackCount");
 
-            if (rounded <= 1 || !entry.HasKnownHandbookPrice) continue;
+            if (rounded <= 1) continue;
+            if (requireKnownHandbookPrice && !entry.HasKnownHandbookPrice) continue;
             if (candidateIndex >= 0) return Block("AmbiguousMultipleReducibleStacks");
             candidateIndex = index;
         }
 
-        if (candidateIndex < 0) return Block("NoReducibleKnownPriceStack");
+        if (candidateIndex < 0)
+            return Block(requireKnownHandbookPrice ? "NoReducibleKnownPriceStack" : "NoReducibleStack");
+
         return new GroupedItemRewardSelection
         {
             Eligible = true,
             SelectedIndex = candidateIndex,
-            Reason = entries.Count == 1 ? "SingleReducibleStack" : "OneReducibleStackInSameTemplateGroupedReward",
+            Reason = entries.Count == 1
+                ? (requireKnownHandbookPrice ? "SingleReducibleStack" : "SingleReducibleStackManualExact")
+                : (requireKnownHandbookPrice ? "OneReducibleStackInSameTemplateGroupedReward" : "OneReducibleStackInSameTemplateGroupedRewardManualExact"),
         };
     }
 
