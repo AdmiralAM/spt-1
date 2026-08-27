@@ -48,6 +48,7 @@ if ([int]$manifest.DeclaredMutationCount -ne [int]$plan.MutationCount) { Fail "m
 $allowedDimensions = if ($itemStackMode) { @('Experience','TraderStanding','ItemRewardStackCount') } else { @('Experience','TraderStanding') }
 $applied = 0
 $itemApplied = 0
+$itemChanges = @()
 foreach ($candidate in @($plan.Candidates)) {
     $mutations = @($candidate.ProposedMutations)
     if ([string]$candidate.ProvenanceClass -eq 'PristineUnchanged') {
@@ -79,17 +80,30 @@ foreach ($candidate in @($plan.Candidates)) {
             if (-not $itemStackMode) { Fail "item stack mutation appeared under Alpha-only schema" }
             if ([string]$mutation.PolicyId -ne 'PresetSingleStackItemBudgetCapV1') { Fail "item stack mutation used unexpected policy $($mutation.PolicyId)" }
             if ([double]$mutation.Target -lt 1 -or -not (Near ([double]$mutation.Target) ([Math]::Round([double]$mutation.Target)) 0.000001)) { Fail "item stack target must be an integer >= 1" }
+            $itemChanges += [pscustomobject]@{
+                QuestId = [string]$candidate.QuestId
+                QuestName = [string]$candidate.QuestName
+                Provenance = [string]$candidate.ProvenanceClass
+                Before = [double]$mutation.Before
+                Target = [double]$mutation.Target
+                After = [double]$mutation.After
+            }
         }
     }
 }
 if ($applied -ne [int]$plan.MutationCount) { Fail "applied record count $applied disagrees with MutationCount $($plan.MutationCount)" }
+if ($itemStackMode -and $itemApplied -le 0) { Fail "bounded item-stack runtime candidate did not apply any ItemRewardStackCount mutation" }
 
 $build = $manifest.BuildIdentity
 if ($null -eq $build -or [string]$build.Product -ne 'Economy Admiral' -or [string]$build.TargetRuntime -ne 'SPT 4.1.3') { Fail "packaged build identity invalid" }
 if ([string]$build.HeadSha -notmatch '^[0-9a-fA-F]{40}$') { Fail "BuildIdentity.HeadSha is not a full SHA" }
 
 if ($itemStackMode) {
-    Pass "XP/TraderStanding + bounded item-stack DB mutation contract proven; applied=$applied; itemStacks=$itemApplied; fingerprint changed; pristine protection and exact targets verified"
+    Pass "bounded item-stack runtime mutation proven; totalApplied=$applied; itemStacks=$itemApplied; fingerprint changed; pristine protection and exact targets verified"
+    Write-Host "[Economy Admiral] applied item reward stack changes:"
+    foreach ($change in $itemChanges) {
+        Write-Host ("  {0} | {1} | {2} | {3} -> {4}" -f $change.QuestId, $change.QuestName, $change.Provenance, $change.Before, $change.After)
+    }
 } else {
     Pass "real XP/TraderStanding DB mutation proven; applied=$applied; fingerprint changed; pristine protection and exact targets verified"
 }
