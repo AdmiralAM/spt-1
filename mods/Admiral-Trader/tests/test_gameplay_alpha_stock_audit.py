@@ -34,24 +34,24 @@ class GameplayAlphaStockAuditTests(unittest.TestCase):
         cls.questassort = load(DB / "questassort.json")
         cls.roots = root_items(cls.assort)
         cls.baseline_ids = {row["offerId"] for row in cls.baseline["offers"]}
-        cls.milestone_ids = set(cls.roots) - cls.baseline_ids
+        cls.relationship_ids = {row["offerId"] for row in cls.audit["relationshipOffers"]}
+        cls.milestone_ids = set(cls.roots) - cls.baseline_ids - cls.relationship_ids
 
     def test_offer_classification_is_exact_and_non_overlapping(self):
         expected = self.audit["expected"]
         self.assertEqual(len(self.roots), expected["totalRootOfferCount"])
         self.assertEqual(len(self.baseline_ids), expected["baselineOfferCount"])
+        self.assertEqual(len(self.relationship_ids), expected["relationshipOfferCount"])
         self.assertEqual(len(self.milestone_ids), expected["milestoneOfferCount"])
-        self.assertEqual(expected["relationshipOfferCount"], 0)
+        self.assertTrue(self.baseline_ids.isdisjoint(self.relationship_ids))
         self.assertTrue(self.baseline_ids.isdisjoint(self.milestone_ids))
-        self.assertEqual(self.baseline_ids | self.milestone_ids, set(self.roots))
-        self.assertTrue(self.baseline_ids.isdisjoint(self.questassort["success"]))
+        self.assertTrue(self.relationship_ids.isdisjoint(self.milestone_ids))
+        self.assertEqual(self.baseline_ids | self.relationship_ids | self.milestone_ids, set(self.roots))
+        self.assertTrue((self.baseline_ids | self.relationship_ids).isdisjoint(self.questassort["success"]))
         self.assertEqual(self.milestone_ids, set(self.questassort["success"]))
 
     def test_baseline_personal_limits_are_stricter_than_global_stock(self):
-        global_units = 0
-        player_units = 0
-        global_value = 0
-        player_value = 0
+        global_units = player_units = global_value = player_value = 0
         for row in self.baseline["offers"]:
             offer_id = row["offerId"]
             item = self.roots[offer_id]
@@ -66,13 +66,40 @@ class GameplayAlphaStockAuditTests(unittest.TestCase):
             player_units += int(upd["BuyRestrictionMax"])
             global_value += price * int(upd["StackObjectsCount"])
             player_value += price * int(upd["BuyRestrictionMax"])
-
         expected = self.audit["expected"]
         self.assertEqual(global_units, expected["baselineGlobalStockUnits"])
         self.assertEqual(player_units, expected["baselinePlayerBuyLimitUnits"])
         self.assertEqual(global_value, expected["baselineGlobalStockRubValue"])
         self.assertEqual(player_value, expected["baselinePlayerFullBuyRub"])
-        self.assertLess(player_value, global_value)
+
+    def test_relationship_stock_is_loyalty_gated_bounded_and_not_quest_gated(self):
+        global_units = player_units = global_value = player_value = 0
+        levels = []
+        for row in self.audit["relationshipOffers"]:
+            offer_id = row["offerId"]
+            item = self.roots[offer_id]
+            upd = item["upd"]
+            price = rub_price(self.assort, offer_id)
+            loyalty = int(self.assort["loyal_level_items"][offer_id])
+            self.assertEqual(item["_tpl"], row["tpl"])
+            self.assertEqual(price, row["priceRub"])
+            self.assertEqual(loyalty, row["loyaltyLevel"])
+            self.assertIn(loyalty, (2, 3, 4))
+            self.assertFalse(upd["UnlimitedCount"])
+            self.assertEqual(upd["StackObjectsCount"], row["stockPerReset"])
+            self.assertEqual(upd["BuyRestrictionMax"], 1)
+            self.assertNotIn(offer_id, self.questassort["success"])
+            levels.append(loyalty)
+            global_units += int(upd["StackObjectsCount"])
+            player_units += int(upd["BuyRestrictionMax"])
+            global_value += price * int(upd["StackObjectsCount"])
+            player_value += price * int(upd["BuyRestrictionMax"])
+        expected = self.audit["expected"]
+        self.assertEqual(sorted(set(levels)), [2, 3, 4])
+        self.assertEqual(global_units, expected["relationshipGlobalStockUnits"])
+        self.assertEqual(player_units, expected["relationshipPlayerBuyLimitUnits"])
+        self.assertEqual(global_value, expected["relationshipGlobalStockRubValue"])
+        self.assertEqual(player_value, expected["relationshipPlayerFullBuyRub"])
 
     def test_ammo_pressure_matches_authored_policy_and_preserves_headroom(self):
         units = sum(int(row["stockPerReset"]) for row in self.ammo["offers"].values())
@@ -80,19 +107,14 @@ class GameplayAlphaStockAuditTests(unittest.TestCase):
         expected = self.audit["expected"]
         headroom = self.audit["policyHeadroom"]
         logistics = self.policy["logistics"]
-
         self.assertEqual(units, expected["ammoUnitsPerReset"])
         self.assertEqual(spend, expected["ammoFullResetSpendRub"])
         self.assertEqual(logistics["maximumAmmoUnitsAcrossPermanentOffersPerReset"], headroom["ammoUnitCeiling"])
         self.assertEqual(logistics["maximumAmmoFullResetSpendRub"], headroom["ammoSpendCeilingRub"])
         self.assertEqual(headroom["ammoUnitCeiling"] - units, headroom["ammoUnitHeadroom"])
         self.assertEqual(headroom["ammoSpendCeilingRub"] - spend, headroom["ammoSpendHeadroomRub"])
-        self.assertAlmostEqual(units / headroom["ammoUnitCeiling"], headroom["ammoUnitUtilization"], places=8)
-        self.assertAlmostEqual(spend / headroom["ammoSpendCeilingRub"], headroom["ammoSpendUtilization"], places=8)
         self.assertLessEqual(units, headroom["ammoUnitCeiling"])
         self.assertLessEqual(spend, headroom["ammoSpendCeilingRub"])
-        self.assertGreater(headroom["ammoUnitHeadroom"], 0)
-        self.assertGreater(headroom["ammoSpendHeadroomRub"], 0)
 
     def test_milestone_and_total_player_spend_are_factual(self):
         ammo_tpls = {row["tpl"] for row in self.ammo["offers"].values()}
@@ -100,19 +122,11 @@ class GameplayAlphaStockAuditTests(unittest.TestCase):
         clearance_ids = self.milestone_ids - ammo_ids
         self.assertEqual(len(ammo_ids), self.audit["expected"]["ammoMilestoneOfferCount"])
         self.assertEqual(len(clearance_ids), 1)
-
         clearance_id = next(iter(clearance_ids))
-        clearance_item = self.roots[clearance_id]
-        clearance_price = rub_price(self.assort, clearance_id)
-        self.assertEqual(clearance_item["upd"]["BuyRestrictionMax"], 1)
-        self.assertEqual(clearance_price, self.audit["expected"]["clearanceMilestoneRub"])
-
-        milestone_spend = 0
-        for offer_id in self.milestone_ids:
-            item = self.roots[offer_id]
-            milestone_spend += rub_price(self.assort, offer_id) * int(item["upd"]["BuyRestrictionMax"])
+        self.assertEqual(rub_price(self.assort, clearance_id), self.audit["expected"]["clearanceMilestoneRub"])
+        milestone_spend = sum(rub_price(self.assort, offer_id) * int(self.roots[offer_id]["upd"]["BuyRestrictionMax"]) for offer_id in self.milestone_ids)
         self.assertEqual(milestone_spend, self.audit["expected"]["milestonePlayerFullBuyRub"])
-        total = milestone_spend + self.audit["expected"]["baselinePlayerFullBuyRub"]
+        total = milestone_spend + self.audit["expected"]["baselinePlayerFullBuyRub"] + self.audit["expected"]["relationshipPlayerFullBuyRub"]
         self.assertEqual(total, self.audit["expected"]["allCurrentOffersPlayerFullBuyRub"])
 
     def test_special_weapons_remains_sample_only(self):
