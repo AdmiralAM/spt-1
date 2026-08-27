@@ -7,17 +7,11 @@ from pathlib import Path
 from typing import Any
 
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
+INTRO_QUEST_ID = "5d404ebd654de4efecef71d2"
 REQUIRED_LOCALE_FIELDS = (
-    "name",
-    "description",
-    "note",
-    "startedMessageText",
-    "successMessageText",
-    "failMessageText",
-    "acceptPlayerMessage",
-    "declinePlayerMessage",
-    "completePlayerMessage",
-    "changeQuestMessageText",
+    "name", "description", "note", "startedMessageText", "successMessageText",
+    "failMessageText", "acceptPlayerMessage", "declinePlayerMessage",
+    "completePlayerMessage", "changeQuestMessageText",
 )
 
 
@@ -43,12 +37,7 @@ def load_committed_quests(directory: Path, expected_ids: set[str] | None = None)
     return quests
 
 
-def validate_runtime(
-    committed: dict[str, dict[str, Any]],
-    generated: dict[str, Any],
-    english: dict[str, str],
-    russian: dict[str, str],
-) -> None:
+def validate_runtime(committed: dict[str, dict[str, Any]], generated: dict[str, Any], english: dict[str, str], russian: dict[str, str]) -> None:
     generated_templates = generated.get("templates") or {}
     if set(committed) != set(generated_templates):
         missing = sorted(set(generated_templates) - set(committed))
@@ -63,12 +52,11 @@ def validate_runtime(
             raise ValueError(f"quest {qid} trader id drift")
 
         finish = (quest.get("conditions") or {}).get("AvailableForFinish") or []
-        if len(finish) != 1 or finish[0].get("conditionType") != "FindItem":
-            raise ValueError(f"quest {qid} must contain exactly one FindItem finish condition")
+        expected_type = "HandoverItem" if qid == INTRO_QUEST_ID else "FindItem"
+        if len(finish) != 1 or finish[0].get("conditionType") != expected_type:
+            raise ValueError(f"quest {qid} must contain exactly one {expected_type} finish condition")
         if finish[0].get("onlyFoundInRaid") is not False:
             raise ValueError(f"quest {qid} unexpectedly requires FIR")
-        if any(condition.get("conditionType") == "HandoverItem" for condition in finish):
-            raise ValueError(f"quest {qid} leaked legacy HandoverItem grind")
 
         reward_types = [reward.get("type") for reward in (quest.get("rewards") or {}).get("Success") or []]
         if "AssortmentUnlock" in reward_types:
