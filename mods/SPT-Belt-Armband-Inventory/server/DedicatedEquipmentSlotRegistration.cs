@@ -26,45 +26,68 @@ public sealed class DedicatedEquipmentSlotRegistration(
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
-            throw new InvalidOperationException("B&A&HB dedicated-slot default inventory template missing.");
+        try
+        {
+            if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
+            {
+                logger.Warning("B&A&HB dedicated-slot registration skipped safely: default inventory template missing.");
+                return Task.CompletedTask;
+            }
 
-        var slots = inventory.Properties?.Slots?.ToList()
-            ?? throw new InvalidOperationException("B&A&HB dedicated-slot default inventory Slots missing.");
+            var slots = inventory.Properties?.Slots?.ToList();
+            if (slots == null)
+            {
+                logger.Warning("B&A&HB dedicated-slot registration skipped safely: default inventory Slots missing.");
+                return Task.CompletedTask;
+            }
 
-        var armBand = RequireVanillaSlot(slots, "ArmBand");
-        RequireVanillaSlot(slots, "Pockets");
-        RequireVanillaSlot(slots, "Backpack");
-        RequireVanillaSlot(slots, "Headwear");
-        RejectNumericCollision(slots, RuntimeIdentity.DedicatedBeltWireSlotId);
-        RejectNumericCollision(slots, RuntimeIdentity.DedicatedHeadBandWireSlotId);
+            var armBand = FindSingleVanillaSlot(slots, "ArmBand");
+            if (armBand == null
+                || FindSingleVanillaSlot(slots, "Pockets") == null
+                || FindSingleVanillaSlot(slots, "Backpack") == null
+                || FindSingleVanillaSlot(slots, "Headwear") == null)
+            {
+                logger.Warning("B&A&HB dedicated-slot registration skipped safely: required vanilla slot boundary is not unique.");
+                return Task.CompletedTask;
+            }
 
-        UpsertDedicatedSlot(slots, armBand, RuntimeIdentity.DedicatedBeltWireSlotId, BeltSlotMongoId, BeltParentTpl);
-        UpsertDedicatedSlot(slots, armBand, RuntimeIdentity.DedicatedHeadBandWireSlotId, HeadBandSlotMongoId, HeadBandParentTpl);
+            if (HasDuplicateWireId(slots, RuntimeIdentity.DedicatedBeltWireSlotId)
+                || HasDuplicateWireId(slots, RuntimeIdentity.DedicatedHeadBandWireSlotId))
+            {
+                logger.Warning("B&A&HB dedicated-slot registration skipped safely: dedicated wire-id collision detected.");
+                return Task.CompletedTask;
+            }
 
-        MoveAfter(slots, RuntimeIdentity.DedicatedBeltWireSlotId, "Pockets");
-        MoveBefore(slots, RuntimeIdentity.DedicatedHeadBandWireSlotId, "Headwear");
+            UpsertDedicatedSlot(slots, armBand, RuntimeIdentity.DedicatedBeltWireSlotId, BeltSlotMongoId, BeltParentTpl);
+            UpsertDedicatedSlot(slots, armBand, RuntimeIdentity.DedicatedHeadBandWireSlotId, HeadBandSlotMongoId, HeadBandParentTpl);
 
-        ValidatePlacement(slots);
-        inventory.Properties!.Slots = slots;
+            // Server slot-list order is not a UI layout contract. Do not reorder
+            // vanilla inventory slots and do not abort startup based on relative
+            // list positions. Client presentation owns the requested visual anchors.
+            inventory.Properties!.Slots = slots;
 
-        logger.Success($"B&A&HB #2 MOD SPT dedicated equipment slots registered: Belt wire={RuntimeIdentity.DedicatedBeltWireSlotId} after Pockets/before Backpack; HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId} before Headwear.");
+            logger.Success($"B&A&HB #2 MOD SPT dedicated equipment slot contracts registered startup-safely: Belt wire={RuntimeIdentity.DedicatedBeltWireSlotId}; HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId}. Visual placement is client-owned.");
+        }
+        catch (Exception exception)
+        {
+            // Optional dedicated slots must never be capable of killing SPT startup.
+            // ArmBand/profile recovery remains usable even if this experimental
+            // registration boundary is incompatible with the active runtime.
+            logger.Error($"B&A&HB dedicated-slot registration failed safely: {exception.GetType().FullName}: {exception.Message}");
+        }
+
         return Task.CompletedTask;
     }
 
-    private static Slot RequireVanillaSlot(List<Slot> slots, string name)
+    private static Slot? FindSingleVanillaSlot(List<Slot> slots, string name)
     {
-        var matches = slots.Where(x => string.Equals(x.Name, name, StringComparison.Ordinal)).ToArray();
-        if (matches.Length != 1)
-            throw new InvalidOperationException($"B&A&HB dedicated-slot expected exactly one vanilla {name} slot, got {matches.Length}.");
-        return matches[0];
+        var matches = slots.Where(x => string.Equals(x.Name, name, StringComparison.Ordinal)).Take(2).ToArray();
+        return matches.Length == 1 ? matches[0] : null;
     }
 
-    private static void RejectNumericCollision(List<Slot> slots, string wireName)
+    private static bool HasDuplicateWireId(List<Slot> slots, string wireName)
     {
-        var matches = slots.Where(x => string.Equals(x.Name, wireName, StringComparison.Ordinal)).ToArray();
-        if (matches.Length > 1)
-            throw new InvalidOperationException($"B&A&HB dedicated-slot duplicate wire-id collision: {wireName}.");
+        return slots.Count(x => string.Equals(x.Name, wireName, StringComparison.Ordinal)) > 1;
     }
 
     private static void UpsertDedicatedSlot(
@@ -118,43 +141,5 @@ public sealed class DedicatedEquipmentSlotRegistration(
         var accepted = filters?.Length == 1 ? filters[0].Filter : null;
         if (accepted == null || accepted.Count != 1 || !accepted.Contains(allowedParent))
             throw new InvalidOperationException($"B&A&HB dedicated-slot filter collision for wire id {wireName}.");
-    }
-
-    private static void MoveAfter(List<Slot> slots, string movingName, string anchorName)
-    {
-        var moving = slots.Single(x => string.Equals(x.Name, movingName, StringComparison.Ordinal));
-        slots.Remove(moving);
-        int anchor = slots.FindIndex(x => string.Equals(x.Name, anchorName, StringComparison.Ordinal));
-        if (anchor < 0) throw new InvalidOperationException($"B&A&HB dedicated-slot missing anchor {anchorName}.");
-        slots.Insert(anchor + 1, moving);
-    }
-
-    private static void MoveBefore(List<Slot> slots, string movingName, string anchorName)
-    {
-        var moving = slots.Single(x => string.Equals(x.Name, movingName, StringComparison.Ordinal));
-        slots.Remove(moving);
-        int anchor = slots.FindIndex(x => string.Equals(x.Name, anchorName, StringComparison.Ordinal));
-        if (anchor < 0) throw new InvalidOperationException($"B&A&HB dedicated-slot missing anchor {anchorName}.");
-        slots.Insert(anchor, moving);
-    }
-
-    private static void ValidatePlacement(List<Slot> slots)
-    {
-        int pockets = slots.FindIndex(x => string.Equals(x.Name, "Pockets", StringComparison.Ordinal));
-        int belt = slots.FindIndex(x => string.Equals(x.Name, RuntimeIdentity.DedicatedBeltWireSlotId, StringComparison.Ordinal));
-        int backpack = slots.FindIndex(x => string.Equals(x.Name, "Backpack", StringComparison.Ordinal));
-        int headBand = slots.FindIndex(x => string.Equals(x.Name, RuntimeIdentity.DedicatedHeadBandWireSlotId, StringComparison.Ordinal));
-        int headwear = slots.FindIndex(x => string.Equals(x.Name, "Headwear", StringComparison.Ordinal));
-
-        // The SPT server inventory template is a serialization/filter contract, not
-        // the visual ContainersPanel ordering contract. Vanilla 4.1.3 can contain
-        // other equipment slots between Pockets and Backpack, so requiring direct
-        // adjacency here is an invalid assumption and can abort server startup.
-        // Belt must be after Pockets and before Backpack; exact visual adjacency is
-        // owned by the bounded client ContainersPanel projection.
-        if (pockets < 0 || belt < 0 || backpack < 0 || !(pockets < belt && belt < backpack))
-            throw new InvalidOperationException("B&A&HB dedicated Belt placement drifted: Belt must remain after Pockets and before Backpack in the server inventory contract.");
-        if (headBand < 0 || headwear < 0 || headBand + 1 != headwear)
-            throw new InvalidOperationException("B&A&HB dedicated HeadBand placement drifted: must be immediately before Headwear.");
     }
 }
