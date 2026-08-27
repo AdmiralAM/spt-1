@@ -32,15 +32,24 @@ When explicitly enabled, Economy Admiral may reduce `ItemRewardStackCount` only 
 
 - the quest is `ModAdded`, or it is `PristineModified` with `SuccessItemHandbookValue` proven changed;
 - the quest is flagged by the item reward budget policy;
-- the Success reward contains exactly one Item reward item;
-- that item has a known positive handbook price;
-- the current stack count is a finite integer greater than one;
-- `Reward.Value` and `Upd.StackObjectsCount` are both present/finite and equal before mutation;
-- the calculated budget target can be reached by lowering the existing stack count to an integer of at least one.
+- the complete Success item bundle can be priced from known handbook values for automatic normalization;
+- exactly one existing Item stack is structurally reducible and selected for mutation;
+- the selected stack has a known positive handbook price for automatic normalization;
+- its current count is a finite integer greater than one;
+- the containing reward record has synchronized aggregate `Reward.Value == sum(Upd.StackObjectsCount)` before mutation;
+- the calculated whole-bundle budget target can be reached by lowering only the selected existing stack to an integer of at least one.
 
-The transaction writes `Reward.Value` and `Upd.StackObjectsCount` together, verifies them through a synchronized read, and restores both on rollback. If the original fields disagree, the candidate is blocked/fails preflight instead of being repaired implicitly.
+The selected stack may be the sole item in its reward record, part of a same-template grouped reward, or part of a mixed-template grouped reward. Grouped records are eligible only when there is exactly one reducible selected stack; sibling items remain immutable. Multiple reducible stacks remain fail-closed as ambiguous.
+
+The transaction writes the selected `Upd.StackObjectsCount` and the containing reward record's aggregate `Reward.Value` together, verifies them through a synchronized read, and restores both on rollback. If the original aggregate quantity is inconsistent, the candidate is blocked/fails preflight instead of being repaired implicitly.
 
 This slice does **not** replace `_tpl` item templates, add/remove reward records, delete the last item to satisfy a budget, mutate structural quest fields, bypass provenance protection, or enable generic item replacement logic.
+
+Physical status is intentionally separated by capability:
+
+- single-stack bounded item normalization is physically proven on SPT 4.1.3 (`34cddc352f2b82b2b8f6359502bf9dd5d0e449fc`): `ENFORCE PASS`, `totalApplied=123`, `itemStacks=35`;
+- same-template grouped selection is implemented and CI-proven, but **not applicable on the current installed quest set**: exact runtime head `c8e76ae0569f74a5cf09624cd5ecc709f72e61fe` loaded and completed Enforce successfully, while the grouped fail-closed validator correctly reported zero eligible grouped mutations;
+- mixed-template grouped single-stack selection is the next bounded product extension and requires CI proof before any new physical SPT gate is requested.
 
 ## Provenance safety
 
@@ -78,7 +87,7 @@ All active reward mutations share the production `NumericRewardTransactionCore`:
 5. rollback the whole batch on any failure;
 6. verify rollback.
 
-Experience, TraderStanding and the opt-in single-stack item quantity therefore participate in the same all-or-nothing batch. CI smoke tests include successful commits, same-state idempotence, synthetic failures, full rollback of earlier numeric mutations, synchronized item-stack commit, and mixed XP/standing/item rollback restoring both item quantity representations.
+Experience, TraderStanding and the opt-in selected item quantity therefore participate in the same all-or-nothing batch. CI smoke tests include successful commits, same-state idempotence, synthetic failures, full rollback of earlier numeric mutations, synchronized grouped item commit, and mixed XP/standing/item rollback restoring both selected quantity and aggregate reward value.
 
 ## SPT boundary and lean runtime path
 
@@ -109,7 +118,8 @@ Runtime evidence schema **5** requires exactly seven core reports under the mod-
 Packaged candidates include only active runtime validators:
 
 - `Validate-Runtime.ps1` — Audit/read-only contract;
-- `Validate-Enforce.ps1` — Enforce mutation contract; recognizes Alpha schema 5/policy 3 and opt-in item-stack schema 6/policy 4.
+- `Validate-Enforce.ps1` — Enforce mutation contract for the accepted Alpha and opt-in bounded item-stack capability;
+- `Validate-Grouped-Enforce.ps1` — an intentionally fail-closed physical gate used only when proving that a concrete installed quest set actually contains an eligible grouped reward mutation.
 
 The old primary parity shadow verifier and validator were retired after physical SPT 4.1.3 parity was proven. Their accepted evidence remains recorded in project history; they are not repeated on every server start or shipped as a misleading runtime command.
 
