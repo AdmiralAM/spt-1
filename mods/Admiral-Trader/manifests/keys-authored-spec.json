@@ -21,7 +21,16 @@
       "minimumLevel": 5,
       "map": "any",
       "prerequisites": [],
-      "objective": {"model": "possess-representative-keys", "representativeCount": 2, "maximumTargetPoolSize": 6, "sourceGroup": "keys-intro"},
+      "objective": {
+        "model": "handover-explicit-keys",
+        "representativeCount": 2,
+        "maximumTargetPoolSize": 2,
+        "sourceGroup": "keys-intro",
+        "explicitTargets": [
+          "5780cf942459777df90dcb72",
+          "59148c8a86f774197930e983"
+        ]
+      },
       "rewardBudget": {"xp": 4500, "rub": 15000, "standing": 0.01, "unlockSlots": 0}
     },
     {
