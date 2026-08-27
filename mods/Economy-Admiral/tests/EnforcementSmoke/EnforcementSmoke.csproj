@@ -8,6 +8,9 @@
   <ItemGroup>
     <Compile Include="../../server/NumericRewardTransactionCore.cs" Link="NumericRewardTransactionCore.cs" />
     <Compile Include="../../server/ItemRewardStackPlanner.cs" Link="ItemRewardStackPlanner.cs" />
+    <Compile Include="../../server/ItemRewardQuantityCore.cs" Link="ItemRewardQuantityCore.cs" />
+    <Compile Include="../../server/GroupedItemRewardSelectorCore.cs" Link="GroupedItemRewardSelectorCore.cs" />
+    <Compile Include="../../server/GroupedItemRewardSlot.cs" Link="GroupedItemRewardSlot.cs" />
     <Compile Include="../../server/QuestRewardMutationPermission.cs" Link="QuestRewardMutationPermission.cs" />
   </ItemGroup>
 </Project>
