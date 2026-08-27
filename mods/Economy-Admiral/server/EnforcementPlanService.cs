@@ -55,7 +55,7 @@ public sealed class EnforcementPlanService(
         {
             try
             {
-                var requests = BuildTransactionRequests(proposals);
+                var requests = BuildTransactionRequests(proposals, handbookPrices);
                 transaction = NumericRewardTransactionCore.Execute(requests);
             }
             catch (Exception exception)
@@ -121,7 +121,7 @@ public sealed class EnforcementPlanService(
             CandidateCountsByProvenance = countsByProvenance,
             CandidateCountsByEligibility = countsByEligibility,
             Note = itemStackEnabled
-                ? "Opt-in post-Alpha enforcement: Experience/TraderStanding plus only a single safe Success reward-item stack may be changed. Automatic item policy only reduces known-price outlier stacks; an explicit ItemRewardStackCountTarget may set an exact positive integral count in either direction but does not bypass provenance or single-stack safety gates. Reward.Value and Upd.StackObjectsCount are required to agree before mutation and are changed/restored together. Item templates, reward records and structural quest fields are never added, removed or replaced."
+                ? "Opt-in post-Alpha enforcement: Experience/TraderStanding plus one unambiguous mutable Success item stack may be changed while other Success item rewards remain immutable. Automatic item policy prices the complete Success item bundle, reserves all immutable handbook value, and only reduces the selected known-price stack. Ambiguous multiple reducible stacks, unknown immutable prices, non-finite quantities, or budgets requiring item removal are blocked. An explicit ItemRewardStackCountTarget retains the legacy exact single-reward safety gate and may set a positive integral count in either direction without bypassing provenance. Reward.Value and Upd.StackObjectsCount are changed/restored together; item templates, reward records and structural quest fields are never added, removed or replaced."
                 : config.Mode == EconomyMode.Enforce
                     ? "Active Alpha enforcement: only numeric Success Experience and TraderStanding rewards may be changed. PristineUnchanged and unknown provenance remain protected; PristineModified requires the exact reward dimension to be proven changed. Item rewards and structural quest fields remain preview-only/non-mutating."
                     : "Audit preview: deterministic Experience/TraderStanding proposals are emitted but the final DB is not mutated.",
@@ -147,7 +147,9 @@ public sealed class EnforcementPlanService(
         return report;
     }
 
-    private IReadOnlyList<NumericRewardTransactionRequest> BuildTransactionRequests(IReadOnlyList<NumericRewardMutation> proposals)
+    private IReadOnlyList<NumericRewardTransactionRequest> BuildTransactionRequests(
+        IReadOnlyList<NumericRewardMutation> proposals,
+        IReadOnlyDictionary<string, double> handbookPrices)
     {
         var requests = new List<NumericRewardTransactionRequest>(proposals.Count);
         foreach (var proposal in proposals)
@@ -157,8 +159,11 @@ public sealed class EnforcementPlanService(
 
             if (proposal.Dimension == "ItemRewardStackCount")
             {
-                var record = GetSingleSuccessItemRewardRecord(quest)
-                    ?? throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' item-stack mutation requires exactly one Success Item reward record containing exactly one item.");
+                var record = proposal.ManualOverride
+                    ? GetSingleSuccessItemRewardRecord(quest)
+                    : GetSingleAutomaticMutableSuccessItemRewardRecord(quest, handbookPrices);
+                if (record is null)
+                    throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' item-stack selector is no longer uniquely safe at transaction preflight.");
 
                 var reward = record.Reward;
                 var item = record.Item;
@@ -290,19 +295,15 @@ public sealed class EnforcementPlanService(
         ManualQuestRewardOverride? manualOverride)
     {
         if (!templates.Quests.TryGetValue(row.QuestId, out var quest)) return null;
-        var record = GetSingleSuccessItemRewardRecord(quest);
-        if (record is null) return null;
-
-        var item = record.Item;
-        var reward = record.Reward;
-        var currentCount = item.Upd?.StackObjectsCount ?? 1d;
-        if (!double.IsFinite(currentCount) || reward.Value is not { } rewardValue || !double.IsFinite(rewardValue)) return null;
-        if (Math.Abs(rewardValue - currentCount) > 0.001) return null;
 
         if (manualOverride?.ItemRewardStackCountTarget is { } exactTarget)
         {
+            var manualRecord = GetSingleSuccessItemRewardRecord(quest);
+            if (manualRecord is null) return null;
+            if (!TryReadSynchronizedItemQuantity(manualRecord, out var manualCurrentCount)) return null;
+
             var target = Math.Round(exactTarget, 0);
-            if (!NumericRewardTransactionCore.NeedsMutation(currentCount, target, manualExact: true)) return null;
+            if (!NumericRewardTransactionCore.NeedsMutation(manualCurrentCount, target, manualExact: true)) return null;
             return new NumericRewardMutation
             {
                 QuestId = row.QuestId,
@@ -310,17 +311,22 @@ public sealed class EnforcementPlanService(
                 Dimension = "ItemRewardStackCount",
                 RewardType = "Item",
                 PolicyId = "ManualExactQuestRewardTargetV1",
-                Before = Math.Round(currentCount, 0),
-                Current = Math.Round(currentCount, 0),
+                Before = Math.Round(manualCurrentCount, 0),
+                Current = Math.Round(manualCurrentCount, 0),
                 Target = target,
-                After = Math.Round(currentCount, 0),
+                After = Math.Round(manualCurrentCount, 0),
                 ManualOverride = true,
                 Applied = false,
             };
         }
 
-        var templateId = item.Template.ToString();
+        var record = GetSingleAutomaticMutableSuccessItemRewardRecord(quest, handbookPrices);
+        if (record is null || !TryReadSynchronizedItemQuantity(record, out var currentCount)) return null;
+
+        var templateId = record.Item.Template.ToString();
         if (string.IsNullOrWhiteSpace(templateId) || !handbookPrices.TryGetValue(templateId, out var unitPrice)) return null;
+        var immutableHandbookValue = CalculateImmutableSuccessItemHandbookValue(quest, record, handbookPrices);
+        if (immutableHandbookValue is null) return null;
 
         var baseline = row.Restartable && analysis.VanillaRestartable.QuestSamples > 0
             ? analysis.VanillaRestartable
@@ -331,7 +337,7 @@ public sealed class EnforcementPlanService(
             ? analysis.Policy.RestartableHighItemValueWarnMultiple
             : analysis.Policy.HighItemValueLowStructureWarnMultiple;
         var budgetCap = baseline.MedianSuccessHandbookValue * multiple;
-        var plan = ItemRewardStackPlanner.Plan(currentCount, unitPrice, budgetCap);
+        var plan = ItemRewardStackPlanner.PlanWithinBundle(currentCount, unitPrice, immutableHandbookValue.Value, budgetCap);
         if (!plan.Eligible || plan.TargetCount is null) return null;
 
         return new NumericRewardMutation
@@ -406,22 +412,78 @@ public sealed class EnforcementPlanService(
         }
     }
 
-    private static ItemRewardRecord? GetSingleSuccessItemRewardRecord(Quest quest)
+    private static IEnumerable<Reward> GetSuccessItemRewards(Quest quest)
     {
-        if (quest.Rewards is null) return null;
-
-        var itemRewards = new List<Reward>();
+        if (quest.Rewards is null) yield break;
         foreach (var pair in quest.Rewards)
         {
             if (!string.Equals(pair.Key, "Success", StringComparison.OrdinalIgnoreCase)) continue;
             foreach (var reward in pair.Value)
-                if (reward.Type == RewardType.Item) itemRewards.Add(reward);
+                if (reward.Type == RewardType.Item) yield return reward;
         }
+    }
 
+    private static ItemRewardRecord? GetSingleSuccessItemRewardRecord(Quest quest)
+    {
+        var itemRewards = GetSuccessItemRewards(quest).ToList();
         if (itemRewards.Count != 1) return null;
         var items = itemRewards[0].Items?.ToList();
         if (items is null || items.Count != 1) return null;
         return new ItemRewardRecord(itemRewards[0], items[0]);
+    }
+
+    private static ItemRewardRecord? GetSingleAutomaticMutableSuccessItemRewardRecord(
+        Quest quest,
+        IReadOnlyDictionary<string, double> handbookPrices)
+    {
+        var candidates = new List<ItemRewardRecord>();
+        foreach (var reward in GetSuccessItemRewards(quest))
+        {
+            var items = reward.Items?.ToList();
+            if (items is null || items.Count != 1) continue;
+            var record = new ItemRewardRecord(reward, items[0]);
+            if (!TryReadSynchronizedItemQuantity(record, out var count) || count <= 1) continue;
+            var rounded = Math.Round(count, 0);
+            if (Math.Abs(count - rounded) > 0.000001) continue;
+            var templateId = record.Item.Template.ToString();
+            if (string.IsNullOrWhiteSpace(templateId) || !handbookPrices.ContainsKey(templateId)) continue;
+            candidates.Add(record);
+            if (candidates.Count > 1) return null;
+        }
+
+        return candidates.Count == 1 ? candidates[0] : null;
+    }
+
+    private static double? CalculateImmutableSuccessItemHandbookValue(
+        Quest quest,
+        ItemRewardRecord mutableRecord,
+        IReadOnlyDictionary<string, double> handbookPrices)
+    {
+        var immutableValue = 0d;
+        foreach (var reward in GetSuccessItemRewards(quest))
+        {
+            if (reward.Items is null) continue;
+            foreach (var item in reward.Items)
+            {
+                if (ReferenceEquals(reward, mutableRecord.Reward) && ReferenceEquals(item, mutableRecord.Item)) continue;
+
+                var templateId = item.Template.ToString();
+                if (string.IsNullOrWhiteSpace(templateId) || !handbookPrices.TryGetValue(templateId, out var price)) return null;
+                var count = item.Upd?.StackObjectsCount ?? 1d;
+                if (!double.IsFinite(count) || count <= 0) return null;
+                immutableValue += price * Math.Max(1d, count);
+                if (!double.IsFinite(immutableValue)) return null;
+            }
+        }
+        return immutableValue;
+    }
+
+    private static bool TryReadSynchronizedItemQuantity(ItemRewardRecord record, out double count)
+    {
+        count = record.Item.Upd?.StackObjectsCount ?? 1d;
+        if (record.Item.Upd is null || !double.IsFinite(count)) return false;
+        if (record.Reward.Value is not { } rewardValue || !double.IsFinite(rewardValue)) return false;
+        return Math.Abs(rewardValue - count) <= 0.001;
     }
 
     private static double ReadSynchronizedItemQuantity(string questId, Reward reward, Item item)
