@@ -17,7 +17,7 @@
     "runtimeAsset": "assets/d5c27bb3169f8dfbc13f6b69.jpg",
     "runtimeRoute": "/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg",
     "runtimeDimensions": "512x576",
-    "runtimeGitBlobSha1": "0cd9db6776b246c08eb9ae0f1ac3e79c2a486966",
+    "runtimeGitBlobSha1": "854e015bab09e6bf7f0ff051c6d1362a2afc3d9c",
     "runtimeIntegrity": "repository bytes are locked by runtimeGitBlobSha1; exact package SHA-256 is computed during candidate staging and recorded as officialPortraitSha256 in candidate-provenance.json",
     "runtimeTransform": "technical resize and JPEG encoding only; no regeneration, redrawing, substitution, or compositional change",
     "substitutionAllowed": false,
