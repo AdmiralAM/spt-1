@@ -17,7 +17,8 @@ public sealed class EconomyMod(
     QuestAnalysisService questAnalysisService,
     QuestProvenanceDeltaService questProvenanceDeltaService,
     EnforcementPlanService enforcementPlanService,
-    GroupedItemRuntimeEvidenceService groupedItemRuntimeEvidenceService
+    GroupedItemRuntimeEvidenceService groupedItemRuntimeEvidenceService,
+    SourcePressureObservationPipelineService sourcePressureObservationPipelineService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
@@ -39,6 +40,10 @@ public sealed class EconomyMod(
         await questConstraintAuditService.RunAsync(questAnalysis, vanillaBaseline, cancellationToken);
 
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
+
+        // Observation remains separate from enforcement: evidence is emitted but never consumed by policy.
+        await sourcePressureObservationPipelineService.RunAsync(config, cancellationToken);
+
         GroupedItemRewardSlot.ResetEvidence();
         var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
         await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);
