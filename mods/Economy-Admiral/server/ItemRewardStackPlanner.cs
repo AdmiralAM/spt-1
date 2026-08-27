@@ -44,11 +44,20 @@ public static class ItemRewardStackPlanner
             return Block(currentCount, unitHandbookPrice, immutableHandbookValue, budgetCap, "SingleItemCannotBeReducedWithoutStructuralRemoval");
 
         var currentStackValue = roundedCount * unitHandbookPrice;
+        if (!double.IsFinite(currentStackValue))
+            return Block(currentCount, unitHandbookPrice, immutableHandbookValue, budgetCap, "NonFiniteComputedValue");
+
         var currentBundleValue = immutableHandbookValue + currentStackValue;
+        if (!double.IsFinite(currentBundleValue))
+            return Block(currentCount, unitHandbookPrice, immutableHandbookValue, budgetCap, "NonFiniteComputedValue");
+
         if (currentBundleValue <= budgetCap + IntegerTolerance)
             return Block(currentCount, unitHandbookPrice, immutableHandbookValue, budgetCap, "AlreadyWithinBudget");
 
         var mutableBudget = budgetCap - immutableHandbookValue;
+        if (!double.IsFinite(mutableBudget))
+            return Block(currentCount, unitHandbookPrice, immutableHandbookValue, budgetCap, "NonFiniteComputedValue");
+
         if (mutableBudget < unitHandbookPrice)
             return Block(
                 currentCount,
@@ -58,6 +67,9 @@ public static class ItemRewardStackPlanner
                 immutableHandbookValue > 0 ? "ImmutableRewardsConsumeBudget" : "BudgetBelowOneItemFloor");
 
         var targetCount = Math.Floor(mutableBudget / unitHandbookPrice);
+        if (!double.IsFinite(targetCount))
+            return Block(currentCount, unitHandbookPrice, immutableHandbookValue, budgetCap, "NonFiniteComputedValue");
+
         if (targetCount < 1)
             return Block(currentCount, unitHandbookPrice, immutableHandbookValue, budgetCap, "BudgetBelowOneItemFloor");
 
@@ -66,6 +78,13 @@ public static class ItemRewardStackPlanner
             return Block(currentCount, unitHandbookPrice, immutableHandbookValue, budgetCap, "NoReductionRequired");
 
         var targetStackValue = targetCount * unitHandbookPrice;
+        var targetBundleValue = immutableHandbookValue + targetStackValue;
+        if (!double.IsFinite(targetStackValue) || !double.IsFinite(targetBundleValue))
+            return Block(currentCount, unitHandbookPrice, immutableHandbookValue, budgetCap, "NonFiniteComputedValue");
+
+        if (targetBundleValue > budgetCap + IntegerTolerance)
+            return Block(currentCount, unitHandbookPrice, immutableHandbookValue, budgetCap, "TargetWouldExceedBudget");
+
         return new ItemRewardStackPlan
         {
             Eligible = true,
@@ -76,7 +95,7 @@ public static class ItemRewardStackPlanner
             BudgetCap = Math.Round(budgetCap, 2),
             TargetCount = targetCount,
             TargetHandbookValue = Math.Round(targetStackValue, 2),
-            TargetBundleHandbookValue = Math.Round(immutableHandbookValue + targetStackValue, 2),
+            TargetBundleHandbookValue = Math.Round(targetBundleValue, 2),
             Reason = immutableHandbookValue > 0
                 ? "SingleMutableKnownPriceStackCanBeReducedWithinWholeBundleBudget"
                 : "SingleKnownPriceStackCanBeReducedWithoutChangingTemplateOrRewardStructure",
