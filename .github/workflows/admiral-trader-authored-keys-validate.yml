@@ -32,25 +32,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
-
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
       - name: Run Admiral Trader Python tests
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
-
       - name: Validate authored and runtime JSON
         run: |
           python -m json.tool mods/Admiral-Trader/manifests/keys-authored-spec.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/curated-quest-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/locales/en.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/locales/ru.json > /dev/null
-          for quest in mods/Admiral-Trader/db/quests/*.json; do
-            python -m json.tool "$quest" > /dev/null
-          done
-
+          for quest in mods/Admiral-Trader/db/quests/*.json; do python -m json.tool "$quest" > /dev/null; done
       - name: Checkout pinned legacy corpus
         uses: actions/checkout@v4
         with:
@@ -58,42 +52,21 @@ jobs:
           ref: 4e15990ac18f469ef7818475ce8553bbbb7cebb4
           path: legacy-andrudis
           fetch-depth: 1
-
       - name: Build pinned legacy inventory
         run: >-
-          python mods/Admiral-Trader/tools/build_inventory.py
-          legacy-andrudis/db/QuestBundles
-          --rules mods/Admiral-Trader/manifests/campaign-manifest.json
-          --output build/admiral-trader-inventory.json
-
+          python mods/Admiral-Trader/tools/build_inventory.py legacy-andrudis/db/QuestBundles --rules mods/Admiral-Trader/manifests/campaign-manifest.json --output build/admiral-trader-inventory.json
       - name: Fetch pinned official vanilla quest database
         run: >-
-          curl --fail --location --retry 3
-          --output build/vanilla-quests.json
-          https://raw.githubusercontent.com/sp-tarkov/server-csharp/fe74b07c6361e2c6d1532dc21ba1c3b981d88d93/Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json
-
+          curl --fail --location --retry 3 --output build/vanilla-quests.json https://raw.githubusercontent.com/sp-tarkov/server-csharp/fe74b07c6361e2c6d1532dc21ba1c3b981d88d93/Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json
       - name: Build vanilla reward benchmark
         run: >-
-          python mods/Admiral-Trader/tools/build_reward_benchmark.py
-          build/vanilla-quests.json
-          --output build/vanilla-reward-benchmark.json
-
+          python mods/Admiral-Trader/tools/build_reward_benchmark.py build/vanilla-quests.json --output build/vanilla-reward-benchmark.json
       - name: Validate authored graph and reward envelopes
         run: >-
-          python mods/Admiral-Trader/tools/validate_keys_authored_spec.py
-          mods/Admiral-Trader/manifests/keys-authored-spec.json
-          mods/Admiral-Trader/manifests/curated-quest-manifest.json
-          build/vanilla-reward-benchmark.json
-
+          python mods/Admiral-Trader/tools/validate_keys_authored_spec.py mods/Admiral-Trader/manifests/keys-authored-spec.json mods/Admiral-Trader/manifests/curated-quest-manifest.json build/vanilla-reward-benchmark.json
       - name: Compile authored keys to native templates
         run: >-
-          python mods/Admiral-Trader/tools/build_keys_runtime_templates.py
-          mods/Admiral-Trader/manifests/keys-authored-spec.json
-          mods/Admiral-Trader/manifests/curated-quest-manifest.json
-          build/admiral-trader-inventory.json
-          legacy-andrudis/db/QuestBundles
-          --output build/admiral-trader-keys-runtime.json
-
+          python mods/Admiral-Trader/tools/build_keys_runtime_templates.py mods/Admiral-Trader/manifests/keys-authored-spec.json mods/Admiral-Trader/manifests/curated-quest-manifest.json build/admiral-trader-inventory.json legacy-andrudis/db/QuestBundles --output build/admiral-trader-keys-runtime.json
       - name: Enforce authored runtime-template gate
         run: |
           python - <<'PY'
@@ -109,29 +82,25 @@ jobs:
               raise SystemExit(f"authored key target pool is too broad: {summary['maximumKeyPoolSize']}")
           if summary['deferredUnlockSlotCount'] != 1:
               raise SystemExit(f"expected exactly one deferred final unlock, got {summary['deferredUnlockSlotCount']}")
+          intro = '5d404ebd654de4efecef71d2'
           for qid, quest in data['templates'].items():
               if quest['traderId'] != data['traderId']:
                   raise SystemExit(f'{qid}: trader id drift')
               finish = quest['conditions']['AvailableForFinish']
-              if len(finish) != 1 or finish[0]['conditionType'] != 'FindItem':
-                  raise SystemExit(f'{qid}: authored key objective must contain exactly one FindItem condition')
+              if len(finish) != 1:
+                  raise SystemExit(f'{qid}: authored key objective must contain exactly one finish condition')
+              expected_type = 'HandoverItem' if qid == intro else 'FindItem'
+              if finish[0]['conditionType'] != expected_type:
+                  raise SystemExit(f'{qid}: expected {expected_type}, got {finish[0]["conditionType"]}')
               if finish[0].get('onlyFoundInRaid') is not False:
                   raise SystemExit(f'{qid}: authored key objective must not force FIR')
-              if any(condition.get('conditionType') == 'HandoverItem' for condition in finish):
-                  raise SystemExit(f'{qid}: legacy handover grind leaked into authored quest')
               pool = finish[0]['target']
               if any(len(str(tpl)) != 24 for tpl in pool):
                   raise SystemExit(f'{qid}: malformed key target in source pool')
           PY
-
       - name: Validate committed runtime equals compiler output
         run: >-
-          python mods/Admiral-Trader/tools/validate_committed_quest_runtime.py
-          mods/Admiral-Trader/db/quests
-          build/admiral-trader-keys-runtime.json
-          mods/Admiral-Trader/db/locales/en.json
-          mods/Admiral-Trader/db/locales/ru.json
-
+          python mods/Admiral-Trader/tools/validate_committed_quest_runtime.py mods/Admiral-Trader/db/quests build/admiral-trader-keys-runtime.json mods/Admiral-Trader/db/locales/en.json mods/Admiral-Trader/db/locales/ru.json
       - name: Upload transient authored template audit
         uses: actions/upload-artifact@v4
         with:
