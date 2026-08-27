@@ -146,9 +146,15 @@ public sealed class DedicatedEquipmentSlotRegistration(
         int headBand = slots.FindIndex(x => string.Equals(x.Name, RuntimeIdentity.DedicatedHeadBandWireSlotId, StringComparison.Ordinal));
         int headwear = slots.FindIndex(x => string.Equals(x.Name, "Headwear", StringComparison.Ordinal));
 
-        if (belt != pockets + 1 || backpack != belt + 1)
-            throw new InvalidOperationException("B&A&HB dedicated Belt placement drifted: must be exactly between Pockets and Backpack.");
-        if (headBand + 1 != headwear)
+        // The SPT server inventory template is a serialization/filter contract, not
+        // the visual ContainersPanel ordering contract. Vanilla 4.1.3 can contain
+        // other equipment slots between Pockets and Backpack, so requiring direct
+        // adjacency here is an invalid assumption and can abort server startup.
+        // Belt must be after Pockets and before Backpack; exact visual adjacency is
+        // owned by the bounded client ContainersPanel projection.
+        if (pockets < 0 || belt < 0 || backpack < 0 || !(pockets < belt && belt < backpack))
+            throw new InvalidOperationException("B&A&HB dedicated Belt placement drifted: Belt must remain after Pockets and before Backpack in the server inventory contract.");
+        if (headBand < 0 || headwear < 0 || headBand + 1 != headwear)
             throw new InvalidOperationException("B&A&HB dedicated HeadBand placement drifted: must be immediately before Headwear.");
     }
 }
