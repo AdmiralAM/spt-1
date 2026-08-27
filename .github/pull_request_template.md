@@ -10,6 +10,12 @@
 - Work-package objective:
 - Package state (`active` / `blocked` / `runtime-gate` / `complete`):
 - Final package acceptance condition:
+- Product roadmap / authoritative Issue:
+- Current product phase:
+- Artifact class (`none` / `diagnostic` / `runtime-candidate` / `release-candidate` / `release`):
+- Final stable/release acceptance criteria:
+- Successor package after PASS:
+- FAIL transition / remediation path:
 
 ## Ordered package gates
 
@@ -39,6 +45,10 @@
 - [ ] Passing an internal gate automatically advanced to the next recorded gate.
 - [ ] No terminal update was issued before all package gates/final acceptance completed or a genuine blocker was recorded.
 - [ ] The agent did not shrink the package into a self-selected discovery/docs/one-file/one-commit gate.
+- [ ] This package is linked to a roadmap through stable/release; its artifact is not being mislabeled as the final product.
+- [ ] PASS automatically activates the recorded successor package unless the product's stable/release criteria are satisfied.
+- [ ] FAIL returns this package to evidence-driven remediation without requiring the user to restate the task.
+- [ ] A branch/PR boundary is not being used as a reason to stop when the next roadmap phase is already authorized.
 
 ## Runtime test handoff
 

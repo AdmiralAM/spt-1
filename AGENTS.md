@@ -91,6 +91,30 @@ Once the user authorizes the active package with wording such as `continue`, `wo
 
 Progress communication must be low-noise and non-terminal. Give a start acknowledgement, then report only a proven root cause, a material multi-file implementation slice, CI failure that changes the plan, a genuine blocker, or final package completion. Do not issue `next step`, `head before/after`, `changed files`, artifact, or completion-style summaries after internal gates. When an intermediate update is necessary, state `continuing automatically; no user response required` and continue working.
 
+## Product roadmap and package transitions
+
+A work package is not automatically the product finish line. Every actively developed module must have a durable product roadmap in its authoritative Issue, PR, or module current-state documentation. The roadmap must define:
+
+- the final product/release objective and explicit stable acceptance criteria;
+- the ordered product phases from the current state to that objective;
+- which phase and work package are active now;
+- the successor package that becomes active after a PASS;
+- the FAIL path that resumes diagnosis/remediation;
+- dependencies or product decisions that can legitimately block automatic transition.
+
+An artifact is a delivery vehicle, not proof that the module is finished. Every artifact must be classified as `diagnostic`, `runtime-candidate`, `release-candidate`, or `release`. Do not describe a diagnostic/runtime candidate as a final version. A CI-green candidate may complete a repository implementation gate, but it does not complete the product unless the roadmap's stable/release acceptance criteria are also satisfied.
+
+At a package boundary:
+
+- if no physical gate is required, close the package and automatically open/activate the recorded successor package when the roadmap already authorizes it;
+- if a runtime gate is required, set the package to `runtime-gate` and request the one batched test defined by the PR;
+- after a runtime PASS, record the evidence and automatically continue into the recorded successor package without asking `what next` or waiting for another authorization;
+- after a runtime FAIL, consume the evidence, return the package to `active`, diagnose and fix the failed boundary, rerun automated validation, and produce the next coherent candidate without asking the user to restate the task;
+- after inconclusive evidence, exhaust repository/source/log diagnosis first and request only the smallest missing external fact when genuinely necessary;
+- mark the product `complete` only when the roadmap's stable/release criteria are satisfied, not merely because a package, PR, CI run, or artifact exists.
+
+A new branch or PR required by the recorded successor phase is repository mechanics, not a new user decision. Create it automatically when the roadmap already authorizes that phase. Do not expand beyond the recorded product roadmap or invent new mechanics merely to keep working.
+
 ## Runtime gates and test artifacts
 
 SPT/EFT runtime behavior is proven only by the required physical/user runtime evidence for that module. CI is necessary but not a substitute when an Issue or PR defines a runtime gate.
