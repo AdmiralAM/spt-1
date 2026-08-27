@@ -8,7 +8,11 @@ namespace SPTBeltArmbandInventory
         internal static Type EquipmentSlotType;
         internal static FieldInfo DefaultTemplateField;
         internal static FieldInfo DogtagTemplateField;
+        internal static Action<string> LogInfo;
         internal static Action<string> LogWarning;
+        internal static bool FactoryCalledForBelt;
+        internal static bool FactoryProofLogged;
+        internal static bool ShowProofLogged;
 
         internal static bool IsDedicatedBelt(object value)
         {
@@ -18,12 +22,36 @@ namespace SPTBeltArmbandInventory
                 && Convert.ToInt32(value) == RuntimeIdentity.DedicatedBeltEquipmentSlotValue;
         }
 
+        internal static void BeginPanelShow()
+        {
+            FactoryCalledForBelt = false;
+        }
+
+        internal static void EndPanelShow()
+        {
+            if (ShowProofLogged) return;
+            ShowProofLogged = true;
+            LogInfo?.Invoke("B&A&HB BELT PANEL PROOF: ContainersPanel.Show completed; pseudo-slot15 factoryCalled=" + FactoryCalledForBelt + ".");
+        }
+
+        internal static void RecordFactoryResult(object result)
+        {
+            FactoryCalledForBelt = true;
+            if (FactoryProofLogged) return;
+            FactoryProofLogged = true;
+            LogInfo?.Invoke("B&A&HB BELT FACTORY PROOF: pseudo-slot15 invoked=True; result=" + (result == null ? "<null>" : result.GetType().FullName) + ".");
+        }
+
         internal static void Reset()
         {
             EquipmentSlotType = null;
             DefaultTemplateField = null;
             DogtagTemplateField = null;
+            LogInfo = null;
             LogWarning = null;
+            FactoryCalledForBelt = false;
+            FactoryProofLogged = false;
+            ShowProofLogged = false;
         }
     }
 
@@ -56,12 +84,14 @@ namespace SPTBeltArmbandInventory
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
                 Type panelType = ReflectionTools.FindType("EFT.UI.ContainersPanel");
                 Type equipmentSlotType = ReflectionTools.FindType("EFT.InventoryLogic.EquipmentSlot");
-                if (harmonyType == null || harmonyMethodType == null || panelType == null || equipmentSlotType == null)
+                Type equipmentType = ReflectionTools.FindType("EFT.InventoryLogic.InventoryEquipment");
+                if (harmonyType == null || harmonyMethodType == null || panelType == null || equipmentSlotType == null || equipmentType == null)
                     return Fail("Belt ContainersPanel projection boundary was not found.");
 
                 MethodInfo slotFactory = FindSlotFactory(panelType, equipmentSlotType);
-                if (slotFactory == null)
-                    return Fail("ContainersPanel native slot factory was not found exactly.");
+                MethodInfo panelShow = FindPanelShow(panelType, equipmentType);
+                if (slotFactory == null || panelShow == null)
+                    return Fail("ContainersPanel native slot factory/Show boundary was not found exactly.");
 
                 FieldInfo defaultTemplate = FindTemplateField(panelType, "default", slotFactory.ReturnType);
                 FieldInfo dogtagTemplate = FindTemplateField(panelType, "dogtag", slotFactory.ReturnType);
@@ -71,28 +101,45 @@ namespace SPTBeltArmbandInventory
                 BeltContainersPanelProjectionRuntime.EquipmentSlotType = equipmentSlotType;
                 BeltContainersPanelProjectionRuntime.DefaultTemplateField = defaultTemplate;
                 BeltContainersPanelProjectionRuntime.DogtagTemplateField = dogtagTemplate;
+                BeltContainersPanelProjectionRuntime.LogInfo = logInfo;
                 BeltContainersPanelProjectionRuntime.LogWarning = logWarning;
 
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                 unpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
                 if (patchMethod == null || harmonyMethodCtor == null || unpatchSelf == null)
-                    return Fail("Harmony prefix/finalizer API incompatible with Belt ContainersPanel projection.");
+                    return Fail("Harmony prefix/postfix/finalizer API incompatible with Belt ContainersPanel proof.");
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
-                object prefix = harmonyMethodCtor.Invoke(new object[] { Method(nameof(SlotFactoryPrefix)) });
-                object finalizer = harmonyMethodCtor.Invoke(new object[] { Method(nameof(SlotFactoryFinalizer)) });
-                Patch(patchMethod, harmonyMethodType, slotFactory, prefix, finalizer);
 
-                logInfo?.Invoke("B&A&HB #2 MOD SPT Belt ContainersPanel bridge installed: dedicated Belt pseudo-slot 15 uses EFT native container-row presentation.");
+                object factoryPrefix = harmonyMethodCtor.Invoke(new object[] { Method(nameof(SlotFactoryPrefix)) });
+                object factoryPostfix = harmonyMethodCtor.Invoke(new object[] { Method(nameof(SlotFactoryPostfix)) });
+                object factoryFinalizer = harmonyMethodCtor.Invoke(new object[] { Method(nameof(SlotFactoryFinalizer)) });
+                Patch(patchMethod, harmonyMethodType, slotFactory, factoryPrefix, factoryPostfix, factoryFinalizer);
+
+                object showPrefix = harmonyMethodCtor.Invoke(new object[] { Method(nameof(PanelShowPrefix)) });
+                object showPostfix = harmonyMethodCtor.Invoke(new object[] { Method(nameof(PanelShowPostfix)) });
+                Patch(patchMethod, harmonyMethodType, panelShow, showPrefix, showPostfix, null);
+
+                logInfo?.Invoke("B&A&HB #2 MOD SPT Belt ContainersPanel proof installed: next inventory Show will report whether pseudo-slot 15 reaches the native slot factory and whether that factory returns a SlotView.");
                 return true;
             }
             catch (Exception exception)
             {
                 Dispose();
                 Exception root = Unwrap(exception);
-                return Fail("Belt ContainersPanel projection failed safely: " + root.GetType().FullName + ": " + root.Message);
+                return Fail("Belt ContainersPanel proof failed safely: " + root.GetType().FullName + ": " + root.Message);
             }
+        }
+
+        static void PanelShowPrefix()
+        {
+            BeltContainersPanelProjectionRuntime.BeginPanelShow();
+        }
+
+        static void PanelShowPostfix()
+        {
+            BeltContainersPanelProjectionRuntime.EndPanelShow();
         }
 
         static void SlotFactoryPrefix(object[] __args, object __instance, ref object __state)
@@ -112,6 +159,12 @@ namespace SPTBeltArmbandInventory
             }
         }
 
+        static void SlotFactoryPostfix(object[] __args, object __result)
+        {
+            if (__args == null || __args.Length != 1 || !BeltContainersPanelProjectionRuntime.IsDedicatedBelt(__args[0])) return;
+            BeltContainersPanelProjectionRuntime.RecordFactoryResult(__result);
+        }
+
         static Exception SlotFactoryFinalizer(Exception __exception, object __instance, object __state)
         {
             try
@@ -127,6 +180,20 @@ namespace SPTBeltArmbandInventory
                 BeltContainersPanelProjectionRuntime.LogWarning?.Invoke("Could not restore ContainersPanel dogtag template: " + Unwrap(exception).Message);
             }
             return __exception;
+        }
+
+        static MethodInfo FindPanelShow(Type panelType, Type equipmentType)
+        {
+            MethodInfo[] methods = panelType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo method = methods[i];
+                if (!string.Equals(method.Name, "Show", StringComparison.Ordinal)) continue;
+                ParameterInfo[] parameters = method.GetParameters();
+                for (int p = 0; p < parameters.Length; p++)
+                    if (parameters[p].ParameterType == equipmentType) return method;
+            }
+            return null;
         }
 
         static MethodInfo FindSlotFactory(Type panelType, Type slotEnumType)
@@ -165,19 +232,20 @@ namespace SPTBeltArmbandInventory
                 if (!string.Equals(method.Name, "Patch", StringComparison.Ordinal)) continue;
                 ParameterInfo[] parameters = method.GetParameters();
                 if (parameters.Length < 2 || !typeof(MethodBase).IsAssignableFrom(parameters[0].ParameterType)) continue;
-                bool prefix = false, finalizer = false;
+                bool prefix = false, postfix = false, finalizer = false;
                 for (int p = 1; p < parameters.Length; p++)
                 {
                     if (parameters[p].ParameterType != harmonyMethodType) continue;
                     if (string.Equals(parameters[p].Name, "prefix", StringComparison.OrdinalIgnoreCase)) prefix = true;
+                    if (string.Equals(parameters[p].Name, "postfix", StringComparison.OrdinalIgnoreCase)) postfix = true;
                     if (string.Equals(parameters[p].Name, "finalizer", StringComparison.OrdinalIgnoreCase)) finalizer = true;
                 }
-                if (prefix && finalizer) return method;
+                if (prefix && postfix && finalizer) return method;
             }
             return null;
         }
 
-        void Patch(MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, object prefix, object finalizer)
+        void Patch(MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, object prefix, object postfix, object finalizer)
         {
             ParameterInfo[] parameters = patchMethod.GetParameters();
             object[] args = new object[parameters.Length];
@@ -186,6 +254,7 @@ namespace SPTBeltArmbandInventory
             {
                 if (parameters[i].ParameterType != harmonyMethodType) continue;
                 if (string.Equals(parameters[i].Name, "prefix", StringComparison.OrdinalIgnoreCase)) args[i] = prefix;
+                else if (string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) args[i] = postfix;
                 else if (string.Equals(parameters[i].Name, "finalizer", StringComparison.OrdinalIgnoreCase)) args[i] = finalizer;
             }
             patchMethod.Invoke(harmony, args);
