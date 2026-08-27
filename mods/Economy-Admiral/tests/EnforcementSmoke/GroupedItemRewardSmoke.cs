@@ -30,6 +30,38 @@ internal static class GroupedItemRewardSmoke
         ]);
         Require(!ambiguous.Eligible && ambiguous.Reason == "AmbiguousMultipleReducibleStacks", "multiple reducible stacks in one reward record must stay blocked");
 
+        var automaticUnknownPrice = GroupedItemRewardSelectorCore.Select([
+            new GroupedItemRewardEntry("same-tpl", 3d, false),
+            new GroupedItemRewardEntry("same-tpl", 1d, false),
+        ]);
+        Require(
+            !automaticUnknownPrice.Eligible && automaticUnknownPrice.Reason == "NoReducibleKnownPriceStack",
+            "automatic grouped selection must continue to require known handbook pricing");
+
+        var manualUnknownPrice = GroupedItemRewardSelectorCore.Select([
+            new GroupedItemRewardEntry("same-tpl", 3d, false),
+            new GroupedItemRewardEntry("same-tpl", 1d, false),
+        ], requireKnownHandbookPrice: false);
+        Require(
+            manualUnknownPrice.Eligible && manualUnknownPrice.SelectedIndex == 0 && manualUnknownPrice.Reason == "OneReducibleStackInSameTemplateGroupedRewardManualExact",
+            "manual exact grouped selection may ignore handbook price while preserving same-template and unique-stack gates");
+
+        var manualAmbiguous = GroupedItemRewardSelectorCore.Select([
+            new GroupedItemRewardEntry("same-tpl", 3d, false),
+            new GroupedItemRewardEntry("same-tpl", 2d, false),
+        ], requireKnownHandbookPrice: false);
+        Require(
+            !manualAmbiguous.Eligible && manualAmbiguous.Reason == "AmbiguousMultipleReducibleStacks",
+            "manual exact grouped selection must not bypass unique-stack safety");
+
+        var manualMixedTpl = GroupedItemRewardSelectorCore.Select([
+            new GroupedItemRewardEntry("tpl-a", 3d, false),
+            new GroupedItemRewardEntry("tpl-b", 1d, false),
+        ], requireKnownHandbookPrice: false);
+        Require(
+            !manualMixedTpl.Eligible && manualMixedTpl.Reason == "MixedTemplatesInRewardRecord",
+            "manual exact grouped selection must not bypass same-template safety");
+
         double?[] stacks = [3d, 1d, 1d];
         Require(
             ItemRewardQuantityCore.TryReadSynchronizedTotal(5d, stacks, out var total) && Math.Abs(total - 5d) < 0.001,
