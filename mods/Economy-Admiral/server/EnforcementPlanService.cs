@@ -157,11 +157,9 @@ public sealed class EnforcementPlanService(
 
             if (proposal.Dimension == "ItemRewardStackCount")
             {
-                var records = GetSuccessItemRewardRecords(quest);
-                if (records.Count != 1)
-                    throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' item-stack mutation requires exactly one Success Item reward record containing exactly one item; actual item records={records.Count}.");
+                var record = GetSingleSuccessItemRewardRecord(quest)
+                    ?? throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' item-stack mutation requires exactly one Success Item reward record containing exactly one item.");
 
-                var record = records[0];
                 var reward = record.Reward;
                 var item = record.Item;
                 if (item.Upd is null)
@@ -290,10 +288,9 @@ public sealed class EnforcementPlanService(
         IReadOnlyDictionary<string, double> handbookPrices)
     {
         if (!templates.Quests.TryGetValue(row.QuestId, out var quest)) return null;
-        var records = GetSuccessItemRewardRecords(quest);
-        if (records.Count != 1) return null;
+        var record = GetSingleSuccessItemRewardRecord(quest);
+        if (record is null) return null;
 
-        var record = records[0];
         var item = record.Item;
         var reward = record.Reward;
         var templateId = item.Template.ToString();
@@ -387,20 +384,22 @@ public sealed class EnforcementPlanService(
         }
     }
 
-    private static List<ItemRewardRecord> GetSuccessItemRewardRecords(Quest quest)
+    private static ItemRewardRecord? GetSingleSuccessItemRewardRecord(Quest quest)
     {
-        var records = new List<ItemRewardRecord>();
-        if (quest.Rewards is null) return records;
+        if (quest.Rewards is null) return null;
+
+        var itemRewards = new List<Reward>();
         foreach (var pair in quest.Rewards)
         {
             if (!string.Equals(pair.Key, "Success", StringComparison.OrdinalIgnoreCase)) continue;
             foreach (var reward in pair.Value)
-            {
-                if (reward.Type != RewardType.Item || reward.Items is null) continue;
-                foreach (var item in reward.Items) records.Add(new ItemRewardRecord(reward, item));
-            }
+                if (reward.Type == RewardType.Item) itemRewards.Add(reward);
         }
-        return records;
+
+        if (itemRewards.Count != 1) return null;
+        var items = itemRewards[0].Items?.ToList();
+        if (items is null || items.Count != 1) return null;
+        return new ItemRewardRecord(itemRewards[0], items[0]);
     }
 
     private static double ReadSynchronizedItemQuantity(string questId, Reward reward, Item item)
