@@ -26,6 +26,7 @@ namespace SPTBeltArmbandInventory
         FastAccessSlotPatches fastAccessSlotPatches;
         SlotMergePatches slotMergePatches;
         PickupSlotPatches pickupPatches;
+        DedicatedWearablePickupPatches dedicatedPickupPatches;
         PaymentSlotPatches paymentPatches;
         EquipmentBuildValidationPatches buildValidationPatches;
         Coroutine deferredRuntimePump;
@@ -152,6 +153,16 @@ namespace SPTBeltArmbandInventory
                 pickupPatches = null;
                 Logger.LogWarning("Wearable storage remains active, but compatible wearable items may not auto-equip through the optional pickup integration.");
             }
+            else
+            {
+                dedicatedPickupPatches = new DedicatedWearablePickupPatches(Logger.LogInfo, Logger.LogWarning);
+                if (!dedicatedPickupPatches.TryInstall())
+                {
+                    dedicatedPickupPatches.Dispose();
+                    dedicatedPickupPatches = null;
+                    Logger.LogWarning("Core ArmBand pickup remains active, but exact Magazine Belt/Emergency HeadBand auto-placement is disabled for this session.");
+                }
+            }
 
             paymentPatches = new PaymentSlotPatches(Logger.LogInfo, Logger.LogWarning);
             if (!paymentPatches.TryInstall())
@@ -227,6 +238,8 @@ namespace SPTBeltArmbandInventory
             buildValidationPatches = null;
             if (paymentPatches != null) paymentPatches.Dispose();
             paymentPatches = null;
+            if (dedicatedPickupPatches != null) dedicatedPickupPatches.Dispose();
+            dedicatedPickupPatches = null;
             if (pickupPatches != null) pickupPatches.Dispose();
             pickupPatches = null;
             if (slotMergePatches != null) slotMergePatches.Dispose();
