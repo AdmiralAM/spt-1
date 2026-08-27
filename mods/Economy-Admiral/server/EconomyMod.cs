@@ -16,7 +16,8 @@ public sealed class EconomyMod(
     QuestConstraintAuditService questConstraintAuditService,
     QuestAnalysisService questAnalysisService,
     QuestProvenanceDeltaService questProvenanceDeltaService,
-    EnforcementPlanService enforcementPlanService
+    EnforcementPlanService enforcementPlanService,
+    GroupedItemRuntimeEvidenceService groupedItemRuntimeEvidenceService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
@@ -38,7 +39,9 @@ public sealed class EconomyMod(
         await questConstraintAuditService.RunAsync(questAnalysis, vanillaBaseline, cancellationToken);
 
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
+        GroupedItemRewardSlot.ResetEvidence();
         var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
+        await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);
         await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
     }
 }
