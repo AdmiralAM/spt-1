@@ -1,7 +1,9 @@
+using System;
+
 namespace SPTBeltArmbandInventory.Server;
 
 /// <summary>
-/// Authoritative persistent identity manifest for B&A&HB #2 MOD SPT.
+/// Runtime mirror of the B&A&HB #2 MOD SPT persistent identity contract.
 /// Any identifier that can be serialized into an SPT profile, inventory tree,
 /// trader assort reference, build or service record belongs here. Existing IDs
 /// are immutable and must never be repurposed.
