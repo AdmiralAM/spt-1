@@ -9,6 +9,7 @@ Before making changes, read:
 - `AGENTS.md`
 - `CONTRIBUTING.md`
 - `docs/development-workflow.md`
+- `docs/runtime-artifact-gate.md`
 - `docs/github-stable-runtime.md`
 - `docs/branch-hygiene.md`
 - the affected module's README and relevant durable docs.
@@ -70,12 +71,17 @@ A failed runtime gate does not authorize feature expansion or redesign. Diagnose
 
 SPT/EFT runtime behavior is proven only by the required physical/user runtime evidence for that module. CI is necessary but not a substitute when an Issue or PR defines a runtime gate.
 
+When the active user direction, Issue, PR, or handoff asks for a runtime candidate, gameplay alpha, installable package, or artifact-only continuation, the accepted unit of progress is a CI-green installable artifact for the exact commit under review. Static tests, validators, documentation, manifests, and guard scripts may support that artifact, but they are not delivery by themselves.
+
+After an artifact-only/runtime-candidate instruction, do not stop on static-only commits. Do not add another documentation, validator, guard, manifest, or refactor commit unless the same work produces or directly fixes the installable artifact packaging path. If packaging cannot be produced, stop with the exact missing boundary instead of substituting additional static proof.
+
 Any PR or chat handoff that asks for user testing must provide:
 
 - module name and affected SPT version;
 - PR number, branch name, and exact commit SHA;
 - successful workflow/run that produced the exact test build;
 - artifact name and whether it is transient Actions output or a maintained `runtime-*` package;
+- artifact digest or package checksum when available;
 - exact install layout, including `BepInEx/plugins` and/or `SPT_Runtime/user/mods` paths;
 - focused test checklist;
 - exact logs/screenshots/results to return, including `BepInEx/LogOutput.log` when client runtime evidence is needed;
