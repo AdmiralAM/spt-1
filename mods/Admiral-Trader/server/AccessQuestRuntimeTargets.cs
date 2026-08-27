@@ -7,6 +7,7 @@ using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using IOPath = System.IO.Path;
 
@@ -92,7 +93,7 @@ public sealed class AccessQuestRuntimeTargets(
             if (registeredQuest.Conditions.AvailableForFinish is not { Count: 1 } finishConditions)
                 throw new InvalidDataException($"Registered Admiral access quest {questId} must have exactly one finish condition");
 
-            finishConditions[0].Target = new ListOrT<string>(concreteTargets, null!);
+            SetConcreteTargets(finishConditions[0], concreteTargets);
             resolvedQuestCount++;
         }
 
@@ -102,5 +103,16 @@ public sealed class AccessQuestRuntimeTargets(
 
         logger.Success($"Resolved concrete installed-SPT key targets for {resolvedQuestCount} Admiral access quests");
         return Task.CompletedTask;
+    }
+
+    private static void SetConcreteTargets(QuestCondition condition, List<string> concreteTargets)
+    {
+        PropertyInfo targetProperty = typeof(QuestCondition).GetProperty(nameof(QuestCondition.Target))
+            ?? throw new MissingMemberException(typeof(QuestCondition).FullName, nameof(QuestCondition.Target));
+        object runtimeTarget = Activator.CreateInstance(
+                targetProperty.PropertyType,
+                [concreteTargets, null])
+            ?? throw new InvalidOperationException("Unable to construct SPT quest target wrapper");
+        targetProperty.SetValue(condition, runtimeTarget);
     }
 }
