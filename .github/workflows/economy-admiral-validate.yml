@@ -75,9 +75,14 @@ jobs:
               'runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken)',
           ]:
               assert text in mod, text
-          for forbidden in ['PristineReportCorrectionService', 'PrimaryAuditParityService', 'CompositePolicyEvaluationService', 'TargetProposalService']:
+          for forbidden in [
+              'PristineReportCorrectionService','PrimaryAuditParityService','CompositePolicyEvaluationService','TargetProposalService',
+              'AdmiralTraderRuntimeAdapterService','SourcePressureRuntimeReportService'
+          ]:
               assert forbidden not in mod, forbidden
           assert mod.index('config.Mode == EconomyMode.Off') < mod.index('runtimeEvidenceService.CaptureBefore()')
+          assert mod.index('questAnalysisService.RunAsync') < mod.index('rewardUtilityAuditService.RunAsync')
+          assert mod.index('questAnalysisService.RunAsync') < mod.index('questConstraintAuditService.RunAsync')
 
           for service_name in ['EconomyAuditService.cs', 'QuestAnalysisService.cs', 'EnforcementPlanService.cs']:
               text = (root / 'server' / service_name).read_text(encoding='utf-8')
@@ -85,10 +90,18 @@ jobs:
               assert 'LoadConfigAsync' not in text, service_name
               assert 'Path.Combine(modPath, "config", "config.json")' not in text, service_name
 
-          for service_name in ['RewardUtilityAuditService.cs', 'QuestProgressionGraphService.cs', 'QuestConstraintAuditService.cs']:
+          progression = (root / 'server/QuestProgressionGraphService.cs').read_text(encoding='utf-8')
+          assert 'VanillaBaselineSnapshot' in progression
+          assert 'PristineStartupSnapshot' in progression
+
+          for service_name in ['RewardUtilityAuditService.cs', 'QuestConstraintAuditService.cs']:
               text = (root / 'server' / service_name).read_text(encoding='utf-8')
               assert 'VanillaBaselineSnapshot' in text, service_name
               assert 'PristineStartupSnapshot' in text, service_name
+              assert 'QuestAnalysisReport analysis' in text, service_name
+              assert 'SourceAnalysisSchemaVersion = analysis.SchemaVersion' in text, service_name
+              assert 'TemplateTable' not in text, f'{service_name} regressed to a direct final-DB quest scan'
+
           analysis = (root / 'server/QuestAnalysisService.cs').read_text(encoding='utf-8')
           assert 'VanillaBaselineSnapshot vanillaBaseline' in analysis
           assert 'vanillaBaseline.QuestIds.Contains' in analysis
@@ -144,7 +157,7 @@ jobs:
           for text in ['QuestRewardOverrides','AllowAutomaticMutation','ExperienceTarget','TraderStandingTarget','EnableItemRewardStackNormalization']:
               assert text in config_source, text
 
-          print('Economy Admiral Enforce + seven-report direct pristine contract OK')
+          print('Economy Admiral Enforce + seven-report single-analysis projection contract OK')
 
   server:
     name: Economy Admiral .NET 10 server build
