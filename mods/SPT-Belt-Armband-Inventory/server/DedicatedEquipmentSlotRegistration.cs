@@ -9,9 +9,9 @@ namespace SPTBeltArmbandInventory.Server;
 
 /// <summary>
 /// Adds the two product-required equipment locations to the canonical default
-/// inventory template. Item/profile serialization already carries slotId as a
-/// string, so these names remain stable on the wire and do not alias vanilla
-/// ArmBand/Headwear semantics.
+/// inventory template. EFT 4.1.x parses slot names through EquipmentSlot during
+/// InventoryEquipment construction, therefore dedicated locations serialize as
+/// collision-checked numeric pseudo-enum IDs 15/16 rather than invented enum names.
 /// </summary>
 [Injectable(TypePriority = OnLoadOrder.Preload + 2)]
 public sealed class DedicatedEquipmentSlotRegistration(
@@ -36,17 +36,19 @@ public sealed class DedicatedEquipmentSlotRegistration(
         RequireVanillaSlot(slots, "Pockets");
         RequireVanillaSlot(slots, "Backpack");
         RequireVanillaSlot(slots, "Headwear");
+        RejectNumericCollision(slots, RuntimeIdentity.DedicatedBeltWireSlotId);
+        RejectNumericCollision(slots, RuntimeIdentity.DedicatedHeadBandWireSlotId);
 
-        UpsertDedicatedSlot(slots, armBand, RuntimeIdentity.DedicatedBeltSlotName, BeltSlotMongoId, BeltParentTpl);
-        UpsertDedicatedSlot(slots, armBand, RuntimeIdentity.DedicatedHeadBandSlotName, HeadBandSlotMongoId, HeadBandParentTpl);
+        UpsertDedicatedSlot(slots, armBand, RuntimeIdentity.DedicatedBeltWireSlotId, BeltSlotMongoId, BeltParentTpl);
+        UpsertDedicatedSlot(slots, armBand, RuntimeIdentity.DedicatedHeadBandWireSlotId, HeadBandSlotMongoId, HeadBandParentTpl);
 
-        MoveAfter(slots, RuntimeIdentity.DedicatedBeltSlotName, "Pockets");
-        MoveBefore(slots, RuntimeIdentity.DedicatedHeadBandSlotName, "Headwear");
+        MoveAfter(slots, RuntimeIdentity.DedicatedBeltWireSlotId, "Pockets");
+        MoveBefore(slots, RuntimeIdentity.DedicatedHeadBandWireSlotId, "Headwear");
 
         ValidatePlacement(slots);
         inventory.Properties!.Slots = slots;
 
-        logger.Success($"B&A&HB #2 dedicated equipment slots registered: {RuntimeIdentity.DedicatedBeltSlotName} after Pockets/before Backpack; {RuntimeIdentity.DedicatedHeadBandSlotName} before Headwear.");
+        logger.Success($"B&A&HB #2 MOD SPT dedicated equipment slots registered: Belt wire={RuntimeIdentity.DedicatedBeltWireSlotId} after Pockets/before Backpack; HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId} before Headwear.");
         return Task.CompletedTask;
     }
 
@@ -58,26 +60,30 @@ public sealed class DedicatedEquipmentSlotRegistration(
         return matches[0];
     }
 
+    private static void RejectNumericCollision(List<Slot> slots, string wireName)
+    {
+        var matches = slots.Where(x => string.Equals(x.Name, wireName, StringComparison.Ordinal)).ToArray();
+        if (matches.Length > 1)
+            throw new InvalidOperationException($"B&A&HB dedicated-slot duplicate wire-id collision: {wireName}.");
+    }
+
     private static void UpsertDedicatedSlot(
         List<Slot> slots,
         Slot armBandPrototype,
-        string name,
+        string wireName,
         MongoId id,
         MongoId allowedParent)
     {
-        var matches = slots.Where(x => string.Equals(x.Name, name, StringComparison.Ordinal)).ToArray();
-        if (matches.Length > 1)
-            throw new InvalidOperationException($"B&A&HB dedicated-slot duplicate name collision: {name}.");
-
+        var matches = slots.Where(x => string.Equals(x.Name, wireName, StringComparison.Ordinal)).ToArray();
         if (matches.Length == 1)
         {
-            ValidateDedicatedSlot(matches[0], name, id, allowedParent);
+            ValidateDedicatedSlot(matches[0], wireName, id, allowedParent);
             return;
         }
 
         slots.Add(new Slot
         {
-            Name = name,
+            Name = wireName,
             Id = id,
             Parent = DefaultInventoryTpl,
             MaxCount = 1,
@@ -100,18 +106,18 @@ public sealed class DedicatedEquipmentSlotRegistration(
         });
     }
 
-    private static void ValidateDedicatedSlot(Slot slot, string name, MongoId id, MongoId allowedParent)
+    private static void ValidateDedicatedSlot(Slot slot, string wireName, MongoId id, MongoId allowedParent)
     {
         if (!Equals(slot.Id, id)
             || !Equals(slot.Parent, DefaultInventoryTpl)
             || slot.MaxCount != 1
             || slot.Required == true)
-            throw new InvalidOperationException($"B&A&HB dedicated-slot identity collision for {name}.");
+            throw new InvalidOperationException($"B&A&HB dedicated-slot identity collision for wire id {wireName}.");
 
         var filters = slot.Properties?.Filters?.ToArray();
         var accepted = filters?.Length == 1 ? filters[0].Filter : null;
         if (accepted == null || accepted.Count != 1 || !accepted.Contains(allowedParent))
-            throw new InvalidOperationException($"B&A&HB dedicated-slot filter collision for {name}.");
+            throw new InvalidOperationException($"B&A&HB dedicated-slot filter collision for wire id {wireName}.");
     }
 
     private static void MoveAfter(List<Slot> slots, string movingName, string anchorName)
@@ -135,9 +141,9 @@ public sealed class DedicatedEquipmentSlotRegistration(
     private static void ValidatePlacement(List<Slot> slots)
     {
         int pockets = slots.FindIndex(x => string.Equals(x.Name, "Pockets", StringComparison.Ordinal));
-        int belt = slots.FindIndex(x => string.Equals(x.Name, RuntimeIdentity.DedicatedBeltSlotName, StringComparison.Ordinal));
+        int belt = slots.FindIndex(x => string.Equals(x.Name, RuntimeIdentity.DedicatedBeltWireSlotId, StringComparison.Ordinal));
         int backpack = slots.FindIndex(x => string.Equals(x.Name, "Backpack", StringComparison.Ordinal));
-        int headBand = slots.FindIndex(x => string.Equals(x.Name, RuntimeIdentity.DedicatedHeadBandSlotName, StringComparison.Ordinal));
+        int headBand = slots.FindIndex(x => string.Equals(x.Name, RuntimeIdentity.DedicatedHeadBandWireSlotId, StringComparison.Ordinal));
         int headwear = slots.FindIndex(x => string.Equals(x.Name, "Headwear", StringComparison.Ordinal));
 
         if (belt != pockets + 1 || backpack != belt + 1)
