@@ -121,7 +121,7 @@ public sealed class EnforcementPlanService(
             CandidateCountsByProvenance = countsByProvenance,
             CandidateCountsByEligibility = countsByEligibility,
             Note = itemStackEnabled
-                ? "Opt-in post-Alpha enforcement: Experience/TraderStanding plus only a single known-price Success reward-item stack may be reduced. Reward.Value and Upd.StackObjectsCount are required to agree before mutation and are changed/restored together. Item templates, reward records and structural quest fields are never added, removed or replaced. Pristine/unknown provenance protection remains mandatory."
+                ? "Opt-in post-Alpha enforcement: Experience/TraderStanding plus only a single safe Success reward-item stack may be changed. Automatic item policy only reduces known-price outlier stacks; an explicit ItemRewardStackCountTarget may set an exact positive integral count in either direction but does not bypass provenance or single-stack safety gates. Reward.Value and Upd.StackObjectsCount are required to agree before mutation and are changed/restored together. Item templates, reward records and structural quest fields are never added, removed or replaced."
                 : config.Mode == EconomyMode.Enforce
                     ? "Active Alpha enforcement: only numeric Success Experience and TraderStanding rewards may be changed. PristineUnchanged and unknown provenance remain protected; PristineModified requires the exact reward dimension to be proven changed. Item rewards and structural quest fields remain preview-only/non-mutating."
                     : "Audit preview: deterministic Experience/TraderStanding proposals are emitted but the final DB is not mutated.",
@@ -226,6 +226,7 @@ public sealed class EnforcementPlanService(
         config.QuestRewardOverrides.TryGetValue(row.QuestId, out var manualOverride);
         if (manualOverride?.ExperienceTarget is not null) actions.Add("ManualExperienceTarget");
         if (manualOverride?.TraderStandingTarget is not null) actions.Add("ManualStandingTarget");
+        if (manualOverride?.ItemRewardStackCountTarget is not null) actions.Add("ManualItemStackTarget");
 
         var provenanceClass = provenance?.Provenance ?? "Unknown";
         var changedDimensions = provenance?.ChangedDimensions ?? [];
@@ -254,7 +255,7 @@ public sealed class EnforcementPlanService(
             }
             if (potentialMutationDimensions.Contains("ItemRewardStackCount", StringComparer.Ordinal))
             {
-                var itemMutation = BuildItemStackMutation(row, analysis, handbookPrices);
+                var itemMutation = BuildItemStackMutation(row, analysis, handbookPrices, manualOverride);
                 if (itemMutation is not null) mutations.Add(itemMutation);
             }
         }
@@ -285,7 +286,8 @@ public sealed class EnforcementPlanService(
     private NumericRewardMutation? BuildItemStackMutation(
         QuestAnalysisRow row,
         QuestAnalysisReport analysis,
-        IReadOnlyDictionary<string, double> handbookPrices)
+        IReadOnlyDictionary<string, double> handbookPrices,
+        ManualQuestRewardOverride? manualOverride)
     {
         if (!templates.Quests.TryGetValue(row.QuestId, out var quest)) return null;
         var record = GetSingleSuccessItemRewardRecord(quest);
@@ -293,12 +295,32 @@ public sealed class EnforcementPlanService(
 
         var item = record.Item;
         var reward = record.Reward;
-        var templateId = item.Template.ToString();
-        if (string.IsNullOrWhiteSpace(templateId) || !handbookPrices.TryGetValue(templateId, out var unitPrice)) return null;
-
         var currentCount = item.Upd?.StackObjectsCount ?? 1d;
         if (!double.IsFinite(currentCount) || reward.Value is not { } rewardValue || !double.IsFinite(rewardValue)) return null;
         if (Math.Abs(rewardValue - currentCount) > 0.001) return null;
+
+        if (manualOverride?.ItemRewardStackCountTarget is { } exactTarget)
+        {
+            var target = Math.Round(exactTarget, 0);
+            if (!NumericRewardTransactionCore.NeedsMutation(currentCount, target, manualExact: true)) return null;
+            return new NumericRewardMutation
+            {
+                QuestId = row.QuestId,
+                QuestName = row.QuestName,
+                Dimension = "ItemRewardStackCount",
+                RewardType = "Item",
+                PolicyId = "ManualExactQuestRewardTargetV1",
+                Before = Math.Round(currentCount, 0),
+                Current = Math.Round(currentCount, 0),
+                Target = target,
+                After = Math.Round(currentCount, 0),
+                ManualOverride = true,
+                Applied = false,
+            };
+        }
+
+        var templateId = item.Template.ToString();
+        if (string.IsNullOrWhiteSpace(templateId) || !handbookPrices.TryGetValue(templateId, out var unitPrice)) return null;
 
         var baseline = row.Restartable && analysis.VanillaRestartable.QuestSamples > 0
             ? analysis.VanillaRestartable
@@ -446,7 +468,7 @@ public sealed class EnforcementPlanService(
             dimensions.Add("TraderStanding");
 
         if (allowItemStackMutation
-            && reviewActions.Contains("ReviewItemRewardBudget", StringComparer.Ordinal)
+            && (reviewActions.Contains("ReviewItemRewardBudget", StringComparer.Ordinal) || reviewActions.Contains("ManualItemStackTarget", StringComparer.Ordinal))
             && (modAdded || changedDimensions.Contains("SuccessItemHandbookValue", StringComparer.Ordinal)))
             dimensions.Add("ItemRewardStackCount");
 
