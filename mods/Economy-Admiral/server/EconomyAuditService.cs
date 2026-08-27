@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Path = System.IO.Path;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
@@ -75,6 +74,8 @@ public sealed class EconomyAuditService(
             EnforcementApplied = false,
             RepeatedRaidLootDecay = config.RepeatedRaidLootDecay,
             RewardNormalizationModel = "knownHandbookValue / (1 + cappedLevelGate*levelGateWeight + cappedObjectiveCount*objectiveConditionWeight)",
+            VanillaBenchmarkSource = "PristineStartupSnapshot",
+            PristineQuestCount = baseline.QuestCount,
             Policy = policy,
             Database = new DatabaseSummary
             {
@@ -101,15 +102,10 @@ public sealed class EconomyAuditService(
             Items = items,
         };
 
-        var root = JsonSerializer.SerializeToNode(report, JsonOptions)?.AsObject()
-            ?? throw new InvalidOperationException("Economy Admiral primary audit serialization failed.");
-        root["VanillaBenchmarkSource"] = "PristineStartupSnapshot";
-        root["PristineQuestCount"] = baseline.QuestCount;
-
         var modPath = modHelper.GetAbsolutePathToModFolder(typeof(EconomyAuditService).Assembly);
         var reportPath = SafePath(modPath, config.ReportRelativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(reportPath)!);
-        await File.WriteAllTextAsync(reportPath, root.ToJsonString(JsonOptions), cancellationToken);
+        await File.WriteAllTextAsync(reportPath, JsonSerializer.Serialize(report, JsonOptions), cancellationToken);
 
         logger.Info(
             $"[Economy Admiral] primary audit complete from typed final DB + pristine startup snapshot: " +
@@ -452,6 +448,8 @@ public sealed record EconomyAuditReport
     public required bool EnforcementApplied { get; init; }
     public required bool RepeatedRaidLootDecay { get; init; }
     public required string RewardNormalizationModel { get; init; }
+    public required string VanillaBenchmarkSource { get; init; }
+    public required int PristineQuestCount { get; init; }
     public required AuditPolicy Policy { get; init; }
     public required DatabaseSummary Database { get; init; }
     public required AcquisitionSummary Acquisition { get; init; }
