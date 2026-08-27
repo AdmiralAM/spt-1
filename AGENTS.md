@@ -94,12 +94,17 @@ Any PR or chat handoff that asks for user testing must provide:
 - module name and affected SPT version;
 - PR number, branch name, and exact commit SHA;
 - successful workflow/run that produced the exact test build;
+- a clickable GitHub Actions run URL and a direct GitHub-hosted artifact URL for the exact artifact ID, or a deliberate maintained GitHub runtime/release URL;
 - artifact name and whether it is transient Actions output or a maintained `runtime-*` package;
 - artifact digest or package checksum when available;
 - exact install layout, including `BepInEx/plugins` and/or `SPT_Runtime/user/mods` paths;
 - focused test checklist;
 - exact logs/screenshots/results to return, including `BepInEx/LogOutput.log` when client runtime evidence is needed;
 - explicit pass/fail decision rule.
+
+The GitHub URL is mandatory. Do not hand off a chat attachment, automatic chat download, ephemeral local/sandbox file, source archive, or binary pasted outside GitHub as the test candidate. If the Actions artifact expired, is missing, or cannot be downloaded from the named run, regenerate or deliberately republish it on GitHub before requesting user action.
+
+The runtime checklist must be numbered and decision-oriented. For every item state: the exact user action, expected PASS behavior, explicit FAIL condition, and evidence to return. Do not use vague requests such as `test everything`, `see whether it works`, or a bare request for the full log. Ask for the complete log only when it is genuinely required; otherwise request results by checklist number and the smallest failure evidence.
 
 Do not ask the user to perform physical/runtime testing from source code, a PR diff, a branch name, or a CI success alone. A runtime-test request is valid only after a downloadable artifact or deliberate `runtime-*` package exists for the exact commit being tested. If the workflow passed but produced no artifact, stop and fix the packaging/handoff workflow first.
 

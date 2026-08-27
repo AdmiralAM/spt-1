@@ -16,7 +16,9 @@ Every runtime-test handoff must name:
 - target SPT version;
 - PR number, branch, and exact commit SHA;
 - successful workflow run;
+- clickable GitHub Actions run URL;
 - artifact name;
+- artifact ID and direct GitHub-hosted artifact URL, or an explicit maintained GitHub runtime/release URL;
 - artifact digest or package checksum when available;
 - exact install layout, including `SPT_Runtime/user/mods` and/or `BepInEx/plugins`;
 - focused Gate A checklist;
@@ -24,6 +26,26 @@ Every runtime-test handoff must name:
 - explicit pass/fail rule.
 
 Do not ask for runtime testing from a branch, PR diff, source tree, or CI success alone.
+
+## GitHub-only candidate delivery
+
+The user must download the candidate from GitHub. Accepted handoff sources are:
+
+- the exact GitHub Actions artifact produced by the named successful run;
+- a deliberate maintained `runtime-*` branch package on GitHub;
+- a deliberate GitHub Release asset.
+
+A chat attachment, automatic chat download, local/sandbox path, pasted binary, generic repository ZIP, or source checkout is not an accepted runtime-test handoff. Provide a normal clickable GitHub URL that the user can open independently from the chat. For an Actions candidate, link both the run page and the specific artifact ID. If the artifact is expired or unavailable, the gate remains queued until a replacement GitHub artifact is produced.
+
+## Point-by-point test contract
+
+The user must know exactly what the candidate is intended to prove. Present the physical checklist in this form:
+
+| # | Exact action | Expected PASS | Explicit FAIL | Evidence to return |
+| --- | --- | --- | --- | --- |
+| 1 | One concrete user action | One observable result | One observable contrary result | Smallest useful log line, screenshot, or `PASS`/`FAIL` |
+
+Every row must affect the gate decision. Number the rows, keep their order stable, and state the overall rule (for example, `PASS only when items 1-4 all pass`). Do not combine unrelated product areas, ask the user to explore freely, or request a full log when numbered PASS/FAIL results or a narrow failure excerpt are sufficient.
 
 ## Manual-test budget and scheduling
 
