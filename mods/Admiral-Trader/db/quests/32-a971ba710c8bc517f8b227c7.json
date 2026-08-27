@@ -1,0 +1,131 @@
+{
+  "QuestName": "Field Operation: Broken Command",
+  "_id": "a971ba710c8bc517f8b227c7",
+  "canShowNotificationsInGame": true,
+  "conditions": {
+    "AvailableForFinish": [
+      {
+        "id": "2a688815090f409908dbd261",
+        "index": 0,
+        "dynamicLocale": false,
+        "globalQuestCounterId": "",
+        "visibilityConditions": [],
+        "parentId": "",
+        "value": 1,
+        "type": "Elimination",
+        "oneSessionOnly": false,
+        "isResetOnConditionFailed": false,
+        "isNecessary": false,
+        "doNotResetIfCounterCompleted": false,
+        "counter": {
+          "id": "1b1a67ddb79b779550ef2390",
+          "conditions": [
+            {
+              "id": "abce0c7d722c8ee6f708155f",
+              "dynamicLocale": false,
+              "target": "Savage",
+              "compareMethod": ">=",
+              "value": 1,
+              "weapon": [],
+              "distance": {"value": 0, "compareMethod": ">="},
+              "weaponModsInclusive": [],
+              "weaponModsExclusive": [],
+              "enemyEquipmentInclusive": [],
+              "enemyEquipmentExclusive": [],
+              "weaponCaliber": [],
+              "savageRole": ["bossGluhar"],
+              "bodyPart": [],
+              "daytime": {"from": 0, "to": 0},
+              "conditionType": "Kills",
+              "enemyHealthEffects": [],
+              "resetOnSessionEnd": false
+            }
+          ]
+        },
+        "completeInSeconds": 0,
+        "conditionType": "CounterCreator"
+      }
+    ],
+    "AvailableForStart": [
+      {
+        "id": "f70f4344e8bd5e74cc0a1df4",
+        "index": 0,
+        "compareMethod": ">=",
+        "dynamicLocale": false,
+        "globalQuestCounterId": "",
+        "visibilityConditions": [],
+        "parentId": "",
+        "value": 25,
+        "conditionType": "Level"
+      },
+      {
+        "id": "793e184c52f3069014398c87",
+        "index": 1,
+        "dynamicLocale": false,
+        "globalQuestCounterId": "",
+        "visibilityConditions": [],
+        "parentId": "",
+        "target": "9c438fa48f645044ddc75e8d",
+        "status": [4],
+        "availableAfter": 0,
+        "dispersion": 0,
+        "conditionType": "Quest"
+      }
+    ],
+    "Started": [],
+    "Success": [],
+    "Fail": []
+  },
+  "description": "a971ba710c8bc517f8b227c7 description",
+  "failMessageText": "a971ba710c8bc517f8b227c7 failMessageText",
+  "name": "a971ba710c8bc517f8b227c7 name",
+  "note": "a971ba710c8bc517f8b227c7 note",
+  "traderId": "d5c27bb3169f8dfbc13f6b69",
+  "location": "RezervBase",
+  "image": "/files/quest/icon/5d69468a86f77452aa51d79d.jpg",
+  "type": "Elimination",
+  "isKey": false,
+  "restartable": false,
+  "instantComplete": false,
+  "secretQuest": false,
+  "startedMessageText": "a971ba710c8bc517f8b227c7 startedMessageText",
+  "successMessageText": "a971ba710c8bc517f8b227c7 successMessageText",
+  "acceptPlayerMessage": "a971ba710c8bc517f8b227c7 acceptPlayerMessage",
+  "acceptanceAndFinishingSource": "eft",
+  "declinePlayerMessage": "a971ba710c8bc517f8b227c7 declinePlayerMessage",
+  "completePlayerMessage": "a971ba710c8bc517f8b227c7 completePlayerMessage",
+  "rewards": {
+    "Started": [],
+    "Success": [
+      {
+        "value": 9500,
+        "id": "cae9f7bbf35405421d81184d",
+        "type": "Experience",
+        "index": 0
+      },
+      {
+        "value": 0.06,
+        "id": "168cc4829a7f318b5fb3723a",
+        "type": "TraderStanding",
+        "target": "d5c27bb3169f8dfbc13f6b69",
+        "index": 1
+      },
+      {
+        "value": 1,
+        "id": "f7bfd09e106133241c104d8b",
+        "type": "Item",
+        "target": "84ca2ddae6194992fbc19ce7",
+        "index": 2,
+        "items": [
+          {
+            "_id": "84ca2ddae6194992fbc19ce7",
+            "_tpl": "5c12613b86f7743bbe2c3f76",
+            "upd": {"StackObjectsCount": 1}
+          }
+        ]
+      }
+    ],
+    "Fail": []
+  },
+  "side": "Pmc"
+}
