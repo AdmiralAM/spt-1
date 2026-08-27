@@ -8,12 +8,14 @@ namespace SPTBeltArmbandInventory
 {
     internal static class DedicatedEquipmentSlotRuntime
     {
+        internal static Action<string> LogInfo;
         internal static Action<string> LogWarning;
         internal static Type EquipmentSlotType;
         internal static Type SlotViewType;
         internal static FieldInfo EquipmentTabSlotViewsField;
         internal static FieldInfo EquipmentTabHeadwearField;
         internal static FieldInfo SlotViewHeaderTextField;
+        internal static bool HeadBandCloneProofLogged;
 
         internal static object BeltSlotKey => Enum.ToObject(EquipmentSlotType, RuntimeIdentity.DedicatedBeltEquipmentSlotValue);
         internal static object HeadBandSlotKey => Enum.ToObject(EquipmentSlotType, RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue);
@@ -50,7 +52,14 @@ namespace SPTBeltArmbandInventory
                 clone.gameObject.name = "B&A&HB HeadBand Slot";
                 clone.transform.SetParent(headwear.transform.parent, false);
                 clone.transform.SetSiblingIndex(headwear.transform.GetSiblingIndex());
+                SetHeaderText(clone, "HEADBAND");
                 slotViews.Add(key, clone);
+
+                if (!HeadBandCloneProofLogged)
+                {
+                    HeadBandCloneProofLogged = true;
+                    LogInfo?.Invoke("B&A&HB HEADBAND UI PROOF: pseudo-slot16 view cloned before Headwear and registered in EquipmentTab slot map.");
+                }
             }
             catch (Exception exception)
             {
@@ -58,27 +67,30 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        internal static void NormalizeDedicatedSlotHeader(object slotView)
+        internal static void NormalizeDedicatedSlotHeader(object slotView, object slot)
         {
-            if (slotView == null || SlotViewHeaderTextField == null) return;
+            if (slotView == null || slot == null || SlotViewHeaderTextField == null) return;
             try
             {
-                object slot = ReflectionTools.ReadMember(slotView, "Slot");
                 string id = ReflectionTools.ReadMember(slot, "ID") as string;
                 string text = null;
                 if (string.Equals(id, RuntimeIdentity.DedicatedBeltWireSlotId, StringComparison.Ordinal)) text = "BELT";
                 else if (string.Equals(id, RuntimeIdentity.DedicatedHeadBandWireSlotId, StringComparison.Ordinal)) text = "HEADBAND";
-                if (text == null) return;
-
-                object header = SlotViewHeaderTextField.GetValue(slotView);
-                if (header == null) return;
-                PropertyInfo textProperty = ReflectionTools.FindInstanceProperty(header.GetType(), "text", typeof(string));
-                if (textProperty != null && textProperty.CanWrite) textProperty.SetValue(header, text, null);
+                if (text != null) SetHeaderText(slotView, text);
             }
             catch (Exception exception)
             {
                 LogWarning?.Invoke("B&A&HB dedicated slot header normalization failed closed: " + Unwrap(exception).Message);
             }
+        }
+
+        static void SetHeaderText(object slotView, string text)
+        {
+            object header = SlotViewHeaderTextField?.GetValue(slotView);
+            if (header == null) return;
+            PropertyInfo textProperty = ReflectionTools.FindInstanceProperty(header.GetType(), "text", typeof(string));
+            if (textProperty != null && textProperty.CanWrite)
+                textProperty.SetValue(header, text, null);
         }
 
         static Exception Unwrap(Exception exception)
@@ -90,12 +102,14 @@ namespace SPTBeltArmbandInventory
 
         internal static void Reset()
         {
+            LogInfo = null;
             LogWarning = null;
             EquipmentSlotType = null;
             SlotViewType = null;
             EquipmentTabSlotViewsField = null;
             EquipmentTabHeadwearField = null;
             SlotViewHeaderTextField = null;
+            HeadBandCloneProofLogged = false;
         }
     }
 
@@ -131,6 +145,7 @@ namespace SPTBeltArmbandInventory
 
                 DedicatedEquipmentSlotRuntime.EquipmentSlotType = equipmentSlotType;
                 DedicatedEquipmentSlotRuntime.SlotViewType = slotViewType;
+                DedicatedEquipmentSlotRuntime.LogInfo = logInfo;
                 DedicatedEquipmentSlotRuntime.LogWarning = logWarning;
                 if (!DedicatedEquipmentSlotRuntime.ValidatePseudoSlotBoundary())
                     return Fail("EquipmentSlot enum no longer ends at ArmBand=14; pseudo-slot values 15/16 refused to avoid collision.");
@@ -171,7 +186,7 @@ namespace SPTBeltArmbandInventory
                 Patch(patchMethod, harmonyMethodType, awake, awakePostfix);
                 Patch(patchMethod, harmonyMethodType, show, showPostfix);
 
-                logInfo?.Invoke("B&A&HB #2 MOD SPT dedicated client slots installed: Belt pseudo-slot 15 after Pockets in ContainersPanel; HeadBand pseudo-slot 16 cloned immediately before Headwear in EquipmentTab.");
+                logInfo?.Invoke("B&A&HB #2 MOD SPT dedicated client slots installed: Belt pseudo-slot 15 after Pockets in ContainersPanel; HeadBand pseudo-slot 16 cloned immediately before Headwear in EquipmentTab; dedicated labels normalized from exact Slot.ID.");
                 return true;
             }
             catch (Exception exception)
@@ -265,10 +280,15 @@ namespace SPTBeltArmbandInventory
         {
             MethodInfo method = original as MethodInfo;
             if (method == null || method.DeclaringType == null) return null;
-            DynamicMethod postfix = new DynamicMethod("BAndHBSlotViewShowPostfix", typeof(void), new[] { method.DeclaringType }, typeof(DedicatedEquipmentSlotPatches), true);
+            ParameterInfo[] parameters = method.GetParameters();
+            if (parameters.Length == 0) return null;
+            Type slotType = parameters[0].ParameterType;
+            DynamicMethod postfix = new DynamicMethod("BAndHBSlotViewShowPostfix", typeof(void), new[] { method.DeclaringType, slotType }, typeof(DedicatedEquipmentSlotPatches), true);
             postfix.DefineParameter(1, ParameterAttributes.None, "__instance");
+            postfix.DefineParameter(2, ParameterAttributes.None, "__0");
             ILGenerator il = postfix.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldarg_1);
             il.Emit(OpCodes.Call, typeof(DedicatedEquipmentSlotRuntime).GetMethod(nameof(DedicatedEquipmentSlotRuntime.NormalizeDedicatedSlotHeader), BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
             il.Emit(OpCodes.Ret);
             return postfix;
