@@ -100,7 +100,7 @@ var alreadyNormalItem = ItemRewardStackPlanner.Plan(currentCount: 3, unitHandboo
 Require(!alreadyNormalItem.Eligible && alreadyNormalItem.Reason == "AlreadyWithinBudget", "normal item stack must not be increased or changed");
 
 var structuralRemovalRequired = ItemRewardStackPlanner.Plan(currentCount: 5, unitHandbookPrice: 25000, budgetCap: 10000);
-Require(!structuralRemovalRequired.Eligible && structuralRemovalRequired.Reason == "ImmutableRewardsConsumeBudget", "planner must block cases requiring item removal/template replacement");
+Require(!structuralRemovalRequired.Eligible && structuralRemovalRequired.Reason == "BudgetBelowOneItemFloor", "planner must block cases requiring item removal/template replacement");
 
 var singleItem = ItemRewardStackPlanner.Plan(currentCount: 1, unitHandbookPrice: 25000, budgetCap: 10000);
 Require(!singleItem.Eligible && singleItem.Reason == "SingleItemCannotBeReducedWithoutStructuralRemoval", "single-item rewards must remain structural-protected");
