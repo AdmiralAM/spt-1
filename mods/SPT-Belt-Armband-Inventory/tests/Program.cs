@@ -18,6 +18,7 @@ internal static class Program
     {
         SPTBeltArmbandInventory.Tests.ProfileCleanupRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedWearableSlotContractRegression.Run();
+        SPTBeltArmbandInventory.Tests.DedicatedSlotPresentationPolicyRegression.Run();
         Assert(BeltSlotPlan.IsExpectedContainerPanelOrder(Vanilla), "recognizes SPT 4.1 container order");
         Assert(!BeltSlotPlan.IsExpectedContainerPanelOrder(new[] { BeltSlotPlan.Pockets }), "rejects unrelated enum arrays");
 
@@ -50,7 +51,7 @@ internal static class Program
         Assert(!BeltSlotPlan.ShouldExposeBelt(false, false), "empty slot never exposes legacy panel projection");
         Assert(!BeltSlotPlan.ShouldExposeBelt(true, false), "plain armband never exposes legacy panel projection");
         Assert(!BeltSlotPlan.ShouldExposeBelt(false, true), "container flag alone is insufficient");
-        Assert(!BeltSlotPlan.ShouldExposeBelt(true, true), "Phase 1 native GridWindow path keeps legacy panel projection disabled");
+        Assert(!BeltSlotPlan.ShouldExposeBelt(true, true), "native dedicated-slot path keeps legacy ArmBand panel projection disabled");
 
         Assert(AccessoryCategoryPolicy.IsSupported(AccessoryCategory.ArmBand), "ArmBand category is supported");
         Assert(AccessoryCategoryPolicy.IsSupported(AccessoryCategory.Belt), "Belt category is supported");
@@ -58,26 +59,26 @@ internal static class Program
         Assert(AccessoryCategoryPolicy.Capacity(AccessoryCategory.HeadBand) == AccessoryCapacityBand.Micro, "HeadBand uses micro capacity band");
         Assert(AccessoryCategoryPolicy.Capacity(AccessoryCategory.ArmBand) == AccessoryCapacityBand.Compact, "ArmBand uses compact capacity band");
         Assert(AccessoryCategoryPolicy.Capacity(AccessoryCategory.Belt) == AccessoryCapacityBand.Expanded, "Belt uses expanded capacity band");
-        Assert(AccessoryCategoryPolicy.HostState(AccessoryCategory.ArmBand) == AccessoryHostState.Validated, "ArmBand is the only validated runtime host");
-        Assert(AccessoryCategoryPolicy.HostState(AccessoryCategory.Belt) == AccessoryHostState.ConceptOnly, "Belt remains concept-only until its dedicated runtime injection boundary is proven");
-        Assert(AccessoryCategoryPolicy.HostState(AccessoryCategory.HeadBand) == AccessoryHostState.ConceptOnly, "HeadBand remains concept-only until its dedicated runtime injection boundary is proven");
+        Assert(AccessoryCategoryPolicy.HostState(AccessoryCategory.ArmBand) == AccessoryHostState.Validated, "ArmBand host remains runtime validated");
+        Assert(AccessoryCategoryPolicy.HostState(AccessoryCategory.Belt) == AccessoryHostState.Validated, "dedicated Belt host reflects physical slot/filter validation");
+        Assert(AccessoryCategoryPolicy.HostState(AccessoryCategory.HeadBand) == AccessoryHostState.RuntimeCandidate, "HeadBand remains runtime-candidate until the batched physical gate passes");
         Assert(!AccessoryCategoryPolicy.CanExposeContainer(AccessoryCategory.Belt, false, true), "category alone cannot expose an empty host");
-        Assert(AccessoryCategoryPolicy.CanExposeContainer(AccessoryCategory.HeadBand, true, true), "container-capable HeadBand may expose a row conceptually");
+        Assert(AccessoryCategoryPolicy.CanExposeContainer(AccessoryCategory.HeadBand, true, true), "container-capable HeadBand may expose its dedicated host");
         Assert(AccessoryCategoryPolicy.CanActivateRuntime(AccessoryCategory.ArmBand, true, true), "validated ArmBand container can activate its runtime route");
-        Assert(!AccessoryCategoryPolicy.CanActivateRuntime(AccessoryCategory.Belt, true, true), "concept-only Belt cannot activate before dedicated slot injection is proven");
-        Assert(!AccessoryCategoryPolicy.CanActivateRuntime(AccessoryCategory.HeadBand, true, true), "concept-only HeadBand cannot activate before dedicated slot injection is proven");
+        Assert(AccessoryCategoryPolicy.CanActivateRuntime(AccessoryCategory.Belt, true, true), "physically validated Belt host can activate its dedicated runtime route");
+        Assert(!AccessoryCategoryPolicy.CanActivateRuntime(AccessoryCategory.HeadBand, true, true), "HeadBand does not become validated merely because a candidate implementation exists");
         Assert(!AccessoryCategoryPolicy.CanExposeContainer((AccessoryCategory)99, true, true), "unknown category fails closed");
         Assert(!AccessoryCategoryPolicy.CanActivateRuntime((AccessoryCategory)99, true, true), "unknown category cannot activate runtime behavior");
 
-        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.PanelProjection), "native GridWindow Phase 1 does not own legacy panel projection");
-        Assert(AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess), "magazine belt retains reachable-container fast access");
-        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.PaymentSource), "magazine-only RC does not install payment-source behavior");
-        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess), "magazine-only RC does not install grenade behavior");
-        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.Belt, AccessoryCapability.PanelProjection), "concept-only Belt has no runtime capabilities");
-        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.HeadBand, AccessoryCapability.FastAccess), "concept-only HeadBand has no runtime capabilities");
+        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.PanelProjection), "native GridWindow ArmBand path does not own legacy panel projection");
+        Assert(AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess), "magazine ArmBand candidate retains reachable-container fast access");
+        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.PaymentSource), "magazine-only ArmBand candidate does not install payment-source behavior");
+        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess), "magazine-only ArmBand candidate does not install grenade behavior");
+        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.Belt, AccessoryCapability.PanelProjection), "dedicated Belt presentation is slot-owned rather than a generic capability");
+        Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.HeadBand, AccessoryCapability.FastAccess), "HeadBand candidate does not inherit Belt fast-access behavior");
         Assert(!AccessoryCapabilityPolicy.Has((AccessoryCategory)99, AccessoryCapability.PanelProjection), "unknown category has no capabilities");
         Assert(!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.None), "empty capability request fails closed");
-        Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess, true, true), "disabled grenade capability cannot activate on the magazine RC");
+        Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess, true, true), "disabled grenade capability cannot activate on the magazine candidate");
         Assert(AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess, true, true), "assigned fast-access capability activates only for a real container");
         Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess, true, false), "fast-access capability still requires a container item");
 
