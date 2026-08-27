@@ -67,6 +67,20 @@ If the work is too small to justify its own Issue, it may be included in an exis
 
 A failed runtime gate does not authorize feature expansion or redesign. Diagnose the first proven failing boundary, make the smallest corrective change, rerun the minimum necessary validation, and keep unrelated work out of the PR.
 
+## Autonomous milestone execution
+
+An approved gate is a bounded milestone, not a single commit, command, micro-patch, or chat turn. Once the user authorizes the milestone with wording such as `continue`, `work`, or `next step`, continue autonomously through every feasible internal step needed to meet its acceptance criteria.
+
+- Break the milestone into internal steps without requiring repeated user permission.
+- Continue through source inspection, implementation, tests, commits, CI diagnosis, corrective commits, packaging, and PR/status updates while all work remains inside the approved scope.
+- A commit, successful sub-test, discovered boundary, started CI run, or completed micro-step is progress inside the milestone; it is not a reason to end the turn or ask the user for `next step` again.
+- `One gate at a time` means no scope expansion. It does not mean one micro-step per response.
+- Do not issue a terminal handoff while feasible milestone work remains. Wait for current CI when necessary, consume its result, and fix failures within scope.
+- Stop only when the milestone acceptance criteria are met, a genuine external/user decision is required, permissions or unavailable evidence block further work, or a safety boundary requires user action.
+- If blocked, name the exact blocker and the work already completed. Do not manufacture a documentation/validator task merely to remain busy.
+
+Progress communication must be low-noise. Give a start acknowledgement, then report only material state changes such as a proven root cause, a meaningful implementation slice, CI result requiring a decision, a real blocker, or milestone completion. Do not send a completion-style message for every command, commit, file, test, or two-minute increment. A progress update does not pause the work unless it explicitly reports a blocker.
+
 ## Runtime gates and test artifacts
 
 SPT/EFT runtime behavior is proven only by the required physical/user runtime evidence for that module. CI is necessary but not a substitute when an Issue or PR defines a runtime gate.

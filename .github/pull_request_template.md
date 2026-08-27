@@ -7,6 +7,8 @@
 - Affected module(s):
 - Explicit non-goals:
 - Persistent profile impact (`none` or exact IDs/state written):
+- Current milestone / acceptance criteria:
+- Authorized internal work batch (implementation, CI fixes, packaging, PR update):
 
 ## Changes
 
@@ -25,6 +27,8 @@
 - [ ] No unrelated module behavior was changed.
 - [ ] No shared CI concurrency group was introduced with unrelated workstreams.
 - [ ] This PR does not invoke or depend on `Publish SPT Mod Suite` merely for development validation.
+- [ ] The current milestone was executed as one autonomous batch; intermediate commits/checks were not turned into repeated user handoffs.
+- [ ] No terminal update was issued while feasible in-scope milestone work remained.
 
 ## Runtime test handoff
 
