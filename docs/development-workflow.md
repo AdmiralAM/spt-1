@@ -81,6 +81,16 @@ A PR can remain open while work/validation continues. Its existence does not imp
 
 Automated tests/builds prove only what they execute. SPT/EFT runtime behavior is not considered proven when runtime evidence is required but absent.
 
+### Milestone batches
+
+Work is authorized and reported at milestone/gate granularity. A gate may require multiple commits and CI iterations. Agents execute those internal steps autonomously and do not require the user to repeat `continue` after each one.
+
+The normal batch is:
+
+`inspect current authority -> implement complete scoped slice -> validate -> diagnose/fix scoped failures -> package/update PR -> milestone handoff`
+
+Intermediate commits and checks preserve evidence; they are not separate user handoffs. End the batch only at acceptance, a real external decision/blocker, or a required physical runtime boundary. Status updates remain non-terminal and low-noise while the batch continues.
+
 Merge into `main` only when there is a concrete integration need and the task has reached its required acceptance/validation state. Do not merge merely to preserve progress, obtain a build artifact, expose work to another process, or clean up a branch.
 
 After merge:
