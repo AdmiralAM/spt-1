@@ -67,19 +67,29 @@ If the work is too small to justify its own Issue, it may be included in an exis
 
 A failed runtime gate does not authorize feature expansion or redesign. Diagnose the first proven failing boundary, make the smallest corrective change, rerun the minimum necessary validation, and keep unrelated work out of the PR.
 
-## Autonomous milestone execution
+## Autonomous work-package execution
 
-An approved gate is a bounded milestone, not a single commit, command, micro-patch, or chat turn. Once the user authorizes the milestone with wording such as `continue`, `work`, or `next step`, continue autonomously through every feasible internal step needed to meet its acceptance criteria.
+Active development is authorized as a work package: one bounded product objective containing an ordered sequence of gates and one final acceptance condition. A gate is an internal checkpoint inside the package, not a user conversation boundary.
 
-- Break the milestone into internal steps without requiring repeated user permission.
-- Continue through source inspection, implementation, tests, commits, CI diagnosis, corrective commits, packaging, and PR/status updates while all work remains inside the approved scope.
-- A commit, successful sub-test, discovered boundary, started CI run, or completed micro-step is progress inside the milestone; it is not a reason to end the turn or ask the user for `next step` again.
-- `One gate at a time` means no scope expansion. It does not mean one micro-step per response.
-- Do not issue a terminal handoff while feasible milestone work remains. Wait for current CI when necessary, consume its result, and fix failures within scope.
-- Stop only when the milestone acceptance criteria are met, a genuine external/user decision is required, permissions or unavailable evidence block further work, or a safety boundary requires user action.
-- If blocked, name the exact blocker and the work already completed. Do not manufacture a documentation/validator task merely to remain busy.
+The active Issue or PR must define before implementation:
 
-Progress communication must be low-noise. Give a start acknowledgement, then report only material state changes such as a proven root cause, a meaningful implementation slice, CI result requiring a decision, a real blocker, or milestone completion. Do not send a completion-style message for every command, commit, file, test, or two-minute increment. A progress update does not pause the work unless it explicitly reports a blocker.
+- one work-package objective;
+- the ordered gates included in the package;
+- explicit non-goals/frozen contracts;
+- the final package acceptance condition;
+- the package state: `active`, `blocked`, `runtime-gate`, or `complete`.
+
+Once the user authorizes the active package with wording such as `continue`, `work`, or `next step`, execute the whole package autonomously.
+
+- Do not redefine, shrink, or replace the package with a smaller self-selected `next gate`.
+- Do not turn discovery, policy reading, one file, one commit, one quest, one validator, one CI run, documentation reconciliation, or PR cleanup into a terminal milestone unless the user explicitly defined that exact task as the whole package.
+- Complete gates in the recorded order. When one gate passes, update its state and immediately start the next recorded gate without asking for permission.
+- Continue through source inspection, implementation, tests, commits, CI diagnosis, corrective commits, packaging, PR updates, merge and cleanup when those steps are included in the package.
+- `One gate at a time` controls execution order and prevents scope expansion. It never means `one gate per response`.
+- A terminal response is valid only when every package gate and the final acceptance condition are complete, or when a genuine blocker changes package state to `blocked`/`runtime-gate`.
+- If blocked, name the exact external boundary and preserve the remaining ordered gates. Do not invent a documentation/validator gate merely to end the turn.
+
+Progress communication must be low-noise and non-terminal. Give a start acknowledgement, then report only a proven root cause, a material multi-file implementation slice, CI failure that changes the plan, a genuine blocker, or final package completion. Do not issue `next step`, `head before/after`, `changed files`, artifact, or completion-style summaries after internal gates. When an intermediate update is necessary, state `continuing automatically; no user response required` and continue working.
 
 ## Runtime gates and test artifacts
 

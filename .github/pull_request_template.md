@@ -7,8 +7,16 @@
 - Affected module(s):
 - Explicit non-goals:
 - Persistent profile impact (`none` or exact IDs/state written):
-- Current milestone / acceptance criteria:
-- Authorized internal work batch (implementation, CI fixes, packaging, PR update):
+- Work-package objective:
+- Package state (`active` / `blocked` / `runtime-gate` / `complete`):
+- Final package acceptance condition:
+
+## Ordered package gates
+
+| # | Gate | Acceptance | State |
+| --- | --- | --- | --- |
+| 1 |  |  | `pending` |
+| 2 |  |  | `pending` |
 
 ## Changes
 
@@ -27,8 +35,10 @@
 - [ ] No unrelated module behavior was changed.
 - [ ] No shared CI concurrency group was introduced with unrelated workstreams.
 - [ ] This PR does not invoke or depend on `Publish SPT Mod Suite` merely for development validation.
-- [ ] The current milestone was executed as one autonomous batch; intermediate commits/checks were not turned into repeated user handoffs.
-- [ ] No terminal update was issued while feasible in-scope milestone work remained.
+- [ ] The complete work package was executed autonomously; internal gates were not turned into repeated user handoffs.
+- [ ] Passing an internal gate automatically advanced to the next recorded gate.
+- [ ] No terminal update was issued before all package gates/final acceptance completed or a genuine blocker was recorded.
+- [ ] The agent did not shrink the package into a self-selected discovery/docs/one-file/one-commit gate.
 
 ## Runtime test handoff
 
