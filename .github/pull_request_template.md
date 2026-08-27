@@ -16,6 +16,7 @@
 - [ ] Module-specific automated tests/builds passed where applicable.
 - [ ] CI annotations/warnings were reviewed and are fixed, or explicitly classified as non-blocking/follow-up debt.
 - [ ] Runtime/user validation is complete, or the remaining runtime gate is explicitly documented.
+- [ ] If this PR is a runtime candidate/gameplay alpha/installable package, the exact artifact exists; static checks/docs/validators are not being used as a substitute for delivery.
 - [ ] Existing logs/results were inspected before triggering reruns.
 - [ ] If this PR ports or uses an old reference/mod/branch, baseline viability was checked and documented before implementation.
 - [ ] Any failure was diagnosed at the first failed boundary before rerunning.
@@ -31,12 +32,14 @@
 - PR / branch / commit SHA:
 - Successful workflow run:
 - Downloadable artifact or deliberate runtime branch:
+- Artifact digest / package checksum:
 - Single runtime gate being tested:
 - Install layout:
 - Focused checklist:
 - Required returned evidence:
 - Pass/fail decision rule:
 - [ ] I am not asking for runtime testing from CI success alone; the named artifact/package exists for the exact commit above.
+- [ ] I did not stop at docs/tests/validators after an artifact-only or runtime-candidate instruction.
 - [ ] This handoff answers one clear physical question and is not an internal micro-patch/debug loop.
 - [ ] Unknown runtime/API boundaries were resolved from references, source, logs, artifacts, or narrow diagnostics before requesting physical testing.
 - [ ] Load safety was considered first; this artifact is not expected to block profile/game loading or startup.
