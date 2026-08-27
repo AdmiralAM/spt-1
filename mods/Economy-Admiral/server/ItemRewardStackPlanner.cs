@@ -50,7 +50,12 @@ public static class ItemRewardStackPlanner
 
         var mutableBudget = budgetCap - immutableHandbookValue;
         if (mutableBudget < unitHandbookPrice)
-            return Block(currentCount, unitHandbookPrice, immutableHandbookValue, budgetCap, "ImmutableRewardsConsumeBudget");
+            return Block(
+                currentCount,
+                unitHandbookPrice,
+                immutableHandbookValue,
+                budgetCap,
+                immutableHandbookValue > 0 ? "ImmutableRewardsConsumeBudget" : "BudgetBelowOneItemFloor");
 
         var targetCount = Math.Floor(mutableBudget / unitHandbookPrice);
         if (targetCount < 1)
