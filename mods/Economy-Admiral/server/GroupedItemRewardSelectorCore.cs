@@ -32,8 +32,10 @@ public static class GroupedItemRewardSelectorCore
             if (Math.Abs(entry.Count - rounded) > IntegerTolerance)
                 return Block("NonIntegralStackCount");
 
+            if (requireKnownHandbookPrice && !entry.HasKnownHandbookPrice)
+                return Block("UnknownHandbookPrice");
+
             if (rounded <= 1) continue;
-            if (requireKnownHandbookPrice && !entry.HasKnownHandbookPrice) continue;
             if (candidateIndex >= 0) return Block("AmbiguousMultipleReducibleStacks");
             candidateIndex = index;
         }
