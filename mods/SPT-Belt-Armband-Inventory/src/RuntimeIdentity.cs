@@ -11,9 +11,6 @@ namespace SPTBeltArmbandInventory
         internal const string SearchableTemplateParentId = "68ac00000000000000000004";
         internal const string BeltItemParentId = "68ac00000000000000000005";
 
-        // Phase 2 proof item. It reuses the already proven searchable ArmBand
-        // host/runtime type but has a distinct template/grid/assort identity and
-        // independent item capabilities.
         internal const string WristWalletItemId = "68ac00000000000000000006";
         internal const string WristWalletGridId = "68ac00000000000000000007";
         internal const string WristWalletAssortId = "68ac00000000000000000008";
@@ -26,9 +23,21 @@ namespace SPTBeltArmbandInventory
         internal const string DedicatedHeadBandSlotMongoId = "68ac0000000000000000000a";
         internal const string HeadBandItemParentId = "68ac0000000000000000000b";
 
+        // First concrete items for the two new equipment locations.
+        internal const string DedicatedMagazineBeltItemId = "68ac0000000000000000000c";
+        internal const string DedicatedMagazineBeltGridId = "68ac0000000000000000000d";
+        internal const string DedicatedMagazineBeltAssortId = "68ac0000000000000000000e";
+        internal const string EmergencyHeadBandItemId = "68ac0000000000000000000f";
+        internal const string EmergencyHeadBandGridId = "68ac00000000000000000010";
+        internal const string EmergencyHeadBandAssortId = "68ac00000000000000000011";
+
         internal const int CandidateGridColumns = 1;
         internal const int CandidateGridRows = 2;
         internal const int WristWalletGridColumns = 1;
         internal const int WristWalletGridRows = 1;
+        internal const int DedicatedMagazineBeltGridColumns = 2;
+        internal const int DedicatedMagazineBeltGridRows = 2;
+        internal const int EmergencyHeadBandGridColumns = 1;
+        internal const int EmergencyHeadBandGridRows = 1;
     }
 }
