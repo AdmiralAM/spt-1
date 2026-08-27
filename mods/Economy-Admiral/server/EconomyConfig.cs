@@ -76,5 +76,8 @@ public sealed record ManualQuestRewardOverride
     public double? ExperienceTarget { get; init; }
     public double? TraderStandingTarget { get; init; }
 
+    // Exact count for the one safe Success Item reward stack. This never replaces templates or reward records.
+    public double? ItemRewardStackCountTarget { get; init; }
+
     public string? Note { get; init; }
 }
