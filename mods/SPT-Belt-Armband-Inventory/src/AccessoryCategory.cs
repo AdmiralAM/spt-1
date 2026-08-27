@@ -19,6 +19,7 @@ namespace SPTBeltArmbandInventory
     internal enum AccessoryHostState
     {
         ConceptOnly,
+        RuntimeCandidate,
         Validated
     }
 
