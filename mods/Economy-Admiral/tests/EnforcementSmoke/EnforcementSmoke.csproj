@@ -8,5 +8,6 @@
   <ItemGroup>
     <Compile Include="../../server/NumericRewardTransactionCore.cs" Link="NumericRewardTransactionCore.cs" />
     <Compile Include="../../server/ItemRewardStackPlanner.cs" Link="ItemRewardStackPlanner.cs" />
+    <Compile Include="../../server/QuestRewardMutationPermission.cs" Link="QuestRewardMutationPermission.cs" />
   </ItemGroup>
 </Project>
