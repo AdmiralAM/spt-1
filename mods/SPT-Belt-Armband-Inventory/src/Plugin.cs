@@ -18,6 +18,7 @@ namespace SPTBeltArmbandInventory
         RuntimeCustomBeltTypePatches runtimeTypePatches;
         RuntimeCustomHeadBandTypePatches runtimeHeadBandTypePatches;
         DedicatedEquipmentSlotPatches dedicatedEquipmentSlotPatches;
+        BeltContainersPanelProjectionPatches beltContainersPanelProjectionPatches;
         GridWindowSizingPatches gridWindowSizingPatches;
         LootPriorityPatches lootPatches;
         UnloadPriorityPatches unloadPatches;
@@ -80,6 +81,14 @@ namespace SPTBeltArmbandInventory
                 runtimeTypePatches = null;
                 Logger.LogWarning("B&A&HB #2 dedicated Belt/HeadBand equipment-slot client projection failed; dedicated runtime mappings rolled back for this session.");
                 return;
+            }
+
+            beltContainersPanelProjectionPatches = new BeltContainersPanelProjectionPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!beltContainersPanelProjectionPatches.TryInstall())
+            {
+                beltContainersPanelProjectionPatches.Dispose();
+                beltContainersPanelProjectionPatches = null;
+                Logger.LogWarning("Dedicated Belt equipment data remains active, but the Belt row could not be projected into EFT ContainersPanel for this session.");
             }
 
             Logger.LogInfo("B&A&HB #2 wearable presentation uses native SlotView/GridWindow paths with fixed dedicated Belt and HeadBand locations.");
@@ -232,6 +241,8 @@ namespace SPTBeltArmbandInventory
             lootPatches = null;
             if (gridWindowSizingPatches != null) gridWindowSizingPatches.Dispose();
             gridWindowSizingPatches = null;
+            if (beltContainersPanelProjectionPatches != null) beltContainersPanelProjectionPatches.Dispose();
+            beltContainersPanelProjectionPatches = null;
             if (dedicatedEquipmentSlotPatches != null) dedicatedEquipmentSlotPatches.Dispose();
             dedicatedEquipmentSlotPatches = null;
             if (runtimeHeadBandTypePatches != null) runtimeHeadBandTypePatches.Dispose();
