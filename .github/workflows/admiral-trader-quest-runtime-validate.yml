@@ -46,6 +46,8 @@ jobs:
           if len(quest_files) != 31:
               raise SystemExit(f'expected 31 packaged quest templates, got {len(quest_files)}')
 
+          intro_id = '5d404ebd654de4efecef71d2'
+          intro_targets = {'5780cf942459777df90dcb72', '59148c8a86f774197930e983'}
           quests = []
           quest_ids = []
           access_ids = []
@@ -68,12 +70,18 @@ jobs:
                   raise SystemExit(f'{path.name}: expected exactly one finish condition')
               condition = finish[0]
               condition_type = condition.get('conditionType')
-              if condition_type == 'FindItem':
+              if condition_type in ('FindItem', 'HandoverItem'):
                   if condition.get('onlyFoundInRaid') is not False:
                       raise SystemExit(f'{path.name}: item proof must be non-FIR')
                   if not condition.get('target') or not condition.get('value') or condition.get('value') <= 0:
                       raise SystemExit(f'{path.name}: malformed item proof')
-                  if is_arsenal:
+                  if condition_type == 'HandoverItem':
+                      if quest['_id'] != intro_id or is_arsenal:
+                          raise SystemExit(f'{path.name}: HandoverItem is reserved for Fundamentals')
+                      if set(condition.get('target') or []) != intro_targets or condition.get('value') != 2:
+                          raise SystemExit(f'{path.name}: Fundamentals handover target drift')
+                      access_ids.append(quest['_id'])
+                  elif is_arsenal:
                       if quest.get('type') != 'PickUp' or condition.get('value') != 1:
                           raise SystemExit(f'{path.name}: malformed Arsenal readiness proof')
                       arsenal_readiness_ids.append(quest['_id'])
@@ -97,24 +105,12 @@ jobs:
           if len(quest_ids) != len(set(quest_ids)):
               raise SystemExit('packaged quest ids are not unique')
           if len(access_ids) != 10 or len(arsenal_readiness_ids) != 7 or len(arsenal_combat_ids) != 14:
-              raise SystemExit(
-                  'packaged quest mix drifted: '
-                  f'Access={len(access_ids)}/10, '
-                  f'ArsenalReadiness={len(arsenal_readiness_ids)}/7, '
-                  f'ArsenalCombat={len(arsenal_combat_ids)}/14'
-              )
+              raise SystemExit('packaged quest mix drifted: ' f'Access={len(access_ids)}/10, ' f'ArsenalReadiness={len(arsenal_readiness_ids)}/7, ' f'ArsenalCombat={len(arsenal_combat_ids)}/14')
           if len(caliber_proof_ids) != 6:
               raise SystemExit(f'expected six packaged caliber-constrained Munitions proofs, got {len(caliber_proof_ids)}')
 
-          required_fields = (
-              'name', 'description', 'note', 'startedMessageText', 'successMessageText',
-              'failMessageText', 'acceptPlayerMessage', 'declinePlayerMessage',
-              'completePlayerMessage', 'changeQuestMessageText'
-          )
-          locale_sets = {
-              'en': ('en.json', 'arsenal-en.json'),
-              'ru': ('ru.json', 'arsenal-ru.json'),
-          }
+          required_fields = ('name', 'description', 'note', 'startedMessageText', 'successMessageText', 'failMessageText', 'acceptPlayerMessage', 'declinePlayerMessage', 'completePlayerMessage', 'changeQuestMessageText')
+          locale_sets = {'en': ('en.json', 'arsenal-en.json'), 'ru': ('ru.json', 'arsenal-ru.json')}
           for locale_code, files in locale_sets.items():
               merged = {}
               for filename in files:
