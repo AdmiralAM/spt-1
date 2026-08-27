@@ -28,10 +28,16 @@ internal static class WearableDescriptorRegression
         if (!string.Equals(belt.HostSlot, DedicatedWearableSlotContract.BeltSlotId, StringComparison.Ordinal)
             || !string.Equals(headBand.HostSlot, DedicatedWearableSlotContract.HeadBandSlotId, StringComparison.Ordinal))
             throw new InvalidOperationException("Belt/HeadBand descriptors must retain their fixed dedicated product slot identities.");
-        if (belt.HostState != AccessoryHostState.ConceptOnly || headBand.HostState != AccessoryHostState.ConceptOnly)
-            throw new InvalidOperationException("Dedicated identities may exist before physical runtime proof; host state must remain fail-closed until the full client slot boundary is activated.");
+        if (belt.HostState != AccessoryHostState.Validated)
+            throw new InvalidOperationException("Dedicated Belt host must reflect the physically proven slot/filter runtime boundary.");
+        if (headBand.HostState != AccessoryHostState.RuntimeCandidate)
+            throw new InvalidOperationException("HeadBand host must remain a runtime candidate until the single physical Phase 1 gate passes.");
         if (belt.Capabilities != AccessoryCapability.None || headBand.Capabilities != AccessoryCapability.None)
-            throw new InvalidOperationException("Unproven dedicated host descriptors must expose no policy capabilities yet.");
+            throw new InvalidOperationException("Dedicated host placement must not implicitly grant unrelated capability policies.");
+        if (!AccessoryCategoryPolicy.CanActivateRuntime(AccessoryCategory.Belt, true, true))
+            throw new InvalidOperationException("Physically validated Belt host must be eligible for its dedicated runtime path.");
+        if (AccessoryCategoryPolicy.CanActivateRuntime(AccessoryCategory.HeadBand, true, true))
+            throw new InvalidOperationException("HeadBand candidate must not be promoted to validated before physical acceptance.");
 
         if (AccessoryCategoryPolicy.Capacity(AccessoryCategory.ArmBand) != armBand.Capacity
             || AccessoryCapabilityPolicy.Capabilities(AccessoryCategory.ArmBand) != armBand.Capabilities)
