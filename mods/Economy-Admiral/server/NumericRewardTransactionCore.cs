@@ -114,17 +114,30 @@ public static class NumericRewardTransactionCore
                 Results = results,
             };
         }
-        catch (Exception exception)
+        catch (Exception applyException)
         {
-            Rollback(journal);
-            VerifyRollback(journal);
-            return new NumericRewardTransactionOutcome
+            try
             {
-                Committed = false,
-                RolledBack = true,
-                Error = exception.Message,
-                Results = Array.Empty<NumericRewardTransactionResult>(),
-            };
+                Rollback(journal);
+                VerifyRollback(journal);
+                return new NumericRewardTransactionOutcome
+                {
+                    Committed = false,
+                    RolledBack = true,
+                    Error = applyException.Message,
+                    Results = Array.Empty<NumericRewardTransactionResult>(),
+                };
+            }
+            catch (Exception rollbackException)
+            {
+                return new NumericRewardTransactionOutcome
+                {
+                    Committed = false,
+                    RolledBack = false,
+                    Error = $"Apply failed: {applyException.Message} Rollback could not be proven: {rollbackException.Message}",
+                    Results = Array.Empty<NumericRewardTransactionResult>(),
+                };
+            }
         }
     }
 
