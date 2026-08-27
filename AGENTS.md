@@ -35,6 +35,25 @@ Parallel development of multiple modules is normal and must remain safe.
 
 If the work is too small to justify its own Issue, it may be included in an existing coherent Issue/PR, but it still follows branch/PR isolation.
 
+## Physical runtime-test handoff contract
+
+Whenever a developer asks the user to physically test an SPT runtime artifact, the handoff must state exactly what this artifact is intended to prove. Do not hand off an artifact with a vague request to "test it".
+
+Every physical-test handoff must include:
+
+- exact source head SHA;
+- CI run/result and exact artifact identity/digest when available;
+- one concrete runtime gate for that handoff;
+- the exact user actions required, in order;
+- explicit PASS criteria;
+- explicit FAIL criteria or the first blocker/evidence to capture;
+- which previously proven behavior does **not** need to be retested;
+- known defects intentionally deferred to later gates/polish.
+
+Do not ask the user to repeat already proven Belt/filter/startup/etc. checks unless the current change can realistically regress them or the gate explicitly requires regression coverage. Prefer a larger coherent runtime package over repeated micro-tests when several adjacent fixes can be validated together safely.
+
+A log line that says a patch was installed or a projection was registered is not physical proof that the corresponding UI/runtime behavior exists. Runtime handoffs must distinguish installation/diagnostic proof from visible/interactive acceptance.
+
 ## CI and publication
 
 Module CI proves the affected module. Keep triggers/path filters narrow.
