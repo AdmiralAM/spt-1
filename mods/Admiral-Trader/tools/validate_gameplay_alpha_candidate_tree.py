@@ -4,12 +4,17 @@ import json
 from pathlib import Path
 
 EXPECTED_OFFER_COUNT = 11
-EXPECTED_QUEST_COUNT = 31
+MINIMUM_QUEST_COUNT = 32
+EXPECTED_BACKBONE_QUEST_COUNT = 31
 EXPECTED_QUESTASSORT_STATES = {"started", "success", "fail"}
 EXPECTED_MILESTONE_UNLOCKS = 7
 REQUIRED_LOCALES = {
     "en.json",
     "ru.json",
+    "arsenal-en.json",
+    "arsenal-ru.json",
+    "operations-en.json",
+    "operations-ru.json",
     "gameplay-alpha-en.json",
     "gameplay-alpha-ru.json",
     "objectives-en.json",
@@ -77,22 +82,32 @@ def validate(root: Path, require_enabled: bool) -> None:
         fail("candidate questassort.success references a non-offer ID")
 
     quest_files = sorted(quests.glob("*.json")) if quests.is_dir() else []
-    if len(quest_files) != EXPECTED_QUEST_COUNT:
-        fail(f"candidate must contain exactly {EXPECTED_QUEST_COUNT} current quest templates; found {len(quest_files)}")
+    if len(quest_files) < MINIMUM_QUEST_COUNT:
+        fail(f"candidate must contain at least {MINIMUM_QUEST_COUNT} current quest templates; found {len(quest_files)}")
     quest_ids = set()
+    field_operation_count = 0
     for path in quest_files:
         quest = load_json(path)
         quest_id = str(quest.get("_id") or "")
         if not quest_id or quest_id in quest_ids:
             fail(f"candidate quest template has missing/duplicate _id: {path}")
         quest_ids.add(quest_id)
+        if str(quest.get("QuestName") or "").startswith("Field Operation:"):
+            field_operation_count += 1
+    if field_operation_count < 1:
+        fail("candidate must contain at least one materialized authored Field Operation")
+    if len(quest_files) - field_operation_count < EXPECTED_BACKBONE_QUEST_COUNT:
+        fail(
+            f"candidate lost stable quest backbone: non-operation quests={len(quest_files) - field_operation_count}, "
+            f"expected at least {EXPECTED_BACKBONE_QUEST_COUNT}"
+        )
     missing_unlock_quests = sorted(set(map(str, questassort["success"].values())) - quest_ids)
     if missing_unlock_quests:
         fail(f"candidate milestone unlocks reference missing quest templates: {missing_unlock_quests}")
 
     missing_locales = sorted(name for name in REQUIRED_LOCALES if not (locales / name).is_file())
     if missing_locales:
-        fail(f"candidate is missing required EN/RU Gameplay Alpha/objective locale files: {missing_locales}")
+        fail(f"candidate is missing required EN/RU locale files: {missing_locales}")
     for name in REQUIRED_LOCALES:
         data = load_json(locales / name)
         if not isinstance(data, dict) or not data:
@@ -101,7 +116,7 @@ def validate(root: Path, require_enabled: bool) -> None:
     print(
         "Admiral Trader candidate tree OK: "
         f"target=4.1.3 offers={EXPECTED_OFFER_COUNT} milestoneUnlocks={EXPECTED_MILESTONE_UNLOCKS} "
-        f"quests={EXPECTED_QUEST_COUNT} locales={len(REQUIRED_LOCALES)} enabled={require_enabled}"
+        f"quests={len(quest_files)} fieldOperations={field_operation_count} locales={len(REQUIRED_LOCALES)} enabled={require_enabled}"
     )
 
 
