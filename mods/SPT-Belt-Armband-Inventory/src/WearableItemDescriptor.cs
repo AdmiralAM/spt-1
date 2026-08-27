@@ -45,15 +45,33 @@ namespace SPTBeltArmbandInventory
                     RuntimeIdentity.CandidateGridRows,
                     WearableDescriptorRegistry.Get(AccessoryCategory.ArmBand).Capabilities),
 
-                // Phase 2 proof stays deliberately narrow: exact-fit 1x1 storage,
-                // currency filter and payment-source visibility. Pickup/fast-access
-                // are not advertised until independently proven for this item.
                 [RuntimeIdentity.WristWalletItemId] = new WearableItemDescriptor(
                     RuntimeIdentity.WristWalletItemId,
                     AccessoryCategory.ArmBand,
                     RuntimeIdentity.WristWalletGridColumns,
                     RuntimeIdentity.WristWalletGridRows,
                     AccessoryCapability.PaymentSource |
+                    AccessoryCapability.BuildValidation),
+
+                // Dedicated Belt is the tactical fast-access family. It participates in
+                // reachable-container ordering but keeps grenade/payment semantics off.
+                [RuntimeIdentity.DedicatedMagazineBeltItemId] = new WearableItemDescriptor(
+                    RuntimeIdentity.DedicatedMagazineBeltItemId,
+                    AccessoryCategory.Belt,
+                    RuntimeIdentity.DedicatedMagazineBeltGridColumns,
+                    RuntimeIdentity.DedicatedMagazineBeltGridRows,
+                    AccessoryCapability.LootPriority |
+                    AccessoryCapability.UnloadPriority |
+                    AccessoryCapability.FastAccess |
+                    AccessoryCapability.BuildValidation),
+
+                // Emergency HeadBand is intentionally narrow: exact-fit medical storage
+                // and build/lifecycle visibility, with no payment/fast-access/grenade route.
+                [RuntimeIdentity.EmergencyHeadBandItemId] = new WearableItemDescriptor(
+                    RuntimeIdentity.EmergencyHeadBandItemId,
+                    AccessoryCategory.HeadBand,
+                    RuntimeIdentity.EmergencyHeadBandGridColumns,
+                    RuntimeIdentity.EmergencyHeadBandGridRows,
                     AccessoryCapability.BuildValidation)
             };
 
