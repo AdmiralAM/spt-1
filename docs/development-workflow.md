@@ -112,6 +112,8 @@ When runtime evidence arrives, consume it as part of the active roadmap. PASS ac
 
 Only stop between phases when the roadmap names a real product decision, external dependency, missing permission, or unavoidable physical gate. Do not use a normal branch/PR boundary as a conversational stop.
 
+An unfinished module must not silently fall into `parked` state. `Parked` requires an explicit user pause or a roadmap-level product decision hold. A dependency-gated future package is `queued`; it does not become the current authority and does not block unrelated active phases. Complete all unblocked preparation and continue the current roadmap package. When a package completes, select the next eligible recorded successor automatically.
+
 Merge into `main` only when there is a concrete integration need and the task has reached its required acceptance/validation state. Do not merge merely to preserve progress, obtain a build artifact, expose work to another process, or clean up a branch.
 
 After merge:

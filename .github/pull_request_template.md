@@ -8,7 +8,7 @@
 - Explicit non-goals:
 - Persistent profile impact (`none` or exact IDs/state written):
 - Work-package objective:
-- Package state (`active` / `blocked` / `runtime-gate` / `complete`):
+- Package state (`active` / `queued` / `blocked` / `runtime-gate` / `parked` / `complete`):
 - Final package acceptance condition:
 - Product roadmap / authoritative Issue:
 - Current product phase:
@@ -49,6 +49,8 @@
 - [ ] PASS automatically activates the recorded successor package unless the product's stable/release criteria are satisfied.
 - [ ] FAIL returns this package to evidence-driven remediation without requiring the user to restate the task.
 - [ ] A branch/PR boundary is not being used as a reason to stop when the next roadmap phase is already authorized.
+- [ ] `parked` is used only for an explicit user/product hold; a queued dependency is not being used to park the whole module.
+- [ ] If the product remains unfinished, one eligible roadmap package is active and queued child packages do not replace its authority.
 
 ## Runtime test handoff
 

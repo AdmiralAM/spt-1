@@ -77,7 +77,7 @@ The active Issue or PR must define before implementation:
 - the ordered gates included in the package;
 - explicit non-goals/frozen contracts;
 - the final package acceptance condition;
-- the package state: `active`, `blocked`, `runtime-gate`, or `complete`.
+- the package state: `active`, `queued`, `blocked`, `runtime-gate`, `parked`, or `complete`.
 
 Once the user authorizes the active package with wording such as `continue`, `work`, or `next step`, execute the whole package autonomously.
 
@@ -114,6 +114,17 @@ At a package boundary:
 - mark the product `complete` only when the roadmap's stable/release criteria are satisfied, not merely because a package, PR, CI run, or artifact exists.
 
 A new branch or PR required by the recorded successor phase is repository mechanics, not a new user decision. Create it automatically when the roadmap already authorizes that phase. Do not expand beyond the recorded product roadmap or invent new mechanics merely to keep working.
+
+`Parked` is an explicit product/user decision, not a default for an unfinished module. Do not mark a workstream parked merely because one child package is dependency-gated, a PR merged, an artifact exists, or no immediate defect is open.
+
+- `active` means execute the package now;
+- `queued` means a recorded successor/dependency package exists but does not replace the module's current active package;
+- `blocked` names a proven external boundary after all unblocked work in that package is exhausted;
+- `runtime-gate` means the coherent package is awaiting the single recorded physical result;
+- `parked` is allowed only when the user explicitly pauses the unfinished product or the roadmap records a deliberate product-decision hold;
+- `complete` means either that package's acceptance is satisfied or, at product level, stable/release acceptance is satisfied.
+
+An unfinished active product normally has exactly one `active` package even when other roadmap packages are `queued`. A dependency-gated child Issue must not be presented as the authority for parking the whole module. Continue the current active package and every unblocked roadmap phase. If the active package completes, activate the next eligible successor rather than defaulting the module to parked.
 
 ## Runtime gates and test artifacts
 
