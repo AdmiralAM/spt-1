@@ -116,12 +116,13 @@ jobs:
           plan = (root / 'server/EnforcementPlanService.cs').read_text(encoding='utf-8')
           for text in [
               'SchemaVersion = itemStackEnabled ? 6 : 5','PresetSingleStackItemBudgetCapV1','MutationEligibilityPolicyVersion = itemStackEnabled ? 4 : 3',
-              'config.Mode == EconomyMode.Enforce','var requests = BuildTransactionRequests(proposals);','NumericRewardTransactionCore.Execute(requests)',
+              'config.Mode == EconomyMode.Enforce','var requests = BuildTransactionRequests(proposals, handbookPrices);','NumericRewardTransactionCore.Execute(requests)',
               'new NumericRewardSlot(','value => reward.Value = value','NumericRewardTransactionCore.NeedsMutation',
               'RewardType.Experience','RewardType.TraderStanding','PolicyEligibleModAdded','PolicyEligibleModifiedPristine',
               'ProtectedPristine','ProtectedUnchangedRewardDimensions','BlockedUnknownProvenance',
               'changedDimensions.Contains("Experience"','changedDimensions.Contains("TraderStanding"','changedDimensions.Contains("SuccessItemHandbookValue"',
-              'ItemRewardStackPlanner.Plan','item.Upd.StackObjectsCount = value','reward.Value = value','ReadSynchronizedItemQuantity','Item Reward.Value/StackObjectsCount mismatch','ItemRewardStackCount',
+              'ItemRewardStackPlanner.PlanWithinBundle','GetSingleAutomaticMutableSuccessItemRewardRecord','CalculateImmutableSuccessItemHandbookValue',
+              'item.Upd.StackObjectsCount = value','reward.Value = value','ReadSynchronizedItemQuantity','Item Reward.Value/StackObjectsCount mismatch','ItemRewardStackCount',
               'ManualExactQuestRewardTargetV1','QuestRewardOverrides','PlannedMutationCount','TransactionCommitted','TransactionRolledBack',
               'Before','Current','Target','After',
           ]:
@@ -134,10 +135,10 @@ jobs:
           for text in ['Journal before first write','Rollback(journal)','VerifyRollback(journal)','NeedsMutation','Experience','TraderStanding','ItemRewardStackCount','exactly one writable reward-item stack']:
               assert text in transaction, text
           planner = (root / 'server/ItemRewardStackPlanner.cs').read_text(encoding='utf-8')
-          for text in ['BudgetBelowOneItemFloor','AlreadyWithinBudget','NonIntegralStackCount','SingleItemCannotBeReducedWithoutStructuralRemoval']:
+          for text in ['PlanWithinBundle','ImmutableRewardsConsumeBudget','BudgetBelowOneItemFloor','AlreadyWithinBudget','NonIntegralStackCount','SingleItemCannotBeReducedWithoutStructuralRemoval']:
               assert text in planner, text
           transaction_smoke = (root / 'tests/EnforcementSmoke/Program.cs').read_text(encoding='utf-8')
-          for text in ['successful transaction must commit','second automatic pass must be idempotent','synthetic setter failure','must roll back whole batch','earlier standing mutation must be restored','single known-price stack above budget must be eligible','planner must block cases requiring item removal/template replacement','update stack count and Reward.Value together','restore both item quantity representations']:
+          for text in ['successful transaction must commit','second automatic pass must be idempotent','synthetic setter failure','must roll back whole batch','earlier standing mutation must be restored','single known-price stack above budget must be eligible','whole-bundle planner must reserve immutable reward value','planner must block cases requiring item removal/template replacement','update stack count and Reward.Value together','restore both item quantity representations']:
               assert text in transaction_smoke, text
 
           evidence = (root / 'server/RuntimeEvidenceService.cs').read_text(encoding='utf-8')
@@ -157,7 +158,7 @@ jobs:
           for text in ['QuestRewardOverrides','AllowAutomaticMutation','ExperienceTarget','TraderStandingTarget','EnableItemRewardStackNormalization']:
               assert text in config_source, text
 
-          print('Economy Admiral Enforce + seven-report single-analysis projection contract OK')
+          print('Economy Admiral Enforce + seven-report single-analysis + whole-bundle item wiring contract OK')
 
   server:
     name: Economy Admiral .NET 10 server build
