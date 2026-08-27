@@ -27,49 +27,64 @@ From the installed `Economy Admiral` folder:
 
 `Validate-Runtime.ps1` is for `mode=Audit`, requires runtime-evidence schema 5, all seven core reports, pristine provenance consistency, an unchanged DB fingerprint, and no committed mutations.
 
-`Validate-Enforce.ps1` is for `mode=Enforce`. It also requires the seven-report schema-5 runtime manifest and recognizes:
+`Validate-Enforce.ps1` is for `mode=Enforce`. It recognizes:
 
 - enforcement-plan schema 5 / mutation policy 3: accepted Alpha (`Experience`, `TraderStanding` only);
 - enforcement-plan schema 6 / mutation policy 4: opt-in bounded single-stack item normalization in addition to numeric Alpha dimensions.
 
-Do not re-request primary parity for unrelated changes. The physical parity gate already served its purpose and is preserved in project history rather than re-run on every server start.
+For schema 6 the validator is a strict product gate: at least one `ItemRewardStackCount` mutation must actually be applied. A schema-6 run with zero item-stack mutations is FAIL, even if XP/standing mutations succeed. On PASS it prints every applied item mutation as `QuestId | QuestName | Provenance | Before -> After`.
 
-## Opt-in bounded item-stack gate
+## Bounded item-stack runtime candidate
 
-The config switch is deliberately false by default:
+This is the only active post-Alpha physical gate.
+
+Source/default configuration remains conservative (`Audit`, item-stack disabled). For the one physical candidate run, set exactly:
 
 ```json
-"enableItemRewardStackNormalization": false
+"mode": "Enforce",
+"preset": "Normal",
+"enableItemRewardStackNormalization": true
 ```
 
-Before any future physical promotion of this slice, CI must already prove:
+No manual quest overrides are required.
 
-- SPT server build with writable `Reward.Value` and `Upd.StackObjectsCount`;
-- only one existing Success Item reward item is eligible;
+The expected mutation class is intentionally narrow:
+
+- existing `Success` Item reward stack only;
+- quest provenance must be `ModAdded`, or `PristineModified` with `SuccessItemHandbookValue` proven changed;
+- the automatically mutable reward shape must be unambiguous;
 - known positive handbook price;
-- finite integral stack count > 1;
-- budget target floors to an integer >= 1;
-- normal stacks are no-ops;
-- cases requiring deletion/template replacement are blocked;
-- `Reward.Value == Upd.StackObjectsCount` before item mutation;
-- both quantity representations change together;
-- transaction verification re-checks synchronization;
-- mixed XP/standing/item failure rolls the whole batch back and restores both item quantity representations;
-- PristineUnchanged and unknown provenance remain protected;
-- PristineModified item mutation requires `SuccessItemHandbookValue` in its changed dimensions;
-- `Validate-Enforce.ps1` accepts a valid item-stack fixture and rejects an unproven modified-pristine fixture.
+- finite integral current stack count > 1;
+- whole Success-item bundle must exceed the Normal item budget after immutable reward value is reserved;
+- target is an integer >= 1 and lower than current stack count;
+- `_tpl`, reward records and structural quest fields are never replaced, added or removed;
+- `Reward.Value` and `Upd.StackObjectsCount` change together and are transactionally rolled back together on failure.
 
-Only after all of that is green does a physical SPT test become meaningful. A physical item-stack test, if eventually required, should be a single candidate run proving a real eligible mod-added stack changes `Before -> Target -> After` while the quest reward remains internally synchronized and all protected content remains untouched.
+The user's last physical SPT dataset contained 295 item-reward outlier flags, so the runtime environment has real item-reward candidates to evaluate. The physical gate itself decides which of those also satisfy provenance, reward-shape, price and reducibility requirements.
 
-## Procedure when a physical gate is actually requested
+### One physical test
 
-The test request must always provide:
+1. Install the single candidate artifact over `user/mods/Economy Admiral`.
+2. Set the three configuration values above.
+3. Start the SPT server once and let startup complete.
+4. From the installed mod folder run exactly:
 
-1. exact 40-character candidate SHA;
-2. exact workflow run and artifact identity;
-3. exact install target;
-4. exact config keys to change;
-5. exact server/validator commands;
-6. minimal output that must be returned.
+```powershell
+.\Validate-Enforce.ps1
+```
 
-Do not ask the user to infer what to test.
+PASS requires all of the following in that same run:
+
+- runtime evidence gate passed;
+- DB fingerprint changed;
+- transaction committed without rollback/error;
+- pristine/unknown provenance protection held;
+- exact mutation targets verified;
+- **at least one real `ItemRewardStackCount` mutation applied**;
+- validator prints the concrete changed quests and stack values.
+
+The only result needed back is the final validator output. Do not perform a second Audit run, parity run, or unrelated economy test for this gate.
+
+## Stop condition
+
+Do not begin flea, world-loot, trader-price, craft, insurance, or other economy subsystems until the physical schema-6 run above passes with at least one concrete item reward stack change.
