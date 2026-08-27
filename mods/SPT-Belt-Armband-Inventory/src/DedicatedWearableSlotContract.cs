@@ -33,8 +33,8 @@ namespace SPTBeltArmbandInventory
 
     internal static class DedicatedWearableSlotContract
     {
-        internal const string BeltSlotId = "BAndHBBelt";
-        internal const string HeadBandSlotId = "BAndHBHeadBand";
+        internal const string BeltSlotId = RuntimeIdentity.DedicatedBeltSlotName;
+        internal const string HeadBandSlotId = RuntimeIdentity.DedicatedHeadBandSlotName;
 
         // Product placement requirements. Belt is between Pockets and Backpack,
         // therefore it is inserted immediately after Pockets. HeadBand is above
