@@ -16,56 +16,53 @@ internal static class GroupedItemRewardSmoke
             new GroupedItemRewardEntry("same-tpl", 1d, true),
             new GroupedItemRewardEntry("same-tpl", 1d, true),
         ]);
-        Require(selection.Eligible && selection.SelectedIndex == 0, "same-template grouped reward with one reducible stack must select that exact stack");
+        Require(
+            selection.Eligible && selection.SelectedIndex == 0 && selection.Reason == "OneReducibleStackInGroupedReward",
+            "same-template grouped reward with one reducible stack must select that exact stack");
 
         var mixedTpl = GroupedItemRewardSelectorCore.Select([
             new GroupedItemRewardEntry("tpl-a", 3d, true),
             new GroupedItemRewardEntry("tpl-b", 1d, true),
+            new GroupedItemRewardEntry("tpl-c", 1d, true),
         ]);
-        Require(!mixedTpl.Eligible && mixedTpl.Reason == "MixedTemplatesInRewardRecord", "mixed-template item reward records must stay blocked");
+        Require(
+            mixedTpl.Eligible && mixedTpl.SelectedIndex == 0 && mixedTpl.Reason == "OneReducibleStackInGroupedReward",
+            "mixed-template grouped reward with exactly one reducible known-price stack must be selectable without changing templates");
 
         var ambiguous = GroupedItemRewardSelectorCore.Select([
-            new GroupedItemRewardEntry("same-tpl", 3d, true),
-            new GroupedItemRewardEntry("same-tpl", 2d, true),
+            new GroupedItemRewardEntry("tpl-a", 3d, true),
+            new GroupedItemRewardEntry("tpl-b", 2d, true),
         ]);
-        Require(!ambiguous.Eligible && ambiguous.Reason == "AmbiguousMultipleReducibleStacks", "multiple reducible stacks in one reward record must stay blocked");
+        Require(!ambiguous.Eligible && ambiguous.Reason == "AmbiguousMultipleReducibleStacks", "multiple reducible stacks in one reward record must stay blocked even across different templates");
 
         var automaticUnknownPrice = GroupedItemRewardSelectorCore.Select([
-            new GroupedItemRewardEntry("same-tpl", 3d, false),
-            new GroupedItemRewardEntry("same-tpl", 1d, false),
+            new GroupedItemRewardEntry("tpl-a", 3d, false),
+            new GroupedItemRewardEntry("tpl-b", 1d, true),
         ]);
         Require(
             !automaticUnknownPrice.Eligible && automaticUnknownPrice.Reason == "NoReducibleKnownPriceStack",
-            "automatic grouped selection must continue to require known handbook pricing");
+            "automatic grouped selection must continue to require known handbook pricing on the mutable stack");
 
         var manualUnknownPrice = GroupedItemRewardSelectorCore.Select([
-            new GroupedItemRewardEntry("same-tpl", 3d, false),
-            new GroupedItemRewardEntry("same-tpl", 1d, false),
+            new GroupedItemRewardEntry("tpl-a", 3d, false),
+            new GroupedItemRewardEntry("tpl-b", 1d, false),
         ], requireKnownHandbookPrice: false);
         Require(
-            manualUnknownPrice.Eligible && manualUnknownPrice.SelectedIndex == 0 && manualUnknownPrice.Reason == "OneReducibleStackInSameTemplateGroupedRewardManualExact",
-            "manual exact grouped selection may ignore handbook price while preserving same-template and unique-stack gates");
+            manualUnknownPrice.Eligible && manualUnknownPrice.SelectedIndex == 0 && manualUnknownPrice.Reason == "OneReducibleStackInGroupedRewardManualExact",
+            "manual exact grouped selection may ignore handbook price while preserving unique-stack and structural gates");
 
         var manualAmbiguous = GroupedItemRewardSelectorCore.Select([
-            new GroupedItemRewardEntry("same-tpl", 3d, false),
-            new GroupedItemRewardEntry("same-tpl", 2d, false),
+            new GroupedItemRewardEntry("tpl-a", 3d, false),
+            new GroupedItemRewardEntry("tpl-b", 2d, false),
         ], requireKnownHandbookPrice: false);
         Require(
             !manualAmbiguous.Eligible && manualAmbiguous.Reason == "AmbiguousMultipleReducibleStacks",
             "manual exact grouped selection must not bypass unique-stack safety");
 
-        var manualMixedTpl = GroupedItemRewardSelectorCore.Select([
-            new GroupedItemRewardEntry("tpl-a", 3d, false),
-            new GroupedItemRewardEntry("tpl-b", 1d, false),
-        ], requireKnownHandbookPrice: false);
-        Require(
-            !manualMixedTpl.Eligible && manualMixedTpl.Reason == "MixedTemplatesInRewardRecord",
-            "manual exact grouped selection must not bypass same-template safety");
-
         double?[] stacks = [3d, 1d, 1d];
         Require(
             ItemRewardQuantityCore.TryReadSynchronizedTotal(5d, stacks, out var total) && Math.Abs(total - 5d) < 0.001,
-            "Reward.Value must equal the sum of StackObjectsCount values for a same-template multi-item reward record");
+            "Reward.Value must equal the sum of StackObjectsCount values for a grouped multi-item reward record");
 
         Require(
             !ItemRewardQuantityCore.TryReadSynchronizedTotal(3d, stacks, out _),
@@ -102,12 +99,12 @@ internal static class GroupedItemRewardSmoke
             selectedIndex: 0,
             rewardValueRead: () => rewardValue,
             rewardValueWrite: value => rewardValue = value,
-            label: "grouped-success-reward");
+            label: "mixed-template-grouped-success-reward");
 
         var commit = NumericRewardTransactionCore.Execute([
             new NumericRewardTransactionRequest
             {
-                QuestId = "grouped-item-reward",
+                QuestId = "mixed-grouped-item-reward",
                 Dimension = "ItemRewardStackCount",
                 ExpectedBefore = 3d,
                 Target = 1d,
@@ -116,7 +113,7 @@ internal static class GroupedItemRewardSmoke
         ]);
         Require(commit.Committed && !commit.RolledBack, "grouped item transaction must commit");
         Require(selected == 1d && siblingA == 1d && siblingB == 1d, "grouped item transaction must change only the selected stack");
-        Require(rewardValue == 3d, "grouped item transaction must update Reward.Value by the selected-stack delta");
+        Require(rewardValue == 3d, "grouped item transaction must update aggregate Reward.Value by the selected-stack delta");
         Require(!NumericRewardTransactionCore.NeedsMutation(selected, 1d, false), "grouped item automatic second pass must be idempotent");
 
         selected = 3d;
