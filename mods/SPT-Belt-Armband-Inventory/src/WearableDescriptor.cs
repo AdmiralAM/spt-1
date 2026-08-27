@@ -44,21 +44,22 @@ namespace SPTBeltArmbandInventory
                     AccessoryCapability.DeathRetention |
                     AccessoryCapability.ScavHostRestoration),
 
-                // Dedicated identities are fixed product requirements. They remain
-                // fail-closed until the SPT 4.1.3 injection/serialization boundary is
-                // proven, but no code may reinterpret them as vanilla equipment slots.
+                // Physical runtime validation has proven the dedicated Belt location
+                // and its exact-item filter. The HeadBand location has a complete
+                // runtime candidate but remains unvalidated until the single package
+                // runtime gate proves its visible/native binding and interaction.
                 [AccessoryCategory.Belt] = new WearableDescriptor(
                     AccessoryCategory.Belt,
                     DedicatedWearableSlotContract.BeltSlotId,
                     AccessoryCapacityBand.Expanded,
-                    AccessoryHostState.ConceptOnly,
+                    AccessoryHostState.Validated,
                     AccessoryCapability.None),
 
                 [AccessoryCategory.HeadBand] = new WearableDescriptor(
                     AccessoryCategory.HeadBand,
                     DedicatedWearableSlotContract.HeadBandSlotId,
                     AccessoryCapacityBand.Micro,
-                    AccessoryHostState.ConceptOnly,
+                    AccessoryHostState.RuntimeCandidate,
                     AccessoryCapability.None)
             };
 
