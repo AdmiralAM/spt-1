@@ -108,6 +108,34 @@ Require(itemStackTx.Committed && !itemStackTx.RolledBack, "bounded single-stack 
 Require(itemStackCount == 4 && itemRewardValue == 4, "bounded item stack transaction must update stack count and Reward.Value together");
 Require(!NumericRewardTransactionCore.NeedsMutation(itemStackCount, 4, false), "bounded item stack second pass must be idempotent");
 
+var exactManualStack = 4d;
+var exactManualRewardValue = 4d;
+Require(NumericRewardTransactionCore.NeedsMutation(exactManualStack, 7, true), "manual exact item target must allow an intentional increase");
+Require(!NumericRewardTransactionCore.NeedsMutation(exactManualStack, 7, false), "automatic item policy must never increase a stack");
+var exactManualTx = NumericRewardTransactionCore.Execute([
+    new NumericRewardTransactionRequest
+    {
+        QuestId = "manual-single-stack-item",
+        Dimension = "ItemRewardStackCount",
+        ExpectedBefore = 4,
+        Target = 7,
+        Slots = [new NumericRewardSlot(
+            () =>
+            {
+                Require(Math.Abs(exactManualStack - exactManualRewardValue) < 0.001, "manual exact item representations must remain synchronized");
+                return exactManualStack;
+            },
+            value =>
+            {
+                exactManualStack = value;
+                exactManualRewardValue = value;
+            })],
+    },
+]);
+Require(exactManualTx.Committed && !exactManualTx.RolledBack, "manual exact single-stack transaction must commit");
+Require(exactManualStack == 7 && exactManualRewardValue == 7, "manual exact target must update Reward.Value and stack count together");
+Require(!NumericRewardTransactionCore.NeedsMutation(exactManualStack, 7, true), "manual exact item target must be idempotent on the second pass");
+
 var mixedXp = 9000d;
 var mixedStanding = 0.20d;
 var mixedItemStack = 10d;
@@ -160,4 +188,4 @@ Require(Math.Abs(mixedXp - 9000) < 0.001, "mixed rollback must restore earlier X
 Require(Math.Abs(mixedStanding - 0.20) < 0.00001, "mixed rollback must restore earlier standing mutation");
 Require(Math.Abs(mixedItemStack - 10) < 0.001 && Math.Abs(mixedItemRewardValue - 10) < 0.001, "mixed rollback must restore both item quantity representations");
 
-Console.WriteLine("Economy Admiral Enforce transaction + bounded item stack planner smoke PASS");
+Console.WriteLine("Economy Admiral Enforce transaction + bounded/manual item stack planner smoke PASS");
