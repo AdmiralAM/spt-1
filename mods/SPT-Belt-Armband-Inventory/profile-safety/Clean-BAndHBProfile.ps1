@@ -126,7 +126,7 @@ function Rewrite-Node([object]$Node, [string]$Path) {
                     Rewrite-Node $child $childPath
                     $kept.Add($child)
                 }
-                $property.Value = @($kept)
+                $property.Value = $kept.ToArray()
             }
             else {
                 Rewrite-Node $value "$Path.$($property.Name)"
