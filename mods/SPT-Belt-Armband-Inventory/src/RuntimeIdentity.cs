@@ -15,10 +15,17 @@ namespace SPTBeltArmbandInventory
         internal const string WristWalletGridId = "68ac00000000000000000007";
         internal const string WristWalletAssortId = "68ac00000000000000000008";
 
-        // Dedicated equipment-location identities. Slot *names* are protocol strings;
-        // slot object ids are MongoIds embedded in the default inventory template.
+        // Product identities are human-readable and remain stable inside B&A&HB.
+        // EFT 4.1.x InventoryEquipment, however, parses every slot ID through the
+        // closed EquipmentSlot enum and indexes a slot cache by its numeric value.
+        // The vanilla enum currently ends at ArmBand=14, so the two dedicated
+        // locations use collision-checked pseudo-enum values 15 and 16 on the wire.
         internal const string DedicatedBeltSlotName = "BAndHBBelt";
         internal const string DedicatedHeadBandSlotName = "BAndHBHeadBand";
+        internal const int DedicatedBeltEquipmentSlotValue = 15;
+        internal const int DedicatedHeadBandEquipmentSlotValue = 16;
+        internal const string DedicatedBeltWireSlotId = "15";
+        internal const string DedicatedHeadBandWireSlotId = "16";
         internal const string DedicatedBeltSlotMongoId = "68ac00000000000000000009";
         internal const string DedicatedHeadBandSlotMongoId = "68ac0000000000000000000a";
         internal const string HeadBandItemParentId = "68ac0000000000000000000b";
