@@ -8,6 +8,7 @@ using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Spt.Tables;
+using SPTarkov.Server.Core.Utils.Json;
 using IOPath = System.IO.Path;
 
 namespace AdmiralTrader.Server;
@@ -72,7 +73,7 @@ public sealed class AccessQuestRuntimeTargets(
             if (registeredQuest.Conditions.AvailableForFinish is not { Count: 1 } finishConditions)
                 throw new InvalidDataException($"Registered Admiral access quest {questId} must have exactly one finish condition");
 
-            finishConditions[0].Target = concreteTargets;
+            finishConditions[0].Target = new ListOrT<string>(concreteTargets, null!);
             resolvedQuestCount++;
         }
 
