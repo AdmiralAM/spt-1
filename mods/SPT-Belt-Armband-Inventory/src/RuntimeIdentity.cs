@@ -18,6 +18,14 @@ namespace SPTBeltArmbandInventory
         internal const string WristWalletGridId = "68ac00000000000000000007";
         internal const string WristWalletAssortId = "68ac00000000000000000008";
 
+        // Dedicated equipment-location identities. Slot *names* are protocol strings;
+        // slot object ids are MongoIds embedded in the default inventory template.
+        internal const string DedicatedBeltSlotName = "BAndHBBelt";
+        internal const string DedicatedHeadBandSlotName = "BAndHBHeadBand";
+        internal const string DedicatedBeltSlotMongoId = "68ac00000000000000000009";
+        internal const string DedicatedHeadBandSlotMongoId = "68ac0000000000000000000a";
+        internal const string HeadBandItemParentId = "68ac0000000000000000000b";
+
         internal const int CandidateGridColumns = 1;
         internal const int CandidateGridRows = 2;
         internal const int WristWalletGridColumns = 1;
