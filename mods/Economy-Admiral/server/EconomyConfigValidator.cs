@@ -81,6 +81,14 @@ public static class EconomyConfigValidator
             {
                 throw new InvalidOperationException($"Economy Admiral config: QuestRewardOverrides[{questId}].TraderStandingTarget must be finite.");
             }
+            if (questOverride.ItemRewardStackCountTarget is { } stackTarget)
+            {
+                ValidatePositiveFinite(stackTarget, $"QuestRewardOverrides[{questId}].ItemRewardStackCountTarget");
+                if (Math.Abs(stackTarget - Math.Round(stackTarget, 0)) > 0.000001)
+                {
+                    throw new InvalidOperationException($"Economy Admiral config: QuestRewardOverrides[{questId}].ItemRewardStackCountTarget must be an integer stack count.");
+                }
+            }
         }
     }
 
