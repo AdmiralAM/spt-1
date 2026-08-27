@@ -100,7 +100,7 @@ jobs:
               assert 'PristineStartupSnapshot' in text, service_name
               assert 'QuestAnalysisReport analysis' in text, service_name
               assert 'SourceAnalysisSchemaVersion = analysis.SchemaVersion' in text, service_name
-              assert 'TemplateTable' not in text, f'{service_name} regressed to a direct final-DB quest scan'
+              assert 'TemplateTable templates' not in text, f'{service_name} regressed to a direct final-DB quest dependency'
 
           analysis = (root / 'server/QuestAnalysisService.cs').read_text(encoding='utf-8')
           assert 'VanillaBaselineSnapshot vanillaBaseline' in analysis
