@@ -93,6 +93,25 @@ The PR/Issue records the complete ordered gate list before work begins. Passing 
 
 End the package only when its final acceptance condition is met, a real external decision/permission is required, or a physical runtime boundary is genuinely unavoidable. A docs-only cleanup discovered during product implementation stays internal to the package and must not replace the next product gate.
 
+### Product roadmaps and continuation after candidates
+
+Each active module keeps one durable roadmap above its individual work packages:
+
+`current product state -> active package -> runtime gate if required -> successor package -> release candidate -> stable release`
+
+The roadmap records final stable acceptance, ordered phases, the active phase, and PASS/FAIL transitions. The current PR must link that roadmap and name its successor package. This prevents an agent from treating a green artifact as the final version or from asking the user to decide a next step that was already planned.
+
+Artifact classes have distinct meanings:
+
+- `diagnostic` proves one unknown boundary and is never a release;
+- `runtime-candidate` tests a bounded functional package;
+- `release-candidate` has completed planned functionality and awaits final regression/runtime acceptance;
+- `release` satisfies the roadmap's stable criteria and deliberate publication requirements.
+
+When runtime evidence arrives, consume it as part of the active roadmap. PASS activates the recorded successor package automatically. FAIL reopens the same package for evidence-driven remediation. Neither result is a reason to emit a status-only response and wait for `next step`. Creating the next branch/PR, updating the Issue, fixing code, validating, packaging and cleanup continue autonomously when already covered by the roadmap.
+
+Only stop between phases when the roadmap names a real product decision, external dependency, missing permission, or unavoidable physical gate. Do not use a normal branch/PR boundary as a conversational stop.
+
 Merge into `main` only when there is a concrete integration need and the task has reached its required acceptance/validation state. Do not merge merely to preserve progress, obtain a build artifact, expose work to another process, or clean up a branch.
 
 After merge:
