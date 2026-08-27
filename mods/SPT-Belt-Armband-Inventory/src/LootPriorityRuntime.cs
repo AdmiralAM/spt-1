@@ -9,6 +9,7 @@ namespace SPTBeltArmbandInventory
     {
         static MethodInfo getSlot;
         static object armBandValue;
+        static object dedicatedBeltValue;
         static Type containerType;
         static Action<string> logWarning;
 
@@ -18,14 +19,15 @@ namespace SPTBeltArmbandInventory
             MethodInfo target = FindTarget(equipmentType);
             getSlot = ReflectionTools.FindInstanceMethod(equipmentType, "GetSlot", null, slotEnumType);
             if (target == null || getSlot == null || !target.ReturnType.IsGenericType)
-                return Fail("SPT 4.1 GetPrioritizedContainersForLoot shape was not found; belt loot priority was not patched.");
+                return Fail("SPT 4.1 GetPrioritizedContainersForLoot shape was not found; wearable loot priority was not patched.");
 
             Type[] genericArguments = target.ReturnType.GetGenericArguments();
             if (genericArguments.Length != 1)
-                return Fail("SPT 4.1 loot-priority return type changed; belt loot priority was not patched.");
+                return Fail("SPT 4.1 loot-priority return type changed; wearable loot priority was not patched.");
 
             containerType = genericArguments[0];
             armBandValue = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand);
+            dedicatedBeltValue = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedBeltEquipmentSlotValue);
             object postfix = harmonyMethodConstructor.Invoke(new object[] { typeof(LootPriorityRuntime).GetMethod(nameof(Postfix), BindingFlags.Static | BindingFlags.NonPublic) });
             Patch(harmony, patchMethod, harmonyMethodType, target, postfix);
             return true;
@@ -35,6 +37,7 @@ namespace SPTBeltArmbandInventory
         {
             getSlot = null;
             armBandValue = null;
+            dedicatedBeltValue = null;
             containerType = null;
             logWarning = null;
         }
@@ -45,12 +48,8 @@ namespace SPTBeltArmbandInventory
             {
                 if (__args == null || __args.Length < 2 || __args[0] == null || __result == null) return;
                 object equipment = __args[0];
-                object beltItem = GetContainedItem(equipment, armBandValue);
-                bool hasContainers = ReflectionTools.HasContainers(beltItem);
-                string templateId = GetTemplateId(beltItem);
-                if (!hasContainers || !WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.LootPriority)) return;
-
-                List<object> belt = ReadContainers(beltItem);
+                List<object> belt = ReadCapabilityContainers(equipment, armBandValue, AccessoryCapability.LootPriority);
+                AppendUnique(belt, ReadCapabilityContainers(equipment, dedicatedBeltValue, AccessoryCapability.LootPriority));
                 if (belt.Count == 0) return;
 
                 var groups = new Dictionary<string, List<object>>
@@ -71,8 +70,7 @@ namespace SPTBeltArmbandInventory
 
                 for (int i = 0; i < order.Length; i++)
                 {
-                    List<object> source;
-                    if (!groups.TryGetValue(order[i], out source)) continue;
+                    if (!groups.TryGetValue(order[i], out List<object> source)) continue;
                     for (int p = 0; p < source.Count; p++)
                         if (source[p] != null && containerType.IsInstanceOfType(source[p])) list.Add(source[p]);
                 }
@@ -80,8 +78,21 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                if (logWarning != null) logWarning("Could not extend loot priority with wearable containers: " + exception.Message);
+                logWarning?.Invoke("Could not extend loot priority with wearable containers: " + exception.Message);
             }
+        }
+
+        static List<object> ReadCapabilityContainers(object equipment, object slotValue, AccessoryCapability capability)
+        {
+            object item = GetContainedItem(equipment, slotValue);
+            if (!ReflectionTools.HasContainers(item)) return new List<object>();
+            string templateId = GetTemplateId(item);
+            return WearableItemDescriptorRegistry.HasCapability(templateId, capability) ? ReadContainers(item) : new List<object>();
+        }
+
+        static void AppendUnique(List<object> target, List<object> source)
+        {
+            for (int i = 0; i < source.Count; i++) if (!target.Contains(source[i])) target.Add(source[i]);
         }
 
         static string GetTemplateId(object item)
@@ -97,7 +108,6 @@ namespace SPTBeltArmbandInventory
         {
             Assembly assembly = equipmentType.Assembly;
             Type[] types = ReflectionTools.GetTypes(assembly);
-
             for (int i = 0; i < types.Length; i++)
             {
                 Type type = types[i];
@@ -173,6 +183,7 @@ namespace SPTBeltArmbandInventory
 
         static object GetContainedItem(object equipment, object slotValue)
         {
+            if (equipment == null || slotValue == null) return null;
             object slot = getSlot.Invoke(equipment, new[] { slotValue });
             return ReflectionTools.ReadMember(slot, "ContainedItem");
         }
@@ -224,7 +235,7 @@ namespace SPTBeltArmbandInventory
 
         static bool Fail(string message)
         {
-            if (logWarning != null) logWarning(message);
+            logWarning?.Invoke(message);
             Reset();
             return false;
         }
