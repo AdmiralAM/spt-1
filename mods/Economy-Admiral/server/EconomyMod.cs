@@ -18,8 +18,7 @@ public sealed class EconomyMod(
     QuestProvenanceDeltaService questProvenanceDeltaService,
     EnforcementPlanService enforcementPlanService,
     GroupedItemRuntimeEvidenceService groupedItemRuntimeEvidenceService,
-    AdmiralTraderRuntimeAdapterService admiralTraderRuntimeAdapterService,
-    SourcePressureRuntimeReportService sourcePressureRuntimeReportService
+    SourcePressureObservationPipelineService sourcePressureObservationPipelineService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
@@ -42,10 +41,8 @@ public sealed class EconomyMod(
 
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
 
-        // Phase 3 remains observation-only. Explicit adapter evidence is emitted with honest
-        // ExplicitAdaptersOnly coverage and is not consumed by the enforcement planner.
-        var admiralTraderEvidence = await admiralTraderRuntimeAdapterService.RunAsync(config, cancellationToken);
-        await sourcePressureRuntimeReportService.RunAsync(config, admiralTraderEvidence, cancellationToken);
+        // Observation remains separate from enforcement: evidence is emitted but never consumed by policy.
+        await sourcePressureObservationPipelineService.RunAsync(config, cancellationToken);
 
         GroupedItemRewardSlot.ResetEvidence();
         var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
