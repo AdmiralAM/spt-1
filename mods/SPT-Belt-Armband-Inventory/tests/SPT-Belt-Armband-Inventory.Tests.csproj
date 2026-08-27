@@ -15,6 +15,7 @@
     <Compile Include="..\src\WearableConceptCatalog.cs" Link="WearableConceptCatalog.cs" />
     <Compile Include="..\src\HostBoundaryPolicy.cs" Link="HostBoundaryPolicy.cs" />
     <Compile Include="..\src\DedicatedWearableSlotContract.cs" Link="DedicatedWearableSlotContract.cs" />
+    <Compile Include="..\src\DedicatedSlotPresentationPolicy.cs" Link="DedicatedSlotPresentationPolicy.cs" />
     <Compile Include="..\src\BeltSlotPlan.cs" Link="BeltSlotPlan.cs" />
     <Compile Include="..\src\LootPriorityPlan.cs" Link="LootPriorityPlan.cs" />
     <Compile Include="..\src\ReflectionTools.cs" Link="ReflectionTools.cs" />
