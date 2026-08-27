@@ -35,15 +35,21 @@
 <!-- Required when asking the user to test an Actions artifact or runtime package. Delete or mark N/A for docs-only/no-runtime PRs. -->
 
 - PR / branch / commit SHA:
-- Successful workflow run:
-- Downloadable artifact or deliberate runtime branch:
+- Successful workflow run and clickable GitHub URL:
+- Artifact name / artifact ID:
+- Direct GitHub artifact URL or deliberate GitHub runtime/release URL:
 - Artifact digest / package checksum:
 - User gate state (`none` / `queued` / `active` / `passed` / `failed`):
 - Single runtime gate being tested:
 - Install layout:
-- Focused checklist:
+- Point-by-point checklist:
+
+| # | Exact action | Expected PASS | Explicit FAIL | Evidence to return |
+| --- | --- | --- | --- | --- |
+| 1 |  |  |  |  |
+
+- Overall gate decision rule:
 - Required returned evidence:
-- Pass/fail decision rule:
 - [ ] I am not asking for runtime testing from CI success alone; the named artifact/package exists for the exact commit above.
 - [ ] I did not stop at docs/tests/validators after an artifact-only or runtime-candidate instruction.
 - [ ] This handoff answers one clear physical question and is not an internal micro-patch/debug loop.
@@ -52,6 +58,9 @@
 - [ ] No other PR currently owns the single active user runtime-test window, or the user explicitly authorized parallel tests.
 - [ ] Related checks were batched into one short milestone session instead of per-commit requests.
 - [ ] CI is green and warnings are classified; red/incomplete work is not being handed to the user.
+- [ ] The candidate is linked from GitHub; no chat attachment, automatic chat download, local file, or source ZIP is being substituted.
+- [ ] The GitHub link identifies the exact artifact ID for the exact commit and is currently downloadable.
+- [ ] Every checklist row has a concrete action, PASS result, FAIL result, and minimal evidence request.
 
 ## Persistent profile safety
 
