@@ -76,19 +76,31 @@ public static class EconomyConfigValidator
             if (questOverride.ExperienceTarget is { } xp)
             {
                 ValidateNonNegativeFinite(xp, $"QuestRewardOverrides[{questId}].ExperienceTarget");
+                ValidateExactPrecision(xp, 0, $"QuestRewardOverrides[{questId}].ExperienceTarget", "an integer XP total");
             }
-            if (questOverride.TraderStandingTarget is { } standing && !double.IsFinite(standing))
+            if (questOverride.TraderStandingTarget is { } standing)
             {
-                throw new InvalidOperationException($"Economy Admiral config: QuestRewardOverrides[{questId}].TraderStandingTarget must be finite.");
+                if (!double.IsFinite(standing))
+                {
+                    throw new InvalidOperationException($"Economy Admiral config: QuestRewardOverrides[{questId}].TraderStandingTarget must be finite.");
+                }
+                ValidateExactPrecision(standing, 4, $"QuestRewardOverrides[{questId}].TraderStandingTarget", "representable to at most 4 decimal places");
             }
             if (questOverride.ItemRewardStackCountTarget is { } stackTarget)
             {
                 ValidatePositiveFinite(stackTarget, $"QuestRewardOverrides[{questId}].ItemRewardStackCountTarget");
-                if (Math.Abs(stackTarget - Math.Round(stackTarget, 0)) > 0.000001)
-                {
-                    throw new InvalidOperationException($"Economy Admiral config: QuestRewardOverrides[{questId}].ItemRewardStackCountTarget must be an integer stack count.");
-                }
+                ValidateExactPrecision(stackTarget, 0, $"QuestRewardOverrides[{questId}].ItemRewardStackCountTarget", "an integer stack count");
             }
+        }
+    }
+
+    private static void ValidateExactPrecision(double value, int decimals, string name, string requirement)
+    {
+        var rounded = Math.Round(value, decimals);
+        var tolerance = decimals == 0 ? 0.000001 : 0.000000001;
+        if (Math.Abs(value - rounded) > tolerance)
+        {
+            throw new InvalidOperationException($"Economy Admiral config: {name} must be {requirement}; exact targets are not silently rounded.");
         }
     }
 
