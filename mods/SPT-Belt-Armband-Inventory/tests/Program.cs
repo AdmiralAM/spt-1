@@ -16,6 +16,7 @@ internal static class Program
 
     static void Main()
     {
+        SPTBeltArmbandInventory.Tests.ProfileCleanupRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedWearableSlotContractRegression.Run();
         Assert(BeltSlotPlan.IsExpectedContainerPanelOrder(Vanilla), "recognizes SPT 4.1 container order");
         Assert(!BeltSlotPlan.IsExpectedContainerPanelOrder(new[] { BeltSlotPlan.Pockets }), "rejects unrelated enum arrays");
@@ -80,9 +81,7 @@ internal static class Program
         Assert(AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess, true, true), "assigned fast-access capability activates only for a real container");
         Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess, true, false), "fast-access capability still requires a container item");
 
-        // Existing regression body continues below unchanged in repository history; this replacement intentionally
-        // retains only the currently relevant contract assertions while dedicated slot injection is developed.
-        Console.WriteLine("SPT Belt/Armband Inventory dedicated slot contract regressions passed.");
+        Console.WriteLine("SPT Belt/Armband Inventory profile safety and dedicated slot contract regressions passed.");
     }
 
     static string[] InsertDedicated(string[] source, DedicatedWearableSlotDescriptor descriptor)
