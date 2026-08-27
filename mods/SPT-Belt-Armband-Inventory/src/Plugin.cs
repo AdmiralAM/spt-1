@@ -17,6 +17,7 @@ namespace SPTBeltArmbandInventory
         ConfigEntry<bool> modEnabled;
         RuntimeCustomBeltTypePatches runtimeTypePatches;
         RuntimeCustomHeadBandTypePatches runtimeHeadBandTypePatches;
+        DedicatedEquipmentSlotPatches dedicatedEquipmentSlotPatches;
         GridWindowSizingPatches gridWindowSizingPatches;
         LootPriorityPatches lootPatches;
         UnloadPriorityPatches unloadPatches;
@@ -40,8 +41,6 @@ namespace SPTBeltArmbandInventory
                 Logger.LogInfo("B&A&HB #2 MOD SPT migrated stale Enabled=false config to Enabled=true for runtime validation.");
             }
 
-            // One-shot implementation-boundary discovery only. Product identities and
-            // placement are fixed by DedicatedWearableSlotContract and are never chosen here.
             HostBoundaryDiscovery.Log(Logger.LogInfo, Logger.LogWarning);
 
             if (LegacyBeltSlotDetected())
@@ -64,13 +63,26 @@ namespace SPTBeltArmbandInventory
             {
                 runtimeHeadBandTypePatches.Dispose();
                 runtimeHeadBandTypePatches = null;
-                if (runtimeTypePatches != null) runtimeTypePatches.Dispose();
+                runtimeTypePatches.Dispose();
                 runtimeTypePatches = null;
                 Logger.LogWarning("B&A&HB #2 dedicated HeadBand runtime mapping failed; wearable runtime registration rolled back for this session.");
                 return;
             }
 
-            Logger.LogInfo("B&A&HB #2 wearable presentation uses the native searchable-item GridWindow and GeneratedGridsView; legacy ContainersPanel ArmBand projection remains disabled.");
+            dedicatedEquipmentSlotPatches = new DedicatedEquipmentSlotPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!dedicatedEquipmentSlotPatches.TryInstall())
+            {
+                dedicatedEquipmentSlotPatches.Dispose();
+                dedicatedEquipmentSlotPatches = null;
+                runtimeHeadBandTypePatches.Dispose();
+                runtimeHeadBandTypePatches = null;
+                runtimeTypePatches.Dispose();
+                runtimeTypePatches = null;
+                Logger.LogWarning("B&A&HB #2 dedicated Belt/HeadBand equipment-slot client projection failed; dedicated runtime mappings rolled back for this session.");
+                return;
+            }
+
+            Logger.LogInfo("B&A&HB #2 wearable presentation uses native SlotView/GridWindow paths with fixed dedicated Belt and HeadBand locations.");
 
             gridWindowSizingPatches = new GridWindowSizingPatches(Logger.LogInfo, Logger.LogWarning);
             if (!gridWindowSizingPatches.TryInstall())
@@ -220,6 +232,8 @@ namespace SPTBeltArmbandInventory
             lootPatches = null;
             if (gridWindowSizingPatches != null) gridWindowSizingPatches.Dispose();
             gridWindowSizingPatches = null;
+            if (dedicatedEquipmentSlotPatches != null) dedicatedEquipmentSlotPatches.Dispose();
+            dedicatedEquipmentSlotPatches = null;
             if (runtimeHeadBandTypePatches != null) runtimeHeadBandTypePatches.Dispose();
             runtimeHeadBandTypePatches = null;
             if (runtimeTypePatches != null) runtimeTypePatches.Dispose();
