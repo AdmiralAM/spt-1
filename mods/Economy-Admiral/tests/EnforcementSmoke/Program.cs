@@ -188,4 +188,33 @@ Require(Math.Abs(mixedXp - 9000) < 0.001, "mixed rollback must restore earlier X
 Require(Math.Abs(mixedStanding - 0.20) < 0.00001, "mixed rollback must restore earlier standing mutation");
 Require(Math.Abs(mixedItemStack - 10) < 0.001 && Math.Abs(mixedItemRewardValue - 10) < 0.001, "mixed rollback must restore both item quantity representations");
 
-Console.WriteLine("Economy Admiral Enforce transaction + bounded/manual item stack planner smoke PASS");
+var unrecoverable = 100d;
+var writeCount = 0;
+var rollbackFailure = NumericRewardTransactionCore.Execute([
+    new NumericRewardTransactionRequest
+    {
+        QuestId = "rollback-proof-failure",
+        Dimension = "Experience",
+        ExpectedBefore = 100,
+        Target = 50,
+        Slots = [new NumericRewardSlot(
+            () => unrecoverable,
+            value =>
+            {
+                writeCount++;
+                if (writeCount == 1)
+                {
+                    unrecoverable = value;
+                    throw new InvalidOperationException("apply failed after partial write");
+                }
+                throw new InvalidOperationException("rollback setter failed");
+            })],
+    },
+]);
+Require(!rollbackFailure.Committed, "rollback-proof failure must never report committed");
+Require(!rollbackFailure.RolledBack, "failed rollback must not be falsely reported as successful rollback");
+Require(rollbackFailure.Results.Count == 0, "unproven rollback must publish no committed results");
+Require(rollbackFailure.Error?.Contains("Rollback could not be proven", StringComparison.Ordinal) == true, "unproven rollback must carry explicit rollback failure evidence");
+Require(Math.Abs(unrecoverable - 50) < 0.001, "synthetic unrecoverable state must demonstrate why rollback cannot be claimed");
+
+Console.WriteLine("Economy Admiral Enforce transaction + bounded/manual item stack planner + rollback-proof smoke PASS");
