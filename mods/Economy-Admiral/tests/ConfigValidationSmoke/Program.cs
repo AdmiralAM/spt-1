@@ -66,6 +66,13 @@ MustPass("supported exceptional override", new EconomyConfig
         ["fixture-template"] = new() { Rarity = "Exceptional" },
     },
 });
+MustPass("exact single-stack quest reward override", new EconomyConfig
+{
+    QuestRewardOverrides = new Dictionary<string, ManualQuestRewardOverride>(StringComparer.Ordinal)
+    {
+        ["fixture-quest"] = new() { ItemRewardStackCountTarget = 4 },
+    },
+});
 
 MustFail("unimplemented repeated raid loot decay", new EconomyConfig { RepeatedRaidLootDecay = true });
 MustFail("empty report path", new EconomyConfig { ReportRelativePath = " " });
@@ -88,6 +95,20 @@ MustFail("empty manual override id", new EconomyConfig
         [""] = new() { Rarity = "Rare" },
     },
 });
+MustFail("zero exact item stack target", new EconomyConfig
+{
+    QuestRewardOverrides = new Dictionary<string, ManualQuestRewardOverride>(StringComparer.Ordinal)
+    {
+        ["fixture-quest"] = new() { ItemRewardStackCountTarget = 0 },
+    },
+});
+MustFail("fractional exact item stack target", new EconomyConfig
+{
+    QuestRewardOverrides = new Dictionary<string, ManualQuestRewardOverride>(StringComparer.Ordinal)
+    {
+        ["fixture-quest"] = new() { ItemRewardStackCountTarget = 2.5 },
+    },
+});
 MustFail("zero warning multiple", new EconomyConfig { CustomAuditPolicy = new() { QuestRewardVsVanillaMedianWarnMultiple = 0 } });
 MustFail("negative warning multiple", new EconomyConfig { CustomAuditPolicy = new() { HighXpLowDepthWarnMultiple = -1 } });
 MustFail("nan policy value", new EconomyConfig { CustomAuditPolicy = new() { RestartableHighXpWarnMultiple = double.NaN } });
@@ -101,8 +122,10 @@ MustFail("null overrides object", new EconomyConfig { ManualOverrides = null! })
 JsonMustPass("minimal JSON", "{}");
 JsonMustPass("case-insensitive known keys", "{\"MODE\":\"Audit\",\"PRESET\":\"Normal\"}");
 JsonMustPass("opt-in bounded item stack JSON", "{\"enableItemRewardStackNormalization\":true}");
+JsonMustPass("exact item stack JSON", "{\"questRewardOverrides\":{\"fixture-quest\":{\"itemRewardStackCountTarget\":4}}}");
 foreach (var preset in new[] { "Easy", "Normal", "Hard", "Custom" }) JsonMustPass($"JSON preset {preset}", $"{{\"preset\":\"{preset}\"}}");
 JsonMustFail("enabled repeated raid loot decay", "{\"repeatedRaidLootDecay\":true}");
+JsonMustFail("fractional item stack JSON", "{\"questRewardOverrides\":{\"fixture-quest\":{\"itemRewardStackCountTarget\":1.5}}}");
 JsonMustFail("numeric mode", "{\"mode\":1}");
 JsonMustFail("numeric preset", "{\"preset\":2}");
 JsonMustFail("unknown mode string", "{\"mode\":\"Explode\"}");
