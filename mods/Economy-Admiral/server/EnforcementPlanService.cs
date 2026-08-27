@@ -245,28 +245,37 @@ public sealed class EnforcementPlanService(
             actions,
             config.EnableItemRewardStackNormalization);
         var eligibility = ResolveMutationEligibility(provenanceClass, potentialMutationDimensions.Count);
-        var manualDenied = manualOverride?.AllowAutomaticMutation == false;
+        var automaticMutationDenied = manualOverride?.AllowAutomaticMutation == false;
 
         var mutations = new List<NumericRewardMutation>();
-        if (eligibility.PotentiallyEligible && !manualDenied)
+        if (potentialMutationDimensions.Contains("Experience", StringComparer.Ordinal)
+            && QuestRewardMutationPermission.AllowsDimension(
+                eligibility.PotentiallyEligible,
+                automaticMutationDenied,
+                manualOverride?.ExperienceTarget is not null))
         {
-            if (potentialMutationDimensions.Contains("Experience", StringComparer.Ordinal))
-            {
-                var target = ResolveExperienceTarget(row, analysis, manualOverride);
-                if (target is { } xpTarget && NumericRewardTransactionCore.NeedsMutation(row.Experience, xpTarget, manualOverride?.ExperienceTarget is not null))
-                    mutations.Add(BuildMutation(row, "Experience", row.Experience, xpTarget, manualOverride?.ExperienceTarget is not null));
-            }
-            if (potentialMutationDimensions.Contains("TraderStanding", StringComparer.Ordinal))
-            {
-                var target = ResolveStandingTarget(row, analysis, manualOverride);
-                if (target is { } standingTarget && NumericRewardTransactionCore.NeedsMutation(row.TraderStanding, standingTarget, manualOverride?.TraderStandingTarget is not null))
-                    mutations.Add(BuildMutation(row, "TraderStanding", row.TraderStanding, standingTarget, manualOverride?.TraderStandingTarget is not null));
-            }
-            if (potentialMutationDimensions.Contains("ItemRewardStackCount", StringComparer.Ordinal))
-            {
-                var itemMutation = BuildItemStackMutation(row, analysis, handbookPrices, manualOverride);
-                if (itemMutation is not null) mutations.Add(itemMutation);
-            }
+            var target = ResolveExperienceTarget(row, analysis, manualOverride);
+            if (target is { } xpTarget && NumericRewardTransactionCore.NeedsMutation(row.Experience, xpTarget, manualOverride?.ExperienceTarget is not null))
+                mutations.Add(BuildMutation(row, "Experience", row.Experience, xpTarget, manualOverride?.ExperienceTarget is not null));
+        }
+        if (potentialMutationDimensions.Contains("TraderStanding", StringComparer.Ordinal)
+            && QuestRewardMutationPermission.AllowsDimension(
+                eligibility.PotentiallyEligible,
+                automaticMutationDenied,
+                manualOverride?.TraderStandingTarget is not null))
+        {
+            var target = ResolveStandingTarget(row, analysis, manualOverride);
+            if (target is { } standingTarget && NumericRewardTransactionCore.NeedsMutation(row.TraderStanding, standingTarget, manualOverride?.TraderStandingTarget is not null))
+                mutations.Add(BuildMutation(row, "TraderStanding", row.TraderStanding, standingTarget, manualOverride?.TraderStandingTarget is not null));
+        }
+        if (potentialMutationDimensions.Contains("ItemRewardStackCount", StringComparer.Ordinal)
+            && QuestRewardMutationPermission.AllowsDimension(
+                eligibility.PotentiallyEligible,
+                automaticMutationDenied,
+                manualOverride?.ItemRewardStackCountTarget is not null))
+        {
+            var itemMutation = BuildItemStackMutation(row, analysis, handbookPrices, manualOverride);
+            if (itemMutation is not null) mutations.Add(itemMutation);
         }
 
         return new EnforcementPlanCandidate
@@ -277,16 +286,16 @@ public sealed class EnforcementPlanService(
             Restartable = row.Restartable,
             ProvenanceClass = provenanceClass,
             PristineUntouched = string.Equals(provenanceClass, "PristineUnchanged", StringComparison.Ordinal),
-            MutationEligibilityClass = manualDenied ? "ManualOverrideDenied" : eligibility.Class,
-            PotentialAutomaticMutationEligible = eligibility.PotentiallyEligible && !manualDenied,
+            MutationEligibilityClass = automaticMutationDenied ? "AutomaticMutationDenied" : eligibility.Class,
+            PotentialAutomaticMutationEligible = eligibility.PotentiallyEligible && !automaticMutationDenied,
             PotentialMutationDimensions = potentialMutationDimensions,
-            MutationEligibilityReason = manualDenied
-                ? "Manual quest override explicitly denies automatic mutation."
+            MutationEligibilityReason = automaticMutationDenied
+                ? "Manual quest override explicitly denies preset-derived automatic mutation; explicit exact targets remain subject to provenance and dimension eligibility."
                 : eligibility.Reason,
             ChangedDimensions = changedDimensions,
             ReasonFlags = row.ObservationalFlags.OrderBy(value => value, StringComparer.Ordinal).ToList(),
             ProposedReviewActions = actions.ToList(),
-            AutomaticMutationAllowed = mutations.Count > 0,
+            AutomaticMutationAllowed = mutations.Any(mutation => !mutation.ManualOverride),
             ProposedMutations = mutations,
             ProposedMutation = mutations.Count == 0 ? null : mutations,
         };
