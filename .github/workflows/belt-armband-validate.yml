@@ -8,6 +8,7 @@ on:
       - 'mods/SPT-Belt-Armband-Inventory/server/**'
       - 'mods/SPT-Belt-Armband-Inventory/tests/**'
       - 'mods/SPT-Belt-Armband-Inventory/tools/**'
+      - 'mods/SPT-Belt-Armband-Inventory/profile-safety/**'
       - '.github/workflows/belt-armband-validate.yml'
   workflow_dispatch:
 
@@ -37,24 +38,51 @@ jobs:
       - name: 'Run B&A&HB #2 regression tests'
         shell: pwsh
         run: dotnet run --project mods/SPT-Belt-Armband-Inventory/tests/SPT-Belt-Armband-Inventory.Tests.csproj -c Release
+      - name: 'Exercise B&A&HB #2 offline profile recovery'
+        shell: pwsh
+        run: |
+          $fixture = Join-Path $env:RUNNER_TEMP 'bahb-invalid-profile.json'
+          @'
+          {
+            "Inventory": {
+              "items": [
+                { "_id": "vanilla", "_tpl": "5448bf274bdc2dfc2f8b456a" },
+                { "_id": "bahb", "_tpl": "68ac00000000000000000001" },
+                { "_id": "child", "_tpl": "5448bf274bdc2dfc2f8b456a", "parentId": "bahb", "slotId": "Grid" }
+              ]
+            },
+            "insurance": [
+              { "itemId": "bahb", "traderId": "54cb50c76803fa8b248b4571" }
+            ]
+          }
+          '@ | Set-Content -LiteralPath $fixture -Encoding UTF8
+          & 'mods/SPT-Belt-Armband-Inventory/profile-safety/Clean-BAndHBProfile.ps1' -ProfilePath $fixture
+          $cleaned = Join-Path $env:RUNNER_TEMP 'bahb-invalid-profile.bahb-clean.json'
+          $text = Get-Content -LiteralPath $cleaned -Raw
+          if ($text.Contains('68ac00000000000000000001')) { throw 'Recovery tool left B&A&HB template in profile' }
+          if ($text.Contains('"_id": "child"')) { throw 'Recovery tool left descendant of removed B&A&HB item' }
+          if ($text.Contains('"itemId": "bahb"')) { throw 'Recovery tool left direct insurance reference' }
+          if (-not $text.Contains('5448bf274bdc2dfc2f8b456a')) { throw 'Recovery tool removed unrelated vanilla item' }
       - name: 'Build B&A&HB #2 client'
         shell: pwsh
         run: dotnet build mods/SPT-Belt-Armband-Inventory/src/SPT-Belt-Armband-Inventory.csproj -c Release
       - name: 'Build B&A&HB #2 server'
         shell: pwsh
         run: dotnet build mods/SPT-Belt-Armband-Inventory/server/SPT-Belt-Armband-Inventory.Server.csproj -c Release
-      - name: 'Stage B&A&HB #2 runtime candidate'
+      - name: 'Stage B&A&HB #2 profile-safe candidate'
         shell: pwsh
         run: |
-          $root = 'artifact/B&A&HB #2 MOD SPT RC1'
+          $root = 'artifact/B&A&HB #2 MOD SPT profile-safe candidate'
+          $modRoot = "$root/SPT_Runtime/user/mods/B&A&HB #2 MOD SPT"
           New-Item -ItemType Directory -Force -Path "$root/BepInEx/plugins" | Out-Null
-          New-Item -ItemType Directory -Force -Path "$root/SPT_Runtime/user/mods/B&A&HB #2 MOD SPT" | Out-Null
+          New-Item -ItemType Directory -Force -Path $modRoot | Out-Null
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/src/bin/Release/netstandard2.1/SPT Belt Armband Inventory v0.1.0.dll' "$root/BepInEx/plugins/"
-          Copy-Item 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT-Belt-Armband-Inventory.Server.dll' "$root/SPT_Runtime/user/mods/B&A&HB #2 MOD SPT/"
-      - name: 'Upload B&A&HB #2 runtime candidate'
+          Copy-Item 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT-Belt-Armband-Inventory.Server.dll' "$modRoot/"
+          Copy-Item 'mods/SPT-Belt-Armband-Inventory/profile-safety' "$modRoot/profile-safety" -Recurse
+      - name: 'Upload B&A&HB #2 profile-safe candidate'
         uses: actions/upload-artifact@v4
         with:
-          name: 'B&A&HB #2 MOD SPT RC1'
-          path: 'artifact/B&A&HB #2 MOD SPT RC1'
+          name: 'B&A&HB #2 MOD SPT profile-safe candidate'
+          path: 'artifact/B&A&HB #2 MOD SPT profile-safe candidate'
           if-no-files-found: error
           retention-days: 14
