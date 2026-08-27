@@ -21,7 +21,7 @@ public sealed class DedicatedEquipmentSlotRegistration(
     private static readonly MongoId DefaultInventoryTpl = new("55d7217a4bdc2d86028b456d");
     private static readonly MongoId BeltSlotMongoId = new(RuntimeIdentity.DedicatedBeltSlotMongoId);
     private static readonly MongoId HeadBandSlotMongoId = new(RuntimeIdentity.DedicatedHeadBandSlotMongoId);
-    private static readonly MongoId BeltParentTpl = new(RuntimeIdentity.BeltItemParentId);
+    private static readonly MongoId DedicatedMagazineBeltTpl = new(RuntimeIdentity.DedicatedMagazineBeltItemId);
     private static readonly MongoId HeadBandParentTpl = new(RuntimeIdentity.HeadBandItemParentId);
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
@@ -58,7 +58,10 @@ public sealed class DedicatedEquipmentSlotRegistration(
                 return Task.CompletedTask;
             }
 
-            UpsertDedicatedSlot(slots, armBand, RuntimeIdentity.DedicatedBeltWireSlotId, BeltSlotMongoId, BeltParentTpl);
+            // Belt gate is intentionally exact-item scoped: the runtime-candidate
+            // ArmBand and Wrist Wallet share the searchable Belt parent for client
+            // runtime typing, but must never be equipable in the dedicated Belt slot.
+            UpsertDedicatedSlot(slots, armBand, RuntimeIdentity.DedicatedBeltWireSlotId, BeltSlotMongoId, DedicatedMagazineBeltTpl);
             UpsertDedicatedSlot(slots, armBand, RuntimeIdentity.DedicatedHeadBandWireSlotId, HeadBandSlotMongoId, HeadBandParentTpl);
 
             // Server slot-list order is not a UI layout contract. Do not reorder
@@ -95,12 +98,12 @@ public sealed class DedicatedEquipmentSlotRegistration(
         Slot armBandPrototype,
         string wireName,
         MongoId id,
-        MongoId allowedParent)
+        MongoId allowedTemplateOrParent)
     {
         var matches = slots.Where(x => string.Equals(x.Name, wireName, StringComparison.Ordinal)).ToArray();
         if (matches.Length == 1)
         {
-            ValidateDedicatedSlot(matches[0], wireName, id, allowedParent);
+            ValidateDedicatedSlot(matches[0], wireName, id, allowedTemplateOrParent);
             return;
         }
 
@@ -120,7 +123,7 @@ public sealed class DedicatedEquipmentSlotRegistration(
                 [
                     new SlotFilter
                     {
-                        Filter = [allowedParent],
+                        Filter = [allowedTemplateOrParent],
                         Locked = false,
                         MaxStackCount = 1
                     }
@@ -129,7 +132,7 @@ public sealed class DedicatedEquipmentSlotRegistration(
         });
     }
 
-    private static void ValidateDedicatedSlot(Slot slot, string wireName, MongoId id, MongoId allowedParent)
+    private static void ValidateDedicatedSlot(Slot slot, string wireName, MongoId id, MongoId allowedTemplateOrParent)
     {
         if (!Equals(slot.Id, id)
             || !Equals(slot.Parent, DefaultInventoryTpl)
@@ -139,7 +142,7 @@ public sealed class DedicatedEquipmentSlotRegistration(
 
         var filters = slot.Properties?.Filters?.ToArray();
         var accepted = filters?.Length == 1 ? filters[0].Filter : null;
-        if (accepted == null || accepted.Count != 1 || !accepted.Contains(allowedParent))
+        if (accepted == null || accepted.Count != 1 || !accepted.Contains(allowedTemplateOrParent))
             throw new InvalidOperationException($"B&A&HB dedicated-slot filter collision for wire id {wireName}.");
     }
 }
