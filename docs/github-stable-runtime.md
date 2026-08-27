@@ -28,8 +28,11 @@ Long-term source modules currently integrated under `mods/`:
 - `SPT-Pause`
 - `SPT-Belt-Armband-Inventory`
 - `Item-Valuation-MOD-SPT`
+- `Economy-Admiral`
 - `Admiral-Trader`
 - `Admiral-Artyom-Revival`
+
+`Economy-Admiral` is integrated source with physically accepted SPT 4.1.3 Enforce Alpha behavior and module-specific CI. It remains a development-source / Actions-artifact module until a separate deliberate publication decision creates or assigns a maintained runtime channel.
 
 `Item-Valuation-MOD-SPT` remains a development/CI-artifact module until its SPT 4.1.3 physical runtime gate passes; it has no permanent runtime branch yet.
 
