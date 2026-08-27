@@ -121,7 +121,7 @@ public sealed class EnforcementPlanService(
             CandidateCountsByProvenance = countsByProvenance,
             CandidateCountsByEligibility = countsByEligibility,
             Note = itemStackEnabled
-                ? "Opt-in post-Alpha enforcement: Experience/TraderStanding plus one unambiguous mutable Success item stack may be changed while other Success item rewards remain immutable. Automatic item policy prices the complete Success item bundle, reserves all immutable handbook value, and only reduces the selected known-price stack. Ambiguous multiple reducible stacks, unknown immutable prices, non-finite quantities, or budgets requiring item removal are blocked. An explicit ItemRewardStackCountTarget retains the legacy exact single-reward safety gate and may set a positive integral count in either direction without bypassing provenance. Reward.Value and Upd.StackObjectsCount are changed/restored together; item templates, reward records and structural quest fields are never added, removed or replaced."
+                ? "Opt-in post-Alpha enforcement: Experience/TraderStanding plus one unambiguous mutable Success item stack may be changed while other Success item rewards remain immutable. Automatic item policy prices the complete Success item bundle, reserves all immutable handbook value, and only reduces the selected known-price stack. Ambiguous multiple reducible stacks, unknown immutable prices, non-finite quantities, or budgets requiring item removal are blocked. An explicit ItemRewardStackCountTarget preserves the legacy single-reward path and, for larger Success bundles, may target exactly one unambiguous existing synchronized integral stack greater than one while every other item reward remains immutable; ambiguous bundles are blocked. The exact target may set a positive integral count in either direction without bypassing provenance. Reward.Value and Upd.StackObjectsCount are changed/restored together; item templates, reward records and structural quest fields are never added, removed or replaced."
                 : config.Mode == EconomyMode.Enforce
                     ? "Active Alpha enforcement: only numeric Success Experience and TraderStanding rewards may be changed. PristineUnchanged and unknown provenance remain protected; PristineModified requires the exact reward dimension to be proven changed. Item rewards and structural quest fields remain preview-only/non-mutating."
                     : "Audit preview: deterministic Experience/TraderStanding proposals are emitted but the final DB is not mutated.",
@@ -160,7 +160,7 @@ public sealed class EnforcementPlanService(
             if (proposal.Dimension == "ItemRewardStackCount")
             {
                 var record = proposal.ManualOverride
-                    ? GetSingleSuccessItemRewardRecord(quest)
+                    ? GetSingleManualMutableSuccessItemRewardRecord(quest)
                     : GetSingleAutomaticMutableSuccessItemRewardRecord(quest, handbookPrices);
                 if (record is null)
                     throw new InvalidOperationException($"Enforce quest '{proposal.QuestId}' item-stack selector is no longer uniquely safe at transaction preflight.");
@@ -298,7 +298,7 @@ public sealed class EnforcementPlanService(
 
         if (manualOverride?.ItemRewardStackCountTarget is { } exactTarget)
         {
-            var manualRecord = GetSingleSuccessItemRewardRecord(quest);
+            var manualRecord = GetSingleManualMutableSuccessItemRewardRecord(quest);
             if (manualRecord is null) return null;
             if (!TryReadSynchronizedItemQuantity(manualRecord, out var manualCurrentCount)) return null;
 
@@ -430,6 +430,27 @@ public sealed class EnforcementPlanService(
         var items = itemRewards[0].Items?.ToList();
         if (items is null || items.Count != 1) return null;
         return new ItemRewardRecord(itemRewards[0], items[0]);
+    }
+
+    private static ItemRewardRecord? GetSingleManualMutableSuccessItemRewardRecord(Quest quest)
+    {
+        var legacySingleRecord = GetSingleSuccessItemRewardRecord(quest);
+        if (legacySingleRecord is not null) return legacySingleRecord;
+
+        var candidates = new List<ItemRewardRecord>();
+        foreach (var reward in GetSuccessItemRewards(quest))
+        {
+            var items = reward.Items?.ToList();
+            if (items is null || items.Count != 1) continue;
+            var record = new ItemRewardRecord(reward, items[0]);
+            if (!TryReadSynchronizedItemQuantity(record, out var count) || count <= 1) continue;
+            var rounded = Math.Round(count, 0);
+            if (Math.Abs(count - rounded) > 0.000001) continue;
+            candidates.Add(record);
+            if (candidates.Count > 1) return null;
+        }
+
+        return candidates.Count == 1 ? candidates[0] : null;
     }
 
     private static ItemRewardRecord? GetSingleAutomaticMutableSuccessItemRewardRecord(
