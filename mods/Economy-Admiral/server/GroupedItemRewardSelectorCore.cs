@@ -20,16 +20,11 @@ public static class GroupedItemRewardSelectorCore
         ArgumentNullException.ThrowIfNull(entries);
         if (entries.Count == 0) return Block("EmptyItemRewardRecord");
 
-        var firstTemplate = entries[0].TemplateId;
-        if (string.IsNullOrWhiteSpace(firstTemplate)) return Block("MissingTemplateId");
-
         var candidateIndex = -1;
         for (var index = 0; index < entries.Count; index++)
         {
             var entry = entries[index];
             if (string.IsNullOrWhiteSpace(entry.TemplateId)) return Block("MissingTemplateId");
-            if (!string.Equals(entry.TemplateId, firstTemplate, StringComparison.Ordinal))
-                return Block("MixedTemplatesInRewardRecord");
             if (!double.IsFinite(entry.Count) || entry.Count <= 0)
                 return Block("InvalidStackCount");
 
@@ -52,7 +47,7 @@ public static class GroupedItemRewardSelectorCore
             SelectedIndex = candidateIndex,
             Reason = entries.Count == 1
                 ? (requireKnownHandbookPrice ? "SingleReducibleStack" : "SingleReducibleStackManualExact")
-                : (requireKnownHandbookPrice ? "OneReducibleStackInSameTemplateGroupedReward" : "OneReducibleStackInSameTemplateGroupedRewardManualExact"),
+                : (requireKnownHandbookPrice ? "OneReducibleStackInGroupedReward" : "OneReducibleStackInGroupedRewardManualExact"),
         };
     }
 
