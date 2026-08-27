@@ -6,6 +6,7 @@ public static class GroupedItemRewardSlot
         Func<double> selectedStackRead,
         Action<double> selectedStackWrite,
         Func<IReadOnlyList<double?>> allStackCountsRead,
+        int selectedIndex,
         Func<double?> rewardValueRead,
         Action<double> rewardValueWrite,
         string label)
@@ -15,14 +16,20 @@ public static class GroupedItemRewardSlot
         ArgumentNullException.ThrowIfNull(allStackCountsRead);
         ArgumentNullException.ThrowIfNull(rewardValueRead);
         ArgumentNullException.ThrowIfNull(rewardValueWrite);
+        if (selectedIndex < 0) throw new ArgumentOutOfRangeException(nameof(selectedIndex));
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Grouped item reward label must not be empty.", nameof(label));
 
         double Read()
         {
             var selected = selectedStackRead();
             var stacks = allStackCountsRead();
+            if (selectedIndex >= stacks.Count)
+                throw new InvalidOperationException($"{label} selected item index {selectedIndex} is outside the grouped reward record.");
             if (!double.IsFinite(selected) || selected <= 0)
                 throw new InvalidOperationException($"{label} selected item stack must be finite and > 0: {selected}.");
+            var indexed = stacks[selectedIndex] ?? 1d;
+            if (!double.IsFinite(indexed) || Math.Abs(indexed - selected) > 0.001)
+                throw new InvalidOperationException($"{label} selected item stack drifted from grouped reward index {selectedIndex}: selected={selected}, indexed={indexed}.");
             if (!ItemRewardQuantityCore.TryReadSynchronizedTotal(rewardValueRead(), stacks, out _))
                 throw new InvalidOperationException($"{label} Reward.Value does not equal the sum of grouped item StackObjectsCount values.");
             return selected;
@@ -30,10 +37,10 @@ public static class GroupedItemRewardSlot
 
         void Write(double target)
         {
-            var currentSelected = Read();
+            Read();
             var stacks = allStackCountsRead();
             if (!ItemRewardQuantityCore.TryCalculateRewardValueAfterSelectedStackChange(
-                    rewardValueRead(), stacks, FindSelectedIndex(stacks, currentSelected), target, out var targetRewardValue))
+                    rewardValueRead(), stacks, selectedIndex, target, out var targetRewardValue))
                 throw new InvalidOperationException($"{label} cannot represent grouped item reward target {target} without structural change.");
 
             selectedStackWrite(target);
@@ -41,21 +48,5 @@ public static class GroupedItemRewardSlot
         }
 
         return new NumericRewardSlot(Read, Write);
-    }
-
-    private static int FindSelectedIndex(IReadOnlyList<double?> stackCounts, double selected)
-    {
-        var match = -1;
-        for (var index = 0; index < stackCounts.Count; index++)
-        {
-            var value = stackCounts[index] ?? 1d;
-            if (Math.Abs(value - selected) > 0.001) continue;
-            if (match >= 0)
-                throw new InvalidOperationException("Grouped item reward selected stack is ambiguous by quantity; caller must provide an unambiguous item selector.");
-            match = index;
-        }
-        if (match < 0)
-            throw new InvalidOperationException("Grouped item reward selected stack is absent from the reward record.");
-        return match;
     }
 }
