@@ -6,8 +6,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
 EXPECTED_ROUTE = f"/files/trader/avatar/{TRADER_ID}.jpg"
-EXPECTED_RUNTIME_GIT_BLOB_SHA1 = "8637f5fe359eb447ce88effc68681230df62bd8a"
-EXPECTED_SOURCE_SHA256 = "48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff"
+EXPECTED_RUNTIME_GIT_BLOB_SHA1 = "63e158fbd96b595a609560dfef452451b4783144"
+EXPECTED_SOURCE_SHA256 = "2387fb3d6bc9b8a0ec677789959d7007f108744e72d7cf809ed945d459428cda"
 EXPECTED_DIMENSIONS = (512, 576)
 
 
@@ -66,7 +66,7 @@ class IdentityAssetTests(unittest.TestCase):
         self.assertFalse(portrait["substitutionAllowed"])
         self.assertFalse(portrait["placeholderAllowed"])
         self.assertEqual(portrait["sourceFileSha256"], EXPECTED_SOURCE_SHA256)
-        self.assertEqual(portrait["sourceDimensions"], "1182x1330")
+        self.assertEqual(portrait["sourceDimensions"], "1365x1536")
 
     def test_runtime_asset_exists_and_matches_locked_blob_and_geometry(self):
         self.assertTrue(self.asset.is_file())

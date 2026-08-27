@@ -47,8 +47,8 @@ jobs:
           portrait = identity['portrait']; path = root/portrait['runtimeAsset']
           assert portrait['selectionStatus'] == 'final' and portrait['assetStatus'] == 'ingested'
           assert portrait['placeholderAllowed'] is False and portrait['substitutionAllowed'] is False
-          assert portrait['sourceFileSha256'] == '48508c7370bd0c98ed368049ff89a161282279a0ffa40a705e73f23d83a28aff'
-          assert portrait['sourceDimensions'] == '1182x1330' and portrait['runtimeDimensions'] == '512x576'
+          assert portrait['sourceFileSha256'] == '2387fb3d6bc9b8a0ec677789959d7007f108744e72d7cf809ed945d459428cda'
+          assert portrait['sourceDimensions'] == '1365x1536' and portrait['runtimeDimensions'] == '512x576'
           expected_route = f"/files/trader/avatar/{identity['traderId']}.jpg"
           assert portrait['runtimeRoute'] == expected_route == base['avatar']
           data = path.read_bytes(); clean = data.rstrip(b'\r\n')
