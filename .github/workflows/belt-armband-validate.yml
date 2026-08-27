@@ -73,12 +73,23 @@ jobs:
         shell: pwsh
         run: |
           $root = 'artifact/B&A&HB #2 MOD SPT profile-safe candidate'
-          $modRoot = "$root/SPT_Runtime/user/mods/B&A&HB #2 MOD SPT"
-          New-Item -ItemType Directory -Force -Path "$root/BepInEx/plugins" | Out-Null
+          $runtimeRoot = "$root/SPT_Runtime"
+          $pluginRoot = "$runtimeRoot/BepInEx/plugins"
+          $modRoot = "$runtimeRoot/user/mods/B&A&HB #2 MOD SPT"
+          New-Item -ItemType Directory -Force -Path $pluginRoot | Out-Null
           New-Item -ItemType Directory -Force -Path $modRoot | Out-Null
-          Copy-Item 'mods/SPT-Belt-Armband-Inventory/src/bin/Release/netstandard2.1/SPT Belt Armband Inventory v0.1.0.dll' "$root/BepInEx/plugins/"
+          Copy-Item 'mods/SPT-Belt-Armband-Inventory/src/bin/Release/netstandard2.1/SPT Belt Armband Inventory v0.1.0.dll' "$pluginRoot/"
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT-Belt-Armband-Inventory.Server.dll' "$modRoot/"
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/profile-safety' "$modRoot/profile-safety" -Recurse
+
+          $clientDll = "$pluginRoot/SPT Belt Armband Inventory v0.1.0.dll"
+          $serverDll = "$modRoot/SPT-Belt-Armband-Inventory.Server.dll"
+          $manifest = "$modRoot/profile-safety/persistent-identities.json"
+          if (-not (Test-Path -LiteralPath $clientDll)) { throw 'Install-tree validation: client DLL missing under SPT_Runtime/BepInEx/plugins' }
+          if (-not (Test-Path -LiteralPath $serverDll)) { throw 'Install-tree validation: server DLL missing under SPT_Runtime/user/mods' }
+          if (-not (Test-Path -LiteralPath $manifest)) { throw 'Install-tree validation: profile-safety manifest missing from server mod' }
+          if (Test-Path -LiteralPath "$root/BepInEx") { throw 'Install-tree validation: forbidden split top-level BepInEx root exists' }
+          Write-Host '[B&A&HB #2 MOD SPT] install tree PASS: single SPT_Runtime root contains client + server + recovery tooling'
       - name: 'Upload B&A&HB #2 profile-safe candidate'
         uses: actions/upload-artifact@v4
         with:
