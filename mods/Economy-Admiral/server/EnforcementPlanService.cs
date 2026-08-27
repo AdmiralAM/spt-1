@@ -63,7 +63,7 @@ public sealed class EnforcementPlanService(
                 transaction = new NumericRewardTransactionOutcome
                 {
                     Committed = false,
-                    RolledBack = true,
+                    RolledBack = false,
                     Error = $"Enforce preflight failed before writes: {exception.Message}",
                     Results = Array.Empty<NumericRewardTransactionResult>(),
                 };
@@ -134,10 +134,14 @@ public sealed class EnforcementPlanService(
 
         if (config.Mode == EconomyMode.Enforce)
         {
-            if (transaction.RolledBack)
-                logger.Error($"[Economy Admiral] Enforce transaction rolled back/aborted: planned={proposals.Count}, error={transaction.Error}; plan={planPath}");
-            else
+            if (transaction.Committed)
                 logger.Warning($"[Economy Admiral] Enforce committed: planned={proposals.Count}, mutations={transaction.Results.Count}; plan={planPath}");
+            else if (transaction.RolledBack)
+                logger.Error($"[Economy Admiral] Enforce transaction rolled back: planned={proposals.Count}, error={transaction.Error}; plan={planPath}");
+            else if (!string.IsNullOrWhiteSpace(transaction.Error))
+                logger.Error($"[Economy Admiral] Enforce transaction aborted without writes/commit: planned={proposals.Count}, error={transaction.Error}; plan={planPath}");
+            else
+                logger.Info($"[Economy Admiral] Enforce completed with no planned mutations: planned=0; plan={planPath}");
         }
         else
         {
