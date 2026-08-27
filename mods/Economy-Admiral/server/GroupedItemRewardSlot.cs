@@ -2,6 +2,19 @@ namespace SPTEconomy;
 
 public static class GroupedItemRewardSlot
 {
+    private static readonly object EvidenceLock = new();
+    private static readonly List<string> PlannedGroupedLabels = [];
+
+    public static void ResetEvidence()
+    {
+        lock (EvidenceLock) PlannedGroupedLabels.Clear();
+    }
+
+    public static IReadOnlyList<string> SnapshotPlannedGroupedLabels()
+    {
+        lock (EvidenceLock) return PlannedGroupedLabels.ToList();
+    }
+
     public static NumericRewardSlot Create(
         Func<double> selectedStackRead,
         Action<double> selectedStackWrite,
@@ -18,6 +31,12 @@ public static class GroupedItemRewardSlot
         ArgumentNullException.ThrowIfNull(rewardValueWrite);
         if (selectedIndex < 0) throw new ArgumentOutOfRangeException(nameof(selectedIndex));
         if (string.IsNullOrWhiteSpace(label)) throw new ArgumentException("Grouped item reward label must not be empty.", nameof(label));
+
+        var initialStacks = allStackCountsRead();
+        if (initialStacks.Count > 1)
+        {
+            lock (EvidenceLock) PlannedGroupedLabels.Add(label);
+        }
 
         double Read()
         {
