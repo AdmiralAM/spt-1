@@ -39,6 +39,7 @@ public sealed class QuestGameplayAlphaOverrides(
             modHelper.GetJsonDataFromFile<Dictionary<string, string>>(modPath, "db/locales/gameplay-alpha-ru.json");
 
         ValidateOverrides(english, russian);
+        ApplyStarterClarityOverrides(english, russian);
 
         foreach (var (localeCode, localeKvP) in localesTable.Global)
         {
@@ -59,6 +60,38 @@ public sealed class QuestGameplayAlphaOverrides(
 
         logger.Success($"Applied {english.Count} Gameplay Alpha quest text overrides");
         return Task.CompletedTask;
+    }
+
+    private static void ApplyStarterClarityOverrides(
+        Dictionary<string, string> english,
+        Dictionary<string, string> russian)
+    {
+        const string fundamentals = "5d404ebd654de4efecef71d2";
+        const string factory = "1b92e4cf212d895be4f70b2c";
+
+        english[$"{fundamentals} description"] =
+            "Have any 2 approved access keys in your inventory at the same time. The keys do not need Found in Raid status, are not handed over, and no raid is required.";
+        english[$"{fundamentals} startedMessageText"] =
+            "First check: keep any two approved access keys in your inventory. Nothing is consumed and you do not need to enter a raid.";
+        english[$"{fundamentals} acceptPlayerMessage"] = english[$"{fundamentals} startedMessageText"];
+
+        russian[$"{fundamentals} description"] =
+            "Имей одновременно любые 2 подходящих ключа доступа в инвентаре. Статус «Найдено в рейде» не нужен, ключи не сдаются и идти в рейд не требуется.";
+        russian[$"{fundamentals} startedMessageText"] =
+            "Первая проверка: держи в инвентаре любые два подходящих ключа доступа. Ничего сдавать не нужно и в рейд идти не требуется.";
+        russian[$"{fundamentals} acceptPlayerMessage"] = russian[$"{fundamentals} startedMessageText"];
+
+        english[$"{factory} description"] =
+            "Have any 1 approved Factory access key in your inventory. It does not need Found in Raid status, is not handed over, and no Factory raid is required.";
+        english[$"{factory} startedMessageText"] =
+            "Factory check: keep one approved Factory key in your inventory. Nothing is consumed and you do not need to enter Factory.";
+        english[$"{factory} acceptPlayerMessage"] = english[$"{factory} startedMessageText"];
+
+        russian[$"{factory} description"] =
+            "Имей в инвентаре 1 подходящий ключ доступа для Завода. Статус «Найдено в рейде» не нужен, ключ не сдаётся и заходить на Завод не требуется.";
+        russian[$"{factory} startedMessageText"] =
+            "Проверка Завода: держи в инвентаре один подходящий ключ Завода. Ничего сдавать не нужно и заходить на карту не требуется.";
+        russian[$"{factory} acceptPlayerMessage"] = russian[$"{factory} startedMessageText"];
     }
 
     private static void ValidateOverrides(
