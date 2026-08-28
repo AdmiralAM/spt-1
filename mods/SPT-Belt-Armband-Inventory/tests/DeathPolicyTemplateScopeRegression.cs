@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
 
@@ -53,6 +54,11 @@ internal static class DeathPolicyTemplateScopeRegression
         Assert(kept.Contains("headband") && kept.Contains("smokes"), "HeadBand protected tree is retained");
         Assert(!kept.Contains("wrong"), "unregistered template in dedicated slot remains vanilla");
 
+        string[] allLostIds = { "armband", "cash", "belt", "mag", "headband", "smokes", "wrong", "external" };
+        string[] protectedInsurance = BeltDeathPolicy.FilterLostInsuredIds(allLostIds, allWearables, roots);
+        Assert(protectedInsurance.SequenceEqual(new[] { "wrong", "external" }),
+            "insurance removes exactly the protected wearable roots and descendants from lost-insured processing");
+
         var armBandOnlyRoots = new[]
         {
             new ProtectedWearableRoot(BeltDeathPolicy.ArmBand, RuntimeIdentity.CandidateItemId),
@@ -62,6 +68,9 @@ internal static class DeathPolicyTemplateScopeRegression
         Assert(armBandOnly.Contains("armband") && armBandOnly.Contains("cash"), "ArmBand-only policy keeps exactly its owned tree");
         Assert(!armBandOnly.Contains("belt") && !armBandOnly.Contains("mag"), "disabled Belt family receives no special death protection");
         Assert(!armBandOnly.Contains("headband") && !armBandOnly.Contains("smokes"), "disabled HeadBand family receives no special death protection");
+        string[] armBandInsurance = BeltDeathPolicy.FilterLostInsuredIds(allLostIds, allWearables, armBandOnlyRoots);
+        Assert(armBandInsurance.SequenceEqual(new[] { "belt", "mag", "headband", "smokes", "wrong", "external" }),
+            "ArmBand-only protection suppresses no Belt/HeadBand insurance loss");
 
         var beltOnlyRoots = new[]
         {
@@ -71,6 +80,9 @@ internal static class DeathPolicyTemplateScopeRegression
         Assert(beltOnly.Contains("belt") && beltOnly.Contains("mag"), "Belt-only policy keeps Belt root and descendants");
         Assert(!beltOnly.Contains("armband") && !beltOnly.Contains("cash"), "Belt-only policy does not leak into ArmBand");
         Assert(!beltOnly.Contains("headband") && !beltOnly.Contains("smokes"), "Belt-only policy does not leak into HeadBand");
+        string[] beltInsurance = BeltDeathPolicy.FilterLostInsuredIds(allLostIds, allWearables, beltOnlyRoots);
+        Assert(beltInsurance.SequenceEqual(new[] { "armband", "cash", "headband", "smokes", "wrong", "external" }),
+            "Belt-only protection suppresses exactly Belt insurance loss");
 
         var headBandOnlyRoots = new[]
         {
@@ -80,9 +92,14 @@ internal static class DeathPolicyTemplateScopeRegression
         Assert(headBandOnly.Contains("headband") && headBandOnly.Contains("smokes"), "HeadBand-only policy keeps HeadBand root and descendants");
         Assert(!headBandOnly.Contains("armband") && !headBandOnly.Contains("cash"), "HeadBand-only policy does not leak into ArmBand");
         Assert(!headBandOnly.Contains("belt") && !headBandOnly.Contains("mag"), "HeadBand-only policy does not leak into Belt");
+        string[] headBandInsurance = BeltDeathPolicy.FilterLostInsuredIds(allLostIds, allWearables, headBandOnlyRoots);
+        Assert(headBandInsurance.SequenceEqual(new[] { "armband", "cash", "belt", "mag", "wrong", "external" }),
+            "HeadBand-only protection suppresses exactly HeadBand insurance loss");
 
         var lostAll = BeltDeathPolicy.GetKeptTreeIds(allWearables, Array.Empty<ProtectedWearableRoot>());
         Assert(lostAll.Count == 0, "LostOnDeath for every family delegates all loss semantics back to vanilla SPT");
+        Assert(BeltDeathPolicy.FilterLostInsuredIds(allLostIds, allWearables, Array.Empty<ProtectedWearableRoot>()).SequenceEqual(allLostIds),
+            "all LostOnDeath leaves lost-insured IDs untouched for vanilla SPT processing");
 
         var wrongHost = new[]
         {
