@@ -8,6 +8,9 @@
   "customTraderPurchasePriceMultiplier": 1.15,
   "enableFleaPurchasePressure": false,
   "customFleaBasePriceMultiplier": 1.65,
+  "enableLootPressure": false,
+  "customLooseLootScale": 0.88,
+  "customStaticLootScale": 0.95,
   "rarity": {
     "commonMinSources": 8,
     "uncommonMinSources": 4,
