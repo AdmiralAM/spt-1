@@ -16,10 +16,13 @@ internal static class DedicatedWearableItemRegression
         if (!belt.Has(AccessoryCapability.FastAccess)
             || !belt.Has(AccessoryCapability.LootPriority)
             || !belt.Has(AccessoryCapability.UnloadPriority)
-            || !belt.Has(AccessoryCapability.BuildValidation))
-            throw new InvalidOperationException("Dedicated Magazine Belt lost required tactical/container capabilities.");
-        if (belt.Has(AccessoryCapability.PaymentSource) || belt.Has(AccessoryCapability.GrenadeAccess))
-            throw new InvalidOperationException("Dedicated Magazine Belt activated unrelated payment/grenade capabilities.");
+            || !belt.Has(AccessoryCapability.BuildValidation)
+            || !belt.Has(AccessoryCapability.ScavHostRestoration))
+            throw new InvalidOperationException("Dedicated Magazine Belt lost required tactical/container lifecycle capabilities.");
+        if (belt.Has(AccessoryCapability.PaymentSource)
+            || belt.Has(AccessoryCapability.GrenadeAccess)
+            || belt.Has(AccessoryCapability.DeathRetention))
+            throw new InvalidOperationException("Dedicated Magazine Belt activated unrelated payment/grenade/death-retention capabilities.");
 
         if (!WearableItemDescriptorRegistry.TryGet(RuntimeIdentity.EmergencyHeadBandItemId, out var headBand))
             throw new InvalidOperationException("Emergency HeadBand descriptor missing.");
@@ -27,11 +30,13 @@ internal static class DedicatedWearableItemRegression
             || headBand.GridColumns != RuntimeIdentity.EmergencyHeadBandGridColumns
             || headBand.GridRows != RuntimeIdentity.EmergencyHeadBandGridRows)
             throw new InvalidOperationException("Emergency HeadBand geometry/category contract drifted.");
-        if (!headBand.Has(AccessoryCapability.BuildValidation))
-            throw new InvalidOperationException("Emergency HeadBand lost build-validation capability.");
+        if (!headBand.Has(AccessoryCapability.BuildValidation)
+            || !headBand.Has(AccessoryCapability.ScavHostRestoration))
+            throw new InvalidOperationException("Emergency HeadBand lost required build/ReplaceInventory lifecycle capabilities.");
         if (headBand.Has(AccessoryCapability.FastAccess)
             || headBand.Has(AccessoryCapability.PaymentSource)
-            || headBand.Has(AccessoryCapability.GrenadeAccess))
-            throw new InvalidOperationException("Emergency HeadBand activated unrelated tactical/payment/grenade capabilities.");
+            || headBand.Has(AccessoryCapability.GrenadeAccess)
+            || headBand.Has(AccessoryCapability.DeathRetention))
+            throw new InvalidOperationException("Emergency HeadBand activated unrelated tactical/payment/grenade/death-retention capabilities.");
     }
 }
