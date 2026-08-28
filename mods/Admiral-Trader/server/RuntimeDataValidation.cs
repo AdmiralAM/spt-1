@@ -98,7 +98,8 @@ public sealed class AdmiralRuntimeDataValidation(
                     ? typeElement.GetString()
                     : null;
 
-                if (string.Equals(type, "FindItem", StringComparison.Ordinal)
+                if ((string.Equals(type, "FindItem", StringComparison.Ordinal)
+                     || string.Equals(type, "HandoverItem", StringComparison.Ordinal))
                     && condition.TryGetProperty("target", out JsonElement targets))
                 {
                     foreach (JsonElement target in targets.EnumerateArray())
