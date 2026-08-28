@@ -25,13 +25,11 @@ namespace SPTBeltArmbandInventory
                 string slotId = ReflectionTools.ReadMember(slot, "ID")?.ToString();
                 if (string.Equals(slotId, DedicatedSlotPresentationPolicy.VanillaHeadwearSlotId, StringComparison.Ordinal))
                 {
-                    string headwearCaption = ReadHeader(slotView);
-                    bool detectedRussian = DedicatedSlotPresentationPolicy.LooksRussian(headwearCaption);
-                    if (detectedRussian || !russianUi.HasValue)
-                    {
-                        russianUi = detectedRussian || Application.systemLanguage == SystemLanguage.Russian;
-                        RelabelKnownViews();
-                    }
+                    russianUi = DedicatedSlotPresentationPolicy.ResolveRussian(
+                        russianUi,
+                        ReadHeader(slotView),
+                        Application.systemLanguage == SystemLanguage.Russian);
+                    RelabelKnownViews();
                     return;
                 }
 
