@@ -82,7 +82,20 @@ internal static class Program
         Assert(AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess, true, true), "assigned fast-access capability activates only for a real container");
         Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess, true, false), "fast-access capability still requires a container item");
 
-        Console.WriteLine("SPT Belt/Armband Inventory profile safety and dedicated slot contract regressions passed.");
+        Assert(ScavBeltPolicy.ShouldRestore(RuntimeIdentity.CandidateItemId, true, true),
+            "ArmBand runtime candidate survives Scav ReplaceInventory when deleted");
+        Assert(ScavBeltPolicy.ShouldRestore(RuntimeIdentity.DedicatedMagazineBeltItemId, true, true),
+            "dedicated Magazine Belt survives Scav ReplaceInventory when deleted");
+        Assert(ScavBeltPolicy.ShouldRestore(RuntimeIdentity.EmergencyHeadBandItemId, true, true),
+            "Emergency HeadBand survives Scav ReplaceInventory when deleted");
+        Assert(!ScavBeltPolicy.ShouldRestore(RuntimeIdentity.WristWalletItemId, true, true),
+            "Wrist Wallet without explicit Scav capability is not silently restored");
+        Assert(!ScavBeltPolicy.ShouldRestore(RuntimeIdentity.DedicatedMagazineBeltItemId, false, true),
+            "Scav lifecycle does not mutate an already-active Belt slot");
+        Assert(!ScavBeltPolicy.ShouldRestore(RuntimeIdentity.DedicatedMagazineBeltItemId, true, false),
+            "Scav lifecycle requires a real container item");
+
+        Console.WriteLine("SPT Belt/Armband Inventory profile safety, dedicated slot and lifecycle regressions passed.");
     }
 
     static string[] InsertDedicated(string[] source, DedicatedWearableSlotDescriptor descriptor)
