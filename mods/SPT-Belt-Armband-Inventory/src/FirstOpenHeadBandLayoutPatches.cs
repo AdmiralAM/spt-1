@@ -63,9 +63,6 @@ namespace SPTBeltArmbandInventory
                 }
             }
 
-            // SlotView.Show fires before the first Items-tab layout has necessarily
-            // completed all of EFT's late RectTransform writes. Re-apply only for a
-            // short event-triggered settle window; no idle Update/polling loop.
             TryApply(headwearView);
             Pending.Add(new PendingLayout(headwearView));
             RequestFlush?.Invoke();
@@ -185,9 +182,9 @@ namespace SPTBeltArmbandInventory
                     RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue);
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
-                object postfix = harmonyMethodConstructor.Invoke(new object[] { PostfixFactory(show) });
-                Patch(patchMethod, harmonyMethodType, show, postfix);
-                logInfo?.Invoke("B&A&HB first-open HeadBand layout settle installed on native SlotView.Show; bounded six-pass post-Show repair, no idle polling.");
+                object postfixFactory = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
+                Patch(patchMethod, harmonyMethodType, show, postfixFactory);
+                logInfo?.Invoke("B&A&HB first-open HeadBand layout settle installed through Harmony postfix factory on native SlotView.Show; bounded six-pass post-Show repair, no idle polling.");
                 return true;
             }
             catch (Exception exception)
@@ -222,11 +219,15 @@ namespace SPTBeltArmbandInventory
             return null;
         }
 
-        static MethodInfo PostfixFactory(MethodInfo original)
+        static MethodInfo PostfixFactory(MethodBase original)
         {
-            ParameterInfo[] parameters = original.GetParameters();
+            MethodInfo method = original as MethodInfo;
+            if (method == null || method.DeclaringType == null) return null;
+            ParameterInfo[] parameters = method.GetParameters();
+            if (parameters.Length == 0) return null;
+
             Type[] signature = new Type[parameters.Length + 1];
-            signature[0] = original.DeclaringType;
+            signature[0] = method.DeclaringType;
             for (int i = 0; i < parameters.Length; i++) signature[i + 1] = parameters[i].ParameterType;
 
             DynamicMethod postfix = new DynamicMethod(
@@ -251,6 +252,14 @@ namespace SPTBeltArmbandInventory
                     BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
             il.Emit(OpCodes.Ret);
             return postfix;
+        }
+
+        static MethodInfo Method(string name)
+        {
+            MethodInfo[] methods = typeof(FirstOpenHeadBandLayoutPatches).GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal)) return methods[i];
+            return null;
         }
 
         static MethodInfo FindZeroArgInstanceMethod(Type type, string name)
