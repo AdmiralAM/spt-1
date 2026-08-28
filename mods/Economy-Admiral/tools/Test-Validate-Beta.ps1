@@ -85,3 +85,4 @@ exit 0
 finally {
     Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
 }
+exit 0
