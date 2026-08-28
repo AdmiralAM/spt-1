@@ -1,0 +1,140 @@
+name: Publish Economy Admiral Runtime
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/economy-admiral-publish.yml'
+      - 'mods/Economy-Admiral/**'
+  push:
+    branches:
+      - 'publish/economy-admiral-runtime'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  validate-package-publish:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Resolve Economy Admiral identity
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content 'mods/Economy-Admiral/server/Economy-Admiral.csproj'
+          $version = [string]$project.Project.PropertyGroup.Version
+          $assembly = [string]$project.Project.PropertyGroup.AssemblyName
+          if ($version -ne '0.1.0') { throw "Unexpected Economy Admiral version: $version" }
+          if ($assembly -ne 'Economy-Admiral') { throw "Unexpected Economy Admiral assembly: $assembly" }
+          "EA_VERSION=$version" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+          "EA_ASSEMBLY=$assembly" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Build Economy Admiral
+        shell: pwsh
+        run: dotnet build mods/Economy-Admiral/server/Economy-Admiral.csproj -c Release --nologo
+
+      - name: Assemble install-only runtime package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $sourceSha = '${{ github.event.pull_request.head.sha || github.sha }}'
+          $root = Join-Path $PWD 'build-output/Economy-Admiral'
+          $mod = Join-Path $root 'SPT_Runtime/user/mods/Economy Admiral'
+          Remove-Item (Join-Path $PWD 'build-output') -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path (Join-Path $mod 'config') | Out-Null
+
+          Copy-Item "mods/Economy-Admiral/server/bin/Release/net10.0/$env:EA_ASSEMBLY.dll" (Join-Path $mod 'Economy-Admiral.dll') -Force
+          Copy-Item 'mods/Economy-Admiral/config/config.json' (Join-Path $mod 'config/config.json') -Force
+          Copy-Item 'mods/Economy-Admiral/README.md' (Join-Path $mod 'README.md') -Force
+          Copy-Item 'mods/Economy-Admiral/RUNTIME_TEST.md' (Join-Path $mod 'RUNTIME_TEST.md') -Force
+          Copy-Item 'mods/Economy-Admiral/tools/Validate-Runtime.ps1' (Join-Path $mod 'Validate-Runtime.ps1') -Force
+          Copy-Item 'mods/Economy-Admiral/tools/Validate-Enforce.ps1' (Join-Path $mod 'Validate-Enforce.ps1') -Force
+          Copy-Item 'mods/Economy-Admiral/tools/Validate-Beta.ps1' (Join-Path $mod 'Validate-Beta.ps1') -Force
+
+          [ordered]@{
+            name = 'Economy Admiral'
+            channel = 'runtime-economy-admiral'
+            version = $env:EA_VERSION
+            spt_version = '4.1.3'
+            source_commit = $sourceSha
+            install_root = 'SPT_Runtime/user/mods/Economy Admiral'
+            server_only = $true
+            physically_accepted = $true
+          } | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $root 'runtime-manifest.json') -Encoding utf8
+
+          @(
+            '# Economy Admiral runtime',
+            '',
+            "Ready-to-install Economy Admiral $env:EA_VERSION for SPT 4.1.3.",
+            '',
+            'Copy this package into the SPT root. It contains only the Economy Admiral server mod.',
+            "Verified source commit: $sourceSha"
+          ) -join "`n" | Set-Content (Join-Path $root 'README.md') -Encoding utf8
+
+      - name: Validate runtime package
+        shell: pwsh
+        run: |
+          $root = 'build-output/Economy-Admiral'
+          $mod = "$root/SPT_Runtime/user/mods/Economy Admiral"
+          $required = @(
+            "$mod/Economy-Admiral.dll",
+            "$mod/config/config.json",
+            "$mod/README.md",
+            "$mod/RUNTIME_TEST.md",
+            "$mod/Validate-Runtime.ps1",
+            "$mod/Validate-Enforce.ps1",
+            "$mod/Validate-Beta.ps1",
+            "$root/runtime-manifest.json",
+            "$root/README.md"
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path $path -PathType Leaf)) { throw "Runtime package contract missing: $path" }
+          }
+          $manifest = Get-Content "$root/runtime-manifest.json" -Raw | ConvertFrom-Json
+          if ($manifest.channel -ne 'runtime-economy-admiral') { throw 'Wrong runtime channel' }
+          if ($manifest.version -ne '0.1.0') { throw 'Wrong runtime version' }
+          if ($manifest.spt_version -ne '4.1.3') { throw 'Wrong SPT target' }
+
+      - name: Upload Economy Admiral package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Economy-Admiral-v${{ env.EA_VERSION }}
+          path: build-output/Economy-Admiral/**
+          if-no-files-found: error
+
+      - name: Publish runtime-economy-admiral
+        if: github.event_name == 'push' && github.ref == 'refs/heads/publish/economy-admiral-runtime'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $sourceSha = '${{ github.sha }}'
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          $worktree = Join-Path $env:RUNNER_TEMP "publish-economy-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          git worktree add --detach $worktree $sourceSha | Out-Null
+          Push-Location $worktree
+          try {
+            git checkout --orphan "publish-economy-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT" | Out-Null
+            git rm -rf . | Out-Null
+            Copy-Item (Join-Path $PWD '..\..\build-output\Economy-Admiral\*') . -Recurse -Force
+            git add -A
+            git commit -m "Publish Economy Admiral $env:EA_VERSION runtime package" | Out-Null
+            $runtimeCommit = (git rev-parse HEAD).Trim()
+          } finally {
+            Pop-Location
+            git worktree remove $worktree --force | Out-Null
+          }
+
+          git push origin --force "$runtimeCommit`:refs/heads/runtime-economy-admiral"
