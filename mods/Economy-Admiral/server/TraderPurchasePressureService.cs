@@ -25,12 +25,9 @@ public sealed class TraderPurchasePressureService(
         if (!config.EnableTraderPurchasePressure || config.Mode != EconomyMode.Enforce)
             return new TraderPurchasePressureResult(false, 1.0, 0, 0, 0, 0, null);
         if (applied)
-            return new TraderPurchasePressureResult(true, ResolveMultiplier(config), 0, 0, 0, 0, "already-applied");
+            return new TraderPurchasePressureResult(true, TraderPurchasePressurePolicy.ResolveMultiplier(config), 0, 0, 0, 0, "already-applied");
 
-        var multiplier = ResolveMultiplier(config);
-        if (!double.IsFinite(multiplier) || multiplier < 1.0 || multiplier > 2.0)
-            throw new InvalidOperationException($"Trader purchase pressure multiplier must be finite and within 1.0..2.0, got {multiplier}.");
-
+        var multiplier = TraderPurchasePressurePolicy.ResolveMultiplier(config);
         var rollback = new List<Action>();
         var changedOffers = 0;
         var changedTraders = new HashSet<string>(StringComparer.Ordinal);
@@ -63,7 +60,7 @@ public sealed class TraderPurchasePressureService(
                     if (!double.IsFinite(before) || before <= 0)
                         continue;
 
-                    var target = Math.Ceiling(before * multiplier);
+                    var target = TraderPurchasePressurePolicy.ApplyToCurrencyCost(before, config);
                     if (target <= before)
                         continue;
 
@@ -91,15 +88,6 @@ public sealed class TraderPurchasePressureService(
             throw new InvalidOperationException($"Trader purchase pressure transaction rolled back: {applyException.Message}", applyException);
         }
     }
-
-    public static double ResolveMultiplier(EconomyConfig config) => config.Preset switch
-    {
-        EconomyPreset.Easy => 1.05,
-        EconomyPreset.Normal => 1.15,
-        EconomyPreset.Hard => 1.30,
-        EconomyPreset.Custom => config.CustomTraderPurchasePriceMultiplier,
-        _ => throw new ArgumentOutOfRangeException(nameof(config.Preset), config.Preset, "Unsupported economy preset."),
-    };
 }
 
 public sealed record TraderPurchasePressureResult(
