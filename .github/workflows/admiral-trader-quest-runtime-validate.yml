@@ -48,15 +48,13 @@ jobs:
 
           intro_id = '5d404ebd654de4efecef71d2'
           intro_targets = {'5780cf942459777df90dcb72', '59148c8a86f774197930e983'}
-          quests = []
           quest_ids = []
           access_ids = []
-          arsenal_readiness_ids = []
           arsenal_combat_ids = []
+          qualification_ids = []
           caliber_proof_ids = []
           for path in quest_files:
               quest = json.loads(path.read_text(encoding='utf-8-sig'))
-              quests.append(quest)
               quest_ids.append(quest['_id'])
               if quest['traderId'] != 'd5c27bb3169f8dfbc13f6b69':
                   raise SystemExit(f'{path.name}: trader id drift')
@@ -71,22 +69,18 @@ jobs:
               condition = finish[0]
               condition_type = condition.get('conditionType')
               if condition_type in ('FindItem', 'HandoverItem'):
+                  if is_arsenal:
+                      raise SystemExit(f'{path.name}: Arsenal may not use possession/readiness item semantics')
                   if condition.get('onlyFoundInRaid') is not False:
                       raise SystemExit(f'{path.name}: item proof must be non-FIR')
                   if not condition.get('target') or not condition.get('value') or condition.get('value') <= 0:
                       raise SystemExit(f'{path.name}: malformed item proof')
                   if condition_type == 'HandoverItem':
-                      if quest['_id'] != intro_id or is_arsenal:
+                      if quest['_id'] != intro_id:
                           raise SystemExit(f'{path.name}: HandoverItem is reserved for Fundamentals')
                       if set(condition.get('target') or []) != intro_targets or condition.get('value') != 2:
                           raise SystemExit(f'{path.name}: Fundamentals handover target drift')
-                      access_ids.append(quest['_id'])
-                  elif is_arsenal:
-                      if quest.get('type') != 'PickUp' or condition.get('value') != 1:
-                          raise SystemExit(f'{path.name}: malformed Arsenal readiness proof')
-                      arsenal_readiness_ids.append(quest['_id'])
-                  else:
-                      access_ids.append(quest['_id'])
+                  access_ids.append(quest['_id'])
               elif condition_type == 'CounterCreator':
                   if not is_arsenal or quest.get('type') != 'Elimination':
                       raise SystemExit(f'{path.name}: CounterCreator must be Arsenal combat')
@@ -97,6 +91,8 @@ jobs:
                   if kill.get('conditionType') != 'Kills' or not kill.get('weapon'):
                       raise SystemExit(f'{path.name}: malformed Arsenal kill filter')
                   arsenal_combat_ids.append(quest['_id'])
+                  if condition.get('value') == 1 and not kill.get('weaponCaliber'):
+                      qualification_ids.append(quest['_id'])
                   if kill.get('weaponCaliber'):
                       caliber_proof_ids.append(quest['_id'])
               else:
@@ -104,8 +100,8 @@ jobs:
 
           if len(quest_ids) != len(set(quest_ids)):
               raise SystemExit('packaged quest ids are not unique')
-          if len(access_ids) != 10 or len(arsenal_readiness_ids) != 7 or len(arsenal_combat_ids) != 14:
-              raise SystemExit('packaged quest mix drifted: ' f'Access={len(access_ids)}/10, ' f'ArsenalReadiness={len(arsenal_readiness_ids)}/7, ' f'ArsenalCombat={len(arsenal_combat_ids)}/14')
+          if len(access_ids) != 10 or len(arsenal_combat_ids) != 21 or len(qualification_ids) != 7:
+              raise SystemExit('packaged quest mix drifted: ' f'Access={len(access_ids)}/10, ' f'ArsenalCombat={len(arsenal_combat_ids)}/21, ' f'Qualification={len(qualification_ids)}/7')
           if len(caliber_proof_ids) != 6:
               raise SystemExit(f'expected six packaged caliber-constrained Munitions proofs, got {len(caliber_proof_ids)}')
 
