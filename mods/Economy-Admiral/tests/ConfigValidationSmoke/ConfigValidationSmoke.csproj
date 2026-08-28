@@ -11,5 +11,6 @@
     <Compile Include="../../server/EconomyConfigJsonLoader.cs" Link="Production/EconomyConfigJsonLoader.cs" />
     <Compile Include="../../server/EconomyConfigValidator.cs" Link="Production/EconomyConfigValidator.cs" />
     <Compile Include="../../server/PlayableQuestRewardCaps.cs" Link="Production/PlayableQuestRewardCaps.cs" />
+    <Compile Include="../../server/TraderPurchasePressurePolicy.cs" Link="Production/TraderPurchasePressurePolicy.cs" />
   </ItemGroup>
 </Project>
