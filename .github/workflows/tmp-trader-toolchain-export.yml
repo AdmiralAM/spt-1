@@ -24,7 +24,7 @@ jobs:
         with:
           dotnet-version: 10.0.400
 
-      - name: Package minimal portable toolchain
+      - name: Stage minimal portable toolchain
         shell: bash
         run: |
           set -euo pipefail
@@ -32,12 +32,10 @@ jobs:
           pwsh -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
           test -n "${DOTNET_ROOT:-}"
 
-          portable="$RUNNER_TEMP/dotnet-portable"
-          mkdir -p "$portable" toolchain
+          portable="$GITHUB_WORKSPACE/toolchain/dotnet"
+          mkdir -p "$portable/host/fxr" "$portable/sdk" "$portable/shared/Microsoft.NETCore.App" "$portable/shared/Microsoft.AspNetCore.App" "$portable/packs" "$GITHUB_WORKSPACE/toolchain/powershell"
           cp "$DOTNET_ROOT/dotnet" "$portable/dotnet"
           chmod +x "$portable/dotnet"
-
-          mkdir -p "$portable/host/fxr" "$portable/sdk" "$portable/shared/Microsoft.NETCore.App" "$portable/shared/Microsoft.AspNetCore.App" "$portable/packs"
           cp -a "$DOTNET_ROOT"/host/fxr/10.0.* "$portable/host/fxr/"
           cp -a "$DOTNET_ROOT/sdk/10.0.400" "$portable/sdk/"
           cp -a "$DOTNET_ROOT"/shared/Microsoft.NETCore.App/10.0.* "$portable/shared/Microsoft.NETCore.App/"
@@ -47,10 +45,9 @@ jobs:
           cp -a "$DOTNET_ROOT"/packs/Microsoft.NETCore.App.Host.linux-x64/10.0.* "$portable/packs/"
           if test -d "$DOTNET_ROOT/packs/NETStandard.Library.Ref"; then cp -a "$DOTNET_ROOT/packs/NETStandard.Library.Ref" "$portable/packs/"; fi
 
-          tar -C "$portable" -czf toolchain/dotnet-sdk-10.0.400-linux-x64.tar.gz .
           pwsh_bin="$(readlink -f "$(command -v pwsh)")"
           pwsh_root="$(dirname "$pwsh_bin")"
-          tar -C "$pwsh_root" -czf toolchain/powershell-linux-x64.tar.gz .
+          cp -a "$pwsh_root/." "$GITHUB_WORKSPACE/toolchain/powershell/"
 
           test "$(git -C source rev-parse HEAD)" = "708c0002df7aff5d190d9ddcd001c57a9b1445c2"
           test -z "$(git -C source status --porcelain --untracked-files=all)"
@@ -59,8 +56,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: trader-portable-toolchain
-          path: toolchain/*.tar.gz
+          path: toolchain
+          include-hidden-files: true
           if-no-files-found: error
+          compression-level: 1
           retention-days: 1
 
       - name: Upload exact clean Trader checkout
@@ -70,4 +69,5 @@ jobs:
           path: source
           include-hidden-files: true
           if-no-files-found: error
+          compression-level: 1
           retention-days: 1
