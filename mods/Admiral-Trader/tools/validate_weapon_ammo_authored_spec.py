@@ -9,7 +9,7 @@ from typing import Any
 EXPECTED_TARGET = "4.1.3"
 EXPECTED_FAMILY_IDS = {"handguns","smg-pdw","shotguns","assault-rifles","marksman-battle","precision","special-weapons"}
 EXPECTED_STAGE_MODELS = {
-    "Qualification": "family-readiness-possession",
+    "Qualification": "family-single-elimination",
     "Fieldwork": "family-eliminations",
     "Munitions": "capability-caliber-eliminations",
 }
@@ -75,11 +75,11 @@ def validate(spec: dict[str, Any], reward_policy: dict[str, Any], audit: dict[st
             slugs.add(slug)
 
             if index == 0:
-                readiness = int(stage.get("readinessCount", 0))
-                if readiness != 1:
-                    fail(f"{slug}: Qualification must require possession of exactly one family weapon")
-                if "kills" in stage:
-                    fail(f"{slug}: Qualification must not regress to a kill-count objective")
+                qualification_kills = int(stage.get("qualificationKills", 0))
+                if qualification_kills != 1:
+                    fail(f"{slug}: Qualification must require exactly one family-weapon elimination")
+                if "readinessCount" in stage:
+                    fail(f"{slug}: Qualification must not regress to possession/readiness semantics")
             else:
                 kills = int(stage.get("kills", 0))
                 if kills <= 0 or kills > 25:
