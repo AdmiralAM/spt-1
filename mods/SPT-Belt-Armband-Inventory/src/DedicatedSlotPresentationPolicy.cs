@@ -12,7 +12,7 @@ namespace SPTBeltArmbandInventory
             if (string.Equals(slotId, RuntimeIdentity.DedicatedBeltWireSlotId, StringComparison.Ordinal))
                 return russian ? "ПОЯС" : "BELT";
             if (string.Equals(slotId, RuntimeIdentity.DedicatedHeadBandWireSlotId, StringComparison.Ordinal))
-                return russian ? "ПОВЯЗКА НА ГОЛОВУ" : "HEADBAND";
+                return russian ? "ГОЛ. ПОВЯЗКА" : "HEADBAND";
             return null;
         }
 
