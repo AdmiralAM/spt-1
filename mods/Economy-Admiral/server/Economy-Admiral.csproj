@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="SPTarkov.Server.Core" Version="4.1.2" />
+    <PackageReference Include="SPTarkov.Server.Web" Version="4.1.2" />
   </ItemGroup>
 
   <Target Name="CopyEconomyAdmiralConfig" AfterTargets="Build" Condition="Exists('$(ProjectDir)..\config\config.json')">
