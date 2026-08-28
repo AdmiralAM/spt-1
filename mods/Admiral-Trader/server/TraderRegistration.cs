@@ -155,8 +155,20 @@ public sealed class AdmiralTraderRegistration(
 
         if (manifest is null)
             throw new InvalidDataException("Admiral Trader runtime manifest could not be parsed");
+        if (manifest.SchemaVersion != 3)
+            throw new InvalidDataException($"runtime-manifest schema mismatch: {manifest.SchemaVersion}");
+        if (!string.Equals(manifest.Product, "Admiral Trader", StringComparison.Ordinal))
+            throw new InvalidDataException($"runtime-manifest product mismatch: {manifest.Product}");
         if (!string.Equals(manifest.TraderId, RuntimeIdentity.TraderId, StringComparison.Ordinal))
             throw new InvalidDataException($"runtime-manifest trader id mismatch: {manifest.TraderId}");
+        if (!string.Equals(manifest.TargetSptVersion, "4.1.3", StringComparison.Ordinal))
+            throw new InvalidDataException($"runtime-manifest target SPT mismatch: {manifest.TargetSptVersion}");
+
+        string expectedPublicationMode = manifest.RegistrationEnabled ? "test-candidate" : "test-candidate-source";
+        if (!string.Equals(manifest.PublicationMode, expectedPublicationMode, StringComparison.Ordinal))
+            throw new InvalidDataException(
+                $"runtime-manifest publication gate mismatch: enabled={manifest.RegistrationEnabled}, mode={manifest.PublicationMode}, expected={expectedPublicationMode}");
+
         return manifest;
     }
 }
@@ -166,5 +178,7 @@ public sealed record RuntimeRegistrationManifest
     public int SchemaVersion { get; init; }
     public string? Product { get; init; }
     public string? TraderId { get; init; }
+    public string? TargetSptVersion { get; init; }
+    public string? PublicationMode { get; init; }
     public bool RegistrationEnabled { get; init; }
 }
