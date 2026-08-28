@@ -20,6 +20,7 @@ namespace SPTBeltArmbandInventory
         RuntimeCustomHeadBandTypePatches runtimeHeadBandTypePatches;
         DedicatedEquipmentSlotPatches dedicatedEquipmentSlotPatches;
         DedicatedSlotPresentationPatches dedicatedSlotPresentationPatches;
+        FirstOpenHeadBandLayoutPatches firstOpenHeadBandLayoutPatches;
         DedicatedSlotLocalizationPatches dedicatedSlotLocalizationPatches;
         HeadwearCompatibilityPatches headwearCompatibilityPatches;
         BeltContainersPanelProjectionPatches beltContainersPanelProjectionPatches;
@@ -96,6 +97,18 @@ namespace SPTBeltArmbandInventory
                 dedicatedSlotPresentationPatches.Dispose();
                 dedicatedSlotPresentationPatches = null;
                 Logger.LogWarning("Dedicated Belt/HeadBand equipment data remains active, but visible captions/HeadBand placement could not bind to SlotView.Show for this session.");
+            }
+
+            firstOpenHeadBandLayoutPatches = new FirstOpenHeadBandLayoutPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!firstOpenHeadBandLayoutPatches.TryInstall())
+            {
+                firstOpenHeadBandLayoutPatches.Dispose();
+                firstOpenHeadBandLayoutPatches = null;
+                Logger.LogWarning("HeadBand remains visible, but first Items-tab layout may require a later native refresh for this session.");
+            }
+            else
+            {
+                FirstOpenHeadBandLayoutRuntime.RequestFlush = EnsureDeferredRuntimePump;
             }
 
             dedicatedSlotLocalizationPatches = new DedicatedSlotLocalizationPatches(Logger.LogInfo, Logger.LogWarning);
@@ -238,10 +251,17 @@ namespace SPTBeltArmbandInventory
         IEnumerator FlushDeferredRuntimeWork()
         {
             yield return null;
-            while (gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending)
+            while ((gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending)
+                || (firstOpenHeadBandLayoutPatches != null && FirstOpenHeadBandLayoutRuntime.HasPending))
             {
-                GridWindowSizingRuntime.Flush();
-                if (gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending) yield return null;
+                if (gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending)
+                    GridWindowSizingRuntime.Flush();
+                if (firstOpenHeadBandLayoutPatches != null && FirstOpenHeadBandLayoutRuntime.HasPending)
+                    FirstOpenHeadBandLayoutRuntime.Flush();
+
+                if ((gridWindowSizingPatches != null && GridWindowSizingRuntime.HasPending)
+                    || (firstOpenHeadBandLayoutPatches != null && FirstOpenHeadBandLayoutRuntime.HasPending))
+                    yield return null;
             }
             deferredRuntimePump = null;
         }
@@ -312,6 +332,8 @@ namespace SPTBeltArmbandInventory
             headwearCompatibilityPatches = null;
             if (dedicatedSlotLocalizationPatches != null) dedicatedSlotLocalizationPatches.Dispose();
             dedicatedSlotLocalizationPatches = null;
+            if (firstOpenHeadBandLayoutPatches != null) firstOpenHeadBandLayoutPatches.Dispose();
+            firstOpenHeadBandLayoutPatches = null;
             if (dedicatedSlotPresentationPatches != null) dedicatedSlotPresentationPatches.Dispose();
             dedicatedSlotPresentationPatches = null;
             if (dedicatedEquipmentSlotPatches != null) dedicatedEquipmentSlotPatches.Dispose();
