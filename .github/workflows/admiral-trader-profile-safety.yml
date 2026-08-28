@@ -30,9 +30,8 @@ jobs:
 
       - name: Validate identity and static recovery contracts
         run: |
-          python -m unittest \
-            mods.Admiral-Trader.tests.test_persistent_identities \
-            mods.Admiral-Trader.tests.test_profile_safety_contract
+          python mods/Admiral-Trader/tests/test_persistent_identities.py
+          python mods/Admiral-Trader/tests/test_profile_safety_contract.py
 
       - name: Parse recovery tool
         shell: pwsh
@@ -60,8 +59,8 @@ jobs:
             characters = [ordered]@{
               pmc = [ordered]@{
                 TradersInfo = [ordered]@{
-                  $ownedTrader = [ordered]@{ standing = 0.20; loyaltyLevel = 1 }
-                  $foreignTrader = [ordered]@{ standing = 0.30; loyaltyLevel = 2 }
+                  "$ownedTrader" = [ordered]@{ standing = 0.20; loyaltyLevel = 1 }
+                  "$foreignTrader" = [ordered]@{ standing = 0.30; loyaltyLevel = 2 }
                 }
                 Quests = @(
                   [ordered]@{ qid = $ownedQuest; status = 2 },
@@ -74,12 +73,12 @@ jobs:
               }
             }
             dialogues = [ordered]@{
-              $ownedTrader = [ordered]@{ messages = @() }
-              $foreignTrader = [ordered]@{ messages = @() }
+              "$ownedTrader" = [ordered]@{ messages = @() }
+              "$foreignTrader" = [ordered]@{ messages = @() }
             }
             traderPurchases = [ordered]@{
-              $ownedTrader = [ordered]@{ sample = [ordered]@{ count = 1 } }
-              $foreignTrader = [ordered]@{ sample = [ordered]@{ count = 2 } }
+              "$ownedTrader" = [ordered]@{ sample = [ordered]@{ count = 1 } }
+              "$foreignTrader" = [ordered]@{ sample = [ordered]@{ count = 2 } }
             }
           }
           $profile | ConvertTo-Json -Depth 20 -Compress | Set-Content $profilePath -Encoding UTF8
