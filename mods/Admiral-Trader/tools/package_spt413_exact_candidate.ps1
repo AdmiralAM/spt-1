@@ -34,6 +34,7 @@ $stageMod = Join-Path $stageRoot 'SPT_Runtime\user\mods\Admiral-Trader'
 $provenancePath = Join-Path $stageMod 'candidate-provenance.json'
 $manifestPath = Join-Path $stageMod 'manifests\runtime-manifest.json'
 $identityPath = Join-Path $stageMod 'manifests\identity-assets.json'
+$persistentIdentityPath = Join-Path $stageMod 'manifests\persistent-identities.json'
 $basePath = Join-Path $stageMod 'db\base.json'
 $assortPath = Join-Path $stageMod 'db\assort.json'
 $questAssortPath = Join-Path $stageMod 'db\questassort.json'
@@ -42,7 +43,7 @@ $recoveryPath = Join-Path $stageMod 'tools\Reset-AdmiralTraderProfile.ps1'
 New-Item (Split-Path $recoveryPath -Parent) -ItemType Directory -Force | Out-Null
 Copy-Item $recoverySource $recoveryPath -Force
 
-foreach ($required in @($provenancePath, $manifestPath, $identityPath, $basePath, $assortPath, $questAssortPath, $serverDllPath, $recoveryPath)) {
+foreach ($required in @($provenancePath, $manifestPath, $identityPath, $persistentIdentityPath, $basePath, $assortPath, $questAssortPath, $serverDllPath, $recoveryPath)) {
     if (-not (Test-Path $required)) { throw "Exact-runtime staging is incomplete: missing $required" }
 }
 
@@ -62,8 +63,30 @@ if ($actualServerDllSha256 -ne $provenance.serverDllSha256) { throw "Staged Admi
 
 $manifest = Get-Content $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $identity = Get-Content $identityPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$persistentIdentity = Get-Content $persistentIdentityPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $base = Get-Content $basePath -Raw -Encoding UTF8 | ConvertFrom-Json
+$assort = Get-Content $assortPath -Raw -Encoding UTF8 | ConvertFrom-Json
 if ($manifest.registrationEnabled -ne $true -or $manifest.targetSptVersion -ne '4.1.3' -or $manifest.publicationMode -ne 'test-candidate') { throw 'Staged runtime manifest is not an enabled exact SPT 4.1.3 test candidate.' }
+
+if ($persistentIdentity.product -ne 'Admiral Trader' -or $persistentIdentity.targetSptVersion -ne '4.1.3') { throw 'Persistent identity ledger product/target drift in staged candidate.' }
+if ($persistentIdentity.policy.preserveDistributedIds -ne $true -or $persistentIdentity.policy.reuseRetiredIds -ne $false -or $persistentIdentity.policy.silentRemovalAllowed -ne $false -or $persistentIdentity.policy.retirementRequiresRecoveryCoverage -ne $true) { throw 'Persistent identity ledger policy is not fail-closed in staged candidate.' }
+$currentTraderIds = @($persistentIdentity.current.traderIds | ForEach-Object { [string]$_ })
+$currentQuestIds = @($persistentIdentity.current.questIds | ForEach-Object { [string]$_ })
+$currentOfferIds = @($persistentIdentity.current.offerIds | ForEach-Object { [string]$_ })
+if ($currentTraderIds.Count -ne 1 -or $currentTraderIds[0] -ne [string]$identity.traderId -or $currentTraderIds[0] -ne [string]$base._id) { throw 'Persistent current trader identity drift in staged candidate.' }
+if ($currentQuestIds.Count -ne 31 -or @($currentQuestIds | Sort-Object -Unique).Count -ne 31) { throw "Persistent current quest identity count drift: $($currentQuestIds.Count)" }
+if ($currentOfferIds.Count -ne 11 -or @($currentOfferIds | Sort-Object -Unique).Count -ne 11) { throw "Persistent current offer identity count drift: $($currentOfferIds.Count)" }
+$rootOfferIds = @($assort.items | Where-Object { $_.parentId -eq 'hideout' } | ForEach-Object { [string]$_._id } | Sort-Object -Unique)
+if ($rootOfferIds.Count -ne 11 -or (Compare-Object ($currentOfferIds | Sort-Object) $rootOfferIds)) { throw 'Persistent current offer identities do not match staged assort roots.' }
+$questFiles = @(Get-ChildItem (Join-Path $stageMod 'db\quests') -Filter '*.json' -File)
+$runtimeQuestIds = @($questFiles | ForEach-Object { [string](Get-Content $_.FullName -Raw -Encoding UTF8 | ConvertFrom-Json)._id } | Sort-Object -Unique)
+if ($runtimeQuestIds.Count -ne 31 -or (Compare-Object ($currentQuestIds | Sort-Object) $runtimeQuestIds)) { throw 'Persistent current quest identities do not match staged runtime quests.' }
+foreach ($domain in @('traderIds','questIds','offerIds')) {
+    $currentIds = @($persistentIdentity.current.$domain | ForEach-Object { [string]$_ })
+    $retiredIds = @($persistentIdentity.retired.$domain | ForEach-Object { [string]$_ })
+    if (@($currentIds | Sort-Object -Unique).Count -ne $currentIds.Count -or @($retiredIds | Sort-Object -Unique).Count -ne $retiredIds.Count) { throw "Persistent $domain contains duplicate identities." }
+    if (@(Compare-Object $currentIds $retiredIds -IncludeEqual -ExcludeDifferent).Count -ne 0) { throw "Persistent $domain reuses a retired identity." }
+}
 
 $portraitRelative = [string]$identity.portrait.runtimeAsset
 $portraitRoute = [string]$identity.portrait.runtimeRoute
@@ -100,6 +123,7 @@ try {
         'SPT_Runtime/user/mods/Admiral-Trader/Admiral Trader Server.dll',
         'SPT_Runtime/user/mods/Admiral-Trader/manifests/runtime-manifest.json',
         'SPT_Runtime/user/mods/Admiral-Trader/manifests/identity-assets.json',
+        'SPT_Runtime/user/mods/Admiral-Trader/manifests/persistent-identities.json',
         'SPT_Runtime/user/mods/Admiral-Trader/db/base.json',
         'SPT_Runtime/user/mods/Admiral-Trader/db/assort.json',
         'SPT_Runtime/user/mods/Admiral-Trader/db/questassort.json',
@@ -125,7 +149,7 @@ if ($Install) {
 
     foreach ($scratch in @($incoming, $backup)) { if (Test-Path $scratch) { Remove-Item $scratch -Recurse -Force } }
     Copy-Item $stageMod $incoming -Recurse
-    foreach ($requiredRelative in @('candidate-provenance.json','Admiral Trader Server.dll','manifests\runtime-manifest.json','manifests\identity-assets.json','db\base.json','db\assort.json','db\questassort.json','tools\Reset-AdmiralTraderProfile.ps1',($portraitRelative -replace '/', '\'))) {
+    foreach ($requiredRelative in @('candidate-provenance.json','Admiral Trader Server.dll','manifests\runtime-manifest.json','manifests\identity-assets.json','manifests\persistent-identities.json','db\base.json','db\assort.json','db\questassort.json','tools\Reset-AdmiralTraderProfile.ps1',($portraitRelative -replace '/', '\'))) {
         if (-not (Test-Path (Join-Path $incoming $requiredRelative))) {
             Remove-Item $incoming -Recurse -Force -ErrorAction SilentlyContinue
             throw "Prepared install tree is incomplete: missing $requiredRelative"
