@@ -32,7 +32,7 @@ public sealed class DedicatedWearableItems(
         new("569668774bdc2da2298b4568"), // EUR
 
         // Cigarettes
-        new("5734758f24597738025ee253"), // Apollo
+        new("573475fb24597737fb1379e1"), // Apollo Soyuz
         new("573476d324597737da2adc13"), // Malboro
         new("573476f124597737e04bf328"), // Wilston
         new("5734770f24597738025ee254"), // Strike
