@@ -5,11 +5,12 @@ Development validation is module-specific. A pull request should trigger only th
 | Module | Pull-request workflow | Publication channel |
 | --- | --- | --- |
 | Tactical HUD | `Tactical HUD Validate` | `runtime` |
-| Item Intelligence | `Item Intelligence Validate` | `runtime-item-intelligence` |
-| Pause | `Pause Validate` | `runtime-pause` |
+| Item Intelligence Admiral | `Item Intelligence Validate` | `runtime-item-intelligence` |
+| Pause Admiral | `Pause Validate` | `runtime-pause` |
 | Belt/Armband Inventory | `Belt Armband Inventory Validate` | `runtime-belt-armband` |
-| Quest Planner | `Quest Planner Validate` | CI artifacts until a dedicated runtime channel is deliberately introduced |
-| Artem Revival | dedicated workstream validation while its revival PR remains active | no publication channel until its own acceptance gates are satisfied |
+| Quest Planner | `Quest Planner Validate` | CI artifacts until deliberate runtime promotion |
+| Admiral Trader | Admiral Trader module-specific validation workflows | CI artifacts until deliberate runtime promotion |
+| Admiral Artyom Revival | `Admiral Artyom Revival Validate` | `runtime-artem-revival` (retained publication compatibility identifier) |
 
 ## Isolation rules
 
@@ -22,7 +23,7 @@ Development validation is module-specific. A pull request should trigger only th
 
 ## Actions resource policy
 
-GitHub-hosted runner time is a finite engineering resource even when monthly quota remains or additional quota can be purchased.
+GitHub-hosted runner time is an engineering resource even when public-repository standard runner minutes are not metered against the private-repository quota.
 
 - Inspect the code, diff, existing logs, and prior check result before scheduling another run.
 - Prefer the narrowest module/path-specific check that can prove the required condition.
@@ -30,7 +31,6 @@ GitHub-hosted runner time is a finite engineering resource even when monthly quo
 - On failure, identify the first failed boundary before rerunning anything.
 - Rerun only the smallest required failed job/check when supported; do not rerun an unchanged complete workflow as a diagnostic substitute.
 - Avoid duplicate builds/tests when a current check already proves the same contract.
-- Treat unnecessary Windows-hosted jobs, redundant downloads/setup, excessive failed-job minutes, broad path triggers, and repeated full-suite runs as CI hygiene defects.
-- Increasing the Actions quota provides capacity for useful work; it does not relax these efficiency rules.
+- Treat unnecessary Windows-hosted jobs, redundant downloads/setup, excessive failed-job churn, broad path triggers, and repeated full-suite runs as CI hygiene defects.
 
 See `AGENTS.md`, `CONTRIBUTING.md`, and `docs/development-workflow.md` for the complete repository lifecycle.

@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>WTTArtem</RootNamespace>
+    <AssemblyName>Admiral Artyom Revival</AssemblyName>
+    <Version>3.0.0</Version>
+    <AssemblyVersion>3.0.0.0</AssemblyVersion>
+    <FileVersion>3.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WTT-ServerCommonLib" Version="3.0.6" />
+  </ItemGroup>
+
+  <Target Name="CopyArtyomResources" AfterTargets="Build" Condition="Exists('$(ProjectDir)Resources')">
+    <ItemGroup>
+      <ArtyomResources Include="$(ProjectDir)Resources\**\*.*" />
+    </ItemGroup>
+    <Copy
+      SourceFiles="@(ArtyomResources)"
+      DestinationFiles="@(ArtyomResources->'$(OutputPath)%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
+  </Target>
+</Project>

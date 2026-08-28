@@ -8,7 +8,7 @@
 
 ## Single trader registration boundary — proven
 
-The maintained `mods/WTT-Artem-Revival` module already compiles and runs against the current repository SPT generation using:
+The maintained `mods/Admiral-Artyom-Revival` module already compiles and runs against the current repository SPT generation using:
 
 - `ModHelper` for module path resolution;
 - `ImageRouter` for trader avatar route registration;
@@ -22,20 +22,7 @@ This is the preferred Admiral Trader baseline. We do not need legacy six-directo
 
 ## Quest loading boundary — proven for current generation
 
-The maintained Artem path uses `WTT-ServerCommonLib` custom quest loading after trader registration. The SPT 4.1 Andrudis port and Scorpion C# reference also prove current-generation quest insertion/loading patterns. Admiral Trader should retain WTT only if the curated quest feature set actually requires it; native table insertion remains a viable alternative for ordinary quest records.
-
-## PMC profile quest-state boundary — proven read boundary
-
-The maintained `SPT-Quest-Planner` server module injects `SPTarkov.Server.Core.Helpers.Profile.ProfileHelper` and calls `GetPmcProfile(sessionId)` on the SPT 4.1 package line.
-
-Its profile projection reads the PMC profile `Quests` collection and establishes the fields required for migration classification:
-
-- quest id: `qid` / `Qid` / `questId`;
-- quest state: `status`;
-- timing metadata: `startTime`, `statusTimer`;
-- task progress: `TaskConditionCounters` including `id`, `type`, `value`, `sourceId`.
-
-This proves that Admiral Trader can classify existing-profile legacy quests without inventing a new persistence model.
+Admiral Artyom Revival uses `WTT-ServerCommonLib` custom quest loading after trader registration. The SPT 4.1 Andrudis port and Scorpion C# reference also prove current-generation quest insertion/loading patterns. Admiral Trader should retain WTT only if the curated quest feature set actually requires it; native table insertion remains a viable alternative for ordinary quest records.
 
 ## Native acceptance/profile semantics — proven on current upstream source
 
@@ -88,7 +75,7 @@ Required proof before any direct profile write:
 
 ## Runtime evidence
 
-Project SPT logs from the current environment report `Server: 4.1.3` and show maintained custom trader/quest modules loading successfully, including Artem Revival, Quest Planner and Item Intelligence. This corroborates that the repository references above are not merely stale compile-time examples.
+Project SPT logs from the current environment report `Server: 4.1.3` and show maintained custom trader/quest modules loading successfully. This corroborates that the repository references above are not merely stale compile-time examples.
 
 ## Decision
 

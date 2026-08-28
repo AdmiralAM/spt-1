@@ -8,20 +8,22 @@ A source repository for independent SPT 4.1.x mods. Each maintained module owns 
 
 This repository and the active SPT Mod Suite development are maintained by **AdmiralAM**. Modules authored as part of this suite are developed and maintained here under AdmiralAM's project ownership unless a module explicitly documents different upstream authorship or provenance.
 
-`Artem Revival MOD SPT` is the important exception: it is a revival/compatibility workstream based on the pre-existing WTT Artem mod and its upstream content. Inclusion and maintenance of the revival in this repository do not claim original authorship of WTT Artem or its upstream assets/content. Module-specific documentation records that provenance where relevant.
-
-This section is an authorship/provenance statement, not a software license grant.
+**Admiral Artyom Revival** is the important provenance exception: it is the maintained revival/compatibility product based on the pre-existing WTT-Artem mod and its upstream content. Inclusion and maintenance of the revival do not claim original authorship of WTT-Artem or its upstream assets/content.
 
 ## Modules
 
-| Module | Current state | Purpose | Install channel |
+Versions below are the module versions declared by current source metadata. A leading `v` is reserved for release/tag presentation and is not part of the semantic version itself.
+
+| Module | Version / state | Purpose | Install channel |
 | --- | --- | --- | --- |
-| [SPT Tactical HUD](mods/SPT-Tactical-HUD) | Client `1.13.2`; optional server `1.13.0` | Population, player-status, and kill-feed HUD | `runtime` |
-| [Item Intelligence Admiral](mods/SPT-Item-Intelligence) | `v1.0.0`; stable / maintenance-only | Requirement, FIR, valuation, craft/barter relevance, and persistent per-item markers | `runtime-item-intelligence` |
-| [Pause Admiral](mods/SPT-Pause) | `v1.0.0`; stable / runtime validated | Offline-raid pause with raid-clock/time-of-day preservation and paused-input suppression | `runtime-pause` |
+| [SPT Tactical HUD](mods/SPT-Tactical-HUD) | client `1.13.2`; optional server `1.13.0` | Population, player-status, and kill-feed HUD | `runtime` |
+| [Item Intelligence Admiral](mods/SPT-Item-Intelligence) | `1.0.0`; stable / maintenance-only | Requirement, FIR, valuation, craft/barter relevance, and persistent per-item markers | `runtime-item-intelligence` |
+| [Pause Admiral](mods/SPT-Pause) | `1.0.0`; stable / runtime validated | Offline-raid pause with raid-clock/time-of-day preservation and paused-input suppression | `runtime-pause` |
 | [SPT Belt/Armband Inventory](mods/SPT-Belt-Armband-Inventory) | `0.1.0`; active development | Additional inventory/container behavior for the `ArmBand` equipment slot | `runtime-belt-armband` |
-| [SPT Quest Planner](mods/SPT-Quest-Planner) | `0.9.4`; active UX/polish development | Persistent active raid planning plus quest progression recommendations | Development source / CI artifacts |
-| [Artem Revival MOD SPT](mods/WTT-Artem-Revival) | `3.0.0`; SPT 4.1.3 runtime validated | Revived Artem trader, 23-quest campaign, gear and clothing | `runtime-artem-revival` |
+| [Item Valuation MOD SPT](mods/Item-Valuation-MOD-SPT) | `1.0.0`; stable / SPT 4.1.3 runtime validated | Server-only inventory background coloring by economic value/category, with penetration tiers for ammunition | `runtime-item-valuation` |
+| [Economy Admiral](mods/Economy-Admiral) | `0.1.0`; Economy Beta / SPT 4.1.3 runtime validated | Provenance-safe bounded economy/reward normalization with source-pressure, health, and explicit Admiral Trader compatibility evidence | `runtime-economy-admiral` |
+| [Admiral Trader](mods/Admiral-Trader) | `0.1.0`; active development | Curated successor campaign/trader for the legacy Andrudis/QuestManiac ecosystem | Development source / CI artifacts |
+| [Admiral Artyom Revival](mods/Admiral-Artyom-Revival) | `3.0.0`; SPT 4.1.3 runtime validated | Maintained revival of WTT-Artem trader, 23-quest campaign, gear and clothing | `runtime-artem-revival` |
 
 Tactical HUD `1.14.0` is retired. That build accidentally combined early Item Intelligence code with the HUD. The maintained HUD line is `1.13.2`; Item Intelligence Admiral has an independent version and release lifecycle.
 
@@ -33,21 +35,27 @@ Tactical HUD `1.14.0` is retired. That build accidentally combined early Item In
 - `runtime-item-intelligence` — install-only Item Intelligence Admiral package; branch name retained as a compatibility identifier.
 - `runtime-pause` — install-only Pause Admiral package.
 - `runtime-belt-armband` — install-only Belt/Armband Inventory package.
-- `runtime-artem-revival` — stable Artem runtime identity containing the validated r5 server DLL/runtime manifest; authored Artem core data and the large Unity `Bundles/` payload remain external/reproducible from the module source contract.
+- `runtime-item-valuation` — install-only Item Valuation MOD SPT 1.0.0 package for SPT 4.1.3.
+- `runtime-economy-admiral` — install-only Economy Admiral 0.1.0 package for SPT 4.1.3.
+- `runtime-artem-revival` — stable Admiral Artyom Revival publication identity; branch name retained as an established compatibility identifier.
 - `archive/v1.13.0` — intentional frozen Tactical HUD `1.13.0` reserve.
 
 Runtime branches are publication/runtime channels, not development branches. Their exact package model is documented by the owning module.
 
 ## Downloads
 
-Runtime branches provide the maintained install packages for Tactical HUD, Item Intelligence Admiral, Pause Admiral, and Belt/Armband Inventory. Tactical HUD `1.13.0` remains preserved under `archive/v1.13.0`.
+Runtime branches provide the maintained install packages for Tactical HUD, Item Intelligence Admiral, Pause Admiral, Belt/Armband Inventory, Item Valuation MOD SPT, Economy Admiral, and the validated server identity for Admiral Artyom Revival. Tactical HUD `1.13.0` remains preserved under `archive/v1.13.0`.
 
-Artem Revival is different from the self-contained runtime ZIP channels above: `runtime-artem-revival` pins the accepted r5 DLL/runtime manifest, while the repaired authored core data and already-assembled external `Bundles/` directory remain in the installed Artem folder. See the Artem module README for reconstruction/update details.
+Item Valuation MOD SPT `1.0.0` is published on `runtime-item-valuation` as a server-only install package rooted at `SPT_Runtime/user/mods/Item Valuation MOD SPT/`.
+
+Economy Admiral `0.1.0` is published on `runtime-economy-admiral` as a server-only install package rooted at `SPT_Runtime/user/mods/Economy Admiral/`.
+
+Admiral Artyom Revival differs from the self-contained runtime ZIP channels: `runtime-artem-revival` pins the accepted r5 server identity while repaired authored core data and the external Unity `Bundles/` set remain governed by the module's reconstruction/update contract.
 
 ## Repository policy
 
 `main` contains source code, tests, maintained assets, build definitions, and durable documentation. Generated binaries, package copies, build/test logs, CI run metadata, temporary diagnostics, local IDE state, and dependency caches do not belong in source history.
 
-Temporary feature, fix, diagnostic, and archaeology branches are removed after their useful work is merged or explicitly superseded. Active workstream branches are preserved until that determination is made.
+Temporary feature, fix, diagnostic, research, and archaeology branches are removed after their useful work is merged or explicitly superseded. Active workstream branches are preserved until that determination is made.
 
 Development follows [`CONTRIBUTING.md`](CONTRIBUTING.md). See also [development workflow](docs/development-workflow.md), [source/stable/runtime governance](docs/github-stable-runtime.md), and [branch hygiene](docs/branch-hygiene.md).
