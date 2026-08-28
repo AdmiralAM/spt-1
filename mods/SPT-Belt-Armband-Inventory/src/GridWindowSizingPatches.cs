@@ -9,9 +9,10 @@ namespace SPTBeltArmbandInventory
 {
     internal static class GridWindowSizingRuntime
     {
-        // A specific wearable OpenItem event may request only a few deferred passes
-        // while Unity finishes that one window. There is no idle polling.
-        const int MaxDeferredAttempts = 8;
+        // OpenItem is event-driven. A bounded four-frame settle window is enough
+        // for Unity/native layout groups to finish without introducing idle polling.
+        const int MaxDeferredAttempts = 4;
+        const int MaxRecentWindowsToInspect = 4;
 
         sealed class PendingWindow
         {
@@ -28,10 +29,12 @@ namespace SPTBeltArmbandInventory
             }
         }
 
+        internal static Action<string> LogInfo;
         internal static Action<string> LogWarning;
         internal static Action RequestFlush;
         internal static Type GridWindowType;
         static readonly List<PendingWindow> PendingWindows = new List<PendingWindow>();
+        static readonly HashSet<string> FitProofShapes = new HashSet<string>(StringComparer.Ordinal);
 
         internal static bool HasPending => PendingWindows.Count != 0;
 
@@ -43,17 +46,24 @@ namespace SPTBeltArmbandInventory
                 IList windows = ReflectionTools.ReadMember(itemUiContext, "_windows") as IList;
                 if (windows == null || windows.Count == 0) return;
 
-                object windowData = windows[windows.Count - 1];
-                if (windowData == null) return;
-                object windowType = ReflectionTools.ReadMember(windowData, "WindowType");
-                if (!Equals(windowType, GridWindowType)) return;
+                // WindowData.WindowType is not a reliable System.Type discriminator in
+                // SPT 4.1.3. RC1 could therefore install successfully yet never resize
+                // a physical GridWindow. Resolve the actual Window instance instead.
+                int floor = Math.Max(0, windows.Count - MaxRecentWindowsToInspect);
+                for (int index = windows.Count - 1; index >= floor; index--)
+                {
+                    object windowData = windows[index];
+                    if (windowData == null) continue;
 
-                object item = ReflectionTools.ReadMember(windowData, "Item");
-                if (!TryResolveDescriptor(item, out WearableItemDescriptor descriptor)) return;
+                    object window = ReflectionTools.ReadMember(windowData, "Window");
+                    if (window == null || !GridWindowType.IsInstanceOfType(window)) continue;
 
-                object window = ReflectionTools.ReadMember(windowData, "Window");
-                if (window == null || !GridWindowType.IsInstanceOfType(window)) return;
-                ObserveWindow(window, descriptor.GridColumns, descriptor.GridRows);
+                    object item = ReflectionTools.ReadMember(windowData, "Item");
+                    if (!TryResolveDescriptor(item, out WearableItemDescriptor descriptor)) continue;
+
+                    ObserveWindow(window, descriptor.GridColumns, descriptor.GridRows);
+                    return;
+                }
             }
             catch (Exception exception)
             {
@@ -64,7 +74,8 @@ namespace SPTBeltArmbandInventory
 
         static void ObserveWindow(object window, int columns, int rows)
         {
-            if (TryAdjust(window, columns, rows)) return;
+            TryAdjust(window, columns, rows);
+
             for (int i = 0; i < PendingWindows.Count; i++)
             {
                 object existing = PendingWindows[i].Window.Target;
@@ -77,6 +88,9 @@ namespace SPTBeltArmbandInventory
                 RequestFlush?.Invoke();
                 return;
             }
+
+            // Even a successful immediate resize is re-applied for a few frames.
+            // Native layout may write its preferred size after OpenItem returns.
             PendingWindows.Add(new PendingWindow(window, columns, rows));
             RequestFlush?.Invoke();
         }
@@ -88,7 +102,15 @@ namespace SPTBeltArmbandInventory
             {
                 PendingWindow pending = PendingWindows[i];
                 object window = pending.Window.Target;
-                if (window == null || TryAdjust(window, pending.Columns, pending.Rows) || ++pending.Attempts >= MaxDeferredAttempts)
+                if (window == null)
+                {
+                    PendingWindows.RemoveAt(i--);
+                    continue;
+                }
+
+                TryAdjust(window, pending.Columns, pending.Rows);
+                pending.Attempts++;
+                if (pending.Attempts >= MaxDeferredAttempts)
                     PendingWindows.RemoveAt(i--);
             }
         }
@@ -108,12 +130,24 @@ namespace SPTBeltArmbandInventory
             float height = AccessoryGridPolicy.ExactWindowHeight(rows);
             if (width <= 0f || height <= 0f) return false;
 
-            if (Math.Abs(rect.rect.width - width) >= 0.5f)
+            float beforeWidth = rect.rect.width;
+            float beforeHeight = rect.rect.height;
+
+            if (Math.Abs(beforeWidth - width) >= 0.5f)
                 rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
-            if (Math.Abs(rect.rect.height - height) >= 0.5f)
+            if (Math.Abs(beforeHeight - height) >= 0.5f)
                 rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
 
             ApplyLayoutElement(component.gameObject, width, height);
+
+            string shape = columns + "x" + rows;
+            if (FitProofShapes.Add(shape))
+            {
+                LogInfo?.Invoke("B&A&HB WINDOW FIT PROOF: physical GridWindow shape=" + shape
+                    + "; before=" + beforeWidth.ToString("0.0") + "x" + beforeHeight.ToString("0.0")
+                    + "; target=" + width.ToString("0.0") + "x" + height.ToString("0.0")
+                    + "; bounded settle passes=" + MaxDeferredAttempts + ".");
+            }
             return true;
         }
 
@@ -171,6 +205,8 @@ namespace SPTBeltArmbandInventory
         internal static void Reset()
         {
             PendingWindows.Clear();
+            FitProofShapes.Clear();
+            LogInfo = null;
             LogWarning = null;
             RequestFlush = null;
             GridWindowType = null;
@@ -217,12 +253,13 @@ namespace SPTBeltArmbandInventory
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 if (harmony == null) return Fail("Harmony instance creation failed; exact-fit wearable window sizing is disabled.");
 
+                GridWindowSizingRuntime.LogInfo = logInfo;
                 GridWindowSizingRuntime.LogWarning = logWarning;
                 GridWindowSizingRuntime.GridWindowType = gridWindowType;
                 object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
                 Patch(patchMethod, harmonyMethodType, openItem, postfix);
 
-                logInfo?.Invoke("B&A&HB exact-fit wearable GridWindow sizing installed on ItemUiContext.OpenItem(CompoundItem, ItemContext).");
+                logInfo?.Invoke("B&A&HB exact-fit wearable GridWindow sizing installed on ItemUiContext.OpenItem(CompoundItem, ItemContext); actual GridWindow instance binding with bounded layout settling enabled.");
                 return true;
             }
             catch (Exception exception)
