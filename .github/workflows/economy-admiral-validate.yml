@@ -35,12 +35,18 @@ jobs:
               root / 'README.md', root / 'RUNTIME_TEST.md', root / 'config/config.json',
               root / 'tools/Validate-Runtime.ps1', root / 'tools/Test-Validate-Runtime.ps1',
               root / 'tools/Validate-Enforce.ps1', root / 'tools/Test-Validate-Enforce.ps1',
+              root / 'tools/Validate-Beta.ps1', root / 'tools/Test-Validate-Beta.ps1',
               root / 'server/Economy-Admiral.csproj', root / 'server/EconomyMod.cs',
               root / 'server/EconomyConfig.cs', root / 'server/EconomyConfigValidator.cs',
               root / 'server/QuestAnalysisService.cs', root / 'server/QuestProvenanceDeltaService.cs',
-              root / 'server/EnforcementPlanService.cs', root / 'server/RuntimeEvidenceService.cs',
-              root / 'server/NumericRewardTransactionCore.cs', root / 'server/ItemRewardStackPlanner.cs',
+              root / 'server/EnforcementPlanService.cs', root / 'server/EnforcementPlanServiceBetaExtensions.cs',
+              root / 'server/RuntimeEvidenceService.cs', root / 'server/NumericRewardTransactionCore.cs',
+              root / 'server/ItemRewardStackPlanner.cs', root / 'server/TraderOwnershipEnforcementGate.cs',
+              root / 'server/SourcePressureObservationPipelineService.cs', root / 'server/SourcePressureRuntimeReport.cs',
+              root / 'server/EconomyHealthRuntimeReport.cs', root / 'server/AdmiralTraderRuntimeAdapterService.cs',
+              root / 'server/AdmiralTraderRuntimeAdapterReport.cs', root / 'server/AdmiralTraderGameplayAlphaAdapter.cs',
               root / 'tests/EnforcementSmoke/EnforcementSmoke.csproj', root / 'tests/EnforcementSmoke/Program.cs',
+              root / 'tests/SourcePressureSmoke/SourcePressureSmoke.csproj',
           ]
           missing = [str(p) for p in required if not p.is_file()]
           assert not missing, missing
@@ -68,7 +74,9 @@ jobs:
           for text in [
               'OnLoadOrder.PostLoad + 1000', 'config.Mode == EconomyMode.Off',
               'var questProvenance = await questProvenanceDeltaService.RunAsync',
-              'var enforcement = await enforcementPlanService.RunAsync',
+              'var observation = await sourcePressureObservationPipelineService.RunAsync',
+              'economyHealthRuntimeReportService.RunAsync(config, observation.SourcePressure',
+              'enforcementPlanService.RunAsync(questAnalysis, questProvenance, observation.AdmiralTrader',
               'runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken)',
           ]:
               assert text in mod, text
@@ -80,6 +88,7 @@ jobs:
           assert mod.index('config.Mode == EconomyMode.Off') < mod.index('runtimeEvidenceService.CaptureBefore()')
           assert mod.index('questAnalysisService.RunAsync') < mod.index('rewardUtilityAuditService.RunAsync')
           assert mod.index('questAnalysisService.RunAsync') < mod.index('questConstraintAuditService.RunAsync')
+          assert mod.index('sourcePressureObservationPipelineService.RunAsync') < mod.index('enforcementPlanService.RunAsync')
 
           for service_name in ['EconomyAuditService.cs', 'QuestAnalysisService.cs', 'EnforcementPlanService.cs']:
               text = (root / 'server' / service_name).read_text(encoding='utf-8')
@@ -138,6 +147,19 @@ jobs:
           for text in ['successful transaction must commit','second automatic pass must be idempotent','synthetic setter failure','must roll back whole batch','earlier standing mutation must be restored','single known-price stack above budget must be eligible','whole-bundle planner must reserve immutable reward value','planner must block cases requiring item removal/template replacement','update stack count and Reward.Value together','restore both item quantity representations']:
               assert text in transaction_smoke, text
 
+          observation = (root / 'server/SourcePressureObservationPipelineService.cs').read_text(encoding='utf-8')
+          for text in ['SourcePressureObservationPipelineResult','AdmiralTrader','FinalDbSourceObservationService']:
+              assert text in observation, text
+          trader = (root / 'server/AdmiralTraderGameplayAlphaAdapter.cs').read_text(encoding='utf-8')
+          for text in ['ExpectedProductName = "Admiral Trader"','ExpectedTraderId = "d5c27bb3169f8dfbc13f6b69"','ExpectedModGuid = "com.admiralam.spt.admiraltrader"','RelationshipStockAllowed','SpecialWeaponsSampleOnly','BaselineOfferCount','MilestoneOfferCount']:
+              assert text in trader, text
+          ownership = (root / 'server/TraderOwnershipEnforcementGate.cs').read_text(encoding='utf-8')
+          for text in ['ExplicitGameplayAlphaOwnershipProven','LoadedGameplayAlphaV4','UnclassifiedPermanentOffer','UnboundedPermanentOffer','AttributionDrift','SampleOnlyContractDrift']:
+              assert text in ownership, text
+          beta = (root / 'server/EnforcementPlanServiceBetaExtensions.cs').read_text(encoding='utf-8')
+          for text in ['TraderOwnershipEnforcementGate.Evaluate','AutomaticRewardFlags','manual targets','service.RunAsync(gatedAnalysis']:
+              assert text in beta, text
+
           evidence = (root / 'server/RuntimeEvidenceService.cs').read_text(encoding='utf-8')
           for text in ['SchemaVersion = 5','DatabaseChangeExpected','EnforcementEvidenceValid','ValidateEnforcementEvidence','config.Mode != EconomyMode.Enforce','enforcement.MutationCount == 0','enforcement.TransactionCommitted && !databaseUnchanged','allowedDimensions','ItemRewardStackCount','SuccessItemHandbookValue','candidate.PristineUntouched','DeclaredMutationCount = enforcement.MutationCount']:
               assert text in evidence, text
@@ -150,12 +172,15 @@ jobs:
           enforce_validator = (root / 'tools/Validate-Enforce.ps1').read_text(encoding='utf-8')
           for text in ['validator requires mode=Enforce','Alpha requires at least one applied mutation','After != Target','PristineUnchanged candidate was mutated','fingerprint changed','ItemRewardStackCount','PresetSingleStackItemBudgetCapV1','7/7 core reports are required']:
               assert text in enforce_validator, text
+          beta_validator = (root / 'tools/Validate-Beta.ps1').read_text(encoding='utf-8')
+          for text in ['Validate-Enforce.ps1','LoadedGameplayAlphaV4','UnknownNoMaintainedAdapter','CompositeScoreSelected','MutationAuthorized','SpecialWeaponsSampleOnly','combined Economy Beta RC proven']:
+              assert text in beta_validator, text
 
           config_source = (root / 'server/EconomyConfig.cs').read_text(encoding='utf-8')
           for text in ['QuestRewardOverrides','AllowAutomaticMutation','ExperienceTarget','TraderStandingTarget','EnableItemRewardStackNormalization']:
               assert text in config_source, text
 
-          print('Economy Admiral Enforce + seven-report single-analysis + whole-bundle item wiring contract OK')
+          print('Economy Admiral Beta RC: Enforce + provenance + bounded item + source-pressure + health + Trader ownership contract OK')
 
   server:
     name: Economy Admiral .NET 10 server build
@@ -174,12 +199,17 @@ jobs:
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1 -Raw))
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-Enforce.ps1 -Raw))
           $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-Enforce.ps1 -Raw))
+          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Validate-Beta.ps1 -Raw))
+          $null = [scriptblock]::Create((Get-Content mods/Economy-Admiral/tools/Test-Validate-Beta.ps1 -Raw))
       - name: Smoke-test Audit runtime contract
         shell: pwsh
         run: '& mods/Economy-Admiral/tools/Test-Validate-Runtime.ps1'
       - name: Smoke-test Enforce runtime contract
         shell: pwsh
         run: '& mods/Economy-Admiral/tools/Test-Validate-Enforce.ps1'
+      - name: Smoke-test Beta release-candidate validator
+        shell: pwsh
+        run: '& mods/Economy-Admiral/tools/Test-Validate-Beta.ps1'
       - name: Smoke-test config validation
         shell: pwsh
         run: dotnet run --project mods/Economy-Admiral/tests/ConfigValidationSmoke/ConfigValidationSmoke.csproj -c Release --nologo
@@ -189,7 +219,7 @@ jobs:
       - name: Smoke-test Enforce transaction commit, rollback, idempotence, and bounded item planning
         shell: pwsh
         run: dotnet run --project mods/Economy-Admiral/tests/EnforcementSmoke/EnforcementSmoke.csproj -c Release --nologo
-      - name: Smoke-test source-pressure integration regression
+      - name: Smoke-test source-pressure, health and Trader ownership regression
         shell: pwsh
         run: dotnet run --project mods/Economy-Admiral/tests/SourcePressureSmoke/SourcePressureSmoke.csproj -c Release --nologo
       - name: Stage candidate
@@ -204,9 +234,10 @@ jobs:
           Copy-Item mods/Economy-Admiral/RUNTIME_TEST.md 'build-output/Economy Admiral/RUNTIME_TEST.md'
           Copy-Item mods/Economy-Admiral/tools/Validate-Runtime.ps1 'build-output/Economy Admiral/Validate-Runtime.ps1'
           Copy-Item mods/Economy-Admiral/tools/Validate-Enforce.ps1 'build-output/Economy Admiral/Validate-Enforce.ps1'
+          Copy-Item mods/Economy-Admiral/tools/Validate-Beta.ps1 'build-output/Economy Admiral/Validate-Beta.ps1'
           [ordered]@{
             Product = 'Economy Admiral'
-            ProductLine = 'Enforce Alpha'
+            ProductLine = 'Economy Beta Release Candidate'
             HeadSha = $env:EA_HEAD_SHA
             WorkflowRunId = $env:GITHUB_RUN_ID
             ArtifactName = 'economy-admiral-candidate'

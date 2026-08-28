@@ -1,44 +1,27 @@
 # Economy Admiral runtime testing
 
-Physical SPT 4.1.3 tests are reserved for product gates that cannot be adequately proven in CI. Do not repeat runtime tests for documentation-only changes, source cleanup, parity already physically accepted, or ordinary transaction/planner regressions covered by automated smoke tests.
+Physical SPT 4.1.3 testing is reserved for the single combined release-candidate gate after automated work is exhausted. Earlier Alpha/item-stack runtime proofs remain accepted historical evidence and are not repeated as separate user tasks.
 
-## Accepted Alpha evidence
+## Already accepted physical evidence
 
-The narrow Experience/TraderStanding Enforce Alpha is already physically accepted on SPT 4.1.3.
+Economy Admiral has already physically proven on SPT 4.1.3:
 
-Accepted evidence includes:
+- Audit is read-only with concrete policy preview and unchanged DB fingerprint;
+- Enforce performs real `Experience` / `TraderStanding` mutations with exact targets and pristine protection;
+- bounded opt-in `ItemRewardStackCount` mutation updates `Reward.Value` and `Upd.StackObjectsCount` transactionally;
+- grouped reward handling is safe and may be `NOT APPLICABLE` when the installed modset exposes no reducible grouped candidate;
+- transaction commit, rollback, rollback verification and second-pass idempotence;
+- Off disables the pipeline.
 
-- Audit / Normal: read-only DB fingerprint, concrete policy preview, `planned=88`, `applied=0`;
-- Enforce / Normal: real Experience/TraderStanding mutations, `applied=88`, fingerprint changed, exact targets, pristine protection;
-- Off: pipeline disabled;
-- production transaction smoke: commit, rollback and same-state idempotence;
-- primary audit: typed final DB + pristine startup parity physically proven (`final=5362`, `pristine=558`, `compared=5362`, `questRewardEdges=38176`).
+These proofs are retained by deterministic CI regressions. Do not request separate Audit/parity/item-stack micro-tests again.
 
-The accepted parity proof is historical acceptance evidence. Its shadow service and standalone parity validator have been retired from the active runtime after the direct typed/pristine path replaced the old correction chain.
+## Economy Beta release-candidate gate
 
-## Standard packaged validators
+The final physical gate is one server startup and one command. It simultaneously checks the already accepted transactional Enforce path plus the new Economy Beta observation/compatibility boundaries.
 
-From the installed `Economy Admiral` folder:
+The release-candidate environment must include the maintained **Admiral Trader** package because stable Economy acceptance includes explicit Trader compatibility. Economy Admiral never infers Trader ownership from names/IDs alone and never creates a second Trader economy engine.
 
-```powershell
-.\Validate-Runtime.ps1
-.\Validate-Enforce.ps1
-```
-
-`Validate-Runtime.ps1` is for `mode=Audit`, requires runtime-evidence schema 5, all seven core reports, pristine provenance consistency, an unchanged DB fingerprint, and no committed mutations.
-
-`Validate-Enforce.ps1` is for `mode=Enforce`. It recognizes:
-
-- enforcement-plan schema 5 / mutation policy 3: accepted Alpha (`Experience`, `TraderStanding` only);
-- enforcement-plan schema 6 / mutation policy 4: opt-in bounded single-stack item normalization in addition to numeric Alpha dimensions.
-
-For schema 6 the validator is a strict product gate: at least one `ItemRewardStackCount` mutation must actually be applied. A schema-6 run with zero item-stack mutations is FAIL, even if XP/standing mutations succeed. On PASS it prints every applied item mutation as `QuestId | QuestName | Provenance | Before -> After`.
-
-## Bounded item-stack runtime candidate
-
-This is the only active post-Alpha physical gate.
-
-Source/default configuration remains conservative (`Audit`, item-stack disabled). For the one physical candidate run, set exactly:
+For the RC run use:
 
 ```json
 "mode": "Enforce",
@@ -46,45 +29,40 @@ Source/default configuration remains conservative (`Audit`, item-stack disabled)
 "enableItemRewardStackNormalization": true
 ```
 
-No manual quest overrides are required.
+No manual quest reward overrides are required.
 
-The expected mutation class is intentionally narrow:
+### One batched runtime test
 
-- existing `Success` Item reward stack only;
-- quest provenance must be `ModAdded`, or `PristineModified` with `SuccessItemHandbookValue` proven changed;
-- the automatically mutable reward shape must be unambiguous;
-- known positive handbook price;
-- finite integral current stack count > 1;
-- whole Success-item bundle must exceed the Normal item budget after immutable reward value is reserved;
-- target is an integer >= 1 and lower than current stack count;
-- `_tpl`, reward records and structural quest fields are never replaced, added or removed;
-- `Reward.Value` and `Upd.StackObjectsCount` change together and are transactionally rolled back together on failure.
-
-The user's last physical SPT dataset contained 295 item-reward outlier flags, so the runtime environment has real item-reward candidates to evaluate. The physical gate itself decides which of those also satisfy provenance, reward-shape, price and reducibility requirements.
-
-### One physical test
-
-1. Install the single candidate artifact over `user/mods/Economy Admiral`.
-2. Set the three configuration values above.
-3. Start the SPT server once and let startup complete.
-4. From the installed mod folder run exactly:
+1. Install the exact GitHub artifact over `user/mods/Economy Admiral`.
+2. Install/use the maintained Admiral Trader Gameplay Alpha package for the same SPT 4.1.3 runtime session.
+3. Set the three Economy Admiral configuration values above.
+4. Start the SPT server once and allow startup to finish completely.
+5. Close the server.
+6. From `user/mods/Economy Admiral` run exactly:
 
 ```powershell
-.\Validate-Enforce.ps1
+.\Validate-Beta.ps1
 ```
 
-PASS requires all of the following in that same run:
+Return only the final PowerShell output.
 
-- runtime evidence gate passed;
-- DB fingerprint changed;
-- transaction committed without rollback/error;
-- pristine/unknown provenance protection held;
-- exact mutation targets verified;
-- **at least one real `ItemRewardStackCount` mutation applied**;
-- validator prints the concrete changed quests and stack values.
+## PASS contract
 
-The only result needed back is the final validator output. Do not perform a second Audit run, parity run, or unrelated economy test for this gate.
+`Validate-Beta.ps1` first executes the established strict Enforce validator and then requires all Economy Beta evidence from that same startup:
 
-## Stop condition
+- real committed transactional reward mutations with exact before/current/target/after evidence;
+- pristine/unknown provenance protection, rollback-safe transaction semantics and bounded item-stack proof;
+- source-pressure schema 2 with final-DB evidence plus the loaded explicit Admiral Trader adapter;
+- world loot remains explicit `UnknownNoMaintainedAdapter` rather than fabricated zero supply;
+- health schema 1 remains separately inspectable, selects no opaque composite score and does not independently authorize mutation;
+- Admiral Trader adapter schema 3 resolves exact product name, modGuid and frozen trader ID through Gameplay Alpha schema v4;
+- every maintained permanent Trader offer is explicitly classified `Baseline` / `Relationship` / `Milestone`, remains bounded and retains `ExplicitAdapter` provenance;
+- milestone offers preserve authored effective quest gates;
+- Special Weapons remain sample-only and are not converted into permanent offers;
+- exact Economy Admiral build SHA/workflow identity is present.
 
-Do not begin flea, world-loot, trader-price, craft, insurance, or other economy subsystems until the physical schema-6 run above passes with at least one concrete item reward stack change.
+Any missing/incompatible Trader contract, inferred/unclassified offer, lost quest gate, unbounded offer, attribution drift, health mutation authorization or source-pressure boundary regression is FAIL.
+
+## After the gate
+
+On PASS, the exact tested candidate is eligible for the recorded `stable-release` transition. On FAIL, use the returned validator output to remediate the same workstream; do not create unrelated economy scope or ask the user for additional exploratory tests.
