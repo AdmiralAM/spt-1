@@ -111,12 +111,15 @@ class GameplayAlphaRewardAuditTests(unittest.TestCase):
             quest = self.runtime[quest_id]
             xp = scalar_reward(quest, "Experience")
             standing = scalar_reward(quest, "TraderStanding")
-            _, _, rub = rub_reward(quest)
+            rub_row, rub_item, rub = rub_reward(quest)
 
             self.assertEqual(int(xp["value"]), budget["xp"], quest_id)
             self.assertAlmostEqual(float(standing["value"]), budget["standing"], places=8, msg=quest_id)
             self.assertEqual(standing.get("target"), TRADER_ID, quest_id)
             self.assertEqual(rub, budget["rub"], quest_id)
+            self.assertEqual(int(rub_row["value"]), rub, quest_id)
+            self.assertEqual(rub_row.get("target"), rub_item.get("_id"), quest_id)
+            self.assertEqual(rub_item.get("_tpl"), RUB_TPL, quest_id)
 
             totals["xp"] += int(xp["value"])
             totals["rub"] += rub
