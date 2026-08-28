@@ -21,6 +21,26 @@ public sealed class DedicatedWearableItems(
     private static readonly MongoId HeadBandParentTpl = new(RuntimeIdentity.HeadBandItemParentId);
     private const string GridPrototype = "55d329c24bdc2d892f8b4567";
 
+    // HeadBand is a compact personal-utility carrier rather than a second medical pouch.
+    // Exact item IDs are deliberate here: accepting broad barter/money parents would turn
+    // this slot into a generic secure container. Stack limits remain owned by the items.
+    private static readonly HashSet<MongoId> HeadBandUtilityWhitelist =
+    [
+        // Currency
+        new("5449016a4bdc2d6f028b456f"), // RUB
+        new("5696686a4bdc2da3298b456a"), // USD
+        new("569668774bdc2da2298b4568"), // EUR
+
+        // Cigarettes
+        new("5734758f24597738025ee253"), // Apollo
+        new("573476d324597737da2adc13"), // Malboro
+        new("573476f124597737e04bf328"), // Wilston
+        new("5734770f24597738025ee254"), // Strike
+
+        // Compact vanilla wallet; its own internal filter/capacity remains authoritative.
+        new("5783c43d2459774bbe137486")
+    ];
+
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl)
@@ -43,12 +63,12 @@ public sealed class DedicatedWearableItems(
             RuntimeIdentity.EmergencyHeadBandItemId,
             RuntimeIdentity.EmergencyHeadBandGridId,
             HeadBandParentTpl,
-            "B&A&HB Emergency HeadBand",
-            "Emergency HB",
-            "Dedicated 1x1 emergency medical HeadBand worn above Headwear.",
+            "B&A&HB Utility HeadBand",
+            "Utility HB",
+            "Protected compact 1x2 HeadBand utility carrier for currency, cigarettes and a compact wallet.",
             RuntimeIdentity.EmergencyHeadBandGridColumns,
             RuntimeIdentity.EmergencyHeadBandGridRows,
-            [BaseClasses.MED_KIT, BaseClasses.STIMULATOR, BaseClasses.MEDICAL],
+            HeadBandUtilityWhitelist,
             handbookItem.ParentId,
             25000);
 
