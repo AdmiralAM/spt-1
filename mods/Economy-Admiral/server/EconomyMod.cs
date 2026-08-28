@@ -21,7 +21,8 @@ public sealed class EconomyMod(
     SourcePressureObservationPipelineService sourcePressureObservationPipelineService,
     EconomyHealthRuntimeReportService economyHealthRuntimeReportService,
     TraderPurchasePressureService traderPurchasePressureService,
-    FleaPurchasePressureService fleaPurchasePressureService
+    FleaPurchasePressureService fleaPurchasePressureService,
+    LootPressureService lootPressureService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
@@ -51,6 +52,7 @@ public sealed class EconomyMod(
 
         traderPurchasePressureService.Apply(config);
         fleaPurchasePressureService.Apply(config);
+        lootPressureService.Apply(config);
 
         await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);
         await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
