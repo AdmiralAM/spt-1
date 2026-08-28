@@ -32,10 +32,18 @@ namespace SPTBeltArmbandInventory.Tests
                     DedicatedSlotPresentationPolicy.VanillaHeadwearSlotId,
                     RuntimeIdentity.EmergencyHeadBandItemId),
                 "exact Emergency HeadBand is rejected from vanilla Headwear");
+            Assert(DedicatedSlotPresentationPolicy.ShouldSuppressVanillaHeadwearCompatibility(
+                    DedicatedSlotPresentationPolicy.VanillaArmBandSlotId,
+                    RuntimeIdentity.EmergencyHeadBandItemId),
+                "exact Emergency HeadBand is rejected from vanilla ArmBand");
             Assert(!DedicatedSlotPresentationPolicy.ShouldSuppressVanillaHeadwearCompatibility(
                     DedicatedSlotPresentationPolicy.VanillaHeadwearSlotId,
                     RuntimeIdentity.DedicatedMagazineBeltItemId),
                 "Belt is not reclassified by HeadBand guard");
+            Assert(!DedicatedSlotPresentationPolicy.ShouldSuppressVanillaHeadwearCompatibility(
+                    DedicatedSlotPresentationPolicy.VanillaArmBandSlotId,
+                    RuntimeIdentity.DedicatedMagazineBeltItemId),
+                "Belt remains unaffected by HeadBand exact-slot guard");
             Assert(!DedicatedSlotPresentationPolicy.ShouldSuppressVanillaHeadwearCompatibility(
                     RuntimeIdentity.DedicatedHeadBandWireSlotId,
                     RuntimeIdentity.EmergencyHeadBandItemId),
