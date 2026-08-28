@@ -1,4 +1,4 @@
-name: Temporary Trader Toolchain Export
+name: Temporary Trader Exact Source Export
 
 on:
   push:
@@ -15,65 +15,21 @@ jobs:
       - name: Checkout exact Trader source
         uses: actions/checkout@v4
         with:
-          ref: 708c0002df7aff5d190d9ddcd001c57a9b1445c2
+          ref: cb4f5d9fa5aeda20a783f88d770a826e7eaa5ebb
           fetch-depth: 1
           path: source
 
-      - name: Install exact .NET SDK toolchain
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 10.0.400
-
-      - name: Stage minimal portable toolchain
+      - name: Verify exact clean source
         shell: bash
         run: |
           set -euo pipefail
-          dotnet --info
-          pwsh -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
-          test -n "${DOTNET_ROOT:-}"
-
-          portable="$GITHUB_WORKSPACE/toolchain/dotnet"
-          mkdir -p \
-            "$portable/host/fxr" \
-            "$portable/sdk" \
-            "$portable/shared/Microsoft.NETCore.App" \
-            "$portable/shared/Microsoft.AspNetCore.App" \
-            "$portable/packs/Microsoft.NETCore.App.Ref" \
-            "$portable/packs/Microsoft.AspNetCore.App.Ref" \
-            "$portable/packs/Microsoft.NETCore.App.Host.linux-x64" \
-            "$GITHUB_WORKSPACE/toolchain/powershell"
-          cp "$DOTNET_ROOT/dotnet" "$portable/dotnet"
-          chmod +x "$portable/dotnet"
-          cp -a "$DOTNET_ROOT"/host/fxr/10.0.* "$portable/host/fxr/"
-          cp -a "$DOTNET_ROOT/sdk/10.0.400" "$portable/sdk/"
-          cp -a "$DOTNET_ROOT"/shared/Microsoft.NETCore.App/10.0.* "$portable/shared/Microsoft.NETCore.App/"
-          cp -a "$DOTNET_ROOT"/shared/Microsoft.AspNetCore.App/10.0.* "$portable/shared/Microsoft.AspNetCore.App/"
-          cp -a "$DOTNET_ROOT"/packs/Microsoft.NETCore.App.Ref/10.0.* "$portable/packs/Microsoft.NETCore.App.Ref/"
-          cp -a "$DOTNET_ROOT"/packs/Microsoft.AspNetCore.App.Ref/10.0.* "$portable/packs/Microsoft.AspNetCore.App.Ref/"
-          cp -a "$DOTNET_ROOT"/packs/Microsoft.NETCore.App.Host.linux-x64/10.0.* "$portable/packs/Microsoft.NETCore.App.Host.linux-x64/"
-          if test -d "$DOTNET_ROOT/packs/NETStandard.Library.Ref"; then cp -a "$DOTNET_ROOT/packs/NETStandard.Library.Ref" "$portable/packs/"; fi
-
-          pwsh_bin="$(readlink -f "$(command -v pwsh)")"
-          pwsh_root="$(dirname "$pwsh_bin")"
-          cp -a "$pwsh_root/." "$GITHUB_WORKSPACE/toolchain/powershell/"
-
-          test "$(git -C source rev-parse HEAD)" = "708c0002df7aff5d190d9ddcd001c57a9b1445c2"
+          test "$(git -C source rev-parse HEAD)" = "cb4f5d9fa5aeda20a783f88d770a826e7eaa5ebb"
           test -z "$(git -C source status --porcelain --untracked-files=all)"
-
-      - name: Upload portable toolchain
-        uses: actions/upload-artifact@v4
-        with:
-          name: trader-portable-toolchain-fixed
-          path: toolchain
-          include-hidden-files: true
-          if-no-files-found: error
-          compression-level: 1
-          retention-days: 1
 
       - name: Upload exact clean Trader checkout
         uses: actions/upload-artifact@v4
         with:
-          name: trader-exact-source-708c0002-fixed
+          name: trader-exact-source-cb4f5d9f
           path: source
           include-hidden-files: true
           if-no-files-found: error
