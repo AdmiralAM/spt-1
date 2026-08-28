@@ -23,6 +23,7 @@ namespace SPTBeltArmbandInventory
         internal static Action<object, object, object, object, object, object, object, object> ShowSlot;
 
         static readonly Dictionary<int, Component> HeadBandViews = new Dictionary<int, Component>();
+        static bool? russianUi;
         static bool beltLabelProofLogged;
         static bool headBandBindProofLogged;
         static bool headBandFailureLogged;
@@ -42,33 +43,36 @@ namespace SPTBeltArmbandInventory
             try
             {
                 string id = ReflectionTools.ReadMember(slot, "ID")?.ToString();
+                ObserveLocale(slotView, id);
 
                 if (string.Equals(id, RuntimeIdentity.DedicatedBeltWireSlotId, StringComparison.Ordinal))
                 {
-                    SetHeader(slotView, "BELT");
+                    string caption = DedicatedSlotPresentationPolicy.Caption(id, russianUi == true) ?? "BELT";
+                    SetHeader(slotView, caption);
                     if (!beltLabelProofLogged)
                     {
                         beltLabelProofLogged = true;
-                        LogInfo?.Invoke("B&A&HB BELT LABEL PROOF: exact pseudo-slot15 reached SlotView.Show and caption was normalized to BELT.");
+                        LogInfo?.Invoke("B&A&HB BELT LABEL PROOF: exact pseudo-slot15 reached SlotView.Show; caption=" + caption + ".");
                     }
                     return;
                 }
 
                 if (string.Equals(id, RuntimeIdentity.DedicatedHeadBandWireSlotId, StringComparison.Ordinal))
                 {
-                    SetHeader(slotView, "HEADBAND");
+                    string caption = DedicatedSlotPresentationPolicy.Caption(id, russianUi == true) ?? "HEADBAND";
+                    SetHeader(slotView, caption);
                     Component dedicatedView = slotView as Component;
                     if (dedicatedView != null) dedicatedView.gameObject.SetActive(true);
 
                     if (!headBandBindProofLogged)
                     {
                         headBandBindProofLogged = true;
-                        LogInfo?.Invoke("B&A&HB HEADBAND BIND PROOF: exact pseudo-slot16 reached native SlotView.Show on a dedicated visible view.");
+                        LogInfo?.Invoke("B&A&HB HEADBAND BIND PROOF: exact pseudo-slot16 reached native SlotView.Show on a dedicated visible view; caption=" + caption + ".");
                     }
                     return;
                 }
 
-                if (!string.Equals(id, "Headwear", StringComparison.Ordinal)) return;
+                if (!string.Equals(id, DedicatedSlotPresentationPolicy.VanillaHeadwearSlotId, StringComparison.Ordinal)) return;
 
                 BindHeadBandFromHeadwear(slotView, slot, arg1, arg2, arg3, arg4, arg5, arg6);
             }
@@ -76,6 +80,36 @@ namespace SPTBeltArmbandInventory
             {
                 FailOnce("B&A&HB dedicated-slot presentation failed closed", exception);
             }
+        }
+
+        static void ObserveLocale(object slotView, string slotId)
+        {
+            if (DedicatedWearableSlotContract.IsDedicatedWireSlotId(slotId)) return;
+            string text = ReadHeader(slotView);
+            if (string.IsNullOrWhiteSpace(text)) return;
+            if (DedicatedSlotPresentationPolicy.LooksRussian(text))
+            {
+                russianUi = true;
+                return;
+            }
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+                {
+                    if (!russianUi.HasValue) russianUi = false;
+                    return;
+                }
+            }
+        }
+
+        static string ReadHeader(object slotView)
+        {
+            object header = HeaderTextField.GetValue(slotView);
+            if (header == null) return null;
+            PropertyInfo textProperty = ReflectionTools.FindInstanceProperty(header.GetType(), "text", typeof(string));
+            return textProperty != null && textProperty.CanRead ? textProperty.GetValue(header, null) as string : null;
         }
 
         static void BindHeadBandFromHeadwear(
@@ -114,9 +148,6 @@ namespace SPTBeltArmbandInventory
             Component headBandView = GetOrCreateHeadBandView(headwearView);
             if (headBandView == null) return;
 
-            // Re-run the exact vanilla SlotView.Show contract with the current EquipmentTab
-            // context, replacing only the slot argument. This keeps drag/drop, inventory
-            // controller, tooltip and interaction ownership native instead of simulating it.
             ShowSlot(headBandView, headBandSlot, arg1, arg2, arg3, arg4, arg5, arg6);
             PositionAboveHeadwear(headBandView, headwearView);
             headBandView.gameObject.SetActive(true);
@@ -229,6 +260,7 @@ namespace SPTBeltArmbandInventory
             GetSlot = null;
             ShowSlot = null;
             HeadBandViews.Clear();
+            russianUi = null;
             beltLabelProofLogged = false;
             headBandBindProofLogged = false;
             headBandFailureLogged = false;
