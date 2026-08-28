@@ -53,6 +53,37 @@ internal static class DeathPolicyTemplateScopeRegression
         Assert(kept.Contains("headband") && kept.Contains("smokes"), "HeadBand protected tree is retained");
         Assert(!kept.Contains("wrong"), "unregistered template in dedicated slot remains vanilla");
 
+        var armBandOnlyRoots = new[]
+        {
+            new ProtectedWearableRoot(BeltDeathPolicy.ArmBand, RuntimeIdentity.CandidateItemId),
+            new ProtectedWearableRoot(BeltDeathPolicy.ArmBand, RuntimeIdentity.WristWalletItemId)
+        };
+        var armBandOnly = BeltDeathPolicy.GetKeptTreeIds(allWearables, armBandOnlyRoots);
+        Assert(armBandOnly.Contains("armband") && armBandOnly.Contains("cash"), "ArmBand-only policy keeps exactly its owned tree");
+        Assert(!armBandOnly.Contains("belt") && !armBandOnly.Contains("mag"), "disabled Belt family receives no special death protection");
+        Assert(!armBandOnly.Contains("headband") && !armBandOnly.Contains("smokes"), "disabled HeadBand family receives no special death protection");
+
+        var beltOnlyRoots = new[]
+        {
+            new ProtectedWearableRoot(RuntimeIdentity.DedicatedBeltWireSlotId, RuntimeIdentity.DedicatedMagazineBeltItemId)
+        };
+        var beltOnly = BeltDeathPolicy.GetKeptTreeIds(allWearables, beltOnlyRoots);
+        Assert(beltOnly.Contains("belt") && beltOnly.Contains("mag"), "Belt-only policy keeps Belt root and descendants");
+        Assert(!beltOnly.Contains("armband") && !beltOnly.Contains("cash"), "Belt-only policy does not leak into ArmBand");
+        Assert(!beltOnly.Contains("headband") && !beltOnly.Contains("smokes"), "Belt-only policy does not leak into HeadBand");
+
+        var headBandOnlyRoots = new[]
+        {
+            new ProtectedWearableRoot(RuntimeIdentity.DedicatedHeadBandWireSlotId, RuntimeIdentity.EmergencyHeadBandItemId)
+        };
+        var headBandOnly = BeltDeathPolicy.GetKeptTreeIds(allWearables, headBandOnlyRoots);
+        Assert(headBandOnly.Contains("headband") && headBandOnly.Contains("smokes"), "HeadBand-only policy keeps HeadBand root and descendants");
+        Assert(!headBandOnly.Contains("armband") && !headBandOnly.Contains("cash"), "HeadBand-only policy does not leak into ArmBand");
+        Assert(!headBandOnly.Contains("belt") && !headBandOnly.Contains("mag"), "HeadBand-only policy does not leak into Belt");
+
+        var lostAll = BeltDeathPolicy.GetKeptTreeIds(allWearables, Array.Empty<ProtectedWearableRoot>());
+        Assert(lostAll.Count == 0, "LostOnDeath for every family delegates all loss semantics back to vanilla SPT");
+
         var wrongHost = new[]
         {
             new BeltInventoryNode("belt", "equipment", "TacticalVest", rcTpl),
