@@ -20,6 +20,14 @@ namespace SPTBeltArmbandInventory.Tests
                 "Cyrillic vanilla caption selects Russian dedicated labels");
             Assert(!DedicatedSlotPresentationPolicy.LooksRussian("HEADWEAR"),
                 "Latin vanilla caption keeps English dedicated labels");
+            Assert(DedicatedSlotPresentationPolicy.ResolveRussian(null, "ГОЛОВНОЙ УБОР", false),
+                "observed Cyrillic caption overrides non-Russian system fallback");
+            Assert(!DedicatedSlotPresentationPolicy.ResolveRussian(null, "HEADWEAR", true),
+                "observed Latin caption overrides Russian system fallback");
+            Assert(DedicatedSlotPresentationPolicy.ResolveRussian(null, "15", true),
+                "numeric dedicated caption falls back to Russian system language when no locale evidence exists");
+            Assert(!DedicatedSlotPresentationPolicy.ResolveRussian(false, "16", true),
+                "cached observed English locale wins over numeric dedicated captions");
             Assert(DedicatedSlotPresentationPolicy.ShouldSuppressVanillaHeadwearCompatibility(
                     DedicatedSlotPresentationPolicy.VanillaHeadwearSlotId,
                     RuntimeIdentity.EmergencyHeadBandItemId),
