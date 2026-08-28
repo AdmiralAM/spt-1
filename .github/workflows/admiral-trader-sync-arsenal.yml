@@ -1,0 +1,60 @@
+name: Admiral Trader One-shot Arsenal Sync
+
+on:
+  push:
+    branches:
+      - feature/admiral-trader-gameplay-alpha-assort
+    paths:
+      - 'mods/Admiral-Trader/tools/sync_committed_arsenal_runtime.py'
+      - '.github/workflows/admiral-trader-sync-arsenal.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout working branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/admiral-trader-gameplay-alpha-assort
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Compile canonical Arsenal runtime
+        run: >-
+          python mods/Admiral-Trader/tools/build_weapon_ammo_runtime_templates.py
+          mods/Admiral-Trader/manifests/weapon-ammo-runtime-plan.json
+          mods/Admiral-Trader/manifests/weapon-ammo-authored-spec.json
+          mods/Admiral-Trader/manifests/weapon-ammo-capabilities.json
+          mods/Admiral-Trader/manifests/weapon-family-runtime-pools.json
+          --output /tmp/admiral-trader-weapon-ammo-runtime.json
+
+      - name: Synchronize committed Arsenal quests
+        run: >-
+          python mods/Admiral-Trader/tools/sync_committed_arsenal_runtime.py
+          mods/Admiral-Trader/db/quests
+          /tmp/admiral-trader-weapon-ammo-runtime.json
+
+      - name: Verify parity before commit
+        run: >-
+          python mods/Admiral-Trader/tools/validate_committed_arsenal_runtime.py
+          mods/Admiral-Trader/db/quests
+          /tmp/admiral-trader-weapon-ammo-runtime.json
+
+      - name: Commit synchronized runtime
+        run: |
+          if git diff --quiet -- mods/Admiral-Trader/db/quests; then
+            echo 'Committed Arsenal runtime already matches compiler output.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add mods/Admiral-Trader/db/quests
+          git commit -m 'fix(trader): synchronize committed Arsenal runtime'
+          git push origin HEAD:feature/admiral-trader-gameplay-alpha-assort
