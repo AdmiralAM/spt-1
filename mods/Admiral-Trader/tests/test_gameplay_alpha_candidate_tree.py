@@ -20,6 +20,7 @@ class GameplayAlphaCandidateTreeTests(unittest.TestCase):
         self.assertIn("offers=11", result.stdout)
         self.assertIn("milestoneUnlocks=7", result.stdout)
         self.assertIn("quests=31", result.stdout)
+        self.assertIn("recovery=backup-first", result.stdout)
 
 
 if __name__ == "__main__":
