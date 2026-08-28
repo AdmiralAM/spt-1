@@ -33,16 +33,24 @@ jobs:
           test -n "${DOTNET_ROOT:-}"
 
           portable="$GITHUB_WORKSPACE/toolchain/dotnet"
-          mkdir -p "$portable/host/fxr" "$portable/sdk" "$portable/shared/Microsoft.NETCore.App" "$portable/shared/Microsoft.AspNetCore.App" "$portable/packs" "$GITHUB_WORKSPACE/toolchain/powershell"
+          mkdir -p \
+            "$portable/host/fxr" \
+            "$portable/sdk" \
+            "$portable/shared/Microsoft.NETCore.App" \
+            "$portable/shared/Microsoft.AspNetCore.App" \
+            "$portable/packs/Microsoft.NETCore.App.Ref" \
+            "$portable/packs/Microsoft.AspNetCore.App.Ref" \
+            "$portable/packs/Microsoft.NETCore.App.Host.linux-x64" \
+            "$GITHUB_WORKSPACE/toolchain/powershell"
           cp "$DOTNET_ROOT/dotnet" "$portable/dotnet"
           chmod +x "$portable/dotnet"
           cp -a "$DOTNET_ROOT"/host/fxr/10.0.* "$portable/host/fxr/"
           cp -a "$DOTNET_ROOT/sdk/10.0.400" "$portable/sdk/"
           cp -a "$DOTNET_ROOT"/shared/Microsoft.NETCore.App/10.0.* "$portable/shared/Microsoft.NETCore.App/"
           cp -a "$DOTNET_ROOT"/shared/Microsoft.AspNetCore.App/10.0.* "$portable/shared/Microsoft.AspNetCore.App/"
-          cp -a "$DOTNET_ROOT"/packs/Microsoft.NETCore.App.Ref/10.0.* "$portable/packs/"
-          cp -a "$DOTNET_ROOT"/packs/Microsoft.AspNetCore.App.Ref/10.0.* "$portable/packs/"
-          cp -a "$DOTNET_ROOT"/packs/Microsoft.NETCore.App.Host.linux-x64/10.0.* "$portable/packs/"
+          cp -a "$DOTNET_ROOT"/packs/Microsoft.NETCore.App.Ref/10.0.* "$portable/packs/Microsoft.NETCore.App.Ref/"
+          cp -a "$DOTNET_ROOT"/packs/Microsoft.AspNetCore.App.Ref/10.0.* "$portable/packs/Microsoft.AspNetCore.App.Ref/"
+          cp -a "$DOTNET_ROOT"/packs/Microsoft.NETCore.App.Host.linux-x64/10.0.* "$portable/packs/Microsoft.NETCore.App.Host.linux-x64/"
           if test -d "$DOTNET_ROOT/packs/NETStandard.Library.Ref"; then cp -a "$DOTNET_ROOT/packs/NETStandard.Library.Ref" "$portable/packs/"; fi
 
           pwsh_bin="$(readlink -f "$(command -v pwsh)")"
@@ -55,7 +63,7 @@ jobs:
       - name: Upload portable toolchain
         uses: actions/upload-artifact@v4
         with:
-          name: trader-portable-toolchain
+          name: trader-portable-toolchain-fixed
           path: toolchain
           include-hidden-files: true
           if-no-files-found: error
@@ -65,7 +73,7 @@ jobs:
       - name: Upload exact clean Trader checkout
         uses: actions/upload-artifact@v4
         with:
-          name: trader-exact-source-708c0002
+          name: trader-exact-source-708c0002-fixed
           path: source
           include-hidden-files: true
           if-no-files-found: error
