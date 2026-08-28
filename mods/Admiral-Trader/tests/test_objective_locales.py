@@ -38,7 +38,7 @@ class ObjectiveLocaleTests(unittest.TestCase):
                 self.assertNotIn("tpl", text.lower())
                 self.assertNotIn("condition", text.lower())
 
-    def test_qualification_objectives_describe_possession_not_combat(self):
+    def test_qualification_objectives_describe_one_combat_proof(self):
         qualifications = [
             quest for quest in self.quests
             if quest["QuestName"].startswith("Arsenal Protocol:") and quest["QuestName"].endswith("- Qualification")
@@ -46,16 +46,14 @@ class ObjectiveLocaleTests(unittest.TestCase):
         self.assertEqual(len(qualifications), 7)
         for quest in qualifications:
             condition = quest["conditions"]["AvailableForFinish"][0]
-            self.assertEqual(condition["conditionType"], "FindItem")
-            self.assertIn("Possess", self.en[condition["id"]])
-            self.assertIn("Имейте", self.ru[condition["id"]])
+            self.assertEqual(condition["conditionType"], "CounterCreator")
+            self.assertEqual(int(condition["value"]), 1)
+            self.assertIn("Eliminate 1", self.en[condition["id"]])
+            self.assertIn("Устраните 1", self.ru[condition["id"]])
 
     def test_combat_objectives_match_runtime_counter_values(self):
-        combat = [
-            quest for quest in self.quests
-            if quest["QuestName"].startswith("Arsenal Protocol:") and not quest["QuestName"].endswith("- Qualification")
-        ]
-        self.assertEqual(len(combat), 14)
+        combat = [quest for quest in self.quests if quest["QuestName"].startswith("Arsenal Protocol:")]
+        self.assertEqual(len(combat), 21)
         for quest in combat:
             condition = quest["conditions"]["AvailableForFinish"][0]
             self.assertEqual(condition["conditionType"], "CounterCreator")
