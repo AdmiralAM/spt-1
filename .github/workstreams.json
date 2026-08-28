@@ -1,11 +1,14 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "updatedAt": "2026-08-28",
-  "controller": {
-    "name": "GitHub Work SPT",
+  "authority": {
+    "productAuthority": "user",
+    "coordinationWorker": "GitHub Work SPT",
     "policyRef": "origin/main:AGENTS.md",
     "registryRef": "origin/main:.github/workstreams.json",
-    "workersMayEditControl": false,
+    "coordinationWorkerMayGateExecution": false,
+    "workerRequiresAnotherWorkerPermission": false,
+    "workerMayEncodeExplicitUserGovernanceInstruction": true,
     "governanceBranchPrefix": "governance/"
   },
   "execution": {
@@ -19,15 +22,15 @@
       "ONE_BATCHED_RUNTIME_TEST",
       "FAIL_REMEDIATE_OR_PASS_STABLE_RELEASE"
     ],
-    "roadmapAuthorization": "all-recorded-phases",
+    "roadmapAuthorization": "user-standing-authorization-all-recorded-phases",
     "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
     "workerMayAdvanceWithinRecordedRoadmap": true,
     "registryUpdateRequiredForRecordedPhaseTransition": false,
-    "maxActiveRuntimeGates": 1,
     "maxActivePullRequestsPerModule": 1,
-    "runtimeGateActivation": "combined-release-candidate-only-unless-controller-marks-active",
-    "workerMayChangeRoadmap": false,
-    "workerMayPerformGovernance": false
+    "runtimeGateActivation": "worker-direct-to-user-at-recorded-runtime-phase",
+    "workerMayRequestUserRuntimeDirectly": true,
+    "workerMayChangeRoadmapWithoutExplicitUserInstruction": false,
+    "workerMayPerformGovernanceWithoutExplicitUserInstruction": false
   },
   "workstreams": {
     "belt": {
@@ -35,7 +38,6 @@
       "productName": "B&A&HB #2 MOD SPT",
       "modulePath": "mods/SPT-Belt-Armband-Inventory",
       "version": "0.1.0",
-      "state": "ACTIVE",
       "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
       "phasePlan": [
         {
@@ -63,7 +65,7 @@
           "key": "combined-release-candidate",
           "issue": 62,
           "objective": "Produce one coherent exact-head SPT 4.1.3 release candidate covering the complete product.",
-          "acceptance": "Controller activates one GitHub-artifact runtime handoff with a short complete PASS/FAIL checklist only after all automated work is exhausted.",
+          "acceptance": "The worker directly gives the user one GitHub-artifact runtime handoff with a short complete PASS/FAIL checklist after all automated work is exhausted.",
           "requiresUserRuntime": true
         },
         {
@@ -74,7 +76,6 @@
           "requiresUserRuntime": false
         }
       ],
-      "userGate": "queued",
       "frozen": {
         "version": "0.1.0",
         "slotIds": [15, 16],
@@ -93,7 +94,6 @@
       "productName": "Admiral Trader",
       "modulePath": "mods/Admiral-Trader",
       "version": "0.1.0",
-      "state": "ACTIVE",
       "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
       "phasePlan": [
         {
@@ -121,7 +121,7 @@
           "key": "combined-release-candidate",
           "issue": 192,
           "objective": "Produce one complete SPT 4.1.3 Trader release candidate.",
-          "acceptance": "Controller activates one GitHub-artifact playthrough/runtime handoff only after the complete automated campaign and shop package is ready.",
+          "acceptance": "The worker directly gives the user one GitHub-artifact playthrough/runtime handoff after the complete automated campaign and shop package is ready.",
           "requiresUserRuntime": true
         },
         {
@@ -132,7 +132,6 @@
           "requiresUserRuntime": false
         }
       ],
-      "userGate": "queued",
       "frozen": {
         "version": "0.1.0",
         "traderId": "d5c27bb3169f8dfbc13f6b69",
@@ -157,7 +156,6 @@
       "productName": "Economy Admiral",
       "modulePath": "mods/Economy-Admiral",
       "version": "0.1.0",
-      "state": "ACTIVE",
       "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
       "integratedPrs": [222, 223, 226],
       "phasePlan": [
@@ -200,7 +198,7 @@
           "key": "combined-release-candidate",
           "issue": null,
           "objective": "Produce one complete exact-head Economy Beta release candidate.",
-          "acceptance": "Controller activates one GitHub-artifact SPT 4.1.3 runtime handoff only after all automated enforcement and compatibility work is complete.",
+          "acceptance": "The worker directly gives the user one GitHub-artifact SPT 4.1.3 runtime handoff after all automated enforcement and compatibility work is complete.",
           "requiresUserRuntime": true
         },
         {
@@ -211,7 +209,6 @@
           "requiresUserRuntime": false
         }
       ],
-      "userGate": "none",
       "frozen": {
         "version": "0.1.0",
         "modes": ["Off", "Audit", "Enforce"],
@@ -232,7 +229,6 @@
       "productName": "Admiral Tactical HUD",
       "modulePath": "mods/SPT-Tactical-HUD",
       "version": "1.13.3",
-      "state": "ACTIVE",
       "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
       "phasePlan": [
         {
@@ -246,7 +242,7 @@
           "key": "final-smoke",
           "issue": 71,
           "objective": "Produce one exact-head final HUD artifact and activate one short smoke gate.",
-          "acceptance": "The controller supplies the concrete GitHub artifact and HUD-specific PASS/FAIL checklist only after automated remediation is exhausted.",
+          "acceptance": "The worker directly supplies the user the concrete GitHub artifact and HUD-specific PASS/FAIL checklist after automated remediation is exhausted.",
           "requiresUserRuntime": true
         },
         {
@@ -257,7 +253,6 @@
           "requiresUserRuntime": false
         }
       ],
-      "userGate": "queued",
       "frozen": {
         "version": "1.13.3",
         "productName": "Admiral Tactical HUD",

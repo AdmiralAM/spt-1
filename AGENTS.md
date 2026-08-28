@@ -13,21 +13,23 @@ Before every work session, fetch `origin/main` and read these exact files from t
 
 Policy copied into a feature branch, old PR body, chat memory, artifact, or historical Issue is not authority. Do not merge `main` merely to read control state.
 
-## Roles
+## Authority and roles
 
-`GitHub Work SPT` is the sole controller. It owns product goals, recorded phase plans, frozen identity/version/IDs, stable acceptance, runtime-test activation, blocked/parked state, and release decisions.
+The user is the sole product authority. The complete recorded `phasePlan` is the user's standing authorization to execute every listed phase through its recorded acceptance, including a direct runtime handoff and the recorded stable/publication transition. No worker grants permission to another worker.
 
-Module workers (Belt, Trader, Economy, HUD, and future module chats) are executors. They may inspect, implement, test, repair CI, package, and attach evidence. They must not:
+`GitHub Work SPT` is a coordination and audit worker, not a controller or approval gate. It may reconcile repository facts, maintain shared mechanics when the user asks, and report cross-module status. Module workers do not wait for it, ask it to activate a phase, or require its acknowledgement.
 
-- edit this charter or `.github/workstreams.json`;
-- rewrite their recorded phase plan or stable acceptance;
-- create a new product scope or mark an unfinished product `parked`;
+Module workers (Belt, Trader, Economy, HUD, and future module chats) inspect, implement, test, repair CI, package, integrate, and attach evidence. They must not:
+
+- edit this charter or `.github/workstreams.json` without an explicit user instruction;
+- rewrite their recorded phase plan or stable acceptance without an explicit user instruction;
+- create a new product scope or declare an unfinished product cancelled/parked without an explicit user instruction;
 - change frozen names, versions, persistent IDs, routes, or cross-module ownership;
 - treat a branch, commit, PR, CI run, document, validator, or artifact as the product finish line;
 - ask for `next step` when the registry already records the continuation;
-- perform repository governance or modify another module.
+- modify another module or invent governance changes as a substitute for product work.
 
-Control files may change only through a `governance/*` PR owned by `GitHub Work SPT`. CODEOWNERS and the control guard enforce this boundary.
+Any worker may faithfully encode an explicit user governance instruction through a `governance/*` PR. It must not wait for `GitHub Work SPT` to do so. Without an explicit user instruction, control files remain unchanged. CODEOWNERS and the control guard keep those changes visible to the user.
 
 ## Worker execution loop
 
@@ -35,10 +37,10 @@ The complete ordered `phasePlan` is pre-authorized. At the start of every run, i
 
 `ACTIVE -> IMPLEMENT -> VALIDATE -> FIX UNTIL GREEN -> CONTINUE NEXT RECORDED PACKAGE -> RELEASE CANDIDATE -> ONE BATCHED RUNTIME TEST -> FAIL: REMEDIATE / PASS: STABLE RELEASE`
 
-- Complete each phase's technical work without requiring user or controller approval between internal steps.
+- Complete each phase's technical work without requiring approval between internal steps.
 - Fix scoped CI failures and continue; do not end a run merely because CI started or passed.
 - When a phase completes, record evidence in its technical Issue/PR and immediately continue to the next `phasePlan` entry.
-- Ordinary recorded phase transitions never require a registry edit, controller acknowledgement, or a new user message.
+- Ordinary recorded phase transitions never require a registry edit, another worker's acknowledgement, or a new user message.
 - Create at most one implementation PR for the module, and only when coherent implementation exists.
 - Discover the module's single live implementation PR from GitHub; PR numbers and temporary branches are deliberately not stored as control pointers.
 - New branch/PR mechanics for an already recorded phase are not a new product decision.
@@ -48,7 +50,7 @@ The complete ordered `phasePlan` is pre-authorized. At the start of every run, i
 
 Do not update the registry merely because a phase, commit, CI run, PR, merge, artifact, or recorded successor completed. The evidence itself determines the resume point.
 
-A controller-owned registry update is required only to add/remove/reorder product scope, change a phase contract or frozen identity, activate a user runtime gate, record a real blocked/parked state, or make a stable/publication decision.
+Only an explicit user instruction may add, remove, or reorder product scope; change a phase contract or frozen identity; cancel/park work; or change an undefined publication decision. The worker receiving that instruction may encode it directly. Runtime readiness, technical blockers, phase completion, and recorded stable/publication transitions live in Issue/PR evidence and never require a registry update.
 
 ## Valid stop conditions
 
@@ -56,20 +58,20 @@ A worker may stop only at the exact boundary of:
 
 1. a coherent physical SPT/EFT runtime gate that cannot be resolved from source, references, logs, artifacts, or automated validation;
 2. missing permission/access or a proven external dependency after all unblocked work is exhausted;
-3. an explicit product decision absent from the registered roadmap;
+3. an explicit product decision absent from the registered roadmap, asked directly of the user;
 4. completed stable/release acceptance.
 
 PR creation, branch synchronization, commits, documentation, CI, packaging, and an internal artifact are never stop conditions.
 
 ## Runtime-test budget and handoff
 
-- The repository normally permits one active user runtime gate across all workstreams.
-- A queued gate does not stop implementation. Only the controller may activate it, normally at the combined release-candidate boundary.
-- Batch related checks into one release-candidate session; do not use the user as a per-patch debugger.
-- Ask only after all feasible source inspection, automated tests, builds, packaging, and CI repair are complete.
+- A module worker enters its recorded `requiresUserRuntime` phase automatically after all prior acceptance is proven. No controller activation, registry edit, or inter-chat coordination is required.
+- Ask the user directly only at that coherent physical boundary. The user alone decides when to run the candidate and may choose the order if several modules become ready.
+- Batch related checks into one release-candidate session per module; do not use the user as a per-patch debugger.
+- Ask only after all feasible source inspection, automated tests, builds, packaging, integration, and CI repair are complete.
 - Provide the exact GitHub Actions/release URL, PR, branch, commit SHA, artifact name/ID, digest, install layout, and a short numbered table of action / PASS / FAIL / minimal evidence.
 - Chat attachments, local files, source ZIPs, CI success without an artifact, and vague `test everything` requests are invalid handoffs.
-- On FAIL, consume the evidence and resume remediation automatically. On PASS, follow the next recorded phase or release transition.
+- On FAIL, consume the evidence and resume remediation automatically. On PASS, follow the next recorded phase or release transition under the standing authorization; do not ask another worker for permission.
 
 Detailed handoff mechanics live in `docs/runtime-artifact-gate.md`; that document cannot override this charter or the registry.
 

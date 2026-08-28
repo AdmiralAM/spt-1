@@ -51,14 +51,15 @@ Every row must affect the gate decision. Number the rows, keep their order stabl
 
 Manual runtime testing is the final physical gate for a milestone candidate, not a per-turn development loop.
 
-1. There may be only one outstanding active user runtime gate repository-wide unless the user explicitly authorizes parallel tests.
-2. A workstream with red CI, unresolved warnings, incomplete implementation, or no exact downloadable artifact cannot request user action.
-3. Related runtime checks must be batched into one short session, normally 10-15 minutes or less.
-4. Other candidates remain `queued`; their agents continue every task that can be completed without physical evidence.
-5. A new test request after a previous run requires a material change to the same runtime boundary and fresh green automated evidence.
-6. Validators and evidence scripts must consume normal runtime output when possible. They must not create repeated user chores whose only purpose is proving the validator itself.
+1. Each workstream may request one batched user runtime session only when it reaches its recorded `requiresUserRuntime` phase and all feasible automated work is complete.
+2. No controller, coordination chat, registry edit, or permission from another worker activates that handoff. The module worker asks the user directly.
+3. A workstream with red CI, unresolved warnings, incomplete implementation, or no exact downloadable artifact cannot request user action.
+4. Related runtime checks must be batched into one short session, normally 10-15 minutes or less.
+5. If several candidates are ready, the user chooses when and in which order to run them; one workstream never blocks another workstream's non-physical work.
+6. A new test request after a previous run requires a material change to the same runtime boundary and fresh green automated evidence.
+7. Validators and evidence scripts must consume normal runtime output when possible. They must not create repeated user chores whose only purpose is proving the validator itself.
 
-Every PR that has a physical gate records one state: `none`, `queued`, `active`, `passed`, or `failed`. Moving a gate from `queued` to `active` requires confirming that no other active PR already owns the user test window.
+Runtime readiness and PASS/FAIL evidence belong in the module PR/Issue, not in mutable registry gate fields.
 
 ## Profile-affecting candidates
 
@@ -96,4 +97,4 @@ Keep the PR draft while required runtime evidence is absent. A PR can be conside
 
 ## Publication
 
-Actions artifacts are the normal place for test candidates. Do not promote to `main`, `stable`, or a `runtime-*` publication branch until the required runtime gate has passed and the promotion is deliberate.
+Actions artifacts are the normal place for test candidates. Do not promote to `main`, `stable`, or a `runtime-*` publication branch until the required runtime gate has passed. After PASS, continue the recorded stable/publication phase automatically under the user's standing authorization unless the user explicitly placed the release on hold.

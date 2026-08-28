@@ -33,7 +33,7 @@ This file describes repository mechanics. Execution authority comes only from th
 - Use the narrowest module workflow. Diagnose the first failed boundary before rerunning.
 - CI warnings are fixed or explicitly classified before integration.
 - CI success and an artifact are evidence, not completion or a conversational stop.
-- Physical testing follows `docs/runtime-artifact-gate.md` only when the registry marks the gate active.
+- Physical testing follows `docs/runtime-artifact-gate.md` when the worker reaches a recorded `requiresUserRuntime` phase with all prior acceptance proven. No other chat activates it.
 
 ## Integration and cleanup
 
@@ -43,7 +43,7 @@ After acceptance:
 2. verify the intended result on `main`;
 3. update or close the linked Issue;
 4. remove obsolete temporary diagnostics and branches;
-5. update the registry through a controller-owned `governance/*` PR only when product scope, frozen contracts, runtime-gate state, blocking state or release authority changes; ordinary recorded phase transitions use their GitHub evidence and require no registry edit.
+5. update the registry through a `governance/*` PR only when faithfully implementing an explicit user instruction that changes durable product scope or contracts; runtime readiness, blockers and ordinary phase transitions use GitHub evidence and require no registry edit.
 
 Generated binaries, logs, caches, package copies, trigger files and CI metadata do not belong in source history. Preserve unique evidence in Issues, PRs or Actions artifacts instead.
 
