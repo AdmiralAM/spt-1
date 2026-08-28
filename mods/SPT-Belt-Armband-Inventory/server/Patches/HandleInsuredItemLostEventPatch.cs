@@ -8,6 +8,14 @@ namespace SPTBeltArmbandInventory.Server.Patches;
 
 public sealed class HandleInsuredItemLostEventPatch : AbstractPatch
 {
+    private static readonly ProtectedWearableRoot[] ProtectedRoots =
+    [
+        new(BeltDeathPolicy.ArmBand, RuntimeIdentity.CandidateItemId),
+        new(BeltDeathPolicy.ArmBand, RuntimeIdentity.WristWalletItemId),
+        new(RuntimeIdentity.DedicatedBeltWireSlotId, RuntimeIdentity.DedicatedMagazineBeltItemId),
+        new(RuntimeIdentity.DedicatedHeadBandWireSlotId, RuntimeIdentity.EmergencyHeadBandItemId)
+    ];
+
     protected override MethodBase? GetTargetMethod()
     {
         MethodInfo? selected = null;
@@ -35,7 +43,7 @@ public sealed class HandleInsuredItemLostEventPatch : AbstractPatch
             item.ParentId?.ToString(),
             item.SlotId,
             item.Template.ToString()));
-        var kept = BeltDeathPolicy.GetKeptTreeIds(nodes, RuntimeCandidateBeltItem.RuntimeCandidateTpl);
+        var kept = BeltDeathPolicy.GetKeptTreeIds(nodes, ProtectedRoots);
         if (kept.Count == 0) return;
 
         request.LostInsuredItems = lostInsuredItems
