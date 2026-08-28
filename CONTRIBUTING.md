@@ -6,7 +6,7 @@ This file describes repository mechanics. Execution authority comes only from th
 
 1. Fetch `origin/main` and read the charter and registry from that ref.
 2. Read the registered active Issue/PR and the affected module README.
-3. Work only in the registered module branch/PR, or create its recorded successor branch when implementation is ready.
+3. Discover the module's single live implementation PR from GitHub, or create a short-lived branch when coherent implementation is ready.
 4. Identify the module-specific validation workflow and any persistent profile IDs before editing.
 
 ## Identity and persistence
@@ -43,7 +43,7 @@ After acceptance:
 2. verify the intended result on `main`;
 3. update or close the linked Issue;
 4. remove obsolete temporary diagnostics and branches;
-5. update the registry only through a controller-owned `governance/*` PR when phase authority actually changes.
+5. update the registry through a controller-owned `governance/*` PR only when product scope, frozen contracts, runtime-gate state, blocking state or release authority changes; ordinary recorded phase transitions use their GitHub evidence and require no registry edit.
 
 Generated binaries, logs, caches, package copies, trigger files and CI metadata do not belong in source history. Preserve unique evidence in Issues, PRs or Actions artifacts instead.
 

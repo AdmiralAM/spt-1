@@ -8,19 +8,19 @@ Before every work session, fetch `origin/main` and read these exact files from t
 
 1. `origin/main:AGENTS.md` — immutable worker policy;
 2. `origin/main:.github/workstreams.json` — current workstream state;
-3. the active Issue/PR named by that registry entry;
+3. the technical Issues recorded in its phase plan and the module's live GitHub PR/evidence;
 4. the affected module README and relevant technical docs.
 
 Policy copied into a feature branch, old PR body, chat memory, artifact, or historical Issue is not authority. Do not merge `main` merely to read control state.
 
 ## Roles
 
-`GitHub Work SPT` is the sole controller. It owns product goals, roadmaps, active packages, successors, frozen identity/version/IDs, stable acceptance, runtime-test scheduling, and workstream state.
+`GitHub Work SPT` is the sole controller. It owns product goals, recorded phase plans, frozen identity/version/IDs, stable acceptance, runtime-test activation, blocked/parked state, and release decisions.
 
 Module workers (Belt, Trader, Economy, HUD, and future module chats) are executors. They may inspect, implement, test, repair CI, package, and attach evidence. They must not:
 
 - edit this charter or `.github/workstreams.json`;
-- rewrite their roadmap, active package, successor, or stable acceptance;
+- rewrite their recorded phase plan or stable acceptance;
 - create a new product scope or mark an unfinished product `parked`;
 - change frozen names, versions, persistent IDs, routes, or cross-module ownership;
 - treat a branch, commit, PR, CI run, document, validator, or artifact as the product finish line;
@@ -31,16 +31,24 @@ Control files may change only through a `governance/*` PR owned by `GitHub Work 
 
 ## Worker execution loop
 
-For the registered active package, continue within every available run:
+The complete ordered `phasePlan` is pre-authorized. At the start of every run, inspect `main`, the recorded Issues, and the module's live PR evidence; resume at the first phase whose acceptance is not already proven. Continue within every available run:
 
 `ACTIVE -> IMPLEMENT -> VALIDATE -> FIX UNTIL GREEN -> CONTINUE NEXT RECORDED PACKAGE -> RELEASE CANDIDATE -> ONE BATCHED RUNTIME TEST -> FAIL: REMEDIATE / PASS: STABLE RELEASE`
 
-- Complete the package's ordered technical work without requiring user approval between internal steps.
+- Complete each phase's technical work without requiring user or controller approval between internal steps.
 - Fix scoped CI failures and continue; do not end a run merely because CI started or passed.
-- When a package completes, follow the registered successor automatically.
+- When a phase completes, record evidence in its technical Issue/PR and immediately continue to the next `phasePlan` entry.
+- Ordinary recorded phase transitions never require a registry edit, controller acknowledgement, or a new user message.
 - Create at most one implementation PR for the module, and only when coherent implementation exists.
-- New branch/PR mechanics for an already recorded successor are not a new product decision.
+- Discover the module's single live implementation PR from GitHub; PR numbers and temporary branches are deliberately not stored as control pointers.
+- New branch/PR mechanics for an already recorded phase are not a new product decision.
 - Do not expand beyond the registry and linked Issue/PR.
+
+## Registry update boundaries
+
+Do not update the registry merely because a phase, commit, CI run, PR, merge, artifact, or recorded successor completed. The evidence itself determines the resume point.
+
+A controller-owned registry update is required only to add/remove/reorder product scope, change a phase contract or frozen identity, activate a user runtime gate, record a real blocked/parked state, or make a stable/publication decision.
 
 ## Valid stop conditions
 
@@ -61,7 +69,7 @@ PR creation, branch synchronization, commits, documentation, CI, packaging, and 
 - Ask only after all feasible source inspection, automated tests, builds, packaging, and CI repair are complete.
 - Provide the exact GitHub Actions/release URL, PR, branch, commit SHA, artifact name/ID, digest, install layout, and a short numbered table of action / PASS / FAIL / minimal evidence.
 - Chat attachments, local files, source ZIPs, CI success without an artifact, and vague `test everything` requests are invalid handoffs.
-- On FAIL, consume the evidence and resume remediation automatically. On PASS, follow the registered successor or release transition.
+- On FAIL, consume the evidence and resume remediation automatically. On PASS, follow the next recorded phase or release transition.
 
 Detailed handoff mechanics live in `docs/runtime-artifact-gate.md`; that document cannot override this charter or the registry.
 
