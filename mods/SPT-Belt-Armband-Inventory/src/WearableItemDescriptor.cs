@@ -51,11 +51,12 @@ namespace SPTBeltArmbandInventory
                     RuntimeIdentity.WristWalletGridColumns,
                     RuntimeIdentity.WristWalletGridRows,
                     AccessoryCapability.PaymentSource |
-                    AccessoryCapability.BuildValidation),
+                    AccessoryCapability.BuildValidation |
+                    AccessoryCapability.DeathRetention),
 
-                // Dedicated Belt is the tactical fast-access family. It participates in
-                // reachable-container ordering and survives ReplaceInventory like any
-                // exact registered wearable container, while keeping payment/grenade off.
+                // Dedicated Belt is the tactical fast-access family. Protected-by-default
+                // is a product policy; a later F12 user toggle will be allowed to switch
+                // the category to Lost on death without changing its persistent identity.
                 [RuntimeIdentity.DedicatedMagazineBeltItemId] = new WearableItemDescriptor(
                     RuntimeIdentity.DedicatedMagazineBeltItemId,
                     AccessoryCategory.Belt,
@@ -65,18 +66,19 @@ namespace SPTBeltArmbandInventory
                     AccessoryCapability.UnloadPriority |
                     AccessoryCapability.FastAccess |
                     AccessoryCapability.BuildValidation |
-                    AccessoryCapability.ScavHostRestoration),
+                    AccessoryCapability.ScavHostRestoration |
+                    AccessoryCapability.DeathRetention),
 
-                // Emergency HeadBand is intentionally narrow: exact-fit medical storage
-                // plus build/ReplaceInventory lifecycle visibility, with no payment,
-                // fast-access, grenade or special death-retention behavior.
+                // HeadBand is protected personal utility storage. It deliberately does not
+                // inherit tactical fast-access, payment-source or grenade semantics.
                 [RuntimeIdentity.EmergencyHeadBandItemId] = new WearableItemDescriptor(
                     RuntimeIdentity.EmergencyHeadBandItemId,
                     AccessoryCategory.HeadBand,
                     RuntimeIdentity.EmergencyHeadBandGridColumns,
                     RuntimeIdentity.EmergencyHeadBandGridRows,
                     AccessoryCapability.BuildValidation |
-                    AccessoryCapability.ScavHostRestoration)
+                    AccessoryCapability.ScavHostRestoration |
+                    AccessoryCapability.DeathRetention)
             };
 
         internal static bool TryGet(string templateId, out WearableItemDescriptor descriptor)
