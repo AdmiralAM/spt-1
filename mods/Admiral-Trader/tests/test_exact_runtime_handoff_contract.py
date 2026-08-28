@@ -67,10 +67,13 @@ class ExactRuntimeHandoffContractTests(unittest.TestCase):
         self.assertIn("tools\\Reset-AdmiralTraderProfile.ps1", text)
         self.assertIn("SPT_Runtime/user/mods/Admiral-Trader/tools/Reset-AdmiralTraderProfile.ps1", text)
         self.assertIn("Copy-Item $recoverySource $recoveryPath -Force", text)
+        self.assertIn("manifests\\persistent-identities.json", recovery)
+        self.assertIn("$ledger.retired.traderIds", recovery)
+        self.assertIn("$ledger.retired.questIds", recovery)
         self.assertIn("Copy-Item $resolvedProfile $backupPath -Force", recovery)
         self.assertIn("Backup verification failed; profile was not modified.", recovery)
         backup = recovery.index("Copy-Item $resolvedProfile $backupPath -Force")
-        mutation = recovery.index("$pmc.TradersInfo.PSObject.Properties.Remove($traderId)")
+        mutation = recovery.index("foreach ($traderId in $ownedTraderInfo)")
         self.assertLess(backup, mutation)
 
     def test_wrapper_emits_single_obvious_exact_head_zip_and_checksum(self):
