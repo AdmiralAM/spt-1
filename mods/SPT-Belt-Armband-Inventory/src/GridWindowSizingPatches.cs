@@ -9,10 +9,11 @@ namespace SPTBeltArmbandInventory
 {
     internal static class GridWindowSizingRuntime
     {
-        // OpenItem is event-driven. A bounded four-frame settle window is enough
-        // for Unity/native layout groups to finish without introducing idle polling.
-        const int MaxDeferredAttempts = 4;
+        // OpenItem is event-driven. A short bounded settle window lets EFT and
+        // optional UI layout patches finish their late writes without idle polling.
+        const int MaxDeferredAttempts = 8;
         const int MaxRecentWindowsToInspect = 4;
+        const float FitTolerance = 0.5f;
 
         sealed class PendingWindow
         {
@@ -35,6 +36,7 @@ namespace SPTBeltArmbandInventory
         internal static Type GridWindowType;
         static readonly List<PendingWindow> PendingWindows = new List<PendingWindow>();
         static readonly HashSet<string> FitProofShapes = new HashSet<string>(StringComparer.Ordinal);
+        static readonly HashSet<string> FinalProofShapes = new HashSet<string>(StringComparer.Ordinal);
 
         internal static bool HasPending => PendingWindows.Count != 0;
 
@@ -47,8 +49,7 @@ namespace SPTBeltArmbandInventory
                 if (windows == null || windows.Count == 0) return;
 
                 // WindowData.WindowType is not a reliable System.Type discriminator in
-                // SPT 4.1.3. RC1 could therefore install successfully yet never resize
-                // a physical GridWindow. Resolve the actual Window instance instead.
+                // SPT 4.1.3. Resolve the actual Window instance instead.
                 int floor = Math.Max(0, windows.Count - MaxRecentWindowsToInspect);
                 for (int index = windows.Count - 1; index >= floor; index--)
                 {
@@ -89,8 +90,6 @@ namespace SPTBeltArmbandInventory
                 return;
             }
 
-            // Even a successful immediate resize is re-applied for a few frames.
-            // Native layout may write its preferred size after OpenItem returns.
             PendingWindows.Add(new PendingWindow(window, columns, rows));
             RequestFlush?.Invoke();
         }
@@ -110,8 +109,10 @@ namespace SPTBeltArmbandInventory
 
                 TryAdjust(window, pending.Columns, pending.Rows);
                 pending.Attempts++;
-                if (pending.Attempts >= MaxDeferredAttempts)
-                    PendingWindows.RemoveAt(i--);
+                if (pending.Attempts < MaxDeferredAttempts) continue;
+
+                LogFinalFit(window, pending.Columns, pending.Rows);
+                PendingWindows.RemoveAt(i--);
             }
         }
 
@@ -123,9 +124,9 @@ namespace SPTBeltArmbandInventory
             RectTransform rect = component.transform as RectTransform;
             if (rect == null || rect.rect.width <= 0f || rect.rect.height <= 0f) return false;
 
-            // Geometry comes from the registered item descriptor. No Unity hierarchy
-            // scan is needed, and no artificial minimum is allowed: native window
-            // chrome + exact declared cell extent only.
+            // Geometry comes from the registered item descriptor. No hierarchy
+            // scan and no artificial minimum: declared cell extent + calibrated
+            // native GridWindow chrome only.
             float width = AccessoryGridPolicy.ExactWindowWidth(columns);
             float height = AccessoryGridPolicy.ExactWindowHeight(rows);
             if (width <= 0f || height <= 0f) return false;
@@ -133,9 +134,9 @@ namespace SPTBeltArmbandInventory
             float beforeWidth = rect.rect.width;
             float beforeHeight = rect.rect.height;
 
-            if (Math.Abs(beforeWidth - width) >= 0.5f)
+            if (Math.Abs(beforeWidth - width) >= FitTolerance)
                 rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
-            if (Math.Abs(beforeHeight - height) >= 0.5f)
+            if (Math.Abs(beforeHeight - height) >= FitTolerance)
                 rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
 
             ApplyLayoutElement(component.gameObject, width, height);
@@ -149,6 +150,30 @@ namespace SPTBeltArmbandInventory
                     + "; bounded settle passes=" + MaxDeferredAttempts + ".");
             }
             return true;
+        }
+
+        static void LogFinalFit(object window, int columns, int rows)
+        {
+            Component component = window as Component;
+            RectTransform rect = component == null ? null : component.transform as RectTransform;
+            if (rect == null) return;
+
+            float width = AccessoryGridPolicy.ExactWindowWidth(columns);
+            float height = AccessoryGridPolicy.ExactWindowHeight(rows);
+            float finalWidth = rect.rect.width;
+            float finalHeight = rect.rect.height;
+            string shape = columns + "x" + rows;
+            bool exact = Math.Abs(finalWidth - width) < FitTolerance && Math.Abs(finalHeight - height) < FitTolerance;
+
+            if (FinalProofShapes.Add(shape))
+            {
+                string message = "B&A&HB WINDOW FIT FINAL: shape=" + shape
+                    + "; final=" + finalWidth.ToString("0.0") + "x" + finalHeight.ToString("0.0")
+                    + "; target=" + width.ToString("0.0") + "x" + height.ToString("0.0")
+                    + "; exact=" + exact + ".";
+                if (exact) LogInfo?.Invoke(message);
+                else LogWarning?.Invoke(message);
+            }
         }
 
         internal static bool TryResolveDescriptor(object item, out WearableItemDescriptor descriptor)
@@ -206,6 +231,7 @@ namespace SPTBeltArmbandInventory
         {
             PendingWindows.Clear();
             FitProofShapes.Clear();
+            FinalProofShapes.Clear();
             LogInfo = null;
             LogWarning = null;
             RequestFlush = null;
