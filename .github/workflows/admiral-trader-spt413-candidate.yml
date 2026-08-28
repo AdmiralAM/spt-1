@@ -59,6 +59,7 @@ jobs:
           assert len(assort['items']) == 11
           assert set(qa) == {'started','success','fail'} and len(qa['success']) == 7
           assert len(list((root/'db/quests').glob('*.json'))) == 31
+          assert (root/'tools/Reset-AdmiralTraderProfile.ps1').is_file()
 
       - name: Run Admiral Trader test suite
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
@@ -66,7 +67,7 @@ jobs:
       - name: Validate exact-runtime scripts
         shell: pwsh
         run: |
-          foreach ($script in @('mods/Admiral-Trader/tools/build_spt413_test_candidate.ps1','mods/Admiral-Trader/tools/package_spt413_exact_candidate.ps1')) {
+          foreach ($script in @('mods/Admiral-Trader/tools/build_spt413_test_candidate.ps1','mods/Admiral-Trader/tools/package_spt413_exact_candidate.ps1','mods/Admiral-Trader/tools/Reset-AdmiralTraderProfile.ps1')) {
             $tokens=$null; $errors=$null
             [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $script),[ref]$tokens,[ref]$errors)|Out-Null
             if ($errors.Count) { $errors | % { Write-Error $_.Message }; exit 1 }
@@ -88,6 +89,8 @@ jobs:
           stage.mkdir(parents=True)
           shutil.copy2(dll,stage/dll.name)
           for d in ('db','manifests','assets'): shutil.copytree(module/d,stage/d)
+          (stage/'tools').mkdir()
+          shutil.copy2(module/'tools/Reset-AdmiralTraderProfile.ps1', stage/'tools/Reset-AdmiralTraderProfile.ps1')
           rm=stage/'manifests/runtime-manifest.json'; runtime=json.loads(rm.read_text(encoding='utf-8'))
           runtime['registrationEnabled']=True; runtime['publicationMode']='published-api-preflight'
           rm.write_text(json.dumps(runtime,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
@@ -102,6 +105,10 @@ jobs:
           (stage/'candidate-provenance.json').write_text(json.dumps(prov,indent=2)+'\n',encoding='utf-8')
           assert len(list((stage/'db/quests').glob('*.json')))==31
           assert len(json.loads((stage/'db/assort.json').read_text())['items'])==11
+          assert (stage/'tools/Reset-AdmiralTraderProfile.ps1').is_file()
+
+      - name: Validate staged preflight composition
+        run: python mods/Admiral-Trader/tools/validate_gameplay_alpha_candidate_tree.py build/admiral-trader-spt413-preflight/SPT_Runtime/user/mods/Admiral-Trader
 
       - name: Upload published-API preflight package
         uses: actions/upload-artifact@v4
