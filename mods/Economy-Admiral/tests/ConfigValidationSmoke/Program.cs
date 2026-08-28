@@ -66,8 +66,10 @@ static void MustEqual(string name, double actual, double expected)
 MustPass("defaults", new EconomyConfig());
 MustPass("opt-in bounded item stack normalization", new EconomyConfig { EnableItemRewardStackNormalization = true });
 MustPass("opt-in trader purchase pressure", new EconomyConfig { EnableTraderPurchasePressure = true });
+MustPass("opt-in flea purchase pressure", new EconomyConfig { EnableFleaPurchasePressure = true });
 foreach (var preset in Enum.GetValues<EconomyPreset>()) MustPass($"preset {preset}", new EconomyConfig { Preset = preset });
 MustPass("custom trader pressure upper bound", new EconomyConfig { Preset = EconomyPreset.Custom, CustomTraderPurchasePriceMultiplier = 2.0 });
+MustPass("custom flea pressure upper bound", new EconomyConfig { Preset = EconomyPreset.Custom, CustomFleaBasePriceMultiplier = 2.5 });
 MustPass("supported exceptional override", new EconomyConfig
 {
     ManualOverrides = new Dictionary<string, ManualItemOverride>(StringComparer.Ordinal)
@@ -96,10 +98,34 @@ if (!(TraderPurchasePressurePolicy.ApplyToCurrencyCost(10000, new EconomyConfig 
     throw new InvalidOperationException("Trader purchase pressure presets are not strictly ordered Easy < Normal < Hard.");
 Console.WriteLine("PASS trader pressure preset strength ordering");
 
+var fleaEasy = FleaPurchasePressurePolicy.Resolve(new EconomyConfig { Preset = EconomyPreset.Easy });
+var fleaNormal = FleaPurchasePressurePolicy.Resolve(new EconomyConfig { Preset = EconomyPreset.Normal });
+var fleaHard = FleaPurchasePressurePolicy.Resolve(new EconomyConfig { Preset = EconomyPreset.Hard });
+MustEqual("flea pressure Easy base multiplier", fleaEasy.BasePriceMultiplier, 1.55);
+MustEqual("flea pressure Normal base multiplier", fleaNormal.BasePriceMultiplier, 1.65);
+MustEqual("flea pressure Hard base multiplier", fleaHard.BasePriceMultiplier, 1.80);
+MustEqual("flea pressure Normal below-handbook threshold", fleaNormal.MaxPriceDifferenceBelowHandbookPercent, 45);
+MustEqual("flea pressure Hard handbook correction", fleaHard.HandbookPriceMultiplier, 1.15);
+MustEqual("flea pressure Custom base multiplier", FleaPurchasePressurePolicy.Resolve(new EconomyConfig { Preset = EconomyPreset.Custom, CustomFleaBasePriceMultiplier = 1.72 }).BasePriceMultiplier, 1.72);
+MustEqual("flea pressure preserves stronger existing base", FleaPurchasePressurePolicy.StrongerBasePriceMultiplier(1.90, new EconomyConfig { Preset = EconomyPreset.Normal }), 1.90);
+MustEqual("flea pressure raises stock base on Normal", FleaPurchasePressurePolicy.StrongerBasePriceMultiplier(1.50, new EconomyConfig { Preset = EconomyPreset.Normal }), 1.65);
+MustEqual("flea pressure preserves stricter below-handbook threshold", FleaPurchasePressurePolicy.StrongerBelowHandbookDifference(30, new EconomyConfig { Preset = EconomyPreset.Normal }), 30);
+MustEqual("flea pressure tightens stock below-handbook threshold", FleaPurchasePressurePolicy.StrongerBelowHandbookDifference(64, new EconomyConfig { Preset = EconomyPreset.Normal }), 45);
+MustEqual("flea pressure preserves stronger handbook correction", FleaPurchasePressurePolicy.StrongerHandbookPriceMultiplier(1.20, new EconomyConfig { Preset = EconomyPreset.Normal }), 1.20);
+if (!(fleaEasy.BasePriceMultiplier < fleaNormal.BasePriceMultiplier && fleaNormal.BasePriceMultiplier < fleaHard.BasePriceMultiplier))
+    throw new InvalidOperationException("Flea base price pressure presets are not strictly ordered Easy < Normal < Hard.");
+if (!(fleaEasy.MaxPriceDifferenceBelowHandbookPercent > fleaNormal.MaxPriceDifferenceBelowHandbookPercent
+      && fleaNormal.MaxPriceDifferenceBelowHandbookPercent > fleaHard.MaxPriceDifferenceBelowHandbookPercent))
+    throw new InvalidOperationException("Flea underpricing correction is not strictly stronger Easy < Normal < Hard.");
+Console.WriteLine("PASS flea pressure preset strength ordering");
+
 MustFail("unimplemented repeated raid loot decay", new EconomyConfig { RepeatedRaidLootDecay = true });
 MustFail("custom trader pressure below bound", new EconomyConfig { CustomTraderPurchasePriceMultiplier = 0.99 });
 MustFail("custom trader pressure above bound", new EconomyConfig { CustomTraderPurchasePriceMultiplier = 2.01 });
 MustFail("custom trader pressure NaN", new EconomyConfig { CustomTraderPurchasePriceMultiplier = double.NaN });
+MustFail("custom flea pressure below bound", new EconomyConfig { CustomFleaBasePriceMultiplier = 0.99 });
+MustFail("custom flea pressure above bound", new EconomyConfig { CustomFleaBasePriceMultiplier = 2.51 });
+MustFail("custom flea pressure NaN", new EconomyConfig { CustomFleaBasePriceMultiplier = double.NaN });
 MustFail("empty report path", new EconomyConfig { ReportRelativePath = " " });
 MustFail("rooted report path", new EconomyConfig { ReportRelativePath = Path.GetFullPath("outside.json") });
 MustFail("parent traversal slash", new EconomyConfig { ReportRelativePath = "reports/../outside.json" });
@@ -149,11 +175,15 @@ JsonMustPass("case-insensitive known keys", "{\"MODE\":\"Audit\",\"PRESET\":\"No
 JsonMustPass("opt-in bounded item stack JSON", "{\"enableItemRewardStackNormalization\":true}");
 JsonMustPass("opt-in trader purchase pressure JSON", "{\"enableTraderPurchasePressure\":true}");
 JsonMustPass("custom trader pressure JSON", "{\"preset\":\"Custom\",\"customTraderPurchasePriceMultiplier\":1.42}");
+JsonMustPass("opt-in flea purchase pressure JSON", "{\"enableFleaPurchasePressure\":true}");
+JsonMustPass("custom flea pressure JSON", "{\"preset\":\"Custom\",\"customFleaBasePriceMultiplier\":1.72}");
 JsonMustPass("exact item stack JSON", "{\"questRewardOverrides\":{\"fixture-quest\":{\"itemRewardStackCountTarget\":4}}}");
 foreach (var preset in new[] { "Easy", "Normal", "Hard", "Custom" }) JsonMustPass($"JSON preset {preset}", $"{{\"preset\":\"{preset}\"}}");
 JsonMustFail("enabled repeated raid loot decay", "{\"repeatedRaidLootDecay\":true}");
 JsonMustFail("custom trader pressure below bound JSON", "{\"customTraderPurchasePriceMultiplier\":0.5}");
 JsonMustFail("custom trader pressure above bound JSON", "{\"customTraderPurchasePriceMultiplier\":2.5}");
+JsonMustFail("custom flea pressure below bound JSON", "{\"customFleaBasePriceMultiplier\":0.5}");
+JsonMustFail("custom flea pressure above bound JSON", "{\"customFleaBasePriceMultiplier\":3.0}");
 JsonMustFail("fractional item stack JSON", "{\"questRewardOverrides\":{\"fixture-quest\":{\"itemRewardStackCountTarget\":1.5}}}");
 JsonMustFail("numeric mode", "{\"mode\":1}");
 JsonMustFail("numeric preset", "{\"preset\":2}");
