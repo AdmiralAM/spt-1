@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Threading;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
@@ -42,7 +43,9 @@ internal static class WearableProtectionRuntime
     private static bool headBandProtected = true;
     private static ProtectedWearableRoot[] activeRoots = BuildRoots(true, true, true);
 
-    internal static ProtectedWearableRoot[] ActiveRoots => activeRoots;
+    // Root arrays are immutable after publication. Death/insurance readers take one
+    // atomic snapshot so a concurrent F12 update cannot expose a stale/torn policy.
+    internal static ProtectedWearableRoot[] ActiveRoots => Volatile.Read(ref activeRoots);
 
     internal static WearableProtectionSnapshot Snapshot()
     {
@@ -57,7 +60,8 @@ internal static class WearableProtectionRuntime
             armBandProtected = request.ArmBandProtected;
             beltProtected = request.BeltProtected;
             headBandProtected = request.HeadBandProtected;
-            activeRoots = BuildRoots(armBandProtected, beltProtected, headBandProtected);
+            ProtectedWearableRoot[] nextRoots = BuildRoots(armBandProtected, beltProtected, headBandProtected);
+            Volatile.Write(ref activeRoots, nextRoots);
             return new WearableProtectionSnapshot(armBandProtected, beltProtected, headBandProtected);
         }
     }
