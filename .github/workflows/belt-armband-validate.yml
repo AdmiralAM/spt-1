@@ -9,6 +9,7 @@ on:
       - 'mods/SPT-Belt-Armband-Inventory/tests/**'
       - 'mods/SPT-Belt-Armband-Inventory/tools/**'
       - 'mods/SPT-Belt-Armband-Inventory/profile-safety/**'
+      - 'mods/SPT-Belt-Armband-Inventory/docs/RC1-runtime-checklist.md'
       - '.github/workflows/belt-armband-validate.yml'
   workflow_dispatch:
 
@@ -82,19 +83,22 @@ jobs:
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT-Belt-Armband-Inventory.Server.dll' "$modRoot/"
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/profile-safety' "$modRoot/profile-safety" -Recurse
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/README.md' "$modRoot/README.md"
+          Copy-Item 'mods/SPT-Belt-Armband-Inventory/docs/RC1-runtime-checklist.md' "$modRoot/RC1-runtime-checklist.md"
 
           $clientDll = "$pluginRoot/SPT Belt Armband Inventory v0.1.0.dll"
           $serverDll = "$modRoot/SPT-Belt-Armband-Inventory.Server.dll"
           $manifest = "$modRoot/profile-safety/persistent-identities.json"
           $recovery = "$modRoot/profile-safety/README.md"
           $moduleReadme = "$modRoot/README.md"
+          $runtimeChecklist = "$modRoot/RC1-runtime-checklist.md"
           if (-not (Test-Path -LiteralPath $clientDll)) { throw 'Install-tree validation: client DLL missing under SPT_Runtime/BepInEx/plugins' }
           if (-not (Test-Path -LiteralPath $serverDll)) { throw 'Install-tree validation: server DLL missing under SPT_Runtime/user/mods' }
           if (-not (Test-Path -LiteralPath $manifest)) { throw 'Install-tree validation: profile-safety manifest missing from server mod' }
           if (-not (Test-Path -LiteralPath $recovery)) { throw 'Install-tree validation: recovery instructions missing from server mod' }
           if (-not (Test-Path -LiteralPath $moduleReadme)) { throw 'Install-tree validation: module README missing from RC package' }
+          if (-not (Test-Path -LiteralPath $runtimeChecklist)) { throw 'Install-tree validation: RC runtime checklist missing from package' }
           if (Test-Path -LiteralPath "$root/BepInEx") { throw 'Install-tree validation: forbidden split top-level BepInEx root exists' }
-          Write-Host '[B&A&HB #2 MOD SPT] RC1 install tree PASS: single SPT_Runtime root contains client + server + identity/recovery contract'
+          Write-Host '[B&A&HB #2 MOD SPT] RC1 install tree PASS: single SPT_Runtime root contains client + server + identity/recovery contract + runtime checklist'
       - name: 'Upload B&A&HB #2 MOD SPT RC1'
         uses: actions/upload-artifact@v4
         with:
