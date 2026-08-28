@@ -1,13 +1,12 @@
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.Models.Spt.Config;
-using SPTarkov.Server.Core.Servers;
 
 namespace SPTEconomy;
 
 [Injectable]
 public sealed class FleaPurchasePressureService(
-    ConfigServer configServer,
+    RagfairConfig ragfair,
     ISptLogger<FleaPurchasePressureService> logger)
 {
     public FleaPurchasePressureResult Apply(EconomyConfig config)
@@ -15,7 +14,6 @@ public sealed class FleaPurchasePressureService(
         if (!config.EnableFleaPurchasePressure || config.Mode != EconomyMode.Enforce)
             return new(false, 0, 0, false, false);
 
-        var ragfair = configServer.GetConfig<RagfairConfig>();
         var generate = ragfair.Dynamic.GenerateBaseFleaPrices;
         var adjustment = ragfair.Dynamic.OfferAdjustment;
 
