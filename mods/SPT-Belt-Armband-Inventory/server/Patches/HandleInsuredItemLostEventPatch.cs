@@ -10,9 +10,20 @@ public sealed class HandleInsuredItemLostEventPatch : AbstractPatch
 {
     protected override MethodBase? GetTargetMethod()
     {
-        return typeof(LocationLifecycleService).GetMethod(
-            "HandleInsuredItemLostEvent",
-            BindingFlags.NonPublic | BindingFlags.Instance);
+        var methods = typeof(LocationLifecycleService).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+        MethodInfo? selected = null;
+        foreach (var method in methods)
+        {
+            if (!string.Equals(method.Name, "HandleInsuredItemLostEvent", StringComparison.Ordinal))
+                continue;
+            var parameters = method.GetParameters();
+            if (parameters.Length != 2 || parameters[0].ParameterType != typeof(PmcData) || parameters[1].ParameterType != typeof(EndLocalRaidRequestData))
+                continue;
+            if (selected is not null)
+                throw new AmbiguousMatchException("Multiple exact LocationLifecycleService.HandleInsuredItemLostEvent(PmcData, EndLocalRaidRequestData) methods found.");
+            selected = method;
+        }
+        return selected;
     }
 
     [PatchPrefix]
