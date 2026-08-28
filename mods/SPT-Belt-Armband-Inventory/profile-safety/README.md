@@ -54,6 +54,12 @@ An item instance with one of the item template IDs can survive in the PMC/Scav i
 5. Review the reported removal locations. Replace the original profile with the cleaned copy only after keeping the backup.
 6. Disable/remove B&A&HB and start SPT with the cleaned profile.
 
+## Safe downgrade procedure
+
+Treat a downgrade exactly like disable/uninstall unless the target build's packaged `persistent-identities.json` contains every B&A&HB identity already present in the profile. Never assume an older build knows a newer distributed template, parent, grid, assort or dedicated slot identity.
+
+For an uncertain or incompatible downgrade: stop SPT, back up the profile, run the current build's packaged cleanup tool against the backup/copy, verify the reported B&A&HB removals, then install the older build and start SPT with the cleaned profile. Do not reuse or renumber IDs to make an older build accept newer profile data.
+
 ## Recovery if the mod was already removed
 
 If SPT already reports `InvalidModdedItemException` / `item found in profile that does not exist in items db`, keep the server stopped. Either temporarily restore the exact B&A&HB build that created the items and clean them while it is installed, or run the offline cleanup script directly against a backup/copy of the profile. The script uses only `persistent-identities.json`; it does not require B&A&HB item templates to be registered.
