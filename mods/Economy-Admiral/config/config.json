@@ -9,8 +9,8 @@
   "enableFleaPurchasePressure": false,
   "customFleaBasePriceMultiplier": 1.65,
   "enableLootPressure": false,
-  "customLooseLootScale": 0.88,
-  "customStaticLootScale": 0.95,
+  "customLooseLootScale": 0.85,
+  "customStaticLootScale": 0.85,
   "rarity": {
     "commonMinSources": 8,
     "uncommonMinSources": 4,
