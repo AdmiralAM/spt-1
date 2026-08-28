@@ -51,6 +51,8 @@
     <Error Condition="!Exists('$(SptRuntimeLibDir)\SPTarkov.Server.Core.dll')" Text="Exact SPT build requested but SPTarkov.Server.Core.dll is missing from SptRuntimeLibDir=$(SptRuntimeLibDir)" />
     <Error Condition="!Exists('$(SptRuntimeLibDir)\SPTarkov.Common.dll')" Text="Exact SPT build requested but SPTarkov.Common.dll is missing from SptRuntimeLibDir=$(SptRuntimeLibDir)" />
     <Error Condition="!Exists('$(SptRuntimeLibDir)\SPTarkov.DI.dll')" Text="Exact SPT build requested but SPTarkov.DI.dll is missing from SptRuntimeLibDir=$(SptRuntimeLibDir)" />
+    <Error Condition="!Exists('$(SptRuntimeLibDir)\SemanticVersioning.dll')" Text="Exact SPT build requested but SemanticVersioning.dll is missing from SptRuntimeLibDir=$(SptRuntimeLibDir)" />
+    <Error Condition="!Exists('$(SptRuntimeLibDir)\JetBrains.Annotations.dll')" Text="Exact SPT build requested but JetBrains.Annotations.dll is missing from SptRuntimeLibDir=$(SptRuntimeLibDir)" />
   </Target>
 
   <ItemGroup>
