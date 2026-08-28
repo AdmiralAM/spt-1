@@ -1,4 +1,5 @@
 using System.Reflection;
+using SPTarkov.DI.Annotations;
 using SPTarkov.Reflection.Patching;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Match;
@@ -6,6 +7,7 @@ using SPTarkov.Server.Core.Services.InRaid;
 
 namespace SPTBeltArmbandInventory.Server.Patches;
 
+[Injectable]
 public sealed class HandleInsuredItemLostEventPatch : AbstractPatch
 {
     protected override MethodBase? GetTargetMethod()
@@ -35,7 +37,8 @@ public sealed class HandleInsuredItemLostEventPatch : AbstractPatch
             item.ParentId?.ToString(),
             item.SlotId,
             item.Template.ToString()));
-        var kept = BeltDeathPolicy.GetKeptTreeIds(nodes, WearableProtectionRuntime.ActiveRoots);
+        ProtectedWearableRoot[] roots = WearableProtectionRuntime.ActiveRoots;
+        var kept = BeltDeathPolicy.GetKeptTreeIds(nodes, roots);
         if (kept.Count == 0) return;
 
         request.LostInsuredItems = lostInsuredItems
