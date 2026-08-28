@@ -8,7 +8,7 @@ Official curated successor workstream for the legacy Andrudis/QuestManiac ecosys
 - Trader name: **Admiral / Адмирал**
 - Official trader portrait: **final and ingested** — the exact user-approved `1365x1536` source portrait supplied in the current Admiral Trader chat, showing Admiral in a white naval tunic.
 - Approved source SHA-256: `2387fb3d6bc9b8a0ec677789959d7007f108744e72d7cf809ed945d459428cda`.
-- Runtime portrait: technical-only `512x576` JPEG encoding, Git blob `63e158fbd96b595a609560dfef452451b4783144`; the exact packaged SHA-256 is computed during candidate staging and recorded in provenance. Substitution, regeneration and placeholder fallback are forbidden. The maintained contract is [`manifests/identity-assets.json`](manifests/identity-assets.json).
+- Runtime portrait: technical-only `512x576` JPEG encoding, Git blob `63e158fbd96b595a609560dfef452451b4783144`; substitution, regeneration and placeholder fallback are forbidden. The maintained contract is [`manifests/identity-assets.json`](manifests/identity-assets.json).
 - Legacy Andrudis/QuestManiac names are provenance/source references only and are not the target product identity.
 
 ## Gameplay Alpha direction
@@ -19,7 +19,7 @@ His target role is **expeditionary procurement and specialist field logistics**.
 
 `trade -> build relationship -> take authored contracts -> earn milestones/capabilities -> expand specialist access`
 
-The current 31 quests are a runtime/gameplay backbone, not a final quest-count target. Quest count has no artificial ceiling: expansion is quality-gated by authored purpose, objective variety, progression value and meaningful payoff.
+The current 31 quests are a runtime/gameplay backbone, not a final quest-count target. Quest count has no artificial ceiling outside the currently frozen 31-quest package: later expansion requires a separate controller decision.
 
 ## Current stock model
 
@@ -45,18 +45,18 @@ The current authored runtime set contains **31 quests**:
 - 10 **Access Protocol** quests;
 - 21 **Arsenal Protocol** quests across seven weapon families;
 - current Arsenal backbone: Qualification -> Fieldwork -> Munitions;
-- Qualification is a non-FIR, non-consumptive readiness/possession proof;
+- current committed Qualification templates still use non-FIR `FindItem` readiness proof and are a known Beta-stabilization defect because pre-existing stash/equipped weapons do not satisfy that semantic reliably for the intended player-facing contract;
 - Fieldwork is family-specific combat use;
 - six normal Munitions tracks add capability-caliber field proof and a controlled ammunition milestone;
 - Special Weapons ends in a one-unit RSP-30 sample and no permanent ammo offer.
 
-This structure is explicitly **not** a future campaign cap. Strong Andrudis concepts, unique objectives, authored chains, presets and milestone rewards may add many more quests after passing the current quest-admission rules.
+The qualification defect is explicitly not accepted as final behavior. It must be replaced by a native, deterministic, non-consumptive objective whose UI text exactly describes what the game counts before release-candidate activation.
 
 ## Player-facing quest contract
 
 Every quest must make **Why / What / Context / Payoff** understandable in EN/RU. Raw TPLs, condition IDs and opaque technical objective text are prohibited as final UI.
 
-Gameplay Alpha now maintains:
+Gameplay Alpha maintains:
 
 - dedicated EN/RU locale text for every current finish-condition ID;
 - quest-level Gameplay Alpha prose overrides where the original skeleton text did not match actual mechanics;
@@ -64,77 +64,41 @@ Gameplay Alpha now maintains:
 - runtime-generated Admiral standing context derived from actual `TraderStanding` reward records;
 - semantic regression checks linking objective mechanics, objective locales, item/standing rewards and `questassort` unlocks.
 
+Observed runtime evidence has already shown why text cannot be treated as proof of mechanics: the first access quest required a canonical stash-aware handover fix before it became completable. Weapon Qualification remains under the same rule: mechanics first, text second.
+
 ## Loyalty / standing
 
 Standing represents relationship/status. It does **not** replace explicit milestone proof and sales-sum grind is forbidden.
 
-Current loyalty thresholds are level + standing based, with no sales-sum requirement. Capability gates remain authored quest gates where declared; relationship stock may use loyalty in future slices.
-
-New profile templates explicitly pin Admiral's starting standing to `0`. The template mutation is itself fail-closed behind runtime publication, and SPT recreates a missing Admiral `TraderInfo` from that exact profile-template standing when the current trader is next accessed.
-
-## Profile identity and recovery
-
-Distributed trader, quest and offer IDs are persistent profile identities. [`manifests/persistent-identities.json`](manifests/persistent-identities.json) is the immutable current/retired identity ledger: retired IDs may not be silently removed or reused.
-
-The packaged `tools/Reset-AdmiralTraderProfile.ps1` is preview-only unless `-Apply` is supplied. On apply it creates and SHA-256 verifies a backup before mutation, consumes both current and retired owned trader/quest identities from the ledger, removes only Admiral-owned profile state, validates the rewritten JSON and rolls back on a write failure. It is the supported reset/update/disable/uninstall recovery path; manual profile surgery is not.
+Current loyalty thresholds are level + standing based, with no sales-sum requirement. New-profile template registration pins Admiral initial standing to `0`. Existing contaminated test profiles are handled only through the packaged backup-first, ownership-scoped recovery tool.
 
 ## Economy Admiral boundary
 
-Admiral Trader owns:
-
-- authored quest/progression semantics;
-- Baseline / Relationship / Milestone stock classification;
-- quest and standing gates;
-- finite stock/buy ceilings;
-- sample/permanent capability semantics;
-- ownership/provenance declarations.
-
-**Economy Admiral** owns global source-pressure analysis, reward/price benchmarking and normalization, provenance/health checks and any future approved economy enforcement. Admiral Trader therefore keeps its data native-shaped and publishes explicit integration contracts instead of implementing a second global economy engine.
-
-Gameplay Alpha changes that add baseline/relationship stock must remain compatible with Economy Admiral Issue #197; Economy Admiral must not infer that every Admiral offer is quest-gated or that renewable offer count is permanently seven.
+Admiral Trader owns authored quest/progression semantics, stock classification, quest/standing gates, finite stock/buy ceilings, sample/permanent capability semantics and ownership/provenance declarations. **Economy Admiral** owns global source-pressure analysis, reward/price benchmarking and normalization, provenance/health checks and approved economy enforcement.
 
 ## Andrudis curation
 
-QuestManiac/Andrudis is source material, not a runtime dependency of the target product. The intended integration mode allows the legacy mod to be disabled while one Admiral replaces its useful authored value.
-
-Preserve or re-author:
-
-- strong authored concepts and narrative chains;
-- unusual objectives;
-- unique weapon/preset ideas;
-- meaningful milestone rewards and specialist capabilities.
-
-Remove or rewrite:
-
-- literal and low-value vanilla duplicates;
-- empty count-escalation ladders;
-- excessive FIR/handover busywork;
-- purposeless hideout chores;
-- reward faucets.
-
-Curation optimizes **quality density**, not minimum quest count.
+QuestManiac/Andrudis is source material, not a runtime dependency of the target product. Preserve strong authored concepts and unusual objectives; remove literal vanilla duplicates, empty count-escalation ladders, excessive FIR/handover busywork, purposeless hideout chores and reward faucets.
 
 ## SPT 4.1.3 runtime safety
 
-Admiral Trader is currently server-side and targets **SPT 4.1.3**. Source registration remains fail-closed through `runtime-manifest.json`.
+Admiral Trader is server-side and targets **SPT 4.1.3**. Source registration remains fail-closed through `runtime-manifest.json`.
 
-The server/runtime validation layer checks trader identity, native lowercase `questassort` states (`started / success / fail`), quest/objective shapes, referenced item TPLs, assort contracts, persistent identities, profile recovery and locale coverage. The earlier physical PascalCase `questassort` startup failure is retained as a regression boundary.
+The validation layer checks frozen trader identity, native lowercase `questassort` states (`started / success / fail`), quest/objective shapes, referenced item TPLs, assort contracts, locale coverage, persistent identity ownership and backup-first profile recovery. Exact-runtime packaging compiles against the user's real SPT 4.1.3 assemblies and records source/runtime provenance; published API CI is necessary but is not physical runtime evidence.
 
-The exact-runtime builder compiles against the user's real SPT 4.1.3 runtime assemblies and records source/runtime provenance before physical testing. CI is necessary but does not substitute for physical SPT runtime evidence.
-
-The official portrait source has been physically recovered from the current chat and ingested. Source metadata locks the exact approved `1365x1536` source image by SHA-256, while the runtime package locks the technical `512x576` JPEG by Git blob identity and records its exact package SHA-256 in candidate provenance. `base.json` and runtime metadata use only `/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg`; placeholder/substitute portrait paths are not accepted.
+Connector-authored commits now have an independent exact-head validation path: a push dispatcher launches all default-branch registered Trader workflows, while feature-only profile/preflight gates run directly on the pushed feature head. This avoids relying exclusively on `pull_request/synchronize`.
 
 ## Key maintained contracts
 
-- [`docs/gameplay-doctrine.md`](docs/gameplay-doctrine.md) — current gameplay purpose, stock layers, quest admission test and anti-goals.
-- [`manifests/gameplay-policy.json`](manifests/gameplay-policy.json) — machine-readable gameplay invariants.
-- [`manifests/identity-assets.json`](manifests/identity-assets.json) — official Admiral identity/portrait selection contract.
-- [`manifests/persistent-identities.json`](manifests/persistent-identities.json) — immutable current/retired trader, quest and offer identity ledger.
-- [`manifests/baseline-stock.json`](manifests/baseline-stock.json) — baseline stock classification and overlap rationale.
-- [`manifests/reward-policy.json`](manifests/reward-policy.json) — vanilla-benchmarked reward envelopes.
-- [`docs/source-baseline.md`](docs/source-baseline.md) — pinned external reference authority.
-- [`docs/migration-contract.md`](docs/migration-contract.md) — legacy migration/suppression safety boundary.
-- [`docs/spt413-test-candidate.md`](docs/spt413-test-candidate.md) — exact physical runtime handoff/evidence contract.
+- [`docs/gameplay-doctrine.md`](docs/gameplay-doctrine.md)
+- [`manifests/gameplay-policy.json`](manifests/gameplay-policy.json)
+- [`manifests/identity-assets.json`](manifests/identity-assets.json)
+- [`manifests/persistent-identities.json`](manifests/persistent-identities.json)
+- [`manifests/baseline-stock.json`](manifests/baseline-stock.json)
+- [`manifests/reward-policy.json`](manifests/reward-policy.json)
+- [`docs/source-baseline.md`](docs/source-baseline.md)
+- [`docs/migration-contract.md`](docs/migration-contract.md)
+- [`docs/spt413-test-candidate.md`](docs/spt413-test-candidate.md)
 
 ## Validation
 
@@ -142,6 +106,4 @@ The official portrait source has been physically recovered from the current chat
 python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 ```
 
-Module CI additionally validates the pinned legacy corpus/graph, vanilla reward benchmark, current Access/Arsenal materialization, weapon/ammo pools, native SPT quest/assort contracts, Gameplay Alpha quest semantics, baseline stock overlap against pinned references, .NET 10 SPT 4.1.3 server compilation, package layout/provenance, persistent profile identities and fail-closed runtime boundaries.
-
-Active Gameplay Alpha/Beta stabilization is tracked by Issue #192 / Draft PR #193. Economy Admiral stock-class compatibility is tracked separately by Issue #197.
+Active work is tracked by Issue #192 / Draft PR #193. The registry, not this README, owns phase progression and runtime-gate activation.
