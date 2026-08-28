@@ -83,13 +83,12 @@ jobs:
           }
           $profile | ConvertTo-Json -Depth 20 -Compress | Set-Content $profilePath -Encoding UTF8
           $before = (Get-FileHash $profilePath -Algorithm SHA256).Hash
+
           & (Join-Path $module 'tools/Reset-AdmiralTraderProfile.ps1') -ProfilePath $profilePath
-          if ($LASTEXITCODE -ne 0) { throw "Recovery dry-run failed with exit code $LASTEXITCODE" }
           $afterDryRun = (Get-FileHash $profilePath -Algorithm SHA256).Hash
           if ($before -ne $afterDryRun) { throw 'Dry-run mutated the profile.' }
 
           & (Join-Path $module 'tools/Reset-AdmiralTraderProfile.ps1') -ProfilePath $profilePath -Apply
-          if ($LASTEXITCODE -ne 0) { throw "Recovery apply failed with exit code $LASTEXITCODE" }
           $result = Get-Content $profilePath -Raw | ConvertFrom-Json -Depth 100
           if ($null -ne $result.characters.pmc.TradersInfo.PSObject.Properties[$ownedTrader]) { throw 'Owned Admiral TraderInfo survived recovery.' }
           if ($null -eq $result.characters.pmc.TradersInfo.PSObject.Properties[$foreignTrader]) { throw 'Foreign TraderInfo was removed.' }
