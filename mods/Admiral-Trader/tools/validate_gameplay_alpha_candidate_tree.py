@@ -15,6 +15,7 @@ REQUIRED_LOCALES = {
     "objectives-en.json",
     "objectives-ru.json",
 }
+RECOVERY_TOOL = Path("tools") / "Reset-AdmiralTraderProfile.ps1"
 
 
 def fail(message: str) -> None:
@@ -35,6 +36,19 @@ def validate(root: Path, require_enabled: bool) -> None:
     manifests = root / "manifests"
     locales = db / "locales"
     quests = db / "quests"
+
+    recovery = root / RECOVERY_TOOL
+    if not recovery.is_file():
+        fail(f"candidate tree missing backup-first profile recovery tool: {recovery}")
+    recovery_text = recovery.read_text(encoding="utf-8-sig")
+    for contract in (
+        "[switch]$Apply",
+        "Copy-Item $resolvedProfile $backupPath -Force",
+        "Backup verification failed; profile was not modified.",
+        "Expected exactly 31 canonical Admiral quest IDs",
+    ):
+        if contract not in recovery_text:
+            fail(f"candidate profile recovery contract drift: missing {contract!r}")
 
     runtime = load_json(manifests / "runtime-manifest.json")
     assort = load_json(db / "assort.json")
@@ -101,7 +115,7 @@ def validate(root: Path, require_enabled: bool) -> None:
     print(
         "Admiral Trader candidate tree OK: "
         f"target=4.1.3 offers={EXPECTED_OFFER_COUNT} milestoneUnlocks={EXPECTED_MILESTONE_UNLOCKS} "
-        f"quests={EXPECTED_QUEST_COUNT} locales={len(REQUIRED_LOCALES)} enabled={require_enabled}"
+        f"quests={EXPECTED_QUEST_COUNT} locales={len(REQUIRED_LOCALES)} recovery=backup-first enabled={require_enabled}"
     )
 
 
