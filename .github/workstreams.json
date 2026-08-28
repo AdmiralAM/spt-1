@@ -1,0 +1,186 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-08-28",
+  "controller": {
+    "name": "GitHub Work SPT",
+    "policyRef": "origin/main:AGENTS.md",
+    "registryRef": "origin/main:.github/workstreams.json",
+    "workersMayEditControl": false,
+    "governanceBranchPrefix": "governance/"
+  },
+  "execution": {
+    "stateMachine": [
+      "ACTIVE",
+      "IMPLEMENT",
+      "VALIDATE",
+      "FIX_UNTIL_GREEN",
+      "CONTINUE_NEXT_RECORDED_PACKAGE",
+      "RELEASE_CANDIDATE",
+      "ONE_BATCHED_RUNTIME_TEST",
+      "FAIL_REMEDIATE_OR_PASS_STABLE_RELEASE"
+    ],
+    "maxActiveRuntimeGates": 1,
+    "maxActivePullRequestsPerModule": 1,
+    "runtimeGateActivation": "combined-release-candidate-only-unless-controller-marks-active",
+    "workerMayChangeRoadmap": false,
+    "workerMayPerformGovernance": false
+  },
+  "workstreams": {
+    "belt": {
+      "workstreamName": "B&A&HB #2 MOD SPT",
+      "productName": "B&A&HB #2 MOD SPT",
+      "modulePath": "mods/SPT-Belt-Armband-Inventory",
+      "version": "0.1.0",
+      "state": "ACTIVE",
+      "activeIssue": null,
+      "activePr": 64,
+      "activeBranch": "belt-runtime-candidate-poc",
+      "currentPhase": "profile-safety-and-dedicated-slots",
+      "activePackage": {
+        "objective": "Finish profile-safe dedicated ArmBand, Belt and HeadBand identities, slots, filters, routing and recovery without regressing the proven container runtime.",
+        "acceptance": "All feasible source, profile-recovery, build, package and performance validation is green; then continue directly into full lifecycle and native polish while the physical gate remains queued.",
+        "continueWithoutUser": true
+      },
+      "roadmap": [
+        "profile-safety-and-dedicated-slots",
+        "full-lifecycle-and-native-polish",
+        "release-hardening",
+        "combined-release-candidate",
+        "stable-release"
+      ],
+      "successor": "full-lifecycle-and-native-polish",
+      "userGate": "queued",
+      "frozen": {
+        "version": "0.1.0",
+        "slotIds": [15, 16],
+        "preserveDistributedIds": true
+      },
+      "stableAcceptance": [
+        "ArmBand, Belt and HeadBand use exact intended identities and slots",
+        "profile-safe update, disable, uninstall and downgrade",
+        "correct EN/RU presentation, pickup, lifecycle and persistence",
+        "no unbounded polling, scene scans, freezes or global UI mutation",
+        "one exact-head release candidate passes the batched SPT 4.1.3 runtime gate"
+      ]
+    },
+    "trader": {
+      "workstreamName": "Admiral TR #2 MOD SPT",
+      "productName": "Admiral Trader",
+      "modulePath": "mods/Admiral-Trader",
+      "version": "0.1.0",
+      "state": "ACTIVE",
+      "activeIssue": 192,
+      "activePr": 193,
+      "activeBranch": "feature/admiral-trader-gameplay-alpha-assort",
+      "currentPhase": "complete-gameplay-alpha",
+      "activePackage": {
+        "objective": "Complete the canonical 31-quest, 11-offer Gameplay Alpha with correct lifecycle, rewards, portrait presentation and profile safety.",
+        "acceptance": "One coherent exact-head Alpha package passes every deterministic Trader workflow and is ready to enter Beta stabilization; no one-quest or portrait-only user handoff.",
+        "continueWithoutUser": true
+      },
+      "roadmap": [
+        "complete-gameplay-alpha",
+        "gameplay-beta-stabilization",
+        "release-hardening",
+        "combined-release-candidate",
+        "stable-release"
+      ],
+      "successor": "gameplay-beta-stabilization",
+      "userGate": "queued",
+      "frozen": {
+        "version": "0.1.0",
+        "traderId": "d5c27bb3169f8dfbc13f6b69",
+        "questCount": 31,
+        "baselineOfferCount": 4,
+        "milestoneOfferCount": 7,
+        "portraitRoute": "/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg",
+        "portraitIdentityLocked": true,
+        "economyOwnedByEconomyAdmiral": true
+      },
+      "stableAcceptance": [
+        "all 31 quests complete lifecycle, reward delivery and EN/RU contracts",
+        "initial reputation is zero and unaccepted quests remain unaccepted",
+        "exactly 11 finite offers follow authored progression",
+        "approved portrait renders with correct proportions",
+        "profile-safe update, disable and uninstall",
+        "one exact-head release candidate passes the batched SPT 4.1.3 runtime gate"
+      ]
+    },
+    "economy": {
+      "workstreamName": "Admiral Ec #2 MOD SPT",
+      "productName": "Economy Admiral",
+      "modulePath": "mods/Economy-Admiral",
+      "version": "0.1.0",
+      "state": "ACTIVE",
+      "activeIssue": 141,
+      "activePr": null,
+      "activeBranch": null,
+      "currentPhase": "source-pressure-observation",
+      "activePackage": {
+        "objective": "Complete deterministic provenance-aware source-pressure and replacement observation across the recorded acquisition channels without mutation.",
+        "acceptance": "Reports, unknown handling, bounded graph behavior, adapter ownership and startup cost are proven automatically, then health invariants activate without a user micro-test.",
+        "continueWithoutUser": true
+      },
+      "completedPackages": [222, 223],
+      "roadmap": [
+        "bounded-item-rewards",
+        "source-pressure-observation",
+        "health-invariants",
+        "trader-compatibility",
+        "beta-enforcement",
+        "combined-release-candidate",
+        "stable-release"
+      ],
+      "successor": "health-invariants",
+      "userGate": "none",
+      "frozen": {
+        "version": "0.1.0",
+        "modes": ["Off", "Audit", "Enforce"],
+        "preserveAcceptedEnforceAlpha": true,
+        "classification": ["Baseline", "Relationship", "Milestone"],
+        "noSecondTraderEconomyEngine": true
+      },
+      "stableAcceptance": [
+        "provenance-safe bounded reward and economy enforcement",
+        "honest fail-closed source-pressure and health evidence",
+        "maintained Trader compatibility without inferred intent",
+        "transaction rollback, idempotence and pristine protection",
+        "one combined exact-head Economy Beta release candidate passes SPT 4.1.3 runtime validation"
+      ]
+    },
+    "tacticalHud": {
+      "workstreamName": "Admiral Tactical HUD",
+      "productName": "Admiral Tactical HUD",
+      "modulePath": "mods/SPT-Tactical-HUD",
+      "version": "1.13.3",
+      "state": "ACTIVE",
+      "activeIssue": null,
+      "activePr": 195,
+      "activeBranch": "optimize/tactical-hud-runtime",
+      "currentPhase": "release-finalization",
+      "activePackage": {
+        "objective": "Finish the 1.13.3 optimized identity, package and compact weapon-name presentation as one release candidate.",
+        "acceptance": "Exact-head CI and packaging are green and all feasible release hardening is complete before the single final smoke gate is activated.",
+        "continueWithoutUser": true
+      },
+      "roadmap": [
+        "release-finalization",
+        "final-smoke",
+        "stable-release"
+      ],
+      "successor": "final-smoke",
+      "userGate": "queued",
+      "frozen": {
+        "version": "1.13.3",
+        "productName": "Admiral Tactical HUD",
+        "compactWeaponNamesInsteadOfKillFeedIcons": true
+      },
+      "stableAcceptance": [
+        "canonical 1.13.3 identity and install layout",
+        "compact readable weapon-name kill feed",
+        "bounded optimized runtime behavior",
+        "final exact-head smoke passes before deliberate stable promotion"
+      ]
+    }
+  }
+}
