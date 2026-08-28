@@ -12,8 +12,8 @@ namespace SPTBeltArmbandInventory.Tests
                 "Belt RU caption is stable");
             Assert(DedicatedSlotPresentationPolicy.Caption(RuntimeIdentity.DedicatedHeadBandWireSlotId, false) == "HEADBAND",
                 "HeadBand EN caption is stable");
-            Assert(DedicatedSlotPresentationPolicy.Caption(RuntimeIdentity.DedicatedHeadBandWireSlotId, true) == "ПОВЯЗКА НА ГОЛОВУ",
-                "HeadBand RU caption is stable");
+            Assert(DedicatedSlotPresentationPolicy.Caption(RuntimeIdentity.DedicatedHeadBandWireSlotId, true) == "ГОЛ. ПОВЯЗКА",
+                "HeadBand RU caption is compact enough for the dedicated slot");
             Assert(DedicatedSlotPresentationPolicy.Caption("Headwear", true) == null,
                 "vanilla slots are never relabeled by dedicated policy");
             Assert(DedicatedSlotPresentationPolicy.LooksRussian("ГОЛОВНОЙ УБОР"),
