@@ -1,0 +1,110 @@
+name: Admiral Trader Profile Safety
+
+on:
+  pull_request:
+    paths:
+      - 'mods/Admiral-Trader/**'
+      - '.github/workflows/admiral-trader-profile-safety.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admiral-trader-profile-safety-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  profile-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate identity and static recovery contracts
+        run: |
+          python -m unittest \
+            mods.Admiral-Trader.tests.test_persistent_identities \
+            mods.Admiral-Trader.tests.test_profile_safety_contract
+
+      - name: Parse recovery tool
+        shell: pwsh
+        run: |
+          $tokens=$null; $errors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile(
+            (Resolve-Path 'mods/Admiral-Trader/tools/Reset-AdmiralTraderProfile.ps1'),
+            [ref]$tokens,
+            [ref]$errors
+          ) | Out-Null
+          if ($errors.Count) { $errors | ForEach-Object { Write-Error $_.Message }; exit 1 }
+
+      - name: Exercise backup-first ownership-scoped recovery
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $module = (Resolve-Path 'mods/Admiral-Trader').Path
+          $ledger = Get-Content (Join-Path $module 'manifests/persistent-identities.json') -Raw | ConvertFrom-Json
+          $ownedTrader = [string]$ledger.current.traderIds[0]
+          $ownedQuest = [string]$ledger.current.questIds[0]
+          $foreignTrader = '54cb50c76803fa8b248b4571'
+          $foreignQuest = '5936d90786f7742b1420ba5b'
+          $profilePath = Join-Path $env:RUNNER_TEMP 'admiral-profile-recovery.json'
+          $profile = [ordered]@{
+            characters = [ordered]@{
+              pmc = [ordered]@{
+                TradersInfo = [ordered]@{
+                  $ownedTrader = [ordered]@{ standing = 0.20; loyaltyLevel = 1 }
+                  $foreignTrader = [ordered]@{ standing = 0.30; loyaltyLevel = 2 }
+                }
+                Quests = @(
+                  [ordered]@{ qid = $ownedQuest; status = 2 },
+                  [ordered]@{ qid = $foreignQuest; status = 4 }
+                )
+                TaskConditionCounters = [ordered]@{
+                  owned = [ordered]@{ sourceId = $ownedQuest; value = 1 }
+                  foreign = [ordered]@{ sourceId = $foreignQuest; value = 2 }
+                }
+              }
+            }
+            dialogues = [ordered]@{
+              $ownedTrader = [ordered]@{ messages = @() }
+              $foreignTrader = [ordered]@{ messages = @() }
+            }
+            traderPurchases = [ordered]@{
+              $ownedTrader = [ordered]@{ sample = [ordered]@{ count = 1 } }
+              $foreignTrader = [ordered]@{ sample = [ordered]@{ count = 2 } }
+            }
+          }
+          $profile | ConvertTo-Json -Depth 20 -Compress | Set-Content $profilePath -Encoding UTF8
+          $before = (Get-FileHash $profilePath -Algorithm SHA256).Hash
+          & (Join-Path $module 'tools/Reset-AdmiralTraderProfile.ps1') -ProfilePath $profilePath
+          if ($LASTEXITCODE -ne 0) { throw "Recovery dry-run failed with exit code $LASTEXITCODE" }
+          $afterDryRun = (Get-FileHash $profilePath -Algorithm SHA256).Hash
+          if ($before -ne $afterDryRun) { throw 'Dry-run mutated the profile.' }
+
+          & (Join-Path $module 'tools/Reset-AdmiralTraderProfile.ps1') -ProfilePath $profilePath -Apply
+          if ($LASTEXITCODE -ne 0) { throw "Recovery apply failed with exit code $LASTEXITCODE" }
+          $result = Get-Content $profilePath -Raw | ConvertFrom-Json -Depth 100
+          if ($null -ne $result.characters.pmc.TradersInfo.PSObject.Properties[$ownedTrader]) { throw 'Owned Admiral TraderInfo survived recovery.' }
+          if ($null -eq $result.characters.pmc.TradersInfo.PSObject.Properties[$foreignTrader]) { throw 'Foreign TraderInfo was removed.' }
+          if (@($result.characters.pmc.Quests | Where-Object { $_.qid -eq $ownedQuest }).Count -ne 0) { throw 'Owned Admiral quest survived recovery.' }
+          if (@($result.characters.pmc.Quests | Where-Object { $_.qid -eq $foreignQuest }).Count -ne 1) { throw 'Foreign quest was removed.' }
+          if ($null -ne $result.characters.pmc.TaskConditionCounters.PSObject.Properties['owned']) { throw 'Owned Admiral task counter survived recovery.' }
+          if ($null -eq $result.characters.pmc.TaskConditionCounters.PSObject.Properties['foreign']) { throw 'Foreign task counter was removed.' }
+          if ($null -ne $result.dialogues.PSObject.Properties[$ownedTrader]) { throw 'Owned Admiral dialogue survived recovery.' }
+          if ($null -eq $result.dialogues.PSObject.Properties[$foreignTrader]) { throw 'Foreign dialogue was removed.' }
+          if ($null -ne $result.traderPurchases.PSObject.Properties[$ownedTrader]) { throw 'Owned Admiral purchase state survived recovery.' }
+          if ($null -eq $result.traderPurchases.PSObject.Properties[$foreignTrader]) { throw 'Foreign purchase state was removed.' }
+          $backups = @(Get-ChildItem "$profilePath.admiral-trader-backup-*" -File)
+          if ($backups.Count -ne 1) { throw "Expected exactly one retained verified backup, got $($backups.Count)" }
+          if ((Get-FileHash $backups[0].FullName -Algorithm SHA256).Hash -ne $before) { throw 'Retained backup does not match pre-mutation profile.' }
+
+      - name: Validate source candidate composition
+        run: python mods/Admiral-Trader/tools/validate_gameplay_alpha_candidate_tree.py mods/Admiral-Trader
