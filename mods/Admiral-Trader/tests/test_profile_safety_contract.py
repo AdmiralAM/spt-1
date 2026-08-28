@@ -35,13 +35,19 @@ class ProfileSafetyContractTests(unittest.TestCase):
         self.assertIn("Get-FileHash $backupPath -Algorithm SHA256", text)
         self.assertIn("Backup verification failed; profile was not modified.", text)
         backup = text.index("Copy-Item $resolvedProfile $backupPath -Force")
-        mutation = text.index("$pmc.TradersInfo.PSObject.Properties.Remove($traderId)")
+        mutation = text.index("foreach ($traderId in $ownedTraderInfo)")
         self.assertLess(backup, mutation)
 
-    def test_recovery_scope_is_locked_to_admiral_identity_and_31_quests(self):
+    def test_recovery_scope_comes_from_immutable_identity_ledger(self):
         text = RECOVERY.read_text(encoding="utf-8")
-        self.assertIn(f"$traderId = '{TRADER_ID}'", text)
-        self.assertIn("Expected exactly 31 canonical Admiral quest IDs", text)
+        self.assertIn(f"$frozenTraderId = '{TRADER_ID}'", text)
+        self.assertIn("manifests\\persistent-identities.json", text)
+        self.assertIn("Expected exactly 31 current Admiral quest IDs", text)
+        self.assertIn("Expected exactly 11 current Admiral offer IDs", text)
+        self.assertIn("$ledger.retired.traderIds", text)
+        self.assertIn("$ledger.retired.questIds", text)
+        self.assertIn("$currentTraderIds + $retiredTraderIds", text)
+        self.assertIn("$currentQuestIds + $retiredQuestIds", text)
         self.assertIn("$questSet.Contains([string]$_.qid)", text)
         self.assertIn("$questSet.Contains([string]$property.Value.sourceId)", text)
         self.assertNotIn("$pmc.Quests = @()", text)
