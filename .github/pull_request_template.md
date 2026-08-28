@@ -2,8 +2,8 @@
 
 - Workstream key:
 - Active Issue:
-- Recorded package / acceptance:
-- Recorded successor:
+- Phase-plan entry / acceptance:
+- Resume evidence checked:
 
 ## Scope
 
