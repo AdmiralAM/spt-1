@@ -29,6 +29,14 @@ class ExactRuntimeHandoffContractTests(unittest.TestCase):
             self.assertIn(key, text)
         self.assertIn("exactly seven success unlock mappings", text)
 
+    def test_wrapper_revalidates_persistent_identity_contract(self):
+        text = SCRIPT.read_text(encoding="utf-8")
+        self.assertIn("manifests\\persistent-identities.json", text)
+        self.assertIn("Persistent identity ledger policy is not fail-closed", text)
+        self.assertIn("Persistent current quest identities do not match staged runtime quests", text)
+        self.assertIn("Persistent current offer identities do not match staged assort roots", text)
+        self.assertIn("SPT_Runtime/user/mods/Admiral-Trader/manifests/persistent-identities.json", text)
+
     def test_exact_runtime_handoff_requires_full_40_character_head_sha(self):
         for path in (SCRIPT, BUILDER):
             text = path.read_text(encoding="utf-8")
@@ -103,6 +111,7 @@ class ExactRuntimeHandoffContractTests(unittest.TestCase):
         self.assertIn(".Admiral-Trader.rollback", block)
         self.assertIn("Copy-Item $stageMod $incoming -Recurse", block)
         self.assertIn("Prepared install tree is incomplete", block)
+        self.assertIn("manifests\\persistent-identities.json", block)
         self.assertIn("Move-Item $destination $backup", block)
         self.assertIn("Move-Item $incoming $destination", block)
         self.assertIn("Move-Item $backup $destination -ErrorAction SilentlyContinue", block)
