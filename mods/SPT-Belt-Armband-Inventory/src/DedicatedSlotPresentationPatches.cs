@@ -10,6 +10,8 @@ namespace SPTBeltArmbandInventory
     internal static class DedicatedSlotPresentationRuntime
     {
         const string HeadBandCloneName = "B&A&HB HeadBand Slot";
+        const float HeadBandCompactHeight = 44f;
+        const float HeadBandGap = 4f;
 
         internal static Action<string> LogInfo;
         internal static Action<string> LogWarning;
@@ -19,13 +21,16 @@ namespace SPTBeltArmbandInventory
         internal static Type SlotViewType;
         internal static Type EquipmentType;
         internal static object HeadBandSlotKey;
+        internal static object ArmBandSlotKey;
         internal static Func<object, object, object> GetSlot;
         internal static Action<object, object, object, object, object, object, object, object> ShowSlot;
 
         static readonly Dictionary<int, Component> HeadBandViews = new Dictionary<int, Component>();
+        static readonly Dictionary<Type, PropertyInfo> TextPropertyCache = new Dictionary<Type, PropertyInfo>();
         static bool? russianUi;
         static bool beltLabelProofLogged;
         static bool headBandBindProofLogged;
+        static bool headBandCompactProofLogged;
         static bool headBandFailureLogged;
 
         internal static void AfterSlotShow(
@@ -49,10 +54,12 @@ namespace SPTBeltArmbandInventory
                 {
                     string caption = DedicatedSlotPresentationPolicy.Caption(id, russianUi == true) ?? "BELT";
                     SetHeader(slotView, caption);
+                    Component dedicatedView = slotView as Component;
+                    if (dedicatedView != null) RelabelNumericCaptionTree(dedicatedView, id, caption);
                     if (!beltLabelProofLogged)
                     {
                         beltLabelProofLogged = true;
-                        LogInfo?.Invoke("B&A&HB BELT LABEL PROOF: exact pseudo-slot15 reached SlotView.Show; caption=" + caption + ".");
+                        LogInfo?.Invoke("B&A&HB BELT LABEL PROOF: exact pseudo-slot15 reached SlotView.Show and numeric row captions were normalized; caption=" + caption + ".");
                     }
                     return;
                 }
@@ -62,7 +69,11 @@ namespace SPTBeltArmbandInventory
                     string caption = DedicatedSlotPresentationPolicy.Caption(id, russianUi == true) ?? "HEADBAND";
                     SetHeader(slotView, caption);
                     Component dedicatedView = slotView as Component;
-                    if (dedicatedView != null) dedicatedView.gameObject.SetActive(true);
+                    if (dedicatedView != null)
+                    {
+                        RelabelNumericCaptionTree(dedicatedView, id, caption);
+                        dedicatedView.gameObject.SetActive(true);
+                    }
 
                     if (!headBandBindProofLogged)
                     {
@@ -167,21 +178,25 @@ namespace SPTBeltArmbandInventory
             if (slotViews != null && slotViews.Contains(HeadBandSlotKey))
                 view = slotViews[HeadBandSlotKey] as Component;
 
-            if (view == null)
+            Component armBandTemplate = null;
+            if (slotViews != null && ArmBandSlotKey != null && slotViews.Contains(ArmBandSlotKey))
+                armBandTemplate = slotViews[ArmBandSlotKey] as Component;
+
+            // The early EquipmentTab projection historically cloned Headwear, which
+            // made slot16 a full helmet-sized block. Replace that provisional clone
+            // once with the already-native compact ArmBand visual template. Binding
+            // still targets the real dedicated slot16, so this changes presentation
+            // only and does not change equipment identity or filters.
+            if (view != null && armBandTemplate != null && string.Equals(view.gameObject.name, HeadBandCloneName, StringComparison.Ordinal))
             {
-                Transform parent = headwearView.transform.parent;
-                for (int i = 0; i < parent.childCount; i++)
-                {
-                    Transform child = parent.GetChild(i);
-                    if (!string.Equals(child.gameObject.name, HeadBandCloneName, StringComparison.Ordinal)) continue;
-                    view = child.gameObject.GetComponent(SlotViewType) as Component;
-                    if (view != null) break;
-                }
+                if (!ReferenceEquals(view, armBandTemplate)) UnityEngine.Object.Destroy(view.gameObject);
+                view = null;
             }
 
             if (view == null)
             {
-                view = UnityEngine.Object.Instantiate(headwearView);
+                Component visualTemplate = armBandTemplate ?? headwearView;
+                view = UnityEngine.Object.Instantiate(visualTemplate);
                 view.gameObject.name = HeadBandCloneName;
                 view.transform.SetParent(headwearView.transform.parent, false);
                 view.transform.SetSiblingIndex(headwearView.transform.GetSiblingIndex());
@@ -205,16 +220,64 @@ namespace SPTBeltArmbandInventory
             RectTransform headwearRect = headwearView.transform as RectTransform;
             if (headBandRect != null && headwearRect != null)
             {
-                float height = Mathf.Max(1f, headwearRect.rect.height);
+                float headwearHeight = Mathf.Max(1f, headwearRect.rect.height);
+                float width = Mathf.Max(1f, headwearRect.rect.width);
+
                 headBandRect.anchorMin = headwearRect.anchorMin;
                 headBandRect.anchorMax = headwearRect.anchorMax;
                 headBandRect.pivot = headwearRect.pivot;
-                headBandRect.sizeDelta = headwearRect.sizeDelta;
-                headBandRect.anchoredPosition = headwearRect.anchoredPosition + new Vector2(0f, height + 4f);
+                headBandRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+                headBandRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, HeadBandCompactHeight);
+                headBandRect.anchoredPosition = headwearRect.anchoredPosition
+                    + new Vector2(0f, (headwearHeight + HeadBandCompactHeight) * 0.5f + HeadBandGap);
+
+                if (!headBandCompactProofLogged)
+                {
+                    headBandCompactProofLogged = true;
+                    LogInfo?.Invoke("B&A&HB HEADBAND LAYOUT PROOF: dedicated slot16 root compacted above Headwear; width="
+                        + width.ToString("0.0") + ", height=" + HeadBandCompactHeight.ToString("0.0") + ".");
+                }
                 return;
             }
 
-            headBandView.transform.localPosition = headwearView.transform.localPosition + new Vector3(0f, 120f, 0f);
+            headBandView.transform.localPosition = headwearView.transform.localPosition + new Vector3(0f, 82f, 0f);
+        }
+
+        static void RelabelNumericCaptionTree(Component root, string numericCaption, string dedicatedCaption)
+        {
+            if (root == null || string.IsNullOrEmpty(numericCaption) || string.IsNullOrEmpty(dedicatedCaption)) return;
+            RelabelTransform(root.transform, numericCaption, dedicatedCaption, 0);
+        }
+
+        static void RelabelTransform(Transform transform, string numericCaption, string dedicatedCaption, int depth)
+        {
+            if (transform == null || depth > 6) return;
+
+            Component[] components = transform.gameObject.GetComponents<Component>();
+            for (int i = 0; i < components.Length; i++)
+            {
+                Component component = components[i];
+                if (component == null) continue;
+                Type type = component.GetType();
+                PropertyInfo textProperty;
+                if (!TextPropertyCache.TryGetValue(type, out textProperty))
+                {
+                    textProperty = ReflectionTools.FindInstanceProperty(type, "text", typeof(string));
+                    TextPropertyCache[type] = textProperty;
+                }
+                if (textProperty == null || !textProperty.CanRead || !textProperty.CanWrite) continue;
+
+                try
+                {
+                    string current = textProperty.GetValue(component, null) as string;
+                    if (string.Equals(current, numericCaption, StringComparison.Ordinal))
+                        textProperty.SetValue(component, dedicatedCaption, null);
+                }
+                catch { }
+            }
+
+            for (int i = 0; i < transform.childCount; i++)
+                RelabelTransform(transform.GetChild(i), numericCaption, dedicatedCaption, depth + 1);
         }
 
         static void SetHeader(object slotView, string text)
@@ -257,12 +320,15 @@ namespace SPTBeltArmbandInventory
             SlotViewType = null;
             EquipmentType = null;
             HeadBandSlotKey = null;
+            ArmBandSlotKey = null;
             GetSlot = null;
             ShowSlot = null;
             HeadBandViews.Clear();
+            TextPropertyCache.Clear();
             russianUi = null;
             beltLabelProofLogged = false;
             headBandBindProofLogged = false;
+            headBandCompactProofLogged = false;
             headBandFailureLogged = false;
         }
     }
@@ -312,6 +378,10 @@ namespace SPTBeltArmbandInventory
                 if (getSlotDelegate == null || showDelegate == null)
                     return Fail("Dedicated slot native delegates could not be bound safely.");
 
+                object armBandSlotKey;
+                try { armBandSlotKey = Enum.Parse(equipmentSlotType, "ArmBand", false); }
+                catch { return Fail("Vanilla ArmBand equipment-slot identity could not be resolved for compact HeadBand presentation."); }
+
                 DedicatedSlotPresentationRuntime.LogInfo = logInfo;
                 DedicatedSlotPresentationRuntime.LogWarning = logWarning;
                 DedicatedSlotPresentationRuntime.HeaderTextField = header;
@@ -322,13 +392,14 @@ namespace SPTBeltArmbandInventory
                 DedicatedSlotPresentationRuntime.HeadBandSlotKey = Enum.ToObject(
                     equipmentSlotType,
                     RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue);
+                DedicatedSlotPresentationRuntime.ArmBandSlotKey = armBandSlotKey;
                 DedicatedSlotPresentationRuntime.GetSlot = getSlotDelegate;
                 DedicatedSlotPresentationRuntime.ShowSlot = showDelegate;
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
                 Patch(patchMethod, harmonyMethodType, show, postfix);
-                logInfo?.Invoke("B&A&HB dedicated slot native presentation installed on exact SlotView.Show/GetSlot; event-driven, no polling or scene scan.");
+                logInfo?.Invoke("B&A&HB dedicated slot native presentation installed on exact SlotView.Show/GetSlot; compact HeadBand uses the native ArmBand visual template; event-driven, no polling or scene scan.");
                 return true;
             }
             catch (Exception exception)
