@@ -69,10 +69,10 @@ jobs:
       - name: 'Build B&A&HB #2 server'
         shell: pwsh
         run: dotnet build mods/SPT-Belt-Armband-Inventory/server/SPT-Belt-Armband-Inventory.Server.csproj -c Release
-      - name: 'Stage B&A&HB #2 profile-safe candidate'
+      - name: 'Stage B&A&HB #2 MOD SPT RC1'
         shell: pwsh
         run: |
-          $root = 'artifact/B&A&HB #2 MOD SPT profile-safe candidate'
+          $root = 'artifact/B&A&HB #2 MOD SPT RC1'
           $runtimeRoot = "$root/SPT_Runtime"
           $pluginRoot = "$runtimeRoot/BepInEx/plugins"
           $modRoot = "$runtimeRoot/user/mods/B&A&HB #2 MOD SPT"
@@ -81,19 +81,24 @@ jobs:
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/src/bin/Release/netstandard2.1/SPT Belt Armband Inventory v0.1.0.dll' "$pluginRoot/"
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT-Belt-Armband-Inventory.Server.dll' "$modRoot/"
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/profile-safety' "$modRoot/profile-safety" -Recurse
+          Copy-Item 'mods/SPT-Belt-Armband-Inventory/README.md' "$modRoot/README.md"
 
           $clientDll = "$pluginRoot/SPT Belt Armband Inventory v0.1.0.dll"
           $serverDll = "$modRoot/SPT-Belt-Armband-Inventory.Server.dll"
           $manifest = "$modRoot/profile-safety/persistent-identities.json"
+          $recovery = "$modRoot/profile-safety/README.md"
+          $moduleReadme = "$modRoot/README.md"
           if (-not (Test-Path -LiteralPath $clientDll)) { throw 'Install-tree validation: client DLL missing under SPT_Runtime/BepInEx/plugins' }
           if (-not (Test-Path -LiteralPath $serverDll)) { throw 'Install-tree validation: server DLL missing under SPT_Runtime/user/mods' }
           if (-not (Test-Path -LiteralPath $manifest)) { throw 'Install-tree validation: profile-safety manifest missing from server mod' }
+          if (-not (Test-Path -LiteralPath $recovery)) { throw 'Install-tree validation: recovery instructions missing from server mod' }
+          if (-not (Test-Path -LiteralPath $moduleReadme)) { throw 'Install-tree validation: module README missing from RC package' }
           if (Test-Path -LiteralPath "$root/BepInEx") { throw 'Install-tree validation: forbidden split top-level BepInEx root exists' }
-          Write-Host '[B&A&HB #2 MOD SPT] install tree PASS: single SPT_Runtime root contains client + server + recovery tooling'
-      - name: 'Upload B&A&HB #2 profile-safe candidate'
+          Write-Host '[B&A&HB #2 MOD SPT] RC1 install tree PASS: single SPT_Runtime root contains client + server + identity/recovery contract'
+      - name: 'Upload B&A&HB #2 MOD SPT RC1'
         uses: actions/upload-artifact@v4
         with:
-          name: 'B&A&HB #2 MOD SPT profile-safe candidate'
-          path: 'artifact/B&A&HB #2 MOD SPT profile-safe candidate'
+          name: 'B&A&HB #2 MOD SPT RC1'
+          path: 'artifact/B&A&HB #2 MOD SPT RC1'
           if-no-files-found: error
           retention-days: 14
