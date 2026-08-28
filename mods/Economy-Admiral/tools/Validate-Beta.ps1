@@ -32,14 +32,15 @@ if ([int]$source.SchemaVersion -ne 2) { Fail "source-pressure SchemaVersion must
 if ([string]$source.EvidenceCoverage -ne 'FinalDbCore+ExplicitAdaptersWithExplicitUnknownChannels') { Fail "unexpected source-pressure coverage contract" }
 if ([int]$source.SourceCount -le 0 -or [int]$source.LoadedAdapterCount -lt 1) { Fail "release candidate requires final-DB evidence and a loaded explicit Trader adapter" }
 if (-not (@($source.LoadedAdapters) -contains 'com.admiralam.spt.admiraltrader')) { Fail "Admiral Trader explicit adapter is not loaded into source-pressure evidence" }
-$world = @($source.ChannelCoverage | Where-Object { [string]$_.Channel -eq 'WorldLoot' })
+# AcquisitionChannel.WorldLoot serializes as numeric enum value 6 in the runtime report.
+$world = @($source.ChannelCoverage | Where-Object { [int]$_.Channel -eq 6 })
 if ($world.Count -ne 1 -or [string]$world[0].State -ne 'UnknownNoMaintainedAdapter') { Fail "world-loot boundary must remain explicit UnknownNoMaintainedAdapter" }
 
 if ([int]$health.SchemaVersion -ne 1 -or [int]$health.SourcePressureSchemaVersion -ne 2) { Fail "health/source-pressure schema link is invalid" }
 if ($health.CompositeScoreSelected -ne $false) { Fail "Beta RC must not select an opaque composite health score" }
 if ($health.MutationAuthorized -ne $false) { Fail "observational health report must not authorize mutation" }
 if ([int]$health.ItemCount -le 0) { Fail "health report contains no observed items" }
-$healthWorld = @($health.ChannelCoverage | Where-Object { [string]$_.Channel -eq 'WorldLoot' })
+$healthWorld = @($health.ChannelCoverage | Where-Object { [int]$_.Channel -eq 6 })
 if ($healthWorld.Count -ne 1 -or [string]$healthWorld[0].State -ne 'UnknownNoMaintainedAdapter') { Fail "health report lost the explicit world-loot Unknown boundary" }
 
 if ([int]$adapter.SchemaVersion -ne 3) { Fail "Admiral Trader adapter SchemaVersion must be 3" }
@@ -53,7 +54,8 @@ if ($adapter.SpecialWeaponsPermanentOfferAllowed -ne $false -or $adapter.Special
 foreach ($offer in @($adapter.Offers)) {
     if ([string]$offer.StockClass -notin @('Baseline','Relationship','Milestone')) { Fail "unclassified Admiral Trader permanent offer $($offer.OfferId)" }
     if ([string]$offer.Source.ProvenanceClass -ne 'ExplicitAdapter') { Fail "offer $($offer.OfferId) lost ExplicitAdapter provenance" }
-    if ([string]$offer.Capacity.SupplyBound -ne 'Bounded') { Fail "offer $($offer.OfferId) is not bounded" }
+    # RenewableSupplyBound.Bounded serializes as numeric enum value 1.
+    if ([int]$offer.Capacity.SupplyBound -ne 1) { Fail "offer $($offer.OfferId) is not bounded" }
     if ([string]$offer.StockClass -eq 'Milestone' -and ([string]$offer.GateKind -ne 'Quest' -or $null -eq $offer.EffectiveGate)) { Fail "milestone offer $($offer.OfferId) lost its authored effective quest gate" }
 }
 
