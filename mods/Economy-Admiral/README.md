@@ -1,14 +1,8 @@
 # Economy Admiral
 
-Economy Admiral is an SPT 4.1.3 server-side economy normalization mod. The physically accepted Alpha mutates only numeric quest rewards (`Experience` and `TraderStanding`) under strict pristine/provenance and transaction safety rules.
+Economy Admiral is an SPT 4.1.3 server-side economy governor. It combines a physically proven, provenance-safe quest-reward transaction path with deterministic source-pressure/health observation and an explicit Admiral Trader compatibility boundary.
 
-## Current product state
-
-### Physically accepted Enforce Alpha
-
-The accepted Alpha is the narrow Experience/TraderStanding slice. It has been physically exercised on SPT 4.1.3 with Audit read-only proof, real Enforce DB mutations, pristine protection, exact target verification, rollback/idempotence smoke coverage, and Off-mode proof.
-
-Default configuration remains conservative:
+Version is **0.1.0**. Default configuration remains conservative:
 
 ```json
 {
@@ -18,92 +12,108 @@ Default configuration remains conservative:
 }
 ```
 
-`Audit` previews policy decisions without mutating the final SPT DB. `Enforce` activates only dimensions allowed by the selected product contract and provenance gates. `Off` skips the Economy Admiral pipeline.
+`Audit` analyzes and previews without mutating the final SPT database. `Enforce` applies only supported, provenance-eligible bounded reward mutations. `Off` skips the Economy Admiral pipeline.
 
-### Post-Alpha bounded item-stack slice
+## Accepted reward enforcement
 
-A new opt-in slice can reduce the quantity of a **single existing stackable Success item reward** when it is a policy outlier. It is deliberately disabled by default:
+The production mutation path supports:
 
-```json
-"enableItemRewardStackNormalization": false
-```
+- `Experience`;
+- `TraderStanding`;
+- opt-in bounded `ItemRewardStackCount` for one structurally unambiguous existing Success reward stack.
 
-When explicitly enabled, Economy Admiral may reduce `ItemRewardStackCount` only when all of the following are true:
+The XP/standing Alpha and bounded item-stack slice are physically proven on SPT 4.1.3. Grouped item handling is deterministic and fail-closed; a grouped mutation may legitimately be `NOT APPLICABLE` when the installed quest set exposes no safely reducible grouped candidate.
 
-- the quest is `ModAdded`, or it is `PristineModified` with `SuccessItemHandbookValue` proven changed;
-- the quest is flagged by the item reward budget policy;
-- the complete Success item bundle can be priced from known handbook values for automatic normalization;
-- exactly one existing Item stack is structurally reducible and selected for mutation;
-- the selected stack has a known positive handbook price for automatic normalization;
-- its current count is a finite integer greater than one;
-- the containing reward record has synchronized aggregate `Reward.Value == sum(Upd.StackObjectsCount)` before mutation;
-- the calculated whole-bundle budget target can be reached by lowering only the selected existing stack to an integer of at least one.
-
-The selected stack may be the sole item in its reward record, part of a same-template grouped reward, or part of a mixed-template grouped reward. Grouped records are eligible only when there is exactly one reducible selected stack; sibling items remain immutable. Multiple reducible stacks remain fail-closed as ambiguous.
-
-The transaction writes the selected `Upd.StackObjectsCount` and the containing reward record's aggregate `Reward.Value` together, verifies them through a synchronized read, and restores both on rollback. If the original aggregate quantity is inconsistent, the candidate is blocked/fails preflight instead of being repaired implicitly.
-
-This slice does **not** replace `_tpl` item templates, add/remove reward records, delete the last item to satisfy a budget, mutate structural quest fields, bypass provenance protection, or enable generic item replacement logic.
-
-Physical status is intentionally separated by capability:
-
-- single-stack bounded item normalization is physically proven on SPT 4.1.3 (`34cddc352f2b82b2b8f6359502bf9dd5d0e449fc`): `ENFORCE PASS`, `totalApplied=123`, `itemStacks=35`;
-- same-template grouped selection is implemented and CI-proven, but **not applicable on the current installed quest set**: exact runtime head `c8e76ae0569f74a5cf09624cd5ecc709f72e61fe` loaded and completed Enforce successfully, while the grouped fail-closed validator correctly reported zero eligible grouped mutations;
-- mixed-template grouped single-stack selection is the next bounded product extension and requires CI proof before any new physical SPT gate is requested.
-
-## Provenance safety
+### Provenance safety
 
 - `PristineUnchanged`: never mutate.
-- `ModAdded`: only policy-flagged supported dimensions may mutate.
-- `PristineModified`: a dimension may mutate only when the corresponding pristine delta proves that dimension changed.
+- `ModAdded`: only flagged/manual supported dimensions may mutate.
+- `PristineModified`: a dimension may mutate only when the pristine delta proves that exact dimension changed.
 - unknown provenance: block.
-- manual overrides do not bypass provenance safety.
+- manual exact targets do not bypass provenance or dimension safety.
 
-For the opt-in item-stack slice, `ItemRewardStackCount` on `PristineModified` maps to the proven delta dimension `SuccessItemHandbookValue`.
+For item-stack normalization on `PristineModified`, `ItemRewardStackCount` requires `SuccessItemHandbookValue` to be proven changed.
 
-## Numeric policy
+### Bounded item-stack rules
 
-Easy / Normal / Hard / Custom resolve concrete thresholds and target caps. Automatic normalization only reduces outliers; it never raises a normal reward. Manual quest reward overrides remain available for exact Experience/TraderStanding targets:
+When `enableItemRewardStackNormalization=true`, automatic item normalization requires an existing Success Item reward whose selected stack is uniquely safe, finite, integral, greater than one and handbook-priced. The complete Success item bundle is budgeted, immutable sibling reward value is reserved, and the policy only lowers the selected existing stack to an integer of at least one.
 
-```json
-"questRewardOverrides": {
-  "QUEST_ID": {
-    "allowAutomaticMutation": true,
-    "experienceTarget": 3000,
-    "traderStandingTarget": 0.03,
-    "note": "optional"
-  }
-}
-```
+Economy Admiral never replaces `_tpl`, creates/deletes reward records, removes the last item to satisfy a budget, or rewrites structural quest fields. `Reward.Value` and `Upd.StackObjectsCount` are updated and rolled back together.
 
-## Transaction contract
+### Transaction contract
 
-All active reward mutations share the production `NumericRewardTransactionCore`:
+Every active reward mutation shares `NumericRewardTransactionCore`:
 
-1. deterministic requests;
-2. journal original values before the first write;
+1. deterministic plan;
+2. journal all original values before the first write;
 3. apply;
-4. verify exact target;
-5. rollback the whole batch on any failure;
+4. verify exact targets;
+5. rollback the entire batch on any error;
 6. verify rollback.
 
-Experience, TraderStanding and the opt-in selected item quantity therefore participate in the same all-or-nothing batch. CI smoke tests include successful commits, same-state idempotence, synthetic failures, full rollback of earlier numeric mutations, synchronized grouped item commit, and mixed XP/standing/item rollback restoring both selected quantity and aggregate reward value.
+CI covers commit, rollback, rollback restoration, idempotence, grouped quantity synchronization and mixed XP/standing/item transactions.
 
-## SPT boundary and lean runtime path
+## Source-pressure observation
 
-Compile boundary: `SPTarkov.Server.Core 4.1.2` / .NET 10. Physical runtime target: **SPT 4.1.3**. Packaged candidates carry exact head/workflow identity in `BUILD_INFO.json`.
+Economy Admiral observes acquisition pressure once at startup/PostLoad and does no raid/frame polling.
 
-Load order remains:
+Maintained observation includes:
 
-1. priority `OnLoadOrder.Watermark + 1` — immutable pristine startup baseline;
-2. normal SPT/mod callbacks;
-3. `PostLoad + 1000` — final modded DB analysis and optional enforcement.
+- final-DB trader currency purchases and barters;
+- normal and repeatable quest item rewards;
+- hideout crafts;
+- explicitly registered external adapter evidence;
+- a bounded effective-acquisition graph with memoization, cycle detection and explicit depth/path caps.
 
-Primary audit, reward utility, progression, constraints and unified quest analysis now consume typed final DB state directly against the pristine snapshot. The old report correction/reparse/rewrite chain, primary parity shadow scan, composite candidate pass and target-envelope pass are no longer on the runtime path.
+Flea remains **reference-only**; Economy Admiral does not become a flea simulator. World loot remains explicit `UnknownNoMaintainedAdapter` until a maintained ownership-safe adapter exists; missing evidence is never converted into zero supply.
 
-## Runtime outputs and validators
+The source-pressure report keeps per-item/channel source diversity, renewable-path evidence, progression coverage, concentration, bounded supply coverage, provenance classes, effective-acquisition evidence and measured startup cost separately inspectable.
 
-Runtime evidence schema **5** requires exactly seven core reports under the mod-local `reports/` directory:
+## Health invariants
+
+Health evidence is policy-free and fail-closed. There is no opaque single health score.
+
+The invariant model can represent `Pass`, `Fail` or `Unknown` for:
+
+- protected pristine content;
+- proof that the targeted dimension was actually changed;
+- renewable-path continuity;
+- progression-access regression;
+- source-concentration regression;
+- attribution confidence/conflict;
+- bounded intervention magnitude.
+
+Missing evidence remains `Unknown` and blocks future automatic action. The runtime health report explicitly keeps `CompositeScoreSelected=false` and `MutationAuthorized=false`; observation does not silently create a new mutation domain.
+
+## Admiral Trader compatibility
+
+Economy Admiral consumes Admiral Trader only through the maintained explicit adapter. It does **not** infer ownership from display names, loyalty levels or ID patterns and does not implement a second Trader economy engine.
+
+For the maintained Gameplay Alpha v4 contract it validates:
+
+- product name `Admiral Trader`;
+- modGuid `com.admiralam.spt.admiraltrader`;
+- trader ID `d5c27bb3169f8dfbc13f6b69`;
+- runtime trader identity/avatar route;
+- explicit `Baseline` / `Relationship` / `Milestone` stock classes;
+- authored milestone quest gates;
+- finite permanent stock/buy limits;
+- `ExplicitAdapter` provenance;
+- Special Weapons remain sample-only rather than permanent offers.
+
+The current Gameplay Alpha has no maintained Relationship offer manifest, so Relationship is supported as a valid explicit class but its current materialized count is zero; Economy Admiral does not fabricate Relationship offers.
+
+Missing Trader contracts produce `ContractUnavailable`; malformed/incompatible maintained contracts produce `ContractUnsupported`. Such evidence is non-authoritative and cannot silently authorize automatic normalization.
+
+## Economy Beta ownership gate
+
+Beta enforcement introduces **no new mutation dimension**. It retains the physically accepted XP/standing/opt-in item-stack transaction core.
+
+Non-Admiral quests continue through the existing provenance/dimension rules. For quests owned by Admiral Trader, automatic reward normalization additionally requires exact Gameplay Alpha v4 identity/class/bounded-supply/`ExplicitAdapter` evidence. If that maintained ownership contract is absent, legacy, incompatible or drifted, only automatic mutation-driving flags for those Trader quests are suppressed. Explicit manual exact targets still remain subject to the existing provenance and dimension gates.
+
+## Runtime reports
+
+The seven core quest/economy reports remain the runtime-evidence manifest contract:
 
 1. `economy-admiral-audit.json`
 2. `economy-admiral-reward-utility.json`
@@ -113,20 +123,37 @@ Runtime evidence schema **5** requires exactly seven core reports under the mod-
 6. `economy-admiral-provenance-delta.json`
 7. `economy-admiral-enforcement-plan.json`
 
-`economy-admiral-runtime-evidence.json` is the manifest over those seven reports.
+Additional Beta observation evidence is emitted separately:
 
-Packaged candidates include only active runtime validators:
+- `economy-admiral-source-pressure.json`;
+- `economy-admiral-health.json`;
+- `economy-admiral-admiral-trader-adapter.json`;
+- `economy-admiral-grouped-item-evidence.json` when applicable.
 
-- `Validate-Runtime.ps1` — Audit/read-only contract;
-- `Validate-Enforce.ps1` — Enforce mutation contract for the accepted Alpha and opt-in bounded item-stack capability;
-- `Validate-Grouped-Enforce.ps1` — an intentionally fail-closed physical gate used only when proving that a concrete installed quest set actually contains an eligible grouped reward mutation.
+`economy-admiral-runtime-evidence.json` carries exact build identity and the core before/after DB fingerprint evidence.
 
-The old primary parity shadow verifier and validator were retired after physical SPT 4.1.3 parity was proven. Their accepted evidence remains recorded in project history; they are not repeated on every server start or shipped as a misleading runtime command.
+## Packaged validators
 
-Physical runtime validation is reserved for meaningful SPT gates; ordinary code/contract changes should be proven through CI/smoke tests first.
+- `Validate-Runtime.ps1` — Audit/read-only contract.
+- `Validate-Enforce.ps1` — strict transactional Enforce contract for XP/standing and the opt-in bounded item-stack mode.
+- `Validate-Beta.ps1` — the single combined Economy Beta release-candidate gate. It runs the strict Enforce validator and then verifies source-pressure, health and explicit Admiral Trader v4 compatibility evidence from the same SPT startup.
 
-## Scope boundaries
+See `RUNTIME_TEST.md` for the one batched SPT 4.1.3 release-candidate procedure. Earlier accepted Alpha/item-stack physical tests are not repeated as micro-tests.
 
-Economy Admiral does not currently expand into PBS, world loot, flea, crafts, insurance, Scorpion, Artem, Andrudis, generic attribution/replacement graphs, or Admiral Trader stock architecture. Those domains are separate future decisions and are not prerequisites for the current quest reward normalization line.
+## Runtime boundary and performance
 
-Development lifecycle: `single active branch/PR -> CI -> physical runtime gate only when genuinely required -> stabilize -> continue product work`.
+Compile boundary: `SPTarkov.Server.Core 4.1.2` / .NET 10. Physical target: **SPT 4.1.3**. Packaged candidates include exact head/workflow identity in `BUILD_INFO.json`.
+
+Load order:
+
+1. `OnLoadOrder.Watermark + 1` — immutable pristine startup snapshot;
+2. normal SPT/mod callbacks;
+3. `PostLoad + 1000` — final DB analysis, observation and optional bounded enforcement.
+
+There is no permanent polling, raid/frame scan, repeated report-reparse correction chain, primary parity shadow scan, composite candidate pass or target-envelope pass on the runtime path.
+
+## Explicit non-goals for 0.1.0 Beta
+
+Economy Admiral does not implement a second Trader economy engine, flea simulator, world-loot controller, item-template replacement engine, insurance overhaul or generic cross-mod mutation attribution system. PBS/Scorpion/Artem/Andrudis-specific ownership adapters are not inferred automatically.
+
+The release path is: deterministic CI and exact-head artifact -> one controller-activated batched SPT 4.1.3 Beta runtime gate -> remediate on FAIL or deliberately promote the exact passing candidate.
