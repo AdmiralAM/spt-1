@@ -58,12 +58,12 @@ public sealed class QuestGameplayAlphaOverrides(ModHelper modHelper, LocaleTable
         russian[$"{fundamentals} startedMessageText"] = "Первая проверка: передай два ключа общежития — «Общ 214» и/или «Общ 204». Подойдут уже имеющиеся в схроне; в рейд идти не требуется.";
         russian[$"{fundamentals} acceptPlayerMessage"] = russian[$"{fundamentals} startedMessageText"];
 
-        english[$"{factory} description"] = "Have any 1 approved Factory access key in your inventory. It does not need Found in Raid status, is not handed over, and no Factory raid is required.";
-        english[$"{factory} startedMessageText"] = "Factory check: keep one approved Factory key in your inventory. Nothing is consumed and you do not need to enter Factory.";
+        english[$"{factory} description"] = "After accepting this quest, acquire 1 of the Factory access keys listed in the objective. Found in Raid is not required; the key is not handed over or consumed.";
+        english[$"{factory} startedMessageText"] = "Factory check: acquire one listed Factory access key after accepting this contract. Existing stash copies do not count for this EFT acquisition objective; nothing is consumed.";
         english[$"{factory} acceptPlayerMessage"] = english[$"{factory} startedMessageText"];
 
-        russian[$"{factory} description"] = "Имей в инвентаре 1 подходящий ключ доступа для Завода. Статус «Найдено в рейде» не нужен, ключ не сдаётся и заходить на Завод не требуется.";
-        russian[$"{factory} startedMessageText"] = "Проверка Завода: держи в инвентаре один подходящий ключ Завода. Ничего сдавать не нужно и заходить на карту не требуется.";
+        russian[$"{factory} description"] = "После принятия задания получите 1 из ключей доступа Завода, перечисленных в цели. Статус «Найдено в рейде» не нужен; ключ не сдаётся и не расходуется.";
+        russian[$"{factory} startedMessageText"] = "Проверка Завода: после принятия контракта получи один из перечисленных ключей. Уже лежащие в схроне экземпляры EFT для такой цели не засчитывает; ничего сдавать не нужно.";
         russian[$"{factory} acceptPlayerMessage"] = russian[$"{factory} startedMessageText"];
     }
 
