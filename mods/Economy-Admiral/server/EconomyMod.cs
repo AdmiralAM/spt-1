@@ -45,8 +45,13 @@ public sealed class EconomyMod(
         var observation = await sourcePressureObservationPipelineService.RunAsync(config, vanillaBaseline, cancellationToken);
         await economyHealthRuntimeReportService.RunAsync(config, observation.SourcePressure, cancellationToken);
 
+        // Keep detection/audit thresholds untouched. Only the copy handed to Enforce receives the
+        // user-authorized Playable Economy v1 reward caps, so Audit remains explanatory while Enforce
+        // becomes materially tighter without changing provenance or transaction safety.
+        var enforcementAnalysis = PlayableQuestRewardPolicy.ApplyToEnforcement(config, questAnalysis);
+
         GroupedItemRewardSlot.ResetEvidence();
-        var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, observation.AdmiralTrader, cancellationToken);
+        var enforcement = await enforcementPlanService.RunAsync(enforcementAnalysis, questProvenance, observation.AdmiralTrader, cancellationToken);
         await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);
         await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
     }
