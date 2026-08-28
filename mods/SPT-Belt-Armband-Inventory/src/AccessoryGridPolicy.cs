@@ -1,14 +1,15 @@
 namespace SPTBeltArmbandInventory
 {
     // Pure geometry rules. They describe the declared grid, not a Unity prefab.
-    // The runtime must render the declared dimensions without filler cells or
-    // artificial minimum window dimensions. The only non-grid space is the
-    // same native GridWindow chrome used by ordinary EFT containers.
+    // Runtime evidence from SPT 4.1.3 shows a native cell pitch of 63px and
+    // a 32px vertical GridWindow chrome band. Horizontal chrome is deliberately
+    // kept to the tight native border allowance rather than the old 128px
+    // one-column minimum, so the outer frame follows the declared grid closely.
     internal static class AccessoryGridPolicy
     {
         internal const float CellPixels = 63f;
-        internal const float WindowHorizontalChrome = 24f;
-        internal const float WindowVerticalChrome = 34f;
+        internal const float WindowHorizontalChrome = 10f;
+        internal const float WindowVerticalChrome = 32f;
 
         internal static bool IsValid(int columns, int rows)
         {
