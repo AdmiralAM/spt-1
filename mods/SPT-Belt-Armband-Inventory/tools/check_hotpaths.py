@@ -1,7 +1,9 @@
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-ROOT = Path(__file__).resolve().parents[1] / "src"
+MODULE_ROOT = Path(__file__).resolve().parents[1]
+ROOT = MODULE_ROOT / "src"
+SERVER_PATCH_ROOT = MODULE_ROOT / "server" / "Patches"
 FORBIDDEN = {
     "ItemView.Update": "global item-view hot-path patch",
     "FindObjectsOfType": "scene-wide object scan",
@@ -27,6 +29,13 @@ for source in sorted(ROOT.glob("*.cs")):
     for token, reason in FORBIDDEN.items():
         if token in text:
             violations.append(f"{source.name}: {reason} ({token})")
+
+# Server lifecycle patches previously caused profile-load failures through name-only
+# reflection. Production patches must enumerate candidates and prove an exact signature.
+for source in sorted(SERVER_PATCH_ROOT.glob("*.cs")):
+    text = source.read_text(encoding="utf-8-sig")
+    if ".GetMethod(" in text:
+        violations.append(f"server/Patches/{source.name}: ambiguous name-only GetMethod is forbidden")
 
 def guard_region(path_name, start_token, end_token, label):
     path = ROOT / path_name
@@ -78,4 +87,4 @@ guard_region(
 if violations:
     raise SystemExit("Hot-path guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; interaction/lifecycle hot paths are startup-bound)")
+print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; interaction/lifecycle hot paths startup-bound; server patches exact-signature only)")
