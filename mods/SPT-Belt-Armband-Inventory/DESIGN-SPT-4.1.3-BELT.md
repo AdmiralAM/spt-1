@@ -1,107 +1,108 @@
-# B&A&HB — SPT 4.1.3 Belt Runtime Design Note
+# B&A&HB — SPT 4.1.3 wearable runtime design
 
 ## Status
 
-PR #64 has passed the native GridWindow container-rendering gate. The RC belt now opens through EFT's default `GeneratedGridsView` and displays its persisted `1x2` contents.
+This note records the **current mechanical architecture** of PR #64. Earlier revisions that treated Belt as only an `ArmBand` projection or described HeadBand as a `1x1` medical container are historical and superseded by the implementation below.
 
-The decisive runtime dump showed that the item, item context and server-backed grid were already correct while `GridWindow._containedGrids` remained `null`. `ContainedGridsView.CreateGrids` selected a custom-layout asset path because the prototype added `GridLayoutComponent` with layout name `B&A&HB-RC-1x2`; no matching client prefab existed. Removing that unnecessary custom-layout component restored the native generated-grid path.
+Gameplay sizing/balance is not declared final here. The final product-design pass for ArmBand, Belt and HeadBand remains intentionally separate from mechanical stabilization.
 
-Verified runtime state on commit `4621b5e`:
+## Persistent equipment model
 
-- the RC belt item exists;
-- it equips into `EquipmentSlot.ArmBand`;
-- server-side `1x2` MAGAZINE grid metadata exists;
-- `ContainersPanel` projection patches install;
-- `Slot.MergeContainerWithChildren` postfix installs and returns `EParentMergeType.InheritFromItem` for `ArmBand`;
-- no separate BELT row appears;
-- the equipped belt opens as a native GridWindow container;
-- separate belt instances display their own empty or populated `1x2` grids;
-- runtime type, searchable/container contract and grid dimensions all pass.
+B&A&HB now owns three wearable families:
 
-Therefore the missing behavior is no longer explained by the previously known Harmony installation failures.
+1. **ArmBand** — vanilla `ArmBand` equipment host. Current RC searchable container is `1x2` magazine-only; Wrist Wallet is a separate persistent ArmBand-family item.
+2. **Belt** — dedicated SPT/EFT pseudo-enum equipment value **15**, semantic identity `BAndHBBelt`, wire slot ID `15`. Current Magazine Belt is `2x2` magazine-only.
+3. **HeadBand** — dedicated pseudo-enum equipment value **16**, semantic identity `BAndHBHeadBand`, wire slot ID `16`. Current Utility HeadBand is `1x2` and exact-item whitelist only.
 
-## PackNStrap decomposition
+All distributed template, parent, slot, grid and assort IDs are persistent contracts recorded in `profile-safety/persistent-identities.json`. Existing IDs must not be renamed, recycled or silently removed.
 
-PackNStrap has two distinct client layers that matter here.
+SPT 4.1.x constructs `InventoryEquipment` through the closed `EquipmentSlot` enum. Dedicated Belt/HeadBand locations therefore use collision-checked numeric values 15/16 on the wire while retaining human-readable semantic identities inside B&A&HB. Server registration does not reorder vanilla slots; client presentation owns visible placement.
 
-### 1. Belt-slot presentation layer
+## Native container path
 
-`Trenchfoot-BeltSlot` patches `ContainersPanel.method_0` so `EquipmentSlot.ArmBand` receives a cloned default `SlotView`, inserts `ArmBand` into the container-panel equipment-slot order, and refreshes belt/armband visibility based on whether `slot.ContainedItem.IsContainer` is true.
+The successful ArmBand proof established the important rendering rule: B&A&HB searchable containers use EFT's native generated-grid path. No unsupported `GridLayoutComponent` or external custom-layout prefab is required.
 
-This layer is presentation/inventory-slot plumbing. Its historical implementation also polls `ItemView.Update`, which is explicitly not acceptable for B&A&HB.
+The dedicated Belt and HeadBand items retain the same principle:
 
-### 2. Custom item runtime type layer
+- server-backed grid metadata is authoritative;
+- custom runtime item/template identity is registered before item construction where required;
+- `GridWindow`/generated grids render the actual declared dimensions;
+- bounded exact-fit correction may settle late EFT layout writes after a window opens;
+- there is no permanent `ItemView.Update` or `MonoBehaviour.Update` polling loop.
 
-Current PackNStrap also defines and registers a dedicated belt item runtime class:
+Current calibrated exact-fit targets are derived from declared cell geometry: `1x2` = `73x158`, `2x2` = `136x158`.
 
-- `CustomBeltItemClass : SearchableItemItemClass`;
-- constructor receives `CustomContainerTemplateClass`;
-- when the template has a `LayoutName`, it adds `GridLayoutComponent`;
-- the class is bound through `[CustomParent(...)]` metadata;
-- `RegisterCustomItemTypesPatch` adds `CustomBeltItemClass` to the game's custom item-type list during `GClass3381.Init`.
+## Dedicated slot filters
 
-The custom template derives from `SearchableItemTemplateClass`, implements the layout interface used by the client, and exposes `LayoutName`.
+The two added equipment slots are exact-template scoped:
 
-PR #64 now keeps PackNStrap's useful custom searchable-item identity but intentionally does not copy its custom-layout component. PackNStrap owns a matching client layout prefab; B&A&HB does not need one because its single grid is rendered correctly by EFT's default generated-grid template.
+- slot 15 accepts only the current dedicated Magazine Belt template;
+- slot 16 accepts only the current Utility HeadBand template.
 
-## #64 comparison
+Shared searchable/container parent identities never make ArmBand/Wrist Wallet equipable in those dedicated locations.
 
-### What #64 has now
+HeadBand's internal grid is also exact-item scoped. Current whitelist:
 
-- server clone from vanilla armband parent/template;
-- `1x2` MAGAZINE `Grids` metadata;
-- ArmBand acceptance/equipment behavior;
-- `ContainersPanel` ArmBand projection;
-- event/deferred refresh rather than `ItemView.Update` polling;
-- inventory reachability / priority compatibility patches;
-- `MergeContainerWithChildren` getter result override.
+- RUB;
+- USD;
+- EUR;
+- Apollo Soyuz cigarettes;
+- Malboro;
+- Wilston;
+- Strike;
+- small vanilla Wallet.
 
-### What #64 now proves
+The Apollo Soyuz TPL is explicitly regression-guarded against the historical accidental golden-neck-chain TPL. Broad medical or generic loot parents are not accepted.
 
-- the RC belt constructs as `CustomBeltSearchableContainer`;
-- the client registers the custom template and item mappings before item creation;
-- `IsContainer`, searchable behavior and the `1x2` client grid are present;
-- `GridWindow` receives the correct belt and item context;
-- EFT's default `GeneratedGridsView` renders persisted contents without a custom prefab.
+## Presentation boundary
 
-The remaining unproven presentation feature is a separate inline BELT row in `ContainersPanel`. It is independent of the now-working native GridWindow container path.
+Dedicated UI is lifecycle-owned, not polled:
 
-## Design decision
+- Belt visual anchor: between Pockets and Backpack;
+- HeadBand visual anchor: immediately above Headwear;
+- client slot registration maps numeric 15/16 into the dedicated runtime locations;
+- `SlotView.Show` owns HeadBand visual creation;
+- exact caption normalization prevents visible raw numeric IDs;
+- optional late UI repairs are bounded to the concrete factory-created row/window rather than scanning scenes or inventories.
 
-Preserve the working native GridWindow path. Treat the separate inline BELT row as an optional presentation slice and do not let it gate container functionality.
+## Scav boundary
 
-### Recommended architecture
+SPT 4.1.3 Scav `ReplaceInventory` does not guarantee the old property-only shape. B&A&HB resolves the required members once at startup:
 
-1. Keep `ArmBand` as the real equipment host. Do not add a new EFT equipment enum slot.
-2. Introduce a minimal B&A&HB client belt item class equivalent in role to PackNStrap's `CustomBeltItemClass`:
-   - derive from the SPT 4.1.3 searchable/container item base actually used by the current client;
-   - expose the server-backed `Grids` through the searchable compound-item base;
-   - no extra PackNStrap features.
-3. Register only the minimum corresponding template class required by SPT 4.1.3; do not add `GridLayoutComponent` unless a matching client prefab is shipped.
-4. Register that custom item type through the current SPT 4.1.3 item-type registration boundary before item construction/deserialization.
-5. Make the RC server item identify/parent itself in the minimal way required for that client class to be selected. Do not otherwise change grid/filter/trader semantics.
-6. Retain the proven `MergeContainerWithChildren` result override for `ArmBand`.
-7. Re-evaluate how much of the current `ContainersPanel` projection is still required after the equipped item is a genuine client container. Prefer native `ContainersPanel` behavior; keep only the smallest ArmBand-specific presentation interception that remains necessary.
+- `Inventory`;
+- `Equipment`;
+- `ContainedItem`;
+- `Deleted`;
+- `StringTemplateId`.
 
-## Verified runtime proof
+Each may bind as a compatible property or field. Dynamic delegates are cached after discovery. The `ReplaceInventory` postfix inspects only ArmBand, Belt15 and HeadBand16 and restores only descriptors with the explicit Scav-host restoration capability. No reflection scan occurs per replacement and no global inventory polling is introduced.
 
-- concrete client item type name;
-- `IsContainer` value;
-- searchable/container base/interface membership;
-- absence of an unsupported custom `GridLayoutComponent`;
-- template concrete type and default generated-grid renderer selection;
-- client-visible grid count and dimensions;
-- ArmBand slot `ContainedItem` is that same custom belt instance.
+## Death and insurance boundary
 
-## Explicit non-goals
+F12 exposes independent `Protected` / `LostOnDeath` settings for ArmBand, Belt and HeadBand, default `Protected`.
 
-- no full PackNStrap port;
-- no `ItemView.Update` polling;
-- no old SPT 4.0.x field/layout assumptions without 4.1.3 proof;
-- no Phase 2;
-- no new belt features;
-- no change to current `1x2` MAGAZINE filter/trader behavior except the minimum template/type identity required to instantiate the correct client runtime class.
+Protection is defined by exact `(slot, template)` roots and expands through the full descendant inventory tree. Arbitrary vanilla/third-party items in a wearable-looking slot are not protected. `LostOnDeath` simply removes that family from B&A&HB special retention and leaves normal SPT semantics in control.
 
-## Remaining physical checks
+The server publishes active roots as an immutable atomic snapshot. The exact SPT 4.1 death-retention and insurance-loss patches are DI-managed and installed as one atomic feature: if either fails to enable, any already-enabled half is rolled back. This prevents death retention and lost-insured processing from diverging.
 
-Container rendering and existing contents are proven. Remaining checks are magazine insertion/removal, remove/re-equip persistence, raid transitions, and the optional separate inline BELT row.
+## Profile safety
+
+Uninstall/recovery is ownership-scoped. Cleanup follows persistent B&A&HB roots, descendants and direct references and must preserve unrelated vanilla/third-party profile data. Backup-first recovery tooling and deterministic fixtures are packaged with the RC.
+
+## Performance contract
+
+Forbidden production behavior:
+
+- permanent `ItemView.Update` polling;
+- permanent generic `MonoBehaviour.Update` polling;
+- scene-wide object/hierarchy scans;
+- repeated reflection scanning in inventory/raid hot paths;
+- global inventory scans per frame/update.
+
+Allowed mechanisms are startup discovery, cached delegates, bounded lifecycle hooks, exact Harmony patches and short deferred work that drains to zero.
+
+## Remaining release boundary
+
+Automated gates cover hot-path policy, deterministic lifecycle/identity/filter/death/insurance behavior, offline profile recovery, client/server compilation and install-tree packaging. Once one exact head is GREEN, the remaining combined SPT 4.1.3 physical gate is defined in `docs/RC1-runtime-checklist.md`.
+
+Only after mechanical runtime acceptance does the final design pass decide the long-term gameplay role, dimensions, item variants, balance and visual concept for each of the three wearable families.
