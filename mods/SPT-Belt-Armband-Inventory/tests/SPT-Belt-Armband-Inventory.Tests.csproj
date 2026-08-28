@@ -13,6 +13,8 @@
     <Compile Include="..\src\WearableDescriptor.cs" Link="WearableDescriptor.cs" />
     <Compile Include="..\src\WearableItemDescriptor.cs" Link="WearableItemDescriptor.cs" />
     <Compile Include="..\src\WearableConceptCatalog.cs" Link="WearableConceptCatalog.cs" />
+    <Compile Include="..\src\HeadBandUtilityPolicy.cs" Link="HeadBandUtilityPolicy.cs" />
+    <Compile Include="..\src\WearableProtectionContract.cs" Link="WearableProtectionContract.cs" />
     <Compile Include="..\src\HostBoundaryPolicy.cs" Link="HostBoundaryPolicy.cs" />
     <Compile Include="..\src\DedicatedWearableSlotContract.cs" Link="DedicatedWearableSlotContract.cs" />
     <Compile Include="..\src\DedicatedSlotPresentationPolicy.cs" Link="DedicatedSlotPresentationPolicy.cs" />
