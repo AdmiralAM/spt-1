@@ -26,6 +26,20 @@ namespace SPTBeltArmbandInventory
             return false;
         }
 
+        internal static bool ResolveRussian(bool? current, string observedCaption, bool systemRussian)
+        {
+            if (LooksRussian(observedCaption)) return true;
+            if (!string.IsNullOrEmpty(observedCaption))
+            {
+                for (int i = 0; i < observedCaption.Length; i++)
+                {
+                    char c = observedCaption[i];
+                    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) return false;
+                }
+            }
+            return current ?? systemRussian;
+        }
+
         internal static bool ShouldSuppressVanillaHeadwearCompatibility(string slotId, string templateId)
         {
             return string.Equals(slotId, VanillaHeadwearSlotId, StringComparison.Ordinal)
