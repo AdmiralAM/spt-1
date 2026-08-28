@@ -31,8 +31,8 @@ public sealed record EconomyConfig
     public bool EnableFleaPurchasePressure { get; init; } = false;
     public double CustomFleaBasePriceMultiplier { get; init; } = 1.65;
     public bool EnableLootPressure { get; init; } = false;
-    public double CustomLooseLootScale { get; init; } = 0.88;
-    public double CustomStaticLootScale { get; init; } = 0.95;
+    public double CustomLooseLootScale { get; init; } = 0.85;
+    public double CustomStaticLootScale { get; init; } = 0.85;
     public RarityThresholds Rarity { get; init; } = new();
     public AuditPolicy CustomAuditPolicy { get; init; } = new();
     public Dictionary<string, ManualItemOverride> ManualOverrides { get; init; } = new(StringComparer.Ordinal);
