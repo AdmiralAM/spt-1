@@ -10,9 +10,20 @@ public sealed class IsItemKeptAfterDeathPatch : AbstractPatch
 {
     protected override MethodBase? GetTargetMethod()
     {
-        return typeof(InRaidHelper).GetMethod(
-            "IsItemKeptAfterDeath",
-            BindingFlags.NonPublic | BindingFlags.Instance);
+        var methods = typeof(InRaidHelper).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+        MethodInfo? selected = null;
+        foreach (var method in methods)
+        {
+            if (!string.Equals(method.Name, "IsItemKeptAfterDeath", StringComparison.Ordinal) || method.ReturnType != typeof(bool))
+                continue;
+            var parameters = method.GetParameters();
+            if (parameters.Length != 2 || parameters[0].ParameterType != typeof(PmcData) || parameters[1].ParameterType != typeof(Item))
+                continue;
+            if (selected is not null)
+                throw new AmbiguousMatchException("Multiple exact InRaidHelper.IsItemKeptAfterDeath(PmcData, Item) methods found.");
+            selected = method;
+        }
+        return selected;
     }
 
     [PatchPostfix]
