@@ -54,7 +54,8 @@ namespace SPTBeltArmbandInventory
                     AccessoryCapability.BuildValidation),
 
                 // Dedicated Belt is the tactical fast-access family. It participates in
-                // reachable-container ordering but keeps grenade/payment semantics off.
+                // reachable-container ordering and survives ReplaceInventory like any
+                // exact registered wearable container, while keeping payment/grenade off.
                 [RuntimeIdentity.DedicatedMagazineBeltItemId] = new WearableItemDescriptor(
                     RuntimeIdentity.DedicatedMagazineBeltItemId,
                     AccessoryCategory.Belt,
@@ -63,16 +64,19 @@ namespace SPTBeltArmbandInventory
                     AccessoryCapability.LootPriority |
                     AccessoryCapability.UnloadPriority |
                     AccessoryCapability.FastAccess |
-                    AccessoryCapability.BuildValidation),
+                    AccessoryCapability.BuildValidation |
+                    AccessoryCapability.ScavHostRestoration),
 
                 // Emergency HeadBand is intentionally narrow: exact-fit medical storage
-                // and build/lifecycle visibility, with no payment/fast-access/grenade route.
+                // plus build/ReplaceInventory lifecycle visibility, with no payment,
+                // fast-access, grenade or special death-retention behavior.
                 [RuntimeIdentity.EmergencyHeadBandItemId] = new WearableItemDescriptor(
                     RuntimeIdentity.EmergencyHeadBandItemId,
                     AccessoryCategory.HeadBand,
                     RuntimeIdentity.EmergencyHeadBandGridColumns,
                     RuntimeIdentity.EmergencyHeadBandGridRows,
-                    AccessoryCapability.BuildValidation)
+                    AccessoryCapability.BuildValidation |
+                    AccessoryCapability.ScavHostRestoration)
             };
 
         internal static bool TryGet(string templateId, out WearableItemDescriptor descriptor)
