@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine;
 
 namespace SPTBeltArmbandInventory
 {
@@ -14,6 +16,9 @@ namespace SPTBeltArmbandInventory
         internal static bool FactoryProofLogged;
         internal static bool ShowProofLogged;
 
+        static Component lastBeltView;
+        static readonly Dictionary<Type, PropertyInfo> TextPropertyCache = new Dictionary<Type, PropertyInfo>();
+
         internal static bool IsDedicatedBelt(object value)
         {
             return value != null
@@ -25,10 +30,18 @@ namespace SPTBeltArmbandInventory
         internal static void BeginPanelShow()
         {
             FactoryCalledForBelt = false;
+            lastBeltView = null;
         }
 
         internal static void EndPanelShow()
         {
+            // Physical RC1 showed the native ContainersPanel row could still display
+            // numeric `15` even after SlotView.Show had internally received ПОЯС/BELT.
+            // Normalize the exact factory-created Belt row once more after the whole
+            // ContainersPanel.Show lifecycle has settled. This is bounded to one known
+            // row on inventory-open; it is not polling or a scene/global scan.
+            NormalizeVisibleBeltCaption();
+
             if (ShowProofLogged) return;
             ShowProofLogged = true;
             LogInfo?.Invoke("B&A&HB BELT PANEL PROOF: ContainersPanel.Show completed; pseudo-slot15 factoryCalled=" + FactoryCalledForBelt + ".");
@@ -37,9 +50,50 @@ namespace SPTBeltArmbandInventory
         internal static void RecordFactoryResult(object result)
         {
             FactoryCalledForBelt = true;
+            lastBeltView = result as Component;
             if (FactoryProofLogged) return;
             FactoryProofLogged = true;
             LogInfo?.Invoke("B&A&HB BELT FACTORY PROOF: pseudo-slot15 invoked=True; result=" + (result == null ? "<null>" : result.GetType().FullName) + ".");
+        }
+
+        static void NormalizeVisibleBeltCaption()
+        {
+            if (lastBeltView == null) return;
+            string caption = DedicatedSlotPresentationPolicy.Caption(
+                RuntimeIdentity.DedicatedBeltWireSlotId,
+                Application.systemLanguage == SystemLanguage.Russian) ?? "BELT";
+            RelabelTransform(lastBeltView.transform, RuntimeIdentity.DedicatedBeltWireSlotId, caption, 0);
+        }
+
+        static void RelabelTransform(Transform transform, string numericCaption, string dedicatedCaption, int depth)
+        {
+            if (transform == null || depth > 6) return;
+
+            Component[] components = transform.gameObject.GetComponents<Component>();
+            for (int i = 0; i < components.Length; i++)
+            {
+                Component component = components[i];
+                if (component == null) continue;
+                Type type = component.GetType();
+                PropertyInfo textProperty;
+                if (!TextPropertyCache.TryGetValue(type, out textProperty))
+                {
+                    textProperty = ReflectionTools.FindInstanceProperty(type, "text", typeof(string));
+                    TextPropertyCache[type] = textProperty;
+                }
+                if (textProperty == null || !textProperty.CanRead || !textProperty.CanWrite) continue;
+
+                try
+                {
+                    string current = textProperty.GetValue(component, null) as string;
+                    if (string.Equals(current, numericCaption, StringComparison.Ordinal))
+                        textProperty.SetValue(component, dedicatedCaption, null);
+                }
+                catch { }
+            }
+
+            for (int i = 0; i < transform.childCount; i++)
+                RelabelTransform(transform.GetChild(i), numericCaption, dedicatedCaption, depth + 1);
         }
 
         internal static void Reset()
@@ -52,6 +106,8 @@ namespace SPTBeltArmbandInventory
             FactoryCalledForBelt = false;
             FactoryProofLogged = false;
             ShowProofLogged = false;
+            lastBeltView = null;
+            TextPropertyCache.Clear();
         }
     }
 
@@ -121,7 +177,7 @@ namespace SPTBeltArmbandInventory
                 object showPostfix = harmonyMethodCtor.Invoke(new object[] { Method(nameof(PanelShowPostfix)) });
                 Patch(patchMethod, harmonyMethodType, panelShow, showPrefix, showPostfix, null);
 
-                logInfo?.Invoke("B&A&HB #2 MOD SPT Belt ContainersPanel proof installed: next inventory Show will report whether pseudo-slot 15 reaches the native slot factory and whether that factory returns a SlotView.");
+                logInfo?.Invoke("B&A&HB #2 MOD SPT Belt ContainersPanel integration installed: pseudo-slot15 uses the native row factory and receives one bounded post-Show caption normalization.");
                 return true;
             }
             catch (Exception exception)
@@ -260,7 +316,14 @@ namespace SPTBeltArmbandInventory
             patchMethod.Invoke(harmony, args);
         }
 
-        static MethodInfo Method(string name) => typeof(BeltContainersPanelProjectionPatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
+        static MethodInfo Method(string name)
+        {
+            MethodInfo[] methods = typeof(BeltContainersPanelProjectionPatches).GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal) && methods[i].GetParameters().Length >= 0)
+                    return methods[i];
+            return null;
+        }
 
         static MethodInfo FindZeroArgInstanceMethod(Type type, string name)
         {
