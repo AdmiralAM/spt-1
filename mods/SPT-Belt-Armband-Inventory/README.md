@@ -8,11 +8,23 @@ Current module version: **0.1.0**.
 
 B&A&HB keeps three explicit wearable categories with narrow item-specific capabilities:
 
-- **ArmBand** — the proven searchable-container foundation on the vanilla `ArmBand` equipment host. The runtime candidate remains exact native `1x2`, magazine-only, with bounded event-driven container integration.
-- **Belt** — dedicated equipment pseudo-slot **15**, positioned between Pockets and Backpack. The exact Magazine Belt uses its own persistent parent/item/grid/assort identities and a `2x2` magazine-only grid.
-- **HeadBand** — dedicated equipment pseudo-slot **16**, presented as a compact strip immediately above Headwear. The exact Emergency HeadBand uses its own persistent parent/item/grid/assort identities and a `1x1` medical-only grid for the current release candidate.
+- **ArmBand** — the proven searchable-container foundation on the vanilla `ArmBand` equipment host. The runtime candidate remains exact native `1x2`, magazine-only, with bounded event-driven container integration. Wrist Wallet is a separate ArmBand-family persistent item and is not silently granted unrelated capabilities.
+- **Belt** — dedicated equipment pseudo-slot **15**, positioned between Pockets and Backpack. The exact Magazine Belt uses its own persistent parent/item/grid/assort identities and a `2x2` magazine-only grid in the current mechanical candidate.
+- **HeadBand** — dedicated equipment pseudo-slot **16**, presented as a compact strip immediately above Headwear. The exact Utility HeadBand uses its own persistent parent/item/grid/assort identities and a narrow `1x2` utility grid. Its whitelist is exact-item only: RUB, USD, EUR, Apollo Soyuz, Malboro, Wilston, Strike and the small vanilla Wallet. It is deliberately not a generic secure or medical container.
 
 Distributed identities are immutable. They are recorded in the persistent identity manifest and must never be renamed, reused for another category, or silently dropped.
+
+## Death / insurance protection
+
+F12 exposes an independent **Protection** setting for every wearable family:
+
+- `ArmBand`: `Protected` / `LostOnDeath`;
+- `Belt`: `Protected` / `LostOnDeath`;
+- `HeadBand`: `Protected` / `LostOnDeath`.
+
+All three default to `Protected`. Protection is exact-root scoped: only registered B&A&HB wearable templates in their intended equipment hosts are protected, together with their complete descendant inventory trees. An arbitrary vanilla or third-party item does not become protected merely because it occupies ArmBand or pseudo-slot 15/16. `LostOnDeath` removes B&A&HB special retention for that family and delegates normal loss behavior to SPT.
+
+The server publishes protection roots as one immutable atomic snapshot. Death retention and insurance-loss filtering consume the same snapshot, and the two SPT 4.1 runtime patches are installed as one DI-managed feature with rollback if either half cannot bind. This prevents a protected tree from being retained while still generating false lost-insured events, or insurance suppression from surviving without matching death retention.
 
 ## Dedicated presentation and routing
 
@@ -25,6 +37,12 @@ The client projects Belt and HeadBand through native EFT equipment/slot boundari
 - exact dedicated-item Alt-pickup resolves to the matching dedicated slot when it is empty and compatible;
 - visible dedicated captions are owned by dedicated presentation policy, including EN/RU labels; the Belt ContainersPanel row receives a final bounded post-`Show` numeric-caption normalization because physical RC evidence proved the outer row could otherwise retain `15`;
 - existing ArmBand container mechanics remain isolated from the new dedicated locations.
+
+## Scav / PMC lifecycle boundary
+
+PMC behavior remains on the ordinary inventory lifecycle. Scav `ReplaceInventory` compatibility is deliberately narrow: SPT/EFT runtime members `Inventory`, `Equipment`, `ContainedItem`, `Deleted` and `StringTemplateId` are resolved once during patch installation as a property or field, cached delegates are generated, and the postfix inspects only the three wearable equipment slots. There is no reflection scan per replacement, no scene/inventory sweep and no idle polling.
+
+Only wearable descriptors with the explicit Scav-host restoration capability can clear the transient deleted flag. Unrelated items and unregistered templates fail closed.
 
 ## Profile and uninstall safety
 
@@ -70,6 +88,6 @@ The server project targets SPT 4.1.3 `SPTushonka.*` packages.
 
 ## Release-candidate boundary
 
-PR #64 is the single implementation/evidence record. Automated profile-safety, dedicated-slot, lifecycle/native-polish and release-hardening work is represented by the exact-head module CI and packaged artifact. The only remaining acceptance boundary is the one combined physical SPT 4.1.3 runtime gate described in `docs/RC1-runtime-checklist.md`.
+PR #64 is the single implementation/evidence record. Automated profile-safety, dedicated-slot, lifecycle/native-polish and release-hardening work must be represented by one exact-head module CI and packaged artifact before another physical handoff is valid. `docs/RC1-runtime-checklist.md` tracks the combined runtime gate and must describe the actual current mechanics rather than historical candidates.
 
-The user decides when to execute that artifact. Internal commits, CI runs and artifacts are evidence, not stable acceptance. On physical FAIL the first concrete boundary is remediated automatically; on PASS the controller owns deliberate stable/publication promotion.
+Internal commits, CI runs and artifacts are evidence, not stable acceptance. On physical FAIL the first concrete boundary is remediated automatically; on PASS the recorded stable-release phase proceeds under the user's standing authorization.
