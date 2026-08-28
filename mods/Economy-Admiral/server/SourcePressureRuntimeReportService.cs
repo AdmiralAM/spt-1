@@ -12,14 +12,16 @@ public sealed class SourcePressureRuntimeReportService(ModHelper modHelper)
 
     public async Task<SourcePressureRuntimeReport> RunAsync(
         EconomyConfig config,
+        FinalDbSourceObservation finalDb,
         AdmiralTraderRuntimeAdapterReport admiralTrader,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(config);
+        ArgumentNullException.ThrowIfNull(finalDb);
         ArgumentNullException.ThrowIfNull(admiralTrader);
         cancellationToken.ThrowIfCancellationRequested();
 
-        var report = SourcePressureRuntimeReportBuilder.Build(admiralTrader);
+        var report = SourcePressureRuntimeReportBuilder.Build(finalDb, admiralTrader);
         var economyModPath = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
         var reportDirectory = Path.GetDirectoryName(Path.Combine(economyModPath, config.ReportRelativePath))
             ?? Path.Combine(economyModPath, "reports");

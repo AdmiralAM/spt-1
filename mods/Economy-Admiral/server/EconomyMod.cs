@@ -18,7 +18,8 @@ public sealed class EconomyMod(
     QuestProvenanceDeltaService questProvenanceDeltaService,
     EnforcementPlanService enforcementPlanService,
     GroupedItemRuntimeEvidenceService groupedItemRuntimeEvidenceService,
-    SourcePressureObservationPipelineService sourcePressureObservationPipelineService
+    SourcePressureObservationPipelineService sourcePressureObservationPipelineService,
+    EconomyHealthRuntimeReportService economyHealthRuntimeReportService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
@@ -30,19 +31,18 @@ public sealed class EconomyMod(
         var vanillaBaseline = vanillaBaselineService.GetSnapshot();
         runtimeEvidenceService.CaptureBefore();
 
-        // Primary acquisition and progression need their own source scans. Unified analysis is the
-        // single final-quest metric scan; utility/constraint reports are projections from that snapshot.
         await auditService.RunAsync(vanillaBaseline, cancellationToken);
         var progressionSnapshot = await questProgressionGraphService.RunAsync(vanillaBaseline, cancellationToken);
         var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, vanillaBaseline, cancellationToken);
-
         await rewardUtilityAuditService.RunAsync(questAnalysis, vanillaBaseline, cancellationToken);
         await questConstraintAuditService.RunAsync(questAnalysis, vanillaBaseline, cancellationToken);
 
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
 
-        // Observation remains separate from enforcement: evidence is emitted but never consumed by policy.
-        await sourcePressureObservationPipelineService.RunAsync(config, cancellationToken);
+        // Observation is startup-only and remains separated from enforcement. Unknown channel evidence
+        // stays explicit rather than being converted into zero supply or policy authorization.
+        var sourcePressure = await sourcePressureObservationPipelineService.RunAsync(config, vanillaBaseline, cancellationToken);
+        await economyHealthRuntimeReportService.RunAsync(config, sourcePressure, cancellationToken);
 
         GroupedItemRewardSlot.ResetEvidence();
         var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
