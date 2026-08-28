@@ -20,7 +20,9 @@ public sealed class EconomyMod(
     GroupedItemRuntimeEvidenceService groupedItemRuntimeEvidenceService,
     SourcePressureObservationPipelineService sourcePressureObservationPipelineService,
     EconomyHealthRuntimeReportService economyHealthRuntimeReportService,
-    TraderPurchasePressureService traderPurchasePressureService
+    TraderPurchasePressureService traderPurchasePressureService,
+    FleaPurchasePressureService fleaPurchasePressureService,
+    LootPressureService lootPressureService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
@@ -48,9 +50,9 @@ public sealed class EconomyMod(
         GroupedItemRewardSlot.ResetEvidence();
         var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, observation.AdmiralTrader, cancellationToken);
 
-        // Playable Economy v1 trader slice: raise currency-denominated purchase costs only.
-        // No stock, loyalty, quest locks, barter intent, or Admiral Trader authored finite-offer semantics are changed.
         traderPurchasePressureService.Apply(config);
+        fleaPurchasePressureService.Apply(config);
+        lootPressureService.Apply(config);
 
         await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);
         await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);

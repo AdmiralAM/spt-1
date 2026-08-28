@@ -28,6 +28,11 @@ public sealed record EconomyConfig
     public bool EnableItemRewardStackNormalization { get; init; } = false;
     public bool EnableTraderPurchasePressure { get; init; } = false;
     public double CustomTraderPurchasePriceMultiplier { get; init; } = 1.15;
+    public bool EnableFleaPurchasePressure { get; init; } = false;
+    public double CustomFleaBasePriceMultiplier { get; init; } = 1.65;
+    public bool EnableLootPressure { get; init; } = false;
+    public double CustomLooseLootScale { get; init; } = 0.85;
+    public double CustomStaticLootScale { get; init; } = 0.85;
     public RarityThresholds Rarity { get; init; } = new();
     public AuditPolicy CustomAuditPolicy { get; init; } = new();
     public Dictionary<string, ManualItemOverride> ManualOverrides { get; init; } = new(StringComparer.Ordinal);
