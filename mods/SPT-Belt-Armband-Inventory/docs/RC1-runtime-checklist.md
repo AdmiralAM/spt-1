@@ -2,7 +2,7 @@
 
 Target: SPT 4.1.3.
 
-This checklist describes the **current exact-head mechanics**. Historical 1x1 medical HeadBand candidates are obsolete. The current HeadBand is a `1x2` utility container with an exact currency/cigarette/wallet whitelist. The current mechanical Belt candidate is `2x2` magazine-only; ArmBand remains `1x2` magazine-only.
+This checklist describes the **current exact-head mechanics**. Historical 1x1 medical HeadBand candidates are obsolete. The current HeadBand is a `1x2` utility container with an exact currency/cigarette/wallet whitelist. The current mechanical Belt candidate is `2x2` magazine-only; ArmBand remains `1x2` magazine-only. The matching technical architecture is recorded in `DESIGN-SPT-4.1.3-BELT.md`.
 
 Do not use the user as a per-patch debugger. This gate is valid only after the same exact head has passed the hot-path guard, deterministic regressions, offline profile recovery, client build, server build and install-tree packaging.
 
