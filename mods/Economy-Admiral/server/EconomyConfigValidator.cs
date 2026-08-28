@@ -28,6 +28,8 @@ public static class EconomyConfigValidator
             || config.CustomFleaBasePriceMultiplier < 1.0
             || config.CustomFleaBasePriceMultiplier > 2.5)
             throw new InvalidOperationException("Economy Admiral config: CustomFleaBasePriceMultiplier must be finite and within 1.0..2.5.");
+        ValidateLootScale(config.CustomLooseLootScale, nameof(config.CustomLooseLootScale));
+        ValidateLootScale(config.CustomStaticLootScale, nameof(config.CustomStaticLootScale));
 
         if (config.Rarity.CommonMinSources < 1 || config.Rarity.UncommonMinSources < 1 || config.Rarity.RareMinSources < 1
             || !(config.Rarity.CommonMinSources > config.Rarity.UncommonMinSources && config.Rarity.UncommonMinSources > config.Rarity.RareMinSources))
@@ -80,6 +82,12 @@ public static class EconomyConfigValidator
                 ValidateExactPrecision(stackTarget, 0, $"QuestRewardOverrides[{questId}].ItemRewardStackCountTarget", "an integer stack count");
             }
         }
+    }
+
+    private static void ValidateLootScale(double value, string name)
+    {
+        if (!double.IsFinite(value) || value < 0.50 || value > 1.00)
+            throw new InvalidOperationException($"Economy Admiral config: {name} must be finite and within 0.50..1.00.");
     }
 
     private static void ValidateExactPrecision(double value, int decimals, string name, string requirement)
