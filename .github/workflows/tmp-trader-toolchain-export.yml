@@ -24,18 +24,34 @@ jobs:
         with:
           dotnet-version: 10.0.400
 
-      - name: Package portable toolchain
+      - name: Package minimal portable toolchain
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p toolchain
           dotnet --info
           pwsh -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
           test -n "${DOTNET_ROOT:-}"
-          tar -C "$DOTNET_ROOT" -czf toolchain/dotnet-sdk-10.0.400-linux-x64.tar.gz .
+
+          portable="$RUNNER_TEMP/dotnet-portable"
+          mkdir -p "$portable" toolchain
+          cp "$DOTNET_ROOT/dotnet" "$portable/dotnet"
+          chmod +x "$portable/dotnet"
+
+          mkdir -p "$portable/host/fxr" "$portable/sdk" "$portable/shared/Microsoft.NETCore.App" "$portable/shared/Microsoft.AspNetCore.App" "$portable/packs"
+          cp -a "$DOTNET_ROOT"/host/fxr/10.0.* "$portable/host/fxr/"
+          cp -a "$DOTNET_ROOT/sdk/10.0.400" "$portable/sdk/"
+          cp -a "$DOTNET_ROOT"/shared/Microsoft.NETCore.App/10.0.* "$portable/shared/Microsoft.NETCore.App/"
+          cp -a "$DOTNET_ROOT"/shared/Microsoft.AspNetCore.App/10.0.* "$portable/shared/Microsoft.AspNetCore.App/"
+          cp -a "$DOTNET_ROOT"/packs/Microsoft.NETCore.App.Ref/10.0.* "$portable/packs/"
+          cp -a "$DOTNET_ROOT"/packs/Microsoft.AspNetCore.App.Ref/10.0.* "$portable/packs/"
+          cp -a "$DOTNET_ROOT"/packs/Microsoft.NETCore.App.Host.linux-x64/10.0.* "$portable/packs/"
+          if test -d "$DOTNET_ROOT/packs/NETStandard.Library.Ref"; then cp -a "$DOTNET_ROOT/packs/NETStandard.Library.Ref" "$portable/packs/"; fi
+
+          tar -C "$portable" -czf toolchain/dotnet-sdk-10.0.400-linux-x64.tar.gz .
           pwsh_bin="$(readlink -f "$(command -v pwsh)")"
           pwsh_root="$(dirname "$pwsh_bin")"
           tar -C "$pwsh_root" -czf toolchain/powershell-linux-x64.tar.gz .
+
           test "$(git -C source rev-parse HEAD)" = "708c0002df7aff5d190d9ddcd001c57a9b1445c2"
           test -z "$(git -C source status --porcelain --untracked-files=all)"
 
