@@ -5,6 +5,12 @@ on:
     paths:
       - 'mods/Admiral-Trader/**'
       - '.github/workflows/admiral-trader-baseline-overlap.yml'
+  push:
+    branches:
+      - 'feature/admiral-trader-gameplay-alpha-assort'
+    paths:
+      - 'mods/Admiral-Trader/**'
+      - '.github/workflows/admiral-trader-baseline-overlap.yml'
   workflow_dispatch:
 
 permissions:
