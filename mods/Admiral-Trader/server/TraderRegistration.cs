@@ -50,6 +50,7 @@ public sealed class AdmiralTraderRegistration(
             modHelper.GetJsonDataFromFile<Dictionary<string, Dictionary<MongoId, MongoId>>>(modPath, "db/questassort.json");
 
         ValidateTraderData(traderBase, assort, questAssort);
+        PreflightRegistrationSurfaces(traderBase.Id);
         RegisterAvatarRoute(modPath, traderBase);
 
         traderConfig.UpdateTime.Add(new UpdateTime
@@ -57,7 +58,8 @@ public sealed class AdmiralTraderRegistration(
             TraderId = traderBase.Id,
             Seconds = new MinMax<int>(timeUtil.GetHoursAsSeconds(1), timeUtil.GetHoursAsSeconds(2))
         });
-        ragfairConfig.Traders.TryAdd(traderBase.Id, true);
+        if (!ragfairConfig.Traders.TryAdd(traderBase.Id, true))
+            throw new InvalidOperationException($"Cannot register Admiral Trader: ragfair config already contains trader id {traderBase.Id}");
 
         Trader trader = new()
         {
@@ -68,10 +70,20 @@ public sealed class AdmiralTraderRegistration(
         };
 
         if (!tradersTable.TryAdd(traderBase.Id, trader))
-            throw new InvalidOperationException($"Cannot register Admiral Trader: trader id {traderBase.Id} already exists");
+            throw new InvalidOperationException($"Cannot register Admiral Trader: trader id {traderBase.Id} appeared after collision preflight");
 
         AddLocales(traderBase);
         logger.Success($"Admiral Trader registered with id {traderBase.Id} and {assort.Items.Count} assort item records");
+    }
+
+    private void PreflightRegistrationSurfaces(MongoId traderId)
+    {
+        if (tradersTable.ContainsKey(traderId))
+            throw new InvalidOperationException($"Cannot register Admiral Trader: trader table already contains id {traderId}");
+        if (traderConfig.UpdateTime.Any(entry => entry.TraderId == traderId))
+            throw new InvalidOperationException($"Cannot register Admiral Trader: trader update-time config already contains id {traderId}");
+        if (ragfairConfig.Traders.ContainsKey(traderId))
+            throw new InvalidOperationException($"Cannot register Admiral Trader: ragfair config already contains id {traderId}");
     }
 
     private void RegisterAvatarRoute(string modPath, TraderBase traderBase)
