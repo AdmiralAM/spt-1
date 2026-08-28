@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate the canonical self-advancing SPT workstream registry."""
+"""Validate the canonical user-authorized, self-advancing SPT workstreams."""
 
 from __future__ import annotations
 
@@ -10,15 +10,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 REGISTRY = ROOT / ".github" / "workstreams.json"
 RESUME_POLICY = "first-phase-without-recorded-acceptance-evidence"
-VALID_STATES = {"ACTIVE", "BLOCKED", "RUNTIME_GATE", "PARKED", "STABLE"}
-VALID_GATES = {"none", "queued", "active", "passed", "failed"}
 REQUIRED = {
-    "workstreamName", "productName", "modulePath", "version", "state",
-    "resumePolicy", "phasePlan", "userGate", "frozen", "stableAcceptance",
+    "workstreamName", "productName", "modulePath", "version",
+    "resumePolicy", "phasePlan", "frozen", "stableAcceptance",
 }
 DEPRECATED_DYNAMIC_POINTERS = {
     "activeIssue", "activePr", "activeBranch", "currentPhase",
-    "activePackage", "roadmap", "successor",
+    "activePackage", "roadmap", "successor", "state", "userGate",
 }
 
 
@@ -33,39 +31,50 @@ def main() -> None:
     except (OSError, json.JSONDecodeError) as error:
         fail(str(error))
 
-    if data.get("schemaVersion") != 2:
-        fail("schemaVersion must be 2")
-    controller = data.get("controller", {})
-    if controller.get("name") != "GitHub Work SPT":
-        fail("GitHub Work SPT must be the controller")
-    if controller.get("workersMayEditControl") is not False:
-        fail("workersMayEditControl must be false")
-    if controller.get("governanceBranchPrefix") != "governance/":
+    if data.get("schemaVersion") != 3:
+        fail("schemaVersion must be 3")
+    if "controller" in data:
+        fail("controller is forbidden; no worker may gate another worker")
+    authority = data.get("authority", {})
+    if authority.get("productAuthority") != "user":
+        fail("the user must be the sole product authority")
+    if authority.get("coordinationWorker") != "GitHub Work SPT":
+        fail("GitHub Work SPT must remain the coordination worker")
+    if authority.get("coordinationWorkerMayGateExecution") is not False:
+        fail("the coordination worker must not gate execution")
+    if authority.get("workerRequiresAnotherWorkerPermission") is not False:
+        fail("workers must not require another worker's permission")
+    if authority.get("workerMayEncodeExplicitUserGovernanceInstruction") is not True:
+        fail("workers must be able to encode an explicit user instruction")
+    if authority.get("governanceBranchPrefix") != "governance/":
         fail("governanceBranchPrefix must be governance/")
 
     execution = data.get("execution", {})
-    if execution.get("roadmapAuthorization") != "all-recorded-phases":
-        fail("the entire recorded roadmap must be authorized")
+    if execution.get("roadmapAuthorization") != "user-standing-authorization-all-recorded-phases":
+        fail("the entire recorded roadmap must carry the user's standing authorization")
     if execution.get("resumePolicy") != RESUME_POLICY:
         fail("execution resumePolicy is invalid")
     if execution.get("workerMayAdvanceWithinRecordedRoadmap") is not True:
         fail("workers must advance within the recorded roadmap")
     if execution.get("registryUpdateRequiredForRecordedPhaseTransition") is not False:
         fail("ordinary recorded phase transitions must not require registry edits")
-    if execution.get("maxActiveRuntimeGates") != 1:
-        fail("exactly one active runtime gate is permitted")
+    if "maxActiveRuntimeGates" in execution:
+        fail("global runtime-gate counters require forbidden inter-worker coordination")
+    if execution.get("runtimeGateActivation") != "worker-direct-to-user-at-recorded-runtime-phase":
+        fail("runtime handoff must go directly from the worker to the user")
+    if execution.get("workerMayRequestUserRuntimeDirectly") is not True:
+        fail("workers must be able to request the recorded runtime gate directly")
     if execution.get("maxActivePullRequestsPerModule") != 1:
         fail("at most one active PR per module is permitted")
-    if execution.get("workerMayChangeRoadmap") is not False:
-        fail("workerMayChangeRoadmap must be false")
-    if execution.get("workerMayPerformGovernance") is not False:
-        fail("workerMayPerformGovernance must be false")
+    if execution.get("workerMayChangeRoadmapWithoutExplicitUserInstruction") is not False:
+        fail("workers must not change roadmaps without an explicit user instruction")
+    if execution.get("workerMayPerformGovernanceWithoutExplicitUserInstruction") is not False:
+        fail("workers must not perform governance without an explicit user instruction")
 
     workstreams = data.get("workstreams")
     if not isinstance(workstreams, dict) or not workstreams:
         fail("workstreams must be a non-empty object")
 
-    active_gates = 0
     phase_count = 0
     for key, stream in workstreams.items():
         if not isinstance(stream, dict):
@@ -76,11 +85,6 @@ def main() -> None:
         deprecated = DEPRECATED_DYNAMIC_POINTERS & stream.keys()
         if deprecated:
             fail(f"{key} contains controller-churn pointers {sorted(deprecated)}")
-        if stream["state"] not in VALID_STATES:
-            fail(f"{key}.state is invalid")
-        if stream["userGate"] not in VALID_GATES:
-            fail(f"{key}.userGate is invalid")
-        active_gates += stream["userGate"] == "active"
         if stream["resumePolicy"] != RESUME_POLICY:
             fail(f"{key}.resumePolicy is invalid")
         if not stream["stableAcceptance"]:
@@ -115,11 +119,9 @@ def main() -> None:
             fail(f"{key}.phasePlan must contain a physical runtime phase")
         phase_count += len(phases)
 
-    if active_gates > execution["maxActiveRuntimeGates"]:
-        fail("too many active user runtime gates")
     print(
         f"workstream registry valid: {len(workstreams)} modules, "
-        f"{phase_count} pre-authorized phases, {active_gates} active runtime gates"
+        f"{phase_count} user-authorized phases, direct user runtime handoff"
     )
 
 

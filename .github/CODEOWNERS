@@ -1,4 +1,4 @@
-# Repository control plane
+# User-owned repository control plane
 /AGENTS.md @AdmiralAM
 /.github/workstreams.json @AdmiralAM
 /.github/CODEOWNERS @AdmiralAM

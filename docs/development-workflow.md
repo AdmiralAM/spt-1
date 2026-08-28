@@ -17,13 +17,13 @@ Do not use policy copied into a long-lived feature branch. Reading current contr
 - Target `main` unless a real code dependency requires a temporary stack.
 - Do not open empty, planning-only, checkpoint, successor, or artifact-only PRs.
 - Keep implementation/completion evidence in module Issues/PRs; keep only durable product authorization in the registry.
-- Control-plane changes use one `governance/*` branch and are owned by `GitHub Work SPT`.
+- Control-plane changes use one `governance/*` branch and require an explicit user instruction. The worker receiving that instruction may implement it; `GitHub Work SPT` is not an approval dependency.
 
 ## Integration lifecycle
 
 `Issue -> branch -> implementation -> module CI -> PR -> runtime gate if required -> merge -> verify main -> update/close Issue -> delete temporary branch`
 
-CI, a commit, merge, or packaged artifact is evidence, not a reason to stop. A completed recorded phase automatically advances to the next phase-plan entry without a registry edit or new instruction.
+CI, a commit, merge, or packaged artifact is evidence, not a reason to stop. A completed recorded phase automatically advances to the next phase-plan entry without a registry edit, another chat's permission, or a new instruction.
 
 After merge, remove obsolete temporary branches and close superseded PRs. Preserve historical PRs and commits; do not revive an old stack as an active roadmap.
 

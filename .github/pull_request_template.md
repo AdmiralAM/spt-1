@@ -1,4 +1,4 @@
-## Authority
+## Standing user authorization
 
 - Workstream key:
 - Active Issue:
@@ -28,4 +28,4 @@
 - Target branch:
 - Issue/branch cleanup after merge:
 
-Worker PRs execute `origin/main:.github/workstreams.json`; they do not redefine policy, roadmap, scope, identity, or release state.
+Worker PRs execute the complete recorded plan in `origin/main:.github/workstreams.json` without permission from another chat. They do not redefine policy, roadmap, scope, or identity unless faithfully implementing an explicit user instruction.
