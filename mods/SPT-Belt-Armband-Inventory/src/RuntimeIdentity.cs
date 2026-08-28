@@ -45,6 +45,6 @@ namespace SPTBeltArmbandInventory
         internal const int DedicatedMagazineBeltGridColumns = 2;
         internal const int DedicatedMagazineBeltGridRows = 2;
         internal const int EmergencyHeadBandGridColumns = 1;
-        internal const int EmergencyHeadBandGridRows = 1;
+        internal const int EmergencyHeadBandGridRows = 2;
     }
 }
