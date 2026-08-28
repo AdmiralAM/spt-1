@@ -14,8 +14,10 @@ Set-StrictMode -Version Latest
 $moduleRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $repoRoot = (Resolve-Path (Join-Path $moduleRoot '..\..')).Path
 $builder = Join-Path $PSScriptRoot 'build_spt413_test_candidate.ps1'
+$recoverySource = Join-Path $PSScriptRoot 'Reset-AdmiralTraderProfile.ps1'
 
 if (-not (Test-Path $builder)) { throw "Exact-runtime builder is missing: $builder" }
+if (-not (Test-Path $recoverySource)) { throw "Profile recovery tool is missing: $recoverySource" }
 
 $expected = $ExpectedHeadSha.Trim().ToLowerInvariant()
 if ($expected -notmatch '^[0-9a-f]{40}$') { throw 'ExpectedHeadSha must be the full 40-character hexadecimal Git SHA.' }
@@ -36,8 +38,11 @@ $basePath = Join-Path $stageMod 'db\base.json'
 $assortPath = Join-Path $stageMod 'db\assort.json'
 $questAssortPath = Join-Path $stageMod 'db\questassort.json'
 $serverDllPath = Join-Path $stageMod 'Admiral Trader Server.dll'
+$recoveryPath = Join-Path $stageMod 'tools\Reset-AdmiralTraderProfile.ps1'
+New-Item (Split-Path $recoveryPath -Parent) -ItemType Directory -Force | Out-Null
+Copy-Item $recoverySource $recoveryPath -Force
 
-foreach ($required in @($provenancePath, $manifestPath, $identityPath, $basePath, $assortPath, $questAssortPath, $serverDllPath)) {
+foreach ($required in @($provenancePath, $manifestPath, $identityPath, $basePath, $assortPath, $questAssortPath, $serverDllPath, $recoveryPath)) {
     if (-not (Test-Path $required)) { throw "Exact-runtime staging is incomplete: missing $required" }
 }
 
@@ -98,6 +103,7 @@ try {
         'SPT_Runtime/user/mods/Admiral-Trader/db/base.json',
         'SPT_Runtime/user/mods/Admiral-Trader/db/assort.json',
         'SPT_Runtime/user/mods/Admiral-Trader/db/questassort.json',
+        'SPT_Runtime/user/mods/Admiral-Trader/tools/Reset-AdmiralTraderProfile.ps1',
         "SPT_Runtime/user/mods/Admiral-Trader/$portraitRelative"
     )
     foreach ($entry in $requiredEntries) { if ($entries -notcontains $entry) { throw "Exact-runtime archive layout is invalid; missing $entry" } }
@@ -119,7 +125,7 @@ if ($Install) {
 
     foreach ($scratch in @($incoming, $backup)) { if (Test-Path $scratch) { Remove-Item $scratch -Recurse -Force } }
     Copy-Item $stageMod $incoming -Recurse
-    foreach ($requiredRelative in @('candidate-provenance.json','Admiral Trader Server.dll','manifests\runtime-manifest.json','manifests\identity-assets.json','db\base.json','db\assort.json','db\questassort.json',($portraitRelative -replace '/', '\'))) {
+    foreach ($requiredRelative in @('candidate-provenance.json','Admiral Trader Server.dll','manifests\runtime-manifest.json','manifests\identity-assets.json','db\base.json','db\assort.json','db\questassort.json','tools\Reset-AdmiralTraderProfile.ps1',($portraitRelative -replace '/', '\'))) {
         if (-not (Test-Path (Join-Path $incoming $requiredRelative))) {
             Remove-Item $incoming -Recurse -Force -ErrorAction SilentlyContinue
             throw "Prepared install tree is incomplete: missing $requiredRelative"
