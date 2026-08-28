@@ -1,118 +1,89 @@
-# Admiral Trader — SPT 4.1.3 Test Candidate Gate
+# Admiral Trader — SPT 4.1.3 release-candidate gate
 
-This document is the physical-runtime acceptance contract for Issue #146. It is not a release checklist and does not approve merge by itself.
+This document is the physical-runtime handoff contract for Issue #192. It does not activate the user gate, approve merge, or replace `origin/main:AGENTS.md` and `.github/workstreams.json`.
 
-## Source state before handoff
+## Authority and gate state
 
-The PR head must satisfy all Admiral Trader workflows. Source `runtime-manifest.json` must remain fail-closed (`registrationEnabled=false`, `publicationMode=test-candidate-source`). The exact-runtime builder is the only supported path that produces an enabled candidate.
+The Trader workstream remains controlled by `GitHub Work SPT`. The current user runtime gate is queued. A module worker may complete source validation, exact-head packaging and release hardening, but only the controller may activate the single batched runtime handoff.
 
-Final trader portrait/character art is intentionally outside this gate. The candidate uses the explicit built-in placeholder route declared in `base.json` and the runtime manifest.
+Source `runtime-manifest.json` remains fail-closed (`registrationEnabled=false`, `publicationMode=test-candidate-source`). An enabled runtime tree is produced only by the maintained staging/package path.
 
-The physical candidate must be built from the exact tested PR head against SPT 4.1.3 runtime assemblies. Build provenance must record the source head and exact runtime binary hashes so runtime evidence cannot describe a different source/runtime pair than the one accepted by CI.
+## Frozen candidate contract
 
-## Candidate publication topology
+The candidate must preserve all current frozen product identity and counts:
 
-Ordinary Admiral Trader validation and installable runtime-candidate publication are intentionally different CI concerns.
+- product: **Admiral Trader**, version `0.1.0`;
+- trader ID: `d5c27bb3169f8dfbc13f6b69`;
+- portrait route: `/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg`;
+- exact final portrait identity from `manifests/identity-assets.json`;
+- exactly 31 canonical quests;
+- exactly 4 Baseline plus 7 Milestone offers;
+- initial Admiral standing `0`;
+- unaccepted quests remain unaccepted;
+- persistent IDs remain governed by `manifests/persistent-identities.json`.
 
-- Module validation continues on Admiral source/path changes, including stacked post-candidate PRs.
-- Automatic `Admiral Trader SPT 4.1.3 Candidate` publication is reserved for pull requests whose base branch is `main`.
-- A PR stacked on another feature/runtime-gate branch must not automatically stage or upload a candidate artifact; such an artifact could be mistaken for the accepted Gate A package.
-- `workflow_dispatch` remains available when a candidate build is deliberately requested outside the automatic main-targeted topology.
+The current stock model is mixed by design: four finite Baseline offers are available without quest gates, while seven finite Milestone offers are unlocked by their authored quest mappings. The candidate must never reinterpret all eleven offers as quest-gated.
 
-A successful validation workflow on a stacked PR therefore does **not** imply that a new physical runtime candidate should exist. The accepted Gate A source/artifact pair remains whatever exact head was explicitly handed off under this document until a later candidate is deliberately cut.
+## Mandatory automated boundary
 
-## Mandatory artifact boundary
+Before any physical SPT test is requested, all feasible module validation must be green for the exact source head and the exact-head package must be available as a GitHub artifact or deliberately promoted package. The handoff must identify:
 
-A user runtime handoff is **not valid** from a source checkout, PR diff, branch name, or green source workflow alone.
+- PR and branch;
+- full 40-character source SHA;
+- successful workflow/run;
+- artifact name/ID and digest;
+- install layout `SPT_Runtime/user/mods/Admiral-Trader`;
+- `candidate-provenance.json` from that package.
 
-Before asking for any physical SPT test, the exact PR head must have a downloadable GitHub Actions artifact (or deliberately promoted runtime package) that contains the installable Admiral Trader candidate produced from the exact SPT 4.1.3 runtime build path. The handoff must name:
+A source commit, PR, CI result, local ZIP or preflight artifact is not by itself a valid physical-runtime handoff.
 
-- PR number and branch;
-- exact 40-character source SHA;
-- successful workflow/run ID;
-- exact artifact name;
-- expected install layout;
-- candidate provenance file contained in the package.
+## Exact-runtime build and package contract
 
-If source CI is green but no installable artifact exists, the gate remains **repo-side incomplete** and no user test is requested.
+`tools/build_spt413_test_candidate.ps1` must build the exact clean source head against the real installed SPT 4.1.3 runtime assemblies and record their hashes. `tools/package_spt413_exact_candidate.ps1` must then validate and package that staged tree.
 
-## Exact-runtime build contract
+The exact package must contain at least:
 
-The maintained builder is `tools/build_spt413_test_candidate.ps1`. When executed in the controlled packaging environment it must:
+- `Admiral Trader Server.dll`;
+- `candidate-provenance.json`;
+- `db/base.json`, `db/assort.json`, `db/questassort.json` and all 31 quest templates;
+- all required EN/RU locale layers;
+- `manifests/runtime-manifest.json`, `identity-assets.json` and `persistent-identities.json`;
+- the exact approved portrait asset;
+- `tools/Reset-AdmiralTraderProfile.ps1`.
 
-1. verify the checkout is a clean Git working tree;
-2. verify the current commit matches the expected PR head SHA;
-3. locate the real `SPTarkov.Server.Core.dll`;
-4. reject any assembly whose version is not `4.1.3.x`;
-5. compile `Admiral Trader Server.dll` against those exact runtime assemblies, not the 4.1.2 NuGet baseline;
-6. create `build/admiral-trader-test-candidate/SPT_Runtime/user/mods/Admiral-Trader`;
-7. enable registration only in the staged manifest;
-8. write `candidate-provenance.json` with the full source SHA, Server.Core version/SHA-256 and built Admiral server DLL SHA-256;
-9. reject temporary/debug artifacts in the staged package.
+Packaging must reject build/debug junk, wrong source HEAD, wrong runtime identity, wrong portrait identity, wrong questassort casing/counts, or an incomplete recovery tree. Optional installation uses prepare-then-swap semantics with rollback on activation failure.
 
-The published artifact must preserve that staged layout. `candidate-provenance.json` must travel with the runtime evidence and must not be committed back to the source branch.
+## Profile safety and recovery
 
-## Server-only smoke gate
+New profiles must obtain Admiral standing `0` from the profile template. The module must not pre-accept or pre-complete its quests.
 
-Start the SPT 4.1.3 server before launching the client. The server must reach normal ready state without an Admiral exception. Evidence must show:
+For existing-profile reset/update/disable/uninstall testing, use the packaged recovery tool rather than manual JSON editing:
 
-- Admiral exact-runtime item gate verifies all referenced TPLs;
-- Admiral trader registers once under ID `d5c27bb3169f8dfbc13f6b69`;
-- 31 authored Admiral quests register;
-- no missing item/weapon TPL is reported;
-- no duplicate trader or quest ID is reported;
-- no locale load exception occurs.
+```powershell
+.\tools\Reset-AdmiralTraderProfile.ps1 -ProfilePath <profile.json>
+.\tools\Reset-AdmiralTraderProfile.ps1 -ProfilePath <profile.json> -Apply
+```
 
-Any failure here blocks client testing and merge.
+The first command is preview-only. `-Apply` creates and SHA-256 verifies a timestamped backup **before** mutation, removes only state owned by current or retired Admiral identities from `persistent-identities.json`, validates the rewritten JSON, and restores the backup on write failure. The retained backup is not deleted automatically.
 
-## New-profile client gate
+## One batched runtime gate
 
-Use a disposable/new profile for the first functional pass.
+When the controller activates the gate, use one copied/disposable profile session to cover the complete candidate rather than per-patch testing.
 
-Verify:
+The minimum PASS set is:
 
-- exactly one custom trader named `Admiral` / `Адмирал` is present;
-- the test placeholder image resolves (visual quality is not under test);
-- no legacy Andrudis six-trader zoo appears;
-- no legacy QuestManiac quest mass is exposed;
-- current available quests belong to the curated Access/Arsenal campaign only and respect their level/prerequisite gates;
-- quest text renders as authored text, not raw `<quest id> name/description/...` locale keys;
-- Admiral assort is not an unrestricted shop: current offers are quest-gated and finite.
+1. Server reaches normal ready state with one Admiral trader, no duplicate IDs, missing TPLs, locale exceptions, or load/save errors.
+2. Trader portrait resolves from the frozen route and renders with the approved proportions.
+3. A fresh profile shows Admiral standing exactly `0`; no Admiral quest is already accepted or completed.
+4. Exactly 31 Admiral quests are published with readable EN/RU text and correct level/prerequisite lifecycle.
+5. Quest completion delivers XP, Admiral standing, RUB/item rewards and any authored sample reward through the normal SPT reward/mail path.
+6. Exactly four finite Baseline offers are present without quest gates; exactly seven finite Milestone offers follow `questassort.success` and preserve stock/buy limits.
+7. `Access Protocol: Clearance` unlocks only the Labs access offer; each of the six normal Arsenal Munitions milestones unlocks only its mapped ammunition offer; Special Weapons remains sample-only with no permanent offer.
+8. A copied existing profile survives preview/apply recovery, retains unrelated profile state, and recreates current Admiral TraderInfo at standing `0` on subsequent trader access.
+9. Update/disable/uninstall recovery does not strand current or retired Admiral-owned quest/trader state or corrupt profile load/save.
 
-## Quest / assort spot checks
+On any FAIL, preserve the minimal exact evidence (source SHA/provenance, relevant log/stack trace, quest or offer ID, and concise observed result) and return to remediation. Do not mix evidence from different source heads.
 
-A full playthrough is not required for the first gate. Profile state may be advanced only in a disposable test profile when needed to verify unlock mechanics.
+## Stable promotion boundary
 
-Required mechanics:
-
-1. `Access Protocol: Clearance` success exposes the finite Labs access-card offer.
-2. Each of the six Arsenal `Munitions` quest successes exposes only its mapped ammunition offer.
-3. Each ammunition offer retains its configured finite stock/buy restriction.
-4. `Special Weapons - Munitions` awards exactly one green RSP-30 sample (`6217726288ed9f0845317459`) and creates no permanent assort offer.
-5. Completing one family does not unlock another family's ammunition.
-
-## Existing-profile migration smoke gate
-
-Use a copied profile only; never risk the user's primary profile for the first migration check.
-
-Confirm that installing Admiral Trader does not expose unstarted legacy QuestManiac content. If an existing legacy active quest is present, capture its current status before and after server start; no direct profile mutation is permitted by the current source implementation.
-
-The completion-bridge behavior remains a separate migration acceptance item if a representative active legacy profile is available.
-
-## Evidence required for Issue #146
-
-Retain only the evidence needed to make a merge decision:
-
-- `candidate-provenance.json` from the exact staged/installed package;
-- SPT server log from the candidate startup/test session;
-- screenshot or concise observation confirming one Admiral trader and readable quest UI;
-- any exception stack trace in full if the server/client fails;
-- for unlock checks, the quest ID and observed offer result.
-
-The server log and provenance must describe the same test run and source head. If the candidate is rebuilt, discard evidence from the older candidate rather than mixing runs.
-
-Do not commit runtime logs, profile copies, generated build folders, screenshots, provenance files or ZIP packages to the source branch.
-
-## Merge rule
-
-PR #151 must remain Draft/unmerged until an exact-head installable SPT 4.1.3 artifact exists and its physical build/start/UI evidence is accepted. Source CI alone proves schema/tooling/package structure, not the final server assembly version or live quest/trader behavior.
+Only an exact candidate that passes the activated batched runtime gate can proceed to stable publication. Source validation, packaging, a preflight artifact, or an untested exact-runtime archive is not stable acceptance.
