@@ -8,6 +8,14 @@ namespace SPTBeltArmbandInventory.Server.Patches;
 
 public sealed class IsItemKeptAfterDeathPatch : AbstractPatch
 {
+    private static readonly ProtectedWearableRoot[] ProtectedRoots =
+    [
+        new(BeltDeathPolicy.ArmBand, RuntimeIdentity.CandidateItemId),
+        new(BeltDeathPolicy.ArmBand, RuntimeIdentity.WristWalletItemId),
+        new(RuntimeIdentity.DedicatedBeltWireSlotId, RuntimeIdentity.DedicatedMagazineBeltItemId),
+        new(RuntimeIdentity.DedicatedHeadBandWireSlotId, RuntimeIdentity.EmergencyHeadBandItemId)
+    ];
+
     protected override MethodBase? GetTargetMethod()
     {
         var methods = typeof(InRaidHelper).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
@@ -39,7 +47,7 @@ public sealed class IsItemKeptAfterDeathPatch : AbstractPatch
             item.SlotId,
             item.Template.ToString()));
 
-        if (BeltDeathPolicy.ShouldKeep(itemToCheck.Id.ToString(), nodes, RuntimeCandidateBeltItem.RuntimeCandidateTpl))
+        if (BeltDeathPolicy.ShouldKeep(itemToCheck.Id.ToString(), nodes, ProtectedRoots))
             __result = true;
     }
 }
