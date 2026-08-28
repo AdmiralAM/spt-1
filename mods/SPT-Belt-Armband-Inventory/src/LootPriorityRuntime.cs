@@ -2,12 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace SPTBeltArmbandInventory
 {
     internal static class LootPriorityRuntime
     {
-        static MethodInfo getSlot;
+        static Func<object, object, object> getSlot;
+        static Func<IList> createTypedList;
         static object armBandValue;
         static object dedicatedBeltValue;
         static Type containerType;
@@ -17,8 +19,8 @@ namespace SPTBeltArmbandInventory
         {
             logWarning = warning;
             MethodInfo target = FindTarget(equipmentType);
-            getSlot = ReflectionTools.FindInstanceMethod(equipmentType, "GetSlot", null, slotEnumType);
-            if (target == null || getSlot == null || !target.ReturnType.IsGenericType)
+            MethodInfo getSlotMethod = ReflectionTools.FindInstanceMethod(equipmentType, "GetSlot", null, slotEnumType);
+            if (target == null || getSlotMethod == null || !target.ReturnType.IsGenericType)
                 return Fail("SPT 4.1 GetPrioritizedContainersForLoot shape was not found; wearable loot priority was not patched.");
 
             Type[] genericArguments = target.ReturnType.GetGenericArguments();
@@ -26,6 +28,11 @@ namespace SPTBeltArmbandInventory
                 return Fail("SPT 4.1 loot-priority return type changed; wearable loot priority was not patched.");
 
             containerType = genericArguments[0];
+            getSlot = BuildBinaryObjectCall(equipmentType, slotEnumType, getSlotMethod);
+            createTypedList = BuildListFactory(containerType);
+            if (getSlot == null || createTypedList == null)
+                return Fail("SPT 4.1 loot-priority startup delegates could not be bound; wearable loot priority was not patched.");
+
             armBandValue = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand);
             dedicatedBeltValue = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedBeltEquipmentSlotValue);
             object postfix = harmonyMethodConstructor.Invoke(new object[] { typeof(LootPriorityRuntime).GetMethod(nameof(Postfix), BindingFlags.Static | BindingFlags.NonPublic) });
@@ -36,6 +43,7 @@ namespace SPTBeltArmbandInventory
         internal static void Reset()
         {
             getSlot = null;
+            createTypedList = null;
             armBandValue = null;
             dedicatedBeltValue = null;
             containerType = null;
@@ -64,8 +72,7 @@ namespace SPTBeltArmbandInventory
                 List<object> vanilla = ToObjects(__result);
                 LootItemKind kind = InferKind(vanilla, groups, __args[1]);
                 string[] order = LootPriorityPlan.Build(kind, true);
-                object rebuilt = CreateTypedList();
-                IList list = rebuilt as IList;
+                IList list = createTypedList();
                 if (list == null) return;
 
                 for (int i = 0; i < order.Length; i++)
@@ -74,7 +81,7 @@ namespace SPTBeltArmbandInventory
                     for (int p = 0; p < source.Count; p++)
                         if (source[p] != null && containerType.IsInstanceOfType(source[p])) list.Add(source[p]);
                 }
-                __result = rebuilt;
+                __result = list;
             }
             catch (Exception exception)
             {
@@ -85,9 +92,9 @@ namespace SPTBeltArmbandInventory
         static List<object> ReadCapabilityContainers(object equipment, object slotValue, AccessoryCapability capability)
         {
             object item = GetContainedItem(equipment, slotValue);
-            if (!ReflectionTools.HasContainers(item)) return new List<object>();
             string templateId = GetTemplateId(item);
-            return WearableItemDescriptorRegistry.HasCapability(templateId, capability) ? ReadContainers(item) : new List<object>();
+            if (!WearableItemDescriptorRegistry.HasCapability(templateId, capability)) return new List<object>();
+            return ReadContainers(item);
         }
 
         static void AppendUnique(List<object> target, List<object> source)
@@ -183,8 +190,8 @@ namespace SPTBeltArmbandInventory
 
         static object GetContainedItem(object equipment, object slotValue)
         {
-            if (equipment == null || slotValue == null) return null;
-            object slot = getSlot.Invoke(equipment, new[] { slotValue });
+            if (equipment == null || slotValue == null || getSlot == null) return null;
+            object slot = getSlot(equipment, slotValue);
             return ReflectionTools.ReadMember(slot, "ContainedItem");
         }
 
@@ -214,10 +221,39 @@ namespace SPTBeltArmbandInventory
             return result;
         }
 
-        static object CreateTypedList()
+        static Func<object, object, object> BuildBinaryObjectCall(Type ownerType, Type argumentType, MethodInfo method)
         {
-            Type listType = typeof(List<>).MakeGenericType(containerType);
-            return Activator.CreateInstance(listType);
+            try
+            {
+                DynamicMethod dm = new DynamicMethod("BAndHBLootGetSlot", typeof(object), new[] { typeof(object), typeof(object) }, typeof(LootPriorityRuntime), true);
+                ILGenerator il = dm.GetILGenerator();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Castclass, ownerType);
+                il.Emit(OpCodes.Ldarg_1);
+                if (argumentType.IsValueType) il.Emit(OpCodes.Unbox_Any, argumentType);
+                else il.Emit(OpCodes.Castclass, argumentType);
+                il.Emit(method.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, method);
+                if (method.ReturnType.IsValueType) il.Emit(OpCodes.Box, method.ReturnType);
+                il.Emit(OpCodes.Ret);
+                return (Func<object, object, object>)dm.CreateDelegate(typeof(Func<object, object, object>));
+            }
+            catch { return null; }
+        }
+
+        static Func<IList> BuildListFactory(Type elementType)
+        {
+            try
+            {
+                Type listType = typeof(List<>).MakeGenericType(elementType);
+                ConstructorInfo ctor = listType.GetConstructor(Type.EmptyTypes);
+                if (ctor == null) return null;
+                DynamicMethod dm = new DynamicMethod("BAndHBLootListFactory", typeof(IList), Type.EmptyTypes, typeof(LootPriorityRuntime), true);
+                ILGenerator il = dm.GetILGenerator();
+                il.Emit(OpCodes.Newobj, ctor);
+                il.Emit(OpCodes.Ret);
+                return (Func<IList>)dm.CreateDelegate(typeof(Func<IList>));
+            }
+            catch { return null; }
         }
 
         static void Patch(object harmony, MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, object postfix)
