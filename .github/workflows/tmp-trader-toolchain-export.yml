@@ -1,0 +1,57 @@
+name: Temporary Trader Toolchain Export
+
+on:
+  push:
+    branches:
+      - tmp/trader-toolchain-export
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact Trader source
+        uses: actions/checkout@v4
+        with:
+          ref: 708c0002df7aff5d190d9ddcd001c57a9b1445c2
+          fetch-depth: 1
+          path: source
+
+      - name: Install exact .NET SDK toolchain
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.400
+
+      - name: Package portable toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p toolchain
+          dotnet --info
+          pwsh -NoLogo -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
+          test -n "${DOTNET_ROOT:-}"
+          tar -C "$DOTNET_ROOT" -czf toolchain/dotnet-sdk-10.0.400-linux-x64.tar.gz .
+          pwsh_bin="$(readlink -f "$(command -v pwsh)")"
+          pwsh_root="$(dirname "$pwsh_bin")"
+          tar -C "$pwsh_root" -czf toolchain/powershell-linux-x64.tar.gz .
+          test "$(git -C source rev-parse HEAD)" = "708c0002df7aff5d190d9ddcd001c57a9b1445c2"
+          test -z "$(git -C source status --porcelain --untracked-files=all)"
+
+      - name: Upload portable toolchain
+        uses: actions/upload-artifact@v4
+        with:
+          name: trader-portable-toolchain
+          path: toolchain/*.tar.gz
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload exact clean Trader checkout
+        uses: actions/upload-artifact@v4
+        with:
+          name: trader-exact-source-708c0002
+          path: source
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 1
