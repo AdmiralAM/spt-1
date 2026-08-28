@@ -23,15 +23,15 @@ public sealed class TraderPurchasePressureService(
     public TraderPurchasePressureResult Apply(EconomyConfig config)
     {
         if (!config.EnableTraderPurchasePressure || config.Mode != EconomyMode.Enforce)
-            return new TraderPurchasePressureResult(false, 1.0, 0, 0, 0, null);
+            return new TraderPurchasePressureResult(false, 1.0, 0, 0, 0, 0, null);
         if (applied)
-            return new TraderPurchasePressureResult(true, ResolveMultiplier(config), 0, 0, 0, "already-applied");
+            return new TraderPurchasePressureResult(true, ResolveMultiplier(config), 0, 0, 0, 0, "already-applied");
 
         var multiplier = ResolveMultiplier(config);
         if (!double.IsFinite(multiplier) || multiplier < 1.0 || multiplier > 2.0)
             throw new InvalidOperationException($"Trader purchase pressure multiplier must be finite and within 1.0..2.0, got {multiplier}.");
 
-        var journal = new List<(object Scheme, double Before)>();
+        var rollback = new List<Action>();
         var changedOffers = 0;
         var changedTraders = new HashSet<string>(StringComparer.Ordinal);
         double beforeTotal = 0;
@@ -67,7 +67,7 @@ public sealed class TraderPurchasePressureService(
                     if (target <= before)
                         continue;
 
-                    journal.Add((requirement, before));
+                    rollback.Add(() => requirement.Count = before);
                     requirement.Count = target;
                     if (Math.Abs(requirement.Count.Value - target) > 0.000001)
                         throw new InvalidOperationException($"Trader price verification failed for trader={traderPair.Key}, offer={offerPair.Key}: target={target}, actual={requirement.Count}.");
@@ -85,11 +85,8 @@ public sealed class TraderPurchasePressureService(
         }
         catch (Exception applyException)
         {
-            for (var index = journal.Count - 1; index >= 0; index--)
-            {
-                dynamic requirement = journal[index].Scheme;
-                requirement.Count = journal[index].Before;
-            }
+            for (var index = rollback.Count - 1; index >= 0; index--)
+                rollback[index]();
 
             throw new InvalidOperationException($"Trader purchase pressure transaction rolled back: {applyException.Message}", applyException);
         }
@@ -111,5 +108,5 @@ public sealed record TraderPurchasePressureResult(
     int TraderCount,
     int OfferCount,
     double AggregateBefore,
-    double? AggregateAfter,
+    double AggregateAfter,
     string? Note);
