@@ -30,8 +30,23 @@ for source in sorted(ROOT.glob("*.cs")):
         if token in text:
             violations.append(f"{source.name}: {reason} ({token})")
 
+# Physical RC1 proved that creating a provisional HeadBand SlotView from
+# EquipmentTab.Awake can expose the full Headwear geometry on first entry and only
+# self-correct after a tab re-entry. DedicatedEquipmentSlotPatches owns only the
+# pseudo-slot contract/order; all HeadBand visual creation must stay in the native
+# SlotView.Show presentation path.
+equipment_slot_path = ROOT / "DedicatedEquipmentSlotPatches.cs"
+if equipment_slot_path.exists() and equipment_slot_path.name not in removed:
+    equipment_slot_text = equipment_slot_path.read_text(encoding="utf-8-sig")
+    for token in ("EquipmentTabAwakePostfix", "InstallHeadBandView", "Instantiate(headwear"):
+        if token in equipment_slot_text:
+            violations.append(
+                "DedicatedEquipmentSlotPatches.cs: provisional HeadBand Awake clone is forbidden after physical first-entry layout regression "
+                f"({token})")
+
 # Server lifecycle patches previously caused profile-load failures through name-only
-# reflection. Production patches must enumerate candidates and prove an exact signature.
+# reflection. Production patches must enumerate candidates and prove a unique bounded
+# runtime target rather than using Type.GetMethod(name).
 for source in sorted(SERVER_PATCH_ROOT.glob("*.cs")):
     text = source.read_text(encoding="utf-8-sig")
     if ".GetMethod(" in text:
@@ -87,4 +102,4 @@ guard_region(
 if violations:
     raise SystemExit("Hot-path guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; interaction/lifecycle hot paths startup-bound; server patches exact-signature only)")
+print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; HeadBand presentation is SlotView.Show-owned; interaction/lifecycle hot paths startup-bound; server patches bounded-unique)")
