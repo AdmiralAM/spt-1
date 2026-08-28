@@ -6,6 +6,8 @@
   "enableItemRewardStackNormalization": false,
   "enableTraderPurchasePressure": false,
   "customTraderPurchasePriceMultiplier": 1.15,
+  "enableFleaPurchasePressure": false,
+  "customFleaBasePriceMultiplier": 1.65,
   "rarity": {
     "commonMinSources": 8,
     "uncommonMinSources": 4,
