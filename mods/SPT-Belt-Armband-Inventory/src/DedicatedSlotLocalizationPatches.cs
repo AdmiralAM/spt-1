@@ -30,6 +30,7 @@ namespace SPTBeltArmbandInventory
                         ReadHeader(slotView),
                         Application.systemLanguage == SystemLanguage.Russian);
                     RelabelKnownViews();
+                    HeadBandRenderSettle.OnHeadwearShown(slotView as Component);
                     return;
                 }
 
@@ -95,6 +96,7 @@ namespace SPTBeltArmbandInventory
 
         internal static void Reset()
         {
+            HeadBandRenderSettle.Reset();
             LogInfo = null;
             LogWarning = null;
             HeaderTextField = null;
@@ -156,7 +158,7 @@ namespace SPTBeltArmbandInventory
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 object postfix = hmCtor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
                 Patch(patchMethod, harmonyMethodType, show, postfix);
-                logInfo?.Invoke("B&A&HB dedicated EN/RU slot-caption localization installed on exact SlotView.Show; no polling.");
+                logInfo?.Invoke("B&A&HB dedicated EN/RU slot-caption localization installed on exact SlotView.Show; bounded HeadBand canvas settle is triggered from the same proven Headwear event; no idle polling.");
                 return true;
             }
             catch (Exception exception)
