@@ -70,6 +70,14 @@ Standing represents relationship/status. It does **not** replace explicit milest
 
 Current loyalty thresholds are level + standing based, with no sales-sum requirement. Capability gates remain authored quest gates where declared; relationship stock may use loyalty in future slices.
 
+New profile templates explicitly pin Admiral's starting standing to `0`. The template mutation is itself fail-closed behind runtime publication, and SPT recreates a missing Admiral `TraderInfo` from that exact profile-template standing when the current trader is next accessed.
+
+## Profile identity and recovery
+
+Distributed trader, quest and offer IDs are persistent profile identities. [`manifests/persistent-identities.json`](manifests/persistent-identities.json) is the immutable current/retired identity ledger: retired IDs may not be silently removed or reused.
+
+The packaged `tools/Reset-AdmiralTraderProfile.ps1` is preview-only unless `-Apply` is supplied. On apply it creates and SHA-256 verifies a backup before mutation, consumes both current and retired owned trader/quest identities from the ledger, removes only Admiral-owned profile state, validates the rewritten JSON and rolls back on a write failure. It is the supported reset/update/disable/uninstall recovery path; manual profile surgery is not.
+
 ## Economy Admiral boundary
 
 Admiral Trader owns:
@@ -110,7 +118,7 @@ Curation optimizes **quality density**, not minimum quest count.
 
 Admiral Trader is currently server-side and targets **SPT 4.1.3**. Source registration remains fail-closed through `runtime-manifest.json`.
 
-The server/runtime validation layer checks trader identity, native lowercase `questassort` states (`started / success / fail`), quest/objective shapes, referenced item TPLs, assort contracts and locale coverage. The earlier physical PascalCase `questassort` startup failure is retained as a regression boundary.
+The server/runtime validation layer checks trader identity, native lowercase `questassort` states (`started / success / fail`), quest/objective shapes, referenced item TPLs, assort contracts, persistent identities, profile recovery and locale coverage. The earlier physical PascalCase `questassort` startup failure is retained as a regression boundary.
 
 The exact-runtime builder compiles against the user's real SPT 4.1.3 runtime assemblies and records source/runtime provenance before physical testing. CI is necessary but does not substitute for physical SPT runtime evidence.
 
@@ -121,6 +129,7 @@ The official portrait source has been physically recovered from the current chat
 - [`docs/gameplay-doctrine.md`](docs/gameplay-doctrine.md) — current gameplay purpose, stock layers, quest admission test and anti-goals.
 - [`manifests/gameplay-policy.json`](manifests/gameplay-policy.json) — machine-readable gameplay invariants.
 - [`manifests/identity-assets.json`](manifests/identity-assets.json) — official Admiral identity/portrait selection contract.
+- [`manifests/persistent-identities.json`](manifests/persistent-identities.json) — immutable current/retired trader, quest and offer identity ledger.
 - [`manifests/baseline-stock.json`](manifests/baseline-stock.json) — baseline stock classification and overlap rationale.
 - [`manifests/reward-policy.json`](manifests/reward-policy.json) — vanilla-benchmarked reward envelopes.
 - [`docs/source-baseline.md`](docs/source-baseline.md) — pinned external reference authority.
@@ -133,6 +142,6 @@ The official portrait source has been physically recovered from the current chat
 python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 ```
 
-Module CI additionally validates the pinned legacy corpus/graph, vanilla reward benchmark, current Access/Arsenal materialization, weapon/ammo pools, native SPT quest/assort contracts, Gameplay Alpha quest semantics, baseline stock overlap against pinned references, .NET 10 SPT 4.1.3 server compilation, package layout/provenance and fail-closed runtime boundaries.
+Module CI additionally validates the pinned legacy corpus/graph, vanilla reward benchmark, current Access/Arsenal materialization, weapon/ammo pools, native SPT quest/assort contracts, Gameplay Alpha quest semantics, baseline stock overlap against pinned references, .NET 10 SPT 4.1.3 server compilation, package layout/provenance, persistent profile identities and fail-closed runtime boundaries.
 
-Active Gameplay Alpha work is tracked by Issue #192 / Draft PR #193. Economy Admiral stock-class compatibility is tracked separately by Issue #197.
+Active Gameplay Alpha/Beta stabilization is tracked by Issue #192 / Draft PR #193. Economy Admiral stock-class compatibility is tracked separately by Issue #197.
