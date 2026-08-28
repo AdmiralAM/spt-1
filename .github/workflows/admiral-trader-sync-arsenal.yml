@@ -6,6 +6,7 @@ on:
       - feature/admiral-trader-gameplay-alpha-assort
     paths:
       - 'mods/Admiral-Trader/tools/sync_committed_arsenal_runtime.py'
+      - 'mods/Admiral-Trader/tools/validate_committed_arsenal_runtime.py'
       - '.github/workflows/admiral-trader-sync-arsenal.yml'
 
 permissions:
