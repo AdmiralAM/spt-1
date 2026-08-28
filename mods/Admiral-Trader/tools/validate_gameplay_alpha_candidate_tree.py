@@ -3,6 +3,7 @@ import argparse
 import json
 from pathlib import Path
 
+TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
 EXPECTED_OFFER_COUNT = 11
 EXPECTED_QUEST_COUNT = 31
 EXPECTED_QUESTASSORT_STATES = {"started", "success", "fail"}
@@ -16,6 +17,7 @@ REQUIRED_LOCALES = {
     "objectives-ru.json",
 }
 RECOVERY_TOOL = Path("tools") / "Reset-AdmiralTraderProfile.ps1"
+IDENTITY_LEDGER = "persistent-identities.json"
 
 
 def fail(message: str) -> None:
@@ -43,14 +45,19 @@ def validate(root: Path, require_enabled: bool) -> None:
     recovery_text = recovery.read_text(encoding="utf-8-sig")
     for contract in (
         "[switch]$Apply",
+        "manifests\\persistent-identities.json",
+        "$ledger.retired.traderIds",
+        "$ledger.retired.questIds",
         "Copy-Item $resolvedProfile $backupPath -Force",
         "Backup verification failed; profile was not modified.",
-        "Expected exactly 31 canonical Admiral quest IDs",
+        "Expected exactly 31 current Admiral quest IDs",
     ):
         if contract not in recovery_text:
             fail(f"candidate profile recovery contract drift: missing {contract!r}")
 
     runtime = load_json(manifests / "runtime-manifest.json")
+    identity = load_json(manifests / IDENTITY_LEDGER)
+    base = load_json(db / "base.json")
     assort = load_json(db / "assort.json")
     questassort = load_json(db / "questassort.json")
 
@@ -69,7 +76,7 @@ def validate(root: Path, require_enabled: bool) -> None:
         fail("candidate assort native collections have invalid types")
 
     roots = [row for row in items if isinstance(row, dict) and row.get("parentId") == "hideout"]
-    root_ids = [row.get("_id") for row in roots]
+    root_ids = [str(row.get("_id") or "") for row in roots]
     if len(roots) != EXPECTED_OFFER_COUNT:
         fail(f"candidate must contain exactly {EXPECTED_OFFER_COUNT} Admiral root offers; found {len(roots)}")
     if len(set(root_ids)) != EXPECTED_OFFER_COUNT or any(not value for value in root_ids):
@@ -104,6 +111,33 @@ def validate(root: Path, require_enabled: bool) -> None:
     if missing_unlock_quests:
         fail(f"candidate milestone unlocks reference missing quest templates: {missing_unlock_quests}")
 
+    policy = identity.get("policy") or {}
+    if not (
+        policy.get("preserveDistributedIds") is True
+        and policy.get("reuseRetiredIds") is False
+        and policy.get("silentRemovalAllowed") is False
+        and policy.get("retirementRequiresRecoveryCoverage") is True
+    ):
+        fail("candidate persistent identity policy is not fail-closed")
+    current = identity.get("current") or {}
+    retired = identity.get("retired") or {}
+    current_traders = list(map(str, current.get("traderIds") or []))
+    current_quests = list(map(str, current.get("questIds") or []))
+    current_offers = list(map(str, current.get("offerIds") or []))
+    if current_traders != [TRADER_ID] or str(base.get("_id") or "") != TRADER_ID:
+        fail("candidate persistent trader identity drift")
+    if set(current_quests) != quest_ids or len(current_quests) != EXPECTED_QUEST_COUNT:
+        fail("candidate persistent current quest identities do not exactly match runtime quests")
+    if set(current_offers) != root_id_set or len(current_offers) != EXPECTED_OFFER_COUNT:
+        fail("candidate persistent current offer identities do not exactly match runtime offers")
+    for domain in ("traderIds", "questIds", "offerIds"):
+        current_ids = list(map(str, current.get(domain) or []))
+        retired_ids = list(map(str, retired.get(domain) or []))
+        if len(current_ids) != len(set(current_ids)) or len(retired_ids) != len(set(retired_ids)):
+            fail(f"candidate persistent {domain} contains duplicate identities")
+        if set(current_ids) & set(retired_ids):
+            fail(f"candidate persistent {domain} reuses a retired identity")
+
     missing_locales = sorted(name for name in REQUIRED_LOCALES if not (locales / name).is_file())
     if missing_locales:
         fail(f"candidate is missing required EN/RU Gameplay Alpha/objective locale files: {missing_locales}")
@@ -115,7 +149,7 @@ def validate(root: Path, require_enabled: bool) -> None:
     print(
         "Admiral Trader candidate tree OK: "
         f"target=4.1.3 offers={EXPECTED_OFFER_COUNT} milestoneUnlocks={EXPECTED_MILESTONE_UNLOCKS} "
-        f"quests={EXPECTED_QUEST_COUNT} locales={len(REQUIRED_LOCALES)} recovery=backup-first enabled={require_enabled}"
+        f"quests={EXPECTED_QUEST_COUNT} locales={len(REQUIRED_LOCALES)} identities=immutable recovery=backup-first enabled={require_enabled}"
     )
 
 
