@@ -140,6 +140,16 @@ Additional Beta observation evidence is emitted separately:
 
 See `RUNTIME_TEST.md` for the one batched SPT 4.1.3 release-candidate procedure. Earlier accepted Alpha/item-stack physical tests are not repeated as micro-tests.
 
+## Installation and publication
+
+The maintained install-only channel is **`runtime-economy-admiral`**. Its root is directly copyable into the SPT root and contains:
+
+`SPT_Runtime/user/mods/Economy Admiral/`
+
+The runtime branch also carries `runtime-manifest.json` with product/version/SPT/source identity. Publication is isolated from the suite `stable` branch and from other runtime channels.
+
+The accepted 0.1.0 Beta runtime gate passed on exact RC head `62e46f0a458991f19daa8363db271c8eb8cdd0ec` / workflow `33157209788`, after which the RC was integrated and republished from authoritative `main` through the dedicated Economy runtime publication workflow.
+
 ## Runtime boundary and performance
 
 Compile boundary: `SPTarkov.Server.Core 4.1.2` / .NET 10. Physical target: **SPT 4.1.3**. Packaged candidates include exact head/workflow identity in `BUILD_INFO.json`.
@@ -156,4 +166,4 @@ There is no permanent polling, raid/frame scan, repeated report-reparse correcti
 
 Economy Admiral does not implement a second Trader economy engine, flea simulator, world-loot controller, item-template replacement engine, insurance overhaul or generic cross-mod mutation attribution system. PBS/Scorpion/Artem/Andrudis-specific ownership adapters are not inferred automatically.
 
-The release path is: deterministic CI and exact-head artifact -> one controller-activated batched SPT 4.1.3 Beta runtime gate -> remediate on FAIL or deliberately promote the exact passing candidate.
+Economy Admiral 0.1.0 Beta is physically accepted on SPT 4.1.3 and has a maintained install-only runtime publication channel. Further product expansion requires a new recorded scope rather than silently extending this accepted release.
