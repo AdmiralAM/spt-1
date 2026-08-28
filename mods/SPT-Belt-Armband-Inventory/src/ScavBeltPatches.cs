@@ -29,13 +29,14 @@ namespace SPTBeltArmbandInventory
         internal static Func<object, bool> ReadDeleted;
         internal static Action<object, bool> WriteDeleted;
         internal static Func<object, string> ReadTemplateId;
-        internal static object ArmBandValue;
+        internal static object[] WearableSlotValues;
         static bool runtimeFailureLogged;
 
         internal static void RestoreContainerBeltSlot(object inventoryController)
         {
             if (inventoryController == null || ReadInventory == null || ReadEquipment == null || GetSlot == null
-                || ReadContainedItem == null || ReadDeleted == null || WriteDeleted == null || ReadTemplateId == null || ArmBandValue == null) return;
+                || ReadContainedItem == null || ReadDeleted == null || WriteDeleted == null || ReadTemplateId == null
+                || WearableSlotValues == null || WearableSlotValues.Length == 0) return;
 
             try
             {
@@ -43,15 +44,20 @@ namespace SPTBeltArmbandInventory
                 object equipment = inventory == null ? null : ReadEquipment(inventory);
                 if (equipment == null) return;
 
-                object slot = GetSlot(equipment, ArmBandValue);
-                if (slot == null) return;
+                for (int i = 0; i < WearableSlotValues.Length; i++)
+                {
+                    object slotValue = WearableSlotValues[i];
+                    if (slotValue == null) continue;
+                    object slot = GetSlot(equipment, slotValue);
+                    if (slot == null) continue;
 
-                object item = ReadContainedItem(slot);
-                bool deleted = ReadDeleted(slot);
-                string templateId = item == null ? null : ReadTemplateId(item);
-                if (!ScavBeltPolicy.ShouldRestore(templateId, deleted, ReflectionTools.HasContainers(item))) return;
+                    object item = ReadContainedItem(slot);
+                    bool deleted = ReadDeleted(slot);
+                    string templateId = item == null ? null : ReadTemplateId(item);
+                    if (!ScavBeltPolicy.ShouldRestore(templateId, deleted, ReflectionTools.HasContainers(item))) continue;
 
-                WriteDeleted(slot, false);
+                    WriteDeleted(slot, false);
+                }
             }
             catch (Exception exception)
             {
@@ -74,7 +80,7 @@ namespace SPTBeltArmbandInventory
             ReadDeleted = null;
             WriteDeleted = null;
             ReadTemplateId = null;
-            ArmBandValue = null;
+            WearableSlotValues = null;
             runtimeFailureLogged = false;
         }
 
@@ -138,6 +144,21 @@ namespace SPTBeltArmbandInventory
                     || readDeleted == null || writeDeleted == null || readTemplateId == null)
                     return Fail("SPT 4.1 Scav wearable delegates could not be bound; compatibility is disabled.");
 
+                object[] wearableSlots;
+                try
+                {
+                    wearableSlots = new[]
+                    {
+                        Enum.Parse(equipmentSlotType, BeltSlotPlan.ArmBand, false),
+                        Enum.ToObject(equipmentSlotType, RuntimeIdentity.DedicatedBeltEquipmentSlotValue),
+                        Enum.ToObject(equipmentSlotType, RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue)
+                    };
+                }
+                catch (Exception exception)
+                {
+                    return Fail("SPT 4.1 wearable slot identities could not be bound for ReplaceInventory: " + Unwrap(exception).Message);
+                }
+
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
@@ -154,12 +175,12 @@ namespace SPTBeltArmbandInventory
                 ScavBeltRuntime.ReadDeleted = readDeleted;
                 ScavBeltRuntime.WriteDeleted = writeDeleted;
                 ScavBeltRuntime.ReadTemplateId = readTemplateId;
-                ScavBeltRuntime.ArmBandValue = Enum.Parse(equipmentSlotType, BeltSlotPlan.ArmBand, false);
+                ScavBeltRuntime.WearableSlotValues = wearableSlots;
 
                 object postfix = harmonyMethodConstructor.Invoke(new object[] { FindOwnDeclaredMethod(nameof(ReplaceInventoryPostfix)) });
                 Patch(patchMethod, harmonyMethodType, replaceInventory, postfix);
 
-                logInfo?.Invoke("B&A&HB item-descriptor scoped Scav ArmBand compatibility installed with startup-bound delegates.");
+                logInfo?.Invoke("B&A&HB exact-item Scav ReplaceInventory compatibility installed for ArmBand, Belt15 and HeadBand16 with startup-bound delegates.");
                 return true;
             }
             catch (Exception exception)
