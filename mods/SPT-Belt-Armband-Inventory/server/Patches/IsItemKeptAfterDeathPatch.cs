@@ -1,4 +1,5 @@
 using System.Reflection;
+using SPTarkov.DI.Annotations;
 using SPTarkov.Reflection.Patching;
 using SPTarkov.Server.Core.Helpers.InRaid;
 using SPTarkov.Server.Core.Models.Eft.Common;
@@ -6,6 +7,7 @@ using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 
 namespace SPTBeltArmbandInventory.Server.Patches;
 
+[Injectable]
 public sealed class IsItemKeptAfterDeathPatch : AbstractPatch
 {
     protected override MethodBase? GetTargetMethod()
@@ -39,7 +41,8 @@ public sealed class IsItemKeptAfterDeathPatch : AbstractPatch
             item.SlotId,
             item.Template.ToString()));
 
-        if (BeltDeathPolicy.ShouldKeep(itemToCheck.Id.ToString(), nodes, WearableProtectionRuntime.ActiveRoots))
+        ProtectedWearableRoot[] roots = WearableProtectionRuntime.ActiveRoots;
+        if (BeltDeathPolicy.ShouldKeep(itemToCheck.Id.ToString(), nodes, roots))
             __result = true;
     }
 }
