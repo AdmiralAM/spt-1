@@ -24,6 +24,10 @@ public static class EconomyConfigValidator
             || config.CustomTraderPurchasePriceMultiplier < 1.0
             || config.CustomTraderPurchasePriceMultiplier > 2.0)
             throw new InvalidOperationException("Economy Admiral config: CustomTraderPurchasePriceMultiplier must be finite and within 1.0..2.0.");
+        if (!double.IsFinite(config.CustomFleaBasePriceMultiplier)
+            || config.CustomFleaBasePriceMultiplier < 1.0
+            || config.CustomFleaBasePriceMultiplier > 2.5)
+            throw new InvalidOperationException("Economy Admiral config: CustomFleaBasePriceMultiplier must be finite and within 1.0..2.5.");
 
         if (config.Rarity.CommonMinSources < 1 || config.Rarity.UncommonMinSources < 1 || config.Rarity.RareMinSources < 1
             || !(config.Rarity.CommonMinSources > config.Rarity.UncommonMinSources && config.Rarity.UncommonMinSources > config.Rarity.RareMinSources))
