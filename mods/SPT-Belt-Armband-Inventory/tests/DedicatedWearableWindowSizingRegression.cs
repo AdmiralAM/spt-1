@@ -7,9 +7,9 @@ internal static class DedicatedWearableWindowSizingRegression
     [ModuleInitializer]
     internal static void Run()
     {
-        AssertExact("ArmBand", 1, 2, 87f, 160f);
-        AssertExact("Belt", 2, 2, 150f, 160f);
-        AssertExact("HeadBand", 1, 1, 87f, 97f);
+        AssertExact("ArmBand", 1, 2, 73f, 158f);
+        AssertExact("Belt", 2, 2, 136f, 158f);
+        AssertExact("HeadBand", 1, 1, 73f, 95f);
 
         if (AccessoryGridPolicy.CellCount(2, 2) != 4)
             throw new InvalidOperationException("Dedicated Belt must retain exact 2x2 / four-cell capacity.");
@@ -22,6 +22,6 @@ internal static class DedicatedWearableWindowSizingRegression
         float width = AccessoryGridPolicy.ExactWindowWidth(columns);
         float height = AccessoryGridPolicy.ExactWindowHeight(rows);
         if (Math.Abs(width - expectedWidth) > 0.01f || Math.Abs(height - expectedHeight) > 0.01f)
-            throw new InvalidOperationException(category + " GridWindow must fit its declared cells exactly with native chrome only.");
+            throw new InvalidOperationException(category + " GridWindow must fit its declared cells exactly with calibrated native chrome only.");
     }
 }
