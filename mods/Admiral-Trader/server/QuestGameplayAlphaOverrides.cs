@@ -28,6 +28,7 @@ public sealed class QuestGameplayAlphaOverrides(ModHelper modHelper, LocaleTable
         Dictionary<string, string> russian = modHelper.GetJsonDataFromFile<Dictionary<string, string>>(modPath, "db/locales/gameplay-alpha-ru.json");
         ValidateOverrides(english, russian);
         ApplyStarterClarityOverrides(english, russian);
+        ApplyQualificationCombatOverrides(english, russian);
 
         foreach (var (localeCode, localeKvP) in localesTable.Global)
         {
@@ -64,6 +65,31 @@ public sealed class QuestGameplayAlphaOverrides(ModHelper modHelper, LocaleTable
         russian[$"{factory} description"] = "Имей в инвентаре 1 подходящий ключ доступа для Завода. Статус «Найдено в рейде» не нужен, ключ не сдаётся и заходить на Завод не требуется.";
         russian[$"{factory} startedMessageText"] = "Проверка Завода: держи в инвентаре один подходящий ключ Завода. Ничего сдавать не нужно и заходить на карту не требуется.";
         russian[$"{factory} acceptPlayerMessage"] = russian[$"{factory} startedMessageText"];
+    }
+
+    private static void ApplyQualificationCombatOverrides(Dictionary<string, string> english, Dictionary<string, string> russian)
+    {
+        (string Id, string EnFamily, string RuFamily)[] qualifications =
+        [
+            ("59ca4829e098dfafa03888d2", "an approved sidearm", "одобренного пистолета"),
+            ("ad9233f54a7132d905d6f29d", "an approved SMG or PDW", "одобренного ПП или PDW"),
+            ("5f62a924076e4b7c2320f2e8", "an approved shotgun", "одобренного дробовика"),
+            ("4ada822d634041a721b346d5", "an approved assault rifle", "одобренной штурмовой винтовки"),
+            ("2568ee0bfe2ee12f24d78f45", "an approved marksman or battle rifle", "одобренной марксманской или боевой винтовки"),
+            ("a0d05e28971f1ba57639b97d", "an approved precision rifle", "одобренной снайперской винтовки"),
+            ("cb8a202d7107f39d860ccb38", "an approved special weapon", "одобренного специального оружия")
+        ];
+
+        foreach (var qualification in qualifications)
+        {
+            english[$"{qualification.Id} description"] = $"Qualification: eliminate 1 enemy using {qualification.EnFamily}. No FIR or item handover is involved.";
+            english[$"{qualification.Id} startedMessageText"] = $"Prove basic readiness in the field: eliminate one enemy using {qualification.EnFamily}.";
+            english[$"{qualification.Id} acceptPlayerMessage"] = english[$"{qualification.Id} startedMessageText"];
+
+            russian[$"{qualification.Id} description"] = $"Квалификация: устраните 1 противника с помощью {qualification.RuFamily}. FIR и сдача оружия не требуются.";
+            russian[$"{qualification.Id} startedMessageText"] = $"Подтверди базовую готовность в бою: устрани одного противника с помощью {qualification.RuFamily}.";
+            russian[$"{qualification.Id} acceptPlayerMessage"] = russian[$"{qualification.Id} startedMessageText"];
+        }
     }
 
     private static void ValidateOverrides(Dictionary<string, string> english, Dictionary<string, string> russian)
