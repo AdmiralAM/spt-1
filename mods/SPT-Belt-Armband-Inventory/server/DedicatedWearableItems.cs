@@ -21,25 +21,10 @@ public sealed class DedicatedWearableItems(
     private static readonly MongoId HeadBandParentTpl = new(RuntimeIdentity.HeadBandItemParentId);
     private const string GridPrototype = "55d329c24bdc2d892f8b4567";
 
-    // HeadBand is a compact personal-utility carrier rather than a second medical pouch.
-    // Exact item IDs are deliberate here: accepting broad barter/money parents would turn
-    // this slot into a generic secure container. Stack limits remain owned by the items.
+    // Exact item IDs are deliberate: broad barter/money parents would make HeadBand
+    // a generic secure container. Stack limits remain owned by the inserted items.
     private static readonly HashSet<MongoId> HeadBandUtilityWhitelist =
-    [
-        // Currency
-        new("5449016a4bdc2d6f028b456f"), // RUB
-        new("5696686a4bdc2da3298b456a"), // USD
-        new("569668774bdc2da2298b4568"), // EUR
-
-        // Cigarettes
-        new("573475fb24597737fb1379e1"), // Apollo Soyuz
-        new("573476d324597737da2adc13"), // Malboro
-        new("573476f124597737e04bf328"), // Wilston
-        new("5734770f24597738025ee254"), // Strike
-
-        // Compact vanilla wallet; its own internal filter/capacity remains authoritative.
-        new("5783c43d2459774bbe137486")
-    ];
+        HeadBandUtilityPolicy.AcceptedTemplateIds.Select(id => new MongoId(id)).ToHashSet();
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
