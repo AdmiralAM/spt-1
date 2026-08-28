@@ -5,6 +5,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "tools" / "package_spt413_exact_candidate.ps1"
 BUILDER = ROOT / "tools" / "build_spt413_test_candidate.ps1"
+RECOVERY = ROOT / "tools" / "Reset-AdmiralTraderProfile.ps1"
 PORTRAIT = "assets/d5c27bb3169f8dfbc13f6b69.jpg"
 
 
@@ -57,6 +58,20 @@ class ExactRuntimeHandoffContractTests(unittest.TestCase):
         self.assertIn("Staged official portrait is not a complete JPEG stream", text)
         self.assertIn("Prepared install portrait hash drift", text)
         self.assertIn('"SPT_Runtime/user/mods/Admiral-Trader/$portraitRelative"', text)
+
+    def test_wrapper_packages_backup_first_profile_recovery(self):
+        self.assertTrue(RECOVERY.is_file())
+        text = SCRIPT.read_text(encoding="utf-8")
+        recovery = RECOVERY.read_text(encoding="utf-8")
+        self.assertIn("Reset-AdmiralTraderProfile.ps1", text)
+        self.assertIn("tools\\Reset-AdmiralTraderProfile.ps1", text)
+        self.assertIn("SPT_Runtime/user/mods/Admiral-Trader/tools/Reset-AdmiralTraderProfile.ps1", text)
+        self.assertIn("Copy-Item $recoverySource $recoveryPath -Force", text)
+        self.assertIn("Copy-Item $resolvedProfile $backupPath -Force", recovery)
+        self.assertIn("Backup verification failed; profile was not modified.", recovery)
+        backup = recovery.index("Copy-Item $resolvedProfile $backupPath -Force")
+        mutation = recovery.index("$pmc.TradersInfo.PSObject.Properties.Remove($traderId)")
+        self.assertLess(backup, mutation)
 
     def test_wrapper_emits_single_obvious_exact_head_zip_and_checksum(self):
         text = SCRIPT.read_text(encoding="utf-8")
