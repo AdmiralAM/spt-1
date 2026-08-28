@@ -106,7 +106,8 @@ public sealed class WearableProtectionRouter(
 
                     WearableProtectionSnapshot snapshot = WearableProtectionRuntime.Apply(request);
                     logger.Info($"B&A&HB protection policy updated: ArmBand={(snapshot.ArmBandProtected ? "Protected" : "Lost")}, Belt={(snapshot.BeltProtected ? "Protected" : "Lost")}, HeadBand={(snapshot.HeadBandProtected ? "Protected" : "Lost")}.");
-                    return ValueTask.FromResult(jsonUtil.Serialize(snapshot)!);
+                    object response = jsonUtil.Serialize(snapshot)!;
+                    return ValueTask.FromResult(response);
                 })
         ])
 { }
