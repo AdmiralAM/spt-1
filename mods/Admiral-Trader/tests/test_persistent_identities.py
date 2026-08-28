@@ -8,6 +8,7 @@ MANIFEST = ROOT / "manifests" / "persistent-identities.json"
 QUESTS = ROOT / "db" / "quests"
 ASSORT = ROOT / "db" / "assort.json"
 BASE = ROOT / "db" / "base.json"
+RECOVERY = ROOT / "tools" / "Reset-AdmiralTraderProfile.ps1"
 
 
 def load(path: Path):
@@ -49,6 +50,19 @@ class PersistentIdentityLedgerTests(unittest.TestCase):
         self.assertFalse(policy["reuseRetiredIds"])
         self.assertFalse(policy["silentRemovalAllowed"])
         self.assertTrue(policy["retirementRequiresRecoveryCoverage"])
+
+    def test_recovery_consumes_current_and_retired_identity_sets(self):
+        text = RECOVERY.read_text(encoding="utf-8")
+        self.assertIn("persistent-identities.json", text)
+        for expression in (
+            "$ledger.current.traderIds",
+            "$ledger.retired.traderIds",
+            "$ledger.current.questIds",
+            "$ledger.retired.questIds",
+        ):
+            self.assertIn(expression, text)
+        self.assertIn("$currentTraderIds + $retiredTraderIds", text)
+        self.assertIn("$currentQuestIds + $retiredQuestIds", text)
 
 
 if __name__ == "__main__":
