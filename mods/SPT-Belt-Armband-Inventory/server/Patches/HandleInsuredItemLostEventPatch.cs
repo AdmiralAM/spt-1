@@ -10,9 +10,16 @@ public sealed class HandleInsuredItemLostEventPatch : AbstractPatch
 {
     protected override MethodBase? GetTargetMethod()
     {
-        return typeof(LocationLifecycleService).GetMethod(
-            "HandleInsuredItemLostEvent",
-            BindingFlags.NonPublic | BindingFlags.Instance);
+        MethodInfo? selected = null;
+        foreach (var method in typeof(LocationLifecycleService).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
+        {
+            if (!string.Equals(method.Name, "HandleInsuredItemLostEvent", StringComparison.Ordinal))
+                continue;
+            if (selected is not null)
+                throw new AmbiguousMatchException("Multiple LocationLifecycleService.HandleInsuredItemLostEvent methods found; insurance retention refused.");
+            selected = method;
+        }
+        return selected;
     }
 
     [PatchPrefix]
