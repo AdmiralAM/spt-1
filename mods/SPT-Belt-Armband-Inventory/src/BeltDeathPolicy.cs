@@ -20,13 +20,26 @@ namespace SPTBeltArmbandInventory
         public string TemplateId { get; }
     }
 
+    public readonly struct ProtectedWearableRoot
+    {
+        public ProtectedWearableRoot(string slotId, string templateId)
+        {
+            SlotId = slotId;
+            TemplateId = templateId;
+        }
+
+        public string SlotId { get; }
+        public string TemplateId { get; }
+    }
+
     public static class BeltDeathPolicy
     {
         public const string ArmBand = "ArmBand";
 
         // Legacy pure-policy overloads remain for historical regression coverage.
-        // Production server patches use the explicit-template overloads below so
-        // an ordinary ArmBand can never gain belt death/insurance retention.
+        // Production server patches use explicit slot/template roots below so an
+        // ordinary ArmBand or an unrelated item in pseudo-slots 15/16 never gains
+        // B&A&HB protection accidentally.
         public static HashSet<string> GetKeptTreeIds(IEnumerable<BeltInventoryNode> nodes)
         {
             return GetKeptTreeIdsCore(nodes, null, false);
@@ -62,6 +75,52 @@ namespace SPTBeltArmbandInventory
             return (lostIds ?? Array.Empty<string>()).Where(id => !kept.Contains(id)).ToArray();
         }
 
+        public static HashSet<string> GetKeptTreeIds(
+            IEnumerable<BeltInventoryNode> nodes,
+            IEnumerable<ProtectedWearableRoot> protectedRoots)
+        {
+            BeltInventoryNode[] items = nodes == null ? Array.Empty<BeltInventoryNode>() : nodes.ToArray();
+            ProtectedWearableRoot[] roots = protectedRoots == null ? Array.Empty<ProtectedWearableRoot>() : protectedRoots.ToArray();
+            var rootIds = new HashSet<string>(StringComparer.Ordinal);
+
+            for (int i = 0; i < roots.Length; i++)
+            {
+                if (string.IsNullOrEmpty(roots[i].SlotId) || string.IsNullOrEmpty(roots[i].TemplateId))
+                    continue;
+
+                for (int j = 0; j < items.Length; j++)
+                {
+                    if (!string.Equals(items[j].SlotId, roots[i].SlotId, StringComparison.Ordinal)
+                        || !string.Equals(items[j].TemplateId, roots[i].TemplateId, StringComparison.Ordinal)
+                        || string.IsNullOrEmpty(items[j].Id))
+                        continue;
+                    rootIds.Add(items[j].Id);
+                }
+            }
+
+            if (rootIds.Count == 0) return rootIds;
+            return ExpandTrees(items, rootIds);
+        }
+
+        public static bool ShouldKeep(
+            string itemId,
+            IEnumerable<BeltInventoryNode> nodes,
+            IEnumerable<ProtectedWearableRoot> protectedRoots)
+        {
+            return !string.IsNullOrEmpty(itemId)
+                && GetKeptTreeIds(nodes, protectedRoots).Contains(itemId);
+        }
+
+        public static string[] FilterLostInsuredIds(
+            IEnumerable<string> lostIds,
+            IEnumerable<BeltInventoryNode> nodes,
+            IEnumerable<ProtectedWearableRoot> protectedRoots)
+        {
+            var kept = GetKeptTreeIds(nodes, protectedRoots);
+            if (kept.Count == 0) return lostIds == null ? Array.Empty<string>() : lostIds.ToArray();
+            return (lostIds ?? Array.Empty<string>()).Where(id => !kept.Contains(id)).ToArray();
+        }
+
         static HashSet<string> GetKeptTreeIdsCore(IEnumerable<BeltInventoryNode> nodes, string protectedRootTemplateId, bool requireTemplateMatch)
         {
             var result = new HashSet<string>(StringComparer.Ordinal);
@@ -78,7 +137,13 @@ namespace SPTBeltArmbandInventory
             }
 
             if (!belt.HasValue || string.IsNullOrEmpty(belt.Value.Id)) return result;
+            result.Add(belt.Value.Id);
+            return ExpandTrees(items, result);
+        }
 
+        static HashSet<string> ExpandTrees(BeltInventoryNode[] items, HashSet<string> rootIds)
+        {
+            var result = new HashSet<string>(StringComparer.Ordinal);
             var children = new Dictionary<string, List<string>>(StringComparer.Ordinal);
             for (int i = 0; i < items.Length; i++)
             {
@@ -94,7 +159,7 @@ namespace SPTBeltArmbandInventory
             }
 
             var pending = new Stack<string>();
-            pending.Push(belt.Value.Id);
+            foreach (string rootId in rootIds) pending.Push(rootId);
             while (pending.Count > 0)
             {
                 string current = pending.Pop();
