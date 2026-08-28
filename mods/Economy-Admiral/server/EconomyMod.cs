@@ -19,7 +19,8 @@ public sealed class EconomyMod(
     EnforcementPlanService enforcementPlanService,
     GroupedItemRuntimeEvidenceService groupedItemRuntimeEvidenceService,
     SourcePressureObservationPipelineService sourcePressureObservationPipelineService,
-    EconomyHealthRuntimeReportService economyHealthRuntimeReportService
+    EconomyHealthRuntimeReportService economyHealthRuntimeReportService,
+    TraderPurchasePressureService traderPurchasePressureService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
@@ -39,18 +40,18 @@ public sealed class EconomyMod(
 
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
 
-        // Observation remains startup-only. It cannot create a new mutation dimension, but the explicit
-        // Admiral Trader contract is retained as ownership evidence so Beta enforcement can fail closed
-        // for that trader when its maintained contract is absent/incompatible.
         var observation = await sourcePressureObservationPipelineService.RunAsync(config, vanillaBaseline, cancellationToken);
         await economyHealthRuntimeReportService.RunAsync(config, observation.SourcePressure, cancellationToken);
 
-        // Keep detection/audit thresholds untouched. Only after those consumers finish do we replace the
-        // local analysis copy with user-authorized Playable Economy v1 caps for the existing Enforce path.
         questAnalysis = PlayableQuestRewardPolicy.ApplyToEnforcement(config, questAnalysis);
 
         GroupedItemRewardSlot.ResetEvidence();
         var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, observation.AdmiralTrader, cancellationToken);
+
+        // Playable Economy v1 trader slice: raise currency-denominated purchase costs only.
+        // No stock, loyalty, quest locks, barter intent, or Admiral Trader authored finite-offer semantics are changed.
+        traderPurchasePressureService.Apply(config);
+
         await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);
         await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
     }

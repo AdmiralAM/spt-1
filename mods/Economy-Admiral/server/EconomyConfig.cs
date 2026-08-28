@@ -26,6 +26,8 @@ public sealed record EconomyConfig
     public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
     public bool RepeatedRaidLootDecay { get; init; } = false;
     public bool EnableItemRewardStackNormalization { get; init; } = false;
+    public bool EnableTraderPurchasePressure { get; init; } = false;
+    public double CustomTraderPurchasePriceMultiplier { get; init; } = 1.15;
     public RarityThresholds Rarity { get; init; } = new();
     public AuditPolicy CustomAuditPolicy { get; init; } = new();
     public Dictionary<string, ManualItemOverride> ManualOverrides { get; init; } = new(StringComparer.Ordinal);
@@ -69,15 +71,9 @@ public sealed record ManualItemOverride
 
 public sealed record ManualQuestRewardOverride
 {
-    // false = explicit deny; true = explicitly allow when provenance + flagged-dimension gates also pass.
     public bool? AllowAutomaticMutation { get; init; }
-
-    // Exact total Success reward targets. Null keeps preset-derived target.
     public double? ExperienceTarget { get; init; }
     public double? TraderStandingTarget { get; init; }
-
-    // Exact count for the one safe Success Item reward stack. This never replaces templates or reward records.
     public double? ItemRewardStackCountTarget { get; init; }
-
     public string? Note { get; init; }
 }

@@ -4,6 +4,8 @@
   "reportRelativePath": "reports/economy-admiral-audit.json",
   "repeatedRaidLootDecay": false,
   "enableItemRewardStackNormalization": false,
+  "enableTraderPurchasePressure": false,
+  "customTraderPurchasePriceMultiplier": 1.15,
   "rarity": {
     "commonMinSources": 8,
     "uncommonMinSources": 4,
