@@ -7,23 +7,6 @@ using SPTarkov.Server.Core.Models.Spt.Tables;
 
 namespace SPTEconomy;
 
-public sealed record ChannelObservationCoverage
-{
-    public required AcquisitionChannel Channel { get; init; }
-    public required string State { get; init; }
-    public required int ObservedSourceCount { get; init; }
-    public string? Diagnostic { get; init; }
-}
-
-public sealed record FinalDbSourceObservation
-{
-    public required IReadOnlyList<AcquisitionSourceEvidence> Sources { get; init; }
-    public required IReadOnlyList<AcquisitionCostPath> CostPaths { get; init; }
-    public required IReadOnlyList<ChannelObservationCoverage> ChannelCoverage { get; init; }
-    public required EffectiveAcquisitionGraphResult AcquisitionGraph { get; init; }
-    public required double StartupMilliseconds { get; init; }
-}
-
 [Injectable]
 public sealed class FinalDbSourceObservationService(
     TemplateTable templates,
@@ -32,9 +15,9 @@ public sealed class FinalDbSourceObservationService(
 {
     private static readonly HashSet<string> CurrencyTemplates = new(StringComparer.Ordinal)
     {
-        "5449016a4bdc2d6f028b456f", // RUB
-        "5696686a4bdc2da3298b456a", // USD
-        "569668774bdc2da2298b4568", // EUR
+        "5449016a4bdc2d6f028b456f",
+        "5696686a4bdc2da3298b456a",
+        "569668774bdc2da2298b4568",
     };
 
     public FinalDbSourceObservation Build(VanillaBaselineSnapshot baseline, CancellationToken cancellationToken)
