@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 using JetBrains.Annotations;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
@@ -41,6 +42,7 @@ public sealed class QuestObjectiveLocalization(
             modHelper.GetJsonDataFromFile<Dictionary<string, string>>(modPath, "db/locales/objectives-ru.json");
 
         HashSet<string> finishConditionIds = LoadFinishConditionIds(modPath);
+        Dictionary<string, AccessObjective> accessObjectives = LoadAccessObjectives(modPath);
         ValidateObjectiveLocales(finishConditionIds, english, russian);
 
         foreach (var (localeCode, localeKvP) in localesTable.Global)
@@ -50,17 +52,50 @@ public sealed class QuestObjectiveLocalization(
                 if (lazyLoadedLocaleData is null)
                     return lazyLoadedLocaleData;
 
-                Dictionary<string, string> source = localeCode.Equals("ru", StringComparison.OrdinalIgnoreCase)
-                    ? russian
-                    : english;
+                bool isRussian = localeCode.Equals("ru", StringComparison.OrdinalIgnoreCase);
+                Dictionary<string, string> source = isRussian ? russian : english;
                 foreach (var (key, value) in source)
                     lazyLoadedLocaleData[key] = value;
+
+                foreach (AccessObjective access in accessObjectives.Values)
+                {
+                    List<string> names = [];
+                    bool completeNames = true;
+                    foreach (string tpl in access.Targets)
+                    {
+                        if (!lazyLoadedLocaleData.TryGetValue($"{tpl} Name", out string? name) || string.IsNullOrWhiteSpace(name))
+                        {
+                            completeNames = false;
+                            break;
+                        }
+                        names.Add(name.Trim());
+                    }
+
+                    // Never expose raw template ids to the player. If an installed locale lacks
+                    // an item name, retain the validated generic fallback from objectives-*.json.
+                    if (!completeNames || names.Count == 0)
+                        continue;
+
+                    string list = string.Join(", ", names);
+                    if (isRussian)
+                    {
+                        lazyLoadedLocaleData[access.ConditionId] = access.ConditionType == "HandoverItem"
+                            ? $"Передайте {access.Value} предмет(а) из списка: {list}. FIR не требуется."
+                            : $"После принятия задания получите {access.Value} предмет(а) из списка: {list}. Уже лежащие в схроне экземпляры не засчитываются; FIR не требуется, предметы не изымаются.";
+                    }
+                    else
+                    {
+                        lazyLoadedLocaleData[access.ConditionId] = access.ConditionType == "HandoverItem"
+                            ? $"Hand over {access.Value} item(s) from this list: {list}. Found in Raid is not required."
+                            : $"After accepting the quest, acquire {access.Value} item(s) from this list: {list}. Existing stash copies do not count; Found in Raid is not required and the items are not consumed.";
+                    }
+                }
 
                 return lazyLoadedLocaleData;
             });
         }
 
-        logger.Success($"Registered {finishConditionIds.Count} player-facing Admiral objective locales");
+        logger.Success($"Registered {finishConditionIds.Count} player-facing Admiral objective locales; {accessObjectives.Count} access objectives render concrete installed-locale item names");
         return Task.CompletedTask;
     }
 
@@ -86,6 +121,43 @@ public sealed class QuestObjectiveLocalization(
         if (ids.Count != ExpectedObjectiveCount)
             throw new InvalidDataException($"Expected {ExpectedObjectiveCount} Admiral finish objectives, got {ids.Count}");
         return ids;
+    }
+
+    private static Dictionary<string, AccessObjective> LoadAccessObjectives(string modPath)
+    {
+        string questDirectory = IOPath.Combine(modPath, "db", "quests");
+        Dictionary<string, AccessObjective> result = new(StringComparer.Ordinal);
+
+        foreach (string file in Directory.GetFiles(questDirectory, "*.json", SearchOption.TopDirectoryOnly))
+        {
+            using JsonDocument document = JsonDocument.Parse(File.ReadAllText(file));
+            JsonElement root = document.RootElement;
+            string questName = root.GetProperty("QuestName").GetString() ?? string.Empty;
+            if (questName.StartsWith("Arsenal Protocol:", StringComparison.Ordinal))
+                continue;
+
+            JsonElement finish = root.GetProperty("conditions").GetProperty("AvailableForFinish")[0];
+            string conditionType = finish.GetProperty("conditionType").GetString() ?? string.Empty;
+            if (conditionType is not ("FindItem" or "HandoverItem"))
+                continue;
+
+            string conditionId = finish.GetProperty("id").GetString() ?? throw new InvalidDataException($"Access objective in {IOPath.GetFileName(file)} has no id");
+            int value = finish.GetProperty("value").GetInt32();
+            List<string> targets = finish.GetProperty("target").EnumerateArray()
+                .Select(element => element.GetString())
+                .Where(value => !string.IsNullOrWhiteSpace(value))
+                .Cast<string>()
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+            if (targets.Count == 0)
+                throw new InvalidDataException($"Access objective {conditionId} has no concrete authored target list");
+
+            result.Add(conditionId, new AccessObjective(conditionId, conditionType, value, targets));
+        }
+
+        if (result.Count != 10)
+            throw new InvalidDataException($"Expected 10 Admiral access objectives, got {result.Count}");
+        return result;
     }
 
     private static void ValidateObjectiveLocales(
@@ -122,4 +194,6 @@ public sealed class QuestObjectiveLocalization(
                 throw new InvalidDataException($"Admiral objective locale {localeCode} exposes raw condition id {conditionId}");
         }
     }
+
+    private sealed record AccessObjective(string ConditionId, string ConditionType, int Value, List<string> Targets);
 }
