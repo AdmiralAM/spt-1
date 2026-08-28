@@ -6,9 +6,9 @@ public static class LootPressurePolicy
 {
     public static LootPressureTargets Resolve(EconomyConfig config) => config.Preset switch
     {
-        EconomyPreset.Easy => new(0.95, 0.98),
-        EconomyPreset.Normal => new(0.88, 0.95),
-        EconomyPreset.Hard => new(0.78, 0.90),
+        EconomyPreset.Easy => new(0.95, 0.95),
+        EconomyPreset.Normal => new(0.85, 0.85),
+        EconomyPreset.Hard => new(0.70, 0.70),
         EconomyPreset.Custom => new(config.CustomLooseLootScale, config.CustomStaticLootScale),
         _ => throw new ArgumentOutOfRangeException(nameof(config.Preset), config.Preset, "Unsupported economy preset."),
     };
