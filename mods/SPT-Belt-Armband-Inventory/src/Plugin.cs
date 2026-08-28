@@ -15,6 +15,7 @@ namespace SPTBeltArmbandInventory
         public const string PluginVersion = "0.1.0";
 
         ConfigEntry<bool> modEnabled;
+        ProtectionSettingsSync protectionSettings;
         RuntimeCustomBeltTypePatches runtimeTypePatches;
         RuntimeCustomHeadBandTypePatches runtimeHeadBandTypePatches;
         DedicatedEquipmentSlotPatches dedicatedEquipmentSlotPatches;
@@ -33,11 +34,13 @@ namespace SPTBeltArmbandInventory
         PaymentSlotPatches paymentPatches;
         EquipmentBuildValidationPatches buildValidationPatches;
         Coroutine deferredRuntimePump;
+        Coroutine protectionSyncPump;
 
         void Awake()
         {
             ReflectionTools.LogWarning = Logger.LogWarning;
             modEnabled = Config.Bind("General", "Enabled", true, "Enable B&A&HB #2 MOD SPT. Runtime-candidate builds force this on at startup.");
+            protectionSettings = new ProtectionSettingsSync(Config, Logger.LogInfo, Logger.LogWarning);
 
             if (!modEnabled.Value)
             {
@@ -207,7 +210,24 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Wearable build/apply remains active, but missing wearable contents may be classified under Slots instead of Containers in Equipment Builds.");
             }
 
+            protectionSyncPump = StartCoroutine(SyncProtectionSettingsBounded());
             Logger.LogInfo("B&A&HB #2 MOD SPT wearable-container core initialized without idle polling.");
+        }
+
+        IEnumerator SyncProtectionSettingsBounded()
+        {
+            const int maxAttempts = 30;
+            for (int i = 0; i < maxAttempts; i++)
+            {
+                if (protectionSettings != null && protectionSettings.TryBindAndSync())
+                {
+                    protectionSyncPump = null;
+                    yield break;
+                }
+                yield return null;
+            }
+            Logger.LogWarning("B&A&HB protection F12 settings could not reach the server during bounded startup sync; all three categories remain Protected until a later setting change succeeds.");
+            protectionSyncPump = null;
         }
 
         void EnsureDeferredRuntimePump()
@@ -256,6 +276,11 @@ namespace SPTBeltArmbandInventory
 
         void OnDestroy()
         {
+            if (protectionSyncPump != null)
+            {
+                StopCoroutine(protectionSyncPump);
+                protectionSyncPump = null;
+            }
             if (deferredRuntimePump != null)
             {
                 StopCoroutine(deferredRuntimePump);
@@ -295,6 +320,8 @@ namespace SPTBeltArmbandInventory
             runtimeHeadBandTypePatches = null;
             if (runtimeTypePatches != null) runtimeTypePatches.Dispose();
             runtimeTypePatches = null;
+            if (protectionSettings != null) protectionSettings.Dispose();
+            protectionSettings = null;
             ReflectionTools.ResetDiagnostics();
         }
     }
