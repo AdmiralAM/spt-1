@@ -18,7 +18,8 @@ public sealed class EconomyMod(
     QuestProvenanceDeltaService questProvenanceDeltaService,
     EnforcementPlanService enforcementPlanService,
     GroupedItemRuntimeEvidenceService groupedItemRuntimeEvidenceService,
-    SourcePressureObservationPipelineService sourcePressureObservationPipelineService
+    SourcePressureObservationPipelineService sourcePressureObservationPipelineService,
+    EconomyHealthRuntimeReportService economyHealthRuntimeReportService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
@@ -40,7 +41,8 @@ public sealed class EconomyMod(
 
         // Observation is startup-only and remains separated from enforcement. Unknown channel evidence
         // stays explicit rather than being converted into zero supply or policy authorization.
-        await sourcePressureObservationPipelineService.RunAsync(config, vanillaBaseline, cancellationToken);
+        var sourcePressure = await sourcePressureObservationPipelineService.RunAsync(config, vanillaBaseline, cancellationToken);
+        await economyHealthRuntimeReportService.RunAsync(config, sourcePressure, cancellationToken);
 
         GroupedItemRewardSlot.ResetEvidence();
         var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
