@@ -25,6 +25,13 @@ class ProfileSafetyContractTests(unittest.TestCase):
         self.assertIn("InitialStanding ??= new Dictionary<string, double?>()", text)
         self.assertIn("InitialStanding[RuntimeIdentity.TraderId] = 0d", text)
 
+    def test_profile_template_hook_never_auto_accepts_or_auto_finishes_quests(self):
+        text = REGISTRATION.read_text(encoding="utf-8")
+        self.assertNotIn("SetQuestsAvailableForStart", text)
+        self.assertNotIn("SetQuestsAvailableForFinish", text)
+        self.assertNotIn("AddAllQuestsToProfile", text)
+        self.assertNotIn("QuestStatus", text)
+
     def test_recovery_is_dry_run_by_default_and_backup_first(self):
         text = RECOVERY.read_text(encoding="utf-8")
         self.assertIn("[switch]$Apply", text)
