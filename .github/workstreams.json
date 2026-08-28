@@ -112,16 +112,16 @@
       "modulePath": "mods/Economy-Admiral",
       "version": "0.1.0",
       "state": "ACTIVE",
-      "activeIssue": 141,
+      "activeIssue": 197,
       "activePr": null,
       "activeBranch": null,
-      "currentPhase": "source-pressure-observation",
+      "currentPhase": "trader-compatibility",
       "activePackage": {
-        "objective": "Complete deterministic provenance-aware source-pressure and replacement observation across the recorded acquisition channels without mutation.",
-        "acceptance": "Reports, unknown handling, bounded graph behavior, adapter ownership and startup cost are proven automatically, then health invariants activate without a user micro-test.",
+        "objective": "Complete ownership-safe Admiral Trader compatibility through the maintained explicit adapter without inference or a second economy engine.",
+        "acceptance": "Trader identity, schema, Baseline/Relationship/Milestone classes, authored gates and finite stock semantics are consumed explicitly; absent or incompatible evidence fails closed; then beta enforcement activates without a user micro-test.",
         "continueWithoutUser": true
       },
-      "completedPackages": [222, 223],
+      "completedPackages": [222, 223, 226],
       "roadmap": [
         "bounded-item-rewards",
         "source-pressure-observation",
@@ -131,7 +131,7 @@
         "combined-release-candidate",
         "stable-release"
       ],
-      "successor": "health-invariants",
+      "successor": "beta-enforcement",
       "userGate": "none",
       "frozen": {
         "version": "0.1.0",
