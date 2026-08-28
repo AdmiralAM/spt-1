@@ -2,15 +2,39 @@ using System.Text.Json;
 
 namespace SPTEconomy;
 
+public sealed record AdmiralTraderGameplayAlphaContractSummary
+{
+    public required string ProductName { get; init; }
+    public required string ModGuid { get; init; }
+    public required string TraderId { get; init; }
+    public required int GameplayPolicySchemaVersion { get; init; }
+    public required bool RelationshipStockAllowed { get; init; }
+    public required bool SpecialWeaponsPermanentOfferAllowed { get; init; }
+    public required bool SpecialWeaponsSampleOnly { get; init; }
+    public required int BaselineOfferCount { get; init; }
+    public required int RelationshipOfferCount { get; init; }
+    public required int MilestoneOfferCount { get; init; }
+    public required IReadOnlyList<AdmiralTraderOfferAdapterEvidence> Offers { get; init; }
+}
+
 public static class AdmiralTraderGameplayAlphaAdapter
 {
-    public static IReadOnlyList<AdmiralTraderOfferAdapterEvidence> Parse(
+    public const string ExpectedProductName = "Admiral Trader";
+    public const string ExpectedTraderId = "d5c27bb3169f8dfbc13f6b69";
+    public const string ExpectedModGuid = "com.admiralam.spt.admiraltrader";
+
+    public static AdmiralTraderGameplayAlphaContractSummary Parse(
+        string campaignManifestJson,
+        string identityAssetsJson,
+        string traderBaseJson,
         string gameplayPolicyJson,
         string baselineStockJson,
         string assortJson,
         string questAssortJson,
         IEnumerable<string> authoredQuestJsonRecords)
     {
+        ValidateIdentity(campaignManifestJson, identityAssetsJson, traderBaseJson);
+
         using var policyDoc = JsonDocument.Parse(gameplayPolicyJson);
         var policy = policyDoc.RootElement;
         Require(policy.GetProperty("schemaVersion").GetInt32() == 4, "Gameplay Alpha requires gameplay-policy schemaVersion 4.");
@@ -19,12 +43,16 @@ public static class AdmiralTraderGameplayAlphaAdapter
         Require(traderStock.GetProperty("baselineStockRequired").GetBoolean(), "baseline stock must be required.");
         Require(!traderStock.GetProperty("baselineOffersMustBeQuestGated").GetBoolean(), "baseline offers must not be quest-gated.");
         Require(traderStock.GetProperty("baselineOffersMustBeFinite").GetBoolean(), "baseline offers must be finite.");
+        var relationshipAllowed = traderStock.GetProperty("relationshipStockAllowed").GetBoolean();
         var logistics = policy.GetProperty("logistics");
         var expectedMilestone = logistics.GetProperty("expectedMilestonePermanentOfferCount").GetInt32();
         var maxStock = logistics.GetProperty("maximumPermanentOfferStockPerReset").GetInt32();
         Require(expectedMilestone > 0 && maxStock > 0, "invalid Gameplay Alpha logistics bounds.");
         Require(logistics.GetProperty("milestoneOffersMustBeQuestGated").GetBoolean(), "milestone offers must be quest-gated.");
         Require(logistics.GetProperty("offersMustBeFinite").GetBoolean(), "permanent offers must remain finite.");
+        var specialPermanentAllowed = logistics.GetProperty("specialWeaponsPermanentOfferAllowed").GetBoolean();
+        var specialSampleOnly = logistics.GetProperty("specialWeaponsSampleOnly").GetBoolean();
+        Require(!specialPermanentAllowed && specialSampleOnly, "special-weapons permanent/sample-only contract drift.");
 
         using var baselineDoc = JsonDocument.Parse(baselineStockJson);
         var baselineRoot = baselineDoc.RootElement;
@@ -74,13 +102,56 @@ public static class AdmiralTraderGameplayAlphaAdapter
                 continue;
             }
 
-            throw new InvalidOperationException($"Economy Admiral Admiral Trader Gameplay Alpha adapter: offer '{offerId}' has no unambiguous Baseline/Relationship/Milestone classification.");
+            // Relationship is supported as a doctrine class, but the current Gameplay Alpha contract has
+            // no maintained machine-readable relationship-offer manifest. Never infer it from loyalty/name/id.
+            throw new InvalidOperationException($"Economy Admiral Admiral Trader Gameplay Alpha adapter: offer '{offerId}' has no explicit Baseline/Relationship/Milestone classification.");
         }
 
         Require(results.Count(x => x.StockClass == "Baseline") == baselineById.Count, "baseline-stock contains offers absent from assort.");
         Require(results.Count(x => x.StockClass == "Milestone") == expectedMilestone, "milestone offer count drift.");
+        var relationshipCount = results.Count(x => x.StockClass == "Relationship");
+        Require(relationshipCount == 0 || relationshipAllowed, "relationship offers materialized while relationship stock is disabled.");
         var graph = QuestGateJsonParser.ParseMany(authoredQuestJsonRecords);
-        return AdmiralTraderItemAdapter.ApplyEffectiveQuestGates(results, graph);
+        var enriched = AdmiralTraderItemAdapter.ApplyEffectiveQuestGates(results, graph);
+
+        return new AdmiralTraderGameplayAlphaContractSummary
+        {
+            ProductName = ExpectedProductName,
+            ModGuid = ExpectedModGuid,
+            TraderId = ExpectedTraderId,
+            GameplayPolicySchemaVersion = 4,
+            RelationshipStockAllowed = relationshipAllowed,
+            SpecialWeaponsPermanentOfferAllowed = specialPermanentAllowed,
+            SpecialWeaponsSampleOnly = specialSampleOnly,
+            BaselineOfferCount = enriched.Count(x => x.StockClass == "Baseline"),
+            RelationshipOfferCount = enriched.Count(x => x.StockClass == "Relationship"),
+            MilestoneOfferCount = enriched.Count(x => x.StockClass == "Milestone"),
+            Offers = enriched,
+        };
+    }
+
+    private static void ValidateIdentity(string campaignManifestJson, string identityAssetsJson, string traderBaseJson)
+    {
+        using var campaignDoc = JsonDocument.Parse(campaignManifestJson);
+        var campaign = campaignDoc.RootElement;
+        Require(campaign.GetProperty("schemaVersion").GetInt32() == 1, "unsupported campaign-manifest schema.");
+        var product = campaign.GetProperty("product");
+        Require(ReqString(product, "modName") == ExpectedProductName, "campaign product name drift.");
+        Require(ReqString(product, "modGuid") == ExpectedModGuid, "campaign modGuid/owner drift.");
+        Require(ReqString(product, "traderId") == ExpectedTraderId, "campaign traderId drift.");
+
+        using var identityDoc = JsonDocument.Parse(identityAssetsJson);
+        var identity = identityDoc.RootElement;
+        Require(identity.GetProperty("schemaVersion").GetInt32() == 3, "unsupported identity-assets schema.");
+        Require(ReqString(identity, "product") == ExpectedProductName, "identity-assets product drift.");
+        Require(ReqString(identity, "traderId") == ExpectedTraderId, "identity-assets traderId drift.");
+
+        using var baseDoc = JsonDocument.Parse(traderBaseJson);
+        var traderBase = baseDoc.RootElement;
+        Require(ReqString(traderBase, "_id") == ExpectedTraderId, "runtime trader base id drift.");
+        Require(ReqString(traderBase, "name") == "Admiral", "runtime trader base name drift.");
+        Require(ReqString(traderBase, "nickname") == "Admiral", "runtime trader nickname drift.");
+        Require(ReqString(traderBase, "avatar") == $"/files/trader/avatar/{ExpectedTraderId}.jpg", "runtime trader avatar route drift.");
     }
 
     private static string ReqString(JsonElement obj, string name)

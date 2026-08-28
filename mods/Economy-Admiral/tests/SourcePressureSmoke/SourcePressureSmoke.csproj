@@ -15,6 +15,7 @@
     <Compile Include="../../server/AdmiralTraderItemAdapter.cs" Link="AdmiralTraderItemAdapter.cs" />
     <Compile Include="../../server/AdmiralTraderGameplayAlphaAdapter.cs" Link="AdmiralTraderGameplayAlphaAdapter.cs" />
     <Compile Include="../../server/AdmiralTraderRuntimeAdapterReport.cs" Link="AdmiralTraderRuntimeAdapterReport.cs" />
+    <Compile Include="../../server/TraderOwnershipEnforcementGate.cs" Link="TraderOwnershipEnforcementGate.cs" />
     <Compile Include="../../server/SourcePressureRuntimeReport.cs" Link="SourcePressureRuntimeReport.cs" />
     <Compile Include="../../server/EconomyAttributionEvidence.cs" Link="EconomyAttributionEvidence.cs" />
     <Compile Include="../../server/EconomyHealthInvariants.cs" Link="EconomyHealthInvariants.cs" />

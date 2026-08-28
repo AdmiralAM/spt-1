@@ -39,13 +39,14 @@ public sealed class EconomyMod(
 
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
 
-        // Observation is startup-only and remains separated from enforcement. Unknown channel evidence
-        // stays explicit rather than being converted into zero supply or policy authorization.
-        var sourcePressure = await sourcePressureObservationPipelineService.RunAsync(config, vanillaBaseline, cancellationToken);
-        await economyHealthRuntimeReportService.RunAsync(config, sourcePressure, cancellationToken);
+        // Observation remains startup-only. It cannot create a new mutation dimension, but the explicit
+        // Admiral Trader contract is retained as ownership evidence so Beta enforcement can fail closed
+        // for that trader when its maintained contract is absent/incompatible.
+        var observation = await sourcePressureObservationPipelineService.RunAsync(config, vanillaBaseline, cancellationToken);
+        await economyHealthRuntimeReportService.RunAsync(config, observation.SourcePressure, cancellationToken);
 
         GroupedItemRewardSlot.ResetEvidence();
-        var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
+        var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, observation.AdmiralTrader, cancellationToken);
         await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);
         await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
     }

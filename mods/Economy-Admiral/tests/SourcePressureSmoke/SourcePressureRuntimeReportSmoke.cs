@@ -8,7 +8,7 @@ internal static class SourcePressureRuntimeReportSmoke
     {
         var offers = Enumerable.Range(1, 7).Select(index => new AdmiralTraderOfferAdapterEvidence
         {
-            OfferId = $"offer{index}", ItemTemplateId = $"tpl{index}", QuestGateId = $"quest{index}", LoyaltyLevel = 1,
+            OfferId = $"offer{index}", ItemTemplateId = $"tpl{index}", StockClass = "Milestone", GateKind = "Quest", QuestGateId = $"quest{index}", LoyaltyLevel = 1,
             StockPerReset = 10 * index, BuyRestrictionPerReset = 10 * index,
             Source = new AcquisitionSourceEvidence
             {
@@ -25,9 +25,10 @@ internal static class SourcePressureRuntimeReportSmoke
         var finalDb = FinalDb();
         var loadedInput = new AdmiralTraderRuntimeAdapterReport
         {
-            Installed = true, ContractAvailable = true, ContractState = "LoadedPrototypeContract",
-            ModGuid = "com.admiralam.spt.admiraltrader", AttributionConfidence = "ExplicitAdapter",
-            OfferCount = offers.Length, BoundedRenewableOfferCount = offers.Length,
+            Installed = true, ContractAvailable = true, ContractState = "LoadedGameplayAlphaV4",
+            ProductName = "Admiral Trader", ModGuid = "com.admiralam.spt.admiraltrader", TraderId = "d5c27bb3169f8dfbc13f6b69", GameplayPolicySchemaVersion = 4,
+            AttributionConfidence = "ExplicitAdapter", OfferCount = offers.Length, MilestoneOfferCount = offers.Length, BoundedRenewableOfferCount = offers.Length,
+            RelationshipStockAllowed = true, SpecialWeaponsPermanentOfferAllowed = false, SpecialWeaponsSampleOnly = true,
             MinimumEffectiveProgressionLevel = 5, MaximumEffectiveProgressionLevel = 11, Offers = offers,
         };
         var loaded = SourcePressureRuntimeReportBuilder.Build(finalDb, loadedInput);
@@ -44,8 +45,8 @@ internal static class SourcePressureRuntimeReportSmoke
         var absentInput = new AdmiralTraderRuntimeAdapterReport
         {
             Installed = false, ContractAvailable = false, ContractState = "NotInstalled",
-            ModGuid = "com.admiralam.spt.admiraltrader", AttributionConfidence = "ExplicitAdapter",
-            Offers = Array.Empty<AdmiralTraderOfferAdapterEvidence>(),
+            ProductName = "Admiral Trader", ModGuid = "com.admiralam.spt.admiraltrader", TraderId = "d5c27bb3169f8dfbc13f6b69",
+            AttributionConfidence = "ExplicitAdapter", Offers = Array.Empty<AdmiralTraderOfferAdapterEvidence>(),
         };
         var absent = SourcePressureRuntimeReportBuilder.Build(finalDb, absentInput);
         Require(absent.LoadedAdapterCount == 0 && absent.SourceCount == 1, "not-installed adapter must preserve final DB evidence without fabricating adapter sources");
@@ -58,6 +59,9 @@ internal static class SourcePressureRuntimeReportSmoke
 
         MustFail(() => SourcePressureRuntimeReportBuilder.Build(finalDb, loadedInput with { ModGuid = " " }));
         MustFail(() => SourcePressureRuntimeReportBuilder.Build(finalDb, loadedInput with { OfferCount = 6 }));
+        MustFail(() => SourcePressureRuntimeReportBuilder.Build(finalDb, loadedInput with { MilestoneOfferCount = 6 }));
+        MustFail(() => SourcePressureRuntimeReportBuilder.Build(finalDb, loadedInput with { Offers = offers.Select((offer, index) => index == 0 ? offer with { StockClass = "Relationship" } : offer).ToArray(), RelationshipOfferCount = 0 }));
+        MustFail(() => SourcePressureRuntimeReportBuilder.Build(finalDb, loadedInput with { Offers = offers.Select((offer, index) => index == 0 ? offer with { Source = offer.Source with { ProvenanceClass = "Heuristic" } } : offer).ToArray() }));
         MustFail(() => SourcePressureRuntimeReportBuilder.Build(finalDb, absentInput with { ContractAvailable = true }));
         Console.WriteLine("Economy Admiral runtime source-pressure report smoke PASS");
     }
