@@ -1,4 +1,6 @@
 using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using SPTEconomy;
 
 internal static class ReplacementComparabilitySmoke
@@ -39,7 +41,7 @@ internal static class ReplacementComparabilitySmoke
         Require(oneTime.RenewableProgressionLevelDelta is null, "missing progression must remain null");
 
         var reversed = ReplacementComparabilityEvidenceAnalyzer.Analyze(items.Reverse(), facts.Reverse());
-        Require(evidence.SequenceEqual(reversed), "replacement output must be deterministic under reverse input");
+        Require(Serialize(evidence) == Serialize(reversed), "replacement output must be deterministic under reverse input");
 
         MustFail(() => ReplacementComparabilityEvidenceAnalyzer.Analyze(items, new[] { new ReplacementCandidateFact { SubjectItemId = "subject", CandidateItemId = "subject", Relationship = "bad" } }));
         MustFail(() => ReplacementComparabilityEvidenceAnalyzer.Analyze(items, new[] { new ReplacementCandidateFact { SubjectItemId = "missing", CandidateItemId = "candidate", Relationship = "bad" } }));
@@ -50,6 +52,10 @@ internal static class ReplacementComparabilitySmoke
         }));
         Console.WriteLine("Economy Admiral replacement comparability smoke PASS");
     }
+
+    private static string Serialize(IReadOnlyList<ReplacementComparabilityEvidence> evidence) => JsonSerializer.Serialize(
+        evidence,
+        new JsonSerializerOptions { Converters = { new JsonStringEnumConverter() } });
 
     private static void Require(bool condition, string message)
     {
