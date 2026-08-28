@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <Compile Include="../../server/SourcePressureEvidence.cs" Link="SourcePressureEvidence.cs" />
+    <Compile Include="../../server/ReplacementComparabilityEvidence.cs" Link="ReplacementComparabilityEvidence.cs" />
     <Compile Include="../../server/BoundedSupplyEvidence.cs" Link="BoundedSupplyEvidence.cs" />
     <Compile Include="../../server/EffectiveAcquisitionGraph.cs" Link="EffectiveAcquisitionGraph.cs" />
     <Compile Include="../../server/SourcePressureObservationModels.cs" Link="SourcePressureObservationModels.cs" />
