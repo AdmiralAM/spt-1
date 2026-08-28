@@ -1,104 +1,73 @@
 # B&A&HB #2 MOD SPT
 
-Wearable inventory extension for SPT 4.1.x. The validated runtime foundation uses the
-real EFT `ArmBand` equipment slot as the host for dedicated searchable container
-items. Ordinary armbands remain ordinary. Belt and HeadBand remain later product
-categories until their real EFT host boundaries are proven.
+Wearable inventory extension for SPT 4.1.3. Current development is the profile-safe dedicated wearable package recorded by the repository `belt` workstream and PR #64.
 
 Current module version: **0.1.0**.
 
-## Current ArmBand runtime foundation
+## Current runtime model
 
-The module has one shared searchable ArmBand runtime type with item-specific
-descriptors. A descriptor owns geometry and optional integration capabilities so a
-new wearable does not inherit behavior merely because it occupies `ArmBand`.
+B&A&HB keeps three explicit wearable categories with narrow item-specific capabilities:
 
-### Magazine belt runtime candidate
+- **ArmBand** — the proven searchable-container foundation on the vanilla `ArmBand` equipment host. The runtime candidate remains exact native `1x2`, magazine-only, with bounded event-driven container integration.
+- **Belt** — dedicated equipment pseudo-slot **15**, positioned between Pockets and Backpack. The exact Magazine Belt uses its own persistent parent/item/grid/assort identities and a `2x2` magazine-only grid.
+- **HeadBand** — dedicated equipment pseudo-slot **16**, presented above Headwear. The exact Emergency HeadBand uses its own persistent parent/item/grid/assort identities and a `1x1` medical-only grid.
 
-- dedicated custom searchable item/template runtime identity;
-- real `ArmBand` equipment host;
-- one exact native `1x2` grid;
-- `MAGAZINE`-only filter;
-- native EFT `GridWindow` + `GeneratedGridsView` presentation;
-- exact-fit event-driven window sizing;
-- loot/unload priority integration;
-- reachable-container / reload integration;
-- automatic pickup fallback into an empty compatible ArmBand slot;
-- equipment-build, Scav, merge, death and insurance lifecycle handling.
+Distributed identities are immutable. They are recorded in the persistent identity manifest and must never be renamed, reused for another category, or silently dropped.
 
-### Wrist Wallet proof item
+## Dedicated presentation and routing
 
-The current Phase 2 proof reuses only the already-proven searchable ArmBand host and
-runtime type. It has independent item/grid/assort identities and capabilities:
+The client projects Belt and HeadBand through native EFT equipment/slot boundaries rather than permanent UI polling:
 
-- exact native `1x1` grid;
-- `RUB`, `USD` and `EUR` only;
-- native searchable `GridWindow` presentation;
-- exact-fit sizing from the item descriptor;
-- payment-source enumeration;
-- equipment-build container validation;
-- registered-wearable parent/child merge semantics.
+- dedicated equipment slots are registered against the SPT 4.1.3 `InventoryEquipment` boundary;
+- exact item filters prevent cross-category placement;
+- Belt and HeadBand use dedicated wire slot IDs `15` and `16`;
+- HeadBand presentation is created from the actual EquipmentTab/SlotView lifecycle and rebound to pseudo-slot 16;
+- exact dedicated-item Alt-pickup resolves to the matching dedicated slot when it is empty and compatible;
+- visible dedicated captions are owned by the dedicated presentation policy, including EN/RU labels;
+- existing ArmBand container mechanics remain isolated from the new dedicated locations.
 
-It deliberately does **not** receive magazine loot/unload priority, reload/fast-access,
-Scav restoration, pickup fallback, grenade behavior, or death-retention policy unless
-those behaviors are separately justified and validated for this item.
+## Profile and uninstall safety
 
-The old experimental `ContainersPanel` BELT-row projection is not installed in
-production.
+B&A&HB persistent data is treated as a lifecycle contract, not only a runtime feature. The package includes:
 
-## Capability isolation
+- one authoritative persistent-identity manifest covering current distributed template, parent, slot, grid and assort IDs;
+- backup-first ownership-scoped recovery tooling;
+- deterministic cleanup regression coverage for B&A&HB parent/child references while templates are absent;
+- preservation of unrelated profile data;
+- documented update/disable/uninstall recovery procedure packaged with the candidate.
 
-Runtime behavior that can differ between wearable items is selected from the exact
-item template descriptor. The magazine belt and Wrist Wallet therefore share a host
-without sharing unrelated policies.
-
-Host-level compatibility that is inherently attached to the EFT `ArmBand` slot is
-kept narrow and ownership-safe. Plain armbands are never reclassified as searchable
-wearable containers.
+Do not manually delete arbitrary profile nodes. Use the packaged recovery contract when disabling or uninstalling a build that has already written B&A&HB identities to a profile.
 
 ## Performance contract
 
-The client is interaction/event driven:
+Production client behavior is interaction/event driven:
 
 - no `ItemView.Update` polling;
-- no production `MonoBehaviour.Update` loop;
+- no permanent production `MonoBehaviour.Update` loop;
 - no scene-wide object scans;
 - no hierarchy-wide polling;
-- deferred exact-fit window work only after a registered wearable window is observed;
-- deferred work is bounded and terminates when its queue drains;
-- reusable reflection lookups are cached.
+- no repeated reflection in hot paths where startup-bound delegates can be used;
+- deferred GridWindow work is bounded and drains to zero;
+- dedicated-slot presentation is driven by native SlotView lifecycle calls.
 
-CI runs a deterministic hot-path guard before tests/builds to reject regression to
-those patterns.
+CI includes deterministic hot-path and runtime-contract guards.
 
 ## Repository layout
 
-- `src/` — client runtime type registration and ArmBand wearable integrations;
-- `server/` — SPT 4.1.3 item/trader/lifecycle integration;
-- `tests/` — regression coverage for current runtime contracts;
-- `tools/` — hot-path validation;
-- `docs/` — runtime architecture, archaeology and later wearable design.
+- `src/` — client runtime registration, dedicated equipment projection and wearable integrations;
+- `server/` — SPT 4.1.3 item, slot, trader and lifecycle integration;
+- `tests/` — deterministic profile, identity, routing, presentation and lifecycle regressions;
+- `tools/` — validation and profile-recovery tooling;
+- `docs/` — architecture, archaeology, runtime contracts and recovery documentation.
 
 ## Compatibility
 
-Pack 'n' Strap and Trenchfoot BeltSlot are reference/archaeology sources, not runtime
-dependencies. If legacy `Trenchfoot-BeltSlot.dll` is installed, remove or disable it
-before using this module so two implementations do not patch the same host behavior.
+Pack 'n' Strap and Trenchfoot BeltSlot are reference/archaeology sources, not runtime dependencies. If legacy `Trenchfoot-BeltSlot.dll` is installed, remove or disable it before using B&A&HB so two implementations do not patch the same host behavior.
 
 The server project targets SPT 4.1.3 `SPTushonka.*` packages.
 
-## Current runtime gate
+## Active acceptance path
 
-The next physical runtime candidate must prove the shared ArmBand foundation and both
-item descriptors together without regression:
+PR #64 remains the single implementation/evidence record. The current package must preserve the proven ArmBand/Belt behavior while completing dedicated HeadBand presentation, exact routing, EN/RU captions, lifecycle/persistence and profile-safe recovery. After that, work continues directly through full lifecycle/native polish and release hardening.
 
-- magazine belt still opens as exact native `1x2`, accepts magazines, and preserves
-  its proven reachability/lifecycle behavior;
-- Wrist Wallet opens as exact native `1x1`, accepts only supported currencies, and
-  contributes those currencies through the vanilla payment-source path;
-- switching between the two items does not leak item-specific behavior;
-- plain armbands remain vanilla;
-- no idle polling, duplication, loss, or persistence regression appears.
-
-PR #64 remains Draft until the required exact-SHA physical runtime gate passes. Belt
-and HeadBand host expansion remains out of scope for this ArmBand proof.
+The user runtime gate remains queued by repository governance. CI, commits, PR state and intermediate artifacts are not acceptance by themselves; the final release candidate requires one exact-head batched SPT 4.1.3 runtime gate before stable promotion.
