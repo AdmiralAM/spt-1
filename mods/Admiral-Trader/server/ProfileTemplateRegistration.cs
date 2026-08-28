@@ -1,19 +1,30 @@
+using System.Reflection;
 using JetBrains.Annotations;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
+using SPTarkov.Server.Core.Helpers.Server;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 
 namespace AdmiralTrader.Server;
 
 [Injectable(TypePriority = OnLoadOrder.Preload + 2), UsedImplicitly]
 public sealed class AdmiralProfileTemplateRegistration(
+    ModHelper modHelper,
     TemplateTable templateTable,
     ISptLogger<AdmiralProfileTemplateRegistration> logger) : IOnLoad
 {
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        string modPath = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
+        RuntimeRegistrationManifest runtimeManifest = AdmiralTraderRegistration.LoadRuntimeManifest(modPath);
+        if (!runtimeManifest.RegistrationEnabled)
+        {
+            logger.Info("Admiral Trader profile-template publication gate is disabled");
+            return Task.CompletedTask;
+        }
 
         int updatedSides = 0;
         foreach (var profileTemplate in templateTable.Profiles.Values)
