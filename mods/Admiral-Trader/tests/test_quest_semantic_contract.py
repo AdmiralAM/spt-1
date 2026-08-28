@@ -41,20 +41,26 @@ class QuestSemanticContractTests(unittest.TestCase):
             self.assertTrue(self.ru[cid].strip(), quest["_id"])
 
     def test_arsenal_stage_mechanics_match_names(self):
+        qualification_count = 0
         for quest in self.quests:
             name = quest.get("QuestName", "")
             if not name.startswith("Arsenal Protocol:"):
                 continue
             finish = quest["conditions"]["AvailableForFinish"][0]
-            ctype = finish.get("conditionType")
+            self.assertEqual(finish.get("conditionType"), "CounterCreator", quest["_id"])
+            self.assertEqual(quest.get("type"), "Elimination", quest["_id"])
+            kill = finish["counter"]["conditions"][0]
+            self.assertEqual(kill.get("conditionType"), "Kills", quest["_id"])
+            self.assertTrue(kill.get("weapon"), quest["_id"])
             if name.endswith("Qualification"):
-                self.assertEqual(ctype, "FindItem", quest["_id"])
-                self.assertFalse(finish.get("onlyFoundInRaid"), quest["_id"])
+                qualification_count += 1
                 self.assertEqual(int(finish.get("value", 0)), 1, quest["_id"])
+                self.assertFalse(kill.get("weaponCaliber"), quest["_id"])
             elif name.endswith("Fieldwork") or name.endswith("Munitions"):
-                self.assertEqual(ctype, "CounterCreator", quest["_id"])
+                self.assertGreater(int(finish.get("value", 0)), 1, quest["_id"])
             else:
                 self.fail(f"unknown Arsenal stage naming: {name}")
+        self.assertEqual(qualification_count, 7)
 
     def test_munitions_unlocks_match_backend_payoff(self):
         quest_to_offer = {quest_id: offer_id for offer_id, quest_id in self.questassort.items()}
