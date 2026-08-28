@@ -5,6 +5,7 @@ namespace SPTBeltArmbandInventory
     internal static class DedicatedSlotPresentationPolicy
     {
         internal const string VanillaHeadwearSlotId = "Headwear";
+        internal const string VanillaArmBandSlotId = "ArmBand";
 
         internal static string Caption(string slotId, bool russian)
         {
@@ -40,10 +41,17 @@ namespace SPTBeltArmbandInventory
             return current ?? systemRussian;
         }
 
+        // Emergency HeadBand has one equipment identity only: dedicated pseudo-slot16.
+        // It must not remain compatible with the vanilla Headwear or ArmBand hosts even
+        // though the runtime type/template ancestry is intentionally based on the proven
+        // searchable ArmBand/container family.
         internal static bool ShouldSuppressVanillaHeadwearCompatibility(string slotId, string templateId)
         {
+            if (!string.Equals(templateId, RuntimeIdentity.EmergencyHeadBandItemId, StringComparison.Ordinal))
+                return false;
+
             return string.Equals(slotId, VanillaHeadwearSlotId, StringComparison.Ordinal)
-                && string.Equals(templateId, RuntimeIdentity.EmergencyHeadBandItemId, StringComparison.Ordinal);
+                || string.Equals(slotId, VanillaArmBandSlotId, StringComparison.Ordinal);
         }
     }
 }
