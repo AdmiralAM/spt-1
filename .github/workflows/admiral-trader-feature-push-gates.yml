@@ -1,0 +1,87 @@
+name: Admiral Trader Feature Push Gates
+
+on:
+  push:
+    branches:
+      - 'feature/admiral-trader-gameplay-alpha-assort'
+    paths:
+      - 'mods/Admiral-Trader/**'
+      - '.github/workflows/admiral-trader-feature-push-gates.yml'
+      - '.github/workflows/admiral-trader-profile-safety.yml'
+      - '.github/workflows/admiral-trader-spt413-candidate.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admiral-trader-feature-push-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  profile-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact pushed head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate profile identity and recovery contracts
+        run: |
+          python mods/Admiral-Trader/tests/test_persistent_identities.py
+          python mods/Admiral-Trader/tests/test_profile_safety_contract.py
+          python mods/Admiral-Trader/tools/validate_gameplay_alpha_candidate_tree.py mods/Admiral-Trader
+      - name: Parse backup-first recovery tool
+        shell: pwsh
+        run: |
+          $tokens=$null; $errors=$null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'mods/Admiral-Trader/tools/Reset-AdmiralTraderProfile.ps1'),[ref]$tokens,[ref]$errors)|Out-Null
+          if ($errors.Count) { $errors | ForEach-Object { Write-Error $_.Message }; exit 1 }
+
+  published-api-preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact pushed head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Validate frozen candidate composition
+        shell: python
+        run: |
+          import hashlib, json
+          from pathlib import Path
+          root=Path('mods/Admiral-Trader')
+          runtime=json.loads((root/'manifests/runtime-manifest.json').read_text(encoding='utf-8'))
+          identity=json.loads((root/'manifests/identity-assets.json').read_text(encoding='utf-8'))
+          base=json.loads((root/'db/base.json').read_text(encoding='utf-8'))
+          assort=json.loads((root/'db/assort.json').read_text(encoding='utf-8'))
+          qa=json.loads((root/'db/questassort.json').read_text(encoding='utf-8'))
+          assert runtime['targetSptVersion']=='4.1.3'
+          assert runtime['registrationEnabled'] is False
+          assert len(list((root/'db/quests').glob('*.json')))==31
+          assert len(assort['items'])==11
+          assert set(qa)=={'started','success','fail'} and len(qa['success'])==7
+          portrait=identity['portrait']; path=root/portrait['runtimeAsset']; data=path.read_bytes()
+          assert base['avatar']==portrait['runtimeRoute']=='/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg'
+          assert hashlib.sha1(f'blob {len(data)}\0'.encode()+data).hexdigest()==portrait['runtimeGitBlobSha1']
+          assert (root/'tools/Reset-AdmiralTraderProfile.ps1').is_file()
+      - name: Run full Trader tests
+        run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
+      - name: Build against published SPT 4.1.3 API
+        run: dotnet build mods/Admiral-Trader/server/AdmiralTrader.Server.csproj -c Release
+      - name: Validate exact-runtime scripts parse
+        shell: pwsh
+        run: |
+          foreach ($script in @('mods/Admiral-Trader/tools/build_spt413_test_candidate.ps1','mods/Admiral-Trader/tools/package_spt413_exact_candidate.ps1','mods/Admiral-Trader/tools/Reset-AdmiralTraderProfile.ps1')) {
+            $tokens=$null; $errors=$null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $script),[ref]$tokens,[ref]$errors)|Out-Null
+            if ($errors.Count) { $errors | ForEach-Object { Write-Error $_.Message }; exit 1 }
+          }
