@@ -136,6 +136,22 @@ class GameplayAlphaRewardAuditTests(unittest.TestCase):
         self.assertEqual(max_seen["rub"], expected["maximumSingleQuestRub"])
         self.assertAlmostEqual(max_seen["standing"], expected["maximumSingleQuestStanding"], places=8)
 
+    def test_every_item_reward_has_native_mail_root_identity(self):
+        for quest_id, quest in self.runtime.items():
+            for reward in success_rewards(quest):
+                if reward.get("type") != "Item":
+                    continue
+                items = reward.get("items") or []
+                self.assertGreater(len(items), 0, quest_id)
+                target = reward.get("target")
+                roots = [item for item in items if item.get("_id") == target]
+                self.assertEqual(len(roots), 1, f"{quest_id}: Item reward target must identify exactly one reward root")
+                root = roots[0]
+                self.assertRegex(str(root.get("_id") or ""), r"^[0-9a-f]{24}$", quest_id)
+                self.assertRegex(str(root.get("_tpl") or ""), r"^[0-9a-f]{24}$", quest_id)
+                self.assertGreater(int((root.get("upd") or {}).get("StackObjectsCount", 0)), 0, quest_id)
+                self.assertEqual(int(reward.get("value", 0)), int(root["upd"]["StackObjectsCount"]), quest_id)
+
     def test_current_rewards_stay_below_declared_vanilla_p90_envelope(self):
         envelope = self.audit["vanillaEnvelope"]
         policy_ref = self.reward_policy["observedReference"]["overall"]
