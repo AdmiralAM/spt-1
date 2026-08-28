@@ -20,7 +20,7 @@ jobs:
   dispatch-canonical-trader-ci:
     runs-on: ubuntu-latest
     steps:
-      - name: Dispatch canonical Trader workflows for exact pushed ref
+      - name: Dispatch default-branch registered Trader workflows for exact pushed ref
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -30,16 +30,15 @@ jobs:
           set -euo pipefail
           workflows=(
             admiral-trader-validate.yml
-            admiral-trader-spt413-candidate.yml
             admiral-trader-quest-runtime-validate.yml
             admiral-trader-authored-keys-validate.yml
             admiral-trader-weapon-ammo-validate.yml
             admiral-trader-weapon-ammo-pools.yml
-            admiral-trader-baseline-overlap.yml
-            admiral-trader-profile-safety.yml
           )
 
           for workflow in "${workflows[@]}"; do
             echo "Dispatching $workflow on $TARGET_REF"
             gh workflow run "$workflow" --repo "$GH_REPO" --ref "$TARGET_REF"
           done
+
+          echo "Feature-only candidate/baseline/profile workflows run directly from push and are intentionally not dispatched by filename."
