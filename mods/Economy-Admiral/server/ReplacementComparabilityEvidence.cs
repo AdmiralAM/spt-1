@@ -82,7 +82,7 @@ public static class ReplacementComparabilityEvidenceAnalyzer
         var candidateChannels = candidate.Channels.Where(x => x.RenewableSourceCount > 0).Select(x => x.Channel).ToHashSet();
         var intersection = subjectChannels.Intersect(candidateChannels).OrderBy(x => x).ToArray();
         var unionCount = subjectChannels.Union(candidateChannels).Count();
-        var delta = subject.EarliestRenewableProgressionLevel.HasValue && candidate.EarliestRenewableProgressionLevel.HasValue
+        int? delta = subject.EarliestRenewableProgressionLevel.HasValue && candidate.EarliestRenewableProgressionLevel.HasValue
             ? candidate.EarliestRenewableProgressionLevel.Value - subject.EarliestRenewableProgressionLevel.Value
             : null;
 
