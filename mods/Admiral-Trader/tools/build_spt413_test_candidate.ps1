@@ -61,12 +61,24 @@ foreach ($assembly in $requiredRuntimeAssemblies) {
     if (-not (Test-Path $path)) { throw "Required runtime assembly is missing: $path" }
 }
 
+$runtimeAssemblies = @()
+foreach ($assembly in $requiredRuntimeAssemblies) {
+    $path = Join-Path $runtimeRoot $assembly
+    $assemblyName = [System.Reflection.AssemblyName]::GetAssemblyName($path)
+    $runtimeAssemblies += [ordered]@{
+        fileName = $assembly
+        assemblyName = $assemblyName.Name
+        assemblyVersion = $assemblyName.Version.ToString()
+        sha256 = (Get-FileHash $path -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+}
+
 $corePath = Join-Path $runtimeRoot 'SPTarkov.Server.Core.dll'
 $coreVersion = [System.Reflection.AssemblyName]::GetAssemblyName($corePath).Version
 if ($null -eq $coreVersion -or $coreVersion.Major -ne 4 -or $coreVersion.Minor -ne 1 -or $coreVersion.Build -ne 3) {
     throw "Admiral Trader test candidate requires SPTarkov.Server.Core 4.1.3.x; found $coreVersion at $corePath"
 }
-$coreSha256 = (Get-FileHash $corePath -Algorithm SHA256).Hash.ToLowerInvariant()
+$coreSha256 = ($runtimeAssemblies | Where-Object { $_.fileName -eq 'SPTarkov.Server.Core.dll' }).sha256
 
 $manifest = Get-Content $manifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
 if ($manifest.targetSptVersion -ne '4.1.3') { throw "runtime-manifest target drift: $($manifest.targetSptVersion)" }
@@ -131,7 +143,7 @@ $stagedPortraitSha256 = (Get-FileHash $stagedPortrait -Algorithm SHA256).Hash.To
 if ($stagedPortraitSha256 -ne $portraitSha256) { throw "Staged official portrait hash drift: source=$portraitSha256 staged=$stagedPortraitSha256" }
 
 $provenance = [ordered]@{
-    schemaVersion = 4
+    schemaVersion = 5
     product = 'Admiral Trader'
     sourceHeadSha = $sourceHead
     sourceTreeClean = $true
@@ -140,6 +152,7 @@ $provenance = [ordered]@{
     runtimeAssemblyIdentity = 'SPTarkov.Server.Core.dll'
     runtimeCoreVersion = $coreVersion.ToString()
     runtimeCoreSha256 = $coreSha256
+    runtimeAssemblies = $runtimeAssemblies
     serverDllSha256 = (Get-FileHash (Join-Path $stageMod 'Admiral Trader Server.dll') -Algorithm SHA256).Hash.ToLowerInvariant()
     officialPortraitRoute = [string]$identity.portrait.runtimeRoute
     officialPortraitGitBlobSha1 = $portraitGitBlobSha1
@@ -147,7 +160,7 @@ $provenance = [ordered]@{
     publicationMode = 'test-candidate'
     physicalRuntimeEvidenceEligible = $true
 }
-$provenance | ConvertTo-Json | Set-Content (Join-Path $stageMod 'candidate-provenance.json') -Encoding UTF8
+$provenance | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $stageMod 'candidate-provenance.json') -Encoding UTF8
 
 $junk = Get-ChildItem $stageRoot -Recurse -File | Where-Object {
     $_.Extension -in @('.pdb', '.log', '.zip') -or $_.Name -match '(^|[-_.])(tmp|temp)([-_.]|$)'
@@ -164,13 +177,23 @@ if (
     $stagedProvenance.sourceHeadSha -ne $sourceHead -or
     $stagedProvenance.compileMode -ne 'exact-installed-runtime' -or
     $stagedProvenance.runtimeCoreSha256 -ne $coreSha256 -or
+    $stagedProvenance.runtimeAssemblies.Count -ne $requiredRuntimeAssemblies.Count -or
     $stagedProvenance.officialPortraitGitBlobSha1 -ne $portraitGitBlobSha1 -or
     $stagedProvenance.officialPortraitSha256 -ne $portraitSha256 -or
     $stagedProvenance.physicalRuntimeEvidenceEligible -ne $true
 ) {
     throw 'Staged candidate provenance does not match the verified source/runtime inputs.'
 }
+foreach ($expectedAssembly in $runtimeAssemblies) {
+    $recordedAssembly = $stagedProvenance.runtimeAssemblies | Where-Object { $_.fileName -eq $expectedAssembly.fileName }
+    if ($null -eq $recordedAssembly -or $recordedAssembly.sha256 -ne $expectedAssembly.sha256 -or $recordedAssembly.assemblyVersion -ne $expectedAssembly.assemblyVersion) {
+        throw "Staged candidate provenance mismatch for runtime assembly $($expectedAssembly.fileName)."
+    }
+}
 
 Write-Host "Candidate staged at: $stageRoot"
 Write-Host "Candidate provenance: source=$sourceHead compileMode=exact-installed-runtime runtimeCore=$coreVersion runtimeCoreSha256=$coreSha256 portraitGitBlob=$portraitGitBlobSha1 portraitSha256=$portraitSha256"
+foreach ($assembly in $runtimeAssemblies) {
+    Write-Host "Runtime assembly provenance: $($assembly.fileName) version=$($assembly.assemblyVersion) sha256=$($assembly.sha256)"
+}
 Write-Host 'Staging-only builder completed. Use package_spt413_exact_candidate.ps1 for validated archive creation and optional rollback-safe installation.'
