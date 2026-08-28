@@ -1,0 +1,6 @@
+# Repository control plane
+/AGENTS.md @AdmiralAM
+/.github/workstreams.json @AdmiralAM
+/.github/CODEOWNERS @AdmiralAM
+/.github/scripts/validate_workstreams.py @AdmiralAM
+/.github/workflows/workstream-control-guard.yml @AdmiralAM
