@@ -64,6 +64,16 @@ guard_region(
     "internal static void RestoreContainerBeltSlot(",
     "internal static void Reset()",
     "Scav lifecycle restore")
+guard_region(
+    "LootPriorityRuntime.cs",
+    "static void Postfix(",
+    "static List<object> ReadCapabilityContainers",
+    "loot priority Postfix")
+guard_region(
+    "UnloadPriorityRuntime.cs",
+    "static void Postfix(",
+    "static List<object> ReadCapabilityGrids",
+    "unload priority Postfix")
 
 if violations:
     raise SystemExit("Hot-path guard failed:\n" + "\n".join(violations))
