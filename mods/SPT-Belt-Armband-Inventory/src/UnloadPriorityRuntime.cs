@@ -2,12 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace SPTBeltArmbandInventory
 {
     internal static class UnloadPriorityRuntime
     {
-        static MethodInfo getSlot;
+        static Func<object, object, object> getSlot;
+        static Func<IList> createTypedList;
         static object armBandValue;
         static object dedicatedBeltValue;
         static Type gridType;
@@ -17,14 +19,19 @@ namespace SPTBeltArmbandInventory
         {
             logWarning = warning;
             MethodInfo target = FindTarget(equipmentType);
-            getSlot = ReflectionTools.FindInstanceMethod(equipmentType, "GetSlot", null, slotEnumType);
-            if (target == null || getSlot == null || !target.ReturnType.IsGenericType)
+            MethodInfo getSlotMethod = ReflectionTools.FindInstanceMethod(equipmentType, "GetSlot", null, slotEnumType);
+            if (target == null || getSlotMethod == null || !target.ReturnType.IsGenericType)
                 return Fail("SPT 4.1 GetPrioritizedGridsForUnloadedObject shape was not found; wearable unload priority was not patched.");
 
             Type[] genericArguments = target.ReturnType.GetGenericArguments();
             if (genericArguments.Length != 1) return Fail("SPT 4.1 unload-grid return type changed; wearable unload priority was not patched.");
 
             gridType = genericArguments[0];
+            getSlot = BuildBinaryObjectCall(equipmentType, slotEnumType, getSlotMethod);
+            createTypedList = BuildListFactory(gridType);
+            if (getSlot == null || createTypedList == null)
+                return Fail("SPT 4.1 unload-priority startup delegates could not be bound; wearable unload priority was not patched.");
+
             armBandValue = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand);
             dedicatedBeltValue = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedBeltEquipmentSlotValue);
             MethodInfo postfixMethod = typeof(UnloadPriorityRuntime).GetMethod(nameof(Postfix), BindingFlags.Static | BindingFlags.NonPublic);
@@ -36,6 +43,7 @@ namespace SPTBeltArmbandInventory
         internal static void Reset()
         {
             getSlot = null;
+            createTypedList = null;
             armBandValue = null;
             dedicatedBeltValue = null;
             gridType = null;
@@ -52,8 +60,7 @@ namespace SPTBeltArmbandInventory
                 AppendUnique(wearableGrids, ReadCapabilityGrids(equipment, dedicatedBeltValue));
                 if (wearableGrids.Count == 0) return;
 
-                object rebuilt = Activator.CreateInstance(typeof(List<>).MakeGenericType(gridType));
-                IList list = rebuilt as IList;
+                IList list = createTypedList();
                 if (list == null) return;
 
                 if (__result is IEnumerable vanilla)
@@ -61,7 +68,7 @@ namespace SPTBeltArmbandInventory
                         if (entry != null && gridType.IsInstanceOfType(entry)) list.Add(entry);
 
                 for (int i = 0; i < wearableGrids.Count; i++) if (!list.Contains(wearableGrids[i])) list.Add(wearableGrids[i]);
-                __result = rebuilt;
+                __result = list;
             }
             catch (Exception exception)
             {
@@ -72,12 +79,11 @@ namespace SPTBeltArmbandInventory
         static List<object> ReadCapabilityGrids(object equipment, object slotValue)
         {
             var result = new List<object>();
-            if (equipment == null || slotValue == null) return result;
-            object slot = getSlot.Invoke(equipment, new[] { slotValue });
+            if (equipment == null || slotValue == null || getSlot == null) return result;
+            object slot = getSlot(equipment, slotValue);
             object item = ReflectionTools.ReadMember(slot, "ContainedItem");
-            bool hasContainers = ReflectionTools.HasContainers(item);
             string templateId = GetTemplateId(item);
-            if (!hasContainers || !WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.UnloadPriority)) return result;
+            if (!WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.UnloadPriority)) return result;
             IEnumerable grids = ReflectionTools.ReadMember(item, "Grids") as IEnumerable;
             if (grids == null) return result;
             foreach (object grid in grids) if (grid != null && gridType.IsInstanceOfType(grid)) result.Add(grid);
@@ -115,6 +121,41 @@ namespace SPTBeltArmbandInventory
                 }
             }
             return null;
+        }
+
+        static Func<object, object, object> BuildBinaryObjectCall(Type ownerType, Type argumentType, MethodInfo method)
+        {
+            try
+            {
+                DynamicMethod dm = new DynamicMethod("BAndHBUnloadGetSlot", typeof(object), new[] { typeof(object), typeof(object) }, typeof(UnloadPriorityRuntime), true);
+                ILGenerator il = dm.GetILGenerator();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Castclass, ownerType);
+                il.Emit(OpCodes.Ldarg_1);
+                if (argumentType.IsValueType) il.Emit(OpCodes.Unbox_Any, argumentType);
+                else il.Emit(OpCodes.Castclass, argumentType);
+                il.Emit(method.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, method);
+                if (method.ReturnType.IsValueType) il.Emit(OpCodes.Box, method.ReturnType);
+                il.Emit(OpCodes.Ret);
+                return (Func<object, object, object>)dm.CreateDelegate(typeof(Func<object, object, object>));
+            }
+            catch { return null; }
+        }
+
+        static Func<IList> BuildListFactory(Type elementType)
+        {
+            try
+            {
+                Type listType = typeof(List<>).MakeGenericType(elementType);
+                ConstructorInfo ctor = listType.GetConstructor(Type.EmptyTypes);
+                if (ctor == null) return null;
+                DynamicMethod dm = new DynamicMethod("BAndHBUnloadListFactory", typeof(IList), Type.EmptyTypes, typeof(UnloadPriorityRuntime), true);
+                ILGenerator il = dm.GetILGenerator();
+                il.Emit(OpCodes.Newobj, ctor);
+                il.Emit(OpCodes.Ret);
+                return (Func<IList>)dm.CreateDelegate(typeof(Func<IList>));
+            }
+            catch { return null; }
         }
 
         static void Patch(object harmony, MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, object postfix)
