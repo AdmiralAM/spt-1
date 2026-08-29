@@ -50,7 +50,8 @@ namespace SPTBeltArmbandInventory
 
         internal static void PromoteReachability(object item, ref bool result)
         {
-            if (result || item == null || MagazineType == null || !MagazineType.IsInstanceOfType(item) || GetAllParentItems == null)
+            bool isMagazine = item != null && MagazineType != null && MagazineType.IsInstanceOfType(item);
+            if (!FastAccessSlotPolicy.ShouldPromoteReloadReachability(result, isMagazine, true) || GetAllParentItems == null)
                 return;
 
             try
@@ -61,7 +62,8 @@ namespace SPTBeltArmbandInventory
                 {
                     string templateId = ReflectionTools.ReadMember(parent, "StringTemplateId") as string
                         ?? ReflectionTools.ReadMember(parent, "TemplateId") as string;
-                    if (WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.FastAccess))
+                    bool fastAccessRoot = WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.FastAccess);
+                    if (FastAccessSlotPolicy.ShouldPromoteReloadReachability(result, isMagazine, fastAccessRoot))
                     {
                         result = true;
                         return;
@@ -248,7 +250,7 @@ namespace SPTBeltArmbandInventory
                 new[] { itemType, typeof(bool).MakeByRefType() },
                 typeof(FastAccessSlotPatches),
                 true);
-            dynamic.DefineParameter(1, ParameterAttributes.None, "item");
+            dynamic.DefineParameter(1, ParameterAttributes.None, "__0");
             dynamic.DefineParameter(2, ParameterAttributes.Out, "__result");
             ILGenerator il = dynamic.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
