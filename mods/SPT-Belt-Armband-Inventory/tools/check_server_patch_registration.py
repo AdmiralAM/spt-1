@@ -2,7 +2,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "server" / "ServerMod.cs"
+INSURANCE = ROOT / "server" / "Patches" / "HandleInsuredItemLostEventPatch.cs"
 text = SOURCE.read_text(encoding="utf-8-sig")
+insurance = INSURANCE.read_text(encoding="utf-8-sig")
 violations = []
 
 required = [
@@ -34,7 +36,20 @@ if min(death_resolve, insurance_resolve, unique_gate, first_enable) < 0 or not (
 ):
     violations.append("both protection patch types must be bounded and uniquely proven before any Enable call")
 
+for token in [
+    "BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly",
+    "method.ReturnType != typeof(void)",
+    "parameters.Length != 4",
+    "parameters[0].ParameterType != typeof(MongoId)",
+    "parameters[1].ParameterType != typeof(PmcData)",
+    "parameters[2].ParameterType != typeof(EndLocalRaidRequestData)",
+    "parameters[3].ParameterType != typeof(string)",
+    "Multiple exact LocationLifecycleService.HandleInsuredItemLostEvent(MongoId, PmcData, EndLocalRaidRequestData, string) methods found",
+]:
+    if token not in insurance:
+        violations.append(f"insurance target binding missing exact SPT 4.1.3 signature token: {token!r}")
+
 if violations:
     raise SystemExit("B&A&HB server-patch registration gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB server-patch registration gate: OK (death/insurance DI bindings bounded to <=2, exactly one each required before enable, atomic rollback retained)")
+print("B&A&HB server-patch registration gate: OK (death/insurance DI bindings bounded-unique before enable; rollback atomic; insurance target exact to SPT 4.1.3 four-parameter signature)")
