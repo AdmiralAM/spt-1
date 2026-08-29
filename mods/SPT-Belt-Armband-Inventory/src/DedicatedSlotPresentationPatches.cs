@@ -635,7 +635,7 @@ namespace SPTBeltArmbandInventory
             MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             for (int i = 0; i < methods.Length; i++)
                 if (string.Equals(methods[i].Name, name, StringComparison.Ordinal)
-                    && method.GetParameters().Length == 0)
+                    && methods[i].GetParameters().Length == 0)
                     return methods[i];
             return null;
         }
