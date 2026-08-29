@@ -3,6 +3,7 @@ namespace SPTEconomy;
 public static class RestartableStandingPressureCore
 {
     public const string Flag = "RESTARTABLE_HIGH_STANDING";
+    public const string StandingBudgetFlag = "HIGH_STANDING_LOW_DEPTH";
 
     public static double ResolveThreshold(PlayableQuestRewardCaps policy)
     {
