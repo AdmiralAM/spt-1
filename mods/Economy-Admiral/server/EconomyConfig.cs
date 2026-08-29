@@ -29,15 +29,15 @@ public sealed record EconomyConfig
     private bool enableLootPressure;
     private Dictionary<string, ManualQuestRewardOverride> questRewardOverrides = new(StringComparer.Ordinal);
 
-    public EconomyMode Mode { get; init; } = EconomyMode.Audit;
+    public EconomyMode Mode { get; init; } = EconomyMode.Enforce;
     public EconomyPreset Preset { get; init; } = EconomyPreset.Normal;
     public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
     public bool RepeatedRaidLootDecay { get; init; } = false;
 
     /// <summary>
-    /// High-level product switch. Safe by default because committed Mode remains Audit.
-    /// When Mode is Enforce, this activates every accepted Playable Economy surface through the selected preset.
-    /// Cluster switches remain hard gates so Advanced mode can keep selected areas vanilla.
+    /// High-level product switch. When Mode is Enforce, this activates every accepted
+    /// Playable Economy surface through the selected preset. Cluster switches remain
+    /// hard gates so Advanced mode can keep selected areas vanilla.
     /// </summary>
     public bool EnablePlayableEconomyBundle { get; init; } = true;
 
