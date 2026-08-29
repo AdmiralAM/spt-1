@@ -138,15 +138,18 @@ jobs:
             'ServerDll=SPT-Belt-Armband-Inventory.Server.dll',
             "ServerSha256=$serverHash"
           ) | Set-Content -LiteralPath "$root/BUILD-INFO.txt" -Encoding UTF8
+          Copy-Item -LiteralPath "$root/BUILD-INFO.txt" -Destination "$modRoot/BUILD-INFO.txt" -Force
 
           $buildInfo = Get-Content -LiteralPath "$root/BUILD-INFO.txt" -Raw
+          $installedBuildInfo = Get-Content -LiteralPath "$modRoot/BUILD-INFO.txt" -Raw
           if (-not $buildInfo.Contains('CandidateLine=v0.2.0')) { throw 'Install-tree validation: BUILD-INFO v0.2.0 line missing' }
           if (-not $buildInfo.Contains('ClientRuntimeVersion=0.2.0')) { throw 'Install-tree validation: BUILD-INFO client runtime version missing' }
           if (-not $buildInfo.Contains('ClientFilenameCompatibility=legacy-v0.1.0-path')) { throw 'Install-tree validation: BUILD-INFO upgrade-path marker missing' }
           if (-not $buildInfo.Contains("HeadSha=$headSha")) { throw 'Install-tree validation: BUILD-INFO exact head missing' }
           if (-not $buildInfo.Contains("ClientSha256=$clientHash")) { throw 'Install-tree validation: BUILD-INFO client hash missing' }
           if (-not $buildInfo.Contains("ServerSha256=$serverHash")) { throw 'Install-tree validation: BUILD-INFO server hash missing' }
-          Write-Host "[B&A&HB #2 MOD SPT v0.2.0] RC1 install tree PASS: exactHead=$headSha upgradeSafeClientPath=$clientDll clientSha256=$clientHash serverSha256=$serverHash"
+          if ($installedBuildInfo -ne $buildInfo) { throw 'Install-tree validation: installed BUILD-INFO differs from artifact-root provenance' }
+          Write-Host "[B&A&HB #2 MOD SPT v0.2.0] RC1 install tree PASS: exactHead=$headSha upgradeSafeClientPath=$clientDll clientSha256=$clientHash serverSha256=$serverHash provenanceCopies=2"
       - name: 'Upload B&A&HB #2 MOD SPT RC1'
         uses: actions/upload-artifact@v4
         with:
