@@ -9,10 +9,17 @@ using SPTarkov.Server.Core.Models.Spt.Tables;
 namespace SPTBeltArmbandInventory.Server;
 
 [Injectable(TypePriority = OnLoadOrder.TraderRegistration + 1)]
-public sealed class RuntimeCandidateAssort(TradersTable tradersTable, ISptLogger<RuntimeCandidateAssort> logger) : IOnLoad
+public sealed class RuntimeCandidateAssort(
+    TradersTable tradersTable,
+    TemplateTable templateTable,
+    ISptLogger<RuntimeCandidateAssort> logger) : IOnLoad
 {
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
+        var templateId = new MongoId(RuntimeCandidateBeltItem.RuntimeCandidateTpl);
+        if (!templateTable.Items.ContainsKey(templateId))
+            throw new InvalidOperationException("B&A&HB Magazine Armband offer refused: exact product template is not registered.");
+
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB Magazine Armband could not find Ragman.");
         var id = new MongoId(RuntimeIdentity.CandidateAssortId);
@@ -32,7 +39,7 @@ public sealed class RuntimeCandidateAssort(TradersTable tradersTable, ISptLogger
         trader.Assort.Items.Add(new Item
         {
             Id = id,
-            Template = new MongoId(RuntimeCandidateBeltItem.RuntimeCandidateTpl),
+            Template = templateId,
             ParentId = RuntimeCandidateOfferContract.RootId,
             SlotId = RuntimeCandidateOfferContract.RootId,
             Upd = new Upd { UnlimitedCount = true, StackObjectsCount = RuntimeCandidateOfferContract.UnlimitedStock }
@@ -51,7 +58,7 @@ public sealed class RuntimeCandidateAssort(TradersTable tradersTable, ISptLogger
         void ValidateExistingAssort()
         {
             if (existing == null) throw new InvalidOperationException("B&A&HB Magazine Armband assort validation received no existing offer.");
-            if (!Equals(existing.Template, new MongoId(RuntimeCandidateBeltItem.RuntimeCandidateTpl))
+            if (!Equals(existing.Template, templateId)
                 || !string.Equals(existing.ParentId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal)
                 || !string.Equals(existing.SlotId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal))
                 throw new InvalidOperationException("B&A&HB Magazine Armband assort ID collision: existing offer points to a different item or hierarchy.");
