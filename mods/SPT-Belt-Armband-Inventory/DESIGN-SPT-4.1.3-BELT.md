@@ -1,129 +1,83 @@
 # B&A&HB — SPT 4.1.3 wearable runtime design
 
-## Status
+## Authority
 
-This note records the **current mechanical architecture and stabilized product boundary** of PR #64. Earlier revisions that treated Belt as only an `ArmBand` projection or described HeadBand as a `1x1` medical container are historical and superseded.
-
-**Stable Baseline 1** is exact head `d6336f290361b16c4aa54f9d7dddfe0e8f7f9bbf`, preserved on branch `belt-stable-baseline-1`. It physically passed first-open Items, insurance/pre-raid navigation and normal PMC lifecycle. Current work may refine product identity, exact whitelists, trader progression and later visual presentation while preserving that rollback point.
+Stable v0.1.0 is already frozen/published and remains the rollback release. Active v0.2 development is Issue #285 / PR #286.
 
 ## Persistent equipment model
 
 B&A&HB owns three wearable families:
 
-1. **ArmBand** — vanilla `ArmBand` equipment host. Current products are Wrist Wallet (`1x1`, currency-only) and Magazine Armband (`1x2`, MAGAZINE-only).
-2. **Belt** — dedicated SPT/EFT pseudo-enum equipment value **15**, semantic identity `BAndHBBelt`, wire slot ID `15`. Magazine Belt is `2x2`, MAGAZINE-only.
-3. **HeadBand** — dedicated pseudo-enum equipment value **16**, semantic identity `BAndHBHeadBand`, wire slot ID `16`. Utility HeadBand is `1x2` with an exact-item utility whitelist.
+1. **ArmBand** — vanilla ArmBand host. Wrist Wallet (`1x1`, currency-only) and Magazine Armband (`1x2`, MAGAZINE-only).
+2. **Belt** — dedicated pseudo-enum equipment value **15**, semantic identity `BAndHBBelt`, wire slot `15`. Magazine Belt is `2x2`, MAGAZINE-only.
+3. **HeadBand** — dedicated pseudo-enum equipment value **16**, semantic identity `BAndHBHeadBand`, wire slot `16`. Utility HeadBand v0.2 uses two native `1x1` grids.
 
-All distributed template, parent, slot, grid and assort IDs are persistent contracts recorded in `profile-safety/persistent-identities.json`. Existing IDs must not be renamed, recycled or silently removed.
+All distributed template, parent, slot, grid and assort IDs are persistent contracts. Existing identities must not be renamed, recycled or silently removed.
 
-SPT 4.1.x constructs `InventoryEquipment` through the closed `EquipmentSlot` enum. Dedicated Belt/HeadBand locations therefore use collision-checked numeric values 15/16 on the wire while retaining human-readable semantic identities inside B&A&HB. Server registration does not reorder vanilla slots; client presentation owns visible placement.
-
-## Product roster and progression
+## v0.2 product contract
 
 | Product | Host | Grid/filter | Ragman |
 | --- | --- | --- | --- |
 | Wrist Wallet | ArmBand | `1x1`, currency-only | LL1 — 12,500 RUB |
 | Magazine Armband | ArmBand | `1x2`, MAGAZINE-only | LL1 — 25,000 RUB |
-| Utility HeadBand | slot16 | `1x2`, exact utility whitelist | LL1 — 25,000 RUB |
+| Utility HeadBand | slot16 | two native `1x1` grids | LL1 — 25,000 RUB |
 | Magazine Belt | slot15 | `2x2`, MAGAZINE-only | LL2 — 45,000 RUB |
 
-The larger Belt is deliberately later/more expensive than Magazine Armband. No product is a universal storage upgrade.
+Utility HeadBand grids:
 
-## Native container path
+- `main` — RUB, USD, EUR, Simple Wallet `5783c43d2459774bbe137486`, WZ Wallet `60b0f6c058e0b0481a09ad11`;
+- `cigarettes` — Apollo Soyuz, Malboro, Wilston, Strike.
 
-The successful ArmBand proof established the rendering rule: B&A&HB searchable containers use EFT's native generated-grid path. No unsupported `GridLayoutComponent` or external custom-layout prefab is required.
+Broad medical, barter, money-container and generic CASE parents are not accepted.
 
-The dedicated Belt and HeadBand retain the same principle:
+## Split-grid profile migration
 
-- server-backed grid metadata is authoritative;
-- custom runtime item/template identity is registered before item construction where required;
-- `GridWindow`/generated grids render the actual declared dimensions;
-- bounded exact-fit correction may settle late EFT layout writes after a window opens;
-- there is no permanent `ItemView.Update` or `MonoBehaviour.Update` polling loop.
+v0.1.0 profiles may contain Utility HeadBand children in the old single `main` `1x2` grid. v0.2 uses SPT's native raw-profile migration lifecycle before profile deserialization.
 
-Current calibrated exact-fit targets are derived from declared cell geometry: `1x2` = `73x158`, `2x2` = `136x158`.
+Migration rules:
 
-## Dedicated slot filters
+- preserve the original `main` grid identity for currency/wallet;
+- move one cigarette child to the new persistent `cigarettes` grid;
+- normalize retained 1x1 children to grid origin;
+- never delete same-category overflow; on PMC move overflow root to sorting table and preserve its descendant subtree;
+- preserve unknown Scav children rather than corrupting profiles where no sorting table exists;
+- migration is regression-tested for idempotence and compiled against the SPT 4.1.3 server package set.
 
-The two added equipment slots are exact-template scoped:
+## Dedicated slot lifecycle
 
-- slot 15 accepts only the dedicated Magazine Belt template;
-- slot 16 accepts only the Utility HeadBand template.
+The accepted v0.1.0 slot lifecycle is unchanged:
 
-Shared searchable/container parent identities never make ArmBand/Wrist Wallet equipable in those dedicated locations.
+- slot15/slot16 are exact-template scoped;
+- slot16 is inserted/recovered in the `EquipmentTab.Show` prefix before native `_slotViews` enumeration;
+- live slot16 mappings are preserved; only stale Unity-null mappings are replaced pre-enumeration;
+- `SlotView.Show` binds the already-mapped slot16 and cannot Add/Remove/clone the active map;
+- exact captions prevent visible raw numeric IDs;
+- no permanent scene/inventory polling is introduced.
 
-Utility HeadBand's internal grid is exact-item scoped. Current whitelist:
+## Compact Face + HeadBand presentation
 
-- RUB;
-- USD;
-- EUR;
-- Apollo Soyuz cigarettes;
-- Malboro;
-- Wilston;
-- Strike;
-- Simple Wallet (`5783c43d2459774bbe137486`);
-- WZ Wallet (`60b0f6c058e0b0481a09ad11`).
+v0.2 installs one exact `EquipmentTab.Show` postfix as the compact presentation owner. The old stable HeadBand presentation remains compiled as fail-safe fallback and is suppressed only after the compact patch installs successfully.
 
-The Apollo Soyuz TPL is regression-guarded against the historical accidental golden-neck-chain TPL. Broad medical, barter, money-container or generic CASE parents are not accepted.
+Final geometry contract:
 
-## Presentation boundary
+- preserve the original FaceCover **outer footprint**;
+- FaceCover keeps original width and is reduced to roughly half-height;
+- HeadBand keeps `44 px` height with a `4 px` local gap and sits above FaceCover inside the same footprint;
+- no Gear Panel resize/translation;
+- no unrelated native equipment slot movement;
+- no `LayoutElement.preferredHeight`, Canvas force-refresh, coroutine retry or idle polling;
+- if compact ownership cannot install safely, accepted stable presentation remains active.
 
-Dedicated UI is lifecycle-owned, not polled:
+## Death / insurance boundary
 
-- Belt visual anchor: between Pockets and Backpack;
-- HeadBand uses the physically accepted Stable Baseline 1 placement;
-- client slot registration maps numeric 15/16 into the dedicated runtime locations;
-- `EquipmentTab.Show` prefix creates or recovers slot16 before native `_slotViews` enumeration;
-- live slot16 mappings are preserved; only stale Unity-null mappings are removed/recreated pre-enumeration;
-- `SlotView.Show` binds the already-mapped slot16 and is forbidden from Add/Remove/clone operations on the active map;
-- accepted structural HeadBand geometry is one `44 + 4 px` row: mapped slot16 occupies original Headwear coordinates and individual native slot RectTransforms retain the accepted `-48 px` translation;
-- the host Gear Panel itself is never resized or translated, and no global Canvas refresh/coroutine retry is used;
-- exact caption normalization prevents visible raw numeric IDs;
-- optional late UI repairs are bounded to the concrete factory-created Belt row/GridWindow rather than scanning scenes or inventories.
+Independent F12 `Protected` / `LostOnDeath` settings for ArmBand, Belt and HeadBand remain unchanged. Protection is exact-root scoped and expands through full descendant trees. Death retention and insurance-loss filtering consume the same immutable root policy and are not reopened by v0.2 presentation/product work.
 
-## Scav boundary
+The historical `DEFAULT_VALUE` insurer incident belongs to Admiral Trader and is not handled inside B&A&HB.
 
-SPT 4.1.3 Scav `ReplaceInventory` does not guarantee the old property-only shape. B&A&HB resolves `Inventory`, `Equipment`, `ContainedItem`, `Deleted` and `StringTemplateId` once at startup as compatible properties or fields. Dynamic delegates are cached after discovery. The postfix inspects only ArmBand, Belt15 and HeadBand16 and restores only descriptors with the explicit Scav-host restoration capability. No reflection scan occurs per replacement and no global inventory polling is introduced.
+## Scav / performance boundary
 
-Scav compatibility is CI-owned and is not a user physical gate.
+Scav `ReplaceInventory` compatibility remains bounded and CI-owned. Runtime member discovery is startup-only with cached delegates. Forbidden production behavior remains: permanent `ItemView.Update`/generic `MonoBehaviour.Update` polling, scene-wide scans, global per-frame inventory scans, repeated reflection in guarded hot paths, host-panel resize and global Canvas rebuilds.
 
-## Death and insurance boundary
+## Release gate
 
-F12 exposes independent `Protected` / `LostOnDeath` settings for ArmBand, Belt and HeadBand, default `Protected`.
-
-Protection is defined by exact `(slot, template)` roots and expands through the full descendant inventory tree. Arbitrary vanilla/third-party items in a wearable-looking slot are not protected. `LostOnDeath` removes that family from B&A&HB special retention and leaves normal SPT semantics in control.
-
-The server publishes active roots as an immutable atomic snapshot. The exact SPT 4.1 death-retention and insurance-loss patches are DI-managed and installed as one atomic feature: if either fails to enable, any already-enabled half is rolled back. This prevents death retention and lost-insured processing from diverging.
-
-The prior `DEFAULT_VALUE` insurer incident was isolated to Admiral Trader and is not masked inside Belt.
-
-## Profile safety
-
-Uninstall/recovery is ownership-scoped. Cleanup follows persistent B&A&HB roots, descendants and direct references and must preserve unrelated vanilla/third-party profile data. Backup-first recovery tooling and deterministic fixtures are packaged with the candidate.
-
-## Performance contract
-
-Forbidden production behavior:
-
-- permanent `ItemView.Update` polling;
-- permanent generic `MonoBehaviour.Update` polling;
-- scene-wide object/hierarchy scans;
-- repeated reflection scanning in inventory/raid hot paths;
-- global inventory scans per frame/update;
-- HeadBand placement via host-panel resize, global Canvas rebuild or deferred refresh loop.
-
-Allowed mechanisms are startup discovery, cached delegates, bounded lifecycle hooks, exact Harmony patches and short deferred GridWindow work that drains to zero.
-
-## Deferred final visual boundary
-
-The stable HeadBand mechanics are accepted; its final **visual** design remains deferred. Target direction:
-
-- reduce the Face equipment window roughly by half;
-- place a compact HeadBand above/adjacent using the ArmBand + Dogtag visual principle;
-- preserve pseudo-slot16 identity and Stable Baseline 1 lifecycle while changing presentation only.
-
-A possible final-stage alternative is two independent internal `1x1` grids: one cigarettes-only, one currency/wallet-only. This is feasible only if native multi-grid `CompoundItem`/GridWindow behavior can be proven without a fragile parallel UI. If that proof fails, the current single `1x2` exact whitelist remains the stable design.
-
-## Release boundary
-
-CI covers hot-path/lifecycle policy, product-contract progression, exact utility whitelist, deterministic identity/filter/death/insurance behavior, offline profile recovery, client/server compilation and install-tree packaging. The user physical gate after Stable Baseline 1 is intentionally short and is defined in `docs/RC1-runtime-checklist.md`; already-proven death/insurance scenarios are reopened only by relevant runtime changes or concrete regression evidence.
+CI owns hot-path/lifecycle guard, product contract, compact-layout ownership, split-grid migration regression, offline recovery, client/server builds and exact-head packaging. Physical runtime acceptance is one combined gate from `docs/RC1-runtime-checklist.md` only after the exact PR head is fully GREEN.
