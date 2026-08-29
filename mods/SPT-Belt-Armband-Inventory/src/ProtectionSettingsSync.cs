@@ -95,8 +95,11 @@ namespace SPTBeltArmbandInventory
                     armBand.Value == DeathLossMode.Protected,
                     belt.Value == DeathLossMode.Protected,
                     headBand.Value == DeathLossMode.Protected);
-                postJson(WearableProtectionContract.Route, payload);
-                logInfo?.Invoke("B&A&HB protection settings synced: ArmBand=" + armBand.Value
+                string response = postJson(WearableProtectionContract.Route, payload);
+                if (!WearableProtectionContract.IsAcknowledgement(response, payload))
+                    throw new InvalidOperationException("server acknowledgement did not match the applied protection snapshot");
+
+                logInfo?.Invoke("B&A&HB protection settings synced and acknowledged: ArmBand=" + armBand.Value
                     + ", Belt=" + belt.Value + ", HeadBand=" + headBand.Value + ".");
                 transportWarningLogged = false;
                 return true;
@@ -106,7 +109,7 @@ namespace SPTBeltArmbandInventory
                 if (!transportWarningLogged)
                 {
                     transportWarningLogged = true;
-                    logWarning?.Invoke("B&A&HB protection settings sync failed safely; server defaults remain Protected: "
+                    logWarning?.Invoke("B&A&HB protection settings sync failed safely; server defaults/current acknowledged policy remain authoritative: "
                         + Unwrap(exception).GetType().Name + ": " + Unwrap(exception).Message);
                 }
                 return false;
