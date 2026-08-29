@@ -37,6 +37,7 @@ The client projects Belt and HeadBand through native EFT equipment/slot boundari
 - Belt and HeadBand use dedicated wire slot IDs `15` and `16`;
 - HeadBand presentation is created only from the native `SlotView.Show` lifecycle; the earlier provisional `EquipmentTab.Awake` Headwear clone was removed after physical RC evidence showed a broken first-entry layout;
 - the compact HeadBand view is inserted into the `EquipmentTab` slot map by an exact `Show` prefix before EFT begins enumerating that map; `SlotView.Show` may bind and position the existing view but is forbidden from adding/replacing map entries, preventing the pre-raid insurance screen from throwing `Collection was modified` and becoming non-interactive;
+- the first visible stash/Items layout is completed synchronously from the native Headwear `SlotView.Show` event by moving only individual slot rectangles; B&A&HB never changes the character panel `LayoutElement`, panel world position, or forces a global canvas refresh, so the panel cannot disappear or require tab switching to settle;
 - exact dedicated-item Alt-pickup resolves to the matching dedicated slot when it is empty and compatible;
 - visible dedicated captions are owned by dedicated presentation policy, including EN/RU labels; the Belt ContainersPanel row receives a final bounded post-`Show` numeric-caption normalization because physical RC evidence proved the outer row could otherwise retain `15`;
 - existing ArmBand container mechanics remain isolated from the new dedicated locations.

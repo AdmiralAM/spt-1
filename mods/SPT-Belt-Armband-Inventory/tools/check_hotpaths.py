@@ -72,6 +72,18 @@ if protection_router_path.exists():
     if "info?.ToString()" in protection_router_text or "JsonSerializer.Deserialize<WearableProtectionRequest>" in protection_router_text:
         violations.append("server/WearableProtectionRuntime.cs: protection route must not parse EmptyRequestData.ToString()")
 
+first_render_path = ROOT / "HeadBandRenderSettle.cs"
+if first_render_path.exists() and first_render_path.name not in removed:
+    first_render_text = first_render_path.read_text(encoding="utf-8-sig")
+    for token in ("HEADBAND FIRST-RENDER PROOF", "panelLayoutMutation=False", "synchronous=True"):
+        if token not in first_render_text:
+            violations.append(f"HeadBandRenderSettle.cs: first-render invariant is missing ({token})")
+    for token in ("Canvas.ForceUpdateCanvases", "preferredHeight.SetValue", "GetProperty(\"preferredHeight\"", "equipmentTab.transform.position =", "gearRect.position"):
+        if token in first_render_text:
+            violations.append(
+                "HeadBandRenderSettle.cs: first-render path must not mutate/force the host panel layout "
+                f"({token})")
+
 # Server lifecycle patches previously caused profile-load failures through name-only
 # reflection. Production patches must enumerate candidates and prove a unique bounded
 # runtime target rather than using Type.GetMethod(name).

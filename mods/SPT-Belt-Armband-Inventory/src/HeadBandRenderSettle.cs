@@ -1,16 +1,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 namespace SPTBeltArmbandInventory
 {
     // EFT 4.1.3 Gear Panel is a fixed RectTransform map, not a LayoutGroup. Slot16
     // participates in the same _slotViews map as the native equipment slots. This
-    // class is the sole placement owner: reserve one compact row, move every native
-    // slot down by that row, and put the mapped slot16 into the original Headwear
-    // screen position. No clone projection, no retry positioner, no polling.
+    // class is the sole placement owner: move every native slot down by one compact
+    // row and put mapped slot16 into the original Headwear position. The host panel's
+    // LayoutElement/RectTransform is deliberately untouched: changing preferredHeight
+    // caused EFT's parent layout to move the whole character panel off-screen on first
+    // stash entry. No clone projection, canvas refresh, retry positioner or polling.
     internal static class HeadBandRenderSettle
     {
         const float HeadBandCompactHeight = 44f;
@@ -21,10 +22,6 @@ namespace SPTBeltArmbandInventory
         {
             internal readonly WeakReference EquipmentTab;
             internal readonly Dictionary<int, Vector2> OriginalPositions = new Dictionary<int, Vector2>();
-            internal float OriginalPreferredHeight;
-            internal bool HasPreferredHeight;
-            internal Vector3 OriginalGearWorldPosition;
-            internal bool HasGearWorldPosition;
 
             internal ReflowState(Component equipmentTab)
             {
@@ -60,14 +57,13 @@ namespace SPTBeltArmbandInventory
                 Component headBandView = slotViews[DedicatedSlotPresentationRuntime.HeadBandSlotKey] as Component;
                 RectTransform headBandRect = headBandView == null ? null : headBandView.transform as RectTransform;
                 RectTransform headwearRect = headwearView.transform as RectTransform;
-                RectTransform gearRect = equipmentTab.transform as RectTransform;
-                if (headBandView == null || headBandRect == null || headwearRect == null || gearRect == null) return false;
+                if (headBandView == null || headBandRect == null || headwearRect == null) return false;
 
                 int key = equipmentTab.GetInstanceID();
                 ReflowState state;
                 if (!States.TryGetValue(key, out state) || state == null || state.EquipmentTab.Target == null)
                 {
-                    state = CaptureState(equipmentTab, slotViews, gearRect);
+                    state = CaptureState(equipmentTab, slotViews);
                     States[key] = state;
                 }
 
@@ -78,8 +74,7 @@ namespace SPTBeltArmbandInventory
                     state.OriginalPositions[headwearView.GetInstanceID()] = originalHeadwear;
                 }
 
-                Vector3 originalHeadwearWorld = headwearRect.TransformPoint(headwearRect.rect.center);
-                Vector3 topBefore = GearTopWorld(gearRect);
+                Vector3 panelWorldBefore = equipmentTab.transform.position;
 
                 foreach (DictionaryEntry entry in slotViews)
                 {
@@ -109,29 +104,20 @@ namespace SPTBeltArmbandInventory
                 headBandRect.anchoredPosition = originalHeadwear;
                 headBandView.gameObject.SetActive(true);
 
-                ReserveGearPanelHeight(equipmentTab, gearRect, state);
-                Canvas.ForceUpdateCanvases();
-
-                Vector3 topAfter = GearTopWorld(gearRect);
-                Vector3 topCorrection = topBefore - topAfter;
-                if (topCorrection.sqrMagnitude > 0.0001f)
-                    gearRect.position += topCorrection;
-
-                Vector3 headBandWorld = headBandRect.TransformPoint(headBandRect.rect.center);
-                float worldDelta = Vector3.Distance(headBandWorld, originalHeadwearWorld);
+                float panelWorldDelta = Vector3.Distance(equipmentTab.transform.position, panelWorldBefore);
                 bool mapExact = ReferenceEquals(slotViews[DedicatedSlotPresentationRuntime.HeadBandSlotKey], headBandView);
 
                 if (!proofLogged)
                 {
                     proofLogged = true;
                     DedicatedSlotPresentationRuntime.LogInfo?.Invoke(
-                        "B&A&HB HEADBAND SCREEN REFLOW PROOF: slot16 instance=" + headBandView.GetInstanceID()
+                        "B&A&HB HEADBAND FIRST-RENDER PROOF: slot16 instance=" + headBandView.GetInstanceID()
                         + "; mapExact=" + mapExact
                         + "; local=" + headBandRect.anchoredPosition.x.ToString("0.0") + "," + headBandRect.anchoredPosition.y.ToString("0.0")
                         + "; nativeY=-" + StructuralOffset.ToString("0.0")
-                        + "; reservedHeight=+" + StructuralOffset.ToString("0.0")
-                        + "; gearTopCorrectionY=" + topCorrection.y.ToString("0.00")
-                        + "; worldDeltaFromOriginalHeadwear=" + worldDelta.ToString("0.00") + ".");
+                        + "; panelLayoutMutation=False"
+                        + "; panelWorldDelta=" + panelWorldDelta.ToString("0.00")
+                        + "; synchronous=True.");
                 }
                 return true;
             }
@@ -148,7 +134,7 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static ReflowState CaptureState(Component equipmentTab, IDictionary slotViews, RectTransform gearRect)
+        static ReflowState CaptureState(Component equipmentTab, IDictionary slotViews)
         {
             ReflowState state = new ReflowState(equipmentTab);
             foreach (DictionaryEntry entry in slotViews)
@@ -161,50 +147,7 @@ namespace SPTBeltArmbandInventory
                 state.OriginalPositions[view.GetInstanceID()] = rect.anchoredPosition;
             }
 
-            state.OriginalGearWorldPosition = gearRect.position;
-            state.HasGearWorldPosition = true;
-
-            Component layoutElement = FindComponentByTypeName(equipmentTab.transform, "UnityEngine.UI.LayoutElement");
-            if (layoutElement != null)
-            {
-                PropertyInfo preferredHeight = layoutElement.GetType().GetProperty("preferredHeight", BindingFlags.Instance | BindingFlags.Public);
-                if (preferredHeight != null && preferredHeight.CanRead && preferredHeight.CanWrite)
-                {
-                    state.OriginalPreferredHeight = Convert.ToSingle(preferredHeight.GetValue(layoutElement, null));
-                    state.HasPreferredHeight = true;
-                }
-            }
             return state;
-        }
-
-        static void ReserveGearPanelHeight(Component equipmentTab, RectTransform gearRect, ReflowState state)
-        {
-            Component layoutElement = FindComponentByTypeName(equipmentTab.transform, "UnityEngine.UI.LayoutElement");
-            if (layoutElement == null) return;
-            PropertyInfo preferredHeight = layoutElement.GetType().GetProperty("preferredHeight", BindingFlags.Instance | BindingFlags.Public);
-            if (preferredHeight == null || !preferredHeight.CanWrite) return;
-            float baseline = state.HasPreferredHeight && state.OriginalPreferredHeight >= 0f
-                ? state.OriginalPreferredHeight
-                : Mathf.Max(1f, gearRect.rect.height);
-            preferredHeight.SetValue(layoutElement, baseline + StructuralOffset, null);
-        }
-
-        static Vector3 GearTopWorld(RectTransform gearRect)
-        {
-            return gearRect.TransformPoint(new Vector3(gearRect.rect.center.x, gearRect.rect.yMax, 0f));
-        }
-
-        static Component FindComponentByTypeName(Transform transform, string fullName)
-        {
-            if (transform == null) return null;
-            Component[] components = transform.gameObject.GetComponents<Component>();
-            for (int i = 0; i < components.Length; i++)
-            {
-                Component component = components[i];
-                if (component != null && string.Equals(component.GetType().FullName, fullName, StringComparison.Ordinal))
-                    return component;
-            }
-            return null;
         }
 
         internal static void Reset()
@@ -230,16 +173,6 @@ namespace SPTBeltArmbandInventory
                     }
                 }
 
-                if (state.HasPreferredHeight)
-                {
-                    Component layoutElement = FindComponentByTypeName(equipmentTab.transform, "UnityEngine.UI.LayoutElement");
-                    PropertyInfo preferredHeight = layoutElement == null ? null : layoutElement.GetType().GetProperty("preferredHeight", BindingFlags.Instance | BindingFlags.Public);
-                    if (preferredHeight != null && preferredHeight.CanWrite)
-                        preferredHeight.SetValue(layoutElement, state.OriginalPreferredHeight, null);
-                }
-
-                if (state.HasGearWorldPosition)
-                    equipmentTab.transform.position = state.OriginalGearWorldPosition;
             }
 
             States.Clear();
