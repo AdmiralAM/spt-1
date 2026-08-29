@@ -26,6 +26,7 @@ class GameplayPolicyTests(unittest.TestCase):
         cls.assort = load(DB / "assort.json")
         cls.questassort = load(DB / "questassort.json")
         cls.base = load(DB / "base.json")
+        cls.quests = [load(path) for path in sorted((DB / "quests").glob("*.json"))]
 
     @classmethod
     def baseline_offer_ids(cls):
@@ -112,6 +113,25 @@ class GameplayPolicyTests(unittest.TestCase):
             for quest in quests:
                 for prerequisite in quest["prerequisites"]:
                     self.assertEqual(id_to_family[prerequisite], family)
+
+    def test_runtime_arsenal_stage_classifier_matches_authored_7_14_mix(self):
+        arsenal = [quest for quest in self.quests if quest["QuestName"].startswith("Arsenal Protocol:")]
+        self.assertEqual(len(arsenal), 21)
+
+        qualification = [quest for quest in arsenal if quest["QuestName"].endswith(" - Qualification")]
+        combat = [
+            quest
+            for quest in arsenal
+            if quest["QuestName"].endswith(" - Fieldwork") or quest["QuestName"].endswith(" - Munitions")
+        ]
+        self.assertEqual(len(qualification), 7)
+        self.assertEqual(len(combat), 14)
+
+        for quest in arsenal:
+            finish = quest["conditions"]["AvailableForFinish"]
+            self.assertEqual(len(finish), 1, quest["_id"])
+            self.assertEqual(finish[0]["conditionType"], "CounterCreator", quest["_id"])
+            self.assertEqual(quest["type"], "Elimination", quest["_id"])
 
     def test_permanent_ammo_unlocks_exist_only_for_munitions_stage(self):
         arsenal_policy = self.policy["arsenalProtocol"]
