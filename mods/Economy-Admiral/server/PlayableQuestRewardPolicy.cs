@@ -2,16 +2,6 @@ namespace SPTEconomy;
 
 public static class PlayableQuestRewardPolicy
 {
-    private static readonly HashSet<string> RewardPressureFlags = new(StringComparer.Ordinal)
-    {
-        "HIGH_ITEM_VALUE_LOW_STRUCTURE",
-        "RESTARTABLE_HIGH_ITEM_VALUE",
-        "HIGH_XP_LOW_DEPTH",
-        "RESTARTABLE_HIGH_XP",
-        "HIGH_STANDING_LOW_DEPTH",
-        RestartableStandingPressureCore.Flag,
-    };
-
     public static QuestAnalysisReport ApplyToEnforcement(EconomyConfig config, QuestAnalysisReport analysis)
     {
         ArgumentNullException.ThrowIfNull(config);
@@ -55,7 +45,16 @@ public static class PlayableQuestRewardPolicy
         var quests = analysis.Quests
             .Select(row => row with
             {
-                ObservationalFlags = ReclassifyRewardPressureFlags(row, enforcementPolicy)
+                ObservationalFlags = QuestRewardPressureClassifier.Reclassify(new QuestRewardPressureSignals
+                    {
+                        Restartable = row.Restartable,
+                        HandbookValueVsVanillaMedian = row.HandbookValueVsVanillaMedian,
+                        XpVsVanillaMedian = row.XpVsVanillaMedian,
+                        StandingVsVanillaMedian = row.StandingVsVanillaMedian,
+                        PrerequisiteDepthVsVanillaMedian = row.PrerequisiteDepthVsVanillaMedian,
+                        StructuredConstraintsVsVanillaMedian = row.StructuredConstraintsVsVanillaMedian,
+                        ExistingFlags = row.ObservationalFlags,
+                    }, enforcementPolicy)
                     .Where(flag => QuestMechanismGate.AutomaticFlagEnabled(config, row.Restartable, flag))
                     .Distinct(StringComparer.Ordinal)
                     .ToList(),
@@ -76,39 +75,5 @@ public static class PlayableQuestRewardPolicy
                    $"Automatic quest mechanisms: items={config.EnableItemRewardStackNormalization}, xp={config.EnableQuestXpPressure}, " +
                    $"standing={config.EnableQuestStandingPressure}, restartable={config.EnableRestartableQuestPressure}.",
         };
-    }
-
-    public static IReadOnlyList<string> ReclassifyRewardPressureFlags(QuestAnalysisRow row, AuditPolicy policy)
-    {
-        ArgumentNullException.ThrowIfNull(row);
-        ArgumentNullException.ThrowIfNull(policy);
-
-        var flags = row.ObservationalFlags
-            .Where(flag => !RewardPressureFlags.Contains(flag))
-            .ToList();
-        var lowDepth = row.PrerequisiteDepthVsVanillaMedian is null
-            || row.PrerequisiteDepthVsVanillaMedian <= policy.LowDepthMaxRelativeMultiple;
-        var lowStructure = row.StructuredConstraintsVsVanillaMedian is null
-            || row.StructuredConstraintsVsVanillaMedian <= policy.LowStructureMaxRelativeMultiple;
-
-        if (row.HandbookValueVsVanillaMedian >= policy.HighItemValueLowStructureWarnMultiple && lowDepth && lowStructure)
-            flags.Add("HIGH_ITEM_VALUE_LOW_STRUCTURE");
-        if (row.XpVsVanillaMedian >= policy.HighXpLowDepthWarnMultiple && lowDepth)
-            flags.Add("HIGH_XP_LOW_DEPTH");
-        if (row.StandingVsVanillaMedian >= policy.HighStandingLowDepthWarnMultiple && lowDepth)
-            flags.Add("HIGH_STANDING_LOW_DEPTH");
-        if (row.Restartable && row.HandbookValueVsVanillaMedian >= policy.RestartableHighItemValueWarnMultiple)
-            flags.Add("RESTARTABLE_HIGH_ITEM_VALUE");
-        if (row.Restartable && row.XpVsVanillaMedian >= policy.RestartableHighXpWarnMultiple)
-            flags.Add("RESTARTABLE_HIGH_XP");
-        foreach (var flag in RestartableStandingPressureCore.EnforcementFlags(
-                     row.Restartable,
-                     row.StandingVsVanillaMedian,
-                     policy.RestartableHighStandingWarnMultiple))
-        {
-            flags.Add(flag);
-        }
-
-        return flags.Distinct(StringComparer.Ordinal).ToList();
     }
 }
