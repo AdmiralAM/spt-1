@@ -1,4 +1,5 @@
 from pathlib import Path
+import runpy
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "server" / "DedicatedEquipmentSlotRegistration.cs"
@@ -37,3 +38,8 @@ if violations:
     raise SystemExit("B&A&HB dedicated-slot atomicity gate failed:\n" + "\n".join(violations))
 
 print("B&A&HB dedicated-slot atomicity gate: OK (slot15/slot16 validated/prepared before any canonical slot mutation; partial install path forbidden)")
+
+# Keep client/server collision safety in the same compatibility gate step so a
+# future workflow edit cannot accidentally run slot atomicity while omitting the
+# legacy BeltSlot fail-closed check.
+runpy.run_path(str(ROOT / "tools" / "check_legacy_conflict_gate.py"), run_name="__main__")
