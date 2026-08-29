@@ -94,7 +94,7 @@ wearable_items = require(
         '"B&A&HB Magazine Belt"',
         '"B&A&HB Utility HeadBand"',
         "separate currency/wallet and cigarette pockets",
-        'Name = "Пояс под магазины B&A&HB"',
+        '"Пояс под магазины B&A&HB"',
         'Name = "Утилитарная налобная повязка B&A&HB"',
         'HeadBandCurrencyGridName = "main"',
         'HeadBandCigarettesGridName = "cigarettes"',
