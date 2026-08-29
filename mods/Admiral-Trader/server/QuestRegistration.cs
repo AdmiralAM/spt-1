@@ -55,6 +55,10 @@ public sealed class AdmiralQuestRegistration(ModHelper modHelper, TemplateTable 
         {
             string relativePath = IOPath.GetRelativePath(modPath, file).Replace('\\', '/');
             Quest quest = modHelper.GetJsonDataFromFile<Quest>(modPath, relativePath);
+            // EFT expects authored quest templates to carry the native initial root status (Locked = 0).
+            // SPT later publishes transient SptStatus=AvailableForStart when requirements are met; leaving
+            // root status null makes the client construct an incorrect initial local lifecycle state.
+            quest.Status = 0;
             if (!quests.TryAdd(quest.Id, quest))
                 throw new InvalidDataException($"Duplicate Admiral quest id {quest.Id} in {relativePath}");
         }
