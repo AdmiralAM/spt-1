@@ -4,7 +4,7 @@
     <LangVersion>latest</LangVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
-    <AssemblyName>SPT Belt Armband Inventory v0.2.0</AssemblyName>
+    <AssemblyName>SPT Belt Armband Inventory v0.1.0</AssemblyName>
     <RootNamespace>SPTBeltArmbandInventory</RootNamespace>
     <Version>0.2.0</Version>
     <AssemblyVersion>0.2.0.0</AssemblyVersion>
