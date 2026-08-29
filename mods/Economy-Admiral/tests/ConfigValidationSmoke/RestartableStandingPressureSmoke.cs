@@ -20,6 +20,13 @@ internal static class RestartableStandingPressureSmoke
         if (RestartableStandingPressureCore.ShouldFlag(true, null, threshold))
             throw new InvalidOperationException("Missing standing evidence must fail closed.");
 
+        var enforcementFlags = RestartableStandingPressureCore.EnforcementFlags(true, 1.20, threshold);
+        if (!enforcementFlags.Contains(RestartableStandingPressureCore.Flag, StringComparer.Ordinal)
+            || !enforcementFlags.Contains(RestartableStandingPressureCore.StandingBudgetFlag, StringComparer.Ordinal))
+            throw new InvalidOperationException("Restartable standing classification must emit both its explicit reason and the standing-budget flag consumed by the mutation planner.");
+        if (RestartableStandingPressureCore.EnforcementFlags(true, 1.10, threshold).Count != 0)
+            throw new InvalidOperationException("Standing below the restartable threshold must emit no enforcement flags.");
+
         var selectiveOff = new EconomyConfig
         {
             Mode = EconomyMode.Enforce,
@@ -28,17 +35,20 @@ internal static class RestartableStandingPressureSmoke
             EnableQuestStandingPressure = true,
             EnableRestartableQuestPressure = false,
         };
-        if (QuestMechanismGate.AutomaticFlagEnabled(selectiveOff, true, RestartableStandingPressureCore.Flag))
-            throw new InvalidOperationException("Repeatable / Restartable Pressure OFF must block automatic restartable standing pressure.");
+        if (QuestMechanismGate.AutomaticFlagEnabled(selectiveOff, true, RestartableStandingPressureCore.Flag)
+            || QuestMechanismGate.AutomaticFlagEnabled(selectiveOff, true, RestartableStandingPressureCore.StandingBudgetFlag))
+            throw new InvalidOperationException("Repeatable / Restartable Pressure OFF must block all automatic restartable standing enforcement flags.");
 
         var selectiveOn = selectiveOff with { EnableRestartableQuestPressure = true };
-        if (!QuestMechanismGate.AutomaticFlagEnabled(selectiveOn, true, RestartableStandingPressureCore.Flag))
-            throw new InvalidOperationException("Standing Pressure ON plus Repeatable / Restartable Pressure ON must allow restartable standing pressure.");
+        if (!QuestMechanismGate.AutomaticFlagEnabled(selectiveOn, true, RestartableStandingPressureCore.Flag)
+            || !QuestMechanismGate.AutomaticFlagEnabled(selectiveOn, true, RestartableStandingPressureCore.StandingBudgetFlag))
+            throw new InvalidOperationException("Standing Pressure ON plus Repeatable / Restartable Pressure ON must allow both restartable standing enforcement flags.");
 
         var standingOff = selectiveOn with { EnableQuestStandingPressure = false };
-        if (QuestMechanismGate.AutomaticFlagEnabled(standingOff, true, RestartableStandingPressureCore.Flag))
+        if (QuestMechanismGate.AutomaticFlagEnabled(standingOff, true, RestartableStandingPressureCore.Flag)
+            || QuestMechanismGate.AutomaticFlagEnabled(standingOff, true, RestartableStandingPressureCore.StandingBudgetFlag))
             throw new InvalidOperationException("Trader Standing Reward Pressure OFF must block restartable standing pressure.");
 
-        Console.WriteLine("PASS restartable standing pressure classification + mechanism gates");
+        Console.WriteLine("PASS restartable standing classification reaches standing-budget mutation path + mechanism gates");
     }
 }

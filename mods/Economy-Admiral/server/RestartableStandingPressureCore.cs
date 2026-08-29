@@ -3,6 +3,7 @@ namespace SPTEconomy;
 public static class RestartableStandingPressureCore
 {
     public const string Flag = "RESTARTABLE_HIGH_STANDING";
+    public const string StandingBudgetFlag = "HIGH_STANDING_LOW_DEPTH";
 
     public static double ResolveThreshold(PlayableQuestRewardCaps policy)
     {
@@ -21,5 +22,12 @@ public static class RestartableStandingPressureCore
             && standingVsVanillaMedian is { } ratio
             && double.IsFinite(ratio)
             && ratio >= threshold;
+    }
+
+    public static IReadOnlyList<string> EnforcementFlags(bool restartable, double? standingVsVanillaMedian, double threshold)
+    {
+        return ShouldFlag(restartable, standingVsVanillaMedian, threshold)
+            ? [StandingBudgetFlag, Flag]
+            : [];
     }
 }
