@@ -19,6 +19,7 @@ public sealed class RuntimeCandidateAssort(
         var templateId = new MongoId(RuntimeCandidateBeltItem.RuntimeCandidateTpl);
         if (!templateTable.Items.ContainsKey(templateId))
             throw new InvalidOperationException("B&A&HB Magazine Armband offer refused: exact product template is not registered.");
+        WearableOfferHostContract.RequireArmBandProduct(templateTable, templateId);
 
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB Magazine Armband could not find Ragman.");
