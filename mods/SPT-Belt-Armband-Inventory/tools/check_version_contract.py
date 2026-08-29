@@ -4,6 +4,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CLIENT_PROJECT = ROOT / "src" / "SPT-Belt-Armband-Inventory.csproj"
 PLUGIN = ROOT / "src" / "Plugin.cs"
 SERVER_PROJECT = ROOT / "server" / "SPT-Belt-Armband-Inventory.Server.csproj"
+SERVER_MOD = ROOT / "server" / "ServerMod.cs"
 WORKFLOW = ROOT.parents[1] / ".github" / "workflows" / "belt-armband-validate.yml"
 
 violations = []
@@ -40,7 +41,18 @@ require(
         "<AssemblyVersion>0.2.0.0</AssemblyVersion>",
         "<FileVersion>0.2.0.0</FileVersion>",
     ],
-    "server v0.2 identity",
+    "server assembly v0.2 identity",
+)
+
+require(
+    SERVER_MOD,
+    [
+        'public string ModGuid { get; init; } = "com.admiralam.spt.belt-armband-inventory.server";',
+        'public string Name { get; init; } = "B&A&HB #2 MOD SPT Server";',
+        "public SemanticVersioning.Version Version { get; init; } = new(0, 2, 0);",
+        'public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");',
+    ],
+    "SPT server mod v0.2 identity",
 )
 
 require(
@@ -74,4 +86,4 @@ require(
 if violations:
     raise SystemExit("B&A&HB version-contract gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB version-contract gate: OK (runtime candidate=0.2.0; upgrade-safe client path overwrites stable DLL; duplicate v0.2 filename forbidden; root+installed provenance frozen; GUID/name preserved)")
+print("B&A&HB version-contract gate: OK (client assembly/BepInEx + server assembly/SPT mod metadata all v0.2.0; upgrade-safe client path overwrites stable DLL; duplicate v0.2 filename forbidden; root+installed provenance frozen)")
