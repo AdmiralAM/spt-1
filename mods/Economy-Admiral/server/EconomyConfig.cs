@@ -88,6 +88,15 @@ public sealed record EconomyConfig
 
     public double CustomLooseLootScale { get; init; } = 0.85;
     public double CustomStaticLootScale { get; init; } = 0.85;
+
+    // Custom gameplay enforcement targets are deliberately separate from CustomAuditPolicy.
+    // Changing Custom difficulty must not redefine the observational/detection thresholds.
+    public double CustomQuestItemBudgetMultiple { get; init; } = 1.50;
+    public double CustomRestartableQuestItemBudgetMultiple { get; init; } = 1.15;
+    public double CustomQuestXpMultiple { get; init; } = 1.50;
+    public double CustomRestartableQuestXpMultiple { get; init; } = 1.15;
+    public double CustomQuestStandingMultiple { get; init; } = 1.50;
+
     public RarityThresholds Rarity { get; init; } = new();
     public AuditPolicy CustomAuditPolicy { get; init; } = new();
     public Dictionary<string, ManualItemOverride> ManualOverrides { get; init; } = new(StringComparer.Ordinal);
@@ -97,9 +106,6 @@ public sealed record EconomyConfig
         init => questRewardOverrides = value;
     }
 
-    // Runtime activation getters above intentionally expose effective state. Persistence must use
-    // these raw configured values so an F12 save cannot silently turn bundle-derived activation
-    // into permanent granular opt-ins or erase overrides hidden by a disabled cluster.
     [JsonIgnore] public bool ConfiguredEnableItemRewardStackNormalization => enableItemRewardStackNormalization;
     [JsonIgnore] public bool ConfiguredEnableTraderPurchasePressure => enableTraderPurchasePressure;
     [JsonIgnore] public bool ConfiguredEnableTraderSellPressure => enableTraderSellPressure;

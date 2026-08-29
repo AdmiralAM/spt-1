@@ -22,6 +22,11 @@
   "enableLootPressure": false,
   "customLooseLootScale": 0.85,
   "customStaticLootScale": 0.85,
+  "customQuestItemBudgetMultiple": 1.50,
+  "customRestartableQuestItemBudgetMultiple": 1.15,
+  "customQuestXpMultiple": 1.50,
+  "customRestartableQuestXpMultiple": 1.15,
+  "customQuestStandingMultiple": 1.50,
   "rarity": {
     "commonMinSources": 8,
     "uncommonMinSources": 4,

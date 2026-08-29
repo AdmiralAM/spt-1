@@ -19,7 +19,7 @@ public static class PlayableQuestRewardPolicy
             };
         }
 
-        var playable = PlayableQuestRewardCaps.Resolve(config.Preset, config.CustomAuditPolicy);
+        var playable = PlayableQuestRewardCaps.Resolve(config);
         var source = analysis.Policy;
         var enforcementPolicy = new AuditPolicy
         {
