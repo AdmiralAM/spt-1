@@ -47,7 +47,19 @@ namespace SPTBeltArmbandInventory
             try
             {
                 IDictionary slotViews = EquipmentTabSlotViewsField.GetValue(equipmentTab) as IDictionary;
-                if (slotViews == null || slotViews.Contains(HeadBandSlotKey)) return;
+                if (slotViews == null) return;
+
+                if (slotViews.Contains(HeadBandSlotKey))
+                {
+                    Component existingHeadBandView = slotViews[HeadBandSlotKey] as Component;
+                    if (existingHeadBandView != null) return;
+
+                    // A reused EquipmentTab can retain the pseudo-slot key after its
+                    // Unity view has been destroyed. Repair that stale entry here,
+                    // before EFT creates the native dictionary enumerator. The late
+                    // SlotView.Show path remains mutation-free by design.
+                    slotViews.Remove(HeadBandSlotKey);
+                }
 
                 Component armBandTemplate = slotViews.Contains(ArmBandSlotKey)
                     ? slotViews[ArmBandSlotKey] as Component
@@ -623,7 +635,7 @@ namespace SPTBeltArmbandInventory
             MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             for (int i = 0; i < methods.Length; i++)
                 if (string.Equals(methods[i].Name, name, StringComparison.Ordinal)
-                    && methods[i].GetParameters().Length == 0)
+                    && method.GetParameters().Length == 0)
                     return methods[i];
             return null;
         }
