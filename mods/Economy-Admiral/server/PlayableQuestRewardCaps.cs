@@ -8,22 +8,22 @@ public sealed record PlayableQuestRewardCaps(
     double RestartableXpMultiple,
     double StandingMultiple)
 {
-    public static PlayableQuestRewardCaps Resolve(EconomyPreset preset, AuditPolicy custom)
+    public static PlayableQuestRewardCaps Resolve(EconomyConfig config)
     {
-        ArgumentNullException.ThrowIfNull(custom);
-        return preset switch
+        ArgumentNullException.ThrowIfNull(config);
+        return config.Preset switch
         {
             EconomyPreset.Easy => new("PlayableQuestRewardPolicyV1/Easy", 2.25, 1.75, 2.25, 1.75, 2.25),
             EconomyPreset.Normal => new("PlayableQuestRewardPolicyV1/Normal", 1.50, 1.15, 1.50, 1.15, 1.50),
             EconomyPreset.Hard => new("PlayableQuestRewardPolicyV1/Hard", 1.10, 1.00, 1.10, 1.00, 1.10),
             EconomyPreset.Custom => Validate(new(
                 "PlayableQuestRewardPolicyV1/Custom",
-                custom.HighItemValueLowStructureWarnMultiple,
-                custom.RestartableHighItemValueWarnMultiple,
-                custom.HighXpLowDepthWarnMultiple,
-                custom.RestartableHighXpWarnMultiple,
-                custom.HighStandingLowDepthWarnMultiple)),
-            _ => throw new ArgumentOutOfRangeException(nameof(preset), preset, "Unsupported Economy Admiral preset."),
+                config.CustomQuestItemBudgetMultiple,
+                config.CustomRestartableQuestItemBudgetMultiple,
+                config.CustomQuestXpMultiple,
+                config.CustomRestartableQuestXpMultiple,
+                config.CustomQuestStandingMultiple)),
+            _ => throw new ArgumentOutOfRangeException(nameof(config.Preset), config.Preset, "Unsupported Economy Admiral preset."),
         };
     }
 
