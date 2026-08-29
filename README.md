@@ -19,7 +19,7 @@ Versions below are the module versions declared by current source metadata. A le
 | [SPT Tactical HUD](mods/SPT-Tactical-HUD) | client `1.13.2`; optional server `1.13.0` | Population, player-status, and kill-feed HUD | `runtime` |
 | [Item Intelligence Admiral](mods/SPT-Item-Intelligence) | `1.0.0`; stable / maintenance-only | Requirement, FIR, valuation, craft/barter relevance, and persistent per-item markers | `runtime-item-intelligence` |
 | [Pause Admiral](mods/SPT-Pause) | `1.0.0`; stable / runtime validated | Offline-raid pause with raid-clock/time-of-day preservation and paused-input suppression | `runtime-pause` |
-| [B&A&HB #2 MOD SPT](mods/SPT-Belt-Armband-Inventory) | **`0.1.0 STABLE` / SPT 4.1.3 physically accepted** | ArmBand, dedicated Belt slot 15 and HeadBand slot 16 wearable inventory with profile-safe persistence and configurable death/insurance protection | **[runtime-belt-armband](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband)** |
+| [B&A&HB #2 MOD SPT](mods/SPT-Belt-Armband-Inventory) | **`0.1.0 STABLE` / SPT 4.1.3** | ArmBand inventory plus dedicated Belt and HeadBand equipment slots, with configurable loss-on-death behavior | **[download ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip)** |
 | [Item Valuation MOD SPT](mods/Item-Valuation-MOD-SPT) | `1.0.0`; stable / SPT 4.1.3 runtime validated | Server-only inventory background coloring by economic value/category, with penetration tiers for ammunition | `runtime-item-valuation` |
 | [Economy Admiral](mods/Economy-Admiral) | `0.1.0`; Economy Beta / SPT 4.1.3 runtime validated | Provenance-safe bounded economy/reward normalization with source-pressure, health, and explicit Admiral Trader compatibility evidence | `runtime-economy-admiral` |
 | [Admiral Trader](mods/Admiral-Trader) | `0.1.0`; active development | Curated successor campaign/trader for the legacy Andrudis/QuestManiac ecosystem | Development source / CI artifacts |
@@ -46,13 +46,14 @@ Runtime branches are publication/runtime channels, not development branches. The
 
 ### B&A&HB #2 MOD SPT — Stable v0.1.0
 
-- **Install-ready channel:** [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband)
-- **Direct ZIP:** [download Stable v0.1.0](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip)
+- **Download:** [B&A&HB Stable v0.1.0 ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip)
+- **Package contents:** [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband)
 - **Stable source tag:** [`bahb-v0.1.0`](https://github.com/AdmiralAM/spt-1/tree/bahb-v0.1.0)
-- **Frozen stable source branch:** [`belt-stable-baseline-1`](https://github.com/AdmiralAM/spt-1/tree/belt-stable-baseline-1)
+- **Version:** 0.1.0
 - **Target:** SPT 4.1.3
+- **Extra dependencies:** none
 
-Installation: download the ZIP, open its `SPT_Runtime` directory, and copy that directory's **contents** into the existing SPT `SPT_Runtime` directory. The package contains both the BepInEx client DLL and the server mod DLL plus profile-safety material.
+Installation: close SPT, download and unpack the ZIP, open the included `SPT_Runtime` directory, then copy its **contents** into the existing `SPT_Runtime` directory of the game. The package already contains both required parts: the BepInEx client DLL and the server mod DLL. Remove the obsolete `Trenchfoot-BeltSlot.dll` first if it is installed.
 
 Runtime branches provide the maintained install packages for Tactical HUD, Item Intelligence Admiral, Pause Admiral, B&A&HB, Item Valuation MOD SPT, Economy Admiral, and the validated server identity for Admiral Artyom Revival. Tactical HUD `1.13.0` remains preserved under `archive/v1.13.0`.
 
