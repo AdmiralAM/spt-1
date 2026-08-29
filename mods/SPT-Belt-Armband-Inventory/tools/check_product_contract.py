@@ -44,6 +44,9 @@ if "Runtime Candidate Magazine Belt" in armband_item:
 armband_assort = require(
     SERVER / "RuntimeCandidateAssort.cs",
     [
+        "trader.Assort.Items.Where(x => x.Id == id).Take(2).ToArray();",
+        "if (matches.Length > 1)",
+        "duplicate item entries own the persistent assort ID",
         "EnsureNoPartialAssortCollision();",
         "trader.Assort.BarterScheme.ContainsKey(id)",
         "trader.Assort.LoyalLevelItems.ContainsKey(id)",
@@ -51,6 +54,8 @@ armband_assort = require(
         "trader.Assort.LoyalLevelItems.Add(id,",
     ],
     "Magazine Armband persistent assort collision safety")
+if "trader.Assort.Items.FirstOrDefault(x => x.Id == id)" in armband_assort:
+    violations.append("Magazine Armband assort must reject duplicate persistent item entries instead of validating only the first")
 if "trader.Assort.BarterScheme[id] =" in armband_assort or "trader.Assort.LoyalLevelItems[id] =" in armband_assort:
     violations.append("Magazine Armband assort must not overwrite persistent metadata with dictionary indexers")
 
@@ -59,12 +64,17 @@ wallet_assort = require(
     [
         "private const int PriceRoubles = 12500;",
         "private const int LoyaltyLevel = 1;",
+        "trader.Assort.Items.Where(x => x.Id == id).Take(2).ToArray();",
+        "if (matches.Length > 1)",
+        "duplicate item entries own the persistent assort ID",
         "trader.Assort.BarterScheme.ContainsKey(id)",
         "trader.Assort.LoyalLevelItems.ContainsKey(id)",
         "trader.Assort.BarterScheme.Add(id,",
         "trader.Assort.LoyalLevelItems.Add(id,",
     ],
     "Wrist Wallet offer")
+if "trader.Assort.Items.FirstOrDefault(x => x.Id == id)" in wallet_assort:
+    violations.append("Wrist Wallet assort must reject duplicate persistent item entries instead of validating only the first")
 if "trader.Assort.BarterScheme[id] =" in wallet_assort or "trader.Assort.LoyalLevelItems[id] =" in wallet_assort:
     violations.append("Wrist Wallet assort must not overwrite persistent metadata with dictionary indexers")
 
@@ -175,5 +185,5 @@ if violations:
 
 print(
     "B&A&HB product-contract gate: OK "
-    "(EN/RU localized roster; exact pricing/progression and host isolation; split HeadBand pockets; persistent assort IDs reject partial collisions; dedicated pair prepares before commit)"
+    "(EN/RU localized roster; exact pricing/progression and host isolation; split HeadBand pockets; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
 )
