@@ -1,0 +1,25 @@
+name: tmp trader ilspy transport
+
+on:
+  push:
+    branches:
+      - tmp/trader-ilspy-transport
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install ilspycmd
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out
+          dotnet tool install ilspycmd --tool-path out
+          tar -czf ilspycmd-linux-x64.tar.gz out
+      - name: Upload ilspycmd
+        uses: actions/upload-artifact@v4
+        with:
+          name: trader-ilspycmd-linux-x64
+          path: ilspycmd-linux-x64.tar.gz
+          if-no-files-found: error
+          retention-days: 1
