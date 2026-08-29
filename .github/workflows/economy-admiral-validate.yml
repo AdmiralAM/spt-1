@@ -28,6 +28,7 @@ jobs:
         shell: python
         run: |
           import json
+          import os
           from pathlib import Path
 
           root = Path('mods/Economy-Admiral')
@@ -66,8 +67,26 @@ jobs:
           config = json.loads((root / 'config/config.json').read_text(encoding='utf-8'))
           assert config['mode'] in {'Off', 'Audit', 'Enforce'}
           assert config['preset'] in {'Easy', 'Normal', 'Hard', 'Custom'}
-          assert config['repeatedRaidLootDecay'] is False
-          assert config['enableItemRewardStackNormalization'] is False
+          playable_rc_branch = 'rc/economy-admiral-playable-v1'
+          is_playable_rc = (
+              os.environ.get('GITHUB_HEAD_REF') == playable_rc_branch
+              or os.environ.get('GITHUB_REF_NAME') == playable_rc_branch
+          )
+          expected_config = {
+              'mode': 'Enforce' if is_playable_rc else 'Audit',
+              'preset': 'Normal',
+              'repeatedRaidLootDecay': False,
+              'enableItemRewardStackNormalization': is_playable_rc,
+              'enableTraderPurchasePressure': is_playable_rc,
+              'customTraderPurchasePriceMultiplier': 1.15,
+              'enableFleaPurchasePressure': is_playable_rc,
+              'customFleaBasePriceMultiplier': 1.65,
+              'enableLootPressure': is_playable_rc,
+              'customLooseLootScale': 0.85,
+              'customStaticLootScale': 0.85,
+          }
+          for key, expected in expected_config.items():
+              assert config[key] == expected, f'{key}: expected {expected!r}, got {config[key]!r}'
           assert isinstance(config['questRewardOverrides'], dict)
 
           mod = (root / 'server/EconomyMod.cs').read_text(encoding='utf-8')
