@@ -8,13 +8,29 @@ violations = []
 
 for token in [
     "[Injectable(TypePriority = OnLoadOrder.Preload)]",
-    "EnsureNode(SearchableParentTpl",
-    "EnsureNode(BeltParentTpl",
-    "EnsureNode(HeadBandParentTpl",
-    "templateTable.Items[id] = new TemplateItem",
+    "TemplateItem? searchableAddition = PrepareNode(",
+    "TemplateItem? beltAddition = PrepareNode(",
+    "TemplateItem? headBandAddition = PrepareNode(",
+    "if (searchableAddition != null) templateTable.Items.Add(",
+    "if (beltAddition != null) templateTable.Items.Add(",
+    "if (headBandAddition != null) templateTable.Items.Add(",
+    "registered atomically",
 ]:
     if token not in taxonomy:
         violations.append(f"taxonomy owner missing token {token!r}")
+
+first_add = taxonomy.find("templateTable.Items.Add(")
+for prepare in [
+    taxonomy.find("TemplateItem? searchableAddition = PrepareNode("),
+    taxonomy.find("TemplateItem? beltAddition = PrepareNode("),
+    taxonomy.find("TemplateItem? headBandAddition = PrepareNode("),
+]:
+    if prepare < 0 or first_add < 0 or prepare > first_add:
+        violations.append("all persistent taxonomy nodes must be prepared/validated before the first TemplateTable mutation")
+        break
+
+if "templateTable.Items[id] =" in taxonomy:
+    violations.append("taxonomy registrar must not mutate TemplateTable during per-node validation")
 
 for token in [
     "[Injectable(TypePriority = OnLoadOrder.Preload + 1)]",
@@ -33,4 +49,4 @@ for forbidden in ["EnsureCustomParents()", "EnsureCustomParent(", "templateTable
 if violations:
     raise SystemExit("B&A&HB taxonomy-ownership gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB taxonomy-ownership gate: OK (Preload taxonomy registrar is the sole persistent-parent mutation owner; later item registration validates only)")
+print("B&A&HB taxonomy-ownership gate: OK (Preload registrar is sole persistent-parent owner; all three nodes validate before atomic commit; later item registration validates only)")
