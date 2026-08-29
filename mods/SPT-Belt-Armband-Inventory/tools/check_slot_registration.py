@@ -28,8 +28,6 @@ if min(belt_prepare, head_prepare, first_add) < 0:
 elif not (belt_prepare < first_add and head_prepare < first_add):
     violations.append("both dedicated slot contracts must be prepared/validated before the first slot-list mutation")
 
-# The canonical inventory slot list must be assigned only after prepared additions
-# have been committed; collision exceptions before that point leave the template unchanged.
 assignment = text.find("inventory.Properties!.Slots = slots;")
 if first_add >= 0 and assignment >= 0 and assignment < first_add:
     violations.append("canonical slot-list assignment occurs before prepared additions are committed")
@@ -39,7 +37,6 @@ if violations:
 
 print("B&A&HB dedicated-slot atomicity gate: OK (slot15/slot16 validated/prepared before any canonical slot mutation; partial install path forbidden)")
 
-# Keep client/server collision safety in the same compatibility gate step so a
-# future workflow edit cannot accidentally run slot atomicity while omitting the
-# legacy BeltSlot fail-closed check.
+# Keep server/client ownership and collision safety in one compatibility step.
+runpy.run_path(str(ROOT / "tools" / "check_taxonomy_ownership.py"), run_name="__main__")
 runpy.run_path(str(ROOT / "tools" / "check_legacy_conflict_gate.py"), run_name="__main__")
