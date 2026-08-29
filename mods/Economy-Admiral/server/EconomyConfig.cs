@@ -38,9 +38,8 @@ public sealed record EconomyConfig
     public EconomyPreset Preset { get; init; } = EconomyPreset.Normal;
     public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
 
-    // Retired 0.1.0 placeholder. Kept only as a source-compatibility constant so old config files
-    // containing repeatedRaidLootDecay deserialize harmlessly; it is not serialized or actionable.
-    [JsonIgnore] public bool RepeatedRaidLootDecay => false;
+    // Retired compatibility key. Older configs may still contain true, but the unimplemented mechanic is inert.
+    public bool RepeatedRaidLootDecay { get => false; init { } }
 
     public bool EnablePlayableEconomyBundle { get; init; } = true;
 
