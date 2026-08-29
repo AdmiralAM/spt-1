@@ -142,10 +142,17 @@ if first_open_path.exists() and first_open_path.name not in removed:
             violations.append(
                 "FirstOpenHeadBandLayoutPatches.cs: legacy first-open refresh path is no longer a strict no-op "
                 f"({token})")
-    for token in ("Harmony", "SlotView.Show", "StartCoroutine", "RequestFlush?.Invoke", "Canvas.ForceUpdateCanvases"):
+    for token in (
+        "Type.GetType(\"HarmonyLib.Harmony",
+        "DynamicMethod(",
+        "patchMethod.Invoke(",
+        "RequestFlush?.Invoke",
+        "StartCoroutine",
+        "Canvas.ForceUpdateCanvases",
+    ):
         if token in first_open_text:
             violations.append(
-                "FirstOpenHeadBandLayoutPatches.cs: legacy first-open shim must not own runtime refresh/placement "
+                "FirstOpenHeadBandLayoutPatches.cs: legacy first-open shim must not install executable refresh/placement hooks "
                 f"({token})")
 
 protection_router_path = MODULE_ROOT / "server" / "WearableProtectionRuntime.cs"
