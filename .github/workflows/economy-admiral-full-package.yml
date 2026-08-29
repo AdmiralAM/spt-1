@@ -18,6 +18,19 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Provision BepInEx 5.4.21 compile reference
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $archive = Join-Path $env:RUNNER_TEMP 'BepInEx_x64_5.4.21.0.zip'
+          $extract = Join-Path $env:RUNNER_TEMP 'BepInEx-5.4.21'
+          Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.21/BepInEx_x64_5.4.21.0.zip' -OutFile $archive
+          Expand-Archive $archive -DestinationPath $extract -Force
+          $target = Join-Path $PWD 'deps/BepInEx/core'
+          New-Item -ItemType Directory -Force -Path $target | Out-Null
+          Copy-Item (Join-Path $extract 'BepInEx/core/BepInEx.dll') (Join-Path $target 'BepInEx.dll') -Force
+          if (-not (Test-Path (Join-Path $target 'BepInEx.dll') -PathType Leaf)) { throw 'BepInEx compile reference was not provisioned.' }
+
       - name: Build server economy engine
         shell: pwsh
         run: dotnet build mods/Economy-Admiral/server/Economy-Admiral.csproj -c Release --nologo
