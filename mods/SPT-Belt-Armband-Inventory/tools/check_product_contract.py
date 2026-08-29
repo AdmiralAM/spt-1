@@ -24,9 +24,13 @@ armband_item = require(
     SERVER / "RuntimeCandidateBeltItem.cs",
     [
         'NewItemName = "B&A&HB Magazine Armband"',
+        '["en"] = new LocaleDetails',
         'Name = "B&A&HB Magazine Armband"',
         'ShortName = "Mag Armband"',
         'Description = "Compact 1x2 magazine carrier worn in the ArmBand equipment location."',
+        '["ru"] = new LocaleDetails',
+        'Name = "Повязка под магазины B&A&HB"',
+        'ShortName = "Маг. повязка"',
         "CellsH = RuntimeIdentity.CandidateGridColumns",
         "CellsV = RuntimeIdentity.CandidateGridRows",
         "Filter = [BaseClasses.MAGAZINE]",
@@ -39,6 +43,18 @@ require(
     SERVER / "WristWalletAssort.cs",
     ["private const int PriceRoubles = 12500;", "private const int LoyaltyLevel = 1;"],
     "Wrist Wallet offer")
+
+require(
+    SERVER / "WristWalletItem.cs",
+    [
+        '["en"] = new LocaleDetails',
+        'Name = "B&A&HB Wrist Wallet"',
+        '["ru"] = new LocaleDetails',
+        'Name = "Наручный кошелёк B&A&HB"',
+        'ShortName = "Наруч. кошелёк"',
+        "Filter = [Money.ROUBLES, Money.DOLLARS, Money.EUROS]",
+    ],
+    "Wrist Wallet item")
 
 require(
     SERVER / "DedicatedWearableAssort.cs",
@@ -78,6 +94,8 @@ wearable_items = require(
         '"B&A&HB Magazine Belt"',
         '"B&A&HB Utility HeadBand"',
         "separate currency/wallet and cigarette pockets",
+        'Name = "Пояс под магазины B&A&HB"',
+        'Name = "Утилитарная налобная повязка B&A&HB"',
         'HeadBandCurrencyGridName = "main"',
         'HeadBandCigarettesGridName = "cigarettes"',
         "RuntimeIdentity.EmergencyHeadBandGridId",
@@ -113,5 +131,5 @@ if violations:
 
 print(
     "B&A&HB product-contract gate: OK "
-    "(Wrist Wallet LL1/12.5k; Magazine Armband LL1/25k; Utility HeadBand LL1/25k with native split 1x1 pockets; Magazine Belt LL2/45k)"
+    "(EN/RU localized roster; Wrist Wallet LL1/12.5k; Magazine Armband LL1/25k; Utility HeadBand LL1/25k with native split 1x1 pockets; Magazine Belt LL2/45k)"
 )
