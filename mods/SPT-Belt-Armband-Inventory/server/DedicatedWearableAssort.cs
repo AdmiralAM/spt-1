@@ -13,7 +13,8 @@ public sealed class DedicatedWearableAssort(
     TradersTable tradersTable,
     ISptLogger<DedicatedWearableAssort> logger) : IOnLoad
 {
-    private const int LoyaltyLevel = 1;
+    private const int BeltLoyaltyLevel = 2;
+    private const int HeadBandLoyaltyLevel = 1;
     private const int BeltPrice = 45000;
     private const int HeadBandPrice = 25000;
     private const int UnlimitedStock = 999999;
@@ -23,13 +24,23 @@ public sealed class DedicatedWearableAssort(
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB dedicated wearable offers could not find Ragman.");
 
-        EnsureOffer(new MongoId(RuntimeIdentity.DedicatedMagazineBeltAssortId), new MongoId(RuntimeIdentity.DedicatedMagazineBeltItemId), BeltPrice, "Magazine Belt");
-        EnsureOffer(new MongoId(RuntimeIdentity.EmergencyHeadBandAssortId), new MongoId(RuntimeIdentity.EmergencyHeadBandItemId), HeadBandPrice, "Emergency HeadBand");
+        EnsureOffer(
+            new MongoId(RuntimeIdentity.DedicatedMagazineBeltAssortId),
+            new MongoId(RuntimeIdentity.DedicatedMagazineBeltItemId),
+            BeltPrice,
+            BeltLoyaltyLevel,
+            "Magazine Belt");
+        EnsureOffer(
+            new MongoId(RuntimeIdentity.EmergencyHeadBandAssortId),
+            new MongoId(RuntimeIdentity.EmergencyHeadBandItemId),
+            HeadBandPrice,
+            HeadBandLoyaltyLevel,
+            "Utility HeadBand");
 
-        logger.Success($"B&A&HB #2 MOD SPT dedicated Belt/HeadBand test offers registered at Ragman LL{LoyaltyLevel}.");
+        logger.Success($"B&A&HB product offers registered: Magazine Belt Ragman LL{BeltLoyaltyLevel}/{BeltPrice:N0} RUB; Utility HeadBand Ragman LL{HeadBandLoyaltyLevel}/{HeadBandPrice:N0} RUB.");
         return Task.CompletedTask;
 
-        void EnsureOffer(MongoId assortId, MongoId templateId, int price, string label)
+        void EnsureOffer(MongoId assortId, MongoId templateId, int price, int loyaltyLevel, string label)
         {
             var existing = trader.Assort.Items.FirstOrDefault(x => x.Id == assortId);
             if (existing == null)
@@ -43,7 +54,7 @@ public sealed class DedicatedWearableAssort(
                     Upd = new Upd { UnlimitedCount = true, StackObjectsCount = UnlimitedStock }
                 });
                 trader.Assort.BarterScheme[assortId] = [[new BarterScheme { Count = price, Template = Money.ROUBLES }]];
-                trader.Assort.LoyalLevelItems[assortId] = LoyaltyLevel;
+                trader.Assort.LoyalLevelItems[assortId] = loyaltyLevel;
                 return;
             }
 
@@ -61,7 +72,7 @@ public sealed class DedicatedWearableAssort(
                 || schemes[0][0].Count != price)
                 throw new InvalidOperationException($"B&A&HB dedicated {label} barter contract collision.");
 
-            if (!trader.Assort.LoyalLevelItems.TryGetValue(assortId, out var loyalty) || loyalty != LoyaltyLevel)
+            if (!trader.Assort.LoyalLevelItems.TryGetValue(assortId, out var loyalty) || loyalty != loyaltyLevel)
                 throw new InvalidOperationException($"B&A&HB dedicated {label} loyalty contract collision.");
         }
     }

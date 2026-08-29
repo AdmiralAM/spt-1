@@ -30,7 +30,8 @@ public static class PersistentIdentityManifest
         RuntimeIdentity.CandidateGridId,
         RuntimeIdentity.WristWalletGridId,
         RuntimeIdentity.DedicatedMagazineBeltGridId,
-        RuntimeIdentity.EmergencyHeadBandGridId
+        RuntimeIdentity.EmergencyHeadBandGridId,
+        RuntimeIdentity.EmergencyHeadBandCigarettesGridId
     ];
 
     public static readonly string[] AssortIds =
