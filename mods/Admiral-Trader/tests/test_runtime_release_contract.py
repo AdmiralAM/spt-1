@@ -80,6 +80,14 @@ class RuntimeReleaseContractTests(unittest.TestCase):
         self.assertIn("traderConfig.UpdateTime.Any", text)
         self.assertIn("ragfairConfig.Traders.ContainsKey(traderId)", text)
 
+    def test_admiral_insurance_is_fail_closed_after_mod_loading(self):
+        text = (SERVER / "TraderRegistration.cs").read_text(encoding="utf-8")
+        self.assertIn("class AdmiralInsurancePublicationGuard", text)
+        self.assertIn("OnLoadOrder.PostLoad + 100_000", text)
+        self.assertIn("insurance.Availability = false", text)
+        self.assertIn("level.InsurancePriceCoefficient = 0", text)
+        self.assertIn("must not publish an insurance service", text)
+
 
 if __name__ == "__main__":
     unittest.main()

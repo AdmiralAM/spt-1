@@ -67,6 +67,9 @@ $persistentIdentity = Get-Content $persistentIdentityPath -Raw -Encoding UTF8 | 
 $base = Get-Content $basePath -Raw -Encoding UTF8 | ConvertFrom-Json
 $assort = Get-Content $assortPath -Raw -Encoding UTF8 | ConvertFrom-Json
 if ($manifest.registrationEnabled -ne $true -or $manifest.targetSptVersion -ne '4.1.3' -or $manifest.publicationMode -ne 'test-candidate') { throw 'Staged runtime manifest is not an enabled exact SPT 4.1.3 test candidate.' }
+if ($null -eq $base.insurance -or $base.insurance.availability -ne $false) { throw 'Admiral Trader must not publish as an insurance provider.' }
+$insuranceCoefficients = @($base.loyaltyLevels | ForEach-Object { [double]$_.insurance_price_coef })
+if ($insuranceCoefficients.Count -eq 0 -or @($insuranceCoefficients | Where-Object { $_ -ne 0 }).Count -ne 0) { throw 'Disabled Admiral insurance must have zero price coefficients at every loyalty level.' }
 
 if ($persistentIdentity.product -ne 'Admiral Trader' -or $persistentIdentity.targetSptVersion -ne '4.1.3') { throw 'Persistent identity ledger product/target drift in staged candidate.' }
 if ($persistentIdentity.policy.preserveDistributedIds -ne $true -or $persistentIdentity.policy.reuseRetiredIds -ne $false -or $persistentIdentity.policy.silentRemovalAllowed -ne $false -or $persistentIdentity.policy.retirementRequiresRecoveryCoverage -ne $true) { throw 'Persistent identity ledger policy is not fail-closed in staged candidate.' }

@@ -36,7 +36,7 @@
       "minStanding": 0,
       "buy_price_coef": 100,
       "repair_price_coef": 100,
-      "insurance_price_coef": 1,
+      "insurance_price_coef": 0,
       "exchange_price_coef": 0,
       "heal_price_coef": 0
     },
@@ -46,7 +46,7 @@
       "minStanding": 0.1,
       "buy_price_coef": 100,
       "repair_price_coef": 100,
-      "insurance_price_coef": 1,
+      "insurance_price_coef": 0,
       "exchange_price_coef": 0,
       "heal_price_coef": 0
     },
@@ -56,7 +56,7 @@
       "minStanding": 0.3,
       "buy_price_coef": 100,
       "repair_price_coef": 100,
-      "insurance_price_coef": 1,
+      "insurance_price_coef": 0,
       "exchange_price_coef": 0,
       "heal_price_coef": 0
     },
@@ -66,7 +66,7 @@
       "minStanding": 0.55,
       "buy_price_coef": 100,
       "repair_price_coef": 100,
-      "insurance_price_coef": 1,
+      "insurance_price_coef": 0,
       "exchange_price_coef": 0,
       "heal_price_coef": 0
     }

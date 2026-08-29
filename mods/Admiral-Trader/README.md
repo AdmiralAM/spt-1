@@ -74,6 +74,8 @@ Standing represents relationship/status. It does **not** replace explicit milest
 
 Current loyalty thresholds are level + standing based, with no sales-sum requirement. New-profile template registration pins Admiral initial standing to `0`. Existing contaminated test profiles are handled only through the packaged backup-first, ownership-scoped recovery tool.
 
+Insurance is not part of the current `0.1.0` release. The runtime validates that contract before registration and reasserts it after normal mod loading so broad service mutators cannot expose an incomplete Admiral insurer in the pre-raid screen. A future Admiral insurance feature remains a separate product phase; it is not cancelled or partially exposed by this candidate.
+
 ## Economy Admiral boundary
 
 Admiral Trader owns authored quest/progression semantics, stock classification, quest/standing gates, finite stock/buy ceilings, sample/permanent capability semantics and ownership/provenance declarations. **Economy Admiral** owns global source-pressure analysis, reward/price benchmarking and normalization, provenance/health checks and approved economy enforcement.

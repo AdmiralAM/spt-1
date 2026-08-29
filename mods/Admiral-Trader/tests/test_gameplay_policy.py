@@ -177,6 +177,10 @@ class GameplayPolicyTests(unittest.TestCase):
         self.assertEqual(len({row["buy_price_coef"] for row in tiers}), 1)
         self.assertFalse(self.base["repair"]["availability"])
         self.assertFalse(self.base["insurance"]["availability"])
+        self.assertTrue(
+            all(level["insurance_price_coef"] == 0 for level in self.base["loyaltyLevels"]),
+            "disabled Admiral insurance must not retain a price surface",
+        )
 
         baseline_ids = self.baseline_offer_ids()
         milestone_ids = self.milestone_offer_ids()

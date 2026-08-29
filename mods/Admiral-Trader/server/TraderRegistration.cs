@@ -111,6 +111,12 @@ public sealed class AdmiralTraderRegistration(
             throw new InvalidDataException($"base.json trader name mismatch: {traderBase.Name}");
         if (string.IsNullOrWhiteSpace(traderBase.Avatar))
             throw new InvalidDataException("base.json trader avatar route is missing");
+        if (traderBase.Insurance is null || traderBase.Insurance.Availability != false)
+            throw new InvalidDataException("Admiral Trader must not publish an insurance service");
+        if (traderBase.LoyaltyLevels is null
+            || traderBase.LoyaltyLevels.Count == 0
+            || traderBase.LoyaltyLevels.Any(level => level.InsurancePriceCoefficient != 0))
+            throw new InvalidDataException("Admiral Trader insurance coefficients must remain zero while insurance is disabled");
         if (assort.Items is null || assort.BarterScheme is null || assort.LoyalLevelItems is null)
             throw new InvalidDataException("assort.json is missing a required native collection");
 
@@ -170,6 +176,56 @@ public sealed class AdmiralTraderRegistration(
                 $"runtime-manifest publication gate mismatch: enabled={manifest.RegistrationEnabled}, mode={manifest.PublicationMode}, expected={expectedPublicationMode}");
 
         return manifest;
+    }
+}
+
+/// <summary>
+/// Reassert the authored no-insurance contract after every normal mod load callback.
+/// This keeps a broad trader/service mutator from exposing Admiral as an incomplete
+/// insurer in the pre-raid screen.
+/// </summary>
+[Injectable(TypePriority = OnLoadOrder.PostLoad + 100_000), UsedImplicitly]
+public sealed class AdmiralInsurancePublicationGuard(
+    TradersTable tradersTable,
+    ISptLogger<AdmiralInsurancePublicationGuard> logger) : IOnLoad
+{
+    public Task OnLoadAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        MongoId traderId = new(RuntimeIdentity.TraderId);
+        if (!tradersTable.TryGetValue(traderId, out Trader? trader))
+        {
+            logger.Info("Admiral Trader insurance guard skipped because runtime publication is disabled");
+            return Task.CompletedTask;
+        }
+
+        TraderInsurance insurance = trader.Base.Insurance ?? new TraderInsurance
+        {
+            Availability = false,
+            ExcludedCategory = [],
+            MaxReturnHour = 0,
+            MaxStorageTime = 0,
+            MinPayment = 0,
+            MinReturnHour = 0
+        };
+
+        bool corrected = insurance.Availability != false;
+        insurance.Availability = false;
+        trader.Base.Insurance = insurance;
+
+        foreach (TraderLoyaltyLevel level in trader.Base.LoyaltyLevels ?? [])
+        {
+            corrected |= level.InsurancePriceCoefficient != 0;
+            level.InsurancePriceCoefficient = 0;
+        }
+
+        if (corrected)
+            logger.Warning("Admiral Trader insurance publication was re-enabled or repriced by another runtime mutation; restored disabled state");
+        else
+            logger.Success("Admiral Trader insurance publication guard verified disabled state");
+
+        return Task.CompletedTask;
     }
 }
 
