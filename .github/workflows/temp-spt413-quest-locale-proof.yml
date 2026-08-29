@@ -1,4 +1,4 @@
-name: TEMP SPT 4.1.3 quest locale proof
+name: TEMP SPT 4.1.3 quest source proof
 on:
   push:
     branches: [temp/trader-5e8-exact-source-export]
@@ -6,14 +6,36 @@ jobs:
   proof:
     runs-on: ubuntu-latest
     steps:
-      - name: Fetch exact SPT 4.1.3 Russian locale and print quest labels
+      - name: Checkout exact SPT 4.1.3 server
+        uses: actions/checkout@v4
+        with:
+          repository: SP-Tushonka/server-csharp
+          ref: ddce41c6c40c2ac7a7641da759bf2140a6e47505
+          path: server
+          fetch-depth: 1
+      - name: Checkout SPT client modules
+        uses: actions/checkout@v4
+        with:
+          repository: SP-Tushonka/modules
+          ref: 3e82e3f6d331e5a3ab227dfe531e977bf79fc90d
+          path: modules
+          fetch-depth: 1
+      - name: Print quest lifecycle references
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsSL 'https://raw.githubusercontent.com/SP-Tushonka/server-csharp/ddce41c6c40c2ac7a7641da759bf2140a6e47505/Libraries/SPTushonka.Server.Assets/SPT_Data/database/locales/global/ru.json' -o ru.json
-          python3 - <<'PY'
-          import json
-          d=json.load(open('ru.json',encoding='utf-8'))
-          for k in ['QuestIsNew','QuestStatusLocked','QuestStatusAvailableForStart','QuestStatusStarted','QuestStatusAvailableForFinish']:
-              print(f'{k}={d.get(k)!r}')
-          PY
+          grep -Rni --exclude-dir=.git -E 'SptStatus|sptStatus|QuestStatus|client/quest/list' server/Libraries modules | head -300 || true
+      - name: Upload exact SPT sources
+        uses: actions/upload-artifact@v4
+        with:
+          name: spt413-quest-source-proof
+          path: |
+            server/Libraries/SPTushonka.Server.Core
+            server/Libraries/SPTushonka.Server.Common
+            modules/SPT.Common
+            modules/SPT.Core
+            modules/SPT.Custom
+            modules/SPT.PrePatch
+            modules/SPT.SinglePlayer
+          include-hidden-files: true
+          retention-days: 1
