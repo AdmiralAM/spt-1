@@ -9,7 +9,10 @@ using SPTarkov.Server.Core.Models.Spt.Tables;
 namespace SPTBeltArmbandInventory.Server;
 
 [Injectable(TypePriority = OnLoadOrder.TraderRegistration + 2)]
-public sealed class WristWalletAssort(TradersTable tradersTable, ISptLogger<WristWalletAssort> logger) : IOnLoad
+public sealed class WristWalletAssort(
+    TradersTable tradersTable,
+    TemplateTable templateTable,
+    ISptLogger<WristWalletAssort> logger) : IOnLoad
 {
     private const int PriceRoubles = 12500;
     private const int LoyaltyLevel = 1;
@@ -17,6 +20,10 @@ public sealed class WristWalletAssort(TradersTable tradersTable, ISptLogger<Wris
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
+        var templateId = new MongoId(RuntimeIdentity.WristWalletItemId);
+        if (!templateTable.Items.ContainsKey(templateId))
+            throw new InvalidOperationException("B&A&HB Wrist Wallet offer refused: exact product template is not registered.");
+
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB Wrist Wallet could not find Ragman.");
         var id = new MongoId(RuntimeIdentity.WristWalletAssortId);
@@ -27,7 +34,7 @@ public sealed class WristWalletAssort(TradersTable tradersTable, ISptLogger<Wris
         var existing = matches.SingleOrDefault();
         if (existing != null)
         {
-            ValidateExisting(trader, id, existing);
+            ValidateExisting(trader, id, existing, templateId);
             logger.Success($"B&A&HB Wrist Wallet retained validated Ragman LL{LoyaltyLevel} offer for {PriceRoubles:N0} RUB.");
             return Task.CompletedTask;
         }
@@ -38,7 +45,7 @@ public sealed class WristWalletAssort(TradersTable tradersTable, ISptLogger<Wris
         trader.Assort.Items.Add(new Item
         {
             Id = id,
-            Template = new MongoId(RuntimeIdentity.WristWalletItemId),
+            Template = templateId,
             ParentId = RuntimeCandidateOfferContract.RootId,
             SlotId = RuntimeCandidateOfferContract.RootId,
             Upd = new Upd { UnlimitedCount = true, StackObjectsCount = UnlimitedStock }
@@ -49,9 +56,9 @@ public sealed class WristWalletAssort(TradersTable tradersTable, ISptLogger<Wris
         return Task.CompletedTask;
     }
 
-    private static void ValidateExisting(Trader trader, MongoId id, Item existing)
+    private static void ValidateExisting(Trader trader, MongoId id, Item existing, MongoId templateId)
     {
-        if (!Equals(existing.Template, new MongoId(RuntimeIdentity.WristWalletItemId))
+        if (!Equals(existing.Template, templateId)
             || !string.Equals(existing.ParentId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal)
             || !string.Equals(existing.SlotId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal))
             throw new InvalidOperationException("B&A&HB Wrist Wallet assort ID collision: hierarchy differs.");
