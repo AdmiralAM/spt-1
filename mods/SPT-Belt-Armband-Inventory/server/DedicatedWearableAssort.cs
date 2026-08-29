@@ -11,6 +11,7 @@ namespace SPTBeltArmbandInventory.Server;
 [Injectable(TypePriority = OnLoadOrder.TraderRegistration + 2)]
 public sealed class DedicatedWearableAssort(
     TradersTable tradersTable,
+    TemplateTable templateTable,
     ISptLogger<DedicatedWearableAssort> logger) : IOnLoad
 {
     private const int BeltLoyaltyLevel = 2;
@@ -23,6 +24,11 @@ public sealed class DedicatedWearableAssort(
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
+        var beltTemplateId = new MongoId(RuntimeIdentity.DedicatedMagazineBeltItemId);
+        var headBandTemplateId = new MongoId(RuntimeIdentity.EmergencyHeadBandItemId);
+        if (!templateTable.Items.ContainsKey(beltTemplateId) || !templateTable.Items.ContainsKey(headBandTemplateId))
+            throw new InvalidOperationException("B&A&HB dedicated wearable offers refused: both exact product templates must be registered before Ragman assort mutation.");
+
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB dedicated wearable offers could not find Ragman.");
 
@@ -30,13 +36,13 @@ public sealed class DedicatedWearableAssort(
         // A collision in either dedicated product therefore leaves both offers intact.
         OfferPlan? beltPlan = PrepareOffer(
             new MongoId(RuntimeIdentity.DedicatedMagazineBeltAssortId),
-            new MongoId(RuntimeIdentity.DedicatedMagazineBeltItemId),
+            beltTemplateId,
             BeltPrice,
             BeltLoyaltyLevel,
             "Magazine Belt");
         OfferPlan? headBandPlan = PrepareOffer(
             new MongoId(RuntimeIdentity.EmergencyHeadBandAssortId),
-            new MongoId(RuntimeIdentity.EmergencyHeadBandItemId),
+            headBandTemplateId,
             HeadBandPrice,
             HeadBandLoyaltyLevel,
             "Utility HeadBand");
