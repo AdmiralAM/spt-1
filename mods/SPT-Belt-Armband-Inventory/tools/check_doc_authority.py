@@ -22,7 +22,7 @@ require(
         "Issue **#285**",
         "PR **#286**",
         "Candidate install / upgrade",
-        "ClientFilenameCompatibility",
+        "physical DLL filename intentionally remains",
         "Magazine operational integration",
         "BUILD-INFO.txt",
     ],
