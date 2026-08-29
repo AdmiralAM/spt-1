@@ -43,8 +43,6 @@ internal static class WearableProtectionRuntime
     private static bool headBandProtected = true;
     private static ProtectedWearableRoot[] activeRoots = BuildRoots(true, true, true);
 
-    // Root arrays are immutable after publication. Death/insurance readers take one
-    // atomic snapshot so a concurrent F12 update cannot expose a stale/torn policy.
     internal static ProtectedWearableRoot[] ActiveRoots => Volatile.Read(ref activeRoots);
 
     internal static WearableProtectionSnapshot Snapshot()
@@ -103,8 +101,10 @@ public sealed class WearableProtectionRouter(
                     cancellationToken.ThrowIfCancellationRequested();
                     WearableProtectionSnapshot snapshot = WearableProtectionRuntime.Apply(info);
                     logger.Info($"B&A&HB protection policy updated: ArmBand={(snapshot.ArmBandProtected ? "Protected" : "Lost")}, Belt={(snapshot.BeltProtected ? "Protected" : "Lost")}, HeadBand={(snapshot.HeadBandProtected ? "Protected" : "Lost")}.");
-                    string response = jsonUtil.Serialize(snapshot)
-                        ?? throw new InvalidOperationException("B&A&HB protection snapshot serialization failed.");
+                    string response = WearableProtectionContract.Encode(
+                        snapshot.ArmBandProtected,
+                        snapshot.BeltProtected,
+                        snapshot.HeadBandProtected);
                     return ValueTask.FromResult(response);
                 })
         ])
