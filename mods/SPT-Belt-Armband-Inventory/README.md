@@ -25,6 +25,8 @@ The CI artifact contains one install root: `SPT_Runtime`.
 6. Confirm the server path is `SPT_Runtime/user/mods/B&A&HB #2 MOD SPT/SPT-Belt-Armband-Inventory.Server.dll` and that the same directory contains `BUILD-INFO.txt`.
 7. For an exact candidate check, compare `BUILD-INFO.txt` `HeadSha`, `ClientSha256` and `ServerSha256` with the handoff evidence before launching SPT.
 
+The published stable v0.1.0 runtime uses those same client/server paths, so an in-place v0.2.0 overlay replaces both runtime DLLs rather than creating a second server-mod directory.
+
 Do not install v0.2.0 by copying only the client or only the server DLL. Client/server code and the profile migration belong to one exact candidate.
 
 ### Rollback to stable v0.1.0
@@ -49,7 +51,7 @@ The HeadBand keeps the existing item/slot identity but now uses **two native `1x
 - `main` — RUB, USD, EUR, Simple Wallet and WZ Wallet;
 - `cigarettes` — Apollo Soyuz, Malboro, Wilston and Strike.
 
-The original `main` grid identity is preserved. The cigarettes grid has its own persistent identity. Existing v0.1.0 HeadBand contents are migrated through the native SPT profile-migration lifecycle before profile deserialization. Currency/wallet items remain in `main`, cigarettes move to `cigarettes`, and same-category overflow is preserved through the PMC sorting table rather than deleted.
+The original `main` grid identity is preserved. The cigarettes grid has its own persistent identity. Existing v0.1.0 HeadBand contents are migrated through the native SPT profile-migration lifecycle before profile deserialization. Currency/wallet items remain in `main`, cigarettes move to `cigarettes`, and same-category overflow is preserved through the PMC sorting table rather than deleted. For Scav profiles without a sorting table, only actionable normalization is claimed; unclassifiable/overflow children are preserved rather than repeatedly reporting the same migration as pending.
 
 ## Compact Face + HeadBand presentation
 
@@ -76,6 +78,15 @@ Magazine Armband and Magazine Belt are no longer reserve-only storage in v0.2.
 
 If the exact EFT reachability boundary cannot be bound, the reload extension fails closed and the wearable containers remain valid storage rather than replacing vanilla behavior.
 
+## Compatibility and fail-safe boundaries
+
+- The persistent taxonomy has one server mutation owner. All three parent nodes are validated/prepared before any `TemplateTable` addition.
+- Dedicated slot15/slot16 contracts are likewise validated/prepared together before the canonical inventory slot list is mutated; a collision cannot leave a half-installed Belt-only/HeadBand-only state.
+- The ArmBand host must resolve to exactly one vanilla slot with exactly one filter group before its accepted parent is extended.
+- New persistent Ragman assort IDs are created only when the item, barter metadata and loyalty metadata are all absent; partial pre-existing ownership is treated as an ID collision rather than overwritten.
+- Historical Trenchfoot-BeltSlot GUID variants are declared as BepInEx soft dependencies so they load before B&A&HB conflict inspection. A confirmed legacy BeltSlot blocks B&A client runtime patching; an unreadable/unknown `Chainloader.PluginInfos` state fails closed rather than assuming no conflict.
+- ArmBand/Belt/HeadBand protection defaults server-side to Protected. Client F12 values are reported as synchronized only after the server returns an exact acknowledgement of the applied three-family snapshot; an unacknowledged transport attempt does not become a false success log.
+
 ## Stable mechanical boundaries retained
 
 v0.2 preserves the accepted slot15/slot16 lifecycle and protection model:
@@ -94,13 +105,17 @@ CI for PR #286 owns:
 - hot-path/lifecycle guard;
 - reload-access fallback/order guard;
 - version/build-identity and single-DLL upgrade-path guard;
+- atomic persistent taxonomy/dedicated-slot and unique ArmBand host-boundary guards;
+- legacy BeltSlot load-order/conflict and acknowledged protection-sync guards;
+- persistent assort collision-safety guard;
+- documentation-authority guard;
 - product-contract and EN/RU localization guard;
 - compact-layout guard;
-- deterministic regressions, including the real split-grid profile migration and reload fallback policy;
+- deterministic regressions, including the real split-grid profile migration, non-repeating Scav migration edge, protection wire acknowledgement and reload fallback policy;
 - offline profile recovery;
 - client build;
 - server build against the SPT 4.1.3 package set;
-- compiled binary version checks and root/installed BUILD-INFO provenance;
+- compiled client/server/SPT server-mod version checks and root/installed BUILD-INFO provenance;
 - one installable exact-head RC artifact with exact-head/hash manifest.
 
 A physical runtime handoff is made only after a materially significant bundle is ready, the exact PR head is fully GREEN, and the handoff includes one working GitHub artifact link plus a numbered PASS/FAIL checklist.
