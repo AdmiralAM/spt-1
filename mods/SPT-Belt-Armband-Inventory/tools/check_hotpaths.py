@@ -33,8 +33,8 @@ for source in sorted(ROOT.glob("*.cs")):
 # Physical RC1 proved that cloning Headwear from EquipmentTab.Awake creates broken
 # geometry. Insurance evidence later proved the opposite late boundary unsafe too:
 # SlotView.Show runs inside EquipmentTab.Show's slot-map enumeration and must never
-# add/replace a map entry. A compact ArmBand-template slot16 is now projected only
-# from the EquipmentTab.Show prefix, before the native enumerator exists.
+# add/replace a map entry. A compact ArmBand-template slot16 is projected only from
+# the EquipmentTab.Show prefix, before the native enumerator exists.
 equipment_slot_path = ROOT / "DedicatedEquipmentSlotPatches.cs"
 if equipment_slot_path.exists() and equipment_slot_path.name not in removed:
     equipment_slot_text = equipment_slot_path.read_text(encoding="utf-8-sig")
@@ -59,11 +59,6 @@ if presentation_path.exists() and presentation_path.name not in removed:
                 "DedicatedSlotPresentationPatches.cs: synchronous insurance-safe first-render contract is missing "
                 f"({token})")
 
-    # The actual production first-render path is DedicatedSlotPresentationPatches,
-    # not the historical HeadBandRenderSettle experiment. Binding must remain fully
-    # synchronous inside native SlotView.Show and may mutate only the dedicated view's
-    # own RectTransform. No coroutine, manual refresh, canvas rebuild or host-panel
-    # geometry mutation is allowed here.
     bind_start = presentation_text.find("static void BindHeadBandFromHeadwear(")
     bind_end = presentation_text.find("static Component GetOrCreateHeadBandView(", bind_start)
     if bind_start < 0 or bind_end < 0:
@@ -120,19 +115,19 @@ if presentation_path.exists() and presentation_path.name not in removed:
         ):
             if token in position_region:
                 violations.append(
-                    "DedicatedSlotPresentationPatches.cs: frozen HeadBand geometry mutates/refeshes the host panel "
+                    "DedicatedSlotPresentationPatches.cs: frozen HeadBand geometry mutates/refreshes the host panel "
                     f"({token})")
 
-# The old structural-reflow class may remain compiled for the stabilization branch,
-# but production code must not call it. This prevents an accidental return of the
-# global Gear Panel reflow while preserving current runtime geometry exactly.
+# Stabilization removes the historical global Gear Panel reflow entirely. No compiled
+# production source may reference it and the source file itself must stay absent.
+if (ROOT / "HeadBandRenderSettle.cs").exists():
+    violations.append("HeadBandRenderSettle.cs: obsolete global Gear Panel reflow must remain removed in stabilization")
 for source in sorted(ROOT.glob("*.cs")):
-    if source.name in removed or source.name == "HeadBandRenderSettle.cs":
+    if source.name in removed:
         continue
     text = source.read_text(encoding="utf-8-sig")
-    if "HeadBandRenderSettle." in text:
-        violations.append(
-            f"{source.name}: frozen stabilization geometry forbids reactivating HeadBandRenderSettle")
+    if "HeadBandRenderSettle" in text:
+        violations.append(f"{source.name}: frozen stabilization geometry references removed HeadBandRenderSettle")
 
 first_open_path = ROOT / "FirstOpenHeadBandLayoutPatches.cs"
 if first_open_path.exists() and first_open_path.name not in removed:
@@ -191,7 +186,6 @@ def guard_region(path_name, start_token, end_token, label):
             violations.append(f"{path_name}: {label} performs runtime reflection/discovery ({token})")
 
 # Interaction/lifecycle hot paths must use startup-bound delegates and cached values.
-# Delegate calls (including ?.Invoke on Action loggers) are allowed; reflection Invoke is not.
 guard_region(
     "PickupSlotPatches.cs",
     "internal static object Resolve(",
@@ -221,4 +215,4 @@ guard_region(
 if violations:
     raise SystemExit("Hot-path guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; production HeadBand first-render is synchronous and refresh-free; slot16 projection is pre-enumeration only; interaction/lifecycle hot paths startup-bound; server patches bounded-unique)")
+print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; production HeadBand first-render is synchronous and refresh-free; global Gear Panel reflow removed; slot16 projection is pre-enumeration only; interaction/lifecycle hot paths startup-bound; server patches bounded-unique)")
