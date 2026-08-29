@@ -22,6 +22,7 @@ namespace SPTBeltArmbandInventory
         internal static Type EquipmentType;
         internal static object HeadBandSlotKey;
         internal static object ArmBandSlotKey;
+        internal static object HeadwearSlotKey;
         internal static Func<object, object, object> GetSlot;
         internal static Action<object, object, object, object, object, object, object, object> ShowSlot;
 
@@ -31,7 +32,53 @@ namespace SPTBeltArmbandInventory
         static bool beltLabelProofLogged;
         static bool headBandBindProofLogged;
         static bool headBandCompactProofLogged;
+        static bool headBandPreprojectionProofLogged;
         static bool headBandFailureLogged;
+
+        internal static void BeforeEquipmentTabShow(object equipmentTab)
+        {
+            if (equipmentTab == null
+                || EquipmentTabSlotViewsField == null
+                || HeadBandSlotKey == null
+                || ArmBandSlotKey == null
+                || HeadwearSlotKey == null)
+                return;
+
+            try
+            {
+                IDictionary slotViews = EquipmentTabSlotViewsField.GetValue(equipmentTab) as IDictionary;
+                if (slotViews == null || slotViews.Contains(HeadBandSlotKey)) return;
+
+                Component armBandTemplate = slotViews.Contains(ArmBandSlotKey)
+                    ? slotViews[ArmBandSlotKey] as Component
+                    : null;
+                Component headwearView = slotViews.Contains(HeadwearSlotKey)
+                    ? slotViews[HeadwearSlotKey] as Component
+                    : null;
+                if (armBandTemplate == null || headwearView == null || headwearView.transform?.parent == null)
+                {
+                    FailOnce("B&A&HB HeadBand pre-enumeration projection could not resolve ArmBand/Headwear UI anchors", null);
+                    return;
+                }
+
+                Component view = UnityEngine.Object.Instantiate(armBandTemplate);
+                view.gameObject.name = HeadBandCloneName;
+                view.transform.SetParent(headwearView.transform.parent, false);
+                view.transform.SetSiblingIndex(headwearView.transform.GetSiblingIndex());
+                slotViews.Add(HeadBandSlotKey, view);
+                HeadBandViews[headwearView.GetInstanceID()] = view;
+
+                if (!headBandPreprojectionProofLogged)
+                {
+                    headBandPreprojectionProofLogged = true;
+                    LogInfo?.Invoke("B&A&HB INSURANCE-SAFE SLOT PROOF: slot16 was inserted before EquipmentTab.Show began enumerating its slot map.");
+                }
+            }
+            catch (Exception exception)
+            {
+                FailOnce("B&A&HB HeadBand pre-enumeration projection failed closed", exception);
+            }
+        }
 
         internal static void AfterSlotShow(
             object slotView,
@@ -178,34 +225,14 @@ namespace SPTBeltArmbandInventory
             if (slotViews != null && slotViews.Contains(HeadBandSlotKey))
                 view = slotViews[HeadBandSlotKey] as Component;
 
-            Component armBandTemplate = null;
-            if (slotViews != null && ArmBandSlotKey != null && slotViews.Contains(ArmBandSlotKey))
-                armBandTemplate = slotViews[ArmBandSlotKey] as Component;
-
-            // The early EquipmentTab projection historically cloned Headwear, which
-            // made slot16 a full helmet-sized block. Replace that provisional clone
-            // once with the already-native compact ArmBand visual template. Binding
-            // still targets the real dedicated slot16, so this changes presentation
-            // only and does not change equipment identity or filters.
-            if (view != null && armBandTemplate != null && string.Equals(view.gameObject.name, HeadBandCloneName, StringComparison.Ordinal))
-            {
-                if (!ReferenceEquals(view, armBandTemplate)) UnityEngine.Object.Destroy(view.gameObject);
-                view = null;
-            }
-
             if (view == null)
             {
-                Component visualTemplate = armBandTemplate ?? headwearView;
-                view = UnityEngine.Object.Instantiate(visualTemplate);
-                view.gameObject.name = HeadBandCloneName;
-                view.transform.SetParent(headwearView.transform.parent, false);
-                view.transform.SetSiblingIndex(headwearView.transform.GetSiblingIndex());
-            }
-
-            if (slotViews != null)
-            {
-                if (slotViews.Contains(HeadBandSlotKey)) slotViews[HeadBandSlotKey] = view;
-                else slotViews.Add(HeadBandSlotKey, view);
+                // SlotView.Show is called from inside EquipmentTab.Show's dictionary
+                // enumeration. Mutating that dictionary here invalidates the native
+                // enumerator and strands the matchmaker on the insurance screen.
+                // The EquipmentTab.Show prefix owns the only slot16 insertion point.
+                FailOnce("B&A&HB HeadBand slot16 was not preprojected; late slot-map mutation was refused", null);
+                return null;
             }
 
             HeadBandViews[sourceId] = view;
@@ -321,6 +348,7 @@ namespace SPTBeltArmbandInventory
             EquipmentType = null;
             HeadBandSlotKey = null;
             ArmBandSlotKey = null;
+            HeadwearSlotKey = null;
             GetSlot = null;
             ShowSlot = null;
             HeadBandViews.Clear();
@@ -329,6 +357,7 @@ namespace SPTBeltArmbandInventory
             beltLabelProofLogged = false;
             headBandBindProofLogged = false;
             headBandCompactProofLogged = false;
+            headBandPreprojectionProofLogged = false;
             headBandFailureLogged = false;
         }
     }
@@ -363,13 +392,14 @@ namespace SPTBeltArmbandInventory
                     return Fail("Dedicated slot native presentation boundary missing; labels/HeadBand binding disabled.");
 
                 MethodInfo show = FindSlotViewShow(slotViewType, slotType);
+                MethodInfo equipmentTabShow = FindEquipmentTabShow(equipmentTabType, equipmentType);
                 FieldInfo header = FindNamedField(slotViewType, "_headerText");
                 FieldInfo slotViewsField = FindFieldInHierarchy(equipmentTabType, "_slotViews", typeof(IDictionary));
                 MethodInfo getSlot = ReflectionTools.FindInstanceMethod(equipmentType, "GetSlot", slotType, equipmentSlotType);
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                 unpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
-                if (show == null || header == null || slotViewsField == null || getSlot == null
+                if (show == null || equipmentTabShow == null || header == null || slotViewsField == null || getSlot == null
                     || patchMethod == null || harmonyMethodConstructor == null || unpatchSelf == null)
                     return Fail("Exact SlotView.Show/InventoryEquipment.GetSlot/EquipmentTab map contract changed; dedicated presentation disabled.");
 
@@ -379,7 +409,12 @@ namespace SPTBeltArmbandInventory
                     return Fail("Dedicated slot native delegates could not be bound safely.");
 
                 object armBandSlotKey;
-                try { armBandSlotKey = Enum.Parse(equipmentSlotType, "ArmBand", false); }
+                object headwearSlotKey;
+                try
+                {
+                    armBandSlotKey = Enum.Parse(equipmentSlotType, "ArmBand", false);
+                    headwearSlotKey = Enum.Parse(equipmentSlotType, "Headwear", false);
+                }
                 catch { return Fail("Vanilla ArmBand equipment-slot identity could not be resolved for compact HeadBand presentation."); }
 
                 DedicatedSlotPresentationRuntime.LogInfo = logInfo;
@@ -393,13 +428,16 @@ namespace SPTBeltArmbandInventory
                     equipmentSlotType,
                     RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue);
                 DedicatedSlotPresentationRuntime.ArmBandSlotKey = armBandSlotKey;
+                DedicatedSlotPresentationRuntime.HeadwearSlotKey = headwearSlotKey;
                 DedicatedSlotPresentationRuntime.GetSlot = getSlotDelegate;
                 DedicatedSlotPresentationRuntime.ShowSlot = showDelegate;
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
+                object prefix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(EquipmentTabPrefixFactory)) });
                 object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
-                Patch(patchMethod, harmonyMethodType, show, postfix);
-                logInfo?.Invoke("B&A&HB dedicated slot native presentation installed on exact SlotView.Show/GetSlot; compact HeadBand uses the native ArmBand visual template; event-driven, no polling or scene scan.");
+                Patch(patchMethod, harmonyMethodType, equipmentTabShow, prefix, null);
+                Patch(patchMethod, harmonyMethodType, show, null, postfix);
+                logInfo?.Invoke("B&A&HB dedicated slot native presentation installed on exact EquipmentTab.Show/SlotView.Show/GetSlot; slot16 is inserted before native map enumeration and uses the compact ArmBand visual template.");
                 return true;
             }
             catch (Exception exception)
@@ -421,6 +459,25 @@ namespace SPTBeltArmbandInventory
                 if (parameters.Length == 7 && parameters[0].ParameterType == slotType) return method;
             }
             return null;
+        }
+
+        static MethodInfo FindEquipmentTabShow(Type equipmentTabType, Type equipmentType)
+        {
+            MethodInfo selected = null;
+            MethodInfo[] methods = equipmentTabType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo method = methods[i];
+                if (!string.Equals(method.Name, "Show", StringComparison.Ordinal) || method.ReturnType != typeof(void)) continue;
+                ParameterInfo[] parameters = method.GetParameters();
+                if (parameters.Length != 6
+                    || parameters[1].ParameterType != equipmentType
+                    || parameters[5].ParameterType != typeof(bool))
+                    continue;
+                if (selected != null) return null;
+                selected = method;
+            }
+            return selected;
         }
 
         static FieldInfo FindNamedField(Type type, string name)
@@ -531,6 +588,28 @@ namespace SPTBeltArmbandInventory
             return postfix;
         }
 
+        static MethodInfo EquipmentTabPrefixFactory(MethodBase original)
+        {
+            MethodInfo method = original as MethodInfo;
+            if (method == null || method.DeclaringType == null) return null;
+
+            DynamicMethod prefix = new DynamicMethod(
+                "BAndHBEquipmentTabPreEnumerationPrefix",
+                typeof(void),
+                new[] { method.DeclaringType },
+                typeof(DedicatedSlotPresentationPatches),
+                true);
+            prefix.DefineParameter(1, ParameterAttributes.None, "__instance");
+
+            ILGenerator il = prefix.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Call, typeof(DedicatedSlotPresentationRuntime).GetMethod(
+                nameof(DedicatedSlotPresentationRuntime.BeforeEquipmentTabShow),
+                BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
+            il.Emit(OpCodes.Ret);
+            return prefix;
+        }
+
         static MethodInfo Method(string name)
         {
             MethodInfo[] methods = typeof(DedicatedSlotPresentationPatches).GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
@@ -566,15 +645,17 @@ namespace SPTBeltArmbandInventory
             return null;
         }
 
-        void Patch(MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, object postfix)
+        void Patch(MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, object prefix, object postfix)
         {
             ParameterInfo[] parameters = patchMethod.GetParameters();
             object[] args = new object[parameters.Length];
             args[0] = original;
             for (int i = 1; i < parameters.Length; i++)
-                if (parameters[i].ParameterType == harmonyMethodType
-                    && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase))
-                    args[i] = postfix;
+            {
+                if (parameters[i].ParameterType != harmonyMethodType) continue;
+                if (string.Equals(parameters[i].Name, "prefix", StringComparison.OrdinalIgnoreCase)) args[i] = prefix;
+                if (string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) args[i] = postfix;
+            }
             patchMethod.Invoke(harmony, args);
         }
 

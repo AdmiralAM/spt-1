@@ -30,11 +30,11 @@ for source in sorted(ROOT.glob("*.cs")):
         if token in text:
             violations.append(f"{source.name}: {reason} ({token})")
 
-# Physical RC1 proved that creating a provisional HeadBand SlotView from
-# EquipmentTab.Awake can expose the full Headwear geometry on first entry and only
-# self-correct after a tab re-entry. DedicatedEquipmentSlotPatches owns only the
-# pseudo-slot contract/order; all HeadBand visual creation must stay in the native
-# SlotView.Show presentation path.
+# Physical RC1 proved that cloning Headwear from EquipmentTab.Awake creates broken
+# geometry. Insurance evidence later proved the opposite late boundary unsafe too:
+# SlotView.Show runs inside EquipmentTab.Show's slot-map enumeration and must never
+# add/replace a map entry. A compact ArmBand-template slot16 is now projected only
+# from the EquipmentTab.Show prefix, before the native enumerator exists.
 equipment_slot_path = ROOT / "DedicatedEquipmentSlotPatches.cs"
 if equipment_slot_path.exists() and equipment_slot_path.name not in removed:
     equipment_slot_text = equipment_slot_path.read_text(encoding="utf-8-sig")
@@ -43,6 +43,34 @@ if equipment_slot_path.exists() and equipment_slot_path.name not in removed:
             violations.append(
                 "DedicatedEquipmentSlotPatches.cs: provisional HeadBand Awake clone is forbidden after physical first-entry layout regression "
                 f"({token})")
+
+presentation_path = ROOT / "DedicatedSlotPresentationPatches.cs"
+if presentation_path.exists() and presentation_path.name not in removed:
+    presentation_text = presentation_path.read_text(encoding="utf-8-sig")
+    for token in ("BeforeEquipmentTabShow", "EquipmentTabPrefixFactory", "INSURANCE-SAFE SLOT PROOF"):
+        if token not in presentation_text:
+            violations.append(
+                "DedicatedSlotPresentationPatches.cs: insurance-safe pre-enumeration projection contract is missing "
+                f"({token})")
+    late_start = presentation_text.find("static Component GetOrCreateHeadBandView(")
+    late_end = presentation_text.find("static void PositionAboveHeadwear(", late_start)
+    if late_start < 0 or late_end < 0:
+        violations.append("DedicatedSlotPresentationPatches.cs: late SlotView.Show binding region could not be located")
+    else:
+        late_region = presentation_text[late_start:late_end]
+        for token in ("slotViews.Add(", "UnityEngine.Object.Instantiate("):
+            if token in late_region:
+                violations.append(
+                    "DedicatedSlotPresentationPatches.cs: SlotView.Show path mutates the EquipmentTab map during native enumeration "
+                    f"({token})")
+
+protection_router_path = MODULE_ROOT / "server" / "WearableProtectionRuntime.cs"
+if protection_router_path.exists():
+    protection_router_text = protection_router_path.read_text(encoding="utf-8-sig")
+    if "RouteAction<WearableProtectionRequest>" not in protection_router_text:
+        violations.append("server/WearableProtectionRuntime.cs: protection route must declare its typed request body")
+    if "info?.ToString()" in protection_router_text or "JsonSerializer.Deserialize<WearableProtectionRequest>" in protection_router_text:
+        violations.append("server/WearableProtectionRuntime.cs: protection route must not parse EmptyRequestData.ToString()")
 
 # Server lifecycle patches previously caused profile-load failures through name-only
 # reflection. Production patches must enumerate candidates and prove a unique bounded
@@ -102,4 +130,4 @@ guard_region(
 if violations:
     raise SystemExit("Hot-path guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; HeadBand presentation is SlotView.Show-owned; interaction/lifecycle hot paths startup-bound; server patches bounded-unique)")
+print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; slot16 pre-enumeration projection is insurance-safe; interaction/lifecycle hot paths startup-bound; server patches bounded-unique)")

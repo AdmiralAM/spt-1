@@ -1,9 +1,9 @@
-using System.Text.Json;
 using System.Threading;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Enums;
+using SPTarkov.Server.Core.Models.Utils;
 using SPTarkov.Server.Core.Utils;
 
 namespace SPTBeltArmbandInventory.Server;
@@ -11,7 +11,7 @@ namespace SPTBeltArmbandInventory.Server;
 internal sealed record WearableProtectionRequest(
     bool ArmBandProtected,
     bool BeltProtected,
-    bool HeadBandProtected);
+    bool HeadBandProtected) : IRequestData;
 
 internal sealed record WearableProtectionSnapshot(
     bool ArmBandProtected,
@@ -96,21 +96,15 @@ public sealed class WearableProtectionRouter(
     : StaticRouter(
         jsonUtil,
         [
-            new RouteAction(
+            new RouteAction<WearableProtectionRequest>(
                 WearableProtectionContract.Route,
                 (url, info, sessionId, output, cancellationToken) =>
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    string body = info?.ToString() ?? string.Empty;
-                    WearableProtectionRequest? request = JsonSerializer.Deserialize<WearableProtectionRequest>(
-                        body,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    if (request is null)
-                        throw new InvalidOperationException("B&A&HB protection settings payload is invalid.");
-
-                    WearableProtectionSnapshot snapshot = WearableProtectionRuntime.Apply(request);
+                    WearableProtectionSnapshot snapshot = WearableProtectionRuntime.Apply(info);
                     logger.Info($"B&A&HB protection policy updated: ArmBand={(snapshot.ArmBandProtected ? "Protected" : "Lost")}, Belt={(snapshot.BeltProtected ? "Protected" : "Lost")}, HeadBand={(snapshot.HeadBandProtected ? "Protected" : "Lost")}.");
-                    object response = jsonUtil.Serialize(snapshot)!;
+                    string response = jsonUtil.Serialize(snapshot)
+                        ?? throw new InvalidOperationException("B&A&HB protection snapshot serialization failed.");
                     return ValueTask.FromResult(response);
                 })
         ])
