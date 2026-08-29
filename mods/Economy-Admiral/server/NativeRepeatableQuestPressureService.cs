@@ -32,6 +32,19 @@ public sealed class NativeRepeatableQuestPressureService(
                 continue;
             }
 
+            if (config.EnableItemRewardStackNormalization)
+            {
+                blocked += PlanDimension(
+                    proposals,
+                    key,
+                    repeatable.Name,
+                    "ItemRewardCount",
+                    pristine.Items,
+                    repeatable.RewardScaling.Items,
+                    caps.RestartableItemBudgetMultiple,
+                    config.Mode == EconomyMode.Enforce);
+            }
+
             if (config.EnableQuestXpPressure)
             {
                 blocked += PlanDimension(
