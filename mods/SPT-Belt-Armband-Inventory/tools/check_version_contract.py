@@ -22,12 +22,15 @@ def require(path: Path, tokens, label: str):
 require(
     CLIENT_PROJECT,
     [
-        "<AssemblyName>SPT Belt Armband Inventory v0.2.0</AssemblyName>",
+        # Keep the v0.1.0 physical filename for in-place overwrite compatibility.
+        # Runtime/assembly identity is v0.2.0; changing the filename would leave
+        # the stable DLL beside the candidate and create duplicate BepInEx GUIDs.
+        "<AssemblyName>SPT Belt Armband Inventory v0.1.0</AssemblyName>",
         "<Version>0.2.0</Version>",
         "<AssemblyVersion>0.2.0.0</AssemblyVersion>",
         "<FileVersion>0.2.0.0</FileVersion>",
     ],
-    "client v0.2 identity",
+    "client v0.2 identity with upgrade-safe legacy path",
 )
 
 require(
@@ -53,11 +56,14 @@ require(
 require(
     WORKFLOW,
     [
-        "SPT Belt Armband Inventory v0.2.0.dll",
+        "SPT Belt Armband Inventory v0.1.0.dll",
         "CandidateLine=v0.2.0",
+        "ClientRuntimeVersion=0.2.0",
+        "ClientFilenameCompatibility=legacy-v0.1.0-path",
         "StableBaseline=v0.1.0",
         "SPTTarget=4.1.3",
         "BUILD-INFO.txt",
+        "SPT Belt Armband Inventory v0.2.0.dll",
     ],
     "artifact v0.2 identity",
 )
@@ -65,4 +71,4 @@ require(
 if violations:
     raise SystemExit("B&A&HB version-contract gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB version-contract gate: OK (development candidate=0.2.0; stable baseline=0.1.0; GUID/name preserved; artifact identity stamped)")
+print("B&A&HB version-contract gate: OK (runtime candidate=0.2.0; upgrade-safe client path overwrites stable DLL; duplicate v0.2 filename forbidden; GUID/name preserved)")
