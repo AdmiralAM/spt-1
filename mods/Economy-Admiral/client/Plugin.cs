@@ -16,6 +16,7 @@ public sealed class Plugin : BaseUnityPlugin
     private const string GetRoute = "/economy-admiral/settings/get";
     private const string SaveRoute = "/economy-admiral/settings/save";
     private const string RestartText = " Saved to the Economy Admiral server config; applies after the next SPT server restart.";
+    private const string ManualText = " Used only when Full Preset Bundle is OFF; cluster OFF always wins.";
 
     private ConfigEntry<string> mode;
     private ConfigEntry<string> preset;
@@ -24,6 +25,12 @@ public sealed class Plugin : BaseUnityPlugin
     private ConfigEntry<bool> traderCluster;
     private ConfigEntry<bool> fleaCluster;
     private ConfigEntry<bool> lootCluster;
+    private ConfigEntry<bool> questItemStacksEnabled;
+    private ConfigEntry<bool> traderPurchaseEnabled;
+    private ConfigEntry<bool> traderSellEnabled;
+    private ConfigEntry<bool> fleaPriceEnabled;
+    private ConfigEntry<bool> fleaFeeEnabled;
+    private ConfigEntry<bool> lootPressureEnabled;
     private ConfigEntry<double> traderPurchase;
     private ConfigEntry<double> traderSell;
     private ConfigEntry<double> fleaBase;
@@ -65,7 +72,7 @@ public sealed class Plugin : BaseUnityPlugin
             new ConfigDescription("Economy strength. Normal is the recommended balanced starting point." + RestartText,
                 new AcceptableValueList<string>("Easy", "Normal", "Hard", "Custom")));
         bundle = Config.Bind("01. Basic", "Full Preset Bundle", true,
-            "Recommended: ON. In Enforce, every enabled cluster uses the selected preset as one coherent economy profile. Turn OFF only for selective legacy/manual deployments." + RestartText);
+            "Recommended: ON. In Enforce, every enabled cluster uses the selected preset as one coherent economy profile. Turn OFF only when you want the granular mechanism switches below." + RestartText);
 
         questCluster = Config.Bind("02. Advanced - Clusters", "Quest Economy", true,
             "Hard gate for quest item-stack, XP, trader-standing and repeatable reward pressure. OFF keeps quest economy untouched." + RestartText);
@@ -76,22 +83,35 @@ public sealed class Plugin : BaseUnityPlugin
         lootCluster = Config.Bind("02. Advanced - Clusters", "Loot Economy", true,
             "Hard gate for loose and static/container loot pressure. OFF keeps loot multipliers untouched." + RestartText);
 
-        questItems = BindDouble("03. Custom - Quests", "Quest Item Reward Cap", 3.0, 0.1, 10.0, "normal quest item-reward budget multiple");
-        restartableQuestItems = BindDouble("03. Custom - Quests", "Restartable Quest Item Reward Cap", 2.0, 0.1, 10.0, "restartable quest item-reward budget multiple");
-        questXp = BindDouble("03. Custom - Quests", "Quest XP Reward Cap", 3.0, 0.1, 10.0, "normal quest XP reward multiple");
-        restartableQuestXp = BindDouble("03. Custom - Quests", "Restartable Quest XP Reward Cap", 2.0, 0.1, 10.0, "restartable quest XP reward multiple");
-        questStanding = BindDouble("03. Custom - Quests", "Quest Standing Reward Cap", 3.0, 0.1, 10.0, "trader-standing reward multiple");
+        questItemStacksEnabled = Config.Bind("03. Advanced - Quest Mechanisms", "Item Reward Stack Normalization", false,
+            "Granular switch for bounded quest item-stack normalization." + ManualText + RestartText);
+        traderPurchaseEnabled = Config.Bind("04. Advanced - Trader Mechanisms", "Purchase Price Pressure", false,
+            "Granular switch for supported trader currency purchase-price pressure." + ManualText + RestartText);
+        traderSellEnabled = Config.Bind("04. Advanced - Trader Mechanisms", "Sell Payout Pressure", false,
+            "Granular switch for reduced trader sell payouts." + ManualText + RestartText);
+        fleaPriceEnabled = Config.Bind("05. Advanced - Flea Mechanisms", "Price and Anti-Arbitrage Pressure", false,
+            "Granular switch for flea base-price, handbook-floor and anti-arbitrage pressure." + ManualText + RestartText);
+        fleaFeeEnabled = Config.Bind("05. Advanced - Flea Mechanisms", "Listing Fee Pressure", false,
+            "Granular switch for flea listing-fee pressure." + ManualText + RestartText);
+        lootPressureEnabled = Config.Bind("06. Advanced - Loot Mechanisms", "Loot Pressure", false,
+            "Granular switch for loose and static/container loot scaling." + ManualText + RestartText);
 
-        traderPurchase = BindDouble("04. Custom - Traders", "Trader Purchase Multiplier", 1.15, 1.0, 2.0, "multiplier applied to supported trader currency purchase costs");
-        traderSell = BindDouble("04. Custom - Traders", "Trader Sell Payout Multiplier", 0.85, 0.5, 1.0, "effective share of normal trader sell payout");
+        questItems = BindDouble("07. Custom - Quests", "Quest Item Reward Cap", 1.50, 0.1, 10.0, "normal quest item-reward budget multiple");
+        restartableQuestItems = BindDouble("07. Custom - Quests", "Restartable Quest Item Reward Cap", 1.15, 0.1, 10.0, "restartable quest item-reward budget multiple");
+        questXp = BindDouble("07. Custom - Quests", "Quest XP Reward Cap", 1.50, 0.1, 10.0, "normal quest XP reward multiple");
+        restartableQuestXp = BindDouble("07. Custom - Quests", "Restartable Quest XP Reward Cap", 1.15, 0.1, 10.0, "restartable quest XP reward multiple");
+        questStanding = BindDouble("07. Custom - Quests", "Quest Standing Reward Cap", 1.50, 0.1, 10.0, "trader-standing reward multiple");
 
-        fleaBase = BindDouble("05. Custom - Flea", "Flea Base Price Multiplier", 1.65, 1.0, 2.5, "minimum flea base-price pressure multiplier");
-        fleaBelowHandbook = BindDouble("05. Custom - Flea", "Max Below-Handbook Difference (%)", 45.0, 0.0, 100.0, "maximum allowed flea price difference below handbook price; lower is stricter");
-        fleaHandbook = BindDouble("05. Custom - Flea", "Handbook Price Multiplier", 1.10, 1.0, 2.0, "handbook floor multiplier used by flea pressure");
-        fleaFee = BindDouble("05. Custom - Flea", "Flea Listing Fee Multiplier", 1.25, 1.0, 2.0, "flea listing-fee multiplier");
+        traderPurchase = BindDouble("08. Custom - Traders", "Trader Purchase Multiplier", 1.15, 1.0, 2.0, "multiplier applied to supported trader currency purchase costs");
+        traderSell = BindDouble("08. Custom - Traders", "Trader Sell Payout Multiplier", 0.85, 0.5, 1.0, "effective share of normal trader sell payout");
 
-        looseLoot = BindDouble("06. Custom - Loot", "Loose Loot Scale", 0.85, 0.5, 1.0, "native loose-loot multiplier scale");
-        staticLoot = BindDouble("06. Custom - Loot", "Static Loot Scale", 0.85, 0.5, 1.0, "native static/container-loot multiplier scale");
+        fleaBase = BindDouble("09. Custom - Flea", "Flea Base Price Multiplier", 1.65, 1.0, 2.5, "minimum flea base-price pressure multiplier");
+        fleaBelowHandbook = BindDouble("09. Custom - Flea", "Max Below-Handbook Difference (%)", 45.0, 0.0, 100.0, "maximum allowed flea price difference below handbook price; lower is stricter");
+        fleaHandbook = BindDouble("09. Custom - Flea", "Handbook Price Multiplier", 1.10, 1.0, 2.0, "handbook floor multiplier used by flea pressure");
+        fleaFee = BindDouble("09. Custom - Flea", "Flea Listing Fee Multiplier", 1.25, 1.0, 2.0, "flea listing-fee multiplier");
+
+        looseLoot = BindDouble("10. Custom - Loot", "Loose Loot Scale", 0.85, 0.5, 1.0, "native loose-loot multiplier scale");
+        staticLoot = BindDouble("10. Custom - Loot", "Static Loot Scale", 0.85, 0.5, 1.0, "native static/container-loot multiplier scale");
     }
 
     private ConfigEntry<double> BindDouble(string section, string name, double value, double min, double max, string text) =>
@@ -167,6 +187,12 @@ public sealed class Plugin : BaseUnityPlugin
             traderCluster.Value = snapshot.EnableTraderEconomyCluster;
             fleaCluster.Value = snapshot.EnableFleaEconomyCluster;
             lootCluster.Value = snapshot.EnableLootEconomyCluster;
+            questItemStacksEnabled.Value = snapshot.EnableItemRewardStackNormalization;
+            traderPurchaseEnabled.Value = snapshot.EnableTraderPurchasePressure;
+            traderSellEnabled.Value = snapshot.EnableTraderSellPressure;
+            fleaPriceEnabled.Value = snapshot.EnableFleaPurchasePressure;
+            fleaFeeEnabled.Value = snapshot.EnableFleaListingFeePressure;
+            lootPressureEnabled.Value = snapshot.EnableLootPressure;
             traderPurchase.Value = snapshot.CustomTraderPurchasePriceMultiplier;
             traderSell.Value = snapshot.CustomTraderSellPayoutMultiplier;
             fleaBase.Value = snapshot.CustomFleaBasePriceMultiplier;
@@ -196,6 +222,12 @@ public sealed class Plugin : BaseUnityPlugin
         traderCluster.SettingChanged += OnSettingChanged;
         fleaCluster.SettingChanged += OnSettingChanged;
         lootCluster.SettingChanged += OnSettingChanged;
+        questItemStacksEnabled.SettingChanged += OnSettingChanged;
+        traderPurchaseEnabled.SettingChanged += OnSettingChanged;
+        traderSellEnabled.SettingChanged += OnSettingChanged;
+        fleaPriceEnabled.SettingChanged += OnSettingChanged;
+        fleaFeeEnabled.SettingChanged += OnSettingChanged;
+        lootPressureEnabled.SettingChanged += OnSettingChanged;
         traderPurchase.SettingChanged += OnSettingChanged;
         traderSell.SettingChanged += OnSettingChanged;
         fleaBase.SettingChanged += OnSettingChanged;
@@ -252,6 +284,12 @@ public sealed class Plugin : BaseUnityPlugin
         request.EnableTraderEconomyCluster == snapshot.EnableTraderEconomyCluster &&
         request.EnableFleaEconomyCluster == snapshot.EnableFleaEconomyCluster &&
         request.EnableLootEconomyCluster == snapshot.EnableLootEconomyCluster &&
+        request.EnableItemRewardStackNormalization == snapshot.EnableItemRewardStackNormalization &&
+        request.EnableTraderPurchasePressure == snapshot.EnableTraderPurchasePressure &&
+        request.EnableTraderSellPressure == snapshot.EnableTraderSellPressure &&
+        request.EnableFleaPurchasePressure == snapshot.EnableFleaPurchasePressure &&
+        request.EnableFleaListingFeePressure == snapshot.EnableFleaListingFeePressure &&
+        request.EnableLootPressure == snapshot.EnableLootPressure &&
         Nearly(request.CustomTraderPurchasePriceMultiplier, snapshot.CustomTraderPurchasePriceMultiplier) &&
         Nearly(request.CustomTraderSellPayoutMultiplier, snapshot.CustomTraderSellPayoutMultiplier) &&
         Nearly(request.CustomFleaBasePriceMultiplier, snapshot.CustomFleaBasePriceMultiplier) &&
@@ -277,6 +315,12 @@ public sealed class Plugin : BaseUnityPlugin
         EnableTraderEconomyCluster = traderCluster.Value,
         EnableFleaEconomyCluster = fleaCluster.Value,
         EnableLootEconomyCluster = lootCluster.Value,
+        EnableItemRewardStackNormalization = questItemStacksEnabled.Value,
+        EnableTraderPurchasePressure = traderPurchaseEnabled.Value,
+        EnableTraderSellPressure = traderSellEnabled.Value,
+        EnableFleaPurchasePressure = fleaPriceEnabled.Value,
+        EnableFleaListingFeePressure = fleaFeeEnabled.Value,
+        EnableLootPressure = lootPressureEnabled.Value,
         CustomTraderPurchasePriceMultiplier = traderPurchase.Value,
         CustomTraderSellPayoutMultiplier = traderSell.Value,
         CustomFleaBasePriceMultiplier = fleaBase.Value,
@@ -312,6 +356,12 @@ public sealed class Plugin : BaseUnityPlugin
         public bool EnableTraderEconomyCluster;
         public bool EnableFleaEconomyCluster;
         public bool EnableLootEconomyCluster;
+        public bool EnableItemRewardStackNormalization;
+        public bool EnableTraderPurchasePressure;
+        public bool EnableTraderSellPressure;
+        public bool EnableFleaPurchasePressure;
+        public bool EnableFleaListingFeePressure;
+        public bool EnableLootPressure;
         public double CustomTraderPurchasePriceMultiplier;
         public double CustomTraderSellPayoutMultiplier;
         public double CustomFleaBasePriceMultiplier;
@@ -339,6 +389,12 @@ public sealed class Plugin : BaseUnityPlugin
         public bool EnableTraderEconomyCluster;
         public bool EnableFleaEconomyCluster;
         public bool EnableLootEconomyCluster;
+        public bool EnableItemRewardStackNormalization;
+        public bool EnableTraderPurchasePressure;
+        public bool EnableTraderSellPressure;
+        public bool EnableFleaPurchasePressure;
+        public bool EnableFleaListingFeePressure;
+        public bool EnableLootPressure;
         public double CustomTraderPurchasePriceMultiplier;
         public double CustomTraderSellPayoutMultiplier;
         public double CustomFleaBasePriceMultiplier;

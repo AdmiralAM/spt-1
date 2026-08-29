@@ -70,6 +70,12 @@ public sealed class EconomySettingsRouterCallback(
                 EnableTraderEconomyCluster = info.EnableTraderEconomyCluster,
                 EnableFleaEconomyCluster = info.EnableFleaEconomyCluster,
                 EnableLootEconomyCluster = info.EnableLootEconomyCluster,
+                EnableItemRewardStackNormalization = info.EnableItemRewardStackNormalization,
+                EnableTraderPurchasePressure = info.EnableTraderPurchasePressure,
+                EnableTraderSellPressure = info.EnableTraderSellPressure,
+                EnableFleaPurchasePressure = info.EnableFleaPurchasePressure,
+                EnableFleaListingFeePressure = info.EnableFleaListingFeePressure,
+                EnableLootPressure = info.EnableLootPressure,
                 CustomTraderPurchasePriceMultiplier = info.CustomTraderPurchasePriceMultiplier,
                 CustomTraderSellPayoutMultiplier = info.CustomTraderSellPayoutMultiplier,
                 CustomFleaBasePriceMultiplier = info.CustomFleaBasePriceMultiplier,
@@ -189,6 +195,12 @@ public sealed record EconomySettingsUpdateRequest : IRequestData
     public bool EnableTraderEconomyCluster { get; init; } = true;
     public bool EnableFleaEconomyCluster { get; init; } = true;
     public bool EnableLootEconomyCluster { get; init; } = true;
+    public bool EnableItemRewardStackNormalization { get; init; } = false;
+    public bool EnableTraderPurchasePressure { get; init; } = false;
+    public bool EnableTraderSellPressure { get; init; } = false;
+    public bool EnableFleaPurchasePressure { get; init; } = false;
+    public bool EnableFleaListingFeePressure { get; init; } = false;
+    public bool EnableLootPressure { get; init; } = false;
     public double CustomTraderPurchasePriceMultiplier { get; init; } = 1.15;
     public double CustomTraderSellPayoutMultiplier { get; init; } = 0.85;
     public double CustomFleaBasePriceMultiplier { get; init; } = 1.65;
@@ -214,6 +226,12 @@ public sealed record EconomySettingsSnapshot(
     bool EnableTraderEconomyCluster,
     bool EnableFleaEconomyCluster,
     bool EnableLootEconomyCluster,
+    bool EnableItemRewardStackNormalization,
+    bool EnableTraderPurchasePressure,
+    bool EnableTraderSellPressure,
+    bool EnableFleaPurchasePressure,
+    bool EnableFleaListingFeePressure,
+    bool EnableLootPressure,
     double CustomTraderPurchasePriceMultiplier,
     double CustomTraderSellPayoutMultiplier,
     double CustomFleaBasePriceMultiplier,
@@ -231,6 +249,9 @@ public sealed record EconomySettingsSnapshot(
     public static EconomySettingsSnapshot From(EconomyConfig config, bool restartRequired) => new(
         true, restartRequired, config.Mode.ToString(), config.Preset.ToString(), config.EnablePlayableEconomyBundle,
         config.EnableQuestEconomyCluster, config.EnableTraderEconomyCluster, config.EnableFleaEconomyCluster, config.EnableLootEconomyCluster,
+        config.ConfiguredEnableItemRewardStackNormalization, config.ConfiguredEnableTraderPurchasePressure,
+        config.ConfiguredEnableTraderSellPressure, config.ConfiguredEnableFleaPurchasePressure,
+        config.ConfiguredEnableFleaListingFeePressure, config.ConfiguredEnableLootPressure,
         config.CustomTraderPurchasePriceMultiplier, config.CustomTraderSellPayoutMultiplier, config.CustomFleaBasePriceMultiplier,
         config.CustomFleaMaxPriceDifferenceBelowHandbookPercent, config.CustomFleaHandbookPriceMultiplier, config.CustomFleaListingFeeMultiplier,
         config.CustomLooseLootScale, config.CustomStaticLootScale, config.CustomQuestItemBudgetMultiple,
