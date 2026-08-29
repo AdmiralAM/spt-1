@@ -73,6 +73,32 @@ PR creation, branch synchronization, commits, documentation, CI, packaging, and 
 - Chat attachments, local files, source ZIPs, CI success without an artifact, and vague `test everything` requests are invalid handoffs.
 - On FAIL, consume the evidence and resume remediation automatically. On PASS, follow the next recorded phase or release transition under the standing authorization; do not ask another worker for permission.
 
+### Mandatory user-facing test request
+
+A runtime-test request is valid only when the same message gives the user one complete, immediately actionable handoff. It must begin with this compact block (translated to the conversation language when needed):
+
+```text
+Скачать: <one clickable GitHub download URL>
+Скачивать именно: <exact artifact/asset/ZIP name>
+Кандидат: <module name, version, target SPT, PR and exact commit SHA>
+Установка: <exact replacement/copy steps and destination paths>
+Проверить:
+1. <user action> — PASS: <observable result>; FAIL: <observable result>
+2. ...
+Вернуть: <numbered PASS/FAIL plus the smallest requested screenshot or log excerpt>
+Общий PASS: <exact rule>
+```
+
+Hard rules:
+
+- The first URL is the **primary candidate download**, not merely a repository home page, source tree, PR, commit, workflow list, or CI-status page. Provenance links may follow it.
+- State exactly which named file/artifact the user downloads. Never make the user search an Actions run, choose among builds, infer a filename, build source, or guess which ZIP is installable.
+- Verify that the linked GitHub artifact, Release asset, or install-ready `runtime-*` package actually exists and matches the named exact commit before asking.
+- Give exact install/replace/remove instructions for that candidate, including both client and server paths when applicable.
+- Test points are short, numbered, behavior-specific, and include observable PASS and FAIL results. `Test everything`, `try it`, free exploration, and an unbounded full-log request are invalid.
+- Ask for only the minimum evidence needed to decide the numbered gate.
+- **No working GitHub download link + no exact filename + no numbered checklist = no user test request.** Continue packaging/publication work or report the concrete blocker without assigning the user a test.
+
 Detailed handoff mechanics live in `docs/runtime-artifact-gate.md`; that document cannot override this charter or the registry.
 
 ## Safety and isolation

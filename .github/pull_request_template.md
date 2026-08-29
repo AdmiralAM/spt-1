@@ -20,8 +20,16 @@
 ## Runtime handoff
 
 - Required now: no / yes (why automation cannot decide):
-- GitHub artifact URL, name and digest:
-- Short PASS/FAIL checklist:
+- Primary clickable GitHub download URL:
+- Download exactly (artifact/asset/ZIP name):
+- Candidate (module/version/SPT/PR/exact head):
+- Exact install/replace paths:
+- Numbered action / PASS / FAIL checklist:
+- Minimum evidence to return:
+- Overall PASS rule:
+- Link and exact candidate availability verified: no / yes
+
+A worker must not ask the user to test while any required `yes` handoff field is blank. A PR, source branch, workflow page or CI result is provenance, not a substitute for the primary installable download.
 
 ## Integration
 

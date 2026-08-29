@@ -8,6 +8,19 @@ When a task asks for a runtime candidate, gameplay alpha, installable package, u
 
 Static validation is useful, but it is not runtime delivery. Tests, validators, manifests, docs, provenance files, and guard scripts only count as progress when they accompany or directly repair the artifact-producing path.
 
+## No-link, no-test rule
+
+The worker may not ask the user to test, install, download, or look for anything until one exact installable candidate is available through a working clickable GitHub URL.
+
+The handoff must lead with:
+
+1. the primary download URL;
+2. the exact filename/artifact name to download;
+3. exact installation/replacement paths;
+4. the short numbered behavior checklist.
+
+A repository home page, source branch, PR, commit, Actions list, CI result, or phrase such as `download the latest artifact` is not a download handoff. Those may be included only as secondary provenance. If the candidate cannot be downloaded immediately from the supplied URL, the worker has not reached the user runtime gate and must fix publication or report that blocker.
+
 ## Required artifact handoff
 
 Every runtime-test handoff must name:
@@ -46,6 +59,8 @@ The user must know exactly what the candidate is intended to prove. Present the 
 | 1 | One concrete user action | One observable result | One observable contrary result | Smallest useful log line, screenshot, or `PASS`/`FAIL` |
 
 Every row must affect the gate decision. Number the rows, keep their order stable, and state the overall rule (for example, `PASS only when items 1-4 all pass`). Do not combine unrelated product areas, ask the user to explore freely, or request a full log when numbered PASS/FAIL results or a narrow failure excerpt are sufficient.
+
+The user-facing message must use the mandatory compact handoff block from `AGENTS.md`. Do not bury the download link or checklist beneath implementation history, CI narration, provenance analysis, or a long status report.
 
 ## Manual-test budget and scheduling
 
