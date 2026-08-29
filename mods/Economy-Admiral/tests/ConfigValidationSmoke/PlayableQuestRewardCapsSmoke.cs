@@ -6,10 +6,9 @@ internal static class PlayableQuestRewardCapsSmoke
     [ModuleInitializer]
     internal static void Run()
     {
-        var custom = new AuditPolicy();
-        var easy = PlayableQuestRewardCaps.Resolve(EconomyPreset.Easy, custom);
-        var normal = PlayableQuestRewardCaps.Resolve(EconomyPreset.Normal, custom);
-        var hard = PlayableQuestRewardCaps.Resolve(EconomyPreset.Hard, custom);
+        var easy = PlayableQuestRewardCaps.Resolve(new EconomyConfig { Preset = EconomyPreset.Easy });
+        var normal = PlayableQuestRewardCaps.Resolve(new EconomyConfig { Preset = EconomyPreset.Normal });
+        var hard = PlayableQuestRewardCaps.Resolve(new EconomyConfig { Preset = EconomyPreset.Hard });
 
         Require(easy.ItemBudgetMultiple > normal.ItemBudgetMultiple && normal.ItemBudgetMultiple > hard.ItemBudgetMultiple,
             "item budget strength must be Easy > Normal > Hard");
@@ -24,19 +23,30 @@ internal static class PlayableQuestRewardCapsSmoke
         Require(normal.StandingMultiple == 1.50,
             "Normal standing cap is the Playable Economy v1 contract");
 
-        var customPolicy = new AuditPolicy
+        var customConfig = new EconomyConfig
         {
-            HighItemValueLowStructureWarnMultiple = 1.7,
-            RestartableHighItemValueWarnMultiple = 1.2,
-            HighXpLowDepthWarnMultiple = 1.6,
-            RestartableHighXpWarnMultiple = 1.1,
-            HighStandingLowDepthWarnMultiple = 1.4,
+            Preset = EconomyPreset.Custom,
+            CustomQuestItemBudgetMultiple = 1.7,
+            CustomRestartableQuestItemBudgetMultiple = 1.2,
+            CustomQuestXpMultiple = 1.6,
+            CustomRestartableQuestXpMultiple = 1.1,
+            CustomQuestStandingMultiple = 1.4,
+            CustomAuditPolicy = new AuditPolicy
+            {
+                HighItemValueLowStructureWarnMultiple = 9.0,
+                RestartableHighItemValueWarnMultiple = 8.0,
+                HighXpLowDepthWarnMultiple = 7.0,
+                RestartableHighXpWarnMultiple = 6.0,
+                HighStandingLowDepthWarnMultiple = 5.0,
+            },
         };
-        var resolvedCustom = PlayableQuestRewardCaps.Resolve(EconomyPreset.Custom, customPolicy);
+        var resolvedCustom = PlayableQuestRewardCaps.Resolve(customConfig);
         Require(resolvedCustom.ItemBudgetMultiple == 1.7 && resolvedCustom.RestartableItemBudgetMultiple == 1.2,
-            "Custom item caps must remain user-configurable");
+            "Custom item enforcement caps must use dedicated user targets");
         Require(resolvedCustom.XpMultiple == 1.6 && resolvedCustom.RestartableXpMultiple == 1.1 && resolvedCustom.StandingMultiple == 1.4,
-            "Custom numeric caps must remain user-configurable");
+            "Custom XP/standing enforcement caps must use dedicated user targets");
+        Require(customConfig.CustomAuditPolicy.HighItemValueLowStructureWarnMultiple == 9.0,
+            "Custom enforcement targets must not overwrite audit detection policy");
 
         Console.WriteLine("Economy Admiral Playable Economy v1 reward cap smoke PASS");
     }
