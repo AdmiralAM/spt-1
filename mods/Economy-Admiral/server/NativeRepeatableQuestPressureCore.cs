@@ -26,7 +26,7 @@ public static class NativeRepeatableQuestPressureCore
         && target >= 0
         && target + 0.0000001 < current;
 
-    public static bool Compatible(IReadOnlyList<double> pristine, IReadOnlyList<double> current) =>
+    public static bool Compatible(IReadOnlyList<double> pristine, IList<double> current) =>
         pristine.Count > 0 && pristine.Count == current.Count;
 }
 
