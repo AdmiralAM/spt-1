@@ -42,6 +42,9 @@ jobs:
       - name: 'Run B&A&HB #2 reload-access guard'
         shell: pwsh
         run: python mods/SPT-Belt-Armband-Inventory/tools/check_reload_access.py
+      - name: 'Run B&A&HB #2 version-contract guard'
+        shell: pwsh
+        run: python mods/SPT-Belt-Armband-Inventory/tools/check_version_contract.py
       - name: 'Run B&A&HB #2 product-contract guard'
         shell: pwsh
         run: python mods/SPT-Belt-Armband-Inventory/tools/check_product_contract.py
@@ -91,27 +94,28 @@ jobs:
           $modRoot = "$runtimeRoot/user/mods/B&A&HB #2 MOD SPT"
           New-Item -ItemType Directory -Force -Path $pluginRoot | Out-Null
           New-Item -ItemType Directory -Force -Path $modRoot | Out-Null
-          Copy-Item 'mods/SPT-Belt-Armband-Inventory/src/bin/Release/netstandard2.1/SPT Belt Armband Inventory v0.1.0.dll' "$pluginRoot/"
+          Copy-Item 'mods/SPT-Belt-Armband-Inventory/src/bin/Release/netstandard2.1/SPT Belt Armband Inventory v0.2.0.dll' "$pluginRoot/"
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT-Belt-Armband-Inventory.Server.dll' "$modRoot/"
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/profile-safety' "$modRoot/profile-safety" -Recurse
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/README.md' "$modRoot/README.md"
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/DESIGN-SPT-4.1.3-BELT.md' "$modRoot/DESIGN-SPT-4.1.3-BELT.md"
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/docs/RC1-runtime-checklist.md' "$modRoot/RC1-runtime-checklist.md"
 
-          $clientDll = "$pluginRoot/SPT Belt Armband Inventory v0.1.0.dll"
+          $clientDll = "$pluginRoot/SPT Belt Armband Inventory v0.2.0.dll"
           $serverDll = "$modRoot/SPT-Belt-Armband-Inventory.Server.dll"
           $manifest = "$modRoot/profile-safety/persistent-identities.json"
           $recovery = "$modRoot/profile-safety/README.md"
           $moduleReadme = "$modRoot/README.md"
           $designNote = "$modRoot/DESIGN-SPT-4.1.3-BELT.md"
           $runtimeChecklist = "$modRoot/RC1-runtime-checklist.md"
-          if (-not (Test-Path -LiteralPath $clientDll)) { throw 'Install-tree validation: client DLL missing under SPT_Runtime/BepInEx/plugins' }
+          if (-not (Test-Path -LiteralPath $clientDll)) { throw 'Install-tree validation: v0.2.0 client DLL missing under SPT_Runtime/BepInEx/plugins' }
           if (-not (Test-Path -LiteralPath $serverDll)) { throw 'Install-tree validation: server DLL missing under SPT_Runtime/user/mods' }
           if (-not (Test-Path -LiteralPath $manifest)) { throw 'Install-tree validation: profile-safety manifest missing from server mod' }
           if (-not (Test-Path -LiteralPath $recovery)) { throw 'Install-tree validation: recovery instructions missing from server mod' }
           if (-not (Test-Path -LiteralPath $moduleReadme)) { throw 'Install-tree validation: module README missing from RC package' }
           if (-not (Test-Path -LiteralPath $designNote)) { throw 'Install-tree validation: current architecture note missing from RC package' }
           if (-not (Test-Path -LiteralPath $runtimeChecklist)) { throw 'Install-tree validation: RC runtime checklist missing from package' }
+          if (Test-Path -LiteralPath "$pluginRoot/SPT Belt Armband Inventory v0.1.0.dll") { throw 'Install-tree validation: stale v0.1.0 client DLL leaked into v0.2 candidate' }
           if (Test-Path -LiteralPath "$root/BepInEx") { throw 'Install-tree validation: forbidden split top-level BepInEx root exists' }
 
           $clientHash = (Get-FileHash -LiteralPath $clientDll -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -121,23 +125,24 @@ jobs:
           $prNumber = '${{ github.event.pull_request.number }}'
           @(
             'B&A&HB #2 MOD SPT development candidate',
-            'CandidateLine=v0.2',
+            'CandidateLine=v0.2.0',
             'StableBaseline=v0.1.0',
             'SPTTarget=4.1.3',
             "HeadSha=$headSha",
             "HeadBranch=$headBranch",
             "PullRequest=$prNumber",
-            "ClientDll=SPT Belt Armband Inventory v0.1.0.dll",
+            'ClientDll=SPT Belt Armband Inventory v0.2.0.dll',
             "ClientSha256=$clientHash",
-            "ServerDll=SPT-Belt-Armband-Inventory.Server.dll",
+            'ServerDll=SPT-Belt-Armband-Inventory.Server.dll',
             "ServerSha256=$serverHash"
           ) | Set-Content -LiteralPath "$root/BUILD-INFO.txt" -Encoding UTF8
 
           $buildInfo = Get-Content -LiteralPath "$root/BUILD-INFO.txt" -Raw
+          if (-not $buildInfo.Contains('CandidateLine=v0.2.0')) { throw 'Install-tree validation: BUILD-INFO v0.2.0 line missing' }
           if (-not $buildInfo.Contains("HeadSha=$headSha")) { throw 'Install-tree validation: BUILD-INFO exact head missing' }
           if (-not $buildInfo.Contains("ClientSha256=$clientHash")) { throw 'Install-tree validation: BUILD-INFO client hash missing' }
           if (-not $buildInfo.Contains("ServerSha256=$serverHash")) { throw 'Install-tree validation: BUILD-INFO server hash missing' }
-          Write-Host "[B&A&HB #2 MOD SPT] RC1 install tree PASS: exactHead=$headSha clientSha256=$clientHash serverSha256=$serverHash"
+          Write-Host "[B&A&HB #2 MOD SPT v0.2.0] RC1 install tree PASS: exactHead=$headSha clientSha256=$clientHash serverSha256=$serverHash"
       - name: 'Upload B&A&HB #2 MOD SPT RC1'
         uses: actions/upload-artifact@v4
         with:
