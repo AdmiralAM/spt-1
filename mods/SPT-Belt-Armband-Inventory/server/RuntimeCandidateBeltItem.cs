@@ -53,6 +53,12 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
                     Name = "B&A&HB Magazine Armband",
                     ShortName = "Mag Armband",
                     Description = "Compact 1x2 magazine carrier worn in the ArmBand equipment location."
+                },
+                ["ru"] = new LocaleDetails
+                {
+                    Name = "Повязка под магазины B&A&HB",
+                    ShortName = "Маг. повязка",
+                    Description = "Компактная повязка 1x2 для магазинов, устанавливаемая в слот ArmBand."
                 }
             },
             OverrideProperties = new TemplateItemProperties
