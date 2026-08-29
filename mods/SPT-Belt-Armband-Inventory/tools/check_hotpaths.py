@@ -76,14 +76,14 @@ if presentation_path.exists() and presentation_path.name not in removed:
             "EnsureDeferredRuntimePump",
             "Canvas.ForceUpdateCanvases",
             "preferredHeight",
-            "equipmentTab.transform.position",
-            "gearRect.position",
+            "equipmentTab.transform.position =",
+            "gearRect.position =",
             "slotViews.Add(",
             "UnityEngine.Object.Instantiate(",
         ):
             if token in bind_region:
                 violations.append(
-                    "DedicatedSlotPresentationPatches.cs: first-render bind introduced deferred/global/late mutation "
+                    "DedicatedSlotPresentationPatches.cs: first-render bind introduced deferred/host-panel/late mutation "
                     f"({token})")
 
     late_start = presentation_text.find("static Component GetOrCreateHeadBandView(")
@@ -101,33 +101,90 @@ if presentation_path.exists() and presentation_path.name not in removed:
     position_start = presentation_text.find("static void PositionAboveHeadwear(")
     position_end = presentation_text.find("static void RelabelNumericCaptionTree(", position_start)
     if position_start < 0 or position_end < 0:
-        violations.append("DedicatedSlotPresentationPatches.cs: frozen HeadBand geometry region could not be located")
+        violations.append("DedicatedSlotPresentationPatches.cs: accepted HeadBand pre-reflow placement region could not be located")
     else:
         position_region = presentation_text[position_start:position_end]
         for token in (
             "Canvas.ForceUpdateCanvases",
             "preferredHeight",
             "LayoutElement",
-            "equipmentTab.transform.position",
-            "gearRect.position",
+            "equipmentTab.transform.position =",
+            "gearRect.position =",
             "StartCoroutine",
             "RequestFlush",
         ):
             if token in position_region:
                 violations.append(
-                    "DedicatedSlotPresentationPatches.cs: frozen HeadBand geometry mutates/refreshes the host panel "
+                    "DedicatedSlotPresentationPatches.cs: accepted HeadBand placement mutates/refreshes the host panel "
                     f"({token})")
 
-# Stabilization removes the historical global Gear Panel reflow entirely. No compiled
-# production source may reference it and the source file itself must stay absent.
-if (ROOT / "HeadBandRenderSettle.cs").exists():
-    violations.append("HeadBandRenderSettle.cs: obsolete global Gear Panel reflow must remain removed in stabilization")
+# Freeze the exact physical layout accepted at 9cf023c: the mapped HeadBand occupies
+# original Headwear local coordinates and native slot RectTransforms are translated by
+# exactly one compact 44+4 row. This is deliberately NOT a host Gear Panel layout
+# mutation: no LayoutElement/preferredHeight, Canvas rebuild, panel transform move,
+# coroutine, retry or polling is allowed.
+reflow_path = ROOT / "HeadBandRenderSettle.cs"
+if not reflow_path.exists() or reflow_path.name in removed:
+    violations.append("HeadBandRenderSettle.cs: accepted stabilization geometry owner is missing")
+else:
+    reflow_text = reflow_path.read_text(encoding="utf-8-sig")
+    for token in (
+        "const float HeadBandCompactHeight = 44f;",
+        "const float HeadBandGap = 4f;",
+        "const float StructuralOffset = HeadBandCompactHeight + HeadBandGap;",
+        "rect.anchoredPosition = new Vector2(original.x, original.y - StructuralOffset);",
+        "headBandRect.anchoredPosition = originalHeadwear;",
+        "HEADBAND FIRST-RENDER PROOF",
+        "panelLayoutMutation=False",
+        "synchronous=True",
+    ):
+        if token not in reflow_text:
+            violations.append(
+                "HeadBandRenderSettle.cs: accepted stabilization geometry contract changed "
+                f"({token})")
+    for token in (
+        "preferredHeight",
+        "LayoutElement",
+        "Canvas.ForceUpdateCanvases",
+        "StartCoroutine",
+        "RequestFlush",
+        "EnsureDeferredRuntimePump",
+        "equipmentTab.transform.position =",
+        "gearRect.position =",
+        "slotViews.Add(",
+        "UnityEngine.Object.Instantiate(",
+    ):
+        if token in reflow_text:
+            violations.append(
+                "HeadBandRenderSettle.cs: frozen geometry introduced host-panel/deferred/slot-map mutation "
+                f"({token})")
+
+# The accepted reflow is triggered only from dedicated-slot localization on the same
+# proven Headwear SlotView.Show event. No second production caller may appear.
+reflow_callers = []
 for source in sorted(ROOT.glob("*.cs")):
-    if source.name in removed:
+    if source.name in removed or source.name == "HeadBandRenderSettle.cs":
         continue
     text = source.read_text(encoding="utf-8-sig")
-    if "HeadBandRenderSettle" in text:
-        violations.append(f"{source.name}: frozen stabilization geometry references removed HeadBandRenderSettle")
+    if "HeadBandRenderSettle.OnHeadwearShown" in text:
+        reflow_callers.append(source.name)
+if reflow_callers != ["DedicatedSlotLocalizationPatches.cs"]:
+    violations.append(
+        "HeadBandRenderSettle: accepted synchronous caller set changed: " + repr(reflow_callers))
+
+localization_path = ROOT / "DedicatedSlotLocalizationPatches.cs"
+if localization_path.exists() and localization_path.name not in removed:
+    localization_text = localization_path.read_text(encoding="utf-8-sig")
+    for token in ("HeadBandRenderSettle.OnHeadwearShown(slotView as Component);", "HeadBandRenderSettle.Reset();"):
+        if token not in localization_text:
+            violations.append(
+                "DedicatedSlotLocalizationPatches.cs: accepted HeadBand first-render lifecycle hook changed "
+                f"({token})")
+    for token in ("StartCoroutine", "Canvas.ForceUpdateCanvases", "preferredHeight", "LayoutElement"):
+        if token in localization_text:
+            violations.append(
+                "DedicatedSlotLocalizationPatches.cs: localization/settle path introduced manual/deferred host refresh "
+                f"({token})")
 
 first_open_path = ROOT / "FirstOpenHeadBandLayoutPatches.cs"
 if first_open_path.exists() and first_open_path.name not in removed:
@@ -185,7 +242,6 @@ def guard_region(path_name, start_token, end_token, label):
         if token in region:
             violations.append(f"{path_name}: {label} performs runtime reflection/discovery ({token})")
 
-# Interaction/lifecycle hot paths must use startup-bound delegates and cached values.
 guard_region(
     "PickupSlotPatches.cs",
     "internal static object Resolve(",
@@ -215,4 +271,4 @@ guard_region(
 if violations:
     raise SystemExit("Hot-path guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; production HeadBand first-render is synchronous and refresh-free; global Gear Panel reflow removed; slot16 projection is pre-enumeration only; interaction/lifecycle hot paths startup-bound; server patches bounded-unique)")
+print("B&A&HB #2 hot-path guard: OK (accepted HeadBand geometry frozen at 44+4 structural row; host Gear Panel layout untouched; no manual/deferred first-open refresh; slot16 projection pre-enumeration only; interaction/lifecycle hot paths startup-bound; server patches bounded-unique)")
