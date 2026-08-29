@@ -2,6 +2,7 @@
   "mode": "Enforce",
   "preset": "Normal",
   "reportRelativePath": "reports/economy-admiral-audit.json",
+  "repeatedRaidLootDecay": false,
   "enablePlayableEconomyBundle": true,
   "enableQuestEconomyCluster": true,
   "enableTraderEconomyCluster": true,
