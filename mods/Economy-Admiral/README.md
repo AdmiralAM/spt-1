@@ -138,14 +138,16 @@ If Admiral Trader is absent, Economy Admiral runs standalone. If the maintained 
 
 Runtime reports and `Validate-Runtime.ps1`, `Validate-Enforce.ps1`, `Validate-Beta.ps1` remain available in the source repository for development/release diagnosis. They are deliberately **not shipped in the player install package** and are not required to use Economy Admiral.
 
-## Installation
+## Installation and updates
 
-The player package contains only the files needed to run and configure Economy Admiral:
+Extract the package into the SPT root. The package contains only the maintained player runtime:
 
 - `SPT_Runtime/user/mods/Economy Admiral/Economy-Admiral.dll` — server economy engine;
-- `SPT_Runtime/user/mods/Economy Admiral/config/config.json` — server-owned settings;
+- `SPT_Runtime/user/mods/Economy Admiral/config/config.default.json` — maintained first-install defaults;
 - `SPT_Runtime/user/mods/Economy Admiral/README.md` — player documentation;
 - `BepInEx/plugins/Economy Admiral/Economy Admiral v0.1.0.dll` — F12 settings client.
+
+On the first server start, Economy Admiral validates `config.default.json` and creates `config/config.json`. That `config.json` is user state. **Update packages never contain it**, so extracting a newer Economy Admiral over an existing installation preserves the settings saved through F12.
 
 It does not bundle or replace the BepInEx runtime itself, and it does not install development validators/test harnesses into the game directory.
 

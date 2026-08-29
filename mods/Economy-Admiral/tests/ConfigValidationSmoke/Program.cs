@@ -201,4 +201,5 @@ JsonMustFail("null policy JSON", "{\"customAuditPolicy\":null}");
 JsonMustFail("null overrides JSON", "{\"manualOverrides\":null}");
 JsonMustFail("null override entry JSON", "{\"manualOverrides\":{\"fixture-template\":null}}");
 
+await ConfigBootstrapSmoke.RunAsync();
 Console.WriteLine("Economy Admiral config + playable policy validation smoke PASS");
