@@ -53,7 +53,12 @@ namespace SPTBeltArmbandInventory
 
             HostBoundaryDiscovery.Log(Logger.LogInfo, Logger.LogWarning);
 
-            if (LegacyBeltSlotDetected())
+            if (!TryDetectLegacyBeltSlot(out bool legacyBeltSlotDetected))
+            {
+                Logger.LogWarning("B&A&HB #2 legacy BeltSlot conflict state could not be proven from BepInEx PluginInfos; failing closed for this session and installing no wearable runtime patches.");
+                return;
+            }
+            if (legacyBeltSlotDetected)
             {
                 Logger.LogWarning("Trenchfoot-BeltSlot is already loaded. Remove/disable that DLL before enabling B&A&HB #2 MOD SPT; no duplicate patch was installed.");
                 return;
@@ -275,26 +280,36 @@ namespace SPTBeltArmbandInventory
             deferredRuntimePump = null;
         }
 
-        bool LegacyBeltSlotDetected()
+        bool TryDetectLegacyBeltSlot(out bool detected)
         {
+            detected = false;
             try
             {
                 Type chainloader = Type.GetType("BepInEx.Bootstrap.Chainloader, BepInEx", false);
-                PropertyInfo pluginInfos = ReflectionTools.FindInstanceProperty(chainloader, "PluginInfos");
-                if (pluginInfos == null && chainloader != null)
+                if (chainloader == null)
                 {
-                    PropertyInfo[] properties = chainloader.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                    for (int i = 0; i < properties.Length; i++)
-                    {
-                        if (string.Equals(properties[i].Name, "PluginInfos", StringComparison.Ordinal))
-                        {
-                            pluginInfos = properties[i];
-                            break;
-                        }
-                    }
+                    Logger.LogWarning("B&A&HB legacy-plugin discovery could not resolve BepInEx Chainloader.");
+                    return false;
                 }
-                IDictionary dictionary = pluginInfos == null ? null : pluginInfos.GetValue(null, null) as IDictionary;
-                return dictionary != null && (dictionary.Contains("com.trenchfoot.beltslot") || dictionary.Contains("BeltSlot"));
+
+                PropertyInfo pluginInfos = chainloader.GetProperty(
+                    "PluginInfos",
+                    BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                if (pluginInfos == null)
+                {
+                    Logger.LogWarning("B&A&HB legacy-plugin discovery could not resolve static BepInEx Chainloader.PluginInfos.");
+                    return false;
+                }
+
+                IDictionary dictionary = pluginInfos.GetValue(null, null) as IDictionary;
+                if (dictionary == null)
+                {
+                    Logger.LogWarning("B&A&HB legacy-plugin discovery resolved PluginInfos but could not read it as IDictionary.");
+                    return false;
+                }
+
+                detected = dictionary.Contains("com.trenchfoot.beltslot") || dictionary.Contains("BeltSlot");
+                return true;
             }
             catch (Exception exception)
             {
