@@ -40,6 +40,9 @@ public sealed class DedicatedWearableItems(
             "B&A&HB Magazine Belt",
             "Magazine Belt",
             "Dedicated 2x2 tactical magazine belt worn in the B&A&HB Belt equipment location.",
+            "Пояс под магазины B&A&HB",
+            "Маг. пояс",
+            "Тактический пояс 2x2 для магазинов, устанавливаемый в отдельный слот Belt B&A&HB.",
             RuntimeIdentity.DedicatedMagazineBeltGridColumns,
             RuntimeIdentity.DedicatedMagazineBeltGridRows,
             [BaseClasses.MAGAZINE],
@@ -77,6 +80,12 @@ public sealed class DedicatedWearableItems(
                     Name = "B&A&HB Utility HeadBand",
                     ShortName = "Utility HB",
                     Description = "Compact HeadBand utility carrier with separate currency/wallet and cigarette pockets. Death protection follows the B&A&HB F12 setting."
+                },
+                ["ru"] = new LocaleDetails
+                {
+                    Name = "Утилитарная налобная повязка B&A&HB",
+                    ShortName = "Утил. повязка",
+                    Description = "Компактная налобная повязка с отдельными ячейками для денег/кошелька и сигарет. Защита при смерти определяется настройкой B&A&HB в F12."
                 }
             },
             OverrideProperties = new TemplateItemProperties
@@ -115,6 +124,9 @@ public sealed class DedicatedWearableItems(
         string name,
         string shortName,
         string description,
+        string ruName,
+        string ruShortName,
+        string ruDescription,
         int cellsH,
         int cellsV,
         HashSet<MongoId> accepted,
@@ -139,7 +151,8 @@ public sealed class DedicatedWearableItems(
             HandbookParentId = handbookParent,
             Locales = new Dictionary<string, LocaleDetails>
             {
-                ["en"] = new LocaleDetails { Name = name, ShortName = shortName, Description = description }
+                ["en"] = new LocaleDetails { Name = name, ShortName = shortName, Description = description },
+                ["ru"] = new LocaleDetails { Name = ruName, ShortName = ruShortName, Description = ruDescription }
             },
             OverrideProperties = new TemplateItemProperties
             {
