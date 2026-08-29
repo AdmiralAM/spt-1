@@ -38,8 +38,8 @@ public sealed record PlayableQuestRewardCaps(
                      policy.StandingMultiple,
                  })
         {
-            if (!double.IsFinite(value) || value <= 0)
-                throw new InvalidOperationException("Economy Admiral playable quest reward multipliers must be finite and positive.");
+            if (!double.IsFinite(value) || value < 0.1 || value > 10.0)
+                throw new InvalidOperationException("Economy Admiral custom quest reward multipliers must be finite and within 0.1..10.0.");
         }
         return policy;
     }
