@@ -28,10 +28,10 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl) ?? throw new InvalidOperationException("B&A&HB Magazine Armband source handbook entry missing.");
 
         ValidateTaxonomyParents();
-        EnsureArmBandAcceptsCustomBeltParent();
         if (templateTable.Items.TryGetValue(new MongoId(RuntimeCandidateTpl), out var existingCandidate))
         {
             ValidateExistingCandidate(existingCandidate);
+            EnsureArmBandAcceptsCustomBeltParent();
             logger.Success($"B&A&HB Magazine Armband retained existing validated item: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
             return Task.CompletedTask;
         }
@@ -68,6 +68,10 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         };
         var result = customItemService.CreateItemFromClone(details);
         if (!result.Success) throw new InvalidOperationException($"B&A&HB Magazine Armband creation failed: {string.Join("; ", result.Errors)}");
+
+        // Only expose the custom parent to vanilla ArmBand after the item itself was
+        // created successfully. Failed creation must not leave a broadened host filter.
+        EnsureArmBandAcceptsCustomBeltParent();
         logger.Success($"B&A&HB Magazine Armband created: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
         return Task.CompletedTask;
     }
