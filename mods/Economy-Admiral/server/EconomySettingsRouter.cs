@@ -92,6 +92,8 @@ public sealed class EconomySettingsRouterCallback(
                 CustomTraderPurchasePriceMultiplier = info.CustomTraderPurchasePriceMultiplier,
                 CustomTraderSellPayoutMultiplier = info.CustomTraderSellPayoutMultiplier,
                 CustomFleaBasePriceMultiplier = info.CustomFleaBasePriceMultiplier,
+                CustomFleaMaxPriceDifferenceBelowHandbookPercent = info.CustomFleaMaxPriceDifferenceBelowHandbookPercent,
+                CustomFleaHandbookPriceMultiplier = info.CustomFleaHandbookPriceMultiplier,
                 CustomFleaListingFeeMultiplier = info.CustomFleaListingFeeMultiplier,
                 CustomLooseLootScale = info.CustomLooseLootScale,
                 CustomStaticLootScale = info.CustomStaticLootScale,
@@ -177,7 +179,7 @@ public sealed class EconomySettingsRouterCallback(
 
 public sealed record EconomySettingsUpdateRequest : IRequestData
 {
-    public string Mode { get; init; } = "Audit";
+    public string Mode { get; init; } = "Enforce";
     public string Preset { get; init; } = "Normal";
     public bool EnablePlayableEconomyBundle { get; init; } = true;
     public bool EnableQuestEconomyCluster { get; init; } = true;
@@ -187,6 +189,8 @@ public sealed record EconomySettingsUpdateRequest : IRequestData
     public double CustomTraderPurchasePriceMultiplier { get; init; } = 1.15;
     public double CustomTraderSellPayoutMultiplier { get; init; } = 0.85;
     public double CustomFleaBasePriceMultiplier { get; init; } = 1.65;
+    public double CustomFleaMaxPriceDifferenceBelowHandbookPercent { get; init; } = 45.0;
+    public double CustomFleaHandbookPriceMultiplier { get; init; } = 1.10;
     public double CustomFleaListingFeeMultiplier { get; init; } = 1.25;
     public double CustomLooseLootScale { get; init; } = 0.85;
     public double CustomStaticLootScale { get; init; } = 0.85;
@@ -210,6 +214,8 @@ public sealed record EconomySettingsSnapshot(
     double CustomTraderPurchasePriceMultiplier,
     double CustomTraderSellPayoutMultiplier,
     double CustomFleaBasePriceMultiplier,
+    double CustomFleaMaxPriceDifferenceBelowHandbookPercent,
+    double CustomFleaHandbookPriceMultiplier,
     double CustomFleaListingFeeMultiplier,
     double CustomLooseLootScale,
     double CustomStaticLootScale,
@@ -232,6 +238,8 @@ public sealed record EconomySettingsSnapshot(
         config.CustomTraderPurchasePriceMultiplier,
         config.CustomTraderSellPayoutMultiplier,
         config.CustomFleaBasePriceMultiplier,
+        config.CustomFleaMaxPriceDifferenceBelowHandbookPercent,
+        config.CustomFleaHandbookPriceMultiplier,
         config.CustomFleaListingFeeMultiplier,
         config.CustomLooseLootScale,
         config.CustomStaticLootScale,
