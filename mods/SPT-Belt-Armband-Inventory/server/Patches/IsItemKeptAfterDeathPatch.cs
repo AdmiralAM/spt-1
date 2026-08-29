@@ -1,4 +1,5 @@
 using System.Reflection;
+using SPTarkov.DI.Annotations;
 using SPTarkov.Reflection.Patching;
 using SPTarkov.Server.Core.Helpers.InRaid;
 using SPTarkov.Server.Core.Models.Eft.Common;
@@ -6,13 +7,25 @@ using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 
 namespace SPTBeltArmbandInventory.Server.Patches;
 
+[Injectable]
 public sealed class IsItemKeptAfterDeathPatch : AbstractPatch
 {
     protected override MethodBase? GetTargetMethod()
     {
-        return typeof(InRaidHelper).GetMethod(
-            "IsItemKeptAfterDeath",
-            BindingFlags.NonPublic | BindingFlags.Instance);
+        var methods = typeof(InRaidHelper).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+        MethodInfo? selected = null;
+        foreach (var method in methods)
+        {
+            if (!string.Equals(method.Name, "IsItemKeptAfterDeath", StringComparison.Ordinal) || method.ReturnType != typeof(bool))
+                continue;
+            var parameters = method.GetParameters();
+            if (parameters.Length != 2 || parameters[0].ParameterType != typeof(PmcData) || parameters[1].ParameterType != typeof(Item))
+                continue;
+            if (selected is not null)
+                throw new AmbiguousMatchException("Multiple exact InRaidHelper.IsItemKeptAfterDeath(PmcData, Item) methods found.");
+            selected = method;
+        }
+        return selected;
     }
 
     [PatchPostfix]
@@ -25,9 +38,11 @@ public sealed class IsItemKeptAfterDeathPatch : AbstractPatch
         var nodes = inventoryItems.Select(item => new BeltInventoryNode(
             item.Id.ToString(),
             item.ParentId?.ToString(),
-            item.SlotId));
+            item.SlotId,
+            item.Template.ToString()));
 
-        if (BeltDeathPolicy.ShouldKeep(itemToCheck.Id.ToString(), nodes))
+        ProtectedWearableRoot[] roots = WearableProtectionRuntime.ActiveRoots;
+        if (BeltDeathPolicy.ShouldKeep(itemToCheck.Id.ToString(), nodes, roots))
             __result = true;
     }
 }

@@ -8,12 +8,19 @@ namespace SPTBeltArmbandInventory
     {
         internal static bool ShouldIncludeBelt(bool hasItem, bool hasContainers)
         {
-            return hasItem && hasContainers;
+            return AccessoryCapabilityPolicy.CanUse(
+                AccessoryCategory.ArmBand,
+                AccessoryCapability.GrenadeAccess,
+                hasItem,
+                hasContainers);
         }
 
         internal static bool ShouldAppendGrenade(bool isGrenade, bool examined, bool alreadyPresent)
         {
-            return isGrenade && examined && !alreadyPresent;
+            return AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess)
+                && isGrenade
+                && examined
+                && !alreadyPresent;
         }
     }
 
@@ -71,6 +78,7 @@ namespace SPTBeltArmbandInventory
 
         internal static void AppendBeltGrenades(object inventoryController, object result)
         {
+            if (!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess)) return;
             if (inventoryController == null || result == null || GetSlotMethod == null || ArmBandValue == null || GetTopLevelItemsMethod == null || ExaminedMethod == null || GrenadeType == null) return;
 
             try
@@ -152,6 +160,9 @@ namespace SPTBeltArmbandInventory
 
         internal bool TryInstall()
         {
+            if (!AccessoryCapabilityPolicy.Has(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess))
+                return false;
+
             try
             {
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
@@ -170,7 +181,7 @@ namespace SPTBeltArmbandInventory
 
                 Type[] listArguments = grenadeList.ReturnType.GetGenericArguments();
                 if (listArguments.Length != 1)
-                    return Fail("SPT 4.1 grenade-list return type changed; belt grenade fast-access compatibility is disabled.");
+                    return Fail("SPT 4.1 grenade-list return type changed; belt grenade enumeration is disabled.");
 
                 Type grenadeType = listArguments[0];
                 Type controllerType = grenadeList.GetParameters()[0].ParameterType;
@@ -222,9 +233,7 @@ namespace SPTBeltArmbandInventory
 
         static MethodInfo FindStaticMethod(Assembly assembly, string name)
         {
-            Type[] types;
-            try { types = assembly.GetTypes(); }
-            catch (ReflectionTypeLoadException exception) { types = exception.Types; }
+            Type[] types = ReflectionTools.GetTypes(assembly);
 
             for (int i = 0; i < types.Length; i++)
             {
@@ -248,9 +257,7 @@ namespace SPTBeltArmbandInventory
 
         static MethodInfo FindTopLevelItemsMethod(Assembly assembly)
         {
-            Type[] types;
-            try { types = assembly.GetTypes(); }
-            catch (ReflectionTypeLoadException exception) { types = exception.Types; }
+            Type[] types = ReflectionTools.GetTypes(assembly);
 
             for (int i = 0; i < types.Length; i++)
             {
@@ -262,10 +269,9 @@ namespace SPTBeltArmbandInventory
                 for (int p = 0; p < methods.Length; p++)
                 {
                     MethodInfo method = methods[p];
-                    if (!string.Equals(method.Name, "GetTopLevelItemsFromCollection", StringComparison.Ordinal)) continue;
+                    if (!method.Name.EndsWith("GetTopLevelItemsFromCollection", StringComparison.Ordinal)) continue;
                     ParameterInfo[] parameters = method.GetParameters();
-                    if (parameters.Length != 1 || !typeof(IEnumerable).IsAssignableFrom(method.ReturnType)) continue;
-                    return method;
+                    if (parameters.Length == 1 && typeof(IEnumerable).IsAssignableFrom(method.ReturnType)) return method;
                 }
             }
             return null;
@@ -277,9 +283,10 @@ namespace SPTBeltArmbandInventory
             for (int i = 0; i < methods.Length; i++)
             {
                 MethodInfo method = methods[i];
-                if (!string.Equals(method.Name, "Examined", StringComparison.Ordinal) || method.ReturnType != typeof(bool)) continue;
+                if (method.ReturnType != typeof(bool)) continue;
                 ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length == 1 && parameters[0].ParameterType.IsAssignableFrom(grenadeType)) return method;
+                if (parameters.Length != 1 || !parameters[0].ParameterType.IsAssignableFrom(grenadeType)) continue;
+                if (method.Name.IndexOf("Examined", StringComparison.OrdinalIgnoreCase) >= 0) return method;
             }
             return null;
         }

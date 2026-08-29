@@ -30,9 +30,11 @@ namespace SPTBeltArmbandInventory
 
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
+                MethodInfo rollback = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
-                if (harmony == null || patchMethod == null || harmonyMethodConstructor == null)
-                    return Fail("Harmony patch API is incompatible; belt unload priority remains disabled.");
+                if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, harmonyMethodConstructor != null, rollback != null))
+                    return Fail("Harmony patch/rollback API is incompatible; belt unload priority remains disabled.");
+                unpatchSelf = rollback;
 
                 if (!UnloadPriorityRuntime.TryInstall(harmony, patchMethod, harmonyMethodType, harmonyMethodConstructor, equipmentType, slotEnumType, logWarning))
                 {
@@ -40,7 +42,6 @@ namespace SPTBeltArmbandInventory
                     return false;
                 }
 
-                unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
                 if (logInfo != null) logInfo("Belt unload-grid integration installed for GetPrioritizedGridsForUnloadedObject.");
                 return true;
             }

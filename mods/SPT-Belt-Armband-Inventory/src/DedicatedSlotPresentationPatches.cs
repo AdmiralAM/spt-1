@@ -1,0 +1,701 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Reflection.Emit;
+using UnityEngine;
+
+namespace SPTBeltArmbandInventory
+{
+    internal static class DedicatedSlotPresentationRuntime
+    {
+        const string HeadBandCloneName = "B&A&HB HeadBand Slot";
+        const float HeadBandCompactHeight = 44f;
+        const float HeadBandGap = 4f;
+
+        internal static Action<string> LogInfo;
+        internal static Action<string> LogWarning;
+        internal static FieldInfo HeaderTextField;
+        internal static FieldInfo EquipmentTabSlotViewsField;
+        internal static Type EquipmentTabType;
+        internal static Type SlotViewType;
+        internal static Type EquipmentType;
+        internal static object HeadBandSlotKey;
+        internal static object ArmBandSlotKey;
+        internal static object HeadwearSlotKey;
+        internal static Func<object, object, object> GetSlot;
+        internal static Action<object, object, object, object, object, object, object, object> ShowSlot;
+
+        static readonly Dictionary<int, Component> HeadBandViews = new Dictionary<int, Component>();
+        static readonly Dictionary<Type, PropertyInfo> TextPropertyCache = new Dictionary<Type, PropertyInfo>();
+        static bool? russianUi;
+        static bool beltLabelProofLogged;
+        static bool headBandBindProofLogged;
+        static bool headBandCompactProofLogged;
+        static bool headBandPreprojectionProofLogged;
+        static bool headBandFailureLogged;
+
+        internal static void BeforeEquipmentTabShow(object equipmentTab)
+        {
+            if (equipmentTab == null
+                || EquipmentTabSlotViewsField == null
+                || HeadBandSlotKey == null
+                || ArmBandSlotKey == null
+                || HeadwearSlotKey == null)
+                return;
+
+            try
+            {
+                IDictionary slotViews = EquipmentTabSlotViewsField.GetValue(equipmentTab) as IDictionary;
+                if (slotViews == null) return;
+
+                if (slotViews.Contains(HeadBandSlotKey))
+                {
+                    Component existingHeadBandView = slotViews[HeadBandSlotKey] as Component;
+                    if (existingHeadBandView != null) return;
+
+                    // A reused EquipmentTab can retain the pseudo-slot key after its
+                    // Unity view has been destroyed. Repair that stale entry here,
+                    // before EFT creates the native dictionary enumerator. The late
+                    // SlotView.Show path remains mutation-free by design.
+                    slotViews.Remove(HeadBandSlotKey);
+                }
+
+                Component armBandTemplate = slotViews.Contains(ArmBandSlotKey)
+                    ? slotViews[ArmBandSlotKey] as Component
+                    : null;
+                Component headwearView = slotViews.Contains(HeadwearSlotKey)
+                    ? slotViews[HeadwearSlotKey] as Component
+                    : null;
+                if (armBandTemplate == null || headwearView == null || headwearView.transform?.parent == null)
+                {
+                    FailOnce("B&A&HB HeadBand pre-enumeration projection could not resolve ArmBand/Headwear UI anchors", null);
+                    return;
+                }
+
+                Component view = UnityEngine.Object.Instantiate(armBandTemplate);
+                view.gameObject.name = HeadBandCloneName;
+                view.transform.SetParent(headwearView.transform.parent, false);
+                view.transform.SetSiblingIndex(headwearView.transform.GetSiblingIndex());
+                slotViews.Add(HeadBandSlotKey, view);
+                HeadBandViews[headwearView.GetInstanceID()] = view;
+
+                if (!headBandPreprojectionProofLogged)
+                {
+                    headBandPreprojectionProofLogged = true;
+                    LogInfo?.Invoke("B&A&HB INSURANCE-SAFE SLOT PROOF: slot16 was inserted before EquipmentTab.Show began enumerating its slot map.");
+                }
+            }
+            catch (Exception exception)
+            {
+                FailOnce("B&A&HB HeadBand pre-enumeration projection failed closed", exception);
+            }
+        }
+
+        internal static void AfterSlotShow(
+            object slotView,
+            object slot,
+            object arg1,
+            object arg2,
+            object arg3,
+            object arg4,
+            object arg5,
+            object arg6)
+        {
+            if (slotView == null || slot == null || HeaderTextField == null) return;
+
+            try
+            {
+                string id = ReflectionTools.ReadMember(slot, "ID")?.ToString();
+                ObserveLocale(slotView, id);
+
+                if (string.Equals(id, RuntimeIdentity.DedicatedBeltWireSlotId, StringComparison.Ordinal))
+                {
+                    string caption = DedicatedSlotPresentationPolicy.Caption(id, russianUi == true) ?? "BELT";
+                    SetHeader(slotView, caption);
+                    Component dedicatedView = slotView as Component;
+                    if (dedicatedView != null) RelabelNumericCaptionTree(dedicatedView, id, caption);
+                    if (!beltLabelProofLogged)
+                    {
+                        beltLabelProofLogged = true;
+                        LogInfo?.Invoke("B&A&HB BELT LABEL PROOF: exact pseudo-slot15 reached SlotView.Show and numeric row captions were normalized; caption=" + caption + ".");
+                    }
+                    return;
+                }
+
+                if (string.Equals(id, RuntimeIdentity.DedicatedHeadBandWireSlotId, StringComparison.Ordinal))
+                {
+                    string caption = DedicatedSlotPresentationPolicy.Caption(id, russianUi == true) ?? "HEADBAND";
+                    SetHeader(slotView, caption);
+                    Component dedicatedView = slotView as Component;
+                    if (dedicatedView != null)
+                    {
+                        RelabelNumericCaptionTree(dedicatedView, id, caption);
+                        dedicatedView.gameObject.SetActive(true);
+                    }
+
+                    if (!headBandBindProofLogged)
+                    {
+                        headBandBindProofLogged = true;
+                        LogInfo?.Invoke("B&A&HB HEADBAND BIND PROOF: exact pseudo-slot16 reached native SlotView.Show on a dedicated visible view; caption=" + caption + ".");
+                    }
+                    return;
+                }
+
+                if (!string.Equals(id, DedicatedSlotPresentationPolicy.VanillaHeadwearSlotId, StringComparison.Ordinal)) return;
+
+                BindHeadBandFromHeadwear(slotView, slot, arg1, arg2, arg3, arg4, arg5, arg6);
+            }
+            catch (Exception exception)
+            {
+                FailOnce("B&A&HB dedicated-slot presentation failed closed", exception);
+            }
+        }
+
+        static void ObserveLocale(object slotView, string slotId)
+        {
+            if (DedicatedWearableSlotContract.IsDedicatedWireSlotId(slotId)) return;
+            string text = ReadHeader(slotView);
+            if (string.IsNullOrWhiteSpace(text)) return;
+            if (DedicatedSlotPresentationPolicy.LooksRussian(text))
+            {
+                russianUi = true;
+                return;
+            }
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+                if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+                {
+                    if (!russianUi.HasValue) russianUi = false;
+                    return;
+                }
+            }
+        }
+
+        static string ReadHeader(object slotView)
+        {
+            object header = HeaderTextField.GetValue(slotView);
+            if (header == null) return null;
+            PropertyInfo textProperty = ReflectionTools.FindInstanceProperty(header.GetType(), "text", typeof(string));
+            return textProperty != null && textProperty.CanRead ? textProperty.GetValue(header, null) as string : null;
+        }
+
+        static void BindHeadBandFromHeadwear(
+            object slotView,
+            object headwearSlot,
+            object arg1,
+            object arg2,
+            object arg3,
+            object arg4,
+            object arg5,
+            object arg6)
+        {
+            if (SlotViewType == null
+                || EquipmentType == null
+                || EquipmentTabType == null
+                || EquipmentTabSlotViewsField == null
+                || HeadBandSlotKey == null
+                || GetSlot == null
+                || ShowSlot == null)
+                return;
+
+            Component headwearView = slotView as Component;
+            if (headwearView == null || headwearView.transform == null || headwearView.transform.parent == null) return;
+
+            object equipment = ReflectionTools.ReadMember(headwearSlot, "ParentItem")
+                ?? ReflectionTools.ReadMember(headwearSlot, "Parent");
+            if (equipment == null || !EquipmentType.IsInstanceOfType(equipment)) return;
+
+            object headBandSlot = GetSlot(equipment, HeadBandSlotKey);
+            if (headBandSlot == null)
+            {
+                FailOnce("B&A&HB HeadBand native binding could not resolve pseudo-slot16 from InventoryEquipment", null);
+                return;
+            }
+
+            Component headBandView = GetOrCreateHeadBandView(headwearView);
+            if (headBandView == null) return;
+
+            ShowSlot(headBandView, headBandSlot, arg1, arg2, arg3, arg4, arg5, arg6);
+            PositionAboveHeadwear(headBandView, headwearView);
+            headBandView.gameObject.SetActive(true);
+        }
+
+        static Component GetOrCreateHeadBandView(Component headwearView)
+        {
+            int sourceId = headwearView.GetInstanceID();
+            Component cached;
+            if (HeadBandViews.TryGetValue(sourceId, out cached) && cached != null)
+                return cached;
+
+            Component equipmentTab = headwearView.GetComponentInParent(EquipmentTabType);
+            IDictionary slotViews = equipmentTab == null ? null : EquipmentTabSlotViewsField.GetValue(equipmentTab) as IDictionary;
+
+            Component view = null;
+            if (slotViews != null && slotViews.Contains(HeadBandSlotKey))
+                view = slotViews[HeadBandSlotKey] as Component;
+
+            if (view == null)
+            {
+                // SlotView.Show is called from inside EquipmentTab.Show's dictionary
+                // enumeration. Mutating that dictionary here invalidates the native
+                // enumerator and strands the matchmaker on the insurance screen.
+                // The EquipmentTab.Show prefix owns the only slot16 insertion point.
+                FailOnce("B&A&HB HeadBand slot16 was not preprojected; late slot-map mutation was refused", null);
+                return null;
+            }
+
+            HeadBandViews[sourceId] = view;
+            return view;
+        }
+
+        static void PositionAboveHeadwear(Component headBandView, Component headwearView)
+        {
+            if (headBandView == null || headwearView == null) return;
+
+            RectTransform headBandRect = headBandView.transform as RectTransform;
+            RectTransform headwearRect = headwearView.transform as RectTransform;
+            if (headBandRect != null && headwearRect != null)
+            {
+                float headwearHeight = Mathf.Max(1f, headwearRect.rect.height);
+                float width = Mathf.Max(1f, headwearRect.rect.width);
+
+                headBandRect.anchorMin = headwearRect.anchorMin;
+                headBandRect.anchorMax = headwearRect.anchorMax;
+                headBandRect.pivot = headwearRect.pivot;
+                headBandRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
+                headBandRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, HeadBandCompactHeight);
+                headBandRect.anchoredPosition = headwearRect.anchoredPosition
+                    + new Vector2(0f, (headwearHeight + HeadBandCompactHeight) * 0.5f + HeadBandGap);
+
+                if (!headBandCompactProofLogged)
+                {
+                    headBandCompactProofLogged = true;
+                    LogInfo?.Invoke("B&A&HB HEADBAND LAYOUT PROOF: dedicated slot16 root compacted above Headwear; width="
+                        + width.ToString("0.0") + ", height=" + HeadBandCompactHeight.ToString("0.0") + ".");
+                }
+                return;
+            }
+
+            headBandView.transform.localPosition = headwearView.transform.localPosition + new Vector3(0f, 82f, 0f);
+        }
+
+        static void RelabelNumericCaptionTree(Component root, string numericCaption, string dedicatedCaption)
+        {
+            if (root == null || string.IsNullOrEmpty(numericCaption) || string.IsNullOrEmpty(dedicatedCaption)) return;
+            RelabelTransform(root.transform, numericCaption, dedicatedCaption, 0);
+        }
+
+        static void RelabelTransform(Transform transform, string numericCaption, string dedicatedCaption, int depth)
+        {
+            if (transform == null || depth > 6) return;
+
+            Component[] components = transform.gameObject.GetComponents<Component>();
+            for (int i = 0; i < components.Length; i++)
+            {
+                Component component = components[i];
+                if (component == null) continue;
+                Type type = component.GetType();
+                PropertyInfo textProperty;
+                if (!TextPropertyCache.TryGetValue(type, out textProperty))
+                {
+                    textProperty = ReflectionTools.FindInstanceProperty(type, "text", typeof(string));
+                    TextPropertyCache[type] = textProperty;
+                }
+                if (textProperty == null || !textProperty.CanRead || !textProperty.CanWrite) continue;
+
+                try
+                {
+                    string current = textProperty.GetValue(component, null) as string;
+                    if (string.Equals(current, numericCaption, StringComparison.Ordinal))
+                        textProperty.SetValue(component, dedicatedCaption, null);
+                }
+                catch { }
+            }
+
+            for (int i = 0; i < transform.childCount; i++)
+                RelabelTransform(transform.GetChild(i), numericCaption, dedicatedCaption, depth + 1);
+        }
+
+        static void SetHeader(object slotView, string text)
+        {
+            object header = HeaderTextField.GetValue(slotView);
+            if (header == null) return;
+            PropertyInfo textProperty = ReflectionTools.FindInstanceProperty(header.GetType(), "text", typeof(string));
+            if (textProperty != null && textProperty.CanWrite) textProperty.SetValue(header, text, null);
+        }
+
+        static void FailOnce(string message, Exception exception)
+        {
+            if (headBandFailureLogged) return;
+            headBandFailureLogged = true;
+
+            if (exception == null)
+            {
+                LogWarning?.Invoke(message + ".");
+                return;
+            }
+
+            Exception root = Unwrap(exception);
+            LogWarning?.Invoke(message + ": " + root.GetType().FullName + ": " + root.Message);
+        }
+
+        static Exception Unwrap(Exception exception)
+        {
+            Exception current = exception;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null) current = invocation.InnerException;
+            return current;
+        }
+
+        internal static void Reset()
+        {
+            LogInfo = null;
+            LogWarning = null;
+            HeaderTextField = null;
+            EquipmentTabSlotViewsField = null;
+            EquipmentTabType = null;
+            SlotViewType = null;
+            EquipmentType = null;
+            HeadBandSlotKey = null;
+            ArmBandSlotKey = null;
+            HeadwearSlotKey = null;
+            GetSlot = null;
+            ShowSlot = null;
+            HeadBandViews.Clear();
+            TextPropertyCache.Clear();
+            russianUi = null;
+            beltLabelProofLogged = false;
+            headBandBindProofLogged = false;
+            headBandCompactProofLogged = false;
+            headBandPreprojectionProofLogged = false;
+            headBandFailureLogged = false;
+        }
+    }
+
+    internal sealed class DedicatedSlotPresentationPatches : IDisposable
+    {
+        const string HarmonyId = "com.admiralam.spt.belt-armband-inventory.dedicated-slot-presentation";
+        readonly Action<string> logInfo;
+        readonly Action<string> logWarning;
+        object harmony;
+        MethodInfo unpatchSelf;
+
+        internal DedicatedSlotPresentationPatches(Action<string> logInfo, Action<string> logWarning)
+        {
+            this.logInfo = logInfo;
+            this.logWarning = logWarning;
+        }
+
+        internal bool TryInstall()
+        {
+            try
+            {
+                Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
+                Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
+                Type slotViewType = ReflectionTools.FindType("EFT.UI.DragAndDrop.SlotView");
+                Type slotType = ReflectionTools.FindType("EFT.InventoryLogic.Slot");
+                Type equipmentType = ReflectionTools.FindType("EFT.InventoryLogic.InventoryEquipment");
+                Type equipmentSlotType = ReflectionTools.FindType("EFT.InventoryLogic.EquipmentSlot");
+                Type equipmentTabType = ReflectionTools.FindType("EFT.UI.EquipmentTab");
+                if (harmonyType == null || harmonyMethodType == null || slotViewType == null || slotType == null
+                    || equipmentType == null || equipmentSlotType == null || equipmentTabType == null)
+                    return Fail("Dedicated slot native presentation boundary missing; labels/HeadBand binding disabled.");
+
+                MethodInfo show = FindSlotViewShow(slotViewType, slotType);
+                MethodInfo equipmentTabShow = FindEquipmentTabShow(equipmentTabType, equipmentType);
+                FieldInfo header = FindNamedField(slotViewType, "_headerText");
+                FieldInfo slotViewsField = FindFieldInHierarchy(equipmentTabType, "_slotViews", typeof(IDictionary));
+                MethodInfo getSlot = ReflectionTools.FindInstanceMethod(equipmentType, "GetSlot", slotType, equipmentSlotType);
+                MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
+                ConstructorInfo harmonyMethodConstructor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
+                unpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
+                if (show == null || equipmentTabShow == null || header == null || slotViewsField == null || getSlot == null
+                    || patchMethod == null || harmonyMethodConstructor == null || unpatchSelf == null)
+                    return Fail("Exact SlotView.Show/InventoryEquipment.GetSlot/EquipmentTab map contract changed; dedicated presentation disabled.");
+
+                Func<object, object, object> getSlotDelegate = BuildBinaryObjectCall(equipmentType, equipmentSlotType, getSlot);
+                Action<object, object, object, object, object, object, object, object> showDelegate = BuildShowCall(slotViewType, show);
+                if (getSlotDelegate == null || showDelegate == null)
+                    return Fail("Dedicated slot native delegates could not be bound safely.");
+
+                object armBandSlotKey;
+                object headwearSlotKey;
+                try
+                {
+                    armBandSlotKey = Enum.Parse(equipmentSlotType, "ArmBand", false);
+                    headwearSlotKey = Enum.Parse(equipmentSlotType, "Headwear", false);
+                }
+                catch { return Fail("Vanilla ArmBand equipment-slot identity could not be resolved for compact HeadBand presentation."); }
+
+                DedicatedSlotPresentationRuntime.LogInfo = logInfo;
+                DedicatedSlotPresentationRuntime.LogWarning = logWarning;
+                DedicatedSlotPresentationRuntime.HeaderTextField = header;
+                DedicatedSlotPresentationRuntime.EquipmentTabSlotViewsField = slotViewsField;
+                DedicatedSlotPresentationRuntime.EquipmentTabType = equipmentTabType;
+                DedicatedSlotPresentationRuntime.SlotViewType = slotViewType;
+                DedicatedSlotPresentationRuntime.EquipmentType = equipmentType;
+                DedicatedSlotPresentationRuntime.HeadBandSlotKey = Enum.ToObject(
+                    equipmentSlotType,
+                    RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue);
+                DedicatedSlotPresentationRuntime.ArmBandSlotKey = armBandSlotKey;
+                DedicatedSlotPresentationRuntime.HeadwearSlotKey = headwearSlotKey;
+                DedicatedSlotPresentationRuntime.GetSlot = getSlotDelegate;
+                DedicatedSlotPresentationRuntime.ShowSlot = showDelegate;
+
+                harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
+                object prefix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(EquipmentTabPrefixFactory)) });
+                object postfix = harmonyMethodConstructor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
+                Patch(patchMethod, harmonyMethodType, equipmentTabShow, prefix, null);
+                Patch(patchMethod, harmonyMethodType, show, null, postfix);
+                logInfo?.Invoke("B&A&HB dedicated slot native presentation installed on exact EquipmentTab.Show/SlotView.Show/GetSlot; slot16 is inserted before native map enumeration and uses the compact ArmBand visual template.");
+                return true;
+            }
+            catch (Exception exception)
+            {
+                Dispose();
+                Exception root = Unwrap(exception);
+                return Fail("Dedicated slot presentation installation failed safely: " + root.GetType().FullName + ": " + root.Message);
+            }
+        }
+
+        static MethodInfo FindSlotViewShow(Type slotViewType, Type slotType)
+        {
+            MethodInfo[] methods = slotViewType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo method = methods[i];
+                if (!string.Equals(method.Name, "Show", StringComparison.Ordinal) || method.ReturnType != typeof(void)) continue;
+                ParameterInfo[] parameters = method.GetParameters();
+                if (parameters.Length == 7 && parameters[0].ParameterType == slotType) return method;
+            }
+            return null;
+        }
+
+        static MethodInfo FindEquipmentTabShow(Type equipmentTabType, Type equipmentType)
+        {
+            MethodInfo selected = null;
+            MethodInfo[] methods = equipmentTabType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo method = methods[i];
+                if (!string.Equals(method.Name, "Show", StringComparison.Ordinal) || method.ReturnType != typeof(void)) continue;
+                ParameterInfo[] parameters = method.GetParameters();
+                if (parameters.Length != 6
+                    || parameters[1].ParameterType != equipmentType
+                    || parameters[5].ParameterType != typeof(bool))
+                    continue;
+                if (selected != null) return null;
+                selected = method;
+            }
+            return selected;
+        }
+
+        static FieldInfo FindNamedField(Type type, string name)
+        {
+            for (Type current = type; current != null; current = current.BaseType)
+            {
+                FieldInfo field = current.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                if (field != null) return field;
+            }
+            return null;
+        }
+
+        static FieldInfo FindFieldInHierarchy(Type type, string name, Type assignableType)
+        {
+            for (Type current = type; current != null; current = current.BaseType)
+            {
+                FieldInfo field = current.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                if (field != null && (assignableType.IsAssignableFrom(field.FieldType) || field.FieldType.IsAssignableFrom(assignableType)))
+                    return field;
+            }
+            return null;
+        }
+
+        static Func<object, object, object> BuildBinaryObjectCall(Type ownerType, Type argumentType, MethodInfo method)
+        {
+            DynamicMethod dm = new DynamicMethod(
+                "BAndHB_GetDedicatedSlot",
+                typeof(object),
+                new[] { typeof(object), typeof(object) },
+                typeof(DedicatedSlotPresentationPatches),
+                true);
+            ILGenerator il = dm.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Castclass, ownerType);
+            il.Emit(OpCodes.Ldarg_1);
+            if (argumentType.IsValueType) il.Emit(OpCodes.Unbox_Any, argumentType);
+            else il.Emit(OpCodes.Castclass, argumentType);
+            il.Emit(OpCodes.Callvirt, method);
+            if (method.ReturnType.IsValueType) il.Emit(OpCodes.Box, method.ReturnType);
+            il.Emit(OpCodes.Ret);
+            return (Func<object, object, object>)dm.CreateDelegate(typeof(Func<object, object, object>));
+        }
+
+        static Action<object, object, object, object, object, object, object, object> BuildShowCall(Type ownerType, MethodInfo method)
+        {
+            ParameterInfo[] p = method.GetParameters();
+            if (p.Length != 7) return null;
+
+            DynamicMethod dm = new DynamicMethod(
+                "BAndHB_ShowDedicatedSlot",
+                typeof(void),
+                new[]
+                {
+                    typeof(object), typeof(object), typeof(object), typeof(object),
+                    typeof(object), typeof(object), typeof(object), typeof(object)
+                },
+                typeof(DedicatedSlotPresentationPatches),
+                true);
+            ILGenerator il = dm.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Castclass, ownerType);
+            for (int i = 0; i < p.Length; i++)
+            {
+                il.Emit(OpCodes.Ldarg, i + 1);
+                Type parameterType = p[i].ParameterType;
+                if (parameterType.IsValueType) il.Emit(OpCodes.Unbox_Any, parameterType);
+                else il.Emit(OpCodes.Castclass, parameterType);
+            }
+            il.Emit(OpCodes.Callvirt, method);
+            il.Emit(OpCodes.Ret);
+            return (Action<object, object, object, object, object, object, object, object>)dm.CreateDelegate(
+                typeof(Action<object, object, object, object, object, object, object, object>));
+        }
+
+        static MethodInfo PostfixFactory(MethodBase original)
+        {
+            MethodInfo method = original as MethodInfo;
+            if (method == null || method.DeclaringType == null) return null;
+            ParameterInfo[] parameters = method.GetParameters();
+            if (parameters.Length != 7) return null;
+
+            Type[] signature = new Type[8];
+            signature[0] = method.DeclaringType;
+            for (int i = 0; i < parameters.Length; i++) signature[i + 1] = parameters[i].ParameterType;
+
+            DynamicMethod postfix = new DynamicMethod(
+                "BAndHBDedicatedSlotNativePresentationPostfix",
+                typeof(void),
+                signature,
+                typeof(DedicatedSlotPresentationPatches),
+                true);
+            postfix.DefineParameter(1, ParameterAttributes.None, "__instance");
+            for (int i = 0; i < parameters.Length; i++)
+                postfix.DefineParameter(i + 2, ParameterAttributes.None, "__" + i);
+
+            ILGenerator il = postfix.GetILGenerator();
+            for (int i = 0; i < signature.Length; i++)
+            {
+                il.Emit(OpCodes.Ldarg, i);
+                if (signature[i].IsValueType) il.Emit(OpCodes.Box, signature[i]);
+            }
+            il.Emit(
+                OpCodes.Call,
+                typeof(DedicatedSlotPresentationRuntime).GetMethod(
+                    nameof(DedicatedSlotPresentationRuntime.AfterSlotShow),
+                    BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
+            il.Emit(OpCodes.Ret);
+            return postfix;
+        }
+
+        static MethodInfo EquipmentTabPrefixFactory(MethodBase original)
+        {
+            MethodInfo method = original as MethodInfo;
+            if (method == null || method.DeclaringType == null) return null;
+
+            DynamicMethod prefix = new DynamicMethod(
+                "BAndHBEquipmentTabPreEnumerationPrefix",
+                typeof(void),
+                new[] { method.DeclaringType },
+                typeof(DedicatedSlotPresentationPatches),
+                true);
+            prefix.DefineParameter(1, ParameterAttributes.None, "__instance");
+
+            ILGenerator il = prefix.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Call, typeof(DedicatedSlotPresentationRuntime).GetMethod(
+                nameof(DedicatedSlotPresentationRuntime.BeforeEquipmentTabShow),
+                BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
+            il.Emit(OpCodes.Ret);
+            return prefix;
+        }
+
+        static MethodInfo Method(string name)
+        {
+            MethodInfo[] methods = typeof(DedicatedSlotPresentationPatches).GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal)) return methods[i];
+            return null;
+        }
+
+        static MethodInfo FindZeroArgInstanceMethod(Type type, string name)
+        {
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal)
+                    && methods[i].GetParameters().Length == 0)
+                    return methods[i];
+            return null;
+        }
+
+        static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
+        {
+            MethodInfo[] methods = harmonyType.GetMethods(BindingFlags.Instance | BindingFlags.Public);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo method = methods[i];
+                if (!string.Equals(method.Name, "Patch", StringComparison.Ordinal)) continue;
+                ParameterInfo[] parameters = method.GetParameters();
+                if (parameters.Length < 2 || !typeof(MethodBase).IsAssignableFrom(parameters[0].ParameterType)) continue;
+                for (int p = 1; p < parameters.Length; p++)
+                    if (parameters[p].ParameterType == harmonyMethodType
+                        && string.Equals(parameters[p].Name, "postfix", StringComparison.OrdinalIgnoreCase))
+                        return method;
+            }
+            return null;
+        }
+
+        void Patch(MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, object prefix, object postfix)
+        {
+            ParameterInfo[] parameters = patchMethod.GetParameters();
+            object[] args = new object[parameters.Length];
+            args[0] = original;
+            for (int i = 1; i < parameters.Length; i++)
+            {
+                if (parameters[i].ParameterType != harmonyMethodType) continue;
+                if (string.Equals(parameters[i].Name, "prefix", StringComparison.OrdinalIgnoreCase)) args[i] = prefix;
+                if (string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) args[i] = postfix;
+            }
+            patchMethod.Invoke(harmony, args);
+        }
+
+        static Exception Unwrap(Exception exception)
+        {
+            Exception current = exception;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null)
+                current = invocation.InnerException;
+            return current;
+        }
+
+        bool Fail(string message)
+        {
+            logWarning?.Invoke(message);
+            return false;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                if (harmony != null && unpatchSelf != null) unpatchSelf.Invoke(harmony, null);
+            }
+            catch { }
+
+            harmony = null;
+            unpatchSelf = null;
+            DedicatedSlotPresentationRuntime.Reset();
+        }
+    }
+}
