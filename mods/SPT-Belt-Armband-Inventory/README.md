@@ -30,6 +30,6 @@ The package installs both required components:
 
 If `Trenchfoot-BeltSlot.dll` is installed, remove it before using B&A&HB because both mods change the same equipment area.
 
-## Updating or removing
+## Updating
 
-To update, replace both DLLs with the files from the stable ZIP. Before removing the mod from a profile that has Belt or HeadBand items equipped, use the included `profile-safety` recovery instructions instead of deleting profile data manually.
+To update, replace both DLLs with the files from the stable ZIP.
