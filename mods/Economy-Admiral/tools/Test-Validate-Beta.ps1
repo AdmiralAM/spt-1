@@ -60,20 +60,28 @@ exit 0
     }
     $adapter | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-admiral-trader-adapter.json') -Encoding UTF8
 
-    [ordered]@{
+    $runtime = [ordered]@{
         BuildIdentity = [ordered]@{
             Product = 'Economy Admiral'
             TargetRuntime = 'SPT 4.1.3'
             HeadSha = '0123456789abcdef0123456789abcdef01234567'
             WorkflowRunId = '123'
         }
-    } | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-runtime-evidence.json') -Encoding UTF8
+    }
+    $runtime | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-runtime-evidence.json') -Encoding UTF8
 
     $validator = Join-Path $PSScriptRoot 'Validate-Beta.ps1'
 
     # Installed + supported Trader must PASS under the strict adapter contract.
     & pwsh -NoProfile -File $validator -ModPath $root
     if ($LASTEXITCODE -ne 0) { throw "installed supported Trader Beta fixture failed" }
+
+    # Build identity metadata is diagnostic only; invalid metadata must not block physical economy validation.
+    $runtime.BuildIdentity = $null
+    $runtime | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-runtime-evidence.json') -Encoding UTF8
+    $identityOutput = & pwsh -NoProfile -File $validator -ModPath $root 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) { throw "invalid/missing build identity incorrectly blocked Beta validator" }
+    if ($identityOutput -notmatch 'build identity metadata: unavailable/invalid') { throw "invalid build identity did not emit non-blocking diagnostic" }
 
     # Trader absent is a valid standalone Economy Admiral RC state.
     $source.LoadedAdapterCount = 0
@@ -102,7 +110,7 @@ exit 0
     if ($LASTEXITCODE -eq 0) { throw "incompatible installed Trader contract did not fail Beta validator" }
     if ($negativeOutput -notmatch 'BETA FAIL') { throw "negative Beta validator fixture did not emit explicit failure" }
 
-    Write-Host 'Economy Admiral Beta validator optional-Trader smoke PASS'
+    Write-Host 'Economy Admiral Beta validator optional-Trader/build-metadata smoke PASS'
 }
 finally {
     Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
