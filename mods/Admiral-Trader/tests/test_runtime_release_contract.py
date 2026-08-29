@@ -86,7 +86,7 @@ class RuntimeReleaseContractTests(unittest.TestCase):
         self.assertIn("OnLoadOrder.PostLoad + 100_000", text)
         self.assertIn("trader.Base.Insurance = null", text)
         self.assertIn("level.InsurancePriceCoefficient = 0", text)
-        self.assertIn("must not publish an insurance service object", text)
+        self.assertIn("must not publish an insurance service", text)
 
 
 if __name__ == "__main__":
