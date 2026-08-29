@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace SPTBeltArmbandInventory
 {
@@ -33,10 +34,62 @@ namespace SPTBeltArmbandInventory
         {
             return installedValue != null && ReferenceEquals(currentValue, installedValue);
         }
+
+        internal static bool ShouldPromoteReloadReachability(bool vanillaResult, bool isMagazine, bool hasFastAccessWearableAncestor)
+        {
+            return !vanillaResult && isMagazine && hasFastAccessWearableAncestor;
+        }
+    }
+
+    internal static class FastAccessReloadRuntime
+    {
+        internal static Type MagazineType;
+        internal static Func<object, IEnumerable> GetAllParentItems;
+        internal static Action<string> LogWarning;
+        static bool failureLogged;
+
+        internal static void PromoteReachability(object item, ref bool result)
+        {
+            if (result || item == null || MagazineType == null || !MagazineType.IsInstanceOfType(item) || GetAllParentItems == null)
+                return;
+
+            try
+            {
+                IEnumerable parents = GetAllParentItems(item);
+                if (parents == null) return;
+                foreach (object parent in parents)
+                {
+                    string templateId = ReflectionTools.ReadMember(parent, "StringTemplateId") as string
+                        ?? ReflectionTools.ReadMember(parent, "TemplateId") as string;
+                    if (WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.FastAccess))
+                    {
+                        result = true;
+                        return;
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                if (failureLogged) return;
+                failureLogged = true;
+                Exception root = exception;
+                while (root is TargetInvocationException invocation && invocation.InnerException != null) root = invocation.InnerException;
+                LogWarning?.Invoke("B&A&HB reload reachability failed closed: " + root.GetType().FullName + ": " + root.Message);
+            }
+        }
+
+        internal static void Reset()
+        {
+            MagazineType = null;
+            GetAllParentItems = null;
+            LogWarning = null;
+            failureLogged = false;
+        }
     }
 
     internal sealed class FastAccessSlotPatches : IDisposable
     {
+        const string HarmonyId = "com.admiralam.spt.belt-armband-inventory.fast-access";
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         FieldInfo fastAccessSlotsField;
@@ -45,8 +98,11 @@ namespace SPTBeltArmbandInventory
         object originalBindAvailableSlots;
         object installedFastAccessSlots;
         object installedBindAvailableSlots;
+        object harmony;
+        MethodInfo unpatchSelf;
         bool wroteFastAccessSlots;
         bool wroteBindAvailableSlots;
+        bool reloadPatchInstalled;
         bool installed;
 
         internal FastAccessSlotPatches(Action<string> logInfo, Action<string> logWarning)
@@ -84,15 +140,158 @@ namespace SPTBeltArmbandInventory
                 wroteBindAvailableSlots = true;
                 installed = true;
 
-                logInfo?.Invoke("B&A&HB fast-access/reachability compatibility installed for vanilla ArmBand and dedicated Belt pseudo-slot 15.");
+                if (TryInstallReloadReachability())
+                    logInfo?.Invoke("B&A&HB fast-access installed: vanilla ArmBand/Belt arrays extended and exact Magazine Armband/Magazine Belt descendants are reload-reachable without changing vanilla reload ordering.");
+                else
+                    logWarning?.Invoke("B&A&HB fast-access slot arrays remain active, but exact reload reachability could not bind; wearable magazines remain reserve-only for this session.");
                 return true;
             }
             catch (Exception exception)
             {
                 RestoreOwnedWrites();
+                UnpatchReload();
                 ClearState();
                 return Fail("Wearable fast-access slot compatibility installation failed safely: " + Unwrap(exception).Message);
             }
+        }
+
+        bool TryInstallReloadReachability()
+        {
+            try
+            {
+                Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
+                Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
+                Type controllerType = ReflectionTools.FindType("EFT.InventoryLogic.InventoryController");
+                Type itemType = ReflectionTools.FindType("EFT.InventoryLogic.Item");
+                Type magazineType = ReflectionTools.FindType("EFT.InventoryLogic.Magazine");
+                if (harmonyType == null || harmonyMethodType == null || controllerType == null || itemType == null || magazineType == null)
+                    return false;
+
+                MethodInfo reachable = ReflectionTools.FindInstanceMethod(controllerType, "IsAtReachablePlace", typeof(bool), itemType);
+                MethodInfo parentsMethod = FindGetAllParentItems(itemType);
+                ConstructorInfo harmonyMethodCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
+                MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
+                unpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
+                if (reachable == null || parentsMethod == null || harmonyMethodCtor == null || patchMethod == null || unpatchSelf == null)
+                    return false;
+
+                FastAccessReloadRuntime.MagazineType = magazineType;
+                FastAccessReloadRuntime.GetAllParentItems = BuildParentEnumerator(parentsMethod, itemType);
+                FastAccessReloadRuntime.LogWarning = logWarning;
+                if (FastAccessReloadRuntime.GetAllParentItems == null) return false;
+
+                harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
+                MethodInfo postfixMethod = BuildReachabilityPostfix(itemType);
+                object postfix = harmonyMethodCtor.Invoke(new object[] { postfixMethod });
+                Patch(patchMethod, harmonyMethodType, reachable, postfix);
+                reloadPatchInstalled = true;
+                return true;
+            }
+            catch (Exception exception)
+            {
+                logWarning?.Invoke("B&A&HB reload reachability discovery failed closed: " + Unwrap(exception).Message);
+                UnpatchReload();
+                return false;
+            }
+        }
+
+        static MethodInfo FindGetAllParentItems(Type itemType)
+        {
+            MethodInfo selected = null;
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int a = 0; a < assemblies.Length; a++)
+            {
+                Type[] types = ReflectionTools.GetTypes(assemblies[a]);
+                for (int t = 0; t < types.Length; t++)
+                {
+                    Type type = types[t];
+                    if (type == null || !(type.IsAbstract && type.IsSealed)) continue;
+                    MethodInfo[] methods;
+                    try { methods = type.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic); }
+                    catch { continue; }
+                    for (int m = 0; m < methods.Length; m++)
+                    {
+                        MethodInfo method = methods[m];
+                        if (!string.Equals(method.Name, "GetAllParentItems", StringComparison.Ordinal) || method.ContainsGenericParameters) continue;
+                        ParameterInfo[] parameters = method.GetParameters();
+                        if (parameters.Length != 1 || parameters[0].ParameterType != itemType) continue;
+                        if (!typeof(IEnumerable).IsAssignableFrom(method.ReturnType)) continue;
+                        if (selected != null) return null;
+                        selected = method;
+                    }
+                }
+            }
+            return selected;
+        }
+
+        static Func<object, IEnumerable> BuildParentEnumerator(MethodInfo method, Type itemType)
+        {
+            try
+            {
+                DynamicMethod dynamic = new DynamicMethod("BAndHBGetAllParentItems", typeof(IEnumerable), new[] { typeof(object) }, typeof(FastAccessSlotPatches), true);
+                ILGenerator il = dynamic.GetILGenerator();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Castclass, itemType);
+                il.Emit(OpCodes.Call, method);
+                if (method.ReturnType != typeof(IEnumerable)) il.Emit(OpCodes.Castclass, typeof(IEnumerable));
+                il.Emit(OpCodes.Ret);
+                return (Func<object, IEnumerable>)dynamic.CreateDelegate(typeof(Func<object, IEnumerable>));
+            }
+            catch { return null; }
+        }
+
+        static MethodInfo BuildReachabilityPostfix(Type itemType)
+        {
+            DynamicMethod dynamic = new DynamicMethod(
+                "BAndHBReloadReachabilityPostfix",
+                typeof(void),
+                new[] { itemType, typeof(bool).MakeByRefType() },
+                typeof(FastAccessSlotPatches),
+                true);
+            dynamic.DefineParameter(1, ParameterAttributes.None, "item");
+            dynamic.DefineParameter(2, ParameterAttributes.Out, "__result");
+            ILGenerator il = dynamic.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Call, typeof(FastAccessReloadRuntime).GetMethod(nameof(FastAccessReloadRuntime.PromoteReachability), BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
+            il.Emit(OpCodes.Ret);
+            return dynamic;
+        }
+
+        static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
+        {
+            MethodInfo[] methods = harmonyType.GetMethods(BindingFlags.Instance | BindingFlags.Public);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo method = methods[i];
+                if (!string.Equals(method.Name, "Patch", StringComparison.Ordinal)) continue;
+                ParameterInfo[] parameters = method.GetParameters();
+                if (parameters.Length < 2 || !typeof(MethodBase).IsAssignableFrom(parameters[0].ParameterType)) continue;
+                for (int p = 1; p < parameters.Length; p++)
+                    if (parameters[p].ParameterType == harmonyMethodType && string.Equals(parameters[p].Name, "postfix", StringComparison.OrdinalIgnoreCase))
+                        return method;
+            }
+            return null;
+        }
+
+        static MethodInfo FindZeroArgInstanceMethod(Type type, string name)
+        {
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal) && methods[i].GetParameters().Length == 0)
+                    return methods[i];
+            return null;
+        }
+
+        void Patch(MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, object postfix)
+        {
+            ParameterInfo[] parameters = patchMethod.GetParameters();
+            object[] args = new object[parameters.Length];
+            args[0] = original;
+            for (int i = 1; i < parameters.Length; i++)
+                if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase))
+                    args[i] = postfix;
+            patchMethod.Invoke(harmony, args);
         }
 
         static bool IsSlotArray(FieldInfo field, Type slotEnumType)
@@ -142,16 +341,22 @@ namespace SPTBeltArmbandInventory
             catch { }
         }
 
+        void UnpatchReload()
+        {
+            try { if (harmony != null && unpatchSelf != null) unpatchSelf.Invoke(harmony, null); }
+            catch { }
+            harmony = null;
+            unpatchSelf = null;
+            reloadPatchInstalled = false;
+            FastAccessReloadRuntime.Reset();
+        }
+
         bool Fail(string message) { logWarning?.Invoke(message); return false; }
 
         public void Dispose()
         {
-            if (!installed && !wroteFastAccessSlots && !wroteBindAvailableSlots)
-            {
-                ClearState();
-                return;
-            }
             RestoreOwnedWrites();
+            UnpatchReload();
             ClearState();
         }
 
@@ -160,6 +365,7 @@ namespace SPTBeltArmbandInventory
             installed = false;
             wroteFastAccessSlots = false;
             wroteBindAvailableSlots = false;
+            reloadPatchInstalled = false;
             fastAccessSlotsField = null;
             bindAvailableSlotsField = null;
             originalFastAccessSlots = null;
