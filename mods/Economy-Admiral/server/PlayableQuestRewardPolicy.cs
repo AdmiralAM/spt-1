@@ -37,8 +37,7 @@ public static class PlayableQuestRewardPolicy
             HighStandingLowDepthWarnMultiple = playable.StandingMultiple,
             RestartableHighItemValueWarnMultiple = playable.RestartableItemBudgetMultiple,
             RestartableHighXpWarnMultiple = playable.RestartableXpMultiple,
-            // Reuse the already-maintained restartable tightness instead of introducing a new balance coefficient.
-            RestartableHighStandingWarnMultiple = Math.Min(playable.StandingMultiple, playable.RestartableXpMultiple),
+            RestartableHighStandingWarnMultiple = RestartableStandingPressureCore.ResolveThreshold(playable),
             LowDepthMaxRelativeMultiple = source.LowDepthMaxRelativeMultiple,
             LowStructureMaxRelativeMultiple = source.LowStructureMaxRelativeMultiple,
         };
@@ -73,9 +72,8 @@ public static class PlayableQuestRewardPolicy
         foreach (var flag in row.ObservationalFlags)
             yield return flag;
 
-        if (row.Restartable
-            && row.StandingVsVanillaMedian >= policy.RestartableHighStandingWarnMultiple
-            && !row.ObservationalFlags.Contains("RESTARTABLE_HIGH_STANDING", StringComparer.Ordinal))
-            yield return "RESTARTABLE_HIGH_STANDING";
+        if (RestartableStandingPressureCore.ShouldFlag(row.Restartable, row.StandingVsVanillaMedian, policy.RestartableHighStandingWarnMultiple)
+            && !row.ObservationalFlags.Contains(RestartableStandingPressureCore.Flag, StringComparer.Ordinal))
+            yield return RestartableStandingPressureCore.Flag;
     }
 }
