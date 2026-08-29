@@ -36,19 +36,24 @@ public sealed record EconomyConfig
     /// <summary>
     /// High-level product switch. Safe by default because committed Mode remains Audit.
     /// When Mode is Enforce, this activates every accepted Playable Economy surface through the selected preset.
-    /// Set false to use the granular feature switches independently.
+    /// Cluster switches remain hard gates so Advanced mode can keep selected areas vanilla.
     /// </summary>
     public bool EnablePlayableEconomyBundle { get; init; } = true;
 
+    public bool EnableQuestEconomyCluster { get; init; } = true;
+    public bool EnableTraderEconomyCluster { get; init; } = true;
+    public bool EnableFleaEconomyCluster { get; init; } = true;
+    public bool EnableLootEconomyCluster { get; init; } = true;
+
     public bool EnableItemRewardStackNormalization
     {
-        get => enableItemRewardStackNormalization || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce);
+        get => EnableQuestEconomyCluster && (enableItemRewardStackNormalization || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce));
         init => enableItemRewardStackNormalization = value;
     }
 
     public bool EnableTraderPurchasePressure
     {
-        get => enableTraderPurchasePressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce);
+        get => EnableTraderEconomyCluster && (enableTraderPurchasePressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce));
         init => enableTraderPurchasePressure = value;
     }
 
@@ -56,7 +61,7 @@ public sealed record EconomyConfig
 
     public bool EnableTraderSellPressure
     {
-        get => enableTraderSellPressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce);
+        get => EnableTraderEconomyCluster && (enableTraderSellPressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce));
         init => enableTraderSellPressure = value;
     }
 
@@ -64,7 +69,7 @@ public sealed record EconomyConfig
 
     public bool EnableFleaPurchasePressure
     {
-        get => enableFleaPurchasePressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce);
+        get => EnableFleaEconomyCluster && (enableFleaPurchasePressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce));
         init => enableFleaPurchasePressure = value;
     }
 
@@ -72,7 +77,7 @@ public sealed record EconomyConfig
 
     public bool EnableFleaListingFeePressure
     {
-        get => enableFleaListingFeePressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce);
+        get => EnableFleaEconomyCluster && (enableFleaListingFeePressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce));
         init => enableFleaListingFeePressure = value;
     }
 
@@ -80,7 +85,7 @@ public sealed record EconomyConfig
 
     public bool EnableLootPressure
     {
-        get => enableLootPressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce);
+        get => EnableLootEconomyCluster && (enableLootPressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce));
         init => enableLootPressure = value;
     }
 
