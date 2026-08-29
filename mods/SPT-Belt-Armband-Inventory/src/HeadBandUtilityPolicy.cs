@@ -15,6 +15,7 @@ namespace SPTBeltArmbandInventory
         internal const string Strike = "5734770f24597738025ee254";
 
         internal const string VanillaWallet = "5783c43d2459774bbe137486";
+        internal const string WzWallet = "60b0f6c058e0b0481a09ad11";
 
         internal static readonly IReadOnlyList<string> AcceptedTemplateIds = new[]
         {
@@ -25,7 +26,8 @@ namespace SPTBeltArmbandInventory
             Malboro,
             Wilston,
             Strike,
-            VanillaWallet
+            VanillaWallet,
+            WzWallet
         };
 
         internal static bool IsAccepted(string templateId)
