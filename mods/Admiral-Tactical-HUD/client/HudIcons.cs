@@ -18,6 +18,7 @@ namespace SPTPopCounter
         {
             {"usec", "pmc.png"},
             {"bear", "pmc.png"},
+            {"pmc", "pmc.png"},
             {"scav", "scav.png"},
             {"boss", "boss.png"},
             {"raider", "raider.png"},
