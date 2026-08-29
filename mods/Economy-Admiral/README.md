@@ -136,15 +136,17 @@ If Admiral Trader is absent, Economy Admiral runs standalone. If the maintained 
 
 ## Development diagnostics
 
-Runtime reports and `Validate-Runtime.ps1`, `Validate-Enforce.ps1`, `Validate-Beta.ps1` remain packaged for development/release diagnosis. They are **not** part of normal player interaction and are not required to use Economy Admiral.
+Runtime reports and `Validate-Runtime.ps1`, `Validate-Enforce.ps1`, `Validate-Beta.ps1` remain available in the source repository for development/release diagnosis. They are deliberately **not shipped in the player install package** and are not required to use Economy Admiral.
 
 ## Installation
 
-The complete package owns only its own files:
+The player package contains only the files needed to run and configure Economy Admiral:
 
-- `SPT_Runtime/user/mods/Economy Admiral/` — server module, config and diagnostics;
+- `SPT_Runtime/user/mods/Economy Admiral/Economy-Admiral.dll` — server economy engine;
+- `SPT_Runtime/user/mods/Economy Admiral/config/config.json` — server-owned settings;
+- `SPT_Runtime/user/mods/Economy Admiral/README.md` — player documentation;
 - `BepInEx/plugins/Economy Admiral/Economy Admiral v0.1.0.dll` — F12 settings client.
 
-It does not bundle or replace the BepInEx runtime itself.
+It does not bundle or replace the BepInEx runtime itself, and it does not install development validators/test harnesses into the game directory.
 
 Compile boundary: `SPTarkov.Server.Core 4.1.2` / .NET 10. Physical target: **SPT 4.1.3**. Runtime economy changes are applied during server database load; there is no permanent raid/frame economy polling.
