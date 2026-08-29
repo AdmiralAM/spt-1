@@ -73,14 +73,13 @@ public static class PlayableQuestRewardPolicy
         foreach (var flag in row.ObservationalFlags)
             yield return flag;
 
-        if (!RestartableStandingPressureCore.ShouldFlag(row.Restartable, row.StandingVsVanillaMedian, policy.RestartableHighStandingWarnMultiple))
-            yield break;
-
-        // EnforcementPlanService already maps the generic standing-budget flag to TraderStanding mutation.
-        // Emit it alongside the explicit restartable reason so stricter restartable classification reaches the existing mutation path.
-        if (!row.ObservationalFlags.Contains(RestartableStandingPressureCore.StandingBudgetFlag, StringComparer.Ordinal))
-            yield return RestartableStandingPressureCore.StandingBudgetFlag;
-        if (!row.ObservationalFlags.Contains(RestartableStandingPressureCore.Flag, StringComparer.Ordinal))
-            yield return RestartableStandingPressureCore.Flag;
+        foreach (var flag in RestartableStandingPressureCore.EnforcementFlags(
+                     row.Restartable,
+                     row.StandingVsVanillaMedian,
+                     policy.RestartableHighStandingWarnMultiple))
+        {
+            if (!row.ObservationalFlags.Contains(flag, StringComparer.Ordinal))
+                yield return flag;
+        }
     }
 }
