@@ -18,5 +18,8 @@
     <EmbeddedResource Include="assets\botcensus\*.png">
       <LogicalName>AdmiralTacticalHUD.BotCensus.%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="assets\hud-sprites.png">
+      <LogicalName>AdmiralTacticalHUD.Reserve.hud-sprites.png</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>
