@@ -69,7 +69,7 @@ public sealed class EconomyMod(
                     $"rolledBack={enforcement.TransactionRolledBack}, error={enforcement.TransactionError ?? "none"}.");
             }
 
-            var nativeRepeatables = nativeRepeatableQuestPressureService.Apply(config);
+            nativeRepeatableQuestPressureService.Apply(config);
             traderPurchasePressureService.Apply(config);
             traderSellPressureService.Apply(config);
             fleaPurchasePressureService.Apply(config);
@@ -77,7 +77,7 @@ public sealed class EconomyMod(
             lootPressureService.Apply(config);
 
             await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);
-            await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, nativeRepeatables, cancellationToken);
+            await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
         }
         catch (Exception applyException) when (transactionSnapshot is not null)
         {
