@@ -1,12 +1,8 @@
-using System.Runtime.CompilerServices;
 using SPTEconomy;
 
 internal static class ConfigBootstrapSmoke
 {
-    [ModuleInitializer]
-    internal static void Run() => RunAsync().GetAwaiter().GetResult();
-
-    private static async Task RunAsync()
+    internal static async Task RunAsync()
     {
         var root = Path.Combine(Path.GetTempPath(), "economy-admiral-config-bootstrap-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
