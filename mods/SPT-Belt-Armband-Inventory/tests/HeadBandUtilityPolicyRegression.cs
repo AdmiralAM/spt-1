@@ -20,7 +20,8 @@ internal static class HeadBandUtilityPolicyRegression
             HeadBandUtilityPolicy.Malboro,
             HeadBandUtilityPolicy.Wilston,
             HeadBandUtilityPolicy.Strike,
-            HeadBandUtilityPolicy.VanillaWallet
+            HeadBandUtilityPolicy.VanillaWallet,
+            HeadBandUtilityPolicy.WzWallet
         };
         if (HeadBandUtilityPolicy.AcceptedTemplateIds.Count != expected.Count)
             throw new InvalidOperationException("HeadBand whitelist contains duplicates or unexpected entries.");
@@ -30,6 +31,9 @@ internal static class HeadBandUtilityPolicyRegression
         if (expected.Count != 0)
             throw new InvalidOperationException("HeadBand whitelist lost an intended utility item.");
 
+        if (!HeadBandUtilityPolicy.IsAccepted("5783c43d2459774bbe137486")
+            || !HeadBandUtilityPolicy.IsAccepted("60b0f6c058e0b0481a09ad11"))
+            throw new InvalidOperationException("HeadBand must accept both Simple Wallet and WZ Wallet.");
         if (HeadBandUtilityPolicy.IsAccepted("5734758f24597738025ee253"))
             throw new InvalidOperationException("Golden neck chain must never be accepted as Apollo cigarettes.");
         if (HeadBandUtilityPolicy.IsAccepted("544fb3f34bdc2d03748b456a"))
