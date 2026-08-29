@@ -34,11 +34,6 @@ public sealed record EconomyConfig
     public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
     public bool RepeatedRaidLootDecay { get; init; } = false;
 
-    /// <summary>
-    /// High-level product switch. When Mode is Enforce, this activates every accepted
-    /// Playable Economy surface through the selected preset. Cluster switches remain
-    /// hard gates so Advanced mode can keep selected areas vanilla.
-    /// </summary>
     public bool EnablePlayableEconomyBundle { get; init; } = true;
 
     public bool EnableQuestEconomyCluster { get; init; } = true;
@@ -75,6 +70,8 @@ public sealed record EconomyConfig
     }
 
     public double CustomFleaBasePriceMultiplier { get; init; } = 1.65;
+    public double CustomFleaMaxPriceDifferenceBelowHandbookPercent { get; init; } = 45.0;
+    public double CustomFleaHandbookPriceMultiplier { get; init; } = 1.10;
 
     public bool EnableFleaListingFeePressure
     {
