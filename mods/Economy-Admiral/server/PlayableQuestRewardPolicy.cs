@@ -45,8 +45,9 @@ public static class PlayableQuestRewardPolicy
         var quests = analysis.Quests
             .Select(row => row with
             {
-                ObservationalFlags = AddRestartableStandingFlag(row, enforcementPolicy)
+                ObservationalFlags = AddRestartableStandingFlags(row, enforcementPolicy)
                     .Where(flag => QuestMechanismGate.AutomaticFlagEnabled(config, row.Restartable, flag))
+                    .Distinct(StringComparer.Ordinal)
                     .ToList(),
             })
             .ToList();
@@ -67,13 +68,19 @@ public static class PlayableQuestRewardPolicy
         };
     }
 
-    private static IEnumerable<string> AddRestartableStandingFlag(QuestAnalysisRow row, AuditPolicy policy)
+    private static IEnumerable<string> AddRestartableStandingFlags(QuestAnalysisRow row, AuditPolicy policy)
     {
         foreach (var flag in row.ObservationalFlags)
             yield return flag;
 
-        if (RestartableStandingPressureCore.ShouldFlag(row.Restartable, row.StandingVsVanillaMedian, policy.RestartableHighStandingWarnMultiple)
-            && !row.ObservationalFlags.Contains(RestartableStandingPressureCore.Flag, StringComparer.Ordinal))
+        if (!RestartableStandingPressureCore.ShouldFlag(row.Restartable, row.StandingVsVanillaMedian, policy.RestartableHighStandingWarnMultiple))
+            yield break;
+
+        // EnforcementPlanService already maps the generic standing-budget flag to TraderStanding mutation.
+        // Emit it alongside the explicit restartable reason so stricter restartable classification reaches the existing mutation path.
+        if (!row.ObservationalFlags.Contains(RestartableStandingPressureCore.StandingBudgetFlag, StringComparer.Ordinal))
+            yield return RestartableStandingPressureCore.StandingBudgetFlag;
+        if (!row.ObservationalFlags.Contains(RestartableStandingPressureCore.Flag, StringComparer.Ordinal))
             yield return RestartableStandingPressureCore.Flag;
     }
 }
