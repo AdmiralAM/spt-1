@@ -9,6 +9,8 @@ on:
       - 'mods/SPT-Belt-Armband-Inventory/tests/**'
       - 'mods/SPT-Belt-Armband-Inventory/tools/**'
       - 'mods/SPT-Belt-Armband-Inventory/profile-safety/**'
+      - 'mods/SPT-Belt-Armband-Inventory/README.md'
+      - 'mods/SPT-Belt-Armband-Inventory/docs/product-concept.md'
       - 'mods/SPT-Belt-Armband-Inventory/docs/RC1-runtime-checklist.md'
       - 'mods/SPT-Belt-Armband-Inventory/DESIGN-SPT-4.1.3-BELT.md'
       - '.github/workflows/belt-armband-validate.yml'
