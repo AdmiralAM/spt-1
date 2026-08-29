@@ -75,7 +75,7 @@ jobs:
 
           Copy-Item "mods/Economy-Admiral/server/bin/Release/net10.0/$env:EA_ASSEMBLY.dll" (Join-Path $server 'Economy-Admiral.dll') -Force
           Copy-Item 'mods/Economy-Admiral/client/bin/Release/netstandard2.1/Economy Admiral v0.1.0.dll' (Join-Path $client 'Economy Admiral v0.1.0.dll') -Force
-          Copy-Item 'mods/Economy-Admiral/config/config.json' (Join-Path $server 'config/config.json') -Force
+          Copy-Item 'mods/Economy-Admiral/config/config.json' (Join-Path $server 'config/config.default.json') -Force
           Copy-Item 'mods/Economy-Admiral/README.md' (Join-Path $server 'README.md') -Force
 
           [ordered]@{
@@ -88,7 +88,9 @@ jobs:
             client = 'BepInEx/plugins/Economy Admiral/Economy Admiral v0.1.0.dll'
             settings_ui = 'BepInEx F12 Configuration Manager'
             settings_apply = 'next SPT server restart'
-            package_ownership = 'Economy Admiral player runtime only; development validators and BepInEx runtime are never bundled'
+            config_template = 'SPT_Runtime/user/mods/Economy Admiral/config/config.default.json'
+            config_runtime = 'SPT_Runtime/user/mods/Economy Admiral/config/config.json (created on first start; preserved on updates)'
+            package_ownership = 'Economy Admiral player runtime only; user config, development validators and BepInEx runtime are never bundled'
             physically_accepted_settings_transport = $true
           } | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $root 'runtime-manifest.json') -Encoding utf8
 
@@ -101,7 +103,7 @@ jobs:
           $allowed = @(
             'BepInEx/plugins/Economy Admiral/Economy Admiral v0.1.0.dll',
             'SPT_Runtime/user/mods/Economy Admiral/Economy-Admiral.dll',
-            'SPT_Runtime/user/mods/Economy Admiral/config/config.json',
+            'SPT_Runtime/user/mods/Economy Admiral/config/config.default.json',
             'SPT_Runtime/user/mods/Economy Admiral/README.md',
             'runtime-manifest.json'
           )
@@ -112,6 +114,7 @@ jobs:
           $missing = @($allowed | Where-Object { $_ -notin $actual })
           if ($unexpected.Count -gt 0) { throw "Package contains files outside the player runtime contract: $($unexpected -join ', ')" }
           if ($missing.Count -gt 0) { throw "Package is missing player runtime files: $($missing -join ', ')" }
+          if (Test-Path (Join-Path $server 'config/config.json') -PathType Leaf) { throw 'Player package must not contain config.json; updates must preserve user settings.' }
           if ($actual | Where-Object { $_ -like 'BepInEx/core/*' -or $_ -like 'BepInEx/config/*' -or $_ -like 'BepInEx/patchers/*' }) {
             throw 'BepInEx runtime/config leakage detected.'
           }
@@ -120,6 +123,10 @@ jobs:
           }
           foreach ($devFile in @('RUNTIME_TEST.md','Validate-Runtime.ps1','Validate-Enforce.ps1','Validate-Beta.ps1')) {
             if (Test-Path (Join-Path $server $devFile) -PathType Leaf) { throw "Development-only file leaked into player package: $devFile" }
+          }
+          $defaultConfig = Get-Content (Join-Path $server 'config/config.default.json') -Raw | ConvertFrom-Json
+          foreach ($property in @('enableQuestEconomyCluster','enableTraderEconomyCluster','enableFleaEconomyCluster','enableLootEconomyCluster')) {
+            if ($null -eq $defaultConfig.$property) { throw "Default config missing UI cluster: $property" }
           }
           $manifest = Get-Content (Join-Path $root 'runtime-manifest.json') -Raw | ConvertFrom-Json
           if ($manifest.channel -ne 'runtime-economy-admiral') { throw 'Wrong runtime channel' }
