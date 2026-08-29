@@ -65,15 +65,29 @@ The goal is not poverty for its own sake. The combined profile should keep raid 
 ### Basic
 - **Mode** — Off / Audit / Enforce. Normal players use Enforce; Audit is diagnostic/read-only.
 - **Preset** — Easy / Normal / Hard / Custom.
-- **Playable Economy Bundle** — master high-level preset path.
+- **Full Preset Bundle** — recommended ON. Every enabled cluster uses the selected preset as one coherent profile.
 
 ### Advanced - Clusters
-- **Quest Economy** — item stacks, XP, trader standing and repeatable reward pressure.
-- **Trader Economy** — purchase-price and sell-payout pressure.
-- **Flea Market Economy** — base-price/floor/anti-arbitrage and listing-fee pressure.
-- **Loot Economy** — loose and static/container loot pressure.
+- **Quest Economy** — hard gate for quest item stacks, XP, trader standing and repeatable reward pressure.
+- **Trader Economy** — hard gate for purchase-price and sell-payout pressure.
+- **Flea Market Economy** — hard gate for base-price/floor/anti-arbitrage and listing-fee pressure.
+- **Loot Economy** — hard gate for loose and static/container loot pressure.
 
-A cluster set to OFF is a hard gate for that entire economic area. For example, `Normal + Quest Economy OFF` keeps Normal trader/flea/loot pressure while leaving quests untouched.
+A cluster set to OFF always wins. For example, `Normal + Quest Economy OFF` keeps Normal trader/flea/loot pressure while leaving quests untouched.
+
+### Advanced - Mechanisms
+For selective/manual setups, set **Full Preset Bundle = OFF**. The underlying mechanisms can then be enabled independently from F12 without editing JSON:
+
+- **Quest / Item Reward Stack Normalization**;
+- **Traders / Purchase Price Pressure**;
+- **Traders / Sell Payout Pressure**;
+- **Flea / Price and Anti-Arbitrage Pressure**;
+- **Flea / Listing Fee Pressure**;
+- **Loot / Loot Pressure**.
+
+These switches expose the same maintained server feature flags that previously existed only in `config.json`. They do not create parallel client-side behavior. Cluster OFF remains a hard gate over every mechanism in that cluster.
+
+Quest XP and trader-standing normalization remain part of the core Quest Economy enforcement path; disabling the Quest Economy cluster is the supported way to leave the entire quest economy untouched.
 
 ### Advanced - Custom
 Custom exposes bounded numeric controls for trader purchase/sell multipliers, flea base/listing-fee multipliers, loose/static loot scales and quest item/XP/standing reward caps. These values are used by the `Custom` preset; Easy/Normal/Hard retain their maintained profile values.
@@ -96,7 +110,7 @@ F12 is the intended user interface. The equivalent recommended server configurat
 }
 ```
 
-Legacy granular feature switches remain available for specialized/manual deployments when the Playable Economy Bundle is disabled, but ordinary users should not need them.
+For selective/manual deployments, turn the bundle OFF and use the Advanced mechanism switches. Ordinary users should keep the bundle ON and control only preset strength plus whole-cluster hard gates.
 
 ## Quest enforcement safety
 
