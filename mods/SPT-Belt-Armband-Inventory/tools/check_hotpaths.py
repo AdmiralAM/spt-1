@@ -47,11 +47,50 @@ if equipment_slot_path.exists() and equipment_slot_path.name not in removed:
 presentation_path = ROOT / "DedicatedSlotPresentationPatches.cs"
 if presentation_path.exists() and presentation_path.name not in removed:
     presentation_text = presentation_path.read_text(encoding="utf-8-sig")
-    for token in ("BeforeEquipmentTabShow", "EquipmentTabPrefixFactory", "INSURANCE-SAFE SLOT PROOF"):
+    for token in (
+        "BeforeEquipmentTabShow",
+        "EquipmentTabPrefixFactory",
+        "INSURANCE-SAFE SLOT PROOF",
+        "BindHeadBandFromHeadwear",
+        "PositionAboveHeadwear",
+    ):
         if token not in presentation_text:
             violations.append(
-                "DedicatedSlotPresentationPatches.cs: insurance-safe pre-enumeration projection contract is missing "
+                "DedicatedSlotPresentationPatches.cs: synchronous insurance-safe first-render contract is missing "
                 f"({token})")
+
+    # The actual production first-render path is DedicatedSlotPresentationPatches,
+    # not the historical HeadBandRenderSettle experiment. Binding must remain fully
+    # synchronous inside native SlotView.Show and may mutate only the dedicated view's
+    # own RectTransform. No coroutine, manual refresh, canvas rebuild or host-panel
+    # geometry mutation is allowed here.
+    bind_start = presentation_text.find("static void BindHeadBandFromHeadwear(")
+    bind_end = presentation_text.find("static Component GetOrCreateHeadBandView(", bind_start)
+    if bind_start < 0 or bind_end < 0:
+        violations.append("DedicatedSlotPresentationPatches.cs: synchronous HeadBand bind region could not be located")
+    else:
+        bind_region = presentation_text[bind_start:bind_end]
+        for required in ("ShowSlot(headBandView, headBandSlot", "PositionAboveHeadwear(headBandView, headwearView)"):
+            if required not in bind_region:
+                violations.append(
+                    "DedicatedSlotPresentationPatches.cs: first-render bind is no longer synchronous "
+                    f"({required})")
+        for token in (
+            "StartCoroutine",
+            "RequestFlush",
+            "EnsureDeferredRuntimePump",
+            "Canvas.ForceUpdateCanvases",
+            "preferredHeight",
+            "equipmentTab.transform.position",
+            "gearRect.position",
+            "slotViews.Add(",
+            "UnityEngine.Object.Instantiate(",
+        ):
+            if token in bind_region:
+                violations.append(
+                    "DedicatedSlotPresentationPatches.cs: first-render bind introduced deferred/global/late mutation "
+                    f"({token})")
+
     late_start = presentation_text.find("static Component GetOrCreateHeadBandView(")
     late_end = presentation_text.find("static void PositionAboveHeadwear(", late_start)
     if late_start < 0 or late_end < 0:
@@ -64,6 +103,51 @@ if presentation_path.exists() and presentation_path.name not in removed:
                     "DedicatedSlotPresentationPatches.cs: SlotView.Show path mutates the EquipmentTab map during native enumeration "
                     f"({token})")
 
+    position_start = presentation_text.find("static void PositionAboveHeadwear(")
+    position_end = presentation_text.find("static void RelabelNumericCaptionTree(", position_start)
+    if position_start < 0 or position_end < 0:
+        violations.append("DedicatedSlotPresentationPatches.cs: frozen HeadBand geometry region could not be located")
+    else:
+        position_region = presentation_text[position_start:position_end]
+        for token in (
+            "Canvas.ForceUpdateCanvases",
+            "preferredHeight",
+            "LayoutElement",
+            "equipmentTab.transform.position",
+            "gearRect.position",
+            "StartCoroutine",
+            "RequestFlush",
+        ):
+            if token in position_region:
+                violations.append(
+                    "DedicatedSlotPresentationPatches.cs: frozen HeadBand geometry mutates/refeshes the host panel "
+                    f"({token})")
+
+# The old structural-reflow class may remain compiled for the stabilization branch,
+# but production code must not call it. This prevents an accidental return of the
+# global Gear Panel reflow while preserving current runtime geometry exactly.
+for source in sorted(ROOT.glob("*.cs")):
+    if source.name in removed or source.name == "HeadBandRenderSettle.cs":
+        continue
+    text = source.read_text(encoding="utf-8-sig")
+    if "HeadBandRenderSettle." in text:
+        violations.append(
+            f"{source.name}: frozen stabilization geometry forbids reactivating HeadBandRenderSettle")
+
+first_open_path = ROOT / "FirstOpenHeadBandLayoutPatches.cs"
+if first_open_path.exists() and first_open_path.name not in removed:
+    first_open_text = first_open_path.read_text(encoding="utf-8-sig")
+    for token in ("HasPending => false", "void Flush() { }", "positioner disabled"):
+        if token not in first_open_text:
+            violations.append(
+                "FirstOpenHeadBandLayoutPatches.cs: legacy first-open refresh path is no longer a strict no-op "
+                f"({token})")
+    for token in ("Harmony", "SlotView.Show", "StartCoroutine", "RequestFlush?.Invoke", "Canvas.ForceUpdateCanvases"):
+        if token in first_open_text:
+            violations.append(
+                "FirstOpenHeadBandLayoutPatches.cs: legacy first-open shim must not own runtime refresh/placement "
+                f"({token})")
+
 protection_router_path = MODULE_ROOT / "server" / "WearableProtectionRuntime.cs"
 if protection_router_path.exists():
     protection_router_text = protection_router_path.read_text(encoding="utf-8-sig")
@@ -71,18 +155,6 @@ if protection_router_path.exists():
         violations.append("server/WearableProtectionRuntime.cs: protection route must declare its typed request body")
     if "info?.ToString()" in protection_router_text or "JsonSerializer.Deserialize<WearableProtectionRequest>" in protection_router_text:
         violations.append("server/WearableProtectionRuntime.cs: protection route must not parse EmptyRequestData.ToString()")
-
-first_render_path = ROOT / "HeadBandRenderSettle.cs"
-if first_render_path.exists() and first_render_path.name not in removed:
-    first_render_text = first_render_path.read_text(encoding="utf-8-sig")
-    for token in ("HEADBAND FIRST-RENDER PROOF", "panelLayoutMutation=False", "synchronous=True"):
-        if token not in first_render_text:
-            violations.append(f"HeadBandRenderSettle.cs: first-render invariant is missing ({token})")
-    for token in ("Canvas.ForceUpdateCanvases", "preferredHeight.SetValue", "GetProperty(\"preferredHeight\"", "equipmentTab.transform.position =", "gearRect.position"):
-        if token in first_render_text:
-            violations.append(
-                "HeadBandRenderSettle.cs: first-render path must not mutate/force the host panel layout "
-                f"({token})")
 
 # Server lifecycle patches previously caused profile-load failures through name-only
 # reflection. Production patches must enumerate candidates and prove a unique bounded
@@ -142,4 +214,4 @@ guard_region(
 if violations:
     raise SystemExit("Hot-path guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; slot16 pre-enumeration projection is insurance-safe; interaction/lifecycle hot paths startup-bound; server patches bounded-unique)")
+print("B&A&HB #2 hot-path guard: OK (no idle polling/global scans; production HeadBand first-render is synchronous and refresh-free; slot16 projection is pre-enumeration only; interaction/lifecycle hot paths startup-bound; server patches bounded-unique)")
