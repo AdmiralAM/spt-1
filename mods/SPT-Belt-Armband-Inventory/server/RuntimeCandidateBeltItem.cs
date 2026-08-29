@@ -133,9 +133,18 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
             throw new InvalidOperationException("B&A&HB default inventory template missing.");
 
-        var armBand = inventory.Properties?.Slots?.FirstOrDefault(x => string.Equals(x.Name, "ArmBand", StringComparison.Ordinal));
-        var filter = armBand?.Properties?.Filters?.FirstOrDefault()?.Filter;
-        if (filter == null) throw new InvalidOperationException("B&A&HB ArmBand slot filter missing.");
+        var armBands = inventory.Properties?.Slots?
+            .Where(x => string.Equals(x.Name, "ArmBand", StringComparison.Ordinal))
+            .Take(2)
+            .ToArray();
+        if (armBands == null || armBands.Length != 1)
+            throw new InvalidOperationException("B&A&HB ArmBand slot boundary is missing or ambiguous; refusing to mutate an unproven inventory slot.");
+
+        var filterGroups = armBands[0].Properties?.Filters?.ToArray();
+        if (filterGroups == null || filterGroups.Length != 1 || filterGroups[0].Filter == null)
+            throw new InvalidOperationException("B&A&HB ArmBand slot filter boundary is missing or ambiguous; exactly one filter group is required.");
+
+        var filter = filterGroups[0].Filter;
         if (!filter.Contains(CustomBeltParentTpl)) filter.Add(CustomBeltParentTpl);
     }
 }
