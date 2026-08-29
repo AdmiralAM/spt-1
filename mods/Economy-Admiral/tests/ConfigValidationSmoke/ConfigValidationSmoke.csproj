@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../server/EconomyConfig.cs" Link="Production/EconomyConfig.cs" />
+    <Compile Include="../../server/EconomyConfigJsonLoader.cs" Link="Production/EconomyConfigJsonLoader.cs" />
+    <Compile Include="../../server/EconomyConfigValidator.cs" Link="Production/EconomyConfigValidator.cs" />
+    <Compile Include="../../server/PlayableQuestRewardCaps.cs" Link="Production/PlayableQuestRewardCaps.cs" />
+    <Compile Include="../../server/QuestMechanismGate.cs" Link="Production/QuestMechanismGate.cs" />
+    <Compile Include="../../server/TraderPurchasePressurePolicy.cs" Link="Production/TraderPurchasePressurePolicy.cs" />
+    <Compile Include="../../server/TraderSellPressurePolicy.cs" Link="Production/TraderSellPressurePolicy.cs" />
+    <Compile Include="../../server/FleaPurchasePressurePolicy.cs" Link="Production/FleaPurchasePressurePolicy.cs" />
+    <Compile Include="../../server/FleaListingFeePressurePolicy.cs" Link="Production/FleaListingFeePressurePolicy.cs" />
+    <Compile Include="../../server/LootPressurePolicy.cs" Link="Production/LootPressurePolicy.cs" />
+  </ItemGroup>
+</Project>

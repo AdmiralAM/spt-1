@@ -1,8 +1,8 @@
 # SPT Mod Suite
 
-A source repository for independent SPT 4.1.x mods. Each maintained module owns its source code, tests, documentation, versioning, and release lifecycle under `mods/`.
+A source repository for independent SPT 4.1.x mods. Each maintained module owns its source code, documentation, versioning, and release lifecycle under `mods/`.
 
-> **Before development:** read [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/development-workflow.md`](docs/development-workflow.md). Independent module workstreams use separate branches, PRs, and module-specific CI. Repository-wide publication is a separate controlled operation.
+> **Before development:** read [`CONTRIBUTING.md`](CONTRIBUTING.md) and [`docs/development-workflow.md`](docs/development-workflow.md). Independent module workstreams use separate branches, PRs, and module-specific validation while under active development. Repository-wide publication is a separate controlled operation.
 
 ## Project authorship
 
@@ -16,31 +16,59 @@ Versions below are the module versions declared by current source metadata. A le
 
 | Module | Version / state | Purpose | Install channel |
 | --- | --- | --- | --- |
-| [Admiral Tactical HUD](mods/Admiral-Tactical-HUD) | `1.13.3`; stable-final candidate | Population, player-status, compact weapon-name kill feed | final CI package / runtime promotion |
+| [SPT Tactical HUD](mods/SPT-Tactical-HUD) | client `1.13.2`; optional server `1.13.0` | Population, player-status, and kill-feed HUD | `runtime` |
 | [Item Intelligence Admiral](mods/SPT-Item-Intelligence) | `1.0.0`; stable / maintenance-only | Requirement, FIR, valuation, craft/barter relevance, and persistent per-item markers | `runtime-item-intelligence` |
 | [Pause Admiral](mods/SPT-Pause) | `1.0.0`; stable / runtime validated | Offline-raid pause with raid-clock/time-of-day preservation and paused-input suppression | `runtime-pause` |
-| [SPT Belt/Armband Inventory](mods/SPT-Belt-Armband-Inventory) | `0.1.0`; active development | Additional inventory/container behavior for the `ArmBand` equipment slot | `runtime-belt-armband` |
+| [B&A&HB #2 MOD SPT](mods/SPT-Belt-Armband-Inventory) | **`0.1.0 STABLE` / SPT 4.1.3** | ArmBand inventory plus dedicated Belt and HeadBand equipment slots, with configurable loss-on-death behavior | **[download ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip)** |
+| [Item Valuation MOD SPT](mods/Item-Valuation-MOD-SPT) | `1.0.0`; stable / SPT 4.1.3 runtime validated | Server-only inventory background coloring by economic value/category, with penetration tiers for ammunition | `runtime-item-valuation` |
+| [Economy Admiral](mods/Economy-Admiral) | `0.1.0`; Economy Beta / SPT 4.1.3 runtime validated | Provenance-safe bounded economy/reward normalization with source-pressure, health, and explicit Admiral Trader compatibility evidence | `runtime-economy-admiral` |
 | [Admiral Trader](mods/Admiral-Trader) | `0.1.0`; active development | Curated successor campaign/trader for the legacy Andrudis/QuestManiac ecosystem | Development source / CI artifacts |
 | [Admiral Artyom Revival](mods/Admiral-Artyom-Revival) | `3.0.0`; SPT 4.1.3 runtime validated | Maintained revival of WTT-Artem trader, 23-quest campaign, gear and clothing | `runtime-artem-revival` |
 
-Admiral Tactical HUD has one maintained line: **1.13.3**. Older Tactical HUD versions and the retired combined HUD/Item-Intelligence experiment are not maintained products and must not be used as runtime sources.
+Tactical HUD `1.14.0` is retired. That build accidentally combined early Item Intelligence code with the HUD. The maintained HUD line is `1.13.2`; Item Intelligence Admiral has an independent version and release lifecycle.
 
 ## Repository channels
 
-- `main` — authoritative development source.
+- `main` — authoritative integrated source, including accepted stable module source plus active integrated development.
 - `stable` — source commit promoted after deliberate suite publication.
-- `runtime` — install-only Admiral Tactical HUD publication channel after final acceptance.
+- `runtime` — install-only Tactical HUD package.
 - `runtime-item-intelligence` — install-only Item Intelligence Admiral package; branch name retained as a compatibility identifier.
 - `runtime-pause` — install-only Pause Admiral package.
-- `runtime-belt-armband` — install-only Belt/Armband Inventory package.
-- `runtime-artem-revival` — stable Admiral Artyom Revival publication identity.
+- [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband) — **install-only B&A&HB Stable v0.1.0 package**.
+- `runtime-item-valuation` — install-only Item Valuation MOD SPT 1.0.0 package for SPT 4.1.3.
+- `runtime-economy-admiral` — install-only Economy Admiral 0.1.0 package for SPT 4.1.3.
+- `runtime-artem-revival` — stable Admiral Artyom Revival publication identity; branch name retained as an established compatibility identifier.
+- `archive/v1.13.0` — intentional frozen Tactical HUD `1.13.0` reserve.
 
-Runtime branches are publication/runtime channels, not development branches.
+Runtime branches are publication/runtime channels, not development branches. Their exact package model is documented by the owning module.
+
+## Downloads
+
+### B&A&HB #2 MOD SPT — Stable v0.1.0
+
+- **Download:** [B&A&HB Stable v0.1.0 ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip)
+- **Package contents:** [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband)
+- **Stable source tag:** [`bahb-v0.1.0`](https://github.com/AdmiralAM/spt-1/tree/bahb-v0.1.0)
+- **Version:** 0.1.0
+- **Target:** SPT 4.1.3
+- **Extra dependencies:** none
+
+Installation: close SPT, download and unpack the ZIP, open the included `SPT_Runtime` directory, then copy its **contents** into the existing `SPT_Runtime` directory of the game. The package already contains both required parts: the BepInEx client DLL and the server mod DLL. Remove the obsolete `Trenchfoot-BeltSlot.dll` first if it is installed.
+
+Runtime branches provide the maintained install packages for Tactical HUD, Item Intelligence Admiral, Pause Admiral, B&A&HB, Item Valuation MOD SPT, Economy Admiral, and the validated server identity for Admiral Artyom Revival. Tactical HUD `1.13.0` remains preserved under `archive/v1.13.0`.
+
+Item Valuation MOD SPT `1.0.0` is published on `runtime-item-valuation` as a server-only install package rooted at `SPT_Runtime/user/mods/Item Valuation MOD SPT/`.
+
+Economy Admiral `0.1.0` is published on `runtime-economy-admiral` as a server-only install package rooted at `SPT_Runtime/user/mods/Economy Admiral/`.
+
+Admiral Artyom Revival differs from the self-contained runtime ZIP channels: `runtime-artem-revival` pins the accepted r5 server identity while repaired authored core data and the external Unity `Bundles/` set remain governed by the module's reconstruction/update contract.
 
 ## Repository policy
 
-`main` contains source code, tests, maintained assets, build definitions, and durable documentation. Generated binaries, package copies, build/test logs, CI run metadata, temporary diagnostics, local IDE state, and dependency caches do not belong in source history.
+`main` contains maintained source and durable documentation. Active-development modules may also keep deterministic validation suites and build definitions. Once a module is deliberately promoted to a stable production source line, obsolete RC-only tests, temporary diagnostics, evidence bundles and development-only tooling are removed rather than retained as runtime baggage.
 
-Temporary feature, fix, diagnostic, research, and archaeology branches are removed after their useful work is merged or explicitly superseded. Active workstream branches are preserved until that determination is made.
+Generated binaries, package copies, build/test logs, CI run metadata, temporary diagnostics, local IDE state, and dependency caches do not belong in source history.
+
+Temporary feature, fix, diagnostic, research, and archaeology branches are removed after their useful work is merged or explicitly superseded. Active workstream branches are preserved only while they serve current development.
 
 Development follows [`CONTRIBUTING.md`](CONTRIBUTING.md). See also [development workflow](docs/development-workflow.md), [source/stable/runtime governance](docs/github-stable-runtime.md), and [branch hygiene](docs/branch-hygiene.md).

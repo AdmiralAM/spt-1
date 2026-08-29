@@ -1,29 +1,35 @@
-# SPT Belt/Armband Inventory
+# B&A&HB #2 MOD SPT
 
-Inventory extension for SPT 4.1.x that gives compatible container items equipped in the `ArmBand` slot belt-style inventory behavior. Current module version: **0.1.0**.
+Stable version **0.1.0** for **SPT 4.1.3**.
 
-The implementation is generic: it does not require a specific Pack 'n' Strap item ID or content class. Plain armbands remain ordinary armbands; container-capable items receive the additional inventory behavior.
+- [Download the stable ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip)
+- [View the install-ready package](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband)
+- [View the v0.1.0 source](https://github.com/AdmiralAM/spt-1/tree/bahb-v0.1.0)
 
-## Current architecture
+No additional mods or libraries are required.
 
-The module now contains both client and server components:
+## What the mod adds
 
-- `src/` — client-side inventory presentation, slot integration, quick-move/priority behavior, and compatibility patches;
-- `server/` — SPT 4.1.3 server integration, including belt persistence/death-policy behavior;
-- `tests/` — regression coverage for the current client/server contracts;
-- `tools/` — deterministic hot-path checks;
-- `docs/` — compatibility archaeology and runtime contracts.
+- **ArmBand** accessories with usable inventory, including Wrist Wallet support.
+- A dedicated **Belt** equipment slot with a `2x2` magazine container.
+- A dedicated **HeadBand** equipment slot with a compact `1x2` utility container.
+- Independent F12 settings for ArmBand, Belt and HeadBand loss on death.
 
-The client remains event/interaction driven; it does not use per-frame inventory polling. Runtime reflection is used where EFT/SPT client members are obfuscated and is resolved outside hot paths.
+## Installation
 
-## Compatibility
+1. Close the game, launcher and SPT server.
+2. Download and unpack the stable ZIP.
+3. Open the included `SPT_Runtime` directory.
+4. Copy its **contents** into the existing `SPT_Runtime` directory of your SPT 4.1.3 installation.
+5. Start the SPT server and launch the game normally.
 
-The original Trenchfoot BeltSlot and Pack 'n' Strap implementations are archaeology/reference material, not runtime dependencies. If a legacy `Trenchfoot-BeltSlot.dll` is installed, remove or disable it before using this module to avoid two implementations patching the same inventory behavior.
+The package installs both required components:
 
-The server project targets the SPT 4.1.3 `SPTushonka.*` packages. See [archaeology and SPT 4.1 mapping](docs/archaeology.md) for the retained behavior and rejected legacy patch patterns.
+- `SPT_Runtime/BepInEx/plugins/SPT Belt Armband Inventory v0.1.0.dll`
+- `SPT_Runtime/user/mods/B&A&HB #2 MOD SPT/SPT-Belt-Armband-Inventory.Server.dll`
 
-## Development status
+If `Trenchfoot-BeltSlot.dll` is installed, remove it before using B&A&HB because both mods change the same equipment area.
 
-Belt/Armband Inventory is under active development. Historical Phase 1 documentation records the original presentation contract and should be read as design history where later source/tests have expanded the behavior beyond that baseline.
+## Updating
 
-Use the current source, regression tests, and active development branch as the authority for ongoing work. The `runtime-belt-armband` channel is the install-only publication channel for validated builds.
+To update, replace both DLLs with the files from the stable ZIP.

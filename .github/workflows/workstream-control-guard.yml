@@ -1,0 +1,38 @@
+name: Workstream control guard
+
+on:
+  pull_request:
+    paths:
+      - AGENTS.md
+      - .github/workstreams.json
+      - .github/CODEOWNERS
+      - .github/scripts/validate_workstreams.py
+      - .github/workflows/workstream-control-guard.yml
+  push:
+    branches: [main]
+    paths:
+      - AGENTS.md
+      - .github/workstreams.json
+      - .github/CODEOWNERS
+      - .github/scripts/validate_workstreams.py
+      - .github/workflows/workstream-control-guard.yml
+
+permissions:
+  contents: read
+
+jobs:
+  validate-control-plane:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require governance branch for pull requests
+        if: github.event_name == 'pull_request'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          case "$HEAD_REF" in
+            governance/*) ;;
+            *) echo "Control files may change only from governance/* branches." >&2; exit 1 ;;
+          esac
+      - name: Validate canonical workstream registry
+        run: python3 .github/scripts/validate_workstreams.py

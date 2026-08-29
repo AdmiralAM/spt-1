@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="../../server/SourcePressureEvidence.cs" Link="SourcePressureEvidence.cs" />
+    <Compile Include="../../server/ReplacementComparabilityEvidence.cs" Link="ReplacementComparabilityEvidence.cs" />
+    <Compile Include="../../server/BoundedSupplyEvidence.cs" Link="BoundedSupplyEvidence.cs" />
+    <Compile Include="../../server/EffectiveAcquisitionGraph.cs" Link="EffectiveAcquisitionGraph.cs" />
+    <Compile Include="../../server/SourcePressureObservationModels.cs" Link="SourcePressureObservationModels.cs" />
+    <Compile Include="../../server/AdmiralTraderAdapterEvidence.cs" Link="AdmiralTraderAdapterEvidence.cs" />
+    <Compile Include="../../server/AdmiralTraderItemAdapter.cs" Link="AdmiralTraderItemAdapter.cs" />
+    <Compile Include="../../server/AdmiralTraderGameplayAlphaAdapter.cs" Link="AdmiralTraderGameplayAlphaAdapter.cs" />
+    <Compile Include="../../server/AdmiralTraderRuntimeAdapterReport.cs" Link="AdmiralTraderRuntimeAdapterReport.cs" />
+    <Compile Include="../../server/TraderOwnershipEnforcementGate.cs" Link="TraderOwnershipEnforcementGate.cs" />
+    <Compile Include="../../server/SourcePressureRuntimeReport.cs" Link="SourcePressureRuntimeReport.cs" />
+    <Compile Include="../../server/EconomyAttributionEvidence.cs" Link="EconomyAttributionEvidence.cs" />
+    <Compile Include="../../server/EconomyHealthInvariants.cs" Link="EconomyHealthInvariants.cs" />
+    <Compile Include="../../server/EconomyHealthRuntimeReport.cs" Link="EconomyHealthRuntimeReport.cs" />
+    <Compile Include="../../server/EffectiveQuestGateEvidence.cs" Link="EffectiveQuestGateEvidence.cs" />
+    <Compile Include="../../server/QuestGateJsonParser.cs" Link="QuestGateJsonParser.cs" />
+    <Compile Include="../../server/AdmiralTraderInstallationLocator.cs" Link="AdmiralTraderInstallationLocator.cs" />
+  </ItemGroup>
+</Project>

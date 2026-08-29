@@ -2,13 +2,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace SPTBeltArmbandInventory
 {
     internal static class LootPriorityRuntime
     {
-        static MethodInfo getSlot;
+        static Func<object, object, object> getSlot;
+        static Func<IList> createTypedList;
         static object armBandValue;
+        static object dedicatedBeltValue;
         static Type containerType;
         static Action<string> logWarning;
 
@@ -16,16 +19,22 @@ namespace SPTBeltArmbandInventory
         {
             logWarning = warning;
             MethodInfo target = FindTarget(equipmentType);
-            getSlot = equipmentType.GetMethod("GetSlot", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { slotEnumType }, null);
-            if (target == null || getSlot == null || !target.ReturnType.IsGenericType)
-                return Fail("SPT 4.1 GetPrioritizedContainersForLoot shape was not found; belt loot priority was not patched.");
+            MethodInfo getSlotMethod = ReflectionTools.FindInstanceMethod(equipmentType, "GetSlot", null, slotEnumType);
+            if (target == null || getSlotMethod == null || !target.ReturnType.IsGenericType)
+                return Fail("SPT 4.1 GetPrioritizedContainersForLoot shape was not found; wearable loot priority was not patched.");
 
             Type[] genericArguments = target.ReturnType.GetGenericArguments();
             if (genericArguments.Length != 1)
-                return Fail("SPT 4.1 loot-priority return type changed; belt loot priority was not patched.");
+                return Fail("SPT 4.1 loot-priority return type changed; wearable loot priority was not patched.");
 
             containerType = genericArguments[0];
+            getSlot = BuildBinaryObjectCall(equipmentType, slotEnumType, getSlotMethod);
+            createTypedList = BuildListFactory(containerType);
+            if (getSlot == null || createTypedList == null)
+                return Fail("SPT 4.1 loot-priority startup delegates could not be bound; wearable loot priority was not patched.");
+
             armBandValue = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand);
+            dedicatedBeltValue = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedBeltEquipmentSlotValue);
             object postfix = harmonyMethodConstructor.Invoke(new object[] { typeof(LootPriorityRuntime).GetMethod(nameof(Postfix), BindingFlags.Static | BindingFlags.NonPublic) });
             Patch(harmony, patchMethod, harmonyMethodType, target, postfix);
             return true;
@@ -34,7 +43,9 @@ namespace SPTBeltArmbandInventory
         internal static void Reset()
         {
             getSlot = null;
+            createTypedList = null;
             armBandValue = null;
+            dedicatedBeltValue = null;
             containerType = null;
             logWarning = null;
         }
@@ -45,10 +56,8 @@ namespace SPTBeltArmbandInventory
             {
                 if (__args == null || __args.Length < 2 || __args[0] == null || __result == null) return;
                 object equipment = __args[0];
-                object beltItem = GetContainedItem(equipment, armBandValue);
-                if (!ReflectionTools.HasContainers(beltItem)) return;
-
-                List<object> belt = ReadContainers(beltItem);
+                List<object> belt = ReadCapabilityContainers(equipment, armBandValue, AccessoryCapability.LootPriority);
+                AppendUnique(belt, ReadCapabilityContainers(equipment, dedicatedBeltValue, AccessoryCapability.LootPriority));
                 if (belt.Count == 0) return;
 
                 var groups = new Dictionary<string, List<object>>
@@ -63,32 +72,49 @@ namespace SPTBeltArmbandInventory
                 List<object> vanilla = ToObjects(__result);
                 LootItemKind kind = InferKind(vanilla, groups, __args[1]);
                 string[] order = LootPriorityPlan.Build(kind, true);
-                object rebuilt = CreateTypedList();
-                IList list = rebuilt as IList;
+                IList list = createTypedList();
                 if (list == null) return;
 
                 for (int i = 0; i < order.Length; i++)
                 {
-                    List<object> source;
-                    if (!groups.TryGetValue(order[i], out source)) continue;
+                    if (!groups.TryGetValue(order[i], out List<object> source)) continue;
                     for (int p = 0; p < source.Count; p++)
                         if (source[p] != null && containerType.IsInstanceOfType(source[p])) list.Add(source[p]);
                 }
-                __result = rebuilt;
+                __result = list;
             }
             catch (Exception exception)
             {
-                if (logWarning != null) logWarning("Could not extend loot priority with belt containers: " + exception.Message);
+                logWarning?.Invoke("Could not extend loot priority with wearable containers: " + exception.Message);
             }
+        }
+
+        static List<object> ReadCapabilityContainers(object equipment, object slotValue, AccessoryCapability capability)
+        {
+            object item = GetContainedItem(equipment, slotValue);
+            string templateId = GetTemplateId(item);
+            if (!WearableItemDescriptorRegistry.HasCapability(templateId, capability)) return new List<object>();
+            return ReadContainers(item);
+        }
+
+        static void AppendUnique(List<object> target, List<object> source)
+        {
+            for (int i = 0; i < source.Count; i++) if (!target.Contains(source[i])) target.Add(source[i]);
+        }
+
+        static string GetTemplateId(object item)
+        {
+            if (item == null) return null;
+            object stringTemplateId = ReflectionTools.ReadMember(item, "StringTemplateId");
+            if (stringTemplateId is string direct && !string.IsNullOrEmpty(direct)) return direct;
+            object templateId = ReflectionTools.ReadMember(item, "TemplateId");
+            return templateId?.ToString();
         }
 
         static MethodInfo FindTarget(Type equipmentType)
         {
             Assembly assembly = equipmentType.Assembly;
-            Type[] types;
-            try { types = assembly.GetTypes(); }
-            catch (ReflectionTypeLoadException exception) { types = exception.Types; }
-
+            Type[] types = ReflectionTools.GetTypes(assembly);
             for (int i = 0; i < types.Length; i++)
             {
                 Type type = types[i];
@@ -164,7 +190,8 @@ namespace SPTBeltArmbandInventory
 
         static object GetContainedItem(object equipment, object slotValue)
         {
-            object slot = getSlot.Invoke(equipment, new[] { slotValue });
+            if (equipment == null || slotValue == null || getSlot == null) return null;
+            object slot = getSlot(equipment, slotValue);
             return ReflectionTools.ReadMember(slot, "ContainedItem");
         }
 
@@ -194,10 +221,39 @@ namespace SPTBeltArmbandInventory
             return result;
         }
 
-        static object CreateTypedList()
+        static Func<object, object, object> BuildBinaryObjectCall(Type ownerType, Type argumentType, MethodInfo method)
         {
-            Type listType = typeof(List<>).MakeGenericType(containerType);
-            return Activator.CreateInstance(listType);
+            try
+            {
+                DynamicMethod dm = new DynamicMethod("BAndHBLootGetSlot", typeof(object), new[] { typeof(object), typeof(object) }, typeof(LootPriorityRuntime), true);
+                ILGenerator il = dm.GetILGenerator();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Castclass, ownerType);
+                il.Emit(OpCodes.Ldarg_1);
+                if (argumentType.IsValueType) il.Emit(OpCodes.Unbox_Any, argumentType);
+                else il.Emit(OpCodes.Castclass, argumentType);
+                il.Emit(method.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, method);
+                if (method.ReturnType.IsValueType) il.Emit(OpCodes.Box, method.ReturnType);
+                il.Emit(OpCodes.Ret);
+                return (Func<object, object, object>)dm.CreateDelegate(typeof(Func<object, object, object>));
+            }
+            catch { return null; }
+        }
+
+        static Func<IList> BuildListFactory(Type elementType)
+        {
+            try
+            {
+                Type listType = typeof(List<>).MakeGenericType(elementType);
+                ConstructorInfo ctor = listType.GetConstructor(Type.EmptyTypes);
+                if (ctor == null) return null;
+                DynamicMethod dm = new DynamicMethod("BAndHBLootListFactory", typeof(IList), Type.EmptyTypes, typeof(LootPriorityRuntime), true);
+                ILGenerator il = dm.GetILGenerator();
+                il.Emit(OpCodes.Newobj, ctor);
+                il.Emit(OpCodes.Ret);
+                return (Func<IList>)dm.CreateDelegate(typeof(Func<IList>));
+            }
+            catch { return null; }
         }
 
         static void Patch(object harmony, MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, object postfix)
@@ -215,7 +271,7 @@ namespace SPTBeltArmbandInventory
 
         static bool Fail(string message)
         {
-            if (logWarning != null) logWarning(message);
+            logWarning?.Invoke(message);
             Reset();
             return false;
         }

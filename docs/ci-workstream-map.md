@@ -4,7 +4,7 @@ Development validation is module-specific. A pull request should trigger only th
 
 | Module | Pull-request workflow | Publication channel |
 | --- | --- | --- |
-| Admiral Tactical HUD | `Admiral Tactical HUD Validate` | `runtime` |
+| Tactical HUD | `Tactical HUD Validate` | `runtime` |
 | Item Intelligence Admiral | `Item Intelligence Validate` | `runtime-item-intelligence` |
 | Pause Admiral | `Pause Validate` | `runtime-pause` |
 | Belt/Armband Inventory | `Belt Armband Inventory Validate` | `runtime-belt-armband` |

@@ -1,0 +1,131 @@
+name: Economy Admiral Full Package
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mods/Economy-Admiral/**'
+      - '.github/workflows/economy-admiral-full-package.yml'
+  workflow_dispatch:
+
+jobs:
+  build-full-package:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Provision BepInEx 5.4.21 compile reference
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $archive = Join-Path $env:RUNNER_TEMP 'BepInEx_x64_5.4.21.0.zip'
+          $extract = Join-Path $env:RUNNER_TEMP 'BepInEx-5.4.21'
+          Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.21/BepInEx_x64_5.4.21.0.zip' -OutFile $archive
+          Expand-Archive $archive -DestinationPath $extract -Force
+          $target = Join-Path $PWD 'deps/BepInEx/core'
+          New-Item -ItemType Directory -Force -Path $target | Out-Null
+          Copy-Item (Join-Path $extract 'BepInEx/core/BepInEx.dll') (Join-Path $target 'BepInEx.dll') -Force
+          if (-not (Test-Path (Join-Path $target 'BepInEx.dll') -PathType Leaf)) { throw 'BepInEx compile reference was not provisioned.' }
+
+      - name: Build server economy engine
+        shell: pwsh
+        run: dotnet build mods/Economy-Admiral/server/Economy-Admiral.csproj -c Release --nologo
+
+      - name: Build F12 settings client
+        shell: pwsh
+        run: dotnet build mods/Economy-Admiral/client/Economy-Admiral.Client.csproj -c Release --nologo
+
+      - name: Assemble owned install package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $PWD 'build-output/Economy-Admiral-Full'
+          $server = Join-Path $root 'SPT_Runtime/user/mods/Economy Admiral'
+          $client = Join-Path $root 'BepInEx/plugins/Economy Admiral'
+          Remove-Item (Join-Path $PWD 'build-output') -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path (Join-Path $server 'config') | Out-Null
+          New-Item -ItemType Directory -Force -Path $client | Out-Null
+
+          Copy-Item 'mods/Economy-Admiral/server/bin/Release/net10.0/Economy-Admiral.dll' (Join-Path $server 'Economy-Admiral.dll') -Force
+          Copy-Item 'mods/Economy-Admiral/client/bin/Release/netstandard2.1/Economy Admiral v0.1.0.dll' (Join-Path $client 'Economy Admiral v0.1.0.dll') -Force
+          Copy-Item 'mods/Economy-Admiral/config/config.json' (Join-Path $server 'config/config.json') -Force
+          Copy-Item 'mods/Economy-Admiral/README.md' (Join-Path $server 'README.md') -Force
+          Copy-Item 'mods/Economy-Admiral/RUNTIME_TEST.md' (Join-Path $server 'RUNTIME_TEST.md') -Force
+          Copy-Item 'mods/Economy-Admiral/tools/Validate-Runtime.ps1' (Join-Path $server 'Validate-Runtime.ps1') -Force
+          Copy-Item 'mods/Economy-Admiral/tools/Validate-Enforce.ps1' (Join-Path $server 'Validate-Enforce.ps1') -Force
+          Copy-Item 'mods/Economy-Admiral/tools/Validate-Beta.ps1' (Join-Path $server 'Validate-Beta.ps1') -Force
+
+          [ordered]@{
+            name = 'Economy Admiral'
+            version = '0.1.0'
+            target = 'SPT 4.1.3'
+            source_commit = '${{ github.event.pull_request.head.sha || github.sha }}'
+            server = 'SPT_Runtime/user/mods/Economy Admiral/Economy-Admiral.dll'
+            client = 'BepInEx/plugins/Economy Admiral/Economy Admiral v0.1.0.dll'
+            settings_ui = 'BepInEx F12 Configuration Manager'
+            settings_apply = 'next SPT server restart'
+            package_ownership = 'Economy Admiral files only; BepInEx runtime is never bundled'
+          } | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $root 'runtime-manifest.json') -Encoding utf8
+
+      - name: Validate package ownership and contents
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = (Resolve-Path 'build-output/Economy-Admiral-Full').Path
+          $allowed = @(
+            'BepInEx/plugins/Economy Admiral/Economy Admiral v0.1.0.dll',
+            'SPT_Runtime/user/mods/Economy Admiral/Economy-Admiral.dll',
+            'SPT_Runtime/user/mods/Economy Admiral/config/config.json',
+            'SPT_Runtime/user/mods/Economy Admiral/README.md',
+            'SPT_Runtime/user/mods/Economy Admiral/RUNTIME_TEST.md',
+            'SPT_Runtime/user/mods/Economy Admiral/Validate-Runtime.ps1',
+            'SPT_Runtime/user/mods/Economy Admiral/Validate-Enforce.ps1',
+            'SPT_Runtime/user/mods/Economy Admiral/Validate-Beta.ps1',
+            'runtime-manifest.json'
+          )
+
+          $actual = Get-ChildItem $root -Recurse -File | ForEach-Object {
+            $_.FullName.Substring($root.Length + 1).Replace('\','/')
+          } | Sort-Object
+
+          $unexpected = @($actual | Where-Object { $_ -notin $allowed })
+          $missing = @($allowed | Where-Object { $_ -notin $actual })
+          if ($unexpected.Count -gt 0) {
+            throw "Package contains files not owned by Economy Admiral: $($unexpected -join ', ')"
+          }
+          if ($missing.Count -gt 0) {
+            throw "Package is missing owned files: $($missing -join ', ')"
+          }
+
+          $forbiddenBepInEx = @($actual | Where-Object {
+            $_ -like 'BepInEx/core/*' -or
+            $_ -like 'BepInEx/config/*' -or
+            $_ -like 'BepInEx/patchers/*' -or
+            ($_ -like 'BepInEx/*' -and $_ -notlike 'BepInEx/plugins/Economy Admiral/*')
+          })
+          if ($forbiddenBepInEx.Count -gt 0) {
+            throw "BepInEx runtime/config leakage detected: $($forbiddenBepInEx -join ', ')"
+          }
+
+          foreach ($rootFile in @('winhttp.dll','doorstop_config.ini','changelog.txt')) {
+            if (Test-Path (Join-Path $root $rootFile) -PathType Leaf) {
+              throw "Foreign runtime file leaked into Economy Admiral package: $rootFile"
+            }
+          }
+
+          $config = Get-Content (Join-Path $root 'SPT_Runtime/user/mods/Economy Admiral/config/config.json') -Raw | ConvertFrom-Json
+          foreach ($property in @('enableQuestEconomyCluster','enableTraderEconomyCluster','enableFleaEconomyCluster','enableLootEconomyCluster')) {
+            if ($null -eq $config.$property) { throw "Config missing UI cluster: $property" }
+          }
+          Write-Host '[Economy Admiral] package ownership PASS: only Economy Admiral-owned files are present.'
+
+      - name: Upload complete Economy Admiral package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Economy-Admiral-Full-v0.1.0
+          path: build-output/Economy-Admiral-Full/**
+          if-no-files-found: error

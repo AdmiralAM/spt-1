@@ -1,147 +1,129 @@
-# SPT repository instructions
+# SPT automated work charter
 
-These instructions apply to every automated or interactive development process working in this repository.
+This is the single repository-wide execution policy for automated workers.
 
-## Read before writing
+## Canonical authority
 
-Before making changes, read:
+Before every work session, fetch `origin/main` and read these exact files from that ref:
 
-- `AGENTS.md`
-- `CONTRIBUTING.md`
-- `docs/development-workflow.md`
-- `docs/github-stable-runtime.md`
-- `docs/branch-hygiene.md`
-- the affected module's README and relevant durable docs.
+1. `origin/main:AGENTS.md` — immutable worker policy;
+2. `origin/main:.github/workstreams.json` — current workstream state;
+3. the technical Issues recorded in its phase plan and the module's live GitHub PR/evidence;
+4. the affected module README and relevant technical docs.
 
-Do not begin implementation from stale assumptions when newer repository state, Issues, Pull Requests, runtime evidence, or user direction exists.
+Policy copied into a feature branch, old PR body, chat memory, artifact, or historical Issue is not authority. Do not merge `main` merely to read control state.
 
-When using an old mod, external repository, previous implementation, old branch, or other reference as a baseline, perform a baseline viability check before implementation. Identify the reference source and version, the current target version, affected runtime/API boundaries, known incompatible dependencies, whether the reference is product inspiration, data-model source, code port, or runtime behavior proof, and the minimal proof that the baseline boundary still exists on the target version. If that foundation cannot be proven, stop and report instead of spending implementation effort porting an unvalidated reference.
+## Authority and roles
 
-## Source-of-truth check
+The user is the sole product authority. The complete recorded `phasePlan` is the user's standing authorization to execute every listed phase through its recorded acceptance, including a direct runtime handoff and the recorded stable/publication transition. No worker grants permission to another worker.
 
-Before writing code, changing CI, publishing artifacts, or telling a user which build to test, establish the current authority for the affected module:
+`GitHub Work SPT` is a coordination and audit worker, not a controller or approval gate. It may reconcile repository facts, maintain shared mechanics when the user asks, and report cross-module status. Module workers do not wait for it, ask it to activate a phase, or require its acknowledgement.
 
-- check `main` for integrated source state;
-- check active Issues for objective, allowed scope, non-goals, stop condition, and acceptance criteria;
-- check active Pull Requests for in-flight implementation, draft/merge status, head branch, head SHA, runtime gate, and validation status;
-- check the relevant `runtime-*` branch only as an install/publication channel, not as development source;
-- check recent Actions artifacts only when a PR/build explicitly points to the matching commit SHA.
+Module workers (Belt, Trader, Economy, HUD, and future module chats) inspect, implement, test, repair CI, package, integrate, and attach evidence. They must not:
 
-Never assume work is merged because a PR exists, a branch exists, or a chat says a build was made. Name the PR number, branch, commit SHA, and artifact/run being used when giving runtime-test instructions.
+- edit this charter or `.github/workstreams.json` without an explicit user instruction;
+- rewrite their recorded phase plan or stable acceptance without an explicit user instruction;
+- create a new product scope or declare an unfinished product cancelled/parked without an explicit user instruction;
+- change frozen names, versions, persistent IDs, routes, or cross-module ownership;
+- treat a branch, commit, PR, CI run, document, validator, or artifact as the product finish line;
+- ask for `next step` when the registry already records the continuation;
+- modify another module or invent governance changes as a substitute for product work.
 
-If repo evidence conflicts with chat memory, the repository state and latest explicit user direction win. Stop and report the conflict instead of guessing.
+Any worker may faithfully encode an explicit user governance instruction through a `governance/*` PR. It must not wait for `GitHub Work SPT` to do so. Without an explicit user instruction, control files remain unchanged. CODEOWNERS and the control guard keep those changes visible to the user.
 
-## Product identity and version contract
+## Worker execution loop
 
-Every maintained module has one official product name and authoritative version metadata. Treat those values as repository contracts, not cosmetic prose.
+The complete ordered `phasePlan` is pre-authorized. At the start of every run, inspect `main`, the recorded Issues, and the module's live PR evidence; resume at the first phase whose acceptance is not already proven. Continue within every available run:
 
-- Before changing a module name or version, identify its current README and machine-readable package/project metadata authority.
-- Current product names and versions must agree across the root module index, module README, affected project/package metadata, maintained runtime/publication manifest, workflow/package display naming, and durable current-state documentation.
-- Runtime README/display identity must use the official product name.
-- Historical upstream names, directory names, GUIDs, namespaces, endpoints, binary names, and runtime branch names may remain only when they are required for compatibility/provenance and that retained role is documented explicitly.
-- Do not silently treat a compatibility identifier as the current product name.
-- Do not invent a version bump merely to normalize documentation. Version changes are release decisions owned by the affected module workstream.
-- A rename/version PR must update all affected identity surfaces in the same integration slice or explicitly document a compatibility exception.
+`ACTIVE -> IMPLEMENT -> VALIDATE -> FIX UNTIL GREEN -> CONTINUE NEXT RECORDED PACKAGE -> RELEASE CANDIDATE -> ONE BATCHED RUNTIME TEST -> FAIL: REMEDIATE / PASS: STABLE RELEASE`
 
-## Mandatory isolation
+- Complete each phase's technical work without requiring approval between internal steps.
+- Fix scoped CI failures and continue; do not end a run merely because CI started or passed.
+- When a phase completes, record evidence in its technical Issue/PR and immediately continue to the next `phasePlan` entry.
+- Ordinary recorded phase transitions never require a registry edit, another worker's acknowledgement, or a new user message.
+- Create at most one implementation PR for the module, and only when coherent implementation exists.
+- Discover the module's single live implementation PR from GitHub; PR numbers and temporary branches are deliberately not stored as control pointers.
+- New branch/PR mechanics for an already recorded phase are not a new product decision.
+- Do not expand beyond the registry and linked Issue/PR.
 
-Treat every SPT mod/workstream as independent by default.
+## Registry update boundaries
 
-- Work in a dedicated short-lived branch.
-- Keep changes scoped to the affected module.
-- Use that module's validation workflow.
-- Do not share concurrency groups with unrelated modules.
-- Do not cancel, supersede, retarget, force-update, or block another active workstream.
-- Do not rewrite another module's runtime branch.
-- Do not invoke repository-wide publication merely to validate development.
-- Do not push ordinary feature/fix work directly to `main`.
+Do not update the registry merely because a phase, commit, CI run, PR, merge, artifact, or recorded successor completed. The evidence itself determines the resume point.
 
-Parallel development of multiple modules is normal and must remain safe.
+Only an explicit user instruction may add, remove, or reorder product scope; change a phase contract or frozen identity; cancel/park work; or change an undefined publication decision. The worker receiving that instruction may encode it directly. Runtime readiness, technical blockers, phase completion, and recorded stable/publication transitions live in Issue/PR evidence and never require a registry update.
 
-## Required lifecycle
+## Valid stop conditions
 
-`Issue -> branch -> implementation/diagnostics -> PR -> module CI -> runtime validation if required -> merge -> delete temporary branch -> remove obsolete temporary material -> update current-state docs`
+A worker may stop only at the exact boundary of:
 
-If the work is too small to justify its own Issue, it may be included in an existing coherent Issue/PR, but it still follows branch/PR isolation.
+1. a coherent physical SPT/EFT runtime gate that cannot be resolved from source, references, logs, artifacts, or automated validation;
+2. missing permission/access or a proven external dependency after all unblocked work is exhausted;
+3. an explicit product decision absent from the registered roadmap, asked directly of the user;
+4. completed stable/release acceptance.
 
-A failed runtime gate does not authorize feature expansion or redesign. Diagnose the first proven failing boundary, make the smallest corrective change, rerun the minimum necessary validation, and keep unrelated work out of the PR.
+PR creation, branch synchronization, commits, documentation, CI, packaging, and an internal artifact are never stop conditions.
 
-## Runtime gates and test artifacts
+## Runtime-test budget and handoff
 
-SPT/EFT runtime behavior is proven only by the required physical/user runtime evidence for that module. CI is necessary but not a substitute when an Issue or PR defines a runtime gate.
+- A module worker enters its recorded `requiresUserRuntime` phase automatically after all prior acceptance is proven. No controller activation, registry edit, or inter-chat coordination is required.
+- Ask the user directly only at that coherent physical boundary. The user alone decides when to run the candidate and may choose the order if several modules become ready.
+- Batch related checks into one release-candidate session per module; do not use the user as a per-patch debugger.
+- Ask only after all feasible source inspection, automated tests, builds, packaging, integration, and CI repair are complete.
+- Provide the exact GitHub Actions/release URL, PR, branch, commit SHA, artifact name/ID, digest, install layout, and a short numbered table of action / PASS / FAIL / minimal evidence.
+- Chat attachments, local files, source ZIPs, CI success without an artifact, and vague `test everything` requests are invalid handoffs.
+- On FAIL, consume the evidence and resume remediation automatically. On PASS, follow the next recorded phase or release transition under the standing authorization; do not ask another worker for permission.
 
-Any PR or chat handoff that asks for user testing must provide:
+### Mandatory user-facing test request
 
-- module name and affected SPT version;
-- PR number, branch name, and exact commit SHA;
-- successful workflow/run that produced the exact test build;
-- artifact name and whether it is transient Actions output or a maintained `runtime-*` package;
-- exact install layout, including `BepInEx/plugins` and/or `SPT_Runtime/user/mods` paths;
-- focused test checklist;
-- exact logs/screenshots/results to return, including `BepInEx/LogOutput.log` when client runtime evidence is needed;
-- explicit pass/fail decision rule.
+A runtime-test request is valid only when the same message gives the user one complete, immediately actionable handoff. It must begin with this compact block (translated to the conversation language when needed):
 
-Do not ask the user to perform physical/runtime testing from source code, a PR diff, a branch name, or a CI success alone. A runtime-test request is valid only after a downloadable artifact or deliberate `runtime-*` package exists for the exact commit being tested. If the workflow passed but produced no artifact, stop and fix the packaging/handoff workflow first.
+```text
+Скачать: <one clickable GitHub download URL>
+Скачивать именно: <exact artifact/asset/ZIP name>
+Кандидат: <module name, version, target SPT, PR and exact commit SHA>
+Установка: <exact replacement/copy steps and destination paths>
+Проверить:
+1. <user action> — PASS: <observable result>; FAIL: <observable result>
+2. ...
+Вернуть: <numbered PASS/FAIL plus the smallest requested screenshot or log excerpt>
+Общий PASS: <exact rule>
+```
 
-Test candidates belong in GitHub Actions artifacts while they are under review. Do not update `main`, `stable`, or a `runtime-*` publication branch with a candidate until the required validation gate has passed and the promotion is deliberate.
+Hard rules:
 
-## Gate-based runtime handoff
+- The first URL is the **primary candidate download**, not merely a repository home page, source tree, PR, commit, workflow list, or CI-status page. Provenance links may follow it.
+- State exactly which named file/artifact the user downloads. Never make the user search an Actions run, choose among builds, infer a filename, build source, or guess which ZIP is installable.
+- Verify that the linked GitHub artifact, Release asset, or install-ready `runtime-*` package actually exists and matches the named exact commit before asking.
+- Give exact install/replace/remove instructions for that candidate, including both client and server paths when applicable.
+- Test points are short, numbered, behavior-specific, and include observable PASS and FAIL results. `Test everything`, `try it`, free exploration, and an unbounded full-log request are invalid.
+- Ask for only the minimum evidence needed to decide the numbered gate.
+- **No working GitHub download link + no exact filename + no numbered checklist = no user test request.** Continue packaging/publication work or report the concrete blocker without assigning the user a test.
 
-Do not use the user as a debugger loop. Agents must not publish a new runtime artifact for every internal hypothesis, blind guess, or micro-patch.
+Detailed handoff mechanics live in `docs/runtime-artifact-gate.md`; that document cannot override this charter or the registry.
 
-Before requesting user runtime testing, complete all feasible discovery, source/log inspection, static analysis, compile checks, and local validation. If the implementation depends on an unknown runtime/API boundary, resolve that boundary from available references, source, logs, artifacts, or a narrow diagnostic before asking for physical testing. If the boundary cannot be proven, stop and report the blocker instead of handing off a speculative build.
+## Safety and isolation
 
-A runtime artifact may be handed off only when it answers one clear physical question. State the single gate being tested, such as load safety, runtime type proof, functional Gate A, or regression confirmation. The handoff must include expected log lines or visible behavior and a pass/fail rule.
+- Work in the registered module branch/PR and change only that module plus narrowly required shared infrastructure.
+- `main` is integration-only; `runtime-*` and `stable` are deliberate publication channels, not development workspaces.
+- Never weaken tests, force-update another workstream, share unrelated concurrency groups, or invoke suite publication for ordinary validation.
+- Persistent profile identities require an immutable manifest covering current and retired distributed IDs, backup-first ownership-scoped recovery, and deterministic regression coverage.
+- Never rename, reuse, or silently drop a distributed persistent ID.
+- A profile-load/save incident freezes feature expansion for that module until recovery and prevention are proven.
+- Performance-sensitive code must avoid permanent polling, scene-wide scans, hot-path reflection/allocations, and global UI mutation unless explicitly proven necessary and bounded.
 
-Load safety comes first. If a candidate can break profile loading, game loading, taxonomy registration, or startup, it must fail closed before handoff. Do not expose unsafe runtime data or ask the user to confirm a known startup-blocking state.
+## Communication
 
-When a runtime gate fails, do not immediately issue another artifact. First explain the failed boundary, the evidence that proves it, and the next smallest gate. User physical testing is reserved for defined gates, not internal patch iteration.
+Use only:
 
-## Issues and Pull Requests
+1. one short start acknowledgement;
+2. a material root cause or plan-changing CI failure;
+3. a genuine blocker/runtime gate;
+4. one coherent package/RC/stable result.
 
-Issues define durable scope: objective, evidence/current state, allowed work, non-goals, stop condition, runtime checklist when needed, and acceptance criteria.
+Do not narrate file edits, branch creation, commits, CI polling, documentation, or every internal gate. Intermediate updates are non-terminal and require no user response.
 
-Pull Requests are integration gates and durable change records. A PR must state affected module, linked Issue/objective, changes, explicit non-goals, validation, runtime gate status, and post-merge cleanup. Keep a PR draft while its required runtime evidence is absent.
+## Repository lifecycle
 
-Do not use source files, generated commits, or permanent branches as substitutes for Issue/PR comments, checklists, Actions checks, or Actions artifacts.
+`Issue -> short-lived branch -> implementation -> module CI -> PR -> runtime gate when required -> merge -> verify main -> close/update Issue -> delete temporary branch`
 
-## CI and publication
-
-Module CI proves the affected module. Keep triggers/path filters narrow.
-
-Green checks with annotations or warnings are not automatically clean. Review every annotation before requesting runtime testing or merging. A warned build may be used for runtime testing only after the warnings are classified as non-blocking for that exact artifact. Before merge, warnings must be fixed or explicitly documented as accepted follow-up debt with the reason they do not affect the gate being evaluated.
-
-GitHub Actions minutes and runner capacity are finite repository resources even when account quota remains. Every development process must use them deliberately:
-
-- inspect code, repository state, and existing logs before triggering CI;
-- prefer module/path-scoped checks over repository-wide validation;
-- order validation fail-fast: cheap deterministic checks first, expensive builds/package work later;
-- after a failure, diagnose the first failed boundary before triggering another run;
-- rerun only the smallest necessary failed job/check when GitHub supports it;
-- never rerun an unchanged full workflow merely to see whether the same failure disappears;
-- do not duplicate validation already proven by another current check;
-- do not spend Windows-hosted runner time on documentation-only or otherwise irrelevant changes;
-- treat repeated failed-job minutes, redundant setup/download work, unnecessary full-suite runs, and broad triggers as CI hygiene defects to fix rather than normal operating cost.
-
-A larger Actions quota is capacity for useful work, not permission to waste runner time.
-
-`Publish SPT Mod Suite` is a manual release/publication controller. It may promote `stable` and rewrite install-only runtime channels. Treat it as a higher-level release operation, not a development check.
-
-## Repository hygiene
-
-Generated binaries, build/test logs, CI metadata, one-off trigger/evidence files, dependency caches, temporary diagnostics, obsolete package copies, and dead branches do not belong in the long-term source tree.
-
-Clean up safely as part of completing the work. Never remove active working data or unique unmerged changes merely for cosmetic cleanliness.
-
-For every branch-cleanup pass, classify each candidate explicitly before deletion:
-
-- `delete-now` — useful state is merged, expired, superseded, or deliberately discarded and no unique work remains;
-- `retain-active` — active implementation, review, or required runtime validation still depends on it;
-- `retain-evidence` — unique useful evidence/recovery material remains and its retention reason is documented;
-- `manual-action` — cleanup is justified but the available GitHub interface cannot perform the required ref operation safely.
-
-Ambiguous branches are never `delete-now`. Cleanup queues and one-time evidence belong in Issues, PR comments, or explicit manual reports, not permanent source-tree files.
-
-## Priority
-
-Active development/runtime validation > module-specific PR CI > deliberate publication > housekeeping.
+Detailed repository mechanics live in `CONTRIBUTING.md`, `docs/development-workflow.md`, `docs/github-stable-runtime.md`, and `docs/branch-hygiene.md`. If any text conflicts, this charter and `.github/workstreams.json` win.
