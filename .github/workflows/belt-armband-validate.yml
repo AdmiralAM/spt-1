@@ -39,6 +39,9 @@ jobs:
       - name: 'Run B&A&HB #2 hot-path guard'
         shell: pwsh
         run: python mods/SPT-Belt-Armband-Inventory/tools/check_hotpaths.py
+      - name: 'Run B&A&HB #2 reload-access guard'
+        shell: pwsh
+        run: python mods/SPT-Belt-Armband-Inventory/tools/check_reload_access.py
       - name: 'Run B&A&HB #2 product-contract guard'
         shell: pwsh
         run: python mods/SPT-Belt-Armband-Inventory/tools/check_product_contract.py
