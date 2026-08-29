@@ -30,8 +30,7 @@ $runtime = Read-Json (Join-Path $reports 'economy-admiral-runtime-evidence.json'
 
 if ([int]$source.SchemaVersion -ne 2) { Fail "source-pressure SchemaVersion must be 2" }
 if ([string]$source.EvidenceCoverage -ne 'FinalDbCore+ExplicitAdaptersWithExplicitUnknownChannels') { Fail "unexpected source-pressure coverage contract" }
-if ([int]$source.SourceCount -le 0 -or [int]$source.LoadedAdapterCount -lt 1) { Fail "release candidate requires final-DB evidence and a loaded explicit Trader adapter" }
-if (-not (@($source.LoadedAdapters) -contains 'com.admiralam.spt.admiraltrader')) { Fail "Admiral Trader explicit adapter is not loaded into source-pressure evidence" }
+if ([int]$source.SourceCount -le 0) { Fail "release candidate requires final-DB source evidence" }
 # AcquisitionChannel.WorldLoot serializes as numeric enum value 6 in the runtime report.
 $world = @($source.ChannelCoverage | Where-Object { [int]$_.Channel -eq 6 })
 if ($world.Count -ne 1 -or [string]$world[0].State -ne 'UnknownNoMaintainedAdapter') { Fail "world-loot boundary must remain explicit UnknownNoMaintainedAdapter" }
@@ -44,27 +43,42 @@ $healthWorld = @($health.ChannelCoverage | Where-Object { [int]$_.Channel -eq 6 
 if ($healthWorld.Count -ne 1 -or [string]$healthWorld[0].State -ne 'UnknownNoMaintainedAdapter') { Fail "health report lost the explicit world-loot Unknown boundary" }
 
 if ([int]$adapter.SchemaVersion -ne 3) { Fail "Admiral Trader adapter SchemaVersion must be 3" }
-if ($adapter.Installed -ne $true -or $adapter.ContractAvailable -ne $true) { Fail "Beta RC requires installed Admiral Trader with an available maintained contract" }
-if ([string]$adapter.ContractState -ne 'LoadedGameplayAlphaV4' -or [int]$adapter.GameplayPolicySchemaVersion -ne 4) { Fail "Beta RC requires the maintained Gameplay Alpha v4 contract" }
-if ([string]$adapter.ProductName -ne 'Admiral Trader' -or [string]$adapter.ModGuid -ne 'com.admiralam.spt.admiraltrader' -or [string]$adapter.TraderId -ne 'd5c27bb3169f8dfbc13f6b69') { Fail "Admiral Trader product/owner/trader identity mismatch" }
-if ([string]$adapter.AttributionConfidence -ne 'ExplicitAdapter') { Fail "Admiral Trader attribution must remain ExplicitAdapter" }
-if ([int]$adapter.OfferCount -ne ([int]$adapter.BaselineOfferCount + [int]$adapter.RelationshipOfferCount + [int]$adapter.MilestoneOfferCount)) { Fail "Admiral Trader stock-class counts do not cover every permanent offer" }
-if ([int]$adapter.OfferCount -ne [int]$adapter.BoundedRenewableOfferCount) { Fail "all maintained Admiral Trader permanent offers must remain bounded" }
-if ($adapter.SpecialWeaponsPermanentOfferAllowed -ne $false -or $adapter.SpecialWeaponsSampleOnly -ne $true) { Fail "Special Weapons sample-only contract drifted" }
-foreach ($offer in @($adapter.Offers)) {
-    if ([string]$offer.StockClass -notin @('Baseline','Relationship','Milestone')) { Fail "unclassified Admiral Trader permanent offer $($offer.OfferId)" }
-    if ([string]$offer.Source.ProvenanceClass -ne 'ExplicitAdapter') { Fail "offer $($offer.OfferId) lost ExplicitAdapter provenance" }
-    # RenewableSupplyBound.Bounded serializes as numeric enum value 1.
-    if ([int]$offer.Capacity.SupplyBound -ne 1) { Fail "offer $($offer.OfferId) is not bounded" }
-    if ([string]$offer.StockClass -eq 'Milestone' -and ([string]$offer.GateKind -ne 'Quest' -or $null -eq $offer.EffectiveGate)) { Fail "milestone offer $($offer.OfferId) lost its authored effective quest gate" }
+$traderInstalled = ($adapter.Installed -eq $true)
+if ($traderInstalled) {
+    # Admiral Trader is optional. Once present, its compatibility contract is strict and fail-closed.
+    if ($adapter.ContractAvailable -ne $true) { Fail "installed Admiral Trader does not expose a supported maintained contract: $($adapter.ContractState)" }
+    if ([int]$source.LoadedAdapterCount -lt 1 -or -not (@($source.LoadedAdapters) -contains 'com.admiralam.spt.admiraltrader')) { Fail "installed Admiral Trader explicit adapter is not loaded into source-pressure evidence" }
+    if ([string]$adapter.ContractState -ne 'LoadedGameplayAlphaV4' -or [int]$adapter.GameplayPolicySchemaVersion -ne 4) { Fail "installed Admiral Trader must match the maintained Gameplay Alpha v4 contract" }
+    if ([string]$adapter.ProductName -ne 'Admiral Trader' -or [string]$adapter.ModGuid -ne 'com.admiralam.spt.admiraltrader' -or [string]$adapter.TraderId -ne 'd5c27bb3169f8dfbc13f6b69') { Fail "Admiral Trader product/owner/trader identity mismatch" }
+    if ([string]$adapter.AttributionConfidence -ne 'ExplicitAdapter') { Fail "Admiral Trader attribution must remain ExplicitAdapter" }
+    if ([int]$adapter.OfferCount -ne ([int]$adapter.BaselineOfferCount + [int]$adapter.RelationshipOfferCount + [int]$adapter.MilestoneOfferCount)) { Fail "Admiral Trader stock-class counts do not cover every permanent offer" }
+    if ([int]$adapter.OfferCount -ne [int]$adapter.BoundedRenewableOfferCount) { Fail "all maintained Admiral Trader permanent offers must remain bounded" }
+    if ($adapter.SpecialWeaponsPermanentOfferAllowed -ne $false -or $adapter.SpecialWeaponsSampleOnly -ne $true) { Fail "Special Weapons sample-only contract drifted" }
+    foreach ($offer in @($adapter.Offers)) {
+        if ([string]$offer.StockClass -notin @('Baseline','Relationship','Milestone')) { Fail "unclassified Admiral Trader permanent offer $($offer.OfferId)" }
+        if ([string]$offer.Source.ProvenanceClass -ne 'ExplicitAdapter') { Fail "offer $($offer.OfferId) lost ExplicitAdapter provenance" }
+        # RenewableSupplyBound.Bounded serializes as numeric enum value 1.
+        if ([int]$offer.Capacity.SupplyBound -ne 1) { Fail "offer $($offer.OfferId) is not bounded" }
+        if ([string]$offer.StockClass -eq 'Milestone' -and ([string]$offer.GateKind -ne 'Quest' -or $null -eq $offer.EffectiveGate)) { Fail "milestone offer $($offer.OfferId) lost its authored effective quest gate" }
+    }
+}
+else {
+    if ($adapter.ContractAvailable -ne $false -or [string]$adapter.ContractState -ne 'NotInstalled') { Fail "absent Admiral Trader must report clean NotInstalled optional-dependency state" }
+    if ([int]$source.LoadedAdapterCount -ne 0 -or (@($source.LoadedAdapters) -contains 'com.admiralam.spt.admiraltrader')) { Fail "source-pressure evidence claims Admiral Trader adapter while Trader is not installed" }
 }
 
 $build = $runtime.BuildIdentity
 if ($null -eq $build -or [string]$build.Product -ne 'Economy Admiral' -or [string]$build.TargetRuntime -ne 'SPT 4.1.3') { Fail "runtime build identity invalid" }
 if ([string]$build.HeadSha -notmatch '^[0-9a-fA-F]{40}$') { Fail "runtime build identity does not contain an exact SHA" }
 
-Pass "combined Economy Beta RC proven: transactional Enforce + explicit Trader v4 compatibility + source-pressure/health fail-closed evidence"
+if ($traderInstalled) {
+    Pass "combined Economy Beta RC proven: standalone economy + strict installed Admiral Trader v4 compatibility + source-pressure/health evidence"
+    Write-Host "[Economy Admiral] trader offers: baseline=$($adapter.BaselineOfferCount), relationship=$($adapter.RelationshipOfferCount), milestone=$($adapter.MilestoneOfferCount), bounded=$($adapter.BoundedRenewableOfferCount)"
+}
+else {
+    Pass "combined Economy Beta RC proven: standalone economy + optional Admiral Trader absent + source-pressure/health evidence"
+    Write-Host "[Economy Admiral] trader compatibility: optional Admiral Trader not installed"
+}
 Write-Host "[Economy Admiral] build: $($build.HeadSha) / workflow $($build.WorkflowRunId)"
-Write-Host "[Economy Admiral] trader offers: baseline=$($adapter.BaselineOfferCount), relationship=$($adapter.RelationshipOfferCount), milestone=$($adapter.MilestoneOfferCount), bounded=$($adapter.BoundedRenewableOfferCount)"
 Write-Host "[Economy Admiral] observed items: sourcePressure=$($source.Items.Count), health=$($health.ItemCount)"
 exit 0
