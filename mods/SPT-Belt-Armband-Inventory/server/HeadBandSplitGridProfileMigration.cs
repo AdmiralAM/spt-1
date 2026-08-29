@@ -25,7 +25,13 @@ public sealed class HeadBandSplitGridProfileMigration : AbstractProfileMigration
     {
         var inventory = GetInventory(profile, character);
         var items = inventory?["items"] as JsonArray;
-        if (items == null) return false;
+        if (inventory == null || items == null) return false;
+
+        // PMC can preserve excess/unknown roots by moving them to sorting table.
+        // Scav usually has no sorting table. Those children are intentionally left
+        // untouched rather than deleted; therefore they must not keep this migration
+        // permanently pending after all actionable 1x1 normalization has completed.
+        bool canOffload = !string.IsNullOrEmpty(ReadString(inventory, "sortingTable"));
 
         foreach (var headBand in items.OfType<JsonObject>().Where(IsHeadBand))
         {
@@ -40,18 +46,30 @@ public sealed class HeadBandSplitGridProfileMigration : AbstractProfileMigration
                 if (tpl != null && HeadBandUtilityPolicy.IsCurrencyOrWallet(tpl))
                 {
                     currencyCount++;
-                    if (currencyCount > 1
-                        || !string.Equals(ReadString(child, "slotId"), DedicatedWearableItems.HeadBandCurrencyGridName, StringComparison.Ordinal)
-                        || !IsOriginLocation(child["location"])) return true;
+                    if (currencyCount == 1)
+                    {
+                        if (!string.Equals(ReadString(child, "slotId"), DedicatedWearableItems.HeadBandCurrencyGridName, StringComparison.Ordinal)
+                            || !IsOriginLocation(child["location"])) return true;
+                    }
+                    else if (canOffload)
+                    {
+                        return true;
+                    }
                 }
                 else if (tpl != null && HeadBandUtilityPolicy.IsCigarette(tpl))
                 {
                     cigaretteCount++;
-                    if (cigaretteCount > 1
-                        || !string.Equals(ReadString(child, "slotId"), DedicatedWearableItems.HeadBandCigarettesGridName, StringComparison.Ordinal)
-                        || !IsOriginLocation(child["location"])) return true;
+                    if (cigaretteCount == 1)
+                    {
+                        if (!string.Equals(ReadString(child, "slotId"), DedicatedWearableItems.HeadBandCigarettesGridName, StringComparison.Ordinal)
+                            || !IsOriginLocation(child["location"])) return true;
+                    }
+                    else if (canOffload)
+                    {
+                        return true;
+                    }
                 }
-                else
+                else if (canOffload)
                 {
                     return true;
                 }
@@ -94,7 +112,9 @@ public sealed class HeadBandSplitGridProfileMigration : AbstractProfileMigration
                 // Never delete overflow or an unknown legacy child. PMC profiles have
                 // a sorting table; move the whole child subtree root there and leave
                 // descendants attached to it. Scav normally has no sorting table, so
-                // preserve an unclassifiable child untouched rather than corrupting it.
+                // preserve an unclassifiable/overflow child untouched. NeedsMigration
+                // deliberately ignores such unfixable Scav roots after actionable
+                // normalization, preventing an endless pending-migration loop.
                 if (!string.IsNullOrEmpty(sortingTableId))
                     MoveToSortingTable(child, sortingTableId);
             }
