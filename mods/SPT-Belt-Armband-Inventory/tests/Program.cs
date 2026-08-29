@@ -97,6 +97,12 @@ internal static class Program
             "non-magazine descendants are never promoted into reload reachability");
         Assert(!FastAccessSlotPolicy.ShouldPromoteReloadReachability(false, true, false),
             "magazines outside exact B&A&HB fast-access wearable roots remain vanilla-unreachable");
+        string[] vanillaReloadSlots = { BeltSlotPlan.TacticalVest, BeltSlotPlan.Pockets };
+        string[] extendedReloadSlots = FastAccessSlotPolicy.Extend(vanillaReloadSlots);
+        Assert(extendedReloadSlots.Take(vanillaReloadSlots.Length).SequenceEqual(vanillaReloadSlots),
+            "B&A&HB preserves the complete vanilla reload-slot order as the priority prefix");
+        Assert(extendedReloadSlots.Skip(vanillaReloadSlots.Length).SequenceEqual(new[] { BeltSlotPlan.ArmBand, RuntimeIdentity.DedicatedBeltWireSlotId }),
+            "Magazine Armband and Magazine Belt are appended only after vanilla reload slots");
 
         Assert(ScavBeltPolicy.ShouldRestore(RuntimeIdentity.CandidateItemId, true, true),
             "ArmBand runtime candidate survives Scav ReplaceInventory when deleted");
