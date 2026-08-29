@@ -44,12 +44,25 @@ for token in [
     "filterGroups.Length != 1",
     "ArmBand slot boundary is missing or ambiguous",
     "ArmBand slot filter boundary is missing or ambiguous",
+    "Only expose the custom parent to vanilla ArmBand after the item itself was",
 ]:
     if token not in armband:
         violations.append(f"Magazine Armband consumer missing token {token!r}")
 
 if 'FirstOrDefault(x => string.Equals(x.Name, "ArmBand"' in armband:
     violations.append("Magazine Armband must not mutate the first ArmBand slot when the host boundary is ambiguous")
+
+# On the new-item path, host-filter mutation must happen only after successful
+# CreateItemFromClone. The existing-item branch may expose the parent after its
+# own ValidateExistingCandidate succeeds.
+details = armband.find("var details = new NewItemFromCloneDetails")
+create = armband.find("var result = customItemService.CreateItemFromClone(details);", details)
+failed = armband.find("if (!result.Success)", create)
+post_create_host = armband.find("EnsureArmBandAcceptsCustomBeltParent();", failed)
+if min(details, create, failed, post_create_host) < 0 or not (details < create < failed < post_create_host):
+    violations.append("new Magazine Armband path must create/validate the item successfully before exposing its parent to vanilla ArmBand")
+if details >= 0 and create >= 0 and "EnsureArmBandAcceptsCustomBeltParent();" in armband[details:create]:
+    violations.append("new Magazine Armband path mutates ArmBand filter before item creation completes")
 
 for forbidden in ["EnsureCustomParents()", "EnsureCustomParent(", "templateTable.Items[id] = new TemplateItem"]:
     if forbidden in armband:
@@ -58,4 +71,4 @@ for forbidden in ["EnsureCustomParents()", "EnsureCustomParent(", "templateTable
 if violations:
     raise SystemExit("B&A&HB taxonomy-ownership gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB taxonomy-ownership gate: OK (atomic single-owner taxonomy; later item registration validates parents and a unique ArmBand/one-filter host boundary before mutation)")
+print("B&A&HB taxonomy-ownership gate: OK (atomic single-owner taxonomy; unique ArmBand host; new item exists before host filter is widened)")
