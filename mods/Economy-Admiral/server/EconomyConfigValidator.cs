@@ -12,28 +12,28 @@ public static class EconomyConfigValidator
         ArgumentNullException.ThrowIfNull(config);
 
         if (config.RepeatedRaidLootDecay)
-        {
             throw new InvalidOperationException("Economy Admiral config: RepeatedRaidLootDecay is not implemented and must remain false.");
-        }
         if (string.IsNullOrWhiteSpace(config.ReportRelativePath))
-        {
             throw new InvalidOperationException("Economy Admiral config: ReportRelativePath must not be empty.");
-        }
         if (Path.IsPathRooted(config.ReportRelativePath)
             || config.ReportRelativePath.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries).Contains("..", StringComparer.Ordinal))
-        {
             throw new InvalidOperationException("Economy Admiral config: ReportRelativePath must remain inside the mod folder.");
-        }
         if (config.Rarity is null || config.CustomAuditPolicy is null || config.ManualOverrides is null || config.QuestRewardOverrides is null)
-        {
             throw new InvalidOperationException("Economy Admiral config: Rarity, CustomAuditPolicy, ManualOverrides and QuestRewardOverrides must be objects.");
-        }
+        if (!double.IsFinite(config.CustomTraderPurchasePriceMultiplier)
+            || config.CustomTraderPurchasePriceMultiplier < 1.0
+            || config.CustomTraderPurchasePriceMultiplier > 2.0)
+            throw new InvalidOperationException("Economy Admiral config: CustomTraderPurchasePriceMultiplier must be finite and within 1.0..2.0.");
+        if (!double.IsFinite(config.CustomFleaBasePriceMultiplier)
+            || config.CustomFleaBasePriceMultiplier < 1.0
+            || config.CustomFleaBasePriceMultiplier > 2.5)
+            throw new InvalidOperationException("Economy Admiral config: CustomFleaBasePriceMultiplier must be finite and within 1.0..2.5.");
+        ValidateLootScale(config.CustomLooseLootScale, nameof(config.CustomLooseLootScale));
+        ValidateLootScale(config.CustomStaticLootScale, nameof(config.CustomStaticLootScale));
 
         if (config.Rarity.CommonMinSources < 1 || config.Rarity.UncommonMinSources < 1 || config.Rarity.RareMinSources < 1
             || !(config.Rarity.CommonMinSources > config.Rarity.UncommonMinSources && config.Rarity.UncommonMinSources > config.Rarity.RareMinSources))
-        {
             throw new InvalidOperationException("Economy Admiral config: rarity thresholds must be positive and satisfy Common > Uncommon > Rare.");
-        }
 
         ValidatePositiveFinite(config.CustomAuditPolicy.QuestRewardVsVanillaMedianWarnMultiple, nameof(config.CustomAuditPolicy.QuestRewardVsVanillaMedianWarnMultiple));
         ValidatePositiveFinite(config.CustomAuditPolicy.RestartableRewardVsVanillaMedianWarnMultiple, nameof(config.CustomAuditPolicy.RestartableRewardVsVanillaMedianWarnMultiple));
@@ -51,28 +51,20 @@ public static class EconomyConfigValidator
         ValidatePositiveFinite(config.CustomAuditPolicy.LowDepthMaxRelativeMultiple, nameof(config.CustomAuditPolicy.LowDepthMaxRelativeMultiple));
         ValidatePositiveFinite(config.CustomAuditPolicy.LowStructureMaxRelativeMultiple, nameof(config.CustomAuditPolicy.LowStructureMaxRelativeMultiple));
         if (config.CustomAuditPolicy.DuplicateTraderSourcesWarnCount < 1)
-        {
             throw new InvalidOperationException("Economy Admiral config: DuplicateTraderSourcesWarnCount must be positive.");
-        }
 
         foreach (var (templateId, itemOverride) in config.ManualOverrides)
         {
             if (string.IsNullOrWhiteSpace(templateId) || itemOverride is null)
-            {
                 throw new InvalidOperationException("Economy Admiral config: manual overrides require non-empty template ids and object values.");
-            }
             if (itemOverride.Rarity is not null && !AllowedRarities.Contains(itemOverride.Rarity))
-            {
                 throw new InvalidOperationException($"Economy Admiral config: unsupported manual rarity '{itemOverride.Rarity}' for template '{templateId}'.");
-            }
         }
 
         foreach (var (questId, questOverride) in config.QuestRewardOverrides)
         {
             if (string.IsNullOrWhiteSpace(questId) || questOverride is null)
-            {
                 throw new InvalidOperationException("Economy Admiral config: quest reward overrides require non-empty quest ids and object values.");
-            }
             if (questOverride.ExperienceTarget is { } xp)
             {
                 ValidateNonNegativeFinite(xp, $"QuestRewardOverrides[{questId}].ExperienceTarget");
@@ -81,9 +73,7 @@ public static class EconomyConfigValidator
             if (questOverride.TraderStandingTarget is { } standing)
             {
                 if (!double.IsFinite(standing))
-                {
                     throw new InvalidOperationException($"Economy Admiral config: QuestRewardOverrides[{questId}].TraderStandingTarget must be finite.");
-                }
                 ValidateExactPrecision(standing, 4, $"QuestRewardOverrides[{questId}].TraderStandingTarget", "representable to at most 4 decimal places");
             }
             if (questOverride.ItemRewardStackCountTarget is { } stackTarget)
@@ -94,29 +84,29 @@ public static class EconomyConfigValidator
         }
     }
 
+    private static void ValidateLootScale(double value, string name)
+    {
+        if (!double.IsFinite(value) || value < 0.50 || value > 1.00)
+            throw new InvalidOperationException($"Economy Admiral config: {name} must be finite and within 0.50..1.00.");
+    }
+
     private static void ValidateExactPrecision(double value, int decimals, string name, string requirement)
     {
         var rounded = Math.Round(value, decimals);
         var tolerance = decimals == 0 ? 0.000001 : 0.000000001;
         if (Math.Abs(value - rounded) > tolerance)
-        {
             throw new InvalidOperationException($"Economy Admiral config: {name} must be {requirement}; exact targets are not silently rounded.");
-        }
     }
 
     private static void ValidatePositiveFinite(double value, string name)
     {
         if (!double.IsFinite(value) || value <= 0)
-        {
             throw new InvalidOperationException($"Economy Admiral config: {name} must be finite and > 0.");
-        }
     }
 
     private static void ValidateNonNegativeFinite(double value, string name)
     {
         if (!double.IsFinite(value) || value < 0)
-        {
             throw new InvalidOperationException($"Economy Admiral config: {name} must be finite and >= 0.");
-        }
     }
 }

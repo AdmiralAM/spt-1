@@ -27,56 +27,18 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
             var gameplayPolicyPath = Path.Combine(traderModPath, "manifests", "gameplay-policy.json");
             if (!File.Exists(gameplayPolicyPath))
             {
-                report = Empty(true, "ContractUnavailable", "Admiral Trader is installed but manifests/gameplay-policy.json is absent; explicit source-pressure evidence is suppressed until a supported machine-readable contract is present.");
+                report = Empty(true, "ContractUnavailable", "Admiral Trader is installed but manifests/gameplay-policy.json is absent; explicit evidence is suppressed until a supported machine-readable contract is present.");
             }
             else
             {
-                var policyJson = await File.ReadAllTextAsync(gameplayPolicyPath, cancellationToken);
-                using var policyDoc = JsonDocument.Parse(policyJson);
-                if (!policyDoc.RootElement.TryGetProperty("schemaVersion", out var schemaElement) || !schemaElement.TryGetInt32(out var schemaVersion))
-                    throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: gameplay-policy schemaVersion is missing or invalid.");
-
-                var assortJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "db", "assort.json"), cancellationToken);
-                var questAssortJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "db", "questassort.json"), cancellationToken);
-                var authoredQuestJson = await ReadQuestRecordsAsync(traderModPath, cancellationToken);
-                IReadOnlyList<AdmiralTraderOfferAdapterEvidence> offers;
-                string contractState;
-
-                if (schemaVersion == 4)
+                try
                 {
-                    var baselineJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "manifests", "baseline-stock.json"), cancellationToken);
-                    offers = AdmiralTraderGameplayAlphaAdapter.Parse(policyJson, baselineJson, assortJson, questAssortJson, authoredQuestJson);
-                    contractState = "LoadedGameplayAlphaV4";
+                    report = await LoadSupportedContractAsync(traderModPath, gameplayPolicyPath, cancellationToken);
                 }
-                else if (schemaVersion == 3)
+                catch (Exception exception) when (exception is InvalidOperationException or JsonException)
                 {
-                    var policy = AdmiralTraderAdapterEvidence.ParseGameplayPolicy(policyJson);
-                    offers = AdmiralTraderItemAdapter.ParseAndApplyEffectiveQuestGates(assortJson, questAssortJson, policy, authoredQuestJson);
-                    contractState = "LoadedPrototypeV3";
+                    report = Empty(true, "ContractUnsupported", exception.Message);
                 }
-                else
-                {
-                    throw new InvalidOperationException($"Economy Admiral Admiral Trader runtime adapter: unsupported gameplay-policy schemaVersion {schemaVersion}.");
-                }
-
-                if (offers.Any(offer => offer.Source.EarliestProgressionLevel is null))
-                    throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: enriched offer progression evidence is incomplete.");
-                if (offers.Any(offer => string.Equals(offer.GateKind, "Quest", StringComparison.Ordinal) && offer.EffectiveGate is null))
-                    throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: quest-gated offer is missing effective gate evidence.");
-
-                report = new AdmiralTraderRuntimeAdapterReport
-                {
-                    Installed = true,
-                    ContractAvailable = true,
-                    ContractState = contractState,
-                    ModGuid = AdmiralTraderInstallationLocator.ExpectedModGuid,
-                    AttributionConfidence = AdmiralTraderAdapterEvidence.AttributionConfidence,
-                    OfferCount = offers.Count,
-                    BoundedRenewableOfferCount = offers.Count(o => o.Capacity.SupplyBound == RenewableSupplyBound.Bounded),
-                    MinimumEffectiveProgressionLevel = offers.Min(o => o.Source.EarliestProgressionLevel),
-                    MaximumEffectiveProgressionLevel = offers.Max(o => o.Source.EarliestProgressionLevel),
-                    Offers = offers,
-                };
             }
         }
 
@@ -86,13 +48,92 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
         return report;
     }
 
+    private static async Task<AdmiralTraderRuntimeAdapterReport> LoadSupportedContractAsync(
+        string traderModPath,
+        string gameplayPolicyPath,
+        CancellationToken cancellationToken)
+    {
+        var policyJson = await File.ReadAllTextAsync(gameplayPolicyPath, cancellationToken);
+        using var policyDoc = JsonDocument.Parse(policyJson);
+        if (!policyDoc.RootElement.TryGetProperty("schemaVersion", out var schemaElement) || !schemaElement.TryGetInt32(out var schemaVersion))
+            throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: gameplay-policy schemaVersion is missing or invalid.");
+
+        var assortJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "db", "assort.json"), cancellationToken);
+        var questAssortJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "db", "questassort.json"), cancellationToken);
+        var authoredQuestJson = await ReadQuestRecordsAsync(traderModPath, cancellationToken);
+        IReadOnlyList<AdmiralTraderOfferAdapterEvidence> offers;
+        string contractState;
+        AdmiralTraderGameplayAlphaContractSummary? gameplay = null;
+
+        if (schemaVersion == 4)
+        {
+            var campaignJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "manifests", "campaign-manifest.json"), cancellationToken);
+            var identityJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "manifests", "identity-assets.json"), cancellationToken);
+            var baseJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "db", "base.json"), cancellationToken);
+            var baselineJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "manifests", "baseline-stock.json"), cancellationToken);
+            gameplay = AdmiralTraderGameplayAlphaAdapter.Parse(
+                campaignJson,
+                identityJson,
+                baseJson,
+                policyJson,
+                baselineJson,
+                assortJson,
+                questAssortJson,
+                authoredQuestJson);
+            offers = gameplay.Offers;
+            contractState = "LoadedGameplayAlphaV4";
+        }
+        else if (schemaVersion == 3)
+        {
+            var policy = AdmiralTraderAdapterEvidence.ParseGameplayPolicy(policyJson);
+            offers = AdmiralTraderItemAdapter.ParseAndApplyEffectiveQuestGates(assortJson, questAssortJson, policy, authoredQuestJson);
+            contractState = "LoadedPrototypeV3";
+        }
+        else
+        {
+            throw new InvalidOperationException($"Economy Admiral Admiral Trader runtime adapter: unsupported gameplay-policy schemaVersion {schemaVersion}.");
+        }
+
+        if (offers.Any(offer => offer.Source.EarliestProgressionLevel is null))
+            throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: enriched offer progression evidence is incomplete.");
+        if (offers.Any(offer => string.Equals(offer.GateKind, "Quest", StringComparison.Ordinal) && offer.EffectiveGate is null))
+            throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: quest-gated offer is missing effective gate evidence.");
+        if (offers.Any(offer => !string.Equals(offer.Source.ProvenanceClass, AdmiralTraderAdapterEvidence.AttributionConfidence, StringComparison.Ordinal)))
+            throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: explicit adapter provenance drifted.");
+
+        return new AdmiralTraderRuntimeAdapterReport
+        {
+            Installed = true,
+            ContractAvailable = true,
+            ContractState = contractState,
+            ProductName = gameplay?.ProductName ?? "Admiral Trader (legacy prototype)",
+            ModGuid = gameplay?.ModGuid ?? AdmiralTraderInstallationLocator.ExpectedModGuid,
+            TraderId = gameplay?.TraderId ?? AdmiralTraderGameplayAlphaAdapter.ExpectedTraderId,
+            GameplayPolicySchemaVersion = schemaVersion,
+            AttributionConfidence = AdmiralTraderAdapterEvidence.AttributionConfidence,
+            OfferCount = offers.Count,
+            BaselineOfferCount = gameplay?.BaselineOfferCount ?? 0,
+            RelationshipOfferCount = gameplay?.RelationshipOfferCount ?? 0,
+            MilestoneOfferCount = gameplay?.MilestoneOfferCount ?? offers.Count,
+            BoundedRenewableOfferCount = offers.Count(o => o.Capacity.SupplyBound == RenewableSupplyBound.Bounded),
+            RelationshipStockAllowed = gameplay?.RelationshipStockAllowed ?? false,
+            SpecialWeaponsPermanentOfferAllowed = gameplay?.SpecialWeaponsPermanentOfferAllowed ?? false,
+            SpecialWeaponsSampleOnly = gameplay?.SpecialWeaponsSampleOnly ?? false,
+            MinimumEffectiveProgressionLevel = offers.Min(o => o.Source.EarliestProgressionLevel),
+            MaximumEffectiveProgressionLevel = offers.Max(o => o.Source.EarliestProgressionLevel),
+            Offers = offers,
+        };
+    }
+
     private static AdmiralTraderRuntimeAdapterReport Empty(bool installed, string state, string? diagnostic) => new()
     {
         Installed = installed,
         ContractAvailable = false,
         ContractState = state,
         ContractDiagnostic = diagnostic,
+        ProductName = AdmiralTraderGameplayAlphaAdapter.ExpectedProductName,
         ModGuid = AdmiralTraderInstallationLocator.ExpectedModGuid,
+        TraderId = AdmiralTraderGameplayAlphaAdapter.ExpectedTraderId,
         AttributionConfidence = AdmiralTraderAdapterEvidence.AttributionConfidence,
         Offers = Array.Empty<AdmiralTraderOfferAdapterEvidence>(),
     };

@@ -17,7 +17,12 @@ public sealed class EconomyMod(
     QuestAnalysisService questAnalysisService,
     QuestProvenanceDeltaService questProvenanceDeltaService,
     EnforcementPlanService enforcementPlanService,
-    GroupedItemRuntimeEvidenceService groupedItemRuntimeEvidenceService
+    GroupedItemRuntimeEvidenceService groupedItemRuntimeEvidenceService,
+    SourcePressureObservationPipelineService sourcePressureObservationPipelineService,
+    EconomyHealthRuntimeReportService economyHealthRuntimeReportService,
+    TraderPurchasePressureService traderPurchasePressureService,
+    FleaPurchasePressureService fleaPurchasePressureService,
+    LootPressureService lootPressureService
 ) : IOnLoad
 {
     public async Task OnLoadAsync(CancellationToken cancellationToken)
@@ -29,18 +34,26 @@ public sealed class EconomyMod(
         var vanillaBaseline = vanillaBaselineService.GetSnapshot();
         runtimeEvidenceService.CaptureBefore();
 
-        // Primary acquisition and progression need their own source scans. Unified analysis is the
-        // single final-quest metric scan; utility/constraint reports are projections from that snapshot.
         await auditService.RunAsync(vanillaBaseline, cancellationToken);
         var progressionSnapshot = await questProgressionGraphService.RunAsync(vanillaBaseline, cancellationToken);
         var questAnalysis = await questAnalysisService.RunAsync(progressionSnapshot, vanillaBaseline, cancellationToken);
-
         await rewardUtilityAuditService.RunAsync(questAnalysis, vanillaBaseline, cancellationToken);
         await questConstraintAuditService.RunAsync(questAnalysis, vanillaBaseline, cancellationToken);
 
         var questProvenance = await questProvenanceDeltaService.RunAsync(vanillaBaseline, questAnalysis, cancellationToken);
+
+        var observation = await sourcePressureObservationPipelineService.RunAsync(config, vanillaBaseline, cancellationToken);
+        await economyHealthRuntimeReportService.RunAsync(config, observation.SourcePressure, cancellationToken);
+
+        questAnalysis = PlayableQuestRewardPolicy.ApplyToEnforcement(config, questAnalysis);
+
         GroupedItemRewardSlot.ResetEvidence();
-        var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, cancellationToken);
+        var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, observation.AdmiralTrader, cancellationToken);
+
+        traderPurchasePressureService.Apply(config);
+        fleaPurchasePressureService.Apply(config);
+        lootPressureService.Apply(config);
+
         await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);
         await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
     }
