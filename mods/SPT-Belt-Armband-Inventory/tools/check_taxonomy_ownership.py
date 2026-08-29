@@ -44,13 +44,16 @@ for token in [
     if token not in armband:
         violations.append(f"Magazine Armband consumer missing token {token!r}")
 
-if "EnsureArmBandAccepts" in armband:
+if "EnsureArmBandAccepts" in armband or "CommitArmBandExactProducts" in armband:
     violations.append("Magazine Armband must not mutate ArmBand host filters before Wrist Wallet exists")
 
 for token in [
     "[Injectable(TypePriority = OnLoadOrder.Preload + 2)]",
     "if (!templateTable.Items.ContainsKey(MagazineArmbandTpl))",
-    "EnsureArmBandAcceptsExactProducts();",
+    "HashSet<MongoId> armBandFilter = PrepareArmBandExactProductFilter();",
+    "CommitArmBandExactProducts(armBandFilter);",
+    "private HashSet<MongoId> PrepareArmBandExactProductFilter()",
+    "private void CommitArmBandExactProducts(HashSet<MongoId> filter)",
     '.Where(x => string.Equals(x.Name, "ArmBand", StringComparison.Ordinal))',
     ".Take(2)",
     "armBands.Length != 1",
@@ -68,22 +71,24 @@ if 'FirstOrDefault(x => string.Equals(x.Name, "ArmBand"' in wallet:
 if "filter.Add(BroadBeltParentTpl)" in wallet or "filter.Add(RuntimeCandidateBeltItem.CustomBeltParentTpl)" in wallet:
     violations.append("ArmBand filter must never admit the broad Belt parent shared by dedicated Magazine Belt")
 
-# New Wrist Wallet path: creation must complete before host mutation. The broad
-# parent collision check must occur before either exact product is added.
+# Host target/collision boundary must be proven before a new Wrist Wallet is
+# created. Exact filter mutation is committed only after successful creation.
+prepare = wallet.find("HashSet<MongoId> armBandFilter = PrepareArmBandExactProductFilter();")
 details = wallet.find("var details = new NewItemFromCloneDetails")
 create = wallet.find("var result = customItemService.CreateItemFromClone(details);", details)
 failed = wallet.find("if (!result.Success)", create)
-post_create_host = wallet.find("EnsureArmBandAcceptsExactProducts();", failed)
-if min(details, create, failed, post_create_host) < 0 or not (details < create < failed < post_create_host):
-    violations.append("new Wrist Wallet path must create successfully before exposing exact ArmBand products")
+commit = wallet.find("CommitArmBandExactProducts(armBandFilter);", failed)
+if min(prepare, details, create, failed, commit) < 0 or not (prepare < details < create < failed < commit):
+    violations.append("new Wrist Wallet path must prepare host first, create item successfully, then commit exact ArmBand products")
 
-method_start = wallet.find("private void EnsureArmBandAcceptsExactProducts()")
-method = wallet[method_start:] if method_start >= 0 else ""
-broad_check = method.find("if (filter.Contains(BroadBeltParentTpl))")
-mag_add = method.find("filter.Add(MagazineArmbandTpl)")
-wallet_add = method.find("filter.Add(WristWalletTpl)")
-if min(broad_check, mag_add, wallet_add) < 0 or not (broad_check < mag_add and broad_check < wallet_add):
-    violations.append("broad Belt-parent collision must be rejected before any exact ArmBand filter mutation")
+prepare_method_start = wallet.find("private HashSet<MongoId> PrepareArmBandExactProductFilter()")
+commit_method_start = wallet.find("private void CommitArmBandExactProducts(HashSet<MongoId> filter)")
+prepare_method = wallet[prepare_method_start:commit_method_start] if prepare_method_start >= 0 and commit_method_start > prepare_method_start else ""
+commit_method = wallet[commit_method_start:] if commit_method_start >= 0 else ""
+if "filter.Add(" in prepare_method:
+    violations.append("ArmBand prepare phase must not mutate the filter")
+if "BroadBeltParentTpl" in commit_method:
+    violations.append("all broad-parent collision checks must complete in prepare phase before commit")
 
 for forbidden in ["EnsureCustomParents()", "EnsureCustomParent(", "templateTable.Items[id] = new TemplateItem"]:
     if forbidden in armband:
@@ -92,4 +97,4 @@ for forbidden in ["EnsureCustomParents()", "EnsureCustomParent(", "templateTable
 if violations:
     raise SystemExit("B&A&HB taxonomy-ownership gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB taxonomy-ownership gate: OK (atomic single-owner taxonomy; Magazine Armband creates first; Wrist Wallet exposes only two exact ArmBand products after both exist; broad Belt parent rejected pre-mutation)")
+print("B&A&HB taxonomy-ownership gate: OK (atomic single-owner taxonomy; Magazine Armband creates first; ArmBand host is prepared collision-free before Wallet creation; only two exact products commit after both exist)")
