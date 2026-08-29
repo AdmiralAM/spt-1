@@ -10,7 +10,8 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
     TradersTable traders,
     RagfairConfig ragfair,
     GlobalTable globalTable,
-    LocationConfig locationConfig)
+    LocationConfig locationConfig,
+    QuestConfig questConfig)
 {
     public EconomyEnforcementTransactionSnapshot Capture(EconomyConfig config)
     {
@@ -19,6 +20,8 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
 
         if (config.EnableQuestEconomyCluster)
             CaptureQuestRewards(entries);
+        if (config.EnableQuestEconomyCluster && config.EnableRestartableQuestPressure)
+            CaptureNativeRepeatableRewards(entries, config);
         if (config.EnableTraderPurchasePressure)
             CaptureTraderPurchaseCosts(entries);
         if (config.EnableTraderSellPressure)
@@ -65,6 +68,31 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
                     }
                 }
             }
+        }
+    }
+
+    private void CaptureNativeRepeatableRewards(List<EconomyRollbackEntry> entries, EconomyConfig config)
+    {
+        for (var repeatableIndex = 0; repeatableIndex < questConfig.RepeatableQuests.Count; repeatableIndex++)
+        {
+            var repeatable = questConfig.RepeatableQuests[repeatableIndex];
+            if (config.EnableQuestXpPressure)
+                CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:experience", repeatable.RewardScaling.Experience);
+            if (config.EnableQuestStandingPressure)
+                CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:reputation", repeatable.RewardScaling.Reputation);
+        }
+    }
+
+    private static void CaptureList(List<EconomyRollbackEntry> entries, string label, IList<double> values)
+    {
+        for (var index = 0; index < values.Count; index++)
+        {
+            var capturedIndex = index;
+            var value = values[index];
+            entries.Add(new(
+                $"{label}:{capturedIndex}",
+                () => values[capturedIndex] = value,
+                () => object.Equals(values[capturedIndex], value)));
         }
     }
 
