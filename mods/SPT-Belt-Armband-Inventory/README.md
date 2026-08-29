@@ -13,6 +13,24 @@ The v0.2.0 client reports `AssemblyVersion/FileVersion/BepInEx PluginVersion = 0
 
 The BepInEx plugin GUID/name remain unchanged for in-place upgrade compatibility. Every CI artifact contains `BUILD-INFO.txt` with the exact head SHA, runtime candidate version, filename-compatibility marker and SHA-256 hashes for both runtime DLLs.
 
+## Candidate install / upgrade
+
+The CI artifact contains one install root: `SPT_Runtime`.
+
+1. Stop the SPT server and game completely.
+2. Back up the active SPT profile before the first v0.2.0 launch. v0.2.0 includes a one-way profile migration for the Utility HeadBand split-grid shape; the migration preserves valid content, but a profile backup remains the rollback boundary.
+3. Extract/copy the artifact's `SPT_Runtime` directory **over the existing SPT root**, preserving paths.
+4. Confirm the client path is exactly `SPT_Runtime/BepInEx/plugins/SPT Belt Armband Inventory v0.1.0.dll`. The filename is intentionally legacy; its compiled/BepInEx version is v0.2.0.
+5. Confirm there is **no** second `SPT Belt Armband Inventory v0.2.0.dll` (or another duplicate B&A&HB client DLL) beside it.
+6. Confirm the server path is `SPT_Runtime/user/mods/B&A&HB #2 MOD SPT/SPT-Belt-Armband-Inventory.Server.dll` and that the same directory contains `BUILD-INFO.txt`.
+7. For an exact candidate check, compare `BUILD-INFO.txt` `HeadSha`, `ClientSha256` and `ServerSha256` with the handoff evidence before launching SPT.
+
+Do not install v0.2.0 by copying only the client or only the server DLL. Client/server code and the profile migration belong to one exact candidate.
+
+### Rollback to stable v0.1.0
+
+Do not simply copy v0.1.0 binaries over a profile after v0.2.0 has migrated/created newer persistent data. Stop SPT, restore the pre-v0.2.0 profile backup when possible, then restore the complete stable v0.1.0 package. If no compatible backup exists, follow `profile-safety/README.md`: preserve a backup/copy and use the current cleanup contract before starting an older build that may not know newer distributed identities.
+
 ## Current v0.2 scope
 
 ### Wearable products
@@ -82,6 +100,7 @@ CI for PR #286 owns:
 - offline profile recovery;
 - client build;
 - server build against the SPT 4.1.3 package set;
+- compiled binary version checks and root/installed BUILD-INFO provenance;
 - one installable exact-head RC artifact with exact-head/hash manifest.
 
 A physical runtime handoff is made only after a materially significant bundle is ready, the exact PR head is fully GREEN, and the handoff includes one working GitHub artifact link plus a numbered PASS/FAIL checklist.
