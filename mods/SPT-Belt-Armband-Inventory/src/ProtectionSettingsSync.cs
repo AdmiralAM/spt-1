@@ -19,6 +19,7 @@ namespace SPTBeltArmbandInventory
         readonly Action<string> logWarning;
         Func<string, string, string> postJson;
         bool transportWarningLogged;
+        bool subscribed;
 
         internal ProtectionSettingsSync(ConfigFile config, Action<string> logInfo, Action<string> logWarning)
         {
@@ -41,15 +42,25 @@ namespace SPTBeltArmbandInventory
                 DeathLossMode.Protected,
                 "HeadBand container family death behavior: Protected or LostOnDeath.");
 
-            armBand.SettingChanged += OnSettingChanged;
-            belt.SettingChanged += OnSettingChanged;
-            headBand.SettingChanged += OnSettingChanged;
+            // Do not subscribe from the constructor. Plugin.Awake may fail closed
+            // before mandatory wearable runtime patches are installed. In that state
+            // F12 changes must remain local and must not POST policy to the server.
         }
 
         internal bool TryBindAndSync()
         {
+            EnsureSubscribed();
             if (postJson == null && !TryBindTransport()) return false;
             return Sync();
+        }
+
+        void EnsureSubscribed()
+        {
+            if (subscribed) return;
+            armBand.SettingChanged += OnSettingChanged;
+            belt.SettingChanged += OnSettingChanged;
+            headBand.SettingChanged += OnSettingChanged;
+            subscribed = true;
         }
 
         bool TryBindTransport()
@@ -135,9 +146,13 @@ namespace SPTBeltArmbandInventory
 
         public void Dispose()
         {
-            armBand.SettingChanged -= OnSettingChanged;
-            belt.SettingChanged -= OnSettingChanged;
-            headBand.SettingChanged -= OnSettingChanged;
+            if (subscribed)
+            {
+                armBand.SettingChanged -= OnSettingChanged;
+                belt.SettingChanged -= OnSettingChanged;
+                headBand.SettingChanged -= OnSettingChanged;
+                subscribed = false;
+            }
             postJson = null;
         }
     }
