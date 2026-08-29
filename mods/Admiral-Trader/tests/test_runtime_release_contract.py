@@ -84,9 +84,9 @@ class RuntimeReleaseContractTests(unittest.TestCase):
         text = (SERVER / "TraderRegistration.cs").read_text(encoding="utf-8")
         self.assertIn("class AdmiralInsurancePublicationGuard", text)
         self.assertIn("OnLoadOrder.PostLoad + 100_000", text)
-        self.assertIn("insurance.Availability = false", text)
+        self.assertIn("trader.Base.Insurance = null", text)
         self.assertIn("level.InsurancePriceCoefficient = 0", text)
-        self.assertIn("must not publish an insurance service", text)
+        self.assertIn("must not publish an insurance service object", text)
 
 
 if __name__ == "__main__":
