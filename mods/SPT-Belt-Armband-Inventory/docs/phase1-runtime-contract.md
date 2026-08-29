@@ -1,4 +1,6 @@
-# Phase 1 runtime contract
+# Phase 1 runtime contract — archived snapshot
+
+> **Historical evidence only.** This file records the original ArmBand-hosted Phase 1 candidate and its then-current acceptance gate. That phase is complete and the references below (including PR #64 and magazine-only/current-candidate language) are intentionally preserved as history, not current authority. For active v0.2.0 behavior use `../README.md`, `../DESIGN-SPT-4.1.3-BELT.md`, `product-concept.md`, and `RC1-runtime-checklist.md` under Issue #285 / PR #286.
 
 Target: SPT 4.1.3 client + server runtime.
 
@@ -41,9 +43,9 @@ Every optional client integration fails soft. Server lifecycle patch registratio
 
 The CI hot-path guard rejects reintroduction of the prohibited polling patterns.
 
-## Current acceptance gate
+## Historical acceptance gate
 
-Phase 1 is not complete until one exact-SHA artifact passes a continuous physical lifecycle test:
+Phase 1 was defined as incomplete until one exact-SHA artifact passed a continuous physical lifecycle test:
 
 1. client/server start without B&A&HB errors;
 2. RC equips into `ArmBand`;
@@ -56,4 +58,4 @@ Phase 1 is not complete until one exact-SHA artifact passes a continuous physica
 9. grenade/fast-access state refreshes after loaded-belt equip/remove;
 10. profile/raid boundary persistence retains the RC and its children without duplication or loss.
 
-Only after this gate passes should PR #64 stop being a diagnostic/runtime candidate and Phase 2 wearable expansion begin.
+The historical statement that PR #64 should remain a diagnostic/runtime candidate until this gate passed belongs to that completed phase. Current development authority is Issue #285 / PR #286.
