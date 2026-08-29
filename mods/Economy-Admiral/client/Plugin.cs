@@ -27,6 +27,8 @@ public sealed class Plugin : BaseUnityPlugin
     private ConfigEntry<double> traderPurchase;
     private ConfigEntry<double> traderSell;
     private ConfigEntry<double> fleaBase;
+    private ConfigEntry<double> fleaBelowHandbook;
+    private ConfigEntry<double> fleaHandbook;
     private ConfigEntry<double> fleaFee;
     private ConfigEntry<double> looseLoot;
     private ConfigEntry<double> staticLoot;
@@ -84,6 +86,8 @@ public sealed class Plugin : BaseUnityPlugin
         traderSell = BindDouble("04. Custom - Traders", "Trader Sell Payout Multiplier", 0.85, 0.5, 1.0, "effective share of normal trader sell payout");
 
         fleaBase = BindDouble("05. Custom - Flea", "Flea Base Price Multiplier", 1.65, 1.0, 2.5, "minimum flea base-price pressure multiplier");
+        fleaBelowHandbook = BindDouble("05. Custom - Flea", "Max Below-Handbook Difference (%)", 45.0, 0.0, 100.0, "maximum allowed flea price difference below handbook price; lower is stricter");
+        fleaHandbook = BindDouble("05. Custom - Flea", "Handbook Price Multiplier", 1.10, 1.0, 2.0, "handbook floor multiplier used by flea pressure");
         fleaFee = BindDouble("05. Custom - Flea", "Flea Listing Fee Multiplier", 1.25, 1.0, 2.0, "flea listing-fee multiplier");
 
         looseLoot = BindDouble("06. Custom - Loot", "Loose Loot Scale", 0.85, 0.5, 1.0, "native loose-loot multiplier scale");
@@ -166,6 +170,8 @@ public sealed class Plugin : BaseUnityPlugin
             traderPurchase.Value = snapshot.CustomTraderPurchasePriceMultiplier;
             traderSell.Value = snapshot.CustomTraderSellPayoutMultiplier;
             fleaBase.Value = snapshot.CustomFleaBasePriceMultiplier;
+            fleaBelowHandbook.Value = snapshot.CustomFleaMaxPriceDifferenceBelowHandbookPercent;
+            fleaHandbook.Value = snapshot.CustomFleaHandbookPriceMultiplier;
             fleaFee.Value = snapshot.CustomFleaListingFeeMultiplier;
             looseLoot.Value = snapshot.CustomLooseLootScale;
             staticLoot.Value = snapshot.CustomStaticLootScale;
@@ -193,6 +199,8 @@ public sealed class Plugin : BaseUnityPlugin
         traderPurchase.SettingChanged += OnSettingChanged;
         traderSell.SettingChanged += OnSettingChanged;
         fleaBase.SettingChanged += OnSettingChanged;
+        fleaBelowHandbook.SettingChanged += OnSettingChanged;
+        fleaHandbook.SettingChanged += OnSettingChanged;
         fleaFee.SettingChanged += OnSettingChanged;
         looseLoot.SettingChanged += OnSettingChanged;
         staticLoot.SettingChanged += OnSettingChanged;
@@ -247,6 +255,8 @@ public sealed class Plugin : BaseUnityPlugin
         Nearly(request.CustomTraderPurchasePriceMultiplier, snapshot.CustomTraderPurchasePriceMultiplier) &&
         Nearly(request.CustomTraderSellPayoutMultiplier, snapshot.CustomTraderSellPayoutMultiplier) &&
         Nearly(request.CustomFleaBasePriceMultiplier, snapshot.CustomFleaBasePriceMultiplier) &&
+        Nearly(request.CustomFleaMaxPriceDifferenceBelowHandbookPercent, snapshot.CustomFleaMaxPriceDifferenceBelowHandbookPercent) &&
+        Nearly(request.CustomFleaHandbookPriceMultiplier, snapshot.CustomFleaHandbookPriceMultiplier) &&
         Nearly(request.CustomFleaListingFeeMultiplier, snapshot.CustomFleaListingFeeMultiplier) &&
         Nearly(request.CustomLooseLootScale, snapshot.CustomLooseLootScale) &&
         Nearly(request.CustomStaticLootScale, snapshot.CustomStaticLootScale) &&
@@ -270,6 +280,8 @@ public sealed class Plugin : BaseUnityPlugin
         CustomTraderPurchasePriceMultiplier = traderPurchase.Value,
         CustomTraderSellPayoutMultiplier = traderSell.Value,
         CustomFleaBasePriceMultiplier = fleaBase.Value,
+        CustomFleaMaxPriceDifferenceBelowHandbookPercent = fleaBelowHandbook.Value,
+        CustomFleaHandbookPriceMultiplier = fleaHandbook.Value,
         CustomFleaListingFeeMultiplier = fleaFee.Value,
         CustomLooseLootScale = looseLoot.Value,
         CustomStaticLootScale = staticLoot.Value,
@@ -303,6 +315,8 @@ public sealed class Plugin : BaseUnityPlugin
         public double CustomTraderPurchasePriceMultiplier;
         public double CustomTraderSellPayoutMultiplier;
         public double CustomFleaBasePriceMultiplier;
+        public double CustomFleaMaxPriceDifferenceBelowHandbookPercent;
+        public double CustomFleaHandbookPriceMultiplier;
         public double CustomFleaListingFeeMultiplier;
         public double CustomLooseLootScale;
         public double CustomStaticLootScale;
@@ -328,6 +342,8 @@ public sealed class Plugin : BaseUnityPlugin
         public double CustomTraderPurchasePriceMultiplier;
         public double CustomTraderSellPayoutMultiplier;
         public double CustomFleaBasePriceMultiplier;
+        public double CustomFleaMaxPriceDifferenceBelowHandbookPercent;
+        public double CustomFleaHandbookPriceMultiplier;
         public double CustomFleaListingFeeMultiplier;
         public double CustomLooseLootScale;
         public double CustomStaticLootScale;
