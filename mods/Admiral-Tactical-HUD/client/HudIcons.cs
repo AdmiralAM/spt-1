@@ -30,7 +30,9 @@ namespace SPTPopCounter
             {"btr", "btr.png"},
             {"other", "other.png"},
             {"total", "total.png"},
-            {"faction", "faction.png"}
+            {"faction", "faction.png"},
+            {"blackdivision", "blackdivision.png"},
+            {"wedge", "wedge.png"}
         };
         readonly Dictionary<string, Vector2Int> cells = new Dictionary<string, Vector2Int>(StringComparer.OrdinalIgnoreCase)
         {
