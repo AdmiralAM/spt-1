@@ -21,20 +21,69 @@ public enum EconomyPreset
 
 public sealed record EconomyConfig
 {
+    private bool enableItemRewardStackNormalization;
+    private bool enableTraderPurchasePressure;
+    private bool enableTraderSellPressure;
+    private bool enableFleaPurchasePressure;
+    private bool enableFleaListingFeePressure;
+    private bool enableLootPressure;
+
     public EconomyMode Mode { get; init; } = EconomyMode.Audit;
     public EconomyPreset Preset { get; init; } = EconomyPreset.Normal;
     public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
     public bool RepeatedRaidLootDecay { get; init; } = false;
-    public bool EnableItemRewardStackNormalization { get; init; } = false;
-    public bool EnableTraderPurchasePressure { get; init; } = false;
+
+    /// <summary>
+    /// High-level product switch. Safe by default because committed Mode remains Audit.
+    /// When Mode is Enforce, this activates every accepted Playable Economy surface through the selected preset.
+    /// Set false to use the granular feature switches independently.
+    /// </summary>
+    public bool EnablePlayableEconomyBundle { get; init; } = true;
+
+    public bool EnableItemRewardStackNormalization
+    {
+        get => enableItemRewardStackNormalization || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce);
+        init => enableItemRewardStackNormalization = value;
+    }
+
+    public bool EnableTraderPurchasePressure
+    {
+        get => enableTraderPurchasePressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce);
+        init => enableTraderPurchasePressure = value;
+    }
+
     public double CustomTraderPurchasePriceMultiplier { get; init; } = 1.15;
-    public bool EnableTraderSellPressure { get; init; } = false;
+
+    public bool EnableTraderSellPressure
+    {
+        get => enableTraderSellPressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce);
+        init => enableTraderSellPressure = value;
+    }
+
     public double CustomTraderSellPayoutMultiplier { get; init; } = 0.85;
-    public bool EnableFleaPurchasePressure { get; init; } = false;
+
+    public bool EnableFleaPurchasePressure
+    {
+        get => enableFleaPurchasePressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce);
+        init => enableFleaPurchasePressure = value;
+    }
+
     public double CustomFleaBasePriceMultiplier { get; init; } = 1.65;
-    public bool EnableFleaListingFeePressure { get; init; } = false;
+
+    public bool EnableFleaListingFeePressure
+    {
+        get => enableFleaListingFeePressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce);
+        init => enableFleaListingFeePressure = value;
+    }
+
     public double CustomFleaListingFeeMultiplier { get; init; } = 1.25;
-    public bool EnableLootPressure { get; init; } = false;
+
+    public bool EnableLootPressure
+    {
+        get => enableLootPressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce);
+        init => enableLootPressure = value;
+    }
+
     public double CustomLooseLootScale { get; init; } = 0.85;
     public double CustomStaticLootScale { get; init; } = 0.85;
     public RarityThresholds Rarity { get; init; } = new();
