@@ -18,7 +18,6 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
     public static readonly MongoId CustomTemplateParentTpl = new(RuntimeIdentity.SearchableTemplateParentId);
     public static readonly MongoId CustomBeltParentTpl = new(RuntimeIdentity.BeltItemParentId);
     private static readonly MongoId MagazineArmbandTpl = new(RuntimeIdentity.CandidateItemId);
-    private static readonly MongoId WristWalletTpl = new(RuntimeIdentity.WristWalletItemId);
     public const string RuntimeCandidateTpl = RuntimeIdentity.CandidateItemId;
     public const string RuntimeCandidateGridId = RuntimeIdentity.CandidateGridId;
     private const string RuntimeCandidateGridName = "main";
@@ -33,7 +32,6 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         if (templateTable.Items.TryGetValue(MagazineArmbandTpl, out var existingCandidate))
         {
             ValidateExistingCandidate(existingCandidate);
-            EnsureArmBandAcceptsExactProducts();
             logger.Success($"B&A&HB Magazine Armband retained existing validated item: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
             return Task.CompletedTask;
         }
@@ -71,10 +69,9 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         var result = customItemService.CreateItemFromClone(details);
         if (!result.Success) throw new InvalidOperationException($"B&A&HB Magazine Armband creation failed: {string.Join("; ", result.Errors)}");
 
-        // Only expose exact ArmBand products after the Magazine Armband item exists.
-        // The broader BeltItemParentId is shared by dedicated Magazine Belt, so adding
-        // that parent to ArmBand would incorrectly make the slot15 product cross-equip.
-        EnsureArmBandAcceptsExactProducts();
+        // ArmBand host exposure is intentionally owned by WristWalletItem at
+        // Preload+2. That later owner validates that both exact ArmBand products
+        // exist before mutating the vanilla slot filter, preventing dangling IDs.
         logger.Success($"B&A&HB Magazine Armband created: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
         return Task.CompletedTask;
     }
@@ -133,28 +130,5 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
             || !string.Equals(existing.Name, name, StringComparison.Ordinal)
             || !string.Equals(existing.Type, "Node", StringComparison.Ordinal))
             throw new InvalidOperationException($"B&A&HB taxonomy parent collision: {id} does not match the registered taxonomy contract.");
-    }
-
-    private void EnsureArmBandAcceptsExactProducts()
-    {
-        if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
-            throw new InvalidOperationException("B&A&HB default inventory template missing.");
-
-        var armBands = inventory.Properties?.Slots?
-            .Where(x => string.Equals(x.Name, "ArmBand", StringComparison.Ordinal))
-            .Take(2)
-            .ToArray();
-        if (armBands == null || armBands.Length != 1)
-            throw new InvalidOperationException("B&A&HB ArmBand slot boundary is missing or ambiguous; refusing to mutate an unproven inventory slot.");
-
-        var filterGroups = armBands[0].Properties?.Filters?.ToArray();
-        if (filterGroups == null || filterGroups.Length != 1 || filterGroups[0].Filter == null)
-            throw new InvalidOperationException("B&A&HB ArmBand slot filter boundary is missing or ambiguous; exactly one filter group is required.");
-
-        var filter = filterGroups[0].Filter;
-        if (!filter.Contains(MagazineArmbandTpl)) filter.Add(MagazineArmbandTpl);
-        if (!filter.Contains(WristWalletTpl)) filter.Add(WristWalletTpl);
-        if (filter.Contains(CustomBeltParentTpl))
-            throw new InvalidOperationException("B&A&HB ArmBand filter already contains the broad Belt parent; refusing host overlap that would admit dedicated Magazine Belt.");
     }
 }
