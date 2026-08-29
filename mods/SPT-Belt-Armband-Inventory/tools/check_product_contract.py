@@ -38,7 +38,7 @@ armband_item = require(
 if "Runtime Candidate Magazine Belt" in armband_item:
     violations.append("Magazine Armband item: obsolete user-visible Runtime Candidate product name returned")
 
-wrist = require(
+require(
     SERVER / "WristWalletAssort.cs",
     [
         "private const int PriceRoubles = 12500;",
@@ -46,7 +46,7 @@ wrist = require(
     ],
     "Wrist Wallet offer")
 
-dedicated = require(
+require(
     SERVER / "DedicatedWearableAssort.cs",
     [
         "private const int BeltLoyaltyLevel = 2;",
@@ -56,7 +56,7 @@ dedicated = require(
     ],
     "Dedicated Belt/HeadBand offers")
 
-headband_policy = require(
+require(
     SRC / "HeadBandUtilityPolicy.cs",
     [
         'internal const string VanillaWallet = "5783c43d2459774bbe137486";',
@@ -71,7 +71,7 @@ wearable_items = require(
     [
         '"B&A&HB Magazine Belt"',
         '"B&A&HB Utility HeadBand"',
-        '"Death protection follows the B&A&HB F12 setting."',
+        "Death protection follows the B&A&HB F12 setting.",
         "RuntimeIdentity.DedicatedMagazineBeltGridColumns",
         "RuntimeIdentity.DedicatedMagazineBeltGridRows",
         "RuntimeIdentity.EmergencyHeadBandGridColumns",
