@@ -38,9 +38,18 @@ for token in [
     "ValidateTaxonomyParent(CustomTemplateParentTpl",
     "ValidateTaxonomyParent(CustomBeltParentTpl",
     "was not registered by the Preload taxonomy owner",
+    '.Where(x => string.Equals(x.Name, "ArmBand", StringComparison.Ordinal))',
+    ".Take(2)",
+    "armBands.Length != 1",
+    "filterGroups.Length != 1",
+    "ArmBand slot boundary is missing or ambiguous",
+    "ArmBand slot filter boundary is missing or ambiguous",
 ]:
     if token not in armband:
         violations.append(f"Magazine Armband consumer missing token {token!r}")
+
+if 'FirstOrDefault(x => string.Equals(x.Name, "ArmBand"' in armband:
+    violations.append("Magazine Armband must not mutate the first ArmBand slot when the host boundary is ambiguous")
 
 for forbidden in ["EnsureCustomParents()", "EnsureCustomParent(", "templateTable.Items[id] = new TemplateItem"]:
     if forbidden in armband:
@@ -49,4 +58,4 @@ for forbidden in ["EnsureCustomParents()", "EnsureCustomParent(", "templateTable
 if violations:
     raise SystemExit("B&A&HB taxonomy-ownership gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB taxonomy-ownership gate: OK (Preload registrar is sole persistent-parent owner; all three nodes validate before atomic commit; later item registration validates only)")
+print("B&A&HB taxonomy-ownership gate: OK (atomic single-owner taxonomy; later item registration validates parents and a unique ArmBand/one-filter host boundary before mutation)")
