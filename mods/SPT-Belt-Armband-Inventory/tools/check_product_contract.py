@@ -5,6 +5,7 @@ SERVER = ROOT / "server"
 SRC = ROOT / "src"
 violations = []
 
+
 def require(path: Path, tokens, label: str):
     if not path.exists():
         violations.append(f"{label}: missing file {path.name}")
@@ -14,6 +15,7 @@ def require(path: Path, tokens, label: str):
         if token not in text:
             violations.append(f"{label}: missing contract token {token!r}")
     return text
+
 
 require(
     SERVER / "RuntimeCandidateOfferContract.cs",
@@ -75,6 +77,9 @@ require(
         'Name = "Наручный кошелёк B&A&HB"',
         'ShortName = "Наруч. кошелёк"',
         "Filter = [Money.ROUBLES, Money.DOLLARS, Money.EUROS]",
+        "PrepareArmBandExactProductFilter",
+        "CommitArmBandExactProducts",
+        "BroadBeltParentTpl",
     ],
     "Wrist Wallet item")
 
@@ -85,14 +90,25 @@ dedicated_assort = require(
         "private const int HeadBandLoyaltyLevel = 1;",
         "private const int BeltPrice = 45000;",
         "private const int HeadBandPrice = 25000;",
+        "OfferPlan? beltPlan = PrepareOffer(",
+        "OfferPlan? headBandPlan = PrepareOffer(",
+        "if (beltPlan != null) CommitOffer(beltPlan);",
+        "if (headBandPlan != null) CommitOffer(headBandPlan);",
         "trader.Assort.BarterScheme.ContainsKey(assortId)",
         "trader.Assort.LoyalLevelItems.ContainsKey(assortId)",
-        "trader.Assort.BarterScheme.Add(assortId,",
-        "trader.Assort.LoyalLevelItems.Add(assortId,",
+        "trader.Assort.BarterScheme.Add(plan.AssortId,",
+        "trader.Assort.LoyalLevelItems.Add(plan.AssortId,",
+        "duplicate item entries own the persistent assort ID",
     ],
     "Dedicated Belt/HeadBand offers")
 if "trader.Assort.BarterScheme[assortId] =" in dedicated_assort or "trader.Assort.LoyalLevelItems[assortId] =" in dedicated_assort:
     violations.append("Dedicated wearable assort must not overwrite persistent metadata with dictionary indexers")
+
+belt_prepare = dedicated_assort.find("OfferPlan? beltPlan = PrepareOffer(")
+head_prepare = dedicated_assort.find("OfferPlan? headBandPlan = PrepareOffer(")
+first_commit = dedicated_assort.find("CommitOffer(")
+if min(belt_prepare, head_prepare, first_commit) < 0 or not (belt_prepare < first_commit and head_prepare < first_commit):
+    violations.append("both dedicated persistent offers must be prepared/validated before the first assort mutation")
 
 require(
     SRC / "RuntimeIdentity.cs",
@@ -159,5 +175,5 @@ if violations:
 
 print(
     "B&A&HB product-contract gate: OK "
-    "(EN/RU localized roster; exact pricing/progression; split HeadBand pockets; persistent assort IDs reject partial metadata collisions instead of overwriting)"
+    "(EN/RU localized roster; exact pricing/progression and host isolation; split HeadBand pockets; persistent assort IDs reject partial collisions; dedicated pair prepares before commit)"
 )
