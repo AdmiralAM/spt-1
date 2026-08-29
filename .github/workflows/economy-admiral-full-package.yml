@@ -72,6 +72,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $root = (Resolve-Path 'build-output/Economy-Admiral-Full').Path
+          $server = Join-Path $root 'SPT_Runtime/user/mods/Economy Admiral'
           $allowed = @(
             'BepInEx/plugins/Economy Admiral/Economy Admiral v0.1.0.dll',
             'SPT_Runtime/user/mods/Economy Admiral/Economy-Admiral.dll',
