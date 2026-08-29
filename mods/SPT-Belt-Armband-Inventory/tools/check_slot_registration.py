@@ -37,6 +37,7 @@ if violations:
 
 print("B&A&HB dedicated-slot atomicity gate: OK (slot15/slot16 validated/prepared before any canonical slot mutation; partial install path forbidden)")
 
-# Keep server/client ownership and collision safety in one compatibility step.
+# Keep server/client ownership, transport and collision safety in one compatibility step.
 runpy.run_path(str(ROOT / "tools" / "check_taxonomy_ownership.py"), run_name="__main__")
 runpy.run_path(str(ROOT / "tools" / "check_legacy_conflict_gate.py"), run_name="__main__")
+runpy.run_path(str(ROOT / "tools" / "check_protection_sync.py"), run_name="__main__")
