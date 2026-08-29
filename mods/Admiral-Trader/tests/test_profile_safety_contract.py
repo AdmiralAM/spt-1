@@ -4,6 +4,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRATION = ROOT / "server" / "ProfileTemplateRegistration.cs"
+QUEST_REGISTRATION = ROOT / "server" / "QuestRegistration.cs"
 RECOVERY = ROOT / "tools" / "Reset-AdmiralTraderProfile.ps1"
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
 
@@ -31,6 +32,16 @@ class ProfileSafetyContractTests(unittest.TestCase):
         self.assertNotIn("SetQuestsAvailableForFinish", text)
         self.assertNotIn("AddAllQuestsToProfile", text)
         self.assertNotIn("QuestStatus", text)
+
+    def test_authored_quest_templates_never_preseed_player_lifecycle(self):
+        text = QUEST_REGISTRATION.read_text(encoding="utf-8")
+        self.assertIn("quest.Status = 0", text)
+        self.assertIn("quest.SptStatus = null", text)
+        self.assertNotIn("quest.SptStatus = QuestStatusEnum.Started", text)
+        self.assertIn('quest.ProgressSource ??= "eft"', text)
+        self.assertIn("quest.GameModes ??= []", text)
+        self.assertIn("quest.RankingModes ??= []", text)
+        self.assertIn("quest.ArenaLocations ??= []", text)
 
     def test_recovery_is_dry_run_by_default_and_backup_first(self):
         text = RECOVERY.read_text(encoding="utf-8")
