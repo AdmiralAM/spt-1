@@ -1,37 +1,41 @@
-# B&A&HB #2 MOD SPT RC1 — combined SPT 4.1.3 runtime gate
+# B&A&HB #2 MOD SPT — post-stable product gate
 
 Target: SPT 4.1.3.
 
-This checklist describes the **current exact-head mechanics**. Historical 1x1 medical HeadBand candidates are obsolete. The current HeadBand is a `1x2` utility container with an exact currency/cigarette/wallet whitelist. The current mechanical Belt candidate is `2x2` magazine-only; ArmBand remains `1x2` magazine-only. The matching technical architecture is recorded in `DESIGN-SPT-4.1.3-BELT.md`.
+**Stable Baseline 1** is exact head `d6336f290361b16c4aa54f9d7dddfe0e8f7f9bbf`, preserved on branch `belt-stable-baseline-1`. That runtime already passed the full Items / insurance / PMC lifecycle acceptance. The current development line keeps that mechanical architecture and advances the final product roster.
 
-Do not use the user as a per-patch debugger. Automated CI owns Scav compatibility and profile-recovery coverage. The user runtime gate is limited to PMC/gameplay behavior that cannot be proven outside SPT itself.
+Do not use the user as a per-patch debugger. Scav compatibility, profile recovery, hot-path safety and the previously proven death/insurance boundaries remain CI-owned unless a concrete runtime regression appears.
 
-| # | Exact action | Expected PASS | Explicit FAIL | Minimal evidence |
-| --- | --- | --- | --- | --- |
-| 1 | Start SPT and open **Character → Items** from the stash for the first time in the session. Do not switch away/back or use any refresh workaround. Then proceed to a PMC raid's pre-raid **Insurance** screen. | The character/equipment panel is visible immediately; existing vanilla equipment remains intact; Belt is in slot 15 and HeadBand is in slot 16 at the intended Headwear reflow position; client log reports `HEADBAND FIRST-RENDER PROOF ... panelLayoutMutation=False; panelWorldDelta=0.00; synchronous=True`; the insurer has a real localized name and Back/Next/Insure remain responsive. | Missing/off-screen character panel, layout becoming correct only after tab switching, nonzero panel movement, `DEFAULT_VALUE`, frozen navigation, `Collection was modified`, `/b-and-hb/protection` failure, or startup/load failure. | One first-open Items screenshot and client/server lines around that entry only on FAIL. |
-| 2 | Open ArmBand `1x2`, Belt `2x2`, and Utility HeadBand `1x2`. | Each opens through native GridWindow with its declared grid; frame is tight to the cells and final fit reports `exact=True`. For `1x2` the calibrated target is `73x158`; for `2x2` it is `136x158`. | Container does not open, wrong grid geometry, clipping/filler, or `WINDOW FIT FINAL ... exact=False`. | On FAIL: one screenshot + matching `WINDOW FIT PROOF/FINAL` lines. |
-| 3 | Verify item filters. Put a magazine in ArmBand and Belt. Put RUB/USD/EUR, one allowed cigarette type, and a supported wallet in HeadBand; also try one ordinary medical item or unrelated loot item. | Magazine wearables accept magazines according to their current policy. HeadBand accepts the current exact utility whitelist and rejects ordinary medical/unrelated items. | Cross-category acceptance, HeadBand behaving as generic secure/medical storage, or a currently whitelisted utility item rejected. | Item name/TPL only for the failing case. |
-| 4 | Unequip/re-equip each wearable with contents, close/reopen inventory, then restart SPT/profile once. | Wearable root and descendants persist correctly; contents remain attached to their own root; no duplication/orphaning. | Lost contents, duplicate items, orphaned descendants, profile-load/save failure. | Relevant log lines + affected wearable/content IDs. |
-| 5 | Exercise one normal raid lifecycle as PMC with contents in the three wearables and return alive. | Inventory remains coherent through raid transition; no unexpected migration/deletion or duplicated descendants. | Any root/tree corruption or profile-save issue. | Relevant IDs/log excerpt on FAIL. |
-| 6 | With all three F12 `Protection` entries at default `Protected`, die as PMC carrying identifiable contents in ArmBand, Belt and HeadBand. | Each exact B&A&HB wearable root and its complete descendant tree is retained. No unrelated vanilla item is protected merely because of slot placement. | Root retained but descendants lost, protected family lost, or unrelated item receives B&A&HB protection. | Before/after wearable/content IDs + server B&A&HB protection lines on FAIL. |
-| 7 | Change exactly one family to `LostOnDeath`, leave the other two `Protected`, then perform the next death test with identifiable contents. Repeat only as needed to cover all three family toggles. | The selected family receives normal SPT death/loss semantics; the other protected families retain root + descendants. F12 changes do not leak across families. | Toggle ignored, wrong family affected, or cross-family protection leak. | F12 state + affected IDs on FAIL. |
-| 8 | Where an affected wearable/content item is insured, inspect post-raid insurance behavior after a protected death. | Items actually retained by B&A&HB are not simultaneously recorded as lost-insured/returned later. Items genuinely lost under `LostOnDeath` follow normal SPT insurance semantics. | False lost-insured event for retained tree, duplicate insurance return, or B&A&HB suppression of a genuinely lost item. | Insurance item IDs/server log excerpt on FAIL. |
+## Current product roster
 
-## Deferred product polish
+| Product | Host | Capacity / filter | Progression |
+| --- | --- | --- | --- |
+| Wrist Wallet | ArmBand | `1x1`, currency-only | Ragman LL1 — 12,500 RUB |
+| Magazine Armband | ArmBand | `1x2`, MAGAZINE-only | Ragman LL1 — 25,000 RUB |
+| Utility HeadBand | slot16 | `1x2`, exact currency/cigarette/wallet whitelist | Ragman LL1 — 25,000 RUB |
+| Magazine Belt | slot15 | `2x2`, MAGAZINE-only | Ragman LL2 — 45,000 RUB |
 
-- Wallet coverage is not considered final: EFT/SPT has more than one wallet-style item. Expanding the exact HeadBand wallet whitelist is a later content pass rather than a blocker for the first-open layout fix.
-- A possible final-stage HeadBand redesign is two independent `1x1` internal cells: one cigarette-only and one currency/wallet-only. Feasibility must be proven against the native multi-grid UI/template behavior before committing to it.
+Utility HeadBand wallet coverage includes both Simple Wallet (`5783c43d2459774bbe137486`) and WZ Wallet (`60b0f6c058e0b0481a09ad11`). It remains exact-item restricted rather than a broad container class.
+
+## One combined user gate
+
+| # | Exact action | Expected PASS | FAIL evidence |
+| --- | --- | --- | --- |
+| 1 | Start SPT and open **Character → Items** once, without tab-switch refresh. | Stable Baseline 1 presentation is unchanged: character panel visible immediately, Belt/HeadBand present, no duplicate/missing slot16, no UI displacement. | One screenshot + B&A&HB client lines only if wrong. |
+| 2 | Open Ragman and inspect the B&A&HB products available for the profile's current LL. | Product names are `Wrist Wallet`, `Magazine Armband`, `Utility HeadBand`, `Magazine Belt`; contracts are 12.5k/LL1, 25k/LL1, 25k/LL1 and 45k/LL2 respectively. No user-visible `Runtime Candidate Magazine Belt` remains. | Screenshot or exact wrong offer/name. |
+| 3 | Open the four wearable containers and check only their product-critical filters. | Wrist Wallet accepts currency; Magazine Armband and Magazine Belt accept magazines; Utility HeadBand accepts RUB/USD/EUR, the intended cigarette set, Simple Wallet and WZ Wallet, while rejecting ordinary unrelated loot/medical items. Geometry stays `1x1`, `1x2`, `1x2`, `2x2` respectively. | Name of the specific accepted/rejected item + screenshot only if UI geometry is wrong. |
+| 4 | Proceed through the normal PMC pre-raid flow into one raid, open inventory once in raid, then return normally. | No Belt exception, no frozen inventory/pre-raid UI, no missing/duplicate wearable tree, no manual refresh requirement. | Client/server B&A&HB/error excerpt only on failure. |
+
+If these four rows pass, the product candidate is accepted without repeating the already-proven death/insurance matrix.
+
+## Regression-only retest boundaries
+
+Repeat protection/death/insurance tests **only** if a later change touches `WearableProtectionRuntime`, `BeltDeathPolicy`, the death/insurance SPT patches, persistent template/slot identities, or runtime evidence shows a related failure. Product naming, exact whitelist additions and trader progression do not by themselves reopen that physical gate.
+
+## Deferred final HeadBand design
+
+The future visual redesign remains separate from this product pass: reduce the Face window roughly by half and place a compact HeadBand above/adjacent using the ArmBand + Dogtag visual principle. A possible two-independent-`1x1` HeadBand layout (one cigarettes-only, one currency/wallet-only) remains a final feasibility investigation after the product roster is stable.
 
 ## Automated-only boundaries
 
-Scav `ReplaceInventory` compatibility remains part of the implementation and automated hardening, but is **not a user runtime acceptance step** because the target play workflow does not use Scav. Profile recovery also remains packaged and CI-tested but is not part of the normal runtime gate unless an actual uninstall/recovery problem appears.
-
-## Performance boundary
-
-The client must remain interaction/event driven. GridWindow correction performs at most eight bounded settle passes per relevant opened window. First-open HeadBand stabilization performs only a short bounded post-`SlotView.Show` settle after the native Headwear presentation event. Scav compatibility resolves property/field runtime shape once and then uses cached delegates over only the three wearable slots. There must be no permanent `Update` polling, scene-wide inventory scan, per-`ReplaceInventory` reflection scan, or global UI mutation loop.
-
-## Decision rule
-
-A runtime PASS requires the applicable PMC product-critical rows above to show no profile/lifecycle/death/insurance defect. Row 1 is mandatory after the insurance-screen regression: an Items-only screenshot cannot prove the candidate safe. On FAIL, return only the smallest evidence requested by the failed row; remediation resumes from that concrete boundary.
-
-Profile recovery remains packaged under `SPT_Runtime/user/mods/B&A&HB #2 MOD SPT/profile-safety/` for exceptional recovery use.
+Scav `ReplaceInventory` compatibility is not a user test. Profile recovery is not a normal runtime test. CI owns both, together with product-contract, lifecycle/hot-path, client/server build and packaging checks.
