@@ -20,6 +20,7 @@ namespace SPTBeltArmbandInventory
         RuntimeCustomHeadBandTypePatches runtimeHeadBandTypePatches;
         DedicatedEquipmentSlotPatches dedicatedEquipmentSlotPatches;
         DedicatedSlotPresentationPatches dedicatedSlotPresentationPatches;
+        CompactFaceHeadBandPresentationPatches compactFaceHeadBandPresentationPatches;
         FirstOpenHeadBandLayoutPatches firstOpenHeadBandLayoutPatches;
         DedicatedSlotLocalizationPatches dedicatedSlotLocalizationPatches;
         HeadwearCompatibilityPatches headwearCompatibilityPatches;
@@ -97,6 +98,14 @@ namespace SPTBeltArmbandInventory
                 dedicatedSlotPresentationPatches.Dispose();
                 dedicatedSlotPresentationPatches = null;
                 Logger.LogWarning("Dedicated Belt/HeadBand equipment data remains active, but visible captions/HeadBand placement could not bind to SlotView.Show for this session.");
+            }
+
+            compactFaceHeadBandPresentationPatches = new CompactFaceHeadBandPresentationPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!compactFaceHeadBandPresentationPatches.TryInstall())
+            {
+                compactFaceHeadBandPresentationPatches.Dispose();
+                compactFaceHeadBandPresentationPatches = null;
+                Logger.LogWarning("Accepted stable HeadBand presentation remains active; compact Face/HeadBand layout could not bind for this session.");
             }
 
             firstOpenHeadBandLayoutPatches = new FirstOpenHeadBandLayoutPatches(Logger.LogInfo, Logger.LogWarning);
@@ -334,6 +343,8 @@ namespace SPTBeltArmbandInventory
             dedicatedSlotLocalizationPatches = null;
             if (firstOpenHeadBandLayoutPatches != null) firstOpenHeadBandLayoutPatches.Dispose();
             firstOpenHeadBandLayoutPatches = null;
+            if (compactFaceHeadBandPresentationPatches != null) compactFaceHeadBandPresentationPatches.Dispose();
+            compactFaceHeadBandPresentationPatches = null;
             if (dedicatedSlotPresentationPatches != null) dedicatedSlotPresentationPatches.Dispose();
             dedicatedSlotPresentationPatches = null;
             if (dedicatedEquipmentSlotPatches != null) dedicatedEquipmentSlotPatches.Dispose();
