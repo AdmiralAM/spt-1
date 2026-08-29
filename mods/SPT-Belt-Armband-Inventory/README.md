@@ -1,13 +1,16 @@
 # B&A&HB #2 MOD SPT
 
-Post-stable development line for **SPT 4.1.3**.
+Development candidate **v0.2.0** for **SPT 4.1.3**.
 
-Stable **v0.1.0** is already frozen and published separately on `runtime-belt-armband` / tag `bahb-v0.1.0`. This branch develops the next B&A&HB revision without changing that release.
+Stable **v0.1.0** is already frozen and published separately on `runtime-belt-armband` / tag `bahb-v0.1.0`. This branch develops v0.2.0 without changing that release.
 
 Active authority:
 - Issue **#285**
 - PR **#286**
 - branch `feature/bahb-v0.2-compact-headband`
+
+Development client assembly: `SPT Belt Armband Inventory v0.2.0.dll`.
+The BepInEx plugin GUID/name remain unchanged for in-place upgrade compatibility; only the development version advances to `0.2.0`. Every CI artifact contains `BUILD-INFO.txt` with the exact head SHA plus SHA-256 hashes for both runtime DLLs.
 
 ## Current v0.2 scope
 
@@ -71,12 +74,13 @@ CI for PR #286 owns:
 
 - hot-path/lifecycle guard;
 - reload-access fallback/order guard;
+- version/build-identity guard;
 - product-contract and EN/RU localization guard;
 - compact-layout guard;
 - deterministic regressions, including the real split-grid profile migration and reload fallback policy;
 - offline profile recovery;
 - client build;
 - server build against the SPT 4.1.3 package set;
-- one installable exact-head RC artifact.
+- one installable exact-head RC artifact with exact-head/hash manifest.
 
 A physical runtime handoff is made only after a materially significant bundle is ready, the exact PR head is fully GREEN, and the handoff includes one working GitHub artifact link plus a numbered PASS/FAIL checklist.
