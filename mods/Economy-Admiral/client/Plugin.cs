@@ -25,12 +25,18 @@ public sealed class Plugin : BaseUnityPlugin
     private ConfigEntry<bool> traderCluster;
     private ConfigEntry<bool> fleaCluster;
     private ConfigEntry<bool> lootCluster;
+
     private ConfigEntry<bool> questItemStacksEnabled;
+    private ConfigEntry<bool> questXpEnabled;
+    private ConfigEntry<bool> questStandingEnabled;
+    private ConfigEntry<bool> restartableQuestEnabled;
     private ConfigEntry<bool> traderPurchaseEnabled;
     private ConfigEntry<bool> traderSellEnabled;
     private ConfigEntry<bool> fleaPriceEnabled;
     private ConfigEntry<bool> fleaFeeEnabled;
-    private ConfigEntry<bool> lootPressureEnabled;
+    private ConfigEntry<bool> looseLootEnabled;
+    private ConfigEntry<bool> staticLootEnabled;
+
     private ConfigEntry<double> traderPurchase;
     private ConfigEntry<double> traderSell;
     private ConfigEntry<double> fleaBase;
@@ -72,29 +78,40 @@ public sealed class Plugin : BaseUnityPlugin
             new ConfigDescription("Economy strength. Normal is the recommended balanced starting point." + RestartText,
                 new AcceptableValueList<string>("Easy", "Normal", "Hard", "Custom")));
         bundle = Config.Bind("01. Basic", "Full Preset Bundle", true,
-            "Recommended: ON. In Enforce, every enabled cluster uses the selected preset as one coherent economy profile. Turn OFF only when you want the granular mechanism switches below." + RestartText);
+            "Recommended: ON. Every enabled cluster uses the selected preset as one coherent economy profile. Turn OFF only for selective mechanism control." + RestartText);
 
         questCluster = Config.Bind("02. Advanced - Clusters", "Quest Economy", true,
-            "Hard gate for quest item-stack, XP, trader-standing and repeatable reward pressure. OFF keeps quest economy untouched." + RestartText);
+            "Hard gate for all automatic quest reward pressure. OFF leaves quest rewards untouched by Economy Admiral." + RestartText);
         traderCluster = Config.Bind("02. Advanced - Clusters", "Trader Economy", true,
-            "Hard gate for trader purchase-price and sell-payout pressure. OFF keeps trader economics untouched." + RestartText);
+            "Hard gate for trader purchase-price and sell-payout pressure." + RestartText);
         fleaCluster = Config.Bind("02. Advanced - Clusters", "Flea Market Economy", true,
-            "Hard gate for flea price/anti-arbitrage and listing-fee pressure. OFF keeps flea economics untouched." + RestartText);
+            "Hard gate for flea price/anti-arbitrage and listing-fee pressure." + RestartText);
         lootCluster = Config.Bind("02. Advanced - Clusters", "Loot Economy", true,
-            "Hard gate for loose and static/container loot pressure. OFF keeps loot multipliers untouched." + RestartText);
+            "Hard gate for loose and static/container loot pressure." + RestartText);
 
-        questItemStacksEnabled = Config.Bind("03. Advanced - Quest Mechanisms", "Item Reward Stack Normalization", false,
-            "Granular switch for bounded quest item-stack normalization." + ManualText + RestartText);
+        questItemStacksEnabled = Config.Bind("03. Advanced - Quest Mechanisms", "Item Reward Stack Pressure", false,
+            "Automatic bounded item-reward stack normalization." + ManualText + RestartText);
+        questXpEnabled = Config.Bind("03. Advanced - Quest Mechanisms", "XP Reward Pressure", false,
+            "Automatic quest XP reward normalization." + ManualText + RestartText);
+        questStandingEnabled = Config.Bind("03. Advanced - Quest Mechanisms", "Trader Standing Reward Pressure", false,
+            "Automatic quest trader-standing reward normalization." + ManualText + RestartText);
+        restartableQuestEnabled = Config.Bind("03. Advanced - Quest Mechanisms", "Repeatable / Restartable Pressure", false,
+            "Allows preset-derived reward pressure on restartable/repeatable quests. OFF excludes them from automatic quest pressure." + ManualText + RestartText);
+
         traderPurchaseEnabled = Config.Bind("04. Advanced - Trader Mechanisms", "Purchase Price Pressure", false,
-            "Granular switch for supported trader currency purchase-price pressure." + ManualText + RestartText);
+            "Supported RUB/USD/EUR trader purchase-price pressure." + ManualText + RestartText);
         traderSellEnabled = Config.Bind("04. Advanced - Trader Mechanisms", "Sell Payout Pressure", false,
-            "Granular switch for reduced trader sell payouts." + ManualText + RestartText);
+            "Reduced trader sell payouts." + ManualText + RestartText);
+
         fleaPriceEnabled = Config.Bind("05. Advanced - Flea Mechanisms", "Price and Anti-Arbitrage Pressure", false,
-            "Granular switch for flea base-price, handbook-floor and anti-arbitrage pressure." + ManualText + RestartText);
+            "Flea base-price, handbook-floor and anti-arbitrage pressure." + ManualText + RestartText);
         fleaFeeEnabled = Config.Bind("05. Advanced - Flea Mechanisms", "Listing Fee Pressure", false,
-            "Granular switch for flea listing-fee pressure." + ManualText + RestartText);
-        lootPressureEnabled = Config.Bind("06. Advanced - Loot Mechanisms", "Loot Pressure", false,
-            "Granular switch for loose and static/container loot scaling." + ManualText + RestartText);
+            "Flea listing-fee pressure." + ManualText + RestartText);
+
+        looseLootEnabled = Config.Bind("06. Advanced - Loot Mechanisms", "Loose Loot Pressure", false,
+            "Scales native loose-loot multipliers." + ManualText + RestartText);
+        staticLootEnabled = Config.Bind("06. Advanced - Loot Mechanisms", "Static / Container Loot Pressure", false,
+            "Scales native static/container-loot multipliers." + ManualText + RestartText);
 
         questItems = BindDouble("07. Custom - Quests", "Quest Item Reward Cap", 1.50, 0.1, 10.0, "normal quest item-reward budget multiple");
         restartableQuestItems = BindDouble("07. Custom - Quests", "Restartable Quest Item Reward Cap", 1.15, 0.1, 10.0, "restartable quest item-reward budget multiple");
@@ -123,12 +140,11 @@ public sealed class Plugin : BaseUnityPlugin
         Type requestHandlerType = null;
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         {
-            requestHandlerType = assembly.GetType("SPT.Common.Http.RequestHandler", throwOnError: false);
-            if (requestHandlerType != null)
-                break;
+            requestHandlerType = assembly.GetType("SPT.Common.Http.RequestHandler", false);
+            if (requestHandlerType != null) break;
         }
 
-        requestHandlerType ??= Type.GetType("SPT.Common.Http.RequestHandler, SPT.Common", throwOnError: false);
+        requestHandlerType ??= Type.GetType("SPT.Common.Http.RequestHandler, SPT.Common", false);
         if (requestHandlerType == null)
         {
             Logger.LogError("SPT.Common.Http.RequestHandler was not found; Economy Admiral F12 transport is unavailable.");
@@ -144,7 +160,6 @@ public sealed class Plugin : BaseUnityPlugin
             postJsonMethod = null;
             return;
         }
-
         Logger.LogInfo($"Economy Admiral F12 transport resolved via {requestHandlerType.Assembly.GetName().Name}.");
     }
 
@@ -153,9 +168,7 @@ public sealed class Plugin : BaseUnityPlugin
 
     private bool HydrateFromServer()
     {
-        if (getJsonMethod == null)
-            return false;
-
+        if (getJsonMethod == null) return false;
         try
         {
             var snapshot = ParseSnapshot(InvokeGet());
@@ -164,7 +177,6 @@ public sealed class Plugin : BaseUnityPlugin
                 Logger.LogError("Economy Admiral server settings GET returned no valid snapshot.");
                 return false;
             }
-
             ApplySnapshot(snapshot);
             return true;
         }
@@ -188,11 +200,16 @@ public sealed class Plugin : BaseUnityPlugin
             fleaCluster.Value = snapshot.EnableFleaEconomyCluster;
             lootCluster.Value = snapshot.EnableLootEconomyCluster;
             questItemStacksEnabled.Value = snapshot.EnableItemRewardStackNormalization;
+            questXpEnabled.Value = snapshot.EnableQuestXpPressure;
+            questStandingEnabled.Value = snapshot.EnableQuestStandingPressure;
+            restartableQuestEnabled.Value = snapshot.EnableRestartableQuestPressure;
             traderPurchaseEnabled.Value = snapshot.EnableTraderPurchasePressure;
             traderSellEnabled.Value = snapshot.EnableTraderSellPressure;
             fleaPriceEnabled.Value = snapshot.EnableFleaPurchasePressure;
             fleaFeeEnabled.Value = snapshot.EnableFleaListingFeePressure;
-            lootPressureEnabled.Value = snapshot.EnableLootPressure;
+            // Migrate the old single loot switch into both new sub-switches on the next save.
+            looseLootEnabled.Value = snapshot.EnableLooseLootPressure || snapshot.EnableLootPressure;
+            staticLootEnabled.Value = snapshot.EnableStaticLootPressure || snapshot.EnableLootPressure;
             traderPurchase.Value = snapshot.CustomTraderPurchasePriceMultiplier;
             traderSell.Value = snapshot.CustomTraderSellPayoutMultiplier;
             fleaBase.Value = snapshot.CustomFleaBasePriceMultiplier;
@@ -207,10 +224,7 @@ public sealed class Plugin : BaseUnityPlugin
             restartableQuestXp.Value = snapshot.CustomRestartableQuestXpMultiple;
             questStanding.Value = snapshot.CustomQuestStandingMultiple;
         }
-        finally
-        {
-            hydrating = false;
-        }
+        finally { hydrating = false; }
     }
 
     private void Subscribe()
@@ -223,11 +237,15 @@ public sealed class Plugin : BaseUnityPlugin
         fleaCluster.SettingChanged += OnSettingChanged;
         lootCluster.SettingChanged += OnSettingChanged;
         questItemStacksEnabled.SettingChanged += OnSettingChanged;
+        questXpEnabled.SettingChanged += OnSettingChanged;
+        questStandingEnabled.SettingChanged += OnSettingChanged;
+        restartableQuestEnabled.SettingChanged += OnSettingChanged;
         traderPurchaseEnabled.SettingChanged += OnSettingChanged;
         traderSellEnabled.SettingChanged += OnSettingChanged;
         fleaPriceEnabled.SettingChanged += OnSettingChanged;
         fleaFeeEnabled.SettingChanged += OnSettingChanged;
-        lootPressureEnabled.SettingChanged += OnSettingChanged;
+        looseLootEnabled.SettingChanged += OnSettingChanged;
+        staticLootEnabled.SettingChanged += OnSettingChanged;
         traderPurchase.SettingChanged += OnSettingChanged;
         traderSell.SettingChanged += OnSettingChanged;
         fleaBase.SettingChanged += OnSettingChanged;
@@ -245,9 +263,7 @@ public sealed class Plugin : BaseUnityPlugin
 
     private void OnSettingChanged(object sender, EventArgs args)
     {
-        if (hydrating || !initialized)
-            return;
-
+        if (hydrating || !initialized) return;
         if (postJsonMethod == null || getJsonMethod == null)
         {
             Logger.LogError("Economy Admiral setting was not saved: SPT server transport is unavailable.");
@@ -261,11 +277,9 @@ public sealed class Plugin : BaseUnityPlugin
             var response = ParseSnapshot(InvokePost(JsonUtility.ToJson(request)));
             if (response == null || !response.Ok)
                 throw new InvalidOperationException("server SAVE did not return a valid success snapshot");
-
             var persisted = ParseSnapshot(InvokeGet());
             if (persisted == null || !persisted.Ok || !Matches(request, persisted))
                 throw new InvalidOperationException("server round-trip verification did not match the requested settings");
-
             ApplySnapshot(persisted);
             Logger.LogMessage("Economy Admiral settings saved to server config. Restart the SPT server to apply them.");
         }
@@ -276,6 +290,41 @@ public sealed class Plugin : BaseUnityPlugin
         }
     }
 
+    private SettingsRequest BuildRequest() => new SettingsRequest
+    {
+        Mode = mode.Value,
+        Preset = preset.Value,
+        EnablePlayableEconomyBundle = bundle.Value,
+        EnableQuestEconomyCluster = questCluster.Value,
+        EnableTraderEconomyCluster = traderCluster.Value,
+        EnableFleaEconomyCluster = fleaCluster.Value,
+        EnableLootEconomyCluster = lootCluster.Value,
+        EnableItemRewardStackNormalization = questItemStacksEnabled.Value,
+        EnableQuestXpPressure = questXpEnabled.Value,
+        EnableQuestStandingPressure = questStandingEnabled.Value,
+        EnableRestartableQuestPressure = restartableQuestEnabled.Value,
+        EnableTraderPurchasePressure = traderPurchaseEnabled.Value,
+        EnableTraderSellPressure = traderSellEnabled.Value,
+        EnableFleaPurchasePressure = fleaPriceEnabled.Value,
+        EnableFleaListingFeePressure = fleaFeeEnabled.Value,
+        EnableLootPressure = false,
+        EnableLooseLootPressure = looseLootEnabled.Value,
+        EnableStaticLootPressure = staticLootEnabled.Value,
+        CustomTraderPurchasePriceMultiplier = traderPurchase.Value,
+        CustomTraderSellPayoutMultiplier = traderSell.Value,
+        CustomFleaBasePriceMultiplier = fleaBase.Value,
+        CustomFleaMaxPriceDifferenceBelowHandbookPercent = fleaBelowHandbook.Value,
+        CustomFleaHandbookPriceMultiplier = fleaHandbook.Value,
+        CustomFleaListingFeeMultiplier = fleaFee.Value,
+        CustomLooseLootScale = looseLoot.Value,
+        CustomStaticLootScale = staticLoot.Value,
+        CustomQuestItemBudgetMultiple = questItems.Value,
+        CustomRestartableQuestItemBudgetMultiple = restartableQuestItems.Value,
+        CustomQuestXpMultiple = questXp.Value,
+        CustomRestartableQuestXpMultiple = restartableQuestXp.Value,
+        CustomQuestStandingMultiple = questStanding.Value,
+    };
+
     private static bool Matches(SettingsRequest request, SettingsSnapshot snapshot) =>
         string.Equals(request.Mode, snapshot.Mode, StringComparison.OrdinalIgnoreCase) &&
         string.Equals(request.Preset, snapshot.Preset, StringComparison.OrdinalIgnoreCase) &&
@@ -285,11 +334,16 @@ public sealed class Plugin : BaseUnityPlugin
         request.EnableFleaEconomyCluster == snapshot.EnableFleaEconomyCluster &&
         request.EnableLootEconomyCluster == snapshot.EnableLootEconomyCluster &&
         request.EnableItemRewardStackNormalization == snapshot.EnableItemRewardStackNormalization &&
+        request.EnableQuestXpPressure == snapshot.EnableQuestXpPressure &&
+        request.EnableQuestStandingPressure == snapshot.EnableQuestStandingPressure &&
+        request.EnableRestartableQuestPressure == snapshot.EnableRestartableQuestPressure &&
         request.EnableTraderPurchasePressure == snapshot.EnableTraderPurchasePressure &&
         request.EnableTraderSellPressure == snapshot.EnableTraderSellPressure &&
         request.EnableFleaPurchasePressure == snapshot.EnableFleaPurchasePressure &&
         request.EnableFleaListingFeePressure == snapshot.EnableFleaListingFeePressure &&
         request.EnableLootPressure == snapshot.EnableLootPressure &&
+        request.EnableLooseLootPressure == snapshot.EnableLooseLootPressure &&
+        request.EnableStaticLootPressure == snapshot.EnableStaticLootPressure &&
         Nearly(request.CustomTraderPurchasePriceMultiplier, snapshot.CustomTraderPurchasePriceMultiplier) &&
         Nearly(request.CustomTraderSellPayoutMultiplier, snapshot.CustomTraderSellPayoutMultiplier) &&
         Nearly(request.CustomFleaBasePriceMultiplier, snapshot.CustomFleaBasePriceMultiplier) &&
@@ -306,40 +360,9 @@ public sealed class Plugin : BaseUnityPlugin
 
     private static bool Nearly(double left, double right) => Math.Abs(left - right) < 0.000001;
 
-    private SettingsRequest BuildRequest() => new SettingsRequest
-    {
-        Mode = mode.Value,
-        Preset = preset.Value,
-        EnablePlayableEconomyBundle = bundle.Value,
-        EnableQuestEconomyCluster = questCluster.Value,
-        EnableTraderEconomyCluster = traderCluster.Value,
-        EnableFleaEconomyCluster = fleaCluster.Value,
-        EnableLootEconomyCluster = lootCluster.Value,
-        EnableItemRewardStackNormalization = questItemStacksEnabled.Value,
-        EnableTraderPurchasePressure = traderPurchaseEnabled.Value,
-        EnableTraderSellPressure = traderSellEnabled.Value,
-        EnableFleaPurchasePressure = fleaPriceEnabled.Value,
-        EnableFleaListingFeePressure = fleaFeeEnabled.Value,
-        EnableLootPressure = lootPressureEnabled.Value,
-        CustomTraderPurchasePriceMultiplier = traderPurchase.Value,
-        CustomTraderSellPayoutMultiplier = traderSell.Value,
-        CustomFleaBasePriceMultiplier = fleaBase.Value,
-        CustomFleaMaxPriceDifferenceBelowHandbookPercent = fleaBelowHandbook.Value,
-        CustomFleaHandbookPriceMultiplier = fleaHandbook.Value,
-        CustomFleaListingFeeMultiplier = fleaFee.Value,
-        CustomLooseLootScale = looseLoot.Value,
-        CustomStaticLootScale = staticLoot.Value,
-        CustomQuestItemBudgetMultiple = questItems.Value,
-        CustomRestartableQuestItemBudgetMultiple = restartableQuestItems.Value,
-        CustomQuestXpMultiple = questXp.Value,
-        CustomRestartableQuestXpMultiple = restartableQuestXp.Value,
-        CustomQuestStandingMultiple = questStanding.Value,
-    };
-
     private static SettingsSnapshot ParseSnapshot(string json)
     {
-        if (string.IsNullOrWhiteSpace(json))
-            return null;
+        if (string.IsNullOrWhiteSpace(json)) return null;
         return JsonUtility.FromJson<SettingsSnapshot>(json);
     }
 
@@ -357,11 +380,16 @@ public sealed class Plugin : BaseUnityPlugin
         public bool EnableFleaEconomyCluster;
         public bool EnableLootEconomyCluster;
         public bool EnableItemRewardStackNormalization;
+        public bool EnableQuestXpPressure;
+        public bool EnableQuestStandingPressure;
+        public bool EnableRestartableQuestPressure;
         public bool EnableTraderPurchasePressure;
         public bool EnableTraderSellPressure;
         public bool EnableFleaPurchasePressure;
         public bool EnableFleaListingFeePressure;
         public bool EnableLootPressure;
+        public bool EnableLooseLootPressure;
+        public bool EnableStaticLootPressure;
         public double CustomTraderPurchasePriceMultiplier;
         public double CustomTraderSellPayoutMultiplier;
         public double CustomFleaBasePriceMultiplier;
@@ -390,11 +418,16 @@ public sealed class Plugin : BaseUnityPlugin
         public bool EnableFleaEconomyCluster;
         public bool EnableLootEconomyCluster;
         public bool EnableItemRewardStackNormalization;
+        public bool EnableQuestXpPressure;
+        public bool EnableQuestStandingPressure;
+        public bool EnableRestartableQuestPressure;
         public bool EnableTraderPurchasePressure;
         public bool EnableTraderSellPressure;
         public bool EnableFleaPurchasePressure;
         public bool EnableFleaListingFeePressure;
         public bool EnableLootPressure;
+        public bool EnableLooseLootPressure;
+        public bool EnableStaticLootPressure;
         public double CustomTraderPurchasePriceMultiplier;
         public double CustomTraderSellPayoutMultiplier;
         public double CustomFleaBasePriceMultiplier;
