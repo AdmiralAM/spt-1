@@ -76,6 +76,8 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
         for (var repeatableIndex = 0; repeatableIndex < questConfig.RepeatableQuests.Count; repeatableIndex++)
         {
             var repeatable = questConfig.RepeatableQuests[repeatableIndex];
+            if (config.EnableItemRewardStackNormalization)
+                CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:items", repeatable.RewardScaling.Items);
             if (config.EnableQuestXpPressure)
                 CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:experience", repeatable.RewardScaling.Experience);
             if (config.EnableQuestStandingPressure)
