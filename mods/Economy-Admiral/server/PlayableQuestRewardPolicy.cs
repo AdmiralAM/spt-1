@@ -45,7 +45,7 @@ public static class PlayableQuestRewardPolicy
             .Select(row => row with
             {
                 ObservationalFlags = row.ObservationalFlags
-                    .Where(flag => AutomaticFlagEnabled(config, row, flag))
+                    .Where(flag => QuestMechanismGate.AutomaticFlagEnabled(config, row.Restartable, flag))
                     .ToList(),
             })
             .ToList();
@@ -65,25 +65,4 @@ public static class PlayableQuestRewardPolicy
                    $"standing={config.EnableQuestStandingPressure}, restartable={config.EnableRestartableQuestPressure}.",
         };
     }
-
-    internal static bool AutomaticFlagEnabled(EconomyConfig config, QuestAnalysisRow row, string flag)
-    {
-        if (row.Restartable && !config.EnableRestartableQuestPressure && IsRewardPressureFlag(flag))
-            return false;
-
-        return flag switch
-        {
-            "HIGH_ITEM_VALUE_LOW_STRUCTURE" or "RESTARTABLE_HIGH_ITEM_VALUE" => config.EnableItemRewardStackNormalization,
-            "HIGH_XP_LOW_DEPTH" or "RESTARTABLE_HIGH_XP" => config.EnableQuestXpPressure,
-            "HIGH_STANDING_LOW_DEPTH" => config.EnableQuestStandingPressure,
-            _ => true,
-        };
-    }
-
-    private static bool IsRewardPressureFlag(string flag) => flag is
-        "HIGH_ITEM_VALUE_LOW_STRUCTURE" or
-        "RESTARTABLE_HIGH_ITEM_VALUE" or
-        "HIGH_XP_LOW_DEPTH" or
-        "RESTARTABLE_HIGH_XP" or
-        "HIGH_STANDING_LOW_DEPTH";
 }
