@@ -54,10 +54,6 @@ jobs:
           Copy-Item 'mods/Economy-Admiral/client/bin/Release/netstandard2.1/Economy Admiral v0.1.0.dll' (Join-Path $client 'Economy Admiral v0.1.0.dll') -Force
           Copy-Item 'mods/Economy-Admiral/config/config.json' (Join-Path $server 'config/config.json') -Force
           Copy-Item 'mods/Economy-Admiral/README.md' (Join-Path $server 'README.md') -Force
-          Copy-Item 'mods/Economy-Admiral/RUNTIME_TEST.md' (Join-Path $server 'RUNTIME_TEST.md') -Force
-          Copy-Item 'mods/Economy-Admiral/tools/Validate-Runtime.ps1' (Join-Path $server 'Validate-Runtime.ps1') -Force
-          Copy-Item 'mods/Economy-Admiral/tools/Validate-Enforce.ps1' (Join-Path $server 'Validate-Enforce.ps1') -Force
-          Copy-Item 'mods/Economy-Admiral/tools/Validate-Beta.ps1' (Join-Path $server 'Validate-Beta.ps1') -Force
 
           [ordered]@{
             name = 'Economy Admiral'
@@ -68,7 +64,7 @@ jobs:
             client = 'BepInEx/plugins/Economy Admiral/Economy Admiral v0.1.0.dll'
             settings_ui = 'BepInEx F12 Configuration Manager'
             settings_apply = 'next SPT server restart'
-            package_ownership = 'Economy Admiral files only; BepInEx runtime is never bundled'
+            package_ownership = 'Economy Admiral player runtime only; development validators and BepInEx runtime are never bundled'
           } | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $root 'runtime-manifest.json') -Encoding utf8
 
       - name: Validate package ownership and contents
@@ -76,15 +72,12 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $root = (Resolve-Path 'build-output/Economy-Admiral-Full').Path
+          $server = Join-Path $root 'SPT_Runtime/user/mods/Economy Admiral'
           $allowed = @(
             'BepInEx/plugins/Economy Admiral/Economy Admiral v0.1.0.dll',
             'SPT_Runtime/user/mods/Economy Admiral/Economy-Admiral.dll',
             'SPT_Runtime/user/mods/Economy Admiral/config/config.json',
             'SPT_Runtime/user/mods/Economy Admiral/README.md',
-            'SPT_Runtime/user/mods/Economy Admiral/RUNTIME_TEST.md',
-            'SPT_Runtime/user/mods/Economy Admiral/Validate-Runtime.ps1',
-            'SPT_Runtime/user/mods/Economy Admiral/Validate-Enforce.ps1',
-            'SPT_Runtime/user/mods/Economy Admiral/Validate-Beta.ps1',
             'runtime-manifest.json'
           )
 
@@ -95,10 +88,10 @@ jobs:
           $unexpected = @($actual | Where-Object { $_ -notin $allowed })
           $missing = @($allowed | Where-Object { $_ -notin $actual })
           if ($unexpected.Count -gt 0) {
-            throw "Package contains files not owned by Economy Admiral: $($unexpected -join ', ')"
+            throw "Package contains files outside the player runtime contract: $($unexpected -join ', ')"
           }
           if ($missing.Count -gt 0) {
-            throw "Package is missing owned files: $($missing -join ', ')"
+            throw "Package is missing player runtime files: $($missing -join ', ')"
           }
 
           $forbiddenBepInEx = @($actual | Where-Object {
@@ -117,11 +110,17 @@ jobs:
             }
           }
 
+          foreach ($devFile in @('RUNTIME_TEST.md','Validate-Runtime.ps1','Validate-Enforce.ps1','Validate-Beta.ps1')) {
+            if (Test-Path (Join-Path $server $devFile) -PathType Leaf) {
+              throw "Development-only file leaked into player package: $devFile"
+            }
+          }
+
           $config = Get-Content (Join-Path $root 'SPT_Runtime/user/mods/Economy Admiral/config/config.json') -Raw | ConvertFrom-Json
           foreach ($property in @('enableQuestEconomyCluster','enableTraderEconomyCluster','enableFleaEconomyCluster','enableLootEconomyCluster')) {
             if ($null -eq $config.$property) { throw "Config missing UI cluster: $property" }
           }
-          Write-Host '[Economy Admiral] package ownership PASS: only Economy Admiral-owned files are present.'
+          Write-Host '[Economy Admiral] clean player package PASS: only install/runtime files are present.'
 
       - name: Upload complete Economy Admiral package
         uses: actions/upload-artifact@v4
