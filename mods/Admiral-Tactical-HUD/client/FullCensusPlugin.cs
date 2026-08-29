@@ -17,7 +17,8 @@ namespace SPTPopCounter
 
         struct CensusRow
         {
-            public string Label;
+            public string LabelText;
+            public string ValueText;
             public int Value;
             public string Icon;
             public bool Accent;
@@ -25,7 +26,8 @@ namespace SPTPopCounter
 
             public CensusRow(string label, int value, string icon, bool accent = false, bool rule = false)
             {
-                Label = label;
+                LabelText = string.IsNullOrEmpty(label) ? string.Empty : label.ToUpperInvariant();
+                ValueText = value.ToString();
                 Value = value;
                 Icon = icon;
                 Accent = accent;
@@ -171,7 +173,8 @@ namespace SPTPopCounter
         {
             if (player == null || IsTrue(ReadMember(player,"IsYourPlayer"))) return;
             object ai = ReadMember(player,"IsAI");
-            if (ai is bool && !(bool)ai) return;
+            bool observedAi = IsTrue(ReadMember(player,"IsObservedAI"));
+            if (ai is bool && !(bool)ai && !observedAi) return;
 
             object health = ReadMember(player,"HealthController");
             object alive = ReadMember(health,"IsAlive") ?? ReadMember(player,"IsAlive");
@@ -237,7 +240,7 @@ namespace SPTPopCounter
         void BuildRows()
         {
             rows.Clear();
-            Add("PMC", counts[(int)Bucket.Pmc], showPmc, "usec");
+            Add("PMC", counts[(int)Bucket.Pmc], showPmc, "pmc");
             Add("Scav", counts[(int)Bucket.Scav], showScav, "scav");
 
             if (splitRogue.Value)
@@ -250,25 +253,25 @@ namespace SPTPopCounter
             if (splitBoss.Value)
             {
                 Add("Boss", counts[(int)Bucket.Boss], showBoss, "boss");
-                Add("Guard", counts[(int)Bucket.Guard], showGuard, "raider");
+                Add("Guard", counts[(int)Bucket.Guard], showGuard, "guard");
             }
             else AddCombined("Boss / Guard", counts[(int)Bucket.Boss] + counts[(int)Bucket.Guard], showBoss, "boss");
 
-            Add("Goons", counts[(int)Bucket.Goon], showGoon, "boss", true);
-            Add("Cultist", counts[(int)Bucket.Cultist], showCultist, "boss");
-            Add("Infected", counts[(int)Bucket.Infected], showInfected, "scav");
-            Add("BTR", counts[(int)Bucket.Btr], showBtr, "rogue");
+            Add("Goons", counts[(int)Bucket.Goon], showGoon, "goons", true);
+            Add("Cultist", counts[(int)Bucket.Cultist], showCultist, "cultist");
+            Add("Infected", counts[(int)Bucket.Infected], showInfected, "infected");
+            Add("BTR", counts[(int)Bucket.Btr], showBtr, "btr");
 
             foreach (KeyValuePair<string,int> faction in customFactions)
-                if (faction.Value > 0) rows.Add(new CensusRow(faction.Key, faction.Value, "usec", true));
+                if (faction.Value > 0) rows.Add(new CensusRow(faction.Key, faction.Value, "faction", true));
 
-            Add("Other", counts[(int)Bucket.Other], showOther, "raider");
+            Add("Other", counts[(int)Bucket.Other], showOther, "other");
 
             int total = 0;
             for (int i=0;i<counts.Length;i++) total += counts[i];
             foreach (KeyValuePair<string,int> faction in customFactions) total += faction.Value;
             if (showTotal.Value != RowVis.Hidden && (showTotal.Value == RowVis.Always || total > 0))
-                rows.Add(new CensusRow("Total Bots", total, "usec", false, true));
+                rows.Add(new CensusRow("Total Bots", total, "total", false, true));
         }
 
         void Add(string label, int value, ConfigEntry<RowVis> vis, string icon, bool accent = false)
@@ -342,8 +345,8 @@ namespace SPTPopCounter
                 }
 
                 Rect textRect = new Rect(rect.x+iconColumn,rect.y,innerWidth-iconColumn,rowHeight);
-                GUI.Label(textRect,row.Label.ToUpperInvariant(),labelStyle);
-                GUI.Label(textRect,row.Value.ToString(),valueStyle);
+                GUI.Label(textRect,row.LabelText,labelStyle);
+                GUI.Label(textRect,row.ValueText,valueStyle);
                 rowTop += rowHeight;
             }
         }
@@ -443,7 +446,17 @@ namespace SPTPopCounter
             if (Contains(type,"Hideout")) return false;
             string scene = string.Empty;
             try { scene = SceneManager.GetActiveScene().name ?? string.Empty; } catch { }
-            return !Contains(scene,"Hideout") && !Contains(scene,"убежищ");
+            if (Contains(scene,"Hideout") || Contains(scene,"убежищ")) return false;
+            return HasLocalPlayer(candidate);
+        }
+
+        bool HasLocalPlayer(object candidate)
+        {
+            IEnumerable players = GetPlayers(candidate);
+            if (players == null) return false;
+            foreach (object player in players)
+                if (Usable(player) && IsTrue(ReadMember(player,"IsYourPlayer"))) return true;
+            return false;
         }
 
         IEnumerable GetPlayers(object candidate)
