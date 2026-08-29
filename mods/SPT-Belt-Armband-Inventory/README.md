@@ -1,16 +1,22 @@
 # B&A&HB #2 MOD SPT
 
-Wearable inventory extension for SPT 4.1.3. Current development is the profile-safe dedicated wearable package recorded by the repository `belt` workstream and PR #64.
+Wearable inventory extension for SPT 4.1.3. The mechanically accepted rollback point is **Stable Baseline 1** at exact head `d6336f290361b16c4aa54f9d7dddfe0e8f7f9bbf`, preserved on branch `belt-stable-baseline-1`. Current development continues on PR #64 without changing persistent identities or the accepted slot15/slot16 lifecycle unless a concrete regression requires it.
 
 Current module version: **0.1.0**.
 
-## Current runtime model
+## Product roster
 
-B&A&HB keeps three explicit wearable categories with narrow item-specific capabilities:
+B&A&HB keeps three explicit wearable categories with narrow item-specific roles:
 
-- **ArmBand** — the proven searchable-container foundation on the vanilla `ArmBand` equipment host. The runtime candidate remains exact native `1x2`, magazine-only, with bounded event-driven container integration. Wrist Wallet is a separate ArmBand-family persistent item and is not silently granted unrelated capabilities.
-- **Belt** — dedicated equipment pseudo-slot **15**, positioned between Pockets and Backpack. The exact Magazine Belt uses its own persistent parent/item/grid/assort identities and a `2x2` magazine-only grid in the current mechanical candidate.
-- **HeadBand** — dedicated equipment pseudo-slot **16**, presented as a compact strip immediately above Headwear. The exact Utility HeadBand uses its own persistent parent/item/grid/assort identities and a narrow `1x2` utility grid. Its whitelist is exact-item only: RUB, USD, EUR, Apollo Soyuz, Malboro, Wilston, Strike and the small vanilla Wallet. It is deliberately not a generic secure or medical container.
+- **ArmBand** — two specialist choices on the proven vanilla ArmBand host:
+  - **Wrist Wallet** — `1x1`, currency-only, Ragman LL1, 12,500 RUB;
+  - **Magazine Armband** — `1x2`, MAGAZINE-only, Ragman LL1, 25,000 RUB.
+- **Belt** — dedicated pseudo-slot **15** between Pockets and Backpack:
+  - **Magazine Belt** — `2x2`, MAGAZINE-only, Ragman LL2, 45,000 RUB.
+- **HeadBand** — dedicated pseudo-slot **16** with the accepted compact first-open presentation:
+  - **Utility HeadBand** — `1x2`, Ragman LL1, 25,000 RUB; exact whitelist only: RUB, USD, EUR, Apollo Soyuz, Malboro, Wilston, Strike, Simple Wallet and WZ Wallet.
+
+The Utility HeadBand is deliberately not a generic secure, medical or container-class slot. Wallet support is exact-template based. The future split two-cell design remains deferred.
 
 Distributed identities are immutable. They are recorded in the persistent identity manifest and must never be renamed, reused for another category, or silently dropped.
 
@@ -35,18 +41,20 @@ The client projects Belt and HeadBand through native EFT equipment/slot boundari
 - dedicated equipment slots are registered against the SPT 4.1.3 `InventoryEquipment` boundary;
 - exact item filters prevent cross-category placement;
 - Belt and HeadBand use dedicated wire slot IDs `15` and `16`;
-- HeadBand presentation is created only from the native `SlotView.Show` lifecycle; the earlier provisional `EquipmentTab.Awake` Headwear clone was removed after physical RC evidence showed a broken first-entry layout;
-- the compact HeadBand view is inserted into the `EquipmentTab` slot map by an exact `Show` prefix before EFT begins enumerating that map; `SlotView.Show` may bind and position the existing view but is forbidden from adding/replacing map entries, preventing the pre-raid insurance screen from throwing `Collection was modified` and becoming non-interactive;
-- the first visible stash/Items layout is completed synchronously from the native Headwear `SlotView.Show` event by moving only individual slot rectangles; B&A&HB never changes the character panel `LayoutElement`, panel world position, or forces a global canvas refresh, so the panel cannot disappear or require tab switching to settle;
+- slot16 is inserted/recovered in the `EquipmentTab.Show` prefix before EFT enumerates `_slotViews`; a live mapped view is preserved and only a stale Unity-null entry is replaced;
+- late `SlotView.Show` binding is forbidden from adding/removing/cloning slot-map entries while EFT enumerates the dictionary;
+- the accepted HeadBand structural presentation uses one `44 + 4 px` row, keeps slot16 at the original Headwear position and translates individual native slot rectangles without resizing or moving the host Gear Panel;
+- no `LayoutElement.preferredHeight`, global Canvas force-refresh, host-panel transform correction, coroutine retry or idle polling participates in HeadBand placement;
 - exact dedicated-item Alt-pickup resolves to the matching dedicated slot when it is empty and compatible;
-- visible dedicated captions are owned by dedicated presentation policy, including EN/RU labels; the Belt ContainersPanel row receives a final bounded post-`Show` numeric-caption normalization because physical RC evidence proved the outer row could otherwise retain `15`;
-- existing ArmBand container mechanics remain isolated from the new dedicated locations.
+- visible dedicated captions are owned by dedicated presentation policy, including EN/RU labels;
+- Belt ContainersPanel caption repair is bounded to the exact factory-created row;
+- existing ArmBand container mechanics remain isolated from the dedicated slot15/slot16 locations.
 
 ## Scav / PMC lifecycle boundary
 
 PMC behavior remains on the ordinary inventory lifecycle. Scav `ReplaceInventory` compatibility is deliberately narrow: SPT/EFT runtime members `Inventory`, `Equipment`, `ContainedItem`, `Deleted` and `StringTemplateId` are resolved once during patch installation as a property or field, cached delegates are generated, and the postfix inspects only the three wearable equipment slots. There is no reflection scan per replacement, no scene/inventory sweep and no idle polling.
 
-Only wearable descriptors with the explicit Scav-host restoration capability can clear the transient deleted flag. Unrelated items and unregistered templates fail closed.
+Only wearable descriptors with the explicit Scav-host restoration capability can clear the transient deleted flag. Unrelated items and unregistered templates fail closed. Scav compatibility is CI-owned and is not part of the user's physical acceptance matrix.
 
 ## Profile and uninstall safety
 
@@ -70,19 +78,19 @@ Production client behavior is interaction/event driven:
 - no hierarchy-wide polling;
 - no repeated reflection in guarded hot paths where startup-bound delegates can be used;
 - deferred GridWindow work is bounded and drains to zero;
-- HeadBand visual creation is owned by native `SlotView.Show`, not `EquipmentTab.Awake`;
+- HeadBand visual creation is owned by native `EquipmentTab.Show` / `SlotView.Show` boundaries;
 - Belt caption repair is bounded to the exact factory-created row at `ContainersPanel.Show` completion;
 - server lifecycle target discovery is bounded and fails closed on zero/ambiguous candidates.
 
-CI includes deterministic hot-path and runtime-contract guards.
+CI includes deterministic hot-path, product-contract and runtime-contract guards.
 
 ## Repository layout
 
 - `src/` — client runtime registration, dedicated equipment projection and wearable integrations;
 - `server/` — SPT 4.1.3 item, slot, trader and lifecycle integration;
 - `tests/` — deterministic profile, identity, routing, presentation and lifecycle regressions;
-- `tools/` — validation and profile-recovery tooling;
-- `docs/` — architecture, archaeology, runtime contracts and recovery documentation.
+- `tools/` — validation, product-contract and profile-recovery tooling;
+- `docs/` — architecture, runtime acceptance and recovery documentation.
 
 ## Compatibility
 
@@ -90,8 +98,8 @@ Pack 'n' Strap and Trenchfoot BeltSlot are reference/archaeology sources, not ru
 
 The server project targets SPT 4.1.3 `SPTushonka.*` packages.
 
-## Release-candidate boundary
+## Development boundary
 
-PR #64 is the single implementation/evidence record. Automated profile-safety, dedicated-slot, lifecycle/native-polish and release-hardening work must be represented by one exact-head module CI and packaged artifact before another physical handoff is valid. `docs/RC1-runtime-checklist.md` tracks the combined runtime gate and must describe the actual current mechanics rather than historical candidates.
+PR #64 remains the single implementation/evidence record. Stable Baseline 1 is the rollback anchor for the accepted gameplay base. Product-pass changes must preserve persistent identities and the accepted runtime lifecycle; CI must prove the exact product roster and full client/server build before a new artifact is handed off.
 
-Internal commits, CI runs and artifacts are evidence, not stable acceptance. On physical FAIL the first concrete boundary is remediated automatically; on PASS the recorded stable-release phase proceeds under the user's standing authorization.
+The deferred final HeadBand visual concept is intentionally separate: reduce the Face window roughly by half and place a compact HeadBand above/adjacent using the ArmBand + Dogtag visual principle. The possible two-independent-`1x1` HeadBand layout (cigarettes-only + currency/wallet-only) is a final feasibility task, not part of the stable-base productization pass.
