@@ -13,7 +13,7 @@ namespace SPTBeltArmbandInventory.Server;
 /// InventoryEquipment construction, therefore dedicated locations serialize as
 /// collision-checked numeric pseudo-enum IDs 15/16 rather than invented enum names.
 /// </summary>
-[Injectable(TypePriority = OnLoadOrder.Preload + 2)]
+[Injectable(TypePriority = OnLoadOrder.Preload + 4)]
 public sealed class DedicatedEquipmentSlotRegistration(
     TemplateTable templateTable,
     ISptLogger<DedicatedEquipmentSlotRegistration> logger) : IOnLoad
@@ -28,6 +28,16 @@ public sealed class DedicatedEquipmentSlotRegistration(
     {
         try
         {
+            // DedicatedWearableItems runs at Preload+3. Never publish slot15/16
+            // filters until both exact product templates exist and are therefore
+            // safe host targets for the remainder of server startup.
+            if (!templateTable.Items.ContainsKey(DedicatedMagazineBeltTpl)
+                || !templateTable.Items.ContainsKey(EmergencyHeadBandTpl))
+            {
+                logger.Warning("B&A&HB dedicated-slot registration skipped safely: dedicated product templates were not both initialized.");
+                return Task.CompletedTask;
+            }
+
             if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
             {
                 logger.Warning("B&A&HB dedicated-slot registration skipped safely: default inventory template missing.");
@@ -82,7 +92,7 @@ public sealed class DedicatedEquipmentSlotRegistration(
             // list positions. Client presentation owns the requested visual anchors.
             inventory.Properties!.Slots = slots;
 
-            logger.Success($"B&A&HB #2 MOD SPT dedicated equipment slot contracts registered atomically: Belt wire={RuntimeIdentity.DedicatedBeltWireSlotId}; HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId}. Visual placement is client-owned.");
+            logger.Success($"B&A&HB #2 MOD SPT dedicated equipment slot contracts registered atomically after exact product templates: Belt wire={RuntimeIdentity.DedicatedBeltWireSlotId}; HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId}. Visual placement is client-owned.");
         }
         catch (Exception exception)
         {
