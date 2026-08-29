@@ -50,14 +50,14 @@ public sealed class DedicatedWearableItems(
             HeadBandParentTpl,
             "B&A&HB Utility HeadBand",
             "Utility HB",
-            "Protected compact 1x2 HeadBand utility carrier for currency, cigarettes and a compact wallet.",
+            "Compact 1x2 HeadBand utility carrier for currency, cigarettes and a compact wallet. Death protection follows the B&A&HB F12 setting.",
             RuntimeIdentity.EmergencyHeadBandGridColumns,
             RuntimeIdentity.EmergencyHeadBandGridRows,
             HeadBandUtilityWhitelist,
             handbookItem.ParentId,
             25000);
 
-        logger.Success("B&A&HB #2 dedicated Belt and HeadBand container items registered.");
+        logger.Success("B&A&HB dedicated Magazine Belt and Utility HeadBand items registered.");
         return Task.CompletedTask;
     }
 
