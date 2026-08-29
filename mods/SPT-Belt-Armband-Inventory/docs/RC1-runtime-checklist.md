@@ -15,6 +15,8 @@ Candidate runtime version is **0.2.0**. The client DLL intentionally keeps the p
 | Utility HeadBand | slot16 | two native `1x1` cells: currency/wallet + cigarettes | Ragman LL1 — 25,000 RUB |
 | Magazine Belt | slot15 | `2x2`, MAGAZINE-only | Ragman LL2 — 45,000 RUB |
 
+Host isolation is exact: vanilla ArmBand accepts only Wrist Wallet and Magazine Armband from B&A&HB; it does not accept the shared custom Belt parent and therefore must not accept Magazine Belt. slot15 accepts only Magazine Belt. slot16 accepts only Utility HeadBand.
+
 Utility HeadBand exact filters:
 - `main`: RUB, USD, EUR, Simple Wallet, WZ Wallet;
 - `cigarettes`: Apollo Soyuz, Malboro, Wilston, Strike.
@@ -35,7 +37,7 @@ The v0.2 compact presentation must remain inside the original FaceCover footprin
 
 3. **Existing-profile migration.** If the profile already contained a v0.1.0 Utility HeadBand, inspect it after first launch. PASS: one currency/wallet item remains in `main`, one cigarette item is in the cigarette cell, no valid item is silently deleted. Any same-category overflow should be preserved in the PMC sorting table.
 
-4. **Product roster and localization.** Check Ragman when the relevant LL is available. PASS: Wrist Wallet 12.5k/LL1, Magazine Armband 25k/LL1, Utility HeadBand 25k/LL1, Magazine Belt 45k/LL2; no `Runtime Candidate` user-visible name remains; with Russian EFT locale the four B&A&HB product names/descriptions use the bundled Russian localization rather than falling back to technical English names.
+4. **Product roster, localization and host isolation.** Check Ragman when the relevant LL is available. PASS: Wrist Wallet 12.5k/LL1, Magazine Armband 25k/LL1, Utility HeadBand 25k/LL1, Magazine Belt 45k/LL2; no `Runtime Candidate` user-visible name remains; with Russian EFT locale the four B&A&HB product names/descriptions use the bundled Russian localization rather than falling back to technical English names. Equip boundary PASS: Wrist Wallet and Magazine Armband can use ArmBand; Magazine Belt cannot be placed in ArmBand and uses only slot15; Wrist Wallet/Magazine Armband cannot be placed in slot15; Utility HeadBand uses only slot16.
 
 5. **Reload — vanilla source remains first.** Equip a weapon with a compatible magazine, keep at least one compatible spare in an ordinary vanilla reachable location (pockets/rig as normally supported) and another compatible spare in Magazine Armband or Magazine Belt. Trigger normal reload. PASS: the ordinary vanilla reachable magazine is selected before the wearable fallback; B&A&HB does not become the preferred/default source.
 
