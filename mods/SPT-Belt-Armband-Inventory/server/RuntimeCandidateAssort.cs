@@ -16,7 +16,11 @@ public sealed class RuntimeCandidateAssort(TradersTable tradersTable, ISptLogger
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB Magazine Armband could not find Ragman.");
         var id = new MongoId(RuntimeIdentity.CandidateAssortId);
-        var existing = trader.Assort.Items.FirstOrDefault(x => x.Id == id);
+        var matches = trader.Assort.Items.Where(x => x.Id == id).Take(2).ToArray();
+        if (matches.Length > 1)
+            throw new InvalidOperationException("B&A&HB Magazine Armband assort ID collision: duplicate item entries own the persistent assort ID.");
+
+        var existing = matches.SingleOrDefault();
         if (existing != null)
         {
             ValidateExistingAssort();
