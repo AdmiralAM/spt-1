@@ -111,8 +111,8 @@ public sealed class AdmiralTraderRegistration(
             throw new InvalidDataException($"base.json trader name mismatch: {traderBase.Name}");
         if (string.IsNullOrWhiteSpace(traderBase.Avatar))
             throw new InvalidDataException("base.json trader avatar route is missing");
-        if (traderBase.Insurance is null || traderBase.Insurance.Availability != false)
-            throw new InvalidDataException("Admiral Trader must not publish an insurance service");
+        if (traderBase.Insurance is not null)
+            throw new InvalidDataException("Admiral Trader 0.1.0 must not publish an insurance service object");
         if (traderBase.LoyaltyLevels is null
             || traderBase.LoyaltyLevels.Count == 0
             || traderBase.LoyaltyLevels.Any(level => level.InsurancePriceCoefficient != 0))
@@ -200,19 +200,8 @@ public sealed class AdmiralInsurancePublicationGuard(
             return Task.CompletedTask;
         }
 
-        TraderInsurance insurance = trader.Base.Insurance ?? new TraderInsurance
-        {
-            Availability = false,
-            ExcludedCategory = [],
-            MaxReturnHour = 0,
-            MaxStorageTime = 0,
-            MinPayment = 0,
-            MinReturnHour = 0
-        };
-
-        bool corrected = insurance.Availability != false;
-        insurance.Availability = false;
-        trader.Base.Insurance = insurance;
+        bool corrected = trader.Base.Insurance is not null;
+        trader.Base.Insurance = null;
 
         foreach (TraderLoyaltyLevel level in trader.Base.LoyaltyLevels ?? [])
         {
@@ -221,9 +210,9 @@ public sealed class AdmiralInsurancePublicationGuard(
         }
 
         if (corrected)
-            logger.Warning("Admiral Trader insurance publication was re-enabled or repriced by another runtime mutation; restored disabled state");
+            logger.Warning("Admiral Trader insurance service surface was reintroduced or repriced by another runtime mutation; removed it");
         else
-            logger.Success("Admiral Trader insurance publication guard verified disabled state");
+            logger.Success("Admiral Trader insurance publication guard verified no service surface");
 
         return Task.CompletedTask;
     }
