@@ -37,6 +37,8 @@ public static class PlayableQuestRewardPolicy
             HighStandingLowDepthWarnMultiple = playable.StandingMultiple,
             RestartableHighItemValueWarnMultiple = playable.RestartableItemBudgetMultiple,
             RestartableHighXpWarnMultiple = playable.RestartableXpMultiple,
+            // Reuse the already-maintained restartable tightness instead of introducing a new balance coefficient.
+            RestartableHighStandingWarnMultiple = Math.Min(playable.StandingMultiple, playable.RestartableXpMultiple),
             LowDepthMaxRelativeMultiple = source.LowDepthMaxRelativeMultiple,
             LowStructureMaxRelativeMultiple = source.LowStructureMaxRelativeMultiple,
         };
