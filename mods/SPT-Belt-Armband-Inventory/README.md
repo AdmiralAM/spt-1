@@ -9,8 +9,9 @@ Active authority:
 - PR **#286**
 - branch `feature/bahb-v0.2-compact-headband`
 
-Development client assembly: `SPT Belt Armband Inventory v0.2.0.dll`.
-The BepInEx plugin GUID/name remain unchanged for in-place upgrade compatibility; only the development version advances to `0.2.0`. Every CI artifact contains `BUILD-INFO.txt` with the exact head SHA plus SHA-256 hashes for both runtime DLLs.
+The v0.2.0 client reports `AssemblyVersion/FileVersion/BepInEx PluginVersion = 0.2.0`. Its physical DLL filename intentionally remains `SPT Belt Armband Inventory v0.1.0.dll` for this upgrade line so extracting the candidate over an installed stable v0.1.0 replaces the existing client file instead of leaving two DLLs with the same BepInEx GUID. CI explicitly forbids a second `...v0.2.0.dll` in the candidate package.
+
+The BepInEx plugin GUID/name remain unchanged for in-place upgrade compatibility. Every CI artifact contains `BUILD-INFO.txt` with the exact head SHA, runtime candidate version, filename-compatibility marker and SHA-256 hashes for both runtime DLLs.
 
 ## Current v0.2 scope
 
@@ -74,7 +75,7 @@ CI for PR #286 owns:
 
 - hot-path/lifecycle guard;
 - reload-access fallback/order guard;
-- version/build-identity guard;
+- version/build-identity and single-DLL upgrade-path guard;
 - product-contract and EN/RU localization guard;
 - compact-layout guard;
 - deterministic regressions, including the real split-grid profile migration and reload fallback policy;
