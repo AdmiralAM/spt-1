@@ -37,7 +37,11 @@ public sealed record EconomyConfig
     public EconomyMode Mode { get; init; } = EconomyMode.Enforce;
     public EconomyPreset Preset { get; init; } = EconomyPreset.Normal;
     public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
-    public bool RepeatedRaidLootDecay { get; init; } = false;
+
+    // Retired compatibility key. Older configs may still contain true, but the unimplemented mechanic is inert.
+    [JsonInclude]
+    public bool RepeatedRaidLootDecay { get => false; private init { } }
+
     public bool EnablePlayableEconomyBundle { get; init; } = true;
 
     public bool EnableQuestEconomyCluster { get; init; } = true;
