@@ -181,8 +181,10 @@ public sealed class AdmiralTraderRegistration(
 
 /// <summary>
 /// Reassert the authored no-insurance contract after every normal mod load callback.
-/// This keeps a broad trader/service mutator from exposing Admiral as an incomplete
-/// insurer in the pre-raid screen.
+/// SPT's client still dereferences TraderBase.Insurance while it filters the complete
+/// trader list, so a disabled trader must retain a complete, non-null service record.
+/// Availability=false keeps Admiral out of the insurer list without breaking vanilla
+/// insurers such as Prapor.
 /// </summary>
 [Injectable(TypePriority = OnLoadOrder.PostLoad + 100_000), UsedImplicitly]
 public sealed class AdmiralInsurancePublicationGuard(
@@ -200,8 +202,19 @@ public sealed class AdmiralInsurancePublicationGuard(
             return Task.CompletedTask;
         }
 
-        bool corrected = trader.Base.Insurance is not null;
-        trader.Base.Insurance = null;
+        TraderInsurance insurance = trader.Base.Insurance ?? new TraderInsurance
+        {
+            Availability = false,
+            ExcludedCategory = [],
+            MaxReturnHour = 0,
+            MaxStorageTime = 0,
+            MinPayment = 0,
+            MinReturnHour = 0
+        };
+
+        bool corrected = insurance.Availability != false;
+        insurance.Availability = false;
+        trader.Base.Insurance = insurance;
 
         foreach (TraderLoyaltyLevel level in trader.Base.LoyaltyLevels ?? [])
         {
@@ -210,9 +223,9 @@ public sealed class AdmiralInsurancePublicationGuard(
         }
 
         if (corrected)
-            logger.Warning("Admiral Trader insurance service surface was reintroduced or repriced by another runtime mutation; removed it");
+            logger.Warning("Admiral Trader insurance was re-enabled or repriced by another runtime mutation; restored client-safe disabled state");
         else
-            logger.Success("Admiral Trader insurance publication guard verified no service surface");
+            logger.Success("Admiral Trader insurance publication guard verified client-safe disabled state");
 
         return Task.CompletedTask;
     }
