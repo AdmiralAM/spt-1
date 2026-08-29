@@ -51,9 +51,13 @@ jobs:
           Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
           Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
 
-      - name: Build Admiral Tactical HUD client
+      - name: Build Admiral Tactical HUD Compact
         shell: pwsh
         run: dotnet build 'mods/Admiral-Tactical-HUD/client/Admiral-Tactical-HUD.csproj' -c Release --nologo
+
+      - name: Build Admiral Tactical HUD Full Census
+        shell: pwsh
+        run: dotnet build 'mods/Admiral-Tactical-HUD/client/Admiral-Tactical-HUD-Full-Census.csproj' -c Release --nologo
 
       - name: Build Admiral Tactical HUD server
         shell: pwsh
@@ -69,10 +73,26 @@ jobs:
           New-Item -ItemType Directory -Force -Path $clientAssets | Out-Null
           New-Item -ItemType Directory -Force -Path $server | Out-Null
           Copy-Item 'mods/Admiral-Tactical-HUD/client/bin/Release/netstandard2.1/Admiral Tactical HUD.dll' (Join-Path $client 'Admiral Tactical HUD.dll')
+          Copy-Item 'mods/Admiral-Tactical-HUD/client/bin/Release/netstandard2.1/Admiral Tactical HUD Full Census.dll' (Join-Path $client 'Admiral Tactical HUD Full Census.dll')
           Copy-Item 'mods/Admiral-Tactical-HUD/client/assets/hud-sprites.png' (Join-Path $clientAssets 'hud-sprites.png')
           Copy-Item 'mods/Admiral-Tactical-HUD/server/bin/Release/net10.0/Admiral Tactical HUD Server.dll' (Join-Path $server 'Admiral Tactical HUD Server.dll')
           Copy-Item 'mods/Admiral-Tactical-HUD/README.md' (Join-Path $server 'README.md')
           Copy-Item 'mods/Admiral-Tactical-HUD/THIRD-PARTY-LICENSES' (Join-Path $server 'THIRD-PARTY-LICENSES') -Recurse
+
+      - name: Validate RC2 package contract
+        shell: pwsh
+        run: |
+          $root = 'artifacts/Admiral-Tactical-HUD-1.13.3-RC2'
+          $required = @(
+            "$root/BepInEx/plugins/Admiral Tactical HUD/Admiral Tactical HUD.dll",
+            "$root/BepInEx/plugins/Admiral Tactical HUD/Admiral Tactical HUD Full Census.dll",
+            "$root/BepInEx/plugins/Admiral Tactical HUD/assets/hud-sprites.png",
+            "$root/SPT_Runtime/user/mods/Admiral Tactical HUD/Admiral Tactical HUD Server.dll",
+            "$root/SPT_Runtime/user/mods/Admiral Tactical HUD/THIRD-PARTY-LICENSES/BotCensus-LICENSE.txt"
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path $path -PathType Leaf)) { throw "RC2 runtime file missing: $path" }
+          }
 
       - name: Upload Admiral Tactical HUD RC2 package
         uses: actions/upload-artifact@v4
