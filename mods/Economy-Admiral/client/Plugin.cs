@@ -2,7 +2,6 @@ using System;
 using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
-using BepInEx.Logging;
 using UnityEngine;
 
 namespace EconomyAdmiralClient;
@@ -39,18 +38,20 @@ public sealed class Plugin : BaseUnityPlugin
 
     private bool hydrating;
     private bool initialized;
-    private Type requestHandlerType;
     private MethodInfo getJsonMethod;
     private MethodInfo postJsonMethod;
 
     private void Awake()
     {
+        Config.SaveOnConfigSet = false;
         BindUi();
         ResolveRequestHandler();
-        HydrateFromServer();
+        var hydrated = HydrateFromServer();
         Subscribe();
         initialized = true;
-        Logger.LogInfo("Economy Admiral F12 settings loaded. Changes are persisted to the server and apply after server restart.");
+        Logger.LogInfo(hydrated
+            ? "Economy Admiral F12 settings loaded from the server config."
+            : "Economy Admiral F12 settings loaded, but server hydration failed; changes will be rejected until transport is available.");
     }
 
     private void BindUi()
@@ -73,72 +74,85 @@ public sealed class Plugin : BaseUnityPlugin
         lootCluster = Config.Bind("02. Advanced - Clusters", "Loot Economy", true,
             "Controls loose and static/container loot pressure." + RestartText);
 
-        traderPurchase = Config.Bind("03. Advanced - Custom", "Trader Purchase Multiplier", 1.15,
-            new ConfigDescription("Custom preset: multiplier applied to supported trader currency purchase costs." + RestartText,
-                new AcceptableValueRange<double>(1.0, 2.0)));
-        traderSell = Config.Bind("03. Advanced - Custom", "Trader Sell Payout Multiplier", 0.85,
-            new ConfigDescription("Custom preset: effective share of normal trader sell payout." + RestartText,
-                new AcceptableValueRange<double>(0.5, 1.0)));
-        fleaBase = Config.Bind("03. Advanced - Custom", "Flea Base Price Multiplier", 1.65,
-            new ConfigDescription("Custom preset: minimum flea base-price pressure multiplier." + RestartText,
-                new AcceptableValueRange<double>(1.0, 2.5)));
-        fleaFee = Config.Bind("03. Advanced - Custom", "Flea Listing Fee Multiplier", 1.25,
-            new ConfigDescription("Custom preset: flea listing-fee multiplier." + RestartText,
-                new AcceptableValueRange<double>(1.0, 2.0)));
-        looseLoot = Config.Bind("03. Advanced - Custom", "Loose Loot Scale", 0.85,
-            new ConfigDescription("Custom preset: native loose-loot multiplier scale." + RestartText,
-                new AcceptableValueRange<double>(0.5, 1.0)));
-        staticLoot = Config.Bind("03. Advanced - Custom", "Static Loot Scale", 0.85,
-            new ConfigDescription("Custom preset: native static/container-loot multiplier scale." + RestartText,
-                new AcceptableValueRange<double>(0.5, 1.0)));
-        questItems = Config.Bind("03. Advanced - Custom", "Quest Item Reward Cap", 3.0,
-            new ConfigDescription("Custom preset: normal quest item-reward budget multiple." + RestartText,
-                new AcceptableValueRange<double>(0.1, 10.0)));
-        restartableQuestItems = Config.Bind("03. Advanced - Custom", "Restartable Quest Item Reward Cap", 2.0,
-            new ConfigDescription("Custom preset: restartable quest item-reward budget multiple." + RestartText,
-                new AcceptableValueRange<double>(0.1, 10.0)));
-        questXp = Config.Bind("03. Advanced - Custom", "Quest XP Reward Cap", 3.0,
-            new ConfigDescription("Custom preset: normal quest XP reward multiple." + RestartText,
-                new AcceptableValueRange<double>(0.1, 10.0)));
-        restartableQuestXp = Config.Bind("03. Advanced - Custom", "Restartable Quest XP Reward Cap", 2.0,
-            new ConfigDescription("Custom preset: restartable quest XP reward multiple." + RestartText,
-                new AcceptableValueRange<double>(0.1, 10.0)));
-        questStanding = Config.Bind("03. Advanced - Custom", "Quest Standing Reward Cap", 3.0,
-            new ConfigDescription("Custom preset: trader-standing reward multiple." + RestartText,
-                new AcceptableValueRange<double>(0.1, 10.0)));
+        traderPurchase = BindDouble("Trader Purchase Multiplier", 1.15, 1.0, 2.0, "multiplier applied to supported trader currency purchase costs");
+        traderSell = BindDouble("Trader Sell Payout Multiplier", 0.85, 0.5, 1.0, "effective share of normal trader sell payout");
+        fleaBase = BindDouble("Flea Base Price Multiplier", 1.65, 1.0, 2.5, "minimum flea base-price pressure multiplier");
+        fleaFee = BindDouble("Flea Listing Fee Multiplier", 1.25, 1.0, 2.0, "flea listing-fee multiplier");
+        looseLoot = BindDouble("Loose Loot Scale", 0.85, 0.5, 1.0, "native loose-loot multiplier scale");
+        staticLoot = BindDouble("Static Loot Scale", 0.85, 0.5, 1.0, "native static/container-loot multiplier scale");
+        questItems = BindDouble("Quest Item Reward Cap", 3.0, 0.1, 10.0, "normal quest item-reward budget multiple");
+        restartableQuestItems = BindDouble("Restartable Quest Item Reward Cap", 2.0, 0.1, 10.0, "restartable quest item-reward budget multiple");
+        questXp = BindDouble("Quest XP Reward Cap", 3.0, 0.1, 10.0, "normal quest XP reward multiple");
+        restartableQuestXp = BindDouble("Restartable Quest XP Reward Cap", 2.0, 0.1, 10.0, "restartable quest XP reward multiple");
+        questStanding = BindDouble("Quest Standing Reward Cap", 3.0, 0.1, 10.0, "trader-standing reward multiple");
     }
+
+    private ConfigEntry<double> BindDouble(string name, double value, double min, double max, string text) =>
+        Config.Bind("03. Advanced - Custom", name, value,
+            new ConfigDescription("Custom preset: " + text + "." + RestartText, new AcceptableValueRange<double>(min, max)));
 
     private void ResolveRequestHandler()
     {
-        requestHandlerType = Type.GetType("SPT.Common.Http.RequestHandler, SPT.Common", throwOnError: false);
+        Type requestHandlerType = null;
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            requestHandlerType = assembly.GetType("SPT.Common.Http.RequestHandler", throwOnError: false);
+            if (requestHandlerType != null)
+                break;
+        }
+
+        requestHandlerType ??= Type.GetType("SPT.Common.Http.RequestHandler, SPT.Common", throwOnError: false);
         if (requestHandlerType == null)
         {
-            Logger.LogError("SPT.Common.Http.RequestHandler was not found; F12 settings cannot reach the SPT server.");
+            Logger.LogError("SPT.Common.Http.RequestHandler was not found; Economy Admiral F12 transport is unavailable.");
             return;
         }
 
         getJsonMethod = requestHandlerType.GetMethod("GetJson", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(string) }, null);
         postJsonMethod = requestHandlerType.GetMethod("PostJson", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(string), typeof(string) }, null);
         if (getJsonMethod == null || postJsonMethod == null)
-            Logger.LogError("SPT RequestHandler GetJson/PostJson API was not found; Economy Admiral settings sync is disabled.");
+        {
+            Logger.LogError($"SPT RequestHandler API mismatch in {requestHandlerType.Assembly.FullName}; Economy Admiral F12 transport is unavailable.");
+            getJsonMethod = null;
+            postJsonMethod = null;
+            return;
+        }
+
+        Logger.LogInfo($"Economy Admiral F12 transport resolved via {requestHandlerType.Assembly.GetName().Name}.");
     }
 
-    private void HydrateFromServer()
+    private string InvokeGet() => getJsonMethod?.Invoke(null, new object[] { GetRoute }) as string;
+    private string InvokePost(string json) => postJsonMethod?.Invoke(null, new object[] { SaveRoute, json }) as string;
+
+    private bool HydrateFromServer()
     {
         if (getJsonMethod == null)
-            return;
+            return false;
 
         try
         {
-            var json = getJsonMethod.Invoke(null, new object[] { GetRoute }) as string;
-            var snapshot = ParseSnapshot(json);
+            var snapshot = ParseSnapshot(InvokeGet());
             if (snapshot == null || !snapshot.Ok)
             {
-                Logger.LogWarning("Economy Admiral server settings were unavailable; F12 shows local fallback values.");
-                return;
+                Logger.LogError("Economy Admiral server settings GET returned no valid snapshot.");
+                return false;
             }
 
-            hydrating = true;
+            ApplySnapshot(snapshot);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            Logger.LogError($"Failed to load Economy Admiral server settings: {Unwrap(exception).Message}");
+            return false;
+        }
+    }
+
+    private void ApplySnapshot(SettingsSnapshot snapshot)
+    {
+        hydrating = true;
+        try
+        {
             mode.Value = snapshot.Mode;
             preset.Value = snapshot.Preset;
             bundle.Value = snapshot.EnablePlayableEconomyBundle;
@@ -157,10 +171,6 @@ public sealed class Plugin : BaseUnityPlugin
             questXp.Value = snapshot.CustomQuestXpMultiple;
             restartableQuestXp.Value = snapshot.CustomRestartableQuestXpMultiple;
             questStanding.Value = snapshot.CustomQuestStandingMultiple;
-        }
-        catch (Exception exception)
-        {
-            Logger.LogError($"Failed to load Economy Admiral server settings: {Unwrap(exception).Message}");
         }
         finally
         {
@@ -192,23 +202,29 @@ public sealed class Plugin : BaseUnityPlugin
 
     private void OnSettingChanged(object sender, EventArgs args)
     {
-        if (hydrating || !initialized || postJsonMethod == null)
+        if (hydrating || !initialized)
             return;
+
+        if (postJsonMethod == null || getJsonMethod == null)
+        {
+            Logger.LogError("Economy Admiral setting was not saved: SPT server transport is unavailable.");
+            HydrateFromServer();
+            return;
+        }
 
         try
         {
             var request = BuildRequest();
-            var json = JsonUtility.ToJson(request);
-            var responseJson = postJsonMethod.Invoke(null, new object[] { SaveRoute, json }) as string;
-            var response = ParseSnapshot(responseJson);
+            var response = ParseSnapshot(InvokePost(JsonUtility.ToJson(request)));
             if (response == null || !response.Ok)
-            {
-                Logger.LogError("Economy Admiral server rejected the F12 settings update; reloading persisted values.");
-                HydrateFromServer();
-                return;
-            }
+                throw new InvalidOperationException("server SAVE did not return a valid success snapshot");
 
-            Logger.LogMessage("Economy Admiral settings saved. Restart the SPT server to apply them.");
+            var persisted = ParseSnapshot(InvokeGet());
+            if (persisted == null || !persisted.Ok || !Matches(request, persisted))
+                throw new InvalidOperationException("server round-trip verification did not match the requested settings");
+
+            ApplySnapshot(persisted);
+            Logger.LogMessage("Economy Admiral settings saved to server config. Restart the SPT server to apply them.");
         }
         catch (Exception exception)
         {
@@ -216,6 +232,28 @@ public sealed class Plugin : BaseUnityPlugin
             HydrateFromServer();
         }
     }
+
+    private static bool Matches(SettingsRequest request, SettingsSnapshot snapshot) =>
+        string.Equals(request.Mode, snapshot.Mode, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(request.Preset, snapshot.Preset, StringComparison.OrdinalIgnoreCase) &&
+        request.EnablePlayableEconomyBundle == snapshot.EnablePlayableEconomyBundle &&
+        request.EnableQuestEconomyCluster == snapshot.EnableQuestEconomyCluster &&
+        request.EnableTraderEconomyCluster == snapshot.EnableTraderEconomyCluster &&
+        request.EnableFleaEconomyCluster == snapshot.EnableFleaEconomyCluster &&
+        request.EnableLootEconomyCluster == snapshot.EnableLootEconomyCluster &&
+        Nearly(request.CustomTraderPurchasePriceMultiplier, snapshot.CustomTraderPurchasePriceMultiplier) &&
+        Nearly(request.CustomTraderSellPayoutMultiplier, snapshot.CustomTraderSellPayoutMultiplier) &&
+        Nearly(request.CustomFleaBasePriceMultiplier, snapshot.CustomFleaBasePriceMultiplier) &&
+        Nearly(request.CustomFleaListingFeeMultiplier, snapshot.CustomFleaListingFeeMultiplier) &&
+        Nearly(request.CustomLooseLootScale, snapshot.CustomLooseLootScale) &&
+        Nearly(request.CustomStaticLootScale, snapshot.CustomStaticLootScale) &&
+        Nearly(request.CustomQuestItemBudgetMultiple, snapshot.CustomQuestItemBudgetMultiple) &&
+        Nearly(request.CustomRestartableQuestItemBudgetMultiple, snapshot.CustomRestartableQuestItemBudgetMultiple) &&
+        Nearly(request.CustomQuestXpMultiple, snapshot.CustomQuestXpMultiple) &&
+        Nearly(request.CustomRestartableQuestXpMultiple, snapshot.CustomRestartableQuestXpMultiple) &&
+        Nearly(request.CustomQuestStandingMultiple, snapshot.CustomQuestStandingMultiple);
+
+    private static bool Nearly(double left, double right) => Math.Abs(left - right) < 0.000001;
 
     private SettingsRequest BuildRequest() => new SettingsRequest
     {
