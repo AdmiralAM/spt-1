@@ -101,12 +101,12 @@ public static class PlayableQuestRewardPolicy
             flags.Add("RESTARTABLE_HIGH_ITEM_VALUE");
         if (row.Restartable && row.XpVsVanillaMedian >= policy.RestartableHighXpWarnMultiple)
             flags.Add("RESTARTABLE_HIGH_XP");
-        if (RestartableStandingPressureCore.ShouldFlag(
-                row.Restartable,
-                row.StandingVsVanillaMedian,
-                policy.RestartableHighStandingWarnMultiple))
+        foreach (var flag in RestartableStandingPressureCore.EnforcementFlags(
+                     row.Restartable,
+                     row.StandingVsVanillaMedian,
+                     policy.RestartableHighStandingWarnMultiple))
         {
-            flags.Add(RestartableStandingPressureCore.Flag);
+            flags.Add(flag);
         }
 
         return flags.Distinct(StringComparer.Ordinal).ToList();
