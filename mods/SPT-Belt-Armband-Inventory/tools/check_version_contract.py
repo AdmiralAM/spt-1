@@ -64,6 +64,9 @@ require(
         "SPTTarget=4.1.3",
         "BUILD-INFO.txt",
         "SPT Belt Armband Inventory v0.2.0.dll",
+        'Copy-Item -LiteralPath "$root/BUILD-INFO.txt" -Destination "$modRoot/BUILD-INFO.txt" -Force',
+        '$installedBuildInfo = Get-Content -LiteralPath "$modRoot/BUILD-INFO.txt" -Raw',
+        "if ($installedBuildInfo -ne $buildInfo)",
     ],
     "artifact v0.2 identity",
 )
@@ -71,4 +74,4 @@ require(
 if violations:
     raise SystemExit("B&A&HB version-contract gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB version-contract gate: OK (runtime candidate=0.2.0; upgrade-safe client path overwrites stable DLL; duplicate v0.2 filename forbidden; GUID/name preserved)")
+print("B&A&HB version-contract gate: OK (runtime candidate=0.2.0; upgrade-safe client path overwrites stable DLL; duplicate v0.2 filename forbidden; root+installed provenance frozen; GUID/name preserved)")
