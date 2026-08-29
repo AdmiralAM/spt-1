@@ -39,10 +39,32 @@ armband_item = require(
 if "Runtime Candidate Magazine Belt" in armband_item:
     violations.append("Magazine Armband item: obsolete user-visible Runtime Candidate product name returned")
 
-require(
+armband_assort = require(
+    SERVER / "RuntimeCandidateAssort.cs",
+    [
+        "EnsureNoPartialAssortCollision();",
+        "trader.Assort.BarterScheme.ContainsKey(id)",
+        "trader.Assort.LoyalLevelItems.ContainsKey(id)",
+        "trader.Assort.BarterScheme.Add(id,",
+        "trader.Assort.LoyalLevelItems.Add(id,",
+    ],
+    "Magazine Armband persistent assort collision safety")
+if "trader.Assort.BarterScheme[id] =" in armband_assort or "trader.Assort.LoyalLevelItems[id] =" in armband_assort:
+    violations.append("Magazine Armband assort must not overwrite persistent metadata with dictionary indexers")
+
+wallet_assort = require(
     SERVER / "WristWalletAssort.cs",
-    ["private const int PriceRoubles = 12500;", "private const int LoyaltyLevel = 1;"],
+    [
+        "private const int PriceRoubles = 12500;",
+        "private const int LoyaltyLevel = 1;",
+        "trader.Assort.BarterScheme.ContainsKey(id)",
+        "trader.Assort.LoyalLevelItems.ContainsKey(id)",
+        "trader.Assort.BarterScheme.Add(id,",
+        "trader.Assort.LoyalLevelItems.Add(id,",
+    ],
     "Wrist Wallet offer")
+if "trader.Assort.BarterScheme[id] =" in wallet_assort or "trader.Assort.LoyalLevelItems[id] =" in wallet_assort:
+    violations.append("Wrist Wallet assort must not overwrite persistent metadata with dictionary indexers")
 
 require(
     SERVER / "WristWalletItem.cs",
@@ -56,15 +78,21 @@ require(
     ],
     "Wrist Wallet item")
 
-require(
+dedicated_assort = require(
     SERVER / "DedicatedWearableAssort.cs",
     [
         "private const int BeltLoyaltyLevel = 2;",
         "private const int HeadBandLoyaltyLevel = 1;",
         "private const int BeltPrice = 45000;",
         "private const int HeadBandPrice = 25000;",
+        "trader.Assort.BarterScheme.ContainsKey(assortId)",
+        "trader.Assort.LoyalLevelItems.ContainsKey(assortId)",
+        "trader.Assort.BarterScheme.Add(assortId,",
+        "trader.Assort.LoyalLevelItems.Add(assortId,",
     ],
     "Dedicated Belt/HeadBand offers")
+if "trader.Assort.BarterScheme[assortId] =" in dedicated_assort or "trader.Assort.LoyalLevelItems[assortId] =" in dedicated_assort:
+    violations.append("Dedicated wearable assort must not overwrite persistent metadata with dictionary indexers")
 
 require(
     SRC / "RuntimeIdentity.cs",
@@ -131,5 +159,5 @@ if violations:
 
 print(
     "B&A&HB product-contract gate: OK "
-    "(EN/RU localized roster; Wrist Wallet LL1/12.5k; Magazine Armband LL1/25k; Utility HeadBand LL1/25k with native split 1x1 pockets; Magazine Belt LL2/45k)"
+    "(EN/RU localized roster; exact pricing/progression; split HeadBand pockets; persistent assort IDs reject partial metadata collisions instead of overwriting)"
 )
