@@ -187,6 +187,7 @@ public sealed record AuditPolicy
     public double HighStandingLowDepthWarnMultiple { get; init; } = 3.0;
     public double RestartableHighItemValueWarnMultiple { get; init; } = 2.0;
     public double RestartableHighXpWarnMultiple { get; init; } = 2.0;
+    public double RestartableHighStandingWarnMultiple { get; init; } = 2.0;
     public double LowDepthMaxRelativeMultiple { get; init; } = 1.0;
     public double LowStructureMaxRelativeMultiple { get; init; } = 1.0;
 }
