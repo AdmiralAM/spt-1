@@ -28,8 +28,12 @@ public sealed record EconomyConfig
     public bool EnableItemRewardStackNormalization { get; init; } = false;
     public bool EnableTraderPurchasePressure { get; init; } = false;
     public double CustomTraderPurchasePriceMultiplier { get; init; } = 1.15;
+    public bool EnableTraderSellPressure { get; init; } = false;
+    public double CustomTraderSellPayoutMultiplier { get; init; } = 0.85;
     public bool EnableFleaPurchasePressure { get; init; } = false;
     public double CustomFleaBasePriceMultiplier { get; init; } = 1.65;
+    public bool EnableFleaListingFeePressure { get; init; } = false;
+    public double CustomFleaListingFeeMultiplier { get; init; } = 1.25;
     public bool EnableLootPressure { get; init; } = false;
     public double CustomLooseLootScale { get; init; } = 0.85;
     public double CustomStaticLootScale { get; init; } = 0.85;

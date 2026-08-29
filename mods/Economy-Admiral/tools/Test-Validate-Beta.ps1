@@ -60,27 +60,53 @@ exit 0
     }
     $adapter | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-admiral-trader-adapter.json') -Encoding UTF8
 
-    [ordered]@{
+    $runtime = [ordered]@{
         BuildIdentity = [ordered]@{
             Product = 'Economy Admiral'
             TargetRuntime = 'SPT 4.1.3'
             HeadSha = '0123456789abcdef0123456789abcdef01234567'
             WorkflowRunId = '123'
         }
-    } | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-runtime-evidence.json') -Encoding UTF8
+    }
+    $runtime | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-runtime-evidence.json') -Encoding UTF8
 
     $validator = Join-Path $PSScriptRoot 'Validate-Beta.ps1'
-    & pwsh -NoProfile -File $validator -ModPath $root
-    if ($LASTEXITCODE -ne 0) { throw "positive Beta validator fixture failed" }
 
+    & pwsh -NoProfile -File $validator -ModPath $root
+    if ($LASTEXITCODE -ne 0) { throw "installed supported Trader Beta fixture failed" }
+
+    $runtime.BuildIdentity = $null
+    $runtime | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-runtime-evidence.json') -Encoding UTF8
+    $identityOutput = & pwsh -NoProfile -File $validator -ModPath $root 2>&1 | Out-String
+    if ($LASTEXITCODE -ne 0) { throw "invalid/missing build identity incorrectly blocked Beta validator" }
+    if ($identityOutput -notmatch 'build identity metadata: unavailable/invalid') { throw "invalid build identity did not emit non-blocking diagnostic" }
+
+    $source.LoadedAdapterCount = 0
+    $source.LoadedAdapters = @()
+    $source | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-source-pressure.json') -Encoding UTF8
+    $adapter.Installed = $false
+    $adapter.ContractAvailable = $false
+    $adapter.ContractState = 'NotInstalled'
+    $adapter.GameplayPolicySchemaVersion = 0
+    $adapter.OfferCount = 0
+    $adapter.BaselineOfferCount = 0
+    $adapter.RelationshipOfferCount = 0
+    $adapter.MilestoneOfferCount = 0
+    $adapter.BoundedRenewableOfferCount = 0
+    $adapter.Offers = @()
+    $adapter | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-admiral-trader-adapter.json') -Encoding UTF8
+    & pwsh -NoProfile -File $validator -ModPath $root
+    if ($LASTEXITCODE -ne 0) { throw "standalone Economy Admiral fixture without Trader failed" }
+
+    $adapter.Installed = $true
     $adapter.ContractAvailable = $false
     $adapter.ContractState = 'ContractUnsupported'
     $adapter | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-admiral-trader-adapter.json') -Encoding UTF8
     $negativeOutput = & pwsh -NoProfile -File $validator -ModPath $root 2>&1 | Out-String
-    if ($LASTEXITCODE -eq 0) { throw "incompatible Trader contract did not fail Beta validator" }
+    if ($LASTEXITCODE -eq 0) { throw "incompatible installed Trader contract did not fail Beta validator" }
     if ($negativeOutput -notmatch 'BETA FAIL') { throw "negative Beta validator fixture did not emit explicit failure" }
 
-    Write-Host 'Economy Admiral Beta validator smoke PASS'
+    Write-Host 'Economy Admiral Beta validator optional-Trader/build-metadata smoke PASS'
 }
 finally {
     Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
