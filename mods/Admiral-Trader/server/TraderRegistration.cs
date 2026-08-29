@@ -111,8 +111,8 @@ public sealed class AdmiralTraderRegistration(
             throw new InvalidDataException($"base.json trader name mismatch: {traderBase.Name}");
         if (string.IsNullOrWhiteSpace(traderBase.Avatar))
             throw new InvalidDataException("base.json trader avatar route is missing");
-        if (traderBase.Insurance is not null)
-            throw new InvalidDataException("Admiral Trader 0.1.0 must not publish an insurance service object");
+        if (traderBase.Insurance is null || traderBase.Insurance.Availability != false)
+            throw new InvalidDataException("Admiral Trader must not publish an insurance service");
         if (traderBase.LoyaltyLevels is null
             || traderBase.LoyaltyLevels.Count == 0
             || traderBase.LoyaltyLevels.Any(level => level.InsurancePriceCoefficient != 0))
