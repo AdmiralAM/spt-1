@@ -155,6 +155,9 @@ else:
         "const float HeadBandCompactHeight = 44f;",
         "const float HeadBandGap = 4f;",
         "const float StructuralOffset = HeadBandCompactHeight + HeadBandGap;",
+        "States.TryGetValue(key, out state);",
+        "Component stateEquipmentTab = state == null ? null : state.EquipmentTab.Target as Component;",
+        "!ReferenceEquals(stateEquipmentTab, equipmentTab)",
         "rect.anchoredPosition = new Vector2(original.x, original.y - StructuralOffset);",
         "headBandRect.anchoredPosition = originalHeadwear;",
         "HEADBAND FIRST-RENDER PROOF",
@@ -163,8 +166,10 @@ else:
     ):
         if token not in reflow_text:
             violations.append(
-                "HeadBandRenderSettle.cs: accepted stabilization geometry contract changed "
+                "HeadBandRenderSettle.cs: accepted stabilization geometry/lifecycle contract changed "
                 f"({token})")
+    if "state.EquipmentTab.Target == null" in reflow_text:
+        violations.append("HeadBandRenderSettle.cs: raw WeakReference object-null check can reuse stale Unity state")
     for token in (
         'GetProperty("preferredHeight"',
         'FindComponentByTypeName(equipmentTab.transform, "UnityEngine.UI.LayoutElement")',
@@ -292,4 +297,4 @@ guard_region(
 if violations:
     raise SystemExit("Hot-path guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB #2 hot-path guard: OK (accepted HeadBand geometry frozen at 44+4 structural row; stale slot16 recovered pre-enumeration; host Gear Panel layout untouched; no manual/deferred first-open refresh; late slot-map mutation forbidden; interaction/lifecycle hot paths startup-bound; server patches bounded-unique)")
+print("B&A&HB #2 hot-path guard: OK (accepted HeadBand geometry frozen at 44+4 structural row; stale slot16 recovered pre-enumeration; reflow cache bound to exact live EquipmentTab identity; host Gear Panel layout untouched; no manual/deferred first-open refresh; late slot-map mutation forbidden; interaction/lifecycle hot paths startup-bound; server patches bounded-unique)")
