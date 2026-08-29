@@ -56,40 +56,43 @@ public sealed class Plugin : BaseUnityPlugin
 
     private void BindUi()
     {
-        mode = Config.Bind("01. Basic", "Mode", "Audit",
-            new ConfigDescription("Off disables the mod, Audit analyzes without mutation, Enforce applies the selected economy preset." + RestartText,
+        mode = Config.Bind("01. Basic", "Mode", "Enforce",
+            new ConfigDescription("Off disables Economy Admiral. Audit is diagnostics-only. Enforce applies the selected preset." + RestartText,
                 new AcceptableValueList<string>("Off", "Audit", "Enforce")));
         preset = Config.Bind("01. Basic", "Preset", "Normal",
-            new ConfigDescription("Economy strength. Normal is the intended balanced starting point." + RestartText,
+            new ConfigDescription("Economy strength. Normal is the recommended balanced starting point." + RestartText,
                 new AcceptableValueList<string>("Easy", "Normal", "Hard", "Custom")));
-        bundle = Config.Bind("01. Basic", "Playable Economy Bundle", true,
-            "Master high-level activation path. In Enforce, enabled clusters automatically use the selected preset." + RestartText);
+        bundle = Config.Bind("01. Basic", "Full Preset Bundle", true,
+            "Recommended: ON. In Enforce, every enabled cluster uses the selected preset as one coherent economy profile. Turn OFF only for selective legacy/manual deployments." + RestartText);
 
         questCluster = Config.Bind("02. Advanced - Clusters", "Quest Economy", true,
-            "Controls quest item stacks, XP, trader standing and repeatable reward pressure." + RestartText);
+            "Hard gate for quest item-stack, XP, trader-standing and repeatable reward pressure. OFF keeps quest economy untouched." + RestartText);
         traderCluster = Config.Bind("02. Advanced - Clusters", "Trader Economy", true,
-            "Controls trader purchase-price and sell-payout pressure." + RestartText);
+            "Hard gate for trader purchase-price and sell-payout pressure. OFF keeps trader economics untouched." + RestartText);
         fleaCluster = Config.Bind("02. Advanced - Clusters", "Flea Market Economy", true,
-            "Controls flea purchase/base-price, anti-arbitrage/handbook and listing-fee pressure." + RestartText);
+            "Hard gate for flea price/anti-arbitrage and listing-fee pressure. OFF keeps flea economics untouched." + RestartText);
         lootCluster = Config.Bind("02. Advanced - Clusters", "Loot Economy", true,
-            "Controls loose and static/container loot pressure." + RestartText);
+            "Hard gate for loose and static/container loot pressure. OFF keeps loot multipliers untouched." + RestartText);
 
-        traderPurchase = BindDouble("Trader Purchase Multiplier", 1.15, 1.0, 2.0, "multiplier applied to supported trader currency purchase costs");
-        traderSell = BindDouble("Trader Sell Payout Multiplier", 0.85, 0.5, 1.0, "effective share of normal trader sell payout");
-        fleaBase = BindDouble("Flea Base Price Multiplier", 1.65, 1.0, 2.5, "minimum flea base-price pressure multiplier");
-        fleaFee = BindDouble("Flea Listing Fee Multiplier", 1.25, 1.0, 2.0, "flea listing-fee multiplier");
-        looseLoot = BindDouble("Loose Loot Scale", 0.85, 0.5, 1.0, "native loose-loot multiplier scale");
-        staticLoot = BindDouble("Static Loot Scale", 0.85, 0.5, 1.0, "native static/container-loot multiplier scale");
-        questItems = BindDouble("Quest Item Reward Cap", 3.0, 0.1, 10.0, "normal quest item-reward budget multiple");
-        restartableQuestItems = BindDouble("Restartable Quest Item Reward Cap", 2.0, 0.1, 10.0, "restartable quest item-reward budget multiple");
-        questXp = BindDouble("Quest XP Reward Cap", 3.0, 0.1, 10.0, "normal quest XP reward multiple");
-        restartableQuestXp = BindDouble("Restartable Quest XP Reward Cap", 2.0, 0.1, 10.0, "restartable quest XP reward multiple");
-        questStanding = BindDouble("Quest Standing Reward Cap", 3.0, 0.1, 10.0, "trader-standing reward multiple");
+        questItems = BindDouble("03. Custom - Quests", "Quest Item Reward Cap", 3.0, 0.1, 10.0, "normal quest item-reward budget multiple");
+        restartableQuestItems = BindDouble("03. Custom - Quests", "Restartable Quest Item Reward Cap", 2.0, 0.1, 10.0, "restartable quest item-reward budget multiple");
+        questXp = BindDouble("03. Custom - Quests", "Quest XP Reward Cap", 3.0, 0.1, 10.0, "normal quest XP reward multiple");
+        restartableQuestXp = BindDouble("03. Custom - Quests", "Restartable Quest XP Reward Cap", 2.0, 0.1, 10.0, "restartable quest XP reward multiple");
+        questStanding = BindDouble("03. Custom - Quests", "Quest Standing Reward Cap", 3.0, 0.1, 10.0, "trader-standing reward multiple");
+
+        traderPurchase = BindDouble("04. Custom - Traders", "Trader Purchase Multiplier", 1.15, 1.0, 2.0, "multiplier applied to supported trader currency purchase costs");
+        traderSell = BindDouble("04. Custom - Traders", "Trader Sell Payout Multiplier", 0.85, 0.5, 1.0, "effective share of normal trader sell payout");
+
+        fleaBase = BindDouble("05. Custom - Flea", "Flea Base Price Multiplier", 1.65, 1.0, 2.5, "minimum flea base-price pressure multiplier");
+        fleaFee = BindDouble("05. Custom - Flea", "Flea Listing Fee Multiplier", 1.25, 1.0, 2.0, "flea listing-fee multiplier");
+
+        looseLoot = BindDouble("06. Custom - Loot", "Loose Loot Scale", 0.85, 0.5, 1.0, "native loose-loot multiplier scale");
+        staticLoot = BindDouble("06. Custom - Loot", "Static Loot Scale", 0.85, 0.5, 1.0, "native static/container-loot multiplier scale");
     }
 
-    private ConfigEntry<double> BindDouble(string name, double value, double min, double max, string text) =>
-        Config.Bind("03. Advanced - Custom", name, value,
-            new ConfigDescription("Custom preset: " + text + "." + RestartText, new AcceptableValueRange<double>(min, max)));
+    private ConfigEntry<double> BindDouble(string section, string name, double value, double min, double max, string text) =>
+        Config.Bind(section, name, value,
+            new ConfigDescription("Used only by the Custom preset: " + text + "." + RestartText, new AcceptableValueRange<double>(min, max)));
 
     private void ResolveRequestHandler()
     {
