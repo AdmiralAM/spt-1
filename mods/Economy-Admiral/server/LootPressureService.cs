@@ -31,34 +31,41 @@ public sealed class LootPressureService(
 
         try
         {
-            foreach (var key in locationConfig.LooseLootMultiplier.Keys.ToArray())
+            if (config.EnableLooseLootPressure)
             {
-                if (NonPlayableKeys.Contains(key))
-                    continue;
-                var before = locationConfig.LooseLootMultiplier[key];
-                var after = LootPressurePolicy.ApplyScale(before, targets.LooseLootScale);
-                if (after < before)
+                foreach (var key in locationConfig.LooseLootMultiplier.Keys.ToArray())
                 {
-                    locationConfig.LooseLootMultiplier[key] = after;
-                    looseChanged++;
+                    if (NonPlayableKeys.Contains(key))
+                        continue;
+                    var before = locationConfig.LooseLootMultiplier[key];
+                    var after = LootPressurePolicy.ApplyScale(before, targets.LooseLootScale);
+                    if (after < before)
+                    {
+                        locationConfig.LooseLootMultiplier[key] = after;
+                        looseChanged++;
+                    }
                 }
             }
 
-            foreach (var key in locationConfig.StaticLootMultiplier.Keys.ToArray())
+            if (config.EnableStaticLootPressure)
             {
-                if (NonPlayableKeys.Contains(key))
-                    continue;
-                var before = locationConfig.StaticLootMultiplier[key];
-                var after = LootPressurePolicy.ApplyScale(before, targets.StaticLootScale);
-                if (after < before)
+                foreach (var key in locationConfig.StaticLootMultiplier.Keys.ToArray())
                 {
-                    locationConfig.StaticLootMultiplier[key] = after;
-                    staticChanged++;
+                    if (NonPlayableKeys.Contains(key))
+                        continue;
+                    var before = locationConfig.StaticLootMultiplier[key];
+                    var after = LootPressurePolicy.ApplyScale(before, targets.StaticLootScale);
+                    if (after < before)
+                    {
+                        locationConfig.StaticLootMultiplier[key] = after;
+                        staticChanged++;
+                    }
                 }
             }
 
             logger.Info(
                 $"[Economy Admiral] loot pressure applied: preset={config.Preset}, " +
+                $"looseEnabled={config.EnableLooseLootPressure}, staticEnabled={config.EnableStaticLootPressure}, " +
                 $"looseScale={targets.LooseLootScale:0.###}, staticScale={targets.StaticLootScale:0.###}, " +
                 $"looseMaps={looseChanged}, staticMaps={staticChanged}");
             return new(true, looseChanged, staticChanged);
