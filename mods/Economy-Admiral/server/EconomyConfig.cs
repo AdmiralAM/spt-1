@@ -27,6 +27,7 @@ public sealed record EconomyConfig
     private bool enableFleaPurchasePressure;
     private bool enableFleaListingFeePressure;
     private bool enableLootPressure;
+    private Dictionary<string, ManualQuestRewardOverride> questRewardOverrides = new(StringComparer.Ordinal);
 
     public EconomyMode Mode { get; init; } = EconomyMode.Audit;
     public EconomyPreset Preset { get; init; } = EconomyPreset.Normal;
@@ -94,7 +95,13 @@ public sealed record EconomyConfig
     public RarityThresholds Rarity { get; init; } = new();
     public AuditPolicy CustomAuditPolicy { get; init; } = new();
     public Dictionary<string, ManualItemOverride> ManualOverrides { get; init; } = new(StringComparer.Ordinal);
-    public Dictionary<string, ManualQuestRewardOverride> QuestRewardOverrides { get; init; } = new(StringComparer.Ordinal);
+    public Dictionary<string, ManualQuestRewardOverride> QuestRewardOverrides
+    {
+        get => EnableQuestEconomyCluster ? questRewardOverrides : EmptyQuestRewardOverrides;
+        init => questRewardOverrides = value;
+    }
+
+    private static readonly Dictionary<string, ManualQuestRewardOverride> EmptyQuestRewardOverrides = new(StringComparer.Ordinal);
 }
 
 public sealed record RarityThresholds
