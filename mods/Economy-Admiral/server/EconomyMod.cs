@@ -17,6 +17,7 @@ public sealed class EconomyMod(
     QuestAnalysisService questAnalysisService,
     QuestProvenanceDeltaService questProvenanceDeltaService,
     EnforcementPlanService enforcementPlanService,
+    NativeRepeatableQuestPressureService nativeRepeatableQuestPressureService,
     GroupedItemRuntimeEvidenceService groupedItemRuntimeEvidenceService,
     SourcePressureObservationPipelineService sourcePressureObservationPipelineService,
     EconomyHealthRuntimeReportService economyHealthRuntimeReportService,
@@ -68,6 +69,7 @@ public sealed class EconomyMod(
                     $"rolledBack={enforcement.TransactionRolledBack}, error={enforcement.TransactionError ?? "none"}.");
             }
 
+            nativeRepeatableQuestPressureService.Apply(config);
             traderPurchasePressureService.Apply(config);
             traderSellPressureService.Apply(config);
             fleaPurchasePressureService.Apply(config);
@@ -92,7 +94,7 @@ public sealed class EconomyMod(
             }
 
             throw new InvalidOperationException(
-                $"Economy Admiral Enforce failed; all captured Quest/Trader/Flea/Loot mutations were rolled back and verified ({transactionSnapshot.EntryCount} entries).",
+                $"Economy Admiral Enforce failed; all captured Quest/Trader/Flea/Loot/native-repeatable mutations were rolled back and verified ({transactionSnapshot.EntryCount} entries).",
                 applyException);
         }
     }
