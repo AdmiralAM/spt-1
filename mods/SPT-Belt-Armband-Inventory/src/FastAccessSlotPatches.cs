@@ -45,13 +45,15 @@ namespace SPTBeltArmbandInventory
     {
         internal static Type MagazineType;
         internal static Func<object, IEnumerable> GetAllParentItems;
+        internal static Func<object, string> ReadTemplateId;
         internal static Action<string> LogWarning;
         static bool failureLogged;
 
         internal static void PromoteReachability(object item, ref bool result)
         {
             bool isMagazine = item != null && MagazineType != null && MagazineType.IsInstanceOfType(item);
-            if (!FastAccessSlotPolicy.ShouldPromoteReloadReachability(result, isMagazine, true) || GetAllParentItems == null)
+            if (!FastAccessSlotPolicy.ShouldPromoteReloadReachability(result, isMagazine, true)
+                || GetAllParentItems == null || ReadTemplateId == null)
                 return;
 
             try
@@ -60,8 +62,7 @@ namespace SPTBeltArmbandInventory
                 if (parents == null) return;
                 foreach (object parent in parents)
                 {
-                    string templateId = ReflectionTools.ReadMember(parent, "StringTemplateId") as string
-                        ?? ReflectionTools.ReadMember(parent, "TemplateId") as string;
+                    string templateId = parent == null ? null : ReadTemplateId(parent);
                     bool fastAccessRoot = WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.FastAccess);
                     if (FastAccessSlotPolicy.ShouldPromoteReloadReachability(result, isMagazine, fastAccessRoot))
                     {
@@ -84,6 +85,7 @@ namespace SPTBeltArmbandInventory
         {
             MagazineType = null;
             GetAllParentItems = null;
+            ReadTemplateId = null;
             LogWarning = null;
             failureLogged = false;
         }
@@ -171,16 +173,20 @@ namespace SPTBeltArmbandInventory
 
                 MethodInfo reachable = ReflectionTools.FindInstanceMethod(controllerType, "IsAtReachablePlace", typeof(bool), itemType);
                 MethodInfo parentsMethod = FindGetAllParentItems(itemType);
+                MemberInfo templateIdMember = FindReadableMember(itemType, "StringTemplateId", typeof(string));
                 ConstructorInfo harmonyMethodCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 unpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
-                if (reachable == null || parentsMethod == null || harmonyMethodCtor == null || patchMethod == null || unpatchSelf == null)
+                if (reachable == null || parentsMethod == null || templateIdMember == null
+                    || harmonyMethodCtor == null || patchMethod == null || unpatchSelf == null)
                     return false;
 
                 FastAccessReloadRuntime.MagazineType = magazineType;
                 FastAccessReloadRuntime.GetAllParentItems = BuildParentEnumerator(parentsMethod, itemType);
+                FastAccessReloadRuntime.ReadTemplateId = BuildStringReader(itemType, templateIdMember);
                 FastAccessReloadRuntime.LogWarning = logWarning;
-                if (FastAccessReloadRuntime.GetAllParentItems == null) return false;
+                if (FastAccessReloadRuntime.GetAllParentItems == null || FastAccessReloadRuntime.ReadTemplateId == null)
+                    return false;
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo postfixMethod = BuildReachabilityPostfix(itemType);
@@ -226,6 +232,38 @@ namespace SPTBeltArmbandInventory
             return selected;
         }
 
+        static MemberInfo FindReadableMember(Type type, string name, Type expectedType)
+        {
+            MemberInfo selected = null;
+            int matches = 0;
+            for (Type current = type; current != null; current = current.BaseType)
+            {
+                PropertyInfo[] properties;
+                try { properties = current.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly); }
+                catch { properties = Array.Empty<PropertyInfo>(); }
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    PropertyInfo property = properties[i];
+                    if (!string.Equals(property.Name, name, StringComparison.Ordinal) || property.GetIndexParameters().Length != 0
+                        || property.GetGetMethod(true) == null || property.PropertyType != expectedType) continue;
+                    matches++;
+                    if (selected == null) selected = property;
+                }
+
+                FieldInfo[] fields;
+                try { fields = current.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly); }
+                catch { fields = Array.Empty<FieldInfo>(); }
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    FieldInfo field = fields[i];
+                    if (!string.Equals(field.Name, name, StringComparison.Ordinal) || field.FieldType != expectedType) continue;
+                    matches++;
+                    if (selected == null) selected = field;
+                }
+            }
+            return matches == 1 ? selected : null;
+        }
+
         static Func<object, IEnumerable> BuildParentEnumerator(MethodInfo method, Type itemType)
         {
             try
@@ -238,6 +276,32 @@ namespace SPTBeltArmbandInventory
                 if (method.ReturnType != typeof(IEnumerable)) il.Emit(OpCodes.Castclass, typeof(IEnumerable));
                 il.Emit(OpCodes.Ret);
                 return (Func<object, IEnumerable>)dynamic.CreateDelegate(typeof(Func<object, IEnumerable>));
+            }
+            catch { return null; }
+        }
+
+        static Func<object, string> BuildStringReader(Type declaringType, MemberInfo member)
+        {
+            try
+            {
+                DynamicMethod dynamic = new DynamicMethod("BAndHBReloadTemplateId", typeof(string), new[] { typeof(object) }, typeof(FastAccessSlotPatches), true);
+                ILGenerator il = dynamic.GetILGenerator();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Castclass, declaringType);
+                if (member is PropertyInfo property)
+                {
+                    MethodInfo getter = property.GetGetMethod(true);
+                    if (getter == null || property.PropertyType != typeof(string)) return null;
+                    il.Emit(getter.IsVirtual ? OpCodes.Callvirt : OpCodes.Call, getter);
+                }
+                else if (member is FieldInfo field)
+                {
+                    if (field.FieldType != typeof(string)) return null;
+                    il.Emit(OpCodes.Ldfld, field);
+                }
+                else return null;
+                il.Emit(OpCodes.Ret);
+                return (Func<object, string>)dynamic.CreateDelegate(typeof(Func<object, string>));
             }
             catch { return null; }
         }
