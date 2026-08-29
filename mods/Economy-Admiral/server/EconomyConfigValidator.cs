@@ -32,6 +32,14 @@ public static class EconomyConfigValidator
             || config.CustomFleaBasePriceMultiplier < 1.0
             || config.CustomFleaBasePriceMultiplier > 2.5)
             throw new InvalidOperationException("Economy Admiral config: CustomFleaBasePriceMultiplier must be finite and within 1.0..2.5.");
+        if (!double.IsFinite(config.CustomFleaMaxPriceDifferenceBelowHandbookPercent)
+            || config.CustomFleaMaxPriceDifferenceBelowHandbookPercent < 0.0
+            || config.CustomFleaMaxPriceDifferenceBelowHandbookPercent > 100.0)
+            throw new InvalidOperationException("Economy Admiral config: CustomFleaMaxPriceDifferenceBelowHandbookPercent must be finite and within 0..100.");
+        if (!double.IsFinite(config.CustomFleaHandbookPriceMultiplier)
+            || config.CustomFleaHandbookPriceMultiplier < 1.0
+            || config.CustomFleaHandbookPriceMultiplier > 2.0)
+            throw new InvalidOperationException("Economy Admiral config: CustomFleaHandbookPriceMultiplier must be finite and within 1.0..2.0.");
         if (!double.IsFinite(config.CustomFleaListingFeeMultiplier)
             || config.CustomFleaListingFeeMultiplier < 1.0
             || config.CustomFleaListingFeeMultiplier > 2.0)
