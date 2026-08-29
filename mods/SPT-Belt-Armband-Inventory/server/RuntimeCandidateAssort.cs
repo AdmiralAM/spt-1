@@ -24,6 +24,7 @@ public sealed class RuntimeCandidateAssort(TradersTable tradersTable, ISptLogger
             return Task.CompletedTask;
         }
 
+        EnsureNoPartialAssortCollision();
         trader.Assort.Items.Add(new Item
         {
             Id = id,
@@ -32,10 +33,16 @@ public sealed class RuntimeCandidateAssort(TradersTable tradersTable, ISptLogger
             SlotId = RuntimeCandidateOfferContract.RootId,
             Upd = new Upd { UnlimitedCount = true, StackObjectsCount = RuntimeCandidateOfferContract.UnlimitedStock }
         });
-        trader.Assort.BarterScheme[id] = [[new BarterScheme { Count = RuntimeCandidateOfferContract.PriceRoubles, Template = Money.ROUBLES }]];
-        trader.Assort.LoyalLevelItems[id] = RuntimeCandidateOfferContract.LoyaltyLevel;
+        trader.Assort.BarterScheme.Add(id, [[new BarterScheme { Count = RuntimeCandidateOfferContract.PriceRoubles, Template = Money.ROUBLES }]]);
+        trader.Assort.LoyalLevelItems.Add(id, RuntimeCandidateOfferContract.LoyaltyLevel);
         logger.Success($"B&A&HB Magazine Armband added to Ragman LL{RuntimeCandidateOfferContract.LoyaltyLevel} for {RuntimeCandidateOfferContract.PriceRoubles:N0} RUB.");
         return Task.CompletedTask;
+
+        void EnsureNoPartialAssortCollision()
+        {
+            if (trader.Assort.BarterScheme.ContainsKey(id) || trader.Assort.LoyalLevelItems.ContainsKey(id))
+                throw new InvalidOperationException("B&A&HB Magazine Armband assort ID collision: item is absent but barter/loyalty metadata already owns the persistent assort ID.");
+        }
 
         void ValidateExistingAssort()
         {
