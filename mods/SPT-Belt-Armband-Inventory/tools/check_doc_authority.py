@@ -66,6 +66,19 @@ require(
 )
 
 require(
+    ROOT / "profile-safety" / "README.md",
+    [
+        "development v0.2.0",
+        "68ac00000000000000000012",
+        "Utility HeadBand `cigarettes`",
+        "BAndHBHeadBandSplitGridV1",
+        "do not keep the migration permanently pending",
+        "pre-v0.2.0 profile backup",
+    ],
+    "profile-safety v0.2 recovery authority",
+)
+
+require(
     DOCS / "phase1-runtime-contract.md",
     [
         "# Phase 1 runtime contract — archived snapshot",
@@ -88,4 +101,4 @@ require(
 if violations:
     raise SystemExit("B&A&HB doc-authority gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB doc-authority gate: OK (v0.2.0 current authority aligned; Issue #285/PR #286/#287 explicit; Phase 1 records archived, not current)")
+print("B&A&HB doc-authority gate: OK (v0.2.0 current/recovery authority aligned; Issue #285/PR #286/#287 explicit; Phase 1 records archived, not current)")
