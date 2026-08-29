@@ -33,7 +33,6 @@ public sealed record EconomyConfig
     public EconomyPreset Preset { get; init; } = EconomyPreset.Normal;
     public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
     public bool RepeatedRaidLootDecay { get; init; } = false;
-
     public bool EnablePlayableEconomyBundle { get; init; } = true;
 
     public bool EnableQuestEconomyCluster { get; init; } = true;
@@ -98,6 +97,17 @@ public sealed record EconomyConfig
         init => questRewardOverrides = value;
     }
 
+    // Runtime activation getters above intentionally expose effective state. Persistence must use
+    // these raw configured values so an F12 save cannot silently turn bundle-derived activation
+    // into permanent granular opt-ins or erase overrides hidden by a disabled cluster.
+    [JsonIgnore] public bool ConfiguredEnableItemRewardStackNormalization => enableItemRewardStackNormalization;
+    [JsonIgnore] public bool ConfiguredEnableTraderPurchasePressure => enableTraderPurchasePressure;
+    [JsonIgnore] public bool ConfiguredEnableTraderSellPressure => enableTraderSellPressure;
+    [JsonIgnore] public bool ConfiguredEnableFleaPurchasePressure => enableFleaPurchasePressure;
+    [JsonIgnore] public bool ConfiguredEnableFleaListingFeePressure => enableFleaListingFeePressure;
+    [JsonIgnore] public bool ConfiguredEnableLootPressure => enableLootPressure;
+    [JsonIgnore] public Dictionary<string, ManualQuestRewardOverride> ConfiguredQuestRewardOverrides => questRewardOverrides;
+
     private static readonly Dictionary<string, ManualQuestRewardOverride> EmptyQuestRewardOverrides = new(StringComparer.Ordinal);
 }
 
@@ -119,7 +129,6 @@ public sealed record AuditPolicy
     public double MaxLevelGateContribution { get; init; } = 3.0;
     public double MaxObjectiveContribution { get; init; } = 5.0;
     public int DuplicateTraderSourcesWarnCount { get; init; } = 6;
-
     public double HighItemValueLowStructureWarnMultiple { get; init; } = 3.0;
     public double HighXpLowDepthWarnMultiple { get; init; } = 3.0;
     public double HighStandingLowDepthWarnMultiple { get; init; } = 3.0;
