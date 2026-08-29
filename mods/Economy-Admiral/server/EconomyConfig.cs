@@ -37,7 +37,11 @@ public sealed record EconomyConfig
     public EconomyMode Mode { get; init; } = EconomyMode.Enforce;
     public EconomyPreset Preset { get; init; } = EconomyPreset.Normal;
     public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
-    public bool RepeatedRaidLootDecay { get; init; } = false;
+
+    // Retired 0.1.0 placeholder. Kept only as a source-compatibility constant so old config files
+    // containing repeatedRaidLootDecay deserialize harmlessly; it is not serialized or actionable.
+    [JsonIgnore] public bool RepeatedRaidLootDecay => false;
+
     public bool EnablePlayableEconomyBundle { get; init; } = true;
 
     public bool EnableQuestEconomyCluster { get; init; } = true;
