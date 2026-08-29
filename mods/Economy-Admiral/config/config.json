@@ -15,6 +15,8 @@
   "customTraderSellPayoutMultiplier": 0.85,
   "enableFleaPurchasePressure": false,
   "customFleaBasePriceMultiplier": 1.65,
+  "customFleaMaxPriceDifferenceBelowHandbookPercent": 45.0,
+  "customFleaHandbookPriceMultiplier": 1.10,
   "enableFleaListingFeePressure": false,
   "customFleaListingFeeMultiplier": 1.25,
   "enableLootPressure": false,
