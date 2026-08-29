@@ -80,5 +80,13 @@
     "currency_coefficient": 1,
     "price_rate": 0
   },
+  "insurance": {
+    "availability": false,
+    "min_payment": 0,
+    "min_return_hour": 0,
+    "max_return_hour": 0,
+    "max_storage_time": 0,
+    "excluded_category": []
+  },
   "sell_category": []
 }
