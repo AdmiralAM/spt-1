@@ -32,6 +32,10 @@ public static class EconomyConfigValidator
             || config.CustomFleaBasePriceMultiplier < 1.0
             || config.CustomFleaBasePriceMultiplier > 2.5)
             throw new InvalidOperationException("Economy Admiral config: CustomFleaBasePriceMultiplier must be finite and within 1.0..2.5.");
+        if (!double.IsFinite(config.CustomFleaListingFeeMultiplier)
+            || config.CustomFleaListingFeeMultiplier < 1.0
+            || config.CustomFleaListingFeeMultiplier > 2.0)
+            throw new InvalidOperationException("Economy Admiral config: CustomFleaListingFeeMultiplier must be finite and within 1.0..2.0.");
         ValidateLootScale(config.CustomLooseLootScale, nameof(config.CustomLooseLootScale));
         ValidateLootScale(config.CustomStaticLootScale, nameof(config.CustomStaticLootScale));
 

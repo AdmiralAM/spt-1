@@ -23,6 +23,7 @@ public sealed class EconomyMod(
     TraderPurchasePressureService traderPurchasePressureService,
     TraderSellPressureService traderSellPressureService,
     FleaPurchasePressureService fleaPurchasePressureService,
+    FleaListingFeePressureService fleaListingFeePressureService,
     LootPressureService lootPressureService
 ) : IOnLoad
 {
@@ -54,6 +55,7 @@ public sealed class EconomyMod(
         traderPurchasePressureService.Apply(config);
         traderSellPressureService.Apply(config);
         fleaPurchasePressureService.Apply(config);
+        fleaListingFeePressureService.Apply(config);
         lootPressureService.Apply(config);
 
         await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);

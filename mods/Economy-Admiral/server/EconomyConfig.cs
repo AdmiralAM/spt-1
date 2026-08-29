@@ -32,6 +32,8 @@ public sealed record EconomyConfig
     public double CustomTraderSellPayoutMultiplier { get; init; } = 0.85;
     public bool EnableFleaPurchasePressure { get; init; } = false;
     public double CustomFleaBasePriceMultiplier { get; init; } = 1.65;
+    public bool EnableFleaListingFeePressure { get; init; } = false;
+    public double CustomFleaListingFeeMultiplier { get; init; } = 1.25;
     public bool EnableLootPressure { get; init; } = false;
     public double CustomLooseLootScale { get; init; } = 0.85;
     public double CustomStaticLootScale { get; init; } = 0.85;
