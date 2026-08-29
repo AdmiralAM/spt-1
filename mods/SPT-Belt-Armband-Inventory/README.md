@@ -18,6 +18,8 @@ Active authority:
 - **Magazine Belt** — dedicated slot15, `2x2`, MAGAZINE-only, Ragman LL2, 45,000 RUB.
 - **Utility HeadBand** — dedicated slot16, Ragman LL1, 25,000 RUB.
 
+All four v0.2 products publish explicit **EN and RU** item names, short names and descriptions. Persistent template/grid/assort identities are unchanged by localization.
+
 ### Utility HeadBand v0.2
 
 The HeadBand keeps the existing item/slot identity but now uses **two native `1x1` grids**:
@@ -38,6 +40,20 @@ The v0.2 presentation is local to the **existing FaceCover footprint**:
 - no global Canvas refresh, coroutine retry or idle polling is used;
 - the accepted v0.1.0 HeadBand presentation remains the fallback if the compact owner cannot install safely.
 
+## Magazine operational integration
+
+Magazine Armband and Magazine Belt are no longer reserve-only storage in v0.2.
+
+- EFT's native `InventoryController.IsAtReachablePlace(Item)` remains authoritative.
+- A vanilla-reachable magazine is never modified by B&A&HB.
+- A magazine that is otherwise unreachable may become reachable only when its ancestor chain contains the exact B&A&HB Magazine Armband or Magazine Belt template.
+- Wrist Wallet and Utility HeadBand are not reload roots.
+- Existing vanilla fast-access slot order is preserved as the complete priority prefix; ArmBand and B&A&HB Belt are appended after it, so wearable magazines are lower-priority fallback sources rather than the preferred source.
+- Parent traversal and item-template accessors are resolved and compiled at startup; there are no inventory-wide scans, scene scans, per-frame polling or runtime reflection discovery in the reload path.
+- The existing unload-grid integration likewise appends eligible wearable grids after vanilla unload destinations.
+
+If the exact EFT reachability boundary cannot be bound, the reload extension fails closed and the wearable containers remain valid storage rather than replacing vanilla behavior.
+
 ## Stable mechanical boundaries retained
 
 v0.2 preserves the accepted slot15/slot16 lifecycle and protection model:
@@ -54,12 +70,13 @@ v0.2 preserves the accepted slot15/slot16 lifecycle and protection model:
 CI for PR #286 owns:
 
 - hot-path/lifecycle guard;
-- product-contract guard;
+- reload-access fallback/order guard;
+- product-contract and EN/RU localization guard;
 - compact-layout guard;
-- deterministic regressions, including the real split-grid profile migration;
+- deterministic regressions, including the real split-grid profile migration and reload fallback policy;
 - offline profile recovery;
 - client build;
 - server build against the SPT 4.1.3 package set;
 - one installable exact-head RC artifact.
 
-A physical runtime handoff is made only after the exact PR head is fully GREEN and includes one working GitHub artifact link plus a numbered PASS/FAIL checklist.
+A physical runtime handoff is made only after a materially significant bundle is ready, the exact PR head is fully GREEN, and the handoff includes one working GitHub artifact link plus a numbered PASS/FAIL checklist.
