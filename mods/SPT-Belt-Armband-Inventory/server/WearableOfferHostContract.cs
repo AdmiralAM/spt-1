@@ -13,6 +13,8 @@ internal static class WearableOfferHostContract
 {
     private static readonly MongoId DefaultInventoryTpl = new("55d7217a4bdc2d86028b456d");
     private static readonly MongoId BroadBeltParentTpl = new(RuntimeIdentity.BeltItemParentId);
+    private static readonly MongoId DedicatedMagazineBeltTpl = new(RuntimeIdentity.DedicatedMagazineBeltItemId);
+    private static readonly MongoId UtilityHeadBandTpl = new(RuntimeIdentity.EmergencyHeadBandItemId);
     private static readonly MongoId BeltSlotMongoId = new(RuntimeIdentity.DedicatedBeltSlotMongoId);
     private static readonly MongoId HeadBandSlotMongoId = new(RuntimeIdentity.DedicatedHeadBandSlotMongoId);
 
@@ -23,6 +25,8 @@ internal static class WearableOfferHostContract
 
         if (filter.Contains(BroadBeltParentTpl))
             throw new InvalidOperationException("B&A&HB offer host contract refused broad Belt parent exposure through ArmBand.");
+        if (filter.Contains(DedicatedMagazineBeltTpl) || filter.Contains(UtilityHeadBandTpl))
+            throw new InvalidOperationException("B&A&HB offer host contract refused exact dedicated Belt/HeadBand cross-host exposure through ArmBand.");
         if (!filter.Contains(productTemplate))
             throw new InvalidOperationException($"B&A&HB offer host contract: ArmBand does not expose exact product template {productTemplate}.");
     }
@@ -33,12 +37,12 @@ internal static class WearableOfferHostContract
             RequireSingleSlot(templateTable, RuntimeIdentity.DedicatedBeltWireSlotId),
             RuntimeIdentity.DedicatedBeltWireSlotId,
             BeltSlotMongoId,
-            new MongoId(RuntimeIdentity.DedicatedMagazineBeltItemId));
+            DedicatedMagazineBeltTpl);
         ValidateDedicatedSlot(
             RequireSingleSlot(templateTable, RuntimeIdentity.DedicatedHeadBandWireSlotId),
             RuntimeIdentity.DedicatedHeadBandWireSlotId,
             HeadBandSlotMongoId,
-            new MongoId(RuntimeIdentity.EmergencyHeadBandItemId));
+            UtilityHeadBandTpl);
     }
 
     private static Slot RequireSingleSlot(TemplateTable templateTable, string wireName)
