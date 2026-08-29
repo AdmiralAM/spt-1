@@ -28,6 +28,9 @@ public sealed class WristWalletAssort(TradersTable tradersTable, ISptLogger<Wris
             return Task.CompletedTask;
         }
 
+        if (trader.Assort.BarterScheme.ContainsKey(id) || trader.Assort.LoyalLevelItems.ContainsKey(id))
+            throw new InvalidOperationException("B&A&HB Wrist Wallet assort ID collision: item is absent but barter/loyalty metadata already owns the persistent assort ID.");
+
         trader.Assort.Items.Add(new Item
         {
             Id = id,
@@ -36,8 +39,8 @@ public sealed class WristWalletAssort(TradersTable tradersTable, ISptLogger<Wris
             SlotId = RuntimeCandidateOfferContract.RootId,
             Upd = new Upd { UnlimitedCount = true, StackObjectsCount = UnlimitedStock }
         });
-        trader.Assort.BarterScheme[id] = [[new BarterScheme { Count = PriceRoubles, Template = Money.ROUBLES }]];
-        trader.Assort.LoyalLevelItems[id] = LoyaltyLevel;
+        trader.Assort.BarterScheme.Add(id, [[new BarterScheme { Count = PriceRoubles, Template = Money.ROUBLES }]]);
+        trader.Assort.LoyalLevelItems.Add(id, LoyaltyLevel);
         logger.Success($"B&A&HB Wrist Wallet added to Ragman LL{LoyaltyLevel} for {PriceRoubles:N0} RUB.");
         return Task.CompletedTask;
     }
