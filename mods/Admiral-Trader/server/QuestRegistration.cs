@@ -55,10 +55,19 @@ public sealed class AdmiralQuestRegistration(ModHelper modHelper, TemplateTable 
         {
             string relativePath = IOPath.GetRelativePath(modPath, file).Replace('\\', '/');
             Quest quest = modHelper.GetJsonDataFromFile<Quest>(modPath, relativePath);
-            // EFT expects authored quest templates to carry the native initial root status (Locked = 0).
-            // SPT later publishes transient SptStatus=AvailableForStart when requirements are met; leaving
-            // root status null makes the client construct an incorrect initial local lifecycle state.
+            // Root status becomes EFT AppearStatus; it is not the player's quest lifecycle.
             quest.Status = 0;
+
+            // Keep the authored database template lifecycle-neutral. SPT's native /client/quest/list
+            // path derives SptStatus per profile (AvailableForStart until the player explicitly Accepts).
+            quest.SptStatus = null;
+
+            // Match the complete native EFT quest-template contract expected by the client.
+            quest.ProgressSource ??= "eft";
+            quest.GameModes ??= [];
+            quest.RankingModes ??= [];
+            quest.ArenaLocations ??= [];
+
             if (!quests.TryAdd(quest.Id, quest))
                 throw new InvalidDataException($"Duplicate Admiral quest id {quest.Id} in {relativePath}");
         }
@@ -82,6 +91,14 @@ public sealed class AdmiralQuestRegistration(ModHelper modHelper, TemplateTable 
                 throw new InvalidDataException($"Quest {questId} has unexpected trader id {quest.TraderId}");
             if (string.IsNullOrWhiteSpace(quest.QuestName))
                 throw new InvalidDataException($"Quest {questId} has no authored QuestName fallback");
+            if (quest.Status != 0)
+                throw new InvalidDataException($"Quest {questId} must publish native AppearStatus 0");
+            if (quest.SptStatus is not null)
+                throw new InvalidDataException($"Quest {questId} must not pre-seed a per-player lifecycle status");
+            if (!string.Equals(quest.ProgressSource, "eft", StringComparison.Ordinal))
+                throw new InvalidDataException($"Quest {questId} must use native EFT progressSource");
+            if (quest.GameModes is null || quest.RankingModes is null || quest.ArenaLocations is null)
+                throw new InvalidDataException($"Quest {questId} is missing native client mode metadata");
             if (quest.Conditions.AvailableForFinish is not { Count: 1 } finishConditions)
                 throw new InvalidDataException($"Quest {questId} must have exactly one finish condition");
 
