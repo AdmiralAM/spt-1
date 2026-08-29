@@ -4,6 +4,8 @@ Target: **SPT 4.1.3**.
 
 Stable **v0.1.0** is already accepted and published. This checklist covers only the new v0.2 scope in Issue #285 / PR #286 plus the bundled reload extension tracked by Issue #287. Do not reopen the full v0.1.0 death/insurance matrix unless a concrete regression appears.
 
+Candidate runtime version is **0.2.0**. The client DLL intentionally keeps the physical filename `SPT Belt Armband Inventory v0.1.0.dll` so an in-place extraction overwrites stable v0.1.0 instead of leaving two DLLs with the same BepInEx GUID. This filename is therefore not a version check. Candidate identity is proven by BepInEx/FileVersion `0.2.0` and the packaged `BUILD-INFO.txt`; CI stamps the same BUILD-INFO into the installed server-mod directory.
+
 ## Candidate contract
 
 | Product | Host | Capacity / filter | Progression |
@@ -45,4 +47,4 @@ Return evidence is only: `1 PASS / 2 PASS / ... / 7 PASS` plus one screenshot fo
 
 ## CI-owned boundaries
 
-No user microtests are required for Scav replacement, profile cleanup tooling, hot-path safety, persistent-ID collision checks, reload implementation internals or the previously accepted death/insurance matrix. CI owns those boundaries unless runtime evidence specifically points back to them.
+No user microtests are required for Scav replacement, profile cleanup tooling, hot-path safety, persistent-ID collision checks, reload implementation internals, candidate build stamping or the previously accepted death/insurance matrix. CI owns those boundaries unless runtime evidence specifically points back to them.
