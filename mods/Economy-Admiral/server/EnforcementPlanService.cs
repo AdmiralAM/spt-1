@@ -414,7 +414,8 @@ public sealed class EnforcementPlanService(
         if (manual?.TraderStandingTarget is { } exact) return Math.Round(exact, 4);
         var baseline = row.Restartable && analysis.VanillaRestartable.QuestSamples > 0 ? analysis.VanillaRestartable : analysis.Vanilla;
         if (baseline.MedianAbsoluteStanding <= 0 || row.TraderStanding == 0) return null;
-        var magnitude = baseline.MedianAbsoluteStanding * analysis.Policy.HighStandingLowDepthWarnMultiple;
+        var multiple = RestartableStandingPressureCore.ResolveTargetMultiple(row.Restartable, row.ObservationalFlags, analysis.Policy);
+        var magnitude = baseline.MedianAbsoluteStanding * multiple;
         return Math.Round(Math.CopySign(magnitude, row.TraderStanding), 4);
     }
 
