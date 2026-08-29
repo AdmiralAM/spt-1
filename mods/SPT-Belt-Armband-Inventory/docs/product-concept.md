@@ -2,92 +2,76 @@
 
 ## Product thesis
 
-B&A&HB is an accessory-logistics framework, not a generic way to add free
-inventory cells. It turns small equipment accessories into deliberately scoped
-load-bearing roles while preserving EFT inventory rules, persistence and native
-UI behavior.
+B&A&HB is an accessory-logistics framework, not a generic way to add free inventory cells. It turns small equipment accessories into deliberately scoped load-bearing roles while preserving EFT inventory rules, persistence and native UI behavior.
 
-The useful decision is not simply “more space”. A player chooses where a small
-set of supplies lives, how quickly gameplay systems can reach it, and which
-equipment role is consumed by that choice. Capacity, accepted item classes and
-runtime integrations must therefore be explicit for every accessory.
+The useful decision is not simply “more space”. A player chooses where a small set of supplies lives, how quickly gameplay systems can reach it, and which equipment role is consumed by that choice. Capacity, accepted item classes and runtime integrations therefore remain explicit for every accessory.
 
-## Category roles
+## Stable mechanical base
 
-| Category | Intended decision | Capacity direction | Filter direction | Runtime state |
-|---|---|---|---|---|
-| `ArmBand` | carry a compact specialist reserve without replacing a main rig | compact | one narrow purpose per item | validated SPT 4.1.3 host |
-| `Belt` | organize sustained combat logistics outside the vest's primary layout | expanded, but bounded | combat supply groups chosen per concrete belt | concept only until a real host is proven |
-| `HeadBand` | expose a micro head-worn utility role rather than general storage | micro | deliberately restrictive utility set | concept only until a real host is proven |
+Stable Baseline 1 is exact head `d6336f290361b16c4aa54f9d7dddfe0e8f7f9bbf`, preserved on branch `belt-stable-baseline-1`. It physically passed first-open Items, pre-raid/insurance navigation and normal PMC lifecycle. Subsequent product work must preserve that host/slot architecture unless a concrete regression proves a mechanical change necessary.
 
-These roles do not prescribe a mesh, trader item or exact final grid. A concrete
-item still owns its dimensions and filters. The category supplies policy and
-expectations; it never fabricates a container or an EFT slot by itself.
+## Product roles and progression
+
+| Product | Category / host | Capacity | Exact role | Ragman progression |
+| --- | --- | --- | --- | --- |
+| Wrist Wallet | `ArmBand` | `1x1` | currency-only specialist reserve | LL1 — 12,500 RUB |
+| Magazine Armband | `ArmBand` | `1x2` | compact magazine reserve | LL1 — 25,000 RUB |
+| Utility HeadBand | `HeadBand` slot16 | `1x2` | micro currency/cigarette/wallet utility | LL1 — 25,000 RUB |
+| Magazine Belt | `Belt` slot15 | `2x2` | larger sustained magazine reserve | LL2 — 45,000 RUB |
+
+This progression deliberately avoids a universal accessory container. The LL1 products are narrow specialist tools; the larger Belt arrives later and costs more rather than simply replacing the ArmBand option for free.
+
+## Category rules
+
+### ArmBand
+
+The vanilla ArmBand host is a proven searchable-container foundation. Concrete items remain narrow-purpose: Wrist Wallet is payment-oriented currency storage; Magazine Armband is MAGAZINE-only. A new ArmBand item does not automatically inherit every capability.
+
+### Belt
+
+Belt uses dedicated pseudo-slot 15 and is mechanically active. The current concrete product is Magazine Belt: `2x2`, MAGAZINE-only, Ragman LL2. Future belts, if any, must specialize by filter/capability rather than merely adding more unrestricted cells.
+
+### HeadBand
+
+HeadBand uses dedicated pseudo-slot 16 and is mechanically active. Utility HeadBand remains a micro utility carrier with an exact-item whitelist: RUB, USD, EUR, Apollo Soyuz, Malboro, Wilston, Strike, Simple Wallet and WZ Wallet. It is not a generic CASE, money-parent, barter-parent, secure or medical container.
+
+Death protection is a separate F12 family policy and must not be presented as an unconditional item property.
 
 ## Balance rules
 
 1. No universal accessory container. Each item has a narrow logistical purpose.
-2. Capacity is paid for through equipment opportunity, item restrictions,
-   progression placement, weight and price rather than invisible UI penalties.
-3. Fast-access, grenade enumeration, loot placement, payment and death retention
-   are separate capabilities. A future category does not automatically inherit
-   all current ArmBand integrations.
-4. Native EFT inventory behavior remains authoritative. The mod extends
-   reachability and ordering only at confirmed boundaries.
-5. A declared `1x2` grid is exactly two visible cells. UI padding or a custom
-   prefab must never create the impression of a hidden `2x2` capacity.
+2. Capacity is paid for through equipment opportunity, item restrictions, progression placement, weight and price rather than invisible UI penalties.
+3. Fast-access, grenade enumeration, loot placement, payment and death retention are separate capabilities. A category does not automatically inherit all integrations.
+4. Native EFT inventory behavior remains authoritative. The mod extends reachability and ordering only at confirmed boundaries.
+5. A declared grid is exact. UI padding or presentation must never imply hidden capacity.
+6. Persistent item, parent, grid, assort and slot identities are immutable after distribution.
+7. Stable Baseline 1 remains the rollback point while product/design work advances.
 
-## What is distinct
+## Architecture lessons now treated as constraints
 
-Pack 'n' Strap proves that grid-backed wearable accessories are useful, but
-B&A&HB's target is a smaller and stricter SPT 4.1.3 architecture:
+Physical RC work established several non-negotiable boundaries:
 
-- one shared category and identity contract across client and server;
-- native `GeneratedGridsView` unless a real custom prefab is shipped;
-- event-driven lifecycle without `ItemView.Update` polling;
-- ownership-safe compatibility patches that fail per feature;
-- explicit integration with loot, unload, pickup, payment, fast access, builds,
-  Scav handling and death persistence;
-- future categories gated by proven hosts instead of invented enum values.
+- slot16 map creation/recovery happens before `EquipmentTab.Show` begins native enumeration;
+- late `SlotView.Show` cannot mutate that map;
+- HeadBand layout cannot resize/translate the host Gear Panel or force global Canvas rebuilds;
+- first-visible layout is event-driven and does not depend on tab switching;
+- stale Unity objects must be checked with Unity liveness semantics, not managed-reference non-null alone;
+- death retention and insurance-loss filtering consume the same exact-root protection policy;
+- Scav compatibility is bounded and automated rather than a user acceptance requirement.
 
-The result should feel like part of EFT's inventory system, not a parallel bag
-UI attached to cosmetic items.
+These are reusable implementation rules for future wearable slots.
 
-## Development gates
+## Deferred final HeadBand design
 
-### Current ArmBand reference
+The current accepted HeadBand geometry is mechanically stable but not the final visual target. The deferred design direction is:
 
-The current RC remains the proof fixture: custom searchable runtime type,
-`MAGAZINE` filter and native one-column/two-row grid. It establishes technical
-behavior; its placeholder economy and content are not the final category roster.
+- reduce the Face equipment window roughly by half;
+- use the recovered space for a compact HeadBand placement above/adjacent to Face;
+- visually follow the ArmBand + Dogtag principle so no control protrudes beyond the normal equipment panel;
+- preserve slot16 identity and the stable lifecycle while changing only presentation.
 
-### Belt activation gate
+A second final-stage feasibility question is whether Utility HeadBand can become two independent internal `1x1` cells: one cigarettes-only and one currency/wallet-only. This must be proven against native multi-grid behavior before implementation. If it requires fragile parallel UI or compromises stable lifecycle, keep the current single `1x2` exact whitelist instead.
 
-Before Belt leaves `ConceptOnly`, static evidence must identify a real equipment
-host, serialization path, inventory merge behavior, screen lifecycle and native
-presentation boundary. Only then should concrete capacity/filter profiles be
-selected.
+## Visual-content gate
 
-### HeadBand activation gate
-
-HeadBand additionally needs proof that its chosen host does not conflict with
-armor, face cover, eyewear or headset behavior. Its utility purpose must be
-valuable with micro capacity; otherwise the category should remain conceptual.
-
-### Visual-content gate
-
-Icons, bundles and 3D models start only after the category role, grid, filters,
-host and progression are stable. Visual assets must represent the actual capacity
-and cannot be used to compensate for an unclear gameplay purpose.
-
-## Candidate future policies (not yet runtime features)
-
-- category-specific capability profiles instead of granting every integration;
-- progression tiers that change specialization, not merely cell count;
-- filter presets for emergency magazines, medical reserve or narrow utility;
-- compatibility reporting that identifies which optional integration failed;
-- exact-grid UI verification as an automated contract once a renderable test
-  boundary is available.
-
-Every candidate must first answer three questions: what player decision it adds,
-which existing system owns adjacent behavior, and how it can fail closed.
+Icons, bundles and 3D models should represent the actual capacity and role. They must not be used to conceal ambiguous mechanics. Presentation redesign can proceed only with Stable Baseline 1 preserved as rollback reference and the product roster protected by CI.
