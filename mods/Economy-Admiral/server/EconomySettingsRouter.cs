@@ -30,7 +30,6 @@ public sealed class EconomySettingsRouter(JsonUtil jsonUtil, EconomySettingsRout
 [Injectable]
 public sealed class EconomySettingsRouterCallback(
     ModHelper modHelper,
-    JsonUtil jsonUtil,
     ISptLogger<EconomySettingsRouterCallback> logger)
 {
     private static readonly JsonSerializerOptions ConfigJsonOptions = new()
@@ -39,6 +38,8 @@ public sealed class EconomySettingsRouterCallback(
         PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() },
     };
+
+    private static string SerializeResponse<T>(T value) => JsonSerializer.Serialize(value, ConfigJsonOptions);
 
     public ValueTask<string> GetAsync(
         string url,
@@ -49,12 +50,12 @@ public sealed class EconomySettingsRouterCallback(
         try
         {
             var config = LoadPersistedConfig();
-            return new ValueTask<string>(jsonUtil.Serialize(EconomySettingsSnapshot.From(config, restartRequired: false)));
+            return new ValueTask<string>(SerializeResponse(EconomySettingsSnapshot.From(config, restartRequired: false)));
         }
         catch (Exception exception)
         {
             logger.Error($"[Economy Admiral] settings GET failed: {exception.Message}");
-            return new ValueTask<string>(jsonUtil.Serialize(new EconomySettingsError(false, exception.Message)));
+            return new ValueTask<string>(SerializeResponse(new EconomySettingsError(false, exception.Message)));
         }
     }
 
@@ -99,13 +100,18 @@ public sealed class EconomySettingsRouterCallback(
 
             EconomyConfigValidator.Validate(updated);
             await PersistValidatedAsync(updated, cancellationToken);
+
+            var persisted = LoadPersistedConfig();
+            if (!Equals(updated, persisted))
+                throw new InvalidOperationException("Persisted Economy Admiral config did not round-trip to the requested settings.");
+
             logger.Info("[Economy Admiral] settings saved from client UI; changes apply after next SPT server restart.");
-            return jsonUtil.Serialize(EconomySettingsSnapshot.From(updated, restartRequired: true));
+            return SerializeResponse(EconomySettingsSnapshot.From(persisted, restartRequired: true));
         }
         catch (Exception exception)
         {
             logger.Error($"[Economy Admiral] settings SAVE failed: {exception.Message}");
-            return jsonUtil.Serialize(new EconomySettingsError(false, exception.Message));
+            return SerializeResponse(new EconomySettingsError(false, exception.Message));
         }
     }
 
