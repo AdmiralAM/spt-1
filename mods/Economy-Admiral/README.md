@@ -79,15 +79,19 @@ A cluster set to OFF always wins. For example, `Normal + Quest Economy OFF` keep
 For selective/manual setups, set **Full Preset Bundle = OFF**. The underlying mechanisms can then be enabled independently from F12 without editing JSON:
 
 - **Quest / Item Reward Stack Normalization**;
+- **Quest / XP Reward Pressure**;
+- **Quest / Trader Standing Reward Pressure**;
+- **Quest / Repeatable Quest Pressure** — hard gate over automatic reward pressure on restartable/repeatable quests;
 - **Traders / Purchase Price Pressure**;
 - **Traders / Sell Payout Pressure**;
 - **Flea / Price and Anti-Arbitrage Pressure**;
 - **Flea / Listing Fee Pressure**;
-- **Loot / Loot Pressure**.
+- **Loot / Loose Loot Pressure**;
+- **Loot / Static / Container Loot Pressure**.
 
-These switches expose the same maintained server feature flags that previously existed only in `config.json`. They do not create parallel client-side behavior. Cluster OFF remains a hard gate over every mechanism in that cluster.
+These switches expose maintained server feature flags; they do not create parallel client-side behavior. Cluster OFF remains a hard gate over every mechanism in that cluster. With the bundle ON, all mechanisms inside enabled clusters use the selected preset. With the bundle OFF, each mechanism can be selected independently.
 
-Quest XP and trader-standing normalization remain part of the core Quest Economy enforcement path; disabling the Quest Economy cluster is the supported way to leave the entire quest economy untouched.
+The legacy server-side `enableLootPressure` master remains accepted for compatibility with older configs and enables both loose and static loot pressure. New F12/manual configuration should use the two explicit loot switches.
 
 ### Advanced - Custom
 Custom exposes bounded numeric controls for trader purchase/sell multipliers, flea base/listing-fee multipliers, loose/static loot scales and quest item/XP/standing reward caps. These values are used by the `Custom` preset; Easy/Normal/Hard retain their maintained profile values.

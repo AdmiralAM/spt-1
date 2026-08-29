@@ -16,22 +16,14 @@ namespace SPTEconomy;
 public sealed class EconomySettingsRouter(JsonUtil jsonUtil, EconomySettingsRouterCallback callback)
     : StaticRouter(jsonUtil,
     [
-        new RouteAction<EmptyRequestData>(
-            "/economy-admiral/settings/get",
-            async (url, info, sessionId, output, cancellationToken) =>
-                await callback.GetAsync(url, info, sessionId, cancellationToken)),
-        new RouteAction<EconomySettingsUpdateRequest>(
-            "/economy-admiral/settings/save",
-            async (url, info, sessionId, output, cancellationToken) =>
-                await callback.SaveAsync(url, info, sessionId, cancellationToken)),
+        new RouteAction<EmptyRequestData>("/economy-admiral/settings/get", async (url, info, sessionId, output, cancellationToken) => await callback.GetAsync(url, info, sessionId, cancellationToken)),
+        new RouteAction<EconomySettingsUpdateRequest>("/economy-admiral/settings/save", async (url, info, sessionId, output, cancellationToken) => await callback.SaveAsync(url, info, sessionId, cancellationToken)),
     ])
 {
 }
 
 [Injectable]
-public sealed class EconomySettingsRouterCallback(
-    ModHelper modHelper,
-    ISptLogger<EconomySettingsRouterCallback> logger)
+public sealed class EconomySettingsRouterCallback(ModHelper modHelper, ISptLogger<EconomySettingsRouterCallback> logger)
 {
     private static readonly JsonSerializerOptions ConfigJsonOptions = new()
     {
@@ -47,7 +39,7 @@ public sealed class EconomySettingsRouterCallback(
         try
         {
             var config = LoadPersistedConfig();
-            return new ValueTask<string>(SerializeResponse(EconomySettingsSnapshot.From(config, restartRequired: false)));
+            return new ValueTask<string>(SerializeResponse(EconomySettingsSnapshot.From(config, false)));
         }
         catch (Exception exception)
         {
@@ -71,11 +63,16 @@ public sealed class EconomySettingsRouterCallback(
                 EnableFleaEconomyCluster = info.EnableFleaEconomyCluster,
                 EnableLootEconomyCluster = info.EnableLootEconomyCluster,
                 EnableItemRewardStackNormalization = info.EnableItemRewardStackNormalization,
+                EnableQuestXpPressure = info.EnableQuestXpPressure,
+                EnableQuestStandingPressure = info.EnableQuestStandingPressure,
+                EnableRestartableQuestPressure = info.EnableRestartableQuestPressure,
                 EnableTraderPurchasePressure = info.EnableTraderPurchasePressure,
                 EnableTraderSellPressure = info.EnableTraderSellPressure,
                 EnableFleaPurchasePressure = info.EnableFleaPurchasePressure,
                 EnableFleaListingFeePressure = info.EnableFleaListingFeePressure,
                 EnableLootPressure = info.EnableLootPressure,
+                EnableLooseLootPressure = info.EnableLooseLootPressure,
+                EnableStaticLootPressure = info.EnableStaticLootPressure,
                 CustomTraderPurchasePriceMultiplier = info.CustomTraderPurchasePriceMultiplier,
                 CustomTraderSellPayoutMultiplier = info.CustomTraderSellPayoutMultiplier,
                 CustomFleaBasePriceMultiplier = info.CustomFleaBasePriceMultiplier,
@@ -93,13 +90,12 @@ public sealed class EconomySettingsRouterCallback(
 
             EconomyConfigValidator.Validate(updated);
             await PersistValidatedAsync(updated, cancellationToken);
-
             var persisted = LoadPersistedConfig();
             if (!PersistedConfigEquivalent(updated, persisted))
                 throw new InvalidOperationException("Persisted Economy Admiral config did not structurally round-trip to the requested settings.");
 
             logger.Info("[Economy Admiral] settings saved from client UI; changes apply after next SPT server restart.");
-            return SerializeResponse(EconomySettingsSnapshot.From(persisted, restartRequired: true));
+            return SerializeResponse(EconomySettingsSnapshot.From(persisted, true));
         }
         catch (Exception exception)
         {
@@ -111,8 +107,7 @@ public sealed class EconomySettingsRouterCallback(
     private EconomyConfig LoadPersistedConfig()
     {
         var path = GetConfigPath();
-        if (!File.Exists(path))
-            throw new FileNotFoundException("Economy Admiral config.json is missing.", path);
+        if (!File.Exists(path)) throw new FileNotFoundException("Economy Admiral config.json is missing.", path);
         var config = JsonSerializer.Deserialize<EconomyConfig>(File.ReadAllText(path), ConfigJsonOptions)
             ?? throw new InvalidOperationException("Economy Admiral config.json deserialized to null.");
         EconomyConfigValidator.Validate(config);
@@ -126,7 +121,6 @@ public sealed class EconomySettingsRouterCallback(
         var tempPath = path + ".tmp";
         var backupPath = path + ".bak";
         Directory.CreateDirectory(directory);
-
         var serialized = SerializePersistedConfig(config);
         var roundTrip = JsonSerializer.Deserialize<EconomyConfig>(serialized, ConfigJsonOptions)
             ?? throw new InvalidOperationException("Serialized Economy Admiral settings could not be read back.");
@@ -137,12 +131,12 @@ public sealed class EconomySettingsRouterCallback(
         try
         {
             await File.WriteAllTextAsync(tempPath, serialized + Environment.NewLine, cancellationToken);
-            if (File.Exists(path)) File.Copy(path, backupPath, overwrite: true);
-            File.Move(tempPath, path, overwrite: true);
+            if (File.Exists(path)) File.Copy(path, backupPath, true);
+            File.Move(tempPath, path, true);
         }
         catch
         {
-            if (File.Exists(backupPath)) File.Copy(backupPath, path, overwrite: true);
+            if (File.Exists(backupPath)) File.Copy(backupPath, path, true);
             throw;
         }
         finally
@@ -151,23 +145,24 @@ public sealed class EconomySettingsRouterCallback(
         }
     }
 
-    private static bool PersistedConfigEquivalent(EconomyConfig left, EconomyConfig right)
-    {
-        var leftNode = JsonNode.Parse(SerializePersistedConfig(left));
-        var rightNode = JsonNode.Parse(SerializePersistedConfig(right));
-        return JsonNode.DeepEquals(leftNode, rightNode);
-    }
+    private static bool PersistedConfigEquivalent(EconomyConfig left, EconomyConfig right) =>
+        JsonNode.DeepEquals(JsonNode.Parse(SerializePersistedConfig(left)), JsonNode.Parse(SerializePersistedConfig(right)));
 
     private static string SerializePersistedConfig(EconomyConfig config)
     {
         var node = JsonSerializer.SerializeToNode(config, ConfigJsonOptions) as JsonObject
             ?? throw new InvalidOperationException("Economy Admiral config did not serialize to an object.");
         node["EnableItemRewardStackNormalization"] = config.ConfiguredEnableItemRewardStackNormalization;
+        node["EnableQuestXpPressure"] = config.ConfiguredEnableQuestXpPressure;
+        node["EnableQuestStandingPressure"] = config.ConfiguredEnableQuestStandingPressure;
+        node["EnableRestartableQuestPressure"] = config.ConfiguredEnableRestartableQuestPressure;
         node["EnableTraderPurchasePressure"] = config.ConfiguredEnableTraderPurchasePressure;
         node["EnableTraderSellPressure"] = config.ConfiguredEnableTraderSellPressure;
         node["EnableFleaPurchasePressure"] = config.ConfiguredEnableFleaPurchasePressure;
         node["EnableFleaListingFeePressure"] = config.ConfiguredEnableFleaListingFeePressure;
         node["EnableLootPressure"] = config.ConfiguredEnableLootPressure;
+        node["EnableLooseLootPressure"] = config.ConfiguredEnableLooseLootPressure;
+        node["EnableStaticLootPressure"] = config.ConfiguredEnableStaticLootPressure;
         node["QuestRewardOverrides"] = JsonSerializer.SerializeToNode(config.ConfiguredQuestRewardOverrides, ConfigJsonOptions);
         return node.ToJsonString(ConfigJsonOptions);
     }
@@ -180,7 +175,7 @@ public sealed class EconomySettingsRouterCallback(
 
     private static T ParseEnum<T>(string value, string field) where T : struct, Enum
     {
-        if (!Enum.TryParse<T>(value, ignoreCase: true, out var parsed) || !Enum.IsDefined(parsed))
+        if (!Enum.TryParse<T>(value, true, out var parsed) || !Enum.IsDefined(parsed))
             throw new InvalidOperationException($"Unsupported {field} value '{value}'.");
         return parsed;
     }
@@ -195,12 +190,17 @@ public sealed record EconomySettingsUpdateRequest : IRequestData
     public bool EnableTraderEconomyCluster { get; init; } = true;
     public bool EnableFleaEconomyCluster { get; init; } = true;
     public bool EnableLootEconomyCluster { get; init; } = true;
-    public bool EnableItemRewardStackNormalization { get; init; } = false;
-    public bool EnableTraderPurchasePressure { get; init; } = false;
-    public bool EnableTraderSellPressure { get; init; } = false;
-    public bool EnableFleaPurchasePressure { get; init; } = false;
-    public bool EnableFleaListingFeePressure { get; init; } = false;
-    public bool EnableLootPressure { get; init; } = false;
+    public bool EnableItemRewardStackNormalization { get; init; }
+    public bool EnableQuestXpPressure { get; init; }
+    public bool EnableQuestStandingPressure { get; init; }
+    public bool EnableRestartableQuestPressure { get; init; }
+    public bool EnableTraderPurchasePressure { get; init; }
+    public bool EnableTraderSellPressure { get; init; }
+    public bool EnableFleaPurchasePressure { get; init; }
+    public bool EnableFleaListingFeePressure { get; init; }
+    public bool EnableLootPressure { get; init; }
+    public bool EnableLooseLootPressure { get; init; }
+    public bool EnableStaticLootPressure { get; init; }
     public double CustomTraderPurchasePriceMultiplier { get; init; } = 1.15;
     public double CustomTraderSellPayoutMultiplier { get; init; } = 0.85;
     public double CustomFleaBasePriceMultiplier { get; init; } = 1.65;
@@ -217,46 +217,32 @@ public sealed record EconomySettingsUpdateRequest : IRequestData
 }
 
 public sealed record EconomySettingsSnapshot(
-    bool Ok,
-    bool RestartRequired,
-    string Mode,
-    string Preset,
-    bool EnablePlayableEconomyBundle,
-    bool EnableQuestEconomyCluster,
-    bool EnableTraderEconomyCluster,
-    bool EnableFleaEconomyCluster,
-    bool EnableLootEconomyCluster,
-    bool EnableItemRewardStackNormalization,
-    bool EnableTraderPurchasePressure,
-    bool EnableTraderSellPressure,
-    bool EnableFleaPurchasePressure,
-    bool EnableFleaListingFeePressure,
-    bool EnableLootPressure,
-    double CustomTraderPurchasePriceMultiplier,
-    double CustomTraderSellPayoutMultiplier,
-    double CustomFleaBasePriceMultiplier,
-    double CustomFleaMaxPriceDifferenceBelowHandbookPercent,
-    double CustomFleaHandbookPriceMultiplier,
-    double CustomFleaListingFeeMultiplier,
-    double CustomLooseLootScale,
-    double CustomStaticLootScale,
-    double CustomQuestItemBudgetMultiple,
-    double CustomRestartableQuestItemBudgetMultiple,
-    double CustomQuestXpMultiple,
-    double CustomRestartableQuestXpMultiple,
-    double CustomQuestStandingMultiple)
+    bool Ok, bool RestartRequired, string Mode, string Preset, bool EnablePlayableEconomyBundle,
+    bool EnableQuestEconomyCluster, bool EnableTraderEconomyCluster, bool EnableFleaEconomyCluster, bool EnableLootEconomyCluster,
+    bool EnableItemRewardStackNormalization, bool EnableQuestXpPressure, bool EnableQuestStandingPressure, bool EnableRestartableQuestPressure,
+    bool EnableTraderPurchasePressure, bool EnableTraderSellPressure, bool EnableFleaPurchasePressure, bool EnableFleaListingFeePressure,
+    bool EnableLootPressure, bool EnableLooseLootPressure, bool EnableStaticLootPressure,
+    double CustomTraderPurchasePriceMultiplier, double CustomTraderSellPayoutMultiplier,
+    double CustomFleaBasePriceMultiplier, double CustomFleaMaxPriceDifferenceBelowHandbookPercent,
+    double CustomFleaHandbookPriceMultiplier, double CustomFleaListingFeeMultiplier,
+    double CustomLooseLootScale, double CustomStaticLootScale,
+    double CustomQuestItemBudgetMultiple, double CustomRestartableQuestItemBudgetMultiple,
+    double CustomQuestXpMultiple, double CustomRestartableQuestXpMultiple, double CustomQuestStandingMultiple)
 {
     public static EconomySettingsSnapshot From(EconomyConfig config, bool restartRequired) => new(
         true, restartRequired, config.Mode.ToString(), config.Preset.ToString(), config.EnablePlayableEconomyBundle,
         config.EnableQuestEconomyCluster, config.EnableTraderEconomyCluster, config.EnableFleaEconomyCluster, config.EnableLootEconomyCluster,
-        config.ConfiguredEnableItemRewardStackNormalization, config.ConfiguredEnableTraderPurchasePressure,
-        config.ConfiguredEnableTraderSellPressure, config.ConfiguredEnableFleaPurchasePressure,
-        config.ConfiguredEnableFleaListingFeePressure, config.ConfiguredEnableLootPressure,
-        config.CustomTraderPurchasePriceMultiplier, config.CustomTraderSellPayoutMultiplier, config.CustomFleaBasePriceMultiplier,
-        config.CustomFleaMaxPriceDifferenceBelowHandbookPercent, config.CustomFleaHandbookPriceMultiplier, config.CustomFleaListingFeeMultiplier,
-        config.CustomLooseLootScale, config.CustomStaticLootScale, config.CustomQuestItemBudgetMultiple,
-        config.CustomRestartableQuestItemBudgetMultiple, config.CustomQuestXpMultiple, config.CustomRestartableQuestXpMultiple,
-        config.CustomQuestStandingMultiple);
+        config.ConfiguredEnableItemRewardStackNormalization, config.ConfiguredEnableQuestXpPressure,
+        config.ConfiguredEnableQuestStandingPressure, config.ConfiguredEnableRestartableQuestPressure,
+        config.ConfiguredEnableTraderPurchasePressure, config.ConfiguredEnableTraderSellPressure,
+        config.ConfiguredEnableFleaPurchasePressure, config.ConfiguredEnableFleaListingFeePressure,
+        config.ConfiguredEnableLootPressure, config.ConfiguredEnableLooseLootPressure, config.ConfiguredEnableStaticLootPressure,
+        config.CustomTraderPurchasePriceMultiplier, config.CustomTraderSellPayoutMultiplier,
+        config.CustomFleaBasePriceMultiplier, config.CustomFleaMaxPriceDifferenceBelowHandbookPercent,
+        config.CustomFleaHandbookPriceMultiplier, config.CustomFleaListingFeeMultiplier,
+        config.CustomLooseLootScale, config.CustomStaticLootScale,
+        config.CustomQuestItemBudgetMultiple, config.CustomRestartableQuestItemBudgetMultiple,
+        config.CustomQuestXpMultiple, config.CustomRestartableQuestXpMultiple, config.CustomQuestStandingMultiple);
 }
 
 public sealed record EconomySettingsError(bool Ok, string Error);

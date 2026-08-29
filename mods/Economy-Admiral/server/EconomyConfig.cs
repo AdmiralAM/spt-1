@@ -22,11 +22,16 @@ public enum EconomyPreset
 public sealed record EconomyConfig
 {
     private bool enableItemRewardStackNormalization;
+    private bool enableQuestXpPressure;
+    private bool enableQuestStandingPressure;
+    private bool enableRestartableQuestPressure;
     private bool enableTraderPurchasePressure;
     private bool enableTraderSellPressure;
     private bool enableFleaPurchasePressure;
     private bool enableFleaListingFeePressure;
     private bool enableLootPressure;
+    private bool enableLooseLootPressure;
+    private bool enableStaticLootPressure;
     private Dictionary<string, ManualQuestRewardOverride> questRewardOverrides = new(StringComparer.Ordinal);
 
     public EconomyMode Mode { get; init; } = EconomyMode.Enforce;
@@ -42,13 +47,31 @@ public sealed record EconomyConfig
 
     public bool EnableItemRewardStackNormalization
     {
-        get => EnableQuestEconomyCluster && (enableItemRewardStackNormalization || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce));
+        get => EnableQuestEconomyCluster && (enableItemRewardStackNormalization || BundleEnforceActive);
         init => enableItemRewardStackNormalization = value;
+    }
+
+    public bool EnableQuestXpPressure
+    {
+        get => EnableQuestEconomyCluster && (enableQuestXpPressure || BundleEnforceActive);
+        init => enableQuestXpPressure = value;
+    }
+
+    public bool EnableQuestStandingPressure
+    {
+        get => EnableQuestEconomyCluster && (enableQuestStandingPressure || BundleEnforceActive);
+        init => enableQuestStandingPressure = value;
+    }
+
+    public bool EnableRestartableQuestPressure
+    {
+        get => EnableQuestEconomyCluster && (enableRestartableQuestPressure || BundleEnforceActive);
+        init => enableRestartableQuestPressure = value;
     }
 
     public bool EnableTraderPurchasePressure
     {
-        get => EnableTraderEconomyCluster && (enableTraderPurchasePressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce));
+        get => EnableTraderEconomyCluster && (enableTraderPurchasePressure || BundleEnforceActive);
         init => enableTraderPurchasePressure = value;
     }
 
@@ -56,7 +79,7 @@ public sealed record EconomyConfig
 
     public bool EnableTraderSellPressure
     {
-        get => EnableTraderEconomyCluster && (enableTraderSellPressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce));
+        get => EnableTraderEconomyCluster && (enableTraderSellPressure || BundleEnforceActive);
         init => enableTraderSellPressure = value;
     }
 
@@ -64,7 +87,7 @@ public sealed record EconomyConfig
 
     public bool EnableFleaPurchasePressure
     {
-        get => EnableFleaEconomyCluster && (enableFleaPurchasePressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce));
+        get => EnableFleaEconomyCluster && (enableFleaPurchasePressure || BundleEnforceActive);
         init => enableFleaPurchasePressure = value;
     }
 
@@ -74,16 +97,29 @@ public sealed record EconomyConfig
 
     public bool EnableFleaListingFeePressure
     {
-        get => EnableFleaEconomyCluster && (enableFleaListingFeePressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce));
+        get => EnableFleaEconomyCluster && (enableFleaListingFeePressure || BundleEnforceActive);
         init => enableFleaListingFeePressure = value;
     }
 
     public double CustomFleaListingFeeMultiplier { get; init; } = 1.25;
 
+    // Legacy/manual master remains accepted for old configs. New UI exposes loose/static mechanisms separately.
     public bool EnableLootPressure
     {
-        get => EnableLootEconomyCluster && (enableLootPressure || (EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce));
+        get => EnableLooseLootPressure || EnableStaticLootPressure;
         init => enableLootPressure = value;
+    }
+
+    public bool EnableLooseLootPressure
+    {
+        get => EnableLootEconomyCluster && (enableLootPressure || enableLooseLootPressure || BundleEnforceActive);
+        init => enableLooseLootPressure = value;
+    }
+
+    public bool EnableStaticLootPressure
+    {
+        get => EnableLootEconomyCluster && (enableLootPressure || enableStaticLootPressure || BundleEnforceActive);
+        init => enableStaticLootPressure = value;
     }
 
     public double CustomLooseLootScale { get; init; } = 0.85;
@@ -107,12 +143,19 @@ public sealed record EconomyConfig
     }
 
     [JsonIgnore] public bool ConfiguredEnableItemRewardStackNormalization => enableItemRewardStackNormalization;
+    [JsonIgnore] public bool ConfiguredEnableQuestXpPressure => enableQuestXpPressure;
+    [JsonIgnore] public bool ConfiguredEnableQuestStandingPressure => enableQuestStandingPressure;
+    [JsonIgnore] public bool ConfiguredEnableRestartableQuestPressure => enableRestartableQuestPressure;
     [JsonIgnore] public bool ConfiguredEnableTraderPurchasePressure => enableTraderPurchasePressure;
     [JsonIgnore] public bool ConfiguredEnableTraderSellPressure => enableTraderSellPressure;
     [JsonIgnore] public bool ConfiguredEnableFleaPurchasePressure => enableFleaPurchasePressure;
     [JsonIgnore] public bool ConfiguredEnableFleaListingFeePressure => enableFleaListingFeePressure;
     [JsonIgnore] public bool ConfiguredEnableLootPressure => enableLootPressure;
+    [JsonIgnore] public bool ConfiguredEnableLooseLootPressure => enableLooseLootPressure;
+    [JsonIgnore] public bool ConfiguredEnableStaticLootPressure => enableStaticLootPressure;
     [JsonIgnore] public Dictionary<string, ManualQuestRewardOverride> ConfiguredQuestRewardOverrides => questRewardOverrides;
+
+    [JsonIgnore] private bool BundleEnforceActive => EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce;
 
     private static readonly Dictionary<string, ManualQuestRewardOverride> EmptyQuestRewardOverrides = new(StringComparer.Ordinal);
 }

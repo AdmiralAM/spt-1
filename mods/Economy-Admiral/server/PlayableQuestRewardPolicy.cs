@@ -41,10 +41,28 @@ public static class PlayableQuestRewardPolicy
             LowStructureMaxRelativeMultiple = source.LowStructureMaxRelativeMultiple,
         };
 
+        var quests = analysis.Quests
+            .Select(row => row with
+            {
+                ObservationalFlags = row.ObservationalFlags
+                    .Where(flag => QuestMechanismGate.AutomaticFlagEnabled(config, row.Restartable, flag))
+                    .ToList(),
+            })
+            .ToList();
+        var flagCounts = quests
+            .SelectMany(row => row.ObservationalFlags)
+            .GroupBy(flag => flag, StringComparer.Ordinal)
+            .OrderBy(group => group.Key, StringComparer.Ordinal)
+            .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
+
         return analysis with
         {
             Policy = enforcementPolicy,
-            Note = $"{analysis.Note} Enforcement uses {playable.PolicyId} caps independently of observational outlier thresholds.",
+            Quests = quests,
+            FlagCounts = flagCounts,
+            Note = $"{analysis.Note} Enforcement uses {playable.PolicyId} caps independently of observational outlier thresholds. " +
+                   $"Automatic quest mechanisms: items={config.EnableItemRewardStackNormalization}, xp={config.EnableQuestXpPressure}, " +
+                   $"standing={config.EnableQuestStandingPressure}, restartable={config.EnableRestartableQuestPressure}.",
         };
     }
 }
