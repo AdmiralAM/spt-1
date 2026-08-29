@@ -52,6 +52,12 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
                     Name = "B&A&HB Wrist Wallet",
                     ShortName = "Wrist Wallet",
                     Description = "Compact 1x1 wrist wallet for RUB, USD and EUR."
+                },
+                ["ru"] = new LocaleDetails
+                {
+                    Name = "Наручный кошелёк B&A&HB",
+                    ShortName = "Наруч. кошелёк",
+                    Description = "Компактный наручный кошелёк 1x1 для рублей, долларов и евро."
                 }
             },
             OverrideProperties = new TemplateItemProperties
