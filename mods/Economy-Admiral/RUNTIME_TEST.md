@@ -17,28 +17,19 @@ These proofs are retained by deterministic CI regressions. Do not request separa
 
 ## Economy Beta release-candidate gate
 
-The final physical gate is one server startup and one command. It simultaneously checks the already accepted transactional Enforce path plus the new Economy Beta observation/compatibility boundaries.
+The final physical gate is one server startup and one command. It simultaneously checks the already accepted transactional Enforce path plus the Economy Beta observation/compatibility boundaries.
 
-The release-candidate environment must include the maintained **Admiral Trader** package because stable Economy acceptance includes explicit Trader compatibility. Economy Admiral never infers Trader ownership from names/IDs alone and never creates a second Trader economy engine.
+**Admiral Trader is an optional dependency.** Economy Admiral must run and validate standalone when Admiral Trader is absent. When Admiral Trader is installed, Economy Admiral must load the maintained explicit adapter and validate the Trader contract strictly and fail-closed on identity/schema/offer-class drift. Economy Admiral never infers Trader ownership from names/IDs alone and never creates a second Trader economy engine.
 
-For the RC run use:
-
-```json
-"mode": "Enforce",
-"preset": "Normal",
-"enableItemRewardStackNormalization": true
-```
-
-No manual quest reward overrides are required.
+The playable RC artifact is preconfigured for Enforce/Normal with item reward normalization, trader purchase pressure, flea purchase pressure and loot pressure enabled. No manual config editing or quest reward overrides are required for the RC artifact.
 
 ### One batched runtime test
 
-1. Install the exact GitHub artifact over `user/mods/Economy Admiral`.
-2. Install/use the maintained Admiral Trader Gameplay Alpha package for the same SPT 4.1.3 runtime session.
-3. Set the three Economy Admiral configuration values above.
-4. Start the SPT server once and allow startup to finish completely.
-5. Close the server.
-6. From `user/mods/Economy Admiral` run exactly:
+1. Install the exact GitHub RC artifact over `user/mods/Economy Admiral`.
+2. Admiral Trader may be present or absent. If present, use the maintained supported package.
+3. Start the SPT server once and allow startup to finish completely.
+4. Close the server.
+5. From `user/mods/Economy Admiral` run exactly:
 
 ```powershell
 .\Validate-Beta.ps1
@@ -52,17 +43,21 @@ Return only the final PowerShell output.
 
 - real committed transactional reward mutations with exact before/current/target/after evidence;
 - pristine/unknown provenance protection, rollback-safe transaction semantics and bounded item-stack proof;
-- source-pressure schema 2 with final-DB evidence plus the loaded explicit Admiral Trader adapter;
+- source-pressure schema 2 with final-DB evidence;
 - world loot remains explicit `UnknownNoMaintainedAdapter` rather than fabricated zero supply;
 - health schema 1 remains separately inspectable, selects no opaque composite score and does not independently authorize mutation;
-- Admiral Trader adapter schema 3 resolves exact product name, modGuid and frozen trader ID through Gameplay Alpha schema v4;
-- every maintained permanent Trader offer is explicitly classified `Baseline` / `Relationship` / `Milestone`, remains bounded and retains `ExplicitAdapter` provenance;
-- milestone offers preserve authored effective quest gates;
-- Special Weapons remain sample-only and are not converted into permanent offers;
-- exact Economy Admiral build SHA/workflow identity is present.
+- when Admiral Trader is absent, adapter state is exactly `NotInstalled` and no Trader adapter is falsely claimed by source-pressure evidence;
+- when Admiral Trader is installed, adapter schema 3 resolves exact product name, modGuid and frozen trader ID through Gameplay Alpha schema v4;
+- when Admiral Trader is installed, every maintained permanent Trader offer is explicitly classified `Baseline` / `Relationship` / `Milestone`, remains bounded and retains `ExplicitAdapter` provenance;
+- when Admiral Trader is installed, milestone offers preserve authored effective quest gates and Special Weapons remain sample-only;
+- build identity metadata is diagnostic only and does not override physical gameplay evidence.
 
-Any missing/incompatible Trader contract, inferred/unclassified offer, lost quest gate, unbounded offer, attribution drift, health mutation authorization or source-pressure boundary regression is FAIL.
+Absent Admiral Trader is valid. An installed but missing/incompatible Trader contract, inferred/unclassified offer, lost quest gate, unbounded offer, attribution drift, health mutation authorization or source-pressure boundary regression is FAIL.
+
+## Accepted Playable Economy v1 physical evidence
+
+The combined Playable Economy v1 RC has physically PASSed on SPT 4.1.3 in standalone mode with optional Admiral Trader absent: `totalApplied=123`, `itemStacks=35`, fingerprint changed, pristine protection/exact targets verified, representative `750000` / `1500000` quest reward stacks reduced to `338025` on Normal, and sourcePressure/health both observed 3846 items.
 
 ## After the gate
 
-On PASS, the exact tested candidate is eligible for the recorded `stable-release` transition. On FAIL, use the returned validator output to remediate the same workstream; do not create unrelated economy scope or ask the user for additional exploratory tests.
+On PASS, product-safe validator/docs/tests are promoted to stable `main` while the RC-only preconfigured Enforce config remains outside safe defaults. Do not merge an RC Enforce config into `main`.
