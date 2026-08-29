@@ -21,6 +21,7 @@ public sealed class EconomyMod(
     SourcePressureObservationPipelineService sourcePressureObservationPipelineService,
     EconomyHealthRuntimeReportService economyHealthRuntimeReportService,
     TraderPurchasePressureService traderPurchasePressureService,
+    TraderSellPressureService traderSellPressureService,
     FleaPurchasePressureService fleaPurchasePressureService,
     LootPressureService lootPressureService
 ) : IOnLoad
@@ -51,6 +52,7 @@ public sealed class EconomyMod(
         var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, observation.AdmiralTrader, cancellationToken);
 
         traderPurchasePressureService.Apply(config);
+        traderSellPressureService.Apply(config);
         fleaPurchasePressureService.Apply(config);
         lootPressureService.Apply(config);
 

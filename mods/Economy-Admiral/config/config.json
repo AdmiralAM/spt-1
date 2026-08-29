@@ -6,6 +6,8 @@
   "enableItemRewardStackNormalization": false,
   "enableTraderPurchasePressure": false,
   "customTraderPurchasePriceMultiplier": 1.15,
+  "enableTraderSellPressure": false,
+  "customTraderSellPayoutMultiplier": 0.85,
   "enableFleaPurchasePressure": false,
   "customFleaBasePriceMultiplier": 1.65,
   "enableLootPressure": false,
