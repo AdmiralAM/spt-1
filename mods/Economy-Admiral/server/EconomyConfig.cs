@@ -39,7 +39,8 @@ public sealed record EconomyConfig
     public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
 
     // Retired compatibility key. Older configs may still contain true, but the unimplemented mechanic is inert.
-    public bool RepeatedRaidLootDecay { get => false; init { } }
+    [JsonInclude]
+    public bool RepeatedRaidLootDecay { get => false; private init { } }
 
     public bool EnablePlayableEconomyBundle { get; init; } = true;
 
