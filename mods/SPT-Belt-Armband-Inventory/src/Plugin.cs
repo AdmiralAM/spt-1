@@ -1,13 +1,15 @@
 using System;
 using System.Collections;
-using System.Reflection;
 using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using UnityEngine;
 
 namespace SPTBeltArmbandInventory
 {
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
+    [BepInDependency("com.trenchfoot.beltslot", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("BeltSlot", BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
         public const string PluginGuid = "com.admiralam.spt.belt-armband-inventory";
@@ -138,7 +140,7 @@ namespace SPTBeltArmbandInventory
             {
                 headwearCompatibilityPatches.Dispose();
                 headwearCompatibilityPatches = null;
-                Logger.LogWarning("Dedicated HeadBand remains active, but vanilla Headwear may still show a misleading compatibility highlight for Emergency HeadBand.");
+                Logger.LogWarning("Dedicated HeadBand remains active, but vanilla Headwear may still show a misleading compatibility highlight for Utility HeadBand.");
             }
 
             beltContainersPanelProjectionPatches = new BeltContainersPanelProjectionPatches(Logger.LogInfo, Logger.LogWarning);
@@ -217,7 +219,7 @@ namespace SPTBeltArmbandInventory
                 {
                     dedicatedPickupPatches.Dispose();
                     dedicatedPickupPatches = null;
-                    Logger.LogWarning("Core ArmBand pickup remains active, but exact Magazine Belt/Emergency HeadBand auto-placement is disabled for this session.");
+                    Logger.LogWarning("Core ArmBand pickup remains active, but exact Magazine Belt/Utility HeadBand auto-placement is disabled for this session.");
                 }
             }
 
@@ -253,7 +255,7 @@ namespace SPTBeltArmbandInventory
                 }
                 yield return null;
             }
-            Logger.LogWarning("B&A&HB protection F12 settings could not reach the server during bounded startup sync; all three categories remain Protected until a later setting change succeeds.");
+            Logger.LogWarning("B&A&HB protection F12 settings were not acknowledged during bounded startup sync; the server's current/default protection policy remains authoritative until a later setting change is acknowledged.");
             protectionSyncPump = null;
         }
 
@@ -285,30 +287,33 @@ namespace SPTBeltArmbandInventory
             detected = false;
             try
             {
-                Type chainloader = Type.GetType("BepInEx.Bootstrap.Chainloader, BepInEx", false);
-                if (chainloader == null)
-                {
-                    Logger.LogWarning("B&A&HB legacy-plugin discovery could not resolve BepInEx Chainloader.");
-                    return false;
-                }
-
-                PropertyInfo pluginInfos = chainloader.GetProperty(
-                    "PluginInfos",
-                    BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+                var pluginInfos = Chainloader.PluginInfos;
                 if (pluginInfos == null)
                 {
-                    Logger.LogWarning("B&A&HB legacy-plugin discovery could not resolve static BepInEx Chainloader.PluginInfos.");
+                    Logger.LogWarning("B&A&HB legacy-plugin discovery could not read BepInEx Chainloader.PluginInfos.");
                     return false;
                 }
 
-                IDictionary dictionary = pluginInfos.GetValue(null, null) as IDictionary;
-                if (dictionary == null)
+                if (pluginInfos.ContainsKey("com.trenchfoot.beltslot") || pluginInfos.ContainsKey("BeltSlot"))
                 {
-                    Logger.LogWarning("B&A&HB legacy-plugin discovery resolved PluginInfos but could not read it as IDictionary.");
-                    return false;
+                    detected = true;
+                    return true;
                 }
 
-                detected = dictionary.Contains("com.trenchfoot.beltslot") || dictionary.Contains("BeltSlot");
+                foreach (var entry in pluginInfos)
+                {
+                    var metadata = entry.Value?.Metadata;
+                    if (metadata == null) continue;
+                    if (string.Equals(metadata.GUID, "com.trenchfoot.beltslot", StringComparison.Ordinal)
+                        || string.Equals(metadata.GUID, "BeltSlot", StringComparison.Ordinal)
+                        || string.Equals(metadata.Name, "BeltSlot", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(metadata.Name, "Trenchfoot-BeltSlot", StringComparison.OrdinalIgnoreCase))
+                    {
+                        detected = true;
+                        return true;
+                    }
+                }
+
                 return true;
             }
             catch (Exception exception)
