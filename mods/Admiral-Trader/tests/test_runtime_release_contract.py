@@ -69,6 +69,11 @@ class RuntimeReleaseContractTests(unittest.TestCase):
         self.assertIn("'physicalRuntimeEvidenceEligible':False", text)
         self.assertIn("validate_gameplay_alpha_candidate_tree.py build/admiral-trader-spt413-preflight/SPT_Runtime/user/mods/Admiral-Trader --require-enabled", text)
 
+    def test_quest_loader_publishes_native_locked_root_status(self):
+        text = (SERVER / "QuestRegistration.cs").read_text(encoding="utf-8")
+        self.assertIn("quest.Status = 0;", text)
+        self.assertNotIn("quest.Status = 2;", text)
+
     def test_runtime_tpl_gate_covers_handover_and_find_item(self):
         text = (SERVER / "RuntimeDataValidation.cs").read_text(encoding="utf-8")
         self.assertIn('string.Equals(type, "FindItem"', text)
