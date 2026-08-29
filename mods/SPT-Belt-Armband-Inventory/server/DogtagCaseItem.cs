@@ -1,0 +1,198 @@
+using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.DI;
+using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+using SPTarkov.Server.Core.Models.Enums;
+using SPTarkov.Server.Core.Models.Spt.Mod;
+using SPTarkov.Server.Core.Models.Spt.Tables;
+using SPTarkov.Server.Core.Services.Modding.Custom;
+
+namespace SPTBeltArmbandInventory.Server;
+
+/// <summary>
+/// Registers a dedicated Dogtag-slot container without replacing the vanilla
+/// player dogtag contract. The container is cloned from EFT's own Dogtag Case,
+/// and its single internal grid copies the source case's exact filter groups so
+/// B&A&HB never broadens what can be stored inside it.
+/// </summary>
+[Injectable(TypePriority = OnLoadOrder.Preload + 3)]
+public sealed class DogtagCaseItem(
+    TemplateTable templateTable,
+    CustomItemService customItemService,
+    ISptLogger<DogtagCaseItem> logger) : IOnLoad
+{
+    public const string TemplateId = RuntimeIdentity.DogtagCaseItemId;
+    public const string GridId = RuntimeIdentity.DogtagCaseGridId;
+
+    // EFT/SPT canonical Dogtag Case. This is deliberately an exact source
+    // template, not a base-class/category fallback.
+    private static readonly MongoId SourceDogtagCaseTpl = new("5c093e3486f77430cb02e593");
+    private static readonly MongoId DogtagCaseTpl = new(TemplateId);
+    private static readonly MongoId DefaultInventoryTpl = RuntimeCandidateBeltItem.DefaultInventoryTpl;
+    private const string DogtagSlotName = "Dogtag";
+
+    public Task OnLoadAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!templateTable.Items.TryGetValue(SourceDogtagCaseTpl, out var source))
+            throw new InvalidOperationException("B&A&HB Dogtag Case source template is missing; refusing fallback cloning.");
+
+        var sourceGrids = source.Properties?.Grids?.ToArray();
+        if (sourceGrids == null || sourceGrids.Length != 1 || sourceGrids[0].Properties == null)
+            throw new InvalidOperationException("B&A&HB Dogtag Case source grid boundary is missing or ambiguous; exactly one canonical grid is required.");
+
+        var sourceGrid = sourceGrids[0];
+        var sourceGridProperties = sourceGrid.Properties;
+        var sourceFilters = sourceGridProperties.Filters?.ToArray();
+        if (sourceFilters == null || sourceFilters.Length == 0 || sourceFilters.Any(x => x.Filter == null || x.Filter.Count == 0))
+            throw new InvalidOperationException("B&A&HB Dogtag Case source filters are empty or ambiguous; refusing to create a broadened container.");
+
+        HashSet<MongoId> dogtagSlotFilter = PrepareDogtagSlotFilter();
+        var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceDogtagCaseTpl)
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case source handbook entry is missing.");
+
+        if (templateTable.Items.TryGetValue(DogtagCaseTpl, out var existing))
+        {
+            ValidateExisting(existing, source);
+            CommitDogtagSlotExposure(dogtagSlotFilter);
+            logger.Success("B&A&HB Dogtag Case retained existing validated template; vanilla Dogtag slot filter preserved and exact container appended.");
+            return Task.CompletedTask;
+        }
+
+        var copiedFilters = sourceFilters
+            .Select(filter => new GridFilter
+            {
+                Filter = new HashSet<MongoId>(filter.Filter),
+                ExcludedFilter = filter.ExcludedFilter == null
+                    ? []
+                    : new HashSet<MongoId>(filter.ExcludedFilter)
+            })
+            .ToList();
+
+        var details = new NewItemFromCloneDetails
+        {
+            NewItemName = "B&A&HB Dogtag Case",
+            ItemTplToClone = SourceDogtagCaseTpl,
+            ParentId = source.Parent,
+            NewId = TemplateId,
+            FleaPriceRoubles = 50000,
+            HandbookPriceRoubles = 50000,
+            HandbookParentId = handbookItem.ParentId,
+            Locales = new Dictionary<string, LocaleDetails>
+            {
+                ["en"] = new LocaleDetails
+                {
+                    Name = "B&A&HB Dogtag Case",
+                    ShortName = "Dogtag Case",
+                    Description = "A dedicated dogtag container that can be equipped in the vanilla Dogtag slot while preserving the normal personal dogtag contract."
+                },
+                ["ru"] = new LocaleDetails
+                {
+                    Name = "Жетонница B&A&HB",
+                    ShortName = "Жетонница",
+                    Description = "Специальный контейнер для жетонов, устанавливаемый в штатный слот Dogtag без замены обычного личного жетона."
+                }
+            },
+            OverrideProperties = new TemplateItemProperties
+            {
+                BackgroundColor = source.Properties?.BackgroundColor,
+                ExaminedByDefault = true,
+                Grids =
+                [
+                    new Grid
+                    {
+                        Name = sourceGrid.Name,
+                        Id = GridId,
+                        Parent = TemplateId,
+                        Prototype = sourceGrid.Prototype,
+                        Properties = new GridProperties
+                        {
+                            CellsH = sourceGridProperties.CellsH,
+                            CellsV = sourceGridProperties.CellsV,
+                            MinCount = sourceGridProperties.MinCount,
+                            MaxCount = sourceGridProperties.MaxCount,
+                            MaxWeight = sourceGridProperties.MaxWeight,
+                            IsSortingTable = sourceGridProperties.IsSortingTable,
+                            Filters = copiedFilters
+                        }
+                    }
+                ]
+            }
+        };
+
+        var result = customItemService.CreateItemFromClone(details);
+        if (!result.Success)
+            throw new InvalidOperationException($"B&A&HB Dogtag Case creation failed: {string.Join("; ", result.Errors)}");
+
+        CommitDogtagSlotExposure(dogtagSlotFilter);
+        logger.Success("B&A&HB Dogtag Case created from canonical EFT Dogtag Case filters; vanilla Dogtag slot entries preserved and exact container appended.");
+        return Task.CompletedTask;
+    }
+
+    private HashSet<MongoId> PrepareDogtagSlotFilter()
+    {
+        if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
+            throw new InvalidOperationException("B&A&HB default inventory template is missing for Dogtag host registration.");
+
+        var slots = inventory.Properties?.Slots?
+            .Where(x => string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal))
+            .Take(2)
+            .ToArray();
+        if (slots == null || slots.Length != 1)
+            throw new InvalidOperationException("B&A&HB Dogtag slot boundary is missing or ambiguous; refusing inventory mutation.");
+
+        var groups = slots[0].Properties?.Filters?.ToArray();
+        if (groups == null || groups.Length != 1 || groups[0].Filter == null || groups[0].Filter.Count == 0)
+            throw new InvalidOperationException("B&A&HB Dogtag slot filter boundary is missing or ambiguous; exactly one non-empty vanilla filter group is required.");
+
+        return groups[0].Filter;
+    }
+
+    private static void CommitDogtagSlotExposure(HashSet<MongoId> filter)
+    {
+        // Vanilla-first semantics: never remove, replace, or normalize existing
+        // accepted dogtag entries; append only our exact product template.
+        if (!filter.Contains(DogtagCaseTpl)) filter.Add(DogtagCaseTpl);
+    }
+
+    private static void ValidateExisting(TemplateItem candidate, TemplateItem source)
+    {
+        if (!Equals(candidate.Parent, source.Parent))
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: existing template uses a different parent.");
+
+        var grids = candidate.Properties?.Grids?.ToArray();
+        var sourceGrids = source.Properties?.Grids?.ToArray();
+        if (grids == null || grids.Length != 1 || sourceGrids == null || sourceGrids.Length != 1)
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: expected one grid.");
+
+        var grid = grids[0];
+        var sourceGrid = sourceGrids[0];
+        if (!string.Equals(grid.Id.ToString(), GridId, StringComparison.Ordinal)
+            || !string.Equals(grid.Parent?.ToString(), TemplateId, StringComparison.Ordinal)
+            || grid.Properties == null
+            || sourceGrid.Properties == null
+            || grid.Properties.CellsH != sourceGrid.Properties.CellsH
+            || grid.Properties.CellsV != sourceGrid.Properties.CellsV)
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: grid identity or geometry differs from the canonical source contract.");
+
+        var actualFilters = grid.Properties.Filters?.ToArray();
+        var expectedFilters = sourceGrid.Properties.Filters?.ToArray();
+        if (actualFilters == null || expectedFilters == null || actualFilters.Length != expectedFilters.Length)
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: filter-group count differs from canonical source.");
+
+        for (int i = 0; i < expectedFilters.Length; i++)
+        {
+            var actualIncluded = actualFilters[i].Filter;
+            var expectedIncluded = expectedFilters[i].Filter;
+            var actualExcluded = actualFilters[i].ExcludedFilter;
+            var expectedExcluded = expectedFilters[i].ExcludedFilter;
+            if (actualIncluded == null || expectedIncluded == null || !actualIncluded.SetEquals(expectedIncluded))
+                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: included filter differs from canonical source.");
+            if ((actualExcluded == null ? 0 : actualExcluded.Count) != (expectedExcluded == null ? 0 : expectedExcluded.Count)
+                || (actualExcluded != null && expectedExcluded != null && !actualExcluded.SetEquals(expectedExcluded)))
+                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: excluded filter differs from canonical source.");
+        }
+    }
+}
