@@ -14,8 +14,6 @@ public sealed class TraderPurchasePressureService(
         "5449016a4bdc2d6f028b456f", // RUB
         "569668774bdc2da2298b4568", // USD
         "5696686a4bdc2da3298b456a", // EUR
-        "5d235b4d86f7742e017bc88a", // GP coin
-        "6656560053eaaa7a23349c86", // Lega medal
     };
 
     private bool applied;
@@ -77,7 +75,7 @@ public sealed class TraderPurchasePressureService(
             }
 
             applied = true;
-            logger.Info($"[Economy Admiral] trader purchase pressure applied: preset={config.Preset}, multiplier={multiplier:0.###}x, traders={changedTraders.Count}, offers={changedOffers}, aggregate={beforeTotal:0.##}->{afterTotal:0.##}");
+            logger.Info($"[Economy Admiral] trader fiat purchase pressure applied: preset={config.Preset}, multiplier={multiplier:0.###}x, traders={changedTraders.Count}, offers={changedOffers}, aggregate={beforeTotal:0.##}->{afterTotal:0.##}");
             return new TraderPurchasePressureResult(true, multiplier, changedTraders.Count, changedOffers, beforeTotal, afterTotal, null);
         }
         catch (Exception applyException)
