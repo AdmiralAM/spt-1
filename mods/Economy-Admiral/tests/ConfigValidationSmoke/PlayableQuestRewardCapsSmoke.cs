@@ -59,8 +59,8 @@ internal static class PlayableQuestRewardCapsSmoke
             LowDepthMaxRelativeMultiple = 1.0,
             LowStructureMaxRelativeMultiple = 1.0,
         };
-        var regularFlags = PlayableQuestRewardPolicy.ReclassifyRewardPressureFlags(
-            CreateRow(false, 1.60, 1.60, 1.60, ["PREREQUISITE_CYCLE"]), enforcementPolicy);
+        var regularFlags = QuestRewardPressureClassifier.Reclassify(
+            CreateSignals(false, 1.60, 1.60, 1.60, ["PREREQUISITE_CYCLE"]), enforcementPolicy);
         Require(regularFlags.Contains("HIGH_ITEM_VALUE_LOW_STRUCTURE", StringComparer.Ordinal)
                 && regularFlags.Contains("HIGH_XP_LOW_DEPTH", StringComparer.Ordinal)
                 && regularFlags.Contains("HIGH_STANDING_LOW_DEPTH", StringComparer.Ordinal),
@@ -68,49 +68,28 @@ internal static class PlayableQuestRewardCapsSmoke
         Require(regularFlags.Contains("PREREQUISITE_CYCLE", StringComparer.Ordinal),
             "enforcement reclassification must preserve non-reward analysis flags");
 
-        var restartableFlags = PlayableQuestRewardPolicy.ReclassifyRewardPressureFlags(
-            CreateRow(true, 1.20, 1.20, 1.20, []), enforcementPolicy);
+        var restartableFlags = QuestRewardPressureClassifier.Reclassify(
+            CreateSignals(true, 1.20, 1.20, 1.20, []), enforcementPolicy);
         Require(restartableFlags.Contains("RESTARTABLE_HIGH_ITEM_VALUE", StringComparer.Ordinal)
                 && restartableFlags.Contains("RESTARTABLE_HIGH_XP", StringComparer.Ordinal)
-                && restartableFlags.Contains(RestartableStandingPressureCore.Flag, StringComparer.Ordinal),
-            "restartable reward pressure must classify from the stricter playable caps");
+                && restartableFlags.Contains(RestartableStandingPressureCore.Flag, StringComparer.Ordinal)
+                && restartableFlags.Contains(RestartableStandingPressureCore.StandingBudgetFlag, StringComparer.Ordinal),
+            "restartable reward pressure must classify from the stricter playable caps and retain the standing mutation-planner route");
 
         Console.WriteLine("Economy Admiral Playable Economy v1 reward cap smoke PASS");
     }
 
-    private static QuestAnalysisRow CreateRow(bool restartable, double itemRatio, double xpRatio, double standingRatio, List<string> flags)
+    private static QuestRewardPressureSignals CreateSignals(bool restartable, double itemRatio, double xpRatio, double standingRatio, IReadOnlyList<string> flags)
     {
-        return new QuestAnalysisRow
+        return new QuestRewardPressureSignals
         {
-            QuestId = "smoke",
-            QuestName = "smoke",
-            TraderId = "smoke",
-            IsVanillaTraderQuest = false,
             Restartable = restartable,
-            SuccessKnownHandbookValue = 1,
-            UnknownPriceRewardItemRecords = 0,
-            Experience = 1,
-            TraderStanding = 1,
-            TraderUnlocks = 0,
-            AssortmentUnlocks = 0,
-            ProductionSchemeUnlocks = 0,
-            DirectPrerequisiteCount = 0,
-            MaximumPrerequisiteDepth = 0,
-            IsPrerequisiteCycleMember = flags.Contains("PREREQUISITE_CYCLE", StringComparer.Ordinal),
-            ObjectiveConditionCount = 1,
-            StructuredConstraintCount = 0,
-            TimedConditionCount = 0,
-            OneSessionConditionCount = 0,
-            FoundInRaidConditionCount = 0,
-            PlantConditionCount = 0,
-            DistanceConstraintCount = 0,
-            DaytimeConstraintCount = 0,
-            ObservationalFlags = flags,
             HandbookValueVsVanillaMedian = itemRatio,
             XpVsVanillaMedian = xpRatio,
             StandingVsVanillaMedian = standingRatio,
             PrerequisiteDepthVsVanillaMedian = 0,
             StructuredConstraintsVsVanillaMedian = 0,
+            ExistingFlags = flags,
         };
     }
 
