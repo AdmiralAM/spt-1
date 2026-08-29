@@ -96,50 +96,19 @@ internal static class ClusterControlSmoke
                 && !granularBlocked.EnableLooseLootPressure,
             "cluster OFF must override configured granular true flags");
 
-        var questRow = FixtureQuest(restartable: false);
-        Require(PlayableQuestRewardPolicy.AutomaticFlagEnabled(granular, questRow, "HIGH_XP_LOW_DEPTH"),
+        Require(QuestMechanismGate.AutomaticFlagEnabled(granular, false, "HIGH_XP_LOW_DEPTH"),
             "XP pressure ON must preserve automatic XP enforcement flags");
-        Require(!PlayableQuestRewardPolicy.AutomaticFlagEnabled(granular, questRow, "HIGH_STANDING_LOW_DEPTH"),
+        Require(!QuestMechanismGate.AutomaticFlagEnabled(granular, false, "HIGH_STANDING_LOW_DEPTH"),
             "standing pressure OFF must suppress automatic standing enforcement flags");
-        Require(!PlayableQuestRewardPolicy.AutomaticFlagEnabled(granular, questRow, "HIGH_ITEM_VALUE_LOW_STRUCTURE"),
+        Require(!QuestMechanismGate.AutomaticFlagEnabled(granular, false, "HIGH_ITEM_VALUE_LOW_STRUCTURE"),
             "item pressure OFF must suppress automatic item enforcement flags");
-
-        var restartableRow = FixtureQuest(restartable: true);
-        Require(!PlayableQuestRewardPolicy.AutomaticFlagEnabled(granular, restartableRow, "RESTARTABLE_HIGH_XP"),
+        Require(!QuestMechanismGate.AutomaticFlagEnabled(granular, true, "RESTARTABLE_HIGH_XP"),
             "repeatable pressure OFF must suppress repeatable automatic reward enforcement");
-        Require(PlayableQuestRewardPolicy.AutomaticFlagEnabled(granular, restartableRow, "PREREQUISITE_CYCLE"),
+        Require(QuestMechanismGate.AutomaticFlagEnabled(granular, true, "PREREQUISITE_CYCLE"),
             "mechanism gates must not erase non-reward diagnostic flags");
 
         Console.WriteLine("PASS advanced economy cluster and mechanism controls");
     }
-
-    private static QuestAnalysisRow FixtureQuest(bool restartable) => new()
-    {
-        QuestId = "fixture",
-        QuestName = "fixture",
-        TraderId = "fixture",
-        IsVanillaTraderQuest = false,
-        Restartable = restartable,
-        SuccessKnownHandbookValue = 1,
-        UnknownPriceRewardItemRecords = 0,
-        Experience = 1,
-        TraderStanding = 0.01,
-        TraderUnlocks = 0,
-        AssortmentUnlocks = 0,
-        ProductionSchemeUnlocks = 0,
-        DirectPrerequisiteCount = 0,
-        MaximumPrerequisiteDepth = 0,
-        IsPrerequisiteCycleMember = false,
-        ObjectiveConditionCount = 1,
-        StructuredConstraintCount = 0,
-        TimedConditionCount = 0,
-        OneSessionConditionCount = 0,
-        FoundInRaidConditionCount = 0,
-        PlantConditionCount = 0,
-        DistanceConstraintCount = 0,
-        DaytimeConstraintCount = 0,
-        ObservationalFlags = [],
-    };
 
     private static void Require(bool condition, string message)
     {
