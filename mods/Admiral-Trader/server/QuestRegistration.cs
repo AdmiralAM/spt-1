@@ -85,14 +85,10 @@ public sealed class AdmiralQuestRegistration(ModHelper modHelper, TemplateTable 
             bool isArsenal = quest.QuestName.StartsWith("Arsenal Protocol:", StringComparison.Ordinal);
             if (string.Equals(finish.ConditionType, "FindItem", StringComparison.Ordinal))
             {
-                ValidateNonFirItemProof(questId, finish);
                 if (isArsenal)
-                {
-                    if (quest.Type != QuestTypeEnum.PickUp)
-                        throw new InvalidDataException($"Arsenal Qualification {questId} must be PickUp, got {quest.Type}");
-                    arsenalReadinessCount++;
-                }
-                else accessCount++;
+                    throw new InvalidDataException($"Arsenal quest {questId} unexpectedly uses legacy FindItem proof");
+                ValidateNonFirItemProof(questId, finish);
+                accessCount++;
                 continue;
             }
             if (string.Equals(finish.ConditionType, "HandoverItem", StringComparison.Ordinal))
@@ -109,8 +105,17 @@ public sealed class AdmiralQuestRegistration(ModHelper modHelper, TemplateTable 
                 if (!isArsenal)
                     throw new InvalidDataException($"Non-Arsenal quest {questId} unexpectedly uses CounterCreator");
                 if (quest.Type != QuestTypeEnum.Elimination)
-                    throw new InvalidDataException($"Arsenal combat quest {questId} must be Elimination, got {quest.Type}");
-                arsenalCombatCount++;
+                    throw new InvalidDataException($"Arsenal quest {questId} must be Elimination, got {quest.Type}");
+
+                bool isQualification = quest.QuestName.EndsWith(" - Qualification", StringComparison.Ordinal);
+                bool isFieldwork = quest.QuestName.EndsWith(" - Fieldwork", StringComparison.Ordinal);
+                bool isMunitions = quest.QuestName.EndsWith(" - Munitions", StringComparison.Ordinal);
+                if (isQualification)
+                    arsenalReadinessCount++;
+                else if (isFieldwork || isMunitions)
+                    arsenalCombatCount++;
+                else
+                    throw new InvalidDataException($"Arsenal quest {questId} has unsupported authored stage name {quest.QuestName}");
                 continue;
             }
             throw new InvalidDataException($"Quest {questId} has unsupported finish condition {finish.ConditionType}");
