@@ -28,6 +28,7 @@ public sealed class DedicatedWearableAssort(
         var headBandTemplateId = new MongoId(RuntimeIdentity.EmergencyHeadBandItemId);
         if (!templateTable.Items.ContainsKey(beltTemplateId) || !templateTable.Items.ContainsKey(headBandTemplateId))
             throw new InvalidOperationException("B&A&HB dedicated wearable offers refused: both exact product templates must be registered before Ragman assort mutation.");
+        WearableOfferHostContract.RequireDedicatedProducts(templateTable);
 
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB dedicated wearable offers could not find Ragman.");
