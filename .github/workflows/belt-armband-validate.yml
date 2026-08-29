@@ -10,8 +10,7 @@ on:
       - 'mods/SPT-Belt-Armband-Inventory/tools/**'
       - 'mods/SPT-Belt-Armband-Inventory/profile-safety/**'
       - 'mods/SPT-Belt-Armband-Inventory/README.md'
-      - 'mods/SPT-Belt-Armband-Inventory/docs/product-concept.md'
-      - 'mods/SPT-Belt-Armband-Inventory/docs/RC1-runtime-checklist.md'
+      - 'mods/SPT-Belt-Armband-Inventory/docs/**'
       - 'mods/SPT-Belt-Armband-Inventory/DESIGN-SPT-4.1.3-BELT.md'
       - '.github/workflows/belt-armband-validate.yml'
   workflow_dispatch:
@@ -45,6 +44,9 @@ jobs:
       - name: 'Run B&A&HB #2 version-contract guard'
         shell: pwsh
         run: python mods/SPT-Belt-Armband-Inventory/tools/check_version_contract.py
+      - name: 'Run B&A&HB #2 documentation-authority guard'
+        shell: pwsh
+        run: python mods/SPT-Belt-Armband-Inventory/tools/check_doc_authority.py
       - name: 'Run B&A&HB #2 product-contract guard'
         shell: pwsh
         run: python mods/SPT-Belt-Armband-Inventory/tools/check_product_contract.py
