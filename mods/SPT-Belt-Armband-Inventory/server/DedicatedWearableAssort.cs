@@ -19,46 +19,46 @@ public sealed class DedicatedWearableAssort(
     private const int HeadBandPrice = 25000;
     private const int UnlimitedStock = 999999;
 
+    private sealed record OfferPlan(MongoId AssortId, MongoId TemplateId, int Price, int LoyaltyLevel);
+
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB dedicated wearable offers could not find Ragman.");
 
-        EnsureOffer(
+        // Validate both persistent IDs before mutating any Ragman assort structure.
+        // A collision in either dedicated product therefore leaves both offers intact.
+        OfferPlan? beltPlan = PrepareOffer(
             new MongoId(RuntimeIdentity.DedicatedMagazineBeltAssortId),
             new MongoId(RuntimeIdentity.DedicatedMagazineBeltItemId),
             BeltPrice,
             BeltLoyaltyLevel,
             "Magazine Belt");
-        EnsureOffer(
+        OfferPlan? headBandPlan = PrepareOffer(
             new MongoId(RuntimeIdentity.EmergencyHeadBandAssortId),
             new MongoId(RuntimeIdentity.EmergencyHeadBandItemId),
             HeadBandPrice,
             HeadBandLoyaltyLevel,
             "Utility HeadBand");
 
-        logger.Success($"B&A&HB product offers registered: Magazine Belt Ragman LL{BeltLoyaltyLevel}/{BeltPrice:N0} RUB; Utility HeadBand Ragman LL{HeadBandLoyaltyLevel}/{HeadBandPrice:N0} RUB.");
+        if (beltPlan != null) CommitOffer(beltPlan);
+        if (headBandPlan != null) CommitOffer(headBandPlan);
+
+        logger.Success($"B&A&HB product offers registered atomically: Magazine Belt Ragman LL{BeltLoyaltyLevel}/{BeltPrice:N0} RUB; Utility HeadBand Ragman LL{HeadBandLoyaltyLevel}/{HeadBandPrice:N0} RUB.");
         return Task.CompletedTask;
 
-        void EnsureOffer(MongoId assortId, MongoId templateId, int price, int loyaltyLevel, string label)
+        OfferPlan? PrepareOffer(MongoId assortId, MongoId templateId, int price, int loyaltyLevel, string label)
         {
-            var existing = trader.Assort.Items.FirstOrDefault(x => x.Id == assortId);
+            var matches = trader.Assort.Items.Where(x => x.Id == assortId).Take(2).ToArray();
+            if (matches.Length > 1)
+                throw new InvalidOperationException($"B&A&HB dedicated {label} assort ID collision: duplicate item entries own the persistent assort ID.");
+
+            var existing = matches.SingleOrDefault();
             if (existing == null)
             {
                 if (trader.Assort.BarterScheme.ContainsKey(assortId) || trader.Assort.LoyalLevelItems.ContainsKey(assortId))
                     throw new InvalidOperationException($"B&A&HB dedicated {label} assort ID collision: item is absent but barter/loyalty metadata already owns the persistent assort ID.");
-
-                trader.Assort.Items.Add(new Item
-                {
-                    Id = assortId,
-                    Template = templateId,
-                    ParentId = RuntimeCandidateOfferContract.RootId,
-                    SlotId = RuntimeCandidateOfferContract.RootId,
-                    Upd = new Upd { UnlimitedCount = true, StackObjectsCount = UnlimitedStock }
-                });
-                trader.Assort.BarterScheme.Add(assortId, [[new BarterScheme { Count = price, Template = Money.ROUBLES }]]);
-                trader.Assort.LoyalLevelItems.Add(assortId, loyaltyLevel);
-                return;
+                return new OfferPlan(assortId, templateId, price, loyaltyLevel);
             }
 
             if (!Equals(existing.Template, templateId)
@@ -77,6 +77,21 @@ public sealed class DedicatedWearableAssort(
 
             if (!trader.Assort.LoyalLevelItems.TryGetValue(assortId, out var loyalty) || loyalty != loyaltyLevel)
                 throw new InvalidOperationException($"B&A&HB dedicated {label} loyalty contract collision.");
+            return null;
+        }
+
+        void CommitOffer(OfferPlan plan)
+        {
+            trader.Assort.Items.Add(new Item
+            {
+                Id = plan.AssortId,
+                Template = plan.TemplateId,
+                ParentId = RuntimeCandidateOfferContract.RootId,
+                SlotId = RuntimeCandidateOfferContract.RootId,
+                Upd = new Upd { UnlimitedCount = true, StackObjectsCount = UnlimitedStock }
+            });
+            trader.Assort.BarterScheme.Add(plan.AssortId, [[new BarterScheme { Count = plan.Price, Template = Money.ROUBLES }]]);
+            trader.Assort.LoyalLevelItems.Add(plan.AssortId, plan.LoyaltyLevel);
         }
     }
 }
