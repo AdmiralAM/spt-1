@@ -9,6 +9,12 @@ internal static class HeadBandSplitGridMigrationRegression
     [ModuleInitializer]
     internal static void Run()
     {
+        RunPmcOverflowMigration();
+        RunScavUnfixablePreservation();
+    }
+
+    private static void RunPmcOverflowMigration()
+    {
         var profile = JsonNode.Parse("""
         {
           "characters": {
@@ -57,7 +63,55 @@ internal static class HeadBandSplitGridMigrationRegression
             throw new InvalidOperationException("Moving an overflow root must preserve its descendant subtree.");
 
         if (migration.CanMigrate(profile, Array.Empty<SPTarkov.Server.Core.Migration.IProfileMigration>()))
-            throw new InvalidOperationException("Split-grid migration is not idempotent after successful normalization.");
+            throw new InvalidOperationException("Split-grid migration is not idempotent after successful PMC normalization.");
+    }
+
+    private static void RunScavUnfixablePreservation()
+    {
+        var profile = JsonNode.Parse("""
+        {
+          "characters": {
+            "pmc": { "Inventory": { "items": [] } },
+            "scav": {
+              "Inventory": {
+                "items": [
+                  { "_id": "scav-hb", "_tpl": "68ac0000000000000000000f", "parentId": "equipment", "slotId": "16" },
+                  { "_id": "scav-money", "_tpl": "5449016a4bdc2d6f028b456f", "parentId": "scav-hb", "slotId": "main", "location": { "x": 0, "y": 0, "r": "Horizontal" } },
+                  { "_id": "scav-cigs1", "_tpl": "573476d324597737da2adc13", "parentId": "scav-hb", "slotId": "main", "location": { "x": 0, "y": 1, "r": "Horizontal" } },
+                  { "_id": "scav-cigs2", "_tpl": "573476f124597737e04bf328", "parentId": "scav-hb", "slotId": "main", "location": { "x": 0, "y": 0, "r": "Horizontal" } },
+                  { "_id": "scav-unknown", "_tpl": "5448bf274bdc2dfc2f8b456a", "parentId": "scav-hb", "slotId": "main", "location": { "x": 0, "y": 0, "r": "Horizontal" } }
+                ]
+              }
+            }
+          }
+        }
+        """)!.AsObject();
+
+        var migration = new HeadBandSplitGridProfileMigration();
+        if (!migration.CanMigrate(profile, Array.Empty<SPTarkov.Server.Core.Migration.IProfileMigration>()))
+            throw new InvalidOperationException("Scav split-grid migration failed to detect actionable cigarette normalization.");
+
+        migration.Migrate(profile);
+
+        var items = profile["characters"]!["scav"]!["Inventory"]!["items"]!.AsArray();
+        JsonObject Find(string id) => items.OfType<JsonObject>().Single(x => x["_id"]!.GetValue<string>() == id);
+
+        var migratedCigs = Find("scav-cigs1");
+        if (migratedCigs["parentId"]!.GetValue<string>() != "scav-hb"
+            || migratedCigs["slotId"]!.GetValue<string>() != "cigarettes")
+            throw new InvalidOperationException("Actionable Scav cigarette was not normalized into the cigarettes grid.");
+        AssertOrigin(migratedCigs);
+
+        var overflow = Find("scav-cigs2");
+        if (overflow["parentId"]!.GetValue<string>() != "scav-hb")
+            throw new InvalidOperationException("Scav overflow must be preserved when no sorting table exists.");
+
+        var unknown = Find("scav-unknown");
+        if (unknown["parentId"]!.GetValue<string>() != "scav-hb")
+            throw new InvalidOperationException("Unknown Scav legacy child must be preserved when no sorting table exists.");
+
+        if (migration.CanMigrate(profile, Array.Empty<SPTarkov.Server.Core.Migration.IProfileMigration>()))
+            throw new InvalidOperationException("Unfixable preserved Scav children must not keep the profile migration permanently pending.");
     }
 
     private static void AssertOrigin(JsonObject item)
