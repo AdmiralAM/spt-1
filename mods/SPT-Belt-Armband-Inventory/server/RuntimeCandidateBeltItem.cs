@@ -1,0 +1,138 @@
+using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.DI;
+using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+using SPTarkov.Server.Core.Models.Enums;
+using SPTarkov.Server.Core.Models.Spt.Mod;
+using SPTarkov.Server.Core.Models.Spt.Tables;
+using SPTarkov.Server.Core.Services.Modding.Custom;
+
+namespace SPTBeltArmbandInventory.Server;
+
+[Injectable(TypePriority = OnLoadOrder.Preload + 1)]
+public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, CustomItemService customItemService, ISptLogger<RuntimeCandidateBeltItem> logger) : IOnLoad
+{
+    public static readonly MongoId SourceArmbandTpl = new("5b3f3af486f774679e752c1f");
+    public static readonly MongoId DefaultInventoryTpl = new("55d7217a4bdc2d86028b456d");
+    private static readonly MongoId SearchableItemBaseTpl = new("566162e44bdc2d3f298b4573");
+    public static readonly MongoId CustomTemplateParentTpl = new(RuntimeIdentity.SearchableTemplateParentId);
+    public static readonly MongoId CustomBeltParentTpl = new(RuntimeIdentity.BeltItemParentId);
+    public const string RuntimeCandidateTpl = RuntimeIdentity.CandidateItemId;
+    public const string RuntimeCandidateGridId = RuntimeIdentity.CandidateGridId;
+    private const string RuntimeCandidateGridName = "main";
+    private const string RuntimeCandidateGridPrototype = "55d329c24bdc2d892f8b4567";
+
+    public Task OnLoadAsync(CancellationToken cancellationToken = default)
+    {
+        if (!templateTable.Items.ContainsKey(SourceArmbandTpl)) throw new InvalidOperationException("B&A&HB RC source armband missing.");
+        var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl) ?? throw new InvalidOperationException("B&A&HB RC source handbook entry missing.");
+
+        EnsureCustomParents();
+        EnsureArmBandAcceptsCustomBeltParent();
+        if (templateTable.Items.TryGetValue(new MongoId(RuntimeCandidateTpl), out var existingCandidate))
+        {
+            ValidateExistingCandidate(existingCandidate);
+            logger.Success($"B&A&HB RC retained existing validated item: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
+            return Task.CompletedTask;
+        }
+
+        var details = new NewItemFromCloneDetails
+        {
+            NewItemName = "B&A&HB Runtime Candidate Magazine Belt",
+            ItemTplToClone = SourceArmbandTpl,
+            ParentId = CustomBeltParentTpl,
+            NewId = RuntimeCandidateTpl,
+            FleaPriceRoubles = RuntimeCandidateOfferContract.PriceRoubles,
+            HandbookPriceRoubles = RuntimeCandidateOfferContract.PriceRoubles,
+            HandbookParentId = handbookItem.ParentId,
+            Locales = new Dictionary<string, LocaleDetails> { ["en"] = new LocaleDetails { Name = "B&A&HB Runtime Candidate Magazine Belt", ShortName = "B&A&HB Belt RC", Description = "Minimal 1x2 magazine belt runtime candidate." } },
+            OverrideProperties = new TemplateItemProperties
+            {
+                BackgroundColor = "blue", ExaminedByDefault = true,
+                Grids = [new Grid { Name = RuntimeCandidateGridName, Id = RuntimeCandidateGridId, Parent = RuntimeCandidateTpl, Prototype = RuntimeCandidateGridPrototype, Properties = new GridProperties { CellsH = RuntimeIdentity.CandidateGridColumns, CellsV = RuntimeIdentity.CandidateGridRows, MinCount = 0, MaxCount = 0, MaxWeight = 0, IsSortingTable = false, Filters = [new GridFilter { Filter = [BaseClasses.MAGAZINE], ExcludedFilter = [] }] } }]
+            }
+        };
+        var result = customItemService.CreateItemFromClone(details);
+        if (!result.Success) throw new InvalidOperationException($"B&A&HB RC item creation failed: {string.Join("; ", result.Errors)}");
+        logger.Success($"B&A&HB RC created: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
+        return Task.CompletedTask;
+    }
+
+    private static void ValidateExistingCandidate(TemplateItem candidate)
+    {
+        if (!Equals(candidate.Parent, CustomBeltParentTpl))
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing item uses a different parent.");
+
+        var grids = candidate.Properties?.Grids?.ToArray();
+        if (grids == null || grids.Length != 1)
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing item does not declare exactly one grid.");
+
+        var grid = grids[0];
+        var properties = grid.Properties;
+        if (!string.Equals(grid.Name, RuntimeCandidateGridName, StringComparison.Ordinal)
+            || !string.Equals(grid.Id.ToString(), RuntimeCandidateGridId, StringComparison.Ordinal)
+            || !string.Equals(grid.Parent?.ToString(), RuntimeCandidateTpl, StringComparison.Ordinal)
+            || !string.Equals(grid.Prototype?.ToString(), RuntimeCandidateGridPrototype, StringComparison.Ordinal)
+            || properties == null
+            || properties.CellsH != RuntimeIdentity.CandidateGridColumns
+            || properties.CellsV != RuntimeIdentity.CandidateGridRows
+            || properties.MinCount != 0
+            || properties.MaxCount != 0
+            || properties.MaxWeight != 0
+            || properties.IsSortingTable == true)
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid identity, geometry, or limits differ from the shared runtime contract.");
+
+        var filters = properties.Filters?.ToArray();
+        if (filters == null || filters.Length != 1)
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid does not declare exactly one filter group.");
+
+        var filter = filters[0];
+        var included = filter.Filter?.ToArray();
+        var excluded = filter.ExcludedFilter?.ToArray();
+        if (included == null
+            || included.Length != 1
+            || !included.Contains(BaseClasses.MAGAZINE)
+            || (excluded != null && excluded.Length != 0))
+            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid does not retain the exact MAGAZINE-only filter.");
+    }
+
+    private void EnsureCustomParents()
+    {
+        EnsureCustomParent(CustomTemplateParentTpl, "BAndHBSearchableContainerTemplate", SearchableItemBaseTpl);
+        EnsureCustomParent(CustomBeltParentTpl, "BAndHBCustomBeltItem", CustomTemplateParentTpl);
+    }
+
+    private void EnsureCustomParent(MongoId id, string name, MongoId parent)
+    {
+        if (!templateTable.Items.TryGetValue(id, out var existing))
+        {
+            templateTable.Items[id] = new TemplateItem
+            {
+                Id = id,
+                Name = name,
+                Parent = parent,
+                Type = "Node",
+                Properties = new TemplateItemProperties()
+            };
+            return;
+        }
+
+        if (!Equals(existing.Id, id)
+            || !Equals(existing.Parent, parent)
+            || !string.Equals(existing.Name, name, StringComparison.Ordinal)
+            || !string.Equals(existing.Type, "Node", StringComparison.Ordinal))
+            throw new InvalidOperationException($"B&A&HB custom parent ID collision: {id} does not match the registered taxonomy contract.");
+    }
+
+    private void EnsureArmBandAcceptsCustomBeltParent()
+    {
+        if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
+            throw new InvalidOperationException("B&A&HB RC default inventory template missing.");
+
+        var armBand = inventory.Properties?.Slots?.FirstOrDefault(x => string.Equals(x.Name, "ArmBand", StringComparison.Ordinal));
+        var filter = armBand?.Properties?.Filters?.FirstOrDefault()?.Filter;
+        if (filter == null) throw new InvalidOperationException("B&A&HB RC ArmBand slot filter missing.");
+        if (!filter.Contains(CustomBeltParentTpl)) filter.Add(CustomBeltParentTpl);
+    }
+}

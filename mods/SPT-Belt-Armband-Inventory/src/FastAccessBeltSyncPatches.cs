@@ -17,7 +17,14 @@ namespace SPTBeltArmbandInventory
     {
         internal static bool ShouldQueue(bool succeeded, bool ownerMatches, bool armBandRoute, bool hasContainers)
         {
-            return succeeded && ownerMatches && armBandRoute && hasContainers;
+            return succeeded
+                && ownerMatches
+                && armBandRoute
+                && AccessoryCapabilityPolicy.CanUse(
+                    AccessoryCategory.ArmBand,
+                    AccessoryCapability.FastAccess,
+                    true,
+                    hasContainers);
         }
 
         internal static bool ShouldClearSelected(bool isRemoval, bool selectedBelongsToRemovedBelt)
@@ -30,23 +37,29 @@ namespace SPTBeltArmbandInventory
     {
         sealed class PendingRefresh
         {
-            internal readonly object View;
+            internal readonly WeakReference View;
             internal object RemovedContainer;
 
             internal PendingRefresh(object view, object removedContainer)
             {
-                View = view;
+                View = new WeakReference(view);
                 RemovedContainer = removedContainer;
             }
         }
 
         internal static Action<string> LogWarning;
+        internal static Action RequestFlush;
         internal static FieldInfo ControllerField;
         internal static FieldInfo ItemUiContextField;
         internal static MethodInfo ShowMethod;
         internal static PropertyInfo TopPriorityGrenadeProperty;
         internal static MethodInfo GetTopLevelItemsMethod;
         static readonly List<PendingRefresh> PendingViews = new List<PendingRefresh>();
+
+        internal static bool HasPending
+        {
+            get { return PendingViews.Count != 0; }
+        }
 
         internal static void Queue(object view, object eventArgs, bool added)
         {
@@ -74,11 +87,19 @@ namespace SPTBeltArmbandInventory
 
                 for (int i = 0; i < PendingViews.Count; i++)
                 {
-                    if (!ReferenceEquals(PendingViews[i].View, view)) continue;
+                    object pendingView = PendingViews[i].View.Target;
+                    if (pendingView == null)
+                    {
+                        PendingViews.RemoveAt(i--);
+                        continue;
+                    }
+                    if (!ReferenceEquals(pendingView, view)) continue;
                     if (!added) PendingViews[i].RemovedContainer = item;
+                    RequestFlush?.Invoke();
                     return;
                 }
                 PendingViews.Add(new PendingRefresh(view, added ? null : item));
+                RequestFlush?.Invoke();
             }
             catch (Exception exception)
             {
@@ -88,14 +109,16 @@ namespace SPTBeltArmbandInventory
 
         internal static void Flush()
         {
-            if (PendingViews.Count == 0 || ControllerField == null || ItemUiContextField == null || ShowMethod == null) return;
+            if (PendingViews.Count == 0) return;
 
             PendingRefresh[] pending = PendingViews.ToArray();
             PendingViews.Clear();
+            if (ControllerField == null || ItemUiContextField == null || ShowMethod == null) return;
             for (int i = 0; i < pending.Length; i++)
             {
                 PendingRefresh refresh = pending[i];
-                object view = refresh.View;
+                object view = refresh.View.Target;
+                if (view == null) continue;
                 try
                 {
                     object controller = ControllerField.GetValue(view);
@@ -118,14 +141,25 @@ namespace SPTBeltArmbandInventory
 
             object inventory = ReflectionTools.ReadMember(controller, "Inventory");
             object equipment = ReflectionTools.ReadMember(inventory, "Equipment");
-            if (equipment == null) return;
+            object selectedOwner = ResolveSelectedGrenadeOwner(controller, inventory, equipment, TopPriorityGrenadeProperty);
+            if (selectedOwner == null) return;
 
-            object selected = TopPriorityGrenadeProperty.GetValue(equipment, null);
+            object selected = TopPriorityGrenadeProperty.GetValue(selectedOwner, null);
             if (selected == null) return;
 
             IEnumerable items = GetTopLevelItemsMethod.Invoke(null, new[] { removedContainer }) as IEnumerable;
             bool belongs = ContainsReference(items, selected);
-            if (FastAccessBeltSyncPolicy.ShouldClearSelected(true, belongs)) TopPriorityGrenadeProperty.SetValue(equipment, null, null);
+            if (FastAccessBeltSyncPolicy.ShouldClearSelected(true, belongs)) TopPriorityGrenadeProperty.SetValue(selectedOwner, null, null);
+        }
+
+        static object ResolveSelectedGrenadeOwner(object controller, object inventory, object equipment, PropertyInfo property)
+        {
+            Type declaringType = property == null ? null : property.DeclaringType;
+            if (declaringType == null) return null;
+            if (equipment != null && declaringType.IsInstanceOfType(equipment)) return equipment;
+            if (inventory != null && declaringType.IsInstanceOfType(inventory)) return inventory;
+            if (controller != null && declaringType.IsInstanceOfType(controller)) return controller;
+            return null;
         }
 
         static bool ContainsReference(IEnumerable items, object target)
@@ -142,6 +176,7 @@ namespace SPTBeltArmbandInventory
         {
             PendingViews.Clear();
             LogWarning = null;
+            RequestFlush = null;
             ControllerField = null;
             ItemUiContextField = null;
             ShowMethod = null;
@@ -186,15 +221,39 @@ namespace SPTBeltArmbandInventory
                 if (harmonyType == null || harmonyMethodType == null || viewType == null || equipmentType == null)
                     return Fail("SPT 4.1 FastAccessGrenadeItemView/InventoryEquipment or Harmony was not found; live belt grenade synchronization is disabled.");
 
-                MethodInfo added = viewType.GetMethod("OnItemAdded", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                MethodInfo removed = viewType.GetMethod("OnItemRemoved", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                MethodInfo added = FindHandler(viewType, "IAddHandler", "OnItemAdded");
+                MethodInfo removed = FindHandler(viewType, "IRemoveHandler", "OnItemRemoved");
                 MethodInfo show = FindShowMethod(viewType);
-                FieldInfo controller = FindField(viewType, "InventoryController");
-                FieldInfo context = FindField(viewType, "ItemUiContext");
-                PropertyInfo topPriority = equipmentType.GetProperty("TopPriorityGrenade", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                ParameterInfo[] showParameters = show == null ? Array.Empty<ParameterInfo>() : show.GetParameters();
+                FieldInfo controller = showParameters.Length == 2 ? FindField(viewType, showParameters[0].ParameterType, "InventoryController") : null;
+                FieldInfo context = showParameters.Length == 2 ? FindField(viewType, showParameters[1].ParameterType, "ItemUiContext") : null;
+                PropertyInfo topPriority = FindTopPriorityGrenadeProperty(viewType.Assembly, equipmentType);
                 MethodInfo topLevelItems = FindTopLevelItemsMethod(viewType.Assembly);
-                if (added == null || removed == null || show == null || controller == null || context == null || topPriority == null || !topPriority.CanRead || !topPriority.CanWrite || topLevelItems == null)
-                    return Fail("SPT 4.1 grenade fast-access event/selection shape changed; live belt grenade synchronization is disabled.");
+                if (added == null || removed == null || show == null || controller == null || context == null)
+                    return Fail("SPT 4.1 grenade fast-access boundary is incomplete; live belt grenade synchronization is disabled."
+                        + " added=" + Describe(added)
+                        + ", removed=" + Describe(removed)
+                        + ", show=" + Describe(show)
+                        + ", controller=" + Describe(controller)
+                        + ", context=" + Describe(context)
+                        + ", topPriority=" + Describe(topPriority)
+                        + ", topLevelItems=" + Describe(topLevelItems) + ".");
+
+                if (topPriority == null || !topPriority.CanRead || !topPriority.CanWrite || topLevelItems == null)
+                {
+                    string degradedTopPriority = Describe(topPriority);
+                    string degradedTopLevelItems = Describe(topLevelItems);
+                    topPriority = null;
+                    topLevelItems = null;
+                    if (logWarning != null)
+                        logWarning("SPT 4.1 grenade fast-access selected-grenade boundary was not found; live ArmBand refresh will install without selected grenade cleanup on removal."
+                            + " topPriority=" + degradedTopPriority
+                            + ", topLevelItems=" + degradedTopLevelItems + ".");
+                }
+                else if (logInfo != null)
+                {
+                    logInfo("B&A&HB selected grenade boundary resolved at " + Describe(topPriority) + ".");
+                }
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
@@ -250,11 +309,65 @@ namespace SPTBeltArmbandInventory
             return null;
         }
 
+        internal static MethodInfo FindHandler(Type viewType, string interfaceName, string methodName)
+        {
+            if (viewType == null || string.IsNullOrEmpty(interfaceName) || string.IsNullOrEmpty(methodName)) return null;
+
+            Type[] interfaces;
+            try { interfaces = viewType.GetInterfaces(); }
+            catch { interfaces = Array.Empty<Type>(); }
+            for (int i = 0; i < interfaces.Length; i++)
+            {
+                Type contract = interfaces[i];
+                if (!string.Equals(contract.Name, interfaceName, StringComparison.Ordinal)
+                    && !EndsWith(contract.FullName, "." + interfaceName)) continue;
+
+                InterfaceMapping map;
+                try { map = viewType.GetInterfaceMap(contract); }
+                catch { continue; }
+                for (int p = 0; p < map.InterfaceMethods.Length; p++)
+                    if (EndsWith(map.InterfaceMethods[p].Name, methodName)) return map.TargetMethods[p];
+            }
+
+            MethodInfo[] methods;
+            try { methods = viewType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic); }
+            catch { return null; }
+            for (int i = 0; i < methods.Length; i++)
+                if (EndsWith(methods[i].Name, methodName) && methods[i].GetParameters().Length > 0) return methods[i];
+            return null;
+        }
+
+        static PropertyInfo FindTopPriorityGrenadeProperty(Assembly assembly, Type equipmentType)
+        {
+            PropertyInfo direct = FindProperty(equipmentType, "TopPriorityGrenade");
+            if (IsUsableProperty(direct)) return direct;
+
+            PropertyInfo only = null;
+            int matches = 0;
+            Type[] types = ReflectionTools.GetTypes(assembly);
+            for (int i = 0; i < types.Length; i++)
+            {
+                Type type = types[i];
+                if (type == null) continue;
+                PropertyInfo property;
+                try { property = type.GetProperty("TopPriorityGrenade", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly); }
+                catch { continue; }
+                if (!IsUsableProperty(property)) continue;
+                if (equipmentType != null && property.DeclaringType != null && property.DeclaringType.IsAssignableFrom(equipmentType)) return property;
+                only = property;
+                matches++;
+            }
+            return matches == 1 ? only : null;
+        }
+
+        static bool IsUsableProperty(PropertyInfo property)
+        {
+            return property != null && property.CanRead && property.CanWrite && property.GetIndexParameters().Length == 0;
+        }
+
         static MethodInfo FindTopLevelItemsMethod(Assembly assembly)
         {
-            Type[] types;
-            try { types = assembly.GetTypes(); }
-            catch (ReflectionTypeLoadException exception) { types = exception.Types; }
+            Type[] types = ReflectionTools.GetTypes(assembly);
 
             for (int i = 0; i < types.Length; i++)
             {
@@ -266,7 +379,7 @@ namespace SPTBeltArmbandInventory
                 for (int p = 0; p < methods.Length; p++)
                 {
                     MethodInfo method = methods[p];
-                    if (!string.Equals(method.Name, "GetTopLevelItemsFromCollection", StringComparison.Ordinal)) continue;
+                    if (!EndsWith(method.Name, "GetTopLevelItemsFromCollection")) continue;
                     ParameterInfo[] parameters = method.GetParameters();
                     if (parameters.Length != 1 || !typeof(IEnumerable).IsAssignableFrom(method.ReturnType)) continue;
                     return method;
@@ -275,14 +388,46 @@ namespace SPTBeltArmbandInventory
             return null;
         }
 
-        static FieldInfo FindField(Type type, string name)
+        internal static FieldInfo FindField(Type type, Type valueType, string preferredName)
+        {
+            FieldInfo match = null;
+            int matches = 0;
+            for (Type current = type; current != null; current = current.BaseType)
+            {
+                FieldInfo[] fields;
+                try { fields = current.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly); }
+                catch { continue; }
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    FieldInfo field = fields[i];
+                    if (valueType == null || !valueType.IsAssignableFrom(field.FieldType)) continue;
+                    if (string.Equals(field.Name, preferredName, StringComparison.Ordinal)
+                        || field.Name.IndexOf(preferredName, StringComparison.Ordinal) >= 0) return field;
+                    match = field;
+                    matches++;
+                }
+            }
+            return matches == 1 ? match : null;
+        }
+
+        static PropertyInfo FindProperty(Type type, string name)
         {
             for (Type current = type; current != null; current = current.BaseType)
             {
-                FieldInfo field = current.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                if (field != null) return field;
+                PropertyInfo property = current.GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                if (property != null) return property;
             }
             return null;
+        }
+
+        static bool EndsWith(string value, string suffix)
+        {
+            return value != null && value.EndsWith(suffix, StringComparison.Ordinal);
+        }
+
+        static string Describe(MemberInfo member)
+        {
+            return member == null ? "<missing>" : member.DeclaringType?.FullName + "." + member.Name;
         }
 
         static MethodInfo Method(string name)

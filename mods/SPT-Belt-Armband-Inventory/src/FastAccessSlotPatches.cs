@@ -9,27 +9,23 @@ namespace SPTBeltArmbandInventory
         internal static string[] Extend(string[] source)
         {
             if (source == null) return null;
+            string[] result = CopyAppendUnique(source, BeltSlotPlan.ArmBand);
+            result = CopyAppendUnique(result, RuntimeIdentity.DedicatedBeltWireSlotId);
+            return result;
+        }
 
-            int existing = -1;
+        static string[] CopyAppendUnique(string[] source, string value)
+        {
             for (int i = 0; i < source.Length; i++)
-            {
-                if (string.Equals(source[i], BeltSlotPlan.ArmBand, StringComparison.Ordinal))
+                if (string.Equals(source[i], value, StringComparison.Ordinal))
                 {
-                    existing = i;
-                    break;
+                    string[] copy = new string[source.Length];
+                    Array.Copy(source, copy, source.Length);
+                    return copy;
                 }
-            }
-
-            if (existing >= 0)
-            {
-                string[] copy = new string[source.Length];
-                Array.Copy(source, copy, source.Length);
-                return copy;
-            }
-
             string[] result = new string[source.Length + 1];
             Array.Copy(source, result, source.Length);
-            result[result.Length - 1] = BeltSlotPlan.ArmBand;
+            result[result.Length - 1] = value;
             return result;
         }
 
@@ -66,20 +62,21 @@ namespace SPTBeltArmbandInventory
                 Type inventoryType = ReflectionTools.FindType("EFT.InventoryLogic.Inventory");
                 Type slotEnumType = ReflectionTools.FindType("EFT.InventoryLogic.EquipmentSlot");
                 if (inventoryType == null || slotEnumType == null)
-                    return Fail("SPT 4.1 Inventory/EquipmentSlot was not found; belt fast-access slot compatibility is disabled.");
+                    return Fail("SPT 4.1 Inventory/EquipmentSlot was not found; wearable fast-access slot compatibility is disabled.");
 
                 fastAccessSlotsField = inventoryType.GetField("FastAccessSlots", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
                 bindAvailableSlotsField = inventoryType.GetField("BindAvailableSlotsExtended", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
                 if (!IsSlotArray(fastAccessSlotsField, slotEnumType) || !IsSlotArray(bindAvailableSlotsField, slotEnumType))
-                    return Fail("SPT 4.1 fast-access slot arrays changed shape; belt fast-access slot compatibility is disabled.");
+                    return Fail("SPT 4.1 fast-access slot arrays changed shape; wearable fast-access compatibility is disabled.");
 
                 object armBand = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand, false);
+                object dedicatedBelt = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedBeltEquipmentSlotValue);
                 originalFastAccessSlots = fastAccessSlotsField.GetValue(null);
                 originalBindAvailableSlots = bindAvailableSlotsField.GetValue(null);
-                installedFastAccessSlots = AppendSlot(originalFastAccessSlots as Array, slotEnumType, armBand);
-                installedBindAvailableSlots = AppendSlot(originalBindAvailableSlots as Array, slotEnumType, armBand);
+                installedFastAccessSlots = AppendSlots(originalFastAccessSlots as Array, slotEnumType, armBand, dedicatedBelt);
+                installedBindAvailableSlots = AppendSlots(originalBindAvailableSlots as Array, slotEnumType, armBand, dedicatedBelt);
                 if (installedFastAccessSlots == null || installedBindAvailableSlots == null)
-                    return Fail("SPT 4.1 fast-access slot arrays could not be extended safely; belt fast-access slot compatibility is disabled.");
+                    return Fail("SPT 4.1 fast-access slot arrays could not be extended safely; wearable fast-access compatibility is disabled.");
 
                 fastAccessSlotsField.SetValue(null, installedFastAccessSlots);
                 wroteFastAccessSlots = true;
@@ -87,14 +84,14 @@ namespace SPTBeltArmbandInventory
                 wroteBindAvailableSlots = true;
                 installed = true;
 
-                if (logInfo != null) logInfo("Belt/Armband Inventory fast-access/reachability slot compatibility installed.");
+                logInfo?.Invoke("B&A&HB fast-access/reachability compatibility installed for vanilla ArmBand and dedicated Belt pseudo-slot 15.");
                 return true;
             }
             catch (Exception exception)
             {
                 RestoreOwnedWrites();
                 ClearState();
-                return Fail("Belt fast-access slot compatibility installation failed safely: " + Unwrap(exception).Message);
+                return Fail("Wearable fast-access slot compatibility installation failed safely: " + Unwrap(exception).Message);
             }
         }
 
@@ -103,23 +100,26 @@ namespace SPTBeltArmbandInventory
             return field != null && field.FieldType.IsArray && field.FieldType.GetElementType() == slotEnumType;
         }
 
-        static Array AppendSlot(Array source, Type slotEnumType, object armBand)
+        static Array AppendSlots(Array source, Type slotEnumType, params object[] additions)
         {
-            if (source == null || slotEnumType == null || armBand == null) return null;
-
-            for (int i = 0; i < source.Length; i++)
+            if (source == null || slotEnumType == null || additions == null) return null;
+            int unique = 0;
+            for (int a = 0; a < additions.Length; a++)
             {
-                if (Equals(source.GetValue(i), armBand))
-                {
-                    Array clone = Array.CreateInstance(slotEnumType, source.Length);
-                    Array.Copy(source, clone, source.Length);
-                    return clone;
-                }
+                bool exists = false;
+                for (int i = 0; i < source.Length; i++) if (Equals(source.GetValue(i), additions[a])) { exists = true; break; }
+                if (!exists) unique++;
             }
 
-            Array result = Array.CreateInstance(slotEnumType, source.Length + 1);
+            Array result = Array.CreateInstance(slotEnumType, source.Length + unique);
             Array.Copy(source, result, source.Length);
-            result.SetValue(armBand, source.Length);
+            int write = source.Length;
+            for (int a = 0; a < additions.Length; a++)
+            {
+                bool exists = false;
+                for (int i = 0; i < write; i++) if (Equals(result.GetValue(i), additions[a])) { exists = true; break; }
+                if (!exists) result.SetValue(additions[a], write++);
+            }
             return result;
         }
 
@@ -129,9 +129,7 @@ namespace SPTBeltArmbandInventory
             {
                 if (wroteBindAvailableSlots && bindAvailableSlotsField != null && originalBindAvailableSlots != null &&
                     FastAccessSlotPolicy.ShouldRestoreReference(bindAvailableSlotsField.GetValue(null), installedBindAvailableSlots))
-                {
                     bindAvailableSlotsField.SetValue(null, originalBindAvailableSlots);
-                }
             }
             catch { }
 
@@ -139,18 +137,12 @@ namespace SPTBeltArmbandInventory
             {
                 if (wroteFastAccessSlots && fastAccessSlotsField != null && originalFastAccessSlots != null &&
                     FastAccessSlotPolicy.ShouldRestoreReference(fastAccessSlotsField.GetValue(null), installedFastAccessSlots))
-                {
                     fastAccessSlotsField.SetValue(null, originalFastAccessSlots);
-                }
             }
             catch { }
         }
 
-        bool Fail(string message)
-        {
-            if (logWarning != null) logWarning(message);
-            return false;
-        }
+        bool Fail(string message) { logWarning?.Invoke(message); return false; }
 
         public void Dispose()
         {
@@ -159,7 +151,6 @@ namespace SPTBeltArmbandInventory
                 ClearState();
                 return;
             }
-
             RestoreOwnedWrites();
             ClearState();
         }

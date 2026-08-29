@@ -1,40 +1,72 @@
 using System;
-using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace SPTBeltArmbandInventory
 {
     internal static class SlotMergePolicy
     {
-        internal static bool ShouldForce(string slotId)
+        internal static bool ShouldForce(string slotId, bool hasContainedItem, bool containedItemIsRegisteredWearable)
         {
-            return string.Equals(slotId, BeltSlotPlan.ArmBand, StringComparison.Ordinal);
+            if (!string.Equals(slotId, BeltSlotPlan.ArmBand, StringComparison.Ordinal)) return false;
+            return !hasContainedItem || containedItemIsRegisteredWearable;
         }
     }
 
     internal static class SlotMergeRuntime
     {
+        internal static object InheritFromItemValue;
         internal static Action<string> LogWarning;
+        static bool runtimeFailureLogged;
 
-        internal static void Prepare(object slot)
+        internal static void OverrideResult(object slot, ref object result)
         {
-            if (slot == null) return;
+            if (slot == null || InheritFromItemValue == null) return;
             try
             {
                 string id = ReflectionTools.ReadMember(slot, "ID") as string;
-                if (!SlotMergePolicy.ShouldForce(id)) return;
+                if (!string.Equals(id, BeltSlotPlan.ArmBand, StringComparison.Ordinal)) return;
 
-                Type type = slot.GetType();
-                FieldInfo field = type.GetField("<MergeContainerWithChildren>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
-                if (field == null || !field.FieldType.IsEnum) return;
-
-                object inherit = Enum.Parse(field.FieldType, "InheritFromItem", false);
-                if (!Equals(field.GetValue(slot), inherit)) field.SetValue(slot, inherit);
+                object containedItem = ReflectionTools.ReadMember(slot, "ContainedItem");
+                bool hasContainedItem = containedItem != null;
+                bool containedItemIsRegisteredWearable = hasContainedItem && IsRegisteredWearable(containedItem);
+                if (!SlotMergePolicy.ShouldForce(id, hasContainedItem, containedItemIsRegisteredWearable)) return;
+                result = InheritFromItemValue;
             }
             catch (Exception exception)
             {
-                if (LogWarning != null) LogWarning("Could not normalize ArmBand merge behavior: " + exception.Message);
+                if (!runtimeFailureLogged)
+                {
+                    runtimeFailureLogged = true;
+                    Exception root = Unwrap(exception);
+                    LogWarning?.Invoke("B&A&HB MERGE RUNTIME FAIL-CLOSED: " + root.GetType().FullName + ": " + root.Message
+                        + (string.IsNullOrEmpty(root.StackTrace) ? "" : "\n" + root.StackTrace));
+                }
             }
+        }
+
+        static bool IsRegisteredWearable(object item)
+        {
+            object stringTemplateId = ReflectionTools.ReadMember(item, "StringTemplateId");
+            if (stringTemplateId is string direct && WearableItemDescriptorRegistry.IsRegistered(direct)) return true;
+
+            object templateId = ReflectionTools.ReadMember(item, "TemplateId");
+            return templateId != null && WearableItemDescriptorRegistry.IsRegistered(templateId.ToString());
+        }
+
+        static Exception Unwrap(Exception exception)
+        {
+            Exception current = exception;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null)
+                current = invocation.InnerException;
+            return current;
+        }
+
+        internal static void Reset()
+        {
+            InheritFromItemValue = null;
+            LogWarning = null;
+            runtimeFailureLogged = false;
         }
     }
 
@@ -59,38 +91,98 @@ namespace SPTBeltArmbandInventory
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
                 Type slotType = ReflectionTools.FindType("EFT.InventoryLogic.Slot");
-                if (harmonyType == null || harmonyMethodType == null || slotType == null)
-                    return Fail("SPT 4.1 Slot or Harmony was not found; ArmBand merge compatibility is disabled.");
+                Type parentMergeType = ReflectionTools.FindType("EFT.InventoryLogic.EParentMergeType");
+                if (harmonyType == null || harmonyMethodType == null || slotType == null || parentMergeType == null)
+                    return Fail("SPT 4.1 Slot/EParentMergeType or Harmony was not found; ArmBand merge compatibility is disabled.");
 
-                PropertyInfo property = slotType.GetProperty("MergeContainerWithChildren", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                PropertyInfo property = ReflectionTools.FindInstanceProperty(slotType, "MergeContainerWithChildren", parentMergeType);
                 MethodInfo getter = property == null ? null : property.GetGetMethod(true);
-                FieldInfo backing = slotType.GetField("<MergeContainerWithChildren>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
-                if (getter == null || backing == null || !backing.FieldType.IsEnum || !Enum.GetNames(backing.FieldType).Contains("InheritFromItem"))
-                    return Fail("SPT 4.1 Slot.MergeContainerWithChildren shape changed; ArmBand merge compatibility is disabled.");
+                if (getter == null)
+                    return Fail("SPT 4.1 Slot.MergeContainerWithChildren getter shape changed; ArmBand merge compatibility is disabled.");
+
+                object inheritFromItem;
+                try { inheritFromItem = Enum.Parse(parentMergeType, "InheritFromItem", false); }
+                catch (Exception exception)
+                {
+                    LogException("B&A&HB MERGE ENUM", exception);
+                    return Fail("EParentMergeType.InheritFromItem was not found; ArmBand merge compatibility is disabled.");
+                }
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 ConstructorInfo hmCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
-                if (harmony == null || patchMethod == null || hmCtor == null)
-                    return Fail("Harmony patch API is incompatible; ArmBand merge compatibility is disabled.");
+                MethodInfo rollback = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
+                if (!HarmonyInstallPolicy.CanBegin(harmony != null, patchMethod != null, hmCtor != null, rollback != null))
+                    return Fail("Harmony patch/rollback API is incompatible; ArmBand merge compatibility is disabled.");
+                unpatchSelf = rollback;
 
+                SlotMergeRuntime.InheritFromItemValue = inheritFromItem;
                 SlotMergeRuntime.LogWarning = logWarning;
-                object prefix = hmCtor.Invoke(new object[] { Method(nameof(Prefix)) });
-                Patch(patchMethod, harmonyMethodType, getter, prefix);
-                unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
-                if (logInfo != null) logInfo("Belt/Armband Inventory slot merge compatibility installed.");
+                object hmPostfix = hmCtor.Invoke(new object[] { Method(nameof(PostfixFactory)) });
+                Patch(patchMethod, harmonyMethodType, getter, hmPostfix);
+
+                logInfo?.Invoke("ArmBand merge compatibility installed via registered-wearable-scoped MergeContainerWithChildren result override.");
                 return true;
             }
             catch (Exception exception)
             {
+                LogException("B&A&HB MERGE INSTALL", exception);
                 Dispose();
-                return Fail("ArmBand merge compatibility installation failed safely: " + exception.Message);
+                Exception root = Unwrap(exception);
+                return Fail("ArmBand merge compatibility installation failed safely: " + root.GetType().FullName + ": " + root.Message);
             }
         }
 
-        static void Prefix(object __instance) { SlotMergeRuntime.Prepare(__instance); }
+        static MethodInfo PostfixFactory(MethodBase original)
+        {
+            MethodInfo originalMethod = original as MethodInfo;
+            if (originalMethod == null || originalMethod.DeclaringType == null || originalMethod.ReturnType == typeof(void)) return null;
+            return BuildPostfix(originalMethod.DeclaringType, originalMethod.ReturnType);
+        }
 
-        static MethodInfo Method(string name) => typeof(SlotMergePatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
+        static MethodInfo BuildPostfix(Type slotType, Type parentMergeType)
+        {
+            DynamicMethod method = new DynamicMethod(
+                "ArmBandMergeContainerWithChildrenPostfix",
+                typeof(void),
+                new[] { slotType, parentMergeType.MakeByRefType() },
+                typeof(SlotMergePatches),
+                true);
+            method.DefineParameter(1, ParameterAttributes.None, "__instance");
+            method.DefineParameter(2, ParameterAttributes.None, "__result");
+
+            ILGenerator il = method.GetILGenerator();
+            LocalBuilder boxedResult = il.DeclareLocal(typeof(object));
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldobj, parentMergeType);
+            il.Emit(OpCodes.Box, parentMergeType);
+            il.Emit(OpCodes.Stloc, boxedResult);
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldloca_S, boxedResult);
+            il.Emit(OpCodes.Call, typeof(SlotMergeRuntime).GetMethod(nameof(SlotMergeRuntime.OverrideResult), BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public));
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldloc, boxedResult);
+            il.Emit(OpCodes.Unbox_Any, parentMergeType);
+            il.Emit(OpCodes.Stobj, parentMergeType);
+            il.Emit(OpCodes.Ret);
+            return method;
+        }
+
+        static MethodInfo Method(string name)
+        {
+            MethodInfo[] methods = typeof(SlotMergePatches).GetMethods(BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal)) return methods[i];
+            return null;
+        }
+
+        static MethodInfo FindZeroArgInstanceMethod(Type type, string name)
+        {
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            for (int i = 0; i < methods.Length; i++)
+                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal) && methods[i].GetParameters().Length == 0) return methods[i];
+            return null;
+        }
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
         {
@@ -100,29 +192,45 @@ namespace SPTBeltArmbandInventory
                 ParameterInfo[] parameters = method.GetParameters();
                 if (parameters.Length < 2 || !typeof(MethodBase).IsAssignableFrom(parameters[0].ParameterType)) continue;
                 for (int i = 1; i < parameters.Length; i++)
-                    if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "prefix", StringComparison.OrdinalIgnoreCase)) return method;
+                    if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) return method;
             }
             return null;
         }
 
-        void Patch(MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, object prefix)
+        void Patch(MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, object postfix)
         {
             ParameterInfo[] parameters = patchMethod.GetParameters();
             object[] args = new object[parameters.Length];
             args[0] = original;
             for (int i = 1; i < parameters.Length; i++)
-                if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "prefix", StringComparison.OrdinalIgnoreCase)) args[i] = prefix;
+                if (parameters[i].ParameterType == harmonyMethodType && string.Equals(parameters[i].Name, "postfix", StringComparison.OrdinalIgnoreCase)) args[i] = postfix;
             patchMethod.Invoke(harmony, args);
         }
 
-        bool Fail(string message) { if (logWarning != null) logWarning(message); return false; }
+        static Exception Unwrap(Exception exception)
+        {
+            Exception current = exception;
+            while (current is TargetInvocationException invocation && invocation.InnerException != null)
+                current = invocation.InnerException;
+            return current;
+        }
+
+        void LogException(string prefix, Exception exception)
+        {
+            Exception root = Unwrap(exception);
+            logWarning?.Invoke(prefix + " exception type=" + root.GetType().FullName);
+            logWarning?.Invoke(prefix + " message=" + root.Message);
+            if (!string.IsNullOrEmpty(root.StackTrace)) logWarning?.Invoke(prefix + " stack=" + root.StackTrace);
+        }
+
+        bool Fail(string message) { logWarning?.Invoke(message); return false; }
 
         public void Dispose()
         {
             try { if (harmony != null && unpatchSelf != null) unpatchSelf.Invoke(harmony, null); } catch { }
             harmony = null;
             unpatchSelf = null;
-            SlotMergeRuntime.LogWarning = null;
+            SlotMergeRuntime.Reset();
         }
     }
 }
