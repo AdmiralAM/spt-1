@@ -23,6 +23,7 @@ public sealed class WristWalletAssort(
         var templateId = new MongoId(RuntimeIdentity.WristWalletItemId);
         if (!templateTable.Items.ContainsKey(templateId))
             throw new InvalidOperationException("B&A&HB Wrist Wallet offer refused: exact product template is not registered.");
+        WearableOfferHostContract.RequireArmBandProduct(templateTable, templateId);
 
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB Wrist Wallet could not find Ragman.");
