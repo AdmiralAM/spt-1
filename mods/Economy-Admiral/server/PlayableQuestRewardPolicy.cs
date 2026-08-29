@@ -45,7 +45,16 @@ public static class PlayableQuestRewardPolicy
         var quests = analysis.Quests
             .Select(row => row with
             {
-                ObservationalFlags = AddRestartableStandingFlags(row, enforcementPolicy)
+                ObservationalFlags = QuestRewardPressureClassifier.Reclassify(new QuestRewardPressureSignals
+                    {
+                        Restartable = row.Restartable,
+                        HandbookValueVsVanillaMedian = row.HandbookValueVsVanillaMedian,
+                        XpVsVanillaMedian = row.XpVsVanillaMedian,
+                        StandingVsVanillaMedian = row.StandingVsVanillaMedian,
+                        PrerequisiteDepthVsVanillaMedian = row.PrerequisiteDepthVsVanillaMedian,
+                        StructuredConstraintsVsVanillaMedian = row.StructuredConstraintsVsVanillaMedian,
+                        ExistingFlags = row.ObservationalFlags,
+                    }, enforcementPolicy)
                     .Where(flag => QuestMechanismGate.AutomaticFlagEnabled(config, row.Restartable, flag))
                     .Distinct(StringComparer.Ordinal)
                     .ToList(),
@@ -62,24 +71,9 @@ public static class PlayableQuestRewardPolicy
             Policy = enforcementPolicy,
             Quests = quests,
             FlagCounts = flagCounts,
-            Note = $"{analysis.Note} Enforcement uses {playable.PolicyId} caps independently of observational outlier thresholds. " +
+            Note = $"{analysis.Note} Enforcement uses {playable.PolicyId} caps independently of observational outlier thresholds and reclassifies reward-pressure flags against those caps before mutation planning. " +
                    $"Automatic quest mechanisms: items={config.EnableItemRewardStackNormalization}, xp={config.EnableQuestXpPressure}, " +
                    $"standing={config.EnableQuestStandingPressure}, restartable={config.EnableRestartableQuestPressure}.",
         };
-    }
-
-    private static IEnumerable<string> AddRestartableStandingFlags(QuestAnalysisRow row, AuditPolicy policy)
-    {
-        foreach (var flag in row.ObservationalFlags)
-            yield return flag;
-
-        foreach (var flag in RestartableStandingPressureCore.EnforcementFlags(
-                     row.Restartable,
-                     row.StandingVsVanillaMedian,
-                     policy.RestartableHighStandingWarnMultiple))
-        {
-            if (!row.ObservationalFlags.Contains(flag, StringComparer.Ordinal))
-                yield return flag;
-        }
     }
 }
