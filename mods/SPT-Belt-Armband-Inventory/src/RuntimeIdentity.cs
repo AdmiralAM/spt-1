@@ -35,6 +35,13 @@ namespace SPTBeltArmbandInventory
         // New post-stable persistent identity: cigarettes-only HeadBand grid.
         internal const string EmergencyHeadBandCigarettesGridId = "68ac00000000000000000012";
 
+        // Dogtag Case is a container item hosted by the vanilla Dogtag equipment
+        // slot, not a new pseudo-slot. These IDs are new immutable profile-facing
+        // identities and must remain distinct from every wearable identity above.
+        internal const string DogtagCaseItemId = "68ac00000000000000000013";
+        internal const string DogtagCaseGridId = "68ac00000000000000000014";
+        internal const string DogtagCaseAssortId = "68ac00000000000000000015";
+
         internal const int CandidateGridColumns = 1;
         internal const int CandidateGridRows = 2;
         internal const int WristWalletGridColumns = 1;
