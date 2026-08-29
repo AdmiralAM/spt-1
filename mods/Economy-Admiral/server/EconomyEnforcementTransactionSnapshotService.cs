@@ -49,7 +49,7 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
                     entries.Add(new(
                         $"quest:{questPair.Key}:reward-value",
                         () => reward.Value = rewardValue,
-                        () => Nullable.Equals(reward.Value, rewardValue)));
+                        () => object.Equals(reward.Value, rewardValue)));
 
                     if (reward.Items is null)
                         continue;
@@ -61,7 +61,7 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
                         entries.Add(new(
                             $"quest:{questPair.Key}:item-stack:{item.Template}",
                             () => item.Upd.StackObjectsCount = stackCount,
-                            () => Nullable.Equals(item.Upd.StackObjectsCount, stackCount)));
+                            () => object.Equals(item.Upd.StackObjectsCount, stackCount)));
                     }
                 }
             }
@@ -89,7 +89,7 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
                         entries.Add(new(
                             $"trader:{traderPair.Key}:offer:{offerPair.Key}:requirement:{requirement.Template}",
                             () => requirement.Count = count,
-                            () => Nullable.Equals(requirement.Count, count)));
+                            () => object.Equals(requirement.Count, count)));
                     }
                 }
             }
@@ -103,14 +103,15 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
             var loyaltyLevels = traderPair.Value.Base.LoyaltyLevels;
             if (loyaltyLevels is null)
                 continue;
-            for (var index = 0; index < loyaltyLevels.Length; index++)
+            var index = 0;
+            foreach (var loyalty in loyaltyLevels)
             {
-                var loyalty = loyaltyLevels[index];
+                var capturedIndex = index++;
                 var coefficient = loyalty.BuyPriceCoefficient;
                 entries.Add(new(
-                    $"trader:{traderPair.Key}:loyalty:{index}:buy-price-coefficient",
+                    $"trader:{traderPair.Key}:loyalty:{capturedIndex}:buy-price-coefficient",
                     () => loyalty.BuyPriceCoefficient = coefficient,
-                    () => Nullable.Equals(loyalty.BuyPriceCoefficient, coefficient)));
+                    () => object.Equals(loyalty.BuyPriceCoefficient, coefficient)));
             }
         }
     }
@@ -121,7 +122,7 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
         var adjustment = ragfair.Dynamic.OfferAdjustment;
 
         var priceMultiplier = generate.PriceMultiplier;
-        entries.Add(new("flea:generate:price-multiplier", () => generate.PriceMultiplier = priceMultiplier, () => generate.PriceMultiplier.Equals(priceMultiplier)));
+        entries.Add(new("flea:generate:price-multiplier", () => generate.PriceMultiplier = priceMultiplier, () => object.Equals(generate.PriceMultiplier, priceMultiplier)));
 
         var preventBelowTrader = generate.PreventPriceBeingBelowTraderBuyPrice;
         entries.Add(new("flea:generate:prevent-below-trader", () => generate.PreventPriceBeingBelowTraderBuyPrice = preventBelowTrader, () => generate.PreventPriceBeingBelowTraderBuyPrice == preventBelowTrader));
@@ -130,20 +131,20 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
         entries.Add(new("flea:adjust:below-handbook-enabled", () => adjustment.AdjustPriceWhenBelowHandbookPrice = adjustBelowHandbook, () => adjustment.AdjustPriceWhenBelowHandbookPrice == adjustBelowHandbook));
 
         var maxDifference = adjustment.MaxPriceDifferenceBelowHandbookPercent;
-        entries.Add(new("flea:adjust:max-below-handbook", () => adjustment.MaxPriceDifferenceBelowHandbookPercent = maxDifference, () => adjustment.MaxPriceDifferenceBelowHandbookPercent.Equals(maxDifference)));
+        entries.Add(new("flea:adjust:max-below-handbook", () => adjustment.MaxPriceDifferenceBelowHandbookPercent = maxDifference, () => object.Equals(adjustment.MaxPriceDifferenceBelowHandbookPercent, maxDifference)));
 
         var handbookMultiplier = adjustment.HandbookPriceMultiplier;
-        entries.Add(new("flea:adjust:handbook-multiplier", () => adjustment.HandbookPriceMultiplier = handbookMultiplier, () => adjustment.HandbookPriceMultiplier.Equals(handbookMultiplier)));
+        entries.Add(new("flea:adjust:handbook-multiplier", () => adjustment.HandbookPriceMultiplier = handbookMultiplier, () => object.Equals(adjustment.HandbookPriceMultiplier, handbookMultiplier)));
     }
 
     private void CaptureFleaListingFees(List<EconomyRollbackEntry> entries)
     {
         var globalRagfair = globalTable.Configuration.RagFair;
         var itemTax = globalRagfair.CommunityItemTax;
-        entries.Add(new("flea:tax:item", () => globalRagfair.CommunityItemTax = itemTax, () => globalRagfair.CommunityItemTax.Equals(itemTax)));
+        entries.Add(new("flea:tax:item", () => globalRagfair.CommunityItemTax = itemTax, () => object.Equals(globalRagfair.CommunityItemTax, itemTax)));
 
         var requirementTax = globalRagfair.CommunityRequirementTax;
-        entries.Add(new("flea:tax:requirement", () => globalRagfair.CommunityRequirementTax = requirementTax, () => globalRagfair.CommunityRequirementTax.Equals(requirementTax)));
+        entries.Add(new("flea:tax:requirement", () => globalRagfair.CommunityRequirementTax = requirementTax, () => object.Equals(globalRagfair.CommunityRequirementTax, requirementTax)));
     }
 
     private void CaptureLootMultipliers(List<EconomyRollbackEntry> entries, EconomyConfig config)
@@ -157,7 +158,7 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
                 entries.Add(new(
                     $"loot:loose:{key}",
                     () => locationConfig.LooseLootMultiplier[key] = value,
-                    () => locationConfig.LooseLootMultiplier.TryGetValue(key, out var current) && current.Equals(value)));
+                    () => locationConfig.LooseLootMultiplier.TryGetValue(key, out var current) && object.Equals(current, value)));
             }
         }
 
@@ -170,7 +171,7 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
                 entries.Add(new(
                     $"loot:static:{key}",
                     () => locationConfig.StaticLootMultiplier[key] = value,
-                    () => locationConfig.StaticLootMultiplier.TryGetValue(key, out var current) && current.Equals(value)));
+                    () => locationConfig.StaticLootMultiplier.TryGetValue(key, out var current) && object.Equals(current, value)));
             }
         }
     }
