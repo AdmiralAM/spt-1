@@ -15,7 +15,8 @@ public static class PersistentIdentityManifest
         RuntimeIdentity.CandidateItemId,
         RuntimeIdentity.WristWalletItemId,
         RuntimeIdentity.DedicatedMagazineBeltItemId,
-        RuntimeIdentity.EmergencyHeadBandItemId
+        RuntimeIdentity.EmergencyHeadBandItemId,
+        RuntimeIdentity.DogtagCaseItemId
     ];
 
     public static readonly string[] ParentIds =
@@ -31,7 +32,8 @@ public static class PersistentIdentityManifest
         RuntimeIdentity.WristWalletGridId,
         RuntimeIdentity.DedicatedMagazineBeltGridId,
         RuntimeIdentity.EmergencyHeadBandGridId,
-        RuntimeIdentity.EmergencyHeadBandCigarettesGridId
+        RuntimeIdentity.EmergencyHeadBandCigarettesGridId,
+        RuntimeIdentity.DogtagCaseGridId
     ];
 
     public static readonly string[] AssortIds =
@@ -39,7 +41,8 @@ public static class PersistentIdentityManifest
         RuntimeIdentity.CandidateAssortId,
         RuntimeIdentity.WristWalletAssortId,
         RuntimeIdentity.DedicatedMagazineBeltAssortId,
-        RuntimeIdentity.EmergencyHeadBandAssortId
+        RuntimeIdentity.EmergencyHeadBandAssortId,
+        RuntimeIdentity.DogtagCaseAssortId
     ];
 
     public static readonly string[] SlotIds =
