@@ -45,6 +45,9 @@ public sealed class DedicatedWearableAssort(
             var existing = trader.Assort.Items.FirstOrDefault(x => x.Id == assortId);
             if (existing == null)
             {
+                if (trader.Assort.BarterScheme.ContainsKey(assortId) || trader.Assort.LoyalLevelItems.ContainsKey(assortId))
+                    throw new InvalidOperationException($"B&A&HB dedicated {label} assort ID collision: item is absent but barter/loyalty metadata already owns the persistent assort ID.");
+
                 trader.Assort.Items.Add(new Item
                 {
                     Id = assortId,
@@ -53,8 +56,8 @@ public sealed class DedicatedWearableAssort(
                     SlotId = RuntimeCandidateOfferContract.RootId,
                     Upd = new Upd { UnlimitedCount = true, StackObjectsCount = UnlimitedStock }
                 });
-                trader.Assort.BarterScheme[assortId] = [[new BarterScheme { Count = price, Template = Money.ROUBLES }]];
-                trader.Assort.LoyalLevelItems[assortId] = loyaltyLevel;
+                trader.Assort.BarterScheme.Add(assortId, [[new BarterScheme { Count = price, Template = Money.ROUBLES }]]);
+                trader.Assort.LoyalLevelItems.Add(assortId, loyaltyLevel);
                 return;
             }
 
