@@ -3,6 +3,7 @@
   "preset": "Normal",
   "reportRelativePath": "reports/economy-admiral-audit.json",
   "repeatedRaidLootDecay": false,
+  "enablePlayableEconomyBundle": true,
   "enableItemRewardStackNormalization": false,
   "enableTraderPurchasePressure": false,
   "customTraderPurchasePriceMultiplier": 1.15,
