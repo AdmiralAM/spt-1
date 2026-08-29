@@ -70,17 +70,39 @@ exit 0
     } | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-runtime-evidence.json') -Encoding UTF8
 
     $validator = Join-Path $PSScriptRoot 'Validate-Beta.ps1'
-    & pwsh -NoProfile -File $validator -ModPath $root
-    if ($LASTEXITCODE -ne 0) { throw "positive Beta validator fixture failed" }
 
+    # Installed + supported Trader must PASS under the strict adapter contract.
+    & pwsh -NoProfile -File $validator -ModPath $root
+    if ($LASTEXITCODE -ne 0) { throw "installed supported Trader Beta fixture failed" }
+
+    # Trader absent is a valid standalone Economy Admiral RC state.
+    $source.LoadedAdapterCount = 0
+    $source.LoadedAdapters = @()
+    $source | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-source-pressure.json') -Encoding UTF8
+    $adapter.Installed = $false
+    $adapter.ContractAvailable = $false
+    $adapter.ContractState = 'NotInstalled'
+    $adapter.GameplayPolicySchemaVersion = 0
+    $adapter.OfferCount = 0
+    $adapter.BaselineOfferCount = 0
+    $adapter.RelationshipOfferCount = 0
+    $adapter.MilestoneOfferCount = 0
+    $adapter.BoundedRenewableOfferCount = 0
+    $adapter.Offers = @()
+    $adapter | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-admiral-trader-adapter.json') -Encoding UTF8
+    & pwsh -NoProfile -File $validator -ModPath $root
+    if ($LASTEXITCODE -ne 0) { throw "standalone Economy Admiral fixture without Trader failed" }
+
+    # If Trader is installed, unsupported/missing contract must remain fail-closed.
+    $adapter.Installed = $true
     $adapter.ContractAvailable = $false
     $adapter.ContractState = 'ContractUnsupported'
     $adapter | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $reports 'economy-admiral-admiral-trader-adapter.json') -Encoding UTF8
     $negativeOutput = & pwsh -NoProfile -File $validator -ModPath $root 2>&1 | Out-String
-    if ($LASTEXITCODE -eq 0) { throw "incompatible Trader contract did not fail Beta validator" }
+    if ($LASTEXITCODE -eq 0) { throw "incompatible installed Trader contract did not fail Beta validator" }
     if ($negativeOutput -notmatch 'BETA FAIL') { throw "negative Beta validator fixture did not emit explicit failure" }
 
-    Write-Host 'Economy Admiral Beta validator smoke PASS'
+    Write-Host 'Economy Admiral Beta validator optional-Trader smoke PASS'
 }
 finally {
     Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
