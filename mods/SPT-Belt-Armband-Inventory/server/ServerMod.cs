@@ -33,14 +33,16 @@ public sealed class BeltServerRegistration(
         cancellationToken.ThrowIfCancellationRequested();
 
         IRuntimePatch[] patches = runtimePatches.ToArray();
-        IRuntimePatch? deathPatch = patches.SingleOrDefault(patch => patch is IsItemKeptAfterDeathPatch);
-        IRuntimePatch? insurancePatch = patches.SingleOrDefault(patch => patch is HandleInsuredItemLostEventPatch);
-        if (deathPatch is null || insurancePatch is null)
+        IRuntimePatch[] deathMatches = patches.Where(patch => patch is IsItemKeptAfterDeathPatch).Take(2).ToArray();
+        IRuntimePatch[] insuranceMatches = patches.Where(patch => patch is HandleInsuredItemLostEventPatch).Take(2).ToArray();
+        if (deathMatches.Length != 1 || insuranceMatches.Length != 1)
         {
-            logger.Warning("B&A&HB #2 server protection patches were not both resolved by SPT 4.1 DI; death/insurance protection remains disabled as one atomic feature.");
+            logger.Warning($"B&A&HB #2 server protection patches were not uniquely resolved by SPT 4.1 DI (death={deathMatches.Length}, insurance={insuranceMatches.Length}); death/insurance protection remains disabled as one atomic feature.");
             return Task.CompletedTask;
         }
 
+        IRuntimePatch deathPatch = deathMatches[0];
+        IRuntimePatch insurancePatch = insuranceMatches[0];
         var enabled = new List<IRuntimePatch>(2);
         try
         {
@@ -48,7 +50,7 @@ public sealed class BeltServerRegistration(
             enabled.Add(deathPatch);
             insurancePatch.Enable();
             enabled.Add(insurancePatch);
-            logger.Success("B&A&HB #2 server death + insurance protection patches installed atomically through SPT 4.1 DI.");
+            logger.Success("B&A&HB #2 server death + insurance protection patches installed atomically through uniquely-resolved SPT 4.1 DI bindings.");
         }
         catch (Exception exception)
         {
