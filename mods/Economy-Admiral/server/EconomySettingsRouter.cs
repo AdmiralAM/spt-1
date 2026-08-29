@@ -89,8 +89,8 @@ public sealed class EconomySettingsRouterCallback(
             await PersistValidatedAsync(updated, cancellationToken);
 
             var persisted = LoadPersistedConfig();
-            if (!Equals(updated, persisted))
-                throw new InvalidOperationException("Persisted Economy Admiral config did not round-trip to the requested settings.");
+            if (!PersistedConfigEquivalent(updated, persisted))
+                throw new InvalidOperationException("Persisted Economy Admiral config did not structurally round-trip to the requested settings.");
 
             logger.Info("[Economy Admiral] settings saved from client UI; changes apply after next SPT server restart.");
             return SerializeResponse(EconomySettingsSnapshot.From(persisted, restartRequired: true));
@@ -125,7 +125,7 @@ public sealed class EconomySettingsRouterCallback(
         var roundTrip = JsonSerializer.Deserialize<EconomyConfig>(serialized, ConfigJsonOptions)
             ?? throw new InvalidOperationException("Serialized Economy Admiral settings could not be read back.");
         EconomyConfigValidator.Validate(roundTrip);
-        if (!Equals(config, roundTrip))
+        if (!PersistedConfigEquivalent(config, roundTrip))
             throw new InvalidOperationException("Serialized Economy Admiral settings changed configured activation or override state.");
 
         try
@@ -143,6 +143,13 @@ public sealed class EconomySettingsRouterCallback(
         {
             if (File.Exists(tempPath)) File.Delete(tempPath);
         }
+    }
+
+    private static bool PersistedConfigEquivalent(EconomyConfig left, EconomyConfig right)
+    {
+        var leftNode = JsonNode.Parse(SerializePersistedConfig(left));
+        var rightNode = JsonNode.Parse(SerializePersistedConfig(right));
+        return JsonNode.DeepEquals(leftNode, rightNode);
     }
 
     private static string SerializePersistedConfig(EconomyConfig config)
