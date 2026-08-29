@@ -1,0 +1,83 @@
+name: Economy Admiral Full Package
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mods/Economy-Admiral/**'
+      - '.github/workflows/economy-admiral-full-package.yml'
+  workflow_dispatch:
+
+jobs:
+  build-full-package:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build server economy engine
+        shell: pwsh
+        run: dotnet build mods/Economy-Admiral/server/Economy-Admiral.csproj -c Release --nologo
+
+      - name: Build F12 settings client
+        shell: pwsh
+        run: dotnet build mods/Economy-Admiral/client/Economy-Admiral.Client.csproj -c Release --nologo
+
+      - name: Assemble complete install package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $PWD 'build-output/Economy-Admiral-Full'
+          $server = Join-Path $root 'SPT_Runtime/user/mods/Economy Admiral'
+          $client = Join-Path $root 'BepInEx/plugins/Economy Admiral'
+          Remove-Item (Join-Path $PWD 'build-output') -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Force -Path (Join-Path $server 'config') | Out-Null
+          New-Item -ItemType Directory -Force -Path $client | Out-Null
+
+          Copy-Item 'mods/Economy-Admiral/server/bin/Release/net10.0/Economy-Admiral.dll' (Join-Path $server 'Economy-Admiral.dll') -Force
+          Copy-Item 'mods/Economy-Admiral/client/bin/Release/netstandard2.1/Economy Admiral v0.1.0.dll' (Join-Path $client 'Economy Admiral v0.1.0.dll') -Force
+          Copy-Item 'mods/Economy-Admiral/config/config.json' (Join-Path $server 'config/config.json') -Force
+          Copy-Item 'mods/Economy-Admiral/README.md' (Join-Path $server 'README.md') -Force
+          Copy-Item 'mods/Economy-Admiral/RUNTIME_TEST.md' (Join-Path $server 'RUNTIME_TEST.md') -Force
+          Copy-Item 'mods/Economy-Admiral/tools/Validate-Runtime.ps1' (Join-Path $server 'Validate-Runtime.ps1') -Force
+          Copy-Item 'mods/Economy-Admiral/tools/Validate-Enforce.ps1' (Join-Path $server 'Validate-Enforce.ps1') -Force
+          Copy-Item 'mods/Economy-Admiral/tools/Validate-Beta.ps1' (Join-Path $server 'Validate-Beta.ps1') -Force
+
+          [ordered]@{
+            name = 'Economy Admiral'
+            version = '0.1.0'
+            target = 'SPT 4.1.3'
+            source_commit = '${{ github.event.pull_request.head.sha || github.sha }}'
+            server = 'SPT_Runtime/user/mods/Economy Admiral/Economy-Admiral.dll'
+            client = 'BepInEx/plugins/Economy Admiral/Economy Admiral v0.1.0.dll'
+            settings_ui = 'BepInEx F12 Configuration Manager'
+            settings_apply = 'next SPT server restart'
+          } | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $root 'runtime-manifest.json') -Encoding utf8
+
+      - name: Validate complete package
+        shell: pwsh
+        run: |
+          $root = 'build-output/Economy-Admiral-Full'
+          $required = @(
+            "$root/SPT_Runtime/user/mods/Economy Admiral/Economy-Admiral.dll",
+            "$root/SPT_Runtime/user/mods/Economy Admiral/config/config.json",
+            "$root/BepInEx/plugins/Economy Admiral/Economy Admiral v0.1.0.dll",
+            "$root/runtime-manifest.json"
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path $path -PathType Leaf)) { throw "Full package missing: $path" }
+          }
+          $config = Get-Content "$root/SPT_Runtime/user/mods/Economy Admiral/config/config.json" -Raw | ConvertFrom-Json
+          foreach ($property in @('enableQuestEconomyCluster','enableTraderEconomyCluster','enableFleaEconomyCluster','enableLootEconomyCluster')) {
+            if ($null -eq $config.$property) { throw "Config missing UI cluster: $property" }
+          }
+
+      - name: Upload complete Economy Admiral package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Economy-Admiral-Full-v0.1.0
+          path: build-output/Economy-Admiral-Full/**
+          if-no-files-found: error
