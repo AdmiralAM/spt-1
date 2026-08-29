@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
@@ -138,10 +139,13 @@ public sealed class EconomySettingsRouterCallback(
         var backupPath = path + ".bak";
         Directory.CreateDirectory(directory);
 
-        var serialized = JsonSerializer.Serialize(config, ConfigJsonOptions);
+        var serialized = SerializePersistedConfig(config);
         var roundTrip = JsonSerializer.Deserialize<EconomyConfig>(serialized, ConfigJsonOptions)
             ?? throw new InvalidOperationException("Serialized Economy Admiral settings could not be read back.");
         EconomyConfigValidator.Validate(roundTrip);
+
+        if (!Equals(config, roundTrip))
+            throw new InvalidOperationException("Serialized Economy Admiral settings changed configured activation or override state.");
 
         try
         {
@@ -161,6 +165,25 @@ public sealed class EconomySettingsRouterCallback(
             if (File.Exists(tempPath))
                 File.Delete(tempPath);
         }
+    }
+
+    private static string SerializePersistedConfig(EconomyConfig config)
+    {
+        var node = JsonSerializer.SerializeToNode(config, ConfigJsonOptions) as JsonObject
+            ?? throw new InvalidOperationException("Economy Admiral config did not serialize to an object.");
+
+        // Effective runtime getters intentionally include Full Preset Bundle and cluster gates.
+        // The file must retain raw user choices instead, otherwise one F12 save can turn
+        // bundle-derived activation into permanent granular opt-ins or erase hidden overrides.
+        node["EnableItemRewardStackNormalization"] = config.ConfiguredEnableItemRewardStackNormalization;
+        node["EnableTraderPurchasePressure"] = config.ConfiguredEnableTraderPurchasePressure;
+        node["EnableTraderSellPressure"] = config.ConfiguredEnableTraderSellPressure;
+        node["EnableFleaPurchasePressure"] = config.ConfiguredEnableFleaPurchasePressure;
+        node["EnableFleaListingFeePressure"] = config.ConfiguredEnableFleaListingFeePressure;
+        node["EnableLootPressure"] = config.ConfiguredEnableLootPressure;
+        node["QuestRewardOverrides"] = JsonSerializer.SerializeToNode(config.ConfiguredQuestRewardOverrides, ConfigJsonOptions);
+
+        return node.ToJsonString(ConfigJsonOptions);
     }
 
     private string GetConfigPath()
