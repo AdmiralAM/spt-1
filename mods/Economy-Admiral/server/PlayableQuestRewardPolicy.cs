@@ -37,6 +37,7 @@ public static class PlayableQuestRewardPolicy
             HighStandingLowDepthWarnMultiple = playable.StandingMultiple,
             RestartableHighItemValueWarnMultiple = playable.RestartableItemBudgetMultiple,
             RestartableHighXpWarnMultiple = playable.RestartableXpMultiple,
+            RestartableHighStandingWarnMultiple = RestartableStandingPressureCore.ResolveThreshold(playable),
             LowDepthMaxRelativeMultiple = source.LowDepthMaxRelativeMultiple,
             LowStructureMaxRelativeMultiple = source.LowStructureMaxRelativeMultiple,
         };
@@ -44,7 +45,7 @@ public static class PlayableQuestRewardPolicy
         var quests = analysis.Quests
             .Select(row => row with
             {
-                ObservationalFlags = row.ObservationalFlags
+                ObservationalFlags = AddRestartableStandingFlag(row, enforcementPolicy)
                     .Where(flag => QuestMechanismGate.AutomaticFlagEnabled(config, row.Restartable, flag))
                     .ToList(),
             })
@@ -64,5 +65,15 @@ public static class PlayableQuestRewardPolicy
                    $"Automatic quest mechanisms: items={config.EnableItemRewardStackNormalization}, xp={config.EnableQuestXpPressure}, " +
                    $"standing={config.EnableQuestStandingPressure}, restartable={config.EnableRestartableQuestPressure}.",
         };
+    }
+
+    private static IEnumerable<string> AddRestartableStandingFlag(QuestAnalysisRow row, AuditPolicy policy)
+    {
+        foreach (var flag in row.ObservationalFlags)
+            yield return flag;
+
+        if (RestartableStandingPressureCore.ShouldFlag(row.Restartable, row.StandingVsVanillaMedian, policy.RestartableHighStandingWarnMultiple)
+            && !row.ObservationalFlags.Contains(RestartableStandingPressureCore.Flag, StringComparer.Ordinal))
+            yield return RestartableStandingPressureCore.Flag;
     }
 }

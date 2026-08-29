@@ -13,7 +13,7 @@ public static class QuestMechanismGate
         {
             "HIGH_ITEM_VALUE_LOW_STRUCTURE" or "RESTARTABLE_HIGH_ITEM_VALUE" => config.EnableItemRewardStackNormalization,
             "HIGH_XP_LOW_DEPTH" or "RESTARTABLE_HIGH_XP" => config.EnableQuestXpPressure,
-            "HIGH_STANDING_LOW_DEPTH" => config.EnableQuestStandingPressure,
+            "HIGH_STANDING_LOW_DEPTH" or "RESTARTABLE_HIGH_STANDING" => config.EnableQuestStandingPressure,
             _ => true,
         };
     }
@@ -23,5 +23,6 @@ public static class QuestMechanismGate
         "RESTARTABLE_HIGH_ITEM_VALUE" or
         "HIGH_XP_LOW_DEPTH" or
         "RESTARTABLE_HIGH_XP" or
-        "HIGH_STANDING_LOW_DEPTH";
+        "HIGH_STANDING_LOW_DEPTH" or
+        "RESTARTABLE_HIGH_STANDING";
 }
