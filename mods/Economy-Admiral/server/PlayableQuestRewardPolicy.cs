@@ -2,6 +2,16 @@ namespace SPTEconomy;
 
 public static class PlayableQuestRewardPolicy
 {
+    private static readonly HashSet<string> RewardPressureFlags = new(StringComparer.Ordinal)
+    {
+        "HIGH_ITEM_VALUE_LOW_STRUCTURE",
+        "RESTARTABLE_HIGH_ITEM_VALUE",
+        "HIGH_XP_LOW_DEPTH",
+        "RESTARTABLE_HIGH_XP",
+        "HIGH_STANDING_LOW_DEPTH",
+        RestartableStandingPressureCore.Flag,
+    };
+
     public static QuestAnalysisReport ApplyToEnforcement(EconomyConfig config, QuestAnalysisReport analysis)
     {
         ArgumentNullException.ThrowIfNull(config);
@@ -45,7 +55,7 @@ public static class PlayableQuestRewardPolicy
         var quests = analysis.Quests
             .Select(row => row with
             {
-                ObservationalFlags = AddRestartableStandingFlags(row, enforcementPolicy)
+                ObservationalFlags = ReclassifyRewardPressureFlags(row, enforcementPolicy)
                     .Where(flag => QuestMechanismGate.AutomaticFlagEnabled(config, row.Restartable, flag))
                     .Distinct(StringComparer.Ordinal)
                     .ToList(),
@@ -62,24 +72,43 @@ public static class PlayableQuestRewardPolicy
             Policy = enforcementPolicy,
             Quests = quests,
             FlagCounts = flagCounts,
-            Note = $"{analysis.Note} Enforcement uses {playable.PolicyId} caps independently of observational outlier thresholds. " +
+            Note = $"{analysis.Note} Enforcement uses {playable.PolicyId} caps independently of observational outlier thresholds and reclassifies reward-pressure flags against those caps before mutation planning. " +
                    $"Automatic quest mechanisms: items={config.EnableItemRewardStackNormalization}, xp={config.EnableQuestXpPressure}, " +
                    $"standing={config.EnableQuestStandingPressure}, restartable={config.EnableRestartableQuestPressure}.",
         };
     }
 
-    private static IEnumerable<string> AddRestartableStandingFlags(QuestAnalysisRow row, AuditPolicy policy)
+    public static IReadOnlyList<string> ReclassifyRewardPressureFlags(QuestAnalysisRow row, AuditPolicy policy)
     {
-        foreach (var flag in row.ObservationalFlags)
-            yield return flag;
+        ArgumentNullException.ThrowIfNull(row);
+        ArgumentNullException.ThrowIfNull(policy);
 
-        foreach (var flag in RestartableStandingPressureCore.EnforcementFlags(
-                     row.Restartable,
-                     row.StandingVsVanillaMedian,
-                     policy.RestartableHighStandingWarnMultiple))
+        var flags = row.ObservationalFlags
+            .Where(flag => !RewardPressureFlags.Contains(flag))
+            .ToList();
+        var lowDepth = row.PrerequisiteDepthVsVanillaMedian is null
+            || row.PrerequisiteDepthVsVanillaMedian <= policy.LowDepthMaxRelativeMultiple;
+        var lowStructure = row.StructuredConstraintsVsVanillaMedian is null
+            || row.StructuredConstraintsVsVanillaMedian <= policy.LowStructureMaxRelativeMultiple;
+
+        if (row.HandbookValueVsVanillaMedian >= policy.HighItemValueLowStructureWarnMultiple && lowDepth && lowStructure)
+            flags.Add("HIGH_ITEM_VALUE_LOW_STRUCTURE");
+        if (row.XpVsVanillaMedian >= policy.HighXpLowDepthWarnMultiple && lowDepth)
+            flags.Add("HIGH_XP_LOW_DEPTH");
+        if (row.StandingVsVanillaMedian >= policy.HighStandingLowDepthWarnMultiple && lowDepth)
+            flags.Add("HIGH_STANDING_LOW_DEPTH");
+        if (row.Restartable && row.HandbookValueVsVanillaMedian >= policy.RestartableHighItemValueWarnMultiple)
+            flags.Add("RESTARTABLE_HIGH_ITEM_VALUE");
+        if (row.Restartable && row.XpVsVanillaMedian >= policy.RestartableHighXpWarnMultiple)
+            flags.Add("RESTARTABLE_HIGH_XP");
+        if (RestartableStandingPressureCore.ShouldFlag(
+                row.Restartable,
+                row.StandingVsVanillaMedian,
+                policy.RestartableHighStandingWarnMultiple))
         {
-            if (!row.ObservationalFlags.Contains(flag, StringComparer.Ordinal))
-                yield return flag;
+            flags.Add(RestartableStandingPressureCore.Flag);
         }
+
+        return flags.Distinct(StringComparer.Ordinal).ToList();
     }
 }
