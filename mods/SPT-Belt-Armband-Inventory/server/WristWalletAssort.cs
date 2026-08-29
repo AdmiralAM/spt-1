@@ -20,7 +20,11 @@ public sealed class WristWalletAssort(TradersTable tradersTable, ISptLogger<Wris
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB Wrist Wallet could not find Ragman.");
         var id = new MongoId(RuntimeIdentity.WristWalletAssortId);
-        var existing = trader.Assort.Items.FirstOrDefault(x => x.Id == id);
+        var matches = trader.Assort.Items.Where(x => x.Id == id).Take(2).ToArray();
+        if (matches.Length > 1)
+            throw new InvalidOperationException("B&A&HB Wrist Wallet assort ID collision: duplicate item entries own the persistent assort ID.");
+
+        var existing = matches.SingleOrDefault();
         if (existing != null)
         {
             ValidateExisting(trader, id, existing);
