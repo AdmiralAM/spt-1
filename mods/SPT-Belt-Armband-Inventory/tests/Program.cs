@@ -81,6 +81,22 @@ internal static class Program
         Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.GrenadeAccess, true, true), "disabled grenade capability cannot activate on the magazine candidate");
         Assert(AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess, true, true), "assigned fast-access capability activates only for a real container");
         Assert(!AccessoryCapabilityPolicy.CanUse(AccessoryCategory.ArmBand, AccessoryCapability.FastAccess, true, false), "fast-access capability still requires a container item");
+        Assert(WearableItemDescriptorRegistry.HasCapability(RuntimeIdentity.CandidateItemId, AccessoryCapability.FastAccess),
+            "Magazine Armband is an exact fast-access/reload root");
+        Assert(WearableItemDescriptorRegistry.HasCapability(RuntimeIdentity.DedicatedMagazineBeltItemId, AccessoryCapability.FastAccess),
+            "Magazine Belt is an exact fast-access/reload root");
+        Assert(!WearableItemDescriptorRegistry.HasCapability(RuntimeIdentity.WristWalletItemId, AccessoryCapability.FastAccess),
+            "Wrist Wallet is not a reload root");
+        Assert(!WearableItemDescriptorRegistry.HasCapability(RuntimeIdentity.EmergencyHeadBandItemId, AccessoryCapability.FastAccess),
+            "Utility HeadBand is not a reload root");
+        Assert(!FastAccessSlotPolicy.ShouldPromoteReloadReachability(true, true, true),
+            "vanilla reachable magazines keep vanilla result/order and are never promoted by B&A&HB");
+        Assert(FastAccessSlotPolicy.ShouldPromoteReloadReachability(false, true, true),
+            "unreachable magazine under an exact fast-access wearable may become a fallback reload source");
+        Assert(!FastAccessSlotPolicy.ShouldPromoteReloadReachability(false, false, true),
+            "non-magazine descendants are never promoted into reload reachability");
+        Assert(!FastAccessSlotPolicy.ShouldPromoteReloadReachability(false, true, false),
+            "magazines outside exact B&A&HB fast-access wearable roots remain vanilla-unreachable");
 
         Assert(ScavBeltPolicy.ShouldRestore(RuntimeIdentity.CandidateItemId, true, true),
             "ArmBand runtime candidate survives Scav ReplaceInventory when deleted");
