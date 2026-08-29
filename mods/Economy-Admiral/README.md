@@ -1,84 +1,94 @@
 # Economy Admiral
 
-**Economy Admiral** is an SPT 4.1.3 server-side economy difficulty layer. It makes money, loot and progression retain value longer by applying one coherent preset across quest rewards, traders, flea and world loot.
+**Economy Admiral** is an SPT 4.1.3 economy difficulty layer. It makes money, loot and progression retain value longer by applying one coherent profile across quest rewards, traders, flea and world loot.
 
-Version: **0.1.0**.
+Version: **0.1.0** during final product acceptance.
+
+## Player quick start
+
+Install the package into the SPT root and start SPT normally. The shipped profile is immediately playable:
+
+- Economy Admiral: **enabled** (`Enforce`)
+- Preset: **Normal**
+- Quest Economy: **ON**
+- Trader Economy: **ON**
+- Flea Market Economy: **ON**
+- Loot Economy: **ON**
+
+Open the BepInEx/F12 Configuration Manager to change the preset or disable an economic cluster. F12 reads and writes the same server-owned `user/mods/Economy Admiral/config/config.json`; it is not a second economy engine. Saved changes apply after the next SPT server restart.
+
+`Normal` is the recommended balanced starting point. `Easy` is lighter pressure, `Hard` is stronger pressure, and `Custom` uses the explicit Advanced numeric values.
 
 ## What it changes
 
-When enabled in `Enforce` mode, Economy Admiral can apply four economic clusters:
-
-### Quests
+### Quest Economy
 - reduces excessive quest item reward stacks;
 - applies bounded XP reward pressure;
 - applies bounded trader-standing reward pressure;
 - uses stricter limits for restartable/repeatable reward outliers;
 - preserves pristine/provenance protections and transactional rollback.
 
-### Traders
+### Trader Economy
 - raises player purchase prices for supported currency offers;
 - reduces effective payout when the player sells items to traders;
-- does not replace trader progression, loyalty, quest locks or authored stock logic.
+- preserves barter structure, trader progression, loyalty, quest locks and authored stock logic.
 
-### Flea
-- increases economic pressure on flea purchase pricing;
-- tightens below-handbook/anti-arbitrage behavior;
+### Flea Market Economy
+- increases economic pressure on flea purchase/base pricing;
+- protects handbook/trader-value floors against obvious cheap-buy/resell arbitrage;
 - increases listing-fee pressure;
-- remains configuration-based and does not implement a second flea simulator.
+- remains a pressure layer rather than replacing SPT flea generation.
 
-### Loot
-- reduces native SPT loose-loot multipliers;
-- reduces native SPT static/container-loot multipliers;
-- preserves relative map differences instead of flattening every map to one fixed value.
+### Loot Economy
+- scales native SPT loose-loot multipliers downward;
+- scales native SPT static/container-loot multipliers downward;
+- preserves relative map/mod differences instead of flattening every map to one fixed value.
 
-## Basic configuration
+## Presets
 
-For normal use only three settings matter:
+Presets control **strength**. Advanced cluster switches control **where** Economy Admiral acts.
+
+| Surface | Easy | Normal | Hard |
+| --- | ---: | ---: | ---: |
+| Trader purchase price | +5% | **+15%** | +30% |
+| Trader sell payout | x0.95 | **x0.85** | x0.70 |
+| Flea listing-fee pressure | x1.10 | **x1.25** | x1.50 |
+| Loose loot | x0.95 | **x0.85** | x0.70 |
+| Static/container loot | x0.95 | **x0.85** | x0.70 |
+| Normal quest reward cap basis | 2.25x | **1.50x** | 1.10x |
+| Restartable quest reward cap basis | 1.75x | **1.15x** | 1.00x |
+
+The goal is not poverty for its own sake. The combined profile should keep raid loot, cash, barter items and progression decisions relevant for longer without turning SPT into grind-only play.
+
+## F12 controls
+
+### Basic
+- **Mode** — Off / Audit / Enforce. Normal players use Enforce; Audit is diagnostic/read-only.
+- **Preset** — Easy / Normal / Hard / Custom.
+- **Playable Economy Bundle** — master high-level preset path.
+
+### Advanced - Clusters
+- **Quest Economy** — item stacks, XP, trader standing and repeatable reward pressure.
+- **Trader Economy** — purchase-price and sell-payout pressure.
+- **Flea Market Economy** — base-price/floor/anti-arbitrage and listing-fee pressure.
+- **Loot Economy** — loose and static/container loot pressure.
+
+A cluster set to OFF is a hard gate for that entire economic area. For example, `Normal + Quest Economy OFF` keeps Normal trader/flea/loot pressure while leaving quests untouched.
+
+### Advanced - Custom
+Custom exposes bounded numeric controls for trader purchase/sell multipliers, flea base/listing-fee multipliers, loose/static loot scales and quest item/XP/standing reward caps. These values are used by the `Custom` preset; Easy/Normal/Hard retain their maintained profile values.
+
+The server remains the only source of economic calculations. The F12 plugin is only a settings client.
+
+## Direct config equivalent
+
+F12 is the intended user interface. The equivalent recommended server configuration is:
 
 ```json
 {
   "mode": "Enforce",
   "preset": "Normal",
-  "enablePlayableEconomyBundle": true
-}
-```
-
-`Off` disables Economy Admiral. `Audit` analyzes without changing the final SPT database. `Enforce` applies the selected economy policy.
-
-With `enablePlayableEconomyBundle=true`, all enabled economic clusters use the selected preset automatically. The granular legacy feature flags can remain `false`.
-
-Committed repository defaults remain safe:
-
-```json
-{
-  "mode": "Audit",
-  "preset": "Normal",
-  "enablePlayableEconomyBundle": true
-}
-```
-
-## Presets
-
-Presets control **strength**, not which systems exist.
-
-| Surface | Easy | Normal | Hard |
-| --- | ---: | ---: | ---: |
-| Trader purchase price | +5% | +15% | +30% |
-| Trader sell payout | x0.95 | x0.85 | x0.70 |
-| Flea listing-fee pressure | x1.10 | x1.25 | x1.50 |
-| Loose loot | x0.95 | x0.85 | x0.70 |
-| Static/container loot | x0.95 | x0.85 | x0.70 |
-| Normal quest reward cap basis | 2.25x | 1.50x | 1.10x |
-| Restartable quest reward cap basis | 1.75x | 1.15x | 1.00x |
-
-`Normal` is the intended balanced starting point.
-
-## Advanced cluster controls
-
-Advanced configuration separates **where Economy Admiral acts** from **how strongly it acts**.
-
-```json
-{
+  "enablePlayableEconomyBundle": true,
   "enableQuestEconomyCluster": true,
   "enableTraderEconomyCluster": true,
   "enableFleaEconomyCluster": true,
@@ -86,36 +96,11 @@ Advanced configuration separates **where Economy Admiral acts** from **how stron
 }
 ```
 
-A cluster set to `false` is a hard gate over that entire economic area.
-
-Examples:
-
-- `Normal + enableQuestEconomyCluster=false` keeps Normal trader/flea/loot pressure while quest economy remains untouched.
-- `Hard + enableFleaEconomyCluster=false` keeps Hard quest/trader/loot pressure while flea remains vanilla/current-mod behavior.
-- cluster OFF overrides any granular `true` feature flag inside that cluster.
-
-Cluster mapping:
-
-| Cluster | Surfaces |
-| --- | --- |
-| Quests | item stacks, XP, trader standing, restartable reward pressure, manual quest reward targets |
-| Traders | purchase-price pressure, sell-payout pressure |
-| Flea | purchase/base-price pressure, handbook/anti-arbitrage pressure, listing-fee pressure |
-| Loot | loose loot, static/container loot |
-
-If `enablePlayableEconomyBundle=false`, existing granular switches can still be used inside enabled clusters for selective/custom deployments.
-
-## Custom preset
-
-`Custom` uses the explicit numeric settings in `config.json`, including trader purchase/sell multipliers, flea price/listing-fee multipliers, loot scales and custom quest reward policy values.
-
-The server remains the only source of economic calculations. A future client GUI must edit this same settings contract and must not implement a second economy engine.
+Legacy granular feature switches remain available for specialized/manual deployments when the Playable Economy Bundle is disabled, but ordinary users should not need them.
 
 ## Quest enforcement safety
 
-The production mutation path supports `Experience`, `TraderStanding` and bounded `ItemRewardStackCount` for one structurally unambiguous existing Success reward stack.
-
-Provenance rules:
+The production mutation path supports `Experience`, `TraderStanding` and bounded `ItemRewardStackCount` for structurally unambiguous existing Success rewards.
 
 - `PristineUnchanged`: never mutate;
 - `ModAdded`: only supported flagged/manual dimensions may mutate;
@@ -125,34 +110,23 @@ Provenance rules:
 
 Item-stack normalization never replaces `_tpl`, creates/deletes reward records, removes the last reward item to satisfy a budget or rewrites structural quest fields. `Reward.Value` and `Upd.StackObjectsCount` are updated and rolled back together.
 
-Every active reward mutation shares a transaction contract: deterministic plan, journal originals before first write, apply, verify exact targets, rollback entire batch on any error, then verify rollback.
-
 ## Admiral Trader compatibility
 
 Admiral Trader is an **optional integration**, not a dependency.
 
-If Admiral Trader is absent, Economy Admiral runs standalone. If the maintained Admiral Trader contract is installed, Economy Admiral validates its explicit identity/schema/offer classes and treats compatibility fail-closed on drift. It does not implement or replace Admiral Trader's own economy engine.
+If Admiral Trader is absent, Economy Admiral runs standalone. If the maintained Admiral Trader contract is installed, Economy Admiral validates its explicit identity/schema/offer classes and treats compatibility fail-closed on drift. Economy Admiral does not duplicate Admiral Trader's own progression/store logic.
 
-Maintained Gameplay Alpha v4 identity includes product `Admiral Trader`, modGuid `com.admiralam.spt.admiraltrader` and trader ID `d5c27bb3169f8dfbc13f6b69`.
+## Development diagnostics
 
-## Runtime reports and validators
+Runtime reports and `Validate-Runtime.ps1`, `Validate-Enforce.ps1`, `Validate-Beta.ps1` remain packaged for development/release diagnosis. They are **not** part of normal player interaction and are not required to use Economy Admiral.
 
-Runtime reports remain available for development/diagnostics, including audit, quest analysis/provenance, enforcement plan, source pressure, health, optional Admiral Trader adapter evidence and combined runtime evidence.
+## Installation
 
-Packaged developer validators:
+The complete package owns only its own files:
 
-- `Validate-Runtime.ps1` — Audit/read-only contract;
-- `Validate-Enforce.ps1` — transactional Enforce contract;
-- `Validate-Beta.ps1` — combined physical release-candidate gate.
+- `SPT_Runtime/user/mods/Economy Admiral/` — server module, config and diagnostics;
+- `BepInEx/plugins/Economy Admiral/Economy Admiral v0.1.0.dll` — F12 settings client.
 
-These validators are development/release tools, not part of normal player interaction.
+It does not bundle or replace the BepInEx runtime itself.
 
-## Installation and publication
-
-The maintained install-only channel is `runtime-economy-admiral`. Its package root is directly copyable into the SPT root and contains:
-
-`SPT_Runtime/user/mods/Economy Admiral/`
-
-Compile boundary: `SPTarkov.Server.Core 4.1.2` / .NET 10. Physical target: **SPT 4.1.3**.
-
-Runtime load order keeps immutable pristine capture early and applies final-DB analysis/economy changes at `PostLoad + 1000`. There is no permanent raid/frame polling.
+Compile boundary: `SPTarkov.Server.Core 4.1.2` / .NET 10. Physical target: **SPT 4.1.3**. Runtime economy changes are applied during server database load; there is no permanent raid/frame economy polling.
