@@ -11,7 +11,7 @@ internal static class PlayableEconomyBundleSmoke
             Mode = EconomyMode.Audit,
             EnablePlayableEconomyBundle = true,
         };
-        MustAllFalse("Audit bundle safety", audit);
+        MustAllTrue("Audit playable bundle preview", audit);
 
         var enforce = new EconomyConfig
         {
@@ -19,6 +19,13 @@ internal static class PlayableEconomyBundleSmoke
             EnablePlayableEconomyBundle = true,
         };
         MustAllTrue("Enforce playable bundle", enforce);
+
+        var off = new EconomyConfig
+        {
+            Mode = EconomyMode.Off,
+            EnablePlayableEconomyBundle = true,
+        };
+        MustAllFalse("Off bundle safety", off);
 
         var selective = new EconomyConfig
         {
@@ -42,8 +49,9 @@ internal static class PlayableEconomyBundleSmoke
 
         EconomyConfigValidator.Validate(audit);
         EconomyConfigValidator.Validate(enforce);
+        EconomyConfigValidator.Validate(off);
         EconomyConfigValidator.Validate(selective);
-        Console.WriteLine("PASS playable economy one-switch activation");
+        Console.WriteLine("PASS playable economy bundle preview/enforcement activation");
     }
 
     private static void MustAllFalse(string name, EconomyConfig config)
