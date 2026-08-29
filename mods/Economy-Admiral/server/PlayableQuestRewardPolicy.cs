@@ -6,6 +6,19 @@ public static class PlayableQuestRewardPolicy
     {
         ArgumentNullException.ThrowIfNull(config);
         ArgumentNullException.ThrowIfNull(analysis);
+
+        if (!config.EnableQuestEconomyCluster)
+        {
+            return analysis with
+            {
+                Quests = analysis.Quests
+                    .Select(row => row with { ObservationalFlags = [] })
+                    .ToList(),
+                FlagCounts = new Dictionary<string, int>(StringComparer.Ordinal),
+                Note = $"{analysis.Note} Quest economy cluster is disabled; quest reward enforcement is bypassed while observational analysis remains available upstream.",
+            };
+        }
+
         var playable = PlayableQuestRewardCaps.Resolve(config.Preset, config.CustomAuditPolicy);
         var source = analysis.Policy;
         var enforcementPolicy = new AuditPolicy
