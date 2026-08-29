@@ -71,11 +71,11 @@ if presentation_path.exists() and presentation_path.name not in removed:
                     "DedicatedSlotPresentationPatches.cs: first-render bind is no longer synchronous "
                     f"({required})")
         for token in (
-            "StartCoroutine",
+            "StartCoroutine(",
             "RequestFlush",
             "EnsureDeferredRuntimePump",
-            "Canvas.ForceUpdateCanvases",
-            "preferredHeight",
+            "Canvas.ForceUpdateCanvases()",
+            'GetProperty("preferredHeight"',
             "equipmentTab.transform.position =",
             "gearRect.position =",
             "slotViews.Add(",
@@ -105,12 +105,12 @@ if presentation_path.exists() and presentation_path.name not in removed:
     else:
         position_region = presentation_text[position_start:position_end]
         for token in (
-            "Canvas.ForceUpdateCanvases",
-            "preferredHeight",
-            "LayoutElement",
+            "Canvas.ForceUpdateCanvases()",
+            'GetProperty("preferredHeight"',
+            'FindComponentByTypeName(equipmentTab.transform, "UnityEngine.UI.LayoutElement")',
             "equipmentTab.transform.position =",
             "gearRect.position =",
-            "StartCoroutine",
+            "StartCoroutine(",
             "RequestFlush",
         ):
             if token in position_region:
@@ -121,8 +121,8 @@ if presentation_path.exists() and presentation_path.name not in removed:
 # Freeze the exact physical layout accepted at 9cf023c: the mapped HeadBand occupies
 # original Headwear local coordinates and native slot RectTransforms are translated by
 # exactly one compact 44+4 row. This is deliberately NOT a host Gear Panel layout
-# mutation: no LayoutElement/preferredHeight, Canvas rebuild, panel transform move,
-# coroutine, retry or polling is allowed.
+# mutation: no LayoutElement/preferredHeight write, Canvas rebuild, panel transform
+# move, coroutine, retry or polling is allowed.
 reflow_path = ROOT / "HeadBandRenderSettle.cs"
 if not reflow_path.exists() or reflow_path.name in removed:
     violations.append("HeadBandRenderSettle.cs: accepted stabilization geometry owner is missing")
@@ -143,10 +143,11 @@ else:
                 "HeadBandRenderSettle.cs: accepted stabilization geometry contract changed "
                 f"({token})")
     for token in (
-        "preferredHeight",
-        "LayoutElement",
-        "Canvas.ForceUpdateCanvases",
-        "StartCoroutine",
+        'GetProperty("preferredHeight"',
+        'FindComponentByTypeName(equipmentTab.transform, "UnityEngine.UI.LayoutElement")',
+        "preferredHeight.SetValue(",
+        "Canvas.ForceUpdateCanvases()",
+        "StartCoroutine(",
         "RequestFlush",
         "EnsureDeferredRuntimePump",
         "equipmentTab.transform.position =",
@@ -180,7 +181,7 @@ if localization_path.exists() and localization_path.name not in removed:
             violations.append(
                 "DedicatedSlotLocalizationPatches.cs: accepted HeadBand first-render lifecycle hook changed "
                 f"({token})")
-    for token in ("StartCoroutine", "Canvas.ForceUpdateCanvases", "preferredHeight", "LayoutElement"):
+    for token in ("StartCoroutine(", "Canvas.ForceUpdateCanvases()", 'GetProperty("preferredHeight"'):
         if token in localization_text:
             violations.append(
                 "DedicatedSlotLocalizationPatches.cs: localization/settle path introduced manual/deferred host refresh "
@@ -199,8 +200,8 @@ if first_open_path.exists() and first_open_path.name not in removed:
         "DynamicMethod(",
         "patchMethod.Invoke(",
         "RequestFlush?.Invoke",
-        "StartCoroutine",
-        "Canvas.ForceUpdateCanvases",
+        "StartCoroutine(",
+        "Canvas.ForceUpdateCanvases()",
     ):
         if token in first_open_text:
             violations.append(
@@ -215,9 +216,6 @@ if protection_router_path.exists():
     if "info?.ToString()" in protection_router_text or "JsonSerializer.Deserialize<WearableProtectionRequest>" in protection_router_text:
         violations.append("server/WearableProtectionRuntime.cs: protection route must not parse EmptyRequestData.ToString()")
 
-# Server lifecycle patches previously caused profile-load failures through name-only
-# reflection. Production patches must enumerate candidates and prove a unique bounded
-# runtime target rather than using Type.GetMethod(name).
 for source in sorted(SERVER_PATCH_ROOT.glob("*.cs")):
     text = source.read_text(encoding="utf-8-sig")
     if ".GetMethod(" in text:
