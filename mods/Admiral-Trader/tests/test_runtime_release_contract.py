@@ -4,9 +4,11 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
+REPO = ROOT.parents[1]
 SERVER = ROOT / "server"
 TOOLS = ROOT / "tools"
 MANIFEST = ROOT / "manifests" / "runtime-manifest.json"
+PREFLIGHT_WORKFLOW = REPO / ".github" / "workflows" / "admiral-trader-spt413-candidate.yml"
 
 
 class RuntimeReleaseContractTests(unittest.TestCase):
@@ -59,6 +61,13 @@ class RuntimeReleaseContractTests(unittest.TestCase):
         self.assertIn('manifest.Product, "Admiral Trader"', text)
         self.assertIn('manifest.TargetSptVersion, "4.1.3"', text)
         self.assertIn('manifest.RegistrationEnabled ? "test-candidate" : "test-candidate-source"', text)
+
+    def test_preflight_package_uses_runnable_manifest_with_truthful_provenance(self):
+        text = PREFLIGHT_WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("runtime['registrationEnabled']=True; runtime['publicationMode']='test-candidate'", text)
+        self.assertIn("'compileMode':'published-api-preflight'", text)
+        self.assertIn("'physicalRuntimeEvidenceEligible':False", text)
+        self.assertIn("validate_gameplay_alpha_candidate_tree.py build/admiral-trader-spt413-preflight/SPT_Runtime/user/mods/Admiral-Trader --require-enabled", text)
 
     def test_runtime_tpl_gate_covers_handover_and_find_item(self):
         text = (SERVER / "RuntimeDataValidation.cs").read_text(encoding="utf-8")

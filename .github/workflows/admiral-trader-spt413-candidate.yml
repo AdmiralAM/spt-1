@@ -92,7 +92,11 @@ jobs:
           (stage/'tools').mkdir()
           shutil.copy2(module/'tools/Reset-AdmiralTraderProfile.ps1', stage/'tools/Reset-AdmiralTraderProfile.ps1')
           rm=stage/'manifests/runtime-manifest.json'; runtime=json.loads(rm.read_text(encoding='utf-8'))
-          runtime['registrationEnabled']=True; runtime['publicationMode']='published-api-preflight'
+          # The runtime manifest controls server registration and must use the
+          # enabled candidate mode accepted by AdmiralTraderRegistration. Build
+          # provenance below remains explicit that this DLL is API-preflight,
+          # not exact-installed-runtime evidence.
+          runtime['registrationEnabled']=True; runtime['publicationMode']='test-candidate'
           rm.write_text(json.dumps(runtime,indent=2,ensure_ascii=False)+'\n',encoding='utf-8')
           identity=json.loads((stage/'manifests/identity-assets.json').read_text(encoding='utf-8'))
           portrait=stage/identity['portrait']['runtimeAsset']; raw=portrait.read_bytes(); clean=raw.rstrip(b'\r\n')
@@ -108,7 +112,7 @@ jobs:
           assert (stage/'tools/Reset-AdmiralTraderProfile.ps1').is_file()
 
       - name: Validate staged preflight composition
-        run: python mods/Admiral-Trader/tools/validate_gameplay_alpha_candidate_tree.py build/admiral-trader-spt413-preflight/SPT_Runtime/user/mods/Admiral-Trader
+        run: python mods/Admiral-Trader/tools/validate_gameplay_alpha_candidate_tree.py build/admiral-trader-spt413-preflight/SPT_Runtime/user/mods/Admiral-Trader --require-enabled
 
       - name: Upload published-API preflight package
         uses: actions/upload-artifact@v4
