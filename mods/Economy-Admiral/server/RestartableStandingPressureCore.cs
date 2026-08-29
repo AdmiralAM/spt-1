@@ -30,4 +30,16 @@ public static class RestartableStandingPressureCore
             ? [StandingBudgetFlag, Flag]
             : [];
     }
+
+    public static double ResolveTargetMultiple(bool restartable, IReadOnlyCollection<string> flags, AuditPolicy policy)
+    {
+        ArgumentNullException.ThrowIfNull(flags);
+        ArgumentNullException.ThrowIfNull(policy);
+        var multiple = restartable && flags.Contains(Flag, StringComparer.Ordinal)
+            ? policy.RestartableHighStandingWarnMultiple
+            : policy.HighStandingLowDepthWarnMultiple;
+        if (!double.IsFinite(multiple) || multiple <= 0)
+            throw new InvalidOperationException("Economy Admiral standing target multiple must be finite and > 0.");
+        return multiple;
+    }
 }

@@ -27,6 +27,18 @@ internal static class RestartableStandingPressureSmoke
         if (RestartableStandingPressureCore.EnforcementFlags(true, 1.10, threshold).Count != 0)
             throw new InvalidOperationException("Standing below the restartable threshold must emit no enforcement flags.");
 
+        var enforcementPolicy = new AuditPolicy
+        {
+            HighStandingLowDepthWarnMultiple = normal.StandingMultiple,
+            RestartableHighStandingWarnMultiple = threshold,
+        };
+        var restartableTargetMultiple = RestartableStandingPressureCore.ResolveTargetMultiple(true, enforcementFlags, enforcementPolicy);
+        if (Math.Abs(restartableTargetMultiple - 1.15) > 0.000001)
+            throw new InvalidOperationException("A restartable standing outlier must target the restartable 1.15 cap rather than the ordinary 1.50 standing cap.");
+        var ordinaryTargetMultiple = RestartableStandingPressureCore.ResolveTargetMultiple(false, [RestartableStandingPressureCore.StandingBudgetFlag], enforcementPolicy);
+        if (Math.Abs(ordinaryTargetMultiple - 1.50) > 0.000001)
+            throw new InvalidOperationException("A non-restartable standing outlier must keep the ordinary 1.50 standing cap.");
+
         var selectiveOff = new EconomyConfig
         {
             Mode = EconomyMode.Enforce,
@@ -49,6 +61,6 @@ internal static class RestartableStandingPressureSmoke
             || QuestMechanismGate.AutomaticFlagEnabled(standingOff, true, RestartableStandingPressureCore.StandingBudgetFlag))
             throw new InvalidOperationException("Trader Standing Reward Pressure OFF must block restartable standing pressure.");
 
-        Console.WriteLine("PASS restartable standing classification reaches standing-budget mutation path + mechanism gates");
+        Console.WriteLine("PASS restartable standing classification reaches its stricter standing target + mutation gates");
     }
 }

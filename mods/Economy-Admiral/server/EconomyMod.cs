@@ -20,6 +20,7 @@ public sealed class EconomyMod(
     GroupedItemRuntimeEvidenceService groupedItemRuntimeEvidenceService,
     SourcePressureObservationPipelineService sourcePressureObservationPipelineService,
     EconomyHealthRuntimeReportService economyHealthRuntimeReportService,
+    EconomyEnforcementTransactionSnapshotService enforcementTransactionSnapshotService,
     TraderPurchasePressureService traderPurchasePressureService,
     TraderSellPressureService traderSellPressureService,
     FleaPurchasePressureService fleaPurchasePressureService,
@@ -49,16 +50,50 @@ public sealed class EconomyMod(
 
         questAnalysis = PlayableQuestRewardPolicy.ApplyToEnforcement(config, questAnalysis);
 
-        GroupedItemRewardSlot.ResetEvidence();
-        var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, observation.AdmiralTrader, cancellationToken);
+        EconomyEnforcementTransactionSnapshot? transactionSnapshot = null;
+        if (config.Mode == EconomyMode.Enforce)
+            transactionSnapshot = enforcementTransactionSnapshotService.Capture(config);
 
-        traderPurchasePressureService.Apply(config);
-        traderSellPressureService.Apply(config);
-        fleaPurchasePressureService.Apply(config);
-        fleaListingFeePressureService.Apply(config);
-        lootPressureService.Apply(config);
+        try
+        {
+            GroupedItemRewardSlot.ResetEvidence();
+            var enforcement = await enforcementPlanService.RunAsync(questAnalysis, questProvenance, observation.AdmiralTrader, cancellationToken);
 
-        await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);
-        await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
+            if (config.Mode == EconomyMode.Enforce
+                && enforcement.PlannedMutationCount > 0
+                && !enforcement.TransactionCommitted)
+            {
+                throw new InvalidOperationException(
+                    $"Quest enforcement did not commit its planned transaction: planned={enforcement.PlannedMutationCount}, " +
+                    $"rolledBack={enforcement.TransactionRolledBack}, error={enforcement.TransactionError ?? "none"}.");
+            }
+
+            traderPurchasePressureService.Apply(config);
+            traderSellPressureService.Apply(config);
+            fleaPurchasePressureService.Apply(config);
+            fleaListingFeePressureService.Apply(config);
+            lootPressureService.Apply(config);
+
+            await groupedItemRuntimeEvidenceService.WriteAsync(enforcement, cancellationToken);
+            await runtimeEvidenceService.WriteAfterAsync(vanillaBaseline, questProvenance, enforcement, cancellationToken);
+        }
+        catch (Exception applyException) when (transactionSnapshot is not null)
+        {
+            try
+            {
+                transactionSnapshot.RollbackAndVerify();
+            }
+            catch (Exception rollbackException)
+            {
+                throw new AggregateException(
+                    "Economy Admiral Enforce failed and the complete economy rollback could not be proven.",
+                    applyException,
+                    rollbackException);
+            }
+
+            throw new InvalidOperationException(
+                $"Economy Admiral Enforce failed; all captured Quest/Trader/Flea/Loot mutations were rolled back and verified ({transactionSnapshot.EntryCount} entries).",
+                applyException);
+        }
     }
 }
