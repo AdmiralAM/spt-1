@@ -17,6 +17,8 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
     public const string GridId = RuntimeIdentity.WristWalletGridId;
     private static readonly MongoId WristWalletTpl = new(TemplateId);
     private static readonly MongoId MagazineArmbandTpl = new(RuntimeIdentity.CandidateItemId);
+    private static readonly MongoId DedicatedMagazineBeltTpl = new(RuntimeIdentity.DedicatedMagazineBeltItemId);
+    private static readonly MongoId UtilityHeadBandTpl = new(RuntimeIdentity.EmergencyHeadBandItemId);
     private static readonly MongoId BroadBeltParentTpl = new(RuntimeIdentity.BeltItemParentId);
     private const string GridName = "main";
     private const string GridPrototype = "55d329c24bdc2d892f8b4567";
@@ -169,6 +171,8 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
         HashSet<MongoId> filter = filterGroups[0].Filter;
         if (filter.Contains(BroadBeltParentTpl))
             throw new InvalidOperationException("B&A&HB ArmBand filter contains the broad Belt parent; refusing host overlap that would admit dedicated Magazine Belt.");
+        if (filter.Contains(DedicatedMagazineBeltTpl) || filter.Contains(UtilityHeadBandTpl))
+            throw new InvalidOperationException("B&A&HB ArmBand filter contains an exact dedicated cross-host product; refusing Belt/HeadBand host overlap.");
         return filter;
     }
 
