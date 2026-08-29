@@ -11,6 +11,7 @@ namespace SPTPopCounter
     {
         const int Cell = 64;
         const string BotCensusPrefix = "AdmiralTacticalHUD.BotCensus.";
+        const string ReserveResource = "AdmiralTacticalHUD.Reserve.hud-sprites.png";
 
         readonly Dictionary<string, Texture2D> cache = new Dictionary<string, Texture2D>(StringComparer.OrdinalIgnoreCase);
         readonly Dictionary<string, string> botCensus = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -38,12 +39,32 @@ namespace SPTPopCounter
         {
             try
             {
+                byte[] bytes = null;
                 string path = Path.Combine(Paths.PluginPath,"Admiral Tactical HUD","assets","hud-sprites.png");
-                if (!File.Exists(path))
-                    path = Path.Combine(Paths.PluginPath,"assets","hud-sprites.png");
-                if (!File.Exists(path)) return;
+                if (!File.Exists(path)) path = Path.Combine(Paths.PluginPath,"assets","hud-sprites.png");
+                if (File.Exists(path)) bytes = File.ReadAllBytes(path);
 
-                byte[] bytes = File.ReadAllBytes(path);
+                if (bytes == null)
+                {
+                    Assembly assembly = typeof(HudIcons).Assembly;
+                    using (Stream stream = assembly.GetManifestResourceStream(ReserveResource))
+                    {
+                        if (stream != null)
+                        {
+                            bytes = new byte[stream.Length];
+                            int offset = 0;
+                            while (offset < bytes.Length)
+                            {
+                                int read = stream.Read(bytes,offset,bytes.Length-offset);
+                                if (read <= 0) break;
+                                offset += read;
+                            }
+                            if (offset != bytes.Length) bytes = null;
+                        }
+                    }
+                }
+
+                if (bytes == null) return;
                 sheet = new Texture2D(2,2,TextureFormat.RGBA32,false);
                 sheet.name = "Admiral Tactical HUD Reserve Sprite Sheet";
                 sheet.filterMode = FilterMode.Bilinear;
