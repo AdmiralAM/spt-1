@@ -23,4 +23,11 @@ public static class RestartableStandingPressureCore
             && double.IsFinite(ratio)
             && ratio >= threshold;
     }
+
+    public static IReadOnlyList<string> EnforcementFlags(bool restartable, double? standingVsVanillaMedian, double threshold)
+    {
+        return ShouldFlag(restartable, standingVsVanillaMedian, threshold)
+            ? [StandingBudgetFlag, Flag]
+            : [];
+    }
 }
