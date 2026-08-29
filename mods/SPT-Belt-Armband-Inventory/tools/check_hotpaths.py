@@ -59,6 +59,28 @@ if presentation_path.exists() and presentation_path.name not in removed:
                 "DedicatedSlotPresentationPatches.cs: synchronous insurance-safe first-render contract is missing "
                 f"({token})")
 
+    pre_start = presentation_text.find("internal static void BeforeEquipmentTabShow(")
+    pre_end = presentation_text.find("internal static void AfterSlotShow(", pre_start)
+    if pre_start < 0 or pre_end < 0:
+        violations.append("DedicatedSlotPresentationPatches.cs: pre-enumeration slot16 projection region could not be located")
+    else:
+        pre_region = presentation_text[pre_start:pre_end]
+        for required in (
+            "if (slotViews.Contains(HeadBandSlotKey))",
+            "Component existingHeadBandView = slotViews[HeadBandSlotKey] as Component;",
+            "if (existingHeadBandView != null) return;",
+            "slotViews.Remove(HeadBandSlotKey);",
+            "slotViews.Add(HeadBandSlotKey, view);",
+        ):
+            if required not in pre_region:
+                violations.append(
+                    "DedicatedSlotPresentationPatches.cs: stale slot16 is no longer repaired before native enumeration "
+                    f"({required})")
+        remove_at = pre_region.find("slotViews.Remove(HeadBandSlotKey);")
+        add_at = pre_region.find("slotViews.Add(HeadBandSlotKey, view);")
+        if remove_at < 0 or add_at < 0 or remove_at >= add_at:
+            violations.append("DedicatedSlotPresentationPatches.cs: stale slot16 replacement ordering is not pre-enumeration remove-then-add")
+
     bind_start = presentation_text.find("static void BindHeadBandFromHeadwear(")
     bind_end = presentation_text.find("static Component GetOrCreateHeadBandView(", bind_start)
     if bind_start < 0 or bind_end < 0:
@@ -79,6 +101,7 @@ if presentation_path.exists() and presentation_path.name not in removed:
             "equipmentTab.transform.position =",
             "gearRect.position =",
             "slotViews.Add(",
+            "slotViews.Remove(",
             "UnityEngine.Object.Instantiate(",
         ):
             if token in bind_region:
@@ -92,7 +115,7 @@ if presentation_path.exists() and presentation_path.name not in removed:
         violations.append("DedicatedSlotPresentationPatches.cs: late SlotView.Show binding region could not be located")
     else:
         late_region = presentation_text[late_start:late_end]
-        for token in ("slotViews.Add(", "UnityEngine.Object.Instantiate("):
+        for token in ("slotViews.Add(", "slotViews.Remove(", "UnityEngine.Object.Instantiate("):
             if token in late_region:
                 violations.append(
                     "DedicatedSlotPresentationPatches.cs: SlotView.Show path mutates the EquipmentTab map during native enumeration "
@@ -269,4 +292,4 @@ guard_region(
 if violations:
     raise SystemExit("Hot-path guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB #2 hot-path guard: OK (accepted HeadBand geometry frozen at 44+4 structural row; host Gear Panel layout untouched; no manual/deferred first-open refresh; slot16 projection pre-enumeration only; interaction/lifecycle hot paths startup-bound; server patches bounded-unique)")
+print("B&A&HB #2 hot-path guard: OK (accepted HeadBand geometry frozen at 44+4 structural row; stale slot16 recovered pre-enumeration; host Gear Panel layout untouched; no manual/deferred first-open refresh; late slot-map mutation forbidden; interaction/lifecycle hot paths startup-bound; server patches bounded-unique)")
