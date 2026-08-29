@@ -16,17 +16,19 @@ string_constants = dict(re.findall(r'internal const string\s+(\w+)\s*=\s*"([^"]+
 
 families = {
     "templateIds": [
-        "CandidateItemId", "WristWalletItemId", "DedicatedMagazineBeltItemId", "EmergencyHeadBandItemId"
+        "CandidateItemId", "WristWalletItemId", "DedicatedMagazineBeltItemId", "EmergencyHeadBandItemId",
+        "DogtagCaseItemId"
     ],
     "parentIds": [
         "SearchableTemplateParentId", "BeltItemParentId", "HeadBandItemParentId"
     ],
     "gridIds": [
         "CandidateGridId", "WristWalletGridId", "DedicatedMagazineBeltGridId",
-        "EmergencyHeadBandGridId", "EmergencyHeadBandCigarettesGridId"
+        "EmergencyHeadBandGridId", "EmergencyHeadBandCigarettesGridId", "DogtagCaseGridId"
     ],
     "assortIds": [
-        "CandidateAssortId", "WristWalletAssortId", "DedicatedMagazineBeltAssortId", "EmergencyHeadBandAssortId"
+        "CandidateAssortId", "WristWalletAssortId", "DedicatedMagazineBeltAssortId", "EmergencyHeadBandAssortId",
+        "DogtagCaseAssortId"
     ],
     "slotIds": ["DedicatedBeltWireSlotId", "DedicatedHeadBandWireSlotId"],
     "slotMongoIds": ["DedicatedBeltSlotMongoId", "DedicatedHeadBandSlotMongoId"],
