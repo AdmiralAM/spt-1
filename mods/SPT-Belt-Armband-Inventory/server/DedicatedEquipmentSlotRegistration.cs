@@ -58,22 +58,35 @@ public sealed class DedicatedEquipmentSlotRegistration(
                 return Task.CompletedTask;
             }
 
-            // Both dedicated gates are exact-item scoped. Shared searchable parent
-            // identities are client runtime-type contracts and must not make the RC
-            // ArmBand/Wrist Wallet equipable in Belt or HeadBand locations.
-            UpsertDedicatedSlot(slots, armBand, RuntimeIdentity.DedicatedBeltWireSlotId, BeltSlotMongoId, DedicatedMagazineBeltTpl);
-            UpsertDedicatedSlot(slots, armBand, RuntimeIdentity.DedicatedHeadBandWireSlotId, HeadBandSlotMongoId, EmergencyHeadBandTpl);
+            // Prepare both contracts before mutating the canonical slot list. If an
+            // existing slot15/slot16 collides, validation throws while `slots` is still
+            // unchanged; this prevents a half-installed Belt-only/HeadBand-only state.
+            Slot? beltAddition = PrepareDedicatedSlot(
+                slots,
+                armBand,
+                RuntimeIdentity.DedicatedBeltWireSlotId,
+                BeltSlotMongoId,
+                DedicatedMagazineBeltTpl);
+            Slot? headBandAddition = PrepareDedicatedSlot(
+                slots,
+                armBand,
+                RuntimeIdentity.DedicatedHeadBandWireSlotId,
+                HeadBandSlotMongoId,
+                EmergencyHeadBandTpl);
+
+            if (beltAddition != null) slots.Add(beltAddition);
+            if (headBandAddition != null) slots.Add(headBandAddition);
 
             // Server slot-list order is not a UI layout contract. Do not reorder
             // vanilla inventory slots and do not abort startup based on relative
             // list positions. Client presentation owns the requested visual anchors.
             inventory.Properties!.Slots = slots;
 
-            logger.Success($"B&A&HB #2 MOD SPT dedicated equipment slot contracts registered startup-safely: Belt wire={RuntimeIdentity.DedicatedBeltWireSlotId}; HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId}. Visual placement is client-owned.");
+            logger.Success($"B&A&HB #2 MOD SPT dedicated equipment slot contracts registered atomically: Belt wire={RuntimeIdentity.DedicatedBeltWireSlotId}; HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId}. Visual placement is client-owned.");
         }
         catch (Exception exception)
         {
-            logger.Error($"B&A&HB dedicated-slot registration failed safely: {exception.GetType().FullName}: {exception.Message}");
+            logger.Error($"B&A&HB dedicated-slot registration failed safely without partial slot mutation: {exception.GetType().FullName}: {exception.Message}");
         }
 
         return Task.CompletedTask;
@@ -90,16 +103,16 @@ public sealed class DedicatedEquipmentSlotRegistration(
         return slots.Count(x => string.Equals(x.Name, wireName, StringComparison.Ordinal)) > 1;
     }
 
-    private static void UpsertDedicatedSlot(List<Slot> slots, Slot armBandPrototype, string wireName, MongoId id, MongoId allowedTemplate)
+    private static Slot? PrepareDedicatedSlot(List<Slot> slots, Slot armBandPrototype, string wireName, MongoId id, MongoId allowedTemplate)
     {
         var matches = slots.Where(x => string.Equals(x.Name, wireName, StringComparison.Ordinal)).ToArray();
         if (matches.Length == 1)
         {
             ValidateDedicatedSlot(matches[0], wireName, id, allowedTemplate);
-            return;
+            return null;
         }
 
-        slots.Add(new Slot
+        return new Slot
         {
             Name = wireName,
             Id = id,
@@ -113,7 +126,7 @@ public sealed class DedicatedEquipmentSlotRegistration(
                 MaxStackCount = 1,
                 Filters = [new SlotFilter { Filter = [allowedTemplate], Locked = false, MaxStackCount = 1 }]
             }
-        });
+        };
     }
 
     private static void ValidateDedicatedSlot(Slot slot, string wireName, MongoId id, MongoId allowedTemplate)
