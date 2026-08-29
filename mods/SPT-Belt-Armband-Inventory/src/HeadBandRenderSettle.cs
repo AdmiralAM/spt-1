@@ -61,7 +61,9 @@ namespace SPTBeltArmbandInventory
 
                 int key = equipmentTab.GetInstanceID();
                 ReflowState state;
-                if (!States.TryGetValue(key, out state) || state == null || state.EquipmentTab.Target == null)
+                States.TryGetValue(key, out state);
+                Component stateEquipmentTab = state == null ? null : state.EquipmentTab.Target as Component;
+                if (state == null || stateEquipmentTab == null || !ReferenceEquals(stateEquipmentTab, equipmentTab))
                 {
                     state = CaptureState(equipmentTab, slotViews);
                     States[key] = state;
