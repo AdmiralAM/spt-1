@@ -10,6 +10,8 @@
   "customTraderSellPayoutMultiplier": 0.85,
   "enableFleaPurchasePressure": false,
   "customFleaBasePriceMultiplier": 1.65,
+  "enableFleaListingFeePressure": false,
+  "customFleaListingFeeMultiplier": 1.25,
   "enableLootPressure": false,
   "customLooseLootScale": 0.85,
   "customStaticLootScale": 0.85,
