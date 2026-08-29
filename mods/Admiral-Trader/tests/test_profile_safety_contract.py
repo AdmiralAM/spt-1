@@ -1,10 +1,13 @@
 from pathlib import Path
+import json
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRATION = ROOT / "server" / "ProfileTemplateRegistration.cs"
 QUEST_REGISTRATION = ROOT / "server" / "QuestRegistration.cs"
+SERVER = ROOT / "server"
+QUESTS = ROOT / "db" / "quests"
 RECOVERY = ROOT / "tools" / "Reset-AdmiralTraderProfile.ps1"
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
 
@@ -42,6 +45,27 @@ class ProfileSafetyContractTests(unittest.TestCase):
         self.assertIn("quest.GameModes ??= []", text)
         self.assertIn("quest.RankingModes ??= []", text)
         self.assertIn("quest.ArenaLocations ??= []", text)
+
+    def test_all_authored_quests_require_explicit_manual_completion(self):
+        quest_files = sorted(QUESTS.glob("*.json"))
+        self.assertEqual(len(quest_files), 31)
+        for path in quest_files:
+            quest = json.loads(path.read_text(encoding="utf-8"))
+            self.assertIs(quest.get("instantComplete"), False, quest.get("_id"))
+            self.assertEqual(quest.get("acceptanceAndFinishingSource"), "eft", quest.get("_id"))
+            finish = ((quest.get("conditions") or {}).get("AvailableForFinish") or [])
+            self.assertGreater(len(finish), 0, quest.get("_id"))
+            success = ((quest.get("rewards") or {}).get("Success") or [])
+            self.assertGreater(len(success), 0, quest.get("_id"))
+
+    def test_server_mod_never_forces_quest_completion_or_success(self):
+        source = "\n".join(
+            path.read_text(encoding="utf-8")
+            for path in sorted(SERVER.glob("*.cs"))
+        )
+        self.assertNotIn("CompleteQuest(", source)
+        self.assertNotIn("QuestStatusEnum.Success", source)
+        self.assertNotIn("SetQuestsAvailableForFinish", source)
 
     def test_recovery_is_dry_run_by_default_and_backup_first(self):
         text = RECOVERY.read_text(encoding="utf-8")
