@@ -26,7 +26,7 @@ class Post010CurationAdmissionTests(unittest.TestCase):
 
     def test_every_reviewed_source_remains_non_materialized(self):
         admissions = self.manifest["admissions"]
-        self.assertGreaterEqual(len(admissions), 7)
+        self.assertGreaterEqual(len(admissions), 12)
         self.assertTrue(all(entry["runtimeMaterialize"] is False for entry in admissions))
 
         by_name = {entry["sourceBundle"]: entry for entry in admissions}
@@ -38,6 +38,11 @@ class Post010CurationAdmissionTests(unittest.TestCase):
             "Tarkov Mule",
             "Ultrasound",
             "Stims Proficiency",
+            "Boss Hunt",
+            "Boss Follower Hunt",
+            "Cultists Hunt",
+            "Sniper Life",
+            "Survivalist",
         ):
             self.assertEqual(by_name[rewrite]["decision"], "rewrite-candidate")
             self.assertIn("requiredRewriteBoundary", by_name[rewrite])
@@ -56,6 +61,22 @@ class Post010CurationAdmissionTests(unittest.TestCase):
         self.assertEqual(stims["futureUse"], "controlled stimulant field doctrine")
         self.assertIn("avoid repeated-use grind", stims["requiredRewriteBoundary"].lower())
         self.assertIn("economy admiral review", stims["requiredRewriteBoundary"].lower())
+
+    def test_operations_are_compact_rewrites_not_count_ladders(self):
+        by_name = {entry["sourceBundle"]: entry for entry in self.manifest["admissions"]}
+        boundaries = {
+            name: by_name[name]["requiredRewriteBoundary"].lower()
+            for name in ("Boss Hunt", "Boss Follower Hunt", "Cultists Hunt", "Sniper Life", "Survivalist")
+        }
+
+        self.assertIn("no repeated boss-count ladder", boundaries["Boss Hunt"])
+        self.assertIn("no follower farming ladder", boundaries["Boss Follower Hunt"])
+        self.assertIn("no cumulative cultist ladder", boundaries["Cultists Hunt"])
+        self.assertIn("never expand by repetitive 10 m", boundaries["Sniper Life"])
+        self.assertIn("no per-map five-quest template", boundaries["Survivalist"])
+
+        self.assertEqual(by_name["Boss Hunt"]["futureUse"], "single high-value-target operations")
+        self.assertEqual(by_name["Survivalist"]["futureUse"], "expedition survival and extraction proof")
 
     def test_frozen_runtime_counts_are_unchanged(self):
         quest_files = sorted((ROOT / "db" / "quests").glob("*.json"))
