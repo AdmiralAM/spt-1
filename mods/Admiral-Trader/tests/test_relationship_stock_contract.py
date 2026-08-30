@@ -55,6 +55,28 @@ class RelationshipStockContractTests(unittest.TestCase):
         self.assertTrue(rules["runtimeMaterializationRequiresItemTplProof"])
         self.assertTrue(rules["runtimeMaterializationRequiresEconomyReview"])
 
+    def test_candidate_evidence_is_review_only_and_rejections_are_explicit(self):
+        candidate_doc = self.load("relationship-stock-candidates.json")
+        self.assertFalse(candidate_doc["policy"]["materialize"])
+        self.assertTrue(candidate_doc["policy"]["requiresPinnedTraderAssortOverlapProof"])
+        self.assertTrue(candidate_doc["policy"]["requiresEconomyAdmiralReview"])
+        self.assertTrue(candidate_doc["policy"]["rejectedCandidatesMustNeverMaterialize"])
+
+        candidates = candidate_doc["candidates"]
+        by_tpl = {x["tpl"]: x for x in candidates}
+        self.assertEqual(len(by_tpl), len(candidates))
+        self.assertEqual(by_tpl["590c2e1186f77425357b6124"]["decision"], "advance-to-overlap-review")
+        self.assertEqual(by_tpl["5910968f86f77425cf569c32"]["decision"], "advance-to-overlap-review")
+        self.assertEqual(by_tpl["591094e086f7747caa7bb2ef"]["decision"], "hold-high-economic-impact")
+        self.assertEqual(by_tpl["544fb5454bdc2df8738b456a"]["decision"], "reject-redundant-vanilla")
+        self.assertEqual(by_tpl["5ac78a9b86f7741cca0bbd8d"]["decision"], "reject-redundant-vanilla")
+        self.assertTrue(all(x["spt413ReferencePriceRub"] > 0 for x in candidates))
+
+        assort = json.loads((ROOT / "db" / "assort.json").read_text(encoding="utf-8"))
+        live_tpls = {x["_tpl"] for x in assort["items"]}
+        rejected_tpls = {x["tpl"] for x in candidates if x["decision"].startswith("reject-")}
+        self.assertTrue(rejected_tpls.isdisjoint(live_tpls))
+
 
 if __name__ == "__main__":
     unittest.main()
