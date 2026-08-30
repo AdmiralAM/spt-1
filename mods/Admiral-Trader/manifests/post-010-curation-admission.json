@@ -56,8 +56,15 @@
     },
     {
       "sourceBundle": "Juggernaut",
-      "decision": "pending-source-review",
-      "futureUse": "heavy-protection operation",
+      "decision": "rewrite-candidate",
+      "futureUse": "heavy-protection field doctrine",
+      "evidence": [
+        "legacy chain begins with BNTI Module-3M body armor barter",
+        "objective is FIR HandoverItem over a broad body-armor target list",
+        "next quest repeats the same structure at quantity two and unlocks the next armor offer"
+      ],
+      "reason": "Heavy protection can support Admiral's expeditionary identity, but the legacy chain is another escalating armor barter conveyor rather than proof of operating effectively under heavy protection.",
+      "requiredRewriteBoundary": "Any future Juggernaut-derived operation must demonstrate field use, survival or combat performance under a bounded armor class/equipment rule; no generic armor handover ladder or per-armor unlock chain.",
       "runtimeMaterialize": false
     },
     {
