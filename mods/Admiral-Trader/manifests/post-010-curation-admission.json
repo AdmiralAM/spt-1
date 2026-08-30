@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-research-only",
+  "source": {
+    "repository": "Thirt3nth/Andrudis-Questmaniac",
+    "commit": "4e15990ac18f469ef7818475ce8553bbbb7cebb4"
+  },
+  "policy": {
+    "directLegacyQuestCopyAllowed": false,
+    "materializeIntoFrozen010": false,
+    "quotaDrivenAdmission": false,
+    "requireWhyWhatContextPayoff": true,
+    "requireExactSpt413ConditionProof": true,
+    "requireVanillaScorpionArtemOverlapAudit": true,
+    "requireEconomyAdmiralReview": true
+  },
+  "admissions": [
+    {
+      "sourceBundle": "Deep Pockets",
+      "decision": "reject-direct-port",
+      "futureUse": "theme-only-if-distinct-operation-emerges",
+      "evidence": [
+        "legacy chain begins with FIR HandoverItem requirements across broad vest/rig targets",
+        "success rewards unlock individual equipment offers",
+        "next quest repeats the same structure with a larger handover count"
+      ],
+      "reason": "This is an equipment barter-unlock ladder, not an authored operation. Porting it would recreate collection busywork and a supermarket progression surface.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Iron Head",
+      "decision": "rewrite-candidate",
+      "futureUse": "protective-equipment field doctrine",
+      "evidence": [
+        "legacy chain begins with Kolpak-1S riot helmet barter",
+        "objective is FIR HandoverItem over a broad helmet target list",
+        "next quest repeats the same structure with increased quantity and another helmet unlock"
+      ],
+      "reason": "The protective-equipment identity may fit Admiral, but the source mechanic is another escalating barter ladder. Any future quest must prove field use or operational risk rather than item handover volume.",
+      "requiredRewriteBoundary": "No generic helmet collection, no escalating count ladder, no one-item-per-quest assort conveyor.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Meds Proficiency",
+      "decision": "rewrite-candidate",
+      "futureUse": "field-medicine proficiency",
+      "evidence": [
+        "legacy chain begins with Esmarch tourniquet barter",
+        "objective combines broad HandoverItem inputs with five copies of the target medical item",
+        "success immediately unlocks that medical item and the next quest repeats the pattern for another consumable"
+      ],
+      "reason": "Medical proficiency is a potentially coherent Admiral support domain, but the source implementation is acquisition/handover repetition rather than demonstrated medical field use.",
+      "requiredRewriteBoundary": "Future admission requires a proven SPT 4.1.3 use/healing/survival condition or another distinct operational proof; otherwise reject.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Juggernaut",
+      "decision": "pending-source-review",
+      "futureUse": "heavy-protection operation",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Tarkov Mule",
+      "decision": "pending-source-review",
+      "futureUse": "load-bearing expedition operation",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Ultrasound",
+      "decision": "pending-source-review",
+      "futureUse": "medical/diagnostic operation",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Stims Proficiency",
+      "decision": "pending-source-review",
+      "futureUse": "controlled stimulant proficiency",
+      "runtimeMaterialize": false
+    }
+  ]
+}
