@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 using SPTBeltArmbandInventory;
@@ -21,6 +22,27 @@ internal static class DogtagCaseLifecycleRegression
         // capabilities that are intentionally reserved for B&A&HB wearables.
         if (WearableItemDescriptorRegistry.TryGet(RuntimeIdentity.DogtagCaseItemId, out _))
             throw new InvalidOperationException("Dogtag Case must not be registered as a protected/capability-bearing wearable.");
+
+        // Prove the negative lifecycle boundary explicitly instead of relying only
+        // on descriptor absence: a Dogtag-slot case and its child remain entirely
+        // vanilla for death and lost-insurance processing.
+        var vanillaDogtagCaseTree = new[]
+        {
+            new BeltInventoryNode("equipment", null, null, null),
+            new BeltInventoryNode("dogtag-case-instance", "equipment", "Dogtag", RuntimeIdentity.DogtagCaseItemId),
+            new BeltInventoryNode("dogtag-child", "dogtag-case-instance", "main", "vanilla-dogtag")
+        };
+        var wearableRoots = new[]
+        {
+            new ProtectedWearableRoot(BeltDeathPolicy.ArmBand, RuntimeIdentity.CandidateItemId),
+            new ProtectedWearableRoot(RuntimeIdentity.DedicatedBeltWireSlotId, RuntimeIdentity.DedicatedMagazineBeltItemId),
+            new ProtectedWearableRoot(RuntimeIdentity.DedicatedHeadBandWireSlotId, RuntimeIdentity.EmergencyHeadBandItemId)
+        };
+        if (BeltDeathPolicy.GetKeptTreeIds(vanillaDogtagCaseTree, wearableRoots).Count != 0)
+            throw new InvalidOperationException("Dogtag Case must not inherit B&A&HB death-retention semantics.");
+        string[] lostDogtagTree = { "dogtag-case-instance", "dogtag-child" };
+        if (!BeltDeathPolicy.FilterLostInsuredIds(lostDogtagTree, vanillaDogtagCaseTree, wearableRoots).SequenceEqual(lostDogtagTree))
+            throw new InvalidOperationException("Dogtag Case must remain untouched by B&A&HB insurance-loss suppression.");
 
         // Recovery/uninstall semantics must remove both the serialized owned root
         // and every descendant/reference even though this item lives in a vanilla
