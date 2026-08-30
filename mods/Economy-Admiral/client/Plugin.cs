@@ -25,7 +25,6 @@ public sealed class Plugin : BaseUnityPlugin
     private ConfigEntry<bool> traderCluster;
     private ConfigEntry<bool> fleaCluster;
     private ConfigEntry<bool> lootCluster;
-
     private ConfigEntry<bool> questItemStacksEnabled;
     private ConfigEntry<bool> questXpEnabled;
     private ConfigEntry<bool> questStandingEnabled;
@@ -36,7 +35,6 @@ public sealed class Plugin : BaseUnityPlugin
     private ConfigEntry<bool> fleaFeeEnabled;
     private ConfigEntry<bool> looseLootEnabled;
     private ConfigEntry<bool> staticLootEnabled;
-
     private ConfigEntry<double> traderPurchase;
     private ConfigEntry<double> traderSell;
     private ConfigEntry<double> fleaBase;
@@ -50,6 +48,7 @@ public sealed class Plugin : BaseUnityPlugin
     private ConfigEntry<double> questXp;
     private ConfigEntry<double> restartableQuestXp;
     private ConfigEntry<double> questStanding;
+    private ConfigEntry<double> restartableQuestStanding;
 
     private bool hydrating;
     private bool initialized;
@@ -90,7 +89,7 @@ public sealed class Plugin : BaseUnityPlugin
             "Hard gate for loose and static/container loot pressure." + RestartText);
 
         questItemStacksEnabled = Config.Bind("03. Advanced - Quest Mechanisms", "Item Reward Stack Pressure", false,
-            "Automatic bounded item-reward stack normalization." + ManualText + RestartText);
+            "Automatic bounded item/reward-value normalization, including generated repeatable Rouble/GP reward budgets." + ManualText + RestartText);
         questXpEnabled = Config.Bind("03. Advanced - Quest Mechanisms", "XP Reward Pressure", false,
             "Automatic quest XP reward normalization." + ManualText + RestartText);
         questStandingEnabled = Config.Bind("03. Advanced - Quest Mechanisms", "Trader Standing Reward Pressure", false,
@@ -102,31 +101,28 @@ public sealed class Plugin : BaseUnityPlugin
             "Supported RUB/USD/EUR trader purchase-price pressure." + ManualText + RestartText);
         traderSellEnabled = Config.Bind("04. Advanced - Trader Mechanisms", "Sell Payout Pressure", false,
             "Reduced trader sell payouts." + ManualText + RestartText);
-
         fleaPriceEnabled = Config.Bind("05. Advanced - Flea Mechanisms", "Price and Anti-Arbitrage Pressure", false,
             "Flea base-price, handbook-floor and anti-arbitrage pressure." + ManualText + RestartText);
         fleaFeeEnabled = Config.Bind("05. Advanced - Flea Mechanisms", "Listing Fee Pressure", false,
             "Flea listing-fee pressure." + ManualText + RestartText);
-
         looseLootEnabled = Config.Bind("06. Advanced - Loot Mechanisms", "Loose Loot Pressure", false,
             "Scales native loose-loot multipliers." + ManualText + RestartText);
         staticLootEnabled = Config.Bind("06. Advanced - Loot Mechanisms", "Static / Container Loot Pressure", false,
             "Scales native static/container-loot multipliers." + ManualText + RestartText);
 
         questItems = BindDouble("07. Custom - Quests", "Quest Item Reward Cap", 1.50, 0.1, 10.0, "normal quest item-reward budget multiple");
-        restartableQuestItems = BindDouble("07. Custom - Quests", "Restartable Quest Item Reward Cap", 1.15, 0.1, 10.0, "restartable quest item-reward budget multiple");
+        restartableQuestItems = BindDouble("07. Custom - Quests", "Restartable Quest Item / Value Cap", 1.15, 0.1, 10.0, "restartable item and generated reward-value budget multiple");
         questXp = BindDouble("07. Custom - Quests", "Quest XP Reward Cap", 1.50, 0.1, 10.0, "normal quest XP reward multiple");
         restartableQuestXp = BindDouble("07. Custom - Quests", "Restartable Quest XP Reward Cap", 1.15, 0.1, 10.0, "restartable quest XP reward multiple");
-        questStanding = BindDouble("07. Custom - Quests", "Quest Standing Reward Cap", 1.50, 0.1, 10.0, "trader-standing reward multiple");
+        questStanding = BindDouble("07. Custom - Quests", "Quest Standing Reward Cap", 1.50, 0.1, 10.0, "normal trader-standing reward multiple");
+        restartableQuestStanding = BindDouble("07. Custom - Quests", "Restartable Quest Standing Reward Cap", 1.15, 0.1, 10.0, "restartable trader-standing reward multiple");
 
         traderPurchase = BindDouble("08. Custom - Traders", "Trader Purchase Multiplier", 1.15, 1.0, 2.0, "multiplier applied to supported trader currency purchase costs");
         traderSell = BindDouble("08. Custom - Traders", "Trader Sell Payout Multiplier", 0.85, 0.5, 1.0, "effective share of normal trader sell payout");
-
         fleaBase = BindDouble("09. Custom - Flea", "Flea Base Price Multiplier", 1.65, 1.0, 2.5, "minimum flea base-price pressure multiplier");
         fleaBelowHandbook = BindDouble("09. Custom - Flea", "Max Below-Handbook Difference (%)", 45.0, 0.0, 100.0, "maximum allowed flea price difference below handbook price; lower is stricter");
         fleaHandbook = BindDouble("09. Custom - Flea", "Handbook Price Multiplier", 1.10, 1.0, 2.0, "handbook floor multiplier used by flea pressure");
         fleaFee = BindDouble("09. Custom - Flea", "Flea Listing Fee Multiplier", 1.25, 1.0, 2.0, "flea listing-fee multiplier");
-
         looseLoot = BindDouble("10. Custom - Loot", "Loose Loot Scale", 0.85, 0.5, 1.0, "native loose-loot multiplier scale");
         staticLoot = BindDouble("10. Custom - Loot", "Static Loot Scale", 0.85, 0.5, 1.0, "native static/container-loot multiplier scale");
     }
@@ -143,14 +139,12 @@ public sealed class Plugin : BaseUnityPlugin
             requestHandlerType = assembly.GetType("SPT.Common.Http.RequestHandler", false);
             if (requestHandlerType != null) break;
         }
-
         requestHandlerType ??= Type.GetType("SPT.Common.Http.RequestHandler, SPT.Common", false);
         if (requestHandlerType == null)
         {
             Logger.LogError("SPT.Common.Http.RequestHandler was not found; Economy Admiral F12 transport is unavailable.");
             return;
         }
-
         getJsonMethod = requestHandlerType.GetMethod("GetJson", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(string) }, null);
         postJsonMethod = requestHandlerType.GetMethod("PostJson", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(string), typeof(string) }, null);
         if (getJsonMethod == null || postJsonMethod == null)
@@ -172,11 +166,7 @@ public sealed class Plugin : BaseUnityPlugin
         try
         {
             var snapshot = ParseSnapshot(InvokeGet());
-            if (snapshot == null || !snapshot.Ok)
-            {
-                Logger.LogError("Economy Admiral server settings GET returned no valid snapshot.");
-                return false;
-            }
+            if (snapshot == null || !snapshot.Ok) return false;
             ApplySnapshot(snapshot);
             return true;
         }
@@ -207,7 +197,6 @@ public sealed class Plugin : BaseUnityPlugin
             traderSellEnabled.Value = snapshot.EnableTraderSellPressure;
             fleaPriceEnabled.Value = snapshot.EnableFleaPurchasePressure;
             fleaFeeEnabled.Value = snapshot.EnableFleaListingFeePressure;
-            // Migrate the old single loot switch into both new sub-switches on the next save.
             looseLootEnabled.Value = snapshot.EnableLooseLootPressure || snapshot.EnableLootPressure;
             staticLootEnabled.Value = snapshot.EnableStaticLootPressure || snapshot.EnableLootPressure;
             traderPurchase.Value = snapshot.CustomTraderPurchasePriceMultiplier;
@@ -223,6 +212,7 @@ public sealed class Plugin : BaseUnityPlugin
             questXp.Value = snapshot.CustomQuestXpMultiple;
             restartableQuestXp.Value = snapshot.CustomRestartableQuestXpMultiple;
             questStanding.Value = snapshot.CustomQuestStandingMultiple;
+            restartableQuestStanding.Value = snapshot.CustomRestartableQuestStandingMultiple;
         }
         finally { hydrating = false; }
     }
@@ -259,6 +249,7 @@ public sealed class Plugin : BaseUnityPlugin
         questXp.SettingChanged += OnSettingChanged;
         restartableQuestXp.SettingChanged += OnSettingChanged;
         questStanding.SettingChanged += OnSettingChanged;
+        restartableQuestStanding.SettingChanged += OnSettingChanged;
     }
 
     private void OnSettingChanged(object sender, EventArgs args)
@@ -270,7 +261,6 @@ public sealed class Plugin : BaseUnityPlugin
             HydrateFromServer();
             return;
         }
-
         try
         {
             var request = BuildRequest();
@@ -323,6 +313,7 @@ public sealed class Plugin : BaseUnityPlugin
         CustomQuestXpMultiple = questXp.Value,
         CustomRestartableQuestXpMultiple = restartableQuestXp.Value,
         CustomQuestStandingMultiple = questStanding.Value,
+        CustomRestartableQuestStandingMultiple = restartableQuestStanding.Value,
     };
 
     private static bool Matches(SettingsRequest request, SettingsSnapshot snapshot) =>
@@ -356,91 +347,43 @@ public sealed class Plugin : BaseUnityPlugin
         Nearly(request.CustomRestartableQuestItemBudgetMultiple, snapshot.CustomRestartableQuestItemBudgetMultiple) &&
         Nearly(request.CustomQuestXpMultiple, snapshot.CustomQuestXpMultiple) &&
         Nearly(request.CustomRestartableQuestXpMultiple, snapshot.CustomRestartableQuestXpMultiple) &&
-        Nearly(request.CustomQuestStandingMultiple, snapshot.CustomQuestStandingMultiple);
+        Nearly(request.CustomQuestStandingMultiple, snapshot.CustomQuestStandingMultiple) &&
+        Nearly(request.CustomRestartableQuestStandingMultiple, snapshot.CustomRestartableQuestStandingMultiple);
 
     private static bool Nearly(double left, double right) => Math.Abs(left - right) < 0.000001;
-
-    private static SettingsSnapshot ParseSnapshot(string json)
-    {
-        if (string.IsNullOrWhiteSpace(json)) return null;
-        return JsonUtility.FromJson<SettingsSnapshot>(json);
-    }
-
-    private static Exception Unwrap(Exception exception) =>
-        exception is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : exception;
+    private static SettingsSnapshot ParseSnapshot(string json) => string.IsNullOrWhiteSpace(json) ? null : JsonUtility.FromJson<SettingsSnapshot>(json);
+    private static Exception Unwrap(Exception exception) => exception is TargetInvocationException tie && tie.InnerException != null ? tie.InnerException : exception;
 
     [Serializable]
     private sealed class SettingsRequest
     {
-        public string Mode;
-        public string Preset;
-        public bool EnablePlayableEconomyBundle;
-        public bool EnableQuestEconomyCluster;
-        public bool EnableTraderEconomyCluster;
-        public bool EnableFleaEconomyCluster;
-        public bool EnableLootEconomyCluster;
-        public bool EnableItemRewardStackNormalization;
-        public bool EnableQuestXpPressure;
-        public bool EnableQuestStandingPressure;
-        public bool EnableRestartableQuestPressure;
-        public bool EnableTraderPurchasePressure;
-        public bool EnableTraderSellPressure;
-        public bool EnableFleaPurchasePressure;
-        public bool EnableFleaListingFeePressure;
-        public bool EnableLootPressure;
-        public bool EnableLooseLootPressure;
-        public bool EnableStaticLootPressure;
-        public double CustomTraderPurchasePriceMultiplier;
-        public double CustomTraderSellPayoutMultiplier;
-        public double CustomFleaBasePriceMultiplier;
-        public double CustomFleaMaxPriceDifferenceBelowHandbookPercent;
-        public double CustomFleaHandbookPriceMultiplier;
-        public double CustomFleaListingFeeMultiplier;
-        public double CustomLooseLootScale;
-        public double CustomStaticLootScale;
-        public double CustomQuestItemBudgetMultiple;
-        public double CustomRestartableQuestItemBudgetMultiple;
-        public double CustomQuestXpMultiple;
-        public double CustomRestartableQuestXpMultiple;
-        public double CustomQuestStandingMultiple;
+        public string Mode; public string Preset;
+        public bool EnablePlayableEconomyBundle; public bool EnableQuestEconomyCluster; public bool EnableTraderEconomyCluster; public bool EnableFleaEconomyCluster; public bool EnableLootEconomyCluster;
+        public bool EnableItemRewardStackNormalization; public bool EnableQuestXpPressure; public bool EnableQuestStandingPressure; public bool EnableRestartableQuestPressure;
+        public bool EnableTraderPurchasePressure; public bool EnableTraderSellPressure; public bool EnableFleaPurchasePressure; public bool EnableFleaListingFeePressure;
+        public bool EnableLootPressure; public bool EnableLooseLootPressure; public bool EnableStaticLootPressure;
+        public double CustomTraderPurchasePriceMultiplier; public double CustomTraderSellPayoutMultiplier;
+        public double CustomFleaBasePriceMultiplier; public double CustomFleaMaxPriceDifferenceBelowHandbookPercent; public double CustomFleaHandbookPriceMultiplier; public double CustomFleaListingFeeMultiplier;
+        public double CustomLooseLootScale; public double CustomStaticLootScale;
+        public double CustomQuestItemBudgetMultiple; public double CustomRestartableQuestItemBudgetMultiple;
+        public double CustomQuestXpMultiple; public double CustomRestartableQuestXpMultiple;
+        public double CustomQuestStandingMultiple; public double CustomRestartableQuestStandingMultiple;
     }
 
     [Serializable]
     private sealed class SettingsSnapshot
     {
-        public bool Ok;
-        public bool RestartRequired;
-        public string Mode;
-        public string Preset;
-        public bool EnablePlayableEconomyBundle;
-        public bool EnableQuestEconomyCluster;
-        public bool EnableTraderEconomyCluster;
-        public bool EnableFleaEconomyCluster;
-        public bool EnableLootEconomyCluster;
-        public bool EnableItemRewardStackNormalization;
-        public bool EnableQuestXpPressure;
-        public bool EnableQuestStandingPressure;
-        public bool EnableRestartableQuestPressure;
-        public bool EnableTraderPurchasePressure;
-        public bool EnableTraderSellPressure;
-        public bool EnableFleaPurchasePressure;
-        public bool EnableFleaListingFeePressure;
-        public bool EnableLootPressure;
-        public bool EnableLooseLootPressure;
-        public bool EnableStaticLootPressure;
-        public double CustomTraderPurchasePriceMultiplier;
-        public double CustomTraderSellPayoutMultiplier;
-        public double CustomFleaBasePriceMultiplier;
-        public double CustomFleaMaxPriceDifferenceBelowHandbookPercent;
-        public double CustomFleaHandbookPriceMultiplier;
-        public double CustomFleaListingFeeMultiplier;
-        public double CustomLooseLootScale;
-        public double CustomStaticLootScale;
-        public double CustomQuestItemBudgetMultiple;
-        public double CustomRestartableQuestItemBudgetMultiple;
-        public double CustomQuestXpMultiple;
-        public double CustomRestartableQuestXpMultiple;
-        public double CustomQuestStandingMultiple;
+        public bool Ok; public bool RestartRequired; public string Mode; public string Preset;
+        public bool EnablePlayableEconomyBundle; public bool EnableQuestEconomyCluster; public bool EnableTraderEconomyCluster; public bool EnableFleaEconomyCluster; public bool EnableLootEconomyCluster;
+        public bool EnableItemRewardStackNormalization; public bool EnableQuestXpPressure; public bool EnableQuestStandingPressure; public bool EnableRestartableQuestPressure;
+        public bool EnableTraderPurchasePressure; public bool EnableTraderSellPressure; public bool EnableFleaPurchasePressure; public bool EnableFleaListingFeePressure;
+        public bool EnableLootPressure; public bool EnableLooseLootPressure; public bool EnableStaticLootPressure;
+        public double CustomTraderPurchasePriceMultiplier; public double CustomTraderSellPayoutMultiplier;
+        public double CustomFleaBasePriceMultiplier; public double CustomFleaMaxPriceDifferenceBelowHandbookPercent; public double CustomFleaHandbookPriceMultiplier; public double CustomFleaListingFeeMultiplier;
+        public double CustomLooseLootScale; public double CustomStaticLootScale;
+        public double CustomQuestItemBudgetMultiple; public double CustomRestartableQuestItemBudgetMultiple;
+        public double CustomQuestXpMultiple; public double CustomRestartableQuestXpMultiple;
+        public double CustomQuestStandingMultiple; public double CustomRestartableQuestStandingMultiple;
         public string Error;
     }
 }
