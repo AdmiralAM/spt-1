@@ -26,7 +26,9 @@
     "requiresPinnedTraderAssortOverlapProof": true,
     "requiresEconomyAdmiralReview": true,
     "rejectedCandidatesMustNeverMaterialize": true,
-    "barterInputPressureMustBeReviewedSeparatelyFromDirectSaleOverlap": true
+    "barterInputPressureMustBeReviewedSeparatelyFromDirectSaleOverlap": true,
+    "independentRecurringUtilityRequired": true,
+    "rawBarterSupplyRejectedEvenWhenEconomyEnvelopeIsSafe": true
   },
   "candidates": [
     {
@@ -35,19 +37,17 @@
       "targetLoyaltyLevel": 2,
       "role": "expedition-electronics",
       "spt413ReferencePriceRub": 28413,
-      "decision": "advance-to-economy-review",
-      "proposedEnvelope": {
-        "stockPerReset": 4,
-        "buyRestriction": 2,
-        "priceRubFloor": 34000,
-        "priceRubCeiling": 37000,
-        "questGate": null
-      },
-      "rationale": "A bounded military-grade logistics component fits Admiral's expeditionary procurement role and does not directly grant combat capability. The pinned fixed-trader SPT 4.1.3 assort set contains no direct Military cable offer, unlike the rejected repair/tool candidates. The proposed envelope deliberately prices above the pinned 28,413 RUB reference and remains finite; Economy Admiral still owns final price/supply approval.",
+      "decision": "reject-raw-barter-supply-no-independent-utility",
+      "rationale": "Military cable cleared the pinned fixed-trader overlap screen and can be bounded economically, but Relationship admission requires independent recurring specialist utility. The item is a raw component rather than usable field equipment; selling it for standing would create renewable barter/material supply and tier filler rather than a distinct Admiral privilege. Economy approval can constrain a valid offer but cannot waive this gameplay-purpose gate.",
       "overlap": {
         "vanillaPinnedFixedAssorts": "no-direct-tpl-hit",
         "scorpionPinned": "no-exact-tpl-hit-in-repository-code-search",
         "artemPinned": "no-exact-tpl-hit-in-repository-code-search"
+      },
+      "admissionFailure": {
+        "independentRecurringUtility": false,
+        "rawBarterSupply": true,
+        "economyReviewCanOverride": false
       }
     },
     {
