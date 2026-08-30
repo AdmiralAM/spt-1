@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-curation-review-only",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "supplementalSource": {
+    "repository": "laurentmekka/AndrudisQuestManiac",
+    "commit": "58c3dd0487858c7ba8e8c053b873fbe76a222637",
+    "activeQuestCount": 4641,
+    "activeBundleCount": 30,
+    "reserveQuestCount": 1734,
+    "legacyReserveQuestCount": 803,
+    "alternativeReserveQuestCount": 931,
+    "role": "SPT-4.1 supplemental compatibility/content reference; does not replace the pinned canonical legacy corpus"
+  },
+  "legacyReserve": [
+    {
+      "sourceBundle": "Gear Mastery",
+      "originalDocumentedQuestCount": 99,
+      "decision": "consume-as-constraint-source",
+      "targets": ["protection-calibration", "ballistic-head-test", "heavy-assault-loadout", "expedition-loadout"],
+      "reason": "Gear-restricted elimination mastery repeats the same design space already represented by bounded protection/loadout operations. Useful equipment constraints may inform those operations, but no separate gear-mastery ladder is admitted.",
+      "newAuthoredOperationRequired": false
+    },
+    {
+      "sourceBundle": "Honor Skills",
+      "originalDocumentedQuestCount": 280,
+      "decision": "reject-direct-port",
+      "targets": [],
+      "reason": "Ten-step skill-level ladders per skill reward passive character progression rather than an authored Admiral operation. They duplicate organic skill advancement and create notification/reward volume without a distinct tactical problem.",
+      "newAuthoredOperationRequired": false
+    },
+    {
+      "sourceBundle": "Skills Guru",
+      "originalDocumentedQuestCount": 16,
+      "decision": "reject-direct-port",
+      "targets": [],
+      "reason": "Meta mastery of whole skill categories is character-progression bookkeeping rather than specialist field work. It adds no distinct Why/What/Context/Payoff beyond reaching skill thresholds.",
+      "newAuthoredOperationRequired": false
+    },
+    {
+      "sourceBundle": "Weapon Expert",
+      "originalDocumentedQuestCount": 416,
+      "decision": "consume-as-coverage-source",
+      "targets": ["arsenal-capability-backbone"],
+      "reason": "Weapon-group elimination ladders duplicate the seven-family Arsenal capability model. Weapon-group coverage may be used to audit family pools, but the 1/3/6/9/... kill conveyor is not admitted.",
+      "newAuthoredOperationRequired": false
+    }
+  ],
+  "alternativeReserve": {
+    "documentedVariantCount": 28,
+    "documentedQuestCount": 931,
+    "decision": "no-separate-campaign-content",
+    "classes": [
+      {
+        "kind": "Barter/Trade splits",
+        "decision": "covered-by-standard-bundle-curation",
+        "reason": "These are half-bundle substitutions of already reviewed proficiency/equipment content, not additional quest concepts."
+      },
+      {
+        "kind": "Lite/Strict variants",
+        "decision": "covered-by-standard-bundle-curation",
+        "reason": "Difficulty/order variants do not create a new authored operation; Admiral owns one curated progression rather than user-swappable duplicate chains."
+      },
+      {
+        "kind": "Gunsmith Assistant variants",
+        "decision": "drop",
+        "reason": "They duplicate Mechanic Gunsmith handover/progression and have no distinct Admiral field purpose."
+      },
+      {
+        "kind": "Hideout Assistant variants",
+        "decision": "drop",
+        "reason": "They duplicate hideout construction requirements and are explicitly outside Admiral's curated specialist campaign."
+      },
+      {
+        "kind": "Killboard / Killboard By Weapons",
+        "decision": "reject-as-quest-content",
+        "reason": "Never-completing scoreboard quests are telemetry/UI concepts, not Admiral operations or progression rewards."
+      }
+    ]
+  },
+  "globalBoundary": {
+    "reserveBundlesMayCreateParallelQuestChains": false,
+    "variantSwappingSupported": false,
+    "skillThresholdRewardLaddersAllowed": false,
+    "neverCompletingTrackerQuestsAllowed": false,
+    "newAuthoredOperationsRequired": 0
+  },
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0
+  }
+}
