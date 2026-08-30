@@ -27,12 +27,27 @@ internal static class GroupedItemRewardSmoke
         Require(mixedTpl.Eligible && mixedTpl.SelectedIndex == 0 && mixedTpl.Reason == "OneReducibleStackInGroupedReward",
             "mixed-template grouped reward with exactly one reducible known-price stack must select only that stack");
 
-        var ambiguous = GroupedItemRewardSelectorCore.Select([
+        var dominant = GroupedItemRewardSelectorCore.Select([
             new GroupedItemRewardEntry("tpl-a", 3d, true),
             new GroupedItemRewardEntry("tpl-b", 2d, true),
         ]);
+        Require(dominant.Eligible && dominant.SelectedIndex == 0 && dominant.Reason == "UniqueDominantReducibleStackInGroupedReward",
+            "automatic grouped pressure must select a unique largest reducible stack while leaving smaller stacks immutable");
+
+        var dominantLater = GroupedItemRewardSelectorCore.Select([
+            new GroupedItemRewardEntry("tpl-a", 2d, true),
+            new GroupedItemRewardEntry("tpl-b", 5d, true),
+            new GroupedItemRewardEntry("tpl-c", 3d, true),
+        ]);
+        Require(dominantLater.Eligible && dominantLater.SelectedIndex == 1 && dominantLater.Reason == "UniqueDominantReducibleStackInGroupedReward",
+            "dominant automatic selection must be independent of item order");
+
+        var ambiguous = GroupedItemRewardSelectorCore.Select([
+            new GroupedItemRewardEntry("tpl-a", 3d, true),
+            new GroupedItemRewardEntry("tpl-b", 3d, true),
+        ]);
         Require(!ambiguous.Eligible && ambiguous.Reason == "AmbiguousMultipleReducibleStacks",
-            "multiple reducible stacks must fail closed across different templates");
+            "equal dominant reducible stacks must remain fail-closed");
 
         var unknownSelectedPrice = GroupedItemRewardSelectorCore.Select([
             new GroupedItemRewardEntry("tpl-a", 3d, false),
@@ -79,7 +94,7 @@ internal static class GroupedItemRewardSmoke
             new GroupedItemRewardEntry("tpl-b", 2d, false),
         ], requireKnownHandbookPrice: false);
         Require(!manualAmbiguous.Eligible && manualAmbiguous.Reason == "AmbiguousMultipleReducibleStacks",
-            "manual exact grouped selection must not bypass unique-stack safety");
+            "manual exact grouped selection must not choose among multiple stacks");
 
         double?[] stacks = [3d, 1d, 1d];
         Require(ItemRewardQuantityCore.TryReadSynchronizedTotal(5d, stacks, out var total) && Math.Abs(total - 5d) < 0.001,
