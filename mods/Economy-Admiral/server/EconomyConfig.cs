@@ -38,7 +38,6 @@ public sealed record EconomyConfig
     public EconomyPreset Preset { get; init; } = EconomyPreset.Normal;
     public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
 
-    // Retired compatibility key. Older configs may still contain true, but the unimplemented mechanic is inert.
     [JsonInclude]
     public bool RepeatedRaidLootDecay { get => false; private init { } }
 
@@ -107,7 +106,6 @@ public sealed record EconomyConfig
 
     public double CustomFleaListingFeeMultiplier { get; init; } = 1.25;
 
-    // Legacy/manual master remains accepted for old configs. New UI exposes loose/static mechanisms separately.
     public bool EnableLootPressure
     {
         get => EnableLooseLootPressure || EnableStaticLootPressure;
@@ -129,13 +127,12 @@ public sealed record EconomyConfig
     public double CustomLooseLootScale { get; init; } = 0.85;
     public double CustomStaticLootScale { get; init; } = 0.85;
 
-    // Custom gameplay enforcement targets are deliberately separate from CustomAuditPolicy.
-    // Changing Custom difficulty must not redefine the observational/detection thresholds.
     public double CustomQuestItemBudgetMultiple { get; init; } = 1.50;
     public double CustomRestartableQuestItemBudgetMultiple { get; init; } = 1.15;
     public double CustomQuestXpMultiple { get; init; } = 1.50;
     public double CustomRestartableQuestXpMultiple { get; init; } = 1.15;
     public double CustomQuestStandingMultiple { get; init; } = 1.50;
+    public double CustomRestartableQuestStandingMultiple { get; init; } = 1.15;
 
     public RarityThresholds Rarity { get; init; } = new();
     public AuditPolicy CustomAuditPolicy { get; init; } = new();
@@ -159,7 +156,6 @@ public sealed record EconomyConfig
     [JsonIgnore] public bool ConfiguredEnableStaticLootPressure => enableStaticLootPressure;
     [JsonIgnore] public Dictionary<string, ManualQuestRewardOverride> ConfiguredQuestRewardOverrides => questRewardOverrides;
 
-    // Audit must preview the same selected profile that Enforce would apply, while mutation services still require Mode=Enforce.
     [JsonIgnore] private bool BundleProfileActive => EnablePlayableEconomyBundle && Mode != EconomyMode.Off;
 
     private static readonly Dictionary<string, ManualQuestRewardOverride> EmptyQuestRewardOverrides = new(StringComparer.Ordinal);

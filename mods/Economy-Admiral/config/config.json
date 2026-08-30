@@ -32,6 +32,7 @@
   "customQuestXpMultiple": 1.50,
   "customRestartableQuestXpMultiple": 1.15,
   "customQuestStandingMultiple": 1.50,
+  "customRestartableQuestStandingMultiple": 1.15,
   "rarity": {
     "commonMinSources": 8,
     "uncommonMinSources": 4,

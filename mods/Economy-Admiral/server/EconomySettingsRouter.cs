@@ -86,6 +86,7 @@ public sealed class EconomySettingsRouterCallback(ModHelper modHelper, ISptLogge
                 CustomQuestXpMultiple = info.CustomQuestXpMultiple,
                 CustomRestartableQuestXpMultiple = info.CustomRestartableQuestXpMultiple,
                 CustomQuestStandingMultiple = info.CustomQuestStandingMultiple,
+                CustomRestartableQuestStandingMultiple = info.CustomRestartableQuestStandingMultiple,
             };
 
             EconomyConfigValidator.Validate(updated);
@@ -214,6 +215,7 @@ public sealed record EconomySettingsUpdateRequest : IRequestData
     public double CustomQuestXpMultiple { get; init; } = 1.50;
     public double CustomRestartableQuestXpMultiple { get; init; } = 1.15;
     public double CustomQuestStandingMultiple { get; init; } = 1.50;
+    public double CustomRestartableQuestStandingMultiple { get; init; } = 1.15;
 }
 
 public sealed record EconomySettingsSnapshot(
@@ -227,7 +229,8 @@ public sealed record EconomySettingsSnapshot(
     double CustomFleaHandbookPriceMultiplier, double CustomFleaListingFeeMultiplier,
     double CustomLooseLootScale, double CustomStaticLootScale,
     double CustomQuestItemBudgetMultiple, double CustomRestartableQuestItemBudgetMultiple,
-    double CustomQuestXpMultiple, double CustomRestartableQuestXpMultiple, double CustomQuestStandingMultiple)
+    double CustomQuestXpMultiple, double CustomRestartableQuestXpMultiple, double CustomQuestStandingMultiple,
+    double CustomRestartableQuestStandingMultiple)
 {
     public static EconomySettingsSnapshot From(EconomyConfig config, bool restartRequired) => new(
         true, restartRequired, config.Mode.ToString(), config.Preset.ToString(), config.EnablePlayableEconomyBundle,
@@ -242,7 +245,8 @@ public sealed record EconomySettingsSnapshot(
         config.CustomFleaHandbookPriceMultiplier, config.CustomFleaListingFeeMultiplier,
         config.CustomLooseLootScale, config.CustomStaticLootScale,
         config.CustomQuestItemBudgetMultiple, config.CustomRestartableQuestItemBudgetMultiple,
-        config.CustomQuestXpMultiple, config.CustomRestartableQuestXpMultiple, config.CustomQuestStandingMultiple);
+        config.CustomQuestXpMultiple, config.CustomRestartableQuestXpMultiple, config.CustomQuestStandingMultiple,
+        config.CustomRestartableQuestStandingMultiple);
 }
 
 public sealed record EconomySettingsError(bool Ok, string Error);

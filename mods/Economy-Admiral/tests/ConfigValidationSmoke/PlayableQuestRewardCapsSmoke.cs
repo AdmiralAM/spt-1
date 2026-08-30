@@ -16,12 +16,14 @@ internal static class PlayableQuestRewardCapsSmoke
             "XP strength must be Easy > Normal > Hard");
         Require(easy.StandingMultiple > normal.StandingMultiple && normal.StandingMultiple > hard.StandingMultiple,
             "standing strength must be Easy > Normal > Hard");
+        Require(easy.RestartableStandingMultiple > normal.RestartableStandingMultiple && normal.RestartableStandingMultiple > hard.RestartableStandingMultiple,
+            "restartable standing strength must be Easy > Normal > Hard");
         Require(normal.ItemBudgetMultiple == 1.50 && normal.RestartableItemBudgetMultiple == 1.15,
             "Normal item caps are the Playable Economy v1 contract");
         Require(normal.XpMultiple == 1.50 && normal.RestartableXpMultiple == 1.15,
             "Normal XP caps are the Playable Economy v1 contract");
-        Require(normal.StandingMultiple == 1.50,
-            "Normal standing cap is the Playable Economy v1 contract");
+        Require(normal.StandingMultiple == 1.50 && normal.RestartableStandingMultiple == 1.15,
+            "Normal standing caps are the Playable Economy v1 contract");
 
         var customConfig = new EconomyConfig
         {
@@ -31,6 +33,7 @@ internal static class PlayableQuestRewardCapsSmoke
             CustomQuestXpMultiple = 1.6,
             CustomRestartableQuestXpMultiple = 1.1,
             CustomQuestStandingMultiple = 1.4,
+            CustomRestartableQuestStandingMultiple = 1.05,
             CustomAuditPolicy = new AuditPolicy
             {
                 HighItemValueLowStructureWarnMultiple = 9.0,
@@ -43,8 +46,10 @@ internal static class PlayableQuestRewardCapsSmoke
         var resolvedCustom = PlayableQuestRewardCaps.Resolve(customConfig);
         Require(resolvedCustom.ItemBudgetMultiple == 1.7 && resolvedCustom.RestartableItemBudgetMultiple == 1.2,
             "Custom item enforcement caps must use dedicated user targets");
-        Require(resolvedCustom.XpMultiple == 1.6 && resolvedCustom.RestartableXpMultiple == 1.1 && resolvedCustom.StandingMultiple == 1.4,
-            "Custom XP/standing enforcement caps must use dedicated user targets");
+        Require(resolvedCustom.XpMultiple == 1.6 && resolvedCustom.RestartableXpMultiple == 1.1,
+            "Custom XP enforcement caps must use dedicated user targets");
+        Require(resolvedCustom.StandingMultiple == 1.4 && resolvedCustom.RestartableStandingMultiple == 1.05,
+            "Custom ordinary/restartable standing caps must be independently configurable");
         Require(customConfig.CustomAuditPolicy.HighItemValueLowStructureWarnMultiple == 9.0,
             "Custom enforcement targets must not overwrite audit detection policy");
 
