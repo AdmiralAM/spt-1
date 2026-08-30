@@ -8,7 +8,7 @@ public static class RestartableStandingPressureCore
     public static double ResolveThreshold(PlayableQuestRewardCaps policy)
     {
         ArgumentNullException.ThrowIfNull(policy);
-        var threshold = Math.Min(policy.StandingMultiple, policy.RestartableXpMultiple);
+        var threshold = policy.RestartableStandingMultiple;
         if (!double.IsFinite(threshold) || threshold <= 0)
             throw new InvalidOperationException("Economy Admiral restartable standing threshold must be finite and > 0.");
         return threshold;
