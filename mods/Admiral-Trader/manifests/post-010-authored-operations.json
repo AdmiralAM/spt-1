@@ -23,23 +23,10 @@
           "success": "Их периметр больше не выглядит предсказуемым. Это уже полезная разведка. Маршрут оставь себе — дальше разберусь я."
         }
       },
-      "objectiveIntent": [
-        "bounded Rogue elimination on Lighthouse",
-        "survive/extract the same operation rather than cumulative farming"
-      ],
-      "antiGrind": {
-        "maximumTargetCount": 6,
-        "repeatable": false,
-        "noEscalatingSequels": true,
-        "noLocationFreeFallback": true
-      },
+      "objectiveIntent": ["bounded Rogue elimination on Lighthouse", "survive/extract the same operation rather than cumulative farming"],
+      "antiGrind": {"maximumTargetCount": 6, "repeatable": false, "noEscalatingSequels": true, "noLocationFreeFallback": true},
       "rewardDoctrine": "XP/RUB/standing only by default; no Rogue gear storefront and no capability unlock. Any item reward requires Economy Admiral approval.",
-      "proofGates": [
-        "prove exact SPT 4.1.3 Rogue target alias and Lighthouse location condition shape",
-        "prove survived/extraction condition semantics without restart punishment",
-        "audit vanilla/Scorpion/Artem overlap",
-        "Economy Admiral approves final numeric rewards"
-      ],
+      "proofGates": ["prove exact SPT 4.1.3 Rogue target alias and Lighthouse location condition shape", "prove survived/extraction condition semantics without restart punishment", "audit vanilla/Scorpion/Artem overlap", "Economy Admiral approves final numeric rewards"],
       "runtimeMaterialize": false
     },
     {
@@ -59,23 +46,10 @@
           "success": "Груз вернулся вместе с тобой, а не стал пожертвованием местным. На такой логистике уже можно что-то строить."
         }
       },
-      "objectiveIntent": [
-        "one survived extraction while meeting a proven bounded load-bearing proxy",
-        "no backpack handover or backpack-by-backpack progression"
-      ],
-      "antiGrind": {
-        "maximumRequiredSuccessfulRaids": 1,
-        "repeatable": false,
-        "noPerMapCopies": true,
-        "noItemCollection": true
-      },
+      "objectiveIntent": ["one survived extraction while meeting a proven bounded load-bearing proxy", "no backpack handover or backpack-by-backpack progression"],
+      "antiGrind": {"maximumRequiredSuccessfulRaids": 1, "repeatable": false, "noPerMapCopies": true, "noItemCollection": true},
       "rewardDoctrine": "Support/logistics reward only; no backpack storefront ladder. Any durable container or high-value logistics item requires explicit Economy Admiral review.",
-      "proofGates": [
-        "identify a reliable exact SPT 4.1.3 load-bearing or inventory-weight condition/proxy; reject this operation if none exists",
-        "prove survived/extraction semantics",
-        "audit vanilla/Scorpion/Artem overlap",
-        "Economy Admiral approves final numeric and item rewards"
-      ],
+      "proofGates": ["identify a reliable exact SPT 4.1.3 load-bearing or inventory-weight condition/proxy; reject this operation if none exists", "prove survived/extraction semantics", "audit vanilla/Scorpion/Artem overlap", "Economy Admiral approves final numeric and item rewards"],
       "runtimeMaterialize": false
     },
     {
@@ -95,23 +69,56 @@
           "success": "Проблему купировал и продолжил работу. Хорошо. Медицина должна поддерживать операцию, а не становиться самой операцией."
         }
       },
-      "objectiveIntent": [
-        "prove meaningful in-raid treatment or recovery and survive/extract",
-        "no repeated stimulant-use quota and no medical-item handover"
-      ],
-      "antiGrind": {
-        "maximumRequiredSuccessfulRaids": 1,
-        "repeatable": false,
-        "noConsumableCountLadder": true,
-        "noStimulantUseQuota": true
-      },
+      "objectiveIntent": ["prove meaningful in-raid treatment or recovery and survive/extract", "no repeated stimulant-use quota and no medical-item handover"],
+      "antiGrind": {"maximumRequiredSuccessfulRaids": 1, "repeatable": false, "noConsumableCountLadder": true, "noStimulantUseQuota": true},
       "rewardDoctrine": "XP/RUB/standing or tightly bounded support consumables only. No permanent stimulant supply without Economy Admiral approval.",
-      "proofGates": [
-        "prove an exact SPT 4.1.3 treatment/healing condition or reject the treatment requirement",
-        "prove survived/extraction semantics",
-        "audit vanilla/Scorpion/Artem overlap",
-        "Economy Admiral approves any consumable reward and final numeric rewards"
-      ],
+      "proofGates": ["prove an exact SPT 4.1.3 treatment/healing condition or reject the treatment requirement", "prove survived/extraction semantics", "audit vanilla/Scorpion/Artem overlap", "Economy Admiral approves any consumable reward and final numeric rewards"],
+      "runtimeMaterialize": false
+    },
+    {
+      "key": "high-value-target-window",
+      "sourceBundles": ["Boss Hunt", "Boss Follower Hunt"],
+      "domain": "operations",
+      "workingTitle": {"en": "Command Window", "ru": "Командное окно"},
+      "playerText": {
+        "en": {
+          "description": "A command element is exposed only briefly. I do not need fifty bodies; I need one clean break in the local chain of command and a contractor who knows when to leave.",
+          "started": "Take the command target or its immediate escort element when the opportunity appears, then extract. One operation, one disruption. Do not turn it into population control.",
+          "success": "The command link is broken for now. That is enough. A useful strike ends when the objective is complete, not when the map is empty."
+        },
+        "ru": {
+          "description": "Командное звено открывается ненадолго. Мне не нужны пятьдесят тел; нужен один чистый разрыв местного управления и исполнитель, который понимает, когда пора уходить.",
+          "started": "Сними командную цель или её ближайшее сопровождение, когда появится окно, и выйди из рейда. Одна операция — один разрыв. Не превращай это в зачистку населения.",
+          "success": "Командная связь на время нарушена. Этого достаточно. Полезный удар заканчивается выполненной задачей, а не пустой картой."
+        }
+      },
+      "objectiveIntent": ["one bounded HVT or immediate-command-element disruption", "survive/extract after the same operation instead of escalating boss/follower counts"],
+      "antiGrind": {"maximumTargetCount": 3, "repeatable": false, "noEscalatingSequels": true, "noGenericBossFarm": true},
+      "rewardDoctrine": "Premium XP/RUB/standing may reflect target risk, but no boss-equipment faucet, guaranteed trophy chain or permanent capability unlock without Economy Admiral review.",
+      "proofGates": ["prove exact SPT 4.1.3 boss/follower target aliases before choosing the final target", "prove survived/extraction semantics and same-operation counter behavior", "audit vanilla/Scorpion/Artem overlap for the selected target and location", "Economy Admiral approves risk-adjusted numeric and any item rewards"],
+      "runtimeMaterialize": false
+    },
+    {
+      "key": "night-signal-disruption",
+      "sourceBundles": ["Cultists Hunt"],
+      "domain": "reconnaissance",
+      "workingTitle": {"en": "Black Signal", "ru": "Чёрный сигнал"},
+      "playerText": {
+        "en": {
+          "description": "There is movement after dark that does not belong to patrols or scavengers. Confirm the pattern, break a small part of it, and come back alive. I need evidence of a network, not a cultist kill counter.",
+          "started": "Work at night. Make limited contact with the cultist element, survive it, and extract. Do not chase shadows across ten raids just to raise a number.",
+          "success": "That confirms enough: organized movement, armed response, and a route worth watching. We gained intelligence without feeding men into the dark."
+        },
+        "ru": {
+          "description": "После темноты там движутся не патрули и не обычные дикие. Подтверди схему, нарушь небольшую часть и вернись живым. Мне нужно доказательство сети, а не счётчик убитых сектантов.",
+          "started": "Работай ночью. Войди в ограниченный контакт с группой сектантов, переживи его и выйди. Не гоняйся за тенями десять рейдов только ради роста цифры.",
+          "success": "Этого достаточно: организованное движение, вооружённый ответ и маршрут, за которым стоит следить. Разведданные получены без кормления темноты людьми."
+        }
+      },
+      "objectiveIntent": ["bounded cultist contact during a proven night-time/location context", "survive/extract the reconnaissance-disruption operation rather than accumulate cultist kills"],
+      "antiGrind": {"maximumTargetCount": 3, "repeatable": false, "noEscalatingSequels": true, "noCumulativeKillLadder": true},
+      "rewardDoctrine": "Reconnaissance-risk XP/RUB/standing by default. No cultist gear supply chain or high-value trophy reward without explicit Economy Admiral review.",
+      "proofGates": ["prove exact SPT 4.1.3 Cultist target alias plus reliable time/location condition shape", "prove survived/extraction semantics without restart punishment", "audit vanilla/Scorpion/Artem overlap for night/cultist objectives", "Economy Admiral approves final numeric and any item rewards"],
       "runtimeMaterialize": false
     }
   ]
