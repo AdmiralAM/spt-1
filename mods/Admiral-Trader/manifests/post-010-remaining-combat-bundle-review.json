@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-curation-review-only",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "source": {
+    "repository": "Thirt3nth/Andrudis-Questmaniac",
+    "commit": "4e15990ac18f469ef7818475ce8553bbbb7cebb4",
+    "legacyQuestCount": 2697
+  },
+  "reviews": [
+    {"sourceBundle":"Headless PMC","legacyQuestCount":70,"decision":"merge-into-existing-operations","targets":["contractor-intercept","precision-denial"],"reason":"Per-location PMC headshot ladders up to 200 duplicate contractor and precision domains; retain only bounded contextual precision constraints.","runtimeMaterialize":false},
+    {"sourceBundle":"Headless Scav","legacyQuestCount":60,"decision":"merge-into-existing-operations","targets":["route-security","precision-denial"],"reason":"Per-location Scav headshot ladders up to 500 are farming templates; retain at most a bounded precision variation where an authored operation needs it.","runtimeMaterialize":false},
+    {"sourceBundle":"PMC Hunt","legacyQuestCount":70,"decision":"merge-into-existing-operation","targets":["contractor-intercept"],"reason":"Per-location PMC kill ladders up to 500 add count escalation but no new operational purpose.","runtimeMaterialize":false},
+    {"sourceBundle":"Raider Hunt","legacyQuestCount":10,"decision":"merge-into-existing-operation","targets":["labs-security-disruption"],"reason":"A 1-to-100 Raider ladder is absorbed by the existing Labs security operation; no second progression chain.","runtimeMaterialize":false},
+    {"sourceBundle":"Rogue Hunt","legacyQuestCount":10,"decision":"merge-into-existing-operation","targets":["rogue-interdiction"],"reason":"A 1-to-100 Rogue ladder is absorbed by Lighthouse perimeter interdiction; location-free farming is rejected.","runtimeMaterialize":false},
+    {"sourceBundle":"Deep Pockets Legend","legacyQuestCount":274,"decision":"consume-as-constraint-source","targets":["expedition-loadout"],"reason":"One-enemy/one-rig kill tasks are not standalone authored quests; only useful gear-restriction ideas may inform bounded expedition checks.","runtimeMaterialize":false},
+    {"sourceBundle":"Iron Head Legend","legacyQuestCount":229,"decision":"consume-as-constraint-source","targets":["protection-calibration","ballistic-head-test"],"reason":"Helmet-by-helmet kill tasks are repetitive equipment mastery; preserve only meaningful protective field constraints.","runtimeMaterialize":false},
+    {"sourceBundle":"Juggernaut Legend","legacyQuestCount":200,"decision":"consume-as-constraint-source","targets":["heavy-assault-loadout"],"reason":"Armor-set kill templates duplicate the authored protection domain; preserve only bounded combined-loadout constraints.","runtimeMaterialize":false},
+    {"sourceBundle":"Ultrasound Legend","legacyQuestCount":72,"decision":"consume-as-constraint-source","targets":["signal-discipline"],"reason":"Headset-specific kill chains are gear quota progression; acoustic equipment may be a bounded condition, never a headset-by-headset ladder.","runtimeMaterialize":false},
+    {"sourceBundle":"Weapon Mastery","legacyQuestCount":1702,"decision":"consume-as-coverage-source","targets":["arsenal-capability-backbone"],"reason":"Specific-weapon elimination chains are already superseded by the seven-family Arsenal capability model. Use source coverage only to audit weapon-family pools; do not recreate per-weapon mastery quests.","runtimeMaterialize":false}
+  ],
+  "globalBoundary": {
+    "separateLegacyQuestChainsAllowed": false,
+    "countOnlyEscalationAllowed": false,
+    "perItemOrPerWeaponQuestQuotaAllowed": false,
+    "locationFreeSpecialistFarmingAllowed": false,
+    "newAuthoredOperationsRequired": 0
+  },
+  "proofGates": [
+    "any future precision/gear modifier requires exact SPT 4.1.3 condition proof",
+    "any admitted target or equipment pool requires vanilla/Scorpion/Artem overlap review",
+    "Weapon Mastery may inform family coverage only and cannot increase frozen quest counts",
+    "do not change frozen 0.1.0 runtime quest or assort counts"
+  ],
+  "frozenBoundary": {"questCount":31,"rootOfferCount":11,"relationshipRuntimeOffers":0}
+}
