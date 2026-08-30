@@ -1,6 +1,6 @@
 # B&A&HB #2 MOD SPT — profile / uninstall safety
 
-This directory is the recovery contract for SPT 4.1.3 profiles that contain persistent B&A&HB data. Stable v0.1.0 and development v0.2.0 share the existing distributed identities; v0.2.0 additionally distributes the Utility HeadBand cigarettes grid ID listed below.
+This directory is the recovery contract for SPT 4.1.3 profiles that contain persistent B&A&HB data. Stable v0.1.0 and development v0.2.0 share the existing distributed identities; v0.2.0 additionally distributes the Utility HeadBand cigarettes grid and the Dogtag Case item/grid/assort identities listed below.
 
 ## Authoritative persistent identities
 
@@ -12,6 +12,7 @@ This directory is the recovery contract for SPT 4.1.3 profiles that contain pers
 - `68ac00000000000000000006` — Wrist Wallet
 - `68ac0000000000000000000c` — Magazine Belt
 - `68ac0000000000000000000f` — Utility HeadBand
+- `68ac00000000000000000013` — Dogtag Case
 
 ### Parent IDs
 
@@ -24,6 +25,7 @@ This directory is the recovery contract for SPT 4.1.3 profiles that contain pers
 - wire slot IDs: `15`, `16`
 - slot Mongo IDs: `68ac00000000000000000009`, `68ac0000000000000000000a`
 - semantic slot identities: `BAndHBBelt`, `BAndHBHeadBand`
+- Dogtag Case deliberately uses the existing vanilla `Dogtag` equipment slot and therefore creates no additional persistent slot identity.
 
 ### Grid IDs
 
@@ -32,6 +34,7 @@ This directory is the recovery contract for SPT 4.1.3 profiles that contain pers
 - `68ac0000000000000000000d` — Magazine Belt `main`
 - `68ac00000000000000000010` — Utility HeadBand `main` (currency/wallet)
 - `68ac00000000000000000012` — Utility HeadBand `cigarettes` (introduced by v0.2.0)
+- `68ac00000000000000000014` — Dogtag Case canonical-copy internal grid (introduced by v0.2.0)
 
 ### Trader assort IDs
 
@@ -39,6 +42,7 @@ This directory is the recovery contract for SPT 4.1.3 profiles that contain pers
 - `68ac00000000000000000008` — Wrist Wallet offer
 - `68ac0000000000000000000e` — Magazine Belt offer
 - `68ac00000000000000000011` — Utility HeadBand offer
+- `68ac00000000000000000015` — Dogtag Case offer
 
 The server-side `PersistentIdentityManifest` mirrors the machine-readable groups, and CI regression coverage rejects drift between `persistent-identities.json`, server/runtime constants and slot semantic IDs.
 
@@ -52,7 +56,18 @@ On first v0.2.0 profile load, `BAndHBHeadBandSplitGridV1` converts actionable Ut
 - Scav normally has no sorting table, so unclassifiable/overflow roots are preserved rather than deleted; after all actionable normalization is complete they do not keep the migration permanently pending;
 - the migration is idempotent for fully actionable normalized content.
 
-Because older builds do not know the v0.2.0 `cigarettes` grid identity, restoring the **pre-v0.2.0 profile backup** is the preferred rollback path.
+Because older builds do not know the v0.2.0 `cigarettes` grid identity or the Dogtag Case persistent identities, restoring the **pre-v0.2.0 profile backup** is the preferred rollback path.
+
+## Dogtag Case recovery boundary
+
+The v0.2.0 Dogtag Case is a B&A&HB-owned persistent item even though it equips into the existing vanilla `Dogtag` slot. It remains outside the wearable capability registry: B&A&HB does not grant it custom death retention, insurance-loss suppression, fast-access or build behavior.
+
+Recovery ownership is therefore intentionally asymmetric:
+
+- during normal runtime, its lifecycle semantics remain vanilla/unclaimed by B&A&HB;
+- during deliberate cleanup/uninstall, its exact owned template ID is removed wherever serialized, together with descendants and direct references, so an older build cannot encounter an unknown item template.
+
+The deterministic regression covers Dogtag Case roots serialized in equipment, mail rewards and insurance payloads, plus descendant and build references, while proving unrelated records survive cleanup.
 
 ## Where persistent references can remain
 
@@ -61,7 +76,7 @@ An item instance with one of the item template IDs can survive in the PMC/Scav i
 ## Safe disable / uninstall procedure
 
 1. Exit raids and stop SPT before changing profile files.
-2. While B&A&HB is still installed, remove its wearable items from equipment/stash when practical and collect or discard pending mail/insurance returns containing them.
+2. While B&A&HB is still installed, remove its wearable items and Dogtag Case from equipment/stash when practical and collect or discard pending mail/insurance returns containing them.
 3. Back up the affected profile JSON before cleanup.
 4. Run `Clean-BAndHBProfile.ps1 -ProfilePath <profile.json>`. By default the tool writes a sibling `<profile>.bahb-clean.json` and does **not** overwrite the original.
 5. Review the reported removal locations. Replace the original profile with the cleaned copy only after keeping the backup.
@@ -69,7 +84,7 @@ An item instance with one of the item template IDs can survive in the PMC/Scav i
 
 ## Safe downgrade procedure
 
-Treat a downgrade exactly like disable/uninstall unless the target build's packaged `persistent-identities.json` contains every B&A&HB identity already present in the profile **and** the target build understands the corresponding storage shape. Identity presence alone is not sufficient for v0.2.0 → v0.1.0 because v0.1.0 does not understand the new HeadBand `cigarettes` grid shape.
+Treat a downgrade exactly like disable/uninstall unless the target build's packaged `persistent-identities.json` contains every B&A&HB identity already present in the profile **and** the target build understands the corresponding storage shape. Identity presence alone is not sufficient for v0.2.0 → v0.1.0 because v0.1.0 does not understand the new HeadBand `cigarettes` grid shape or Dogtag Case identities.
 
 Preferred v0.2.0 → v0.1.0 rollback: stop SPT, restore the pre-v0.2.0 profile backup, then restore the complete stable v0.1.0 package.
 
@@ -83,4 +98,4 @@ The cleanup is ownership-scoped: it removes B&A&HB template instances and serial
 
 ## Proof boundary
 
-CI regression proves the deterministic recovery policy, persistent-identity parity, v0.2.0 split-grid migration behavior and package contents. It does **not** prove the exact physical SPT 4.1.3 profile-load lifecycle. Physical runtime evidence remains a separate combined gate before v0.2.0 is promoted from development candidate to stable release.
+CI regression proves the deterministic recovery policy, persistent-identity parity, v0.2.0 split-grid migration behavior, Dogtag Case equipment/mail/insurance/build cleanup ownership and package contents. It does **not** prove the exact physical SPT 4.1.3 profile-load lifecycle. Physical runtime evidence remains a separate combined gate before v0.2.0 is promoted from development candidate to stable release.
