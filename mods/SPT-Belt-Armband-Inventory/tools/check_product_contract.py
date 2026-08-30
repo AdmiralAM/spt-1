@@ -130,12 +130,26 @@ dogtag_item = require(
         'ShortName = "Жетонница"',
         'new("5c093e3486f77430cb02e593")',
         "Filters = copiedFilters",
+        "if (!templateTable.Items.TryGetValue(DogtagCaseTpl, out var created))",
+        "ValidateExisting(created, source);",
         "CommitDogtagSlotExposure(dogtagSlotFilter);",
         "if (!filter.Contains(DogtagCaseTpl)) filter.Add(DogtagCaseTpl);",
+        "!string.Equals(grid.Name, sourceGrid.Name, StringComparison.Ordinal)",
+        "!Equals(grid.Prototype, sourceGrid.Prototype)",
+        "actual.MinCount != expected.MinCount",
+        "actual.MaxCount != expected.MaxCount",
+        "actual.MaxWeight != expected.MaxWeight",
+        "actual.IsSortingTable != expected.IsSortingTable",
     ],
     "Dogtag Case item")
 if "BaseClasses.DOGTAG" in dogtag_item:
     violations.append("Dogtag Case must copy the canonical Dogtag Case filter groups instead of replacing them with a broad dogtag category")
+
+create_call = dogtag_item.find("customItemService.CreateItemFromClone(details)")
+post_create_validation = dogtag_item.find("ValidateExisting(created, source);", create_call)
+post_create_exposure = dogtag_item.find("CommitDogtagSlotExposure(dogtagSlotFilter);", create_call)
+if min(create_call, post_create_validation, post_create_exposure) < 0 or not (create_call < post_create_validation < post_create_exposure):
+    violations.append("Dogtag Case must re-read/revalidate the created template before exposing it through the vanilla Dogtag slot")
 
 dogtag_assort = require(
     SERVER / "DogtagCaseAssort.cs",
@@ -229,5 +243,5 @@ if violations:
 
 print(
     "B&A&HB product-contract gate: OK "
-    "(EN/RU localized five-product roster; exact pricing/progression and host isolation; split HeadBand pockets; Dogtag Case clones canonical filters and requires preserved vanilla Dogtag host; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
+    "(EN/RU localized five-product roster; exact pricing/progression and host isolation; split HeadBand pockets; Dogtag Case post-create revalidation proves canonical grid/filter parity before host exposure; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
 )
