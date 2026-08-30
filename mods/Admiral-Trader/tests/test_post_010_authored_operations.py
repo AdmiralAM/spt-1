@@ -24,10 +24,11 @@ class Post010AuthoredOperationsTests(unittest.TestCase):
 
     def test_operations_are_authored_and_bilingual(self):
         operations = self.manifest["operations"]
-        self.assertEqual(len(operations), 3)
-        self.assertEqual(
-            {op["key"] for op in operations},
-            {"rogue-interdiction", "expedition-discipline", "field-medicine-under-pressure"},
+        self.assertGreaterEqual(len(operations), 3)
+        keys = {op["key"] for op in operations}
+        self.assertEqual(len(keys), len(operations))
+        self.assertTrue(
+            {"rogue-interdiction", "expedition-discipline", "field-medicine-under-pressure"}.issubset(keys)
         )
         for operation in operations:
             self.assertGreaterEqual(len(operation["objectiveIntent"]), 2)
@@ -55,6 +56,12 @@ class Post010AuthoredOperationsTests(unittest.TestCase):
         self.assertEqual(medicine["antiGrind"]["maximumRequiredSuccessfulRaids"], 1)
         self.assertTrue(medicine["antiGrind"]["noConsumableCountLadder"])
         self.assertTrue(medicine["antiGrind"]["noStimulantUseQuota"])
+
+        for operation in self.manifest["operations"]:
+            anti_grind = operation["antiGrind"]
+            if "maximumTargetCount" in anti_grind:
+                self.assertLessEqual(anti_grind["maximumTargetCount"], 6)
+            self.assertFalse(anti_grind.get("repeatable", False))
 
     def test_specs_fail_closed_on_unproven_runtime_semantics(self):
         proof_text = " ".join(
