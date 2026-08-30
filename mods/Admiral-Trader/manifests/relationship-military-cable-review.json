@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "candidateTpl": "59e36c6f86f774176c10a2a7",
+  "candidateName": "Military cable",
+  "source": {
+    "repository": "sp-tarkov/server-csharp",
+    "commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+    "hideoutAreasPath": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/hideout/areas.json",
+    "praporAssortPath": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/traders/54cb50c76803fa8b248b4571/assort.json",
+    "mechanicAssortPath": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/traders/5a7c2eca46aef81a7ca2145d/assort.json"
+  },
+  "findings": {
+    "directPinnedPraporOfferOrBarterReference": false,
+    "directPinnedMechanicOfferOrBarterReference": false,
+    "hideoutAreaRequirementOccurrences": 12,
+    "observedRequirementCounts": [1, 3, 5, 7, 10],
+    "sampledHideoutRequirementsRequireSpawnedInSession": true,
+    "interpretation": "Military cable is a high-pressure hideout progression component in pinned SPT 4.1.3, but the sampled construction requirements explicitly require spawned-in-session items. A trader-purchased unit therefore does not substitute for those FIR-style construction requirements. The fixed Prapor and Mechanic assorts contain no Military cable reference, so the reviewed candidate does not create a direct fixed-trader barter shortcut in those two primary economic paths."
+  },
+  "decision": {
+    "state": "advance-to-economy-review-with-progression-fence",
+    "materialize": false,
+    "targetLoyaltyLevel": 2,
+    "reason": "The candidate remains viable only as bounded field-logistics availability. Its trader-bought copies must not be represented as a hideout-progression shortcut, and Economy Admiral still owns price/supply pressure approval.",
+    "requiredBeforeMaterialization": [
+      "Economy Admiral confirms that 4 per reset / buy 2 does not create unacceptable flea or barter pressure",
+      "Relationship manifest-to-assort implementation preserves finite supply and LL2 standing gate",
+      "no quest or capability path is added that treats trader-bought Military cable as spawned-in-session",
+      "runtime candidate remains separate from frozen 0.1.0 until its own later milestone"
+    ]
+  }
+}
