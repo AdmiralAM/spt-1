@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-authored-spec-only",
+  "source": {
+    "bundle": "Errand Boy",
+    "legacyQuestCount": 920,
+    "decision": "rewrite-theme-only"
+  },
+  "operation": {
+    "key": "field-expedient-supply",
+    "title": {
+      "en": "Field-Expedient Supply",
+      "ru": "Полевое снабжение"
+    },
+    "description": {
+      "en": "A forward element lost part of its maintenance reserve. Recover a small, defined set of ordinary field-service supplies and deliver them as one operational package. This is a one-off logistics problem, not an open procurement queue.",
+      "ru": "Передовая группа потеряла часть ремонтного резерва. Собери небольшой заранее определённый комплект обычных полевых расходников и передай его как единый оперативный пакет. Это разовая задача снабжения, а не бесконечная очередь поручений."
+    },
+    "started": {
+      "en": "Bring only what the package calls for. I need a usable reserve, not a warehouse inventory.",
+      "ru": "Принеси только то, что входит в комплект. Мне нужен рабочий резерв, а не складской инвентарь."
+    },
+    "success": {
+      "en": "That closes the shortage. The element can maintain itself again; there is no reason to turn this into another shopping list.",
+      "ru": "Дефицит закрыт. Группа снова может обслуживать себя сама; превращать это в очередной список покупок незачем."
+    },
+    "objectiveIntent": "One contextual maintenance-reserve handover using a small fixed set of ordinary consumable/service supplies whose exact TPLs are selected only after overlap and economy review.",
+    "bounds": {
+      "maximumDistinctItemTpls": 3,
+      "maximumTotalHandedOverUnits": 6,
+      "maximumSuccessfulCompletions": 1,
+      "repeatable": false,
+      "escalatingSequelsAllowed": false,
+      "genericRequestedItemQueueAllowed": false,
+      "containerRewardLadderAllowed": false,
+      "storefrontUnlockAllowed": false
+    },
+    "rewardDoctrine": {
+      "default": ["xp", "rub", "admiral-standing"],
+      "permanentItemSupplyAllowed": false,
+      "containerMilestoneRewardAllowed": false,
+      "capabilityUnlockAllowed": false,
+      "requiresEconomyAdmiralReview": true
+    }
+  },
+  "gates": {
+    "implementationAllowed": false,
+    "runtimeMaterialize": false,
+    "requiresExactSpt413HandoverConditionProof": true,
+    "requiresExactItemTplSelection": true,
+    "requiresVanillaScorpionArtemOverlapAudit": true,
+    "requiresEconomyAdmiralReview": true,
+    "requiresFrozenCampaignOverlapReview": true
+  },
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0
+  }
+}
