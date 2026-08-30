@@ -34,65 +34,32 @@ public sealed class NativeRepeatableQuestPressureService(
 
             if (config.EnableItemRewardStackNormalization)
             {
-                // SPT intentionally derives both the generated cash reward and the generated item-reward
-                // budget from RewardScaling.Roubles. Keep those two native value surfaces coherent.
-                blocked += PlanDimension(
-                    proposals,
-                    key,
-                    repeatable.Name,
-                    "RoubleRewardBudget",
-                    pristine.Roubles,
-                    repeatable.RewardScaling.Roubles,
-                    caps.RestartableItemBudgetMultiple,
-                    config.Mode == EconomyMode.Enforce);
-
-                // GP Coins are a separate generated reward-value vector and share the restartable value cap.
-                blocked += PlanDimension(
-                    proposals,
-                    key,
-                    repeatable.Name,
-                    "GpCoinReward",
-                    pristine.GpCoins,
-                    repeatable.RewardScaling.GpCoins,
-                    caps.RestartableItemBudgetMultiple,
-                    config.Mode == EconomyMode.Enforce);
-
-                // Item count potential is a different native dimension from reward value. Presets deliberately
-                // retain the same maintained numbers, while Custom can tune count independently from cash/GP/value.
-                blocked += PlanDimension(
-                    proposals,
-                    key,
-                    repeatable.Name,
-                    "ItemRewardCount",
-                    pristine.Items,
-                    repeatable.RewardScaling.Items,
-                    caps.RestartableItemCountMultiple,
-                    config.Mode == EconomyMode.Enforce);
+                blocked += PlanDimension(proposals, key, repeatable.Name, "RoubleRewardBudget", pristine.Roubles,
+                    repeatable.RewardScaling.Roubles, caps.RestartableItemBudgetMultiple, config.Mode == EconomyMode.Enforce);
+                blocked += PlanDimension(proposals, key, repeatable.Name, "GpCoinReward", pristine.GpCoins,
+                    repeatable.RewardScaling.GpCoins, caps.RestartableItemBudgetMultiple, config.Mode == EconomyMode.Enforce);
+                blocked += PlanDimension(proposals, key, repeatable.Name, "ItemRewardCount", pristine.Items,
+                    repeatable.RewardScaling.Items, caps.RestartableItemCountMultiple, config.Mode == EconomyMode.Enforce);
             }
 
             if (config.EnableQuestXpPressure)
             {
-                blocked += PlanDimension(
-                    proposals,
-                    key,
-                    repeatable.Name,
-                    "Experience",
-                    pristine.Experience,
-                    repeatable.RewardScaling.Experience,
-                    caps.RestartableXpMultiple,
-                    config.Mode == EconomyMode.Enforce);
+                blocked += PlanDimension(proposals, key, repeatable.Name, "Experience", pristine.Experience,
+                    repeatable.RewardScaling.Experience, caps.RestartableXpMultiple, config.Mode == EconomyMode.Enforce);
+
+                // Native repeatables can also advance physical skills. Treat both the chance of receiving
+                // that progression reward and its point amount as progression pressure alongside XP, using
+                // the already-maintained restartable XP cap rather than inventing another balance coefficient.
+                blocked += PlanDimension(proposals, key, repeatable.Name, "SkillRewardChance", pristine.SkillRewardChance,
+                    repeatable.RewardScaling.SkillRewardChance, caps.RestartableXpMultiple, config.Mode == EconomyMode.Enforce);
+                blocked += PlanDimension(proposals, key, repeatable.Name, "SkillPointReward", pristine.SkillPointReward,
+                    repeatable.RewardScaling.SkillPointReward, caps.RestartableXpMultiple, config.Mode == EconomyMode.Enforce);
             }
 
             if (config.EnableQuestStandingPressure)
             {
-                blocked += PlanDimension(
-                    proposals,
-                    key,
-                    repeatable.Name,
-                    "TraderStanding",
-                    pristine.Reputation,
-                    repeatable.RewardScaling.Reputation,
-                    NativeRepeatableQuestPressureCore.ResolveStandingMultiple(caps),
+                blocked += PlanDimension(proposals, key, repeatable.Name, "TraderStanding", pristine.Reputation,
+                    repeatable.RewardScaling.Reputation, NativeRepeatableQuestPressureCore.ResolveStandingMultiple(caps),
                     config.Mode == EconomyMode.Enforce);
             }
         }
@@ -137,14 +104,7 @@ public sealed class NativeRepeatableQuestPressureService(
             if (apply)
                 current[index] = target;
 
-            proposals.Add(new NativeRepeatableMutation(
-                key,
-                name,
-                dimension,
-                index,
-                before,
-                target,
-                apply));
+            proposals.Add(new NativeRepeatableMutation(key, name, dimension, index, before, target, apply));
         }
 
         return 0;
