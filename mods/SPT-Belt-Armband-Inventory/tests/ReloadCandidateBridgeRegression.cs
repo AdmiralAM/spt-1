@@ -15,6 +15,10 @@ internal static class ReloadCandidateBridgeRegression
             "bridge invocation is reentrancy-safe");
         Assert(!FastAccessSlotPolicy.ShouldBridgeReloadCandidates(true, false, false),
             "unrelated slot enumerations are not widened");
+        Assert(FastAccessSlotPolicy.ShouldReuseVanillaReloadCandidates(false),
+            "no exact Belt fallback keeps the original vanilla result object");
+        Assert(!FastAccessSlotPolicy.ShouldReuseVanillaReloadCandidates(true),
+            "a real exact Belt fallback is the only reason to allocate a merged result");
     }
 
     static void Assert(bool condition, string message)
