@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-authored-spec-only",
+  "source": {
+    "bundles": ["Deep Pockets", "Tarkov Mule"],
+    "legacyQuestCount": 150,
+    "legacyPattern": "per-item Barter/Trade ladders for rigs, pockets and backpacks",
+    "directPortAllowed": false
+  },
+  "operation": {
+    "key": "expedition-loadout",
+    "title": {
+      "en": "Expedition Loadout",
+      "ru": "Экспедиционная выкладка"
+    },
+    "description": {
+      "en": "A loadout is not a catalogue. Build one practical expedition kit, carry it through contact, and return with the capability intact. I am evaluating deployment discipline, not how many rigs and backpacks you can hand over.",
+      "ru": "Выкладка — не каталог. Собери один практичный экспедиционный комплект, проведи его через контакт и вернись, сохранив боеспособность. Я оцениваю дисциплину развёртывания, а не количество разгрузок и рюкзаков, которые ты можешь сдать."
+    },
+    "started": {
+      "en": "Deploy with a bounded approved expedition setup, satisfy the field condition, and extract. Keep your equipment. One coherent loadout is the test; item-by-item collection is not.",
+      "ru": "Выйди в рейд с ограниченной одобренной экспедиционной выкладкой, выполни полевое условие и эвакуируйся. Снаряжение остаётся у тебя. Проверяется один цельный комплект, а не поштучная коллекция."
+    },
+    "success": {
+      "en": "The equipment supported the operation instead of becoming the objective. That is the point of a field loadout.",
+      "ru": "Снаряжение поддержало операцию, а не стало её целью. В этом и смысл полевой выкладки."
+    },
+    "objectiveIntent": [
+      "possess or wear a small approved expedition equipment set without handover",
+      "complete one bounded field condition and survive or extract",
+      "replace 150 per-item legacy tasks with one coherent capability check"
+    ],
+    "bounds": {
+      "maximumDistinctEquipmentRequirements": 3,
+      "maximumSuccessfulRaids": 1,
+      "repeatable": false,
+      "handoverAllowed": false,
+      "firCollectionAllowed": false,
+      "perItemQuestCopiesAllowed": false,
+      "equipmentClassLadderAllowed": false
+    },
+    "rewardDoctrine": {
+      "default": "XP/RUB/Admiral standing",
+      "durableEquipmentRewardAllowed": false,
+      "containerRewardAllowed": false,
+      "permanentEquipmentStorefrontUnlockAllowed": false
+    }
+  },
+  "gates": {
+    "implementationAllowed": false,
+    "runtimeMaterialize": false,
+    "requiresExactSpt413EquipmentPossessionOrWearProof": true,
+    "requiresExactSpt413SurvivedExtractionProof": true,
+    "requiresFinalEquipmentTplSelection": true,
+    "requiresVanillaScorpionArtemOverlapAudit": true,
+    "requiresFrozenCampaignOverlapReview": true,
+    "requiresEconomyAdmiralReview": true
+  },
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0
+  }
+}
