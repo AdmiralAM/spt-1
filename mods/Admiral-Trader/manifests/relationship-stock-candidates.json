@@ -5,8 +5,21 @@
     "spt413Repository": "sp-tarkov/server-csharp",
     "spt413Commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
     "priceTable": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/prices.json",
-    "mechanicAssort": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/traders/5a7c2eca46aef81a7ca2145d/assort.json",
-    "refAssort": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/traders/6617beeaa9cfa777ca915b7c/assort.json"
+    "fixedTraderAssortsReviewed": [
+      "54cb50c76803fa8b248b4571",
+      "54cb57776803fa99248b456e",
+      "58330581ace78e27b8b10cee",
+      "5935c25fb3acc3127c3d8cd9",
+      "5a7c2eca46aef81a7ca2145d",
+      "5ac3b934156ae10c4430e83c",
+      "5c0647fdd443bc2504c2d371",
+      "638f541a29ffd1183d187f57",
+      "656f0f98d80a697f855d34b1",
+      "6617beeaa9cfa777ca915b7c",
+      "579dc571d53a0658a154fbec",
+      "6864e812f9fe664cb8b8e152"
+    ],
+    "dynamicFenceExcludedFromDirectFixedAssortUniqueness": true
   },
   "policy": {
     "materialize": false,
@@ -21,12 +34,19 @@
       "targetLoyaltyLevel": 2,
       "role": "expedition-electronics",
       "spt413ReferencePriceRub": 28413,
-      "decision": "advance-to-pinned-overlap-review",
-      "rationale": "A bounded military-grade logistics component fits Admiral's expeditionary procurement role and does not directly grant combat capability. Current external vendor evidence indicates it is not sold directly by traders, making it a stronger Relationship candidate than early vanilla special-equipment duplicates.",
+      "decision": "advance-to-economy-review",
+      "proposedEnvelope": {
+        "stockPerReset": 4,
+        "buyRestriction": 2,
+        "priceRubFloor": 34000,
+        "priceRubCeiling": 37000,
+        "questGate": null
+      },
+      "rationale": "A bounded military-grade logistics component fits Admiral's expeditionary procurement role and does not directly grant combat capability. The pinned fixed-trader SPT 4.1.3 assort set contains no direct Military cable offer, unlike the rejected repair/tool candidates. The proposed envelope deliberately prices above the pinned 28,413 RUB reference and remains finite; Economy Admiral still owns final price/supply approval.",
       "overlap": {
-        "vanillaPinnedAssort": "pending-full-trader-parse",
-        "scorpionPinned": "pending-exact-parse",
-        "artemPinned": "pending-exact-parse"
+        "vanillaPinnedFixedAssorts": "no-direct-tpl-hit",
+        "scorpionPinned": "no-exact-tpl-hit-in-repository-code-search",
+        "artemPinned": "no-exact-tpl-hit-in-repository-code-search"
       }
     },
     {
