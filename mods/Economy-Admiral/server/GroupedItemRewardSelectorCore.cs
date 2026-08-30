@@ -21,6 +21,8 @@ public static class GroupedItemRewardSelectorCore
         if (entries.Count == 0) return Block("EmptyItemRewardRecord");
 
         var candidateIndex = -1;
+        var candidateCount = 0d;
+        var multipleReducibleStacks = false;
         for (var index = 0; index < entries.Count; index++)
         {
             var entry = entries[index];
@@ -36,8 +38,25 @@ public static class GroupedItemRewardSelectorCore
                 return Block("UnknownHandbookPrice");
 
             if (rounded <= 1) continue;
-            if (candidateIndex >= 0) return Block("AmbiguousMultipleReducibleStacks");
-            candidateIndex = index;
+            if (candidateIndex < 0)
+            {
+                candidateIndex = index;
+                candidateCount = rounded;
+                continue;
+            }
+
+            multipleReducibleStacks = true;
+            if (!requireKnownHandbookPrice)
+                return Block("AmbiguousMultipleReducibleStacks");
+
+            if (Math.Abs(rounded - candidateCount) <= IntegerTolerance)
+                return Block("AmbiguousMultipleReducibleStacks");
+
+            if (rounded > candidateCount)
+            {
+                candidateIndex = index;
+                candidateCount = rounded;
+            }
         }
 
         if (candidateIndex < 0)
@@ -47,9 +66,11 @@ public static class GroupedItemRewardSelectorCore
         {
             Eligible = true,
             SelectedIndex = candidateIndex,
-            Reason = entries.Count == 1
-                ? (requireKnownHandbookPrice ? "SingleReducibleStack" : "SingleReducibleStackManualExact")
-                : (requireKnownHandbookPrice ? "OneReducibleStackInGroupedReward" : "OneReducibleStackInGroupedRewardManualExact"),
+            Reason = multipleReducibleStacks
+                ? "UniqueDominantReducibleStackInGroupedReward"
+                : entries.Count == 1
+                    ? (requireKnownHandbookPrice ? "SingleReducibleStack" : "SingleReducibleStackManualExact")
+                    : (requireKnownHandbookPrice ? "OneReducibleStackInGroupedReward" : "OneReducibleStackInGroupedRewardManualExact"),
         };
     }
 
