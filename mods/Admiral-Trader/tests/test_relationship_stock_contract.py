@@ -65,12 +65,24 @@ class RelationshipStockContractTests(unittest.TestCase):
         candidates = candidate_doc["candidates"]
         by_tpl = {x["tpl"]: x for x in candidates}
         self.assertEqual(len(by_tpl), len(candidates))
-        self.assertEqual(by_tpl["590c2e1186f77425357b6124"]["decision"], "advance-to-overlap-review")
-        self.assertEqual(by_tpl["5910968f86f77425cf569c32"]["decision"], "advance-to-overlap-review")
-        self.assertEqual(by_tpl["591094e086f7747caa7bb2ef"]["decision"], "hold-high-economic-impact")
-        self.assertEqual(by_tpl["544fb5454bdc2df8738b456a"]["decision"], "reject-redundant-vanilla")
-        self.assertEqual(by_tpl["5ac78a9b86f7741cca0bbd8d"]["decision"], "reject-redundant-vanilla")
+        self.assertEqual(by_tpl["59e36c6f86f774176c10a2a7"]["decision"], "advance-to-pinned-overlap-review")
+        self.assertEqual(by_tpl["590c2e1186f77425357b6124"]["decision"], "reject-redundant-pinned-vanilla")
+        self.assertEqual(by_tpl["5910968f86f77425cf569c32"]["decision"], "hold-pinned-vanilla-overlap")
+        self.assertEqual(by_tpl["591094e086f7747caa7bb2ef"]["decision"], "reject-pinned-vanilla-and-economic-impact")
+        self.assertEqual(by_tpl["544fb5454bdc2df8738b456a"]["decision"], "reject-redundant-pinned-vanilla")
+        self.assertEqual(by_tpl["5ac78a9b86f7741cca0bbd8d"]["decision"], "reject-redundant-pinned-vanilla")
         self.assertTrue(all(x["spt413ReferencePriceRub"] > 0 for x in candidates))
+
+        pinned_direct_overlap = {
+            x["tpl"]
+            for x in candidates
+            if x.get("overlap", {}).get("vanillaPinnedAssort") in {"mechanic-direct-unlimited", "ref-direct-unlimited"}
+        }
+        self.assertIn("590c2e1186f77425357b6124", pinned_direct_overlap)
+        self.assertIn("5910968f86f77425cf569c32", pinned_direct_overlap)
+        self.assertIn("591094e086f7747caa7bb2ef", pinned_direct_overlap)
+        self.assertIn("544fb5454bdc2df8738b456a", pinned_direct_overlap)
+        self.assertIn("5ac78a9b86f7741cca0bbd8d", pinned_direct_overlap)
 
         assort = json.loads((ROOT / "db" / "assort.json").read_text(encoding="utf-8"))
         live_tpls = {x["_tpl"] for x in assort["items"]}
