@@ -34,6 +34,19 @@ public sealed class NativeRepeatableQuestPressureService(
 
             if (config.EnableItemRewardStackNormalization)
             {
+                // SPT intentionally derives both the generated cash reward and the generated item-reward
+                // budget from RewardScaling.Roubles. Keep those two native surfaces coherent instead of
+                // post-processing cash and silently leaving a richer item budget behind.
+                blocked += PlanDimension(
+                    proposals,
+                    key,
+                    repeatable.Name,
+                    "RoubleRewardBudget",
+                    pristine.Roubles,
+                    repeatable.RewardScaling.Roubles,
+                    caps.RestartableItemBudgetMultiple,
+                    config.Mode == EconomyMode.Enforce);
+
                 blocked += PlanDimension(
                     proposals,
                     key,
