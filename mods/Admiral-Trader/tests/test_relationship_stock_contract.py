@@ -102,6 +102,31 @@ class RelationshipStockContractTests(unittest.TestCase):
         rejected_tpls = {x["tpl"] for x in candidates if x["decision"].startswith("reject-")}
         self.assertTrue(rejected_tpls.isdisjoint(live_tpls))
 
+    def test_finished_equipment_review_rejects_unlimited_vanilla_duplicates(self):
+        review = self.load("relationship-finished-equipment-review.json")
+        self.assertFalse(review["policy"]["materialize"])
+        self.assertTrue(review["policy"]["unlimitedVanillaDirectOfferIsDisqualifying"])
+        self.assertFalse(review["policy"]["priceDiscountAsRelationshipBenefitAllowed"])
+        self.assertFalse(review["policy"]["questOrCombatCapabilityBypassAllowed"])
+
+        resolved = {x["tpl"]: x for x in review["resolved"]}
+        expected = {
+            "590c60fc86f77412b13fddcf": ("Therapist", "686e34716c2a18ed6b0eb451"),
+            "59fafd4b86f7745ca07e1232": ("Therapist", "686e34706c2a18ed6b0eb427"),
+            "5d235bb686f77443f4331278": ("Jaeger", "686e34256c2a18ed6b0e94b1"),
+        }
+        self.assertEqual(set(resolved), set(expected))
+        for tpl, (trader, offer_id) in expected.items():
+            candidate = resolved[tpl]
+            self.assertEqual(candidate["decision"], "reject-redundant-pinned-vanilla")
+            self.assertEqual(candidate["evidence"]["trader"], trader)
+            self.assertEqual(candidate["evidence"]["offerId"], offer_id)
+            self.assertTrue(candidate["evidence"]["unlimitedCount"])
+            self.assertGreater(candidate["evidence"]["stackObjectsCount"], 1_000_000)
+
+        self.assertEqual(review["conclusion"]["approvedOfferCount"], 0)
+        self.assertTrue(review["conclusion"]["relationshipMaterializationStillDisabled"])
+
 
 if __name__ == "__main__":
     unittest.main()
