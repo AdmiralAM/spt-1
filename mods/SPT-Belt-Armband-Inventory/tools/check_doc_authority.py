@@ -58,9 +58,11 @@ require(
         "Issue #285 / PR #286",
         "Issue #287",
         "Candidate runtime version is **0.2.0**",
+        "Dogtag Case",
         "Reload — vanilla source remains first",
-        "Reload — wearable fallback",
-        "1 PASS / 2 PASS / ... / 7 PASS",
+        "Reload — wearable fallback + quick reload",
+        "Dogtag Case contents + persistence",
+        "1 PASS / 2 PASS / ... / 8 PASS",
     ],
     "runtime checklist current authority",
 )
@@ -101,4 +103,4 @@ require(
 if violations:
     raise SystemExit("B&A&HB doc-authority gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB doc-authority gate: OK (v0.2.0 current/recovery authority aligned; Issue #285/PR #286/#287 explicit; Phase 1 records archived, not current)")
+print("B&A&HB doc-authority gate: OK (v0.2.0 current/recovery authority aligned; Dogtag Case folded into the eight-check combined milestone; Issue #285/PR #286/#287 explicit; Phase 1 records archived, not current)")
