@@ -66,6 +66,8 @@ class RelationshipStockContractTests(unittest.TestCase):
         self.assertTrue(candidate_doc["policy"]["requiresPinnedTraderAssortOverlapProof"])
         self.assertTrue(candidate_doc["policy"]["requiresEconomyAdmiralReview"])
         self.assertTrue(candidate_doc["policy"]["rejectedCandidatesMustNeverMaterialize"])
+        self.assertTrue(candidate_doc["policy"]["independentRecurringUtilityRequired"])
+        self.assertTrue(candidate_doc["policy"]["rawBarterSupplyRejectedEvenWhenEconomyEnvelopeIsSafe"])
         self.assertTrue(candidate_doc["sourceBaseline"]["dynamicFenceExcludedFromDirectFixedAssortUniqueness"])
         self.assertGreaterEqual(len(candidate_doc["sourceBaseline"]["fixedTraderAssortsReviewed"]), 12)
 
@@ -73,16 +75,20 @@ class RelationshipStockContractTests(unittest.TestCase):
         by_tpl = {x["tpl"]: x for x in candidates}
         self.assertEqual(len(by_tpl), len(candidates))
         military_cable = by_tpl["59e36c6f86f774176c10a2a7"]
-        self.assertEqual(military_cable["decision"], "advance-to-economy-review")
+        self.assertEqual(military_cable["decision"], "reject-raw-barter-supply-no-independent-utility")
         self.assertEqual(military_cable["overlap"]["vanillaPinnedFixedAssorts"], "no-direct-tpl-hit")
         self.assertEqual(military_cable["overlap"]["scorpionPinned"], "no-exact-tpl-hit-in-repository-code-search")
         self.assertEqual(military_cable["overlap"]["artemPinned"], "no-exact-tpl-hit-in-repository-code-search")
-        envelope = military_cable["proposedEnvelope"]
-        self.assertEqual(envelope["stockPerReset"], 4)
-        self.assertEqual(envelope["buyRestriction"], 2)
-        self.assertGreaterEqual(envelope["priceRubFloor"], military_cable["spt413ReferencePriceRub"])
-        self.assertGreaterEqual(envelope["priceRubCeiling"], envelope["priceRubFloor"])
-        self.assertIsNone(envelope["questGate"])
+        self.assertFalse(military_cable["admissionFailure"]["independentRecurringUtility"])
+        self.assertTrue(military_cable["admissionFailure"]["rawBarterSupply"])
+        self.assertFalse(military_cable["admissionFailure"]["economyReviewCanOverride"])
+
+        cable_review = self.load("relationship-military-cable-review.json")
+        self.assertEqual(cable_review["decision"]["state"], military_cable["decision"])
+        self.assertFalse(cable_review["decision"]["materialize"])
+        self.assertFalse(cable_review["decision"]["economyReviewCanOverride"])
+        self.assertFalse(cable_review["findings"]["independentRecurringFieldUtility"])
+        self.assertTrue(cable_review["findings"]["rawMaterialComponent"])
 
         self.assertEqual(by_tpl["590c2e1186f77425357b6124"]["decision"], "reject-redundant-pinned-vanilla")
         self.assertEqual(by_tpl["5910968f86f77425cf569c32"]["decision"], "hold-pinned-vanilla-overlap")
