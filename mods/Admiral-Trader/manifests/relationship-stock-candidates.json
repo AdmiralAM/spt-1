@@ -4,7 +4,9 @@
   "sourceBaseline": {
     "spt413Repository": "sp-tarkov/server-csharp",
     "spt413Commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
-    "priceTable": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/prices.json"
+    "priceTable": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/prices.json",
+    "mechanicAssort": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/traders/5a7c2eca46aef81a7ca2145d/assort.json",
+    "refAssort": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/traders/6617beeaa9cfa777ca915b7c/assort.json"
   },
   "policy": {
     "materialize": false,
@@ -14,15 +16,29 @@
   },
   "candidates": [
     {
+      "tpl": "59e36c6f86f774176c10a2a7",
+      "name": "Military cable",
+      "targetLoyaltyLevel": 2,
+      "role": "expedition-electronics",
+      "spt413ReferencePriceRub": 28413,
+      "decision": "advance-to-pinned-overlap-review",
+      "rationale": "A bounded military-grade logistics component fits Admiral's expeditionary procurement role and does not directly grant combat capability. Current external vendor evidence indicates it is not sold directly by traders, making it a stronger Relationship candidate than early vanilla special-equipment duplicates.",
+      "overlap": {
+        "vanillaPinnedAssort": "pending-full-trader-parse",
+        "scorpionPinned": "pending-exact-parse",
+        "artemPinned": "pending-exact-parse"
+      }
+    },
+    {
       "tpl": "590c2e1186f77425357b6124",
       "name": "Toolset",
       "targetLoyaltyLevel": 2,
       "role": "field-maintenance",
       "spt413ReferencePriceRub": 34578,
-      "decision": "advance-to-overlap-review",
-      "rationale": "Reusable maintenance equipment fits trusted field logistics and does not itself grant ammunition, access or combat capability.",
+      "decision": "reject-redundant-pinned-vanilla",
+      "rationale": "Pinned SPT 4.1.3 Mechanic assort directly contains the Toolset with unlimited stock. Relationship progression should not spend a slot duplicating an already-renewable vanilla source.",
       "overlap": {
-        "vanillaPinnedAssort": "pending-exact-parse",
+        "vanillaPinnedAssort": "mechanic-direct-unlimited",
         "scorpionPinned": "no-exact-tpl-hit-in-preliminary-code-search",
         "artemPinned": "no-exact-tpl-hit-in-preliminary-code-search"
       }
@@ -33,10 +49,10 @@
       "targetLoyaltyLevel": 3,
       "role": "expedition-maintenance",
       "spt413ReferencePriceRub": 106861,
-      "decision": "advance-to-overlap-review",
-      "rationale": "A scarce finite maintenance resource gives relationship progression practical value without replacing quest-gated capability unlocks.",
+      "decision": "hold-pinned-vanilla-overlap",
+      "rationale": "Pinned SPT 4.1.3 Ref assort already contains the weapon repair kit with unlimited stock. Admiral may only use it later if the relationship role supplies a deliberately bounded alternative with a justified access distinction; it is not approved for materialization now.",
       "overlap": {
-        "vanillaPinnedAssort": "pending-exact-parse",
+        "vanillaPinnedAssort": "ref-direct-unlimited",
         "scorpionPinned": "pending-exact-parse",
         "artemPinned": "pending-exact-parse"
       }
@@ -47,10 +63,10 @@
       "targetLoyaltyLevel": 4,
       "role": "command-trust-maintenance",
       "spt413ReferencePriceRub": 861650,
-      "decision": "hold-high-economic-impact",
-      "rationale": "Role fit is strong but the pinned reference value is an order of magnitude above lower-tier maintenance stock; it must not be added before explicit Economy Admiral supply/price review and vanilla overlap proof.",
+      "decision": "reject-pinned-vanilla-and-economic-impact",
+      "rationale": "Pinned SPT 4.1.3 Ref assort already provides this item with unlimited stock and its reference value is exceptionally high. Duplicating it would add both overlap and large economic pressure without a unique Admiral capability story.",
       "overlap": {
-        "vanillaPinnedAssort": "pending-exact-parse",
+        "vanillaPinnedAssort": "ref-direct-unlimited",
         "scorpionPinned": "pending-exact-parse",
         "artemPinned": "pending-exact-parse"
       }
@@ -61,8 +77,11 @@
       "targetLoyaltyLevel": 2,
       "role": "field-maintenance",
       "spt413ReferencePriceRub": 12000,
-      "decision": "reject-redundant-vanilla",
-      "rationale": "Current vanilla already exposes the multitool as early Mechanic stock; adding it as relationship progression would create low-value duplicate availability rather than a meaningful Admiral privilege."
+      "decision": "reject-redundant-pinned-vanilla",
+      "rationale": "Pinned SPT 4.1.3 Mechanic assort directly exposes the multitool with unlimited stock; adding it as relationship progression would create low-value duplicate availability rather than a meaningful Admiral privilege.",
+      "overlap": {
+        "vanillaPinnedAssort": "mechanic-direct-unlimited"
+      }
     },
     {
       "tpl": "5ac78a9b86f7741cca0bbd8d",
@@ -70,8 +89,11 @@
       "targetLoyaltyLevel": 2,
       "role": "field-electronics",
       "spt413ReferencePriceRub": 28315,
-      "decision": "reject-redundant-vanilla",
-      "rationale": "Current vanilla exposes the jammer through Mechanic and uses it directly in quest placement flows; duplicating it as Admiral relationship stock adds little specialist identity and risks becoming quest convenience stock."
+      "decision": "reject-redundant-pinned-vanilla",
+      "rationale": "Pinned SPT 4.1.3 Mechanic assort directly exposes the jammer with unlimited stock. It is also a vanilla quest-placement tool, so Admiral duplication would be convenience stock rather than relationship progression.",
+      "overlap": {
+        "vanillaPinnedAssort": "mechanic-direct-unlimited"
+      }
     }
   ]
 }
