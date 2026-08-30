@@ -28,6 +28,14 @@ contracts = {
         "beltTemplateId,",
         "headBandTemplateId,",
     ],
+    "DogtagCaseAssort.cs": [
+        "TemplateTable templateTable",
+        "var templateId = new MongoId(RuntimeIdentity.DogtagCaseItemId);",
+        "if (!templateTable.Items.ContainsKey(templateId))",
+        "Dogtag Case offer refused: exact product template is not registered",
+        "RequireExactDogtagHost(templateTable, templateId);",
+        "Template = templateId",
+    ],
 }
 
 for filename, required in contracts.items():
@@ -45,4 +53,4 @@ for filename, required in contracts.items():
 if violations:
     raise SystemExit("B&A&HB offer-template boundary gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-template boundary gate: OK (all four Ragman products require their exact registered templates before any assort mutation; dangling offers forbidden)")
+print("B&A&HB offer-template boundary gate: OK (all five Ragman products require their exact registered templates before any assort mutation; Dogtag Case additionally proves its exact live vanilla host; dangling offers forbidden)")
