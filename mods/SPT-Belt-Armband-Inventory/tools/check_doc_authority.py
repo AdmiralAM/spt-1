@@ -24,6 +24,7 @@ require(
         "Candidate install / upgrade",
         "physical DLL filename intentionally remains",
         "Magazine operational integration",
+        "Dogtag Case",
         "BUILD-INFO.txt",
     ],
     "README current authority",
@@ -73,6 +74,11 @@ require(
         "development v0.2.0",
         "68ac00000000000000000012",
         "Utility HeadBand `cigarettes`",
+        "68ac00000000000000000013",
+        "68ac00000000000000000014",
+        "68ac00000000000000000015",
+        "Dogtag Case recovery boundary",
+        "equipment, mail rewards and insurance payloads",
         "BAndHBHeadBandSplitGridV1",
         "do not keep the migration permanently pending",
         "pre-v0.2.0 profile backup",
@@ -103,4 +109,4 @@ require(
 if violations:
     raise SystemExit("B&A&HB doc-authority gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB doc-authority gate: OK (v0.2.0 current/recovery authority aligned; Dogtag Case folded into the eight-check combined milestone; Issue #285/PR #286/#287 explicit; Phase 1 records archived, not current)")
+print("B&A&HB doc-authority gate: OK (v0.2.0 current/recovery authority aligned; Dogtag Case identity and recovery boundaries guarded; eight-check combined milestone authoritative; Issue #285/PR #286/#287 explicit; Phase 1 records archived, not current)")
