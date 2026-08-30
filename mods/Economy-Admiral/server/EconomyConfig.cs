@@ -129,6 +129,7 @@ public sealed record EconomyConfig
 
     public double CustomQuestItemBudgetMultiple { get; init; } = 1.50;
     public double CustomRestartableQuestItemBudgetMultiple { get; init; } = 1.15;
+    public double CustomRestartableQuestItemCountMultiple { get; init; } = 1.15;
     public double CustomQuestXpMultiple { get; init; } = 1.50;
     public double CustomRestartableQuestXpMultiple { get; init; } = 1.15;
     public double CustomQuestStandingMultiple { get; init; } = 1.50;
