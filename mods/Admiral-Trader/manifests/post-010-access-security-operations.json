@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-authored-spec-only",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "implementationAllowed": false,
+  "principle": "Access and hostile-operator themes may become future Admiral operations only when they solve a specific tactical problem. Key collection, generic PMC farming and escalating Raider counters are not progression systems.",
+  "operations": [
+    {
+      "key": "access-reconnaissance",
+      "sourceBundles": ["Keys Proficiency"],
+      "domain": "access-reconnaissance",
+      "workingTitle": {"en": "Borrowed Access", "ru": "Чужой доступ"},
+      "playerText": {
+        "en": {
+          "description": "A key is not the objective. Access is. I need proof that a restricted route can be opened, checked and left without turning your pockets into a locksmith's catalogue.",
+          "started": "Use one verified access route for the operation, confirm what is behind it, then extract. Do not bring me a ring of keys; I am interested in the route, not the collection.",
+          "success": "The route is real, usable and no longer theoretical. Keep the key if you have it. The information is what I needed."
+        },
+        "ru": {
+          "description": "Ключ — не цель. Цель — доступ. Мне нужно доказательство, что закрытый маршрут можно открыть, проверить и покинуть, не превращая карманы в каталог слесаря.",
+          "started": "Используй один подтверждённый маршрут доступа, проверь, что находится за ним, и выйди из рейда. Связку ключей мне не неси; меня интересует маршрут, а не коллекция.",
+          "success": "Маршрут существует, работает и больше не является теорией. Ключ можешь оставить себе. Мне нужна была информация."
+        }
+      },
+      "objectiveIntent": [
+        "prove one specific restricted-access route rather than collect keys",
+        "survive/extract after using the route so access supports an operation rather than a handover checklist"
+      ],
+      "antiGrind": {
+        "maximumRequiredKeys": 1,
+        "maximumRequiredSuccessfulRaids": 1,
+        "repeatable": false,
+        "noKeyCollectionLadder": true,
+        "noPerMapCopies": true,
+        "noPermanentKeyStorefront": true
+      },
+      "rewardDoctrine": "XP/RUB/standing by default. No permanent key storefront, key container reward or access-capability bypass without explicit overlap and Economy Admiral review.",
+      "proofGates": [
+        "prove exact SPT 4.1.3 condition semantics for the selected access interaction or location proxy; reject the interaction requirement if it cannot be represented reliably",
+        "prove survived/extraction semantics for the same bounded operation",
+        "audit overlap with frozen Admiral Access progression plus vanilla/Scorpion/Artem location quests before choosing the route",
+        "Economy Admiral approves final numeric and any item rewards"
+      ],
+      "runtimeMaterialize": false
+    },
+    {
+      "key": "labs-security-disruption",
+      "sourceBundles": ["Raider Hunt"],
+      "domain": "security-operations",
+      "workingTitle": {"en": "Internal Security", "ru": "Внутренняя охрана"},
+      "playerText": {
+        "en": {
+          "description": "Labs access is worth nothing if you cannot operate once the doors close behind you. I want one controlled breach of the Raider security pattern and an extraction, not a hundred-man tally.",
+          "started": "Enter Labs under your existing access authority, disrupt a small Raider element, and leave alive. This contract does not grant access and it does not reward staying to farm security teams.",
+          "success": "You proved the clearance can be used under pressure. The security response is not invincible, and more importantly, you knew when the operation was finished."
+        },
+        "ru": {
+          "description": "Доступ в Лабораторию ничего не стоит, если после закрытия дверей ты не способен там работать. Мне нужен один контролируемый разрыв схемы охраны Рейдеров и выход, а не счёт на сотню тел.",
+          "started": "Зайди в Лабораторию по уже имеющемуся допуску, нарушь работу небольшой группы Рейдеров и выйди живым. Этот контракт не выдаёт доступ и не поощряет фарм охраны.",
+          "success": "Ты доказал, что допуск можно использовать под давлением. Охрана не неуязвима, а главное — ты понял, когда операция закончена."
+        }
+      },
+      "objectiveIntent": [
+        "bounded Raider disruption inside The Labs after existing access progression",
+        "survive/extract the same operation rather than escalate Raider body counts"
+      ],
+      "antiGrind": {
+        "maximumTargetCount": 4,
+        "maximumRequiredSuccessfulRaids": 1,
+        "repeatable": false,
+        "noEscalatingSequels": true,
+        "noAccessUnlock": true,
+        "noLocationFreeFallback": true
+      },
+      "rewardDoctrine": "Risk-adjusted XP/RUB/standing only by default. No Labs access unlock, keycard faucet, Raider-equipment storefront or capability bypass.",
+      "proofGates": [
+        "prove exact SPT 4.1.3 Raider target alias and The Labs location condition shape",
+        "prove survived/extraction and same-operation counter semantics",
+        "audit overlap with frozen Admiral Labs clearance and vanilla/Scorpion/Artem Labs objectives",
+        "Economy Admiral approves final risk-adjusted numeric and any item rewards"
+      ],
+      "runtimeMaterialize": false
+    },
+    {
+      "key": "hostile-operator-intercept",
+      "sourceBundles": ["PMC Hunt"],
+      "domain": "counter-operator",
+      "workingTitle": {"en": "Contractor Intercept", "ru": "Перехват контрактников"},
+      "playerText": {
+        "en": {
+          "description": "Another armed contractor is useful only when there is a reason to intercept him. I am not paying for population control. I need a short counter-operator action tied to a route or objective that matters.",
+          "started": "Intercept a small hostile PMC element in the selected operational area and make your extraction. Do not roam the whole region adding bodies to a quota.",
+          "success": "The opposing contractors lost the window they were working. That is enough. A contract should remove a problem, not manufacture a career out of counting corpses."
+        },
+        "ru": {
+          "description": "Вооружённый контрактник становится целью только тогда, когда есть причина его перехватить. За зачистку населения я не плачу. Нужна короткая контроперация, привязанная к важному маршруту или задаче.",
+          "started": "Перехвати небольшую группу враждебных ЧВК в выбранной операционной зоне и выйди из рейда. Не броди по всему району ради пополнения счётчика тел.",
+          "success": "Противостоящие контрактники потеряли своё рабочее окно. Этого достаточно. Контракт должен устранять проблему, а не создавать профессию из подсчёта трупов."
+        }
+      },
+      "objectiveIntent": [
+        "one contextual hostile-PMC intercept tied to a selected operational area",
+        "survive/extract after a bounded engagement instead of repeating per-map PMC kill templates"
+      ],
+      "antiGrind": {
+        "maximumTargetCount": 4,
+        "maximumRequiredSuccessfulRaids": 1,
+        "repeatable": false,
+        "noEscalatingSequels": true,
+        "noPerMapCopies": true,
+        "noFactionKillLadder": true
+      },
+      "rewardDoctrine": "XP/RUB/standing only by default. No PMC gear faucet, dogtag conveyor or weapon-capability unlock; any item reward requires Economy Admiral approval.",
+      "proofGates": [
+        "prove exact SPT 4.1.3 PMC target/faction and selected location condition shape",
+        "prove survived/extraction and same-operation counter semantics",
+        "audit overlap with vanilla/Scorpion/Artem PMC objectives and frozen Admiral combat progression before selecting the area",
+        "Economy Admiral approves final numeric and any item rewards"
+      ],
+      "runtimeMaterialize": false
+    }
+  ]
+}
