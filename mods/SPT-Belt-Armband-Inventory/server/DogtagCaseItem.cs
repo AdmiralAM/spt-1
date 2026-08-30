@@ -126,8 +126,15 @@ public sealed class DogtagCaseItem(
         if (!result.Success)
             throw new InvalidOperationException($"B&A&HB Dogtag Case creation failed: {string.Join("; ", result.Errors)}");
 
+        // Do not make a service-level success observable through the equipment
+        // host until the actual inserted template has been read back and proven
+        // equivalent to the exact canonical grid contract we requested.
+        if (!templateTable.Items.TryGetValue(DogtagCaseTpl, out var created))
+            throw new InvalidOperationException("B&A&HB Dogtag Case creation reported success but the exact template is absent; refusing Dogtag slot exposure.");
+        ValidateExisting(created, source);
+
         CommitDogtagSlotExposure(dogtagSlotFilter);
-        logger.Success("B&A&HB Dogtag Case created from canonical EFT Dogtag Case filters; vanilla Dogtag slot entries preserved and exact container appended.");
+        logger.Success("B&A&HB Dogtag Case created and revalidated against the canonical EFT Dogtag Case grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
         return Task.CompletedTask;
     }
 
@@ -169,16 +176,24 @@ public sealed class DogtagCaseItem(
 
         var grid = grids[0];
         var sourceGrid = sourceGrids[0];
+        var actual = grid.Properties;
+        var expected = sourceGrid.Properties;
         if (!string.Equals(grid.Id.ToString(), GridId, StringComparison.Ordinal)
             || !string.Equals(grid.Parent?.ToString(), TemplateId, StringComparison.Ordinal)
-            || grid.Properties == null
-            || sourceGrid.Properties == null
-            || grid.Properties.CellsH != sourceGrid.Properties.CellsH
-            || grid.Properties.CellsV != sourceGrid.Properties.CellsV)
-            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: grid identity or geometry differs from the canonical source contract.");
+            || !string.Equals(grid.Name, sourceGrid.Name, StringComparison.Ordinal)
+            || !Equals(grid.Prototype, sourceGrid.Prototype)
+            || actual == null
+            || expected == null
+            || actual.CellsH != expected.CellsH
+            || actual.CellsV != expected.CellsV
+            || actual.MinCount != expected.MinCount
+            || actual.MaxCount != expected.MaxCount
+            || actual.MaxWeight != expected.MaxWeight
+            || actual.IsSortingTable != expected.IsSortingTable)
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: grid identity, geometry or limits differ from the canonical source contract.");
 
-        var actualFilters = grid.Properties.Filters?.ToArray();
-        var expectedFilters = sourceGrid.Properties.Filters?.ToArray();
+        var actualFilters = actual.Filters?.ToArray();
+        var expectedFilters = expected.Filters?.ToArray();
         if (actualFilters == null || expectedFilters == null || actualFilters.Length != expectedFilters.Length)
             throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: filter-group count differs from canonical source.");
 
