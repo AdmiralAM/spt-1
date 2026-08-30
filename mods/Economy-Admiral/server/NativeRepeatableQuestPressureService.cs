@@ -35,8 +35,7 @@ public sealed class NativeRepeatableQuestPressureService(
             if (config.EnableItemRewardStackNormalization)
             {
                 // SPT intentionally derives both the generated cash reward and the generated item-reward
-                // budget from RewardScaling.Roubles. Keep those two native surfaces coherent instead of
-                // post-processing cash and silently leaving a richer item budget behind.
+                // budget from RewardScaling.Roubles. Keep those two native value surfaces coherent.
                 blocked += PlanDimension(
                     proposals,
                     key,
@@ -47,9 +46,7 @@ public sealed class NativeRepeatableQuestPressureService(
                     caps.RestartableItemBudgetMultiple,
                     config.Mode == EconomyMode.Enforce);
 
-                // GP Coins are a separate native generated reward vector. They are reward value, not an
-                // authored trader barter/token offer, so keep them under the same existing restartable
-                // reward-budget allowance instead of letting repeatables bypass economy pressure through GP.
+                // GP Coins are a separate generated reward-value vector and share the restartable value cap.
                 blocked += PlanDimension(
                     proposals,
                     key,
@@ -60,6 +57,8 @@ public sealed class NativeRepeatableQuestPressureService(
                     caps.RestartableItemBudgetMultiple,
                     config.Mode == EconomyMode.Enforce);
 
+                // Item count potential is a different native dimension from reward value. Presets deliberately
+                // retain the same maintained numbers, while Custom can tune count independently from cash/GP/value.
                 blocked += PlanDimension(
                     proposals,
                     key,
@@ -67,7 +66,7 @@ public sealed class NativeRepeatableQuestPressureService(
                     "ItemRewardCount",
                     pristine.Items,
                     repeatable.RewardScaling.Items,
-                    caps.RestartableItemBudgetMultiple,
+                    caps.RestartableItemCountMultiple,
                     config.Mode == EconomyMode.Enforce);
             }
 

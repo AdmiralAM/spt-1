@@ -26,6 +26,7 @@ Open the BepInEx/F12 Configuration Manager to change the preset or disable an ec
 - applies bounded XP reward pressure;
 - applies bounded trader-standing reward pressure;
 - uses stricter limits for restartable/repeatable reward outliers;
+- bounds native Daily/Weekly/Scav generated reward value and item-count potential independently in Custom;
 - preserves pristine/provenance protections and transactional rollback.
 
 ### Trader Economy
@@ -94,7 +95,7 @@ These switches expose maintained server feature flags; they do not create parall
 The legacy server-side `enableLootPressure` master remains accepted for compatibility with older configs and enables both loose and static loot pressure. New F12/manual configuration should use the two explicit loot switches.
 
 ### Advanced - Custom
-Custom exposes bounded numeric controls for trader purchase/sell multipliers, flea base/listing-fee multipliers, loose/static loot scales and quest item/XP/standing reward caps. These values are used by the `Custom` preset; Easy/Normal/Hard retain their maintained profile values.
+Custom exposes bounded numeric controls for trader purchase/sell multipliers, flea base/listing-fee multipliers, loose/static loot scales and quest item/XP/standing reward caps. For native Daily/Weekly/Scav generation, **Restartable Quest Reward Value Cap** controls the generated Rouble/GP and item-value budget while **Restartable Quest Item Count Cap** independently controls generated item-count potential. These values are used by the `Custom` preset; Easy/Normal/Hard retain their maintained profile values.
 
 The server remains the only source of economic calculations. The F12 plugin is only a settings client.
 

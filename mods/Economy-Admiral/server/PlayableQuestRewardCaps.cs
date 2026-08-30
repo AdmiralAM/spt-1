@@ -4,6 +4,7 @@ public sealed record PlayableQuestRewardCaps(
     string PolicyId,
     double ItemBudgetMultiple,
     double RestartableItemBudgetMultiple,
+    double RestartableItemCountMultiple,
     double XpMultiple,
     double RestartableXpMultiple,
     double StandingMultiple,
@@ -14,13 +15,14 @@ public sealed record PlayableQuestRewardCaps(
         ArgumentNullException.ThrowIfNull(config);
         return config.Preset switch
         {
-            EconomyPreset.Easy => new("PlayableQuestRewardPolicyV1/Easy", 2.25, 1.75, 2.25, 1.75, 2.25, 1.75),
-            EconomyPreset.Normal => new("PlayableQuestRewardPolicyV1/Normal", 1.50, 1.15, 1.50, 1.15, 1.50, 1.15),
-            EconomyPreset.Hard => new("PlayableQuestRewardPolicyV1/Hard", 1.10, 1.00, 1.10, 1.00, 1.10, 1.00),
+            EconomyPreset.Easy => new("PlayableQuestRewardPolicyV1/Easy", 2.25, 1.75, 1.75, 2.25, 1.75, 2.25, 1.75),
+            EconomyPreset.Normal => new("PlayableQuestRewardPolicyV1/Normal", 1.50, 1.15, 1.15, 1.50, 1.15, 1.50, 1.15),
+            EconomyPreset.Hard => new("PlayableQuestRewardPolicyV1/Hard", 1.10, 1.00, 1.00, 1.10, 1.00, 1.10, 1.00),
             EconomyPreset.Custom => Validate(new(
                 "PlayableQuestRewardPolicyV1/Custom",
                 config.CustomQuestItemBudgetMultiple,
                 config.CustomRestartableQuestItemBudgetMultiple,
+                config.CustomRestartableQuestItemCountMultiple,
                 config.CustomQuestXpMultiple,
                 config.CustomRestartableQuestXpMultiple,
                 config.CustomQuestStandingMultiple,
@@ -35,6 +37,7 @@ public sealed record PlayableQuestRewardCaps(
                  {
                      policy.ItemBudgetMultiple,
                      policy.RestartableItemBudgetMultiple,
+                     policy.RestartableItemCountMultiple,
                      policy.XpMultiple,
                      policy.RestartableXpMultiple,
                      policy.StandingMultiple,
