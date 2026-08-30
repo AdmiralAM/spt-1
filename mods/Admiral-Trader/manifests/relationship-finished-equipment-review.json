@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "Relationship LL3/LL4 finished specialist equipment review",
+  "source": {
+    "repository": "sp-tarkov/server-csharp",
+    "commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+    "therapistTraderId": "54cb57776803fa99248b456e",
+    "jaegerTraderId": "5c0647fdd443bc2504c2d371"
+  },
+  "policy": {
+    "materialize": false,
+    "relationshipValueMustBeIndependentAvailability": true,
+    "unlimitedVanillaDirectOfferIsDisqualifying": true,
+    "priceDiscountAsRelationshipBenefitAllowed": false,
+    "questOrCombatCapabilityBypassAllowed": false
+  },
+  "resolved": [
+    {
+      "tpl": "590c60fc86f77412b13fddcf",
+      "name": "Documents case",
+      "targetLoyaltyLevel": 3,
+      "decision": "reject-redundant-pinned-vanilla",
+      "evidence": {
+        "trader": "Therapist",
+        "offerId": "686e34716c2a18ed6b0eb451",
+        "unlimitedCount": true,
+        "stackObjectsCount": 9999999
+      },
+      "rationale": "Pinned SPT 4.1.3 Therapist already provides the Documents case as a renewable direct offer. Admiral cannot create independent relationship value by duplicating unlimited vanilla availability, and loyalty-gated price discounts are outside policy."
+    },
+    {
+      "tpl": "59fafd4b86f7745ca07e1232",
+      "name": "Key tool",
+      "targetLoyaltyLevel": 3,
+      "decision": "reject-redundant-pinned-vanilla",
+      "evidence": {
+        "trader": "Therapist",
+        "offerId": "686e34706c2a18ed6b0eb427",
+        "unlimitedCount": true,
+        "stackObjectsCount": 9999999
+      },
+      "rationale": "Pinned SPT 4.1.3 Therapist already provides the Key tool with renewable unlimited supply. A bounded Admiral copy would not create a new specialist availability privilege."
+    },
+    {
+      "tpl": "5d235bb686f77443f4331278",
+      "name": "S I C C organizational pouch",
+      "targetLoyaltyLevel": 4,
+      "decision": "reject-redundant-pinned-vanilla",
+      "evidence": {
+        "trader": "Jaeger",
+        "offerId": "686e34256c2a18ed6b0e94b1",
+        "unlimitedCount": true,
+        "stackObjectsCount": 9999999
+      },
+      "rationale": "Pinned SPT 4.1.3 Jaeger already provides the SICC pouch with renewable unlimited supply. High standing therefore would not buy a distinct Admiral logistics privilege; it would only duplicate another trader."
+    }
+  ],
+  "conclusion": {
+    "approvedOfferCount": 0,
+    "relationshipMaterializationStillDisabled": true,
+    "nextSelectionRule": "Do not search additional storage containers merely for tier fill. Continue only with equipment that has an independent recurring specialist use and lacks renewable direct vanilla supply; otherwise leave the tier intentionally sparse and move to another product surface."
+  }
+}
