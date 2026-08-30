@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-relationship-progression-contract",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "purpose": "Prove that the frozen authored standing rewards can reach each Admiral loyalty tier by that tier's own minimum player level without adding sales-volume gates or changing the frozen rewards.",
+  "sources": {
+    "loyaltyLevels": "db/base.json",
+    "accessStanding": "manifests/keys-authored-spec.json",
+    "arsenalStanding": "manifests/weapon-ammo-authored-spec.json"
+  },
+  "policy": {
+    "initialStanding": 0.0,
+    "salesSumGateAllowed": false,
+    "relationshipStockMayAssumeTierReachabilityOnlyAfterThisContractPasses": true,
+    "runtimeRewardMutationInThisSlice": false
+  },
+  "tiers": [
+    {
+      "loyaltyLevel": 1,
+      "minimumPlayerLevel": 1,
+      "requiredStanding": 0.0,
+      "maximumAuthoredStandingAvailableByLevel": 0.0,
+      "headroom": 0.0,
+      "reachableByOwnLevelGate": true
+    },
+    {
+      "loyaltyLevel": 2,
+      "minimumPlayerLevel": 15,
+      "requiredStanding": 0.1,
+      "maximumAuthoredStandingAvailableByLevel": 0.23,
+      "headroom": 0.13,
+      "reachableByOwnLevelGate": true
+    },
+    {
+      "loyaltyLevel": 3,
+      "minimumPlayerLevel": 25,
+      "requiredStanding": 0.3,
+      "maximumAuthoredStandingAvailableByLevel": 0.5,
+      "headroom": 0.2,
+      "reachableByOwnLevelGate": true
+    },
+    {
+      "loyaltyLevel": 4,
+      "minimumPlayerLevel": 35,
+      "requiredStanding": 0.55,
+      "maximumAuthoredStandingAvailableByLevel": 0.65,
+      "headroom": 0.1,
+      "reachableByOwnLevelGate": true
+    }
+  ],
+  "campaignStanding": {
+    "accessDomainTotal": 0.22,
+    "arsenalDomainTotal": 0.43,
+    "authoredTotal": 0.65,
+    "ll4Requirement": 0.55,
+    "ll4CompletionHeadroom": 0.1
+  },
+  "interpretation": {
+    "ll2": "Trusted-field logistics can become meaningful by level 15 without forcing completion of every early quest family.",
+    "ll3": "Specialist-expedition standing is economically usable by level 25 because the authored backbone exposes materially more standing than the 0.30 threshold by then.",
+    "ll4": "Command-trust stock is reachable at level 35 with 0.10 standing headroom across the complete frozen campaign; no artificial sales-sum grind is required."
+  },
+  "changeControl": {
+    "standingReductionRequiresTrajectoryRecalculation": true,
+    "loyaltyThresholdIncreaseRequiresTrajectoryRecalculation": true,
+    "minimumLevelChangeRequiresTrajectoryRecalculation": true,
+    "futureRelationshipOfferMustNotCompensateForUnreachableTier": true
+  }
+}
