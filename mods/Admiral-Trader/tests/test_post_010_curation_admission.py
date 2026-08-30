@@ -31,10 +31,10 @@ class Post010CurationAdmissionTests(unittest.TestCase):
 
         by_name = {entry["sourceBundle"]: entry for entry in admissions}
         self.assertEqual(by_name["Deep Pockets"]["decision"], "reject-direct-port")
-        for rewrite in ("Iron Head", "Meds Proficiency", "Juggernaut"):
+        for rewrite in ("Iron Head", "Meds Proficiency", "Juggernaut", "Tarkov Mule"):
             self.assertEqual(by_name[rewrite]["decision"], "rewrite-candidate")
             self.assertIn("requiredRewriteBoundary", by_name[rewrite])
-        for pending in ("Tarkov Mule", "Ultrasound", "Stims Proficiency"):
+        for pending in ("Ultrasound", "Stims Proficiency"):
             self.assertEqual(by_name[pending]["decision"], "pending-source-review")
 
     def test_frozen_runtime_counts_are_unchanged(self):
