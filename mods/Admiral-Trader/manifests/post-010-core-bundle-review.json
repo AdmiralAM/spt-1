@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-research-only",
+  "source": {
+    "repository": "Thirt3nth/Andrudis-Questmaniac",
+    "commit": "4e15990ac18f469ef7818475ce8553bbbb7cebb4"
+  },
+  "principle": "Admit themes, not template volume. Any future quest must be authored around a distinct operational problem and may not recreate item-by-item storefront, body-count, map-copy, mastery, or handover conveyors.",
+  "reviews": [
+    {
+      "sourceBundle": "Ammo Proficiency",
+      "legacyQuestCount": 283,
+      "decision": "reject-direct-port",
+      "futureUse": "reference-only-for-caliber-coverage",
+      "evidence": [
+        "legacy README defines 283 quests",
+        "purpose is unlocking barter/purchase trades for ammunition types and better magazines",
+        "chains are coupled to Weapon Proficiency unlocks by caliber"
+      ],
+      "reason": "The frozen Admiral campaign already owns a compact quest-gated munitions capability layer. Porting the legacy ammunition conveyor would duplicate that authority and massively expand storefront progression.",
+      "requiredRewriteBoundary": "No ammo-by-ammo quest conveyor, no magazine unlock ladder, and no duplicate permanent ammunition capability outside the existing authored Munitions milestones.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Weapon Proficiency",
+      "legacyQuestCount": 92,
+      "decision": "reject-direct-port",
+      "futureUse": "reference-only-for-weapon-domain-inventory",
+      "evidence": [
+        "legacy README defines 92 quests",
+        "weapon categories are split into Rookie, Seasoned, Veteran and Elite tiers",
+        "barter quests unlock subsequent proficiency quests and storefront progression"
+      ],
+      "reason": "The source is a tiered weapon/storefront progression system. Admiral already has authored Arsenal capability milestones, so direct reuse would create a second overlapping weapon progression engine.",
+      "requiredRewriteBoundary": "No four-tier mastery ladder, no weapon-by-weapon unlock conveyor, and no duplicate Arsenal authority; future use is limited to source inventory or a materially distinct one-off operation.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Weapon Mastery",
+      "legacyQuestCount": 1702,
+      "decision": "reject-direct-port",
+      "futureUse": "none-unless-distinct-authored-operation-emerges",
+      "evidence": [
+        "legacy README defines 1702 quests",
+        "bundle is a series of elimination quests with specific weapons",
+        "chains are distributed across Fence and location traders"
+      ],
+      "reason": "This is template-volume mastery content rather than a finite Admiral campaign. Its scale and per-weapon repetition are directly contrary to the curated authored-product model.",
+      "requiredRewriteBoundary": "Never materialize mastery by weapon enumeration or repeated kill quotas. Any future weapon operation must solve one distinct tactical problem and remain small.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Errand Boy",
+      "legacyQuestCount": 920,
+      "decision": "reject-direct-port",
+      "futureUse": "theme-only-for-single-procurement-operation",
+      "evidence": [
+        "legacy README defines 920 quests",
+        "four chains revolve around handing over requested items",
+        "container rewards are issued at completion quartiles"
+      ],
+      "reason": "Nine hundred twenty handover errands are collection busywork and reward-volume inflation. Procurement can fit Admiral only when it supports a specific operation with a clear why/what/payoff.",
+      "requiredRewriteBoundary": "No generic requested-item queue, no percent-completion container ladder, and no high-volume handover sequence; any future procurement quest must be singular and contextual.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Keys Proficiency",
+      "legacyQuestCount": 27,
+      "decision": "rewrite-candidate",
+      "futureUse": "access-reconnaissance operation",
+      "evidence": [
+        "legacy README defines 27 quests",
+        "quests revolve around finding keys and unlocking rewards",
+        "chain moves from Fence to local map traders"
+      ],
+      "reason": "Access intelligence is thematically compatible with Admiral, but a key-collection progression risks becoming another acquisition checklist and may overlap vanilla location progression.",
+      "requiredRewriteBoundary": "Future use must be a compact access/reconnaissance operation with vanilla/Scorpion/Artem overlap proof; no key-by-key collection ladder and no broad permanent key storefront.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "PMC Hunt",
+      "legacyQuestCount": 70,
+      "decision": "rewrite-candidate",
+      "futureUse": "single contextual hostile-operator operation",
+      "evidence": [
+        "legacy README defines location chains with kill counts from 1 through 500 PMCs",
+        "the same progression template repeats across locations",
+        "later rounds depend on earlier repeated rounds"
+      ],
+      "reason": "A hostile-operator contract can fit Admiral, but 70 quests built from escalating per-map counts are pure template repetition.",
+      "requiredRewriteBoundary": "At most a few authored operations with explicit location/context; no 1-to-500 ladder and no copy of the same objective across every map.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Scav Hunt",
+      "legacyQuestCount": 60,
+      "decision": "reject-direct-port",
+      "futureUse": "none-unless-distinct-threat-operation-emerges",
+      "evidence": [
+        "legacy README defines location chains with counts from 1 through 1000 Scavs",
+        "the same ten-step counter pattern repeats per location",
+        "progression is body-count volume rather than changing tactical requirements"
+      ],
+      "reason": "The source is a large farming ladder and duplicates common vanilla/repeatable combat space. It has little unique Admiral product value in direct form.",
+      "requiredRewriteBoundary": "No cumulative Scav farming ladder, no four-digit kill requirement and no map-template duplication; future use requires a genuinely distinct operational threat context.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Raider Hunt",
+      "legacyQuestCount": 10,
+      "decision": "rewrite-candidate",
+      "futureUse": "single Labs security-disruption operation",
+      "evidence": [
+        "legacy README defines a ten-step Raider chain",
+        "counts escalate from 1 through 100",
+        "the chain is tied to The Labs"
+      ],
+      "reason": "Labs security disruption is compatible with Admiral's access/capability identity, but ten escalating Raider counters add grind rather than new operational meaning.",
+      "requiredRewriteBoundary": "Use only a compact Labs-specific operation if it is distinct from frozen Access progression; no 1-to-100 Raider ladder and no reward that bypasses existing Labs clearance authority.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Rogue Hunt",
+      "legacyQuestCount": 10,
+      "decision": "rewrite-candidate",
+      "futureUse": "single ex-USEC perimeter operation",
+      "evidence": [
+        "legacy README defines a ten-step Rogue chain",
+        "counts escalate from 1 through 100",
+        "source deliberately permits completion outside Lighthouse when spawn mods are present"
+      ],
+      "reason": "A Rogue operation can be distinctive, but the legacy version is still only a count ladder and its location-free compatibility rule weakens authored context.",
+      "requiredRewriteBoundary": "Future use must have explicit operational context and bounded target count; no 1-to-100 ladder and no location-free farming rule solely for mod compatibility.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Headless PMC",
+      "legacyQuestCount": 70,
+      "decision": "reject-direct-port",
+      "futureUse": "none-unless-distinct-precision-operation-emerges",
+      "evidence": [
+        "legacy README defines per-location PMC headshot chains",
+        "counts rise from 1 through 200",
+        "the same ten-stage structure repeats across locations"
+      ],
+      "reason": "This duplicates precision-kill progression already represented by Admiral's frozen precision domain and does so through repetitive location templates.",
+      "requiredRewriteBoundary": "No per-map headshot ladder, no 1-to-200 escalation and no duplication of frozen Precision Arsenal; only a materially different authored precision operation may be reconsidered.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Headless Scav",
+      "legacyQuestCount": 60,
+      "decision": "reject-direct-port",
+      "futureUse": "none",
+      "evidence": [
+        "legacy README defines per-location Scav headshot chains",
+        "counts rise from 1 through 500",
+        "round structure is repeated across maps"
+      ],
+      "reason": "This is a high-volume precision farming template with weak distinct product identity and direct overlap with general combat progression.",
+      "requiredRewriteBoundary": "Do not port or emulate the map-by-map headshot ladder; reconsider only if a future authored operation has a different tactical purpose.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Deep Pockets Legend / Iron Head Legend / Juggernaut Legend / Ultrasound Legend",
+      "legacyQuestCount": 775,
+      "decision": "reject-direct-port",
+      "futureUse": "gear-constraint-mechanic-reference-only",
+      "evidence": [
+        "legacy README defines hundreds of Legend quests tied to specific gear",
+        "each chain repeats eliminations while wearing prescribed equipment",
+        "Ultrasound Legend alone contains 72 headset-gated kill quests"
+      ],
+      "reason": "The Legend families multiply storefront unlock content into another gear-restricted kill grid. This is useful only as evidence that equipment constraints exist, not as authored campaign content.",
+      "requiredRewriteBoundary": "No gear-by-gear kill matrix and no Legend-scale expansion. A future gear constraint may appear only inside a small operation where the equipment requirement serves the scenario.",
+      "runtimeMaterialize": false
+    }
+  ]
+}
