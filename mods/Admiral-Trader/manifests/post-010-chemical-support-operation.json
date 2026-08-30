@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-authored-spec-only",
+  "source": {
+    "bundle": "Stims Proficiency",
+    "legacyQuestCount": 16,
+    "legacyPattern": "mostly per-stimulant Trade tasks",
+    "directPortAllowed": false
+  },
+  "operation": {
+    "key": "controlled-chemical-support",
+    "title": {
+      "en": "Controlled Support",
+      "ru": "Контролируемая поддержка"
+    },
+    "description": {
+      "en": "Chemical support is useful only when it solves a field problem. I do not need a syringe collection or a habit disguised as training. Demonstrate one controlled use under operational pressure and come back alive.",
+      "ru": "Химическая поддержка полезна только тогда, когда решает полевую задачу. Мне не нужна коллекция шприцов или привычка, замаскированная под подготовку. Покажи одно контролируемое применение под оперативной нагрузкой и вернись живым."
+    },
+    "started": {
+      "en": "Take one approved support stimulant for a real operational need, complete the bounded field condition, and extract. One deliberate use is enough; repeated consumption proves nothing.",
+      "ru": "Используй один одобренный поддерживающий стимулятор по реальной оперативной необходимости, выполни ограниченное полевое условие и выйди из рейда. Одного осознанного применения достаточно; повторное потребление ничего не доказывает."
+    },
+    "success": {
+      "en": "You used the chemistry as a tool and ended the operation on your feet. That is the standard: controlled support, not dependency and not inventory farming.",
+      "ru": "Ты использовал химию как инструмент и закончил операцию на ногах. Такой и есть стандарт: контролируемая поддержка, а не зависимость и не фарм запасов."
+    },
+    "objectiveIntent": [
+      "one deliberate approved-support-stimulant use tied to a distinct bounded field requirement",
+      "survive or extract the same operation",
+      "no stimulant-by-stimulant progression and no consumption quota"
+    ],
+    "bounds": {
+      "maximumRequiredStimulantUses": 1,
+      "maximumSuccessfulRaids": 1,
+      "repeatable": false,
+      "perStimCopiesAllowed": false,
+      "consumptionLadderAllowed": false,
+      "handoverAllowed": false,
+      "firCollectionAllowed": false
+    },
+    "rewardDoctrine": {
+      "default": "XP/RUB/Admiral standing",
+      "boundedSampleRewardAllowedAfterEconomyReview": true,
+      "renewableStimulantSupplyAllowed": false,
+      "permanentStimulantStorefrontUnlockAllowed": false,
+      "highValueConsumableFaucetAllowed": false
+    }
+  },
+  "gates": {
+    "implementationAllowed": false,
+    "runtimeMaterialize": false,
+    "requiresExactSpt413StimulantUseConditionProof": true,
+    "requiresExactSpt413SurvivedExtractionProof": true,
+    "requiresFinalApprovedStimTplSelection": true,
+    "requiresDistinctFieldConditionSelection": true,
+    "requiresVanillaScorpionArtemOverlapAudit": true,
+    "requiresFrozenCampaignOverlapReview": true,
+    "requiresEconomyAdmiralReview": true
+  },
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0
+  }
+}
