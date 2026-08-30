@@ -37,7 +37,9 @@ public sealed record NativeRepeatableRewardBaseline(
     IReadOnlyList<double> Roubles,
     IReadOnlyList<double> GpCoins,
     IReadOnlyList<double> Items,
-    IReadOnlyList<double> Reputation);
+    IReadOnlyList<double> Reputation,
+    IReadOnlyList<double> SkillRewardChance,
+    IReadOnlyList<double> SkillPointReward);
 
 public sealed record NativeRepeatableMutation(
     string RepeatableKey,
