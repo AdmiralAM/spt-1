@@ -69,8 +69,15 @@
     },
     {
       "sourceBundle": "Tarkov Mule",
-      "decision": "pending-source-review",
-      "futureUse": "load-bearing expedition operation",
+      "decision": "rewrite-candidate",
+      "futureUse": "load-bearing expedition field doctrine",
+      "evidence": [
+        "legacy chain begins with Tactical sling bag barter",
+        "objective is FIR HandoverItem over a broad backpack target list",
+        "next quest repeats the same structure at quantity two and unlocks the next backpack offer"
+      ],
+      "reason": "Load-bearing endurance is compatible with expeditionary logistics, but the legacy implementation is another backpack barter ladder rather than proof of carrying, extracting or operating under load.",
+      "requiredRewriteBoundary": "Any future Tarkov Mule-derived operation must use a proven load/extraction/survival mechanic or another field-performance proxy; no backpack collection ladder or sequential backpack storefront unlocks.",
       "runtimeMaterialize": false
     },
     {
