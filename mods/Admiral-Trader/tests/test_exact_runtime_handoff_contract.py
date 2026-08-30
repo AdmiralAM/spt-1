@@ -64,7 +64,7 @@ class ExactRuntimeHandoffContractTests(unittest.TestCase):
         self.assertIn("officialPortraitRoute", text)
         self.assertIn("Staged official portrait provenance drift", text)
         self.assertIn("Staged official portrait is not a complete JPEG stream", text)
-        self.assertIn("Prepared install portrait hash drift", text)
+        self.assertIn("Installed official portrait hash drift", text)
         self.assertIn('"SPT_Runtime/user/mods/Admiral-Trader/$portraitRelative"', text)
 
     def test_wrapper_packages_backup_first_profile_recovery(self):
@@ -101,27 +101,48 @@ class ExactRuntimeHandoffContractTests(unittest.TestCase):
         archive_validation = text.index("Exact-runtime archive contains forbidden build/debug junk.")
         self.assertGreater(install, archive_validation)
         self.assertGreater(install, checksum)
-        self.assertIn("Installed fully validated exact-runtime test candidate", text[install:])
+        self.assertIn("Installed and postcondition-verified exact-runtime test candidate", text[install:])
 
-    def test_final_install_is_prepared_then_rollback_safe_swapped(self):
+    def test_final_install_is_prepared_then_postcondition_verified_before_rollback_delete(self):
         text = SCRIPT.read_text(encoding="utf-8")
         install = text.index("if ($Install) {")
         block = text[install:]
         self.assertIn(".Admiral-Trader.incoming", block)
         self.assertIn(".Admiral-Trader.rollback", block)
         self.assertIn("Copy-Item $stageMod $incoming -Recurse", block)
-        self.assertIn("Prepared install tree is incomplete", block)
+        self.assertIn("function Assert-AdmiralInstallTree", block)
+        self.assertIn("Validated install tree is incomplete", block)
         self.assertIn("manifests\\persistent-identities.json", block)
         self.assertIn("Move-Item $destination $backup", block)
         self.assertIn("Move-Item $incoming $destination", block)
-        self.assertIn("Move-Item $backup $destination -ErrorAction SilentlyContinue", block)
+        self.assertIn("Assert-AdmiralInstallTree -RootPath $destination", block)
+        self.assertIn("Move-Item $backup $destination -ErrorAction Stop", block)
+        self.assertIn("Remove-Item $backup -Recurse -Force", block)
+
         copy_incoming = block.index("Copy-Item $stageMod $incoming -Recurse")
+        validate_incoming = block.index("Assert-AdmiralInstallTree -RootPath $incoming")
         backup_existing = block.index("Move-Item $destination $backup")
         activate_incoming = block.index("Move-Item $incoming $destination")
-        rollback = block.index("Move-Item $backup $destination -ErrorAction SilentlyContinue")
-        self.assertLess(copy_incoming, backup_existing)
+        validate_destination = block.index("Assert-AdmiralInstallTree -RootPath $destination")
+        rollback = block.index("Move-Item $backup $destination -ErrorAction Stop")
+        delete_rollback = block.index("Remove-Item $backup -Recurse -Force")
+
+        self.assertLess(copy_incoming, validate_incoming)
+        self.assertLess(validate_incoming, backup_existing)
         self.assertLess(backup_existing, activate_incoming)
-        self.assertGreater(rollback, activate_incoming)
+        self.assertLess(activate_incoming, validate_destination)
+        self.assertGreater(rollback, validate_destination)
+        self.assertGreater(delete_rollback, validate_destination)
+
+    def test_activated_tree_revalidates_identity_and_binary_hashes(self):
+        text = SCRIPT.read_text(encoding="utf-8")
+        install = text.index("if ($Install) {")
+        block = text[install:]
+        self.assertIn("Installed provenance source HEAD drift", block)
+        self.assertIn("Installed Admiral server DLL hash drift", block)
+        self.assertIn("Installed official portrait hash drift", block)
+        self.assertIn("Installed runtime manifest is not an enabled exact SPT 4.1.3 test candidate", block)
+        self.assertIn("physicalRuntimeEvidenceEligible", block)
 
 
 if __name__ == "__main__":
