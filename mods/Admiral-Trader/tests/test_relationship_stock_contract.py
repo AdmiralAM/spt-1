@@ -13,7 +13,7 @@ class RelationshipStockContractTests(unittest.TestCase):
         policy = self.load("gameplay-policy.json")
         relationship = self.load("relationship-stock.json")
 
-        self.assertEqual(relationship["schemaVersion"], 1)
+        self.assertEqual(relationship["schemaVersion"], 2)
         self.assertEqual(relationship["stockClass"], "Relationship")
         self.assertTrue(policy["traderStock"]["relationshipStockAllowed"])
         self.assertFalse(relationship["authority"]["salesSumGateAllowed"])
@@ -25,11 +25,16 @@ class RelationshipStockContractTests(unittest.TestCase):
             policy["loyalty"]["expectedStandingThresholds"][1:],
         )
 
+        rules = relationship["designRules"]
+        self.assertFalse(rules["tierFillQuotaAllowed"])
+        self.assertTrue(rules["emptyTierAllowedWhenNoCandidatePasses"])
+
         tiers = relationship["tiers"]
         self.assertEqual([x["loyaltyLevel"] for x in tiers], [2, 3, 4])
         self.assertEqual([x["standing"] for x in tiers], policy["loyalty"]["expectedStandingThresholds"][1:])
-        self.assertTrue(all(x["targetOfferCount"]["min"] > 0 for x in tiers))
-        self.assertTrue(all(x["targetOfferCount"]["max"] >= x["targetOfferCount"]["min"] for x in tiers))
+        self.assertTrue(all(x["selection"]["minimumRequiredOffers"] == 0 for x in tiers))
+        self.assertTrue(all(x["selection"]["maximumOffers"] > 0 for x in tiers))
+        self.assertTrue(all(x["selection"]["qualityGateOverridesCount"] for x in tiers))
 
     def test_frozen_candidate_is_not_materialized_by_relationship_design(self):
         relationship = self.load("relationship-stock.json")
