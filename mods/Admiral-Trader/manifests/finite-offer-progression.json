@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "frozen-0.1.0-economic-contract",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "purpose": "Define the gameplay and economic meaning of the current finite 11-offer assort without changing the frozen runtime candidate.",
+  "classes": {
+    "baseline": {
+      "offerCount": 4,
+      "questGated": false,
+      "loyaltyLevel": 1,
+      "role": "first-contact specialist logistics",
+      "stockUnitsPerReset": 25,
+      "playerBuyUnitsPerReset": 8,
+      "playerFullBuyRub": 240000,
+      "globalStockRub": 762000,
+      "rules": [
+        "Finite stock and a stricter personal buy limit are required on every Baseline offer.",
+        "Baseline may overlap vanilla only when the item has a clear expedition/recon/field-preparation role and the duplicate remains bounded.",
+        "Baseline must not become generic barter-material or supermarket inventory."
+      ]
+    },
+    "clearanceMilestone": {
+      "offerCount": 1,
+      "questGated": true,
+      "loyaltyLevel": 1,
+      "role": "earned Labs access capability",
+      "stockUnitsPerReset": 1,
+      "playerBuyUnitsPerReset": 1,
+      "playerFullBuyRub": 166000,
+      "rules": [
+        "The authored Access quest remains the sole Admiral gate; loyalty must not add a second blocker.",
+        "Availability is finite and personally capped at one per reset.",
+        "Relationship standing must never bypass or duplicate this capability gate."
+      ]
+    },
+    "munitionMilestones": {
+      "offerCount": 6,
+      "questGated": true,
+      "loyaltyLevel": 1,
+      "role": "earned category-specific ammunition capability",
+      "stockUnitsPerReset": 380,
+      "playerBuyUnitsPerReset": 380,
+      "playerFullBuyRub": 265000,
+      "unitBudgetCeiling": 400,
+      "spendBudgetCeilingRub": 300000,
+      "rules": [
+        "Each ammunition offer requires its own authored Munitions quest success unlock.",
+        "Quest completion is the capability gate; loyalty must not add a second blocker.",
+        "Permanent special/heavy/explosive ammunition offers are forbidden; those remain sample-only rewards.",
+        "Any new permanent ammunition offer or stock increase requires explicit rebudgeting because the current unit budget is already at 95 percent utilization."
+      ]
+    },
+    "relationship": {
+      "offerCount": 0,
+      "role": "future standing-gated specialist logistics",
+      "materialized": false,
+      "rules": [
+        "Relationship stock remains quality-gated rather than quota-filled.",
+        "It may add specialist availability but may not replace Access or Munitions capability gates.",
+        "Every future offer requires separate Economy Admiral price and supply approval before materialization."
+      ]
+    }
+  },
+  "aggregate": {
+    "rootOfferCount": 11,
+    "playerFullBuyRubPerReset": 671000,
+    "milestonePlayerFullBuyRubPerReset": 431000,
+    "economicMeaning": "The frozen assort is deliberately a finite preparation/capability surface, not a general-purpose trader. Baseline establishes bounded utility; authored milestones unlock narrow capabilities; Relationship remains absent until a genuinely distinct specialist privilege passes economy review."
+  },
+  "changeControl": {
+    "runtimeMutationInThisSlice": false,
+    "requireFullCiForAnyOfferChange": true,
+    "requireEconomyReviewForPriceStockOrNewOffer": true,
+    "requireUnlockGraphReviewForMilestoneOfferChange": true,
+    "requireFrozenCountDecisionBeforeChanging11OfferBaseline": true
+  }
+}
