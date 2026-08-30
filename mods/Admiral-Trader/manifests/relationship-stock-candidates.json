@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "sourceBaseline": {
+    "spt413Repository": "sp-tarkov/server-csharp",
+    "spt413Commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+    "priceTable": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/prices.json"
+  },
+  "policy": {
+    "materialize": false,
+    "requiresPinnedTraderAssortOverlapProof": true,
+    "requiresEconomyAdmiralReview": true,
+    "rejectedCandidatesMustNeverMaterialize": true
+  },
+  "candidates": [
+    {
+      "tpl": "590c2e1186f77425357b6124",
+      "name": "Toolset",
+      "targetLoyaltyLevel": 2,
+      "role": "field-maintenance",
+      "spt413ReferencePriceRub": 34578,
+      "decision": "advance-to-overlap-review",
+      "rationale": "Reusable maintenance equipment fits trusted field logistics and does not itself grant ammunition, access or combat capability.",
+      "overlap": {
+        "vanillaPinnedAssort": "pending-exact-parse",
+        "scorpionPinned": "no-exact-tpl-hit-in-preliminary-code-search",
+        "artemPinned": "no-exact-tpl-hit-in-preliminary-code-search"
+      }
+    },
+    {
+      "tpl": "5910968f86f77425cf569c32",
+      "name": "Weapon repair kit",
+      "targetLoyaltyLevel": 3,
+      "role": "expedition-maintenance",
+      "spt413ReferencePriceRub": 106861,
+      "decision": "advance-to-overlap-review",
+      "rationale": "A scarce finite maintenance resource gives relationship progression practical value without replacing quest-gated capability unlocks.",
+      "overlap": {
+        "vanillaPinnedAssort": "pending-exact-parse",
+        "scorpionPinned": "pending-exact-parse",
+        "artemPinned": "pending-exact-parse"
+      }
+    },
+    {
+      "tpl": "591094e086f7747caa7bb2ef",
+      "name": "Body armor repair kit",
+      "targetLoyaltyLevel": 4,
+      "role": "command-trust-maintenance",
+      "spt413ReferencePriceRub": 861650,
+      "decision": "hold-high-economic-impact",
+      "rationale": "Role fit is strong but the pinned reference value is an order of magnitude above lower-tier maintenance stock; it must not be added before explicit Economy Admiral supply/price review and vanilla overlap proof.",
+      "overlap": {
+        "vanillaPinnedAssort": "pending-exact-parse",
+        "scorpionPinned": "pending-exact-parse",
+        "artemPinned": "pending-exact-parse"
+      }
+    },
+    {
+      "tpl": "544fb5454bdc2df8738b456a",
+      "name": "Leatherman Multitool",
+      "targetLoyaltyLevel": 2,
+      "role": "field-maintenance",
+      "spt413ReferencePriceRub": 12000,
+      "decision": "reject-redundant-vanilla",
+      "rationale": "Current vanilla already exposes the multitool as early Mechanic stock; adding it as relationship progression would create low-value duplicate availability rather than a meaningful Admiral privilege."
+    },
+    {
+      "tpl": "5ac78a9b86f7741cca0bbd8d",
+      "name": "Signal Jammer",
+      "targetLoyaltyLevel": 2,
+      "role": "field-electronics",
+      "spt413ReferencePriceRub": 28315,
+      "decision": "reject-redundant-vanilla",
+      "rationale": "Current vanilla exposes the jammer through Mechanic and uses it directly in quest placement flows; duplicating it as Admiral relationship stock adds little specialist identity and risks becoming quest convenience stock."
+    }
+  ]
+}
