@@ -25,7 +25,7 @@
       "en": "That closes the shortage. The element can maintain itself again; there is no reason to turn this into another shopping list.",
       "ru": "Дефицит закрыт. Группа снова может обслуживать себя сама; превращать это в очередной список покупок незачем."
     },
-    "objectiveIntent": "One contextual maintenance-reserve handover using a small fixed set of ordinary consumable/service supplies whose exact TPLs are selected only after overlap and economy review.",
+    "objectiveIntent": "One contextual maintenance-reserve handover using a small fixed set of ordinary non-repairable consumable/service supplies whose exact TPLs are selected only after overlap and economy review.",
     "bounds": {
       "maximumDistinctItemTpls": 3,
       "maximumTotalHandedOverUnits": 6,
@@ -34,7 +34,20 @@
       "escalatingSequelsAllowed": false,
       "genericRequestedItemQueueAllowed": false,
       "containerRewardLadderAllowed": false,
-      "storefrontUnlockAllowed": false
+      "storefrontUnlockAllowed": false,
+      "repairableWeaponsArmorHelmetsAllowed": false
+    },
+    "handoverCompatibility": {
+      "legacyRisk": "The maintained SPT 4.1 QuestManiac port documents legacy handover conditions with maxDurability=0, which rejects repairable weapons, helmets and armor; its converter normalizes those conditions to the vanilla-style 100 ceiling.",
+      "admiralDecision": "Field-Expedient Supply avoids repairable weapon/armor/helmet payloads entirely. Exact selected TPLs must be ordinary non-repairable service/consumable supplies, so the operation does not depend on durability-bound handover behavior.",
+      "repairablePayloadAllowed": false,
+      "exactTplSelectionStillRequired": true,
+      "exactSpt413ConditionProofStillRequired": true,
+      "sourceReference": {
+        "repository": "laurentmekka/AndrudisQuestManiac",
+        "commit": "58c3dd0487858c7ba8e8c053b873fbe76a222637",
+        "finding": "3423 legacy HandoverItem/FindItem/LeaveItemAtLocation durability ceilings normalized from 0 to 100"
+      }
     },
     "rewardDoctrine": {
       "default": ["xp", "rub", "admiral-standing"],

@@ -27,6 +27,16 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
     assert bounds["genericRequestedItemQueueAllowed"] is False
     assert bounds["containerRewardLadderAllowed"] is False
     assert bounds["storefrontUnlockAllowed"] is False
+    assert bounds["repairableWeaponsArmorHelmetsAllowed"] is False
+
+    compat = op["handoverCompatibility"]
+    assert compat["repairablePayloadAllowed"] is False
+    assert compat["exactTplSelectionStillRequired"] is True
+    assert compat["exactSpt413ConditionProofStillRequired"] is True
+    assert compat["sourceReference"]["repository"] == "laurentmekka/AndrudisQuestManiac"
+    assert compat["sourceReference"]["commit"] == "58c3dd0487858c7ba8e8c053b873fbe76a222637"
+    assert "3423" in compat["sourceReference"]["finding"]
+    assert "maxDurability=0" in compat["legacyRisk"]
 
     rewards = op["rewardDoctrine"]
     assert rewards["permanentItemSupplyAllowed"] is False
