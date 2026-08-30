@@ -77,7 +77,10 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
         {
             var repeatable = questConfig.RepeatableQuests[repeatableIndex];
             if (config.EnableItemRewardStackNormalization)
+            {
+                CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:roubles", repeatable.RewardScaling.Roubles);
                 CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:items", repeatable.RewardScaling.Items);
+            }
             if (config.EnableQuestXpPressure)
                 CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:experience", repeatable.RewardScaling.Experience);
             if (config.EnableQuestStandingPressure)
@@ -161,7 +164,7 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
         entries.Add(new("flea:adjust:below-handbook-enabled", () => adjustment.AdjustPriceWhenBelowHandbookPrice = adjustBelowHandbook, () => adjustment.AdjustPriceWhenBelowHandbookPrice == adjustBelowHandbook));
 
         var maxDifference = adjustment.MaxPriceDifferenceBelowHandbookPercent;
-        entries.Add(new("flea:adjust:max-below-handbook", () => adjustment.MaxPriceDifferenceBelowHandbookPercent = maxDifference, () => object.Equals(adjustment.MaxPriceDifferenceBelowHandbookPercent, maxDifference)));
+        entries.Add(new("flea:adjust:max-below-handbook", () => adjustment.MaxPriceDifferenceBelowHandbookPrice = maxDifference, () => object.Equals(adjustment.MaxPriceDifferenceBelowHandbookPrice, maxDifference)));
 
         var handbookMultiplier = adjustment.HandbookPriceMultiplier;
         entries.Add(new("flea:adjust:handbook-multiplier", () => adjustment.HandbookPriceMultiplier = handbookMultiplier, () => object.Equals(adjustment.HandbookPriceMultiplier, handbookMultiplier)));
