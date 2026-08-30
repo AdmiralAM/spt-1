@@ -42,6 +42,8 @@ public sealed class NativeRepeatableQuestBaselineService(
             scaling.Roubles.ToArray(),
             scaling.GpCoins.ToArray(),
             scaling.Items.ToArray(),
-            scaling.Reputation.ToArray());
+            scaling.Reputation.ToArray(),
+            scaling.SkillRewardChance.ToArray(),
+            scaling.SkillPointReward.ToArray());
     }
 }
