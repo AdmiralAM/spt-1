@@ -71,6 +71,10 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
             var identityJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "manifests", "identity-assets.json"), cancellationToken);
             var baseJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "db", "base.json"), cancellationToken);
             var baselineJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "manifests", "baseline-stock.json"), cancellationToken);
+            var relationshipPath = Path.Combine(traderModPath, "manifests", "relationship-stock.json");
+            var relationshipJson = File.Exists(relationshipPath)
+                ? await File.ReadAllTextAsync(relationshipPath, cancellationToken)
+                : null;
             gameplay = AdmiralTraderGameplayAlphaAdapter.Parse(
                 campaignJson,
                 identityJson,
@@ -79,7 +83,8 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
                 baselineJson,
                 assortJson,
                 questAssortJson,
-                authoredQuestJson);
+                authoredQuestJson,
+                relationshipJson);
             offers = gameplay.Offers;
             contractState = "LoadedGameplayAlphaV4";
         }
