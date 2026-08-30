@@ -9,6 +9,7 @@ armband_item = (SERVER / "WristWalletItem.cs").read_text(encoding="utf-8-sig")
 armband = (SERVER / "RuntimeCandidateAssort.cs").read_text(encoding="utf-8-sig")
 wallet = (SERVER / "WristWalletAssort.cs").read_text(encoding="utf-8-sig")
 dedicated = (SERVER / "DedicatedWearableAssort.cs").read_text(encoding="utf-8-sig")
+dogtag = (SERVER / "DogtagCaseAssort.cs").read_text(encoding="utf-8-sig")
 
 for token in [
     "internal static void RequireArmBandProduct(TemplateTable templateTable, MongoId productTemplate)",
@@ -55,10 +56,33 @@ if min(host, belt_prepare, head_prepare, first_commit) < 0 or not (
 ):
     violations.append("dedicated offers must prove exact slot15/slot16 hosts before either offer is prepared or committed")
 
+for token in [
+    "new MongoId(RuntimeIdentity.DogtagCaseItemId)",
+    "new MongoId(RuntimeIdentity.DogtagCaseAssortId)",
+    "RequireExactDogtagHost(templateTable, templateId);",
+    'string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal)',
+    "groups.Length != 1",
+    "groups[0].Filter.Count < 2",
+    "!groups[0].Filter.Contains(templateId)",
+    "!groups[0].Filter.Any(x => !Equals(x, templateId))",
+]:
+    if token not in dogtag:
+        violations.append(f"Dogtag Case offer missing exact host/preservation token {token!r}")
+
+dogtag_host = dogtag.find("RequireExactDogtagHost(templateTable, templateId);")
+dogtag_trader = dogtag.find("tradersTable.GetValueOrDefault(")
+dogtag_first_mutation = dogtag.find("trader.Assort.Items.Add(")
+if min(dogtag_host, dogtag_trader, dogtag_first_mutation) < 0 or not (
+    dogtag_host < dogtag_trader < dogtag_first_mutation
+):
+    violations.append("Dogtag Case offer must prove exact vanilla Dogtag host and preserved vanilla acceptance before resolving/mutating Ragman assort")
+
 if "filter.Add(" in contract or "slots.Add(" in contract:
     violations.append("offer-host validation must be read-only and must not repair equipment filters/slots during trader registration")
+if "groups[0].Filter.Add(" in dogtag or "slots.Add(" in dogtag:
+    violations.append("Dogtag Case offer-host validation must remain read-only; host mutation belongs to DogtagCaseItem preload only")
 
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; validation is read-only)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case requires the exact vanilla Dogtag host while preserving a vanilla accepted entry; validation is read-only)")
