@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-authored-spec-only",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "sourceBundle": "Sniper Life",
+  "key": "precision-observation-window",
+  "domain": "reconnaissance",
+  "workingTitle": {
+    "en": "Observation Window",
+    "ru": "Окно наблюдения"
+  },
+  "playerText": {
+    "en": {
+      "description": "Distance is useful only when it buys information and control. Find a clean observation lane, make a small number of deliberate shots, and leave before the position becomes a firing range.",
+      "started": "Work from a real standoff distance, confirm the lane, make the necessary shots, then extract. I am checking fieldcraft and discipline, not whether you can add another ten metres to a counter.",
+      "success": "You used distance as a tool instead of a scoreboard. The lane is mapped, the position is compromised, and you knew when to leave."
+    },
+    "ru": {
+      "description": "Дистанция полезна только тогда, когда даёт информацию и контроль. Найди чистый сектор наблюдения, сделай несколько выверенных выстрелов и уйди до того, как позиция превратится в тир.",
+      "started": "Работай с реальной дистанции, подтверди сектор, сделай необходимые выстрелы и выйди из рейда. Я проверяю полевую дисциплину, а не способность добавлять ещё десять метров к счётчику.",
+      "success": "Ты использовал дистанцию как инструмент, а не как таблицу рекордов. Сектор нанесён, позиция раскрыта, и ты вовремя ушёл."
+    }
+  },
+  "objectiveIntent": [
+    "one bounded precision engagement from a proven meaningful standoff-distance band",
+    "survive/extract after the engagement so positioning and disengagement matter",
+    "avoid overlap with the frozen Precision Arsenal qualification and weapon-possession scope"
+  ],
+  "antiGrind": {
+    "maximumTargetCount": 2,
+    "maximumRequiredSuccessfulRaids": 1,
+    "repeatable": false,
+    "noDistanceLadder": true,
+    "noEscalatingSequels": true,
+    "noWeaponCollection": true,
+    "noPerMapCopies": true
+  },
+  "rewardDoctrine": "XP/RUB/standing only by default. No sniper-rifle storefront, weapon unlock, optics faucet or rare ammunition supply. Any item reward requires Economy Admiral approval.",
+  "proofGates": [
+    "prove the exact SPT 4.1.3 kill-condition distance field and unit semantics before selecting a final distance band",
+    "prove survived/extraction semantics and whether the precision engagement can be required in the same operation without restart punishment",
+    "audit overlap against frozen Precision Arsenal plus vanilla, Scorpion and Artem precision/sniper objectives",
+    "Economy Admiral approves final numeric rewards and any exceptional item reward"
+  ],
+  "implementationAllowed": false,
+  "runtimeMaterialize": false
+}
