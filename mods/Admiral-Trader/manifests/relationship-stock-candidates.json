@@ -25,7 +25,8 @@
     "materialize": false,
     "requiresPinnedTraderAssortOverlapProof": true,
     "requiresEconomyAdmiralReview": true,
-    "rejectedCandidatesMustNeverMaterialize": true
+    "rejectedCandidatesMustNeverMaterialize": true,
+    "barterInputPressureMustBeReviewedSeparatelyFromDirectSaleOverlap": true
   },
   "candidates": [
     {
@@ -50,6 +51,30 @@
       }
     },
     {
+      "tpl": "5d0376a486f7747d8050965c",
+      "name": "Military circuit board",
+      "targetLoyaltyLevel": 3,
+      "role": "specialist-electronics",
+      "spt413ReferencePriceRub": 52255,
+      "decision": "reject-mechanic-barter-faucet",
+      "rationale": "The item is thematically appropriate but pinned Mechanic assort uses it repeatedly as barter input. Turning standing into a renewable direct source would weaken existing barter scarcity rather than create an independent Relationship privilege.",
+      "overlap": {
+        "vanillaPinnedEconomicRole": "mechanic-barter-input-multiple"
+      }
+    },
+    {
+      "tpl": "5d03775b86f774203e7e0c4b",
+      "name": "Phased array element",
+      "targetLoyaltyLevel": 4,
+      "role": "command-electronics",
+      "spt413ReferencePriceRub": 119902,
+      "decision": "reject-mechanic-barter-faucet",
+      "rationale": "The item fits high-tier military electronics but is already consumed by pinned Mechanic barter schemes, including high-count recipes. Stable Relationship supply would materially bypass another trader's barter economy and is rejected before runtime materialization.",
+      "overlap": {
+        "vanillaPinnedEconomicRole": "mechanic-barter-input-high-pressure"
+      }
+    },
+    {
       "tpl": "590c2e1186f77425357b6124",
       "name": "Toolset",
       "targetLoyaltyLevel": 2,
@@ -64,7 +89,7 @@
       }
     },
     {
-      "tpl": "5910968f86f77425cf569c32",
+      "tpl": "5910968f86f774592f7b841e",
       "name": "Weapon repair kit",
       "targetLoyaltyLevel": 3,
       "role": "expedition-maintenance",
