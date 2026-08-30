@@ -82,14 +82,28 @@
     },
     {
       "sourceBundle": "Ultrasound",
-      "decision": "pending-source-review",
-      "futureUse": "medical/diagnostic operation",
+      "decision": "rewrite-candidate",
+      "futureUse": "acoustic-awareness field doctrine",
+      "evidence": [
+        "pinned legacy README defines Ultrasound as 16 quests whose purpose is unlocking headset barter/purchase trades",
+        "bundle is structurally split into eight Barter and eight Trade quests",
+        "Ultrasound Legend is a separate 72-quest gear-restricted kill layer unlocked by the corresponding Ultrasound Trade quests"
+      ],
+      "reason": "Hearing protection and acoustic awareness fit specialist field preparation, but the source bundle is primarily a headset storefront-unlock conveyor. The adjacent Legend layer is also far too repetitive to port as progression.",
+      "requiredRewriteBoundary": "Any future Ultrasound-derived operation must have a distinct field-performance purpose and a small authored scope; no headset-by-headset barter/trade ladder, no 72-quest gear-kill expansion and no sequential storefront unlock quota.",
       "runtimeMaterialize": false
     },
     {
       "sourceBundle": "Stims Proficiency",
-      "decision": "pending-source-review",
-      "futureUse": "controlled stimulant proficiency",
+      "decision": "rewrite-candidate",
+      "futureUse": "controlled stimulant field doctrine",
+      "evidence": [
+        "pinned legacy README defines Stims Proficiency as 16 quests whose purpose is unlocking stimulant barter/purchase trades",
+        "bundle is structurally split into one Barter and fifteen Trade quests",
+        "legacy bundle therefore maps almost one quest per stimulant purchase unlock rather than a compact operational proficiency arc"
+      ],
+      "reason": "Controlled stimulant use may support a specialist medical/logistics identity, but a fifteen-trade unlock conveyor would create excessive storefront progression and risks turning quest rewards into a stimulant supply faucet.",
+      "requiredRewriteBoundary": "Any future Stims-derived operation must use a small authored field-use/survival concept proven against SPT 4.1.3, avoid repeated-use grind and health-risk incentives, and keep any stimulant reward or permanent supply behind explicit Economy Admiral review.",
       "runtimeMaterialize": false
     }
   ]
