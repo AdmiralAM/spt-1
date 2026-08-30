@@ -79,6 +79,7 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
             if (config.EnableItemRewardStackNormalization)
             {
                 CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:roubles", repeatable.RewardScaling.Roubles);
+                CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:gp-coins", repeatable.RewardScaling.GpCoins);
                 CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:items", repeatable.RewardScaling.Items);
             }
             if (config.EnableQuestXpPressure)
