@@ -120,15 +120,59 @@ first_commit = dedicated_assort.find("CommitOffer(")
 if min(belt_prepare, head_prepare, first_commit) < 0 or not (belt_prepare < first_commit and head_prepare < first_commit):
     violations.append("both dedicated persistent offers must be prepared/validated before the first assort mutation")
 
+dogtag_item = require(
+    SERVER / "DogtagCaseItem.cs",
+    [
+        'NewItemName = "B&A&HB Dogtag Case"',
+        'Name = "B&A&HB Dogtag Case"',
+        'ShortName = "Dogtag Case"',
+        'Name = "Жетонница B&A&HB"',
+        'ShortName = "Жетонница"',
+        'new("5c093e3486f77430cb02e593")',
+        "Filters = copiedFilters",
+        "CommitDogtagSlotExposure(dogtagSlotFilter);",
+        "if (!filter.Contains(DogtagCaseTpl)) filter.Add(DogtagCaseTpl);",
+    ],
+    "Dogtag Case item")
+if "BaseClasses.DOGTAG" in dogtag_item:
+    violations.append("Dogtag Case must copy the canonical Dogtag Case filter groups instead of replacing them with a broad dogtag category")
+
+dogtag_assort = require(
+    SERVER / "DogtagCaseAssort.cs",
+    [
+        "private const int PriceRoubles = 50000;",
+        "private const int LoyaltyLevel = 2;",
+        "new MongoId(RuntimeIdentity.DogtagCaseItemId)",
+        "new MongoId(RuntimeIdentity.DogtagCaseAssortId)",
+        "RequireExactDogtagHost(templateTable, templateId);",
+        "trader.Assort.Items.Where(x => x.Id == id).Take(2).ToArray();",
+        "if (matches.Length > 1)",
+        "trader.Assort.BarterScheme.ContainsKey(id)",
+        "trader.Assort.LoyalLevelItems.ContainsKey(id)",
+        "trader.Assort.BarterScheme.Add(id,",
+        "trader.Assort.LoyalLevelItems.Add(id,",
+        "groups[0].Filter.Count < 2",
+        "!groups[0].Filter.Contains(templateId)",
+        "!groups[0].Filter.Any(x => !Equals(x, templateId))",
+    ],
+    "Dogtag Case offer")
+if "trader.Assort.Items.FirstOrDefault(x => x.Id == id)" in dogtag_assort:
+    violations.append("Dogtag Case assort must reject duplicate persistent item entries instead of validating only the first")
+if "trader.Assort.BarterScheme[id] =" in dogtag_assort or "trader.Assort.LoyalLevelItems[id] =" in dogtag_assort:
+    violations.append("Dogtag Case assort must not overwrite persistent metadata with dictionary indexers")
+
 require(
     SRC / "RuntimeIdentity.cs",
     [
         'EmergencyHeadBandGridId = "68ac00000000000000000010"',
         'EmergencyHeadBandCigarettesGridId = "68ac00000000000000000012"',
+        'DogtagCaseItemId = "68ac00000000000000000013"',
+        'DogtagCaseGridId = "68ac00000000000000000014"',
+        'DogtagCaseAssortId = "68ac00000000000000000015"',
         "EmergencyHeadBandSplitGridColumns = 1",
         "EmergencyHeadBandSplitGridRows = 1",
     ],
-    "Utility HeadBand split identities")
+    "Utility HeadBand + Dogtag Case persistent identities")
 
 require(
     SRC / "HeadBandUtilityPolicy.cs",
@@ -185,5 +229,5 @@ if violations:
 
 print(
     "B&A&HB product-contract gate: OK "
-    "(EN/RU localized roster; exact pricing/progression and host isolation; split HeadBand pockets; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
+    "(EN/RU localized five-product roster; exact pricing/progression and host isolation; split HeadBand pockets; Dogtag Case clones canonical filters and requires preserved vanilla Dogtag host; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
 )
