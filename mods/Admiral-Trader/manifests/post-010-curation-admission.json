@@ -105,6 +105,71 @@
       "reason": "Controlled stimulant use may support a specialist medical/logistics identity, but a fifteen-trade unlock conveyor would create excessive storefront progression and risks turning quest rewards into a stimulant supply faucet.",
       "requiredRewriteBoundary": "Any future Stims-derived operation must use a small authored field-use/survival concept proven against SPT 4.1.3, avoid repeated-use grind and health-risk incentives, and keep any stimulant reward or permanent supply behind explicit Economy Admiral review.",
       "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Boss Hunt",
+      "decision": "rewrite-candidate",
+      "futureUse": "single high-value-target operations",
+      "evidence": [
+        "pinned legacy README defines a ten-step boss kill chain",
+        "required counts escalate through 1, 2, 3, 4, 5, 7, 9, 12, 20 and 50",
+        "the progression value is therefore repeated body-count escalation rather than distinct operations"
+      ],
+      "reason": "High-value target contracts fit Admiral, but killing the same boss through ten increasing counters is exactly the repetition the curated campaign removes.",
+      "requiredRewriteBoundary": "Preserve only distinct one-off HVT operations with explicit operational context and bounded proof; no repeated boss-count ladder and no same-target sequel whose only change is a larger number.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Boss Follower Hunt",
+      "decision": "rewrite-candidate",
+      "futureUse": "command-network disruption operations",
+      "evidence": [
+        "pinned legacy README defines a ten-step boss-follower kill chain",
+        "required counts escalate through 1, 3, 5, 7, 9, 12, 15, 20, 50 and 100",
+        "the source applies the ladder anywhere rather than authoring a specific command-network objective"
+      ],
+      "reason": "Disrupting a boss entourage can support a coherent operation, but a 1-to-100 follower body-count ladder is not meaningful authored progression.",
+      "requiredRewriteBoundary": "Use at most a compact contextual operation around a specific command network or escort element; no follower farming ladder, no arbitrary triple-digit count and no location-free repetition without narrative purpose.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Cultists Hunt",
+      "decision": "rewrite-candidate",
+      "futureUse": "night reconnaissance and cultist disruption",
+      "evidence": [
+        "pinned legacy README defines a ten-step cultist kill chain",
+        "required counts escalate through 1, 2, 5, 10, 15, 20, 27, 35, 50 and 75",
+        "the chain measures only cumulative kills rather than reconnaissance, survival or a specific operation"
+      ],
+      "reason": "Cultist activity can justify a distinctive dangerous contract, but the legacy chain is another escalating body-count grind.",
+      "requiredRewriteBoundary": "Future use must be a small authored night/reconnaissance/disruption operation with proven SPT conditions; no cumulative cultist ladder or reward scaling based solely on kill volume.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Sniper Life",
+      "decision": "rewrite-candidate",
+      "futureUse": "precision fieldcraft operation",
+      "evidence": [
+        "pinned legacy README defines 90 quests across four kill/headshot chains",
+        "minimum distance rises by ten metres with each successive quest",
+        "the structure therefore manufactures progression by distance increments rather than distinct tactical problems"
+      ],
+      "reason": "Precision fieldcraft fits Admiral's specialist identity, but ninety incremental-distance quests would duplicate the existing precision capability domain and recreate quota progression.",
+      "requiredRewriteBoundary": "Any future sniper-derived operation must be materially distinct from the frozen Precision Arsenal chain, use one or very few contextual objectives, and never expand by repetitive 10 m distance increments.",
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Survivalist",
+      "decision": "rewrite-candidate",
+      "futureUse": "expedition survival and extraction proof",
+      "evidence": [
+        "pinned legacy README defines 40 quests as five-quest chains per location plus a location-free chain",
+        "early stages repeat survival counts of 2, 5 and 10",
+        "later stages repeat 5 and 10 survived-status raids with restart-on-failure behavior"
+      ],
+      "reason": "Extraction discipline is a strong expeditionary theme, but repeating the same survival counter across every map creates forty near-duplicate quests.",
+      "requiredRewriteBoundary": "Compress survival into a small authored expedition arc with distinct risk/context and proven SPT 4.1.3 survived-status semantics; no per-map five-quest template and no restart punishment used merely to inflate repetition.",
+      "runtimeMaterialize": false
     }
   ]
 }
