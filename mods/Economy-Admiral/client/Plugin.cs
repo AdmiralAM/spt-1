@@ -45,6 +45,7 @@ public sealed class Plugin : BaseUnityPlugin
     private ConfigEntry<double> staticLoot;
     private ConfigEntry<double> questItems;
     private ConfigEntry<double> restartableQuestItems;
+    private ConfigEntry<double> restartableQuestItemCount;
     private ConfigEntry<double> questXp;
     private ConfigEntry<double> restartableQuestXp;
     private ConfigEntry<double> questStanding;
@@ -111,7 +112,8 @@ public sealed class Plugin : BaseUnityPlugin
             "Scales native static/container-loot multipliers." + ManualText + RestartText);
 
         questItems = BindDouble("07. Custom - Quests", "Quest Item Reward Cap", 1.50, 0.1, 10.0, "normal quest item-reward budget multiple");
-        restartableQuestItems = BindDouble("07. Custom - Quests", "Restartable Quest Item / Value Cap", 1.15, 0.1, 10.0, "restartable item and generated reward-value budget multiple");
+        restartableQuestItems = BindDouble("07. Custom - Quests", "Restartable Quest Reward Value Cap", 1.15, 0.1, 10.0, "restartable generated Rouble/GP and item-value budget multiple");
+        restartableQuestItemCount = BindDouble("07. Custom - Quests", "Restartable Quest Item Count Cap", 1.15, 0.1, 10.0, "restartable generated item-count potential multiple");
         questXp = BindDouble("07. Custom - Quests", "Quest XP Reward Cap", 1.50, 0.1, 10.0, "normal quest XP reward multiple");
         restartableQuestXp = BindDouble("07. Custom - Quests", "Restartable Quest XP Reward Cap", 1.15, 0.1, 10.0, "restartable quest XP reward multiple");
         questStanding = BindDouble("07. Custom - Quests", "Quest Standing Reward Cap", 1.50, 0.1, 10.0, "normal trader-standing reward multiple");
@@ -209,6 +211,7 @@ public sealed class Plugin : BaseUnityPlugin
             staticLoot.Value = snapshot.CustomStaticLootScale;
             questItems.Value = snapshot.CustomQuestItemBudgetMultiple;
             restartableQuestItems.Value = snapshot.CustomRestartableQuestItemBudgetMultiple;
+            restartableQuestItemCount.Value = snapshot.CustomRestartableQuestItemCountMultiple;
             questXp.Value = snapshot.CustomQuestXpMultiple;
             restartableQuestXp.Value = snapshot.CustomRestartableQuestXpMultiple;
             questStanding.Value = snapshot.CustomQuestStandingMultiple;
@@ -246,6 +249,7 @@ public sealed class Plugin : BaseUnityPlugin
         staticLoot.SettingChanged += OnSettingChanged;
         questItems.SettingChanged += OnSettingChanged;
         restartableQuestItems.SettingChanged += OnSettingChanged;
+        restartableQuestItemCount.SettingChanged += OnSettingChanged;
         questXp.SettingChanged += OnSettingChanged;
         restartableQuestXp.SettingChanged += OnSettingChanged;
         questStanding.SettingChanged += OnSettingChanged;
@@ -310,6 +314,7 @@ public sealed class Plugin : BaseUnityPlugin
         CustomStaticLootScale = staticLoot.Value,
         CustomQuestItemBudgetMultiple = questItems.Value,
         CustomRestartableQuestItemBudgetMultiple = restartableQuestItems.Value,
+        CustomRestartableQuestItemCountMultiple = restartableQuestItemCount.Value,
         CustomQuestXpMultiple = questXp.Value,
         CustomRestartableQuestXpMultiple = restartableQuestXp.Value,
         CustomQuestStandingMultiple = questStanding.Value,
@@ -345,6 +350,7 @@ public sealed class Plugin : BaseUnityPlugin
         Nearly(request.CustomStaticLootScale, snapshot.CustomStaticLootScale) &&
         Nearly(request.CustomQuestItemBudgetMultiple, snapshot.CustomQuestItemBudgetMultiple) &&
         Nearly(request.CustomRestartableQuestItemBudgetMultiple, snapshot.CustomRestartableQuestItemBudgetMultiple) &&
+        Nearly(request.CustomRestartableQuestItemCountMultiple, snapshot.CustomRestartableQuestItemCountMultiple) &&
         Nearly(request.CustomQuestXpMultiple, snapshot.CustomQuestXpMultiple) &&
         Nearly(request.CustomRestartableQuestXpMultiple, snapshot.CustomRestartableQuestXpMultiple) &&
         Nearly(request.CustomQuestStandingMultiple, snapshot.CustomQuestStandingMultiple) &&
@@ -365,7 +371,7 @@ public sealed class Plugin : BaseUnityPlugin
         public double CustomTraderPurchasePriceMultiplier; public double CustomTraderSellPayoutMultiplier;
         public double CustomFleaBasePriceMultiplier; public double CustomFleaMaxPriceDifferenceBelowHandbookPercent; public double CustomFleaHandbookPriceMultiplier; public double CustomFleaListingFeeMultiplier;
         public double CustomLooseLootScale; public double CustomStaticLootScale;
-        public double CustomQuestItemBudgetMultiple; public double CustomRestartableQuestItemBudgetMultiple;
+        public double CustomQuestItemBudgetMultiple; public double CustomRestartableQuestItemBudgetMultiple; public double CustomRestartableQuestItemCountMultiple;
         public double CustomQuestXpMultiple; public double CustomRestartableQuestXpMultiple;
         public double CustomQuestStandingMultiple; public double CustomRestartableQuestStandingMultiple;
     }
@@ -381,7 +387,7 @@ public sealed class Plugin : BaseUnityPlugin
         public double CustomTraderPurchasePriceMultiplier; public double CustomTraderSellPayoutMultiplier;
         public double CustomFleaBasePriceMultiplier; public double CustomFleaMaxPriceDifferenceBelowHandbookPercent; public double CustomFleaHandbookPriceMultiplier; public double CustomFleaListingFeeMultiplier;
         public double CustomLooseLootScale; public double CustomStaticLootScale;
-        public double CustomQuestItemBudgetMultiple; public double CustomRestartableQuestItemBudgetMultiple;
+        public double CustomQuestItemBudgetMultiple; public double CustomRestartableQuestItemBudgetMultiple; public double CustomRestartableQuestItemCountMultiple;
         public double CustomQuestXpMultiple; public double CustomRestartableQuestXpMultiple;
         public double CustomQuestStandingMultiple; public double CustomRestartableQuestStandingMultiple;
         public string Error;
