@@ -5,7 +5,7 @@ public static class NativeRepeatableQuestPressureCore
     public static double ResolveStandingMultiple(PlayableQuestRewardCaps caps)
     {
         ArgumentNullException.ThrowIfNull(caps);
-        return Math.Min(caps.StandingMultiple, caps.RestartableXpMultiple);
+        return caps.RestartableStandingMultiple;
     }
 
     public static double Cap(double current, double pristine, double multiple)
