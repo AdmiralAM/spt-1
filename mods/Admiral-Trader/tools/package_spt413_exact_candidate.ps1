@@ -150,39 +150,62 @@ if ($Install) {
     $backup = Join-Path $modsRoot '.Admiral-Trader.rollback'
     New-Item $modsRoot -ItemType Directory -Force | Out-Null
 
+    $requiredInstallRelative = @('candidate-provenance.json','Admiral Trader Server.dll','manifests\runtime-manifest.json','manifests\identity-assets.json','manifests\persistent-identities.json','db\base.json','db\assort.json','db\questassort.json','tools\Reset-AdmiralTraderProfile.ps1',($portraitRelative -replace '/', '\'))
+
+    function Assert-AdmiralInstallTree {
+        param([Parameter(Mandatory = $true)][string]$RootPath)
+
+        foreach ($requiredRelative in $requiredInstallRelative) {
+            if (-not (Test-Path (Join-Path $RootPath $requiredRelative))) {
+                throw "Validated install tree is incomplete: missing $requiredRelative"
+            }
+        }
+
+        $installedProvenancePath = Join-Path $RootPath 'candidate-provenance.json'
+        $installedProvenance = Get-Content $installedProvenancePath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ([string]$installedProvenance.sourceHeadSha -ne $sourceHead) { throw "Installed provenance source HEAD drift: expected=$sourceHead actual=$($installedProvenance.sourceHeadSha)" }
+        if ([string]$installedProvenance.compileMode -ne 'exact-installed-runtime' -or [string]$installedProvenance.publicationMode -ne 'test-candidate' -or $installedProvenance.physicalRuntimeEvidenceEligible -ne $true) { throw 'Installed provenance is not the exact-runtime test candidate contract.' }
+
+        $installedDllSha256 = (Get-FileHash (Join-Path $RootPath 'Admiral Trader Server.dll') -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($installedDllSha256 -ne [string]$provenance.serverDllSha256) { throw "Installed Admiral server DLL hash drift: expected=$($provenance.serverDllSha256) actual=$installedDllSha256" }
+
+        $installedPortraitSha256 = (Get-FileHash (Join-Path $RootPath ($portraitRelative -replace '/', '\')) -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($installedPortraitSha256 -ne $portraitSha256) { throw "Installed official portrait hash drift: expected=$portraitSha256 actual=$installedPortraitSha256" }
+
+        $installedManifest = Get-Content (Join-Path $RootPath 'manifests\runtime-manifest.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($installedManifest.registrationEnabled -ne $true -or [string]$installedManifest.targetSptVersion -ne '4.1.3' -or [string]$installedManifest.publicationMode -ne 'test-candidate') { throw 'Installed runtime manifest is not an enabled exact SPT 4.1.3 test candidate.' }
+    }
+
     foreach ($scratch in @($incoming, $backup)) { if (Test-Path $scratch) { Remove-Item $scratch -Recurse -Force } }
     Copy-Item $stageMod $incoming -Recurse
-    foreach ($requiredRelative in @('candidate-provenance.json','Admiral Trader Server.dll','manifests\runtime-manifest.json','manifests\identity-assets.json','manifests\persistent-identities.json','db\base.json','db\assort.json','db\questassort.json','tools\Reset-AdmiralTraderProfile.ps1',($portraitRelative -replace '/', '\'))) {
-        if (-not (Test-Path (Join-Path $incoming $requiredRelative))) {
-            Remove-Item $incoming -Recurse -Force -ErrorAction SilentlyContinue
-            throw "Prepared install tree is incomplete: missing $requiredRelative"
-        }
+    try {
+        Assert-AdmiralInstallTree -RootPath $incoming
     }
-    $incomingDllSha256 = (Get-FileHash (Join-Path $incoming 'Admiral Trader Server.dll') -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($incomingDllSha256 -ne $provenance.serverDllSha256) {
+    catch {
         Remove-Item $incoming -Recurse -Force -ErrorAction SilentlyContinue
-        throw "Prepared install DLL hash drift: provenance=$($provenance.serverDllSha256) actual=$incomingDllSha256"
-    }
-    $incomingPortraitSha256 = (Get-FileHash (Join-Path $incoming ($portraitRelative -replace '/', '\')) -Algorithm SHA256).Hash.ToLowerInvariant()
-    if ($incomingPortraitSha256 -ne $portraitSha256) {
-        Remove-Item $incoming -Recurse -Force -ErrorAction SilentlyContinue
-        throw "Prepared install portrait hash drift: staged=$portraitSha256 incoming=$incomingPortraitSha256"
+        throw "Prepared install validation failed: $($_.Exception.Message)"
     }
 
     $hadExistingInstall = Test-Path $destination
     try {
         if ($hadExistingInstall) { Move-Item $destination $backup }
         Move-Item $incoming $destination
+        Assert-AdmiralInstallTree -RootPath $destination
     }
     catch {
+        $activationError = $_
         if (Test-Path $destination) { Remove-Item $destination -Recurse -Force -ErrorAction SilentlyContinue }
-        if ($hadExistingInstall -and (Test-Path $backup)) { Move-Item $backup $destination -ErrorAction SilentlyContinue }
+        if ($hadExistingInstall -and (Test-Path $backup)) {
+            Move-Item $backup $destination -ErrorAction Stop
+            if (-not (Test-Path $destination)) { throw "Install activation failed and rollback restore did not recreate destination: $($activationError.Exception.Message)" }
+        }
         if (Test-Path $incoming) { Remove-Item $incoming -Recurse -Force -ErrorAction SilentlyContinue }
-        throw
+        throw "Install activation/postcondition validation failed; previous install restored when available: $($activationError.Exception.Message)"
     }
+
     if (Test-Path $backup) { Remove-Item $backup -Recurse -Force }
     if (Test-Path $incoming) { Remove-Item $incoming -Recurse -Force }
-    Write-Host "Installed fully validated exact-runtime test candidate to: $destination"
+    Write-Host "Installed and postcondition-verified exact-runtime test candidate to: $destination"
 }
 
 Write-Host "Exact-runtime candidate package ready: $artifactPath"
