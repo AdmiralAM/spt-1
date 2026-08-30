@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-authored-spec-only",
+  "source": {
+    "bundle": "Scav Hunt",
+    "legacyQuestCount": 60,
+    "decision": "rewrite-theme-only"
+  },
+  "operation": {
+    "key": "route-security",
+    "title": {
+      "en": "Route Security",
+      "ru": "Безопасный маршрут"
+    },
+    "description": {
+      "en": "A logistics corridor is being hit by local armed groups. Clear one defined section, break the immediate threat and leave the area alive. I need a route opened, not a body-count campaign.",
+      "ru": "Маршрут снабжения постоянно атакуют местные вооружённые группы. Зачисти один конкретный участок, сними непосредственную угрозу и выйди из района живым. Мне нужен открытый маршрут, а не кампания по набиванию счётчика убийств."
+    },
+    "started": {
+      "en": "Keep it contained. Secure the corridor, confirm the threat is broken and extract. Do not turn this into a sweep of the whole district.",
+      "ru": "Работай в заданных пределах. Обеспечь проход, убедись, что угроза снята, и выходи. Не превращай это в зачистку всего района."
+    },
+    "success": {
+      "en": "The corridor is usable again. That was the objective; there is no value in repeating the same clearance with larger numbers.",
+      "ru": "Маршрут снова пригоден для движения. Это и было целью; повторять ту же зачистку с большими цифрами бессмысленно."
+    },
+    "objectiveIntent": "One location-bound route-security operation against ordinary Scav threats, coupled to successful extraction so the objective represents opening a corridor rather than farming kills.",
+    "bounds": {
+      "maximumScavTargets": 6,
+      "maximumSuccessfulRaids": 1,
+      "locationBound": true,
+      "surviveOrExtractRequired": true,
+      "repeatable": false,
+      "escalatingSequelsAllowed": false,
+      "perMapCopiesAllowed": false,
+      "fourDigitKillCountsAllowed": false
+    },
+    "rewardDoctrine": {
+      "default": ["xp", "rub", "admiral-standing"],
+      "permanentScavGearSupplyAllowed": false,
+      "capabilityUnlockAllowed": false,
+      "requiresEconomyAdmiralReview": true
+    }
+  },
+  "gates": {
+    "implementationAllowed": false,
+    "runtimeMaterialize": false,
+    "requiresExactSpt413ScavTargetConditionProof": true,
+    "requiresExactSpt413SurvivedExtractionProof": true,
+    "requiresExactLocationSelection": true,
+    "requiresVanillaScorpionArtemOverlapAudit": true,
+    "requiresFrozenCampaignOverlapReview": true,
+    "requiresEconomyAdmiralReview": true
+  },
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0
+  }
+}
