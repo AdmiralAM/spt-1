@@ -47,6 +47,19 @@ public sealed class NativeRepeatableQuestPressureService(
                     caps.RestartableItemBudgetMultiple,
                     config.Mode == EconomyMode.Enforce);
 
+                // GP Coins are a separate native generated reward vector. They are reward value, not an
+                // authored trader barter/token offer, so keep them under the same existing restartable
+                // reward-budget allowance instead of letting repeatables bypass economy pressure through GP.
+                blocked += PlanDimension(
+                    proposals,
+                    key,
+                    repeatable.Name,
+                    "GpCoinReward",
+                    pristine.GpCoins,
+                    repeatable.RewardScaling.GpCoins,
+                    caps.RestartableItemBudgetMultiple,
+                    config.Mode == EconomyMode.Enforce);
+
                 blocked += PlanDimension(
                     proposals,
                     key,
