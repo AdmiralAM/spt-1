@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-curation-review-only",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "source": {
+    "repository": "Thirt3nth/Andrudis-Questmaniac",
+    "commit": "4e15990ac18f469ef7818475ce8553bbbb7cebb4",
+    "legacyQuestCount": 20
+  },
+  "reviews": [
+    {
+      "sourceBundle": "Headless Raider",
+      "legacyQuestCount": 10,
+      "legacyShape": "headshot Raider ladder 1/2/3/4/5/7/9/12/20/50",
+      "decision": "merge-into-existing-operation",
+      "targetOperation": "labs-security-disruption",
+      "targetWorkingTitle": "Internal Security",
+      "reason": "A second ten-step Raider progression whose only distinction is headshots would duplicate the already-authored Labs security operation and reintroduce counter escalation. Precision can be a bounded tactical constraint inside Internal Security if exact SPT semantics and overlap review justify it, but it does not deserve a separate quest chain.",
+      "mergeBoundary": {
+        "separateQuestAllowed": false,
+        "headshotCountLadderAllowed": false,
+        "maximumOptionalPrecisionTargets": 2,
+        "mustRemainLabsContextual": true,
+        "mustNotUnlockLabsAccess": true
+      },
+      "runtimeMaterialize": false
+    },
+    {
+      "sourceBundle": "Headless Rogue",
+      "legacyQuestCount": 10,
+      "legacyShape": "headshot Rogue ladder 1/2/3/4/5/7/9/12/20/50 with location-free fallback",
+      "decision": "merge-into-existing-operation",
+      "targetOperation": "rogue-interdiction",
+      "targetWorkingTitle": "Perimeter Interdiction",
+      "reason": "Rogue precision contact is useful only as a tactical variation of the existing Lighthouse perimeter operation. A separate ten-step headshot ladder and location-free farming path add grind rather than product value.",
+      "mergeBoundary": {
+        "separateQuestAllowed": false,
+        "headshotCountLadderAllowed": false,
+        "maximumOptionalPrecisionTargets": 2,
+        "mustRemainLighthouseContextual": true,
+        "locationFreeFallbackAllowed": false
+      },
+      "runtimeMaterialize": false
+    }
+  ],
+  "proofGates": [
+    "prove exact SPT 4.1.3 headshot target-condition semantics before any precision modifier is selected",
+    "audit vanilla/Scorpion/Artem overlap for Raider/Rogue headshot objectives",
+    "do not change frozen 0.1.0 runtime quest or assort counts"
+  ],
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0
+  }
+}
