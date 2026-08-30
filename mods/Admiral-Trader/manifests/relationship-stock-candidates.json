@@ -140,5 +140,37 @@
         "vanillaPinnedAssort": "mechanic-direct-unlimited"
       }
     }
+  ],
+  "namedRejectedEquipment": [
+    {
+      "name": "Tripwire installation kit",
+      "decision": "reject-combat-capability-and-quest-bypass",
+      "rationale": "Tripwire is a direct grenade/trap combat capability and vanilla acquisition is deliberately quest-unlocked through Jaeger. Relationship standing must not bypass that capability gate."
+    },
+    {
+      "name": "Radio repeater",
+      "decision": "reject-quest-craft-progression-bypass",
+      "rationale": "Radio repeater is a purpose-built placement item tied to Network Provider progression and its Workbench craft. Renewable Admiral stock would short-circuit another progression path rather than add independent logistics value."
+    },
+    {
+      "name": "Local network hacking device",
+      "decision": "reject-story-progression-bypass",
+      "rationale": "The hacking device is explicitly provided/used by story and quest progression and has a Mechanic acquisition path. Relationship stock must not replace story-state acquisition."
+    },
+    {
+      "name": "The Eye mortar strike signaling device",
+      "decision": "reject-unique-quest-reward-capability",
+      "rationale": "The Eye is a unique functional quest reward, not ordinary specialist merchandise. Making it renewable would erase the meaning of its quest reward."
+    },
+    {
+      "name": "Audio recorder",
+      "decision": "reject-story-tool-until-independent-use-proven",
+      "rationale": "The recorder is used as story/quest equipment and has no normal trader/flea availability. No independent recurring logistics use has been proven that would justify Relationship materialization."
+    },
+    {
+      "name": "SZ-1 explosive charge",
+      "decision": "reject-explosive-capability",
+      "rationale": "Explosive charges are direct capability items, outside Relationship convenience/logistics authority and unsuitable as standing-only stock."
+    }
   ]
 }
