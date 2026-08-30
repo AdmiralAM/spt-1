@@ -95,11 +95,11 @@
       "role": "expedition-maintenance",
       "spt413ReferencePriceRub": 106861,
       "decision": "hold-pinned-vanilla-overlap",
-      "rationale": "Pinned SPT 4.1.3 Ref assort already contains the weapon repair kit with unlimited stock. Admiral may only use it later if the relationship role supplies a deliberately bounded alternative with a justified access distinction; it is not approved for materialization now.",
+      "rationale": "Pinned SPT 4.1.3 Ref assort already contains the weapon repair kit with unlimited stock. Admiral may only use it later if the relationship role supplies a deliberately bounded alternative with a justified access distinction; it is not approved for materialization now. Exact repository-wide searches also found no direct tpl reference in the currently pinned Scorpion/Artem source mirrors, so the hold is driven by vanilla redundancy rather than a hidden cross-mod collision.",
       "overlap": {
         "vanillaPinnedAssort": "ref-direct-unlimited",
-        "scorpionPinned": "pending-exact-parse",
-        "artemPinned": "pending-exact-parse"
+        "scorpionPinned": "no-exact-tpl-hit-in-repository-code-search",
+        "artemPinned": "no-exact-tpl-hit-in-repository-code-search"
       }
     },
     {
@@ -109,11 +109,11 @@
       "role": "command-trust-maintenance",
       "spt413ReferencePriceRub": 861650,
       "decision": "reject-pinned-vanilla-and-economic-impact",
-      "rationale": "Pinned SPT 4.1.3 Ref assort already provides this item with unlimited stock and its reference value is exceptionally high. Duplicating it would add both overlap and large economic pressure without a unique Admiral capability story.",
+      "rationale": "Pinned SPT 4.1.3 Ref assort already provides this item with unlimited stock and its reference value is exceptionally high. Duplicating it would add both overlap and large economic pressure without a unique Admiral capability story. Exact repository-wide searches found no direct tpl reference in the currently pinned Scorpion/Artem source mirrors, so no external-mod exception changes the rejection.",
       "overlap": {
         "vanillaPinnedAssort": "ref-direct-unlimited",
-        "scorpionPinned": "pending-exact-parse",
-        "artemPinned": "pending-exact-parse"
+        "scorpionPinned": "no-exact-tpl-hit-in-repository-code-search",
+        "artemPinned": "no-exact-tpl-hit-in-repository-code-search"
       }
     },
     {
