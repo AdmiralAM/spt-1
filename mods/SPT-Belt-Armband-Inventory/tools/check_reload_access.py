@@ -29,9 +29,44 @@ for token in (
     'GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })',
     'if (item == null || !MagazineType.IsInstanceOfType(item) || !HasExactMagazineBeltAncestor(item)) continue;',
     'if (ReferenceEquals(merged[i], item)) { duplicate = true; break; }',
+    'ReachabilityHarmonyId = "com.admiralam.spt.belt-armband-inventory.fast-access.reachability"',
+    'CandidateBridgeHarmonyId = "com.admiralam.spt.belt-armband-inventory.fast-access.reload-candidate"',
+    'PatchNamed(reachabilityHarmony, patchMethod, harmonyMethodType, reachable, "postfix", postfix)',
+    'PatchNamed(candidateBridgeHarmony, patchMethod, harmonyMethodType, reload, "prefix", prefix)',
+    'PatchNamed(candidateBridgeHarmony, patchMethod, harmonyMethodType, quickReload, "prefix", prefix)',
+    'PatchNamed(candidateBridgeHarmony, patchMethod, harmonyMethodType, getItemsInSlots, "postfix", candidatesPostfix)',
+    'UnpatchCandidateBridge();',
+    'UnpatchReachability();',
 ):
     if token not in source:
         violations.append(f"FastAccessSlotPatches.cs: reload contract token missing: {token}")
+
+if source.count('Activator.CreateInstance(harmonyType, new object[] { ReachabilityHarmonyId })') != 1:
+    violations.append("FastAccessSlotPatches.cs: reachability Harmony owner must be created exactly once")
+if source.count('Activator.CreateInstance(harmonyType, new object[] { CandidateBridgeHarmonyId })') != 1:
+    violations.append("FastAccessSlotPatches.cs: candidate bridge Harmony owner must be created exactly once")
+
+candidate_start = source.find("bool TryInstallReloadCandidateBridge(")
+candidate_end = source.find("static MethodInfo FindExactZeroArgVoidMethod", candidate_start)
+if candidate_start < 0 or candidate_end < 0:
+    violations.append("FastAccessSlotPatches.cs: candidate bridge installer region not found")
+else:
+    installer = source[candidate_start:candidate_end]
+    if "UnpatchReachability();" in installer:
+        violations.append("FastAccessSlotPatches.cs: candidate bridge failure must not unpatch valid reachability owner")
+    if "UnpatchCandidateBridge();" not in installer:
+        violations.append("FastAccessSlotPatches.cs: partial candidate bridge install lacks owner-scoped rollback")
+
+unpatch_start = source.find("void UnpatchCandidateBridge()")
+unpatch_end = source.find("void UnpatchReachability()", unpatch_start)
+if unpatch_start < 0 or unpatch_end < 0:
+    violations.append("FastAccessSlotPatches.cs: candidate owner rollback region not found")
+else:
+    rollback = source[unpatch_start:unpatch_end]
+    if "candidateBridgeUnpatchSelf.Invoke(candidateBridgeHarmony, null)" not in rollback:
+        violations.append("FastAccessSlotPatches.cs: candidate rollback does not unpatch its own Harmony owner")
+    if "FastAccessReloadRuntime.Reset()" in rollback:
+        violations.append("FastAccessSlotPatches.cs: candidate rollback must preserve reachability runtime state")
 
 start = source.find("internal static void PromoteReachability(")
 end = source.find("internal static void Reset()", start)
@@ -106,4 +141,4 @@ for token in (
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB reload-access guard: OK (vanilla reachability/order preserved; Reload/QuickReload scoped bridge appends exact Magazine Belt magazine descendants only; startup-bound discovery; fail-closed/no polling)")
+print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; reachability and candidate Harmony owners isolated; partial bridge installs roll back atomically without removing reachability; startup-bound discovery; fail-closed/no polling)")
