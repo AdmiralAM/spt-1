@@ -46,6 +46,11 @@ namespace SPTBeltArmbandInventory
         {
             return reloadScopeActive && !reentrant && isFastAccessSlotArray;
         }
+
+        internal static bool ShouldReuseVanillaReloadCandidates(bool appendedExactBeltCandidate)
+        {
+            return !appendedExactBeltCandidate;
+        }
     }
 
     internal static class FastAccessReloadRuntime
@@ -144,9 +149,10 @@ namespace SPTBeltArmbandInventory
 
             try
             {
-                var merged = new List<object>();
-                foreach (object item in (IEnumerable)vanillaResult)
-                    if (item != null) merged.Add(item);
+                // The exact SPT 4.1 contract produces Item[]. If runtime shape drifts, do not widen it.
+                // Keeping the original array also preserves vanilla object identity for every no-op path.
+                if (!(vanillaResult is Array vanillaItems) || vanillaItems.GetType().GetElementType() != ItemType)
+                    return vanillaResult;
 
                 object beltResult;
                 reentrant = true;
@@ -159,17 +165,26 @@ namespace SPTBeltArmbandInventory
                     reentrant = false;
                 }
 
+                List<object> merged = null;
                 if (beltResult is IEnumerable beltItems)
                 {
                     foreach (object item in beltItems)
                     {
                         if (item == null || !MagazineType.IsInstanceOfType(item) || !HasExactMagazineBeltAncestor(item)) continue;
-                        bool duplicate = false;
-                        for (int i = 0; i < merged.Count; i++)
-                            if (ReferenceEquals(merged[i], item)) { duplicate = true; break; }
-                        if (!duplicate) merged.Add(item);
+                        if (ContainsReference(vanillaItems, item) || (merged != null && ContainsReference(merged, item))) continue;
+
+                        if (merged == null)
+                        {
+                            merged = new List<object>(vanillaItems.Length + 1);
+                            for (int i = 0; i < vanillaItems.Length; i++)
+                                merged.Add(vanillaItems.GetValue(i));
+                        }
+                        merged.Add(item);
                     }
                 }
+
+                if (FastAccessSlotPolicy.ShouldReuseVanillaReloadCandidates(merged != null))
+                    return vanillaResult;
 
                 Array result = Array.CreateInstance(ItemType, merged.Count);
                 for (int i = 0; i < merged.Count; i++) result.SetValue(merged[i], i);
@@ -186,6 +201,20 @@ namespace SPTBeltArmbandInventory
                 }
                 return vanillaResult;
             }
+        }
+
+        static bool ContainsReference(Array items, object candidate)
+        {
+            for (int i = 0; i < items.Length; i++)
+                if (ReferenceEquals(items.GetValue(i), candidate)) return true;
+            return false;
+        }
+
+        static bool ContainsReference(List<object> items, object candidate)
+        {
+            for (int i = 0; i < items.Count; i++)
+                if (ReferenceEquals(items[i], candidate)) return true;
+            return false;
         }
 
         static bool HasExactMagazineBeltAncestor(object item)
