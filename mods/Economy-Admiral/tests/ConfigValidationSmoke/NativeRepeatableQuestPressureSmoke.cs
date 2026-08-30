@@ -11,6 +11,10 @@ internal static class NativeRepeatableQuestPressureSmoke
             throw new InvalidOperationException("Normal native repeatable XP at <=115% pristine must not be increased or reduced.");
         if (Math.Abs(NativeRepeatableQuestPressureCore.Cap(1500, 1000, normal.RestartableXpMultiple) - 1150) > 0.000001)
             throw new InvalidOperationException("Normal native repeatable XP above 115% pristine must cap at 115%.");
+        if (Math.Abs(NativeRepeatableQuestPressureCore.Cap(20, 15, normal.RestartableXpMultiple) - 17.25) > 0.000001)
+            throw new InvalidOperationException("Normal native repeatable skill reward chance inflation must share maintained restartable progression pressure.");
+        if (Math.Abs(NativeRepeatableQuestPressureCore.Cap(30, 20, normal.RestartableXpMultiple) - 23) > 0.000001)
+            throw new InvalidOperationException("Normal native repeatable skill-point reward inflation must share maintained restartable progression pressure.");
         if (Math.Abs(NativeRepeatableQuestPressureCore.Cap(4.0, 2.0, normal.RestartableItemCountMultiple) - 2.3) > 0.000001)
             throw new InvalidOperationException("Normal native repeatable item-count potential above 115% pristine must use the maintained repeatable item-count allowance.");
         if (Math.Abs(normal.RestartableItemCountMultiple - normal.RestartableItemBudgetMultiple) > 0.000001)
@@ -51,6 +55,6 @@ internal static class NativeRepeatableQuestPressureSmoke
         if (!NativeRepeatableQuestPressureCore.NeedsMutation(100, 90))
             throw new InvalidOperationException("Native repeatable policy must recognize a real downward cap.");
 
-        Console.WriteLine("PASS native repeatable reward-value/item-count/XP/standing cap math is independent, bounded and fail-closed");
+        Console.WriteLine("PASS native repeatable value/count/XP/skill/standing cap math is independent, bounded and fail-closed");
     }
 }
