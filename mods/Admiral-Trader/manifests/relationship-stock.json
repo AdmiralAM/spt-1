@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "stockClass": "Relationship",
   "status": "AuthoredPreMaterialization",
   "product": "Admiral Trader",
@@ -19,6 +19,8 @@
     "labsAccessAllowed": false,
     "specialWeaponsSupplyAllowed": false,
     "questMilestoneSubstituteAllowed": false,
+    "tierFillQuotaAllowed": false,
+    "emptyTierAllowedWhenNoCandidatePasses": true,
     "directOverlapAuditRequired": ["vanilla", "Scorpion", "Artem"],
     "runtimeMaterializationRequiresItemTplProof": true,
     "runtimeMaterializationRequiresEconomyReview": true
@@ -28,30 +30,31 @@
       "loyaltyLevel": 2,
       "standing": 0.1,
       "role": "trusted-field-logistics",
-      "intent": "Add a small number of bounded navigation, observation, field-maintenance or mission-preparation offers that are useful after first contact but do not unlock combat capability.",
-      "targetOfferCount": {"min": 2, "max": 4}
+      "intent": "Add bounded navigation, observation, field-maintenance or mission-preparation offers only when they create independent specialist availability and do not unlock combat capability.",
+      "selection": {"minimumRequiredOffers": 0, "maximumOffers": 4, "qualityGateOverridesCount": true}
     },
     {
       "loyaltyLevel": 3,
       "standing": 0.3,
       "role": "specialist-expedition-support",
-      "intent": "Add rarer bounded reconnaissance and expedition-support equipment with meaningful utility while preserving explicit quest gates for ammunition and access privileges.",
-      "targetOfferCount": {"min": 2, "max": 4}
+      "intent": "Add rarer bounded reconnaissance and expedition-support equipment only when it has independent recurring utility and is not already renewable from vanilla traders.",
+      "selection": {"minimumRequiredOffers": 0, "maximumOffers": 4, "qualityGateOverridesCount": true}
     },
     {
       "loyaltyLevel": 4,
       "standing": 0.55,
       "role": "command-trust-logistics",
-      "intent": "Add scarce high-trust logistics and observation equipment; value comes from convenience and specialist availability, not unrestricted combat power.",
-      "targetOfferCount": {"min": 1, "max": 3}
+      "intent": "Add scarce high-trust logistics or observation equipment only when availability itself is a distinct privilege; do not manufacture a tier reward from duplicate, raw-material or capability-bypass stock.",
+      "selection": {"minimumRequiredOffers": 0, "maximumOffers": 3, "qualityGateOverridesCount": true}
     }
   ],
   "materialization": {
     "enabled": false,
-    "reason": "The frozen 0.1.0 candidate remains exactly 11 offers. This manifest closes the missing machine-readable Relationship classification contract and prepares a separately reviewable post-gate stock slice without mutating the candidate.",
+    "reason": "The frozen 0.1.0 candidate remains exactly 11 offers. Relationship stock is a post-gate product surface and may remain sparse or empty at a tier until a candidate passes exact item, overlap, gameplay-purpose and economy review.",
     "requiredBeforeEnable": [
       "select exact SPT 4.1.3 item TPLs from pinned references",
       "run direct overlap audit against vanilla, Scorpion and Artem",
+      "prove independent recurring specialist utility rather than tier-fill value",
       "benchmark price, stock and buy ceilings with Economy Admiral",
       "add explicit Relationship parsing to Economy Admiral adapter",
       "add Trader CI parity checks for manifest-to-assort classification"
