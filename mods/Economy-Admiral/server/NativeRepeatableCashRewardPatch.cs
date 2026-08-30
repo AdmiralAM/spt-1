@@ -10,14 +10,14 @@ using SPTarkov.Server.Core.Models.Spt.Config;
 namespace SPTEconomy;
 
 [Injectable]
-public sealed class NativeRepeatableCashRewardPatch(
-    EconomyConfig config,
-    NativeRepeatableQuestBaselineService baselineService) : AbstractPatch
+public sealed class NativeRepeatableCashRewardPatch : AbstractPatch
 {
     private static EconomyConfig runtimeConfig = default!;
     private static NativeRepeatableQuestBaselineService runtimeBaselineService = default!;
 
-    public NativeRepeatableCashRewardPatch : this(config, baselineService)
+    public NativeRepeatableCashRewardPatch(
+        EconomyConfig config,
+        NativeRepeatableQuestBaselineService baselineService)
     {
         runtimeConfig = config;
         runtimeBaselineService = baselineService;
@@ -71,14 +71,15 @@ public sealed class NativeRepeatableCashRewardPatch(
             var item = reward.Items[0];
             if (item.Template != Money.ROUBLES && item.Template != Money.EUROS)
                 continue;
-            if (item.Upd?.StackObjectsCount is not double stack || !double.IsFinite(stack) || stack <= 0)
+            var stack = item.Upd?.StackObjectsCount;
+            if (stack is null || !double.IsFinite(stack.Value) || stack.Value <= 0)
                 continue;
 
-            var target = Math.Max(1d, Math.Floor(stack * ratio));
-            if (target >= stack)
+            var target = Math.Max(1d, Math.Floor(stack.Value * ratio));
+            if (target >= stack.Value)
                 continue;
 
-            item.Upd.StackObjectsCount = target;
+            item.Upd!.StackObjectsCount = target;
             reward.Value = target;
         }
     }
