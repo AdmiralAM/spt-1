@@ -28,7 +28,11 @@ for token in (
     'RuntimeIdentity.DedicatedMagazineBeltItemId',
     'GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })',
     'if (item == null || !MagazineType.IsInstanceOfType(item) || !HasExactMagazineBeltAncestor(item)) continue;',
-    'if (ReferenceEquals(merged[i], item)) { duplicate = true; break; }',
+    'if (ContainsReference(vanillaItems, item) || (merged != null && ContainsReference(merged, item))) continue;',
+    'List<object> merged = null;',
+    'merged = new List<object>(vanillaItems.Length + 1);',
+    'ShouldReuseVanillaReloadCandidates(merged != null)',
+    'return vanillaResult;',
     'ReachabilityHarmonyId = "com.admiralam.spt.belt-armband-inventory.fast-access.reachability"',
     'CandidateBridgeHarmonyId = "com.admiralam.spt.belt-armband-inventory.fast-access.reload-candidate"',
     'PatchNamed(reachabilityHarmony, patchMethod, harmonyMethodType, reachable, "postfix", postfix)',
@@ -107,6 +111,13 @@ else:
         if token in runtime:
             violations.append(f"FastAccessSlotPatches.cs: scoped candidate hot path performs discovery/scan: {token}")
 
+    lazy_merge = runtime.find("List<object> merged = null;")
+    belt_loop = runtime.find("foreach (object item in beltItems)")
+    allocation = runtime.find("merged = new List<object>(vanillaItems.Length + 1);")
+    reuse = runtime.find("ShouldReuseVanillaReloadCandidates(merged != null)")
+    if min(lazy_merge, belt_loop, allocation, reuse) < 0 or not (lazy_merge < belt_loop < allocation < reuse):
+        violations.append("FastAccessSlotPatches.cs: no-op Belt path must stay allocation-free and reuse vanilla result until first exact fallback")
+
 for token in (
     '!FastAccessSlotPolicy.ShouldPromoteReloadReachability(true, true, true)',
     'FastAccessSlotPolicy.ShouldPromoteReloadReachability(false, true, true)',
@@ -125,6 +136,8 @@ for token in (
     'ShouldBridgeReloadCandidates(false, false, true)',
     'ShouldBridgeReloadCandidates(true, true, true)',
     'ShouldBridgeReloadCandidates(true, false, false)',
+    'ShouldReuseVanillaReloadCandidates(false)',
+    'ShouldReuseVanillaReloadCandidates(true)',
 ):
     if token not in bridge_tests:
         violations.append(f"ReloadCandidateBridgeRegression.cs: scoped bridge regression missing: {token}")
@@ -141,4 +154,4 @@ for token in (
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; reachability and candidate Harmony owners isolated; partial bridge installs roll back atomically without removing reachability; startup-bound discovery; fail-closed/no polling)")
+print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; no-op Belt path preserves vanilla result identity without merge allocation; reachability/candidate Harmony owners isolated; partial bridge installs roll back atomically; startup-bound discovery; fail-closed/no polling)")
