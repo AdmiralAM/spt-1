@@ -1,0 +1,268 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-authored-spec-only",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "implementationAllowed": false,
+  "purpose": "Complete the previously approved ~21-contract authored replacement wave without materializing any quest into frozen 0.1.0.",
+  "operations": [
+    {
+      "key": "protection-calibration",
+      "sourceBundles": [
+        "Iron Head",
+        "Juggernaut"
+      ],
+      "domain": "protective-fieldcraft",
+      "workingTitle": {
+        "en": "Protection Calibration",
+        "ru": "Калибровка защиты"
+      },
+      "playerText": {
+        "en": {
+          "description": "Protection starts with judgement, not weight. Use a practical light defensive setup, take a bounded contact, and come back with enough mobility left to finish the route.",
+          "started": "Field a light protective setup, complete one short contact, and extract. I am checking whether you can balance protection and movement, not whether you own every vest in Tarkov.",
+          "success": "You kept the protection useful without letting it dictate the whole operation. That balance is the first thing worth proving."
+        },
+        "ru": {
+          "description": "Защита начинается с расчёта, а не с массы. Возьми практичный лёгкий комплект, пройди ограниченный контакт и вернись, сохранив подвижность для завершения маршрута.",
+          "started": "Возьми лёгкий защитный комплект, проведи один короткий контакт и выйди. Я проверяю баланс защиты и движения, а не коллекцию всех бронежилетов Таркова.",
+          "success": "Защита помогала работе, но не управляла всей операцией. Именно этот баланс и нужно было доказать."
+        }
+      },
+      "objectiveIntent": [
+        "one bounded contact while wearing a proven light-protection category",
+        "survive/extract in the same raid"
+      ],
+      "antiGrind": {
+        "maximumTargetCount": 3,
+        "maximumRequiredSuccessfulRaids": 1,
+        "repeatable": false,
+        "noPerItemCopies": true,
+        "noProtectionClassLadder": true
+      },
+      "rewardDoctrine": "XP/RUB/standing by default; no armor storefront unlock and no durable armor reward without Economy Admiral review.",
+      "proofGates": [
+        "exact SPT 4.1.3 equipment-category proof",
+        "survived/extraction proof",
+        "vanilla/Scorpion/Artem overlap audit",
+        "Economy Admiral reward review"
+      ],
+      "runtimeMaterialize": false
+    },
+    {
+      "key": "ballistic-head-test",
+      "sourceBundles": [
+        "Iron Head"
+      ],
+      "domain": "protective-fieldcraft",
+      "workingTitle": {
+        "en": "Ballistic Head Test",
+        "ru": "Проверка баллистической защиты"
+      },
+      "playerText": {
+        "en": {
+          "description": "A helmet is useful when it supports a decision under fire, not when it fills a display case. Prove one serious head-protection setup during a controlled engagement.",
+          "started": "Use a verified ballistic helmet for one bounded engagement and extract. No helmet handover, no model-by-model checklist.",
+          "success": "You treated head protection as working equipment instead of a collectible. That is enough evidence for the next step."
+        },
+        "ru": {
+          "description": "Шлем полезен тогда, когда помогает принять решение под огнём, а не когда занимает место на витрине. Проверь один серьёзный комплект защиты головы в контролируемом бою.",
+          "started": "Используй подтверждённый баллистический шлем в одном ограниченном контакте и выйди. Никакой сдачи шлемов и списка моделей.",
+          "success": "Ты использовал защиту головы как рабочее снаряжение, а не как коллекционный предмет. Этого достаточно."
+        }
+      },
+      "objectiveIntent": [
+        "one bounded combat contact under a proven ballistic-helmet rule",
+        "survive/extract without item handover"
+      ],
+      "antiGrind": {
+        "maximumTargetCount": 3,
+        "maximumRequiredSuccessfulRaids": 1,
+        "repeatable": false,
+        "noHelmetCollection": true,
+        "noModelLadder": true
+      },
+      "rewardDoctrine": "XP/RUB/standing only by default; no helmet unlock conveyor.",
+      "proofGates": [
+        "exact SPT 4.1.3 helmet condition proof",
+        "survived/extraction proof",
+        "overlap audit",
+        "Economy Admiral review"
+      ],
+      "runtimeMaterialize": false
+    },
+    {
+      "key": "heavy-assault-loadout",
+      "sourceBundles": [
+        "Juggernaut"
+      ],
+      "domain": "protective-fieldcraft",
+      "workingTitle": {
+        "en": "Heavy Assault Loadout",
+        "ru": "Тяжёлая штурмовая выкладка"
+      },
+      "playerText": {
+        "en": {
+          "description": "Heavy armor has a cost: speed, stamina, and options. Prove you can accept that cost for one deliberate assault and still disengage alive.",
+          "started": "Take a proven heavy protective setup into one bounded assault contact, finish the objective, and extract. Do not stay to turn armor into a kill-farming gimmick.",
+          "success": "You used heavy protection for the moment it mattered and left before the weight became the mission. That is disciplined assault work."
+        },
+        "ru": {
+          "description": "Тяжёлая броня имеет цену: скорость, выносливость и свободу действий. Докажи, что можешь принять эту цену ради одного осмысленного штурма и выйти живым.",
+          "started": "Возьми подтверждённый тяжёлый защитный комплект, проведи один ограниченный штурмовой контакт, заверши задачу и выйди. Не превращай броню в повод для фарма убийств.",
+          "success": "Ты использовал тяжёлую защиту именно тогда, когда она была нужна, и ушёл до того, как вес стал самой задачей."
+        }
+      },
+      "objectiveIntent": [
+        "one bounded assault contact under a proven heavy-protection rule",
+        "survive/extract the same operation"
+      ],
+      "antiGrind": {
+        "maximumTargetCount": 4,
+        "maximumRequiredSuccessfulRaids": 1,
+        "repeatable": false,
+        "noArmorCollection": true,
+        "noEscalatingClassCopies": true
+      },
+      "rewardDoctrine": "Risk-adjusted XP/RUB/standing by default; no heavy-armor faucet or permanent storefront unlock.",
+      "proofGates": [
+        "exact SPT 4.1.3 heavy-protection condition proof",
+        "survived/extraction proof",
+        "overlap audit",
+        "Economy Admiral review"
+      ],
+      "runtimeMaterialize": false
+    },
+    {
+      "key": "signal-discipline",
+      "sourceBundles": [
+        "Ultrasound"
+      ],
+      "domain": "reconnaissance-support",
+      "workingTitle": {
+        "en": "Signal Discipline",
+        "ru": "Дисциплина сигнала"
+      },
+      "playerText": {
+        "en": {
+          "description": "Hearing first is only useful if it changes what you do. Use an acoustic setup to avoid a bad approach, make one deliberate contact, and leave with the route understood.",
+          "started": "Run one hostile-environment reconnaissance pass with a proven headset-category setup. Keep contact limited and extract with the route confirmed.",
+          "success": "You converted sound into a decision instead of another firefight. That is reconnaissance value, not equipment ownership."
+        },
+        "ru": {
+          "description": "Услышать первым полезно только тогда, когда это меняет решение. Используй акустический комплект, чтобы избежать плохого подхода, проведи один осмысленный контакт и выйди с пониманием маршрута.",
+          "started": "Проведи один разведывательный проход во враждебной обстановке с подтверждённой гарнитурой. Ограничь контакт и выйди с подтверждённым маршрутом.",
+          "success": "Ты превратил звук в решение, а не в ещё одну перестрелку. Это ценность разведки, а не владение экипировкой."
+        }
+      },
+      "objectiveIntent": [
+        "one hostile-environment reconnaissance operation under a proven headset-category rule",
+        "bounded contact plus survive/extract"
+      ],
+      "antiGrind": {
+        "maximumTargetCount": 2,
+        "maximumRequiredSuccessfulRaids": 1,
+        "repeatable": false,
+        "noHeadsetCollection": true,
+        "noPerModelCopies": true
+      },
+      "rewardDoctrine": "XP/RUB/standing or tightly bounded support consumables only; no headset storefront conveyor.",
+      "proofGates": [
+        "exact SPT 4.1.3 headset-category proof",
+        "location/recon proxy proof",
+        "survived/extraction proof",
+        "overlap and Economy review"
+      ],
+      "runtimeMaterialize": false
+    },
+    {
+      "key": "endurance-circuit",
+      "sourceBundles": [
+        "Survivalist"
+      ],
+      "domain": "survival-operations",
+      "workingTitle": {
+        "en": "Endurance Circuit",
+        "ru": "Маршрут выносливости"
+      },
+      "playerText": {
+        "en": {
+          "description": "One clean extraction proves judgement; late-game endurance proves you can repeat that judgement across different pressure. I want a short cross-map circuit, not fifty copies of the same exit counter.",
+          "started": "Complete a small set of distinct survival routes and extract from each. No x2/x5/x10 ladder and no repeating the same map until a number fills.",
+          "success": "Different routes, same discipline. You kept the operation intact when the terrain and pressure changed."
+        },
+        "ru": {
+          "description": "Один чистый выход доказывает решение задачи; поздняя выносливость показывает, что ты способен повторить это решение под разным давлением. Нужен короткий маршрут по разным картам, а не пятьдесят копий счётчика выходов.",
+          "started": "Пройди небольшой набор разных маршрутов выживания и выйди с каждого. Никаких лестниц x2/x5/x10 и повторения одной карты ради цифры.",
+          "success": "Маршруты разные, дисциплина одна. Ты сохранил операцию целой при смене местности и давления."
+        }
+      },
+      "objectiveIntent": [
+        "small cross-map survived-extraction set with distinct locations",
+        "late-game endurance without repeated-count ladders"
+      ],
+      "antiGrind": {
+        "maximumDistinctLocations": 3,
+        "maximumSuccessfulRaidsPerLocation": 1,
+        "repeatable": false,
+        "noCountLadder": true,
+        "noSameMapFarm": true
+      },
+      "rewardDoctrine": "Milestone XP/RUB/standing by default; no container reward or permanent survival-supply faucet without Economy Admiral review.",
+      "proofGates": [
+        "exact SPT 4.1.3 multi-location prerequisite/condition proof",
+        "survived/extraction proof",
+        "vanilla/Scorpion/Artem overlap audit",
+        "Economy Admiral review"
+      ],
+      "runtimeMaterialize": false
+    },
+    {
+      "key": "precision-denial",
+      "sourceBundles": [
+        "Sniper Life"
+      ],
+      "domain": "precision-operations",
+      "workingTitle": {
+        "en": "Precision Denial",
+        "ru": "Точный запрет"
+      },
+      "playerText": {
+        "en": {
+          "description": "The advanced shot is not farther for the sake of being farther. It removes a specific threat before that threat can control the route.",
+          "started": "Take one contextual precision problem at a proven standoff band, solve it with a very small number of deliberate hits, and extract. Distance is a constraint, not a ladder.",
+          "success": "The threat lost its window before it could own the route. That is what precision is for."
+        },
+        "ru": {
+          "description": "Сложный выстрел не должен быть дальним только ради дальности. Он снимает конкретную угрозу до того, как та начнёт контролировать маршрут.",
+          "started": "Реши одну контекстную задачу точного огня на подтверждённой дистанции, сделай минимальное число выверенных попаданий и выйди. Дистанция — условие, а не лестница.",
+          "success": "Угроза потеряла своё окно до того, как смогла взять маршрут под контроль. Для этого и нужна точность."
+        }
+      },
+      "objectiveIntent": [
+        "one contextual advanced precision engagement at a proven distance band",
+        "survive/extract after a very small target count"
+      ],
+      "antiGrind": {
+        "maximumTargetCount": 2,
+        "maximumRequiredSuccessfulRaids": 1,
+        "repeatable": false,
+        "noDistanceLadder": true,
+        "noPerMapCopies": true
+      },
+      "rewardDoctrine": "Premium XP/RUB/standing by default; no rifle, optic or rare-ammunition faucet.",
+      "proofGates": [
+        "exact SPT 4.1.3 distance-condition proof",
+        "target/location context proof",
+        "survived/extraction proof",
+        "overlap and Economy review"
+      ],
+      "runtimeMaterialize": false
+    }
+  ],
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0
+  }
+}
