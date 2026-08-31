@@ -42,6 +42,22 @@ internal static class GroupedItemRewardSmoke
         Require(dominantLater.Eligible && dominantLater.SelectedIndex == 1 && dominantLater.Reason == "UniqueDominantReducibleStackInGroupedReward",
             "dominant automatic selection must be independent of item order");
 
+        var equalTotalDifferentReducible = GroupedItemRewardSelectorCore.Select([
+            new GroupedItemRewardEntry("tie-expensive", 2d, true, 100d),
+            new GroupedItemRewardEntry("tie-cheaper", 4d, true, 50d),
+        ]);
+        Require(equalTotalDifferentReducible.Eligible
+                && equalTotalDifferentReducible.SelectedIndex == 1
+                && equalTotalDifferentReducible.Reason == "UniqueDominantReducibleStackInGroupedReward",
+            "equal total handbook contributions must select the unique stack with greater removable value while preserving one item");
+
+        var equalTotalDifferentReducibleReversed = GroupedItemRewardSelectorCore.Select([
+            new GroupedItemRewardEntry("tie-cheaper", 4d, true, 50d),
+            new GroupedItemRewardEntry("tie-expensive", 2d, true, 100d),
+        ]);
+        Require(equalTotalDifferentReducibleReversed.Eligible && equalTotalDifferentReducibleReversed.SelectedIndex == 0,
+            "reducible-value tie-break must be independent of item order");
+
         var ambiguous = GroupedItemRewardSelectorCore.Select([
             new GroupedItemRewardEntry("tpl-a", 3d, true),
             new GroupedItemRewardEntry("tpl-b", 3d, true),
