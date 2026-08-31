@@ -1,17 +1,19 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "ReviewedPreMaterialization",
   "sourceBaseline": {
     "spt413Repository": "sp-tarkov/server-csharp",
     "spt413Commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
     "jaegerTraderId": "5c0647fdd443bc2504c2d371",
-    "jaegerAssortPath": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/traders/5c0647fdd443bc2504c2d371/assort.json"
+    "jaegerAssortPath": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/traders/5c0647fdd443bc2504c2d371/assort.json",
+    "frozenAdmiralHead": "053a62ff5f1cb545f13bc89a96bba3acd319a823"
   },
   "policy": {
     "materialize": false,
     "relationshipBenefitMustCreateIndependentAvailability": true,
     "unlimitedVanillaDirectOfferDisqualifies": true,
+    "existingFrozenAdmiralBaselineOfferDisqualifies": true,
     "nonConsumableUtilityDoesNotJustifyRenewableDuplicateSupply": true,
     "barterPressureMustNotBeConvertedIntoStandingSupply": true
   },
@@ -20,14 +22,17 @@
       "tpl": "5f4f9eb969cdc30ff33f09db",
       "name": "EYE MK.2 professional hand-held compass",
       "role": "navigation",
-      "decision": "reject-redundant-pinned-jaeger",
+      "decision": "reject-existing-admiral-baseline-and-pinned-jaeger",
       "evidence": {
         "trader": "Jaeger",
         "offerId": "686e34266c2a18ed6b0e952f",
         "unlimitedCount": true,
-        "stackObjectsCount": 9999999
+        "stackObjectsCount": 9999999,
+        "frozenAdmiralOfferId": "ad2000000000000000000001",
+        "frozenAdmiralStock": 4,
+        "frozenAdmiralBuyRestriction": 1
       },
-      "rationale": "The compass has genuine field utility, but pinned SPT 4.1.3 Jaeger already provides it as an unlimited direct offer. Relationship standing would therefore duplicate renewable availability instead of creating a distinct Admiral privilege."
+      "rationale": "The compass already has a bounded Baseline role in frozen Admiral and pinned SPT 4.1.3 Jaeger also provides it as an unlimited direct offer. Relationship standing must not reclassify or duplicate an existing Baseline convenience offer merely to make loyalty progression more visible."
     },
     {
       "tpl": "61605e13ffa6e502ac5e7eef",
@@ -38,7 +43,8 @@
         "trader": "Jaeger",
         "offerId": "686e34276c2a18ed6b0e9586",
         "unlimitedCount": true,
-        "stackObjectsCount": 9999999
+        "stackObjectsCount": 9999999,
+        "frozenAdmiralDirectTplHit": false
       },
       "rationale": "The handheld rangefinder fits Admiral's reconnaissance theme, but pinned SPT 4.1.3 Jaeger already exposes it with unlimited direct stock. A Relationship copy would be thematic duplication, not meaningful progression."
     },
@@ -46,19 +52,22 @@
       "tpl": "5c12688486f77426843c7d32",
       "name": "Paracord",
       "role": "extract-logistics",
-      "decision": "reject-barter-pressure-and-nonconsumable-utility",
+      "decision": "reject-existing-admiral-baseline-and-barter-pressure",
       "evidence": {
         "jaegerBarterInput": true,
         "barterOfferId": "686e34256c2a18ed6b0e94b1",
         "barterCount": 12,
-        "directPinnedJaegerSale": false
+        "directPinnedJaegerSale": false,
+        "frozenAdmiralOfferId": "ad2000000000000000000002",
+        "frozenAdmiralStock": 6,
+        "frozenAdmiralBuyRestriction": 2
       },
-      "rationale": "Paracord is one of the few reviewed items with real recurring field relevance because it supports cliff-style extracts, but it is not consumed by that use and pinned Jaeger also consumes twelve units in a high-value barter. Renewable standing stock would therefore provide little durable relationship benefit after the first owned copy while weakening existing barter scarcity. It is rejected rather than used as LL2/LL3 quota filler."
+      "rationale": "Paracord already has a bounded frozen Admiral Baseline offer, is not consumed by its extract utility, and pinned Jaeger consumes twelve units in a high-value barter. Relationship materialization would therefore duplicate Admiral's own convenience layer while further weakening barter scarcity."
     }
   ],
   "conclusion": {
     "approvedOfferCount": 0,
     "relationshipMaterializationStillDisabled": true,
-    "finding": "The strongest obvious navigation/observation special-slot candidates are already unlimited vanilla offers, while Paracord fails the independent recurring-supply test despite having legitimate field utility. Empty Relationship tiers remain preferable to duplicate or scarcity-bypassing stock."
+    "finding": "The strongest obvious navigation/observation special-slot candidates are either already represented by frozen Admiral Baseline stock or are unlimited vanilla offers. Relationship progression should not cannibalize Baseline semantics, duplicate Jaeger, or manufacture standing value from scarcity bypass."
   }
 }
