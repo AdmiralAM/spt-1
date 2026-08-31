@@ -30,6 +30,10 @@ for token in (
     'ReloadCandidateBridgeRuntime.ExitReloadScope',
     'ReferenceEquals(slots, OriginalFastAccessSlots)',
     'ReferenceEquals(slots, InstalledFastAccessSlots)',
+    'ReferenceEquals(slots, OriginalBindAvailableSlots)',
+    'ReferenceEquals(slots, InstalledBindAvailableSlots)',
+    'ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = originalBindAvailableSlots;',
+    'ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = installedBindAvailableSlots;',
     'RuntimeIdentity.DedicatedMagazineBeltItemId',
     'GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })',
     'if (item == null || !MagazineType.IsInstanceOfType(item) || !HasExactMagazineBeltAncestor(item)) continue;',
@@ -146,6 +150,10 @@ for token in (
     'ShouldBridgeReloadCandidates(true, false, false)',
     'ShouldReuseVanillaReloadCandidates(false)',
     'ShouldReuseVanillaReloadCandidates(true)',
+    'OriginalBindAvailableSlots = originalBindAvailableSlots',
+    'InstalledBindAvailableSlots = installedBindAvailableSlots',
+    'originalBindAvailableSlots',
+    'installedBindAvailableSlots',
 ):
     if token not in bridge_tests:
         violations.append(f"ReloadCandidateBridgeRegression.cs: scoped bridge regression missing: {token}")
@@ -162,4 +170,4 @@ for token in (
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact EFT Item contract; no-op Belt path preserves vanilla result identity without merge allocation; reachability/candidate Harmony owners isolated; partial bridge installs roll back atomically; startup-bound discovery; fail-closed/no polling)")
+print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item contract; no-op Belt path preserves vanilla result identity without merge allocation; reachability/candidate Harmony owners isolated; partial bridge installs roll back atomically; startup-bound discovery; fail-closed/no polling)")
