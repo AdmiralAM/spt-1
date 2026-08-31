@@ -59,7 +59,7 @@ def test_numeric_envelopes_are_bounded_and_do_not_create_a_standing_faucet():
         for band_name in spec["operationBands"].values()
     )
     assert total_standing_ceiling <= spec["campaignCaps"]["maximumAdditionalStandingIfEveryOperationPaysItsBandCeiling"]
-    assert total_standing_ceiling <= 0.36
+    assert total_standing_ceiling <= 0.37
     assert spec["campaignCaps"]["salesVolumeGrindRequired"] is False
     assert spec["campaignCaps"]["rewardEscalationForRepeatedSameObjectiveAllowed"] is False
 

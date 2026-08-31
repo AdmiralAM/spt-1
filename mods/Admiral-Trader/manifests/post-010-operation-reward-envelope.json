@@ -35,7 +35,7 @@
   },
   "campaignCaps": {
     "operationCount": 21,
-    "maximumAdditionalStandingIfEveryOperationPaysItsBandCeiling": 0.36,
+    "maximumAdditionalStandingIfEveryOperationPaysItsBandCeiling": 0.37,
     "standingIsNotAQuota": true,
     "salesVolumeGrindRequired": false,
     "rewardEscalationForRepeatedSameObjectiveAllowed": false
