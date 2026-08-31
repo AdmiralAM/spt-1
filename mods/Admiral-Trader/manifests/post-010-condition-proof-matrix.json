@@ -1,10 +1,10 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-condition-proof-inventory",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
   "runtimeMaterialize": false,
-  "purpose": "Separate condition shapes already evidenced by the frozen exact candidate from mechanics that remain unproven before any post-0.1.0 operation is materialized. This inventory narrows future implementation work without changing the frozen 31-quest runtime.",
+  "purpose": "Separate condition shapes already evidenced by the frozen exact candidate or pinned vanilla SPT 4.1.3 from mechanics that remain unproven before any post-0.1.0 operation is materialized. This inventory narrows future implementation work without changing the frozen 31-quest runtime.",
   "evidence": {
     "canonicalExactHead": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
     "exactInstalledRuntimePackageProven": true,
@@ -12,6 +12,11 @@
     "representativeFrozenQuest": {
       "path": "db/quests/20-153839f368b80b6fbc36d29e.json",
       "quest": "Arsenal Protocol: Precision Rifles - Fieldwork"
+    },
+    "pinnedSpt413QuestSource": {
+      "repository": "sp-tarkov/server-csharp",
+      "commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+      "path": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json"
     }
   },
   "staticallyProvenShapes": [
@@ -50,20 +55,26 @@
       "conditionType": "Level",
       "evidence": "Frozen quests use compareMethod >= with explicit numeric level values.",
       "post010Use": "Supports the four authored campaign phases without sales-volume gates."
+    },
+    {
+      "capability": "Scav/Raider/Rogue/boss elimination role discrimination",
+      "fields": ["target", "savageRole"],
+      "evidence": "Pinned SPT 4.1.3 vanilla quest data proves target=Savage with empty savageRole for ordinary Scavs, savageRole=pmcBot for Raiders, savageRole=exUsec for Rogues, and explicit boss aliases such as bossKilla for bosses. Exact evidence is recorded in post-010-role-alias-proof.json.",
+      "post010Use": "Role discrimination may be reused for route-security, labs-security-disruption, rogue-interdiction and boss-oriented operations. Location, extraction, equipment and final boss-set semantics remain separately proof-gated."
     }
   ],
   "stillUnprovenForPost010": [
     {
-      "capability": "specific PMC, Scav, Raider, Rogue, boss or follower role discrimination",
+      "capability": "PMC faction/any-PMC and follower/guard discrimination",
       "fields": ["target", "savageRole"],
-      "reason": "The frozen evidence does not prove the exact SPT 4.1.3 aliases and role semantics required by the future specialist operations.",
-      "affectedOperations": ["route-security", "hostile-operator-intercept", "labs-security-disruption", "rogue-interdiction", "high-value-target-window", "precision-denial"]
+      "reason": "Scav/Raider/Rogue/boss aliases are now pinned and proven, but this slice does not infer PMC or follower aliases without separate exact vanilla evidence.",
+      "affectedOperations": ["hostile-operator-intercept"]
     },
     {
       "capability": "map or sub-location restriction",
       "fields": ["location", "zoneId or equivalent counter subcondition"],
-      "reason": "Frozen Arsenal evidence is location=any and therefore cannot prove map/zone semantics for contextual operations.",
-      "affectedOperations": ["access-reconnaissance", "route-security", "hostile-operator-intercept", "labs-security-disruption", "night-signal-disruption"]
+      "reason": "Frozen Arsenal evidence is location=any and role-alias proof does not establish map/zone semantics for contextual operations.",
+      "affectedOperations": ["access-reconnaissance", "route-security", "hostile-operator-intercept", "labs-security-disruption", "night-signal-disruption", "rogue-interdiction"]
     },
     {
       "capability": "survive/extract and same-raid coupling",
@@ -102,7 +113,7 @@
     "editorialCopyMayNotPublishUnprovenSpecifics": true,
     "noNewFrozen010QuestJson": true,
     "nextResearchPriority": [
-      "prove role aliases plus map/location shape for bounded combat operations",
+      "prove PMC aliases plus map/location shape for bounded combat operations",
       "prove survive/extract and same-raid coupling",
       "prove player-equipment condition family",
       "prove medical/stimulant use semantics",
