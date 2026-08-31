@@ -13,7 +13,7 @@ class RelationshipStockContractTests(unittest.TestCase):
         policy = self.load("gameplay-policy.json")
         relationship = self.load("relationship-stock.json")
 
-        self.assertEqual(relationship["schemaVersion"], 2)
+        self.assertEqual(relationship["schemaVersion"], 3)
         self.assertEqual(relationship["stockClass"], "Relationship")
         self.assertTrue(policy["traderStock"]["relationshipStockAllowed"])
         self.assertFalse(relationship["authority"]["salesSumGateAllowed"])
@@ -35,6 +35,23 @@ class RelationshipStockContractTests(unittest.TestCase):
         self.assertTrue(all(x["selection"]["minimumRequiredOffers"] == 0 for x in tiers))
         self.assertTrue(all(x["selection"]["maximumOffers"] > 0 for x in tiers))
         self.assertTrue(all(x["selection"]["qualityGateOverridesCount"] for x in tiers))
+
+    def test_economy_relationship_adapter_integration_is_already_implemented(self):
+        relationship = self.load("relationship-stock.json")
+        integration = relationship["integrationState"]
+        self.assertEqual(integration["economyAdapterRelationshipParsing"], "implemented-on-origin-main")
+        self.assertEqual(integration["verifiedOriginMain"], "f927a23c8057811f78ce48508e58b37012c6d6e8")
+        self.assertEqual(
+            set(integration["adapterFiles"]),
+            {
+                "mods/Economy-Admiral/server/AdmiralTraderRuntimeAdapterService.cs",
+                "mods/Economy-Admiral/server/AdmiralTraderGameplayAlphaAdapter.cs",
+            },
+        )
+        required = relationship["materialization"]["requiredBeforeEnable"]
+        self.assertFalse(any("Relationship parsing" in entry for entry in required))
+        self.assertTrue(any("Economy Admiral" in entry for entry in required))
+        self.assertIn("RelationshipOfferCount is emitted by the Economy adapter", integration["provenContract"])
 
     def test_frozen_candidate_is_not_materialized_by_relationship_design(self):
         relationship = self.load("relationship-stock.json")
