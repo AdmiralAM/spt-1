@@ -46,26 +46,31 @@ internal static class DogtagCaseLifecycleRegression
 
         // Recovery/uninstall semantics must remove serialized owned roots wherever
         // SPT can persist them (equipment/stash, insurance or mail), together with
-        // descendants and direct build/service references. This stays schema-
-        // agnostic and therefore remains usable when the item template is absent.
+        // descendants and direct build/service references. The grandchildren below
+        // deliberately require more than one cleanup pass, proving that a nested
+        // serialized tree cannot leave a dangling descendant after the owned root
+        // template has disappeared from the item database.
         JsonNode profile = JsonNode.Parse("""
         {
           "Inventory": {
             "items": [
               { "_id": "dogtag-case-instance", "_tpl": "DOGTAG_TPL", "slotId": "Dogtag" },
               { "_id": "dogtag-child", "_tpl": "vanilla-dogtag", "parentId": "dogtag-case-instance", "slotId": "main" },
+              { "_id": "dogtag-grandchild", "_tpl": "vanilla-marker", "parentId": "dogtag-child", "slotId": "marker" },
               { "_id": "unrelated", "_tpl": "vanilla-unrelated", "slotId": "Pockets" }
             ]
           },
           "Insurance": [
             { "_id": "insured-dogtag-case", "_tpl": "DOGTAG_TPL" },
             { "_id": "insured-dogtag-child", "_tpl": "vanilla-dogtag", "parentId": "insured-dogtag-case", "slotId": "main" },
+            { "_id": "insured-dogtag-grandchild", "_tpl": "vanilla-marker", "parentId": "insured-dogtag-child", "slotId": "marker" },
             { "_id": "insured-unrelated", "_tpl": "vanilla-unrelated" }
           ],
           "Mail": {
             "rewards": [
               { "_id": "mail-dogtag-case", "_tpl": "DOGTAG_TPL" },
               { "_id": "mail-dogtag-child", "_tpl": "vanilla-dogtag", "parentId": "mail-dogtag-case", "slotId": "main" },
+              { "_id": "mail-dogtag-grandchild", "_tpl": "vanilla-marker", "parentId": "mail-dogtag-child", "slotId": "marker" },
               { "_id": "mail-unrelated", "_tpl": "vanilla-unrelated" }
             ]
           },
@@ -77,18 +82,18 @@ internal static class DogtagCaseLifecycleRegression
         """.Replace("DOGTAG_TPL", RuntimeIdentity.DogtagCaseItemId, StringComparison.Ordinal))!;
 
         ProfileCleanupPolicy.CleanupResult cleanup = ProfileCleanupPolicy.Clean(profile);
-        if (cleanup.RemovedItems != 3 || cleanup.RemovedReferences != 4)
-            throw new InvalidOperationException("Dogtag Case profile cleanup must remove equipment/mail/insurance owned roots plus descendants/build references exactly.");
+        if (cleanup.RemovedItems != 3 || cleanup.RemovedReferences != 7)
+            throw new InvalidOperationException("Dogtag Case profile cleanup must remove equipment/mail/insurance owned roots plus transitive descendants/build references exactly.");
 
         string remaining = profile.ToJsonString();
         string[] removedIds =
         {
-            "dogtag-case-instance", "dogtag-child", "build-ref",
-            "insured-dogtag-case", "insured-dogtag-child",
-            "mail-dogtag-case", "mail-dogtag-child"
+            "dogtag-case-instance", "dogtag-child", "dogtag-grandchild", "build-ref",
+            "insured-dogtag-case", "insured-dogtag-child", "insured-dogtag-grandchild",
+            "mail-dogtag-case", "mail-dogtag-child", "mail-dogtag-grandchild"
         };
         if (removedIds.Any(id => remaining.Contains(id, StringComparison.Ordinal)))
-            throw new InvalidOperationException("Dogtag Case profile cleanup left an owned root or dangling descendant/reference.");
+            throw new InvalidOperationException("Dogtag Case profile cleanup left an owned root or dangling transitive descendant/reference.");
 
         string[] preservedIds = { "unrelated", "insured-unrelated", "mail-unrelated", "unrelated-build" };
         if (preservedIds.Any(id => !remaining.Contains(id, StringComparison.Ordinal)))
