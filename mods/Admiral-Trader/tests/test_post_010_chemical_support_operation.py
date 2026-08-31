@@ -15,6 +15,7 @@ def test_chemical_support_operation_is_bounded_and_non_materialized():
     rewards = op["rewardDoctrine"]
     gates = spec["gates"]
 
+    assert spec["schemaVersion"] == 2
     assert spec["source"]["bundle"] == "Stims Proficiency"
     assert spec["source"]["legacyQuestCount"] == 16
     assert spec["source"]["directPortAllowed"] is False
@@ -36,10 +37,21 @@ def test_chemical_support_operation_is_bounded_and_non_materialized():
     assert rewards["permanentStimulantStorefrontUnlockAllowed"] is False
     assert rewards["highValueConsumableFaucetAllowed"] is False
 
+    extraction = spec["conditionReadiness"]["survivedExtraction"]
+    stimulant_use = spec["conditionReadiness"]["stimulantUse"]
+    assert extraction["status"] == "proven-shape-only"
+    assert extraction["authorityManifest"] == "post-010-pmc-location-extraction-proof.json"
+    assert extraction["conditionShape"] == ["Location", "ExitStatus(Survived)"]
+    assert extraction["sameRaidStimulantUseCouplingProven"] is False
+    assert "does not prove" in extraction["boundary"].lower()
+    assert stimulant_use["status"] == "unproven-fail-closed"
+    assert stimulant_use["mayInferFromGenericItemUse"] is False
+
     assert gates["implementationAllowed"] is False
     assert gates["runtimeMaterialize"] is False
     assert gates["requiresExactSpt413StimulantUseConditionProof"] is True
-    assert gates["requiresExactSpt413SurvivedExtractionProof"] is True
+    assert gates["requiresExactSpt413SurvivedExtractionProof"] is False
+    assert gates["requiresSameRaidStimulantUseToExtractionProof"] is True
     assert gates["requiresFinalApprovedStimTplSelection"] is True
     assert gates["requiresDistinctFieldConditionSelection"] is True
     assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
@@ -51,6 +63,17 @@ def test_chemical_support_operation_is_bounded_and_non_materialized():
         "rootOfferCount": 11,
         "relationshipRuntimeOffers": 0,
     }
+
+
+def test_chemical_support_extraction_readiness_matches_authoritative_proof():
+    spec = load_json(ROOT / "manifests" / "post-010-chemical-support-operation.json")
+    proof = load_json(ROOT / "manifests" / spec["conditionReadiness"]["survivedExtraction"]["authorityManifest"])
+    extraction = proof["proven"]["survivedExtraction"]
+
+    assert "controlled-chemical-support" in extraction["affectedOperations"]
+    assert extraction["conditionTypes"] == ["Location", "ExitStatus"]
+    assert extraction["status"] == ["Survived"]
+    assert proof["notProvenByThisSlice"]["killThenExtractSameRaidCoupling"] is True
 
 
 def test_chemical_support_does_not_change_frozen_runtime_counts():

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "source": {
@@ -48,11 +48,29 @@
       "highValueConsumableFaucetAllowed": false
     }
   },
+  "conditionReadiness": {
+    "survivedExtraction": {
+      "status": "proven-shape-only",
+      "authorityManifest": "post-010-pmc-location-extraction-proof.json",
+      "conditionShape": [
+        "Location",
+        "ExitStatus(Survived)"
+      ],
+      "sameRaidStimulantUseCouplingProven": false,
+      "boundary": "The authoritative extraction proof establishes bounded survived-extraction semantics for controlled-chemical-support; it does not prove that stimulant use and extraction are coupled within the same raid."
+    },
+    "stimulantUse": {
+      "status": "unproven-fail-closed",
+      "requiredProof": "exact SPT 4.1.3 stimulant-use objective condition shape and accepted item selector semantics",
+      "mayInferFromGenericItemUse": false
+    }
+  },
   "gates": {
     "implementationAllowed": false,
     "runtimeMaterialize": false,
     "requiresExactSpt413StimulantUseConditionProof": true,
-    "requiresExactSpt413SurvivedExtractionProof": true,
+    "requiresExactSpt413SurvivedExtractionProof": false,
+    "requiresSameRaidStimulantUseToExtractionProof": true,
     "requiresFinalApprovedStimTplSelection": true,
     "requiresDistinctFieldConditionSelection": true,
     "requiresVanillaScorpionArtemOverlapAudit": true,
