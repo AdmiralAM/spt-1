@@ -24,6 +24,12 @@ public static class DogtagCaseHostContract
         if (snapshot.Count == 0)
             throw new InvalidOperationException("B&A&HB Dogtag host snapshot refused: no vanilla/non-owned acceptance entries were present before mutation.");
 
+        foreach (MongoId entry in snapshot)
+        {
+            if (PersistentIdentityManifest.IsOwnedTemplate(entry.ToString()))
+                throw new InvalidOperationException($"B&A&HB Dogtag host snapshot refused: owned template {entry} was presented as a vanilla/foreign acceptance entry.");
+        }
+
         if (capturedVanillaEntries == null)
         {
             capturedVanillaEntries = snapshot;
