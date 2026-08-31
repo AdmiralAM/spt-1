@@ -25,6 +25,11 @@ internal static class DogtagCaseHostContractRegression
             throw new InvalidOperationException("Dogtag host regression failed: exact pre-mutation vanilla snapshot count was not retained.");
 
         DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { vanillaA, vanillaB, caseTpl });
+        DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { vanillaA, vanillaB, caseTpl });
+
+        ExpectFailure(
+            () => DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { vanillaA, vanillaB }),
+            "committed host verification must reject a preserved host that lacks the exact Dogtag Case template");
 
         ExpectFailure(
             () => DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { vanillaA, caseTpl }),
@@ -33,6 +38,10 @@ internal static class DogtagCaseHostContractRegression
         ExpectFailure(
             () => DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { vanillaA, vanillaB, caseTpl, foreignOwnedTpl }),
             "another B&A&HB-owned product must be rejected by the reusable Dogtag host contract itself");
+
+        ExpectFailure(
+            () => DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { vanillaA, vanillaB, caseTpl, foreignOwnedTpl }),
+            "committed host verification must retain ownership isolation as well as exact case presence");
 
         ExpectFailure(
             () => DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaA }),
@@ -54,12 +63,15 @@ internal static class DogtagCaseHostContractRegression
 
         var clean = new HashSet<MongoId> { vanillaA, vanillaB };
         commit.Invoke(null, new object[] { clean });
+        DogtagCaseHostContract.RequireCommitted(clean);
         if (!clean.Contains(caseTpl) || !clean.Contains(vanillaA) || !clean.Contains(vanillaB))
             throw new InvalidOperationException("Dogtag host regression failed: atomic exposure did not append only the exact case while preserving captured vanilla entries.");
 
-        // Repeating the commit is an exact idempotent no-op.
+        // Repeating the commit is an exact idempotent no-op and must still pass
+        // the centralized committed-state contract.
         int count = clean.Count;
         commit.Invoke(null, new object[] { clean });
+        DogtagCaseHostContract.RequireCommitted(clean);
         if (clean.Count != count)
             throw new InvalidOperationException("Dogtag host regression failed: repeated atomic exposure changed the host set.");
 
