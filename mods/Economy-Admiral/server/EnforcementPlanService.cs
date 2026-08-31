@@ -489,10 +489,27 @@ public sealed class EnforcementPlanService(
             candidates.Add(record);
         }
 
-        var recordSelection = ItemRewardRecordSelectorCore.Select(
-            candidates.Select((record, index) => new ItemRewardRecordCandidate(
+        var recordSelectionCandidates = candidates.Select((record, index) =>
+        {
+            var count = record.Item.Upd?.StackObjectsCount ?? 1d;
+            if (!requireKnownHandbookPrice)
+                return new ItemRewardRecordCandidate(index, count);
+
+            var templateId = record.Item.Template.ToString();
+            if (handbookPrices is null
+                || string.IsNullOrWhiteSpace(templateId)
+                || !handbookPrices.TryGetValue(templateId, out var unitPrice))
+                return new ItemRewardRecordCandidate(index, count, double.NaN, double.NaN);
+
+            return new ItemRewardRecordCandidate(
                 index,
-                record.Item.Upd?.StackObjectsCount ?? 1d)).ToList(),
+                count,
+                count * unitPrice,
+                (count - 1d) * unitPrice);
+        }).ToList();
+
+        var recordSelection = ItemRewardRecordSelectorCore.Select(
+            recordSelectionCandidates,
             allowUniqueDominant: requireKnownHandbookPrice);
         if (!recordSelection.Eligible || recordSelection.SelectedRecordIndex is not { } recordIndex)
             return null;
