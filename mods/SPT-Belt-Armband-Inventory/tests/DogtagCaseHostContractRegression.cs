@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using SPTarkov.Server.Core.Models.Common;
+using SPTBeltArmbandInventory;
 using SPTBeltArmbandInventory.Server;
 
 internal static class DogtagCaseHostContractRegression
