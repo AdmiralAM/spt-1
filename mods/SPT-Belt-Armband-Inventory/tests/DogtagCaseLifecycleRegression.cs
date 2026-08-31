@@ -75,25 +75,28 @@ internal static class DogtagCaseLifecycleRegression
             ]
           },
           "Builds": [
-            { "_id": "build-ref", "itemId": "dogtag-case-instance" },
+            { "_id": "build-root-ref", "itemId": "dogtag-case-instance" },
+            { "_id": "build-child-ref", "itemId": "dogtag-child" },
+            { "_id": "build-grandchild-ref", "itemId": "dogtag-grandchild" },
             { "_id": "unrelated-build", "itemId": "unrelated" }
           ]
         }
         """.Replace("DOGTAG_TPL", RuntimeIdentity.DogtagCaseItemId, StringComparison.Ordinal))!;
 
         ProfileCleanupPolicy.CleanupResult cleanup = ProfileCleanupPolicy.Clean(profile);
-        if (cleanup.RemovedItems != 3 || cleanup.RemovedReferences != 7)
-            throw new InvalidOperationException("Dogtag Case profile cleanup must remove equipment/mail/insurance owned roots plus transitive descendants/build references exactly.");
+        if (cleanup.RemovedItems != 3 || cleanup.RemovedReferences != 9)
+            throw new InvalidOperationException("Dogtag Case profile cleanup must remove equipment/mail/insurance owned roots plus transitive descendants and references to every removed tree node exactly.");
 
         string remaining = profile.ToJsonString();
         string[] removedIds =
         {
-            "dogtag-case-instance", "dogtag-child", "dogtag-grandchild", "build-ref",
+            "dogtag-case-instance", "dogtag-child", "dogtag-grandchild",
+            "build-root-ref", "build-child-ref", "build-grandchild-ref",
             "insured-dogtag-case", "insured-dogtag-child", "insured-dogtag-grandchild",
             "mail-dogtag-case", "mail-dogtag-child", "mail-dogtag-grandchild"
         };
         if (removedIds.Any(id => remaining.Contains(id, StringComparison.Ordinal)))
-            throw new InvalidOperationException("Dogtag Case profile cleanup left an owned root or dangling transitive descendant/reference.");
+            throw new InvalidOperationException("Dogtag Case profile cleanup left an owned root, dangling transitive descendant or reference to a removed descendant.");
 
         string[] preservedIds = { "unrelated", "insured-unrelated", "mail-unrelated", "unrelated-build" };
         if (preservedIds.Any(id => !remaining.Contains(id, StringComparison.Ordinal)))
