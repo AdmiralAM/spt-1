@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
@@ -51,7 +53,108 @@ internal static class ReloadCandidateBridgeRegression
         Assert((int)depth.GetValue(null)! == 0,
             "defensive extra unwind cannot make reload scope negative or leak future bridging");
 
+        ExerciseCandidateMerge();
         ReloadCandidateBridgeRuntime.Reset();
+    }
+
+    static void ExerciseCandidateMerge()
+    {
+        var exactBelt = new FakeItem(RuntimeIdentity.DedicatedMagazineBeltItemId);
+        var foreignRoot = new FakeItem("foreign-container");
+        var vanillaMagazine = new FakeMagazine("vanilla-magazine", foreignRoot);
+        var duplicateMagazine = new FakeMagazine("already-vanilla", exactBelt);
+        var exactBeltMagazine = new FakeMagazine("belt-magazine", exactBelt);
+        var foreignMagazine = new FakeMagazine("foreign-magazine", foreignRoot);
+        var nonMagazine = new FakeItem("not-a-magazine", exactBelt);
+        var vanilla = new FakeItem[] { vanillaMagazine, duplicateMagazine };
+        var fastAccessSlots = new object();
+        var inventory = new FakeInventory(new FakeItem[]
+        {
+            duplicateMagazine,
+            foreignMagazine,
+            nonMagazine,
+            exactBeltMagazine
+        });
+
+        ConfigureFakeRuntime(fastAccessSlots);
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object mergedObject = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, fastAccessSlots, vanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+
+        Assert(mergedObject is FakeItem[], "bridge preserves the exact Item[]-compatible return shape");
+        var merged = (FakeItem[])mergedObject;
+        Assert(!ReferenceEquals(merged, vanilla), "one real exact Belt fallback allocates a replacement result");
+        Assert(merged.Length == 3, "only one unique exact Magazine Belt descendant is appended");
+        Assert(ReferenceEquals(merged[0], vanillaMagazine) && ReferenceEquals(merged[1], duplicateMagazine),
+            "complete vanilla candidate prefix and order are preserved by reference");
+        Assert(ReferenceEquals(merged[2], exactBeltMagazine),
+            "exact Magazine Belt descendant is appended after the vanilla prefix");
+
+        inventory.Items = new FakeItem[] { duplicateMagazine, foreignMagazine, nonMagazine };
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object noOpObject = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, fastAccessSlots, vanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Assert(ReferenceEquals(noOpObject, vanilla),
+            "duplicate, foreign and non-magazine Belt candidates keep the exact vanilla result object");
+
+        inventory.Items = new FakeItem[] { exactBeltMagazine };
+        object unrelatedSlots = new object();
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object unrelatedObject = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, unrelatedSlots, vanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Assert(ReferenceEquals(unrelatedObject, vanilla),
+            "unrelated slot enumeration cannot activate the Belt fallback even during reload scope");
+    }
+
+    static void ConfigureFakeRuntime(object fastAccessSlots)
+    {
+        ReloadCandidateBridgeRuntime.Reset();
+        ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
+            ?? throw new InvalidOperationException("Reload candidate bridge regression failed: fake GetItemsInSlots missing");
+        ReloadCandidateBridgeRuntime.BeltSlotsArgument = new object();
+        ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = fastAccessSlots;
+        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object();
+        ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
+        ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
+        ReloadCandidateBridgeRuntime.GetAllParentItems = item => ((FakeItem)item).Parents;
+        ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
+        ReloadCandidateBridgeRuntime.LogWarning = message => throw new InvalidOperationException("Reload candidate bridge regression failed closed unexpectedly: " + message);
+    }
+
+    sealed class FakeInventory
+    {
+        internal FakeItem[] Items;
+
+        internal FakeInventory(FakeItem[] items)
+        {
+            Items = items;
+        }
+
+        public FakeItem[] GetItemsInSlots(object slots)
+        {
+            return Items;
+        }
+    }
+
+    class FakeItem
+    {
+        internal string TemplateId { get; }
+        internal IEnumerable Parents { get; }
+
+        internal FakeItem(string templateId, params FakeItem[] parents)
+        {
+            TemplateId = templateId;
+            Parents = parents ?? Array.Empty<FakeItem>();
+        }
+    }
+
+    sealed class FakeMagazine : FakeItem
+    {
+        internal FakeMagazine(string templateId, params FakeItem[] parents)
+            : base(templateId, parents)
+        {
+        }
     }
 
     static void Assert(bool condition, string message)
