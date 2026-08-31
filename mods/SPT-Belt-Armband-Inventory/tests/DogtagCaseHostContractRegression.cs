@@ -11,14 +11,19 @@ internal static class DogtagCaseHostContractRegression
     [ModuleInitializer]
     internal static void Run()
     {
-        var vanillaA = new MongoId("59f32bb586f774757e1e8442");
-        var vanillaB = new MongoId("59f32c3b86f77472a31742f0");
+        var vanillaA = new MongoId(DogtagCaseHostContract.BearDogtagTemplateId);
+        var vanillaB = new MongoId(DogtagCaseHostContract.UsecDogtagTemplateId);
+        var foreignVanillaTpl = new MongoId("5c093ca986f7740a1867ab12");
         var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
         var foreignOwnedTpl = new MongoId(RuntimeIdentity.CandidateItemId);
 
         ExpectFailure(
             () => DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaA, caseTpl }),
             "pre-mutation snapshot must reject a B&A&HB-owned template presented as vanilla/foreign");
+
+        ExpectFailure(
+            () => DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaA }),
+            "pre-mutation snapshot must fail closed if either canonical faction dogtag is missing");
 
         DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaA, vanillaB });
         if (DogtagCaseHostContract.CapturedVanillaEntryCount != 2)
@@ -44,7 +49,7 @@ internal static class DogtagCaseHostContractRegression
             "committed host verification must retain ownership isolation as well as exact case presence");
 
         ExpectFailure(
-            () => DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaA }),
+            () => DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaA, vanillaB, foreignVanillaTpl }),
             "a second, different preload snapshot must be rejected as an ambiguous host contract");
 
         // Idempotent re-capture of the exact same set is safe and must not depend
