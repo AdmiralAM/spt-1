@@ -67,7 +67,9 @@ Recovery ownership is therefore intentionally asymmetric:
 - during normal runtime, its lifecycle semantics remain vanilla/unclaimed by B&A&HB;
 - during deliberate cleanup/uninstall, its exact owned template ID is removed wherever serialized, together with descendants and direct references, so an older build cannot encounter an unknown item template.
 
-The deterministic regression covers Dogtag Case roots serialized in equipment, mail rewards and insurance payloads, plus descendant and build references, while proving unrelated records survive cleanup.
+Cleanup also treats serialized instance IDs as untrusted recovery data. Before cascading through `parentId` / `itemId`, the recovery engine proves that the referenced `_id` occurs exactly once in the profile. A duplicate/ambiguous instance ID may still identify an exact B&A&HB-owned template for direct removal, but it is **not** allowed to authorize descendant/reference deletion. This intentionally prefers leaving ambiguous foreign state for manual recovery over deleting unrelated records from a malformed or mixed-mod profile.
+
+The deterministic regressions cover Dogtag Case roots serialized in equipment, mail rewards and insurance payloads, descendant/build references, ordinary BEAR/USEC dogtags sharing the vanilla Dogtag host, exact-vs-lookalike references, multi-root cleanup, and duplicate instance-ID ambiguity at both owned roots and removed descendants. Unrelated records remain intact and a second cleanup pass remains a strict no-op.
 
 ## Where persistent references can remain
 
@@ -94,8 +96,8 @@ For an uncertain or incompatible downgrade without a suitable backup: stop SPT, 
 
 If SPT already reports `InvalidModdedItemException` / `item found in profile that does not exist in items db`, keep the server stopped. Either temporarily restore the exact B&A&HB build that created the items and clean them while it is installed, or run the offline cleanup script directly against a backup/copy of the profile. The script uses only `persistent-identities.json`; it does not require B&A&HB item templates to be registered.
 
-The cleanup is ownership-scoped: it removes B&A&HB template instances and serialized descendants/direct `parentId`/`itemId` references to those removed instances. It does not intentionally remove unrelated vanilla/mod items. A second cleanup pass is expected to be a no-op.
+The cleanup is ownership-scoped: it removes B&A&HB template instances and serialized descendants/direct `parentId`/`itemId` references to those removed instances. Reference cascading additionally requires unique instance-ID cardinality; ambiguous duplicate IDs fail closed instead of widening deletion. It does not intentionally remove unrelated vanilla/mod items. A second cleanup pass is expected to be a no-op.
 
 ## Proof boundary
 
-CI regression proves the deterministic recovery policy, persistent-identity parity, v0.2.0 split-grid migration behavior, Dogtag Case equipment/mail/insurance/build cleanup ownership and package contents. It does **not** prove the exact physical SPT 4.1.3 profile-load lifecycle. Physical runtime evidence remains a separate combined gate before v0.2.0 is promoted from development candidate to stable release.
+CI regression proves the deterministic recovery policy, persistent-identity parity, v0.2.0 split-grid migration behavior, Dogtag Case equipment/mail/insurance/build cleanup ownership, duplicate-ID fail-closed isolation and package contents. It does **not** prove the exact physical SPT 4.1.3 profile-load lifecycle. Physical runtime evidence remains a separate combined gate before v0.2.0 is promoted from development candidate to stable release.
