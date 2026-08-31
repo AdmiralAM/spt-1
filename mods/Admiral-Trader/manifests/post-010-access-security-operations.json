@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -36,9 +36,25 @@
         "noPermanentKeyStorefront": true
       },
       "rewardDoctrine": "XP/RUB/standing by default. No permanent key storefront, key container reward or access-capability bypass without explicit overlap and Economy Admiral review.",
+      "conditionReadiness": {
+        "survivedExtraction": {
+          "status": "proven-shape-only",
+          "authorityManifest": "post-010-pmc-location-extraction-proof.json",
+          "conditionShape": ["Location", "ExitStatus(Survived)"]
+        },
+        "accessInteraction": {
+          "status": "unproven-fail-closed",
+          "requiredProof": "exact SPT 4.1.3 condition semantics for one selected restricted-access interaction or a deliberately chosen location proxy",
+          "mayInferFromLocationVisit": false
+        },
+        "sameRaidCoupling": {
+          "status": "unproven-fail-closed",
+          "requiredProof": "the selected access interaction/location proxy and survived extraction are required in the same raid"
+        }
+      },
       "proofGates": [
-        "prove exact SPT 4.1.3 condition semantics for the selected access interaction or location proxy; reject the interaction requirement if it cannot be represented reliably",
-        "prove survived/extraction semantics for the same bounded operation",
+        "prove exact SPT 4.1.3 semantics for the selected restricted-access interaction or deliberately chosen location proxy; reject the interaction requirement if it cannot be represented reliably",
+        "prove same-raid coupling between that selected access proof and the already-proven survived-extraction shape",
         "audit overlap with frozen Admiral Access progression plus vanilla/Scorpion/Artem location quests before choosing the route",
         "Economy Admiral approves final numeric and any item rewards"
       ],
@@ -74,9 +90,32 @@
         "noLocationFreeFallback": true
       },
       "rewardDoctrine": "Risk-adjusted XP/RUB/standing only by default. No Labs access unlock, keycard faucet, Raider-equipment storefront or capability bypass.",
+      "conditionReadiness": {
+        "targetRole": {
+          "status": "proven-shape-only",
+          "authorityManifest": "post-010-role-alias-proof.json",
+          "target": "Savage",
+          "savageRole": ["pmcBot"]
+        },
+        "location": {
+          "status": "proven-shape-only",
+          "authorityManifest": "post-010-pmc-location-extraction-proof.json",
+          "conditionType": "Location",
+          "selectedMapValueProven": false
+        },
+        "survivedExtraction": {
+          "status": "proven-shape-only",
+          "authorityManifest": "post-010-pmc-location-extraction-proof.json",
+          "conditionShape": ["Location", "ExitStatus(Survived)"]
+        },
+        "sameRaidCoupling": {
+          "status": "unproven-fail-closed",
+          "requiredProof": "Raider kill counter and survived extraction are required in the same raid"
+        }
+      },
       "proofGates": [
-        "prove exact SPT 4.1.3 Raider target alias and The Labs location condition shape",
-        "prove survived/extraction and same-operation counter semantics",
+        "select and validate the exact pinned SPT 4.1.3 The Labs Location value without changing the already-proven Raider target shape",
+        "prove same-raid coupling between the bounded Raider counter and the already-proven survived-extraction shape",
         "audit overlap with frozen Admiral Labs clearance and vanilla/Scorpion/Artem Labs objectives",
         "Economy Admiral approves final risk-adjusted numeric and any item rewards"
       ],
@@ -112,9 +151,32 @@
         "noFactionKillLadder": true
       },
       "rewardDoctrine": "XP/RUB/standing only by default. No PMC gear faucet, dogtag conveyor or weapon-capability unlock; any item reward requires Economy Admiral approval.",
+      "conditionReadiness": {
+        "target": {
+          "status": "proven-shape-only",
+          "authorityManifest": "post-010-pmc-location-extraction-proof.json",
+          "value": "AnyPmc"
+        },
+        "factionSplitProven": false,
+        "location": {
+          "status": "proven-shape-only",
+          "authorityManifest": "post-010-pmc-location-extraction-proof.json",
+          "conditionType": "Location",
+          "selectedMapValueProven": false
+        },
+        "survivedExtraction": {
+          "status": "proven-shape-only",
+          "authorityManifest": "post-010-pmc-location-extraction-proof.json",
+          "conditionShape": ["Location", "ExitStatus(Survived)"]
+        },
+        "sameRaidCoupling": {
+          "status": "unproven-fail-closed",
+          "requiredProof": "AnyPmc kill counter and survived extraction are required in the same raid"
+        }
+      },
       "proofGates": [
-        "prove exact SPT 4.1.3 PMC target/faction and selected location condition shape",
-        "prove survived/extraction and same-operation counter semantics",
+        "select and validate the exact pinned SPT 4.1.3 Location value for the chosen operational area; faction-specific USEC/BEAR aliases remain out of scope until separately proven",
+        "prove same-raid coupling between the bounded AnyPmc counter and the already-proven survived-extraction shape",
         "audit overlap with vanilla/Scorpion/Artem PMC objectives and frozen Admiral combat progression before selecting the area",
         "Economy Admiral approves final numeric and any item rewards"
       ],
