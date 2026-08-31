@@ -167,7 +167,29 @@ public sealed class DogtagCaseItem(
 
     private static void CommitDogtagSlotExposure(HashSet<MongoId> filter)
     {
-        if (!filter.Contains(DogtagCaseTpl)) filter.Add(DogtagCaseTpl);
+        ArgumentNullException.ThrowIfNull(filter);
+
+        // Re-prove the captured vanilla/foreign host immediately before mutation.
+        // This closes the preload gap without rejecting compatible foreign additions.
+        DogtagCaseHostContract.RequirePreserved(filter);
+        if (filter.Contains(DogtagCaseTpl)) return;
+
+        filter.Add(DogtagCaseTpl);
+        try
+        {
+            // Postcondition: exact case exposure must coexist with every captured
+            // pre-mutation entry and no different B&A&HB-owned template.
+            DogtagCaseHostContract.RequirePreserved(filter);
+            if (!filter.Contains(DogtagCaseTpl))
+                throw new InvalidOperationException("B&A&HB Dogtag host commit failed: exact Dogtag Case template was not retained.");
+        }
+        catch
+        {
+            // We own only this append. Roll it back if postcondition verification
+            // fails so fail-closed startup cannot leave a partially mutated host.
+            filter.Remove(DogtagCaseTpl);
+            throw;
+        }
     }
 
     private static void ValidateExisting(TemplateItem candidate, TemplateItem source)
