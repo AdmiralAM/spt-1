@@ -15,7 +15,7 @@ class RelationshipSpecialSlotReviewTests(unittest.TestCase):
         )
         assort = json.loads((ROOT / "db" / "assort.json").read_text(encoding="utf-8"))
 
-        self.assertEqual(review["schemaVersion"], 1)
+        self.assertEqual(review["schemaVersion"], 2)
         self.assertFalse(review["policy"]["materialize"])
         self.assertFalse(relationship["materialization"]["enabled"])
         self.assertEqual(review["conclusion"]["approvedOfferCount"], 0)
@@ -31,22 +31,31 @@ class RelationshipSpecialSlotReviewTests(unittest.TestCase):
             },
         )
 
-        for tpl in ("5f4f9eb969cdc30ff33f09db", "61605e13ffa6e502ac5e7eef"):
-            candidate = reviewed[tpl]
-            self.assertEqual(candidate["decision"], "reject-redundant-pinned-jaeger")
-            self.assertEqual(candidate["evidence"]["trader"], "Jaeger")
-            self.assertTrue(candidate["evidence"]["unlimitedCount"])
-            self.assertEqual(candidate["evidence"]["stackObjectsCount"], 9999999)
-            self.assertTrue(candidate["evidence"]["offerId"].startswith("686e34"))
+        compass = reviewed["5f4f9eb969cdc30ff33f09db"]
+        self.assertEqual(compass["decision"], "reject-existing-admiral-baseline-and-pinned-jaeger")
+        self.assertEqual(compass["evidence"]["trader"], "Jaeger")
+        self.assertTrue(compass["evidence"]["unlimitedCount"])
+        self.assertEqual(compass["evidence"]["stackObjectsCount"], 9999999)
+        self.assertEqual(compass["evidence"]["frozenAdmiralOfferId"], "ad2000000000000000000001")
+
+        rangefinder = reviewed["61605e13ffa6e502ac5e7eef"]
+        self.assertEqual(rangefinder["decision"], "reject-redundant-pinned-jaeger")
+        self.assertEqual(rangefinder["evidence"]["trader"], "Jaeger")
+        self.assertTrue(rangefinder["evidence"]["unlimitedCount"])
+        self.assertEqual(rangefinder["evidence"]["stackObjectsCount"], 9999999)
+        self.assertFalse(rangefinder["evidence"]["frozenAdmiralDirectTplHit"])
 
         paracord = reviewed["5c12688486f77426843c7d32"]
-        self.assertEqual(paracord["decision"], "reject-barter-pressure-and-nonconsumable-utility")
+        self.assertEqual(paracord["decision"], "reject-existing-admiral-baseline-and-barter-pressure")
         self.assertTrue(paracord["evidence"]["jaegerBarterInput"])
         self.assertEqual(paracord["evidence"]["barterCount"], 12)
         self.assertFalse(paracord["evidence"]["directPinnedJaegerSale"])
+        self.assertEqual(paracord["evidence"]["frozenAdmiralOfferId"], "ad2000000000000000000002")
 
-        live_tpls = {item["_tpl"] for item in assort["items"]}
-        self.assertTrue(set(reviewed).isdisjoint(live_tpls))
+        live_by_tpl = {item["_tpl"]: item["_id"] for item in assort["items"]}
+        self.assertEqual(live_by_tpl["5f4f9eb969cdc30ff33f09db"], "ad2000000000000000000001")
+        self.assertEqual(live_by_tpl["5c12688486f77426843c7d32"], "ad2000000000000000000002")
+        self.assertNotIn("61605e13ffa6e502ac5e7eef", live_by_tpl)
         self.assertEqual(len(assort["items"]), 11)
 
 
