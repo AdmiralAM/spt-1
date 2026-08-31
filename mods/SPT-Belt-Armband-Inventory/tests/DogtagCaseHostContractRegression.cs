@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using SPTarkov.Server.Core.Models.Common;
 using SPTBeltArmbandInventory;
@@ -40,6 +41,41 @@ internal static class DogtagCaseHostContractRegression
         // Idempotent re-capture of the exact same set is safe and must not depend
         // on enumeration order.
         DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaB, vanillaA });
+
+        ExerciseAtomicExposure(vanillaA, vanillaB, caseTpl, foreignOwnedTpl);
+    }
+
+    private static void ExerciseAtomicExposure(MongoId vanillaA, MongoId vanillaB, MongoId caseTpl, MongoId foreignOwnedTpl)
+    {
+        MethodInfo commit = typeof(DogtagCaseItem).GetMethod(
+            "CommitDogtagSlotExposure",
+            BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("Dogtag host regression failed: atomic host commit method missing.");
+
+        var clean = new HashSet<MongoId> { vanillaA, vanillaB };
+        commit.Invoke(null, new object[] { clean });
+        if (!clean.Contains(caseTpl) || !clean.Contains(vanillaA) || !clean.Contains(vanillaB))
+            throw new InvalidOperationException("Dogtag host regression failed: atomic exposure did not append only the exact case while preserving captured vanilla entries.");
+
+        // Repeating the commit is an exact idempotent no-op.
+        int count = clean.Count;
+        commit.Invoke(null, new object[] { clean });
+        if (clean.Count != count)
+            throw new InvalidOperationException("Dogtag host regression failed: repeated atomic exposure changed the host set.");
+
+        // A host that became contaminated after preload must fail before our append.
+        // This proves fail-closed verification cannot leave a partial Dogtag Case entry.
+        var contaminated = new HashSet<MongoId> { vanillaA, vanillaB, foreignOwnedTpl };
+        try
+        {
+            commit.Invoke(null, new object[] { contaminated });
+            throw new InvalidOperationException("Dogtag host regression failed: contaminated host unexpectedly accepted atomic case exposure.");
+        }
+        catch (TargetInvocationException exception) when (exception.InnerException is InvalidOperationException)
+        {
+            if (contaminated.Contains(caseTpl))
+                throw new InvalidOperationException("Dogtag host regression failed: failed atomic exposure left the Dogtag Case partially appended.");
+        }
     }
 
     private static void ExpectFailure(Action action, string message)
