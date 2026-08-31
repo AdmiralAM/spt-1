@@ -133,7 +133,10 @@ dogtag_item = require(
         "if (!templateTable.Items.TryGetValue(DogtagCaseTpl, out var created))",
         "ValidateExisting(created, source);",
         "CommitDogtagSlotExposure(dogtagSlotFilter);",
-        "if (!filter.Contains(DogtagCaseTpl)) filter.Add(DogtagCaseTpl);",
+        "DogtagCaseHostContract.RequirePreserved(filter);",
+        "if (filter.Contains(DogtagCaseTpl)) return;",
+        "filter.Add(DogtagCaseTpl);",
+        "filter.Remove(DogtagCaseTpl);",
         "!string.Equals(grid.Name, sourceGrid.Name, StringComparison.Ordinal)",
         "!Equals(grid.Prototype, sourceGrid.Prototype)",
         "actual.MinCount != expected.MinCount",
@@ -243,5 +246,5 @@ if violations:
 
 print(
     "B&A&HB product-contract gate: OK "
-    "(EN/RU localized five-product roster; exact pricing/progression and host isolation; split HeadBand pockets; Dogtag Case post-create revalidation proves canonical grid/filter parity before host exposure; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
+    "(EN/RU localized five-product roster; exact pricing/progression and host isolation; split HeadBand pockets; Dogtag Case post-create revalidation plus atomic host exposure prove canonical grid/filter parity before publish; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
 )
