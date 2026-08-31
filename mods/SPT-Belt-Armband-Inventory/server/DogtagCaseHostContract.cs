@@ -7,14 +7,16 @@ namespace SPTBeltArmbandInventory.Server;
 /// appends its container. Trader registration then proves that every captured
 /// vanilla/foreign entry still survives. This prevents a later mutation from
 /// silently satisfying the host check with just one arbitrary non-case entry.
+/// Public surface exists only so the separate regression assembly can exercise
+/// the runtime contract directly.
 /// </summary>
-internal static class DogtagCaseHostContract
+public static class DogtagCaseHostContract
 {
     private static HashSet<MongoId>? capturedVanillaEntries;
 
-    internal static int CapturedVanillaEntryCount => capturedVanillaEntries?.Count ?? 0;
+    public static int CapturedVanillaEntryCount => capturedVanillaEntries?.Count ?? 0;
 
-    internal static void CaptureVanillaEntries(IEnumerable<MongoId> acceptedTemplates)
+    public static void CaptureVanillaEntries(IEnumerable<MongoId> acceptedTemplates)
     {
         ArgumentNullException.ThrowIfNull(acceptedTemplates);
 
@@ -32,7 +34,7 @@ internal static class DogtagCaseHostContract
             throw new InvalidOperationException("B&A&HB Dogtag host snapshot changed during preload; refusing an ambiguous host contract.");
     }
 
-    internal static void RequirePreserved(HashSet<MongoId> currentFilter)
+    public static void RequirePreserved(HashSet<MongoId> currentFilter)
     {
         ArgumentNullException.ThrowIfNull(currentFilter);
 
