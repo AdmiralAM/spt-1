@@ -4,6 +4,7 @@ ROOT = Path(__file__).resolve().parents[1]
 source = (ROOT / "src" / "FastAccessSlotPatches.cs").read_text(encoding="utf-8-sig")
 tests = (ROOT / "tests" / "Program.cs").read_text(encoding="utf-8-sig")
 bridge_tests = (ROOT / "tests" / "ReloadCandidateBridgeRegression.cs").read_text(encoding="utf-8-sig")
+diagnostic_tests = (ROOT / "tests" / "ReloadDiagnosticLoggingRegression.cs").read_text(encoding="utf-8-sig")
 
 violations = []
 
@@ -42,6 +43,8 @@ for token in (
     'merged = new List<object>(vanillaItems.Length + 1);',
     'ShouldReuseVanillaReloadCandidates(merged != null)',
     'return vanillaResult;',
+    'internal static class ReloadDiagnosticLog',
+    'ReloadDiagnosticLog.TryWarning(LogWarning,',
     'ReachabilityHarmonyId = "com.admiralam.spt.belt-armband-inventory.fast-access.reachability"',
     'CandidateBridgeHarmonyId = "com.admiralam.spt.belt-armband-inventory.fast-access.reload-candidate"',
     'PatchNamed(reachabilityHarmony, patchMethod, harmonyMethodType, reachable, "postfix", postfix)',
@@ -53,6 +56,9 @@ for token in (
 ):
     if token not in source:
         violations.append(f"FastAccessSlotPatches.cs: reload contract token missing: {token}")
+
+if source.count('ReloadDiagnosticLog.TryWarning(LogWarning,') < 2:
+    violations.append("FastAccessSlotPatches.cs: both reload reachability and candidate runtime diagnostics must isolate throwing warning sinks")
 
 if 'FastAccessReloadRuntime.MagazineType.BaseType' in source:
     violations.append("FastAccessSlotPatches.cs: candidate discovery must use exact resolved EFT Item, not infer Item from Magazine.BaseType")
@@ -159,6 +165,18 @@ for token in (
         violations.append(f"ReloadCandidateBridgeRegression.cs: scoped bridge regression missing: {token}")
 
 for token in (
+    'ThrowingReachabilityLoggerCannotEscape()',
+    'ThrowingCandidateLoggerCannotEscape()',
+    'FastAccessReloadRuntime.LogWarning = _ => throw new InvalidOperationException("synthetic logger failure")',
+    'ReloadCandidateBridgeRuntime.LogWarning = _ => throw new InvalidOperationException("synthetic logger failure")',
+    'ReferenceEquals(first, vanilla)',
+    'ReferenceEquals(second, vanilla)',
+    'candidate failure plus logger failure cannot leak reentrant state',
+):
+    if token not in diagnostic_tests:
+        violations.append(f"ReloadDiagnosticLoggingRegression.cs: throwing diagnostic sink regression missing: {token}")
+
+for token in (
     "FindObjectsOfType",
     "Resources.FindObjectsOfTypeAll",
     "GetComponentsInChildren",
@@ -170,4 +188,4 @@ for token in (
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item contract; no-op Belt path preserves vanilla result identity without merge allocation; reachability/candidate Harmony owners isolated; partial bridge installs roll back atomically; startup-bound discovery; fail-closed/no polling)")
+print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item contract; no-op Belt path preserves vanilla result identity without merge allocation; throwing runtime diagnostics are isolated; reachability/candidate Harmony owners isolated; partial bridge installs roll back atomically; startup-bound discovery; fail-closed/no polling)")
