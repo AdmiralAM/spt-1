@@ -121,6 +121,21 @@ Copy-Item (Join-Path $moduleRoot 'db') (Join-Path $stageMod 'db') -Recurse
 Copy-Item (Join-Path $moduleRoot 'manifests') (Join-Path $stageMod 'manifests') -Recurse
 Copy-Item (Join-Path $moduleRoot 'assets') (Join-Path $stageMod 'assets') -Recurse
 
+# The physical candidate is still the frozen 0.1.0 runtime surface. Post-0.1.0
+# manifests may live on this staging branch for research/authoring, but files added
+# after the canonical frozen head must never leak into the exact-runtime package.
+$frozen010Head = '053a62ff5f1cb545f13bc89a96bba3acd319a823'
+$addedManifestPaths = @(& git -C $repoRoot diff --diff-filter=A --name-only $frozen010Head $sourceHead -- 'mods/Admiral-Trader/manifests/*.json')
+if ($LASTEXITCODE -ne 0) { throw 'Unable to resolve post-0.1.0 manifest additions for frozen-runtime staging.' }
+foreach ($repoRelativePath in $addedManifestPaths) {
+    if ([string]::IsNullOrWhiteSpace($repoRelativePath)) { continue }
+    $manifestName = Split-Path $repoRelativePath -Leaf
+    $stagedAddedManifest = Join-Path $stageMod (Join-Path 'manifests' $manifestName)
+    if (Test-Path $stagedAddedManifest) { Remove-Item $stagedAddedManifest -Force }
+}
+$remainingAddedManifestNames = @($addedManifestPaths | ForEach-Object { Split-Path $_ -Leaf } | Where-Object { Test-Path (Join-Path $stageMod (Join-Path 'manifests' $_)) })
+if ($remainingAddedManifestNames.Count -ne 0) { throw "Post-0.1.0 manifests leaked into frozen runtime staging: $($remainingAddedManifestNames -join ', ')" }
+
 $stagedManifestPath = Join-Path $stageMod 'manifests\runtime-manifest.json'
 $stagedManifest = Get-Content $stagedManifestPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $stagedManifest.registrationEnabled = $true
