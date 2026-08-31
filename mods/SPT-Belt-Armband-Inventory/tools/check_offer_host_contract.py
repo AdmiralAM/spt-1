@@ -74,9 +74,12 @@ for token in [
     "groups[0].Filter.Count < 2",
     "!groups[0].Filter.Contains(templateId)",
     "!groups[0].Filter.Any(x => !Equals(x, templateId))",
+    "PersistentIdentityManifest.IsOwnedTemplate(acceptedId)",
+    "!string.Equals(acceptedId, RuntimeIdentity.DogtagCaseItemId, StringComparison.Ordinal)",
+    "vanilla Dogtag host is contaminated by another owned product template",
 ]:
     if token not in dogtag:
-        violations.append(f"Dogtag Case offer missing exact host/preservation token {token!r}")
+        violations.append(f"Dogtag Case offer missing exact host/preservation/isolation token {token!r}")
 
 dogtag_host = dogtag.find("RequireExactDogtagHost(templateTable, templateId);")
 dogtag_trader = dogtag.find("tradersTable.GetValueOrDefault(")
@@ -94,4 +97,4 @@ if "groups[0].Filter.Add(" in dogtag or "slots.Add(" in dogtag:
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case preload rejects other owned B&A&HB templates in the vanilla Dogtag host and its offer requires the exact host while preserving a vanilla accepted entry; validation is read-only)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case preload and offer validation both reject other owned B&A&HB templates in the vanilla Dogtag host while preserving a vanilla accepted entry; validation is read-only)")
