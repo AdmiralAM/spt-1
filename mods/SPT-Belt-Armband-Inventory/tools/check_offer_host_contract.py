@@ -98,10 +98,11 @@ for token in [
     "RequireExactDogtagHost(templateTable, templateId);",
     'string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal)',
     "groups.Length != 1",
-    "groups[0].Filter.Count < 2",
-    "DogtagCaseHostContract.RequireCommitted(groups[0].Filter);",
-    "!groups[0].Filter.Contains(templateId)",
-    "!groups[0].Filter.Any(x => !Equals(x, templateId))",
+    "var hostFilter = groups[0].Filter;",
+    "hostFilter == null || hostFilter.Count < 2",
+    "DogtagCaseHostContract.RequireCommitted(hostFilter);",
+    "!hostFilter.Contains(templateId)",
+    "!hostFilter.Any(x => !Equals(x, templateId))",
 ]:
     if token not in dogtag:
         violations.append(f"Dogtag Case offer missing exact committed host token {token!r}")
@@ -118,14 +119,14 @@ if min(dogtag_host, dogtag_trader, dogtag_first_mutation) < 0 or not (
 # itself contain the complete committed-state proof. Do not compare source-file
 # offsets across the caller and helper body because helper definitions appear later.
 require_host_def = dogtag.find("internal static void RequireExactDogtagHost")
-commit_verify = dogtag.find("DogtagCaseHostContract.RequireCommitted(groups[0].Filter);", require_host_def)
+commit_verify = dogtag.find("DogtagCaseHostContract.RequireCommitted(hostFilter);", require_host_def)
 host_method_end = dogtag.find("private static void ValidateExisting", require_host_def)
 if min(require_host_def, commit_verify, host_method_end) < 0 or not (require_host_def < commit_verify < host_method_end):
     violations.append("Dogtag Case exact-host helper must include complete committed snapshot/case/ownership proof")
 
 if "filter.Add(" in contract or "slots.Add(" in contract:
     violations.append("offer-host validation must be read-only and must not repair equipment filters/slots during trader registration")
-if "groups[0].Filter.Add(" in dogtag or "slots.Add(" in dogtag:
+if "hostFilter.Add(" in dogtag or "groups[0].Filter.Add(" in dogtag or "slots.Add(" in dogtag:
     violations.append("Dogtag Case offer-host validation must remain read-only; host mutation belongs to DogtagCaseItem preload only")
 
 if violations:
