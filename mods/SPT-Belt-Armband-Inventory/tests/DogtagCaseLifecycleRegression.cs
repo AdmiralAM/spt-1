@@ -47,9 +47,9 @@ internal static class DogtagCaseLifecycleRegression
         // Recovery/uninstall semantics must remove serialized owned roots wherever
         // SPT can persist them (equipment/stash, insurance or mail), together with
         // descendants and direct build/service references. The grandchildren below
-        // deliberately require more than one cleanup pass, proving that a nested
-        // serialized tree cannot leave a dangling descendant after the owned root
-        // template has disappeared from the item database.
+        // deliberately require more than one cleanup pass internally, proving that
+        // a nested serialized tree cannot leave a dangling descendant after the owned
+        // root template has disappeared from the item database.
         JsonNode profile = JsonNode.Parse("""
         {
           "Inventory": {
@@ -98,5 +98,15 @@ internal static class DogtagCaseLifecycleRegression
         string[] preservedIds = { "unrelated", "insured-unrelated", "mail-unrelated", "unrelated-build" };
         if (preservedIds.Any(id => !remaining.Contains(id, StringComparison.Ordinal)))
             throw new InvalidOperationException("Dogtag Case profile cleanup crossed ownership boundaries into unrelated profile data.");
+
+        // Cleanup is a recovery/uninstall operation and may be invoked repeatedly by
+        // an operator or automation. Once the owned tree has been removed, a second
+        // pass must be a strict no-op: zero removals and byte-equivalent JSON output.
+        ProfileCleanupPolicy.CleanupResult secondCleanup = ProfileCleanupPolicy.Clean(profile);
+        string secondRemaining = profile.ToJsonString();
+        if (secondCleanup.RemovedItems != 0 || secondCleanup.RemovedReferences != 0)
+            throw new InvalidOperationException("Dogtag Case profile cleanup must be idempotent after the owned tree has been removed.");
+        if (!string.Equals(remaining, secondRemaining, StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag Case profile cleanup must not mutate an already-clean profile on a second pass.");
     }
 }
