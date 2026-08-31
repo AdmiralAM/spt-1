@@ -13,6 +13,13 @@ namespace SPTBeltArmbandInventory.Server;
 /// </summary>
 public static class DogtagCaseHostContract
 {
+    // Canonical SPT/EFT dogtag templates. The Dogtag Case is additive: preload
+    // must never succeed against a host that has already lost either ordinary
+    // faction dogtag acceptance, otherwise equipping the container could mask a
+    // broken vanilla Dogtag slot contract.
+    public const string BearDogtagTemplateId = "59f32bb586f774757e1e8442";
+    public const string UsecDogtagTemplateId = "59f32c3b86f77472a31742f0";
+
     private static HashSet<MongoId>? capturedVanillaEntries;
 
     public static int CapturedVanillaEntryCount => capturedVanillaEntries?.Count ?? 0;
@@ -30,6 +37,11 @@ public static class DogtagCaseHostContract
             if (PersistentIdentityManifest.IsOwnedTemplate(entry.ToString()))
                 throw new InvalidOperationException($"B&A&HB Dogtag host snapshot refused: owned template {entry} was presented as a vanilla/foreign acceptance entry.");
         }
+
+        var bearDogtag = new MongoId(BearDogtagTemplateId);
+        var usecDogtag = new MongoId(UsecDogtagTemplateId);
+        if (!snapshot.Contains(bearDogtag) || !snapshot.Contains(usecDogtag))
+            throw new InvalidOperationException("B&A&HB Dogtag host snapshot refused: canonical BEAR/USEC dogtag acceptance is incomplete before mutation.");
 
         if (capturedVanillaEntries == null)
         {
