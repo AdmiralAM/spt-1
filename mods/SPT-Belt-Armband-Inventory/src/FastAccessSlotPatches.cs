@@ -117,6 +117,8 @@ namespace SPTBeltArmbandInventory
         internal static object BeltSlotsArgument;
         internal static object OriginalFastAccessSlots;
         internal static object InstalledFastAccessSlots;
+        internal static object OriginalBindAvailableSlots;
+        internal static object InstalledBindAvailableSlots;
         internal static Type ItemType;
         internal static Type MagazineType;
         internal static Type ReturnType;
@@ -142,7 +144,10 @@ namespace SPTBeltArmbandInventory
         internal static object AppendCandidates(object inventory, object slots, object vanillaResult)
         {
             bool fastAccessArray = slots != null
-                && (ReferenceEquals(slots, OriginalFastAccessSlots) || ReferenceEquals(slots, InstalledFastAccessSlots));
+                && (ReferenceEquals(slots, OriginalFastAccessSlots)
+                    || ReferenceEquals(slots, InstalledFastAccessSlots)
+                    || ReferenceEquals(slots, OriginalBindAvailableSlots)
+                    || ReferenceEquals(slots, InstalledBindAvailableSlots));
             if (!FastAccessSlotPolicy.ShouldBridgeReloadCandidates(reloadDepth > 0, reentrant, fastAccessArray)
                 || inventory == null || vanillaResult == null || GetItemsInSlots == null || BeltSlotsArgument == null
                 || ItemType == null || MagazineType == null || ReturnType == null
@@ -238,6 +243,8 @@ namespace SPTBeltArmbandInventory
             BeltSlotsArgument = null;
             OriginalFastAccessSlots = null;
             InstalledFastAccessSlots = null;
+            OriginalBindAvailableSlots = null;
+            InstalledBindAvailableSlots = null;
             ItemType = null;
             MagazineType = null;
             ReturnType = null;
@@ -417,6 +424,8 @@ namespace SPTBeltArmbandInventory
                 ReloadCandidateBridgeRuntime.BeltSlotsArgument = beltSlotsArgument;
                 ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = originalFastAccessSlots;
                 ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = installedFastAccessSlots;
+                ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = originalBindAvailableSlots;
+                ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = installedBindAvailableSlots;
                 ReloadCandidateBridgeRuntime.ItemType = itemType;
                 ReloadCandidateBridgeRuntime.MagazineType = FastAccessReloadRuntime.MagazineType;
                 ReloadCandidateBridgeRuntime.ReturnType = getItemsInSlots.ReturnType;
