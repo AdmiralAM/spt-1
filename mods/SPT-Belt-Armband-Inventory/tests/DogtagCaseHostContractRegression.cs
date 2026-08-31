@@ -14,6 +14,10 @@ internal static class DogtagCaseHostContractRegression
         var vanillaB = new MongoId("59f32c3b86f77472a31742f0");
         var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
 
+        ExpectFailure(
+            () => DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaA, caseTpl }),
+            "pre-mutation snapshot must reject a B&A&HB-owned template presented as vanilla/foreign");
+
         DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaA, vanillaB });
         if (DogtagCaseHostContract.CapturedVanillaEntryCount != 2)
             throw new InvalidOperationException("Dogtag host regression failed: exact pre-mutation vanilla snapshot count was not retained.");
