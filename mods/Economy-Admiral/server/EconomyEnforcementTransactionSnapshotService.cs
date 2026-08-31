@@ -76,20 +76,35 @@ public sealed class EconomyEnforcementTransactionSnapshotService(
         for (var repeatableIndex = 0; repeatableIndex < questConfig.RepeatableQuests.Count; repeatableIndex++)
         {
             var repeatable = questConfig.RepeatableQuests[repeatableIndex];
+            var spreadAffected = false;
             if (config.EnableItemRewardStackNormalization)
             {
                 CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:roubles", repeatable.RewardScaling.Roubles);
                 CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:gp-coins", repeatable.RewardScaling.GpCoins);
                 CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:items", repeatable.RewardScaling.Items);
+                spreadAffected = true;
             }
             if (config.EnableQuestXpPressure)
             {
                 CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:experience", repeatable.RewardScaling.Experience);
                 CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:skill-reward-chance", repeatable.RewardScaling.SkillRewardChance);
                 CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:skill-point-reward", repeatable.RewardScaling.SkillPointReward);
+                spreadAffected = true;
             }
             if (config.EnableQuestStandingPressure)
+            {
                 CaptureList(entries, $"repeatable:{repeatableIndex}:{repeatable.Name}:reputation", repeatable.RewardScaling.Reputation);
+                spreadAffected = true;
+            }
+
+            if (spreadAffected)
+            {
+                var spread = repeatable.RewardScaling.RewardSpread;
+                entries.Add(new(
+                    $"repeatable:{repeatableIndex}:{repeatable.Name}:reward-spread",
+                    () => repeatable.RewardScaling.RewardSpread = spread,
+                    () => object.Equals(repeatable.RewardScaling.RewardSpread, spread)));
+            }
         }
     }
 
