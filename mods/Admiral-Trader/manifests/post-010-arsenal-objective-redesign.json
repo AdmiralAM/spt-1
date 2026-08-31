@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-arsenal-objective-plan-only",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "implementationAllowed": false,
+  "runtimeMaterialize": false,
+  "purpose": "Remove residual copy-paste gameplay from the seven Arsenal capability tracks after Qualification was already converted to possession/readiness. Fieldwork and Munitions become family-specific demonstrations of use while preserving the frozen 31-quest runtime candidate until its deferred physical gate is explicitly activated.",
+  "globalRules": {
+    "qualificationSemantics": "possession-readiness-no-handover",
+    "fieldworkMustProveFamilyUse": true,
+    "munitionsMustProveControlledCapability": true,
+    "sameObjectiveWithOnlyHigherCountForbidden": true,
+    "genericKillLadderForbidden": true,
+    "firHandoverForbidden": true,
+    "salesVolumeGateForbidden": true,
+    "repeatableGateForbidden": true,
+    "maximumPrimaryCombatCount": 8,
+    "maximumSuccessfulRaidCount": 3,
+    "minimumDistinctFieldworkArchetypesAcrossFamilies": 5
+  },
+  "families": {
+    "sidearms": {
+      "qualification": "Possess one approved sidearm; keep it.",
+      "fieldwork": {
+        "archetype": "close-contact-recovery",
+        "intent": "Use a sidearm as a deliberate close-range or contingency weapon rather than farming generic eliminations.",
+        "bounds": {"maximumTargets": 6, "maximumDistanceMeters": 25, "successfulRaidRequired": true}
+      },
+      "munitions": {
+        "archetype": "precision-ammunition-validation",
+        "intent": "Demonstrate controlled sidearm employment before finite L191 access.",
+        "permanentOffer": true
+      }
+    },
+    "smg-pdw": {
+      "qualification": "Possess one approved SMG or PDW; keep it.",
+      "fieldwork": {
+        "archetype": "confined-space-contact",
+        "intent": "Prove short-range volume-of-fire capability in a bounded close-quarters context.",
+        "bounds": {"maximumTargets": 8, "maximumDistanceMeters": 35, "successfulRaidRequired": true}
+      },
+      "munitions": {
+        "archetype": "sustained-contact-validation",
+        "intent": "Complete one successful sustained-contact operation before finite .45 ACP AP access.",
+        "permanentOffer": true
+      }
+    },
+    "shotguns": {
+      "qualification": "Possess one approved shotgun; keep it.",
+      "fieldwork": {
+        "archetype": "breach-range-control",
+        "intent": "Validate decisive short-range employment with a shotgun, not a generic higher kill count.",
+        "bounds": {"maximumTargets": 6, "maximumDistanceMeters": 40, "successfulRaidRequired": true}
+      },
+      "munitions": {
+        "archetype": "slug-precision-validation",
+        "intent": "Demonstrate deliberate accurate shotgun use before finite AP-20 access.",
+        "permanentOffer": true
+      }
+    },
+    "assault-rifles": {
+      "qualification": "Possess one approved assault rifle; keep it.",
+      "fieldwork": {
+        "archetype": "mixed-range-patrol",
+        "intent": "Prove general-purpose rifle employment across a normal patrol engagement envelope.",
+        "bounds": {"maximumTargets": 8, "minimumDistinctEngagementBands": 2, "successfulRaidRequired": true}
+      },
+      "munitions": {
+        "archetype": "service-rifle-capability-validation",
+        "intent": "Complete a bounded service-rifle operation before finite high-performance ammunition access.",
+        "permanentOffer": true
+      }
+    },
+    "marksman-battle-rifles": {
+      "qualification": "Possess one approved marksman or battle rifle; keep it.",
+      "fieldwork": {
+        "archetype": "stand-off-control",
+        "intent": "Prove controlled medium-range target discrimination with a marksman or battle rifle.",
+        "bounds": {"maximumTargets": 6, "minimumDistanceMeters": 50, "successfulRaidRequired": true}
+      },
+      "munitions": {
+        "archetype": "limited-precision-ammunition-validation",
+        "intent": "Demonstrate disciplined medium-range capability before finite specialist ammunition access.",
+        "permanentOffer": true
+      }
+    },
+    "precision-rifles": {
+      "qualification": "Possess one approved precision rifle; keep it.",
+      "fieldwork": {
+        "archetype": "measured-distance-engagement",
+        "intent": "Prove actual long-range precision at one meaningful threshold rather than a 20/30/40/... distance staircase.",
+        "bounds": {"maximumTargets": 5, "minimumDistanceMeters": 100, "successfulRaidRequired": true}
+      },
+      "munitions": {
+        "archetype": "cold-bore-capability-validation",
+        "intent": "Complete a low-count precision validation before finite specialist rifle ammunition access.",
+        "permanentOffer": true
+      }
+    },
+    "special-weapons": {
+      "qualification": "Possess one approved special-weapon platform; keep it.",
+      "fieldwork": {
+        "archetype": "special-purpose-deployment",
+        "intent": "Demonstrate one bounded mission-relevant use of the approved special platform without turning rare systems into a grind track.",
+        "bounds": {"maximumTargets": 3, "successfulRaidRequired": true}
+      },
+      "munitions": {
+        "archetype": "sample-only-capability-validation",
+        "intent": "Validate specialist use for a representative sample reward only; no permanent heavy, explosive or special-ammunition storefront offer.",
+        "permanentOffer": false,
+        "sampleOnly": true
+      }
+    }
+  },
+  "materializationGate": {
+    "requiresExactSpt413ConditionProofPerFamily": true,
+    "requiresVanillaQuestOverlapReview": true,
+    "requiresEconomyAdmiralRewardReview": true,
+    "requiresWeaponPoolValidation": true,
+    "requiresBatchedPhysicalMilestone": true
+  },
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0,
+    "runtimeQuestMutationInThisSlice": false
+  }
+}
