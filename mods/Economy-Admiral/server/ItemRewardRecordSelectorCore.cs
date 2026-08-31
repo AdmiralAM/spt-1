@@ -1,6 +1,10 @@
 namespace SPTEconomy;
 
-public readonly record struct ItemRewardRecordCandidate(int RecordIndex, double StackCount);
+public readonly record struct ItemRewardRecordCandidate(
+    int RecordIndex,
+    double StackCount,
+    double? EconomicValue = null,
+    double? ReducibleEconomicValue = null);
 
 public sealed record ItemRewardRecordSelection
 {
@@ -12,6 +16,7 @@ public sealed record ItemRewardRecordSelection
 public static class ItemRewardRecordSelectorCore
 {
     private const double IntegerTolerance = 0.0001d;
+    private const double ValueTolerance = 0.01d;
 
     public static ItemRewardRecordSelection Select(
         IReadOnlyList<ItemRewardRecordCandidate> candidates,
@@ -28,26 +33,38 @@ public static class ItemRewardRecordSelectorCore
         }
 
         var selected = candidates[0];
+        if (!IsValidAutomaticCandidate(selected))
+            return Block("InvalidReducibleRecordEconomicValue");
+
         var dominantCount = 1;
         for (var index = 1; index < candidates.Count; index++)
         {
             var candidate = candidates[index];
-            if (!double.IsFinite(candidate.StackCount) || candidate.StackCount <= 1)
-                return Block("InvalidReducibleRecordStackCount");
+            if (!IsValidAutomaticCandidate(candidate))
+                return Block("InvalidReducibleRecordEconomicValue");
 
-            if (candidate.StackCount > selected.StackCount + IntegerTolerance)
+            var candidateValue = candidate.EconomicValue!.Value;
+            var selectedValue = selected.EconomicValue!.Value;
+            if (candidateValue > selectedValue + ValueTolerance)
             {
                 selected = candidate;
                 dominantCount = 1;
             }
-            else if (Math.Abs(candidate.StackCount - selected.StackCount) <= IntegerTolerance)
+            else if (Math.Abs(candidateValue - selectedValue) <= ValueTolerance)
             {
-                dominantCount++;
+                var candidateReducibleValue = candidate.ReducibleEconomicValue!.Value;
+                var selectedReducibleValue = selected.ReducibleEconomicValue!.Value;
+                if (candidateReducibleValue > selectedReducibleValue + ValueTolerance)
+                {
+                    selected = candidate;
+                    dominantCount = 1;
+                }
+                else if (Math.Abs(candidateReducibleValue - selectedReducibleValue) <= ValueTolerance)
+                {
+                    dominantCount++;
+                }
             }
         }
-
-        if (!double.IsFinite(selected.StackCount) || selected.StackCount <= 1)
-            return Block("InvalidReducibleRecordStackCount");
 
         if (dominantCount != 1)
             return Block("AmbiguousMultipleReducibleRewardRecords");
@@ -55,6 +72,23 @@ public static class ItemRewardRecordSelectorCore
         return Allow(
             selected.RecordIndex,
             candidates.Count == 1 ? "SingleReducibleRewardRecord" : "UniqueDominantReducibleRewardRecord");
+    }
+
+    private static bool IsValidAutomaticCandidate(ItemRewardRecordCandidate candidate)
+    {
+        if (!double.IsFinite(candidate.StackCount) || candidate.StackCount <= 1)
+            return false;
+
+        var rounded = Math.Round(candidate.StackCount, 0);
+        if (Math.Abs(candidate.StackCount - rounded) > IntegerTolerance)
+            return false;
+
+        return candidate.EconomicValue is { } economicValue
+            && double.IsFinite(economicValue)
+            && economicValue > 0
+            && candidate.ReducibleEconomicValue is { } reducibleEconomicValue
+            && double.IsFinite(reducibleEconomicValue)
+            && reducibleEconomicValue > 0;
     }
 
     private static ItemRewardRecordSelection Allow(int recordIndex, string reason) => new()
