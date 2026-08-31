@@ -55,6 +55,12 @@ namespace SPTBeltArmbandInventory
 
     internal static class ReloadDiagnosticLog
     {
+        internal static void TryInfo(Action<string> sink, string message)
+        {
+            try { sink?.Invoke(message); }
+            catch { }
+        }
+
         internal static void TryWarning(Action<string> sink, string message)
         {
             try { sink?.Invoke(message); }
@@ -336,11 +342,14 @@ namespace SPTBeltArmbandInventory
                 bool reachability = TryInstallReloadReachability();
                 bool candidateBridge = reachability && TryInstallReloadCandidateBridge(inventoryType, slotEnumType, dedicatedBelt);
                 if (reachability && candidateBridge)
-                    logInfo?.Invoke("B&A&HB fast-access installed: vanilla ArmBand/Belt arrays extended; reload reachability is exact; Reload/QuickReload preserve vanilla candidates and append exact Magazine Belt descendants as scoped fallback.");
+                    ReloadDiagnosticLog.TryInfo(logInfo,
+                        "B&A&HB fast-access installed: vanilla ArmBand/Belt arrays extended; reload reachability is exact; Reload/QuickReload preserve vanilla candidates and append exact Magazine Belt descendants as scoped fallback.");
                 else if (reachability)
-                    logWarning?.Invoke("B&A&HB fast-access arrays/reachability remain active, but the atomic Reload/QuickReload candidate bridge could not bind; Magazine Armband remains reachable and Magazine Belt remains reserve-only for this session.");
+                    ReloadDiagnosticLog.TryWarning(logWarning,
+                        "B&A&HB fast-access arrays/reachability remain active, but the atomic Reload/QuickReload candidate bridge could not bind; Magazine Armband remains reachable and Magazine Belt remains reserve-only for this session.");
                 else
-                    logWarning?.Invoke("B&A&HB fast-access slot arrays remain active, but exact reload reachability could not bind; wearable magazines remain reserve-only for this session.");
+                    ReloadDiagnosticLog.TryWarning(logWarning,
+                        "B&A&HB fast-access slot arrays remain active, but exact reload reachability could not bind; wearable magazines remain reserve-only for this session.");
                 return true;
             }
             catch (Exception exception)
@@ -392,7 +401,8 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                logWarning?.Invoke("B&A&HB reload reachability discovery failed closed: " + Unwrap(exception).Message);
+                ReloadDiagnosticLog.TryWarning(logWarning,
+                    "B&A&HB reload reachability discovery failed closed: " + Unwrap(exception).Message);
                 UnpatchReachability();
                 return false;
             }
@@ -461,7 +471,8 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                logWarning?.Invoke("B&A&HB scoped reload candidate discovery failed closed and rolled back atomically: " + Unwrap(exception).Message);
+                ReloadDiagnosticLog.TryWarning(logWarning,
+                    "B&A&HB scoped reload candidate discovery failed closed and rolled back atomically: " + Unwrap(exception).Message);
                 UnpatchCandidateBridge();
                 return false;
             }
@@ -820,7 +831,7 @@ namespace SPTBeltArmbandInventory
 
         bool Fail(string message)
         {
-            logWarning?.Invoke(message);
+            ReloadDiagnosticLog.TryWarning(logWarning, message);
             return false;
         }
 
