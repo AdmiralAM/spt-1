@@ -47,9 +47,11 @@ for token in [
     "!string.Equals(templateId, TemplateId, StringComparison.Ordinal)",
     "already contaminated by a different owned product template",
     "DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);",
+    "DogtagCaseHostContract.RequirePreserved(filter);",
+    "DogtagCaseHostContract.RequireCommitted(filter);",
 ]:
     if token not in dogtag_item:
-        violations.append(f"Dogtag Case preload missing exact B&A&HB cross-host/preservation token {token!r}")
+        violations.append(f"Dogtag Case preload missing exact B&A&HB cross-host/preservation/commit token {token!r}")
 
 for token in [
     "private static HashSet<MongoId>? capturedVanillaEntries;",
@@ -57,6 +59,9 @@ for token in [
     "capturedVanillaEntries.SetEquals(snapshot)",
     "foreach (MongoId entry in capturedVanillaEntries)",
     "if (!currentFilter.Contains(entry))",
+    "public static void RequireCommitted(HashSet<MongoId> currentFilter)",
+    "RequirePreserved(currentFilter);",
+    "!currentFilter.Contains(caseTpl)",
 ]:
     if token not in dogtag_snapshot:
         violations.append(f"Dogtag Case host snapshot contract missing token {token!r}")
@@ -94,15 +99,12 @@ for token in [
     'string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal)',
     "groups.Length != 1",
     "groups[0].Filter.Count < 2",
+    "DogtagCaseHostContract.RequireCommitted(groups[0].Filter);",
     "!groups[0].Filter.Contains(templateId)",
-    "DogtagCaseHostContract.RequirePreserved(groups[0].Filter);",
     "!groups[0].Filter.Any(x => !Equals(x, templateId))",
-    "PersistentIdentityManifest.IsOwnedTemplate(acceptedId)",
-    "!string.Equals(acceptedId, RuntimeIdentity.DogtagCaseItemId, StringComparison.Ordinal)",
-    "vanilla Dogtag host is contaminated by another owned product template",
 ]:
     if token not in dogtag:
-        violations.append(f"Dogtag Case offer missing exact host/preservation/isolation token {token!r}")
+        violations.append(f"Dogtag Case offer missing exact committed host token {token!r}")
 
 dogtag_host = dogtag.find("RequireExactDogtagHost(templateTable, templateId);")
 dogtag_trader = dogtag.find("tradersTable.GetValueOrDefault(")
@@ -110,16 +112,16 @@ dogtag_first_mutation = dogtag.find("trader.Assort.Items.Add(")
 if min(dogtag_host, dogtag_trader, dogtag_first_mutation) < 0 or not (
     dogtag_host < dogtag_trader < dogtag_first_mutation
 ):
-    violations.append("Dogtag Case offer must execute exact vanilla Dogtag host/snapshot validation before resolving or mutating Ragman assort")
+    violations.append("Dogtag Case offer must execute exact committed Dogtag host validation before resolving or mutating Ragman assort")
 
 # RequireExactDogtagHost is called above before Ragman resolution; its body must
-# itself contain the complete snapshot proof. Do not compare source-file offsets
-# across the caller and helper body because helper definitions appear later.
+# itself contain the complete committed-state proof. Do not compare source-file
+# offsets across the caller and helper body because helper definitions appear later.
 require_host_def = dogtag.find("internal static void RequireExactDogtagHost")
-snapshot_verify = dogtag.find("DogtagCaseHostContract.RequirePreserved(groups[0].Filter);", require_host_def)
+commit_verify = dogtag.find("DogtagCaseHostContract.RequireCommitted(groups[0].Filter);", require_host_def)
 host_method_end = dogtag.find("private static void ValidateExisting", require_host_def)
-if min(require_host_def, snapshot_verify, host_method_end) < 0 or not (require_host_def < snapshot_verify < host_method_end):
-    violations.append("Dogtag Case exact-host helper must include complete pre-mutation snapshot preservation proof")
+if min(require_host_def, commit_verify, host_method_end) < 0 or not (require_host_def < commit_verify < host_method_end):
+    violations.append("Dogtag Case exact-host helper must include complete committed snapshot/case/ownership proof")
 
 if "filter.Add(" in contract or "slots.Add(" in contract:
     violations.append("offer-host validation must be read-only and must not repair equipment filters/slots during trader registration")
@@ -129,4 +131,4 @@ if "groups[0].Filter.Add(" in dogtag or "slots.Add(" in dogtag:
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case snapshots every pre-mutation non-owned Dogtag host entry and trader registration proves the complete snapshot still survives while rejecting owned cross-host contamination; validation is read-only)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case snapshots every pre-mutation non-owned Dogtag host entry and trader registration requires centralized committed-state proof: complete snapshot survives, exact case is present, and owned cross-host contamination is absent; validation is read-only)")
