@@ -17,77 +17,68 @@
     {
       "operationKey": "rogue-interdiction",
       "title": {"en": "Break the Rogue perimeter and extract", "ru": "Нарушить периметр Рогов и выйти из рейда"},
-      "steps": {
-        "en": [
-          "Eliminate a bounded Rogue element at the Lighthouse water-treatment perimeter.",
-          "Survive and extract from the operation after disrupting the perimeter."
-        ],
-        "ru": [
-          "Устранить ограниченную группу Рогов на периметре водоочистной станции Маяка.",
-          "После нарушения периметра выжить и выйти из рейда."
-        ]
-      },
+      "steps": {"en": ["Eliminate a bounded Rogue element at the Lighthouse water-treatment perimeter.", "Survive and extract from the operation after disrupting the perimeter."], "ru": ["Устранить ограниченную группу Рогов на периметре водоочистной станции Маяка.", "После нарушения периметра выжить и выйти из рейда."]},
       "editorialConstraint": "Do not phrase the objective as cumulative Rogue farming; final numeric target remains governed by the authored operation and exact SPT 4.1.3 proof."
     },
     {
       "operationKey": "expedition-discipline",
       "title": {"en": "Complete a field deployment with a proven expedition load", "ru": "Завершить полевой выход с подтверждённой экспедиционной нагрузкой"},
-      "steps": {
-        "en": [
-          "Enter a raid while meeting the final proven expedition-load condition.",
-          "Survive and extract while preserving the deployment as one successful operation."
-        ],
-        "ru": [
-          "Войти в рейд, выполнив итоговое подтверждённое условие экспедиционной нагрузки.",
-          "Выжить и выйти из рейда, завершив выход как одну успешную операцию."
-        ]
-      },
+      "steps": {"en": ["Enter a raid while meeting the final proven expedition-load condition.", "Survive and extract while preserving the deployment as one successful operation."], "ru": ["Войти в рейд, выполнив итоговое подтверждённое условие экспедиционной нагрузки.", "Выжить и выйти из рейда, завершив выход как одну успешную операцию."]},
       "editorialConstraint": "The copy intentionally does not name weight, backpack class or item count until an exact SPT 4.1.3 load-bearing condition or proxy is proven."
     },
     {
       "operationKey": "field-medicine-under-pressure",
       "title": {"en": "Stabilize in the field and complete the operation", "ru": "Стабилизироваться в поле и завершить операцию"},
-      "steps": {
-        "en": [
-          "Perform the final proven in-raid treatment or recovery action.",
-          "Survive and extract after the treatment requirement is satisfied."
-        ],
-        "ru": [
-          "Выполнить итоговое подтверждённое действие по лечению или восстановлению в рейде.",
-          "После выполнения медицинского условия выжить и выйти из рейда."
-        ]
-      },
+      "steps": {"en": ["Perform the final proven in-raid treatment or recovery action.", "Survive and extract after the treatment requirement is satisfied."], "ru": ["Выполнить итоговое подтверждённое действие по лечению или восстановлению в рейде.", "После выполнения медицинского условия выжить и выйти из рейда."]},
       "editorialConstraint": "Do not promise a specific wound, healing amount, stimulant or medical-item class until the exact condition shape is proven."
     },
     {
       "operationKey": "high-value-target-window",
       "title": {"en": "Disrupt the selected command element and extract", "ru": "Нарушить работу выбранного командного звена и выйти"},
-      "steps": {
-        "en": [
-          "Eliminate the final selected high-value target or immediate command element within the bounded operation.",
-          "Survive and extract after the command disruption."
-        ],
-        "ru": [
-          "Устранить итоговую выбранную приоритетную цель или ближайший элемент командного звена в рамках ограниченной операции.",
-          "После нарушения управления выжить и выйти из рейда."
-        ]
-      },
+      "steps": {"en": ["Eliminate the final selected high-value target or immediate command element within the bounded operation.", "Survive and extract after the command disruption."], "ru": ["Устранить итоговую выбранную приоритетную цель или ближайший элемент командного звена в рамках ограниченной операции.", "После нарушения управления выжить и выйти из рейда."]},
       "editorialConstraint": "The copy remains target-neutral until exact SPT 4.1.3 boss/follower aliases, location and overlap proof select the final operation target."
     },
     {
       "operationKey": "night-signal-disruption",
       "title": {"en": "Make controlled night contact and return alive", "ru": "Провести ограниченный ночной контакт и вернуться живым"},
-      "steps": {
-        "en": [
-          "Make bounded contact with the final proven Cultist target set under the required night context.",
-          "Survive and extract after confirming and disrupting the hostile pattern."
-        ],
-        "ru": [
-          "Вступить в ограниченный контакт с итоговым подтверждённым набором целей-сектантов в требуемых ночных условиях.",
-          "После подтверждения и нарушения враждебной схемы выжить и выйти из рейда."
-        ]
-      },
+      "steps": {"en": ["Make bounded contact with the final proven Cultist target set under the required night context.", "Survive and extract after confirming and disrupting the hostile pattern."], "ru": ["Вступить в ограниченный контакт с итоговым подтверждённым набором целей-сектантов в требуемых ночных условиях.", "После подтверждения и нарушения враждебной схемы выжить и выйти из рейда."]},
       "editorialConstraint": "Do not expose a kill ladder, fixed map or unsupported time window until exact SPT 4.1.3 target/time/location conditions are proven."
+    },
+    {
+      "operationKey": "protection-calibration",
+      "title": {"en": "Complete a bounded contact in a light protective setup", "ru": "Провести ограниченный контакт в лёгком защитном комплекте"},
+      "steps": {"en": ["Enter the operation using the final proven light-protection category.", "Complete the bounded contact, survive, and extract in the same raid."], "ru": ["Войти в операцию с итоговой подтверждённой категорией лёгкой защиты.", "Провести ограниченный контакт, выжить и выйти в том же рейде."]},
+      "editorialConstraint": "Do not name armor class, vest model or numeric protection threshold before exact equipment-category proof."
+    },
+    {
+      "operationKey": "ballistic-head-test",
+      "title": {"en": "Test ballistic head protection in one controlled engagement", "ru": "Проверить баллистическую защиту головы в одном контролируемом бою"},
+      "steps": {"en": ["Use the final proven ballistic-helmet category during the bounded engagement.", "Survive and extract without handing over the equipment."], "ru": ["Использовать итоговую подтверждённую категорию баллистического шлема в ограниченном бою.", "Выжить и выйти без сдачи использованного снаряжения."]},
+      "editorialConstraint": "Do not publish a helmet model checklist or protection-class ladder."
+    },
+    {
+      "operationKey": "heavy-assault-loadout",
+      "title": {"en": "Complete a deliberate assault in a heavy protective setup", "ru": "Завершить осмысленный штурм в тяжёлом защитном комплекте"},
+      "steps": {"en": ["Enter the operation using the final proven heavy-protection category.", "Complete the bounded assault contact, survive, and extract."], "ru": ["Войти в операцию с итоговой подтверждённой категорией тяжёлой защиты.", "Провести ограниченный штурмовой контакт, выжить и выйти."]},
+      "editorialConstraint": "Do not name a specific armor model, class or weight rule until exact SPT 4.1.3 proof exists."
+    },
+    {
+      "operationKey": "signal-discipline",
+      "title": {"en": "Complete a reconnaissance pass with proven acoustic equipment", "ru": "Провести разведывательный проход с подтверждённой акустической экипировкой"},
+      "steps": {"en": ["Use the final proven headset category during the reconnaissance operation.", "Keep hostile contact bounded, survive, and extract with the route confirmed."], "ru": ["Использовать итоговую подтверждённую категорию гарнитуры в разведывательной операции.", "Ограничить враждебный контакт, выжить и выйти с подтверждённым маршрутом."]},
+      "editorialConstraint": "Do not imply audio detection mechanics that SPT quests cannot prove; the headset requirement and reconnaissance proxy remain proof-gated."
+    },
+    {
+      "operationKey": "endurance-circuit",
+      "title": {"en": "Complete the final proven cross-map survival circuit", "ru": "Завершить итоговый подтверждённый маршрут выживания по разным картам"},
+      "steps": {"en": ["Survive and extract once from each final selected location in the circuit.", "Complete the circuit without repeating a location to inflate progress."], "ru": ["Один раз выжить и выйти с каждой итоговой выбранной локации маршрута.", "Завершить маршрут без повторения одной карты ради искусственного прогресса."]},
+      "editorialConstraint": "Do not publish map names until exact multi-location condition support and overlap review select the final set; maximum remains three distinct locations."
+    },
+    {
+      "operationKey": "precision-denial",
+      "title": {"en": "Resolve a contextual precision threat and extract", "ru": "Снять контекстную угрозу точным огнём и выйти"},
+      "steps": {"en": ["Engage the final selected threat within the proven stand-off distance context.", "Keep the target count minimal, survive, and extract after the precision objective."], "ru": ["Поразить итоговую выбранную угрозу в подтверждённом контексте дистанционного огня.", "Сохранить минимальное число целей, выжить и выйти после выполнения точной задачи."]},
+      "editorialConstraint": "Do not publish a distance number, target role or map until exact SPT 4.1.3 distance/target/location proof selects them."
     }
   ],
   "acceptance": {
