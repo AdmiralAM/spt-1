@@ -62,10 +62,4 @@ public static class DogtagCaseHostContract
                 throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: owned template {entry} contaminates the vanilla Dogtag host.");
         }
     }
-
-    public static void RequireTemplateNotExcluded(HashSet<MongoId>? excludedFilter, MongoId templateId)
-    {
-        if (excludedFilter?.Contains(templateId) == true)
-            throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: exact container template {templateId} is simultaneously excluded by the vanilla Dogtag host.");
-    }
 }
