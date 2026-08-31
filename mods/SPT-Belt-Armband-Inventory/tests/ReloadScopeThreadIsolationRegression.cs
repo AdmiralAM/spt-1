@@ -33,78 +33,62 @@ internal static class ReloadScopeThreadIsolationRegression
         FieldInfo reentrant = typeof(ReloadCandidateBridgeRuntime).GetField("reentrant", BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Reload thread isolation regression failed: reentrant state field missing");
 
-        using var scopeEntered = new ManualResetEventSlim(false);
-        using var foreignChecked = new ManualResetEventSlim(false);
-        Exception ownerFailure = null;
         Exception foreignFailure = null;
         object foreignResult = null;
-
-        Thread owner = new Thread(() =>
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        try
         {
-            try
-            {
-                ReloadCandidateBridgeRuntime.EnterReloadScope();
-                Assert((int)depth.GetValue(null)! == 1, "owner thread must observe its active reload scope");
-                scopeEntered.Set();
-                if (!foreignChecked.Wait(TimeSpan.FromSeconds(5)))
-                    throw new InvalidOperationException("foreign thread did not complete bounded isolation check");
+            Assert((int)depth.GetValue(null)! == 1 && !(bool)reentrant.GetValue(null)!,
+                "calling thread must own one clean active reload scope before foreign-thread execution");
 
-                object ownerResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
-                Assert(ownerResult is FakeItem[] ownerItems && ownerItems.Length == 2,
-                    "owner thread must retain exact Magazine Belt fallback while its scope is active");
-                Assert(ReferenceEquals(((FakeItem[])ownerResult)[0], vanillaMagazine)
-                    && ReferenceEquals(((FakeItem[])ownerResult)[1], beltMagazine),
-                    "owner-thread merge must remain vanilla-first and exact-Belt-only");
-            }
-            catch (Exception exception)
+            Thread foreign = new Thread(() =>
             {
-                ownerFailure = exception;
-            }
-            finally
-            {
-                ReloadCandidateBridgeRuntime.ExitReloadScope(null);
-            }
-        });
+                try
+                {
+                    int foreignDepth = (int)depth.GetValue(null)!;
+                    bool foreignReentrant = (bool)reentrant.GetValue(null)!;
+                    object result = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
+                    if (foreignDepth != 0 || foreignReentrant)
+                        throw new InvalidOperationException("ThreadStatic reload state leaked from the owner thread");
+                    if (!ReferenceEquals(result, vanilla))
+                        throw new InvalidOperationException("foreign thread activated Magazine Belt fallback outside its own reload scope");
+                    if ((int)depth.GetValue(null)! != 0 || (bool)reentrant.GetValue(null)!)
+                        throw new InvalidOperationException("foreign-thread no-op acquired reload scope or reentrancy state");
+                    foreignResult = result;
+                }
+                catch (Exception exception)
+                {
+                    foreignFailure = exception;
+                }
+            });
 
-        Thread foreign = new Thread(() =>
+            foreign.Start();
+            if (!foreign.Join(TimeSpan.FromSeconds(5)))
+                throw new InvalidOperationException("foreign thread did not terminate within bounded time");
+            if (foreignFailure != null)
+                throw new InvalidOperationException("foreign-thread assertion failed", foreignFailure);
+
+            Assert(ReferenceEquals(foreignResult, vanilla),
+                "foreign thread must preserve the exact vanilla result identity while owner reload scope is active");
+            Assert((int)depth.GetValue(null)! == 1 && !(bool)reentrant.GetValue(null)!,
+                "foreign-thread execution must not consume or mutate the owner thread reload scope");
+
+            object ownerResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
+            Assert(ownerResult is FakeItem[] ownerItems && ownerItems.Length == 2,
+                "owner thread must retain exact Magazine Belt fallback after foreign-thread no-op");
+            Assert(ReferenceEquals(((FakeItem[])ownerResult)[0], vanillaMagazine)
+                && ReferenceEquals(((FakeItem[])ownerResult)[1], beltMagazine),
+                "owner-thread merge must remain vanilla-first and exact-Belt-only");
+            Assert((int)depth.GetValue(null)! == 1 && !(bool)reentrant.GetValue(null)!,
+                "owner candidate enumeration must not consume its reload scope or leak reentrancy");
+        }
+        finally
         {
-            try
-            {
-                if (!scopeEntered.Wait(TimeSpan.FromSeconds(5)))
-                    throw new InvalidOperationException("owner thread did not enter reload scope in time");
+            ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        }
 
-                Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
-                    "ThreadStatic reload state must start clean on a foreign thread");
-                foreignResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
-                Assert(ReferenceEquals(foreignResult, vanilla),
-                    "another thread must return the exact vanilla result even while the owner thread is inside Reload/QuickReload");
-                Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
-                    "foreign-thread no-op must not acquire reload scope or reentrancy state");
-            }
-            catch (Exception exception)
-            {
-                foreignFailure = exception;
-            }
-            finally
-            {
-                foreignChecked.Set();
-            }
-        });
-
-        owner.Start();
-        foreign.Start();
-        if (!owner.Join(TimeSpan.FromSeconds(10)) || !foreign.Join(TimeSpan.FromSeconds(10)))
-            throw new InvalidOperationException("Reload thread isolation regression failed: worker thread did not terminate within bounded time");
-        if (ownerFailure != null)
-            throw new InvalidOperationException("Reload thread isolation regression failed: owner-thread assertion failed", ownerFailure);
-        if (foreignFailure != null)
-            throw new InvalidOperationException("Reload thread isolation regression failed: foreign-thread assertion failed", foreignFailure);
-
-        Assert(ReferenceEquals(foreignResult, vanilla),
-            "foreign thread result must remain exact vanilla identity after both threads finish");
         Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
-            "calling test thread must retain a clean independent ThreadStatic baseline");
-
+            "owner finalizer boundary must restore the calling thread to a clean state");
         ReloadCandidateBridgeRuntime.Reset();
     }
 
@@ -142,6 +126,6 @@ internal static class ReloadScopeThreadIsolationRegression
 
     static void Assert(bool condition, string message)
     {
-        if (!condition) throw new InvalidOperationException(message);
+        if (!condition) throw new InvalidOperationException("Reload thread isolation regression failed: " + message);
     }
 }
