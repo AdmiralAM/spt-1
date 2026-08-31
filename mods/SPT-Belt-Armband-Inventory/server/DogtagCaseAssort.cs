@@ -84,8 +84,7 @@ public sealed class DogtagCaseAssort(
         if (!groups[0].Filter.Contains(templateId))
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: exact container template is not exposed by the vanilla Dogtag host.");
 
-        if (!groups[0].Filter.Any(x => !Equals(x, templateId)))
-            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: ordinary vanilla Dogtag acceptance was replaced rather than preserved.");
+        DogtagCaseHostContract.RequirePreserved(groups[0].Filter);
 
         foreach (MongoId accepted in groups[0].Filter)
         {
