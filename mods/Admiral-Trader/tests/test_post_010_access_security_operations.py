@@ -14,7 +14,7 @@ class Post010AccessSecurityOperationsTests(unittest.TestCase):
         cls.by_key = {op["key"]: op for op in cls.manifest["operations"]}
 
     def test_specs_are_non_materialized_and_bound_to_frozen_base(self):
-        self.assertEqual(self.manifest["schemaVersion"], 1)
+        self.assertIn(self.manifest["schemaVersion"], (1, 2))
         self.assertEqual(self.manifest["status"], "post-0.1.0-authored-spec-only")
         self.assertEqual(
             self.manifest["frozen010Base"],
@@ -62,12 +62,42 @@ class Post010AccessSecurityOperationsTests(unittest.TestCase):
         for operation in self.by_key.values():
             self.assertFalse(operation["antiGrind"].get("repeatable", False))
 
+    def test_readiness_contract_when_schema_v2_is_present(self):
+        if self.manifest["schemaVersion"] < 2:
+            self.skipTest("schema v1 predates condition-readiness reconciliation")
+
+        labs = self.by_key["labs-security-disruption"]["conditionReadiness"]
+        self.assertEqual(labs["targetRole"]["status"], "proven-shape-only")
+        self.assertEqual(labs["targetRole"]["savageRole"], ["pmcBot"])
+        self.assertEqual(labs["location"]["status"], "proven-shape-only")
+        self.assertEqual(labs["survivedExtraction"]["status"], "proven-shape-only")
+        self.assertEqual(labs["sameRaidCoupling"]["status"], "unproven-fail-closed")
+
+        pmc = self.by_key["hostile-operator-intercept"]["conditionReadiness"]
+        self.assertEqual(pmc["target"]["status"], "proven-shape-only")
+        self.assertEqual(pmc["target"]["value"], "AnyPmc")
+        self.assertEqual(pmc["location"]["status"], "proven-shape-only")
+        self.assertEqual(pmc["survivedExtraction"]["status"], "proven-shape-only")
+        self.assertEqual(pmc["sameRaidCoupling"]["status"], "unproven-fail-closed")
+        self.assertFalse(pmc["factionSplitProven"])
+
+        access = self.by_key["access-reconnaissance"]["conditionReadiness"]
+        self.assertEqual(access["survivedExtraction"]["status"], "proven-shape-only")
+        self.assertEqual(access["accessInteraction"]["status"], "unproven-fail-closed")
+        self.assertEqual(access["sameRaidCoupling"]["status"], "unproven-fail-closed")
+
     def test_specs_fail_closed_on_runtime_overlap_and_economy_gates(self):
         for operation in self.by_key.values():
             gate_text = " ".join(operation["proofGates"]).lower()
-            self.assertIn("exact spt 4.1.3", gate_text)
             self.assertIn("overlap", gate_text)
             self.assertIn("economy admiral", gate_text)
+
+        if self.manifest["schemaVersion"] >= 2:
+            access_gate_text = " ".join(self.by_key["access-reconnaissance"]["proofGates"]).lower()
+            self.assertIn("exact spt 4.1.3", access_gate_text)
+            for key in ("labs-security-disruption", "hostile-operator-intercept"):
+                gate_text = " ".join(self.by_key[key]["proofGates"]).lower()
+                self.assertIn("same-raid", gate_text)
 
     def test_frozen_runtime_counts_are_unchanged(self):
         quest_files = sorted((ROOT / "db" / "quests").glob("*.json"))
