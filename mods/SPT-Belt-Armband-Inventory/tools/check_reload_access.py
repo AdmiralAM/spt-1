@@ -68,7 +68,12 @@ for token in (
     'runtime.GetMethod("ExitReloadScope"',
     'runtime.GetMethod("AppendCandidates"',
     'runtime.GetMethod("Reset"',
+    'object owner = null;',
     'PatchNamed(owner, patch, harmonyMethodType, reset, "postfix"',
+    'TryRollbackOwner(owner);',
+    'GetMethod("UnpatchSelf"',
+    'harmonyOwner = null;',
+    'installed = false;',
     'if (IsCurrentScope()) return true;',
     '__result = __2;',
     'return false;',
@@ -220,4 +225,4 @@ for token in (
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item contract; no-op Belt path preserves vanilla result identity without merge allocation; throwing diagnostics isolated; reachability/candidate owners isolated; stale ThreadStatic scopes generation-invalidated across reset/reinstall; startup-bound discovery; fail-closed/no polling)")
+print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item contract; no-op Belt path preserves vanilla result identity without merge allocation; throwing diagnostics isolated; reachability/candidate owners isolated; stale ThreadStatic scopes generation-invalidated across reset/reinstall; epoch Harmony install is owner-atomic with rollback on partial failure; startup-bound discovery; fail-closed/no polling)")
