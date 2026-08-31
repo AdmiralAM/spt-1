@@ -61,10 +61,15 @@ for token in [
     if token not in dogtag_snapshot:
         violations.append(f"Dogtag Case host snapshot contract missing token {token!r}")
 
-capture = dogtag_item.find("DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);")
-commit = dogtag_item.find("CommitDogtagSlotExposure(dogtagSlotFilter);")
-if min(capture, commit) < 0 or capture > commit:
-    violations.append("Dogtag Case must snapshot every pre-mutation non-owned host entry before exposing the container")
+prepare_call = dogtag_item.find("HashSet<MongoId> dogtagSlotFilter = PrepareDogtagSlotFilter();")
+first_commit = dogtag_item.find("CommitDogtagSlotExposure(dogtagSlotFilter);")
+prepare_def = dogtag_item.find("private HashSet<MongoId> PrepareDogtagSlotFilter()")
+capture = dogtag_item.find("DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);", prepare_def)
+prepare_return = dogtag_item.find("return groups[0].Filter;", prepare_def)
+if min(prepare_call, first_commit) < 0 or prepare_call > first_commit:
+    violations.append("Dogtag Case must prepare/snapshot its host before the first container exposure")
+if min(prepare_def, capture, prepare_return) < 0 or not (prepare_def < capture < prepare_return):
+    violations.append("Dogtag Case host preparation must capture every non-owned entry before returning the mutable host filter")
 
 for label, text in [("Magazine Armband", armband), ("Wrist Wallet", wallet)]:
     host = text.find("WearableOfferHostContract.RequireArmBandProduct(templateTable, templateId);")
@@ -102,13 +107,19 @@ for token in [
 dogtag_host = dogtag.find("RequireExactDogtagHost(templateTable, templateId);")
 dogtag_trader = dogtag.find("tradersTable.GetValueOrDefault(")
 dogtag_first_mutation = dogtag.find("trader.Assort.Items.Add(")
-dogtag_snapshot_verify = dogtag.find("DogtagCaseHostContract.RequirePreserved(groups[0].Filter);")
 if min(dogtag_host, dogtag_trader, dogtag_first_mutation) < 0 or not (
     dogtag_host < dogtag_trader < dogtag_first_mutation
 ):
-    violations.append("Dogtag Case offer must prove exact vanilla Dogtag host and preserved vanilla acceptance before resolving/mutating Ragman assort")
-if dogtag_snapshot_verify < 0 or dogtag_snapshot_verify > dogtag_trader:
-    violations.append("Dogtag Case must prove the complete pre-mutation host snapshot before Ragman is resolved")
+    violations.append("Dogtag Case offer must execute exact vanilla Dogtag host/snapshot validation before resolving or mutating Ragman assort")
+
+# RequireExactDogtagHost is called above before Ragman resolution; its body must
+# itself contain the complete snapshot proof. Do not compare source-file offsets
+# across the caller and helper body because helper definitions appear later.
+require_host_def = dogtag.find("internal static void RequireExactDogtagHost")
+snapshot_verify = dogtag.find("DogtagCaseHostContract.RequirePreserved(groups[0].Filter);", require_host_def)
+host_method_end = dogtag.find("private static void ValidateExisting", require_host_def)
+if min(require_host_def, snapshot_verify, host_method_end) < 0 or not (require_host_def < snapshot_verify < host_method_end):
+    violations.append("Dogtag Case exact-host helper must include complete pre-mutation snapshot preservation proof")
 
 if "filter.Add(" in contract or "slots.Add(" in contract:
     violations.append("offer-host validation must be read-only and must not repair equipment filters/slots during trader registration")
