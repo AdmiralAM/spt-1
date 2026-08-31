@@ -50,10 +50,14 @@ internal static class DogtagCaseLifecycleRegression
         // deliberately require more than one cleanup pass internally, proving that
         // a nested serialized tree cannot leave a dangling descendant after the owned
         // root template has disappeared from the item database.
+        // A normal personal dogtag is deliberately equipped in the exact same vanilla
+        // EquipmentSlot.Dogtag host: cleanup ownership is template/tree based, never
+        // slot-name based, so uninstalling the case must preserve the ordinary tag.
         JsonNode profile = JsonNode.Parse("""
         {
           "Inventory": {
             "items": [
+              { "_id": "ordinary-personal-dogtag", "_tpl": "59f32bb586f774757e1e8442", "slotId": "Dogtag" },
               { "_id": "dogtag-case-instance", "_tpl": "DOGTAG_TPL", "slotId": "Dogtag" },
               { "_id": "dogtag-child", "_tpl": "vanilla-dogtag", "parentId": "dogtag-case-instance", "slotId": "main" },
               { "_id": "dogtag-grandchild", "_tpl": "vanilla-marker", "parentId": "dogtag-child", "slotId": "marker" },
@@ -98,9 +102,11 @@ internal static class DogtagCaseLifecycleRegression
         if (removedIds.Any(id => remaining.Contains(id, StringComparison.Ordinal)))
             throw new InvalidOperationException("Dogtag Case profile cleanup left an owned root, dangling transitive descendant or reference to a removed descendant.");
 
-        string[] preservedIds = { "unrelated", "insured-unrelated", "mail-unrelated", "unrelated-build" };
+        string[] preservedIds = { "ordinary-personal-dogtag", "unrelated", "insured-unrelated", "mail-unrelated", "unrelated-build" };
         if (preservedIds.Any(id => !remaining.Contains(id, StringComparison.Ordinal)))
-            throw new InvalidOperationException("Dogtag Case profile cleanup crossed ownership boundaries into unrelated profile data.");
+            throw new InvalidOperationException("Dogtag Case profile cleanup crossed ownership boundaries into ordinary Dogtag-slot or unrelated profile data.");
+        if (!remaining.Contains("59f32bb586f774757e1e8442", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag Case cleanup must preserve the ordinary personal dogtag template in the shared vanilla Dogtag host.");
 
         // Cleanup is a recovery/uninstall operation and may be invoked repeatedly by
         // an operator or automation. Once the owned tree has been removed, a second
