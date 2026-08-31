@@ -66,6 +66,14 @@ internal static class DogtagCaseHostContractRegression
         DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaB, vanillaA });
 
         ExerciseAtomicExposure(vanillaA, vanillaB, caseTpl, foreignOwnedTpl, laterForeignTpl);
+    }
+
+    internal static void RunConcurrentCommittedVerificationRegression()
+    {
+        var vanillaA = new MongoId(DogtagCaseHostContract.BearDogtagTemplateId);
+        var vanillaB = new MongoId(DogtagCaseHostContract.UsecDogtagTemplateId);
+        var laterForeignTpl = new MongoId("5c093db286f7740a1b2617e3");
+        var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
         ExerciseConcurrentCommittedVerification(vanillaA, vanillaB, caseTpl, laterForeignTpl);
     }
 
@@ -124,10 +132,9 @@ internal static class DogtagCaseHostContractRegression
         MongoId caseTpl,
         MongoId laterForeignTpl)
     {
-        // Verification is read-only and snapshot-backed. Multiple startup consumers may
-        // therefore prove different compatible live host sets concurrently without
-        // mutating the captured baseline, dropping the exact case, or rejecting a
-        // cooperative foreign addition made after preload.
+        // Threaded verification must run after module initialization has completed.
+        // Verification itself is read-only and snapshot-backed: different compatible
+        // live host sets may be proven concurrently without mutating the preload baseline.
         var plain = new HashSet<MongoId> { vanillaA, vanillaB, caseTpl };
         var extended = new HashSet<MongoId> { vanillaA, vanillaB, laterForeignTpl, caseTpl };
         Exception leftFailure = null;
