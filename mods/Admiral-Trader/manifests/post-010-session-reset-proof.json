@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-session-reset-proof",
+  "runtimeMaterialize": false,
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "source": {
+    "authority": "official SPT modding wiki quest-values reference",
+    "repository": "sp-tarkov/wiki",
+    "path": "modding/references/quest-values.md",
+    "checkedDate": "2026-08-31",
+    "documentedSemantics": "Kills.resetOnSessionEnd=true resets incomplete kill progress at session end (exfil/death), requiring that bounded kill quota to be completed within one raid. CounterCreator.oneSessionOnly is documented as currently unused and must not be treated as a supported coupling primitive."
+  },
+  "proven": {
+    "singleRaidKillQuota": {
+      "conditionType": "CounterCreator -> Kills",
+      "field": "resetOnSessionEnd",
+      "value": true,
+      "meaning": "A bounded Kills counter can require its kill quota to be completed within one raid because incomplete progress resets at raid/session end.",
+      "safeUse": "May constrain a pure combat objective to one raid after its target/location/weapon filters are otherwise proven."
+    }
+  },
+  "explicitlyNotProven": {
+    "oneSessionOnly": {
+      "supported": false,
+      "reason": "Official SPT reference documents CounterCreator.oneSessionOnly as currently unused."
+    },
+    "killThenExtractSameRaidCoupling": {
+      "supported": false,
+      "reason": "resetOnSessionEnd proves only reset semantics for the Kills subcondition. It does not prove that a prior kill/action and ExitStatus can be reliably temporally coupled as one same-raid objective."
+    },
+    "genericActionReset": {
+      "supported": false,
+      "reason": "This proof does not generalize Kills.resetOnSessionEnd to visit/place/use-item condition families without their own exact evidence."
+    }
+  },
+  "affectedOperations": {
+    "canUseSingleRaidKillQuotaAfterOtherFiltersAreProven": [
+      "hostile-operator-intercept",
+      "route-security",
+      "rogue-interdiction",
+      "labs-security-disruption"
+    ],
+    "stillRequireSeparateActionThenExtractProof": [
+      "access-reconnaissance",
+      "acoustic-contact",
+      "route-security",
+      "hostile-operator-intercept",
+      "armored-transit",
+      "controlled-chemical-support",
+      "precision-observation-window",
+      "labs-security-disruption"
+    ]
+  },
+  "materializationRules": {
+    "resetOnSessionEndTrueAllowedOnlyForPureKillQuota": true,
+    "oneSessionOnlyMustRemainFalse": true,
+    "sameRaidKillThenExtractMustRemainFailClosed": true,
+    "noNewFrozen010QuestJson": true
+  }
+}
