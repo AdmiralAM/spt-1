@@ -11,6 +11,8 @@ for token in (
     'FindInstanceMethod(controllerType, "IsAtReachablePlace", typeof(bool), itemType)',
     'GetAllParentItems',
     'FindReadableMember(itemType, "StringTemplateId", typeof(string))',
+    'internal static Type ItemType;',
+    'FastAccessReloadRuntime.ItemType = itemType;',
     'FastAccessReloadRuntime.GetAllParentItems = BuildParentEnumerator',
     'FastAccessReloadRuntime.ReadTemplateId = BuildStringReader',
     'ShouldPromoteReloadReachability',
@@ -20,7 +22,10 @@ for token in (
     'ReflectionTools.FindType("EFT.FirearmHandsInputTranslator")',
     'FindExactZeroArgVoidMethod(translatorType, "Reload")',
     'FindExactZeroArgVoidMethod(translatorType, "QuickReload")',
+    'Type itemType = FastAccessReloadRuntime.ItemType;',
+    'if (!itemType.IsAssignableFrom(FastAccessReloadRuntime.MagazineType)) return false;',
     'string.Equals(method.Name, "GetItemsInSlots", StringComparison.Ordinal)',
+    'if (!method.ReturnType.IsAssignableFrom(itemArrayType)) continue;',
     'ReloadCandidateBridgeRuntime.EnterReloadScope',
     'ReloadCandidateBridgeRuntime.ExitReloadScope',
     'ReferenceEquals(slots, OriginalFastAccessSlots)',
@@ -44,6 +49,9 @@ for token in (
 ):
     if token not in source:
         violations.append(f"FastAccessSlotPatches.cs: reload contract token missing: {token}")
+
+if 'FastAccessReloadRuntime.MagazineType.BaseType' in source:
+    violations.append("FastAccessSlotPatches.cs: candidate discovery must use exact resolved EFT Item, not infer Item from Magazine.BaseType")
 
 if source.count('Activator.CreateInstance(harmonyType, new object[] { ReachabilityHarmonyId })') != 1:
     violations.append("FastAccessSlotPatches.cs: reachability Harmony owner must be created exactly once")
@@ -154,4 +162,4 @@ for token in (
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; no-op Belt path preserves vanilla result identity without merge allocation; reachability/candidate Harmony owners isolated; partial bridge installs roll back atomically; startup-bound discovery; fail-closed/no polling)")
+print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact EFT Item contract; no-op Belt path preserves vanilla result identity without merge allocation; reachability/candidate Harmony owners isolated; partial bridge installs roll back atomically; startup-bound discovery; fail-closed/no polling)")
