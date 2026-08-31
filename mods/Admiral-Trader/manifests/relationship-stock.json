@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "stockClass": "Relationship",
   "status": "AuthoredPreMaterialization",
   "product": "Admiral Trader",
@@ -24,6 +24,22 @@
     "directOverlapAuditRequired": ["vanilla", "Scorpion", "Artem"],
     "runtimeMaterializationRequiresItemTplProof": true,
     "runtimeMaterializationRequiresEconomyReview": true
+  },
+  "integrationState": {
+    "economyAdapterRelationshipParsing": "implemented-on-origin-main",
+    "verifiedOriginMain": "f927a23c8057811f78ce48508e58b37012c6d6e8",
+    "adapterFiles": [
+      "mods/Economy-Admiral/server/AdmiralTraderRuntimeAdapterService.cs",
+      "mods/Economy-Admiral/server/AdmiralTraderGameplayAlphaAdapter.cs"
+    ],
+    "provenContract": [
+      "relationship manifest is loaded when present",
+      "Relationship offers are explicitly classified separately from Baseline and Milestone",
+      "offer tpl, loyalty level, stock and buy restriction must match the Relationship manifest",
+      "Relationship offer IDs may not overlap Baseline or quest-gated Milestone offers",
+      "RelationshipOfferCount is emitted by the Economy adapter"
+    ],
+    "remainingCrossModuleWork": "Economy review is still required for each concrete candidate price/supply envelope; no additional Relationship parser implementation is required before Trader materialization."
   },
   "tiers": [
     {
@@ -56,8 +72,7 @@
       "run direct overlap audit against vanilla, Scorpion and Artem",
       "prove independent recurring specialist utility rather than tier-fill value",
       "benchmark price, stock and buy ceilings with Economy Admiral",
-      "add explicit Relationship parsing to Economy Admiral adapter",
-      "add Trader CI parity checks for manifest-to-assort classification"
+      "add Trader CI parity checks for manifest-to-assort Relationship classification"
     ]
   }
 }
