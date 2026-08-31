@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-condition-proof",
+  "runtimeMaterialize": false,
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "source": {
+    "authority": "official SPT modding wiki quest-values reference",
+    "repository": "sp-tarkov/wiki",
+    "path": "modding/references/quest-values.md",
+    "checkedDate": "2026-08-31",
+    "note": "This proof records documented SPT quest semantics only. Exact map targets and operation-specific exfil names remain selection gates."
+  },
+  "proven": {
+    "anyPmcTarget": {
+      "conditionType": "Kills",
+      "target": "AnyPmc",
+      "savageRole": [],
+      "meaning": "A Kills subcondition may target any PMC without inferring USEC/BEAR-specific aliases.",
+      "affectedOperations": ["hostile-operator-intercept"]
+    },
+    "locationBoundCounter": {
+      "conditionType": "Location",
+      "shape": "CounterCreator.counter.conditions[]",
+      "targetType": "string[]",
+      "meaning": "Location can be paired with Kills or ExitStatus inside one CounterCreator so the other subconditions are evaluated on the specified map.",
+      "affectedOperations": ["route-security", "hostile-operator-intercept", "labs-security-disruption", "rogue-interdiction", "night-signal-disruption"]
+    },
+    "survivedExtraction": {
+      "conditionTypes": ["Location", "ExitStatus"],
+      "status": ["Survived"],
+      "shape": "CounterCreator.counter.conditions[]",
+      "meaning": "A bounded completion counter can require a successful Survived extraction from a selected location.",
+      "affectedOperations": ["access-reconnaissance", "route-security", "hostile-operator-intercept", "armored-transit", "controlled-chemical-support", "precision-observation-window", "labs-security-disruption"]
+    },
+    "specificExfil": {
+      "conditionTypes": ["Location", "ExitName", "ExitStatus"],
+      "meaning": "A selected exfil can be coupled to location and Survived status inside one CounterCreator when an operation genuinely requires a named route.",
+      "affectedOperations": ["access-reconnaissance"]
+    }
+  },
+  "notProvenByThisSlice": {
+    "usecVsBearFactionSplit": true,
+    "followerOrGuardAliases": true,
+    "zoneIdOrSubLocationSemantics": true,
+    "killThenExtractSameRaidCoupling": true,
+    "oneSessionOnlySemantics": true,
+    "selectedOperationMapTargets": true,
+    "selectedOperationExfilNames": true
+  },
+  "materializationRules": {
+    "anyPmcMayBeUsedWithoutFactionSplit": true,
+    "mapTargetMustBeExplicitlySelected": true,
+    "namedExfilMustBeValidatedAgainstTargetLocation": true,
+    "sameRaidKillAndExtractMustRemainFailClosed": true,
+    "noNewFrozen010QuestJson": true
+  }
+}
