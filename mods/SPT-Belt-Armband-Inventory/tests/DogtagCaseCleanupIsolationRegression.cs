@@ -32,7 +32,7 @@ internal static class DogtagCaseCleanupIsolationRegression
             throw new InvalidOperationException("Dogtag cleanup isolation regression failed: owned root, child and exact itemId reference must be the only removals.");
 
         string remaining = profile.ToJsonString();
-        if (remaining.Contains("owned-case\"", StringComparison.Ordinal)
+        if (remaining.Contains("\"_id\":\"owned-case\"", StringComparison.Ordinal)
             || remaining.Contains("\"_id\":\"owned-child\"", StringComparison.Ordinal)
             || remaining.Contains("\"_id\":\"exact-ref\"", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag cleanup isolation regression failed: an owned root/descendant or exact service reference survived cleanup.");
@@ -48,7 +48,8 @@ internal static class DogtagCaseCleanupIsolationRegression
             if (!remaining.Contains(id, StringComparison.Ordinal))
                 throw new InvalidOperationException("Dogtag cleanup isolation regression failed: cleanup crossed an exact ownership/reference boundary into " + id + ".");
 
-        if (!remaining.Contains("\"target\":\"owned-child\"", StringComparison.Ordinal))
+        if (!remaining.Contains("\"note\":\"owned-case\"", StringComparison.Ordinal)
+            || !remaining.Contains("\"target\":\"owned-child\"", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag cleanup isolation regression failed: unknown foreign-schema string fields must not be interpreted as B&A&HB ownership references.");
         if (!remaining.Contains("\"itemId\":\"owned-child-suffix\"", StringComparison.Ordinal)
             || !remaining.Contains("\"parentId\":\"owned-child-suffix\"", StringComparison.Ordinal))
