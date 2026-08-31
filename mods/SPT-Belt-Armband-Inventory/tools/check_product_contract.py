@@ -169,10 +169,11 @@ dogtag_assort = require(
         "trader.Assort.LoyalLevelItems.ContainsKey(id)",
         "trader.Assort.BarterScheme.Add(id,",
         "trader.Assort.LoyalLevelItems.Add(id,",
-        "groups[0].Filter.Count < 2",
-        "DogtagCaseHostContract.RequireCommitted(groups[0].Filter);",
-        "!groups[0].Filter.Contains(templateId)",
-        "!groups[0].Filter.Any(x => !Equals(x, templateId))",
+        "var hostFilter = groups[0].Filter;",
+        "hostFilter == null || hostFilter.Count < 2",
+        "DogtagCaseHostContract.RequireCommitted(hostFilter);",
+        "!hostFilter.Contains(templateId)",
+        "!hostFilter.Any(x => !Equals(x, templateId))",
     ],
     "Dogtag Case offer")
 if "trader.Assort.Items.FirstOrDefault(x => x.Id == id)" in dogtag_assort:
