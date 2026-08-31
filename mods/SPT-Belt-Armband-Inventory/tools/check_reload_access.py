@@ -2,8 +2,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 source = (ROOT / "src" / "FastAccessSlotPatches.cs").read_text(encoding="utf-8-sig")
+epoch = (ROOT / "src" / "ReloadScopeEpochGuard.cs").read_text(encoding="utf-8-sig")
 tests = (ROOT / "tests" / "Program.cs").read_text(encoding="utf-8-sig")
 bridge_tests = (ROOT / "tests" / "ReloadCandidateBridgeRegression.cs").read_text(encoding="utf-8-sig")
+epoch_tests = (ROOT / "tests" / "ReloadScopeEpochRegression.cs").read_text(encoding="utf-8-sig")
 diagnostic_tests = (ROOT / "tests" / "ReloadDiagnosticLoggingRegression.cs").read_text(encoding="utf-8-sig")
 
 violations = []
@@ -56,6 +58,36 @@ for token in (
 ):
     if token not in source:
         violations.append(f"FastAccessSlotPatches.cs: reload contract token missing: {token}")
+
+for token in (
+    '[ThreadStatic] static int threadGeneration;',
+    '[ThreadStatic] static int threadDepth;',
+    'Volatile.Read(ref generation)',
+    'Interlocked.Increment(ref generation)',
+    'runtime.GetMethod("EnterReloadScope"',
+    'runtime.GetMethod("ExitReloadScope"',
+    'runtime.GetMethod("AppendCandidates"',
+    'runtime.GetMethod("Reset"',
+    'PatchNamed(owner, patch, harmonyMethodType, reset, "postfix"',
+    'if (IsCurrentScope()) return true;',
+    '__result = __2;',
+    'return false;',
+):
+    if token not in epoch:
+        violations.append(f"ReloadScopeEpochGuard.cs: lifecycle epoch contract token missing: {token}")
+
+if 'ReloadScopeEpochRegression.Run();' not in tests:
+    violations.append("Program.cs: reload epoch regression must run after module initialization")
+if '[ModuleInitializer]' in epoch_tests:
+    violations.append("ReloadScopeEpochRegression.cs: cross-thread epoch regression must not execute from module initialization")
+for token in (
+    'ReloadScopeEpochGuard.InvalidateForRegression();',
+    'scope from superseded installation remained current on its owning thread',
+    'new-generation reload scope did not become current',
+    'same-thread nested stale scope survived generation invalidation',
+):
+    if token not in epoch_tests:
+        violations.append(f"ReloadScopeEpochRegression.cs: epoch regression missing: {token}")
 
 if source.count('ReloadDiagnosticLog.TryWarning(LogWarning,') < 2:
     violations.append("FastAccessSlotPatches.cs: both reload reachability and candidate runtime diagnostics must isolate throwing warning sinks")
@@ -188,4 +220,4 @@ for token in (
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item contract; no-op Belt path preserves vanilla result identity without merge allocation; throwing runtime diagnostics are isolated; reachability/candidate Harmony owners isolated; partial bridge installs roll back atomically; startup-bound discovery; fail-closed/no polling)")
+print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item contract; no-op Belt path preserves vanilla result identity without merge allocation; throwing diagnostics isolated; reachability/candidate owners isolated; stale ThreadStatic scopes generation-invalidated across reset/reinstall; startup-bound discovery; fail-closed/no polling)")
