@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-player-equipment-proof",
+  "runtimeMaterialize": false,
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "source": {
+    "authority": "pinned SPT 4.1.3 vanilla quest database",
+    "repository": "sp-tarkov/server-csharp",
+    "commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+    "path": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json",
+    "checkedDate": "2026-08-31",
+    "observedShape": {
+      "conditionType": "Equipment",
+      "IncludeNotEquippedItems": false,
+      "equipmentInclusive": "array-of-arrays of item TPLs",
+      "equipmentExclusive": "array"
+    }
+  },
+  "proven": {
+    "playerEquipmentConditionFamilyExists": {
+      "conditionType": "Equipment",
+      "fields": ["IncludeNotEquippedItems", "equipmentInclusive", "equipmentExclusive"],
+      "meaning": "SPT 4.1.3 vanilla quests use a dedicated Equipment subcondition distinct from Kills.enemyEquipmentInclusive/Exclusive.",
+      "safeUse": "Future Admiral objectives may use the exact vanilla Equipment condition family only with explicit validated item TPL sets."
+    },
+    "equippedOnlyMode": {
+      "field": "IncludeNotEquippedItems",
+      "value": false,
+      "meaning": "Pinned vanilla examples explicitly use the equipped-only mode represented by false."
+    }
+  },
+  "explicitlyNotProven": {
+    "categoryOrParentIdSelector": {
+      "supported": false,
+      "reason": "The pinned evidence shows explicit item TPL groups, not a generic armor/headset/helmet parent-category selector."
+    },
+    "armorClassPredicate": {
+      "supported": false,
+      "reason": "No class-level comparator is proven by the observed Equipment shape."
+    },
+    "multiGroupBooleanSemantics": {
+      "supported": false,
+      "reason": "The exact AND/OR meaning of multiple inner equipmentInclusive groups is not assumed from serialization alone."
+    },
+    "includeNotEquippedItemsTrueSemantics": {
+      "supported": false,
+      "reason": "Only vanilla false examples are admitted by this proof."
+    },
+    "sameRaidEquipmentThenExtractCoupling": {
+      "supported": false,
+      "reason": "Existence of Equipment does not prove temporal coupling with a separate extraction counter."
+    }
+  },
+  "affectedOperations": {
+    "structuralEquipmentBlockerRemoved": ["expedition-loadout", "protection-calibration", "ballistic-head-test", "heavy-assault-loadout", "acoustic-contact", "armored-transit"],
+    "stillRequireExactTplSelectionAndOperationSpecificProof": ["expedition-loadout", "protection-calibration", "ballistic-head-test", "heavy-assault-loadout", "acoustic-contact", "armored-transit"]
+  },
+  "materializationRules": {
+    "equipmentConditionFamilyAllowed": true,
+    "explicitValidatedTplsRequired": true,
+    "categoryOrArmorClassInferenceForbidden": true,
+    "multiGroupSemanticsMustRemainFailClosed": true,
+    "includeNotEquippedItemsMustRemainFalse": true,
+    "sameRaidEquipmentThenExtractMustRemainFailClosed": true,
+    "noNewFrozen010QuestJson": true
+  }
+}
