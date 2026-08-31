@@ -8,6 +8,24 @@ public static class NativeRepeatableQuestPressureCore
         return caps.RestartableStandingMultiple;
     }
 
+    public static double? ResolveRewardSpreadMultiple(
+        PlayableQuestRewardCaps caps,
+        bool itemRewardPressure,
+        bool xpPressure,
+        bool standingPressure)
+    {
+        ArgumentNullException.ThrowIfNull(caps);
+        var multiples = new List<double>(3);
+        if (itemRewardPressure)
+            multiples.Add(caps.RestartableItemBudgetMultiple);
+        if (xpPressure)
+            multiples.Add(caps.RestartableXpMultiple);
+        if (standingPressure)
+            multiples.Add(ResolveStandingMultiple(caps));
+
+        return multiples.Count == 0 ? null : multiples.Min();
+    }
+
     public static double Cap(double current, double pristine, double multiple)
     {
         if (!double.IsFinite(current) || current < 0)
@@ -38,6 +56,7 @@ public sealed record NativeRepeatableRewardBaseline(
     IReadOnlyList<double> GpCoins,
     IReadOnlyList<double> Items,
     IReadOnlyList<double> Reputation,
+    double RewardSpread,
     IReadOnlyList<double> SkillRewardChance,
     IReadOnlyList<double> SkillPointReward);
 

@@ -62,6 +62,34 @@ public sealed class NativeRepeatableQuestPressureService(
                     repeatable.RewardScaling.Reputation, NativeRepeatableQuestPressureCore.ResolveStandingMultiple(caps),
                     config.Mode == EconomyMode.Enforce);
             }
+
+            // SPT applies RewardSpread to money/item budget, GP, XP and reputation after the base tier
+            // values are selected. A modified spread can therefore bypass every bounded base vector above.
+            // Use the strictest already-active affected mechanism allowance; this adds no balance knob and
+            // prevents one shared randomizer from weakening a stricter enabled dimension.
+            var spreadMultiple = NativeRepeatableQuestPressureCore.ResolveRewardSpreadMultiple(
+                caps,
+                config.EnableItemRewardStackNormalization,
+                config.EnableQuestXpPressure,
+                config.EnableQuestStandingPressure);
+            if (spreadMultiple is { } resolvedSpreadMultiple)
+            {
+                var beforeSpread = repeatable.RewardScaling.RewardSpread;
+                var targetSpread = NativeRepeatableQuestPressureCore.Cap(beforeSpread, pristine.RewardSpread, resolvedSpreadMultiple);
+                if (NativeRepeatableQuestPressureCore.NeedsMutation(beforeSpread, targetSpread))
+                {
+                    if (config.Mode == EconomyMode.Enforce)
+                        repeatable.RewardScaling.RewardSpread = targetSpread;
+                    proposals.Add(new NativeRepeatableMutation(
+                        key,
+                        repeatable.Name,
+                        "RewardSpread",
+                        -1,
+                        beforeSpread,
+                        targetSpread,
+                        config.Mode == EconomyMode.Enforce));
+                }
+            }
         }
 
         var result = new NativeRepeatablePressureResult
