@@ -25,8 +25,6 @@ public sealed class DogtagCaseItem(
     public const string TemplateId = RuntimeIdentity.DogtagCaseItemId;
     public const string GridId = RuntimeIdentity.DogtagCaseGridId;
 
-    // EFT/SPT canonical Dogtag Case. This is deliberately an exact source
-    // template, not a base-class/category fallback.
     private static readonly MongoId SourceDogtagCaseTpl = new("5c093e3486f77430cb02e593");
     private static readonly MongoId DogtagCaseTpl = new(TemplateId);
     private static readonly MongoId DefaultInventoryTpl = RuntimeCandidateBeltItem.DefaultInventoryTpl;
@@ -66,7 +64,7 @@ public sealed class DogtagCaseItem(
             {
                 Filter = new HashSet<MongoId>(filter.Filter),
                 ExcludedFilter = filter.ExcludedFilter == null
-                    ? []
+                    ? null
                     : new HashSet<MongoId>(filter.ExcludedFilter)
             })
             .ToList();
@@ -126,9 +124,6 @@ public sealed class DogtagCaseItem(
         if (!result.Success)
             throw new InvalidOperationException($"B&A&HB Dogtag Case creation failed: {string.Join("; ", result.Errors)}");
 
-        // Do not make a service-level success observable through the equipment
-        // host until the actual inserted template has been read back and proven
-        // equivalent to the exact canonical grid contract we requested.
         if (!templateTable.Items.TryGetValue(DogtagCaseTpl, out var created))
             throw new InvalidOperationException("B&A&HB Dogtag Case creation reported success but the exact template is absent; refusing Dogtag slot exposure.");
         ValidateExisting(created, source);
@@ -154,9 +149,6 @@ public sealed class DogtagCaseItem(
         if (groups == null || groups.Length != 1 || groups[0].Filter == null || groups[0].Filter.Count == 0)
             throw new InvalidOperationException("B&A&HB Dogtag slot filter boundary is missing or ambiguous; exactly one non-empty vanilla filter group is required.");
 
-        // Capture the complete non-owned acceptance set before any mutation.
-        // Trader registration must later prove that every one of these entries
-        // still exists; one arbitrary surviving non-case entry is not sufficient.
         MongoId[] vanillaEntries = groups[0].Filter
             .Where(x => !PersistentIdentityManifest.IsOwnedTemplate(x.ToString()))
             .ToArray();
@@ -175,8 +167,6 @@ public sealed class DogtagCaseItem(
 
     private static void CommitDogtagSlotExposure(HashSet<MongoId> filter)
     {
-        // Vanilla-first semantics: never remove, replace, or normalize existing
-        // accepted dogtag entries; append only our exact product template.
         if (!filter.Contains(DogtagCaseTpl)) filter.Add(DogtagCaseTpl);
     }
 
@@ -221,9 +211,9 @@ public sealed class DogtagCaseItem(
             var expectedExcluded = expectedFilters[i].ExcludedFilter;
             if (actualIncluded == null || expectedIncluded == null || !actualIncluded.SetEquals(expectedIncluded))
                 throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: included filter differs from canonical source.");
-            if ((actualExcluded == null ? 0 : actualExcluded.Count) != (expectedExcluded == null ? 0 : expectedExcluded.Count)
+            if ((actualExcluded == null) != (expectedExcluded == null)
                 || (actualExcluded != null && expectedExcluded != null && !actualExcluded.SetEquals(expectedExcluded)))
-                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: excluded filter differs from canonical source.");
+                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: excluded filter differs from canonical source, including null/empty contract parity.");
         }
     }
 }
