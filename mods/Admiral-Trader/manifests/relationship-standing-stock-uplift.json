@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "purpose": "Make Admiral standing materially useful without quota-filling Relationship with duplicate items: standing may increase finite replenishment of an already-admitted consumable mission-preparation offer, while non-consumable Baseline equipment remains unchanged.",
@@ -106,11 +106,38 @@
       "maximumGlobalStockValueIncreaseRub": 198000
     }
   },
+  "materializationArchitecture": {
+    "staticAssortTierEncodingAllowed": false,
+    "reason": "A root assort offer has one loyalty-level mapping and one stock/buy-restriction state; the four standing tiers in this specification must not be misread as four values that can coexist on one static offer.",
+    "requiredSeam": "profile-or-request-scoped-assort-projection",
+    "requiredInputs": [
+      "requesting profile/session",
+      "current Admiral loyalty/standing tier",
+      "immutable frozen Baseline marker offer"
+    ],
+    "projectionRules": [
+      "start from the immutable Baseline marker offer rather than mutating the global trader database",
+      "select exactly one tier for the requesting profile",
+      "project only stockPerReset and buyRestriction from that tier",
+      "preserve offer id, tpl, price and quest/capability gates",
+      "fall back to frozen LL1 values when profile or standing cannot be resolved",
+      "never duplicate the root offer to encode standing tiers"
+    ],
+    "globalDatabaseMutationAllowed": false,
+    "duplicateRootOfferEncodingAllowed": false,
+    "unknownProfileFallback": {
+      "loyaltyLevel": 1,
+      "stockPerReset": 12,
+      "buyRestriction": 4
+    },
+    "proofState": "architecture-required-runtime-seam-not-yet-proven-on-pinned-spt-4.1.3"
+  },
   "materializationGates": {
     "implementationAllowed": false,
     "requiresEconomyAdmiralApproval": true,
     "requiresRuntimeLoyaltyVisibilityProof": true,
     "requiresAssortMutationContract": true,
+    "requiresProfileScopedAssortProjectionProof": true,
     "requiresFrozen010PhysicalGate": true,
     "physicalCheckpointRequestedNow": false
   },
