@@ -55,6 +55,7 @@ namespace SPTBeltArmbandInventory
 
     internal static class FastAccessReloadRuntime
     {
+        internal static Type ItemType;
         internal static Type MagazineType;
         internal static Func<object, IEnumerable> GetAllParentItems;
         internal static Func<object, string> ReadTemplateId;
@@ -94,6 +95,7 @@ namespace SPTBeltArmbandInventory
 
         internal static void Reset()
         {
+            ItemType = null;
             MagazineType = null;
             GetAllParentItems = null;
             ReadTemplateId = null;
@@ -354,6 +356,7 @@ namespace SPTBeltArmbandInventory
                     || harmonyMethodCtor == null || patchMethod == null || reachabilityUnpatchSelf == null)
                     return false;
 
+                FastAccessReloadRuntime.ItemType = itemType;
                 FastAccessReloadRuntime.MagazineType = magazineType;
                 FastAccessReloadRuntime.GetAllParentItems = BuildParentEnumerator(parentsMethod, itemType);
                 FastAccessReloadRuntime.ReadTemplateId = BuildStringReader(itemType, templateIdMember);
@@ -381,7 +384,7 @@ namespace SPTBeltArmbandInventory
         {
             try
             {
-                if (!reloadPatchInstalled || FastAccessReloadRuntime.MagazineType == null
+                if (!reloadPatchInstalled || FastAccessReloadRuntime.ItemType == null || FastAccessReloadRuntime.MagazineType == null
                     || FastAccessReloadRuntime.GetAllParentItems == null || FastAccessReloadRuntime.ReadTemplateId == null)
                     return false;
 
@@ -390,9 +393,12 @@ namespace SPTBeltArmbandInventory
                 Type translatorType = ReflectionTools.FindType("EFT.FirearmHandsInputTranslator");
                 if (harmonyType == null || harmonyMethodType == null || translatorType == null) return false;
 
+                Type itemType = FastAccessReloadRuntime.ItemType;
+                if (!itemType.IsAssignableFrom(FastAccessReloadRuntime.MagazineType)) return false;
+
                 MethodInfo reload = FindExactZeroArgVoidMethod(translatorType, "Reload");
                 MethodInfo quickReload = FindExactZeroArgVoidMethod(translatorType, "QuickReload");
-                MethodInfo getItemsInSlots = FindGetItemsInSlots(inventoryType, slotEnumType, FastAccessReloadRuntime.MagazineType.BaseType);
+                MethodInfo getItemsInSlots = FindGetItemsInSlots(inventoryType, slotEnumType, itemType);
                 ConstructorInfo harmonyMethodCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 candidateBridgeUnpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
@@ -403,9 +409,8 @@ namespace SPTBeltArmbandInventory
                 ParameterInfo[] getItemsParameters = getItemsInSlots.GetParameters();
                 if (getItemsParameters.Length != 1 || !typeof(IEnumerable).IsAssignableFrom(getItemsInSlots.ReturnType)) return false;
                 object beltSlotsArgument = CreateSingleSlotArgument(getItemsParameters[0].ParameterType, slotEnumType, dedicatedBelt);
-                Type itemType = FastAccessReloadRuntime.MagazineType.BaseType;
-                Type itemArrayType = itemType?.MakeArrayType();
-                if (beltSlotsArgument == null || itemType == null || itemArrayType == null || !getItemsInSlots.ReturnType.IsAssignableFrom(itemArrayType))
+                Type itemArrayType = itemType.MakeArrayType();
+                if (beltSlotsArgument == null || !getItemsInSlots.ReturnType.IsAssignableFrom(itemArrayType))
                     return false;
 
                 ReloadCandidateBridgeRuntime.GetItemsInSlots = getItemsInSlots;
@@ -468,6 +473,8 @@ namespace SPTBeltArmbandInventory
                     || !typeof(IEnumerable).IsAssignableFrom(method.ReturnType)) continue;
                 ParameterInfo[] parameters = method.GetParameters();
                 if (parameters.Length != 1 || !CanCarrySlotValues(parameters[0].ParameterType, slotEnumType)) continue;
+                Type itemArrayType = itemType.MakeArrayType();
+                if (!method.ReturnType.IsAssignableFrom(itemArrayType)) continue;
                 if (selected != null) return null;
                 selected = method;
             }
