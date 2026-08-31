@@ -37,9 +37,14 @@ internal static class DogtagCaseHostContractRegression
             () => DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaA }),
             "a second, different preload snapshot must be rejected as an ambiguous host contract");
 
-        // Idempotent re-capture of the exact same set is safe and must not depend
-        // on enumeration order.
         DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaB, vanillaA });
+
+        DogtagCaseHostContract.RequireTemplateNotExcluded(null, caseTpl);
+        DogtagCaseHostContract.RequireTemplateNotExcluded(new HashSet<MongoId>(), caseTpl);
+        DogtagCaseHostContract.RequireTemplateNotExcluded(new HashSet<MongoId> { vanillaA }, caseTpl);
+        ExpectFailure(
+            () => DogtagCaseHostContract.RequireTemplateNotExcluded(new HashSet<MongoId> { vanillaA, caseTpl }, caseTpl),
+            "exact Dogtag Case inclusion must fail closed when the same host filter explicitly excludes the template");
     }
 
     private static void ExpectFailure(Action action, string message)
