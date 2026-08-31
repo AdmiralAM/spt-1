@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using SPTarkov.Server.Core.Models.Common;
 using SPTBeltArmbandInventory;
 using SPTBeltArmbandInventory.Server;
@@ -65,6 +66,7 @@ internal static class DogtagCaseHostContractRegression
         DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaB, vanillaA });
 
         ExerciseAtomicExposure(vanillaA, vanillaB, caseTpl, foreignOwnedTpl, laterForeignTpl);
+        ExerciseConcurrentCommittedVerification(vanillaA, vanillaB, caseTpl, laterForeignTpl);
     }
 
     private static void ExerciseAtomicExposure(
@@ -114,6 +116,44 @@ internal static class DogtagCaseHostContractRegression
             if (contaminated.Contains(caseTpl))
                 throw new InvalidOperationException("Dogtag host regression failed: failed atomic exposure left the Dogtag Case partially appended.");
         }
+    }
+
+    private static void ExerciseConcurrentCommittedVerification(
+        MongoId vanillaA,
+        MongoId vanillaB,
+        MongoId caseTpl,
+        MongoId laterForeignTpl)
+    {
+        // Verification is read-only and snapshot-backed. Multiple startup consumers may
+        // therefore prove different compatible live host sets concurrently without
+        // mutating the captured baseline, dropping the exact case, or rejecting a
+        // cooperative foreign addition made after preload.
+        var plain = new HashSet<MongoId> { vanillaA, vanillaB, caseTpl };
+        var extended = new HashSet<MongoId> { vanillaA, vanillaB, laterForeignTpl, caseTpl };
+        Exception leftFailure = null;
+        Exception rightFailure = null;
+
+        var left = new Thread(() =>
+        {
+            try { DogtagCaseHostContract.RequireCommitted(plain); }
+            catch (Exception exception) { leftFailure = exception; }
+        });
+        var right = new Thread(() =>
+        {
+            try { DogtagCaseHostContract.RequireCommitted(extended); }
+            catch (Exception exception) { rightFailure = exception; }
+        });
+
+        left.Start();
+        right.Start();
+        if (!left.Join(TimeSpan.FromSeconds(5)) || !right.Join(TimeSpan.FromSeconds(5)))
+            throw new InvalidOperationException("Dogtag host regression failed: concurrent committed verification exceeded bounded time.");
+        if (leftFailure != null || rightFailure != null)
+            throw new InvalidOperationException("Dogtag host regression failed: concurrent committed verification was not read-only/deterministic.", leftFailure ?? rightFailure);
+        if (DogtagCaseHostContract.CapturedVanillaEntryCount != 2)
+            throw new InvalidOperationException("Dogtag host regression failed: concurrent committed verification mutated the captured preload baseline.");
+        if (plain.Count != 3 || extended.Count != 4 || !extended.Contains(laterForeignTpl))
+            throw new InvalidOperationException("Dogtag host regression failed: verification mutated a caller-owned compatible host set.");
     }
 
     private static void ExpectFailure(Action action, string message)
