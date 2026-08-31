@@ -7,6 +7,7 @@ violations = []
 contract = (SERVER / "WearableOfferHostContract.cs").read_text(encoding="utf-8-sig")
 armband_item = (SERVER / "WristWalletItem.cs").read_text(encoding="utf-8-sig")
 dogtag_item = (SERVER / "DogtagCaseItem.cs").read_text(encoding="utf-8-sig")
+dogtag_snapshot = (SERVER / "DogtagCaseHostContract.cs").read_text(encoding="utf-8-sig")
 armband = (SERVER / "RuntimeCandidateAssort.cs").read_text(encoding="utf-8-sig")
 wallet = (SERVER / "WristWalletAssort.cs").read_text(encoding="utf-8-sig")
 dedicated = (SERVER / "DedicatedWearableAssort.cs").read_text(encoding="utf-8-sig")
@@ -45,9 +46,25 @@ for token in [
     "PersistentIdentityManifest.IsOwnedTemplate(templateId)",
     "!string.Equals(templateId, TemplateId, StringComparison.Ordinal)",
     "already contaminated by a different owned product template",
+    "DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);",
 ]:
     if token not in dogtag_item:
-        violations.append(f"Dogtag Case preload missing exact B&A&HB cross-host ownership guard token {token!r}")
+        violations.append(f"Dogtag Case preload missing exact B&A&HB cross-host/preservation token {token!r}")
+
+for token in [
+    "private static HashSet<MongoId>? capturedVanillaEntries;",
+    "var snapshot = acceptedTemplates.ToHashSet();",
+    "capturedVanillaEntries.SetEquals(snapshot)",
+    "foreach (MongoId entry in capturedVanillaEntries)",
+    "if (!currentFilter.Contains(entry))",
+]:
+    if token not in dogtag_snapshot:
+        violations.append(f"Dogtag Case host snapshot contract missing token {token!r}")
+
+capture = dogtag_item.find("DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);")
+commit = dogtag_item.find("CommitDogtagSlotExposure(dogtagSlotFilter);")
+if min(capture, commit) < 0 or capture > commit:
+    violations.append("Dogtag Case must snapshot every pre-mutation non-owned host entry before exposing the container")
 
 for label, text in [("Magazine Armband", armband), ("Wrist Wallet", wallet)]:
     host = text.find("WearableOfferHostContract.RequireArmBandProduct(templateTable, templateId);")
@@ -73,6 +90,7 @@ for token in [
     "groups.Length != 1",
     "groups[0].Filter.Count < 2",
     "!groups[0].Filter.Contains(templateId)",
+    "DogtagCaseHostContract.RequirePreserved(groups[0].Filter);",
     "!groups[0].Filter.Any(x => !Equals(x, templateId))",
     "PersistentIdentityManifest.IsOwnedTemplate(acceptedId)",
     "!string.Equals(acceptedId, RuntimeIdentity.DogtagCaseItemId, StringComparison.Ordinal)",
@@ -84,10 +102,13 @@ for token in [
 dogtag_host = dogtag.find("RequireExactDogtagHost(templateTable, templateId);")
 dogtag_trader = dogtag.find("tradersTable.GetValueOrDefault(")
 dogtag_first_mutation = dogtag.find("trader.Assort.Items.Add(")
+dogtag_snapshot_verify = dogtag.find("DogtagCaseHostContract.RequirePreserved(groups[0].Filter);")
 if min(dogtag_host, dogtag_trader, dogtag_first_mutation) < 0 or not (
     dogtag_host < dogtag_trader < dogtag_first_mutation
 ):
     violations.append("Dogtag Case offer must prove exact vanilla Dogtag host and preserved vanilla acceptance before resolving/mutating Ragman assort")
+if dogtag_snapshot_verify < 0 or dogtag_snapshot_verify > dogtag_trader:
+    violations.append("Dogtag Case must prove the complete pre-mutation host snapshot before Ragman is resolved")
 
 if "filter.Add(" in contract or "slots.Add(" in contract:
     violations.append("offer-host validation must be read-only and must not repair equipment filters/slots during trader registration")
@@ -97,4 +118,4 @@ if "groups[0].Filter.Add(" in dogtag or "slots.Add(" in dogtag:
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case preload and offer validation both reject other owned B&A&HB templates in the vanilla Dogtag host while preserving a vanilla accepted entry; validation is read-only)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case snapshots every pre-mutation non-owned Dogtag host entry and trader registration proves the complete snapshot still survives while rejecting owned cross-host contamination; validation is read-only)")
