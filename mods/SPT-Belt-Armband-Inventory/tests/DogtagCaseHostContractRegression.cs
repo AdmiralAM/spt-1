@@ -13,6 +13,7 @@ internal static class DogtagCaseHostContractRegression
         var vanillaA = new MongoId("59f32bb586f774757e1e8442");
         var vanillaB = new MongoId("59f32c3b86f77472a31742f0");
         var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
+        var foreignOwnedTpl = new MongoId(RuntimeIdentity.CandidateItemId);
 
         ExpectFailure(
             () => DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaA, caseTpl }),
@@ -27,6 +28,10 @@ internal static class DogtagCaseHostContractRegression
         ExpectFailure(
             () => DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { vanillaA, caseTpl }),
             "removing one captured vanilla entry must fail even though another non-case entry survives");
+
+        ExpectFailure(
+            () => DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { vanillaA, vanillaB, caseTpl, foreignOwnedTpl }),
+            "another B&A&HB-owned product must be rejected by the reusable Dogtag host contract itself");
 
         ExpectFailure(
             () => DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaA }),
