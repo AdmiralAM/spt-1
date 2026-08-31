@@ -87,7 +87,7 @@ public static class GroupedItemRewardSelectorCore
             Eligible = true,
             SelectedIndex = candidateIndex,
             Reason = reducibleCount > 1
-                ? "UniqueDominantEconomicValueStackInGroupedReward"
+                ? "UniqueDominantReducibleStackInGroupedReward"
                 : entries.Count == 1
                     ? (requireKnownHandbookPrice ? "SingleReducibleStack" : "SingleReducibleStackManualExact")
                     : (requireKnownHandbookPrice ? "OneReducibleStackInGroupedReward" : "OneReducibleStackInGroupedRewardManualExact"),
