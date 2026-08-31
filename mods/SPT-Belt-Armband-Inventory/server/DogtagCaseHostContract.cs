@@ -5,8 +5,9 @@ namespace SPTBeltArmbandInventory.Server;
 /// <summary>
 /// Captures the exact non-B&A&HB Dogtag-slot acceptance set before the mod
 /// appends its container. Trader registration then proves that every captured
-/// vanilla/foreign entry still survives. This prevents a later mutation from
-/// silently satisfying the host check with just one arbitrary non-case entry.
+/// vanilla/foreign entry still survives and that no other B&A&HB product has
+/// contaminated the host. This prevents a later mutation from silently
+/// satisfying the host check with just one arbitrary non-case entry.
 /// Public surface exists only so the separate regression assembly can exercise
 /// the runtime contract directly.
 /// </summary>
@@ -51,6 +52,17 @@ public static class DogtagCaseHostContract
         {
             if (!currentFilter.Contains(entry))
                 throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: pre-mutation acceptance entry {entry} was removed before trader registration.");
+        }
+
+        // Keep ownership isolation inside the reusable host contract itself rather
+        // than relying only on a particular caller. The Dogtag Case is the sole
+        // B&A&HB-owned template allowed in the vanilla Dogtag acceptance set.
+        foreach (MongoId entry in currentFilter)
+        {
+            string id = entry.ToString();
+            if (PersistentIdentityManifest.IsOwnedTemplate(id)
+                && !string.Equals(id, RuntimeIdentity.DogtagCaseItemId, StringComparison.Ordinal))
+                throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: owned template {entry} contaminates the vanilla Dogtag host.");
         }
     }
 }
