@@ -65,4 +65,13 @@ public static class DogtagCaseHostContract
                 throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: owned template {entry} contaminates the vanilla Dogtag host.");
         }
     }
+
+    public static void RequireCommitted(HashSet<MongoId> currentFilter)
+    {
+        RequirePreserved(currentFilter);
+
+        var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
+        if (!currentFilter.Contains(caseTpl))
+            throw new InvalidOperationException("B&A&HB Dogtag host verification refused: exact Dogtag Case template is absent after host commit.");
+    }
 }
