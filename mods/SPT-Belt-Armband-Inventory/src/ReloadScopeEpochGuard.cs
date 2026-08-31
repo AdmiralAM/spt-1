@@ -47,6 +47,7 @@ namespace SPTBeltArmbandInventory
             lock (installGate)
             {
                 if (installed) return true;
+                object owner = null;
                 try
                 {
                     Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
@@ -65,7 +66,7 @@ namespace SPTBeltArmbandInventory
                     MethodInfo reset = runtime.GetMethod("Reset", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
                     if (enter == null || exit == null || append == null || reset == null) return false;
 
-                    object owner = harmonyCtor.Invoke(new object[] { HarmonyId });
+                    owner = harmonyCtor.Invoke(new object[] { HarmonyId });
                     if (owner == null) return false;
                     PatchNamed(owner, patch, harmonyMethodType, enter, "prefix", harmonyMethodCtor.Invoke(new object[] { Method(nameof(BeforeEnter)) }));
                     PatchNamed(owner, patch, harmonyMethodType, exit, "prefix", harmonyMethodCtor.Invoke(new object[] { Method(nameof(BeforeExit)) }));
@@ -78,8 +79,30 @@ namespace SPTBeltArmbandInventory
                 }
                 catch
                 {
+                    // Harmony.Patch mutates process-wide state one patch at a time. If any later
+                    // patch in this four-method transaction fails, roll back this owner before an
+                    // AssemblyLoad retry can attempt installation again. A partially installed
+                    // epoch guard is less safe than no guard and could otherwise duplicate patches.
+                    TryRollbackOwner(owner);
+                    harmonyOwner = null;
+                    installed = false;
                     return false;
                 }
+            }
+        }
+
+        static void TryRollbackOwner(object owner)
+        {
+            if (owner == null) return;
+            try
+            {
+                MethodInfo unpatchSelf = owner.GetType().GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
+                unpatchSelf?.Invoke(owner, null);
+            }
+            catch
+            {
+                // Discovery remains fail-closed. Do not allow cleanup diagnostics/failures to
+                // escape module initialization; a later retry must still start from installed=false.
             }
         }
 
