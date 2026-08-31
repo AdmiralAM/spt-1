@@ -50,21 +50,33 @@ internal static class ReloadDiagnosticLoggingRegression
         ReloadCandidateBridgeRuntime.ReadTemplateId = _ => "unused";
         ReloadCandidateBridgeRuntime.LogWarning = _ => throw new InvalidOperationException("synthetic logger failure");
 
+        FieldInfo depth = typeof(ReloadCandidateBridgeRuntime).GetField("reloadDepth", BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("Reload diagnostic logging regression failed: reloadDepth state field missing");
+        FieldInfo reentrant = typeof(ReloadCandidateBridgeRuntime).GetField("reentrant", BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("Reload diagnostic logging regression failed: reentrant state field missing");
+
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object first = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
-        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
         Assert(ReferenceEquals(first, vanilla),
             "candidate bridge returns exact vanilla result when candidate inspection and warning sink both fail");
+        Assert((int)depth.GetValue(null)! == 1,
+            "candidate failure cannot consume the active Reload/QuickReload scope owned by the Harmony finalizer");
+        Assert(!(bool)reentrant.GetValue(null)!,
+            "candidate failure plus logger failure cannot leak reentrant state while reload scope is still active");
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Assert((int)depth.GetValue(null)! == 0,
+            "finalizer remains the sole owner of reload-scope unwind after a candidate failure");
 
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object second = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
-        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
         Assert(ReferenceEquals(second, vanilla),
             "repeat candidate failure remains contained after first diagnostic attempt");
+        Assert((int)depth.GetValue(null)! == 1 && !(bool)reentrant.GetValue(null)!,
+            "repeat failure preserves scope depth and clears reentrancy after diagnostic suppression");
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
 
-        FieldInfo reentrant = typeof(ReloadCandidateBridgeRuntime).GetField("reentrant", BindingFlags.Static | BindingFlags.NonPublic)
-            ?? throw new InvalidOperationException("Reload diagnostic logging regression failed: reentrant state field missing");
-        Assert(!(bool)reentrant.GetValue(null)!, "candidate failure plus logger failure cannot leak reentrant state");
+        Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
+            "candidate failure plus logger failure cannot leak reload or reentrant state into future vanilla calls");
         ReloadCandidateBridgeRuntime.Reset();
     }
 
