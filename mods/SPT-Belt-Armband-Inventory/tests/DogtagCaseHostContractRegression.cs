@@ -14,6 +14,7 @@ internal static class DogtagCaseHostContractRegression
         var vanillaA = new MongoId(DogtagCaseHostContract.BearDogtagTemplateId);
         var vanillaB = new MongoId(DogtagCaseHostContract.UsecDogtagTemplateId);
         var foreignVanillaTpl = new MongoId("5c093ca986f7740a1867ab12");
+        var laterForeignTpl = new MongoId("5c093db286f7740a1b2617e3");
         var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
         var foreignOwnedTpl = new MongoId(RuntimeIdentity.CandidateItemId);
 
@@ -31,6 +32,13 @@ internal static class DogtagCaseHostContractRegression
 
         DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { vanillaA, vanillaB, caseTpl });
         DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { vanillaA, vanillaB, caseTpl });
+
+        // Compatible foreign additions made after our preload snapshot are intentionally
+        // tolerated. The contract is preservation-based rather than exclusive: it must
+        // retain every captured vanilla/foreign entry and reject only B&A&HB cross-owned
+        // contamination. This keeps load-order compatibility without weakening ownership.
+        DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { vanillaA, vanillaB, laterForeignTpl });
+        DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { vanillaA, vanillaB, laterForeignTpl, caseTpl });
 
         ExpectFailure(
             () => DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { vanillaA, vanillaB }),
@@ -56,10 +64,15 @@ internal static class DogtagCaseHostContractRegression
         // on enumeration order.
         DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaB, vanillaA });
 
-        ExerciseAtomicExposure(vanillaA, vanillaB, caseTpl, foreignOwnedTpl);
+        ExerciseAtomicExposure(vanillaA, vanillaB, caseTpl, foreignOwnedTpl, laterForeignTpl);
     }
 
-    private static void ExerciseAtomicExposure(MongoId vanillaA, MongoId vanillaB, MongoId caseTpl, MongoId foreignOwnedTpl)
+    private static void ExerciseAtomicExposure(
+        MongoId vanillaA,
+        MongoId vanillaB,
+        MongoId caseTpl,
+        MongoId foreignOwnedTpl,
+        MongoId laterForeignTpl)
     {
         MethodInfo commit = typeof(DogtagCaseItem).GetMethod(
             "CommitDogtagSlotExposure",
@@ -79,6 +92,14 @@ internal static class DogtagCaseHostContractRegression
         DogtagCaseHostContract.RequireCommitted(clean);
         if (clean.Count != count)
             throw new InvalidOperationException("Dogtag host regression failed: repeated atomic exposure changed the host set.");
+
+        // A compatible foreign addition made after capture must survive our atomic append.
+        // This pins cooperative load-order semantics while preserving the exact captured set.
+        var extended = new HashSet<MongoId> { vanillaA, vanillaB, laterForeignTpl };
+        commit.Invoke(null, new object[] { extended });
+        DogtagCaseHostContract.RequireCommitted(extended);
+        if (!extended.Contains(laterForeignTpl) || !extended.Contains(caseTpl) || extended.Count != 4)
+            throw new InvalidOperationException("Dogtag host regression failed: atomic exposure did not preserve a compatible post-capture foreign host addition.");
 
         // A host that became contaminated after preload must fail before our append.
         // This proves fail-closed verification cannot leave a partial Dogtag Case entry.
