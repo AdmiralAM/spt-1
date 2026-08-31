@@ -20,9 +20,17 @@ public static class DogtagCaseHostContract
     public const string BearDogtagTemplateId = "59f32bb586f774757e1e8442";
     public const string UsecDogtagTemplateId = "59f32c3b86f77472a31742f0";
 
+    private static readonly object SnapshotSync = new();
     private static HashSet<MongoId>? capturedVanillaEntries;
 
-    public static int CapturedVanillaEntryCount => capturedVanillaEntries?.Count ?? 0;
+    public static int CapturedVanillaEntryCount
+    {
+        get
+        {
+            lock (SnapshotSync)
+                return capturedVanillaEntries?.Count ?? 0;
+        }
+    }
 
     public static void CaptureVanillaEntries(IEnumerable<MongoId> acceptedTemplates)
     {
@@ -43,24 +51,37 @@ public static class DogtagCaseHostContract
         if (!snapshot.Contains(bearDogtag) || !snapshot.Contains(usecDogtag))
             throw new InvalidOperationException("B&A&HB Dogtag host snapshot refused: canonical BEAR/USEC dogtag acceptance is incomplete before mutation.");
 
-        if (capturedVanillaEntries == null)
+        lock (SnapshotSync)
         {
-            capturedVanillaEntries = snapshot;
-            return;
-        }
+            if (capturedVanillaEntries == null)
+            {
+                // Retain our own set rather than any caller-owned mutable collection.
+                // From this point the preload baseline is stable for every verifier.
+                capturedVanillaEntries = snapshot;
+                return;
+            }
 
-        if (!capturedVanillaEntries.SetEquals(snapshot))
-            throw new InvalidOperationException("B&A&HB Dogtag host snapshot changed during preload; refusing an ambiguous host contract.");
+            if (!capturedVanillaEntries.SetEquals(snapshot))
+                throw new InvalidOperationException("B&A&HB Dogtag host snapshot changed during preload; refusing an ambiguous host contract.");
+        }
     }
 
     public static void RequirePreserved(HashSet<MongoId> currentFilter)
     {
         ArgumentNullException.ThrowIfNull(currentFilter);
 
-        if (capturedVanillaEntries == null || capturedVanillaEntries.Count == 0)
-            throw new InvalidOperationException("B&A&HB Dogtag host verification refused: vanilla acceptance snapshot was never captured.");
+        MongoId[] captured;
+        lock (SnapshotSync)
+        {
+            if (capturedVanillaEntries == null || capturedVanillaEntries.Count == 0)
+                throw new InvalidOperationException("B&A&HB Dogtag host verification refused: vanilla acceptance snapshot was never captured.");
 
-        foreach (MongoId entry in capturedVanillaEntries)
+            // Verify against an immutable point-in-time copy so a concurrent
+            // idempotent recapture cannot interleave with host verification.
+            captured = capturedVanillaEntries.ToArray();
+        }
+
+        foreach (MongoId entry in captured)
         {
             if (!currentFilter.Contains(entry))
                 throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: pre-mutation acceptance entry {entry} was removed before trader registration.");
