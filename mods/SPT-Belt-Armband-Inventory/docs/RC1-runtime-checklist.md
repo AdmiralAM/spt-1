@@ -26,13 +26,15 @@ Dogtag Case contract:
 - source template is the canonical EFT/SPT Dogtag Case `5c093e3486f77430cb02e593`;
 - internal geometry and include/exclude filter groups are copied exactly from that source rather than replaced by a broad category;
 - ordinary personal-dogtag acceptance in the vanilla `Dogtag` equipment slot is preserved;
+- the reusable host contract rejects any other B&A&HB-owned template from the vanilla Dogtag acceptance set;
 - the case does not opt into B&A&HB death retention, insurance suppression, fast-access or build capabilities;
-- profile cleanup owns the case root and removes its descendants/references if the mod is deliberately cleaned up/uninstalled.
+- profile cleanup owns the case root and removes its descendants/references if the mod is deliberately cleaned up/uninstalled; repeating cleanup after a clean result is a strict no-op.
 
 Reload contract:
 - ordinary EFT reachable magazine locations remain first/default;
 - Magazine Armband and Magazine Belt may supply a compatible magazine only as additional reachable fallback sources;
 - Belt pseudo-slot15 bridging is scoped only to `Reload()` / `QuickReload()` fast-access enumeration and leaves the complete vanilla result/order as the prefix;
+- activation accepts only reference-identical original/installed `Inventory.FastAccessSlots` or original/installed `Inventory.BindAvailableSlotsExtended` arrays; structurally similar or copied arrays do not activate the bridge;
 - Wrist Wallet and Utility HeadBand are not reload sources;
 - no broad inventory scan, polling or UI/scene scan is part of the reload path.
 
