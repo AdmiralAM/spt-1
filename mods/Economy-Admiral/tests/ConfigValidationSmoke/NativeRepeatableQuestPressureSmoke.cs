@@ -20,11 +20,21 @@ internal static class NativeRepeatableQuestPressureSmoke
         if (Math.Abs(normal.RestartableItemCountMultiple - normal.RestartableItemBudgetMultiple) > 0.000001)
             throw new InvalidOperationException("Normal preset balance must remain unchanged when item-count and reward-value controls are separated.");
 
+        var normalSpreadMultiple = NativeRepeatableQuestPressureCore.ResolveRewardSpreadMultiple(normal, true, true, true);
+        if (normalSpreadMultiple is null || Math.Abs(normalSpreadMultiple.Value - 1.15) > 0.000001)
+            throw new InvalidOperationException("Normal repeatable reward spread must reuse the maintained strictest active 1.15 allowance.");
+        if (Math.Abs(NativeRepeatableQuestPressureCore.Cap(0.50, 0.25, normalSpreadMultiple.Value) - 0.2875) > 0.000001)
+            throw new InvalidOperationException("Inflated native repeatable reward spread must be bounded relative to pristine.");
+        if (NativeRepeatableQuestPressureCore.ResolveRewardSpreadMultiple(normal, false, false, false) is not null)
+            throw new InvalidOperationException("Reward spread must remain untouched when no affected repeatable reward mechanism is active.");
+
         var custom = PlayableQuestRewardCaps.Resolve(new EconomyConfig
         {
             Preset = EconomyPreset.Custom,
             CustomRestartableQuestItemBudgetMultiple = 1.40,
             CustomRestartableQuestItemCountMultiple = 0.80,
+            CustomRestartableQuestXpMultiple = 1.20,
+            CustomRestartableQuestStandingMultiple = 1.10,
         });
         if (Math.Abs(custom.RestartableItemBudgetMultiple - 1.40) > 0.000001
             || Math.Abs(custom.RestartableItemCountMultiple - 0.80) > 0.000001)
@@ -33,6 +43,12 @@ internal static class NativeRepeatableQuestPressureSmoke
             throw new InvalidOperationException("Custom repeatable reward-value pressure must use its own cap.");
         if (Math.Abs(NativeRepeatableQuestPressureCore.Cap(4.0, 2.0, custom.RestartableItemCountMultiple) - 1.6) > 0.000001)
             throw new InvalidOperationException("Custom repeatable item-count pressure must use its own cap.");
+        var customSpreadMultiple = NativeRepeatableQuestPressureCore.ResolveRewardSpreadMultiple(custom, true, true, true);
+        if (customSpreadMultiple is null || Math.Abs(customSpreadMultiple.Value - 1.10) > 0.000001)
+            throw new InvalidOperationException("Custom reward spread must obey the strictest active affected dimension without a new balance coefficient.");
+        var customItemOnlySpread = NativeRepeatableQuestPressureCore.ResolveRewardSpreadMultiple(custom, true, false, false);
+        if (customItemOnlySpread is null || Math.Abs(customItemOnlySpread.Value - 1.40) > 0.000001)
+            throw new InvalidOperationException("Custom item-only repeatable spread pressure must reuse the item-value allowance.");
 
         var standingMultiple = NativeRepeatableQuestPressureCore.ResolveStandingMultiple(normal);
         if (Math.Abs(standingMultiple - 1.15) > 0.000001)
@@ -45,6 +61,9 @@ internal static class NativeRepeatableQuestPressureSmoke
             throw new InvalidOperationException("Hard native repeatable XP must cap inflation back to pristine.");
         if (Math.Abs(NativeRepeatableQuestPressureCore.Cap(4.0, 2.0, hard.RestartableItemCountMultiple) - 2.0) > 0.000001)
             throw new InvalidOperationException("Hard native repeatable item-count inflation must cap back to pristine potential.");
+        var hardSpreadMultiple = NativeRepeatableQuestPressureCore.ResolveRewardSpreadMultiple(hard, true, true, true);
+        if (hardSpreadMultiple is null || Math.Abs(NativeRepeatableQuestPressureCore.Cap(0.5, 0.25, hardSpreadMultiple.Value) - 0.25) > 0.000001)
+            throw new InvalidOperationException("Hard native repeatable reward spread inflation must cap back to pristine.");
 
         if (!NativeRepeatableQuestPressureCore.Compatible([1d, 2d], [3d, 4d]))
             throw new InvalidOperationException("Equal non-empty native repeatable tier vectors must be compatible.");
@@ -55,6 +74,6 @@ internal static class NativeRepeatableQuestPressureSmoke
         if (!NativeRepeatableQuestPressureCore.NeedsMutation(100, 90))
             throw new InvalidOperationException("Native repeatable policy must recognize a real downward cap.");
 
-        Console.WriteLine("PASS native repeatable value/count/XP/skill/standing cap math is independent, bounded and fail-closed");
+        Console.WriteLine("PASS native repeatable value/count/XP/skill/standing/spread cap math is independent, bounded and fail-closed");
     }
 }
