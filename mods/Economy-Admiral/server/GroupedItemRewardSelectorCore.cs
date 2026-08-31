@@ -27,6 +27,7 @@ public static class GroupedItemRewardSelectorCore
 
         var candidateIndex = -1;
         var candidateValue = 0d;
+        var candidateReducibleValue = 0d;
         var reducibleCount = 0;
         var dominantCount = 0;
         for (var index = 0; index < entries.Count; index++)
@@ -62,18 +63,33 @@ public static class GroupedItemRewardSelectorCore
                 return Block("AmbiguousMultipleReducibleStacks");
 
             var economicValue = requireKnownHandbookPrice ? rounded * unitPrice : rounded;
-            if (!double.IsFinite(economicValue) || economicValue <= 0)
+            var reducibleEconomicValue = requireKnownHandbookPrice ? (rounded - 1d) * unitPrice : rounded - 1d;
+            if (!double.IsFinite(economicValue) || economicValue <= 0
+                || !double.IsFinite(reducibleEconomicValue) || reducibleEconomicValue <= 0)
                 return Block("InvalidRewardEconomicValue");
 
             if (candidateIndex < 0 || economicValue > candidateValue + ValueTolerance)
             {
                 candidateIndex = index;
                 candidateValue = economicValue;
+                candidateReducibleValue = reducibleEconomicValue;
                 dominantCount = 1;
             }
             else if (Math.Abs(economicValue - candidateValue) <= ValueTolerance)
             {
-                dominantCount++;
+                // Equal total economic contribution is not necessarily ambiguous. Prefer the stack with
+                // uniquely greater removable value while preserving one item: (count - 1) * unit price.
+                // This expands safe one-stack normalization without guessing or permitting item deletion.
+                if (reducibleEconomicValue > candidateReducibleValue + ValueTolerance)
+                {
+                    candidateIndex = index;
+                    candidateReducibleValue = reducibleEconomicValue;
+                    dominantCount = 1;
+                }
+                else if (Math.Abs(reducibleEconomicValue - candidateReducibleValue) <= ValueTolerance)
+                {
+                    dominantCount++;
+                }
             }
         }
 
