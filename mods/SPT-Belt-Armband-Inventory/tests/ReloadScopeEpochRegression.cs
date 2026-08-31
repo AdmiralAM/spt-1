@@ -1,12 +1,10 @@
 using System;
-using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace SPTBeltArmbandInventory.Tests
 {
     internal static class ReloadScopeEpochRegression
     {
-        [ModuleInitializer]
         internal static void Run()
         {
             ReloadScopeEpochGuard.ResetStateForRegression();
@@ -47,8 +45,6 @@ namespace SPTBeltArmbandInventory.Tests
 
             ReloadScopeEpochGuard.InvalidateForRegression();
 
-            // The invalidating thread must be able to enter the new generation immediately while
-            // the old owner still carries stale ThreadStatic state.
             ReloadScopeEpochGuard.EnterForRegression();
             if (!ReloadScopeEpochGuard.IsCurrentForRegression())
                 throw new InvalidOperationException("new-generation reload scope did not become current");
@@ -62,7 +58,6 @@ namespace SPTBeltArmbandInventory.Tests
             if (workerFailure != null)
                 throw new InvalidOperationException("cross-thread reload epoch regression failed", workerFailure);
 
-            // Same-thread stale nesting must also be discarded when the generation changes.
             ReloadScopeEpochGuard.EnterForRegression();
             ReloadScopeEpochGuard.EnterForRegression();
             ReloadScopeEpochGuard.InvalidateForRegression();
