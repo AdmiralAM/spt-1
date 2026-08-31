@@ -17,7 +17,7 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
         cls.by_key = {op["key"]: op for op in cls.manifest["operations"]}
 
     def test_specs_are_non_materialized_and_bound_to_frozen_base(self):
-        self.assertEqual(self.manifest["schemaVersion"], 2)
+        self.assertEqual(self.manifest["schemaVersion"], 3)
         self.assertEqual(self.manifest["status"], "post-0.1.0-authored-spec-only")
         self.assertEqual(
             self.manifest["frozen010Base"],
@@ -54,6 +54,21 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
             self.assertIn("explicit", plan["equipmentInclusiveSource"].lower())
             self.assertIn("pinned spt 4.1.3", plan["remainingBlocker"].lower())
 
+    def test_survived_extraction_shape_is_not_reopened_or_overclaimed(self):
+        authority = self.manifest["survivedExtractionAuthority"]
+        self.assertEqual(authority["status"], "proven-shape-only")
+        self.assertEqual(authority["conditionShape"], ["Location", "ExitStatus(Survived)"])
+        self.assertFalse(authority["sameRaidEquipmentCouplingProven"])
+        self.assertIn("does not prove", authority["boundary"].lower())
+        for operation in self.manifest["operations"]:
+            readiness = operation["conditionReadiness"]
+            self.assertEqual(readiness["equipmentShape"], "proven")
+            self.assertEqual(readiness["survivedExtractionShape"], "proven")
+            self.assertEqual(
+                readiness["equipmentToExtractionSameRaidCoupling"],
+                "unproven-not-required-for-initial-materialization",
+            )
+
     def test_armored_transit_rejects_legacy_equipment_ladders(self):
         operation = self.by_key["armored-transit"]
         self.assertEqual(operation["sourceBundles"], ["Iron Head", "Juggernaut"])
@@ -85,7 +100,8 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
         self.assertIn("pinned spt 4.1.3", proof_text)
         self.assertIn("overlap", proof_text)
         self.assertIn("economy admiral", proof_text)
-        self.assertIn("temporal coupling", proof_text)
+        self.assertIn("same-raid coupling", proof_text)
+        self.assertNotIn("prove survived/extraction semantics", proof_text)
         self.assertNotIn("prove exact spt 4.1.3 equipment-condition shape", proof_text)
 
     def test_frozen_runtime_counts_are_unchanged(self):
