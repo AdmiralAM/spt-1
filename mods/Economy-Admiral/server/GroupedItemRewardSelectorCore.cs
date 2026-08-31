@@ -40,11 +40,18 @@ public static class GroupedItemRewardSelectorCore
             if (Math.Abs(entry.Count - rounded) > IntegerTolerance)
                 return Block("NonIntegralStackCount");
 
+            var unitPrice = 0d;
             if (requireKnownHandbookPrice)
             {
                 if (!entry.HasKnownHandbookPrice)
                     return Block("UnknownHandbookPrice");
-                if (entry.HandbookUnitPrice is not { } unitPrice || !double.IsFinite(unitPrice) || unitPrice <= 0)
+
+                if (entry.HandbookUnitPrice is { } explicitPrice)
+                    unitPrice = explicitPrice;
+                else if (!QuestRewardHandbookPriceCatalog.TryGet(entry.TemplateId, out unitPrice))
+                    return Block("UnknownHandbookPrice");
+
+                if (!double.IsFinite(unitPrice) || unitPrice <= 0)
                     return Block("InvalidHandbookPrice");
             }
 
@@ -54,9 +61,7 @@ public static class GroupedItemRewardSelectorCore
             if (!requireKnownHandbookPrice && reducibleCount > 1)
                 return Block("AmbiguousMultipleReducibleStacks");
 
-            var economicValue = requireKnownHandbookPrice
-                ? rounded * entry.HandbookUnitPrice!.Value
-                : rounded;
+            var economicValue = requireKnownHandbookPrice ? rounded * unitPrice : rounded;
             if (!double.IsFinite(economicValue) || economicValue <= 0)
                 return Block("InvalidRewardEconomicValue");
 
