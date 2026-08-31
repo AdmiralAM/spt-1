@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "product": "Admiral Trader",
   "status": "post-0.1.0-condition-proof-inventory",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -18,7 +18,8 @@
       "commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
       "path": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json"
     },
-    "pmcLocationExtractionProof": "post-010-pmc-location-extraction-proof.json"
+    "pmcLocationExtractionProof": "post-010-pmc-location-extraction-proof.json",
+    "playerEquipmentProof": "post-010-player-equipment-proof.json"
   },
   "staticallyProvenShapes": [
     {
@@ -82,6 +83,13 @@
       "conditionTypes": ["Location", "ExitName", "ExitStatus"],
       "evidence": "Documented SPT quest semantics recorded in post-010-pmc-location-extraction-proof.json.",
       "post010Use": "May be used only after the exact exfil is selected and validated against the selected map."
+    },
+    {
+      "capability": "player equipment condition family",
+      "conditionType": "Equipment",
+      "fields": ["IncludeNotEquippedItems", "equipmentInclusive", "equipmentExclusive"],
+      "evidence": "Pinned SPT 4.1.3 vanilla quests serialize dedicated Equipment subconditions; exact boundary is recorded in post-010-player-equipment-proof.json.",
+      "post010Use": "May use explicit validated item TPL sets with IncludeNotEquippedItems=false; category/class inference and multi-group semantics remain proof-gated."
     }
   ],
   "stillUnprovenForPost010": [
@@ -104,9 +112,9 @@
       "affectedOperations": ["access-reconnaissance", "acoustic-contact", "route-security", "hostile-operator-intercept", "armored-transit", "controlled-chemical-support", "precision-observation-window", "labs-security-disruption"]
     },
     {
-      "capability": "equipped armor/helmet/headset/loadout requirement",
-      "fields": ["player equipment condition family or exact SPT equivalent"],
-      "reason": "Enemy equipment fields in Kills conditions are not evidence for player-equipment requirements.",
+      "capability": "player equipment category/class refinement",
+      "fields": ["Equipment.equipmentInclusive exact TPL groups; category/armor-class equivalent if one exists"],
+      "reason": "The dedicated Equipment family is proven, but generic helmet/headset/armor category selectors, armor-class predicates, multiple-group boolean semantics and IncludeNotEquippedItems=true are not inferred from serialization alone.",
       "affectedOperations": ["expedition-loadout", "protection-calibration", "ballistic-head-test", "heavy-assault-loadout", "acoustic-contact", "armored-transit"]
     },
     {
@@ -137,7 +145,7 @@
     "noNewFrozen010QuestJson": true,
     "nextResearchPriority": [
       "prove same-raid coupling semantics",
-      "prove player-equipment condition family",
+      "select and validate explicit equipment TPL sets or prove category/class refinement",
       "prove medical/stimulant use semantics",
       "prove access interaction/proxy semantics",
       "prove repairable-item handover durability semantics"
