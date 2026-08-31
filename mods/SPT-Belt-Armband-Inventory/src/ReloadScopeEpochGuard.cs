@@ -24,6 +24,7 @@ namespace SPTBeltArmbandInventory
         static readonly object installGate = new object();
         static int generation;
         static bool installed;
+        static bool terminalFailure;
         static object harmonyOwner;
 
         [ThreadStatic] static int threadGeneration;
@@ -32,13 +33,22 @@ namespace SPTBeltArmbandInventory
         [System.Runtime.CompilerServices.ModuleInitializer]
         internal static void Initialize()
         {
-            if (!TryInstall())
+            if (!TryInstall() && !terminalFailure)
                 AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
         }
 
         static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
         {
-            if (!TryInstall()) return;
+            if (terminalFailure)
+            {
+                AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+                return;
+            }
+            if (!TryInstall())
+            {
+                if (terminalFailure) AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+                return;
+            }
             AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
         }
 
@@ -47,7 +57,9 @@ namespace SPTBeltArmbandInventory
             lock (installGate)
             {
                 if (installed) return true;
+                if (terminalFailure) return false;
                 object owner = null;
+                MethodInfo unpatchSelf = null;
                 try
                 {
                     Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
@@ -57,7 +69,8 @@ namespace SPTBeltArmbandInventory
                     ConstructorInfo harmonyCtor = harmonyType.GetConstructor(new[] { typeof(string) });
                     ConstructorInfo harmonyMethodCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                     MethodInfo patch = FindPatchMethod(harmonyType, harmonyMethodType);
-                    if (harmonyCtor == null || harmonyMethodCtor == null || patch == null) return false;
+                    unpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
+                    if (harmonyCtor == null || harmonyMethodCtor == null || patch == null || unpatchSelf == null) return false;
 
                     Type runtime = typeof(ReloadCandidateBridgeRuntime);
                     MethodInfo enter = runtime.GetMethod("EnterReloadScope", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
@@ -81,29 +94,45 @@ namespace SPTBeltArmbandInventory
                 {
                     // Harmony.Patch mutates process-wide state one patch at a time. If any later
                     // patch in this four-method transaction fails, roll back this owner before an
-                    // AssemblyLoad retry can attempt installation again. A partially installed
-                    // epoch guard is less safe than no guard and could otherwise duplicate patches.
-                    TryRollbackOwner(owner);
+                    // AssemblyLoad retry can attempt installation again. If rollback itself cannot
+                    // be proven, enter terminal fail-closed state rather than risking duplicate or
+                    // mixed-generation patches on a later assembly-load retry.
+                    bool rolledBack = TryRollbackOwner(owner, unpatchSelf);
                     harmonyOwner = null;
                     installed = false;
+                    terminalFailure = owner != null && !rolledBack;
                     return false;
                 }
             }
         }
 
-        static void TryRollbackOwner(object owner)
+        static bool TryRollbackOwner(object owner, MethodInfo unpatchSelf)
         {
-            if (owner == null) return;
+            if (owner == null) return true;
+            if (unpatchSelf == null) return false;
             try
             {
-                MethodInfo unpatchSelf = owner.GetType().GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, Type.EmptyTypes, null);
-                unpatchSelf?.Invoke(owner, null);
+                unpatchSelf.Invoke(owner, null);
+                return true;
             }
             catch
             {
-                // Discovery remains fail-closed. Do not allow cleanup diagnostics/failures to
-                // escape module initialization; a later retry must still start from installed=false.
+                return false;
             }
+        }
+
+        static MethodInfo FindZeroArgInstanceMethod(Type type, string name)
+        {
+            MethodInfo selected = null;
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            for (int i = 0; i < methods.Length; i++)
+            {
+                MethodInfo method = methods[i];
+                if (!string.Equals(method.Name, name, StringComparison.Ordinal) || method.GetParameters().Length != 0) continue;
+                if (selected != null) return null;
+                selected = method;
+            }
+            return selected;
         }
 
         static MethodInfo Method(string name)
