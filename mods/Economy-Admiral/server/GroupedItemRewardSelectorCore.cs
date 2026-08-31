@@ -1,6 +1,10 @@
 namespace SPTEconomy;
 
-public sealed record GroupedItemRewardEntry(string TemplateId, double Count, bool HasKnownHandbookPrice);
+public sealed record GroupedItemRewardEntry(
+    string TemplateId,
+    double Count,
+    bool HasKnownHandbookPrice,
+    double? HandbookUnitPrice = null);
 
 public sealed record GroupedItemRewardSelection
 {
@@ -12,6 +16,7 @@ public sealed record GroupedItemRewardSelection
 public static class GroupedItemRewardSelectorCore
 {
     private const double IntegerTolerance = 0.000001;
+    private const double ValueTolerance = 0.01;
 
     public static GroupedItemRewardSelection Select(
         IReadOnlyList<GroupedItemRewardEntry> entries,
@@ -21,7 +26,7 @@ public static class GroupedItemRewardSelectorCore
         if (entries.Count == 0) return Block("EmptyItemRewardRecord");
 
         var candidateIndex = -1;
-        var candidateCount = 0d;
+        var candidateValue = 0d;
         var reducibleCount = 0;
         var dominantCount = 0;
         for (var index = 0; index < entries.Count; index++)
@@ -35,8 +40,13 @@ public static class GroupedItemRewardSelectorCore
             if (Math.Abs(entry.Count - rounded) > IntegerTolerance)
                 return Block("NonIntegralStackCount");
 
-            if (requireKnownHandbookPrice && !entry.HasKnownHandbookPrice)
-                return Block("UnknownHandbookPrice");
+            if (requireKnownHandbookPrice)
+            {
+                if (!entry.HasKnownHandbookPrice)
+                    return Block("UnknownHandbookPrice");
+                if (entry.HandbookUnitPrice is not { } unitPrice || !double.IsFinite(unitPrice) || unitPrice <= 0)
+                    return Block("InvalidHandbookPrice");
+            }
 
             if (rounded <= 1) continue;
             reducibleCount++;
@@ -44,13 +54,19 @@ public static class GroupedItemRewardSelectorCore
             if (!requireKnownHandbookPrice && reducibleCount > 1)
                 return Block("AmbiguousMultipleReducibleStacks");
 
-            if (candidateIndex < 0 || rounded > candidateCount)
+            var economicValue = requireKnownHandbookPrice
+                ? rounded * entry.HandbookUnitPrice!.Value
+                : rounded;
+            if (!double.IsFinite(economicValue) || economicValue <= 0)
+                return Block("InvalidRewardEconomicValue");
+
+            if (candidateIndex < 0 || economicValue > candidateValue + ValueTolerance)
             {
                 candidateIndex = index;
-                candidateCount = rounded;
+                candidateValue = economicValue;
                 dominantCount = 1;
             }
-            else if (Math.Abs(rounded - candidateCount) <= IntegerTolerance)
+            else if (Math.Abs(economicValue - candidateValue) <= ValueTolerance)
             {
                 dominantCount++;
             }
@@ -66,7 +82,7 @@ public static class GroupedItemRewardSelectorCore
             Eligible = true,
             SelectedIndex = candidateIndex,
             Reason = reducibleCount > 1
-                ? "UniqueDominantReducibleStackInGroupedReward"
+                ? "UniqueDominantEconomicValueStackInGroupedReward"
                 : entries.Count == 1
                     ? (requireKnownHandbookPrice ? "SingleReducibleStack" : "SingleReducibleStackManualExact")
                     : (requireKnownHandbookPrice ? "OneReducibleStackInGroupedReward" : "OneReducibleStackInGroupedRewardManualExact"),
