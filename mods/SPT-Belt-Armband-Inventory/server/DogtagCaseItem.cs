@@ -154,6 +154,14 @@ public sealed class DogtagCaseItem(
         if (groups == null || groups.Length != 1 || groups[0].Filter == null || groups[0].Filter.Count == 0)
             throw new InvalidOperationException("B&A&HB Dogtag slot filter boundary is missing or ambiguous; exactly one non-empty vanilla filter group is required.");
 
+        foreach (MongoId accepted in groups[0].Filter)
+        {
+            string templateId = accepted.ToString();
+            if (PersistentIdentityManifest.IsOwnedTemplate(templateId)
+                && !string.Equals(templateId, TemplateId, StringComparison.Ordinal))
+                throw new InvalidOperationException("B&A&HB Dogtag slot is already contaminated by a different owned product template; refusing cross-host mutation.");
+        }
+
         return groups[0].Filter;
     }
 
