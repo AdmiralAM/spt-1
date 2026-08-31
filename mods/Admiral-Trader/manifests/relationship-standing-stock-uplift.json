@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-authored-spec-only",
+  "purpose": "Make Admiral standing materially useful without quota-filling Relationship with duplicate items: standing may increase finite replenishment of an already-admitted consumable mission-preparation offer, while non-consumable Baseline equipment remains unchanged.",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "authority": {
+    "baselineManifest": "baseline-stock.json",
+    "relationshipManifest": "relationship-stock.json",
+    "finiteOfferContract": "finite-offer-progression.json",
+    "runtimeMaterialize": false,
+    "newRootOffersAdded": 0,
+    "priceDiscountAllowed": false,
+    "questGateBypassAllowed": false,
+    "capabilityOfferUpliftAllowed": false,
+    "economyReviewRequiredBeforeMaterialization": true
+  },
+  "eligibility": {
+    "required": [
+      "offer already belongs to frozen Baseline rather than Milestone capability stock",
+      "item is consumed by ordinary field preparation so additional personal replenishment has recurring utility",
+      "uplift remains finite at every standing tier",
+      "price remains unchanged",
+      "uplift does not create a new item source, quest bypass or ammunition/access capability"
+    ],
+    "excluded": [
+      "non-consumable navigation or observation equipment",
+      "extract utility items that are normally retained rather than consumed",
+      "quest-gated Access or Munitions offers",
+      "raw barter materials",
+      "high-value consumable faucets"
+    ]
+  },
+  "reviewedBaselineOffers": [
+    {
+      "offerId": "ad2000000000000000000001",
+      "role": "navigation",
+      "decision": "no-uplift-non-consumable",
+      "reason": "The compass is durable navigation equipment. Standing should not manufacture repeated renewable copies of a tool the player normally needs only once."
+    },
+    {
+      "offerId": "ad2000000000000000000002",
+      "role": "expedition-support",
+      "decision": "no-uplift-retained-extract-utility",
+      "reason": "Paracord already has bounded Baseline availability and is normally retained for extraction utility; increasing replenishment would primarily weaken scarcity/barter pressure rather than improve recurring mission preparation."
+    },
+    {
+      "offerId": "ad2000000000000000000003",
+      "role": "reconnaissance",
+      "decision": "no-uplift-non-consumable",
+      "reason": "The rangefinder is durable reconnaissance equipment. Additional standing-gated copies do not create a meaningful recurring logistics privilege."
+    },
+    {
+      "offerId": "ad2000000000000000000004",
+      "role": "field-marking",
+      "decision": "approve-uplift-after-economy-review",
+      "reason": "Field markers are consumed by mission preparation. Raising only their finite replenishment creates a visible logistics benefit from relationship standing without adding a new item source or bypassing a capability gate."
+    }
+  ],
+  "upliftPlan": {
+    "offerId": "ad2000000000000000000004",
+    "tpl": "5991b51486f77447b112d44f",
+    "role": "field-marking",
+    "priceRub": 16500,
+    "priceChangesAcrossTiers": false,
+    "tiers": [
+      {
+        "loyaltyLevel": 1,
+        "standing": 0.0,
+        "stockPerReset": 12,
+        "buyRestriction": 4,
+        "state": "frozen-baseline"
+      },
+      {
+        "loyaltyLevel": 2,
+        "standing": 0.1,
+        "stockPerReset": 16,
+        "buyRestriction": 6,
+        "state": "post-0.1.0-proposed"
+      },
+      {
+        "loyaltyLevel": 3,
+        "standing": 0.3,
+        "stockPerReset": 20,
+        "buyRestriction": 8,
+        "state": "post-0.1.0-proposed"
+      },
+      {
+        "loyaltyLevel": 4,
+        "standing": 0.55,
+        "stockPerReset": 24,
+        "buyRestriction": 10,
+        "state": "post-0.1.0-proposed"
+      }
+    ],
+    "ll1ToLl4Delta": {
+      "stockUnitsPerReset": 12,
+      "personalBuyUnitsPerReset": 6,
+      "personalSpendCapacityRub": 99000,
+      "globalStockValueRub": 198000
+    },
+    "bounds": {
+      "maximumStockPerReset": 24,
+      "maximumBuyRestriction": 10,
+      "maximumPersonalSpendCapacityIncreaseRub": 99000,
+      "maximumGlobalStockValueIncreaseRub": 198000
+    }
+  },
+  "materializationGates": {
+    "implementationAllowed": false,
+    "requiresEconomyAdmiralApproval": true,
+    "requiresRuntimeLoyaltyVisibilityProof": true,
+    "requiresAssortMutationContract": true,
+    "requiresFrozen010PhysicalGate": true,
+    "physicalCheckpointRequestedNow": false
+  },
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0,
+    "baselineRuntimeMutationInThisSlice": false
+  }
+}
