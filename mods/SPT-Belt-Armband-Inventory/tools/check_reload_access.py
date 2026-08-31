@@ -6,6 +6,7 @@ epoch = (ROOT / "src" / "ReloadScopeEpochGuard.cs").read_text(encoding="utf-8-si
 tests = (ROOT / "tests" / "Program.cs").read_text(encoding="utf-8-sig")
 bridge_tests = (ROOT / "tests" / "ReloadCandidateBridgeRegression.cs").read_text(encoding="utf-8-sig")
 epoch_tests = (ROOT / "tests" / "ReloadScopeEpochRegression.cs").read_text(encoding="utf-8-sig")
+epoch_install_tests = (ROOT / "tests" / "ReloadScopeEpochInstallRollbackRegression.cs").read_text(encoding="utf-8-sig")
 diagnostic_tests = (ROOT / "tests" / "ReloadDiagnosticLoggingRegression.cs").read_text(encoding="utf-8-sig")
 
 violations = []
@@ -68,12 +69,21 @@ for token in (
     'runtime.GetMethod("ExitReloadScope"',
     'runtime.GetMethod("AppendCandidates"',
     'runtime.GetMethod("Reset"',
-    'object owner = null;',
+    'static bool terminalFailure;',
+    'if (terminalFailure) return false;',
+    'MethodInfo unpatchSelf = null;',
+    'unpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf")',
+    'if (harmonyCtor == null || harmonyMethodCtor == null || patch == null || unpatchSelf == null) return false;',
     'PatchNamed(owner, patch, harmonyMethodType, reset, "postfix"',
-    'TryRollbackOwner(owner);',
-    'GetMethod("UnpatchSelf"',
+    'bool rolledBack = TryRollbackOwner(owner, unpatchSelf);',
+    'terminalFailure = owner != null && !rolledBack;',
+    'static bool TryRollbackOwner(object owner, MethodInfo unpatchSelf)',
+    'if (unpatchSelf == null) return false;',
+    'unpatchSelf.Invoke(owner, null);',
+    'FindZeroArgInstanceMethod',
     'harmonyOwner = null;',
     'installed = false;',
+    'AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;',
     'if (IsCurrentScope()) return true;',
     '__result = __2;',
     'return false;',
@@ -93,6 +103,18 @@ for token in (
 ):
     if token not in epoch_tests:
         violations.append(f"ReloadScopeEpochRegression.cs: epoch regression missing: {token}")
+
+for token in (
+    'TryRollbackOwner',
+    'FindZeroArgInstanceMethod',
+    'partial Harmony owner was not unpatched exactly once',
+    'throwing rollback was not reported as terminally unsafe',
+    'missing rollback API was incorrectly treated as safe',
+    'no-owner rollback must be an exact safe no-op',
+    'ambiguous zero-arg rollback API did not fail closed',
+):
+    if token not in epoch_install_tests:
+        violations.append(f"ReloadScopeEpochInstallRollbackRegression.cs: atomic install regression missing: {token}")
 
 if source.count('ReloadDiagnosticLog.TryWarning(LogWarning,') < 2:
     violations.append("FastAccessSlotPatches.cs: both reload reachability and candidate runtime diagnostics must isolate throwing warning sinks")
@@ -225,4 +247,4 @@ for token in (
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item contract; no-op Belt path preserves vanilla result identity without merge allocation; throwing diagnostics isolated; reachability/candidate owners isolated; stale ThreadStatic scopes generation-invalidated across reset/reinstall; epoch Harmony install is owner-atomic with rollback on partial failure; startup-bound discovery; fail-closed/no polling)")
+print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item contract; no-op Belt path preserves vanilla result identity without merge allocation; throwing diagnostics isolated; reachability/candidate owners isolated; stale ThreadStatic scopes generation-invalidated across reset/reinstall; epoch Harmony install preflights unique rollback and enters terminal fail-closed state if owner rollback cannot be proven; startup-bound discovery; fail-closed/no polling)")
