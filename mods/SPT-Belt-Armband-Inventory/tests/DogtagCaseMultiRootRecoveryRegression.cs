@@ -40,17 +40,26 @@ internal static class DogtagCaseMultiRootRecoveryRegression
             throw new InvalidOperationException("Dogtag multi-root recovery regression failed: cleanup did not compute the exact transitive closure for two independent owned case roots.");
 
         string remaining = profile.ToJsonString();
-        string[] removed =
+        string[] removedIdentityTokens =
         {
-            "case-a", "a-child", "a-grandchild",
-            "case-b", "b-child",
-            "ref-a-root", "ref-a-child", "ref-a-grandchild", "ref-b-root", "ref-b-child"
+            "\"_id\":\"case-a\"", "\"_id\":\"a-child\"", "\"_id\":\"a-grandchild\"",
+            "\"_id\":\"case-b\"", "\"_id\":\"b-child\"",
+            "\"_id\":\"ref-a-root\"", "\"_id\":\"ref-a-child\"", "\"_id\":\"ref-a-grandchild\"",
+            "\"_id\":\"ref-b-root\"", "\"_id\":\"ref-b-child\""
         };
-        if (removed.Any(id => remaining.Contains(id, StringComparison.Ordinal)))
+        if (removedIdentityTokens.Any(token => remaining.Contains(token, StringComparison.Ordinal)))
             throw new InvalidOperationException("Dogtag multi-root recovery regression failed: an owned root, descendant or exact reference survived cleanup.");
 
-        string[] preserved = { "ordinary-bear", "unrelated", "foreign-lookalike", "case-a-suffix", "foreign-parent-lookalike", "prefix-case-b" };
-        if (preserved.Any(id => !remaining.Contains(id, StringComparison.Ordinal)))
+        string[] preservedExactTokens =
+        {
+            "\"_id\":\"ordinary-bear\"",
+            "\"_id\":\"unrelated\"",
+            "\"_id\":\"foreign-lookalike\"",
+            "\"itemId\":\"case-a-suffix\"",
+            "\"_id\":\"foreign-parent-lookalike\"",
+            "\"parentId\":\"prefix-case-b\""
+        };
+        if (preservedExactTokens.Any(token => !remaining.Contains(token, StringComparison.Ordinal)))
             throw new InvalidOperationException("Dogtag multi-root recovery regression failed: cleanup crossed an exact-reference boundary into unrelated/lookalike data.");
 
         if (!remaining.Contains(DogtagCaseHostContract.BearDogtagTemplateId, StringComparison.Ordinal))
