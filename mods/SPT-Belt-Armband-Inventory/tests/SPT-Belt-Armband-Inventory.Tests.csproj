@@ -28,6 +28,7 @@
     <Compile Include="..\src\GrenadeSlotPatches.cs" Link="GrenadeSlotPatches.cs" />
     <Compile Include="..\src\FastAccessBeltSyncPatches.cs" Link="FastAccessBeltSyncPatches.cs" />
     <Compile Include="..\src\FastAccessSlotPatches.cs" Link="FastAccessSlotPatches.cs" />
+    <Compile Include="..\src\ReloadScopeEpochGuard.cs" Link="ReloadScopeEpochGuard.cs" />
     <Compile Include="..\src\RuntimeMutationPolicy.cs" Link="RuntimeMutationPolicy.cs" />
     <Compile Include="..\src\RuntimeCustomBeltTypes.cs" Link="RuntimeCustomBeltTypes.cs" />
     <Compile Include="..\src\RuntimeIdentity.cs" Link="RuntimeIdentity.cs" />
