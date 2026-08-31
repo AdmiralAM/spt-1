@@ -51,16 +51,45 @@ public sealed class DogtagCaseAssort(
         if (trader.Assort.BarterScheme.ContainsKey(id) || trader.Assort.LoyalLevelItems.ContainsKey(id))
             throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: item is absent but barter/loyalty metadata already owns the persistent assort ID.");
 
-        trader.Assort.Items.Add(new Item
+        var offer = new Item
         {
             Id = id,
             Template = templateId,
             ParentId = RuntimeCandidateOfferContract.RootId,
             SlotId = RuntimeCandidateOfferContract.RootId,
             Upd = new Upd { UnlimitedCount = true, StackObjectsCount = UnlimitedStock }
-        });
-        trader.Assort.BarterScheme.Add(id, [[new BarterScheme { Count = PriceRoubles, Template = Money.ROUBLES }]]);
-        trader.Assort.LoyalLevelItems.Add(id, LoyaltyLevel);
+        };
+        var barter = new List<List<BarterScheme>>
+        {
+            new() { new BarterScheme { Count = PriceRoubles, Template = Money.ROUBLES } }
+        };
+
+        bool itemAdded = false;
+        bool barterAdded = false;
+        bool loyaltyAdded = false;
+        try
+        {
+            trader.Assort.Items.Add(offer);
+            itemAdded = true;
+            trader.Assort.BarterScheme.Add(id, barter);
+            barterAdded = true;
+            trader.Assort.LoyalLevelItems.Add(id, LoyaltyLevel);
+            loyaltyAdded = true;
+
+            // Publication is a committed-state boundary just like Dogtag host
+            // exposure. Revalidate the exact live offer before declaring success.
+            ValidateExisting(trader, id, offer, templateId);
+        }
+        catch
+        {
+            // Roll back only state created by this invocation. Existing/foreign
+            // assort data was rejected before mutation and is never removed here.
+            if (loyaltyAdded) trader.Assort.LoyalLevelItems.Remove(id);
+            if (barterAdded) trader.Assort.BarterScheme.Remove(id);
+            if (itemAdded) trader.Assort.Items.Remove(offer);
+            throw;
+        }
+
         logger.Success($"B&A&HB Dogtag Case added to Ragman LL{LoyaltyLevel} for {PriceRoubles:N0} RUB after exact vanilla Dogtag host verification.");
         return Task.CompletedTask;
     }
