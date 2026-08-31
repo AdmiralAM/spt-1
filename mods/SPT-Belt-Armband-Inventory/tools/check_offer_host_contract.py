@@ -46,6 +46,7 @@ for token in [
     "PersistentIdentityManifest.IsOwnedTemplate(templateId)",
     "!string.Equals(templateId, TemplateId, StringComparison.Ordinal)",
     "already contaminated by a different owned product template",
+    "HashSet<MongoId> hostFilter = groups[0].Filter;",
     "DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);",
     "DogtagCaseHostContract.RequirePreserved(filter);",
     "DogtagCaseHostContract.RequireCommitted(filter);",
@@ -72,12 +73,13 @@ for token in [
 prepare_call = dogtag_item.find("HashSet<MongoId> dogtagSlotFilter = PrepareDogtagSlotFilter();")
 first_commit = dogtag_item.find("CommitDogtagSlotExposure(dogtagSlotFilter);")
 prepare_def = dogtag_item.find("private HashSet<MongoId> PrepareDogtagSlotFilter()")
+host_capture = dogtag_item.find("HashSet<MongoId> hostFilter = groups[0].Filter;", prepare_def)
 capture = dogtag_item.find("DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);", prepare_def)
-prepare_return = dogtag_item.find("return groups[0].Filter;", prepare_def)
+prepare_return = dogtag_item.find("return hostFilter;", prepare_def)
 if min(prepare_call, first_commit) < 0 or prepare_call > first_commit:
     violations.append("Dogtag Case must prepare/snapshot its host before the first container exposure")
-if min(prepare_def, capture, prepare_return) < 0 or not (prepare_def < capture < prepare_return):
-    violations.append("Dogtag Case host preparation must capture every non-owned entry before returning the mutable host filter")
+if min(prepare_def, host_capture, capture, prepare_return) < 0 or not (prepare_def < host_capture < capture < prepare_return):
+    violations.append("Dogtag Case host preparation must bind one validated host filter, capture every non-owned entry, then return that same mutable reference")
 
 for label, text in [("Magazine Armband", armband), ("Wrist Wallet", wallet)]:
     host = text.find("WearableOfferHostContract.RequireArmBandProduct(templateTable, templateId);")
@@ -118,9 +120,6 @@ if min(dogtag_host, dogtag_trader, dogtag_first_mutation) < 0 or not (
 ):
     violations.append("Dogtag Case offer must execute exact committed Dogtag host validation before resolving or mutating Ragman assort")
 
-# RequireExactDogtagHost is called above before Ragman resolution; its body must
-# itself contain the complete committed-state proof. Do not compare source-file
-# offsets across the caller and helper body because helper definitions appear later.
 require_host_def = dogtag.find("internal static void RequireExactDogtagHost")
 commit_verify = dogtag.find("DogtagCaseHostContract.RequireCommitted(hostFilter);", require_host_def)
 host_method_end = dogtag.find("private static void ValidateExisting", require_host_def)
@@ -135,4 +134,4 @@ if "hostFilter.Add(" in dogtag or "groups[0].Filter.Add(" in dogtag or "slots.Ad
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case snapshots every pre-mutation non-owned Dogtag host entry under a synchronized immutable verification boundary and trader registration requires centralized committed-state proof: complete snapshot survives, exact case is present, and owned cross-host contamination is absent; validation is read-only)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case binds one validated preload host-filter reference, snapshots every pre-mutation non-owned entry under a synchronized immutable verification boundary, and trader registration requires centralized committed-state proof; validation is read-only)")
