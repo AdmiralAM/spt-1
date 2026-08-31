@@ -37,12 +37,15 @@ public sealed class DogtagCaseItem(
         if (!templateTable.Items.TryGetValue(SourceDogtagCaseTpl, out var source))
             throw new InvalidOperationException("B&A&HB Dogtag Case source template is missing; refusing fallback cloning.");
 
-        var sourceGrids = source.Properties?.Grids?.ToArray();
-        if (sourceGrids == null || sourceGrids.Length != 1 || sourceGrids[0].Properties == null)
+        var sourceProperties = source.Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case source properties are missing; refusing fallback cloning.");
+        var sourceGrids = sourceProperties.Grids?.ToArray();
+        if (sourceGrids == null || sourceGrids.Length != 1)
             throw new InvalidOperationException("B&A&HB Dogtag Case source grid boundary is missing or ambiguous; exactly one canonical grid is required.");
 
         var sourceGrid = sourceGrids[0];
-        var sourceGridProperties = sourceGrid.Properties;
+        var sourceGridProperties = sourceGrid.Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case canonical source grid properties are missing; refusing fallback cloning.");
         var sourceFilters = sourceGridProperties.Filters?.ToArray();
         if (sourceFilters == null || sourceFilters.Length == 0 || sourceFilters.Any(x => x.Filter == null || x.Filter.Count == 0))
             throw new InvalidOperationException("B&A&HB Dogtag Case source filters are empty or ambiguous; refusing to create a broadened container.");
@@ -62,7 +65,7 @@ public sealed class DogtagCaseItem(
         var copiedFilters = sourceFilters
             .Select(filter => new GridFilter
             {
-                Filter = new HashSet<MongoId>(filter.Filter),
+                Filter = new HashSet<MongoId>(filter.Filter!),
                 ExcludedFilter = filter.ExcludedFilter == null
                     ? null
                     : new HashSet<MongoId>(filter.ExcludedFilter)
@@ -95,7 +98,7 @@ public sealed class DogtagCaseItem(
             },
             OverrideProperties = new TemplateItemProperties
             {
-                BackgroundColor = source.Properties?.BackgroundColor,
+                BackgroundColor = sourceProperties.BackgroundColor,
                 ExaminedByDefault = true,
                 Grids =
                 [
@@ -149,12 +152,13 @@ public sealed class DogtagCaseItem(
         if (groups == null || groups.Length != 1 || groups[0].Filter == null || groups[0].Filter.Count == 0)
             throw new InvalidOperationException("B&A&HB Dogtag slot filter boundary is missing or ambiguous; exactly one non-empty vanilla filter group is required.");
 
-        MongoId[] vanillaEntries = groups[0].Filter
+        HashSet<MongoId> hostFilter = groups[0].Filter;
+        MongoId[] vanillaEntries = hostFilter
             .Where(x => !PersistentIdentityManifest.IsOwnedTemplate(x.ToString()))
             .ToArray();
         DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);
 
-        foreach (MongoId accepted in groups[0].Filter)
+        foreach (MongoId accepted in hostFilter)
         {
             string templateId = accepted.ToString();
             if (PersistentIdentityManifest.IsOwnedTemplate(templateId)
@@ -162,15 +166,13 @@ public sealed class DogtagCaseItem(
                 throw new InvalidOperationException("B&A&HB Dogtag slot is already contaminated by a different owned product template; refusing cross-host mutation.");
         }
 
-        return groups[0].Filter;
+        return hostFilter;
     }
 
     private static void CommitDogtagSlotExposure(HashSet<MongoId> filter)
     {
         ArgumentNullException.ThrowIfNull(filter);
 
-        // Re-prove the captured vanilla/foreign host immediately before mutation.
-        // This closes the preload gap without rejecting compatible foreign additions.
         DogtagCaseHostContract.RequirePreserved(filter);
         if (filter.Contains(DogtagCaseTpl))
         {
@@ -181,15 +183,10 @@ public sealed class DogtagCaseItem(
         filter.Add(DogtagCaseTpl);
         try
         {
-            // Central committed-state verification proves both sides of the host
-            // contract: every captured vanilla/foreign entry survives, no other
-            // B&A&HB template contaminates Dogtag, and the exact case is present.
             DogtagCaseHostContract.RequireCommitted(filter);
         }
         catch
         {
-            // We own only this append. Roll it back if postcondition verification
-            // fails so fail-closed startup cannot leave a partially mutated host.
             filter.Remove(DogtagCaseTpl);
             throw;
         }
