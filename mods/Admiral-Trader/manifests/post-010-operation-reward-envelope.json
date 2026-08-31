@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-balance-plan-only",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "purpose": "Give the complete 21-operation post-0.1.0 authored wave one bounded reward language before any runtime materialization. Numeric envelopes are ceilings for later Economy Admiral review, not runtime rewards.",
+  "bands": {
+    "routine": {"xpMin": 3500, "xpMax": 6000, "rubMin": 20000, "rubMax": 35000, "standingMax": 0.01},
+    "standard": {"xpMin": 6000, "xpMax": 9000, "rubMin": 35000, "rubMax": 55000, "standingMax": 0.015},
+    "high-risk": {"xpMin": 9000, "xpMax": 13000, "rubMin": 55000, "rubMax": 85000, "standingMax": 0.02},
+    "critical": {"xpMin": 13000, "xpMax": 18000, "rubMin": 85000, "rubMax": 120000, "standingMax": 0.025}
+  },
+  "operationBands": {
+    "rogue-interdiction": "high-risk",
+    "expedition-discipline": "standard",
+    "field-medicine-under-pressure": "standard",
+    "high-value-target-window": "critical",
+    "night-signal-disruption": "high-risk",
+    "access-reconnaissance": "standard",
+    "labs-security-disruption": "critical",
+    "hostile-operator-intercept": "high-risk",
+    "protection-calibration": "standard",
+    "ballistic-head-test": "standard",
+    "heavy-assault-loadout": "high-risk",
+    "signal-discipline": "routine",
+    "endurance-circuit": "high-risk",
+    "precision-denial": "high-risk",
+    "controlled-chemical-support": "standard",
+    "expedition-loadout": "standard",
+    "field-expedient-supply": "routine",
+    "precision-observation-window": "high-risk",
+    "armored-transit": "high-risk",
+    "acoustic-contact": "standard",
+    "route-security": "standard"
+  },
+  "campaignCaps": {
+    "operationCount": 21,
+    "maximumAdditionalStandingIfEveryOperationPaysItsBandCeiling": 0.36,
+    "standingIsNotAQuota": true,
+    "salesVolumeGrindRequired": false,
+    "rewardEscalationForRepeatedSameObjectiveAllowed": false
+  },
+  "itemRewardPolicy": {
+    "defaultItemReward": "none",
+    "boundedSupportSampleAllowedAfterEconomyReview": true,
+    "durableEquipmentByDefaultAllowed": false,
+    "containerRewardAllowed": false,
+    "permanentStorefrontUnlockByDefaultAllowed": false,
+    "bossOrRaiderGearFaucetAllowed": false,
+    "rareAmmoFaucetAllowed": false,
+    "renewableStimFaucetAllowed": false,
+    "keyStorefrontAllowed": false,
+    "capabilityUnlockRequiresSeparateProductJustification": true
+  },
+  "compoundRewardIntegrity": {
+    "requiredBeforeAnyWeaponArmorHelmetRigReward": true,
+    "requiredSlotsMustBeComplete": true,
+    "presetOrDefaultInsertChildrenMustBeValidated": true,
+    "reason": "The maintained SPT 4.1 QuestManiac port found 676 mandatory slots missing in legacy quest reward objects and repaired 937 child parts across 228 quests. Admiral must never publish a compound reward whose required children are incomplete.",
+    "source": {
+      "repository": "laurentmekka/AndrudisQuestManiac",
+      "commit": "58c3dd0487858c7ba8e8c053b873fbe76a222637"
+    }
+  },
+  "materializationGate": {
+    "implementationAllowed": false,
+    "runtimeMaterialize": false,
+    "requiresFinalQuestLevelAndDifficultyPlacement": true,
+    "requiresVanillaRewardBenchmark": true,
+    "requiresEconomyAdmiralReview": true,
+    "requiresItemTplReviewForAnyExceptionalItemReward": true,
+    "requiresCompoundRewardIntegrityProofWhenApplicable": true
+  },
+  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
+}
