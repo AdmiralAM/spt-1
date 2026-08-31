@@ -49,36 +49,51 @@ public sealed class TraderPurchasePressureService(
 
                     // Each barter-scheme entry is an independent way to pay for the same offer.
                     // Pressure every structurally pure fiat alternative while preserving authored
-                    // barter/token/mixed alternatives byte-for-byte. Previously the entire offer
-                    // was skipped whenever more than one payment alternative existed.
+                    // barter/token/mixed alternatives byte-for-byte. A pure fiat alternative may
+                    // contain more than one currency requirement (for example RUB + USD); treating
+                    // only single-requirement alternatives as fiat left that legitimate payment
+                    // shape outside Trader Economy pressure.
                     foreach (var requirements in alternatives)
                     {
-                        if (requirements is null || requirements.Count != 1)
+                        if (requirements is null || requirements.Count == 0)
                             continue;
 
-                        var requirement = requirements[0];
-                        var template = requirement.Template.ToString();
-                        if (!CurrencyTemplates.Contains(template) || requirement.Count is null)
+                        var pureFiat = true;
+                        foreach (var requirement in requirements)
+                        {
+                            var template = requirement.Template.ToString();
+                            if (!CurrencyTemplates.Contains(template)
+                                || requirement.Count is not { } count
+                                || !double.IsFinite(count)
+                                || count <= 0)
+                            {
+                                pureFiat = false;
+                                break;
+                            }
+                        }
+
+                        if (!pureFiat)
                             continue;
 
-                        var before = requirement.Count.Value;
-                        if (!double.IsFinite(before) || before <= 0)
-                            continue;
+                        foreach (var requirement in requirements)
+                        {
+                            var before = requirement.Count!.Value;
+                            var target = TraderPurchasePressurePolicy.ApplyToCurrencyCost(before, config);
+                            if (target <= before)
+                                continue;
 
-                        var target = TraderPurchasePressurePolicy.ApplyToCurrencyCost(before, config);
-                        if (target <= before)
-                            continue;
+                            rollback.Add(() => requirement.Count = before);
+                            requirement.Count = target;
+                            if (Math.Abs(requirement.Count.Value - target) > 0.000001)
+                                throw new InvalidOperationException($"Trader price verification failed for trader={traderPair.Key}, offer={offerPair.Key}: target={target}, actual={requirement.Count}.");
 
-                        rollback.Add(() => requirement.Count = before);
-                        requirement.Count = target;
-                        if (Math.Abs(requirement.Count.Value - target) > 0.000001)
-                            throw new InvalidOperationException($"Trader price verification failed for trader={traderPair.Key}, offer={offerPair.Key}: target={target}, actual={requirement.Count}.");
+                            beforeTotal += before;
+                            afterTotal += target;
+                        }
 
                         changedAlternatives++;
                         changedOffers.Add($"{traderPair.Key}:{offerPair.Key}");
                         changedTraders.Add(traderPair.Key.ToString());
-                        beforeTotal += before;
-                        afterTotal += target;
                     }
                 }
             }
