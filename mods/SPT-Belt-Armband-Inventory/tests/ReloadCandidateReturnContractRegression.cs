@@ -1,0 +1,117 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using SPTBeltArmbandInventory;
+
+internal static class ReloadCandidateReturnContractRegression
+{
+    [ModuleInitializer]
+    internal static void Run()
+    {
+        var exactBelt = new FakeItem(RuntimeIdentity.DedicatedMagazineBeltItemId);
+        var vanillaMagazine = new FakeMagazine("vanilla-magazine", new FakeItem("foreign-root"));
+        var beltMagazine = new FakeMagazine("belt-magazine", exactBelt);
+        var vanilla = new FakeItem[] { vanillaMagazine };
+        var slots = new object();
+        var inventory = new FakeInventory(new FakeItem[] { beltMagazine });
+
+        Configure(inventory, slots);
+
+        // The bridge is defined around the exact SPT 4.1 Item[] contract. If the
+        // live vanilla result is not that array shape, fail closed before querying
+        // or allocating any Belt fallback result.
+        var driftedVanilla = new List<FakeItem> { vanillaMagazine };
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object driftedResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, driftedVanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Assert(ReferenceEquals(driftedResult, driftedVanilla),
+            "non-Item[] vanilla result shape must preserve exact vanilla object identity");
+        Assert(inventory.Calls == 0,
+            "non-Item[] vanilla result shape must fail closed before the pseudo-slot15 fallback query");
+
+        // Even after a valid exact-Belt candidate is discovered, a return-type
+        // contract mismatch must discard the proposed merge rather than widening
+        // Harmony's result type or leaking a partially-built replacement.
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(List<FakeItem>);
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object incompatibleReturn = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Assert(ReferenceEquals(incompatibleReturn, vanilla),
+            "incompatible declared return type must discard Belt fallback and return exact vanilla result");
+        Assert(inventory.Calls == 1,
+            "return-type rejection occurs only after one bounded exact-Belt slot query");
+
+        FieldInfo depth = typeof(ReloadCandidateBridgeRuntime).GetField("reloadDepth", BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: reloadDepth field missing");
+        FieldInfo reentrant = typeof(ReloadCandidateBridgeRuntime).GetField("reentrant", BindingFlags.Static | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: reentrant field missing");
+        Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
+            "return-contract fail-closed paths must not leak reload scope or reentrancy state");
+
+        ReloadCandidateBridgeRuntime.Reset();
+    }
+
+    static void Configure(FakeInventory inventory, object slots)
+    {
+        ReloadCandidateBridgeRuntime.Reset();
+        ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
+            ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: fake GetItemsInSlots missing");
+        ReloadCandidateBridgeRuntime.BeltSlotsArgument = new object();
+        ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = slots;
+        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object();
+        ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = new object();
+        ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object();
+        ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
+        ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
+        ReloadCandidateBridgeRuntime.GetAllParentItems = item => ((FakeItem)item).Parents;
+        ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
+        ReloadCandidateBridgeRuntime.LogWarning = message => throw new InvalidOperationException(
+            "Reload candidate return-contract regression failed closed unexpectedly: " + message);
+    }
+
+    sealed class FakeInventory
+    {
+        readonly FakeItem[] items;
+        internal int Calls { get; private set; }
+
+        internal FakeInventory(FakeItem[] items)
+        {
+            this.items = items;
+        }
+
+        public FakeItem[] GetItemsInSlots(object slots)
+        {
+            Calls++;
+            return items;
+        }
+    }
+
+    class FakeItem
+    {
+        internal string TemplateId { get; }
+        internal IEnumerable Parents { get; }
+
+        internal FakeItem(string templateId, params FakeItem[] parents)
+        {
+            TemplateId = templateId;
+            Parents = parents ?? Array.Empty<FakeItem>();
+        }
+    }
+
+    sealed class FakeMagazine : FakeItem
+    {
+        internal FakeMagazine(string templateId, params FakeItem[] parents)
+            : base(templateId, parents)
+        {
+        }
+    }
+
+    static void Assert(bool condition, string message)
+    {
+        if (!condition)
+            throw new InvalidOperationException("Reload candidate return-contract regression failed: " + message);
+    }
+}
