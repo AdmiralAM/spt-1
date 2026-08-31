@@ -64,6 +64,29 @@ def test_numeric_envelopes_are_bounded_and_do_not_create_a_standing_faucet():
     assert spec["campaignCaps"]["rewardEscalationForRepeatedSameObjectiveAllowed"] is False
 
 
+def test_authored_reward_allocation_covers_every_operation_and_stays_inside_its_band():
+    spec = load_json(ROOT / "manifests" / "post-010-operation-reward-envelope.json")
+    authored = authored_operation_keys()
+    allocations = spec["operationRewards"]
+
+    assert set(allocations) == authored
+    assert set(allocations) == set(spec["operationBands"])
+
+    standing_total = 0.0
+    for operation_key, reward in allocations.items():
+        band = spec["bands"][spec["operationBands"][operation_key]]
+        assert band["xpMin"] <= reward["xp"] <= band["xpMax"]
+        assert band["rubMin"] <= reward["rub"] <= band["rubMax"]
+        assert 0 < reward["standing"] <= band["standingMax"]
+        assert reward["itemReward"] is None
+        standing_total += reward["standing"]
+
+    assert round(standing_total, 6) == spec["campaignCaps"]["maximumAuthoredStandingAllocation"]
+    assert standing_total < spec["campaignCaps"]["maximumAdditionalStandingIfEveryOperationPaysItsBandCeiling"]
+    assert spec["allocationPolicy"]["runtimeMaterializationFromThisTableAllowed"] is False
+    assert spec["allocationPolicy"]["economyAdmiralMayReduceButNotIncreaseBeyondBandWithoutTraderReview"] is True
+
+
 def test_item_rewards_fail_closed_around_faucets_and_incomplete_compound_items():
     spec = load_json(ROOT / "manifests" / "post-010-operation-reward-envelope.json")
     item = spec["itemRewardPolicy"]
