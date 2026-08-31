@@ -11,10 +11,13 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
         cls.manifest = json.loads(
             (ROOT / "manifests" / "post-010-protective-acoustic-operations.json").read_text(encoding="utf-8")
         )
+        cls.equipment_proof = json.loads(
+            (ROOT / "manifests" / "post-010-player-equipment-proof.json").read_text(encoding="utf-8")
+        )
         cls.by_key = {op["key"]: op for op in cls.manifest["operations"]}
 
     def test_specs_are_non_materialized_and_bound_to_frozen_base(self):
-        self.assertEqual(self.manifest["schemaVersion"], 1)
+        self.assertEqual(self.manifest["schemaVersion"], 2)
         self.assertEqual(self.manifest["status"], "post-0.1.0-authored-spec-only")
         self.assertEqual(
             self.manifest["frozen010Base"],
@@ -32,6 +35,24 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
             for locale in ("en", "ru"):
                 for field in ("description", "started", "success"):
                     self.assertGreater(len(operation["playerText"][locale][field].strip()), 30)
+
+    def test_protective_specs_consume_proven_equipment_family_without_overclaiming(self):
+        authority = self.manifest["equipmentConditionAuthority"]
+        proof = self.equipment_proof
+        self.assertEqual(authority["manifest"], "post-010-player-equipment-proof.json")
+        self.assertEqual(authority["conditionType"], proof["proven"]["playerEquipmentConditionFamilyExists"]["conditionType"])
+        self.assertFalse(authority["includeNotEquippedItems"])
+        self.assertEqual(authority["selectionMode"], "explicit-validated-tpl-allowlist")
+        forbidden = " ".join(authority["forbiddenInference"]).lower()
+        self.assertIn("category", forbidden)
+        self.assertIn("armor class", forbidden)
+        for operation in self.manifest["operations"]:
+            plan = operation["equipmentPlan"]
+            self.assertEqual(plan["conditionType"], "Equipment")
+            self.assertFalse(plan["IncludeNotEquippedItems"])
+            self.assertFalse(plan["materializationReady"])
+            self.assertIn("explicit", plan["equipmentInclusiveSource"].lower())
+            self.assertIn("pinned spt 4.1.3", plan["remainingBlocker"].lower())
 
     def test_armored_transit_rejects_legacy_equipment_ladders(self):
         operation = self.by_key["armored-transit"]
@@ -61,9 +82,11 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
             for operation in self.manifest["operations"]
             for gate in operation["proofGates"]
         )
-        self.assertIn("exact spt 4.1.3", proof_text)
+        self.assertIn("pinned spt 4.1.3", proof_text)
         self.assertIn("overlap", proof_text)
         self.assertIn("economy admiral", proof_text)
+        self.assertIn("temporal coupling", proof_text)
+        self.assertNotIn("prove exact spt 4.1.3 equipment-condition shape", proof_text)
 
     def test_frozen_runtime_counts_are_unchanged(self):
         quest_files = sorted((ROOT / "db" / "quests").glob("*.json"))
