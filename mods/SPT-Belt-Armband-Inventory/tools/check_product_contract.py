@@ -134,7 +134,8 @@ dogtag_item = require(
         "ValidateExisting(created, source);",
         "CommitDogtagSlotExposure(dogtagSlotFilter);",
         "DogtagCaseHostContract.RequirePreserved(filter);",
-        "if (filter.Contains(DogtagCaseTpl)) return;",
+        "if (filter.Contains(DogtagCaseTpl))",
+        "DogtagCaseHostContract.RequireCommitted(filter);",
         "filter.Add(DogtagCaseTpl);",
         "filter.Remove(DogtagCaseTpl);",
         "!string.Equals(grid.Name, sourceGrid.Name, StringComparison.Ordinal)",
@@ -169,6 +170,7 @@ dogtag_assort = require(
         "trader.Assort.BarterScheme.Add(id,",
         "trader.Assort.LoyalLevelItems.Add(id,",
         "groups[0].Filter.Count < 2",
+        "DogtagCaseHostContract.RequireCommitted(groups[0].Filter);",
         "!groups[0].Filter.Contains(templateId)",
         "!groups[0].Filter.Any(x => !Equals(x, templateId))",
     ],
@@ -246,5 +248,5 @@ if violations:
 
 print(
     "B&A&HB product-contract gate: OK "
-    "(EN/RU localized five-product roster; exact pricing/progression and host isolation; split HeadBand pockets; Dogtag Case post-create revalidation plus atomic host exposure prove canonical grid/filter parity before publish; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
+    "(EN/RU localized five-product roster; exact pricing/progression and host isolation; split HeadBand pockets; Dogtag Case post-create revalidation plus atomic committed host exposure prove canonical grid/filter parity before publish; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
 )
