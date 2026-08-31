@@ -172,16 +172,19 @@ public sealed class DogtagCaseItem(
         // Re-prove the captured vanilla/foreign host immediately before mutation.
         // This closes the preload gap without rejecting compatible foreign additions.
         DogtagCaseHostContract.RequirePreserved(filter);
-        if (filter.Contains(DogtagCaseTpl)) return;
+        if (filter.Contains(DogtagCaseTpl))
+        {
+            DogtagCaseHostContract.RequireCommitted(filter);
+            return;
+        }
 
         filter.Add(DogtagCaseTpl);
         try
         {
-            // Postcondition: exact case exposure must coexist with every captured
-            // pre-mutation entry and no different B&A&HB-owned template.
-            DogtagCaseHostContract.RequirePreserved(filter);
-            if (!filter.Contains(DogtagCaseTpl))
-                throw new InvalidOperationException("B&A&HB Dogtag host commit failed: exact Dogtag Case template was not retained.");
+            // Central committed-state verification proves both sides of the host
+            // contract: every captured vanilla/foreign entry survives, no other
+            // B&A&HB template contaminates Dogtag, and the exact case is present.
+            DogtagCaseHostContract.RequireCommitted(filter);
         }
         catch
         {
