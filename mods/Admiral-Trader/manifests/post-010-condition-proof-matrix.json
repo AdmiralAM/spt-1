@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-condition-proof-inventory",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "runtimeMaterialize": false,
+  "purpose": "Separate condition shapes already evidenced by the frozen exact candidate from mechanics that remain unproven before any post-0.1.0 operation is materialized. This inventory narrows future implementation work without changing the frozen 31-quest runtime.",
+  "evidence": {
+    "canonicalExactHead": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+    "exactInstalledRuntimePackageProven": true,
+    "physicalLifecycleRewardGateDeferred": true,
+    "representativeFrozenQuest": {
+      "path": "db/quests/20-153839f368b80b6fbc36d29e.json",
+      "quest": "Arsenal Protocol: Precision Rifles - Fieldwork"
+    }
+  },
+  "staticallyProvenShapes": [
+    {
+      "capability": "bounded elimination counter",
+      "conditionType": "CounterCreator -> Kills",
+      "evidence": "Frozen authored Arsenal Fieldwork quests use CounterCreator with nested Kills and a finite parent value.",
+      "post010Use": "May be reused as the base counter shape for bounded combat operations; target-role/location/equipment refinements remain separately proof-gated."
+    },
+    {
+      "capability": "exact weapon whitelist",
+      "field": "weapon",
+      "evidence": "Frozen Arsenal Fieldwork conditions carry explicit weapon TPL arrays.",
+      "post010Use": "Supports weapon-family objective materialization after the final approved TPL pool is selected."
+    },
+    {
+      "capability": "weapon caliber filter",
+      "field": "weaponCaliber",
+      "evidence": "Frozen Arsenal Munitions conditions use explicit caliber identifiers inside Kills conditions.",
+      "post010Use": "Supports caliber-bounded objectives where the authored operation calls for caliber rather than a named weapon."
+    },
+    {
+      "capability": "distance comparator field",
+      "field": "distance.value + distance.compareMethod",
+      "evidence": "Frozen Arsenal Kills conditions serialize the distance comparator object on the exact candidate.",
+      "post010Use": "The structural field is available; any non-zero gameplay threshold still requires pinned vanilla/SPT semantic proof before publication."
+    },
+    {
+      "capability": "quest prerequisite",
+      "conditionType": "Quest",
+      "evidence": "Frozen Arsenal chains use target quest ID plus Success status and availableAfter/dispersion fields.",
+      "post010Use": "Supports the already-authored post-0.1.0 campaign graph once operations are materialized."
+    },
+    {
+      "capability": "level prerequisite",
+      "conditionType": "Level",
+      "evidence": "Frozen quests use compareMethod >= with explicit numeric level values.",
+      "post010Use": "Supports the four authored campaign phases without sales-volume gates."
+    }
+  ],
+  "stillUnprovenForPost010": [
+    {
+      "capability": "specific PMC, Scav, Raider, Rogue, boss or follower role discrimination",
+      "fields": ["target", "savageRole"],
+      "reason": "The frozen evidence does not prove the exact SPT 4.1.3 aliases and role semantics required by the future specialist operations.",
+      "affectedOperations": ["route-security", "hostile-operator-intercept", "labs-security-disruption", "rogue-interdiction", "high-value-target-window", "precision-denial"]
+    },
+    {
+      "capability": "map or sub-location restriction",
+      "fields": ["location", "zoneId or equivalent counter subcondition"],
+      "reason": "Frozen Arsenal evidence is location=any and therefore cannot prove map/zone semantics for contextual operations.",
+      "affectedOperations": ["access-reconnaissance", "route-security", "hostile-operator-intercept", "labs-security-disruption", "night-signal-disruption"]
+    },
+    {
+      "capability": "survive/extract and same-raid coupling",
+      "fields": ["Survive", "ExitStatus", "oneSessionOnly/resetOnSessionEnd or exact SPT equivalent"],
+      "reason": "Static frozen quest structure does not establish a reliable same-operation extraction contract for the future authored wave.",
+      "affectedOperations": ["access-reconnaissance", "acoustic-contact", "route-security", "hostile-operator-intercept", "armored-transit", "controlled-chemical-support", "precision-observation-window", "labs-security-disruption"]
+    },
+    {
+      "capability": "equipped armor/helmet/headset/loadout requirement",
+      "fields": ["enemyEquipmentInclusive", "equipment condition family or exact SPT equivalent"],
+      "reason": "Enemy-equipment fields present in Kills conditions are not evidence for player-equipment requirements.",
+      "affectedOperations": ["expedition-loadout", "protection-calibration", "ballistic-head-test", "heavy-assault-loadout", "acoustic-contact", "armored-transit"]
+    },
+    {
+      "capability": "stimulant/medical use or health-effect requirement",
+      "fields": ["enemyHealthEffects", "HealthEffect", "UseItem or exact SPT equivalent"],
+      "reason": "No exact SPT 4.1.3 use/effect semantics are proven by the frozen Arsenal conditions.",
+      "affectedOperations": ["field-medicine-under-pressure", "controlled-chemical-support"]
+    },
+    {
+      "capability": "restricted-access interaction",
+      "fields": ["door/key interaction, visit/place or location proxy"],
+      "reason": "The selected access route and a reliable representable interaction/proxy are not yet proven.",
+      "affectedOperations": ["access-reconnaissance"]
+    },
+    {
+      "capability": "repairable-item handover durability semantics",
+      "fields": ["HandoverItem min/max durability"],
+      "reason": "QuestManiac SPT 4.1 evidence exposed maxDurability=0 behavior; repairable gear remains excluded from Field-Expedient Supply until exact SPT 4.1.3 semantics are proven.",
+      "affectedOperations": ["field-expedient-supply"]
+    }
+  ],
+  "materializationRule": {
+    "reuseProvenBaseShapesAllowed": true,
+    "unprovenRefinementMustFailClosed": true,
+    "editorialCopyMayNotPublishUnprovenSpecifics": true,
+    "noNewFrozen010QuestJson": true,
+    "nextResearchPriority": [
+      "prove role aliases plus map/location shape for bounded combat operations",
+      "prove survive/extract and same-raid coupling",
+      "prove player-equipment condition family",
+      "prove medical/stimulant use semantics",
+      "prove access interaction/proxy semantics"
+    ]
+  }
+}
