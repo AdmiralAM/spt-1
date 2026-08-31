@@ -53,6 +53,15 @@ namespace SPTBeltArmbandInventory
         }
     }
 
+    internal static class ReloadDiagnosticLog
+    {
+        internal static void TryWarning(Action<string> sink, string message)
+        {
+            try { sink?.Invoke(message); }
+            catch { }
+        }
+    }
+
     internal static class FastAccessReloadRuntime
     {
         internal static Type ItemType;
@@ -89,7 +98,8 @@ namespace SPTBeltArmbandInventory
                 if (failureLogged) return;
                 failureLogged = true;
                 Exception root = Unwrap(exception);
-                LogWarning?.Invoke("B&A&HB reload reachability failed closed: " + root.GetType().FullName + ": " + root.Message);
+                ReloadDiagnosticLog.TryWarning(LogWarning,
+                    "B&A&HB reload reachability failed closed: " + root.GetType().FullName + ": " + root.Message);
             }
         }
 
@@ -204,7 +214,8 @@ namespace SPTBeltArmbandInventory
                 {
                     failureLogged = true;
                     Exception root = Unwrap(exception);
-                    LogWarning?.Invoke("B&A&HB scoped reload candidate bridge failed closed: " + root.GetType().FullName + ": " + root.Message);
+                    ReloadDiagnosticLog.TryWarning(LogWarning,
+                        "B&A&HB scoped reload candidate bridge failed closed: " + root.GetType().FullName + ": " + root.Message);
                 }
                 return vanillaResult;
             }
