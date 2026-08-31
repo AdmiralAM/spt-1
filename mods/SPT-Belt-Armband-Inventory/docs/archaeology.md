@@ -42,6 +42,22 @@ SPT 4.1 routes the relevant container presentations through `ContainersPanel.Sho
 
 Therefore the generic `ContainersPanel.Show(...)` patch is the single presentation boundary for these contexts. Adding the old screen-specific patches would duplicate state, depend on obfuscated/private screen methods, and reintroduce manual UI hierarchy manipulation without adding belt functionality.
 
+SPT 4.1 keeps a single `ContainersPanel.Show(...)` route across the player inventory, loot, transfer, build and profile-style container contexts reviewed above. The runtime adapter temporarily supplies a belt-aware slot order for that call and restores the original field in a Harmony finalizer. The private slot factory is handled with the same transaction pattern so `ArmBand` receives the default container template without patching the method result type.
+
 Porting rule: **do not add a screen-specific patch merely because old BeltSlot had one.** Add one only when a current SPT 4.1 screen is proven to bypass `ContainersPanel.Show(...)` and that bypass prevents belt inventory functionality.
 
-SPT 4.1 keeps a single `ContainersPanel.Show(...)` route across the player inventory, loot, transfer, build and profile-style container contexts reviewed above. The runtime adapter temporarily supplies a belt-aware slot order for that call and restores the original field in a Harmony finalizer. The private slot factory is handled with the same transaction pattern so `ArmBand` receives the default container template without patching the method result type.
+## R15 reload pseudo-slot enumeration contract
+
+The post-physical ArmBand PASS / Belt FAIL diagnosis is now anchored to the exact SPT 4.x decompilation snapshot `Luna-Salamanca/assemblycsharptarkovspt4@5566499af1ba6d9e85cc89c72c79ded5757cafec`, rather than to the earlier broad hypothesis that an undeclared enum value is automatically rejected.
+
+`Inventory.GetItemsInSlots(IEnumerable<EquipmentSlot>)` resolves every supplied value through `InventoryEquipment.GetSlot`, materializes the equipped roots in caller order, and then concatenates descendants of compound roots. `InventoryEquipment.GetSlot` itself is an integer-indexed lookup into `_cachedSlots`; its constructor sizes that cache from the live equipment `Slots` array and populates each entry by parsing the slot ID back to `EquipmentSlot`.
+
+Consequences for the dedicated Magazine Belt reload boundary:
+
+- pseudo-value `15` is not rejected merely because vanilla `Enum.GetValues(EquipmentSlot)` ends at `ArmBand=14`;
+- slot15 enumeration is viable when the live equipment instance actually owns cache index 15, which is the condition created by the server-side dedicated-slot registration;
+- if the live cache lacks index 15, `GetItemsInSlots(slot15)` fails inside the existing scoped bridge exception boundary and the complete vanilla reload result is retained;
+- the current bridge therefore remains correctly placed at `Inventory.GetItemsInSlots`: it preserves the vanilla result/order and performs one bounded slot15 query only while Reload/QuickReload scope and the exact retained/installed FastAccess or BindAvailable slot-array reference are active;
+- if a future physical candidate still fails, the next diagnostic split is no longer “enum 14 vs pseudo 15”. It is: (a) runtime equipment cache does not contain slot15, (b) Reload/QuickReload does not call `GetItemsInSlots` with one of the exact recognized slot-array references, or (c) the returned slot15 compound tree differs from the decompiled SPT 4.x contract. Do not widen to structural-array matching or broad inventory scans without evidence for one of those boundaries.
+
+`ReloadPseudoSlotEnumerationContractRegression` mirrors the exact root-prefix/compound-descendant ordering and the missing-cache-index failure boundary so this architecture assumption cannot silently regress while runtime acceptance remains batched.
