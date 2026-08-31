@@ -54,10 +54,13 @@ for token in [
         violations.append(f"Dogtag Case preload missing exact B&A&HB cross-host/preservation/commit token {token!r}")
 
 for token in [
+    "private static readonly object SnapshotSync = new();",
     "private static HashSet<MongoId>? capturedVanillaEntries;",
     "var snapshot = acceptedTemplates.ToHashSet();",
+    "lock (SnapshotSync)",
     "capturedVanillaEntries.SetEquals(snapshot)",
-    "foreach (MongoId entry in capturedVanillaEntries)",
+    "captured = capturedVanillaEntries.ToArray();",
+    "foreach (MongoId entry in captured)",
     "if (!currentFilter.Contains(entry))",
     "public static void RequireCommitted(HashSet<MongoId> currentFilter)",
     "RequirePreserved(currentFilter);",
@@ -132,4 +135,4 @@ if "hostFilter.Add(" in dogtag or "groups[0].Filter.Add(" in dogtag or "slots.Ad
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case snapshots every pre-mutation non-owned Dogtag host entry and trader registration requires centralized committed-state proof: complete snapshot survives, exact case is present, and owned cross-host contamination is absent; validation is read-only)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case snapshots every pre-mutation non-owned Dogtag host entry under a synchronized immutable verification boundary and trader registration requires centralized committed-state proof: complete snapshot survives, exact case is present, and owned cross-host contamination is absent; validation is read-only)")
