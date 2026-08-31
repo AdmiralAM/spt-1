@@ -86,6 +86,14 @@ public sealed class DogtagCaseAssort(
 
         if (!groups[0].Filter.Any(x => !Equals(x, templateId)))
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: ordinary vanilla Dogtag acceptance was replaced rather than preserved.");
+
+        foreach (MongoId accepted in groups[0].Filter)
+        {
+            string acceptedId = accepted.ToString();
+            if (PersistentIdentityManifest.IsOwnedTemplate(acceptedId)
+                && !string.Equals(acceptedId, RuntimeIdentity.DogtagCaseItemId, StringComparison.Ordinal))
+                throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: vanilla Dogtag host is contaminated by another owned product template.");
+        }
     }
 
     private static void ValidateExisting(Trader trader, MongoId id, Item existing, MongoId templateId)
