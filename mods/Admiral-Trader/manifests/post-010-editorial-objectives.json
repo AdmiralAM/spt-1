@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-editorial-spec-only",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "runtimeMaterialize": false,
+  "purpose": "Player-facing EN/RU objective copy for already-authored future operations. This file changes no objective mechanics, quest graph, rewards or runtime quest count.",
+  "editorialRules": {
+    "objectiveMustDescribePlayerAction": true,
+    "noLegacyCounterLanguage": true,
+    "noUnsupportedMechanicPromise": true,
+    "sameOperationRequirementMustBeExplicitWhenApplicable": true,
+    "survivalOrExtractionMustBeExplicitWhenRequired": true,
+    "russianCopyIsAuthoredNotLiteralMachineTranslation": true
+  },
+  "objectives": [
+    {
+      "operationKey": "rogue-interdiction",
+      "title": {"en": "Break the Rogue perimeter and extract", "ru": "Нарушить периметр Рогов и выйти из рейда"},
+      "steps": {
+        "en": [
+          "Eliminate a bounded Rogue element at the Lighthouse water-treatment perimeter.",
+          "Survive and extract from the operation after disrupting the perimeter."
+        ],
+        "ru": [
+          "Устранить ограниченную группу Рогов на периметре водоочистной станции Маяка.",
+          "После нарушения периметра выжить и выйти из рейда."
+        ]
+      },
+      "editorialConstraint": "Do not phrase the objective as cumulative Rogue farming; final numeric target remains governed by the authored operation and exact SPT 4.1.3 proof."
+    },
+    {
+      "operationKey": "expedition-discipline",
+      "title": {"en": "Complete a field deployment with a proven expedition load", "ru": "Завершить полевой выход с подтверждённой экспедиционной нагрузкой"},
+      "steps": {
+        "en": [
+          "Enter a raid while meeting the final proven expedition-load condition.",
+          "Survive and extract while preserving the deployment as one successful operation."
+        ],
+        "ru": [
+          "Войти в рейд, выполнив итоговое подтверждённое условие экспедиционной нагрузки.",
+          "Выжить и выйти из рейда, завершив выход как одну успешную операцию."
+        ]
+      },
+      "editorialConstraint": "The copy intentionally does not name weight, backpack class or item count until an exact SPT 4.1.3 load-bearing condition or proxy is proven."
+    },
+    {
+      "operationKey": "field-medicine-under-pressure",
+      "title": {"en": "Stabilize in the field and complete the operation", "ru": "Стабилизироваться в поле и завершить операцию"},
+      "steps": {
+        "en": [
+          "Perform the final proven in-raid treatment or recovery action.",
+          "Survive and extract after the treatment requirement is satisfied."
+        ],
+        "ru": [
+          "Выполнить итоговое подтверждённое действие по лечению или восстановлению в рейде.",
+          "После выполнения медицинского условия выжить и выйти из рейда."
+        ]
+      },
+      "editorialConstraint": "Do not promise a specific wound, healing amount, stimulant or medical-item class until the exact condition shape is proven."
+    },
+    {
+      "operationKey": "high-value-target-window",
+      "title": {"en": "Disrupt the selected command element and extract", "ru": "Нарушить работу выбранного командного звена и выйти"},
+      "steps": {
+        "en": [
+          "Eliminate the final selected high-value target or immediate command element within the bounded operation.",
+          "Survive and extract after the command disruption."
+        ],
+        "ru": [
+          "Устранить итоговую выбранную приоритетную цель или ближайший элемент командного звена в рамках ограниченной операции.",
+          "После нарушения управления выжить и выйти из рейда."
+        ]
+      },
+      "editorialConstraint": "The copy remains target-neutral until exact SPT 4.1.3 boss/follower aliases, location and overlap proof select the final operation target."
+    },
+    {
+      "operationKey": "night-signal-disruption",
+      "title": {"en": "Make controlled night contact and return alive", "ru": "Провести ограниченный ночной контакт и вернуться живым"},
+      "steps": {
+        "en": [
+          "Make bounded contact with the final proven Cultist target set under the required night context.",
+          "Survive and extract after confirming and disrupting the hostile pattern."
+        ],
+        "ru": [
+          "Вступить в ограниченный контакт с итоговым подтверждённым набором целей-сектантов в требуемых ночных условиях.",
+          "После подтверждения и нарушения враждебной схемы выжить и выйти из рейда."
+        ]
+      },
+      "editorialConstraint": "Do not expose a kill ladder, fixed map or unsupported time window until exact SPT 4.1.3 target/time/location conditions are proven."
+    }
+  ],
+  "acceptance": {
+    "operationKeysMustMatchAuthoredOperations": true,
+    "bothLocalesRequired": true,
+    "objectiveCopyMayBeMaterializedOnlyWithItsParentOperation": true,
+    "frozen010RuntimeMustRemainUnchanged": true
+  }
+}
