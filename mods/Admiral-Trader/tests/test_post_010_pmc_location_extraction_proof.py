@@ -48,6 +48,37 @@ def test_pmc_location_extraction_shapes_are_bounded_and_fail_closed():
     assert rules["noNewFrozen010QuestJson"] is True
 
 
+def test_condition_proof_matrix_tracks_the_exact_proof_boundary():
+    matrix = load_json(ROOT / "manifests" / "post-010-condition-proof-matrix.json")
+    proof = load_json(ROOT / "manifests" / "post-010-pmc-location-extraction-proof.json")
+
+    assert matrix["schemaVersion"] >= 3
+    assert matrix["runtimeMaterialize"] is False
+    assert matrix["evidence"]["pmcLocationExtractionProof"] == "post-010-pmc-location-extraction-proof.json"
+
+    proven = {entry["capability"]: entry for entry in matrix["staticallyProvenShapes"]}
+    assert proven["any-PMC elimination"]["shape"] == {
+        "target": proof["proven"]["anyPmcTarget"]["target"],
+        "savageRole": proof["proven"]["anyPmcTarget"]["savageRole"],
+    }
+    assert proven["map-bound counter"]["conditionType"] == proof["proven"]["locationBoundCounter"]["conditionType"]
+    assert proven["successful extraction"]["status"] == proof["proven"]["survivedExtraction"]["status"]
+    assert proven["specific named extraction"]["conditionTypes"] == proof["proven"]["specificExfil"]["conditionTypes"]
+
+    unproven = {entry["capability"] for entry in matrix["stillUnprovenForPost010"]}
+    assert "PMC faction/any-PMC and follower/guard discrimination" not in unproven
+    assert "map or sub-location restriction" not in unproven
+    assert "survive/extract and same-raid coupling" not in unproven
+    assert "PMC faction split and follower/guard discrimination" in unproven
+    assert "sub-location or zone restriction" in unproven
+    assert "kill/action then extract in the same raid" in unproven
+
+    rules = matrix["materializationRule"]
+    assert rules["mapAndExfilTargetsMustBeExplicitlySelected"] is True
+    assert rules["sameRaidCouplingMustRemainFailClosed"] is True
+    assert rules["noNewFrozen010QuestJson"] is True
+
+
 def test_condition_proof_slice_does_not_change_frozen_runtime_counts():
     assort = load_json(ROOT / "db" / "assort.json")
     quest_files = list((ROOT / "db" / "quests").glob("*.json"))
