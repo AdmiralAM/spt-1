@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -10,6 +10,12 @@
     "includeNotEquippedItems": false,
     "selectionMode": "explicit-validated-tpl-allowlist",
     "forbiddenInference": ["generic equipment category selector", "armor class predicate", "unproven multi-group boolean semantics"]
+  },
+  "survivedExtractionAuthority": {
+    "status": "proven-shape-only",
+    "conditionShape": ["Location", "ExitStatus(Survived)"],
+    "boundary": "This proves a bounded survived extraction objective can be materialized. It does not prove that Equipment and extraction occurred in the same raid, and it does not supply operation-specific map or exfil values.",
+    "sameRaidEquipmentCouplingProven": false
   },
   "operations": [
     {
@@ -33,6 +39,11 @@
         "one survived operation while meeting a bounded proven protective-equipment rule",
         "small combat or route objective under protection rather than helmet/body-armor handover"
       ],
+      "conditionReadiness": {
+        "equipmentShape": "proven",
+        "survivedExtractionShape": "proven",
+        "equipmentToExtractionSameRaidCoupling": "unproven-not-required-for-initial-materialization"
+      },
       "equipmentPlan": {
         "conditionType": "Equipment",
         "IncludeNotEquippedItems": false,
@@ -52,7 +63,7 @@
       "rewardDoctrine": "XP/RUB/standing by default. No sequential helmet, armor, plate or carrier storefront unlocks; any durable protective-equipment reward requires Economy Admiral review and must not bypass normal capability progression.",
       "proofGates": [
         "select and validate an explicit pinned SPT 4.1.3 protective-equipment TPL allowlist; generic armor-class or parent-category inference remains forbidden",
-        "prove survived/extraction semantics for the same operation without claiming equipment-to-extract temporal coupling",
+        "select the bounded operation-specific map/contact values using already-proven condition families; do not claim equipment-to-extract same-raid coupling",
         "audit vanilla/Scorpion/Artem overlap for protected-combat and equipment-use objectives",
         "Economy Admiral approves final numeric rewards and any protective-equipment reward"
       ],
@@ -79,6 +90,11 @@
         "one bounded reconnaissance/combat contact while using a proven headset equipment allowlist",
         "survive/extract without headset-by-headset progression or gear-restricted kill ladders"
       ],
+      "conditionReadiness": {
+        "equipmentShape": "proven",
+        "survivedExtractionShape": "proven",
+        "equipmentToExtractionSameRaidCoupling": "unproven-not-required-for-initial-materialization"
+      },
       "equipmentPlan": {
         "conditionType": "Equipment",
         "IncludeNotEquippedItems": false,
@@ -98,7 +114,7 @@
       "rewardDoctrine": "XP/RUB/standing or a tightly bounded support reward only. No headset storefront conveyor and no equipment unlock whose sole purpose is to start another same-shaped quest.",
       "proofGates": [
         "select and validate an explicit pinned SPT 4.1.3 headset TPL allowlist; generic category inference remains forbidden",
-        "prove survived/extraction semantics for the same operation without claiming equipment-to-extract temporal coupling",
+        "select the bounded operation-specific map/contact values using already-proven condition families; do not claim equipment-to-extract same-raid coupling",
         "audit vanilla/Scorpion/Artem overlap for headset-restricted and reconnaissance objectives",
         "Economy Admiral approves final numeric and any support-item rewards"
       ],
