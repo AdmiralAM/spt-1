@@ -84,11 +84,11 @@ public sealed class DogtagCaseAssort(
         if (!groups[0].Filter.Contains(templateId))
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: exact container template is not exposed by the vanilla Dogtag host.");
 
-        if (groups[0].ExcludedFilter?.Contains(templateId) == true)
-            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: exact container template is simultaneously excluded by the vanilla Dogtag host.");
-
         DogtagCaseHostContract.RequirePreserved(groups[0].Filter);
 
+        // Retain the cheap local sanity boundary as well as the stronger snapshot
+        // proof. The snapshot establishes identity preservation; this guards a
+        // malformed empty/non-case host if the contract is ever refactored.
         if (!groups[0].Filter.Any(x => !Equals(x, templateId)))
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: ordinary vanilla Dogtag acceptance was replaced rather than preserved.");
 
