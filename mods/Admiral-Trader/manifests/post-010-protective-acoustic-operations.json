@@ -1,9 +1,16 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
   "implementationAllowed": false,
+  "equipmentConditionAuthority": {
+    "manifest": "post-010-player-equipment-proof.json",
+    "conditionType": "Equipment",
+    "includeNotEquippedItems": false,
+    "selectionMode": "explicit-validated-tpl-allowlist",
+    "forbiddenInference": ["generic equipment category selector", "armor class predicate", "unproven multi-group boolean semantics"]
+  },
   "operations": [
     {
       "key": "armored-transit",
@@ -26,6 +33,14 @@
         "one survived operation while meeting a bounded proven protective-equipment rule",
         "small combat or route objective under protection rather than helmet/body-armor handover"
       ],
+      "equipmentPlan": {
+        "conditionType": "Equipment",
+        "IncludeNotEquippedItems": false,
+        "equipmentInclusiveSource": "explicit curated protective item TPL allowlist",
+        "minimumIndependentGroups": 1,
+        "materializationReady": false,
+        "remainingBlocker": "select and validate the exact pinned SPT 4.1.3 protective TPL allowlist; do not emulate armor-class filtering"
+      },
       "antiGrind": {
         "maximumRequiredSuccessfulRaids": 1,
         "maximumTargetCount": 4,
@@ -36,8 +51,8 @@
       },
       "rewardDoctrine": "XP/RUB/standing by default. No sequential helmet, armor, plate or carrier storefront unlocks; any durable protective-equipment reward requires Economy Admiral review and must not bypass normal capability progression.",
       "proofGates": [
-        "prove exact SPT 4.1.3 equipment-condition shape for a bounded armor/helmet class or reject that requirement",
-        "prove survived/extraction semantics for the same operation",
+        "select and validate an explicit pinned SPT 4.1.3 protective-equipment TPL allowlist; generic armor-class or parent-category inference remains forbidden",
+        "prove survived/extraction semantics for the same operation without claiming equipment-to-extract temporal coupling",
         "audit vanilla/Scorpion/Artem overlap for protected-combat and equipment-use objectives",
         "Economy Admiral approves final numeric rewards and any protective-equipment reward"
       ],
@@ -61,9 +76,17 @@
         }
       },
       "objectiveIntent": [
-        "one bounded reconnaissance/combat contact while using a proven headset-category equipment rule",
+        "one bounded reconnaissance/combat contact while using a proven headset equipment allowlist",
         "survive/extract without headset-by-headset progression or gear-restricted kill ladders"
       ],
+      "equipmentPlan": {
+        "conditionType": "Equipment",
+        "IncludeNotEquippedItems": false,
+        "equipmentInclusiveSource": "explicit curated headset TPL allowlist",
+        "minimumIndependentGroups": 1,
+        "materializationReady": false,
+        "remainingBlocker": "select and validate the exact pinned SPT 4.1.3 headset TPL allowlist; do not infer a generic headset category selector"
+      },
       "antiGrind": {
         "maximumRequiredSuccessfulRaids": 1,
         "maximumTargetCount": 3,
@@ -74,8 +97,8 @@
       },
       "rewardDoctrine": "XP/RUB/standing or a tightly bounded support reward only. No headset storefront conveyor and no equipment unlock whose sole purpose is to start another same-shaped quest.",
       "proofGates": [
-        "prove exact SPT 4.1.3 equipment-condition shape for the headset category or reject the equipment requirement",
-        "prove survived/extraction semantics for the same operation",
+        "select and validate an explicit pinned SPT 4.1.3 headset TPL allowlist; generic category inference remains forbidden",
+        "prove survived/extraction semantics for the same operation without claiming equipment-to-extract temporal coupling",
         "audit vanilla/Scorpion/Artem overlap for headset-restricted and reconnaissance objectives",
         "Economy Admiral approves final numeric and any support-item rewards"
       ],
