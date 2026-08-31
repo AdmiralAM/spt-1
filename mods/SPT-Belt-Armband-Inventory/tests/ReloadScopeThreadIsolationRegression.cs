@@ -89,6 +89,46 @@ internal static class ReloadScopeThreadIsolationRegression
 
         Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
             "owner finalizer boundary must restore the calling thread to a clean state");
+
+        // Reload and QuickReload can nest through game-side dispatch or another cooperative patch.
+        // The bridge therefore treats the ThreadStatic value as an owned depth, not a boolean latch:
+        // an inner finalizer must not consume the outer scope, and Harmony's exception value must
+        // be returned unchanged through every unwind.
+        Exception sentinel = new InvalidOperationException("sentinel");
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        Assert((int)depth.GetValue(null)! == 2 && !(bool)reentrant.GetValue(null)!,
+            "nested reload scopes must increment depth without entering candidate reentrancy");
+
+        Exception inner = ReloadCandidateBridgeRuntime.ExitReloadScope(sentinel);
+        Assert(ReferenceEquals(inner, sentinel),
+            "inner reload finalizer must preserve the exact Harmony exception identity");
+        Assert((int)depth.GetValue(null)! == 1 && !(bool)reentrant.GetValue(null)!,
+            "inner reload finalizer must leave the outer reload scope active");
+
+        object nestedOwnerResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
+        Assert(nestedOwnerResult is FakeItem[] nestedItems && nestedItems.Length == 2,
+            "outer reload scope must retain Magazine Belt fallback after nested inner unwind");
+        Assert(ReferenceEquals(((FakeItem[])nestedOwnerResult)[0], vanillaMagazine)
+            && ReferenceEquals(((FakeItem[])nestedOwnerResult)[1], beltMagazine),
+            "nested-scope fallback must remain vanilla-first and exact-Belt-only");
+        Assert((int)depth.GetValue(null)! == 1 && !(bool)reentrant.GetValue(null)!,
+            "nested candidate enumeration must not consume the surviving outer scope");
+
+        Exception outer = ReloadCandidateBridgeRuntime.ExitReloadScope(sentinel);
+        Assert(ReferenceEquals(outer, sentinel),
+            "outer reload finalizer must preserve the exact Harmony exception identity");
+        Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
+            "outer reload finalizer must restore a clean ThreadStatic state");
+
+        // Defensive unmatched finalizer calls must remain fail-closed rather than underflowing
+        // into a permanently-active reload scope.
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
+            "unmatched reload finalizer must saturate at zero and keep the bridge inactive");
+        Assert(ReferenceEquals(ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla), vanilla),
+            "zero-depth state after unmatched finalizer must preserve exact vanilla result identity");
+
         ReloadCandidateBridgeRuntime.Reset();
     }
 
