@@ -107,22 +107,26 @@ public sealed class DogtagCaseAssort(
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: vanilla Dogtag host boundary is missing or ambiguous.");
 
         var groups = slots[0].Properties?.Filters?.ToArray();
-        if (groups == null || groups.Length != 1 || groups[0].Filter == null || groups[0].Filter.Count < 2)
+        if (groups == null || groups.Length != 1)
+            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: Dogtag host filter is missing or ambiguous.");
+
+        var hostFilter = groups[0].Filter;
+        if (hostFilter == null || hostFilter.Count < 2)
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: Dogtag host filter does not preserve a vanilla entry plus the exact container.");
 
         // Trader publication is a committed-state boundary, not merely a
         // preservation check. Centralizing this proof guarantees the exact case is
         // present, every captured vanilla/foreign entry survives, and no different
         // B&A&HB product contaminates the host before the offer becomes obtainable.
-        DogtagCaseHostContract.RequireCommitted(groups[0].Filter);
+        DogtagCaseHostContract.RequireCommitted(hostFilter);
 
-        if (!groups[0].Filter.Contains(templateId))
+        if (!hostFilter.Contains(templateId))
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: exact container template is not exposed by the vanilla Dogtag host.");
 
         // Retain the cheap local sanity boundary as well as the stronger snapshot
         // proof. The snapshot establishes identity preservation; this guards a
         // malformed empty/non-case host if the contract is ever refactored.
-        if (!groups[0].Filter.Any(x => !Equals(x, templateId)))
+        if (!hostFilter.Any(x => !Equals(x, templateId)))
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: ordinary vanilla Dogtag acceptance was replaced rather than preserved.");
     }
 
