@@ -67,7 +67,10 @@ internal static class ReloadCandidateBridgeRegression
         var foreignMagazine = new FakeMagazine("foreign-magazine", foreignRoot);
         var nonMagazine = new FakeItem("not-a-magazine", exactBelt);
         var vanilla = new FakeItem[] { vanillaMagazine, duplicateMagazine };
-        var fastAccessSlots = new object();
+        var originalFastAccessSlots = new object();
+        var installedFastAccessSlots = new object();
+        var originalBindAvailableSlots = new object();
+        var installedBindAvailableSlots = new object();
         var inventory = new FakeInventory(new FakeItem[]
         {
             duplicateMagazine,
@@ -76,9 +79,36 @@ internal static class ReloadCandidateBridgeRegression
             exactBeltMagazine
         });
 
-        ConfigureFakeRuntime(fastAccessSlots);
+        ConfigureFakeRuntime(
+            originalFastAccessSlots,
+            installedFastAccessSlots,
+            originalBindAvailableSlots,
+            installedBindAvailableSlots);
+
+        // Every exact reference that B&A&HB either retained or installed is a valid
+        // reload enumeration boundary. Matching remains strict reference identity;
+        // no array contents or structural likeness participate in activation.
+        object[] recognizedSlotReferences =
+        {
+            originalFastAccessSlots,
+            installedFastAccessSlots,
+            originalBindAvailableSlots,
+            installedBindAvailableSlots
+        };
+        foreach (object recognizedSlots in recognizedSlotReferences)
+        {
+            ReloadCandidateBridgeRuntime.EnterReloadScope();
+            object recognizedObject = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, recognizedSlots, vanilla);
+            ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+            Assert(recognizedObject is FakeItem[],
+                "all four exact FastAccess/BindAvailable retained-or-installed references preserve Item[] shape");
+            var recognized = (FakeItem[])recognizedObject;
+            Assert(recognized.Length == 3 && ReferenceEquals(recognized[2], exactBeltMagazine),
+                "all four exact FastAccess/BindAvailable references activate the same exact Belt fallback");
+        }
+
         ReloadCandidateBridgeRuntime.EnterReloadScope();
-        object mergedObject = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, fastAccessSlots, vanilla);
+        object mergedObject = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, originalFastAccessSlots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
 
         Assert(mergedObject is FakeItem[], "bridge preserves the exact Item[]-compatible return shape");
@@ -92,7 +122,7 @@ internal static class ReloadCandidateBridgeRegression
 
         inventory.Items = new FakeItem[] { duplicateMagazine, foreignMagazine, nonMagazine };
         ReloadCandidateBridgeRuntime.EnterReloadScope();
-        object noOpObject = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, fastAccessSlots, vanilla);
+        object noOpObject = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, originalFastAccessSlots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
         Assert(ReferenceEquals(noOpObject, vanilla),
             "duplicate, foreign and non-magazine Belt candidates keep the exact vanilla result object");
@@ -103,17 +133,23 @@ internal static class ReloadCandidateBridgeRegression
         object unrelatedObject = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, unrelatedSlots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
         Assert(ReferenceEquals(unrelatedObject, vanilla),
-            "unrelated slot enumeration cannot activate the Belt fallback even during reload scope");
+            "structurally unrelated slot enumeration cannot activate the Belt fallback even during reload scope");
     }
 
-    static void ConfigureFakeRuntime(object fastAccessSlots)
+    static void ConfigureFakeRuntime(
+        object originalFastAccessSlots,
+        object installedFastAccessSlots,
+        object originalBindAvailableSlots,
+        object installedBindAvailableSlots)
     {
         ReloadCandidateBridgeRuntime.Reset();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload candidate bridge regression failed: fake GetItemsInSlots missing");
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new object();
-        ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = fastAccessSlots;
-        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object();
+        ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = originalFastAccessSlots;
+        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = installedFastAccessSlots;
+        ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = originalBindAvailableSlots;
+        ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = installedBindAvailableSlots;
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
         ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
