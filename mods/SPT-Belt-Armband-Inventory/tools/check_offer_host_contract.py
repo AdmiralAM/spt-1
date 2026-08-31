@@ -6,6 +6,7 @@ violations = []
 
 contract = (SERVER / "WearableOfferHostContract.cs").read_text(encoding="utf-8-sig")
 armband_item = (SERVER / "WristWalletItem.cs").read_text(encoding="utf-8-sig")
+dogtag_item = (SERVER / "DogtagCaseItem.cs").read_text(encoding="utf-8-sig")
 armband = (SERVER / "RuntimeCandidateAssort.cs").read_text(encoding="utf-8-sig")
 wallet = (SERVER / "WristWalletAssort.cs").read_text(encoding="utf-8-sig")
 dedicated = (SERVER / "DedicatedWearableAssort.cs").read_text(encoding="utf-8-sig")
@@ -39,6 +40,14 @@ for token in [
 ]:
     if token not in armband_item:
         violations.append(f"ArmBand registration missing exact cross-host isolation token {token!r}")
+
+for token in [
+    "PersistentIdentityManifest.IsOwnedTemplate(templateId)",
+    "!string.Equals(templateId, TemplateId, StringComparison.Ordinal)",
+    "already contaminated by a different owned product template",
+]:
+    if token not in dogtag_item:
+        violations.append(f"Dogtag Case preload missing exact B&A&HB cross-host ownership guard token {token!r}")
 
 for label, text in [("Magazine Armband", armband), ("Wrist Wallet", wallet)]:
     host = text.find("WearableOfferHostContract.RequireArmBandProduct(templateTable, templateId);")
@@ -85,4 +94,4 @@ if "groups[0].Filter.Add(" in dogtag or "slots.Add(" in dogtag:
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case requires the exact vanilla Dogtag host while preserving a vanilla accepted entry; validation is read-only)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case preload rejects other owned B&A&HB templates in the vanilla Dogtag host and its offer requires the exact host while preserving a vanilla accepted entry; validation is read-only)")
