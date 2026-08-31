@@ -1,13 +1,11 @@
 using System;
 using System.Collections;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using SPTBeltArmbandInventory;
 
 internal static class ReloadScopeThreadIsolationRegression
 {
-    [ModuleInitializer]
     internal static void Run()
     {
         var slots = new object();
@@ -37,7 +35,8 @@ internal static class ReloadScopeThreadIsolationRegression
 
         using var scopeEntered = new ManualResetEventSlim(false);
         using var foreignChecked = new ManualResetEventSlim(false);
-        Exception threadFailure = null;
+        Exception ownerFailure = null;
+        Exception foreignFailure = null;
         object foreignResult = null;
 
         Thread owner = new Thread(() =>
@@ -59,7 +58,7 @@ internal static class ReloadScopeThreadIsolationRegression
             }
             catch (Exception exception)
             {
-                threadFailure = exception;
+                ownerFailure = exception;
             }
             finally
             {
@@ -84,7 +83,7 @@ internal static class ReloadScopeThreadIsolationRegression
             }
             catch (Exception exception)
             {
-                threadFailure = exception;
+                foreignFailure = exception;
             }
             finally
             {
@@ -96,8 +95,10 @@ internal static class ReloadScopeThreadIsolationRegression
         foreign.Start();
         if (!owner.Join(TimeSpan.FromSeconds(10)) || !foreign.Join(TimeSpan.FromSeconds(10)))
             throw new InvalidOperationException("Reload thread isolation regression failed: worker thread did not terminate within bounded time");
-        if (threadFailure != null)
-            throw new InvalidOperationException("Reload thread isolation regression failed: worker assertion failed", threadFailure);
+        if (ownerFailure != null)
+            throw new InvalidOperationException("Reload thread isolation regression failed: owner-thread assertion failed", ownerFailure);
+        if (foreignFailure != null)
+            throw new InvalidOperationException("Reload thread isolation regression failed: foreign-thread assertion failed", foreignFailure);
 
         Assert(ReferenceEquals(foreignResult, vanilla),
             "foreign thread result must remain exact vanilla identity after both threads finish");
