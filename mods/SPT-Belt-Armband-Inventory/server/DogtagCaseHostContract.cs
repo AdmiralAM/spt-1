@@ -54,9 +54,6 @@ public static class DogtagCaseHostContract
                 throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: pre-mutation acceptance entry {entry} was removed before trader registration.");
         }
 
-        // Keep ownership isolation inside the reusable host contract itself rather
-        // than relying only on a particular caller. The Dogtag Case is the sole
-        // B&A&HB-owned template allowed in the vanilla Dogtag acceptance set.
         foreach (MongoId entry in currentFilter)
         {
             string id = entry.ToString();
@@ -64,5 +61,11 @@ public static class DogtagCaseHostContract
                 && !string.Equals(id, RuntimeIdentity.DogtagCaseItemId, StringComparison.Ordinal))
                 throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: owned template {entry} contaminates the vanilla Dogtag host.");
         }
+    }
+
+    public static void RequireTemplateNotExcluded(HashSet<MongoId>? excludedFilter, MongoId templateId)
+    {
+        if (excludedFilter?.Contains(templateId) == true)
+            throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: exact container template {templateId} is simultaneously excluded by the vanilla Dogtag host.");
     }
 }
