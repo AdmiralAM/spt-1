@@ -154,6 +154,14 @@ public sealed class DogtagCaseItem(
         if (groups == null || groups.Length != 1 || groups[0].Filter == null || groups[0].Filter.Count == 0)
             throw new InvalidOperationException("B&A&HB Dogtag slot filter boundary is missing or ambiguous; exactly one non-empty vanilla filter group is required.");
 
+        // Capture the complete non-owned acceptance set before any mutation.
+        // Trader registration must later prove that every one of these entries
+        // still exists; one arbitrary surviving non-case entry is not sufficient.
+        MongoId[] vanillaEntries = groups[0].Filter
+            .Where(x => !PersistentIdentityManifest.IsOwnedTemplate(x.ToString()))
+            .ToArray();
+        DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);
+
         foreach (MongoId accepted in groups[0].Filter)
         {
             string templateId = accepted.ToString();
