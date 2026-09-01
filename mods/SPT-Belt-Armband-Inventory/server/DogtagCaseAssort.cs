@@ -121,6 +121,15 @@ public sealed class DogtagCaseAssort(
             || !ReferenceEquals(liveBarter, expectedBarter))
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman barter reference was replaced before publication.");
 
+        // Reference identity alone is insufficient because the retained outer barter list can
+        // be mutated in place after ValidateExisting. Re-prove the exact one-price contract at
+        // the publication boundary so same-reference inner-list/scheme edits fail closed too.
+        if (liveBarter.Count != 1
+            || liveBarter[0].Count != 1
+            || !Equals(liveBarter[0][0].Template, Money.ROUBLES)
+            || liveBarter[0][0].Count != PriceRoubles)
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman barter contents changed in place before publication.");
+
         if (!trader.Assort.LoyalLevelItems.TryGetValue(id, out var liveLoyalty)
             || liveLoyalty != LoyaltyLevel)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman loyalty metadata changed before publication.");
