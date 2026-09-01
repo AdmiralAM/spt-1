@@ -705,28 +705,62 @@ namespace SPTBeltArmbandInventory
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
         {
+            MethodInfo selected = null;
             MethodInfo[] methods = harmonyType.GetMethods(BindingFlags.Instance | BindingFlags.Public);
             for (int i = 0; i < methods.Length; i++)
             {
                 MethodInfo method = methods[i];
-                if (!string.Equals(method.Name, "Patch", StringComparison.Ordinal)) continue;
-                ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length < 2 || !typeof(MethodBase).IsAssignableFrom(parameters[0].ParameterType)) continue;
-                bool hasHarmonyMethod = false;
-                for (int p = 1; p < parameters.Length; p++)
-                    if (parameters[p].ParameterType == harmonyMethodType) { hasHarmonyMethod = true; break; }
-                if (hasHarmonyMethod) return method;
+                if (!IsCompatiblePatchMethod(method, harmonyMethodType)) continue;
+                if (selected != null) return null;
+                selected = method;
             }
-            return null;
+            return selected;
+        }
+
+        static bool IsCompatiblePatchMethod(MethodInfo method, Type harmonyMethodType)
+        {
+            if (method == null || harmonyMethodType == null || !string.Equals(method.Name, "Patch", StringComparison.Ordinal)) return false;
+            ParameterInfo[] parameters = method.GetParameters();
+            if (parameters.Length < 4 || parameters[0].ParameterType != typeof(MethodBase)) return false;
+
+            bool prefix = false;
+            bool postfix = false;
+            bool finalizer = false;
+            for (int i = 1; i < parameters.Length; i++)
+            {
+                ParameterInfo parameter = parameters[i];
+                if (parameter.ParameterType != harmonyMethodType) continue;
+                if (string.Equals(parameter.Name, "prefix", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (prefix) return false;
+                    prefix = true;
+                }
+                else if (string.Equals(parameter.Name, "postfix", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (postfix) return false;
+                    postfix = true;
+                }
+                else if (string.Equals(parameter.Name, "finalizer", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (finalizer) return false;
+                    finalizer = true;
+                }
+            }
+            return prefix && postfix && finalizer;
         }
 
         static MethodInfo FindZeroArgInstanceMethod(Type type, string name)
         {
+            MethodInfo selected = null;
             MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             for (int i = 0; i < methods.Length; i++)
-                if (string.Equals(methods[i].Name, name, StringComparison.Ordinal) && methods[i].GetParameters().Length == 0)
-                    return methods[i];
-            return null;
+            {
+                MethodInfo method = methods[i];
+                if (!string.Equals(method.Name, name, StringComparison.Ordinal) || method.GetParameters().Length != 0) continue;
+                if (selected != null) return null;
+                selected = method;
+            }
+            return selected;
         }
 
         static void PatchNamed(object owner, MethodInfo patchMethod, Type harmonyMethodType, MethodInfo original, string patchKind, object patch)
