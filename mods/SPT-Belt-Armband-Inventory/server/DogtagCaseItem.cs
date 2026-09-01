@@ -214,7 +214,9 @@ public sealed class DogtagCaseItem(
     /// preload-to-trader-registration mutation window: another startup participant
     /// may not alter the B&A&HB case root footprint, stack policy, root presentation,
     /// grid geometry or filter contract after preload and still obtain a purchasable
-    /// corrupted product.
+    /// corrupted product. The final reference-identity reproof also refuses a
+    /// detached source/candidate pair that was replaced in TemplateTable during
+    /// validation.
     /// </summary>
     public static void RequireCanonicalRegisteredTemplate(TemplateTable templates)
     {
@@ -224,6 +226,13 @@ public sealed class DogtagCaseItem(
         if (!templates.Items.TryGetValue(DogtagCaseTpl, out var candidate))
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: exact product template is missing.");
         ValidateExisting(candidate, source);
+
+        if (!templates.Items.TryGetValue(SourceDogtagCaseTpl, out var liveSource)
+            || !ReferenceEquals(liveSource, source))
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: canonical source template was replaced during validation.");
+        if (!templates.Items.TryGetValue(DogtagCaseTpl, out var liveCandidate)
+            || !ReferenceEquals(liveCandidate, candidate))
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: product template was replaced during validation.");
     }
 
     private static void ValidateExisting(TemplateItem candidate, TemplateItem source)
