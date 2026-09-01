@@ -9,7 +9,7 @@ internal static class ReloadScopeThreadIsolationRegression
     internal static void Run()
     {
         var slots = new object();
-        var beltSlotArgument = new object();
+        var beltSlotArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         var beltParent = new FakeItem(RuntimeIdentity.DedicatedMagazineBeltItemId);
         var beltMagazine = new FakeMagazine("belt-mag");
         var vanillaMagazine = new FakeMagazine("vanilla-mag");
