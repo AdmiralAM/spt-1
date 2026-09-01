@@ -98,10 +98,16 @@
           "savageRole": ["pmcBot"]
         },
         "location": {
-          "status": "proven-shape-only",
-          "authorityManifest": "post-010-pmc-location-extraction-proof.json",
+          "status": "proven-selected",
+          "authority": [
+            "sp-tarkov/wiki modding/references/location-information.md",
+            "sp-tarkov/server-csharp SPT_Data/configs/quest.json"
+          ],
           "conditionType": "Location",
-          "selectedMapValueProven": false
+          "target": ["laboratory"],
+          "locationId": "5b0fc42d86f7744a585f9105",
+          "selectedMapValueProven": true,
+          "meaning": "The Labs quest/location target is laboratory; both the SPT location reference and server quest configuration use this exact target name."
         },
         "survivedExtraction": {
           "status": "proven-shape-only",
@@ -114,7 +120,7 @@
         }
       },
       "proofGates": [
-        "select and validate the exact pinned SPT 4.1.3 The Labs Location value without changing the already-proven Raider target shape",
+        "retain exact Labs Location target laboratory and fail closed if pinned SPT location authority diverges; do not substitute friendly name or MongoID into the quest Location target",
         "prove same-raid coupling between the bounded Raider counter and the already-proven survived-extraction shape",
         "audit overlap with frozen Admiral Labs clearance and vanilla/Scorpion/Artem Labs objectives",
         "Economy Admiral approves final risk-adjusted numeric and any item rewards"
