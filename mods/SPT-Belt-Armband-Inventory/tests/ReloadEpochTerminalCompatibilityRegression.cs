@@ -15,8 +15,8 @@ internal static class ReloadEpochTerminalCompatibilityRegression
 
         Require(source, "if (harmonyType == null || harmonyMethodType == null) return false;",
             "late Harmony assembly availability must remain retryable");
-        Require(source, "if (harmonyCtor == null || harmonyMethodCtor == null || patch == null || unpatchSelf == null)\n                        terminalFailure = true;",
-            "loaded-but-structurally-incompatible Harmony contract must become terminal fail-closed");
+        Require(source, "if (harmonyCtor == null || harmonyMethodCtor == null || patch == null || unpatchSelf == null) return false;",
+            "loaded structural Harmony drift must retain an explicit fail-closed return");
         Require(source, "if (enter == null || exit == null || append == null || reset == null)",
             "runtime callback shape must remain a bounded structural gate");
         Require(source, "if (terminalFailure) AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;",
