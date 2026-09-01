@@ -212,8 +212,9 @@ public sealed class DogtagCaseItem(
     /// Revalidates the live registered product against the live canonical EFT/SPT
     /// Dogtag Case immediately before downstream publication. This closes the
     /// preload-to-trader-registration mutation window: another startup participant
-    /// may not alter the B&A&HB case root footprint, stack policy, grid geometry or
-    /// filter contract after preload and still obtain a purchasable corrupted product.
+    /// may not alter the B&A&HB case root footprint, stack policy, root presentation,
+    /// grid geometry or filter contract after preload and still obtain a purchasable
+    /// corrupted product.
     /// </summary>
     public static void RequireCanonicalRegisteredTemplate(TemplateTable templates)
     {
@@ -233,10 +234,11 @@ public sealed class DogtagCaseItem(
         var candidateProperties = candidate.Properties;
         var sourceProperties = source.Properties;
         if (candidateProperties == null || sourceProperties == null
+            || !Equals(candidateProperties.BackgroundColor, sourceProperties.BackgroundColor)
             || candidateProperties.Width != sourceProperties.Width
             || candidateProperties.Height != sourceProperties.Height
             || candidateProperties.StackMaxSize != sourceProperties.StackMaxSize)
-            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: root geometry or stack policy differs from the canonical source contract.");
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: root presentation, geometry or stack policy differs from the canonical source contract.");
 
         var grids = candidateProperties.Grids?.ToArray();
         var sourceGrids = sourceProperties.Grids?.ToArray();
