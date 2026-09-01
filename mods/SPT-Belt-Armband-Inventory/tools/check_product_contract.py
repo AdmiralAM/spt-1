@@ -172,10 +172,11 @@ dogtag_assort = require(
         "var hostFilter = groups[0].Filter;",
         "hostFilter == null || hostFilter.Count < 2",
         "DogtagCaseHostContract.RequireCommitted(hostFilter);",
-        "!hostFilter.Contains(templateId)",
-        "!hostFilter.Any(x => !Equals(x, templateId))",
+        "requested template identity is not the exact Dogtag Case product",
     ],
     "Dogtag Case offer")
+if "hostFilter.Contains(templateId)" in dogtag_assort or "hostFilter.Any(x => !Equals(x, templateId))" in dogtag_assort:
+    violations.append("Dogtag Case offer must not re-read the mutable Dogtag host after centralized committed-snapshot verification")
 if "trader.Assort.Items.FirstOrDefault(x => x.Id == id)" in dogtag_assort:
     violations.append("Dogtag Case assort must reject duplicate persistent item entries instead of validating only the first")
 if "trader.Assort.BarterScheme[id] =" in dogtag_assort or "trader.Assort.LoyalLevelItems[id] =" in dogtag_assort:
@@ -249,5 +250,5 @@ if violations:
 
 print(
     "B&A&HB product-contract gate: OK "
-    "(EN/RU localized five-product roster; exact pricing/progression and host isolation; split HeadBand pockets; Dogtag Case post-create revalidation plus atomic committed host exposure prove canonical grid/filter parity before publish; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
+    "(EN/RU localized five-product roster; exact pricing/progression and host isolation; split HeadBand pockets; Dogtag Case post-create revalidation plus atomic committed host exposure prove canonical grid/filter parity before publish; trader publication consumes one point-in-time Dogtag host proof; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
 )
