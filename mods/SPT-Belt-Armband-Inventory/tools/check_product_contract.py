@@ -134,9 +134,9 @@ dogtag_item = require(
         "ValidateExisting(created, source);",
         "CommitDogtagSlotExposure(dogtagSlotFilter);",
         "DogtagCaseHostContract.RequirePreserved(filter);",
-        "if (filter.Contains(DogtagCaseTpl))",
+        "bool addedHere = filter.Add(DogtagCaseTpl);",
         "DogtagCaseHostContract.RequireCommitted(filter);",
-        "filter.Add(DogtagCaseTpl);",
+        "if (addedHere)",
         "filter.Remove(DogtagCaseTpl);",
         "!string.Equals(grid.Name, sourceGrid.Name, StringComparison.Ordinal)",
         "!Equals(grid.Prototype, sourceGrid.Prototype)",
@@ -148,6 +148,8 @@ dogtag_item = require(
     "Dogtag Case item")
 if "BaseClasses.DOGTAG" in dogtag_item:
     violations.append("Dogtag Case must copy the canonical Dogtag Case filter groups instead of replacing them with a broad dogtag category")
+if "if (filter.Contains(DogtagCaseTpl))" in dogtag_item:
+    violations.append("Dogtag Case host exposure must use HashSet.Add as the exact mutation/rollback ownership boundary instead of a separate Contains pre-check")
 
 create_call = dogtag_item.find("customItemService.CreateItemFromClone(details)")
 post_create_validation = dogtag_item.find("ValidateExisting(created, source);", create_call)
@@ -250,5 +252,5 @@ if violations:
 
 print(
     "B&A&HB product-contract gate: OK "
-    "(EN/RU localized five-product roster; exact pricing/progression and host isolation; split HeadBand pockets; Dogtag Case post-create revalidation plus atomic committed host exposure prove canonical grid/filter parity before publish; trader publication consumes one point-in-time Dogtag host proof; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
+    "(EN/RU localized five-product roster; exact pricing/progression and host isolation; split HeadBand pockets; Dogtag Case post-create revalidation plus mutation-owned atomic committed host exposure prove canonical grid/filter parity before publish; trader publication consumes one point-in-time Dogtag host proof; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
 )
