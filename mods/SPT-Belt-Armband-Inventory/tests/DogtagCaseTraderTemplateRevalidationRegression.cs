@@ -40,8 +40,10 @@ internal static class DogtagCaseTraderTemplateRevalidationRegression
         int secondBoundary = committedOfferProof < 0
             ? -1
             : assort.IndexOf("RequirePublicationBoundary(templateTable, templateId);", committedOfferProof + 1, StringComparison.Ordinal);
-        int rollback = assort.IndexOf("if (loyaltyAdded) trader.Assort.LoyalLevelItems.Remove(id);", StringComparison.Ordinal);
-        if (committedOfferProof < 0 || secondBoundary < 0 || rollback < 0 || !(committedOfferProof < secondBoundary && secondBoundary < rollback))
+        int rollbackCall = secondBoundary < 0
+            ? -1
+            : assort.IndexOf("RollbackOwnedAssortTuple(trader, id, offer, barter, itemAdded, barterAdded, loyaltyAdded);", secondBoundary + 1, StringComparison.Ordinal);
+        if (committedOfferProof < 0 || secondBoundary < 0 || rollbackCall < 0 || !(committedOfferProof < secondBoundary && secondBoundary < rollbackCall))
             throw new InvalidOperationException("Dogtag trader template revalidation regression failed: post-commit template + host proof must remain inside the owned assort rollback boundary.");
 
         int loyaltyAdd = assort.IndexOf("trader.Assort.LoyalLevelItems.Add(id, LoyaltyLevel);", StringComparison.Ordinal);
@@ -51,12 +53,22 @@ internal static class DogtagCaseTraderTemplateRevalidationRegression
         int postBoundaryCancellation = secondBoundary < 0
             ? -1
             : assort.IndexOf("cancellationToken.ThrowIfCancellationRequested();", secondBoundary + 1, StringComparison.Ordinal);
-        if (loyaltyAdd < 0 || postMutationCancellation < 0 || secondBoundary < 0 || postBoundaryCancellation < 0 || rollback < 0
+        if (loyaltyAdd < 0 || postMutationCancellation < 0 || secondBoundary < 0 || postBoundaryCancellation < 0 || rollbackCall < 0
             || !(loyaltyAdd < postMutationCancellation
                 && postMutationCancellation < committedOfferProof
                 && secondBoundary < postBoundaryCancellation
-                && postBoundaryCancellation < rollback))
+                && postBoundaryCancellation < rollbackCall))
             throw new InvalidOperationException("Dogtag trader template revalidation regression failed: cancellation after owned assort mutation and after final publication proof must remain inside rollback ownership.");
+
+        int rollbackHelper = assort.IndexOf("private static void RollbackOwnedAssortTuple", StringComparison.Ordinal);
+        if (rollbackHelper < 0 || rollbackHelper <= rollbackCall)
+            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: owned rollback call must resolve to the explicit replacement-safe helper.");
+        Require(assort, "bool ownsItem = ownedItemIndex >= 0;",
+            "rollback helper must prove exact offer reference ownership");
+        Require(assort, "bool ownsBarter = barterAdded",
+            "rollback helper must prove exact barter reference ownership");
+        Require(assort, "if (loyaltyAdded && ownsItem && ownsBarter",
+            "value-only loyalty metadata may be removed only while both reference-owned tuple components remain ours");
 
         int existingProof = assort.IndexOf("ValidateExisting(trader, id, existing, templateId);", StringComparison.Ordinal);
         int existingBoundary = existingProof < 0
