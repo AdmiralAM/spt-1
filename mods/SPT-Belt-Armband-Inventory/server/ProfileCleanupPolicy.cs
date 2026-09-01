@@ -47,9 +47,10 @@ public static class ProfileCleanupPolicy
         });
 
         // Pass 2: remove descendants and direct references to removed instances.
-        // ParentId is the critical inventory-tree edge; common reference fields
-        // cover build/service records while remaining ownership-specific. IDs of
-        // removed descendants are themselves allowed to cascade only when unique.
+        // Only parentId is a containment edge and may promote the removed object's
+        // own unique _id into further cascade authority. itemId is a service/build
+        // reference edge: remove that exact reference, but never let an arbitrary
+        // reference record become a new ownership root for deleting foreign state.
         bool changed;
         do
         {
@@ -60,10 +61,12 @@ public static class ProfileCleanupPolicy
                 string? parentId = ReadString(obj, "parentId");
                 string? itemId = ReadString(obj, "itemId");
                 string? id = ReadString(obj, "_id");
-                if ((!string.IsNullOrEmpty(parentId) && removedInstanceIds.Contains(parentId))
-                    || (!string.IsNullOrEmpty(itemId) && removedInstanceIds.Contains(itemId)))
+                bool matchedParent = !string.IsNullOrEmpty(parentId) && removedInstanceIds.Contains(parentId);
+                bool matchedItemReference = !string.IsNullOrEmpty(itemId) && removedInstanceIds.Contains(itemId);
+                if (matchedParent || matchedItemReference)
                 {
-                    if (IsUniqueInstanceId(id, instanceIdCounts)) removedInstanceIds.Add(id!);
+                    if (matchedParent && IsUniqueInstanceId(id, instanceIdCounts))
+                        removedInstanceIds.Add(id!);
                     array.RemoveAt(index);
                     removedReferences++;
                     locations.Add(path);
