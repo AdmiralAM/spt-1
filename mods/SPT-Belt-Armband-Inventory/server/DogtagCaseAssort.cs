@@ -43,7 +43,10 @@ public sealed class DogtagCaseAssort(
         if (existing != null)
         {
             ValidateExisting(trader, id, existing, templateId);
+            if (!trader.Assort.BarterScheme.TryGetValue(id, out var existingBarter))
+                throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: validated barter tuple disappeared before publication proof.");
             RequirePublicationBoundary(templateTable, templateId);
+            RequirePublishedAssortTupleIdentity(trader, id, existing, existingBarter);
             cancellationToken.ThrowIfCancellationRequested();
             logger.Success($"B&A&HB Dogtag Case retained validated Ragman LL{LoyaltyLevel} offer for {PriceRoubles:N0} RUB.");
             return Task.CompletedTask;
@@ -80,6 +83,7 @@ public sealed class DogtagCaseAssort(
             cancellationToken.ThrowIfCancellationRequested();
             ValidateExisting(trader, id, offer, templateId);
             RequirePublicationBoundary(templateTable, templateId);
+            RequirePublishedAssortTupleIdentity(trader, id, offer, barter);
             cancellationToken.ThrowIfCancellationRequested();
         }
         catch
@@ -90,6 +94,36 @@ public sealed class DogtagCaseAssort(
 
         logger.Success($"B&A&HB Dogtag Case added to Ragman LL{LoyaltyLevel} for {PriceRoubles:N0} RUB after exact vanilla Dogtag host verification.");
         return Task.CompletedTask;
+    }
+
+    private static void RequirePublishedAssortTupleIdentity(
+        Trader trader,
+        MongoId id,
+        Item expectedItem,
+        List<List<BarterScheme>> expectedBarter)
+    {
+        int exactItemMatches = 0;
+        int idMatches = 0;
+        for (int i = 0; i < trader.Assort.Items.Count; i++)
+        {
+            var item = trader.Assort.Items[i];
+            if (item.Id != id) continue;
+            idMatches++;
+            if (ReferenceEquals(item, expectedItem)) exactItemMatches++;
+            if (idMatches > 1)
+                throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: Ragman item tuple changed or became ambiguous after validation.");
+        }
+
+        if (idMatches != 1 || exactItemMatches != 1)
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman item reference was replaced before publication.");
+
+        if (!trader.Assort.BarterScheme.TryGetValue(id, out var liveBarter)
+            || !ReferenceEquals(liveBarter, expectedBarter))
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman barter reference was replaced before publication.");
+
+        if (!trader.Assort.LoyalLevelItems.TryGetValue(id, out var liveLoyalty)
+            || liveLoyalty != LoyaltyLevel)
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman loyalty metadata changed before publication.");
     }
 
     private static void RollbackOwnedAssortTuple(
@@ -161,20 +195,10 @@ public sealed class DogtagCaseAssort(
 
         DogtagCaseHostContract.RequireCommitted(hostFilter);
 
-        // The committed HashSet proof is meaningful only if the exact inventory
-        // template that owned it is still the live DefaultInventory entry. A
-        // replacement of TemplateTable.Items[DefaultInventory] must fail closed
-        // before slot/filter identity checks can accidentally validate a detached
-        // stale inventory object captured above.
         if (!templateTable.Items.TryGetValue(RuntimeCandidateBeltItem.DefaultInventoryTpl, out var liveInventory)
             || !ReferenceEquals(liveInventory, inventory))
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: live DefaultInventory template changed during committed-host verification.");
 
-        // The committed HashSet proof is meaningful only if that exact host is still
-        // installed in the live DefaultInventory after verification. Re-resolve the
-        // bounded Dogtag slot/group/filter shape and require reference identity for
-        // every link; a replacement group that reuses the same HashSet is still a
-        // structural host replacement and must fail closed before Ragman publication.
         var liveSlots = liveInventory.Properties?.Slots?
             .Where(x => string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal))
             .Take(2)
