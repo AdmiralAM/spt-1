@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-condition-proof-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -17,6 +17,12 @@
     "innerTargetSemantics": "target must match an existing vanilla visit-zone ID or a deliberately created visit zone",
     "innerValue": 1,
     "counterValueOwnsCompletionCount": true
+  },
+  "selectionContract": {
+    "exactVanillaZoneRequired": true,
+    "physicalRestrictedAccessEvidenceRequired": true,
+    "customZoneCreationAllowedForAdmiral": false,
+    "reason": "Borrowed Access must use an existing SPT/vanilla visit zone with independently pinned evidence that the zone sits behind a restricted/keyed route; creating an Admiral-only trigger would prove our trigger, not the game-world access route."
   },
   "admiralBoundary": {
     "mayRepresent": [
