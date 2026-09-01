@@ -23,9 +23,6 @@ internal static class ReloadCandidateBridgeRegression
         Assert(!FastAccessSlotPolicy.ShouldReuseVanillaReloadCandidates(true),
             "a real exact Belt fallback is the only reason to allocate a merged result");
 
-        // Harmony prefixes/finalizers can nest if EFT routes one reload entry point
-        // through another. The ThreadStatic scope must therefore be depth-counted,
-        // preserve the original exception, and never underflow after an extra unwind.
         FieldInfo depth = typeof(ReloadCandidateBridgeRuntime).GetField("reloadDepth", BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Reload candidate bridge regression failed: reloadDepth state field missing");
         FieldInfo reentrant = typeof(ReloadCandidateBridgeRuntime).GetField("reentrant", BindingFlags.Static | BindingFlags.NonPublic)
@@ -85,9 +82,6 @@ internal static class ReloadCandidateBridgeRegression
             originalBindAvailableSlots,
             installedBindAvailableSlots);
 
-        // Every exact reference that B&A&HB either retained or installed is a valid
-        // reload enumeration boundary. Matching remains strict reference identity;
-        // no array contents or structural likeness participate in activation.
         object[] recognizedSlotReferences =
         {
             originalFastAccessSlots,
@@ -145,7 +139,7 @@ internal static class ReloadCandidateBridgeRegression
         ReloadCandidateBridgeRuntime.Reset();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload candidate bridge regression failed: fake GetItemsInSlots missing");
-        ReloadCandidateBridgeRuntime.BeltSlotsArgument = new object();
+        ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = originalFastAccessSlots;
         ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = installedFastAccessSlots;
         ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = originalBindAvailableSlots;
