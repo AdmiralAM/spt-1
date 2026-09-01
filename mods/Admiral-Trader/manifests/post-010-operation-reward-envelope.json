@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "product": "Admiral Trader",
   "status": "post-0.1.0-balance-plan-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -39,16 +39,24 @@
     "operationCount": 21,
     "allOperationsHaveConcretePlayerLevel": true,
     "levelRange": {"minimum": 15, "maximum": 37},
-    "phaseMinimumLevels": {
-      "field-readiness": 15,
-      "operational-integration": 20,
-      "specialist-operations": 28,
-      "command-grade-operations": 35
-    },
+    "phaseMinimumLevels": {"field-readiness": 15, "operational-integration": 20, "specialist-operations": 28, "command-grade-operations": 35},
     "placementReviewComplete": true,
     "difficultyPlacementMeaning": "Reward risk band is the authored difficulty class; concrete player level comes from the campaign progression manifest. Materialization must preserve both independently rather than infer one from the other.",
     "standingDoesNotReplaceQuestPrerequisites": true,
     "loyaltyDoesNotReplaceQuestPrerequisites": true
+  },
+  "vanillaRewardBenchmarkAuthority": {
+    "manifest": "reward-policy.json",
+    "sourceRepository": "sp-tarkov/server-csharp",
+    "sourceCommit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+    "sourcePath": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json",
+    "questCountObserved": 558,
+    "method": "descriptive-vanilla-reward-distribution",
+    "overallReference": {"xpMedian": 12000, "xpP75": 22500, "xpP90": 39930, "rubMedian": 32000, "rubP75": 85000, "rubP90": 170600, "standingMedian": 0.02, "standingP75": 0.03, "standingP90": 0.04},
+    "nearestComparatorRequired": true,
+    "explicitLevelBucketAloneIsNotComparator": true,
+    "benchmarkReviewComplete": true,
+    "interpretation": "The authored post-0.1.0 ceilings remain conservative against the pinned vanilla distribution: 18k XP is below vanilla overall p75, 120k RUB is below vanilla overall p90, and 0.025 standing is below vanilla p75. Per-operation review must still use the nearest quest-type/progression comparator rather than these aggregate percentiles alone."
   },
   "allocationPolicy": {
     "concreteValuesAreAuthoredPlan": true,
@@ -82,44 +90,9 @@
     "high-value-target-window": {"xp": 15500, "rub": 100000, "standing": 0.023, "itemReward": null},
     "labs-security-disruption": {"xp": 17000, "rub": 115000, "standing": 0.025, "itemReward": null}
   },
-  "campaignCaps": {
-    "operationCount": 21,
-    "maximumAdditionalStandingIfEveryOperationPaysItsBandCeiling": 0.37,
-    "maximumAuthoredStandingAllocation": 0.288,
-    "standingIsNotAQuota": true,
-    "salesVolumeGrindRequired": false,
-    "rewardEscalationForRepeatedSameObjectiveAllowed": false
-  },
-  "itemRewardPolicy": {
-    "defaultItemReward": "none",
-    "boundedSupportSampleAllowedAfterEconomyReview": true,
-    "durableEquipmentByDefaultAllowed": false,
-    "containerRewardAllowed": false,
-    "permanentStorefrontUnlockByDefaultAllowed": false,
-    "bossOrRaiderGearFaucetAllowed": false,
-    "rareAmmoFaucetAllowed": false,
-    "renewableStimFaucetAllowed": false,
-    "keyStorefrontAllowed": false,
-    "capabilityUnlockRequiresSeparateProductJustification": true
-  },
-  "compoundRewardIntegrity": {
-    "requiredBeforeAnyWeaponArmorHelmetRigReward": true,
-    "requiredSlotsMustBeComplete": true,
-    "presetOrDefaultInsertChildrenMustBeValidated": true,
-    "reason": "The maintained SPT 4.1 QuestManiac port found 676 mandatory slots missing in legacy quest reward objects and repaired 937 child parts across 228 quests. Admiral must never publish a compound reward whose required children are incomplete.",
-    "source": {
-      "repository": "laurentmekka/AndrudisQuestManiac",
-      "commit": "58c3dd0487858c7ba8e8c053b873fbe76a222637"
-    }
-  },
-  "materializationGate": {
-    "implementationAllowed": false,
-    "runtimeMaterialize": false,
-    "requiresFinalQuestLevelAndDifficultyPlacement": false,
-    "requiresVanillaRewardBenchmark": true,
-    "requiresEconomyAdmiralReview": true,
-    "requiresItemTplReviewForAnyExceptionalItemReward": true,
-    "requiresCompoundRewardIntegrityProofWhenApplicable": true
-  },
+  "campaignCaps": {"operationCount": 21, "maximumAdditionalStandingIfEveryOperationPaysItsBandCeiling": 0.37, "maximumAuthoredStandingAllocation": 0.288, "standingIsNotAQuota": true, "salesVolumeGrindRequired": false, "rewardEscalationForRepeatedSameObjectiveAllowed": false},
+  "itemRewardPolicy": {"defaultItemReward": "none", "boundedSupportSampleAllowedAfterEconomyReview": true, "durableEquipmentByDefaultAllowed": false, "containerRewardAllowed": false, "permanentStorefrontUnlockByDefaultAllowed": false, "bossOrRaiderGearFaucetAllowed": false, "rareAmmoFaucetAllowed": false, "renewableStimFaucetAllowed": false, "keyStorefrontAllowed": false, "capabilityUnlockRequiresSeparateProductJustification": true},
+  "compoundRewardIntegrity": {"requiredBeforeAnyWeaponArmorHelmetRigReward": true, "requiredSlotsMustBeComplete": true, "presetOrDefaultInsertChildrenMustBeValidated": true, "reason": "The maintained SPT 4.1 QuestManiac port found 676 mandatory slots missing in legacy quest reward objects and repaired 937 child parts across 228 quests. Admiral must never publish a compound reward whose required children are incomplete.", "source": {"repository": "laurentmekka/AndrudisQuestManiac", "commit": "58c3dd0487858c7ba8e8c053b873fbe76a222637"}},
+  "materializationGate": {"implementationAllowed": false, "runtimeMaterialize": false, "requiresFinalQuestLevelAndDifficultyPlacement": false, "requiresVanillaRewardBenchmark": false, "requiresEconomyAdmiralReview": true, "requiresItemTplReviewForAnyExceptionalItemReward": true, "requiresCompoundRewardIntegrityProofWhenApplicable": true},
   "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
 }
