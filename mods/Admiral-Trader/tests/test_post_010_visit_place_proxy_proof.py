@@ -72,7 +72,9 @@ class Post010VisitPlaceProxyProofTests(unittest.TestCase):
 
     def test_borrowed_access_remains_fail_closed_until_coupling_overlap_and_economy_are_proven(self):
         readiness = self.access["conditionReadiness"]
-        self.assertEqual(readiness["accessInteraction"]["status"], "unproven-fail-closed")
+        self.assertEqual(readiness["accessInteraction"]["status"], "proven-selected-proxy")
+        self.assertEqual(readiness["accessInteraction"]["authorityManifest"], "post-010-visit-place-proxy-proof.json")
+        self.assertEqual(readiness["accessInteraction"]["target"], "room206_water")
         self.assertEqual(readiness["sameRaidCoupling"]["status"], "unproven-fail-closed")
         gate_text = " ".join(self.proof["materializationGate"]).lower()
         self.assertIn("room206_water", gate_text)
