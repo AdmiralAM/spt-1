@@ -172,9 +172,9 @@ public sealed class DogtagCaseAssort(
 
         // The committed HashSet proof is meaningful only if that exact host is still
         // installed in the live DefaultInventory after verification. Re-resolve the
-        // bounded Dogtag slot/filter shape and require reference identity; otherwise
-        // another startup participant could replace the host during verification and
-        // leave us validating a detached stale set before Ragman publication.
+        // bounded Dogtag slot/group/filter shape and require reference identity for
+        // every link; a replacement group that reuses the same HashSet is still a
+        // structural host replacement and must fail closed before Ragman publication.
         var liveSlots = liveInventory.Properties?.Slots?
             .Where(x => string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal))
             .Take(2)
@@ -183,8 +183,10 @@ public sealed class DogtagCaseAssort(
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: live Dogtag slot changed during committed-host verification.");
 
         var liveGroups = liveSlots[0].Properties?.Filters?.ToArray();
-        if (liveGroups == null || liveGroups.Length != 1 || !ReferenceEquals(liveGroups[0].Filter, hostFilter))
-            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: live Dogtag filter changed during committed-host verification.");
+        if (liveGroups == null || liveGroups.Length != 1
+            || !ReferenceEquals(liveGroups[0], groups[0])
+            || !ReferenceEquals(liveGroups[0].Filter, hostFilter))
+            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: live Dogtag filter group/filter changed during committed-host verification.");
     }
 
     private static void ValidateExisting(Trader trader, MongoId id, Item existing, MongoId templateId)
