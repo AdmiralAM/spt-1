@@ -174,20 +174,19 @@ public sealed class DogtagCaseItem(
         ArgumentNullException.ThrowIfNull(filter);
 
         DogtagCaseHostContract.RequirePreserved(filter);
-        if (filter.Contains(DogtagCaseTpl))
-        {
-            DogtagCaseHostContract.RequireCommitted(filter);
-            return;
-        }
 
-        filter.Add(DogtagCaseTpl);
+        // HashSet.Add is the mutation/ownership boundary. If another compatible
+        // actor already exposed the exact case, this invocation owns no mutation
+        // and must never remove that pre-existing entry during fail-closed rollback.
+        bool addedHere = filter.Add(DogtagCaseTpl);
         try
         {
             DogtagCaseHostContract.RequireCommitted(filter);
         }
         catch
         {
-            filter.Remove(DogtagCaseTpl);
+            if (addedHere)
+                filter.Remove(DogtagCaseTpl);
             throw;
         }
     }
