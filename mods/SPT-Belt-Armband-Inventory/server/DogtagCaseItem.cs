@@ -99,7 +99,7 @@ public sealed class DogtagCaseItem(
             OverrideProperties = new TemplateItemProperties
             {
                 BackgroundColor = sourceProperties.BackgroundColor,
-                ExaminedByDefault = true,
+                ExaminedByDefault = sourceProperties.ExaminedByDefault,
                 Width = sourceProperties.Width,
                 Height = sourceProperties.Height,
                 StackMaxSize = sourceProperties.StackMaxSize,
@@ -235,10 +235,11 @@ public sealed class DogtagCaseItem(
         var sourceProperties = source.Properties;
         if (candidateProperties == null || sourceProperties == null
             || !Equals(candidateProperties.BackgroundColor, sourceProperties.BackgroundColor)
+            || candidateProperties.ExaminedByDefault != sourceProperties.ExaminedByDefault
             || candidateProperties.Width != sourceProperties.Width
             || candidateProperties.Height != sourceProperties.Height
             || candidateProperties.StackMaxSize != sourceProperties.StackMaxSize)
-            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: root presentation, geometry or stack policy differs from the canonical source contract.");
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: root presentation, examined state, geometry or stack policy differs from the canonical source contract.");
 
         var grids = candidateProperties.Grids?.ToArray();
         var sourceGrids = sourceProperties.Grids?.ToArray();
