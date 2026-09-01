@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "product": "Admiral Trader",
   "status": "post-0.1.0-balance-plan-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -32,6 +32,23 @@
     "armored-transit": "high-risk",
     "acoustic-contact": "standard",
     "route-security": "standard"
+  },
+  "campaignPlacementAuthority": {
+    "manifest": "post-010-campaign-progression.json",
+    "schemaVersion": 2,
+    "operationCount": 21,
+    "allOperationsHaveConcretePlayerLevel": true,
+    "levelRange": {"minimum": 15, "maximum": 37},
+    "phaseMinimumLevels": {
+      "field-readiness": 15,
+      "operational-integration": 20,
+      "specialist-operations": 28,
+      "command-grade-operations": 35
+    },
+    "placementReviewComplete": true,
+    "difficultyPlacementMeaning": "Reward risk band is the authored difficulty class; concrete player level comes from the campaign progression manifest. Materialization must preserve both independently rather than infer one from the other.",
+    "standingDoesNotReplaceQuestPrerequisites": true,
+    "loyaltyDoesNotReplaceQuestPrerequisites": true
   },
   "allocationPolicy": {
     "concreteValuesAreAuthoredPlan": true,
@@ -98,7 +115,7 @@
   "materializationGate": {
     "implementationAllowed": false,
     "runtimeMaterialize": false,
-    "requiresFinalQuestLevelAndDifficultyPlacement": true,
+    "requiresFinalQuestLevelAndDifficultyPlacement": false,
     "requiresVanillaRewardBenchmark": true,
     "requiresEconomyAdmiralReview": true,
     "requiresItemTplReviewForAnyExceptionalItemReward": true,
