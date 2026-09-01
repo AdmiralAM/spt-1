@@ -1,15 +1,19 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-pre-materialization-contract",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
   "runtimeMaterialize": false,
   "purpose": "Bind the 21-operation authored reward envelope to the current Economy Admiral quest-reward valuation surface before any item reward is allowed to materialize.",
   "economyAuthority": {
-    "verifiedOriginMain": "58997520237340a4d7648b7fb350a0c8aa3bc9f8",
+    "verifiedOriginMain": "4a31b134c70bdc7dbec3af036f3e6772c7dbbf5f",
     "priceCatalog": "mods/Economy-Admiral/server/QuestRewardHandbookPriceCatalog.cs",
     "groupedRewardSelector": "mods/Economy-Admiral/server/GroupedItemRewardSelectorCore.cs",
-    "integrationMeaning": "Economy Admiral now exposes a positive finite handbook-price lookup used by grouped quest-reward selection; Admiral can therefore fail closed on unpriced item rewards instead of approving qualitative item lists."
+    "recordRewardSelector": "mods/Economy-Admiral/server/ItemRewardRecordSelectorCore.cs",
+    "enforcementSurface": "mods/Economy-Admiral/server/EnforcementPlanService.cs",
+    "integrationMeaning": "Economy Admiral exposes positive finite handbook-price lookup for quest-item valuation and, as of main 4a31b134, ranks separate reducible reward records by total handbook economic value with reducible value as the tie-breaker. Admiral must therefore review the whole reward package economically rather than infer value from stack count or record order.",
+    "mainDiffTouchesTraderRuntime": false,
+    "traderRebaseRequiredForThisAuthorityRefresh": false
   },
   "admissionRules": {
     "defaultItemReward": "none",
@@ -20,7 +24,10 @@
     "economyAdmiralReviewRequired": true,
     "renewableSupplyMayNotBeCreatedByRewardApproval": true,
     "rewardMustFitOperationRiskBand": true,
-    "cashAndItemValueMustBeReviewedTogether": true
+    "cashAndItemValueMustBeReviewedTogether": true,
+    "multipleItemRewardRecordsMustBeValuedSeparatelyBeforePackageAggregation": true,
+    "stackCountMayNotBeUsedAsEconomicValueProxy": true,
+    "recordOrderMayNotBeUsedAsEconomicPriority": true
   },
   "riskBandRubEquivalentCeilings": {
     "routine": 45000,
@@ -32,6 +39,7 @@
     "select the exact reward TPL only after the operation objective shape is proven on SPT 4.1.3",
     "resolve every selected TPL through Economy Admiral handbook-price authority; missing or non-positive price rejects the item reward",
     "for weapons, armor, helmets or rigs, prove all mandatory child slots/default inserts before valuation",
+    "value every separate item reward record by handbook economic value; do not rank records by stack count or declaration order",
     "sum direct RUB plus handbook-valued item rewards and compare the combined package to the operation risk-band ceiling",
     "reject boss/Raider gear, rare-ammo, stim, key, container or capability-faucet rewards unless an explicit operation-specific exception survives Economy Admiral review",
     "keep storefront/renewable unlock decisions separate from one-time reward valuation"
@@ -39,6 +47,14 @@
   "currentWave": {
     "operationCount": 21,
     "itemRewardsApproved": 0,
-    "reason": "The authored wave intentionally defaults to XP/RUB/standing. This contract removes ambiguity for later item-reward admission without changing the frozen runtime candidate or pre-approving any item."
-  }
+    "reason": "The authored wave intentionally defaults to XP/RUB/standing. Current Economy authority is sufficient to evaluate a future exceptional item reward deterministically, but no item reward is pre-approved and runtime materialization remains disabled."
+  },
+  "authorityRefresh": {
+    "previousVerifiedOriginMain": "58997520237340a4d7648b7fb350a0c8aa3bc9f8",
+    "currentVerifiedOriginMain": "4a31b134c70bdc7dbec3af036f3e6772c7dbbf5f",
+    "economyChangeConsumed": "Economy Admiral: rank separate quest item rewards by handbook value (#318)",
+    "effectOnAdmiralRewardPlan": "Stronger fail-closed valuation semantics only; no reward amount, quest, offer, standing or frozen runtime count changes.",
+    "economyReviewStillRequired": true
+  },
+  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
 }
