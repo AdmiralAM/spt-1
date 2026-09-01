@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Reflection;
 using System.Threading;
 #if NETSTANDARD2_1
@@ -152,11 +153,10 @@ namespace SPTBeltArmbandInventory
 
         static bool BeforeAppend(object __2, ref object __result)
         {
-            // The pinned SPT 4.1 GetItemsInSlots contract is exactly Item[]. A
-            // broader IEnumerable/List return shape must not reach the fallback
-            // bridge even if reflection discovery considered it assignable. Gate
-            // here, before AppendCandidates can issue the bounded pseudo-slot15
-            // query, and preserve exact vanilla object identity on refusal.
+            // The pinned SPT 4.1 GetItemsInSlots contract is exactly Item[], and
+            // the fallback query itself must still be the one-element pseudo-slot15
+            // argument created at install time. Any return/query-state drift is
+            // refused before AppendCandidates can invoke Inventory.GetItemsInSlots.
             if (IsCurrentScope() && HasExactRuntimeReturnContract()) return true;
             __result = __2;
             return false;
@@ -164,13 +164,38 @@ namespace SPTBeltArmbandInventory
 
         static bool HasExactRuntimeReturnContract()
         {
-            Type itemType = ReloadCandidateBridgeRuntime.ItemType;
-            Type declaredReturn = ReloadCandidateBridgeRuntime.ReturnType;
-            MethodInfo getItems = ReloadCandidateBridgeRuntime.GetItemsInSlots;
-            if (itemType == null || declaredReturn == null || getItems == null) return false;
+            try
+            {
+                Type itemType = ReloadCandidateBridgeRuntime.ItemType;
+                Type declaredReturn = ReloadCandidateBridgeRuntime.ReturnType;
+                MethodInfo getItems = ReloadCandidateBridgeRuntime.GetItemsInSlots;
+                object beltArgument = ReloadCandidateBridgeRuntime.BeltSlotsArgument;
+                if (itemType == null || declaredReturn == null || getItems == null || beltArgument == null) return false;
 
-            Type exactArray = itemType.MakeArrayType();
-            return declaredReturn == exactArray && getItems.ReturnType == exactArray;
+                Type exactArray = itemType.MakeArrayType();
+                if (declaredReturn != exactArray || getItems.ReturnType != exactArray) return false;
+
+                ParameterInfo[] parameters = getItems.GetParameters();
+                if (parameters.Length != 1 || !parameters[0].ParameterType.IsInstanceOfType(beltArgument)) return false;
+
+                // The install path creates either EquipmentSlot[1] or List<EquipmentSlot>
+                // for the decompiled IEnumerable<EquipmentSlot> boundary. Re-prove the
+                // observable query value here without accepting structurally-similar or
+                // multi-slot collections that could broaden candidate discovery.
+                if (!(beltArgument is IEnumerable values)) return false;
+                int count = 0;
+                foreach (object value in values)
+                {
+                    if (value == null || Convert.ToInt32(value) != RuntimeIdentity.DedicatedBeltEquipmentSlotValue) return false;
+                    count++;
+                    if (count > 1) return false;
+                }
+                return count == 1;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         static void AfterReset()
