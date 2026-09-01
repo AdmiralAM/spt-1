@@ -172,9 +172,17 @@ namespace SPTBeltArmbandInventory
 
             try
             {
+                // Defense in depth: the primary bridge itself re-proves the pinned SPT 4.1
+                // Item[] return shape and the one-value pseudo-slot15 query before invoking
+                // Inventory.GetItemsInSlots. This must remain safe even if the separate epoch
+                // owner is absent, reordered or disabled by another compatibility participant.
+                if (!HasExactFallbackQueryContract())
+                    return vanillaResult;
+
                 // The exact SPT 4.1 contract produces Item[]. If runtime shape drifts, do not widen it.
                 // Keeping the original array also preserves vanilla object identity for every no-op path.
-                if (!(vanillaResult is Array vanillaItems) || vanillaItems.GetType().GetElementType() != ItemType)
+                if (!(vanillaResult is Array vanillaItems)
+                    || vanillaItems.GetType() != ItemType.MakeArrayType())
                     return vanillaResult;
 
                 object beltResult;
@@ -224,6 +232,45 @@ namespace SPTBeltArmbandInventory
                         "B&A&HB scoped reload candidate bridge failed closed: " + root.GetType().FullName + ": " + root.Message);
                 }
                 return vanillaResult;
+            }
+        }
+
+        static bool HasExactFallbackQueryContract()
+        {
+            try
+            {
+                Type itemType = ItemType;
+                Type declaredReturn = ReturnType;
+                MethodInfo getItems = GetItemsInSlots;
+                object beltArgument = BeltSlotsArgument;
+                if (itemType == null || declaredReturn == null || getItems == null || beltArgument == null)
+                    return false;
+
+                Type exactArray = itemType.MakeArrayType();
+                if (declaredReturn != exactArray || getItems.ReturnType != exactArray)
+                    return false;
+
+                ParameterInfo[] parameters = getItems.GetParameters();
+                if (parameters.Length != 1 || !parameters[0].ParameterType.IsInstanceOfType(beltArgument))
+                    return false;
+
+                if (!(beltArgument is IEnumerable values))
+                    return false;
+
+                int count = 0;
+                foreach (object value in values)
+                {
+                    if (value == null || Convert.ToInt32(value) != RuntimeIdentity.DedicatedBeltEquipmentSlotValue)
+                        return false;
+                    count++;
+                    if (count > 1)
+                        return false;
+                }
+                return count == 1;
+            }
+            catch
+            {
+                return false;
             }
         }
 
