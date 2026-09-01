@@ -12,6 +12,7 @@ internal static class DogtagCaseCanonicalIdentityReproofRegression
             throw new InvalidOperationException("Dogtag canonical identity reproof regression failed: module root could not be resolved.");
 
         string item = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseItem.cs"));
+        string assort = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseAssort.cs"));
 
         int verifier = item.IndexOf("public static void RequireCanonicalRegisteredTemplate(TemplateTable templates)", StringComparison.Ordinal);
         int validate = verifier < 0 ? -1 : item.IndexOf("ValidateExisting(candidate, source);", verifier, StringComparison.Ordinal);
@@ -28,7 +29,7 @@ internal static class DogtagCaseCanonicalIdentityReproofRegression
         int existingBranch = item.IndexOf("if (templateTable.Items.TryGetValue(DogtagCaseTpl, out var existing))", StringComparison.Ordinal);
         int existingValueProof = existingBranch < 0 ? -1 : item.IndexOf("ValidateExisting(existing, source);", existingBranch, StringComparison.Ordinal);
         int existingProof = existingValueProof < 0 ? -1 : item.IndexOf("RequireCanonicalRegisteredTemplate(templateTable);", existingValueProof, StringComparison.Ordinal);
-        int firstHostCommit = existingProof < 0 ? -1 : item.IndexOf("CommitDogtagSlotExposure(dogtagSlotFilter, cancellationToken);", existingProof, StringComparison.Ordinal);
+        int firstHostCommit = existingProof < 0 ? -1 : item.IndexOf("CommitDogtagSlotExposure(dogtagHost, cancellationToken);", existingProof, StringComparison.Ordinal);
         if (existingBranch < 0 || existingValueProof < 0 || existingProof < 0 || firstHostCommit < 0
             || !(existingBranch < existingValueProof && existingValueProof < existingProof && existingProof < firstHostCommit))
             throw new InvalidOperationException("Dogtag canonical identity reproof regression failed: retained-template host exposure must follow explicit value validation and fresh canonical reference-identity proof.");
@@ -36,7 +37,7 @@ internal static class DogtagCaseCanonicalIdentityReproofRegression
         int create = item.IndexOf("customItemService.CreateItemFromClone(details);", StringComparison.Ordinal);
         int createdValueProof = create < 0 ? -1 : item.IndexOf("ValidateExisting(created, source);", create + 1, StringComparison.Ordinal);
         int createdProof = createdValueProof < 0 ? -1 : item.IndexOf("RequireCanonicalRegisteredTemplate(templateTable);", createdValueProof + 1, StringComparison.Ordinal);
-        int createdHostCommit = createdProof < 0 ? -1 : item.IndexOf("CommitDogtagSlotExposure(dogtagSlotFilter, CancellationToken.None);", createdProof, StringComparison.Ordinal);
+        int createdHostCommit = createdProof < 0 ? -1 : item.IndexOf("CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);", createdProof, StringComparison.Ordinal);
         if (create < 0 || createdValueProof < 0 || createdProof < 0 || createdHostCommit < 0
             || !(create < createdValueProof && createdValueProof < createdProof && createdProof < createdHostCommit))
             throw new InvalidOperationException("Dogtag canonical identity reproof regression failed: newly-created product must be value-validated, re-resolved and reference-proven before host exposure.");
@@ -44,6 +45,20 @@ internal static class DogtagCaseCanonicalIdentityReproofRegression
         if (item.Contains("templates.Items[SourceDogtagCaseTpl]", StringComparison.Ordinal)
             || item.Contains("templates.Items[DogtagCaseTpl]", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag canonical identity reproof regression failed: publication reproof must remain bounded TryGetValue fail-closed lookup rather than indexer reads.");
+
+        // Trader publication must retain reference identity for every structural
+        // link in the live Dogtag host. Reusing the same HashSet behind a replaced
+        // sole filter-group object is still a host replacement and must fail closed.
+        int host = assort.IndexOf("internal static void RequireExactDogtagHost(TemplateTable templateTable, MongoId templateId)", StringComparison.Ordinal);
+        int committed = host < 0 ? -1 : assort.IndexOf("DogtagCaseHostContract.RequireCommitted(hostFilter);", host, StringComparison.Ordinal);
+        int inventoryIdentity = committed < 0 ? -1 : assort.IndexOf("!ReferenceEquals(liveInventory, inventory)", committed, StringComparison.Ordinal);
+        int slotIdentity = inventoryIdentity < 0 ? -1 : assort.IndexOf("!ReferenceEquals(liveSlots[0], slot)", inventoryIdentity, StringComparison.Ordinal);
+        int groupIdentity = slotIdentity < 0 ? -1 : assort.IndexOf("!ReferenceEquals(liveGroups[0], groups[0])", slotIdentity, StringComparison.Ordinal);
+        int filterIdentity = groupIdentity < 0 ? -1 : assort.IndexOf("!ReferenceEquals(liveGroups[0].Filter, hostFilter)", groupIdentity, StringComparison.Ordinal);
+        if (host < 0 || committed < 0 || inventoryIdentity < 0 || slotIdentity < 0 || groupIdentity < 0 || filterIdentity < 0
+            || !(host < committed && committed < inventoryIdentity && inventoryIdentity < slotIdentity
+                && slotIdentity < groupIdentity && groupIdentity < filterIdentity))
+            throw new InvalidOperationException("Dogtag canonical identity reproof regression failed: trader publication must re-prove live DefaultInventory, Dogtag slot, sole filter-group and filter-set reference identities after committed-host proof.");
     }
 
     private static string? FindModuleRoot()
