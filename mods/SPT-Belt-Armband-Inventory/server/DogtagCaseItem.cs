@@ -30,6 +30,14 @@ public sealed class DogtagCaseItem(
     private static readonly MongoId DefaultInventoryTpl = RuntimeCandidateBeltItem.DefaultInventoryTpl;
     private const string DogtagSlotName = "Dogtag";
 
+    private sealed class DogtagHostBoundary(object inventory, object slot, object filterGroup, HashSet<MongoId> filter)
+    {
+        public object Inventory { get; } = inventory;
+        public object Slot { get; } = slot;
+        public object FilterGroup { get; } = filterGroup;
+        public HashSet<MongoId> Filter { get; } = filter;
+    }
+
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -50,7 +58,7 @@ public sealed class DogtagCaseItem(
         if (sourceFilters == null || sourceFilters.Length == 0 || sourceFilters.Any(x => x.Filter == null || x.Filter.Count == 0))
             throw new InvalidOperationException("B&A&HB Dogtag Case source filters are empty or ambiguous; refusing to create a broadened container.");
 
-        HashSet<MongoId> dogtagSlotFilter = PrepareDogtagSlotFilter();
+        DogtagHostBoundary dogtagHost = PrepareDogtagSlotFilter();
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceDogtagCaseTpl)
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case source handbook entry is missing.");
 
@@ -61,7 +69,7 @@ public sealed class DogtagCaseItem(
             ValidateExisting(existing, source);
             RequireCanonicalRegisteredTemplate(templateTable);
             cancellationToken.ThrowIfCancellationRequested();
-            CommitDogtagSlotExposure(dogtagSlotFilter, cancellationToken);
+            CommitDogtagSlotExposure(dogtagHost, cancellationToken);
             logger.Success("B&A&HB Dogtag Case retained existing validated template; vanilla Dogtag slot filter preserved and exact container appended.");
             return Task.CompletedTask;
         }
@@ -148,12 +156,12 @@ public sealed class DogtagCaseItem(
         // post-create value proof and before exposing the product through the live
         // Dogtag host. A replaced/detached template pair fails closed here.
         RequireCanonicalRegisteredTemplate(templateTable);
-        CommitDogtagSlotExposure(dogtagSlotFilter, CancellationToken.None);
+        CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);
         logger.Success("B&A&HB Dogtag Case created and revalidated against the canonical EFT Dogtag Case root/grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
         return Task.CompletedTask;
     }
 
-    private HashSet<MongoId> PrepareDogtagSlotFilter()
+    private DogtagHostBoundary PrepareDogtagSlotFilter()
     {
         if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
             throw new InvalidOperationException("B&A&HB default inventory template is missing for Dogtag host registration.");
@@ -183,16 +191,47 @@ public sealed class DogtagCaseItem(
                 throw new InvalidOperationException("B&A&HB Dogtag slot is already contaminated by a different owned product template; refusing cross-host mutation.");
         }
 
-        return hostFilter;
+        // Capture the whole resolved host chain, not only the mutable HashSet. The
+        // later commit must prove these exact objects are still the live
+        // DefaultInventory -> Dogtag slot -> sole filter group -> filter chain.
+        return new DogtagHostBoundary(inventory, slots[0], groups[0], hostFilter);
     }
 
-    private static void CommitDogtagSlotExposure(HashSet<MongoId> filter, CancellationToken cancellationToken)
+    private void RequireLiveDogtagHostIdentity(DogtagHostBoundary boundary)
     {
-        ArgumentNullException.ThrowIfNull(filter);
+        ArgumentNullException.ThrowIfNull(boundary);
+
+        if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var liveInventory)
+            || !ReferenceEquals(liveInventory, boundary.Inventory))
+            throw new InvalidOperationException("B&A&HB Dogtag host publication refused: DefaultInventory template was replaced after preload host capture.");
+
+        var liveSlots = liveInventory.Properties?.Slots?
+            .Where(x => string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal))
+            .Take(2)
+            .ToArray();
+        if (liveSlots == null || liveSlots.Length != 1 || !ReferenceEquals(liveSlots[0], boundary.Slot))
+            throw new InvalidOperationException("B&A&HB Dogtag host publication refused: Dogtag slot object was replaced or became ambiguous after preload host capture.");
+
+        var liveGroups = liveSlots[0].Properties?.Filters?.ToArray();
+        if (liveGroups == null || liveGroups.Length != 1
+            || !ReferenceEquals(liveGroups[0], boundary.FilterGroup)
+            || !ReferenceEquals(liveGroups[0].Filter, boundary.Filter))
+            throw new InvalidOperationException("B&A&HB Dogtag host publication refused: Dogtag filter group/filter object was replaced after preload host capture.");
+    }
+
+    private void CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(boundary);
+        HashSet<MongoId> filter = boundary.Filter;
         cancellationToken.ThrowIfCancellationRequested();
 
+        // Close the capture-to-commit TOCTOU before any mutation. A startup actor
+        // may not replace DefaultInventory, the Dogtag slot, its sole filter group,
+        // or the filter set while leaving us holding a detached but value-valid set.
+        RequireLiveDogtagHostIdentity(boundary);
         DogtagCaseHostContract.RequirePreserved(filter);
         cancellationToken.ThrowIfCancellationRequested();
+        RequireLiveDogtagHostIdentity(boundary);
 
         // HashSet.Add is the mutation/ownership boundary. If another compatible
         // actor already exposed the exact case, this invocation owns no mutation
@@ -206,6 +245,7 @@ public sealed class DogtagCaseItem(
             // remains untouched because addedHere is false.
             cancellationToken.ThrowIfCancellationRequested();
             DogtagCaseHostContract.RequireCommitted(filter);
+            RequireLiveDogtagHostIdentity(boundary);
             cancellationToken.ThrowIfCancellationRequested();
         }
         catch
