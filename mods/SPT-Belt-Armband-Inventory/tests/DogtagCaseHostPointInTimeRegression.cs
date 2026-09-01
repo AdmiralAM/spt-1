@@ -24,6 +24,21 @@ internal static class DogtagCaseHostPointInTimeRegression
             "committed preservation and exact-case checks must share the same snapshot");
         Require(contract, "if (!current.Contains(caseTpl))",
             "exact-case presence must be checked against the committed snapshot, not the live mutable filter");
+        Require(contract, "HashSet<MongoId> liveAfterProof = SnapshotCurrentFilter(currentFilter);",
+            "committed verification must re-snapshot the same live filter after the preservation/exact-case proof");
+        Require(contract, "if (!current.SetEquals(liveAfterProof))",
+            "in-place Dogtag filter drift during committed-host verification must fail closed even when reference identity is unchanged");
+        Require(contract, "live Dogtag filter changed during committed-host verification",
+            "committed-host drift must remain explicitly diagnosable");
+
+        int firstSnapshot = contract.IndexOf("HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);", StringComparison.Ordinal);
+        int preserved = contract.IndexOf("RequirePreservedSnapshot(current);", firstSnapshot, StringComparison.Ordinal);
+        int exactCase = contract.IndexOf("if (!current.Contains(caseTpl))", preserved, StringComparison.Ordinal);
+        int secondSnapshot = contract.IndexOf("HashSet<MongoId> liveAfterProof = SnapshotCurrentFilter(currentFilter);", exactCase, StringComparison.Ordinal);
+        int stabilityProof = contract.IndexOf("if (!current.SetEquals(liveAfterProof))", secondSnapshot, StringComparison.Ordinal);
+        if (firstSnapshot < 0 || preserved <= firstSnapshot || exactCase <= preserved
+            || secondSnapshot <= exactCase || stabilityProof <= secondSnapshot)
+            throw new InvalidOperationException("Dogtag host point-in-time regression failed: committed proof must remain snapshot -> preservation -> exact case -> live re-snapshot -> stability proof.");
 
         if (contract.Contains("RequirePreserved(currentFilter);\n\n        var caseTpl", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag host point-in-time regression failed: TOCTOU live-filter committed verification was restored.");
