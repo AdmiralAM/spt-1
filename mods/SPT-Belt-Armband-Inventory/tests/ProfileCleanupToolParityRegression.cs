@@ -19,15 +19,21 @@ internal static class ProfileCleanupToolParityRegression
         Require(policy, "CollectInstanceIdCounts(profile)", "compiled cleanup must pre-count serialized instance IDs");
         Require(policy, "IsUniqueInstanceId(id, instanceIdCounts)", "compiled cleanup must gate cascade IDs by exact cardinality");
         Require(policy, "count == 1", "compiled cleanup uniqueness must mean exactly one serialized instance ID");
+        Require(policy, "bool matchedParent", "compiled cleanup must distinguish containment from direct reference edges");
+        Require(policy, "bool matchedItemReference", "compiled cleanup must preserve explicit itemId reference cleanup");
+        Require(policy, "if (matchedParent && IsUniqueInstanceId(id, instanceIdCounts))", "compiled cleanup must promote cascade authority only through parentId containment");
 
         Require(script, "$idCounts = @{}", "offline cleanup must pre-count serialized instance IDs");
         Require(script, "function Test-UniqueInstanceId", "offline cleanup must expose the same uniqueness gate");
         Require(script, "([int]$idCounts[$Id] -eq 1)", "offline cleanup uniqueness must mean exactly one serialized instance ID");
         Require(script, "if (Test-UniqueInstanceId $id)", "direct owned IDs must enter cascade authority only when unique");
-        Require(script, "if ((Test-UniqueInstanceId $id) -and -not $removedIds.ContainsKey($id))", "removed descendant IDs must continue cascade only when unique");
+        Require(script, "if ($parentId -and $removedIds.ContainsKey($parentId))", "offline recovery must promote cascade authority only through parentId containment");
+        Require(script, "$itemProperty = $Object.PSObject.Properties['itemId']", "offline recovery must still remove exact direct itemId references");
 
         if (script.Contains("$removedIds[[string]$idProperty.Value] = $true", StringComparison.Ordinal))
             throw new InvalidOperationException("Profile cleanup tool parity regression failed: offline recovery restored unconditional owned-ID cascade authority.");
+        if (script.Contains("($itemId -and $removedIds.ContainsKey($itemId)))", StringComparison.Ordinal))
+            throw new InvalidOperationException("Profile cleanup tool parity regression failed: offline recovery restored itemId-driven cascade authority.");
     }
 
     private static string? FindModuleRoot()
