@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "source": {
@@ -25,7 +25,7 @@
       "en": "That closes the shortage. The element can maintain itself again; there is no reason to turn this into another shopping list.",
       "ru": "Дефицит закрыт. Группа снова может обслуживать себя сама; превращать это в очередной список покупок незачем."
     },
-    "objectiveIntent": "One contextual maintenance-reserve handover using a small fixed set of ordinary non-repairable consumable/service supplies whose exact TPLs are selected only after overlap and economy review.",
+    "objectiveIntent": "One contextual maintenance-reserve handover using a small fixed set of field-service supplies whose exact TPLs are selected only after gameplay-purpose, overlap and economy review.",
     "bounds": {
       "maximumDistinctItemTpls": 3,
       "maximumTotalHandedOverUnits": 6,
@@ -35,14 +35,19 @@
       "genericRequestedItemQueueAllowed": false,
       "containerRewardLadderAllowed": false,
       "storefrontUnlockAllowed": false,
-      "repairableWeaponsArmorHelmetsAllowed": false
+      "repairableWeaponsArmorHelmetsAllowed": true
     },
     "handoverCompatibility": {
-      "legacyRisk": "The maintained SPT 4.1 QuestManiac port documents legacy handover conditions with maxDurability=0, which rejects repairable weapons, helmets and armor; its converter normalizes those conditions to the vanilla-style 100 ceiling.",
-      "admiralDecision": "Field-Expedient Supply avoids repairable weapon/armor/helmet payloads entirely. Exact selected TPLs must be ordinary non-repairable service/consumable supplies, so the operation does not depend on durability-bound handover behavior.",
-      "repairablePayloadAllowed": false,
+      "legacyRisk": "The maintained SPT 4.1 QuestManiac port documents legacy handover conditions with maxDurability=0, which is not the documented full usable durability range for repairable weapons, helmets and armor; its converter normalizes those conditions to the vanilla-style 100 ceiling.",
+      "admiralDecision": "Exact SPT handover durability semantics are now statically proven: repairable payloads are mechanically representable with minDurability=0 and maxDurability=100. They are no longer excluded for durability reasons alone, but they remain unselected until an exact TPL has an independent field-service purpose and passes overlap plus Economy Admiral review.",
+      "repairablePayloadAllowed": true,
+      "fullRangeDurabilityBounds": {
+        "minDurability": 0,
+        "maxDurability": 100
+      },
       "exactTplSelectionStillRequired": true,
-      "exactSpt413ConditionProofStillRequired": true,
+      "exactSpt413ConditionProofStillRequired": false,
+      "conditionProof": "post-010-handover-durability-proof.json",
       "sourceReference": {
         "repository": "laurentmekka/AndrudisQuestManiac",
         "commit": "58c3dd0487858c7ba8e8c053b873fbe76a222637",
@@ -60,7 +65,7 @@
   "gates": {
     "implementationAllowed": false,
     "runtimeMaterialize": false,
-    "requiresExactSpt413HandoverConditionProof": true,
+    "requiresExactSpt413HandoverConditionProof": false,
     "requiresExactItemTplSelection": true,
     "requiresVanillaScorpionArtemOverlapAudit": true,
     "requiresEconomyAdmiralReview": true,

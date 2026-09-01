@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-static-condition-proof",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "runtimeMaterialize": false,
+  "capability": "HandoverItem durability bounds for repairable equipment",
+  "authority": {
+    "sptQuestReference": {
+      "repository": "sp-tarkov/wiki",
+      "path": "modding/references/quest-values.md",
+      "finding": "HandoverItem maxDurability and minDurability are required for medical items, weapons and armour; the documented vanilla-shaped full-range example is minDurability=0 and maxDurability=100."
+    },
+    "pinnedSpt413QuestData": {
+      "repository": "sp-tarkov/server-csharp",
+      "commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+      "path": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json",
+      "role": "version-pinned serialization authority"
+    },
+    "legacyCompatibilityFinding": {
+      "repository": "laurentmekka/AndrudisQuestManiac",
+      "commit": "58c3dd0487858c7ba8e8c053b873fbe76a222637",
+      "finding": "3423 legacy HandoverItem/FindItem/LeaveItemAtLocation durability ceilings were normalized from 0 to the vanilla-style 100 ceiling."
+    }
+  },
+  "provenContract": {
+    "conditionType": "HandoverItem",
+    "fullUsableDurabilityRange": {
+      "minDurability": 0,
+      "maxDurability": 100
+    },
+    "maxDurabilityZeroIsNotFullRange": true,
+    "repairableWeaponArmorHelmetPayloadMayUseFullRangeBounds": true,
+    "onlyFoundInRaidRemainsIndependent": true,
+    "exactTargetTplsStillRequired": true,
+    "quantityValueStillRequired": true
+  },
+  "scopeBoundary": {
+    "provesConditionSerializationAndDocumentedDurabilitySemantics": true,
+    "doesNotSelectAnyAdmiralPayloadTpl": true,
+    "doesNotApproveEconomyImpact": true,
+    "doesNotMaterializeFieldExpedientSupply": true,
+    "doesNotChangeFrozen010": true
+  },
+  "fieldExpedientSupplyImpact": {
+    "exactSpt413HandoverConditionProofSatisfied": true,
+    "repairablePayloadNoLongerMechanicallyExcludedByDurabilitySemantics": true,
+    "admissionStillRequiresIndependentGameplayPurpose": true,
+    "admissionStillRequiresExactTplSelection": true,
+    "admissionStillRequiresOverlapAudit": true,
+    "admissionStillRequiresEconomyAdmiralReview": true
+  }
+}

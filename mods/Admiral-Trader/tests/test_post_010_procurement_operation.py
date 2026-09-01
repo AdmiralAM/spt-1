@@ -10,6 +10,7 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
     bounds = op["bounds"]
     gates = data["gates"]
 
+    assert data["schemaVersion"] == 2
     assert data["status"] == "post-0.1.0-authored-spec-only"
     assert data["source"]["bundle"] == "Errand Boy"
     assert data["source"]["legacyQuestCount"] == 920
@@ -27,16 +28,32 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
     assert bounds["genericRequestedItemQueueAllowed"] is False
     assert bounds["containerRewardLadderAllowed"] is False
     assert bounds["storefrontUnlockAllowed"] is False
-    assert bounds["repairableWeaponsArmorHelmetsAllowed"] is False
+    assert bounds["repairableWeaponsArmorHelmetsAllowed"] is True
 
     compat = op["handoverCompatibility"]
-    assert compat["repairablePayloadAllowed"] is False
+    assert compat["repairablePayloadAllowed"] is True
+    assert compat["fullRangeDurabilityBounds"] == {"minDurability": 0, "maxDurability": 100}
     assert compat["exactTplSelectionStillRequired"] is True
-    assert compat["exactSpt413ConditionProofStillRequired"] is True
+    assert compat["exactSpt413ConditionProofStillRequired"] is False
+    assert compat["conditionProof"] == "post-010-handover-durability-proof.json"
     assert compat["sourceReference"]["repository"] == "laurentmekka/AndrudisQuestManiac"
     assert compat["sourceReference"]["commit"] == "58c3dd0487858c7ba8e8c053b873fbe76a222637"
     assert "3423" in compat["sourceReference"]["finding"]
     assert "maxDurability=0" in compat["legacyRisk"]
+
+    proof = json.loads((ROOT / "manifests" / compat["conditionProof"]).read_text(encoding="utf-8"))
+    contract = proof["provenContract"]
+    impact = proof["fieldExpedientSupplyImpact"]
+    assert proof["runtimeMaterialize"] is False
+    assert contract["conditionType"] == "HandoverItem"
+    assert contract["fullUsableDurabilityRange"] == {"minDurability": 0, "maxDurability": 100}
+    assert contract["maxDurabilityZeroIsNotFullRange"] is True
+    assert contract["repairableWeaponArmorHelmetPayloadMayUseFullRangeBounds"] is True
+    assert impact["exactSpt413HandoverConditionProofSatisfied"] is True
+    assert impact["repairablePayloadNoLongerMechanicallyExcludedByDurabilitySemantics"] is True
+    assert impact["admissionStillRequiresExactTplSelection"] is True
+    assert impact["admissionStillRequiresOverlapAudit"] is True
+    assert impact["admissionStillRequiresEconomyAdmiralReview"] is True
 
     rewards = op["rewardDoctrine"]
     assert rewards["permanentItemSupplyAllowed"] is False
@@ -46,7 +63,7 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
 
     assert gates["implementationAllowed"] is False
     assert gates["runtimeMaterialize"] is False
-    assert gates["requiresExactSpt413HandoverConditionProof"] is True
+    assert gates["requiresExactSpt413HandoverConditionProof"] is False
     assert gates["requiresExactItemTplSelection"] is True
     assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
     assert gates["requiresEconomyAdmiralReview"] is True
