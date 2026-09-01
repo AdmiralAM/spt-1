@@ -132,7 +132,7 @@ dogtag_item = require(
         "Filters = copiedFilters",
         "if (!templateTable.Items.TryGetValue(DogtagCaseTpl, out var created))",
         "ValidateExisting(created, source);",
-        "CommitDogtagSlotExposure(dogtagSlotFilter);",
+        "CommitDogtagSlotExposure(dogtagSlotFilter, CancellationToken.None);",
         "DogtagCaseHostContract.RequirePreserved(filter);",
         "bool addedHere = filter.Add(DogtagCaseTpl);",
         "DogtagCaseHostContract.RequireCommitted(filter);",
@@ -152,10 +152,18 @@ if "if (filter.Contains(DogtagCaseTpl))" in dogtag_item:
     violations.append("Dogtag Case host exposure must use HashSet.Add as the exact mutation/rollback ownership boundary instead of a separate Contains pre-check")
 
 create_call = dogtag_item.find("customItemService.CreateItemFromClone(details)")
+pre_create_cancel = dogtag_item.rfind("cancellationToken.ThrowIfCancellationRequested();", 0, create_call)
 post_create_validation = dogtag_item.find("ValidateExisting(created, source);", create_call)
-post_create_exposure = dogtag_item.find("CommitDogtagSlotExposure(dogtagSlotFilter);", create_call)
-if min(create_call, post_create_validation, post_create_exposure) < 0 or not (create_call < post_create_validation < post_create_exposure):
-    violations.append("Dogtag Case must re-read/revalidate the created template before exposing it through the vanilla Dogtag slot")
+post_create_exposure = dogtag_item.find("CommitDogtagSlotExposure(dogtagSlotFilter, CancellationToken.None);", create_call)
+if min(create_call, pre_create_cancel, post_create_validation, post_create_exposure) < 0 or not (
+    pre_create_cancel < create_call < post_create_validation < post_create_exposure
+):
+    violations.append("Dogtag Case must observe cancellation before irreversible clone registration, then revalidate and finish exact host publication without introducing an orphaned-template cancellation gap")
+
+existing_check = dogtag_item.find("if (templateTable.Items.TryGetValue(DogtagCaseTpl, out var existing))")
+existing_commit = dogtag_item.find("CommitDogtagSlotExposure(dogtagSlotFilter, cancellationToken);", existing_check)
+if min(existing_check, existing_commit) < 0 or existing_check >= existing_commit:
+    violations.append("pre-existing Dogtag Case path must retain cancellation-aware atomic host exposure")
 
 dogtag_assort = require(
     SERVER / "DogtagCaseAssort.cs",
@@ -252,5 +260,5 @@ if violations:
 
 print(
     "B&A&HB product-contract gate: OK "
-    "(EN/RU localized five-product roster; exact pricing/progression and host isolation; split HeadBand pockets; Dogtag Case post-create revalidation plus mutation-owned atomic committed host exposure prove canonical grid/filter parity before publish; trader publication consumes one point-in-time Dogtag host proof; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
+    "(EN/RU localized five-product roster; exact pricing/progression and host isolation; split HeadBand pockets; Dogtag Case cancellation is bounded before irreversible clone registration, post-create revalidation completes coherent host publication, and pre-existing exposure remains mutation-owned/cancellation-atomic; trader publication consumes one point-in-time Dogtag host proof; all persistent assort IDs reject duplicate/partial collisions; dedicated pair prepares before commit)"
 )
