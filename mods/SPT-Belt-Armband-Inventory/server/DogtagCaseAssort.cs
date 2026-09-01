@@ -29,8 +29,7 @@ public sealed class DogtagCaseAssort(
         cancellationToken.ThrowIfCancellationRequested();
 
         var templateId = new MongoId(RuntimeIdentity.DogtagCaseItemId);
-        DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);
-        RequireExactDogtagHost(templateTable, templateId);
+        RequirePublicationBoundary(templateTable, templateId);
 
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case could not find Ragman.");
@@ -43,6 +42,10 @@ public sealed class DogtagCaseAssort(
         if (existing != null)
         {
             ValidateExisting(trader, id, existing, templateId);
+            // Re-prove the live product + host after reading committed trader state.
+            // Existing offers are not mutated here, so any concurrent startup drift
+            // simply fails closed without ownership/rollback ambiguity.
+            RequirePublicationBoundary(templateTable, templateId);
             logger.Success($"B&A&HB Dogtag Case retained validated Ragman LL{LoyaltyLevel} offer for {PriceRoubles:N0} RUB.");
             return Task.CompletedTask;
         }
@@ -78,6 +81,12 @@ public sealed class DogtagCaseAssort(
             // Publication is a committed-state boundary just like Dogtag host
             // exposure. Revalidate the exact live offer before declaring success.
             ValidateExisting(trader, id, offer, templateId);
+
+            // Close the publication-time TOCTOU window as well: after the complete
+            // owned assort tuple exists, re-prove both the live canonical product
+            // and the committed vanilla Dogtag host. Failure remains inside this
+            // invocation's rollback boundary and cannot publish a stale/corrupt case.
+            RequirePublicationBoundary(templateTable, templateId);
         }
         catch
         {
@@ -91,6 +100,14 @@ public sealed class DogtagCaseAssort(
 
         logger.Success($"B&A&HB Dogtag Case added to Ragman LL{LoyaltyLevel} for {PriceRoubles:N0} RUB after exact vanilla Dogtag host verification.");
         return Task.CompletedTask;
+    }
+
+    private static void RequirePublicationBoundary(TemplateTable templateTable, MongoId templateId)
+    {
+        // Keep template parity and equipment-host parity as one reusable publication
+        // boundary so pre-publication and post-commit checks cannot silently diverge.
+        DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);
+        RequireExactDogtagHost(templateTable, templateId);
     }
 
     internal static void RequireExactDogtagHost(TemplateTable templateTable, MongoId templateId)
