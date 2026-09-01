@@ -57,7 +57,7 @@ public sealed class DogtagCaseItem(
         if (templateTable.Items.TryGetValue(DogtagCaseTpl, out var existing))
         {
             ValidateExisting(existing, source);
-            CommitDogtagSlotExposure(dogtagSlotFilter);
+            CommitDogtagSlotExposure(dogtagSlotFilter, cancellationToken);
             logger.Success("B&A&HB Dogtag Case retained existing validated template; vanilla Dogtag slot filter preserved and exact container appended.");
             return Task.CompletedTask;
         }
@@ -131,7 +131,7 @@ public sealed class DogtagCaseItem(
             throw new InvalidOperationException("B&A&HB Dogtag Case creation reported success but the exact template is absent; refusing Dogtag slot exposure.");
         ValidateExisting(created, source);
 
-        CommitDogtagSlotExposure(dogtagSlotFilter);
+        CommitDogtagSlotExposure(dogtagSlotFilter, cancellationToken);
         logger.Success("B&A&HB Dogtag Case created and revalidated against the canonical EFT Dogtag Case grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
         return Task.CompletedTask;
     }
@@ -169,11 +169,13 @@ public sealed class DogtagCaseItem(
         return hostFilter;
     }
 
-    private static void CommitDogtagSlotExposure(HashSet<MongoId> filter)
+    private static void CommitDogtagSlotExposure(HashSet<MongoId> filter, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(filter);
+        cancellationToken.ThrowIfCancellationRequested();
 
         DogtagCaseHostContract.RequirePreserved(filter);
+        cancellationToken.ThrowIfCancellationRequested();
 
         // HashSet.Add is the mutation/ownership boundary. If another compatible
         // actor already exposed the exact case, this invocation owns no mutation
@@ -181,7 +183,13 @@ public sealed class DogtagCaseItem(
         bool addedHere = filter.Add(DogtagCaseTpl);
         try
         {
+            // Cancellation is observed inside the same ownership boundary as
+            // committed-host validation. If this invocation appended the case,
+            // cancellation rolls back only that append; a pre-existing exact case
+            // remains untouched because addedHere is false.
+            cancellationToken.ThrowIfCancellationRequested();
             DogtagCaseHostContract.RequireCommitted(filter);
+            cancellationToken.ThrowIfCancellationRequested();
         }
         catch
         {
