@@ -152,9 +152,25 @@ namespace SPTBeltArmbandInventory
 
         static bool BeforeAppend(object __2, ref object __result)
         {
-            if (IsCurrentScope()) return true;
+            // The pinned SPT 4.1 GetItemsInSlots contract is exactly Item[]. A
+            // broader IEnumerable/List return shape must not reach the fallback
+            // bridge even if reflection discovery considered it assignable. Gate
+            // here, before AppendCandidates can issue the bounded pseudo-slot15
+            // query, and preserve exact vanilla object identity on refusal.
+            if (IsCurrentScope() && HasExactRuntimeReturnContract()) return true;
             __result = __2;
             return false;
+        }
+
+        static bool HasExactRuntimeReturnContract()
+        {
+            Type itemType = ReloadCandidateBridgeRuntime.ItemType;
+            Type declaredReturn = ReloadCandidateBridgeRuntime.ReturnType;
+            MethodInfo getItems = ReloadCandidateBridgeRuntime.GetItemsInSlots;
+            if (itemType == null || declaredReturn == null || getItems == null) return false;
+
+            Type exactArray = itemType.MakeArrayType();
+            return declaredReturn == exactArray && getItems.ReturnType == exactArray;
         }
 
         static void AfterReset()
@@ -266,5 +282,6 @@ namespace SPTBeltArmbandInventory
         internal static void ExitForRegression() => ExitScope();
         internal static void InvalidateForRegression() => Invalidate();
         internal static bool IsCurrentForRegression() => IsCurrentScope();
+        internal static bool HasExactRuntimeReturnContractForRegression() => HasExactRuntimeReturnContract();
     }
 }
