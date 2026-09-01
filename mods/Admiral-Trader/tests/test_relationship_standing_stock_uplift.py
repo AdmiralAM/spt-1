@@ -41,39 +41,24 @@ class RelationshipStandingStockUpliftTests(unittest.TestCase):
         self.assertEqual(len(approved), 1)
         self.assertEqual(approved[0]["offerId"], "ad2000000000000000000004")
         self.assertEqual(approved[0]["role"], "field-marking")
-        self.assertTrue(all(
-            reviewed[offer_id]["decision"].startswith("no-uplift-")
-            for offer_id in {
-                "ad2000000000000000000001",
-                "ad2000000000000000000002",
-                "ad2000000000000000000003",
-            }
-        ))
+        self.assertTrue(all(reviewed[offer_id]["decision"].startswith("no-uplift-") for offer_id in {
+            "ad2000000000000000000001", "ad2000000000000000000002", "ad2000000000000000000003"
+        }))
 
     def test_tiers_are_finite_monotonic_and_standing_aligned(self):
         uplift = self.load("relationship-standing-stock-uplift.json")
         relationship = self.load("relationship-stock.json")
         baseline = self.load("baseline-stock.json")
-        plan = uplift["upliftPlan"]
-        tiers = plan["tiers"]
+        tiers = uplift["upliftPlan"]["tiers"]
 
         self.assertEqual([tier["loyaltyLevel"] for tier in tiers], [1, 2, 3, 4])
-        self.assertEqual(
-            [tier["standing"] for tier in tiers],
-            [0.0] + relationship["authority"]["standingThresholds"],
-        )
+        self.assertEqual([tier["standing"] for tier in tiers], [0.0] + relationship["authority"]["standingThresholds"])
         self.assertEqual(tiers[0]["stockPerReset"], baseline["offers"][3]["stockPerReset"])
         self.assertEqual(tiers[0]["buyRestriction"], baseline["offers"][3]["buyRestriction"])
         self.assertEqual([tier["stockPerReset"] for tier in tiers], [12, 16, 20, 24])
         self.assertEqual([tier["buyRestriction"] for tier in tiers], [4, 6, 8, 10])
-        self.assertTrue(all(a < b for a, b in zip(
-            [tier["stockPerReset"] for tier in tiers],
-            [tier["stockPerReset"] for tier in tiers][1:],
-        )))
-        self.assertTrue(all(a < b for a, b in zip(
-            [tier["buyRestriction"] for tier in tiers],
-            [tier["buyRestriction"] for tier in tiers][1:],
-        )))
+        self.assertTrue(all(a < b for a, b in zip([tier["stockPerReset"] for tier in tiers], [tier["stockPerReset"] for tier in tiers][1:])))
+        self.assertTrue(all(a < b for a, b in zip([tier["buyRestriction"] for tier in tiers], [tier["buyRestriction"] for tier in tiers][1:])))
         self.assertTrue(all(tier["buyRestriction"] <= tier["stockPerReset"] for tier in tiers))
 
     def test_economic_delta_and_capability_boundaries_are_explicit(self):
@@ -88,7 +73,6 @@ class RelationshipStandingStockUpliftTests(unittest.TestCase):
         self.assertFalse(uplift["authority"]["capabilityOfferUpliftAllowed"])
         self.assertTrue(uplift["authority"]["economyReviewRequiredBeforeMaterialization"])
         self.assertFalse(plan["priceChangesAcrossTiers"])
-
         self.assertEqual(delta["stockUnitsPerReset"], last["stockPerReset"] - first["stockPerReset"])
         self.assertEqual(delta["personalBuyUnitsPerReset"], last["buyRestriction"] - first["buyRestriction"])
         self.assertEqual(delta["personalSpendCapacityRub"], delta["personalBuyUnitsPerReset"] * plan["priceRub"])
@@ -102,9 +86,33 @@ class RelationshipStandingStockUpliftTests(unittest.TestCase):
         self.assertFalse(gates["implementationAllowed"])
         self.assertTrue(gates["requiresEconomyAdmiralApproval"])
         self.assertTrue(gates["requiresRuntimeLoyaltyVisibilityProof"])
-        self.assertTrue(gates["requiresAssortMutationContract"])
+        self.assertFalse(gates["requiresAssortMutationContract"])
         self.assertTrue(gates["requiresFrozen010PhysicalGate"])
         self.assertFalse(gates["physicalCheckpointRequestedNow"])
+
+    def test_assort_mutation_contract_is_narrow_and_preserves_spt_purchase_state(self):
+        uplift = self.load("relationship-standing-stock-uplift.json")
+        contract = uplift["materializationArchitecture"]["assortMutationContract"]
+        source = (ROOT / contract["implementedFile"].replace("server/", "server/")).read_text(encoding="utf-8")
+
+        self.assertEqual(contract["proofState"], "implemented-and-regression-locked")
+        self.assertEqual(contract["targetOfferId"], uplift["upliftPlan"]["offerId"])
+        self.assertEqual(contract["targetTpl"], uplift["upliftPlan"]["tpl"])
+        self.assertEqual(contract["requiredRootSlotId"], "hideout")
+        self.assertEqual(set(contract["allowedWrites"]), {"Upd.StackObjectsCount", "Upd.BuyRestrictionMax", "Upd.UnlimitedCount"})
+        self.assertIn("Upd.BuyRestrictionCurrent", contract["requiredPreservation"])
+        self.assertFalse(contract["unlimitedCountForced"])
+        self.assertFalse(contract["globalSourceAssortAccepted"])
+        self.assertEqual(set(contract["failClosedOn"]), {
+            "missing marker offer", "marker template mismatch", "non-hideout root shape", "missing Upd"
+        })
+
+        self.assertIn("marker.Upd.StackObjectsCount = tier.StockPerReset;", source)
+        self.assertIn("marker.Upd.BuyRestrictionMax = tier.BuyRestriction;", source)
+        self.assertIn("marker.Upd.UnlimitedCount = false;", source)
+        self.assertNotIn("marker.Upd.BuyRestrictionCurrent =", source)
+        self.assertIn("marker.Template.ToString() != RelationshipStandingStockPolicy.MarkerTpl", source)
+        self.assertIn("marker.SlotId, \"hideout\"", source)
 
 
 if __name__ == "__main__":

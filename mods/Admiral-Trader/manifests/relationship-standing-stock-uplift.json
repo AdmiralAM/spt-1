@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "purpose": "Make Admiral standing materially useful without quota-filling Relationship with duplicate items: standing may increase finite replenishment of an already-admitted consumable mission-preparation offer, while non-consumable Baseline equipment remains unchanged.",
@@ -64,57 +64,19 @@
     "priceRub": 16500,
     "priceChangesAcrossTiers": false,
     "tiers": [
-      {
-        "loyaltyLevel": 1,
-        "standing": 0.0,
-        "stockPerReset": 12,
-        "buyRestriction": 4,
-        "state": "frozen-baseline"
-      },
-      {
-        "loyaltyLevel": 2,
-        "standing": 0.1,
-        "stockPerReset": 16,
-        "buyRestriction": 6,
-        "state": "post-0.1.0-proposed"
-      },
-      {
-        "loyaltyLevel": 3,
-        "standing": 0.3,
-        "stockPerReset": 20,
-        "buyRestriction": 8,
-        "state": "post-0.1.0-proposed"
-      },
-      {
-        "loyaltyLevel": 4,
-        "standing": 0.55,
-        "stockPerReset": 24,
-        "buyRestriction": 10,
-        "state": "post-0.1.0-proposed"
-      }
+      {"loyaltyLevel": 1, "standing": 0.0, "stockPerReset": 12, "buyRestriction": 4, "state": "frozen-baseline"},
+      {"loyaltyLevel": 2, "standing": 0.1, "stockPerReset": 16, "buyRestriction": 6, "state": "post-0.1.0-proposed"},
+      {"loyaltyLevel": 3, "standing": 0.3, "stockPerReset": 20, "buyRestriction": 8, "state": "post-0.1.0-proposed"},
+      {"loyaltyLevel": 4, "standing": 0.55, "stockPerReset": 24, "buyRestriction": 10, "state": "post-0.1.0-proposed"}
     ],
-    "ll1ToLl4Delta": {
-      "stockUnitsPerReset": 12,
-      "personalBuyUnitsPerReset": 6,
-      "personalSpendCapacityRub": 99000,
-      "globalStockValueRub": 198000
-    },
-    "bounds": {
-      "maximumStockPerReset": 24,
-      "maximumBuyRestriction": 10,
-      "maximumPersonalSpendCapacityIncreaseRub": 99000,
-      "maximumGlobalStockValueIncreaseRub": 198000
-    }
+    "ll1ToLl4Delta": {"stockUnitsPerReset": 12, "personalBuyUnitsPerReset": 6, "personalSpendCapacityRub": 99000, "globalStockValueRub": 198000},
+    "bounds": {"maximumStockPerReset": 24, "maximumBuyRestriction": 10, "maximumPersonalSpendCapacityIncreaseRub": 99000, "maximumGlobalStockValueIncreaseRub": 198000}
   },
   "materializationArchitecture": {
     "staticAssortTierEncodingAllowed": false,
     "reason": "A root assort offer has one loyalty-level mapping and one stock/buy-restriction state; the four standing tiers in this specification must not be misread as four values that can coexist on one static offer.",
     "requiredSeam": "profile-or-request-scoped-assort-projection",
-    "requiredInputs": [
-      "requesting profile/session",
-      "current Admiral loyalty/standing tier",
-      "immutable frozen Baseline marker offer"
-    ],
+    "requiredInputs": ["requesting profile/session", "current Admiral loyalty/standing tier", "immutable frozen Baseline marker offer"],
     "projectionRules": [
       "start from the immutable Baseline marker offer rather than mutating the global trader database",
       "select exactly one tier for the requesting profile",
@@ -125,11 +87,7 @@
     ],
     "globalDatabaseMutationAllowed": false,
     "duplicateRootOfferEncodingAllowed": false,
-    "unknownProfileFallback": {
-      "loyaltyLevel": 1,
-      "stockPerReset": 12,
-      "buyRestriction": 4
-    },
+    "unknownProfileFallback": {"loyaltyLevel": 1, "stockPerReset": 12, "buyRestriction": 4},
     "proofState": "profile-scoped-post-route-seam-proven-implemented-fail-closed-on-pinned-spt-4.1.3",
     "publicationSeamProof": {
       "pinnedSptVersion": "4.1.3",
@@ -139,21 +97,29 @@
       "extensionMechanism": "DynamicRouter at OnLoadOrder.Routers + 1 receives the previous matching router output and post-processes only the Admiral response",
       "implementedFile": "server/RelationshipStandingAssortDynamicRouter.cs",
       "runtimeMaterializationEnabled": false
+    },
+    "assortMutationContract": {
+      "proofState": "implemented-and-regression-locked",
+      "implementedFile": "server/RelationshipStandingAssortProjection.cs",
+      "targetOfferId": "ad2000000000000000000004",
+      "targetTpl": "5991b51486f77447b112d44f",
+      "requiredRootSlotId": "hideout",
+      "allowedWrites": ["Upd.StackObjectsCount", "Upd.BuyRestrictionMax", "Upd.UnlimitedCount"],
+      "requiredPreservation": ["offer Id", "Template", "SlotId", "barter scheme / price", "loyalty mapping", "questassort gates", "Upd.BuyRestrictionCurrent", "all non-target offers"],
+      "buyRestrictionCurrentOwner": "SPT TraderAssortHelper persisted profile purchase projection",
+      "unlimitedCountForced": false,
+      "failClosedOn": ["missing marker offer", "marker template mismatch", "non-hideout root shape", "missing Upd"],
+      "globalSourceAssortAccepted": false
     }
   },
   "materializationGates": {
     "implementationAllowed": false,
     "requiresEconomyAdmiralApproval": true,
     "requiresRuntimeLoyaltyVisibilityProof": true,
-    "requiresAssortMutationContract": true,
+    "requiresAssortMutationContract": false,
     "requiresProfileScopedAssortProjectionProof": false,
     "requiresFrozen010PhysicalGate": true,
     "physicalCheckpointRequestedNow": false
   },
-  "frozenBoundary": {
-    "questCount": 31,
-    "rootOfferCount": 11,
-    "relationshipRuntimeOffers": 0,
-    "baselineRuntimeMutationInThisSlice": false
-  }
+  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0, "baselineRuntimeMutationInThisSlice": false}
 }
