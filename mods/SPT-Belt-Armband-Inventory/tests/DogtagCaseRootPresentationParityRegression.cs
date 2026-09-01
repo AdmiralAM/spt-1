@@ -15,19 +15,27 @@ internal static class DogtagCaseRootPresentationParityRegression
 
         Require(item, "BackgroundColor = sourceProperties.BackgroundColor,",
             "clone must explicitly retain canonical Dogtag Case root background presentation");
+        Require(item, "ExaminedByDefault = sourceProperties.ExaminedByDefault,",
+            "clone must retain canonical Dogtag Case examined-state policy rather than invent a product-only override");
         Require(item, "!Equals(candidateProperties.BackgroundColor, sourceProperties.BackgroundColor)",
             "live publication revalidation must reject post-preload root presentation drift");
+        Require(item, "candidateProperties.ExaminedByDefault != sourceProperties.ExaminedByDefault",
+            "live publication revalidation must reject examined-state drift");
 
         int publicationVerifier = item.IndexOf("public static void RequireCanonicalRegisteredTemplate(TemplateTable templates)", StringComparison.Ordinal);
         int validateCall = publicationVerifier < 0
             ? -1
             : item.IndexOf("ValidateExisting(candidate, source);", publicationVerifier, StringComparison.Ordinal);
         int presentationCheck = item.IndexOf("!Equals(candidateProperties.BackgroundColor, sourceProperties.BackgroundColor)", StringComparison.Ordinal);
-        if (publicationVerifier < 0 || validateCall < 0 || presentationCheck < 0)
+        int examinedCheck = item.IndexOf("candidateProperties.ExaminedByDefault != sourceProperties.ExaminedByDefault", StringComparison.Ordinal);
+        if (publicationVerifier < 0 || validateCall < 0 || presentationCheck < 0 || examinedCheck < 0)
             throw new InvalidOperationException("Dogtag Case root presentation parity regression failed: canonical publication proof is incomplete.");
 
-        if (item.Contains("candidateProperties.BackgroundColor = sourceProperties.BackgroundColor", StringComparison.Ordinal))
+        if (item.Contains("candidateProperties.BackgroundColor = sourceProperties.BackgroundColor", StringComparison.Ordinal)
+            || item.Contains("candidateProperties.ExaminedByDefault = sourceProperties.ExaminedByDefault", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag Case root presentation parity regression failed: publication validation must fail closed, not repair a mutated live template.");
+        if (item.Contains("ExaminedByDefault = true", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag Case root presentation parity regression failed: clone restored a non-canonical examined-state override.");
     }
 
     private static string? FindModuleRoot()
