@@ -18,6 +18,18 @@ internal static class DogtagCaseTraderTemplateRevalidationRegression
             "Dogtag product must expose one reusable canonical live-template verifier");
         Require(item, "ValidateExisting(candidate, source);",
             "publication verifier must reuse the exact preload canonical geometry/filter contract");
+        Require(item, "Width = sourceProperties.Width,",
+            "Dogtag clone must explicitly preserve canonical root width");
+        Require(item, "Height = sourceProperties.Height,",
+            "Dogtag clone must explicitly preserve canonical root height");
+        Require(item, "StackMaxSize = sourceProperties.StackMaxSize,",
+            "Dogtag clone must explicitly preserve canonical root stack policy");
+        Require(item, "candidateProperties.Width != sourceProperties.Width",
+            "live publication revalidation must reject root-width drift");
+        Require(item, "candidateProperties.Height != sourceProperties.Height",
+            "live publication revalidation must reject root-height drift");
+        Require(item, "candidateProperties.StackMaxSize != sourceProperties.StackMaxSize",
+            "live publication revalidation must reject root stack-policy drift");
         Require(assort, "private static void RequirePublicationBoundary(TemplateTable templateTable, MongoId templateId)",
             "Ragman publication must centralize canonical-template and committed-host parity");
         Require(assort, "DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);",
