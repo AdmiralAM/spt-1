@@ -17,6 +17,10 @@ internal static class DogtagCaseAssortPublicationIdentityRegression
             "Ragman publication must have an explicit retained-tuple identity proof");
         Require(assort, "ReferenceEquals(item, expectedItem)",
             "validated assort item must remain the exact same object reference");
+        Require(assort, "!Equals(expectedItem.Template, new MongoId(RuntimeIdentity.DogtagCaseItemId))",
+            "publication must revalidate exact Dogtag Case template after retained item-reference proof");
+        Require(assort, "expectedItem.Upd.StackObjectsCount != UnlimitedStock",
+            "publication must revalidate exact stock contract against in-place item mutation");
         Require(assort, "ReferenceEquals(liveBarter, expectedBarter)",
             "validated barter tuple must remain the exact same object reference");
         Require(assort, "liveBarter.Count != 1",
@@ -32,12 +36,14 @@ internal static class DogtagCaseAssortPublicationIdentityRegression
         Require(assort, "idMatches > 1",
             "duplicate assort-ID publication must fail closed rather than selecting one item");
 
+        int itemIdentity = assort.IndexOf("idMatches != 1 || exactItemMatches != 1", StringComparison.Ordinal);
+        int itemContents = assort.IndexOf("!Equals(expectedItem.Template, new MongoId(RuntimeIdentity.DogtagCaseItemId))", StringComparison.Ordinal);
         int barterIdentity = assort.IndexOf("ReferenceEquals(liveBarter, expectedBarter)", StringComparison.Ordinal);
         int barterContents = assort.IndexOf("liveBarter.Count != 1", StringComparison.Ordinal);
         int loyaltyProof = assort.IndexOf("liveLoyalty != LoyaltyLevel", StringComparison.Ordinal);
-        if (barterIdentity < 0 || barterContents < 0 || loyaltyProof < 0
-            || !(barterIdentity < barterContents && barterContents < loyaltyProof))
-            throw new InvalidOperationException("Dogtag assort publication identity regression failed: retained barter reference must be proven before exact in-place contents and loyalty are revalidated.");
+        if (itemIdentity < 0 || itemContents < 0 || barterIdentity < 0 || barterContents < 0 || loyaltyProof < 0
+            || !(itemIdentity < itemContents && itemContents < barterIdentity && barterIdentity < barterContents && barterContents < loyaltyProof))
+            throw new InvalidOperationException("Dogtag assort publication identity regression failed: publication ordering must remain item reference -> item contents -> barter reference -> barter contents -> loyalty.");
 
         int existingValidation = assort.IndexOf("ValidateExisting(trader, id, existing, templateId);", StringComparison.Ordinal);
         int existingBoundary = existingValidation < 0 ? -1
