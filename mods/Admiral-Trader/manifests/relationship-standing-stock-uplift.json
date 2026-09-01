@@ -130,14 +130,23 @@
       "stockPerReset": 12,
       "buyRestriction": 4
     },
-    "proofState": "architecture-required-runtime-seam-not-yet-proven-on-pinned-spt-4.1.3"
+    "proofState": "profile-scoped-post-route-seam-proven-implemented-fail-closed-on-pinned-spt-4.1.3",
+    "publicationSeamProof": {
+      "pinnedSptVersion": "4.1.3",
+      "upstreamCommit": "ddce41c6c40c2ac7a7641da759bf2140a6e47505",
+      "nativeRoute": "/client/trading/api/getTraderAssort/",
+      "vanillaPublicationPath": "TraderCallbacks.GetAssort -> TraderAssortHelper.GetAssort(sessionId, traderId) -> HttpResponseUtil.GetBody",
+      "extensionMechanism": "DynamicRouter at OnLoadOrder.Routers + 1 receives the previous matching router output and post-processes only the Admiral response",
+      "implementedFile": "server/RelationshipStandingAssortDynamicRouter.cs",
+      "runtimeMaterializationEnabled": false
+    }
   },
   "materializationGates": {
     "implementationAllowed": false,
     "requiresEconomyAdmiralApproval": true,
     "requiresRuntimeLoyaltyVisibilityProof": true,
     "requiresAssortMutationContract": true,
-    "requiresProfileScopedAssortProjectionProof": true,
+    "requiresProfileScopedAssortProjectionProof": false,
     "requiresFrozen010PhysicalGate": true,
     "physicalCheckpointRequestedNow": false
   },
