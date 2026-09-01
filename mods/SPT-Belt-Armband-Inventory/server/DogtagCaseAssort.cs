@@ -29,8 +29,7 @@ public sealed class DogtagCaseAssort(
         cancellationToken.ThrowIfCancellationRequested();
 
         var templateId = new MongoId(RuntimeIdentity.DogtagCaseItemId);
-        if (!templateTable.Items.ContainsKey(templateId))
-            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: exact product template is not registered.");
+        DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);
         RequireExactDogtagHost(templateTable, templateId);
 
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
