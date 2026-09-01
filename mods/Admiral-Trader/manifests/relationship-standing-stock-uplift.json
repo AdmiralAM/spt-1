@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "purpose": "Make Admiral standing materially useful without quota-filling Relationship with duplicate items: standing may increase finite replenishment of an already-admitted consumable mission-preparation offer, while non-consumable Baseline equipment remains unchanged.",
@@ -13,7 +13,7 @@
     "priceDiscountAllowed": false,
     "questGateBypassAllowed": false,
     "capabilityOfferUpliftAllowed": false,
-    "economyReviewRequiredBeforeMaterialization": true
+    "economyReviewRequiredBeforeMaterialization": false
   },
   "eligibility": {
     "required": [
@@ -53,7 +53,7 @@
     {
       "offerId": "ad2000000000000000000004",
       "role": "field-marking",
-      "decision": "approve-uplift-after-economy-review",
+      "decision": "approve-uplift-economy-reviewed",
       "reason": "Field markers are consumed by mission preparation. Raising only their finite replenishment creates a visible logistics benefit from relationship standing without adding a new item source or bypassing a capability gate."
     }
   ],
@@ -65,12 +65,53 @@
     "priceChangesAcrossTiers": false,
     "tiers": [
       {"loyaltyLevel": 1, "standing": 0.0, "stockPerReset": 12, "buyRestriction": 4, "state": "frozen-baseline"},
-      {"loyaltyLevel": 2, "standing": 0.1, "stockPerReset": 16, "buyRestriction": 6, "state": "post-0.1.0-proposed"},
-      {"loyaltyLevel": 3, "standing": 0.3, "stockPerReset": 20, "buyRestriction": 8, "state": "post-0.1.0-proposed"},
-      {"loyaltyLevel": 4, "standing": 0.55, "stockPerReset": 24, "buyRestriction": 10, "state": "post-0.1.0-proposed"}
+      {"loyaltyLevel": 2, "standing": 0.1, "stockPerReset": 16, "buyRestriction": 6, "state": "post-0.1.0-economy-approved"},
+      {"loyaltyLevel": 3, "standing": 0.3, "stockPerReset": 20, "buyRestriction": 8, "state": "post-0.1.0-economy-approved"},
+      {"loyaltyLevel": 4, "standing": 0.55, "stockPerReset": 24, "buyRestriction": 10, "state": "post-0.1.0-economy-approved"}
     ],
     "ll1ToLl4Delta": {"stockUnitsPerReset": 12, "personalBuyUnitsPerReset": 6, "personalSpendCapacityRub": 99000, "globalStockValueRub": 198000},
     "bounds": {"maximumStockPerReset": 24, "maximumBuyRestriction": 10, "maximumPersonalSpendCapacityIncreaseRub": 99000, "maximumGlobalStockValueIncreaseRub": 198000}
+  },
+  "economyReview": {
+    "decision": "approved-with-bounds",
+    "scope": "field-marker standing capacity only",
+    "authority": "Economy Admiral ownership contract plus frozen Baseline economics",
+    "reviewedPriceRub": 16500,
+    "priceChangeApproved": false,
+    "newOfferApproved": false,
+    "capabilityGateBypassApproved": false,
+    "renewableHighValueFaucetApproved": false,
+    "finiteCapacityApproved": true,
+    "tierEnvelopeApproved": [
+      {"loyaltyLevel": 1, "stockPerReset": 12, "buyRestriction": 4},
+      {"loyaltyLevel": 2, "stockPerReset": 16, "buyRestriction": 6},
+      {"loyaltyLevel": 3, "stockPerReset": 20, "buyRestriction": 8},
+      {"loyaltyLevel": 4, "stockPerReset": 24, "buyRestriction": 10}
+    ],
+    "economicBoundary": {
+      "maximumPersonalUnitsPerReset": 10,
+      "maximumPersonalSpendRubPerReset": 165000,
+      "maximumIncrementalPersonalUnitsVsLl1": 6,
+      "maximumIncrementalPersonalSpendRubVsLl1": 99000,
+      "maximumGlobalUnitsPerReset": 24,
+      "maximumIncrementalGlobalUnitsVsLl1": 12,
+      "maximumIncrementalGlobalStockValueRubVsLl1": 198000
+    },
+    "rationale": [
+      "the relationship benefit changes finite replenishment capacity only; the 16,500 RUB unit price is invariant",
+      "the LL4 personal cap remains below half of total reset stock (10 of 24), preserving finite shared scarcity rather than converting the offer to effectively unlimited supply",
+      "the full LL1-to-LL4 personal privilege adds only six purchasable units and 99,000 RUB of spend capacity per reset",
+      "the uplift targets a consumed mission-preparation item rather than ammunition, access capability, durable equipment, raw barter material or an exceptional reward",
+      "Economy Admiral remains free to apply global pressure without reclassifying or mutating the immutable Baseline source offer"
+    ],
+    "invalidatesApprovalIf": [
+      "unit price is discounted by standing",
+      "LL4 stock exceeds 24 or personal buy restriction exceeds 10",
+      "the uplift is extended to another TPL without a separate economy review",
+      "the offer becomes unlimited",
+      "a quest/capability gate is bypassed",
+      "projection mutates the global source assort rather than the request-scoped response"
+    ]
   },
   "materializationArchitecture": {
     "staticAssortTierEncodingAllowed": false,
@@ -114,7 +155,7 @@
   },
   "materializationGates": {
     "implementationAllowed": false,
-    "requiresEconomyAdmiralApproval": true,
+    "requiresEconomyAdmiralApproval": false,
     "requiresRuntimeLoyaltyVisibilityProof": true,
     "requiresAssortMutationContract": false,
     "requiresProfileScopedAssortProjectionProof": false,
