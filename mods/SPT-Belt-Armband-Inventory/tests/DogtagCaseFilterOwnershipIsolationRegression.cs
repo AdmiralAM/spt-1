@@ -27,12 +27,11 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
             || !(copy < details && details < publish && publish < create))
             throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: source filters must be copied before clone construction and publication.");
 
-        // Exact positive tokens above already prove both include/exclude sets are
-        // independently allocated. Keep the negative guard at collection ownership
-        // level only; property-prefix matching is brittle because the legitimate
-        // null-check/copy expression necessarily contains the source property name.
-        if (source.Contains("Filters = sourceGridProperties.Filters", StringComparison.Ordinal)
-            || source.Contains("Filters = sourceFilters", StringComparison.Ordinal))
+        // Positive tokens above prove independently allocated include/exclude sets and
+        // publication of the copied collection. Reject only an unmistakable direct
+        // alias of the canonical grid collection; shorter sourceFilters/property
+        // substrings also occur in the legitimate LINQ deep-copy expression.
+        if (source.Contains("Filters = sourceGridProperties.Filters", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: canonical mutable filter collections must never be aliased into the B&A&HB product.");
     }
 
