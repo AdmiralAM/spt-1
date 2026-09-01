@@ -14,7 +14,7 @@ class Post010AccessSecurityOperationsTests(unittest.TestCase):
         cls.by_key = {op["key"]: op for op in cls.manifest["operations"]}
 
     def test_specs_are_non_materialized_and_bound_to_frozen_base(self):
-        self.assertIn(self.manifest["schemaVersion"], (1, 2))
+        self.assertIn(self.manifest["schemaVersion"], (1, 2, 3))
         self.assertEqual(self.manifest["status"], "post-0.1.0-authored-spec-only")
         self.assertEqual(
             self.manifest["frozen010Base"],
@@ -83,14 +83,22 @@ class Post010AccessSecurityOperationsTests(unittest.TestCase):
         pmc = self.by_key["hostile-operator-intercept"]["conditionReadiness"]
         self.assertEqual(pmc["target"]["status"], "proven-shape-only")
         self.assertEqual(pmc["target"]["value"], "AnyPmc")
-        self.assertEqual(pmc["location"]["status"], "proven-shape-only")
+        self.assertEqual(pmc["location"]["status"], "proven-selected")
+        self.assertEqual(pmc["location"]["target"], ["TarkovStreets"])
+        self.assertEqual(pmc["location"]["locationId"], "5714dc692459777137212e12")
+        self.assertTrue(pmc["location"]["selectedMapValueProven"])
+        self.assertIn("location-information.md", pmc["location"]["authority"].lower())
         self.assertEqual(pmc["survivedExtraction"]["status"], "proven-shape-only")
         self.assertEqual(pmc["sameRaidCoupling"]["status"], "unproven-fail-closed")
         self.assertFalse(pmc["factionSplitProven"])
 
         access = self.by_key["access-reconnaissance"]["conditionReadiness"]
         self.assertEqual(access["survivedExtraction"]["status"], "proven-shape-only")
-        self.assertEqual(access["accessInteraction"]["status"], "unproven-fail-closed")
+        self.assertEqual(access["accessInteraction"]["status"], "proven-selected-proxy")
+        self.assertEqual(access["accessInteraction"]["authorityManifest"], "post-010-visit-place-proxy-proof.json")
+        self.assertEqual(access["accessInteraction"]["conditionType"], "VisitPlace")
+        self.assertEqual(access["accessInteraction"]["locationTarget"], "bigmap")
+        self.assertEqual(access["accessInteraction"]["target"], "room206_water")
         self.assertEqual(access["sameRaidCoupling"]["status"], "unproven-fail-closed")
 
     def test_labs_location_gate_is_closed_without_reopening_same_raid_gate(self):
@@ -101,6 +109,34 @@ class Post010AccessSecurityOperationsTests(unittest.TestCase):
         self.assertNotIn("select and validate the exact pinned spt 4.1.3 the labs location value", gate_text)
         self.assertFalse(labs["runtimeMaterialize"])
 
+    def test_borrowed_access_proxy_is_reconciled_but_personal_key_use_is_not_claimed(self):
+        access = self.by_key["access-reconnaissance"]
+        readiness = access["conditionReadiness"]["accessInteraction"]
+        self.assertEqual(readiness["map"], "Customs")
+        self.assertEqual(readiness["target"], "room206_water")
+        meaning = readiness["meaning"].lower()
+        self.assertIn("not", meaning)
+        self.assertIn("key", meaning)
+        gate_text = " ".join(access["proofGates"]).lower()
+        self.assertIn("room206_water", gate_text)
+        self.assertIn("never infer personal key use", gate_text)
+        self.assertIn("same-raid", gate_text)
+        self.assertFalse(access["runtimeMaterialize"])
+
+    def test_contractor_intercept_has_one_selected_streets_area_without_per_map_copies(self):
+        pmc = self.by_key["hostile-operator-intercept"]
+        location = pmc["conditionReadiness"]["location"]
+        self.assertEqual(location["target"], ["TarkovStreets"])
+        self.assertEqual(location["locationId"], "5714dc692459777137212e12")
+        self.assertTrue(location["selectedMapValueProven"])
+        self.assertIn("streets", pmc["mapSelectionRationale"].lower())
+        self.assertTrue(pmc["antiGrind"]["noPerMapCopies"])
+        gate_text = " ".join(pmc["proofGates"]).lower()
+        self.assertIn("tarkovstreets", gate_text)
+        self.assertIn("same-raid", gate_text)
+        self.assertIn("overlap", gate_text)
+        self.assertFalse(pmc["runtimeMaterialize"])
+
     def test_specs_fail_closed_on_runtime_overlap_and_economy_gates(self):
         for operation in self.by_key.values():
             gate_text = " ".join(operation["proofGates"]).lower()
@@ -109,7 +145,7 @@ class Post010AccessSecurityOperationsTests(unittest.TestCase):
 
         if self.manifest["schemaVersion"] >= 2:
             access_gate_text = " ".join(self.by_key["access-reconnaissance"]["proofGates"]).lower()
-            self.assertIn("exact spt 4.1.3", access_gate_text)
+            self.assertIn("post-010-visit-place-proxy-proof.json", access_gate_text)
             for key in ("labs-security-disruption", "hostile-operator-intercept"):
                 gate_text = " ".join(self.by_key[key]["proofGates"]).lower()
                 self.assertIn("same-raid", gate_text)

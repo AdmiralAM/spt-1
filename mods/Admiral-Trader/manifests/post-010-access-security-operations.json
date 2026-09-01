@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -43,19 +43,23 @@
           "conditionShape": ["Location", "ExitStatus(Survived)"]
         },
         "accessInteraction": {
-          "status": "unproven-fail-closed",
-          "requiredProof": "exact SPT 4.1.3 condition semantics for one selected restricted-access interaction or a deliberately chosen location proxy",
-          "mayInferFromLocationVisit": false
+          "status": "proven-selected-proxy",
+          "authorityManifest": "post-010-visit-place-proxy-proof.json",
+          "conditionType": "VisitPlace",
+          "map": "Customs",
+          "locationTarget": "bigmap",
+          "target": "room206_water",
+          "meaning": "VisitPlace(room206_water) is a pinned vanilla restricted-route reconnaissance proxy. It proves entry into the zone, not that this player possessed/used the Dorm room 206 key or opened the door."
         },
         "sameRaidCoupling": {
           "status": "unproven-fail-closed",
-          "requiredProof": "the selected access interaction/location proxy and survived extraction are required in the same raid"
+          "requiredProof": "VisitPlace(room206_water) and survived extraction are required in the same raid"
         }
       },
       "proofGates": [
-        "prove exact SPT 4.1.3 semantics for the selected restricted-access interaction or deliberately chosen location proxy; reject the interaction requirement if it cannot be represented reliably",
-        "prove same-raid coupling between that selected access proof and the already-proven survived-extraction shape",
-        "audit overlap with frozen Admiral Access progression plus vanilla/Scorpion/Artem location quests before choosing the route",
+        "retain exact pinned VisitPlace target room206_water on Customs from post-010-visit-place-proxy-proof.json and never infer personal key use or door opening",
+        "prove same-raid coupling between VisitPlace(room206_water) and the already-proven survived-extraction shape",
+        "audit overlap with frozen Admiral Access progression plus vanilla/Scorpion/Artem location quests before materialization",
         "Economy Admiral approves final numeric and any item rewards"
       ],
       "runtimeMaterialize": false
@@ -135,17 +139,17 @@
       "playerText": {
         "en": {
           "description": "Another armed contractor is useful only when there is a reason to intercept him. I am not paying for population control. I need a short counter-operator action tied to a route or objective that matters.",
-          "started": "Intercept a small hostile PMC element in the selected operational area and make your extraction. Do not roam the whole region adding bodies to a quota.",
+          "started": "Intercept a small hostile PMC element on Streets and make your extraction. Do not roam the whole region adding bodies to a quota.",
           "success": "The opposing contractors lost the window they were working. That is enough. A contract should remove a problem, not manufacture a career out of counting corpses."
         },
         "ru": {
           "description": "Вооружённый контрактник становится целью только тогда, когда есть причина его перехватить. За зачистку населения я не плачу. Нужна короткая контроперация, привязанная к важному маршруту или задаче.",
-          "started": "Перехвати небольшую группу враждебных ЧВК в выбранной операционной зоне и выйди из рейда. Не броди по всему району ради пополнения счётчика тел.",
+          "started": "Перехвати небольшую группу враждебных ЧВК на Улицах и выйди из рейда. Не броди по всему району ради пополнения счётчика тел.",
           "success": "Противостоящие контрактники потеряли своё рабочее окно. Этого достаточно. Контракт должен устранять проблему, а не создавать профессию из подсчёта трупов."
         }
       },
       "objectiveIntent": [
-        "one contextual hostile-PMC intercept tied to a selected operational area",
+        "one contextual hostile-PMC intercept on Streets of Tarkov",
         "survive/extract after a bounded engagement instead of repeating per-map PMC kill templates"
       ],
       "antiGrind": {
@@ -165,10 +169,13 @@
         },
         "factionSplitProven": false,
         "location": {
-          "status": "proven-shape-only",
-          "authorityManifest": "post-010-pmc-location-extraction-proof.json",
+          "status": "proven-selected",
+          "authority": "sp-tarkov/wiki modding/references/location-information.md",
           "conditionType": "Location",
-          "selectedMapValueProven": false
+          "target": ["TarkovStreets"],
+          "locationId": "5714dc692459777137212e12",
+          "selectedMapValueProven": true,
+          "meaning": "Streets of Tarkov uses exact SPT quest target TarkovStreets. Friendly name and MongoID are reference metadata only and must not replace the quest target."
         },
         "survivedExtraction": {
           "status": "proven-shape-only",
@@ -177,13 +184,14 @@
         },
         "sameRaidCoupling": {
           "status": "unproven-fail-closed",
-          "requiredProof": "AnyPmc kill counter and survived extraction are required in the same raid"
+          "requiredProof": "AnyPmc kill counter on TarkovStreets and survived extraction are required in the same raid"
         }
       },
+      "mapSelectionRationale": "Streets is selected as the single operational-integration map for this bounded PMC intercept. It supplies dense contractor contact and urban route pressure without creating per-map copies; the exact SPT target is independently pinned. Selection does not waive overlap, same-raid or economy gates.",
       "proofGates": [
-        "select and validate the exact pinned SPT 4.1.3 Location value for the chosen operational area; faction-specific USEC/BEAR aliases remain out of scope until separately proven",
-        "prove same-raid coupling between the bounded AnyPmc counter and the already-proven survived-extraction shape",
-        "audit overlap with vanilla/Scorpion/Artem PMC objectives and frozen Admiral combat progression before selecting the area",
+        "retain exact pinned SPT Location target TarkovStreets and fail closed if location authority diverges; faction-specific USEC/BEAR aliases remain out of scope until separately proven",
+        "prove same-raid coupling between the bounded AnyPmc counter on TarkovStreets and the already-proven survived-extraction shape",
+        "complete overlap audit with vanilla/Scorpion/Artem PMC objectives and frozen Admiral combat progression before materialization",
         "Economy Admiral approves final numeric and any item rewards"
       ],
       "runtimeMaterialize": false
