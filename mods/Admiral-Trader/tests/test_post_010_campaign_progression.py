@@ -85,6 +85,52 @@ def test_post_010_campaign_progression_is_complete_reachable_and_acyclic():
         assert len(parent_branches) >= 2
 
 
+def test_post_010_campaign_has_concrete_non_regressing_player_level_placement():
+    graph = load("post-010-campaign-progression.json")
+    rewards = load("post-010-operation-reward-envelope.json")
+    trajectory = load("relationship-standing-trajectory.json")
+
+    levels = graph["operationLevelPlacement"]
+    expected = set(rewards["operationBands"])
+    assert set(levels) == expected
+    assert all(isinstance(level, int) and level >= 1 for level in levels.values())
+
+    phase_minimums = {
+        phase["key"]: phase["minimumPlayerLevel"]
+        for phase in graph["phases"]
+    }
+    assert phase_minimums == {
+        "field-readiness": 15,
+        "operational-integration": 20,
+        "specialist-operations": 28,
+        "command-grade-operations": 35,
+    }
+
+    for phase in graph["phases"]:
+        assert all(levels[operation] >= phase["minimumPlayerLevel"] for operation in phase["operations"])
+
+    for operation, prerequisites in graph["prerequisites"].items():
+        for prerequisite in prerequisites:
+            assert levels[prerequisite] <= levels[operation]
+
+    loyalty_minimums = {
+        tier["loyaltyLevel"]: tier["minimumPlayerLevel"]
+        for tier in trajectory["tiers"]
+    }
+    assert loyalty_minimums[2] == 15
+    assert loyalty_minimums[3] == 25
+    assert loyalty_minimums[4] == 35
+    assert min(levels.values()) == loyalty_minimums[2]
+    assert levels["high-value-target-window"] == loyalty_minimums[4]
+    assert levels["labs-security-disruption"] > levels["high-value-target-window"]
+
+    contracts = graph["progressionContracts"]
+    assert contracts["questLevelsReviewedAgainstFrozenAdmiralLoyaltyThresholds"] is True
+    assert contracts["everyOperationHasConcretePlayerLevel"] is True
+    assert contracts["prerequisitesNeverRequireHigherPlayerLevelThanDependentOperation"] is True
+    assert graph["materializationGate"]["requiresFinalQuestLevelPlacement"] is False
+
+
 def test_post_010_progression_does_not_turn_loyalty_or_sales_into_quest_gates():
     graph = load("post-010-campaign-progression.json")
     rules = graph["designRules"]
