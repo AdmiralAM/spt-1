@@ -161,12 +161,21 @@ public sealed class DogtagCaseAssort(
 
         DogtagCaseHostContract.RequireCommitted(hostFilter);
 
+        // The committed HashSet proof is meaningful only if the exact inventory
+        // template that owned it is still the live DefaultInventory entry. A
+        // replacement of TemplateTable.Items[DefaultInventory] must fail closed
+        // before slot/filter identity checks can accidentally validate a detached
+        // stale inventory object captured above.
+        if (!templateTable.Items.TryGetValue(RuntimeCandidateBeltItem.DefaultInventoryTpl, out var liveInventory)
+            || !ReferenceEquals(liveInventory, inventory))
+            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: live DefaultInventory template changed during committed-host verification.");
+
         // The committed HashSet proof is meaningful only if that exact host is still
         // installed in the live DefaultInventory after verification. Re-resolve the
         // bounded Dogtag slot/filter shape and require reference identity; otherwise
         // another startup participant could replace the host during verification and
         // leave us validating a detached stale set before Ragman publication.
-        var liveSlots = inventory.Properties?.Slots?
+        var liveSlots = liveInventory.Properties?.Slots?
             .Where(x => string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal))
             .Take(2)
             .ToArray();
