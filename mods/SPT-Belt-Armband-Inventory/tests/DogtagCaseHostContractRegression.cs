@@ -99,13 +99,40 @@ internal static class DogtagCaseHostContractRegression
             "ReferenceEquals(liveSlots[0], boundary.Slot)",
             "ReferenceEquals(liveGroups[0], boundary.FilterGroup)",
             "ReferenceEquals(liveGroups[0].Filter, boundary.Filter)",
-            "RequireLiveDogtagHostIdentity(boundary);\n        DogtagCaseHostContract.RequirePreserved(filter);",
-            "DogtagCaseHostContract.RequireCommitted(filter);\n            RequireLiveDogtagHostIdentity(boundary);"
         };
 
         foreach (string contract in required)
             if (!source.Contains(contract, StringComparison.Ordinal))
                 throw new InvalidOperationException("Dogtag host regression failed: live preload-host identity contract missing: " + contract);
+
+        int commit = source.IndexOf("private void CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)", StringComparison.Ordinal);
+        int commitEnd = commit < 0 ? -1 : source.IndexOf("public static void RequireCanonicalRegisteredTemplate", commit, StringComparison.Ordinal);
+        string region = commit >= 0 && commitEnd > commit ? source.Substring(commit, commitEnd - commit) : string.Empty;
+
+        int firstIdentity = region.IndexOf("RequireLiveDogtagHostIdentity(boundary);", StringComparison.Ordinal);
+        int preserved = firstIdentity < 0 ? -1 : region.IndexOf("DogtagCaseHostContract.RequirePreserved(filter);", firstIdentity + 1, StringComparison.Ordinal);
+        int secondIdentity = preserved < 0 ? -1 : region.IndexOf("RequireLiveDogtagHostIdentity(boundary);", preserved + 1, StringComparison.Ordinal);
+        int ownedAdd = secondIdentity < 0 ? -1 : region.IndexOf("bool addedHere = filter.Add(DogtagCaseTpl);", secondIdentity + 1, StringComparison.Ordinal);
+        int committed = ownedAdd < 0 ? -1 : region.IndexOf("DogtagCaseHostContract.RequireCommitted(filter);", ownedAdd + 1, StringComparison.Ordinal);
+        int postCommitIdentity = committed < 0 ? -1 : region.IndexOf("RequireLiveDogtagHostIdentity(boundary);", committed + 1, StringComparison.Ordinal);
+        int rollback = postCommitIdentity < 0 ? -1 : region.IndexOf("filter.Remove(DogtagCaseTpl);", postCommitIdentity + 1, StringComparison.Ordinal);
+
+        if (string.IsNullOrEmpty(region)
+            || min(firstIdentity, preserved, secondIdentity, ownedAdd, committed, postCommitIdentity, rollback) < 0
+            || !(firstIdentity < preserved && preserved < secondIdentity && secondIdentity < ownedAdd
+                && ownedAdd < committed && committed < postCommitIdentity && postCommitIdentity < rollback))
+            throw new InvalidOperationException("Dogtag host regression failed: exact live/preserved/live -> owned Add -> committed/live -> owned rollback ordering drifted.");
+
+        int cancellationChecks = region.Split("cancellationToken.ThrowIfCancellationRequested();", StringSplitOptions.None).Length - 1;
+        if (cancellationChecks < 4)
+            throw new InvalidOperationException("Dogtag host regression failed: cancellation observations no longer bound the exact host mutation/commit/rollback transaction.");
+    }
+
+    private static int min(params int[] values)
+    {
+        int result = int.MaxValue;
+        foreach (int value in values) if (value < result) result = value;
+        return result;
     }
 
     private static void ExpectFailure(Action action, string message)
