@@ -13,7 +13,14 @@ wallet = (SERVER / "WristWalletAssort.cs").read_text(encoding="utf-8-sig")
 dedicated = (SERVER / "DedicatedWearableAssort.cs").read_text(encoding="utf-8-sig")
 dogtag = (SERVER / "DogtagCaseAssort.cs").read_text(encoding="utf-8-sig")
 
-for token in [
+
+def require_tokens(label, text, tokens):
+    for token in tokens:
+        if token not in text:
+            violations.append(f"{label} missing token {token!r}")
+
+
+require_tokens("offer-host contract", contract, [
     "internal static void RequireArmBandProduct(TemplateTable templateTable, MongoId productTemplate)",
     'RequireSingleSlot(templateTable, "ArmBand")',
     "filter.Contains(BroadBeltParentTpl)",
@@ -29,36 +36,46 @@ for token in [
     ".Take(2)",
     "matches.Length != 1",
     "accepted.Count != 1 || !accepted.Contains(allowedTemplate)",
-]:
-    if token not in contract:
-        violations.append(f"offer-host contract missing token {token!r}")
+])
 
-for token in [
+require_tokens("ArmBand registration exact cross-host isolation", armband_item, [
     "DedicatedMagazineBeltTpl = new(RuntimeIdentity.DedicatedMagazineBeltItemId)",
     "UtilityHeadBandTpl = new(RuntimeIdentity.EmergencyHeadBandItemId)",
     "filter.Contains(DedicatedMagazineBeltTpl) || filter.Contains(UtilityHeadBandTpl)",
     "refusing Belt/HeadBand host overlap",
-]:
-    if token not in armband_item:
-        violations.append(f"ArmBand registration missing exact cross-host isolation token {token!r}")
+])
 
-for token in [
+# Dogtag preload must own one exact live DefaultInventory -> Dogtag slot -> sole
+# filter-group -> HashSet chain. Value-equivalent detached replacements are not
+# sufficient publication authority.
+require_tokens("Dogtag Case preload exact host boundary", dogtag_item, [
+    "private sealed class DogtagHostBoundary(object inventory, object slot, object filterGroup, HashSet<MongoId> filter)",
+    "public object Inventory { get; } = inventory;",
+    "public object Slot { get; } = slot;",
+    "public object FilterGroup { get; } = filterGroup;",
+    "public HashSet<MongoId> Filter { get; } = filter;",
+    "DogtagHostBoundary dogtagHost = PrepareDogtagSlotFilter();",
+    "private DogtagHostBoundary PrepareDogtagSlotFilter()",
+    "return new DogtagHostBoundary(inventory, slots[0], groups[0], hostFilter);",
+    "private void RequireLiveDogtagHostIdentity(DogtagHostBoundary boundary)",
+    "!ReferenceEquals(liveInventory, boundary.Inventory)",
+    "!ReferenceEquals(liveSlots[0], boundary.Slot)",
+    "!ReferenceEquals(liveGroups[0], boundary.FilterGroup)",
+    "!ReferenceEquals(liveGroups[0].Filter, boundary.Filter)",
+    "private void CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)",
+    "HashSet<MongoId> filter = boundary.Filter;",
     "PersistentIdentityManifest.IsOwnedTemplate(templateId)",
     "!string.Equals(templateId, TemplateId, StringComparison.Ordinal)",
     "already contaminated by a different owned product template",
-    "HashSet<MongoId> hostFilter = groups[0].Filter;",
     "DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);",
     "DogtagCaseHostContract.RequirePreserved(filter);",
     "DogtagCaseHostContract.RequireCommitted(filter);",
-    "private static void CommitDogtagSlotExposure(HashSet<MongoId> filter, CancellationToken cancellationToken)",
     "bool addedHere = filter.Add(DogtagCaseTpl);",
     "if (addedHere)",
     "filter.Remove(DogtagCaseTpl);",
-]:
-    if token not in dogtag_item:
-        violations.append(f"Dogtag Case preload missing exact B&A&HB cross-host/preservation/cancellation-atomic commit token {token!r}")
+])
 
-for token in [
+require_tokens("Dogtag Case host snapshot contract", dogtag_snapshot, [
     "private static readonly object SnapshotSync = new();",
     "private static HashSet<MongoId>? capturedVanillaEntries;",
     "var snapshot = acceptedTemplates.ToHashSet();",
@@ -74,34 +91,42 @@ for token in [
     "HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);",
     "RequirePreservedSnapshot(current);",
     "!current.Contains(caseTpl)",
-]:
-    if token not in dogtag_snapshot:
-        violations.append(f"Dogtag Case host snapshot contract missing token {token!r}")
+])
 
 if "RequirePreserved(currentFilter);\n\n        var caseTpl" in dogtag_snapshot:
     violations.append("Dogtag Case committed host verification must not re-read the live mutable filter after preservation proof")
 
-prepare_call = dogtag_item.find("HashSet<MongoId> dogtagSlotFilter = PrepareDogtagSlotFilter();")
-first_commit = dogtag_item.find("CommitDogtagSlotExposure(dogtagSlotFilter, cancellationToken);")
-prepare_def = dogtag_item.find("private HashSet<MongoId> PrepareDogtagSlotFilter()")
+# Preload order: capture the exact boundary before any exposure.
+prepare_call = dogtag_item.find("DogtagHostBoundary dogtagHost = PrepareDogtagSlotFilter();")
+first_commit = dogtag_item.find("CommitDogtagSlotExposure(dogtagHost, cancellationToken);")
+prepare_def = dogtag_item.find("private DogtagHostBoundary PrepareDogtagSlotFilter()")
 host_capture = dogtag_item.find("HashSet<MongoId> hostFilter = groups[0].Filter;", prepare_def)
 capture = dogtag_item.find("DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);", prepare_def)
-prepare_return = dogtag_item.find("return hostFilter;", prepare_def)
+boundary_return = dogtag_item.find("return new DogtagHostBoundary(inventory, slots[0], groups[0], hostFilter);", prepare_def)
 if min(prepare_call, first_commit) < 0 or prepare_call > first_commit:
-    violations.append("Dogtag Case must prepare/snapshot its host before the first cancellation-atomic container exposure")
-if min(prepare_def, host_capture, capture, prepare_return) < 0 or not (prepare_def < host_capture < capture < prepare_return):
-    violations.append("Dogtag Case host preparation must bind one validated host filter, capture every non-owned entry, then return that same mutable reference")
+    violations.append("Dogtag Case must capture/snapshot its exact host boundary before the first cancellation-atomic exposure")
+if min(prepare_def, host_capture, capture, boundary_return) < 0 or not (prepare_def < host_capture < capture < boundary_return):
+    violations.append("Dogtag Case host preparation must bind one validated filter, capture non-owned baseline entries, then return the exact inventory/slot/group/filter boundary")
 
-commit_def = dogtag_item.find("private static void CommitDogtagSlotExposure(HashSet<MongoId> filter, CancellationToken cancellationToken)")
-preserved = dogtag_item.find("DogtagCaseHostContract.RequirePreserved(filter);", commit_def)
-add = dogtag_item.find("bool addedHere = filter.Add(DogtagCaseTpl);", commit_def)
-committed = dogtag_item.find("DogtagCaseHostContract.RequireCommitted(filter);", commit_def)
-rollback = dogtag_item.find("filter.Remove(DogtagCaseTpl);", commit_def)
-if min(commit_def, preserved, add, committed, rollback) < 0 or not (commit_def < preserved < add < committed < rollback):
-    violations.append("Dogtag Case exposure must remain preservation-proof -> owned Add -> committed proof -> owned rollback")
-commit_region = dogtag_item[commit_def:dogtag_item.find("public static void RequireCanonicalRegisteredTemplate", commit_def)] if commit_def >= 0 else ""
+# Commit order: exact live identity and preserved baseline are proven before Add;
+# committed proof and a second live-identity proof occur while rollback ownership
+# is still bounded by HashSet.Add's return value.
+commit_def = dogtag_item.find("private void CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)")
+commit_end = dogtag_item.find("public static void RequireCanonicalRegisteredTemplate", commit_def)
+commit_region = dogtag_item[commit_def:commit_end] if min(commit_def, commit_end) >= 0 else ""
+first_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);")
+preserved = commit_region.find("DogtagCaseHostContract.RequirePreserved(filter);")
+second_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);", first_identity + 1)
+add = commit_region.find("bool addedHere = filter.Add(DogtagCaseTpl);")
+committed = commit_region.find("DogtagCaseHostContract.RequireCommitted(filter);")
+post_commit_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);", second_identity + 1)
+rollback = commit_region.find("filter.Remove(DogtagCaseTpl);")
+if min(first_identity, preserved, second_identity, add, committed, post_commit_identity, rollback) < 0 or not (
+    first_identity < preserved < second_identity < add < committed < post_commit_identity < rollback
+):
+    violations.append("Dogtag Case exposure must remain live-identity -> preserved -> live-identity -> owned Add -> committed -> live-identity -> owned rollback")
 if commit_region.count("cancellationToken.ThrowIfCancellationRequested();") < 4:
-    violations.append("Dogtag Case exposure must observe cancellation before mutation and within owned commit/rollback boundary")
+    violations.append("Dogtag Case exposure must observe cancellation before mutation and within the owned commit/rollback boundary")
 
 for label, text in [("Magazine Armband", armband), ("Wrist Wallet", wallet)]:
     host = text.find("WearableOfferHostContract.RequireArmBandProduct(templateTable, templateId);")
@@ -119,7 +144,7 @@ if min(host, belt_prepare, head_prepare, first_commit) < 0 or not (
 ):
     violations.append("dedicated offers must prove exact slot15/slot16 hosts before either offer is prepared or committed")
 
-for token in [
+require_tokens("Dogtag Case offer exact committed publication/host contract", dogtag, [
     "new MongoId(RuntimeIdentity.DogtagCaseItemId)",
     "new MongoId(RuntimeIdentity.DogtagCaseAssortId)",
     "private static void RequirePublicationBoundary(TemplateTable templateTable, MongoId templateId)",
@@ -131,9 +156,7 @@ for token in [
     "hostFilter == null || hostFilter.Count < 2",
     "DogtagCaseHostContract.RequireCommitted(hostFilter);",
     "requested template identity is not the exact Dogtag Case product",
-]:
-    if token not in dogtag:
-        violations.append(f"Dogtag Case offer missing exact committed publication/host token {token!r}")
+])
 
 if "hostFilter.Contains(templateId)" in dogtag or "hostFilter.Any(x => !Equals(x, templateId))" in dogtag:
     violations.append("Dogtag Case offer must not re-read the mutable Dogtag host after centralized committed-snapshot verification")
@@ -168,4 +191,4 @@ if "hostFilter.Add(" in dogtag or "groups[0].Filter.Add(" in dogtag or "slots.Ad
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case centralizes canonical-template + committed-host publication proof, snapshots one point-in-time host view, and makes preload exposure cancellation-atomic without deleting pre-existing exact case)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; Dogtag preload pins DefaultInventory/slot/group/filter by reference, re-proves that chain around the owned mutation, preserves vanilla/foreign baseline entries, and rolls back only its own exact append)")
