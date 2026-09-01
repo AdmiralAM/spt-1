@@ -61,14 +61,21 @@ for token in [
     "lock (SnapshotSync)",
     "capturedVanillaEntries.SetEquals(snapshot)",
     "captured = capturedVanillaEntries.ToArray();",
+    "private static HashSet<MongoId> SnapshotCurrentFilter(HashSet<MongoId> currentFilter)",
+    "return currentFilter.ToHashSet();",
+    "private static void RequirePreservedSnapshot(HashSet<MongoId> current)",
     "foreach (MongoId entry in captured)",
-    "if (!currentFilter.Contains(entry))",
+    "if (!current.Contains(entry))",
     "public static void RequireCommitted(HashSet<MongoId> currentFilter)",
-    "RequirePreserved(currentFilter);",
-    "!currentFilter.Contains(caseTpl)",
+    "HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);",
+    "RequirePreservedSnapshot(current);",
+    "!current.Contains(caseTpl)",
 ]:
     if token not in dogtag_snapshot:
         violations.append(f"Dogtag Case host snapshot contract missing token {token!r}")
+
+if "RequirePreserved(currentFilter);\n\n        var caseTpl" in dogtag_snapshot:
+    violations.append("Dogtag Case committed host verification must not re-read the live mutable filter after preservation proof")
 
 prepare_call = dogtag_item.find("HashSet<MongoId> dogtagSlotFilter = PrepareDogtagSlotFilter();")
 first_commit = dogtag_item.find("CommitDogtagSlotExposure(dogtagSlotFilter);")
@@ -106,11 +113,13 @@ for token in [
     "var hostFilter = groups[0].Filter;",
     "hostFilter == null || hostFilter.Count < 2",
     "DogtagCaseHostContract.RequireCommitted(hostFilter);",
-    "!hostFilter.Contains(templateId)",
-    "!hostFilter.Any(x => !Equals(x, templateId))",
+    "requested template identity is not the exact Dogtag Case product",
 ]:
     if token not in dogtag:
         violations.append(f"Dogtag Case offer missing exact committed host token {token!r}")
+
+if "hostFilter.Contains(templateId)" in dogtag or "hostFilter.Any(x => !Equals(x, templateId))" in dogtag:
+    violations.append("Dogtag Case offer must not re-read the mutable Dogtag host after centralized committed-snapshot verification")
 
 dogtag_host = dogtag.find("RequireExactDogtagHost(templateTable, templateId);")
 dogtag_trader = dogtag.find("tradersTable.GetValueOrDefault(")
@@ -134,4 +143,4 @@ if "hostFilter.Add(" in dogtag or "groups[0].Filter.Add(" in dogtag or "slots.Ad
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case binds one validated preload host-filter reference, snapshots every pre-mutation non-owned entry under a synchronized immutable verification boundary, and trader registration requires centralized committed-state proof; validation is read-only)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case binds one validated preload host-filter reference, snapshots every pre-mutation non-owned entry, and trader registration consumes one point-in-time committed host proof without live-filter rereads; validation is read-only)")
