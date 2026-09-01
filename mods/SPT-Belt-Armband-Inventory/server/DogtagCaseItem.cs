@@ -123,6 +123,12 @@ public sealed class DogtagCaseItem(
             }
         };
 
+        // CustomItemService registration owns template/handbook/locale state that
+        // cannot be proven rollback-safe here. Observe cancellation immediately
+        // before that point of no return; once creation succeeds, finish the exact
+        // host commit to a coherent registered product rather than leaving an
+        // orphaned template because cancellation arrived during the synchronous call.
+        cancellationToken.ThrowIfCancellationRequested();
         var result = customItemService.CreateItemFromClone(details);
         if (!result.Success)
             throw new InvalidOperationException($"B&A&HB Dogtag Case creation failed: {string.Join("; ", result.Errors)}");
@@ -131,7 +137,7 @@ public sealed class DogtagCaseItem(
             throw new InvalidOperationException("B&A&HB Dogtag Case creation reported success but the exact template is absent; refusing Dogtag slot exposure.");
         ValidateExisting(created, source);
 
-        CommitDogtagSlotExposure(dogtagSlotFilter, cancellationToken);
+        CommitDogtagSlotExposure(dogtagSlotFilter, CancellationToken.None);
         logger.Success("B&A&HB Dogtag Case created and revalidated against the canonical EFT Dogtag Case grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
         return Task.CompletedTask;
     }
