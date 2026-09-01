@@ -19,7 +19,7 @@ internal static class ReloadCandidateReentrancyRegression
         ReloadCandidateBridgeRuntime.Reset();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload candidate reentrancy regression failed: fake GetItemsInSlots missing");
-        ReloadCandidateBridgeRuntime.BeltSlotsArgument = new object();
+        ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = recognizedSlots;
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
