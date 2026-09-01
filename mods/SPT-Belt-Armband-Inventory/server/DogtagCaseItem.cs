@@ -100,6 +100,9 @@ public sealed class DogtagCaseItem(
             {
                 BackgroundColor = sourceProperties.BackgroundColor,
                 ExaminedByDefault = true,
+                Width = sourceProperties.Width,
+                Height = sourceProperties.Height,
+                StackMaxSize = sourceProperties.StackMaxSize,
                 Grids =
                 [
                     new Grid
@@ -138,7 +141,7 @@ public sealed class DogtagCaseItem(
         ValidateExisting(created, source);
 
         CommitDogtagSlotExposure(dogtagSlotFilter, CancellationToken.None);
-        logger.Success("B&A&HB Dogtag Case created and revalidated against the canonical EFT Dogtag Case grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
+        logger.Success("B&A&HB Dogtag Case created and revalidated against the canonical EFT Dogtag Case root/grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
         return Task.CompletedTask;
     }
 
@@ -209,8 +212,8 @@ public sealed class DogtagCaseItem(
     /// Revalidates the live registered product against the live canonical EFT/SPT
     /// Dogtag Case immediately before downstream publication. This closes the
     /// preload-to-trader-registration mutation window: another startup participant
-    /// may not alter the B&A&HB case geometry/filter after preload and still obtain
-    /// a purchasable corrupted product.
+    /// may not alter the B&A&HB case root footprint, stack policy, grid geometry or
+    /// filter contract after preload and still obtain a purchasable corrupted product.
     /// </summary>
     public static void RequireCanonicalRegisteredTemplate(TemplateTable templates)
     {
@@ -227,8 +230,16 @@ public sealed class DogtagCaseItem(
         if (!Equals(candidate.Parent, source.Parent))
             throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: existing template uses a different parent.");
 
-        var grids = candidate.Properties?.Grids?.ToArray();
-        var sourceGrids = source.Properties?.Grids?.ToArray();
+        var candidateProperties = candidate.Properties;
+        var sourceProperties = source.Properties;
+        if (candidateProperties == null || sourceProperties == null
+            || candidateProperties.Width != sourceProperties.Width
+            || candidateProperties.Height != sourceProperties.Height
+            || candidateProperties.StackMaxSize != sourceProperties.StackMaxSize)
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: root geometry or stack policy differs from the canonical source contract.");
+
+        var grids = candidateProperties.Grids?.ToArray();
+        var sourceGrids = sourceProperties.Grids?.ToArray();
         if (grids == null || grids.Length != 1 || sourceGrids == null || sourceGrids.Length != 1)
             throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: expected one grid.");
 
