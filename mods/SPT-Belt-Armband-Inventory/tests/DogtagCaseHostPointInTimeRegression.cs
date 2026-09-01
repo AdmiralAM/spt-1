@@ -30,11 +30,26 @@ internal static class DogtagCaseHostPointInTimeRegression
 
         Require(assort, "DogtagCaseHostContract.RequireCommitted(hostFilter);",
             "Ragman publication must consume the centralized committed host proof");
+        Require(assort, "ReferenceEquals(liveSlots[0], slot)",
+            "publication must prove the verified Dogtag slot object is still installed after committed-host verification");
+        Require(assort, "ReferenceEquals(liveGroups[0].Filter, hostFilter)",
+            "publication must prove the verified Dogtag filter object is still installed after committed-host verification");
+        Require(assort, "live Dogtag slot changed during committed-host verification",
+            "slot replacement must fail closed at publication");
+        Require(assort, "live Dogtag filter changed during committed-host verification",
+            "filter replacement must fail closed at publication");
         Require(assort, "requested template identity is not the exact Dogtag Case product",
-            "Ragman publication must retain exact product-template identity after centralizing host verification");
+            "Ragman publication must retain exact product-template identity");
+
+        int committed = assort.IndexOf("DogtagCaseHostContract.RequireCommitted(hostFilter);", StringComparison.Ordinal);
+        int slotReproof = assort.IndexOf("ReferenceEquals(liveSlots[0], slot)", StringComparison.Ordinal);
+        int filterReproof = assort.IndexOf("ReferenceEquals(liveGroups[0].Filter, hostFilter)", StringComparison.Ordinal);
+        if (committed < 0 || slotReproof <= committed || filterReproof <= slotReproof)
+            throw new InvalidOperationException("Dogtag host point-in-time regression failed: live host identity reproof must follow the committed snapshot proof in slot/filter order.");
+
         if (assort.Contains("hostFilter.Contains(templateId)", StringComparison.Ordinal)
             || assort.Contains("hostFilter.Any(x => !Equals(x, templateId))", StringComparison.Ordinal))
-            throw new InvalidOperationException("Dogtag host point-in-time regression failed: assort publication re-read the mutable host after committed verification.");
+            throw new InvalidOperationException("Dogtag host point-in-time regression failed: assort publication restored value-based live-filter rechecks instead of reference identity reproof.");
     }
 
     private static string? FindModuleRoot()
