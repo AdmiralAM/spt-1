@@ -5,6 +5,7 @@ source = (ROOT / "src" / "FastAccessSlotPatches.cs").read_text(encoding="utf-8-s
 epoch = (ROOT / "src" / "ReloadScopeEpochGuard.cs").read_text(encoding="utf-8-sig")
 tests = (ROOT / "tests" / "Program.cs").read_text(encoding="utf-8-sig")
 bridge_tests = (ROOT / "tests" / "ReloadCandidateBridgeRegression.cs").read_text(encoding="utf-8-sig")
+return_tests = (ROOT / "tests" / "ReloadCandidateReturnContractRegression.cs").read_text(encoding="utf-8-sig")
 epoch_tests = (ROOT / "tests" / "ReloadScopeEpochRegression.cs").read_text(encoding="utf-8-sig")
 epoch_install_tests = (ROOT / "tests" / "ReloadScopeEpochInstallRollbackRegression.cs").read_text(encoding="utf-8-sig")
 diagnostic_tests = (ROOT / "tests" / "ReloadDiagnosticLoggingRegression.cs").read_text(encoding="utf-8-sig")
@@ -84,12 +85,15 @@ for token in (
     'harmonyOwner = null;',
     'installed = false;',
     'AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;',
-    'if (IsCurrentScope()) return true;',
+    'if (IsCurrentScope() && HasExactRuntimeReturnContract()) return true;',
+    'static bool HasExactRuntimeReturnContract()',
+    'Type exactArray = itemType.MakeArrayType();',
+    'return declaredReturn == exactArray && getItems.ReturnType == exactArray;',
     '__result = __2;',
     'return false;',
 ):
     if token not in epoch:
-        violations.append(f"ReloadScopeEpochGuard.cs: lifecycle epoch contract token missing: {token}")
+        violations.append(f"ReloadScopeEpochGuard.cs: lifecycle/return-shape contract token missing: {token}")
 
 if 'ReloadScopeEpochRegression.Run();' not in tests:
     violations.append("Program.cs: reload epoch regression must run after module initialization")
@@ -103,6 +107,14 @@ for token in (
 ):
     if token not in epoch_tests:
         violations.append(f"ReloadScopeEpochRegression.cs: epoch regression missing: {token}")
+
+for token in (
+    'HasExactRuntimeReturnContractForRegression()',
+    'IEnumerable<Item> GetItemsInSlots drift must fail closed despite Item[] assignability',
+    'exact contract must recover after a rejected drifted method without a permanent circuit breaker',
+):
+    if token not in return_tests:
+        violations.append(f"ReloadCandidateReturnContractRegression.cs: exact return-shape regression missing: {token}")
 
 for token in (
     'TryRollbackOwner',
@@ -247,4 +259,4 @@ for token in (
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item contract; no-op Belt path preserves vanilla result identity without merge allocation; throwing diagnostics isolated; reachability/candidate owners isolated; stale ThreadStatic scopes generation-invalidated across reset/reinstall; epoch Harmony install preflights unique rollback and enters terminal fail-closed state if owner rollback cannot be proven; startup-bound discovery; fail-closed/no polling)")
+print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item[] return contract gated before pseudo-slot15 query; no-op Belt path preserves vanilla result identity without merge allocation; throwing diagnostics isolated; reachability/candidate owners isolated; stale ThreadStatic scopes generation-invalidated across reset/reinstall; epoch Harmony install preflights unique rollback and enters terminal fail-closed state if owner rollback cannot be proven; startup-bound discovery; fail-closed/no polling)")
