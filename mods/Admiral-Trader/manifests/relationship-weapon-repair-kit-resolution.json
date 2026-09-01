@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "ResolvedPreMaterialization",
+  "sourceBaseline": {
+    "spt413Repository": "sp-tarkov/server-csharp",
+    "spt413Commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+    "sourceCandidateManifest": "relationship-stock-candidates.json",
+    "sourceCandidateDecision": "hold-pinned-vanilla-overlap",
+    "frozenAdmiralHead": "053a62ff5f1cb545f13bc89a96bba3acd319a823"
+  },
+  "candidate": {
+    "tpl": "5910968f86f77425cf569c32",
+    "name": "Weapon repair kit",
+    "targetLoyaltyLevel": 3,
+    "role": "expedition-maintenance",
+    "spt413ReferencePriceRub": 106861
+  },
+  "evidence": {
+    "pinnedVanillaTrader": "Ref",
+    "pinnedVanillaDirectOffer": true,
+    "pinnedVanillaStock": "unlimited",
+    "sourceCandidateOverlapValue": "ref-direct-unlimited",
+    "frozenAdmiralDirectTplHit": false,
+    "scorpionPinned": "no-exact-tpl-hit-in-repository-code-search",
+    "artemPinned": "no-exact-tpl-hit-in-repository-code-search"
+  },
+  "policy": {
+    "relationshipBenefitMustCreateIndependentAvailability": true,
+    "unlimitedVanillaDirectOfferDisqualifies": true,
+    "priceOrStandingDiscountAloneDoesNotCreateIndependentUtility": true,
+    "tierFillQuotaAllowed": false,
+    "economyApprovalCanOverrideGameplayPurposeGate": false
+  },
+  "decision": {
+    "state": "reject-redundant-pinned-vanilla",
+    "materialize": false,
+    "targetLoyaltyLevelReserved": false,
+    "rationale": "Pinned SPT 4.1.3 Ref already provides renewable unlimited direct access to the weapon repair kit. Relationship standing must create a distinct Admiral privilege rather than a second route to the same permanently available utility. A bounded price, purchase limit, or Economy Admiral approval cannot turn duplicate availability into an independent gameplay purpose, so the previous hold is resolved as a rejection."
+  },
+  "conclusion": {
+    "previousHoldResolved": true,
+    "relationshipOfferAdded": false,
+    "relationshipMaterializationStillDisabled": true,
+    "replacementCandidateRequired": false,
+    "reason": "Empty Relationship tiers remain valid when no candidate passes the quality gate."
+  }
+}
