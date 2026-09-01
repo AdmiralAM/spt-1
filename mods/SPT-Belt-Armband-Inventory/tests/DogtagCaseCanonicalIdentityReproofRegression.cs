@@ -25,6 +25,18 @@ internal static class DogtagCaseCanonicalIdentityReproofRegression
                 && sourceIdentity < liveCandidate && liveCandidate <= candidateIdentity))
             throw new InvalidOperationException("Dogtag canonical identity reproof regression failed: canonical value validation must be followed by live source then live product reference-identity reproof.");
 
+        int existingBranch = item.IndexOf("if (templateTable.Items.TryGetValue(DogtagCaseTpl, out _))", StringComparison.Ordinal);
+        int existingProof = existingBranch < 0 ? -1 : item.IndexOf("RequireCanonicalRegisteredTemplate(templateTable);", existingBranch, StringComparison.Ordinal);
+        int firstHostCommit = existingProof < 0 ? -1 : item.IndexOf("CommitDogtagSlotExposure(dogtagSlotFilter, cancellationToken);", existingProof, StringComparison.Ordinal);
+        if (existingBranch < 0 || existingProof < 0 || firstHostCommit < 0 || !(existingBranch < existingProof && existingProof < firstHostCommit))
+            throw new InvalidOperationException("Dogtag canonical identity reproof regression failed: retained-template host exposure must be preceded by fresh canonical reference-identity proof.");
+
+        int create = item.IndexOf("customItemService.CreateItemFromClone(details);", StringComparison.Ordinal);
+        int createdProof = create < 0 ? -1 : item.IndexOf("RequireCanonicalRegisteredTemplate(templateTable);", create + 1, StringComparison.Ordinal);
+        int createdHostCommit = createdProof < 0 ? -1 : item.IndexOf("CommitDogtagSlotExposure(dogtagSlotFilter, CancellationToken.None);", createdProof, StringComparison.Ordinal);
+        if (create < 0 || createdProof < 0 || createdHostCommit < 0 || !(create < createdProof && createdProof < createdHostCommit))
+            throw new InvalidOperationException("Dogtag canonical identity reproof regression failed: newly-created product must be re-resolved and reference-proven before host exposure.");
+
         if (item.Contains("templates.Items[SourceDogtagCaseTpl]", StringComparison.Ordinal)
             || item.Contains("templates.Items[DogtagCaseTpl]", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag canonical identity reproof regression failed: publication reproof must remain bounded TryGetValue fail-closed lookup rather than indexer reads.");
