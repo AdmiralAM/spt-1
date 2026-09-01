@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-research-proof-fail-closed",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "runtimeMaterialize": false,
+  "purpose": "Record the exact boundary for future objectives that require a qualifying action and a successful extraction in the same raid without treating legacy-looking quest flags as proven semantics.",
+  "authority": {
+    "pinnedSpt413QuestRepository": "sp-tarkov/server-csharp",
+    "pinnedSpt413Commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+    "pinnedSpt413QuestPath": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json",
+    "sptQuestReference": "sp-tarkov/wiki modding/references/quest-values.md",
+    "referencePublished": "2026-04-07"
+  },
+  "proven": {
+    "counterCreatorMayContainMultipleNestedConditions": true,
+    "exitStatusMustBeNestedInCounterCreator": true,
+    "survivedExitStatusIsSupported": true,
+    "killsConditionSerializesResetOnSessionEnd": true,
+    "counterCreatorSerializesOneSessionOnly": true
+  },
+  "negativeProof": {
+    "oneSessionOnlyIsDocumentedAsCurrentlyUnused": true,
+    "completeInSecondsIsDocumentedAsCurrentlyUnused": true,
+    "thereforeOneSessionOnlyCannotBeUsedAsSameRaidAuthority": true,
+    "thereforeCompleteInSecondsCannotBeUsedAsSameRaidAuthority": true
+  },
+  "stillUnproven": {
+    "killsResetOnSessionEndPlusExitStatusTemporalOrdering": true,
+    "crossRaidResetBehaviorForCompoundActionAndExtractCounter": true,
+    "sameRaidActionThenSurvivedExtractCompletion": true
+  },
+  "affectedOperations": [
+    "access-reconnaissance",
+    "acoustic-contact",
+    "route-security",
+    "hostile-operator-intercept",
+    "armored-transit",
+    "controlled-chemical-support",
+    "precision-observation-window",
+    "labs-security-disruption"
+  ],
+  "implementationContract": {
+    "doNotMaterializeWithOneSessionOnlyAsTheOnlyCouplingMechanism": true,
+    "doNotInferTemporalCouplingFromNestedConditionsAlone": true,
+    "doNotSplitActionAndExtractionIntoIndependentPersistentCountersWhenEditorialRequiresSameRaid": true,
+    "remainFailClosedUntilExactEvaluatorOrCanonicalVanillaBehaviorIsProven": true,
+    "noNewFrozen010QuestJson": true
+  },
+  "futureRuntimeCheckpoint": {
+    "activatePhysicalTestNow": false,
+    "expectedPass": "A qualifying action followed by Survived extraction in the same raid completes the compound objective.",
+    "expectedFailBoundaries": [
+      "A qualifying action in raid N followed by extraction in raid N+1 must not complete the objective.",
+      "Killed, MissingInAction, Runner or other disallowed exit status must not satisfy a Survived-only objective.",
+      "Progress must not leak between profiles or sessions."
+    ]
+  }
+}
