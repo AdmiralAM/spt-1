@@ -29,10 +29,13 @@ class RelationshipEconomyCompatibilityProofTests(unittest.TestCase):
 
         # Admiral's future uplift is deliberately downstream of that source audit and
         # mutates only the already-produced request response, never the source assort.
+        # Tier selection now consumes both profile progression dimensions; this does not
+        # alter the cross-module source-assort ownership boundary proved here.
         self.assertIn('OnLoadOrder.Routers + 1', router)
         self.assertIn('if (!RuntimeMaterializationEnabled)', router)
         self.assertIn('coordinator.Project(sessionId, response.Data);', router)
-        self.assertIn('internal static ProjectionResult Apply(TraderAssort assort, double standing)', projection)
+        self.assertIn('internal static ProjectionResult Apply(TraderAssort assort, double standing, int playerLevel)', projection)
+        self.assertIn('Resolve(standing, playerLevel)', projection)
         self.assertIn('must never receive the', projection)
         self.assertIn('global TradersTable assort instance', projection)
         self.assertIn('marker.Upd.StackObjectsCount = tier.StockPerReset;', projection)
