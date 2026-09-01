@@ -69,7 +69,14 @@ class Post010AccessSecurityOperationsTests(unittest.TestCase):
         labs = self.by_key["labs-security-disruption"]["conditionReadiness"]
         self.assertEqual(labs["targetRole"]["status"], "proven-shape-only")
         self.assertEqual(labs["targetRole"]["savageRole"], ["pmcBot"])
-        self.assertEqual(labs["location"]["status"], "proven-shape-only")
+        self.assertEqual(labs["location"]["status"], "proven-selected")
+        self.assertEqual(labs["location"]["conditionType"], "Location")
+        self.assertEqual(labs["location"]["target"], ["laboratory"])
+        self.assertEqual(labs["location"]["locationId"], "5b0fc42d86f7744a585f9105")
+        self.assertTrue(labs["location"]["selectedMapValueProven"])
+        authority = " ".join(labs["location"]["authority"]).lower()
+        self.assertIn("location-information.md", authority)
+        self.assertIn("quest.json", authority)
         self.assertEqual(labs["survivedExtraction"]["status"], "proven-shape-only")
         self.assertEqual(labs["sameRaidCoupling"]["status"], "unproven-fail-closed")
 
@@ -85,6 +92,14 @@ class Post010AccessSecurityOperationsTests(unittest.TestCase):
         self.assertEqual(access["survivedExtraction"]["status"], "proven-shape-only")
         self.assertEqual(access["accessInteraction"]["status"], "unproven-fail-closed")
         self.assertEqual(access["sameRaidCoupling"]["status"], "unproven-fail-closed")
+
+    def test_labs_location_gate_is_closed_without_reopening_same_raid_gate(self):
+        labs = self.by_key["labs-security-disruption"]
+        gate_text = " ".join(labs["proofGates"]).lower()
+        self.assertIn("exact labs location target laboratory", gate_text)
+        self.assertIn("same-raid", gate_text)
+        self.assertNotIn("select and validate the exact pinned spt 4.1.3 the labs location value", gate_text)
+        self.assertFalse(labs["runtimeMaterialize"])
 
     def test_specs_fail_closed_on_runtime_overlap_and_economy_gates(self):
         for operation in self.by_key.values():
