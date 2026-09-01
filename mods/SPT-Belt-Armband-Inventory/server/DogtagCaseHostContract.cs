@@ -68,8 +68,33 @@ public static class DogtagCaseHostContract
 
     public static void RequirePreserved(HashSet<MongoId> currentFilter)
     {
+        RequirePreservedSnapshot(SnapshotCurrentFilter(currentFilter));
+    }
+
+    public static void RequireCommitted(HashSet<MongoId> currentFilter)
+    {
+        HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);
+        RequirePreservedSnapshot(current);
+
+        var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
+        if (!current.Contains(caseTpl))
+            throw new InvalidOperationException("B&A&HB Dogtag host verification refused: exact Dogtag Case template is absent after host commit.");
+    }
+
+    private static HashSet<MongoId> SnapshotCurrentFilter(HashSet<MongoId> currentFilter)
+    {
         ArgumentNullException.ThrowIfNull(currentFilter);
 
+        // Verify one point-in-time copy rather than repeatedly consulting a mutable
+        // host set. Host registration is startup-only and tiny, so the bounded copy
+        // avoids TOCTOU between preservation and exact-case checks without adding a
+        // steady-state hot-path cost. Concurrent mutation that makes enumeration
+        // invalid still fails closed by propagating the collection exception.
+        return currentFilter.ToHashSet();
+    }
+
+    private static void RequirePreservedSnapshot(HashSet<MongoId> current)
+    {
         MongoId[] captured;
         lock (SnapshotSync)
         {
@@ -83,28 +108,19 @@ public static class DogtagCaseHostContract
 
         foreach (MongoId entry in captured)
         {
-            if (!currentFilter.Contains(entry))
+            if (!current.Contains(entry))
                 throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: pre-mutation acceptance entry {entry} was removed before trader registration.");
         }
 
         // Keep ownership isolation inside the reusable host contract itself rather
         // than relying only on a particular caller. The Dogtag Case is the sole
         // B&A&HB-owned template allowed in the vanilla Dogtag acceptance set.
-        foreach (MongoId entry in currentFilter)
+        foreach (MongoId entry in current)
         {
             string id = entry.ToString();
             if (PersistentIdentityManifest.IsOwnedTemplate(id)
                 && !string.Equals(id, RuntimeIdentity.DogtagCaseItemId, StringComparison.Ordinal))
                 throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: owned template {entry} contaminates the vanilla Dogtag host.");
         }
-    }
-
-    public static void RequireCommitted(HashSet<MongoId> currentFilter)
-    {
-        RequirePreserved(currentFilter);
-
-        var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
-        if (!currentFilter.Contains(caseTpl))
-            throw new InvalidOperationException("B&A&HB Dogtag host verification refused: exact Dogtag Case template is absent after host commit.");
     }
 }
