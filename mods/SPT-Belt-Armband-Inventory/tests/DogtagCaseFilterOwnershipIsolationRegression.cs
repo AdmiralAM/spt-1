@@ -27,9 +27,14 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
             || !(copy < details && details < publish && publish < create))
             throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: source filters must be copied before clone construction and publication.");
 
+        // Reject direct aliases only. Do not use the shorter `ExcludedFilter = filter.ExcludedFilter`
+        // prefix here because the legitimate null-check branch necessarily contains that text before
+        // constructing its independent HashSet copy.
         if (source.Contains("Filters = sourceGridProperties.Filters", StringComparison.Ordinal)
-            || source.Contains("Filter = filter.Filter", StringComparison.Ordinal)
-            || source.Contains("ExcludedFilter = filter.ExcludedFilter", StringComparison.Ordinal))
+            || source.Contains("Filter = filter.Filter,", StringComparison.Ordinal)
+            || source.Contains("Filter = filter.Filter\n", StringComparison.Ordinal)
+            || source.Contains("ExcludedFilter = filter.ExcludedFilter,", StringComparison.Ordinal)
+            || source.Contains("ExcludedFilter = filter.ExcludedFilter\n", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: canonical mutable filter collections must never be aliased into the B&A&HB product.");
     }
 
