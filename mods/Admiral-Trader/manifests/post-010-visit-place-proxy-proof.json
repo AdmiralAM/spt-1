@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "product": "Admiral Trader",
   "status": "post-0.1.0-condition-proof-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -24,28 +24,57 @@
     "customZoneCreationAllowedForAdmiral": false,
     "reason": "Borrowed Access must use an existing SPT/vanilla visit zone with independently pinned evidence that the zone sits behind a restricted/keyed route; creating an Admiral-only trigger would prove our trigger, not the game-world access route."
   },
+  "selectedRoute": {
+    "status": "proven-selected-proxy",
+    "map": "Customs",
+    "locationTarget": "bigmap",
+    "visitZoneId": "room206_water",
+    "vanillaQuest": {
+      "name": "Operation Aquarius - Part 1",
+      "id": "59689fbd86f7740d137ebfc4"
+    },
+    "pinnedVanillaAuthority": {
+      "repository": "sp-tarkov/server-csharp",
+      "commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+      "path": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json",
+      "observedConditionType": "VisitPlace",
+      "observedTarget": "room206_water",
+      "observedConditionId": "5a3fb74d86f7746ce457a0a6"
+    },
+    "restrictedAccessEvidence": [
+      {
+        "source": "SPT Hub - Resources: All Zone ID's",
+        "finding": "room206_water is Room 206 of the two-story Dorms and requires the Dorm room 206 key for Operation Aquarius Part 1"
+      },
+      {
+        "source": "Escape from Tarkov Wiki - Dorm room 206 key",
+        "finding": "Dorm room 206 key unlocks room 206 in the two-story Dorms on Customs and the location is required for Operation Aquarius Part 1"
+      }
+    ],
+    "proofBoundary": "The proxy proves entry into a vanilla zone independently documented as being behind a keyed route. It does not prove that this player possessed or used the key, because another player may have opened the door."
+  },
   "admiralBoundary": {
     "mayRepresent": [
       "the player entered one exact selected visit zone",
-      "a deliberately chosen location proxy for access reconnaissance after the zone itself is validated"
+      "the selected zone is a valid restricted-access reconnaissance proxy because it is independently documented behind a keyed route"
     ],
     "doesNotProve": [
-      "a door was locked",
-      "a key was possessed or consumed",
-      "a key unlocked the door",
+      "the player possessed the required key",
+      "the player consumed or used the required key",
+      "the player unlocked the door",
       "the route was opened by the player",
       "the visit and survived extraction occurred in the same raid"
     ],
-    "selectedRestrictedRouteProven": false,
+    "selectedRestrictedRouteProven": true,
     "sameRaidCouplingProven": false,
     "implementationAllowed": false
   },
   "materializationGate": [
-    "select one exact vanilla visit-zone ID that is physically behind a restricted/keyed access route and pin evidence for that relationship",
-    "word player-facing copy as visit/confirm reconnaissance unless an actual door/key interaction is separately proven",
-    "prove same-raid coupling between the selected VisitPlace proxy and Survived extraction",
+    "retain exact vanilla visit-zone room206_water on Customs and fail closed if pinned SPT vanilla quest authority diverges",
+    "word player-facing copy as visit/confirm reconnaissance and never claim the player personally unlocked the door or used a key",
+    "prove same-raid coupling between VisitPlace(room206_water) and Survived extraction",
     "complete overlap review against frozen Admiral Access progression and vanilla/Scorpion/Artem location quests",
     "obtain Economy Admiral approval for final numeric and any item rewards"
   ],
-  "rejectedInference": "VisitPlace proves presence in a target zone only. It must never be described as proof that a key opened a locked door without separate interaction evidence."
+  "rejectedInference": "VisitPlace proves presence in a target zone only. Even when the selected zone is behind a keyed door, it must never be described as proof that this player used the key or opened the locked door."
 }

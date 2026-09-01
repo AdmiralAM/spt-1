@@ -34,23 +34,48 @@ class Post010VisitPlaceProxyProofTests(unittest.TestCase):
         self.assertTrue(shape["counterValueOwnsCompletionCount"])
         self.assertIn("visit-zone ID", shape["innerTargetSemantics"])
 
-    def test_proxy_does_not_claim_key_or_door_semantics(self):
+    def test_room206_proxy_is_pinned_to_vanilla_quest_corpus(self):
+        route = self.proof["selectedRoute"]
+        self.assertEqual(route["status"], "proven-selected-proxy")
+        self.assertEqual(route["map"], "Customs")
+        self.assertEqual(route["locationTarget"], "bigmap")
+        self.assertEqual(route["visitZoneId"], "room206_water")
+        self.assertEqual(route["vanillaQuest"], {
+            "name": "Operation Aquarius - Part 1",
+            "id": "59689fbd86f7740d137ebfc4",
+        })
+
+        vanilla = route["pinnedVanillaAuthority"]
+        self.assertEqual(vanilla["repository"], "sp-tarkov/server-csharp")
+        self.assertEqual(vanilla["commit"], "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93")
+        self.assertEqual(
+            vanilla["path"],
+            "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json",
+        )
+        self.assertEqual(vanilla["observedConditionType"], "VisitPlace")
+        self.assertEqual(vanilla["observedTarget"], "room206_water")
+        self.assertEqual(vanilla["observedConditionId"], "5a3fb74d86f7746ce457a0a6")
+
+        evidence = " ".join(item["finding"] for item in route["restrictedAccessEvidence"]).lower()
+        self.assertIn("room 206", evidence)
+        self.assertIn("key", evidence)
+
+    def test_proxy_does_not_claim_player_key_or_door_semantics(self):
         boundary = self.proof["admiralBoundary"]
         rejected = " ".join(boundary["doesNotProve"]).lower()
-        for concept in ("door was locked", "key was possessed", "key unlocked", "opened by the player", "same raid"):
+        for concept in ("possessed", "used", "unlocked", "opened by the player", "same raid"):
             self.assertIn(concept, rejected)
-        self.assertFalse(boundary["selectedRestrictedRouteProven"])
+        self.assertTrue(boundary["selectedRestrictedRouteProven"])
         self.assertFalse(boundary["sameRaidCouplingProven"])
         self.assertFalse(boundary["implementationAllowed"])
         self.assertFalse(self.proof["runtimeMaterialize"])
 
-    def test_borrowed_access_remains_fail_closed_until_route_and_coupling_are_proven(self):
+    def test_borrowed_access_remains_fail_closed_until_coupling_overlap_and_economy_are_proven(self):
         readiness = self.access["conditionReadiness"]
         self.assertEqual(readiness["accessInteraction"]["status"], "unproven-fail-closed")
         self.assertEqual(readiness["sameRaidCoupling"]["status"], "unproven-fail-closed")
         gate_text = " ".join(self.proof["materializationGate"]).lower()
-        self.assertIn("exact vanilla visit-zone id", gate_text)
-        self.assertIn("restricted/keyed access route", gate_text)
+        self.assertIn("room206_water", gate_text)
         self.assertIn("same-raid", gate_text)
         self.assertIn("overlap", gate_text)
         self.assertIn("economy admiral", gate_text)
@@ -60,7 +85,8 @@ class Post010VisitPlaceProxyProofTests(unittest.TestCase):
         rejected = self.proof["rejectedInference"].lower()
         self.assertIn("presence", rejected)
         self.assertIn("must never be described", rejected)
-        self.assertIn("key opened a locked door", rejected)
+        self.assertIn("this player used the key", rejected)
+        self.assertIn("opened the locked door", rejected)
 
 
 if __name__ == "__main__":
