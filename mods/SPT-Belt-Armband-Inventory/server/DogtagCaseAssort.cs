@@ -99,16 +99,44 @@ public sealed class DogtagCaseAssort(
         }
         catch
         {
-            // Roll back only state created by this invocation. Existing/foreign
-            // assort data was rejected before mutation and is never removed here.
-            if (loyaltyAdded) trader.Assort.LoyalLevelItems.Remove(id);
-            if (barterAdded) trader.Assort.BarterScheme.Remove(id);
-            if (itemAdded) trader.Assort.Items.Remove(offer);
+            // Roll back only state that is still observably owned by this invocation.
+            // Another startup participant may have replaced one component after our
+            // Add succeeded; never delete such replacement state merely because the
+            // current invocation later failed closed.
+            RollbackOwnedAssortTuple(trader, id, offer, barter, itemAdded, barterAdded, loyaltyAdded);
             throw;
         }
 
         logger.Success($"B&A&HB Dogtag Case added to Ragman LL{LoyaltyLevel} for {PriceRoubles:N0} RUB after exact vanilla Dogtag host verification.");
         return Task.CompletedTask;
+    }
+
+    private static void RollbackOwnedAssortTuple(
+        Trader trader,
+        MongoId id,
+        Item offer,
+        List<List<BarterScheme>> barter,
+        bool itemAdded,
+        bool barterAdded,
+        bool loyaltyAdded)
+    {
+        if (loyaltyAdded
+            && trader.Assort.LoyalLevelItems.TryGetValue(id, out var currentLoyalty)
+            && currentLoyalty == LoyaltyLevel)
+            trader.Assort.LoyalLevelItems.Remove(id);
+
+        if (barterAdded
+            && trader.Assort.BarterScheme.TryGetValue(id, out var currentBarter)
+            && ReferenceEquals(currentBarter, barter))
+            trader.Assort.BarterScheme.Remove(id);
+
+        if (!itemAdded) return;
+        for (int i = trader.Assort.Items.Count - 1; i >= 0; i--)
+        {
+            if (!ReferenceEquals(trader.Assort.Items[i], offer)) continue;
+            trader.Assort.Items.RemoveAt(i);
+            break;
+        }
     }
 
     private static void RequirePublicationBoundary(TemplateTable templateTable, MongoId templateId)
