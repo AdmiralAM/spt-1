@@ -191,6 +191,23 @@ public sealed class DogtagCaseItem(
         }
     }
 
+    /// <summary>
+    /// Revalidates the live registered product against the live canonical EFT/SPT
+    /// Dogtag Case immediately before downstream publication. This closes the
+    /// preload-to-trader-registration mutation window: another startup participant
+    /// may not alter the B&A&HB case geometry/filter after preload and still obtain
+    /// a purchasable corrupted product.
+    /// </summary>
+    public static void RequireCanonicalRegisteredTemplate(TemplateTable templates)
+    {
+        ArgumentNullException.ThrowIfNull(templates);
+        if (!templates.Items.TryGetValue(SourceDogtagCaseTpl, out var source))
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: canonical source template is missing.");
+        if (!templates.Items.TryGetValue(DogtagCaseTpl, out var candidate))
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: exact product template is missing.");
+        ValidateExisting(candidate, source);
+    }
+
     private static void ValidateExisting(TemplateItem candidate, TemplateItem source)
     {
         if (!Equals(candidate.Parent, source.Parent))
