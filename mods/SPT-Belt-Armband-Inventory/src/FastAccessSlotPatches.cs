@@ -482,10 +482,10 @@ namespace SPTBeltArmbandInventory
                     return false;
 
                 ParameterInfo[] getItemsParameters = getItemsInSlots.GetParameters();
-                if (getItemsParameters.Length != 1 || !typeof(IEnumerable).IsAssignableFrom(getItemsInSlots.ReturnType)) return false;
-                object beltSlotsArgument = CreateSingleSlotArgument(getItemsParameters[0].ParameterType, slotEnumType, dedicatedBelt);
                 Type itemArrayType = itemType.MakeArrayType();
-                if (beltSlotsArgument == null || !getItemsInSlots.ReturnType.IsAssignableFrom(itemArrayType))
+                if (getItemsParameters.Length != 1 || getItemsInSlots.ReturnType != itemArrayType) return false;
+                object beltSlotsArgument = CreateSingleSlotArgument(getItemsParameters[0].ParameterType, slotEnumType, dedicatedBelt);
+                if (beltSlotsArgument == null)
                     return false;
 
                 ReloadCandidateBridgeRuntime.GetItemsInSlots = getItemsInSlots;
@@ -543,16 +543,15 @@ namespace SPTBeltArmbandInventory
         {
             if (inventoryType == null || slotEnumType == null || itemType == null) return null;
             MethodInfo selected = null;
+            Type itemArrayType = itemType.MakeArrayType();
             MethodInfo[] methods = inventoryType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             for (int i = 0; i < methods.Length; i++)
             {
                 MethodInfo method = methods[i];
                 if (!string.Equals(method.Name, "GetItemsInSlots", StringComparison.Ordinal) || method.ContainsGenericParameters
-                    || !typeof(IEnumerable).IsAssignableFrom(method.ReturnType)) continue;
+                    || method.ReturnType != itemArrayType) continue;
                 ParameterInfo[] parameters = method.GetParameters();
                 if (parameters.Length != 1 || !CanCarrySlotValues(parameters[0].ParameterType, slotEnumType)) continue;
-                Type itemArrayType = itemType.MakeArrayType();
-                if (!method.ReturnType.IsAssignableFrom(itemArrayType)) continue;
                 if (selected != null) return null;
                 selected = method;
             }
