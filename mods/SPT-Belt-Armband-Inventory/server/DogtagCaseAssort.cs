@@ -117,6 +117,16 @@ public sealed class DogtagCaseAssort(
         if (idMatches != 1 || exactItemMatches != 1)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman item reference was replaced before publication.");
 
+        // The same Item object can be mutated in place after ValidateExisting. Re-prove the
+        // exact owned item contract after reference identity, before considering the tuple live.
+        if (!Equals(expectedItem.Template, new MongoId(RuntimeIdentity.DogtagCaseItemId))
+            || !string.Equals(expectedItem.ParentId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal)
+            || !string.Equals(expectedItem.SlotId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal)
+            || expectedItem.Upd == null
+            || expectedItem.Upd.UnlimitedCount != true
+            || expectedItem.Upd.StackObjectsCount != UnlimitedStock)
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman item contents changed in place before publication.");
+
         if (!trader.Assort.BarterScheme.TryGetValue(id, out var liveBarter)
             || !ReferenceEquals(liveBarter, expectedBarter))
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman barter reference was replaced before publication.");
