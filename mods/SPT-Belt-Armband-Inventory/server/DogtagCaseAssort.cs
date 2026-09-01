@@ -112,22 +112,20 @@ public sealed class DogtagCaseAssort(
 
         var hostFilter = groups[0].Filter;
         if (hostFilter == null || hostFilter.Count < 2)
-            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: Dogtag host filter does not preserve a vanilla entry plus the exact container.");
+            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: Dogtag host filter does not preserve ordinary dogtags plus the exact container.");
 
-        // Trader publication is a committed-state boundary, not merely a
-        // preservation check. Centralizing this proof guarantees the exact case is
-        // present, every captured vanilla/foreign entry survives, and no different
-        // B&A&HB product contaminates the host before the offer becomes obtainable.
+        // One committed-state proof is authoritative for publication. The host
+        // contract snapshots this mutable set exactly once and proves on that same
+        // point-in-time view that every captured vanilla/foreign entry survives,
+        // the exact Dogtag Case is present, and no other B&A&HB-owned product has
+        // contaminated the vanilla Dogtag host. Do not re-read the live HashSet
+        // afterward: that would recreate a preservation/case-presence TOCTOU gap.
         DogtagCaseHostContract.RequireCommitted(hostFilter);
 
-        if (!hostFilter.Contains(templateId))
-            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: exact container template is not exposed by the vanilla Dogtag host.");
-
-        // Retain the cheap local sanity boundary as well as the stronger snapshot
-        // proof. The snapshot establishes identity preservation; this guards a
-        // malformed empty/non-case host if the contract is ever refactored.
-        if (!hostFilter.Any(x => !Equals(x, templateId)))
-            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: ordinary vanilla Dogtag acceptance was replaced rather than preserved.");
+        // Keep the requested template argument an exact identity boundary as well;
+        // callers may not reuse this verifier for another product/template.
+        if (!Equals(templateId, new MongoId(RuntimeIdentity.DogtagCaseItemId)))
+            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: requested template identity is not the exact Dogtag Case product.");
     }
 
     private static void ValidateExisting(Trader trader, MongoId id, Item existing, MongoId templateId)
