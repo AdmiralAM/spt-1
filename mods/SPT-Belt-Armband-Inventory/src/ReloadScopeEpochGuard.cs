@@ -71,17 +71,32 @@ namespace SPTBeltArmbandInventory
                     ConstructorInfo harmonyMethodCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                     MethodInfo patch = FindPatchMethod(harmonyType, harmonyMethodType);
                     unpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
-                    if (harmonyCtor == null || harmonyMethodCtor == null || patch == null || unpatchSelf == null) return false;
+                    if (harmonyCtor == null || harmonyMethodCtor == null || patch == null || unpatchSelf == null)
+                    {
+                        // Harmony is already present, so a missing/ambiguous structural contract cannot
+                        // become valid because an unrelated assembly loads later. Stop the AssemblyLoad
+                        // retry loop instead of repeatedly reflecting an incompatible process-wide API.
+                        terminalFailure = true;
+                        return false;
+                    }
 
                     Type runtime = typeof(ReloadCandidateBridgeRuntime);
                     MethodInfo enter = runtime.GetMethod("EnterReloadScope", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
                     MethodInfo exit = runtime.GetMethod("ExitReloadScope", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
                     MethodInfo append = runtime.GetMethod("AppendCandidates", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
                     MethodInfo reset = runtime.GetMethod("Reset", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
-                    if (enter == null || exit == null || append == null || reset == null) return false;
+                    if (enter == null || exit == null || append == null || reset == null)
+                    {
+                        terminalFailure = true;
+                        return false;
+                    }
 
                     owner = harmonyCtor.Invoke(new object[] { HarmonyId });
-                    if (owner == null) return false;
+                    if (owner == null)
+                    {
+                        terminalFailure = true;
+                        return false;
+                    }
                     PatchNamed(owner, patch, harmonyMethodType, enter, "prefix", harmonyMethodCtor.Invoke(new object[] { Method(nameof(BeforeEnter)) }));
                     PatchNamed(owner, patch, harmonyMethodType, exit, "prefix", harmonyMethodCtor.Invoke(new object[] { Method(nameof(BeforeExit)) }));
                     PatchNamed(owner, patch, harmonyMethodType, append, "prefix", harmonyMethodCtor.Invoke(new object[] { Method(nameof(BeforeAppend)) }));
