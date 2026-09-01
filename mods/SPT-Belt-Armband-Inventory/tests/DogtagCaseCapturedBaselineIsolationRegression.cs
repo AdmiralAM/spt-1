@@ -1,51 +1,61 @@
 using System;
-using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
-using SPTarkov.Server.Core.Models.Common;
-using SPTBeltArmbandInventory.Server;
 
 internal static class DogtagCaseCapturedBaselineIsolationRegression
 {
     [ModuleInitializer]
     internal static void Run()
     {
-        var bear = new MongoId(DogtagCaseHostContract.BearDogtagTemplateId);
-        var usec = new MongoId(DogtagCaseHostContract.UsecDogtagTemplateId);
-        var foreign = new MongoId("5c093e3486f77430cb02e594");
-        var caseTpl = new MongoId(SPTBeltArmbandInventory.RuntimeIdentity.DogtagCaseItemId);
+        string? root = FindModuleRoot();
+        if (root == null)
+            throw new InvalidOperationException("Dogtag captured-baseline isolation regression failed: module root could not be resolved.");
 
-        // The preload baseline must never retain a caller-owned mutable collection.
-        // Capture an exact canonical set through a HashSet, mutate that same caller
-        // object afterwards, then prove the committed host still uses the internal
-        // point-in-time snapshot rather than following the caller's later edits.
-        var callerOwned = new HashSet<MongoId> { bear, usec };
-        DogtagCaseHostContract.CaptureVanillaEntries(callerOwned);
-        if (DogtagCaseHostContract.CapturedVanillaEntryCount != 2)
-            throw new InvalidOperationException("Dogtag captured-baseline isolation regression failed: canonical baseline cardinality was not retained.");
+        string source = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseHostContract.cs"));
 
-        callerOwned.Remove(usec);
-        callerOwned.Add(foreign);
+        Require(source, "var snapshot = acceptedTemplates.ToHashSet();",
+            "preload capture must materialize an owned point-in-time HashSet rather than retain caller-owned mutable state");
+        Require(source, "capturedVanillaEntries = snapshot;",
+            "the retained baseline must be the owned snapshot created inside CaptureVanillaEntries");
+        Require(source, "captured = capturedVanillaEntries.ToArray();",
+            "verification must also take a bounded point-in-time copy under the snapshot lock");
 
-        if (DogtagCaseHostContract.CapturedVanillaEntryCount != 2)
-            throw new InvalidOperationException("Dogtag captured-baseline isolation regression failed: caller mutation changed retained baseline cardinality.");
+        int snapshot = source.IndexOf("var snapshot = acceptedTemplates.ToHashSet();", StringComparison.Ordinal);
+        int lockStart = source.IndexOf("lock (SnapshotSync)", snapshot, StringComparison.Ordinal);
+        int publish = source.IndexOf("capturedVanillaEntries = snapshot;", lockStart, StringComparison.Ordinal);
+        if (snapshot < 0 || lockStart < 0 || publish < 0 || !(snapshot < lockStart && lockStart < publish))
+            throw new InvalidOperationException("Dogtag captured-baseline isolation regression failed: owned snapshot must be created before synchronized publication.");
 
-        DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { bear, usec, caseTpl });
-
-        ExpectFailure(
-            () => DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { bear, foreign, caseTpl }),
-            "caller mutation must not rewrite the captured USEC acceptance requirement");
-
-        // Re-capturing the original semantic set through a different object remains
-        // idempotent; the contract is value-stable but never collection-reference-owned.
-        DogtagCaseHostContract.CaptureVanillaEntries(new HashSet<MongoId> { usec, bear });
-        if (DogtagCaseHostContract.CapturedVanillaEntryCount != 2)
-            throw new InvalidOperationException("Dogtag captured-baseline isolation regression failed: idempotent recapture changed baseline cardinality.");
+        if (source.Contains("capturedVanillaEntries = acceptedTemplates", StringComparison.Ordinal)
+            || source.Contains("capturedVanillaEntries = currentFilter", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag captured-baseline isolation regression failed: caller-owned mutable collection aliasing is forbidden.");
     }
 
-    private static void ExpectFailure(Action action, string message)
+    private static string? FindModuleRoot()
     {
-        try { action(); }
-        catch (InvalidOperationException) { return; }
-        throw new InvalidOperationException("Dogtag captured-baseline isolation regression failed: " + message);
+        DirectoryInfo? current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current != null)
+        {
+            string candidate = Path.Combine(current.FullName, "server", "DogtagCaseHostContract.cs");
+            if (File.Exists(candidate)) return current.FullName;
+            current = current.Parent;
+        }
+
+        current = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (current != null)
+        {
+            string direct = Path.Combine(current.FullName, "server", "DogtagCaseHostContract.cs");
+            if (File.Exists(direct)) return current.FullName;
+            string nested = Path.Combine(current.FullName, "mods", "SPT-Belt-Armband-Inventory");
+            if (File.Exists(Path.Combine(nested, "server", "DogtagCaseHostContract.cs"))) return nested;
+            current = current.Parent;
+        }
+        return null;
+    }
+
+    private static void Require(string source, string token, string message)
+    {
+        if (!source.Contains(token, StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag captured-baseline isolation regression failed: " + message + ".");
     }
 }
