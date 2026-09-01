@@ -80,10 +80,10 @@ foreach ($obj in $allObjects) {
     }
 }
 
-# Expand the removal set through inventory parent edges and common serialized item
-# references. The referenced owner ID must already be cardinality-proven unique. A
-# removed descendant with an ambiguous own ID is removed because its unique parent
-# proves ownership, but that ambiguous ID is not promoted into further cascade authority.
+# Expand ownership only through inventory containment (parentId). itemId is a
+# direct service/build reference edge: the record referencing an already-owned
+# item is removed later, but its own ID must never become a new cascade root.
+# This keeps recovery exact even if foreign schemas chain records together.
 do {
     $changed = $false
     foreach ($obj in $allObjects) {
@@ -92,11 +92,9 @@ do {
         if ((Test-UniqueInstanceId $id) -and $removedIds.ContainsKey($id)) { continue }
 
         $parentProperty = $obj.PSObject.Properties['parentId']
-        $itemProperty = $obj.PSObject.Properties['itemId']
         $parentId = if ($null -ne $parentProperty) { [string]$parentProperty.Value } else { $null }
-        $itemId = if ($null -ne $itemProperty) { [string]$itemProperty.Value } else { $null }
 
-        if (($parentId -and $removedIds.ContainsKey($parentId)) -or ($itemId -and $removedIds.ContainsKey($itemId))) {
+        if ($parentId -and $removedIds.ContainsKey($parentId)) {
             if ((Test-UniqueInstanceId $id) -and -not $removedIds.ContainsKey($id)) {
                 $removedIds[$id] = $true
                 $changed = $true
