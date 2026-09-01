@@ -18,15 +18,15 @@ internal static class RelationshipStandingAssortProjection
     );
 
     /// <summary>
-    /// Project the field-marker root offer onto the requested standing tier without
-    /// changing offer identity, template, price/barter scheme, quest gates, or the
-    /// profile-derived BuyRestrictionCurrent value already applied by SPT.
+    /// Project the field-marker root offer onto the highest tier whose standing and
+    /// player-level requirements are both satisfied, without changing offer identity,
+    /// template, price/barter scheme, quest gates, or BuyRestrictionCurrent.
     /// </summary>
-    internal static ProjectionResult Apply(TraderAssort assort, double standing)
+    internal static ProjectionResult Apply(TraderAssort assort, double standing, int playerLevel)
     {
         ArgumentNullException.ThrowIfNull(assort);
 
-        var tier = RelationshipStandingStockPolicy.Resolve(standing);
+        var tier = RelationshipStandingStockPolicy.Resolve(standing, playerLevel);
         var marker = assort.Items.FirstOrDefault(item => item.Id.ToString() == RelationshipStandingStockPolicy.MarkerOfferId);
 
         if (marker is null)
@@ -44,9 +44,6 @@ internal static class RelationshipStandingAssortProjection
             return Rejected(tier, "marker root offer shape invalid");
         }
 
-        // StackObjectsCount is the finite trader stock visible for this reset.
-        // BuyRestrictionMax is the per-profile cap. Preserve BuyRestrictionCurrent:
-        // TraderAssortHelper has already projected the profile's persisted purchases.
         marker.Upd.StackObjectsCount = tier.StockPerReset;
         marker.Upd.BuyRestrictionMax = tier.BuyRestriction;
         marker.Upd.UnlimitedCount = false;
