@@ -15,6 +15,8 @@ namespace AdmiralTrader.Server;
 /// HttpRouter executes matching dynamic routers in registration order and passes the
 /// previous route output into the next route, so this router deliberately runs after
 /// the vanilla TraderDynamicRouter and projects only its already profile-scoped clone.
+/// The post-0.1.0 Relationship materialization gate remains fail-closed while the
+/// frozen 0.1.0 physical/economy gates are deferred.
 /// </summary>
 [Injectable(TypePriority = OnLoadOrder.Routers + 1)]
 public sealed class RelationshipStandingAssortDynamicRouter(
@@ -32,6 +34,10 @@ public sealed class RelationshipStandingAssortDynamicRouter(
         ]
     )
 {
+    // Mirrors relationship-standing-stock-uplift.json materializationGates.implementationAllowed.
+    // Change only in the future materialization slice after all recorded gates are satisfied.
+    private const bool RuntimeMaterializationEnabled = false;
+
     private static ValueTask<string> ProjectAdmiralAssortAsync(
         string url,
         MongoId sessionId,
@@ -42,6 +48,11 @@ public sealed class RelationshipStandingAssortDynamicRouter(
         RelationshipStandingAssortCoordinator coordinator)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        if (!RuntimeMaterializationEnabled)
+        {
+            return ValueTask.FromResult(output ?? string.Empty);
+        }
 
         if (!url.EndsWith(RuntimeIdentity.TraderId, StringComparison.Ordinal) || string.IsNullOrEmpty(output))
         {
