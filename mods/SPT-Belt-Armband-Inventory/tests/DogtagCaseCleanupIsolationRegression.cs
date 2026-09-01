@@ -20,6 +20,7 @@ internal static class DogtagCaseCleanupIsolationRegression
           },
           "Services": [
             { "_id": "exact-ref", "itemId": "owned-child", "kind": "build-service" },
+            { "_id": "foreign-ref-child", "parentId": "exact-ref", "kind": "foreign-service-child" },
             { "_id": "string-only-ref", "target": "owned-child", "kind": "foreign-schema" },
             { "_id": "substring-ref", "itemId": "owned-child-suffix", "kind": "foreign-item" },
             { "_id": "unrelated-parent", "parentId": "owned-child-suffix", "kind": "foreign-parent" }
@@ -40,6 +41,7 @@ internal static class DogtagCaseCleanupIsolationRegression
         string[] preserved =
         {
             "unrelated-item",
+            "foreign-ref-child",
             "string-only-ref",
             "substring-ref",
             "unrelated-parent"
@@ -48,6 +50,8 @@ internal static class DogtagCaseCleanupIsolationRegression
             if (!remaining.Contains(id, StringComparison.Ordinal))
                 throw new InvalidOperationException("Dogtag cleanup isolation regression failed: cleanup crossed an exact ownership/reference boundary into " + id + ".");
 
+        if (!remaining.Contains("\"parentId\":\"exact-ref\"", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag cleanup isolation regression failed: an itemId service reference must not promote its own ID into cascade authority.");
         if (!remaining.Contains("\"note\":\"owned-case\"", StringComparison.Ordinal)
             || !remaining.Contains("\"target\":\"owned-child\"", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag cleanup isolation regression failed: unknown foreign-schema string fields must not be interpreted as B&A&HB ownership references.");
