@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "product": "Admiral Trader",
   "status": "post-0.1.0-condition-proof-inventory",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -19,7 +19,8 @@
       "path": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json"
     },
     "pmcLocationExtractionProof": "post-010-pmc-location-extraction-proof.json",
-    "playerEquipmentProof": "post-010-player-equipment-proof.json"
+    "playerEquipmentProof": "post-010-player-equipment-proof.json",
+    "sameRaidCouplingProof": "post-010-same-raid-coupling-proof.json"
   },
   "staticallyProvenShapes": [
     {
@@ -107,8 +108,9 @@
     },
     {
       "capability": "kill/action then extract in the same raid",
-      "fields": ["oneSessionOnly/resetOnSessionEnd or exact SPT equivalent"],
-      "reason": "Survived extraction is proven, but temporal coupling of a prior action and extraction inside one raid remains unproven.",
+      "fields": ["CounterCreator nested conditions", "Kills.resetOnSessionEnd", "ExitStatus"],
+      "reason": "CounterCreator composition, Survived ExitStatus, Kills.resetOnSessionEnd serialization and the oneSessionOnly field are known shapes, but SPT documentation marks oneSessionOnly as currently unused. Therefore oneSessionOnly is explicitly rejected as coupling authority. Exact reset/evaluator ordering that would guarantee action-in-raid-N cannot combine with extract-in-raid-N+1 remains unproven; see post-010-same-raid-coupling-proof.json.",
+      "rejectedShortcut": "Do not set oneSessionOnly=true and call same-raid semantics proven.",
       "affectedOperations": ["access-reconnaissance", "acoustic-contact", "route-security", "hostile-operator-intercept", "armored-transit", "controlled-chemical-support", "precision-observation-window", "labs-security-disruption"]
     },
     {
@@ -142,9 +144,10 @@
     "editorialCopyMayNotPublishUnprovenSpecifics": true,
     "mapAndExfilTargetsMustBeExplicitlySelected": true,
     "sameRaidCouplingMustRemainFailClosed": true,
+    "oneSessionOnlyMustNotBeUsedAsProof": true,
     "noNewFrozen010QuestJson": true,
     "nextResearchPriority": [
-      "prove same-raid coupling semantics",
+      "prove same-raid evaluator/reset ordering or identify a canonical vanilla compound action+extract pattern",
       "select and validate explicit equipment TPL sets or prove category/class refinement",
       "prove medical/stimulant use semantics",
       "prove access interaction/proxy semantics",
