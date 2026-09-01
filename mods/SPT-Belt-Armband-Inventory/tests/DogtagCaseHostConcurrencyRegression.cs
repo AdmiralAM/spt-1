@@ -19,13 +19,16 @@ internal static class DogtagCaseHostConcurrencyRegression
         // Parallel idempotent capture/verification must be deterministic. This pins
         // the preload contract against future DI/load-order parallelization without
         // widening the accepted host: every worker presents the same canonical
-        // baseline and verifies a private committed live set.
+        // baseline, proves a private pre-mutation host, then verifies a private
+        // committed live set. RequirePreserved is exercised directly so its new
+        // two-snapshot stability boundary cannot remain source-only authority.
         Task[] workers = Enumerable.Range(0, 16)
             .Select(_ => Task.Run(() =>
             {
                 for (int i = 0; i < 32; i++)
                 {
                     DogtagCaseHostContract.CaptureVanillaEntries(new[] { bear, usec });
+                    DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { bear, usec });
                     DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { bear, usec, caseTpl });
                 }
             }))
