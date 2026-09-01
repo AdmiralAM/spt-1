@@ -13,7 +13,9 @@ def test_route_security_operation_is_bounded_and_non_materialized():
     op = spec["operation"]
     bounds = op["bounds"]
     gates = spec["gates"]
+    authority = spec["proofAuthority"]
 
+    assert spec["schemaVersion"] == 2
     assert spec["source"]["bundle"] == "Scav Hunt"
     assert spec["source"]["legacyQuestCount"] == 60
     assert op["key"] == "route-security"
@@ -22,9 +24,16 @@ def test_route_security_operation_is_bounded_and_non_materialized():
     assert op["started"]["en"] and op["started"]["ru"]
     assert op["success"]["en"] and op["success"]["ru"]
 
+    assert authority["scavTarget"] == "post-010-role-alias-proof.json"
+    assert authority["locationAndExtraction"] == "post-010-pmc-location-extraction-proof.json"
+    assert authority["sameRaidCoupling"] == "post-010-same-raid-coupling-proof.json"
+    assert "sub-location/zone" in authority["admittedBoundary"]
+    assert "same-raid" in authority["admittedBoundary"]
+
     assert bounds["maximumScavTargets"] <= 6
     assert bounds["maximumSuccessfulRaids"] == 1
     assert bounds["locationBound"] is True
+    assert bounds["subLocationOrZoneRequired"] is False
     assert bounds["surviveOrExtractRequired"] is True
     assert bounds["repeatable"] is False
     assert bounds["escalatingSequelsAllowed"] is False
@@ -35,8 +44,10 @@ def test_route_security_operation_is_bounded_and_non_materialized():
     assert op["rewardDoctrine"]["capabilityUnlockAllowed"] is False
     assert gates["implementationAllowed"] is False
     assert gates["runtimeMaterialize"] is False
-    assert gates["requiresExactSpt413ScavTargetConditionProof"] is True
-    assert gates["requiresExactSpt413SurvivedExtractionProof"] is True
+    assert gates["requiresExactSpt413ScavTargetConditionProof"] is False
+    assert gates["requiresExactSpt413SurvivedExtractionProof"] is False
+    assert gates["requiresSubLocationOrZoneProof"] is False
+    assert gates["requiresSameRaidKillAndExtractionCouplingProof"] is True
     assert gates["requiresExactLocationSelection"] is True
     assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
     assert gates["requiresFrozenCampaignOverlapReview"] is True
@@ -48,6 +59,24 @@ def test_route_security_operation_is_bounded_and_non_materialized():
         "rootOfferCount": 11,
         "relationshipRuntimeOffers": 0,
     }
+
+
+def test_route_security_proof_authorities_exist_and_temporal_coupling_stays_closed():
+    spec = load_json(ROOT / "manifests" / "post-010-route-security-operation.json")
+    authority = spec["proofAuthority"]
+
+    role_proof = load_json(ROOT / "manifests" / authority["scavTarget"])
+    location_proof = load_json(ROOT / "manifests" / authority["locationAndExtraction"])
+    same_raid_proof = load_json(ROOT / "manifests" / authority["sameRaidCoupling"])
+
+    role_text = json.dumps(role_proof, ensure_ascii=False)
+    location_text = json.dumps(location_proof, ensure_ascii=False)
+    same_raid_text = json.dumps(same_raid_proof, ensure_ascii=False)
+
+    assert "Savage" in role_text
+    assert "Survived" in location_text
+    assert "oneSessionOnly" in same_raid_text
+    assert spec["gates"]["requiresSameRaidKillAndExtractionCouplingProof"] is True
 
 
 def test_route_security_does_not_change_frozen_runtime_counts():

@@ -1,11 +1,17 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "source": {
     "bundle": "Scav Hunt",
     "legacyQuestCount": 60,
     "decision": "rewrite-theme-only"
+  },
+  "proofAuthority": {
+    "scavTarget": "post-010-role-alias-proof.json",
+    "locationAndExtraction": "post-010-pmc-location-extraction-proof.json",
+    "sameRaidCoupling": "post-010-same-raid-coupling-proof.json",
+    "admittedBoundary": "ordinary Scav target discrimination, map-level Location and Survived extraction shapes are proven; sub-location/zone restriction and kill-to-extract same-raid coupling are not"
   },
   "operation": {
     "key": "route-security",
@@ -14,22 +20,23 @@
       "ru": "Безопасный маршрут"
     },
     "description": {
-      "en": "A logistics corridor is being hit by local armed groups. Clear one defined section, break the immediate threat and leave the area alive. I need a route opened, not a body-count campaign.",
-      "ru": "Маршрут снабжения постоянно атакуют местные вооружённые группы. Зачисти один конкретный участок, сними непосредственную угрозу и выйди из района живым. Мне нужен открытый маршрут, а не кампания по набиванию счётчика убийств."
+      "en": "A logistics route on the selected map is being hit by local armed groups. Break the immediate Scav threat and leave the area alive. I need movement restored, not a body-count campaign.",
+      "ru": "Маршрут снабжения на выбранной территории атакуют местные вооружённые группы. Сними непосредственную угрозу со стороны Диких и выйди живым. Мне нужно восстановить движение, а не устроить кампанию по набиванию счётчика убийств."
     },
     "started": {
-      "en": "Keep it contained. Secure the corridor, confirm the threat is broken and extract. Do not turn this into a sweep of the whole district.",
-      "ru": "Работай в заданных пределах. Обеспечь проход, убедись, что угроза снята, и выходи. Не превращай это в зачистку всего района."
+      "en": "Keep it contained. Work the designated area, break the local threat and extract. Do not turn this into a sweep of every map or a ladder of larger kill counts.",
+      "ru": "Работай в заданных пределах. Отработай выбранную территорию, сними местную угрозу и выходи. Не превращай это в зачистку каждой карты или лестницу всё больших счётчиков убийств."
     },
     "success": {
-      "en": "The corridor is usable again. That was the objective; there is no value in repeating the same clearance with larger numbers.",
-      "ru": "Маршрут снова пригоден для движения. Это и было целью; повторять ту же зачистку с большими цифрами бессмысленно."
+      "en": "Movement through the area is viable again. That was the objective; there is no value in repeating the same clearance with larger numbers.",
+      "ru": "Движение через район снова возможно. Это и было целью; повторять ту же зачистку с большими цифрами бессмысленно."
     },
-    "objectiveIntent": "One location-bound route-security operation against ordinary Scav threats, coupled to successful extraction so the objective represents opening a corridor rather than farming kills.",
+    "objectiveIntent": "One map-bound route-security operation against ordinary Scav threats with successful extraction. The product intent is same-raid clearance-and-extract, but that temporal coupling must remain fail-closed until exact evaluator/reset ordering is proven.",
     "bounds": {
       "maximumScavTargets": 6,
       "maximumSuccessfulRaids": 1,
       "locationBound": true,
+      "subLocationOrZoneRequired": false,
       "surviveOrExtractRequired": true,
       "repeatable": false,
       "escalatingSequelsAllowed": false,
@@ -46,8 +53,10 @@
   "gates": {
     "implementationAllowed": false,
     "runtimeMaterialize": false,
-    "requiresExactSpt413ScavTargetConditionProof": true,
-    "requiresExactSpt413SurvivedExtractionProof": true,
+    "requiresExactSpt413ScavTargetConditionProof": false,
+    "requiresExactSpt413SurvivedExtractionProof": false,
+    "requiresSubLocationOrZoneProof": false,
+    "requiresSameRaidKillAndExtractionCouplingProof": true,
     "requiresExactLocationSelection": true,
     "requiresVanillaScorpionArtemOverlapAudit": true,
     "requiresFrozenCampaignOverlapReview": true,
