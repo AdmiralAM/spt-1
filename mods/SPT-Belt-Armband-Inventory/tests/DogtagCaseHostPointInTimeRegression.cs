@@ -16,22 +16,35 @@ internal static class DogtagCaseHostPointInTimeRegression
         string contract = File.ReadAllText(contractPath);
         string assort = File.ReadAllText(assortPath);
 
-        Require(contract, "RequirePreservedSnapshot(SnapshotCurrentFilter(currentFilter))",
-            "preserved verification must consume a detached current-host snapshot");
+        Require(contract, "public static void RequirePreserved(HashSet<MongoId> currentFilter)",
+            "preserved verification boundary must remain explicit");
         Require(contract, "HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);",
-            "committed verification must capture one current-host point in time");
+            "preserved and committed verification must capture a detached current-host point in time");
         Require(contract, "RequirePreservedSnapshot(current);",
-            "committed preservation and exact-case checks must share the same snapshot");
+            "preservation proof must consume the detached snapshot");
+        Require(contract, "live Dogtag filter changed during preserved-host verification",
+            "preload preservation drift must remain explicitly diagnosable");
+        Require(contract, "HashSet<MongoId> liveAfterProof = SnapshotCurrentFilter(currentFilter);",
+            "host proofs must re-snapshot the same live filter before returning success");
+        Require(contract, "if (!current.SetEquals(liveAfterProof))",
+            "in-place Dogtag filter drift during a host proof must fail closed even when reference identity is unchanged");
         Require(contract, "if (!current.Contains(caseTpl))",
             "exact-case presence must be checked against the committed snapshot, not the live mutable filter");
-        Require(contract, "HashSet<MongoId> liveAfterProof = SnapshotCurrentFilter(currentFilter);",
-            "committed verification must re-snapshot the same live filter after the preservation/exact-case proof");
-        Require(contract, "if (!current.SetEquals(liveAfterProof))",
-            "in-place Dogtag filter drift during committed-host verification must fail closed even when reference identity is unchanged");
         Require(contract, "live Dogtag filter changed during committed-host verification",
             "committed-host drift must remain explicitly diagnosable");
 
-        int firstSnapshot = contract.IndexOf("HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);", StringComparison.Ordinal);
+        int preservedMethod = contract.IndexOf("public static void RequirePreserved(HashSet<MongoId> currentFilter)", StringComparison.Ordinal);
+        int committedMethod = contract.IndexOf("public static void RequireCommitted(HashSet<MongoId> currentFilter)", preservedMethod, StringComparison.Ordinal);
+        int preservedFirstSnapshot = contract.IndexOf("HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);", preservedMethod, StringComparison.Ordinal);
+        int preservedProof = contract.IndexOf("RequirePreservedSnapshot(current);", preservedFirstSnapshot, StringComparison.Ordinal);
+        int preservedSecondSnapshot = contract.IndexOf("HashSet<MongoId> liveAfterProof = SnapshotCurrentFilter(currentFilter);", preservedProof, StringComparison.Ordinal);
+        int preservedStability = contract.IndexOf("if (!current.SetEquals(liveAfterProof))", preservedSecondSnapshot, StringComparison.Ordinal);
+        if (preservedMethod < 0 || committedMethod <= preservedMethod || preservedFirstSnapshot <= preservedMethod
+            || preservedProof <= preservedFirstSnapshot || preservedSecondSnapshot <= preservedProof
+            || preservedStability <= preservedSecondSnapshot || preservedStability >= committedMethod)
+            throw new InvalidOperationException("Dogtag host point-in-time regression failed: preserved proof must remain snapshot -> preservation -> live re-snapshot -> stability proof before committed verification begins.");
+
+        int firstSnapshot = contract.IndexOf("HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);", committedMethod, StringComparison.Ordinal);
         int preserved = contract.IndexOf("RequirePreservedSnapshot(current);", firstSnapshot, StringComparison.Ordinal);
         int exactCase = contract.IndexOf("if (!current.Contains(caseTpl))", preserved, StringComparison.Ordinal);
         int secondSnapshot = contract.IndexOf("HashSet<MongoId> liveAfterProof = SnapshotCurrentFilter(currentFilter);", exactCase, StringComparison.Ordinal);
@@ -40,6 +53,8 @@ internal static class DogtagCaseHostPointInTimeRegression
             || secondSnapshot <= exactCase || stabilityProof <= secondSnapshot)
             throw new InvalidOperationException("Dogtag host point-in-time regression failed: committed proof must remain snapshot -> preservation -> exact case -> live re-snapshot -> stability proof.");
 
+        if (contract.Contains("RequirePreservedSnapshot(SnapshotCurrentFilter(currentFilter))", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag host point-in-time regression failed: single-snapshot preserved verification was restored.");
         if (contract.Contains("RequirePreserved(currentFilter);\n\n        var caseTpl", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag host point-in-time regression failed: TOCTOU live-filter committed verification was restored.");
 
