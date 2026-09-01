@@ -64,7 +64,10 @@ internal static class ReloadCandidateAncestorFailureIsolationRegression
         ReloadCandidateBridgeRuntime.Reset();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload ancestor-failure regression failed: fake GetItemsInSlots missing");
-        ReloadCandidateBridgeRuntime.BeltSlotsArgument = new object();
+        // Match the pinned primary bridge boundary exactly so this regression reaches
+        // the intended ancestry-reader fault after one bounded fallback query rather
+        // than being correctly rejected earlier by the query-contract guard.
+        ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = slots;
         ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object();
         ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = new object();
