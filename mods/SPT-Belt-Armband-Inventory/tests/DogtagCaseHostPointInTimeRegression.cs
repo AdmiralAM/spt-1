@@ -30,22 +30,31 @@ internal static class DogtagCaseHostPointInTimeRegression
 
         Require(assort, "DogtagCaseHostContract.RequireCommitted(hostFilter);",
             "Ragman publication must consume the centralized committed host proof");
+        Require(assort, "ReferenceEquals(liveInventory, inventory)",
+            "publication must prove the verified DefaultInventory object is still installed after committed-host verification");
         Require(assort, "ReferenceEquals(liveSlots[0], slot)",
             "publication must prove the verified Dogtag slot object is still installed after committed-host verification");
+        Require(assort, "ReferenceEquals(liveGroups[0], groups[0])",
+            "publication must prove the verified sole Dogtag filter-group object is still installed after committed-host verification");
         Require(assort, "ReferenceEquals(liveGroups[0].Filter, hostFilter)",
-            "publication must prove the verified Dogtag filter object is still installed after committed-host verification");
+            "publication must prove the verified Dogtag filter set is still installed after committed-host verification");
+        Require(assort, "live DefaultInventory template changed during committed-host verification",
+            "whole DefaultInventory replacement must fail closed at publication");
         Require(assort, "live Dogtag slot changed during committed-host verification",
             "slot replacement must fail closed at publication");
-        Require(assort, "live Dogtag filter changed during committed-host verification",
-            "filter replacement must fail closed at publication");
+        Require(assort, "live Dogtag filter group/filter changed during committed-host verification",
+            "filter-group or filter-set replacement must fail closed at publication");
         Require(assort, "requested template identity is not the exact Dogtag Case product",
             "Ragman publication must retain exact product-template identity");
 
         int committed = assort.IndexOf("DogtagCaseHostContract.RequireCommitted(hostFilter);", StringComparison.Ordinal);
-        int slotReproof = assort.IndexOf("ReferenceEquals(liveSlots[0], slot)", StringComparison.Ordinal);
-        int filterReproof = assort.IndexOf("ReferenceEquals(liveGroups[0].Filter, hostFilter)", StringComparison.Ordinal);
-        if (committed < 0 || slotReproof <= committed || filterReproof <= slotReproof)
-            throw new InvalidOperationException("Dogtag host point-in-time regression failed: live host identity reproof must follow the committed snapshot proof in slot/filter order.");
+        int inventoryReproof = assort.IndexOf("ReferenceEquals(liveInventory, inventory)", committed, StringComparison.Ordinal);
+        int slotReproof = assort.IndexOf("ReferenceEquals(liveSlots[0], slot)", inventoryReproof, StringComparison.Ordinal);
+        int groupReproof = assort.IndexOf("ReferenceEquals(liveGroups[0], groups[0])", slotReproof, StringComparison.Ordinal);
+        int filterReproof = assort.IndexOf("ReferenceEquals(liveGroups[0].Filter, hostFilter)", groupReproof, StringComparison.Ordinal);
+        if (committed < 0 || inventoryReproof <= committed || slotReproof <= inventoryReproof
+            || groupReproof <= slotReproof || filterReproof <= groupReproof)
+            throw new InvalidOperationException("Dogtag host point-in-time regression failed: live host identity reproof must follow committed snapshot proof in inventory/slot/group/filter order.");
 
         if (assort.Contains("hostFilter.Contains(templateId)", StringComparison.Ordinal)
             || assort.Contains("hostFilter.Any(x => !Equals(x, templateId))", StringComparison.Ordinal))
