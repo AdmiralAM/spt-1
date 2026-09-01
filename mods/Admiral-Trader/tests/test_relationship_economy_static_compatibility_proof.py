@@ -22,8 +22,13 @@ class RelationshipEconomyCompatibilityProofTests(unittest.TestCase):
         self.assertFalse(result["economyEnvelopeApproved"])
         self.assertFalse(result["runtimeMaterializationAllowed"])
 
+        # This invariant exists on both the frozen staging base and current origin/main:
+        # Economy Admiral audits immutable source-assort Baseline capacity exactly.
         self.assertIn('baseline.GetProperty("stockPerReset").GetInt32() == stock', economy)
-        self.assertIn('relationshipById.Keys.Any(baselineById.ContainsKey)', economy)
+        self.assertIn('baseline capacity drift', economy)
+
+        # Admiral's future uplift is deliberately downstream of that source audit and
+        # mutates only the already-produced request response, never TradersTable/source assort.
         self.assertIn('OnLoadOrder.Routers + 1', router)
         self.assertIn('if (!RuntimeMaterializationEnabled)', router)
         self.assertIn('coordinator.Project(sessionId, response.Data);', router)
