@@ -120,23 +120,35 @@ public sealed class DogtagCaseAssort(
         bool barterAdded,
         bool loyaltyAdded)
     {
-        if (loyaltyAdded
+        int ownedItemIndex = -1;
+        if (itemAdded)
+        {
+            for (int i = trader.Assort.Items.Count - 1; i >= 0; i--)
+            {
+                if (!ReferenceEquals(trader.Assort.Items[i], offer)) continue;
+                ownedItemIndex = i;
+                break;
+            }
+        }
+
+        bool ownsItem = ownedItemIndex >= 0;
+        bool ownsBarter = barterAdded
+            && trader.Assort.BarterScheme.TryGetValue(id, out var currentBarter)
+            && ReferenceEquals(currentBarter, barter);
+
+        // Loyalty is a value type and cannot prove reference ownership by itself.
+        // Remove it only while the two reference-identifiable components of the
+        // same tuple are still ours; otherwise preserve possibly replaced metadata.
+        if (loyaltyAdded && ownsItem && ownsBarter
             && trader.Assort.LoyalLevelItems.TryGetValue(id, out var currentLoyalty)
             && currentLoyalty == LoyaltyLevel)
             trader.Assort.LoyalLevelItems.Remove(id);
 
-        if (barterAdded
-            && trader.Assort.BarterScheme.TryGetValue(id, out var currentBarter)
-            && ReferenceEquals(currentBarter, barter))
+        if (ownsBarter)
             trader.Assort.BarterScheme.Remove(id);
 
-        if (!itemAdded) return;
-        for (int i = trader.Assort.Items.Count - 1; i >= 0; i--)
-        {
-            if (!ReferenceEquals(trader.Assort.Items[i], offer)) continue;
-            trader.Assort.Items.RemoveAt(i);
-            break;
-        }
+        if (ownsItem)
+            trader.Assort.Items.RemoveAt(ownedItemIndex);
     }
 
     private static void RequirePublicationBoundary(TemplateTable templateTable, MongoId templateId)
