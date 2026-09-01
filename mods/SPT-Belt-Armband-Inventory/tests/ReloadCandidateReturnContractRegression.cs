@@ -19,7 +19,7 @@ internal static class ReloadCandidateReturnContractRegression
 
         Configure(inventory, slots);
         Assert(ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
-            "exact Item[] GetItemsInSlots + declared return contract must pass the pre-bridge epoch gate");
+            "exact Item[] GetItemsInSlots + one pseudo-slot15 query must pass the pre-bridge epoch gate");
 
         // The bridge is defined around the exact SPT 4.1 Item[] contract. If the
         // live vanilla result is not that array shape, fail closed before querying
@@ -63,12 +63,31 @@ internal static class ReloadCandidateReturnContractRegression
         Assert(ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
             "exact contract must recover after a rejected drifted method without a permanent circuit breaker");
 
+        // Query-state corruption must also fail before Inventory.GetItemsInSlots.
+        // This keeps the fallback bounded to the one dedicated pseudo-slot even if
+        // another participant mutates the bridge's process-wide static state.
+        ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[]
+        {
+            RuntimeIdentity.DedicatedBeltEquipmentSlotValue,
+            RuntimeIdentity.DedicatedBeltEquipmentSlotValue
+        };
+        Assert(!ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
+            "multi-slot fallback argument must fail closed before inventory enumeration");
+
+        ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue - 1 };
+        Assert(!ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
+            "wrong pseudo-slot fallback argument must fail closed before inventory enumeration");
+
+        ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
+        Assert(ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
+            "exact one-slot query must recover after rejected query-state drift");
+
         FieldInfo depth = typeof(ReloadCandidateBridgeRuntime).GetField("reloadDepth", BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: reloadDepth field missing");
         FieldInfo reentrant = typeof(ReloadCandidateBridgeRuntime).GetField("reentrant", BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: reentrant field missing");
         Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
-            "return-contract fail-closed paths must not leak reload scope or reentrancy state");
+            "return/query-contract fail-closed paths must not leak reload scope or reentrancy state");
 
         ReloadCandidateBridgeRuntime.Reset();
     }
@@ -78,7 +97,7 @@ internal static class ReloadCandidateReturnContractRegression
         ReloadCandidateBridgeRuntime.Reset();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: fake GetItemsInSlots missing");
-        ReloadCandidateBridgeRuntime.BeltSlotsArgument = new object();
+        ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = slots;
         ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object();
         ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = new object();
