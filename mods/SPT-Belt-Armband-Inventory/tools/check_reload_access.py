@@ -6,6 +6,7 @@ epoch = (ROOT / "src" / "ReloadScopeEpochGuard.cs").read_text(encoding="utf-8-si
 tests = (ROOT / "tests" / "Program.cs").read_text(encoding="utf-8-sig")
 bridge_tests = (ROOT / "tests" / "ReloadCandidateBridgeRegression.cs").read_text(encoding="utf-8-sig")
 return_tests = (ROOT / "tests" / "ReloadCandidateReturnContractRegression.cs").read_text(encoding="utf-8-sig")
+discovery_tests = (ROOT / "tests" / "ReloadDiscoveryExactReturnContractRegression.cs").read_text(encoding="utf-8-sig")
 epoch_tests = (ROOT / "tests" / "ReloadScopeEpochRegression.cs").read_text(encoding="utf-8-sig")
 epoch_install_tests = (ROOT / "tests" / "ReloadScopeEpochInstallRollbackRegression.cs").read_text(encoding="utf-8-sig")
 diagnostic_tests = (ROOT / "tests" / "ReloadDiagnosticLoggingRegression.cs").read_text(encoding="utf-8-sig")
@@ -30,7 +31,9 @@ for token in (
     'Type itemType = FastAccessReloadRuntime.ItemType;',
     'if (!itemType.IsAssignableFrom(FastAccessReloadRuntime.MagazineType)) return false;',
     'string.Equals(method.Name, "GetItemsInSlots", StringComparison.Ordinal)',
-    'if (!method.ReturnType.IsAssignableFrom(itemArrayType)) continue;',
+    'Type itemArrayType = itemType.MakeArrayType();',
+    'method.ReturnType != itemArrayType',
+    'getItemsInSlots.ReturnType != itemArrayType',
     'ReloadCandidateBridgeRuntime.EnterReloadScope',
     'ReloadCandidateBridgeRuntime.ExitReloadScope',
     'ReferenceEquals(slots, OriginalFastAccessSlots)',
@@ -126,6 +129,17 @@ for token in (
         violations.append(f"ReloadCandidateReturnContractRegression.cs: exact return/query-shape regression missing: {token}")
 
 for token in (
+    'typeof(ExactAndBroadInventory)',
+    'exact.ReturnType != typeof(FakeItem[])',
+    'typeof(BroadOnlyInventory)',
+    'if (broadOnly != null)',
+    'typeof(AmbiguousExactInventory)',
+    'if (ambiguous != null)',
+):
+    if token not in discovery_tests:
+        violations.append(f"ReloadDiscoveryExactReturnContractRegression.cs: exact discovery regression missing: {token}")
+
+for token in (
     'TryRollbackOwner',
     'FindZeroArgInstanceMethod',
     'partial Harmony owner was not unpatched exactly once',
@@ -142,6 +156,11 @@ if source.count('ReloadDiagnosticLog.TryWarning(LogWarning,') < 2:
 
 if 'FastAccessReloadRuntime.MagazineType.BaseType' in source:
     violations.append("FastAccessSlotPatches.cs: candidate discovery must use exact resolved EFT Item, not infer Item from Magazine.BaseType")
+
+if 'method.ReturnType.IsAssignableFrom(itemArrayType)' in source:
+    violations.append("FastAccessSlotPatches.cs: reload discovery must not accept assignable/broader return contracts; exact EFT Item[] is required")
+if 'getItemsInSlots.ReturnType.IsAssignableFrom(itemArrayType)' in source:
+    violations.append("FastAccessSlotPatches.cs: candidate installer must not widen exact EFT Item[] discovery after selection")
 
 if source.count('Activator.CreateInstance(harmonyType, new object[] { ReachabilityHarmonyId })') != 1:
     violations.append("FastAccessSlotPatches.cs: reachability Harmony owner must be created exactly once")
@@ -268,4 +287,4 @@ for token in (
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item[] return contract plus exactly one pseudo-slot15 query are gated before fallback enumeration; no-op Belt path preserves vanilla result identity without merge allocation; throwing diagnostics isolated; reachability/candidate owners isolated; stale ThreadStatic scopes generation-invalidated across reset/reinstall; epoch Harmony install preflights unique rollback and enters terminal fail-closed state if owner rollback cannot be proven; startup-bound discovery; fail-closed/no polling)")
+print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; discovery and execution both pin exact EFT Item[]; exact FastAccess/BindAvailable reference identity plus exactly one pseudo-slot15 query are gated before fallback enumeration; no-op Belt path preserves vanilla result identity without merge allocation; throwing diagnostics isolated; reachability/candidate owners isolated; stale ThreadStatic scopes generation-invalidated across reset/reinstall; epoch Harmony install preflights unique rollback and enters terminal fail-closed state if owner rollback cannot be proven; startup-bound discovery; fail-closed/no polling)")
