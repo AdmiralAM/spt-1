@@ -36,6 +36,12 @@ internal static class DogtagCaseTraderTemplateRevalidationRegression
             "publication boundary must revalidate the live Dogtag Case template");
         Require(assort, "RequireExactDogtagHost(templateTable, templateId);",
             "publication boundary must prove the committed vanilla Dogtag host");
+        Require(assort, "templateTable.Items.TryGetValue(RuntimeCandidateBeltItem.DefaultInventoryTpl, out var liveInventory)",
+            "committed-host publication must re-resolve the live DefaultInventory template after the point-in-time host proof");
+        Require(assort, "!ReferenceEquals(liveInventory, inventory)",
+            "replacement of the DefaultInventory template object during host proof must fail closed");
+        Require(assort, "var liveSlots = liveInventory.Properties?.Slots?",
+            "slot/filter identity reproof must resolve from the revalidated live DefaultInventory object rather than a detached stale capture");
 
         int firstBoundary = assort.IndexOf("RequirePublicationBoundary(templateTable, templateId);", StringComparison.Ordinal);
         int traderLookup = assort.IndexOf("tradersTable.GetValueOrDefault", StringComparison.Ordinal);
@@ -47,6 +53,20 @@ internal static class DogtagCaseTraderTemplateRevalidationRegression
             : assort.IndexOf("cancellationToken.ThrowIfCancellationRequested();", firstBoundary + 1, StringComparison.Ordinal);
         if (firstPostBoundaryCancellation < 0 || traderLookup < 0 || firstPostBoundaryCancellation >= traderLookup)
             throw new InvalidOperationException("Dogtag trader template revalidation regression failed: cancellation must be re-observed after the initial product/host proof and before Ragman state is touched.");
+
+        int committedHostProof = assort.IndexOf("DogtagCaseHostContract.RequireCommitted(hostFilter);", StringComparison.Ordinal);
+        int liveInventoryProof = committedHostProof < 0
+            ? -1
+            : assort.IndexOf("!ReferenceEquals(liveInventory, inventory)", committedHostProof + 1, StringComparison.Ordinal);
+        int liveSlotProof = liveInventoryProof < 0
+            ? -1
+            : assort.IndexOf("!ReferenceEquals(liveSlots[0], slot)", liveInventoryProof + 1, StringComparison.Ordinal);
+        int liveFilterProof = liveSlotProof < 0
+            ? -1
+            : assort.IndexOf("!ReferenceEquals(liveGroups[0].Filter, hostFilter)", liveSlotProof + 1, StringComparison.Ordinal);
+        if (committedHostProof < 0 || liveInventoryProof < 0 || liveSlotProof < 0 || liveFilterProof < 0
+            || !(committedHostProof < liveInventoryProof && liveInventoryProof < liveSlotProof && liveSlotProof < liveFilterProof))
+            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: committed snapshot proof must be followed by live DefaultInventory, slot, then filter reference-identity reproof.");
 
         int committedOfferProof = assort.IndexOf("ValidateExisting(trader, id, offer, templateId);", StringComparison.Ordinal);
         int secondBoundary = committedOfferProof < 0
