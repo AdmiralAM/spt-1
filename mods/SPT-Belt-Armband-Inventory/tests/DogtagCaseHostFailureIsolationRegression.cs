@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using SPTarkov.Server.Core.Models.Common;
 using SPTBeltArmbandInventory;
 using SPTBeltArmbandInventory.Server;
@@ -17,37 +16,31 @@ internal static class DogtagCaseHostFailureIsolationRegression
         var foreignOwned = new MongoId(RuntimeIdentity.CandidateItemId);
 
         // Same-set capture is intentionally idempotent regardless of module-initializer
-        // order. This pins the canonical baseline before testing concurrent failure.
+        // order. Keep this regression initializer-safe: cross-thread committed-host
+        // verification is exercised after module initialization by the dedicated
+        // concurrency regression in Program.Main.
         DogtagCaseHostContract.CaptureVanillaEntries(new[] { bear, usec });
 
         var valid = new HashSet<MongoId> { bear, usec, dogtagCase };
         var contaminated = new HashSet<MongoId> { bear, usec, dogtagCase, foreignOwned };
-        Exception validFailure = null;
-        Exception contaminatedFailure = null;
 
-        var validThread = new Thread(() =>
+        DogtagCaseHostContract.RequireCommitted(valid);
+
+        bool rejected = false;
+        try
         {
-            try { DogtagCaseHostContract.RequireCommitted(valid); }
-            catch (Exception exception) { validFailure = exception; }
-        });
-        var contaminatedThread = new Thread(() =>
+            DogtagCaseHostContract.RequireCommitted(contaminated);
+        }
+        catch (InvalidOperationException)
         {
-            try { DogtagCaseHostContract.RequireCommitted(contaminated); }
-            catch (Exception exception) { contaminatedFailure = exception; }
-        });
+            rejected = true;
+        }
 
-        validThread.Start();
-        contaminatedThread.Start();
-        if (!validThread.Join(TimeSpan.FromSeconds(5)) || !contaminatedThread.Join(TimeSpan.FromSeconds(5)))
-            throw new InvalidOperationException("Dogtag host failure-isolation regression failed: verification exceeded bounded time.");
-
-        if (validFailure != null)
-            throw new InvalidOperationException("Dogtag host failure-isolation regression failed: a concurrent incompatible host poisoned valid committed verification.", validFailure);
-        if (!(contaminatedFailure is InvalidOperationException))
-            throw new InvalidOperationException("Dogtag host failure-isolation regression failed: cross-owned contamination did not fail closed independently.", contaminatedFailure);
+        if (!rejected)
+            throw new InvalidOperationException("Dogtag host failure-isolation regression failed: cross-owned contamination did not fail closed independently.");
 
         if (DogtagCaseHostContract.CapturedVanillaEntryCount != 2)
-            throw new InvalidOperationException("Dogtag host failure-isolation regression failed: failed concurrent verification mutated the captured preload baseline.");
+            throw new InvalidOperationException("Dogtag host failure-isolation regression failed: rejected verification mutated the captured preload baseline.");
         if (valid.Count != 3 || !valid.Contains(bear) || !valid.Contains(usec) || !valid.Contains(dogtagCase))
             throw new InvalidOperationException("Dogtag host failure-isolation regression failed: verification mutated the valid caller-owned host set.");
         if (contaminated.Count != 4 || !contaminated.Contains(foreignOwned) || !contaminated.Contains(dogtagCase))
