@@ -38,6 +38,9 @@ contracts = {
         "RollbackOwnedAssortTuple(trader, id, offer, barter, itemAdded, barterAdded, loyaltyAdded);",
         "ReferenceEquals(currentBarter, barter)",
         "ReferenceEquals(trader.Assort.Items[i], offer)",
+        "bool ownsItem = ownedItemIndex >= 0;",
+        "bool ownsBarter = barterAdded",
+        "if (loyaltyAdded && ownsItem && ownsBarter",
     ],
 }
 
@@ -78,6 +81,10 @@ for filename, required in contracts.items():
             violations.append(
                 f"{filename}: Dogtag rollback must not rely on value equality when exact offer reference ownership is required"
             )
+        if "if (loyaltyAdded) trader.Assort.LoyalLevelItems.Remove(id);" in text:
+            violations.append(
+                f"{filename}: Dogtag loyalty rollback must not delete value-only metadata without reference-owned tuple proof"
+            )
         if "templateTable.Items.ContainsKey(templateId)" in text:
             violations.append(
                 f"{filename}: existence-only template gating must not replace canonical Dogtag template revalidation"
@@ -90,4 +97,4 @@ for filename, required in contracts.items():
 if violations:
     raise SystemExit("B&A&HB offer-template boundary gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-template boundary gate: OK (all five Ragman products prove exact registered templates before assort mutation; Dogtag Case uses one centralized canonical live-template + committed-host publication boundary before trader lookup and ownership-bounded rollback for its item/barter tuple; dangling/corrupted offers forbidden)")
+print("B&A&HB offer-template boundary gate: OK (all five Ragman products prove exact registered templates before assort mutation; Dogtag Case uses one centralized canonical live-template + committed-host publication boundary before trader lookup and replacement-safe ownership-bounded rollback for its item/barter/loyalty tuple; dangling/corrupted offers forbidden)")
