@@ -30,6 +30,7 @@ public sealed class DogtagCaseAssort(
 
         var templateId = new MongoId(RuntimeIdentity.DogtagCaseItemId);
         RequirePublicationBoundary(templateTable, templateId);
+        cancellationToken.ThrowIfCancellationRequested();
 
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case could not find Ragman.");
@@ -46,6 +47,7 @@ public sealed class DogtagCaseAssort(
             // Existing offers are not mutated here, so any concurrent startup drift
             // simply fails closed without ownership/rollback ambiguity.
             RequirePublicationBoundary(templateTable, templateId);
+            cancellationToken.ThrowIfCancellationRequested();
             logger.Success($"B&A&HB Dogtag Case retained validated Ragman LL{LoyaltyLevel} offer for {PriceRoubles:N0} RUB.");
             return Task.CompletedTask;
         }
@@ -78,6 +80,12 @@ public sealed class DogtagCaseAssort(
             trader.Assort.LoyalLevelItems.Add(id, LoyaltyLevel);
             loyaltyAdded = true;
 
+            // Cancellation after owned mutation is part of the same atomic
+            // publication boundary. A shutdown/reload request must not leave a
+            // fully or partially owned assort tuple behind when IOnLoad itself
+            // did not complete successfully.
+            cancellationToken.ThrowIfCancellationRequested();
+
             // Publication is a committed-state boundary just like Dogtag host
             // exposure. Revalidate the exact live offer before declaring success.
             ValidateExisting(trader, id, offer, templateId);
@@ -87,6 +95,7 @@ public sealed class DogtagCaseAssort(
             // and the committed vanilla Dogtag host. Failure remains inside this
             // invocation's rollback boundary and cannot publish a stale/corrupt case.
             RequirePublicationBoundary(templateTable, templateId);
+            cancellationToken.ThrowIfCancellationRequested();
         }
         catch
         {
