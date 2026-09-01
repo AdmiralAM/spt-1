@@ -72,13 +72,8 @@ namespace SPTBeltArmbandInventory
                     MethodInfo patch = FindPatchMethod(harmonyType, harmonyMethodType);
                     unpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
                     if (harmonyCtor == null || harmonyMethodCtor == null || patch == null || unpatchSelf == null)
-                    {
-                        // Harmony is already present, so a missing/ambiguous structural contract cannot
-                        // become valid because an unrelated assembly loads later. Stop the AssemblyLoad
-                        // retry loop instead of repeatedly reflecting an incompatible process-wide API.
                         terminalFailure = true;
-                        return false;
-                    }
+                    if (harmonyCtor == null || harmonyMethodCtor == null || patch == null || unpatchSelf == null) return false;
 
                     Type runtime = typeof(ReloadCandidateBridgeRuntime);
                     MethodInfo enter = runtime.GetMethod("EnterReloadScope", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
