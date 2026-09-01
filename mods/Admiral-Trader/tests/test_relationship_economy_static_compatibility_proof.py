@@ -28,13 +28,17 @@ class RelationshipEconomyCompatibilityProofTests(unittest.TestCase):
         self.assertIn('baseline capacity drift', economy)
 
         # Admiral's future uplift is deliberately downstream of that source audit and
-        # mutates only the already-produced request response, never TradersTable/source assort.
+        # mutates only the already-produced request response, never the source assort.
         self.assertIn('OnLoadOrder.Routers + 1', router)
         self.assertIn('if (!RuntimeMaterializationEnabled)', router)
         self.assertIn('coordinator.Project(sessionId, response.Data);', router)
+        self.assertIn('internal static ProjectionResult Apply(TraderAssort assort, double standing)', projection)
+        self.assertIn('must never receive the', projection)
+        self.assertIn('global TradersTable assort instance', projection)
         self.assertIn('marker.Upd.StackObjectsCount = tier.StockPerReset;', projection)
         self.assertIn('marker.Upd.BuyRestrictionMax = tier.BuyRestriction;', projection)
-        self.assertNotIn('TradersTable', projection)
+        self.assertNotIn('DatabaseService', projection)
+        self.assertNotIn('TraderHelper', projection)
 
         baseline_ids = {offer["offerId"] for offer in baseline["offers"]}
         assort_ids = {item["_id"] for item in assort["items"]}
