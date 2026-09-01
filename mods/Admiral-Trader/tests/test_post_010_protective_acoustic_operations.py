@@ -17,7 +17,7 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
         cls.by_key = {op["key"]: op for op in cls.manifest["operations"]}
 
     def test_specs_are_non_materialized_and_bound_to_frozen_base(self):
-        self.assertEqual(self.manifest["schemaVersion"], 3)
+        self.assertEqual(self.manifest["schemaVersion"], 4)
         self.assertEqual(self.manifest["status"], "post-0.1.0-authored-spec-only")
         self.assertEqual(
             self.manifest["frozen010Base"],
@@ -68,6 +68,19 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
                 readiness["equipmentToExtractionSameRaidCoupling"],
                 "unproven-not-required-for-initial-materialization",
             )
+
+    def test_same_raid_coupling_blocks_runtime_materialization(self):
+        policy = self.manifest["sameRaidCouplingMaterializationPolicy"]
+        self.assertTrue(policy["requiredBeforeRuntimeMaterialization"])
+        self.assertEqual(policy["authority"], "post-010-same-raid-coupling-proof.json")
+        self.assertTrue(policy["failClosed"])
+        for operation in self.manifest["operations"]:
+            blockers = " ".join(operation["materializationBlockedBy"]).lower()
+            self.assertIn("same-raid", blockers)
+            self.assertIn("tpl allowlist", blockers)
+            proof_text = " ".join(operation["proofGates"]).lower()
+            self.assertIn("same-raid coupling before runtime materialization", proof_text)
+            self.assertIn("different raids", proof_text)
 
     def test_armored_transit_rejects_legacy_equipment_ladders(self):
         operation = self.by_key["armored-transit"]
