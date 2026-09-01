@@ -33,29 +33,34 @@ internal static class ReloadCandidateReturnContractRegression
         Assert(inventory.Calls == 0,
             "non-Item[] vanilla result shape must fail closed before the pseudo-slot15 fallback query");
 
-        // Even after a valid exact-Belt candidate is discovered, a return-type
-        // contract mismatch must discard the proposed merge rather than widening
-        // Harmony's result type or leaking a partially-built replacement.
+        // The primary bridge now duplicates the exact return-contract proof instead
+        // of depending solely on the separate epoch-owner Harmony prefix.
         ReloadCandidateBridgeRuntime.ReturnType = typeof(List<FakeItem>);
         Assert(!ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
-            "declared List return drift must be rejected before AppendCandidates");
+            "declared List return drift must be rejected by the epoch gate");
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object incompatibleReturn = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
         Assert(ReferenceEquals(incompatibleReturn, vanilla),
-            "incompatible declared return type must discard Belt fallback and return exact vanilla result");
-        Assert(inventory.Calls == 1,
-            "direct bridge regression still proves legacy inner guard after one bounded exact-Belt slot query");
+            "primary bridge must preserve exact vanilla result on declared return drift");
+        Assert(inventory.Calls == 0,
+            "primary bridge must reject declared return drift before any pseudo-slot15 query even without relying on the epoch prefix");
 
         // Pinned runtime contract is stronger than covariance/assignability. A
         // GetItemsInSlots method that returns IEnumerable<Item> can carry Item[]
-        // values, but it is not the SPT 4.1 boundary and must be refused by the
-        // epoch prefix before the fallback method can issue any query.
+        // values, but it is not the SPT 4.1 boundary and must be refused directly.
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeDriftInventory).GetMethod(nameof(FakeDriftInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: drift GetItemsInSlots missing");
         ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<FakeItem>);
         Assert(!ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
             "IEnumerable<Item> GetItemsInSlots drift must fail closed despite Item[] assignability");
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object driftMethodResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Assert(ReferenceEquals(driftMethodResult, vanilla),
+            "primary bridge must preserve exact vanilla result on GetItemsInSlots return-shape drift");
+        Assert(inventory.Calls == 0,
+            "drifted GetItemsInSlots contract must not reach the exact inventory query");
 
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: exact GetItemsInSlots missing");
@@ -63,9 +68,7 @@ internal static class ReloadCandidateReturnContractRegression
         Assert(ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
             "exact contract must recover after a rejected drifted method without a permanent circuit breaker");
 
-        // Query-state corruption must also fail before Inventory.GetItemsInSlots.
-        // This keeps the fallback bounded to the one dedicated pseudo-slot even if
-        // another participant mutates the bridge's process-wide static state.
+        // Query-state corruption must also fail inside AppendCandidates itself.
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[]
         {
             RuntimeIdentity.DedicatedBeltEquipmentSlotValue,
@@ -73,14 +76,31 @@ internal static class ReloadCandidateReturnContractRegression
         };
         Assert(!ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
             "multi-slot fallback argument must fail closed before inventory enumeration");
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object multiSlotResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Assert(ReferenceEquals(multiSlotResult, vanilla) && inventory.Calls == 0,
+            "primary bridge must reject multi-slot state before querying and preserve exact vanilla identity");
 
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue - 1 };
         Assert(!ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
             "wrong pseudo-slot fallback argument must fail closed before inventory enumeration");
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object wrongSlotResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Assert(ReferenceEquals(wrongSlotResult, vanilla) && inventory.Calls == 0,
+            "primary bridge must reject wrong pseudo-slot state before querying and preserve exact vanilla identity");
 
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         Assert(ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
             "exact one-slot query must recover after rejected query-state drift");
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object recovered = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Assert(!ReferenceEquals(recovered, vanilla),
+            "healthy exact contract must still append the exact Belt descendant after fail-closed drift cases");
+        Assert(inventory.Calls == 1,
+            "healthy recovery must perform exactly one bounded pseudo-slot15 query");
 
         FieldInfo depth = typeof(ReloadCandidateBridgeRuntime).GetField("reloadDepth", BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: reloadDepth field missing");
