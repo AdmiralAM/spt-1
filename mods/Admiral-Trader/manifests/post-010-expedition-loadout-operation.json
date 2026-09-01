@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "source": {
@@ -7,6 +7,12 @@
     "legacyQuestCount": 150,
     "legacyPattern": "per-item Barter/Trade ladders for rigs, pockets and backpacks",
     "directPortAllowed": false
+  },
+  "proofAuthority": {
+    "equipmentCondition": "post-010-player-equipment-proof.json",
+    "survivedExtraction": "post-010-pmc-location-extraction-proof.json",
+    "equipmentBoundary": "explicit validated item TPL sets only; IncludeNotEquippedItems=false; no category/class inference",
+    "extractionBoundary": "successful extraction shape is proven, but same-raid equipment/action coupling remains separately fail-closed"
   },
   "operation": {
     "key": "expedition-loadout",
@@ -50,8 +56,9 @@
   "gates": {
     "implementationAllowed": false,
     "runtimeMaterialize": false,
-    "requiresExactSpt413EquipmentPossessionOrWearProof": true,
-    "requiresExactSpt413SurvivedExtractionProof": true,
+    "requiresExactSpt413EquipmentPossessionOrWearProof": false,
+    "requiresExactSpt413SurvivedExtractionProof": false,
+    "requiresSameRaidEquipmentAndExtractionCouplingProof": true,
     "requiresFinalEquipmentTplSelection": true,
     "requiresVanillaScorpionArtemOverlapAudit": true,
     "requiresFrozenCampaignOverlapReview": true,

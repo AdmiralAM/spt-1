@@ -14,7 +14,9 @@ def test_expedition_loadout_is_bounded_and_non_materialized():
     bounds = op["bounds"]
     rewards = op["rewardDoctrine"]
     gates = spec["gates"]
+    authority = spec["proofAuthority"]
 
+    assert spec["schemaVersion"] == 2
     assert spec["source"]["bundles"] == ["Deep Pockets", "Tarkov Mule"]
     assert spec["source"]["legacyQuestCount"] == 150
     assert spec["source"]["directPortAllowed"] is False
@@ -23,6 +25,11 @@ def test_expedition_loadout_is_bounded_and_non_materialized():
     assert op["description"]["en"] and op["description"]["ru"]
     assert op["started"]["en"] and op["started"]["ru"]
     assert op["success"]["en"] and op["success"]["ru"]
+
+    assert authority["equipmentCondition"] == "post-010-player-equipment-proof.json"
+    assert authority["survivedExtraction"] == "post-010-pmc-location-extraction-proof.json"
+    assert "explicit validated item TPL" in authority["equipmentBoundary"]
+    assert "same-raid" in authority["extractionBoundary"]
 
     assert bounds["maximumDistinctEquipmentRequirements"] <= 3
     assert bounds["maximumSuccessfulRaids"] == 1
@@ -38,8 +45,9 @@ def test_expedition_loadout_is_bounded_and_non_materialized():
 
     assert gates["implementationAllowed"] is False
     assert gates["runtimeMaterialize"] is False
-    assert gates["requiresExactSpt413EquipmentPossessionOrWearProof"] is True
-    assert gates["requiresExactSpt413SurvivedExtractionProof"] is True
+    assert gates["requiresExactSpt413EquipmentPossessionOrWearProof"] is False
+    assert gates["requiresExactSpt413SurvivedExtractionProof"] is False
+    assert gates["requiresSameRaidEquipmentAndExtractionCouplingProof"] is True
     assert gates["requiresFinalEquipmentTplSelection"] is True
     assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
     assert gates["requiresFrozenCampaignOverlapReview"] is True
@@ -50,6 +58,19 @@ def test_expedition_loadout_is_bounded_and_non_materialized():
         "rootOfferCount": 11,
         "relationshipRuntimeOffers": 0,
     }
+
+
+def test_expedition_loadout_proof_authorities_exist_and_remain_fail_closed():
+    spec = load_json(ROOT / "manifests" / "post-010-expedition-loadout-operation.json")
+    authority = spec["proofAuthority"]
+
+    equipment_proof = load_json(ROOT / "manifests" / authority["equipmentCondition"])
+    extraction_proof = load_json(ROOT / "manifests" / authority["survivedExtraction"])
+
+    assert equipment_proof["proven"]["playerEquipmentConditionFamilyExists"]["conditionType"] == "Equipment"
+    assert equipment_proof["proven"]["equippedOnlyMode"]["value"] is False
+    assert equipment_proof["materializationRules"]["sameRaidEquipmentThenExtractMustRemainFailClosed"] is True
+    assert extraction_proof["materializationRules"]["sameRaidCouplingMustRemainFailClosed"] is True
 
 
 def test_expedition_loadout_does_not_change_frozen_runtime_counts():
