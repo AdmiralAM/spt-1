@@ -54,8 +54,11 @@ public sealed class DogtagCaseItem(
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceDogtagCaseTpl)
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case source handbook entry is missing.");
 
-        if (templateTable.Items.TryGetValue(DogtagCaseTpl, out _))
+        if (templateTable.Items.TryGetValue(DogtagCaseTpl, out var existing))
         {
+            // Keep the immediate preload collision proof explicit, then perform the
+            // stronger live reference-identity reproof before host publication.
+            ValidateExisting(existing, source);
             RequireCanonicalRegisteredTemplate(templateTable);
             cancellationToken.ThrowIfCancellationRequested();
             CommitDogtagSlotExposure(dogtagSlotFilter, cancellationToken);
@@ -137,10 +140,13 @@ public sealed class DogtagCaseItem(
         if (!result.Success)
             throw new InvalidOperationException($"B&A&HB Dogtag Case creation failed: {string.Join("; ", result.Errors)}");
 
-        // Re-resolve both canonical source and exact product after CustomItemService
-        // returns and before exposing the product through the live Dogtag host.
-        // A replaced/detached template pair fails closed here rather than leaving a
-        // host entry that points at a product we did not validate.
+        if (!templateTable.Items.TryGetValue(DogtagCaseTpl, out var created))
+            throw new InvalidOperationException("B&A&HB Dogtag Case creation reported success but the exact template is absent; refusing Dogtag slot exposure.");
+        ValidateExisting(created, source);
+
+        // Re-resolve both canonical source and exact product after the explicit
+        // post-create value proof and before exposing the product through the live
+        // Dogtag host. A replaced/detached template pair fails closed here.
         RequireCanonicalRegisteredTemplate(templateTable);
         CommitDogtagSlotExposure(dogtagSlotFilter, CancellationToken.None);
         logger.Success("B&A&HB Dogtag Case created and revalidated against the canonical EFT Dogtag Case root/grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
