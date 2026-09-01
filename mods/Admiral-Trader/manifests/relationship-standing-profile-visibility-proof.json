@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-static-proof-only",
+  "purpose": "Prove the server-side visibility seam used by future Relationship standing stock projection without claiming client refresh, reward-to-assort physical behavior, Economy approval, or runtime materialization.",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "authority": {
+    "pinnedSptVersion": "4.1.3",
+    "upstreamCommit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+    "upstreamProfileHelper": "Libraries/SPTarkov.Server.Core/Helpers/Profile/ProfileHelper.cs",
+    "admiralResolver": "server/RelationshipStandingProfileResolver.cs",
+    "admiralAssortRouter": "server/RelationshipStandingAssortDynamicRouter.cs",
+    "standingStockSpec": "relationship-standing-stock-uplift.json"
+  },
+  "provenServerPath": {
+    "requestRoute": "/client/trading/api/getTraderAssort/",
+    "sessionScope": "DynamicRouter RouteAction receives the requesting sessionId and passes it to RelationshipStandingAssortCoordinator",
+    "profileResolution": "RelationshipStandingProfileResolver calls ProfileHelper.GetPmcProfile(sessionId)",
+    "pinnedSptProfileResolution": "ProfileHelper.GetPmcProfile(sessionId) returns GetFullProfile(sessionId).CharacterData.PmcData from SaveServer-backed profile state",
+    "standingRead": "Resolver reads pmcProfile.TradersInfo[AdmiralTraderId].Standing and accepts only finite values",
+    "fallback": "Missing profile/trader/standing fails closed to LL1 finite-stock baseline",
+    "globalTraderStandingUsed": false,
+    "profileWritePerformedByResolver": false
+  },
+  "proofResult": {
+    "profileScopedCurrentStandingVisibleToAssortProjection": true,
+    "serverSeamStaticallyProven": true,
+    "clientRefreshProven": false,
+    "questRewardToAssortTransitionPhysicallyProven": false,
+    "economyApproved": false,
+    "runtimeMaterializationAllowed": false
+  },
+  "nonClaims": [
+    "This proof does not assert that a completed quest reward is reflected by the client without reopening or refreshing trader UI.",
+    "This proof does not assert a physical reward -> standing -> projected stock transition on SPT runtime.",
+    "This proof does not approve the proposed LL2-LL4 marker stock quantities or personal buy limits.",
+    "This proof does not enable RelationshipStandingAssortDynamicRouter.RuntimeMaterializationEnabled.",
+    "This proof does not alter frozen 0.1.0 quests, rewards, assort, loyalty or standing values."
+  ],
+  "futurePhysicalCheckpoint": {
+    "requestedNow": false,
+    "expectedPass": "After a standing-changing lifecycle event, a subsequent Admiral assort request for the same session resolves the updated PMC TradersInfo standing and projects exactly the corresponding finite marker tier when materialization is intentionally enabled in a later approved slice.",
+    "diagnosticFailBoundaries": [
+      "Profile TradersInfo standing itself remains unchanged after the lifecycle event: reward/profile mutation boundary.",
+      "Profile standing changes but resolver sees stale/different standing for the same session: server profile-resolution boundary.",
+      "Resolver sees updated standing but returned assort retains LL1 values: Admiral projection/router boundary.",
+      "Server returns projected values but trader UI remains stale until refresh/reopen: client refresh/cache boundary."
+    ]
+  },
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0,
+    "runtimeMutationInThisSlice": false
+  }
+}
