@@ -31,6 +31,7 @@ contracts = {
     "DogtagCaseAssort.cs": [
         "TemplateTable templateTable",
         "var templateId = new MongoId(RuntimeIdentity.DogtagCaseItemId);",
+        "RequirePublicationBoundary(templateTable, templateId);",
         "DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);",
         "RequireExactDogtagHost(templateTable, templateId);",
         "Template = templateId",
@@ -46,13 +47,22 @@ for filename, required in contracts.items():
     trader_lookup = text.find("tradersTable.GetValueOrDefault")
     first_item_add = text.find("trader.Assort.Items.Add(")
     if filename == "DogtagCaseAssort.cs":
-        template_check = text.find("DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);")
-        host_check = text.find("RequireExactDogtagHost(templateTable, templateId);")
-        if min(template_check, host_check, trader_lookup, first_item_add) < 0 or not (
-            template_check < host_check < trader_lookup < first_item_add
+        publication_call = text.find("RequirePublicationBoundary(templateTable, templateId);")
+        boundary_def = text.find("private static void RequirePublicationBoundary")
+        template_check = text.find("DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);", boundary_def)
+        host_check = text.find("RequireExactDogtagHost(templateTable, templateId);", boundary_def)
+        host_def = text.find("internal static void RequireExactDogtagHost", boundary_def)
+        if min(publication_call, trader_lookup, first_item_add) < 0 or not (
+            publication_call < trader_lookup < first_item_add
         ):
             violations.append(
-                f"{filename}: canonical live template and committed Dogtag host must both be proven before trader lookup and any assort mutation"
+                f"{filename}: centralized publication boundary must run before trader lookup and any assort mutation"
+            )
+        if min(boundary_def, template_check, host_check, host_def) < 0 or not (
+            boundary_def < template_check < host_check < host_def
+        ):
+            violations.append(
+                f"{filename}: publication boundary must prove canonical live template then committed Dogtag host"
             )
         if "templateTable.Items.ContainsKey(templateId)" in text:
             violations.append(
@@ -66,4 +76,4 @@ for filename, required in contracts.items():
 if violations:
     raise SystemExit("B&A&HB offer-template boundary gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-template boundary gate: OK (all five Ragman products prove exact registered templates before assort mutation; Dogtag Case additionally revalidates canonical live geometry/filter plus committed vanilla Dogtag host before trader lookup; dangling/corrupted offers forbidden)")
+print("B&A&HB offer-template boundary gate: OK (all five Ragman products prove exact registered templates before assort mutation; Dogtag Case uses one centralized canonical live-template + committed-host publication boundary before trader lookup; dangling/corrupted offers forbidden)")
