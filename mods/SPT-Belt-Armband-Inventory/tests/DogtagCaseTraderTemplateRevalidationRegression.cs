@@ -42,6 +42,8 @@ internal static class DogtagCaseTraderTemplateRevalidationRegression
             "replacement of the DefaultInventory template object during host proof must fail closed");
         Require(assort, "var liveSlots = liveInventory.Properties?.Slots?",
             "slot/filter identity reproof must resolve from the revalidated live DefaultInventory object rather than a detached stale capture");
+        Require(assort, "!ReferenceEquals(liveGroups[0], groups[0])",
+            "replacement of the sole Dogtag filter-group object must fail closed even when it reuses the same filter set");
 
         int firstBoundary = assort.IndexOf("RequirePublicationBoundary(templateTable, templateId);", StringComparison.Ordinal);
         int traderLookup = assort.IndexOf("tradersTable.GetValueOrDefault", StringComparison.Ordinal);
@@ -61,12 +63,16 @@ internal static class DogtagCaseTraderTemplateRevalidationRegression
         int liveSlotProof = liveInventoryProof < 0
             ? -1
             : assort.IndexOf("!ReferenceEquals(liveSlots[0], slot)", liveInventoryProof + 1, StringComparison.Ordinal);
-        int liveFilterProof = liveSlotProof < 0
+        int liveGroupProof = liveSlotProof < 0
             ? -1
-            : assort.IndexOf("!ReferenceEquals(liveGroups[0].Filter, hostFilter)", liveSlotProof + 1, StringComparison.Ordinal);
-        if (committedHostProof < 0 || liveInventoryProof < 0 || liveSlotProof < 0 || liveFilterProof < 0
-            || !(committedHostProof < liveInventoryProof && liveInventoryProof < liveSlotProof && liveSlotProof < liveFilterProof))
-            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: committed snapshot proof must be followed by live DefaultInventory, slot, then filter reference-identity reproof.");
+            : assort.IndexOf("!ReferenceEquals(liveGroups[0], groups[0])", liveSlotProof + 1, StringComparison.Ordinal);
+        int liveFilterProof = liveGroupProof < 0
+            ? -1
+            : assort.IndexOf("!ReferenceEquals(liveGroups[0].Filter, hostFilter)", liveGroupProof + 1, StringComparison.Ordinal);
+        if (committedHostProof < 0 || liveInventoryProof < 0 || liveSlotProof < 0 || liveGroupProof < 0 || liveFilterProof < 0
+            || !(committedHostProof < liveInventoryProof && liveInventoryProof < liveSlotProof
+                && liveSlotProof < liveGroupProof && liveGroupProof < liveFilterProof))
+            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: committed snapshot proof must be followed by live DefaultInventory, slot, sole filter-group, then filter-set reference-identity reproof.");
 
         int committedOfferProof = assort.IndexOf("ValidateExisting(trader, id, offer, templateId);", StringComparison.Ordinal);
         int secondBoundary = committedOfferProof < 0
