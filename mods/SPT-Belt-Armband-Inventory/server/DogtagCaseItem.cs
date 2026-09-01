@@ -54,9 +54,10 @@ public sealed class DogtagCaseItem(
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceDogtagCaseTpl)
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case source handbook entry is missing.");
 
-        if (templateTable.Items.TryGetValue(DogtagCaseTpl, out var existing))
+        if (templateTable.Items.TryGetValue(DogtagCaseTpl, out _))
         {
-            ValidateExisting(existing, source);
+            RequireCanonicalRegisteredTemplate(templateTable);
+            cancellationToken.ThrowIfCancellationRequested();
             CommitDogtagSlotExposure(dogtagSlotFilter, cancellationToken);
             logger.Success("B&A&HB Dogtag Case retained existing validated template; vanilla Dogtag slot filter preserved and exact container appended.");
             return Task.CompletedTask;
@@ -136,10 +137,11 @@ public sealed class DogtagCaseItem(
         if (!result.Success)
             throw new InvalidOperationException($"B&A&HB Dogtag Case creation failed: {string.Join("; ", result.Errors)}");
 
-        if (!templateTable.Items.TryGetValue(DogtagCaseTpl, out var created))
-            throw new InvalidOperationException("B&A&HB Dogtag Case creation reported success but the exact template is absent; refusing Dogtag slot exposure.");
-        ValidateExisting(created, source);
-
+        // Re-resolve both canonical source and exact product after CustomItemService
+        // returns and before exposing the product through the live Dogtag host.
+        // A replaced/detached template pair fails closed here rather than leaving a
+        // host entry that points at a product we did not validate.
+        RequireCanonicalRegisteredTemplate(templateTable);
         CommitDogtagSlotExposure(dogtagSlotFilter, CancellationToken.None);
         logger.Success("B&A&HB Dogtag Case created and revalidated against the canonical EFT Dogtag Case root/grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
         return Task.CompletedTask;
@@ -210,13 +212,12 @@ public sealed class DogtagCaseItem(
 
     /// <summary>
     /// Revalidates the live registered product against the live canonical EFT/SPT
-    /// Dogtag Case immediately before downstream publication. This closes the
-    /// preload-to-trader-registration mutation window: another startup participant
-    /// may not alter the B&A&HB case root footprint, stack policy, root presentation,
-    /// grid geometry or filter contract after preload and still obtain a purchasable
-    /// corrupted product. The final reference-identity reproof also refuses a
-    /// detached source/candidate pair that was replaced in TemplateTable during
-    /// validation.
+    /// Dogtag Case immediately before host/trader publication. This closes startup
+    /// mutation windows: another participant may not alter the B&A&HB case root
+    /// footprint, stack policy, root presentation, grid geometry or filter contract
+    /// and still obtain a host/trader-published corrupted product. The final
+    /// reference-identity reproof also refuses a detached source/candidate pair that
+    /// was replaced in TemplateTable during validation.
     /// </summary>
     public static void RequireCanonicalRegisteredTemplate(TemplateTable templates)
     {
