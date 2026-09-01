@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -16,6 +16,12 @@
     "conditionShape": ["Location", "ExitStatus(Survived)"],
     "boundary": "This proves a bounded survived extraction objective can be materialized. It does not prove that Equipment and extraction occurred in the same raid, and it does not supply operation-specific map or exfil values.",
     "sameRaidEquipmentCouplingProven": false
+  },
+  "sameRaidCouplingMaterializationPolicy": {
+    "requiredBeforeRuntimeMaterialization": true,
+    "authority": "post-010-same-raid-coupling-proof.json",
+    "reason": "Both authored operations promise that the qualifying equipment is actually used during the bounded operation that is survived. Separate cross-raid Equipment and ExitStatus progress would violate the player-facing contract.",
+    "failClosed": true
   },
   "operations": [
     {
@@ -52,6 +58,13 @@
         "materializationReady": false,
         "remainingBlocker": "select and validate the exact pinned SPT 4.1.3 protective TPL allowlist; do not emulate armor-class filtering"
       },
+      "materializationBlockedBy": [
+        "exact pinned SPT 4.1.3 protective-equipment TPL allowlist",
+        "same-raid equipment-to-extraction coupling proof",
+        "bounded operation-specific map/contact selection",
+        "overlap review",
+        "Economy Admiral reward review"
+      ],
       "antiGrind": {
         "maximumRequiredSuccessfulRaids": 1,
         "maximumTargetCount": 4,
@@ -63,7 +76,8 @@
       "rewardDoctrine": "XP/RUB/standing by default. No sequential helmet, armor, plate or carrier storefront unlocks; any durable protective-equipment reward requires Economy Admiral review and must not bypass normal capability progression.",
       "proofGates": [
         "select and validate an explicit pinned SPT 4.1.3 protective-equipment TPL allowlist; generic armor-class or parent-category inference remains forbidden",
-        "select the bounded operation-specific map/contact values using already-proven condition families; do not claim equipment-to-extract same-raid coupling",
+        "prove same-raid coupling before runtime materialization so protective Equipment progress and the Survived extraction cannot be satisfied across different raids",
+        "select the bounded operation-specific map/contact values using already-proven condition families",
         "audit vanilla/Scorpion/Artem overlap for protected-combat and equipment-use objectives",
         "Economy Admiral approves final numeric rewards and any protective-equipment reward"
       ],
@@ -103,6 +117,13 @@
         "materializationReady": false,
         "remainingBlocker": "select and validate the exact pinned SPT 4.1.3 headset TPL allowlist; do not infer a generic headset category selector"
       },
+      "materializationBlockedBy": [
+        "exact pinned SPT 4.1.3 headset TPL allowlist",
+        "same-raid equipment-to-extraction coupling proof",
+        "bounded operation-specific map/contact selection",
+        "overlap review",
+        "Economy Admiral reward review"
+      ],
       "antiGrind": {
         "maximumRequiredSuccessfulRaids": 1,
         "maximumTargetCount": 3,
@@ -114,7 +135,8 @@
       "rewardDoctrine": "XP/RUB/standing or a tightly bounded support reward only. No headset storefront conveyor and no equipment unlock whose sole purpose is to start another same-shaped quest.",
       "proofGates": [
         "select and validate an explicit pinned SPT 4.1.3 headset TPL allowlist; generic category inference remains forbidden",
-        "select the bounded operation-specific map/contact values using already-proven condition families; do not claim equipment-to-extract same-raid coupling",
+        "prove same-raid coupling before runtime materialization so headset Equipment progress and the Survived extraction cannot be satisfied across different raids",
+        "select the bounded operation-specific map/contact values using already-proven condition families",
         "audit vanilla/Scorpion/Artem overlap for headset-restricted and reconnaissance objectives",
         "Economy Admiral approves final numeric and any support-item rewards"
       ],
