@@ -41,6 +41,7 @@ class RelationshipStandingStockUpliftTests(unittest.TestCase):
         self.assertEqual(len(approved), 1)
         self.assertEqual(approved[0]["offerId"], "ad2000000000000000000004")
         self.assertEqual(approved[0]["role"], "field-marking")
+        self.assertEqual(approved[0]["decision"], "approve-uplift-economy-reviewed")
         self.assertTrue(all(reviewed[offer_id]["decision"].startswith("no-uplift-") for offer_id in {
             "ad2000000000000000000001", "ad2000000000000000000002", "ad2000000000000000000003"
         }))
@@ -57,6 +58,7 @@ class RelationshipStandingStockUpliftTests(unittest.TestCase):
         self.assertEqual(tiers[0]["buyRestriction"], baseline["offers"][3]["buyRestriction"])
         self.assertEqual([tier["stockPerReset"] for tier in tiers], [12, 16, 20, 24])
         self.assertEqual([tier["buyRestriction"] for tier in tiers], [4, 6, 8, 10])
+        self.assertEqual([tier["state"] for tier in tiers[1:]], ["post-0.1.0-economy-approved"] * 3)
         self.assertTrue(all(a < b for a, b in zip([tier["stockPerReset"] for tier in tiers], [tier["stockPerReset"] for tier in tiers][1:])))
         self.assertTrue(all(a < b for a, b in zip([tier["buyRestriction"] for tier in tiers], [tier["buyRestriction"] for tier in tiers][1:])))
         self.assertTrue(all(tier["buyRestriction"] <= tier["stockPerReset"] for tier in tiers))
@@ -71,7 +73,7 @@ class RelationshipStandingStockUpliftTests(unittest.TestCase):
         self.assertFalse(uplift["authority"]["priceDiscountAllowed"])
         self.assertFalse(uplift["authority"]["questGateBypassAllowed"])
         self.assertFalse(uplift["authority"]["capabilityOfferUpliftAllowed"])
-        self.assertTrue(uplift["authority"]["economyReviewRequiredBeforeMaterialization"])
+        self.assertFalse(uplift["authority"]["economyReviewRequiredBeforeMaterialization"])
         self.assertFalse(plan["priceChangesAcrossTiers"])
         self.assertEqual(delta["stockUnitsPerReset"], last["stockPerReset"] - first["stockPerReset"])
         self.assertEqual(delta["personalBuyUnitsPerReset"], last["buyRestriction"] - first["buyRestriction"])
@@ -84,11 +86,41 @@ class RelationshipStandingStockUpliftTests(unittest.TestCase):
 
         gates = uplift["materializationGates"]
         self.assertFalse(gates["implementationAllowed"])
-        self.assertTrue(gates["requiresEconomyAdmiralApproval"])
+        self.assertFalse(gates["requiresEconomyAdmiralApproval"])
         self.assertTrue(gates["requiresRuntimeLoyaltyVisibilityProof"])
         self.assertFalse(gates["requiresAssortMutationContract"])
         self.assertTrue(gates["requiresFrozen010PhysicalGate"])
         self.assertFalse(gates["physicalCheckpointRequestedNow"])
+
+    def test_economy_review_approves_exact_finite_envelope_only(self):
+        uplift = self.load("relationship-standing-stock-uplift.json")
+        review = uplift["economyReview"]
+        plan = uplift["upliftPlan"]
+
+        self.assertEqual(review["decision"], "approved-with-bounds")
+        self.assertTrue(review["finiteCapacityApproved"])
+        self.assertFalse(review["priceChangeApproved"])
+        self.assertFalse(review["newOfferApproved"])
+        self.assertFalse(review["capabilityGateBypassApproved"])
+        self.assertFalse(review["renewableHighValueFaucetApproved"])
+        self.assertEqual(review["reviewedPriceRub"], plan["priceRub"])
+        self.assertEqual(
+            [(tier["loyaltyLevel"], tier["stockPerReset"], tier["buyRestriction"]) for tier in review["tierEnvelopeApproved"]],
+            [(tier["loyaltyLevel"], tier["stockPerReset"], tier["buyRestriction"]) for tier in plan["tiers"]],
+        )
+
+        boundary = review["economicBoundary"]
+        ll1, ll4 = plan["tiers"][0], plan["tiers"][-1]
+        self.assertEqual(boundary["maximumPersonalUnitsPerReset"], ll4["buyRestriction"])
+        self.assertEqual(boundary["maximumPersonalSpendRubPerReset"], ll4["buyRestriction"] * plan["priceRub"])
+        self.assertEqual(boundary["maximumIncrementalPersonalUnitsVsLl1"], ll4["buyRestriction"] - ll1["buyRestriction"])
+        self.assertEqual(boundary["maximumIncrementalPersonalSpendRubVsLl1"], (ll4["buyRestriction"] - ll1["buyRestriction"]) * plan["priceRub"])
+        self.assertEqual(boundary["maximumGlobalUnitsPerReset"], ll4["stockPerReset"])
+        self.assertEqual(boundary["maximumIncrementalGlobalUnitsVsLl1"], ll4["stockPerReset"] - ll1["stockPerReset"])
+        self.assertLess(ll4["buyRestriction"] * 2, ll4["stockPerReset"])
+        self.assertIn("LL4 stock exceeds 24 or personal buy restriction exceeds 10", review["invalidatesApprovalIf"])
+        self.assertIn("the offer becomes unlimited", review["invalidatesApprovalIf"])
+        self.assertIn("the uplift is extended to another TPL without a separate economy review", review["invalidatesApprovalIf"])
 
     def test_assort_mutation_contract_is_narrow_and_preserves_spt_purchase_state(self):
         uplift = self.load("relationship-standing-stock-uplift.json")
