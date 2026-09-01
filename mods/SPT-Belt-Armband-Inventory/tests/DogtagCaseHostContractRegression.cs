@@ -34,10 +34,6 @@ internal static class DogtagCaseHostContractRegression
         DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { vanillaA, vanillaB, caseTpl });
         DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { vanillaA, vanillaB, caseTpl });
 
-        // Compatible foreign additions made after our preload snapshot are intentionally
-        // tolerated. The contract is preservation-based rather than exclusive: it must
-        // retain every captured vanilla/foreign entry and reject only B&A&HB cross-owned
-        // contamination. This keeps load-order compatibility without weakening ownership.
         DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { vanillaA, vanillaB, laterForeignTpl });
         DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { vanillaA, vanillaB, laterForeignTpl, caseTpl });
 
@@ -61,8 +57,6 @@ internal static class DogtagCaseHostContractRegression
             () => DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaA, vanillaB, foreignVanillaTpl }),
             "a second, different preload snapshot must be rejected as an ambiguous host contract");
 
-        // Idempotent re-capture of the exact same set is safe and must not depend
-        // on enumeration order.
         DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaB, vanillaA });
 
         ExerciseAtomicExposure(vanillaA, vanillaB, caseTpl, foreignOwnedTpl, laterForeignTpl);
@@ -90,33 +84,27 @@ internal static class DogtagCaseHostContractRegression
             ?? throw new InvalidOperationException("Dogtag host regression failed: atomic host commit method missing.");
 
         var clean = new HashSet<MongoId> { vanillaA, vanillaB };
-        commit.Invoke(null, new object[] { clean });
+        commit.Invoke(null, new object[] { clean, CancellationToken.None });
         DogtagCaseHostContract.RequireCommitted(clean);
         if (!clean.Contains(caseTpl) || !clean.Contains(vanillaA) || !clean.Contains(vanillaB))
             throw new InvalidOperationException("Dogtag host regression failed: atomic exposure did not append only the exact case while preserving captured vanilla entries.");
 
-        // Repeating the commit is an exact idempotent no-op and must still pass
-        // the centralized committed-state contract.
         int count = clean.Count;
-        commit.Invoke(null, new object[] { clean });
+        commit.Invoke(null, new object[] { clean, CancellationToken.None });
         DogtagCaseHostContract.RequireCommitted(clean);
         if (clean.Count != count)
             throw new InvalidOperationException("Dogtag host regression failed: repeated atomic exposure changed the host set.");
 
-        // A compatible foreign addition made after capture must survive our atomic append.
-        // This pins cooperative load-order semantics while preserving the exact captured set.
         var extended = new HashSet<MongoId> { vanillaA, vanillaB, laterForeignTpl };
-        commit.Invoke(null, new object[] { extended });
+        commit.Invoke(null, new object[] { extended, CancellationToken.None });
         DogtagCaseHostContract.RequireCommitted(extended);
         if (!extended.Contains(laterForeignTpl) || !extended.Contains(caseTpl) || extended.Count != 4)
             throw new InvalidOperationException("Dogtag host regression failed: atomic exposure did not preserve a compatible post-capture foreign host addition.");
 
-        // A host that became contaminated after preload must fail before our append.
-        // This proves fail-closed verification cannot leave a partial Dogtag Case entry.
         var contaminated = new HashSet<MongoId> { vanillaA, vanillaB, foreignOwnedTpl };
         try
         {
-            commit.Invoke(null, new object[] { contaminated });
+            commit.Invoke(null, new object[] { contaminated, CancellationToken.None });
             throw new InvalidOperationException("Dogtag host regression failed: contaminated host unexpectedly accepted atomic case exposure.");
         }
         catch (TargetInvocationException exception) when (exception.InnerException is InvalidOperationException)
@@ -124,6 +112,27 @@ internal static class DogtagCaseHostContractRegression
             if (contaminated.Contains(caseTpl))
                 throw new InvalidOperationException("Dogtag host regression failed: failed atomic exposure left the Dogtag Case partially appended.");
         }
+
+        // Cancellation before mutation is an exact no-op.
+        var canceledBefore = new HashSet<MongoId> { vanillaA, vanillaB };
+        using (var cts = new CancellationTokenSource())
+        {
+            cts.Cancel();
+            ExpectInvocationCancellation(() => commit.Invoke(null, new object[] { canceledBefore, cts.Token }));
+        }
+        if (canceledBefore.Contains(caseTpl) || canceledBefore.Count != 2)
+            throw new InvalidOperationException("Dogtag host regression failed: pre-cancelled exposure mutated the caller-owned host.");
+
+        // A pre-existing exact case is not owned by the current invocation and
+        // therefore must survive cancellation/rollback unchanged.
+        var preexisting = new HashSet<MongoId> { vanillaA, vanillaB, caseTpl };
+        using (var cts = new CancellationTokenSource())
+        {
+            cts.Cancel();
+            ExpectInvocationCancellation(() => commit.Invoke(null, new object[] { preexisting, cts.Token }));
+        }
+        if (!preexisting.Contains(caseTpl) || preexisting.Count != 3)
+            throw new InvalidOperationException("Dogtag host regression failed: cancellation removed a pre-existing exact Dogtag Case entry.");
     }
 
     private static void ExerciseConcurrentCommittedVerification(
@@ -132,9 +141,6 @@ internal static class DogtagCaseHostContractRegression
         MongoId caseTpl,
         MongoId laterForeignTpl)
     {
-        // Threaded verification must run after module initialization has completed.
-        // Verification itself is read-only and snapshot-backed: different compatible
-        // live host sets may be proven concurrently without mutating the preload baseline.
         var plain = new HashSet<MongoId> { vanillaA, vanillaB, caseTpl };
         var extended = new HashSet<MongoId> { vanillaA, vanillaB, laterForeignTpl, caseTpl };
         Exception leftFailure = null;
@@ -161,6 +167,19 @@ internal static class DogtagCaseHostContractRegression
             throw new InvalidOperationException("Dogtag host regression failed: concurrent committed verification mutated the captured preload baseline.");
         if (plain.Count != 3 || extended.Count != 4 || !extended.Contains(laterForeignTpl))
             throw new InvalidOperationException("Dogtag host regression failed: verification mutated a caller-owned compatible host set.");
+    }
+
+    private static void ExpectInvocationCancellation(Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (TargetInvocationException exception) when (exception.InnerException is OperationCanceledException)
+        {
+            return;
+        }
+        throw new InvalidOperationException("Dogtag host regression failed: expected cancellation was not propagated through atomic host exposure.");
     }
 
     private static void ExpectFailure(Action action, string message)
