@@ -88,12 +88,18 @@ for token in (
     'if (IsCurrentScope() && HasExactRuntimeReturnContract()) return true;',
     'static bool HasExactRuntimeReturnContract()',
     'Type exactArray = itemType.MakeArrayType();',
-    'return declaredReturn == exactArray && getItems.ReturnType == exactArray;',
+    'if (declaredReturn != exactArray || getItems.ReturnType != exactArray) return false;',
+    'ParameterInfo[] parameters = getItems.GetParameters();',
+    'parameters[0].ParameterType.IsInstanceOfType(beltArgument)',
+    'if (!(beltArgument is IEnumerable values)) return false;',
+    'Convert.ToInt32(value) != RuntimeIdentity.DedicatedBeltEquipmentSlotValue',
+    'if (count > 1) return false;',
+    'return count == 1;',
     '__result = __2;',
     'return false;',
 ):
     if token not in epoch:
-        violations.append(f"ReloadScopeEpochGuard.cs: lifecycle/return-shape contract token missing: {token}")
+        violations.append(f"ReloadScopeEpochGuard.cs: lifecycle/return-query contract token missing: {token}")
 
 if 'ReloadScopeEpochRegression.Run();' not in tests:
     violations.append("Program.cs: reload epoch regression must run after module initialization")
@@ -111,10 +117,13 @@ for token in (
 for token in (
     'HasExactRuntimeReturnContractForRegression()',
     'IEnumerable<Item> GetItemsInSlots drift must fail closed despite Item[] assignability',
+    'multi-slot fallback argument must fail closed before inventory enumeration',
+    'wrong pseudo-slot fallback argument must fail closed before inventory enumeration',
+    'exact one-slot query must recover after rejected query-state drift',
     'exact contract must recover after a rejected drifted method without a permanent circuit breaker',
 ):
     if token not in return_tests:
-        violations.append(f"ReloadCandidateReturnContractRegression.cs: exact return-shape regression missing: {token}")
+        violations.append(f"ReloadCandidateReturnContractRegression.cs: exact return/query-shape regression missing: {token}")
 
 for token in (
     'TryRollbackOwner',
@@ -259,4 +268,4 @@ for token in (
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item[] return contract gated before pseudo-slot15 query; no-op Belt path preserves vanilla result identity without merge allocation; throwing diagnostics isolated; reachability/candidate owners isolated; stale ThreadStatic scopes generation-invalidated across reset/reinstall; epoch Harmony install preflights unique rollback and enters terminal fail-closed state if owner rollback cannot be proven; startup-bound discovery; fail-closed/no polling)")
+print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; exact FastAccess/BindAvailable reference identity; exact EFT Item[] return contract plus exactly one pseudo-slot15 query are gated before fallback enumeration; no-op Belt path preserves vanilla result identity without merge allocation; throwing diagnostics isolated; reachability/candidate owners isolated; stale ThreadStatic scopes generation-invalidated across reset/reinstall; epoch Harmony install preflights unique rollback and enters terminal fail-closed state if owner rollback cannot be proven; startup-bound discovery; fail-closed/no polling)")
