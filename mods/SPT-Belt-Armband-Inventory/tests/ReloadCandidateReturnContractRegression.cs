@@ -18,6 +18,8 @@ internal static class ReloadCandidateReturnContractRegression
         var inventory = new FakeInventory(new FakeItem[] { beltMagazine });
 
         Configure(inventory, slots);
+        Assert(ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
+            "exact Item[] GetItemsInSlots + declared return contract must pass the pre-bridge epoch gate");
 
         // The bridge is defined around the exact SPT 4.1 Item[] contract. If the
         // live vanilla result is not that array shape, fail closed before querying
@@ -35,13 +37,31 @@ internal static class ReloadCandidateReturnContractRegression
         // contract mismatch must discard the proposed merge rather than widening
         // Harmony's result type or leaking a partially-built replacement.
         ReloadCandidateBridgeRuntime.ReturnType = typeof(List<FakeItem>);
+        Assert(!ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
+            "declared List return drift must be rejected before AppendCandidates");
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object incompatibleReturn = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
         Assert(ReferenceEquals(incompatibleReturn, vanilla),
             "incompatible declared return type must discard Belt fallback and return exact vanilla result");
         Assert(inventory.Calls == 1,
-            "return-type rejection occurs only after one bounded exact-Belt slot query");
+            "direct bridge regression still proves legacy inner guard after one bounded exact-Belt slot query");
+
+        // Pinned runtime contract is stronger than covariance/assignability. A
+        // GetItemsInSlots method that returns IEnumerable<Item> can carry Item[]
+        // values, but it is not the SPT 4.1 boundary and must be refused by the
+        // epoch prefix before the fallback method can issue any query.
+        ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeDriftInventory).GetMethod(nameof(FakeDriftInventory.GetItemsInSlots))
+            ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: drift GetItemsInSlots missing");
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<FakeItem>);
+        Assert(!ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
+            "IEnumerable<Item> GetItemsInSlots drift must fail closed despite Item[] assignability");
+
+        ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
+            ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: exact GetItemsInSlots missing");
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
+        Assert(ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
+            "exact contract must recover after a rejected drifted method without a permanent circuit breaker");
 
         FieldInfo depth = typeof(ReloadCandidateBridgeRuntime).GetField("reloadDepth", BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: reloadDepth field missing");
@@ -86,6 +106,14 @@ internal static class ReloadCandidateReturnContractRegression
         {
             Calls++;
             return items;
+        }
+    }
+
+    sealed class FakeDriftInventory
+    {
+        public IEnumerable<FakeItem> GetItemsInSlots(object slots)
+        {
+            return Array.Empty<FakeItem>();
         }
     }
 
