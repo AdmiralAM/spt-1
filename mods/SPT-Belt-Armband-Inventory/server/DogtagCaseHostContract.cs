@@ -79,6 +79,15 @@ public static class DogtagCaseHostContract
         var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
         if (!current.Contains(caseTpl))
             throw new InvalidOperationException("B&A&HB Dogtag host verification refused: exact Dogtag Case template is absent after host commit.");
+
+        // Re-snapshot the same live HashSet after the full preservation/exact-case
+        // proof. Reference identity alone cannot detect an in-place mutation by a
+        // concurrent startup participant. Any content drift during this bounded
+        // verification window therefore fails closed instead of publishing a proof
+        // that was already stale by the time RequireCommitted returned.
+        HashSet<MongoId> liveAfterProof = SnapshotCurrentFilter(currentFilter);
+        if (!current.SetEquals(liveAfterProof))
+            throw new InvalidOperationException("B&A&HB Dogtag host verification refused: live Dogtag filter changed during committed-host verification.");
     }
 
     private static HashSet<MongoId> SnapshotCurrentFilter(HashSet<MongoId> currentFilter)
