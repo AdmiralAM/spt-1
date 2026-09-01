@@ -35,6 +35,9 @@ contracts = {
         "DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);",
         "RequireExactDogtagHost(templateTable, templateId);",
         "Template = templateId",
+        "RollbackOwnedAssortTuple(trader, id, offer, barter, itemAdded, barterAdded, loyaltyAdded);",
+        "ReferenceEquals(currentBarter, barter)",
+        "ReferenceEquals(trader.Assort.Items[i], offer)",
     ],
 }
 
@@ -52,6 +55,7 @@ for filename, required in contracts.items():
         template_check = text.find("DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);", boundary_def)
         host_check = text.find("RequireExactDogtagHost(templateTable, templateId);", boundary_def)
         host_def = text.find("internal static void RequireExactDogtagHost", boundary_def)
+        rollback_def = text.find("private static void RollbackOwnedAssortTuple")
         if min(publication_call, trader_lookup, first_item_add) < 0 or not (
             publication_call < trader_lookup < first_item_add
         ):
@@ -63,6 +67,16 @@ for filename, required in contracts.items():
         ):
             violations.append(
                 f"{filename}: publication boundary must prove canonical live template then committed Dogtag host"
+            )
+        if rollback_def < 0:
+            violations.append(f"{filename}: owned assort rollback helper is missing")
+        if "if (barterAdded) trader.Assort.BarterScheme.Remove(id);" in text:
+            violations.append(
+                f"{filename}: Dogtag rollback must not delete barter state without proving current reference ownership"
+            )
+        if "if (itemAdded) trader.Assort.Items.Remove(offer);" in text:
+            violations.append(
+                f"{filename}: Dogtag rollback must not rely on value equality when exact offer reference ownership is required"
             )
         if "templateTable.Items.ContainsKey(templateId)" in text:
             violations.append(
@@ -76,4 +90,4 @@ for filename, required in contracts.items():
 if violations:
     raise SystemExit("B&A&HB offer-template boundary gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-template boundary gate: OK (all five Ragman products prove exact registered templates before assort mutation; Dogtag Case uses one centralized canonical live-template + committed-host publication boundary before trader lookup; dangling/corrupted offers forbidden)")
+print("B&A&HB offer-template boundary gate: OK (all five Ragman products prove exact registered templates before assort mutation; Dogtag Case uses one centralized canonical live-template + committed-host publication boundary before trader lookup and ownership-bounded rollback for its item/barter tuple; dangling/corrupted offers forbidden)")
