@@ -56,7 +56,7 @@ class Post010VisitPlaceProxyProofTests(unittest.TestCase):
         self.assertIn("economy admiral", gate_text)
         self.assertFalse(self.access["runtimeMaterialize"])
 
-    def test_visit_place_proxy_cannot_publish_false_opened-door_claim(self):
+    def test_visit_place_proxy_cannot_publish_false_opened_door_claim(self):
         rejected = self.proof["rejectedInference"].lower()
         self.assertIn("presence", rejected)
         self.assertIn("must never be described", rejected)
