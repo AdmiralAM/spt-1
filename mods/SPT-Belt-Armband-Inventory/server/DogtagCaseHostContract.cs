@@ -68,7 +68,16 @@ public static class DogtagCaseHostContract
 
     public static void RequirePreserved(HashSet<MongoId> currentFilter)
     {
-        RequirePreservedSnapshot(SnapshotCurrentFilter(currentFilter));
+        HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);
+        RequirePreservedSnapshot(current);
+
+        // Preload preservation is itself an ownership boundary: proving a detached
+        // snapshot is insufficient if another startup participant mutates the same
+        // live HashSet before the proof returns. Re-snapshot the live host and require
+        // exact set stability before the caller is allowed to append our case.
+        HashSet<MongoId> liveAfterProof = SnapshotCurrentFilter(currentFilter);
+        if (!current.SetEquals(liveAfterProof))
+            throw new InvalidOperationException("B&A&HB Dogtag host verification refused: live Dogtag filter changed during preserved-host verification.");
     }
 
     public static void RequireCommitted(HashSet<MongoId> currentFilter)
