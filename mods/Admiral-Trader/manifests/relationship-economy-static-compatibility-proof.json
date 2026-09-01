@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-static-compatibility-proof-only",
+  "purpose": "Prove that the planned profile-scoped Relationship standing stock uplift does not invalidate Economy Admiral's immutable Baseline assort contract: Economy audits the source assort, while Admiral projects only the already-produced per-request response and never mutates the global trader database.",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "authority": {
+    "verifiedOriginMain": "4a31b134c70bdc7dbec3af036f3e6772c7dbbf5f",
+    "economyAdapter": "../Economy-Admiral/server/AdmiralTraderGameplayAlphaAdapter.cs",
+    "admiralRouter": "server/RelationshipStandingAssortDynamicRouter.cs",
+    "admiralProjection": "server/RelationshipStandingAssortProjection.cs",
+    "baselineManifest": "baseline-stock.json",
+    "standingUpliftSpec": "relationship-standing-stock-uplift.json"
+  },
+  "economyContract": {
+    "baselineSourceMustRemainExact": true,
+    "baselineCapacityMustMatchManifest": true,
+    "baselineOfferMayNotBecomeRelationshipOffer": true,
+    "relationshipOfferIdsMayNotOverlapBaseline": true,
+    "sourceAssortMutationAllowed": false
+  },
+  "projectionBoundary": {
+    "route": "/client/trading/api/getTraderAssort/",
+    "execution": "post-process previous matching router output at OnLoadOrder.Routers + 1",
+    "target": "already profile-scoped TraderAssort response only",
+    "globalTraderDatabaseMutation": false,
+    "rootOfferIdentityChanged": false,
+    "stockClassChanged": false,
+    "priceChanged": false,
+    "questGateChanged": false,
+    "allowedResponseWrites": ["Upd.StackObjectsCount", "Upd.BuyRestrictionMax", "Upd.UnlimitedCount"],
+    "buyRestrictionCurrentPreserved": true
+  },
+  "compatibilityResult": {
+    "economyStaticBaselineAuditRemainsValid": true,
+    "dynamicStandingProjectionRequiresEconomyAdapterRewrite": false,
+    "newRelationshipOfferRequired": false,
+    "crossModuleStaticCompatibilityProven": true,
+    "economyEnvelopeApproved": false,
+    "runtimeLoyaltyTransitionPhysicallyProven": false,
+    "runtimeMaterializationAllowed": false
+  },
+  "nonClaims": [
+    "This proof does not approve LL2-LL4 field-marker stock or buy limits.",
+    "This proof does not prove client refresh after a standing change.",
+    "This proof does not enable Relationship materialization.",
+    "This proof does not change the frozen 31-quest / 11-offer runtime package."
+  ],
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0,
+    "runtimeMutationInThisSlice": false
+  }
+}
