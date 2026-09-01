@@ -107,6 +107,8 @@ if min(host, belt_prepare, head_prepare, first_commit) < 0 or not (
 for token in [
     "new MongoId(RuntimeIdentity.DogtagCaseItemId)",
     "new MongoId(RuntimeIdentity.DogtagCaseAssortId)",
+    "private static void RequirePublicationBoundary(TemplateTable templateTable, MongoId templateId)",
+    "DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);",
     "RequireExactDogtagHost(templateTable, templateId);",
     'string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal)',
     "groups.Length != 1",
@@ -116,20 +118,28 @@ for token in [
     "requested template identity is not the exact Dogtag Case product",
 ]:
     if token not in dogtag:
-        violations.append(f"Dogtag Case offer missing exact committed host token {token!r}")
+        violations.append(f"Dogtag Case offer missing exact committed publication/host token {token!r}")
 
 if "hostFilter.Contains(templateId)" in dogtag or "hostFilter.Any(x => !Equals(x, templateId))" in dogtag:
     violations.append("Dogtag Case offer must not re-read the mutable Dogtag host after centralized committed-snapshot verification")
 
-dogtag_host = dogtag.find("RequireExactDogtagHost(templateTable, templateId);")
+publication_call = dogtag.find("RequirePublicationBoundary(templateTable, templateId);")
 dogtag_trader = dogtag.find("tradersTable.GetValueOrDefault(")
 dogtag_first_mutation = dogtag.find("trader.Assort.Items.Add(")
-if min(dogtag_host, dogtag_trader, dogtag_first_mutation) < 0 or not (
-    dogtag_host < dogtag_trader < dogtag_first_mutation
+if min(publication_call, dogtag_trader, dogtag_first_mutation) < 0 or not (
+    publication_call < dogtag_trader < dogtag_first_mutation
 ):
-    violations.append("Dogtag Case offer must execute exact committed Dogtag host validation before resolving or mutating Ragman assort")
+    violations.append("Dogtag Case offer must execute centralized canonical-template + committed-host validation before resolving or mutating Ragman assort")
 
-require_host_def = dogtag.find("internal static void RequireExactDogtagHost")
+boundary_def = dogtag.find("private static void RequirePublicationBoundary")
+boundary_template = dogtag.find("DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);", boundary_def)
+boundary_host = dogtag.find("RequireExactDogtagHost(templateTable, templateId);", boundary_def)
+require_host_def = dogtag.find("internal static void RequireExactDogtagHost", boundary_def)
+if min(boundary_def, boundary_template, boundary_host, require_host_def) < 0 or not (
+    boundary_def < boundary_template < boundary_host < require_host_def
+):
+    violations.append("Dogtag Case publication boundary must prove canonical live template then exact committed host through the centralized helper")
+
 commit_verify = dogtag.find("DogtagCaseHostContract.RequireCommitted(hostFilter);", require_host_def)
 host_method_end = dogtag.find("private static void ValidateExisting", require_host_def)
 if min(require_host_def, commit_verify, host_method_end) < 0 or not (require_host_def < commit_verify < host_method_end):
@@ -143,4 +153,4 @@ if "hostFilter.Add(" in dogtag or "groups[0].Filter.Add(" in dogtag or "slots.Ad
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case binds one validated preload host-filter reference, snapshots every pre-mutation non-owned entry, and trader registration consumes one point-in-time committed host proof without live-filter rereads; validation is read-only)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case centralizes canonical-template + committed-host publication proof, snapshots one point-in-time host view, and keeps validation read-only)")
