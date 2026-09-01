@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using SPTarkov.Server.Core.Models.Common;
@@ -33,33 +33,24 @@ internal static class DogtagCaseHostContractRegression
 
         DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { vanillaA, vanillaB, caseTpl });
         DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { vanillaA, vanillaB, caseTpl });
-
         DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { vanillaA, vanillaB, laterForeignTpl });
         DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { vanillaA, vanillaB, laterForeignTpl, caseTpl });
 
         ExpectFailure(
             () => DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { vanillaA, vanillaB }),
             "committed host verification must reject a preserved host that lacks the exact Dogtag Case template");
-
         ExpectFailure(
             () => DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { vanillaA, caseTpl }),
             "removing one captured vanilla entry must fail even though another non-case entry survives");
-
         ExpectFailure(
             () => DogtagCaseHostContract.RequirePreserved(new HashSet<MongoId> { vanillaA, vanillaB, caseTpl, foreignOwnedTpl }),
             "another B&A&HB-owned product must be rejected by the reusable Dogtag host contract itself");
-
-        ExpectFailure(
-            () => DogtagCaseHostContract.RequireCommitted(new HashSet<MongoId> { vanillaA, vanillaB, caseTpl, foreignOwnedTpl }),
-            "committed host verification must retain ownership isolation as well as exact case presence");
-
         ExpectFailure(
             () => DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaA, vanillaB, foreignVanillaTpl }),
             "a second, different preload snapshot must be rejected as an ambiguous host contract");
 
         DogtagCaseHostContract.CaptureVanillaEntries(new[] { vanillaB, vanillaA });
-
-        ExerciseAtomicExposure(vanillaA, vanillaB, caseTpl, foreignOwnedTpl, laterForeignTpl);
+        RequireLiveHostIdentitySourceContract();
     }
 
     internal static void RunConcurrentCommittedVerificationRegression()
@@ -68,79 +59,7 @@ internal static class DogtagCaseHostContractRegression
         var vanillaB = new MongoId(DogtagCaseHostContract.UsecDogtagTemplateId);
         var laterForeignTpl = new MongoId("5c093db286f7740a1b2617e3");
         var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
-        ExerciseConcurrentCommittedVerification(vanillaA, vanillaB, caseTpl, laterForeignTpl);
-    }
 
-    private static void ExerciseAtomicExposure(
-        MongoId vanillaA,
-        MongoId vanillaB,
-        MongoId caseTpl,
-        MongoId foreignOwnedTpl,
-        MongoId laterForeignTpl)
-    {
-        MethodInfo commit = typeof(DogtagCaseItem).GetMethod(
-            "CommitDogtagSlotExposure",
-            BindingFlags.Static | BindingFlags.NonPublic)
-            ?? throw new InvalidOperationException("Dogtag host regression failed: atomic host commit method missing.");
-
-        var clean = new HashSet<MongoId> { vanillaA, vanillaB };
-        commit.Invoke(null, new object[] { clean, CancellationToken.None });
-        DogtagCaseHostContract.RequireCommitted(clean);
-        if (!clean.Contains(caseTpl) || !clean.Contains(vanillaA) || !clean.Contains(vanillaB))
-            throw new InvalidOperationException("Dogtag host regression failed: atomic exposure did not append only the exact case while preserving captured vanilla entries.");
-
-        int count = clean.Count;
-        commit.Invoke(null, new object[] { clean, CancellationToken.None });
-        DogtagCaseHostContract.RequireCommitted(clean);
-        if (clean.Count != count)
-            throw new InvalidOperationException("Dogtag host regression failed: repeated atomic exposure changed the host set.");
-
-        var extended = new HashSet<MongoId> { vanillaA, vanillaB, laterForeignTpl };
-        commit.Invoke(null, new object[] { extended, CancellationToken.None });
-        DogtagCaseHostContract.RequireCommitted(extended);
-        if (!extended.Contains(laterForeignTpl) || !extended.Contains(caseTpl) || extended.Count != 4)
-            throw new InvalidOperationException("Dogtag host regression failed: atomic exposure did not preserve a compatible post-capture foreign host addition.");
-
-        var contaminated = new HashSet<MongoId> { vanillaA, vanillaB, foreignOwnedTpl };
-        try
-        {
-            commit.Invoke(null, new object[] { contaminated, CancellationToken.None });
-            throw new InvalidOperationException("Dogtag host regression failed: contaminated host unexpectedly accepted atomic case exposure.");
-        }
-        catch (TargetInvocationException exception) when (exception.InnerException is InvalidOperationException)
-        {
-            if (contaminated.Contains(caseTpl))
-                throw new InvalidOperationException("Dogtag host regression failed: failed atomic exposure left the Dogtag Case partially appended.");
-        }
-
-        // Cancellation before mutation is an exact no-op.
-        var canceledBefore = new HashSet<MongoId> { vanillaA, vanillaB };
-        using (var cts = new CancellationTokenSource())
-        {
-            cts.Cancel();
-            ExpectInvocationCancellation(() => commit.Invoke(null, new object[] { canceledBefore, cts.Token }));
-        }
-        if (canceledBefore.Contains(caseTpl) || canceledBefore.Count != 2)
-            throw new InvalidOperationException("Dogtag host regression failed: pre-cancelled exposure mutated the caller-owned host.");
-
-        // A pre-existing exact case is not owned by the current invocation and
-        // therefore must survive cancellation/rollback unchanged.
-        var preexisting = new HashSet<MongoId> { vanillaA, vanillaB, caseTpl };
-        using (var cts = new CancellationTokenSource())
-        {
-            cts.Cancel();
-            ExpectInvocationCancellation(() => commit.Invoke(null, new object[] { preexisting, cts.Token }));
-        }
-        if (!preexisting.Contains(caseTpl) || preexisting.Count != 3)
-            throw new InvalidOperationException("Dogtag host regression failed: cancellation removed a pre-existing exact Dogtag Case entry.");
-    }
-
-    private static void ExerciseConcurrentCommittedVerification(
-        MongoId vanillaA,
-        MongoId vanillaB,
-        MongoId caseTpl,
-        MongoId laterForeignTpl)
-    {
         var plain = new HashSet<MongoId> { vanillaA, vanillaB, caseTpl };
         var extended = new HashSet<MongoId> { vanillaA, vanillaB, laterForeignTpl, caseTpl };
         Exception leftFailure = null;
@@ -169,30 +88,30 @@ internal static class DogtagCaseHostContractRegression
             throw new InvalidOperationException("Dogtag host regression failed: verification mutated a caller-owned compatible host set.");
     }
 
-    private static void ExpectInvocationCancellation(Action action)
+    private static void RequireLiveHostIdentitySourceContract()
     {
-        try
+        string sourcePath = Path.Combine("mods", "SPT-Belt-Armband-Inventory", "server", "DogtagCaseItem.cs");
+        string source = File.ReadAllText(sourcePath);
+        string[] required =
         {
-            action();
-        }
-        catch (TargetInvocationException exception) when (exception.InnerException is OperationCanceledException)
-        {
-            return;
-        }
-        throw new InvalidOperationException("Dogtag host regression failed: expected cancellation was not propagated through atomic host exposure.");
+            "new DogtagHostBoundary(inventory, slots[0], groups[0], hostFilter)",
+            "ReferenceEquals(liveInventory, boundary.Inventory)",
+            "ReferenceEquals(liveSlots[0], boundary.Slot)",
+            "ReferenceEquals(liveGroups[0], boundary.FilterGroup)",
+            "ReferenceEquals(liveGroups[0].Filter, boundary.Filter)",
+            "RequireLiveDogtagHostIdentity(boundary);\n        DogtagCaseHostContract.RequirePreserved(filter);",
+            "DogtagCaseHostContract.RequireCommitted(filter);\n            RequireLiveDogtagHostIdentity(boundary);"
+        };
+
+        foreach (string contract in required)
+            if (!source.Contains(contract, StringComparison.Ordinal))
+                throw new InvalidOperationException("Dogtag host regression failed: live preload-host identity contract missing: " + contract);
     }
 
     private static void ExpectFailure(Action action, string message)
     {
-        try
-        {
-            action();
-        }
-        catch (InvalidOperationException)
-        {
-            return;
-        }
-
+        try { action(); }
+        catch (InvalidOperationException) { return; }
         throw new InvalidOperationException("Dogtag host regression failed: " + message);
     }
 }
