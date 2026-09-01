@@ -50,9 +50,13 @@ for token in [
     "DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);",
     "DogtagCaseHostContract.RequirePreserved(filter);",
     "DogtagCaseHostContract.RequireCommitted(filter);",
+    "private static void CommitDogtagSlotExposure(HashSet<MongoId> filter, CancellationToken cancellationToken)",
+    "bool addedHere = filter.Add(DogtagCaseTpl);",
+    "if (addedHere)",
+    "filter.Remove(DogtagCaseTpl);",
 ]:
     if token not in dogtag_item:
-        violations.append(f"Dogtag Case preload missing exact B&A&HB cross-host/preservation/commit token {token!r}")
+        violations.append(f"Dogtag Case preload missing exact B&A&HB cross-host/preservation/cancellation-atomic commit token {token!r}")
 
 for token in [
     "private static readonly object SnapshotSync = new();",
@@ -78,15 +82,26 @@ if "RequirePreserved(currentFilter);\n\n        var caseTpl" in dogtag_snapshot:
     violations.append("Dogtag Case committed host verification must not re-read the live mutable filter after preservation proof")
 
 prepare_call = dogtag_item.find("HashSet<MongoId> dogtagSlotFilter = PrepareDogtagSlotFilter();")
-first_commit = dogtag_item.find("CommitDogtagSlotExposure(dogtagSlotFilter);")
+first_commit = dogtag_item.find("CommitDogtagSlotExposure(dogtagSlotFilter, cancellationToken);")
 prepare_def = dogtag_item.find("private HashSet<MongoId> PrepareDogtagSlotFilter()")
 host_capture = dogtag_item.find("HashSet<MongoId> hostFilter = groups[0].Filter;", prepare_def)
 capture = dogtag_item.find("DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);", prepare_def)
 prepare_return = dogtag_item.find("return hostFilter;", prepare_def)
 if min(prepare_call, first_commit) < 0 or prepare_call > first_commit:
-    violations.append("Dogtag Case must prepare/snapshot its host before the first container exposure")
+    violations.append("Dogtag Case must prepare/snapshot its host before the first cancellation-atomic container exposure")
 if min(prepare_def, host_capture, capture, prepare_return) < 0 or not (prepare_def < host_capture < capture < prepare_return):
     violations.append("Dogtag Case host preparation must bind one validated host filter, capture every non-owned entry, then return that same mutable reference")
+
+commit_def = dogtag_item.find("private static void CommitDogtagSlotExposure(HashSet<MongoId> filter, CancellationToken cancellationToken)")
+preserved = dogtag_item.find("DogtagCaseHostContract.RequirePreserved(filter);", commit_def)
+add = dogtag_item.find("bool addedHere = filter.Add(DogtagCaseTpl);", commit_def)
+committed = dogtag_item.find("DogtagCaseHostContract.RequireCommitted(filter);", commit_def)
+rollback = dogtag_item.find("filter.Remove(DogtagCaseTpl);", commit_def)
+if min(commit_def, preserved, add, committed, rollback) < 0 or not (commit_def < preserved < add < committed < rollback):
+    violations.append("Dogtag Case exposure must remain preservation-proof -> owned Add -> committed proof -> owned rollback")
+commit_region = dogtag_item[commit_def:dogtag_item.find("public static void RequireCanonicalRegisteredTemplate", commit_def)] if commit_def >= 0 else ""
+if commit_region.count("cancellationToken.ThrowIfCancellationRequested();") < 4:
+    violations.append("Dogtag Case exposure must observe cancellation before mutation and within owned commit/rollback boundary")
 
 for label, text in [("Magazine Armband", armband), ("Wrist Wallet", wallet)]:
     host = text.find("WearableOfferHostContract.RequireArmBandProduct(templateTable, templateId);")
@@ -153,4 +168,4 @@ if "hostFilter.Add(" in dogtag or "groups[0].Filter.Add(" in dogtag or "slots.Ad
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case centralizes canonical-template + committed-host publication proof, snapshots one point-in-time host view, and keeps validation read-only)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; ArmBand rejects broad-parent and exact Belt/HeadBand cross-host contamination; slot15/slot16 require unique exact product contracts; Dogtag Case centralizes canonical-template + committed-host publication proof, snapshots one point-in-time host view, and makes preload exposure cancellation-atomic without deleting pre-existing exact case)")
