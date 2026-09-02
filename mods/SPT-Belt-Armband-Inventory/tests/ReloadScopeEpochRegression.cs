@@ -71,6 +71,11 @@ namespace SPTBeltArmbandInventory.Tests
                 throw new InvalidOperationException("recovered scope leaked after exact exit");
 
             Console.WriteLine("ReloadScopeEpochRegression: PASS");
+
+            // The publication-fence regression mutates the same global/thread epoch state,
+            // so execute it deterministically after the base epoch regression rather than
+            // through ModuleInitializer ordering.
+            ReloadEpochPublicationFenceRegression.Run();
         }
     }
 }
