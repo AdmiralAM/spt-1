@@ -297,12 +297,13 @@ public sealed class DogtagCaseItem(
         var candidateProperties = candidate.Properties;
         var sourceProperties = source.Properties;
         if (candidateProperties == null || sourceProperties == null
+            || ReferenceEquals(candidateProperties, sourceProperties)
             || !Equals(candidateProperties.BackgroundColor, sourceProperties.BackgroundColor)
             || candidateProperties.ExaminedByDefault != sourceProperties.ExaminedByDefault
             || candidateProperties.Width != sourceProperties.Width
             || candidateProperties.Height != sourceProperties.Height
             || candidateProperties.StackMaxSize != sourceProperties.StackMaxSize)
-            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: root presentation, examined state, geometry or stack policy differs from the canonical source contract.");
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: root presentation/ownership, examined state, geometry or stack policy differs from the canonical source contract.");
 
         var grids = candidateProperties.Grids?.ToArray();
         var sourceGrids = sourceProperties.Grids?.ToArray();
@@ -313,19 +314,21 @@ public sealed class DogtagCaseItem(
         var sourceGrid = sourceGrids[0];
         var actual = grid.Properties;
         var expected = sourceGrid.Properties;
-        if (!string.Equals(grid.Id.ToString(), GridId, StringComparison.Ordinal)
+        if (ReferenceEquals(grid, sourceGrid)
+            || !string.Equals(grid.Id.ToString(), GridId, StringComparison.Ordinal)
             || !string.Equals(grid.Parent?.ToString(), TemplateId, StringComparison.Ordinal)
             || !string.Equals(grid.Name, sourceGrid.Name, StringComparison.Ordinal)
             || !Equals(grid.Prototype, sourceGrid.Prototype)
             || actual == null
             || expected == null
+            || ReferenceEquals(actual, expected)
             || actual.CellsH != expected.CellsH
             || actual.CellsV != expected.CellsV
             || actual.MinCount != expected.MinCount
             || actual.MaxCount != expected.MaxCount
             || actual.MaxWeight != expected.MaxWeight
             || actual.IsSortingTable != expected.IsSortingTable)
-            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: grid identity, geometry or limits differ from the canonical source contract.");
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: grid identity, ownership, geometry or limits differ from the canonical source contract.");
 
         var actualFilters = actual.Filters?.ToArray();
         var expectedFilters = expected.Filters?.ToArray();
@@ -334,15 +337,21 @@ public sealed class DogtagCaseItem(
 
         for (int i = 0; i < expectedFilters.Length; i++)
         {
+            if (ReferenceEquals(actualFilters[i], expectedFilters[i]))
+                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: filter-group object aliases canonical source state.");
+
             var actualIncluded = actualFilters[i].Filter;
             var expectedIncluded = expectedFilters[i].Filter;
             var actualExcluded = actualFilters[i].ExcludedFilter;
             var expectedExcluded = expectedFilters[i].ExcludedFilter;
-            if (actualIncluded == null || expectedIncluded == null || !actualIncluded.SetEquals(expectedIncluded))
-                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: included filter differs from canonical source.");
+            if (actualIncluded == null || expectedIncluded == null
+                || ReferenceEquals(actualIncluded, expectedIncluded)
+                || !actualIncluded.SetEquals(expectedIncluded))
+                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: included filter differs from or aliases canonical source.");
             if ((actualExcluded == null) != (expectedExcluded == null)
-                || (actualExcluded != null && expectedExcluded != null && !actualExcluded.SetEquals(expectedExcluded)))
-                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: excluded filter differs from canonical source, including null/empty contract parity.");
+                || (actualExcluded != null && expectedExcluded != null
+                    && (ReferenceEquals(actualExcluded, expectedExcluded) || !actualExcluded.SetEquals(expectedExcluded))))
+                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: excluded filter differs from/aliases canonical source, including null/empty contract parity.");
         }
     }
 }
