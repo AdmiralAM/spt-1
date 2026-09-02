@@ -1,10 +1,8 @@
 using System;
-using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
 
 internal static class ReloadSlotArrayContentPinRegression
 {
-    [ModuleInitializer]
     internal static void Run()
     {
         int[] originalFast = { 1, 2, 3 };
