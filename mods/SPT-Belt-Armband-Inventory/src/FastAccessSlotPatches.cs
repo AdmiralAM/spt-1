@@ -181,8 +181,9 @@ namespace SPTBeltArmbandInventory
 
                 // The exact SPT 4.1 contract produces Item[]. If runtime shape drifts, do not widen it.
                 // Keeping the original array also preserves vanilla object identity for every no-op path.
+                Type exactArrayType = ItemType.MakeArrayType();
                 if (!(vanillaResult is Array vanillaItems)
-                    || vanillaItems.GetType() != ItemType.MakeArrayType())
+                    || vanillaItems.GetType() != exactArrayType)
                     return vanillaResult;
 
                 object beltResult;
@@ -196,22 +197,25 @@ namespace SPTBeltArmbandInventory
                     reentrant = false;
                 }
 
-                List<object> merged = null;
-                if (beltResult is IEnumerable beltItems)
-                {
-                    foreach (object item in beltItems)
-                    {
-                        if (item == null || !MagazineType.IsInstanceOfType(item) || !HasExactMagazineBeltAncestor(item)) continue;
-                        if (ContainsReference(vanillaItems, item) || (merged != null && ContainsReference(merged, item))) continue;
+                // MethodInfo.ReturnType is already pinned to Item[], but CLR array covariance can
+                // still surface a more-derived runtime array (for example Magazine[]) through that
+                // declared boundary. Refuse any such runtime widening before enumerating slot15.
+                if (!(beltResult is Array beltItems) || beltItems.GetType() != exactArrayType)
+                    return vanillaResult;
 
-                        if (merged == null)
-                        {
-                            merged = new List<object>(vanillaItems.Length + 1);
-                            for (int i = 0; i < vanillaItems.Length; i++)
-                                merged.Add(vanillaItems.GetValue(i));
-                        }
-                        merged.Add(item);
+                List<object> merged = null;
+                foreach (object item in beltItems)
+                {
+                    if (item == null || !MagazineType.IsInstanceOfType(item) || !HasExactMagazineBeltAncestor(item)) continue;
+                    if (ContainsReference(vanillaItems, item) || (merged != null && ContainsReference(merged, item))) continue;
+
+                    if (merged == null)
+                    {
+                        merged = new List<object>(vanillaItems.Length + 1);
+                        for (int i = 0; i < vanillaItems.Length; i++)
+                            merged.Add(vanillaItems.GetValue(i));
                     }
+                    merged.Add(item);
                 }
 
                 if (FastAccessSlotPolicy.ShouldReuseVanillaReloadCandidates(merged != null))
