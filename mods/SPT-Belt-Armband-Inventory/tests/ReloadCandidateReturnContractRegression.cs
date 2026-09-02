@@ -102,6 +102,20 @@ internal static class ReloadCandidateReturnContractRegression
         Assert(inventory.Calls == 1,
             "healthy recovery must perform exactly one bounded pseudo-slot15 query");
 
+        // The method can still be declared FakeItem[] while returning a covariant
+        // FakeMagazine[] runtime object. That is CLR-valid, but it is not the exact
+        // pinned SPT Item[] runtime boundary. Query once, then fail closed before
+        // enumerating/merging the slot15 result and preserve the vanilla object.
+        var covariantInventory = new FakeInventory(new FakeMagazine[] { beltMagazine });
+        Configure(covariantInventory, slots);
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object covariantResult = ReloadCandidateBridgeRuntime.AppendCandidates(covariantInventory, slots, vanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Assert(ReferenceEquals(covariantResult, vanilla),
+            "covariant Magazine[] fallback runtime shape must preserve exact vanilla result identity");
+        Assert(covariantInventory.Calls == 1,
+            "covariant runtime-shape rejection must occur immediately after the single bounded pseudo-slot15 query");
+
         FieldInfo depth = typeof(ReloadCandidateBridgeRuntime).GetField("reloadDepth", BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: reloadDepth field missing");
         FieldInfo reentrant = typeof(ReloadCandidateBridgeRuntime).GetField("reentrant", BindingFlags.Static | BindingFlags.NonPublic)
