@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "rogue-interdiction-frozen-campaign-overlap",
+  "operationKey": "rogue-interdiction",
+  "status": "resolved-no-frozen-rogue-semantic-overlap",
+  "runtimeMaterialize": false,
+  "frozenRuntimeQuestCountReviewed": 31,
+  "searchedSignals": ["savageRole=exUsec", "Rogue target semantics"],
+  "expectedRogueSemanticQuestCount": 0,
+  "semanticDuplicateFound": false,
+  "decision": "The complete frozen 31-quest runtime campaign contains no exUsec/Rogue elimination objective. Rogue Interdiction therefore adds no duplicate Rogue combat contract to frozen 0.1.0. This proof concerns only frozen campaign overlap; external overlap is separately strong and already bounded by the operation-specific external proof.",
+  "regressionBoundary": "All frozen db/quests/*.json files are scanned. Any future exUsec/Rogue semantic objective in the frozen campaign must fail this proof closed and trigger overlap review before materialization."
+}

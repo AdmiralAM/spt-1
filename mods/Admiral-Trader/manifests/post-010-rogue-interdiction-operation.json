@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "operationKey": "rogue-interdiction",
@@ -16,6 +16,7 @@
     "boundary": "The operation may require Rogue kills on Lighthouse and a successful Lighthouse extraction using proven shapes. Water Treatment remains narrative/target context, not an independently enforced zone selector. Same-raid kill-to-extract temporal coupling remains fail-closed until evaluator/reset ordering is proven."
   },
   "overlapAuthority": "post-010-rogue-interdiction-overlap-proof.json",
+  "frozenOverlapAuthority": "post-010-rogue-interdiction-frozen-overlap-proof.json",
   "bounds": {"maximumRogueTargets": 6, "maximumSuccessfulRaids": 1, "repeatable": false, "escalatingSequelsAllowed": false, "locationFreeFallbackAllowed": false, "genericTargetFallbackAllowed": false, "subLocationRequirement": false},
   "economyReview": {
     "status": "approved-static",
@@ -27,11 +28,8 @@
     "overallVanillaStandingMedian": 0.02,
     "review": "At level 31 this specialist Rogue operation stays below the pinned vanilla Elimination XP median and below the overall vanilla standing median. RUB is moderately above the Elimination median but remains inside the authored high-risk band and below the pinned vanilla overall RUB p75 of 85000. It grants no item reward, no Rogue-equipment faucet and no capability unlock, so the 78000 RUB allocation is accepted without escalation."
   },
-  "externalOverlapReview": {
-    "status": "resolved-strong-partial-overlap-no-exact-duplicate",
-    "semanticDuplicateFound": false,
-    "permanentDifferentiators": ["Rogue/exUsec target specificity", "maximum six targets", "mandatory successful extraction", "no generic-target fallback", "no repeatable/escalating hunt ladder", "no Rogue gear faucet"]
-  },
+  "externalOverlapReview": {"status": "resolved-strong-partial-overlap-no-exact-duplicate", "semanticDuplicateFound": false, "permanentDifferentiators": ["Rogue/exUsec target specificity", "maximum six targets", "mandatory successful extraction", "no generic-target fallback", "no repeatable/escalating hunt ladder", "no Rogue gear faucet"]},
+  "frozenCampaignOverlapReview": {"status": "resolved-no-frozen-rogue-semantic-overlap", "runtimeQuestCountReviewed": 31, "rogueSemanticQuestCount": 0, "semanticDuplicateFound": false},
   "gates": {
     "requiresExactRogueRoleProof": false,
     "requiresExactLighthouseLocationSelection": false,
@@ -39,6 +37,7 @@
     "requiresSameRaidKillAndExtractionCouplingProof": true,
     "requiresSubLocationOrZoneProof": false,
     "requiresVanillaScorpionArtemOverlapAudit": false,
+    "requiresFrozenCampaignOverlapReview": false,
     "requiresEconomyAdmiralReview": false,
     "implementationAllowed": false,
     "runtimeMaterialize": false
