@@ -1,20 +1,22 @@
 using System;
 using System.Reflection;
+using System.Threading;
 
 namespace SPTBeltArmbandInventory
 {
     /// <summary>
     /// Final lifecycle fence for ReloadCandidateBridgeRuntime.AppendCandidates.
     /// A scope that was current at entry may not publish a derived candidate result if
-    /// ReloadCandidateBridgeRuntime.Reset invalidated the process-wide epoch while the
-    /// bridge was inside either lazy enumeration window. Exact execution-reference
-    /// restoration after reset does not revive the stale transaction: publication falls
-    /// back to the exact incoming vanilla result object, with no retry or redirect.
+    /// ReloadCandidateBridgeRuntime.Reset invalidated lifecycle state while the bridge
+    /// was inside either lazy enumeration window. Exact execution-reference restoration
+    /// or a later reinstall cannot revive the stale transaction: publication falls back
+    /// to the exact incoming vanilla result object, with no retry or redirect.
     /// </summary>
     internal static class ReloadEpochPublicationFence
     {
         const string HarmonyId = "com.admiralam.spt.belt-armband-inventory.reload-epoch-publication";
         static readonly object InstallGate = new object();
+        static int generation;
         static bool installed;
         static bool terminalFailure;
         static object harmonyOwner;
@@ -22,15 +24,19 @@ namespace SPTBeltArmbandInventory
         internal readonly struct Snapshot
         {
             internal readonly bool EntryCurrent;
+            internal readonly int Generation;
 
-            internal Snapshot(bool entryCurrent)
+            internal Snapshot(bool entryCurrent, int generation)
             {
                 EntryCurrent = entryCurrent;
+                Generation = generation;
             }
 
             internal bool MayPublish()
             {
-                return EntryCurrent && ReloadScopeEpochGuard.IsCurrentForRegression();
+                return EntryCurrent
+                    && ReloadScopeEpochGuard.IsCurrentForRegression()
+                    && Generation == Volatile.Read(ref generation);
             }
         }
 
@@ -81,10 +87,18 @@ namespace SPTBeltArmbandInventory
                         null,
                         new[] { typeof(object), typeof(object), typeof(object) },
                         null);
+                    MethodInfo reset = typeof(ReloadCandidateBridgeRuntime).GetMethod(
+                        nameof(ReloadCandidateBridgeRuntime.Reset),
+                        BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public,
+                        null,
+                        Type.EmptyTypes,
+                        null);
                     MethodInfo prefix = typeof(ReloadEpochPublicationFence).GetMethod(nameof(BeforeAppend), BindingFlags.Static | BindingFlags.NonPublic);
                     MethodInfo postfix = typeof(ReloadEpochPublicationFence).GetMethod(nameof(AfterAppend), BindingFlags.Static | BindingFlags.NonPublic);
+                    MethodInfo resetPostfix = typeof(ReloadEpochPublicationFence).GetMethod(nameof(AfterReset), BindingFlags.Static | BindingFlags.NonPublic);
                     if (harmonyCtor == null || harmonyMethodCtor == null || patch == null || unpatchSelf == null
-                        || append == null || append.ReturnType != typeof(object) || prefix == null || postfix == null)
+                        || append == null || append.ReturnType != typeof(object) || reset == null || reset.ReturnType != typeof(void)
+                        || prefix == null || postfix == null || resetPostfix == null)
                     {
                         terminalFailure = true;
                         return false;
@@ -99,15 +113,18 @@ namespace SPTBeltArmbandInventory
 
                     object prefixHarmony = harmonyMethodCtor.Invoke(new object[] { prefix });
                     object postfixHarmony = harmonyMethodCtor.Invoke(new object[] { postfix });
-                    object[] arguments = BuildPatchArguments(patch, harmonyMethodType, append, prefixHarmony, postfixHarmony);
-                    if (arguments == null)
+                    object resetHarmony = harmonyMethodCtor.Invoke(new object[] { resetPostfix });
+                    object[] appendArguments = BuildPatchArguments(patch, harmonyMethodType, append, prefixHarmony, postfixHarmony);
+                    object[] resetArguments = BuildPostfixArguments(patch, harmonyMethodType, reset, resetHarmony);
+                    if (appendArguments == null || resetArguments == null)
                     {
                         terminalFailure = true;
                         TryRollbackOwner(owner, unpatchSelf);
                         return false;
                     }
 
-                    patch.Invoke(owner, arguments);
+                    patch.Invoke(owner, appendArguments);
+                    patch.Invoke(owner, resetArguments);
                     harmonyOwner = owner;
                     installed = true;
                     return true;
@@ -134,14 +151,29 @@ namespace SPTBeltArmbandInventory
                 __result = __2;
         }
 
+        static void AfterReset()
+        {
+            InvalidateForRegression();
+        }
+
         internal static Snapshot CaptureForRegression()
         {
-            return new Snapshot(ReloadScopeEpochGuard.IsCurrentForRegression());
+            return new Snapshot(ReloadScopeEpochGuard.IsCurrentForRegression(), Volatile.Read(ref generation));
         }
 
         internal static bool ShouldPublishForRegression(Snapshot snapshot)
         {
             return snapshot.MayPublish();
+        }
+
+        internal static void ResetForRegression()
+        {
+            Interlocked.Exchange(ref generation, 0);
+        }
+
+        internal static void InvalidateForRegression()
+        {
+            Interlocked.Increment(ref generation);
         }
 
         static object[] BuildPatchArguments(MethodInfo patch, Type harmonyMethodType, MethodInfo original, object prefix, object postfix)
@@ -175,6 +207,33 @@ namespace SPTBeltArmbandInventory
                 }
             }
             return originalAssigned && prefixAssigned && postfixAssigned ? args : null;
+        }
+
+        static object[] BuildPostfixArguments(MethodInfo patch, Type harmonyMethodType, MethodInfo original, object postfix)
+        {
+            ParameterInfo[] parameters = patch.GetParameters();
+            object[] args = new object[parameters.Length];
+            bool originalAssigned = false;
+            bool postfixAssigned = false;
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                ParameterInfo parameter = parameters[i];
+                if (i == 0 && parameter.ParameterType == typeof(MethodBase))
+                {
+                    args[i] = original;
+                    originalAssigned = true;
+                }
+                else if (parameter.ParameterType == harmonyMethodType && string.Equals(parameter.Name, "postfix", StringComparison.OrdinalIgnoreCase))
+                {
+                    args[i] = postfix;
+                    postfixAssigned = true;
+                }
+                else
+                {
+                    args[i] = parameter.HasDefaultValue ? parameter.DefaultValue : null;
+                }
+            }
+            return originalAssigned && postfixAssigned ? args : null;
         }
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
