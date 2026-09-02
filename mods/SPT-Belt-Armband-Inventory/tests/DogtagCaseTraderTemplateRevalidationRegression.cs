@@ -46,6 +46,10 @@ internal static class DogtagCaseTraderTemplateRevalidationRegression
             "slot/filter identity reproof must enumerate only the wrapper whose exact ownership was just re-proven against live DefaultInventory");
         Require(assort, "!ReferenceEquals(liveGroups[0], groups[0])",
             "replacement of the sole Dogtag filter-group object must fail closed even when it reuses the same filter set");
+        Require(assort, "var assort = trader.Assort",
+            "Ragman publication must capture the exact Assort wrapper after the initial template/host proof");
+        Require(assort, "void RequireAssortWrapperIdentity()",
+            "captured Ragman wrapper chain must be re-proven through publication");
 
         int firstBoundary = assort.IndexOf("RequirePublicationBoundary(templateTable, templateId);", StringComparison.Ordinal);
         int traderLookup = assort.IndexOf("tradersTable.GetValueOrDefault", StringComparison.Ordinal);
@@ -79,51 +83,86 @@ internal static class DogtagCaseTraderTemplateRevalidationRegression
                 && liveSlotsWrapperProof < liveSlotProof && liveSlotProof < liveGroupProof && liveGroupProof < liveFilterProof))
             throw new InvalidOperationException("Dogtag trader template revalidation regression failed: committed snapshot proof must be followed by live DefaultInventory ownership of the pinned Slots wrapper, then slot, sole filter-group and filter-set reference-identity reproof.");
 
-        int committedOfferProof = assort.IndexOf("ValidateExisting(trader, id, offer, templateId);", StringComparison.Ordinal);
-        int secondBoundary = committedOfferProof < 0
-            ? -1
-            : assort.IndexOf("RequirePublicationBoundary(templateTable, templateId);", committedOfferProof + 1, StringComparison.Ordinal);
-        int rollbackCall = secondBoundary < 0
-            ? -1
-            : assort.IndexOf("RollbackOwnedAssortTuple(trader, id, offer, barter, itemAdded, barterAdded, loyaltyAdded);", secondBoundary + 1, StringComparison.Ordinal);
-        if (committedOfferProof < 0 || secondBoundary < 0 || rollbackCall < 0 || !(committedOfferProof < secondBoundary && secondBoundary < rollbackCall))
-            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: post-commit template + host proof must remain inside the owned assort rollback boundary.");
-
-        int loyaltyAdd = assort.IndexOf("trader.Assort.LoyalLevelItems.Add(id, LoyaltyLevel);", StringComparison.Ordinal);
+        int loyaltyAdd = assort.IndexOf("loyalLevelItems.Add(id, LoyaltyLevel);", StringComparison.Ordinal);
         int postMutationCancellation = loyaltyAdd < 0
             ? -1
             : assort.IndexOf("cancellationToken.ThrowIfCancellationRequested();", loyaltyAdd + 1, StringComparison.Ordinal);
-        int postBoundaryCancellation = secondBoundary < 0
+        int postMutationWrapperProof = postMutationCancellation < 0
             ? -1
-            : assort.IndexOf("cancellationToken.ThrowIfCancellationRequested();", secondBoundary + 1, StringComparison.Ordinal);
-        if (loyaltyAdd < 0 || postMutationCancellation < 0 || secondBoundary < 0 || postBoundaryCancellation < 0 || rollbackCall < 0
-            || !(loyaltyAdd < postMutationCancellation
-                && postMutationCancellation < committedOfferProof
-                && secondBoundary < postBoundaryCancellation
-                && postBoundaryCancellation < rollbackCall))
-            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: cancellation after owned assort mutation and after final publication proof must remain inside rollback ownership.");
+            : assort.IndexOf("RequireAssortWrapperIdentity();", postMutationCancellation + 1, StringComparison.Ordinal);
+        int committedOfferProof = postMutationWrapperProof < 0
+            ? -1
+            : assort.IndexOf("ValidateExisting(trader, id, offer, templateId);", postMutationWrapperProof + 1, StringComparison.Ordinal);
+        int secondBoundary = committedOfferProof < 0
+            ? -1
+            : assort.IndexOf("RequirePublicationBoundary(templateTable, templateId);", committedOfferProof + 1, StringComparison.Ordinal);
+        int tupleProof = secondBoundary < 0
+            ? -1
+            : assort.IndexOf("RequirePublishedAssortTupleIdentity(trader, id, offer, barter);", secondBoundary + 1, StringComparison.Ordinal);
+        int finalWrapperProof = tupleProof < 0
+            ? -1
+            : assort.IndexOf("RequireAssortWrapperIdentity();", tupleProof + 1, StringComparison.Ordinal);
+        int postBoundaryCancellation = finalWrapperProof < 0
+            ? -1
+            : assort.IndexOf("cancellationToken.ThrowIfCancellationRequested();", finalWrapperProof + 1, StringComparison.Ordinal);
+        int catchBlock = postBoundaryCancellation < 0
+            ? -1
+            : assort.IndexOf("catch", postBoundaryCancellation + 1, StringComparison.Ordinal);
+        if (loyaltyAdd < 0 || postMutationCancellation < 0 || postMutationWrapperProof < 0 || committedOfferProof < 0
+            || secondBoundary < 0 || tupleProof < 0 || finalWrapperProof < 0 || postBoundaryCancellation < 0 || catchBlock < 0
+            || !(loyaltyAdd < postMutationCancellation && postMutationCancellation < postMutationWrapperProof
+                && postMutationWrapperProof < committedOfferProof && committedOfferProof < secondBoundary
+                && secondBoundary < tupleProof && tupleProof < finalWrapperProof
+                && finalWrapperProof < postBoundaryCancellation && postBoundaryCancellation < catchBlock))
+            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: post-commit template/host/tuple/wrapper proofs and cancellation must remain inside captured-wrapper rollback ownership.");
 
-        int rollbackHelper = assort.IndexOf("private static void RollbackOwnedAssortTuple", StringComparison.Ordinal);
-        if (rollbackHelper < 0 || rollbackHelper <= rollbackCall)
-            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: owned rollback call must resolve to the explicit replacement-safe helper.");
-        Require(assort, "bool ownsItem = ownedItemIndex >= 0;",
-            "rollback helper must prove exact offer reference ownership");
-        Require(assort, "bool ownsBarter = barterAdded",
-            "rollback helper must prove exact barter reference ownership");
+        int ownsItemProof = assort.IndexOf("bool ownsItem = ownedItemIndex >= 0;", catchBlock, StringComparison.Ordinal);
+        int ownsBarterProof = ownsItemProof < 0
+            ? -1
+            : assort.IndexOf("bool ownsBarter = barterAdded", ownsItemProof + 1, StringComparison.Ordinal);
+        int loyaltyRollback = ownsBarterProof < 0
+            ? -1
+            : assort.IndexOf("loyalLevelItems.Remove(id);", ownsBarterProof + 1, StringComparison.Ordinal);
+        int barterRollback = loyaltyRollback < 0
+            ? -1
+            : assort.IndexOf("barterScheme.Remove(id);", loyaltyRollback + 1, StringComparison.Ordinal);
+        int itemRollback = barterRollback < 0
+            ? -1
+            : assort.IndexOf("items.RemoveAt(ownedItemIndex);", barterRollback + 1, StringComparison.Ordinal);
+        if (ownsItemProof < 0 || ownsBarterProof < 0 || loyaltyRollback < 0 || barterRollback < 0 || itemRollback < 0
+            || !(catchBlock < ownsItemProof && ownsItemProof < ownsBarterProof && ownsBarterProof < loyaltyRollback
+                && loyaltyRollback < barterRollback && barterRollback < itemRollback))
+            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: captured-wrapper rollback must prove item/barter ownership before loyalty -> barter -> item removal.");
+        Require(assort, "ReferenceEquals(items[i], offer)",
+            "rollback must prove exact offer reference ownership in the captured Items wrapper");
+        Require(assort, "ReferenceEquals(currentBarter, barter)",
+            "rollback must prove exact barter reference ownership in the captured BarterScheme wrapper");
         Require(assort, "if (loyaltyAdded && ownsItem && ownsBarter",
             "value-only loyalty metadata may be removed only while both reference-owned tuple components remain ours");
 
         int existingProof = assort.IndexOf("ValidateExisting(trader, id, existing, templateId);", StringComparison.Ordinal);
-        int existingBoundary = existingProof < 0
+        int existingWrapperProof = existingProof < 0
             ? -1
-            : assort.IndexOf("RequirePublicationBoundary(templateTable, templateId);", existingProof + 1, StringComparison.Ordinal);
-        int existingCancellation = existingBoundary < 0
+            : assort.IndexOf("RequireAssortWrapperIdentity();", existingProof + 1, StringComparison.Ordinal);
+        int existingBoundary = existingWrapperProof < 0
             ? -1
-            : assort.IndexOf("cancellationToken.ThrowIfCancellationRequested();", existingBoundary + 1, StringComparison.Ordinal);
+            : assort.IndexOf("RequirePublicationBoundary(templateTable, templateId);", existingWrapperProof + 1, StringComparison.Ordinal);
+        int existingTupleProof = existingBoundary < 0
+            ? -1
+            : assort.IndexOf("RequirePublishedAssortTupleIdentity(trader, id, existing, existingBarter);", existingBoundary + 1, StringComparison.Ordinal);
+        int existingFinalWrapper = existingTupleProof < 0
+            ? -1
+            : assort.IndexOf("RequireAssortWrapperIdentity();", existingTupleProof + 1, StringComparison.Ordinal);
+        int existingCancellation = existingFinalWrapper < 0
+            ? -1
+            : assort.IndexOf("cancellationToken.ThrowIfCancellationRequested();", existingFinalWrapper + 1, StringComparison.Ordinal);
         int existingSuccess = assort.IndexOf("retained validated Ragman", StringComparison.Ordinal);
-        if (existingProof < 0 || existingBoundary < 0 || existingCancellation < 0 || existingSuccess < 0
-            || !(existingProof < existingBoundary && existingBoundary < existingCancellation && existingCancellation < existingSuccess))
-            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: pre-existing offer success must be preceded by fresh live template/host proof and cancellation observation.");
+        if (existingProof < 0 || existingWrapperProof < 0 || existingBoundary < 0 || existingTupleProof < 0
+            || existingFinalWrapper < 0 || existingCancellation < 0 || existingSuccess < 0
+            || !(existingProof < existingWrapperProof && existingWrapperProof < existingBoundary
+                && existingBoundary < existingTupleProof && existingTupleProof < existingFinalWrapper
+                && existingFinalWrapper < existingCancellation && existingCancellation < existingSuccess))
+            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: pre-existing offer success must be preceded by captured-wrapper, live template/host, tuple and cancellation reproof.");
 
         if (assort.Contains("templateTable.Items.ContainsKey(templateId)", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag trader template revalidation regression failed: existence-only template gating was restored.");
