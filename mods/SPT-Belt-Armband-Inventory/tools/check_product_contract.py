@@ -33,19 +33,46 @@ if "Runtime Candidate Magazine Belt" in armband_item:
     violations.append("Magazine Armband item: obsolete Runtime Candidate product name returned")
 
 
-def require_collision_safe_assort(path, label):
-    text = require(path, [
-        "trader.Assort.Items.Where(x => x.Id == id).Take(2).ToArray();",
-        "if (matches.Length > 1)",
-        "trader.Assort.BarterScheme.ContainsKey(id)",
-        "trader.Assort.LoyalLevelItems.ContainsKey(id)",
-        "trader.Assort.BarterScheme.Add(id,",
-        "trader.Assort.LoyalLevelItems.Add(id,",
-    ], label)
-    if "trader.Assort.Items.FirstOrDefault(x => x.Id == id)" in text:
+def require_collision_safe_assort(path, label, captured_wrappers=False):
+    if captured_wrappers:
+        tokens = [
+            "var matches = items.Where(x => x.Id == id).Take(2).ToArray();",
+            "if (matches.Length > 1)",
+            "barterScheme.ContainsKey(id)",
+            "loyalLevelItems.ContainsKey(id)",
+            "barterScheme.Add(id,",
+            "loyalLevelItems.Add(id,",
+            "var assort = trader.Assort",
+            "var items = assort.Items",
+            "var barterScheme = assort.BarterScheme",
+            "var loyalLevelItems = assort.LoyalLevelItems",
+            "void RequireAssortWrapperIdentity()",
+            "!ReferenceEquals(trader.Assort, assort)",
+            "!ReferenceEquals(trader.Assort?.Items, items)",
+            "!ReferenceEquals(trader.Assort?.BarterScheme, barterScheme)",
+            "!ReferenceEquals(trader.Assort?.LoyalLevelItems, loyalLevelItems)",
+        ]
+    else:
+        tokens = [
+            "trader.Assort.Items.Where(x => x.Id == id).Take(2).ToArray();",
+            "if (matches.Length > 1)",
+            "trader.Assort.BarterScheme.ContainsKey(id)",
+            "trader.Assort.LoyalLevelItems.ContainsKey(id)",
+            "trader.Assort.BarterScheme.Add(id,",
+            "trader.Assort.LoyalLevelItems.Add(id,",
+        ]
+    text = require(path, tokens, label)
+    if "trader.Assort.Items.FirstOrDefault(x => x.Id == id)" in text or "items.FirstOrDefault(x => x.Id == id)" in text:
         violations.append(f"{label} must reject duplicate persistent item entries")
-    if "trader.Assort.BarterScheme[id] =" in text or "trader.Assort.LoyalLevelItems[id] =" in text:
+    unsafe_indexers = (
+        "trader.Assort.BarterScheme[id] =" in text
+        or "trader.Assort.LoyalLevelItems[id] =" in text
+        or (captured_wrappers and ("barterScheme[id] =" in text or "loyalLevelItems[id] =" in text))
+    )
+    if unsafe_indexers:
         violations.append(f"{label} must not overwrite persistent metadata with dictionary indexers")
+    if captured_wrappers and text.count("RequireAssortWrapperIdentity();") < 6:
+        violations.append(f"{label} must re-prove captured Ragman wrapper identity throughout publication")
     return text
 
 
@@ -157,7 +184,7 @@ if min(first_identity, preserved, second_identity, owned_add, committed, final_i
 if commit_region.count("cancellationToken.ThrowIfCancellationRequested();") < 4:
     violations.append("Dogtag exact-host exposure must keep cancellation checks around owned mutation/commit boundary")
 
-dogtag_assort = require_collision_safe_assort(SERVER / "DogtagCaseAssort.cs", "Dogtag Case assort")
+dogtag_assort = require_collision_safe_assort(SERVER / "DogtagCaseAssort.cs", "Dogtag Case assort", captured_wrappers=True)
 require(SERVER / "DogtagCaseAssort.cs", [
     "private const int PriceRoubles = 50000;",
     "private const int LoyaltyLevel = 2;",
@@ -168,6 +195,11 @@ require(SERVER / "DogtagCaseAssort.cs", [
     "hostFilter == null || hostFilter.Count < 2",
     "DogtagCaseHostContract.RequireCommitted(hostFilter);",
     "requested template identity is not the exact Dogtag Case product",
+    "ReferenceEquals(items[i], offer)",
+    "ReferenceEquals(currentBarter, barter)",
+    "loyalLevelItems.Remove(id);",
+    "barterScheme.Remove(id);",
+    "items.RemoveAt(ownedItemIndex);",
 ], "Dogtag Case offer")
 if "hostFilter.Contains(templateId)" in dogtag_assort or "hostFilter.Any(x => !Equals(x, templateId))" in dogtag_assort:
     violations.append("Dogtag trader publication must consume centralized one-point-in-time committed host proof")
@@ -211,4 +243,4 @@ if ".Remove(" in migration and 'item.Remove("location")' not in migration:
 if violations:
     raise SystemExit("B&A&HB product-contract gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; split HeadBand; Dogtag clone/canonical source-grid ownership/parity plus exact DefaultInventory/slot/group/filter identity and cancellation-owned host publication)")
+print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; Dogtag Ragman wrappers transaction-pinned with ownership-bounded rollback; split HeadBand; canonical Dogtag clone/host parity retained)")
