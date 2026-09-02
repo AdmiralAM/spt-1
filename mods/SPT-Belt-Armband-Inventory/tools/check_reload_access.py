@@ -97,8 +97,10 @@ else:
         violations.append("FastAccessSlotPatches.cs: scoped bridge must execute exactly one transaction-local pseudo-slot15 query")
     if runtime.count('HasPinnedFastAccessArrayContentForRegression(slots)') < 4:
         violations.append("FastAccessSlotPatches.cs: slot-array pin must be proved before contract work, immediately pre-query, post-query/pre-enumeration, and post-enumeration/pre-publication")
-    if runtime.count('HasExactBeltSlotsArgument(beltSlotsArgument)') < 4:
-        violations.append("FastAccessSlotPatches.cs: transaction-local pseudo-slot argument value must be proved at contract entry, immediately pre-query, post-query/pre-enumeration, and post-enumeration/pre-publication")
+    if runtime.count('HasExactFallbackQueryContract(beltSlotsArgument)') < 1:
+        violations.append("FastAccessSlotPatches.cs: contract-entry proof must consume the transaction-local pseudo-slot argument")
+    if runtime.count('HasExactBeltSlotsArgument(beltSlotsArgument)') < 3:
+        violations.append("FastAccessSlotPatches.cs: transaction-local pseudo-slot argument value must be re-proved immediately pre-query, post-query/pre-enumeration, and post-enumeration/pre-publication")
     if runtime.count('ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)') < 4:
         violations.append("FastAccessSlotPatches.cs: pseudo-slot static reference must remain identical to the transaction-local capture across every bounded execution stage")
     if 'GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })' in runtime:
