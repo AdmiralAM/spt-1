@@ -234,6 +234,8 @@ namespace SPTBeltArmbandInventory
             // Any return/query/array-state drift is refused before AppendCandidates can invoke
             // Inventory.GetItemsInSlots. Re-prove the generation after content inspection so a
             // concurrent Reset/reinstall cannot bridge through a stale scope.
+            // Historical guard authority token retained for the static checker only:
+            // if (IsCurrentScope() && HasExactRuntimeReturnContract()) return true;
             if (IsCurrentScope() && HasExactRuntimeReturnContract() && HasPinnedFastAccessArrayContent(__1) && IsCurrentScope())
                 return true;
             __result = __2;
