@@ -26,7 +26,6 @@ internal static class ReloadDiagnosticLoggingRegression
         FastAccessReloadRuntime.PromoteReachability(new FakeMagazine(), ref reachable);
         Assert(!reachable, "reachability failure remains vanilla false even when warning sink throws");
 
-        // failureLogged suppresses repeat diagnostics; a second call must also remain contained.
         FastAccessReloadRuntime.PromoteReachability(new FakeMagazine(), ref reachable);
         Assert(!reachable, "repeat reachability failure cannot escape after diagnostic suppression");
         FastAccessReloadRuntime.Reset();
@@ -34,21 +33,26 @@ internal static class ReloadDiagnosticLoggingRegression
 
     static void ThrowingCandidateLoggerCannotEscape()
     {
-        var slots = new object();
+        object slots = new object[] { "original-fast" };
         var vanilla = new FakeItem[] { new FakeMagazine() };
         var inventory = new FakeInventory();
 
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload diagnostic logging regression failed: fake GetItemsInSlots missing");
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = slots;
+        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object[] { "original-fast", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
+        ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = new object[] { "original-bind" };
+        ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object[] { "original-bind", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
         ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
         ReloadCandidateBridgeRuntime.GetAllParentItems = _ => throw new InvalidOperationException("synthetic candidate failure");
         ReloadCandidateBridgeRuntime.ReadTemplateId = _ => "unused";
         ReloadCandidateBridgeRuntime.LogWarning = _ => throw new InvalidOperationException("synthetic logger failure");
+        ReloadScopeEpochGuard.CaptureSlotArraysForRegression();
 
         FieldInfo depth = typeof(ReloadCandidateBridgeRuntime).GetField("reloadDepth", BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Reload diagnostic logging regression failed: reloadDepth state field missing");
@@ -78,6 +82,7 @@ internal static class ReloadDiagnosticLoggingRegression
         Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
             "candidate failure plus logger failure cannot leak reload or reentrant state into future vanilla calls");
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
     }
 
     sealed class FakeInventory
