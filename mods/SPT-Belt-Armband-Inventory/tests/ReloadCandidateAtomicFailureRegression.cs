@@ -14,14 +14,18 @@ internal static class ReloadCandidateAtomicFailureRegression
         var exactBeltMagazine = new FakeMagazine("belt-magazine", exactBelt);
         var poisonMagazine = new FakeMagazine("poison-magazine", exactBelt);
         var vanilla = new FakeItem[] { vanillaMagazine };
-        var recognizedSlots = new object();
+        var recognizedSlots = new object[] { "fast-access" };
         var inventory = new FakeInventory(new FakeItem[] { exactBeltMagazine, poisonMagazine });
 
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Atomic reload failure regression failed: fake GetItemsInSlots missing");
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = recognizedSlots;
+        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object[] { "installed-fast", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
+        ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = new object[] { "original-bind" };
+        ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object[] { "installed-bind", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
         ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
@@ -33,6 +37,7 @@ internal static class ReloadCandidateAtomicFailureRegression
                 throw new InvalidOperationException("late candidate inspection failure");
             return typed.Parents;
         };
+        ReloadScopeEpochGuard.CaptureSlotArraysForRegression();
 
         // Diagnostics are deliberately hostile too. A valid Belt candidate is seen
         // before the poison candidate, so this proves a late failure cannot leak a
@@ -72,6 +77,7 @@ internal static class ReloadCandidateAtomicFailureRegression
             "successful recovery must leave no per-thread scope or reentrancy residue");
 
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
     }
 
     sealed class FakeInventory
