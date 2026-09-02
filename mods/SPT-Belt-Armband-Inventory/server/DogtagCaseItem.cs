@@ -246,6 +246,7 @@ public sealed class DogtagCaseItem(
             cancellationToken.ThrowIfCancellationRequested();
             DogtagCaseHostContract.RequireCommitted(filter);
             RequireLiveDogtagHostIdentity(boundary);
+            DogtagCaseHostContract.RequireCommitted(filter);
             cancellationToken.ThrowIfCancellationRequested();
         }
         catch
