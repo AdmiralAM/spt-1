@@ -13,6 +13,7 @@ epoch_install_tests = (ROOT / "tests" / "ReloadScopeEpochInstallRollbackRegressi
 diagnostic_tests = (ROOT / "tests" / "ReloadDiagnosticLoggingRegression.cs").read_text(encoding="utf-8-sig")
 lazy_pin_tests = (ROOT / "tests" / "ReloadLazyEnumerationPinRegression.cs").read_text(encoding="utf-8-sig")
 reference_pin_tests = (ROOT / "tests" / "ReloadPseudoSlotReferencePinRegression.cs").read_text(encoding="utf-8-sig")
+captured_state_tests = (ROOT / "tests" / "ReloadCapturedExecutionStateRegression.cs").read_text(encoding="utf-8-sig")
 
 violations = []
 
@@ -36,8 +37,13 @@ for token in (
     'ReferenceEquals(slots, InstalledBindAvailableSlots)',
     'RuntimeIdentity.DedicatedMagazineBeltItemId',
     'MethodInfo getItemsInSlots = GetItemsInSlots;',
+    'object beltSlotsArgument = BeltSlotsArgument;',
+    'Type itemType = ItemType;',
+    'Type magazineType = MagazineType;',
+    'Type returnType = ReturnType;',
+    'Func<object, IEnumerable> getAllParentItems = GetAllParentItems;',
+    'Func<object, string> readTemplateId = ReadTemplateId;',
     'getItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })',
-    'ReferenceEquals(GetItemsInSlots, getItemsInSlots)',
     'ShouldReuseVanillaReloadCandidates(merged != null)',
     'return vanillaResult;',
 ):
@@ -50,7 +56,15 @@ for token in (
     'getItemsParameters[0].ParameterType != slotEnumerableType',
     'method.ReturnType != itemEnumerableType',
     'parameters[0].ParameterType != slotEnumerableType',
-    'static bool HasExactFallbackQueryContract(MethodInfo getItems, object beltArgument)',
+    'static bool HasExactExecutionContract(',
+    'ReferenceEquals(GetItemsInSlots, getItemsInSlots)',
+    'ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)',
+    'ReferenceEquals(ItemType, itemType)',
+    'ReferenceEquals(MagazineType, magazineType)',
+    'ReferenceEquals(ReturnType, returnType)',
+    'ReferenceEquals(GetAllParentItems, getAllParentItems)',
+    'ReferenceEquals(ReadTemplateId, readTemplateId)',
+    'static bool HasExactFallbackQueryContract(MethodInfo getItems, object beltArgument, Type itemType, Type declaredReturn)',
     'Type exactReturn = typeof(IEnumerable<>).MakeGenericType(itemType);',
     'declaredReturn != exactReturn || getItems.ReturnType != exactReturn',
     'Type slotElementType = GetEnumerableElementType(beltArgument.GetType());',
@@ -58,9 +72,14 @@ for token in (
     'parameters[0].ParameterType != exactSlotEnumerable',
     '!exactSlotEnumerable.IsInstanceOfType(beltArgument)',
     'static Type GetEnumerableElementType(Type runtimeType)',
-    'ReturnType.IsInstanceOfType(vanillaResult)',
+    'returnType.IsInstanceOfType(vanillaResult)',
     'vanillaResult is IEnumerable vanillaSequence',
+    'returnType.IsInstanceOfType(beltResult)',
     'beltResult is IEnumerable beltItems',
+    'itemType.IsInstanceOfType(item)',
+    'magazineType.IsInstanceOfType(item)',
+    'HasExactMagazineBeltAncestor(item, getAllParentItems, readTemplateId)',
+    'Array result = Array.CreateInstance(itemType, merged.Count);',
     'static bool HasExactBeltSlotsArgument(object beltArgument)',
     'return HasExactBeltSlotsArgument(beltArgument);',
 ):
@@ -82,11 +101,8 @@ for token in (
     'foreach (object item in beltItems)',
     'merged = new List<object>(vanillaItems);',
     'ContainsReference(vanillaItems, item)',
-    'Array result = Array.CreateInstance(ItemType, merged.Count);',
     'object beltSlotsArgument = BeltSlotsArgument;',
-    'ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)',
-    'captured once at bridge',
-    'Replacement never retries',
+    'HasExactExecutionContract(getItemsInSlots, beltSlotsArgument, itemType, magazineType, returnType, getAllParentItems, readTemplateId)',
 ):
     require(source, token, "FastAccessSlotPatches.cs")
 
@@ -96,22 +112,40 @@ if bridge_start < 0 or bridge_end < 0:
     violations.append("FastAccessSlotPatches.cs: scoped candidate runtime region not found")
 else:
     runtime = source[bridge_start:bridge_end]
+    execution_proof = 'HasExactExecutionContract(getItemsInSlots, beltSlotsArgument, itemType, magazineType, returnType, getAllParentItems, readTemplateId)'
     if runtime.count('getItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })') != 1:
         violations.append("FastAccessSlotPatches.cs: scoped bridge must execute exactly one transaction-local MethodInfo/pseudo-slot15 query")
     if runtime.count('HasPinnedFastAccessArrayContentForRegression(slots)') < 4:
         violations.append("FastAccessSlotPatches.cs: slot-array pin must be proved before contract work, immediately pre-query, post-query/pre-enumeration, and post-enumeration/pre-publication")
-    if runtime.count('HasExactFallbackQueryContract(getItemsInSlots, beltSlotsArgument)') < 1:
-        violations.append("FastAccessSlotPatches.cs: contract-entry proof must consume transaction-local MethodInfo and pseudo-slot argument")
+    if runtime.count(execution_proof) < 4:
+        violations.append("FastAccessSlotPatches.cs: complete MethodInfo/pseudo-slot/type/delegate snapshot must be re-proved at entry, pre-query, post-query/pre-enumeration, and pre-publication")
+    if runtime.count('HasExactFallbackQueryContract(getItemsInSlots, beltSlotsArgument, itemType, returnType)') < 1:
+        violations.append("FastAccessSlotPatches.cs: contract-entry proof must consume transaction-local MethodInfo, pseudo-slot, item type and declared return")
     if runtime.count('HasExactBeltSlotsArgument(beltSlotsArgument)') < 3:
         violations.append("FastAccessSlotPatches.cs: transaction-local pseudo-slot argument value must be re-proved immediately pre-query, post-query/pre-enumeration, and post-enumeration/pre-publication")
-    if runtime.count('ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)') < 4:
-        violations.append("FastAccessSlotPatches.cs: pseudo-slot static reference must remain identical to the transaction-local capture across every bounded execution stage")
-    if runtime.count('ReferenceEquals(GetItemsInSlots, getItemsInSlots)') < 4:
-        violations.append("FastAccessSlotPatches.cs: GetItemsInSlots static MethodInfo must remain identical to the transaction-local capture across every bounded execution stage")
-    if 'GetItemsInSlots.Invoke(inventory' in runtime:
-        violations.append("FastAccessSlotPatches.cs: reflective fallback query must not re-read mutable static GetItemsInSlots at invoke")
-    if 'new[] { BeltSlotsArgument }' in runtime:
-        violations.append("FastAccessSlotPatches.cs: reflective fallback query must not re-read mutable BeltSlotsArgument at invoke")
+    for token in (
+        'ReferenceEquals(GetItemsInSlots, getItemsInSlots)',
+        'ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)',
+        'ReferenceEquals(ItemType, itemType)',
+        'ReferenceEquals(MagazineType, magazineType)',
+        'ReferenceEquals(ReturnType, returnType)',
+        'ReferenceEquals(GetAllParentItems, getAllParentItems)',
+        'ReferenceEquals(ReadTemplateId, readTemplateId)',
+    ):
+        if runtime.count(token) != 1:
+            violations.append(f"FastAccessSlotPatches.cs: captured execution helper must prove static identity exactly once per helper evaluation: {token}")
+    for forbidden in (
+        'GetItemsInSlots.Invoke(inventory',
+        'new[] { BeltSlotsArgument }',
+        'ItemType.IsInstanceOfType(item)',
+        'MagazineType.IsInstanceOfType(item)',
+        'ReturnType.IsInstanceOfType(vanillaResult)',
+        'ReturnType.IsInstanceOfType(beltResult)',
+        'Array.CreateInstance(ItemType',
+        'HasExactMagazineBeltAncestor(item)',
+    ):
+        if forbidden in runtime:
+            violations.append(f"FastAccessSlotPatches.cs: scoped bridge re-read mutable execution state instead of captured locals: {forbidden}")
     for forbidden in (
         "AppDomain.CurrentDomain.GetAssemblies", "ReflectionTools.GetTypes", "GetMethods(",
         "GetProperty(", "GetField(", "FindObjectsOfType", "GetComponentsInChildren", "new StackTrace",
@@ -190,14 +224,28 @@ for token in (
 for token in (
     'MethodInfo getItemsInSlots = GetItemsInSlots;',
     'object beltSlotsArgument = BeltSlotsArgument;',
-    'ReferenceEquals(GetItemsInSlots, getItemsInSlots)',
-    'ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)',
+    'Type itemType = ItemType;',
+    'Type magazineType = MagazineType;',
+    'Type returnType = ReturnType;',
+    'Func<object, IEnumerable> getAllParentItems = GetAllParentItems;',
+    'Func<object, string> readTemplateId = ReadTemplateId;',
     'getItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })',
     'static bool HasExactBeltSlotsArgument(object beltArgument)',
-    'reflective fallback invoke reads mutable static MethodInfo',
-    'reflective fallback invoke reads the mutable static pseudo-slot field',
+    'complete execution snapshot must be re-proven at all four bounded stages',
 ):
     require(reference_pin_tests, token, "ReloadPseudoSlotReferencePinRegression.cs")
+
+for token in (
+    'RunPreQueryDrift(slots, magazine, () => ReloadCandidateBridgeRuntime.ItemType = typeof(object), "ItemType")',
+    'RunPreQueryDrift(slots, magazine, () => ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeItem), "MagazineType")',
+    'RunPreQueryDrift(slots, magazine, () => ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<object>), "ReturnType")',
+    'RunPreQueryDrift(slots, magazine, () => ReloadCandidateBridgeRuntime.GetAllParentItems = _ => Array.Empty<object>(), "GetAllParentItems")',
+    'RunPreQueryDrift(slots, magazine, () => ReloadCandidateBridgeRuntime.ReadTemplateId = _ => "replacement", "ReadTemplateId")',
+    'execution-state drift during lazy Belt enumeration must preserve exact vanilla identity',
+    'post-query execution-state drift must not retry or redirect the single slot15 query',
+    'restored exact execution state must retain one-query vanilla-prefix Belt append behavior',
+):
+    require(captured_state_tests, token, "ReloadCapturedExecutionStateRegression.cs")
 
 if 'ReloadScopeEpochRegression.Run();' not in tests:
     violations.append("Program.cs: reload epoch regression must run after module initialization")
@@ -244,4 +292,4 @@ if source.count('Activator.CreateInstance(harmonyType, new object[] { CandidateB
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, transaction-local MethodInfo + pseudo-slot15 reference/value proof across both lazy windows, four-array content pin, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
+print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, transaction-local MethodInfo + pseudo-slot15 + type/delegate execution snapshot across both lazy windows, four-array content pin, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
