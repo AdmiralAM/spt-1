@@ -14,16 +14,13 @@ internal static class ReloadCandidateReturnContractRegression
         var vanillaMagazine = new FakeMagazine("vanilla-magazine", new FakeItem("foreign-root"));
         var beltMagazine = new FakeMagazine("belt-magazine", exactBelt);
         var vanilla = new FakeItem[] { vanillaMagazine };
-        var slots = new object();
+        object slots = new object[] { "original-fast" };
         var inventory = new FakeInventory(new FakeItem[] { beltMagazine });
 
         Configure(inventory, slots);
         Assert(ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
             "exact Item[] GetItemsInSlots + one pseudo-slot15 query must pass the pre-bridge epoch gate");
 
-        // The bridge is defined around the exact SPT 4.1 Item[] contract. If the
-        // live vanilla result is not that array shape, fail closed before querying
-        // or allocating any Belt fallback result.
         var driftedVanilla = new List<FakeItem> { vanillaMagazine };
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object driftedResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, driftedVanilla);
@@ -33,8 +30,6 @@ internal static class ReloadCandidateReturnContractRegression
         Assert(inventory.Calls == 0,
             "non-Item[] vanilla result shape must fail closed before the pseudo-slot15 fallback query");
 
-        // The primary bridge now duplicates the exact return-contract proof instead
-        // of depending solely on the separate epoch-owner Harmony prefix.
         ReloadCandidateBridgeRuntime.ReturnType = typeof(List<FakeItem>);
         Assert(!ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
             "declared List return drift must be rejected by the epoch gate");
@@ -46,9 +41,6 @@ internal static class ReloadCandidateReturnContractRegression
         Assert(inventory.Calls == 0,
             "primary bridge must reject declared return drift before any pseudo-slot15 query even without relying on the epoch prefix");
 
-        // Pinned runtime contract is stronger than covariance/assignability. A
-        // GetItemsInSlots method that returns IEnumerable<Item> can carry Item[]
-        // values, but it is not the SPT 4.1 boundary and must be refused directly.
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeDriftInventory).GetMethod(nameof(FakeDriftInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: drift GetItemsInSlots missing");
         ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<FakeItem>);
@@ -68,7 +60,6 @@ internal static class ReloadCandidateReturnContractRegression
         Assert(ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
             "exact contract must recover after a rejected drifted method without a permanent circuit breaker");
 
-        // Query-state corruption must also fail inside AppendCandidates itself.
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[]
         {
             RuntimeIdentity.DedicatedBeltEquipmentSlotValue,
@@ -102,10 +93,6 @@ internal static class ReloadCandidateReturnContractRegression
         Assert(inventory.Calls == 1,
             "healthy recovery must perform exactly one bounded pseudo-slot15 query");
 
-        // The method can still be declared FakeItem[] while returning a covariant
-        // FakeMagazine[] runtime object. That is CLR-valid, but it is not the exact
-        // pinned SPT Item[] runtime boundary. Query once, then fail closed before
-        // enumerating/merging the slot15 result and preserve the vanilla object.
         var covariantInventory = new FakeInventory(new FakeMagazine[] { beltMagazine });
         Configure(covariantInventory, slots);
         ReloadCandidateBridgeRuntime.EnterReloadScope();
@@ -124,18 +111,20 @@ internal static class ReloadCandidateReturnContractRegression
             "return/query-contract fail-closed paths must not leak reload scope or reentrancy state");
 
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
     }
 
     static void Configure(FakeInventory inventory, object slots)
     {
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: fake GetItemsInSlots missing");
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = slots;
-        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object();
-        ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = new object();
-        ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object();
+        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object[] { "original-fast", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
+        ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = new object[] { "original-bind" };
+        ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object[] { "original-bind", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
         ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
@@ -143,6 +132,7 @@ internal static class ReloadCandidateReturnContractRegression
         ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
         ReloadCandidateBridgeRuntime.LogWarning = message => throw new InvalidOperationException(
             "Reload candidate return-contract regression failed closed unexpectedly: " + message);
+        ReloadScopeEpochGuard.CaptureSlotArraysForRegression();
     }
 
     sealed class FakeInventory
