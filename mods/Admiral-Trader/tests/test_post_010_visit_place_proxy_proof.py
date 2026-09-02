@@ -14,6 +14,9 @@ class Post010VisitPlaceProxyProofTests(unittest.TestCase):
         cls.access_manifest = json.loads(
             (ROOT / "manifests" / "post-010-access-security-operations.json").read_text(encoding="utf-8")
         )
+        cls.matrix = json.loads(
+            (ROOT / "manifests" / "post-010-condition-proof-matrix.json").read_text(encoding="utf-8")
+        )
         cls.access = next(
             operation
             for operation in cls.access_manifest["operations"]
@@ -69,6 +72,36 @@ class Post010VisitPlaceProxyProofTests(unittest.TestCase):
         self.assertFalse(boundary["sameRaidCouplingProven"])
         self.assertFalse(boundary["implementationAllowed"])
         self.assertFalse(self.proof["runtimeMaterialize"])
+
+    def test_central_condition_matrix_recognizes_only_the_exact_pinned_proxy(self):
+        self.assertEqual(
+            self.matrix["evidence"]["visitPlaceProxyProof"],
+            "post-010-visit-place-proxy-proof.json",
+        )
+        proven = {
+            item["capability"]: item
+            for item in self.matrix["staticallyProvenShapes"]
+        }
+        proxy = proven["exact vanilla visit-zone proxy"]
+        self.assertEqual(proxy["conditionType"], "CounterCreator -> VisitPlace")
+        self.assertEqual(proxy["shape"]["target"], "room206_water")
+        self.assertEqual(proxy["shape"]["locationTarget"], "bigmap")
+        self.assertEqual(proxy["shape"]["value"], 1)
+
+        unproven = {
+            item["capability"]: item
+            for item in self.matrix["stillUnprovenForPost010"]
+        }
+        personal = unproven["personal restricted-access interaction"]
+        self.assertIn("possessed the key", personal["reason"])
+        self.assertIn("personally unlocked", personal["reason"])
+        self.assertEqual(
+            personal["proxyAlreadyProven"],
+            "CounterCreator -> VisitPlace(room206_water) on Customs/bigmap",
+        )
+        self.assertNotIn("access-reconnaissance", unproven["generic sub-location/category restriction beyond pinned exact visit zones"]["affectedOperations"])
+        self.assertTrue(self.matrix["materializationRule"]["exactPinnedVisitZoneProxyAllowed"])
+        self.assertFalse(self.matrix["runtimeMaterialize"])
 
     def test_borrowed_access_remains_fail_closed_until_coupling_overlap_and_economy_are_proven(self):
         readiness = self.access["conditionReadiness"]
