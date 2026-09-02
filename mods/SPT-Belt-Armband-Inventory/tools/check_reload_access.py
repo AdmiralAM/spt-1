@@ -19,7 +19,6 @@ def require(text, token, where):
     if token not in text:
         violations.append(f"{where}: missing {token}")
 
-# Reachability remains exact and independently owned.
 for token in (
     'FindInstanceMethod(controllerType, "IsAtReachablePlace", typeof(bool), itemType)',
     'FindReadableMember(itemType, "StringTemplateId", typeof(string))',
@@ -41,10 +40,6 @@ for token in (
 ):
     require(source, token, "FastAccessSlotPatches.cs")
 
-# Pinned SPT 4.x decomp contract: exact generic interfaces, not the concrete
-# Item[] implementation detail that appears only inside Inventory.GetItemsInSlots.
-# The primary bridge must independently prove the exact slot generic contract;
-# it may not rely solely on the separate epoch Harmony owner for this boundary.
 for token in (
     'Type itemEnumerableType = typeof(IEnumerable<>).MakeGenericType(itemType);',
     'Type slotEnumerableType = typeof(IEnumerable<>).MakeGenericType(slotEnumType);',
@@ -62,6 +57,8 @@ for token in (
     'ReturnType.IsInstanceOfType(vanillaResult)',
     'vanillaResult is IEnumerable vanillaSequence',
     'beltResult is IEnumerable beltItems',
+    'static bool HasExactBeltSlotsArgument()',
+    'return HasExactBeltSlotsArgument();',
 ):
     require(source, token, "FastAccessSlotPatches.cs")
 
@@ -74,9 +71,6 @@ for forbidden in (
     if forbidden in source:
         violations.append(f"FastAccessSlotPatches.cs: stale Item[] contract survived: {forbidden}")
 
-# Exact vanilla-first/fail-closed mechanics: four-array content pin, one query,
-# pre-query + post-query + post-lazy-enumeration reproof, reference dedup, no
-# global scans in the hot bridge.
 for token in (
     'HasPinnedFastAccessArrayContentForRegression(slots)',
     'var vanillaItems = new List<object>();',
@@ -85,7 +79,8 @@ for token in (
     'merged = new List<object>(vanillaItems);',
     'ContainsReference(vanillaItems, item)',
     'Array result = Array.CreateInstance(ItemType, merged.Count);',
-    'Re-prove the exact retained/installed slot-array snapshot after enumeration',
+    'same-reference value drift',
+    'Belt-side argument drift never triggers a retry or second query',
 ):
     require(source, token, "FastAccessSlotPatches.cs")
 
@@ -99,6 +94,8 @@ else:
         violations.append("FastAccessSlotPatches.cs: scoped bridge must execute exactly one pseudo-slot15 query")
     if runtime.count('HasPinnedFastAccessArrayContentForRegression(slots)') < 4:
         violations.append("FastAccessSlotPatches.cs: slot-array pin must be proved before contract work, immediately pre-query, post-query/pre-enumeration, and post-enumeration/pre-publication")
+    if runtime.count('HasExactBeltSlotsArgument()') < 4:
+        violations.append("FastAccessSlotPatches.cs: pseudo-slot argument must be proved at contract entry, immediately pre-query, post-query/pre-enumeration, and post-enumeration/pre-publication")
     for forbidden in (
         "AppDomain.CurrentDomain.GetAssemblies", "ReflectionTools.GetTypes", "GetMethods(",
         "GetProperty(", "GetField(", "FindObjectsOfType", "GetComponentsInChildren", "new StackTrace",
@@ -106,8 +103,6 @@ else:
         if forbidden in runtime:
             violations.append(f"FastAccessSlotPatches.cs: scoped hot path performs discovery/scan: {forbidden}")
 
-# Epoch guard must enforce the same declared interface boundary, including an
-# exact generic slot-parameter contract derived from the one-value belt argument.
 for token in (
     '[ThreadStatic] static int threadGeneration;',
     '[ThreadStatic] static int threadDepth;',
@@ -133,8 +128,6 @@ for token in (
 if 'Type exactArray = itemType.MakeArrayType();' in epoch:
     violations.append("ReloadScopeEpochGuard.cs: stale Item[] return authority survived")
 
-# Deterministic regressions must encode the actual decompiled signature and
-# fail closed on return/query/slot-parameter drift while retaining recovery.
 for token in (
     'exact.ReturnType != typeof(IEnumerable<FakeItem>)',
     'exact.GetParameters()[0].ParameterType != typeof(IEnumerable<FakeSlot>)',
@@ -161,13 +154,14 @@ for token in (
 ):
     require(slot_parameter_tests, token, "ReloadSlotParameterContractRegression.cs")
 
-# The exact lazy-interface risk is executable, not merely structural: mutation
-# during MoveNext must fail closed after the one query, while a restored healthy
-# pin must recover normal vanilla-prefix + exact-Belt append semantics.
 for token in (
     'same-reference slot-array drift during lazy Belt enumeration must preserve the exact vanilla enumerable object',
+    'same-reference pseudo-slot argument drift during lazy vanilla enumeration must preserve exact vanilla identity',
+    'pseudo-slot argument drift during vanilla enumeration must fail closed before any fallback query',
+    'same-reference pseudo-slot argument drift during lazy Belt enumeration must preserve exact vanilla identity',
+    'lazy Belt pseudo-slot drift must not trigger a retry or second query',
     'restoring the exact captured content must restore the recognized retained-array pin',
-    'healthy lazy Belt enumeration with an unchanged pinned array must publish a replacement sequence',
+    'healthy lazy Belt enumeration with unchanged pinned inputs must publish a replacement sequence',
     'healthy lazy Belt enumeration must preserve vanilla prefix and append the exact Belt descendant',
     'duringEnumeration?.Invoke();',
 ):
@@ -218,4 +212,4 @@ if source.count('Activator.CreateInstance(harmonyType, new object[] { CandidateB
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, self-contained primary + epoch slot-parameter execution guards, four-array content pin including post-lazy-enumeration reproof, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
+print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, self-contained slot-parameter + retained pseudo-slot15 proofs across both lazy windows, four-array content pin, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
