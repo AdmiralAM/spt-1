@@ -13,7 +13,7 @@ class RelationshipStockContractTests(unittest.TestCase):
         policy = self.load("gameplay-policy.json")
         relationship = self.load("relationship-stock.json")
 
-        self.assertEqual(relationship["schemaVersion"], 3)
+        self.assertEqual(relationship["schemaVersion"], 4)
         self.assertEqual(relationship["stockClass"], "Relationship")
         self.assertTrue(policy["traderStock"]["relationshipStockAllowed"])
         self.assertFalse(relationship["authority"]["salesSumGateAllowed"])
@@ -36,11 +36,12 @@ class RelationshipStockContractTests(unittest.TestCase):
         self.assertTrue(all(x["selection"]["maximumOffers"] > 0 for x in tiers))
         self.assertTrue(all(x["selection"]["qualityGateOverridesCount"] for x in tiers))
 
-    def test_economy_relationship_adapter_integration_is_already_implemented(self):
+    def test_economy_relationship_adapter_integration_is_current_and_uplift_path_is_separate(self):
         relationship = self.load("relationship-stock.json")
         integration = relationship["integrationState"]
         self.assertEqual(integration["economyAdapterRelationshipParsing"], "implemented-on-origin-main")
-        self.assertEqual(integration["verifiedOriginMain"], "f927a23c8057811f78ce48508e58b37012c6d6e8")
+        self.assertEqual(integration["verifiedOriginMain"], "4a31b134c70bdc7dbec3af036f3e6772c7dbbf5f")
+        self.assertEqual(integration["staticCompatibilityProof"], "relationship-economy-static-compatibility-proof.json")
         self.assertEqual(
             set(integration["adapterFiles"]),
             {
@@ -48,10 +49,26 @@ class RelationshipStockContractTests(unittest.TestCase):
                 "mods/Economy-Admiral/server/AdmiralTraderGameplayAlphaAdapter.cs",
             },
         )
-        required = relationship["materialization"]["requiredBeforeEnable"]
-        self.assertFalse(any("Relationship parsing" in entry for entry in required))
-        self.assertTrue(any("Economy Admiral" in entry for entry in required))
         self.assertIn("RelationshipOfferCount is emitted by the Economy adapter", integration["provenContract"])
+        self.assertTrue(any("immutable Baseline source assort" in x for x in integration["provenContract"]))
+
+        uplift = relationship["standingUpliftState"]
+        self.assertFalse(uplift["newRelationshipOffer"])
+        self.assertTrue(uplift["economyEnvelopeApproved"])
+        self.assertTrue(uplift["profileScopedProjectionImplemented"])
+        self.assertTrue(uplift["profileLevelAndStandingResolverImplemented"])
+        self.assertTrue(uplift["loyaltyThresholdContractLocked"])
+        self.assertFalse(uplift["globalSourceMutationAllowed"])
+        self.assertFalse(uplift["runtimeMaterializationEnabled"])
+        self.assertFalse(uplift["physicalCheckpointRequestedNow"])
+
+        materialization = relationship["materialization"]
+        new_offer_gates = materialization["newOfferPathRequiredBeforeEnable"]
+        uplift_gates = materialization["standingUpliftPathRequiredBeforeEnable"]
+        self.assertTrue(any("Economy Admiral" in entry for entry in new_offer_gates))
+        self.assertEqual(len(uplift_gates), 1)
+        self.assertIn("physical runtime proof", uplift_gates[0])
+        self.assertNotIn("Economy Admiral", uplift_gates[0])
 
     def test_frozen_candidate_is_not_materialized_by_relationship_design(self):
         relationship = self.load("relationship-stock.json")

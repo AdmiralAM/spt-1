@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "stockClass": "Relationship",
   "status": "AuthoredPreMaterialization",
   "product": "Admiral Trader",
@@ -29,7 +29,9 @@
   },
   "integrationState": {
     "economyAdapterRelationshipParsing": "implemented-on-origin-main",
-    "verifiedOriginMain": "f927a23c8057811f78ce48508e58b37012c6d6e8",
+    "verifiedOriginMain": "4a31b134c70bdc7dbec3af036f3e6772c7dbbf5f",
+    "verifiedOriginMainScope": "Relationship adapter surface unchanged through current main; later main commits modify Economy reward ranking/handbook valuation only.",
+    "staticCompatibilityProof": "relationship-economy-static-compatibility-proof.json",
     "adapterFiles": [
       "mods/Economy-Admiral/server/AdmiralTraderRuntimeAdapterService.cs",
       "mods/Economy-Admiral/server/AdmiralTraderGameplayAlphaAdapter.cs"
@@ -39,9 +41,23 @@
       "Relationship offers are explicitly classified separately from Baseline and Milestone",
       "offer tpl, loyalty level, stock and buy restriction must match the Relationship manifest",
       "Relationship offer IDs may not overlap Baseline or quest-gated Milestone offers",
-      "RelationshipOfferCount is emitted by the Economy adapter"
+      "RelationshipOfferCount is emitted by the Economy adapter",
+      "profile-scoped standing projection does not require an Economy adapter rewrite because the immutable Baseline source assort remains the audited authority"
     ],
-    "remainingCrossModuleWork": "Economy review is still required for each concrete candidate price/supply envelope; no additional Relationship parser implementation is required before Trader materialization."
+    "remainingCrossModuleWork": "Economy review remains mandatory for each future new Relationship offer. The currently authored field-marker standing uplift already has its bounded Economy approval and does not require additional Economy adapter work."
+  },
+  "standingUpliftState": {
+    "contract": "relationship-standing-stock-uplift.json",
+    "offerId": "ad2000000000000000000004",
+    "newRelationshipOffer": false,
+    "economyEnvelopeApproved": true,
+    "profileScopedProjectionImplemented": true,
+    "profileLevelAndStandingResolverImplemented": true,
+    "loyaltyThresholdContractLocked": true,
+    "globalSourceMutationAllowed": false,
+    "runtimeMaterializationEnabled": false,
+    "remainingGate": "batched physical runtime proof of requester-local loyalty/standing transition visibility with no cross-profile leakage",
+    "physicalCheckpointRequestedNow": false
   },
   "tiers": [
     {
@@ -68,15 +84,17 @@
   ],
   "materialization": {
     "enabled": false,
-    "reason": "The frozen 0.1.0 candidate remains exactly 11 offers. Relationship is a post-gate product surface and may remain sparse or empty at a tier until a candidate or bounded existing-consumable stock uplift passes exact gameplay and economy review.",
+    "reason": "The frozen 0.1.0 candidate remains exactly 11 offers. Relationship is a post-gate product surface. New Relationship offers may remain sparse or absent; the approved standing uplift remains disabled until the registered batched runtime milestone proves requester-local loyalty visibility and isolation.",
     "standingStockUpliftPlan": "relationship-standing-stock-uplift.json",
-    "requiredBeforeEnable": [
-      "select exact SPT 4.1.3 item TPLs from pinned references for any new Relationship offer",
-      "run direct overlap audit against vanilla, Scorpion and Artem for any new Relationship offer",
+    "newOfferPathRequiredBeforeEnable": [
+      "select exact SPT 4.1.3 item TPLs from pinned references",
+      "run direct overlap audit against vanilla, Scorpion and Artem",
       "prove independent recurring specialist utility rather than tier-fill value",
       "benchmark price, stock and buy ceilings with Economy Admiral",
-      "prove runtime loyalty visibility and assort mutation semantics for any standing-based Baseline stock uplift",
-      "add Trader CI parity checks for manifest-to-assort Relationship classification"
+      "add Trader CI parity checks for the concrete manifest-to-assort Relationship classification"
+    ],
+    "standingUpliftPathRequiredBeforeEnable": [
+      "complete the registered batched physical runtime proof that level+standing transitions select the correct requester-local tier without global/session leakage"
     ]
   }
 }
