@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "source": {
@@ -12,6 +12,9 @@
     "locationAndExtraction": "post-010-pmc-location-extraction-proof.json",
     "exactLocationEvidence": "post-010-visit-place-proxy-proof.json",
     "sameRaidCoupling": "post-010-same-raid-coupling-proof.json",
+    "rewardEnvelope": "post-010-operation-reward-envelope.json",
+    "campaignProgression": "post-010-campaign-progression.json",
+    "vanillaRewardBenchmark": "reward-policy.json",
     "admittedBoundary": "ordinary Scav target discrimination, map-level Location and Survived extraction shapes are proven; Customs/bigmap is independently pinned as an exact valid location target, while sub-location/zone restriction and kill-to-extract same-raid coupling are not"
   },
   "operation": {
@@ -55,7 +58,20 @@
       "default": ["xp", "rub", "admiral-standing"],
       "permanentScavGearSupplyAllowed": false,
       "capabilityUnlockAllowed": false,
-      "requiresEconomyAdmiralReview": true
+      "itemReward": null,
+      "economyReviewStatus": "approved-static"
+    },
+    "economyReview": {
+      "status": "approved-static",
+      "campaignPlayerLevel": 21,
+      "riskBand": "standard",
+      "authoredReward": {"xp": 8000, "rub": 50000, "standing": 0.012, "itemReward": null},
+      "nearestVanillaComparatorClass": "Elimination",
+      "vanillaComparatorMedian": {"xp": 18200, "rub": 65000},
+      "overallVanillaStandingMedian": 0.02,
+      "review": "The bounded six-Scav Customs security operation at level 21 stays materially below the pinned vanilla Elimination median in XP and RUB, below the overall vanilla standing median, grants no item or permanent unlock, and therefore does not create a reward or stock faucet.",
+      "economyAdmiralMayReduceAtMaterialization": true,
+      "increaseBeyondStandardBandRequiresTraderReview": true
     }
   },
   "gates": {
@@ -68,7 +84,7 @@
     "requiresExactLocationSelection": false,
     "requiresVanillaScorpionArtemOverlapAudit": true,
     "requiresFrozenCampaignOverlapReview": true,
-    "requiresEconomyAdmiralReview": true
+    "requiresEconomyAdmiralReview": false
   },
   "frozenBoundary": {
     "questCount": 31,

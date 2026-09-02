@@ -16,7 +16,7 @@ def test_route_security_operation_is_bounded_and_non_materialized():
     authority = spec["proofAuthority"]
     selected = op["selectedLocation"]
 
-    assert spec["schemaVersion"] == 3
+    assert spec["schemaVersion"] == 4
     assert spec["source"]["bundle"] == "Scav Hunt"
     assert spec["source"]["legacyQuestCount"] == 60
     assert op["key"] == "route-security"
@@ -29,6 +29,9 @@ def test_route_security_operation_is_bounded_and_non_materialized():
     assert authority["locationAndExtraction"] == "post-010-pmc-location-extraction-proof.json"
     assert authority["exactLocationEvidence"] == "post-010-visit-place-proxy-proof.json"
     assert authority["sameRaidCoupling"] == "post-010-same-raid-coupling-proof.json"
+    assert authority["rewardEnvelope"] == "post-010-operation-reward-envelope.json"
+    assert authority["campaignProgression"] == "post-010-campaign-progression.json"
+    assert authority["vanillaRewardBenchmark"] == "reward-policy.json"
     assert "sub-location/zone" in authority["admittedBoundary"]
     assert "same-raid" in authority["admittedBoundary"]
 
@@ -50,6 +53,8 @@ def test_route_security_operation_is_bounded_and_non_materialized():
 
     assert op["rewardDoctrine"]["permanentScavGearSupplyAllowed"] is False
     assert op["rewardDoctrine"]["capabilityUnlockAllowed"] is False
+    assert op["rewardDoctrine"]["itemReward"] is None
+    assert op["rewardDoctrine"]["economyReviewStatus"] == "approved-static"
     assert gates["implementationAllowed"] is False
     assert gates["runtimeMaterialize"] is False
     assert gates["requiresExactSpt413ScavTargetConditionProof"] is False
@@ -59,7 +64,7 @@ def test_route_security_operation_is_bounded_and_non_materialized():
     assert gates["requiresExactLocationSelection"] is False
     assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
     assert gates["requiresFrozenCampaignOverlapReview"] is True
-    assert gates["requiresEconomyAdmiralReview"] is True
+    assert gates["requiresEconomyAdmiralReview"] is False
 
     frozen = spec["frozenBoundary"]
     assert frozen == {
@@ -89,6 +94,36 @@ def test_route_security_proof_authorities_exist_and_temporal_coupling_stays_clos
     assert "oneSessionOnly" in same_raid_text
     assert spec["gates"]["requiresExactLocationSelection"] is False
     assert spec["gates"]["requiresSameRaidKillAndExtractionCouplingProof"] is True
+
+
+def test_route_security_reward_is_exactly_bound_to_campaign_and_vanilla_benchmark():
+    spec = load_json(ROOT / "manifests" / "post-010-route-security-operation.json")
+    reward_envelope = load_json(ROOT / "manifests" / spec["proofAuthority"]["rewardEnvelope"])
+    campaign = load_json(ROOT / "manifests" / spec["proofAuthority"]["campaignProgression"])
+    reward_policy = load_json(ROOT / "manifests" / spec["proofAuthority"]["vanillaRewardBenchmark"])
+    review = spec["operation"]["economyReview"]
+
+    assert review["status"] == "approved-static"
+    assert review["campaignPlayerLevel"] == campaign["operationLevelPlacement"]["route-security"] == 21
+    assert review["riskBand"] == reward_envelope["operationBands"]["route-security"] == "standard"
+    assert review["authoredReward"] == reward_envelope["operationRewards"]["route-security"]
+
+    standard = reward_envelope["bands"]["standard"]
+    reward = review["authoredReward"]
+    assert standard["xpMin"] <= reward["xp"] <= standard["xpMax"]
+    assert standard["rubMin"] <= reward["rub"] <= standard["rubMax"]
+    assert reward["standing"] <= standard["standingMax"]
+    assert reward["itemReward"] is None
+
+    elimination = reward_policy["observedReference"]["questTypeMedians"]["Elimination"]
+    assert review["vanillaComparatorMedian"] == {"xp": elimination["xp"], "rub": elimination["rub"]}
+    assert reward["xp"] < elimination["xp"]
+    assert reward["rub"] < elimination["rub"]
+    assert review["overallVanillaStandingMedian"] == reward_policy["observedReference"]["overall"]["standing"]["median"]
+    assert reward["standing"] < review["overallVanillaStandingMedian"]
+    assert review["economyAdmiralMayReduceAtMaterialization"] is True
+    assert review["increaseBeyondStandardBandRequiresTraderReview"] is True
+    assert spec["gates"]["requiresEconomyAdmiralReview"] is False
 
 
 def test_route_security_does_not_change_frozen_runtime_counts():
