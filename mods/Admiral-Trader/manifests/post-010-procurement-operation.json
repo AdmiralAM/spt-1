@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "source": {
@@ -25,7 +25,40 @@
       "en": "That closes the shortage. The element can maintain itself again; there is no reason to turn this into another shopping list.",
       "ru": "Дефицит закрыт. Группа снова может обслуживать себя сама; превращать это в очередной список покупок незачем."
     },
-    "objectiveIntent": "One contextual maintenance-reserve handover using a small fixed set of field-service supplies whose exact TPLs are selected only after gameplay-purpose, overlap and economy review.",
+    "objectiveIntent": "One contextual maintenance-reserve handover using a fixed six-unit package of ordinary repair/maintenance consumables. Exact TPL selection is pinned here; overlap and Economy Admiral approval remain separate fail-closed gates.",
+    "selectedPayload": {
+      "status": "selected-pending-overlap-and-economy-review",
+      "totalUnits": 6,
+      "distinctTpls": 3,
+      "items": [
+        {
+          "tpl": "590c5bbd86f774785762df04",
+          "name": "WD-40 (100ml)",
+          "count": 2,
+          "purpose": "compact lubricant/maintenance consumable"
+        },
+        {
+          "tpl": "57347c1124597737fb1379e3",
+          "name": "Duct tape",
+          "count": 2,
+          "purpose": "general field repair consumable"
+        },
+        {
+          "tpl": "61bf83814088ec1a363d7097",
+          "name": "Sewing kit",
+          "count": 2,
+          "purpose": "soft-gear field repair consumable"
+        }
+      ],
+      "selectionDoctrine": {
+        "ordinaryFieldServiceOnly": true,
+        "repairableEquipmentSelected": false,
+        "rareMilitaryComponentSelected": false,
+        "highValueElectronicsSelected": false,
+        "permanentStorefrontUnlockImplied": false,
+        "selectionDoesNotConstituteEconomyApproval": true
+      }
+    },
     "bounds": {
       "maximumDistinctItemTpls": 3,
       "maximumTotalHandedOverUnits": 6,
@@ -39,13 +72,14 @@
     },
     "handoverCompatibility": {
       "legacyRisk": "The maintained SPT 4.1 QuestManiac port documents legacy handover conditions with maxDurability=0, which is not the documented full usable durability range for repairable weapons, helmets and armor; its converter normalizes those conditions to the vanilla-style 100 ceiling.",
-      "admiralDecision": "Exact SPT handover durability semantics are now statically proven: repairable payloads are mechanically representable with minDurability=0 and maxDurability=100. They are no longer excluded for durability reasons alone, but they remain unselected until an exact TPL has an independent field-service purpose and passes overlap plus Economy Admiral review.",
+      "admiralDecision": "Exact SPT handover durability semantics are now statically proven: repairable payloads are mechanically representable with minDurability=0 and maxDurability=100. The selected Field-Expedient Supply payload intentionally uses only non-repairable ordinary service consumables, so durability bounds are not needed for the selected items.",
       "repairablePayloadAllowed": true,
       "fullRangeDurabilityBounds": {
         "minDurability": 0,
         "maxDurability": 100
       },
-      "exactTplSelectionStillRequired": true,
+      "exactTplSelectionStillRequired": false,
+      "selectedPayloadUsesRepairableEquipment": false,
       "exactSpt413ConditionProofStillRequired": false,
       "conditionProof": "post-010-handover-durability-proof.json",
       "sourceReference": {
@@ -55,7 +89,11 @@
       }
     },
     "rewardDoctrine": {
-      "default": ["xp", "rub", "admiral-standing"],
+      "default": [
+        "xp",
+        "rub",
+        "admiral-standing"
+      ],
       "permanentItemSupplyAllowed": false,
       "containerMilestoneRewardAllowed": false,
       "capabilityUnlockAllowed": false,
@@ -66,7 +104,7 @@
     "implementationAllowed": false,
     "runtimeMaterialize": false,
     "requiresExactSpt413HandoverConditionProof": false,
-    "requiresExactItemTplSelection": true,
+    "requiresExactItemTplSelection": false,
     "requiresVanillaScorpionArtemOverlapAudit": true,
     "requiresEconomyAdmiralReview": true,
     "requiresFrozenCampaignOverlapReview": true
