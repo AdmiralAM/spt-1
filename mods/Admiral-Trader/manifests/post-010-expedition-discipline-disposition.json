@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "post-0.1.0-expedition-discipline-product-disposition",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "operationKey": "expedition-discipline",
+  "status": "rejected-as-standalone-absorbed-into-expedition-loadout",
+  "decision": {
+    "standaloneOperationAccepted": false,
+    "materializeAsQuest": false,
+    "absorbedByOperation": "expedition-loadout",
+    "reason": "The authored concept only remains distinct from Expedition Loadout if Admiral can express a reliable bounded carried-load or inventory-weight requirement. No exact SPT 4.1.3 authority has been proven for that requirement. Substituting another equipment checklist would duplicate Expedition Loadout, while a backpack handover, item-count ladder or generic survive-one-raid proxy would reintroduce the legacy busywork the curation policy explicitly rejects.",
+    "unsupportedWeightProxyAllowed": false,
+    "genericSurviveRaidFallbackAllowed": false,
+    "backpackHandoverFallbackAllowed": false,
+    "equipmentChecklistFallbackAllowed": false,
+    "questCountPreservationIsNotARequirement": true
+  },
+  "absorbedProductMeaning": {
+    "keptInExpeditionLoadout": [
+      "field logistics must survive contact with Tarkov",
+      "equipment remains with the player rather than being handed over",
+      "successful extraction is part of the capability proof",
+      "single bounded non-repeatable operation"
+    ],
+    "discarded": [
+      "unsupported carried-weight threshold",
+      "separate second logistics quest solely to preserve authored-wave count",
+      "generic survive-one-raid proxy",
+      "backpack-by-backpack or weight-ladder progression"
+    ]
+  },
+  "authority": {
+    "expeditionLoadoutManifest": "post-010-expedition-loadout-operation.json",
+    "authoredOperationsManifest": "post-010-authored-operations.json",
+    "campaignProgressionManifest": "post-010-campaign-progression.json",
+    "rewardEnvelopeManifest": "post-010-operation-reward-envelope.json"
+  },
+  "synchronizationRequired": {
+    "removeFromAuthoredOperations": true,
+    "removeFromCampaignProgression": true,
+    "rewireEnduranceCircuitPrerequisiteToExpeditionLoadout": true,
+    "removeFromRewardEnvelope": true,
+    "reduceAuthoredWaveCountFrom21To20": true,
+    "mustBeOneAtomicProductCommit": true
+  },
+  "runtimeGate": {
+    "implementationAllowed": false,
+    "runtimeMaterialize": false,
+    "physicalTestRequired": false,
+    "deferredLifecycleRewardMilestoneUnaffected": true
+  },
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0
+  }
+}
