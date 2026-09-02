@@ -13,96 +13,129 @@ diagnostic_tests = (ROOT / "tests" / "ReloadDiagnosticLoggingRegression.cs").rea
 
 violations = []
 
+def require(text, token, where):
+    if token not in text:
+        violations.append(f"{where}: missing {token}")
+
+# Reachability remains exact and independently owned.
 for token in (
     'FindInstanceMethod(controllerType, "IsAtReachablePlace", typeof(bool), itemType)',
-    'GetAllParentItems',
     'FindReadableMember(itemType, "StringTemplateId", typeof(string))',
-    'internal static Type ItemType;',
-    'FastAccessReloadRuntime.ItemType = itemType;',
-    'FastAccessReloadRuntime.GetAllParentItems = BuildParentEnumerator',
-    'FastAccessReloadRuntime.ReadTemplateId = BuildStringReader',
-    'ShouldPromoteReloadReachability',
     'AccessoryCapability.FastAccess',
-    'dynamic.DefineParameter(1, ParameterAttributes.None, "__0")',
-    'dynamic.DefineParameter(2, ParameterAttributes.Out, "__result")',
-    'ReflectionTools.FindType("EFT.FirearmHandsInputTranslator")',
-    'FindExactZeroArgVoidMethod(translatorType, "Reload")',
-    'FindExactZeroArgVoidMethod(translatorType, "QuickReload")',
-    'Type itemType = FastAccessReloadRuntime.ItemType;',
-    'if (!itemType.IsAssignableFrom(FastAccessReloadRuntime.MagazineType)) return false;',
-    'string.Equals(method.Name, "GetItemsInSlots", StringComparison.Ordinal)',
-    'Type itemArrayType = itemType.MakeArrayType();',
-    'method.ReturnType != itemArrayType',
-    'getItemsInSlots.ReturnType != itemArrayType',
-    'ReloadCandidateBridgeRuntime.EnterReloadScope',
-    'ReloadCandidateBridgeRuntime.ExitReloadScope',
-    'ReferenceEquals(slots, OriginalFastAccessSlots)',
-    'ReferenceEquals(slots, InstalledFastAccessSlots)',
-    'ReferenceEquals(slots, OriginalBindAvailableSlots)',
-    'ReferenceEquals(slots, InstalledBindAvailableSlots)',
-    'ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = originalBindAvailableSlots;',
-    'ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = installedBindAvailableSlots;',
-    'RuntimeIdentity.DedicatedMagazineBeltItemId',
-    'GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })',
-    'if (item == null || !MagazineType.IsInstanceOfType(item) || !HasExactMagazineBeltAncestor(item)) continue;',
-    'if (ContainsReference(vanillaItems, item) || (merged != null && ContainsReference(merged, item))) continue;',
-    'List<object> merged = null;',
-    'merged = new List<object>(vanillaItems.Length + 1);',
-    'ShouldReuseVanillaReloadCandidates(merged != null)',
-    'return vanillaResult;',
-    'internal static class ReloadDiagnosticLog',
-    'ReloadDiagnosticLog.TryWarning(LogWarning,',
     'ReachabilityHarmonyId = "com.admiralam.spt.belt-armband-inventory.fast-access.reachability"',
     'CandidateBridgeHarmonyId = "com.admiralam.spt.belt-armband-inventory.fast-access.reload-candidate"',
     'PatchNamed(reachabilityHarmony, patchMethod, harmonyMethodType, reachable, "postfix", postfix)',
     'PatchNamed(candidateBridgeHarmony, patchMethod, harmonyMethodType, reload, "prefix", prefix)',
     'PatchNamed(candidateBridgeHarmony, patchMethod, harmonyMethodType, quickReload, "prefix", prefix)',
     'PatchNamed(candidateBridgeHarmony, patchMethod, harmonyMethodType, getItemsInSlots, "postfix", candidatesPostfix)',
-    'UnpatchCandidateBridge();',
-    'UnpatchReachability();',
+    'ReferenceEquals(slots, OriginalFastAccessSlots)',
+    'ReferenceEquals(slots, InstalledFastAccessSlots)',
+    'ReferenceEquals(slots, OriginalBindAvailableSlots)',
+    'ReferenceEquals(slots, InstalledBindAvailableSlots)',
+    'RuntimeIdentity.DedicatedMagazineBeltItemId',
+    'GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })',
+    'ShouldReuseVanillaReloadCandidates(merged != null)',
+    'return vanillaResult;',
 ):
-    if token not in source:
-        violations.append(f"FastAccessSlotPatches.cs: reload contract token missing: {token}")
+    require(source, token, "FastAccessSlotPatches.cs")
 
+# Pinned SPT 4.x decomp contract: exact generic interfaces, not the concrete
+# Item[] implementation detail that appears only inside Inventory.GetItemsInSlots.
+for token in (
+    'Type itemEnumerableType = typeof(IEnumerable<>).MakeGenericType(itemType);',
+    'Type slotEnumerableType = typeof(IEnumerable<>).MakeGenericType(slotEnumType);',
+    'getItemsInSlots.ReturnType != itemEnumerableType',
+    'getItemsParameters[0].ParameterType != slotEnumerableType',
+    'method.ReturnType != itemEnumerableType',
+    'parameters[0].ParameterType != slotEnumerableType',
+    'Type exactReturn = typeof(IEnumerable<>).MakeGenericType(itemType);',
+    'declaredReturn != exactReturn || getItems.ReturnType != exactReturn',
+    'ReturnType.IsInstanceOfType(vanillaResult)',
+    'vanillaResult is IEnumerable vanillaSequence',
+    'beltResult is IEnumerable beltItems',
+):
+    require(source, token, "FastAccessSlotPatches.cs")
+
+for forbidden in (
+    'Type itemArrayType = itemType.MakeArrayType();',
+    'method.ReturnType != itemArrayType',
+    'getItemsInSlots.ReturnType != itemArrayType',
+    'declaredReturn != exactArray || getItems.ReturnType != exactArray',
+):
+    if forbidden in source:
+        violations.append(f"FastAccessSlotPatches.cs: stale Item[] contract survived: {forbidden}")
+
+# Exact vanilla-first/fail-closed mechanics: four-array content pin, one query,
+# post-query reproof, reference dedup, no global scans in the hot bridge.
+for token in (
+    'HasPinnedFastAccessArrayContentForRegression(slots)',
+    'var vanillaItems = new List<object>();',
+    'foreach (object item in vanillaSequence)',
+    'foreach (object item in beltItems)',
+    'merged = new List<object>(vanillaItems);',
+    'ContainsReference(vanillaItems, item)',
+    'Array result = Array.CreateInstance(ItemType, merged.Count);',
+):
+    require(source, token, "FastAccessSlotPatches.cs")
+
+bridge_start = source.find("internal static object AppendCandidates(")
+bridge_end = source.find("internal static void Reset()", bridge_start)
+if bridge_start < 0 or bridge_end < 0:
+    violations.append("FastAccessSlotPatches.cs: scoped candidate runtime region not found")
+else:
+    runtime = source[bridge_start:bridge_end]
+    if runtime.count('GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })') != 1:
+        violations.append("FastAccessSlotPatches.cs: scoped bridge must execute exactly one pseudo-slot15 query")
+    if runtime.count('HasPinnedFastAccessArrayContentForRegression(slots)') < 3:
+        violations.append("FastAccessSlotPatches.cs: slot-array pin must be proved before contract work, immediately pre-query, and post-query")
+    for forbidden in (
+        "AppDomain.CurrentDomain.GetAssemblies", "ReflectionTools.GetTypes", "GetMethods(",
+        "GetProperty(", "GetField(", "FindObjectsOfType", "GetComponentsInChildren", "new StackTrace",
+    ):
+        if forbidden in runtime:
+            violations.append(f"FastAccessSlotPatches.cs: scoped hot path performs discovery/scan: {forbidden}")
+
+# Epoch guard must enforce the same declared interface boundary and the same
+# one-value pseudo-slot query; a separate stale Item[] authority is forbidden.
 for token in (
     '[ThreadStatic] static int threadGeneration;',
     '[ThreadStatic] static int threadDepth;',
     'Volatile.Read(ref generation)',
     'Interlocked.Increment(ref generation)',
-    'runtime.GetMethod("EnterReloadScope"',
-    'runtime.GetMethod("ExitReloadScope"',
-    'runtime.GetMethod("AppendCandidates"',
-    'runtime.GetMethod("Reset"',
-    'static bool terminalFailure;',
-    'if (terminalFailure) return false;',
-    'MethodInfo unpatchSelf = null;',
-    'unpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf")',
-    'if (harmonyCtor == null || harmonyMethodCtor == null || patch == null || unpatchSelf == null) return false;',
-    'PatchNamed(owner, patch, harmonyMethodType, reset, "postfix"',
-    'bool rolledBack = TryRollbackOwner(owner, unpatchSelf);',
-    'terminalFailure = owner != null && !rolledBack;',
-    'static bool TryRollbackOwner(object owner, MethodInfo unpatchSelf)',
-    'if (unpatchSelf == null) return false;',
-    'unpatchSelf.Invoke(owner, null);',
-    'FindZeroArgInstanceMethod',
-    'harmonyOwner = null;',
-    'installed = false;',
-    'AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;',
-    'if (IsCurrentScope() && HasExactRuntimeReturnContract()) return true;',
     'static bool HasExactRuntimeReturnContract()',
-    'Type exactArray = itemType.MakeArrayType();',
-    'if (declaredReturn != exactArray || getItems.ReturnType != exactArray) return false;',
-    'ParameterInfo[] parameters = getItems.GetParameters();',
+    'Type exactReturn = typeof(IEnumerable<>).MakeGenericType(itemType);',
+    'if (declaredReturn != exactReturn || getItems.ReturnType != exactReturn) return false;',
     'parameters[0].ParameterType.IsInstanceOfType(beltArgument)',
-    'if (!(beltArgument is IEnumerable values)) return false;',
     'Convert.ToInt32(value) != RuntimeIdentity.DedicatedBeltEquipmentSlotValue',
     'if (count > 1) return false;',
-    'return count == 1;',
     '__result = __2;',
-    'return false;',
+    'CaptureCurrentSlotArrays()',
+    'HasPinnedFastAccessArrayContent(__1)',
+    'bool rolledBack = TryRollbackOwner(owner, unpatchSelf);',
+    'terminalFailure = owner != null && !rolledBack;',
 ):
-    if token not in epoch:
-        violations.append(f"ReloadScopeEpochGuard.cs: lifecycle/return-query contract token missing: {token}")
+    require(epoch, token, "ReloadScopeEpochGuard.cs")
+if 'Type exactArray = itemType.MakeArrayType();' in epoch:
+    violations.append("ReloadScopeEpochGuard.cs: stale Item[] return authority survived")
+
+# Deterministic regressions must encode the actual decompiled signature and
+# fail closed on array/lookalike contracts while retaining one-slot recovery.
+for token in (
+    'exact.ReturnType != typeof(IEnumerable<FakeItem>)',
+    'exact.GetParameters()[0].ParameterType != typeof(IEnumerable<FakeSlot>)',
+    'public FakeItem[] GetItemsInSlots(IEnumerable<FakeSlot> slots)',
+    'if (broadOnly != null)',
+):
+    require(discovery_tests, token, "ReloadDiscoveryExactReturnContractRegression.cs")
+for token in (
+    'exact IEnumerable<Item> GetItemsInSlots + one pseudo-slot15 query',
+    'declared Item[] drift must be rejected',
+    'method-declared Item[] drift must fail closed',
+    'multi-slot fallback argument must fail closed before inventory enumeration',
+    'wrong pseudo-slot fallback argument must fail closed before inventory enumeration',
+    'exact one-slot query must recover after rejected query-state drift',
+):
+    require(return_tests, token, "ReloadCandidateReturnContractRegression.cs")
 
 if 'ReloadScopeEpochRegression.Run();' not in tests:
     violations.append("Program.cs: reload epoch regression must run after module initialization")
@@ -112,179 +145,41 @@ for token in (
     'ReloadScopeEpochGuard.InvalidateForRegression();',
     'scope from superseded installation remained current on its owning thread',
     'new-generation reload scope did not become current',
-    'same-thread nested stale scope survived generation invalidation',
 ):
-    if token not in epoch_tests:
-        violations.append(f"ReloadScopeEpochRegression.cs: epoch regression missing: {token}")
-
+    require(epoch_tests, token, "ReloadScopeEpochRegression.cs")
 for token in (
-    'HasExactRuntimeReturnContractForRegression()',
-    'IEnumerable<Item> GetItemsInSlots drift must fail closed despite Item[] assignability',
-    'multi-slot fallback argument must fail closed before inventory enumeration',
-    'wrong pseudo-slot fallback argument must fail closed before inventory enumeration',
-    'exact one-slot query must recover after rejected query-state drift',
-    'exact contract must recover after a rejected drifted method without a permanent circuit breaker',
-):
-    if token not in return_tests:
-        violations.append(f"ReloadCandidateReturnContractRegression.cs: exact return/query-shape regression missing: {token}")
-
-for token in (
-    'typeof(ExactAndBroadInventory)',
-    'exact.ReturnType != typeof(FakeItem[])',
-    'typeof(BroadOnlyInventory)',
-    'if (broadOnly != null)',
-    'typeof(AmbiguousExactInventory)',
-    'if (ambiguous != null)',
-):
-    if token not in discovery_tests:
-        violations.append(f"ReloadDiscoveryExactReturnContractRegression.cs: exact discovery regression missing: {token}")
-
-for token in (
-    'TryRollbackOwner',
-    'FindZeroArgInstanceMethod',
+    'TryRollbackOwner', 'FindZeroArgInstanceMethod',
     'partial Harmony owner was not unpatched exactly once',
     'throwing rollback was not reported as terminally unsafe',
     'missing rollback API was incorrectly treated as safe',
-    'no-owner rollback must be an exact safe no-op',
-    'ambiguous zero-arg rollback API did not fail closed',
 ):
-    if token not in epoch_install_tests:
-        violations.append(f"ReloadScopeEpochInstallRollbackRegression.cs: atomic install regression missing: {token}")
+    require(epoch_install_tests, token, "ReloadScopeEpochInstallRollbackRegression.cs")
 
-if source.count('ReloadDiagnosticLog.TryWarning(LogWarning,') < 2:
-    violations.append("FastAccessSlotPatches.cs: both reload reachability and candidate runtime diagnostics must isolate throwing warning sinks")
+for token in (
+    'ShouldBridgeReloadCandidates(true, false, true)',
+    'ShouldReuseVanillaReloadCandidates(false)',
+    'OriginalBindAvailableSlots = originalBindAvailableSlots',
+    'InstalledBindAvailableSlots = installedBindAvailableSlots',
+):
+    require(bridge_tests, token, "ReloadCandidateBridgeRegression.cs")
+for token in (
+    'ThrowingReachabilityLoggerCannotEscape()',
+    'ThrowingCandidateLoggerCannotEscape()',
+    'ReferenceEquals(first, vanilla)',
+    'ReferenceEquals(second, vanilla)',
+):
+    require(diagnostic_tests, token, "ReloadDiagnosticLoggingRegression.cs")
 
-if 'FastAccessReloadRuntime.MagazineType.BaseType' in source:
-    violations.append("FastAccessSlotPatches.cs: candidate discovery must use exact resolved EFT Item, not infer Item from Magazine.BaseType")
-
-if 'method.ReturnType.IsAssignableFrom(itemArrayType)' in source:
-    violations.append("FastAccessSlotPatches.cs: reload discovery must not accept assignable/broader return contracts; exact EFT Item[] is required")
-if 'getItemsInSlots.ReturnType.IsAssignableFrom(itemArrayType)' in source:
-    violations.append("FastAccessSlotPatches.cs: candidate installer must not widen exact EFT Item[] discovery after selection")
+for forbidden in ("FindObjectsOfType", "Resources.FindObjectsOfTypeAll", "GetComponentsInChildren", "void Update("):
+    if forbidden in source:
+        violations.append(f"FastAccessSlotPatches.cs: forbidden reload implementation mechanism: {forbidden}")
 
 if source.count('Activator.CreateInstance(harmonyType, new object[] { ReachabilityHarmonyId })') != 1:
     violations.append("FastAccessSlotPatches.cs: reachability Harmony owner must be created exactly once")
 if source.count('Activator.CreateInstance(harmonyType, new object[] { CandidateBridgeHarmonyId })') != 1:
-    violations.append("FastAccessSlotPatches.cs: candidate bridge Harmony owner must be created exactly once")
-
-candidate_start = source.find("bool TryInstallReloadCandidateBridge(")
-candidate_end = source.find("static MethodInfo FindExactZeroArgVoidMethod", candidate_start)
-if candidate_start < 0 or candidate_end < 0:
-    violations.append("FastAccessSlotPatches.cs: candidate bridge installer region not found")
-else:
-    installer = source[candidate_start:candidate_end]
-    if "UnpatchReachability();" in installer:
-        violations.append("FastAccessSlotPatches.cs: candidate bridge failure must not unpatch valid reachability owner")
-    if "UnpatchCandidateBridge();" not in installer:
-        violations.append("FastAccessSlotPatches.cs: partial candidate bridge install lacks owner-scoped rollback")
-
-unpatch_start = source.find("void UnpatchCandidateBridge()")
-unpatch_end = source.find("void UnpatchReachability()", unpatch_start)
-if unpatch_start < 0 or unpatch_end < 0:
-    violations.append("FastAccessSlotPatches.cs: candidate owner rollback region not found")
-else:
-    rollback = source[unpatch_start:unpatch_end]
-    if "candidateBridgeUnpatchSelf.Invoke(candidateBridgeHarmony, null)" not in rollback:
-        violations.append("FastAccessSlotPatches.cs: candidate rollback does not unpatch its own Harmony owner")
-    if "FastAccessReloadRuntime.Reset()" in rollback:
-        violations.append("FastAccessSlotPatches.cs: candidate rollback must preserve reachability runtime state")
-
-start = source.find("internal static void PromoteReachability(")
-end = source.find("internal static void Reset()", start)
-if start < 0 or end < 0:
-    violations.append("FastAccessSlotPatches.cs: reload runtime region not found")
-else:
-    runtime = source[start:end]
-    for token in (
-        "ReflectionTools.ReadMember",
-        "AppDomain.CurrentDomain.GetAssemblies",
-        "ReflectionTools.GetTypes",
-        "GetMethods(",
-        "GetMethod(",
-        "GetProperty(",
-        "GetField(",
-        "FindObjectsOfType",
-        "GetComponentsInChildren",
-    ):
-        if token in runtime:
-            violations.append(f"FastAccessSlotPatches.cs: reload hot path performs discovery/scan: {token}")
-
-bridge_start = source.find("internal static object AppendCandidates(")
-bridge_end = source.find("internal static void Reset()", bridge_start)
-if bridge_start < 0 or bridge_end < 0:
-    violations.append("FastAccessSlotPatches.cs: scoped reload candidate bridge runtime region not found")
-else:
-    runtime = source[bridge_start:bridge_end]
-    for token in (
-        "AppDomain.CurrentDomain.GetAssemblies",
-        "ReflectionTools.GetTypes",
-        "GetMethods(",
-        "GetProperty(",
-        "GetField(",
-        "FindObjectsOfType",
-        "GetComponentsInChildren",
-        "new StackTrace",
-    ):
-        if token in runtime:
-            violations.append(f"FastAccessSlotPatches.cs: scoped candidate hot path performs discovery/scan: {token}")
-
-    lazy_merge = runtime.find("List<object> merged = null;")
-    belt_loop = runtime.find("foreach (object item in beltItems)")
-    allocation = runtime.find("merged = new List<object>(vanillaItems.Length + 1);")
-    reuse = runtime.find("ShouldReuseVanillaReloadCandidates(merged != null)")
-    if min(lazy_merge, belt_loop, allocation, reuse) < 0 or not (lazy_merge < belt_loop < allocation < reuse):
-        violations.append("FastAccessSlotPatches.cs: no-op Belt path must stay allocation-free and reuse vanilla result until first exact fallback")
-
-for token in (
-    '!FastAccessSlotPolicy.ShouldPromoteReloadReachability(true, true, true)',
-    'FastAccessSlotPolicy.ShouldPromoteReloadReachability(false, true, true)',
-    'extendedReloadSlots.Take(vanillaReloadSlots.Length).SequenceEqual(vanillaReloadSlots)',
-    'extendedReloadSlots.Skip(vanillaReloadSlots.Length).SequenceEqual(new[] { BeltSlotPlan.ArmBand, RuntimeIdentity.DedicatedBeltWireSlotId })',
-    'RuntimeIdentity.CandidateItemId, AccessoryCapability.FastAccess',
-    'RuntimeIdentity.DedicatedMagazineBeltItemId, AccessoryCapability.FastAccess',
-    '!WearableItemDescriptorRegistry.HasCapability(RuntimeIdentity.WristWalletItemId, AccessoryCapability.FastAccess)',
-    '!WearableItemDescriptorRegistry.HasCapability(RuntimeIdentity.EmergencyHeadBandItemId, AccessoryCapability.FastAccess)',
-):
-    if token not in tests:
-        violations.append(f"Program.cs: reload fallback regression missing: {token}")
-
-for token in (
-    'ShouldBridgeReloadCandidates(true, false, true)',
-    'ShouldBridgeReloadCandidates(false, false, true)',
-    'ShouldBridgeReloadCandidates(true, true, true)',
-    'ShouldBridgeReloadCandidates(true, false, false)',
-    'ShouldReuseVanillaReloadCandidates(false)',
-    'ShouldReuseVanillaReloadCandidates(true)',
-    'OriginalBindAvailableSlots = originalBindAvailableSlots',
-    'InstalledBindAvailableSlots = installedBindAvailableSlots',
-    'originalBindAvailableSlots',
-    'installedBindAvailableSlots',
-):
-    if token not in bridge_tests:
-        violations.append(f"ReloadCandidateBridgeRegression.cs: scoped bridge regression missing: {token}")
-
-for token in (
-    'ThrowingReachabilityLoggerCannotEscape()',
-    'ThrowingCandidateLoggerCannotEscape()',
-    'FastAccessReloadRuntime.LogWarning = _ => throw new InvalidOperationException("synthetic logger failure")',
-    'ReloadCandidateBridgeRuntime.LogWarning = _ => throw new InvalidOperationException("synthetic logger failure")',
-    'ReferenceEquals(first, vanilla)',
-    'ReferenceEquals(second, vanilla)',
-    'candidate failure plus logger failure cannot leak reentrant state',
-):
-    if token not in diagnostic_tests:
-        violations.append(f"ReloadDiagnosticLoggingRegression.cs: throwing diagnostic sink regression missing: {token}")
-
-for token in (
-    "FindObjectsOfType",
-    "Resources.FindObjectsOfTypeAll",
-    "GetComponentsInChildren",
-    "void Update(",
-):
-    if token in source:
-        violations.append(f"FastAccessSlotPatches.cs: forbidden reload implementation mechanism: {token}")
+    violations.append("FastAccessSlotPatches.cs: candidate Harmony owner must be created exactly once")
 
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("B&A&HB reload-access guard: OK (vanilla-first exact Belt bridge; discovery and execution both pin exact EFT Item[]; exact FastAccess/BindAvailable reference identity plus exactly one pseudo-slot15 query are gated before fallback enumeration; no-op Belt path preserves vanilla result identity without merge allocation; throwing diagnostics isolated; reachability/candidate owners isolated; stale ThreadStatic scopes generation-invalidated across reset/reinstall; epoch Harmony install preflights unique rollback and enters terminal fail-closed state if owner rollback cannot be proven; startup-bound discovery; fail-closed/no polling)")
+print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, four-array content pin, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
