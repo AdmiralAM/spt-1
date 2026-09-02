@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
@@ -13,52 +14,47 @@ internal static class ReloadCandidateReturnContractRegression
         var exactBelt = new FakeItem(RuntimeIdentity.DedicatedMagazineBeltItemId);
         var vanillaMagazine = new FakeMagazine("vanilla-magazine", new FakeItem("foreign-root"));
         var beltMagazine = new FakeMagazine("belt-magazine", exactBelt);
-        var vanilla = new FakeItem[] { vanillaMagazine };
+        IEnumerable<FakeItem> vanilla = new List<FakeItem> { vanillaMagazine };
         object slots = new object[] { "original-fast" };
         var inventory = new FakeInventory(new FakeItem[] { beltMagazine });
 
         Configure(inventory, slots);
         Assert(ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
-            "exact Item[] GetItemsInSlots + one pseudo-slot15 query must pass the pre-bridge epoch gate");
+            "exact IEnumerable<Item> GetItemsInSlots + one pseudo-slot15 query must pass the pre-bridge epoch gate");
 
-        var driftedVanilla = new List<FakeItem> { vanillaMagazine };
         ReloadCandidateBridgeRuntime.EnterReloadScope();
-        object driftedResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, driftedVanilla);
+        object healthy = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
-        Assert(ReferenceEquals(driftedResult, driftedVanilla),
-            "non-Item[] vanilla result shape must preserve exact vanilla object identity");
-        Assert(inventory.Calls == 0,
-            "non-Item[] vanilla result shape must fail closed before the pseudo-slot15 fallback query");
+        Assert(!ReferenceEquals(healthy, vanilla),
+            "healthy pinned interface contract must append the exact Belt descendant");
+        Assert(((IEnumerable<FakeItem>)healthy).SequenceEqual(new FakeItem[] { vanillaMagazine, beltMagazine }),
+            "successful replacement must retain vanilla order as a strict prefix and append only the Belt candidate");
+        Assert(inventory.Calls == 1, "healthy bridge must execute exactly one pseudo-slot15 query");
 
-        ReloadCandidateBridgeRuntime.ReturnType = typeof(List<FakeItem>);
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
         Assert(!ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
-            "declared List return drift must be rejected by the epoch gate");
+            "declared Item[] drift must be rejected even though Item[] implements IEnumerable<Item>");
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object incompatibleReturn = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
-        Assert(ReferenceEquals(incompatibleReturn, vanilla),
-            "primary bridge must preserve exact vanilla result on declared return drift");
-        Assert(inventory.Calls == 0,
-            "primary bridge must reject declared return drift before any pseudo-slot15 query even without relying on the epoch prefix");
+        Assert(ReferenceEquals(incompatibleReturn, vanilla) && inventory.Calls == 1,
+            "declared array drift must preserve exact vanilla object before a second query");
 
-        ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeDriftInventory).GetMethod(nameof(FakeDriftInventory.GetItemsInSlots))
-            ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: drift GetItemsInSlots missing");
+        ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeArrayReturnInventory).GetMethod(nameof(FakeArrayReturnInventory.GetItemsInSlots))
+            ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: array-return drift method missing");
         ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<FakeItem>);
         Assert(!ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
-            "IEnumerable<Item> GetItemsInSlots drift must fail closed despite Item[] assignability");
+            "method-declared Item[] drift must fail closed despite interface assignability");
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object driftMethodResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
-        Assert(ReferenceEquals(driftMethodResult, vanilla),
-            "primary bridge must preserve exact vanilla result on GetItemsInSlots return-shape drift");
-        Assert(inventory.Calls == 0,
-            "drifted GetItemsInSlots contract must not reach the exact inventory query");
+        Assert(ReferenceEquals(driftMethodResult, vanilla) && inventory.Calls == 1,
+            "method return drift must fail before inventory invocation");
 
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: exact GetItemsInSlots missing");
-        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
         Assert(ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
-            "exact contract must recover after a rejected drifted method without a permanent circuit breaker");
+            "exact interface contract must recover after rejected return drift");
 
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[]
         {
@@ -70,8 +66,8 @@ internal static class ReloadCandidateReturnContractRegression
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object multiSlotResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
-        Assert(ReferenceEquals(multiSlotResult, vanilla) && inventory.Calls == 0,
-            "primary bridge must reject multi-slot state before querying and preserve exact vanilla identity");
+        Assert(ReferenceEquals(multiSlotResult, vanilla) && inventory.Calls == 1,
+            "multi-slot state must preserve exact vanilla identity before querying");
 
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue - 1 };
         Assert(!ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
@@ -79,29 +75,12 @@ internal static class ReloadCandidateReturnContractRegression
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object wrongSlotResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
-        Assert(ReferenceEquals(wrongSlotResult, vanilla) && inventory.Calls == 0,
-            "primary bridge must reject wrong pseudo-slot state before querying and preserve exact vanilla identity");
+        Assert(ReferenceEquals(wrongSlotResult, vanilla) && inventory.Calls == 1,
+            "wrong pseudo-slot state must preserve exact vanilla identity before querying");
 
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         Assert(ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
             "exact one-slot query must recover after rejected query-state drift");
-        ReloadCandidateBridgeRuntime.EnterReloadScope();
-        object recovered = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
-        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
-        Assert(!ReferenceEquals(recovered, vanilla),
-            "healthy exact contract must still append the exact Belt descendant after fail-closed drift cases");
-        Assert(inventory.Calls == 1,
-            "healthy recovery must perform exactly one bounded pseudo-slot15 query");
-
-        var covariantInventory = new FakeInventory(new FakeMagazine[] { beltMagazine });
-        Configure(covariantInventory, slots);
-        ReloadCandidateBridgeRuntime.EnterReloadScope();
-        object covariantResult = ReloadCandidateBridgeRuntime.AppendCandidates(covariantInventory, slots, vanilla);
-        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
-        Assert(ReferenceEquals(covariantResult, vanilla),
-            "covariant Magazine[] fallback runtime shape must preserve exact vanilla result identity");
-        Assert(covariantInventory.Calls == 1,
-            "covariant runtime-shape rejection must occur immediately after the single bounded pseudo-slot15 query");
 
         FieldInfo depth = typeof(ReloadCandidateBridgeRuntime).GetField("reloadDepth", BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Reload candidate return-contract regression failed: reloadDepth field missing");
@@ -127,7 +106,7 @@ internal static class ReloadCandidateReturnContractRegression
         ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object[] { "original-bind", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
-        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<FakeItem>);
         ReloadCandidateBridgeRuntime.GetAllParentItems = item => ((FakeItem)item).Parents;
         ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
         ReloadCandidateBridgeRuntime.LogWarning = message => throw new InvalidOperationException(
@@ -139,32 +118,23 @@ internal static class ReloadCandidateReturnContractRegression
     {
         readonly FakeItem[] items;
         internal int Calls { get; private set; }
-
-        internal FakeInventory(FakeItem[] items)
-        {
-            this.items = items;
-        }
-
-        public FakeItem[] GetItemsInSlots(object slots)
+        internal FakeInventory(FakeItem[] items) { this.items = items; }
+        public IEnumerable<FakeItem> GetItemsInSlots(IEnumerable<int> slots)
         {
             Calls++;
-            return items;
+            return items.Concat(Array.Empty<FakeItem>());
         }
     }
 
-    sealed class FakeDriftInventory
+    sealed class FakeArrayReturnInventory
     {
-        public IEnumerable<FakeItem> GetItemsInSlots(object slots)
-        {
-            return Array.Empty<FakeItem>();
-        }
+        public FakeItem[] GetItemsInSlots(IEnumerable<int> slots) => Array.Empty<FakeItem>();
     }
 
     class FakeItem
     {
         internal string TemplateId { get; }
         internal IEnumerable Parents { get; }
-
         internal FakeItem(string templateId, params FakeItem[] parents)
         {
             TemplateId = templateId;
@@ -174,15 +144,11 @@ internal static class ReloadCandidateReturnContractRegression
 
     sealed class FakeMagazine : FakeItem
     {
-        internal FakeMagazine(string templateId, params FakeItem[] parents)
-            : base(templateId, parents)
-        {
-        }
+        internal FakeMagazine(string templateId, params FakeItem[] parents) : base(templateId, parents) { }
     }
 
     static void Assert(bool condition, string message)
     {
-        if (!condition)
-            throw new InvalidOperationException("Reload candidate return-contract regression failed: " + message);
+        if (!condition) throw new InvalidOperationException("Reload candidate return-contract regression failed: " + message);
     }
 }
