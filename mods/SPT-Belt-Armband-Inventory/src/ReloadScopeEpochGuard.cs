@@ -17,10 +17,11 @@ namespace SPTBeltArmbandInventory
     /// Cross-thread lifecycle guard for ReloadCandidateBridgeRuntime.
     /// ReloadCandidateBridgeRuntime intentionally keeps its hot scope state ThreadStatic, which means
     /// Reset() cannot clear a scope owned by another thread. This guard adds a process-wide generation:
-    /// any Reset invalidates every previously-entered scope before a later reinstall can repopulate the
-    /// bridge's static slot references. It also pins point-in-time contents for the four accepted mutable
-    /// slot-array references after FastAccessSlotPatches.TryInstall, so same-reference in-place edits fail
-    /// closed before the scoped pseudo-slot15 query. It never broadens candidate discovery or inventory traversal.
+    /// any Reset or FastAccess install-completion authority transition invalidates every previously-entered
+    /// scope before later snapshot publication can repopulate the bridge's accepted slot references.
+    /// It also pins point-in-time contents for the four accepted mutable slot-array references after
+    /// FastAccessSlotPatches.TryInstall, so same-reference in-place edits fail closed before the scoped
+    /// pseudo-slot15 query. It never broadens candidate discovery or inventory traversal.
     /// </summary>
     internal static class ReloadScopeEpochGuard
     {
@@ -294,11 +295,15 @@ namespace SPTBeltArmbandInventory
 
         static void AfterFastAccessInstall(bool __result)
         {
+            // Snapshot publication changes the accepted mutable slot-array authority.
+            // Clear first, then advance the process-wide generation before any new
+            // snapshot can become visible. A pre-install reload scope can therefore
+            // never become current again after failed -> successful install/reinstall
+            // cycles, even if all bridge references are later restored identically.
+            Volatile.Write(ref slotArraySnapshots, null);
+            Invalidate();
             if (!__result)
-            {
-                Volatile.Write(ref slotArraySnapshots, null);
                 return;
-            }
 
             SlotArraySnapshotSet captured = CaptureCurrentSlotArrays();
             Volatile.Write(ref slotArraySnapshots, captured);
@@ -455,6 +460,7 @@ namespace SPTBeltArmbandInventory
         internal static bool IsCurrentForRegression() => IsCurrentScope();
         internal static bool HasExactRuntimeReturnContractForRegression() => HasExactRuntimeReturnContract();
         internal static void CaptureSlotArraysForRegression() => Volatile.Write(ref slotArraySnapshots, CaptureCurrentSlotArrays());
+        internal static void FastAccessInstallCompletedForRegression(bool succeeded) => AfterFastAccessInstall(succeeded);
         internal static bool HasPinnedFastAccessArrayContentForRegression(object candidate) => HasPinnedFastAccessArrayContent(candidate);
         internal static void ClearSlotArraySnapshotsForRegression() => Volatile.Write(ref slotArraySnapshots, null);
     }
