@@ -16,6 +16,8 @@ internal static class DogtagCaseCanonicalFilterPreflightRegression
             "canonical preflight must execute before DogtagCaseItem preload +3 publication");
         Require(source, "grids == null || grids.Length != 1",
             "canonical preflight must require the exact single-grid boundary");
+        Require(source, "!Equals(grid.Parent, SourceDogtagCaseTpl)",
+            "canonical preflight must reject a detached/reparented EFT Dogtag Case grid before filter authority is consumed");
         Require(source, "filters == null || filters.Length == 0",
             "canonical preflight must reject a vacuous filter-group contract");
         Require(source, "included == null || included.Count == 0",
@@ -28,10 +30,11 @@ internal static class DogtagCaseCanonicalFilterPreflightRegression
         int priority = source.IndexOf("OnLoadOrder.Preload + 2", StringComparison.Ordinal);
         int lookup = source.IndexOf("TryGetValue(SourceDogtagCaseTpl", StringComparison.Ordinal);
         int grid = source.IndexOf("grids == null || grids.Length != 1", StringComparison.Ordinal);
+        int parent = source.IndexOf("!Equals(grid.Parent, SourceDogtagCaseTpl)", StringComparison.Ordinal);
         int filters = source.IndexOf("filters == null || filters.Length == 0", StringComparison.Ordinal);
         int included = source.IndexOf("included == null || included.Count == 0", StringComparison.Ordinal);
         int owned = source.IndexOf("PersistentIdentityManifest.IsOwnedTemplate(accepted.ToString())", StringComparison.Ordinal);
-        if (priority < 0 || lookup < priority || grid < lookup || filters < grid || included < filters || owned < included)
+        if (priority < 0 || lookup < priority || grid < lookup || parent < grid || filters < parent || included < filters || owned < included)
             throw new InvalidOperationException("Dogtag canonical filter preflight regression failed: exact pre-publication proof ordering changed.");
     }
 
