@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 internal static class ReloadPrimaryFallbackContractRegression
 {
-    private const string PinToken = "if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))";
+    private const string PinToken = "ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)";
 
     [ModuleInitializer]
     internal static void Run()
@@ -19,11 +19,11 @@ internal static class ReloadPrimaryFallbackContractRegression
         int helperCall = firstPin < 0 ? -1 : source.IndexOf("if (!HasExactFallbackQueryContract()", firstPin, StringComparison.Ordinal);
         int exactVanillaType = helperCall < 0 ? -1 : source.IndexOf("!ReturnType.IsInstanceOfType(vanillaResult)", helperCall, StringComparison.Ordinal);
         int vanillaEnumerable = exactVanillaType < 0 ? -1 : source.IndexOf("!(vanillaResult is IEnumerable vanillaSequence)", exactVanillaType, StringComparison.Ordinal);
-        int secondPin = vanillaEnumerable < 0 ? -1 : source.IndexOf(PinToken, vanillaEnumerable, StringComparison.Ordinal);
+        int secondPin = firstPin < 0 ? -1 : source.IndexOf(PinToken, firstPin + PinToken.Length, StringComparison.Ordinal);
         int invoke = secondPin < 0 ? -1 : source.IndexOf("GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })", secondPin, StringComparison.Ordinal);
         int exactFallbackType = invoke < 0 ? -1 : source.IndexOf("!ReturnType.IsInstanceOfType(beltResult)", invoke, StringComparison.Ordinal);
         int fallbackEnumerable = exactFallbackType < 0 ? -1 : source.IndexOf("!(beltResult is IEnumerable beltItems)", exactFallbackType, StringComparison.Ordinal);
-        int thirdPin = fallbackEnumerable < 0 ? -1 : source.IndexOf(PinToken, fallbackEnumerable, StringComparison.Ordinal);
+        int thirdPin = secondPin < 0 ? -1 : source.IndexOf(PinToken, secondPin + PinToken.Length, StringComparison.Ordinal);
         int merge = thirdPin < 0 ? -1 : source.IndexOf("List<object> merged = null;", thirdPin, StringComparison.Ordinal);
         int helper = source.IndexOf("static bool HasExactFallbackQueryContract()", StringComparison.Ordinal);
         int reset = helper < 0 ? -1 : source.IndexOf("internal static void Reset()", helper, StringComparison.Ordinal);
