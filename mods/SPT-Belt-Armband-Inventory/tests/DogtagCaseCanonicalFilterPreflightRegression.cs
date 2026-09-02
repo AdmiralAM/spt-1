@@ -28,10 +28,14 @@ internal static class DogtagCaseCanonicalFilterPreflightRegression
             "second canonical value proof must independently fail closed if source identity changes");
         Require(source, "!ReferenceEquals(source.Properties, expected.Properties)",
             "canonical preflight must pin root properties identity");
+        Require(source, "!ReferenceEquals(source.Properties?.Grids, expected.GridsCollection)",
+            "canonical preflight must pin the mutable canonical grids collection identity");
         Require(source, "!ReferenceEquals(grids[0], expected.Grid)",
             "canonical preflight must pin canonical grid object identity");
         Require(source, "!ReferenceEquals(grids[0].Properties, expected.GridProperties)",
             "canonical preflight must pin canonical grid-properties identity");
+        Require(source, "!ReferenceEquals(grids[0].Properties?.Filters, expected.FiltersCollection)",
+            "canonical preflight must pin the mutable filter-group collection identity");
         Require(source, "!ReferenceEquals(groups[i], expected.FilterGroups[i])",
             "canonical preflight must pin every filter-group object identity");
         Require(source, "!ReferenceEquals(groups[i].Filter, expected.IncludedFilters[i])",
@@ -57,6 +61,8 @@ internal static class DogtagCaseCanonicalFilterPreflightRegression
         int identity = source.IndexOf("!ReferenceEquals(liveSource, source)", StringComparison.Ordinal);
         int secondProof = source.IndexOf("RequireCanonicalSourceContract(cancellationToken, source);", StringComparison.Ordinal);
         int nestedIdentity = source.IndexOf("RequireCanonicalIdentity(source, identity);", StringComparison.Ordinal);
+        int gridsCollection = source.IndexOf("!ReferenceEquals(source.Properties?.Grids, expected.GridsCollection)", StringComparison.Ordinal);
+        int filtersCollection = source.IndexOf("!ReferenceEquals(grids[0].Properties?.Filters, expected.FiltersCollection)", StringComparison.Ordinal);
         int grid = source.IndexOf("grids == null || grids.Length != 1", StringComparison.Ordinal);
         int parent = source.IndexOf("!Equals(grid.Parent, SourceDogtagCaseTpl)", StringComparison.Ordinal);
         int filters = source.IndexOf("filters == null || filters.Length == 0", StringComparison.Ordinal);
@@ -64,8 +70,9 @@ internal static class DogtagCaseCanonicalFilterPreflightRegression
         int owned = source.IndexOf("PersistentIdentityManifest.IsOwnedTemplate(accepted.ToString())", StringComparison.Ordinal);
         if (priority < 0 || firstProof < priority || capture < firstProof || identity < capture
             || secondProof < identity || nestedIdentity < secondProof
+            || gridsCollection < nestedIdentity || filtersCollection < gridsCollection
             || grid < nestedIdentity || parent < grid || filters < parent || included < filters || owned < included)
-            throw new InvalidOperationException("Dogtag canonical filter preflight regression failed: value -> nested identity capture -> source identity -> value -> nested identity proof ordering changed.");
+            throw new InvalidOperationException("Dogtag canonical filter preflight regression failed: value -> nested identity capture -> source identity -> value -> complete nested identity proof ordering changed.");
     }
 
     private static string? FindModuleRoot()
