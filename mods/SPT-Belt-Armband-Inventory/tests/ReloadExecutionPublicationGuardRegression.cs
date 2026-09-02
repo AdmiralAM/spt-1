@@ -8,7 +8,7 @@ namespace SPTBeltArmbandInventory.Tests
 {
     internal static class ReloadExecutionPublicationGuardRegression
     {
-        sealed class FakeItem { }
+        class FakeItem { }
         sealed class FakeMagazine : FakeItem { }
 
         [ModuleInitializer]
