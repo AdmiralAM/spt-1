@@ -55,8 +55,9 @@ public sealed class DogtagCaseItem(
         var sourceGridProperties = sourceGrid.Properties
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case canonical source grid properties are missing; refusing fallback cloning.");
         var sourceFilters = sourceGridProperties.Filters?.ToArray();
-        if (sourceFilters == null || sourceFilters.Length == 0 || sourceFilters.Any(x => x.Filter == null || x.Filter.Count == 0))
-            throw new InvalidOperationException("B&A&HB Dogtag Case source filters are empty or ambiguous; refusing to create a broadened container.");
+        if (sourceFilters == null || sourceFilters.Length == 0
+            || sourceFilters.Any(x => x.Filter == null || x.Filter.Count == 0 || x.Filter.Contains(DogtagCaseTpl)))
+            throw new InvalidOperationException("B&A&HB Dogtag Case source filters are empty, recursive or ambiguous; refusing to create a broadened container.");
 
         DogtagHostBoundary dogtagHost = PrepareDogtagSlotFilter();
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceDogtagCaseTpl)
@@ -346,9 +347,10 @@ public sealed class DogtagCaseItem(
             var expectedExcluded = expectedFilters[i].ExcludedFilter;
             if (actualIncluded == null || expectedIncluded == null
                 || actualIncluded.Count == 0 || expectedIncluded.Count == 0
+                || actualIncluded.Contains(DogtagCaseTpl) || expectedIncluded.Contains(DogtagCaseTpl)
                 || ReferenceEquals(actualIncluded, expectedIncluded)
                 || !actualIncluded.SetEquals(expectedIncluded))
-                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: canonical included filter is empty, differs from, or aliases source.");
+                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: canonical included filter is empty, recursive, differs from, or aliases source.");
             if ((actualExcluded == null) != (expectedExcluded == null)
                 || (actualExcluded != null && expectedExcluded != null
                     && (ReferenceEquals(actualExcluded, expectedExcluded) || !actualExcluded.SetEquals(expectedExcluded))))
