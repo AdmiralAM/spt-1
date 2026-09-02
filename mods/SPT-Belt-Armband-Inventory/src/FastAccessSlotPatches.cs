@@ -274,8 +274,14 @@ namespace SPTBeltArmbandInventory
                 if (declaredReturn != exactReturn || getItems.ReturnType != exactReturn)
                     return false;
 
+                Type slotElementType = GetEnumerableElementType(beltArgument.GetType());
+                if (slotElementType == null)
+                    return false;
+                Type exactSlotEnumerable = typeof(IEnumerable<>).MakeGenericType(slotElementType);
                 ParameterInfo[] parameters = getItems.GetParameters();
-                if (parameters.Length != 1 || !parameters[0].ParameterType.IsInstanceOfType(beltArgument))
+                if (parameters.Length != 1
+                    || parameters[0].ParameterType != exactSlotEnumerable
+                    || !exactSlotEnumerable.IsInstanceOfType(beltArgument))
                     return false;
 
                 if (!(beltArgument is IEnumerable values))
@@ -296,6 +302,24 @@ namespace SPTBeltArmbandInventory
             {
                 return false;
             }
+        }
+
+        static Type GetEnumerableElementType(Type runtimeType)
+        {
+            if (runtimeType == null) return null;
+            if (runtimeType.IsArray) return runtimeType.GetElementType();
+
+            Type selected = null;
+            Type[] interfaces = runtimeType.GetInterfaces();
+            for (int i = 0; i < interfaces.Length; i++)
+            {
+                Type candidate = interfaces[i];
+                if (!candidate.IsGenericType || candidate.GetGenericTypeDefinition() != typeof(IEnumerable<>)) continue;
+                Type element = candidate.GetGenericArguments()[0];
+                if (selected != null && selected != element) return null;
+                selected = element;
+            }
+            return selected;
         }
 
         static bool ContainsReference(List<object> items, object candidate)
