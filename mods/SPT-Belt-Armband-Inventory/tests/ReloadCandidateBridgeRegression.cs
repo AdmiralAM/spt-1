@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
@@ -65,7 +66,7 @@ internal static class ReloadCandidateBridgeRegression
         var exactBeltMagazine = new FakeMagazine("belt-magazine", exactBelt);
         var foreignMagazine = new FakeMagazine("foreign-magazine", foreignRoot);
         var nonMagazine = new FakeItem("not-a-magazine", exactBelt);
-        var vanilla = new FakeItem[] { vanillaMagazine, duplicateMagazine };
+        IEnumerable<FakeItem> vanilla = new FakeItem[] { vanillaMagazine, duplicateMagazine };
         var originalFastAccessSlots = new object[] { "original-fast" };
         var installedFastAccessSlots = new object[] { "original-fast", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         var originalBindAvailableSlots = new object[] { "original-bind" };
@@ -78,11 +79,7 @@ internal static class ReloadCandidateBridgeRegression
             exactBeltMagazine
         });
 
-        ConfigureFakeRuntime(
-            originalFastAccessSlots,
-            installedFastAccessSlots,
-            originalBindAvailableSlots,
-            installedBindAvailableSlots);
+        ConfigureFakeRuntime(originalFastAccessSlots, installedFastAccessSlots, originalBindAvailableSlots, installedBindAvailableSlots);
 
         object[] recognizedSlotReferences =
         {
@@ -96,9 +93,7 @@ internal static class ReloadCandidateBridgeRegression
             ReloadCandidateBridgeRuntime.EnterReloadScope();
             object recognizedObject = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, recognizedSlots, vanilla);
             ReloadCandidateBridgeRuntime.ExitReloadScope(null);
-            Assert(recognizedObject is FakeItem[],
-                "all four exact FastAccess/BindAvailable retained-or-installed references preserve Item[] shape");
-            var recognized = (FakeItem[])recognizedObject;
+            var recognized = ((IEnumerable<FakeItem>)recognizedObject).ToArray();
             Assert(recognized.Length == 3 && ReferenceEquals(recognized[2], exactBeltMagazine),
                 "all four exact FastAccess/BindAvailable references with captured content pins activate the same exact Belt fallback");
         }
@@ -106,10 +101,8 @@ internal static class ReloadCandidateBridgeRegression
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object mergedObject = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, originalFastAccessSlots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
-
-        Assert(mergedObject is FakeItem[], "bridge preserves the exact Item[]-compatible return shape");
-        var merged = (FakeItem[])mergedObject;
-        Assert(!ReferenceEquals(merged, vanilla), "one real exact Belt fallback allocates a replacement result");
+        var merged = ((IEnumerable<FakeItem>)mergedObject).ToArray();
+        Assert(!ReferenceEquals(mergedObject, vanilla), "one real exact Belt fallback allocates a replacement result");
         Assert(merged.Length == 3, "only one unique exact Magazine Belt descendant is appended");
         Assert(ReferenceEquals(merged[0], vanillaMagazine) && ReferenceEquals(merged[1], duplicateMagazine),
             "complete vanilla candidate prefix and order are preserved by reference");
@@ -132,11 +125,7 @@ internal static class ReloadCandidateBridgeRegression
             "structurally unrelated slot enumeration cannot activate the Belt fallback even during reload scope");
     }
 
-    static void ConfigureFakeRuntime(
-        object originalFastAccessSlots,
-        object installedFastAccessSlots,
-        object originalBindAvailableSlots,
-        object installedBindAvailableSlots)
+    static void ConfigureFakeRuntime(object originalFastAccessSlots, object installedFastAccessSlots, object originalBindAvailableSlots, object installedBindAvailableSlots)
     {
         ReloadCandidateBridgeRuntime.Reset();
         ReloadScopeEpochGuard.ResetStateForRegression();
@@ -149,7 +138,7 @@ internal static class ReloadCandidateBridgeRegression
         ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = installedBindAvailableSlots;
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
-        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<FakeItem>);
         ReloadCandidateBridgeRuntime.GetAllParentItems = item => ((FakeItem)item).Parents;
         ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
         ReloadCandidateBridgeRuntime.LogWarning = message => throw new InvalidOperationException("Reload candidate bridge regression failed closed unexpectedly: " + message);
@@ -159,15 +148,10 @@ internal static class ReloadCandidateBridgeRegression
     sealed class FakeInventory
     {
         internal FakeItem[] Items;
-
-        internal FakeInventory(FakeItem[] items)
+        internal FakeInventory(FakeItem[] items) { Items = items; }
+        public IEnumerable<FakeItem> GetItemsInSlots(IEnumerable<int> slots)
         {
-            Items = items;
-        }
-
-        public FakeItem[] GetItemsInSlots(object slots)
-        {
-            return Items;
+            return Items.Concat(Array.Empty<FakeItem>());
         }
     }
 
@@ -175,7 +159,6 @@ internal static class ReloadCandidateBridgeRegression
     {
         internal string TemplateId { get; }
         internal IEnumerable Parents { get; }
-
         internal FakeItem(string templateId, params FakeItem[] parents)
         {
             TemplateId = templateId;
@@ -185,10 +168,7 @@ internal static class ReloadCandidateBridgeRegression
 
     sealed class FakeMagazine : FakeItem
     {
-        internal FakeMagazine(string templateId, params FakeItem[] parents)
-            : base(templateId, parents)
-        {
-        }
+        internal FakeMagazine(string templateId, params FakeItem[] parents) : base(templateId, parents) { }
     }
 
     static void Assert(bool condition, string message)
