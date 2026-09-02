@@ -62,13 +62,13 @@ public sealed class DogtagCaseAssort(
         var existing = matches.SingleOrDefault();
         if (existing != null)
         {
-            ValidateExisting(trader, id, existing, templateId);
+            ValidateExisting(items, barterScheme, loyalLevelItems, id, existing, templateId);
             RequireAssortWrapperIdentity();
             if (!barterScheme.TryGetValue(id, out var existingBarter))
                 throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: validated barter tuple disappeared before publication proof.");
             RequirePublicationBoundary(templateTable, templateId);
             RequireAssortWrapperIdentity();
-            RequirePublishedAssortTupleIdentity(trader, id, existing, existingBarter);
+            RequirePublishedAssortTupleIdentity(items, barterScheme, loyalLevelItems, id, existing, existingBarter);
             RequireAssortWrapperIdentity();
             cancellationToken.ThrowIfCancellationRequested();
             logger.Success($"B&A&HB Dogtag Case retained validated Ragman LL{LoyaltyLevel} offer for {PriceRoubles:N0} RUB.");
@@ -106,11 +106,11 @@ public sealed class DogtagCaseAssort(
 
             cancellationToken.ThrowIfCancellationRequested();
             RequireAssortWrapperIdentity();
-            ValidateExisting(trader, id, offer, templateId);
+            ValidateExisting(items, barterScheme, loyalLevelItems, id, offer, templateId);
             RequireAssortWrapperIdentity();
             RequirePublicationBoundary(templateTable, templateId);
             RequireAssortWrapperIdentity();
-            RequirePublishedAssortTupleIdentity(trader, id, offer, barter);
+            RequirePublishedAssortTupleIdentity(items, barterScheme, loyalLevelItems, id, offer, barter);
             RequireAssortWrapperIdentity();
             cancellationToken.ThrowIfCancellationRequested();
         }
@@ -150,16 +150,18 @@ public sealed class DogtagCaseAssort(
     }
 
     private static void RequirePublishedAssortTupleIdentity(
-        Trader trader,
+        List<Item> items,
+        Dictionary<MongoId, List<List<BarterScheme>>> barterScheme,
+        Dictionary<MongoId, int> loyalLevelItems,
         MongoId id,
         Item expectedItem,
         List<List<BarterScheme>> expectedBarter)
     {
         int exactItemMatches = 0;
         int idMatches = 0;
-        for (int i = 0; i < trader.Assort.Items.Count; i++)
+        for (int i = 0; i < items.Count; i++)
         {
-            var item = trader.Assort.Items[i];
+            var item = items[i];
             if (item.Id != id) continue;
             idMatches++;
             if (ReferenceEquals(item, expectedItem)) exactItemMatches++;
@@ -178,7 +180,7 @@ public sealed class DogtagCaseAssort(
             || expectedItem.Upd.StackObjectsCount != UnlimitedStock)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman item contents changed in place before publication.");
 
-        if (!trader.Assort.BarterScheme.TryGetValue(id, out var liveBarter)
+        if (!barterScheme.TryGetValue(id, out var liveBarter)
             || !ReferenceEquals(liveBarter, expectedBarter))
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman barter reference was replaced before publication.");
 
@@ -191,15 +193,17 @@ public sealed class DogtagCaseAssort(
         var expectedInnerBarter = liveBarter[0];
         var expectedScheme = expectedInnerBarter[0];
 
-        if (!trader.Assort.LoyalLevelItems.TryGetValue(id, out var liveLoyalty)
+        if (!loyalLevelItems.TryGetValue(id, out var liveLoyalty)
             || liveLoyalty != LoyaltyLevel)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman loyalty metadata changed before publication.");
 
-        RequirePublishedAssortTupleStillStable(trader, id, expectedItem, expectedBarter, expectedInnerBarter, expectedScheme);
+        RequirePublishedAssortTupleStillStable(items, barterScheme, loyalLevelItems, id, expectedItem, expectedBarter, expectedInnerBarter, expectedScheme);
     }
 
     private static void RequirePublishedAssortTupleStillStable(
-        Trader trader,
+        List<Item> items,
+        Dictionary<MongoId, List<List<BarterScheme>>> barterScheme,
+        Dictionary<MongoId, int> loyalLevelItems,
         MongoId id,
         Item expectedItem,
         List<List<BarterScheme>> expectedBarter,
@@ -208,9 +212,9 @@ public sealed class DogtagCaseAssort(
     {
         int exactItemMatches = 0;
         int idMatches = 0;
-        for (int i = 0; i < trader.Assort.Items.Count; i++)
+        for (int i = 0; i < items.Count; i++)
         {
-            var item = trader.Assort.Items[i];
+            var item = items[i];
             if (item.Id != id) continue;
             idMatches++;
             if (ReferenceEquals(item, expectedItem)) exactItemMatches++;
@@ -227,7 +231,7 @@ public sealed class DogtagCaseAssort(
             || expectedItem.Upd.StackObjectsCount != UnlimitedStock)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: Ragman item identity/content changed during final publication reproof.");
 
-        if (!trader.Assort.BarterScheme.TryGetValue(id, out var liveBarter)
+        if (!barterScheme.TryGetValue(id, out var liveBarter)
             || !ReferenceEquals(liveBarter, expectedBarter)
             || liveBarter.Count != 1
             || !ReferenceEquals(liveBarter[0], expectedInnerBarter)
@@ -237,46 +241,9 @@ public sealed class DogtagCaseAssort(
             || liveBarter[0][0].Count != PriceRoubles)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: Ragman barter identity/content changed during final publication reproof.");
 
-        if (!trader.Assort.LoyalLevelItems.TryGetValue(id, out var liveLoyalty)
+        if (!loyalLevelItems.TryGetValue(id, out var liveLoyalty)
             || liveLoyalty != LoyaltyLevel)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: Ragman loyalty metadata changed during final publication reproof.");
-    }
-
-    private static void RollbackOwnedAssortTuple(
-        Trader trader,
-        MongoId id,
-        Item offer,
-        List<List<BarterScheme>> barter,
-        bool itemAdded,
-        bool barterAdded,
-        bool loyaltyAdded)
-    {
-        int ownedItemIndex = -1;
-        if (itemAdded)
-        {
-            for (int i = trader.Assort.Items.Count - 1; i >= 0; i--)
-            {
-                if (!ReferenceEquals(trader.Assort.Items[i], offer)) continue;
-                ownedItemIndex = i;
-                break;
-            }
-        }
-
-        bool ownsItem = ownedItemIndex >= 0;
-        bool ownsBarter = barterAdded
-            && trader.Assort.BarterScheme.TryGetValue(id, out var currentBarter)
-            && ReferenceEquals(currentBarter, barter);
-
-        if (loyaltyAdded && ownsItem && ownsBarter
-            && trader.Assort.LoyalLevelItems.TryGetValue(id, out var currentLoyalty)
-            && currentLoyalty == LoyaltyLevel)
-            trader.Assort.LoyalLevelItems.Remove(id);
-
-        if (ownsBarter)
-            trader.Assort.BarterScheme.Remove(id);
-
-        if (ownsItem)
-            trader.Assort.Items.RemoveAt(ownedItemIndex);
     }
 
     private static void RequirePublicationBoundary(TemplateTable templateTable, MongoId templateId)
@@ -347,8 +314,28 @@ public sealed class DogtagCaseAssort(
         DogtagCaseHostContract.RequireCommitted(hostFilter);
     }
 
-    private static void ValidateExisting(Trader trader, MongoId id, Item existing, MongoId templateId)
+    private static void ValidateExisting(
+        List<Item> items,
+        Dictionary<MongoId, List<List<BarterScheme>>> barterScheme,
+        Dictionary<MongoId, int> loyalLevelItems,
+        MongoId id,
+        Item existing,
+        MongoId templateId)
     {
+        int idMatches = 0;
+        int exactMatches = 0;
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i].Id != id) continue;
+            idMatches++;
+            if (ReferenceEquals(items[i], existing)) exactMatches++;
+            if (idMatches > 1)
+                throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: item tuple became ambiguous.");
+        }
+
+        if (idMatches != 1 || exactMatches != 1)
+            throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: retained item reference changed.");
+
         if (!Equals(existing.Template, templateId)
             || !string.Equals(existing.ParentId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal)
             || !string.Equals(existing.SlotId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal))
@@ -357,14 +344,14 @@ public sealed class DogtagCaseAssort(
         if (existing.Upd == null || existing.Upd.UnlimitedCount != true || existing.Upd.StackObjectsCount != UnlimitedStock)
             throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: stock policy differs.");
 
-        if (!trader.Assort.BarterScheme.TryGetValue(id, out var schemes)
+        if (!barterScheme.TryGetValue(id, out var schemes)
             || schemes.Count != 1
             || schemes[0].Count != 1
             || !Equals(schemes[0][0].Template, Money.ROUBLES)
             || schemes[0][0].Count != PriceRoubles)
             throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: price differs.");
 
-        if (!trader.Assort.LoyalLevelItems.TryGetValue(id, out var loyalty) || loyalty != LoyaltyLevel)
+        if (!loyalLevelItems.TryGetValue(id, out var loyalty) || loyalty != LoyaltyLevel)
             throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: loyalty level differs.");
     }
 }
