@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "source": {
@@ -15,6 +15,7 @@
     "rewardEnvelope": "post-010-operation-reward-envelope.json",
     "campaignProgression": "post-010-campaign-progression.json",
     "vanillaRewardBenchmark": "reward-policy.json",
+    "frozenCampaignSource": "db/quests/*.json",
     "admittedBoundary": "ordinary Scav target discrimination, map-level Location and Survived extraction shapes are proven; Customs/bigmap is independently pinned as an exact valid location target, while sub-location/zone restriction and kill-to-extract same-raid coupling are not"
   },
   "operation": {
@@ -72,6 +73,20 @@
       "review": "The bounded six-Scav Customs security operation at level 21 stays materially below the pinned vanilla Elimination median in XP and RUB, below the overall vanilla standing median, grants no item or permanent unlock, and therefore does not create a reward or stock faucet.",
       "economyAdmiralMayReduceAtMaterialization": true,
       "increaseBeyondStandardBandRequiresTraderReview": true
+    },
+    "frozenCampaignOverlapReview": {
+      "status": "resolved-map-only-overlap",
+      "runtimeQuestCountReviewed": 31,
+      "customsBoundQuestCount": 1,
+      "overlapQuest": {
+        "id": "cba3374f11375c4e7eea9efe",
+        "name": "Access Protocol: Customs",
+        "finishConditionTypes": ["FindItem"],
+        "classification": "map-only-overlap"
+      },
+      "semanticDuplicateFound": false,
+      "review": "The frozen campaign contains one Customs-bound quest, Access Protocol: Customs, but its completion shape is a two-item FindItem readiness check. It contains no Scav-elimination CounterCreator and no Survived extraction condition. Sharing bigmap alone is not a duplicate of the bounded Scav-clearance-and-extract Route Security operation.",
+      "regressionBoundary": "All 31 frozen db/quests files are scanned; if another bigmap quest is added or the existing Customs quest gains a combat/extraction completion shape, this proof must fail closed and be reviewed again."
     }
   },
   "gates": {
@@ -83,7 +98,7 @@
     "requiresSameRaidKillAndExtractionCouplingProof": true,
     "requiresExactLocationSelection": false,
     "requiresVanillaScorpionArtemOverlapAudit": true,
-    "requiresFrozenCampaignOverlapReview": true,
+    "requiresFrozenCampaignOverlapReview": false,
     "requiresEconomyAdmiralReview": false
   },
   "frozenBoundary": {

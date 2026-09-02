@@ -16,7 +16,7 @@ def test_route_security_operation_is_bounded_and_non_materialized():
     authority = spec["proofAuthority"]
     selected = op["selectedLocation"]
 
-    assert spec["schemaVersion"] == 4
+    assert spec["schemaVersion"] == 5
     assert spec["source"]["bundle"] == "Scav Hunt"
     assert spec["source"]["legacyQuestCount"] == 60
     assert op["key"] == "route-security"
@@ -32,6 +32,7 @@ def test_route_security_operation_is_bounded_and_non_materialized():
     assert authority["rewardEnvelope"] == "post-010-operation-reward-envelope.json"
     assert authority["campaignProgression"] == "post-010-campaign-progression.json"
     assert authority["vanillaRewardBenchmark"] == "reward-policy.json"
+    assert authority["frozenCampaignSource"] == "db/quests/*.json"
     assert "sub-location/zone" in authority["admittedBoundary"]
     assert "same-raid" in authority["admittedBoundary"]
 
@@ -63,7 +64,7 @@ def test_route_security_operation_is_bounded_and_non_materialized():
     assert gates["requiresSameRaidKillAndExtractionCouplingProof"] is True
     assert gates["requiresExactLocationSelection"] is False
     assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
-    assert gates["requiresFrozenCampaignOverlapReview"] is True
+    assert gates["requiresFrozenCampaignOverlapReview"] is False
     assert gates["requiresEconomyAdmiralReview"] is False
 
     frozen = spec["frozenBoundary"]
@@ -124,6 +125,30 @@ def test_route_security_reward_is_exactly_bound_to_campaign_and_vanilla_benchmar
     assert review["economyAdmiralMayReduceAtMaterialization"] is True
     assert review["increaseBeyondStandardBandRequiresTraderReview"] is True
     assert spec["gates"]["requiresEconomyAdmiralReview"] is False
+
+
+def test_route_security_frozen_overlap_is_map_only_not_semantic_duplicate():
+    spec = load_json(ROOT / "manifests" / "post-010-route-security-operation.json")
+    review = spec["operation"]["frozenCampaignOverlapReview"]
+    quest_dir = ROOT / "db" / "quests"
+    quests = [load_json(path) for path in sorted(quest_dir.glob("*.json"))]
+
+    assert len(quests) == review["runtimeQuestCountReviewed"] == 31
+    customs = [quest for quest in quests if quest.get("location") == "bigmap"]
+    assert len(customs) == review["customsBoundQuestCount"] == 1
+
+    overlap = customs[0]
+    finish_types = sorted({condition.get("conditionType") for condition in overlap["conditions"]["AvailableForFinish"]})
+    assert overlap["_id"] == review["overlapQuest"]["id"] == "cba3374f11375c4e7eea9efe"
+    assert overlap["QuestName"] == review["overlapQuest"]["name"] == "Access Protocol: Customs"
+    assert finish_types == review["overlapQuest"]["finishConditionTypes"] == ["FindItem"]
+    assert review["overlapQuest"]["classification"] == "map-only-overlap"
+
+    overlap_text = json.dumps(overlap, ensure_ascii=False)
+    assert '"conditionType": "CounterCreator"' not in overlap_text
+    assert '"conditionType": "Survived"' not in overlap_text
+    assert review["semanticDuplicateFound"] is False
+    assert spec["gates"]["requiresFrozenCampaignOverlapReview"] is False
 
 
 def test_route_security_does_not_change_frozen_runtime_counts():
