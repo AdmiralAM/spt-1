@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "source": {
@@ -12,15 +12,13 @@
     "equipmentCondition": "post-010-player-equipment-proof.json",
     "survivedExtraction": "post-010-pmc-location-extraction-proof.json",
     "frozenOverlap": "post-010-expedition-loadout-frozen-overlap-proof.json",
+    "externalOverlap": "post-010-expedition-loadout-external-overlap-proof.json",
     "equipmentBoundary": "explicit validated item TPL sets only; IncludeNotEquippedItems=false; no category/class inference",
     "extractionBoundary": "successful extraction shape is proven, but same-raid equipment/action coupling remains separately fail-closed"
   },
   "operation": {
     "key": "expedition-loadout",
-    "title": {
-      "en": "Expedition Loadout",
-      "ru": "Экспедиционная выкладка"
-    },
+    "title": {"en": "Expedition Loadout", "ru": "Экспедиционная выкладка"},
     "description": {
       "en": "A loadout is not a catalogue. Build one practical expedition kit, carry it through contact, and return with the capability intact. I am evaluating deployment discipline, not how many rigs and backpacks you can hand over.",
       "ru": "Выкладка — не каталог. Собери один практичный экспедиционный комплект, проведи его через контакт и вернись, сохранив боеспособность. Я оцениваю дисциплину развёртывания, а не количество разгрузок и рюкзаков, которые ты можешь сдать."
@@ -42,18 +40,8 @@
       "selectionState": "selected-product-reviewed",
       "selectionDoctrine": "Use ordinary low-tier field gear that proves preparation without forcing expensive armor, rare equipment, a trader-specific purchase, or an item handover.",
       "requiredPair": [
-        {
-          "slot": "TacticalVest",
-          "tpl": "572b7adb24597762ae139821",
-          "name": "Scav Vest",
-          "rationale": "Unarmored, low-tier chest rig; the objective tests carrying capacity and preparation rather than armor class or purchasing power."
-        },
-        {
-          "slot": "Backpack",
-          "tpl": "56e33680d2720be2748b4576",
-          "name": "Scav backpack",
-          "rationale": "Ordinary low-tier backpack with enough field utility to represent expedition preparation without turning the objective into a premium-gear tax."
-        }
+        {"slot": "TacticalVest", "tpl": "572b7adb24597762ae139821", "name": "Scav Vest", "rationale": "Unarmored, low-tier chest rig; the objective tests carrying capacity and preparation rather than armor class or purchasing power."},
+        {"slot": "Backpack", "tpl": "56e33680d2720be2748b4576", "name": "Scav backpack", "rationale": "Ordinary low-tier backpack with enough field utility to represent expedition preparation without turning the objective into a premium-gear tax."}
       ],
       "exactPairRequired": true,
       "alternativesAllowedAtMaterialization": false,
@@ -62,17 +50,9 @@
       "handoverRequired": false,
       "consumedOnCompletion": false
     },
-    "campaignPlacement": {
-      "playerLevel": 15,
-      "phase": "field-readiness",
-      "prerequisites": []
-    },
+    "campaignPlacement": {"playerLevel": 15, "phase": "field-readiness", "prerequisites": []},
     "reward": {
-      "band": "standard",
-      "xp": 6500,
-      "rub": 38000,
-      "standing": 0.009,
-      "itemReward": null,
+      "band": "standard", "xp": 6500, "rub": 38000, "standing": 0.009, "itemReward": null,
       "economyReview": "approved-no-escalation",
       "rationale": "The selected gear is not surrendered or consumed and no item/storefront reward is granted. The existing early-campaign standard reward therefore needs no acquisition-cost reimbursement or gear-faucet escalation."
     },
@@ -92,6 +72,11 @@
       "permanentEquipmentStorefrontUnlockAllowed": false
     }
   },
+  "externalOverlapReview": {
+    "status": "resolved-partial-overlap-no-semantic-duplicate",
+    "semanticDuplicateFound": false,
+    "permanentDifferentiators": ["exact Scav Vest plus exact Scav backpack pair", "non-consumed equipment", "mandatory successful extraction", "single bounded non-repeatable operation"]
+  },
   "gates": {
     "implementationAllowed": false,
     "runtimeMaterialize": false,
@@ -100,13 +85,9 @@
     "requiresMultiGroupEquipmentBooleanProof": true,
     "requiresSameRaidEquipmentAndExtractionCouplingProof": true,
     "requiresFinalEquipmentTplSelection": false,
-    "requiresVanillaScorpionArtemOverlapAudit": true,
+    "requiresVanillaScorpionArtemOverlapAudit": false,
     "requiresFrozenCampaignOverlapReview": false,
     "requiresEconomyAdmiralReview": false
   },
-  "frozenBoundary": {
-    "questCount": 31,
-    "rootOfferCount": 11,
-    "relationshipRuntimeOffers": 0
-  }
+  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
 }

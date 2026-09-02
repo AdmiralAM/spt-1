@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "expedition-loadout-pinned-external-semantic-overlap",
+  "operationKey": "expedition-loadout",
+  "status": "resolved-partial-overlap-no-semantic-duplicate",
+  "runtimeMaterialize": false,
+  "operationShape": {
+    "requiredPair": [
+      {"slot": "TacticalVest", "tpl": "572b7adb24597762ae139821", "name": "Scav Vest"},
+      {"slot": "Backpack", "tpl": "56e33680d2720be2748b4576", "name": "Scav backpack"}
+    ],
+    "handoverRequired": false,
+    "consumedOnCompletion": false,
+    "successfulExtractionRequired": true,
+    "sameRaidCoupling": "fail-closed-separate-gate"
+  },
+  "sources": {
+    "vanilla": {
+      "repository": "TarkovTracker/tarkovdata",
+      "commit": "1b9bc2acbea0e873244d1819cba9d9fe0f14e26c",
+      "path": "quests.json",
+      "observedQuest": "Setup",
+      "observedShape": "PMC elimination on Customs while wearing specified gear including Scav vest; no exact Scav backpack pair and no successful-extraction completion contract.",
+      "selectedPairDuplicateFound": false,
+      "classification": "single-equipment-component-combat-overlap"
+    },
+    "scorpion": {
+      "repository": "acidphantasm/scorpion-csharp",
+      "commit": "7d1bed766f859f227680377acc1e20c8f97b09bf",
+      "observedQuest": "EVENT: That's Hot",
+      "observedShape": "Elimination challenge wearing Scav Vest plus baseball cap and no armor; it does not require the selected Scav backpack or make successful extraction the completion contract.",
+      "selectedPairDuplicateFound": false,
+      "classification": "single-equipment-component-combat-overlap"
+    },
+    "artem": {
+      "repository": "WelcomeToThursday/WTT-Artem",
+      "commit": "ee5b7c13a1980ff961ed0b2c1d8764574377b2bf",
+      "exactScavVestTplReferenceFound": false,
+      "exactScavBackpackTplReferenceFound": false,
+      "selectedPairDuplicateFound": false,
+      "classification": "no-exact-selected-pair-overlap"
+    }
+  },
+  "decision": {
+    "vanillaOverlapResolved": true,
+    "scorpionOverlapResolved": true,
+    "artemOverlapResolved": true,
+    "semanticDuplicateFound": false,
+    "classification": "partial-component-overlap-only",
+    "externalOverlapGateMayClose": true,
+    "multiGroupBooleanProofUnaffected": true,
+    "sameRaidCouplingProofUnaffected": true,
+    "review": "The selected low-tier gear intentionally reuses familiar vanilla equipment, so Scav Vest overlap alone is not a defect. Reviewed vanilla and Scorpion content use the vest as part of combat challenges; Artem does not reference either exact selected TPL in indexed pinned content. No reviewed source reproduces the bounded Admiral contract requiring the exact Scav Vest plus exact Scav backpack as a non-consumed field loadout tied to successful extraction. External semantic overlap is therefore resolved, while multi-group equipment AND semantics and same-raid equipment-to-extraction coupling remain independently fail-closed."
+  },
+  "regressionBoundary": "If Expedition Loadout changes from the exact two-item non-consumed pair, gains handover/FIR/grind semantics, or loses mandatory successful extraction, this overlap decision no longer applies and must be re-reviewed."
+}
