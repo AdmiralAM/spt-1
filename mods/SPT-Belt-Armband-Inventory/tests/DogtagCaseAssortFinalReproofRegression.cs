@@ -13,7 +13,7 @@ internal static class DogtagCaseAssortFinalReproofRegression
 
         string source = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseAssort.cs"));
         const string loyalty = "liveLoyalty != LoyaltyLevel";
-        const string finalCall = "RequirePublishedAssortTupleStillStable(trader, id, expectedItem, expectedBarter);";
+        const string finalCall = "RequirePublishedAssortTupleStillStable(trader, id, expectedItem, expectedBarter, expectedInnerBarter, expectedScheme);";
         const string finalMethod = "private static void RequirePublishedAssortTupleStillStable(";
 
         int firstLoyalty = source.IndexOf(loyalty, StringComparison.Ordinal);
@@ -22,10 +22,16 @@ internal static class DogtagCaseAssortFinalReproofRegression
         if (firstLoyalty < 0 || reproofCall < 0 || reproofMethod < 0 || !(firstLoyalty < reproofCall && reproofCall < reproofMethod))
             throw new InvalidOperationException("Dogtag assort final reproof regression failed: whole-tuple reproof must run after the first loyalty proof and before publication returns.");
 
+        string identityRegion = source.Substring(0, reproofCall);
+        Require(identityRegion, "var expectedInnerBarter = liveBarter[0];", "first publication proof must pin the exact validated inner barter list");
+        Require(identityRegion, "var expectedScheme = expectedInnerBarter[0];", "first publication proof must pin the exact validated BarterScheme object");
+
         string finalRegion = source.Substring(reproofMethod);
         Require(finalRegion, "ReferenceEquals(item, expectedItem)", "final reproof must retain exact item reference identity");
         Require(finalRegion, "expectedItem.Upd.StackObjectsCount != UnlimitedStock", "final reproof must retain exact item stock/value contract");
-        Require(finalRegion, "ReferenceEquals(liveBarter, expectedBarter)", "final reproof must retain exact barter reference identity");
+        Require(finalRegion, "ReferenceEquals(liveBarter, expectedBarter)", "final reproof must retain exact outer barter reference identity");
+        Require(finalRegion, "ReferenceEquals(liveBarter[0], expectedInnerBarter)", "final reproof must retain exact inner barter-list reference identity");
+        Require(finalRegion, "ReferenceEquals(liveBarter[0][0], expectedScheme)", "final reproof must retain exact BarterScheme reference identity");
         Require(finalRegion, "liveBarter[0][0].Count != PriceRoubles", "final reproof must retain exact RUB price contract");
         Require(finalRegion, "liveLoyalty != LoyaltyLevel", "final reproof must retain exact loyalty metadata");
         Require(finalRegion, "idMatches > 1", "final reproof must fail closed on assort-ID ambiguity");
