@@ -34,10 +34,12 @@ class RelationshipWeaponRepairKitResolutionTests(unittest.TestCase):
         self.assertFalse(r["conclusion"]["relationshipOfferAdded"])
         self.assertTrue(r["conclusion"]["relationshipMaterializationStillDisabled"])
 
-    def test_resolution_is_consistent_with_source_evidence_and_empty_tier_policy(self):
+    def test_resolution_is_consistent_with_canonical_candidate_state_and_empty_tier_policy(self):
         source = {x["tpl"]: x for x in self.candidates["candidates"]}["5910968f86f77425cf569c32"]
-        self.assertEqual(source["decision"], self.resolution["sourceBaseline"]["sourceCandidateDecision"])
+        self.assertEqual(source["decision"], self.resolution["decision"]["state"])
+        self.assertNotEqual(source["decision"], self.resolution["sourceBaseline"]["sourceCandidateDecision"])
         self.assertEqual(source["overlap"]["vanillaPinnedAssort"], "ref-direct-unlimited")
+        self.assertIn("independent recurring availability", source["rationale"])
         self.assertTrue(self.relationship["designRules"]["emptyTierAllowedWhenNoCandidatePasses"])
         self.assertFalse(self.relationship["designRules"]["tierFillQuotaAllowed"])
         self.assertFalse(self.resolution["conclusion"]["replacementCandidateRequired"])

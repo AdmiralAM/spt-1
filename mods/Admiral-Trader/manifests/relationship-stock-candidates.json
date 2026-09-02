@@ -94,8 +94,8 @@
       "targetLoyaltyLevel": 3,
       "role": "expedition-maintenance",
       "spt413ReferencePriceRub": 106861,
-      "decision": "hold-pinned-vanilla-overlap",
-      "rationale": "Pinned SPT 4.1.3 Ref assort already contains the weapon repair kit with unlimited stock. Admiral may only use it later if the relationship role supplies a deliberately bounded alternative with a justified access distinction; it is not approved for materialization now. Exact repository-wide searches also found no direct tpl reference in the currently pinned Scorpion/Artem source mirrors, so the hold is driven by vanilla redundancy rather than a hidden cross-mod collision.",
+      "decision": "reject-redundant-pinned-vanilla",
+      "rationale": "Pinned SPT 4.1.3 Ref assort already contains the weapon repair kit with unlimited stock. The resolved Relationship policy requires independent recurring availability, so a second bounded Admiral route would remain redundant rather than create a distinct standing privilege. Price, buy limits, or Economy Admiral approval cannot override that gameplay-purpose failure.",
       "overlap": {
         "vanillaPinnedAssort": "ref-direct-unlimited",
         "scorpionPinned": "no-exact-tpl-hit-in-repository-code-search",
