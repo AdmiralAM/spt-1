@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using SPTBeltArmbandInventory;
@@ -8,25 +9,33 @@ internal static class ReloadScopeThreadIsolationRegression
 {
     internal static void Run()
     {
-        var slots = new object();
+        int[] slots = { 1, 2, 3 };
+        var installedFastAccess = new[] { 1, 2, 3, RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
+        var originalBindAvailable = new[] { 4, 5, 6 };
+        var installedBindAvailable = new[] { 4, 5, 6, RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         var beltSlotArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         var beltParent = new FakeItem(RuntimeIdentity.DedicatedMagazineBeltItemId);
         var beltMagazine = new FakeMagazine("belt-mag");
         var vanillaMagazine = new FakeMagazine("vanilla-mag");
-        var vanilla = new FakeItem[] { vanillaMagazine };
+        IEnumerable<FakeItem> vanilla = new FakeItem[] { vanillaMagazine };
         var inventory = new FakeInventory(new FakeItem[] { beltMagazine });
 
+        ReloadScopeEpochGuard.ResetStateForRegression();
         ReloadCandidateBridgeRuntime.Reset();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload thread isolation regression failed: fake GetItemsInSlots missing");
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = beltSlotArgument;
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = slots;
+        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = installedFastAccess;
+        ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = originalBindAvailable;
+        ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = installedBindAvailable;
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
-        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<FakeItem>);
         ReloadCandidateBridgeRuntime.GetAllParentItems = item =>
             ReferenceEquals(item, beltMagazine) ? new FakeItem[] { beltParent } : Array.Empty<FakeItem>();
         ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
+        ReloadScopeEpochGuard.CaptureSlotArraysForRegression();
 
         FieldInfo depth = typeof(ReloadCandidateBridgeRuntime).GetField("reloadDepth", BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Reload thread isolation regression failed: reloadDepth state field missing");
@@ -90,6 +99,7 @@ internal static class ReloadScopeThreadIsolationRegression
         Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
             "owner finalizer boundary must restore the calling thread to a clean state");
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
     }
 
     sealed class FakeInventory
@@ -101,7 +111,7 @@ internal static class ReloadScopeThreadIsolationRegression
             this.items = items;
         }
 
-        public FakeItem[] GetItemsInSlots(object slots)
+        public IEnumerable<FakeItem> GetItemsInSlots(IEnumerable<int> slots)
         {
             return items;
         }
