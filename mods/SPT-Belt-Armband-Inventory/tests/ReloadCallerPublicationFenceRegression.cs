@@ -14,6 +14,11 @@ internal static class ReloadCallerPublicationFenceRegression
         string path = Path.Combine(root, "src", "ReloadCallerPublicationFence.cs");
         string source = File.ReadAllText(path);
 
+        Require(source, "readonly struct PublicationState",
+            "per-call final publication state must remain a value type and avoid one managed allocation per GetItemsInSlots call");
+        if (source.Contains("sealed class PublicationState", StringComparison.Ordinal))
+            throw new InvalidOperationException(
+                "Reload caller publication fence regression failed: per-call publication state regressed to an allocating reference type.");
         Require(source, "CandidateFenceHarmonyId = \"com.admiralam.spt.belt-armband-inventory.reload-caller-publication.candidate\"",
             "ordered candidate postfixes must own a distinct rollback domain");
         Require(source, "CandidateBridgeHarmonyId = \"com.admiralam.spt.belt-armband-inventory.fast-access.reload-candidate\"",
