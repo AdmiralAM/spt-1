@@ -2,6 +2,7 @@ using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 
@@ -24,8 +25,28 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        // Treat the canonical source as mutable startup state. Prove value, then the
+        // exact registered source identity, then value again before DogtagCaseItem +3
+        // is allowed to consume this preflight as authority. A replacement or an
+        // in-place mutation during the bounded proof therefore fails closed.
+        TemplateItem source = RequireCanonicalSourceContract(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (!templateTable.Items.TryGetValue(SourceDogtagCaseTpl, out var liveSource)
+            || !ReferenceEquals(liveSource, source))
+            throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical EFT/SPT Dogtag Case template was replaced during validation.");
+        RequireCanonicalSourceContract(cancellationToken, source);
+
+        logger.Success("B&A&HB Dogtag Case canonical filter preflight passed: exact canonical source identity/grid ownership is intact and non-empty EFT/SPT taxonomy contains no B&A&HB-owned product admissions.");
+        return Task.CompletedTask;
+    }
+
+    private TemplateItem RequireCanonicalSourceContract(CancellationToken cancellationToken, TemplateItem? expectedReference = null)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
         if (!templateTable.Items.TryGetValue(SourceDogtagCaseTpl, out var source))
             throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical EFT/SPT Dogtag Case template is missing.");
+        if (expectedReference != null && !ReferenceEquals(source, expectedReference))
+            throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical EFT/SPT Dogtag Case template identity drifted during validation.");
 
         var grids = source.Properties?.Grids?.ToArray();
         if (grids == null || grids.Length != 1)
@@ -57,7 +78,6 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
         // ExcludedFilter is deliberately not constrained here: the canonical EFT/SPT
         // taxonomy remains authoritative and may legitimately exclude arbitrary IDs.
         // Only positive admission of an owned B&A&HB template is forbidden.
-        logger.Success("B&A&HB Dogtag Case canonical filter preflight passed: exact canonical grid ownership is intact and non-empty EFT/SPT taxonomy contains no B&A&HB-owned product admissions.");
-        return Task.CompletedTask;
+        return source;
     }
 }
