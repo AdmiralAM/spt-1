@@ -280,6 +280,12 @@ public sealed class DogtagCaseItem(
         if (!templates.Items.TryGetValue(DogtagCaseTpl, out var liveCandidate)
             || !ReferenceEquals(liveCandidate, candidate))
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: product template was replaced during validation.");
+
+        // Reference identity proves that the same source/product objects remain
+        // installed, but not that those mutable objects retained their values while
+        // the live lookups ran. Revalidate the exact same pair after identity proof
+        // so same-reference root/grid/filter mutation also fails closed.
+        ValidateExisting(liveCandidate, liveSource);
     }
 
     private static void ValidateExisting(TemplateItem candidate, TemplateItem source)
