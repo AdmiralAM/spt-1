@@ -14,6 +14,14 @@ internal static class DogtagCaseCanonicalFilterPreflightRegression
         string source = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseCanonicalFilterPreflight.cs"));
         Require(source, "[Injectable(TypePriority = OnLoadOrder.Preload + 2)]",
             "canonical preflight must execute before DogtagCaseItem preload +3 publication");
+        Require(source, "TemplateItem source = RequireCanonicalSourceContract(cancellationToken);",
+            "canonical preflight must begin with a complete value proof of the live source");
+        Require(source, "!ReferenceEquals(liveSource, source)",
+            "canonical preflight must pin exact TemplateTable source identity between value proofs");
+        Require(source, "RequireCanonicalSourceContract(cancellationToken, source);",
+            "canonical preflight must re-prove the same source reference after identity validation");
+        Require(source, "expectedReference != null && !ReferenceEquals(source, expectedReference)",
+            "second canonical value proof must independently fail closed if source identity changes");
         Require(source, "grids == null || grids.Length != 1",
             "canonical preflight must require the exact single-grid boundary");
         Require(source, "!Equals(grid.Parent, SourceDogtagCaseTpl)",
@@ -28,14 +36,17 @@ internal static class DogtagCaseCanonicalFilterPreflightRegression
             "preflight must preserve live EFT/SPT excluded-filter authority instead of hardcoding taxonomy");
 
         int priority = source.IndexOf("OnLoadOrder.Preload + 2", StringComparison.Ordinal);
-        int lookup = source.IndexOf("TryGetValue(SourceDogtagCaseTpl", StringComparison.Ordinal);
+        int firstProof = source.IndexOf("TemplateItem source = RequireCanonicalSourceContract(cancellationToken);", StringComparison.Ordinal);
+        int identity = source.IndexOf("!ReferenceEquals(liveSource, source)", StringComparison.Ordinal);
+        int secondProof = source.IndexOf("RequireCanonicalSourceContract(cancellationToken, source);", StringComparison.Ordinal);
         int grid = source.IndexOf("grids == null || grids.Length != 1", StringComparison.Ordinal);
         int parent = source.IndexOf("!Equals(grid.Parent, SourceDogtagCaseTpl)", StringComparison.Ordinal);
         int filters = source.IndexOf("filters == null || filters.Length == 0", StringComparison.Ordinal);
         int included = source.IndexOf("included == null || included.Count == 0", StringComparison.Ordinal);
         int owned = source.IndexOf("PersistentIdentityManifest.IsOwnedTemplate(accepted.ToString())", StringComparison.Ordinal);
-        if (priority < 0 || lookup < priority || grid < lookup || parent < grid || filters < parent || included < filters || owned < included)
-            throw new InvalidOperationException("Dogtag canonical filter preflight regression failed: exact pre-publication proof ordering changed.");
+        if (priority < 0 || firstProof < priority || identity < firstProof || secondProof < identity
+            || grid < secondProof || parent < grid || filters < parent || included < filters || owned < included)
+            throw new InvalidOperationException("Dogtag canonical filter preflight regression failed: value -> identity -> value pre-publication proof ordering changed.");
     }
 
     private static string? FindModuleRoot()
