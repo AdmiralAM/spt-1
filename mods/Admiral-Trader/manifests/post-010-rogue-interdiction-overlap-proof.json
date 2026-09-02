@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "rogue-interdiction-pinned-external-semantic-overlap",
+  "operationKey": "rogue-interdiction",
+  "status": "resolved-strong-partial-overlap-no-exact-duplicate",
+  "runtimeMaterialize": false,
+  "operationShape": {
+    "map": "Lighthouse",
+    "target": "Savage",
+    "savageRole": ["exUsec"],
+    "maximumRogueTargets": 6,
+    "surviveOrExtractRequired": true,
+    "sameRaidCoupling": "fail-closed-separate-gate"
+  },
+  "sources": {
+    "vanilla": {
+      "repository": "TarkovTracker/tarkovdata",
+      "commit": "1b9bc2acbea0e873244d1819cba9d9fe0f14e26c",
+      "path": "quests.json",
+      "observedShape": "Vanilla includes Lighthouse Rogue-elimination work such as Easy Job - Part 2 / Rogue kill objectives, but the reviewed comparator does not add mandatory successful extraction to the same bounded Rogue contract.",
+      "classification": "rogue-combat-overlap"
+    },
+    "scorpion": {
+      "repository": "acidphantasm/scorpion-csharp",
+      "commit": "7d1bed766f859f227680377acc1e20c8f97b09bf",
+      "observedQuest": "EVENT: Making Noise",
+      "observedObjectives": ["Eliminate any targets in the Lighthouse region", "Survive and extract from the location"],
+      "classification": "strong-map-combat-extraction-overlap",
+      "difference": "The target is generic rather than the pinned Rogue/exUsec target and the event/party-distraction purpose is not a Rogue perimeter-interdiction contract."
+    },
+    "artem": {
+      "repository": "WelcomeToThursday/WTT-Artem",
+      "commit": "ee5b7c13a1980ff961ed0b2c1d8764574377b2bf",
+      "observedQuest": "Bag n' Tag / Grab n' Tag",
+      "observedShape": "Water-treatment ex-USEC/Rogue elimination; pinned quest data uses savageRole exUsec and the player-facing objective asks for three Rogues, alongside a separate supply handover.",
+      "successfulExtractionObjectiveFoundForThisQuest": false,
+      "classification": "strong-rogue-target-overlap-with-different-completion-contract"
+    }
+  },
+  "decision": {
+    "vanillaOverlapResolved": true,
+    "scorpionOverlapResolved": true,
+    "artemOverlapResolved": true,
+    "semanticDuplicateFound": false,
+    "classification": "strong-partial-overlap-requires-target-specific-differentiation",
+    "sameRaidCouplingProofUnaffected": true,
+    "review": "Rogue Interdiction occupies a crowded semantic area. Vanilla and Artem already cover Lighthouse/Rogue elimination, while Scorpion combines Lighthouse combat and extraction. The Admiral operation remains admissible only as a narrowly bounded target-specific Rogue perimeter disruption: at most six exUsec targets, no escalating hunt ladder, no generic-target fallback, no Rogue gear faucet, and mandatory successful extraction. This review therefore closes external overlap but makes the Rogue-specific target and bounded anti-grind shape permanent differentiation requirements."
+  },
+  "regressionBoundary": "If Rogue Interdiction loses exUsec target specificity, gains generic-target fallback, exceeds six targets, becomes repeatable/escalating, or drops mandatory extraction, it collides materially with the reviewed external content and must fail closed."
+}
