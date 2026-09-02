@@ -164,9 +164,10 @@ namespace SPTBeltArmbandInventory
                     || ReferenceEquals(slots, InstalledFastAccessSlots)
                     || ReferenceEquals(slots, OriginalBindAvailableSlots)
                     || ReferenceEquals(slots, InstalledBindAvailableSlots));
+            MethodInfo getItemsInSlots = GetItemsInSlots;
             object beltSlotsArgument = BeltSlotsArgument;
             if (!FastAccessSlotPolicy.ShouldBridgeReloadCandidates(reloadDepth > 0, reentrant, fastAccessArray)
-                || inventory == null || vanillaResult == null || GetItemsInSlots == null || beltSlotsArgument == null
+                || inventory == null || vanillaResult == null || getItemsInSlots == null || beltSlotsArgument == null
                 || ItemType == null || MagazineType == null || ReturnType == null
                 || GetAllParentItems == null || ReadTemplateId == null)
                 return vanillaResult;
@@ -176,8 +177,9 @@ namespace SPTBeltArmbandInventory
                 if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))
                     return vanillaResult;
 
-                if (!ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
-                    || !HasExactFallbackQueryContract(beltSlotsArgument)
+                if (!ReferenceEquals(GetItemsInSlots, getItemsInSlots)
+                    || !ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
+                    || !HasExactFallbackQueryContract(getItemsInSlots, beltSlotsArgument)
                     || !ReturnType.IsInstanceOfType(vanillaResult)
                     || !(vanillaResult is IEnumerable vanillaSequence))
                     return vanillaResult;
@@ -190,11 +192,12 @@ namespace SPTBeltArmbandInventory
                     vanillaItems.Add(item);
                 }
 
-                // Both mutable inputs to the bounded fallback query must still match their
-                // install-time/exact contract immediately before invoke. The pseudo-slot
-                // argument is transaction-local by reference as well as value: replacing the
-                // static field during lazy vanilla enumeration cannot redirect this query.
+                // Every mutable input to the bounded fallback query must still match its
+                // transaction-local/install-time contract immediately before invoke. The
+                // pseudo-slot argument and exact MethodInfo are both captured once at bridge
+                // entry, so replacement during lazy vanilla enumeration cannot redirect this query.
                 if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)
+                    || !ReferenceEquals(GetItemsInSlots, getItemsInSlots)
                     || !ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
                     || !HasExactBeltSlotsArgument(beltSlotsArgument))
                     return vanillaResult;
@@ -203,7 +206,7 @@ namespace SPTBeltArmbandInventory
                 reentrant = true;
                 try
                 {
-                    beltResult = GetItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument });
+                    beltResult = getItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument });
                 }
                 finally
                 {
@@ -212,6 +215,7 @@ namespace SPTBeltArmbandInventory
 
                 if (beltResult == null || !ReturnType.IsInstanceOfType(beltResult) || !(beltResult is IEnumerable beltItems)
                     || !ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)
+                    || !ReferenceEquals(GetItemsInSlots, getItemsInSlots)
                     || !ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
                     || !HasExactBeltSlotsArgument(beltSlotsArgument))
                     return vanillaResult;
@@ -229,10 +233,11 @@ namespace SPTBeltArmbandInventory
                     merged.Add(item);
                 }
 
-                // Re-prove both content and the exact retained pseudo-slot object after Belt
-                // enumeration and immediately before publication. Replacement never retries and
-                // can never make a second query with a different argument instance.
+                // Re-prove all mutable transaction inputs after Belt enumeration and
+                // immediately before publication. Replacement never retries and cannot
+                // make a second query with a different method or argument instance.
                 if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)
+                    || !ReferenceEquals(GetItemsInSlots, getItemsInSlots)
                     || !ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
                     || !HasExactBeltSlotsArgument(beltSlotsArgument))
                     return vanillaResult;
@@ -258,13 +263,12 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static bool HasExactFallbackQueryContract(object beltArgument)
+        static bool HasExactFallbackQueryContract(MethodInfo getItems, object beltArgument)
         {
             try
             {
                 Type itemType = ItemType;
                 Type declaredReturn = ReturnType;
-                MethodInfo getItems = GetItemsInSlots;
                 if (itemType == null || declaredReturn == null || getItems == null || beltArgument == null)
                     return false;
 
