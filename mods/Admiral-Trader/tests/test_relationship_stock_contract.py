@@ -111,7 +111,7 @@ class RelationshipStockContractTests(unittest.TestCase):
         self.assertEqual(by_tpl["5910968f86f77425cf569c32"]["decision"], "reject-redundant-pinned-vanilla")
         self.assertEqual(by_tpl["591094e086f7747caa7bb2ef"]["decision"], "reject-pinned-vanilla-and-economic-impact")
         self.assertEqual(by_tpl["544fb5454bdc2df8738b456a"]["decision"], "reject-redundant-pinned-vanilla")
-        self.assertEqual(by_tpl["5ac78a9b86f77426843c7d32"]["decision"] if "5ac78a9b86f77426843c7d32" in by_tpl else by_tpl["5ac78a9b86f7741cca0bbd8d"]["decision"], "reject-redundant-pinned-vanilla")
+        self.assertEqual(by_tpl["5ac78a9b86f7741cca0bbd8d"]["decision"], "reject-redundant-pinned-vanilla")
         self.assertTrue(all(x["spt413ReferencePriceRub"] > 0 for x in candidates))
 
         pinned_direct_overlap = {
@@ -140,7 +140,7 @@ class RelationshipStockContractTests(unittest.TestCase):
         resolved = {x["tpl"]: x for x in review["resolved"]}
         expected = {
             "590c60fc86f77412b13fddcf": ("Therapist", "686e34716c2a18ed6b0eb451"),
-            "59fafd4b86f7745ca07e1232": ("Therapist", "686e34706c2a18ed6b0e427"),
+            "59fafd4b86f7745ca07e1232": ("Therapist", "686e34706c2a18ed6b0eb427"),
             "5d235bb686f77443f4331278": ("Jaeger", "686e34256c2a18ed6b0e94b1"),
         }
         self.assertEqual(set(resolved), set(expected))
