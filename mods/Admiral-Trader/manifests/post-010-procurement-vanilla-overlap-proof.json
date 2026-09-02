@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "static-proof",
+  "operationKey": "field-expedient-supply",
+  "scope": "pinned-vanilla-demand-dataset",
+  "source": {
+    "repository": "TarkovTracker/tarkovdata",
+    "commit": "1b9bc2acbea0e873244d1819cba9d9fe0f14e26c",
+    "checkedAtUtcDate": "2026-09-02",
+    "paths": ["quests.json", "hideout.json"],
+    "method": "GitHub exact-TPL code search against pinned vanilla-derived quest and hideout datasets"
+  },
+  "payloadTpls": [
+    "590c5bbd86f774785762df04",
+    "57347c1124597737fb1379e3",
+    "61bf83814088ec1a363d7097"
+  ],
+  "proofContract": {
+    "wd40QuestObjectiveDetected": true,
+    "wd40QuestObjectiveType": "find",
+    "wd40QuestObjectiveCount": 1,
+    "ductTapeQuestObjectiveDetected": false,
+    "sewingKitQuestObjectiveDetected": false,
+    "wd40HideoutDemandDetected": true,
+    "ductTapeHideoutDemandDetected": true,
+    "sewingKitHideoutDemandDetected": true,
+    "selectedPayloadVanillaDemandOverlapDetected": true,
+    "semanticDuplicateDetected": false,
+    "supplyFaucetDetected": false,
+    "competingAcquisitionPressureDetected": true,
+    "vanillaOverlapReviewSatisfied": true,
+    "payloadReplacementRequired": false,
+    "economyApprovalClaimed": false
+  },
+  "decision": "Vanilla demand overlaps the selected payload, but not as a duplicate of Admiral's one-off maintenance-reserve operation. WD-40 is consumed by a vanilla find objective and all three selected TPLs are demanded by hideout progression in the pinned dataset. This is acquisition pressure, not a permanent supply faucet and not a reason by itself to replace ordinary field-service consumables. The overlap is therefore accepted while Economy Admiral review remains fail-closed for aggregate burden and reward sizing.",
+  "runtimeMaterialize": false
+}

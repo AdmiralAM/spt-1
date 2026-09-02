@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "source": {
@@ -25,9 +25,9 @@
       "en": "That closes the shortage. The element can maintain itself again; there is no reason to turn this into another shopping list.",
       "ru": "Дефицит закрыт. Группа снова может обслуживать себя сама; превращать это в очередной список покупок незачем."
     },
-    "objectiveIntent": "One contextual maintenance-reserve handover using a fixed six-unit package of ordinary repair/maintenance consumables. Exact TPL selection, frozen Admiral campaign overlap, Scorpion overlap and Artem semantic overlap are resolved; vanilla overlap and Economy Admiral approval remain separate fail-closed gates.",
+    "objectiveIntent": "One contextual maintenance-reserve handover using a fixed six-unit package of ordinary repair/maintenance consumables. Exact TPL selection and frozen/vanilla/Scorpion/Artem overlap reviews are resolved; Economy Admiral approval remains the separate fail-closed gate.",
     "selectedPayload": {
-      "status": "selected-pending-external-overlap-and-economy-review",
+      "status": "selected-pending-economy-review",
       "totalUnits": 6,
       "distinctTpls": 3,
       "items": [
@@ -97,9 +97,12 @@
       "artemOverlapResolved": true,
       "artemExactTplOverlapAccepted": true,
       "artemOverlapClassification": "competing-sink-not-semantic-duplicate",
-      "vanillaOverlapResolved": false,
-      "externalVanillaScorpionArtemOverlapResolved": false,
-      "scopeBoundary": "Frozen Admiral, Scorpion and Artem sub-gates are resolved. Artem contains a real Sewing kit overlap, but it is a competing sink in Expanding Wardrobe/barter input rather than a duplicate maintenance-reserve operation or supply faucet. Vanilla uniqueness and Economy acquisition pressure remain unresolved."
+      "vanillaProof": "post-010-procurement-vanilla-overlap-proof.json",
+      "vanillaOverlapResolved": true,
+      "vanillaExactTplOverlapAccepted": true,
+      "vanillaOverlapClassification": "competing-demand-not-semantic-duplicate",
+      "externalVanillaScorpionArtemOverlapResolved": true,
+      "scopeBoundary": "Frozen Admiral, Scorpion, Artem and pinned vanilla-derived demand sub-gates are resolved. Artem contains a Sewing kit competing sink; vanilla contains WD-40 quest demand and hideout demand for all three payload TPLs. None is a duplicate maintenance-reserve operation or supply faucet. Aggregate acquisition pressure remains Economy Admiral's gate."
     },
     "rewardDoctrine": {
       "default": [
@@ -118,7 +121,7 @@
     "runtimeMaterialize": false,
     "requiresExactSpt413HandoverConditionProof": false,
     "requiresExactItemTplSelection": false,
-    "requiresVanillaScorpionArtemOverlapAudit": true,
+    "requiresVanillaScorpionArtemOverlapAudit": false,
     "requiresEconomyAdmiralReview": true,
     "requiresFrozenCampaignOverlapReview": false
   },
