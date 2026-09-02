@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-authored-spec-only",
+  "operationKey": "rogue-interdiction",
+  "workingTitle": {"en": "Perimeter Interdiction", "ru": "Перехват периметра"},
+  "runtimeMaterialize": false,
+  "source": {
+    "legacyBundle": "Rogue Hunt",
+    "decision": "bounded-rewrite-theme-only"
+  },
+  "conditionAuthority": {
+    "roleProof": "post-010-role-alias-proof.json",
+    "role": {"target": "Savage", "savageRole": ["exUsec"], "status": "proven-pinned-spt413"},
+    "locationSource": {
+      "repository": "sp-tarkov/server-csharp",
+      "commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+      "path": "Libraries/SPTarkov.Server.Assets/SPT_Data/configs/quest.json",
+      "map": "Lighthouse",
+      "locationTarget": "Lighthouse",
+      "status": "proven-pinned-spt413"
+    },
+    "survivedExtractionProof": "post-010-pmc-location-extraction-proof.json",
+    "sameRaidCouplingProof": "post-010-same-raid-coupling-proof.json",
+    "subLocationOrWaterTreatmentZoneRequired": false,
+    "boundary": "The operation may require Rogue kills on Lighthouse and a successful Lighthouse extraction using proven shapes. Water Treatment remains narrative/target context, not an independently enforced zone selector. Same-raid kill-to-extract temporal coupling remains fail-closed until evaluator/reset ordering is proven."
+  },
+  "bounds": {
+    "maximumRogueTargets": 6,
+    "maximumSuccessfulRaids": 1,
+    "repeatable": false,
+    "escalatingSequelsAllowed": false,
+    "locationFreeFallbackAllowed": false,
+    "subLocationRequirement": false
+  },
+  "economyReview": {
+    "status": "approved-static",
+    "campaignPlayerLevel": 31,
+    "riskBand": "high-risk",
+    "authoredReward": {"xp": 12000, "rub": 78000, "standing": 0.018, "itemReward": null},
+    "nearestVanillaComparatorClass": "Elimination",
+    "vanillaComparatorMedian": {"xp": 18200, "rub": 65000},
+    "overallVanillaStandingMedian": 0.02,
+    "review": "At level 31 this specialist Rogue operation stays below the pinned vanilla Elimination XP median and below the overall vanilla standing median. RUB is moderately above the Elimination median but remains inside the authored high-risk band and below the pinned vanilla overall RUB p75 of 85000. It grants no item reward, no Rogue-equipment faucet and no capability unlock, so the 78000 RUB allocation is accepted without escalation."
+  },
+  "gates": {
+    "requiresExactRogueRoleProof": false,
+    "requiresExactLighthouseLocationSelection": false,
+    "requiresSurvivedExtractionShapeProof": false,
+    "requiresSameRaidKillAndExtractionCouplingProof": true,
+    "requiresSubLocationOrZoneProof": false,
+    "requiresVanillaScorpionArtemOverlapAudit": true,
+    "requiresEconomyAdmiralReview": false,
+    "implementationAllowed": false,
+    "runtimeMaterialize": false
+  },
+  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
+}
