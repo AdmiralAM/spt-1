@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
 
@@ -21,6 +22,8 @@ internal static class ReloadLazyEnumerationPinRegression
 
         Configure(originalFast, installedFast, originalBind, installedBind);
         var beltArgument = (int[])ReloadCandidateBridgeRuntime.BeltSlotsArgument;
+        MethodInfo exactMethod = RequireMethod(nameof(FakeInventory.GetItemsInSlots));
+        MethodInfo alternateMethod = RequireMethod(nameof(FakeInventory.GetItemsInSlotsAlternate));
 
         var preQueryInventory = new FakeInventory(magazine, null);
         IEnumerable<FakeItem> driftingVanilla = EnumerateVanillaWithDrift(
@@ -51,6 +54,19 @@ internal static class ReloadLazyEnumerationPinRegression
             "pseudo-slot argument drift during vanilla enumeration must fail closed before any fallback query");
         beltArgument[0] = RuntimeIdentity.DedicatedBeltEquipmentSlotValue;
 
+        var preQueryMethodInventory = new FakeInventory(magazine, null);
+        IEnumerable<FakeItem> driftingMethodVanilla = EnumerateVanillaWithDrift(
+            new FakeMagazine("vanilla-method-drift-magazine"),
+            () => ReloadCandidateBridgeRuntime.GetItemsInSlots = alternateMethod);
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object preQueryMethodDrifted = ReloadCandidateBridgeRuntime.AppendCandidates(preQueryMethodInventory, originalFast, driftingMethodVanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Require(ReferenceEquals(preQueryMethodDrifted, driftingMethodVanilla),
+            "MethodInfo replacement during lazy vanilla enumeration must preserve exact vanilla identity");
+        Require(preQueryMethodInventory.QueryCount == 0 && preQueryMethodInventory.AlternateQueryCount == 0,
+            "MethodInfo replacement during vanilla enumeration must fail closed before any fallback query");
+        ReloadCandidateBridgeRuntime.GetItemsInSlots = exactMethod;
+
         var driftingInventory = new FakeInventory(magazine, () => originalFast[1] = 99);
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object drifted = ReloadCandidateBridgeRuntime.AppendCandidates(driftingInventory, originalFast, vanilla);
@@ -76,6 +92,18 @@ internal static class ReloadLazyEnumerationPinRegression
             "lazy Belt pseudo-slot drift must not trigger a retry or second query");
         beltArgument[0] = RuntimeIdentity.DedicatedBeltEquipmentSlotValue;
 
+        var driftingMethodInventory = new FakeInventory(
+            magazine,
+            () => ReloadCandidateBridgeRuntime.GetItemsInSlots = alternateMethod);
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object methodDrifted = ReloadCandidateBridgeRuntime.AppendCandidates(driftingMethodInventory, originalFast, vanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Require(ReferenceEquals(methodDrifted, vanilla),
+            "MethodInfo replacement during lazy Belt enumeration must preserve exact vanilla identity");
+        Require(driftingMethodInventory.QueryCount == 1 && driftingMethodInventory.AlternateQueryCount == 0,
+            "lazy Belt MethodInfo drift must retain the captured one-query boundary and never redirect or retry");
+        ReloadCandidateBridgeRuntime.GetItemsInSlots = exactMethod;
+
         var healthyInventory = new FakeInventory(magazine, null);
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object healthy = ReloadCandidateBridgeRuntime.AppendCandidates(healthyInventory, originalFast, vanilla);
@@ -98,12 +126,17 @@ internal static class ReloadLazyEnumerationPinRegression
         yield return item;
     }
 
+    private static MethodInfo RequireMethod(string name)
+    {
+        return typeof(FakeInventory).GetMethod(name)
+            ?? throw new InvalidOperationException("Reload lazy enumeration pin regression failed: fake method missing: " + name);
+    }
+
     private static void Configure(object originalFast, object installedFast, object originalBind, object installedBind)
     {
         ReloadCandidateBridgeRuntime.Reset();
         ReloadScopeEpochGuard.ResetStateForRegression();
-        ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
-            ?? throw new InvalidOperationException("Reload lazy enumeration pin regression failed: fake GetItemsInSlots missing");
+        ReloadCandidateBridgeRuntime.GetItemsInSlots = RequireMethod(nameof(FakeInventory.GetItemsInSlots));
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = originalFast;
         ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = installedFast;
@@ -131,10 +164,17 @@ internal static class ReloadLazyEnumerationPinRegression
         }
 
         internal int QueryCount { get; private set; }
+        internal int AlternateQueryCount { get; private set; }
 
         public IEnumerable<FakeItem> GetItemsInSlots(IEnumerable<int> slots)
         {
             QueryCount++;
+            return Enumerate();
+        }
+
+        public IEnumerable<FakeItem> GetItemsInSlotsAlternate(IEnumerable<int> slots)
+        {
+            AlternateQueryCount++;
             return Enumerate();
         }
 
