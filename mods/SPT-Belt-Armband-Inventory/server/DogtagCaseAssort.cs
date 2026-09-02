@@ -143,6 +143,53 @@ public sealed class DogtagCaseAssort(
         if (!trader.Assort.LoyalLevelItems.TryGetValue(id, out var liveLoyalty)
             || liveLoyalty != LoyaltyLevel)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman loyalty metadata changed before publication.");
+
+        // The tuple is composed of independently mutable collections/objects. A participant can
+        // keep the same references and mutate item/barter state while the first proof advances to
+        // loyalty. Run one final whole-tuple identity+value pass after loyalty so a mutation that
+        // occurred inside this bounded proof window fails closed rather than being published from
+        // a proof that was already stale when it returned.
+        RequirePublishedAssortTupleStillStable(trader, id, expectedItem, expectedBarter);
+    }
+
+    private static void RequirePublishedAssortTupleStillStable(
+        Trader trader,
+        MongoId id,
+        Item expectedItem,
+        List<List<BarterScheme>> expectedBarter)
+    {
+        int exactItemMatches = 0;
+        int idMatches = 0;
+        for (int i = 0; i < trader.Assort.Items.Count; i++)
+        {
+            var item = trader.Assort.Items[i];
+            if (item.Id != id) continue;
+            idMatches++;
+            if (ReferenceEquals(item, expectedItem)) exactItemMatches++;
+            if (idMatches > 1)
+                throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: Ragman item tuple changed during final publication reproof.");
+        }
+
+        if (idMatches != 1 || exactItemMatches != 1
+            || !Equals(expectedItem.Template, new MongoId(RuntimeIdentity.DogtagCaseItemId))
+            || !string.Equals(expectedItem.ParentId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal)
+            || !string.Equals(expectedItem.SlotId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal)
+            || expectedItem.Upd == null
+            || expectedItem.Upd.UnlimitedCount != true
+            || expectedItem.Upd.StackObjectsCount != UnlimitedStock)
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: Ragman item identity/content changed during final publication reproof.");
+
+        if (!trader.Assort.BarterScheme.TryGetValue(id, out var liveBarter)
+            || !ReferenceEquals(liveBarter, expectedBarter)
+            || liveBarter.Count != 1
+            || liveBarter[0].Count != 1
+            || !Equals(liveBarter[0][0].Template, Money.ROUBLES)
+            || liveBarter[0][0].Count != PriceRoubles)
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: Ragman barter identity/content changed during final publication reproof.");
+
+        if (!trader.Assort.LoyalLevelItems.TryGetValue(id, out var liveLoyalty)
+            || liveLoyalty != LoyaltyLevel)
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: Ragman loyalty metadata changed during final publication reproof.");
     }
 
     private static void RollbackOwnedAssortTuple(
