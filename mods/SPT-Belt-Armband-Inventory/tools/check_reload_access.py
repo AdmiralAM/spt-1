@@ -10,6 +10,7 @@ discovery_tests = (ROOT / "tests" / "ReloadDiscoveryExactReturnContractRegressio
 epoch_tests = (ROOT / "tests" / "ReloadScopeEpochRegression.cs").read_text(encoding="utf-8-sig")
 epoch_install_tests = (ROOT / "tests" / "ReloadScopeEpochInstallRollbackRegression.cs").read_text(encoding="utf-8-sig")
 diagnostic_tests = (ROOT / "tests" / "ReloadDiagnosticLoggingRegression.cs").read_text(encoding="utf-8-sig")
+lazy_pin_tests = (ROOT / "tests" / "ReloadLazyEnumerationPinRegression.cs").read_text(encoding="utf-8-sig")
 
 violations = []
 
@@ -66,7 +67,8 @@ for forbidden in (
         violations.append(f"FastAccessSlotPatches.cs: stale Item[] contract survived: {forbidden}")
 
 # Exact vanilla-first/fail-closed mechanics: four-array content pin, one query,
-# post-query reproof, reference dedup, no global scans in the hot bridge.
+# pre-query + post-query + post-lazy-enumeration reproof, reference dedup, no
+# global scans in the hot bridge.
 for token in (
     'HasPinnedFastAccessArrayContentForRegression(slots)',
     'var vanillaItems = new List<object>();',
@@ -75,6 +77,7 @@ for token in (
     'merged = new List<object>(vanillaItems);',
     'ContainsReference(vanillaItems, item)',
     'Array result = Array.CreateInstance(ItemType, merged.Count);',
+    'Re-prove the exact retained/installed slot-array snapshot after enumeration',
 ):
     require(source, token, "FastAccessSlotPatches.cs")
 
@@ -86,8 +89,8 @@ else:
     runtime = source[bridge_start:bridge_end]
     if runtime.count('GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })') != 1:
         violations.append("FastAccessSlotPatches.cs: scoped bridge must execute exactly one pseudo-slot15 query")
-    if runtime.count('HasPinnedFastAccessArrayContentForRegression(slots)') < 3:
-        violations.append("FastAccessSlotPatches.cs: slot-array pin must be proved before contract work, immediately pre-query, and post-query")
+    if runtime.count('HasPinnedFastAccessArrayContentForRegression(slots)') < 4:
+        violations.append("FastAccessSlotPatches.cs: slot-array pin must be proved before contract work, immediately pre-query, post-query/pre-enumeration, and post-enumeration/pre-publication")
     for forbidden in (
         "AppDomain.CurrentDomain.GetAssemblies", "ReflectionTools.GetTypes", "GetMethods(",
         "GetProperty(", "GetField(", "FindObjectsOfType", "GetComponentsInChildren", "new StackTrace",
@@ -137,6 +140,18 @@ for token in (
 ):
     require(return_tests, token, "ReloadCandidateReturnContractRegression.cs")
 
+# The exact lazy-interface risk is executable, not merely structural: mutation
+# during MoveNext must fail closed after the one query, while a restored healthy
+# pin must recover normal vanilla-prefix + exact-Belt append semantics.
+for token in (
+    'same-reference slot-array drift during lazy Belt enumeration must preserve the exact vanilla enumerable object',
+    'restoring the exact captured content must restore the recognized retained-array pin',
+    'healthy lazy Belt enumeration with an unchanged pinned array must publish a replacement sequence',
+    'healthy lazy Belt enumeration must preserve vanilla prefix and append the exact Belt descendant',
+    'duringEnumeration?.Invoke();',
+):
+    require(lazy_pin_tests, token, "ReloadLazyEnumerationPinRegression.cs")
+
 if 'ReloadScopeEpochRegression.Run();' not in tests:
     violations.append("Program.cs: reload epoch regression must run after module initialization")
 if '[ModuleInitializer]' in epoch_tests:
@@ -182,4 +197,4 @@ if source.count('Activator.CreateInstance(harmonyType, new object[] { CandidateB
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, four-array content pin, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
+print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, four-array content pin including post-lazy-enumeration reproof, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
