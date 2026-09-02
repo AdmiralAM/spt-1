@@ -140,6 +140,12 @@ public sealed class DogtagCaseAssort(
             || liveBarter[0][0].Count != PriceRoubles)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman barter contents changed in place before publication.");
 
+        // Pin every mutable layer of the validated barter tuple for the final bounded reproof.
+        // Value-identical replacement of the inner list or BarterScheme object is still a tuple
+        // identity change and must not be accepted as the same publication transaction.
+        var expectedInnerBarter = liveBarter[0];
+        var expectedScheme = expectedInnerBarter[0];
+
         if (!trader.Assort.LoyalLevelItems.TryGetValue(id, out var liveLoyalty)
             || liveLoyalty != LoyaltyLevel)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman loyalty metadata changed before publication.");
@@ -149,14 +155,16 @@ public sealed class DogtagCaseAssort(
         // loyalty. Run one final whole-tuple identity+value pass after loyalty so a mutation that
         // occurred inside this bounded proof window fails closed rather than being published from
         // a proof that was already stale when it returned.
-        RequirePublishedAssortTupleStillStable(trader, id, expectedItem, expectedBarter);
+        RequirePublishedAssortTupleStillStable(trader, id, expectedItem, expectedBarter, expectedInnerBarter, expectedScheme);
     }
 
     private static void RequirePublishedAssortTupleStillStable(
         Trader trader,
         MongoId id,
         Item expectedItem,
-        List<List<BarterScheme>> expectedBarter)
+        List<List<BarterScheme>> expectedBarter,
+        List<BarterScheme> expectedInnerBarter,
+        BarterScheme expectedScheme)
     {
         int exactItemMatches = 0;
         int idMatches = 0;
@@ -182,7 +190,9 @@ public sealed class DogtagCaseAssort(
         if (!trader.Assort.BarterScheme.TryGetValue(id, out var liveBarter)
             || !ReferenceEquals(liveBarter, expectedBarter)
             || liveBarter.Count != 1
+            || !ReferenceEquals(liveBarter[0], expectedInnerBarter)
             || liveBarter[0].Count != 1
+            || !ReferenceEquals(liveBarter[0][0], expectedScheme)
             || !Equals(liveBarter[0][0].Template, Money.ROUBLES)
             || liveBarter[0][0].Count != PriceRoubles)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: Ragman barter identity/content changed during final publication reproof.");
