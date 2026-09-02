@@ -52,6 +52,8 @@ public sealed class DogtagCaseItem(
             throw new InvalidOperationException("B&A&HB Dogtag Case source grid boundary is missing or ambiguous; exactly one canonical grid is required.");
 
         var sourceGrid = sourceGrids[0];
+        if (!Equals(sourceGrid.Parent, SourceDogtagCaseTpl))
+            throw new InvalidOperationException("B&A&HB Dogtag Case canonical source grid parent drifted away from the EFT/SPT Dogtag Case template; refusing fallback cloning.");
         var sourceGridProperties = sourceGrid.Properties
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case canonical source grid properties are missing; refusing fallback cloning.");
         var sourceFilters = sourceGridProperties.Filters?.ToArray();
@@ -317,6 +319,7 @@ public sealed class DogtagCaseItem(
         var actual = grid.Properties;
         var expected = sourceGrid.Properties;
         if (ReferenceEquals(grid, sourceGrid)
+            || !Equals(sourceGrid.Parent, SourceDogtagCaseTpl)
             || !string.Equals(grid.Id.ToString(), GridId, StringComparison.Ordinal)
             || !string.Equals(grid.Parent?.ToString(), TemplateId, StringComparison.Ordinal)
             || !string.Equals(grid.Name, sourceGrid.Name, StringComparison.Ordinal)
@@ -330,7 +333,7 @@ public sealed class DogtagCaseItem(
             || actual.MaxCount != expected.MaxCount
             || actual.MaxWeight != expected.MaxWeight
             || actual.IsSortingTable != expected.IsSortingTable)
-            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: grid identity, ownership, geometry or limits differ from the canonical source contract.");
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: canonical source grid ownership, product grid identity/ownership, geometry or limits differ from the canonical source contract.");
 
         var actualFilters = actual.Filters?.ToArray();
         var expectedFilters = expected.Filters?.ToArray();
