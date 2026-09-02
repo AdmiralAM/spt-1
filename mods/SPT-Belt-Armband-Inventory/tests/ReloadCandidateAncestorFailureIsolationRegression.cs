@@ -13,7 +13,7 @@ internal static class ReloadCandidateAncestorFailureIsolationRegression
         var vanillaMagazine = new FakeMagazine("vanilla-magazine", new FakeItem("foreign-root"));
         var beltMagazine = new FakeMagazine("belt-magazine", exactBelt);
         var vanilla = new FakeItem[] { vanillaMagazine };
-        var slots = new object();
+        var slots = new object[] { "fast-access" };
         var inventory = new FakeInventory(new FakeItem[] { beltMagazine });
         int warnings = 0;
 
@@ -57,26 +57,30 @@ internal static class ReloadCandidateAncestorFailureIsolationRegression
         AssertScopeClean("recovery");
 
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
     }
 
     static void Configure(object slots, Action<string> warning)
     {
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload ancestor-failure regression failed: fake GetItemsInSlots missing");
         // Match the pinned primary bridge boundary exactly so this regression reaches
         // the intended ancestry-reader fault after one bounded fallback query rather
-        // than being correctly rejected earlier by the query-contract guard.
+        // than being correctly rejected earlier by either query-contract or shared
+        // install-time slot-array content-pin guards.
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = slots;
-        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object();
-        ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = new object();
-        ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object();
+        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object[] { "installed-fast", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
+        ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = new object[] { "original-bind" };
+        ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object[] { "installed-bind", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
         ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
         ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
         ReloadCandidateBridgeRuntime.LogWarning = warning;
+        ReloadScopeEpochGuard.CaptureSlotArraysForRegression();
     }
 
     static void AssertScopeClean(string phase)
