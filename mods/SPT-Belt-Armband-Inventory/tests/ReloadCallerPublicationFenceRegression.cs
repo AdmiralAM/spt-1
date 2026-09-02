@@ -14,8 +14,20 @@ internal static class ReloadCallerPublicationFenceRegression
         string path = Path.Combine(root, "src", "ReloadCallerPublicationFence.cs");
         string source = File.ReadAllText(path);
 
+        Require(source, "CandidateFenceHarmonyId = \"com.admiralam.spt.belt-armband-inventory.reload-caller-publication.candidate\"",
+            "ordered candidate postfixes must own a distinct rollback domain");
         Require(source, "CandidateBridgeHarmonyId = \"com.admiralam.spt.belt-armband-inventory.fast-access.reload-candidate\"",
             "final caller fence must order itself against the exact candidate-bridge Harmony owner");
+        Require(source, "candidateOwner = harmonyCtor.Invoke(new object[] { CandidateFenceHarmonyId })",
+            "candidate pair must be installed through its dedicated Harmony owner");
+        Require(source, "patch.Invoke(candidateOwner, beforeArgs);",
+            "vanilla-capture postfix must use the dedicated candidate owner");
+        Require(source, "patch.Invoke(candidateOwner, afterArgs);",
+            "final publication postfix must use the same dedicated candidate owner");
+        Require(source, "bool rolledBack = TryRollback(candidateOwner, candidateRollback);",
+            "partial candidate installation must roll back the dedicated owner");
+        Require(source, "if (candidateOwner != null && !rolledBack)",
+            "failed rollback of a possibly partial pair must become terminal rather than retrying unsafely");
         Require(source, "SetOrdering(beforePostfix, \"before\", CandidateBridgeHarmonyId)",
             "vanilla capture must execute before the candidate bridge postfix");
         Require(source, "SetOrdering(afterPostfix, \"after\", CandidateBridgeHarmonyId)",
@@ -29,10 +41,24 @@ internal static class ReloadCallerPublicationFenceRegression
         Require(source, "__result = state.VanillaResult;",
             "final drift must restore the exact saved vanilla result object");
 
+        if (source.Contains("patch.Invoke(harmonyOwner, beforeArgs)", StringComparison.Ordinal)
+            || source.Contains("patch.Invoke(harmonyOwner, afterArgs)", StringComparison.Ordinal))
+            throw new InvalidOperationException(
+                "Reload caller publication fence regression failed: candidate pair was returned to the lifecycle owner's non-atomic rollback domain.");
         if (source.Contains("AppendCandidates(", StringComparison.Ordinal)
             || source.Contains("GetItemsInSlots.Invoke", StringComparison.Ordinal))
             throw new InvalidOperationException(
                 "Reload caller publication fence regression failed: final fence must not query, retry, redirect, or invoke the candidate bridge itself.");
+
+        int candidateCreate = source.IndexOf("candidateOwner = harmonyCtor.Invoke(new object[] { CandidateFenceHarmonyId })", StringComparison.Ordinal);
+        int candidateBefore = source.IndexOf("patch.Invoke(candidateOwner, beforeArgs);", candidateCreate, StringComparison.Ordinal);
+        int candidateAfter = source.IndexOf("patch.Invoke(candidateOwner, afterArgs);", candidateBefore, StringComparison.Ordinal);
+        int candidatePublish = source.IndexOf("candidateHarmonyOwner = candidateOwner;", candidateAfter, StringComparison.Ordinal);
+        int rollback = source.IndexOf("bool rolledBack = TryRollback(candidateOwner, candidateRollback);", candidatePublish, StringComparison.Ordinal);
+        if (candidateCreate < 0 || candidateBefore <= candidateCreate || candidateAfter <= candidateBefore
+            || candidatePublish <= candidateAfter || rollback <= candidatePublish)
+            throw new InvalidOperationException(
+                "Reload caller publication fence regression failed: dedicated-owner create -> complete pair -> publish -> catch rollback sequence changed.");
 
         int captureOrder = source.IndexOf("SetOrdering(beforePostfix, \"before\", CandidateBridgeHarmonyId)", StringComparison.Ordinal);
         int finalOrder = source.IndexOf("SetOrdering(afterPostfix, \"after\", CandidateBridgeHarmonyId)", StringComparison.Ordinal);
