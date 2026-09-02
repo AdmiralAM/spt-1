@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 
 internal static class ReloadPrimaryFallbackContractRegression
 {
+    private const string PinToken = "if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))";
+
     [ModuleInitializer]
     internal static void Run()
     {
@@ -13,15 +15,15 @@ internal static class ReloadPrimaryFallbackContractRegression
 
         string source = File.ReadAllText(Path.Combine(root, "src", "FastAccessSlotPatches.cs"));
         int append = source.IndexOf("internal static object AppendCandidates(", StringComparison.Ordinal);
-        int firstPin = append < 0 ? -1 : source.IndexOf("if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))", append, StringComparison.Ordinal);
+        int firstPin = append < 0 ? -1 : source.IndexOf(PinToken, append, StringComparison.Ordinal);
         int helperCall = firstPin < 0 ? -1 : source.IndexOf("if (!HasExactFallbackQueryContract()", firstPin, StringComparison.Ordinal);
         int exactVanillaType = helperCall < 0 ? -1 : source.IndexOf("!ReturnType.IsInstanceOfType(vanillaResult)", helperCall, StringComparison.Ordinal);
         int vanillaEnumerable = exactVanillaType < 0 ? -1 : source.IndexOf("!(vanillaResult is IEnumerable vanillaSequence)", exactVanillaType, StringComparison.Ordinal);
-        int secondPin = vanillaEnumerable < 0 ? -1 : source.IndexOf("if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))", vanillaEnumerable, StringComparison.Ordinal);
+        int secondPin = vanillaEnumerable < 0 ? -1 : source.IndexOf(PinToken, vanillaEnumerable, StringComparison.Ordinal);
         int invoke = secondPin < 0 ? -1 : source.IndexOf("GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })", secondPin, StringComparison.Ordinal);
         int exactFallbackType = invoke < 0 ? -1 : source.IndexOf("!ReturnType.IsInstanceOfType(beltResult)", invoke, StringComparison.Ordinal);
         int fallbackEnumerable = exactFallbackType < 0 ? -1 : source.IndexOf("!(beltResult is IEnumerable beltItems)", exactFallbackType, StringComparison.Ordinal);
-        int thirdPin = fallbackEnumerable < 0 ? -1 : source.IndexOf("!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)", fallbackEnumerable, StringComparison.Ordinal);
+        int thirdPin = fallbackEnumerable < 0 ? -1 : source.IndexOf(PinToken, fallbackEnumerable, StringComparison.Ordinal);
         int merge = thirdPin < 0 ? -1 : source.IndexOf("List<object> merged = null;", thirdPin, StringComparison.Ordinal);
         int helper = source.IndexOf("static bool HasExactFallbackQueryContract()", StringComparison.Ordinal);
         int reset = helper < 0 ? -1 : source.IndexOf("internal static void Reset()", helper, StringComparison.Ordinal);
@@ -33,7 +35,7 @@ internal static class ReloadPrimaryFallbackContractRegression
                 && exactFallbackType < fallbackEnumerable && fallbackEnumerable < thirdPin && thirdPin < merge))
             throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary AppendCandidates must consume the shared slot-array content pin before exact generic-interface contract inspection, re-prove it immediately before the one slot15 query and after that query before enumeration, then prove exact declared IEnumerable<Item> compatibility before merge.");
 
-        int fourthPin = source.IndexOf("HasPinnedFastAccessArrayContentForRegression(slots)", thirdPin + 1, StringComparison.Ordinal);
+        int fourthPin = source.IndexOf(PinToken, thirdPin + PinToken.Length, StringComparison.Ordinal);
         if (fourthPin >= 0 && fourthPin < merge)
             throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary bridge must use exactly three bounded shared-pin proofs around the single slot15 query before merge.");
 
