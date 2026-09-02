@@ -19,6 +19,23 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
         Require(source, "Filters = copiedFilters",
             "the cloned grid must publish only the independently owned copied filter groups");
 
+        // Creation-time deep copies are not sufficient for the existing-template
+        // collision path. Value-identical canonical/product state must also prove
+        // deep reference non-aliasing, otherwise both sides could mutate together
+        // and still satisfy SetEquals parity during publication reproof.
+        Require(source, "ReferenceEquals(candidateProperties, sourceProperties)",
+            "existing Dogtag Case root properties must not alias canonical source properties");
+        Require(source, "ReferenceEquals(grid, sourceGrid)",
+            "existing Dogtag Case grid object must not alias the canonical source grid");
+        Require(source, "ReferenceEquals(actual, expected)",
+            "existing Dogtag Case grid properties must not alias canonical grid properties");
+        Require(source, "ReferenceEquals(actualFilters[i], expectedFilters[i])",
+            "existing Dogtag Case filter-group object must not alias canonical filter-group state");
+        Require(source, "ReferenceEquals(actualIncluded, expectedIncluded)",
+            "existing Dogtag Case included filter set must not alias canonical source state");
+        Require(source, "ReferenceEquals(actualExcluded, expectedExcluded)",
+            "existing Dogtag Case excluded filter set must not alias canonical source state");
+
         int copy = source.IndexOf("var copiedFilters = sourceFilters", StringComparison.Ordinal);
         int details = source.IndexOf("var details = new NewItemFromCloneDetails", StringComparison.Ordinal);
         int publish = source.IndexOf("Filters = copiedFilters", StringComparison.Ordinal);
@@ -27,9 +44,15 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
             || !(copy < details && details < publish && publish < create))
             throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: source filters must be copied before clone construction and publication.");
 
-        // Exact positive construction + ordering proofs are authoritative here.
-        // Negative substring checks against source variable/property names are not:
-        // those names necessarily occur in the legitimate copy expression itself.
+        int validate = source.IndexOf("private static void ValidateExisting", StringComparison.Ordinal);
+        int rootAlias = source.IndexOf("ReferenceEquals(candidateProperties, sourceProperties)", StringComparison.Ordinal);
+        int gridAlias = source.IndexOf("ReferenceEquals(grid, sourceGrid)", StringComparison.Ordinal);
+        int groupAlias = source.IndexOf("ReferenceEquals(actualFilters[i], expectedFilters[i])", StringComparison.Ordinal);
+        int includeAlias = source.IndexOf("ReferenceEquals(actualIncluded, expectedIncluded)", StringComparison.Ordinal);
+        int excludeAlias = source.IndexOf("ReferenceEquals(actualExcluded, expectedExcluded)", StringComparison.Ordinal);
+        if (validate < 0 || rootAlias < validate || gridAlias < rootAlias || groupAlias < gridAlias
+            || includeAlias < groupAlias || excludeAlias < includeAlias)
+            throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: canonical non-alias proofs must remain inside ValidateExisting in root-to-filter order.");
     }
 
     private static string? FindModuleRoot()
