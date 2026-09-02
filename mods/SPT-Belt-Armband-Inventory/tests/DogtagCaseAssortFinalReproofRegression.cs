@@ -15,6 +15,8 @@ internal static class DogtagCaseAssortFinalReproofRegression
         const string loyalty = "liveLoyalty != LoyaltyLevel";
         const string finalCall = "RequirePublishedAssortTupleStillStable(items, barterScheme, loyalLevelItems, id, expectedItem, expectedBarter, expectedInnerBarter, expectedScheme);";
         const string finalMethod = "private static void RequirePublishedAssortTupleStillStable(";
+        const string publicationBoundary = "private static void RequirePublicationBoundary(TemplateTable templateTable, MongoId templateId)";
+        const string effectiveHostReproof = "DogtagCaseHostExclusionPolicy.RequireCurrentHost(templateTable);";
 
         int firstLoyalty = source.IndexOf(loyalty, StringComparison.Ordinal);
         int reproofCall = firstLoyalty < 0 ? -1 : source.IndexOf(finalCall, firstLoyalty + loyalty.Length, StringComparison.Ordinal);
@@ -40,6 +42,15 @@ internal static class DogtagCaseAssortFinalReproofRegression
         Require(finalRegion, "idMatches > 1", "final reproof must fail closed on assort-ID ambiguity");
         if (finalRegion.Contains("trader.Assort", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag assort final reproof regression failed: final proof re-read mutable trader.Assort state.");
+
+        int boundaryStart = source.IndexOf(publicationBoundary, StringComparison.Ordinal);
+        int nextMethod = boundaryStart < 0 ? -1 : source.IndexOf("internal static void RequireExactDogtagHost", boundaryStart, StringComparison.Ordinal);
+        if (boundaryStart < 0 || nextMethod < 0)
+            throw new InvalidOperationException("Dogtag assort final reproof regression failed: publication boundary could not be isolated.");
+        string boundaryRegion = source.Substring(boundaryStart, nextMethod - boundaryStart);
+        Require(boundaryRegion, "DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);", "assort publication boundary must reprove canonical registered template");
+        Require(boundaryRegion, "RequireExactDogtagHost(templateTable, templateId);", "assort publication boundary must reprove exact Dogtag host identity/content");
+        Require(boundaryRegion, effectiveHostReproof, "assort publication boundary must reprove effective Dogtag acceptance including any optional future exclusions");
     }
 
     private static string? FindModuleRoot()
