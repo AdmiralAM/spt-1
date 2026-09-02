@@ -41,6 +41,15 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
         Require(source, "actualIncluded.Count == 0 || expectedIncluded.Count == 0",
             "canonical and product included dogtag filter sets must remain non-empty during publication reproof");
 
+        // The live EFT/SPT Dogtag Case taxonomy remains authoritative; do not replace
+        // it with a hardcoded dogtag list. One B&A&HB-owned invariant is nevertheless
+        // absolute: the container may never admit its own persistent template ID,
+        // otherwise synchronized source/product drift would permit recursive case-in-case storage.
+        Require(source, "x.Filter.Contains(DogtagCaseTpl)",
+            "pre-create canonical source validation must reject recursive Dogtag Case inclusion");
+        Require(source, "actualIncluded.Contains(DogtagCaseTpl) || expectedIncluded.Contains(DogtagCaseTpl)",
+            "every live canonical/product parity reproof must reject recursive Dogtag Case inclusion");
+
         int copy = source.IndexOf("var copiedFilters = sourceFilters", StringComparison.Ordinal);
         int details = source.IndexOf("var details = new NewItemFromCloneDetails", StringComparison.Ordinal);
         int publish = source.IndexOf("Filters = copiedFilters", StringComparison.Ordinal);
@@ -55,12 +64,13 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
         int nonEmptyGroups = source.IndexOf("expectedFilters.Length == 0", StringComparison.Ordinal);
         int groupAlias = source.IndexOf("ReferenceEquals(actualFilters[i], expectedFilters[i])", StringComparison.Ordinal);
         int nonEmptyIncluded = source.IndexOf("actualIncluded.Count == 0 || expectedIncluded.Count == 0", StringComparison.Ordinal);
+        int nonRecursiveIncluded = source.IndexOf("actualIncluded.Contains(DogtagCaseTpl) || expectedIncluded.Contains(DogtagCaseTpl)", StringComparison.Ordinal);
         int includeAlias = source.IndexOf("ReferenceEquals(actualIncluded, expectedIncluded)", StringComparison.Ordinal);
         int excludeAlias = source.IndexOf("ReferenceEquals(actualExcluded, expectedExcluded)", StringComparison.Ordinal);
         if (validate < 0 || rootAlias < validate || gridAlias < rootAlias || nonEmptyGroups < gridAlias
-            || groupAlias < nonEmptyGroups || nonEmptyIncluded < groupAlias
-            || includeAlias < nonEmptyIncluded || excludeAlias < includeAlias)
-            throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: canonical non-empty/non-alias proofs must remain inside ValidateExisting in root-to-filter order.");
+            || groupAlias < nonEmptyGroups || nonEmptyIncluded < groupAlias || nonRecursiveIncluded < nonEmptyIncluded
+            || includeAlias < nonRecursiveIncluded || excludeAlias < includeAlias)
+            throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: canonical non-empty/non-recursive/non-alias proofs must remain inside ValidateExisting in root-to-filter order.");
     }
 
     private static string? FindModuleRoot()
