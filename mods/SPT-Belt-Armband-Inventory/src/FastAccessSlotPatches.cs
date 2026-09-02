@@ -231,6 +231,13 @@ namespace SPTBeltArmbandInventory
                     merged.Add(item);
                 }
 
+                // The pinned SPT method returns IEnumerable<Item>; its body may therefore be lazy.
+                // Re-prove the exact retained/installed slot-array snapshot after enumeration and
+                // immediately before publishing a replacement so in-place drift during MoveNext()
+                // cannot escape the same fail-closed vanilla identity boundary.
+                if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))
+                    return vanillaResult;
+
                 if (FastAccessSlotPolicy.ShouldReuseVanillaReloadCandidates(merged != null))
                     return vanillaResult;
 
