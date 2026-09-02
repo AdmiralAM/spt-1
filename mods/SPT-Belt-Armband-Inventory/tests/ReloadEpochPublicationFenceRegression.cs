@@ -1,11 +1,9 @@
 using System;
-using System.Runtime.CompilerServices;
 
 namespace SPTBeltArmbandInventory.Tests
 {
     internal static class ReloadEpochPublicationFenceRegression
     {
-        [ModuleInitializer]
         internal static void Run()
         {
             ReloadScopeEpochGuard.ResetStateForRegression();
@@ -41,6 +39,7 @@ namespace SPTBeltArmbandInventory.Tests
             ReloadScopeEpochGuard.ExitForRegression();
             ReloadScopeEpochGuard.ResetStateForRegression();
             ReloadEpochPublicationFence.ResetForRegression();
+            Console.WriteLine("ReloadEpochPublicationFenceRegression: PASS");
         }
 
         static void Require(bool condition, string message)
