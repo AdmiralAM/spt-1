@@ -172,30 +172,31 @@ namespace SPTBeltArmbandInventory
 
             try
             {
-                // Primary bridge consumes the same install-time slot-array snapshot authority as
-                // ReloadScopeEpochGuard.BeforeAppend. If that authority is absent, cleared, stale,
-                // or the accepted same-reference array was mutated in-place, preserve the exact
-                // vanilla result before any pseudo-slot15 query. This keeps the bridge fail closed
-                // even if the separate epoch Harmony prefix is removed or reordered.
                 if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))
                     return vanillaResult;
 
-                // Defense in depth: the primary bridge itself re-proves the pinned SPT 4.1
-                // Item[] return shape and the one-value pseudo-slot15 query before invoking
-                // Inventory.GetItemsInSlots. This must remain safe even if the separate epoch
-                // owner is absent, reordered or disabled by another compatibility participant.
-                if (!HasExactFallbackQueryContract())
+                // Pinned SPT 4.x decomp authority is exactly
+                // IEnumerable<Item> GetItemsInSlots(IEnumerable<EquipmentSlot> slots).
+                // Refuse any declared-contract drift before touching either lazy sequence.
+                if (!HasExactFallbackQueryContract()
+                    || !ReturnType.IsInstanceOfType(vanillaResult)
+                    || !(vanillaResult is IEnumerable vanillaSequence))
                     return vanillaResult;
 
-                // The exact SPT 4.1 contract produces Item[]. If runtime shape drifts, do not widen it.
-                // Keeping the original array also preserves vanilla object identity for every no-op path.
-                Type exactArrayType = ItemType.MakeArrayType();
-                if (!(vanillaResult is Array vanillaItems)
-                    || vanillaItems.GetType() != exactArrayType)
-                    return vanillaResult;
+                // Preserve the exact original result object on every no-op/failure path. We only
+                // materialize inside an owned Reload/QuickReload scope when the Belt bridge is live;
+                // the successful replacement remains assignable to the exact IEnumerable<Item>
+                // method contract and retains vanilla ordering as its strict prefix.
+                var vanillaItems = new List<object>();
+                foreach (object item in vanillaSequence)
+                {
+                    if (item != null && !ItemType.IsInstanceOfType(item))
+                        return vanillaResult;
+                    vanillaItems.Add(item);
+                }
 
-                // Re-prove the shared mutable-array pin immediately before the only slot15 query so
-                // contract inspection cannot bridge across a same-reference in-place edit.
+                // Close same-reference slot-array mutation between contract inspection and the
+                // single pseudo-slot15 query.
                 if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))
                     return vanillaResult;
 
@@ -210,24 +211,23 @@ namespace SPTBeltArmbandInventory
                     reentrant = false;
                 }
 
-                // MethodInfo.ReturnType is already pinned to Item[], but CLR array covariance can
-                // still surface a more-derived runtime array (for example Magazine[]) through that
-                // declared boundary. Refuse any such runtime widening before enumerating slot15.
-                if (!(beltResult is Array beltItems) || beltItems.GetType() != exactArrayType)
+                // The exact method returns an interface and its concrete LINQ iterator is an
+                // implementation detail. Require only the pinned declared interface at runtime,
+                // then re-prove the mutable slot-array pin before enumerating the one Belt query.
+                if (beltResult == null || !ReturnType.IsInstanceOfType(beltResult) || !(beltResult is IEnumerable beltItems)
+                    || !ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))
                     return vanillaResult;
 
                 List<object> merged = null;
                 foreach (object item in beltItems)
                 {
-                    if (item == null || !MagazineType.IsInstanceOfType(item) || !HasExactMagazineBeltAncestor(item)) continue;
+                    if (item == null) continue;
+                    if (!ItemType.IsInstanceOfType(item)) return vanillaResult;
+                    if (!MagazineType.IsInstanceOfType(item) || !HasExactMagazineBeltAncestor(item)) continue;
                     if (ContainsReference(vanillaItems, item) || (merged != null && ContainsReference(merged, item))) continue;
 
                     if (merged == null)
-                    {
-                        merged = new List<object>(vanillaItems.Length + 1);
-                        for (int i = 0; i < vanillaItems.Length; i++)
-                            merged.Add(vanillaItems.GetValue(i));
-                    }
+                        merged = new List<object>(vanillaItems);
                     merged.Add(item);
                 }
 
@@ -263,8 +263,8 @@ namespace SPTBeltArmbandInventory
                 if (itemType == null || declaredReturn == null || getItems == null || beltArgument == null)
                     return false;
 
-                Type exactArray = itemType.MakeArrayType();
-                if (declaredReturn != exactArray || getItems.ReturnType != exactArray)
+                Type exactReturn = typeof(IEnumerable<>).MakeGenericType(itemType);
+                if (declaredReturn != exactReturn || getItems.ReturnType != exactReturn)
                     return false;
 
                 ParameterInfo[] parameters = getItems.GetParameters();
@@ -289,13 +289,6 @@ namespace SPTBeltArmbandInventory
             {
                 return false;
             }
-        }
-
-        static bool ContainsReference(Array items, object candidate)
-        {
-            for (int i = 0; i < items.Length; i++)
-                if (ReferenceEquals(items.GetValue(i), candidate)) return true;
-            return false;
         }
 
         static bool ContainsReference(List<object> items, object candidate)
@@ -499,8 +492,12 @@ namespace SPTBeltArmbandInventory
                     return false;
 
                 ParameterInfo[] getItemsParameters = getItemsInSlots.GetParameters();
-                Type itemArrayType = itemType.MakeArrayType();
-                if (getItemsParameters.Length != 1 || getItemsInSlots.ReturnType != itemArrayType) return false;
+                Type itemEnumerableType = typeof(IEnumerable<>).MakeGenericType(itemType);
+                Type slotEnumerableType = typeof(IEnumerable<>).MakeGenericType(slotEnumType);
+                if (getItemsParameters.Length != 1
+                    || getItemsInSlots.ReturnType != itemEnumerableType
+                    || getItemsParameters[0].ParameterType != slotEnumerableType)
+                    return false;
                 object beltSlotsArgument = CreateSingleSlotArgument(getItemsParameters[0].ParameterType, slotEnumType, dedicatedBelt);
                 if (beltSlotsArgument == null)
                     return false;
@@ -560,15 +557,16 @@ namespace SPTBeltArmbandInventory
         {
             if (inventoryType == null || slotEnumType == null || itemType == null) return null;
             MethodInfo selected = null;
-            Type itemArrayType = itemType.MakeArrayType();
+            Type itemEnumerableType = typeof(IEnumerable<>).MakeGenericType(itemType);
+            Type slotEnumerableType = typeof(IEnumerable<>).MakeGenericType(slotEnumType);
             MethodInfo[] methods = inventoryType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             for (int i = 0; i < methods.Length; i++)
             {
                 MethodInfo method = methods[i];
                 if (!string.Equals(method.Name, "GetItemsInSlots", StringComparison.Ordinal) || method.ContainsGenericParameters
-                    || method.ReturnType != itemArrayType) continue;
+                    || method.ReturnType != itemEnumerableType) continue;
                 ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length != 1 || !CanCarrySlotValues(parameters[0].ParameterType, slotEnumType)) continue;
+                if (parameters.Length != 1 || parameters[0].ParameterType != slotEnumerableType) continue;
                 if (selected != null) return null;
                 selected = method;
             }
