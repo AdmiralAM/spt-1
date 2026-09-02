@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
@@ -9,7 +10,7 @@ internal static class ReloadEpochPrefixFailClosedRegression
     internal static void Run()
     {
         int[] slots = { 1, 2, 3 };
-        var vanilla = new FakeItem[] { new FakeItem() };
+        IEnumerable<FakeItem> vanilla = new FakeItem[] { new FakeItem() };
         MethodInfo beforeAppend = typeof(ReloadScopeEpochGuard).GetMethod(
             "BeforeAppend",
             BindingFlags.Static | BindingFlags.NonPublic)
@@ -31,15 +32,16 @@ internal static class ReloadEpochPrefixFailClosedRegression
         Assert(ReferenceEquals(driftArgs[2], vanilla),
             "drifted runtime contract must publish the exact vanilla result object");
 
-        // A valid pinned contract inside the current generation must proceed and
-        // must not pre-write Harmony's result. This proves the fail-closed branch
-        // does not leak into the healthy path after a transient rejected state.
-        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
+        // A valid pinned SPT 4.x generic-interface contract inside the current
+        // generation must proceed and must not pre-write Harmony's result. This
+        // proves the fail-closed branch does not leak into the healthy path after
+        // a transient rejected state.
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<FakeItem>);
         object sentinel = new object();
         object?[] exactArgs = { slots, vanilla, sentinel };
         bool exactProceed = (bool)(beforeAppend.Invoke(null, exactArgs)
             ?? throw new InvalidOperationException("Reload epoch prefix regression failed: exact callback returned null."));
-        Assert(exactProceed, "exact Item[] + pinned slot-array + one pseudo-slot15 contract must proceed");
+        Assert(exactProceed, "exact IEnumerable<Item> + pinned slot-array + one pseudo-slot15 contract must proceed");
         Assert(ReferenceEquals(exactArgs[2], sentinel),
             "healthy prefix path must leave Harmony result ownership to AppendCandidates");
 
@@ -83,14 +85,14 @@ internal static class ReloadEpochPrefixFailClosedRegression
         ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new[] { 4, 5, 6, RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
-        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<FakeItem>);
         ReloadCandidateBridgeRuntime.GetAllParentItems = _ => Array.Empty<object>();
         ReloadCandidateBridgeRuntime.ReadTemplateId = _ => string.Empty;
     }
 
     private sealed class FakeInventory
     {
-        public FakeItem[] GetItemsInSlots(object slots) => Array.Empty<FakeItem>();
+        public IEnumerable<FakeItem> GetItemsInSlots(IEnumerable<int> slots) => Array.Empty<FakeItem>();
     }
 
     private class FakeItem { }
