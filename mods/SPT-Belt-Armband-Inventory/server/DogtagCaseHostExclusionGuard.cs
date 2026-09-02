@@ -57,18 +57,81 @@ public static class DogtagCaseHostExclusionPolicy
         if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
             throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: DefaultInventory is missing.");
 
-        var slots = inventory.Properties?.Slots?
+        var inventoryProperties = inventory.Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: DefaultInventory properties are missing.");
+        var slotsCollection = inventoryProperties.Slots
+            ?? throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: DefaultInventory Slots collection is missing.");
+        var slots = slotsCollection
             .Where(x => string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal))
             .Take(2)
             .ToArray();
-        if (slots == null || slots.Length != 1)
+        if (slots.Length != 1)
             throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: Dogtag slot is missing or ambiguous.");
 
-        var groups = slots[0].Properties?.Filters?.ToArray();
-        if (groups == null || groups.Length != 1 || groups[0].Filter == null)
+        var slot = slots[0];
+        var slotProperties = slot.Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: Dogtag slot properties are missing.");
+        var filtersCollection = slotProperties.Filters
+            ?? throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: Dogtag Filters collection is missing.");
+        var groups = filtersCollection.Take(2).ToArray();
+        if (groups.Length != 1 || groups[0].Filter == null)
             throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: exact single Dogtag filter group is unavailable.");
 
-        RequireEffectiveAcceptance(groups[0].Filter, ReadOptionalExcludedFilter(groups[0]));
+        var filterGroup = groups[0];
+        var hostFilter = filterGroup.Filter;
+
+        // The effective proof is point-in-time and uses the same captured host/filter
+        // authority throughout. Included content must already be the committed Dogtag
+        // host, while optional future exclusions are detached before evaluation so a
+        // lazy/mutable collection cannot change underneath RequireEffectiveAcceptance.
+        DogtagCaseHostContract.RequireCommitted(hostFilter);
+        var excludedBefore = SnapshotOptionalExcludedFilter(filterGroup);
+        RequireEffectiveAcceptance(hostFilter, excludedBefore);
+        var excludedAfter = SnapshotOptionalExcludedFilter(filterGroup);
+        if (!OptionalFilterSetEquals(excludedBefore, excludedAfter))
+            throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter changed during effective-host verification.");
+
+        // Re-prove the complete mutable host wrapper chain after the effective proof.
+        // A value-identical replacement is not allowed to inherit the authority that
+        // was captured above; publication must consume the exact verified live chain.
+        if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var liveInventory)
+            || !ReferenceEquals(liveInventory, inventory))
+            throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: DefaultInventory changed during effective-host verification.");
+        if (!ReferenceEquals(liveInventory.Properties, inventoryProperties))
+            throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: DefaultInventory properties changed during effective-host verification.");
+        if (!ReferenceEquals(liveInventory.Properties?.Slots, slotsCollection))
+            throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: DefaultInventory Slots collection changed during effective-host verification.");
+
+        var liveSlots = slotsCollection
+            .Where(x => string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal))
+            .Take(2)
+            .ToArray();
+        if (liveSlots.Length != 1 || !ReferenceEquals(liveSlots[0], slot))
+            throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: Dogtag slot changed during effective-host verification.");
+        if (!ReferenceEquals(liveSlots[0].Properties, slotProperties))
+            throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: Dogtag slot properties changed during effective-host verification.");
+        if (!ReferenceEquals(liveSlots[0].Properties?.Filters, filtersCollection))
+            throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: Dogtag Filters collection changed during effective-host verification.");
+
+        var liveGroups = filtersCollection.Take(2).ToArray();
+        if (liveGroups.Length != 1
+            || !ReferenceEquals(liveGroups[0], filterGroup)
+            || !ReferenceEquals(liveGroups[0].Filter, hostFilter))
+            throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: Dogtag filter group/filter changed during effective-host verification.");
+
+        DogtagCaseHostContract.RequireCommitted(hostFilter);
+    }
+
+    private static IReadOnlyCollection<MongoId>? SnapshotOptionalExcludedFilter(object filterGroup)
+    {
+        IEnumerable<MongoId>? values = ReadOptionalExcludedFilter(filterGroup);
+        return values?.ToArray();
+    }
+
+    private static bool OptionalFilterSetEquals(IReadOnlyCollection<MongoId>? first, IReadOnlyCollection<MongoId>? second)
+    {
+        if (first == null || second == null) return first == null && second == null;
+        return first.ToHashSet().SetEquals(second);
     }
 
     private static IEnumerable<MongoId>? ReadOptionalExcludedFilter(object filterGroup)
