@@ -175,18 +175,11 @@ namespace SPTBeltArmbandInventory
                 if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))
                     return vanillaResult;
 
-                // Pinned SPT 4.x decomp authority is exactly
-                // IEnumerable<Item> GetItemsInSlots(IEnumerable<EquipmentSlot> slots).
-                // Refuse any declared-contract drift before touching either lazy sequence.
                 if (!HasExactFallbackQueryContract()
                     || !ReturnType.IsInstanceOfType(vanillaResult)
                     || !(vanillaResult is IEnumerable vanillaSequence))
                     return vanillaResult;
 
-                // Preserve the exact original result object on every no-op/failure path. We only
-                // materialize inside an owned Reload/QuickReload scope when the Belt bridge is live;
-                // the successful replacement remains assignable to the exact IEnumerable<Item>
-                // method contract and retains vanilla ordering as its strict prefix.
                 var vanillaItems = new List<object>();
                 foreach (object item in vanillaSequence)
                 {
@@ -195,9 +188,12 @@ namespace SPTBeltArmbandInventory
                     vanillaItems.Add(item);
                 }
 
-                // Close same-reference slot-array mutation between contract inspection and the
-                // single pseudo-slot15 query.
-                if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))
+                // Both mutable inputs to the bounded fallback query must still match their
+                // install-time/exact contract immediately before invoke. BeltSlotsArgument is
+                // intentionally a retained one-value enumerable; same-reference value drift
+                // during lazy vanilla enumeration must therefore fail closed before any query.
+                if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)
+                    || !HasExactBeltSlotsArgument())
                     return vanillaResult;
 
                 object beltResult;
@@ -211,11 +207,9 @@ namespace SPTBeltArmbandInventory
                     reentrant = false;
                 }
 
-                // The exact method returns an interface and its concrete LINQ iterator is an
-                // implementation detail. Require only the pinned declared interface at runtime,
-                // then re-prove the mutable slot-array pin before enumerating the one Belt query.
                 if (beltResult == null || !ReturnType.IsInstanceOfType(beltResult) || !(beltResult is IEnumerable beltItems)
-                    || !ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))
+                    || !ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)
+                    || !HasExactBeltSlotsArgument())
                     return vanillaResult;
 
                 List<object> merged = null;
@@ -231,11 +225,11 @@ namespace SPTBeltArmbandInventory
                     merged.Add(item);
                 }
 
-                // The pinned SPT method returns IEnumerable<Item>; its body may therefore be lazy.
-                // Re-prove the exact retained/installed slot-array snapshot after enumeration and
-                // immediately before publishing a replacement so in-place drift during MoveNext()
-                // cannot escape the same fail-closed vanilla identity boundary.
-                if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))
+                // The SPT interface may be lazy on either side of the invoke. Re-prove both
+                // retained mutable inputs after Belt enumeration and immediately before
+                // publication; Belt-side argument drift never triggers a retry or second query.
+                if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)
+                    || !HasExactBeltSlotsArgument())
                     return vanillaResult;
 
                 if (FastAccessSlotPolicy.ShouldReuseVanillaReloadCandidates(merged != null))
@@ -284,6 +278,19 @@ namespace SPTBeltArmbandInventory
                     || !exactSlotEnumerable.IsInstanceOfType(beltArgument))
                     return false;
 
+                return HasExactBeltSlotsArgument();
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        static bool HasExactBeltSlotsArgument()
+        {
+            try
+            {
+                object beltArgument = BeltSlotsArgument;
                 if (!(beltArgument is IEnumerable values))
                     return false;
 
