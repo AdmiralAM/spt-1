@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "static-proof",
+  "operationKey": "field-expedient-supply",
+  "scope": "pinned-wtt-artem-only",
+  "source": {
+    "repository": "WelcomeToThursday/WTT-Artem",
+    "branch": "main",
+    "commit": "ee5b7c13a1980ff961ed0b2c1d8764574377b2bf",
+    "checkedAtUtcDate": "2026-09-02",
+    "method": "GitHub exact-TPL code search plus direct inspection of the matched Artem quest condition"
+  },
+  "payloadTpls": [
+    "590c5bbd86f774785762df04",
+    "57347c1124597737fb1379e3",
+    "61bf83814088ec1a363d7097"
+  ],
+  "proofContract": {
+    "wd40TplMatchCount": 0,
+    "ductTapeTplMatchCount": 0,
+    "sewingKitMatchLocations": [
+      "Resources/db/assort.json",
+      "Resources/db/CustomQuests/66bf757f27d0b097db0acea5/Quests/ArtemQuests.json"
+    ],
+    "selectedPayloadExactTplOverlapDetected": true,
+    "overlapItemTpl": "61bf83814088ec1a363d7097",
+    "overlapItemName": "Sewing kit",
+    "artemQuestName": "Expanding Wardrobe",
+    "artemQuestHandoverCount": 1,
+    "artemQuestOnlyFoundInRaid": false,
+    "semanticDuplicateDetected": false,
+    "supplyFaucetDetected": false,
+    "competingSinkDetected": true,
+    "artemOverlapReviewSatisfied": true,
+    "payloadReplacementRequired": false,
+    "vanillaOverlapClaimed": false,
+    "economyApprovalClaimed": false
+  },
+  "decision": "Pinned Artem does overlap the selected payload through Sewing kit: Expanding Wardrobe consumes one non-FIR sewing kit alongside wardrobe materials, and Artem assort also references sewing kits as barter input. This is a real competing sink, not a duplicate maintenance-reserve operation and not a permanent sewing-kit supply faucet. The overlap is therefore accepted without replacing the payload, but its acquisition-pressure effect is explicitly deferred to Economy Admiral review. This closes only the Artem semantic-overlap sub-gate; vanilla and Economy review remain fail-closed.",
+  "runtimeMaterialize": false
+}

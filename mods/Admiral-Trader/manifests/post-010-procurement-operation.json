@@ -25,7 +25,7 @@
       "en": "That closes the shortage. The element can maintain itself again; there is no reason to turn this into another shopping list.",
       "ru": "Дефицит закрыт. Группа снова может обслуживать себя сама; превращать это в очередной список покупок незачем."
     },
-    "objectiveIntent": "One contextual maintenance-reserve handover using a fixed six-unit package of ordinary repair/maintenance consumables. Exact TPL selection and frozen Admiral campaign overlap are resolved; broader external overlap and Economy Admiral approval remain separate fail-closed gates.",
+    "objectiveIntent": "One contextual maintenance-reserve handover using a fixed six-unit package of ordinary repair/maintenance consumables. Exact TPL selection, frozen Admiral campaign overlap, Scorpion overlap and Artem semantic overlap are resolved; vanilla overlap and Economy Admiral approval remain separate fail-closed gates.",
     "selectedPayload": {
       "status": "selected-pending-external-overlap-and-economy-review",
       "totalUnits": 6,
@@ -91,8 +91,15 @@
     "overlapCompatibility": {
       "frozenCampaignProof": "post-010-procurement-frozen-overlap-proof.json",
       "frozenCampaignOverlapResolved": true,
+      "scorpionProof": "post-010-procurement-scorpion-overlap-proof.json",
+      "scorpionOverlapResolved": true,
+      "artemProof": "post-010-procurement-artem-overlap-proof.json",
+      "artemOverlapResolved": true,
+      "artemExactTplOverlapAccepted": true,
+      "artemOverlapClassification": "competing-sink-not-semantic-duplicate",
+      "vanillaOverlapResolved": false,
       "externalVanillaScorpionArtemOverlapResolved": false,
-      "scopeBoundary": "The frozen-campaign proof covers only Admiral's exact 31 runtime quests, 11 root offers and questassort. It does not claim vanilla or third-party ecosystem uniqueness."
+      "scopeBoundary": "Frozen Admiral, Scorpion and Artem sub-gates are resolved. Artem contains a real Sewing kit overlap, but it is a competing sink in Expanding Wardrobe/barter input rather than a duplicate maintenance-reserve operation or supply faucet. Vanilla uniqueness and Economy acquisition pressure remain unresolved."
     },
     "rewardDoctrine": {
       "default": [
