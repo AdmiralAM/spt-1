@@ -104,6 +104,41 @@ internal static class ReloadLazyEnumerationPinRegression
             "lazy Belt MethodInfo drift must retain the captured one-query boundary and never redirect or retry");
         ReloadCandidateBridgeRuntime.GetItemsInSlots = exactMethod;
 
+        ReloadEpochPublicationFence.ResetForRegression();
+        var resetDuringVanillaInventory = new FakeInventory(magazine, null);
+        IEnumerable<FakeItem> resettingVanilla = EnumerateVanillaWithDrift(
+            new FakeMagazine("vanilla-reset-magazine"),
+            () =>
+            {
+                ReloadCandidateBridgeRuntime.Reset();
+                ReloadEpochPublicationFence.InvalidateForRegression();
+            });
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object resetDuringVanilla = ReloadCandidateBridgeRuntime.AppendCandidates(resetDuringVanillaInventory, originalFast, resettingVanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Require(ReferenceEquals(resetDuringVanilla, resettingVanilla),
+            "teardown/reset during lazy vanilla enumeration must preserve the exact incoming vanilla enumerable object");
+        Require(resetDuringVanillaInventory.QueryCount == 0 && resetDuringVanillaInventory.AlternateQueryCount == 0,
+            "teardown/reset during vanilla enumeration must fail closed before pseudo-slot15 query and must not redirect or retry");
+
+        Configure(originalFast, installedFast, originalBind, installedBind);
+        ReloadEpochPublicationFence.ResetForRegression();
+        var resetDuringBeltInventory = new FakeInventory(
+            magazine,
+            () =>
+            {
+                ReloadCandidateBridgeRuntime.Reset();
+                ReloadEpochPublicationFence.InvalidateForRegression();
+            });
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object resetDuringBelt = ReloadCandidateBridgeRuntime.AppendCandidates(resetDuringBeltInventory, originalFast, vanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Require(ReferenceEquals(resetDuringBelt, vanilla),
+            "teardown/reset during lazy Belt enumeration must preserve the exact incoming vanilla enumerable object");
+        Require(resetDuringBeltInventory.QueryCount == 1 && resetDuringBeltInventory.AlternateQueryCount == 0,
+            "teardown/reset during Belt enumeration may consume only the already-entered single pseudo-slot15 query and must never retry or redirect");
+
+        Configure(originalFast, installedFast, originalBind, installedBind);
         var healthyInventory = new FakeInventory(magazine, null);
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object healthy = ReloadCandidateBridgeRuntime.AppendCandidates(healthyInventory, originalFast, vanilla);
@@ -118,6 +153,7 @@ internal static class ReloadLazyEnumerationPinRegression
 
         ReloadCandidateBridgeRuntime.Reset();
         ReloadScopeEpochGuard.ResetStateForRegression();
+        ReloadEpochPublicationFence.ResetForRegression();
     }
 
     private static IEnumerable<FakeItem> EnumerateVanillaWithDrift(FakeItem item, Action duringEnumeration)
