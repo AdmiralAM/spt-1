@@ -332,8 +332,8 @@ public sealed class DogtagCaseItem(
 
         var actualFilters = actual.Filters?.ToArray();
         var expectedFilters = expected.Filters?.ToArray();
-        if (actualFilters == null || expectedFilters == null || actualFilters.Length != expectedFilters.Length)
-            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: filter-group count differs from canonical source.");
+        if (actualFilters == null || expectedFilters == null || expectedFilters.Length == 0 || actualFilters.Length != expectedFilters.Length)
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: canonical filter-group contract is empty or count differs from source.");
 
         for (int i = 0; i < expectedFilters.Length; i++)
         {
@@ -345,9 +345,10 @@ public sealed class DogtagCaseItem(
             var actualExcluded = actualFilters[i].ExcludedFilter;
             var expectedExcluded = expectedFilters[i].ExcludedFilter;
             if (actualIncluded == null || expectedIncluded == null
+                || actualIncluded.Count == 0 || expectedIncluded.Count == 0
                 || ReferenceEquals(actualIncluded, expectedIncluded)
                 || !actualIncluded.SetEquals(expectedIncluded))
-                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: included filter differs from or aliases canonical source.");
+                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: canonical included filter is empty, differs from, or aliases source.");
             if ((actualExcluded == null) != (expectedExcluded == null)
                 || (actualExcluded != null && expectedExcluded != null
                     && (ReferenceEquals(actualExcluded, expectedExcluded) || !actualExcluded.SetEquals(expectedExcluded))))
