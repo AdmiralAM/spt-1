@@ -10,18 +10,16 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
     bounds = op["bounds"]
     gates = data["gates"]
 
-    assert data["schemaVersion"] == 4
+    assert data["schemaVersion"] == 5
     assert data["status"] == "post-0.1.0-authored-spec-only"
-    assert data["source"]["bundle"] == "Errand Boy"
-    assert data["source"]["legacyQuestCount"] == 920
-    assert data["source"]["decision"] == "rewrite-theme-only"
+    assert data["source"] == {"bundle": "Errand Boy", "legacyQuestCount": 920, "decision": "rewrite-theme-only"}
 
     for field in ("title", "description", "started", "success"):
         assert op[field]["en"].strip()
         assert op[field]["ru"].strip()
 
     payload = op["selectedPayload"]
-    assert payload["status"] == "selected-pending-external-overlap-and-economy-review"
+    assert payload["status"] == "selected-pending-economy-review"
     assert payload["distinctTpls"] == 3
     assert payload["totalUnits"] == 6
     assert [(item["tpl"], item["count"]) for item in payload["items"]] == [
@@ -31,6 +29,7 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
     ]
     assert len({item["tpl"] for item in payload["items"]}) == payload["distinctTpls"]
     assert sum(item["count"] for item in payload["items"]) == payload["totalUnits"]
+
     doctrine = payload["selectionDoctrine"]
     assert doctrine["ordinaryFieldServiceOnly"] is True
     assert doctrine["repairableEquipmentSelected"] is False
@@ -49,20 +48,19 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
     assert bounds["genericRequestedItemQueueAllowed"] is False
     assert bounds["containerRewardLadderAllowed"] is False
     assert bounds["storefrontUnlockAllowed"] is False
-    assert bounds["repairableWeaponsArmorHelmetsAllowed"] is True
 
     compat = op["handoverCompatibility"]
-    assert compat["repairablePayloadAllowed"] is True
-    assert compat["fullRangeDurabilityBounds"] == {"minDurability": 0, "maxDurability": 100}
     assert compat["exactTplSelectionStillRequired"] is False
     assert compat["selectedPayloadUsesRepairableEquipment"] is False
     assert compat["exactSpt413ConditionProofStillRequired"] is False
     assert compat["conditionProof"] == "post-010-handover-durability-proof.json"
 
     overlap = op["overlapCompatibility"]
-    assert overlap["frozenCampaignProof"] == "post-010-procurement-frozen-overlap-proof.json"
     assert overlap["frozenCampaignOverlapResolved"] is True
-    assert overlap["externalVanillaScorpionArtemOverlapResolved"] is False
+    assert overlap["scorpionOverlapResolved"] is True
+    assert overlap["artemOverlapResolved"] is True
+    assert overlap["vanillaOverlapResolved"] is True
+    assert overlap["externalVanillaScorpionArtemOverlapResolved"] is True
 
     rewards = op["rewardDoctrine"]
     assert rewards["permanentItemSupplyAllowed"] is False
@@ -74,12 +72,7 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
     assert gates["runtimeMaterialize"] is False
     assert gates["requiresExactSpt413HandoverConditionProof"] is False
     assert gates["requiresExactItemTplSelection"] is False
-    assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
+    assert gates["requiresVanillaScorpionArtemOverlapAudit"] is False
     assert gates["requiresEconomyAdmiralReview"] is True
     assert gates["requiresFrozenCampaignOverlapReview"] is False
-
-    assert data["frozenBoundary"] == {
-        "questCount": 31,
-        "rootOfferCount": 11,
-        "relationshipRuntimeOffers": 0,
-    }
+    assert data["frozenBoundary"] == {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}

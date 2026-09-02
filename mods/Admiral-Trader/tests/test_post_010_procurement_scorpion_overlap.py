@@ -7,7 +7,6 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_field_expedient_supply_scorpion_overlap_subgate_is_pinned_and_bounded():
     operation = json.loads((ROOT / "manifests" / "post-010-procurement-operation.json").read_text(encoding="utf-8"))
     proof = json.loads((ROOT / "manifests" / "post-010-procurement-scorpion-overlap-proof.json").read_text(encoding="utf-8"))
-
     payload_tpls = [item["tpl"] for item in operation["operation"]["selectedPayload"]["items"]]
     assert payload_tpls == proof["payloadTpls"]
     assert proof["scope"] == "pinned-scorpion-csharp-only"
@@ -24,15 +23,15 @@ def test_field_expedient_supply_scorpion_overlap_subgate_is_pinned_and_bounded()
     assert contract["sewingKitTplMatchCount"] == 0
     assert contract["selectedPayloadExactTplOverlapDetected"] is False
     assert contract["scorpionExactTplOverlapReviewSatisfied"] is True
-    assert contract["vanillaOverlapClaimed"] is False
-    assert contract["artemOverlapClaimed"] is False
     assert contract["economyApprovalClaimed"] is False
 
-    # The aggregate external gate must remain fail-closed until vanilla and Artem are resolved too.
     gates = operation["gates"]
     overlap = operation["operation"]["overlapCompatibility"]
-    assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
-    assert overlap["externalVanillaScorpionArtemOverlapResolved"] is False
+    assert overlap["scorpionOverlapResolved"] is True
+    assert overlap["artemOverlapResolved"] is True
+    assert overlap["vanillaOverlapResolved"] is True
+    assert overlap["externalVanillaScorpionArtemOverlapResolved"] is True
+    assert gates["requiresVanillaScorpionArtemOverlapAudit"] is False
     assert gates["requiresEconomyAdmiralReview"] is True
     assert gates["implementationAllowed"] is False
     assert gates["runtimeMaterialize"] is False

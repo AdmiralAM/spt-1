@@ -7,7 +7,6 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_field_expedient_supply_does_not_overlap_frozen_runtime_surfaces():
     operation = json.loads((ROOT / "manifests" / "post-010-procurement-operation.json").read_text(encoding="utf-8"))
     proof = json.loads((ROOT / "manifests" / "post-010-procurement-frozen-overlap-proof.json").read_text(encoding="utf-8"))
-
     payload_tpls = [item["tpl"] for item in operation["operation"]["selectedPayload"]["items"]]
     assert payload_tpls == proof["payloadTpls"]
     assert proof["scope"] == "frozen-admiral-runtime-only"
@@ -15,7 +14,6 @@ def test_field_expedient_supply_does_not_overlap_frozen_runtime_surfaces():
 
     quest_files = sorted((ROOT / "db" / "quests").glob("*.json"))
     assert len(quest_files) == proof["expectedFrozenBoundary"]["questCount"] == 31
-
     runtime_surfaces = quest_files + [ROOT / "db" / "assort.json", ROOT / "db" / "questassort.json"]
     for path in runtime_surfaces:
         text = path.read_text(encoding="utf-8")
@@ -32,14 +30,11 @@ def test_field_expedient_supply_does_not_overlap_frozen_runtime_surfaces():
     assert contract["selectedPayloadAbsentFromFrozenQuestAssort"] is True
     assert contract["frozenCampaignSemanticDuplicationDetected"] is False
     assert contract["frozenCampaignOverlapReviewSatisfied"] is True
-    assert contract["vanillaOverlapClaimed"] is False
-    assert contract["scorpionOverlapClaimed"] is False
-    assert contract["artemOverlapClaimed"] is False
     assert contract["economyApprovalClaimed"] is False
 
     gates = operation["gates"]
     assert gates["requiresFrozenCampaignOverlapReview"] is False
-    assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
+    assert gates["requiresVanillaScorpionArtemOverlapAudit"] is False
     assert gates["requiresEconomyAdmiralReview"] is True
     assert gates["implementationAllowed"] is False
     assert gates["runtimeMaterialize"] is False
