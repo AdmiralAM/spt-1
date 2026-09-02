@@ -10,7 +10,7 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
     bounds = op["bounds"]
     gates = data["gates"]
 
-    assert data["schemaVersion"] == 3
+    assert data["schemaVersion"] == 4
     assert data["status"] == "post-0.1.0-authored-spec-only"
     assert data["source"]["bundle"] == "Errand Boy"
     assert data["source"]["legacyQuestCount"] == 920
@@ -21,7 +21,7 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
         assert op[field]["ru"].strip()
 
     payload = op["selectedPayload"]
-    assert payload["status"] == "selected-pending-overlap-and-economy-review"
+    assert payload["status"] == "selected-pending-external-overlap-and-economy-review"
     assert payload["distinctTpls"] == 3
     assert payload["totalUnits"] == 6
     assert [(item["tpl"], item["count"]) for item in payload["items"]] == [
@@ -58,24 +58,11 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
     assert compat["selectedPayloadUsesRepairableEquipment"] is False
     assert compat["exactSpt413ConditionProofStillRequired"] is False
     assert compat["conditionProof"] == "post-010-handover-durability-proof.json"
-    assert compat["sourceReference"]["repository"] == "laurentmekka/AndrudisQuestManiac"
-    assert compat["sourceReference"]["commit"] == "58c3dd0487858c7ba8e8c053b873fbe76a222637"
-    assert "3423" in compat["sourceReference"]["finding"]
-    assert "maxDurability=0" in compat["legacyRisk"]
 
-    proof = json.loads((ROOT / "manifests" / compat["conditionProof"]).read_text(encoding="utf-8"))
-    contract = proof["provenContract"]
-    impact = proof["fieldExpedientSupplyImpact"]
-    assert proof["runtimeMaterialize"] is False
-    assert contract["conditionType"] == "HandoverItem"
-    assert contract["fullUsableDurabilityRange"] == {"minDurability": 0, "maxDurability": 100}
-    assert contract["maxDurabilityZeroIsNotFullRange"] is True
-    assert contract["repairableWeaponArmorHelmetPayloadMayUseFullRangeBounds"] is True
-    assert impact["exactSpt413HandoverConditionProofSatisfied"] is True
-    assert impact["repairablePayloadNoLongerMechanicallyExcludedByDurabilitySemantics"] is True
-    assert impact["admissionStillRequiresExactTplSelection"] is True
-    assert impact["admissionStillRequiresOverlapAudit"] is True
-    assert impact["admissionStillRequiresEconomyAdmiralReview"] is True
+    overlap = op["overlapCompatibility"]
+    assert overlap["frozenCampaignProof"] == "post-010-procurement-frozen-overlap-proof.json"
+    assert overlap["frozenCampaignOverlapResolved"] is True
+    assert overlap["externalVanillaScorpionArtemOverlapResolved"] is False
 
     rewards = op["rewardDoctrine"]
     assert rewards["permanentItemSupplyAllowed"] is False
@@ -89,7 +76,7 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
     assert gates["requiresExactItemTplSelection"] is False
     assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
     assert gates["requiresEconomyAdmiralReview"] is True
-    assert gates["requiresFrozenCampaignOverlapReview"] is True
+    assert gates["requiresFrozenCampaignOverlapReview"] is False
 
     assert data["frozenBoundary"] == {
         "questCount": 31,

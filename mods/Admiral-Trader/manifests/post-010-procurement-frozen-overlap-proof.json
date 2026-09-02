@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "static-proof",
+  "operationKey": "field-expedient-supply",
+  "scope": "frozen-admiral-runtime-only",
+  "payloadTpls": [
+    "590c5bbd86f774785762df04",
+    "57347c1124597737fb1379e3",
+    "61bf83814088ec1a363d7097"
+  ],
+  "checkedRuntimeSurfaces": [
+    "db/quests/*.json",
+    "db/assort.json",
+    "db/questassort.json"
+  ],
+  "expectedFrozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0
+  },
+  "proofContract": {
+    "selectedPayloadAbsentFromFrozenQuestConditionsAndRewards": true,
+    "selectedPayloadAbsentFromFrozenAssort": true,
+    "selectedPayloadAbsentFromFrozenQuestAssort": true,
+    "frozenCampaignSemanticDuplicationDetected": false,
+    "frozenCampaignOverlapReviewSatisfied": true,
+    "vanillaOverlapClaimed": false,
+    "scorpionOverlapClaimed": false,
+    "artemOverlapClaimed": false,
+    "economyApprovalClaimed": false
+  },
+  "decision": "The selected six-unit maintenance package does not duplicate or gate any item capability inside Admiral's frozen 0.1.0 runtime package. This closes only the frozen-campaign overlap gate. External ecosystem overlap and Economy Admiral review remain fail-closed before implementation.",
+  "runtimeMaterialize": false
+}

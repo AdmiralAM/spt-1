@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "source": {
@@ -25,9 +25,9 @@
       "en": "That closes the shortage. The element can maintain itself again; there is no reason to turn this into another shopping list.",
       "ru": "Дефицит закрыт. Группа снова может обслуживать себя сама; превращать это в очередной список покупок незачем."
     },
-    "objectiveIntent": "One contextual maintenance-reserve handover using a fixed six-unit package of ordinary repair/maintenance consumables. Exact TPL selection is pinned here; overlap and Economy Admiral approval remain separate fail-closed gates.",
+    "objectiveIntent": "One contextual maintenance-reserve handover using a fixed six-unit package of ordinary repair/maintenance consumables. Exact TPL selection and frozen Admiral campaign overlap are resolved; broader external overlap and Economy Admiral approval remain separate fail-closed gates.",
     "selectedPayload": {
-      "status": "selected-pending-overlap-and-economy-review",
+      "status": "selected-pending-external-overlap-and-economy-review",
       "totalUnits": 6,
       "distinctTpls": 3,
       "items": [
@@ -72,7 +72,7 @@
     },
     "handoverCompatibility": {
       "legacyRisk": "The maintained SPT 4.1 QuestManiac port documents legacy handover conditions with maxDurability=0, which is not the documented full usable durability range for repairable weapons, helmets and armor; its converter normalizes those conditions to the vanilla-style 100 ceiling.",
-      "admiralDecision": "Exact SPT handover durability semantics are now statically proven: repairable payloads are mechanically representable with minDurability=0 and maxDurability=100. The selected Field-Expedient Supply payload intentionally uses only non-repairable ordinary service consumables, so durability bounds are not needed for the selected items.",
+      "admiralDecision": "Exact SPT handover durability semantics are statically proven: repairable payloads are mechanically representable with minDurability=0 and maxDurability=100. The selected Field-Expedient Supply payload intentionally uses only non-repairable ordinary service consumables, so durability bounds are not needed for the selected items.",
       "repairablePayloadAllowed": true,
       "fullRangeDurabilityBounds": {
         "minDurability": 0,
@@ -87,6 +87,12 @@
         "commit": "58c3dd0487858c7ba8e8c053b873fbe76a222637",
         "finding": "3423 legacy HandoverItem/FindItem/LeaveItemAtLocation durability ceilings normalized from 0 to 100"
       }
+    },
+    "overlapCompatibility": {
+      "frozenCampaignProof": "post-010-procurement-frozen-overlap-proof.json",
+      "frozenCampaignOverlapResolved": true,
+      "externalVanillaScorpionArtemOverlapResolved": false,
+      "scopeBoundary": "The frozen-campaign proof covers only Admiral's exact 31 runtime quests, 11 root offers and questassort. It does not claim vanilla or third-party ecosystem uniqueness."
     },
     "rewardDoctrine": {
       "default": [
@@ -107,7 +113,7 @@
     "requiresExactItemTplSelection": false,
     "requiresVanillaScorpionArtemOverlapAudit": true,
     "requiresEconomyAdmiralReview": true,
-    "requiresFrozenCampaignOverlapReview": true
+    "requiresFrozenCampaignOverlapReview": false
   },
   "frozenBoundary": {
     "questCount": 31,
