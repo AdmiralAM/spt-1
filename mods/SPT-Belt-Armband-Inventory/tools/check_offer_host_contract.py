@@ -45,21 +45,30 @@ require_tokens("ArmBand registration exact cross-host isolation", armband_item, 
     "refusing Belt/HeadBand host overlap",
 ])
 
-# Dogtag preload must own one exact live DefaultInventory -> Dogtag slot -> sole
-# filter-group -> HashSet chain. Value-equivalent detached replacements are not
-# sufficient publication authority.
 require_tokens("Dogtag Case preload exact host boundary", dogtag_item, [
     "private sealed class DogtagHostBoundary(object inventory, object slot, object filterGroup, HashSet<MongoId> filter)",
     "public object Inventory { get; } = inventory;",
     "public object Slot { get; } = slot;",
     "public object FilterGroup { get; } = filterGroup;",
     "public HashSet<MongoId> Filter { get; } = filter;",
+    "public object? InventoryProperties { get; init; }",
+    "public object? SlotsCollection { get; init; }",
+    "public object? SlotProperties { get; init; }",
+    "public object? FiltersCollection { get; init; }",
     "DogtagHostBoundary dogtagHost = PrepareDogtagSlotFilter();",
     "private DogtagHostBoundary PrepareDogtagSlotFilter()",
-    "return new DogtagHostBoundary(inventory, slots[0], groups[0], hostFilter);",
+    "return new DogtagHostBoundary(inventory, slots[0], groups[0], hostFilter)",
+    "InventoryProperties = inventoryProperties",
+    "SlotsCollection = slotsCollection",
+    "SlotProperties = slotProperties",
+    "FiltersCollection = filtersCollection",
     "private void RequireLiveDogtagHostIdentity(DogtagHostBoundary boundary)",
     "!ReferenceEquals(liveInventory, boundary.Inventory)",
+    "!ReferenceEquals(liveInventory.Properties, boundary.InventoryProperties)",
+    "!ReferenceEquals(liveInventory.Properties?.Slots, boundary.SlotsCollection)",
     "!ReferenceEquals(liveSlots[0], boundary.Slot)",
+    "!ReferenceEquals(liveSlots[0].Properties, boundary.SlotProperties)",
+    "!ReferenceEquals(liveSlots[0].Properties?.Filters, boundary.FiltersCollection)",
     "!ReferenceEquals(liveGroups[0], boundary.FilterGroup)",
     "!ReferenceEquals(liveGroups[0].Filter, boundary.Filter)",
     "private void CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)",
@@ -96,21 +105,23 @@ require_tokens("Dogtag Case host snapshot contract", dogtag_snapshot, [
 if "RequirePreserved(currentFilter);\n\n        var caseTpl" in dogtag_snapshot:
     violations.append("Dogtag Case committed host verification must not re-read the live mutable filter after preservation proof")
 
-# Preload order: capture the exact boundary before any exposure.
 prepare_call = dogtag_item.find("DogtagHostBoundary dogtagHost = PrepareDogtagSlotFilter();")
 first_commit = dogtag_item.find("CommitDogtagSlotExposure(dogtagHost, cancellationToken);")
 prepare_def = dogtag_item.find("private DogtagHostBoundary PrepareDogtagSlotFilter()")
 host_capture = dogtag_item.find("HashSet<MongoId> hostFilter = groups[0].Filter;", prepare_def)
 capture = dogtag_item.find("DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);", prepare_def)
-boundary_return = dogtag_item.find("return new DogtagHostBoundary(inventory, slots[0], groups[0], hostFilter);", prepare_def)
+boundary_return = dogtag_item.find("return new DogtagHostBoundary(inventory, slots[0], groups[0], hostFilter)", prepare_def)
+capture_inventory_props = dogtag_item.find("InventoryProperties = inventoryProperties", boundary_return)
+capture_slots = dogtag_item.find("SlotsCollection = slotsCollection", capture_inventory_props)
+capture_slot_props = dogtag_item.find("SlotProperties = slotProperties", capture_slots)
+capture_filters = dogtag_item.find("FiltersCollection = filtersCollection", capture_slot_props)
 if min(prepare_call, first_commit) < 0 or prepare_call > first_commit:
     violations.append("Dogtag Case must capture/snapshot its exact host boundary before the first cancellation-atomic exposure")
-if min(prepare_def, host_capture, capture, boundary_return) < 0 or not (prepare_def < host_capture < capture < boundary_return):
-    violations.append("Dogtag Case host preparation must bind one validated filter, capture non-owned baseline entries, then return the exact inventory/slot/group/filter boundary")
+if min(prepare_def, host_capture, capture, boundary_return, capture_inventory_props, capture_slots, capture_slot_props, capture_filters) < 0 or not (
+    prepare_def < host_capture < capture < boundary_return < capture_inventory_props < capture_slots < capture_slot_props < capture_filters
+):
+    violations.append("Dogtag Case host preparation must bind one validated filter, capture non-owned baseline entries, then pin inventory properties/slots/slot properties/filter collection with the exact inventory/slot/group/filter boundary")
 
-# Commit order: exact live identity and preserved baseline are proven before Add;
-# committed proof and a second live-identity proof occur while rollback ownership
-# is still bounded by HashSet.Add's return value.
 commit_def = dogtag_item.find("private void CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)")
 commit_end = dogtag_item.find("public static void RequireCanonicalRegisteredTemplate", commit_def)
 commit_region = dogtag_item[commit_def:commit_end] if min(commit_def, commit_end) >= 0 else ""
@@ -191,4 +202,4 @@ if "hostFilter.Add(" in dogtag or "groups[0].Filter.Add(" in dogtag or "slots.Ad
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; Dogtag preload pins DefaultInventory/slot/group/filter by reference, re-proves that chain around the owned mutation, preserves vanilla/foreign baseline entries, and rolls back only its own exact append)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; Dogtag preload pins DefaultInventory properties/slots/slot/filter collection/group/filter by reference, re-proves that chain around the owned mutation, preserves vanilla/foreign baseline entries, and rolls back only its own exact append)")
