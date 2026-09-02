@@ -10,7 +10,7 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
     bounds = op["bounds"]
     gates = data["gates"]
 
-    assert data["schemaVersion"] in (5, 6)
+    assert data["schemaVersion"] == 6
     assert data["status"] == "post-0.1.0-authored-spec-only"
     assert data["source"] == {"bundle": "Errand Boy", "legacyQuestCount": 920, "decision": "rewrite-theme-only"}
 
@@ -19,22 +19,14 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
         assert op[field]["ru"].strip()
 
     payload = op["selectedPayload"]
-    assert payload["status"] in ("selected-pending-economy-review", "selected-economy-reviewed")
+    assert payload["status"] == "selected-economy-reviewed"
     assert payload["distinctTpls"] == 3
     assert payload["totalUnits"] == 6
-    observed = [(item["tpl"], item["count"]) for item in payload["items"]]
-    assert observed in (
-        [
-            ("590c5bbd86f774785762df04", 2),
-            ("57347c1124597737fb1379e3", 2),
-            ("61bf83814088ec1a363d7097", 2),
-        ],
-        [
-            ("590c5bbd86f774785762df04", 2),
-            ("57347c1124597737fb1379e3", 3),
-            ("61bf83814088ec1a363d7097", 1),
-        ],
-    )
+    assert [(item["tpl"], item["count"]) for item in payload["items"]] == [
+        ("590c5bbd86f774785762df04", 2),
+        ("57347c1124597737fb1379e3", 3),
+        ("61bf83814088ec1a363d7097", 1),
+    ]
     assert len({item["tpl"] for item in payload["items"]}) == payload["distinctTpls"]
     assert sum(item["count"] for item in payload["items"]) == payload["totalUnits"]
 
@@ -44,7 +36,16 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
     assert doctrine["rareMilitaryComponentSelected"] is False
     assert doctrine["highValueElectronicsSelected"] is False
     assert doctrine["permanentStorefrontUnlockImplied"] is False
-    assert doctrine["selectionDoesNotConstituteEconomyApproval"] in (True, False)
+    assert doctrine["selectionDoesNotConstituteEconomyApproval"] is False
+
+    economy = op["economyReview"]
+    assert economy["status"] == "approved-after-payload-rebalance"
+    assert economy["previousPayload"]["handbookBurdenRub"] == 94914
+    assert economy["approvedPayload"]["handbookBurdenRub"] == 59413
+    assert economy["burdenReductionRub"] == 35501
+    assert economy["rewardEnvelopeChanged"] is False
+    assert economy["approvedReward"] == {"xp": 5000, "rub": 30000, "standing": 0.008, "itemReward": None}
+    assert economy["runtimeEvidenceRequiredForThisEconomyDecision"] is False
 
     assert 1 <= bounds["maximumDistinctItemTpls"] <= 3
     assert payload["distinctTpls"] <= bounds["maximumDistinctItemTpls"]
@@ -74,13 +75,13 @@ def test_post_010_procurement_operation_is_bounded_and_non_materialized():
     assert rewards["permanentItemSupplyAllowed"] is False
     assert rewards["containerMilestoneRewardAllowed"] is False
     assert rewards["capabilityUnlockAllowed"] is False
-    assert rewards["requiresEconomyAdmiralReview"] in (True, False)
+    assert rewards["requiresEconomyAdmiralReview"] is False
 
     assert gates["implementationAllowed"] is False
     assert gates["runtimeMaterialize"] is False
     assert gates["requiresExactSpt413HandoverConditionProof"] is False
     assert gates["requiresExactItemTplSelection"] is False
     assert gates["requiresVanillaScorpionArtemOverlapAudit"] is False
-    assert gates["requiresEconomyAdmiralReview"] in (True, False)
+    assert gates["requiresEconomyAdmiralReview"] is False
     assert gates["requiresFrozenCampaignOverlapReview"] is False
     assert data["frozenBoundary"] == {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
