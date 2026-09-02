@@ -166,6 +166,20 @@ require_tokens("Dogtag Case offer exact committed publication/host contract", do
     "var hostFilter = groups[0].Filter;",
     "hostFilter == null || hostFilter.Count < 2",
     "DogtagCaseHostContract.RequireCommitted(hostFilter);",
+    "var inventoryProperties = inventory.Properties",
+    "var slotsCollection = inventoryProperties.Slots",
+    "var slotProperties = slot.Properties",
+    "var filtersCollection = slotProperties.Filters",
+    "!ReferenceEquals(liveInventory, inventory)",
+    "!ReferenceEquals(liveInventory.Properties, inventoryProperties)",
+    "!ReferenceEquals(liveInventory.Properties?.Slots, slotsCollection)",
+    "var liveSlots = slotsCollection",
+    "!ReferenceEquals(liveSlots[0], slot)",
+    "!ReferenceEquals(liveSlots[0].Properties, slotProperties)",
+    "!ReferenceEquals(liveSlots[0].Properties?.Filters, filtersCollection)",
+    "var liveGroups = filtersCollection.Take(2).ToArray();",
+    "!ReferenceEquals(liveGroups[0], groups[0])",
+    "!ReferenceEquals(liveGroups[0].Filter, hostFilter)",
     "requested template identity is not the exact Dogtag Case product",
 ])
 
@@ -191,8 +205,23 @@ if min(boundary_def, boundary_template, boundary_host, require_host_def) < 0 or 
 
 commit_verify = dogtag.find("DogtagCaseHostContract.RequireCommitted(hostFilter);", require_host_def)
 host_method_end = dogtag.find("private static void ValidateExisting", require_host_def)
-if min(require_host_def, commit_verify, host_method_end) < 0 or not (require_host_def < commit_verify < host_method_end):
-    violations.append("Dogtag Case exact-host helper must include complete committed snapshot/case/ownership proof")
+second_commit_verify = dogtag.find("DogtagCaseHostContract.RequireCommitted(hostFilter);", commit_verify + 1)
+trader_inventory_identity = dogtag.find("!ReferenceEquals(liveInventory, inventory)", commit_verify)
+trader_inventory_props_identity = dogtag.find("!ReferenceEquals(liveInventory.Properties, inventoryProperties)", trader_inventory_identity)
+trader_slots_identity = dogtag.find("!ReferenceEquals(liveInventory.Properties?.Slots, slotsCollection)", trader_inventory_props_identity)
+trader_slot_identity = dogtag.find("!ReferenceEquals(liveSlots[0], slot)", trader_slots_identity)
+trader_slot_props_identity = dogtag.find("!ReferenceEquals(liveSlots[0].Properties, slotProperties)", trader_slot_identity)
+trader_filters_identity = dogtag.find("!ReferenceEquals(liveSlots[0].Properties?.Filters, filtersCollection)", trader_slot_props_identity)
+trader_group_identity = dogtag.find("!ReferenceEquals(liveGroups[0], groups[0])", trader_filters_identity)
+trader_filter_identity = dogtag.find("!ReferenceEquals(liveGroups[0].Filter, hostFilter)", trader_group_identity)
+if min(require_host_def, commit_verify, trader_inventory_identity, trader_inventory_props_identity, trader_slots_identity,
+       trader_slot_identity, trader_slot_props_identity, trader_filters_identity, trader_group_identity,
+       trader_filter_identity, second_commit_verify, host_method_end) < 0 or not (
+    require_host_def < commit_verify < trader_inventory_identity < trader_inventory_props_identity < trader_slots_identity
+    < trader_slot_identity < trader_slot_props_identity < trader_filters_identity < trader_group_identity
+    < trader_filter_identity < second_commit_verify < host_method_end
+):
+    violations.append("Dogtag Case exact-host helper must bracket the complete DefaultInventory -> Properties -> Slots -> Dogtag slot -> Properties -> Filters -> group -> HashSet reference chain with committed-content proofs")
 
 if "filter.Add(" in contract or "slots.Add(" in contract:
     violations.append("offer-host validation must be read-only and must not repair equipment filters/slots during trader registration")
@@ -202,4 +231,4 @@ if "hostFilter.Add(" in dogtag or "groups[0].Filter.Add(" in dogtag or "slots.Ad
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; Dogtag preload pins DefaultInventory properties/slots/slot/filter collection/group/filter by reference, re-proves that chain around the owned mutation, preserves vanilla/foreign baseline entries, and rolls back only its own exact append)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; Dogtag preload and trader publication both pin the complete DefaultInventory properties/Slots/slot properties/Filters/group/filter reference chain, bracket content with committed proofs, preserve vanilla/foreign baseline entries, and keep host validation read-only)")
