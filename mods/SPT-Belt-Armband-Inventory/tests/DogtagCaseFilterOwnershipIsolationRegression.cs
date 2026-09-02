@@ -19,10 +19,6 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
         Require(source, "Filters = copiedFilters",
             "the cloned grid must publish only the independently owned copied filter groups");
 
-        // Creation-time deep copies are not sufficient for the existing-template
-        // collision path. Value-identical canonical/product state must also prove
-        // deep reference non-aliasing, otherwise both sides could mutate together
-        // and still satisfy SetEquals parity during publication reproof.
         Require(source, "ReferenceEquals(candidateProperties, sourceProperties)",
             "existing Dogtag Case root properties must not alias canonical source properties");
         Require(source, "ReferenceEquals(grid, sourceGrid)",
@@ -36,6 +32,15 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
         Require(source, "ReferenceEquals(actualExcluded, expectedExcluded)",
             "existing Dogtag Case excluded filter set must not alias canonical source state");
 
+        // Value parity alone is insufficient if another startup participant destroys
+        // both mutable filter graphs in the same way. Canonical taxonomy remains the
+        // authority, but publication must refuse a vacuous empty contract instead of
+        // accepting synchronized empty candidate/source state.
+        Require(source, "expectedFilters.Length == 0",
+            "canonical Dogtag filter-group contract must remain non-empty during every ValidateExisting reproof");
+        Require(source, "actualIncluded.Count == 0 || expectedIncluded.Count == 0",
+            "canonical and product included dogtag filter sets must remain non-empty during publication reproof");
+
         int copy = source.IndexOf("var copiedFilters = sourceFilters", StringComparison.Ordinal);
         int details = source.IndexOf("var details = new NewItemFromCloneDetails", StringComparison.Ordinal);
         int publish = source.IndexOf("Filters = copiedFilters", StringComparison.Ordinal);
@@ -47,12 +52,15 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
         int validate = source.IndexOf("private static void ValidateExisting", StringComparison.Ordinal);
         int rootAlias = source.IndexOf("ReferenceEquals(candidateProperties, sourceProperties)", StringComparison.Ordinal);
         int gridAlias = source.IndexOf("ReferenceEquals(grid, sourceGrid)", StringComparison.Ordinal);
+        int nonEmptyGroups = source.IndexOf("expectedFilters.Length == 0", StringComparison.Ordinal);
         int groupAlias = source.IndexOf("ReferenceEquals(actualFilters[i], expectedFilters[i])", StringComparison.Ordinal);
+        int nonEmptyIncluded = source.IndexOf("actualIncluded.Count == 0 || expectedIncluded.Count == 0", StringComparison.Ordinal);
         int includeAlias = source.IndexOf("ReferenceEquals(actualIncluded, expectedIncluded)", StringComparison.Ordinal);
         int excludeAlias = source.IndexOf("ReferenceEquals(actualExcluded, expectedExcluded)", StringComparison.Ordinal);
-        if (validate < 0 || rootAlias < validate || gridAlias < rootAlias || groupAlias < gridAlias
-            || includeAlias < groupAlias || excludeAlias < includeAlias)
-            throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: canonical non-alias proofs must remain inside ValidateExisting in root-to-filter order.");
+        if (validate < 0 || rootAlias < validate || gridAlias < rootAlias || nonEmptyGroups < gridAlias
+            || groupAlias < nonEmptyGroups || nonEmptyIncluded < groupAlias
+            || includeAlias < nonEmptyIncluded || excludeAlias < includeAlias)
+            throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: canonical non-empty/non-alias proofs must remain inside ValidateExisting in root-to-filter order.");
     }
 
     private static string? FindModuleRoot()
