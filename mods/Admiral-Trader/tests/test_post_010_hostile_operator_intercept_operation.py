@@ -8,24 +8,29 @@ def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def test_hostile_operator_intercept_exact_target_location_and_bounds():
+def test_hostile_operator_intercept_rejects_streets_and_fails_closed_on_reserve_replacement():
     spec = load_json(ROOT / "manifests" / "post-010-hostile-operator-intercept-operation.json")
     authority = spec["conditionAuthority"]
     gates = spec["gates"]
+    decision = spec["productDecision"]
 
-    assert spec["schemaVersion"] == 1
+    assert spec["schemaVersion"] == 2
     assert spec["operationKey"] == "hostile-operator-intercept"
     assert authority["target"] == "AnyPmc"
     assert authority["factionSplitRequired"] is False
-    assert authority["locationSource"]["commit"] == "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93"
-    assert authority["locationSource"]["locationTarget"] == "TarkovStreets"
+    assert decision["rejectedVariant"]["locationTarget"] == "TarkovStreets"
+    assert "Trouble in the Big City" in decision["rejectedVariant"]["reason"]
+    assert decision["replacementVariant"]["map"] == "Reserve"
+    assert decision["replacementVariant"]["locationTargetCandidate"] == "RezervBase"
+    assert authority["locationTargetCandidate"] == "RezervBase"
+    assert authority["locationSelectionStatus"] == "fail-closed-pending-pinned-spt413-proof"
     assert spec["bounds"]["maximumPmcTargets"] <= 4
     assert spec["bounds"]["maximumSuccessfulRaids"] == 1
     assert spec["bounds"]["repeatable"] is False
     assert spec["bounds"]["perMapCopiesAllowed"] is False
     assert spec["bounds"]["factionKillLadderAllowed"] is False
     assert gates["requiresAnyPmcTargetProof"] is False
-    assert gates["requiresExactStreetsLocationSelection"] is False
+    assert gates["requiresExactReserveLocationSelection"] is True
     assert gates["requiresSurvivedExtractionShapeProof"] is False
     assert gates["requiresSameRaidKillAndExtractionCouplingProof"] is True
     assert gates["requiresFrozenCampaignOverlapReview"] is True
@@ -34,7 +39,7 @@ def test_hostile_operator_intercept_exact_target_location_and_bounds():
     assert gates["runtimeMaterialize"] is False
 
 
-def test_hostile_operator_intercept_reward_is_conservative():
+def test_hostile_operator_intercept_reward_envelope_remains_conservative():
     spec = load_json(ROOT / "manifests" / "post-010-hostile-operator-intercept-operation.json")
     campaign = load_json(ROOT / "manifests" / "post-010-campaign-progression.json")
     envelope = load_json(ROOT / "manifests" / "post-010-operation-reward-envelope.json")
