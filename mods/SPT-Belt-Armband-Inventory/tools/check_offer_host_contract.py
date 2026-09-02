@@ -181,6 +181,11 @@ require_tokens("Dogtag Case offer exact committed publication/host contract", do
     "!ReferenceEquals(liveGroups[0], groups[0])",
     "!ReferenceEquals(liveGroups[0].Filter, hostFilter)",
     "requested template identity is not the exact Dogtag Case product",
+    "var assort = trader.Assort",
+    "var items = assort.Items",
+    "var barterScheme = assort.BarterScheme",
+    "var loyalLevelItems = assort.LoyalLevelItems",
+    "void RequireAssortWrapperIdentity()",
 ])
 
 if "hostFilter.Contains(templateId)" in dogtag or "hostFilter.Any(x => !Equals(x, templateId))" in dogtag:
@@ -188,11 +193,13 @@ if "hostFilter.Contains(templateId)" in dogtag or "hostFilter.Any(x => !Equals(x
 
 publication_call = dogtag.find("RequirePublicationBoundary(templateTable, templateId);")
 dogtag_trader = dogtag.find("tradersTable.GetValueOrDefault(")
-dogtag_first_mutation = dogtag.find("trader.Assort.Items.Add(")
-if min(publication_call, dogtag_trader, dogtag_first_mutation) < 0 or not (
-    publication_call < dogtag_trader < dogtag_first_mutation
+dogtag_wrapper_capture = dogtag.find("var assort = trader.Assort", dogtag_trader)
+dogtag_wrapper_proof = dogtag.find("RequireAssortWrapperIdentity();", dogtag_wrapper_capture)
+dogtag_first_mutation = dogtag.find("items.Add(offer);", dogtag_wrapper_proof)
+if min(publication_call, dogtag_trader, dogtag_wrapper_capture, dogtag_wrapper_proof, dogtag_first_mutation) < 0 or not (
+    publication_call < dogtag_trader < dogtag_wrapper_capture < dogtag_wrapper_proof < dogtag_first_mutation
 ):
-    violations.append("Dogtag Case offer must execute centralized canonical-template + committed-host validation before resolving or mutating Ragman assort")
+    violations.append("Dogtag Case offer must execute centralized canonical-template + committed-host validation, then capture/prove exact Ragman wrappers before mutation")
 
 boundary_def = dogtag.find("private static void RequirePublicationBoundary")
 boundary_template = dogtag.find("DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);", boundary_def)
@@ -223,6 +230,9 @@ if min(require_host_def, commit_verify, trader_inventory_identity, trader_invent
 ):
     violations.append("Dogtag Case exact-host helper must bracket the complete DefaultInventory -> Properties -> Slots -> Dogtag slot -> Properties -> Filters -> group -> HashSet reference chain with committed-content proofs")
 
+if dogtag.count("RequireAssortWrapperIdentity();") < 6:
+    violations.append("Dogtag Case trader publication must re-prove the captured Ragman Assort/Items/BarterScheme/LoyalLevelItems wrapper chain through retained and new-offer paths")
+
 if "filter.Add(" in contract or "slots.Add(" in contract:
     violations.append("offer-host validation must be read-only and must not repair equipment filters/slots during trader registration")
 if "hostFilter.Add(" in dogtag or "groups[0].Filter.Add(" in dogtag or "slots.Add(" in dogtag:
@@ -231,4 +241,4 @@ if "hostFilter.Add(" in dogtag or "groups[0].Filter.Add(" in dogtag or "slots.Ad
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; Dogtag preload and trader publication both pin the complete DefaultInventory properties/Slots/slot properties/Filters/group/filter reference chain, bracket content with committed proofs, preserve vanilla/foreign baseline entries, and keep host validation read-only)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; Dogtag preload/trader host proof pins the complete DefaultInventory chain, and trader publication additionally transaction-pins the Ragman Assort/Items/BarterScheme/LoyalLevelItems wrapper chain with ownership-bounded rollback)")
