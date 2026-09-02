@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 #if NETSTANDARD2_1
@@ -168,11 +169,6 @@ namespace SPTBeltArmbandInventory
                 }
                 catch
                 {
-                    // Harmony.Patch mutates process-wide state one patch at a time. If any later
-                    // patch in this five-method transaction fails, roll back this owner before an
-                    // AssemblyLoad retry can attempt installation again. If rollback itself cannot
-                    // be proven, enter terminal fail-closed state rather than risking duplicate or
-                    // mixed-generation patches on a later assembly-load retry.
                     bool rolledBack = TryRollbackOwner(owner, unpatchSelf);
                     harmonyOwner = null;
                     installed = false;
@@ -228,12 +224,10 @@ namespace SPTBeltArmbandInventory
 
         static bool BeforeAppend(object __1, object __2, ref object __result)
         {
-            // The pinned SPT 4.1 GetItemsInSlots contract is exactly Item[], the fallback query
-            // itself must still be the one-element pseudo-slot15 argument created at install time,
-            // and the exact accepted slot-array reference must retain its install-time contents.
-            // Any return/query/array-state drift is refused before AppendCandidates can invoke
-            // Inventory.GetItemsInSlots. Re-prove the generation after content inspection so a
-            // concurrent Reset/reinstall cannot bridge through a stale scope.
+            // Pinned SPT 4.x authority is exactly IEnumerable<Item> returned from
+            // GetItemsInSlots(IEnumerable<EquipmentSlot>). The one-value pseudo-slot15
+            // query and the exact accepted slot-array contents are still re-proven before
+            // AppendCandidates may enumerate either sequence.
             // Historical guard authority token retained for the static checker only:
             // if (IsCurrentScope() && HasExactRuntimeReturnContract()) return true;
             if (IsCurrentScope() && HasExactRuntimeReturnContract() && HasPinnedFastAccessArrayContent(__1) && IsCurrentScope())
@@ -252,16 +246,12 @@ namespace SPTBeltArmbandInventory
                 object beltArgument = ReloadCandidateBridgeRuntime.BeltSlotsArgument;
                 if (itemType == null || declaredReturn == null || getItems == null || beltArgument == null) return false;
 
-                Type exactArray = itemType.MakeArrayType();
-                if (declaredReturn != exactArray || getItems.ReturnType != exactArray) return false;
+                Type exactReturn = typeof(IEnumerable<>).MakeGenericType(itemType);
+                if (declaredReturn != exactReturn || getItems.ReturnType != exactReturn) return false;
 
                 ParameterInfo[] parameters = getItems.GetParameters();
                 if (parameters.Length != 1 || !parameters[0].ParameterType.IsInstanceOfType(beltArgument)) return false;
 
-                // The install path creates either EquipmentSlot[1] or List<EquipmentSlot>
-                // for the decompiled IEnumerable<EquipmentSlot> boundary. Re-prove the
-                // observable query value here without accepting structurally-similar or
-                // multi-slot collections that could broaden candidate discovery.
                 if (!(beltArgument is IEnumerable values)) return false;
                 int count = 0;
                 foreach (object value in values)
@@ -427,7 +417,6 @@ namespace SPTBeltArmbandInventory
             patch.Invoke(owner, args);
         }
 
-        // Deterministic regression surface. These methods exercise the same state machines as the Harmony callbacks.
         internal static void ResetStateForRegression()
         {
             Interlocked.Exchange(ref generation, 0);
