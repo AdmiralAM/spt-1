@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
@@ -15,19 +17,8 @@ internal static class ReloadCandidateIdentityDedupRegression
         var beltMagazineA = new FakeMagazine("same-template", exactBelt);
         var beltMagazineB = new FakeMagazine("same-template", exactBelt);
         var recognizedSlots = new object[] { "fast-access" };
-        var vanilla = new FakeItem[] { vanillaMagazine };
-
-        // The slot enumerator is allowed to surface the same runtime object more than
-        // once. The bridge must de-duplicate that exact object by reference, while
-        // preserving two physically distinct magazines even when their template IDs
-        // are identical. Template-level de-duplication would silently discard a real
-        // reload source and violate vanilla item-identity semantics.
-        var inventory = new FakeInventory(new FakeItem[]
-        {
-            beltMagazineA,
-            beltMagazineA,
-            beltMagazineB
-        });
+        IEnumerable<FakeItem> vanilla = new FakeItem[] { vanillaMagazine };
+        var inventory = new FakeInventory(new FakeItem[] { beltMagazineA, beltMagazineA, beltMagazineB });
 
         ReloadCandidateBridgeRuntime.Reset();
         ReloadScopeEpochGuard.ResetStateForRegression();
@@ -40,7 +31,7 @@ internal static class ReloadCandidateIdentityDedupRegression
         ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object[] { "installed-bind", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
-        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<FakeItem>);
         ReloadCandidateBridgeRuntime.GetAllParentItems = item => ((FakeItem)item).Parents;
         ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
         ReloadCandidateBridgeRuntime.LogWarning = message => throw new InvalidOperationException(
@@ -56,8 +47,7 @@ internal static class ReloadCandidateIdentityDedupRegression
         object resultObject = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, recognizedSlots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
 
-        Assert(resultObject is FakeItem[], "bridge must preserve Item[] return shape");
-        var result = (FakeItem[])resultObject;
+        var result = ((IEnumerable<FakeItem>)resultObject).ToArray();
         Assert(result.Length == 3,
             "one repeated Belt object must collapse to one candidate while a distinct same-template magazine remains distinct");
         Assert(ReferenceEquals(result[0], vanillaMagazine),
@@ -67,14 +57,11 @@ internal static class ReloadCandidateIdentityDedupRegression
         Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
             "identity de-duplication path must leave no reload-scope/reentrancy residue");
 
-        // If the exact same Belt object is already in the vanilla result, it is not
-        // appended again and the bridge must retain exact vanilla object identity.
-        var vanillaWithBelt = new FakeItem[] { vanillaMagazine, beltMagazineA };
+        IEnumerable<FakeItem> vanillaWithBelt = new FakeItem[] { vanillaMagazine, beltMagazineA };
         inventory.Items = new FakeItem[] { beltMagazineA, beltMagazineA };
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object noOp = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, recognizedSlots, vanillaWithBelt);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
-
         Assert(ReferenceEquals(noOp, vanillaWithBelt),
             "a Belt candidate already present by reference in vanilla must be an exact no-op, including result-object identity");
         Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
@@ -87,15 +74,10 @@ internal static class ReloadCandidateIdentityDedupRegression
     sealed class FakeInventory
     {
         internal FakeItem[] Items;
-
-        internal FakeInventory(FakeItem[] items)
+        internal FakeInventory(FakeItem[] items) { Items = items; }
+        public IEnumerable<FakeItem> GetItemsInSlots(IEnumerable<int> slots)
         {
-            Items = items;
-        }
-
-        public FakeItem[] GetItemsInSlots(object slots)
-        {
-            return Items;
+            return Items.Concat(Array.Empty<FakeItem>());
         }
     }
 
@@ -103,7 +85,6 @@ internal static class ReloadCandidateIdentityDedupRegression
     {
         internal string TemplateId { get; }
         internal IEnumerable Parents { get; }
-
         internal FakeItem(string templateId, params FakeItem[] parents)
         {
             TemplateId = templateId;
@@ -113,10 +94,7 @@ internal static class ReloadCandidateIdentityDedupRegression
 
     sealed class FakeMagazine : FakeItem
     {
-        internal FakeMagazine(string templateId, params FakeItem[] parents)
-            : base(templateId, parents)
-        {
-        }
+        internal FakeMagazine(string templateId, params FakeItem[] parents) : base(templateId, parents) { }
     }
 
     static void Assert(bool condition, string message)
