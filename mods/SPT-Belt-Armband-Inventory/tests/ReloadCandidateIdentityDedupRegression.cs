@@ -14,7 +14,7 @@ internal static class ReloadCandidateIdentityDedupRegression
         var vanillaMagazine = new FakeMagazine("same-template", vanillaRoot);
         var beltMagazineA = new FakeMagazine("same-template", exactBelt);
         var beltMagazineB = new FakeMagazine("same-template", exactBelt);
-        var recognizedSlots = new object();
+        var recognizedSlots = new object[] { "fast-access" };
         var vanilla = new FakeItem[] { vanillaMagazine };
 
         // The slot enumerator is allowed to surface the same runtime object more than
@@ -30,10 +30,14 @@ internal static class ReloadCandidateIdentityDedupRegression
         });
 
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload candidate identity regression failed: fake GetItemsInSlots missing");
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = recognizedSlots;
+        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object[] { "installed-fast", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
+        ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = new object[] { "original-bind" };
+        ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object[] { "installed-bind", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
         ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
@@ -41,6 +45,7 @@ internal static class ReloadCandidateIdentityDedupRegression
         ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
         ReloadCandidateBridgeRuntime.LogWarning = message => throw new InvalidOperationException(
             "Reload candidate identity regression failed closed unexpectedly: " + message);
+        ReloadScopeEpochGuard.CaptureSlotArraysForRegression();
 
         FieldInfo depth = typeof(ReloadCandidateBridgeRuntime).GetField("reloadDepth", BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Reload candidate identity regression failed: reloadDepth state field missing");
@@ -76,6 +81,7 @@ internal static class ReloadCandidateIdentityDedupRegression
             "no-op identity de-duplication path must also unwind cleanly");
 
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
     }
 
     sealed class FakeInventory
