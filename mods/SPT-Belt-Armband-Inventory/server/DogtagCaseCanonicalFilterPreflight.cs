@@ -31,7 +31,11 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
         if (grids == null || grids.Length != 1)
             throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical grid boundary is missing or ambiguous.");
 
-        var filters = grids[0].Properties?.Filters?.ToArray();
+        var grid = grids[0];
+        if (!Equals(grid.Parent, SourceDogtagCaseTpl))
+            throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical grid parent no longer owns the EFT/SPT Dogtag Case template.");
+
+        var filters = grid.Properties?.Filters?.ToArray();
         if (filters == null || filters.Length == 0)
             throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical dogtag filter-group contract is empty.");
 
@@ -53,7 +57,7 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
         // ExcludedFilter is deliberately not constrained here: the canonical EFT/SPT
         // taxonomy remains authoritative and may legitimately exclude arbitrary IDs.
         // Only positive admission of an owned B&A&HB template is forbidden.
-        logger.Success("B&A&HB Dogtag Case canonical filter preflight passed: non-empty EFT/SPT taxonomy contains no B&A&HB-owned product admissions.");
+        logger.Success("B&A&HB Dogtag Case canonical filter preflight passed: exact canonical grid ownership is intact and non-empty EFT/SPT taxonomy contains no B&A&HB-owned product admissions.");
         return Task.CompletedTask;
     }
 }
