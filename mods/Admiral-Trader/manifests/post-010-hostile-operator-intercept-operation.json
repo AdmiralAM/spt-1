@@ -1,33 +1,47 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "operationKey": "hostile-operator-intercept",
   "workingTitle": {"en": "Contractor Intercept", "ru": "Перехват контрактников"},
   "runtimeMaterialize": false,
+  "productDecision": {
+    "rejectedVariant": {
+      "map": "Streets of Tarkov",
+      "locationTarget": "TarkovStreets",
+      "reason": "Rejected after external audit: vanilla Trouble in the Big City already combines Streets-bound PMC elimination with survive/extract semantics. Lowering the PMC count does not create enough gameplay differentiation."
+    },
+    "replacementVariant": {
+      "map": "Reserve",
+      "locationTargetCandidate": "RezervBase",
+      "status": "selected-for-proof-and-overlap-audit",
+      "intent": "Intercept a small contractor element crossing the military reserve and extract after the contact. Reserve is selected to move the operation away from the proven Streets semantic collision; it is not implementation-approved until exact pinned location and external-overlap proofs are complete."
+    }
+  },
   "conditionAuthority": {
     "targetProof": "post-010-pmc-location-extraction-proof.json",
     "target": "AnyPmc",
     "factionSplitRequired": false,
-    "locationSource": {"repository": "sp-tarkov/server-csharp", "commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93", "path": "Libraries/SPTarkov.Server.Assets/SPT_Data/configs/quest.json", "map": "Streets of Tarkov", "locationTarget": "TarkovStreets", "status": "proven-pinned-spt413"},
+    "locationTargetCandidate": "RezervBase",
+    "locationSelectionStatus": "fail-closed-pending-pinned-spt413-proof",
     "survivedExtractionProof": "post-010-pmc-location-extraction-proof.json",
     "sameRaidCouplingProof": "post-010-same-raid-coupling-proof.json",
-    "boundary": "AnyPmc plus TarkovStreets and Survived extraction are individually proven shapes. USEC/BEAR split is intentionally unnecessary. Same-raid kill-to-extract temporal coupling remains fail-closed."
+    "boundary": "AnyPmc and Survived extraction are individually proven shapes. The prior TarkovStreets variant is rejected for strong vanilla semantic overlap. Reserve/RezervBase is the replacement product direction, but exact pinned location proof, fresh frozen/external overlap review and same-raid temporal coupling remain fail-closed."
   },
   "bounds": {"maximumPmcTargets": 4, "maximumSuccessfulRaids": 1, "repeatable": false, "escalatingSequelsAllowed": false, "perMapCopiesAllowed": false, "factionKillLadderAllowed": false},
   "economyReview": {
-    "status": "approved-static",
+    "status": "approved-static-envelope-retained",
     "campaignPlayerLevel": 23,
     "riskBand": "high-risk",
     "authoredReward": {"xp": 10000, "rub": 62000, "standing": 0.015, "itemReward": null},
     "nearestVanillaComparatorClass": "Elimination",
     "vanillaComparatorMedian": {"xp": 18200, "rub": 65000},
     "overallVanillaStandingMedian": 0.02,
-    "review": "At level 23 the bounded four-PMC Streets intercept is conservative against the pinned vanilla Elimination median: XP and RUB are both lower, standing remains below the overall vanilla median, and there is no item reward, PMC gear faucet, dogtag conveyor or capability unlock. The authored high-risk reward is accepted without escalation."
+    "review": "The numeric envelope remains conservative and does not depend on Streets. XP and RUB stay below the pinned vanilla Elimination medians, standing remains below the overall vanilla median, and there is no item reward, PMC gear faucet, dogtag conveyor or capability unlock. Re-run only if the replacement objective becomes materially harder than the current four-PMC/one-extraction bound."
   },
   "gates": {
     "requiresAnyPmcTargetProof": false,
-    "requiresExactStreetsLocationSelection": false,
+    "requiresExactReserveLocationSelection": true,
     "requiresSurvivedExtractionShapeProof": false,
     "requiresSameRaidKillAndExtractionCouplingProof": true,
     "requiresFrozenCampaignOverlapReview": true,
