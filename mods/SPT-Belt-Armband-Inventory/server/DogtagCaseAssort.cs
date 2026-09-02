@@ -34,8 +34,28 @@ public sealed class DogtagCaseAssort(
 
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case could not find Ragman.");
+        var assort = trader.Assort
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case could not resolve Ragman assort.");
+        var items = assort.Items
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case could not resolve Ragman assort Items collection.");
+        var barterScheme = assort.BarterScheme
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case could not resolve Ragman assort BarterScheme collection.");
+        var loyalLevelItems = assort.LoyalLevelItems
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case could not resolve Ragman assort LoyalLevelItems collection.");
+
+        void RequireAssortWrapperIdentity()
+        {
+            if (!ReferenceEquals(trader.Assort, assort)
+                || !ReferenceEquals(trader.Assort?.Items, items)
+                || !ReferenceEquals(trader.Assort?.BarterScheme, barterScheme)
+                || !ReferenceEquals(trader.Assort?.LoyalLevelItems, loyalLevelItems))
+                throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: Ragman assort wrapper chain changed during bounded publication.");
+        }
+
+        RequireAssortWrapperIdentity();
+
         var id = new MongoId(RuntimeIdentity.DogtagCaseAssortId);
-        var matches = trader.Assort.Items.Where(x => x.Id == id).Take(2).ToArray();
+        var matches = items.Where(x => x.Id == id).Take(2).ToArray();
         if (matches.Length > 1)
             throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: duplicate item entries own the persistent assort ID.");
 
@@ -43,16 +63,19 @@ public sealed class DogtagCaseAssort(
         if (existing != null)
         {
             ValidateExisting(trader, id, existing, templateId);
-            if (!trader.Assort.BarterScheme.TryGetValue(id, out var existingBarter))
+            RequireAssortWrapperIdentity();
+            if (!barterScheme.TryGetValue(id, out var existingBarter))
                 throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: validated barter tuple disappeared before publication proof.");
             RequirePublicationBoundary(templateTable, templateId);
+            RequireAssortWrapperIdentity();
             RequirePublishedAssortTupleIdentity(trader, id, existing, existingBarter);
+            RequireAssortWrapperIdentity();
             cancellationToken.ThrowIfCancellationRequested();
             logger.Success($"B&A&HB Dogtag Case retained validated Ragman LL{LoyaltyLevel} offer for {PriceRoubles:N0} RUB.");
             return Task.CompletedTask;
         }
 
-        if (trader.Assort.BarterScheme.ContainsKey(id) || trader.Assort.LoyalLevelItems.ContainsKey(id))
+        if (barterScheme.ContainsKey(id) || loyalLevelItems.ContainsKey(id))
             throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: item is absent but barter/loyalty metadata already owns the persistent assort ID.");
 
         var offer = new Item
@@ -73,22 +96,52 @@ public sealed class DogtagCaseAssort(
         bool loyaltyAdded = false;
         try
         {
-            trader.Assort.Items.Add(offer);
+            RequireAssortWrapperIdentity();
+            items.Add(offer);
             itemAdded = true;
-            trader.Assort.BarterScheme.Add(id, barter);
+            barterScheme.Add(id, barter);
             barterAdded = true;
-            trader.Assort.LoyalLevelItems.Add(id, LoyaltyLevel);
+            loyalLevelItems.Add(id, LoyaltyLevel);
             loyaltyAdded = true;
 
             cancellationToken.ThrowIfCancellationRequested();
+            RequireAssortWrapperIdentity();
             ValidateExisting(trader, id, offer, templateId);
+            RequireAssortWrapperIdentity();
             RequirePublicationBoundary(templateTable, templateId);
+            RequireAssortWrapperIdentity();
             RequirePublishedAssortTupleIdentity(trader, id, offer, barter);
+            RequireAssortWrapperIdentity();
             cancellationToken.ThrowIfCancellationRequested();
         }
         catch
         {
-            RollbackOwnedAssortTuple(trader, id, offer, barter, itemAdded, barterAdded, loyaltyAdded);
+            int ownedItemIndex = -1;
+            if (itemAdded)
+            {
+                for (int i = items.Count - 1; i >= 0; i--)
+                {
+                    if (!ReferenceEquals(items[i], offer)) continue;
+                    ownedItemIndex = i;
+                    break;
+                }
+            }
+
+            bool ownsItem = ownedItemIndex >= 0;
+            bool ownsBarter = barterAdded
+                && barterScheme.TryGetValue(id, out var currentBarter)
+                && ReferenceEquals(currentBarter, barter);
+
+            if (loyaltyAdded && ownsItem && ownsBarter
+                && loyalLevelItems.TryGetValue(id, out var currentLoyalty)
+                && currentLoyalty == LoyaltyLevel)
+                loyalLevelItems.Remove(id);
+
+            if (ownsBarter)
+                barterScheme.Remove(id);
+
+            if (ownsItem)
+                items.RemoveAt(ownedItemIndex);
             throw;
         }
 
