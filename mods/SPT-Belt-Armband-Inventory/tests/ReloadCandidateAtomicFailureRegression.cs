@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
@@ -13,7 +15,7 @@ internal static class ReloadCandidateAtomicFailureRegression
         var vanillaMagazine = new FakeMagazine("vanilla-magazine", new FakeItem("vanilla-container"));
         var exactBeltMagazine = new FakeMagazine("belt-magazine", exactBelt);
         var poisonMagazine = new FakeMagazine("poison-magazine", exactBelt);
-        var vanilla = new FakeItem[] { vanillaMagazine };
+        IEnumerable<FakeItem> vanilla = new FakeItem[] { vanillaMagazine };
         var recognizedSlots = new object[] { "fast-access" };
         var inventory = new FakeInventory(new FakeItem[] { exactBeltMagazine, poisonMagazine });
 
@@ -28,7 +30,7 @@ internal static class ReloadCandidateAtomicFailureRegression
         ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object[] { "installed-bind", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
-        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<FakeItem>);
         ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
         ReloadCandidateBridgeRuntime.GetAllParentItems = item =>
         {
@@ -38,10 +40,6 @@ internal static class ReloadCandidateAtomicFailureRegression
             return typed.Parents;
         };
         ReloadScopeEpochGuard.CaptureSlotArraysForRegression();
-
-        // Diagnostics are deliberately hostile too. A valid Belt candidate is seen
-        // before the poison candidate, so this proves a late failure cannot leak a
-        // partially allocated/merged result after vanilla candidates were copied.
         ReloadCandidateBridgeRuntime.LogWarning = _ => throw new InvalidOperationException("diagnostic sink failure");
 
         FieldInfo depth = typeof(ReloadCandidateBridgeRuntime).GetField("reloadDepth", BindingFlags.Static | BindingFlags.NonPublic)
@@ -59,16 +57,13 @@ internal static class ReloadCandidateAtomicFailureRegression
             "candidate failure must clear reentrancy state even when diagnostic logging also throws");
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
 
-        // failureLogged suppresses repeated diagnostics only; it must never become a
-        // circuit breaker that disables valid later reloads for the rest of a raid.
         ReloadCandidateBridgeRuntime.GetAllParentItems = item => ((FakeItem)item).Parents;
         inventory.Items = new FakeItem[] { exactBeltMagazine };
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object recovered = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, recognizedSlots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
 
-        Assert(recovered is FakeItem[], "a later valid reload must remain bridgeable after an earlier scoped failure");
-        var merged = (FakeItem[])recovered;
+        var merged = ((IEnumerable<FakeItem>)recovered).ToArray();
         Assert(merged.Length == 2
             && ReferenceEquals(merged[0], vanillaMagazine)
             && ReferenceEquals(merged[1], exactBeltMagazine),
@@ -83,15 +78,10 @@ internal static class ReloadCandidateAtomicFailureRegression
     sealed class FakeInventory
     {
         internal FakeItem[] Items;
-
-        internal FakeInventory(FakeItem[] items)
+        internal FakeInventory(FakeItem[] items) { Items = items; }
+        public IEnumerable<FakeItem> GetItemsInSlots(IEnumerable<int> slots)
         {
-            Items = items;
-        }
-
-        public FakeItem[] GetItemsInSlots(object slots)
-        {
-            return Items;
+            return Items.Concat(Array.Empty<FakeItem>());
         }
     }
 
@@ -99,7 +89,6 @@ internal static class ReloadCandidateAtomicFailureRegression
     {
         internal string TemplateId { get; }
         internal IEnumerable Parents { get; }
-
         internal FakeItem(string templateId, params FakeItem[] parents)
         {
             TemplateId = templateId;
@@ -109,10 +98,7 @@ internal static class ReloadCandidateAtomicFailureRegression
 
     sealed class FakeMagazine : FakeItem
     {
-        internal FakeMagazine(string templateId, params FakeItem[] parents)
-            : base(templateId, parents)
-        {
-        }
+        internal FakeMagazine(string templateId, params FakeItem[] parents) : base(templateId, parents) { }
     }
 
     static void Assert(bool condition, string message)
