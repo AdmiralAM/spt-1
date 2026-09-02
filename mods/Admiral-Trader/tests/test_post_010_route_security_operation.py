@@ -16,7 +16,7 @@ def test_route_security_operation_is_bounded_and_non_materialized():
     authority = spec["proofAuthority"]
     selected = op["selectedLocation"]
 
-    assert spec["schemaVersion"] == 5
+    assert spec["schemaVersion"] == 6
     assert spec["source"]["bundle"] == "Scav Hunt"
     assert spec["source"]["legacyQuestCount"] == 60
     assert op["key"] == "route-security"
@@ -33,6 +33,8 @@ def test_route_security_operation_is_bounded_and_non_materialized():
     assert authority["campaignProgression"] == "post-010-campaign-progression.json"
     assert authority["vanillaRewardBenchmark"] == "reward-policy.json"
     assert authority["frozenCampaignSource"] == "db/quests/*.json"
+    assert authority["scorpionArtemOverlap"] == "post-010-route-security-scorpion-artem-overlap-proof.json"
+    assert authority["vanillaOverlap"] == "post-010-route-security-vanilla-overlap-proof.json"
     assert "sub-location/zone" in authority["admittedBoundary"]
     assert "same-raid" in authority["admittedBoundary"]
 
@@ -63,16 +65,12 @@ def test_route_security_operation_is_bounded_and_non_materialized():
     assert gates["requiresSubLocationOrZoneProof"] is False
     assert gates["requiresSameRaidKillAndExtractionCouplingProof"] is True
     assert gates["requiresExactLocationSelection"] is False
-    assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
+    assert gates["requiresVanillaScorpionArtemOverlapAudit"] is False
     assert gates["requiresFrozenCampaignOverlapReview"] is False
     assert gates["requiresEconomyAdmiralReview"] is False
 
     frozen = spec["frozenBoundary"]
-    assert frozen == {
-        "questCount": 31,
-        "rootOfferCount": 11,
-        "relationshipRuntimeOffers": 0,
-    }
+    assert frozen == {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
 
 
 def test_route_security_proof_authorities_exist_and_temporal_coupling_stays_closed():
@@ -83,6 +81,8 @@ def test_route_security_proof_authorities_exist_and_temporal_coupling_stays_clos
     location_proof = load_json(ROOT / "manifests" / authority["locationAndExtraction"])
     exact_location_proof = load_json(ROOT / "manifests" / authority["exactLocationEvidence"])
     same_raid_proof = load_json(ROOT / "manifests" / authority["sameRaidCoupling"])
+    vanilla_overlap = load_json(ROOT / "manifests" / authority["vanillaOverlap"])
+    external_overlap = load_json(ROOT / "manifests" / authority["scorpionArtemOverlap"])
 
     role_text = json.dumps(role_proof, ensure_ascii=False)
     location_text = json.dumps(location_proof, ensure_ascii=False)
@@ -92,8 +92,12 @@ def test_route_security_proof_authorities_exist_and_temporal_coupling_stays_clos
     assert "Survived" in location_text
     assert exact_location_proof["selectedRoute"]["map"] == "Customs"
     assert exact_location_proof["selectedRoute"]["locationTarget"] == spec["operation"]["selectedLocation"]["locationTarget"]
+    assert vanilla_overlap["decision"]["vanillaOverlapResolved"] is True
+    assert external_overlap["decision"]["scorpionOverlapResolved"] is True
+    assert external_overlap["decision"]["artemOverlapResolved"] is True
     assert "oneSessionOnly" in same_raid_text
     assert spec["gates"]["requiresExactLocationSelection"] is False
+    assert spec["gates"]["requiresVanillaScorpionArtemOverlapAudit"] is False
     assert spec["gates"]["requiresSameRaidKillAndExtractionCouplingProof"] is True
 
 

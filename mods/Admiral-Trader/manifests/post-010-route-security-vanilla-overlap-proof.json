@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "route-security-pinned-vanilla-semantic-overlap",
+  "operationKey": "route-security",
+  "status": "resolved-no-semantic-duplicate",
+  "runtimeMaterialize": false,
+  "operationShape": {
+    "map": "Customs",
+    "locationTarget": "bigmap",
+    "maximumOrdinaryScavTargets": 6,
+    "surviveOrExtractRequired": true,
+    "sameRaidCoupling": "fail-closed-separate-gate"
+  },
+  "source": {
+    "repository": "TarkovTracker/tarkovdata",
+    "commit": "1b9bc2acbea0e873244d1819cba9d9fe0f14e26c",
+    "path": "quests.json",
+    "role": "pinned vanilla quest-content comparator; not SPT evaluator authority"
+  },
+  "observedComparatorShapes": [
+    {
+      "quest": "Operation Aquarius - Part 2",
+      "shape": "Customs-bound ordinary Scav elimination",
+      "targetCount": 15,
+      "surviveOrExtractObjective": false,
+      "classification": "combat-component-overlap"
+    },
+    {
+      "quest": "Polikhim Hobo",
+      "shape": "Customs-bound ordinary Scav elimination",
+      "targetCount": 25,
+      "surviveOrExtractObjective": false,
+      "classification": "combat-component-overlap"
+    },
+    {
+      "quest": "The Punisher - Part 3",
+      "shape": "Customs-bound Scav elimination with AKS-74U-series weapon restriction",
+      "targetCount": 25,
+      "surviveOrExtractObjective": false,
+      "classification": "combat-component-overlap-with-extra-weapon-constraint"
+    },
+    {
+      "quest": "Big customer",
+      "shape": "Customs objective followed by survive/extract",
+      "ordinaryScavEliminationObjective": false,
+      "classification": "extraction-component-overlap"
+    }
+  ],
+  "decision": {
+    "vanillaOverlapResolved": true,
+    "semanticDuplicateFound": false,
+    "classification": "partial-component-overlap-only",
+    "aggregateVanillaScorpionArtemOverlapResolved": true,
+    "sameRaidCouplingProofUnaffected": true,
+    "review": "Vanilla contains strong individual components of Route Security: multiple Customs Scav-elimination tasks and separate Customs objectives that require survival/extraction. The reviewed comparator set does not combine bounded ordinary-Scav clearance and required Customs extraction into the same objective contract. Route Security therefore remains differentiated by its bounded six-target logistics-restoration framing plus extraction, while same-raid temporal coupling remains a separate fail-closed evaluator question."
+  },
+  "regressionBoundary": "If the pinned vanilla comparator changes, or a vanilla quest is identified that combines ordinary-Scav elimination on Customs with mandatory successful extraction as one completion contract, this proof must be re-reviewed before materialization."
+}

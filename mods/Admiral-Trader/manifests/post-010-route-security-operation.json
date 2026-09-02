@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "source": {
@@ -16,14 +16,13 @@
     "campaignProgression": "post-010-campaign-progression.json",
     "vanillaRewardBenchmark": "reward-policy.json",
     "frozenCampaignSource": "db/quests/*.json",
-    "admittedBoundary": "ordinary Scav target discrimination, map-level Location and Survived extraction shapes are proven; Customs/bigmap is independently pinned as an exact valid location target, while sub-location/zone restriction and kill-to-extract same-raid coupling are not"
+    "scorpionArtemOverlap": "post-010-route-security-scorpion-artem-overlap-proof.json",
+    "vanillaOverlap": "post-010-route-security-vanilla-overlap-proof.json",
+    "admittedBoundary": "ordinary Scav target discrimination, map-level Location and Survived extraction shapes are proven; Customs/bigmap is independently pinned as an exact valid location target, and frozen plus vanilla/Scorpion/Artem semantic-overlap reviews are resolved, while sub-location/zone restriction and kill-to-extract same-raid coupling are not"
   },
   "operation": {
     "key": "route-security",
-    "title": {
-      "en": "Route Security",
-      "ru": "Безопасный маршрут"
-    },
+    "title": {"en": "Route Security", "ru": "Безопасный маршрут"},
     "description": {
       "en": "Customs is one of the few practical corridors for moving supplies between the industrial edge and the interior, and local Scav groups keep turning that route into an ambush line. Break the immediate threat and leave the area alive. I need movement restored, not a body-count campaign.",
       "ru": "Таможня — один из немногих практичных коридоров для переброски снабжения между промышленной окраиной и внутренними районами, а местные группы Диких постоянно превращают маршрут в линию засад. Сними непосредственную угрозу и выйди живым. Мне нужно восстановить движение, а не устроить кампанию по набиванию счётчика убийств."
@@ -78,15 +77,18 @@
       "status": "resolved-map-only-overlap",
       "runtimeQuestCountReviewed": 31,
       "customsBoundQuestCount": 1,
-      "overlapQuest": {
-        "id": "cba3374f11375c4e7eea9efe",
-        "name": "Access Protocol: Customs",
-        "finishConditionTypes": ["FindItem"],
-        "classification": "map-only-overlap"
-      },
+      "overlapQuest": {"id": "cba3374f11375c4e7eea9efe", "name": "Access Protocol: Customs", "finishConditionTypes": ["FindItem"], "classification": "map-only-overlap"},
       "semanticDuplicateFound": false,
       "review": "The frozen campaign contains one Customs-bound quest, Access Protocol: Customs, but its completion shape is a two-item FindItem readiness check. It contains no Scav-elimination CounterCreator and no Survived extraction condition. Sharing bigmap alone is not a duplicate of the bounded Scav-clearance-and-extract Route Security operation.",
       "regressionBoundary": "All 31 frozen db/quests files are scanned; if another bigmap quest is added or the existing Customs quest gains a combat/extraction completion shape, this proof must fail closed and be reviewed again."
+    },
+    "externalOverlapReview": {
+      "status": "resolved-partial-component-overlap-only",
+      "vanilla": "resolved-no-semantic-duplicate",
+      "scorpion": "resolved-no-semantic-duplicate",
+      "artem": "resolved-no-semantic-duplicate",
+      "semanticDuplicateFound": false,
+      "review": "Vanilla, Scorpion and Artem each overlap individual Route Security components, but the pinned reviews found no contract duplicating bounded ordinary-Scav clearance on Customs plus mandatory successful extraction."
     }
   },
   "gates": {
@@ -97,13 +99,9 @@
     "requiresSubLocationOrZoneProof": false,
     "requiresSameRaidKillAndExtractionCouplingProof": true,
     "requiresExactLocationSelection": false,
-    "requiresVanillaScorpionArtemOverlapAudit": true,
+    "requiresVanillaScorpionArtemOverlapAudit": false,
     "requiresFrozenCampaignOverlapReview": false,
     "requiresEconomyAdmiralReview": false
   },
-  "frozenBoundary": {
-    "questCount": 31,
-    "rootOfferCount": 11,
-    "relationshipRuntimeOffers": 0
-  }
+  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
 }
