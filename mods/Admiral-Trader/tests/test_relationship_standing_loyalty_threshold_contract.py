@@ -44,12 +44,15 @@ class RelationshipStandingLoyaltyThresholdContractTests(unittest.TestCase):
         policy = (ROOT / contract["authority"]["policyImplementation"]).read_text(encoding="utf-8")
         resolver = (ROOT / contract["authority"]["profileResolver"]).read_text(encoding="utf-8")
 
-        for level, standing in [(15, "0.10"), (25, "0.30"), (35, "0.55")]:
-            self.assertIn(f"playerLevel >= {level}", policy)
-            self.assertIn(f"standing >= {standing}", policy)
+        for tier, level, standing in [("Ll2", 15, "0.10"), ("Ll3", 25, "0.30"), ("Ll4", 35, "0.55")]:
+            self.assertIn(f"new({int(tier[-1])}, {standing}, {level},", policy)
+            self.assertIn(f"playerLevel < {tier}.MinimumPlayerLevel", policy)
+            self.assertIn(f"standing < {tier}.StandingThreshold", policy)
 
-        self.assertIn("pmcProfile.Info.Level", resolver)
-        self.assertIn("traderInfo.Standing", resolver)
+        self.assertIn("pmcProfile?.Info?.Level is not int resolvedLevel", resolver)
+        self.assertIn("traderInfo?.Standing is not double resolvedStanding", resolver)
+        self.assertIn("playerLevel = resolvedLevel;", resolver)
+        self.assertIn("standing = resolvedStanding;", resolver)
         self.assertIn("high standing must never compensate for insufficient PMC level", contract["selectionRules"])
         self.assertIn("high PMC level must never compensate for insufficient standing", contract["selectionRules"])
 
