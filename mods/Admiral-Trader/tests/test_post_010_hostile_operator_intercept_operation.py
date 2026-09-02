@@ -8,32 +8,41 @@ def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def test_hostile_operator_intercept_rejects_streets_and_fails_closed_on_reserve_replacement():
+def test_hostile_operator_intercept_rejects_streets_and_pins_reserve_replacement():
     spec = load_json(ROOT / "manifests" / "post-010-hostile-operator-intercept-operation.json")
     authority = spec["conditionAuthority"]
     gates = spec["gates"]
     decision = spec["productDecision"]
+    location_proof = load_json(ROOT / "manifests" / "post-010-reserve-location-proof.json")
+    frozen_proof = load_json(ROOT / "manifests" / "post-010-hostile-operator-intercept-frozen-overlap-proof.json")
 
-    assert spec["schemaVersion"] == 2
+    assert spec["schemaVersion"] == 3
     assert spec["operationKey"] == "hostile-operator-intercept"
     assert authority["target"] == "AnyPmc"
     assert authority["factionSplitRequired"] is False
     assert decision["rejectedVariant"]["locationTarget"] == "TarkovStreets"
     assert "Trouble in the Big City" in decision["rejectedVariant"]["reason"]
     assert decision["replacementVariant"]["map"] == "Reserve"
-    assert decision["replacementVariant"]["locationTargetCandidate"] == "RezervBase"
-    assert authority["locationTargetCandidate"] == "RezervBase"
-    assert authority["locationSelectionStatus"] == "fail-closed-pending-pinned-spt413-proof"
+    assert decision["replacementVariant"]["locationTarget"] == "RezervBase"
+    assert authority["locationProof"] == "post-010-reserve-location-proof.json"
+    assert authority["locationTarget"] == "RezervBase"
+    assert authority["locationSelectionStatus"] == "resolved-pinned-upstream-authority"
+    assert location_proof["source"]["commit"] == "9b05502ac7cd3872251ee1e9b67a5f3d541e04c0"
+    assert location_proof["source"]["friendlyName"] == "Reserve"
+    assert location_proof["source"]["targetName"] == "RezervBase"
+    assert frozen_proof["status"] == "resolved-no-frozen-reserve-pmc-semantic-overlap"
+    assert frozen_proof["operationShape"]["locationTarget"] == "RezervBase"
+    assert frozen_proof["semanticDuplicateFound"] is False
     assert spec["bounds"]["maximumPmcTargets"] <= 4
     assert spec["bounds"]["maximumSuccessfulRaids"] == 1
     assert spec["bounds"]["repeatable"] is False
     assert spec["bounds"]["perMapCopiesAllowed"] is False
     assert spec["bounds"]["factionKillLadderAllowed"] is False
     assert gates["requiresAnyPmcTargetProof"] is False
-    assert gates["requiresExactReserveLocationSelection"] is True
+    assert gates["requiresExactReserveLocationSelection"] is False
     assert gates["requiresSurvivedExtractionShapeProof"] is False
     assert gates["requiresSameRaidKillAndExtractionCouplingProof"] is True
-    assert gates["requiresFrozenCampaignOverlapReview"] is True
+    assert gates["requiresFrozenCampaignOverlapReview"] is False
     assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
     assert gates["implementationAllowed"] is False
     assert gates["runtimeMaterialize"] is False

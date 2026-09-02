@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "operationKey": "hostile-operator-intercept",
@@ -13,20 +13,21 @@
     },
     "replacementVariant": {
       "map": "Reserve",
-      "locationTargetCandidate": "RezervBase",
-      "status": "selected-for-proof-and-overlap-audit",
-      "intent": "Intercept a small contractor element crossing the military reserve and extract after the contact. Reserve is selected to move the operation away from the proven Streets semantic collision; it is not implementation-approved until exact pinned location and external-overlap proofs are complete."
+      "locationTarget": "RezervBase",
+      "status": "selected-location-proven-pending-external-overlap",
+      "intent": "Intercept a small contractor element crossing the military reserve and extract after the contact. Reserve removes the proven Streets semantic collision while preserving a bounded military-interdiction identity."
     }
   },
   "conditionAuthority": {
     "targetProof": "post-010-pmc-location-extraction-proof.json",
     "target": "AnyPmc",
     "factionSplitRequired": false,
-    "locationTargetCandidate": "RezervBase",
-    "locationSelectionStatus": "fail-closed-pending-pinned-spt413-proof",
+    "locationProof": "post-010-reserve-location-proof.json",
+    "locationTarget": "RezervBase",
+    "locationSelectionStatus": "resolved-pinned-upstream-authority",
     "survivedExtractionProof": "post-010-pmc-location-extraction-proof.json",
     "sameRaidCouplingProof": "post-010-same-raid-coupling-proof.json",
-    "boundary": "AnyPmc and Survived extraction are individually proven shapes. The prior TarkovStreets variant is rejected for strong vanilla semantic overlap. Reserve/RezervBase is the replacement product direction, but exact pinned location proof, fresh frozen/external overlap review and same-raid temporal coupling remain fail-closed."
+    "boundary": "AnyPmc, RezervBase and Survived extraction are individually proven shapes. The prior TarkovStreets variant remains rejected for strong vanilla semantic overlap. Frozen campaign overlap for the Reserve replacement is resolved; external vanilla/Scorpion/Artem uniqueness and same-raid temporal coupling remain fail-closed."
   },
   "bounds": {"maximumPmcTargets": 4, "maximumSuccessfulRaids": 1, "repeatable": false, "escalatingSequelsAllowed": false, "perMapCopiesAllowed": false, "factionKillLadderAllowed": false},
   "economyReview": {
@@ -37,14 +38,14 @@
     "nearestVanillaComparatorClass": "Elimination",
     "vanillaComparatorMedian": {"xp": 18200, "rub": 65000},
     "overallVanillaStandingMedian": 0.02,
-    "review": "The numeric envelope remains conservative and does not depend on Streets. XP and RUB stay below the pinned vanilla Elimination medians, standing remains below the overall vanilla median, and there is no item reward, PMC gear faucet, dogtag conveyor or capability unlock. Re-run only if the replacement objective becomes materially harder than the current four-PMC/one-extraction bound."
+    "review": "The numeric envelope remains conservative. XP and RUB stay below the pinned vanilla Elimination medians, standing remains below the overall vanilla median, and there is no item reward, PMC gear faucet, dogtag conveyor or capability unlock. Re-run only if the objective becomes materially harder than the current four-PMC/one-extraction bound."
   },
   "gates": {
     "requiresAnyPmcTargetProof": false,
-    "requiresExactReserveLocationSelection": true,
+    "requiresExactReserveLocationSelection": false,
     "requiresSurvivedExtractionShapeProof": false,
     "requiresSameRaidKillAndExtractionCouplingProof": true,
-    "requiresFrozenCampaignOverlapReview": true,
+    "requiresFrozenCampaignOverlapReview": false,
     "requiresVanillaScorpionArtemOverlapAudit": true,
     "requiresEconomyAdmiralReview": false,
     "implementationAllowed": false,

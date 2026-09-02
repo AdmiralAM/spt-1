@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "post-0.1.0-reserve-location-authority",
+  "status": "resolved-pinned-upstream-authority",
+  "runtimeMaterialize": false,
+  "source": {
+    "repository": "sp-tarkov/wiki",
+    "commit": "9b05502ac7cd3872251ee1e9b67a5f3d541e04c0",
+    "path": "modding/references/location-information.md",
+    "friendlyName": "Reserve",
+    "locationId": "5704e5fad2720bc05b8b4567",
+    "targetName": "RezervBase"
+  },
+  "decision": "Reserve quest-location targeting is pinned to exact target name RezervBase. This closes only the exact location-selection gate for authored post-0.1.0 operations; it does not prove objective uniqueness, same-raid coupling or runtime materialization safety.",
+  "regressionBoundary": "Any change away from RezervBase, or any future upstream SPT location-authority change affecting Reserve targeting, requires this proof to be re-pinned and reviewed before materialization."
+}
