@@ -26,7 +26,7 @@ namespace SPTBeltArmbandInventory
 
         [ThreadStatic] static Stack<PublicationState> publicationStates;
 
-        sealed class PublicationState
+        readonly struct PublicationState
         {
             internal readonly object VanillaResult;
             internal readonly object Slots;
