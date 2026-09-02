@@ -16,12 +16,28 @@ internal static class DogtagCaseCanonicalFilterPreflightRegression
             "canonical preflight must execute before DogtagCaseItem preload +3 publication");
         Require(source, "TemplateItem source = RequireCanonicalSourceContract(cancellationToken);",
             "canonical preflight must begin with a complete value proof of the live source");
+        Require(source, "CanonicalIdentitySnapshot identity = CaptureCanonicalIdentity(source);",
+            "canonical preflight must capture the complete nested mutable identity chain after the first value proof");
         Require(source, "!ReferenceEquals(liveSource, source)",
             "canonical preflight must pin exact TemplateTable source identity between value proofs");
         Require(source, "RequireCanonicalSourceContract(cancellationToken, source);",
             "canonical preflight must re-prove the same source reference after identity validation");
+        Require(source, "RequireCanonicalIdentity(source, identity);",
+            "canonical preflight must reject value-identical replacement of root/grid/filter objects after the second value proof");
         Require(source, "expectedReference != null && !ReferenceEquals(source, expectedReference)",
             "second canonical value proof must independently fail closed if source identity changes");
+        Require(source, "!ReferenceEquals(source.Properties, expected.Properties)",
+            "canonical preflight must pin root properties identity");
+        Require(source, "!ReferenceEquals(grids[0], expected.Grid)",
+            "canonical preflight must pin canonical grid object identity");
+        Require(source, "!ReferenceEquals(grids[0].Properties, expected.GridProperties)",
+            "canonical preflight must pin canonical grid-properties identity");
+        Require(source, "!ReferenceEquals(groups[i], expected.FilterGroups[i])",
+            "canonical preflight must pin every filter-group object identity");
+        Require(source, "!ReferenceEquals(groups[i].Filter, expected.IncludedFilters[i])",
+            "canonical preflight must pin every included filter-set identity");
+        Require(source, "!ReferenceEquals(groups[i].ExcludedFilter, expected.ExcludedFilters[i])",
+            "canonical preflight must pin nullable excluded filter-set identity without constraining its taxonomy");
         Require(source, "grids == null || grids.Length != 1",
             "canonical preflight must require the exact single-grid boundary");
         Require(source, "!Equals(grid.Parent, SourceDogtagCaseTpl)",
@@ -37,16 +53,19 @@ internal static class DogtagCaseCanonicalFilterPreflightRegression
 
         int priority = source.IndexOf("OnLoadOrder.Preload + 2", StringComparison.Ordinal);
         int firstProof = source.IndexOf("TemplateItem source = RequireCanonicalSourceContract(cancellationToken);", StringComparison.Ordinal);
+        int capture = source.IndexOf("CanonicalIdentitySnapshot identity = CaptureCanonicalIdentity(source);", StringComparison.Ordinal);
         int identity = source.IndexOf("!ReferenceEquals(liveSource, source)", StringComparison.Ordinal);
         int secondProof = source.IndexOf("RequireCanonicalSourceContract(cancellationToken, source);", StringComparison.Ordinal);
+        int nestedIdentity = source.IndexOf("RequireCanonicalIdentity(source, identity);", StringComparison.Ordinal);
         int grid = source.IndexOf("grids == null || grids.Length != 1", StringComparison.Ordinal);
         int parent = source.IndexOf("!Equals(grid.Parent, SourceDogtagCaseTpl)", StringComparison.Ordinal);
         int filters = source.IndexOf("filters == null || filters.Length == 0", StringComparison.Ordinal);
         int included = source.IndexOf("included == null || included.Count == 0", StringComparison.Ordinal);
         int owned = source.IndexOf("PersistentIdentityManifest.IsOwnedTemplate(accepted.ToString())", StringComparison.Ordinal);
-        if (priority < 0 || firstProof < priority || identity < firstProof || secondProof < identity
-            || grid < secondProof || parent < grid || filters < parent || included < filters || owned < included)
-            throw new InvalidOperationException("Dogtag canonical filter preflight regression failed: value -> identity -> value pre-publication proof ordering changed.");
+        if (priority < 0 || firstProof < priority || capture < firstProof || identity < capture
+            || secondProof < identity || nestedIdentity < secondProof
+            || grid < nestedIdentity || parent < grid || filters < parent || included < filters || owned < included)
+            throw new InvalidOperationException("Dogtag canonical filter preflight regression failed: value -> nested identity capture -> source identity -> value -> nested identity proof ordering changed.");
     }
 
     private static string? FindModuleRoot()
