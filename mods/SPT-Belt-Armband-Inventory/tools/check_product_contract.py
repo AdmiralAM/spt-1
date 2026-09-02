@@ -83,14 +83,17 @@ first_commit = dedicated_assort.find("CommitOffer(")
 if min(belt_prepare, head_prepare, first_commit) < 0 or not (belt_prepare < first_commit and head_prepare < first_commit):
     violations.append("both dedicated persistent offers must be prepared/validated before first mutation")
 
-# Dogtag item: preserve canonical container parity and enforce the new exact
-# DefaultInventory -> Dogtag slot -> sole filter group -> HashSet boundary.
+# Dogtag item: preserve canonical container parity and enforce the exact
+# canonical source-grid ownership plus DefaultInventory -> Dogtag slot -> sole
+# filter group -> HashSet publication boundary.
 dogtag_item = require(SERVER / "DogtagCaseItem.cs", [
     'NewItemName = "B&A&HB Dogtag Case"',
     'Name = "B&A&HB Dogtag Case"',
     'Name = "Жетонница B&A&HB"',
     'new("5c093e3486f77430cb02e593")',
     "Filters = copiedFilters",
+    "if (!Equals(sourceGrid.Parent, SourceDogtagCaseTpl))",
+    "|| !Equals(sourceGrid.Parent, SourceDogtagCaseTpl)",
     "if (!templateTable.Items.TryGetValue(DogtagCaseTpl, out var created))",
     "ValidateExisting(created, source);",
     "DogtagHostBoundary dogtagHost = PrepareDogtagSlotFilter();",
@@ -208,4 +211,4 @@ if ".Remove(" in migration and 'item.Remove("location")' not in migration:
 if violations:
     raise SystemExit("B&A&HB product-contract gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; split HeadBand; Dogtag clone/canonical parity plus exact DefaultInventory/slot/group/filter identity and cancellation-owned host publication)")
+print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; split HeadBand; Dogtag clone/canonical source-grid ownership/parity plus exact DefaultInventory/slot/group/filter identity and cancellation-owned host publication)")
