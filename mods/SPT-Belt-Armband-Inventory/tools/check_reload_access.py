@@ -6,6 +6,7 @@ epoch = (ROOT / "src" / "ReloadScopeEpochGuard.cs").read_text(encoding="utf-8-si
 tests = (ROOT / "tests" / "Program.cs").read_text(encoding="utf-8-sig")
 bridge_tests = (ROOT / "tests" / "ReloadCandidateBridgeRegression.cs").read_text(encoding="utf-8-sig")
 return_tests = (ROOT / "tests" / "ReloadCandidateReturnContractRegression.cs").read_text(encoding="utf-8-sig")
+slot_parameter_tests = (ROOT / "tests" / "ReloadSlotParameterContractRegression.cs").read_text(encoding="utf-8-sig")
 discovery_tests = (ROOT / "tests" / "ReloadDiscoveryExactReturnContractRegression.cs").read_text(encoding="utf-8-sig")
 epoch_tests = (ROOT / "tests" / "ReloadScopeEpochRegression.cs").read_text(encoding="utf-8-sig")
 epoch_install_tests = (ROOT / "tests" / "ReloadScopeEpochInstallRollbackRegression.cs").read_text(encoding="utf-8-sig")
@@ -98,8 +99,8 @@ else:
         if forbidden in runtime:
             violations.append(f"FastAccessSlotPatches.cs: scoped hot path performs discovery/scan: {forbidden}")
 
-# Epoch guard must enforce the same declared interface boundary and the same
-# one-value pseudo-slot query; a separate stale Item[] authority is forbidden.
+# Epoch guard must enforce the same declared interface boundary, including an
+# exact generic slot-parameter contract derived from the one-value belt argument.
 for token in (
     '[ThreadStatic] static int threadGeneration;',
     '[ThreadStatic] static int threadDepth;',
@@ -108,7 +109,11 @@ for token in (
     'static bool HasExactRuntimeReturnContract()',
     'Type exactReturn = typeof(IEnumerable<>).MakeGenericType(itemType);',
     'if (declaredReturn != exactReturn || getItems.ReturnType != exactReturn) return false;',
-    'parameters[0].ParameterType.IsInstanceOfType(beltArgument)',
+    'Type slotElementType = GetEnumerableElementType(beltArgument.GetType());',
+    'Type exactSlotEnumerable = typeof(IEnumerable<>).MakeGenericType(slotElementType);',
+    'parameters[0].ParameterType != exactSlotEnumerable',
+    '!exactSlotEnumerable.IsInstanceOfType(beltArgument)',
+    'static Type GetEnumerableElementType(Type runtimeType)',
     'Convert.ToInt32(value) != RuntimeIdentity.DedicatedBeltEquipmentSlotValue',
     'if (count > 1) return false;',
     '__result = __2;',
@@ -122,7 +127,7 @@ if 'Type exactArray = itemType.MakeArrayType();' in epoch:
     violations.append("ReloadScopeEpochGuard.cs: stale Item[] return authority survived")
 
 # Deterministic regressions must encode the actual decompiled signature and
-# fail closed on array/lookalike contracts while retaining one-slot recovery.
+# fail closed on return/query/slot-parameter drift while retaining recovery.
 for token in (
     'exact.ReturnType != typeof(IEnumerable<FakeItem>)',
     'exact.GetParameters()[0].ParameterType != typeof(IEnumerable<FakeSlot>)',
@@ -139,6 +144,13 @@ for token in (
     'exact one-slot query must recover after rejected query-state drift',
 ):
     require(return_tests, token, "ReloadCandidateReturnContractRegression.cs")
+for token in (
+    'exact IEnumerable<Item>(IEnumerable<slot>) contract must pass',
+    'different slot element contract must fail closed',
+    'exact slot parameter contract must recover after rejected drift',
+    'IEnumerable<long> slots',
+):
+    require(slot_parameter_tests, token, "ReloadSlotParameterContractRegression.cs")
 
 # The exact lazy-interface risk is executable, not merely structural: mutation
 # during MoveNext must fail closed after the one query, while a restored healthy
@@ -197,4 +209,4 @@ if source.count('Activator.CreateInstance(harmonyType, new object[] { CandidateB
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, four-array content pin including post-lazy-enumeration reproof, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
+print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, exact slot-parameter execution guard, four-array content pin including post-lazy-enumeration reproof, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
