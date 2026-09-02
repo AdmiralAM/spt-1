@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-authored-spec-only",
+  "purpose": "Make the Relationship standing-stock uplift follow Admiral's complete loyalty contract. Standing alone is insufficient: every projected tier must satisfy both the trader's minimum PMC level and minimum standing from db/base.json.",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "authority": {
+    "loyaltySource": "db/base.json",
+    "upliftManifest": "relationship-standing-stock-uplift.json",
+    "policyImplementation": "server/RelationshipStandingStockPolicy.cs",
+    "profileResolver": "server/RelationshipStandingProfileResolver.cs",
+    "runtimeMaterialize": false,
+    "salesVolumeRequirementAllowed": false,
+    "standingOnlyTierSelectionAllowed": false,
+    "levelOnlyTierSelectionAllowed": false
+  },
+  "tierEligibility": [
+    {
+      "loyaltyLevel": 1,
+      "minPmcLevel": 1,
+      "minStanding": 0.0,
+      "stockPerReset": 12,
+      "buyRestriction": 4,
+      "eligibility": "minPmcLevel AND minStanding"
+    },
+    {
+      "loyaltyLevel": 2,
+      "minPmcLevel": 15,
+      "minStanding": 0.1,
+      "stockPerReset": 16,
+      "buyRestriction": 6,
+      "eligibility": "minPmcLevel AND minStanding"
+    },
+    {
+      "loyaltyLevel": 3,
+      "minPmcLevel": 25,
+      "minStanding": 0.3,
+      "stockPerReset": 20,
+      "buyRestriction": 8,
+      "eligibility": "minPmcLevel AND minStanding"
+    },
+    {
+      "loyaltyLevel": 4,
+      "minPmcLevel": 35,
+      "minStanding": 0.55,
+      "stockPerReset": 24,
+      "buyRestriction": 10,
+      "eligibility": "minPmcLevel AND minStanding"
+    }
+  ],
+  "selectionRules": [
+    "select the highest tier for which both minPmcLevel and minStanding are satisfied",
+    "high standing must never compensate for insufficient PMC level",
+    "high PMC level must never compensate for insufficient standing",
+    "if profile level or standing cannot be resolved, fall back to LL1 finite Baseline values",
+    "do not use sales volume as an Admiral loyalty gate",
+    "do not alter price, offer identity, TPL, quest gates or capability gates"
+  ],
+  "diagnosticBoundary": {
+    "futurePass": "a profile receives only the highest tier whose level and standing thresholds are both satisfied",
+    "futureFailStandingOnly": "a high-standing profile below the required PMC level receives that higher tier",
+    "futureFailLevelOnly": "a high-level profile below the required standing receives that higher tier",
+    "futureFailUnknownProfile": "an unresolved profile receives any uplift above LL1",
+    "physicalCheckpointRequestedNow": false
+  },
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0,
+    "runtimeMaterializationEnabled": false
+  }
+}
