@@ -166,10 +166,15 @@ namespace SPTBeltArmbandInventory
                     || ReferenceEquals(slots, InstalledBindAvailableSlots));
             MethodInfo getItemsInSlots = GetItemsInSlots;
             object beltSlotsArgument = BeltSlotsArgument;
+            Type itemType = ItemType;
+            Type magazineType = MagazineType;
+            Type returnType = ReturnType;
+            Func<object, IEnumerable> getAllParentItems = GetAllParentItems;
+            Func<object, string> readTemplateId = ReadTemplateId;
             if (!FastAccessSlotPolicy.ShouldBridgeReloadCandidates(reloadDepth > 0, reentrant, fastAccessArray)
                 || inventory == null || vanillaResult == null || getItemsInSlots == null || beltSlotsArgument == null
-                || ItemType == null || MagazineType == null || ReturnType == null
-                || GetAllParentItems == null || ReadTemplateId == null)
+                || itemType == null || magazineType == null || returnType == null
+                || getAllParentItems == null || readTemplateId == null)
                 return vanillaResult;
 
             try
@@ -177,28 +182,22 @@ namespace SPTBeltArmbandInventory
                 if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))
                     return vanillaResult;
 
-                if (!ReferenceEquals(GetItemsInSlots, getItemsInSlots)
-                    || !ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
-                    || !HasExactFallbackQueryContract(getItemsInSlots, beltSlotsArgument)
-                    || !ReturnType.IsInstanceOfType(vanillaResult)
+                if (!HasExactExecutionContract(getItemsInSlots, beltSlotsArgument, itemType, magazineType, returnType, getAllParentItems, readTemplateId)
+                    || !HasExactFallbackQueryContract(getItemsInSlots, beltSlotsArgument, itemType, returnType)
+                    || !returnType.IsInstanceOfType(vanillaResult)
                     || !(vanillaResult is IEnumerable vanillaSequence))
                     return vanillaResult;
 
                 var vanillaItems = new List<object>();
                 foreach (object item in vanillaSequence)
                 {
-                    if (item != null && !ItemType.IsInstanceOfType(item))
+                    if (item != null && !itemType.IsInstanceOfType(item))
                         return vanillaResult;
                     vanillaItems.Add(item);
                 }
 
-                // Every mutable input to the bounded fallback query must still match its
-                // transaction-local/install-time contract immediately before invoke. The
-                // pseudo-slot argument and exact MethodInfo are both captured once at bridge
-                // entry, so replacement during lazy vanilla enumeration cannot redirect this query.
                 if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)
-                    || !ReferenceEquals(GetItemsInSlots, getItemsInSlots)
-                    || !ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
+                    || !HasExactExecutionContract(getItemsInSlots, beltSlotsArgument, itemType, magazineType, returnType, getAllParentItems, readTemplateId)
                     || !HasExactBeltSlotsArgument(beltSlotsArgument))
                     return vanillaResult;
 
@@ -213,10 +212,9 @@ namespace SPTBeltArmbandInventory
                     reentrant = false;
                 }
 
-                if (beltResult == null || !ReturnType.IsInstanceOfType(beltResult) || !(beltResult is IEnumerable beltItems)
+                if (beltResult == null || !returnType.IsInstanceOfType(beltResult) || !(beltResult is IEnumerable beltItems)
                     || !ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)
-                    || !ReferenceEquals(GetItemsInSlots, getItemsInSlots)
-                    || !ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
+                    || !HasExactExecutionContract(getItemsInSlots, beltSlotsArgument, itemType, magazineType, returnType, getAllParentItems, readTemplateId)
                     || !HasExactBeltSlotsArgument(beltSlotsArgument))
                     return vanillaResult;
 
@@ -224,8 +222,9 @@ namespace SPTBeltArmbandInventory
                 foreach (object item in beltItems)
                 {
                     if (item == null) continue;
-                    if (!ItemType.IsInstanceOfType(item)) return vanillaResult;
-                    if (!MagazineType.IsInstanceOfType(item) || !HasExactMagazineBeltAncestor(item)) continue;
+                    if (!itemType.IsInstanceOfType(item)) return vanillaResult;
+                    if (!magazineType.IsInstanceOfType(item)
+                        || !HasExactMagazineBeltAncestor(item, getAllParentItems, readTemplateId)) continue;
                     if (ContainsReference(vanillaItems, item) || (merged != null && ContainsReference(merged, item))) continue;
 
                     if (merged == null)
@@ -233,21 +232,17 @@ namespace SPTBeltArmbandInventory
                     merged.Add(item);
                 }
 
-                // Re-prove all mutable transaction inputs after Belt enumeration and
-                // immediately before publication. Replacement never retries and cannot
-                // make a second query with a different method or argument instance.
                 if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)
-                    || !ReferenceEquals(GetItemsInSlots, getItemsInSlots)
-                    || !ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
+                    || !HasExactExecutionContract(getItemsInSlots, beltSlotsArgument, itemType, magazineType, returnType, getAllParentItems, readTemplateId)
                     || !HasExactBeltSlotsArgument(beltSlotsArgument))
                     return vanillaResult;
 
                 if (FastAccessSlotPolicy.ShouldReuseVanillaReloadCandidates(merged != null))
                     return vanillaResult;
 
-                Array result = Array.CreateInstance(ItemType, merged.Count);
+                Array result = Array.CreateInstance(itemType, merged.Count);
                 for (int i = 0; i < merged.Count; i++) result.SetValue(merged[i], i);
-                return ReturnType.IsInstanceOfType(result) ? result : vanillaResult;
+                return returnType.IsInstanceOfType(result) ? result : vanillaResult;
             }
             catch (Exception exception)
             {
@@ -263,12 +258,35 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static bool HasExactFallbackQueryContract(MethodInfo getItems, object beltArgument)
+        static bool HasExactExecutionContract(
+            MethodInfo getItemsInSlots,
+            object beltSlotsArgument,
+            Type itemType,
+            Type magazineType,
+            Type returnType,
+            Func<object, IEnumerable> getAllParentItems,
+            Func<object, string> readTemplateId)
+        {
+            return getItemsInSlots != null
+                && beltSlotsArgument != null
+                && itemType != null
+                && magazineType != null
+                && returnType != null
+                && getAllParentItems != null
+                && readTemplateId != null
+                && ReferenceEquals(GetItemsInSlots, getItemsInSlots)
+                && ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
+                && ReferenceEquals(ItemType, itemType)
+                && ReferenceEquals(MagazineType, magazineType)
+                && ReferenceEquals(ReturnType, returnType)
+                && ReferenceEquals(GetAllParentItems, getAllParentItems)
+                && ReferenceEquals(ReadTemplateId, readTemplateId);
+        }
+
+        static bool HasExactFallbackQueryContract(MethodInfo getItems, object beltArgument, Type itemType, Type declaredReturn)
         {
             try
             {
-                Type itemType = ItemType;
-                Type declaredReturn = ReturnType;
                 if (itemType == null || declaredReturn == null || getItems == null || beltArgument == null)
                     return false;
 
@@ -343,13 +361,16 @@ namespace SPTBeltArmbandInventory
             return false;
         }
 
-        static bool HasExactMagazineBeltAncestor(object item)
+        static bool HasExactMagazineBeltAncestor(
+            object item,
+            Func<object, IEnumerable> getAllParentItems,
+            Func<object, string> readTemplateId)
         {
-            IEnumerable parents = GetAllParentItems(item);
+            IEnumerable parents = getAllParentItems(item);
             if (parents == null) return false;
             foreach (object parent in parents)
             {
-                string templateId = parent == null ? null : ReadTemplateId(parent);
+                string templateId = parent == null ? null : readTemplateId(parent);
                 if (string.Equals(templateId, RuntimeIdentity.DedicatedMagazineBeltItemId, StringComparison.Ordinal))
                     return true;
             }
