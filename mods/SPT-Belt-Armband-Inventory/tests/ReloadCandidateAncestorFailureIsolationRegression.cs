@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
@@ -12,7 +14,7 @@ internal static class ReloadCandidateAncestorFailureIsolationRegression
         var exactBelt = new FakeItem(RuntimeIdentity.DedicatedMagazineBeltItemId);
         var vanillaMagazine = new FakeMagazine("vanilla-magazine", new FakeItem("foreign-root"));
         var beltMagazine = new FakeMagazine("belt-magazine", exactBelt);
-        var vanilla = new FakeItem[] { vanillaMagazine };
+        IEnumerable<FakeItem> vanilla = new FakeItem[] { vanillaMagazine };
         var slots = new object[] { "fast-access" };
         var inventory = new FakeInventory(new FakeItem[] { beltMagazine });
         int warnings = 0;
@@ -37,18 +39,16 @@ internal static class ReloadCandidateAncestorFailureIsolationRegression
             "first ancestor failure should emit one bounded diagnostic");
         AssertScopeClean("ancestor failure");
 
-        // A single candidate-level compatibility failure must not permanently poison
-        // the bridge. Once the exact startup-bound reader is healthy again, the same
-        // thread and same recognized slot reference may append the Belt fallback.
         ReloadCandidateBridgeRuntime.GetAllParentItems = item => ((FakeItem)item).Parents;
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object recovered = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, slots, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
 
-        Assert(recovered is FakeItem[] recoveredItems && recoveredItems.Length == 2,
+        var recoveredItems = ((IEnumerable<FakeItem>)recovered).ToArray();
+        Assert(recoveredItems.Length == 2,
             "a later healthy call must recover and append the exact Belt candidate");
-        Assert(ReferenceEquals(((FakeItem[])recovered)[0], vanillaMagazine)
-            && ReferenceEquals(((FakeItem[])recovered)[1], beltMagazine),
+        Assert(ReferenceEquals(recoveredItems[0], vanillaMagazine)
+            && ReferenceEquals(recoveredItems[1], beltMagazine),
             "recovered merge must preserve vanilla prefix and append the Belt candidate");
         Assert(inventory.Calls == 2,
             "recovery must perform exactly one additional bounded pseudo-slot15 query");
@@ -66,10 +66,6 @@ internal static class ReloadCandidateAncestorFailureIsolationRegression
         ReloadScopeEpochGuard.ResetStateForRegression();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload ancestor-failure regression failed: fake GetItemsInSlots missing");
-        // Match the pinned primary bridge boundary exactly so this regression reaches
-        // the intended ancestry-reader fault after one bounded fallback query rather
-        // than being correctly rejected earlier by either query-contract or shared
-        // install-time slot-array content-pin guards.
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = slots;
         ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object[] { "installed-fast", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
@@ -77,7 +73,7 @@ internal static class ReloadCandidateAncestorFailureIsolationRegression
         ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object[] { "installed-bind", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
-        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<FakeItem>);
         ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
         ReloadCandidateBridgeRuntime.LogWarning = warning;
         ReloadScopeEpochGuard.CaptureSlotArraysForRegression();
@@ -97,16 +93,11 @@ internal static class ReloadCandidateAncestorFailureIsolationRegression
     {
         readonly FakeItem[] items;
         internal int Calls { get; private set; }
-
-        internal FakeInventory(FakeItem[] items)
-        {
-            this.items = items;
-        }
-
-        public FakeItem[] GetItemsInSlots(object slots)
+        internal FakeInventory(FakeItem[] items) { this.items = items; }
+        public IEnumerable<FakeItem> GetItemsInSlots(IEnumerable<int> slots)
         {
             Calls++;
-            return items;
+            return items.Concat(Array.Empty<FakeItem>());
         }
     }
 
@@ -114,7 +105,6 @@ internal static class ReloadCandidateAncestorFailureIsolationRegression
     {
         internal string TemplateId { get; }
         internal IEnumerable Parents { get; }
-
         internal FakeItem(string templateId, params FakeItem[] parents)
         {
             TemplateId = templateId;
@@ -124,15 +114,11 @@ internal static class ReloadCandidateAncestorFailureIsolationRegression
 
     sealed class FakeMagazine : FakeItem
     {
-        internal FakeMagazine(string templateId, params FakeItem[] parents)
-            : base(templateId, parents)
-        {
-        }
+        internal FakeMagazine(string templateId, params FakeItem[] parents) : base(templateId, parents) { }
     }
 
     static void Assert(bool condition, string message)
     {
-        if (!condition)
-            throw new InvalidOperationException("Reload ancestor-failure regression failed: " + message);
+        if (!condition) throw new InvalidOperationException("Reload ancestor-failure regression failed: " + message);
     }
 }
