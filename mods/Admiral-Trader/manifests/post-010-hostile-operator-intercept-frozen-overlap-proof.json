@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "hostile-operator-intercept-frozen-campaign-overlap",
+  "operationKey": "hostile-operator-intercept",
+  "status": "resolved-no-frozen-streets-pmc-semantic-overlap",
+  "runtimeMaterialize": false,
+  "frozenRuntimeQuestCountReviewed": 31,
+  "operationShape": {
+    "target": "AnyPmc",
+    "map": "Streets of Tarkov",
+    "locationTarget": "TarkovStreets",
+    "maximumPmcTargets": 4,
+    "surviveOrExtractRequired": true,
+    "sameRaidCoupling": "fail-closed-separate-gate"
+  },
+  "searchedSignals": [
+    "AnyPmc target semantics",
+    "TarkovStreets location semantics",
+    "PMC elimination combined with Streets location"
+  ],
+  "expectedFrozenSemanticDuplicateCount": 0,
+  "semanticDuplicateFound": false,
+  "decision": "The frozen 31-quest runtime campaign does not contain a Streets-bound PMC-elimination contract matching Contractor Intercept. This closes only frozen-campaign semantic overlap. It does not prove external vanilla/Scorpion/Artem uniqueness and does not prove same-raid kill-to-extraction temporal coupling.",
+  "regressionBoundary": "Before materialization, all frozen db/quests/*.json must still be checked. Any frozen quest that combines PMC elimination semantics with TarkovStreets must fail this proof closed and trigger overlap review. External overlap and same-raid coupling remain independent fail-closed gates."
+}
