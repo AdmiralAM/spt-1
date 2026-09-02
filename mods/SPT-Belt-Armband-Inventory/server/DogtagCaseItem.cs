@@ -36,6 +36,10 @@ public sealed class DogtagCaseItem(
         public object Slot { get; } = slot;
         public object FilterGroup { get; } = filterGroup;
         public HashSet<MongoId> Filter { get; } = filter;
+        public object? InventoryProperties { get; init; }
+        public object? SlotsCollection { get; init; }
+        public object? SlotProperties { get; init; }
+        public object? FiltersCollection { get; init; }
     }
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
@@ -68,8 +72,6 @@ public sealed class DogtagCaseItem(
 
         if (templateTable.Items.TryGetValue(DogtagCaseTpl, out var existing))
         {
-            // Keep the immediate preload collision proof explicit, then perform the
-            // stronger live reference-identity reproof before host publication.
             ValidateExisting(existing, source);
             RequireCanonicalRegisteredTemplate(templateTable);
             cancellationToken.ThrowIfCancellationRequested();
@@ -142,11 +144,6 @@ public sealed class DogtagCaseItem(
             }
         };
 
-        // CustomItemService registration owns template/handbook/locale state that
-        // cannot be proven rollback-safe here. Observe cancellation immediately
-        // before that point of no return; once creation succeeds, finish the exact
-        // host commit to a coherent registered product rather than leaving an
-        // orphaned template because cancellation arrived during the synchronous call.
         cancellationToken.ThrowIfCancellationRequested();
         var result = customItemService.CreateItemFromClone(details);
         if (!result.Success)
@@ -155,10 +152,6 @@ public sealed class DogtagCaseItem(
         if (!templateTable.Items.TryGetValue(DogtagCaseTpl, out var created))
             throw new InvalidOperationException("B&A&HB Dogtag Case creation reported success but the exact template is absent; refusing Dogtag slot exposure.");
         ValidateExisting(created, source);
-
-        // Re-resolve both canonical source and exact product after the explicit
-        // post-create value proof and before exposing the product through the live
-        // Dogtag host. A replaced/detached template pair fails closed here.
         RequireCanonicalRegisteredTemplate(templateTable);
         CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);
         logger.Success("B&A&HB Dogtag Case created and revalidated against the canonical EFT Dogtag Case root/grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
@@ -170,15 +163,23 @@ public sealed class DogtagCaseItem(
         if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
             throw new InvalidOperationException("B&A&HB default inventory template is missing for Dogtag host registration.");
 
-        var slots = inventory.Properties?.Slots?
+        var inventoryProperties = inventory.Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag host inventory properties are missing; refusing inventory mutation.");
+        var slotsCollection = inventoryProperties.Slots
+            ?? throw new InvalidOperationException("B&A&HB Dogtag host slots collection is missing; refusing inventory mutation.");
+        var slots = slotsCollection
             .Where(x => string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal))
             .Take(2)
             .ToArray();
-        if (slots == null || slots.Length != 1)
+        if (slots.Length != 1)
             throw new InvalidOperationException("B&A&HB Dogtag slot boundary is missing or ambiguous; refusing inventory mutation.");
 
-        var groups = slots[0].Properties?.Filters?.ToArray();
-        if (groups == null || groups.Length != 1 || groups[0].Filter == null || groups[0].Filter.Count == 0)
+        var slotProperties = slots[0].Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag slot properties are missing; refusing inventory mutation.");
+        var filtersCollection = slotProperties.Filters
+            ?? throw new InvalidOperationException("B&A&HB Dogtag slot filter collection is missing; refusing inventory mutation.");
+        var groups = filtersCollection.ToArray();
+        if (groups.Length != 1 || groups[0].Filter == null || groups[0].Filter.Count == 0)
             throw new InvalidOperationException("B&A&HB Dogtag slot filter boundary is missing or ambiguous; exactly one non-empty vanilla filter group is required.");
 
         HashSet<MongoId> hostFilter = groups[0].Filter;
@@ -195,10 +196,13 @@ public sealed class DogtagCaseItem(
                 throw new InvalidOperationException("B&A&HB Dogtag slot is already contaminated by a different owned product template; refusing cross-host mutation.");
         }
 
-        // Capture the whole resolved host chain, not only the mutable HashSet. The
-        // later commit must prove these exact objects are still the live
-        // DefaultInventory -> Dogtag slot -> sole filter group -> filter chain.
-        return new DogtagHostBoundary(inventory, slots[0], groups[0], hostFilter);
+        return new DogtagHostBoundary(inventory, slots[0], groups[0], hostFilter)
+        {
+            InventoryProperties = inventoryProperties,
+            SlotsCollection = slotsCollection,
+            SlotProperties = slotProperties,
+            FiltersCollection = filtersCollection
+        };
     }
 
     private void RequireLiveDogtagHostIdentity(DogtagHostBoundary boundary)
@@ -208,6 +212,9 @@ public sealed class DogtagCaseItem(
         if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var liveInventory)
             || !ReferenceEquals(liveInventory, boundary.Inventory))
             throw new InvalidOperationException("B&A&HB Dogtag host publication refused: DefaultInventory template was replaced after preload host capture.");
+        if (!ReferenceEquals(liveInventory.Properties, boundary.InventoryProperties)
+            || !ReferenceEquals(liveInventory.Properties?.Slots, boundary.SlotsCollection))
+            throw new InvalidOperationException("B&A&HB Dogtag host publication refused: DefaultInventory properties/slots collection was replaced after preload host capture.");
 
         var liveSlots = liveInventory.Properties?.Slots?
             .Where(x => string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal))
@@ -215,6 +222,9 @@ public sealed class DogtagCaseItem(
             .ToArray();
         if (liveSlots == null || liveSlots.Length != 1 || !ReferenceEquals(liveSlots[0], boundary.Slot))
             throw new InvalidOperationException("B&A&HB Dogtag host publication refused: Dogtag slot object was replaced or became ambiguous after preload host capture.");
+        if (!ReferenceEquals(liveSlots[0].Properties, boundary.SlotProperties)
+            || !ReferenceEquals(liveSlots[0].Properties?.Filters, boundary.FiltersCollection))
+            throw new InvalidOperationException("B&A&HB Dogtag host publication refused: Dogtag slot properties/filter collection was replaced after preload host capture.");
 
         var liveGroups = liveSlots[0].Properties?.Filters?.ToArray();
         if (liveGroups == null || liveGroups.Length != 1
@@ -229,24 +239,14 @@ public sealed class DogtagCaseItem(
         HashSet<MongoId> filter = boundary.Filter;
         cancellationToken.ThrowIfCancellationRequested();
 
-        // Close the capture-to-commit TOCTOU before any mutation. A startup actor
-        // may not replace DefaultInventory, the Dogtag slot, its sole filter group,
-        // or the filter set while leaving us holding a detached but value-valid set.
         RequireLiveDogtagHostIdentity(boundary);
         DogtagCaseHostContract.RequirePreserved(filter);
         cancellationToken.ThrowIfCancellationRequested();
         RequireLiveDogtagHostIdentity(boundary);
 
-        // HashSet.Add is the mutation/ownership boundary. If another compatible
-        // actor already exposed the exact case, this invocation owns no mutation
-        // and must never remove that pre-existing entry during fail-closed rollback.
         bool addedHere = filter.Add(DogtagCaseTpl);
         try
         {
-            // Cancellation is observed inside the same ownership boundary as
-            // committed-host validation. If this invocation appended the case,
-            // cancellation rolls back only that append; a pre-existing exact case
-            // remains untouched because addedHere is false.
             cancellationToken.ThrowIfCancellationRequested();
             DogtagCaseHostContract.RequireCommitted(filter);
             RequireLiveDogtagHostIdentity(boundary);
@@ -286,10 +286,6 @@ public sealed class DogtagCaseItem(
             || !ReferenceEquals(liveCandidate, candidate))
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: product template was replaced during validation.");
 
-        // Reference identity proves that the same source/product objects remain
-        // installed, but not that those mutable objects retained their values while
-        // the live lookups ran. Revalidate the exact same pair after identity proof
-        // so same-reference root/grid/filter mutation also fails closed.
         ValidateExisting(liveCandidate, liveSource);
     }
 
