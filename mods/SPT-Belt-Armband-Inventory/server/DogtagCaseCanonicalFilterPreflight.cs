@@ -45,12 +45,6 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // Treat the canonical source as mutable startup state. Prove value, capture
-        // the complete mutable root/grid/filter identity chain (including the mutable
-        // collection wrappers themselves), prove the exact registered source identity,
-        // then value again. Finally require that the same nested objects survived the
-        // bounded proof. Value-identical replacement of a grid/filter graph or either
-        // collection wrapper therefore cannot masquerade as stable authority.
         TemplateItem source = RequireCanonicalSourceContract(cancellationToken);
         CanonicalIdentitySnapshot identity = CaptureCanonicalIdentity(source);
         cancellationToken.ThrowIfCancellationRequested();
@@ -60,7 +54,12 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
         RequireCanonicalSourceContract(cancellationToken, source);
         RequireCanonicalIdentity(source, identity);
 
-        logger.Success("B&A&HB Dogtag Case canonical filter preflight passed: exact canonical source/root/grid/filter identity is intact and non-empty EFT/SPT taxonomy contains no B&A&HB-owned product admissions.");
+        // Carry this exact mutable source graph into the immediately following
+        // DogtagCaseItem transaction. +3 must consume and re-prove this lease before
+        // it clones/copies any canonical geometry or taxonomy.
+        DogtagCaseCanonicalIdentityLease.Publish(source);
+
+        logger.Success("B&A&HB Dogtag Case canonical filter preflight passed: exact canonical source/root/grid/filter identity is intact and leased to Preload +3; non-empty EFT/SPT taxonomy contains no B&A&HB-owned product admissions.");
         return Task.CompletedTask;
     }
 
@@ -99,9 +98,6 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
             }
         }
 
-        // ExcludedFilter is deliberately not constrained here: the canonical EFT/SPT
-        // taxonomy remains authoritative and may legitimately exclude arbitrary IDs.
-        // Only positive admission of an owned B&A&HB template is forbidden.
         return source;
     }
 
