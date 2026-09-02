@@ -1,0 +1,61 @@
+using System;
+using System.IO;
+using System.Runtime.CompilerServices;
+
+internal static class DogtagCaseAssortFinalReproofRegression
+{
+    [ModuleInitializer]
+    internal static void Run()
+    {
+        string? root = FindModuleRoot();
+        if (root == null)
+            throw new InvalidOperationException("Dogtag assort final reproof regression failed: module root could not be resolved.");
+
+        string source = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseAssort.cs"));
+        const string loyalty = "liveLoyalty != LoyaltyLevel";
+        const string finalCall = "RequirePublishedAssortTupleStillStable(trader, id, expectedItem, expectedBarter);";
+        const string finalMethod = "private static void RequirePublishedAssortTupleStillStable(";
+
+        int firstLoyalty = source.IndexOf(loyalty, StringComparison.Ordinal);
+        int reproofCall = firstLoyalty < 0 ? -1 : source.IndexOf(finalCall, firstLoyalty + loyalty.Length, StringComparison.Ordinal);
+        int reproofMethod = source.IndexOf(finalMethod, StringComparison.Ordinal);
+        if (firstLoyalty < 0 || reproofCall < 0 || reproofMethod < 0 || !(firstLoyalty < reproofCall && reproofCall < reproofMethod))
+            throw new InvalidOperationException("Dogtag assort final reproof regression failed: whole-tuple reproof must run after the first loyalty proof and before publication returns.");
+
+        string finalRegion = source.Substring(reproofMethod);
+        Require(finalRegion, "ReferenceEquals(item, expectedItem)", "final reproof must retain exact item reference identity");
+        Require(finalRegion, "expectedItem.Upd.StackObjectsCount != UnlimitedStock", "final reproof must retain exact item stock/value contract");
+        Require(finalRegion, "ReferenceEquals(liveBarter, expectedBarter)", "final reproof must retain exact barter reference identity");
+        Require(finalRegion, "liveBarter[0][0].Count != PriceRoubles", "final reproof must retain exact RUB price contract");
+        Require(finalRegion, "liveLoyalty != LoyaltyLevel", "final reproof must retain exact loyalty metadata");
+        Require(finalRegion, "idMatches > 1", "final reproof must fail closed on assort-ID ambiguity");
+    }
+
+    private static string? FindModuleRoot()
+    {
+        DirectoryInfo? current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current != null)
+        {
+            string source = Path.Combine(current.FullName, "server", "DogtagCaseAssort.cs");
+            if (File.Exists(source)) return current.FullName;
+            current = current.Parent;
+        }
+
+        current = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (current != null)
+        {
+            string direct = Path.Combine(current.FullName, "server", "DogtagCaseAssort.cs");
+            if (File.Exists(direct)) return current.FullName;
+            string nested = Path.Combine(current.FullName, "mods", "SPT-Belt-Armband-Inventory");
+            if (File.Exists(Path.Combine(nested, "server", "DogtagCaseAssort.cs"))) return nested;
+            current = current.Parent;
+        }
+        return null;
+    }
+
+    private static void Require(string source, string token, string message)
+    {
+        if (!source.Contains(token, StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag assort final reproof regression failed: " + message + ".");
+    }
+}
