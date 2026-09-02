@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "route-security-pinned-scorpion-artem-semantic-overlap",
+  "operationKey": "route-security",
+  "status": "resolved-no-semantic-duplicate",
+  "runtimeMaterialize": false,
+  "operationShape": {
+    "map": "Customs",
+    "locationTarget": "bigmap",
+    "maximumOrdinaryScavTargets": 6,
+    "surviveOrExtractRequired": true,
+    "sameRaidCoupling": "fail-closed-separate-gate"
+  },
+  "sources": {
+    "scorpion": {
+      "repository": "acidphantasm/scorpion-csharp",
+      "commit": "7d1bed766f859f227680377acc1e20c8f97b09bf",
+      "observedCustomsShapes": [
+        "visit/place-item Customs zones on bigmap",
+        "Survive and extract from Customs with Survived exit status without healing items"
+      ],
+      "ordinaryScavClearancePlusCustomsExtractionDuplicateFound": false,
+      "classification": "partial-component-overlap-only"
+    },
+    "artem": {
+      "repository": "WelcomeToThursday/WTT-Artem",
+      "commit": "ee5b7c13a1980ff961ed0b2c1d8764574377b2bf",
+      "observedShapes": [
+        "Customs narrative/visit content",
+        "Scav elimination objectives on other maps such as Interchange and Shoreline"
+      ],
+      "ordinaryScavClearancePlusCustomsExtractionDuplicateFound": false,
+      "classification": "partial-component-overlap-only"
+    }
+  },
+  "decision": {
+    "scorpionOverlapResolved": true,
+    "artemOverlapResolved": true,
+    "semanticDuplicateFound": false,
+    "vanillaOverlapStillRequired": true,
+    "aggregateExternalOverlapGateMayClose": false,
+    "sameRaidCouplingProofUnaffected": true,
+    "review": "Pinned Scorpion and Artem content overlaps individual Route Security components (Customs, extraction, or Scav elimination) but does not reproduce the bounded Customs ordinary-Scav-clearance plus successful-extraction operation as one semantic contract. Vanilla remains independently unresolved; same-raid temporal coupling remains a separate fail-closed evaluator question."
+  }
+}
