@@ -15,13 +15,14 @@ namespace SPTBeltArmbandInventory
     internal static class ReloadCallerPublicationFence
     {
         const string HarmonyId = "com.admiralam.spt.belt-armband-inventory.reload-caller-publication";
+        const string CandidateFenceHarmonyId = "com.admiralam.spt.belt-armband-inventory.reload-caller-publication.candidate";
         const string CandidateBridgeHarmonyId = "com.admiralam.spt.belt-armband-inventory.fast-access.reload-candidate";
         static readonly object InstallGate = new object();
         static bool lifecycleInstalled;
         static bool candidateInstalled;
         static bool terminalFailure;
         static object harmonyOwner;
-        static MethodInfo unpatchSelf;
+        static object candidateHarmonyOwner;
 
         [ThreadStatic] static Stack<PublicationState> publicationStates;
 
@@ -69,6 +70,7 @@ namespace SPTBeltArmbandInventory
                 if (terminalFailure) return false;
 
                 object owner = null;
+                MethodInfo rollback = null;
                 try
                 {
                     Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
@@ -78,7 +80,7 @@ namespace SPTBeltArmbandInventory
                     ConstructorInfo harmonyCtor = harmonyType.GetConstructor(new[] { typeof(string) });
                     ConstructorInfo harmonyMethodCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                     MethodInfo patch = FindPatchMethod(harmonyType, harmonyMethodType);
-                    MethodInfo rollback = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
+                    rollback = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
                     MethodInfo install = typeof(FastAccessSlotPatches).GetMethod("TryInstall", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
                     MethodInfo afterInstall = typeof(ReloadCallerPublicationFence).GetMethod(nameof(AfterFastAccessInstall), BindingFlags.Static | BindingFlags.NonPublic);
                     if (harmonyCtor == null || harmonyMethodCtor == null || patch == null || rollback == null
@@ -106,13 +108,12 @@ namespace SPTBeltArmbandInventory
 
                     patch.Invoke(owner, args);
                     harmonyOwner = owner;
-                    unpatchSelf = rollback;
                     lifecycleInstalled = true;
                     return true;
                 }
                 catch
                 {
-                    bool rolledBack = TryRollback(owner, FindZeroArgInstanceMethod(owner?.GetType(), "UnpatchSelf"));
+                    bool rolledBack = TryRollback(owner, rollback);
                     harmonyOwner = null;
                     lifecycleInstalled = false;
                     candidateInstalled = false;
@@ -135,17 +136,21 @@ namespace SPTBeltArmbandInventory
                 if (candidateInstalled) return true;
                 if (!lifecycleInstalled || terminalFailure || harmonyOwner == null) return false;
 
+                object candidateOwner = null;
+                MethodInfo candidateRollback = null;
                 try
                 {
                     Type harmonyType = harmonyOwner.GetType();
                     Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
+                    ConstructorInfo harmonyCtor = harmonyType.GetConstructor(new[] { typeof(string) });
                     ConstructorInfo harmonyMethodCtor = harmonyMethodType?.GetConstructor(new[] { typeof(MethodInfo) });
                     MethodInfo patch = harmonyMethodType == null ? null : FindPatchMethod(harmonyType, harmonyMethodType);
+                    candidateRollback = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
                     MethodInfo getItems = ReloadCandidateBridgeRuntime.GetItemsInSlots;
                     MethodInfo capture = typeof(ReloadCallerPublicationFence).GetMethod(nameof(CaptureVanilla), BindingFlags.Static | BindingFlags.NonPublic);
                     MethodInfo finalize = typeof(ReloadCallerPublicationFence).GetMethod(nameof(FinalizePublication), BindingFlags.Static | BindingFlags.NonPublic);
-                    if (harmonyMethodType == null || harmonyMethodCtor == null || patch == null || getItems == null
-                        || capture == null || finalize == null)
+                    if (harmonyMethodType == null || harmonyCtor == null || harmonyMethodCtor == null || patch == null || candidateRollback == null
+                        || getItems == null || capture == null || finalize == null)
                         return false;
 
                     object beforePostfix = harmonyMethodCtor.Invoke(new object[] { capture });
@@ -158,15 +163,26 @@ namespace SPTBeltArmbandInventory
                     object[] afterArgs = BuildPostfixArguments(patch, harmonyMethodType, getItems, afterPostfix);
                     if (beforeArgs == null || afterArgs == null) return false;
 
-                    patch.Invoke(harmonyOwner, beforeArgs);
-                    patch.Invoke(harmonyOwner, afterArgs);
+                    candidateOwner = harmonyCtor.Invoke(new object[] { CandidateFenceHarmonyId });
+                    if (candidateOwner == null) return false;
+
+                    patch.Invoke(candidateOwner, beforeArgs);
+                    patch.Invoke(candidateOwner, afterArgs);
+                    candidateHarmonyOwner = candidateOwner;
                     candidateInstalled = true;
                     return true;
                 }
                 catch
                 {
-                    // The core bridge remains fail-closed. If this optional final fence cannot
-                    // establish exact ordering, do not guess or broaden patch compatibility.
+                    // The ordered pair is one publication contract. A partial pair is unsafe:
+                    // a lone capture can leak ThreadStatic state and a lone finalizer has no
+                    // matching vanilla snapshot. Roll back the dedicated candidate owner
+                    // atomically rather than weakening Harmony ordering or leaving residue.
+                    bool rolledBack = TryRollback(candidateOwner, candidateRollback);
+                    candidateHarmonyOwner = null;
+                    candidateInstalled = false;
+                    if (candidateOwner != null && !rolledBack)
+                        terminalFailure = true;
                     return false;
                 }
             }
