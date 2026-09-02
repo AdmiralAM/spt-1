@@ -22,6 +22,9 @@ internal static class ReloadCandidateReentrancyRegression
             ?? throw new InvalidOperationException("Reload candidate reentrancy regression failed: fake GetItemsInSlots missing");
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = recognizedSlots;
+        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object[] { "original-fast", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
+        ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = new object[] { "original-bind" };
+        ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object[] { "original-bind", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
         ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
