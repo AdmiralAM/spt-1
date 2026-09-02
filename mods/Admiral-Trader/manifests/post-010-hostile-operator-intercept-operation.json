@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-authored-spec-only",
+  "operationKey": "hostile-operator-intercept",
+  "workingTitle": {"en": "Contractor Intercept", "ru": "Перехват контрактников"},
+  "runtimeMaterialize": false,
+  "conditionAuthority": {
+    "targetProof": "post-010-pmc-location-extraction-proof.json",
+    "target": "AnyPmc",
+    "factionSplitRequired": false,
+    "locationSource": {"repository": "sp-tarkov/server-csharp", "commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93", "path": "Libraries/SPTarkov.Server.Assets/SPT_Data/configs/quest.json", "map": "Streets of Tarkov", "locationTarget": "TarkovStreets", "status": "proven-pinned-spt413"},
+    "survivedExtractionProof": "post-010-pmc-location-extraction-proof.json",
+    "sameRaidCouplingProof": "post-010-same-raid-coupling-proof.json",
+    "boundary": "AnyPmc plus TarkovStreets and Survived extraction are individually proven shapes. USEC/BEAR split is intentionally unnecessary. Same-raid kill-to-extract temporal coupling remains fail-closed."
+  },
+  "bounds": {"maximumPmcTargets": 4, "maximumSuccessfulRaids": 1, "repeatable": false, "escalatingSequelsAllowed": false, "perMapCopiesAllowed": false, "factionKillLadderAllowed": false},
+  "economyReview": {
+    "status": "approved-static",
+    "campaignPlayerLevel": 23,
+    "riskBand": "high-risk",
+    "authoredReward": {"xp": 10000, "rub": 62000, "standing": 0.015, "itemReward": null},
+    "nearestVanillaComparatorClass": "Elimination",
+    "vanillaComparatorMedian": {"xp": 18200, "rub": 65000},
+    "overallVanillaStandingMedian": 0.02,
+    "review": "At level 23 the bounded four-PMC Streets intercept is conservative against the pinned vanilla Elimination median: XP and RUB are both lower, standing remains below the overall vanilla median, and there is no item reward, PMC gear faucet, dogtag conveyor or capability unlock. The authored high-risk reward is accepted without escalation."
+  },
+  "gates": {
+    "requiresAnyPmcTargetProof": false,
+    "requiresExactStreetsLocationSelection": false,
+    "requiresSurvivedExtractionShapeProof": false,
+    "requiresSameRaidKillAndExtractionCouplingProof": true,
+    "requiresFrozenCampaignOverlapReview": true,
+    "requiresVanillaScorpionArtemOverlapAudit": true,
+    "requiresEconomyAdmiralReview": false,
+    "implementationAllowed": false,
+    "runtimeMaterialize": false
+  },
+  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
+}
