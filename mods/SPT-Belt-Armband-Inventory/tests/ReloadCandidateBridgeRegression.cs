@@ -29,6 +29,7 @@ internal static class ReloadCandidateBridgeRegression
             ?? throw new InvalidOperationException("Reload candidate bridge regression failed: reentrant state field missing");
 
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
         Assert((int)depth.GetValue(null)! == 0 && !(bool)reentrant.GetValue(null)!,
             "reset clears per-thread reload scope/reentrancy state");
 
@@ -52,6 +53,7 @@ internal static class ReloadCandidateBridgeRegression
 
         ExerciseCandidateMerge();
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
     }
 
     static void ExerciseCandidateMerge()
@@ -64,10 +66,10 @@ internal static class ReloadCandidateBridgeRegression
         var foreignMagazine = new FakeMagazine("foreign-magazine", foreignRoot);
         var nonMagazine = new FakeItem("not-a-magazine", exactBelt);
         var vanilla = new FakeItem[] { vanillaMagazine, duplicateMagazine };
-        var originalFastAccessSlots = new object();
-        var installedFastAccessSlots = new object();
-        var originalBindAvailableSlots = new object();
-        var installedBindAvailableSlots = new object();
+        var originalFastAccessSlots = new object[] { "original-fast" };
+        var installedFastAccessSlots = new object[] { "original-fast", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
+        var originalBindAvailableSlots = new object[] { "original-bind" };
+        var installedBindAvailableSlots = new object[] { "original-bind", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         var inventory = new FakeInventory(new FakeItem[]
         {
             duplicateMagazine,
@@ -98,7 +100,7 @@ internal static class ReloadCandidateBridgeRegression
                 "all four exact FastAccess/BindAvailable retained-or-installed references preserve Item[] shape");
             var recognized = (FakeItem[])recognizedObject;
             Assert(recognized.Length == 3 && ReferenceEquals(recognized[2], exactBeltMagazine),
-                "all four exact FastAccess/BindAvailable references activate the same exact Belt fallback");
+                "all four exact FastAccess/BindAvailable references with captured content pins activate the same exact Belt fallback");
         }
 
         ReloadCandidateBridgeRuntime.EnterReloadScope();
@@ -137,6 +139,7 @@ internal static class ReloadCandidateBridgeRegression
         object installedBindAvailableSlots)
     {
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload candidate bridge regression failed: fake GetItemsInSlots missing");
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
@@ -150,6 +153,7 @@ internal static class ReloadCandidateBridgeRegression
         ReloadCandidateBridgeRuntime.GetAllParentItems = item => ((FakeItem)item).Parents;
         ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
         ReloadCandidateBridgeRuntime.LogWarning = message => throw new InvalidOperationException("Reload candidate bridge regression failed closed unexpectedly: " + message);
+        ReloadScopeEpochGuard.CaptureSlotArraysForRegression();
     }
 
     sealed class FakeInventory
