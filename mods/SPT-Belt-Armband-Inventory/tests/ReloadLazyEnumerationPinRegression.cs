@@ -21,12 +21,30 @@ internal static class ReloadLazyEnumerationPinRegression
 
         Configure(originalFast, installedFast, originalBind, installedBind);
 
+        var preQueryInventory = new FakeInventory(magazine, null);
+        IEnumerable<FakeItem> driftingVanilla = EnumerateVanillaWithDrift(
+            new FakeMagazine("vanilla-drift-magazine"),
+            () => originalFast[1] = 98);
+        ReloadCandidateBridgeRuntime.EnterReloadScope();
+        object preQueryDrifted = ReloadCandidateBridgeRuntime.AppendCandidates(preQueryInventory, originalFast, driftingVanilla);
+        ReloadCandidateBridgeRuntime.ExitReloadScope(null);
+        Require(ReferenceEquals(preQueryDrifted, driftingVanilla),
+            "same-reference slot-array drift during lazy vanilla enumeration must preserve the exact vanilla enumerable object");
+        Require(preQueryInventory.QueryCount == 0,
+            "slot-array drift during vanilla enumeration must fail closed before the single pseudo-slot15 query");
+
+        originalFast[1] = 2;
+        Require(ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(originalFast),
+            "restoring exact content after vanilla-enumeration drift must restore the recognized retained-array pin");
+
         var driftingInventory = new FakeInventory(magazine, () => originalFast[1] = 99);
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object drifted = ReloadCandidateBridgeRuntime.AppendCandidates(driftingInventory, originalFast, vanilla);
         ReloadCandidateBridgeRuntime.ExitReloadScope(null);
         Require(ReferenceEquals(drifted, vanilla),
             "same-reference slot-array drift during lazy Belt enumeration must preserve the exact vanilla enumerable object");
+        Require(driftingInventory.QueryCount == 1,
+            "lazy Belt drift must occur inside the one bounded pseudo-slot15 query rather than triggering a retry");
 
         originalFast[1] = 2;
         Require(ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(originalFast),
@@ -39,11 +57,19 @@ internal static class ReloadLazyEnumerationPinRegression
         FakeItem[] merged = ((IEnumerable<FakeItem>)healthy).ToArray();
         Require(!ReferenceEquals(healthy, vanilla),
             "healthy lazy Belt enumeration with an unchanged pinned array must publish a replacement sequence");
+        Require(healthyInventory.QueryCount == 1,
+            "healthy Belt fallback must perform exactly one pseudo-slot15 query");
         Require(merged.Length == 2 && ReferenceEquals(merged[1], magazine),
             "healthy lazy Belt enumeration must preserve vanilla prefix and append the exact Belt descendant");
 
         ReloadCandidateBridgeRuntime.Reset();
         ReloadScopeEpochGuard.ResetStateForRegression();
+    }
+
+    private static IEnumerable<FakeItem> EnumerateVanillaWithDrift(FakeItem item, Action duringEnumeration)
+    {
+        duringEnumeration();
+        yield return item;
     }
 
     private static void Configure(object originalFast, object installedFast, object originalBind, object installedBind)
@@ -78,8 +104,11 @@ internal static class ReloadLazyEnumerationPinRegression
             this.duringEnumeration = duringEnumeration;
         }
 
+        internal int QueryCount { get; private set; }
+
         public IEnumerable<FakeItem> GetItemsInSlots(IEnumerable<int> slots)
         {
+            QueryCount++;
             return Enumerate();
         }
 
