@@ -13,19 +13,25 @@ internal static class ReloadPrimaryFallbackContractRegression
 
         string source = File.ReadAllText(Path.Combine(root, "src", "FastAccessSlotPatches.cs"));
         int append = source.IndexOf("internal static object AppendCandidates(", StringComparison.Ordinal);
-        int helperCall = append < 0 ? -1 : source.IndexOf("if (!HasExactFallbackQueryContract())", append, StringComparison.Ordinal);
+        int firstPin = append < 0 ? -1 : source.IndexOf("if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))", append, StringComparison.Ordinal);
+        int helperCall = firstPin < 0 ? -1 : source.IndexOf("if (!HasExactFallbackQueryContract())", firstPin, StringComparison.Ordinal);
         int exactArray = helperCall < 0 ? -1 : source.IndexOf("Type exactArrayType = ItemType.MakeArrayType();", helperCall, StringComparison.Ordinal);
         int exactVanilla = exactArray < 0 ? -1 : source.IndexOf("vanillaItems.GetType() != exactArrayType", exactArray, StringComparison.Ordinal);
-        int invoke = exactVanilla < 0 ? -1 : source.IndexOf("GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })", exactVanilla, StringComparison.Ordinal);
+        int secondPin = exactVanilla < 0 ? -1 : source.IndexOf("if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))", exactVanilla, StringComparison.Ordinal);
+        int invoke = secondPin < 0 ? -1 : source.IndexOf("GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })", secondPin, StringComparison.Ordinal);
         int exactFallback = invoke < 0 ? -1 : source.IndexOf("beltItems.GetType() != exactArrayType", invoke, StringComparison.Ordinal);
         int merge = exactFallback < 0 ? -1 : source.IndexOf("List<object> merged = null;", exactFallback, StringComparison.Ordinal);
         int helper = source.IndexOf("static bool HasExactFallbackQueryContract()", StringComparison.Ordinal);
         int reset = helper < 0 ? -1 : source.IndexOf("internal static void Reset()", helper, StringComparison.Ordinal);
 
-        if (append < 0 || helperCall < 0 || exactArray < 0 || exactVanilla < 0 || invoke < 0 || exactFallback < 0 || merge < 0
-            || !(append < helperCall && helperCall < exactArray && exactArray < exactVanilla
-                && exactVanilla < invoke && invoke < exactFallback && exactFallback < merge))
-            throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary AppendCandidates must prove exact query contract, exact vanilla Item[] shape, and exact returned slot15 runtime Item[] shape before fallback merge.");
+        if (append < 0 || firstPin < 0 || helperCall < 0 || exactArray < 0 || exactVanilla < 0 || secondPin < 0 || invoke < 0 || exactFallback < 0 || merge < 0
+            || !(append < firstPin && firstPin < helperCall && helperCall < exactArray && exactArray < exactVanilla
+                && exactVanilla < secondPin && secondPin < invoke && invoke < exactFallback && exactFallback < merge))
+            throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary AppendCandidates must consume the shared slot-array content pin before contract inspection, re-prove it immediately before the one slot15 query, then prove exact vanilla/returned Item[] shapes before merge.");
+
+        int thirdPin = source.IndexOf("if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))", secondPin + 1, StringComparison.Ordinal);
+        if (thirdPin >= 0 && thirdPin < merge)
+            throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary bridge must use exactly two bounded shared-pin proofs before the single slot15 query, not accumulate redundant hot-path checks.");
 
         if (helper < 0 || reset < 0)
             throw new InvalidOperationException("Reload primary fallback-contract regression failed: bounded contract helper region was not found.");
