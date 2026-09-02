@@ -28,6 +28,7 @@ def test_expedition_loadout_is_bounded_and_non_materialized():
 
     assert authority["equipmentCondition"] == "post-010-player-equipment-proof.json"
     assert authority["survivedExtraction"] == "post-010-pmc-location-extraction-proof.json"
+    assert authority["frozenOverlap"] == "post-010-expedition-loadout-frozen-overlap-proof.json"
     assert "explicit validated item TPL" in authority["equipmentBoundary"]
     assert "same-raid" in authority["extractionBoundary"]
 
@@ -89,7 +90,7 @@ def test_expedition_loadout_is_bounded_and_non_materialized():
     assert gates["requiresSameRaidEquipmentAndExtractionCouplingProof"] is True
     assert gates["requiresFinalEquipmentTplSelection"] is False
     assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
-    assert gates["requiresFrozenCampaignOverlapReview"] is True
+    assert gates["requiresFrozenCampaignOverlapReview"] is False
     assert gates["requiresEconomyAdmiralReview"] is False
 
     assert spec["frozenBoundary"] == {
@@ -118,12 +119,15 @@ def test_expedition_loadout_proof_authorities_exist_and_remain_fail_closed():
 
     equipment_proof = load_json(ROOT / "manifests" / authority["equipmentCondition"])
     extraction_proof = load_json(ROOT / "manifests" / authority["survivedExtraction"])
+    frozen_overlap = load_json(ROOT / "manifests" / authority["frozenOverlap"])
 
     assert equipment_proof["proven"]["playerEquipmentConditionFamilyExists"]["conditionType"] == "Equipment"
     assert equipment_proof["proven"]["equippedOnlyMode"]["value"] is False
     assert equipment_proof["materializationRules"]["multiGroupSemanticsMustRemainFailClosed"] is True
     assert equipment_proof["materializationRules"]["sameRaidEquipmentThenExtractMustRemainFailClosed"] is True
     assert extraction_proof["materializationRules"]["sameRaidCouplingMustRemainFailClosed"] is True
+    assert frozen_overlap["review"]["result"] == "no-semantic-duplicate"
+    assert frozen_overlap["boundary"]["runtimeMaterialize"] is False
 
 
 def test_expedition_loadout_does_not_change_frozen_runtime_counts():
