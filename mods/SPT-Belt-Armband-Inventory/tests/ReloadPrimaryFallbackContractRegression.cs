@@ -14,14 +14,18 @@ internal static class ReloadPrimaryFallbackContractRegression
         string source = File.ReadAllText(Path.Combine(root, "src", "FastAccessSlotPatches.cs"));
         int append = source.IndexOf("internal static object AppendCandidates(", StringComparison.Ordinal);
         int helperCall = append < 0 ? -1 : source.IndexOf("if (!HasExactFallbackQueryContract())", append, StringComparison.Ordinal);
-        int exactVanilla = helperCall < 0 ? -1 : source.IndexOf("vanillaItems.GetType() != ItemType.MakeArrayType()", helperCall, StringComparison.Ordinal);
+        int exactArray = helperCall < 0 ? -1 : source.IndexOf("Type exactArrayType = ItemType.MakeArrayType();", helperCall, StringComparison.Ordinal);
+        int exactVanilla = exactArray < 0 ? -1 : source.IndexOf("vanillaItems.GetType() != exactArrayType", exactArray, StringComparison.Ordinal);
         int invoke = exactVanilla < 0 ? -1 : source.IndexOf("GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })", exactVanilla, StringComparison.Ordinal);
+        int exactFallback = invoke < 0 ? -1 : source.IndexOf("beltItems.GetType() != exactArrayType", invoke, StringComparison.Ordinal);
+        int merge = exactFallback < 0 ? -1 : source.IndexOf("List<object> merged = null;", exactFallback, StringComparison.Ordinal);
         int helper = source.IndexOf("static bool HasExactFallbackQueryContract()", StringComparison.Ordinal);
         int reset = helper < 0 ? -1 : source.IndexOf("internal static void Reset()", helper, StringComparison.Ordinal);
 
-        if (append < 0 || helperCall < 0 || exactVanilla < 0 || invoke < 0
-            || !(append < helperCall && helperCall < exactVanilla && exactVanilla < invoke))
-            throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary AppendCandidates must prove exact query contract and exact vanilla Item[] shape before fallback invocation.");
+        if (append < 0 || helperCall < 0 || exactArray < 0 || exactVanilla < 0 || invoke < 0 || exactFallback < 0 || merge < 0
+            || !(append < helperCall && helperCall < exactArray && exactArray < exactVanilla
+                && exactVanilla < invoke && invoke < exactFallback && exactFallback < merge))
+            throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary AppendCandidates must prove exact query contract, exact vanilla Item[] shape, and exact returned slot15 runtime Item[] shape before fallback merge.");
 
         if (helper < 0 || reset < 0)
             throw new InvalidOperationException("Reload primary fallback-contract regression failed: bounded contract helper region was not found.");
