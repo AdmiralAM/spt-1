@@ -32,6 +32,14 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
         Require(source, "ReferenceEquals(actualExcluded, expectedExcluded)",
             "existing Dogtag Case excluded filter set must not alias canonical source state");
 
+        // Canonical taxonomy is not valid authority if its own grid has been detached
+        // from the canonical EFT/SPT Dogtag Case template. Prove source-grid ownership
+        // both before cloning and during every live candidate/source publication reproof.
+        Require(source, "if (!Equals(sourceGrid.Parent, SourceDogtagCaseTpl))",
+            "pre-create canonical source grid must remain owned by the EFT/SPT Dogtag Case template");
+        Require(source, "|| !Equals(sourceGrid.Parent, SourceDogtagCaseTpl)",
+            "ValidateExisting must reprove canonical source-grid ownership at host/trader publication boundaries");
+
         // Value parity alone is insufficient if another startup participant destroys
         // both mutable filter graphs in the same way. Canonical taxonomy remains the
         // authority, but publication must refuse a vacuous empty contract instead of
@@ -61,19 +69,21 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
             throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: source filters must be copied before clone construction and publication.");
 
         int validate = source.IndexOf("private static void ValidateExisting", StringComparison.Ordinal);
-        int rootAlias = source.IndexOf("ReferenceEquals(candidateProperties, sourceProperties)", StringComparison.Ordinal);
-        int gridAlias = source.IndexOf("ReferenceEquals(grid, sourceGrid)", StringComparison.Ordinal);
-        int nonEmptyGroups = source.IndexOf("expectedFilters.Length == 0", StringComparison.Ordinal);
-        int groupAlias = source.IndexOf("ReferenceEquals(actualFilters[i], expectedFilters[i])", StringComparison.Ordinal);
-        int nonEmptyIncluded = source.IndexOf("actualIncluded.Count == 0 || expectedIncluded.Count == 0", StringComparison.Ordinal);
-        int noOwnedActual = source.IndexOf("actualIncluded.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString()))", StringComparison.Ordinal);
-        int noOwnedExpected = source.IndexOf("expectedIncluded.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString()))", StringComparison.Ordinal);
-        int includeAlias = source.IndexOf("ReferenceEquals(actualIncluded, expectedIncluded)", StringComparison.Ordinal);
-        int excludeAlias = source.IndexOf("ReferenceEquals(actualExcluded, expectedExcluded)", StringComparison.Ordinal);
-        if (validate < 0 || rootAlias < validate || gridAlias < rootAlias || nonEmptyGroups < gridAlias
-            || groupAlias < nonEmptyGroups || nonEmptyIncluded < groupAlias || noOwnedActual < nonEmptyIncluded
-            || noOwnedExpected < noOwnedActual || includeAlias < noOwnedExpected || excludeAlias < includeAlias)
-            throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: canonical non-empty/no-owned/non-alias proofs must remain inside ValidateExisting in root-to-filter order.");
+        int rootAlias = source.IndexOf("ReferenceEquals(candidateProperties, sourceProperties)", validate, StringComparison.Ordinal);
+        int gridAlias = source.IndexOf("ReferenceEquals(grid, sourceGrid)", validate, StringComparison.Ordinal);
+        int sourceGridOwner = source.IndexOf("|| !Equals(sourceGrid.Parent, SourceDogtagCaseTpl)", validate, StringComparison.Ordinal);
+        int nonEmptyGroups = source.IndexOf("expectedFilters.Length == 0", validate, StringComparison.Ordinal);
+        int groupAlias = source.IndexOf("ReferenceEquals(actualFilters[i], expectedFilters[i])", validate, StringComparison.Ordinal);
+        int nonEmptyIncluded = source.IndexOf("actualIncluded.Count == 0 || expectedIncluded.Count == 0", validate, StringComparison.Ordinal);
+        int noOwnedActual = source.IndexOf("actualIncluded.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString()))", validate, StringComparison.Ordinal);
+        int noOwnedExpected = source.IndexOf("expectedIncluded.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString()))", validate, StringComparison.Ordinal);
+        int includeAlias = source.IndexOf("ReferenceEquals(actualIncluded, expectedIncluded)", validate, StringComparison.Ordinal);
+        int excludeAlias = source.IndexOf("ReferenceEquals(actualExcluded, expectedExcluded)", validate, StringComparison.Ordinal);
+        if (validate < 0 || rootAlias < validate || gridAlias < rootAlias || sourceGridOwner < gridAlias
+            || nonEmptyGroups < sourceGridOwner || groupAlias < nonEmptyGroups || nonEmptyIncluded < groupAlias
+            || noOwnedActual < nonEmptyIncluded || noOwnedExpected < noOwnedActual || includeAlias < noOwnedExpected
+            || excludeAlias < includeAlias)
+            throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: canonical source ownership/non-empty/no-owned/non-alias proofs must remain inside ValidateExisting in root-to-filter order.");
     }
 
     private static string? FindModuleRoot()
