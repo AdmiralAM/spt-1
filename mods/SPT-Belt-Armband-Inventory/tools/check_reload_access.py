@@ -43,6 +43,8 @@ for token in (
 
 # Pinned SPT 4.x decomp contract: exact generic interfaces, not the concrete
 # Item[] implementation detail that appears only inside Inventory.GetItemsInSlots.
+# The primary bridge must independently prove the exact slot generic contract;
+# it may not rely solely on the separate epoch Harmony owner for this boundary.
 for token in (
     'Type itemEnumerableType = typeof(IEnumerable<>).MakeGenericType(itemType);',
     'Type slotEnumerableType = typeof(IEnumerable<>).MakeGenericType(slotEnumType);',
@@ -52,6 +54,11 @@ for token in (
     'parameters[0].ParameterType != slotEnumerableType',
     'Type exactReturn = typeof(IEnumerable<>).MakeGenericType(itemType);',
     'declaredReturn != exactReturn || getItems.ReturnType != exactReturn',
+    'Type slotElementType = GetEnumerableElementType(beltArgument.GetType());',
+    'Type exactSlotEnumerable = typeof(IEnumerable<>).MakeGenericType(slotElementType);',
+    'parameters[0].ParameterType != exactSlotEnumerable',
+    '!exactSlotEnumerable.IsInstanceOfType(beltArgument)',
+    'static Type GetEnumerableElementType(Type runtimeType)',
     'ReturnType.IsInstanceOfType(vanillaResult)',
     'vanillaResult is IEnumerable vanillaSequence',
     'beltResult is IEnumerable beltItems',
@@ -147,6 +154,8 @@ for token in (
 for token in (
     'exact IEnumerable<Item>(IEnumerable<slot>) contract must pass',
     'different slot element contract must fail closed',
+    'primary AppendCandidates must preserve exact vanilla result identity on slot-parameter drift',
+    'primary AppendCandidates must reject slot-parameter drift before any fallback query',
     'exact slot parameter contract must recover after rejected drift',
     'IEnumerable<long> slots',
 ):
@@ -209,4 +218,4 @@ if source.count('Activator.CreateInstance(harmonyType, new object[] { CandidateB
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, exact slot-parameter execution guard, four-array content pin including post-lazy-enumeration reproof, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
+print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, self-contained primary + epoch slot-parameter execution guards, four-array content pin including post-lazy-enumeration reproof, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
