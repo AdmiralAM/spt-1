@@ -48,7 +48,13 @@ Porting rule: **do not add a screen-specific patch merely because old BeltSlot h
 
 ## R15 reload pseudo-slot enumeration contract
 
-The post-physical ArmBand PASS / Belt FAIL diagnosis is now anchored to the exact SPT 4.x decompilation snapshot `Luna-Salamanca/assemblycsharptarkovspt4@5566499af1ba6d9e85cc89c72c79ded5757cafec`, rather than to the earlier broad hypothesis that an undeclared enum value is automatically rejected.
+The post-physical ArmBand PASS / Belt FAIL diagnosis is anchored to the exact SPT 4.x decompilation snapshot `Luna-Salamanca/assemblycsharptarkovspt4@5566499af1ba6d9e85cc89c72c79ded5757cafec`, rather than to the earlier broad hypothesis that an undeclared enum value is automatically rejected.
+
+The pinned declaration is exactly:
+
+`IEnumerable<Item> Inventory.GetItemsInSlots(IEnumerable<EquipmentSlot> slots)`
+
+This distinction is material. The method body happens to build an `Item[]` root prefix internally and then returns a concatenated sequence, but the public/runtime contract is the generic interface on both return and parameter sides. A bridge that insists on an exact declared or concrete runtime `Item[]` fails closed against the real SPT 4.x method before Magazine Belt candidates can be appended. Discovery, installation, epoch guarding and execution must therefore agree on the exact `IEnumerable<Item> / IEnumerable<EquipmentSlot>` declaration while remaining fail-closed on array/non-generic/lookalike signatures.
 
 `Inventory.GetItemsInSlots(IEnumerable<EquipmentSlot>)` resolves every supplied value through `InventoryEquipment.GetSlot`, materializes the equipped roots in caller order, and then concatenates descendants of compound roots. `InventoryEquipment.GetSlot` itself is an integer-indexed lookup into `_cachedSlots`; its constructor sizes that cache from the live equipment `Slots` array and populates each entry by parsing the slot ID back to `EquipmentSlot`.
 
@@ -57,7 +63,10 @@ Consequences for the dedicated Magazine Belt reload boundary:
 - pseudo-value `15` is not rejected merely because vanilla `Enum.GetValues(EquipmentSlot)` ends at `ArmBand=14`;
 - slot15 enumeration is viable when the live equipment instance actually owns cache index 15, which is the condition created by the server-side dedicated-slot registration;
 - if the live cache lacks index 15, `GetItemsInSlots(slot15)` fails inside the existing scoped bridge exception boundary and the complete vanilla reload result is retained;
-- the current bridge therefore remains correctly placed at `Inventory.GetItemsInSlots`: it preserves the vanilla result/order and performs one bounded slot15 query only while Reload/QuickReload scope and the exact retained/installed FastAccess or BindAvailable slot-array reference are active;
-- if a future physical candidate still fails, the next diagnostic split is no longer “enum 14 vs pseudo 15”. It is: (a) runtime equipment cache does not contain slot15, (b) Reload/QuickReload does not call `GetItemsInSlots` with one of the exact recognized slot-array references, or (c) the returned slot15 compound tree differs from the decompiled SPT 4.x contract. Do not widen to structural-array matching or broad inventory scans without evidence for one of those boundaries.
+- the bridge remains at `Inventory.GetItemsInSlots`: it preserves the exact original vanilla sequence object on every no-op/failure path and performs one bounded slot15 query only while Reload/QuickReload scope and an exact retained/installed FastAccess or BindAvailable slot-array reference with its captured content pin are active;
+- on successful append only, the bridge materializes a replacement sequence whose strict prefix is the complete vanilla sequence, deduplicates by runtime reference and appends only magazines with exact Magazine Belt ancestry;
+- because the declared return is `IEnumerable<Item>`, the concrete sequence returned by the SPT method is intentionally not pinned to an implementation type; declaration drift, item-type drift, slot-array drift, query-shape drift and ancestry drift still fail closed;
+- the accepted slot-array content pin is re-proven immediately before the single slot15 query and again after query return before Belt enumeration, so same-reference in-place mutation cannot cross that bounded reflective call unnoticed;
+- if a future physical candidate still fails, the diagnostic split is: (a) runtime equipment cache does not contain slot15, (b) Reload/QuickReload does not call the exact pinned `GetItemsInSlots(IEnumerable<EquipmentSlot>)` through one of the recognized slot-array references, or (c) the returned slot15 compound tree differs from the decompiled SPT 4.x contract. Do not widen to structural-array matching or broad inventory scans without evidence for one of those boundaries.
 
-`ReloadPseudoSlotEnumerationContractRegression` mirrors the exact root-prefix/compound-descendant ordering and the missing-cache-index failure boundary so this architecture assumption cannot silently regress while runtime acceptance remains batched.
+`ReloadPseudoSlotEnumerationContractRegression` mirrors the exact root-prefix/compound-descendant ordering and the missing-cache-index failure boundary so this architecture assumption cannot silently regress while runtime acceptance remains batched. `ReloadDiscoveryExactReturnContractRegression` and `ReloadCandidateReturnContractRegression` additionally pin the exact generic-interface declaration and reject the previous erroneous `Item[]` assumption.
