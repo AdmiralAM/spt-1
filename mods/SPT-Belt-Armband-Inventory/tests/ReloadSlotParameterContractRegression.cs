@@ -65,7 +65,7 @@ internal static class ReloadSlotParameterContractRegression
         inventory.QueryCount = 0;
         ReloadCandidateBridgeRuntime.GetItemsInSlots = drift;
         Assert(!ReloadScopeEpochGuard.HasExactRuntimeReturnContractForRegression(),
-            "assignability-compatible return with a different slot element contract must fail the epoch guard");
+            "assignability-compatible return with a different slot element contract must fail closed in the epoch guard");
 
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object rejected = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, originalFastAccessSlots, vanilla);
