@@ -37,7 +37,7 @@ internal static class ReloadPrimaryFallbackContractRegression
 
         int fourthPin = source.IndexOf(PinToken, thirdPin + PinToken.Length, StringComparison.Ordinal);
         if (fourthPin >= 0 && fourthPin < merge)
-            throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary bridge must use exactly three bounded shared-pin proofs around the single slot15 query before merge.");
+            throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary bridge must use exactly three bounded shared-pin proofs around the single slot15 query before merge; the fourth proof belongs post-enumeration/pre-publication.");
 
         if (helper < 0 || reset < 0)
             throw new InvalidOperationException("Reload primary fallback-contract regression failed: bounded contract helper region was not found.");
@@ -47,7 +47,11 @@ internal static class ReloadPrimaryFallbackContractRegression
         {
             "Type exactReturn = typeof(IEnumerable<>).MakeGenericType(itemType);",
             "declaredReturn != exactReturn || getItems.ReturnType != exactReturn",
-            "parameters.Length != 1 || !parameters[0].ParameterType.IsInstanceOfType(beltArgument)",
+            "Type slotElementType = GetEnumerableElementType(beltArgument.GetType());",
+            "Type exactSlotEnumerable = typeof(IEnumerable<>).MakeGenericType(slotElementType);",
+            "parameters[0].ParameterType != exactSlotEnumerable",
+            "!exactSlotEnumerable.IsInstanceOfType(beltArgument)",
+            "static Type GetEnumerableElementType(Type runtimeType)",
             "if (!(beltArgument is IEnumerable values))",
             "Convert.ToInt32(value) != RuntimeIdentity.DedicatedBeltEquipmentSlotValue",
             "if (count > 1)",
@@ -63,14 +67,14 @@ internal static class ReloadPrimaryFallbackContractRegression
         foreach (string forbidden in new[]
         {
             "MakeArrayType()",
-            "GetType() !=",
+            "parameters.Length != 1 || !parameters[0].ParameterType.IsInstanceOfType(beltArgument)",
             "AppDomain.CurrentDomain.GetAssemblies",
             "ReflectionTools.FindType",
             "GetMethods("
         })
         {
             if (contract.Contains(forbidden, StringComparison.Ordinal))
-                throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary hot-path contract proof widened or regressed to an obsolete concrete-array/runtime-discovery contract: " + forbidden);
+                throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary hot-path contract proof widened or regressed to an obsolete concrete-array/assignability/runtime-discovery contract: " + forbidden);
         }
     }
 
