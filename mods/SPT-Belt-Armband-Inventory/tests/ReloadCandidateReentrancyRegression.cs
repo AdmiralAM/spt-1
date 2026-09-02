@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
@@ -12,7 +14,7 @@ internal static class ReloadCandidateReentrancyRegression
         var exactBelt = new FakeItem(RuntimeIdentity.DedicatedMagazineBeltItemId);
         var vanillaMagazine = new FakeMagazine("vanilla-magazine", new FakeItem("vanilla-container"));
         var exactBeltMagazine = new FakeMagazine("belt-magazine", exactBelt);
-        var vanilla = new FakeItem[] { vanillaMagazine };
+        IEnumerable<FakeItem> vanilla = new FakeItem[] { vanillaMagazine };
         object recognizedSlots = new object[] { "original-fast" };
         var inventory = new FakeInventory(recognizedSlots, vanilla, new FakeItem[] { exactBeltMagazine });
 
@@ -27,7 +29,7 @@ internal static class ReloadCandidateReentrancyRegression
         ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object[] { "original-bind", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
-        ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
+        ReloadCandidateBridgeRuntime.ReturnType = typeof(IEnumerable<FakeItem>);
         ReloadCandidateBridgeRuntime.GetAllParentItems = item => ((FakeItem)item).Parents;
         ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
         ReloadCandidateBridgeRuntime.LogWarning = message =>
@@ -47,8 +49,7 @@ internal static class ReloadCandidateReentrancyRegression
             "the scoped Belt fallback may invoke GetItemsInSlots exactly once; its Harmony postfix must not recurse into another Belt enumeration");
         Assert(ReferenceEquals(inventory.NestedBridgeResult, vanilla),
             "a nested candidate-postfix attempt while the owned Belt enumeration is active must return the exact vanilla result object");
-        Assert(result is FakeItem[], "outer bridge must preserve the exact Item[] return shape");
-        var merged = (FakeItem[])result;
+        var merged = ((IEnumerable<FakeItem>)result).ToArray();
         Assert(merged.Length == 2
             && ReferenceEquals(merged[0], vanillaMagazine)
             && ReferenceEquals(merged[1], exactBeltMagazine),
@@ -63,24 +64,23 @@ internal static class ReloadCandidateReentrancyRegression
     sealed class FakeInventory
     {
         readonly object recognizedSlots;
-        readonly FakeItem[] vanilla;
+        readonly IEnumerable<FakeItem> vanilla;
         readonly FakeItem[] items;
-
         internal int GetItemsCalls { get; private set; }
         internal object NestedBridgeResult { get; private set; }
 
-        internal FakeInventory(object recognizedSlots, FakeItem[] vanilla, FakeItem[] items)
+        internal FakeInventory(object recognizedSlots, IEnumerable<FakeItem> vanilla, FakeItem[] items)
         {
             this.recognizedSlots = recognizedSlots;
             this.vanilla = vanilla;
             this.items = items;
         }
 
-        public FakeItem[] GetItemsInSlots(object slots)
+        public IEnumerable<FakeItem> GetItemsInSlots(IEnumerable<int> slots)
         {
             GetItemsCalls++;
             NestedBridgeResult = ReloadCandidateBridgeRuntime.AppendCandidates(this, recognizedSlots, vanilla);
-            return items;
+            return items.Concat(Array.Empty<FakeItem>());
         }
     }
 
@@ -88,7 +88,6 @@ internal static class ReloadCandidateReentrancyRegression
     {
         internal string TemplateId { get; }
         internal IEnumerable Parents { get; }
-
         internal FakeItem(string templateId, params FakeItem[] parents)
         {
             TemplateId = templateId;
@@ -98,10 +97,7 @@ internal static class ReloadCandidateReentrancyRegression
 
     sealed class FakeMagazine : FakeItem
     {
-        internal FakeMagazine(string templateId, params FakeItem[] parents)
-            : base(templateId, parents)
-        {
-        }
+        internal FakeMagazine(string templateId, params FakeItem[] parents) : base(templateId, parents) { }
     }
 
     static void Assert(bool condition, string message)
