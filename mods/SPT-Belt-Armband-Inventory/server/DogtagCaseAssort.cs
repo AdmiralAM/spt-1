@@ -250,6 +250,7 @@ public sealed class DogtagCaseAssort(
     {
         DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);
         RequireExactDogtagHost(templateTable, templateId);
+        DogtagCaseHostExclusionPolicy.RequireCurrentHost(templateTable);
     }
 
     internal static void RequireExactDogtagHost(TemplateTable templateTable, MongoId templateId)
