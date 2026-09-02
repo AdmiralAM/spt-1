@@ -21,22 +21,41 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
 {
     private static readonly MongoId SourceDogtagCaseTpl = new("5c093e3486f77430cb02e593");
 
+    private sealed class CanonicalIdentitySnapshot(
+        object properties,
+        object grid,
+        object gridProperties,
+        object[] filterGroups,
+        object[] includedFilters,
+        object?[] excludedFilters)
+    {
+        public object Properties { get; } = properties;
+        public object Grid { get; } = grid;
+        public object GridProperties { get; } = gridProperties;
+        public object[] FilterGroups { get; } = filterGroups;
+        public object[] IncludedFilters { get; } = includedFilters;
+        public object?[] ExcludedFilters { get; } = excludedFilters;
+    }
+
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        // Treat the canonical source as mutable startup state. Prove value, then the
-        // exact registered source identity, then value again before DogtagCaseItem +3
-        // is allowed to consume this preflight as authority. A replacement or an
-        // in-place mutation during the bounded proof therefore fails closed.
+        // Treat the canonical source as mutable startup state. Prove value, capture
+        // the complete mutable root/grid/filter identity chain, prove the exact
+        // registered source identity, then value again. Finally require that the
+        // same nested objects survived the bounded proof. Value-identical replacement
+        // of a grid/filter graph therefore cannot masquerade as stable authority.
         TemplateItem source = RequireCanonicalSourceContract(cancellationToken);
+        CanonicalIdentitySnapshot identity = CaptureCanonicalIdentity(source);
         cancellationToken.ThrowIfCancellationRequested();
         if (!templateTable.Items.TryGetValue(SourceDogtagCaseTpl, out var liveSource)
             || !ReferenceEquals(liveSource, source))
             throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical EFT/SPT Dogtag Case template was replaced during validation.");
         RequireCanonicalSourceContract(cancellationToken, source);
+        RequireCanonicalIdentity(source, identity);
 
-        logger.Success("B&A&HB Dogtag Case canonical filter preflight passed: exact canonical source identity/grid ownership is intact and non-empty EFT/SPT taxonomy contains no B&A&HB-owned product admissions.");
+        logger.Success("B&A&HB Dogtag Case canonical filter preflight passed: exact canonical source/root/grid/filter identity is intact and non-empty EFT/SPT taxonomy contains no B&A&HB-owned product admissions.");
         return Task.CompletedTask;
     }
 
@@ -79,5 +98,52 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
         // taxonomy remains authoritative and may legitimately exclude arbitrary IDs.
         // Only positive admission of an owned B&A&HB template is forbidden.
         return source;
+    }
+
+    private static CanonicalIdentitySnapshot CaptureCanonicalIdentity(TemplateItem source)
+    {
+        var properties = source.Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical root properties disappeared during identity capture.");
+        var grids = properties.Grids?.ToArray();
+        if (grids == null || grids.Length != 1)
+            throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical grid boundary drifted during identity capture.");
+        var grid = grids[0];
+        var gridProperties = grid.Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical grid properties disappeared during identity capture.");
+        var groups = gridProperties.Filters?.ToArray();
+        if (groups == null || groups.Length == 0 || groups.Any(x => x.Filter == null))
+            throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical filters drifted during identity capture.");
+
+        return new CanonicalIdentitySnapshot(
+            properties,
+            grid,
+            gridProperties,
+            groups.Cast<object>().ToArray(),
+            groups.Select(x => (object)x.Filter!).ToArray(),
+            groups.Select(x => (object?)x.ExcludedFilter).ToArray());
+    }
+
+    private static void RequireCanonicalIdentity(TemplateItem source, CanonicalIdentitySnapshot expected)
+    {
+        if (!ReferenceEquals(source.Properties, expected.Properties))
+            throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical root properties were replaced during validation.");
+
+        var grids = source.Properties?.Grids?.ToArray();
+        if (grids == null || grids.Length != 1 || !ReferenceEquals(grids[0], expected.Grid))
+            throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical grid object was replaced during validation.");
+        if (!ReferenceEquals(grids[0].Properties, expected.GridProperties))
+            throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical grid properties were replaced during validation.");
+
+        var groups = grids[0].Properties?.Filters?.ToArray();
+        if (groups == null || groups.Length != expected.FilterGroups.Length)
+            throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical filter-group cardinality changed during validation.");
+
+        for (int i = 0; i < groups.Length; i++)
+        {
+            if (!ReferenceEquals(groups[i], expected.FilterGroups[i])
+                || !ReferenceEquals(groups[i].Filter, expected.IncludedFilters[i])
+                || !ReferenceEquals(groups[i].ExcludedFilter, expected.ExcludedFilters[i]))
+                throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical filter group/include/exclude identity was replaced during validation.");
+        }
     }
 }
