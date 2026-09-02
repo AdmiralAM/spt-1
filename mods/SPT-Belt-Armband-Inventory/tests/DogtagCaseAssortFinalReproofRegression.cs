@@ -13,7 +13,7 @@ internal static class DogtagCaseAssortFinalReproofRegression
 
         string source = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseAssort.cs"));
         const string loyalty = "liveLoyalty != LoyaltyLevel";
-        const string finalCall = "RequirePublishedAssortTupleStillStable(trader, id, expectedItem, expectedBarter, expectedInnerBarter, expectedScheme);";
+        const string finalCall = "RequirePublishedAssortTupleStillStable(items, barterScheme, loyalLevelItems, id, expectedItem, expectedBarter, expectedInnerBarter, expectedScheme);";
         const string finalMethod = "private static void RequirePublishedAssortTupleStillStable(";
 
         int firstLoyalty = source.IndexOf(loyalty, StringComparison.Ordinal);
@@ -27,6 +27,9 @@ internal static class DogtagCaseAssortFinalReproofRegression
         Require(identityRegion, "var expectedScheme = expectedInnerBarter[0];", "first publication proof must pin the exact validated BarterScheme object");
 
         string finalRegion = source.Substring(reproofMethod);
+        Require(finalRegion, "List<Item> items", "final reproof must operate on captured Items wrapper");
+        Require(finalRegion, "Dictionary<MongoId, List<List<BarterScheme>>> barterScheme", "final reproof must operate on captured BarterScheme wrapper");
+        Require(finalRegion, "Dictionary<MongoId, int> loyalLevelItems", "final reproof must operate on captured LoyalLevelItems wrapper");
         Require(finalRegion, "ReferenceEquals(item, expectedItem)", "final reproof must retain exact item reference identity");
         Require(finalRegion, "expectedItem.Upd.StackObjectsCount != UnlimitedStock", "final reproof must retain exact item stock/value contract");
         Require(finalRegion, "ReferenceEquals(liveBarter, expectedBarter)", "final reproof must retain exact outer barter reference identity");
@@ -35,6 +38,8 @@ internal static class DogtagCaseAssortFinalReproofRegression
         Require(finalRegion, "liveBarter[0][0].Count != PriceRoubles", "final reproof must retain exact RUB price contract");
         Require(finalRegion, "liveLoyalty != LoyaltyLevel", "final reproof must retain exact loyalty metadata");
         Require(finalRegion, "idMatches > 1", "final reproof must fail closed on assort-ID ambiguity");
+        if (finalRegion.Contains("trader.Assort", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag assort final reproof regression failed: final proof re-read mutable trader.Assort state.");
     }
 
     private static string? FindModuleRoot()
