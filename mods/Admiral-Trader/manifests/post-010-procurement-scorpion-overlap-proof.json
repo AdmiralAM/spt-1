@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "static-proof",
+  "operationKey": "field-expedient-supply",
+  "scope": "pinned-scorpion-csharp-only",
+  "source": {
+    "repository": "acidphantasm/scorpion-csharp",
+    "branch": "master",
+    "commit": "7d1bed766f859f227680377acc1e20c8f97b09bf",
+    "checkedAtUtcDate": "2026-09-02",
+    "method": "GitHub exact-TPL code search against the repository default branch at the recorded commit"
+  },
+  "payloadTpls": [
+    "590c5bbd86f774785762df04",
+    "57347c1124597737fb1379e3",
+    "61bf83814088ec1a363d7097"
+  ],
+  "proofContract": {
+    "wd40TplMatchCount": 0,
+    "ductTapeTplMatchCount": 0,
+    "sewingKitTplMatchCount": 0,
+    "selectedPayloadExactTplOverlapDetected": false,
+    "scorpionExactTplOverlapReviewSatisfied": true,
+    "vanillaOverlapClaimed": false,
+    "artemOverlapClaimed": false,
+    "economyApprovalClaimed": false
+  },
+  "decision": "At pinned Scorpion commit 7d1bed766f859f227680377acc1e20c8f97b09bf, none of the three selected Field-Expedient Supply TPLs appear in the Scorpion source tree. This closes only the Scorpion exact-TPL overlap sub-gate; vanilla, Artem and Economy Admiral review remain fail-closed.",
+  "runtimeMaterialize": false
+}
