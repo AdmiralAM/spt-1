@@ -35,7 +35,9 @@ for token in (
     'ReferenceEquals(slots, OriginalBindAvailableSlots)',
     'ReferenceEquals(slots, InstalledBindAvailableSlots)',
     'RuntimeIdentity.DedicatedMagazineBeltItemId',
-    'GetItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })',
+    'MethodInfo getItemsInSlots = GetItemsInSlots;',
+    'getItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })',
+    'ReferenceEquals(GetItemsInSlots, getItemsInSlots)',
     'ShouldReuseVanillaReloadCandidates(merged != null)',
     'return vanillaResult;',
 ):
@@ -48,6 +50,7 @@ for token in (
     'getItemsParameters[0].ParameterType != slotEnumerableType',
     'method.ReturnType != itemEnumerableType',
     'parameters[0].ParameterType != slotEnumerableType',
+    'static bool HasExactFallbackQueryContract(MethodInfo getItems, object beltArgument)',
     'Type exactReturn = typeof(IEnumerable<>).MakeGenericType(itemType);',
     'declaredReturn != exactReturn || getItems.ReturnType != exactReturn',
     'Type slotElementType = GetEnumerableElementType(beltArgument.GetType());',
@@ -82,7 +85,7 @@ for token in (
     'Array result = Array.CreateInstance(ItemType, merged.Count);',
     'object beltSlotsArgument = BeltSlotsArgument;',
     'ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)',
-    'transaction-local by reference as well as value',
+    'captured once at bridge',
     'Replacement never retries',
 ):
     require(source, token, "FastAccessSlotPatches.cs")
@@ -93,17 +96,21 @@ if bridge_start < 0 or bridge_end < 0:
     violations.append("FastAccessSlotPatches.cs: scoped candidate runtime region not found")
 else:
     runtime = source[bridge_start:bridge_end]
-    if runtime.count('GetItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })') != 1:
-        violations.append("FastAccessSlotPatches.cs: scoped bridge must execute exactly one transaction-local pseudo-slot15 query")
+    if runtime.count('getItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })') != 1:
+        violations.append("FastAccessSlotPatches.cs: scoped bridge must execute exactly one transaction-local MethodInfo/pseudo-slot15 query")
     if runtime.count('HasPinnedFastAccessArrayContentForRegression(slots)') < 4:
         violations.append("FastAccessSlotPatches.cs: slot-array pin must be proved before contract work, immediately pre-query, post-query/pre-enumeration, and post-enumeration/pre-publication")
-    if runtime.count('HasExactFallbackQueryContract(beltSlotsArgument)') < 1:
-        violations.append("FastAccessSlotPatches.cs: contract-entry proof must consume the transaction-local pseudo-slot argument")
+    if runtime.count('HasExactFallbackQueryContract(getItemsInSlots, beltSlotsArgument)') < 1:
+        violations.append("FastAccessSlotPatches.cs: contract-entry proof must consume transaction-local MethodInfo and pseudo-slot argument")
     if runtime.count('HasExactBeltSlotsArgument(beltSlotsArgument)') < 3:
         violations.append("FastAccessSlotPatches.cs: transaction-local pseudo-slot argument value must be re-proved immediately pre-query, post-query/pre-enumeration, and post-enumeration/pre-publication")
     if runtime.count('ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)') < 4:
         violations.append("FastAccessSlotPatches.cs: pseudo-slot static reference must remain identical to the transaction-local capture across every bounded execution stage")
-    if 'GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })' in runtime:
+    if runtime.count('ReferenceEquals(GetItemsInSlots, getItemsInSlots)') < 4:
+        violations.append("FastAccessSlotPatches.cs: GetItemsInSlots static MethodInfo must remain identical to the transaction-local capture across every bounded execution stage")
+    if 'GetItemsInSlots.Invoke(inventory' in runtime:
+        violations.append("FastAccessSlotPatches.cs: reflective fallback query must not re-read mutable static GetItemsInSlots at invoke")
+    if 'new[] { BeltSlotsArgument }' in runtime:
         violations.append("FastAccessSlotPatches.cs: reflective fallback query must not re-read mutable BeltSlotsArgument at invoke")
     for forbidden in (
         "AppDomain.CurrentDomain.GetAssemblies", "ReflectionTools.GetTypes", "GetMethods(",
@@ -169,6 +176,10 @@ for token in (
     'pseudo-slot argument drift during vanilla enumeration must fail closed before any fallback query',
     'same-reference pseudo-slot argument drift during lazy Belt enumeration must preserve exact vanilla identity',
     'lazy Belt pseudo-slot drift must not trigger a retry or second query',
+    'MethodInfo replacement during lazy vanilla enumeration must preserve exact vanilla identity',
+    'MethodInfo replacement during vanilla enumeration must fail closed before any fallback query',
+    'MethodInfo replacement during lazy Belt enumeration must preserve exact vanilla identity',
+    'lazy Belt MethodInfo drift must retain the captured one-query boundary and never redirect or retry',
     'restoring the exact captured content must restore the recognized retained-array pin',
     'healthy lazy Belt enumeration with unchanged pinned inputs must publish a replacement sequence',
     'healthy lazy Belt enumeration must preserve vanilla prefix and append the exact Belt descendant',
@@ -177,11 +188,14 @@ for token in (
     require(lazy_pin_tests, token, "ReloadLazyEnumerationPinRegression.cs")
 
 for token in (
+    'MethodInfo getItemsInSlots = GetItemsInSlots;',
     'object beltSlotsArgument = BeltSlotsArgument;',
+    'ReferenceEquals(GetItemsInSlots, getItemsInSlots)',
     'ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)',
-    'GetItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })',
+    'getItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })',
     'static bool HasExactBeltSlotsArgument(object beltArgument)',
-    'reflective fallback invoke reads the mutable static field',
+    'reflective fallback invoke reads mutable static MethodInfo',
+    'reflective fallback invoke reads the mutable static pseudo-slot field',
 ):
     require(reference_pin_tests, token, "ReloadPseudoSlotReferencePinRegression.cs")
 
@@ -230,4 +244,4 @@ if source.count('Activator.CreateInstance(harmonyType, new object[] { CandidateB
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, transaction-local pseudo-slot15 reference+value proof across both lazy windows, four-array content pin, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
+print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, transaction-local MethodInfo + pseudo-slot15 reference/value proof across both lazy windows, four-array content pin, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
