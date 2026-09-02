@@ -164,8 +164,9 @@ namespace SPTBeltArmbandInventory
                     || ReferenceEquals(slots, InstalledFastAccessSlots)
                     || ReferenceEquals(slots, OriginalBindAvailableSlots)
                     || ReferenceEquals(slots, InstalledBindAvailableSlots));
+            object beltSlotsArgument = BeltSlotsArgument;
             if (!FastAccessSlotPolicy.ShouldBridgeReloadCandidates(reloadDepth > 0, reentrant, fastAccessArray)
-                || inventory == null || vanillaResult == null || GetItemsInSlots == null || BeltSlotsArgument == null
+                || inventory == null || vanillaResult == null || GetItemsInSlots == null || beltSlotsArgument == null
                 || ItemType == null || MagazineType == null || ReturnType == null
                 || GetAllParentItems == null || ReadTemplateId == null)
                 return vanillaResult;
@@ -175,7 +176,8 @@ namespace SPTBeltArmbandInventory
                 if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))
                     return vanillaResult;
 
-                if (!HasExactFallbackQueryContract()
+                if (!ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
+                    || !HasExactFallbackQueryContract(beltSlotsArgument)
                     || !ReturnType.IsInstanceOfType(vanillaResult)
                     || !(vanillaResult is IEnumerable vanillaSequence))
                     return vanillaResult;
@@ -189,18 +191,19 @@ namespace SPTBeltArmbandInventory
                 }
 
                 // Both mutable inputs to the bounded fallback query must still match their
-                // install-time/exact contract immediately before invoke. BeltSlotsArgument is
-                // intentionally a retained one-value enumerable; same-reference value drift
-                // during lazy vanilla enumeration must therefore fail closed before any query.
+                // install-time/exact contract immediately before invoke. The pseudo-slot
+                // argument is transaction-local by reference as well as value: replacing the
+                // static field during lazy vanilla enumeration cannot redirect this query.
                 if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)
-                    || !HasExactBeltSlotsArgument())
+                    || !ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
+                    || !HasExactBeltSlotsArgument(beltSlotsArgument))
                     return vanillaResult;
 
                 object beltResult;
                 reentrant = true;
                 try
                 {
-                    beltResult = GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument });
+                    beltResult = GetItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument });
                 }
                 finally
                 {
@@ -209,7 +212,8 @@ namespace SPTBeltArmbandInventory
 
                 if (beltResult == null || !ReturnType.IsInstanceOfType(beltResult) || !(beltResult is IEnumerable beltItems)
                     || !ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)
-                    || !HasExactBeltSlotsArgument())
+                    || !ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
+                    || !HasExactBeltSlotsArgument(beltSlotsArgument))
                     return vanillaResult;
 
                 List<object> merged = null;
@@ -225,11 +229,12 @@ namespace SPTBeltArmbandInventory
                     merged.Add(item);
                 }
 
-                // The SPT interface may be lazy on either side of the invoke. Re-prove both
-                // retained mutable inputs after Belt enumeration and immediately before
-                // publication; Belt-side argument drift never triggers a retry or second query.
+                // Re-prove both content and the exact retained pseudo-slot object after Belt
+                // enumeration and immediately before publication. Replacement never retries and
+                // can never make a second query with a different argument instance.
                 if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots)
-                    || !HasExactBeltSlotsArgument())
+                    || !ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
+                    || !HasExactBeltSlotsArgument(beltSlotsArgument))
                     return vanillaResult;
 
                 if (FastAccessSlotPolicy.ShouldReuseVanillaReloadCandidates(merged != null))
@@ -253,14 +258,13 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static bool HasExactFallbackQueryContract()
+        static bool HasExactFallbackQueryContract(object beltArgument)
         {
             try
             {
                 Type itemType = ItemType;
                 Type declaredReturn = ReturnType;
                 MethodInfo getItems = GetItemsInSlots;
-                object beltArgument = BeltSlotsArgument;
                 if (itemType == null || declaredReturn == null || getItems == null || beltArgument == null)
                     return false;
 
@@ -278,7 +282,7 @@ namespace SPTBeltArmbandInventory
                     || !exactSlotEnumerable.IsInstanceOfType(beltArgument))
                     return false;
 
-                return HasExactBeltSlotsArgument();
+                return HasExactBeltSlotsArgument(beltArgument);
             }
             catch
             {
@@ -286,11 +290,10 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static bool HasExactBeltSlotsArgument()
+        static bool HasExactBeltSlotsArgument(object beltArgument)
         {
             try
             {
-                object beltArgument = BeltSlotsArgument;
                 if (!(beltArgument is IEnumerable values))
                     return false;
 
