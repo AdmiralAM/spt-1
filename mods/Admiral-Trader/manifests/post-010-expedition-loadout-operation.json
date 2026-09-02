@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "source": {
@@ -25,20 +25,58 @@
       "ru": "Выкладка — не каталог. Собери один практичный экспедиционный комплект, проведи его через контакт и вернись, сохранив боеспособность. Я оцениваю дисциплину развёртывания, а не количество разгрузок и рюкзаков, которые ты можешь сдать."
     },
     "started": {
-      "en": "Deploy with a bounded approved expedition setup, satisfy the field condition, and extract. Keep your equipment. One coherent loadout is the test; item-by-item collection is not.",
-      "ru": "Выйди в рейд с ограниченной одобренной экспедиционной выкладкой, выполни полевое условие и эвакуируйся. Снаряжение остаётся у тебя. Проверяется один цельный комплект, а не поштучная коллекция."
+      "en": "Deploy wearing the approved light field rig and backpack, then extract successfully. Keep your equipment. The test is whether a simple expedition setup supports the raid, not whether you can surrender a pile of gear.",
+      "ru": "Выйди в рейд в утверждённой лёгкой разгрузке и с рюкзаком, затем успешно эвакуируйся. Снаряжение остаётся у тебя. Проверяется, работает ли простая экспедиционная выкладка в рейде, а не способность сдать гору вещей."
     },
     "success": {
       "en": "The equipment supported the operation instead of becoming the objective. That is the point of a field loadout.",
       "ru": "Снаряжение поддержало операцию, а не стало её целью. В этом и смысл полевой выкладки."
     },
     "objectiveIntent": [
-      "possess or wear a small approved expedition equipment set without handover",
-      "complete one bounded field condition and survive or extract",
+      "wear one exact low-tier chest rig and one exact low-tier backpack without handover",
+      "survive or extract once with the selected expedition pair",
       "replace 150 per-item legacy tasks with one coherent capability check"
     ],
+    "selectedEquipment": {
+      "selectionState": "selected-product-reviewed",
+      "selectionDoctrine": "Use ordinary low-tier field gear that proves preparation without forcing expensive armor, rare equipment, a trader-specific purchase, or an item handover.",
+      "requiredPair": [
+        {
+          "slot": "TacticalVest",
+          "tpl": "572b7adb24597762ae139821",
+          "name": "Scav Vest",
+          "rationale": "Unarmored, low-tier chest rig; the objective tests carrying capacity and preparation rather than armor class or purchasing power."
+        },
+        {
+          "slot": "Backpack",
+          "tpl": "56e33680d2720be2748b4576",
+          "name": "Scav backpack",
+          "rationale": "Ordinary low-tier backpack with enough field utility to represent expedition preparation without turning the objective into a premium-gear tax."
+        }
+      ],
+      "exactPairRequired": true,
+      "alternativesAllowedAtMaterialization": false,
+      "categoryInferenceAllowed": false,
+      "armorOrDurabilityPredicateAllowed": false,
+      "handoverRequired": false,
+      "consumedOnCompletion": false
+    },
+    "campaignPlacement": {
+      "playerLevel": 15,
+      "phase": "field-readiness",
+      "prerequisites": []
+    },
+    "reward": {
+      "band": "standard",
+      "xp": 6500,
+      "rub": 38000,
+      "standing": 0.009,
+      "itemReward": null,
+      "economyReview": "approved-no-escalation",
+      "rationale": "The selected gear is not surrendered or consumed and no item/storefront reward is granted. The existing early-campaign standard reward therefore needs no acquisition-cost reimbursement or gear-faucet escalation."
+    },
     "bounds": {
-      "maximumDistinctEquipmentRequirements": 3,
+      "maximumDistinctEquipmentRequirements": 2,
       "maximumSuccessfulRaids": 1,
       "repeatable": false,
       "handoverAllowed": false,
@@ -58,11 +96,12 @@
     "runtimeMaterialize": false,
     "requiresExactSpt413EquipmentPossessionOrWearProof": false,
     "requiresExactSpt413SurvivedExtractionProof": false,
+    "requiresMultiGroupEquipmentBooleanProof": true,
     "requiresSameRaidEquipmentAndExtractionCouplingProof": true,
-    "requiresFinalEquipmentTplSelection": true,
+    "requiresFinalEquipmentTplSelection": false,
     "requiresVanillaScorpionArtemOverlapAudit": true,
     "requiresFrozenCampaignOverlapReview": true,
-    "requiresEconomyAdmiralReview": true
+    "requiresEconomyAdmiralReview": false
   },
   "frozenBoundary": {
     "questCount": 31,
