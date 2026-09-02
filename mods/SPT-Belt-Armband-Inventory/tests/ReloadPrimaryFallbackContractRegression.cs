@@ -15,29 +15,42 @@ internal static class ReloadPrimaryFallbackContractRegression
 
         string source = File.ReadAllText(Path.Combine(root, "src", "FastAccessSlotPatches.cs"));
         int append = source.IndexOf("internal static object AppendCandidates(", StringComparison.Ordinal);
-        int firstPin = append < 0 ? -1 : source.IndexOf(PinToken, append, StringComparison.Ordinal);
-        int helperCall = firstPin < 0 ? -1 : source.IndexOf("if (!HasExactFallbackQueryContract()", firstPin, StringComparison.Ordinal);
+        int capture = append < 0 ? -1 : source.IndexOf("object beltSlotsArgument = BeltSlotsArgument;", append, StringComparison.Ordinal);
+        int firstPin = capture < 0 ? -1 : source.IndexOf(PinToken, capture, StringComparison.Ordinal);
+        int firstReference = firstPin < 0 ? -1 : source.IndexOf("ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)", firstPin, StringComparison.Ordinal);
+        int helperCall = firstReference < 0 ? -1 : source.IndexOf("HasExactFallbackQueryContract(beltSlotsArgument)", firstReference, StringComparison.Ordinal);
         int exactVanillaType = helperCall < 0 ? -1 : source.IndexOf("!ReturnType.IsInstanceOfType(vanillaResult)", helperCall, StringComparison.Ordinal);
         int vanillaEnumerable = exactVanillaType < 0 ? -1 : source.IndexOf("!(vanillaResult is IEnumerable vanillaSequence)", exactVanillaType, StringComparison.Ordinal);
         int secondPin = firstPin < 0 ? -1 : source.IndexOf(PinToken, firstPin + PinToken.Length, StringComparison.Ordinal);
-        int invoke = secondPin < 0 ? -1 : source.IndexOf("GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })", secondPin, StringComparison.Ordinal);
+        int preInvokeReference = secondPin < 0 ? -1 : source.IndexOf("ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)", secondPin, StringComparison.Ordinal);
+        int preInvokeValue = preInvokeReference < 0 ? -1 : source.IndexOf("HasExactBeltSlotsArgument(beltSlotsArgument)", preInvokeReference, StringComparison.Ordinal);
+        int invoke = preInvokeValue < 0 ? -1 : source.IndexOf("GetItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })", preInvokeValue, StringComparison.Ordinal);
         int exactFallbackType = invoke < 0 ? -1 : source.IndexOf("!ReturnType.IsInstanceOfType(beltResult)", invoke, StringComparison.Ordinal);
         int fallbackEnumerable = exactFallbackType < 0 ? -1 : source.IndexOf("!(beltResult is IEnumerable beltItems)", exactFallbackType, StringComparison.Ordinal);
         int thirdPin = secondPin < 0 ? -1 : source.IndexOf(PinToken, secondPin + PinToken.Length, StringComparison.Ordinal);
-        int merge = thirdPin < 0 ? -1 : source.IndexOf("List<object> merged = null;", thirdPin, StringComparison.Ordinal);
-        int helper = source.IndexOf("static bool HasExactFallbackQueryContract()", StringComparison.Ordinal);
+        int postQueryReference = thirdPin < 0 ? -1 : source.IndexOf("ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)", thirdPin, StringComparison.Ordinal);
+        int postQueryValue = postQueryReference < 0 ? -1 : source.IndexOf("HasExactBeltSlotsArgument(beltSlotsArgument)", postQueryReference, StringComparison.Ordinal);
+        int merge = postQueryValue < 0 ? -1 : source.IndexOf("List<object> merged = null;", postQueryValue, StringComparison.Ordinal);
+        int helper = source.IndexOf("static bool HasExactFallbackQueryContract(object beltArgument)", StringComparison.Ordinal);
         int reset = helper < 0 ? -1 : source.IndexOf("internal static void Reset()", helper, StringComparison.Ordinal);
 
-        if (append < 0 || firstPin < 0 || helperCall < 0 || exactVanillaType < 0 || vanillaEnumerable < 0
-            || secondPin < 0 || invoke < 0 || exactFallbackType < 0 || fallbackEnumerable < 0 || thirdPin < 0 || merge < 0
-            || !(append < firstPin && firstPin < helperCall && helperCall < exactVanillaType && exactVanillaType < vanillaEnumerable
-                && vanillaEnumerable < secondPin && secondPin < invoke && invoke < exactFallbackType
-                && exactFallbackType < fallbackEnumerable && fallbackEnumerable < thirdPin && thirdPin < merge))
-            throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary AppendCandidates must consume the shared slot-array content pin before exact generic-interface contract inspection, re-prove it immediately before the one slot15 query and after that query before enumeration, then prove exact declared IEnumerable<Item> compatibility before merge.");
+        if (append < 0 || capture < 0 || firstPin < 0 || firstReference < 0 || helperCall < 0 || exactVanillaType < 0 || vanillaEnumerable < 0
+            || secondPin < 0 || preInvokeReference < 0 || preInvokeValue < 0 || invoke < 0
+            || exactFallbackType < 0 || fallbackEnumerable < 0 || thirdPin < 0 || postQueryReference < 0 || postQueryValue < 0 || merge < 0
+            || !(append < capture && capture < firstPin && firstPin < firstReference && firstReference < helperCall
+                && helperCall < exactVanillaType && exactVanillaType < vanillaEnumerable
+                && vanillaEnumerable < secondPin && secondPin < preInvokeReference && preInvokeReference < preInvokeValue
+                && preInvokeValue < invoke && invoke < exactFallbackType && exactFallbackType < fallbackEnumerable
+                && fallbackEnumerable < thirdPin && thirdPin < postQueryReference && postQueryReference < postQueryValue && postQueryValue < merge))
+            throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary AppendCandidates must capture the pseudo-slot argument, consume the shared slot-array pin, prove exact transaction-local reference/value + generic-interface contract, then re-prove both mutable inputs around the single slot15 query before merge.");
 
         int fourthPin = source.IndexOf(PinToken, thirdPin + PinToken.Length, StringComparison.Ordinal);
         if (fourthPin >= 0 && fourthPin < merge)
-            throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary bridge must use exactly three bounded shared-pin proofs around the single slot15 query before merge; the fourth proof belongs post-enumeration/pre-publication.");
+            throw new InvalidOperationException("Reload primary fallback-contract regression failed: primary bridge must use exactly three bounded shared-pin proofs before Belt enumeration; the fourth proof belongs post-enumeration/pre-publication.");
+
+        if (source.IndexOf("GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })", append, StringComparison.Ordinal) >= 0
+            && source.IndexOf("GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })", append, StringComparison.Ordinal) < helper)
+            throw new InvalidOperationException("Reload primary fallback-contract regression failed: reflective fallback query re-read mutable BeltSlotsArgument instead of the transaction-local capture.");
 
         if (helper < 0 || reset < 0)
             throw new InvalidOperationException("Reload primary fallback-contract regression failed: bounded contract helper region was not found.");
