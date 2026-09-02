@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "product": "Admiral Trader",
   "status": "post-0.1.0-condition-proof-inventory",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -21,7 +21,8 @@
     "pmcLocationExtractionProof": "post-010-pmc-location-extraction-proof.json",
     "playerEquipmentProof": "post-010-player-equipment-proof.json",
     "sameRaidCouplingProof": "post-010-same-raid-coupling-proof.json",
-    "handoverDurabilityProof": "post-010-handover-durability-proof.json"
+    "handoverDurabilityProof": "post-010-handover-durability-proof.json",
+    "visitPlaceProxyProof": "post-010-visit-place-proxy-proof.json"
   },
   "staticallyProvenShapes": [
     {
@@ -71,7 +72,7 @@
       "conditionType": "Location",
       "shape": "CounterCreator.counter.conditions[]",
       "evidence": "Documented SPT quest semantics recorded in post-010-pmc-location-extraction-proof.json.",
-      "post010Use": "May bind an objective to an explicitly selected map; sub-location/zone semantics remain unproven."
+      "post010Use": "May bind an objective to an explicitly selected map; generic sub-location/category inference remains unproven."
     },
     {
       "capability": "successful extraction",
@@ -85,6 +86,14 @@
       "conditionTypes": ["Location", "ExitName", "ExitStatus"],
       "evidence": "Documented SPT quest semantics recorded in post-010-pmc-location-extraction-proof.json.",
       "post010Use": "May be used only after the exact exfil is selected and validated against the selected map."
+    },
+    {
+      "capability": "exact vanilla visit-zone proxy",
+      "conditionType": "CounterCreator -> VisitPlace",
+      "fields": ["VisitPlace.target", "VisitPlace.value"],
+      "shape": {"target": "room206_water", "value": 1, "locationTarget": "bigmap"},
+      "evidence": "Pinned SPT 4.1.3 Operation Aquarius - Part 1 contains VisitPlace target room206_water, and independent restricted-access evidence identifies that exact Customs room as behind the Dorm room 206 keyed route; exact authority and boundary are recorded in post-010-visit-place-proxy-proof.json.",
+      "post010Use": "Borrowed Access may represent that the player entered the exact selected room206_water visit zone as a restricted-route reconnaissance proxy. It may not claim the player possessed/used the key or personally unlocked the door."
     },
     {
       "capability": "player equipment condition family",
@@ -110,10 +119,10 @@
       "affectedOperations": ["hostile-operator-intercept"]
     },
     {
-      "capability": "sub-location or zone restriction",
-      "fields": ["zoneId or exact SPT equivalent"],
-      "reason": "Map-level Location is proven; zone/sub-location semantics are not.",
-      "affectedOperations": ["access-reconnaissance", "route-security", "labs-security-disruption", "night-signal-disruption", "rogue-interdiction"]
+      "capability": "generic sub-location/category restriction beyond pinned exact visit zones",
+      "fields": ["zone/category selectors beyond exact validated VisitPlace.target"],
+      "reason": "Exact VisitPlace(room206_water) presence semantics are proven for Borrowed Access, but that single pinned vanilla visit-zone does not establish a generic zone/category selector, arbitrary sub-location inference, or semantics for other unvalidated zones.",
+      "affectedOperations": ["route-security", "labs-security-disruption", "night-signal-disruption", "rogue-interdiction"]
     },
     {
       "capability": "kill/action then extract in the same raid",
@@ -135,14 +144,16 @@
       "affectedOperations": ["field-medicine-under-pressure", "controlled-chemical-support"]
     },
     {
-      "capability": "restricted-access interaction",
-      "fields": ["door/key interaction, visit/place or location proxy"],
-      "reason": "Map/location and named extraction shapes do not prove a door/key interaction or access proxy.",
-      "affectedOperations": ["access-reconnaissance"]
+      "capability": "personal restricted-access interaction",
+      "fields": ["door/key possession, use or unlock interaction"],
+      "reason": "VisitPlace(room206_water) proves presence in an exact vanilla zone independently documented behind a keyed route, but it cannot prove that this player possessed the key, used it, or personally unlocked the door because another player may have opened the route.",
+      "affectedOperations": ["access-reconnaissance"],
+      "proxyAlreadyProven": "CounterCreator -> VisitPlace(room206_water) on Customs/bigmap"
     }
   ],
   "materializationRule": {
     "reuseProvenBaseShapesAllowed": true,
+    "exactPinnedVisitZoneProxyAllowed": true,
     "unprovenRefinementMustFailClosed": true,
     "editorialCopyMayNotPublishUnprovenSpecifics": true,
     "mapAndExfilTargetsMustBeExplicitlySelected": true,
@@ -153,7 +164,7 @@
       "prove same-raid evaluator/reset ordering or identify a canonical vanilla compound action+extract pattern",
       "select and validate explicit equipment TPL sets or prove category/class refinement",
       "prove medical/stimulant use semantics",
-      "prove access interaction/proxy semantics"
+      "prove personal key/door interaction semantics only if a future operation actually requires stronger evidence than the already-proven VisitPlace restricted-route proxy"
     ]
   }
 }
