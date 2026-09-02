@@ -117,8 +117,6 @@ public sealed class DogtagCaseAssort(
         if (idMatches != 1 || exactItemMatches != 1)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman item reference was replaced before publication.");
 
-        // The same Item object can be mutated in place after ValidateExisting. Re-prove the
-        // exact owned item contract after reference identity, before considering the tuple live.
         if (!Equals(expectedItem.Template, new MongoId(RuntimeIdentity.DogtagCaseItemId))
             || !string.Equals(expectedItem.ParentId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal)
             || !string.Equals(expectedItem.SlotId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal)
@@ -131,18 +129,12 @@ public sealed class DogtagCaseAssort(
             || !ReferenceEquals(liveBarter, expectedBarter))
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman barter reference was replaced before publication.");
 
-        // Reference identity alone is insufficient because the retained outer barter list can
-        // be mutated in place after ValidateExisting. Re-prove the exact one-price contract at
-        // the publication boundary so same-reference inner-list/scheme edits fail closed too.
         if (liveBarter.Count != 1
             || liveBarter[0].Count != 1
             || !Equals(liveBarter[0][0].Template, Money.ROUBLES)
             || liveBarter[0][0].Count != PriceRoubles)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman barter contents changed in place before publication.");
 
-        // Pin every mutable layer of the validated barter tuple for the final bounded reproof.
-        // Value-identical replacement of the inner list or BarterScheme object is still a tuple
-        // identity change and must not be accepted as the same publication transaction.
         var expectedInnerBarter = liveBarter[0];
         var expectedScheme = expectedInnerBarter[0];
 
@@ -150,11 +142,6 @@ public sealed class DogtagCaseAssort(
             || liveLoyalty != LoyaltyLevel)
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman loyalty metadata changed before publication.");
 
-        // The tuple is composed of independently mutable collections/objects. A participant can
-        // keep the same references and mutate item/barter state while the first proof advances to
-        // loyalty. Run one final whole-tuple identity+value pass after loyalty so a mutation that
-        // occurred inside this bounded proof window fails closed rather than being published from
-        // a proof that was already stale when it returned.
         RequirePublishedAssortTupleStillStable(trader, id, expectedItem, expectedBarter, expectedInnerBarter, expectedScheme);
     }
 
@@ -253,16 +240,24 @@ public sealed class DogtagCaseAssort(
         if (!templateTable.Items.TryGetValue(RuntimeCandidateBeltItem.DefaultInventoryTpl, out var inventory))
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: default inventory template is missing.");
 
-        var slots = inventory.Properties?.Slots?
+        var inventoryProperties = inventory.Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: default inventory properties are missing.");
+        var slotsCollection = inventoryProperties.Slots
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: default inventory Slots collection is missing.");
+        var slots = slotsCollection
             .Where(x => string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal))
             .Take(2)
             .ToArray();
-        if (slots == null || slots.Length != 1)
+        if (slots.Length != 1)
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: vanilla Dogtag host boundary is missing or ambiguous.");
 
         var slot = slots[0];
-        var groups = slot.Properties?.Filters?.ToArray();
-        if (groups == null || groups.Length != 1)
+        var slotProperties = slot.Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: Dogtag slot properties are missing.");
+        var filtersCollection = slotProperties.Filters
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: Dogtag Filters collection is missing.");
+        var groups = filtersCollection.Take(2).ToArray();
+        if (groups.Length != 1)
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: Dogtag host filter is missing or ambiguous.");
 
         var hostFilter = groups[0].Filter;
@@ -274,24 +269,28 @@ public sealed class DogtagCaseAssort(
         if (!templateTable.Items.TryGetValue(RuntimeCandidateBeltItem.DefaultInventoryTpl, out var liveInventory)
             || !ReferenceEquals(liveInventory, inventory))
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: live DefaultInventory template changed during committed-host verification.");
+        if (!ReferenceEquals(liveInventory.Properties, inventoryProperties))
+            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: live DefaultInventory properties changed during committed-host verification.");
+        if (!ReferenceEquals(liveInventory.Properties?.Slots, slotsCollection))
+            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: live DefaultInventory Slots collection changed during committed-host verification.");
 
-        var liveSlots = liveInventory.Properties?.Slots?
+        var liveSlots = slotsCollection
             .Where(x => string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal))
             .Take(2)
             .ToArray();
-        if (liveSlots == null || liveSlots.Length != 1 || !ReferenceEquals(liveSlots[0], slot))
+        if (liveSlots.Length != 1 || !ReferenceEquals(liveSlots[0], slot))
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: live Dogtag slot changed during committed-host verification.");
+        if (!ReferenceEquals(liveSlots[0].Properties, slotProperties))
+            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: live Dogtag slot properties changed during committed-host verification.");
+        if (!ReferenceEquals(liveSlots[0].Properties?.Filters, filtersCollection))
+            throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: live Dogtag Filters collection changed during committed-host verification.");
 
-        var liveGroups = liveSlots[0].Properties?.Filters?.ToArray();
-        if (liveGroups == null || liveGroups.Length != 1
+        var liveGroups = filtersCollection.Take(2).ToArray();
+        if (liveGroups.Length != 1
             || !ReferenceEquals(liveGroups[0], groups[0])
             || !ReferenceEquals(liveGroups[0].Filter, hostFilter))
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: live Dogtag filter group/filter changed during committed-host verification.");
 
-        // The identity chain above proves that the same host objects are still live,
-        // but the same HashSet can be mutated in place while references remain stable.
-        // Re-prove the committed content after the live reference chain so trader
-        // publication cannot succeed on a same-reference host that drifted in between.
         DogtagCaseHostContract.RequireCommitted(hostFilter);
     }
 
