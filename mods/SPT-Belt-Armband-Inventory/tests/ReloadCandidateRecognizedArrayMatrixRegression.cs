@@ -14,10 +14,10 @@ internal static class ReloadCandidateRecognizedArrayMatrixRegression
         var inventory = new FakeInventory(new FakeItem[] { magazine });
         var vanilla = Array.Empty<FakeItem>();
 
-        object originalFast = new object();
-        object installedFast = new object();
-        object originalBind = new object();
-        object installedBind = new object();
+        object originalFast = new object[] { "original-fast" };
+        object installedFast = new object[] { "original-fast", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
+        object originalBind = new object[] { "original-bind" };
+        object installedBind = new object[] { "original-bind", RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         Configure(originalFast, installedFast, originalBind, installedBind);
 
         object[] recognized = { originalFast, installedFast, originalBind, installedBind };
@@ -28,7 +28,7 @@ internal static class ReloadCandidateRecognizedArrayMatrixRegression
             object result = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, recognized[i], vanilla);
             ReloadCandidateBridgeRuntime.ExitReloadScope(null);
             Assert(result is FakeItem[] items && items.Length == 1 && ReferenceEquals(items[0], magazine),
-                "each exact original/installed FastAccess/BindAvailable array reference must retain the bounded Belt fallback");
+                "each exact original/installed FastAccess/BindAvailable array reference with a captured content pin must retain the bounded Belt fallback");
             Assert(inventory.Calls == before + 1,
                 "each recognized array path must issue exactly one pseudo-slot15 fallback query");
         }
@@ -36,7 +36,7 @@ internal static class ReloadCandidateRecognizedArrayMatrixRegression
         // Structural/copy equivalence is intentionally insufficient. This protects
         // vanilla-first behavior from unrelated callers that happen to pass an
         // equivalent slot collection through GetItemsInSlots.
-        object copiedButForeign = new object();
+        object copiedButForeign = new object[] { "original-fast" };
         int foreignBefore = inventory.Calls;
         ReloadCandidateBridgeRuntime.EnterReloadScope();
         object foreignResult = ReloadCandidateBridgeRuntime.AppendCandidates(inventory, copiedButForeign, vanilla);
@@ -47,11 +47,13 @@ internal static class ReloadCandidateRecognizedArrayMatrixRegression
             "foreign/copy slot-array identity must fail before any pseudo-slot15 query");
 
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
     }
 
     static void Configure(object originalFast, object installedFast, object originalBind, object installedBind)
     {
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("recognized-array regression: fake GetItemsInSlots missing");
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
@@ -65,6 +67,7 @@ internal static class ReloadCandidateRecognizedArrayMatrixRegression
         ReloadCandidateBridgeRuntime.GetAllParentItems = item => ((FakeItem)item).Parents;
         ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
         ReloadCandidateBridgeRuntime.LogWarning = message => throw new InvalidOperationException("recognized-array regression failed closed unexpectedly: " + message);
+        ReloadScopeEpochGuard.CaptureSlotArraysForRegression();
     }
 
     sealed class FakeInventory
