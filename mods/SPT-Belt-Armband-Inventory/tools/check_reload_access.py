@@ -12,6 +12,7 @@ epoch_tests = (ROOT / "tests" / "ReloadScopeEpochRegression.cs").read_text(encod
 epoch_install_tests = (ROOT / "tests" / "ReloadScopeEpochInstallRollbackRegression.cs").read_text(encoding="utf-8-sig")
 diagnostic_tests = (ROOT / "tests" / "ReloadDiagnosticLoggingRegression.cs").read_text(encoding="utf-8-sig")
 lazy_pin_tests = (ROOT / "tests" / "ReloadLazyEnumerationPinRegression.cs").read_text(encoding="utf-8-sig")
+reference_pin_tests = (ROOT / "tests" / "ReloadPseudoSlotReferencePinRegression.cs").read_text(encoding="utf-8-sig")
 
 violations = []
 
@@ -34,7 +35,7 @@ for token in (
     'ReferenceEquals(slots, OriginalBindAvailableSlots)',
     'ReferenceEquals(slots, InstalledBindAvailableSlots)',
     'RuntimeIdentity.DedicatedMagazineBeltItemId',
-    'GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })',
+    'GetItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })',
     'ShouldReuseVanillaReloadCandidates(merged != null)',
     'return vanillaResult;',
 ):
@@ -57,8 +58,8 @@ for token in (
     'ReturnType.IsInstanceOfType(vanillaResult)',
     'vanillaResult is IEnumerable vanillaSequence',
     'beltResult is IEnumerable beltItems',
-    'static bool HasExactBeltSlotsArgument()',
-    'return HasExactBeltSlotsArgument();',
+    'static bool HasExactBeltSlotsArgument(object beltArgument)',
+    'return HasExactBeltSlotsArgument(beltArgument);',
 ):
     require(source, token, "FastAccessSlotPatches.cs")
 
@@ -79,8 +80,10 @@ for token in (
     'merged = new List<object>(vanillaItems);',
     'ContainsReference(vanillaItems, item)',
     'Array result = Array.CreateInstance(ItemType, merged.Count);',
-    'same-reference value drift',
-    'Belt-side argument drift never triggers a retry or second query',
+    'object beltSlotsArgument = BeltSlotsArgument;',
+    'ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)',
+    'transaction-local by reference as well as value',
+    'Replacement never retries',
 ):
     require(source, token, "FastAccessSlotPatches.cs")
 
@@ -90,12 +93,16 @@ if bridge_start < 0 or bridge_end < 0:
     violations.append("FastAccessSlotPatches.cs: scoped candidate runtime region not found")
 else:
     runtime = source[bridge_start:bridge_end]
-    if runtime.count('GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })') != 1:
-        violations.append("FastAccessSlotPatches.cs: scoped bridge must execute exactly one pseudo-slot15 query")
+    if runtime.count('GetItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })') != 1:
+        violations.append("FastAccessSlotPatches.cs: scoped bridge must execute exactly one transaction-local pseudo-slot15 query")
     if runtime.count('HasPinnedFastAccessArrayContentForRegression(slots)') < 4:
         violations.append("FastAccessSlotPatches.cs: slot-array pin must be proved before contract work, immediately pre-query, post-query/pre-enumeration, and post-enumeration/pre-publication")
-    if runtime.count('HasExactBeltSlotsArgument()') < 4:
-        violations.append("FastAccessSlotPatches.cs: pseudo-slot argument must be proved at contract entry, immediately pre-query, post-query/pre-enumeration, and post-enumeration/pre-publication")
+    if runtime.count('HasExactBeltSlotsArgument(beltSlotsArgument)') < 4:
+        violations.append("FastAccessSlotPatches.cs: transaction-local pseudo-slot argument value must be proved at contract entry, immediately pre-query, post-query/pre-enumeration, and post-enumeration/pre-publication")
+    if runtime.count('ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)') < 4:
+        violations.append("FastAccessSlotPatches.cs: pseudo-slot static reference must remain identical to the transaction-local capture across every bounded execution stage")
+    if 'GetItemsInSlots.Invoke(inventory, new[] { BeltSlotsArgument })' in runtime:
+        violations.append("FastAccessSlotPatches.cs: reflective fallback query must not re-read mutable BeltSlotsArgument at invoke")
     for forbidden in (
         "AppDomain.CurrentDomain.GetAssemblies", "ReflectionTools.GetTypes", "GetMethods(",
         "GetProperty(", "GetField(", "FindObjectsOfType", "GetComponentsInChildren", "new StackTrace",
@@ -167,6 +174,15 @@ for token in (
 ):
     require(lazy_pin_tests, token, "ReloadLazyEnumerationPinRegression.cs")
 
+for token in (
+    'object beltSlotsArgument = BeltSlotsArgument;',
+    'ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)',
+    'GetItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })',
+    'static bool HasExactBeltSlotsArgument(object beltArgument)',
+    'reflective fallback invoke reads the mutable static field',
+):
+    require(reference_pin_tests, token, "ReloadPseudoSlotReferencePinRegression.cs")
+
 if 'ReloadScopeEpochRegression.Run();' not in tests:
     violations.append("Program.cs: reload epoch regression must run after module initialization")
 if '[ModuleInitializer]' in epoch_tests:
@@ -212,4 +228,4 @@ if source.count('Activator.CreateInstance(harmonyType, new object[] { CandidateB
 if violations:
     raise SystemExit("Reload-access guard failed:\n" + "\n".join(violations))
 
-print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, self-contained slot-parameter + retained pseudo-slot15 proofs across both lazy windows, four-array content pin, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
+print("Reload-access guard passed: exact pinned IEnumerable<Item>/IEnumerable<EquipmentSlot> bridge, transaction-local pseudo-slot15 reference+value proof across both lazy windows, four-array content pin, one slot15 query, vanilla-first fail-closed semantics, lifecycle/rollback and regression authority verified.")
