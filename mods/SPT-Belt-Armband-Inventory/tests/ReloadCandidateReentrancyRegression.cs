@@ -13,10 +13,11 @@ internal static class ReloadCandidateReentrancyRegression
         var vanillaMagazine = new FakeMagazine("vanilla-magazine", new FakeItem("vanilla-container"));
         var exactBeltMagazine = new FakeMagazine("belt-magazine", exactBelt);
         var vanilla = new FakeItem[] { vanillaMagazine };
-        var recognizedSlots = new object();
+        object recognizedSlots = new object[] { "original-fast" };
         var inventory = new FakeInventory(recognizedSlots, vanilla, new FakeItem[] { exactBeltMagazine });
 
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload candidate reentrancy regression failed: fake GetItemsInSlots missing");
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
@@ -28,6 +29,7 @@ internal static class ReloadCandidateReentrancyRegression
         ReloadCandidateBridgeRuntime.ReadTemplateId = item => ((FakeItem)item).TemplateId;
         ReloadCandidateBridgeRuntime.LogWarning = message =>
             throw new InvalidOperationException("Reload candidate reentrancy regression failed closed unexpectedly: " + message);
+        ReloadScopeEpochGuard.CaptureSlotArraysForRegression();
 
         FieldInfo reentrant = typeof(ReloadCandidateBridgeRuntime).GetField("reentrant", BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Reload candidate reentrancy regression failed: reentrant state field missing");
@@ -52,6 +54,7 @@ internal static class ReloadCandidateReentrancyRegression
             "successful recursive-boundary execution must leave no reentrancy or reload-scope residue");
 
         ReloadCandidateBridgeRuntime.Reset();
+        ReloadScopeEpochGuard.ResetStateForRegression();
     }
 
     sealed class FakeInventory
