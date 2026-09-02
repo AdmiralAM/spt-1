@@ -8,13 +8,13 @@ internal static class ReloadEpochPrefixFailClosedRegression
     [ModuleInitializer]
     internal static void Run()
     {
+        int[] slots = { 1, 2, 3 };
+        var vanilla = new FakeItem[] { new FakeItem() };
         MethodInfo beforeAppend = typeof(ReloadScopeEpochGuard).GetMethod(
             "BeforeAppend",
             BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Reload epoch prefix regression failed: BeforeAppend callback missing.");
 
-        var slots = new object();
-        var vanilla = new FakeItem[] { new FakeItem() };
         ReloadScopeEpochGuard.ResetStateForRegression();
         Configure(slots);
         ReloadScopeEpochGuard.CaptureSlotArraysForRegression();
@@ -43,10 +43,9 @@ internal static class ReloadEpochPrefixFailClosedRegression
         Assert(ReferenceEquals(exactArgs[2], sentinel),
             "healthy prefix path must leave Harmony result ownership to AppendCandidates");
 
-        // Same-reference slot-array mutation is process-wide contract drift too.
+        // Losing the install-time array snapshot is process-wide contract drift too.
         // It must be rejected before the bounded fallback query while preserving
         // exact vanilla result identity.
-        ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = slots;
         ReloadScopeEpochGuard.ClearSlotArraySnapshotsForRegression();
         object?[] unpinnedArgs = { slots, vanilla, null };
         bool unpinnedProceed = (bool)(beforeAppend.Invoke(null, unpinnedArgs)
@@ -72,16 +71,16 @@ internal static class ReloadEpochPrefixFailClosedRegression
         ReloadScopeEpochGuard.ResetStateForRegression();
     }
 
-    private static void Configure(object slots)
+    private static void Configure(int[] slots)
     {
         ReloadCandidateBridgeRuntime.Reset();
         ReloadCandidateBridgeRuntime.GetItemsInSlots = typeof(FakeInventory).GetMethod(nameof(FakeInventory.GetItemsInSlots))
             ?? throw new InvalidOperationException("Reload epoch prefix regression failed: fake GetItemsInSlots missing.");
         ReloadCandidateBridgeRuntime.BeltSlotsArgument = new[] { RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = slots;
-        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new object();
-        ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = new object();
-        ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new object();
+        ReloadCandidateBridgeRuntime.InstalledFastAccessSlots = new[] { 1, 2, 3, RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
+        ReloadCandidateBridgeRuntime.OriginalBindAvailableSlots = new[] { 4, 5, 6 };
+        ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = new[] { 4, 5, 6, RuntimeIdentity.DedicatedBeltEquipmentSlotValue };
         ReloadCandidateBridgeRuntime.ItemType = typeof(FakeItem);
         ReloadCandidateBridgeRuntime.MagazineType = typeof(FakeMagazine);
         ReloadCandidateBridgeRuntime.ReturnType = typeof(FakeItem[]);
