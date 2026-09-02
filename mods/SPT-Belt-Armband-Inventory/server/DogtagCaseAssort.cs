@@ -230,6 +230,12 @@ public sealed class DogtagCaseAssort(
             || !ReferenceEquals(liveGroups[0], groups[0])
             || !ReferenceEquals(liveGroups[0].Filter, hostFilter))
             throw new InvalidOperationException("B&A&HB Dogtag Case offer refused: live Dogtag filter group/filter changed during committed-host verification.");
+
+        // The identity chain above proves that the same host objects are still live,
+        // but the same HashSet can be mutated in place while references remain stable.
+        // Re-prove the committed content after the live reference chain so trader
+        // publication cannot succeed on a same-reference host that drifted in between.
+        DogtagCaseHostContract.RequireCommitted(hostFilter);
     }
 
     private static void ValidateExisting(Trader trader, MongoId id, Item existing, MongoId templateId)
