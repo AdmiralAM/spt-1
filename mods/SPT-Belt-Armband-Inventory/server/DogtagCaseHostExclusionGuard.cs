@@ -9,18 +9,46 @@ namespace SPTBeltArmbandInventory.Server;
 /// <summary>
 /// Final preload semantic guard for the shared vanilla Dogtag host. The included
 /// filter may preserve BEAR/USEC and the B&A&HB Dogtag Case while an ExcludedFilter
-/// silently negates one of them; that shape must fail closed before trader publication.
-/// Foreign exclusions remain untouched and authoritative.
+/// silently negates one of them; that shape must fail closed. Foreign exclusions
+/// remain untouched and authoritative.
 /// </summary>
 [Injectable(TypePriority = OnLoadOrder.Preload + 4)]
 public sealed class DogtagCaseHostExclusionGuard(TemplateTable templateTable) : IOnLoad
 {
-    private static readonly MongoId DefaultInventoryTpl = RuntimeCandidateBeltItem.DefaultInventoryTpl;
-    private const string DogtagSlotName = "Dogtag";
-
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        DogtagCaseHostExclusionPolicy.RequireCurrentHost(templateTable);
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.CompletedTask;
+    }
+}
+
+/// <summary>
+/// Re-proves effective Dogtag-slot acceptance immediately before the Dogtag Case
+/// trader offer is published. This closes the startup window between preload host
+/// commit and TraderRegistration without mutating either included or excluded sets.
+/// </summary>
+[Injectable(TypePriority = OnLoadOrder.TraderRegistration + 1)]
+public sealed class DogtagCaseTraderHostExclusionGuard(TemplateTable templateTable) : IOnLoad
+{
+    public Task OnLoadAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        DogtagCaseHostExclusionPolicy.RequireCurrentHost(templateTable);
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.CompletedTask;
+    }
+}
+
+public static class DogtagCaseHostExclusionPolicy
+{
+    private static readonly MongoId DefaultInventoryTpl = RuntimeCandidateBeltItem.DefaultInventoryTpl;
+    private const string DogtagSlotName = "Dogtag";
+
+    public static void RequireCurrentHost(TemplateTable templateTable)
+    {
+        ArgumentNullException.ThrowIfNull(templateTable);
         if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
             throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: DefaultInventory is missing.");
 
@@ -35,14 +63,9 @@ public sealed class DogtagCaseHostExclusionGuard(TemplateTable templateTable) : 
         if (groups == null || groups.Length != 1 || groups[0].Filter == null)
             throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: exact single Dogtag filter group is unavailable.");
 
-        DogtagCaseHostExclusionPolicy.RequireEffectiveAcceptance(groups[0].Filter, groups[0].ExcludedFilter);
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.CompletedTask;
+        RequireEffectiveAcceptance(groups[0].Filter, groups[0].ExcludedFilter);
     }
-}
 
-public static class DogtagCaseHostExclusionPolicy
-{
     public static void RequireEffectiveAcceptance(IEnumerable<MongoId> included, IEnumerable<MongoId>? excluded)
     {
         ArgumentNullException.ThrowIfNull(included);
