@@ -73,16 +73,47 @@ public static class DogtagCaseHostExclusionPolicy
 
     private static IEnumerable<MongoId>? ReadOptionalExcludedFilter(object filterGroup)
     {
-        var type = filterGroup.GetType();
-        var property = type.GetProperty(ExcludedFilterMemberName, BindingFlags.Instance | BindingFlags.Public);
-        var field = property == null
-            ? type.GetField(ExcludedFilterMemberName, BindingFlags.Instance | BindingFlags.Public)
-            : null;
+        ArgumentNullException.ThrowIfNull(filterGroup);
+        MemberInfo? selected = null;
 
-        if (property == null && field == null)
+        // A future SPT model may introduce ExcludedFilter on this equipment-slot
+        // filter group. Resolve the member across the inheritance chain explicitly:
+        // a value-identical property/field hiding collision is semantic ambiguity and
+        // must not silently prefer one representation over another.
+        for (Type? current = filterGroup.GetType(); current != null; current = current.BaseType)
+        {
+            foreach (var property in current.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+            {
+                if (!string.Equals(property.Name, ExcludedFilterMemberName, StringComparison.Ordinal))
+                    continue;
+                if (property.GetMethod == null || property.GetMethod.IsStatic || property.GetIndexParameters().Length != 0)
+                    throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter property is not a readable zero-index instance member.");
+                if (selected != null)
+                    throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter member is ambiguous across the filter-group hierarchy.");
+                selected = property;
+            }
+
+            foreach (var field in current.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+            {
+                if (!string.Equals(field.Name, ExcludedFilterMemberName, StringComparison.Ordinal))
+                    continue;
+                if (field.IsStatic)
+                    throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter field is static.");
+                if (selected != null)
+                    throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter member is ambiguous across the filter-group hierarchy.");
+                selected = field;
+            }
+        }
+
+        if (selected == null)
             return null;
 
-        var raw = property != null ? property.GetValue(filterGroup) : field!.GetValue(filterGroup);
+        object? raw = selected switch
+        {
+            PropertyInfo property => property.GetValue(filterGroup),
+            FieldInfo field => field.GetValue(filterGroup),
+            _ => throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter member has an unsupported reflection shape.")
+        };
         if (raw == null)
             return null;
         if (raw is IEnumerable<MongoId> typed)
