@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "static-proof",
+  "operationKey": "expedition-loadout",
+  "frozenAuthority": {
+    "canonicalHead": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+    "questDirectory": "db/quests",
+    "expectedQuestCount": 31,
+    "selectedEquipmentTpls": [
+      "572b7adb24597762ae139821",
+      "56e33680d2720be2748b4576"
+    ]
+  },
+  "semanticShape": {
+    "requiresEquippedPair": true,
+    "requiresSuccessfulExtraction": true,
+    "handover": false,
+    "firCollection": false,
+    "repeatable": false
+  },
+  "review": {
+    "method": "scan every frozen runtime quest for Equipment completion conditions and for either selected equipment TPL; fail closed if the frozen campaign acquires an equipment-wear objective or either selected TPL",
+    "result": "no-semantic-duplicate",
+    "reason": "The frozen 31-quest campaign is Access/Intelligence plus Arsenal/Munitions content and contains no Equipment completion condition and no reference to either selected Expedition Loadout TPL. It therefore does not duplicate the authored wear-pair-plus-extraction contract.",
+    "requiresReReviewOnFrozenEquipmentObjective": true,
+    "requiresReReviewOnSelectedTplReference": true
+  },
+  "boundary": {
+    "sameRaidEquipmentAndExtractionCouplingStillUnproven": true,
+    "multiGroupEquipmentBooleanStillUnproven": true,
+    "externalOverlapStillUnreviewed": true,
+    "runtimeMaterialize": false
+  }
+}

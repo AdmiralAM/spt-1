@@ -11,6 +11,7 @@
   "proofAuthority": {
     "equipmentCondition": "post-010-player-equipment-proof.json",
     "survivedExtraction": "post-010-pmc-location-extraction-proof.json",
+    "frozenOverlap": "post-010-expedition-loadout-frozen-overlap-proof.json",
     "equipmentBoundary": "explicit validated item TPL sets only; IncludeNotEquippedItems=false; no category/class inference",
     "extractionBoundary": "successful extraction shape is proven, but same-raid equipment/action coupling remains separately fail-closed"
   },
@@ -100,7 +101,7 @@
     "requiresSameRaidEquipmentAndExtractionCouplingProof": true,
     "requiresFinalEquipmentTplSelection": false,
     "requiresVanillaScorpionArtemOverlapAudit": true,
-    "requiresFrozenCampaignOverlapReview": true,
+    "requiresFrozenCampaignOverlapReview": false,
     "requiresEconomyAdmiralReview": false
   },
   "frozenBoundary": {
