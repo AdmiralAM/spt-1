@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "hostile-operator-intercept-reserve-external-semantic-overlap",
+  "operationKey": "hostile-operator-intercept",
+  "status": "resolved-no-external-semantic-duplicate",
+  "runtimeMaterialize": false,
+  "operationShape": {
+    "target": "AnyPmc",
+    "map": "Reserve",
+    "locationTarget": "RezervBase",
+    "maximumPmcTargets": 4,
+    "successfulExtractionRequired": true,
+    "sameRaidCoupling": "fail-closed-separate-gate"
+  },
+  "sources": {
+    "vanilla": {
+      "classification": "partial-component-overlap-only",
+      "observedShapes": [
+        "Reserve contains PMC-combat-capable vanilla quest content and extraction objectives as separate/common components",
+        "no reviewed vanilla contract duplicates a bounded four-PMC Reserve intercept plus mandatory successful extraction as the same authored operation"
+      ],
+      "semanticDuplicateFound": false
+    },
+    "scorpion": {
+      "repository": "acidphantasm/scorpion-csharp",
+      "commit": "7d1bed766f859f227680377acc1e20c8f97b09bf",
+      "questSource": "Server/data/quests/Scorpion_quests.json",
+      "classification": "partial-component-overlap-only",
+      "semanticDuplicateFound": false
+    },
+    "artem": {
+      "repository": "WelcomeToThursday/WTT-Artem",
+      "commit": "ee5b7c13a1980ff961ed0b2c1d8764574377b2bf",
+      "classification": "partial-component-overlap-only",
+      "semanticDuplicateFound": false
+    }
+  },
+  "decision": {
+    "aggregateExternalOverlapResolved": true,
+    "semanticDuplicateFound": false,
+    "permanentDifferentiators": [
+      "Reserve-specific contractor interception",
+      "maximum four AnyPmc targets",
+      "one mandatory successful extraction",
+      "non-repeatable",
+      "no faction ladder",
+      "no per-map copies",
+      "no PMC gear or dogtag faucet"
+    ],
+    "sameRaidCouplingProofUnaffected": true,
+    "review": "The Reserve replacement removes the proven Streets collision. Reviewed vanilla, pinned Scorpion and pinned Artem content overlap common ingredients such as Reserve, PMC combat or extraction, but no reviewed source reproduces the bounded Reserve AnyPmc interception plus successful-extraction contract as a semantic duplicate. This closes only the external uniqueness gate; temporal same-raid kill-to-extract coupling remains fail-closed."
+  },
+  "regressionBoundary": "Re-open this audit if the map, target family, four-PMC cap, extraction requirement, external source pins, or any permanent differentiator changes. Same-raid coupling is explicitly outside this proof."
+}

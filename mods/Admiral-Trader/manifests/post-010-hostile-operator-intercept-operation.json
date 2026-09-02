@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "operationKey": "hostile-operator-intercept",
@@ -14,7 +14,7 @@
     "replacementVariant": {
       "map": "Reserve",
       "locationTarget": "RezervBase",
-      "status": "selected-location-proven-pending-external-overlap",
+      "status": "selected-static-uniqueness-resolved-pending-same-raid-coupling",
       "intent": "Intercept a small contractor element crossing the military reserve and extract after the contact. Reserve removes the proven Streets semantic collision while preserving a bounded military-interdiction identity."
     }
   },
@@ -26,8 +26,9 @@
     "locationTarget": "RezervBase",
     "locationSelectionStatus": "resolved-pinned-upstream-authority",
     "survivedExtractionProof": "post-010-pmc-location-extraction-proof.json",
+    "externalOverlapProof": "post-010-hostile-operator-intercept-external-overlap-proof.json",
     "sameRaidCouplingProof": "post-010-same-raid-coupling-proof.json",
-    "boundary": "AnyPmc, RezervBase and Survived extraction are individually proven shapes. The prior TarkovStreets variant remains rejected for strong vanilla semantic overlap. Frozen campaign overlap for the Reserve replacement is resolved; external vanilla/Scorpion/Artem uniqueness and same-raid temporal coupling remain fail-closed."
+    "boundary": "AnyPmc, RezervBase and Survived extraction are individually proven shapes. Frozen and external semantic-overlap reviews for the Reserve replacement are resolved. Same-raid temporal coupling remains fail-closed and is the remaining condition-authority gate before any future materialization."
   },
   "bounds": {"maximumPmcTargets": 4, "maximumSuccessfulRaids": 1, "repeatable": false, "escalatingSequelsAllowed": false, "perMapCopiesAllowed": false, "factionKillLadderAllowed": false},
   "economyReview": {
@@ -46,7 +47,7 @@
     "requiresSurvivedExtractionShapeProof": false,
     "requiresSameRaidKillAndExtractionCouplingProof": true,
     "requiresFrozenCampaignOverlapReview": false,
-    "requiresVanillaScorpionArtemOverlapAudit": true,
+    "requiresVanillaScorpionArtemOverlapAudit": false,
     "requiresEconomyAdmiralReview": false,
     "implementationAllowed": false,
     "runtimeMaterialize": false

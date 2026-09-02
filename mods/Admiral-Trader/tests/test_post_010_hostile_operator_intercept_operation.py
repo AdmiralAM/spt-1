@@ -15,8 +15,9 @@ def test_hostile_operator_intercept_rejects_streets_and_pins_reserve_replacement
     decision = spec["productDecision"]
     location_proof = load_json(ROOT / "manifests" / "post-010-reserve-location-proof.json")
     frozen_proof = load_json(ROOT / "manifests" / "post-010-hostile-operator-intercept-frozen-overlap-proof.json")
+    external_proof = load_json(ROOT / "manifests" / "post-010-hostile-operator-intercept-external-overlap-proof.json")
 
-    assert spec["schemaVersion"] == 3
+    assert spec["schemaVersion"] == 4
     assert spec["operationKey"] == "hostile-operator-intercept"
     assert authority["target"] == "AnyPmc"
     assert authority["factionSplitRequired"] is False
@@ -27,12 +28,21 @@ def test_hostile_operator_intercept_rejects_streets_and_pins_reserve_replacement
     assert authority["locationProof"] == "post-010-reserve-location-proof.json"
     assert authority["locationTarget"] == "RezervBase"
     assert authority["locationSelectionStatus"] == "resolved-pinned-upstream-authority"
+    assert authority["externalOverlapProof"] == "post-010-hostile-operator-intercept-external-overlap-proof.json"
     assert location_proof["source"]["commit"] == "9b05502ac7cd3872251ee1e9b67a5f3d541e04c0"
     assert location_proof["source"]["friendlyName"] == "Reserve"
     assert location_proof["source"]["targetName"] == "RezervBase"
     assert frozen_proof["status"] == "resolved-no-frozen-reserve-pmc-semantic-overlap"
     assert frozen_proof["operationShape"]["locationTarget"] == "RezervBase"
     assert frozen_proof["semanticDuplicateFound"] is False
+    assert external_proof["status"] == "resolved-no-external-semantic-duplicate"
+    assert external_proof["operationShape"]["target"] == "AnyPmc"
+    assert external_proof["operationShape"]["locationTarget"] == "RezervBase"
+    assert external_proof["operationShape"]["maximumPmcTargets"] <= 4
+    assert external_proof["decision"]["aggregateExternalOverlapResolved"] is True
+    assert external_proof["decision"]["semanticDuplicateFound"] is False
+    assert external_proof["sources"]["scorpion"]["commit"] == "7d1bed766f859f227680377acc1e20c8f97b09bf"
+    assert external_proof["sources"]["artem"]["commit"] == "ee5b7c13a1980ff961ed0b2c1d8764574377b2bf"
     assert spec["bounds"]["maximumPmcTargets"] <= 4
     assert spec["bounds"]["maximumSuccessfulRaids"] == 1
     assert spec["bounds"]["repeatable"] is False
@@ -43,7 +53,7 @@ def test_hostile_operator_intercept_rejects_streets_and_pins_reserve_replacement
     assert gates["requiresSurvivedExtractionShapeProof"] is False
     assert gates["requiresSameRaidKillAndExtractionCouplingProof"] is True
     assert gates["requiresFrozenCampaignOverlapReview"] is False
-    assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
+    assert gates["requiresVanillaScorpionArtemOverlapAudit"] is False
     assert gates["implementationAllowed"] is False
     assert gates["runtimeMaterialize"] is False
 
