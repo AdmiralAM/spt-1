@@ -172,6 +172,14 @@ namespace SPTBeltArmbandInventory
 
             try
             {
+                // Primary bridge consumes the same install-time slot-array snapshot authority as
+                // ReloadScopeEpochGuard.BeforeAppend. If that authority is absent, cleared, stale,
+                // or the accepted same-reference array was mutated in-place, preserve the exact
+                // vanilla result before any pseudo-slot15 query. This keeps the bridge fail closed
+                // even if the separate epoch Harmony prefix is removed or reordered.
+                if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))
+                    return vanillaResult;
+
                 // Defense in depth: the primary bridge itself re-proves the pinned SPT 4.1
                 // Item[] return shape and the one-value pseudo-slot15 query before invoking
                 // Inventory.GetItemsInSlots. This must remain safe even if the separate epoch
@@ -184,6 +192,11 @@ namespace SPTBeltArmbandInventory
                 Type exactArrayType = ItemType.MakeArrayType();
                 if (!(vanillaResult is Array vanillaItems)
                     || vanillaItems.GetType() != exactArrayType)
+                    return vanillaResult;
+
+                // Re-prove the shared mutable-array pin immediately before the only slot15 query so
+                // contract inspection cannot bridge across a same-reference in-place edit.
+                if (!ReloadScopeEpochGuard.HasPinnedFastAccessArrayContentForRegression(slots))
                     return vanillaResult;
 
                 object beltResult;
