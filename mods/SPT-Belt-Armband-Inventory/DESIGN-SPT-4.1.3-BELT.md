@@ -6,11 +6,12 @@ Stable v0.1.0 is already frozen/published and remains the rollback release. Acti
 
 ## Persistent equipment model
 
-B&A&HB owns three wearable families:
+B&A&HB owns three wearable families plus one vanilla-hosted container product:
 
 1. **ArmBand** — vanilla ArmBand host. Wrist Wallet (`1x1`, currency-only) and Magazine Armband (`1x2`, MAGAZINE-only).
 2. **Belt** — dedicated pseudo-enum equipment value **15**, semantic identity `BAndHBBelt`, wire slot `15`. Magazine Belt is `2x2`, MAGAZINE-only.
 3. **HeadBand** — dedicated pseudo-enum equipment value **16**, semantic identity `BAndHBHeadBand`, wire slot `16`. Utility HeadBand v0.2 uses two native `1x1` grids.
+4. **Dogtag Case** — separate persistent container item hosted by vanilla `EquipmentSlot.Dogtag`; it does not create another equipment enum value and does not replace ordinary personal dogtags.
 
 All distributed template, parent, slot, grid and assort IDs are persistent contracts. Existing identities must not be renamed, recycled, silently removed or overwritten through partial metadata collisions.
 
@@ -19,16 +20,17 @@ All distributed template, parent, slot, grid and assort IDs are persistent contr
 | Product | Host | Grid/filter | Operational role | Ragman |
 | --- | --- | --- | --- | --- |
 | Wrist Wallet | ArmBand | `1x1`, currency-only | reserve/payment source | LL1 — 12,500 RUB |
-| Magazine Armband | ArmBand | `1x2`, MAGAZINE-only | magazine storage + appended reload fallback | LL1 — 25,000 RUB |
+| Magazine Armband | ArmBand | `1x2`, MAGAZINE-only | magazine storage + vanilla-first reload fallback | LL1 — 25,000 RUB |
 | Utility HeadBand | slot16 | two native `1x1` grids | money/wallet + cigarette utility | LL1 — 25,000 RUB |
-| Magazine Belt | slot15 | `2x2`, MAGAZINE-only | magazine storage + appended reload fallback | LL2 — 45,000 RUB |
+| Magazine Belt | slot15 | `2x2`, MAGAZINE-only | magazine storage + vanilla-first reload fallback | LL2 — 45,000 RUB |
+| Dogtag Case | vanilla Dogtag | canonical EFT/SPT Dogtag Case-derived dogtag-only grid | wearable dogtag container | LL2 — 50,000 RUB |
 
 Utility HeadBand grids:
 
 - `main` — RUB, USD, EUR, Simple Wallet `5783c43d2459774bbe137486`, WZ Wallet `60b0f6c058e0b0481a09ad11`;
 - `cigarettes` — Apollo Soyuz, Malboro, Wilston, Strike.
 
-Broad medical, barter, money-container and generic CASE parents are not accepted. All four products publish explicit EN/RU item localization without changing persistent identities.
+Broad medical, barter, money-container and generic CASE parents are not accepted. Dogtag Case instead clones the canonical EFT/SPT Dogtag Case geometry/filter authority and rejects positive admission of every B&A&HB-owned product, including itself. All five products publish explicit EN/RU item localization without changing persistent identities.
 
 ## Split-grid profile migration
 
@@ -51,7 +53,11 @@ Persistent server mutations are deliberately single-owner and prepare-before-com
 - Later item registration validates the taxonomy; it does not recreate it.
 - Magazine Armband extends the vanilla ArmBand filter only when exactly one ArmBand slot and exactly one filter group are proven.
 - dedicated slot15/slot16 registration validates/prepares both slot contracts before mutating the canonical inventory slot list, preventing Belt-only/HeadBand-only partial installation after a collision.
-- persistent Ragman offer creation requires the assort item, barter metadata and loyalty metadata to be simultaneously absent. If only part of the persistent ID is already owned, registration fails rather than overwriting the existing dictionary entry.
+- Dogtag Case derives its root/grid/filter contract from canonical EFT/SPT Dogtag Case `5c093e3486f77430cb02e593`. Canonical root properties, Grids/Filters wrappers, grid/filter-group objects and include/exclude sets are value-checked and exact-reference pinned around source identity before cloning.
+- vanilla Dogtag host mutation preserves ordinary BEAR/USEC personal dogtags plus compatible captured foreign baseline entries and admits only the exact B&A&HB Dogtag Case from the B&A&HB family.
+- Dogtag preload and trader publication re-prove the complete live `DefaultInventory -> Properties -> Slots -> Dogtag slot -> Properties -> Filters -> group -> HashSet` ownership chain before accepting the host contract.
+- persistent Ragman offer creation requires the assort item, barter metadata and loyalty metadata to be simultaneously absent. If only part of a persistent ID is already owned, registration fails rather than overwriting an existing dictionary entry.
+- Dogtag Ragman publication additionally captures `Trader.Assort -> Items -> BarterScheme -> LoyalLevelItems`; retained/new tuple validation and final reproof execute only against those captured wrappers, while wrapper identity is re-proven through publication. Rollback removes only exact reference-owned item/barter state and removes value-only loyalty metadata only while both reference-owned tuple components remain ours.
 
 ## Dedicated slot lifecycle
 
@@ -63,6 +69,8 @@ The accepted v0.1.0 slot lifecycle is unchanged:
 - `SlotView.Show` binds the already-mapped slot16 and cannot Add/Remove/clone the active map;
 - exact captions prevent visible raw numeric IDs;
 - no permanent scene/inventory polling is introduced.
+
+Dogtag Case intentionally does not participate in the dedicated-slot UI lifecycle; it uses the native Dogtag host.
 
 ## Compact Face + HeadBand presentation
 
@@ -78,20 +86,36 @@ Final geometry contract:
 - no `LayoutElement.preferredHeight`, Canvas force-refresh, coroutine retry or idle polling;
 - if compact ownership cannot install safely, accepted stable presentation remains active.
 
-## Magazine reload reachability
+## Magazine reload reachability and candidate bridge
 
 v0.2 extends the existing fast-access owner rather than adding a parallel reload subsystem.
 
 - `Inventory.FastAccessSlots` and `BindAvailableSlotsExtended` preserve the complete vanilla sequence and append ArmBand plus dedicated Belt afterward.
-- Exact `InventoryController.IsAtReachablePlace(Item)` is the narrow eligibility boundary.
-- A vanilla `true` result is never changed.
+- Exact `InventoryController.IsAtReachablePlace(Item)` is the narrow eligibility boundary. A vanilla `true` result is never changed.
 - Only an otherwise-unreachable `Magazine` with an exact B&A&HB `FastAccess` ancestor may be promoted; the registered roots are Magazine Armband and Magazine Belt.
-- Wrist Wallet and Utility HeadBand do not own `FastAccess` and cannot become reload roots.
-- `GetAllParentItems` and the item template-ID reader are discovered/bound once during installation and executed through cached compiled delegates.
-- No inventory-wide scan, scene scan, per-frame polling or runtime reflection discovery occurs in the reload path.
-- If the exact EFT/Harmony boundary cannot bind, reload extension fails closed while storage and existing slot-array compatibility remain available.
+- Wrist Wallet, Utility HeadBand and Dogtag Case do not own `FastAccess` and cannot become reload roots.
+- Reload/QuickReload keep the complete vanilla candidate sequence as strict priority prefix. Magazine Belt descendants are appended only through one scoped pseudo-slot15 `GetItemsInSlots` query; Magazine Armband remains on the native ArmBand path.
+- The pinned SPT 4.1.x query boundary is exactly `IEnumerable<Item> GetItemsInSlots(IEnumerable<EquipmentSlot>)`. Array/non-generic/lookalike return or parameter shapes fail closed.
+- Candidate bridge activation accepts only the exact retained/installed `FastAccessSlots` and `BindAvailableSlotsExtended` array references, with install-time content snapshots re-proved at four bounded execution stages.
+- `GetItemsInSlots`, the one-value pseudo-slot15 argument, `ItemType`, `MagazineType`, declared `ReturnType`, `GetAllParentItems` and `ReadTemplateId` are captured once at bridge entry. All lazy vanilla/Belt processing uses those locals only; static identities are re-proved at contract entry, pre-query, post-query/pre-Belt-enumeration and post-lazy-Belt-enumeration/pre-publication.
+- The reflective fallback invokes only the captured `MethodInfo` with the captured pseudo-slot argument. There is exactly one fallback query and no redirect/retry after drift.
+- Candidate append accepts only runtime magazines with exact Magazine Belt ancestry. Reference dedup suppresses the same object twice while preserving distinct same-template magazine objects.
+- Any unsupported shape, mutable authority drift, ambiguous ancestry/query contract or exception returns the exact incoming vanilla result object.
+- `GetAllParentItems` and the item template-ID reader are discovered/bound once during installation and executed through cached compiled delegates; there is no runtime reflection discovery in the reload hot path.
+- No inventory-wide scan, scene scan, per-frame polling or replacement reload-selection subsystem is introduced.
 
-This design extends reachability only; vanilla ordering remains authoritative and the wearable locations are appended fallback rather than preferred sources.
+This design remains vanilla-first: existing reachable sources and their order stay authoritative; wearable locations are fallback eligibility/candidate extensions, never preferred replacements.
+
+## Dogtag Case lifecycle / profile safety
+
+Dogtag Case is intentionally isolated from the three wearable protection families:
+
+- it is not a B&A&HB death-retention root;
+- it is not removed from insurance loss through the ArmBand/Belt/HeadBand protection policy;
+- it is not a build-container or fast-access root;
+- ordinary personal BEAR/USEC dogtags remain valid native Dogtag-slot contents and are not targeted by B&A&HB profile cleanup;
+- recovery owns only exact persistent B&A&HB IDs, removes transitive descendants/references of removed owned roots, is cardinality guarded and idempotent;
+- RuntimeIdentity constants, compiled manifest and shipped recovery JSON remain parity-checked so a distributed persistent identity cannot silently diverge across runtime/recovery surfaces.
 
 ## Legacy BeltSlot compatibility boundary
 
@@ -130,18 +154,19 @@ CI forbids a second `...v0.2.0.dll`, verifies compiled client/server `FileVersio
 CI owns:
 
 - hot-path/lifecycle guard;
-- reload-access eligibility/order guard;
+- reload-access eligibility/order/execution-snapshot guard;
 - v0.2 version/upgrade/provenance guard;
-- atomic taxonomy/dedicated-slot, unique ArmBand host and persistent assort collision guards;
+- atomic taxonomy/dedicated-slot, unique ArmBand/Dogtag host and persistent assort collision guards;
 - BeltSlot dependency-order/conflict guard;
 - acknowledged protection-sync guard;
 - documentation-authority guard;
 - product/localization contract;
 - compact-layout ownership;
 - split-grid migration and deterministic regressions;
+- Dogtag canonical/host/trader/profile lifecycle regressions;
 - offline recovery;
 - client/server builds against SPT 4.1.3;
 - compiled binary/server-mod version verification;
 - exact-head packaging with SHA-256/provenance.
 
-Physical runtime acceptance is one combined gate from `docs/RC1-runtime-checklist.md` only after the exact PR head is fully GREEN. It covers compact first render, split cells/migration, roster/localization, vanilla-first reload, wearable reload fallback and one PMC lifecycle; the accepted v0.1.0 death/insurance matrix is not repeated without concrete regression evidence.
+Physical runtime acceptance is one combined gate from `docs/RC1-runtime-checklist.md` only after the exact PR head is fully GREEN. It covers compact first render, split cells/migration, roster/localization, vanilla-first reload, wearable reload fallback, Dogtag Case host/container behavior and one PMC lifecycle; the accepted v0.1.0 death/insurance matrix is not repeated without concrete regression evidence.
