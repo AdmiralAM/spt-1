@@ -96,6 +96,10 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
                     throw new InvalidOperationException(
                         "B&A&HB Dogtag Case preflight refused: canonical dogtag grid was broadened to a B&A&HB-owned product template.");
             }
+
+            // ExcludedFilter is deliberately not constrained here: live EFT/SPT
+            // taxonomy remains authoritative. Identity/value stability is pinned by
+            // the +2 -> +3 lease rather than replacing canonical exclusions.
         }
 
         return source;
