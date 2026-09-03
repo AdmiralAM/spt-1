@@ -27,7 +27,18 @@ internal static class ReloadOwnerInstallPublicationWiringRegression
             "Patch(owner, patch, harmonyMethodType, appendCandidates, appendPrefix, null, null);",
             "BeginForRegression();",
             "EndForRegression();",
-            "if (CanPublishForRegression()) return true;",
+            "HasLiveReachabilityPublicationContract()",
+            "HasLiveCandidatePublicationContract()",
+            "FastAccessReloadRuntime.ItemType != null",
+            "FastAccessReloadRuntime.MagazineType != null",
+            "FastAccessReloadRuntime.GetAllParentItems != null",
+            "FastAccessReloadRuntime.ReadTemplateId != null",
+            "ReloadCandidateBridgeRuntime.GetItemsInSlots != null",
+            "ReloadCandidateBridgeRuntime.BeltSlotsArgument != null",
+            "ReloadCandidateBridgeRuntime.ReturnType != null",
+            "ReloadCandidateBridgeRuntime.GetAllParentItems != null",
+            "ReloadCandidateBridgeRuntime.ReadTemplateId != null",
+            "if (HasLiveCandidatePublicationContract()) return true;",
             "__result = __2;",
             "return false;",
             "if (prefix != null) prefixAssigned = true;",
@@ -53,6 +64,11 @@ internal static class ReloadOwnerInstallPublicationWiringRegression
         int candidate = fastAccess.IndexOf("bool candidateBridge = reachability && TryInstallReloadCandidateBridge", StringComparison.Ordinal);
         if (installed < 0 || reachability < 0 || candidate < 0 || !(installed < reachability && reachability < candidate))
             throw new InvalidOperationException("Reload owner install publication wiring regression failed: FastAccess owner publication order changed unexpectedly.");
+
+        int resetReachability = fastAccess.IndexOf("FastAccessReloadRuntime.Reset();", StringComparison.Ordinal);
+        int resetCandidate = fastAccess.IndexOf("ReloadCandidateBridgeRuntime.Reset();", StringComparison.Ordinal);
+        if (resetReachability < 0 || resetCandidate < 0)
+            throw new InvalidOperationException("Reload owner install publication wiring regression failed: stale-owner fencing requires existing runtime Reset on Harmony rollback/teardown paths.");
 
         if (fastAccess.Contains("TryInstallReloadCandidateBridge(inventoryType, slotEnumType, dedicatedBelt) ||", StringComparison.Ordinal))
             throw new InvalidOperationException("Reload owner install publication wiring regression failed: candidate bridge must not gain alternate discovery/retry semantics.");
