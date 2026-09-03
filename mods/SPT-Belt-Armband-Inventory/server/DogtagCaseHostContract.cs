@@ -162,23 +162,22 @@ public static class DogtagCaseHostContract
                 if (!RollbackAuthorities.TryGetValue(preCommitSnapshot, out authority))
                     return false;
 
-                // Rollback authority is single-consumer and belongs only to the exact
-                // host reference captured before the owned add. A value-identical
-                // replacement must never inherit removal authority from an earlier
-                // host object. Consume both snapshot-key authority and any still-live
-                // pre-add host gate atomically under the same synchronization boundary.
+                // A rejected foreign/value-identical host or caller-mutated snapshot
+                // must not burn the real exact-host token. Only an exact host + exact
+                // caller baseline is allowed to consume this single-consumer authority.
+                if (!ReferenceEquals(currentFilter, authority.Host)
+                    || !preCommitSnapshot.SetEquals(authority.Baseline))
+                    return false;
+
                 RollbackAuthorities.Remove(preCommitSnapshot);
                 if (ActiveRollbackHosts.TryGetValue(authority.Host, out RollbackAuthority? active)
                     && ReferenceEquals(active, authority))
                     ActiveRollbackHosts.Remove(authority.Host);
             }
 
-            if (!ReferenceEquals(currentFilter, authority.Host)
-                || !preCommitSnapshot.SetEquals(authority.Baseline))
-                return false;
-
             // From this point onward the local name is rebound to the internally pinned
-            // baseline, not caller-controlled mutable snapshot state.
+            // baseline, not caller-controlled mutable snapshot state. The exact-host
+            // attempt has consumed authority, so later content ABA cannot regain it.
             preCommitSnapshot = authority.Baseline;
             var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
             if (preCommitSnapshot.Contains(caseTpl)) return false;
