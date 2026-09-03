@@ -13,10 +13,6 @@ namespace SPTBeltArmbandInventory.Server;
 /// </summary>
 public static class DogtagCaseHostContract
 {
-    // Canonical SPT/EFT dogtag templates. The Dogtag Case is additive: preload
-    // must never succeed against a host that has already lost either ordinary
-    // faction dogtag acceptance, otherwise equipping the container could mask a
-    // broken vanilla Dogtag slot contract.
     public const string BearDogtagTemplateId = "59f32bb586f774757e1e8442";
     public const string UsecDogtagTemplateId = "59f32c3b86f77472a31742f0";
 
@@ -55,8 +51,6 @@ public static class DogtagCaseHostContract
         {
             if (capturedVanillaEntries == null)
             {
-                // Retain our own set rather than any caller-owned mutable collection.
-                // From this point the preload baseline is stable for every verifier.
                 capturedVanillaEntries = snapshot;
                 return;
             }
@@ -71,10 +65,6 @@ public static class DogtagCaseHostContract
         HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);
         RequirePreservedSnapshot(current);
 
-        // Preload preservation is itself an ownership boundary: proving a detached
-        // snapshot is insufficient if another startup participant mutates the same
-        // live HashSet before the proof returns. Re-snapshot the live host and require
-        // exact set stability before the caller is allowed to append our case.
         HashSet<MongoId> liveAfterProof = SnapshotCurrentFilter(currentFilter);
         if (!current.SetEquals(liveAfterProof))
             throw new InvalidOperationException("B&A&HB Dogtag host verification refused: live Dogtag filter changed during preserved-host verification.");
@@ -89,25 +79,48 @@ public static class DogtagCaseHostContract
         if (!current.Contains(caseTpl))
             throw new InvalidOperationException("B&A&HB Dogtag host verification refused: exact Dogtag Case template is absent after host commit.");
 
-        // Re-snapshot the same live HashSet after the full preservation/exact-case
-        // proof. Reference identity alone cannot detect an in-place mutation by a
-        // concurrent startup participant. Any content drift during this bounded
-        // verification window therefore fails closed instead of publishing a proof
-        // that was already stale by the time RequireCommitted returned.
         HashSet<MongoId> liveAfterProof = SnapshotCurrentFilter(currentFilter);
         if (!current.SetEquals(liveAfterProof))
             throw new InvalidOperationException("B&A&HB Dogtag host verification refused: live Dogtag filter changed during committed-host verification.");
     }
 
+    public static HashSet<MongoId> CaptureRollbackBaseline(HashSet<MongoId> currentFilter)
+    {
+        HashSet<MongoId> snapshot = SnapshotCurrentFilter(currentFilter);
+        RequirePreservedSnapshot(snapshot);
+        if (snapshot.Contains(new MongoId(RuntimeIdentity.DogtagCaseItemId)))
+            throw new InvalidOperationException("B&A&HB Dogtag host rollback baseline refused: exact Dogtag Case was already present before an owned add transaction.");
+        return snapshot;
+    }
+
+    public static bool TryRollbackOwnedCaseAddition(HashSet<MongoId> currentFilter, HashSet<MongoId> preCommitSnapshot)
+    {
+        if (currentFilter == null || preCommitSnapshot == null) return false;
+        try
+        {
+            var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
+            if (preCommitSnapshot.Contains(caseTpl)) return false;
+
+            HashSet<MongoId> expectedCommitted = new(preCommitSnapshot) { caseTpl };
+            HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);
+            if (!current.SetEquals(expectedCommitted))
+                return false;
+
+            if (!currentFilter.Remove(caseTpl))
+                return false;
+
+            HashSet<MongoId> after = SnapshotCurrentFilter(currentFilter);
+            return after.SetEquals(preCommitSnapshot);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private static HashSet<MongoId> SnapshotCurrentFilter(HashSet<MongoId> currentFilter)
     {
         ArgumentNullException.ThrowIfNull(currentFilter);
-
-        // Verify one point-in-time copy rather than repeatedly consulting a mutable
-        // host set. Host registration is startup-only and tiny, so the bounded copy
-        // avoids TOCTOU between preservation and exact-case checks without adding a
-        // steady-state hot-path cost. Concurrent mutation that makes enumeration
-        // invalid still fails closed by propagating the collection exception.
         return currentFilter.ToHashSet();
     }
 
@@ -118,9 +131,6 @@ public static class DogtagCaseHostContract
         {
             if (capturedVanillaEntries == null || capturedVanillaEntries.Count == 0)
                 throw new InvalidOperationException("B&A&HB Dogtag host verification refused: vanilla acceptance snapshot was never captured.");
-
-            // Verify against an immutable point-in-time copy so a concurrent
-            // idempotent recapture cannot interleave with host verification.
             captured = capturedVanillaEntries.ToArray();
         }
 
@@ -130,9 +140,6 @@ public static class DogtagCaseHostContract
                 throw new InvalidOperationException($"B&A&HB Dogtag host verification refused: pre-mutation acceptance entry {entry} was removed before trader registration.");
         }
 
-        // Keep ownership isolation inside the reusable host contract itself rather
-        // than relying only on a particular caller. The Dogtag Case is the sole
-        // B&A&HB-owned template allowed in the vanilla Dogtag acceptance set.
         foreach (MongoId entry in current)
         {
             string id = entry.ToString();
