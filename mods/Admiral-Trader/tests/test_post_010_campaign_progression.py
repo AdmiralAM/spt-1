@@ -10,9 +10,10 @@ def test_post_010_campaign_progression_is_complete_reachable_and_acyclic():
     assert graph["implementationAllowed"] is False and graph["runtimeMaterialize"] is False
     assert graph["frozenBoundary"] == {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
     phase_ops = [op for phase in graph["phases"] for op in phase["operations"]]; expected = set(rewards["operationBands"])
-    assert len(phase_ops) == 18 and len(set(phase_ops)) == 18 and set(phase_ops) == expected
+    assert len(phase_ops) == 17 and len(set(phase_ops)) == 17 and set(phase_ops) == expected
     assert set(graph["prerequisites"]) == expected
-    assert "expedition-discipline" not in expected and "field-medicine-under-pressure" not in expected and "controlled-chemical-support" not in expected
+    for deferred in ("expedition-discipline", "field-medicine-under-pressure", "controlled-chemical-support", "high-value-target-window"):
+        assert deferred not in expected
     assert graph["prerequisites"]["endurance-circuit"] == ["expedition-loadout", "route-security"]
     phase_index = {op: i for i, phase in enumerate(graph["phases"]) for op in phase["operations"]}
     for operation, prerequisites in graph["prerequisites"].items():
@@ -30,7 +31,7 @@ def test_post_010_campaign_progression_is_complete_reachable_and_acyclic():
         visiting.remove(operation); visited.add(operation)
     for operation in expected: visit(operation)
     assert visited == expected
-    critical={"high-value-target-window","labs-security-disruption"}; assert set(graph["phases"][-1]["operations"]) == critical
+    critical={"labs-security-disruption"}; assert set(graph["phases"][-1]["operations"]) == critical
     for operation in critical:
         prerequisites=graph["prerequisites"][operation]; assert len(prerequisites)==2
         parent_branches={branch for branch,members in graph["branchSemantics"].items() if any(parent in members for parent in prerequisites)}
@@ -47,8 +48,8 @@ def test_post_010_campaign_has_concrete_non_regressing_player_level_placement():
         for prerequisite in prerequisites: assert levels[prerequisite]<=levels[operation]
     loyalty_minimums={tier["loyaltyLevel"]:tier["minimumPlayerLevel"] for tier in trajectory["tiers"]}
     assert loyalty_minimums[2]==15 and loyalty_minimums[3]==25 and loyalty_minimums[4]==35
-    assert min(levels.values())==loyalty_minimums[2]; assert levels["high-value-target-window"]==loyalty_minimums[4]; assert levels["labs-security-disruption"]>levels["high-value-target-window"]
-    contracts=graph["progressionContracts"]; assert contracts["operationCount"]==18
+    assert min(levels.values())==loyalty_minimums[2]; assert levels["labs-security-disruption"]>loyalty_minimums[4]
+    contracts=graph["progressionContracts"]; assert contracts["operationCount"]==17
     assert contracts["questLevelsReviewedAgainstFrozenAdmiralLoyaltyThresholds"] is True
     assert contracts["everyOperationHasConcretePlayerLevel"] is True and contracts["prerequisitesNeverRequireHigherPlayerLevelThanDependentOperation"] is True
     assert graph["materializationGate"]["requiresFinalQuestLevelPlacement"] is False

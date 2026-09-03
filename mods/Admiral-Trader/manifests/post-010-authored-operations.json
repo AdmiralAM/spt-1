@@ -1,10 +1,10 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
   "implementationAllowed": false,
-  "principle": "Future operations must add a distinct tactical or expeditionary problem. These are authored product specifications, not runtime quests, and none may materialize until its exact SPT 4.1.3 condition shape, overlap and economy gates are proven.",
+  "principle": "Future operations must add a distinct tactical or expeditionary problem. These are authored product specifications, not runtime quests, and none may materialize until its exact SPT 4.1.3 condition shape, overlap and economy gates are proven. Command Window is intentionally absent after its named-boss shape proved semantically redundant with vanilla; no filler replaces it.",
   "operations": [
     {
       "key": "rogue-interdiction",
@@ -19,21 +19,6 @@
       "antiGrind": {"maximumTargetCount": 6, "repeatable": false, "noEscalatingSequels": true, "noLocationFreeFallback": true},
       "rewardDoctrine": "XP/RUB/standing only by default; no Rogue gear storefront and no capability unlock. Any item reward requires Economy Admiral approval.",
       "proofGates": ["prove exact SPT 4.1.3 Rogue target alias and Lighthouse location condition shape", "prove survived/extraction condition semantics without restart punishment", "audit vanilla/Scorpion/Artem overlap", "Economy Admiral approves final numeric rewards"],
-      "runtimeMaterialize": false
-    },
-    {
-      "key": "high-value-target-window",
-      "sourceBundles": ["Boss Hunt", "Boss Follower Hunt"],
-      "domain": "operations",
-      "workingTitle": {"en": "Command Window", "ru": "Командное окно"},
-      "playerText": {
-        "en": {"description": "A command element is exposed only briefly. I do not need fifty bodies; I need one clean break in the local chain of command and a contractor who knows when to leave.", "started": "Take the command target or its immediate escort element when the opportunity appears, then extract. One operation, one disruption. Do not turn it into population control.", "success": "The command link is broken for now. That is enough. A useful strike ends when the objective is complete, not when the map is empty."},
-        "ru": {"description": "Командное звено открывается ненадолго. Мне не нужны пятьдесят тел; нужен один чистый разрыв местного управления и исполнитель, который понимает, когда пора уходить.", "started": "Сними командную цель или её ближайшее сопровождение, когда появится окно, и выйди из рейда. Одна операция — один разрыв. Не превращай это в зачистку населения.", "success": "Командная связь на время нарушена. Этого достаточно. Полезный удар заканчивается выполненной задачей, а не пустой картой."}
-      },
-      "objectiveIntent": ["one bounded HVT or immediate-command-element disruption", "survive/extract after the same operation instead of escalating boss/follower counts"],
-      "antiGrind": {"maximumTargetCount": 3, "repeatable": false, "noEscalatingSequels": true, "noGenericBossFarm": true},
-      "rewardDoctrine": "Premium XP/RUB/standing may reflect target risk, but no boss-equipment faucet, guaranteed trophy chain or permanent capability unlock without Economy Admiral review.",
-      "proofGates": ["prove exact SPT 4.1.3 boss/follower target aliases before choosing the final target", "prove survived/extraction semantics and same-operation counter behavior", "audit vanilla/Scorpion/Artem overlap for the selected target and location", "Economy Admiral approves risk-adjusted numeric and any item rewards"],
       "runtimeMaterialize": false
     },
     {

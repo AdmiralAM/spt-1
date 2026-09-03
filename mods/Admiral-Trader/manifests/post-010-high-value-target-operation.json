@@ -1,10 +1,12 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "product": "Admiral Trader",
-  "status": "post-0.1.0-authored-spec-only-target-rejected",
+  "status": "post-0.1.0-deferred-out-of-current-wave",
   "operationKey": "high-value-target-window",
   "title": {"en": "Command Window", "ru": "Командное окно"},
   "sourceBundles": ["Boss Hunt", "Boss Follower Hunt"],
+  "activeAuthoredWave": false,
+  "replacementRequired": false,
   "selectedTarget": {
     "friendlyName": "Glukhar",
     "target": "Savage",
@@ -16,62 +18,59 @@
     "repeatable": false,
     "selectionStatus": "rejected-vanilla-semantic-collision"
   },
-  "productDecision": "Reject the current Glukhar-on-Reserve Command Window shape. Vanilla Payback already contains the same command target on Reserve and requires successful Reserve extraction after a broader Glukhar/guards/flare sequence, so Admiral's narrower Glukhar plus successful extraction contract is a semantic subset rather than a distinct operation. Do not materialize it and do not preserve it merely to keep authored quest count. A replacement is admitted only if it has a distinct gameplay purpose and proven SPT 4.1.3 condition semantics.",
-  "whyThisTargetWasInitiallySelected": [
-    "Glukhar is a literal command element with a coherent Reserve identity, so the objective matched Command Window better than an arbitrary boss selected only for difficulty.",
-    "A single boss target compressed legacy escalating boss/follower counters into one bounded operation.",
-    "Reserve has pinned exact quest-location authority as RezervBase.",
-    "The operation intentionally paid no boss gear or trophy reward, avoiding a boss-equipment faucet."
+  "productDecision": "Defer Command Window out of the current authored wave rather than cycling through named bosses until one happens not to collide. The Glukhar/Reserve form is a semantic subset of vanilla Payback, and the remaining obvious boss/follower substitutions still express the same generic boss-kill gameplay already represented heavily by vanilla. A future Command Window may return only with a genuinely distinct command-disruption mechanic backed by exact SPT 4.1.3 condition authority. No replacement or filler operation is required.",
+  "whyNoImmediateRetarget": [
+    "Changing only the boss name does not change the gameplay problem; it remains a bounded named-boss kill followed by extraction.",
+    "The curation policy explicitly rejects quota-filling and literal or semantic vanilla duplication.",
+    "The active wave already contains specialist contact, interdiction, precision and critical-access operations, so campaign structure does not require an artificial boss slot.",
+    "The previous critical reward envelope is removed with the deferred operation rather than reassigned to unrelated content."
   ],
   "externalOverlapReview": {
-    "status": "vanilla-semantic-collision-proven-target-rejected",
+    "status": "vanilla-semantic-collision-proven-operation-deferred",
     "vanilla": {
       "quest": "Payback",
       "location": "Reserve",
       "relevantShape": ["eliminate Glukhar", "eliminate Glukhar guards", "signal objective", "survive and extract from Reserve through Cliff Descent"],
-      "classification": "semantic-superset-of-current-admiral-shape",
-      "decision": "reject-current-target-shape",
-      "reason": "Command Window currently asks for the same named boss on the same map followed by successful extraction. Payback adds guards, flare and a specific extract; those additions do not make the narrower Admiral contract independently valuable."
+      "classification": "semantic-superset-of-rejected-admiral-shape",
+      "decision": "defer-operation-from-current-wave",
+      "reason": "The rejected Admiral form asks for the same named command target on the same map followed by extraction. Retargeting to another named boss without a new mechanic would preserve the generic boss-contract problem rather than solve it."
     },
-    "scorpion": {"status": "not-required-before-redesign", "pinnedCommit": "7d1bed766f859f227680377acc1e20c8f97b09bf"},
-    "artem": {"status": "not-required-before-redesign", "pinnedCommit": "ee5b7c13a1980ff961ed0b2c1d8764574377b2bf"}
+    "scorpion": {"status": "not-required-for-deferred-operation", "pinnedCommit": "7d1bed766f859f227680377acc1e20c8f97b09bf"},
+    "artem": {"status": "not-required-for-deferred-operation", "pinnedCommit": "ee5b7c13a1980ff961ed0b2c1d8764574377b2bf"}
   },
   "conditionAuthority": {
     "roleProof": "post-010-role-alias-proof.json",
-    "role": {"target": "Savage", "savageRole": ["bossGluhar"], "status": "proven-pinned-spt413-but-current-product-shape-rejected"},
+    "role": {"target": "Savage", "savageRole": ["bossGluhar"], "status": "proven-for-rejected-shape-only"},
     "locationProof": "post-010-reserve-location-proof.json",
-    "location": {"friendlyName": "Reserve", "target": "RezervBase", "status": "proven-pinned-upstream-authority-but-current-product-shape-rejected"},
+    "location": {"friendlyName": "Reserve", "target": "RezervBase", "status": "proven-for-rejected-shape-only"},
     "frozenOverlapProof": "post-010-high-value-target-frozen-overlap-proof.json",
     "extractionShapeProof": "post-010-same-raid-coupling-proof.json"
   },
   "economyReview": {
-    "status": "approved-static-for-rejected-shape-do-not-materialize",
-    "campaignPlayerLevel": 35,
-    "riskBand": "critical",
-    "authoredReward": {"xp": 15500, "rub": 100000, "standing": 0.023, "itemReward": null},
-    "reason": "The previous reward envelope was bounded, but reward validity does not rescue a semantically duplicate objective. No reward is materialized while the target shape is rejected."
+    "status": "withdrawn-with-deferred-operation",
+    "previousCampaignPlayerLevel": 35,
+    "previousRiskBand": "critical",
+    "previousAuthoredReward": {"xp": 15500, "rub": 100000, "standing": 0.023, "itemReward": null},
+    "reason": "A bounded reward did not rescue a duplicate objective. The reward allocation is removed from the active envelope and is not transferred to another operation."
   },
   "gates": {
-    "requiresFinalBossSelection": true,
-    "requiresExactBossRoleProof": false,
-    "requiresExactReserveLocationSelection": false,
-    "requiresEconomyAdmiralReview": false,
-    "requiresFrozenCampaignOverlapReview": false,
-    "requiresVanillaScorpionArtemOverlapAudit": true,
-    "requiresTargetRedesignAfterVanillaCollision": true,
-    "requiresSameRaidKillAndExtractionCouplingProof": true,
+    "requiresDistinctCommandDisruptionMechanicBeforeReadmission": true,
+    "requiresExactSpt413ConditionProofAfterRedesign": true,
+    "requiresOverlapAuditAfterRedesign": true,
+    "requiresEconomyAdmiralReviewAfterRedesign": true,
     "implementationAllowed": false,
     "runtimeMaterialize": false
   },
   "rejectedAlternatives": [
     "Glukhar on Reserve plus successful extraction because vanilla Payback is a semantic superset",
+    "swapping Glukhar for another named boss while keeping the same generic kill-and-extract mechanic",
     "generic any-boss objective",
     "boss-or-any-follower ambiguity",
     "escalating 3/5/10 boss or follower counters",
     "boss trophy handover",
     "repeatable boss farm",
     "boss-equipment reward or storefront unlock",
-    "keeping a duplicate boss quest only to preserve authored quest count"
+    "keeping or replacing the operation only to preserve authored quest count"
   ],
   "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
 }

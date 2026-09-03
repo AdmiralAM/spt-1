@@ -3,67 +3,52 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
+def load_json(path: Path): return json.loads(path.read_text(encoding="utf-8"))
 
-def load_json(path: Path):
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def test_command_window_selects_one_exact_glukhar_target_on_reserve():
+def test_command_window_is_deferred_after_vanilla_collision_without_retarget_filler():
     spec = load_json(ROOT / "manifests" / "post-010-high-value-target-operation.json")
-    role_proof = load_json(ROOT / "manifests" / spec["conditionAuthority"]["roleProof"])
-    location_proof = load_json(ROOT / "manifests" / spec["conditionAuthority"]["locationProof"])
-    target = spec["selectedTarget"]
-    gates = spec["gates"]
-
-    assert spec["schemaVersion"] == 1
+    assert spec["schemaVersion"] == 3
     assert spec["operationKey"] == "high-value-target-window"
+    assert spec["status"] == "post-0.1.0-deferred-out-of-current-wave"
+    assert spec["activeAuthoredWave"] is False
+    assert spec["replacementRequired"] is False
+    target = spec["selectedTarget"]
     assert target["friendlyName"] == "Glukhar"
-    assert target["target"] == "Savage"
     assert target["savageRole"] == ["bossGluhar"]
     assert target["locationTarget"] == "RezervBase"
-    assert target["maximumTargets"] == 1
-    assert target["maximumSuccessfulRaids"] == 1
-    assert target["repeatable"] is False
-
-    boss = next(row for row in role_proof["proven"] if row["gameplayRole"] == "specific-boss")
-    assert "bossGluhar" in boss["savageRoleExamples"]
-    assert "high-value-target-window" in boss["admiralUse"]
-    assert location_proof["source"]["friendlyName"] == "Reserve"
-    assert location_proof["source"]["targetName"] == "RezervBase"
-
-    assert gates["requiresFinalBossSelection"] is False
-    assert gates["requiresExactBossRoleProof"] is False
-    assert gates["requiresExactReserveLocationSelection"] is False
-    assert gates["requiresEconomyAdmiralReview"] is False
-    assert gates["requiresFrozenCampaignOverlapReview"] is True
-    assert gates["requiresVanillaScorpionArtemOverlapAudit"] is True
-    assert gates["requiresSameRaidKillAndExtractionCouplingProof"] is True
+    assert target["selectionStatus"] == "rejected-vanilla-semantic-collision"
+    review = spec["externalOverlapReview"]
+    assert review["vanilla"]["quest"] == "Payback"
+    assert review["vanilla"]["classification"] == "semantic-superset-of-rejected-admiral-shape"
+    assert review["scorpion"]["status"] == "not-required-for-deferred-operation"
+    assert review["artem"]["status"] == "not-required-for-deferred-operation"
+    gates = spec["gates"]
+    assert gates["requiresDistinctCommandDisruptionMechanicBeforeReadmission"] is True
+    assert gates["requiresExactSpt413ConditionProofAfterRedesign"] is True
+    assert gates["requiresOverlapAuditAfterRedesign"] is True
+    assert gates["requiresEconomyAdmiralReviewAfterRedesign"] is True
     assert gates["implementationAllowed"] is False
     assert gates["runtimeMaterialize"] is False
 
-
-def test_command_window_reward_matches_campaign_and_critical_envelope():
-    spec = load_json(ROOT / "manifests" / "post-010-high-value-target-operation.json")
+def test_command_window_is_absent_from_active_campaign_and_reward_authorities():
     campaign = load_json(ROOT / "manifests" / "post-010-campaign-progression.json")
     envelope = load_json(ROOT / "manifests" / "post-010-operation-reward-envelope.json")
-    review = spec["economyReview"]
+    authored = load_json(ROOT / "manifests" / "post-010-authored-operations.json")
+    key = "high-value-target-window"
+    assert key not in campaign["operationLevelPlacement"]
+    assert key not in campaign["prerequisites"]
+    assert all(key not in phase["operations"] for phase in campaign["phases"])
+    assert key not in envelope["operationBands"]
+    assert key not in envelope["operationRewards"]
+    assert key not in {op["key"] for op in authored["operations"]}
+    assert campaign["progressionContracts"]["operationCount"] == 17
+    assert envelope["campaignCaps"]["operationCount"] == 17
+    assert envelope["campaignCaps"]["maximumAuthoredStandingAllocation"] == 0.232
 
-    assert review["campaignPlayerLevel"] == campaign["operationLevelPlacement"]["high-value-target-window"] == 35
-    assert review["riskBand"] == envelope["operationBands"]["high-value-target-window"] == "critical"
-    assert review["authoredReward"] == envelope["operationRewards"]["high-value-target-window"]
-    reward = review["authoredReward"]
-    band = envelope["bands"]["critical"]
-    assert band["xpMin"] <= reward["xp"] <= band["xpMax"]
-    assert band["rubMin"] <= reward["rub"] <= band["rubMax"]
-    assert reward["standing"] <= band["standingMax"]
-    assert reward["itemReward"] is None
-
-
-def test_command_window_does_not_change_frozen_runtime_counts():
+def test_command_window_disposition_does_not_change_frozen_runtime_counts():
     spec = load_json(ROOT / "manifests" / "post-010-high-value-target-operation.json")
     assort = load_json(ROOT / "db" / "assort.json")
     quest_files = list((ROOT / "db" / "quests").glob("*.json"))
-
     assert spec["frozenBoundary"] == {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
     assert len(quest_files) == 31
     assert len(assort["loyal_level_items"]) == 11

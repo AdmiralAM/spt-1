@@ -11,7 +11,7 @@ class Post010AuthoredOperationsTests(unittest.TestCase):
         cls.manifest = json.loads((ROOT / "manifests" / "post-010-authored-operations.json").read_text(encoding="utf-8"))
 
     def test_specs_are_non_materialized_and_bound_to_frozen_base(self):
-        self.assertEqual(self.manifest["schemaVersion"], 1)
+        self.assertEqual(self.manifest["schemaVersion"], 2)
         self.assertEqual(self.manifest["status"], "post-0.1.0-authored-spec-only")
         self.assertEqual(self.manifest["frozen010Base"], "053a62ff5f1cb545f13bc89a96bba3acd319a823")
         self.assertFalse(self.manifest["implementationAllowed"])
@@ -19,12 +19,14 @@ class Post010AuthoredOperationsTests(unittest.TestCase):
 
     def test_operations_are_authored_and_bilingual(self):
         operations = self.manifest["operations"]
-        self.assertGreaterEqual(len(operations), 3)
+        self.assertGreaterEqual(len(operations), 2)
         keys = {op["key"] for op in operations}
         self.assertEqual(len(keys), len(operations))
         self.assertNotIn("expedition-discipline", keys)
         self.assertNotIn("field-medicine-under-pressure", keys)
-        self.assertTrue({"rogue-interdiction", "high-value-target-window", "night-signal-disruption"}.issubset(keys))
+        self.assertNotIn("controlled-chemical-support", keys)
+        self.assertNotIn("high-value-target-window", keys)
+        self.assertTrue({"rogue-interdiction", "night-signal-disruption"}.issubset(keys))
         for operation in operations:
             self.assertGreaterEqual(len(operation["objectiveIntent"]), 2)
             self.assertGreaterEqual(len(operation["proofGates"]), 4)

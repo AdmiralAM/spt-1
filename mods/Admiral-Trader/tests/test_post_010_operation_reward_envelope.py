@@ -11,12 +11,16 @@ def authored_operation_keys():
     for filename in ["post-010-chemical-support-operation.json","post-010-expedition-loadout-operation.json","post-010-procurement-operation.json","post-010-route-security-operation.json"]:
         spec=load_json(ROOT/"manifests"/filename); keys.add(spec["operation"]["key"])
     precision=load_json(ROOT/"manifests"/"post-010-precision-operation.json"); keys.add(precision["key"])
+    keys.discard("controlled-chemical-support")
     return keys
 
-def test_reward_envelope_covers_the_complete_authored_wave_once():
+def test_reward_envelope_covers_the_complete_active_authored_wave_once():
     spec=load_json(ROOT/"manifests"/"post-010-operation-reward-envelope.json"); authored=authored_operation_keys(); mapped=set(spec["operationBands"])
-    assert len(authored)==19 and "expedition-discipline" not in authored and "field-medicine-under-pressure" not in authored and mapped==authored and spec["campaignCaps"]["operationCount"]==19
-    assert spec["campaignPlacementAuthority"]["operationCount"]==19
+    assert len(authored)==17
+    for deferred in ("expedition-discipline","field-medicine-under-pressure","controlled-chemical-support","high-value-target-window"):
+        assert deferred not in authored
+    assert mapped==authored and spec["campaignCaps"]["operationCount"]==17
+    assert spec["campaignPlacementAuthority"]["operationCount"]==17
 
 def test_numeric_envelopes_are_bounded_and_do_not_create_a_standing_faucet():
     spec=load_json(ROOT/"manifests"/"post-010-operation-reward-envelope.json"); bands=spec["bands"]
