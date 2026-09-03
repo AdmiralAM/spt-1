@@ -425,6 +425,7 @@ namespace SPTBeltArmbandInventory
         bool wroteBindAvailableSlots;
         bool reloadPatchInstalled;
         bool reloadCandidateBridgeInstalled;
+        bool reachabilityRollbackUnsafe;
         bool candidateBridgeRollbackUnsafe;
         bool installed;
 
@@ -489,6 +490,13 @@ namespace SPTBeltArmbandInventory
         {
             try
             {
+                if (reachabilityRollbackUnsafe)
+                {
+                    ReloadDiagnosticLog.TryWarning(logWarning,
+                        "B&A&HB reload reachability is terminally disabled for this session because a prior Harmony rollback could not be proven.");
+                    return false;
+                }
+
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
                 Type controllerType = ReflectionTools.FindType("EFT.InventoryLogic.InventoryController");
@@ -526,8 +534,10 @@ namespace SPTBeltArmbandInventory
             catch (Exception exception)
             {
                 ReloadDiagnosticLog.TryWarning(logWarning,
-                    "B&A&HB reload reachability discovery failed closed: " + Unwrap(exception).Message);
-                UnpatchReachability();
+                    "B&A&HB reload reachability discovery failed closed; partial Harmony owner rollback is required before any reinstall: " + Unwrap(exception).Message);
+                if (!UnpatchReachability())
+                    ReloadDiagnosticLog.TryWarning(logWarning,
+                        "B&A&HB reload reachability rollback could not be proven; promotion is disabled and reinstall is terminally blocked for this session.");
                 return false;
             }
         }
@@ -980,6 +990,21 @@ namespace SPTBeltArmbandInventory
             }
         }
 
+        static bool TryRollbackReachabilityOwner(object owner, MethodInfo unpatchSelf)
+        {
+            if (owner == null) return true;
+            if (unpatchSelf == null) return false;
+            try
+            {
+                unpatchSelf.Invoke(owner, null);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         bool UnpatchCandidateBridge()
         {
             bool rollbackProven = TryRollbackCandidateBridgeOwner(candidateBridgeHarmony, candidateBridgeUnpatchSelf);
@@ -996,18 +1021,20 @@ namespace SPTBeltArmbandInventory
             return false;
         }
 
-        void UnpatchReachability()
+        bool UnpatchReachability()
         {
-            try
-            {
-                if (reachabilityHarmony != null && reachabilityUnpatchSelf != null)
-                    reachabilityUnpatchSelf.Invoke(reachabilityHarmony, null);
-            }
-            catch { }
-            reachabilityHarmony = null;
-            reachabilityUnpatchSelf = null;
+            bool rollbackProven = TryRollbackReachabilityOwner(reachabilityHarmony, reachabilityUnpatchSelf);
             reloadPatchInstalled = false;
             FastAccessReloadRuntime.Reset();
+            if (rollbackProven)
+            {
+                reachabilityHarmony = null;
+                reachabilityUnpatchSelf = null;
+                return true;
+            }
+
+            reachabilityRollbackUnsafe = true;
+            return false;
         }
 
         void UnpatchReload()
@@ -1042,8 +1069,11 @@ namespace SPTBeltArmbandInventory
             originalBindAvailableSlots = null;
             installedFastAccessSlots = null;
             installedBindAvailableSlots = null;
-            reachabilityHarmony = null;
-            reachabilityUnpatchSelf = null;
+            if (!reachabilityRollbackUnsafe)
+            {
+                reachabilityHarmony = null;
+                reachabilityUnpatchSelf = null;
+            }
             if (!candidateBridgeRollbackUnsafe)
             {
                 candidateBridgeHarmony = null;
