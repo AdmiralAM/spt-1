@@ -5,9 +5,9 @@ using SPTarkov.Server.Core.Models.Spt.Tables;
 namespace SPTBeltArmbandInventory.Server;
 
 /// <summary>
-/// Carries the exact canonical Dogtag Case source identity proven at Preload +2
+/// Carries the exact canonical Dogtag Case source authority proven at Preload +2
 /// into the Preload +3 product transaction. The lease is single-consumer and
-/// fail-closed: value-identical replacement of any mutable source wrapper cannot
+/// fail-closed: wrapper replacement and in-place filter-content drift cannot
 /// inherit preflight authority.
 /// </summary>
 internal static class DogtagCaseCanonicalIdentityLease
@@ -26,7 +26,9 @@ internal static class DogtagCaseCanonicalIdentityLease
             object filtersCollection,
             object[] groups,
             object[] included,
-            object?[] excluded)
+            object?[] excluded,
+            HashSet<MongoId>[] includedValues,
+            HashSet<MongoId>?[] excludedValues)
         {
             Source = source;
             Properties = properties;
@@ -37,6 +39,8 @@ internal static class DogtagCaseCanonicalIdentityLease
             Groups = groups;
             Included = included;
             Excluded = excluded;
+            IncludedValues = includedValues;
+            ExcludedValues = excludedValues;
         }
 
         internal TemplateItem Source { get; }
@@ -48,6 +52,8 @@ internal static class DogtagCaseCanonicalIdentityLease
         private object[] Groups { get; }
         private object[] Included { get; }
         private object?[] Excluded { get; }
+        private HashSet<MongoId>[] IncludedValues { get; }
+        private HashSet<MongoId>?[] ExcludedValues { get; }
 
         internal void RequireCurrent(TemplateTable templates, TemplateItem expectedSource)
         {
@@ -80,6 +86,16 @@ internal static class DogtagCaseCanonicalIdentityLease
                     || !ReferenceEquals(groups[i].Filter, Included[i])
                     || !ReferenceEquals(groups[i].ExcludedFilter, Excluded[i]))
                     throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: canonical filter group/include/exclude identity drifted after Preload +2.");
+
+                HashSet<MongoId>? included = groups[i].Filter;
+                HashSet<MongoId>? excluded = groups[i].ExcludedFilter;
+                HashSet<MongoId>? expectedExcluded = ExcludedValues[i];
+                if (included == null || included.Count == 0 || !included.SetEquals(IncludedValues[i])
+                    || included.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString())))
+                    throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: canonical included-filter content drifted after Preload +2.");
+                if ((excluded == null) != (expectedExcluded == null)
+                    || (excluded != null && expectedExcluded != null && !excluded.SetEquals(expectedExcluded)))
+                    throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: canonical excluded-filter content drifted after Preload +2.");
             }
         }
     }
@@ -125,7 +141,7 @@ internal static class DogtagCaseCanonicalIdentityLease
         var filtersCollection = gridProperties.Filters
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: source filters collection is missing.");
         var groups = filtersCollection.ToArray();
-        if (groups.Length == 0 || groups.Any(x => x.Filter == null))
+        if (groups.Length == 0 || groups.Any(x => x.Filter == null || x.Filter.Count == 0))
             throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: source filters are empty or incomplete.");
 
         return new Lease(
@@ -137,6 +153,8 @@ internal static class DogtagCaseCanonicalIdentityLease
             filtersCollection,
             groups.Cast<object>().ToArray(),
             groups.Select(x => (object)x.Filter!).ToArray(),
-            groups.Select(x => (object?)x.ExcludedFilter).ToArray());
+            groups.Select(x => (object?)x.ExcludedFilter).ToArray(),
+            groups.Select(x => new HashSet<MongoId>(x.Filter!)).ToArray(),
+            groups.Select(x => x.ExcludedFilter == null ? null : new HashSet<MongoId>(x.ExcludedFilter)).ToArray());
     }
 }
