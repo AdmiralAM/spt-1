@@ -31,6 +31,7 @@ public static class DogtagCaseHostContract
 
     private static readonly object SnapshotSync = new();
     private static readonly ConditionalWeakTable<HashSet<MongoId>, RollbackAuthority> RollbackAuthorities = new();
+    private static readonly ConditionalWeakTable<HashSet<MongoId>, RollbackAuthority> ActiveRollbackHosts = new();
     private static HashSet<MongoId>? capturedVanillaEntries;
 
     public static int CapturedVanillaEntryCount
@@ -96,6 +97,13 @@ public static class DogtagCaseHostContract
         HashSet<MongoId> liveAfterProof = SnapshotCurrentFilter(currentFilter);
         if (!current.SetEquals(liveAfterProof))
             throw new InvalidOperationException("B&A&HB Dogtag host verification refused: live Dogtag filter changed during committed-host verification.");
+
+        // Once the exact committed shape has been observed stable, another preload
+        // transaction cannot still be in the pre-add capture phase for this host.
+        // Release only the per-host capture gate; snapshot-key rollback authority is
+        // retained so a later cancellation/exception can still undo this exact add.
+        lock (SnapshotSync)
+            ActiveRollbackHosts.Remove(currentFilter);
     }
 
     public static HashSet<MongoId> CaptureRollbackBaseline(HashSet<MongoId> currentFilter)
@@ -105,7 +113,23 @@ public static class DogtagCaseHostContract
         if (snapshot.Contains(new MongoId(RuntimeIdentity.DogtagCaseItemId)))
             throw new InvalidOperationException("B&A&HB Dogtag host rollback baseline refused: exact Dogtag Case was already present before an owned add transaction.");
 
-        RollbackAuthorities.Add(snapshot, new RollbackAuthority(currentFilter, snapshot));
+        var authority = new RollbackAuthority(currentFilter, snapshot);
+        lock (SnapshotSync)
+        {
+            if (ActiveRollbackHosts.TryGetValue(currentFilter, out _))
+                throw new InvalidOperationException("B&A&HB Dogtag host rollback baseline refused: another pre-add transaction already owns exact-host capture authority.");
+
+            ActiveRollbackHosts.Add(currentFilter, authority);
+            try
+            {
+                RollbackAuthorities.Add(snapshot, authority);
+            }
+            catch
+            {
+                ActiveRollbackHosts.Remove(currentFilter);
+                throw;
+            }
+        }
         return snapshot;
     }
 
@@ -114,13 +138,23 @@ public static class DogtagCaseHostContract
         if (currentFilter == null || preCommitSnapshot == null) return false;
         try
         {
-            if (!RollbackAuthorities.TryGetValue(preCommitSnapshot, out RollbackAuthority? authority))
-                return false;
+            RollbackAuthority? authority;
+            lock (SnapshotSync)
+            {
+                if (!RollbackAuthorities.TryGetValue(preCommitSnapshot, out authority))
+                    return false;
 
-            // Rollback authority is single-consumer and belongs only to the exact host
-            // reference captured before the owned add. A value-identical replacement
-            // must never inherit removal authority from an earlier host object.
-            RollbackAuthorities.Remove(preCommitSnapshot);
+                // Rollback authority is single-consumer and belongs only to the exact
+                // host reference captured before the owned add. A value-identical
+                // replacement must never inherit removal authority from an earlier
+                // host object. Consume both snapshot-key authority and any still-live
+                // pre-add host gate atomically under the same synchronization boundary.
+                RollbackAuthorities.Remove(preCommitSnapshot);
+                if (ActiveRollbackHosts.TryGetValue(authority.Host, out RollbackAuthority? active)
+                    && ReferenceEquals(active, authority))
+                    ActiveRollbackHosts.Remove(authority.Host);
+            }
+
             if (!ReferenceEquals(currentFilter, authority.Host)
                 || !preCommitSnapshot.SetEquals(authority.Baseline))
                 return false;
