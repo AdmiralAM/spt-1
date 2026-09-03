@@ -100,8 +100,12 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
             RequireCanonicalIdentity(source, identity);
             cancellationToken.ThrowIfCancellationRequested();
         }
-        catch (OperationCanceledException)
+        catch
         {
+            // Pending +2 authority is metadata only and must not survive any failed
+            // post-Publish proof. Cancellation, identity drift, scalar drift, or any
+            // other exception all abandon the exact-source lease without mutating the
+            // canonical EFT/SPT source. A later retry must establish fresh +2 authority.
             DogtagCaseCanonicalIdentityLease.CancelPending(source);
             throw;
         }
