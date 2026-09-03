@@ -8,17 +8,12 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 class Post010AuthoredOperationsTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.manifest = json.loads(
-            (ROOT / "manifests" / "post-010-authored-operations.json").read_text(encoding="utf-8")
-        )
+        cls.manifest = json.loads((ROOT / "manifests" / "post-010-authored-operations.json").read_text(encoding="utf-8"))
 
     def test_specs_are_non_materialized_and_bound_to_frozen_base(self):
         self.assertEqual(self.manifest["schemaVersion"], 1)
         self.assertEqual(self.manifest["status"], "post-0.1.0-authored-spec-only")
-        self.assertEqual(
-            self.manifest["frozen010Base"],
-            "053a62ff5f1cb545f13bc89a96bba3acd319a823",
-        )
+        self.assertEqual(self.manifest["frozen010Base"], "053a62ff5f1cb545f13bc89a96bba3acd319a823")
         self.assertFalse(self.manifest["implementationAllowed"])
         self.assertTrue(all(op["runtimeMaterialize"] is False for op in self.manifest["operations"]))
 
@@ -27,9 +22,8 @@ class Post010AuthoredOperationsTests(unittest.TestCase):
         self.assertGreaterEqual(len(operations), 3)
         keys = {op["key"] for op in operations}
         self.assertEqual(len(keys), len(operations))
-        self.assertTrue(
-            {"rogue-interdiction", "expedition-discipline", "field-medicine-under-pressure"}.issubset(keys)
-        )
+        self.assertNotIn("expedition-discipline", keys)
+        self.assertTrue({"rogue-interdiction", "field-medicine-under-pressure", "high-value-target-window"}.issubset(keys))
         for operation in operations:
             self.assertGreaterEqual(len(operation["objectiveIntent"]), 2)
             self.assertGreaterEqual(len(operation["proofGates"]), 4)
@@ -41,22 +35,14 @@ class Post010AuthoredOperationsTests(unittest.TestCase):
 
     def test_no_source_template_grind_is_reintroduced(self):
         by_key = {op["key"]: op for op in self.manifest["operations"]}
-
         rogue = by_key["rogue-interdiction"]
         self.assertLessEqual(rogue["antiGrind"]["maximumTargetCount"], 6)
         self.assertTrue(rogue["antiGrind"]["noEscalatingSequels"])
         self.assertTrue(rogue["antiGrind"]["noLocationFreeFallback"])
-
-        expedition = by_key["expedition-discipline"]
-        self.assertEqual(expedition["antiGrind"]["maximumRequiredSuccessfulRaids"], 1)
-        self.assertTrue(expedition["antiGrind"]["noPerMapCopies"])
-        self.assertTrue(expedition["antiGrind"]["noItemCollection"])
-
         medicine = by_key["field-medicine-under-pressure"]
         self.assertEqual(medicine["antiGrind"]["maximumRequiredSuccessfulRaids"], 1)
         self.assertTrue(medicine["antiGrind"]["noConsumableCountLadder"])
         self.assertTrue(medicine["antiGrind"]["noStimulantUseQuota"])
-
         for operation in self.manifest["operations"]:
             anti_grind = operation["antiGrind"]
             if "maximumTargetCount" in anti_grind:
@@ -64,11 +50,7 @@ class Post010AuthoredOperationsTests(unittest.TestCase):
             self.assertFalse(anti_grind.get("repeatable", False))
 
     def test_specs_fail_closed_on_unproven_runtime_semantics(self):
-        proof_text = " ".join(
-            gate.lower()
-            for operation in self.manifest["operations"]
-            for gate in operation["proofGates"]
-        )
+        proof_text = " ".join(gate.lower() for operation in self.manifest["operations"] for gate in operation["proofGates"])
         self.assertIn("exact spt 4.1.3", proof_text)
         self.assertIn("overlap", proof_text)
         self.assertIn("economy admiral", proof_text)

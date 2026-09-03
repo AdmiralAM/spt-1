@@ -22,21 +22,6 @@
       "runtimeMaterialize": false
     },
     {
-      "key": "expedition-discipline",
-      "sourceBundles": ["Survivalist", "Tarkov Mule"],
-      "domain": "logistics",
-      "workingTitle": {"en": "Expedition Discipline", "ru": "Экспедиционная дисциплина"},
-      "playerText": {
-        "en": {"description": "Anyone can overload a pack. The useful skill is carrying what matters, staying operational, and bringing it out. Prove the expedition ends with you still on your feet.", "started": "Take a real field load into a raid and come back with it. I am not buying backpacks from you; I am checking whether your logistics survive contact with Tarkov.", "success": "You brought the load home instead of turning it into a donation. That is the kind of logistics I can build around."},
-        "ru": {"description": "Перегрузить рюкзак может любой. Полезный навык — нести нужное, оставаться боеспособным и вынести груз обратно. Докажи, что экспедиция заканчивается вместе с тобой, а не вместо тебя.", "started": "Возьми в рейд реальную полевую нагрузку и вернись с ней. Рюкзаки мне сдавать не надо; я проверяю, переживёт ли твоя логистика контакт с Тарковом.", "success": "Груз вернулся вместе с тобой, а не стал пожертвованием местным. На такой логистике уже можно что-то строить."}
-      },
-      "objectiveIntent": ["one survived extraction while meeting a proven bounded load-bearing proxy", "no backpack handover or backpack-by-backpack progression"],
-      "antiGrind": {"maximumRequiredSuccessfulRaids": 1, "repeatable": false, "noPerMapCopies": true, "noItemCollection": true},
-      "rewardDoctrine": "Support/logistics reward only; no backpack storefront ladder. Any durable container or high-value logistics item requires explicit Economy Admiral review.",
-      "proofGates": ["identify a reliable exact SPT 4.1.3 load-bearing or inventory-weight condition/proxy; reject this operation if none exists", "prove survived/extraction semantics", "audit vanilla/Scorpion/Artem overlap", "Economy Admiral approves final numeric and item rewards"],
-      "runtimeMaterialize": false
-    },
-    {
       "key": "field-medicine-under-pressure",
       "sourceBundles": ["Meds Proficiency"],
       "domain": "medical-support",

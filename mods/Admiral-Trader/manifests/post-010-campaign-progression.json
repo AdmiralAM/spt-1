@@ -5,128 +5,19 @@
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
   "implementationAllowed": false,
   "runtimeMaterialize": false,
-  "purpose": "Turn the complete 21-operation authored replacement wave into one coherent non-linear Admiral campaign before any runtime materialization. The graph defines product sequencing, concrete player-level placement and capability growth only; it does not add quests, offers or profile state to frozen 0.1.0.",
-  "designRules": {
-    "singleLinearChainAllowed": false,
-    "parallelBranchesRequired": true,
-    "salesVolumeGateAllowed": false,
-    "repeatableGateAllowed": false,
-    "legacyQuestCountGateAllowed": false,
-    "mandatoryAllBranchesBeforeNextPhaseAllowed": false,
-    "storefrontUnlockRequiredForProgression": false,
-    "standingMaySupportLoyaltyButMustNotReplaceAuthoredPrerequisites": true,
-    "maximumDirectPrerequisitesPerOperation": 2,
-    "prerequisiteLevelRegressionAllowed": false,
-    "sameLevelParallelOperationsAllowed": true
-  },
+  "purpose": "Turn the curated 20-operation authored replacement wave into one coherent non-linear Admiral campaign before any runtime materialization. The graph defines product sequencing, concrete player-level placement and capability growth only; it does not add quests, offers or profile state to frozen 0.1.0.",
+  "designRules": {"singleLinearChainAllowed": false, "parallelBranchesRequired": true, "salesVolumeGateAllowed": false, "repeatableGateAllowed": false, "legacyQuestCountGateAllowed": false, "mandatoryAllBranchesBeforeNextPhaseAllowed": false, "storefrontUnlockRequiredForProgression": false, "standingMaySupportLoyaltyButMustNotReplaceAuthoredPrerequisites": true, "maximumDirectPrerequisitesPerOperation": 2, "prerequisiteLevelRegressionAllowed": false, "sameLevelParallelOperationsAllowed": true},
   "phases": [
-    {
-      "key": "field-readiness",
-      "minimumPlayerLevel": 15,
-      "intent": "Establish logistics, protection, access and medical judgement without forcing a single tutorial chain.",
-      "operations": ["signal-discipline", "field-expedient-supply", "expedition-loadout", "field-medicine-under-pressure", "protection-calibration", "ballistic-head-test", "access-reconnaissance"]
-    },
-    {
-      "key": "operational-integration",
-      "minimumPlayerLevel": 20,
-      "intent": "Combine readiness skills into bounded field operations with logistics, contact and movement pressure.",
-      "operations": ["expedition-discipline", "acoustic-contact", "route-security", "hostile-operator-intercept", "armored-transit", "controlled-chemical-support"]
-    },
-    {
-      "key": "specialist-operations",
-      "minimumPlayerLevel": 28,
-      "intent": "Introduce precision, heavy protection, specialist targets and cross-map endurance after the relevant field branch is proven.",
-      "operations": ["precision-observation-window", "precision-denial", "heavy-assault-loadout", "rogue-interdiction", "night-signal-disruption", "endurance-circuit"]
-    },
-    {
-      "key": "command-grade-operations",
-      "minimumPlayerLevel": 35,
-      "intent": "Reserve the two critical operations for late campaign play without making completion of every optional branch mandatory.",
-      "operations": ["high-value-target-window", "labs-security-disruption"]
-    }
+    {"key": "field-readiness", "minimumPlayerLevel": 15, "intent": "Establish logistics, protection, access and medical judgement without forcing a single tutorial chain.", "operations": ["signal-discipline", "field-expedient-supply", "expedition-loadout", "field-medicine-under-pressure", "protection-calibration", "ballistic-head-test", "access-reconnaissance"]},
+    {"key": "operational-integration", "minimumPlayerLevel": 20, "intent": "Combine readiness skills into bounded field operations with logistics, contact and movement pressure.", "operations": ["acoustic-contact", "route-security", "hostile-operator-intercept", "armored-transit", "controlled-chemical-support"]},
+    {"key": "specialist-operations", "minimumPlayerLevel": 28, "intent": "Introduce precision, heavy protection, specialist targets and cross-map endurance after the relevant field branch is proven.", "operations": ["precision-observation-window", "precision-denial", "heavy-assault-loadout", "rogue-interdiction", "night-signal-disruption", "endurance-circuit"]},
+    {"key": "command-grade-operations", "minimumPlayerLevel": 35, "intent": "Reserve the two critical operations for late campaign play without making completion of every optional branch mandatory.", "operations": ["high-value-target-window", "labs-security-disruption"]}
   ],
-  "operationLevelPlacement": {
-    "signal-discipline": 15,
-    "field-expedient-supply": 15,
-    "expedition-loadout": 15,
-    "field-medicine-under-pressure": 16,
-    "protection-calibration": 16,
-    "access-reconnaissance": 17,
-    "ballistic-head-test": 18,
-    "expedition-discipline": 20,
-    "acoustic-contact": 20,
-    "route-security": 21,
-    "controlled-chemical-support": 22,
-    "hostile-operator-intercept": 23,
-    "armored-transit": 24,
-    "precision-observation-window": 28,
-    "night-signal-disruption": 29,
-    "precision-denial": 30,
-    "heavy-assault-loadout": 30,
-    "rogue-interdiction": 31,
-    "endurance-circuit": 31,
-    "high-value-target-window": 35,
-    "labs-security-disruption": 37
-  },
-  "levelPlacementRationale": {
-    "fieldReadiness": "Level 15 aligns the post-0.1.0 entry surface with Admiral LL2 availability. Root operations fan out at 15-17, while Ballistic Head Test waits until 18 so protection progression is not compressed into one level.",
-    "operationalIntegration": "Levels 20-24 provide a five-level integration band. Pure branch continuations begin at 20; combined hostile-operator and armored-transit checks land later because they depend on prior field branches.",
-    "specialistOperations": "Levels 28-31 keep specialist content after Admiral LL3's level-25 threshold without forcing a loyalty gate. Precision observation opens the band; heavier, rogue and endurance work lands at 30-31.",
-    "commandGrade": "High-Value Target Window opens at level 35 alongside Admiral LL4 eligibility. Labs Security Disruption is held to 37 because it combines restricted-map, precision and protection pressure and should remain the latest authored operation in this wave.",
-    "loyaltyContract": "Player level gates never require a loyalty level or standing value. The level bands merely align campaign pacing with the already-proven 15/25/35 Admiral loyalty trajectory and cannot substitute for authored prerequisites."
-  },
-  "prerequisites": {
-    "signal-discipline": [],
-    "field-expedient-supply": [],
-    "expedition-loadout": [],
-    "field-medicine-under-pressure": [],
-    "protection-calibration": [],
-    "ballistic-head-test": ["protection-calibration"],
-    "access-reconnaissance": [],
-    "expedition-discipline": ["expedition-loadout"],
-    "acoustic-contact": ["signal-discipline"],
-    "route-security": ["access-reconnaissance"],
-    "hostile-operator-intercept": ["route-security"],
-    "armored-transit": ["ballistic-head-test", "expedition-loadout"],
-    "controlled-chemical-support": ["field-medicine-under-pressure"],
-    "precision-observation-window": ["access-reconnaissance", "signal-discipline"],
-    "precision-denial": ["precision-observation-window"],
-    "heavy-assault-loadout": ["armored-transit", "protection-calibration"],
-    "rogue-interdiction": ["hostile-operator-intercept", "route-security"],
-    "night-signal-disruption": ["acoustic-contact", "access-reconnaissance"],
-    "endurance-circuit": ["expedition-discipline", "route-security"],
-    "high-value-target-window": ["precision-denial", "hostile-operator-intercept"],
-    "labs-security-disruption": ["precision-observation-window", "armored-transit"]
-  },
-  "branchSemantics": {
-    "logistics": ["expedition-loadout", "expedition-discipline", "endurance-circuit"],
-    "protection": ["protection-calibration", "ballistic-head-test", "armored-transit", "heavy-assault-loadout"],
-    "reconnaissance": ["signal-discipline", "access-reconnaissance", "acoustic-contact", "precision-observation-window", "night-signal-disruption"],
-    "medicalSupport": ["field-medicine-under-pressure", "controlled-chemical-support"],
-    "securityInterdiction": ["field-expedient-supply", "route-security", "hostile-operator-intercept", "rogue-interdiction", "high-value-target-window"],
-    "precision": ["precision-observation-window", "precision-denial", "high-value-target-window"],
-    "criticalAccess": ["access-reconnaissance", "armored-transit", "labs-security-disruption"]
-  },
-  "progressionContracts": {
-    "operationCount": 21,
-    "allOperationsReachableFromRootSet": true,
-    "acyclicRequired": true,
-    "noOperationRequiresItselfTransitively": true,
-    "criticalOperationsRequireTwoDifferentCapabilityBranches": true,
-    "optionalBranchCompletionMayRemainIncomplete": true,
-    "finalMaterializationMaySplitWaveAcrossMultipleReleases": true,
-    "questLevelsReviewedAgainstFrozenAdmiralLoyaltyThresholds": true,
-    "everyOperationHasConcretePlayerLevel": true,
-    "prerequisitesNeverRequireHigherPlayerLevelThanDependentOperation": true,
-    "rewardStandingMustRemainInsidePost010RewardEnvelope": true
-  },
-  "materializationGate": {
-    "requiresExactSpt413ConditionProofPerOperation": true,
-    "requiresOverlapAuditPerOperation": true,
-    "requiresEconomyAdmiralRewardReview": true,
-    "requiresFinalQuestLevelPlacement": false,
-    "requiresGraphValidationAgainstActuallyMaterializedSubset": true,
-    "requiresPhysicalMilestoneOnlyAfterAWholeMaterializationWaveIsReady": true
-  },
+  "operationLevelPlacement": {"signal-discipline": 15, "field-expedient-supply": 15, "expedition-loadout": 15, "field-medicine-under-pressure": 16, "protection-calibration": 16, "access-reconnaissance": 17, "ballistic-head-test": 18, "acoustic-contact": 20, "route-security": 21, "controlled-chemical-support": 22, "hostile-operator-intercept": 23, "armored-transit": 24, "precision-observation-window": 28, "night-signal-disruption": 29, "precision-denial": 30, "heavy-assault-loadout": 30, "rogue-interdiction": 31, "endurance-circuit": 31, "high-value-target-window": 35, "labs-security-disruption": 37},
+  "levelPlacementRationale": {"fieldReadiness": "Level 15 aligns the post-0.1.0 entry surface with Admiral LL2 availability. Root operations fan out at 15-17, while Ballistic Head Test waits until 18 so protection progression is not compressed into one level.", "operationalIntegration": "Levels 20-24 provide an integration band. Combined hostile-operator and armored-transit checks land later because they depend on prior field branches; the rejected Expedition Discipline node is not retained as artificial padding.", "specialistOperations": "Levels 28-31 keep specialist content after Admiral LL3's level-25 threshold without forcing a loyalty gate. Precision observation opens the band; heavier, rogue and endurance work lands at 30-31.", "commandGrade": "High-Value Target Window opens at level 35 alongside Admiral LL4 eligibility. Labs Security Disruption is held to 37 because it combines restricted-map, precision and protection pressure and should remain the latest authored operation in this wave.", "loyaltyContract": "Player level gates never require a loyalty level or standing value. The level bands merely align campaign pacing with the already-proven 15/25/35 Admiral loyalty trajectory and cannot substitute for authored prerequisites."},
+  "prerequisites": {"signal-discipline": [], "field-expedient-supply": [], "expedition-loadout": [], "field-medicine-under-pressure": [], "protection-calibration": [], "ballistic-head-test": ["protection-calibration"], "access-reconnaissance": [], "acoustic-contact": ["signal-discipline"], "route-security": ["access-reconnaissance"], "hostile-operator-intercept": ["route-security"], "armored-transit": ["ballistic-head-test", "expedition-loadout"], "controlled-chemical-support": ["field-medicine-under-pressure"], "precision-observation-window": ["access-reconnaissance", "signal-discipline"], "precision-denial": ["precision-observation-window"], "heavy-assault-loadout": ["armored-transit", "protection-calibration"], "rogue-interdiction": ["hostile-operator-intercept", "route-security"], "night-signal-disruption": ["acoustic-contact", "access-reconnaissance"], "endurance-circuit": ["expedition-loadout", "route-security"], "high-value-target-window": ["precision-denial", "hostile-operator-intercept"], "labs-security-disruption": ["precision-observation-window", "armored-transit"]},
+  "branchSemantics": {"logistics": ["expedition-loadout", "endurance-circuit"], "protection": ["protection-calibration", "ballistic-head-test", "armored-transit", "heavy-assault-loadout"], "reconnaissance": ["signal-discipline", "access-reconnaissance", "acoustic-contact", "precision-observation-window", "night-signal-disruption"], "medicalSupport": ["field-medicine-under-pressure", "controlled-chemical-support"], "securityInterdiction": ["field-expedient-supply", "route-security", "hostile-operator-intercept", "rogue-interdiction", "high-value-target-window"], "precision": ["precision-observation-window", "precision-denial", "high-value-target-window"], "criticalAccess": ["access-reconnaissance", "armored-transit", "labs-security-disruption"]},
+  "progressionContracts": {"operationCount": 20, "allOperationsReachableFromRootSet": true, "acyclicRequired": true, "noOperationRequiresItselfTransitively": true, "criticalOperationsRequireTwoDifferentCapabilityBranches": true, "optionalBranchCompletionMayRemainIncomplete": true, "finalMaterializationMaySplitWaveAcrossMultipleReleases": true, "questLevelsReviewedAgainstFrozenAdmiralLoyaltyThresholds": true, "everyOperationHasConcretePlayerLevel": true, "prerequisitesNeverRequireHigherPlayerLevelThanDependentOperation": true, "rewardStandingMustRemainInsidePost010RewardEnvelope": true},
+  "materializationGate": {"requiresExactSpt413ConditionProofPerOperation": true, "requiresOverlapAuditPerOperation": true, "requiresEconomyAdmiralRewardReview": true, "requiresFinalQuestLevelPlacement": false, "requiresGraphValidationAgainstActuallyMaterializedSubset": true, "requiresPhysicalMilestoneOnlyAfterAWholeMaterializationWaveIsReady": true},
   "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
 }
