@@ -12,67 +12,59 @@ internal static class DogtagCaseCanonicalFilterPreflightRegression
             throw new InvalidOperationException("Dogtag canonical filter preflight regression failed: module root could not be resolved.");
 
         string source = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseCanonicalFilterPreflight.cs"));
-        Require(source, "[Injectable(TypePriority = OnLoadOrder.Preload + 2)]",
-            "canonical preflight must execute before DogtagCaseItem preload +3 publication");
-        Require(source, "TemplateItem source = RequireCanonicalSourceContract(cancellationToken);",
-            "canonical preflight must begin with a complete value proof of the live source");
-        Require(source, "CanonicalIdentitySnapshot identity = CaptureCanonicalIdentity(source);",
-            "canonical preflight must capture the complete nested mutable identity chain after the first value proof");
-        Require(source, "!ReferenceEquals(liveSource, source)",
-            "canonical preflight must pin exact TemplateTable source identity between value proofs");
-        Require(source, "RequireCanonicalSourceContract(cancellationToken, source);",
-            "canonical preflight must re-prove the same source reference after identity validation");
-        Require(source, "RequireCanonicalIdentity(source, identity);",
-            "canonical preflight must reject value-identical replacement of root/grid/filter objects after the second value proof");
-        Require(source, "expectedReference != null && !ReferenceEquals(source, expectedReference)",
-            "second canonical value proof must independently fail closed if source identity changes");
-        Require(source, "!ReferenceEquals(source.Properties, expected.Properties)",
-            "canonical preflight must pin root properties identity");
-        Require(source, "!ReferenceEquals(source.Properties?.Grids, expected.GridsCollection)",
-            "canonical preflight must pin the mutable canonical grids collection identity");
-        Require(source, "!ReferenceEquals(grids[0], expected.Grid)",
-            "canonical preflight must pin canonical grid object identity");
-        Require(source, "!ReferenceEquals(grids[0].Properties, expected.GridProperties)",
-            "canonical preflight must pin canonical grid-properties identity");
-        Require(source, "!ReferenceEquals(grids[0].Properties?.Filters, expected.FiltersCollection)",
-            "canonical preflight must pin the mutable filter-group collection identity");
-        Require(source, "!ReferenceEquals(groups[i], expected.FilterGroups[i])",
-            "canonical preflight must pin every filter-group object identity");
-        Require(source, "!ReferenceEquals(groups[i].Filter, expected.IncludedFilters[i])",
-            "canonical preflight must pin every included filter-set identity");
-        Require(source, "!ReferenceEquals(groups[i].ExcludedFilter, expected.ExcludedFilters[i])",
-            "canonical preflight must pin nullable excluded filter-set identity without constraining its taxonomy");
-        Require(source, "grids == null || grids.Length != 1",
-            "canonical preflight must require the exact single-grid boundary");
-        Require(source, "!Equals(grid.Parent, SourceDogtagCaseTpl)",
-            "canonical preflight must reject a detached/reparented EFT Dogtag Case grid before filter authority is consumed");
-        Require(source, "filters == null || filters.Length == 0",
-            "canonical preflight must reject a vacuous filter-group contract");
-        Require(source, "included == null || included.Count == 0",
-            "canonical preflight must reject empty positive-admission filters");
-        Require(source, "PersistentIdentityManifest.IsOwnedTemplate(accepted.ToString())",
-            "canonical preflight must reject every B&A&HB-owned product admission rather than only self-recursion");
-        Require(source, "ExcludedFilter is deliberately not constrained here",
-            "preflight must preserve live EFT/SPT excluded-filter authority instead of hardcoding taxonomy");
+        Require(source, "[Injectable(TypePriority = OnLoadOrder.Preload + 2)]", "canonical preflight must execute before DogtagCaseItem preload +3 publication");
+        Require(source, "TemplateItem source = RequireCanonicalSourceContract(cancellationToken);", "canonical preflight must begin with a complete value proof of the live source");
+        Require(source, "CanonicalIdentitySnapshot identity = CaptureCanonicalIdentity(source);", "canonical preflight must capture mutable identity/content/scalar authority after the first value proof");
+        Require(source, "!ReferenceEquals(liveSource, source)", "canonical preflight must pin exact TemplateTable source identity between value proofs");
+        Require(source, "RequireCanonicalSourceContract(cancellationToken, source);", "canonical preflight must re-prove the same source reference after identity validation");
+        Require(source, "RequireCanonicalIdentity(source, identity);", "canonical preflight must reject nested replacement/content/scalar drift before and after lease publication");
+        Require(source, "expectedReference != null && !ReferenceEquals(source, expectedReference)", "second canonical value proof must independently fail closed if source identity changes");
+        Require(source, "!ReferenceEquals(source.Properties, expected.Properties)", "canonical preflight must pin root properties identity");
+        Require(source, "!ReferenceEquals(source.Properties?.Grids, expected.GridsCollection)", "canonical preflight must pin mutable canonical grids collection identity");
+        Require(source, "!ReferenceEquals(grids[0], expected.Grid)", "canonical preflight must pin canonical grid object identity");
+        Require(source, "!ReferenceEquals(grids[0].Properties, expected.GridProperties)", "canonical preflight must pin canonical grid-properties identity");
+        Require(source, "!ReferenceEquals(grids[0].Properties?.Filters, expected.FiltersCollection)", "canonical preflight must pin mutable filter-group collection identity");
+        Require(source, "!ReferenceEquals(groups[i], expected.FilterGroups[i])", "canonical preflight must pin every filter-group object identity");
+        Require(source, "!ReferenceEquals(groups[i].Filter, expected.IncludedFilters[i])", "canonical preflight must pin every included filter-set identity");
+        Require(source, "!ReferenceEquals(groups[i].ExcludedFilter, expected.ExcludedFilters[i])", "canonical preflight must pin nullable excluded filter-set identity without replacing its taxonomy");
 
-        int priority = source.IndexOf("OnLoadOrder.Preload + 2", StringComparison.Ordinal);
+        string[] scalarPins =
+        {
+            "!Equals(source.Parent, expected.SourceParent)",
+            "!Equals(source.Properties?.BackgroundColor, expected.BackgroundColor)",
+            "!Equals(source.Properties?.ExaminedByDefault, expected.ExaminedByDefault)",
+            "!Equals(source.Properties?.Width, expected.Width)",
+            "!Equals(source.Properties?.Height, expected.Height)",
+            "!Equals(source.Properties?.StackMaxSize, expected.StackMaxSize)",
+            "!Equals(grids[0].Name, expected.GridName)",
+            "!Equals(grids[0].Id, expected.GridId)",
+            "!Equals(grids[0].Parent, expected.GridParent)",
+            "!Equals(grids[0].Prototype, expected.GridPrototype)",
+            "!Equals(grids[0].Properties?.CellsH, expected.CellsH)",
+            "!Equals(grids[0].Properties?.CellsV, expected.CellsV)",
+            "!Equals(grids[0].Properties?.MinCount, expected.MinCount)",
+            "!Equals(grids[0].Properties?.MaxCount, expected.MaxCount)",
+            "!Equals(grids[0].Properties?.MaxWeight, expected.MaxWeight)",
+            "!Equals(grids[0].Properties?.IsSortingTable, expected.IsSortingTable)"
+        };
+        foreach (string pin in scalarPins) Require(source, pin, "canonical preflight must pin scalar source authority: " + pin);
+
+        Require(source, "grids == null || grids.Length != 1", "canonical preflight must require the exact single-grid boundary");
+        Require(source, "!Equals(grid.Parent, SourceDogtagCaseTpl)", "canonical preflight must reject a detached/reparented EFT Dogtag Case grid before filter authority is consumed");
+        Require(source, "filters == null || filters.Length == 0", "canonical preflight must reject a vacuous filter-group contract");
+        Require(source, "included == null || included.Count == 0", "canonical preflight must reject empty positive-admission filters");
+        Require(source, "PersistentIdentityManifest.IsOwnedTemplate(accepted.ToString())", "canonical preflight must reject every B&A&HB-owned product admission rather than only self-recursion");
+        Require(source, "ExcludedFilter remains live EFT/SPT authority", "preflight must preserve live EFT/SPT excluded-filter authority instead of hardcoding taxonomy");
+
         int firstProof = source.IndexOf("TemplateItem source = RequireCanonicalSourceContract(cancellationToken);", StringComparison.Ordinal);
         int capture = source.IndexOf("CanonicalIdentitySnapshot identity = CaptureCanonicalIdentity(source);", StringComparison.Ordinal);
-        int identity = source.IndexOf("!ReferenceEquals(liveSource, source)", StringComparison.Ordinal);
         int secondProof = source.IndexOf("RequireCanonicalSourceContract(cancellationToken, source);", StringComparison.Ordinal);
-        int nestedIdentity = source.IndexOf("RequireCanonicalIdentity(source, identity);", StringComparison.Ordinal);
-        int gridsCollection = source.IndexOf("!ReferenceEquals(source.Properties?.Grids, expected.GridsCollection)", StringComparison.Ordinal);
-        int filtersCollection = source.IndexOf("!ReferenceEquals(grids[0].Properties?.Filters, expected.FiltersCollection)", StringComparison.Ordinal);
-        int grid = source.IndexOf("grids == null || grids.Length != 1", StringComparison.Ordinal);
-        int parent = source.IndexOf("!Equals(grid.Parent, SourceDogtagCaseTpl)", StringComparison.Ordinal);
-        int filters = source.IndexOf("filters == null || filters.Length == 0", StringComparison.Ordinal);
-        int included = source.IndexOf("included == null || included.Count == 0", StringComparison.Ordinal);
-        int owned = source.IndexOf("PersistentIdentityManifest.IsOwnedTemplate(accepted.ToString())", StringComparison.Ordinal);
-        if (priority < 0 || firstProof < priority || capture < firstProof || identity < capture
-            || secondProof < identity || nestedIdentity < secondProof
-            || gridsCollection < nestedIdentity || filtersCollection < gridsCollection
-            || grid < nestedIdentity || parent < grid || filters < parent || included < filters || owned < included)
-            throw new InvalidOperationException("Dogtag canonical filter preflight regression failed: value -> nested identity capture -> source identity -> value -> complete nested identity proof ordering changed.");
+        int proofBeforePublish = source.IndexOf("RequireCanonicalIdentity(source, identity);", secondProof, StringComparison.Ordinal);
+        int publish = source.IndexOf("DogtagCaseCanonicalIdentityLease.Publish(source);", StringComparison.Ordinal);
+        int proofAfterPublish = source.IndexOf("RequireCanonicalIdentity(source, identity);", publish + 1, StringComparison.Ordinal);
+        if (firstProof < 0 || capture < firstProof || secondProof < capture || proofBeforePublish < secondProof
+            || publish < proofBeforePublish || proofAfterPublish < publish)
+            throw new InvalidOperationException("Dogtag canonical filter preflight regression failed: initial proof -> capture -> same-source proof -> full proof -> lease capture -> full post-capture proof ordering changed.");
     }
 
     private static string? FindModuleRoot()
@@ -84,7 +76,6 @@ internal static class DogtagCaseCanonicalFilterPreflightRegression
             if (File.Exists(candidate)) return current.FullName;
             current = current.Parent;
         }
-
         current = new DirectoryInfo(Directory.GetCurrentDirectory());
         while (current != null)
         {
