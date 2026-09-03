@@ -7,8 +7,8 @@ namespace SPTBeltArmbandInventory.Server;
 /// <summary>
 /// Carries the exact canonical Dogtag Case source authority proven at Preload +2
 /// into the Preload +3 product transaction. The lease is single-consumer and
-/// fail-closed: wrapper replacement and in-place filter-content drift cannot
-/// inherit preflight authority.
+/// fail-closed: wrapper replacement, in-place filter-content drift, and scalar
+/// canonical geometry/presentation drift cannot inherit preflight authority.
 /// </summary>
 internal static class DogtagCaseCanonicalIdentityLease
 {
@@ -28,7 +28,23 @@ internal static class DogtagCaseCanonicalIdentityLease
             object[] included,
             object?[] excluded,
             HashSet<MongoId>[] includedValues,
-            HashSet<MongoId>?[] excludedValues)
+            HashSet<MongoId>?[] excludedValues,
+            object? sourceParent,
+            object? backgroundColor,
+            object? examinedByDefault,
+            object? width,
+            object? height,
+            object? stackMaxSize,
+            object? gridName,
+            object? gridId,
+            object? gridParent,
+            object? gridPrototype,
+            object? cellsH,
+            object? cellsV,
+            object? minCount,
+            object? maxCount,
+            object? maxWeight,
+            object? isSortingTable)
         {
             Source = source;
             Properties = properties;
@@ -41,6 +57,22 @@ internal static class DogtagCaseCanonicalIdentityLease
             Excluded = excluded;
             IncludedValues = includedValues;
             ExcludedValues = excludedValues;
+            SourceParent = sourceParent;
+            BackgroundColor = backgroundColor;
+            ExaminedByDefault = examinedByDefault;
+            Width = width;
+            Height = height;
+            StackMaxSize = stackMaxSize;
+            GridName = gridName;
+            GridId = gridId;
+            GridParent = gridParent;
+            GridPrototype = gridPrototype;
+            CellsH = cellsH;
+            CellsV = cellsV;
+            MinCount = minCount;
+            MaxCount = maxCount;
+            MaxWeight = maxWeight;
+            IsSortingTable = isSortingTable;
         }
 
         internal TemplateItem Source { get; }
@@ -54,6 +86,22 @@ internal static class DogtagCaseCanonicalIdentityLease
         private object?[] Excluded { get; }
         private HashSet<MongoId>[] IncludedValues { get; }
         private HashSet<MongoId>?[] ExcludedValues { get; }
+        private object? SourceParent { get; }
+        private object? BackgroundColor { get; }
+        private object? ExaminedByDefault { get; }
+        private object? Width { get; }
+        private object? Height { get; }
+        private object? StackMaxSize { get; }
+        private object? GridName { get; }
+        private object? GridId { get; }
+        private object? GridParent { get; }
+        private object? GridPrototype { get; }
+        private object? CellsH { get; }
+        private object? CellsV { get; }
+        private object? MinCount { get; }
+        private object? MaxCount { get; }
+        private object? MaxWeight { get; }
+        private object? IsSortingTable { get; }
 
         internal void RequireCurrent(TemplateTable templates, TemplateItem expectedSource)
         {
@@ -68,6 +116,13 @@ internal static class DogtagCaseCanonicalIdentityLease
             if (!ReferenceEquals(liveSource.Properties, Properties)
                 || !ReferenceEquals(liveSource.Properties?.Grids, GridsCollection))
                 throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: canonical source properties/grids wrapper was replaced after Preload +2.");
+            if (!Equals(liveSource.Parent, SourceParent)
+                || !Equals(liveSource.Properties?.BackgroundColor, BackgroundColor)
+                || !Equals(liveSource.Properties?.ExaminedByDefault, ExaminedByDefault)
+                || !Equals(liveSource.Properties?.Width, Width)
+                || !Equals(liveSource.Properties?.Height, Height)
+                || !Equals(liveSource.Properties?.StackMaxSize, StackMaxSize))
+                throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: canonical root parent/presentation/geometry values drifted after Preload +2.");
 
             var grids = liveSource.Properties?.Grids?.ToArray();
             if (grids == null || grids.Length != 1 || !ReferenceEquals(grids[0], Grid))
@@ -75,6 +130,17 @@ internal static class DogtagCaseCanonicalIdentityLease
             if (!ReferenceEquals(grids[0].Properties, GridProperties)
                 || !ReferenceEquals(grids[0].Properties?.Filters, FiltersCollection))
                 throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: canonical grid properties/filters wrapper was replaced after Preload +2.");
+            if (!Equals(grids[0].Name, GridName)
+                || !Equals(grids[0].Id, GridId)
+                || !Equals(grids[0].Parent, GridParent)
+                || !Equals(grids[0].Prototype, GridPrototype)
+                || !Equals(grids[0].Properties?.CellsH, CellsH)
+                || !Equals(grids[0].Properties?.CellsV, CellsV)
+                || !Equals(grids[0].Properties?.MinCount, MinCount)
+                || !Equals(grids[0].Properties?.MaxCount, MaxCount)
+                || !Equals(grids[0].Properties?.MaxWeight, MaxWeight)
+                || !Equals(grids[0].Properties?.IsSortingTable, IsSortingTable))
+                throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: canonical grid identity/geometry/sorting values drifted after Preload +2.");
 
             var groups = grids[0].Properties?.Filters?.ToArray();
             if (groups == null || groups.Length != Groups.Length)
@@ -108,11 +174,6 @@ internal static class DogtagCaseCanonicalIdentityLease
         Lease next = Capture(source);
         lock (Sync)
         {
-            // +2 publishes authority for exactly one +3 transaction. Silently replacing an
-            // unconsumed lease would allow a second/re-entrant preload pass to erase the first
-            // transaction's proven source graph and create an ABA-style authority handoff.
-            // Refuse duplicate publication instead; successful Consume is the normal authority-
-            // clearing path. Cancellation may withdraw only the exact still-pending source lease.
             if (pending != null)
                 throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: an unconsumed Preload +2 authority is already pending.");
             pending = next;
@@ -125,13 +186,6 @@ internal static class DogtagCaseCanonicalIdentityLease
         {
             Lease lease = pending
                 ?? throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: Preload +2 identity authority is missing or was already consumed.");
-
-            // Keep publication/consumption serialized until the exact +2 graph has been
-            // re-proven. Clearing first would create an interleaving window where another
-            // +2 Publish could install fresh authority while this +3 Consume was still
-            // validating the prior lease. A failed proof intentionally leaves the invalid
-            // lease pending, making the startup path terminal fail-closed rather than
-            // silently accepting a later replacement authority.
             lease.RequireCurrent(templates, source);
             pending = null;
             return lease;
@@ -143,9 +197,6 @@ internal static class DogtagCaseCanonicalIdentityLease
         ArgumentNullException.ThrowIfNull(source);
         lock (Sync)
         {
-            // Cancellation is lifecycle rollback, not compatibility recovery. Withdraw only
-            // the exact +2 lease that this cancelled preflight published. Missing/replaced/
-            // already-consumed authority is ambiguous and must remain fail-closed.
             Lease lease = pending
                 ?? throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease cancellation refused: no pending Preload +2 authority exists.");
             if (!ReferenceEquals(lease.Source, source))
@@ -183,6 +234,22 @@ internal static class DogtagCaseCanonicalIdentityLease
             groups.Select(x => (object)x.Filter!).ToArray(),
             groups.Select(x => (object?)x.ExcludedFilter).ToArray(),
             groups.Select(x => new HashSet<MongoId>(x.Filter!)).ToArray(),
-            groups.Select(x => x.ExcludedFilter == null ? null : new HashSet<MongoId>(x.ExcludedFilter)).ToArray());
+            groups.Select(x => x.ExcludedFilter == null ? null : new HashSet<MongoId>(x.ExcludedFilter)).ToArray(),
+            source.Parent,
+            properties.BackgroundColor,
+            properties.ExaminedByDefault,
+            properties.Width,
+            properties.Height,
+            properties.StackMaxSize,
+            grid.Name,
+            grid.Id,
+            grid.Parent,
+            grid.Prototype,
+            gridProperties.CellsH,
+            gridProperties.CellsV,
+            gridProperties.MinCount,
+            gridProperties.MaxCount,
+            gridProperties.MaxWeight,
+            gridProperties.IsSortingTable);
     }
 }
