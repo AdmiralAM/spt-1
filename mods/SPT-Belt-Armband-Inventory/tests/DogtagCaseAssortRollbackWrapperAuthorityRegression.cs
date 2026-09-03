@@ -29,9 +29,54 @@ internal static class DogtagCaseAssortRollbackWrapperAuthorityRegression
         if (firstFence < 0 || firstMutation < 0 || firstFence > firstMutation)
             throw new InvalidOperationException("Dogtag assort rollback wrapper-authority regression failed: stale wrapper chain can be mutated before the first authority fence.");
 
-        Require(rollback, "if (!IsAssortWrapperIdentityCurrent()) throw;\n                loyalLevelItems.Remove(id);", "loyalty rollback must re-prove wrapper authority immediately before mutation");
-        Require(rollback, "if (!IsAssortWrapperIdentityCurrent()) throw;\n                barterScheme.Remove(id);", "barter rollback must re-prove wrapper authority immediately before mutation");
-        Require(rollback, "if (!IsAssortWrapperIdentityCurrent()) throw;\n                items.RemoveAt(ownedItemIndex);", "item rollback must re-prove wrapper authority immediately before mutation");
+        RequireMutationFence(
+            rollback,
+            "loyalLevelItems.Remove(id);",
+            new[]
+            {
+                "if (!IsAssortWrapperIdentityCurrent()) throw;",
+                "if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;",
+                "if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;",
+                "if (!loyalLevelItems.TryGetValue(id, out var liveOwnedLoyalty) || liveOwnedLoyalty != LoyaltyLevel) throw;"
+            },
+            "loyalty rollback must re-prove captured wrapper plus the complete owned tuple immediately before mutation");
+        RequireMutationFence(
+            rollback,
+            "barterScheme.Remove(id);",
+            new[]
+            {
+                "if (!IsAssortWrapperIdentityCurrent()) throw;",
+                "if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;"
+            },
+            "barter rollback must re-prove captured wrapper plus exact barter reference immediately before mutation");
+        RequireMutationFence(
+            rollback,
+            "items.RemoveAt(ownedItemIndex);",
+            new[]
+            {
+                "if (!IsAssortWrapperIdentityCurrent()) throw;",
+                "if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;"
+            },
+            "item rollback must re-prove captured wrapper plus exact item reference/index immediately before mutation");
+    }
+
+    private static void RequireMutationFence(string source, string mutation, string[] orderedProofs, string message)
+    {
+        int mutationIndex = source.IndexOf(mutation, StringComparison.Ordinal);
+        if (mutationIndex < 0)
+            throw new InvalidOperationException("Dogtag assort rollback wrapper-authority regression failed: " + message + " (mutation missing).");
+
+        int cursor = source.LastIndexOf(orderedProofs[0], mutationIndex, StringComparison.Ordinal);
+        if (cursor < 0)
+            throw new InvalidOperationException("Dogtag assort rollback wrapper-authority regression failed: " + message + " (wrapper proof missing).");
+
+        for (int i = 1; i < orderedProofs.Length; i++)
+        {
+            int next = source.IndexOf(orderedProofs[i], cursor + orderedProofs[i - 1].Length, StringComparison.Ordinal);
+            if (next < 0 || next >= mutationIndex)
+                throw new InvalidOperationException("Dogtag assort rollback wrapper-authority regression failed: " + message + " (tuple proof ordering changed).");
+            cursor = next;
+        }
     }
 
     private static int FirstMutationIndex(string source)
