@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-static-readiness-proof",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "purpose": "Close the non-physical Relationship standing-stock readiness frontier by reconciling the already-proven profile visibility, request-scoped projection, bounded Economy envelope and immutable-source contracts without enabling runtime materialization.",
+  "authorities": {
+    "standingStock": "relationship-standing-stock-uplift.json",
+    "profileVisibility": "relationship-standing-profile-visibility-proof.json",
+    "relationshipStock": "relationship-stock.json",
+    "loyaltyThresholds": "relationship-standing-loyalty-threshold-contract.json"
+  },
+  "resolvedStaticGates": {
+    "profileScopedCurrentStandingVisible": true,
+    "requestScopedAssortProjectionImplemented": true,
+    "assortMutationContractLocked": true,
+    "economyEnvelopeApproved": true,
+    "priceInvariant": true,
+    "newRootOfferAdded": false,
+    "globalSourceMutationAllowed": false,
+    "unknownProfileFallsBackToFrozenLl1": true
+  },
+  "remainingGate": {
+    "type": "batched-physical-runtime-proof",
+    "requestedNow": false,
+    "scope": "requester-local level/standing transition selects exactly one finite marker tier with no cross-profile or cross-session leakage",
+    "expectedPass": "After a standing-changing lifecycle event, a later Admiral assort request for the same session resolves the updated PMC TradersInfo standing and projects exactly the corresponding finite marker tier; another profile/session remains on its own tier and the immutable global source assort is unchanged.",
+    "diagnosticBoundaries": [
+      "profile standing did not change: lifecycle/reward profile mutation boundary",
+      "profile standing changed but resolver saw stale/different value: profile-resolution boundary",
+      "resolver saw correct value but returned assort retained wrong tier: projection/router boundary",
+      "one requester tier leaked into another requester or global source: isolation/source-mutation boundary",
+      "server response is correct but UI remains stale: client refresh/cache boundary"
+    ]
+  },
+  "decision": {
+    "additionalStaticRelationshipWorkRequiredBeforePhysicalCheckpoint": false,
+    "runtimeMaterializationEnabled": false,
+    "physicalCheckpointActivated": false,
+    "frozen010Changed": false
+  },
+  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
+}
