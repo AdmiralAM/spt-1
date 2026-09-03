@@ -43,12 +43,15 @@ public sealed class DogtagCaseAssort(
         var loyalLevelItems = assort.LoyalLevelItems
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case could not resolve Ragman assort LoyalLevelItems collection.");
 
+        bool IsAssortWrapperIdentityCurrent()
+            => ReferenceEquals(trader.Assort, assort)
+                && ReferenceEquals(trader.Assort?.Items, items)
+                && ReferenceEquals(trader.Assort?.BarterScheme, barterScheme)
+                && ReferenceEquals(trader.Assort?.LoyalLevelItems, loyalLevelItems);
+
         void RequireAssortWrapperIdentity()
         {
-            if (!ReferenceEquals(trader.Assort, assort)
-                || !ReferenceEquals(trader.Assort?.Items, items)
-                || !ReferenceEquals(trader.Assort?.BarterScheme, barterScheme)
-                || !ReferenceEquals(trader.Assort?.LoyalLevelItems, loyalLevelItems))
+            if (!IsAssortWrapperIdentityCurrent())
                 throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: Ragman assort wrapper chain changed during bounded publication.");
         }
 
@@ -119,6 +122,12 @@ public sealed class DogtagCaseAssort(
         }
         catch
         {
+            // Rollback may only mutate the exact Ragman wrappers captured for this transaction.
+            // If another participant replaced any wrapper, these collections are stale authority:
+            // preserve them untouched and fail closed rather than "cleaning" detached state.
+            if (!IsAssortWrapperIdentityCurrent())
+                throw;
+
             int ownedItemIndex = -1;
             if (itemAdded)
             {
@@ -138,13 +147,22 @@ public sealed class DogtagCaseAssort(
             if (loyaltyAdded && ownsItem && ownsBarter
                 && loyalLevelItems.TryGetValue(id, out var currentLoyalty)
                 && currentLoyalty == LoyaltyLevel)
+            {
+                if (!IsAssortWrapperIdentityCurrent()) throw;
                 loyalLevelItems.Remove(id);
+            }
 
             if (ownsBarter)
+            {
+                if (!IsAssortWrapperIdentityCurrent()) throw;
                 barterScheme.Remove(id);
+            }
 
             if (ownsItem)
+            {
+                if (!IsAssortWrapperIdentityCurrent()) throw;
                 items.RemoveAt(ownedItemIndex);
+            }
             throw;
         }
 
