@@ -77,13 +77,27 @@ def require_collision_safe_assort(path, label, captured_wrappers=False):
         violations.append(f"{label} must re-prove captured Ragman wrapper identity throughout publication")
     if captured_wrappers:
         rollback_tokens = [
+            "bool ownsItem = !itemAdded || ownedItemIndex >= 0;",
+            "bool ownsBarter = barterAdded",
+            "bool ownsLoyalty = loyaltyAdded",
+            "if (!ownsItem || !ownsBarter || !ownsLoyalty)",
             "if (!IsAssortWrapperIdentityCurrent()) throw;\n                if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;\n                if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;\n                if (!loyalLevelItems.TryGetValue(id, out var liveOwnedLoyalty) || liveOwnedLoyalty != LoyaltyLevel) throw;\n                loyalLevelItems.Remove(id);",
-            "if (!IsAssortWrapperIdentityCurrent()) throw;\n                if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;\n                barterScheme.Remove(id);",
-            "if (!IsAssortWrapperIdentityCurrent()) throw;\n                if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;\n                items.RemoveAt(ownedItemIndex);",
+            "if (!IsAssortWrapperIdentityCurrent()) throw;\n                if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;\n                if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;\n                if (loyalLevelItems.ContainsKey(id)) throw;\n                barterScheme.Remove(id);",
+            "if (!IsAssortWrapperIdentityCurrent()) throw;\n                if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;\n                if (barterScheme.ContainsKey(id) || loyalLevelItems.ContainsKey(id)) throw;\n                items.RemoveAt(ownedItemIndex);",
         ]
         for token in rollback_tokens:
             if token not in text:
-                violations.append(f"{label} must re-prove exact live Ragman wrapper plus owned tuple authority immediately before rollback mutation")
+                violations.append(f"{label} must prove complete prefix tuple ownership and mutation-adjacent downstream absence before rollback mutation")
+        tuple_gate = text.find("if (!ownsItem || !ownsBarter || !ownsLoyalty)")
+        first_remove = min((p for p in (
+            text.find("loyalLevelItems.Remove(id);"),
+            text.find("barterScheme.Remove(id);"),
+            text.find("items.RemoveAt(ownedItemIndex);")
+        ) if p >= 0), default=-1)
+        if tuple_gate < 0 or first_remove < 0 or tuple_gate > first_remove:
+            violations.append(f"{label} must prove complete prefix tuple ownership before the first rollback mutation")
+        if "if (loyaltyAdded && ownsItem && ownsBarter" in text:
+            violations.append(f"{label} must not retain the legacy partial rollback gate that can leave dangling metadata")
     return text
 
 
@@ -284,4 +298,4 @@ if ".Remove(" in migration and 'item.Remove("location")' not in migration:
 if violations:
     raise SystemExit("B&A&HB product-contract gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; Dogtag preload carries exact host receipt through final canonical proof with exact-owned rollback; Dogtag Ragman wrappers transaction-pinned with mutation-adjacent exact tuple ownership rollback; split HeadBand; canonical Dogtag clone/host parity retained)")
+print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; Dogtag preload carries exact host receipt through final canonical proof with exact-owned rollback; Dogtag Ragman wrappers transaction-pinned with complete prefix tuple ownership and mutation-adjacent downstream-absence rollback; split HeadBand; canonical Dogtag clone/host parity retained)")
