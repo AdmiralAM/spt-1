@@ -32,6 +32,7 @@
     <Compile Include="..\src\ReloadExecutionPublicationGuard.cs" Link="ReloadExecutionPublicationGuard.cs" />
     <Compile Include="..\src\ReloadEpochPublicationFence.cs" Link="ReloadEpochPublicationFence.cs" />
     <Compile Include="..\src\ReloadCallerPublicationFence.cs" Link="ReloadCallerPublicationFence.cs" />
+    <Compile Include="..\src\ReloadReachabilityPublicationFence.cs" Link="ReloadReachabilityPublicationFence.cs" />
     <Compile Include="..\src\RuntimeMutationPolicy.cs" Link="RuntimeMutationPolicy.cs" />
     <Compile Include="..\src\RuntimeCustomBeltTypes.cs" Link="RuntimeCustomBeltTypes.cs" />
     <Compile Include="..\src\RuntimeIdentity.cs" Link="RuntimeIdentity.cs" />
