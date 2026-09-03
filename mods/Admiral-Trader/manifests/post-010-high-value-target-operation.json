@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "product": "Admiral Trader",
-  "status": "post-0.1.0-authored-spec-only",
+  "status": "post-0.1.0-authored-spec-only-target-rejected",
   "operationKey": "high-value-target-window",
   "title": {"en": "Command Window", "ru": "Командное окно"},
   "sourceBundles": ["Boss Hunt", "Boss Follower Hunt"],
@@ -13,48 +13,65 @@
     "locationTarget": "RezervBase",
     "maximumTargets": 1,
     "maximumSuccessfulRaids": 1,
-    "repeatable": false
+    "repeatable": false,
+    "selectionStatus": "rejected-vanilla-semantic-collision"
   },
-  "productDecision": "Select Glukhar on Reserve as the command-grade HVT. The operation requires one command target, then a successful extraction; it does not admit follower farming, multi-boss ladders, trophy handovers or repeatable boss population control.",
-  "whyThisTarget": [
-    "Glukhar is a literal command element with a coherent Reserve identity, so the objective matches Command Window rather than using an arbitrary boss for difficulty alone.",
-    "A single boss target preserves the source concept while compressing the legacy escalating boss/follower counters into one bounded operation.",
-    "Reserve already has pinned exact quest-location authority as RezervBase, avoiding a guessed map selector.",
-    "The operation intentionally pays no boss gear or trophy reward, avoiding a boss-equipment faucet."
+  "productDecision": "Reject the current Glukhar-on-Reserve Command Window shape. Vanilla Payback already contains the same command target on Reserve and requires successful Reserve extraction after a broader Glukhar/guards/flare sequence, so Admiral's narrower Glukhar plus successful extraction contract is a semantic subset rather than a distinct operation. Do not materialize it and do not preserve it merely to keep authored quest count. A replacement is admitted only if it has a distinct gameplay purpose and proven SPT 4.1.3 condition semantics.",
+  "whyThisTargetWasInitiallySelected": [
+    "Glukhar is a literal command element with a coherent Reserve identity, so the objective matched Command Window better than an arbitrary boss selected only for difficulty.",
+    "A single boss target compressed legacy escalating boss/follower counters into one bounded operation.",
+    "Reserve has pinned exact quest-location authority as RezervBase.",
+    "The operation intentionally paid no boss gear or trophy reward, avoiding a boss-equipment faucet."
   ],
+  "externalOverlapReview": {
+    "status": "vanilla-semantic-collision-proven-target-rejected",
+    "vanilla": {
+      "quest": "Payback",
+      "location": "Reserve",
+      "relevantShape": ["eliminate Glukhar", "eliminate Glukhar guards", "signal objective", "survive and extract from Reserve through Cliff Descent"],
+      "classification": "semantic-superset-of-current-admiral-shape",
+      "decision": "reject-current-target-shape",
+      "reason": "Command Window currently asks for the same named boss on the same map followed by successful extraction. Payback adds guards, flare and a specific extract; those additions do not make the narrower Admiral contract independently valuable."
+    },
+    "scorpion": {"status": "not-required-before-redesign", "pinnedCommit": "7d1bed766f859f227680377acc1e20c8f97b09bf"},
+    "artem": {"status": "not-required-before-redesign", "pinnedCommit": "ee5b7c13a1980ff961ed0b2c1d8764574377b2bf"}
+  },
   "conditionAuthority": {
     "roleProof": "post-010-role-alias-proof.json",
-    "role": {"target": "Savage", "savageRole": ["bossGluhar"], "status": "proven-pinned-spt413"},
+    "role": {"target": "Savage", "savageRole": ["bossGluhar"], "status": "proven-pinned-spt413-but-current-product-shape-rejected"},
     "locationProof": "post-010-reserve-location-proof.json",
-    "location": {"friendlyName": "Reserve", "target": "RezervBase", "status": "proven-pinned-upstream-authority"},
+    "location": {"friendlyName": "Reserve", "target": "RezervBase", "status": "proven-pinned-upstream-authority-but-current-product-shape-rejected"},
     "frozenOverlapProof": "post-010-high-value-target-frozen-overlap-proof.json",
     "extractionShapeProof": "post-010-same-raid-coupling-proof.json"
   },
   "economyReview": {
-    "status": "approved-static",
+    "status": "approved-static-for-rejected-shape-do-not-materialize",
     "campaignPlayerLevel": 35,
     "riskBand": "critical",
     "authoredReward": {"xp": 15500, "rub": 100000, "standing": 0.023, "itemReward": null},
-    "reason": "One non-repeatable late-campaign boss disruption plus extraction justifies critical-band currency/XP, but no boss gear, guaranteed trophy or capability unlock is required."
+    "reason": "The previous reward envelope was bounded, but reward validity does not rescue a semantically duplicate objective. No reward is materialized while the target shape is rejected."
   },
   "gates": {
-    "requiresFinalBossSelection": false,
+    "requiresFinalBossSelection": true,
     "requiresExactBossRoleProof": false,
     "requiresExactReserveLocationSelection": false,
     "requiresEconomyAdmiralReview": false,
     "requiresFrozenCampaignOverlapReview": false,
     "requiresVanillaScorpionArtemOverlapAudit": true,
+    "requiresTargetRedesignAfterVanillaCollision": true,
     "requiresSameRaidKillAndExtractionCouplingProof": true,
     "implementationAllowed": false,
     "runtimeMaterialize": false
   },
   "rejectedAlternatives": [
+    "Glukhar on Reserve plus successful extraction because vanilla Payback is a semantic superset",
     "generic any-boss objective",
     "boss-or-any-follower ambiguity",
     "escalating 3/5/10 boss or follower counters",
     "boss trophy handover",
     "repeatable boss farm",
-    "boss-equipment reward or storefront unlock"
+    "boss-equipment reward or storefront unlock",
+    "keeping a duplicate boss quest only to preserve authored quest count"
   ],
   "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
 }
