@@ -149,18 +149,23 @@ public sealed class DogtagCaseAssort(
                 && currentLoyalty == LoyaltyLevel)
             {
                 if (!IsAssortWrapperIdentityCurrent()) throw;
+                if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;
+                if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;
+                if (!loyalLevelItems.TryGetValue(id, out var liveOwnedLoyalty) || liveOwnedLoyalty != LoyaltyLevel) throw;
                 loyalLevelItems.Remove(id);
             }
 
             if (ownsBarter)
             {
                 if (!IsAssortWrapperIdentityCurrent()) throw;
+                if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;
                 barterScheme.Remove(id);
             }
 
             if (ownsItem)
             {
                 if (!IsAssortWrapperIdentityCurrent()) throw;
+                if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;
                 items.RemoveAt(ownedItemIndex);
             }
             throw;
