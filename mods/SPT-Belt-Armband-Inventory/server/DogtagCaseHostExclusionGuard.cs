@@ -206,8 +206,7 @@ public static class DogtagCaseHostExclusionPolicy
 
         object? raw = selected switch
         {
-            PropertyInfo property => property.GetGetMethod(true)?.Invoke(filterGroup, null)
-                ?? throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter property getter disappeared after bounded discovery."),
+            PropertyInfo property => property.GetGetMethod(true)?.Invoke(filterGroup, null),
             FieldInfo field => field.GetValue(filterGroup),
             _ => throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter member has an unsupported reflection shape.")
         };
