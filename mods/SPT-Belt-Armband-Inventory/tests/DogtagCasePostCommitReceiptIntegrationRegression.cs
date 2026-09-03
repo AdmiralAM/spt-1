@@ -17,16 +17,18 @@ internal static class DogtagCasePostCommitReceiptIntegrationRegression
         int accept = receiptClass < 0 ? -1 : item.IndexOf("internal void Accept()", receiptClass, StringComparison.Ordinal);
         int acceptHostProof = accept < 0 ? -1 : item.IndexOf("owner.RequireLiveDogtagHostIdentity(boundary);", accept, StringComparison.Ordinal);
         int acceptCommitted = acceptHostProof < 0 ? -1 : item.IndexOf("DogtagCaseHostContract.RequireCommitted(boundary.Filter);", acceptHostProof, StringComparison.Ordinal);
-        int abandon = acceptCommitted < 0 ? -1 : item.IndexOf("DogtagCaseHostContract.TryAbandonRollbackAuthority(boundary.Filter, rollbackBaseline)", acceptCommitted, StringComparison.Ordinal);
+        int nullAuthorityBranch = acceptCommitted < 0 ? -1 : item.IndexOf("if (rollbackBaseline == null)", acceptCommitted, StringComparison.Ordinal);
+        int abandon = nullAuthorityBranch < 0 ? -1 : item.IndexOf("DogtagCaseHostContract.TryAbandonRollbackAuthority(boundary.Filter, rollbackBaseline)", nullAuthorityBranch, StringComparison.Ordinal);
         int rollback = abandon < 0 ? -1 : item.IndexOf("internal bool TryRollback()", abandon, StringComparison.Ordinal);
         int rollbackHostProof = rollback < 0 ? -1 : item.IndexOf("owner.RequireLiveDogtagHostIdentity(boundary);", rollback, StringComparison.Ordinal);
         int ownedRollback = rollbackHostProof < 0 ? -1 : item.IndexOf("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(boundary.Filter, rollbackBaseline)", rollbackHostProof, StringComparison.Ordinal);
 
-        if (receiptClass < 0 || accept < 0 || acceptHostProof < 0 || acceptCommitted < 0 || abandon < 0
+        if (receiptClass < 0 || accept < 0 || acceptHostProof < 0 || acceptCommitted < 0 || nullAuthorityBranch < 0 || abandon < 0
             || rollback < 0 || rollbackHostProof < 0 || ownedRollback < 0
             || !(receiptClass < accept && accept < acceptHostProof && acceptHostProof < acceptCommitted
-                && acceptCommitted < abandon && abandon < rollback && rollback < rollbackHostProof && rollbackHostProof < ownedRollback))
-            throw new InvalidOperationException("Dogtag post-commit receipt integration regression failed: receipt must require exact live host + committed shape before metadata-only acceptance and exact live host before owned rollback.");
+                && acceptCommitted < nullAuthorityBranch && nullAuthorityBranch < abandon
+                && abandon < rollback && rollback < rollbackHostProof && rollbackHostProof < ownedRollback))
+            throw new InvalidOperationException("Dogtag post-commit receipt integration regression failed: every acceptance path, including metadata-empty/pre-existing Case, must re-prove exact live host + committed shape before success; owned acceptance then consumes metadata and failed proof retains exact-owned rollback authority.");
 
         int commitSignature = item.IndexOf("private DogtagHostCommitReceipt CommitDogtagSlotExposure", StringComparison.Ordinal);
         int returnReceipt = commitSignature < 0 ? -1 : item.IndexOf("return new DogtagHostCommitReceipt(this, boundary, addedHere ? rollbackBaseline : null);", commitSignature, StringComparison.Ordinal);
@@ -39,7 +41,7 @@ internal static class DogtagCasePostCommitReceiptIntegrationRegression
         int existingFailureRollback = existingAccept < 0 ? -1 : item.IndexOf("if (!receipt.TryRollback())", existingAccept, StringComparison.Ordinal);
         if (existingReceipt < 0 || existingFinalProof < 0 || existingAccept < 0 || existingFailureRollback < 0
             || !(existingReceipt < existingFinalProof && existingFinalProof < existingAccept && existingAccept < existingFailureRollback))
-            throw new InvalidOperationException("Dogtag post-commit receipt integration regression failed: retained-template path must commit -> final canonical proof -> metadata-only accept, with exact-owned rollback on proof failure.");
+            throw new InvalidOperationException("Dogtag post-commit receipt integration regression failed: retained-template path must commit -> final canonical proof -> host-reproved accept, with exact-owned rollback on proof failure.");
 
         int createdReceipt = item.IndexOf("DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);", StringComparison.Ordinal);
         int createdFinalProof = createdReceipt < 0 ? -1 : item.IndexOf("canonicalLease.RequireCurrent(templateTable, source);", createdReceipt, StringComparison.Ordinal);
@@ -47,7 +49,7 @@ internal static class DogtagCasePostCommitReceiptIntegrationRegression
         int createdFailureRollback = createdAccept < 0 ? -1 : item.IndexOf("if (!createdReceipt.TryRollback())", createdAccept, StringComparison.Ordinal);
         if (createdReceipt < 0 || createdFinalProof < 0 || createdAccept < 0 || createdFailureRollback < 0
             || !(createdReceipt < createdFinalProof && createdFinalProof < createdAccept && createdAccept < createdFailureRollback))
-            throw new InvalidOperationException("Dogtag post-commit receipt integration regression failed: created-template path must commit -> final canonical proof -> metadata-only accept, with exact-owned rollback on proof failure.");
+            throw new InvalidOperationException("Dogtag post-commit receipt integration regression failed: created-template path must commit -> final canonical proof -> host-reproved accept, with exact-owned rollback on proof failure.");
 
         string commitRegion = item.Substring(commitSignature, item.IndexOf("public static void RequireCanonicalRegisteredTemplate", commitSignature, StringComparison.Ordinal) - commitSignature);
         if (commitRegion.Contains("TryAbandonRollbackAuthority(filter, rollbackBaseline)", StringComparison.Ordinal)
