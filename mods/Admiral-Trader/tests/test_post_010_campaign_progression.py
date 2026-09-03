@@ -10,9 +10,9 @@ def test_post_010_campaign_progression_is_complete_reachable_and_acyclic():
     assert graph["implementationAllowed"] is False and graph["runtimeMaterialize"] is False
     assert graph["frozenBoundary"] == {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
     phase_ops = [op for phase in graph["phases"] for op in phase["operations"]]; expected = set(rewards["operationBands"])
-    assert len(phase_ops) == 17 and len(set(phase_ops)) == 17 and set(phase_ops) == expected
+    assert len(phase_ops) == 16 and len(set(phase_ops)) == 16 and set(phase_ops) == expected
     assert set(graph["prerequisites"]) == expected
-    for deferred in ("expedition-discipline", "field-medicine-under-pressure", "controlled-chemical-support", "high-value-target-window"):
+    for deferred in ("expedition-discipline", "field-medicine-under-pressure", "controlled-chemical-support", "high-value-target-window", "night-signal-disruption"):
         assert deferred not in expected
     assert graph["prerequisites"]["endurance-circuit"] == ["expedition-loadout", "route-security"]
     phase_index = {op: i for i, phase in enumerate(graph["phases"]) for op in phase["operations"]}
@@ -49,7 +49,7 @@ def test_post_010_campaign_has_concrete_non_regressing_player_level_placement():
     loyalty_minimums={tier["loyaltyLevel"]:tier["minimumPlayerLevel"] for tier in trajectory["tiers"]}
     assert loyalty_minimums[2]==15 and loyalty_minimums[3]==25 and loyalty_minimums[4]==35
     assert min(levels.values())==loyalty_minimums[2]; assert levels["labs-security-disruption"]>loyalty_minimums[4]
-    contracts=graph["progressionContracts"]; assert contracts["operationCount"]==17
+    contracts=graph["progressionContracts"]; assert contracts["operationCount"]==16
     assert contracts["questLevelsReviewedAgainstFrozenAdmiralLoyaltyThresholds"] is True
     assert contracts["everyOperationHasConcretePlayerLevel"] is True and contracts["prerequisitesNeverRequireHigherPlayerLevelThanDependentOperation"] is True
     assert graph["materializationGate"]["requiresFinalQuestLevelPlacement"] is False

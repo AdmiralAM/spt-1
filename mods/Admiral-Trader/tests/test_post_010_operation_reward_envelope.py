@@ -16,11 +16,11 @@ def authored_operation_keys():
 
 def test_reward_envelope_covers_the_complete_active_authored_wave_once():
     spec=load_json(ROOT/"manifests"/"post-010-operation-reward-envelope.json"); authored=authored_operation_keys(); mapped=set(spec["operationBands"])
-    assert len(authored)==17
-    for deferred in ("expedition-discipline","field-medicine-under-pressure","controlled-chemical-support","high-value-target-window"):
+    assert len(authored)==16
+    for deferred in ("expedition-discipline","field-medicine-under-pressure","controlled-chemical-support","high-value-target-window","night-signal-disruption"):
         assert deferred not in authored
-    assert mapped==authored and spec["campaignCaps"]["operationCount"]==17
-    assert spec["campaignPlacementAuthority"]["operationCount"]==17
+    assert mapped==authored and spec["campaignCaps"]["operationCount"]==16
+    assert spec["campaignPlacementAuthority"]["operationCount"]==16
 
 def test_numeric_envelopes_are_bounded_and_do_not_create_a_standing_faucet():
     spec=load_json(ROOT/"manifests"/"post-010-operation-reward-envelope.json"); bands=spec["bands"]

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "deferred-out-of-current-wave-pending-defining-semantics",
+  "operationKey": "night-signal-disruption",
+  "title": {"en": "Black Signal", "ru": "Чёрный сигнал"},
+  "sourceBundles": ["Cultists Hunt"],
+  "decision": {
+    "currentWaveAccepted": false,
+    "materializeAsQuest": false,
+    "permanentConceptRejection": false,
+    "reason": "Black Signal is only distinct if both cultist contact and a reliable night/context condition are enforceable. Current pinned SPT 4.1.3 authority does not prove the required Cultist role alias in Admiral's target-role proof and does not prove a reliable night-time quest condition. A generic scav/location kill, text-only night requirement, cumulative cultist ladder or generic survive/extract proxy would not preserve the authored reconnaissance purpose.",
+    "genericScavFallbackAllowed": false,
+    "textOnlyNightRequirementAllowed": false,
+    "cumulativeCultistKillLadderAllowed": false,
+    "genericSurviveExtractFallbackAllowed": false,
+    "questCountPreservationIsNotARequirement": true
+  },
+  "synchronization": {"removedFromActiveAuthoredSpec": true, "removedFromActiveCampaign": true, "removedFromRewardEnvelope": true, "activeAuthoredWaveCount": 16, "replacementQuestCreated": false, "rewardEscalationCreated": false},
+  "gates": {"implementationAllowed": false, "runtimeMaterialize": false, "physicalTestRequired": false, "requiresExactSpt413CultistTargetProof": true, "requiresReliableNightContextConditionProof": true, "requiresSameRaidContactToExtractionProof": true, "deferredLifecycleRewardMilestoneUnaffected": true},
+  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
+}
