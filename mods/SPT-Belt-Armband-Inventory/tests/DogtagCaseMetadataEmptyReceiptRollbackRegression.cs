@@ -11,7 +11,8 @@ internal static class DogtagCaseMetadataEmptyReceiptRollbackRegression
         if (root == null)
             throw new InvalidOperationException("Dogtag metadata-empty receipt rollback regression failed: module root could not be resolved.");
 
-        string item = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseItem.cs"));
+        string item = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseItem.cs"))
+            .Replace("\r\n", "\n", StringComparison.Ordinal);
         int receipt = item.IndexOf("private sealed class DogtagHostCommitReceipt", StringComparison.Ordinal);
         int rollback = receipt < 0 ? -1 : item.IndexOf("internal bool TryRollback()", receipt, StringComparison.Ordinal);
         int rollbackEnd = rollback < 0 ? -1 : item.IndexOf("    }\n\n    public Task OnLoadAsync", rollback, StringComparison.Ordinal);
