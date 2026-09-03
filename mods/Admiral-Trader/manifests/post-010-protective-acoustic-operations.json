@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -9,6 +9,8 @@
     "conditionType": "Equipment",
     "includeNotEquippedItems": false,
     "selectionMode": "explicit-validated-tpl-allowlist",
+    "allowlistProofManifest": "post-010-protective-acoustic-equipment-allowlist-proof.json",
+    "exactPinnedTplAllowlistsResolved": true,
     "forbiddenInference": ["generic equipment category selector", "armor class predicate", "unproven multi-group boolean semantics"]
   },
   "survivedExtractionAuthority": {
@@ -63,13 +65,21 @@
         "IncludeNotEquippedItems": false,
         "equipmentInclusiveSource": "explicit curated protective item TPL allowlist",
         "minimumIndependentGroups": 1,
+        "allowlistAuthority": "post-010-protective-acoustic-equipment-allowlist-proof.json",
+        "exactPinnedTplAllowlistResolved": true,
+        "explicitTplCount": 4,
+        "equipmentInclusive": [[
+          "5b44cf1486f77431723e3d05",
+          "5ca21c6986f77479963115a7",
+          "5e9dacf986f774054d6b89f4",
+          "6038b4ca92ec1c3103795a0d"
+        ]],
         "materializationReady": false,
-        "remainingBlocker": "select and validate the exact pinned SPT 4.1.3 protective TPL allowlist; do not emulate armor-class filtering"
+        "remainingBlocker": "vanilla semantic overlap, Economy Admiral reward review, and same-raid Equipment-to-contact-to-extraction coupling remain unresolved"
       },
       "materializationBlockedBy": [
-        "exact pinned SPT 4.1.3 protective-equipment TPL allowlist",
         "same-raid equipment-to-contact-to-extraction coupling proof",
-        "overlap review for Factory protective PMC-contact shape",
+        "vanilla overlap review for Factory protective PMC-contact shape",
         "Economy Admiral reward review"
       ],
       "antiGrind": {
@@ -82,10 +92,10 @@
       },
       "rewardDoctrine": "XP/RUB/standing by default. No sequential helmet, armor, plate or carrier storefront unlocks; any durable protective-equipment reward requires Economy Admiral review and must not bypass normal capability progression.",
       "proofGates": [
-        "select and validate an explicit pinned SPT 4.1.3 protective-equipment TPL allowlist; generic armor-class or parent-category inference remains forbidden",
+        "exact pinned SPT 4.1.3 explicit TPL allowlist is resolved by post-010-protective-acoustic-equipment-allowlist-proof.json; parent handbook categories remain forbidden as runtime selectors",
         "prove same-raid coupling before runtime materialization so protective Equipment, the two AnyPmc contacts on factory4_day and the Survived extraction cannot be satisfied across different raids",
         "retain the selected factory4_day + two AnyPmc + Survived bounded shape unless overlap review proves a semantic collision",
-        "audit vanilla/Scorpion/Artem overlap for Factory protected-PMC objectives",
+        "audit vanilla overlap for Factory protected-PMC objectives; Scorpion/Artem component-overlap review is already resolved separately",
         "Economy Admiral approves final numeric rewards and any protective-equipment reward"
       ],
       "runtimeMaterialize": false
@@ -129,13 +139,32 @@
         "IncludeNotEquippedItems": false,
         "equipmentInclusiveSource": "explicit curated headset TPL allowlist",
         "minimumIndependentGroups": 1,
+        "allowlistAuthority": "post-010-protective-acoustic-equipment-allowlist-proof.json",
+        "exactPinnedTplAllowlistResolved": true,
+        "explicitTplCount": 15,
+        "equipmentInclusive": [[
+          "5645bcc04bdc2d363b8b4572",
+          "5aa2ba71e5b5b000137b758f",
+          "5a16b9fffcdbcb0176308b34",
+          "5c165d832e2216398b5a7e36",
+          "5b432b965acfc47a8774094e",
+          "5e4d34ca86f774264f758330",
+          "5f60cd6cf2bcbb675b00dac6",
+          "6033fa48ffd42c541047f728",
+          "628e4e576d783146b124c64d",
+          "66b5f69ea7f72d197e70bcdb",
+          "66b5f6a28ca68c6461709ed8",
+          "66b5f693acff495a294927e3",
+          "66b5f6985891c84aab75ca76",
+          "66b5f68de98be930d701c00e",
+          "68bf405779c8186398099017"
+        ]],
         "materializationReady": false,
-        "remainingBlocker": "select and validate the exact pinned SPT 4.1.3 headset TPL allowlist; do not infer a generic headset category selector"
+        "remainingBlocker": "vanilla semantic overlap, Economy Admiral reward review, and same-raid Equipment-to-contact-to-extraction coupling remain unresolved"
       },
       "materializationBlockedBy": [
-        "exact pinned SPT 4.1.3 headset TPL allowlist",
         "same-raid equipment-to-contact-to-extraction coupling proof",
-        "overlap review for Woods headset Scav-contact shape",
+        "vanilla overlap review for Woods headset Scav-contact shape",
         "Economy Admiral reward review"
       ],
       "antiGrind": {
@@ -148,10 +177,10 @@
       },
       "rewardDoctrine": "XP/RUB/standing or a tightly bounded support reward only. No headset storefront conveyor and no equipment unlock whose sole purpose is to start another same-shaped quest.",
       "proofGates": [
-        "select and validate an explicit pinned SPT 4.1.3 headset TPL allowlist; generic category inference remains forbidden",
+        "exact pinned SPT 4.1.3 explicit TPL allowlist is resolved by post-010-protective-acoustic-equipment-allowlist-proof.json; parent handbook categories remain forbidden as runtime selectors",
         "prove same-raid coupling before runtime materialization so headset Equipment, the two Savage contacts on woods and the Survived extraction cannot be satisfied across different raids",
         "retain the selected woods + two Savage + Survived bounded shape unless overlap review proves a semantic collision",
-        "audit vanilla/Scorpion/Artem overlap for Woods headset-restricted reconnaissance objectives",
+        "audit vanilla overlap for Woods headset-restricted reconnaissance objectives; Scorpion/Artem component-overlap review is already resolved separately",
         "Economy Admiral approves final numeric and any support-item rewards"
       ],
       "runtimeMaterialize": false

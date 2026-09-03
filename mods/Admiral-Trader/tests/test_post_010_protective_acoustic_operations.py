@@ -14,10 +14,13 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
         cls.equipment_proof = json.loads(
             (ROOT / "manifests" / "post-010-player-equipment-proof.json").read_text(encoding="utf-8")
         )
+        cls.allowlist_proof = json.loads(
+            (ROOT / "manifests" / "post-010-protective-acoustic-equipment-allowlist-proof.json").read_text(encoding="utf-8")
+        )
         cls.by_key = {op["key"]: op for op in cls.manifest["operations"]}
 
     def test_specs_are_non_materialized_and_bound_to_frozen_base(self):
-        self.assertEqual(self.manifest["schemaVersion"], 5)
+        self.assertEqual(self.manifest["schemaVersion"], 6)
         self.assertEqual(self.manifest["status"], "post-0.1.0-authored-spec-only")
         self.assertEqual(
             self.manifest["frozen010Base"],
@@ -36,23 +39,30 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
                 for field in ("description", "started", "success"):
                     self.assertGreater(len(operation["playerText"][locale][field].strip()), 30)
 
-    def test_protective_specs_consume_proven_equipment_family_without_overclaiming(self):
+    def test_protective_specs_consume_resolved_explicit_allowlists_without_overclaiming(self):
         authority = self.manifest["equipmentConditionAuthority"]
         proof = self.equipment_proof
         self.assertEqual(authority["manifest"], "post-010-player-equipment-proof.json")
         self.assertEqual(authority["conditionType"], proof["proven"]["playerEquipmentConditionFamilyExists"]["conditionType"])
         self.assertFalse(authority["includeNotEquippedItems"])
         self.assertEqual(authority["selectionMode"], "explicit-validated-tpl-allowlist")
+        self.assertEqual(authority["allowlistProofManifest"], "post-010-protective-acoustic-equipment-allowlist-proof.json")
+        self.assertTrue(authority["exactPinnedTplAllowlistsResolved"])
         forbidden = " ".join(authority["forbiddenInference"]).lower()
         self.assertIn("category", forbidden)
         self.assertIn("armor class", forbidden)
         for operation in self.manifest["operations"]:
             plan = operation["equipmentPlan"]
+            allowlist = self.allowlist_proof["operations"][operation["key"]]
             self.assertEqual(plan["conditionType"], "Equipment")
             self.assertFalse(plan["IncludeNotEquippedItems"])
             self.assertFalse(plan["materializationReady"])
             self.assertIn("explicit", plan["equipmentInclusiveSource"].lower())
-            self.assertIn("pinned spt 4.1.3", plan["remainingBlocker"].lower())
+            self.assertTrue(plan["exactPinnedTplAllowlistResolved"])
+            self.assertEqual(plan["allowlistAuthority"], "post-010-protective-acoustic-equipment-allowlist-proof.json")
+            self.assertEqual(plan["equipmentInclusive"], allowlist["equipmentInclusive"])
+            self.assertEqual(plan["explicitTplCount"], allowlist["explicitTplCount"])
+            self.assertNotIn("tpl allowlist", plan["remainingBlocker"].lower())
 
     def test_survived_extraction_shape_is_not_reopened_or_overclaimed(self):
         authority = self.manifest["survivedExtractionAuthority"]
@@ -92,7 +102,7 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
         for operation in self.manifest["operations"]:
             blockers = " ".join(operation["materializationBlockedBy"]).lower()
             self.assertIn("same-raid", blockers)
-            self.assertIn("tpl allowlist", blockers)
+            self.assertNotIn("tpl allowlist", blockers)
             proof_text = " ".join(operation["proofGates"]).lower()
             self.assertIn("same-raid coupling before runtime materialization", proof_text)
             self.assertIn("different raids", proof_text)
@@ -120,14 +130,15 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
         self.assertTrue(anti["noSequentialStorefrontUnlocks"])
         self.assertFalse(anti["repeatable"])
 
-    def test_specs_fail_closed_on_runtime_overlap_and_economy_gates(self):
+    def test_specs_fail_closed_on_remaining_runtime_overlap_and_economy_gates(self):
         proof_text = " ".join(
             gate.lower()
             for operation in self.manifest["operations"]
             for gate in operation["proofGates"]
         )
         self.assertIn("pinned spt 4.1.3", proof_text)
-        self.assertIn("overlap", proof_text)
+        self.assertIn("allowlist is resolved", proof_text)
+        self.assertIn("vanilla overlap", proof_text)
         self.assertIn("economy admiral", proof_text)
         self.assertIn("same-raid coupling", proof_text)
         self.assertNotIn("prove survived/extraction semantics", proof_text)
