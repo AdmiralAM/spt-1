@@ -18,9 +18,13 @@ internal static class DogtagCaseCanonicalLeaseRegression
         int preflightIdentity = preflight.IndexOf("RequireCanonicalIdentity(source, identity);", StringComparison.Ordinal);
         int publish = preflight.IndexOf("DogtagCaseCanonicalIdentityLease.Publish(source);", StringComparison.Ordinal);
         int postPublishIdentity = publish < 0 ? -1 : preflight.IndexOf("RequireCanonicalIdentity(source, identity);", publish + 1, StringComparison.Ordinal);
-        if (preflightIdentity < 0 || publish < 0 || postPublishIdentity < 0
-            || !(preflightIdentity < publish && publish < postPublishIdentity))
-            throw new InvalidOperationException("Dogtag canonical lease regression failed: Preload +2 must bracket lease publication with exact canonical identity/content proofs.");
+        int postPublishCancellation = postPublishIdentity < 0 ? -1 : preflight.IndexOf("cancellationToken.ThrowIfCancellationRequested();", postPublishIdentity, StringComparison.Ordinal);
+        int cancellationCatch = postPublishCancellation < 0 ? -1 : preflight.IndexOf("catch (OperationCanceledException)", postPublishCancellation, StringComparison.Ordinal);
+        int cancelPendingCall = cancellationCatch < 0 ? -1 : preflight.IndexOf("DogtagCaseCanonicalIdentityLease.CancelPending(source);", cancellationCatch, StringComparison.Ordinal);
+        if (preflightIdentity < 0 || publish < 0 || postPublishIdentity < 0 || postPublishCancellation < 0 || cancellationCatch < 0 || cancelPendingCall < 0
+            || !(preflightIdentity < publish && publish < postPublishIdentity && postPublishIdentity < postPublishCancellation
+                 && postPublishCancellation < cancellationCatch && cancellationCatch < cancelPendingCall))
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: Preload +2 must bracket lease publication with exact proof and cancellation-only pending-authority rollback.");
         if (!preflight.Contains("new HashSet<MongoId>(x.Filter!)", StringComparison.Ordinal)
             || !preflight.Contains("new HashSet<MongoId>(x.ExcludedFilter)", StringComparison.Ordinal)
             || !preflight.Contains("included.SetEquals(expected.IncludedValues[i])", StringComparison.Ordinal)
@@ -62,19 +66,29 @@ internal static class DogtagCaseCanonicalLeaseRegression
         int consumeProof = consumeLease < 0 ? -1 : lease.IndexOf("lease.RequireCurrent(templates, source);", consumeLease, StringComparison.Ordinal);
         int consumeClear = consumeProof < 0 ? -1 : lease.IndexOf("pending = null;", consumeProof, StringComparison.Ordinal);
         int consumeReturn = consumeClear < 0 ? -1 : lease.IndexOf("return lease;", consumeClear, StringComparison.Ordinal);
+        int cancelMethod = lease.IndexOf("internal static void CancelPending(TemplateItem source)", StringComparison.Ordinal);
+        int cancelLock = cancelMethod < 0 ? -1 : lease.IndexOf("lock (Sync)", cancelMethod, StringComparison.Ordinal);
+        int cancelLease = cancelLock < 0 ? -1 : lease.IndexOf("Lease lease = pending", cancelLock, StringComparison.Ordinal);
+        int cancelIdentity = cancelLease < 0 ? -1 : lease.IndexOf("ReferenceEquals(lease.Source, source)", cancelLease, StringComparison.Ordinal);
+        int cancelClear = cancelIdentity < 0 ? -1 : lease.IndexOf("pending = null;", cancelIdentity, StringComparison.Ordinal);
         if (publishMethod < 0 || captureNext < 0 || publishLock < 0 || duplicateGuard < 0 || pendingAssignment < 0
             || consumeMethod < 0 || consumeLock < 0 || consumeLease < 0 || consumeProof < 0 || consumeClear < 0 || consumeReturn < 0
+            || cancelMethod < 0 || cancelLock < 0 || cancelLease < 0 || cancelIdentity < 0 || cancelClear < 0
             || !(publishMethod < captureNext && captureNext < publishLock && publishLock < duplicateGuard
                  && duplicateGuard < pendingAssignment && pendingAssignment < consumeMethod
                  && consumeMethod < consumeLock && consumeLock < consumeLease && consumeLease < consumeProof
-                 && consumeProof < consumeClear && consumeClear < consumeReturn))
-            throw new InvalidOperationException("Dogtag canonical lease regression failed: duplicate +2 publication must fail closed and Consume must serialize exact proof before clearing single-consumer authority.");
+                 && consumeProof < consumeClear && consumeClear < consumeReturn
+                 && consumeReturn < cancelMethod && cancelMethod < cancelLock && cancelLock < cancelLease
+                 && cancelLease < cancelIdentity && cancelIdentity < cancelClear))
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: authority must serialize publish/consume and permit only exact-source cancellation rollback.");
         if (lease.IndexOf("pending = next;", pendingAssignment + 1, StringComparison.Ordinal) >= 0)
             throw new InvalidOperationException("Dogtag canonical lease regression failed: canonical authority must have exactly one publication assignment.");
-        if (lease.IndexOf("pending = null;", consumeClear + 1, StringComparison.Ordinal) >= 0)
-            throw new InvalidOperationException("Dogtag canonical lease regression failed: canonical authority must not be cleared outside successful single-consumer Consume.");
+        if (lease.IndexOf("pending = null;", cancelClear + 1, StringComparison.Ordinal) >= 0)
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: canonical authority must not be cleared outside successful Consume or exact-source cancellation rollback.");
         if (lease.IndexOf("pending = null;", consumeMethod, StringComparison.Ordinal) < consumeProof)
             throw new InvalidOperationException("Dogtag canonical lease regression failed: Consume must never clear pending authority before exact source reproof.");
+        if (lease.IndexOf("pending = null;", cancelMethod, StringComparison.Ordinal) < cancelIdentity)
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: cancellation rollback must never clear pending authority before exact source-reference proof.");
 
         int sourceValidation = item.IndexOf("source filters are empty, admit a B&A&HB-owned product", StringComparison.Ordinal);
         int consume = item.IndexOf("DogtagCaseCanonicalIdentityLease.Consume(templateTable, source);", StringComparison.Ordinal);
