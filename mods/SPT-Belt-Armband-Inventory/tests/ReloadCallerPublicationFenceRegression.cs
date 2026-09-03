@@ -46,6 +46,29 @@ internal static class ReloadCallerPublicationFenceRegression
         Require(source, "__result = state.VanillaResult;",
             "final drift must restore the exact saved vanilla result object");
 
+        // Exception safety: a foreign/intervening postfix may throw after CaptureVanilla
+        // and prevent our ordinary final publication postfix from popping its frame. Prefix
+        // entry depth + Harmony finalizer cleanup must restore only frames owned by this call,
+        // preserving outer/reentrant frames and the exact exception object.
+        Require(source, "static void CaptureEntryDepth(out int __state)",
+            "candidate fence must capture ThreadStatic publication-stack entry depth in a Harmony prefix");
+        Require(source, "__state = states == null ? 0 : states.Count;",
+            "entry-depth snapshot must represent the exact pre-call stack depth");
+        Require(source, "static Exception CleanupPublicationState(Exception __exception, int __state)",
+            "candidate fence must install a Harmony finalizer for exception-safe state cleanup");
+        Require(source, "while (states.Count > __state)",
+            "cleanup must trim only frames created after this call's entry depth");
+        Require(source, "states.Pop();",
+            "cleanup must remove leaked inner/current frames rather than clearing outer/reentrant authority");
+        Require(source, "return __exception;",
+            "cleanup finalizer must preserve the exact incoming exception instead of suppressing or replacing it");
+        Require(source, "BuildCandidateFenceArguments(",
+            "entry prefix, capture postfix and cleanup finalizer must be installed as one candidate-owner patch contract");
+        Require(source, "originalAssigned && prefixAssigned && postfixAssigned && finalizerAssigned",
+            "candidate patch argument binding must fail closed unless Harmony exposes the full prefix/postfix/finalizer contract");
+        Require(source, "if (!prefix || !postfix || !finalizer) continue;",
+            "Harmony Patch discovery must reject overloads that cannot install exception-safe cleanup");
+
         if (source.Contains("patch.Invoke(harmonyOwner, beforeArgs)", StringComparison.Ordinal)
             || source.Contains("patch.Invoke(harmonyOwner, afterArgs)", StringComparison.Ordinal))
             throw new InvalidOperationException(
@@ -54,6 +77,9 @@ internal static class ReloadCallerPublicationFenceRegression
             || source.Contains("GetItemsInSlots.Invoke", StringComparison.Ordinal))
             throw new InvalidOperationException(
                 "Reload caller publication fence regression failed: final fence must not query, retry, redirect, or invoke the candidate bridge itself.");
+        if (source.Contains("publicationStates.Clear", StringComparison.Ordinal))
+            throw new InvalidOperationException(
+                "Reload caller publication fence regression failed: exception cleanup may not clear outer/reentrant publication frames.");
 
         int candidateCreate = source.IndexOf("candidateOwner = harmonyCtor.Invoke(new object[] { CandidateFenceHarmonyId })", StringComparison.Ordinal);
         int candidateBefore = source.IndexOf("patch.Invoke(candidateOwner, beforeArgs);", candidateCreate, StringComparison.Ordinal);
@@ -64,6 +90,14 @@ internal static class ReloadCallerPublicationFenceRegression
             || candidatePublish <= candidateAfter || rollback <= candidatePublish)
             throw new InvalidOperationException(
                 "Reload caller publication fence regression failed: dedicated-owner create -> complete pair -> publish -> catch rollback sequence changed.");
+
+        int entryMethod = source.IndexOf("static void CaptureEntryDepth(out int __state)", StringComparison.Ordinal);
+        int cleanupMethod = source.IndexOf("static Exception CleanupPublicationState(Exception __exception, int __state)", StringComparison.Ordinal);
+        int trim = source.IndexOf("while (states.Count > __state)", cleanupMethod, StringComparison.Ordinal);
+        int preserveException = source.IndexOf("return __exception;", trim, StringComparison.Ordinal);
+        if (entryMethod < 0 || cleanupMethod < 0 || trim <= cleanupMethod || preserveException <= trim)
+            throw new InvalidOperationException(
+                "Reload caller publication fence regression failed: entry-depth -> bounded cleanup -> exact exception preservation contract changed.");
 
         int captureOrder = source.IndexOf("SetOrdering(beforePostfix, \"before\", CandidateBridgeHarmonyId)", StringComparison.Ordinal);
         int finalOrder = source.IndexOf("SetOrdering(afterPostfix, \"after\", CandidateBridgeHarmonyId)", StringComparison.Ordinal);
