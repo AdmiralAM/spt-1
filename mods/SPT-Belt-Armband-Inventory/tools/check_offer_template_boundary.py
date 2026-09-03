@@ -39,11 +39,13 @@ contracts = {
         "var items = assort.Items",
         "var barterScheme = assort.BarterScheme",
         "var loyalLevelItems = assort.LoyalLevelItems",
+        "bool IsAssortWrapperIdentityCurrent()",
+        "ReferenceEquals(trader.Assort, assort)",
+        "ReferenceEquals(trader.Assort?.Items, items)",
+        "ReferenceEquals(trader.Assort?.BarterScheme, barterScheme)",
+        "ReferenceEquals(trader.Assort?.LoyalLevelItems, loyalLevelItems)",
         "void RequireAssortWrapperIdentity()",
-        "!ReferenceEquals(trader.Assort, assort)",
-        "!ReferenceEquals(trader.Assort?.Items, items)",
-        "!ReferenceEquals(trader.Assort?.BarterScheme, barterScheme)",
-        "!ReferenceEquals(trader.Assort?.LoyalLevelItems, loyalLevelItems)",
+        "if (!IsAssortWrapperIdentityCurrent())",
         "items.Add(offer);",
         "barterScheme.Add(id, barter);",
         "loyalLevelItems.Add(id, LoyaltyLevel);",
@@ -52,6 +54,9 @@ contracts = {
         "bool ownsItem = ownedItemIndex >= 0;",
         "bool ownsBarter = barterAdded",
         "if (loyaltyAdded && ownsItem && ownsBarter",
+        "if (!IsAssortWrapperIdentityCurrent()) throw;\n                loyalLevelItems.Remove(id);",
+        "if (!IsAssortWrapperIdentityCurrent()) throw;\n                barterScheme.Remove(id);",
+        "if (!IsAssortWrapperIdentityCurrent()) throw;\n                items.RemoveAt(ownedItemIndex);",
     ],
 }
 
@@ -87,6 +92,21 @@ for filename, required in contracts.items():
             violations.append(
                 f"{filename}: Ragman assort wrapper chain must be re-proven throughout retained and new-offer publication"
             )
+        catch_start = text.find("catch\n        {")
+        if catch_start < 0:
+            violations.append(f"{filename}: owned rollback catch region is missing")
+        else:
+            rollback = text[catch_start:]
+            first_fence = rollback.find("if (!IsAssortWrapperIdentityCurrent())")
+            mutation_candidates = [
+                pos for pos in (
+                    rollback.find("loyalLevelItems.Remove(id);"),
+                    rollback.find("barterScheme.Remove(id);"),
+                    rollback.find("items.RemoveAt(ownedItemIndex);")
+                ) if pos >= 0
+            ]
+            if not mutation_candidates or first_fence < 0 or first_fence > min(mutation_candidates):
+                violations.append(f"{filename}: Dogtag rollback must prove exact live Ragman wrapper authority before any mutation")
         if "if (barterAdded) trader.Assort.BarterScheme.Remove(id);" in text:
             violations.append(
                 f"{filename}: Dogtag rollback must not delete barter state without proving current reference ownership"
@@ -111,4 +131,4 @@ for filename, required in contracts.items():
 if violations:
     raise SystemExit("B&A&HB offer-template boundary gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-template boundary gate: OK (all five Ragman products prove exact registered templates before assort mutation; Dogtag Case additionally transaction-pins the Ragman Assort/Items/BarterScheme/LoyalLevelItems wrapper chain and uses replacement-safe ownership-bounded rollback for its item/barter/loyalty tuple)")
+print("B&A&HB offer-template boundary gate: OK (all five Ragman products prove exact registered templates before assort mutation; Dogtag Case additionally transaction-pins the Ragman Assort/Items/BarterScheme/LoyalLevelItems wrapper chain and requires live exact-wrapper authority immediately before ownership-bounded rollback mutations)")
