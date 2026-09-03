@@ -37,11 +37,13 @@ internal static class DogtagCaseAssortPublicationIdentityRegression
         Require(assort, "var items = assort.Items", "publication must capture exact Ragman Items wrapper");
         Require(assort, "var barterScheme = assort.BarterScheme", "publication must capture exact Ragman BarterScheme wrapper");
         Require(assort, "var loyalLevelItems = assort.LoyalLevelItems", "publication must capture exact Ragman LoyalLevelItems wrapper");
+        Require(assort, "bool IsAssortWrapperIdentityCurrent()", "publication must have a non-mutating exact wrapper-chain identity predicate");
+        Require(assort, "ReferenceEquals(trader.Assort, assort)", "Ragman Assort replacement must fail closed");
+        Require(assort, "ReferenceEquals(trader.Assort?.Items, items)", "Ragman Items replacement must fail closed");
+        Require(assort, "ReferenceEquals(trader.Assort?.BarterScheme, barterScheme)", "Ragman BarterScheme replacement must fail closed");
+        Require(assort, "ReferenceEquals(trader.Assort?.LoyalLevelItems, loyalLevelItems)", "Ragman LoyalLevelItems replacement must fail closed");
         Require(assort, "void RequireAssortWrapperIdentity()", "publication must have exact wrapper-chain identity reproof");
-        Require(assort, "!ReferenceEquals(trader.Assort, assort)", "Ragman Assort replacement must fail closed");
-        Require(assort, "!ReferenceEquals(trader.Assort?.Items, items)", "Ragman Items replacement must fail closed");
-        Require(assort, "!ReferenceEquals(trader.Assort?.BarterScheme, barterScheme)", "Ragman BarterScheme replacement must fail closed");
-        Require(assort, "!ReferenceEquals(trader.Assort?.LoyalLevelItems, loyalLevelItems)", "Ragman LoyalLevelItems replacement must fail closed");
+        Require(assort, "if (!IsAssortWrapperIdentityCurrent())", "wrapper replacement must be rejected through the shared exact predicate");
 
         int itemIdentity = assort.IndexOf("idMatches != 1 || exactItemMatches != 1", StringComparison.Ordinal);
         int itemContents = assort.IndexOf("!Equals(expectedItem.Template, new MongoId(RuntimeIdentity.DogtagCaseItemId))", StringComparison.Ordinal);
@@ -74,15 +76,16 @@ internal static class DogtagCaseAssortPublicationIdentityRegression
         int newIdentity = assort.IndexOf("RequirePublishedAssortTupleIdentity(items, barterScheme, loyalLevelItems, id, offer, barter);", newBoundary + 1, StringComparison.Ordinal);
         int finalWrapper = assort.IndexOf("RequireAssortWrapperIdentity();", newIdentity + 1, StringComparison.Ordinal);
         int catchBlock = assort.IndexOf("catch", finalWrapper + 1, StringComparison.Ordinal);
+        int rollbackWrapper = assort.IndexOf("if (!IsAssortWrapperIdentityCurrent())", catchBlock + 1, StringComparison.Ordinal);
         int ownedItemScan = assort.IndexOf("ReferenceEquals(items[i], offer)", catchBlock + 1, StringComparison.Ordinal);
         int ownedBarter = assort.IndexOf("ReferenceEquals(currentBarter, barter)", ownedItemScan + 1, StringComparison.Ordinal);
         int loyaltyRollback = assort.IndexOf("loyalLevelItems.Remove(id);", ownedBarter + 1, StringComparison.Ordinal);
         int barterRollback = assort.IndexOf("barterScheme.Remove(id);", loyaltyRollback + 1, StringComparison.Ordinal);
         int itemRollback = assort.IndexOf("items.RemoveAt(ownedItemIndex);", barterRollback + 1, StringComparison.Ordinal);
         if (firstMutation < 0 || postMutationWrapper <= firstMutation || newValidation <= postMutationWrapper || newBoundary <= newValidation
-            || newIdentity <= newBoundary || finalWrapper <= newIdentity || catchBlock <= finalWrapper || ownedItemScan <= catchBlock
-            || ownedBarter <= ownedItemScan || loyaltyRollback <= ownedBarter || barterRollback <= loyaltyRollback || itemRollback <= barterRollback)
-            throw new InvalidOperationException("Dogtag assort publication identity regression failed: new-offer wrapper proof and captured-wrapper ownership rollback ordering changed.");
+            || newIdentity <= newBoundary || finalWrapper <= newIdentity || catchBlock <= finalWrapper || rollbackWrapper <= catchBlock
+            || ownedItemScan <= rollbackWrapper || ownedBarter <= ownedItemScan || loyaltyRollback <= ownedBarter || barterRollback <= loyaltyRollback || itemRollback <= barterRollback)
+            throw new InvalidOperationException("Dogtag assort publication identity regression failed: new-offer wrapper proof and live-wrapper-fenced captured-wrapper ownership rollback ordering changed.");
 
         if (assort.Contains("ValidateExisting(trader,", StringComparison.Ordinal)
             || assort.Contains("RequirePublishedAssortTupleIdentity(trader,", StringComparison.Ordinal)
