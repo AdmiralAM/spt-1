@@ -153,6 +153,14 @@ public static class DogtagCaseHostContract
             if (!current.SetEquals(expectedCommitted))
                 return false;
 
+            // Re-prove the exact host shape immediately before metadata authority is
+            // consumed. A mutation between the first proof and token release must not
+            // silently discard the only rollback/capture authority for this host.
+            HashSet<MongoId> liveBeforeConsume = SnapshotCurrentFilter(currentFilter);
+            if (!current.SetEquals(liveBeforeConsume)
+                || !liveBeforeConsume.SetEquals(expectedCommitted))
+                return false;
+
             RollbackAuthorities.Remove(preCommitSnapshot);
             if (ActiveRollbackHosts.TryGetValue(authority.Host, out RollbackAuthority? active)
                 && ReferenceEquals(active, authority))
