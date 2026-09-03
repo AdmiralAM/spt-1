@@ -1,0 +1,82 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.CompilerServices;
+using SPTarkov.Server.Core.Models.Common;
+using SPTBeltArmbandInventory.Server;
+
+internal static class DogtagCaseHostRollbackAuthorityRegression
+{
+    [ModuleInitializer]
+    internal static void Run()
+    {
+        var bear = new MongoId(DogtagCaseHostContract.BearDogtagTemplateId);
+        var usec = new MongoId(DogtagCaseHostContract.UsecDogtagTemplateId);
+        var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
+        var foreign = new MongoId("5448bf274bdc2dfc2f8b456a");
+
+        var vanilla = new HashSet<MongoId> { bear, usec };
+        DogtagCaseHostContract.CaptureVanillaEntries(vanilla);
+
+        var clean = new HashSet<MongoId>(vanilla);
+        HashSet<MongoId> cleanBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(clean);
+        clean.Add(caseTpl);
+        if (!DogtagCaseHostContract.TryRollbackOwnedCaseAddition(clean, cleanBaseline)
+            || !clean.SetEquals(cleanBaseline))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: exact owned add must roll back to the detached pre-commit snapshot.");
+
+        var drifted = new HashSet<MongoId>(vanilla);
+        HashSet<MongoId> driftBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(drifted);
+        drifted.Add(caseTpl);
+        drifted.Add(foreign);
+        if (DogtagCaseHostContract.TryRollbackOwnedCaseAddition(drifted, driftBaseline))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: foreign/current host drift must make owned rollback ambiguous.");
+        if (!drifted.Contains(caseTpl) || !drifted.Contains(foreign))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: ambiguous rollback must not blindly rewrite current/foreign host state.");
+
+        var missingCase = new HashSet<MongoId>(vanilla);
+        HashSet<MongoId> missingBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(missingCase);
+        if (DogtagCaseHostContract.TryRollbackOwnedCaseAddition(missingCase, missingBaseline))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: rollback cannot succeed when the exact owned committed shape is absent.");
+
+        string? root = FindModuleRoot();
+        if (root == null)
+            throw new InvalidOperationException("Dogtag host rollback regression failed: module root could not be resolved.");
+        string source = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseItem.cs"));
+        int commit = source.IndexOf("private void CommitDogtagSlotExposure", StringComparison.Ordinal);
+        int next = source.IndexOf("public static void RequireCanonicalRegisteredTemplate", commit, StringComparison.Ordinal);
+        if (commit < 0 || next <= commit)
+            throw new InvalidOperationException("Dogtag host rollback regression failed: commit boundary is missing.");
+        string body = source.Substring(commit, next - commit);
+        Require(body, "CaptureRollbackBaseline(filter)", "owned add must capture a detached pre-commit host baseline");
+        Require(body, "TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", "exception rollback must prove exact owned authority before mutation");
+        Require(body, "ambiguous/foreign current host state is not blindly rewritten", "ambiguous rollback must remain explicitly fail-closed");
+        if (body.Contains("filter.Remove(DogtagCaseTpl);", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: unconditional value-only removal must not return.");
+    }
+
+    private static string? FindModuleRoot()
+    {
+        DirectoryInfo? current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current != null)
+        {
+            string server = Path.Combine(current.FullName, "server", "DogtagCaseItem.cs");
+            if (File.Exists(server)) return current.FullName;
+            current = current.Parent;
+        }
+        current = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (current != null)
+        {
+            string nested = Path.Combine(current.FullName, "mods", "SPT-Belt-Armband-Inventory");
+            if (File.Exists(Path.Combine(nested, "server", "DogtagCaseItem.cs"))) return nested;
+            current = current.Parent;
+        }
+        return null;
+    }
+
+    private static void Require(string source, string token, string message)
+    {
+        if (!source.Contains(token, StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: " + message + ".");
+    }
+}
