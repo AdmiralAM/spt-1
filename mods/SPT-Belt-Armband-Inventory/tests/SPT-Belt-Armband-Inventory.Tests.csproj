@@ -29,6 +29,7 @@
     <Compile Include="..\src\FastAccessBeltSyncPatches.cs" Link="FastAccessBeltSyncPatches.cs" />
     <Compile Include="..\src\FastAccessSlotPatches.cs" Link="FastAccessSlotPatches.cs" />
     <Compile Include="..\src\ReloadOwnerInstallPublicationGate.cs" Link="ReloadOwnerInstallPublicationGate.cs" />
+    <Compile Include="..\src\ReloadOwnerRollbackTerminalFence.cs" Link="ReloadOwnerRollbackTerminalFence.cs" />
     <Compile Include="..\src\ReloadScopeEpochGuard.cs" Link="ReloadScopeEpochGuard.cs" />
     <Compile Include="..\src\ReloadExecutionPublicationGuard.cs" Link="ReloadExecutionPublicationGuard.cs" />
     <Compile Include="..\src\ReloadEpochPublicationFence.cs" Link="ReloadEpochPublicationFence.cs" />
