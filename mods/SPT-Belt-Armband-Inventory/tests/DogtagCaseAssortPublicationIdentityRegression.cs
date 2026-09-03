@@ -55,15 +55,17 @@ internal static class DogtagCaseAssortPublicationIdentityRegression
             || schemeCapture <= innerCapture || schemeContents <= schemeCapture || initialInnerReproof <= schemeContents || loyaltyProof <= initialInnerReproof)
             throw new InvalidOperationException("Dogtag assort publication identity regression failed: publication ordering must remain item reference -> item contents -> outer barter reference -> inner identity capture -> scheme value proof -> inner identity reproof -> loyalty.");
 
-        int existingValidation = assort.IndexOf("ValidateExisting(items, barterScheme, loyalLevelItems, id, existing, templateId);", StringComparison.Ordinal);
+        int existingCapture = assort.IndexOf("if (!barterScheme.TryGetValue(id, out var existingBarter))", StringComparison.Ordinal);
+        int existingValidation = assort.IndexOf("ValidateExisting(items, barterScheme, loyalLevelItems, id, existing, templateId);", existingCapture + 1, StringComparison.Ordinal);
         int existingWrapper = assort.IndexOf("RequireAssortWrapperIdentity();", existingValidation + 1, StringComparison.Ordinal);
-        int existingBoundary = assort.IndexOf("RequirePublicationBoundary(templateTable, templateId);", existingWrapper + 1, StringComparison.Ordinal);
+        int existingReproof = assort.IndexOf("!ReferenceEquals(liveExistingBarter, existingBarter)", existingWrapper + 1, StringComparison.Ordinal);
+        int existingBoundary = assort.IndexOf("RequirePublicationBoundary(templateTable, templateId);", existingReproof + 1, StringComparison.Ordinal);
         int existingIdentity = assort.IndexOf("RequirePublishedAssortTupleIdentity(items, barterScheme, loyalLevelItems, id, existing, existingBarter);", existingBoundary + 1, StringComparison.Ordinal);
         int existingFinalWrapper = assort.IndexOf("RequireAssortWrapperIdentity();", existingIdentity + 1, StringComparison.Ordinal);
         int existingSuccess = assort.IndexOf("retained validated Ragman", StringComparison.Ordinal);
-        if (existingValidation < 0 || existingWrapper <= existingValidation || existingBoundary <= existingWrapper || existingIdentity <= existingBoundary
-            || existingFinalWrapper <= existingIdentity || existingSuccess <= existingFinalWrapper)
-            throw new InvalidOperationException("Dogtag assort publication identity regression failed: retained offer must re-prove captured wrappers around host/tuple publication before success.");
+        if (existingCapture < 0 || existingValidation <= existingCapture || existingWrapper <= existingValidation || existingReproof <= existingWrapper
+            || existingBoundary <= existingReproof || existingIdentity <= existingBoundary || existingFinalWrapper <= existingIdentity || existingSuccess <= existingFinalWrapper)
+            throw new InvalidOperationException("Dogtag assort publication identity regression failed: retained offer must capture barter identity before value validation, re-prove it after validation, then re-prove host/tuple/wrappers before success.");
 
         int firstMutation = assort.IndexOf("items.Add(offer);", StringComparison.Ordinal);
         int postMutationWrapper = assort.IndexOf("RequireAssortWrapperIdentity();", firstMutation + 1, StringComparison.Ordinal);
