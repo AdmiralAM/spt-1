@@ -66,20 +66,31 @@ public sealed class DogtagCaseItem(
                 || x.Filter.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString()))))
             throw new InvalidOperationException("B&A&HB Dogtag Case source filters are empty, admit a B&A&HB-owned product, or are ambiguous; refusing to create a broadened container.");
 
+        // Consume the exact source graph proven by Preload +2 before any canonical
+        // geometry/taxonomy is copied. The returned token remains live through this
+        // entire transaction and is re-proved immediately before/after publication.
+        DogtagCaseCanonicalIdentityLease.Lease canonicalLease =
+            DogtagCaseCanonicalIdentityLease.Consume(templateTable, source);
+        canonicalLease.RequireCurrent(templateTable, source);
+
         DogtagHostBoundary dogtagHost = PrepareDogtagSlotFilter();
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceDogtagCaseTpl)
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case source handbook entry is missing.");
 
         if (templateTable.Items.TryGetValue(DogtagCaseTpl, out var existing))
         {
+            canonicalLease.RequireCurrent(templateTable, source);
             ValidateExisting(existing, source);
             RequireCanonicalRegisteredTemplate(templateTable);
+            canonicalLease.RequireCurrent(templateTable, source);
             cancellationToken.ThrowIfCancellationRequested();
             CommitDogtagSlotExposure(dogtagHost, cancellationToken);
-            logger.Success("B&A&HB Dogtag Case retained existing validated template; vanilla Dogtag slot filter preserved and exact container appended.");
+            canonicalLease.RequireCurrent(templateTable, source);
+            logger.Success("B&A&HB Dogtag Case retained existing validated template; Preload +2 canonical identity lease and vanilla Dogtag slot filter remained intact and exact container appended.");
             return Task.CompletedTask;
         }
 
+        canonicalLease.RequireCurrent(templateTable, source);
         var copiedFilters = sourceFilters
             .Select(filter => new GridFilter
             {
@@ -145,7 +156,9 @@ public sealed class DogtagCaseItem(
         };
 
         cancellationToken.ThrowIfCancellationRequested();
+        canonicalLease.RequireCurrent(templateTable, source);
         var result = customItemService.CreateItemFromClone(details);
+        canonicalLease.RequireCurrent(templateTable, source);
         if (!result.Success)
             throw new InvalidOperationException($"B&A&HB Dogtag Case creation failed: {string.Join("; ", result.Errors)}");
 
@@ -153,8 +166,10 @@ public sealed class DogtagCaseItem(
             throw new InvalidOperationException("B&A&HB Dogtag Case creation reported success but the exact template is absent; refusing Dogtag slot exposure.");
         ValidateExisting(created, source);
         RequireCanonicalRegisteredTemplate(templateTable);
+        canonicalLease.RequireCurrent(templateTable, source);
         CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);
-        logger.Success("B&A&HB Dogtag Case created and revalidated against the canonical EFT Dogtag Case root/grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
+        canonicalLease.RequireCurrent(templateTable, source);
+        logger.Success("B&A&HB Dogtag Case created and revalidated against the exact Preload +2 canonical source identity/root/grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
         return Task.CompletedTask;
     }
 
