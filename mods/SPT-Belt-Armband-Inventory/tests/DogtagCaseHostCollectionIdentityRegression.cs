@@ -53,12 +53,15 @@ internal static class DogtagCaseHostCollectionIdentityRegression
         int firstLive = source.IndexOf("RequireLiveDogtagHostIdentity(boundary);", commit, StringComparison.Ordinal);
         int preserved = source.IndexOf("DogtagCaseHostContract.RequirePreserved(filter);", firstLive, StringComparison.Ordinal);
         int secondLive = source.IndexOf("RequireLiveDogtagHostIdentity(boundary);", firstLive + 1, StringComparison.Ordinal);
-        int add = source.IndexOf("bool addedHere = filter.Add(DogtagCaseTpl);", secondLive, StringComparison.Ordinal);
+        int rollbackBaseline = source.IndexOf("DogtagCaseHostContract.CaptureRollbackBaseline(filter)", secondLive, StringComparison.Ordinal);
+        int add = source.IndexOf("addedHere = filter.Add(DogtagCaseTpl);", rollbackBaseline, StringComparison.Ordinal);
         int committed = source.IndexOf("DogtagCaseHostContract.RequireCommitted(filter);", add, StringComparison.Ordinal);
         int finalLive = source.IndexOf("RequireLiveDogtagHostIdentity(boundary);", committed, StringComparison.Ordinal);
+        int provenRollback = source.IndexOf("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", finalLive, StringComparison.Ordinal);
         if (commit < 0 || firstLive <= commit || preserved <= firstLive || secondLive <= preserved
-            || add <= secondLive || committed <= add || finalLive <= committed)
-            throw new InvalidOperationException("Dogtag host collection identity regression failed: collection-chain proof must remain inside the owned pre/post mutation boundary.");
+            || rollbackBaseline <= secondLive || add <= rollbackBaseline || committed <= add
+            || finalLive <= committed || provenRollback <= finalLive)
+            throw new InvalidOperationException("Dogtag host collection identity regression failed: collection-chain proof must remain inside the exact pre-commit snapshot / owned mutation / committed proof / proven rollback boundary.");
     }
 
     private static string? FindModuleRoot()
