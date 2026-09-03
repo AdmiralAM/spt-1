@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -14,7 +14,7 @@
   "survivedExtractionAuthority": {
     "status": "proven-shape-only",
     "conditionShape": ["Location", "ExitStatus(Survived)"],
-    "boundary": "This proves the bounded survived-extraction condition shape only. Runtime materialization still requires operation-specific map/contact values and proof that qualifying Equipment and extraction are coupled in the same raid.",
+    "boundary": "This proves the bounded survived-extraction condition shape only. Runtime materialization still requires proof that qualifying Equipment and extraction are coupled in the same raid.",
     "sameRaidEquipmentCouplingProven": false
   },
   "sameRaidCouplingMaterializationPolicy": {
@@ -32,22 +32,30 @@
       "playerText": {
         "en": {
           "description": "Armor is useful only while the man inside it can still finish the route. I am not interested in a warehouse of helmets and plates; prove you can work under protection and come back alive.",
-          "started": "Take a serious protective setup into the field, complete the bounded contact, and extract. I am testing mobility, judgement and survival under armor, not your collection.",
+          "started": "Factory, day shift. Take a serious protective setup into the close fight, break two hostile operators, and extract alive. I am testing mobility, judgement and survival under armor, not your collection.",
           "success": "You carried the protection through the operation instead of carrying it to a shelf. Good. Equipment earns its place when it survives contact with the job."
         },
         "ru": {
           "description": "Броня полезна только пока человек внутри неё способен закончить маршрут. Склад шлемов и плит меня не интересует; докажи, что умеешь работать под защитой и возвращаться живым.",
-          "started": "Возьми в поле серьёзный комплект защиты, выполни ограниченный боевой контакт и выйди из рейда. Я проверяю подвижность, решение задачи и выживание под бронёй, а не коллекцию.",
+          "started": "Дневная Фабрика. Возьми серьёзный комплект защиты в ближний бой, сними двух вражеских оперативников и выйди живым. Я проверяю подвижность, решение задачи и выживание под бронёй, а не коллекцию.",
           "success": "Защиту ты провёл через операцию, а не просто донёс до полки. Хорошо. Снаряжение заслуживает место тогда, когда переживает вместе с тобой реальную работу."
         }
       },
       "objectiveIntent": [
-        "one survived operation while meeting a bounded proven protective-equipment rule",
-        "small combat or route objective under protection rather than helmet/body-armor handover"
+        "one survived Factory day operation while meeting a bounded proven protective-equipment rule",
+        "eliminate exactly two hostile PMC operators under protection rather than hand over or collect armor"
       ],
+      "boundedOperation": {
+        "selectionStatus": "selected-pending-overlap-economy-and-same-raid-proof",
+        "location": "factory4_day",
+        "contact": {"target": "AnyPmc", "count": 2},
+        "extraction": {"location": "factory4_day", "exitStatus": "Survived"},
+        "rationale": "Factory day creates a deliberately compact mobility-under-protection trial. Two PMC contacts keep the operation meaningful without recreating Juggernaut-style kill ladders or long armor-class progression."
+      },
       "conditionReadiness": {
         "equipmentShape": "proven",
         "survivedExtractionShape": "proven",
+        "boundedMapContactSelection": "selected",
         "equipmentToExtractionSameRaidCoupling": "unproven-required-before-runtime-materialization"
       },
       "equipmentPlan": {
@@ -60,14 +68,13 @@
       },
       "materializationBlockedBy": [
         "exact pinned SPT 4.1.3 protective-equipment TPL allowlist",
-        "same-raid equipment-to-extraction coupling proof",
-        "bounded operation-specific map/contact selection",
-        "overlap review",
+        "same-raid equipment-to-contact-to-extraction coupling proof",
+        "overlap review for Factory protective PMC-contact shape",
         "Economy Admiral reward review"
       ],
       "antiGrind": {
         "maximumRequiredSuccessfulRaids": 1,
-        "maximumTargetCount": 4,
+        "maximumTargetCount": 2,
         "repeatable": false,
         "noArmorCollection": true,
         "noEscalatingProtectionClasses": true,
@@ -76,9 +83,9 @@
       "rewardDoctrine": "XP/RUB/standing by default. No sequential helmet, armor, plate or carrier storefront unlocks; any durable protective-equipment reward requires Economy Admiral review and must not bypass normal capability progression.",
       "proofGates": [
         "select and validate an explicit pinned SPT 4.1.3 protective-equipment TPL allowlist; generic armor-class or parent-category inference remains forbidden",
-        "prove same-raid coupling before runtime materialization so protective Equipment progress and the Survived extraction cannot be satisfied across different raids",
-        "select the bounded operation-specific map/contact values using already-proven condition families",
-        "audit vanilla/Scorpion/Artem overlap for protected-combat and equipment-use objectives",
+        "prove same-raid coupling before runtime materialization so protective Equipment, the two AnyPmc contacts on factory4_day and the Survived extraction cannot be satisfied across different raids",
+        "retain the selected factory4_day + two AnyPmc + Survived bounded shape unless overlap review proves a semantic collision",
+        "audit vanilla/Scorpion/Artem overlap for Factory protected-PMC objectives",
         "Economy Admiral approves final numeric rewards and any protective-equipment reward"
       ],
       "runtimeMaterialize": false
@@ -91,22 +98,30 @@
       "playerText": {
         "en": {
           "description": "A headset is not a qualification. The qualification is hearing the situation early enough to make a better decision. I need field awareness, not sixteen receipts from an equipment counter.",
-          "started": "Run one reconnaissance contact with a proven hearing-protection setup, keep the engagement bounded, and extract. Do not turn this into a headset shopping tour.",
+          "started": "Woods. Run one reconnaissance contact with a proven hearing-protection setup, remove two Scavs without turning the raid into a hunting ledger, and extract alive.",
           "success": "You heard enough to choose the contact instead of stumbling into it. That is the capability I care about; the model number on the headset is secondary."
         },
         "ru": {
           "description": "Гарнитура сама по себе не квалификация. Квалификация — услышать обстановку достаточно рано, чтобы принять лучшее решение. Мне нужна полевая осведомлённость, а не шестнадцать чеков со склада.",
-          "started": "Проведи один разведывательный контакт с подтверждённым средством защиты слуха, держи бой ограниченным и выйди. Не превращай задачу в экскурсию по витрине наушников.",
+          "started": "Лес. Проведи один разведывательный контакт с подтверждённым средством защиты слуха, сними двух Диких без превращения рейда в охотничью ведомость и выйди живым.",
           "success": "Ты услышал достаточно, чтобы выбрать контакт, а не ввалиться в него случайно. Вот эта способность мне нужна; модель гарнитуры вторична."
         }
       },
       "objectiveIntent": [
-        "one bounded reconnaissance/combat contact while using a proven headset equipment allowlist",
-        "survive/extract without headset-by-headset progression or gear-restricted kill ladders"
+        "one bounded Woods reconnaissance contact while using a proven headset equipment allowlist",
+        "eliminate exactly two Scavs and survive/extract without headset-by-headset progression or gear-restricted kill ladders"
       ],
+      "boundedOperation": {
+        "selectionStatus": "selected-pending-overlap-economy-and-same-raid-proof",
+        "location": "woods",
+        "contact": {"target": "Savage", "count": 2},
+        "extraction": {"location": "woods", "exitStatus": "Survived"},
+        "rationale": "Woods rewards early acoustic detection and contact choice without requiring an invented hearing-event condition. Two Scavs keep the contact bounded and subordinate to the reconnaissance/survival purpose."
+      },
       "conditionReadiness": {
         "equipmentShape": "proven",
         "survivedExtractionShape": "proven",
+        "boundedMapContactSelection": "selected",
         "equipmentToExtractionSameRaidCoupling": "unproven-required-before-runtime-materialization"
       },
       "equipmentPlan": {
@@ -119,14 +134,13 @@
       },
       "materializationBlockedBy": [
         "exact pinned SPT 4.1.3 headset TPL allowlist",
-        "same-raid equipment-to-extraction coupling proof",
-        "bounded operation-specific map/contact selection",
-        "overlap review",
+        "same-raid equipment-to-contact-to-extraction coupling proof",
+        "overlap review for Woods headset Scav-contact shape",
         "Economy Admiral reward review"
       ],
       "antiGrind": {
         "maximumRequiredSuccessfulRaids": 1,
-        "maximumTargetCount": 3,
+        "maximumTargetCount": 2,
         "repeatable": false,
         "noHeadsetByHeadsetLadder": true,
         "noLegendGearKillExpansion": true,
@@ -135,9 +149,9 @@
       "rewardDoctrine": "XP/RUB/standing or a tightly bounded support reward only. No headset storefront conveyor and no equipment unlock whose sole purpose is to start another same-shaped quest.",
       "proofGates": [
         "select and validate an explicit pinned SPT 4.1.3 headset TPL allowlist; generic category inference remains forbidden",
-        "prove same-raid coupling before runtime materialization so headset Equipment progress and the Survived extraction cannot be satisfied across different raids",
-        "select the bounded operation-specific map/contact values using already-proven condition families",
-        "audit vanilla/Scorpion/Artem overlap for headset-restricted and reconnaissance objectives",
+        "prove same-raid coupling before runtime materialization so headset Equipment, the two Savage contacts on woods and the Survived extraction cannot be satisfied across different raids",
+        "retain the selected woods + two Savage + Survived bounded shape unless overlap review proves a semantic collision",
+        "audit vanilla/Scorpion/Artem overlap for Woods headset-restricted reconnaissance objectives",
         "Economy Admiral approves final numeric and any support-item rewards"
       ],
       "runtimeMaterialize": false

@@ -17,7 +17,7 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
         cls.by_key = {op["key"]: op for op in cls.manifest["operations"]}
 
     def test_specs_are_non_materialized_and_bound_to_frozen_base(self):
-        self.assertEqual(self.manifest["schemaVersion"], 4)
+        self.assertEqual(self.manifest["schemaVersion"], 5)
         self.assertEqual(self.manifest["status"], "post-0.1.0-authored-spec-only")
         self.assertEqual(
             self.manifest["frozen010Base"],
@@ -65,10 +65,24 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
             readiness = operation["conditionReadiness"]
             self.assertEqual(readiness["equipmentShape"], "proven")
             self.assertEqual(readiness["survivedExtractionShape"], "proven")
+            self.assertEqual(readiness["boundedMapContactSelection"], "selected")
             self.assertEqual(
                 readiness["equipmentToExtractionSameRaidCoupling"],
                 "unproven-required-before-runtime-materialization",
             )
+
+    def test_bounded_operation_shapes_are_selected_without_runtime_overclaim(self):
+        armored = self.by_key["armored-transit"]["boundedOperation"]
+        self.assertEqual(armored["location"], "factory4_day")
+        self.assertEqual(armored["contact"], {"target": "AnyPmc", "count": 2})
+        self.assertEqual(armored["extraction"], {"location": "factory4_day", "exitStatus": "Survived"})
+        self.assertEqual(armored["selectionStatus"], "selected-pending-overlap-economy-and-same-raid-proof")
+
+        acoustic = self.by_key["acoustic-contact"]["boundedOperation"]
+        self.assertEqual(acoustic["location"], "woods")
+        self.assertEqual(acoustic["contact"], {"target": "Savage", "count": 2})
+        self.assertEqual(acoustic["extraction"], {"location": "woods", "exitStatus": "Survived"})
+        self.assertEqual(acoustic["selectionStatus"], "selected-pending-overlap-economy-and-same-raid-proof")
 
     def test_same_raid_coupling_blocks_runtime_materialization(self):
         policy = self.manifest["sameRaidCouplingMaterializationPolicy"]
@@ -89,7 +103,7 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
         self.assertEqual(operation["sourceBundles"], ["Iron Head", "Juggernaut"])
         anti = operation["antiGrind"]
         self.assertEqual(anti["maximumRequiredSuccessfulRaids"], 1)
-        self.assertLessEqual(anti["maximumTargetCount"], 4)
+        self.assertEqual(anti["maximumTargetCount"], 2)
         self.assertTrue(anti["noArmorCollection"])
         self.assertTrue(anti["noEscalatingProtectionClasses"])
         self.assertTrue(anti["noPerItemUnlockChain"])
@@ -100,7 +114,7 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
         self.assertEqual(operation["sourceBundles"], ["Ultrasound"])
         anti = operation["antiGrind"]
         self.assertEqual(anti["maximumRequiredSuccessfulRaids"], 1)
-        self.assertLessEqual(anti["maximumTargetCount"], 3)
+        self.assertEqual(anti["maximumTargetCount"], 2)
         self.assertTrue(anti["noHeadsetByHeadsetLadder"])
         self.assertTrue(anti["noLegendGearKillExpansion"])
         self.assertTrue(anti["noSequentialStorefrontUnlocks"])
