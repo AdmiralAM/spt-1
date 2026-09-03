@@ -38,7 +38,18 @@ namespace SPTBeltArmbandInventory.Tests
 
             ReloadOwnerInstallPublicationGate.EndForRegression();
             if (!ReloadOwnerInstallPublicationGate.CanPublishForRegression())
-                throw new InvalidOperationException("extra finalization must fail closed against depth underflow and leave the idle gate open");
+                throw new InvalidOperationException("extra finalization must fail closed against depth underflow and leave the idle transaction gate open");
+
+            if (!ReloadOwnerInstallPublicationGate.HasPublicationAuthorityForRegression(true, false, 0))
+                throw new InvalidOperationException("only a fully installed non-terminal owner outside an install transaction may publish runtime reload behavior");
+            if (ReloadOwnerInstallPublicationGate.HasPublicationAuthorityForRegression(false, false, 0))
+                throw new InvalidOperationException("uninstalled/stale Harmony owner must remain inert even if runtime fields later become populated");
+            if (ReloadOwnerInstallPublicationGate.HasPublicationAuthorityForRegression(false, true, 0))
+                throw new InvalidOperationException("failed rollback with surviving stale owner must be permanently publication-inert");
+            if (ReloadOwnerInstallPublicationGate.HasPublicationAuthorityForRegression(true, true, 0))
+                throw new InvalidOperationException("terminal owner state must override any stale installed marker");
+            if (ReloadOwnerInstallPublicationGate.HasPublicationAuthorityForRegression(true, false, 1))
+                throw new InvalidOperationException("successful owner must still be inert while a FastAccess install transaction is active");
 
             ReloadOwnerInstallPublicationGate.ResetForRegression();
         }
