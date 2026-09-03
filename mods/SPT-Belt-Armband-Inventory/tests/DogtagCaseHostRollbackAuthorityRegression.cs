@@ -12,7 +12,7 @@ internal static class DogtagCaseHostRollbackAuthorityRegression
     {
         var bear = new MongoId(DogtagCaseHostContract.BearDogtagTemplateId);
         var usec = new MongoId(DogtagCaseHostContract.UsecDogtagTemplateId);
-        var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
+        var caseTpl = new MongoId(DogtagCaseItem.TemplateId);
         var foreign = new MongoId("5448bf274bdc2dfc2f8b456a");
 
         var vanilla = new HashSet<MongoId> { bear, usec };
