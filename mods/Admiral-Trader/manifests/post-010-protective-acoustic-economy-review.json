@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-static-economy-review",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "runtimeMaterialize": false,
+  "purpose": "Close the independent static Economy Admiral reward-review gate for the currently authored Armored Transit and Acoustic Contact shapes without opening their vanilla-overlap or same-raid runtime gates.",
+  "authorities": {
+    "rewardPolicy": {
+      "manifest": "reward-policy.json",
+      "sourceRepository": "sp-tarkov/server-csharp",
+      "sourceCommit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+      "questCountObserved": 558,
+      "overall": {"xpMedian": 12000, "rubMedian": 32000, "rubP75": 85000, "standingMedian": 0.02},
+      "eliminationMedian": {"xp": 18200, "rub": 65000},
+      "explorationMedian": {"xp": 10000, "rub": 40000}
+    },
+    "rewardEnvelope": "post-010-operation-reward-envelope.json",
+    "campaignPlacement": "post-010-campaign-progression.json"
+  },
+  "operations": {
+    "armored-transit": {
+      "campaignPlayerLevel": 24,
+      "riskBand": "high-risk",
+      "authoredShape": "factory4_day + explicit protective Equipment allowlist + exactly 2 AnyPmc + Survived extraction",
+      "authoredReward": {"xp": 10500, "rub": 65000, "standing": 0.016, "itemReward": null},
+      "nearestVanillaComparatorClass": "Elimination",
+      "reviewStatus": "approved-static-conditional-on-shape-surviving-overlap-review",
+      "review": "The 10,500 XP allocation is well below the pinned vanilla Elimination median of 18,200 XP. The 65,000 RUB allocation equals that comparator median and remains inside the authored high-risk band and below the overall vanilla RUB p75 of 85,000. Standing 0.016 stays below the overall vanilla median of 0.02. No armor, helmet, plate, carrier, unlock or other durable item is awarded, so the quest creates no protective-equipment faucet. Economy approval does not override the independent vanilla semantic-overlap gate; if the authored shape is rejected or materially redesigned, this review must be repeated for the replacement shape."
+    },
+    "acoustic-contact": {
+      "campaignPlayerLevel": 20,
+      "riskBand": "standard",
+      "authoredShape": "woods + explicit headset Equipment allowlist + exactly 2 Savage + Survived extraction",
+      "authoredReward": {"xp": 7000, "rub": 42000, "standing": 0.01, "itemReward": null},
+      "nearestVanillaComparatorClass": "Exploration",
+      "secondaryComparatorClass": "Elimination",
+      "reviewStatus": "approved-static-conditional-on-shape-surviving-overlap-review",
+      "review": "The operation is reconnaissance-led with a small bounded elimination component, so Exploration is the nearest primary comparator and Elimination is retained as a conservative secondary ceiling check. The 7,000 XP reward is below both the pinned Exploration median of 10,000 XP and Elimination median of 18,200 XP. The 42,000 RUB reward is only 2,000 above the Exploration median, remains below the Elimination median of 65,000 RUB and well below the overall vanilla RUB p75 of 85,000. Standing 0.01 is half the overall vanilla median. No headset, unlock or renewable support item is awarded, so the operation creates no equipment faucet. Economy approval does not override the independent vanilla semantic-overlap gate or same-raid Equipment-to-contact-to-extraction proof."
+    }
+  },
+  "decision": {
+    "economyAdmiralReviewComplete": true,
+    "numericEscalationApproved": false,
+    "itemRewardsApproved": false,
+    "storefrontUnlocksApproved": false,
+    "runtimeMaterializationAllowedByThisReview": false,
+    "remainingIndependentGates": [
+      "vanilla semantic-overlap review",
+      "same-raid Equipment-to-contact-to-extraction coupling proof"
+    ]
+  },
+  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
+}
