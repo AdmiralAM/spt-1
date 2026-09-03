@@ -264,6 +264,13 @@ public sealed class DogtagCaseItem(
                 rollbackBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(filter);
 
             addedHere = filter.Add(DogtagCaseTpl);
+            if (!addedHere && rollbackBaseline != null)
+            {
+                if (!DogtagCaseHostContract.TryAbandonRollbackAuthority(filter, rollbackBaseline))
+                    throw new InvalidOperationException("B&A&HB Dogtag host pre-add authority could not be abandoned after another transaction supplied the exact Case commit; refusing a leaked/ambiguous capture gate.");
+                rollbackBaseline = null;
+            }
+
             cancellationToken.ThrowIfCancellationRequested();
             DogtagCaseHostContract.RequireCommitted(filter);
             RequireLiveDogtagHostIdentity(boundary);
@@ -272,11 +279,18 @@ public sealed class DogtagCaseItem(
         }
         catch (Exception exception)
         {
-            if (addedHere && (rollbackBaseline == null
-                || !DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)))
-                throw new InvalidOperationException(
-                    "B&A&HB Dogtag host rollback could not be proven against the exact pre-commit acceptance snapshot; ambiguous/foreign current host state is not blindly rewritten.",
-                    exception);
+            if (rollbackBaseline != null)
+            {
+                bool authorityReleased = addedHere
+                    ? DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)
+                    : DogtagCaseHostContract.TryAbandonRollbackAuthority(filter, rollbackBaseline);
+                if (!authorityReleased)
+                    throw new InvalidOperationException(
+                        addedHere
+                            ? "B&A&HB Dogtag host rollback could not be proven against the exact pre-commit acceptance snapshot; ambiguous/foreign current host state is not blindly rewritten."
+                            : "B&A&HB Dogtag host pre-add rollback authority could not be abandoned safely after a non-owned/failed add; exact-host capture remains ambiguous.",
+                        exception);
+            }
             throw;
         }
     }
