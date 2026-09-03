@@ -122,9 +122,11 @@ public sealed class DogtagCaseAssort(
         }
         catch
         {
-            // Rollback may only mutate the exact Ragman wrappers captured for this transaction.
-            // If another participant replaced any wrapper, these collections are stale authority:
-            // preserve them untouched and fail closed rather than "cleaning" detached state.
+            // Rollback is prefix-transactional. Before the first mutation, prove that every
+            // component this transaction successfully published is still exact-owned and
+            // that no later component was supplied by another participant. If any tuple
+            // component drifted, preserve the complete live tuple untouched and fail closed
+            // rather than removing a subset and leaving dangling Ragman metadata.
             if (!IsAssortWrapperIdentityCurrent())
                 throw;
 
@@ -139,14 +141,18 @@ public sealed class DogtagCaseAssort(
                 }
             }
 
-            bool ownsItem = ownedItemIndex >= 0;
+            bool ownsItem = !itemAdded || ownedItemIndex >= 0;
             bool ownsBarter = barterAdded
-                && barterScheme.TryGetValue(id, out var currentBarter)
-                && ReferenceEquals(currentBarter, barter);
+                ? barterScheme.TryGetValue(id, out var currentBarter) && ReferenceEquals(currentBarter, barter)
+                : !barterScheme.ContainsKey(id);
+            bool ownsLoyalty = loyaltyAdded
+                ? loyalLevelItems.TryGetValue(id, out var currentLoyalty) && currentLoyalty == LoyaltyLevel
+                : !loyalLevelItems.ContainsKey(id);
 
-            if (loyaltyAdded && ownsItem && ownsBarter
-                && loyalLevelItems.TryGetValue(id, out var currentLoyalty)
-                && currentLoyalty == LoyaltyLevel)
+            if (!ownsItem || !ownsBarter || !ownsLoyalty)
+                throw;
+
+            if (loyaltyAdded)
             {
                 if (!IsAssortWrapperIdentityCurrent()) throw;
                 if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;
@@ -155,17 +161,20 @@ public sealed class DogtagCaseAssort(
                 loyalLevelItems.Remove(id);
             }
 
-            if (ownsBarter)
-            {
-                if (!IsAssortWrapperIdentityCurrent()) throw;
-                if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;
-                barterScheme.Remove(id);
-            }
-
-            if (ownsItem)
+            if (barterAdded)
             {
                 if (!IsAssortWrapperIdentityCurrent()) throw;
                 if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;
+                if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;
+                if (loyalLevelItems.ContainsKey(id)) throw;
+                barterScheme.Remove(id);
+            }
+
+            if (itemAdded)
+            {
+                if (!IsAssortWrapperIdentityCurrent()) throw;
+                if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;
+                if (barterScheme.ContainsKey(id) || loyalLevelItems.ContainsKey(id)) throw;
                 items.RemoveAt(ownedItemIndex);
             }
             throw;
