@@ -46,11 +46,25 @@ class Post010AuthoredOperationsTests(unittest.TestCase):
                 self.assertLessEqual(anti_grind["maximumTargetCount"], 6)
             self.assertFalse(anti_grind.get("repeatable", False))
 
+    def test_rogue_authority_is_reconciled_to_only_remaining_same_raid_gate(self):
+        rogue = {op["key"]: op for op in self.manifest["operations"]}["rogue-interdiction"]
+        proof_text = " ".join(rogue["proofGates"]).lower()
+        self.assertIn("exact spt 4.1.3 exusec rogue role", proof_text)
+        self.assertIn("lighthouse location authority", proof_text)
+        self.assertIn("same-raid", proof_text)
+        self.assertIn("only remaining condition-authority gate", proof_text)
+        self.assertIn("resolved frozen", proof_text)
+        self.assertIn("vanilla/scorpion/artem overlap", proof_text)
+        self.assertIn("economy admiral approved", proof_text)
+        self.assertNotIn("prove exact spt 4.1.3 rogue target alias", proof_text)
+        self.assertNotIn("audit vanilla/scorpion/artem overlap", proof_text)
+
     def test_specs_fail_closed_on_unproven_runtime_semantics(self):
         proof_text = " ".join(gate.lower() for operation in self.manifest["operations"] for gate in operation["proofGates"])
         self.assertIn("exact spt 4.1.3", proof_text)
         self.assertIn("overlap", proof_text)
         self.assertIn("economy admiral", proof_text)
+        self.assertIn("same-raid", proof_text)
 
     def test_frozen_runtime_counts_are_unchanged(self):
         quest_files = sorted((ROOT / "db" / "quests").glob("*.json"))

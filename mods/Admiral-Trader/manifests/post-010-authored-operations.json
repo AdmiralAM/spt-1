@@ -18,7 +18,12 @@
       "objectiveIntent": ["bounded Rogue elimination on Lighthouse", "survive/extract the same operation rather than cumulative farming"],
       "antiGrind": {"maximumTargetCount": 6, "repeatable": false, "noEscalatingSequels": true, "noLocationFreeFallback": true},
       "rewardDoctrine": "XP/RUB/standing only by default; no Rogue gear storefront and no capability unlock. Any item reward requires Economy Admiral approval.",
-      "proofGates": ["prove exact SPT 4.1.3 Rogue target alias and Lighthouse location condition shape", "prove survived/extraction condition semantics without restart punishment", "audit vanilla/Scorpion/Artem overlap", "Economy Admiral approves final numeric rewards"],
+      "proofGates": [
+        "retain exact SPT 4.1.3 exUsec Rogue role and Lighthouse location authority from post-010-rogue-interdiction-operation.json; Water Treatment remains narrative context rather than an unproven sub-location selector",
+        "prove same-raid coupling between the bounded Rogue kill counter and successful Lighthouse extraction; this is the only remaining condition-authority gate",
+        "retain resolved frozen and vanilla/Scorpion/Artem overlap authorities from post-010-rogue-interdiction-operation.json unless the objective shape changes materially",
+        "retain the Economy Admiral approved 12000 XP / 78000 RUB / 0.018 standing envelope with no item reward unless objective difficulty changes materially"
+      ],
       "runtimeMaterialize": false
     }
   ]
