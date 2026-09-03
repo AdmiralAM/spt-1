@@ -22,6 +22,10 @@ internal static class DogtagCaseAssortPublicationIdentityRegression
         Require(assort, "!Equals(expectedItem.Template, new MongoId(RuntimeIdentity.DogtagCaseItemId))", "publication must revalidate exact Dogtag Case template");
         Require(assort, "expectedItem.Upd.StackObjectsCount != UnlimitedStock", "publication must revalidate exact stock contract");
         Require(assort, "ReferenceEquals(liveBarter, expectedBarter)", "validated barter tuple must remain exact same object reference");
+        Require(assort, "var expectedInnerBarter = liveBarter[0];", "inner barter wrapper must be pinned before value proof");
+        Require(assort, "var expectedScheme = expectedInnerBarter[0];", "barter scheme object must be pinned before value proof");
+        Require(assort, "ReferenceEquals(liveBarter[0], expectedInnerBarter)", "initial tuple proof must re-prove pinned inner barter identity");
+        Require(assort, "ReferenceEquals(liveBarter[0][0], expectedScheme)", "initial tuple proof must re-prove pinned scheme identity");
         Require(assort, "liveBarter.Count != 1", "publication must revalidate outer barter cardinality");
         Require(assort, "liveBarter[0].Count != 1", "publication must revalidate inner barter cardinality");
         Require(assort, "!Equals(liveBarter[0][0].Template, Money.ROUBLES)", "publication must revalidate barter currency");
@@ -42,10 +46,14 @@ internal static class DogtagCaseAssortPublicationIdentityRegression
         int itemIdentity = assort.IndexOf("idMatches != 1 || exactItemMatches != 1", StringComparison.Ordinal);
         int itemContents = assort.IndexOf("!Equals(expectedItem.Template, new MongoId(RuntimeIdentity.DogtagCaseItemId))", StringComparison.Ordinal);
         int barterIdentity = assort.IndexOf("ReferenceEquals(liveBarter, expectedBarter)", StringComparison.Ordinal);
-        int barterContents = assort.IndexOf("liveBarter.Count != 1", StringComparison.Ordinal);
-        int loyaltyProof = assort.IndexOf("liveLoyalty != LoyaltyLevel", StringComparison.Ordinal);
-        if (itemIdentity < 0 || itemContents <= itemIdentity || barterIdentity <= itemContents || barterContents <= barterIdentity || loyaltyProof <= barterContents)
-            throw new InvalidOperationException("Dogtag assort publication identity regression failed: publication ordering must remain item reference -> item contents -> barter reference -> barter contents -> loyalty.");
+        int innerCapture = assort.IndexOf("var expectedInnerBarter = liveBarter[0];", barterIdentity + 1, StringComparison.Ordinal);
+        int schemeCapture = assort.IndexOf("var expectedScheme = expectedInnerBarter[0];", innerCapture + 1, StringComparison.Ordinal);
+        int schemeContents = assort.IndexOf("!Equals(expectedScheme.Template, Money.ROUBLES)", schemeCapture + 1, StringComparison.Ordinal);
+        int initialInnerReproof = assort.IndexOf("!ReferenceEquals(liveBarter[0], expectedInnerBarter)", schemeContents + 1, StringComparison.Ordinal);
+        int loyaltyProof = assort.IndexOf("liveLoyalty != LoyaltyLevel", initialInnerReproof + 1, StringComparison.Ordinal);
+        if (itemIdentity < 0 || itemContents <= itemIdentity || barterIdentity <= itemContents || innerCapture <= barterIdentity
+            || schemeCapture <= innerCapture || schemeContents <= schemeCapture || initialInnerReproof <= schemeContents || loyaltyProof <= initialInnerReproof)
+            throw new InvalidOperationException("Dogtag assort publication identity regression failed: publication ordering must remain item reference -> item contents -> outer barter reference -> inner identity capture -> scheme value proof -> inner identity reproof -> loyalty.");
 
         int existingValidation = assort.IndexOf("ValidateExisting(items, barterScheme, loyalLevelItems, id, existing, templateId);", StringComparison.Ordinal);
         int existingWrapper = assort.IndexOf("RequireAssortWrapperIdentity();", existingValidation + 1, StringComparison.Ordinal);
