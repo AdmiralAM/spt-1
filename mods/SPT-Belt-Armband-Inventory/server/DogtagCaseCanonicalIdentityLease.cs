@@ -111,8 +111,8 @@ internal static class DogtagCaseCanonicalIdentityLease
             // +2 publishes authority for exactly one +3 transaction. Silently replacing an
             // unconsumed lease would allow a second/re-entrant preload pass to erase the first
             // transaction's proven source graph and create an ABA-style authority handoff.
-            // Refuse duplicate publication instead; successful Consume is the only operation
-            // that clears pending authority.
+            // Refuse duplicate publication instead; successful Consume is the normal authority-
+            // clearing path. Cancellation may withdraw only the exact still-pending source lease.
             if (pending != null)
                 throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: an unconsumed Preload +2 authority is already pending.");
             pending = next;
@@ -135,6 +135,22 @@ internal static class DogtagCaseCanonicalIdentityLease
             lease.RequireCurrent(templates, source);
             pending = null;
             return lease;
+        }
+    }
+
+    internal static void CancelPending(TemplateItem source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        lock (Sync)
+        {
+            // Cancellation is lifecycle rollback, not compatibility recovery. Withdraw only
+            // the exact +2 lease that this cancelled preflight published. Missing/replaced/
+            // already-consumed authority is ambiguous and must remain fail-closed.
+            Lease lease = pending
+                ?? throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease cancellation refused: no pending Preload +2 authority exists.");
+            if (!ReferenceEquals(lease.Source, source))
+                throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease cancellation refused: pending authority belongs to a different source reference.");
+            pending = null;
         }
     }
 
