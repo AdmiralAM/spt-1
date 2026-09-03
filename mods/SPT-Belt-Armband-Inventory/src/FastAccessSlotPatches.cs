@@ -425,6 +425,7 @@ namespace SPTBeltArmbandInventory
         bool wroteBindAvailableSlots;
         bool reloadPatchInstalled;
         bool reloadCandidateBridgeInstalled;
+        bool candidateBridgeRollbackUnsafe;
         bool installed;
 
         internal FastAccessSlotPatches(Action<string> logInfo, Action<string> logWarning)
@@ -535,6 +536,12 @@ namespace SPTBeltArmbandInventory
         {
             try
             {
+                if (candidateBridgeRollbackUnsafe)
+                {
+                    ReloadDiagnosticLog.TryWarning(logWarning,
+                        "B&A&HB scoped reload candidate bridge is terminally disabled for this session because a prior Harmony rollback could not be proven.");
+                    return false;
+                }
                 if (!reloadPatchInstalled || FastAccessReloadRuntime.ItemType == null || FastAccessReloadRuntime.MagazineType == null
                     || FastAccessReloadRuntime.GetAllParentItems == null || FastAccessReloadRuntime.ReadTemplateId == null)
                     return false;
@@ -599,8 +606,10 @@ namespace SPTBeltArmbandInventory
             catch (Exception exception)
             {
                 ReloadDiagnosticLog.TryWarning(logWarning,
-                    "B&A&HB scoped reload candidate discovery failed closed and rolled back atomically: " + Unwrap(exception).Message);
-                UnpatchCandidateBridge();
+                    "B&A&HB scoped reload candidate discovery failed closed; partial Harmony owner rollback is required before any reinstall: " + Unwrap(exception).Message);
+                if (!UnpatchCandidateBridge())
+                    ReloadDiagnosticLog.TryWarning(logWarning,
+                        "B&A&HB scoped reload candidate bridge rollback could not be proven; candidate publication is disabled and reinstall is terminally blocked for this session.");
                 return false;
             }
         }
@@ -956,18 +965,35 @@ namespace SPTBeltArmbandInventory
             catch { }
         }
 
-        void UnpatchCandidateBridge()
+        static bool TryRollbackCandidateBridgeOwner(object owner, MethodInfo unpatchSelf)
         {
+            if (owner == null) return true;
+            if (unpatchSelf == null) return false;
             try
             {
-                if (candidateBridgeHarmony != null && candidateBridgeUnpatchSelf != null)
-                    candidateBridgeUnpatchSelf.Invoke(candidateBridgeHarmony, null);
+                unpatchSelf.Invoke(owner, null);
+                return true;
             }
-            catch { }
-            candidateBridgeHarmony = null;
-            candidateBridgeUnpatchSelf = null;
+            catch
+            {
+                return false;
+            }
+        }
+
+        bool UnpatchCandidateBridge()
+        {
+            bool rollbackProven = TryRollbackCandidateBridgeOwner(candidateBridgeHarmony, candidateBridgeUnpatchSelf);
             reloadCandidateBridgeInstalled = false;
             ReloadCandidateBridgeRuntime.Reset();
+            if (rollbackProven)
+            {
+                candidateBridgeHarmony = null;
+                candidateBridgeUnpatchSelf = null;
+                return true;
+            }
+
+            candidateBridgeRollbackUnsafe = true;
+            return false;
         }
 
         void UnpatchReachability()
@@ -1018,8 +1044,11 @@ namespace SPTBeltArmbandInventory
             installedBindAvailableSlots = null;
             reachabilityHarmony = null;
             reachabilityUnpatchSelf = null;
-            candidateBridgeHarmony = null;
-            candidateBridgeUnpatchSelf = null;
+            if (!candidateBridgeRollbackUnsafe)
+            {
+                candidateBridgeHarmony = null;
+                candidateBridgeUnpatchSelf = null;
+            }
         }
 
         static Exception Unwrap(Exception exception)
