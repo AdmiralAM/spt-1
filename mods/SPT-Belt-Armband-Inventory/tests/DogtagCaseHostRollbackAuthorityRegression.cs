@@ -24,6 +24,27 @@ internal static class DogtagCaseHostRollbackAuthorityRegression
         if (!DogtagCaseHostContract.TryRollbackOwnedCaseAddition(clean, cleanBaseline)
             || !clean.SetEquals(cleanBaseline))
             throw new InvalidOperationException("Dogtag host rollback regression failed: exact owned add must roll back to the detached pre-commit snapshot.");
+        clean.Add(caseTpl);
+        if (DogtagCaseHostContract.TryRollbackOwnedCaseAddition(clean, cleanBaseline) || !clean.Contains(caseTpl))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: consumed rollback authority must not be reusable for a second removal.");
+
+        var replacementHost = new HashSet<MongoId>(vanilla);
+        HashSet<MongoId> replacementBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(replacementHost);
+        replacementHost.Add(caseTpl);
+        var valueIdenticalReplacement = new HashSet<MongoId>(replacementHost);
+        if (DogtagCaseHostContract.TryRollbackOwnedCaseAddition(valueIdenticalReplacement, replacementBaseline))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: a value-identical replacement host must not inherit exact-reference rollback authority.");
+        if (!valueIdenticalReplacement.Contains(caseTpl))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: replacement-host rejection must not mutate the foreign/replacement object.");
+
+        var tamperedBaselineHost = new HashSet<MongoId>(vanilla);
+        HashSet<MongoId> tamperedBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(tamperedBaselineHost);
+        tamperedBaselineHost.Add(caseTpl);
+        tamperedBaseline.Add(foreign);
+        if (DogtagCaseHostContract.TryRollbackOwnedCaseAddition(tamperedBaselineHost, tamperedBaseline))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: caller mutation of the detached rollback baseline must invalidate authority.");
+        if (!tamperedBaselineHost.Contains(caseTpl))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: tampered-baseline rejection must leave the live committed host untouched.");
 
         var drifted = new HashSet<MongoId>(vanilla);
         HashSet<MongoId> driftBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(drifted);
