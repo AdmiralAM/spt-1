@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "protective-acoustic-explicit-pinned-spt413-equipment-allowlists",
+  "status": "resolved-explicit-tpl-allowlists",
+  "runtimeMaterialize": false,
+  "source": {
+    "repository": "sp-tarkov/server-csharp",
+    "commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+    "path": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/handbook.json",
+    "method": "validate every explicit TPL by exact handbook membership; handbook parent category is proof metadata only and must not be emitted as an Equipment runtime selector"
+  },
+  "categoryAuthority": {
+    "headsets": {
+      "handbookCategoryId": "5b5f6f3c86f774094242ef87",
+      "icon": "/files/handbook/icon_gear_headsets.png"
+    },
+    "armor": {
+      "handbookCategoryId": "5b5f701386f774093f2ecf0f",
+      "icon": "/files/handbook/icon_gear_armor.png"
+    }
+  },
+  "operations": {
+    "acoustic-contact": {
+      "conditionType": "Equipment",
+      "IncludeNotEquippedItems": false,
+      "selectionPolicy": "all explicit TPLs observed directly under the pinned headset handbook category",
+      "equipmentInclusive": [[
+        "5645bcc04bdc2d363b8b4572",
+        "5aa2ba71e5b5b000137b758f",
+        "5a16b9fffcdbcb0176308b34",
+        "5c165d832e2216398b5a7e36",
+        "5b432b965acfc47a8774094e",
+        "5e4d34ca86f774264f758330",
+        "5f60cd6cf2bcbb675b00dac6",
+        "6033fa48ffd42c541047f728",
+        "628e4e576d783146b124c64d",
+        "66b5f69ea7f72d197e70bcdb",
+        "66b5f6a28ca68c6461709ed8",
+        "66b5f693acff495a294927e3",
+        "66b5f6985891c84aab75ca76",
+        "66b5f68de98be930d701c00e",
+        "68bf405779c8186398099017"
+      ]],
+      "explicitTplCount": 15,
+      "genericCategorySelectorAllowed": false,
+      "exactPinnedTplAllowlistResolved": true
+    },
+    "armored-transit": {
+      "conditionType": "Equipment",
+      "IncludeNotEquippedItems": false,
+      "selectionPolicy": "bounded curated explicit armor roots, each independently observed directly under the pinned armor handbook category; no armor-class predicate or parent-category runtime inference",
+      "equipmentInclusive": [[
+        "5b44cf1486f77431723e3d05",
+        "5ca21c6986f77479963115a7",
+        "5e9dacf986f774054d6b89f4",
+        "6038b4ca92ec1c3103795a0d"
+      ]],
+      "explicitTplCount": 4,
+      "genericCategorySelectorAllowed": false,
+      "armorClassClaimMade": false,
+      "exactPinnedTplAllowlistResolved": true
+    }
+  },
+  "decision": {
+    "exactPinnedProtectiveTplAllowlistResolved": true,
+    "exactPinnedHeadsetTplAllowlistResolved": true,
+    "equipmentConditionShapeAuthority": "post-010-player-equipment-proof.json",
+    "runtimeSelectorMustUseExplicitTplValues": true,
+    "handbookParentIdsMayBeUsedAsRuntimeSelectors": false,
+    "sameRaidEquipmentContactExtractionCouplingStillRequired": true,
+    "vanillaOverlapStillRequired": true,
+    "economyAdmiralRewardReviewStillRequired": true,
+    "implementationAllowed": false,
+    "review": "This closes only exact pinned item identity for the authored Equipment conditions. It deliberately does not infer armor class, does not emit category selectors, and does not prove temporal coupling, vanilla semantic uniqueness, reward balance, or runtime materialization readiness."
+  }
+}
