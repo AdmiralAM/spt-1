@@ -29,6 +29,10 @@ internal static class ReloadOwnerInstallPublicationWiringRegression
             "EndForRegression();",
             "HasLiveReachabilityPublicationContract()",
             "HasLiveCandidatePublicationContract()",
+            "HasPublicationAuthority()",
+            "return installed",
+            "&& !terminalFailure",
+            "&& Volatile.Read(ref installDepth) == 0;",
             "FastAccessReloadRuntime.ItemType != null",
             "FastAccessReloadRuntime.MagazineType != null",
             "FastAccessReloadRuntime.GetAllParentItems != null",
@@ -51,13 +55,15 @@ internal static class ReloadOwnerInstallPublicationWiringRegression
 
         string[] forbidden =
         {
+            "return CanPublishForRegression()\n                && FastAccessReloadRuntime",
+            "return CanPublishForRegression()\n                && ReloadCandidateBridgeRuntime",
             "prefixAssigned = prefix != null;",
             "postfixAssigned = postfix != null;",
             "finalizerAssigned = finalizer != null;"
         };
         foreach (string token in forbidden)
             if (gate.Contains(token, StringComparison.Ordinal))
-                throw new InvalidOperationException("Reload owner install publication wiring regression failed: optional Harmony slot may incorrectly revoke an already-satisfied null request: " + token);
+                throw new InvalidOperationException("Reload owner install publication wiring regression failed: stale/partial owner authority can bypass exact publication fencing: " + token);
 
         int installed = fastAccess.IndexOf("installed = true;", StringComparison.Ordinal);
         int reachability = fastAccess.IndexOf("bool reachability = TryInstallReloadReachability();", StringComparison.Ordinal);
