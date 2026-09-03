@@ -109,6 +109,8 @@ internal static class Program
         Assert(extendedReloadSlots.Skip(vanillaReloadSlots.Length).SequenceEqual(new[] { BeltSlotPlan.ArmBand, RuntimeIdentity.DedicatedBeltWireSlotId }),
             "Magazine Armband and Magazine Belt are appended only after vanilla reload slots");
 
+        RunOwnedArrayRollbackRegression();
+
         Assert(ScavBeltPolicy.ShouldRestore(RuntimeIdentity.CandidateItemId, true, true),
             "ArmBand runtime candidate survives Scav ReplaceInventory when deleted");
         Assert(ScavBeltPolicy.ShouldRestore(RuntimeIdentity.DedicatedMagazineBeltItemId, true, true),
@@ -123,6 +125,33 @@ internal static class Program
             "Scav lifecycle requires a real container item");
 
         Console.WriteLine("SPT Belt/Armband Inventory profile safety, dedicated slot and lifecycle regressions passed.");
+    }
+
+    static void RunOwnedArrayRollbackRegression()
+    {
+        object original = new object();
+        object installed = new object();
+        object current = installed;
+        bool released;
+        bool clean = FastAccessSlotPolicy.TryRestoreOwnedReference(true, () => current, value => current = value, original, installed, out released);
+        Assert(clean && released && ReferenceEquals(current, original),
+            "exact-owned fast-access array restore is proven only after the original reference is read back");
+
+        object foreign = new object();
+        current = foreign;
+        int foreignWrites = 0;
+        bool foreignSafe = FastAccessSlotPolicy.TryRestoreOwnedReference(true, () => current, value => { foreignWrites++; current = value; }, original, installed, out released);
+        Assert(foreignSafe && released && foreignWrites == 0 && ReferenceEquals(current, foreign),
+            "foreign replacement is preserved as an ownership-released no-op");
+
+        current = installed;
+        bool failedWrite = FastAccessSlotPolicy.TryRestoreOwnedReference(true, () => current, value => throw new InvalidOperationException("restore blocked"), original, installed, out released);
+        Assert(!failedWrite && !released && ReferenceEquals(current, installed),
+            "restore failure while the exact installed reference is live retains rollback authority and fails closed");
+
+        bool failedRead = FastAccessSlotPolicy.TryRestoreOwnedReference(true, () => throw new InvalidOperationException("read blocked"), value => { }, original, installed, out released);
+        Assert(!failedRead && !released,
+            "unreadable owned-array state is ambiguous and cannot be treated as a successful rollback");
     }
 
     static string[] InsertDedicated(string[] source, DedicatedWearableSlotDescriptor descriptor)
