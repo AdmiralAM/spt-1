@@ -210,17 +210,17 @@ namespace SPTBeltArmbandInventory
                 else if (parameter.ParameterType == harmonyMethodType && string.Equals(parameter.Name, "prefix", StringComparison.OrdinalIgnoreCase))
                 {
                     args[i] = prefix;
-                    prefixAssigned = prefix != null;
+                    if (prefix != null) prefixAssigned = true;
                 }
                 else if (parameter.ParameterType == harmonyMethodType && string.Equals(parameter.Name, "postfix", StringComparison.OrdinalIgnoreCase))
                 {
                     args[i] = postfix;
-                    postfixAssigned = postfix != null;
+                    if (postfix != null) postfixAssigned = true;
                 }
                 else if (parameter.ParameterType == harmonyMethodType && string.Equals(parameter.Name, "finalizer", StringComparison.OrdinalIgnoreCase))
                 {
                     args[i] = finalizer;
-                    finalizerAssigned = finalizer != null;
+                    if (finalizer != null) finalizerAssigned = true;
                 }
                 else
                 {
