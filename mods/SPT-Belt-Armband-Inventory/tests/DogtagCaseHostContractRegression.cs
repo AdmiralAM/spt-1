@@ -99,13 +99,15 @@ internal static class DogtagCaseHostContractRegression
             "ReferenceEquals(liveSlots[0], boundary.Slot)",
             "ReferenceEquals(liveGroups[0], boundary.FilterGroup)",
             "ReferenceEquals(liveGroups[0].Filter, boundary.Filter)",
+            "private sealed class DogtagHostCommitReceipt",
+            "return new DogtagHostCommitReceipt(this, boundary, addedHere ? rollbackBaseline : null);",
         };
 
         foreach (string contract in required)
             if (!source.Contains(contract, StringComparison.Ordinal))
-                throw new InvalidOperationException("Dogtag host regression failed: live preload-host identity contract missing: " + contract);
+                throw new InvalidOperationException("Dogtag host regression failed: live preload-host/receipt identity contract missing: " + contract);
 
-        int commit = source.IndexOf("private void CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)", StringComparison.Ordinal);
+        int commit = source.IndexOf("private DogtagHostCommitReceipt CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)", StringComparison.Ordinal);
         int commitEnd = commit < 0 ? -1 : source.IndexOf("public static void RequireCanonicalRegisteredTemplate", commit, StringComparison.Ordinal);
         string region = commit >= 0 && commitEnd > commit ? source.Substring(commit, commitEnd - commit) : string.Empty;
 
@@ -116,13 +118,15 @@ internal static class DogtagCaseHostContractRegression
         int ownedAdd = rollbackBaseline < 0 ? -1 : region.IndexOf("addedHere = filter.Add(DogtagCaseTpl);", rollbackBaseline + 1, StringComparison.Ordinal);
         int committed = ownedAdd < 0 ? -1 : region.IndexOf("DogtagCaseHostContract.RequireCommitted(filter);", ownedAdd + 1, StringComparison.Ordinal);
         int postCommitIdentity = committed < 0 ? -1 : region.IndexOf("RequireLiveDogtagHostIdentity(boundary);", committed + 1, StringComparison.Ordinal);
-        int provenRollback = postCommitIdentity < 0 ? -1 : region.IndexOf("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", postCommitIdentity + 1, StringComparison.Ordinal);
+        int receipt = postCommitIdentity < 0 ? -1 : region.IndexOf("return new DogtagHostCommitReceipt(this, boundary, addedHere ? rollbackBaseline : null);", postCommitIdentity + 1, StringComparison.Ordinal);
+        int provenRollback = receipt < 0 ? -1 : region.IndexOf("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", receipt + 1, StringComparison.Ordinal);
 
         if (string.IsNullOrEmpty(region)
-            || min(firstIdentity, preserved, secondIdentity, rollbackBaseline, ownedAdd, committed, postCommitIdentity, provenRollback) < 0
+            || min(firstIdentity, preserved, secondIdentity, rollbackBaseline, ownedAdd, committed, postCommitIdentity, receipt, provenRollback) < 0
             || !(firstIdentity < preserved && preserved < secondIdentity && secondIdentity < rollbackBaseline
-                && rollbackBaseline < ownedAdd && ownedAdd < committed && committed < postCommitIdentity && postCommitIdentity < provenRollback))
-            throw new InvalidOperationException("Dogtag host regression failed: exact live/preserved/live -> rollback baseline -> owned Add -> committed/live -> proven owned rollback ordering drifted.");
+                && rollbackBaseline < ownedAdd && ownedAdd < committed && committed < postCommitIdentity
+                && postCommitIdentity < receipt && receipt < provenRollback))
+            throw new InvalidOperationException("Dogtag host regression failed: exact live/preserved/live -> rollback baseline -> owned Add -> committed/live -> receipt handoff -> proven in-transaction rollback ordering drifted.");
 
         if (region.Contains("filter.Remove(DogtagCaseTpl);", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag host regression failed: value-only rollback returned; ambiguous/foreign current host state must never be blindly rewritten.");
