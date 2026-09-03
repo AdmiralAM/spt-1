@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "post-0.1.0-field-medicine-product-disposition",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "operationKey": "field-medicine-under-pressure",
+  "status": "deferred-out-of-current-wave-pending-exact-treatment-authority",
+  "decision": {
+    "currentWaveAccepted": false,
+    "materializeAsQuest": false,
+    "permanentConceptRejection": false,
+    "reason": "The authored value of Field Medicine Under Pressure depends on proving that the player actually treats or recovers from a meaningful non-stimulant injury in raid. The current exact SPT 4.1.3 condition authority proves extraction and several counter/equipment families, but does not prove a player medical-use, healing, surgery, bleeding-control or health-effect completion condition. Publishing a handover, FIR collection, consumable-count quota or generic survive/extract proxy would remove the operation's differentiator and recreate the legacy Meds Proficiency busywork that Admiral is explicitly curating away.",
+    "unsupportedHealthEffectInferenceAllowed": false,
+    "unsupportedUseItemInferenceAllowed": false,
+    "medicalItemHandoverFallbackAllowed": false,
+    "firMedicalCollectionFallbackAllowed": false,
+    "consumableCountFallbackAllowed": false,
+    "genericSurviveExtractFallbackAllowed": false,
+    "stimulantSubstitutionAllowed": false,
+    "questCountPreservationIsNotARequirement": true
+  },
+  "retainedProductMeaning": {
+    "futureConcept": [
+      "meaningful in-raid ordinary medical treatment or recovery",
+      "successful extraction after the field-medical event if same-raid coupling is eventually proven",
+      "single bounded non-repeatable capability check",
+      "no handover/FIR/use-count ladder"
+    ],
+    "separationFromChemicalSupport": "Controlled Chemical Support remains a distinct stimulant/chemical capability concept and must not be used as a substitute for ordinary field medicine."
+  },
+  "authority": {
+    "conditionProofMatrix": "post-010-condition-proof-matrix.json",
+    "authoredOperationsManifest": "post-010-authored-operations.json",
+    "campaignProgressionManifest": "post-010-campaign-progression.json",
+    "rewardEnvelopeManifest": "post-010-operation-reward-envelope.json",
+    "pinnedSpt413QuestSourceCommit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93"
+  },
+  "synchronization": {
+    "completed": false,
+    "currentAuthoredWaveCount": 20,
+    "targetAuthoredWaveCountAfterRemoval": 19,
+    "removeFromAuthoredOperations": true,
+    "removeFromCampaignProgression": true,
+    "removeFromRewardEnvelope": true,
+    "controlledChemicalSupportPrerequisiteMustBeReauthoredRatherThanSilentlyDropped": true,
+    "nextAtomicSlice": "Synchronize the active authored/progression/reward authorities to 19 operations and explicitly re-author the Controlled Chemical Support prerequisite without creating a replacement filler quest."
+  },
+  "runtimeGate": {
+    "implementationAllowed": false,
+    "runtimeMaterialize": false,
+    "physicalTestRequired": false,
+    "deferredLifecycleRewardMilestoneUnaffected": true
+  },
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0
+  }
+}
