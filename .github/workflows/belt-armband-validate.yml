@@ -53,6 +53,27 @@ jobs:
       - name: 'Run B&A&HB #2 product-contract guard'
         shell: pwsh
         run: python mods/SPT-Belt-Armband-Inventory/tools/check_product_contract.py
+      - name: 'Run B&A&HB #2 persistent-identity parity guard'
+        shell: pwsh
+        run: python mods/SPT-Belt-Armband-Inventory/tools/check_identity_manifest.py
+      - name: 'Run B&A&HB #2 legacy-conflict guard'
+        shell: pwsh
+        run: python mods/SPT-Belt-Armband-Inventory/tools/check_legacy_conflict_gate.py
+      - name: 'Run B&A&HB #2 offer-host guard'
+        shell: pwsh
+        run: python mods/SPT-Belt-Armband-Inventory/tools/check_offer_host_contract.py
+      - name: 'Run B&A&HB #2 offer-template guard'
+        shell: pwsh
+        run: python mods/SPT-Belt-Armband-Inventory/tools/check_offer_template_boundary.py
+      - name: 'Run B&A&HB #2 protection-sync guard'
+        shell: pwsh
+        run: python mods/SPT-Belt-Armband-Inventory/tools/check_protection_sync.py
+      - name: 'Run B&A&HB #2 server-patch registration guard'
+        shell: pwsh
+        run: python mods/SPT-Belt-Armband-Inventory/tools/check_server_patch_registration.py
+      - name: 'Run B&A&HB #2 taxonomy-ownership guard'
+        shell: pwsh
+        run: python mods/SPT-Belt-Armband-Inventory/tools/check_taxonomy_ownership.py
       - name: 'Run B&A&HB #2 compact-layout guard'
         shell: pwsh
         run: python mods/SPT-Belt-Armband-Inventory/tools/check_compact_layout.py
