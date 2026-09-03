@@ -43,7 +43,17 @@ internal static class WearableProtectionRuntime
     private static bool headBandProtected = true;
     private static ProtectedWearableRoot[] activeRoots = BuildRoots(true, true, true);
 
-    internal static ProtectedWearableRoot[] ActiveRoots => Volatile.Read(ref activeRoots);
+    // Never expose the mutable shared publication array. Death/insurance callers get
+    // a point-in-time detached snapshot, so consumer-side mutation cannot rewrite
+    // protection authority for later lifecycle operations.
+    internal static ProtectedWearableRoot[] ActiveRoots
+    {
+        get
+        {
+            ProtectedWearableRoot[] published = Volatile.Read(ref activeRoots);
+            return (ProtectedWearableRoot[])published.Clone();
+        }
+    }
 
     internal static WearableProtectionSnapshot Snapshot()
     {
