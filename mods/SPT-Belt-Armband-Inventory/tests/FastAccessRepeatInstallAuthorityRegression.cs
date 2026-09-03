@@ -28,8 +28,12 @@ internal static class FastAccessRepeatInstallAuthorityRegression
         Require(body, "fastAccessSlotsField.GetValue(null)", "repeat install must read the live FastAccessSlots reference");
         Require(body, "bindAvailableSlotsField.GetValue(null)", "repeat install must read the live BindAvailableSlotsExtended reference");
         Require(body, "FastAccessSlotPolicy.HasExactInstalledArrayAuthority(", "repeat install must require exact installed references for both arrays");
-        Require(body, "idempotent no-op", "exact authority must explicitly remain a no-mutation success");
-        Require(body, "live array authority drifted", "drift must refuse repeat installation");
+        Require(body, "FastAccessSlotPolicy.HasExactArrayContent(currentFastAccessSlots, installedFastAccessSlotsContent)", "repeat install must re-prove detached FastAccessSlots content");
+        Require(body, "FastAccessSlotPolicy.HasExactArrayContent(currentBindAvailableSlots, installedBindAvailableSlotsContent)", "repeat install must re-prove detached BindAvailableSlotsExtended content");
+        Require(body, "arrayContentAuthorityUnsafe = true", "observed in-place drift/ambiguity must become monotonic for the lifecycle");
+        Require(body, "terminally blocked for this lifecycle even if values are later restored", "same-reference ABA restoration must not regain repeat-install authority");
+        Require(body, "idempotent no-op", "exact reference/content authority must explicitly remain a no-mutation success");
+        Require(body, "live array authority drifted", "reference drift must refuse repeat installation");
         Require(body, "live array authority could not be proven", "unreadable authority must fail closed");
 
         if (body.Contains("SetValue(", StringComparison.Ordinal)
@@ -37,6 +41,22 @@ internal static class FastAccessRepeatInstallAuthorityRegression
             || body.Contains("Unpatch", StringComparison.Ordinal)
             || body.Contains("ClearState(", StringComparison.Ordinal))
             throw new InvalidOperationException("FastAccess repeat-install authority regression failed: repeat-install validation must not mutate arrays, rollback Harmony, or clear ownership state.");
+
+        int captureFast = source.IndexOf("installedFastAccessSlotsContent = FastAccessSlotPolicy.CaptureArrayContentSnapshot(installedFastAccessSlots);", StringComparison.Ordinal);
+        int captureBind = source.IndexOf("installedBindAvailableSlotsContent = FastAccessSlotPolicy.CaptureArrayContentSnapshot(installedBindAvailableSlots);", StringComparison.Ordinal);
+        int firstWrite = source.IndexOf("fastAccessSlotsField.SetValue(null, installedFastAccessSlots);", StringComparison.Ordinal);
+        if (captureFast < 0 || captureBind < 0 || firstWrite < 0 || captureFast >= firstWrite || captureBind >= firstWrite)
+            throw new InvalidOperationException("FastAccess repeat-install authority regression failed: detached installed-array snapshots must be captured before either live static array is published.");
+
+        int snapshotHelper = source.IndexOf("internal static Array CaptureArrayContentSnapshot(object value)", StringComparison.Ordinal);
+        int contentHelper = source.IndexOf("internal static bool HasExactArrayContent(object currentValue, Array snapshot)", StringComparison.Ordinal);
+        if (snapshotHelper < 0 || contentHelper <= snapshotHelper)
+            throw new InvalidOperationException("FastAccess repeat-install authority regression failed: detached snapshot/content helpers are missing.");
+
+        string contentBody = source.Substring(contentHelper, source.IndexOf("internal static bool TryRestoreOwnedReference(", contentHelper, StringComparison.Ordinal) - contentHelper);
+        Require(contentBody, "current.GetType() != snapshot.GetType()", "content proof must pin exact runtime array type");
+        Require(contentBody, "current.Length != snapshot.Length", "content proof must pin cardinality");
+        Require(contentBody, "Equals(current.GetValue(i), snapshot.GetValue(i))", "content proof must compare each slot value");
     }
 
     private static string? FindModuleRoot()
