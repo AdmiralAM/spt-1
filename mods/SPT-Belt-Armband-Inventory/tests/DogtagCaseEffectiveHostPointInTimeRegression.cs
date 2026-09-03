@@ -26,7 +26,7 @@ internal static class DogtagCaseEffectiveHostPointInTimeRegression
             "effective proof must capture the Filters wrapper");
         Require(source, "var filterGroup = groups[0];",
             "effective proof must capture the sole filter-group object");
-        Require(source, "var hostFilter = filterGroup.Filter;",
+        Require(source, "var hostFilter = filterGroup.Filter",
             "effective proof must capture the exact included-filter HashSet");
         Require(source, "DogtagCaseHostContract.RequireCommitted(hostFilter);",
             "effective proof must bracket optional-exclusion evaluation with committed included-host proofs");
@@ -64,7 +64,7 @@ internal static class DogtagCaseEffectiveHostPointInTimeRegression
             "final detached exclusion snapshot must receive effective acceptance");
 
         const string identityCall = "RequireCapturedHostIdentity(templateTable, inventory, inventoryProperties, slotsCollection, slot, slotProperties, filtersCollection, filterGroup, hostFilter);";
-        int capture = source.IndexOf("var hostFilter = filterGroup.Filter;", StringComparison.Ordinal);
+        int capture = source.IndexOf("var hostFilter = filterGroup.Filter", StringComparison.Ordinal);
         int committedBefore = source.IndexOf("DogtagCaseHostContract.RequireCommitted(hostFilter);", capture, StringComparison.Ordinal);
         int exclusionBefore = source.IndexOf("var excludedBefore = SnapshotOptionalExcludedFilter(filterGroup);", committedBefore, StringComparison.Ordinal);
         int effective = source.IndexOf("RequireEffectiveAcceptance(hostFilter, excludedBefore);", exclusionBefore, StringComparison.Ordinal);
