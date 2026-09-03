@@ -49,19 +49,27 @@ internal static class DogtagCaseHostCollectionIdentityRegression
             || liveFiltersCollection <= liveSlotProperties || liveGroup <= liveFiltersCollection || liveFilter <= liveGroup)
             throw new InvalidOperationException("Dogtag host collection identity regression failed: capture/reproof ordering drifted from inventory properties -> slots collection -> slot properties -> filters collection -> group -> HashSet.");
 
-        int commit = source.IndexOf("private void CommitDogtagSlotExposure", StringComparison.Ordinal);
-        int firstLive = source.IndexOf("RequireLiveDogtagHostIdentity(boundary);", commit, StringComparison.Ordinal);
-        int preserved = source.IndexOf("DogtagCaseHostContract.RequirePreserved(filter);", firstLive, StringComparison.Ordinal);
-        int secondLive = source.IndexOf("RequireLiveDogtagHostIdentity(boundary);", firstLive + 1, StringComparison.Ordinal);
-        int rollbackBaseline = source.IndexOf("DogtagCaseHostContract.CaptureRollbackBaseline(filter)", secondLive, StringComparison.Ordinal);
-        int add = source.IndexOf("addedHere = filter.Add(DogtagCaseTpl);", rollbackBaseline, StringComparison.Ordinal);
-        int committed = source.IndexOf("DogtagCaseHostContract.RequireCommitted(filter);", add, StringComparison.Ordinal);
-        int finalLive = source.IndexOf("RequireLiveDogtagHostIdentity(boundary);", committed, StringComparison.Ordinal);
-        int provenRollback = source.IndexOf("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", finalLive, StringComparison.Ordinal);
-        if (commit < 0 || firstLive <= commit || preserved <= firstLive || secondLive <= preserved
+        int commit = source.IndexOf("private DogtagHostCommitReceipt CommitDogtagSlotExposure", StringComparison.Ordinal);
+        if (commit < 0)
+            throw new InvalidOperationException("Dogtag host collection identity regression failed: receipt-returning host commit boundary is missing.");
+        int commitEnd = source.IndexOf("public static void RequireCanonicalRegisteredTemplate", commit, StringComparison.Ordinal);
+        if (commitEnd <= commit)
+            throw new InvalidOperationException("Dogtag host collection identity regression failed: host commit region end is missing.");
+        string commitRegion = source.Substring(commit, commitEnd - commit);
+
+        int firstLive = commitRegion.IndexOf("RequireLiveDogtagHostIdentity(boundary);", StringComparison.Ordinal);
+        int preserved = firstLive < 0 ? -1 : commitRegion.IndexOf("DogtagCaseHostContract.RequirePreserved(filter);", firstLive, StringComparison.Ordinal);
+        int secondLive = preserved < 0 ? -1 : commitRegion.IndexOf("RequireLiveDogtagHostIdentity(boundary);", preserved, StringComparison.Ordinal);
+        int rollbackBaseline = secondLive < 0 ? -1 : commitRegion.IndexOf("DogtagCaseHostContract.CaptureRollbackBaseline(filter)", secondLive, StringComparison.Ordinal);
+        int add = rollbackBaseline < 0 ? -1 : commitRegion.IndexOf("addedHere = filter.Add(DogtagCaseTpl);", rollbackBaseline, StringComparison.Ordinal);
+        int committed = add < 0 ? -1 : commitRegion.IndexOf("DogtagCaseHostContract.RequireCommitted(filter);", add, StringComparison.Ordinal);
+        int finalLive = committed < 0 ? -1 : commitRegion.IndexOf("RequireLiveDogtagHostIdentity(boundary);", committed, StringComparison.Ordinal);
+        int receipt = finalLive < 0 ? -1 : commitRegion.IndexOf("return new DogtagHostCommitReceipt(this, boundary, addedHere ? rollbackBaseline : null);", finalLive, StringComparison.Ordinal);
+        int provenRollback = receipt < 0 ? -1 : commitRegion.IndexOf("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", receipt, StringComparison.Ordinal);
+        if (firstLive < 0 || preserved <= firstLive || secondLive <= preserved
             || rollbackBaseline <= secondLive || add <= rollbackBaseline || committed <= add
-            || finalLive <= committed || provenRollback <= finalLive)
-            throw new InvalidOperationException("Dogtag host collection identity regression failed: collection-chain proof must remain inside the exact pre-commit snapshot / owned mutation / committed proof / proven rollback boundary.");
+            || finalLive <= committed || receipt <= finalLive || provenRollback <= receipt)
+            throw new InvalidOperationException("Dogtag host collection identity regression failed: collection-chain proof must remain inside the exact pre-commit snapshot / owned mutation / committed proof / receipt handoff / proven in-transaction rollback boundary.");
     }
 
     private static string? FindModuleRoot()
