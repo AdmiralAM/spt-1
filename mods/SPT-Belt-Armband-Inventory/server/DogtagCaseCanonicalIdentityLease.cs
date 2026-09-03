@@ -111,8 +111,8 @@ internal static class DogtagCaseCanonicalIdentityLease
             // +2 publishes authority for exactly one +3 transaction. Silently replacing an
             // unconsumed lease would allow a second/re-entrant preload pass to erase the first
             // transaction's proven source graph and create an ABA-style authority handoff.
-            // Refuse duplicate publication instead; Consume is the only operation that clears
-            // pending authority.
+            // Refuse duplicate publication instead; successful Consume is the only operation
+            // that clears pending authority.
             if (pending != null)
                 throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: an unconsumed Preload +2 authority is already pending.");
             pending = next;
@@ -121,16 +121,21 @@ internal static class DogtagCaseCanonicalIdentityLease
 
     internal static Lease Consume(TemplateTable templates, TemplateItem source)
     {
-        Lease lease;
         lock (Sync)
         {
-            lease = pending
+            Lease lease = pending
                 ?? throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: Preload +2 identity authority is missing or was already consumed.");
-            pending = null;
-        }
 
-        lease.RequireCurrent(templates, source);
-        return lease;
+            // Keep publication/consumption serialized until the exact +2 graph has been
+            // re-proven. Clearing first would create an interleaving window where another
+            // +2 Publish could install fresh authority while this +3 Consume was still
+            // validating the prior lease. A failed proof intentionally leaves the invalid
+            // lease pending, making the startup path terminal fail-closed rather than
+            // silently accepting a later replacement authority.
+            lease.RequireCurrent(templates, source);
+            pending = null;
+            return lease;
+        }
     }
 
     private static Lease Capture(TemplateItem source)
