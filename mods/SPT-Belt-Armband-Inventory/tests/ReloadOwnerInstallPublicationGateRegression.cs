@@ -4,6 +4,12 @@ namespace SPTBeltArmbandInventory.Tests
 {
     internal static class ReloadOwnerInstallPublicationGateRegression
     {
+        [System.Runtime.CompilerServices.ModuleInitializer]
+        internal static void Initialize()
+        {
+            Run();
+        }
+
         internal static void Run()
         {
             ReloadOwnerInstallPublicationGate.ResetForRegression();
