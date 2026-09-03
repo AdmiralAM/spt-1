@@ -62,10 +62,13 @@ public sealed class DogtagCaseAssort(
         var existing = matches.SingleOrDefault();
         if (existing != null)
         {
+            if (!barterScheme.TryGetValue(id, out var existingBarter))
+                throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: retained item has no barter tuple to capture before validation.");
             ValidateExisting(items, barterScheme, loyalLevelItems, id, existing, templateId);
             RequireAssortWrapperIdentity();
-            if (!barterScheme.TryGetValue(id, out var existingBarter))
-                throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: validated barter tuple disappeared before publication proof.");
+            if (!barterScheme.TryGetValue(id, out var liveExistingBarter)
+                || !ReferenceEquals(liveExistingBarter, existingBarter))
+                throw new InvalidOperationException("B&A&HB Dogtag Case assort ID collision: retained barter tuple identity changed during validation.");
             RequirePublicationBoundary(templateTable, templateId);
             RequireAssortWrapperIdentity();
             RequirePublishedAssortTupleIdentity(items, barterScheme, loyalLevelItems, id, existing, existingBarter);
