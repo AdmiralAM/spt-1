@@ -15,7 +15,7 @@ internal static class FastAccessRepeatInstallAuthorityRegression
         int tryInstall = source.IndexOf("internal bool TryInstall()", StringComparison.Ordinal);
         int repeatGate = source.IndexOf("if (installed)", tryInstall, StringComparison.Ordinal);
         int repeatCall = source.IndexOf("return ValidateExistingInstallAuthority();", repeatGate, StringComparison.Ordinal);
-        int installTry = source.IndexOf("try\n            {", repeatCall, StringComparison.Ordinal);
+        int installTry = source.IndexOf("try", repeatCall, StringComparison.Ordinal);
         if (tryInstall < 0 || repeatGate <= tryInstall || repeatCall <= repeatGate || installTry <= repeatCall)
             throw new InvalidOperationException("FastAccess repeat-install authority regression failed: repeat-install authority gate must execute before the first-install rollback try/catch.");
 
