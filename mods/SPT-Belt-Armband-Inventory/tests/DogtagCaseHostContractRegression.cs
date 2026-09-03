@@ -112,16 +112,20 @@ internal static class DogtagCaseHostContractRegression
         int firstIdentity = region.IndexOf("RequireLiveDogtagHostIdentity(boundary);", StringComparison.Ordinal);
         int preserved = firstIdentity < 0 ? -1 : region.IndexOf("DogtagCaseHostContract.RequirePreserved(filter);", firstIdentity + 1, StringComparison.Ordinal);
         int secondIdentity = preserved < 0 ? -1 : region.IndexOf("RequireLiveDogtagHostIdentity(boundary);", preserved + 1, StringComparison.Ordinal);
-        int ownedAdd = secondIdentity < 0 ? -1 : region.IndexOf("bool addedHere = filter.Add(DogtagCaseTpl);", secondIdentity + 1, StringComparison.Ordinal);
+        int rollbackBaseline = secondIdentity < 0 ? -1 : region.IndexOf("DogtagCaseHostContract.CaptureRollbackBaseline(filter)", secondIdentity + 1, StringComparison.Ordinal);
+        int ownedAdd = rollbackBaseline < 0 ? -1 : region.IndexOf("addedHere = filter.Add(DogtagCaseTpl);", rollbackBaseline + 1, StringComparison.Ordinal);
         int committed = ownedAdd < 0 ? -1 : region.IndexOf("DogtagCaseHostContract.RequireCommitted(filter);", ownedAdd + 1, StringComparison.Ordinal);
         int postCommitIdentity = committed < 0 ? -1 : region.IndexOf("RequireLiveDogtagHostIdentity(boundary);", committed + 1, StringComparison.Ordinal);
-        int rollback = postCommitIdentity < 0 ? -1 : region.IndexOf("filter.Remove(DogtagCaseTpl);", postCommitIdentity + 1, StringComparison.Ordinal);
+        int provenRollback = postCommitIdentity < 0 ? -1 : region.IndexOf("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", postCommitIdentity + 1, StringComparison.Ordinal);
 
         if (string.IsNullOrEmpty(region)
-            || min(firstIdentity, preserved, secondIdentity, ownedAdd, committed, postCommitIdentity, rollback) < 0
-            || !(firstIdentity < preserved && preserved < secondIdentity && secondIdentity < ownedAdd
-                && ownedAdd < committed && committed < postCommitIdentity && postCommitIdentity < rollback))
-            throw new InvalidOperationException("Dogtag host regression failed: exact live/preserved/live -> owned Add -> committed/live -> owned rollback ordering drifted.");
+            || min(firstIdentity, preserved, secondIdentity, rollbackBaseline, ownedAdd, committed, postCommitIdentity, provenRollback) < 0
+            || !(firstIdentity < preserved && preserved < secondIdentity && secondIdentity < rollbackBaseline
+                && rollbackBaseline < ownedAdd && ownedAdd < committed && committed < postCommitIdentity && postCommitIdentity < provenRollback))
+            throw new InvalidOperationException("Dogtag host regression failed: exact live/preserved/live -> rollback baseline -> owned Add -> committed/live -> proven owned rollback ordering drifted.");
+
+        if (region.Contains("filter.Remove(DogtagCaseTpl);", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag host regression failed: value-only rollback returned; ambiguous/foreign current host state must never be blindly rewritten.");
 
         int cancellationChecks = region.Split("cancellationToken.ThrowIfCancellationRequested();", StringSplitOptions.None).Length - 1;
         if (cancellationChecks < 4)
