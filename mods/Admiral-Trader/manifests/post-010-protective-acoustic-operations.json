@@ -14,7 +14,7 @@
   "survivedExtractionAuthority": {
     "status": "proven-shape-only",
     "conditionShape": ["Location", "ExitStatus(Survived)"],
-    "boundary": "This proves a bounded survived extraction objective can be materialized. It does not prove that Equipment and extraction occurred in the same raid, and it does not supply operation-specific map or exfil values.",
+    "boundary": "This proves the bounded survived-extraction condition shape only. Runtime materialization still requires operation-specific map/contact values and proof that qualifying Equipment and extraction are coupled in the same raid.",
     "sameRaidEquipmentCouplingProven": false
   },
   "sameRaidCouplingMaterializationPolicy": {
@@ -48,7 +48,7 @@
       "conditionReadiness": {
         "equipmentShape": "proven",
         "survivedExtractionShape": "proven",
-        "equipmentToExtractionSameRaidCoupling": "unproven-not-required-for-initial-materialization"
+        "equipmentToExtractionSameRaidCoupling": "unproven-required-before-runtime-materialization"
       },
       "equipmentPlan": {
         "conditionType": "Equipment",
@@ -107,7 +107,7 @@
       "conditionReadiness": {
         "equipmentShape": "proven",
         "survivedExtractionShape": "proven",
-        "equipmentToExtractionSameRaidCoupling": "unproven-not-required-for-initial-materialization"
+        "equipmentToExtractionSameRaidCoupling": "unproven-required-before-runtime-materialization"
       },
       "equipmentPlan": {
         "conditionType": "Equipment",

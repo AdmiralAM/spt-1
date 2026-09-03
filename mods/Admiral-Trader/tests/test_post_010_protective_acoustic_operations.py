@@ -59,14 +59,15 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
         self.assertEqual(authority["status"], "proven-shape-only")
         self.assertEqual(authority["conditionShape"], ["Location", "ExitStatus(Survived)"])
         self.assertFalse(authority["sameRaidEquipmentCouplingProven"])
-        self.assertIn("does not prove", authority["boundary"].lower())
+        self.assertIn("shape only", authority["boundary"].lower())
+        self.assertIn("same raid", authority["boundary"].lower())
         for operation in self.manifest["operations"]:
             readiness = operation["conditionReadiness"]
             self.assertEqual(readiness["equipmentShape"], "proven")
             self.assertEqual(readiness["survivedExtractionShape"], "proven")
             self.assertEqual(
                 readiness["equipmentToExtractionSameRaidCoupling"],
-                "unproven-not-required-for-initial-materialization",
+                "unproven-required-before-runtime-materialization",
             )
 
     def test_same_raid_coupling_blocks_runtime_materialization(self):
@@ -81,6 +82,7 @@ class Post010ProtectiveAcousticOperationsTests(unittest.TestCase):
             proof_text = " ".join(operation["proofGates"]).lower()
             self.assertIn("same-raid coupling before runtime materialization", proof_text)
             self.assertIn("different raids", proof_text)
+            self.assertNotIn("not-required-for-initial-materialization", operation["conditionReadiness"]["equipmentToExtractionSameRaidCoupling"])
 
     def test_armored_transit_rejects_legacy_equipment_ladders(self):
         operation = self.by_key["armored-transit"]
