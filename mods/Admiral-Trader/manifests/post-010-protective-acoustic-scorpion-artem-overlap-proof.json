@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "protective-acoustic-pinned-scorpion-artem-semantic-overlap",
+  "status": "resolved-no-semantic-duplicate",
+  "runtimeMaterialize": false,
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "sources": {
+    "scorpion": {
+      "repository": "acidphantasm/scorpion-csharp",
+      "commit": "7d1bed766f859f227680377acc1e20c8f97b09bf",
+      "observedRelevantShapes": [
+        "Factory day PMC headshot elimination objective",
+        "Factory night PMC headshot elimination objective",
+        "Factory monitoring/visit-place objectives",
+        "Woods visit objectives including USEC Camp, radio tower and Scav Base"
+      ],
+      "headsetQuestSearchMatchFound": false,
+      "classification": "partial-component-overlap-only"
+    },
+    "artem": {
+      "repository": "WelcomeToThursday/WTT-Artem",
+      "commit": "ee5b7c13a1980ff961ed0b2c1d8764574377b2bf",
+      "observedRelevantShapes": [
+        "Factory day visit/place-item objectives around the abandoned tent and stolen medical boxes",
+        "Woods TerraGroup-agent elimination plus FIR CMS handover and abandoned USEC-camp visit",
+        "custom mounted ComTac 2 item content without a matching headset quest semantic contract"
+      ],
+      "classification": "partial-component-overlap-only"
+    }
+  },
+  "operations": {
+    "armored-transit": {
+      "selectedShape": "factory4_day + exactly two AnyPmc + explicit protective-equipment allowlist + Survived extraction in one operation",
+      "scorpionOverlap": "Factory-day PMC elimination exists, but the observed contract is headshot-specific rather than protective-equipment use plus bounded contact plus extraction. This is a real shared combat component, not a semantic duplicate.",
+      "artemOverlap": "Factory-day Artem content observed is visit/place-item oriented; no matching protective-equipment PMC-contact plus survived-extraction contract was found.",
+      "externalSemanticDuplicateFound": false,
+      "externalOverlapResolved": true
+    },
+    "acoustic-contact": {
+      "selectedShape": "woods + exactly two Savage + explicit headset allowlist + Survived extraction in one operation",
+      "scorpionOverlap": "Observed Woods content is visit-oriented and repository search produced no headset quest match; no Woods headset-restricted Scav-contact plus extraction semantic duplicate was found.",
+      "artemOverlap": "Artem includes Woods quest content and headset item content, but the observed Woods contract targets TerraGroup agents/visit-handover work and does not combine a headset requirement with exactly two Savage contacts plus survived extraction.",
+      "externalSemanticDuplicateFound": false,
+      "externalOverlapResolved": true
+    }
+  },
+  "decision": {
+    "scorpionArtemExternalOverlapResolved": true,
+    "semanticDuplicateFound": false,
+    "vanillaOverlapStillRequired": true,
+    "exactEquipmentTplAllowlistStillRequired": true,
+    "economyAdmiralRewardReviewStillRequired": true,
+    "sameRaidEquipmentContactExtractionCouplingStillRequired": true,
+    "aggregateOverlapGateMayClose": false,
+    "review": "Pinned Scorpion and Artem contain real partial component overlaps, especially Scorpion Factory-day PMC elimination and Artem Woods content, but neither reproduces either selected Admiral operation as one semantic contract. This closes only the Scorpion/Artem external sub-review. Vanilla overlap, exact equipment TPLs, Economy Admiral rewards and same-raid temporal coupling remain independent fail-closed gates."
+  }
+}
