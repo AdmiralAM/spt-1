@@ -11,7 +11,8 @@ internal static class DogtagCaseAssortRollbackAtomicityRegression
         if (root == null)
             throw new InvalidOperationException("Dogtag assort rollback atomicity regression failed: module root could not be resolved.");
 
-        string source = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseAssort.cs"));
+        string source = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseAssort.cs"))
+            .Replace("\r\n", "\n", StringComparison.Ordinal);
         int catchStart = source.IndexOf("catch\n        {", StringComparison.Ordinal);
         int logger = catchStart < 0 ? -1 : source.IndexOf("logger.Success", catchStart, StringComparison.Ordinal);
         if (catchStart < 0 || logger <= catchStart)
