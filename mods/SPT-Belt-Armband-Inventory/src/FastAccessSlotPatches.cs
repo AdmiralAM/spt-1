@@ -37,6 +37,14 @@ namespace SPTBeltArmbandInventory
             return installedValue != null && ReferenceEquals(currentValue, installedValue);
         }
 
+        internal static bool HasExactInstalledArrayAuthority(object currentFastAccessSlots, object installedFastAccessSlots,
+            object currentBindAvailableSlots, object installedBindAvailableSlots)
+        {
+            return installedFastAccessSlots != null && installedBindAvailableSlots != null
+                && ReferenceEquals(currentFastAccessSlots, installedFastAccessSlots)
+                && ReferenceEquals(currentBindAvailableSlots, installedBindAvailableSlots);
+        }
+
         internal static bool TryRestoreOwnedReference(
             bool wrote,
             Func<object> readCurrent,
@@ -436,6 +444,9 @@ namespace SPTBeltArmbandInventory
 
         internal bool TryInstall()
         {
+            if (installed)
+                return ValidateExistingInstallAuthority();
+
             try
             {
                 if (arrayRollbackUnsafe)
@@ -483,6 +494,30 @@ namespace SPTBeltArmbandInventory
                 UnpatchReload();
                 ClearState();
                 return Fail("Wearable fast-access slot compatibility installation failed safely: " + Unwrap(exception).Message);
+            }
+        }
+
+        bool ValidateExistingInstallAuthority()
+        {
+            try
+            {
+                if (fastAccessSlotsField == null || bindAvailableSlotsField == null)
+                    return Fail("B&A&HB fast-access repeat install refused because prior array authority metadata is incomplete.");
+
+                object currentFastAccessSlots = fastAccessSlotsField.GetValue(null);
+                object currentBindAvailableSlots = bindAvailableSlotsField.GetValue(null);
+                if (FastAccessSlotPolicy.HasExactInstalledArrayAuthority(currentFastAccessSlots, installedFastAccessSlots,
+                    currentBindAvailableSlots, installedBindAvailableSlots))
+                {
+                    ReloadDiagnosticLog.TryInfo(logInfo, "B&A&HB fast-access repeat install is an idempotent no-op; exact installed array authority is unchanged.");
+                    return true;
+                }
+
+                return Fail("B&A&HB fast-access repeat install refused because live array authority drifted; foreign/current state is preserved without reinstallation.");
+            }
+            catch (Exception exception)
+            {
+                return Fail("B&A&HB fast-access repeat install refused because live array authority could not be proven: " + Unwrap(exception).Message);
             }
         }
 
