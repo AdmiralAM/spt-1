@@ -68,10 +68,25 @@ internal static class DogtagCaseHostConcurrencyRegression
         if (!sharedHost.Add(caseTpl) || !DogtagCaseHostContract.TryRollbackOwnedCaseAddition(sharedHost, freshAuthority))
             throw new InvalidOperationException("Dogtag host concurrency regression failed: exact host did not admit a fresh rollback transaction after the prior authority was consumed.");
 
-        // A conflicting parallel-era snapshot is still rejected after the exact
-        // baseline is established; synchronization must never turn ambiguity into
-        // last-writer-wins behavior.
+        // Metadata-only abandon is only justified by the exact concurrent-commit
+        // explanation for Add(case)==false: pinned baseline + exact case and nothing
+        // else. Foreign drift must not silently consume the real pre-add authority.
+        var abandonHost = new HashSet<MongoId> { bear, usec };
+        HashSet<MongoId> abandonAuthority = DogtagCaseHostContract.CaptureRollbackBaseline(abandonHost);
         var foreign = new MongoId("5c093ca986f7740a1867ab12");
+        abandonHost.Add(caseTpl);
+        abandonHost.Add(foreign);
+        if (DogtagCaseHostContract.TryAbandonRollbackAuthority(abandonHost, abandonAuthority))
+            throw new InvalidOperationException("Dogtag host concurrency regression failed: foreign-drift host incorrectly consumed metadata-only abandon authority.");
+        abandonHost.Remove(foreign);
+        if (!DogtagCaseHostContract.TryAbandonRollbackAuthority(abandonHost, abandonAuthority))
+            throw new InvalidOperationException("Dogtag host concurrency regression failed: exact baseline-plus-case concurrent commit could not abandon metadata-only authority after a rejected drift attempt.");
+        if (DogtagCaseHostContract.TryAbandonRollbackAuthority(abandonHost, abandonAuthority))
+            throw new InvalidOperationException("Dogtag host concurrency regression failed: consumed metadata-only abandon authority was reusable.");
+
+        // A conflicting parallel-era vanilla snapshot is still rejected after the
+        // exact baseline is established; synchronization must never turn ambiguity
+        // into last-writer-wins behavior.
         try
         {
             DogtagCaseHostContract.CaptureVanillaEntries(new[] { bear, usec, foreign });
