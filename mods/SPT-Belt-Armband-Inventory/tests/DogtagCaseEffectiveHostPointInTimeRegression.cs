@@ -35,9 +35,9 @@ internal static class DogtagCaseEffectiveHostPointInTimeRegression
         Require(source, "RequireEffectiveAcceptance(hostFilter, excludedBefore);",
             "effective acceptance must consume the captured included filter and detached exclusion snapshot");
         Require(source, "var excludedAfter = SnapshotOptionalExcludedFilter(filterGroup);",
-            "optional future exclusions must be re-snapshotted before publication authority returns");
+            "optional future exclusions must be re-snapshotted before wrapper-chain reproof");
         Require(source, "OptionalFilterSetEquals(excludedBefore, excludedAfter)",
-            "in-place optional exclusion drift must fail closed");
+            "in-place optional exclusion drift during effective evaluation must fail closed");
         Require(source, "ReferenceEquals(liveInventory, inventory)",
             "DefaultInventory replacement during effective proof must fail closed");
         Require(source, "ReferenceEquals(liveInventory.Properties, inventoryProperties)",
@@ -54,6 +54,12 @@ internal static class DogtagCaseEffectiveHostPointInTimeRegression
             "filter-group replacement during effective proof must fail closed");
         Require(source, "ReferenceEquals(liveGroups[0].Filter, hostFilter)",
             "included-filter replacement during effective proof must fail closed");
+        Require(source, "var excludedFinal = SnapshotOptionalExcludedFilter(filterGroup);",
+            "optional exclusions must be snapshotted again after the full wrapper-chain reproof");
+        Require(source, "OptionalFilterSetEquals(excludedBefore, excludedFinal)",
+            "optional exclusion drift during the wrapper-chain proof must fail closed");
+        Require(source, "RequireEffectiveAcceptance(hostFilter, excludedFinal);",
+            "final publication authority must end on effective acceptance of the final detached exclusion snapshot");
 
         int capture = source.IndexOf("var hostFilter = filterGroup.Filter;", StringComparison.Ordinal);
         int committedBefore = source.IndexOf("DogtagCaseHostContract.RequireCommitted(hostFilter);", capture, StringComparison.Ordinal);
@@ -65,14 +71,18 @@ internal static class DogtagCaseEffectiveHostPointInTimeRegression
         int groupReproof = source.IndexOf("ReferenceEquals(liveGroups[0], filterGroup)", inventoryReproof, StringComparison.Ordinal);
         int filterReproof = source.IndexOf("ReferenceEquals(liveGroups[0].Filter, hostFilter)", groupReproof, StringComparison.Ordinal);
         int committedAfter = source.IndexOf("DogtagCaseHostContract.RequireCommitted(hostFilter);", filterReproof, StringComparison.Ordinal);
+        int exclusionFinal = source.IndexOf("var excludedFinal = SnapshotOptionalExcludedFilter(filterGroup);", committedAfter, StringComparison.Ordinal);
+        int finalStability = source.IndexOf("OptionalFilterSetEquals(excludedBefore, excludedFinal)", exclusionFinal, StringComparison.Ordinal);
+        int finalEffective = source.IndexOf("RequireEffectiveAcceptance(hostFilter, excludedFinal);", finalStability, StringComparison.Ordinal);
 
         if (capture < 0 || committedBefore <= capture || exclusionBefore <= committedBefore
             || effective <= exclusionBefore || exclusionAfter <= effective
             || exclusionStability <= exclusionAfter || inventoryReproof <= exclusionStability
             || groupReproof <= inventoryReproof || filterReproof <= groupReproof
-            || committedAfter <= filterReproof)
+            || committedAfter <= filterReproof || exclusionFinal <= committedAfter
+            || finalStability <= exclusionFinal || finalEffective <= finalStability)
             throw new InvalidOperationException(
-                "Dogtag effective-host point-in-time regression failed: required capture -> committed -> exclusion snapshot -> effective proof -> exclusion re-snapshot -> full identity reproof -> committed sequence changed.");
+                "Dogtag effective-host point-in-time regression failed: required capture -> committed -> exclusion snapshot -> effective proof -> exclusion re-snapshot -> full identity reproof -> committed -> final exclusion snapshot/stability/effective sequence changed.");
 
         if (source.Contains("RequireEffectiveAcceptance(groups[0].Filter, ReadOptionalExcludedFilter(groups[0]))", StringComparison.Ordinal))
             throw new InvalidOperationException(
