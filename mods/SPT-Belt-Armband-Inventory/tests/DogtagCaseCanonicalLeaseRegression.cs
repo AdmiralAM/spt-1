@@ -19,12 +19,14 @@ internal static class DogtagCaseCanonicalLeaseRegression
         int publish = preflight.IndexOf("DogtagCaseCanonicalIdentityLease.Publish(source);", StringComparison.Ordinal);
         int postPublishIdentity = publish < 0 ? -1 : preflight.IndexOf("RequireCanonicalIdentity(source, identity);", publish + 1, StringComparison.Ordinal);
         int postPublishCancellation = postPublishIdentity < 0 ? -1 : preflight.IndexOf("cancellationToken.ThrowIfCancellationRequested();", postPublishIdentity, StringComparison.Ordinal);
-        int cancellationCatch = postPublishCancellation < 0 ? -1 : preflight.IndexOf("catch (OperationCanceledException)", postPublishCancellation, StringComparison.Ordinal);
-        int cancelPendingCall = cancellationCatch < 0 ? -1 : preflight.IndexOf("DogtagCaseCanonicalIdentityLease.CancelPending(source);", cancellationCatch, StringComparison.Ordinal);
-        if (preflightIdentity < 0 || publish < 0 || postPublishIdentity < 0 || postPublishCancellation < 0 || cancellationCatch < 0 || cancelPendingCall < 0
+        int allFailureAbandon = postPublishCancellation < 0 ? -1 : preflight.IndexOf("Pending +2 authority is metadata only and must not survive any failed", postPublishCancellation, StringComparison.Ordinal);
+        int cancelPendingCall = allFailureAbandon < 0 ? -1 : preflight.IndexOf("DogtagCaseCanonicalIdentityLease.CancelPending(source);", allFailureAbandon, StringComparison.Ordinal);
+        if (preflightIdentity < 0 || publish < 0 || postPublishIdentity < 0 || postPublishCancellation < 0 || allFailureAbandon < 0 || cancelPendingCall < 0
             || !(preflightIdentity < publish && publish < postPublishIdentity && postPublishIdentity < postPublishCancellation
-                 && postPublishCancellation < cancellationCatch && cancellationCatch < cancelPendingCall))
-            throw new InvalidOperationException("Dogtag canonical lease regression failed: Preload +2 must bracket lease publication with exact proof and cancellation-only pending-authority rollback.");
+                 && postPublishCancellation < allFailureAbandon && allFailureAbandon < cancelPendingCall))
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: Preload +2 must bracket lease publication with exact proof and all-failure pending-authority abandon.");
+        if (preflight.Contains("catch (OperationCanceledException)", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: post-Publish cleanup must not be limited to cancellation; identity/scalar proof failures must abandon pending authority too.");
 
         string[] requiredLeasePins =
         {
@@ -87,7 +89,7 @@ internal static class DogtagCaseCanonicalLeaseRegression
         if (lease.IndexOf("pending = next;", pendingAssignment + 1, StringComparison.Ordinal) >= 0)
             throw new InvalidOperationException("Dogtag canonical lease regression failed: canonical authority must have exactly one publication assignment.");
         if (lease.IndexOf("pending = null;", cancelClear + 1, StringComparison.Ordinal) >= 0)
-            throw new InvalidOperationException("Dogtag canonical lease regression failed: canonical authority must not be cleared outside monotonic Consume or exact-source cancellation rollback.");
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: canonical authority must not be cleared outside monotonic Consume or exact-source metadata abandon.");
 
         int sourceValidation = item.IndexOf("source filters are empty, admit a B&A&HB-owned product", StringComparison.Ordinal);
         int consume = item.IndexOf("DogtagCaseCanonicalIdentityLease.Consume(templateTable, source);", StringComparison.Ordinal);
