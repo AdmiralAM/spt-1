@@ -94,6 +94,36 @@ public static class DogtagCaseHostExclusionPolicy
         // Re-prove the complete mutable host wrapper chain after the effective proof.
         // A value-identical replacement is not allowed to inherit the authority that
         // was captured above; publication must consume the exact verified live chain.
+        RequireCapturedHostIdentity(templateTable, inventory, inventoryProperties, slotsCollection, slot, slotProperties, filtersCollection, filterGroup, hostFilter);
+        DogtagCaseHostContract.RequireCommitted(hostFilter);
+
+        // The wrapper-chain proof itself is another bounded window. Snapshot optional
+        // exclusions one final time after that proof and require both value stability and
+        // effective acceptance before returning publication authority to the caller.
+        var excludedFinal = SnapshotOptionalExcludedFilter(filterGroup);
+        if (!OptionalFilterSetEquals(excludedBefore, excludedFinal))
+            throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter changed during final host-chain reproof.");
+        RequireEffectiveAcceptance(hostFilter, excludedFinal);
+
+        // Effective acceptance and the final optional-exclusion snapshot are themselves
+        // a bounded publication window. Re-prove the exact host/filter wrapper chain one
+        // final time so a value-identical replacement cannot occur after the earlier
+        // identity proof and inherit authority from the captured stale filter group.
+        RequireCapturedHostIdentity(templateTable, inventory, inventoryProperties, slotsCollection, slot, slotProperties, filtersCollection, filterGroup, hostFilter);
+        DogtagCaseHostContract.RequireCommitted(hostFilter);
+    }
+
+    private static void RequireCapturedHostIdentity(
+        TemplateTable templateTable,
+        TemplateItem inventory,
+        TemplateItemProperties inventoryProperties,
+        List<Slot> slotsCollection,
+        Slot slot,
+        SlotProperties slotProperties,
+        List<SlotFilter> filtersCollection,
+        SlotFilter filterGroup,
+        HashSet<MongoId> hostFilter)
+    {
         if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var liveInventory)
             || !ReferenceEquals(liveInventory, inventory))
             throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: DefaultInventory changed during effective-host verification.");
@@ -118,16 +148,6 @@ public static class DogtagCaseHostExclusionPolicy
             || !ReferenceEquals(liveGroups[0], filterGroup)
             || !ReferenceEquals(liveGroups[0].Filter, hostFilter))
             throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: Dogtag filter group/filter changed during effective-host verification.");
-
-        DogtagCaseHostContract.RequireCommitted(hostFilter);
-
-        // The wrapper-chain proof itself is another bounded window. Snapshot optional
-        // exclusions one final time after that proof and require both value stability and
-        // effective acceptance before returning publication authority to the caller.
-        var excludedFinal = SnapshotOptionalExcludedFilter(filterGroup);
-        if (!OptionalFilterSetEquals(excludedBefore, excludedFinal))
-            throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter changed during final host-chain reproof.");
-        RequireEffectiveAcceptance(hostFilter, excludedFinal);
     }
 
     private static IReadOnlyCollection<MongoId>? SnapshotOptionalExcludedFilter(object filterGroup)
