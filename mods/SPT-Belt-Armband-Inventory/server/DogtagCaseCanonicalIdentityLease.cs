@@ -108,6 +108,13 @@ internal static class DogtagCaseCanonicalIdentityLease
         Lease next = Capture(source);
         lock (Sync)
         {
+            // +2 publishes authority for exactly one +3 transaction. Silently replacing an
+            // unconsumed lease would allow a second/re-entrant preload pass to erase the first
+            // transaction's proven source graph and create an ABA-style authority handoff.
+            // Refuse duplicate publication instead; Consume is the only operation that clears
+            // pending authority.
+            if (pending != null)
+                throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: an unconsumed Preload +2 authority is already pending.");
             pending = next;
         }
     }
