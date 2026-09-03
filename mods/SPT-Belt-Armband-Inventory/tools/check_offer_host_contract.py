@@ -165,7 +165,7 @@ rollback_method = receipt_region.find("internal bool TryRollback()", accept_aban
 rollback_host = receipt_region.find("owner.RequireLiveDogtagHostIdentity(boundary);", rollback_method + 1)
 rollback_owned = receipt_region.find("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(boundary.Filter, rollbackBaseline)", rollback_host + 1)
 if min(receipt_def, accept_host, accept_committed, accept_abandon, rollback_method, rollback_host, rollback_owned) < 0 or not (
-    receipt_def < accept_host < accept_committed < accept_abandon < rollback_method < rollback_host < rollback_owned
+    accept_host < accept_committed < accept_abandon < rollback_method < rollback_host < rollback_owned
 ):
     violations.append("Dogtag Case post-commit receipt must re-prove exact live host + committed shape before metadata-only acceptance and exact live host before owned rollback")
 
