@@ -132,10 +132,11 @@ dogtag_item = require(SERVER / "DogtagCaseItem.cs", [
     "!ReferenceEquals(liveGroups[0].Filter, boundary.Filter)",
     "CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);",
     "DogtagCaseHostContract.RequirePreserved(filter);",
-    "bool addedHere = filter.Add(DogtagCaseTpl);",
+    "DogtagCaseHostContract.CaptureRollbackBaseline(filter)",
+    "addedHere = filter.Add(DogtagCaseTpl);",
     "DogtagCaseHostContract.RequireCommitted(filter);",
-    "if (addedHere)",
-    "filter.Remove(DogtagCaseTpl);",
+    "DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)",
+    "ambiguous/foreign current host state is not blindly rewritten",
     "!string.Equals(grid.Name, sourceGrid.Name, StringComparison.Ordinal)",
     "!Equals(grid.Prototype, sourceGrid.Prototype)",
     "actual.MinCount != expected.MinCount",
@@ -145,8 +146,8 @@ dogtag_item = require(SERVER / "DogtagCaseItem.cs", [
 ], "Dogtag Case item")
 if "BaseClasses.DOGTAG" in dogtag_item:
     violations.append("Dogtag Case must copy canonical filter groups rather than broaden to BaseClasses.DOGTAG")
-if "if (filter.Contains(DogtagCaseTpl))" in dogtag_item:
-    violations.append("Dogtag host exposure must use HashSet.Add as mutation/rollback ownership boundary")
+if "filter.Remove(DogtagCaseTpl);" in dogtag_item:
+    violations.append("Dogtag host exposure must not use unconditional value-only rollback")
 
 create_call = dogtag_item.find("customItemService.CreateItemFromClone(details)")
 pre_create_cancel = dogtag_item.rfind("cancellationToken.ThrowIfCancellationRequested();", 0, create_call)
@@ -173,14 +174,17 @@ commit_region = dogtag_item[commit_def:commit_end] if min(commit_def, commit_end
 first_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);")
 preserved = commit_region.find("DogtagCaseHostContract.RequirePreserved(filter);")
 second_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);", first_identity + 1)
-owned_add = commit_region.find("bool addedHere = filter.Add(DogtagCaseTpl);")
-committed = commit_region.find("DogtagCaseHostContract.RequireCommitted(filter);")
-final_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);", second_identity + 1)
-rollback = commit_region.find("filter.Remove(DogtagCaseTpl);")
-if min(first_identity, preserved, second_identity, owned_add, committed, final_identity, rollback) < 0 or not (
-    first_identity < preserved < second_identity < owned_add < committed < final_identity < rollback
+rollback_baseline = commit_region.find("DogtagCaseHostContract.CaptureRollbackBaseline(filter)", second_identity + 1)
+owned_add = commit_region.find("addedHere = filter.Add(DogtagCaseTpl);", rollback_baseline + 1)
+committed = commit_region.find("DogtagCaseHostContract.RequireCommitted(filter);", owned_add + 1)
+final_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);", committed + 1)
+rollback = commit_region.find("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", final_identity + 1)
+if min(first_identity, preserved, second_identity, rollback_baseline, owned_add, committed, final_identity, rollback) < 0 or not (
+    first_identity < preserved < second_identity < rollback_baseline < owned_add < committed < final_identity < rollback
 ):
-    violations.append("Dogtag exact-host exposure ordering drifted from live/preserved/live -> owned Add -> committed/live -> owned rollback")
+    violations.append("Dogtag exact-host exposure ordering drifted from live/preserved/live -> detached rollback baseline -> owned Add -> committed/live -> proven owned rollback")
+if "filter.Remove(DogtagCaseTpl);" in commit_region:
+    violations.append("Dogtag exact-host exposure must refuse value-only rollback when foreign/current host authority is ambiguous")
 if commit_region.count("cancellationToken.ThrowIfCancellationRequested();") < 4:
     violations.append("Dogtag exact-host exposure must keep cancellation checks around owned mutation/commit boundary")
 
@@ -243,4 +247,4 @@ if ".Remove(" in migration and 'item.Remove("location")' not in migration:
 if violations:
     raise SystemExit("B&A&HB product-contract gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; Dogtag Ragman wrappers transaction-pinned with ownership-bounded rollback; split HeadBand; canonical Dogtag clone/host parity retained)")
+print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; Dogtag preload uses exact pre-commit-snapshot proven rollback; Dogtag Ragman wrappers transaction-pinned with ownership-bounded rollback; split HeadBand; canonical Dogtag clone/host parity retained)")
