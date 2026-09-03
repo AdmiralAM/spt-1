@@ -516,6 +516,10 @@ namespace SPTBeltArmbandInventory
 
                 fastAccessSlotsField.SetValue(null, installedFastAccessSlots);
                 wroteFastAccessSlots = true;
+
+                if (!ReproveFirstPublicationSeam())
+                    return Fail("B&A&HB fast-access first install refused because two-write publication authority drifted after FastAccessSlots publication; BindAvailableSlotsExtended was not published and this lifecycle is terminally blocked.");
+
                 bindAvailableSlotsField.SetValue(null, installedBindAvailableSlots);
                 wroteBindAvailableSlots = true;
                 installed = true;
@@ -537,6 +541,50 @@ namespace SPTBeltArmbandInventory
                 UnpatchReload();
                 ClearState();
                 return Fail("Wearable fast-access slot compatibility installation failed safely: " + Unwrap(exception).Message);
+            }
+        }
+
+        bool ReproveFirstPublicationSeam()
+        {
+            try
+            {
+                object currentFastAccessSlots = fastAccessSlotsField.GetValue(null);
+                object currentBindAvailableSlots = bindAvailableSlotsField.GetValue(null);
+                bool firstPublishedExact = FastAccessSlotPolicy.HasExactArrayReferenceAndContent(
+                    currentFastAccessSlots, installedFastAccessSlots, installedFastAccessSlotsContent);
+                bool secondBaselineExact = FastAccessSlotPolicy.HasExactArrayReferenceAndContent(
+                    currentBindAvailableSlots, originalBindAvailableSlots, originalBindAvailableSlotsContent);
+                if (firstPublishedExact && secondBaselineExact)
+                    return true;
+
+                arrayContentAuthorityUnsafe = true;
+
+                // If the first publication is still exact, it remains safely ours and
+                // can be restored before refusing the second write. If its reference was
+                // replaced, ownership is relinquished without touching foreign state. A
+                // same-reference content mutation is ambiguous: retain rollback metadata
+                // but do not overwrite the mutated live array.
+                if (firstPublishedExact)
+                {
+                    if (!RestoreOwnedWrite(fastAccessSlotsField, originalFastAccessSlots, installedFastAccessSlots, ref wroteFastAccessSlots))
+                        arrayRollbackUnsafe = true;
+                }
+                else if (!ReferenceEquals(currentFastAccessSlots, installedFastAccessSlots))
+                {
+                    wroteFastAccessSlots = false;
+                }
+                else
+                {
+                    arrayRollbackUnsafe = true;
+                }
+
+                return false;
+            }
+            catch
+            {
+                arrayContentAuthorityUnsafe = true;
+                arrayRollbackUnsafe = true;
+                return false;
             }
         }
 
