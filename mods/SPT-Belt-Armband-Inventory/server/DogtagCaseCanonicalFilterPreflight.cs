@@ -62,11 +62,23 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
         // DogtagCaseItem transaction. +3 must consume and re-prove this lease before
         // it clones/copies any canonical geometry or taxonomy.
         DogtagCaseCanonicalIdentityLease.Publish(source);
-
-        // Publish() performs its own detached capture. Re-prove the original +2
-        // identity AND filter contents after that capture so a mutation in the tiny
-        // proof -> lease-publication window cannot become new lease authority.
-        RequireCanonicalIdentity(source, identity);
+        try
+        {
+            // Publish() performs its own detached capture. Re-prove the original +2
+            // identity AND filter contents after that capture so a mutation in the tiny
+            // proof -> lease-publication window cannot become new lease authority.
+            RequireCanonicalIdentity(source, identity);
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+        catch (OperationCanceledException)
+        {
+            // A cooperative startup cancellation is not a compatibility failure. Remove only
+            // this exact still-pending +2 authority so a retry in the same process can execute
+            // a fresh complete +2 -> +3 transaction. Proof/identity failures intentionally do
+            // not enter this path and leave their invalid lease terminal fail-closed.
+            DogtagCaseCanonicalIdentityLease.CancelPending(source);
+            throw;
+        }
 
         logger.Success("B&A&HB Dogtag Case canonical filter preflight passed: exact canonical source/root/grid/filter identity+content is intact across lease publication and leased to Preload +3; non-empty EFT/SPT taxonomy contains no B&A&HB-owned product admissions.");
         return Task.CompletedTask;
