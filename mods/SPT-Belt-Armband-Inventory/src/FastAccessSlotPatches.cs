@@ -62,6 +62,12 @@ namespace SPTBeltArmbandInventory
             return true;
         }
 
+        internal static bool HasExactArrayReferenceAndContent(object currentValue, object expectedReference, Array snapshot)
+        {
+            return expectedReference != null && ReferenceEquals(currentValue, expectedReference)
+                && HasExactArrayContent(currentValue, snapshot);
+        }
+
         internal static bool TryRestoreOwnedReference(
             bool wrote,
             Func<object> readCurrent,
@@ -438,6 +444,8 @@ namespace SPTBeltArmbandInventory
         FieldInfo bindAvailableSlotsField;
         object originalFastAccessSlots;
         object originalBindAvailableSlots;
+        Array originalFastAccessSlotsContent;
+        Array originalBindAvailableSlotsContent;
         object installedFastAccessSlots;
         object installedBindAvailableSlots;
         Array installedFastAccessSlotsContent;
@@ -486,13 +494,25 @@ namespace SPTBeltArmbandInventory
                 object dedicatedBelt = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedBeltEquipmentSlotValue);
                 originalFastAccessSlots = fastAccessSlotsField.GetValue(null);
                 originalBindAvailableSlots = bindAvailableSlotsField.GetValue(null);
-                installedFastAccessSlots = AppendSlots(originalFastAccessSlots as Array, slotEnumType, armBand, dedicatedBelt);
-                installedBindAvailableSlots = AppendSlots(originalBindAvailableSlots as Array, slotEnumType, armBand, dedicatedBelt);
+                originalFastAccessSlotsContent = FastAccessSlotPolicy.CaptureArrayContentSnapshot(originalFastAccessSlots);
+                originalBindAvailableSlotsContent = FastAccessSlotPolicy.CaptureArrayContentSnapshot(originalBindAvailableSlots);
+                installedFastAccessSlots = AppendSlots(originalFastAccessSlotsContent, slotEnumType, armBand, dedicatedBelt);
+                installedBindAvailableSlots = AppendSlots(originalBindAvailableSlotsContent, slotEnumType, armBand, dedicatedBelt);
                 installedFastAccessSlotsContent = FastAccessSlotPolicy.CaptureArrayContentSnapshot(installedFastAccessSlots);
                 installedBindAvailableSlotsContent = FastAccessSlotPolicy.CaptureArrayContentSnapshot(installedBindAvailableSlots);
-                if (installedFastAccessSlots == null || installedBindAvailableSlots == null
+                if (originalFastAccessSlotsContent == null || originalBindAvailableSlotsContent == null
+                    || installedFastAccessSlots == null || installedBindAvailableSlots == null
                     || installedFastAccessSlotsContent == null || installedBindAvailableSlotsContent == null)
-                    return Fail("SPT 4.1 fast-access slot arrays could not be extended/snapshotted safely; wearable fast-access compatibility is disabled.");
+                    return Fail("SPT 4.1 fast-access slot arrays could not be baseline-snapshotted/extended safely; wearable fast-access compatibility is disabled.");
+
+                object currentFastAccessSlots = fastAccessSlotsField.GetValue(null);
+                object currentBindAvailableSlots = bindAvailableSlotsField.GetValue(null);
+                if (!FastAccessSlotPolicy.HasExactArrayReferenceAndContent(currentFastAccessSlots, originalFastAccessSlots, originalFastAccessSlotsContent)
+                    || !FastAccessSlotPolicy.HasExactArrayReferenceAndContent(currentBindAvailableSlots, originalBindAvailableSlots, originalBindAvailableSlotsContent))
+                {
+                    arrayContentAuthorityUnsafe = true;
+                    return Fail("B&A&HB fast-access first install refused because vanilla array reference/content authority drifted before publication; this lifecycle is terminally blocked rather than adopting a changed baseline.");
+                }
 
                 fastAccessSlotsField.SetValue(null, installedFastAccessSlots);
                 wroteFastAccessSlots = true;
@@ -1061,6 +1081,8 @@ namespace SPTBeltArmbandInventory
                 bindAvailableSlotsField = null;
                 originalFastAccessSlots = null;
                 originalBindAvailableSlots = null;
+                originalFastAccessSlotsContent = null;
+                originalBindAvailableSlotsContent = null;
                 installedFastAccessSlots = null;
                 installedBindAvailableSlots = null;
                 installedFastAccessSlotsContent = null;
