@@ -77,13 +77,13 @@ def require_collision_safe_assort(path, label, captured_wrappers=False):
         violations.append(f"{label} must re-prove captured Ragman wrapper identity throughout publication")
     if captured_wrappers:
         rollback_tokens = [
-            "if (!IsAssortWrapperIdentityCurrent()) throw;\n                loyalLevelItems.Remove(id);",
-            "if (!IsAssortWrapperIdentityCurrent()) throw;\n                barterScheme.Remove(id);",
-            "if (!IsAssortWrapperIdentityCurrent()) throw;\n                items.RemoveAt(ownedItemIndex);",
+            "if (!IsAssortWrapperIdentityCurrent()) throw;\n                if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;\n                if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;\n                if (!loyalLevelItems.TryGetValue(id, out var liveOwnedLoyalty) || liveOwnedLoyalty != LoyaltyLevel) throw;\n                loyalLevelItems.Remove(id);",
+            "if (!IsAssortWrapperIdentityCurrent()) throw;\n                if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;\n                barterScheme.Remove(id);",
+            "if (!IsAssortWrapperIdentityCurrent()) throw;\n                if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;\n                items.RemoveAt(ownedItemIndex);",
         ]
         for token in rollback_tokens:
             if token not in text:
-                violations.append(f"{label} must re-prove exact live Ragman wrapper authority immediately before rollback mutation")
+                violations.append(f"{label} must re-prove exact live Ragman wrapper plus owned tuple authority immediately before rollback mutation")
     return text
 
 
@@ -258,4 +258,4 @@ if ".Remove(" in migration and 'item.Remove("location")' not in migration:
 if violations:
     raise SystemExit("B&A&HB product-contract gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; Dogtag preload uses exact pre-commit-snapshot proven rollback; Dogtag Ragman wrappers transaction-pinned with live-wrapper-authority ownership-bounded rollback; split HeadBand; canonical Dogtag clone/host parity retained)")
+print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; Dogtag preload uses exact pre-commit-snapshot proven rollback; Dogtag Ragman wrappers transaction-pinned with mutation-adjacent exact tuple ownership rollback; split HeadBand; canonical Dogtag clone/host parity retained)")
