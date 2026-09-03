@@ -186,8 +186,13 @@ internal static class DogtagCaseCanonicalIdentityLease
         {
             Lease lease = pending
                 ?? throw new InvalidOperationException("B&A&HB Dogtag Case canonical lease refused: Preload +2 identity authority is missing or was already consumed.");
-            lease.RequireCurrent(templates, source);
+
+            // Consumption is monotonic. Once Preload +3 attempts to consume the exact
+            // Preload +2 authority, any identity/content/scalar drift permanently burns
+            // that pending token. Restoring values later (ABA) cannot revive preflight
+            // authority that was already challenged against a different live state.
             pending = null;
+            lease.RequireCurrent(templates, source);
             return lease;
         }
     }
