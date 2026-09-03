@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using SPTarkov.Server.Core.Models.Common;
 
 namespace SPTBeltArmbandInventory.Server;
@@ -16,7 +17,20 @@ public static class DogtagCaseHostContract
     public const string BearDogtagTemplateId = "59f32bb586f774757e1e8442";
     public const string UsecDogtagTemplateId = "59f32c3b86f77472a31742f0";
 
+    private sealed class RollbackAuthority
+    {
+        internal readonly HashSet<MongoId> Host;
+        internal readonly HashSet<MongoId> Baseline;
+
+        internal RollbackAuthority(HashSet<MongoId> host, HashSet<MongoId> baseline)
+        {
+            Host = host;
+            Baseline = new HashSet<MongoId>(baseline);
+        }
+    }
+
     private static readonly object SnapshotSync = new();
+    private static readonly ConditionalWeakTable<HashSet<MongoId>, RollbackAuthority> RollbackAuthorities = new();
     private static HashSet<MongoId>? capturedVanillaEntries;
 
     public static int CapturedVanillaEntryCount
@@ -90,6 +104,8 @@ public static class DogtagCaseHostContract
         RequirePreservedSnapshot(snapshot);
         if (snapshot.Contains(new MongoId(RuntimeIdentity.DogtagCaseItemId)))
             throw new InvalidOperationException("B&A&HB Dogtag host rollback baseline refused: exact Dogtag Case was already present before an owned add transaction.");
+
+        RollbackAuthorities.Add(snapshot, new RollbackAuthority(currentFilter, snapshot));
         return snapshot;
     }
 
@@ -98,10 +114,21 @@ public static class DogtagCaseHostContract
         if (currentFilter == null || preCommitSnapshot == null) return false;
         try
         {
-            var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
-            if (preCommitSnapshot.Contains(caseTpl)) return false;
+            if (!RollbackAuthorities.TryGetValue(preCommitSnapshot, out RollbackAuthority? authority))
+                return false;
 
-            HashSet<MongoId> expectedCommitted = new(preCommitSnapshot) { caseTpl };
+            // Rollback authority is single-consumer and belongs only to the exact host
+            // reference captured before the owned add. A value-identical replacement
+            // must never inherit removal authority from an earlier host object.
+            RollbackAuthorities.Remove(preCommitSnapshot);
+            if (!ReferenceEquals(currentFilter, authority.Host)
+                || !preCommitSnapshot.SetEquals(authority.Baseline))
+                return false;
+
+            var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
+            if (authority.Baseline.Contains(caseTpl)) return false;
+
+            HashSet<MongoId> expectedCommitted = new(authority.Baseline) { caseTpl };
             HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);
             if (!current.SetEquals(expectedCommitted))
                 return false;
@@ -110,7 +137,7 @@ public static class DogtagCaseHostContract
                 return false;
 
             HashSet<MongoId> after = SnapshotCurrentFilter(currentFilter);
-            return after.SetEquals(preCommitSnapshot);
+            return after.SetEquals(authority.Baseline);
         }
         catch
         {
