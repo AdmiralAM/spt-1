@@ -526,6 +526,10 @@ namespace SPTBeltArmbandInventory
 
                 bindAvailableSlotsField.SetValue(null, installedBindAvailableSlots);
                 wroteBindAvailableSlots = true;
+
+                if (!ReproveCompletedPublication())
+                    return Fail("B&A&HB fast-access first install refused because completed array publication authority drifted before reload integration became reachable; current/foreign state was preserved under ownership-aware rollback and this lifecycle is terminally blocked.");
+
                 installed = true;
 
                 bool reachability = TryInstallReloadReachability();
@@ -583,6 +587,33 @@ namespace SPTBeltArmbandInventory
             {
                 arrayContentAuthorityUnsafe = true;
                 arrayRollbackUnsafe = true;
+                return false;
+            }
+        }
+
+        bool ReproveCompletedPublication()
+        {
+            try
+            {
+                object currentFastAccessSlots = fastAccessSlotsField.GetValue(null);
+                object currentBindAvailableSlots = bindAvailableSlotsField.GetValue(null);
+                bool fastExact = FastAccessSlotPolicy.HasExactArrayReferenceAndContent(
+                    currentFastAccessSlots, installedFastAccessSlots, installedFastAccessSlotsContent);
+                bool bindExact = FastAccessSlotPolicy.HasExactArrayReferenceAndContent(
+                    currentBindAvailableSlots, installedBindAvailableSlots, installedBindAvailableSlotsContent);
+                if (fastExact && bindExact)
+                    return true;
+
+                arrayContentAuthorityUnsafe = true;
+                if (!RestoreOwnedWrites())
+                    arrayRollbackUnsafe = true;
+                return false;
+            }
+            catch
+            {
+                arrayContentAuthorityUnsafe = true;
+                if (!RestoreOwnedWrites())
+                    arrayRollbackUnsafe = true;
                 return false;
             }
         }
