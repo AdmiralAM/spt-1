@@ -74,11 +74,12 @@ namespace SPTBeltArmbandInventory
             Action<object> writeOriginal,
             object originalValue,
             object installedValue,
+            Array installedContentSnapshot,
             out bool ownershipReleased)
         {
             ownershipReleased = !wrote;
             if (!wrote) return true;
-            if (readCurrent == null || writeOriginal == null || originalValue == null || installedValue == null)
+            if (readCurrent == null || writeOriginal == null || originalValue == null || installedValue == null || installedContentSnapshot == null)
                 return false;
 
             try
@@ -89,6 +90,9 @@ namespace SPTBeltArmbandInventory
                     ownershipReleased = true;
                     return true;
                 }
+
+                if (!HasExactArrayContent(current, installedContentSnapshot))
+                    return false;
 
                 writeOriginal(originalValue);
                 if (!ReferenceEquals(readCurrent(), originalValue))
@@ -559,14 +563,9 @@ namespace SPTBeltArmbandInventory
 
                 arrayContentAuthorityUnsafe = true;
 
-                // If the first publication is still exact, it remains safely ours and
-                // can be restored before refusing the second write. If its reference was
-                // replaced, ownership is relinquished without touching foreign state. A
-                // same-reference content mutation is ambiguous: retain rollback metadata
-                // but do not overwrite the mutated live array.
                 if (firstPublishedExact)
                 {
-                    if (!RestoreOwnedWrite(fastAccessSlotsField, originalFastAccessSlots, installedFastAccessSlots, ref wroteFastAccessSlots))
+                    if (!RestoreOwnedWrite(fastAccessSlotsField, originalFastAccessSlots, installedFastAccessSlots, installedFastAccessSlotsContent, ref wroteFastAccessSlots))
                         arrayRollbackUnsafe = true;
                 }
                 else if (!ReferenceEquals(currentFastAccessSlots, installedFastAccessSlots))
@@ -1027,7 +1026,7 @@ namespace SPTBeltArmbandInventory
             return result;
         }
 
-        bool RestoreOwnedWrite(FieldInfo field, object original, object installedValue, ref bool wrote)
+        bool RestoreOwnedWrite(FieldInfo field, object original, object installedValue, Array installedContentSnapshot, ref bool wrote)
         {
             bool released;
             bool proven = FastAccessSlotPolicy.TryRestoreOwnedReference(
@@ -1036,15 +1035,17 @@ namespace SPTBeltArmbandInventory
                 field == null ? (Action<object>)null : value => field.SetValue(null, value),
                 original,
                 installedValue,
+                installedContentSnapshot,
                 out released);
             if (released) wrote = false;
+            if (!proven && wrote) arrayContentAuthorityUnsafe = true;
             return proven;
         }
 
         bool RestoreOwnedWrites()
         {
-            bool bindProven = RestoreOwnedWrite(bindAvailableSlotsField, originalBindAvailableSlots, installedBindAvailableSlots, ref wroteBindAvailableSlots);
-            bool fastProven = RestoreOwnedWrite(fastAccessSlotsField, originalFastAccessSlots, installedFastAccessSlots, ref wroteFastAccessSlots);
+            bool bindProven = RestoreOwnedWrite(bindAvailableSlotsField, originalBindAvailableSlots, installedBindAvailableSlots, installedBindAvailableSlotsContent, ref wroteBindAvailableSlots);
+            bool fastProven = RestoreOwnedWrite(fastAccessSlotsField, originalFastAccessSlots, installedFastAccessSlots, installedFastAccessSlotsContent, ref wroteFastAccessSlots);
             bool rollbackProven = bindProven && fastProven;
             if (!rollbackProven) arrayRollbackUnsafe = true;
             return rollbackProven;
