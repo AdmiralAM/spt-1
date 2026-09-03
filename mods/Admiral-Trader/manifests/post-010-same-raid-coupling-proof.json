@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-research-proof-fail-closed",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -9,6 +9,7 @@
     "pinnedSpt413QuestRepository": "sp-tarkov/server-csharp",
     "pinnedSpt413Commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
     "pinnedSpt413QuestPath": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json",
+    "pinnedServerQuestControllerPath": "Libraries/SPTarkov.Server.Core/Controllers/QuestController.cs",
     "sptQuestReference": "sp-tarkov/wiki modding/references/quest-values.md",
     "referencePublished": "2026-04-07"
   },
@@ -17,29 +18,42 @@
     "exitStatusMustBeNestedInCounterCreator": true,
     "survivedExitStatusIsSupported": true,
     "killsConditionSerializesResetOnSessionEnd": true,
-    "counterCreatorSerializesOneSessionOnly": true
+    "counterCreatorSerializesOneSessionOnly": true,
+    "pinnedSptQuestControllerDoesNotEvaluateKillExitEquipmentCounterSemantics": true
+  },
+  "serverSourceBoundary": {
+    "sourcePinned": true,
+    "sourcePath": "Libraries/SPTarkov.Server.Core/Controllers/QuestController.cs",
+    "pinnedCommit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+    "finding": "The pinned SPT 4.1.3 QuestController delegates quest listing/completion to QuestHelper and only creates or mutates backend task-condition counters for SellItemToTrader/HandoverItem paths. It contains no evaluator for CounterCreator kill, Equipment, ExitStatus, resetOnSessionEnd or one-session semantics.",
+    "implication": "Server source cannot be cited as proof that a compound kill/equipment/extract CounterCreator is same-raid atomic. The unresolved authority boundary is the EFT/client quest-condition evaluator or an exact canonical vanilla objective whose behavior proves the required semantics.",
+    "doNotMisclassifyAsMissingSptServerImplementation": true
   },
   "negativeProof": {
     "oneSessionOnlyIsDocumentedAsCurrentlyUnused": true,
     "completeInSecondsIsDocumentedAsCurrentlyUnused": true,
     "thereforeOneSessionOnlyCannotBeUsedAsSameRaidAuthority": true,
-    "thereforeCompleteInSecondsCannotBeUsedAsSameRaidAuthority": true
+    "thereforeCompleteInSecondsCannotBeUsedAsSameRaidAuthority": true,
+    "pinnedSptServerControllerIsNotTheMissingEvaluatorAuthority": true
   },
   "stillUnproven": {
     "killsResetOnSessionEndPlusExitStatusTemporalOrdering": true,
     "crossRaidResetBehaviorForCompoundActionAndExtractCounter": true,
-    "sameRaidActionThenSurvivedExtractCompletion": true
+    "sameRaidActionThenSurvivedExtractCompletion": true,
+    "eftClientEvaluatorSemanticsForCompoundCounterCreator": true
   },
   "affectedOperations": [
     "access-reconnaissance",
     "acoustic-contact",
     "route-security",
     "hostile-operator-intercept",
-    "armored-transit",
     "controlled-chemical-support",
     "precision-observation-window",
     "labs-security-disruption"
   ],
+  "removedFromAffectedOperations": {
+    "armored-transit": "Rejected from the active authored wave by post-010-armored-transit-vanilla-disposition.json; no same-raid proof is required for a rejected operation."
+  },
   "implementationContract": {
     "doNotMaterializeWithOneSessionOnlyAsTheOnlyCouplingMechanism": true,
     "doNotInferTemporalCouplingFromNestedConditionsAlone": true,
@@ -47,6 +61,11 @@
     "remainFailClosedUntilExactEvaluatorOrCanonicalVanillaBehaviorIsProven": true,
     "noNewFrozen010QuestJson": true
   },
+  "nextStaticAuthoritySearch": [
+    "Exact EFT/client quest-condition evaluator semantics if a legally accessible authoritative source exists.",
+    "Exact pinned SPT 4.1.3 vanilla quest shape that combines action/equipment and Survived extraction under the same counter and has canonical one-raid behavior.",
+    "Do not substitute wiki wording or serialized flags for evaluator semantics."
+  ],
   "futureRuntimeCheckpoint": {
     "activatePhysicalTestNow": false,
     "expectedPass": "A qualifying action followed by Survived extraction in the same raid completes the compound objective.",
