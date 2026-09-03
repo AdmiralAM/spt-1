@@ -129,27 +129,28 @@ internal static class Program
 
     static void RunOwnedArrayRollbackRegression()
     {
-        object original = new object();
-        object installed = new object();
+        int[] original = { 1, 2 };
+        int[] installed = { 1, 2, 15 };
+        Array installedSnapshot = FastAccessSlotPolicy.CaptureArrayContentSnapshot(installed);
         object current = installed;
         bool released;
-        bool clean = FastAccessSlotPolicy.TryRestoreOwnedReference(true, () => current, value => current = value, original, installed, out released);
+        bool clean = FastAccessSlotPolicy.TryRestoreOwnedReference(true, () => current, value => current = value, original, installed, installedSnapshot, out released);
         Assert(clean && released && ReferenceEquals(current, original),
-            "exact-owned fast-access array restore is proven only after the original reference is read back");
+            "exact-owned fast-access array restore is proven only after installed content and original reference read-back are proven");
 
-        object foreign = new object();
+        int[] foreign = { 9 };
         current = foreign;
         int foreignWrites = 0;
-        bool foreignSafe = FastAccessSlotPolicy.TryRestoreOwnedReference(true, () => current, value => { foreignWrites++; current = value; }, original, installed, out released);
+        bool foreignSafe = FastAccessSlotPolicy.TryRestoreOwnedReference(true, () => current, value => { foreignWrites++; current = value; }, original, installed, installedSnapshot, out released);
         Assert(foreignSafe && released && foreignWrites == 0 && ReferenceEquals(current, foreign),
             "foreign replacement is preserved as an ownership-released no-op");
 
         current = installed;
-        bool failedWrite = FastAccessSlotPolicy.TryRestoreOwnedReference(true, () => current, value => throw new InvalidOperationException("restore blocked"), original, installed, out released);
+        bool failedWrite = FastAccessSlotPolicy.TryRestoreOwnedReference(true, () => current, value => throw new InvalidOperationException("restore blocked"), original, installed, installedSnapshot, out released);
         Assert(!failedWrite && !released && ReferenceEquals(current, installed),
-            "restore failure while the exact installed reference is live retains rollback authority and fails closed");
+            "restore failure while the exact installed ref+content is live retains rollback authority and fails closed");
 
-        bool failedRead = FastAccessSlotPolicy.TryRestoreOwnedReference(true, () => throw new InvalidOperationException("read blocked"), value => { }, original, installed, out released);
+        bool failedRead = FastAccessSlotPolicy.TryRestoreOwnedReference(true, () => throw new InvalidOperationException("read blocked"), value => { }, original, installed, installedSnapshot, out released);
         Assert(!failedRead && !released,
             "unreadable owned-array state is ambiguous and cannot be treated as a successful rollback");
     }
