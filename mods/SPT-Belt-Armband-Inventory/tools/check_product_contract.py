@@ -46,11 +46,13 @@ def require_collision_safe_assort(path, label, captured_wrappers=False):
             "var items = assort.Items",
             "var barterScheme = assort.BarterScheme",
             "var loyalLevelItems = assort.LoyalLevelItems",
+            "bool IsAssortWrapperIdentityCurrent()",
+            "ReferenceEquals(trader.Assort, assort)",
+            "ReferenceEquals(trader.Assort?.Items, items)",
+            "ReferenceEquals(trader.Assort?.BarterScheme, barterScheme)",
+            "ReferenceEquals(trader.Assort?.LoyalLevelItems, loyalLevelItems)",
             "void RequireAssortWrapperIdentity()",
-            "!ReferenceEquals(trader.Assort, assort)",
-            "!ReferenceEquals(trader.Assort?.Items, items)",
-            "!ReferenceEquals(trader.Assort?.BarterScheme, barterScheme)",
-            "!ReferenceEquals(trader.Assort?.LoyalLevelItems, loyalLevelItems)",
+            "if (!IsAssortWrapperIdentityCurrent())",
         ]
     else:
         tokens = [
@@ -73,6 +75,15 @@ def require_collision_safe_assort(path, label, captured_wrappers=False):
         violations.append(f"{label} must not overwrite persistent metadata with dictionary indexers")
     if captured_wrappers and text.count("RequireAssortWrapperIdentity();") < 6:
         violations.append(f"{label} must re-prove captured Ragman wrapper identity throughout publication")
+    if captured_wrappers:
+        rollback_tokens = [
+            "if (!IsAssortWrapperIdentityCurrent()) throw;\n                loyalLevelItems.Remove(id);",
+            "if (!IsAssortWrapperIdentityCurrent()) throw;\n                barterScheme.Remove(id);",
+            "if (!IsAssortWrapperIdentityCurrent()) throw;\n                items.RemoveAt(ownedItemIndex);",
+        ]
+        for token in rollback_tokens:
+            if token not in text:
+                violations.append(f"{label} must re-prove exact live Ragman wrapper authority immediately before rollback mutation")
     return text
 
 
@@ -247,4 +258,4 @@ if ".Remove(" in migration and 'item.Remove("location")' not in migration:
 if violations:
     raise SystemExit("B&A&HB product-contract gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; Dogtag preload uses exact pre-commit-snapshot proven rollback; Dogtag Ragman wrappers transaction-pinned with ownership-bounded rollback; split HeadBand; canonical Dogtag clone/host parity retained)")
+print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; Dogtag preload uses exact pre-commit-snapshot proven rollback; Dogtag Ragman wrappers transaction-pinned with live-wrapper-authority ownership-bounded rollback; split HeadBand; canonical Dogtag clone/host parity retained)")
