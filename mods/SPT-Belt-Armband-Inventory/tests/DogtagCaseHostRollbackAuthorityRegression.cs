@@ -30,17 +30,21 @@ internal static class DogtagCaseHostRollbackAuthorityRegression
 
         var abandonHost = new HashSet<MongoId>(vanilla);
         HashSet<MongoId> abandonBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(abandonHost);
+        abandonHost.Add(caseTpl);
         if (!DogtagCaseHostContract.TryAbandonRollbackAuthority(abandonHost, abandonBaseline))
-            throw new InvalidOperationException("Dogtag host rollback regression failed: exact unused pre-add authority must be explicitly abandonable without host mutation.");
-        if (!abandonHost.SetEquals(vanilla)
+            throw new InvalidOperationException("Dogtag host rollback regression failed: exact baseline-plus-Case concurrent-commit shape must be metadata-only abandonable without host mutation.");
+        if (!abandonHost.Contains(caseTpl) || abandonHost.Count != vanilla.Count + 1
             || DogtagCaseHostContract.TryAbandonRollbackAuthority(abandonHost, abandonBaseline))
-            throw new InvalidOperationException("Dogtag host rollback regression failed: abandon must be no-mutation and single-consumer.");
+            throw new InvalidOperationException("Dogtag host rollback regression failed: abandon must preserve the exact committed host and remain single-consumer.");
+        abandonHost.Remove(caseTpl);
         HashSet<MongoId> freshAfterAbandon = DogtagCaseHostContract.CaptureRollbackBaseline(abandonHost);
+        abandonHost.Add(caseTpl);
         if (!DogtagCaseHostContract.TryAbandonRollbackAuthority(abandonHost, freshAfterAbandon))
-            throw new InvalidOperationException("Dogtag host rollback regression failed: exact host capture gate was not released for a fresh transaction after abandon.");
+            throw new InvalidOperationException("Dogtag host rollback regression failed: exact host capture gate was not released for a fresh transaction after proven abandon.");
 
         var abandonReplacementHost = new HashSet<MongoId>(vanilla);
         HashSet<MongoId> abandonReplacementBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(abandonReplacementHost);
+        abandonReplacementHost.Add(caseTpl);
         var abandonValueIdenticalReplacement = new HashSet<MongoId>(abandonReplacementHost);
         if (DogtagCaseHostContract.TryAbandonRollbackAuthority(abandonValueIdenticalReplacement, abandonReplacementBaseline))
             throw new InvalidOperationException("Dogtag host rollback regression failed: replacement host must not inherit metadata-abandon authority.");
