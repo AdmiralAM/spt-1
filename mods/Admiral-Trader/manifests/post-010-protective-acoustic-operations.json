@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -22,84 +22,18 @@
   "sameRaidCouplingMaterializationPolicy": {
     "requiredBeforeRuntimeMaterialization": true,
     "authority": "post-010-same-raid-coupling-proof.json",
-    "reason": "Both authored operations promise that the qualifying equipment is actually used during the bounded operation that is survived. Separate cross-raid Equipment and ExitStatus progress would violate the player-facing contract.",
+    "reason": "The surviving authored operation promises that qualifying headset equipment is used during the bounded operation that is survived. Separate cross-raid Equipment and ExitStatus progress would violate the player-facing contract.",
     "failClosed": true
   },
+  "rejectedOperations": {
+    "armored-transit": {
+      "authority": "post-010-armored-transit-vanilla-disposition.json",
+      "decision": "reject-from-active-authored-wave",
+      "replacementQuestRequired": false,
+      "rewardRedistributionAllowed": false
+    }
+  },
   "operations": [
-    {
-      "key": "armored-transit",
-      "sourceBundles": ["Iron Head", "Juggernaut"],
-      "domain": "protective-fieldcraft",
-      "workingTitle": {"en": "Armored Transit", "ru": "Бронированный переход"},
-      "playerText": {
-        "en": {
-          "description": "Armor is useful only while the man inside it can still finish the route. I am not interested in a warehouse of helmets and plates; prove you can work under protection and come back alive.",
-          "started": "Factory, day shift. Take a serious protective setup into the close fight, break two hostile operators, and extract alive. I am testing mobility, judgement and survival under armor, not your collection.",
-          "success": "You carried the protection through the operation instead of carrying it to a shelf. Good. Equipment earns its place when it survives contact with the job."
-        },
-        "ru": {
-          "description": "Броня полезна только пока человек внутри неё способен закончить маршрут. Склад шлемов и плит меня не интересует; докажи, что умеешь работать под защитой и возвращаться живым.",
-          "started": "Дневная Фабрика. Возьми серьёзный комплект защиты в ближний бой, сними двух вражеских оперативников и выйди живым. Я проверяю подвижность, решение задачи и выживание под бронёй, а не коллекцию.",
-          "success": "Защиту ты провёл через операцию, а не просто донёс до полки. Хорошо. Снаряжение заслуживает место тогда, когда переживает вместе с тобой реальную работу."
-        }
-      },
-      "objectiveIntent": [
-        "one survived Factory day operation while meeting a bounded proven protective-equipment rule",
-        "eliminate exactly two hostile PMC operators under protection rather than hand over or collect armor"
-      ],
-      "boundedOperation": {
-        "selectionStatus": "selected-pending-overlap-economy-and-same-raid-proof",
-        "location": "factory4_day",
-        "contact": {"target": "AnyPmc", "count": 2},
-        "extraction": {"location": "factory4_day", "exitStatus": "Survived"},
-        "rationale": "Factory day creates a deliberately compact mobility-under-protection trial. Two PMC contacts keep the operation meaningful without recreating Juggernaut-style kill ladders or long armor-class progression."
-      },
-      "conditionReadiness": {
-        "equipmentShape": "proven",
-        "survivedExtractionShape": "proven",
-        "boundedMapContactSelection": "selected",
-        "equipmentToExtractionSameRaidCoupling": "unproven-required-before-runtime-materialization"
-      },
-      "equipmentPlan": {
-        "conditionType": "Equipment",
-        "IncludeNotEquippedItems": false,
-        "equipmentInclusiveSource": "explicit curated protective item TPL allowlist",
-        "minimumIndependentGroups": 1,
-        "allowlistAuthority": "post-010-protective-acoustic-equipment-allowlist-proof.json",
-        "exactPinnedTplAllowlistResolved": true,
-        "explicitTplCount": 4,
-        "equipmentInclusive": [[
-          "5b44cf1486f77431723e3d05",
-          "5ca21c6986f77479963115a7",
-          "5e9dacf986f774054d6b89f4",
-          "6038b4ca92ec1c3103795a0d"
-        ]],
-        "materializationReady": false,
-        "remainingBlocker": "vanilla semantic overlap, Economy Admiral reward review, and same-raid Equipment-to-contact-to-extraction coupling remain unresolved"
-      },
-      "materializationBlockedBy": [
-        "same-raid equipment-to-contact-to-extraction coupling proof",
-        "vanilla overlap review for Factory protective PMC-contact shape",
-        "Economy Admiral reward review"
-      ],
-      "antiGrind": {
-        "maximumRequiredSuccessfulRaids": 1,
-        "maximumTargetCount": 2,
-        "repeatable": false,
-        "noArmorCollection": true,
-        "noEscalatingProtectionClasses": true,
-        "noPerItemUnlockChain": true
-      },
-      "rewardDoctrine": "XP/RUB/standing by default. No sequential helmet, armor, plate or carrier storefront unlocks; any durable protective-equipment reward requires Economy Admiral review and must not bypass normal capability progression.",
-      "proofGates": [
-        "exact pinned SPT 4.1.3 explicit TPL allowlist is resolved by post-010-protective-acoustic-equipment-allowlist-proof.json; parent handbook categories remain forbidden as runtime selectors",
-        "prove same-raid coupling before runtime materialization so protective Equipment, the two AnyPmc contacts on factory4_day and the Survived extraction cannot be satisfied across different raids",
-        "retain the selected factory4_day + two AnyPmc + Survived bounded shape unless overlap review proves a semantic collision",
-        "audit vanilla overlap for Factory protected-PMC objectives; Scorpion/Artem component-overlap review is already resolved separately",
-        "Economy Admiral approves final numeric rewards and any protective-equipment reward"
-      ],
-      "runtimeMaterialize": false
-    },
     {
       "key": "acoustic-contact",
       "sourceBundles": ["Ultrasound"],
@@ -122,7 +56,7 @@
         "eliminate exactly two Scavs and survive/extract without headset-by-headset progression or gear-restricted kill ladders"
       ],
       "boundedOperation": {
-        "selectionStatus": "selected-pending-overlap-economy-and-same-raid-proof",
+        "selectionStatus": "selected-pending-vanilla-overlap-and-same-raid-proof",
         "location": "woods",
         "contact": {"target": "Savage", "count": 2},
         "extraction": {"location": "woods", "exitStatus": "Survived"},
@@ -142,46 +76,19 @@
         "allowlistAuthority": "post-010-protective-acoustic-equipment-allowlist-proof.json",
         "exactPinnedTplAllowlistResolved": true,
         "explicitTplCount": 15,
-        "equipmentInclusive": [[
-          "5645bcc04bdc2d363b8b4572",
-          "5aa2ba71e5b5b000137b758f",
-          "5a16b9fffcdbcb0176308b34",
-          "5c165d832e2216398b5a7e36",
-          "5b432b965acfc47a8774094e",
-          "5e4d34ca86f774264f758330",
-          "5f60cd6cf2bcbb675b00dac6",
-          "6033fa48ffd42c541047f728",
-          "628e4e576d783146b124c64d",
-          "66b5f69ea7f72d197e70bcdb",
-          "66b5f6a28ca68c6461709ed8",
-          "66b5f693acff495a294927e3",
-          "66b5f6985891c84aab75ca76",
-          "66b5f68de98be930d701c00e",
-          "68bf405779c8186398099017"
-        ]],
+        "equipmentInclusive": [["5645bcc04bdc2d363b8b4572","5aa2ba71e5b5b000137b758f","5a16b9fffcdbcb0176308b34","5c165d832e2216398b5a7e36","5b432b965acfc47a8774094e","5e4d34ca86f774264f758330","5f60cd6cf2bcbb675b00dac6","6033fa48ffd42c541047f728","628e4e576d783146b124c64d","66b5f69ea7f72d197e70bcdb","66b5f6a28ca68c6461709ed8","66b5f693acff495a294927e3","66b5f6985891c84aab75ca76","66b5f68de98be930d701c00e","68bf405779c8186398099017"]],
         "materializationReady": false,
-        "remainingBlocker": "vanilla semantic overlap, Economy Admiral reward review, and same-raid Equipment-to-contact-to-extraction coupling remain unresolved"
+        "remainingBlocker": "vanilla semantic overlap and same-raid Equipment-to-contact-to-extraction coupling remain unresolved; Economy Admiral numeric reward review is complete"
       },
-      "materializationBlockedBy": [
-        "same-raid equipment-to-contact-to-extraction coupling proof",
-        "vanilla overlap review for Woods headset Scav-contact shape",
-        "Economy Admiral reward review"
-      ],
-      "antiGrind": {
-        "maximumRequiredSuccessfulRaids": 1,
-        "maximumTargetCount": 2,
-        "repeatable": false,
-        "noHeadsetByHeadsetLadder": true,
-        "noLegendGearKillExpansion": true,
-        "noSequentialStorefrontUnlocks": true
-      },
-      "rewardDoctrine": "XP/RUB/standing or a tightly bounded support reward only. No headset storefront conveyor and no equipment unlock whose sole purpose is to start another same-shaped quest.",
+      "materializationBlockedBy": ["same-raid equipment-to-contact-to-extraction coupling proof","vanilla overlap review for Woods headset Scav-contact shape"],
+      "antiGrind": {"maximumRequiredSuccessfulRaids": 1,"maximumTargetCount": 2,"repeatable": false,"noHeadsetByHeadsetLadder": true,"noLegendGearKillExpansion": true,"noSequentialStorefrontUnlocks": true},
+      "rewardDoctrine": "XP/RUB/standing only under the approved Economy Admiral envelope. No headset storefront conveyor and no equipment unlock whose sole purpose is to start another same-shaped quest.",
       "proofGates": [
         "exact pinned SPT 4.1.3 explicit TPL allowlist is resolved by post-010-protective-acoustic-equipment-allowlist-proof.json; parent handbook categories remain forbidden as runtime selectors",
         "prove same-raid coupling before runtime materialization so headset Equipment, the two Savage contacts on woods and the Survived extraction cannot be satisfied across different raids",
-        "retain the selected woods + two Savage + Survived bounded shape unless overlap review proves a semantic collision",
+        "retain the selected woods + two Savage + Survived bounded shape unless vanilla overlap review proves a semantic collision",
         "audit vanilla overlap for Woods headset-restricted reconnaissance objectives; Scorpion/Artem component-overlap review is already resolved separately",
-        "Economy Admiral approves final numeric and any support-item rewards"
+        "Economy Admiral numeric reward review is complete at 7000 XP / 42000 RUB / 0.010 standing / no item reward"
       ],
       "runtimeMaterialize": false
     }
