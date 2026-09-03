@@ -67,17 +67,23 @@ internal static class DogtagCaseTraderTemplateRevalidationRegression
             || finalWrapperProof <= tupleProof || postBoundaryCancellation <= finalWrapperProof || catchBlock <= postBoundaryCancellation)
             throw new InvalidOperationException("Dogtag trader template revalidation regression failed: new-offer proof ordering drifted outside captured-wrapper rollback ownership.");
 
-        int ownsItemProof = assort.IndexOf("bool ownsItem = ownedItemIndex >= 0;", catchBlock, StringComparison.Ordinal);
+        int ownsItemProof = assort.IndexOf("bool ownsItem = !itemAdded || ownedItemIndex >= 0;", catchBlock, StringComparison.Ordinal);
         int ownsBarterProof = assort.IndexOf("bool ownsBarter = barterAdded", ownsItemProof + 1, StringComparison.Ordinal);
-        int loyaltyRollback = assort.IndexOf("loyalLevelItems.Remove(id);", ownsBarterProof + 1, StringComparison.Ordinal);
+        int ownsLoyaltyProof = assort.IndexOf("bool ownsLoyalty = loyaltyAdded", ownsBarterProof + 1, StringComparison.Ordinal);
+        int tupleGate = assort.IndexOf("if (!ownsItem || !ownsBarter || !ownsLoyalty)", ownsLoyaltyProof + 1, StringComparison.Ordinal);
+        int loyaltyRollback = assort.IndexOf("loyalLevelItems.Remove(id);", tupleGate + 1, StringComparison.Ordinal);
         int barterRollback = assort.IndexOf("barterScheme.Remove(id);", loyaltyRollback + 1, StringComparison.Ordinal);
         int itemRollback = assort.IndexOf("items.RemoveAt(ownedItemIndex);", barterRollback + 1, StringComparison.Ordinal);
-        if (ownsItemProof <= catchBlock || ownsBarterProof <= ownsItemProof || loyaltyRollback <= ownsBarterProof
-            || barterRollback <= loyaltyRollback || itemRollback <= barterRollback)
-            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: rollback ownership/order drifted.");
+        if (ownsItemProof <= catchBlock || ownsBarterProof <= ownsItemProof || ownsLoyaltyProof <= ownsBarterProof
+            || tupleGate <= ownsLoyaltyProof || loyaltyRollback <= tupleGate || barterRollback <= loyaltyRollback || itemRollback <= barterRollback)
+            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: rollback complete-prefix ownership/order drifted.");
         Require(assort, "ReferenceEquals(items[i], offer)", "rollback must prove exact offer reference ownership in captured Items");
         Require(assort, "ReferenceEquals(currentBarter, barter)", "rollback must prove exact barter reference ownership in captured BarterScheme");
-        Require(assort, "if (loyaltyAdded && ownsItem && ownsBarter", "loyalty rollback requires both reference-owned tuple components");
+        Require(assort, "if (!ownsItem || !ownsBarter || !ownsLoyalty)", "rollback must reject the complete tuple before the first mutation when any owned component drifted");
+        Require(assort, "if (loyalLevelItems.ContainsKey(id)) throw;", "barter rollback must prove loyalty metadata was already removed");
+        Require(assort, "if (barterScheme.ContainsKey(id) || loyalLevelItems.ContainsKey(id)) throw;", "item rollback must prove all downstream metadata was already removed");
+        if (assort.Contains("if (loyaltyAdded && ownsItem && ownsBarter", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag trader template revalidation regression failed: legacy partial rollback ownership was restored.");
 
         int existingProof = assort.IndexOf("ValidateExisting(items, barterScheme, loyalLevelItems, id, existing, templateId);", StringComparison.Ordinal);
         int existingWrapperProof = assort.IndexOf("RequireAssortWrapperIdentity();", existingProof + 1, StringComparison.Ordinal);
