@@ -79,9 +79,10 @@ require_tokens("Dogtag Case preload exact host boundary", dogtag_item, [
     "DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);",
     "DogtagCaseHostContract.RequirePreserved(filter);",
     "DogtagCaseHostContract.RequireCommitted(filter);",
-    "bool addedHere = filter.Add(DogtagCaseTpl);",
-    "if (addedHere)",
-    "filter.Remove(DogtagCaseTpl);",
+    "DogtagCaseHostContract.CaptureRollbackBaseline(filter)",
+    "addedHere = filter.Add(DogtagCaseTpl);",
+    "DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)",
+    "ambiguous/foreign current host state is not blindly rewritten",
 ])
 
 require_tokens("Dogtag Case host snapshot contract", dogtag_snapshot, [
@@ -100,6 +101,11 @@ require_tokens("Dogtag Case host snapshot contract", dogtag_snapshot, [
     "HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);",
     "RequirePreservedSnapshot(current);",
     "!current.Contains(caseTpl)",
+    "public static HashSet<MongoId> CaptureRollbackBaseline(HashSet<MongoId> currentFilter)",
+    "public static bool TryRollbackOwnedCaseAddition(HashSet<MongoId> currentFilter, HashSet<MongoId> preCommitSnapshot)",
+    "HashSet<MongoId> expectedCommitted = new(preCommitSnapshot) { caseTpl };",
+    "if (!current.SetEquals(expectedCommitted))",
+    "return after.SetEquals(preCommitSnapshot);",
 ])
 
 if "RequirePreserved(currentFilter);\n\n        var caseTpl" in dogtag_snapshot:
@@ -128,14 +134,17 @@ commit_region = dogtag_item[commit_def:commit_end] if min(commit_def, commit_end
 first_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);")
 preserved = commit_region.find("DogtagCaseHostContract.RequirePreserved(filter);")
 second_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);", first_identity + 1)
-add = commit_region.find("bool addedHere = filter.Add(DogtagCaseTpl);")
-committed = commit_region.find("DogtagCaseHostContract.RequireCommitted(filter);")
-post_commit_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);", second_identity + 1)
-rollback = commit_region.find("filter.Remove(DogtagCaseTpl);")
-if min(first_identity, preserved, second_identity, add, committed, post_commit_identity, rollback) < 0 or not (
-    first_identity < preserved < second_identity < add < committed < post_commit_identity < rollback
+rollback_baseline = commit_region.find("DogtagCaseHostContract.CaptureRollbackBaseline(filter)", second_identity + 1)
+add = commit_region.find("addedHere = filter.Add(DogtagCaseTpl);", rollback_baseline + 1)
+committed = commit_region.find("DogtagCaseHostContract.RequireCommitted(filter);", add + 1)
+post_commit_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);", committed + 1)
+rollback = commit_region.find("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", post_commit_identity + 1)
+if min(first_identity, preserved, second_identity, rollback_baseline, add, committed, post_commit_identity, rollback) < 0 or not (
+    first_identity < preserved < second_identity < rollback_baseline < add < committed < post_commit_identity < rollback
 ):
-    violations.append("Dogtag Case exposure must remain live-identity -> preserved -> live-identity -> owned Add -> committed -> live-identity -> owned rollback")
+    violations.append("Dogtag Case exposure must remain live-identity -> preserved -> live-identity -> detached rollback baseline -> owned Add -> committed -> live-identity -> proven owned rollback")
+if "filter.Remove(DogtagCaseTpl);" in commit_region:
+    violations.append("Dogtag Case exposure must not use value-only rollback; ambiguous/foreign current host state must remain untouched")
 if commit_region.count("cancellationToken.ThrowIfCancellationRequested();") < 4:
     violations.append("Dogtag Case exposure must observe cancellation before mutation and within the owned commit/rollback boundary")
 
@@ -241,4 +250,4 @@ if "hostFilter.Add(" in dogtag or "groups[0].Filter.Add(" in dogtag or "slots.Ad
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; Dogtag preload/trader host proof pins the complete DefaultInventory chain, and trader publication additionally transaction-pins the Ragman Assort/Items/BarterScheme/LoyalLevelItems wrapper chain with ownership-bounded rollback)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; Dogtag preload host rollback is exact pre-commit-snapshot proven and refuses ambiguous foreign/current rewrites; trader host proof pins the complete DefaultInventory chain, and trader publication additionally transaction-pins the Ragman Assort/Items/BarterScheme/LoyalLevelItems wrapper chain with ownership-bounded rollback)")
