@@ -148,23 +148,26 @@ public static class DogtagCaseHostExclusionPolicy
         MemberInfo? selected = null;
 
         // A future SPT model may introduce ExcludedFilter on this equipment-slot
-        // filter group. Resolve the member across the inheritance chain explicitly:
-        // a value-identical property/field hiding collision is semantic ambiguity and
-        // must not silently prefer one representation over another.
+        // filter group. Resolve every declared instance representation, including
+        // non-public members: a private/protected authority is still live authority
+        // and must never be mistaken for member absence. Any hiding/property-field
+        // collision across the hierarchy remains semantic ambiguity and fails closed.
+        const BindingFlags declaredInstance = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
         for (Type? current = filterGroup.GetType(); current != null; current = current.BaseType)
         {
-            foreach (var property in current.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+            foreach (var property in current.GetProperties(declaredInstance))
             {
                 if (!string.Equals(property.Name, ExcludedFilterMemberName, StringComparison.Ordinal))
                     continue;
-                if (property.GetMethod == null || property.GetMethod.IsStatic || property.GetIndexParameters().Length != 0)
+                MethodInfo? getter = property.GetGetMethod(true);
+                if (getter == null || getter.IsStatic || property.GetIndexParameters().Length != 0)
                     throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter property is not a readable zero-index instance member.");
                 if (selected != null)
                     throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter member is ambiguous across the filter-group hierarchy.");
                 selected = property;
             }
 
-            foreach (var field in current.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+            foreach (var field in current.GetFields(declaredInstance))
             {
                 if (!string.Equals(field.Name, ExcludedFilterMemberName, StringComparison.Ordinal))
                     continue;
@@ -181,7 +184,8 @@ public static class DogtagCaseHostExclusionPolicy
 
         object? raw = selected switch
         {
-            PropertyInfo property => property.GetValue(filterGroup),
+            PropertyInfo property => property.GetGetMethod(true)?.Invoke(filterGroup, null)
+                ?? throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter property getter disappeared after bounded discovery."),
             FieldInfo field => field.GetValue(filterGroup),
             _ => throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter member has an unsupported reflection shape.")
         };
