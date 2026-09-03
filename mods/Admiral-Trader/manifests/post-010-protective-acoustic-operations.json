@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -56,16 +56,35 @@
         "eliminate exactly two Scavs and survive/extract without headset-by-headset progression or gear-restricted kill ladders"
       ],
       "boundedOperation": {
-        "selectionStatus": "selected-pending-vanilla-overlap-and-same-raid-proof",
+        "selectionStatus": "admitted-pending-same-raid-proof",
         "location": "woods",
         "contact": {"target": "Savage", "count": 2},
         "extraction": {"location": "woods", "exitStatus": "Survived"},
         "rationale": "Woods rewards early acoustic detection and contact choice without requiring an invented hearing-event condition. Two Scavs keep the contact bounded and subordinate to the reconnaissance/survival purpose."
       },
+      "vanillaOverlapDisposition": {
+        "decision": "admit-bounded-differentiation",
+        "reviewStatus": "closed-static-semantic-review",
+        "definingTuple": ["active qualifying headset", "woods", "exactly 2 Savage", "Survived extraction"],
+        "knownComponentOverlaps": [
+          "Vanilla contains Woods Scav-elimination objectives.",
+          "The Survivalist Path - Tough Guy uses a single-raid Woods Scav objective with a non-equipment restriction, but survival is not required.",
+          "The Survivalist Path - Junkie uses a Woods Scav objective under a stimulant/provision effect rather than headset Equipment.",
+          "Radio Club combines Woods Scav eliminations with Survived extraction, but its defining mechanic is radio-repeater placement and it does not require a headset.",
+          "Vanilla contains equipment-restricted combat objectives, including active-headset combat outside this exact Woods/Scav/survival tuple."
+        ],
+        "verdict": "Component overlap is material but does not reproduce the complete Acoustic Contact contract. The headset is a reconnaissance capability gate, target count is deliberately bounded at two, and Survived extraction makes the objective a field-awareness operation rather than another kill ladder.",
+        "reopenConditions": [
+          "Pinned SPT 4.1.3 quest data later proves a vanilla quest with the same defining tuple.",
+          "A future vanilla/SPT update introduces a materially equivalent active-headset Woods Scav-and-survive objective."
+        ],
+        "noCosmeticDifferentiation": true
+      },
       "conditionReadiness": {
         "equipmentShape": "proven",
         "survivedExtractionShape": "proven",
         "boundedMapContactSelection": "selected",
+        "vanillaSemanticOverlap": "admitted-bounded-differentiation",
         "equipmentToExtractionSameRaidCoupling": "unproven-required-before-runtime-materialization"
       },
       "equipmentPlan": {
@@ -78,16 +97,16 @@
         "explicitTplCount": 15,
         "equipmentInclusive": [["5645bcc04bdc2d363b8b4572","5aa2ba71e5b5b000137b758f","5a16b9fffcdbcb0176308b34","5c165d832e2216398b5a7e36","5b432b965acfc47a8774094e","5e4d34ca86f774264f758330","5f60cd6cf2bcbb675b00dac6","6033fa48ffd42c541047f728","628e4e576d783146b124c64d","66b5f69ea7f72d197e70bcdb","66b5f6a28ca68c6461709ed8","66b5f693acff495a294927e3","66b5f6985891c84aab75ca76","66b5f68de98be930d701c00e","68bf405779c8186398099017"]],
         "materializationReady": false,
-        "remainingBlocker": "vanilla semantic overlap and same-raid Equipment-to-contact-to-extraction coupling remain unresolved; Economy Admiral numeric reward review is complete"
+        "remainingBlocker": "same-raid Equipment-to-contact-to-extraction coupling proof remains unresolved; vanilla semantic-overlap disposition and Economy Admiral numeric reward review are complete"
       },
-      "materializationBlockedBy": ["same-raid equipment-to-contact-to-extraction coupling proof","vanilla overlap review for Woods headset Scav-contact shape"],
+      "materializationBlockedBy": ["same-raid equipment-to-contact-to-extraction coupling proof"],
       "antiGrind": {"maximumRequiredSuccessfulRaids": 1,"maximumTargetCount": 2,"repeatable": false,"noHeadsetByHeadsetLadder": true,"noLegendGearKillExpansion": true,"noSequentialStorefrontUnlocks": true},
       "rewardDoctrine": "XP/RUB/standing only under the approved Economy Admiral envelope. No headset storefront conveyor and no equipment unlock whose sole purpose is to start another same-shaped quest.",
       "proofGates": [
         "exact pinned SPT 4.1.3 explicit TPL allowlist is resolved by post-010-protective-acoustic-equipment-allowlist-proof.json; parent handbook categories remain forbidden as runtime selectors",
         "prove same-raid coupling before runtime materialization so headset Equipment, the two Savage contacts on woods and the Survived extraction cannot be satisfied across different raids",
-        "retain the selected woods + two Savage + Survived bounded shape unless vanilla overlap review proves a semantic collision",
-        "audit vanilla overlap for Woods headset-restricted reconnaissance objectives; Scorpion/Artem component-overlap review is already resolved separately",
+        "vanilla semantic-overlap review is closed as admit-bounded-differentiation; reopen only on evidence of the same defining tuple",
+        "Scorpion/Artem component-overlap review is resolved separately",
         "Economy Admiral numeric reward review is complete at 7000 XP / 42000 RUB / 0.010 standing / no item reward"
       ],
       "runtimeMaterialize": false
