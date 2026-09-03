@@ -23,7 +23,8 @@ class Post010AuthoredOperationsTests(unittest.TestCase):
         keys = {op["key"] for op in operations}
         self.assertEqual(len(keys), len(operations))
         self.assertNotIn("expedition-discipline", keys)
-        self.assertTrue({"rogue-interdiction", "field-medicine-under-pressure", "high-value-target-window"}.issubset(keys))
+        self.assertNotIn("field-medicine-under-pressure", keys)
+        self.assertTrue({"rogue-interdiction", "high-value-target-window", "night-signal-disruption"}.issubset(keys))
         for operation in operations:
             self.assertGreaterEqual(len(operation["objectiveIntent"]), 2)
             self.assertGreaterEqual(len(operation["proofGates"]), 4)
@@ -39,10 +40,6 @@ class Post010AuthoredOperationsTests(unittest.TestCase):
         self.assertLessEqual(rogue["antiGrind"]["maximumTargetCount"], 6)
         self.assertTrue(rogue["antiGrind"]["noEscalatingSequels"])
         self.assertTrue(rogue["antiGrind"]["noLocationFreeFallback"])
-        medicine = by_key["field-medicine-under-pressure"]
-        self.assertEqual(medicine["antiGrind"]["maximumRequiredSuccessfulRaids"], 1)
-        self.assertTrue(medicine["antiGrind"]["noConsumableCountLadder"])
-        self.assertTrue(medicine["antiGrind"]["noStimulantUseQuota"])
         for operation in self.manifest["operations"]:
             anti_grind = operation["antiGrind"]
             if "maximumTargetCount" in anti_grind:

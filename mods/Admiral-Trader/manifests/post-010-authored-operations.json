@@ -22,21 +22,6 @@
       "runtimeMaterialize": false
     },
     {
-      "key": "field-medicine-under-pressure",
-      "sourceBundles": ["Meds Proficiency"],
-      "domain": "medical-support",
-      "workingTitle": {"en": "Field Medicine Under Pressure", "ru": "Полевая медицина под давлением"},
-      "playerText": {
-        "en": {"description": "Medical stock is easy to count on a shelf. I care whether you can take damage, stabilize, and still finish the job. This is field medicine, not a shopping list and not a chemical-support trial.", "started": "Use ordinary field medicine to stabilize a real injury, stay operational, and extract. I am testing treatment judgement, not how many medical items you can consume.", "success": "You treated the problem and kept moving. Good. Medicine supported the operation instead of becoming the operation."},
-        "ru": {"description": "Медицину легко пересчитать на полке. Мне важнее, умеешь ли ты получить повреждение, стабилизироваться и закончить работу. Это полевая медицина, а не список покупок и не испытание химической поддержки.", "started": "Используй обычную полевую медицину, чтобы стабилизировать реальное повреждение, сохрани боеспособность и выйди из рейда. Я проверяю решение о лечении, а не количество потраченных медицинских предметов.", "success": "Проблему купировал и продолжил работу. Хорошо. Медицина поддержала операцию, а не стала самой операцией."}
-      },
-      "objectiveIntent": ["prove meaningful in-raid non-stimulant treatment or recovery and survive/extract", "no medical-item handover, FIR collection or consumable-count ladder", "chemical/stimulant capability remains isolated in controlled-chemical-support"],
-      "antiGrind": {"maximumRequiredSuccessfulRaids": 1, "repeatable": false, "noConsumableCountLadder": true, "noMedicalItemHandover": true, "noStimulantUseQuota": true, "noStimulantObjective": true},
-      "rewardDoctrine": "XP/RUB/standing or a tightly bounded ordinary medical-support reward only. Stimulant rewards and permanent chemical-support supply are outside this operation and remain subject to the dedicated Chemical Support economy contract.",
-      "proofGates": ["prove an exact SPT 4.1.3 non-stimulant treatment/healing condition or reject the treatment requirement", "prove survived/extraction semantics", "audit vanilla/Scorpion/Artem overlap", "Economy Admiral approves any medical-support item reward and final numeric rewards"],
-      "runtimeMaterialize": false
-    },
-    {
       "key": "high-value-target-window",
       "sourceBundles": ["Boss Hunt", "Boss Follower Hunt"],
       "domain": "operations",
