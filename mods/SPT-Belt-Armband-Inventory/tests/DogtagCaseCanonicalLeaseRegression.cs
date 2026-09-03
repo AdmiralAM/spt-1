@@ -31,11 +31,18 @@ internal static class DogtagCaseCanonicalLeaseRegression
             "ReferenceEquals(grids[0].Properties?.Filters, FiltersCollection)",
             "ReferenceEquals(groups[i], Groups[i])",
             "ReferenceEquals(groups[i].Filter, Included[i])",
-            "ReferenceEquals(groups[i].ExcludedFilter, Excluded[i])"
+            "ReferenceEquals(groups[i].ExcludedFilter, Excluded[i])",
+            "included.SetEquals(IncludedValues[i])",
+            "excluded.SetEquals(expectedExcluded)",
+            "included.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString()))"
         };
         foreach (string pin in requiredLeasePins)
             if (!lease.Contains(pin, StringComparison.Ordinal))
-                throw new InvalidOperationException("Dogtag canonical lease regression failed: missing exact source identity pin: " + pin);
+                throw new InvalidOperationException("Dogtag canonical lease regression failed: missing exact source identity/content pin: " + pin);
+
+        if (!lease.Contains("new HashSet<MongoId>(x.Filter!)", StringComparison.Ordinal)
+            || !lease.Contains("new HashSet<MongoId>(x.ExcludedFilter)", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: +2 lease must keep detached include/exclude content snapshots rather than aliasing live HashSets.");
 
         if (!lease.Contains("pending = null;", StringComparison.Ordinal)
             || !lease.Contains("lease.RequireCurrent(templates, source);", StringComparison.Ordinal))
@@ -55,14 +62,14 @@ internal static class DogtagCaseCanonicalLeaseRegression
         int afterNewHostCommit = newHostCommit < 0 ? -1 : item.IndexOf("canonicalLease.RequireCurrent(templateTable, source);", newHostCommit + 1, StringComparison.Ordinal);
         if (beforeCreate < 0 || afterCreate < 0 || newHostCommit < 0 || afterNewHostCommit < 0
             || !(beforeCreate < create && create < afterCreate && afterCreate < newHostCommit && newHostCommit < afterNewHostCommit))
-            throw new InvalidOperationException("Dogtag canonical lease regression failed: new-product creation/publication must be bracketed by exact +2 source identity reproof.");
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: new-product creation/publication must be bracketed by exact +2 source identity/content reproof.");
 
         int existing = item.IndexOf("if (templateTable.Items.TryGetValue(DogtagCaseTpl, out var existing))", StringComparison.Ordinal);
         int existingHostCommit = existing < 0 ? -1 : item.IndexOf("CommitDogtagSlotExposure(dogtagHost, cancellationToken);", existing, StringComparison.Ordinal);
         int beforeExistingHost = existingHostCommit < 0 ? -1 : item.LastIndexOf("canonicalLease.RequireCurrent(templateTable, source);", existingHostCommit, StringComparison.Ordinal);
         int afterExistingHost = existingHostCommit < 0 ? -1 : item.IndexOf("canonicalLease.RequireCurrent(templateTable, source);", existingHostCommit + 1, StringComparison.Ordinal);
         if (existing < 0 || existingHostCommit < 0 || beforeExistingHost < existing || afterExistingHost < 0)
-            throw new InvalidOperationException("Dogtag canonical lease regression failed: retained-product host publication must remain bracketed by exact +2 source identity reproof.");
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: retained-product host publication must remain bracketed by exact +2 source identity/content reproof.");
     }
 
     private static string? FindModuleRoot()
