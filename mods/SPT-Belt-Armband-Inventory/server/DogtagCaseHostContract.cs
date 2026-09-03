@@ -205,6 +205,14 @@ public static class DogtagCaseHostContract
             if (!current.SetEquals(expectedCommitted))
                 return false;
 
+            // Mirror metadata-abandon's final point-in-time reproof at the actual
+            // rollback mutation boundary. If the exact host changes after the first
+            // committed-shape proof, do not remove our Case from a now-drifted host.
+            HashSet<MongoId> liveBeforeRemove = SnapshotCurrentFilter(currentFilter);
+            if (!current.SetEquals(liveBeforeRemove)
+                || !liveBeforeRemove.SetEquals(expectedCommitted))
+                return false;
+
             if (!currentFilter.Remove(caseTpl))
                 return false;
 
