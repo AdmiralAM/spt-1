@@ -42,6 +42,65 @@ public sealed class DogtagCaseItem(
         public object? FiltersCollection { get; init; }
     }
 
+    /// <summary>
+    /// Carries exact host-add rollback authority across the small publication window
+    /// between committed Dogtag-slot exposure and the caller's final canonical-source
+    /// proof. The receipt is single-consumer: successful final proof consumes only
+    /// metadata, while failed final proof may remove only this transaction's exact
+    /// Case addition. Pre-existing Case exposure carries no mutation authority.
+    /// </summary>
+    private sealed class DogtagHostCommitReceipt(
+        DogtagCaseItem owner,
+        DogtagHostBoundary boundary,
+        HashSet<MongoId>? rollbackBaseline)
+    {
+        private bool consumed;
+
+        internal void Accept()
+        {
+            if (consumed)
+                throw new InvalidOperationException("B&A&HB Dogtag host post-commit receipt was already consumed.");
+
+            if (rollbackBaseline == null)
+            {
+                consumed = true;
+                return;
+            }
+
+            owner.RequireLiveDogtagHostIdentity(boundary);
+            DogtagCaseHostContract.RequireCommitted(boundary.Filter);
+            if (!DogtagCaseHostContract.TryAbandonRollbackAuthority(boundary.Filter, rollbackBaseline))
+                throw new InvalidOperationException("B&A&HB Dogtag host post-commit receipt could not consume exact owned-add authority after final canonical proof.");
+
+            consumed = true;
+        }
+
+        internal bool TryRollback()
+        {
+            if (consumed)
+                return false;
+
+            if (rollbackBaseline == null)
+            {
+                consumed = true;
+                return true;
+            }
+
+            try
+            {
+                owner.RequireLiveDogtagHostIdentity(boundary);
+                if (!DogtagCaseHostContract.TryRollbackOwnedCaseAddition(boundary.Filter, rollbackBaseline))
+                    return false;
+                consumed = true;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -81,8 +140,18 @@ public sealed class DogtagCaseItem(
             RequireCanonicalRegisteredTemplate(templateTable);
             canonicalLease.RequireCurrent(templateTable, source);
             cancellationToken.ThrowIfCancellationRequested();
-            CommitDogtagSlotExposure(dogtagHost, cancellationToken);
-            canonicalLease.RequireCurrent(templateTable, source);
+            DogtagHostCommitReceipt receipt = CommitDogtagSlotExposure(dogtagHost, cancellationToken);
+            try
+            {
+                canonicalLease.RequireCurrent(templateTable, source);
+                receipt.Accept();
+            }
+            catch (Exception exception)
+            {
+                if (!receipt.TryRollback())
+                    throw new InvalidOperationException("B&A&HB Dogtag host post-commit rollback could not be proven after final canonical-source proof failed; ambiguous/foreign current host state was left untouched.", exception);
+                throw;
+            }
             logger.Success("B&A&HB Dogtag Case retained existing validated template; Preload +2 canonical identity lease and vanilla Dogtag slot filter remained intact and exact container appended.");
             return Task.CompletedTask;
         }
@@ -164,8 +233,18 @@ public sealed class DogtagCaseItem(
         ValidateExisting(created, source);
         RequireCanonicalRegisteredTemplate(templateTable);
         canonicalLease.RequireCurrent(templateTable, source);
-        CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);
-        canonicalLease.RequireCurrent(templateTable, source);
+        DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);
+        try
+        {
+            canonicalLease.RequireCurrent(templateTable, source);
+            createdReceipt.Accept();
+        }
+        catch (Exception exception)
+        {
+            if (!createdReceipt.TryRollback())
+                throw new InvalidOperationException("B&A&HB Dogtag host post-commit rollback could not be proven after final canonical-source proof failed; ambiguous/foreign current host state was left untouched.", exception);
+            throw;
+        }
         logger.Success("B&A&HB Dogtag Case created and revalidated against the exact Preload +2 canonical source identity/root/grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
         return Task.CompletedTask;
     }
@@ -245,7 +324,7 @@ public sealed class DogtagCaseItem(
             throw new InvalidOperationException("B&A&HB Dogtag host publication refused: Dogtag filter group/filter object was replaced after preload host capture.");
     }
 
-    private void CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)
+    private DogtagHostCommitReceipt CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(boundary);
         HashSet<MongoId> filter = boundary.Filter;
@@ -276,6 +355,11 @@ public sealed class DogtagCaseItem(
             RequireLiveDogtagHostIdentity(boundary);
             DogtagCaseHostContract.RequireCommitted(filter);
             cancellationToken.ThrowIfCancellationRequested();
+
+            // Keep exact owned-add rollback authority alive across the caller's final
+            // canonical-source proof. A pre-existing/concurrently committed Case has
+            // no local mutation authority and therefore returns a metadata-empty receipt.
+            return new DogtagHostCommitReceipt(this, boundary, addedHere ? rollbackBaseline : null);
         }
         catch (Exception exception)
         {
