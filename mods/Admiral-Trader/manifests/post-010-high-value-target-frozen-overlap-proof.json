@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "high-value-target-window-vs-frozen-0.1.0",
+  "status": "resolved-no-semantic-overlap",
+  "runtimeMaterialize": false,
+  "frozenBase": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "candidateShape": {
+    "target": "Savage",
+    "savageRole": ["bossGluhar"],
+    "location": "RezervBase",
+    "maximumTargets": 1,
+    "successfulExtractionRequired": true
+  },
+  "method": "Regression-scan every frozen Admiral quest JSON. A frozen semantic collision would require a bossGluhar elimination objective; no frozen quest references bossGluhar at all, so none can duplicate the narrower bossGluhar + Reserve + successful-extraction operation.",
+  "frozenQuestCountReviewed": 31,
+  "result": {
+    "bossGluharReferences": 0,
+    "semanticDuplicateCount": 0,
+    "decision": "PASS"
+  },
+  "boundary": "This proof closes only overlap against the frozen 31-quest Admiral campaign. It does not waive vanilla/Scorpion/Artem overlap or same-raid kill-to-extraction coupling proof."
+}

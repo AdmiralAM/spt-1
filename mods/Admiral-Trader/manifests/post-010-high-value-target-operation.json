@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-spec-only",
   "operationKey": "high-value-target-window",
@@ -27,6 +27,7 @@
     "role": {"target": "Savage", "savageRole": ["bossGluhar"], "status": "proven-pinned-spt413"},
     "locationProof": "post-010-reserve-location-proof.json",
     "location": {"friendlyName": "Reserve", "target": "RezervBase", "status": "proven-pinned-upstream-authority"},
+    "frozenOverlapProof": "post-010-high-value-target-frozen-overlap-proof.json",
     "extractionShapeProof": "post-010-same-raid-coupling-proof.json"
   },
   "economyReview": {
@@ -41,7 +42,7 @@
     "requiresExactBossRoleProof": false,
     "requiresExactReserveLocationSelection": false,
     "requiresEconomyAdmiralReview": false,
-    "requiresFrozenCampaignOverlapReview": true,
+    "requiresFrozenCampaignOverlapReview": false,
     "requiresVanillaScorpionArtemOverlapAudit": true,
     "requiresSameRaidKillAndExtractionCouplingProof": true,
     "implementationAllowed": false,
