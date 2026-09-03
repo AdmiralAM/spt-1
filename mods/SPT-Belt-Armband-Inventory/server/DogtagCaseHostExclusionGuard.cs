@@ -120,6 +120,14 @@ public static class DogtagCaseHostExclusionPolicy
             throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: Dogtag filter group/filter changed during effective-host verification.");
 
         DogtagCaseHostContract.RequireCommitted(hostFilter);
+
+        // The wrapper-chain proof itself is another bounded window. Snapshot optional
+        // exclusions one final time after that proof and require both value stability and
+        // effective acceptance before returning publication authority to the caller.
+        var excludedFinal = SnapshotOptionalExcludedFilter(filterGroup);
+        if (!OptionalFilterSetEquals(excludedBefore, excludedFinal))
+            throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: optional ExcludedFilter changed during final host-chain reproof.");
+        RequireEffectiveAcceptance(hostFilter, excludedFinal);
     }
 
     private static IReadOnlyCollection<MongoId>? SnapshotOptionalExcludedFilter(object filterGroup)
