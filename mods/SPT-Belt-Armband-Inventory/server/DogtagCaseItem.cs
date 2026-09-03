@@ -84,15 +84,23 @@ public sealed class DogtagCaseItem(
             if (consumed)
                 return false;
 
-            if (rollbackBaseline == null)
-            {
-                consumed = true;
-                return true;
-            }
-
             try
             {
+                // A metadata-empty receipt carries no local mutation authority, but
+                // it still represents a specific committed host observation. Do not
+                // report failure cleanup as proven merely because there is nothing to
+                // remove: exact live host identity + committed shape must still hold.
+                // This keeps pre-existing/concurrently-committed Case publication
+                // fail-closed if the host drifts in the final canonical-proof window.
                 owner.RequireLiveDogtagHostIdentity(boundary);
+                DogtagCaseHostContract.RequireCommitted(boundary.Filter);
+
+                if (rollbackBaseline == null)
+                {
+                    consumed = true;
+                    return true;
+                }
+
                 if (!DogtagCaseHostContract.TryRollbackOwnedCaseAddition(boundary.Filter, rollbackBaseline))
                     return false;
                 consumed = true;
