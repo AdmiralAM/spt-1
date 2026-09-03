@@ -102,7 +102,14 @@ public sealed class DogtagCaseAssort(
         bool loyaltyAdded = false;
         try
         {
+            // The initial product/host proof occurs before Ragman resolution. Re-prove
+            // the exact canonical template + Dogtag host immediately before the first
+            // trader mutation so drift in that bounded preparation window cannot inherit
+            // publication authority merely because the Ragman wrappers stayed stable.
+            cancellationToken.ThrowIfCancellationRequested();
+            RequirePublicationBoundary(templateTable, templateId);
             RequireAssortWrapperIdentity();
+            cancellationToken.ThrowIfCancellationRequested();
             items.Add(offer);
             itemAdded = true;
             barterScheme.Add(id, barter);
