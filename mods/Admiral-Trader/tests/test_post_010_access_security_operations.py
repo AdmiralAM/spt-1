@@ -84,10 +84,10 @@ class Post010AccessSecurityOperationsTests(unittest.TestCase):
         self.assertEqual(pmc["target"]["status"], "proven-shape-only")
         self.assertEqual(pmc["target"]["value"], "AnyPmc")
         self.assertEqual(pmc["location"]["status"], "proven-selected")
-        self.assertEqual(pmc["location"]["target"], ["TarkovStreets"])
-        self.assertEqual(pmc["location"]["locationId"], "5714dc692459777137212e12")
+        self.assertEqual(pmc["location"]["target"], ["RezervBase"])
+        self.assertEqual(pmc["location"]["locationId"], "5704e5fad2720bc05b8b4567")
         self.assertTrue(pmc["location"]["selectedMapValueProven"])
-        self.assertIn("location-information.md", pmc["location"]["authority"].lower())
+        self.assertEqual(pmc["location"]["authorityManifest"], "post-010-reserve-location-proof.json")
         self.assertEqual(pmc["survivedExtraction"]["status"], "proven-shape-only")
         self.assertEqual(pmc["sameRaidCoupling"]["status"], "unproven-fail-closed")
         self.assertFalse(pmc["factionSplitProven"])
@@ -123,18 +123,22 @@ class Post010AccessSecurityOperationsTests(unittest.TestCase):
         self.assertIn("same-raid", gate_text)
         self.assertFalse(access["runtimeMaterialize"])
 
-    def test_contractor_intercept_has_one_selected_streets_area_without_per_map_copies(self):
+    def test_contractor_intercept_uses_selected_reserve_area_without_per_map_copies(self):
         pmc = self.by_key["hostile-operator-intercept"]
         location = pmc["conditionReadiness"]["location"]
-        self.assertEqual(location["target"], ["TarkovStreets"])
-        self.assertEqual(location["locationId"], "5714dc692459777137212e12")
+        self.assertEqual(location["target"], ["RezervBase"])
+        self.assertEqual(location["locationId"], "5704e5fad2720bc05b8b4567")
         self.assertTrue(location["selectedMapValueProven"])
+        self.assertEqual(location["authorityManifest"], "post-010-reserve-location-proof.json")
+        self.assertIn("reserve", pmc["mapSelectionRationale"].lower())
         self.assertIn("streets", pmc["mapSelectionRationale"].lower())
+        self.assertIn("rejected", pmc["mapSelectionRationale"].lower())
         self.assertTrue(pmc["antiGrind"]["noPerMapCopies"])
         gate_text = " ".join(pmc["proofGates"]).lower()
-        self.assertIn("tarkovstreets", gate_text)
+        self.assertIn("rezervbase", gate_text)
         self.assertIn("same-raid", gate_text)
         self.assertIn("overlap", gate_text)
+        self.assertIn("do not reopen the rejected streets variant", gate_text)
         self.assertFalse(pmc["runtimeMaterialize"])
 
     def test_specs_fail_closed_on_runtime_overlap_and_economy_gates(self):

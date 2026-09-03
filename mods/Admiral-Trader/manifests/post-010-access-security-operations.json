@@ -139,17 +139,17 @@
       "playerText": {
         "en": {
           "description": "Another armed contractor is useful only when there is a reason to intercept him. I am not paying for population control. I need a short counter-operator action tied to a route or objective that matters.",
-          "started": "Intercept a small hostile PMC element on Streets and make your extraction. Do not roam the whole region adding bodies to a quota.",
+          "started": "Intercept a small hostile PMC element crossing Reserve and make your extraction. Do not roam the whole military reserve adding bodies to a quota.",
           "success": "The opposing contractors lost the window they were working. That is enough. A contract should remove a problem, not manufacture a career out of counting corpses."
         },
         "ru": {
           "description": "Вооружённый контрактник становится целью только тогда, когда есть причина его перехватить. За зачистку населения я не плачу. Нужна короткая контроперация, привязанная к важному маршруту или задаче.",
-          "started": "Перехвати небольшую группу враждебных ЧВК на Улицах и выйди из рейда. Не броди по всему району ради пополнения счётчика тел.",
+          "started": "Перехвати небольшую группу враждебных ЧВК, пересекающую Резерв, и выйди из рейда. Не броди по всей военной базе ради пополнения счётчика тел.",
           "success": "Противостоящие контрактники потеряли своё рабочее окно. Этого достаточно. Контракт должен устранять проблему, а не создавать профессию из подсчёта трупов."
         }
       },
       "objectiveIntent": [
-        "one contextual hostile-PMC intercept on Streets of Tarkov",
+        "one contextual hostile-PMC intercept on Reserve",
         "survive/extract after a bounded engagement instead of repeating per-map PMC kill templates"
       ],
       "antiGrind": {
@@ -170,12 +170,12 @@
         "factionSplitProven": false,
         "location": {
           "status": "proven-selected",
-          "authority": "sp-tarkov/wiki modding/references/location-information.md",
+          "authorityManifest": "post-010-reserve-location-proof.json",
           "conditionType": "Location",
-          "target": ["TarkovStreets"],
-          "locationId": "5714dc692459777137212e12",
+          "target": ["RezervBase"],
+          "locationId": "5704e5fad2720bc05b8b4567",
           "selectedMapValueProven": true,
-          "meaning": "Streets of Tarkov uses exact SPT quest target TarkovStreets. Friendly name and MongoID are reference metadata only and must not replace the quest target."
+          "meaning": "Reserve uses exact pinned SPT quest target RezervBase. Friendly name and MongoID are reference metadata only and must not replace the quest target."
         },
         "survivedExtraction": {
           "status": "proven-shape-only",
@@ -184,15 +184,15 @@
         },
         "sameRaidCoupling": {
           "status": "unproven-fail-closed",
-          "requiredProof": "AnyPmc kill counter on TarkovStreets and survived extraction are required in the same raid"
+          "requiredProof": "AnyPmc kill counter on RezervBase and survived extraction are required in the same raid"
         }
       },
-      "mapSelectionRationale": "Streets is selected as the single operational-integration map for this bounded PMC intercept. It supplies dense contractor contact and urban route pressure without creating per-map copies; the exact SPT target is independently pinned. Selection does not waive overlap, same-raid or economy gates.",
+      "mapSelectionRationale": "Reserve is the selected replacement for the bounded PMC intercept after the Streets variant was rejected for vanilla semantic collision. The exact RezervBase target, frozen overlap, external vanilla/Scorpion/Artem overlap and conservative reward envelope are already resolved in the dedicated Contractor Intercept authority; only same-raid kill-to-extraction coupling remains fail-closed.",
       "proofGates": [
-        "retain exact pinned SPT Location target TarkovStreets and fail closed if location authority diverges; faction-specific USEC/BEAR aliases remain out of scope until separately proven",
-        "prove same-raid coupling between the bounded AnyPmc counter on TarkovStreets and the already-proven survived-extraction shape",
-        "complete overlap audit with vanilla/Scorpion/Artem PMC objectives and frozen Admiral combat progression before materialization",
-        "Economy Admiral approves final numeric and any item rewards"
+        "retain exact pinned SPT Location target RezervBase from post-010-reserve-location-proof.json and fail closed if that authority diverges; faction-specific USEC/BEAR aliases remain out of scope until separately proven",
+        "prove same-raid coupling between the bounded AnyPmc counter on RezervBase and the already-proven survived-extraction shape",
+        "retain resolved frozen and vanilla/Scorpion/Artem overlap authority from post-010-hostile-operator-intercept-operation.json; do not reopen the rejected Streets variant",
+        "retain the approved conservative Economy Admiral reward envelope from post-010-hostile-operator-intercept-operation.json unless objective difficulty materially changes"
       ],
       "runtimeMaterialize": false
     }
