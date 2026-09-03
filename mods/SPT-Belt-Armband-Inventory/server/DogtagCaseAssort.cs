@@ -181,17 +181,22 @@ public sealed class DogtagCaseAssort(
             throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman item contents changed in place before publication.");
 
         if (!barterScheme.TryGetValue(id, out var liveBarter)
-            || !ReferenceEquals(liveBarter, expectedBarter))
-            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman barter reference was replaced before publication.");
-
-        if (liveBarter.Count != 1
-            || liveBarter[0].Count != 1
-            || !Equals(liveBarter[0][0].Template, Money.ROUBLES)
-            || liveBarter[0][0].Count != PriceRoubles)
-            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman barter contents changed in place before publication.");
+            || !ReferenceEquals(liveBarter, expectedBarter)
+            || liveBarter.Count != 1)
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman barter reference/cardinality changed before publication.");
 
         var expectedInnerBarter = liveBarter[0];
+        if (expectedInnerBarter == null || expectedInnerBarter.Count != 1)
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman inner barter cardinality changed before publication.");
         var expectedScheme = expectedInnerBarter[0];
+        if (expectedScheme == null
+            || !Equals(expectedScheme.Template, Money.ROUBLES)
+            || expectedScheme.Count != PriceRoubles)
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: validated Ragman barter contents changed in place before publication.");
+
+        if (!ReferenceEquals(liveBarter[0], expectedInnerBarter)
+            || !ReferenceEquals(liveBarter[0][0], expectedScheme))
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: Ragman inner barter identity changed during initial tuple proof.");
 
         if (!loyalLevelItems.TryGetValue(id, out var liveLoyalty)
             || liveLoyalty != LoyaltyLevel)
