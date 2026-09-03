@@ -75,11 +75,12 @@ public static class DogtagCaseHostExclusionPolicy
         var filtersCollection = slotProperties.Filters
             ?? throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: Dogtag Filters collection is missing.");
         var groups = filtersCollection.Take(2).ToArray();
-        if (groups.Length != 1 || groups[0].Filter == null)
+        if (groups.Length != 1)
             throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: exact single Dogtag filter group is unavailable.");
 
         var filterGroup = groups[0];
-        var hostFilter = filterGroup.Filter;
+        var hostFilter = filterGroup.Filter
+            ?? throw new InvalidOperationException("B&A&HB Dogtag exclusion guard refused: exact Dogtag included filter is unavailable.");
 
         // The effective proof is point-in-time and uses the same captured host/filter
         // authority throughout. Included content must already be the committed Dogtag
@@ -118,10 +119,10 @@ public static class DogtagCaseHostExclusionPolicy
         TemplateTable templateTable,
         TemplateItem inventory,
         TemplateItemProperties inventoryProperties,
-        List<Slot> slotsCollection,
+        IEnumerable<Slot> slotsCollection,
         Slot slot,
         SlotProperties slotProperties,
-        List<SlotFilter> filtersCollection,
+        IEnumerable<SlotFilter> filtersCollection,
         SlotFilter filterGroup,
         HashSet<MongoId> hostFilter)
     {
