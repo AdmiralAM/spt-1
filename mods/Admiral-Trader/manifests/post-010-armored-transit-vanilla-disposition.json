@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-product-disposition",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "runtimeMaterialize": false,
+  "operation": "armored-transit",
+  "decision": "reject-from-active-authored-wave",
+  "reason": "The current Factory protective-equipment PMC-contact concept occupies the same defining gameplay space as vanilla The Good Times - Part 1. Reducing the PMC count to two, broadening the armor allowlist, or adding a Survived extraction does not create a distinct Admiral capability test; retaining it would preserve authored count at the expense of product distinctness.",
+  "pinnedSpt413Authority": {
+    "repository": "sp-tarkov/server-csharp",
+    "commit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+    "path": "Libraries/SPTarkov.Server.Assets/SPT_Data/database/templates/quests.json",
+    "questId": "666314b4d7f171c4c20226c3",
+    "questName": "The Good Times - Part 1",
+    "provenAtPinnedRevision": {
+      "mandatoryEquippedEquipmentConditionPresent": true,
+      "includeNotEquippedItems": false,
+      "equipmentInclusiveContains": "545cdb794bdc2d3a198b456a",
+      "equipmentTplMeaning": "6B43 Zabralo-Sh body armor"
+    },
+    "evidenceBoundary": "The available GitHub transport exposes the pinned quest identity and mandatory equipped 6B43 condition but not a contiguous extract of the whole LFS-backed quest object. Factory + PMC elimination semantics are independently corroborated by current quest references; the rejection does not claim an exact pinned kill count, weapon restriction, helmet tuple, or reward tuple beyond the fields listed above."
+  },
+  "semanticCollision": {
+    "admiralShape": "factory4_day + explicit protective Equipment + exactly 2 AnyPmc + Survived extraction",
+    "vanillaDefiningSpace": "Factory + mandatory protective equipment + PMC elimination",
+    "distinctiveAdmiralMechanicRemainingAfterComparison": null,
+    "extractionAloneIsSufficientDifferentiator": false,
+    "lowerKillCountAloneIsSufficientDifferentiator": false,
+    "broaderArmorChoiceAloneIsSufficientDifferentiator": false,
+    "verdict": "semantic-collision-reject"
+  },
+  "productDisposition": {
+    "replacementQuestRequired": false,
+    "cosmeticRelabelAllowed": false,
+    "fillerReplacementAllowed": false,
+    "rewardRedistributionAllowed": false,
+    "previousPlannedReward": {"xp": 10500, "rub": 65000, "standing": 0.016, "itemReward": null},
+    "downstreamGraphRewireRequired": true,
+    "requiredAtomicFollowup": [
+      "remove armored-transit from active protective/acoustic authored authority",
+      "remove armored-transit from campaign phases and level placement",
+      "replace downstream prerequisites with existing capability prerequisites rather than a filler operation",
+      "remove armored-transit reward allocation and reduce campaign reward caps without redistribution",
+      "synchronize operation counts and regressions to the resulting 15-operation authored wave"
+    ]
+  },
+  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
+}
