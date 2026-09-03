@@ -143,6 +143,16 @@ public static class DogtagCaseHostContract
                 || !preCommitSnapshot.SetEquals(authority.Baseline))
                 return false;
 
+            // Metadata-only abandon is valid only for the exact concurrent-commit
+            // shape that explains Add(case)==false: the pinned baseline plus exactly
+            // the Dogtag Case. Foreign/current host drift must retain authority and
+            // fail closed rather than silently declaring the pre-add transaction clean.
+            var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
+            var expectedCommitted = new HashSet<MongoId>(authority.Baseline) { caseTpl };
+            HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);
+            if (!current.SetEquals(expectedCommitted))
+                return false;
+
             RollbackAuthorities.Remove(preCommitSnapshot);
             if (ActiveRollbackHosts.TryGetValue(authority.Host, out RollbackAuthority? active)
                 && ReferenceEquals(active, authority))
