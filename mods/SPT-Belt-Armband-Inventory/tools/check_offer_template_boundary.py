@@ -51,12 +51,13 @@ contracts = {
         "loyalLevelItems.Add(id, LoyaltyLevel);",
         "ReferenceEquals(currentBarter, barter)",
         "ReferenceEquals(items[i], offer)",
-        "bool ownsItem = ownedItemIndex >= 0;",
+        "bool ownsItem = !itemAdded || ownedItemIndex >= 0;",
         "bool ownsBarter = barterAdded",
-        "if (loyaltyAdded && ownsItem && ownsBarter",
+        "bool ownsLoyalty = loyaltyAdded",
+        "if (!ownsItem || !ownsBarter || !ownsLoyalty)",
         "if (!loyalLevelItems.TryGetValue(id, out var liveOwnedLoyalty) || liveOwnedLoyalty != LoyaltyLevel) throw;\n                loyalLevelItems.Remove(id);",
-        "if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;\n                barterScheme.Remove(id);",
-        "if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;\n                items.RemoveAt(ownedItemIndex);",
+        "if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;\n                if (loyalLevelItems.ContainsKey(id)) throw;\n                barterScheme.Remove(id);",
+        "if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;\n                if (barterScheme.ContainsKey(id) || loyalLevelItems.ContainsKey(id)) throw;\n                items.RemoveAt(ownedItemIndex);",
     ],
 }
 
@@ -98,6 +99,7 @@ for filename, required in contracts.items():
         else:
             rollback = text[catch_start:]
             first_fence = rollback.find("if (!IsAssortWrapperIdentityCurrent())")
+            tuple_gate = rollback.find("if (!ownsItem || !ownsBarter || !ownsLoyalty)")
             mutation_candidates = [
                 pos for pos in (
                     rollback.find("loyalLevelItems.Remove(id);"),
@@ -107,6 +109,8 @@ for filename, required in contracts.items():
             ]
             if not mutation_candidates or first_fence < 0 or first_fence > min(mutation_candidates):
                 violations.append(f"{filename}: Dogtag rollback must prove exact live Ragman wrapper authority before any mutation")
+            if tuple_gate < 0 or (mutation_candidates and tuple_gate > min(mutation_candidates)):
+                violations.append(f"{filename}: Dogtag rollback must prove complete prefix tuple ownership before the first rollback mutation")
         if "if (barterAdded) trader.Assort.BarterScheme.Remove(id);" in text:
             violations.append(
                 f"{filename}: Dogtag rollback must not delete barter state without proving current reference ownership"
@@ -118,6 +122,10 @@ for filename, required in contracts.items():
         if "if (loyaltyAdded) trader.Assort.LoyalLevelItems.Remove(id);" in text:
             violations.append(
                 f"{filename}: Dogtag loyalty rollback must not delete value-only metadata without reference-owned tuple proof"
+            )
+        if "if (loyaltyAdded && ownsItem && ownsBarter" in text:
+            violations.append(
+                f"{filename}: legacy partial tuple rollback is forbidden because drifted loyalty/barter metadata could be left dangling"
             )
         if "templateTable.Items.ContainsKey(templateId)" in text:
             violations.append(
@@ -131,4 +139,4 @@ for filename, required in contracts.items():
 if violations:
     raise SystemExit("B&A&HB offer-template boundary gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-template boundary gate: OK (all five Ragman products prove exact registered templates before assort mutation; Dogtag Case additionally transaction-pins the Ragman Assort/Items/BarterScheme/LoyalLevelItems wrapper chain and re-proves exact owned loyalty/barter/item tuple state immediately before each rollback mutation)")
+print("B&A&HB offer-template boundary gate: OK (all five Ragman products prove exact registered templates before assort mutation; Dogtag Case additionally transaction-pins the Ragman Assort/Items/BarterScheme/LoyalLevelItems wrapper chain and requires complete prefix tuple ownership before mutation-adjacent loyalty/barter/item rollback)")
