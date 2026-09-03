@@ -54,9 +54,9 @@ contracts = {
         "bool ownsItem = ownedItemIndex >= 0;",
         "bool ownsBarter = barterAdded",
         "if (loyaltyAdded && ownsItem && ownsBarter",
-        "if (!IsAssortWrapperIdentityCurrent()) throw;\n                loyalLevelItems.Remove(id);",
-        "if (!IsAssortWrapperIdentityCurrent()) throw;\n                barterScheme.Remove(id);",
-        "if (!IsAssortWrapperIdentityCurrent()) throw;\n                items.RemoveAt(ownedItemIndex);",
+        "if (!loyalLevelItems.TryGetValue(id, out var liveOwnedLoyalty) || liveOwnedLoyalty != LoyaltyLevel) throw;\n                loyalLevelItems.Remove(id);",
+        "if (!barterScheme.TryGetValue(id, out var liveOwnedBarter) || !ReferenceEquals(liveOwnedBarter, barter)) throw;\n                barterScheme.Remove(id);",
+        "if (ownedItemIndex < 0 || ownedItemIndex >= items.Count || !ReferenceEquals(items[ownedItemIndex], offer)) throw;\n                items.RemoveAt(ownedItemIndex);",
     ],
 }
 
@@ -131,4 +131,4 @@ for filename, required in contracts.items():
 if violations:
     raise SystemExit("B&A&HB offer-template boundary gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-template boundary gate: OK (all five Ragman products prove exact registered templates before assort mutation; Dogtag Case additionally transaction-pins the Ragman Assort/Items/BarterScheme/LoyalLevelItems wrapper chain and requires live exact-wrapper authority immediately before ownership-bounded rollback mutations)")
+print("B&A&HB offer-template boundary gate: OK (all five Ragman products prove exact registered templates before assort mutation; Dogtag Case additionally transaction-pins the Ragman Assort/Items/BarterScheme/LoyalLevelItems wrapper chain and re-proves exact owned loyalty/barter/item tuple state immediately before each rollback mutation)")
