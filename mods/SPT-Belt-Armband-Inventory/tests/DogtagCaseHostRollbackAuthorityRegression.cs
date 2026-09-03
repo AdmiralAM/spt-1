@@ -55,6 +55,9 @@ internal static class DogtagCaseHostRollbackAuthorityRegression
             throw new InvalidOperationException("Dogtag host rollback regression failed: a value-identical replacement host must not inherit exact-reference rollback authority.");
         if (!valueIdenticalReplacement.Contains(caseTpl))
             throw new InvalidOperationException("Dogtag host rollback regression failed: replacement-host rejection must not mutate the foreign/replacement object.");
+        if (!DogtagCaseHostContract.TryRollbackOwnedCaseAddition(replacementHost, replacementBaseline)
+            || replacementHost.Contains(caseTpl))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: rejected foreign-host rollback must not consume the real exact-host token.");
 
         var tamperedBaselineHost = new HashSet<MongoId>(vanilla);
         HashSet<MongoId> tamperedBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(tamperedBaselineHost);
