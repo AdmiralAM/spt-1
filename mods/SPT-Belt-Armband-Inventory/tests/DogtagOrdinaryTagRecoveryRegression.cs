@@ -12,7 +12,9 @@ internal static class DogtagOrdinaryTagRecoveryRegression
     {
         // Recovery ownership must remain template/tree based across every serialized
         // persistence surface. Canonical BEAR/USEC personal dogtags are deliberately
-        // present beside owned case roots in inventory, insurance and mail.
+        // present beside owned case roots in inventory, insurance, mail and direct
+        // service/build references. Only references into an owned Case tree may be
+        // removed; ordinary personal-tag references remain foreign/vanilla authority.
         JsonNode profile = JsonNode.Parse("""
         {
           "Inventory": {
@@ -34,13 +36,19 @@ internal static class DogtagOrdinaryTagRecoveryRegression
               { "_id": "mail-owned-case", "_tpl": "DOGTAG_CASE" },
               { "_id": "mail-owned-child", "_tpl": "59f32bb586f774757e1e8442", "parentId": "mail-owned-case", "slotId": "main" }
             ]
-          }
+          },
+          "Services": [
+            { "_id": "bear-personal-ref", "itemId": "bear-personal", "kind": "foreign-build-reference" },
+            { "_id": "usec-personal-ref", "itemId": "usec-personal", "kind": "foreign-insurance-reference" },
+            { "_id": "owned-case-ref", "itemId": "owned-case", "kind": "owned-tree-reference" },
+            { "_id": "owned-child-ref", "itemId": "owned-case-child", "kind": "owned-tree-reference" }
+          ]
         }
         """.Replace("DOGTAG_CASE", RuntimeIdentity.DogtagCaseItemId, StringComparison.Ordinal))!;
 
         ProfileCleanupPolicy.CleanupResult cleanup = ProfileCleanupPolicy.Clean(profile);
-        if (cleanup.RemovedItems != 3 || cleanup.RemovedReferences != 3)
-            throw new InvalidOperationException("Dogtag ordinary-tag recovery regression failed: owned case roots/children were not removed at the exact expected boundary.");
+        if (cleanup.RemovedItems != 3 || cleanup.RemovedReferences != 5)
+            throw new InvalidOperationException("Dogtag ordinary-tag recovery regression failed: owned case roots/children/references were not removed at the exact expected boundary.");
 
         string remaining = profile.ToJsonString();
         string[] preserved =
@@ -48,10 +56,12 @@ internal static class DogtagOrdinaryTagRecoveryRegression
             "bear-personal",
             "usec-personal",
             "insured-bear-personal",
-            "mail-usec-personal"
+            "mail-usec-personal",
+            "bear-personal-ref",
+            "usec-personal-ref"
         };
         if (preserved.Any(id => !remaining.Contains(id, StringComparison.Ordinal)))
-            throw new InvalidOperationException("Dogtag ordinary-tag recovery regression failed: a canonical personal dogtag outside an owned case tree was removed.");
+            throw new InvalidOperationException("Dogtag ordinary-tag recovery regression failed: a canonical personal dogtag or its foreign/vanilla direct reference was removed.");
 
         string[] removed =
         {
@@ -60,10 +70,16 @@ internal static class DogtagOrdinaryTagRecoveryRegression
             "insured-owned-case",
             "insured-owned-child",
             "mail-owned-case",
-            "mail-owned-child"
+            "mail-owned-child",
+            "owned-case-ref",
+            "owned-child-ref"
         };
         if (removed.Any(id => remaining.Contains(id, StringComparison.Ordinal)))
-            throw new InvalidOperationException("Dogtag ordinary-tag recovery regression failed: owned case tree data survived cleanup.");
+            throw new InvalidOperationException("Dogtag ordinary-tag recovery regression failed: owned case tree data or its exact direct reference survived cleanup.");
+
+        if (!remaining.Contains("\"itemId\":\"bear-personal\"", StringComparison.Ordinal)
+            || !remaining.Contains("\"itemId\":\"usec-personal\"", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag ordinary-tag recovery regression failed: personal-dogtag service/build references must remain outside B&A&HB cleanup authority.");
 
         if (!remaining.Contains(DogtagCaseHostContract.BearDogtagTemplateId, StringComparison.Ordinal)
             || !remaining.Contains(DogtagCaseHostContract.UsecDogtagTemplateId, StringComparison.Ordinal))
