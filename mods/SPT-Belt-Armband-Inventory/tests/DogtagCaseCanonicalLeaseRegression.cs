@@ -70,22 +70,24 @@ internal static class DogtagCaseCanonicalLeaseRegression
         int consumeMethod = lease.IndexOf("internal static Lease Consume(TemplateTable templates, TemplateItem source)", StringComparison.Ordinal);
         int consumeLock = consumeMethod < 0 ? -1 : lease.IndexOf("lock (Sync)", consumeMethod, StringComparison.Ordinal);
         int consumeLease = consumeLock < 0 ? -1 : lease.IndexOf("Lease lease = pending", consumeLock, StringComparison.Ordinal);
-        int consumeProof = consumeLease < 0 ? -1 : lease.IndexOf("lease.RequireCurrent(templates, source);", consumeLease, StringComparison.Ordinal);
-        int consumeClear = consumeProof < 0 ? -1 : lease.IndexOf("pending = null;", consumeProof, StringComparison.Ordinal);
-        int consumeReturn = consumeClear < 0 ? -1 : lease.IndexOf("return lease;", consumeClear, StringComparison.Ordinal);
+        int consumeClear = consumeLease < 0 ? -1 : lease.IndexOf("pending = null;", consumeLease, StringComparison.Ordinal);
+        int consumeProof = consumeClear < 0 ? -1 : lease.IndexOf("lease.RequireCurrent(templates, source);", consumeClear, StringComparison.Ordinal);
+        int consumeReturn = consumeProof < 0 ? -1 : lease.IndexOf("return lease;", consumeProof, StringComparison.Ordinal);
         int cancelMethod = lease.IndexOf("internal static void CancelPending(TemplateItem source)", StringComparison.Ordinal);
         int cancelLock = cancelMethod < 0 ? -1 : lease.IndexOf("lock (Sync)", cancelMethod, StringComparison.Ordinal);
         int cancelLease = cancelLock < 0 ? -1 : lease.IndexOf("Lease lease = pending", cancelLock, StringComparison.Ordinal);
         int cancelIdentity = cancelLease < 0 ? -1 : lease.IndexOf("ReferenceEquals(lease.Source, source)", cancelLease, StringComparison.Ordinal);
         int cancelClear = cancelIdentity < 0 ? -1 : lease.IndexOf("pending = null;", cancelIdentity, StringComparison.Ordinal);
         if (publishMethod < 0 || captureNext < 0 || publishLock < 0 || duplicateGuard < 0 || pendingAssignment < 0
-            || consumeMethod < 0 || consumeLock < 0 || consumeLease < 0 || consumeProof < 0 || consumeClear < 0 || consumeReturn < 0
+            || consumeMethod < 0 || consumeLock < 0 || consumeLease < 0 || consumeClear < 0 || consumeProof < 0 || consumeReturn < 0
             || cancelMethod < 0 || cancelLock < 0 || cancelLease < 0 || cancelIdentity < 0 || cancelClear < 0)
             throw new InvalidOperationException("Dogtag canonical lease regression failed: authority publication/consumption/cancellation shape is incomplete.");
+        if (!(consumeLease < consumeClear && consumeClear < consumeProof && consumeProof < consumeReturn))
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: Consume must burn pending authority before validating current state so drift/restore ABA cannot revive a challenged lease.");
         if (lease.IndexOf("pending = next;", pendingAssignment + 1, StringComparison.Ordinal) >= 0)
             throw new InvalidOperationException("Dogtag canonical lease regression failed: canonical authority must have exactly one publication assignment.");
         if (lease.IndexOf("pending = null;", cancelClear + 1, StringComparison.Ordinal) >= 0)
-            throw new InvalidOperationException("Dogtag canonical lease regression failed: canonical authority must not be cleared outside successful Consume or exact-source cancellation rollback.");
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: canonical authority must not be cleared outside monotonic Consume or exact-source cancellation rollback.");
 
         int sourceValidation = item.IndexOf("source filters are empty, admit a B&A&HB-owned product", StringComparison.Ordinal);
         int consume = item.IndexOf("DogtagCaseCanonicalIdentityLease.Consume(templateTable, source);", StringComparison.Ordinal);
