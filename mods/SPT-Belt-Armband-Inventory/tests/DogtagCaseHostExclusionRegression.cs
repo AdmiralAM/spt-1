@@ -54,8 +54,18 @@ namespace SPTBeltArmbandInventory.Tests
             if (fieldOnly == null || !new HashSet<MongoId>(fieldOnly).SetEquals(new[] { foreign }))
                 throw new InvalidOperationException("Dogtag host exclusion regression failed: unique public ExcludedFilter field was not read exactly");
 
+            var privateProperty = (IEnumerable<MongoId>?)reader.Invoke(null, new object[] { new PrivatePropertyExcluded(foreign) });
+            if (privateProperty == null || !new HashSet<MongoId>(privateProperty).SetEquals(new[] { foreign }))
+                throw new InvalidOperationException("Dogtag host exclusion regression failed: unique non-public ExcludedFilter property was silently treated as absent");
+
+            var privateField = (IEnumerable<MongoId>?)reader.Invoke(null, new object[] { new PrivateFieldExcluded(foreign) });
+            if (privateField == null || !new HashSet<MongoId>(privateField).SetEquals(new[] { foreign }))
+                throw new InvalidOperationException("Dogtag host exclusion regression failed: unique non-public ExcludedFilter field was silently treated as absent");
+
             RequireReflectionThrows(reader, new AmbiguousExcluded(foreign),
                 "property/field hiding collision must fail closed instead of preferring one future ExcludedFilter authority");
+            RequireReflectionThrows(reader, new PrivateAmbiguousExcluded(foreign),
+                "non-public hierarchy collision must fail closed instead of preferring one future ExcludedFilter authority");
             RequireReflectionThrows(reader, new UnsupportedExcluded(),
                 "non-MongoId future ExcludedFilter enumerable must fail closed");
         }
@@ -100,6 +110,18 @@ namespace SPTBeltArmbandInventory.Tests
             internal FieldOnlyExcluded(MongoId id) => ExcludedFilter = new[] { id };
         }
 
+        private sealed class PrivatePropertyExcluded
+        {
+            private IEnumerable<MongoId> ExcludedFilter { get; }
+            internal PrivatePropertyExcluded(MongoId id) => ExcludedFilter = new[] { id };
+        }
+
+        private sealed class PrivateFieldExcluded
+        {
+            private IEnumerable<MongoId> ExcludedFilter;
+            internal PrivateFieldExcluded(MongoId id) => ExcludedFilter = new[] { id };
+        }
+
         private class AmbiguousExcludedBase
         {
             public IEnumerable<MongoId> ExcludedFilter;
@@ -110,6 +132,18 @@ namespace SPTBeltArmbandInventory.Tests
         {
             public new IEnumerable<MongoId> ExcludedFilter { get; }
             internal AmbiguousExcluded(MongoId id) : base(id) => ExcludedFilter = new[] { id };
+        }
+
+        private class PrivateAmbiguousExcludedBase
+        {
+            private IEnumerable<MongoId> ExcludedFilter;
+            protected PrivateAmbiguousExcludedBase(MongoId id) => ExcludedFilter = new[] { id };
+        }
+
+        private sealed class PrivateAmbiguousExcluded : PrivateAmbiguousExcludedBase
+        {
+            private new IEnumerable<MongoId> ExcludedFilter { get; }
+            internal PrivateAmbiguousExcluded(MongoId id) : base(id) => ExcludedFilter = new[] { id };
         }
 
         private sealed class UnsupportedExcluded
