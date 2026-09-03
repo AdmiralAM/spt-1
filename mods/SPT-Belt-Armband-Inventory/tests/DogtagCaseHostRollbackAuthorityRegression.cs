@@ -90,18 +90,28 @@ internal static class DogtagCaseHostRollbackAuthorityRegression
         if (root == null)
             throw new InvalidOperationException("Dogtag host rollback regression failed: module root could not be resolved.");
         string source = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseItem.cs"));
-        int commit = source.IndexOf("private void CommitDogtagSlotExposure", StringComparison.Ordinal);
-        int next = source.IndexOf("public static void RequireCanonicalRegisteredTemplate", commit, StringComparison.Ordinal);
+        int commit = source.IndexOf("private DogtagHostCommitReceipt CommitDogtagSlotExposure", StringComparison.Ordinal);
+        int next = commit < 0 ? -1 : source.IndexOf("public static void RequireCanonicalRegisteredTemplate", commit, StringComparison.Ordinal);
         if (commit < 0 || next <= commit)
-            throw new InvalidOperationException("Dogtag host rollback regression failed: commit boundary is missing.");
+            throw new InvalidOperationException("Dogtag host rollback regression failed: receipt-returning commit boundary is missing.");
         string body = source.Substring(commit, next - commit);
         Require(body, "CaptureRollbackBaseline(filter)", "owned add must capture a detached pre-commit host baseline");
-        Require(body, "TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", "exception rollback must prove exact owned authority before mutation");
+        Require(body, "TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", "in-transaction exception rollback must prove exact owned authority before mutation");
         Require(body, "TryAbandonRollbackAuthority(filter, rollbackBaseline)", "non-owned/failed add must explicitly abandon exact pre-add metadata authority");
         Require(body, "bool authorityReleased = addedHere", "exception cleanup must select rollback versus metadata-only abandon by exact ownership");
+        Require(body, "return new DogtagHostCommitReceipt(this, boundary, addedHere ? rollbackBaseline : null);", "successful owned add must hand exact rollback authority to the post-commit receipt instead of consuming it early");
         Require(body, "ambiguous/foreign current host state is not blindly rewritten", "ambiguous rollback must remain explicitly fail-closed");
         if (body.Contains("filter.Remove(DogtagCaseTpl);", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag host rollback regression failed: unconditional value-only removal must not return.");
+
+        int receiptStart = source.IndexOf("private sealed class DogtagHostCommitReceipt", StringComparison.Ordinal);
+        int receiptEnd = receiptStart < 0 ? -1 : source.IndexOf("public Task OnLoadAsync", receiptStart, StringComparison.Ordinal);
+        if (receiptStart < 0 || receiptEnd <= receiptStart)
+            throw new InvalidOperationException("Dogtag host rollback regression failed: post-commit receipt boundary is missing.");
+        string receipt = source.Substring(receiptStart, receiptEnd - receiptStart);
+        Require(receipt, "TryAbandonRollbackAuthority(boundary.Filter, rollbackBaseline)", "successful final publication proof must consume exact owned rollback metadata without removing the Case");
+        Require(receipt, "TryRollbackOwnedCaseAddition(boundary.Filter, rollbackBaseline)", "failed final publication proof must retain exact-owned rollback capability");
+        Require(receipt, "owner.RequireLiveDogtagHostIdentity(boundary);", "post-commit accept/rollback must remain bound to the exact captured live host identity");
     }
 
     private static string? FindModuleRoot()
