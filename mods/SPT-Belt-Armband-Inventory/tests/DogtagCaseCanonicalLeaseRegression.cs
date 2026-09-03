@@ -17,8 +17,15 @@ internal static class DogtagCaseCanonicalLeaseRegression
 
         int preflightIdentity = preflight.IndexOf("RequireCanonicalIdentity(source, identity);", StringComparison.Ordinal);
         int publish = preflight.IndexOf("DogtagCaseCanonicalIdentityLease.Publish(source);", StringComparison.Ordinal);
-        if (preflightIdentity < 0 || publish < 0 || publish <= preflightIdentity)
-            throw new InvalidOperationException("Dogtag canonical lease regression failed: Preload +2 must publish the lease only after its final exact canonical identity proof.");
+        int postPublishIdentity = publish < 0 ? -1 : preflight.IndexOf("RequireCanonicalIdentity(source, identity);", publish + 1, StringComparison.Ordinal);
+        if (preflightIdentity < 0 || publish < 0 || postPublishIdentity < 0
+            || !(preflightIdentity < publish && publish < postPublishIdentity))
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: Preload +2 must bracket lease publication with exact canonical identity/content proofs.");
+        if (!preflight.Contains("new HashSet<MongoId>(x.Filter!)", StringComparison.Ordinal)
+            || !preflight.Contains("new HashSet<MongoId>(x.ExcludedFilter)", StringComparison.Ordinal)
+            || !preflight.Contains("included.SetEquals(expected.IncludedValues[i])", StringComparison.Ordinal)
+            || !preflight.Contains("excluded.SetEquals(expectedExcluded)", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: Preload +2 proof must pin detached include/exclude content across lease publication.");
 
         string[] requiredLeasePins =
         {
