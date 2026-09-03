@@ -50,9 +50,10 @@ internal static class FastAccessArrayInstallRollbackRegression
         string source = File.ReadAllText(Path.Combine(
             AppContext.BaseDirectory, "..", "..", "..", "..", "src", "FastAccessSlotPatches.cs"));
         if (!source.Contains("arrayRollbackUnsafe", StringComparison.Ordinal)
-            || !source.Contains("if (arrayRollbackUnsafe)", StringComparison.Ordinal)
+            || !source.Contains("arrayContentAuthorityUnsafe", StringComparison.Ordinal)
+            || !source.Contains("if (arrayRollbackUnsafe || arrayContentAuthorityUnsafe)", StringComparison.Ordinal)
             || !source.Contains("if (!rollbackProven) arrayRollbackUnsafe = true;", StringComparison.Ordinal))
-            throw new InvalidOperationException("fast-access array rollback regression failed: terminal reinstall fence is missing from production wiring");
+            throw new InvalidOperationException("fast-access array rollback regression failed: aggregate terminal reinstall fence is missing from production wiring");
 
         if (!source.Contains("if (!arrayRollbackUnsafe)", StringComparison.Ordinal)
             || !source.Contains("RestoreOwnedWrite(bindAvailableSlotsField", StringComparison.Ordinal)
