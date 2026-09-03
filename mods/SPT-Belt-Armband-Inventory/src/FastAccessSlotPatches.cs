@@ -37,6 +37,41 @@ namespace SPTBeltArmbandInventory
             return installedValue != null && ReferenceEquals(currentValue, installedValue);
         }
 
+        internal static bool TryRestoreOwnedReference(
+            bool wrote,
+            Func<object> readCurrent,
+            Action<object> writeOriginal,
+            object originalValue,
+            object installedValue,
+            out bool ownershipReleased)
+        {
+            ownershipReleased = !wrote;
+            if (!wrote) return true;
+            if (readCurrent == null || writeOriginal == null || originalValue == null || installedValue == null)
+                return false;
+
+            try
+            {
+                object current = readCurrent();
+                if (!ShouldRestoreReference(current, installedValue))
+                {
+                    ownershipReleased = true;
+                    return true;
+                }
+
+                writeOriginal(originalValue);
+                if (!ReferenceEquals(readCurrent(), originalValue))
+                    return false;
+
+                ownershipReleased = true;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         internal static bool ShouldPromoteReloadReachability(bool vanillaResult, bool isMagazine, bool hasFastAccessWearableAncestor)
         {
             return !vanillaResult && isMagazine && hasFastAccessWearableAncestor;
@@ -258,22 +293,11 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static bool HasExactExecutionContract(
-            MethodInfo getItemsInSlots,
-            object beltSlotsArgument,
-            Type itemType,
-            Type magazineType,
-            Type returnType,
-            Func<object, IEnumerable> getAllParentItems,
-            Func<object, string> readTemplateId)
+        static bool HasExactExecutionContract(MethodInfo getItemsInSlots, object beltSlotsArgument, Type itemType, Type magazineType, Type returnType,
+            Func<object, IEnumerable> getAllParentItems, Func<object, string> readTemplateId)
         {
-            return getItemsInSlots != null
-                && beltSlotsArgument != null
-                && itemType != null
-                && magazineType != null
-                && returnType != null
-                && getAllParentItems != null
-                && readTemplateId != null
+            return getItemsInSlots != null && beltSlotsArgument != null && itemType != null && magazineType != null && returnType != null
+                && getAllParentItems != null && readTemplateId != null
                 && ReferenceEquals(GetItemsInSlots, getItemsInSlots)
                 && ReferenceEquals(BeltSlotsArgument, beltSlotsArgument)
                 && ReferenceEquals(ItemType, itemType)
@@ -287,60 +311,40 @@ namespace SPTBeltArmbandInventory
         {
             try
             {
-                if (itemType == null || declaredReturn == null || getItems == null || beltArgument == null)
-                    return false;
-
+                if (itemType == null || declaredReturn == null || getItems == null || beltArgument == null) return false;
                 Type exactReturn = typeof(IEnumerable<>).MakeGenericType(itemType);
-                if (declaredReturn != exactReturn || getItems.ReturnType != exactReturn)
-                    return false;
-
+                if (declaredReturn != exactReturn || getItems.ReturnType != exactReturn) return false;
                 Type slotElementType = GetEnumerableElementType(beltArgument.GetType());
-                if (slotElementType == null)
-                    return false;
+                if (slotElementType == null) return false;
                 Type exactSlotEnumerable = typeof(IEnumerable<>).MakeGenericType(slotElementType);
                 ParameterInfo[] parameters = getItems.GetParameters();
-                if (parameters.Length != 1
-                    || parameters[0].ParameterType != exactSlotEnumerable
-                    || !exactSlotEnumerable.IsInstanceOfType(beltArgument))
-                    return false;
-
+                if (parameters.Length != 1 || parameters[0].ParameterType != exactSlotEnumerable || !exactSlotEnumerable.IsInstanceOfType(beltArgument)) return false;
                 return HasExactBeltSlotsArgument(beltArgument);
             }
-            catch
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
         static bool HasExactBeltSlotsArgument(object beltArgument)
         {
             try
             {
-                if (!(beltArgument is IEnumerable values))
-                    return false;
-
+                if (!(beltArgument is IEnumerable values)) return false;
                 int count = 0;
                 foreach (object value in values)
                 {
-                    if (value == null || Convert.ToInt32(value) != RuntimeIdentity.DedicatedBeltEquipmentSlotValue)
-                        return false;
+                    if (value == null || Convert.ToInt32(value) != RuntimeIdentity.DedicatedBeltEquipmentSlotValue) return false;
                     count++;
-                    if (count > 1)
-                        return false;
+                    if (count > 1) return false;
                 }
                 return count == 1;
             }
-            catch
-            {
-                return false;
-            }
+            catch { return false; }
         }
 
         static Type GetEnumerableElementType(Type runtimeType)
         {
             if (runtimeType == null) return null;
             if (runtimeType.IsArray) return runtimeType.GetElementType();
-
             Type selected = null;
             Type[] interfaces = runtimeType.GetInterfaces();
             for (int i = 0; i < interfaces.Length; i++)
@@ -356,23 +360,18 @@ namespace SPTBeltArmbandInventory
 
         static bool ContainsReference(List<object> items, object candidate)
         {
-            for (int i = 0; i < items.Count; i++)
-                if (ReferenceEquals(items[i], candidate)) return true;
+            for (int i = 0; i < items.Count; i++) if (ReferenceEquals(items[i], candidate)) return true;
             return false;
         }
 
-        static bool HasExactMagazineBeltAncestor(
-            object item,
-            Func<object, IEnumerable> getAllParentItems,
-            Func<object, string> readTemplateId)
+        static bool HasExactMagazineBeltAncestor(object item, Func<object, IEnumerable> getAllParentItems, Func<object, string> readTemplateId)
         {
             IEnumerable parents = getAllParentItems(item);
             if (parents == null) return false;
             foreach (object parent in parents)
             {
                 string templateId = parent == null ? null : readTemplateId(parent);
-                if (string.Equals(templateId, RuntimeIdentity.DedicatedMagazineBeltItemId, StringComparison.Ordinal))
-                    return true;
+                if (string.Equals(templateId, RuntimeIdentity.DedicatedMagazineBeltItemId, StringComparison.Ordinal)) return true;
             }
             return false;
         }
@@ -398,8 +397,7 @@ namespace SPTBeltArmbandInventory
 
         static Exception Unwrap(Exception exception)
         {
-            while (exception is TargetInvocationException invocation && invocation.InnerException != null)
-                exception = invocation.InnerException;
+            while (exception is TargetInvocationException invocation && invocation.InnerException != null) exception = invocation.InnerException;
             return exception;
         }
     }
@@ -427,6 +425,7 @@ namespace SPTBeltArmbandInventory
         bool reloadCandidateBridgeInstalled;
         bool reachabilityRollbackUnsafe;
         bool candidateBridgeRollbackUnsafe;
+        bool arrayRollbackUnsafe;
         bool installed;
 
         internal FastAccessSlotPatches(Action<string> logInfo, Action<string> logWarning)
@@ -439,6 +438,9 @@ namespace SPTBeltArmbandInventory
         {
             try
             {
+                if (arrayRollbackUnsafe)
+                    return Fail("B&A&HB fast-access slot arrays are terminally disabled for this session because a prior exact-owned rollback could not be proven.");
+
                 Type inventoryType = ReflectionTools.FindType("EFT.InventoryLogic.Inventory");
                 Type slotEnumType = ReflectionTools.FindType("EFT.InventoryLogic.EquipmentSlot");
                 if (inventoryType == null || slotEnumType == null)
@@ -467,19 +469,17 @@ namespace SPTBeltArmbandInventory
                 bool reachability = TryInstallReloadReachability();
                 bool candidateBridge = reachability && TryInstallReloadCandidateBridge(inventoryType, slotEnumType, dedicatedBelt);
                 if (reachability && candidateBridge)
-                    ReloadDiagnosticLog.TryInfo(logInfo,
-                        "B&A&HB fast-access installed: vanilla ArmBand/Belt arrays extended; reload reachability is exact; Reload/QuickReload preserve vanilla candidates and append exact Magazine Belt descendants as scoped fallback.");
+                    ReloadDiagnosticLog.TryInfo(logInfo, "B&A&HB fast-access installed: vanilla ArmBand/Belt arrays extended; reload reachability is exact; Reload/QuickReload preserve vanilla candidates and append exact Magazine Belt descendants as scoped fallback.");
                 else if (reachability)
-                    ReloadDiagnosticLog.TryWarning(logWarning,
-                        "B&A&HB fast-access arrays/reachability remain active, but the atomic Reload/QuickReload candidate bridge could not bind; Magazine Armband remains reachable and Magazine Belt remains reserve-only for this session.");
+                    ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB fast-access arrays/reachability remain active, but the atomic Reload/QuickReload candidate bridge could not bind; Magazine Armband remains reachable and Magazine Belt remains reserve-only for this session.");
                 else
-                    ReloadDiagnosticLog.TryWarning(logWarning,
-                        "B&A&HB fast-access slot arrays remain active, but exact reload reachability could not bind; wearable magazines remain reserve-only for this session.");
+                    ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB fast-access slot arrays remain active, but exact reload reachability could not bind; wearable magazines remain reserve-only for this session.");
                 return true;
             }
             catch (Exception exception)
             {
-                RestoreOwnedWrites();
+                if (!RestoreOwnedWrites())
+                    ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB exact-owned fast-access array rollback could not be proven; array reinstall is terminally blocked for this session.");
                 UnpatchReload();
                 ClearState();
                 return Fail("Wearable fast-access slot compatibility installation failed safely: " + Unwrap(exception).Message);
@@ -492,37 +492,28 @@ namespace SPTBeltArmbandInventory
             {
                 if (reachabilityRollbackUnsafe)
                 {
-                    ReloadDiagnosticLog.TryWarning(logWarning,
-                        "B&A&HB reload reachability is terminally disabled for this session because a prior Harmony rollback could not be proven.");
+                    ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB reload reachability is terminally disabled for this session because a prior Harmony rollback could not be proven.");
                     return false;
                 }
-
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
                 Type controllerType = ReflectionTools.FindType("EFT.InventoryLogic.InventoryController");
                 Type itemType = ReflectionTools.FindType("EFT.InventoryLogic.Item");
                 Type magazineType = ReflectionTools.FindType("EFT.InventoryLogic.Magazine");
-                if (harmonyType == null || harmonyMethodType == null || controllerType == null || itemType == null || magazineType == null)
-                    return false;
-
+                if (harmonyType == null || harmonyMethodType == null || controllerType == null || itemType == null || magazineType == null) return false;
                 MethodInfo reachable = ReflectionTools.FindInstanceMethod(controllerType, "IsAtReachablePlace", typeof(bool), itemType);
                 MethodInfo parentsMethod = FindGetAllParentItems(itemType);
                 MemberInfo templateIdMember = FindReadableMember(itemType, "StringTemplateId", typeof(string));
                 ConstructorInfo harmonyMethodCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 reachabilityUnpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
-                if (reachable == null || parentsMethod == null || templateIdMember == null
-                    || harmonyMethodCtor == null || patchMethod == null || reachabilityUnpatchSelf == null)
-                    return false;
-
+                if (reachable == null || parentsMethod == null || templateIdMember == null || harmonyMethodCtor == null || patchMethod == null || reachabilityUnpatchSelf == null) return false;
                 FastAccessReloadRuntime.ItemType = itemType;
                 FastAccessReloadRuntime.MagazineType = magazineType;
                 FastAccessReloadRuntime.GetAllParentItems = BuildParentEnumerator(parentsMethod, itemType);
                 FastAccessReloadRuntime.ReadTemplateId = BuildStringReader(itemType, templateIdMember);
                 FastAccessReloadRuntime.LogWarning = logWarning;
-                if (FastAccessReloadRuntime.GetAllParentItems == null || FastAccessReloadRuntime.ReadTemplateId == null)
-                    return false;
-
+                if (FastAccessReloadRuntime.GetAllParentItems == null || FastAccessReloadRuntime.ReadTemplateId == null) return false;
                 reachabilityHarmony = Activator.CreateInstance(harmonyType, new object[] { ReachabilityHarmonyId });
                 if (reachabilityHarmony == null) return false;
                 MethodInfo postfixMethod = BuildReachabilityPostfix(itemType);
@@ -533,11 +524,8 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                ReloadDiagnosticLog.TryWarning(logWarning,
-                    "B&A&HB reload reachability discovery failed closed; partial Harmony owner rollback is required before any reinstall: " + Unwrap(exception).Message);
-                if (!UnpatchReachability())
-                    ReloadDiagnosticLog.TryWarning(logWarning,
-                        "B&A&HB reload reachability rollback could not be proven; promotion is disabled and reinstall is terminally blocked for this session.");
+                ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB reload reachability discovery failed closed; partial Harmony owner rollback is required before any reinstall: " + Unwrap(exception).Message);
+                if (!UnpatchReachability()) ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB reload reachability rollback could not be proven; promotion is disabled and reinstall is terminally blocked for this session.");
                 return false;
             }
         }
@@ -548,43 +536,29 @@ namespace SPTBeltArmbandInventory
             {
                 if (candidateBridgeRollbackUnsafe)
                 {
-                    ReloadDiagnosticLog.TryWarning(logWarning,
-                        "B&A&HB scoped reload candidate bridge is terminally disabled for this session because a prior Harmony rollback could not be proven.");
+                    ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB scoped reload candidate bridge is terminally disabled for this session because a prior Harmony rollback could not be proven.");
                     return false;
                 }
-                if (!reloadPatchInstalled || FastAccessReloadRuntime.ItemType == null || FastAccessReloadRuntime.MagazineType == null
-                    || FastAccessReloadRuntime.GetAllParentItems == null || FastAccessReloadRuntime.ReadTemplateId == null)
-                    return false;
-
+                if (!reloadPatchInstalled || FastAccessReloadRuntime.ItemType == null || FastAccessReloadRuntime.MagazineType == null || FastAccessReloadRuntime.GetAllParentItems == null || FastAccessReloadRuntime.ReadTemplateId == null) return false;
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
                 Type translatorType = ReflectionTools.FindType("EFT.FirearmHandsInputTranslator");
                 if (harmonyType == null || harmonyMethodType == null || translatorType == null) return false;
-
                 Type itemType = FastAccessReloadRuntime.ItemType;
                 if (!itemType.IsAssignableFrom(FastAccessReloadRuntime.MagazineType)) return false;
-
                 MethodInfo reload = FindExactZeroArgVoidMethod(translatorType, "Reload");
                 MethodInfo quickReload = FindExactZeroArgVoidMethod(translatorType, "QuickReload");
                 MethodInfo getItemsInSlots = FindGetItemsInSlots(inventoryType, slotEnumType, itemType);
                 ConstructorInfo harmonyMethodCtor = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                 MethodInfo patchMethod = FindPatchMethod(harmonyType, harmonyMethodType);
                 candidateBridgeUnpatchSelf = FindZeroArgInstanceMethod(harmonyType, "UnpatchSelf");
-                if (reload == null || quickReload == null || getItemsInSlots == null || harmonyMethodCtor == null
-                    || patchMethod == null || candidateBridgeUnpatchSelf == null)
-                    return false;
-
+                if (reload == null || quickReload == null || getItemsInSlots == null || harmonyMethodCtor == null || patchMethod == null || candidateBridgeUnpatchSelf == null) return false;
                 ParameterInfo[] getItemsParameters = getItemsInSlots.GetParameters();
                 Type itemEnumerableType = typeof(IEnumerable<>).MakeGenericType(itemType);
                 Type slotEnumerableType = typeof(IEnumerable<>).MakeGenericType(slotEnumType);
-                if (getItemsParameters.Length != 1
-                    || getItemsInSlots.ReturnType != itemEnumerableType
-                    || getItemsParameters[0].ParameterType != slotEnumerableType)
-                    return false;
+                if (getItemsParameters.Length != 1 || getItemsInSlots.ReturnType != itemEnumerableType || getItemsParameters[0].ParameterType != slotEnumerableType) return false;
                 object beltSlotsArgument = CreateSingleSlotArgument(getItemsParameters[0].ParameterType, slotEnumType, dedicatedBelt);
-                if (beltSlotsArgument == null)
-                    return false;
-
+                if (beltSlotsArgument == null) return false;
                 ReloadCandidateBridgeRuntime.GetItemsInSlots = getItemsInSlots;
                 ReloadCandidateBridgeRuntime.BeltSlotsArgument = beltSlotsArgument;
                 ReloadCandidateBridgeRuntime.OriginalFastAccessSlots = originalFastAccessSlots;
@@ -597,14 +571,11 @@ namespace SPTBeltArmbandInventory
                 ReloadCandidateBridgeRuntime.GetAllParentItems = FastAccessReloadRuntime.GetAllParentItems;
                 ReloadCandidateBridgeRuntime.ReadTemplateId = FastAccessReloadRuntime.ReadTemplateId;
                 ReloadCandidateBridgeRuntime.LogWarning = logWarning;
-
                 candidateBridgeHarmony = Activator.CreateInstance(harmonyType, new object[] { CandidateBridgeHarmonyId });
                 if (candidateBridgeHarmony == null) return false;
-
                 object prefix = harmonyMethodCtor.Invoke(new object[] { BuildReloadScopePrefix() });
                 object finalizer = harmonyMethodCtor.Invoke(new object[] { BuildReloadScopeFinalizer() });
                 object candidatesPostfix = harmonyMethodCtor.Invoke(new object[] { BuildCandidatePostfix(inventoryType, getItemsParameters[0].ParameterType, getItemsInSlots.ReturnType) });
-
                 PatchNamed(candidateBridgeHarmony, patchMethod, harmonyMethodType, reload, "prefix", prefix);
                 PatchNamed(candidateBridgeHarmony, patchMethod, harmonyMethodType, reload, "finalizer", finalizer);
                 PatchNamed(candidateBridgeHarmony, patchMethod, harmonyMethodType, quickReload, "prefix", prefix);
@@ -615,11 +586,8 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                ReloadDiagnosticLog.TryWarning(logWarning,
-                    "B&A&HB scoped reload candidate discovery failed closed; partial Harmony owner rollback is required before any reinstall: " + Unwrap(exception).Message);
-                if (!UnpatchCandidateBridge())
-                    ReloadDiagnosticLog.TryWarning(logWarning,
-                        "B&A&HB scoped reload candidate bridge rollback could not be proven; candidate publication is disabled and reinstall is terminally blocked for this session.");
+                ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB scoped reload candidate discovery failed closed; partial Harmony owner rollback is required before any reinstall: " + Unwrap(exception).Message);
+                if (!UnpatchCandidateBridge()) ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB scoped reload candidate bridge rollback could not be proven; candidate publication is disabled and reinstall is terminally blocked for this session.");
                 return false;
             }
         }
@@ -648,21 +616,13 @@ namespace SPTBeltArmbandInventory
             for (int i = 0; i < methods.Length; i++)
             {
                 MethodInfo method = methods[i];
-                if (!string.Equals(method.Name, "GetItemsInSlots", StringComparison.Ordinal) || method.ContainsGenericParameters
-                    || method.ReturnType != itemEnumerableType) continue;
+                if (!string.Equals(method.Name, "GetItemsInSlots", StringComparison.Ordinal) || method.ContainsGenericParameters || method.ReturnType != itemEnumerableType) continue;
                 ParameterInfo[] parameters = method.GetParameters();
                 if (parameters.Length != 1 || parameters[0].ParameterType != slotEnumerableType) continue;
                 if (selected != null) return null;
                 selected = method;
             }
             return selected;
-        }
-
-        static bool CanCarrySlotValues(Type parameterType, Type slotEnumType)
-        {
-            if (parameterType.IsArray) return parameterType.GetElementType() == slotEnumType;
-            Type listType = typeof(List<>).MakeGenericType(slotEnumType);
-            return parameterType.IsAssignableFrom(listType);
         }
 
         static object CreateSingleSlotArgument(Type parameterType, Type slotEnumType, object slot)
@@ -673,7 +633,6 @@ namespace SPTBeltArmbandInventory
                 array.SetValue(slot, 0);
                 return array;
             }
-
             Type listType = typeof(List<>).MakeGenericType(slotEnumType);
             if (!parameterType.IsAssignableFrom(listType)) return null;
             object list = Activator.CreateInstance(listType);
@@ -703,12 +662,7 @@ namespace SPTBeltArmbandInventory
 
         static MethodInfo BuildCandidatePostfix(Type inventoryType, Type slotsParameterType, Type returnType)
         {
-            DynamicMethod dynamic = new DynamicMethod(
-                "BAndHBReloadCandidatePostfix",
-                typeof(void),
-                new[] { inventoryType, slotsParameterType, returnType.MakeByRefType() },
-                typeof(FastAccessSlotPatches),
-                true);
+            DynamicMethod dynamic = new DynamicMethod("BAndHBReloadCandidatePostfix", typeof(void), new[] { inventoryType, slotsParameterType, returnType.MakeByRefType() }, typeof(FastAccessSlotPatches), true);
             dynamic.DefineParameter(1, ParameterAttributes.None, "__instance");
             dynamic.DefineParameter(2, ParameterAttributes.None, "__0");
             dynamic.DefineParameter(3, ParameterAttributes.Out, "__result");
@@ -769,12 +723,10 @@ namespace SPTBeltArmbandInventory
                 for (int i = 0; i < properties.Length; i++)
                 {
                     PropertyInfo property = properties[i];
-                    if (!string.Equals(property.Name, name, StringComparison.Ordinal) || property.GetIndexParameters().Length != 0
-                        || property.GetGetMethod(true) == null || property.PropertyType != expectedType) continue;
+                    if (!string.Equals(property.Name, name, StringComparison.Ordinal) || property.GetIndexParameters().Length != 0 || property.GetGetMethod(true) == null || property.PropertyType != expectedType) continue;
                     matches++;
                     if (selected == null) selected = property;
                 }
-
                 FieldInfo[] fields;
                 try { fields = current.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly); }
                 catch { fields = Array.Empty<FieldInfo>(); }
@@ -833,12 +785,7 @@ namespace SPTBeltArmbandInventory
 
         static MethodInfo BuildReachabilityPostfix(Type itemType)
         {
-            DynamicMethod dynamic = new DynamicMethod(
-                "BAndHBReloadReachabilityPostfix",
-                typeof(void),
-                new[] { itemType, typeof(bool).MakeByRefType() },
-                typeof(FastAccessSlotPatches),
-                true);
+            DynamicMethod dynamic = new DynamicMethod("BAndHBReloadReachabilityPostfix", typeof(void), new[] { itemType, typeof(bool).MakeByRefType() }, typeof(FastAccessSlotPatches), true);
             dynamic.DefineParameter(1, ParameterAttributes.None, "__0");
             dynamic.DefineParameter(2, ParameterAttributes.Out, "__result");
             ILGenerator il = dynamic.GetILGenerator();
@@ -868,29 +815,14 @@ namespace SPTBeltArmbandInventory
             if (method == null || harmonyMethodType == null || !string.Equals(method.Name, "Patch", StringComparison.Ordinal)) return false;
             ParameterInfo[] parameters = method.GetParameters();
             if (parameters.Length < 4 || parameters[0].ParameterType != typeof(MethodBase)) return false;
-
-            bool prefix = false;
-            bool postfix = false;
-            bool finalizer = false;
+            bool prefix = false, postfix = false, finalizer = false;
             for (int i = 1; i < parameters.Length; i++)
             {
                 ParameterInfo parameter = parameters[i];
                 if (parameter.ParameterType != harmonyMethodType) continue;
-                if (string.Equals(parameter.Name, "prefix", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (prefix) return false;
-                    prefix = true;
-                }
-                else if (string.Equals(parameter.Name, "postfix", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (postfix) return false;
-                    postfix = true;
-                }
-                else if (string.Equals(parameter.Name, "finalizer", StringComparison.OrdinalIgnoreCase))
-                {
-                    if (finalizer) return false;
-                    finalizer = true;
-                }
+                if (string.Equals(parameter.Name, "prefix", StringComparison.OrdinalIgnoreCase)) { if (prefix) return false; prefix = true; }
+                else if (string.Equals(parameter.Name, "postfix", StringComparison.OrdinalIgnoreCase)) { if (postfix) return false; postfix = true; }
+                else if (string.Equals(parameter.Name, "finalizer", StringComparison.OrdinalIgnoreCase)) { if (finalizer) return false; finalizer = true; }
             }
             return prefix && postfix && finalizer;
         }
@@ -943,7 +875,6 @@ namespace SPTBeltArmbandInventory
                 for (int i = 0; i < source.Length; i++) if (Equals(source.GetValue(i), additions[a])) { exists = true; break; }
                 if (!exists) unique++;
             }
-
             Array result = Array.CreateInstance(slotEnumType, source.Length + unique);
             Array.Copy(source, result, source.Length);
             int write = source.Length;
@@ -956,53 +887,43 @@ namespace SPTBeltArmbandInventory
             return result;
         }
 
-        void RestoreOwnedWrites()
+        bool RestoreOwnedWrite(FieldInfo field, object original, object installedValue, ref bool wrote)
         {
-            try
-            {
-                if (wroteBindAvailableSlots && bindAvailableSlotsField != null && originalBindAvailableSlots != null
-                    && FastAccessSlotPolicy.ShouldRestoreReference(bindAvailableSlotsField.GetValue(null), installedBindAvailableSlots))
-                    bindAvailableSlotsField.SetValue(null, originalBindAvailableSlots);
-            }
-            catch { }
+            bool released;
+            bool proven = FastAccessSlotPolicy.TryRestoreOwnedReference(
+                wrote,
+                field == null ? (Func<object>)null : () => field.GetValue(null),
+                field == null ? (Action<object>)null : value => field.SetValue(null, value),
+                original,
+                installedValue,
+                out released);
+            if (released) wrote = false;
+            return proven;
+        }
 
-            try
-            {
-                if (wroteFastAccessSlots && fastAccessSlotsField != null && originalFastAccessSlots != null
-                    && FastAccessSlotPolicy.ShouldRestoreReference(fastAccessSlotsField.GetValue(null), installedFastAccessSlots))
-                    fastAccessSlotsField.SetValue(null, originalFastAccessSlots);
-            }
-            catch { }
+        bool RestoreOwnedWrites()
+        {
+            bool bindProven = RestoreOwnedWrite(bindAvailableSlotsField, originalBindAvailableSlots, installedBindAvailableSlots, ref wroteBindAvailableSlots);
+            bool fastProven = RestoreOwnedWrite(fastAccessSlotsField, originalFastAccessSlots, installedFastAccessSlots, ref wroteFastAccessSlots);
+            bool rollbackProven = bindProven && fastProven;
+            if (!rollbackProven) arrayRollbackUnsafe = true;
+            return rollbackProven;
         }
 
         static bool TryRollbackCandidateBridgeOwner(object owner, MethodInfo unpatchSelf)
         {
             if (owner == null) return true;
             if (unpatchSelf == null) return false;
-            try
-            {
-                unpatchSelf.Invoke(owner, null);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            try { unpatchSelf.Invoke(owner, null); return true; }
+            catch { return false; }
         }
 
         static bool TryRollbackReachabilityOwner(object owner, MethodInfo unpatchSelf)
         {
             if (owner == null) return true;
             if (unpatchSelf == null) return false;
-            try
-            {
-                unpatchSelf.Invoke(owner, null);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            try { unpatchSelf.Invoke(owner, null); return true; }
+            catch { return false; }
         }
 
         bool UnpatchCandidateBridge()
@@ -1016,7 +937,6 @@ namespace SPTBeltArmbandInventory
                 candidateBridgeUnpatchSelf = null;
                 return true;
             }
-
             candidateBridgeRollbackUnsafe = true;
             return false;
         }
@@ -1032,7 +952,6 @@ namespace SPTBeltArmbandInventory
                 reachabilityUnpatchSelf = null;
                 return true;
             }
-
             reachabilityRollbackUnsafe = true;
             return false;
         }
@@ -1051,7 +970,8 @@ namespace SPTBeltArmbandInventory
 
         public void Dispose()
         {
-            RestoreOwnedWrites();
+            if (!RestoreOwnedWrites())
+                ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB exact-owned fast-access array rollback could not be proven during dispose; array reinstall is terminally blocked for this session.");
             UnpatchReload();
             ClearState();
         }
@@ -1059,16 +979,19 @@ namespace SPTBeltArmbandInventory
         void ClearState()
         {
             installed = false;
-            wroteFastAccessSlots = false;
-            wroteBindAvailableSlots = false;
             reloadPatchInstalled = false;
             reloadCandidateBridgeInstalled = false;
-            fastAccessSlotsField = null;
-            bindAvailableSlotsField = null;
-            originalFastAccessSlots = null;
-            originalBindAvailableSlots = null;
-            installedFastAccessSlots = null;
-            installedBindAvailableSlots = null;
+            if (!arrayRollbackUnsafe)
+            {
+                wroteFastAccessSlots = false;
+                wroteBindAvailableSlots = false;
+                fastAccessSlotsField = null;
+                bindAvailableSlotsField = null;
+                originalFastAccessSlots = null;
+                originalBindAvailableSlots = null;
+                installedFastAccessSlots = null;
+                installedBindAvailableSlots = null;
+            }
             if (!reachabilityRollbackUnsafe)
             {
                 reachabilityHarmony = null;
@@ -1083,8 +1006,7 @@ namespace SPTBeltArmbandInventory
 
         static Exception Unwrap(Exception exception)
         {
-            while (exception is TargetInvocationException invocation && invocation.InnerException != null)
-                exception = invocation.InnerException;
+            while (exception is TargetInvocationException invocation && invocation.InnerException != null) exception = invocation.InnerException;
             return exception;
         }
     }
