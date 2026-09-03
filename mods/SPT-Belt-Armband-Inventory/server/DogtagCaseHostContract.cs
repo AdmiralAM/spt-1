@@ -133,6 +133,24 @@ public static class DogtagCaseHostContract
         return snapshot;
     }
 
+    public static bool TryAbandonRollbackAuthority(HashSet<MongoId> currentFilter, HashSet<MongoId> preCommitSnapshot)
+    {
+        if (currentFilter == null || preCommitSnapshot == null) return false;
+        lock (SnapshotSync)
+        {
+            if (!RollbackAuthorities.TryGetValue(preCommitSnapshot, out RollbackAuthority? authority)
+                || !ReferenceEquals(currentFilter, authority.Host)
+                || !preCommitSnapshot.SetEquals(authority.Baseline))
+                return false;
+
+            RollbackAuthorities.Remove(preCommitSnapshot);
+            if (ActiveRollbackHosts.TryGetValue(authority.Host, out RollbackAuthority? active)
+                && ReferenceEquals(active, authority))
+                ActiveRollbackHosts.Remove(authority.Host);
+            return true;
+        }
+    }
+
     public static bool TryRollbackOwnedCaseAddition(HashSet<MongoId> currentFilter, HashSet<MongoId> preCommitSnapshot)
     {
         if (currentFilter == null || preCommitSnapshot == null) return false;
