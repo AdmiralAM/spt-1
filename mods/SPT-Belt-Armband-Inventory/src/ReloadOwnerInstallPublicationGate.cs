@@ -8,8 +8,9 @@ namespace SPTBeltArmbandInventory
     /// Global fail-closed publication gate for the FastAccessSlotPatches install transaction.
     /// Harmony owners become callable as soon as each Patch() succeeds, while the complete
     /// reachability/candidate bridge is published only after several Patch() calls. This gate
-    /// keeps those partially installed hooks inert until FastAccessSlotPatches.TryInstall exits
-    /// and can terminally suppress a subsystem whose owner rollback was not proven.
+    /// keeps those partially installed hooks inert until FastAccessSlotPatches.TryInstall exits.
+    /// A stale owner that survives a failed rollback also remains inert after its runtime Reset,
+    /// because publication requires the complete live subsystem contract on every invocation.
     /// It never discovers candidates, changes slot arrays, retries a query, or changes vanilla
     /// ordering. A blocked candidate hook returns the exact incoming vanilla result object.
     /// </summary>
@@ -18,8 +19,6 @@ namespace SPTBeltArmbandInventory
         const string HarmonyId = "com.admiralam.spt.belt-armband-inventory.reload-owner-install-publication";
         static readonly object InstallGate = new object();
         static int installDepth;
-        static int reachabilityDisabled;
-        static int candidateDisabled;
         static bool installed;
         static bool terminalFailure;
         static object harmonyOwner;
@@ -148,19 +147,40 @@ namespace SPTBeltArmbandInventory
 
         static bool BeforePromote()
         {
-            return CanPublishReachabilityForRegression();
+            return HasLiveReachabilityPublicationContract();
         }
 
         static bool BeforeEnterReload()
         {
-            return CanPublishCandidateForRegression();
+            return HasLiveCandidatePublicationContract();
         }
 
         static bool BeforeAppendCandidates(object __2, ref object __result)
         {
-            if (CanPublishCandidateForRegression()) return true;
+            if (HasLiveCandidatePublicationContract()) return true;
             __result = __2;
             return false;
+        }
+
+        static bool HasLiveReachabilityPublicationContract()
+        {
+            return CanPublishForRegression()
+                && FastAccessReloadRuntime.ItemType != null
+                && FastAccessReloadRuntime.MagazineType != null
+                && FastAccessReloadRuntime.GetAllParentItems != null
+                && FastAccessReloadRuntime.ReadTemplateId != null;
+        }
+
+        static bool HasLiveCandidatePublicationContract()
+        {
+            return CanPublishForRegression()
+                && ReloadCandidateBridgeRuntime.GetItemsInSlots != null
+                && ReloadCandidateBridgeRuntime.BeltSlotsArgument != null
+                && ReloadCandidateBridgeRuntime.ItemType != null
+                && ReloadCandidateBridgeRuntime.MagazineType != null
+                && ReloadCandidateBridgeRuntime.ReturnType != null
+                && ReloadCandidateBridgeRuntime.GetAllParentItems != null
+                && ReloadCandidateBridgeRuntime.ReadTemplateId != null;
         }
 
         internal static void BeginForRegression()
@@ -180,39 +200,17 @@ namespace SPTBeltArmbandInventory
 
         internal static bool CanPublishForRegression()
         {
-            return CanPublishReachabilityForRegression() && CanPublishCandidateForRegression();
-        }
-
-        internal static bool CanPublishReachabilityForRegression()
-        {
-            return Volatile.Read(ref installDepth) == 0 && Volatile.Read(ref reachabilityDisabled) == 0;
-        }
-
-        internal static bool CanPublishCandidateForRegression()
-        {
-            return Volatile.Read(ref installDepth) == 0 && Volatile.Read(ref candidateDisabled) == 0;
+            return Volatile.Read(ref installDepth) == 0;
         }
 
         internal static object SelectCandidateForRegression(object vanillaResult, object candidateResult)
         {
-            return CanPublishCandidateForRegression() ? candidateResult : vanillaResult;
-        }
-
-        internal static void DisableReachabilityPublication()
-        {
-            Interlocked.Exchange(ref reachabilityDisabled, 1);
-        }
-
-        internal static void DisableCandidatePublication()
-        {
-            Interlocked.Exchange(ref candidateDisabled, 1);
+            return CanPublishForRegression() ? candidateResult : vanillaResult;
         }
 
         internal static void ResetForRegression()
         {
             Interlocked.Exchange(ref installDepth, 0);
-            Interlocked.Exchange(ref reachabilityDisabled, 0);
-            Interlocked.Exchange(ref candidateDisabled, 0);
         }
 
         static void Patch(object owner, MethodInfo patch, Type harmonyMethodType, MethodInfo original, object prefix, object postfix, object finalizer)
