@@ -55,6 +55,9 @@ require_tokens("Dogtag Case preload exact host boundary", dogtag_item, [
     "public object? SlotsCollection { get; init; }",
     "public object? SlotProperties { get; init; }",
     "public object? FiltersCollection { get; init; }",
+    "private sealed class DogtagHostCommitReceipt",
+    "internal void Accept()",
+    "internal bool TryRollback()",
     "DogtagHostBoundary dogtagHost = PrepareDogtagSlotFilter();",
     "private DogtagHostBoundary PrepareDogtagSlotFilter()",
     "return new DogtagHostBoundary(inventory, slots[0], groups[0], hostFilter)",
@@ -71,7 +74,8 @@ require_tokens("Dogtag Case preload exact host boundary", dogtag_item, [
     "!ReferenceEquals(liveSlots[0].Properties?.Filters, boundary.FiltersCollection)",
     "!ReferenceEquals(liveGroups[0], boundary.FilterGroup)",
     "!ReferenceEquals(liveGroups[0].Filter, boundary.Filter)",
-    "private void CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)",
+    "private DogtagHostCommitReceipt CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)",
+    "return new DogtagHostCommitReceipt(this, boundary, addedHere ? rollbackBaseline : null);",
     "HashSet<MongoId> filter = boundary.Filter;",
     "PersistentIdentityManifest.IsOwnedTemplate(templateId)",
     "!string.Equals(templateId, TemplateId, StringComparison.Ordinal)",
@@ -81,6 +85,8 @@ require_tokens("Dogtag Case preload exact host boundary", dogtag_item, [
     "DogtagCaseHostContract.RequireCommitted(filter);",
     "DogtagCaseHostContract.CaptureRollbackBaseline(filter)",
     "addedHere = filter.Add(DogtagCaseTpl);",
+    "DogtagCaseHostContract.TryAbandonRollbackAuthority(boundary.Filter, rollbackBaseline)",
+    "DogtagCaseHostContract.TryRollbackOwnedCaseAddition(boundary.Filter, rollbackBaseline)",
     "DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)",
     "ambiguous/foreign current host state is not blindly rewritten",
 ])
@@ -128,7 +134,7 @@ if min(prepare_def, host_capture, capture, boundary_return, capture_inventory_pr
 ):
     violations.append("Dogtag Case host preparation must bind one validated filter, capture non-owned baseline entries, then pin inventory properties/slots/slot properties/filter collection with the exact inventory/slot/group/filter boundary")
 
-commit_def = dogtag_item.find("private void CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)")
+commit_def = dogtag_item.find("private DogtagHostCommitReceipt CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)")
 commit_end = dogtag_item.find("public static void RequireCanonicalRegisteredTemplate", commit_def)
 commit_region = dogtag_item[commit_def:commit_end] if min(commit_def, commit_end) >= 0 else ""
 first_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);")
@@ -138,15 +144,30 @@ rollback_baseline = commit_region.find("DogtagCaseHostContract.CaptureRollbackBa
 add = commit_region.find("addedHere = filter.Add(DogtagCaseTpl);", rollback_baseline + 1)
 committed = commit_region.find("DogtagCaseHostContract.RequireCommitted(filter);", add + 1)
 post_commit_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);", committed + 1)
-rollback = commit_region.find("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", post_commit_identity + 1)
-if min(first_identity, preserved, second_identity, rollback_baseline, add, committed, post_commit_identity, rollback) < 0 or not (
-    first_identity < preserved < second_identity < rollback_baseline < add < committed < post_commit_identity < rollback
+receipt_return = commit_region.find("return new DogtagHostCommitReceipt(this, boundary, addedHere ? rollbackBaseline : null);", post_commit_identity + 1)
+rollback = commit_region.find("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", receipt_return + 1)
+if min(first_identity, preserved, second_identity, rollback_baseline, add, committed, post_commit_identity, receipt_return, rollback) < 0 or not (
+    first_identity < preserved < second_identity < rollback_baseline < add < committed < post_commit_identity < receipt_return < rollback
 ):
-    violations.append("Dogtag Case exposure must remain live-identity -> preserved -> live-identity -> detached rollback baseline -> owned Add -> committed -> live-identity -> proven owned rollback")
+    violations.append("Dogtag Case exposure must remain live-identity -> preserved -> live-identity -> detached rollback baseline -> owned Add -> committed -> live-identity -> receipt handoff, with proven owned rollback on in-transaction failure")
 if "filter.Remove(DogtagCaseTpl);" in commit_region:
     violations.append("Dogtag Case exposure must not use value-only rollback; ambiguous/foreign current host state must remain untouched")
 if commit_region.count("cancellationToken.ThrowIfCancellationRequested();") < 4:
     violations.append("Dogtag Case exposure must observe cancellation before mutation and within the owned commit/rollback boundary")
+
+receipt_def = dogtag_item.find("private sealed class DogtagHostCommitReceipt")
+receipt_end = dogtag_item.find("public Task OnLoadAsync", receipt_def)
+receipt_region = dogtag_item[receipt_def:receipt_end] if min(receipt_def, receipt_end) >= 0 else ""
+accept_host = receipt_region.find("owner.RequireLiveDogtagHostIdentity(boundary);")
+accept_committed = receipt_region.find("DogtagCaseHostContract.RequireCommitted(boundary.Filter);", accept_host + 1)
+accept_abandon = receipt_region.find("DogtagCaseHostContract.TryAbandonRollbackAuthority(boundary.Filter, rollbackBaseline)", accept_committed + 1)
+rollback_method = receipt_region.find("internal bool TryRollback()", accept_abandon + 1)
+rollback_host = receipt_region.find("owner.RequireLiveDogtagHostIdentity(boundary);", rollback_method + 1)
+rollback_owned = receipt_region.find("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(boundary.Filter, rollbackBaseline)", rollback_host + 1)
+if min(receipt_def, accept_host, accept_committed, accept_abandon, rollback_method, rollback_host, rollback_owned) < 0 or not (
+    receipt_def < accept_host < accept_committed < accept_abandon < rollback_method < rollback_host < rollback_owned
+):
+    violations.append("Dogtag Case post-commit receipt must re-prove exact live host + committed shape before metadata-only acceptance and exact live host before owned rollback")
 
 for label, text in [("Magazine Armband", armband), ("Wrist Wallet", wallet)]:
     host = text.find("WearableOfferHostContract.RequireArmBandProduct(templateTable, templateId);")
@@ -250,4 +271,4 @@ if "hostFilter.Add(" in dogtag or "groups[0].Filter.Add(" in dogtag or "slots.Ad
 if violations:
     raise SystemExit("B&A&HB offer-host gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; Dogtag preload host rollback is exact pre-commit-snapshot proven and refuses ambiguous foreign/current rewrites; trader host proof pins the complete DefaultInventory chain, and trader publication additionally transaction-pins the Ragman Assort/Items/BarterScheme/LoyalLevelItems wrapper chain with ownership-bounded rollback)")
+print("B&A&HB offer-host gate: OK (Ragman offers require exact live equipment hosts; Dogtag preload host rollback is exact pre-commit-snapshot proven and post-commit receipt authority survives through final canonical proof; trader host proof pins the complete DefaultInventory chain, and trader publication additionally transaction-pins the Ragman Assort/Items/BarterScheme/LoyalLevelItems wrapper chain with ownership-bounded rollback)")
