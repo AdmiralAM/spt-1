@@ -29,7 +29,9 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
         object filtersCollection,
         object[] filterGroups,
         object[] includedFilters,
-        object?[] excludedFilters)
+        object?[] excludedFilters,
+        HashSet<MongoId>[] includedValues,
+        HashSet<MongoId>?[] excludedValues)
     {
         public object Properties { get; } = properties;
         public object GridsCollection { get; } = gridsCollection;
@@ -39,6 +41,8 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
         public object[] FilterGroups { get; } = filterGroups;
         public object[] IncludedFilters { get; } = includedFilters;
         public object?[] ExcludedFilters { get; } = excludedFilters;
+        public HashSet<MongoId>[] IncludedValues { get; } = includedValues;
+        public HashSet<MongoId>?[] ExcludedValues { get; } = excludedValues;
     }
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
@@ -59,7 +63,12 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
         // it clones/copies any canonical geometry or taxonomy.
         DogtagCaseCanonicalIdentityLease.Publish(source);
 
-        logger.Success("B&A&HB Dogtag Case canonical filter preflight passed: exact canonical source/root/grid/filter identity is intact and leased to Preload +3; non-empty EFT/SPT taxonomy contains no B&A&HB-owned product admissions.");
+        // Publish() performs its own detached capture. Re-prove the original +2
+        // identity AND filter contents after that capture so a mutation in the tiny
+        // proof -> lease-publication window cannot become new lease authority.
+        RequireCanonicalIdentity(source, identity);
+
+        logger.Success("B&A&HB Dogtag Case canonical filter preflight passed: exact canonical source/root/grid/filter identity+content is intact across lease publication and leased to Preload +3; non-empty EFT/SPT taxonomy contains no B&A&HB-owned product admissions.");
         return Task.CompletedTask;
     }
 
@@ -120,7 +129,7 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
         var filtersCollection = gridProperties.Filters
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical filters collection disappeared during identity capture.");
         var groups = filtersCollection.ToArray();
-        if (groups.Length == 0 || groups.Any(x => x.Filter == null))
+        if (groups.Length == 0 || groups.Any(x => x.Filter == null || x.Filter.Count == 0))
             throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical filters drifted during identity capture.");
 
         return new CanonicalIdentitySnapshot(
@@ -131,7 +140,9 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
             filtersCollection,
             groups.Cast<object>().ToArray(),
             groups.Select(x => (object)x.Filter!).ToArray(),
-            groups.Select(x => (object?)x.ExcludedFilter).ToArray());
+            groups.Select(x => (object?)x.ExcludedFilter).ToArray(),
+            groups.Select(x => new HashSet<MongoId>(x.Filter!)).ToArray(),
+            groups.Select(x => x.ExcludedFilter == null ? null : new HashSet<MongoId>(x.ExcludedFilter)).ToArray());
     }
 
     private static void RequireCanonicalIdentity(TemplateItem source, CanonicalIdentitySnapshot expected)
@@ -159,6 +170,16 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
                 || !ReferenceEquals(groups[i].Filter, expected.IncludedFilters[i])
                 || !ReferenceEquals(groups[i].ExcludedFilter, expected.ExcludedFilters[i]))
                 throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical filter group/include/exclude identity was replaced during validation.");
+
+            HashSet<MongoId>? included = groups[i].Filter;
+            HashSet<MongoId>? excluded = groups[i].ExcludedFilter;
+            HashSet<MongoId>? expectedExcluded = expected.ExcludedValues[i];
+            if (included == null || included.Count == 0 || !included.SetEquals(expected.IncludedValues[i])
+                || included.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString())))
+                throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical included-filter content changed during validation.");
+            if ((excluded == null) != (expectedExcluded == null)
+                || (excluded != null && expectedExcluded != null && !excluded.SetEquals(expectedExcluded)))
+                throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical excluded-filter content changed during validation.");
         }
     }
 }
