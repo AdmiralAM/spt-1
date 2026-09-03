@@ -66,9 +66,6 @@ public sealed class DogtagCaseItem(
                 || x.Filter.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString()))))
             throw new InvalidOperationException("B&A&HB Dogtag Case source filters are empty, admit a B&A&HB-owned product, or are ambiguous; refusing to create a broadened container.");
 
-        // Consume the exact source graph proven by Preload +2 before any canonical
-        // geometry/taxonomy is copied. The returned token remains live through this
-        // entire transaction and is re-proved immediately before/after publication.
         DogtagCaseCanonicalIdentityLease.Lease canonicalLease =
             DogtagCaseCanonicalIdentityLease.Consume(templateTable, source);
         canonicalLease.RequireCurrent(templateTable, source);
@@ -259,32 +256,31 @@ public sealed class DogtagCaseItem(
         cancellationToken.ThrowIfCancellationRequested();
         RequireLiveDogtagHostIdentity(boundary);
 
-        bool addedHere = filter.Add(DogtagCaseTpl);
+        HashSet<MongoId>? rollbackBaseline = null;
+        bool addedHere = false;
         try
         {
+            if (!filter.Contains(DogtagCaseTpl))
+                rollbackBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(filter);
+
+            addedHere = filter.Add(DogtagCaseTpl);
             cancellationToken.ThrowIfCancellationRequested();
             DogtagCaseHostContract.RequireCommitted(filter);
             RequireLiveDogtagHostIdentity(boundary);
             DogtagCaseHostContract.RequireCommitted(filter);
             cancellationToken.ThrowIfCancellationRequested();
         }
-        catch
+        catch (Exception exception)
         {
-            if (addedHere)
-                filter.Remove(DogtagCaseTpl);
+            if (addedHere && (rollbackBaseline == null
+                || !DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)))
+                throw new InvalidOperationException(
+                    "B&A&HB Dogtag host rollback could not be proven against the exact pre-commit acceptance snapshot; ambiguous/foreign current host state is not blindly rewritten.",
+                    exception);
             throw;
         }
     }
 
-    /// <summary>
-    /// Revalidates the live registered product against the live canonical EFT/SPT
-    /// Dogtag Case immediately before host/trader publication. This closes startup
-    /// mutation windows: another participant may not alter the B&A&HB case root
-    /// footprint, stack policy, root presentation, grid geometry or filter contract
-    /// and still obtain a host/trader-published corrupted product. The final
-    /// reference-identity reproof also refuses a detached source/candidate pair that
-    /// was replaced in TemplateTable during validation.
-    /// </summary>
     public static void RequireCanonicalRegisteredTemplate(TemplateTable templates)
     {
         ArgumentNullException.ThrowIfNull(templates);
