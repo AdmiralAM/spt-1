@@ -45,6 +45,23 @@ namespace SPTBeltArmbandInventory
                 && ReferenceEquals(currentBindAvailableSlots, installedBindAvailableSlots);
         }
 
+        internal static Array CaptureArrayContentSnapshot(object value)
+        {
+            return value is Array array ? (Array)array.Clone() : null;
+        }
+
+        internal static bool HasExactArrayContent(object currentValue, Array snapshot)
+        {
+            if (!(currentValue is Array current) || snapshot == null
+                || current.GetType() != snapshot.GetType() || current.Length != snapshot.Length)
+                return false;
+
+            for (int i = 0; i < current.Length; i++)
+                if (!Equals(current.GetValue(i), snapshot.GetValue(i)))
+                    return false;
+            return true;
+        }
+
         internal static bool TryRestoreOwnedReference(
             bool wrote,
             Func<object> readCurrent,
@@ -423,6 +440,8 @@ namespace SPTBeltArmbandInventory
         object originalBindAvailableSlots;
         object installedFastAccessSlots;
         object installedBindAvailableSlots;
+        Array installedFastAccessSlotsContent;
+        Array installedBindAvailableSlotsContent;
         object reachabilityHarmony;
         MethodInfo reachabilityUnpatchSelf;
         object candidateBridgeHarmony;
@@ -434,6 +453,7 @@ namespace SPTBeltArmbandInventory
         bool reachabilityRollbackUnsafe;
         bool candidateBridgeRollbackUnsafe;
         bool arrayRollbackUnsafe;
+        bool arrayContentAuthorityUnsafe;
         bool installed;
 
         internal FastAccessSlotPatches(Action<string> logInfo, Action<string> logWarning)
@@ -449,8 +469,8 @@ namespace SPTBeltArmbandInventory
 
             try
             {
-                if (arrayRollbackUnsafe)
-                    return Fail("B&A&HB fast-access slot arrays are terminally disabled for this session because a prior exact-owned rollback could not be proven.");
+                if (arrayRollbackUnsafe || arrayContentAuthorityUnsafe)
+                    return Fail("B&A&HB fast-access slot arrays are terminally disabled for this session because prior exact-owned rollback/content authority could not be proven.");
 
                 Type inventoryType = ReflectionTools.FindType("EFT.InventoryLogic.Inventory");
                 Type slotEnumType = ReflectionTools.FindType("EFT.InventoryLogic.EquipmentSlot");
@@ -468,8 +488,11 @@ namespace SPTBeltArmbandInventory
                 originalBindAvailableSlots = bindAvailableSlotsField.GetValue(null);
                 installedFastAccessSlots = AppendSlots(originalFastAccessSlots as Array, slotEnumType, armBand, dedicatedBelt);
                 installedBindAvailableSlots = AppendSlots(originalBindAvailableSlots as Array, slotEnumType, armBand, dedicatedBelt);
-                if (installedFastAccessSlots == null || installedBindAvailableSlots == null)
-                    return Fail("SPT 4.1 fast-access slot arrays could not be extended safely; wearable fast-access compatibility is disabled.");
+                installedFastAccessSlotsContent = FastAccessSlotPolicy.CaptureArrayContentSnapshot(installedFastAccessSlots);
+                installedBindAvailableSlotsContent = FastAccessSlotPolicy.CaptureArrayContentSnapshot(installedBindAvailableSlots);
+                if (installedFastAccessSlots == null || installedBindAvailableSlots == null
+                    || installedFastAccessSlotsContent == null || installedBindAvailableSlotsContent == null)
+                    return Fail("SPT 4.1 fast-access slot arrays could not be extended/snapshotted safely; wearable fast-access compatibility is disabled.");
 
                 fastAccessSlotsField.SetValue(null, installedFastAccessSlots);
                 wroteFastAccessSlots = true;
@@ -501,15 +524,28 @@ namespace SPTBeltArmbandInventory
         {
             try
             {
-                if (fastAccessSlotsField == null || bindAvailableSlotsField == null)
-                    return Fail("B&A&HB fast-access repeat install refused because prior array authority metadata is incomplete.");
+                if (arrayContentAuthorityUnsafe)
+                    return Fail("B&A&HB fast-access repeat install refused because prior in-place array content drift made current lifecycle authority terminally ambiguous.");
+                if (fastAccessSlotsField == null || bindAvailableSlotsField == null
+                    || installedFastAccessSlotsContent == null || installedBindAvailableSlotsContent == null)
+                {
+                    arrayContentAuthorityUnsafe = true;
+                    return Fail("B&A&HB fast-access repeat install refused because prior array authority metadata/content snapshots are incomplete.");
+                }
 
                 object currentFastAccessSlots = fastAccessSlotsField.GetValue(null);
                 object currentBindAvailableSlots = bindAvailableSlotsField.GetValue(null);
                 if (FastAccessSlotPolicy.HasExactInstalledArrayAuthority(currentFastAccessSlots, installedFastAccessSlots,
                     currentBindAvailableSlots, installedBindAvailableSlots))
                 {
-                    ReloadDiagnosticLog.TryInfo(logInfo, "B&A&HB fast-access repeat install is an idempotent no-op; exact installed array authority is unchanged.");
+                    if (!FastAccessSlotPolicy.HasExactArrayContent(currentFastAccessSlots, installedFastAccessSlotsContent)
+                        || !FastAccessSlotPolicy.HasExactArrayContent(currentBindAvailableSlots, installedBindAvailableSlotsContent))
+                    {
+                        arrayContentAuthorityUnsafe = true;
+                        return Fail("B&A&HB fast-access repeat install refused because an exact installed array was mutated in place; authority is terminally blocked for this lifecycle even if values are later restored.");
+                    }
+
+                    ReloadDiagnosticLog.TryInfo(logInfo, "B&A&HB fast-access repeat install is an idempotent no-op; exact installed array reference/content authority is unchanged.");
                     return true;
                 }
 
@@ -517,7 +553,8 @@ namespace SPTBeltArmbandInventory
             }
             catch (Exception exception)
             {
-                return Fail("B&A&HB fast-access repeat install refused because live array authority could not be proven: " + Unwrap(exception).Message);
+                arrayContentAuthorityUnsafe = true;
+                return Fail("B&A&HB fast-access repeat install refused because live array authority could not be proven; current lifecycle is terminally blocked: " + Unwrap(exception).Message);
             }
         }
 
@@ -1026,6 +1063,8 @@ namespace SPTBeltArmbandInventory
                 originalBindAvailableSlots = null;
                 installedFastAccessSlots = null;
                 installedBindAvailableSlots = null;
+                installedFastAccessSlotsContent = null;
+                installedBindAvailableSlotsContent = null;
             }
             if (!reachabilityRollbackUnsafe)
             {
