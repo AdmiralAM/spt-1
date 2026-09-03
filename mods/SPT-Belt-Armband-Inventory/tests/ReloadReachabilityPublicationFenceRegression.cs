@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.IO;
 using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
 
@@ -8,6 +9,8 @@ internal static class ReloadReachabilityPublicationFenceRegression
     [ModuleInitializer]
     internal static void Run()
     {
+        RequireStructuralContract();
+
         Func<object, IEnumerable> parents = _ => Array.Empty<object>();
         Func<object, string> reader = _ => null;
         Func<object, string> replacementReader = _ => null;
@@ -59,5 +62,64 @@ internal static class ReloadReachabilityPublicationFenceRegression
             ReloadReachabilityPublicationFence.ResetForRegression();
             FastAccessReloadRuntime.Reset();
         }
+    }
+
+    private static void RequireStructuralContract()
+    {
+        string? root = FindModuleRoot();
+        if (root == null)
+            throw new InvalidOperationException("Reload reachability publication fence regression failed: module root could not be resolved.");
+
+        string source = File.ReadAllText(Path.Combine(root, "src", "ReloadReachabilityPublicationFence.cs"));
+        string[] required =
+        {
+            "nameof(FastAccessReloadRuntime.PromoteReachability)",
+            "nameof(FastAccessReloadRuntime.Reset)",
+            "\"TryInstall\"",
+            "new[] { typeof(object), typeof(bool).MakeByRefType() }",
+            "install.ReturnType != typeof(bool)",
+            "patch.Invoke(owner, promoteArgs);",
+            "patch.Invoke(owner, resetArgs);",
+            "patch.Invoke(owner, installArgs);",
+            "bool rolledBack = TryRollback(owner, rollback);",
+            "terminalFailure = owner != null && !rolledBack;",
+            "__state = CaptureForRegression(result);",
+            "result = __state.VanillaResult;",
+            "Interlocked.Increment(ref generation);",
+            "ReferenceEquals(ItemType, FastAccessReloadRuntime.ItemType)",
+            "ReferenceEquals(MagazineType, FastAccessReloadRuntime.MagazineType)",
+            "ReferenceEquals(GetAllParentItems, FastAccessReloadRuntime.GetAllParentItems)",
+            "ReferenceEquals(ReadTemplateId, FastAccessReloadRuntime.ReadTemplateId)"
+        };
+        foreach (string token in required)
+            if (!source.Contains(token, StringComparison.Ordinal))
+                throw new InvalidOperationException("Reload reachability publication fence regression failed: missing structural lifecycle contract token: " + token);
+
+        if (source.Contains("result = false;", StringComparison.Ordinal))
+            throw new InvalidOperationException("Reload reachability publication fence regression failed: publication fence must never manufacture a false result instead of restoring captured vanilla state.");
+    }
+
+    private static string? FindModuleRoot()
+    {
+        DirectoryInfo? current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current != null)
+        {
+            string direct = Path.Combine(current.FullName, "src", "ReloadReachabilityPublicationFence.cs");
+            if (File.Exists(direct)) return current.FullName;
+            string nested = Path.Combine(current.FullName, "mods", "SPT-Belt-Armband-Inventory");
+            if (File.Exists(Path.Combine(nested, "src", "ReloadReachabilityPublicationFence.cs"))) return nested;
+            current = current.Parent;
+        }
+
+        current = new DirectoryInfo(Directory.GetCurrentDirectory());
+        while (current != null)
+        {
+            string direct = Path.Combine(current.FullName, "src", "ReloadReachabilityPublicationFence.cs");
+            if (File.Exists(direct)) return current.FullName;
+            string nested = Path.Combine(current.FullName, "mods", "SPT-Belt-Armband-Inventory");
+            if (File.Exists(Path.Combine(nested, "src", "ReloadReachabilityPublicationFence.cs"))) return nested;
+            current = current.Parent;
+        }
+        return null;
     }
 }
