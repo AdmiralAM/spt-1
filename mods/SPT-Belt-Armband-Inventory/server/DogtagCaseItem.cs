@@ -61,14 +61,18 @@ public sealed class DogtagCaseItem(
             if (consumed)
                 throw new InvalidOperationException("B&A&HB Dogtag host post-commit receipt was already consumed.");
 
+            // Acceptance always re-proves the exact live host and committed shape,
+            // including the pre-existing/concurrently-committed Case path that carries
+            // no local mutation authority. Final canonical proof alone is not host proof.
+            owner.RequireLiveDogtagHostIdentity(boundary);
+            DogtagCaseHostContract.RequireCommitted(boundary.Filter);
+
             if (rollbackBaseline == null)
             {
                 consumed = true;
                 return;
             }
 
-            owner.RequireLiveDogtagHostIdentity(boundary);
-            DogtagCaseHostContract.RequireCommitted(boundary.Filter);
             if (!DogtagCaseHostContract.TryAbandonRollbackAuthority(boundary.Filter, rollbackBaseline))
                 throw new InvalidOperationException("B&A&HB Dogtag host post-commit receipt could not consume exact owned-add authority after final canonical proof.");
 
