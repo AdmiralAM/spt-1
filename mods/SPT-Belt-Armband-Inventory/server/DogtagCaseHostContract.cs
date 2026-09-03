@@ -125,10 +125,13 @@ public static class DogtagCaseHostContract
                 || !preCommitSnapshot.SetEquals(authority.Baseline))
                 return false;
 
+            // From this point onward the local name is rebound to the internally pinned
+            // baseline, not caller-controlled mutable snapshot state.
+            preCommitSnapshot = authority.Baseline;
             var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
-            if (authority.Baseline.Contains(caseTpl)) return false;
+            if (preCommitSnapshot.Contains(caseTpl)) return false;
 
-            HashSet<MongoId> expectedCommitted = new(authority.Baseline) { caseTpl };
+            HashSet<MongoId> expectedCommitted = new(preCommitSnapshot) { caseTpl };
             HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);
             if (!current.SetEquals(expectedCommitted))
                 return false;
@@ -137,7 +140,7 @@ public static class DogtagCaseHostContract
                 return false;
 
             HashSet<MongoId> after = SnapshotCurrentFilter(currentFilter);
-            return after.SetEquals(authority.Baseline);
+            return after.SetEquals(preCommitSnapshot);
         }
         catch
         {
