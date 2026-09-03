@@ -9,10 +9,11 @@ namespace SPTBeltArmbandInventory
     /// Harmony owners become callable as soon as each Patch() succeeds, while the complete
     /// reachability/candidate bridge is published only after several Patch() calls. This gate
     /// keeps those partially installed hooks inert until FastAccessSlotPatches.TryInstall exits.
-    /// A stale owner that survives a failed rollback also remains inert after its runtime Reset,
-    /// because publication requires the complete live subsystem contract on every invocation.
-    /// It never discovers candidates, changes slot arrays, retries a query, or changes vanilla
-    /// ordering. A blocked candidate hook returns the exact incoming vanilla result object.
+    /// A stale owner that survives a failed rollback remains inert permanently because runtime
+    /// publication requires both the complete live subsystem contract and this gate's own exact
+    /// successful-owner authority on every invocation. It never discovers candidates, changes
+    /// slot arrays, retries a query, or changes vanilla ordering. A blocked candidate hook returns
+    /// the exact incoming vanilla result object.
     /// </summary>
     internal static class ReloadOwnerInstallPublicationGate
     {
@@ -164,7 +165,7 @@ namespace SPTBeltArmbandInventory
 
         static bool HasLiveReachabilityPublicationContract()
         {
-            return CanPublishForRegression()
+            return HasPublicationAuthority()
                 && FastAccessReloadRuntime.ItemType != null
                 && FastAccessReloadRuntime.MagazineType != null
                 && FastAccessReloadRuntime.GetAllParentItems != null
@@ -173,7 +174,7 @@ namespace SPTBeltArmbandInventory
 
         static bool HasLiveCandidatePublicationContract()
         {
-            return CanPublishForRegression()
+            return HasPublicationAuthority()
                 && ReloadCandidateBridgeRuntime.GetItemsInSlots != null
                 && ReloadCandidateBridgeRuntime.BeltSlotsArgument != null
                 && ReloadCandidateBridgeRuntime.ItemType != null
@@ -181,6 +182,20 @@ namespace SPTBeltArmbandInventory
                 && ReloadCandidateBridgeRuntime.ReturnType != null
                 && ReloadCandidateBridgeRuntime.GetAllParentItems != null
                 && ReloadCandidateBridgeRuntime.ReadTemplateId != null;
+        }
+
+        static bool HasPublicationAuthority()
+        {
+            return installed
+                && !terminalFailure
+                && Volatile.Read(ref installDepth) == 0;
+        }
+
+        internal static bool HasPublicationAuthorityForRegression(bool installedState, bool terminalFailureState, int depth)
+        {
+            return installedState
+                && !terminalFailureState
+                && depth == 0;
         }
 
         internal static void BeginForRegression()
