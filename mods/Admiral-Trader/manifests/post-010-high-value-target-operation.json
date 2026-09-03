@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-authored-spec-only",
+  "operationKey": "high-value-target-window",
+  "title": {"en": "Command Window", "ru": "Командное окно"},
+  "sourceBundles": ["Boss Hunt", "Boss Follower Hunt"],
+  "selectedTarget": {
+    "friendlyName": "Glukhar",
+    "target": "Savage",
+    "savageRole": ["bossGluhar"],
+    "locationFriendlyName": "Reserve",
+    "locationTarget": "RezervBase",
+    "maximumTargets": 1,
+    "maximumSuccessfulRaids": 1,
+    "repeatable": false
+  },
+  "productDecision": "Select Glukhar on Reserve as the command-grade HVT. The operation requires one command target, then a successful extraction; it does not admit follower farming, multi-boss ladders, trophy handovers or repeatable boss population control.",
+  "whyThisTarget": [
+    "Glukhar is a literal command element with a coherent Reserve identity, so the objective matches Command Window rather than using an arbitrary boss for difficulty alone.",
+    "A single boss target preserves the source concept while compressing the legacy escalating boss/follower counters into one bounded operation.",
+    "Reserve already has pinned exact quest-location authority as RezervBase, avoiding a guessed map selector.",
+    "The operation intentionally pays no boss gear or trophy reward, avoiding a boss-equipment faucet."
+  ],
+  "conditionAuthority": {
+    "roleProof": "post-010-role-alias-proof.json",
+    "role": {"target": "Savage", "savageRole": ["bossGluhar"], "status": "proven-pinned-spt413"},
+    "locationProof": "post-010-reserve-location-proof.json",
+    "location": {"friendlyName": "Reserve", "target": "RezervBase", "status": "proven-pinned-upstream-authority"},
+    "extractionShapeProof": "post-010-same-raid-coupling-proof.json"
+  },
+  "economyReview": {
+    "status": "approved-static",
+    "campaignPlayerLevel": 35,
+    "riskBand": "critical",
+    "authoredReward": {"xp": 15500, "rub": 100000, "standing": 0.023, "itemReward": null},
+    "reason": "One non-repeatable late-campaign boss disruption plus extraction justifies critical-band currency/XP, but no boss gear, guaranteed trophy or capability unlock is required."
+  },
+  "gates": {
+    "requiresFinalBossSelection": false,
+    "requiresExactBossRoleProof": false,
+    "requiresExactReserveLocationSelection": false,
+    "requiresEconomyAdmiralReview": false,
+    "requiresFrozenCampaignOverlapReview": true,
+    "requiresVanillaScorpionArtemOverlapAudit": true,
+    "requiresSameRaidKillAndExtractionCouplingProof": true,
+    "implementationAllowed": false,
+    "runtimeMaterialize": false
+  },
+  "rejectedAlternatives": [
+    "generic any-boss objective",
+    "boss-or-any-follower ambiguity",
+    "escalating 3/5/10 boss or follower counters",
+    "boss trophy handover",
+    "repeatable boss farm",
+    "boss-equipment reward or storefront unlock"
+  ],
+  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
+}
