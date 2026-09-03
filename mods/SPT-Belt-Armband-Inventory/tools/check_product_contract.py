@@ -136,16 +136,22 @@ dogtag_item = require(SERVER / "DogtagCaseItem.cs", [
     "ValidateExisting(created, source);",
     "DogtagHostBoundary dogtagHost = PrepareDogtagSlotFilter();",
     "private sealed class DogtagHostBoundary(object inventory, object slot, object filterGroup, HashSet<MongoId> filter)",
+    "private sealed class DogtagHostCommitReceipt",
+    "internal void Accept()",
+    "internal bool TryRollback()",
     "private void RequireLiveDogtagHostIdentity(DogtagHostBoundary boundary)",
     "!ReferenceEquals(liveInventory, boundary.Inventory)",
     "!ReferenceEquals(liveSlots[0], boundary.Slot)",
     "!ReferenceEquals(liveGroups[0], boundary.FilterGroup)",
     "!ReferenceEquals(liveGroups[0].Filter, boundary.Filter)",
-    "CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);",
+    "DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);",
     "DogtagCaseHostContract.RequirePreserved(filter);",
     "DogtagCaseHostContract.CaptureRollbackBaseline(filter)",
     "addedHere = filter.Add(DogtagCaseTpl);",
     "DogtagCaseHostContract.RequireCommitted(filter);",
+    "return new DogtagHostCommitReceipt(this, boundary, addedHere ? rollbackBaseline : null);",
+    "DogtagCaseHostContract.TryAbandonRollbackAuthority(boundary.Filter, rollbackBaseline)",
+    "DogtagCaseHostContract.TryRollbackOwnedCaseAddition(boundary.Filter, rollbackBaseline)",
     "DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)",
     "ambiguous/foreign current host state is not blindly rewritten",
     "!string.Equals(grid.Name, sourceGrid.Name, StringComparison.Ordinal)",
@@ -164,22 +170,26 @@ create_call = dogtag_item.find("customItemService.CreateItemFromClone(details)")
 pre_create_cancel = dogtag_item.rfind("cancellationToken.ThrowIfCancellationRequested();", 0, create_call)
 post_create_validation = dogtag_item.find("ValidateExisting(created, source);", create_call)
 post_create_canonical = dogtag_item.find("RequireCanonicalRegisteredTemplate(templateTable);", post_create_validation)
-post_create_exposure = dogtag_item.find("CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);", post_create_canonical)
-if min(create_call, pre_create_cancel, post_create_validation, post_create_canonical, post_create_exposure) < 0 or not (
-    pre_create_cancel < create_call < post_create_validation < post_create_canonical < post_create_exposure
+post_create_exposure = dogtag_item.find("DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);", post_create_canonical)
+post_create_final_canonical = dogtag_item.find("canonicalLease.RequireCurrent(templateTable, source);", post_create_exposure)
+post_create_accept = dogtag_item.find("createdReceipt.Accept();", post_create_final_canonical)
+if min(create_call, pre_create_cancel, post_create_validation, post_create_canonical, post_create_exposure, post_create_final_canonical, post_create_accept) < 0 or not (
+    pre_create_cancel < create_call < post_create_validation < post_create_canonical < post_create_exposure < post_create_final_canonical < post_create_accept
 ):
-    violations.append("Dogtag Case must cancel before irreversible clone, then value-revalidate, canonical-reference-reprove and finish exact host publication")
+    violations.append("Dogtag Case must cancel before irreversible clone, value-revalidate/canonical-reprove, then carry exact host receipt through the final canonical proof before acceptance")
 
 existing_check = dogtag_item.find("if (templateTable.Items.TryGetValue(DogtagCaseTpl, out var existing))")
 existing_validate = dogtag_item.find("ValidateExisting(existing, source);", existing_check)
 existing_canonical = dogtag_item.find("RequireCanonicalRegisteredTemplate(templateTable);", existing_validate)
-existing_commit = dogtag_item.find("CommitDogtagSlotExposure(dogtagHost, cancellationToken);", existing_canonical)
-if min(existing_check, existing_validate, existing_canonical, existing_commit) < 0 or not (
-    existing_check < existing_validate < existing_canonical < existing_commit
+existing_commit = dogtag_item.find("DogtagHostCommitReceipt receipt = CommitDogtagSlotExposure(dogtagHost, cancellationToken);", existing_canonical)
+existing_final_canonical = dogtag_item.find("canonicalLease.RequireCurrent(templateTable, source);", existing_commit)
+existing_accept = dogtag_item.find("receipt.Accept();", existing_final_canonical)
+if min(existing_check, existing_validate, existing_canonical, existing_commit, existing_final_canonical, existing_accept) < 0 or not (
+    existing_check < existing_validate < existing_canonical < existing_commit < existing_final_canonical < existing_accept
 ):
-    violations.append("pre-existing Dogtag Case path must value-revalidate, canonical-reference-reprove and retain cancellation-aware exact-host exposure")
+    violations.append("pre-existing Dogtag Case path must value-revalidate/canonical-reprove, then carry exact host receipt through the final canonical proof before acceptance")
 
-commit_def = dogtag_item.find("private void CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)")
+commit_def = dogtag_item.find("private DogtagHostCommitReceipt CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)")
 commit_end = dogtag_item.find("public static void RequireCanonicalRegisteredTemplate", commit_def)
 commit_region = dogtag_item[commit_def:commit_end] if min(commit_def, commit_end) >= 0 else ""
 first_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);")
@@ -189,15 +199,31 @@ rollback_baseline = commit_region.find("DogtagCaseHostContract.CaptureRollbackBa
 owned_add = commit_region.find("addedHere = filter.Add(DogtagCaseTpl);", rollback_baseline + 1)
 committed = commit_region.find("DogtagCaseHostContract.RequireCommitted(filter);", owned_add + 1)
 final_identity = commit_region.find("RequireLiveDogtagHostIdentity(boundary);", committed + 1)
-rollback = commit_region.find("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", final_identity + 1)
-if min(first_identity, preserved, second_identity, rollback_baseline, owned_add, committed, final_identity, rollback) < 0 or not (
-    first_identity < preserved < second_identity < rollback_baseline < owned_add < committed < final_identity < rollback
+receipt_return = commit_region.find("return new DogtagHostCommitReceipt(this, boundary, addedHere ? rollbackBaseline : null);", final_identity + 1)
+rollback = commit_region.find("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)", receipt_return + 1)
+if min(first_identity, preserved, second_identity, rollback_baseline, owned_add, committed, final_identity, receipt_return, rollback) < 0 or not (
+    first_identity < preserved < second_identity < rollback_baseline < owned_add < committed < final_identity < receipt_return < rollback
 ):
-    violations.append("Dogtag exact-host exposure ordering drifted from live/preserved/live -> detached rollback baseline -> owned Add -> committed/live -> proven owned rollback")
+    violations.append("Dogtag exact-host exposure ordering drifted from live/preserved/live -> detached rollback baseline -> owned Add -> committed/live -> receipt handoff -> proven owned rollback")
 if "filter.Remove(DogtagCaseTpl);" in commit_region:
     violations.append("Dogtag exact-host exposure must refuse value-only rollback when foreign/current host authority is ambiguous")
 if commit_region.count("cancellationToken.ThrowIfCancellationRequested();") < 4:
     violations.append("Dogtag exact-host exposure must keep cancellation checks around owned mutation/commit boundary")
+
+receipt_def = dogtag_item.find("private sealed class DogtagHostCommitReceipt")
+receipt_end = dogtag_item.find("public Task OnLoadAsync", receipt_def)
+receipt_region = dogtag_item[receipt_def:receipt_end] if min(receipt_def, receipt_end) >= 0 else ""
+accept_host = receipt_region.find("owner.RequireLiveDogtagHostIdentity(boundary);")
+accept_committed = receipt_region.find("DogtagCaseHostContract.RequireCommitted(boundary.Filter);", accept_host + 1)
+null_authority = receipt_region.find("if (rollbackBaseline == null)", accept_committed + 1)
+accept_abandon = receipt_region.find("DogtagCaseHostContract.TryAbandonRollbackAuthority(boundary.Filter, rollbackBaseline)", null_authority + 1)
+rollback_method = receipt_region.find("internal bool TryRollback()", accept_abandon + 1)
+rollback_host = receipt_region.find("owner.RequireLiveDogtagHostIdentity(boundary);", rollback_method + 1)
+rollback_owned = receipt_region.find("DogtagCaseHostContract.TryRollbackOwnedCaseAddition(boundary.Filter, rollbackBaseline)", rollback_host + 1)
+if min(accept_host, accept_committed, null_authority, accept_abandon, rollback_method, rollback_host, rollback_owned) < 0 or not (
+    accept_host < accept_committed < null_authority < accept_abandon < rollback_method < rollback_host < rollback_owned
+):
+    violations.append("Dogtag post-commit receipt must final-reprove live committed host even for metadata-empty acceptance and preserve exact-owned rollback for failed final publication proof")
 
 dogtag_assort = require_collision_safe_assort(SERVER / "DogtagCaseAssort.cs", "Dogtag Case assort", captured_wrappers=True)
 require(SERVER / "DogtagCaseAssort.cs", [
@@ -258,4 +284,4 @@ if ".Remove(" in migration and 'item.Remove("location")' not in migration:
 if violations:
     raise SystemExit("B&A&HB product-contract gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; Dogtag preload uses exact pre-commit-snapshot proven rollback; Dogtag Ragman wrappers transaction-pinned with mutation-adjacent exact tuple ownership rollback; split HeadBand; canonical Dogtag clone/host parity retained)")
+print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; Dogtag preload carries exact host receipt through final canonical proof with exact-owned rollback; Dogtag Ragman wrappers transaction-pinned with mutation-adjacent exact tuple ownership rollback; split HeadBand; canonical Dogtag clone/host parity retained)")
