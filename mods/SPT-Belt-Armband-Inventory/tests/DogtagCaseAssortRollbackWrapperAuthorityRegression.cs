@@ -11,7 +11,7 @@ internal static class DogtagCaseAssortRollbackWrapperAuthorityRegression
         if (root == null)
             throw new InvalidOperationException("Dogtag assort rollback wrapper-authority regression failed: module root could not be resolved.");
 
-        string source = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseAssort.cs"));
+        string source = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseAssort.cs")).Replace("\r\n", "\n", StringComparison.Ordinal);
         Require(source, "bool IsAssortWrapperIdentityCurrent()", "rollback must have a non-mutating exact-wrapper authority predicate");
         Require(source, "ReferenceEquals(trader.Assort, assort)", "rollback authority must pin the captured Ragman Assort reference");
         Require(source, "ReferenceEquals(trader.Assort?.Items, items)", "rollback authority must pin the captured Items wrapper");
