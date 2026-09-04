@@ -86,7 +86,18 @@ jobs:
           })
           if ($candidates.Count -ne 1) { throw "Expected one combined candidate directory; found $($candidates.Count)" }
           $candidate = $candidates[0]
-          Copy-Item "$($candidate.FullName)/SPT_Runtime/user/mods/*" "$env:SPT_RUNTIME_ROOT/user/mods" -Recurse -Force
+          $runtimeMods = Join-Path $env:SPT_RUNTIME_ROOT 'user/mods'
+          New-Item $runtimeMods -ItemType Directory -Force | Out-Null
+          $candidateMods = @(Get-ChildItem (Join-Path $candidate.FullName 'SPT_Runtime/user/mods') -Directory)
+          $candidateModNames = @($candidateMods.Name | Sort-Object)
+          if (($candidateModNames -join ',') -ne 'Admiral-Trader,Economy Admiral') {
+            throw "Unexpected combined candidate mods: $($candidateMods.Name -join ', ')"
+          }
+          foreach ($mod in $candidateMods) {
+            $target = Join-Path $runtimeMods $mod.Name
+            if (Test-Path $target) { Remove-Item $target -Recurse -Force }
+            Copy-Item $mod.FullName $target -Recurse -Force
+          }
           $server = Get-ChildItem $env:SPT_RUNTIME_ROOT -File | Where-Object { $_.Name -in @('SPT.Server.exe','SPT.Server') } | Select-Object -First 1
           if (-not $server) { throw 'SPT server executable was not found in the verified runtime.' }
           $stdout = "$env:RUNNER_TEMP/spt-server.stdout.log"; $stderr = "$env:RUNNER_TEMP/spt-server.stderr.log"
