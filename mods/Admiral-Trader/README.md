@@ -18,11 +18,11 @@ The current authored runtime set contains **31 quests**:
 
 - 10 **Access Protocol** quests replacing the legacy key-collection ladder with compact non-FIR capability checks;
 - 21 **Arsenal Protocol** quests across seven independent weapon families, with Qualification → Fieldwork → Munitions progression;
-- six controlled ammunition capability rewards/unlocks; Special Weapons remains sample-only/deferred until exact SPT 4.1.3 item proof.
+- six controlled ammunition capability rewards/unlocks; Special Weapons remains sample-only/deferred until exact SPT 4.1.4 item proof.
 
 The server runtime validates the mixed 10 + 21 quest registry, trader identity, quest IDs and objective shapes before publication. Missing authored locale entries fail over to deterministic QuestName-based runtime text so incomplete localization cannot expose raw locale keys; complete authored EN/RU text remains a polish target before final publication.
 
-Live trader registration remains **fail-closed** through `runtime-manifest.json`. No runtime/user test is requested until the package is mechanically complete, module CI is green, and one defined SPT 4.1.3 physical gate has a downloadable exact-head artifact.
+Live trader registration remains **fail-closed** through `runtime-manifest.json`. No runtime/user test is requested until the package is mechanically complete, module CI is green, and one defined SPT 4.1.4 physical gate has a downloadable exact-head artifact.
 
 The target remains one NPC, one curated campaign, deterministic migration behavior, and reward/unlock data that remains inspectable by Economy Admiral.
 
@@ -38,7 +38,7 @@ Tracked by repository Issue #115 and Draft PR #138.
 - New-profile content must be explicitly selected; directory enumeration must not implicitly activate content.
 - Removed legacy quests must not create successor chains on existing profiles.
 - Already-accepted legacy quests should finish through the template-suppression completion bridge without direct profile mutation whenever possible.
-- Direct PMC profile writes remain forbidden until the exact SPT 4.1.3 mutation/persistence boundary is proven.
+- Direct PMC profile writes remain forbidden until the exact SPT 4.1.4 mutation/persistence boundary is proven.
 - Restartable legacy quests are excluded from the completion bridge by default.
 - Hideout-assistant content is excluded from the curated campaign.
 - Repetitive kill/headshot/FIR/handover ladders are not preserved wholesale.
@@ -81,4 +81,4 @@ Module-specific CI additionally:
 - validates the packaged 31-quest mixed runtime layout;
 - keeps generated reports only as transient Actions artifacts.
 
-Runtime validation remains deferred until a mechanically complete exact-head SPT 4.1.3 test artifact is available for one defined physical gate.
+Runtime validation remains deferred until a mechanically complete exact-head SPT 4.1.4 test artifact is available for one defined physical gate.

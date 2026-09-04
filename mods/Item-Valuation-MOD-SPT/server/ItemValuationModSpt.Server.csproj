@@ -9,17 +9,15 @@
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.0.0.0</FileVersion>
-    <SptRuntimeTarget>4.1.3</SptRuntimeTarget>
-    <SptPublishedApiBaseline>4.1.2</SptPublishedApiBaseline>
+    <SptRuntimeTarget>4.1.4</SptRuntimeTarget>
+    <SptPublishedApiBaseline>4.1.4</SptPublishedApiBaseline>
   </PropertyGroup>
 
-  <!-- SPT 4.1.3 is the runtime target. The public SPTarkov NuGet feed currently
-       provides the nearest server API baseline at 4.1.2; exact 4.1.3 behavior
-       is covered by the accepted runtime validation for release 1.0.0. -->
+  <!-- SPT 4.1.4 is the sole canonical runtime and published API target. -->
   <ItemGroup>
-    <PackageReference Include="SPTarkov.Common" Version="$(SptPublishedApiBaseline)" />
-    <PackageReference Include="SPTarkov.DI" Version="$(SptPublishedApiBaseline)" />
-    <PackageReference Include="SPTarkov.Server.Core" Version="$(SptPublishedApiBaseline)" />
+    <PackageReference Include="SPTushonka.Common" Version="$(SptPublishedApiBaseline)" />
+    <PackageReference Include="SPTushonka.DI" Version="$(SptPublishedApiBaseline)" />
+    <PackageReference Include="SPTushonka.Server.Core" Version="$(SptPublishedApiBaseline)" />
   </ItemGroup>
 
   <ItemGroup>

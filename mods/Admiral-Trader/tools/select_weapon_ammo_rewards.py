@@ -25,12 +25,12 @@ def choose_candidate(ammo: list[dict[str, Any]], ceiling: float, preferred_calib
 
 
 def build_selection(pools: dict[str, Any], policy: dict[str, Any]) -> dict[str, Any]:
-    if pools.get("targetSptVersion") != "4.1.3" or policy.get("targetSptVersion") != "4.1.3":
-        raise ValueError("weapon/ammo selection must remain targeted to SPT 4.1.3")
+    if pools.get("targetSptVersion") != "4.1.4" or policy.get("targetSptVersion") != "4.1.4":
+        raise ValueError("weapon/ammo selection must remain targeted to SPT 4.1.4")
     output: dict[str, Any] = {
         "schemaVersion": 2,
-        "targetSptVersion": "4.1.3",
-        "sourceRole": "deterministic-family-distinct-candidate-selection; exact-runtime-4.1.3-template-verification-required",
+        "targetSptVersion": "4.1.4",
+        "sourceRole": "deterministic-family-distinct-candidate-selection; exact-runtime-4.1.4-template-verification-required",
         "families": {},
     }
     for family_id, family_policy in policy["families"].items():

@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "status": "runtime-candidate-contract",
-  "targetSptVersion": "4.1.3",
-  "runtimeVerification": "pending-exact-4.1.3-item-db-gate",
+  "targetSptVersion": "4.1.4",
+  "runtimeVerification": "pending-exact-4.1.4-item-db-gate",
   "families": {
     "handguns": {"tpl":"5cc80f53e4a949000e1ea4f8","name":"5.7x28mm L191","caliber":"Caliber57x28","penetration":33,"damage":53,"sampleUnits":40,"stockPerReset":80,"buyRestriction":80},
     "smg-pdw": {"tpl":"5efb0cabfb3e451d70735af5","name":".45 ACP AP","caliber":"Caliber1143x23ACP","penetration":38,"damage":66,"sampleUnits":40,"stockPerReset":80,"buyRestriction":80},

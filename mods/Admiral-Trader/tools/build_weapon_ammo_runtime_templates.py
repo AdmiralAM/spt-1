@@ -92,8 +92,8 @@ def authored_index(spec: dict[str, Any]) -> dict[str, Any]:
 
 
 def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: dict[str, Any], runtime_pools: dict[str, Any]) -> dict[str, Any]:
-    if any(x.get("targetSptVersion") != "4.1.3" for x in (plan, spec, capabilities, runtime_pools)):
-        raise ValueError("all weapon-ammo runtime inputs must target SPT 4.1.3")
+    if any(x.get("targetSptVersion") != "4.1.4" for x in (plan, spec, capabilities, runtime_pools)):
+        raise ValueError("all weapon-ammo runtime inputs must target SPT 4.1.4")
     authored = authored_index(spec); templates: dict[str, dict[str, Any]] = {}; deferred = []
     for quest in plan.get("quests") or []:
         slug, family = str(quest["slug"]), str(quest["family"])
@@ -102,7 +102,7 @@ def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: di
         capability = capabilities["families"].get(family)
         if family == "special-weapons" and quest["stage"] == "munitions":
             deferred.append({"questId": quest["id"], "slug": slug,
-                             "reason": "special sample TPL requires exact SPT 4.1.3 runtime item verification"})
+                             "reason": "special sample TPL requires exact SPT 4.1.4 runtime item verification"})
         name = f"Arsenal Protocol: {authored['displayByFamily'][family]} - {str(quest['stage']).title()}"; qid = str(quest["id"])
         templates[qid] = {
             "QuestName": name, "_id": qid, "canShowNotificationsInGame": True,
@@ -119,7 +119,7 @@ def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: di
         }
     if len(templates) != 21:
         raise ValueError(f"expected 21 runtime templates, got {len(templates)}")
-    return {"schemaVersion": 2, "targetSptVersion": "4.1.3", "templates": templates, "deferredRuntimeItems": deferred}
+    return {"schemaVersion": 2, "targetSptVersion": "4.1.4", "templates": templates, "deferredRuntimeItems": deferred}
 
 
 def main() -> int:

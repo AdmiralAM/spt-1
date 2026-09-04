@@ -19,9 +19,30 @@ public sealed record AdmiralTraderGameplayAlphaContractSummary
 
 public static class AdmiralTraderGameplayAlphaAdapter
 {
+    public const int FrozenQuestCount = 31;
+    public const int FrozenBaselineOfferCount = 4;
+    public const int FrozenMilestoneOfferCount = 7;
+    public const int FrozenTotalOfferCount = 11;
     public const string ExpectedProductName = "Admiral Trader";
     public const string ExpectedTraderId = "d5c27bb3169f8dfbc13f6b69";
     public const string ExpectedModGuid = "com.admiralam.spt.admiraltrader";
+
+    public static void ValidateFrozenReleaseShape(
+        AdmiralTraderGameplayAlphaContractSummary summary,
+        int authoredQuestCount)
+    {
+        ArgumentNullException.ThrowIfNull(summary);
+        Require(authoredQuestCount == FrozenQuestCount,
+            $"frozen 0.1.0 requires {FrozenQuestCount} authored quests but found {authoredQuestCount}.");
+        Require(summary.BaselineOfferCount == FrozenBaselineOfferCount,
+            $"frozen 0.1.0 requires {FrozenBaselineOfferCount} Baseline offers but found {summary.BaselineOfferCount}.");
+        Require(summary.RelationshipOfferCount == 0,
+            $"frozen 0.1.0 must not materialize Relationship offers but found {summary.RelationshipOfferCount}.");
+        Require(summary.MilestoneOfferCount == FrozenMilestoneOfferCount,
+            $"frozen 0.1.0 requires {FrozenMilestoneOfferCount} Milestone offers but found {summary.MilestoneOfferCount}.");
+        Require(summary.Offers.Count == FrozenTotalOfferCount,
+            $"frozen 0.1.0 requires {FrozenTotalOfferCount} total offers but found {summary.Offers.Count}.");
+    }
 
     public static AdmiralTraderGameplayAlphaContractSummary Parse(
         string campaignManifestJson,

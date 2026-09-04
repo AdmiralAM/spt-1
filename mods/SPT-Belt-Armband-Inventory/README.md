@@ -1,6 +1,6 @@
 # B&A&HB #2 MOD SPT
 
-Stable version **0.1.0** for **SPT 4.1.3**.
+Stable version **0.1.0** for **SPT 4.1.4**.
 
 - [Download the stable ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip)
 - [View the install-ready package](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband)
@@ -20,7 +20,7 @@ No additional mods or libraries are required.
 1. Close the game, launcher and SPT server.
 2. Download and unpack the stable ZIP.
 3. Open the included `SPT_Runtime` directory.
-4. Copy its **contents** into the existing `SPT_Runtime` directory of your SPT 4.1.3 installation.
+4. Copy its **contents** into the existing `SPT_Runtime` directory of your SPT 4.1.4 installation.
 5. Start the SPT server and launch the game normally.
 
 The package installs both required components:

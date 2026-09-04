@@ -63,8 +63,8 @@ jobs:
           committed = json.loads(Path('mods/Admiral-Trader/manifests/weapon-ammo-capabilities.json').read_text())
           runtime_pools = json.loads(Path('mods/Admiral-Trader/manifests/weapon-family-runtime-pools.json').read_text())
           for data in (pools, selection, committed, runtime_pools):
-              if data.get('targetSptVersion') != '4.1.3':
-                  raise SystemExit('weapon/ammo runtime contract lost SPT 4.1.3 target')
+              if data.get('targetSptVersion') != '4.1.4':
+                  raise SystemExit('weapon/ammo runtime contract lost SPT 4.1.4 target')
           if set(runtime_pools['families']) != set(pools['families']):
               raise SystemExit('runtime weapon family set drifted from resolved family set')
           permanent = 0

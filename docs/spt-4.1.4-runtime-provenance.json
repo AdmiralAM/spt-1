@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "canonicalTarget": "SPT 4.1.4",
+  "officialRelease": "https://github.com/SP-Tushonka/build/releases/tag/4.1.4",
+  "archive": {
+    "name": "SPT-4.1.4-40743-072d534.7z",
+    "sha256": "bfc392e53ecf4ce2ff77c8c119fa5af4552ea63a6ff4ae8b5db663837adc6b5b"
+  },
+  "build": {
+    "eft": "0.16.9.5.40743",
+    "spt": "4.1.4-RELEASE+072d534.20260904",
+    "sptSourceCommit": "072d5340dc91218d010778972d85bbbbc7b3d6a9"
+  },
+  "runtimeAssemblies": {
+    "SPTarkov.Server.Core.dll": "8056b5bfe68c038767b4fc761bde797c9056e2e6f710267c3f4363d84036501e",
+    "SPTarkov.Common.dll": "876f4266bdef60fc3ad36ae28de4b16c7ead07ac3655adcc798d51d00adab29f",
+    "SPTarkov.DI.dll": "b224740e4153469f71410129f5ad93d7bb941a02bec331e79e1229ed8487f41c",
+    "SemanticVersioning.dll": "1ec4e9d7312678e23e40724207d871d0dd68a9518e39fe8165beb6e5f98b0961",
+    "JetBrains.Annotations.dll": "0295966b8d44522eec6a3c560fbe4efcfa878d3e16ff1ab0fb3478ab17001381"
+  }
+}

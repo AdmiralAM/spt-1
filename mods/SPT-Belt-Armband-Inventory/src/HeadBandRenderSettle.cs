@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace SPTBeltArmbandInventory
 {
-    // EFT 4.1.3 Gear Panel is a fixed RectTransform map, not a LayoutGroup. Slot16
+    // EFT 4.1.4 Gear Panel is a fixed RectTransform map, not a LayoutGroup. Slot16
     // participates in the same _slotViews map as the native equipment slots. This
     // class is the sole placement owner: move every native slot down by one compact
     // row and put mapped slot16 into the original Headwear position. The host panel's

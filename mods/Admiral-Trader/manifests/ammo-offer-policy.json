@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "targetSptVersion": "4.1.3",
+  "targetSptVersion": "4.1.4",
   "role": "default-price-baseline; future Economy MOD may override price while preserving quest gate and finite stock",
   "pricing": {
     "referenceSource": "carlsmei/tarkovdata items-prices.json @ 08649f48a43fe8f4bea311b23a224a278a26492b",

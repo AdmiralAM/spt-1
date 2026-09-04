@@ -2,9 +2,9 @@
 
 ## Target runtime
 
-- SPT 4.1.x; current project runtime evidence is SPT 4.1.3.
+- SPT 4.1.x; current project runtime evidence is SPT 4.1.4.
 - Server-side implementation target is .NET 10, matching maintained repository server mods.
-- Official NuGet packages currently top out at `SPTarkov.Server.Core` / `SPTarkov.Common` / `SPTarkov.DI` 4.1.2, while the installed runtime is 4.1.3. Therefore NuGet compile proof is valid for the 4.1.2 public API surface, but exact 4.1.3 profile-write behavior must be proven from the runtime assemblies/references before direct profile mutation is implemented.
+- Official `SPTushonka.Server.Core`, `SPTushonka.Common`, and `SPTushonka.DI` packages and the installed runtime now share the canonical 4.1.4 API surface. Exact installed-runtime validation remains required before direct profile mutation is implemented.
 
 ## Single trader registration boundary — proven
 
@@ -59,15 +59,15 @@ Default safety policy:
 - active/completable accepted legacy quest: eligible for completion bridge;
 - no profile record: suppress legacy template from normal start;
 - restartable legacy quest: bridge-disabled until explicitly supported;
-- stale/non-active profile record: preserve, do not mutate, and do not claim full suppression until exact 4.1.3 behavior is validated.
+- stale/non-active profile record: preserve, do not mutate, and do not claim full suppression until exact 4.1.4 behavior is validated.
 
 ## Direct migration write boundary — intentionally deferred
 
-The preferred migration path above avoids direct profile writes for the primary existing-profile case. Directly deleting or rewriting `pmcData.Quests` remains unauthorized until exact SPT 4.1.3 runtime assembly/persistence behavior is proven.
+The preferred migration path above avoids direct profile writes for the primary existing-profile case. Directly deleting or rewriting `pmcData.Quests` remains unauthorized until exact SPT 4.1.4 runtime assembly/persistence behavior is proven.
 
 Required proof before any direct profile write:
 
-1. exact native type/API surface in the installed 4.1.3 runtime;
+1. exact native type/API surface in the installed 4.1.4 runtime;
 2. safe mutation point/load order;
 3. save/persistence behavior;
 4. behavior for delayed and restartable states;
@@ -75,8 +75,8 @@ Required proof before any direct profile write:
 
 ## Runtime evidence
 
-Project SPT logs from the current environment report `Server: 4.1.3` and show maintained custom trader/quest modules loading successfully. This corroborates that the repository references above are not merely stale compile-time examples.
+Project SPT logs from the current environment report `Server: 4.1.4` and show maintained custom trader/quest modules loading successfully. This corroborates that the repository references above are not merely stale compile-time examples.
 
 ## Decision
 
-The next implementation may safely proceed with one-trader registration, profile classification, and a template-suppression completion bridge without direct PMC profile writes. Before a runtime package is published, the bridge must be mechanically validated against retained-template/start-gate/successor rules, then checked once on the exact 4.1.3 runtime at a defined gate.
+The next implementation may safely proceed with one-trader registration, profile classification, and a template-suppression completion bridge without direct PMC profile writes. Before a runtime package is published, the bridge must be mechanically validated against retained-template/start-gate/successor rules, then checked once on the exact 4.1.4 runtime at a defined gate.

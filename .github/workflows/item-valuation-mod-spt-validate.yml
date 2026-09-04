@@ -60,7 +60,7 @@ jobs:
             exit 1
           fi
 
-      - name: Upload SPT 4.1.3 runtime candidate
+      - name: Upload SPT 4.1.4 runtime candidate
         uses: actions/upload-artifact@v4
         with:
           name: item-valuation-mod-spt-${{ github.event.pull_request.head.sha || github.sha }}

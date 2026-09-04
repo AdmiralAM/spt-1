@@ -22,7 +22,7 @@ The legacy repositories are **content/data-model sources and compatibility refer
 
 ## Target
 
-- SPT 4.1.x, with the project runtime currently using 4.1.3 references where an exact runtime package boundary is required.
+- SPT 4.1.x, with the project runtime currently using 4.1.4 references where an exact runtime package boundary is required.
 - .NET 10 server-mod generation, matching maintained server-side modules in this repository.
 - One trader: working display name `Admiral` / `Адмирал`.
 
@@ -40,7 +40,7 @@ Current SPT trader JSON supplied from an installed SPT runtime is a native data-
 
 The first gate does not require a runtime port. It operates only on legacy JSON and is therefore safe to implement independently of unresolved trader/migration runtime details.
 
-Before server implementation begins, re-prove the exact SPT 4.1.3 boundaries needed for:
+Before server implementation begins, re-prove the exact SPT 4.1.4 boundaries needed for:
 
 1. single trader registration and image/locales;
 2. quest insertion/loading;

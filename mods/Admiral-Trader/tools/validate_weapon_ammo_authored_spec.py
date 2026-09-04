@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-EXPECTED_TARGET = "4.1.3"
+EXPECTED_TARGET = "4.1.4"
 EXPECTED_FAMILY_IDS = {"handguns","smg-pdw","shotguns","assault-rifles","marksman-battle","precision","special-weapons"}
 
 

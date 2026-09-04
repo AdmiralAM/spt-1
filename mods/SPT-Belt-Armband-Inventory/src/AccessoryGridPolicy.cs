@@ -1,7 +1,7 @@
 namespace SPTBeltArmbandInventory
 {
     // Pure geometry rules. They describe the declared grid, not a Unity prefab.
-    // Runtime evidence from SPT 4.1.3 shows a native cell pitch of 63px and
+    // Runtime evidence from SPT 4.1.4 shows a native cell pitch of 63px and
     // a 32px vertical GridWindow chrome band. Horizontal chrome is deliberately
     // kept to the tight native border allowance rather than the old 128px
     // one-column minimum, so the outer frame follows the declared grid closely.

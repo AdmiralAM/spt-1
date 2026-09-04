@@ -52,9 +52,9 @@ If the profile contains a legacy quest record and its state represents an accept
 
 `GetClientQuests(...)` returns a template whenever a matching `profile.Quests` record exists before evaluating normal start conditions. This means a stale legacy record in a non-active status cannot be hidden merely by making `AvailableForStart` impossible.
 
-The migration layer must therefore classify actual profile statuses, not only quest-id presence. Before runtime publication, exact SPT 4.1.3 status semantics must be verified for any states that can persist in `profile.Quests` without representing an active/completable quest (for example delayed/restartable/failed states).
+The migration layer must therefore classify actual profile statuses, not only quest-id presence. Before runtime publication, exact SPT 4.1.4 status semantics must be verified for any states that can persist in `profile.Quests` without representing an active/completable quest (for example delayed/restartable/failed states).
 
-No direct deletion or mutation of such records is authorized until the exact 4.1.3 runtime boundary and persistence behavior are proven.
+No direct deletion or mutation of such records is authorized until the exact 4.1.4 runtime boundary and persistence behavior are proven.
 
 ## Successor suppression
 
@@ -67,7 +67,7 @@ Default rule: **absence beats mutation**.
 
 ## Restartable quests
 
-Restartable legacy quests require separate handling because an existing failed profile record can be accepted again by native SPT. Until the restart boundary is explicitly tested against SPT 4.1.3, restartable legacy quests are not eligible for the completion bridge by default.
+Restartable legacy quests require separate handling because an existing failed profile record can be accepted again by native SPT. Until the restart boundary is explicitly tested against SPT 4.1.4, restartable legacy quests are not eligible for the completion bridge by default.
 
 The maintained inventory already extracts the `restartable` flag so this rule is mechanically enforceable.
 

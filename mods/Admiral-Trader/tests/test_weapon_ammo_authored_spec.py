@@ -36,7 +36,7 @@ class WeaponAmmoAuthoredSpecTests(unittest.TestCase):
                 ],
             })
         return {
-            "targetSptVersion": "4.1.3",
+            "targetSptVersion": "4.1.4",
             "domain": "weaponAmmo",
             "legacySource": {"questCount": 438, "assortmentUnlockCount": 768, "crossBundleEdgeCount": 23},
             "designRules": {

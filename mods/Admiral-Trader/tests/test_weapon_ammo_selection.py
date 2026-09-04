@@ -28,9 +28,9 @@ class WeaponAmmoSelectionTests(unittest.TestCase):
         self.assertEqual(module.choose_candidate(ammo, 36)["tpl"], "c")
 
     def test_special_weapons_never_get_permanent_unlock(self):
-        pools = {"targetSptVersion":"4.1.3","families":{"special-weapons":{"ammo":[]}}}
+        pools = {"targetSptVersion":"4.1.4","families":{"special-weapons":{"ammo":[]}}}
         policy = {
-            "targetSptVersion":"4.1.3",
+            "targetSptVersion":"4.1.4",
             "globalRules":{"permanentUnlockFamilies":0},
             "families":{"special-weapons":{"maxPermanentPenetration":None,"sampleUnits":1,"stockPerReset":0,"buyRestriction":0,"permanentUnlock":False}},
         }
@@ -40,7 +40,7 @@ class WeaponAmmoSelectionTests(unittest.TestCase):
 
     def test_rejects_non_413_inputs(self):
         with self.assertRaises(ValueError):
-            module.build_selection({"targetSptVersion":"4.1.2","families":{}}, {"targetSptVersion":"4.1.3","globalRules":{"permanentUnlockFamilies":0},"families":{}})
+            module.build_selection({"targetSptVersion":"4.1.2","families":{}}, {"targetSptVersion":"4.1.4","globalRules":{"permanentUnlockFamilies":0},"families":{}})
 
 
 if __name__ == "__main__":

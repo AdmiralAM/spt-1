@@ -106,7 +106,7 @@ def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
     result: dict[str, Any] = {
         "schemaVersion": 3,
         "targetSptVersion": spec.get("targetSptVersion"),
-        "sourceRole": "pinned-backend-item-candidate-resolution; exact-runtime-4.1.3-verification-required",
+        "sourceRole": "pinned-backend-item-candidate-resolution; exact-runtime-4.1.4-verification-required",
         "families": {},
     }
 

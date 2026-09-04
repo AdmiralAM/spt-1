@@ -1,6 +1,6 @@
 # Item Intelligence Admiral
 
-Standalone item-intelligence module for SPT 4.1.x. Stable release: **v1.0.0**. Physical SPT 4.1.3 runtime acceptance is complete. Active feature development is closed; the module is maintenance-only unless a concrete runtime defect or explicitly approved future enhancement justifies reopening work.
+Standalone item-intelligence module for SPT 4.1.x. Stable release: **v1.0.0**. Physical SPT 4.1.4 runtime acceptance is complete. Active feature development is closed; the module is maintenance-only unless a concrete runtime defect or explicitly approved future enhancement justifies reopening work.
 
 ## Purpose
 

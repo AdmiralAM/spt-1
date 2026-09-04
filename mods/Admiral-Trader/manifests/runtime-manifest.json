@@ -2,18 +2,18 @@
   "schemaVersion": 1,
   "product": "Admiral Trader",
   "traderId": "d5c27bb3169f8dfbc13f6b69",
-  "targetSptVersion": "4.1.3",
-  "publishedApiCompileBaseline": "4.1.2",
+  "targetSptVersion": "4.1.4",
+  "publishedApiCompileBaseline": "4.1.4",
   "registrationEnabled": false,
   "registrationGate": {
-    "reason": "Trader registration remains disabled until the approved portrait asset and first curated assort are present together and the exact SPT 4.1.3 runtime gate is satisfied.",
+    "reason": "Trader registration remains disabled until the approved portrait asset and first curated assort are present together and the exact SPT 4.1.4 runtime gate is satisfied.",
     "requiredBeforeEnable": [
       "approved trader portrait",
       "native base.json validated",
       "curated assort contains at least one reviewed offer",
       "questassort references only loaded curated quest ids",
       "module CI green on exact head",
-      "SPT 4.1.3 runtime compatibility proven"
+      "SPT 4.1.4 runtime compatibility proven"
     ]
   },
   "data": {
