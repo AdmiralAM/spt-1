@@ -141,8 +141,8 @@ internal static class DogtagCaseHostRollbackAuthorityRegression
         if (rollback < 0 || rollbackEnd <= rollback)
             throw new InvalidOperationException("Dogtag host rollback regression failed: host rollback contract boundary is missing.");
         string rollbackBody = hostContract.Substring(rollback, rollbackEnd - rollback);
-        int afterProof = rollbackBody.IndexOf("if (!after.SetEquals(baseline))", StringComparison.Ordinal);
-        int consume = rollbackBody.IndexOf("RollbackAuthorities.Remove(preCommitSnapshot);", StringComparison.Ordinal);
+        int afterProof = rollbackBody.IndexOf("if (!after.SetEquals(preCommitSnapshot))", StringComparison.Ordinal);
+        int consume = rollbackBody.IndexOf("RollbackAuthorities.Remove(authorityKey);", StringComparison.Ordinal);
         if (afterProof < 0 || consume <= afterProof)
             throw new InvalidOperationException("Dogtag host rollback regression failed: rollback/capture authority must be consumed only after exact baseline restoration is proven.");
 
