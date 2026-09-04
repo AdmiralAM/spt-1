@@ -20,26 +20,24 @@ namespace SPTBeltArmbandInventory.Tests
 
             ReloadOwnerRollbackTerminalFence.ObserveRollbackForRegression(true);
             Assert(ReloadOwnerRollbackTerminalFence.CanInstallForRegression(),
-                "proven Harmony rollback does not poison future owner installation");
+                "proven normal Harmony rollback does not poison future owner installation");
 
             ReloadOwnerRollbackTerminalFence.ObserveRollbackForRegression(false);
             Assert(!ReloadOwnerRollbackTerminalFence.CanInstallForRegression(),
-                "unproven Harmony rollback terminally blocks later owner installation");
+                "unproven normal Harmony rollback terminally blocks later owner installation");
 
             ReloadOwnerRollbackTerminalFence.ObserveRollbackForRegression(true);
             Assert(!ReloadOwnerRollbackTerminalFence.CanInstallForRegression(),
                 "later successful rollback cannot clear process-terminal stale-owner ambiguity");
 
-            Assert(!ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(false, false, true),
-                "failed installation before owner creation must not invent rollback ambiguity");
-            Assert(!ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(false, true, true),
-                "proven cleanup of a newly-created owner may leave a previously-clean process unpoisoned");
-            Assert(ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(false, true, false),
-                "unproven cleanup of a created owner must poison the process");
-            Assert(ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(true, true, true),
-                "successful local cleanup must never clear terminal ambiguity already published by another rollback observer");
-            Assert(ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(true, false, true),
-                "an already-poisoned process remains poisoned even when the failing install created no owner");
+            Assert(!ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(false, false),
+                "fence installation failure before owner creation must not invent rollback ambiguity");
+            Assert(ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(false, true),
+                "once a fence owner was created, failed installation is terminal even if best-effort UnpatchSelf returned without throwing");
+            Assert(ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(true, true),
+                "an already-poisoned process remains poisoned after a created-owner install failure");
+            Assert(ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(true, false),
+                "an already-poisoned process remains poisoned when a later failing install creates no owner");
 
             ReloadOwnerRollbackTerminalFence.ResetForRegression();
         }
