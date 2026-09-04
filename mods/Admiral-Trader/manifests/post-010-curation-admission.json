@@ -1,11 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-research-only",
-  "source": {
-    "repository": "Thirt3nth/Andrudis-Questmaniac",
-    "commit": "4e15990ac18f469ef7818475ce8553bbbb7cebb4"
-  },
+  "source": {"repository": "Thirt3nth/Andrudis-Questmaniac", "commit": "4e15990ac18f469ef7818475ce8553bbbb7cebb4"},
   "policy": {
     "directLegacyQuestCopyAllowed": false,
     "materializeIntoFrozen010": false,
@@ -13,163 +10,81 @@
     "requireWhyWhatContextPayoff": true,
     "requireExactSpt413ConditionProof": true,
     "requireVanillaScorpionArtemOverlapAudit": true,
-    "requireEconomyAdmiralReview": true
+    "requireEconomyAdmiralReview": true,
+    "laterSpecificDispositionOverridesEarlierGenericRewriteCandidate": true
   },
   "admissions": [
     {
-      "sourceBundle": "Deep Pockets",
-      "decision": "reject-direct-port",
-      "futureUse": "theme-only-if-distinct-operation-emerges",
-      "evidence": [
-        "legacy chain begins with FIR HandoverItem requirements across broad vest/rig targets",
-        "success rewards unlock individual equipment offers",
-        "next quest repeats the same structure with a larger handover count"
-      ],
-      "reason": "This is an equipment barter-unlock ladder, not an authored operation. Porting it would recreate collection busywork and a supermarket progression surface.",
-      "runtimeMaterialize": false
+      "sourceBundle": "Deep Pockets", "decision": "reject-direct-port", "futureUse": "theme-only-if-distinct-operation-emerges",
+      "evidence": ["legacy chain begins with broad FIR vest/rig handovers", "success unlocks individual equipment offers", "later quests repeat the structure with larger counts"],
+      "reason": "Equipment barter-unlock ladder rather than an authored operation.", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Iron Head",
-      "decision": "rewrite-candidate",
-      "futureUse": "protective-equipment field doctrine",
-      "evidence": [
-        "legacy chain begins with Kolpak-1S riot helmet barter",
-        "objective is FIR HandoverItem over a broad helmet target list",
-        "next quest repeats the same structure with increased quantity and another helmet unlock"
-      ],
-      "reason": "The protective-equipment identity may fit Admiral, but the source mechanic is another escalating barter ladder. Any future quest must prove field use or operational risk rather than item handover volume.",
-      "requiredRewriteBoundary": "No generic helmet collection, no escalating count ladder, no one-item-per-quest assort conveyor.",
-      "runtimeMaterialize": false
+      "sourceBundle": "Iron Head", "decision": "rewrite-candidate", "futureUse": "protective-equipment field doctrine",
+      "evidence": ["legacy chain begins from helmet barter", "objective is broad FIR helmet handover", "later quest increases quantity and unlocks another helmet"],
+      "requiredRewriteBoundary": "No generic helmet collection, no escalating count ladder, no one-item-per-quest assort conveyor.", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Meds Proficiency",
-      "decision": "rewrite-candidate",
-      "futureUse": "field-medicine proficiency",
-      "evidence": [
-        "legacy chain begins with Esmarch tourniquet barter",
-        "objective combines broad HandoverItem inputs with five copies of the target medical item",
-        "success immediately unlocks that medical item and the next quest repeats the pattern for another consumable"
-      ],
-      "reason": "Medical proficiency is a potentially coherent Admiral support domain, but the source implementation is acquisition/handover repetition rather than demonstrated medical field use.",
-      "requiredRewriteBoundary": "Future admission requires a proven SPT 4.1.3 use/healing/survival condition or another distinct operational proof; otherwise reject.",
-      "runtimeMaterialize": false
+      "sourceBundle": "Meds Proficiency", "decision": "consolidated-single-deferred-capability", "futureUse": "field-medicine-under-pressure",
+      "evidence": ["legacy bundle contains 40 item-oriented quests", "source progression repeatedly couples medical handover with trade unlocks", "exact ordinary in-raid treatment/recovery condition authority remains unresolved"],
+      "reason": "Later medical curation supersedes the generic rewrite-candidate state. Field Stabilization and Recovery Protocol are facets of one deferred ordinary-field-medicine capability, not separate quest slots.",
+      "requiredRewriteBoundary": "Canonical authority is post-010-field-medicine-disposition.json. No HandoverItem/FIR/use-count/generic survive-extract/stimulant proxy; no second ordinary-medicine quest without a materially distinct exact supported mechanic.",
+      "supersedingAuthority": "post-010-field-medicine-disposition.json", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Juggernaut",
-      "decision": "rewrite-candidate",
-      "futureUse": "heavy-protection field doctrine",
-      "evidence": [
-        "legacy chain begins with BNTI Module-3M body armor barter",
-        "objective is FIR HandoverItem over a broad body-armor target list",
-        "next quest repeats the same structure at quantity two and unlocks the next armor offer"
-      ],
-      "reason": "Heavy protection can support Admiral's expeditionary identity, but the legacy chain is another escalating armor barter conveyor rather than proof of operating effectively under heavy protection.",
-      "requiredRewriteBoundary": "Any future Juggernaut-derived operation must demonstrate field use, survival or combat performance under a bounded armor class/equipment rule; no generic armor handover ladder or per-armor unlock chain.",
-      "runtimeMaterialize": false
+      "sourceBundle": "Juggernaut", "decision": "rewrite-candidate", "futureUse": "heavy-protection field doctrine",
+      "evidence": ["legacy chain begins with armor barter", "objective is broad FIR armor handover", "later quest increases quantity and unlocks another armor"],
+      "requiredRewriteBoundary": "Demonstrate bounded field use/survival/combat under protective equipment; no armor handover ladder or per-armor unlock chain.", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Tarkov Mule",
-      "decision": "rewrite-candidate",
-      "futureUse": "load-bearing expedition field doctrine",
-      "evidence": [
-        "legacy chain begins with Tactical sling bag barter",
-        "objective is FIR HandoverItem over a broad backpack target list",
-        "next quest repeats the same structure at quantity two and unlocks the next backpack offer"
-      ],
-      "reason": "Load-bearing endurance is compatible with expeditionary logistics, but the legacy implementation is another backpack barter ladder rather than proof of carrying, extracting or operating under load.",
-      "requiredRewriteBoundary": "Any future Tarkov Mule-derived operation must use a proven load/extraction/survival mechanic or another field-performance proxy; no backpack collection ladder or sequential backpack storefront unlocks.",
-      "runtimeMaterialize": false
+      "sourceBundle": "Tarkov Mule", "decision": "rewrite-candidate", "futureUse": "load-bearing expedition field doctrine",
+      "evidence": ["legacy chain begins with backpack barter", "objective is broad FIR backpack handover", "later quest increases quantity and unlocks another backpack"],
+      "requiredRewriteBoundary": "Use a proven load/extraction/survival mechanic or another field-performance proof; no backpack collection ladder or sequential backpack storefront unlocks.", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Ultrasound",
-      "decision": "rewrite-candidate",
-      "futureUse": "acoustic-awareness field doctrine",
-      "evidence": [
-        "pinned legacy README defines Ultrasound as 16 quests whose purpose is unlocking headset barter/purchase trades",
-        "bundle is structurally split into eight Barter and eight Trade quests",
-        "Ultrasound Legend is a separate 72-quest gear-restricted kill layer unlocked by the corresponding Ultrasound Trade quests"
-      ],
-      "reason": "Hearing protection and acoustic awareness fit specialist field preparation, but the source bundle is primarily a headset storefront-unlock conveyor. The adjacent Legend layer is also far too repetitive to port as progression.",
-      "requiredRewriteBoundary": "Any future Ultrasound-derived operation must have a distinct field-performance purpose and a small authored scope; no headset-by-headset barter/trade ladder, no 72-quest gear-kill expansion and no sequential storefront unlock quota.",
-      "runtimeMaterialize": false
+      "sourceBundle": "Ultrasound", "decision": "rewrite-candidate", "futureUse": "acoustic-awareness field doctrine",
+      "evidence": ["legacy README defines 16 headset unlock quests", "bundle splits into eight Barter and eight Trade quests", "Ultrasound Legend adds 72 gear-restricted kill quests"],
+      "requiredRewriteBoundary": "No headset-by-headset barter/trade ladder, no 72-quest gear-kill expansion, no sequential storefront unlock quota.", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Stims Proficiency",
-      "decision": "rewrite-candidate",
-      "futureUse": "controlled stimulant field doctrine",
-      "evidence": [
-        "pinned legacy README defines Stims Proficiency as 16 quests whose purpose is unlocking stimulant barter/purchase trades",
-        "bundle is structurally split into one Barter and fifteen Trade quests",
-        "legacy bundle therefore maps almost one quest per stimulant purchase unlock rather than a compact operational proficiency arc"
-      ],
-      "reason": "Controlled stimulant use may support a specialist medical/logistics identity, but a fifteen-trade unlock conveyor would create excessive storefront progression and risks turning quest rewards into a stimulant supply faucet.",
-      "requiredRewriteBoundary": "Any future Stims-derived operation must use a small authored field-use/survival concept proven against SPT 4.1.3, avoid repeated-use grind and health-risk incentives, and keep any stimulant reward or permanent supply behind explicit Economy Admiral review.",
-      "runtimeMaterialize": false
+      "sourceBundle": "Stims Proficiency", "decision": "reject-current-derived-operation-vanilla-semantic-collision", "futureUse": "source-theme-only-unless-new-mechanic-emerges",
+      "evidence": ["legacy README defines 16 stimulant trade-unlock quests", "legacy structure is one Barter plus fifteen Trade quests", "current compact stimulant-conditioned combat rewrite collides with vanilla The Survivalist Path - Junkie"],
+      "reason": "Later Controlled Pharmacology / Controlled Chemical Support review supersedes the generic rewrite-candidate state. Vanilla already owns stimulant-conditioned combat competency; parameter variation does not justify an Admiral quest.",
+      "requiredRewriteBoundary": "Do not resurrect stimulant-conditioned combat through map/count/stimulant/extraction variations. Any future pharmacology concept requires a materially different exact supported mechanic and fresh overlap/economy review; no stimulant handover/use-count filler or permanent supermarket compensation.",
+      "supersedingAuthority": "post-010-medical-capability-curation.json", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Boss Hunt",
-      "decision": "rewrite-candidate",
-      "futureUse": "single high-value-target operations",
-      "evidence": [
-        "pinned legacy README defines a ten-step boss kill chain",
-        "required counts escalate through 1, 2, 3, 4, 5, 7, 9, 12, 20 and 50",
-        "the progression value is therefore repeated body-count escalation rather than distinct operations"
-      ],
-      "reason": "High-value target contracts fit Admiral, but killing the same boss through ten increasing counters is exactly the repetition the curated campaign removes.",
-      "requiredRewriteBoundary": "Preserve only distinct one-off HVT operations with explicit operational context and bounded proof; no repeated boss-count ladder and no same-target sequel whose only change is a larger number.",
-      "runtimeMaterialize": false
+      "sourceBundle": "Boss Hunt", "decision": "rewrite-candidate", "futureUse": "single high-value-target operations",
+      "evidence": ["legacy README defines ten boss-kill steps", "counts escalate from 1 through 50", "progression is repeated body-count escalation"],
+      "requiredRewriteBoundary": "Preserve only distinct one-off HVT operations; no repeated boss-count ladder or same-target sequel whose only change is a larger number.", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Boss Follower Hunt",
-      "decision": "rewrite-candidate",
-      "futureUse": "command-network disruption operations",
-      "evidence": [
-        "pinned legacy README defines a ten-step boss-follower kill chain",
-        "required counts escalate through 1, 3, 5, 7, 9, 12, 15, 20, 50 and 100",
-        "the source applies the ladder anywhere rather than authoring a specific command-network objective"
-      ],
-      "reason": "Disrupting a boss entourage can support a coherent operation, but a 1-to-100 follower body-count ladder is not meaningful authored progression.",
-      "requiredRewriteBoundary": "Use at most a compact contextual operation around a specific command network or escort element; no follower farming ladder, no arbitrary triple-digit count and no location-free repetition without narrative purpose.",
-      "runtimeMaterialize": false
+      "sourceBundle": "Boss Follower Hunt", "decision": "rewrite-candidate", "futureUse": "command-network disruption operations",
+      "evidence": ["legacy README defines ten follower-kill steps", "counts escalate from 1 through 100", "source is location-free repeated body-count progression"],
+      "requiredRewriteBoundary": "Use a compact contextual command-network operation; no follower farming ladder, triple-digit count or location-free repetition without purpose.", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Cultists Hunt",
-      "decision": "rewrite-candidate",
-      "futureUse": "night reconnaissance and cultist disruption",
-      "evidence": [
-        "pinned legacy README defines a ten-step cultist kill chain",
-        "required counts escalate through 1, 2, 5, 10, 15, 20, 27, 35, 50 and 75",
-        "the chain measures only cumulative kills rather than reconnaissance, survival or a specific operation"
-      ],
-      "reason": "Cultist activity can justify a distinctive dangerous contract, but the legacy chain is another escalating body-count grind.",
-      "requiredRewriteBoundary": "Future use must be a small authored night/reconnaissance/disruption operation with proven SPT conditions; no cumulative cultist ladder or reward scaling based solely on kill volume.",
-      "runtimeMaterialize": false
+      "sourceBundle": "Cultists Hunt", "decision": "rewrite-candidate", "futureUse": "night reconnaissance and cultist disruption",
+      "evidence": ["legacy README defines ten cultist-kill steps", "counts escalate from 1 through 75", "chain measures cumulative kills rather than a distinct operation"],
+      "requiredRewriteBoundary": "Use a small authored night/reconnaissance/disruption operation with proven conditions; no cumulative cultist ladder or reward scaling solely by kill volume.", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Sniper Life",
-      "decision": "rewrite-candidate",
-      "futureUse": "precision fieldcraft operation",
-      "evidence": [
-        "pinned legacy README defines 90 quests across four kill/headshot chains",
-        "minimum distance rises by ten metres with each successive quest",
-        "the structure therefore manufactures progression by distance increments rather than distinct tactical problems"
-      ],
-      "reason": "Precision fieldcraft fits Admiral's specialist identity, but ninety incremental-distance quests would duplicate the existing precision capability domain and recreate quota progression.",
-      "requiredRewriteBoundary": "Any future sniper-derived operation must be materially distinct from the frozen Precision Arsenal chain, use one or very few contextual objectives, and never expand by repetitive 10 m distance increments.",
-      "runtimeMaterialize": false
+      "sourceBundle": "Sniper Life", "decision": "rewrite-candidate", "futureUse": "precision fieldcraft operation",
+      "evidence": ["legacy README defines 90 quests", "four chains repeat kill/headshot objectives", "minimum distance rises by ten metres per quest"],
+      "requiredRewriteBoundary": "Remain materially distinct from frozen Precision Arsenal; one or very few contextual objectives; never expand by repetitive 10 m distance increments.", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Survivalist",
-      "decision": "rewrite-candidate",
-      "futureUse": "expedition survival and extraction proof",
-      "evidence": [
-        "pinned legacy README defines 40 quests as five-quest chains per location plus a location-free chain",
-        "early stages repeat survival counts of 2, 5 and 10",
-        "later stages repeat 5 and 10 survived-status raids with restart-on-failure behavior"
-      ],
-      "reason": "Extraction discipline is a strong expeditionary theme, but repeating the same survival counter across every map creates forty near-duplicate quests.",
-      "requiredRewriteBoundary": "Compress survival into a small authored expedition arc with distinct risk/context and proven SPT 4.1.3 survived-status semantics; no per-map five-quest template and no restart punishment used merely to inflate repetition.",
-      "runtimeMaterialize": false
+      "sourceBundle": "Survivalist", "decision": "rewrite-candidate", "futureUse": "expedition survival and extraction proof",
+      "evidence": ["legacy README defines 40 quests", "five-quest templates repeat per location plus location-free chain", "survived-status counts and restart-on-failure behavior repeat"],
+      "requiredRewriteBoundary": "Compress into a small authored expedition arc with distinct risk/context and proven survived-status semantics; no per-map five-quest template or restart punishment used to inflate repetition.", "runtimeMaterialize": false
     }
-  ]
+  ],
+  "synchronization": {
+    "medicalCapabilityAuthority": "post-010-medical-capability-curation.json",
+    "fieldMedicineAuthority": "post-010-field-medicine-disposition.json",
+    "chemicalSupportAuthority": "post-010-chemical-support-operation.json",
+    "medsIndependentCandidateCount": 1,
+    "stimsCurrentDerivedOperationAccepted": false,
+    "frozenRuntimeChanged": false
+  }
 }
