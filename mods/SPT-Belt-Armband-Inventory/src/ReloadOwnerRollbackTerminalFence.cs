@@ -110,14 +110,17 @@ namespace SPTBeltArmbandInventory
                 }
                 catch
                 {
-                    bool rolledBack = TryRollback(owner, rollback);
+                    // UnpatchSelf is best-effort cleanup only here. A no-throw invocation does
+                    // not prove that every partially published blocker/observer owned by this
+                    // fence is absent. Once an owner was created and installation subsequently
+                    // failed, authority is therefore process-terminal regardless of cleanup's
+                    // apparent success. This is intentionally stricter than the normal owner
+                    // rollback path: the fence itself is the last fail-closed boundary and must
+                    // never certify its own absence from an unverified side effect.
+                    TryRollback(owner, rollback);
                     harmonyOwner = null;
                     fenceInstalled = false;
-                    // Process poison is monotonic. A concurrent/earlier rollback observer may
-                    // already have established terminal ambiguity while this installation was
-                    // failing. A successful cleanup of this local owner must never clear that
-                    // previously published process-terminal fact.
-                    terminalFailure = MergeTerminalFailureForRegression(terminalFailure, owner != null, rolledBack);
+                    terminalFailure = MergeTerminalFailureForRegression(terminalFailure, owner != null);
                     return false;
                 }
             }
@@ -145,9 +148,9 @@ namespace SPTBeltArmbandInventory
             if (!rollbackProven) terminalFailure = true;
         }
 
-        internal static bool MergeTerminalFailureForRegression(bool currentTerminalFailure, bool ownerCreated, bool rollbackProven)
+        internal static bool MergeTerminalFailureForRegression(bool currentTerminalFailure, bool ownerCreated)
         {
-            return currentTerminalFailure || (ownerCreated && !rollbackProven);
+            return currentTerminalFailure || ownerCreated;
         }
 
         internal static void ResetForRegression()
