@@ -213,7 +213,7 @@ public static class DogtagCaseHostContract
                     return false;
 
                 HashSet<MongoId> after = SnapshotCurrentFilter(currentFilter);
-                if (!after.SetEquals(preCommitSnapshot))
+                if (!IsExactRollbackBaseline(after, preCommitSnapshot))
                     return false;
 
                 // Consume rollback/capture metadata only after the exact owned remove
@@ -231,6 +231,11 @@ public static class DogtagCaseHostContract
         {
             return false;
         }
+    }
+
+    private static bool IsExactRollbackBaseline(HashSet<MongoId> after, HashSet<MongoId> preCommitSnapshot)
+    {
+        return after.SetEquals(preCommitSnapshot);
     }
 
     private static HashSet<MongoId> SnapshotCurrentFilter(HashSet<MongoId> currentFilter)
