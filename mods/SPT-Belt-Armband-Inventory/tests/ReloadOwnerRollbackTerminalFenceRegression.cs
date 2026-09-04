@@ -30,6 +30,17 @@ namespace SPTBeltArmbandInventory.Tests
             Assert(!ReloadOwnerRollbackTerminalFence.CanInstallForRegression(),
                 "later successful rollback cannot clear process-terminal stale-owner ambiguity");
 
+            Assert(!ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(false, false, true),
+                "failed installation before owner creation must not invent rollback ambiguity");
+            Assert(!ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(false, true, true),
+                "proven cleanup of a newly-created owner may leave a previously-clean process unpoisoned");
+            Assert(ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(false, true, false),
+                "unproven cleanup of a created owner must poison the process");
+            Assert(ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(true, true, true),
+                "successful local cleanup must never clear terminal ambiguity already published by another rollback observer");
+            Assert(ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(true, false, true),
+                "an already-poisoned process remains poisoned even when the failing install created no owner");
+
             ReloadOwnerRollbackTerminalFence.ResetForRegression();
         }
 
