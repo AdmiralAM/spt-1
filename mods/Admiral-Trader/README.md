@@ -110,4 +110,4 @@ Connector-authored commits have an independent exact-head validation path: a pus
 python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 ```
 
-Active work is tracked by Issue #192 / Draft PR #193. `origin/main:AGENTS.md` and `origin/main:.github/workstreams.json` own phase progression and runtime-gate authority.
+Frozen `0.1.0` release/runtime authority remains Issue #192 / Draft PR #193. Independent post-`0.1.0` curation, progression and hardening work is tracked by Issue #115 / Draft PR #297.
