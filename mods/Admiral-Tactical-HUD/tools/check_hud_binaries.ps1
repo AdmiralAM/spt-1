@@ -15,14 +15,18 @@ function Test-HudAssembly([string]$Path, [string]$ExpectedName, [string]$Expecte
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { throw "HUD assembly missing: $Path" }
     $assembly = [System.Reflection.Assembly]::LoadFile((Resolve-Path -LiteralPath $Path).Path)
     if ($assembly.GetName().Name -ne $ExpectedName) {
-        throw "Assembly identity mismatch for $Path: $($assembly.GetName().Name)"
+        throw "Assembly identity mismatch for $($Path): $($assembly.GetName().Name)"
     }
     $resources = @($assembly.GetManifestResourceNames())
     foreach ($name in @($expectedResources) + $reserve) {
         if ($resources -notcontains $name) { throw "$ExpectedName missing embedded resource: $name" }
     }
-    $binaryText = [Text.Encoding]::UTF8.GetString([IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $Path)))
-    if (-not $binaryText.Contains($ExpectedGuid)) { throw "$ExpectedName missing plugin GUID: $ExpectedGuid" }
+    $binaryBytes = [IO.File]::ReadAllBytes((Resolve-Path -LiteralPath $Path))
+    $binaryUtf8 = [Text.Encoding]::UTF8.GetString($binaryBytes)
+    $binaryUtf16 = [Text.Encoding]::Unicode.GetString($binaryBytes)
+    if (-not $binaryUtf8.Contains($ExpectedGuid) -and -not $binaryUtf16.Contains($ExpectedGuid)) {
+        throw "$ExpectedName missing plugin GUID: $ExpectedGuid"
+    }
     [pscustomobject]@{ Name = $assembly.GetName().Name; Guid = $ExpectedGuid; Resources = $resources.Count }
 }
 
