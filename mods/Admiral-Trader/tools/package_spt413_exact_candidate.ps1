@@ -176,7 +176,11 @@ if ($Install) {
         if ($installedManifest.registrationEnabled -ne $true -or [string]$installedManifest.targetSptVersion -ne '4.1.3' -or [string]$installedManifest.publicationMode -ne 'test-candidate') { throw 'Installed runtime manifest is not an enabled exact SPT 4.1.3 test candidate.' }
     }
 
-    foreach ($scratch in @($incoming, $backup)) { if (Test-Path $scratch) { Remove-Item $scratch -Recurse -Force } }
+    if (Test-Path $incoming) { Remove-Item $incoming -Recurse -Force }
+    if (Test-Path $backup) {
+        throw "Interrupted or unresolved prior Admiral Trader install detected. Rollback copy is preserved at: $backup. Resolve/restore it before retrying installation."
+    }
+
     Copy-Item $stageMod $incoming -Recurse
     try {
         Assert-AdmiralInstallTree -RootPath $incoming
