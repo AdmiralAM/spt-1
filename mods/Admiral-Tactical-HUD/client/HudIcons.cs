@@ -54,35 +54,43 @@ namespace SPTPopCounter
                 string path = Path.Combine(Paths.PluginPath,"Admiral Tactical HUD","assets","hud-sprites.png");
                 if (!File.Exists(path)) path = Path.Combine(Paths.PluginPath,"assets","hud-sprites.png");
                 if (File.Exists(path)) bytes = File.ReadAllBytes(path);
-
-                if (bytes == null)
-                {
-                    Assembly assembly = typeof(HudIcons).Assembly;
-                    using (Stream stream = assembly.GetManifestResourceStream(ReserveResource))
-                    {
-                        if (stream != null)
-                        {
-                            bytes = new byte[stream.Length];
-                            int offset = 0;
-                            while (offset < bytes.Length)
-                            {
-                                int read = stream.Read(bytes,offset,bytes.Length-offset);
-                                if (read <= 0) break;
-                                offset += read;
-                            }
-                            if (offset != bytes.Length) bytes = null;
-                        }
-                    }
-                }
-
-                if (bytes == null) return;
-                sheet = new Texture2D(2,2,TextureFormat.RGBA32,false);
-                sheet.name = "Admiral Tactical HUD Reserve Sprite Sheet";
-                sheet.filterMode = FilterMode.Bilinear;
-                sheet.wrapMode = TextureWrapMode.Clamp;
-                if (!ImageConversion.LoadImage(sheet,bytes,false)) sheet = null;
+                if (!TryLoadSheet(bytes)) TryLoadSheet(ReadEmbeddedReserve());
             }
             catch { sheet = null; }
+        }
+
+        byte[] ReadEmbeddedReserve()
+        {
+            Assembly assembly = typeof(HudIcons).Assembly;
+            using (Stream stream = assembly.GetManifestResourceStream(ReserveResource))
+            {
+                if (stream == null) return null;
+                byte[] bytes = new byte[stream.Length];
+                int offset = 0;
+                while (offset < bytes.Length)
+                {
+                    int read = stream.Read(bytes,offset,bytes.Length-offset);
+                    if (read <= 0) break;
+                    offset += read;
+                }
+                return offset == bytes.Length ? bytes : null;
+            }
+        }
+
+        bool TryLoadSheet(byte[] bytes)
+        {
+            if (bytes == null) return false;
+            Texture2D candidate = new Texture2D(2,2,TextureFormat.RGBA32,false);
+            candidate.name = "Admiral Tactical HUD Reserve Sprite Sheet";
+            candidate.filterMode = FilterMode.Bilinear;
+            candidate.wrapMode = TextureWrapMode.Clamp;
+            if (!ImageConversion.LoadImage(candidate,bytes,false))
+            {
+                UnityEngine.Object.Destroy(candidate);
+                return false;
+            }
+            sheet = candidate;
+            return true;
         }
 
         public Texture2D Get(string key)

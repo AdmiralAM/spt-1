@@ -63,6 +63,13 @@ jobs:
         shell: pwsh
         run: dotnet build 'mods/Admiral-Tactical-HUD/server/Admiral-Tactical-HUD-Server.csproj' -c Release --nologo
 
+      - name: Validate built HUD assemblies
+        shell: pwsh
+        run: |
+          ./mods/Admiral-Tactical-HUD/tools/check_hud_binaries.ps1 `
+            -Compact 'mods/Admiral-Tactical-HUD/client/bin/Release/netstandard2.1/Admiral Tactical HUD.dll' `
+            -FullCensus 'mods/Admiral-Tactical-HUD/client/bin/Release/netstandard2.1/Admiral Tactical HUD Full Census.dll'
+
       - name: Stage Admiral Tactical HUD RC2 package
         shell: pwsh
         run: |
@@ -77,27 +84,32 @@ jobs:
           Copy-Item 'mods/Admiral-Tactical-HUD/client/assets/hud-sprites.png' (Join-Path $clientAssets 'hud-sprites.png')
           Copy-Item 'mods/Admiral-Tactical-HUD/server/bin/Release/net10.0/Admiral Tactical HUD Server.dll' (Join-Path $server 'Admiral Tactical HUD Server.dll')
           Copy-Item 'mods/Admiral-Tactical-HUD/README.md' (Join-Path $server 'README.md')
+          Copy-Item 'mods/Admiral-Tactical-HUD/cleanup-manifest.json' (Join-Path $server 'cleanup-manifest.json')
           Copy-Item 'mods/Admiral-Tactical-HUD/THIRD-PARTY-LICENSES' (Join-Path $server 'THIRD-PARTY-LICENSES') -Recurse
 
       - name: Validate RC2 package contract
         shell: pwsh
         run: |
           $root = 'artifacts/Admiral-Tactical-HUD-1.13.3-RC2'
-          $required = @(
-            "$root/BepInEx/plugins/Admiral Tactical HUD/Admiral Tactical HUD.dll",
-            "$root/BepInEx/plugins/Admiral Tactical HUD/Admiral Tactical HUD Full Census.dll",
-            "$root/BepInEx/plugins/Admiral Tactical HUD/assets/hud-sprites.png",
-            "$root/SPT_Runtime/user/mods/Admiral Tactical HUD/Admiral Tactical HUD Server.dll",
-            "$root/SPT_Runtime/user/mods/Admiral Tactical HUD/THIRD-PARTY-LICENSES/BotCensus-LICENSE.txt"
-          )
-          foreach ($path in $required) {
-            if (-not (Test-Path $path -PathType Leaf)) { throw "RC2 runtime file missing: $path" }
-          }
+          ./mods/Admiral-Tactical-HUD/tools/check_hud_package.ps1 `
+            -PackageRoot $root `
+            -Manifest 'mods/Admiral-Tactical-HUD/cleanup-manifest.json'
+
+      - name: Create install-ready RC2 archive and checksum
+        shell: pwsh
+        run: |
+          $name = 'Admiral-Tactical-HUD-1.13.3-RC2'
+          Compress-Archive -Path "artifacts/$name/*" -DestinationPath "artifacts/$name.zip" -CompressionLevel Optimal
+          $hash = (Get-FileHash "artifacts/$name.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $name.zip" | Set-Content "artifacts/$name.sha256" -Encoding ascii
+          Write-Host "RC2_SHA256=$hash"
 
       - name: Upload Admiral Tactical HUD RC2 package
         uses: actions/upload-artifact@v4
         with:
           name: Admiral-Tactical-HUD-1.13.3-RC2
-          path: artifacts/Admiral-Tactical-HUD-1.13.3-RC2
+          path: |
+            artifacts/Admiral-Tactical-HUD-1.13.3-RC2.zip
+            artifacts/Admiral-Tactical-HUD-1.13.3-RC2.sha256
           if-no-files-found: error
           retention-days: 14

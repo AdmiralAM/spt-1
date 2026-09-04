@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Tactical HUD",
+  "replacementRoot": ".",
+  "removeBeforeInstall": [
+    "BepInEx/plugins/SPT Tactical HUD.dll",
+    "BepInEx/plugins/SPT-Tactical-HUD.dll",
+    "BepInEx/plugins/SPT-TacticalHUD.dll",
+    "BepInEx/plugins/SPT Tactical HUD",
+    "BepInEx/plugins/SPT-Tactical-HUD",
+    "BepInEx/plugins/assets/hud-sprites.png",
+    "SPT_Runtime/user/mods/SPT Tactical HUD",
+    "SPT_Runtime/user/mods/SPT-Tactical-HUD"
+  ],
+  "replace": [
+    "BepInEx/plugins/Admiral Tactical HUD",
+    "SPT_Runtime/user/mods/Admiral Tactical HUD"
+  ],
+  "allowedPackageFiles": [
+    "BepInEx/plugins/Admiral Tactical HUD/Admiral Tactical HUD.dll",
+    "BepInEx/plugins/Admiral Tactical HUD/Admiral Tactical HUD Full Census.dll",
+    "BepInEx/plugins/Admiral Tactical HUD/assets/hud-sprites.png",
+    "SPT_Runtime/user/mods/Admiral Tactical HUD/Admiral Tactical HUD Server.dll",
+    "SPT_Runtime/user/mods/Admiral Tactical HUD/README.md",
+    "SPT_Runtime/user/mods/Admiral Tactical HUD/cleanup-manifest.json",
+    "SPT_Runtime/user/mods/Admiral Tactical HUD/THIRD-PARTY-LICENSES/BotCensus-LICENSE.txt"
+  ]
+}
