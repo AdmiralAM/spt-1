@@ -173,50 +173,56 @@ public static class DogtagCaseHostContract
         if (currentFilter == null || preCommitSnapshot == null) return false;
         try
         {
-            RollbackAuthority? authority;
             lock (SnapshotSync)
             {
-                if (!RollbackAuthorities.TryGetValue(preCommitSnapshot, out authority))
+                if (!RollbackAuthorities.TryGetValue(preCommitSnapshot, out RollbackAuthority? authority))
                     return false;
 
                 // A rejected foreign/value-identical host or caller-mutated snapshot
-                // must not burn the real exact-host token. Only an exact host + exact
-                // caller baseline is allowed to consume this single-consumer authority.
+                // must not burn the real exact-host token. Only the exact host + exact
+                // caller baseline may exercise this authority.
                 if (!ReferenceEquals(currentFilter, authority.Host)
                     || !preCommitSnapshot.SetEquals(authority.Baseline))
                     return false;
 
+                // Bind all value checks to the internally pinned baseline. Crucially,
+                // neither the snapshot-key token nor ActiveRollbackHosts capture gate
+                // is consumed yet. Any drift/no-op failure before a proven exact
+                // baseline restore leaves the original authority live, so later
+                // value-ABA cannot open a second baseline capture on this host.
+                HashSet<MongoId> baseline = authority.Baseline;
+                var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
+                if (baseline.Contains(caseTpl)) return false;
+
+                HashSet<MongoId> expectedCommitted = new(baseline) { caseTpl };
+                HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);
+                if (!current.SetEquals(expectedCommitted))
+                    return false;
+
+                // Re-prove the exact host shape immediately before the only mutation.
+                // Foreign/current drift remains untouched and retains capture authority.
+                HashSet<MongoId> liveBeforeRemove = SnapshotCurrentFilter(currentFilter);
+                if (!current.SetEquals(liveBeforeRemove)
+                    || !liveBeforeRemove.SetEquals(expectedCommitted))
+                    return false;
+
+                if (!currentFilter.Remove(caseTpl))
+                    return false;
+
+                HashSet<MongoId> after = SnapshotCurrentFilter(currentFilter);
+                if (!after.SetEquals(baseline))
+                    return false;
+
+                // Consume rollback/capture metadata only after the exact owned remove
+                // and exact baseline restoration are both proven. Successful rollback
+                // is therefore the sole path that re-opens this host for a fresh
+                // pre-add transaction; ambiguous failures remain fail-closed.
                 RollbackAuthorities.Remove(preCommitSnapshot);
                 if (ActiveRollbackHosts.TryGetValue(authority.Host, out RollbackAuthority? active)
                     && ReferenceEquals(active, authority))
                     ActiveRollbackHosts.Remove(authority.Host);
+                return true;
             }
-
-            // From this point onward the local name is rebound to the internally pinned
-            // baseline, not caller-controlled mutable snapshot state. The exact-host
-            // attempt has consumed authority, so later content ABA cannot regain it.
-            preCommitSnapshot = authority.Baseline;
-            var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
-            if (preCommitSnapshot.Contains(caseTpl)) return false;
-
-            HashSet<MongoId> expectedCommitted = new(preCommitSnapshot) { caseTpl };
-            HashSet<MongoId> current = SnapshotCurrentFilter(currentFilter);
-            if (!current.SetEquals(expectedCommitted))
-                return false;
-
-            // Mirror metadata-abandon's final point-in-time reproof at the actual
-            // rollback mutation boundary. If the exact host changes after the first
-            // committed-shape proof, do not remove our Case from a now-drifted host.
-            HashSet<MongoId> liveBeforeRemove = SnapshotCurrentFilter(currentFilter);
-            if (!current.SetEquals(liveBeforeRemove)
-                || !liveBeforeRemove.SetEquals(expectedCommitted))
-                return false;
-
-            if (!currentFilter.Remove(caseTpl))
-                return false;
-
-            HashSet<MongoId> after = SnapshotCurrentFilter(currentFilter);
-            return after.SetEquals(preCommitSnapshot);
         }
         catch
         {
