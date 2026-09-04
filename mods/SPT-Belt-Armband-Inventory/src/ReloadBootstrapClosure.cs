@@ -6,8 +6,8 @@ namespace SPTBeltArmbandInventory
     /// <summary>
     /// Bootstrap closure for the two older reload publication guards whose own module
     /// initializers probe Harmony before subscribing to AssemblyLoad. This closure
-    /// subscribes first, then invokes their exact private zero-argument TryInstall
-    /// contracts. A 0Harmony load in either legacy probe/subscription window is therefore
+    /// subscribes first, then invokes each guard's exact private zero-argument install
+    /// entrypoint. A 0Harmony load in either legacy probe/subscription window is therefore
     /// still observed by this independent handler. It does not patch reload methods,
     /// discover candidates, query inventory, or alter vanilla-first semantics.
     /// </summary>
@@ -53,7 +53,7 @@ namespace SPTBeltArmbandInventory
 
             try
             {
-                MethodInfo install = ResolveTryInstall(target);
+                MethodInfo install = ResolveInstallEntrypoint(target);
                 FieldInfo terminalField = ResolveTerminalFailure(target);
                 if (install == null || terminalField == null)
                     return false;
@@ -80,14 +80,22 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static MethodInfo ResolveTryInstall(Type target)
+        static MethodInfo ResolveInstallEntrypoint(Type target)
         {
+            string methodName;
+            if (target == typeof(ReloadCallerPublicationFence))
+                methodName = "TryInstallLifecycleHook";
+            else if (target == typeof(ReloadEpochPublicationFence))
+                methodName = "TryInstall";
+            else
+                return null;
+
             MethodInfo selected = null;
             MethodInfo[] methods = target.GetMethods(BindingFlags.Static | BindingFlags.NonPublic);
             for (int i = 0; i < methods.Length; i++)
             {
                 MethodInfo method = methods[i];
-                if (!string.Equals(method.Name, "TryInstall", StringComparison.Ordinal)
+                if (!string.Equals(method.Name, methodName, StringComparison.Ordinal)
                     || method.ReturnType != typeof(bool)
                     || method.GetParameters().Length != 0)
                     continue;
@@ -108,7 +116,7 @@ namespace SPTBeltArmbandInventory
             return !installSucceeded && !terminal;
         }
 
-        internal static MethodInfo ResolveTryInstallForRegression(Type target) => ResolveTryInstall(target);
+        internal static MethodInfo ResolveTryInstallForRegression(Type target) => ResolveInstallEntrypoint(target);
         internal static FieldInfo ResolveTerminalFailureForRegression(Type target) => ResolveTerminalFailure(target);
     }
 }
