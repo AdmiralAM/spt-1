@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-curation",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -27,15 +27,15 @@
       "generic HandoverItem supply ladders whose principal payoff is unlocking the handed-over item",
       "barter-versus-cash duplicate quest variants for the same item",
       "permanent stimulant supermarket stock",
-      "reward escalation justified only by the market value of the unlocked consumable"
+      "reward escalation justified only by the market value of the unlocked consumable",
+      "generic stimulant-conditioned combat as a standalone Admiral capability milestone because vanilla already owns that defining fantasy"
     ],
     "preserve": [
       "field medicine preparedness",
       "combat recovery and casualty stabilization",
-      "controlled pharmacological capability",
       "bounded specialist medical access as a milestone payoff"
     ],
-    "rationale": "Admiral is a capability broker and expeditionary logistics trader. Medical progression must prove field capability and then grant a narrow privilege; it must not recreate 56 item-by-item procurement chores."
+    "rationale": "Admiral is a capability broker and expeditionary logistics trader. Medical progression must prove field capability and then grant a narrow privilege; it must not recreate 56 item-by-item procurement chores or duplicate a vanilla stimulant-combat competency test."
   },
   "authoredCandidates": [
     {
@@ -80,28 +80,29 @@
         "No unlimited surgical or premium med stock without a separately justified finite-offer budget."
       ],
       "runtimeGate": "Admit only if exact supported mechanics produce a materially distinct objective without relying on unverifiable injury-state coupling."
-    },
+    }
+  ],
+  "rejectedCandidates": [
     {
       "id": "MED-PHARM-01",
       "workingName": "Controlled Pharmacology",
-      "domain": "medical",
-      "sourceThemes": ["Stims Proficiency"],
-      "purpose": "Preserve the stimulant-capability fantasy while replacing sixteen permanent trade unlock chores with one tightly controlled specialist milestone.",
-      "mechanicIntent": [
-        "explicit stimulant-related field proof only if exact SPT/EFT semantics are proven",
-        "bounded target/use count",
-        "no requirement to consume a long shopping list of different injectors"
+      "decision": "REJECT-VANILLA-SEMANTIC-COLLISION",
+      "definingFantasy": "prove stimulant capability through stimulant-conditioned combat",
+      "vanillaAuthority": {
+        "quest": "The Survivalist Path - Junkie",
+        "trader": "Jaeger",
+        "location": "Woods",
+        "objective": "Eliminate 15 Scavs while under any stimulant effect on Woods",
+        "finding": "Vanilla already expresses the defining stimulant-in-combat competency fantasy directly. Reducing target count, changing map, changing stimulant list, or adding extraction would be parameter variation rather than a distinct Admiral capability."
+      },
+      "dispositionRules": [
+        "Do not rename and retain the same stimulant-conditioned combat mechanic.",
+        "Do not replace it with a filler stimulant-consumption or handover quest.",
+        "Do not create a permanent stimulant assortment unlock as compensation.",
+        "Do not redistribute any hypothetical reward or standing budget to surviving medical candidates.",
+        "A future pharmacology concept may re-enter only with a materially different supported mechanic and a fresh overlap review."
       ],
-      "payoffIntent": [
-        "standing",
-        "small stimulant sample or a single finite low-pressure specialist offer"
-      ],
-      "economyRules": [
-        "Permanent broad stimulant assortment is forbidden.",
-        "High-value or combat-dominant stimulants default to sample-only unless Economy Admiral approves a narrow finite offer.",
-        "Relationship standing may improve quantity only after the base capability gate exists; it may not bypass the authored milestone."
-      ],
-      "runtimeGate": "Fail closed until exact stimulant condition semantics, vanilla/Artem/Scorpion overlap and Economy Admiral pressure are proven."
+      "runtimeMaterialize": false
     }
   ],
   "admissionPolicy": {
