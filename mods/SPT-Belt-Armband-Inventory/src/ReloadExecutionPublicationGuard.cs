@@ -74,8 +74,13 @@ namespace SPTBeltArmbandInventory
         [System.Runtime.CompilerServices.ModuleInitializer]
         internal static void Initialize()
         {
-            if (!TryInstall() && !terminalFailure)
-                AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+            if (TryInstall() || terminalFailure)
+                return;
+
+            AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+            bool retrySucceeded = TryInstall();
+            if (!ShouldKeepAssemblyLoadSubscriptionForRegression(retrySucceeded, terminalFailure))
+                AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
         }
 
         static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
@@ -93,6 +98,11 @@ namespace SPTBeltArmbandInventory
             }
 
             AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+        }
+
+        internal static bool ShouldKeepAssemblyLoadSubscriptionForRegression(bool installSucceeded, bool terminal)
+        {
+            return !installSucceeded && !terminal;
         }
 
         static bool TryInstall()
