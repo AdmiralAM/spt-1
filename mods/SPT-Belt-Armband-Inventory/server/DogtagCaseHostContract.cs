@@ -98,12 +98,11 @@ public static class DogtagCaseHostContract
         if (!current.SetEquals(liveAfterProof))
             throw new InvalidOperationException("B&A&HB Dogtag host verification refused: live Dogtag filter changed during committed-host verification.");
 
-        // Once the exact committed shape has been observed stable, another preload
-        // transaction cannot still be in the pre-add capture phase for this host.
-        // Release only the per-host capture gate; snapshot-key rollback authority is
-        // retained so a later cancellation/exception can still undo this exact add.
-        lock (SnapshotSync)
-            ActiveRollbackHosts.Remove(currentFilter);
+        // Do not release ActiveRollbackHosts merely because a committed shape was
+        // observed. The exact snapshot-key receipt is still live until explicit
+        // metadata abandon or owned rollback consumes it. Releasing the per-host
+        // gate here would permit an external add/remove ABA to open a second baseline
+        // capture while the first rollback authority remains valid.
     }
 
     public static HashSet<MongoId> CaptureRollbackBaseline(HashSet<MongoId> currentFilter)
