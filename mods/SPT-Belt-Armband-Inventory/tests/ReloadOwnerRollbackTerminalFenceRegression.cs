@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
 
@@ -9,6 +10,10 @@ namespace SPTBeltArmbandInventory.Tests
         [ModuleInitializer]
         internal static void Run()
         {
+            FieldInfo poison = typeof(ReloadOwnerRollbackTerminalFence).GetField("terminalFailure", BindingFlags.Static | BindingFlags.NonPublic);
+            Assert(poison != null && HasRequiredModifier(poison, typeof(IsVolatile)),
+                "process-terminal poison must be volatile so rollback failure is immediately visible to later owner-install prefixes on other threads");
+
             ReloadOwnerRollbackTerminalFence.ResetForRegression();
             Assert(ReloadOwnerRollbackTerminalFence.CanInstallForRegression(),
                 "fresh process authority allows reload owner installation");
@@ -26,6 +31,14 @@ namespace SPTBeltArmbandInventory.Tests
                 "later successful rollback cannot clear process-terminal stale-owner ambiguity");
 
             ReloadOwnerRollbackTerminalFence.ResetForRegression();
+        }
+
+        static bool HasRequiredModifier(FieldInfo field, Type modifier)
+        {
+            Type[] modifiers = field.GetRequiredCustomModifiers();
+            for (int i = 0; i < modifiers.Length; i++)
+                if (modifiers[i] == modifier) return true;
+            return false;
         }
 
         static void Assert(bool condition, string message)
