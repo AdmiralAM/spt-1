@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using SPTBeltArmbandInventory;
@@ -15,19 +16,23 @@ namespace SPTBeltArmbandInventory.Tests
                 "process-terminal poison must be volatile so rollback failure is immediately visible to later owner-install prefixes on other threads");
 
             ReloadOwnerRollbackTerminalFence.ResetForRegression();
-            Assert(ReloadOwnerRollbackTerminalFence.CanInstallForRegression(),
+            Assert(ReloadOwnerRollbackTerminalFence.OwnerInstallsAllowed,
                 "fresh process authority allows reload owner installation");
+            Assert(ReloadOwnerRollbackTerminalFence.CanInstallForRegression(),
+                "regression projection must match production owner-install authority");
 
             ReloadOwnerRollbackTerminalFence.ObserveRollbackForRegression(true);
-            Assert(ReloadOwnerRollbackTerminalFence.CanInstallForRegression(),
+            Assert(ReloadOwnerRollbackTerminalFence.OwnerInstallsAllowed,
                 "proven normal Harmony rollback does not poison future owner installation");
 
             ReloadOwnerRollbackTerminalFence.ObserveRollbackForRegression(false);
-            Assert(!ReloadOwnerRollbackTerminalFence.CanInstallForRegression(),
+            Assert(!ReloadOwnerRollbackTerminalFence.OwnerInstallsAllowed,
                 "unproven normal Harmony rollback terminally blocks later owner installation");
+            Assert(!ReloadOwnerRollbackTerminalFence.CanInstallForRegression(),
+                "regression projection must observe process-terminal production denial");
 
             ReloadOwnerRollbackTerminalFence.ObserveRollbackForRegression(true);
-            Assert(!ReloadOwnerRollbackTerminalFence.CanInstallForRegression(),
+            Assert(!ReloadOwnerRollbackTerminalFence.OwnerInstallsAllowed,
                 "later successful rollback cannot clear process-terminal stale-owner ambiguity");
 
             Assert(!ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(false, false),
@@ -48,7 +53,54 @@ namespace SPTBeltArmbandInventory.Tests
             Assert(ReloadOwnerRollbackTerminalFence.ShouldRetainAssemblyLoadSubscriptionForRegression(false, false),
                 "only a still-unavailable, non-terminal post-subscription retry may retain the AssemblyLoad handler for a future 0Harmony load");
 
+            AssertDirectProductionGateWiring();
             ReloadOwnerRollbackTerminalFence.ResetForRegression();
+        }
+
+        static void AssertDirectProductionGateWiring()
+        {
+            string root = FindModuleRoot();
+            Assert(root != null, "module root must resolve for direct owner-install wiring proof");
+            string source = File.ReadAllText(Path.Combine(root, "src", "FastAccessSlotPatches.cs"));
+
+            AssertMethodGate(source, "bool TryInstallReloadReachability()", "if (!ReloadOwnerRollbackTerminalFence.OwnerInstallsAllowed)", "if (reachabilityRollbackUnsafe)");
+            AssertMethodGate(source, "bool TryInstallReloadCandidateBridge(Type inventoryType, Type slotEnumType, object dedicatedBelt)", "if (!ReloadOwnerRollbackTerminalFence.OwnerInstallsAllowed)", "if (candidateBridgeRollbackUnsafe)");
+        }
+
+        static void AssertMethodGate(string source, string methodSignature, string directGate, string firstLegacyGate)
+        {
+            int method = source.IndexOf(methodSignature, StringComparison.Ordinal);
+            Assert(method >= 0, "production installer missing: " + methodSignature);
+            int nextMethod = source.IndexOf("\n        static ", method + methodSignature.Length, StringComparison.Ordinal);
+            if (nextMethod < 0) nextMethod = source.Length;
+            string body = source.Substring(method, nextMethod - method);
+            int gate = body.IndexOf(directGate, StringComparison.Ordinal);
+            int legacy = body.IndexOf(firstLegacyGate, StringComparison.Ordinal);
+            Assert(gate >= 0, "production installer lacks direct process-terminal authority gate: " + methodSignature);
+            Assert(legacy >= 0 && gate < legacy,
+                "process-terminal authority must be checked before per-instance rollback state/reflection/publication: " + methodSignature);
+        }
+
+        static string FindModuleRoot()
+        {
+            DirectoryInfo current = new DirectoryInfo(AppContext.BaseDirectory);
+            while (current != null)
+            {
+                string candidate = Path.Combine(current.FullName, "src", "FastAccessSlotPatches.cs");
+                if (File.Exists(candidate)) return current.FullName;
+                current = current.Parent;
+            }
+
+            current = new DirectoryInfo(Directory.GetCurrentDirectory());
+            while (current != null)
+            {
+                string direct = Path.Combine(current.FullName, "src", "FastAccessSlotPatches.cs");
+                if (File.Exists(direct)) return current.FullName;
+                string nested = Path.Combine(current.FullName, "mods", "SPT-Belt-Armband-Inventory");
+                if (File.Exists(Path.Combine(nested, "src", "FastAccessSlotPatches.cs"))) return nested;
+                current = current.Parent;
+            }
+            return null;
         }
 
         static bool HasRequiredModifier(FieldInfo field, Type modifier)
