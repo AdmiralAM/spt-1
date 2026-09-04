@@ -70,6 +70,11 @@ namespace SPTBeltArmbandInventory.Tests
                 ReloadCandidateBridgeRuntime.ReadTemplateId = templateId;
 
                 Require(ReloadExecutionPublicationGuard.ShouldPublishForRegression(snapshot), "exact captured identities recover after fixture restoration");
+
+                Require(!ReloadExecutionPublicationGuard.ShouldKeepAssemblyLoadSubscriptionForRegression(true, false), "successful post-subscription retry removes AssemblyLoad handler");
+                Require(!ReloadExecutionPublicationGuard.ShouldKeepAssemblyLoadSubscriptionForRegression(true, true), "terminal state dominates successful retry cleanup");
+                Require(!ReloadExecutionPublicationGuard.ShouldKeepAssemblyLoadSubscriptionForRegression(false, true), "terminal retry removes AssemblyLoad handler");
+                Require(ReloadExecutionPublicationGuard.ShouldKeepAssemblyLoadSubscriptionForRegression(false, false), "unavailable non-terminal Harmony retry retains AssemblyLoad handler");
             }
             finally
             {
