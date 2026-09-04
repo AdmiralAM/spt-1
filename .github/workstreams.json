@@ -308,8 +308,8 @@
       ],
       "activeDevelopment": {
         "issue": 71,
-        "pullRequest": 195,
-        "branch": "optimize/tactical-hud-runtime",
+        "pullRequest": 322,
+        "branch": "recovery/tactical-hud-rc2-clean",
         "version": "1.13.3-RC2",
         "headAuthority": "live-pull-request-head",
         "state": "draft-release-candidate"
