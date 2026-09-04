@@ -227,7 +227,7 @@
     "tacticalHud": {
       "workstreamName": "Admiral Tactical HUD",
       "productName": "Admiral Tactical HUD",
-      "modulePath": "mods/SPT-Tactical-HUD",
+      "modulePath": "mods/Admiral-Tactical-HUD",
       "version": "1.13.3",
       "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
       "phasePlan": [

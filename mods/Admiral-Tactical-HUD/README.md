@@ -67,6 +67,10 @@ The RC2 package installs to:
 - `BepInEx/plugins/Admiral Tactical HUD/assets/hud-sprites.png`
 - `SPT_Runtime/user/mods/Admiral Tactical HUD/Admiral Tactical HUD Server.dll`
 
-Copy the packaged `BepInEx/` and `SPT_Runtime/` folders into the SPT root. Remove obsolete pre-Admiral Tactical HUD DLLs before testing so only one generation is loaded.
+Before copying RC2, remove every path listed under `removeBeforeInstall` in the packaged
+`SPT_Runtime/user/mods/Admiral Tactical HUD/cleanup-manifest.json`. Then remove the two
+existing directories listed under `replace` and copy the packaged `BepInEx/` and
+`SPT_Runtime/` folders into the SPT root. This prevents an old DLL or duplicate atlas from
+being loaded beside RC2; the manifest is the exact machine-readable replacement contract.
 
 RC2 is not promoted as stable until Compact icons, Full Census, status icons and the weapon-text kill feed pass a physical SPT smoke test.
