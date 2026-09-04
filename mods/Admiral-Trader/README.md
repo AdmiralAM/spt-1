@@ -104,10 +104,14 @@ Connector-authored commits have an independent exact-head validation path: a pus
 - [`docs/migration-contract.md`](docs/migration-contract.md)
 - [`docs/spt413-test-candidate.md`](docs/spt413-test-candidate.md)
 
+## Release and narrative authority boundaries
+
+- **Frozen `0.1.0`:** Issue #192 / PR #193 and frozen base commit `053a62ff5f1cb545f13bc89a96bba3acd319a823` remain the release/runtime authority for the 31-quest, 11-offer package.
+- **Active post-`0.1.0`:** Issue #115 / PR #297 owns the independent curation, progression, editorial, and hardening design work after the frozen release.
+- **Evacuation narrative:** [`post-010-evacuation-narrative-plan.json`](manifests/post-010-evacuation-narrative-plan.json) is design-only. It maps the exact 15-operation campaign to a high-level evacuation/Exfil-preparation theme without materializing runtime content or changing mechanics, conditions, rewards, prerequisites, IDs, operation count, or runtime locales.
+
 ## Validation
 
 ```bash
 python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 ```
-
-Frozen `0.1.0` release/runtime authority remains Issue #192 / Draft PR #193. Independent post-`0.1.0` curation, progression and hardening work is tracked by Issue #115 / Draft PR #297.

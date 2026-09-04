@@ -1,0 +1,131 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "post-0.1.0-design-only",
+  "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+  "campaignAuthority": "post-010-campaign-progression.json",
+  "editorialAuthority": "post-010-editorial-objectives.json",
+  "implementationAllowed": false,
+  "runtimeMaterialize": false,
+  "themeBoundary": "Evacuation/Exfil preparation is a high-level narrative frame only. It does not add or alter extraction conditions, destinations, transport, guarantees, rewards, prerequisites, operation identities, or runtime copy.",
+  "classificationDefinitions": {
+    "natural": "The proven player action directly prepares access, supplies, movement, or route knowledge useful to a possible evacuation.",
+    "supporting": "The proven player action improves readiness or reduces interference, but must not be presented as an evacuation step or guarantee.",
+    "do-not-use": "The proven player action has no defensible evacuation relationship; evacuation framing is prohibited."
+  },
+  "operations": [
+    {
+      "operationKey": "signal-discipline",
+      "classification": "natural",
+      "narrativeRole": {"en": "Confirm disciplined reconnaissance and communications readiness before movement toward Exfil.", "ru": "Подтвердить готовность к дисциплинированной разведке и связи перед выдвижением к выходу."},
+      "allowedClaims": {"en": ["The operation prepares route awareness and acoustic readiness."], "ru": ["Операция готовит знание маршрута и акустическую готовность."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not claim radio contact, signal detection, a new Exfil, or guaranteed safe passage."], "ru": ["Нельзя обещать радиосвязь, обнаружение сигнала, новый выход или гарантированный безопасный проход."]}
+    },
+    {
+      "operationKey": "field-expedient-supply",
+      "classification": "natural",
+      "narrativeRole": {"en": "Assemble ordinary field-service supplies for equipment readiness during evacuation preparation.", "ru": "Собрать обычные полевые расходники для готовности снаряжения при подготовке эвакуации."},
+      "allowedClaims": {"en": ["The delivered maintenance package supports field readiness."], "ru": ["Переданный ремонтный комплект поддерживает полевую готовность."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not claim a transport repair, evacuation vehicle, reserved cargo, or extraction unlock."], "ru": ["Нельзя заявлять ремонт транспорта, эвакуационную машину, зарезервированный груз или открытие выхода."]}
+    },
+    {
+      "operationKey": "expedition-loadout",
+      "classification": "natural",
+      "narrativeRole": {"en": "Verify that the operator can deploy with a complete expedition setup before an evacuation attempt.", "ru": "Проверить способность оперативника выйти с полной экспедиционной выкладкой перед попыткой эвакуации."},
+      "allowedClaims": {"en": ["The operation demonstrates deployment readiness with proven equipment requirements."], "ru": ["Операция подтверждает готовность к выходу с проверенными требованиями к экипировке."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not claim that the loadout is consumed, transported, cached, or required by a specific Exfil."], "ru": ["Нельзя заявлять, что выкладка расходуется, перевозится, складируется или требуется конкретным выходом."]}
+    },
+    {
+      "operationKey": "protection-calibration",
+      "classification": "supporting",
+      "narrativeRole": {"en": "Validate light-protection readiness for bounded contact that may occur during movement.", "ru": "Проверить готовность лёгкой защиты к ограниченному контакту, возможному при выдвижении."},
+      "allowedClaims": {"en": ["The operation supports personal readiness for movement under risk."], "ru": ["Операция поддерживает личную готовность к выдвижению в условиях риска."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not call the engagement an evacuation corridor or promise protection from Exfil threats."], "ru": ["Нельзя называть бой эвакуационным коридором или обещать защиту от угроз у выхода."]}
+    },
+    {
+      "operationKey": "ballistic-head-test",
+      "classification": "supporting",
+      "narrativeRole": {"en": "Validate ballistic head-protection readiness before higher-risk movement.", "ru": "Проверить готовность баллистической защиты головы перед выдвижением с повышенным риском."},
+      "allowedClaims": {"en": ["The controlled engagement supports protective readiness."], "ru": ["Контролируемый бой поддерживает готовность защитного снаряжения."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not claim an evacuation route, transport role, equipment handover, or guaranteed survival."], "ru": ["Нельзя заявлять эвакуационный маршрут, транспортную роль, сдачу снаряжения или гарантированное выживание."]}
+    },
+    {
+      "operationKey": "access-reconnaissance",
+      "classification": "natural",
+      "narrativeRole": {"en": "Verify one restricted route as contingency knowledge for a future Exfil movement.", "ru": "Проверить один закрытый маршрут как запасной вариант для будущего выдвижения к выходу."},
+      "allowedClaims": {"en": ["The operation confirms route knowledge through the proven access interaction or proxy."], "ru": ["Операция подтверждает знание маршрута через проверенное взаимодействие доступа или его прокси."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not claim the route is an Exfil, opens an Exfil, or will remain safe or available."], "ru": ["Нельзя заявлять, что маршрут является выходом, открывает выход либо останется безопасным или доступным."]}
+    },
+    {
+      "operationKey": "acoustic-contact",
+      "classification": "supporting",
+      "narrativeRole": {"en": "Exercise bounded contact readiness with acoustic equipment before route movement.", "ru": "Отработать готовность к ограниченному контакту с акустической экипировкой перед выдвижением по маршруту."},
+      "allowedClaims": {"en": ["The operation supports contact readiness with proven equipment."], "ru": ["Операция поддерживает готовность к контакту с проверенной экипировкой."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not claim heard-threat detection, convoy escort, route clearance, or extraction access."], "ru": ["Нельзя заявлять обнаружение угроз по звуку, сопровождение колонны, зачистку маршрута или доступ к выходу."]}
+    },
+    {
+      "operationKey": "route-security",
+      "classification": "natural",
+      "narrativeRole": {"en": "Reduce an ordinary local threat along a selected logistics corridor before Exfil preparation advances.", "ru": "Снизить обычную локальную угрозу на выбранном маршруте снабжения перед следующим этапом подготовки выхода."},
+      "allowedClaims": {"en": ["The bounded action supports temporary route security."], "ru": ["Ограниченная операция поддерживает временную безопасность маршрута."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not promise a permanently cleared corridor, escorted evacuation, or guaranteed extract."], "ru": ["Нельзя обещать навсегда зачищенный коридор, сопровождаемую эвакуацию или гарантированный выход."]}
+    },
+    {
+      "operationKey": "hostile-operator-intercept",
+      "classification": "supporting",
+      "narrativeRole": {"en": "Disrupt bounded hostile-contractor interference that could threaten later movement.", "ru": "Сорвать ограниченное вмешательство враждебных контрактников, способное помешать последующему выдвижению."},
+      "allowedClaims": {"en": ["The intercept reduces one bounded source of operational interference."], "ru": ["Перехват снижает один ограниченный источник оперативных помех."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not call the targets evacuation blockers or claim their defeat secures an Exfil."], "ru": ["Нельзя называть цели блокирующими эвакуацию или заявлять, что их устранение обеспечивает выход."]}
+    },
+    {
+      "operationKey": "precision-observation-window",
+      "classification": "supporting",
+      "narrativeRole": {"en": "Establish measured observation and precision readiness for overwatch planning.", "ru": "Подтвердить готовность к выверенному наблюдению и точному огню для планирования прикрытия."},
+      "allowedClaims": {"en": ["The operation supports observation and overwatch readiness."], "ru": ["Операция поддерживает готовность к наблюдению и прикрытию."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not claim an actual overwatch team, marked evacuation lane, or safe extraction window."], "ru": ["Нельзя заявлять реальную группу прикрытия, обозначенный путь эвакуации или безопасное окно выхода."]}
+    },
+    {
+      "operationKey": "precision-denial",
+      "classification": "supporting",
+      "narrativeRole": {"en": "Demonstrate the ability to deny one contextual stand-off threat before critical movement.", "ru": "Подтвердить способность устранить одну контекстную дистанционную угрозу перед критическим выдвижением."},
+      "allowedClaims": {"en": ["The operation supports precision-threat readiness."], "ru": ["Операция поддерживает готовность к дистанционной угрозе."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not identify an evacuation sniper, route, distance, target, or map beyond proven mechanics."], "ru": ["Нельзя называть эвакуационного снайпера, маршрут, дистанцию, цель или карту сверх подтверждённой механики."]}
+    },
+    {
+      "operationKey": "heavy-assault-loadout",
+      "classification": "supporting",
+      "narrativeRole": {"en": "Validate heavy-protection readiness for a deliberate contact under elevated risk.", "ru": "Проверить готовность тяжёлой защиты к осмысленному контакту при повышенном риске."},
+      "allowedClaims": {"en": ["The bounded assault supports high-risk protective readiness."], "ru": ["Ограниченный штурм поддерживает готовность защиты к высокому риску."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not claim breaching an evacuation perimeter, escorting transport, or guaranteed protection."], "ru": ["Нельзя заявлять прорыв эвакуационного периметра, сопровождение транспорта или гарантированную защиту."]}
+    },
+    {
+      "operationKey": "rogue-interdiction",
+      "classification": "supporting",
+      "narrativeRole": {"en": "Disrupt one bounded Rogue perimeter as regional interference reduction, not Exfil clearance.", "ru": "Нарушить один ограниченный периметр Отступников как снижение помех в регионе, но не зачистку выхода."},
+      "allowedClaims": {"en": ["The operation reduces a bounded hostile perimeter presence."], "ru": ["Операция снижает ограниченное присутствие враждебного периметра."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not claim the water-treatment perimeter controls an Exfil or that disruption opens a route."], "ru": ["Нельзя заявлять, что периметр водоочистной станции контролирует выход или что его нарушение открывает маршрут."]}
+    },
+    {
+      "operationKey": "endurance-circuit",
+      "classification": "natural",
+      "narrativeRole": {"en": "Prove survival and extraction readiness across the final selected locations before committing to Exfil planning.", "ru": "Подтвердить готовность к выживанию и выходу на итоговых выбранных локациях до окончательного планирования эвакуации."},
+      "allowedClaims": {"en": ["The circuit directly demonstrates repeated survival-and-extraction capability."], "ru": ["Маршрут напрямую подтверждает способность неоднократно выживать и выходить из рейда."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not claim a linked journey, same-raid travel, evacuation destination, or newly unlocked Exfil."], "ru": ["Нельзя заявлять связное путешествие, перемещение в одном рейде, пункт эвакуации или новый открытый выход."]}
+    },
+    {
+      "operationKey": "labs-security-disruption",
+      "classification": "do-not-use",
+      "narrativeRole": {"en": "Keep this bounded Labs security action outside the evacuation narrative; its proven mechanics establish no evacuation relationship.", "ru": "Не включать эту ограниченную операцию против охраны Лаборатории в сюжет эвакуации: подтверждённая механика не устанавливает такой связи."},
+      "allowedClaims": {"en": ["The operation disrupts a bounded Labs security element after access has already been earned."], "ru": ["Операция нарушает работу ограниченной группы охраны Лаборатории после уже полученного доступа."]},
+      "forbiddenUnsupportedPromises": {"en": ["Do not claim this grants Labs access, retrieves evacuation intelligence, opens an Exfil, or completes evacuation."], "ru": ["Нельзя заявлять, что операция даёт доступ в Лабораторию, добывает сведения об эвакуации, открывает выход или завершает эвакуацию."]}
+    }
+  ],
+  "acceptance": {
+    "operationCount": 15,
+    "operationKeysMustMatchCampaignProgressionExactly": true,
+    "bothLocalesRequired": true,
+    "runtimeReferencesAllowed": false,
+    "runtimeLocalesMustRemainUnchanged": true,
+    "mechanicsRewardsPrerequisitesAndIdsMustRemainUnchanged": true
+  }
+}
