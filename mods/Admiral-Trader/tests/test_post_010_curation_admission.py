@@ -10,7 +10,7 @@ class Post010CurationAdmissionTests(unittest.TestCase):
         cls.manifest = json.loads((ROOT / "manifests" / "post-010-curation-admission.json").read_text(encoding="utf-8"))
 
     def test_curation_is_post_010_and_never_direct_port(self):
-        self.assertIn(self.manifest["schemaVersion"], (2, 3))
+        self.assertIn(self.manifest["schemaVersion"], (2, 3, 4))
         self.assertEqual(self.manifest["status"], "post-0.1.0-research-only")
         policy = self.manifest["policy"]
         self.assertFalse(policy["directLegacyQuestCopyAllowed"])
@@ -28,11 +28,8 @@ class Post010CurationAdmissionTests(unittest.TestCase):
         self.assertTrue(all(entry["runtimeMaterialize"] is False for entry in admissions))
         by_name = {entry["sourceBundle"]: entry for entry in admissions}
         self.assertEqual(by_name["Deep Pockets"]["decision"], "reject-direct-port")
-        for unresolved in ("Boss Hunt", "Boss Follower Hunt", "Cultists Hunt", "Sniper Life", "Survivalist"):
-            self.assertEqual(by_name[unresolved]["decision"], "rewrite-candidate")
-            self.assertIn("requiredRewriteBoundary", by_name[unresolved])
-            self.assertGreaterEqual(len(by_name[unresolved].get("evidence", [])), 3)
         self.assertFalse(any(entry["decision"] == "pending-source-review" for entry in admissions))
+        self.assertTrue(all("requiredRewriteBoundary" in entry or entry["sourceBundle"] == "Deep Pockets" for entry in admissions))
 
     def test_medical_umbrella_respects_later_specific_dispositions(self):
         by_name = {entry["sourceBundle"]: entry for entry in self.manifest["admissions"]}
@@ -63,10 +60,27 @@ class Post010CurationAdmissionTests(unittest.TestCase):
             self.assertEqual(entry["decision"], decision)
             self.assertEqual(entry["futureUse"], target)
             self.assertIn("supersedingAuthority", entry)
-            self.assertIn("requiredRewriteBoundary", entry)
+        self.assertEqual(self.manifest["synchronization"].get("remainingGenericGearRewriteCandidateCount"), 0)
+
+    def test_combat_survival_umbrella_respects_specific_dispositions(self):
+        if self.manifest["schemaVersion"] < 4:
+            self.skipTest("specific combat/survival umbrella synchronization not materialized yet")
+        by_name = {entry["sourceBundle"]: entry for entry in self.manifest["admissions"]}
+        expected = {
+            "Boss Hunt": ("deferred-specific-command-window", "high-value-target-window"),
+            "Boss Follower Hunt": ("deferred-specific-command-window", "high-value-target-window"),
+            "Cultists Hunt": ("deferred-specific-black-signal", "night-signal-disruption"),
+            "Sniper Life": ("consolidated-existing-precision-operations", "precision-observation-window,precision-denial"),
+            "Survivalist": ("consolidated-existing-survival-operation", "endurance-circuit"),
+        }
+        for bundle, (decision, target) in expected.items():
+            entry = by_name[bundle]
+            self.assertEqual(entry["decision"], decision)
+            self.assertEqual(entry["futureUse"], target)
+            self.assertIn("supersedingAuthority", entry)
         sync = self.manifest["synchronization"]
-        self.assertEqual(sync.get("remainingGenericGearRewriteCandidateCount"), 0)
-        self.assertFalse(sync["frozenRuntimeChanged"])
+        self.assertEqual(sync["remainingGenericCombatSurvivalRewriteCandidateCount"], 0)
+        self.assertEqual(sync["remainingGenericRewriteCandidateCount"], 0)
 
     def test_support_rewrites_do_not_recreate_storefront_conveyors(self):
         by_name = {entry["sourceBundle"]: entry for entry in self.manifest["admissions"]}
@@ -74,17 +88,6 @@ class Post010CurationAdmissionTests(unittest.TestCase):
         self.assertEqual(ultrasound["futureUse"], "acoustic-contact")
         self.assertIn("no headset-by-headset", ultrasound["requiredRewriteBoundary"].lower())
         self.assertIn("no 72-quest", ultrasound["requiredRewriteBoundary"].lower())
-
-    def test_operations_are_compact_rewrites_not_count_ladders(self):
-        by_name = {entry["sourceBundle"]: entry for entry in self.manifest["admissions"]}
-        boundaries = {name: by_name[name]["requiredRewriteBoundary"].lower() for name in ("Boss Hunt", "Boss Follower Hunt", "Cultists Hunt", "Sniper Life", "Survivalist")}
-        self.assertIn("no repeated boss-count ladder", boundaries["Boss Hunt"])
-        self.assertIn("no follower farming ladder", boundaries["Boss Follower Hunt"])
-        self.assertIn("no cumulative cultist ladder", boundaries["Cultists Hunt"])
-        self.assertIn("never expand by repetitive 10 m", boundaries["Sniper Life"])
-        self.assertIn("no per-map five-quest template", boundaries["Survivalist"])
-        self.assertEqual(by_name["Boss Hunt"]["futureUse"], "single high-value-target operations")
-        self.assertEqual(by_name["Survivalist"]["futureUse"], "expedition survival and extraction proof")
 
     def test_frozen_runtime_counts_are_unchanged(self):
         quest_files = sorted((ROOT / "db" / "quests").glob("*.json"))
