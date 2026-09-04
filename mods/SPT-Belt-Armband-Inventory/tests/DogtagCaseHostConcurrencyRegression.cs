@@ -40,10 +40,10 @@ internal static class DogtagCaseHostConcurrencyRegression
             throw new InvalidOperationException("Dogtag host concurrency regression failed: canonical snapshot cardinality drifted under parallel idempotent access.");
 
         // Two pre-add transactions must never simultaneously own rollback authority
-        // for the same exact live HashSet. Otherwise transaction B could remove the
-        // case committed by transaction A merely because both observed an identical
-        // pre-add value set. The gate is released only after a stable committed proof,
-        // while the original snapshot-key rollback authority remains usable.
+        // for the same exact live HashSet. A stable committed proof does not consume
+        // the first receipt and therefore must not release the per-host capture gate.
+        // This specifically prevents external add/remove ABA from opening a second
+        // baseline while the first snapshot-key rollback authority remains valid.
         var sharedHost = new HashSet<MongoId> { bear, usec };
         HashSet<MongoId> firstAuthority = DogtagCaseHostContract.CaptureRollbackBaseline(sharedHost);
         bool duplicateRejected = false;
@@ -59,10 +59,30 @@ internal static class DogtagCaseHostConcurrencyRegression
             throw new InvalidOperationException("Dogtag host concurrency regression failed: duplicate pre-add rollback capture was accepted for the same exact host reference.");
 
         if (!sharedHost.Add(caseTpl))
-            throw new InvalidOperationException("Dogtag host concurrency regression failed: exact case could not be committed for capture-gate release proof.");
+            throw new InvalidOperationException("Dogtag host concurrency regression failed: exact case could not be committed for capture-gate retention proof.");
         DogtagCaseHostContract.RequireCommitted(sharedHost);
-        if (!DogtagCaseHostContract.TryRollbackOwnedCaseAddition(sharedHost, firstAuthority))
-            throw new InvalidOperationException("Dogtag host concurrency regression failed: stable commit release incorrectly consumed the original snapshot-key rollback authority.");
+
+        // Simulate an external participant removing the committed Case after the
+        // stable proof. The original rollback receipt is still live, so ABA back to
+        // the baseline must not permit a second capture on the same host reference.
+        if (!sharedHost.Remove(caseTpl))
+            throw new InvalidOperationException("Dogtag host concurrency regression failed: external ABA simulation could not remove exact case.");
+        bool abaCaptureRejected = false;
+        try
+        {
+            _ = DogtagCaseHostContract.CaptureRollbackBaseline(sharedHost);
+        }
+        catch (InvalidOperationException)
+        {
+            abaCaptureRejected = true;
+        }
+        if (!abaCaptureRejected)
+            throw new InvalidOperationException("Dogtag host concurrency regression failed: committed-proof ABA reopened a second rollback baseline before first receipt consumption.");
+
+        // Restore the exact committed shape and consume the original receipt. Only
+        // after this explicit single-consumer operation may a fresh capture proceed.
+        if (!sharedHost.Add(caseTpl) || !DogtagCaseHostContract.TryRollbackOwnedCaseAddition(sharedHost, firstAuthority))
+            throw new InvalidOperationException("Dogtag host concurrency regression failed: original exact rollback authority could not be consumed after ABA rejection.");
 
         HashSet<MongoId> freshAuthority = DogtagCaseHostContract.CaptureRollbackBaseline(sharedHost);
         if (!sharedHost.Add(caseTpl) || !DogtagCaseHostContract.TryRollbackOwnedCaseAddition(sharedHost, freshAuthority))
