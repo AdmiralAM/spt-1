@@ -81,7 +81,9 @@ jobs:
       - name: Automated combined server-start smoke
         shell: pwsh
         run: |
-          $candidates = @(Get-ChildItem build/combined-rc -Directory)
+          $candidates = @(Get-ChildItem build/combined-rc -Directory | Where-Object {
+            Test-Path (Join-Path $_.FullName 'combined-provenance.json') -PathType Leaf
+          })
           if ($candidates.Count -ne 1) { throw "Expected one combined candidate directory; found $($candidates.Count)" }
           $candidate = $candidates[0]
           Copy-Item "$($candidate.FullName)/SPT_Runtime/user/mods/*" "$env:SPT_RUNTIME_ROOT/user/mods" -Recurse -Force
