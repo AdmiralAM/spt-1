@@ -39,6 +39,15 @@ namespace SPTBeltArmbandInventory.Tests
             Assert(ReloadOwnerRollbackTerminalFence.MergeTerminalFailureForRegression(true, false),
                 "an already-poisoned process remains poisoned when a later failing install creates no owner");
 
+            Assert(!ReloadOwnerRollbackTerminalFence.ShouldRetainAssemblyLoadSubscriptionForRegression(true, false),
+                "post-subscription retry success must immediately remove the AssemblyLoad handler; this closes the missed-load window without leaving a redundant observer");
+            Assert(!ReloadOwnerRollbackTerminalFence.ShouldRetainAssemblyLoadSubscriptionForRegression(false, true),
+                "post-subscription terminal failure must remove the AssemblyLoad handler because no later load may restore install authority");
+            Assert(!ReloadOwnerRollbackTerminalFence.ShouldRetainAssemblyLoadSubscriptionForRegression(true, true),
+                "terminal state dominates even if the second attempt also reports installed");
+            Assert(ReloadOwnerRollbackTerminalFence.ShouldRetainAssemblyLoadSubscriptionForRegression(false, false),
+                "only a still-unavailable, non-terminal post-subscription retry may retain the AssemblyLoad handler for a future 0Harmony load");
+
             ReloadOwnerRollbackTerminalFence.ResetForRegression();
         }
 
