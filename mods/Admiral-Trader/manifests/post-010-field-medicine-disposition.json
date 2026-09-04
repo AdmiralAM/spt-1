@@ -1,14 +1,72 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "scope": "post-0.1.0-field-medicine-product-disposition",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
   "operationKey": "field-medicine-under-pressure",
   "status": "deferred-out-of-current-wave-pending-exact-treatment-authority",
-  "decision": {"currentWaveAccepted": false, "materializeAsQuest": false, "permanentConceptRejection": false, "reason": "The authored value of Field Medicine Under Pressure depends on proving that the player actually treats or recovers from a meaningful non-stimulant injury in raid. The current exact SPT 4.1.3 condition authority proves extraction and several counter/equipment families, but does not prove a player medical-use, healing, surgery, bleeding-control or health-effect completion condition. Publishing a handover, FIR collection, consumable-count quota or generic survive/extract proxy would remove the operation's differentiator and recreate the legacy Meds Proficiency busywork that Admiral is explicitly curating away.", "unsupportedHealthEffectInferenceAllowed": false, "unsupportedUseItemInferenceAllowed": false, "medicalItemHandoverFallbackAllowed": false, "firMedicalCollectionFallbackAllowed": false, "consumableCountFallbackAllowed": false, "genericSurviveExtractFallbackAllowed": false, "stimulantSubstitutionAllowed": false, "questCountPreservationIsNotARequirement": true},
-  "retainedProductMeaning": {"futureConcept": ["meaningful in-raid ordinary medical treatment or recovery", "successful extraction after the field-medical event if same-raid coupling is eventually proven", "single bounded non-repeatable capability check", "no handover/FIR/use-count ladder"], "separationFromChemicalSupport": "Controlled Chemical Support remains a distinct stimulant/chemical capability concept and must not be used as a substitute for ordinary field medicine."},
-  "authority": {"conditionProofMatrix": "post-010-condition-proof-matrix.json", "authoredOperationsManifest": "post-010-authored-operations.json", "campaignProgressionManifest": "post-010-campaign-progression.json", "rewardEnvelopeManifest": "post-010-operation-reward-envelope.json", "pinnedSpt413QuestSourceCommit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93"},
-  "synchronization": {"completed": true, "removedFromAuthoredOperations": true, "removedFromCampaignProgression": true, "removedFromRewardEnvelope": true, "controlledChemicalSupportPrerequisiteReauthored": true, "controlledChemicalSupportPrerequisite": [], "prerequisiteDecision": "Controlled Chemical Support becomes an explicit level-22 integration root rather than inheriting a fake prerequisite. Its own stimulant-use and same-raid proof gates remain fail-closed.", "authoredWaveCount": 19, "completedAtomically": true},
-  "runtimeGate": {"implementationAllowed": false, "runtimeMaterialize": false, "physicalTestRequired": false, "deferredLifecycleRewardMilestoneUnaffected": true},
-  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
+  "decision": {
+    "currentWaveAccepted": false,
+    "materializeAsQuest": false,
+    "permanentConceptRejection": false,
+    "reason": "The authored value of Field Medicine Under Pressure depends on proving that the player actually treats or recovers from a meaningful non-stimulant injury in raid. The current exact SPT 4.1.3 condition authority proves extraction and several counter/equipment families, but does not prove a player medical-use, healing, surgery, bleeding-control or health-effect completion condition. Publishing a handover, FIR collection, consumable-count quota or generic survive/extract proxy would remove the operation's differentiator and recreate the legacy Meds Proficiency busywork that Admiral is explicitly curating away.",
+    "unsupportedHealthEffectInferenceAllowed": false,
+    "unsupportedUseItemInferenceAllowed": false,
+    "medicalItemHandoverFallbackAllowed": false,
+    "firMedicalCollectionFallbackAllowed": false,
+    "consumableCountFallbackAllowed": false,
+    "genericSurviveExtractFallbackAllowed": false,
+    "stimulantSubstitutionAllowed": false,
+    "questCountPreservationIsNotARequirement": true
+  },
+  "candidateConsolidation": {
+    "decision": "MERGE-PARALLEL-LABELS-INTO-SINGLE-DEFERRED-CAPABILITY",
+    "canonicalConcept": "field-medicine-under-pressure",
+    "retiredIndependentCandidateIds": ["MED-FIELD-01", "MED-RECOVERY-01"],
+    "retiredWorkingNames": ["Field Stabilization", "Recovery Protocol"],
+    "independentQuestCountAfterConsolidation": 1,
+    "reason": "Field Stabilization and Recovery Protocol both depend on the same unresolved ordinary in-raid treatment/recovery authority. Distinguishing them only as pre-contact preparation versus post-contact recovery does not create a mechanically distinct objective. They therefore remain source-language facets of one deferred capability, not two quest slots. A second medical operation may re-enter only after a different exact supported mechanic and fresh semantic-overlap review are demonstrated."
+  },
+  "retainedProductMeaning": {
+    "futureConcept": [
+      "meaningful in-raid ordinary medical treatment or recovery",
+      "successful extraction after the field-medical event if same-raid coupling is eventually proven",
+      "single bounded non-repeatable capability check",
+      "no handover/FIR/use-count ladder"
+    ],
+    "fieldStabilizationFacet": "preparation and immediate casualty stabilization may inform authored context, but is not an independent quest without a distinct supported mechanic",
+    "recoveryProtocolFacet": "post-contact recovery may inform authored context, but is not an independent quest without a distinct supported mechanic",
+    "chemicalSupportBoundary": "Controlled Chemical Support / Controlled Pharmacology is permanently rejected at the current product-semantic layer because vanilla already owns stimulant-conditioned combat competency. Stimulants must not substitute for ordinary field medicine, and future stimulant-mechanic proof cannot resurrect that rejected concept without a fresh product review."
+  },
+  "authority": {
+    "conditionProofMatrix": "post-010-condition-proof-matrix.json",
+    "authoredOperationsManifest": "post-010-authored-operations.json",
+    "campaignProgressionManifest": "post-010-campaign-progression.json",
+    "rewardEnvelopeManifest": "post-010-operation-reward-envelope.json",
+    "medicalCapabilityCuration": "post-010-medical-capability-curation.json",
+    "chemicalSupportDisposition": "post-010-chemical-support-operation.json",
+    "pinnedSpt413QuestSourceCommit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93"
+  },
+  "synchronization": {
+    "completed": true,
+    "removedFromAuthoredOperations": true,
+    "removedFromCampaignProgression": true,
+    "removedFromRewardEnvelope": true,
+    "historicalDispositionWaveCount": 19,
+    "currentActiveAuthoredWaveCount": 15,
+    "chemicalSupportHistoricalPrerequisiteReauthoringSuperseded": true,
+    "currentChemicalSupportDisposition": "REJECT-VANILLA-SEMANTIC-COLLISION",
+    "completedAtomically": true
+  },
+  "runtimeGate": {
+    "implementationAllowed": false,
+    "runtimeMaterialize": false,
+    "physicalTestRequired": false,
+    "deferredLifecycleRewardMilestoneUnaffected": true
+  },
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0
+  }
 }

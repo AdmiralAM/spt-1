@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "product": "Admiral Trader",
   "status": "post-0.1.0-authored-curation",
   "frozen010Base": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -28,26 +28,30 @@
       "barter-versus-cash duplicate quest variants for the same item",
       "permanent stimulant supermarket stock",
       "reward escalation justified only by the market value of the unlocked consumable",
-      "generic stimulant-conditioned combat as a standalone Admiral capability milestone because vanilla already owns that defining fantasy"
+      "generic stimulant-conditioned combat as a standalone Admiral capability milestone because vanilla already owns that defining fantasy",
+      "multiple ordinary-field-medicine quests distinguished only by narrative timing when they rely on the same unresolved treatment/recovery mechanic"
     ],
     "preserve": [
       "field medicine preparedness",
       "combat recovery and casualty stabilization",
       "bounded specialist medical access as a milestone payoff"
     ],
-    "rationale": "Admiral is a capability broker and expeditionary logistics trader. Medical progression must prove field capability and then grant a narrow privilege; it must not recreate 56 item-by-item procurement chores or duplicate a vanilla stimulant-combat competency test."
+    "rationale": "Admiral is a capability broker and expeditionary logistics trader. Medical progression must prove field capability and then grant a narrow privilege; it must not recreate 56 item-by-item procurement chores, duplicate a vanilla stimulant-combat competency test, or multiply quest count by assigning separate labels to the same unsupported ordinary-treatment mechanic."
   },
   "authoredCandidates": [
     {
       "id": "MED-FIELD-01",
-      "workingName": "Field Stabilization",
+      "operationKey": "field-medicine-under-pressure",
+      "workingName": "Field Medicine Under Pressure",
       "domain": "medical",
       "sourceThemes": ["Meds Proficiency"],
-      "purpose": "Prove practical casualty-preparation capability rather than buying access by handing in arbitrary stock.",
+      "absorbedWorkingNames": ["Field Stabilization", "Recovery Protocol"],
+      "purpose": "Represent ordinary field stabilization and recovery as one bounded capability milestone rather than separate procurement or narrative-timing quests.",
       "mechanicIntent": [
-        "bounded field-use or mission-context medical proof",
+        "meaningful ordinary in-raid treatment or recovery proof",
         "non-repeatable authored objective",
-        "no item-by-item unlock chain"
+        "no item-by-item unlock chain",
+        "no second quest unless a materially different exact supported mechanic is proven"
       ],
       "payoffIntent": [
         "standing",
@@ -56,30 +60,26 @@
       "economyRules": [
         "No permanent high-value medical faucet.",
         "Any renewable offer requires explicit Economy Admiral price, stock and buy-limit approval.",
-        "A sample reward must remain small enough that quest completion cannot substitute for routine procurement."
+        "A sample reward must remain small enough that quest completion cannot substitute for routine procurement.",
+        "No reward or standing budget is reserved merely because two former working labels were consolidated into one concept."
       ],
-      "runtimeGate": "Exact SPT 4.1.3 condition shape, vanilla/Artem/Scorpion overlap, numeric reward review and authored EN/RU text are required before materialization."
-    },
+      "runtimeGate": "Deferred. Admit only after exact SPT/EFT-supported ordinary treatment or recovery semantics, vanilla/Artem/Scorpion overlap, numeric reward review and authored EN/RU text. Handover/FIR/use-count/generic survive-extract/stimulant proxies are forbidden."
+    }
+  ],
+  "consolidatedCandidates": [
     {
       "id": "MED-RECOVERY-01",
       "workingName": "Recovery Protocol",
-      "domain": "medical",
-      "sourceThemes": ["Meds Proficiency"],
-      "purpose": "Represent advanced recovery logistics as one operational milestone instead of a sequence of separate splint, bandage, surgery-kit and medkit unlock chores.",
-      "mechanicIntent": [
-        "mission-context recovery proof",
-        "bounded objective count",
-        "distinct from Field Stabilization by emphasizing post-contact recovery rather than pre-contact preparation"
-      ],
-      "payoffIntent": [
-        "standing",
-        "controlled recovery-kit access or one sample package"
-      ],
-      "economyRules": [
-        "No container-sized medical bundle reward.",
-        "No unlimited surgical or premium med stock without a separately justified finite-offer budget."
-      ],
-      "runtimeGate": "Admit only if exact supported mechanics produce a materially distinct objective without relying on unverifiable injury-state coupling."
+      "decision": "MERGED-NOT-INDEPENDENT",
+      "mergedInto": "MED-FIELD-01",
+      "reason": "Its intended post-contact recovery proof relies on the same unresolved ordinary treatment/recovery authority as Field Medicine Under Pressure. Narrative phase alone is not mechanical differentiation."
+    },
+    {
+      "id": "MED-FIELD-STABILIZATION-ALIAS",
+      "workingName": "Field Stabilization",
+      "decision": "MERGED-NOT-INDEPENDENT",
+      "mergedInto": "MED-FIELD-01",
+      "reason": "Its preparation/stabilization framing is retained as authored context for the canonical field-medicine concept, not as an extra quest slot."
     }
   ],
   "rejectedCandidates": [
@@ -106,10 +106,12 @@
     }
   ],
   "admissionPolicy": {
+    "currentIndependentCandidateCount": 1,
     "minimumDistinctCandidates": 0,
     "maximumQuestCount": null,
     "quotaFillingForbidden": true,
     "candidateMayBeRejected": true,
+    "secondOrdinaryMedicineQuestRequiresDistinctExactMechanic": true,
     "requiredBeforeRuntime": [
       "distinct Why / What / Context / Payoff in EN/RU",
       "exact SPT 4.1.3-supported condition semantics",
@@ -118,6 +120,12 @@
       "campaign prerequisite and unlock-graph placement",
       "full Admiral Trader CI"
     ]
+  },
+  "crossAuthoritySynchronization": {
+    "fieldMedicineDisposition": "post-010-field-medicine-disposition.json",
+    "canonicalOperationKey": "field-medicine-under-pressure",
+    "chemicalSupportDisposition": "post-010-chemical-support-operation.json",
+    "controlledPharmacologyMayBeResurrectedByMechanicProof": false
   },
   "frozenBoundary": {
     "runtimeQuestCount": 31,
