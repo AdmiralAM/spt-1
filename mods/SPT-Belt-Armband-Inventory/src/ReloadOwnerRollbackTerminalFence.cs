@@ -113,7 +113,11 @@ namespace SPTBeltArmbandInventory
                     bool rolledBack = TryRollback(owner, rollback);
                     harmonyOwner = null;
                     fenceInstalled = false;
-                    terminalFailure = owner != null && !rolledBack;
+                    // Process poison is monotonic. A concurrent/earlier rollback observer may
+                    // already have established terminal ambiguity while this installation was
+                    // failing. A successful cleanup of this local owner must never clear that
+                    // previously published process-terminal fact.
+                    terminalFailure = MergeTerminalFailureForRegression(terminalFailure, owner != null, rolledBack);
                     return false;
                 }
             }
@@ -139,6 +143,11 @@ namespace SPTBeltArmbandInventory
         internal static void ObserveRollbackForRegression(bool rollbackProven)
         {
             if (!rollbackProven) terminalFailure = true;
+        }
+
+        internal static bool MergeTerminalFailureForRegression(bool currentTerminalFailure, bool ownerCreated, bool rollbackProven)
+        {
+            return currentTerminalFailure || (ownerCreated && !rollbackProven);
         }
 
         internal static void ResetForRegression()
