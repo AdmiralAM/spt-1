@@ -1,0 +1,6 @@
+Bot Census icon reference pack
+Source: https://github.com/CameronsWorks/BotCensus
+License: MIT
+Original project copyright and license retained; see THIRD-PARTY-LICENSES/BotCensus-LICENSE.txt.
+
+Admiral Tactical HUD uses compatible BotCensus population glyphs where available. The original Admiral Tactical HUD atlas and approved source cells are retained as reserve/fallback assets.
