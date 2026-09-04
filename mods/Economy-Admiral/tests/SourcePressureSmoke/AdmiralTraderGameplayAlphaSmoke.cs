@@ -85,6 +85,16 @@ internal static class AdmiralTraderGameplayAlphaSmoke
         MustFail("unclassified relationship-like offer", () => AdmiralTraderGameplayAlphaAdapter.Parse(campaign, identity, traderBase, policy, baseline, assort, questassort, new[] { quest }));
         MustFail("Relationship overlap with milestone", () => AdmiralTraderGameplayAlphaAdapter.Parse(campaign, identity, traderBase, policy, baseline, assort, questassort, new[] { quest }, relationship.Replace("\"rel1\"", "\"mile1\"")));
         MustFail("special weapons made permanent", () => AdmiralTraderGameplayAlphaAdapter.Parse(campaign, identity, traderBase, policy.Replace("\"specialWeaponsPermanentOfferAllowed\":false", "\"specialWeaponsPermanentOfferAllowed\":true"), baseline, frozenAssort, questassort, new[] { quest }));
+        MustFail("legacy schema v3 contract is outside frozen 0.1.0", () =>
+            AdmiralTraderGameplayAlphaAdapter.Parse(
+                campaign,
+                identity,
+                traderBase,
+                policy.Replace("\"schemaVersion\":4", "\"schemaVersion\":3"),
+                baseline,
+                frozenAssort,
+                questassort,
+                new[] { quest }));
         Console.WriteLine("Economy Admiral Admiral Trader Gameplay Alpha + Relationship compatibility smoke PASS");
     }
 
