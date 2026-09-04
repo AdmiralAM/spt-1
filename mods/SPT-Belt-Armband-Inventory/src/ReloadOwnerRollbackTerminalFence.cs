@@ -136,9 +136,14 @@ namespace SPTBeltArmbandInventory
             }
         }
 
+        internal static bool OwnerInstallsAllowed
+        {
+            get { return !terminalFailure; }
+        }
+
         static bool BeforeOwnerInstall(ref bool __result)
         {
-            if (!terminalFailure) return true;
+            if (OwnerInstallsAllowed) return true;
             __result = false;
             return false;
         }
@@ -150,7 +155,7 @@ namespace SPTBeltArmbandInventory
 
         internal static bool CanInstallForRegression()
         {
-            return !terminalFailure;
+            return OwnerInstallsAllowed;
         }
 
         internal static void ObserveRollbackForRegression(bool rollbackProven)
