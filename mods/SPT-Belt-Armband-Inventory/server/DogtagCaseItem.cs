@@ -155,7 +155,9 @@ public sealed class DogtagCaseItem(
             DogtagHostCommitReceipt receipt = CommitDogtagSlotExposure(dogtagHost, cancellationToken);
             try
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 canonicalLease.RequireCurrent(templateTable, source);
+                cancellationToken.ThrowIfCancellationRequested();
                 receipt.Accept();
             }
             catch (Exception exception)
@@ -245,10 +247,13 @@ public sealed class DogtagCaseItem(
         ValidateExisting(created, source);
         RequireCanonicalRegisteredTemplate(templateTable);
         canonicalLease.RequireCurrent(templateTable, source);
-        DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);
+        cancellationToken.ThrowIfCancellationRequested();
+        DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, cancellationToken);
         try
         {
+            cancellationToken.ThrowIfCancellationRequested();
             canonicalLease.RequireCurrent(templateTable, source);
+            cancellationToken.ThrowIfCancellationRequested();
             createdReceipt.Accept();
         }
         catch (Exception exception)
