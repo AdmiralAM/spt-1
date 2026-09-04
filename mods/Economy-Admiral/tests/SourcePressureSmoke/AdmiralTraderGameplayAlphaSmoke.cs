@@ -39,6 +39,24 @@ internal static class AdmiralTraderGameplayAlphaSmoke
 
         var frozen = AdmiralTraderGameplayAlphaAdapter.Parse(campaign, identity, traderBase, policy, baseline, frozenAssort, questassort, new[] { quest });
         Require(frozen.RelationshipStockAllowed && frozen.RelationshipOfferCount == 0 && frozen.Offers.Count == 2, "absent Relationship manifest must preserve frozen Gameplay Alpha behavior");
+        MustFail("truncated frozen quest/offer surface", () => AdmiralTraderGameplayAlphaAdapter.ValidateFrozenReleaseShape(frozen, 1));
+
+        var frozenRelease = frozen with
+        {
+            BaselineOfferCount = AdmiralTraderGameplayAlphaAdapter.FrozenBaselineOfferCount,
+            RelationshipOfferCount = 0,
+            MilestoneOfferCount = AdmiralTraderGameplayAlphaAdapter.FrozenMilestoneOfferCount,
+            Offers = Enumerable.Range(0, AdmiralTraderGameplayAlphaAdapter.FrozenTotalOfferCount)
+                .Select(index => frozen.Offers[index % frozen.Offers.Count])
+                .ToArray(),
+        };
+        AdmiralTraderGameplayAlphaAdapter.ValidateFrozenReleaseShape(
+            frozenRelease,
+            AdmiralTraderGameplayAlphaAdapter.FrozenQuestCount);
+        MustFail("Relationship materialization is outside frozen 0.1.0", () =>
+            AdmiralTraderGameplayAlphaAdapter.ValidateFrozenReleaseShape(
+                frozenRelease with { RelationshipOfferCount = 1 },
+                AdmiralTraderGameplayAlphaAdapter.FrozenQuestCount));
 
         var contract = AdmiralTraderGameplayAlphaAdapter.Parse(campaign, identity, traderBase, policy, baseline, assort, questassort, new[] { quest }, relationship);
         var offers = contract.Offers;

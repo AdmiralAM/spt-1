@@ -85,6 +85,7 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
                 questAssortJson,
                 authoredQuestJson,
                 relationshipJson);
+            AdmiralTraderGameplayAlphaAdapter.ValidateFrozenReleaseShape(gameplay, authoredQuestJson.Count);
             offers = gameplay.Offers;
             contractState = "LoadedGameplayAlphaV4";
         }
