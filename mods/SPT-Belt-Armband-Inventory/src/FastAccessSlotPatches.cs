@@ -660,6 +660,11 @@ namespace SPTBeltArmbandInventory
         {
             try
             {
+                if (!ReloadOwnerRollbackTerminalFence.OwnerInstallsAllowed)
+                {
+                    ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB reload reachability is process-terminally disabled because reload-owner rollback authority is ambiguous.");
+                    return false;
+                }
                 if (reachabilityRollbackUnsafe)
                 {
                     ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB reload reachability is terminally disabled for this session because a prior Harmony rollback could not be proven.");
@@ -704,6 +709,11 @@ namespace SPTBeltArmbandInventory
         {
             try
             {
+                if (!ReloadOwnerRollbackTerminalFence.OwnerInstallsAllowed)
+                {
+                    ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB scoped reload candidate bridge is process-terminally disabled because reload-owner rollback authority is ambiguous.");
+                    return false;
+                }
                 if (candidateBridgeRollbackUnsafe)
                 {
                     ReloadDiagnosticLog.TryWarning(logWarning, "B&A&HB scoped reload candidate bridge is terminally disabled for this session because a prior Harmony rollback could not be proven.");
