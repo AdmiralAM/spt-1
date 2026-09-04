@@ -1,6 +1,6 @@
 {
   "schemaVersion": 3,
-  "updatedAt": "2026-08-28",
+  "updatedAt": "2026-09-04",
   "authority": {
     "productAuthority": "user",
     "coordinationWorker": "GitHub Work SPT",
@@ -9,7 +9,11 @@
     "coordinationWorkerMayGateExecution": false,
     "workerRequiresAnotherWorkerPermission": false,
     "workerMayEncodeExplicitUserGovernanceInstruction": true,
-    "governanceBranchPrefix": "governance/"
+    "governanceBranchPrefix": "governance/",
+    "branchSelectionContract": {
+      "rule": "Use each workstream activeDevelopment.branch for new Codex tasks; never infer an active branch from chat memory or a retired branch.",
+      "exactHeadSource": "The referenced live pull request head is authoritative; frozen baselines are explicit and must not be confused with active development."
+    }
   },
   "execution": {
     "stateMachine": [
@@ -78,7 +82,10 @@
       ],
       "frozen": {
         "version": "0.1.0",
-        "slotIds": [15, 16],
+        "slotIds": [
+          15,
+          16
+        ],
         "preserveDistributedIds": true
       },
       "stableAcceptance": [
@@ -87,7 +94,15 @@
         "correct EN/RU presentation, pickup, lifecycle and persistence",
         "no unbounded polling, scene scans, freezes or global UI mutation",
         "one exact-head release candidate passes the batched SPT 4.1.3 runtime gate"
-      ]
+      ],
+      "activeDevelopment": {
+        "issue": 285,
+        "pullRequest": 286,
+        "branch": "feature/bahb-v0.2-compact-headband",
+        "version": "0.2.0",
+        "headAuthority": "live-pull-request-head",
+        "state": "draft-release-candidate-runtime-pending"
+      }
     },
     "trader": {
       "workstreamName": "Admiral TR #2 MOD SPT",
@@ -149,7 +164,22 @@
         "approved portrait renders with correct proportions",
         "profile-safe update, disable and uninstall",
         "one exact-head release candidate passes the batched SPT 4.1.3 runtime gate"
-      ]
+      ],
+      "frozenReleaseAuthority": {
+        "issue": 192,
+        "pullRequest": 193,
+        "branch": "feature/admiral-trader-gameplay-alpha-assort",
+        "version": "0.1.0",
+        "exactHead": "053a62ff5f1cb545f13bc89a96bba3acd319a823"
+      },
+      "activeDevelopment": {
+        "issue": 115,
+        "pullRequest": 297,
+        "branch": "feature/admiral-trader-relationship-stock",
+        "version": "post-0.1.0",
+        "headAuthority": "live-pull-request-head",
+        "runtimeMaterialization": false
+      }
     },
     "economy": {
       "workstreamName": "Admiral Ec #2 MOD SPT",
@@ -157,7 +187,11 @@
       "modulePath": "mods/Economy-Admiral",
       "version": "0.1.0",
       "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
-      "integratedPrs": [222, 223, 226],
+      "integratedPrs": [
+        222,
+        223,
+        226
+      ],
       "phasePlan": [
         {
           "key": "bounded-item-rewards",
@@ -211,9 +245,17 @@
       ],
       "frozen": {
         "version": "0.1.0",
-        "modes": ["Off", "Audit", "Enforce"],
+        "modes": [
+          "Off",
+          "Audit",
+          "Enforce"
+        ],
         "preserveAcceptedEnforceAlpha": true,
-        "classification": ["Baseline", "Relationship", "Milestone"],
+        "classification": [
+          "Baseline",
+          "Relationship",
+          "Milestone"
+        ],
         "noSecondTraderEconomyEngine": true
       },
       "stableAcceptance": [
@@ -263,7 +305,15 @@
         "compact readable weapon-name kill feed",
         "bounded optimized runtime behavior",
         "final exact-head smoke passes before deliberate stable promotion"
-      ]
+      ],
+      "activeDevelopment": {
+        "issue": 71,
+        "pullRequest": 195,
+        "branch": "optimize/tactical-hud-runtime",
+        "version": "1.13.3-RC2",
+        "headAuthority": "live-pull-request-head",
+        "state": "draft-release-candidate"
+      }
     }
   }
 }
