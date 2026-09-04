@@ -185,12 +185,15 @@ public static class DogtagCaseHostContract
                     || !preCommitSnapshot.SetEquals(authority.Baseline))
                     return false;
 
-                // Rebind value checks to the internally pinned baseline. Crucially,
-                // neither the snapshot-key token nor ActiveRollbackHosts capture gate
+                // Retain the exact ConditionalWeakTable key before rebinding value
+                // checks to the internally pinned immutable-copy baseline.
+                HashSet<MongoId> authorityKey = preCommitSnapshot;
+                preCommitSnapshot = authority.Baseline;
+
+                // Neither the snapshot-key token nor ActiveRollbackHosts capture gate
                 // is consumed yet. Any drift/no-op failure before a proven exact
                 // baseline restore leaves the original authority live, so later
                 // value-ABA cannot open a second baseline capture on this host.
-                preCommitSnapshot = authority.Baseline;
                 var caseTpl = new MongoId(RuntimeIdentity.DogtagCaseItemId);
                 if (preCommitSnapshot.Contains(caseTpl)) return false;
 
@@ -217,7 +220,7 @@ public static class DogtagCaseHostContract
                 // and exact baseline restoration are both proven. Successful rollback
                 // is therefore the sole path that re-opens this host for a fresh
                 // pre-add transaction; ambiguous failures remain fail-closed.
-                RollbackAuthorities.Remove(authority.Baseline == preCommitSnapshot ? FindAuthorityKey(authority) : preCommitSnapshot);
+                RollbackAuthorities.Remove(authorityKey);
                 if (ActiveRollbackHosts.TryGetValue(authority.Host, out RollbackAuthority? active)
                     && ReferenceEquals(active, authority))
                     ActiveRollbackHosts.Remove(authority.Host);
@@ -228,14 +231,6 @@ public static class DogtagCaseHostContract
         {
             return false;
         }
-    }
-
-    private static HashSet<MongoId> FindAuthorityKey(RollbackAuthority authority)
-    {
-        // ConditionalWeakTable does not support reverse lookup; this helper must never
-        // be used to derive caller authority. It exists only as a defensive impossible
-        // branch marker and deliberately cannot synthesize a key.
-        throw new InvalidOperationException("B&A&HB Dogtag rollback key identity was lost before metadata consumption.");
     }
 
     private static HashSet<MongoId> SnapshotCurrentFilter(HashSet<MongoId> currentFilter)
