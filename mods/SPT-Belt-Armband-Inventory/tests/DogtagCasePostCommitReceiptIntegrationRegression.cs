@@ -36,20 +36,35 @@ internal static class DogtagCasePostCommitReceiptIntegrationRegression
             throw new InvalidOperationException("Dogtag post-commit receipt integration regression failed: host commit must return a receipt carrying only exact locally-owned add authority.");
 
         int existingReceipt = item.IndexOf("DogtagHostCommitReceipt receipt = CommitDogtagSlotExposure(dogtagHost, cancellationToken);", StringComparison.Ordinal);
-        int existingFinalProof = existingReceipt < 0 ? -1 : item.IndexOf("canonicalLease.RequireCurrent(templateTable, source);", existingReceipt, StringComparison.Ordinal);
-        int existingAccept = existingFinalProof < 0 ? -1 : item.IndexOf("receipt.Accept();", existingFinalProof, StringComparison.Ordinal);
+        int existingCancelAfterCommit = existingReceipt < 0 ? -1 : item.IndexOf("cancellationToken.ThrowIfCancellationRequested();", existingReceipt, StringComparison.Ordinal);
+        int existingFinalProof = existingCancelAfterCommit < 0 ? -1 : item.IndexOf("canonicalLease.RequireCurrent(templateTable, source);", existingCancelAfterCommit, StringComparison.Ordinal);
+        int existingCancelBeforeAccept = existingFinalProof < 0 ? -1 : item.IndexOf("cancellationToken.ThrowIfCancellationRequested();", existingFinalProof, StringComparison.Ordinal);
+        int existingAccept = existingCancelBeforeAccept < 0 ? -1 : item.IndexOf("receipt.Accept();", existingCancelBeforeAccept, StringComparison.Ordinal);
         int existingFailureRollback = existingAccept < 0 ? -1 : item.IndexOf("if (!receipt.TryRollback())", existingAccept, StringComparison.Ordinal);
-        if (existingReceipt < 0 || existingFinalProof < 0 || existingAccept < 0 || existingFailureRollback < 0
-            || !(existingReceipt < existingFinalProof && existingFinalProof < existingAccept && existingAccept < existingFailureRollback))
-            throw new InvalidOperationException("Dogtag post-commit receipt integration regression failed: retained-template path must commit -> final canonical proof -> host-reproved accept, with exact-owned rollback on proof failure.");
+        if (existingReceipt < 0 || existingCancelAfterCommit < 0 || existingFinalProof < 0 || existingCancelBeforeAccept < 0 || existingAccept < 0 || existingFailureRollback < 0
+            || !(existingReceipt < existingCancelAfterCommit && existingCancelAfterCommit < existingFinalProof
+                && existingFinalProof < existingCancelBeforeAccept && existingCancelBeforeAccept < existingAccept
+                && existingAccept < existingFailureRollback))
+            throw new InvalidOperationException("Dogtag post-commit receipt integration regression failed: retained-template path must commit -> cancellation proof -> final canonical proof -> cancellation proof -> host-reproved accept, with exact-owned rollback on any pre-accept failure.");
 
-        int createdReceipt = item.IndexOf("DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);", StringComparison.Ordinal);
-        int createdFinalProof = createdReceipt < 0 ? -1 : item.IndexOf("canonicalLease.RequireCurrent(templateTable, source);", createdReceipt, StringComparison.Ordinal);
-        int createdAccept = createdFinalProof < 0 ? -1 : item.IndexOf("createdReceipt.Accept();", createdFinalProof, StringComparison.Ordinal);
+        int createdBoundary = item.IndexOf("if (!templateTable.Items.TryGetValue(DogtagCaseTpl, out var created))", StringComparison.Ordinal);
+        int createdCancelBeforeCommit = createdBoundary < 0 ? -1 : item.IndexOf("cancellationToken.ThrowIfCancellationRequested();", createdBoundary, StringComparison.Ordinal);
+        int createdReceipt = createdCancelBeforeCommit < 0 ? -1 : item.IndexOf("DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, cancellationToken);", createdCancelBeforeCommit, StringComparison.Ordinal);
+        int createdCancelAfterCommit = createdReceipt < 0 ? -1 : item.IndexOf("cancellationToken.ThrowIfCancellationRequested();", createdReceipt, StringComparison.Ordinal);
+        int createdFinalProof = createdCancelAfterCommit < 0 ? -1 : item.IndexOf("canonicalLease.RequireCurrent(templateTable, source);", createdCancelAfterCommit, StringComparison.Ordinal);
+        int createdCancelBeforeAccept = createdFinalProof < 0 ? -1 : item.IndexOf("cancellationToken.ThrowIfCancellationRequested();", createdFinalProof, StringComparison.Ordinal);
+        int createdAccept = createdCancelBeforeAccept < 0 ? -1 : item.IndexOf("createdReceipt.Accept();", createdCancelBeforeAccept, StringComparison.Ordinal);
         int createdFailureRollback = createdAccept < 0 ? -1 : item.IndexOf("if (!createdReceipt.TryRollback())", createdAccept, StringComparison.Ordinal);
-        if (createdReceipt < 0 || createdFinalProof < 0 || createdAccept < 0 || createdFailureRollback < 0
-            || !(createdReceipt < createdFinalProof && createdFinalProof < createdAccept && createdAccept < createdFailureRollback))
-            throw new InvalidOperationException("Dogtag post-commit receipt integration regression failed: created-template path must commit -> final canonical proof -> host-reproved accept, with exact-owned rollback on proof failure.");
+        if (createdBoundary < 0 || createdCancelBeforeCommit < 0 || createdReceipt < 0 || createdCancelAfterCommit < 0
+            || createdFinalProof < 0 || createdCancelBeforeAccept < 0 || createdAccept < 0 || createdFailureRollback < 0
+            || !(createdBoundary < createdCancelBeforeCommit && createdCancelBeforeCommit < createdReceipt
+                && createdReceipt < createdCancelAfterCommit && createdCancelAfterCommit < createdFinalProof
+                && createdFinalProof < createdCancelBeforeAccept && createdCancelBeforeAccept < createdAccept
+                && createdAccept < createdFailureRollback))
+            throw new InvalidOperationException("Dogtag post-commit receipt integration regression failed: created-template path must honor caller cancellation before host mutation and across the receipt window, then rollback exact-owned host exposure on any pre-accept failure.");
+
+        if (item.Contains("CommitDogtagSlotExposure(dogtagHost, CancellationToken.None)", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag post-commit receipt integration regression failed: created-template host publication must not bypass the caller cancellation contract with CancellationToken.None.");
 
         string commitRegion = item.Substring(commitSignature, item.IndexOf("public static void RequireCanonicalRegisteredTemplate", commitSignature, StringComparison.Ordinal) - commitSignature);
         if (commitRegion.Contains("TryAbandonRollbackAuthority(filter, rollbackBaseline)", StringComparison.Ordinal)
