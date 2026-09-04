@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "product": "Admiral Trader",
   "status": "post-0.1.0-research-only",
   "source": {"repository": "Thirt3nth/Andrudis-Questmaniac", "commit": "4e15990ac18f469ef7818475ce8553bbbb7cebb4"},
@@ -20,9 +20,11 @@
       "reason": "Equipment barter-unlock ladder rather than an authored operation.", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Iron Head", "decision": "rewrite-candidate", "futureUse": "protective-equipment field doctrine",
+      "sourceBundle": "Iron Head", "decision": "consolidated-existing-protection-operations", "futureUse": "protection-calibration,ballistic-head-test",
       "evidence": ["legacy chain begins from helmet barter", "objective is broad FIR helmet handover", "later quest increases quantity and unlocks another helmet"],
-      "requiredRewriteBoundary": "No generic helmet collection, no escalating count ladder, no one-item-per-quest assort conveyor.", "runtimeMaterialize": false
+      "reason": "The helmet-protection theme is already represented by the active protection branch. Keeping Iron Head as a generic rewrite candidate would create a second authority for the same protective-equipment capability.",
+      "requiredRewriteBoundary": "Canonical future use is limited to protection-calibration and ballistic-head-test. No generic helmet collection, no escalating count ladder, no one-item-per-quest assort conveyor, and no parallel Iron Head quest line.",
+      "supersedingAuthority": "post-010-campaign-progression.json", "runtimeMaterialize": false
     },
     {
       "sourceBundle": "Meds Proficiency", "decision": "consolidated-single-deferred-capability", "futureUse": "field-medicine-under-pressure",
@@ -32,19 +34,25 @@
       "supersedingAuthority": "post-010-field-medicine-disposition.json", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Juggernaut", "decision": "rewrite-candidate", "futureUse": "heavy-protection field doctrine",
+      "sourceBundle": "Juggernaut", "decision": "consolidated-existing-protection-operations", "futureUse": "heavy-assault-loadout",
       "evidence": ["legacy chain begins with armor barter", "objective is broad FIR armor handover", "later quest increases quantity and unlocks another armor"],
-      "requiredRewriteBoundary": "Demonstrate bounded field use/survival/combat under protective equipment; no armor handover ladder or per-armor unlock chain.", "runtimeMaterialize": false
+      "reason": "Heavy protective field doctrine is already represented by heavy-assault-loadout after the protection branch. A separate generic Juggernaut rewrite would duplicate the same capability space.",
+      "requiredRewriteBoundary": "Canonical future use is heavy-assault-loadout only. No armor handover ladder, per-armor unlock chain, equipment-class progression clone, or second heavy-protection quest line without a materially distinct mechanic.",
+      "supersedingAuthority": "post-010-campaign-progression.json", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Tarkov Mule", "decision": "rewrite-candidate", "futureUse": "load-bearing expedition field doctrine",
+      "sourceBundle": "Tarkov Mule", "decision": "consolidated-existing-expedition-operation", "futureUse": "expedition-loadout",
       "evidence": ["legacy chain begins with backpack barter", "objective is broad FIR backpack handover", "later quest increases quantity and unlocks another backpack"],
-      "requiredRewriteBoundary": "Use a proven load/extraction/survival mechanic or another field-performance proof; no backpack collection ladder or sequential backpack storefront unlocks.", "runtimeMaterialize": false
+      "reason": "Load-bearing expedition doctrine is already represented by the exact Scav Vest plus Scav backpack Expedition Loadout operation. A parallel Tarkov Mule rewrite would duplicate the same field-preparation capability.",
+      "requiredRewriteBoundary": "Canonical future use is expedition-loadout. No backpack collection ladder, sequential backpack storefront unlocks, load-bearing quota chain, or second expedition-loadout quest without a materially distinct supported mechanic.",
+      "supersedingAuthority": "post-010-expedition-loadout-operation.json", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Ultrasound", "decision": "rewrite-candidate", "futureUse": "acoustic-awareness field doctrine",
+      "sourceBundle": "Ultrasound", "decision": "consolidated-existing-acoustic-operation", "futureUse": "acoustic-contact",
       "evidence": ["legacy README defines 16 headset unlock quests", "bundle splits into eight Barter and eight Trade quests", "Ultrasound Legend adds 72 gear-restricted kill quests"],
-      "requiredRewriteBoundary": "No headset-by-headset barter/trade ladder, no 72-quest gear-kill expansion, no sequential storefront unlock quota.", "runtimeMaterialize": false
+      "reason": "Acoustic-awareness field doctrine is already represented by the bounded Acoustic Contact operation. Keeping Ultrasound generic would permit an accidental second headset progression surface.",
+      "requiredRewriteBoundary": "Canonical future use is acoustic-contact. No headset-by-headset barter/trade ladder, no 72-quest gear-kill expansion, no sequential storefront unlock quota, and no parallel acoustic quest line without a materially distinct mechanic.",
+      "supersedingAuthority": "post-010-protective-acoustic-operations.json", "runtimeMaterialize": false
     },
     {
       "sourceBundle": "Stims Proficiency", "decision": "reject-current-derived-operation-vanilla-semantic-collision", "futureUse": "source-theme-only-unless-new-mechanic-emerges",
@@ -83,8 +91,12 @@
     "medicalCapabilityAuthority": "post-010-medical-capability-curation.json",
     "fieldMedicineAuthority": "post-010-field-medicine-disposition.json",
     "chemicalSupportAuthority": "post-010-chemical-support-operation.json",
+    "protectionCampaignAuthority": "post-010-campaign-progression.json",
+    "expeditionLoadoutAuthority": "post-010-expedition-loadout-operation.json",
+    "acousticOperationAuthority": "post-010-protective-acoustic-operations.json",
     "medsIndependentCandidateCount": 1,
     "stimsCurrentDerivedOperationAccepted": false,
+    "remainingGenericGearRewriteCandidateCount": 0,
     "frozenRuntimeChanged": false
   }
 }
