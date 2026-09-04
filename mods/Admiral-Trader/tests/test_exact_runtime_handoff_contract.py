@@ -134,6 +134,20 @@ class ExactRuntimeHandoffContractTests(unittest.TestCase):
         self.assertGreater(rollback, validate_destination)
         self.assertGreater(delete_rollback, validate_destination)
 
+    def test_preexisting_rollback_is_never_deleted_before_operator_resolution(self):
+        text = SCRIPT.read_text(encoding="utf-8")
+        install = text.index("if ($Install) {")
+        block = text[install:]
+        rollback_guard = block.index("if (Test-Path $backup) {")
+        activation_backup = block.index("if ($hadExistingInstall) { Move-Item $destination $backup }")
+        first_rollback_delete = block.index("Remove-Item $backup -Recurse -Force")
+
+        self.assertIn("Interrupted or unresolved prior Admiral Trader install detected", block)
+        self.assertIn("Rollback copy is preserved", block)
+        self.assertLess(rollback_guard, activation_backup)
+        self.assertGreater(first_rollback_delete, activation_backup)
+        self.assertNotIn("foreach ($scratch in @($incoming, $backup))", block)
+
     def test_activated_tree_revalidates_identity_and_binary_hashes(self):
         text = SCRIPT.read_text(encoding="utf-8")
         install = text.index("if ($Install) {")
