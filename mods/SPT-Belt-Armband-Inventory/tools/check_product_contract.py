@@ -158,7 +158,7 @@ dogtag_item = require(SERVER / "DogtagCaseItem.cs", [
     "!ReferenceEquals(liveSlots[0], boundary.Slot)",
     "!ReferenceEquals(liveGroups[0], boundary.FilterGroup)",
     "!ReferenceEquals(liveGroups[0].Filter, boundary.Filter)",
-    "DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);",
+    "DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, cancellationToken);",
     "DogtagCaseHostContract.RequirePreserved(filter);",
     "DogtagCaseHostContract.CaptureRollbackBaseline(filter)",
     "addedHere = filter.Add(DogtagCaseTpl);",
@@ -179,29 +179,40 @@ if "BaseClasses.DOGTAG" in dogtag_item:
     violations.append("Dogtag Case must copy canonical filter groups rather than broaden to BaseClasses.DOGTAG")
 if "filter.Remove(DogtagCaseTpl);" in dogtag_item:
     violations.append("Dogtag host exposure must not use unconditional value-only rollback")
+if "CommitDogtagSlotExposure(dogtagHost, CancellationToken.None)" in dogtag_item:
+    violations.append("Dogtag Case host exposure must preserve the caller cancellation contract on both retained and newly-created template paths")
 
 create_call = dogtag_item.find("customItemService.CreateItemFromClone(details)")
 pre_create_cancel = dogtag_item.rfind("cancellationToken.ThrowIfCancellationRequested();", 0, create_call)
 post_create_validation = dogtag_item.find("ValidateExisting(created, source);", create_call)
 post_create_canonical = dogtag_item.find("RequireCanonicalRegisteredTemplate(templateTable);", post_create_validation)
-post_create_exposure = dogtag_item.find("DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);", post_create_canonical)
-post_create_final_canonical = dogtag_item.find("canonicalLease.RequireCurrent(templateTable, source);", post_create_exposure)
-post_create_accept = dogtag_item.find("createdReceipt.Accept();", post_create_final_canonical)
-if min(create_call, pre_create_cancel, post_create_validation, post_create_canonical, post_create_exposure, post_create_final_canonical, post_create_accept) < 0 or not (
-    pre_create_cancel < create_call < post_create_validation < post_create_canonical < post_create_exposure < post_create_final_canonical < post_create_accept
+post_create_cancel = dogtag_item.find("cancellationToken.ThrowIfCancellationRequested();", post_create_canonical)
+post_create_exposure = dogtag_item.find("DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, cancellationToken);", post_create_cancel)
+post_commit_cancel = dogtag_item.find("cancellationToken.ThrowIfCancellationRequested();", post_create_exposure)
+post_create_final_canonical = dogtag_item.find("canonicalLease.RequireCurrent(templateTable, source);", post_commit_cancel)
+pre_accept_cancel = dogtag_item.find("cancellationToken.ThrowIfCancellationRequested();", post_create_final_canonical)
+post_create_accept = dogtag_item.find("createdReceipt.Accept();", pre_accept_cancel)
+if min(create_call, pre_create_cancel, post_create_validation, post_create_canonical, post_create_cancel, post_create_exposure,
+       post_commit_cancel, post_create_final_canonical, pre_accept_cancel, post_create_accept) < 0 or not (
+    pre_create_cancel < create_call < post_create_validation < post_create_canonical < post_create_cancel < post_create_exposure
+    < post_commit_cancel < post_create_final_canonical < pre_accept_cancel < post_create_accept
 ):
-    violations.append("Dogtag Case must cancel before irreversible clone, value-revalidate/canonical-reprove, then carry exact host receipt through the final canonical proof before acceptance")
+    violations.append("Dogtag Case must cancel before irreversible clone and before host mutation, then carry caller cancellation + exact host receipt through final canonical proof before acceptance")
 
 existing_check = dogtag_item.find("if (templateTable.Items.TryGetValue(DogtagCaseTpl, out var existing))")
 existing_validate = dogtag_item.find("ValidateExisting(existing, source);", existing_check)
 existing_canonical = dogtag_item.find("RequireCanonicalRegisteredTemplate(templateTable);", existing_validate)
 existing_commit = dogtag_item.find("DogtagHostCommitReceipt receipt = CommitDogtagSlotExposure(dogtagHost, cancellationToken);", existing_canonical)
-existing_final_canonical = dogtag_item.find("canonicalLease.RequireCurrent(templateTable, source);", existing_commit)
-existing_accept = dogtag_item.find("receipt.Accept();", existing_final_canonical)
-if min(existing_check, existing_validate, existing_canonical, existing_commit, existing_final_canonical, existing_accept) < 0 or not (
-    existing_check < existing_validate < existing_canonical < existing_commit < existing_final_canonical < existing_accept
+existing_post_commit_cancel = dogtag_item.find("cancellationToken.ThrowIfCancellationRequested();", existing_commit)
+existing_final_canonical = dogtag_item.find("canonicalLease.RequireCurrent(templateTable, source);", existing_post_commit_cancel)
+existing_pre_accept_cancel = dogtag_item.find("cancellationToken.ThrowIfCancellationRequested();", existing_final_canonical)
+existing_accept = dogtag_item.find("receipt.Accept();", existing_pre_accept_cancel)
+if min(existing_check, existing_validate, existing_canonical, existing_commit, existing_post_commit_cancel,
+       existing_final_canonical, existing_pre_accept_cancel, existing_accept) < 0 or not (
+    existing_check < existing_validate < existing_canonical < existing_commit < existing_post_commit_cancel
+    < existing_final_canonical < existing_pre_accept_cancel < existing_accept
 ):
-    violations.append("pre-existing Dogtag Case path must value-revalidate/canonical-reprove, then carry exact host receipt through the final canonical proof before acceptance")
+    violations.append("pre-existing Dogtag Case path must carry caller cancellation and exact host receipt through the final canonical proof before acceptance")
 
 commit_def = dogtag_item.find("private DogtagHostCommitReceipt CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)")
 commit_end = dogtag_item.find("public static void RequireCanonicalRegisteredTemplate", commit_def)
@@ -298,4 +309,4 @@ if ".Remove(" in migration and 'item.Remove("location")' not in migration:
 if violations:
     raise SystemExit("B&A&HB product-contract gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; Dogtag preload carries exact host receipt through final canonical proof with exact-owned rollback; Dogtag Ragman wrappers transaction-pinned with complete prefix tuple ownership and mutation-adjacent downstream-absence rollback; split HeadBand; canonical Dogtag clone/host parity retained)")
+print("B&A&HB product-contract gate: OK (five-product pricing/identity/filter contracts; collision-safe assorts; Dogtag preload carries caller cancellation + exact host receipt through final canonical proof with exact-owned rollback; Dogtag Ragman wrappers transaction-pinned with complete prefix tuple ownership and mutation-adjacent downstream-absence rollback; split HeadBand; canonical Dogtag clone/host parity retained)")
