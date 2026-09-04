@@ -81,6 +81,37 @@ internal static class DogtagCaseHostRollbackAuthorityRegression
         if (!drifted.Contains(caseTpl) || !drifted.Contains(foreign))
             throw new InvalidOperationException("Dogtag host rollback regression failed: ambiguous rollback must not blindly rewrite current/foreign host state.");
 
+        // A failed rollback must not consume ActiveRollbackHosts. Otherwise an
+        // external value-ABA back to the original baseline could open a second
+        // rollback capture while the first receipt is still live.
+        var driftAbaHost = new HashSet<MongoId>(vanilla);
+        HashSet<MongoId> driftAbaBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(driftAbaHost);
+        driftAbaHost.Add(caseTpl);
+        driftAbaHost.Add(foreign);
+        if (DogtagCaseHostContract.TryRollbackOwnedCaseAddition(driftAbaHost, driftAbaBaseline))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: drifted rollback unexpectedly succeeded before ABA gate proof.");
+        driftAbaHost.Remove(foreign);
+        driftAbaHost.Remove(caseTpl);
+        bool secondCaptureRejected = false;
+        try
+        {
+            _ = DogtagCaseHostContract.CaptureRollbackBaseline(driftAbaHost);
+        }
+        catch (InvalidOperationException)
+        {
+            secondCaptureRejected = true;
+        }
+        if (!secondCaptureRejected)
+            throw new InvalidOperationException("Dogtag host rollback regression failed: failed rollback consumed the exact-host capture gate and allowed value-ABA to mint a second authority.");
+        driftAbaHost.Add(caseTpl);
+        if (!DogtagCaseHostContract.TryRollbackOwnedCaseAddition(driftAbaHost, driftAbaBaseline)
+            || !driftAbaHost.SetEquals(vanilla))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: original rollback authority must remain retryable after drift clears to the exact committed shape.");
+        HashSet<MongoId> freshAfterRecoveredRollback = DogtagCaseHostContract.CaptureRollbackBaseline(driftAbaHost);
+        driftAbaHost.Add(caseTpl);
+        if (!DogtagCaseHostContract.TryAbandonRollbackAuthority(driftAbaHost, freshAfterRecoveredRollback))
+            throw new InvalidOperationException("Dogtag host rollback regression failed: capture gate must reopen only after exact rollback and baseline restoration are proven.");
+
         var missingCase = new HashSet<MongoId>(vanilla);
         HashSet<MongoId> missingBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(missingCase);
         if (DogtagCaseHostContract.TryRollbackOwnedCaseAddition(missingCase, missingBaseline))
@@ -103,6 +134,17 @@ internal static class DogtagCaseHostRollbackAuthorityRegression
         Require(body, "ambiguous/foreign current host state is not blindly rewritten", "ambiguous rollback must remain explicitly fail-closed");
         if (body.Contains("filter.Remove(DogtagCaseTpl);", StringComparison.Ordinal))
             throw new InvalidOperationException("Dogtag host rollback regression failed: unconditional value-only removal must not return.");
+
+        string hostContract = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseHostContract.cs"));
+        int rollback = hostContract.IndexOf("public static bool TryRollbackOwnedCaseAddition", StringComparison.Ordinal);
+        int rollbackEnd = rollback < 0 ? -1 : hostContract.IndexOf("private static HashSet<MongoId> SnapshotCurrentFilter", rollback, StringComparison.Ordinal);
+        if (rollback < 0 || rollbackEnd <= rollback)
+            throw new InvalidOperationException("Dogtag host rollback regression failed: host rollback contract boundary is missing.");
+        string rollbackBody = hostContract.Substring(rollback, rollbackEnd - rollback);
+        int afterProof = rollbackBody.IndexOf("if (!after.SetEquals(baseline))", StringComparison.Ordinal);
+        int consume = rollbackBody.IndexOf("RollbackAuthorities.Remove(preCommitSnapshot);", StringComparison.Ordinal);
+        if (afterProof < 0 || consume <= afterProof)
+            throw new InvalidOperationException("Dogtag host rollback regression failed: rollback/capture authority must be consumed only after exact baseline restoration is proven.");
 
         int receiptStart = source.IndexOf("private sealed class DogtagHostCommitReceipt", StringComparison.Ordinal);
         int receiptEnd = receiptStart < 0 ? -1 : source.IndexOf("public Task OnLoadAsync", receiptStart, StringComparison.Ordinal);
