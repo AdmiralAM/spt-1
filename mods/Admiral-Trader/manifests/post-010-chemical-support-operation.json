@@ -1,35 +1,65 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "product": "Admiral Trader",
-  "status": "deferred-out-of-current-wave-pending-exact-stimulant-use-authority",
-  "source": {"bundle": "Stims Proficiency", "legacyQuestCount": 16, "legacyPattern": "mostly per-stimulant Trade tasks", "directPortAllowed": false},
+  "status": "rejected-vanilla-semantic-collision",
+  "source": {
+    "bundle": "Stims Proficiency",
+    "legacyQuestCount": 16,
+    "legacyPattern": "mostly per-stimulant Trade tasks",
+    "directPortAllowed": false
+  },
   "operation": {
     "key": "controlled-chemical-support",
     "title": {"en": "Controlled Support", "ru": "Контролируемая поддержка"},
-    "description": {"en": "Chemical support is useful only when it solves a field problem. I do not need a syringe collection or a habit disguised as training. Demonstrate one controlled use under operational pressure and come back alive.", "ru": "Химическая поддержка полезна только тогда, когда решает полевую задачу. Мне не нужна коллекция шприцов или привычка, замаскированная под подготовку. Покажи одно контролируемое применение под оперативной нагрузкой и вернись живым."},
-    "started": {"en": "Take one approved support stimulant for a real operational need, complete the bounded field condition, and extract. One deliberate use is enough; repeated consumption proves nothing.", "ru": "Используй один одобренный поддерживающий стимулятор по реальной оперативной необходимости, выполни ограниченное полевое условие и выйди из рейда. Одного осознанного применения достаточно; повторное потребление ничего не доказывает."},
-    "success": {"en": "You used the chemistry as a tool and ended the operation on your feet. That is the standard: controlled support, not dependency and not inventory farming.", "ru": "Ты использовал химию как инструмент и закончил операцию на ногах. Такой и есть стандарт: контролируемая поддержка, а не зависимость и не фарм запасов."},
-    "objectiveIntent": ["one deliberate approved-support-stimulant use tied to a distinct bounded field requirement", "survive or extract the same operation", "no stimulant-by-stimulant progression and no consumption quota"],
-    "bounds": {"maximumRequiredStimulantUses": 1, "maximumSuccessfulRaids": 1, "repeatable": false, "perStimCopiesAllowed": false, "consumptionLadderAllowed": false, "handoverAllowed": false, "firCollectionAllowed": false},
-    "rewardDoctrine": {"default": "XP/RUB/Admiral standing", "boundedSampleRewardAllowedAfterEconomyReview": true, "renewableStimulantSupplyAllowed": false, "permanentStimulantStorefrontUnlockAllowed": false, "highValueConsumableFaucetAllowed": false}
+    "historicalIntent": "one deliberate approved-support-stimulant use tied to a bounded field condition, followed by survival/extraction",
+    "runtimeMaterialize": false
   },
   "decision": {
     "currentWaveAccepted": false,
     "materializeAsQuest": false,
-    "permanentConceptRejection": false,
-    "reason": "The operation only remains distinct if SPT can prove an actual stimulant-use event. The pinned SPT quest authority and maintained quest-condition reference expose handover/find/skill/placement/visit/weapon/kills/extraction/trader/location/counter families, but no exact stimulant-use objective condition or accepted stimulant selector semantics. Replacing the event with handover, FIR collection, possession, generic extraction or a use-count proxy would recreate Stims Proficiency busywork rather than test controlled field use.",
-    "genericItemUseInferenceAllowed": false,
+    "permanentConceptRejection": true,
+    "decisionCode": "REJECT-VANILLA-SEMANTIC-COLLISION",
+    "reason": "The defining product fantasy is stimulant-conditioned operational performance. Vanilla already owns that competency test directly through Jaeger's The Survivalist Path - Junkie, which requires Scav eliminations on Woods while under a stimulant effect. Changing the target count, map, stimulant selector, adding extraction, or reducing required uses does not create a materially distinct Admiral capability; those are parameter variations around the same core mechanic.",
+    "vanillaAuthority": {
+      "quest": "The Survivalist Path - Junkie",
+      "trader": "Jaeger",
+      "definingMechanic": "combat eliminations while under a stimulant effect",
+      "semanticCollision": true
+    },
+    "rescueByParameterVariationAllowed": false,
+    "renameAndRetainAllowed": false,
     "stimulantHandoverFallbackAllowed": false,
     "firStimulantCollectionFallbackAllowed": false,
     "stimulantPossessionFallbackAllowed": false,
     "genericSurviveExtractFallbackAllowed": false,
-    "questCountPreservationIsNotARequirement": true
+    "replacementQuestRequired": false,
+    "rewardOrStandingRedistributionAllowed": false,
+    "permanentStimulantStorefrontCompensationAllowed": false,
+    "futureReentryRule": "A pharmacology concept may be reconsidered only if it uses a materially different, exactly supported mechanic and passes a fresh vanilla/Artem/Scorpion overlap review plus Economy Admiral supply review."
   },
-  "conditionReadiness": {
-    "survivedExtraction": {"status": "proven-shape-only", "authorityManifest": "post-010-pmc-location-extraction-proof.json", "conditionShape": ["Location", "ExitStatus(Survived)"], "sameRaidStimulantUseCouplingProven": false},
-    "stimulantUse": {"status": "unproven-fail-closed", "requiredProof": "exact SPT 4.1.3 stimulant-use objective condition shape and accepted item selector semantics", "mayInferFromGenericItemUse": false}
+  "supersedesPreviousGate": {
+    "previousState": "deferred-out-of-current-wave-pending-exact-stimulant-use-authority",
+    "exactStimulantUseProofStillRequiredForThisConcept": false,
+    "sameRaidStimulantUseToExtractionProofStillRequiredForThisConcept": false,
+    "reason": "Mechanic proof can no longer rescue a product concept already rejected for semantic collision."
   },
-  "synchronization": {"removedFromActiveCampaign": true, "removedFromRewardEnvelope": true, "activeAuthoredWaveCount": 18, "replacementQuestCreated": false, "rewardEscalationCreated": false},
-  "gates": {"implementationAllowed": false, "runtimeMaterialize": false, "physicalTestRequired": false, "requiresExactSpt413StimulantUseConditionProof": true, "requiresSameRaidStimulantUseToExtractionProof": true, "deferredLifecycleRewardMilestoneUnaffected": true},
-  "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
+  "synchronization": {
+    "alreadyRemovedFromActiveCampaign": true,
+    "alreadyRemovedFromRewardEnvelope": true,
+    "replacementQuestCreated": false,
+    "rewardEscalationCreated": false,
+    "medicalCapabilityAuthority": "post-010-medical-capability-curation.json",
+    "medicalCandidateId": "MED-PHARM-01"
+  },
+  "gates": {
+    "implementationAllowed": false,
+    "runtimeMaterialize": false,
+    "physicalTestRequired": false,
+    "deferredLifecycleRewardMilestoneUnaffected": true
+  },
+  "frozenBoundary": {
+    "questCount": 31,
+    "rootOfferCount": 11,
+    "relationshipRuntimeOffers": 0
+  }
 }
