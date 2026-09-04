@@ -51,6 +51,15 @@ namespace SPTBeltArmbandInventory.Tests
             if (ReloadOwnerInstallPublicationGate.HasPublicationAuthorityForRegression(true, false, 1))
                 throw new InvalidOperationException("successful owner must still be inert while a FastAccess install transaction is active");
 
+            if (ReloadOwnerInstallPublicationGate.ShouldRetainAssemblyLoadSubscriptionForRegression(true, false))
+                throw new InvalidOperationException("post-subscription publication-gate retry success must remove the AssemblyLoad handler");
+            if (ReloadOwnerInstallPublicationGate.ShouldRetainAssemblyLoadSubscriptionForRegression(false, true))
+                throw new InvalidOperationException("post-subscription terminal publication-gate failure must remove the AssemblyLoad handler");
+            if (ReloadOwnerInstallPublicationGate.ShouldRetainAssemblyLoadSubscriptionForRegression(true, true))
+                throw new InvalidOperationException("terminal publication-gate state must dominate a retry success marker");
+            if (!ReloadOwnerInstallPublicationGate.ShouldRetainAssemblyLoadSubscriptionForRegression(false, false))
+                throw new InvalidOperationException("only still-unavailable non-terminal publication-gate state may retain AssemblyLoad subscription");
+
             ReloadOwnerInstallPublicationGate.ResetForRegression();
         }
     }
