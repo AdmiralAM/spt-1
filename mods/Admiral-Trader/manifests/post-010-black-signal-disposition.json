@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "deferred-out-of-current-wave-pending-defining-semantics",
   "operationKey": "night-signal-disruption",
@@ -16,7 +16,24 @@
     "genericSurviveExtractFallbackAllowed": false,
     "questCountPreservationIsNotARequirement": true
   },
-  "synchronization": {"removedFromActiveAuthoredSpec": true, "removedFromActiveCampaign": true, "removedFromRewardEnvelope": true, "activeAuthoredWaveCount": 16, "replacementQuestCreated": false, "rewardEscalationCreated": false},
-  "gates": {"implementationAllowed": false, "runtimeMaterialize": false, "physicalTestRequired": false, "requiresExactSpt413CultistTargetProof": true, "requiresReliableNightContextConditionProof": true, "requiresSameRaidContactToExtractionProof": true, "deferredLifecycleRewardMilestoneUnaffected": true},
+  "synchronization": {
+    "removedFromActiveAuthoredSpec": true,
+    "removedFromActiveCampaign": true,
+    "removedFromRewardEnvelope": true,
+    "activeAuthoredWaveCount": 15,
+    "activeWaveCountAuthority": "post-010-campaign-progression.json",
+    "replacementQuestCreated": false,
+    "rewardEscalationCreated": false,
+    "laterArmoredTransitRejectionReflected": true
+  },
+  "gates": {
+    "implementationAllowed": false,
+    "runtimeMaterialize": false,
+    "physicalTestRequired": false,
+    "requiresExactSpt413CultistTargetProof": true,
+    "requiresReliableNightContextConditionProof": true,
+    "requiresSameRaidContactToExtractionProof": true,
+    "deferredLifecycleRewardMilestoneUnaffected": true
+  },
   "frozenBoundary": {"questCount": 31, "rootOfferCount": 11, "relationshipRuntimeOffers": 0}
 }
