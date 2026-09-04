@@ -38,10 +38,14 @@ internal static class DogtagCaseCanonicalIdentityReproofRegression
         int create = item.IndexOf("customItemService.CreateItemFromClone(details);", StringComparison.Ordinal);
         int createdValueProof = create < 0 ? -1 : item.IndexOf("ValidateExisting(created, source);", create + 1, StringComparison.Ordinal);
         int createdProof = createdValueProof < 0 ? -1 : item.IndexOf("RequireCanonicalRegisteredTemplate(templateTable);", createdValueProof + 1, StringComparison.Ordinal);
-        int createdHostCommit = createdProof < 0 ? -1 : item.IndexOf("CommitDogtagSlotExposure(dogtagHost, CancellationToken.None);", createdProof, StringComparison.Ordinal);
-        if (create < 0 || createdValueProof < 0 || createdProof < 0 || createdHostCommit < 0
-            || !(create < createdValueProof && createdValueProof < createdProof && createdProof < createdHostCommit))
-            throw new InvalidOperationException("Dogtag canonical identity reproof regression failed: newly-created product must be value-validated, re-resolved and reference/value-proven before host exposure.");
+        int createdCancel = createdProof < 0 ? -1 : item.IndexOf("cancellationToken.ThrowIfCancellationRequested();", createdProof, StringComparison.Ordinal);
+        int createdHostCommit = createdCancel < 0 ? -1 : item.IndexOf("CommitDogtagSlotExposure(dogtagHost, cancellationToken);", createdCancel, StringComparison.Ordinal);
+        if (create < 0 || createdValueProof < 0 || createdProof < 0 || createdCancel < 0 || createdHostCommit < 0
+            || !(create < createdValueProof && createdValueProof < createdProof && createdProof < createdCancel && createdCancel < createdHostCommit))
+            throw new InvalidOperationException("Dogtag canonical identity reproof regression failed: newly-created product must be value-validated, re-resolved/reference-value proven and caller-cancellation-proven before host exposure.");
+
+        if (item.Contains("CommitDogtagSlotExposure(dogtagHost, CancellationToken.None)", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag canonical identity reproof regression failed: newly-created host exposure must not bypass caller cancellation authority.");
 
         if (item.Contains("templates.Items[SourceDogtagCaseTpl]", StringComparison.Ordinal)
             || item.Contains("templates.Items[DogtagCaseTpl]", StringComparison.Ordinal))
