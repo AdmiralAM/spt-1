@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "product": "Admiral Trader",
   "status": "post-0.1.0-research-only",
   "source": {"repository": "Thirt3nth/Andrudis-Questmaniac", "commit": "4e15990ac18f469ef7818475ce8553bbbb7cebb4"},
@@ -24,7 +24,7 @@
       "evidence": ["legacy chain begins from helmet barter", "objective is broad FIR helmet handover", "later quest increases quantity and unlocks another helmet"],
       "reason": "The helmet-protection theme is already represented by the active protection branch. Keeping Iron Head as a generic rewrite candidate would create a second authority for the same protective-equipment capability.",
       "requiredRewriteBoundary": "Canonical future use is limited to protection-calibration and ballistic-head-test. No generic helmet collection, no escalating count ladder, no one-item-per-quest assort conveyor, and no parallel Iron Head quest line.",
-      "supersedingAuthority": "post-010-campaign-progression.json", "runtimeMaterialize": false
+      "supersedingAuthority": "post-010-wave-completion-operations.json", "runtimeMaterialize": false
     },
     {
       "sourceBundle": "Meds Proficiency", "decision": "consolidated-single-deferred-capability", "futureUse": "field-medicine-under-pressure",
@@ -38,7 +38,7 @@
       "evidence": ["legacy chain begins with armor barter", "objective is broad FIR armor handover", "later quest increases quantity and unlocks another armor"],
       "reason": "Heavy protective field doctrine is already represented by heavy-assault-loadout after the protection branch. A separate generic Juggernaut rewrite would duplicate the same capability space.",
       "requiredRewriteBoundary": "Canonical future use is heavy-assault-loadout only. No armor handover ladder, per-armor unlock chain, equipment-class progression clone, or second heavy-protection quest line without a materially distinct mechanic.",
-      "supersedingAuthority": "post-010-campaign-progression.json", "runtimeMaterialize": false
+      "supersedingAuthority": "post-010-wave-completion-operations.json", "runtimeMaterialize": false
     },
     {
       "sourceBundle": "Tarkov Mule", "decision": "consolidated-existing-expedition-operation", "futureUse": "expedition-loadout",
@@ -62,41 +62,57 @@
       "supersedingAuthority": "post-010-medical-capability-curation.json", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Boss Hunt", "decision": "rewrite-candidate", "futureUse": "single high-value-target operations",
+      "sourceBundle": "Boss Hunt", "decision": "deferred-specific-command-window", "futureUse": "high-value-target-window",
       "evidence": ["legacy README defines ten boss-kill steps", "counts escalate from 1 through 50", "progression is repeated body-count escalation"],
-      "requiredRewriteBoundary": "Preserve only distinct one-off HVT operations; no repeated boss-count ladder or same-target sequel whose only change is a larger number.", "runtimeMaterialize": false
+      "reason": "The compact Command Window rewrite has already been evaluated and deferred out of the current wave after its Glukhar/Reserve shape proved a semantic subset of vanilla Payback. Cycling through another boss without a different mechanic is not a new product.",
+      "requiredRewriteBoundary": "Canonical authority is post-010-high-value-target-operation.json. Do not reopen a generic boss-kill rewrite, swap only the boss name, recreate a repeated boss-count ladder, or add filler to preserve quest count. Readmission requires a genuinely distinct command-disruption mechanic.",
+      "supersedingAuthority": "post-010-high-value-target-operation.json", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Boss Follower Hunt", "decision": "rewrite-candidate", "futureUse": "command-network disruption operations",
+      "sourceBundle": "Boss Follower Hunt", "decision": "deferred-specific-command-window", "futureUse": "high-value-target-window",
       "evidence": ["legacy README defines ten follower-kill steps", "counts escalate from 1 through 100", "source is location-free repeated body-count progression"],
-      "requiredRewriteBoundary": "Use a compact contextual command-network operation; no follower farming ladder, triple-digit count or location-free repetition without purpose.", "runtimeMaterialize": false
+      "reason": "Follower farming was absorbed into the same command-network review as Boss Hunt. The current Command Window concept is deferred; a second follower-only rewrite would restore the location-free body-count progression the curation policy rejects.",
+      "requiredRewriteBoundary": "Canonical authority is post-010-high-value-target-operation.json. No follower farming ladder, triple-digit count, location-free repetition, boss/follower substitution, or parallel command-window quest without a materially distinct exact-supported mechanic.",
+      "supersedingAuthority": "post-010-high-value-target-operation.json", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Cultists Hunt", "decision": "rewrite-candidate", "futureUse": "night reconnaissance and cultist disruption",
+      "sourceBundle": "Cultists Hunt", "decision": "deferred-specific-black-signal", "futureUse": "night-signal-disruption",
       "evidence": ["legacy README defines ten cultist-kill steps", "counts escalate from 1 through 75", "chain measures cumulative kills rather than a distinct operation"],
-      "requiredRewriteBoundary": "Use a small authored night/reconnaissance/disruption operation with proven conditions; no cumulative cultist ladder or reward scaling solely by kill volume.", "runtimeMaterialize": false
+      "reason": "The compact Black Signal rewrite is already deferred because pinned authority does not yet prove both the defining Cultist target and reliable night/context semantics. Generic kill or survive/extract proxies would erase the authored reconnaissance purpose.",
+      "requiredRewriteBoundary": "Canonical authority is post-010-black-signal-disposition.json. No cumulative cultist ladder, generic Scav fallback, text-only night requirement, or generic survive/extract proxy. Readmission requires exact Cultist target and reliable night/context authority.",
+      "supersedingAuthority": "post-010-black-signal-disposition.json", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Sniper Life", "decision": "rewrite-candidate", "futureUse": "precision fieldcraft operation",
+      "sourceBundle": "Sniper Life", "decision": "consolidated-existing-precision-operations", "futureUse": "precision-observation-window,precision-denial",
       "evidence": ["legacy README defines 90 quests", "four chains repeat kill/headshot objectives", "minimum distance rises by ten metres per quest"],
-      "requiredRewriteBoundary": "Remain materially distinct from frozen Precision Arsenal; one or very few contextual objectives; never expand by repetitive 10 m distance increments.", "runtimeMaterialize": false
+      "reason": "The useful precision-fieldcraft theme has already been compressed into Observation Window and Precision Denial. Keeping Sniper Life open generically would permit a parallel distance-ladder authority beside those authored operations.",
+      "requiredRewriteBoundary": "Canonical future use is limited to precision-observation-window and precision-denial. No repetitive 10 m ladder, per-map copies, weapon collection, or parallel sniper progression line without a materially distinct tactical problem.",
+      "supersedingAuthority": "post-010-precision-operation.json", "runtimeMaterialize": false
     },
     {
-      "sourceBundle": "Survivalist", "decision": "rewrite-candidate", "futureUse": "expedition survival and extraction proof",
+      "sourceBundle": "Survivalist", "decision": "consolidated-existing-survival-operation", "futureUse": "endurance-circuit",
       "evidence": ["legacy README defines 40 quests", "five-quest templates repeat per location plus location-free chain", "survived-status counts and restart-on-failure behavior repeat"],
-      "requiredRewriteBoundary": "Compress into a small authored expedition arc with distinct risk/context and proven survived-status semantics; no per-map five-quest template or restart punishment used to inflate repetition.", "runtimeMaterialize": false
+      "reason": "The cross-map survival value is already represented by the bounded Endurance Circuit operation. A second generic Survivalist rewrite would recreate per-map survived-extraction templates or count ladders without new gameplay meaning.",
+      "requiredRewriteBoundary": "Canonical future use is endurance-circuit. No per-map five-quest template, repeated survived-count ladder, restart punishment used to inflate repetition, or parallel survival quest line without a materially distinct supported mechanic.",
+      "supersedingAuthority": "post-010-wave-completion-operations.json", "runtimeMaterialize": false
     }
   ],
   "synchronization": {
     "medicalCapabilityAuthority": "post-010-medical-capability-curation.json",
     "fieldMedicineAuthority": "post-010-field-medicine-disposition.json",
     "chemicalSupportAuthority": "post-010-chemical-support-operation.json",
-    "protectionCampaignAuthority": "post-010-campaign-progression.json",
+    "protectionOperationAuthority": "post-010-wave-completion-operations.json",
     "expeditionLoadoutAuthority": "post-010-expedition-loadout-operation.json",
     "acousticOperationAuthority": "post-010-protective-acoustic-operations.json",
+    "commandWindowAuthority": "post-010-high-value-target-operation.json",
+    "blackSignalAuthority": "post-010-black-signal-disposition.json",
+    "precisionOperationAuthority": "post-010-precision-operation.json",
+    "survivalOperationAuthority": "post-010-wave-completion-operations.json",
     "medsIndependentCandidateCount": 1,
     "stimsCurrentDerivedOperationAccepted": false,
     "remainingGenericGearRewriteCandidateCount": 0,
+    "remainingGenericCombatSurvivalRewriteCandidateCount": 0,
+    "remainingGenericRewriteCandidateCount": 0,
     "frozenRuntimeChanged": false
   }
 }
