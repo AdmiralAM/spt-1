@@ -34,8 +34,6 @@ internal static class ReloadReachabilityPublicationFenceRegression
                 || ReloadReachabilityPublicationFence.SelectForRegression(true, healthy))
                 throw new InvalidOperationException("Reload reachability publication fence regression failed: persistent execution-reference drift must restore the captured vanilla false result.");
 
-            // Exact reference restoration alone may make an identity snapshot current again;
-            // lifecycle generation is the ABA authority that prevents Reset/reinstall revival.
             FastAccessReloadRuntime.ReadTemplateId = reader;
             if (!ReloadReachabilityPublicationFence.ShouldPublishForRegression(healthy))
                 throw new InvalidOperationException("Reload reachability publication fence regression failed: exact reference restoration without a lifecycle transition unexpectedly invalidated the identity snapshot.");
@@ -56,6 +54,12 @@ internal static class ReloadReachabilityPublicationFenceRegression
             ReloadReachabilityPublicationFence.InvalidateForRegression();
             if (!ReloadReachabilityPublicationFence.SelectForRegression(false, vanillaTrue))
                 throw new InvalidOperationException("Reload reachability publication fence regression failed: fail-closed publication must preserve an incoming vanilla true result rather than demoting it.");
+
+            if (ReloadReachabilityPublicationFence.ShouldKeepAssemblyLoadSubscriptionForRegression(true, false)
+                || ReloadReachabilityPublicationFence.ShouldKeepAssemblyLoadSubscriptionForRegression(true, true)
+                || ReloadReachabilityPublicationFence.ShouldKeepAssemblyLoadSubscriptionForRegression(false, true)
+                || !ReloadReachabilityPublicationFence.ShouldKeepAssemblyLoadSubscriptionForRegression(false, false))
+                throw new InvalidOperationException("Reload reachability publication fence regression failed: post-subscription bootstrap retry truth-table drifted.");
         }
         finally
         {
@@ -78,6 +82,9 @@ internal static class ReloadReachabilityPublicationFenceRegression
             "\"TryInstall\"",
             "new[] { typeof(object), typeof(bool).MakeByRefType() }",
             "install.ReturnType != typeof(bool)",
+            "AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;",
+            "bool retrySucceeded = TryInstall();",
+            "ShouldKeepAssemblyLoadSubscriptionForRegression(retrySucceeded, terminalFailure)",
             "patch.Invoke(owner, promoteArgs);",
             "patch.Invoke(owner, resetArgs);",
             "patch.Invoke(owner, installArgs);",
