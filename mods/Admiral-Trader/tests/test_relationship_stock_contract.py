@@ -13,7 +13,7 @@ class RelationshipStockContractTests(unittest.TestCase):
         policy = self.load("gameplay-policy.json")
         relationship = self.load("relationship-stock.json")
 
-        self.assertEqual(relationship["schemaVersion"], 4)
+        self.assertEqual(relationship["schemaVersion"], 5)
         self.assertEqual(relationship["stockClass"], "Relationship")
         self.assertTrue(policy["traderStock"]["relationshipStockAllowed"])
         self.assertFalse(relationship["authority"]["salesSumGateAllowed"])
@@ -33,8 +33,13 @@ class RelationshipStockContractTests(unittest.TestCase):
         self.assertEqual([x["loyaltyLevel"] for x in tiers], [2, 3, 4])
         self.assertEqual([x["standing"] for x in tiers], policy["loyalty"]["expectedStandingThresholds"][1:])
         self.assertTrue(all(x["selection"]["minimumRequiredOffers"] == 0 for x in tiers))
-        self.assertTrue(all(x["selection"]["maximumOffers"] > 0 for x in tiers))
+        self.assertTrue(all(x["selection"]["maximumOffers"] == 0 for x in tiers))
         self.assertTrue(all(x["selection"]["qualityGateOverridesCount"] for x in tiers))
+
+        disposition = relationship["currentSliceDisposition"]
+        self.assertEqual(disposition["decision"], "close-new-relationship-offer-search-for-current-slice")
+        self.assertEqual(disposition["newRelationshipOfferCount"], 0)
+        self.assertEqual(disposition["rootOfferCountBefore"], disposition["rootOfferCountAfter"])
 
     def test_economy_relationship_adapter_integration_is_current_and_uplift_path_is_separate(self):
         relationship = self.load("relationship-stock.json")
@@ -63,9 +68,11 @@ class RelationshipStockContractTests(unittest.TestCase):
         self.assertFalse(uplift["physicalCheckpointRequestedNow"])
 
         materialization = relationship["materialization"]
-        new_offer_gates = materialization["newOfferPathRequiredBeforeEnable"]
+        self.assertFalse(materialization["newOfferPathEnabledForCurrentSlice"])
+        future_offer_gates = materialization["futureNewOfferRevisionRequirements"]
         uplift_gates = materialization["standingUpliftPathRequiredBeforeEnable"]
-        self.assertTrue(any("Economy Admiral" in entry for entry in new_offer_gates))
+        self.assertTrue(any("Economy Admiral" in entry for entry in future_offer_gates))
+        self.assertTrue(any("11-root-offer" in entry for entry in future_offer_gates))
         self.assertEqual(len(uplift_gates), 1)
         self.assertIn("physical runtime proof", uplift_gates[0])
         self.assertNotIn("Economy Admiral", uplift_gates[0])

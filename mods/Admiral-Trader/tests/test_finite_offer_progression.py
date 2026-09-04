@@ -34,7 +34,7 @@ class FiniteOfferProgressionTests(unittest.TestCase):
         return payment["count"]
 
     def test_contract_is_bound_to_frozen_candidate_without_materialization(self):
-        self.assertEqual(self.contract["schemaVersion"], 1)
+        self.assertEqual(self.contract["schemaVersion"], 2)
         self.assertEqual(
             self.contract["frozen010Base"],
             "053a62ff5f1cb545f13bc89a96bba3acd319a823",
@@ -42,6 +42,10 @@ class FiniteOfferProgressionTests(unittest.TestCase):
         self.assertFalse(self.contract["changeControl"]["runtimeMutationInThisSlice"])
         self.assertEqual(len(self.items), 11)
         self.assertEqual(self.contract["aggregate"]["rootOfferCount"], 11)
+        self.assertEqual(self.contract["aggregate"]["currentRelationshipRootOfferDelta"], 0)
+        self.assertTrue(
+            self.contract["changeControl"]["requireExplicitProductRevisionBeforeRelationshipRootOfferExpansion"]
+        )
 
     def test_baseline_aggregate_matches_runtime_assort(self):
         offers = self.baseline["offers"]
@@ -128,12 +132,20 @@ class FiniteOfferProgressionTests(unittest.TestCase):
             self.contract["aggregate"]["milestonePlayerFullBuyRubPerReset"],
         )
 
-    def test_relationship_is_still_absent_and_cannot_fill_a_capability_gate(self):
+    def test_relationship_is_absent_as_new_merchandise_and_cannot_fill_a_capability_gate(self):
         relationship = self.contract["classes"]["relationship"]
         self.assertEqual(relationship["offerCount"], 0)
         self.assertFalse(relationship["materialized"])
+        self.assertEqual(relationship["currentSliceNewRootOffers"], 0)
+        self.assertEqual(relationship["rootOfferCountAfterCurrentSlice"], 11)
+        self.assertFalse(relationship["newRootOfferPathOpen"])
+        self.assertEqual(
+            [(x["stockPerReset"], x["buyRestriction"]) for x in relationship["standingEnvelope"]],
+            [(12, 4), (16, 6), (20, 8), (24, 10)],
+        )
         rules = " ".join(relationship["rules"]).lower()
         self.assertIn("not replace access or munitions", rules)
+        self.assertIn("no ll2-ll4 merchandise", rules)
         self.assertTrue(self.contract["changeControl"]["requireEconomyReviewForPriceStockOrNewOffer"])
         self.assertTrue(self.contract["changeControl"]["requireUnlockGraphReviewForMilestoneOfferChange"])
 
