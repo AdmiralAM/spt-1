@@ -10,7 +10,7 @@ class Post010CurationAdmissionTests(unittest.TestCase):
         cls.manifest = json.loads((ROOT / "manifests" / "post-010-curation-admission.json").read_text(encoding="utf-8"))
 
     def test_curation_is_post_010_and_never_direct_port(self):
-        self.assertEqual(self.manifest["schemaVersion"], 2)
+        self.assertIn(self.manifest["schemaVersion"], (2, 3))
         self.assertEqual(self.manifest["status"], "post-0.1.0-research-only")
         policy = self.manifest["policy"]
         self.assertFalse(policy["directLegacyQuestCopyAllowed"])
@@ -28,10 +28,10 @@ class Post010CurationAdmissionTests(unittest.TestCase):
         self.assertTrue(all(entry["runtimeMaterialize"] is False for entry in admissions))
         by_name = {entry["sourceBundle"]: entry for entry in admissions}
         self.assertEqual(by_name["Deep Pockets"]["decision"], "reject-direct-port")
-        for rewrite in ("Iron Head", "Juggernaut", "Tarkov Mule", "Ultrasound", "Boss Hunt", "Boss Follower Hunt", "Cultists Hunt", "Sniper Life", "Survivalist"):
-            self.assertEqual(by_name[rewrite]["decision"], "rewrite-candidate")
-            self.assertIn("requiredRewriteBoundary", by_name[rewrite])
-            self.assertGreaterEqual(len(by_name[rewrite].get("evidence", [])), 3)
+        for unresolved in ("Boss Hunt", "Boss Follower Hunt", "Cultists Hunt", "Sniper Life", "Survivalist"):
+            self.assertEqual(by_name[unresolved]["decision"], "rewrite-candidate")
+            self.assertIn("requiredRewriteBoundary", by_name[unresolved])
+            self.assertGreaterEqual(len(by_name[unresolved].get("evidence", [])), 3)
         self.assertFalse(any(entry["decision"] == "pending-source-review" for entry in admissions))
 
     def test_medical_umbrella_respects_later_specific_dispositions(self):
@@ -50,10 +50,28 @@ class Post010CurationAdmissionTests(unittest.TestCase):
         self.assertFalse(sync["stimsCurrentDerivedOperationAccepted"])
         self.assertFalse(sync["frozenRuntimeChanged"])
 
+    def test_gear_umbrella_respects_existing_specific_operations(self):
+        by_name = {entry["sourceBundle"]: entry for entry in self.manifest["admissions"]}
+        expected = {
+            "Iron Head": ("consolidated-existing-protection-operations", "protection-calibration,ballistic-head-test"),
+            "Juggernaut": ("consolidated-existing-protection-operations", "heavy-assault-loadout"),
+            "Tarkov Mule": ("consolidated-existing-expedition-operation", "expedition-loadout"),
+            "Ultrasound": ("consolidated-existing-acoustic-operation", "acoustic-contact"),
+        }
+        for bundle, (decision, target) in expected.items():
+            entry = by_name[bundle]
+            self.assertEqual(entry["decision"], decision)
+            self.assertEqual(entry["futureUse"], target)
+            self.assertIn("supersedingAuthority", entry)
+            self.assertIn("requiredRewriteBoundary", entry)
+        sync = self.manifest["synchronization"]
+        self.assertEqual(sync.get("remainingGenericGearRewriteCandidateCount"), 0)
+        self.assertFalse(sync["frozenRuntimeChanged"])
+
     def test_support_rewrites_do_not_recreate_storefront_conveyors(self):
         by_name = {entry["sourceBundle"]: entry for entry in self.manifest["admissions"]}
         ultrasound = by_name["Ultrasound"]
-        self.assertEqual(ultrasound["futureUse"], "acoustic-awareness field doctrine")
+        self.assertEqual(ultrasound["futureUse"], "acoustic-contact")
         self.assertIn("no headset-by-headset", ultrasound["requiredRewriteBoundary"].lower())
         self.assertIn("no 72-quest", ultrasound["requiredRewriteBoundary"].lower())
 
