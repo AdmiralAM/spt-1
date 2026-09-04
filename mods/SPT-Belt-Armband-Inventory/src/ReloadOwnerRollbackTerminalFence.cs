@@ -26,8 +26,18 @@ namespace SPTBeltArmbandInventory
         [System.Runtime.CompilerServices.ModuleInitializer]
         internal static void Initialize()
         {
-            if (!TryInstallFence() && !terminalFailure)
-                AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+            if (TryInstallFence() || terminalFailure)
+                return;
+
+            // Subscribe before the second attempt. 0Harmony can become available after the
+            // first Type.GetType probe but before AssemblyLoad registration; without this
+            // immediate post-subscription retry that load event is lost forever and the
+            // process-terminal owner fence may never publish. The retry is installation-only:
+            // it does not widen reload discovery or touch candidate enumeration.
+            AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+            bool installedAfterSubscribe = TryInstallFence();
+            if (!ShouldRetainAssemblyLoadSubscriptionForRegression(installedAfterSubscribe, terminalFailure))
+                AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
         }
 
         static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
@@ -151,6 +161,11 @@ namespace SPTBeltArmbandInventory
         internal static bool MergeTerminalFailureForRegression(bool currentTerminalFailure, bool ownerCreated)
         {
             return currentTerminalFailure || ownerCreated;
+        }
+
+        internal static bool ShouldRetainAssemblyLoadSubscriptionForRegression(bool installedAfterSubscribe, bool terminalAfterSubscribe)
+        {
+            return !installedAfterSubscribe && !terminalAfterSubscribe;
         }
 
         internal static void ResetForRegression()
