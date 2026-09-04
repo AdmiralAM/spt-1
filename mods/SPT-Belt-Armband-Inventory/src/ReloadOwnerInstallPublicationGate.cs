@@ -27,8 +27,17 @@ namespace SPTBeltArmbandInventory
         [System.Runtime.CompilerServices.ModuleInitializer]
         internal static void Initialize()
         {
-            if (!TryInstall() && !terminalFailure)
-                AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+            if (TryInstall() || terminalFailure)
+                return;
+
+            // Subscribe before retrying. 0Harmony can become available after the first
+            // Type.GetType probe but before AssemblyLoad registration; without the immediate
+            // post-subscription retry that load event is lost and the publication gate may
+            // never install, allowing partially published reload hooks to become callable.
+            AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+            bool installedAfterSubscribe = TryInstall();
+            if (!ShouldRetainAssemblyLoadSubscriptionForRegression(installedAfterSubscribe, terminalFailure))
+                AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
         }
 
         static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
@@ -196,6 +205,11 @@ namespace SPTBeltArmbandInventory
             return installedState
                 && !terminalFailureState
                 && depth == 0;
+        }
+
+        internal static bool ShouldRetainAssemblyLoadSubscriptionForRegression(bool installedAfterSubscribe, bool terminalAfterSubscribe)
+        {
+            return !installedAfterSubscribe && !terminalAfterSubscribe;
         }
 
         internal static void BeginForRegression()
