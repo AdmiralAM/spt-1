@@ -17,7 +17,10 @@ namespace SPTBeltArmbandInventory
         const string HarmonyId = "com.admiralam.spt.belt-armband-inventory.reload-owner-rollback-terminal-fence";
         static readonly object Gate = new object();
         static bool fenceInstalled;
-        static bool terminalFailure;
+        // Harmony rollback observers and later owner-install prefixes can execute on different
+        // threads. The process-terminal poison bit must therefore publish immediately across
+        // threads; a stale false read would otherwise be capable of re-authorizing a stale owner.
+        static volatile bool terminalFailure;
         static object harmonyOwner;
 
         [System.Runtime.CompilerServices.ModuleInitializer]
