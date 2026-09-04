@@ -93,8 +93,13 @@ namespace SPTBeltArmbandInventory
         [System.Runtime.CompilerServices.ModuleInitializer]
         internal static void Initialize()
         {
-            if (!TryInstall() && !terminalFailure)
-                AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+            if (TryInstall() || terminalFailure)
+                return;
+
+            AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
+            bool retrySucceeded = TryInstall();
+            if (!ShouldKeepAssemblyLoadSubscriptionForRegression(retrySucceeded, terminalFailure))
+                AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
         }
 
         static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
@@ -110,6 +115,11 @@ namespace SPTBeltArmbandInventory
                 return;
             }
             AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
+        }
+
+        internal static bool ShouldKeepAssemblyLoadSubscriptionForRegression(bool installSucceeded, bool terminal)
+        {
+            return !installSucceeded && !terminal;
         }
 
         static bool TryInstall()
@@ -295,11 +305,6 @@ namespace SPTBeltArmbandInventory
 
         static void AfterFastAccessInstall(bool __result)
         {
-            // Snapshot publication changes the accepted mutable slot-array authority.
-            // Clear first, then advance the process-wide generation before any new
-            // snapshot can become visible. A pre-install reload scope can therefore
-            // never become current again after failed -> successful install/reinstall
-            // cycles, even if all bridge references are later restored identically.
             Volatile.Write(ref slotArraySnapshots, null);
             Invalidate();
             if (!__result)
