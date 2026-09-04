@@ -39,10 +39,18 @@ internal static class ReloadScopeEpochInstallRollbackRegression
         if (!(noOwnerResult is bool noOwner) || !noOwner)
             throw new InvalidOperationException("reload epoch regression failed: no-owner rollback must be an exact safe no-op");
 
-        // Ambiguous rollback APIs are rejected before any Harmony.Patch mutation.
         object ambiguous = findRollback.Invoke(null, new object[] { typeof(AmbiguousOwner), "UnpatchSelf" });
         if (ambiguous != null)
             throw new InvalidOperationException("reload epoch regression failed: ambiguous zero-arg rollback API did not fail closed");
+
+        if (ReloadScopeEpochGuard.ShouldKeepAssemblyLoadSubscriptionForRegression(true, false))
+            throw new InvalidOperationException("reload epoch regression failed: successful post-subscription retry retained AssemblyLoad handler");
+        if (ReloadScopeEpochGuard.ShouldKeepAssemblyLoadSubscriptionForRegression(true, true))
+            throw new InvalidOperationException("reload epoch regression failed: terminal state did not dominate successful retry cleanup");
+        if (ReloadScopeEpochGuard.ShouldKeepAssemblyLoadSubscriptionForRegression(false, true))
+            throw new InvalidOperationException("reload epoch regression failed: terminal retry retained AssemblyLoad handler");
+        if (!ReloadScopeEpochGuard.ShouldKeepAssemblyLoadSubscriptionForRegression(false, false))
+            throw new InvalidOperationException("reload epoch regression failed: unavailable non-terminal Harmony retry dropped required AssemblyLoad handler");
     }
 
     private sealed class RecordingOwner
