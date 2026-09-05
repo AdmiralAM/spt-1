@@ -3,7 +3,7 @@
   "status": "authored-spec",
   "domain": "weaponAmmo",
   "traderId": "d5c27bb3169f8dfbc13f6b69",
-  "targetSptVersion": "4.1.4",
+  "targetSptVersion": "4.1.5",
   "legacySource": {
     "bundles": ["Weapon Proficiency", "Ammo Proficiency"],
     "questCount": 438,
