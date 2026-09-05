@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "M3-product-spec-only",
   "canonicalPr": 328,
@@ -117,7 +117,7 @@
       "distinctiveDecision": "Accept limited protection in exchange for mobility and finish the route instead of extending the fight.",
       "uniquenessBoundary": "No armor-class staircase. Helmet qualification is not a separate early quest.",
       "reward": {"xp": 6500, "rub": 40000, "standing": 0.009, "itemReward": null},
-      "campaignLevelIntent": 16,
+      "campaignLevelIntent": 17,
       "runtimeProofRequired": ["SPT 4.1.5 explicit equipment allowlist", "selected target/location semantics", "same-raid equipment-contact-extraction coupling"],
       "disposition": "ADMIT"
     },
@@ -133,7 +133,7 @@
       "distinctiveDecision": "Use access to solve a route problem rather than collect keys.",
       "uniquenessBoundary": "No key catalogue, no per-map access copies and no promise that runtime detected personal key use unless SPT 4.1.5 proves it.",
       "reward": {"xp": 7500, "rub": 44000, "standing": 0.010, "itemReward": null},
-      "campaignLevelIntent": 17,
+      "campaignLevelIntent": 18,
       "runtimeProofRequired": ["SPT 4.1.5 VisitPlace target authority", "same-raid VisitPlace-to-extraction coupling", "current vanilla/external overlap recheck"],
       "disposition": "ADMIT"
     },
@@ -198,7 +198,7 @@
       "uniquenessBoundary": "Absorbs the old Precision Denial purpose. No second distance-threshold quest unless a new player decision exists.",
       "reward": {"xp": 12000, "rub": 70000, "standing": 0.018, "itemReward": null},
       "rewardChangeRationale": "Raised modestly from the historical Observation Window allocation because the final operation absorbs the only useful specialist purpose from Precision Denial; no removed reward budget is automatically redistributed.",
-      "campaignLevelIntent": 29,
+      "campaignLevelIntent": 28,
       "runtimeProofRequired": ["SPT 4.1.5 distance unit and comparator semantics", "final target/location selection", "same-raid precision-to-extraction coupling", "current precision-quest overlap recheck"],
       "disposition": "ADMIT-MERGED"
     },
