@@ -45,6 +45,15 @@ Prove the current 31-quest / 11-offer campaign as one coherent playable baseline
 ### M3 — Runtime campaign expansion
 Materialize the already-prepared post-0.1.0 operation wave into actual runtime quests in bounded player-visible slices. Manifest-only research is not counted as product completion.
 
+Current **design-only** M3 authority is now kept on this canonical branch so the eventual runtime slice does not regress to the superseded PR #297 wording or count-driven structure:
+
+- `docs/m3-quest-writing-standard.md` — Admiral voice, EN/RU policy, uniqueness gate, anti-filler policy and reward doctrine;
+- `manifests/m3-campaign-product-spec.json` — curated 12-operation campaign shape, merge/reject decisions and runtime proof gates;
+- `manifests/m3-campaign-editorial-copy.json` — authored EN/RU player-facing copy for the admitted campaign;
+- `manifests/m3-campaign-reward-plan.json` — conservative reward pacing and Economy Admiral handoff rules.
+
+These files **do not authorize M3 runtime materialization before M1 and M2 acceptance**. They replace the old assumption that every prepared PR #297 operation must survive unchanged. Weak duplicates may be merged or held instead of being replaced with filler.
+
 ### M4 — Selective content absorption
 Use QuestManiac/Andrudis/Natalya only as curated source material. No second trader, duplicate campaign or unnecessary dependency.
 
