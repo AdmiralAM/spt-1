@@ -1,0 +1,131 @@
+name: Temporary Admiral Trader governance consolidation
+
+on:
+  push:
+    branches:
+      - governance/admiral-trader-unified-authority
+
+permissions:
+  contents: write
+
+jobs:
+  update-registry:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: governance/admiral-trader-unified-authority
+          fetch-depth: 0
+
+      - name: Replace Trader authority only
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('.github/workstreams.json')
+          data = json.loads(path.read_text(encoding='utf-8'))
+          data['updatedAt'] = '2026-09-05'
+          data['workstreams']['trader'] = {
+              'workstreamName': 'Admiral TR #4 MOD SPT',
+              'productName': 'Admiral Trader',
+              'modulePath': 'mods/Admiral-Trader',
+              'version': '0.1.0+milestones',
+              'resumePolicy': 'first-phase-without-recorded-acceptance-evidence',
+              'phasePlan': [
+                  {
+                      'key': 'lifecycle-correctness',
+                      'issue': 192,
+                      'objective': 'Fix the physical quest lifecycle so eligible quests remain offered until explicit Accept, objectives reach finish-ready without auto-Success, explicit Complete is required, and native success dialogue/reward delivery occurs exactly once.',
+                      'acceptance': 'Source and automated evidence support the native manual lifecycle and one exact-head candidate is ready for the coherent campaign runtime gate; AllQuestsCheckmarks remains ruled out as root cause absent new contrary evidence.',
+                      'requiresUserRuntime': False,
+                  },
+                  {
+                      'key': 'existing-campaign-acceptance',
+                      'issue': 192,
+                      'objective': 'Prove the current 31-quest / 11-offer campaign as one coherent playable baseline with native lifecycle, rewards, success message/mail, questassort unlock and restart persistence.',
+                      'acceptance': 'One batched physical milestone proves Offered -> explicit Accept -> Started -> progress -> AvailableForFinish -> explicit Complete -> Success -> reward/message -> unlock -> persistence with no duplicates.',
+                      'requiresUserRuntime': True,
+                  },
+                  {
+                      'key': 'runtime-campaign-expansion',
+                      'issue': 192,
+                      'objective': 'Materialize the prepared post-0.1.0 operation wave into actual runtime gameplay in bounded player-visible slices.',
+                      'acceptance': 'Approved operations exist as real runtime quests with objectives, EN/RU copy, rewards, progression and deterministic validation; manifest-only research is not product completion.',
+                      'requiresUserRuntime': False,
+                  },
+                  {
+                      'key': 'selective-content-absorption',
+                      'issue': 192,
+                      'objective': 'Consume approved QuestManiac/Andrudis/Natalya research only as curated rewritten source material for existing Admiral operations.',
+                      'acceptance': 'No second trader, duplicate campaign or unnecessary dependency is introduced; only distinct approved concepts improve Admiral.',
+                      'requiresUserRuntime': False,
+                  },
+                  {
+                      'key': 'relationship-specialist-storefront',
+                      'issue': 192,
+                      'objective': 'Add bounded relationship progression and finite specialist stock after lifecycle and campaign foundations are stable.',
+                      'acceptance': 'Relationship/storefront progression is finite, authored, Economy Admiral-compatible and does not create a second economy engine.',
+                      'requiresUserRuntime': False,
+                  },
+                  {
+                      'key': 'stable-release',
+                      'issue': 192,
+                      'objective': 'Produce and deliberately promote one exact-head install-ready SPT 4.1.5 Admiral Trader release candidate after the expanded product is complete.',
+                      'acceptance': 'One final batched runtime gate passes, the proven artifact is published, integration is verified and temporary work is cleaned up.',
+                      'requiresUserRuntime': True,
+                  },
+              ],
+              'frozen': {
+                  'version': '0.1.0',
+                  'exactHead': '053a62ff5f1cb545f13bc89a96bba3acd319a823',
+                  'traderId': 'd5c27bb3169f8dfbc13f6b69',
+                  'questCount': 31,
+                  'baselineOfferCount': 4,
+                  'milestoneOfferCount': 7,
+                  'portraitRoute': '/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg',
+                  'portraitIdentityLocked': True,
+                  'economyOwnedByEconomyAdmiral': True,
+                  'status': 'historical-baseline-not-active-authority',
+              },
+              'stableAcceptance': [
+                  'native button-driven quest lifecycle uses explicit Accept and explicit Complete',
+                  'success dialogue/mail and authored XP/standing/RUB/item rewards deliver exactly once',
+                  'questassort success unlocks appear only after Success and persist after restart',
+                  'current 31-quest / 11-offer baseline remains coherent before expansion',
+                  'approved post-0.1.0 operations become real runtime gameplay rather than manifest-only planning',
+                  'relationship/storefront progression remains finite and Economy Admiral-compatible',
+                  'one exact-head SPT 4.1.5 release candidate passes the final batched runtime gate',
+              ],
+              'activeDevelopment': {
+                  'issue': 192,
+                  'pullRequest': 328,
+                  'branch': 'feature/admiral-trader-canonical-milestones',
+                  'version': '0.1.0+milestones',
+                  'targetSptVersion': '4.1.5',
+                  'headAuthority': 'live-pull-request-head',
+                  'state': 'lifecycle-correctness',
+              },
+              'supersededAuthorities': {
+                  'issues': [115],
+                  'pullRequests': [193, 297, 327],
+              },
+              'ruledOutHypotheses': [
+                  'AllQuestsCheckmarks as root cause of the auto-accept/auto-turn-in lifecycle defect, based on user physical A/B test with the mod disabled',
+              ],
+          }
+          path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+          PY
+          python .github/scripts/validate_workstreams.py
+          rm .github/workflows/tmp-admiral-trader-governance.yml
+
+      - name: Commit governance-only result
+        shell: bash
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add .github/workstreams.json .github/workflows/tmp-admiral-trader-governance.yml
+          git commit -m 'governance: unify Admiral Trader authority and milestones'
+          git push origin HEAD:governance/admiral-trader-unified-authority
