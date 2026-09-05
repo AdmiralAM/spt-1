@@ -9,11 +9,11 @@
     <Version>0.1.0</Version>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
     <FileVersion>0.1.0.0</FileVersion>
-    <SptRuntimeTarget>4.1.4</SptRuntimeTarget>
-    <SptPublishedApiBaseline>4.1.4</SptPublishedApiBaseline>
+    <SptRuntimeTarget>4.1.5</SptRuntimeTarget>
+    <SptPublishedApiBaseline>4.1.5</SptPublishedApiBaseline>
   </PropertyGroup>
 
-  <!-- SPT 4.1.4 is the sole canonical runtime and published API target. -->
+  <!-- SPT 4.1.5 is the sole canonical runtime and published API target. -->
   <ItemGroup>
     <PackageReference Include="SPTushonka.Common" Version="$(SptPublishedApiBaseline)" />
     <PackageReference Include="SPTushonka.DI" Version="$(SptPublishedApiBaseline)" />
