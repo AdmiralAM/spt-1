@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "M3-editorial-spec-only",
   "campaignAuthority": "m3-campaign-product-spec.json",
@@ -15,8 +15,8 @@
       "key": "acoustic-discipline",
       "title": {"en": "Acoustic Discipline", "ru": "Акустическая дисциплина"},
       "briefing": {
-        "en": "One of my patrols heard movement along a route and chose not to chase the noise. Correct decision. Sound means very little until you know where it came from and what it is doing there. Take a proper headset, check the approach, and come back with an answer. I do not need bodies. I need to know whether that ground is being used.",
-        "ru": "На одном из моих маршрутов патруль услышал движение и не полез проверять шум вслепую. Правильно сделал. Сам по себе звук мало что значит, пока не понимаешь, откуда он и зачем там появился. Возьми нормальную гарнитуру, проверь подходы и вернись с ответом. Трупы мне не нужны. Мне нужно понять, пользуется ли кто-то этим маршрутом."
+        "en": "One of my patrols heard movement along a route and chose not to chase the noise. Correct decision. Sound means very little until you know where it came from and what it is doing there. Take a proper headset, check the approach, and come back with an answer. I do not need a fight. I need to know whether that ground is being used.",
+        "ru": "На одном из моих маршрутов патруль услышал движение и не полез проверять шум вслепую. Правильно сделал. Сам по себе звук мало что значит, пока не понимаешь, откуда он и зачем там появился. Возьми нормальную гарнитуру, проверь подходы и вернись с ответом. Бой мне не нужен. Мне нужно понять, пользуется ли кто-то этим маршрутом."
       },
       "objective": {
         "en": ["Use a headset during the reconnaissance pass.", "Check the marked approach.", "Survive and extract."],
@@ -31,8 +31,8 @@
       "key": "forward-reserve",
       "title": {"en": "Forward Reserve", "ru": "Полевой резерв"},
       "briefing": {
-        "en": "The route is usable. The people on it are another matter. A forward team lost most of its maintenance reserve during the last move. Nothing exotic: lubricant, tape, something to keep soft gear together. Small failures end operations just as reliably as bullets. Build them one replacement package. Once. After that they maintain themselves.",
-        "ru": "Маршрут использовать можно. С людьми на нём сложнее. Одна из передовых групп при последнем переходе потеряла почти весь ремонтный запас. Ничего редкого: смазка, лента, то, чем можно привести в порядок мягкое снаряжение. Операции срываются не только из-за пуль. Собери им один резервный комплект. Один раз. Дальше пусть обеспечивают себя сами."
+        "en": "The route is usable. The people on it are another matter. A forward team lost most of its maintenance reserve during the last move. Nothing exotic: lubricant, tape, something to keep soft gear together. Small failures end operations just as reliably as bullets. Build them one replacement package. After that, they maintain themselves.",
+        "ru": "Маршрут использовать можно. С людьми на нём сложнее. Одна из передовых групп при последнем переходе потеряла почти весь ремонтный запас. Ничего редкого: смазка, лента, то, чем можно привести в порядок мягкое снаряжение. Операции срываются не только из-за пуль. Собери им один резервный комплект. Дальше пусть обеспечивают себя сами."
       },
       "objective": {
         "en": ["Deliver the complete maintenance package requested by Admiral."],
@@ -95,16 +95,16 @@
       "key": "acoustic-contact",
       "title": {"en": "Acoustic Contact", "ru": "Акустический контакт"},
       "briefing": {
-        "en": "The route you checked is no longer quiet. This time I do want the contact handled, but on our terms. Use your headset, choose the engagement instead of walking into it, remove the immediate Scav threat, and leave. Two men in the right place are a problem. Twenty corpses after the route is clear are a hobby.",
-        "ru": "Маршрут, который ты проверял, больше не тихий. На этот раз контакт нужно закрыть, но на наших условиях. Работай в гарнитуре, сам выбери момент боя, сними ближайшую угрозу со стороны Диких и уходи. Двое в правильном месте — проблема. Двадцать трупов после решения задачи — уже увлечение."
+        "en": "The route you checked is no longer quiet. This time I do want the contact handled, but on our terms. Use your headset, choose the engagement instead of walking into it, remove the Scavs holding the approach, and leave as soon as the path is open.",
+        "ru": "Маршрут, который ты проверял, больше не тихий. На этот раз контакт нужно закрыть, но на наших условиях. Работай в гарнитуре, сам выбери момент боя, сними Диких, удерживающих подход, и уходи, как только путь будет открыт."
       },
       "objective": {
-        "en": ["Use an approved headset on Woods.", "Eliminate the immediate Scav element.", "Survive and extract."],
-        "ru": ["Использовать подходящую гарнитуру в Лесу.", "Устранить непосредственную группу Диких.", "Выжить и выйти из рейда."]
+        "en": ["Use an approved headset on Woods.", "Eliminate the Scavs holding the approach.", "Survive and extract."],
+        "ru": ["Использовать подходящую гарнитуру в Лесу.", "Устранить Диких, удерживающих подход.", "Выжить и выйти из рейда."]
       },
       "success": {
-        "en": "You heard enough to choose the fight instead of inheriting one. That is the difference I wanted to see.",
-        "ru": "Ты услышал достаточно, чтобы самому выбрать бой, а не получить его в наследство. Вот эту разницу я и хотел увидеть."
+        "en": "You heard enough to choose the fight instead of inheriting one. The approach is usable again.",
+        "ru": "Ты услышал достаточно, чтобы самому выбрать бой, а не получить его в наследство. Подход снова можно использовать."
       }
     },
     {
@@ -119,8 +119,8 @@
         "ru": ["Устранить группу Диких, угрожающую маршруту на Таможне.", "Выжить и выйти с Таможни."]
       },
       "success": {
-        "en": "Movement through Customs is viable again. That was the objective. A cleared road is more useful than a larger number on a report.",
-        "ru": "Движение через Таможню снова возможно. Это и было задачей. Рабочая дорога полезнее красивой цифры в отчёте."
+        "en": "Movement through Customs is viable again. Supplies can move; keep them moving.",
+        "ru": "Движение через Таможню снова возможно. Снабжение пойдёт — пусть идёт дальше."
       }
     },
     {
@@ -151,8 +151,8 @@
         "ru": ["Поразить выбранную угрозу с требуемой дистанции.", "Ограничиться назначенными целями.", "Выжить и выйти из рейда."]
       },
       "success": {
-        "en": "The threat lost its window before it could own the route. You used distance as a tool, not as a scoreboard. Good.",
-        "ru": "Угроза потеряла своё окно до того, как успела взять маршрут под контроль. Ты использовал дистанцию как инструмент, а не как таблицу рекордов. Хорошо."
+        "en": "The threat lost its window before it could control the route. You used distance to control the ground, then left before the position exposed you.",
+        "ru": "Угроза потеряла своё окно до того, как успела взять маршрут под контроль. Ты использовал дистанцию, чтобы управлять местностью, и ушёл до того, как позиция выдала тебя."
       }
     },
     {
@@ -183,8 +183,8 @@
         "ru": ["Нарушить работу группы Отступников, контролирующей периметр водоочистной станции на Маяке.", "Выжить и выйти с Маяка."]
       },
       "success": {
-        "en": "Their perimeter is no longer a reliable machine. That is enough for movement to resume. Do not give them a second operation for free.",
-        "ru": "Их периметр больше не работает как надёжная машина. Этого достаточно, чтобы снова начать движение. Вторую операцию за наш счёт им не дари."
+        "en": "Their perimeter is no longer a reliable machine. Movement can resume before they rebuild it. Do not give them time to learn your pattern in return.",
+        "ru": "Их периметр больше не работает как единая машина. Движение можно возобновить, пока они перестраиваются. Не давай им времени выучить уже твою схему."
       }
     },
     {
