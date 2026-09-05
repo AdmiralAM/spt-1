@@ -1,5 +1,6 @@
 import json
 import unittest
+from collections import deque
 from pathlib import Path
 
 
@@ -18,6 +19,7 @@ class M3CampaignProductSpecTests(unittest.TestCase):
         cls.editorial = load_json("m3-campaign-editorial-copy.json")
         cls.rewards = load_json("m3-campaign-reward-plan.json")
         cls.uniqueness = load_json("m3-campaign-uniqueness-review.json")
+        cls.progression = load_json("m3-campaign-progression.json")
 
     def test_design_files_remain_fail_closed(self):
         self.assertFalse(self.product["implementationAllowed"])
@@ -25,6 +27,7 @@ class M3CampaignProductSpecTests(unittest.TestCase):
         self.assertFalse(self.editorial["runtimeMaterialize"])
         self.assertFalse(self.rewards["runtimeMaterialize"])
         self.assertFalse(self.uniqueness["runtimeMaterialize"])
+        self.assertFalse(self.progression["runtimeMaterialize"])
         self.assertTrue(self.product["materializationGate"]["requiresM1LifecyclePass"])
         self.assertTrue(self.product["materializationGate"]["requiresM2ExistingCampaignPass"])
 
@@ -37,10 +40,13 @@ class M3CampaignProductSpecTests(unittest.TestCase):
         editorial_keys = [row["key"] for row in self.editorial["quests"]]
         reward_keys = list(self.rewards["operationRewards"])
         fingerprint_keys = list(self.uniqueness["operationFingerprints"])
+        progression_keys = list(self.progression["levels"])
 
         self.assertEqual(set(editorial_keys), set(product_keys))
         self.assertEqual(set(reward_keys), set(product_keys))
         self.assertEqual(set(fingerprint_keys), set(product_keys))
+        self.assertEqual(set(progression_keys), set(product_keys))
+        self.assertEqual(set(self.progression["prerequisites"]), set(product_keys))
         self.assertEqual(len(editorial_keys), len(set(editorial_keys)))
 
     def test_act_membership_is_exact_and_nonduplicated(self):
@@ -53,6 +59,63 @@ class M3CampaignProductSpecTests(unittest.TestCase):
         for act in self.product["acts"]:
             for key in act["operations"]:
                 self.assertEqual(operation_act[key], act["key"])
+
+    def test_progression_graph_is_acyclic_reachable_and_level_monotonic(self):
+        keys = set(self.progression["levels"])
+        prereqs = self.progression["prerequisites"]
+        roots = set(self.progression["rootOperations"])
+
+        self.assertTrue(roots)
+        self.assertTrue(roots.issubset(keys))
+        self.assertEqual(roots, {key for key, values in prereqs.items() if not values})
+
+        for key, dependencies in prereqs.items():
+            self.assertLessEqual(len(dependencies), 2, key)
+            self.assertEqual(len(dependencies), len(set(dependencies)), key)
+            for dependency in dependencies:
+                self.assertIn(dependency, keys)
+                self.assertNotEqual(dependency, key)
+                self.assertLessEqual(
+                    self.progression["levels"][dependency],
+                    self.progression["levels"][key],
+                    f"level regression {dependency} -> {key}",
+                )
+
+        dependents = {key: [] for key in keys}
+        indegree = {key: len(prereqs[key]) for key in keys}
+        for key, dependencies in prereqs.items():
+            for dependency in dependencies:
+                dependents[dependency].append(key)
+
+        queue = deque(sorted(key for key, degree in indegree.items() if degree == 0))
+        visited = []
+        while queue:
+            current = queue.popleft()
+            visited.append(current)
+            for dependent in dependents[current]:
+                indegree[dependent] -= 1
+                if indegree[dependent] == 0:
+                    queue.append(dependent)
+
+        self.assertEqual(set(visited), keys, "progression graph must be acyclic and reachable")
+        self.assertEqual(len(visited), len(keys))
+
+        reachable = set(roots)
+        changed = True
+        while changed:
+            changed = False
+            for key, dependencies in prereqs.items():
+                if key not in reachable and all(dep in reachable for dep in dependencies):
+                    reachable.add(key)
+                    changed = True
+        self.assertEqual(reachable, keys)
+
+    def test_progression_branches_only_reference_admitted_operations(self):
+        admitted = {row["key"] for row in self.product["operations"]}
+        for branch, operations in self.progression["branches"].items():
+            self.assertTrue(operations, branch)
+            self.assertTrue(set(operations).issubset(admitted), branch)
+        self.assertEqual(self.progression["graphContracts"]["operationCount"], len(admitted))
 
     def test_merged_and_held_operations_are_not_admitted_as_standalone(self):
         product_keys = {row["key"] for row in self.product["operations"]}
@@ -79,6 +142,8 @@ class M3CampaignProductSpecTests(unittest.TestCase):
                 "fillerAdded": 0,
             },
         )
+        held_graph_keys = {row["legacyKey"] for row in self.progression["heldOutsideGraph"]}
+        self.assertEqual(held_graph_keys, {"endurance-circuit"})
 
     def test_reward_plan_matches_product_spec_and_totals(self):
         product_rewards = {row["key"]: row["reward"] for row in self.product["operations"]}
