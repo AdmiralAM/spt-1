@@ -17,9 +17,16 @@ class Spt415QuestConditionAuditTests(unittest.TestCase):
                 "conditions": {
                     "AvailableForFinish": [
                         {
+                            "id": "counter-1",
+                            "parentId": "parent-1",
+                            "index": 0,
                             "conditionType": "CounterCreator",
                             "type": "Elimination",
                             "value": 2,
+                            "oneSessionOnly": True,
+                            "isResetOnConditionFailed": True,
+                            "doNotResetIfCounterCompleted": False,
+                            "completeInSeconds": 0,
                             "counter": {
                                 "conditions": [
                                     {
@@ -41,7 +48,7 @@ class Spt415QuestConditionAuditTests(unittest.TestCase):
         }
         result = module.audit(quests)
         self.assertEqual(result["targetSptVersion"], "4.1.5")
-        self.assertEqual(result["schemaVersion"], 2)
+        self.assertEqual(result["schemaVersion"], 3)
         self.assertEqual(result["questCount"], 1)
         self.assertEqual(result["conditionTypeCounts"]["Kills"], 1)
         self.assertEqual(result["killTargets"][0]["value"], "AnyPmc")
@@ -52,11 +59,24 @@ class Spt415QuestConditionAuditTests(unittest.TestCase):
         self.assertEqual(result["daytimeWindows"][0]["value"], "6->18")
         self.assertEqual(result["distanceShapes"][0]["value"], ">=:80")
         self.assertEqual(result["counterCompositionCounts"][0]["value"], "ExitStatus+Kills+Location")
+        self.assertEqual(
+            result["sessionFlagCounts"],
+            {
+                "oneSessionOnlyTrue": 1,
+                "resetOnConditionFailedTrue": 1,
+                "doNotResetIfCounterCompletedTrue": 0,
+            },
+        )
         context = result["counterContexts"][0]
         self.assertEqual(context["questId"], "q1")
         self.assertEqual(context["questLocation"], "woods")
+        self.assertEqual(context["counterId"], "counter-1")
+        self.assertEqual(context["parentId"], "parent-1")
         self.assertEqual(context["counterType"], "Elimination")
         self.assertEqual(context["counterValue"], 2)
+        self.assertTrue(context["oneSessionOnly"])
+        self.assertTrue(context["isResetOnConditionFailed"])
+        self.assertFalse(context["doNotResetIfCounterCompleted"])
         self.assertEqual(context["locationTargets"], ["woods"])
         self.assertEqual(context["killTargets"], ["AnyPmc"])
         self.assertEqual(context["savageRoles"], ["pmcBot"])
