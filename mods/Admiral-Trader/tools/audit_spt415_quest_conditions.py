@@ -50,8 +50,15 @@ def counter_context(quest_id: str, quest_location: Any, condition: dict[str, Any
     context: dict[str, Any] = {
         "questId": quest_id,
         "questLocation": quest_location,
+        "counterId": condition.get("id"),
+        "parentId": condition.get("parentId"),
+        "index": condition.get("index"),
         "counterType": condition.get("type"),
         "counterValue": condition.get("value"),
+        "oneSessionOnly": bool(condition.get("oneSessionOnly", False)),
+        "isResetOnConditionFailed": bool(condition.get("isResetOnConditionFailed", False)),
+        "doNotResetIfCounterCompleted": bool(condition.get("doNotResetIfCounterCompleted", False)),
+        "completeInSeconds": condition.get("completeInSeconds", 0),
         "conditionTypes": [],
         "locationTargets": [],
         "visitPlaceTargets": [],
@@ -162,9 +169,28 @@ def audit(quests_raw: Any) -> dict[str, Any]:
         return [{"value": key, "count": value} for key, value in sorted(counter.items(), key=lambda row: (-row[1], row[0]))]
 
     composition_counts = Counter("+".join(sorted(context["conditionTypes"])) for context in counter_contexts)
+    session_flag_counts = {
+        "oneSessionOnlyTrue": sum(1 for context in counter_contexts if context["oneSessionOnly"]),
+        "resetOnConditionFailedTrue": sum(1 for context in counter_contexts if context["isResetOnConditionFailed"]),
+        "doNotResetIfCounterCompletedTrue": sum(1 for context in counter_contexts if context["doNotResetIfCounterCompleted"]),
+    }
+    quest_counter_sets: list[dict[str, Any]] = []
+    by_quest: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for context in counter_contexts:
+        by_quest[context["questId"]].append(context)
+    for quest_id, contexts in sorted(by_quest.items()):
+        types = sorted({ctype for context in contexts for ctype in context["conditionTypes"]})
+        if len(contexts) > 1:
+            quest_counter_sets.append({
+                "questId": quest_id,
+                "questLocation": contexts[0]["questLocation"],
+                "counterCount": len(contexts),
+                "conditionTypes": types,
+                "counterIds": [context["counterId"] for context in contexts],
+            })
 
     return {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "targetSptVersion": TARGET_SPT_VERSION,
         "questCount": len(quests_raw),
         "conditionTypeCounts": dict(sorted(condition_counts.items())),
@@ -178,6 +204,8 @@ def audit(quests_raw: Any) -> dict[str, Any]:
         "daytimeWindows": ordered(daytime_windows),
         "distanceShapes": ordered(distance_shapes),
         "counterCompositionCounts": ordered(composition_counts),
+        "sessionFlagCounts": session_flag_counts,
+        "questCounterSets": quest_counter_sets,
         "counterContexts": counter_contexts,
         "examples": dict(sorted(examples.items())),
     }
@@ -204,6 +232,7 @@ def main() -> int:
         "daytimeWindows": result["daytimeWindows"][:20],
         "distanceShapes": result["distanceShapes"][:20],
         "counterCompositionCounts": result["counterCompositionCounts"][:30],
+        "sessionFlagCounts": result["sessionFlagCounts"],
     }
     print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
     return 0
