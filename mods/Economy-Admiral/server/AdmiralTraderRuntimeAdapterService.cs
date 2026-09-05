@@ -58,46 +58,33 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
         if (!policyDoc.RootElement.TryGetProperty("schemaVersion", out var schemaElement) || !schemaElement.TryGetInt32(out var schemaVersion))
             throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: gameplay-policy schemaVersion is missing or invalid.");
 
+        if (schemaVersion != 4)
+            throw new InvalidOperationException($"Economy Admiral Admiral Trader runtime adapter: unsupported gameplay-policy schemaVersion {schemaVersion}; frozen Admiral Trader 0.1.0 requires schemaVersion 4.");
+
         var assortJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "db", "assort.json"), cancellationToken);
         var questAssortJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "db", "questassort.json"), cancellationToken);
         var authoredQuestJson = await ReadQuestRecordsAsync(traderModPath, cancellationToken);
-        IReadOnlyList<AdmiralTraderOfferAdapterEvidence> offers;
-        string contractState;
-        AdmiralTraderGameplayAlphaContractSummary? gameplay = null;
-
-        if (schemaVersion == 4)
-        {
-            var campaignJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "manifests", "campaign-manifest.json"), cancellationToken);
-            var identityJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "manifests", "identity-assets.json"), cancellationToken);
-            var baseJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "db", "base.json"), cancellationToken);
-            var baselineJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "manifests", "baseline-stock.json"), cancellationToken);
-            var relationshipPath = Path.Combine(traderModPath, "manifests", "relationship-stock.json");
-            var relationshipJson = File.Exists(relationshipPath)
-                ? await File.ReadAllTextAsync(relationshipPath, cancellationToken)
-                : null;
-            gameplay = AdmiralTraderGameplayAlphaAdapter.Parse(
-                campaignJson,
-                identityJson,
-                baseJson,
-                policyJson,
-                baselineJson,
-                assortJson,
-                questAssortJson,
-                authoredQuestJson,
-                relationshipJson);
-            offers = gameplay.Offers;
-            contractState = "LoadedGameplayAlphaV4";
-        }
-        else if (schemaVersion == 3)
-        {
-            var policy = AdmiralTraderAdapterEvidence.ParseGameplayPolicy(policyJson);
-            offers = AdmiralTraderItemAdapter.ParseAndApplyEffectiveQuestGates(assortJson, questAssortJson, policy, authoredQuestJson);
-            contractState = "LoadedPrototypeV3";
-        }
-        else
-        {
-            throw new InvalidOperationException($"Economy Admiral Admiral Trader runtime adapter: unsupported gameplay-policy schemaVersion {schemaVersion}.");
-        }
+        var campaignJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "manifests", "campaign-manifest.json"), cancellationToken);
+        var identityJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "manifests", "identity-assets.json"), cancellationToken);
+        var baseJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "db", "base.json"), cancellationToken);
+        var baselineJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "manifests", "baseline-stock.json"), cancellationToken);
+        var relationshipPath = Path.Combine(traderModPath, "manifests", "relationship-stock.json");
+        var relationshipJson = File.Exists(relationshipPath)
+            ? await File.ReadAllTextAsync(relationshipPath, cancellationToken)
+            : null;
+        var gameplay = AdmiralTraderGameplayAlphaAdapter.Parse(
+            campaignJson,
+            identityJson,
+            baseJson,
+            policyJson,
+            baselineJson,
+            assortJson,
+            questAssortJson,
+            authoredQuestJson,
+            relationshipJson);
+        AdmiralTraderGameplayAlphaAdapter.ValidateFrozenReleaseShape(gameplay, authoredQuestJson.Count);
+        var offers = gameplay.Offers;
+        const string contractState = "LoadedGameplayAlphaV4";
 
         if (offers.Any(offer => offer.Source.EarliestProgressionLevel is null))
             throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: enriched offer progression evidence is incomplete.");
@@ -111,19 +98,19 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
             Installed = true,
             ContractAvailable = true,
             ContractState = contractState,
-            ProductName = gameplay?.ProductName ?? "Admiral Trader (legacy prototype)",
-            ModGuid = gameplay?.ModGuid ?? AdmiralTraderInstallationLocator.ExpectedModGuid,
-            TraderId = gameplay?.TraderId ?? AdmiralTraderGameplayAlphaAdapter.ExpectedTraderId,
+            ProductName = gameplay.ProductName,
+            ModGuid = gameplay.ModGuid,
+            TraderId = gameplay.TraderId,
             GameplayPolicySchemaVersion = schemaVersion,
             AttributionConfidence = AdmiralTraderAdapterEvidence.AttributionConfidence,
             OfferCount = offers.Count,
-            BaselineOfferCount = gameplay?.BaselineOfferCount ?? 0,
-            RelationshipOfferCount = gameplay?.RelationshipOfferCount ?? 0,
-            MilestoneOfferCount = gameplay?.MilestoneOfferCount ?? offers.Count,
+            BaselineOfferCount = gameplay.BaselineOfferCount,
+            RelationshipOfferCount = gameplay.RelationshipOfferCount,
+            MilestoneOfferCount = gameplay.MilestoneOfferCount,
             BoundedRenewableOfferCount = offers.Count(o => o.Capacity.SupplyBound == RenewableSupplyBound.Bounded),
-            RelationshipStockAllowed = gameplay?.RelationshipStockAllowed ?? false,
-            SpecialWeaponsPermanentOfferAllowed = gameplay?.SpecialWeaponsPermanentOfferAllowed ?? false,
-            SpecialWeaponsSampleOnly = gameplay?.SpecialWeaponsSampleOnly ?? false,
+            RelationshipStockAllowed = gameplay.RelationshipStockAllowed,
+            SpecialWeaponsPermanentOfferAllowed = gameplay.SpecialWeaponsPermanentOfferAllowed,
+            SpecialWeaponsSampleOnly = gameplay.SpecialWeaponsSampleOnly,
             MinimumEffectiveProgressionLevel = offers.Min(o => o.Source.EarliestProgressionLevel),
             MaximumEffectiveProgressionLevel = offers.Max(o => o.Source.EarliestProgressionLevel),
             Offers = offers,
