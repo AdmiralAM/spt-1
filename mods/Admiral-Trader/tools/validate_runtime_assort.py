@@ -33,6 +33,8 @@ AMMO_OFFER_IDS = {
     "marksman-battle": "07efd6dee267ec18ed830dd6",
     "precision": "731e65964d324bc545a1b839",
 }
+NATIVE_QUESTASSORT_KEYS = {"started", "success", "fail"}
+LEGACY_CAPITALIZED_QUESTASSORT_KEYS = {"Started", "Success", "Fail"}
 
 
 def fail(message: str) -> None:
@@ -89,6 +91,11 @@ def main() -> None:
     baseline = json.loads(BASELINE_STOCK_PATH.read_text(encoding="utf-8"))
     ammo_policy = json.loads(AMMO_POLICY_PATH.read_text(encoding="utf-8"))
     base = json.loads(BASE_PATH.read_text(encoding="utf-8"))
+
+    if set(questassort) != NATIVE_QUESTASSORT_KEYS:
+        fail(f"questassort top-level keys must be exact native lower-case {sorted(NATIVE_QUESTASSORT_KEYS)}, got {sorted(questassort)}")
+    if LEGACY_CAPITALIZED_QUESTASSORT_KEYS & set(questassort):
+        fail("legacy capitalized questassort state keys are forbidden on SPT 4.1.5")
 
     if baseline.get("targetSptVersion") != EXPECTED_RUNTIME_TARGET:
         fail("Baseline stock target drift")
@@ -149,11 +156,11 @@ def main() -> None:
     if (ammo_policy.get("specialWeapons") or {}).get("permanentOffer") is not False:
         fail("Special Weapons must not receive a permanent offer")
 
-    success = questassort.get("Success")
+    success = questassort.get("success")
     if not isinstance(success, dict) or set(success) != milestone_ids:
-        fail("questassort.Success must contain exactly the seven Milestone offers and no Baseline offers")
+        fail("questassort.success must contain exactly the seven Milestone offers and no Baseline offers")
     if BASELINE_OFFER_IDS & set(success):
-        fail("Baseline offers must never leak into questassort.Success")
+        fail("Baseline offers must never leak into questassort.success")
     if success.get(LABS_OFFER_ID) != LABS_CLEARANCE_QUEST:
         fail("Labs offer is not gated by Access Protocol: Clearance success")
 
@@ -172,7 +179,7 @@ def main() -> None:
         if success.get(offer_id) != str(policy["questId"]):
             fail(f"{family}: questassort success gate drift")
 
-    for state in ("Started", "Fail"):
+    for state in ("started", "fail"):
         mapping = questassort.get(state)
         if not isinstance(mapping, dict) or mapping:
             fail(f"questassort.{state} must remain empty")
@@ -195,7 +202,7 @@ def main() -> None:
         if float(level.get("minStanding", -1)) != standing:
             fail(f"Admiral LL{index}: standing threshold drift")
 
-    print("Admiral Trader SPT 4.1.5 target + 4 Baseline + 7 Milestone offer contract OK")
+    print("Admiral Trader SPT 4.1.5 native questassort + 4 Baseline + 7 Milestone offer contract OK")
 
 
 if __name__ == "__main__":
