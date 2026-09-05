@@ -9,6 +9,7 @@ QUESTASSORT_PATH = ROOT / "db" / "questassort.json"
 QUEST_DIR = ROOT / "db" / "quests"
 BASE_PATH = ROOT / "db" / "base.json"
 RUNTIME_MANIFEST_PATH = ROOT / "manifests" / "runtime-manifest.json"
+BASELINE_STOCK_PATH = ROOT / "manifests" / "baseline-stock.json"
 AMMO_POLICY_PATH = ROOT / "manifests" / "ammo-offer-policy.json"
 CSPROJ_PATH = ROOT / "server" / "AdmiralTrader.Server.csproj"
 
@@ -18,6 +19,12 @@ LABS_OFFER_ID = "ad1000000000000000000001"
 LABS_ITEM_TPL = "5c94bbff86f7747ee735c08f"
 LABS_CLEARANCE_QUEST = "68a6527a3c73b2e85977d7a1"
 RUB_TPL = "5449016a4bdc2d6f028b456f"
+BASELINE_OFFER_IDS = {
+    "ad2000000000000000000001",
+    "ad2000000000000000000002",
+    "ad2000000000000000000003",
+    "ad2000000000000000000004",
+}
 AMMO_OFFER_IDS = {
     "handguns": "6cf0fc22a55417075c5af23e",
     "smg-pdw": "67d5501fb925a7836b99f112",
@@ -55,7 +62,7 @@ def validate_runtime_target() -> None:
         fail(f"SPT package references must use the published API baseline property: {package_versions}")
 
 
-def validate_single_rub_offer(offer_id: str, item: dict, barter: dict, loyalty: dict, *, tpl: str, price: int, stock: int, buy_limit: int) -> None:
+def validate_single_rub_offer(offer_id: str, item: dict, barter: dict, loyalty: dict, *, tpl: str, price: int, stock: int, buy_limit: int, loyalty_level: int = 1) -> None:
     if item.get("_tpl") != tpl or item.get("parentId") != "hideout" or item.get("slotId") != "hideout":
         fail(f"{offer_id}: native root item contract drift")
     upd = item.get("upd") or {}
@@ -71,16 +78,28 @@ def validate_single_rub_offer(offer_id: str, item: dict, barter: dict, loyalty: 
     currency = scheme[0][0]
     if currency.get("_tpl") != RUB_TPL or currency.get("count") != price:
         fail(f"{offer_id}: RUB price drift: {currency}")
-    if loyalty.get(offer_id) != 1:
-        fail(f"{offer_id}: quest-unlocked offer must remain LL1; quest completion is the primary gate")
+    if loyalty.get(offer_id) != loyalty_level:
+        fail(f"{offer_id}: loyalty level drift: {loyalty.get(offer_id)} != {loyalty_level}")
 
 
 def main() -> None:
     validate_runtime_target()
     assort = json.loads(ASSORT_PATH.read_text(encoding="utf-8"))
     questassort = json.loads(QUESTASSORT_PATH.read_text(encoding="utf-8"))
+    baseline = json.loads(BASELINE_STOCK_PATH.read_text(encoding="utf-8"))
     ammo_policy = json.loads(AMMO_POLICY_PATH.read_text(encoding="utf-8"))
     base = json.loads(BASE_PATH.read_text(encoding="utf-8"))
+
+    if baseline.get("targetSptVersion") != EXPECTED_RUNTIME_TARGET:
+        fail("Baseline stock target drift")
+    if baseline.get("stockClass") != "Baseline" or baseline.get("status") != "FrozenPreserved":
+        fail("Baseline stock authority drift")
+    baseline_offers = baseline.get("offers") or []
+    baseline_by_id = {str(row.get("offerId")): row for row in baseline_offers}
+    if set(baseline_by_id) != BASELINE_OFFER_IDS or len(baseline_offers) != 4:
+        fail(f"Baseline stock must contain exactly four preserved offers: {sorted(baseline_by_id)}")
+    if any(row.get("questGate") is not None for row in baseline_offers):
+        fail("Baseline offers must remain non-quest-gated")
 
     items = assort.get("items")
     barter = assort.get("barter_scheme")
@@ -88,14 +107,28 @@ def main() -> None:
     if not isinstance(items, list) or not isinstance(barter, dict) or not isinstance(loyalty, dict):
         fail("assort native collections have invalid types")
 
+    milestone_ids = {LABS_OFFER_ID, *AMMO_OFFER_IDS.values()}
+    expected_ids = BASELINE_OFFER_IDS | milestone_ids
     root_items = {item.get("_id"): item for item in items if item.get("parentId") == "hideout"}
-    if len(root_items) != len(items) or len(root_items) != 7:
-        fail(f"expected exactly seven root-only Admiral offers, got roots={len(root_items)} items={len(items)}")
-    expected_ids = {LABS_OFFER_ID, *AMMO_OFFER_IDS.values()}
+    if len(root_items) != len(items) or len(root_items) != 11:
+        fail(f"expected exactly eleven root-only Admiral offers, got roots={len(root_items)} items={len(items)}")
     if set(root_items) != expected_ids:
         fail(f"assort root id drift; missing={sorted(expected_ids-set(root_items))} extra={sorted(set(root_items)-expected_ids)}")
     if set(barter) != expected_ids or set(loyalty) != expected_ids:
-        fail("assort root/barter/loyalty key sets must match exactly")
+        fail("assort root/barter/loyalty key sets must match the 4 Baseline + 7 Milestone contract")
+
+    for offer_id, policy in baseline_by_id.items():
+        validate_single_rub_offer(
+            offer_id,
+            root_items[offer_id],
+            barter,
+            loyalty,
+            tpl=str(policy["tpl"]),
+            price=int(policy["priceRub"]),
+            stock=int(policy["stockPerReset"]),
+            buy_limit=int(policy["buyRestriction"]),
+            loyalty_level=int(policy["loyaltyLevel"]),
+        )
 
     validate_single_rub_offer(
         LABS_OFFER_ID,
@@ -117,8 +150,10 @@ def main() -> None:
         fail("Special Weapons must not receive a permanent offer")
 
     success = questassort.get("Success")
-    if not isinstance(success, dict) or set(success) != expected_ids:
-        fail("questassort.Success must contain exactly the seven materialized quest-gated offers")
+    if not isinstance(success, dict) or set(success) != milestone_ids:
+        fail("questassort.Success must contain exactly the seven Milestone offers and no Baseline offers")
+    if BASELINE_OFFER_IDS & set(success):
+        fail("Baseline offers must never leak into questassort.Success")
     if success.get(LABS_OFFER_ID) != LABS_CLEARANCE_QUEST:
         fail("Labs offer is not gated by Access Protocol: Clearance success")
 
@@ -160,7 +195,7 @@ def main() -> None:
         if float(level.get("minStanding", -1)) != standing:
             fail(f"Admiral LL{index}: standing threshold drift")
 
-    print("Admiral Trader SPT 4.1.5 target + seven-offer quest assort contract OK")
+    print("Admiral Trader SPT 4.1.5 target + 4 Baseline + 7 Milestone offer contract OK")
 
 
 if __name__ == "__main__":
