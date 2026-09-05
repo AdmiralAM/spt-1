@@ -20,7 +20,7 @@ def prepare(stage: Path):
             or len(conditions) != 1 or conditions[0]["conditionType"] != "Level"
             or conditions[0]["compareMethod"] != ">=" or conditions[0]["value"] not in (1, 5)
             or len(quest["conditions"]["AvailableForFinish"]) != 1
-            or quest["conditions"]["AvailableForFinish"][0]["conditionType"] not in ("FindItem", "HandoverItem")):
+            or quest["conditions"]["AvailableForFinish"][0]["conditionType"] != "HandoverItem"):
         raise ValueError("Fundamentals onboarding contract drifted; refusing broad gate changes")
     conditions[0]["value"] = 1
     finish = quest["conditions"]["AvailableForFinish"][0]

@@ -102,7 +102,7 @@ public sealed class AdmiralQuestRegistration(
                 throw new InvalidDataException($"Quest {questId} must have exactly one finish condition");
 
             QuestCondition finish = finishConditions[0];
-            if (string.Equals(finish.ConditionType, "FindItem", StringComparison.Ordinal))
+            if (string.Equals(finish.ConditionType, "FindItem", StringComparison.Ordinal) || string.Equals(finish.ConditionType, "HandoverItem", StringComparison.Ordinal))
             {
                 ValidateAccessQuest(questId, finish);
                 accessCount++;
@@ -118,7 +118,7 @@ public sealed class AdmiralQuestRegistration(
             }
 
             throw new InvalidDataException(
-                $"Quest {questId} has unsupported finish condition {finish.ConditionType}; expected FindItem or CounterCreator");
+                $"Quest {questId} has unsupported finish condition {finish.ConditionType}; expected FindItem, HandoverItem or CounterCreator");
         }
 
         if (accessCount != ExpectedAccessQuestCount || arsenalCount != ExpectedArsenalQuestCount)
