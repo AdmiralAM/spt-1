@@ -24,7 +24,7 @@
   },
   "migrationPolicy": {
     "implementationStrategy": "template-suppression-completion-bridge",
-    "directProfileWrites": "forbidden-until-exact-4.1.4-boundary-proven",
+    "directProfileWrites": "forbidden-until-exact-4.1.5-boundary-proven",
     "restartableLegacyDefault": "exclude-from-completion-bridge",
     "newProfile": {
       "legacyQuestExposure": "none",
@@ -35,7 +35,7 @@
       "completedLegacyQuest": "preserve-history",
       "failedLegacyQuest": "preserve-history-no-restart-by-default",
       "unstartedLegacyQuest": "suppress-by-absence-or-closed-start-template",
-      "staleLegacyProfileRecord": "preserve-no-direct-mutation-pending-4.1.4-proof",
+      "staleLegacyProfileRecord": "preserve-no-direct-mutation-pending-4.1.5-proof",
       "deprecatedSuccessor": "block-by-not-loading-template",
       "curatedSuccessor": "grant-only-through-curated-graph"
     }
