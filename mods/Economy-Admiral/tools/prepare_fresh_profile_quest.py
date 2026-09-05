@@ -5,7 +5,7 @@ import sys
 
 QUEST_ID = "5d404ebd654de4efecef71d2"
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
-TEST_RUBLE_REWARD = 1000
+TEST_HANDOVER_ROUBLES = 1000
 
 
 def prepare(stage: Path):
@@ -19,13 +19,14 @@ def prepare(stage: Path):
             or quest["secretQuest"] is not False or quest["side"] != "Pmc"
             or len(conditions) != 1 or conditions[0]["conditionType"] != "Level"
             or conditions[0]["compareMethod"] != ">=" or conditions[0]["value"] not in (1, 5)
-            or len(quest["rewards"]["Success"]) != 3
-            or quest["rewards"]["Success"][2]["type"] != "Item"
-            or quest["rewards"]["Success"][2]["items"][0]["_tpl"] != "5449016a4bdc2d6f028b456f"):
+            or len(quest["conditions"]["AvailableForFinish"]) != 1
+            or quest["conditions"]["AvailableForFinish"][0]["conditionType"] != "FindItem"):
         raise ValueError("Fundamentals onboarding contract drifted; refusing broad gate changes")
     conditions[0]["value"] = 1
-    quest["rewards"]["Success"][2]["value"] = TEST_RUBLE_REWARD
-    quest["rewards"]["Success"][2]["items"][0]["upd"]["StackObjectsCount"] = TEST_RUBLE_REWARD
+    finish = quest["conditions"]["AvailableForFinish"][0]
+    finish["target"] = ["5449016a4bdc2d6f028b456f"]
+    finish["value"] = TEST_HANDOVER_ROUBLES
+    finish["onlyFoundInRaid"] = False
     path.write_text(json.dumps(quest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 

@@ -20,10 +20,12 @@ stored in the profile. `QuestController.AcceptQuest` creates its Started entry.
 Thus the level-1 profile fails the level gate for every Admiral quest before
 client filtering. Registration of the 31 templates does not prove visibility.
 
-The combined packaging step now adjusts only the staged Fundamentals level
-condition to 1. It checks the expected identity and condition shape first and
-does not edit the frozen Trader checkout. A regression verifies all 31 staged
-templates, unchanged downstream conditions and idempotent staging.
+The combined packaging step now adjusts only the staged Fundamentals onboarding
+conditions: its start level is 1 and its finish handover is 1000 ordinary
+roubles (`5449016a4bdc2d6f028b456f`) instead of two access keys. The authored
+success reward is untouched. It checks the expected identity and condition shape
+first and does not edit the frozen Trader checkout. A regression verifies all 31
+staged templates, unchanged downstream conditions and idempotent staging.
 
 The installed WTT `HideSecretLockedQuestsPatch` hides a quest only when
 `Template.ServerOnly` is true and status is 0 (Locked). It cannot explain the
