@@ -1,5 +1,4 @@
 import json
-import re
 import unittest
 from pathlib import Path
 
@@ -18,12 +17,14 @@ class M3CampaignProductSpecTests(unittest.TestCase):
         cls.product = load_json("m3-campaign-product-spec.json")
         cls.editorial = load_json("m3-campaign-editorial-copy.json")
         cls.rewards = load_json("m3-campaign-reward-plan.json")
+        cls.uniqueness = load_json("m3-campaign-uniqueness-review.json")
 
     def test_design_files_remain_fail_closed(self):
         self.assertFalse(self.product["implementationAllowed"])
         self.assertFalse(self.product["runtimeMaterialize"])
         self.assertFalse(self.editorial["runtimeMaterialize"])
         self.assertFalse(self.rewards["runtimeMaterialize"])
+        self.assertFalse(self.uniqueness["runtimeMaterialize"])
         self.assertTrue(self.product["materializationGate"]["requiresM1LifecyclePass"])
         self.assertTrue(self.product["materializationGate"]["requiresM2ExistingCampaignPass"])
 
@@ -35,9 +36,11 @@ class M3CampaignProductSpecTests(unittest.TestCase):
 
         editorial_keys = [row["key"] for row in self.editorial["quests"]]
         reward_keys = list(self.rewards["operationRewards"])
+        fingerprint_keys = list(self.uniqueness["operationFingerprints"])
 
         self.assertEqual(set(editorial_keys), set(product_keys))
         self.assertEqual(set(reward_keys), set(product_keys))
+        self.assertEqual(set(fingerprint_keys), set(product_keys))
         self.assertEqual(len(editorial_keys), len(set(editorial_keys)))
 
     def test_act_membership_is_exact_and_nonduplicated(self):
@@ -66,6 +69,15 @@ class M3CampaignProductSpecTests(unittest.TestCase):
         )
         self.assertTrue(
             {"ballistic-head-test", "precision-denial", "endurance-circuit"}.isdisjoint(product_keys)
+        )
+        self.assertEqual(
+            self.uniqueness["admissionOutcome"],
+            {
+                "admitted": 12,
+                "merged": ["ballistic-head-test", "precision-denial"],
+                "held": ["endurance-circuit"],
+                "fillerAdded": 0,
+            },
         )
 
     def test_reward_plan_matches_product_spec_and_totals(self):
@@ -154,6 +166,28 @@ class M3CampaignProductSpecTests(unittest.TestCase):
         self.assertNotIn("ballistic-head-test", product_keys)
         self.assertIn("observation-window", product_keys)
         self.assertNotIn("precision-denial", product_keys)
+
+    def test_uniqueness_conflict_groups_have_enforced_exit_conditions(self):
+        admitted = {row["key"] for row in self.product["operations"]}
+        groups = self.uniqueness["conflictGroups"]
+        self.assertGreaterEqual(len(groups), 5)
+        seen_names = set()
+        for group in groups:
+            self.assertNotIn(group["group"], seen_names)
+            seen_names.add(group["group"])
+            self.assertTrue(group["risk"].strip())
+            self.assertTrue(group["mergeTrigger"].strip())
+            for key in group["operations"]:
+                self.assertIn(key, admitted)
+
+    def test_fingerprints_are_nonempty_and_not_identical(self):
+        fingerprints = self.uniqueness["operationFingerprints"]
+        normalized = []
+        for key, values in fingerprints.items():
+            self.assertTrue(values, key)
+            self.assertEqual(len(values), len(set(values)), key)
+            normalized.append(tuple(values))
+        self.assertEqual(len(normalized), len(set(normalized)))
 
     def test_russian_titles_avoid_known_machine_translation_calques(self):
         titles = {row["title"]["ru"] for row in self.editorial["quests"]}
