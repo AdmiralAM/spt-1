@@ -36,7 +36,7 @@ jobs:
       - name: Run Admiral Trader analysis and migration tests
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 
-      - name: Validate SPT 4.1.3 runtime assort contract
+      - name: Validate SPT 4.1.5 runtime assort contract
         run: python mods/Admiral-Trader/tools/validate_runtime_assort.py
 
       - name: Validate maintained manifests and stable trader identity
@@ -44,6 +44,7 @@ jobs:
           python -m json.tool mods/Admiral-Trader/manifests/campaign-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/reward-policy.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/runtime-manifest.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/baseline-stock.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/curated-quest-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/base.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/assort.json > /dev/null
@@ -54,6 +55,7 @@ jobs:
           root = Path('mods/Admiral-Trader')
           campaign = json.loads((root / 'manifests/campaign-manifest.json').read_text(encoding='utf-8'))
           runtime = json.loads((root / 'manifests/runtime-manifest.json').read_text(encoding='utf-8'))
+          baseline = json.loads((root / 'manifests/baseline-stock.json').read_text(encoding='utf-8'))
           base = json.loads((root / 'db/base.json').read_text(encoding='utf-8'))
           assort = json.loads((root / 'db/assort.json').read_text(encoding='utf-8'))
           questassort = json.loads((root / 'db/questassort.json').read_text(encoding='utf-8'))
@@ -71,12 +73,17 @@ jobs:
           required_assort = {'items', 'barter_scheme', 'loyal_level_items'}
           if not required_assort.issubset(assort):
               raise SystemExit(f'assort missing native collections: {sorted(required_assort - set(assort))}')
-          for key in ('Started', 'Success', 'Fail'):
-              if key not in questassort or not isinstance(questassort[key], dict):
-                  raise SystemExit(f'questassort missing native collection: {key}')
+          if set(questassort) != {'started', 'success', 'fail'}:
+              raise SystemExit(f'questassort must use exact SPT 4.1.5 lower-case state keys, got {sorted(questassort)}')
+          if any(not isinstance(questassort[key], dict) for key in ('started', 'success', 'fail')):
+              raise SystemExit('questassort native collections must be objects')
+          if len(baseline.get('offers') or []) != 4:
+              raise SystemExit('preserved Baseline offer count drift')
+          if len(questassort['success']) != 7:
+              raise SystemExit('Milestone questassort success gate count drift')
           PY
 
-      - name: Build server runtime foundation against SPT 4.1.3
+      - name: Build server runtime foundation against SPT 4.1.5
         run: dotnet build mods/Admiral-Trader/server/AdmiralTrader.Server.csproj -c Release
 
       - name: Validate built runtime package contract
@@ -88,6 +95,7 @@ jobs:
               out / 'manifests/campaign-manifest.json',
               out / 'manifests/reward-policy.json',
               out / 'manifests/runtime-manifest.json',
+              out / 'manifests/baseline-stock.json',
               out / 'db/base.json',
               out / 'db/assort.json',
               out / 'db/questassort.json',

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 2,
+  "stockClass": "Baseline",
+  "status": "FrozenPreserved",
+  "targetSptVersion": "4.1.5",
+  "historicalAuthority": {
+    "sourceHead": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+    "contract": "Preserve the four finite non-quest-gated Baseline offers alongside seven quest-gated Milestone offers.",
+    "migrationReason": "PR #328 consolidated from an earlier branch lineage that predated the frozen Baseline stock commit. Absence on the active branch was lineage loss, not an approved product change."
+  },
+  "offers": [
+    {
+      "offerId": "ad2000000000000000000001",
+      "tpl": "5f4f9eb969cdc30ff33f09db",
+      "role": "navigation",
+      "priceRub": 42000,
+      "stockPerReset": 4,
+      "buyRestriction": 1,
+      "loyaltyLevel": 1,
+      "questGate": null
+    },
+    {
+      "offerId": "ad2000000000000000000002",
+      "tpl": "5c12688486f77426843c7d32",
+      "role": "expedition-support",
+      "priceRub": 32000,
+      "stockPerReset": 6,
+      "buyRestriction": 2,
+      "loyaltyLevel": 1,
+      "questGate": null
+    },
+    {
+      "offerId": "ad2000000000000000000003",
+      "tpl": "61605d88ffa6e502ac5e7eeb",
+      "role": "reconnaissance",
+      "priceRub": 68000,
+      "stockPerReset": 3,
+      "buyRestriction": 1,
+      "loyaltyLevel": 1,
+      "questGate": null
+    },
+    {
+      "offerId": "ad2000000000000000000004",
+      "tpl": "5991b51486f77447b112d44f",
+      "role": "field-marking",
+      "priceRub": 16500,
+      "stockPerReset": 12,
+      "buyRestriction": 4,
+      "loyaltyLevel": 1,
+      "questGate": null
+    }
+  ],
+  "rules": {
+    "offerCount": 4,
+    "finiteStockOnly": true,
+    "questGated": false,
+    "relationshipGated": false,
+    "exactSpt415TplVerificationRequired": true,
+    "economyOwnership": "Economy Admiral may normalize global price pressure; Admiral Trader owns offer identity, finite stock, buy limits and progression class."
+  }
+}

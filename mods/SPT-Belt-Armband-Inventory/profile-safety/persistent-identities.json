@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "workstream": "B&A&HB #2 MOD SPT",
-  "targetSpt": "4.1.3",
+  "targetSpt": "4.1.4",
   "templateIds": [
     "68ac00000000000000000001",
     "68ac00000000000000000006",

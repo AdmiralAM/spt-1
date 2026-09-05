@@ -1,8 +1,8 @@
 # Item Valuation MOD SPT
 
-**Version:** 1.0.0  
-**Runtime target:** SPT 4.1.3  
-**Issue:** #198 (completed)  
+**Version:** 1.0.0
+**Runtime target:** SPT 4.1.4
+**Issue:** #198 (completed)
 **Implementation PR:** #199 (merged)
 
 A deliberately narrow server-only rework of AcidPhantasm Item Valuation focused only on inventory-cell background coloring.
@@ -119,4 +119,4 @@ No file is installed under `BepInEx/plugins` by this module.
 
 ## Validation state
 
-Release 1.0.0 is accepted for SPT 4.1.3. Source/static/build validation is automated by `.github/workflows/item-valuation-mod-spt-validate.yml`, and runtime validation was completed against the current mod stack before development closure.
+Release 1.0.0 is accepted for SPT 4.1.4. Source/static/build validation is automated by `.github/workflows/item-valuation-mod-spt-validate.yml`, and runtime validation was completed against the current mod stack before development closure.

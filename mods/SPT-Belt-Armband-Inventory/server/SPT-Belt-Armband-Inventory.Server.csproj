@@ -8,10 +8,10 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="SPTushonka.Common" Version="4.1.3" />
-    <PackageReference Include="SPTushonka.DI" Version="4.1.3" />
-    <PackageReference Include="SPTushonka.Reflection" Version="4.1.3" />
-    <PackageReference Include="SPTushonka.Server.Core" Version="4.1.3" />
+    <PackageReference Include="SPTushonka.Common" Version="4.1.4" />
+    <PackageReference Include="SPTushonka.DI" Version="4.1.4" />
+    <PackageReference Include="SPTushonka.Reflection" Version="4.1.4" />
+    <PackageReference Include="SPTushonka.Server.Core" Version="4.1.4" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\src\BeltDeathPolicy.cs" Link="BeltDeathPolicy.cs" />

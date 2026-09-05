@@ -8,7 +8,7 @@ This log records only repairs backed by direct runtime/content evidence for Admi
 
 **Repair:** rebuild the server component for .NET 10 using `IModMetadata` and `IOnLoad.OnLoadAsync(CancellationToken)`.
 
-**Status:** implemented and runtime validated on SPT 4.1.3.
+**Status:** implemented and runtime validated on SPT 4.1.4.
 
 ## R2 — CommonLib dependency line
 
@@ -44,7 +44,7 @@ Affected authored rewards include `Expanding Wardrobe`, `Puppets`, and `Gatherin
 
 **Status:** 40/40 explicit Success unlock rewards map to the correct quest after repair.
 
-## R6 — SPT 4.1.3 armor preset compatibility
+## R6 — SPT 4.1.4 armor preset compatibility
 
 **Problem:** runtime logs showed six upstream Artem `Item deserialization error` failures:
 

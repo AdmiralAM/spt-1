@@ -27,7 +27,7 @@ namespace SPTBeltArmbandInventory
                 RuntimeCustomBeltTypes.LogWarning = logWarning;
                 if (!RuntimeCustomBeltTypes.BuildAndRegister()) return false;
 
-                logInfo?.Invoke("B&A&HB RUNTIME TYPE: custom searchable belt item/template mappings registered directly in SPT 4.1.3 JsonTypes for RC parent " + CustomBeltParentId + ".");
+                logInfo?.Invoke("B&A&HB RUNTIME TYPE: custom searchable belt item/template mappings registered directly in SPT 4.1.4 JsonTypes for RC parent " + CustomBeltParentId + ".");
                 return true;
             }
             catch (Exception exception)

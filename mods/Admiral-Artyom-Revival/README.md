@@ -1,6 +1,6 @@
 # Admiral Artyom Revival
 
-Stable revival of the upstream **WTT-Artem** mod for **SPT 4.1.3**. Current module version: **3.0.0**.
+Stable revival of the upstream **WTT-Artem** mod for **SPT 4.1.4**. Current module version: **3.0.0**.
 
 **Admiral Artyom Revival** is the official maintained product identity in this repository. The original WTT-Artem/Artem names remain only where they identify upstream provenance, the in-game Artem trader/content, or technical compatibility identifiers that should not be renamed casually.
 
@@ -8,7 +8,7 @@ The module preserves the upstream Artem trader, 23-quest campaign, unique equipm
 
 ## Stable status
 
-Runtime validation on SPT 4.1.3 is **PASS**.
+Runtime validation on SPT 4.1.4 is **PASS**.
 
 Confirmed in game:
 
@@ -26,7 +26,7 @@ The accepted runtime baseline is **r5-RU-compat**.
 
 - product: **Admiral Artyom Revival**;
 - module version: **3.0.0**;
-- SPT runtime: **4.1.3**;
+- SPT runtime: **4.1.4**;
 - WTT-ServerCommonLib: **3.0.6** validated runtime/build baseline;
 - WTT-ClientCommonLib: **3.0.6** used by the validated client environment.
 
@@ -66,7 +66,7 @@ Economy rebalance and optional asset pruning remain separate future policy work.
 - synchronized explicit quest `AssortmentUnlock` rewards with `QuestAssort.success` mappings;
 - normalized quest locale naming to `en.json` / `ru.json`;
 - added Russian localization for all 204 quest locale keys, 131 custom items and 64 clothing entries;
-- repaired DevTac Ronin preset slot casing for SPT 4.1.3 armor deserialization;
+- repaired DevTac Ronin preset slot casing for SPT 4.1.4 armor deserialization;
 - restored the missing OPENLAND HEXAGON side soft-armor slots required by its preset.
 
 ## Repository contract

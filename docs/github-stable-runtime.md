@@ -14,7 +14,7 @@ This is a multi-mod source repository. `main` is the authoritative integrated tr
 | `runtime-item-intelligence` | Install-only Item Intelligence Admiral channel; retained compatibility branch name |
 | `runtime-pause` | Install-only Pause Admiral channel |
 | `runtime-belt-armband` | Install-only Belt/Armband Inventory channel |
-| `runtime-economy-admiral` | Install-only Economy Admiral 0.1.0 channel for SPT 4.1.3 |
+| `runtime-economy-admiral` | Install-only Economy Admiral 0.1.0 channel for SPT 4.1.4 |
 | `runtime-artem-revival` | Stable Admiral Artyom Revival publication identity; retained compatibility branch name |
 | `archive/v1.13.0` | Intentional frozen Tactical HUD `1.13.0` historical reserve |
 
@@ -41,9 +41,9 @@ Before M1 physical acceptance and merge, `main` intentionally still contains the
 
 The `runtime` branch remains the current published install channel until a candidate is deliberately promoted. An unmerged RC, CI artifact, or development PR must not silently rewrite it.
 
-`Economy-Admiral` is integrated source with physically accepted SPT 4.1.3 Economy Beta behavior and module-specific CI. Its maintained install-only publication channel is `runtime-economy-admiral`; the runtime manifest pins version `0.1.0`, SPT `4.1.3`, the publication source commit, and install root `SPT_Runtime/user/mods/Economy Admiral`.
+`Economy-Admiral` is integrated source with physically accepted SPT 4.1.4 Economy Beta behavior and module-specific CI. Its maintained install-only publication channel is `runtime-economy-admiral`; the runtime manifest pins version `0.1.0`, SPT `4.1.4`, the publication source commit, and install root `SPT_Runtime/user/mods/Economy Admiral`.
 
-`Item-Valuation-MOD-SPT` remains a development/CI-artifact module until its SPT 4.1.3 physical runtime gate passes; it has no permanent runtime branch yet.
+`Item-Valuation-MOD-SPT` remains a development/CI-artifact module until its SPT 4.1.4 physical runtime gate passes; it has no permanent runtime branch yet.
 
 The root `README.md` is the human-readable module index. Each module README owns its current product name, version, scope, architecture, installation channel, and validation status. Project/package metadata is the machine-readable version authority. Detailed phase/revision documents are supporting history, not a second source of truth for current status.
 
@@ -73,7 +73,7 @@ CI may create `build-output/`, `build-status/`, dependency caches, previews, and
 
 Validated packages belong in GitHub Actions artifacts and, for maintained install channels, the corresponding runtime branch. The suite publication workflow advances `stable` to the validated source commit and rebuilds its managed self-contained runtime branches from package output produced during that run. Economy Admiral uses its own isolated publication workflow so publishing `runtime-economy-admiral` does not advance suite `stable` or republish unrelated runtime channels.
 
-`runtime-artem-revival` is an explicit module-specific compatibility identifier for **Admiral Artyom Revival**. The accepted runtime consists of the validated SPT 4.1.3 server build plus repaired authored upstream data/assets and approximately 1.5 GB of Unity Bundles. The authored core and Bundles originate from the external archived WTT-Artem source set and are reproducibly transformed by deterministic importer/repair/localization tooling in `main`; duplicating those binaries in Git would be inappropriate. The permanent runtime branch therefore pins the validated server identity and immutable manifest for the accepted `r5-RU-compat` candidate. The module README documents how that identity relates to the persistent installed core/Bundles set.
+`runtime-artem-revival` is an explicit module-specific compatibility identifier for **Admiral Artyom Revival**. The accepted runtime consists of the validated SPT 4.1.4 server build plus repaired authored upstream data/assets and approximately 1.5 GB of Unity Bundles. The authored core and Bundles originate from the external archived WTT-Artem source set and are reproducibly transformed by deterministic importer/repair/localization tooling in `main`; duplicating those binaries in Git would be inappropriate. The permanent runtime branch therefore pins the validated server identity and immutable manifest for the accepted `r5-RU-compat` candidate. The module README documents how that identity relates to the persistent installed core/Bundles set.
 
 Promotion of `runtime-artem-revival` must use a candidate that passed Admiral Artyom Revival module CI and required user runtime validation. The branch is a publication identity, not a development workspace or a claim that its Git archive is a standalone full installation.
 

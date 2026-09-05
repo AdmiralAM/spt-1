@@ -98,6 +98,9 @@ public sealed class AdmiralQuestRegistration(
                 throw new InvalidDataException($"Quest {questId} has unexpected trader id {quest.TraderId}");
             if (string.IsNullOrWhiteSpace(quest.QuestName))
                 throw new InvalidDataException($"Quest {questId} has no authored QuestName fallback");
+
+            ValidateNativeLifecycleBoundary(questId, quest);
+
             if (quest.Conditions.AvailableForFinish is not { Count: 1 } finishConditions)
                 throw new InvalidDataException($"Quest {questId} must have exactly one finish condition");
 
@@ -124,6 +127,24 @@ public sealed class AdmiralQuestRegistration(
         if (accessCount != ExpectedAccessQuestCount || arsenalCount != ExpectedArsenalQuestCount)
             throw new InvalidDataException(
                 $"Admiral quest mix drifted: Access={accessCount}/{ExpectedAccessQuestCount}, Arsenal={arsenalCount}/{ExpectedArsenalQuestCount}");
+    }
+
+    private static void ValidateNativeLifecycleBoundary(MongoId questId, Quest quest)
+    {
+        if (quest.InstantComplete is not false)
+            throw new InvalidDataException($"Quest {questId} must keep instantComplete=false for explicit native Complete flow");
+        if (!string.Equals(quest.AcceptanceAndFinishingSource, "eft", StringComparison.Ordinal))
+            throw new InvalidDataException($"Quest {questId} must keep acceptanceAndFinishingSource=eft");
+        if (quest.Status is not null || quest.SptStatus is not null)
+            throw new InvalidDataException($"Quest {questId} must not pre-seed client/profile quest status");
+        if (quest.Restartable)
+            throw new InvalidDataException($"Quest {questId} must remain non-restartable in the current M1 lifecycle contract");
+
+        if (quest.Conditions.Started is { Count: > 0 } || quest.Conditions.Success is { Count: > 0 } || quest.Conditions.Fail is { Count: > 0 })
+            throw new InvalidDataException($"Quest {questId} must not attach authored automatic Started/Success/Fail conditions during M1");
+
+        if (quest.Rewards is not null && quest.Rewards.TryGetValue("Started", out List<Reward>? startedRewards) && startedRewards.Count != 0)
+            throw new InvalidDataException($"Quest {questId} must not issue rewards on Started during M1");
     }
 
     private static void ValidateAccessQuest(MongoId questId, QuestCondition finish)

@@ -68,7 +68,7 @@ $build = $runtime.BuildIdentity
 $buildValid = (
     $null -ne $build -and
     [string]$build.Product -eq 'Economy Admiral' -and
-    [string]$build.TargetRuntime -eq 'SPT 4.1.3' -and
+    [string]$build.TargetRuntime -eq 'SPT 4.1.4' -and
     [string]$build.HeadSha -match '^[0-9a-fA-F]{40}$'
 )
 if (-not $buildValid) {
