@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "M3-uniqueness-review-only",
   "campaignAuthority": "m3-campaign-product-spec.json",
@@ -60,7 +60,8 @@
         "borrowed-access": "Reconnaissance/access problem: prove one restricted route is usable; combat is not the defining objective.",
         "route-security": "Later consequence: local Scavs make movement through the broader corridor unreliable and must be removed before extraction."
       },
-      "narrativeDecision": "The shared map is intentional continuity. The player first learns a route, then later helps keep the larger corridor operational. Do not create a third Customs operation in this wave without a new capability or consequence."
+      "narrativeDecision": "The shared map is intentional continuity. The player first learns a route, then later helps keep the larger corridor operational. Do not create a third Customs operation in this wave without a new capability or consequence.",
+      "mergeTrigger": "If Borrowed Access loses its restricted-route interaction/proxy or Route Security loses its logistics-defense purpose, reassess the pair and keep only the operation with the stronger distinct player decision."
     },
     {
       "group": "late-game-pressure",
