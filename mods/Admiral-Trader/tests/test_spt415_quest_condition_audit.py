@@ -18,6 +18,8 @@ class Spt415QuestConditionAuditTests(unittest.TestCase):
                     "AvailableForFinish": [
                         {
                             "conditionType": "CounterCreator",
+                            "type": "Elimination",
+                            "value": 2,
                             "counter": {
                                 "conditions": [
                                     {
@@ -39,6 +41,7 @@ class Spt415QuestConditionAuditTests(unittest.TestCase):
         }
         result = module.audit(quests)
         self.assertEqual(result["targetSptVersion"], "4.1.5")
+        self.assertEqual(result["schemaVersion"], 2)
         self.assertEqual(result["questCount"], 1)
         self.assertEqual(result["conditionTypeCounts"]["Kills"], 1)
         self.assertEqual(result["killTargets"][0]["value"], "AnyPmc")
@@ -48,6 +51,18 @@ class Spt415QuestConditionAuditTests(unittest.TestCase):
         self.assertEqual(result["locationConditionTargets"][0]["value"], "woods")
         self.assertEqual(result["daytimeWindows"][0]["value"], "6->18")
         self.assertEqual(result["distanceShapes"][0]["value"], ">=:80")
+        self.assertEqual(result["counterCompositionCounts"][0]["value"], "ExitStatus+Kills+Location")
+        context = result["counterContexts"][0]
+        self.assertEqual(context["questId"], "q1")
+        self.assertEqual(context["questLocation"], "woods")
+        self.assertEqual(context["counterType"], "Elimination")
+        self.assertEqual(context["counterValue"], 2)
+        self.assertEqual(context["locationTargets"], ["woods"])
+        self.assertEqual(context["killTargets"], ["AnyPmc"])
+        self.assertEqual(context["savageRoles"], ["pmcBot"])
+        self.assertEqual(context["exitStatuses"], ["Survived"])
+        self.assertEqual(context["daytimeWindows"], [{"from": 6, "to": 18}])
+        self.assertEqual(context["distanceShapes"], [{"compareMethod": ">=", "value": 80}])
 
     def test_rejects_non_object_database(self):
         with self.assertRaises(ValueError):
