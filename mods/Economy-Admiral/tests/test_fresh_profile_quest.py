@@ -25,6 +25,8 @@ class FreshProfileQuestTests(unittest.TestCase):
                 expected = copy.deepcopy(before[path.name])
                 if actual["_id"] == onboarding.QUEST_ID:
                     expected["conditions"]["AvailableForStart"][0]["value"] = 1
+                    expected["rewards"]["Success"][2]["value"] = onboarding.TEST_RUBLE_REWARD
+                    expected["rewards"]["Success"][2]["items"][0]["upd"]["StackObjectsCount"] = onboarding.TEST_RUBLE_REWARD
                     self.assertFalse(actual["secretQuest"])
                     self.assertEqual(actual["side"], "Pmc")
                     self.assertEqual(actual["traderId"], onboarding.TRADER_ID)
@@ -32,6 +34,9 @@ class FreshProfileQuestTests(unittest.TestCase):
                     self.assertGreaterEqual(1, actual["conditions"]["AvailableForStart"][0]["value"])
                 self.assertEqual(actual, expected)
             onboarding.prepare(stage)  # Safe to stage the correction twice.
+            quest = json.loads(next((stage / "db/quests").glob(f"*-{onboarding.QUEST_ID}.json")).read_text())
+            self.assertEqual(quest["rewards"]["Success"][2]["value"], 1000)
+            self.assertEqual(quest["rewards"]["Success"][2]["items"][0]["upd"]["StackObjectsCount"], 1000)
 
 
 if __name__ == "__main__":
