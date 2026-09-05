@@ -36,7 +36,7 @@ jobs:
       - name: Run Admiral Trader analysis and migration tests
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 
-      - name: Validate SPT 4.1.4 runtime assort contract
+      - name: Validate SPT 4.1.5 runtime assort contract
         run: python mods/Admiral-Trader/tools/validate_runtime_assort.py
 
       - name: Validate maintained manifests and stable trader identity
@@ -76,7 +76,7 @@ jobs:
                   raise SystemExit(f'questassort missing native collection: {key}')
           PY
 
-      - name: Build server runtime foundation against SPT 4.1.4
+      - name: Build server runtime foundation against SPT 4.1.5
         run: dotnet build mods/Admiral-Trader/server/AdmiralTrader.Server.csproj -c Release
 
       - name: Validate built runtime package contract
