@@ -31,12 +31,35 @@ jobs:
       - name: Run Admiral Trader unit tests
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 
-      - name: Fetch pinned EFT backend item mirror
+      - name: Fetch exact official SPT 4.1.5 item database
         run: |
-          mkdir -p build
+          set -euo pipefail
+          mkdir -p build/spt415
+          archive='build/SPT-4.1.5-40743-7d7add5.7z'
           curl --fail --location --retry 3 \
-            --output build/backend-items.json \
-            https://raw.githubusercontent.com/carlsmei/tarkovdata/08649f48a43fe8f4bea311b23a224a278a26492b/items.json
+            --output "$archive" \
+            https://github.com/SP-Tushonka/build/releases/download/4.1.5/SPT-4.1.5-40743-7d7add5.7z
+          echo '5cc04274c88115730fe982fd12c7525d57e5fc64b6b7271ab3929383e3ac4432  build/SPT-4.1.5-40743-7d7add5.7z' | sha256sum --check --strict
+          7z x "$archive" -obuild/spt415 -y > /dev/null
+          python - <<'PY'
+          import json
+          import shutil
+          from pathlib import Path
+
+          root = Path('build/spt415')
+          matches = [
+              path for path in root.rglob('*')
+              if path.is_file()
+              and path.as_posix().lower().endswith('/spt_data/database/templates/items.json')
+          ]
+          if len(matches) != 1:
+              raise SystemExit(f'expected exactly one exact SPT 4.1.5 items.json, found {len(matches)}: {matches}')
+          payload = json.loads(matches[0].read_text(encoding='utf-8-sig'))
+          if not isinstance(payload, dict) or len(payload) < 1000:
+              raise SystemExit(f'exact SPT 4.1.5 item database has unexpected shape/size: {type(payload).__name__} / {len(payload) if isinstance(payload, dict) else "n/a"}')
+          shutil.copyfile(matches[0], 'build/backend-items.json')
+          print(f'exact SPT 4.1.5 item DB: {matches[0]} ({len(payload)} records)')
+          PY
           python -m json.tool build/backend-items.json > /dev/null
 
       - name: Resolve weapon and ammo candidate pools
@@ -75,7 +98,7 @@ jobs:
                   raise SystemExit(f'{family_id}: empty or duplicate curated weapon pool')
               missing = sorted(set(frozen_ids) - candidate_ids)
               if missing:
-                  raise SystemExit(f'{family_id}: curated weapon TPLs not present in resolved candidate pool: {missing}')
+                  raise SystemExit(f'{family_id}: curated weapon TPLs not present in exact SPT 4.1.5 candidate pool: {missing}')
               selected = selection['families'][family_id]
               frozen = committed['families'][family_id]
               if family_id == 'special-weapons':
@@ -87,7 +110,7 @@ jobs:
               keys = ('tpl','caliber','penetration','damage','sampleUnits','stockPerReset','buyRestriction')
               drift = {key: (selected.get(key), frozen.get(key)) for key in keys if selected.get(key) != frozen.get(key)}
               if drift:
-                  raise SystemExit(f'{family_id}: committed capability drift: {drift}')
+                  raise SystemExit(f'{family_id}: committed capability drift against exact SPT 4.1.5 DB: {drift}')
               if selected.get('tier') != 'controlled' or selected['penetration'] > selected['penetrationCeiling']:
                   raise SystemExit(f'{family_id}: unsafe capability selection')
               if selected['stockPerReset'] <= 0 or selected['buyRestriction'] <= 0:
@@ -138,7 +161,7 @@ jobs:
           mods/Admiral-Trader/db/quests
           build/admiral-trader-weapon-ammo-runtime.json
 
-      - name: Upload transient runtime evidence
+      - name: Upload exact-runtime weapon/ammo evidence
         uses: actions/upload-artifact@v4
         with:
           name: admiral-trader-weapon-ammo-runtime-${{ github.event.pull_request.head.sha || github.sha }}
