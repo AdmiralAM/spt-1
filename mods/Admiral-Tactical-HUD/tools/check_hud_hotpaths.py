@@ -58,6 +58,10 @@ def main() -> int:
     icons = ICONS.read_text(encoding="utf-8")
     if "if (!TryLoadSheet(bytes)) TryLoadSheet(ReadEmbeddedReserve());" not in icons:
         raise SystemExit("external atlas decode failure does not fall back to the embedded reserve")
+    if "WeaponIcon" in plugin or "WeaponIcon" in visual or "WeaponKey(" in plugin or "WeaponKey(" in visual:
+        raise SystemExit("legacy weapon-icon kill-feed contract detected; store and render WeaponText directly")
+    if "WeaponText = cleanWeapon" not in plugin or "k.WeaponText" not in visual:
+        raise SystemExit("kill-feed weapon text is not precomputed at capture time and rendered directly")
     bodies = {
         "Refresh": method_body(plugin, "Refresh"),
         "Update": method_body(plugin, "Update"),
