@@ -12,37 +12,41 @@ This repository and the active SPT Mod Suite development are maintained by **Adm
 
 ## Modules
 
-Versions below are the module versions declared by current accepted source metadata or, for an explicitly recorded active replacement line, the canonical workstream state.
+Versions below reflect the durable workstream roadmap when a module has an active replacement/development line; publication channels continue to represent their last deliberately accepted runtime package until a newer candidate is accepted.
 
-| Module | Version / state | Purpose | Install channel |
+| Module | Version / state | Purpose | Install / development channel |
 | --- | --- | --- | --- |
-| [Admiral Tactical HUD](https://github.com/AdmiralAM/spt-1/issues/71) | `1.13.3 RC2`; **M1 stabilization** | Population, player-status, and kill-feed HUD | Development: [PR #322](https://github.com/AdmiralAM/spt-1/pull/322); published `runtime` remains unchanged until deliberate acceptance |
-| [Item Intelligence Admiral](mods/SPT-Item-Intelligence) | `1.0.0`; stable / maintenance-only | Requirement, FIR, valuation, craft/barter relevance, and persistent per-item markers | `runtime-item-intelligence` |
+| [Admiral Tactical HUD](https://github.com/AdmiralAM/spt-1/issues/71) | `1.13.3`; active M1 stabilization | Population, player-status, and kill-feed HUD | Single live implementation PR discovered from GitHub; published `runtime` remains unchanged until deliberate acceptance |
+| [Item Intelligence Admiral](https://github.com/AdmiralAM/spt-1/issues/338) | `1.1.0`; active v1.1 roadmap (`1.0.0` published baseline) | Requirement, FIR, hideout, valuation, craft/barter relevance, and contextual per-item intelligence | Active implementation line discovered from GitHub; `runtime-item-intelligence` remains the accepted v1.0.0 publication until v1.1 acceptance |
 | [Pause Admiral](mods/SPT-Pause) | `1.0.0`; stable / runtime validated | Offline-raid pause with raid-clock/time-of-day preservation and paused-input suppression | `runtime-pause` |
-| [B&A&HB #2 MOD SPT](mods/SPT-Belt-Armband-Inventory) | **`0.1.0 STABLE` / SPT 4.1.3** | ArmBand inventory plus dedicated Belt and HeadBand equipment slots, with configurable loss-on-death behavior | **[download ZIP](https://github.com/AdmiralAM/spt-1/archive/refs/heads/runtime-belt-armband.zip)** |
+| [B&A&HB #2 MOD SPT](https://github.com/AdmiralAM/spt-1/issues/285) | `0.2.0`; active (`0.1.0` published stable) | ArmBand inventory plus dedicated Belt and HeadBand equipment slots, Dogtag Case integration, and bounded reload/lifecycle behavior | Single live v0.2 PR discovered from GitHub; stable v0.1.0 remains on [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband) |
 | [Item Valuation MOD SPT](mods/Item-Valuation-MOD-SPT) | `1.0.0`; stable / SPT 4.1.3 runtime validated | Server-only inventory background coloring by economic value/category, with penetration tiers for ammunition | `runtime-item-valuation` |
-| [Economy Admiral](mods/Economy-Admiral) | `0.1.0`; Economy Beta / SPT 4.1.3 runtime validated | Provenance-safe bounded economy/reward normalization with source-pressure, health, and explicit Admiral Trader compatibility evidence | `runtime-economy-admiral` |
-| [Admiral Trader](mods/Admiral-Trader) | `0.1.0`; active development | Curated successor campaign/trader for the legacy Andrudis/QuestManiac ecosystem | Development source / CI artifacts |
+| [Economy Admiral](https://github.com/AdmiralAM/spt-1/issues/262) | `0.1.0`; active product acceptance / published runtime baseline | Coherent Quest, Trader, Flea and Loot economy pressure with server-backed F12 controls and optional Admiral Trader compatibility | Single live implementation PR discovered from GitHub; `runtime-economy-admiral` remains the accepted publication channel |
+| [Admiral Trader](https://github.com/AdmiralAM/spt-1/issues/192) | `0.1.0 + milestones`; active development | Curated successor campaign/trader for the legacy Andrudis/QuestManiac ecosystem | Single live implementation PR discovered from GitHub; CI artifacts until deliberate runtime promotion |
 | [Admiral Artyom Revival](mods/Admiral-Artyom-Revival) | `3.0.0`; SPT 4.1.3 runtime validated | Maintained revival of WTT-Artem trader, 23-quest campaign, gear and clothing | `runtime-artem-revival` |
 
 ### Admiral Tactical HUD transition
 
-`Admiral Tactical HUD` is the canonical product identity and Issue #71 is its single milestone roadmap. The current active implementation authority is the one live HUD PR recorded by the canonical workstream; at present that is Draft PR #322 on `recovery/tactical-hud-rc2-clean`.
+`Admiral Tactical HUD` is the canonical product identity and Issue #71 is its durable milestone roadmap. Under the schema-v4 control plane, the current implementation PR/branch/exact head is **discovered from live GitHub evidence** and is deliberately not stored as a mutable pointer in `.github/workstreams.json` or this README.
 
 Until M1 receives physical runtime acceptance and the active line is deliberately integrated, `main` still contains the previously accepted legacy source tree at `mods/SPT-Tactical-HUD` (`1.13.2`). That legacy path is **not** a competing development authority and must not be used to start new HUD work. The target canonical source path is `mods/Admiral-Tactical-HUD`.
 
 Tactical HUD `1.14.0` is retired. Historical PR #195 and branch `optimize/tactical-hud-runtime` are superseded evidence only. `archive/v1.13.0` is a temporary recovery reserve while the 1.13.3 line is not yet final; it is not a maintained product version and should be removed during the final 1.13.3 stable cleanup unless the user explicitly decides otherwise.
+
+### Item Intelligence Admiral transition
+
+Issue #338 is the durable **v1.1.0** roadmap. The accepted `runtime-item-intelligence` channel remains the v1.0.0 publication baseline until the v1.1 milestone line completes its combined runtime gate and deliberate stable promotion. Item Valuation MOD SPT remains an independent server-side background-color product and is not folded into Item Intelligence.
 
 ## Repository channels
 
 - `main` — authoritative integrated source, including accepted stable module source plus active integrated development.
 - `stable` — source commit promoted after deliberate suite publication.
 - `runtime` — current published Tactical HUD install channel; an active Admiral Tactical HUD RC does not rewrite it before deliberate acceptance.
-- `runtime-item-intelligence` — install-only Item Intelligence Admiral package; branch name retained as a compatibility identifier.
+- `runtime-item-intelligence` — install-only Item Intelligence Admiral accepted publication channel; retained compatibility branch name.
 - `runtime-pause` — install-only Pause Admiral package.
-- [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband) — **install-only B&A&HB Stable v0.1.0 package**.
+- [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband) — install-only B&A&HB Stable v0.1.0 package while v0.2 remains in development.
 - `runtime-item-valuation` — install-only Item Valuation MOD SPT 1.0.0 package for SPT 4.1.3.
-- `runtime-economy-admiral` — install-only Economy Admiral 0.1.0 package for SPT 4.1.3.
+- `runtime-economy-admiral` — install-only Economy Admiral 0.1.0 publication channel.
 - `runtime-artem-revival` — stable Admiral Artyom Revival publication identity; branch name retained as an established compatibility identifier.
 - `archive/v1.13.0` — temporary Tactical HUD recovery reserve pending final Admiral Tactical HUD 1.13.3 stable cleanup; never development authority.
 
@@ -65,7 +69,7 @@ Runtime branches provide the maintained install packages for Admiral Tactical HU
 
 Item Valuation MOD SPT `1.0.0` is published on `runtime-item-valuation` as a server-only install package rooted at `SPT_Runtime/user/mods/Item Valuation MOD SPT/`.
 
-Economy Admiral `0.1.0` is published on `runtime-economy-admiral` as a server-only install package rooted at `SPT_Runtime/user/mods/Economy Admiral/`.
+Economy Admiral `0.1.0` is published on `runtime-economy-admiral` as its maintained install-only publication channel.
 
 Admiral Artyom Revival differs from the self-contained runtime ZIP channels: `runtime-artem-revival` pins the accepted r5 server identity while repaired authored core data and the external Unity `Bundles/` set remain governed by the module's reconstruction/update contract.
 
