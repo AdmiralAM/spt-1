@@ -1,0 +1,291 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "M3-product-spec-only",
+  "canonicalPr": 328,
+  "runtimeTarget": "SPT 4.1.5",
+  "implementationAllowed": false,
+  "runtimeMaterialize": false,
+  "historicalSource": {
+    "pr": 297,
+    "role": "authored-design-archive-only",
+    "note": "Historical SPT 4.1.3 condition proofs remain research evidence and must not be treated as exact SPT 4.1.5 runtime authority."
+  },
+  "qualityAuthority": "docs/m3-quest-writing-standard.md",
+  "campaignPrinciples": {
+    "questCountIsKpi": false,
+    "fillerReplacementAllowed": false,
+    "playerFacingAntiGrindMetaLanguageAllowed": false,
+    "literalEnglishToRussianTranslationRequired": false,
+    "sameObjectiveWithDifferentCountAllowed": false,
+    "sameObjectiveWithDifferentEquipmentClassAllowed": false,
+    "sameObjectiveWithDifferentMapAllowedWithoutNewPurpose": false,
+    "customProfileStatePreferred": false,
+    "nativeSptConditionsPreferred": true
+  },
+  "acts": [
+    {
+      "key": "establish-network",
+      "title": {"en": "Establish the Network", "ru": "Развернуть сеть"},
+      "intent": "Prove that the player can be trusted with reconnaissance, field support, low-profile movement, protection decisions and restricted access.",
+      "operations": ["acoustic-discipline", "forward-reserve", "low-profile", "mobility-doctrine", "borrowed-access"]
+    },
+    {
+      "key": "keep-routes-open",
+      "title": {"en": "Keep the Routes Open", "ru": "Удержать маршруты"},
+      "intent": "Turn early capability into concrete network protection against immediate Scav and PMC interference.",
+      "operations": ["acoustic-contact", "route-security", "contractor-intercept"]
+    },
+    {
+      "key": "deny-threat",
+      "title": {"en": "Deny the Threat", "ru": "Лишить противника инициативы"},
+      "intent": "Use specialist precision, heavy protection and deliberate Rogue disruption against threats that can control routes and operational space.",
+      "operations": ["observation-window", "heavy-assault", "break-the-perimeter"]
+    },
+    {
+      "key": "operate-without-support",
+      "title": {"en": "Operate Without Support", "ru": "Работать автономно"},
+      "intent": "Reserve late-game work for operations that prove independent judgement under severe pressure.",
+      "operations": ["internal-security"]
+    }
+  ],
+  "operations": [
+    {
+      "key": "acoustic-discipline",
+      "legacyKeys": ["signal-discipline"],
+      "sourceThemes": ["Ultrasound"],
+      "act": "establish-network",
+      "title": {"en": "Acoustic Discipline", "ru": "Акустическая дисциплина"},
+      "playerProblem": "A patrol heard movement along an Admiral route but could not classify the threat. The player verifies the approach without being ordered to manufacture a firefight.",
+      "mechanicIntent": ["active headset from final explicit allowlist", "selected reconnaissance location/proxy", "successful extraction"],
+      "mandatoryKills": 0,
+      "distinctiveDecision": "Listen and verify before choosing violence.",
+      "uniquenessBoundary": "Must remain non-combat in its required objectives so it does not duplicate Acoustic Contact.",
+      "reward": {"xp": 4000, "rub": 22000, "standing": 0.006, "itemReward": null},
+      "campaignLevelIntent": 15,
+      "runtimeProofRequired": ["SPT 4.1.5 headset Equipment allowlist semantics", "selected VisitPlace/location semantics", "same-raid equipment-to-extraction coupling if promised by final objective"],
+      "disposition": "ADMIT"
+    },
+    {
+      "key": "forward-reserve",
+      "legacyKeys": ["field-expedient-supply"],
+      "sourceThemes": ["Errand Boy"],
+      "act": "establish-network",
+      "title": {"en": "Forward Reserve", "ru": "Полевой резерв"},
+      "playerProblem": "A forward element lost its ordinary maintenance reserve and needs one replacement package to keep the route operational.",
+      "mechanicIntent": ["one fixed ordinary maintenance handover", "no repeating procurement queue"],
+      "selectedPayloadHistorical": [
+        {"tpl": "590c5bbd86f774785762df04", "name": "WD-40 (100ml)", "count": 2},
+        {"tpl": "57347c1124597737fb1379e3", "name": "Duct tape", "count": 3},
+        {"tpl": "61bf83814088ec1a363d7097", "name": "Sewing kit", "count": 1}
+      ],
+      "distinctiveDecision": "Solve one concrete logistics shortage rather than service an endless trader shopping list.",
+      "uniquenessBoundary": "No second maintenance-package quest unless the logistical problem and required player behavior are materially different.",
+      "reward": {"xp": 5000, "rub": 30000, "standing": 0.008, "itemReward": null},
+      "campaignLevelIntent": 15,
+      "runtimeProofRequired": ["SPT 4.1.5 HandoverItem semantics", "final TPL availability and Economy Admiral acquisition-burden recheck"],
+      "disposition": "ADMIT"
+    },
+    {
+      "key": "low-profile",
+      "legacyKeys": ["expedition-loadout"],
+      "sourceThemes": ["Deep Pockets", "Tarkov Mule"],
+      "act": "establish-network",
+      "title": {"en": "Low Profile", "ru": "Низкий профиль"},
+      "playerProblem": "Admiral needs proof that the player can move useful cargo without advertising expensive PMC equipment to everyone on the route.",
+      "mechanicIntent": ["wear exact low-tier field rig", "wear exact low-tier backpack", "successful extraction", "no handover"],
+      "historicalEquipmentPair": [
+        {"slot": "TacticalVest", "tpl": "572b7adb24597762ae139821", "name": "Scav Vest"},
+        {"slot": "Backpack", "tpl": "56e33680d2720be2748b4576", "name": "Scav backpack"}
+      ],
+      "distinctiveDecision": "Choose inconspicuous, replaceable equipment because visibility itself is the operational cost.",
+      "uniquenessBoundary": "The low-tier pair is narrative identity, not the first step of a rig/backpack ladder.",
+      "reward": {"xp": 6500, "rub": 38000, "standing": 0.009, "itemReward": null},
+      "campaignLevelIntent": 15,
+      "runtimeProofRequired": ["SPT 4.1.5 Equipment semantics for two simultaneous explicit equipment requirements", "same-raid equipment-to-extraction coupling"],
+      "disposition": "ADMIT"
+    },
+    {
+      "key": "mobility-doctrine",
+      "legacyKeys": ["protection-calibration"],
+      "sourceThemes": ["Iron Head", "Juggernaut"],
+      "act": "establish-network",
+      "title": {"en": "Mobility Doctrine", "ru": "Манёвренная защита"},
+      "playerProblem": "The player must prove that light protection supports movement through a threatened route instead of becoming the purpose of the raid.",
+      "mechanicIntent": ["final explicit light-protection allowlist", "short combat problem", "successful extraction"],
+      "maximumTargetCount": 3,
+      "distinctiveDecision": "Accept limited protection in exchange for mobility and finish the route instead of extending the fight.",
+      "uniquenessBoundary": "No armor-class staircase. Helmet qualification is not a separate early quest.",
+      "reward": {"xp": 6500, "rub": 40000, "standing": 0.009, "itemReward": null},
+      "campaignLevelIntent": 16,
+      "runtimeProofRequired": ["SPT 4.1.5 explicit equipment allowlist", "selected target/location semantics", "same-raid equipment-contact-extraction coupling"],
+      "disposition": "ADMIT"
+    },
+    {
+      "key": "borrowed-access",
+      "legacyKeys": ["access-reconnaissance"],
+      "sourceThemes": ["Keys Proficiency"],
+      "act": "establish-network",
+      "title": {"en": "Borrowed Access", "ru": "Чужой доступ"},
+      "playerProblem": "Admiral needs one restricted route confirmed as usable; key ownership itself is irrelevant.",
+      "mechanicIntent": ["one final restricted-route VisitPlace or equally truthful native proxy", "successful extraction", "no key handover"],
+      "historicalProxy": {"map": "Customs", "locationTarget": "bigmap", "visitPlaceTarget": "room206_water"},
+      "distinctiveDecision": "Use access to solve a route problem rather than collect keys.",
+      "uniquenessBoundary": "No key catalogue, no per-map access copies and no promise that runtime detected personal key use unless SPT 4.1.5 proves it.",
+      "reward": {"xp": 7500, "rub": 44000, "standing": 0.010, "itemReward": null},
+      "campaignLevelIntent": 17,
+      "runtimeProofRequired": ["SPT 4.1.5 VisitPlace target authority", "same-raid VisitPlace-to-extraction coupling", "current vanilla/external overlap recheck"],
+      "disposition": "ADMIT"
+    },
+    {
+      "key": "acoustic-contact",
+      "legacyKeys": ["acoustic-contact"],
+      "sourceThemes": ["Ultrasound"],
+      "act": "keep-routes-open",
+      "title": {"en": "Acoustic Contact", "ru": "Акустический контакт"},
+      "playerProblem": "A previously observed route now has an immediate hostile presence; the player must use situational awareness to choose and finish a short contact.",
+      "mechanicIntent": ["active headset from final explicit allowlist", "Woods or final justified route location", "two ordinary Scavs", "successful extraction"],
+      "maximumTargetCount": 2,
+      "distinctiveDecision": "Apply acoustic preparation to one deliberate engagement after reconnaissance has already established the route context.",
+      "uniquenessBoundary": "Must remain a combat application and must not become another headset ownership quest.",
+      "reward": {"xp": 7000, "rub": 42000, "standing": 0.010, "itemReward": null},
+      "campaignLevelIntent": 20,
+      "runtimeProofRequired": ["SPT 4.1.5 Equipment/Kills/Location semantics", "same-raid equipment-contact-extraction coupling", "current vanilla overlap recheck"],
+      "disposition": "ADMIT"
+    },
+    {
+      "key": "route-security",
+      "legacyKeys": ["route-security"],
+      "sourceThemes": ["Scav Hunt"],
+      "act": "keep-routes-open",
+      "title": {"en": "Route Security", "ru": "Безопасный маршрут"},
+      "playerProblem": "Local Scav groups are turning a practical Customs supply corridor into an ambush line and movement must be restored.",
+      "mechanicIntent": ["Customs/bigmap", "ordinary Scav target", "successful extraction"],
+      "maximumTargetCount": 6,
+      "distinctiveDecision": "Break the immediate threat only long enough to restore movement, then leave.",
+      "uniquenessBoundary": "No same objective on every map and no escalating clearance sequels.",
+      "reward": {"xp": 8000, "rub": 50000, "standing": 0.012, "itemReward": null},
+      "campaignLevelIntent": 21,
+      "runtimeProofRequired": ["SPT 4.1.5 ordinary Scav role and bigmap target", "same-raid kill-to-extraction coupling", "current vanilla/external overlap recheck"],
+      "disposition": "ADMIT"
+    },
+    {
+      "key": "contractor-intercept",
+      "legacyKeys": ["hostile-operator-intercept"],
+      "sourceThemes": ["PMC Hunt"],
+      "act": "keep-routes-open",
+      "title": {"en": "Contractor Intercept", "ru": "Перехват контрактников"},
+      "playerProblem": "A hostile PMC element is exploiting a Reserve movement window that matters to Admiral's network.",
+      "mechanicIntent": ["Reserve/RezervBase", "bounded hostile PMC element", "successful extraction"],
+      "maximumTargetCount": 4,
+      "distinctiveDecision": "Deny a specific hostile window rather than conduct population-control PMC farming.",
+      "uniquenessBoundary": "No faction ladder, no per-map PMC copies and no dogtag conveyor.",
+      "reward": {"xp": 10000, "rub": 62000, "standing": 0.015, "itemReward": null},
+      "campaignLevelIntent": 23,
+      "runtimeProofRequired": ["SPT 4.1.5 PMC target-role semantics", "Reserve location target", "same-raid kill-to-extraction coupling", "current vanilla/external overlap recheck"],
+      "disposition": "ADMIT"
+    },
+    {
+      "key": "observation-window",
+      "legacyKeys": ["precision-observation-window", "precision-denial"],
+      "sourceThemes": ["Sniper Life"],
+      "act": "deny-threat",
+      "title": {"en": "Observation Window", "ru": "Окно наблюдения"},
+      "playerProblem": "A threatened route needs one controlled long-range observation and denial action before the position becomes predictable.",
+      "mechanicIntent": ["one final justified location/context", "meaningful minimum distance", "one or two selected threats", "successful extraction"],
+      "maximumTargetCount": 2,
+      "distinctiveDecision": "Use distance to control one problem and disengage; distance is not a score in itself.",
+      "uniquenessBoundary": "Absorbs the old Precision Denial purpose. No second distance-threshold quest unless a new player decision exists.",
+      "reward": {"xp": 12000, "rub": 70000, "standing": 0.018, "itemReward": null},
+      "rewardChangeRationale": "Raised modestly from the historical Observation Window allocation because the final operation absorbs the only useful specialist purpose from Precision Denial; no removed reward budget is automatically redistributed.",
+      "campaignLevelIntent": 29,
+      "runtimeProofRequired": ["SPT 4.1.5 distance unit and comparator semantics", "final target/location selection", "same-raid precision-to-extraction coupling", "current precision-quest overlap recheck"],
+      "disposition": "ADMIT-MERGED"
+    },
+    {
+      "key": "heavy-assault",
+      "legacyKeys": ["heavy-assault-loadout", "ballistic-head-test"],
+      "sourceThemes": ["Juggernaut", "Iron Head"],
+      "act": "deny-threat",
+      "title": {"en": "Heavy Assault", "ru": "Тяжёлый штурм"},
+      "playerProblem": "A prepared position requires the player to accept the mobility cost of heavy protection for one deliberate assault and still disengage alive.",
+      "mechanicIntent": ["final explicit heavy-protection allowlist", "ballistic head protection included where mechanically justified", "short assault contact", "successful extraction"],
+      "maximumTargetCount": 4,
+      "distinctiveDecision": "Use heavy protection for the moment it changes the assault outcome, then leave before weight dictates the operation.",
+      "uniquenessBoundary": "Absorbs Ballistic Head Test. No separate helmet ladder or armor-class progression.",
+      "reward": {"xp": 11000, "rub": 70000, "standing": 0.017, "itemReward": null},
+      "campaignLevelIntent": 30,
+      "runtimeProofRequired": ["SPT 4.1.5 explicit heavy-armor/head-protection allowlists", "multi-equipment boolean semantics", "same-raid equipment-contact-extraction coupling", "current overlap recheck"],
+      "disposition": "ADMIT-MERGED"
+    },
+    {
+      "key": "break-the-perimeter",
+      "legacyKeys": ["rogue-interdiction"],
+      "sourceThemes": ["Rogue Hunt"],
+      "act": "deny-threat",
+      "title": {"en": "Break the Perimeter", "ru": "Прорыв периметра"},
+      "playerProblem": "The Lighthouse water-treatment perimeter is being used as a controlled fire lane and Admiral needs that pattern disrupted long enough to reopen movement.",
+      "mechanicIntent": ["Lighthouse", "bounded Rogue element", "successful extraction"],
+      "maximumTargetCount": 6,
+      "distinctiveDecision": "Disrupt the defensive pattern and leave instead of farming towers after the route problem is solved.",
+      "uniquenessBoundary": "No escalating Rogue kill sequence and no Rogue-equipment storefront created as the payoff.",
+      "reward": {"xp": 12000, "rub": 78000, "standing": 0.018, "itemReward": null},
+      "campaignLevelIntent": 31,
+      "runtimeProofRequired": ["SPT 4.1.5 Rogue role alias", "Lighthouse location target", "same-raid kill-to-extraction coupling", "current vanilla/external overlap recheck"],
+      "disposition": "ADMIT"
+    },
+    {
+      "key": "internal-security",
+      "legacyKeys": ["labs-security-disruption"],
+      "sourceThemes": ["Raider Hunt"],
+      "act": "operate-without-support",
+      "title": {"en": "Internal Security", "ru": "Внутренняя охрана"},
+      "playerProblem": "The player already has Labs access; now Admiral needs proof that the clearance can be used under pressure without turning the raid into Raider farming.",
+      "mechanicIntent": ["The Labs/laboratory", "bounded Raider element", "successful extraction", "no access grant"],
+      "maximumTargetCount": 4,
+      "distinctiveDecision": "Use existing access, disrupt one security response and recognize when the operation is complete.",
+      "uniquenessBoundary": "No keycard faucet, Raider-equipment storefront, access bypass or escalating Raider counters.",
+      "reward": {"xp": 17000, "rub": 115000, "standing": 0.025, "itemReward": null},
+      "campaignLevelIntent": 37,
+      "runtimeProofRequired": ["SPT 4.1.5 Raider role alias", "laboratory location target", "same-raid kill-to-extraction coupling", "current Labs quest overlap recheck"],
+      "disposition": "ADMIT"
+    }
+  ],
+  "mergedOrHeld": [
+    {
+      "legacyKey": "ballistic-head-test",
+      "decision": "MERGE-INTO-HEAVY-ASSAULT",
+      "reason": "Standalone wear-helmet/contact/extract play is too similar to the light/heavy protection chain and recreates a miniature Iron Head ladder.",
+      "rewardRedistribution": false
+    },
+    {
+      "legacyKey": "precision-denial",
+      "decision": "MERGE-INTO-OBSERVATION-WINDOW",
+      "reason": "The historical concept did not introduce a sufficiently different decision from Observation Window; useful advanced precision identity is retained in one stronger operation.",
+      "rewardRedistribution": false
+    },
+    {
+      "legacyKey": "endurance-circuit",
+      "decision": "HOLD-FOR-REWRITE",
+      "reason": "Survive once on three maps is still fundamentally an extraction checklist. It returns only if a distinct late-game operational problem can be expressed with native SPT 4.1.5 mechanics.",
+      "rewardRedistribution": false
+    }
+  ],
+  "rewardSummary": {
+    "admittedOperationCount": 12,
+    "totalXp": 106500,
+    "totalRub": 661000,
+    "totalStanding": 0.157,
+    "itemRewardCount": 0,
+    "policy": "Thematic one-time samples may be introduced later only after Economy Admiral review and must replace part of cash value rather than stack above the approved envelope."
+  },
+  "materializationGate": {
+    "requiresM1LifecyclePass": true,
+    "requiresM2ExistingCampaignPass": true,
+    "requiresExactSpt415ConditionProofPerOperation": true,
+    "requiresNaturalEnRuFinalCopy": true,
+    "requiresCurrentVanillaAndApprovedExternalOverlapReview": true,
+    "requiresEconomyAdmiralReview": true,
+    "requiresBatchedPhysicalMilestone": true
+  }
+}
