@@ -12,8 +12,8 @@ RUNTIME_MANIFEST_PATH = ROOT / "manifests" / "runtime-manifest.json"
 AMMO_POLICY_PATH = ROOT / "manifests" / "ammo-offer-policy.json"
 CSPROJ_PATH = ROOT / "server" / "AdmiralTrader.Server.csproj"
 
-EXPECTED_RUNTIME_TARGET = "4.1.4"
-EXPECTED_PUBLISHED_API_BASELINE = "4.1.4"
+EXPECTED_RUNTIME_TARGET = "4.1.5"
+EXPECTED_PUBLISHED_API_BASELINE = "4.1.5"
 LABS_OFFER_ID = "ad1000000000000000000001"
 LABS_ITEM_TPL = "5c94bbff86f7747ee735c08f"
 LABS_CLEARANCE_QUEST = "68a6527a3c73b2e85977d7a1"
@@ -112,7 +112,7 @@ def main() -> None:
     if set(offers) != set(AMMO_OFFER_IDS):
         fail("ammo offer policy family set drift")
     if ammo_policy.get("targetSptVersion") != EXPECTED_RUNTIME_TARGET:
-        fail("ammo offer policy lost SPT 4.1.4 target")
+        fail("ammo offer policy lost SPT 4.1.5 target")
     if (ammo_policy.get("specialWeapons") or {}).get("permanentOffer") is not False:
         fail("Special Weapons must not receive a permanent offer")
 
@@ -160,7 +160,7 @@ def main() -> None:
         if float(level.get("minStanding", -1)) != standing:
             fail(f"Admiral LL{index}: standing threshold drift")
 
-    print("Admiral Trader SPT 4.1.4 target + seven-offer quest assort contract OK")
+    print("Admiral Trader SPT 4.1.5 target + seven-offer quest assort contract OK")
 
 
 if __name__ == "__main__":
