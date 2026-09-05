@@ -1,84 +1,77 @@
 # Admiral Trader
 
-Official curated successor workstream for the legacy Andrudis/QuestManiac ecosystem. Current module version: **0.1.0**.
+Official curated successor to the legacy Andrudis/QuestManiac ecosystem.
 
-## Product identity
+## Canonical authority
 
-- Mod name: **Admiral Trader**
-- Module version: **0.1.0**
-- Trader working name: **Admiral / Адмирал**
-- Trader icon/portrait and final character presentation: TBD
-- Legacy Andrudis/QuestManiac names are provenance/source references only and are not the target product identity.
+Admiral Trader now has **one active workstream**:
 
-## Current state
+- canonical issue: **#192**;
+- active Draft PR: **#328**;
+- active branch: `feature/admiral-trader-canonical-milestones`;
+- runtime target: **SPT 4.1.5**;
+- historical frozen `0.1.0` reference: `053a62ff5f1cb545f13bc89a96bba3acd319a823`;
+- historical frozen shape: **31 runtime quests / 11 finite offers**;
+- QuestManiac/Andrudis research archive: **#115**.
 
-The inventory / quest-graph / campaign-manifest / migration / reward-benchmark foundation is established. Runtime materialization is now in progress on Draft PR #138.
+PRs #193, #297 and #327 are superseded historical references. Do not resume product work on them and do not create parallel Trader implementation branches for work that belongs to the current milestone.
 
-The current authored runtime set contains **31 quests**:
+## Current P0 — quest lifecycle correctness
 
-- 10 **Access Protocol** quests replacing the legacy key-collection ladder with compact non-FIR capability checks;
-- 21 **Arsenal Protocol** quests across seven independent weapon families, with Qualification → Fieldwork → Munitions progression;
-- six controlled ammunition capability rewards/unlocks; Special Weapons remains sample-only/deferred until exact SPT 4.1.4 item proof.
+The unresolved physical defect is the native quest lifecycle, not merely quest visibility:
 
-The server runtime validates the mixed 10 + 21 quest registry, trader identity, quest IDs and objective shapes before publication. Missing authored locale entries fail over to deterministic QuestName-based runtime text so incomplete localization cannot expose raw locale keys; complete authored EN/RU text remains a polish target before final publication.
+1. an eligible quest auto-enters the active lifecycle instead of waiting for explicit **Accept**;
+2. after the objective is satisfied, the quest auto-resolves/turns in without explicit **Complete**;
+3. the transition becomes visible after refreshing/reopening the trader/menu instead of through the expected button-driven flow;
+4. the expected quest-success dialogue/chat path does not occur;
+5. authored rewards do not materialize through the expected native success path.
 
-Live trader registration remains **fail-closed** through `runtime-manifest.json`. No runtime/user test is requested until the package is mechanically complete, module CI is green, and one defined SPT 4.1.4 physical gate has a downloadable exact-head artifact.
+Expected lifecycle:
 
-The target remains one NPC, one curated campaign, deterministic migration behavior, and reward/unlock data that remains inspectable by Economy Admiral.
+`Offered -> explicit Accept -> Started -> progress -> AvailableForFinish -> explicit Complete -> Success -> success dialogue/mail -> reward delivery -> questassort unlock -> persistence`
 
-Work order:
+The user physically repeated the defect with **AllQuestsCheckmarks disabled**. The problem remained, so that mod is ruled out as the root cause unless new contrary evidence appears.
 
-`source inventory -> quest graph -> manifest -> migration -> trader consolidation -> curated content -> reward normalization -> tests -> runtime`
+The level-1 onboarding/HTTP diagnostics remain useful evidence but do not close this P0: HTTP visibility/acceptance is not proof of correct in-client manual Accept, manual Complete, success-message and reward behavior.
 
-Tracked by repository Issue #115 and Draft PR #138.
+## Milestone order
 
-## Design constraints
+### M1 — Lifecycle correctness
+Fix the auto-accept / auto-turn-in / missing Complete / missing success-message-reward path. No campaign expansion while this is unresolved.
 
-- Six legacy custom traders are a source-data concern, not the target runtime architecture.
-- New-profile content must be explicitly selected; directory enumeration must not implicitly activate content.
-- Removed legacy quests must not create successor chains on existing profiles.
-- Already-accepted legacy quests should finish through the template-suppression completion bridge without direct profile mutation whenever possible.
-- Direct PMC profile writes remain forbidden until the exact SPT 4.1.4 mutation/persistence boundary is proven.
-- Restartable legacy quests are excluded from the completion bridge by default.
-- Hideout-assistant content is excluded from the curated campaign.
-- Repetitive kill/headshot/FIR/handover ladders are not preserved wholesale.
-- Weapon and ammo progression form one progression domain because the pinned legacy graph contains intentional cross-bundle prerequisite edges between them.
-- Assort, quest-assort, reward, and unlock data remain close to native SPT shapes so downstream economy auditing does not require an Admiral-Trader-specific opaque format.
+### M2 — Existing campaign acceptance
+Prove the current 31-quest / 11-offer campaign as one coherent playable baseline with manual lifecycle, representative reward delivery, success message/mail, questassort unlock and restart persistence.
 
-## Baselines and findings
+### M3 — Runtime campaign expansion
+Materialize the already-prepared post-0.1.0 operation wave into actual runtime quests in bounded player-visible slices. Manifest-only research is not counted as product completion.
 
-- [`docs/source-baseline.md`](docs/source-baseline.md) defines which external references are authoritative for which boundary.
-- [`docs/inventory-findings.md`](docs/inventory-findings.md) records the full-corpus gate results.
-- [`docs/runtime-boundaries.md`](docs/runtime-boundaries.md) records proven and intentionally unproven SPT runtime boundaries.
-- [`docs/migration-contract.md`](docs/migration-contract.md) defines the no-profile-write legacy completion bridge and its safety limits.
-- [`manifests/campaign-manifest.json`](manifests/campaign-manifest.json) is the maintained source of truth for campaign classification and migration policy.
+### M4 — Selective content absorption
+Use QuestManiac/Andrudis/Natalya only as curated source material. No second trader, duplicate campaign or unnecessary dependency.
 
-The legacy quest database itself remains external source material and is not copied wholesale into this repository.
+### M5 — Relationship / specialist storefront
+Add bounded relationship progression and finite specialist stock after lifecycle/campaign foundations are stable. Economy Admiral remains owner of global economy normalization.
 
-## Analysis tools
+### M6 — Stable release
+One exact-head install-ready SPT 4.1.5 candidate, one final batched physical gate, then deliberate promotion.
 
-`tools/build_inventory.py` walks the pinned legacy `db/QuestBundles` tree, builds a deterministic predecessor/successor graph, reports graph-integrity anomalies, summarizes objectives/rewards, and applies the maintained campaign rules.
+## Product constraints
 
-`tools/build_reward_benchmark.py` consumes native-style vanilla quest JSON and builds descriptive reward distributions by level bucket, including XP, standing, item counts and unlock counts. It intentionally does not invent a ruble valuation for arbitrary item rewards; economic valuation remains a separate layer that Economy Admiral can supply.
+- one NPC: Admiral / Адмирал;
+- frozen trader ID: `d5c27bb3169f8dfbc13f6b69`;
+- initial standing remains zero unless a later milestone explicitly changes the product contract;
+- no wholesale QuestManiac port or legacy trader zoo;
+- no repetitive filler/count ladders merely to increase quest count;
+- preserve only distinct authored concepts with clear Why / What / Context / Payoff;
+- finite progression-aware rewards and unlocks;
+- EN/RU player-facing presentation;
+- backup-first, ownership-scoped profile safety;
+- no speculative destructive profile mutation;
+- no second economy engine.
 
-`tools/build_weapon_ammo_runtime_templates.py` compiles the maintained Arsenal Protocol plan, authored specification, capability selections and frozen runtime weapon-family pools into deterministic native SPT quest templates.
+## Historical evidence
 
-The CI uses the official pinned `sp-tarkov/server-csharp` vanilla `quests.json` as the reward benchmark source and independently validates committed runtime materialization against compiler output.
+Nothing from the superseded workstreams is deleted. Exact heads, CI runs, artifacts, migration research, post-0.1.0 authored-operation work, relationship-stock work and compatibility findings remain valid references where applicable. They are evidence, not competing execution authority.
 
 ## Validation
 
-```bash
-python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
-```
-
-Module-specific CI additionally:
-
-- checks the pinned 4,862-quest legacy corpus and graph invariants;
-- builds the official vanilla reward benchmark from a pinned SPT source revision;
-- validates Access Protocol and Arsenal Protocol compiler output;
-- validates frozen weapon-family pools and controlled ammo capability selections;
-- builds the .NET 10 server runtime against the nearest published SPTarkov package line;
-- validates the packaged 31-quest mixed runtime layout;
-- keeps generated reports only as transient Actions artifacts.
-
-Runtime validation remains deferred until a mechanically complete exact-head SPT 4.1.4 test artifact is available for one defined physical gate.
+Module validation remains under `mods/Admiral-Trader/tests` and associated deterministic tools/workflows. CI is evidence for a milestone, not a substitute for fixing the current P0 or for the required batched physical acceptance.
