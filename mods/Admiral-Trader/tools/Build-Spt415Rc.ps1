@@ -61,7 +61,7 @@ if ($rootOffers.Count -ne 11) { throw "Expected 11 active-head root offers, got 
 $missingTpls = @($rootOffers | ForEach-Object { [string]$_."_tpl" } | Where-Object { -not $itemDb.ContainsKey($_) } | Sort-Object -Unique)
 if ($missingTpls.Count) { throw "Active-head assort contains TPLs missing from exact SPT 4.1.5 DB: $($missingTpls -join ', ')" }
 $baselineIds = @($baseline.offers | ForEach-Object { [string]$_.offerId })
-$milestoneIds = @($questAssort.Success.PSObject.Properties | ForEach-Object { [string]$_.Name })
+$milestoneIds = @($questAssort.success.PSObject.Properties | ForEach-Object { [string]$_.Name })
 if ($baselineIds.Count -ne 4 -or ($baselineIds | Sort-Object -Unique).Count -ne 4) { throw 'Baseline authority must contain four unique offers.' }
 if ($milestoneIds.Count -ne 7 -or ($milestoneIds | Sort-Object -Unique).Count -ne 7) { throw 'Milestone questassort must contain seven unique offers.' }
 if (@($baselineIds | Where-Object { $_ -in $milestoneIds }).Count) { throw 'Baseline offers must not be quest-gated Milestone offers.' }
@@ -100,7 +100,7 @@ $stagedManifest | ConvertTo-Json -Depth 20 | Set-Content $stagedManifestPath -En
 $stagedAssort = Get-Content (Join-Path $modTarget 'db/assort.json') -Raw | ConvertFrom-Json
 $stagedQuestAssort = Get-Content (Join-Path $modTarget 'db/questassort.json') -Raw | ConvertFrom-Json
 if (@($stagedAssort.items | Where-Object parentId -eq 'hideout').Count -ne 11) { throw 'Staged Trader lost the 11-offer contract.' }
-if (@($stagedQuestAssort.Success.PSObject.Properties).Count -ne 7) { throw 'Staged Trader lost the seven Milestone gates.' }
+if (@($stagedQuestAssort.success.PSObject.Properties).Count -ne 7) { throw 'Staged Trader lost the seven Milestone gates.' }
 if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 31) { throw 'Staged Trader lost the 31-quest contract.' }
 if (-not (Test-Path (Join-Path $modTarget 'assets/d5c27bb3169f8dfbc13f6b69.jpg') -PathType Leaf)) { throw 'Staged Trader portrait is missing.' }
 
