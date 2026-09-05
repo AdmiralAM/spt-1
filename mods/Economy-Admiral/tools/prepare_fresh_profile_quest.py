@@ -24,6 +24,7 @@ def prepare(stage: Path):
         raise ValueError("Fundamentals onboarding contract drifted; refusing broad gate changes")
     conditions[0]["value"] = 1
     finish = quest["conditions"]["AvailableForFinish"][0]
+    finish["conditionType"] = "HandoverItem"
     finish["target"] = ["5449016a4bdc2d6f028b456f"]
     finish["value"] = TEST_HANDOVER_ROUBLES
     finish["onlyFoundInRaid"] = False

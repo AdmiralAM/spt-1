@@ -25,7 +25,7 @@ class FreshProfileQuestTests(unittest.TestCase):
                 expected = copy.deepcopy(before[path.name])
                 if actual["_id"] == onboarding.QUEST_ID:
                     expected["conditions"]["AvailableForStart"][0]["value"] = 1
-                    expected["conditions"]["AvailableForFinish"][0]["conditionType"] = "FindItem"
+                    expected["conditions"]["AvailableForFinish"][0]["conditionType"] = "HandoverItem"
                     expected["conditions"]["AvailableForFinish"][0]["target"] = ["5449016a4bdc2d6f028b456f"]
                     expected["conditions"]["AvailableForFinish"][0]["value"] = onboarding.TEST_HANDOVER_ROUBLES
                     expected["conditions"]["AvailableForFinish"][0]["onlyFoundInRaid"] = False
