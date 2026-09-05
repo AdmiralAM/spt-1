@@ -1,0 +1,138 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "M3-context-selection-plan-only",
+  "campaignAuthority": "m3-campaign-product-spec.json",
+  "runtimeMaterialize": false,
+  "selectionRule": "A map or target is selected because it makes the operation's decision legible. Map variety alone is not a reason to create or retain a quest. Every selection remains fail-closed until exact SPT 4.1.5 target names/roles and current semantic overlap are proven.",
+  "contexts": {
+    "acoustic-discipline": {
+      "mapIntent": "Woods",
+      "purpose": "Open terrain and long approaches make listening and route verification plausible without requiring combat.",
+      "exactZone": null,
+      "combatRequired": false,
+      "continuity": "Establishes the same wider field route later used by Acoustic Contact.",
+      "status": "map-product-selected-zone-pending"
+    },
+    "forward-reserve": {
+      "mapIntent": null,
+      "purpose": "This is a logistics handover between raids; inventing a raid location would add friction without adding a decision.",
+      "status": "no-map-required"
+    },
+    "low-profile": {
+      "mapIntent": "Interchange",
+      "purpose": "A commercial complex full of improvised equipment and opportunistic traffic supports the idea of moving with ordinary, replaceable gear rather than a premium display loadout.",
+      "exactZone": null,
+      "status": "map-product-selected-pending-overlap"
+    },
+    "mobility-doctrine": {
+      "mapIntent": "Shoreline",
+      "purpose": "Long movement between exposed and built-up terrain makes mobility a real reason to prefer lighter protection rather than merely the next armor tier.",
+      "exactContactTarget": "ordinary Scav candidate",
+      "maximumTargetCount": 3,
+      "status": "map-product-selected-target-pending-overlap"
+    },
+    "borrowed-access": {
+      "mapIntent": "Customs",
+      "historicalTargetName": "bigmap",
+      "historicalVisitPlaceProxy": "room206_water",
+      "purpose": "A restricted interior route is used as access reconnaissance; the objective is entry and confirmation, not key ownership.",
+      "status": "historical-proxy-selected-revalidate-spt415"
+    },
+    "acoustic-contact": {
+      "mapIntent": "Woods",
+      "purpose": "Returns to the route established by Acoustic Discipline, but now the problem is a real hostile presence rather than uncertain sound.",
+      "targetIntent": "ordinary Scav",
+      "targetCount": 2,
+      "status": "product-selected-revalidate-spt415-and-overlap"
+    },
+    "route-security": {
+      "mapIntent": "Customs",
+      "historicalTargetName": "bigmap",
+      "purpose": "Customs functions as the campaign's practical logistics corridor; this is the consequence operation after access and supply work, not a generic map-clear quest.",
+      "targetIntent": "ordinary Scav",
+      "maximumTargetCount": 6,
+      "status": "product-selected-revalidate-spt415-and-overlap"
+    },
+    "contractor-intercept": {
+      "mapIntent": "Reserve",
+      "historicalTargetName": "RezervBase",
+      "purpose": "A military movement node supports a short counter-contractor intercept distinct from ordinary route clearance.",
+      "targetIntent": "AnyPmc unless a narrower exact SPT 4.1.5 faction selector is proven and materially improves the operation",
+      "maximumTargetCount": 4,
+      "timeWindowCandidate": {
+        "state": "design-candidate-not-final",
+        "intent": "Give the hostile movement window a real gameplay meaning instead of leaving it as flavor text.",
+        "preferredShape": "native Kills daytime window inside the same CounterCreator if exact SPT 4.1.5 semantics support it",
+        "exactHours": null,
+        "rejectIf": "The time restriction produces scheduling annoyance, materially duplicates a current vanilla objective, or cannot be proven against exact SPT 4.1.5."
+      },
+      "status": "map-product-selected-time-window-under-review"
+    },
+    "observation-window": {
+      "mapIntent": "Shoreline",
+      "purpose": "Long natural sightlines make stand-off control intelligible without turning the operation into an arbitrary distance staircase.",
+      "targetIntent": "One or two specific practical threats; prefer a role/context that is not simply AnyPmc at range.",
+      "distanceIntent": "One meaningful minimum band selected after exact SPT 4.1.5 distance semantics and current vanilla precision overlap are measured.",
+      "status": "map-product-selected-target-and-distance-pending"
+    },
+    "heavy-assault": {
+      "mapIntent": "Factory",
+      "purpose": "Short sightlines and compressed contact make accepting heavy protection a coherent tactical choice, sharply separating this operation from Shoreline Mobility Doctrine.",
+      "targetIntent": "ordinary hostile element unless a more specific target survives overlap review",
+      "maximumTargetCount": 4,
+      "status": "map-product-selected-target-pending-overlap"
+    },
+    "break-the-perimeter": {
+      "mapIntent": "Lighthouse",
+      "purpose": "Rogue defensive positions give the perimeter-disruption theme an actual prepared threat rather than another ordinary road clearance.",
+      "targetIntent": "Rogue",
+      "maximumTargetCount": 6,
+      "waterTreatmentBoundary": "Water Treatment is narrative context until an exact SPT 4.1.5 sub-location condition is proven. Do not imply a zone selector that runtime cannot enforce.",
+      "status": "product-selected-revalidate-spt415-role-location"
+    },
+    "internal-security": {
+      "mapIntent": "The Lab",
+      "historicalTargetName": "laboratory",
+      "purpose": "Existing Labs access is exercised under pressure; the operation tests using clearance, controlling one Raider response and leaving, not earning another access token.",
+      "targetIntent": "Raider",
+      "maximumTargetCount": 4,
+      "status": "product-selected-revalidate-spt415-role-location"
+    }
+  },
+  "continuityPairs": [
+    {
+      "operations": ["acoustic-discipline", "acoustic-contact"],
+      "sharedContext": "Woods field route",
+      "reason": "Reconnaissance first, combat application later. Reusing the map is intentional narrative continuity rather than copied objective structure."
+    },
+    {
+      "operations": ["borrowed-access", "route-security"],
+      "sharedContext": "Customs movement network",
+      "reason": "Restricted access is confirmed first; broader logistics movement is defended later."
+    },
+    {
+      "operations": ["mobility-doctrine", "observation-window"],
+      "sharedContext": "Shoreline movement and observation space",
+      "reason": "An early movement lesson later becomes stand-off control; the required equipment and target behavior are different."
+    }
+  ],
+  "deliberateContrast": [
+    {
+      "operations": ["mobility-doctrine", "heavy-assault"],
+      "contrast": "Shoreline rewards movement under light protection; Factory justifies accepting heavy protection for a compressed assault."
+    },
+    {
+      "operations": ["route-security", "contractor-intercept", "break-the-perimeter"],
+      "contrast": "Customs ordinary Scav corridor pressure -> Reserve trained contractor movement window -> Lighthouse prepared Rogue perimeter."
+    }
+  ],
+  "materializationGate": {
+    "requiresExactSpt415LocationTargets": true,
+    "requiresExactSpt415RoleAliases": true,
+    "requiresCurrentVanillaOverlapReview": true,
+    "requiresApprovedExternalOverlapReview": true,
+    "requiresSameRaidCouplingProofWherePromised": true,
+    "requiresUserPhysicalTestNow": false
+  }
+}
