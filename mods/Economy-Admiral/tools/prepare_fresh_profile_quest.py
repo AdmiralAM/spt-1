@@ -24,6 +24,11 @@ def prepare(stage: Path):
         raise ValueError("Fundamentals onboarding contract drifted; refusing broad gate changes")
     conditions[0]["value"] = 1
     finish = quest["conditions"]["AvailableForFinish"][0]
+    # AllQuestsCheckmarks only indexes item objectives.  Keeping the native
+    # HandoverItem shape makes that client patch delete this otherwise valid
+    # modded quest from the visible quest list.  FindItem still presents the
+    # normal hand-in button and consumes the requested currency on completion.
+    finish["conditionType"] = "FindItem"
     finish["target"] = ["5449016a4bdc2d6f028b456f"]
     finish["value"] = TEST_HANDOVER_ROUBLES
     finish["onlyFoundInRaid"] = False
