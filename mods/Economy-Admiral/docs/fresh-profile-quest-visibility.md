@@ -36,7 +36,24 @@ AllQuestsCheckmarks logs an item specification checkmark error, not a quest-list
 response error. These observations are not an exhaustive compatibility proof
 for Quest Tracker, AllQuestsCheckmarks, QuestManiac or other installed patches.
 
-Remaining acceptance evidence: capture the corrected `/client/quest/list`
-response for a fresh profile, verify Fundamentals is AvailableForStart, and
-verify the client shows it and QuestAccept transitions it to Started. The
-packaging regression and server-start smoke alone do not establish this UI gate.
+An isolated copy of the installed runtime, including its server mods and a copy
+of the level-1 profile, was started on localhost port 6979. Compressed requests
+using the copied profile session produced the following actual HTTP results:
+
+- Before the staging correction: `/client/quest/list` returned HTTP 200 with
+  zero Admiral quests.
+- After the correction and restart: the same route returned exactly Fundamentals
+  with `sptStatus: 1` (AvailableForStart), level >=1.
+- Posting QuestAccept to `/client/game/profile/items/moving` returned `err: 0`
+  and no warnings. The subsequent quest list returned Fundamentals with
+  `sptStatus: 2` (Started).
+
+This exercise included Economy Admiral, QuestManiac, Ref Friendly Quests,
+AllQuestsCheckmarks and TraderModding server components from the installed
+runtime. Only the isolated profile was used for acceptance; the game installation
+was not modified. Original logs lack response bodies, so this is reproduced
+HTTP evidence, not a reconstruction of the historical response body.
+
+Remaining acceptance evidence: verify that the real client visibly shows the
+corrected quest and allows the player to accept it. HTTP acceptance does not
+establish rendering or every client-patch interaction.
