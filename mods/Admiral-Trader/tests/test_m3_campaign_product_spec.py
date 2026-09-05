@@ -20,14 +20,27 @@ class M3CampaignProductSpecTests(unittest.TestCase):
         cls.rewards = load_json("m3-campaign-reward-plan.json")
         cls.uniqueness = load_json("m3-campaign-uniqueness-review.json")
         cls.progression = load_json("m3-campaign-progression.json")
+        cls.integration = load_json("m3-existing-campaign-integration.json")
+        cls.contexts = load_json("m3-operation-context-review.json")
+        cls.deferred = load_json("m3-deferred-concepts-review.json")
+        cls.reward_comparators = load_json("m3-reward-comparator-review.json")
+        cls.keys_spec = load_json("keys-authored-spec.json")
+        cls.weapon_runtime = load_json("weapon-ammo-runtime-plan.json")
 
     def test_design_files_remain_fail_closed(self):
         self.assertFalse(self.product["implementationAllowed"])
-        self.assertFalse(self.product["runtimeMaterialize"])
-        self.assertFalse(self.editorial["runtimeMaterialize"])
-        self.assertFalse(self.rewards["runtimeMaterialize"])
-        self.assertFalse(self.uniqueness["runtimeMaterialize"])
-        self.assertFalse(self.progression["runtimeMaterialize"])
+        for manifest in (
+            self.product,
+            self.editorial,
+            self.rewards,
+            self.uniqueness,
+            self.progression,
+            self.integration,
+            self.contexts,
+            self.deferred,
+            self.reward_comparators,
+        ):
+            self.assertFalse(manifest["runtimeMaterialize"])
         self.assertTrue(self.product["materializationGate"]["requiresM1LifecyclePass"])
         self.assertTrue(self.product["materializationGate"]["requiresM2ExistingCampaignPass"])
 
@@ -41,13 +54,18 @@ class M3CampaignProductSpecTests(unittest.TestCase):
         reward_keys = list(self.rewards["operationRewards"])
         fingerprint_keys = list(self.uniqueness["operationFingerprints"])
         progression_keys = list(self.progression["levels"])
+        context_keys = list(self.contexts["contexts"])
+        comparator_keys = [row["operation"] for row in self.reward_comparators["reviews"]]
 
         self.assertEqual(set(editorial_keys), set(product_keys))
         self.assertEqual(set(reward_keys), set(product_keys))
         self.assertEqual(set(fingerprint_keys), set(product_keys))
         self.assertEqual(set(progression_keys), set(product_keys))
+        self.assertEqual(set(context_keys), set(product_keys))
+        self.assertEqual(set(comparator_keys), set(product_keys))
         self.assertEqual(set(self.progression["prerequisites"]), set(product_keys))
         self.assertEqual(len(editorial_keys), len(set(editorial_keys)))
+        self.assertEqual(len(comparator_keys), len(set(comparator_keys)))
 
     def test_product_level_intent_matches_progression_authority(self):
         product_levels = {
@@ -76,7 +94,6 @@ class M3CampaignProductSpecTests(unittest.TestCase):
         self.assertEqual(roots, {key for key, values in prereqs.items() if not values})
 
         for key, dependencies in prereqs.items():
-            self.assertLessEqual(len(dependencies), 2, key)
             self.assertEqual(len(dependencies), len(set(dependencies)), key)
             for dependency in dependencies:
                 self.assertIn(dependency, keys)
@@ -115,6 +132,41 @@ class M3CampaignProductSpecTests(unittest.TestCase):
                     reachable.add(key)
                     changed = True
         self.assertEqual(reachable, keys)
+
+    def test_external_prerequisites_are_real_existing_campaign_quests(self):
+        integration_edges = self.integration["externalPrerequisites"]
+        progression_edges = self.progression["externalPrerequisites"]
+        self.assertEqual(set(integration_edges), set(progression_edges))
+
+        existing_ids = {row["id"] for row in self.keys_spec["quests"]}
+        existing_ids.update(row["id"] for row in self.weapon_runtime["quests"])
+
+        external_count = 0
+        for operation, records in integration_edges.items():
+            ids = [row["questId"] for row in records]
+            self.assertEqual(progression_edges[operation], ids)
+            self.assertEqual(len(ids), len(set(ids)), operation)
+            for record in records:
+                self.assertIn(record["questId"], existing_ids, operation)
+                self.assertLessEqual(
+                    record["minimumLevel"],
+                    self.progression["levels"][operation],
+                    f"external level regression {record['questId']} -> {operation}",
+                )
+                external_count += 1
+
+        self.assertEqual(
+            external_count,
+            self.integration["integrationContracts"]["externalPrerequisiteCount"],
+        )
+        self.assertEqual(external_count, self.progression["graphContracts"]["externalPrerequisiteCount"])
+
+    def test_total_direct_prerequisite_count_is_bounded(self):
+        external = self.progression["externalPrerequisites"]
+        maximum = self.progression["graphContracts"]["maximumTotalDirectPrerequisitesPerOperation"]
+        for key, internal in self.progression["prerequisites"].items():
+            total = len(internal) + len(external.get(key, []))
+            self.assertLessEqual(total, maximum, key)
 
     def test_progression_branches_only_reference_admitted_operations(self):
         admitted = {row["key"] for row in self.product["operations"]}
@@ -168,6 +220,16 @@ class M3CampaignProductSpecTests(unittest.TestCase):
         self.assertEqual(summary["itemRewardCount"], 0)
         self.assertEqual(summary["permanentUnlockCount"], 0)
         self.assertTrue(all(row["itemReward"] is None for row in plan_rewards.values()))
+
+    def test_reward_comparator_rows_match_planned_rewards(self):
+        planned = self.rewards["operationRewards"]
+        for row in self.reward_comparators["reviews"]:
+            reward = planned[row["operation"]]
+            self.assertEqual(row["planned"]["xp"], reward["xp"])
+            self.assertEqual(row["planned"]["rub"], reward["rub"])
+            self.assertAlmostEqual(row["planned"]["standing"], reward["standing"], places=6)
+        self.assertFalse(self.reward_comparators["campaignDecision"]["obviousInflationDetected"])
+        self.assertTrue(self.reward_comparators["campaignDecision"]["exactSpt415RebenchmarkStillRequired"])
 
     def test_act_budgets_sum_to_campaign_totals(self):
         acts = self.rewards["actBudgets"]
@@ -259,6 +321,22 @@ class M3CampaignProductSpecTests(unittest.TestCase):
             self.assertEqual(len(values), len(set(values)), key)
             normalized.append(tuple(values))
         self.assertEqual(len(normalized), len(set(normalized)))
+
+    def test_context_selection_is_complete_but_fail_closed(self):
+        admitted = {row["key"] for row in self.product["operations"]}
+        self.assertEqual(set(self.contexts["contexts"]), admitted)
+        self.assertTrue(self.contexts["materializationGate"]["requiresExactSpt415LocationTargets"])
+        self.assertTrue(self.contexts["materializationGate"]["requiresCurrentVanillaOverlapReview"])
+        self.assertFalse(self.contexts["materializationGate"]["requiresUserPhysicalTestNow"])
+
+    def test_deferred_concepts_do_not_reserve_slots_or_rewards(self):
+        decision = self.deferred["qualityDecision"]
+        self.assertTrue(decision["deferredConceptsDoNotReserveQuestSlots"])
+        self.assertTrue(decision["deferredConceptsDoNotReserveRewardBudget"])
+        self.assertFalse(decision["fillerReplacementRequired"])
+        deferred_keys = {row["key"] for row in self.deferred["concepts"]}
+        admitted = {row["key"] for row in self.product["operations"]}
+        self.assertTrue(deferred_keys.isdisjoint(admitted))
 
     def test_russian_titles_avoid_known_machine_translation_calques(self):
         titles = {row["title"]["ru"] for row in self.editorial["quests"]}
