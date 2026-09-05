@@ -36,10 +36,28 @@ class RuntimeTargetAuthorityTests(unittest.TestCase):
             "manifests/weapon-ammo-capabilities.json",
             "manifests/weapon-ammo-selection-policy.json",
             "manifests/weapon-family-runtime-pools.json",
+            "manifests/weapon-ammo-spt415-evidence.json",
         )
         for path in paths:
             with self.subTest(path=path):
                 self.assertEqual(self.load_json(path)["targetSptVersion"], TARGET)
+
+    def test_exact_item_db_evidence_is_bound_to_capabilities(self):
+        capabilities = self.load_json("manifests/weapon-ammo-capabilities.json")
+        evidence_name = capabilities["runtimeVerificationEvidence"]
+        self.assertEqual(capabilities["runtimeVerification"], "verified-exact-spt-4.1.5-item-db")
+        self.assertEqual(evidence_name, "weapon-ammo-spt415-evidence.json")
+
+        evidence = self.load_json(f"manifests/{evidence_name}")
+        self.assertEqual(evidence["status"], "verified")
+        self.assertEqual(evidence["targetSptVersion"], TARGET)
+        self.assertEqual(evidence["source"]["itemRecordCount"], 4673)
+        self.assertEqual(
+            evidence["source"]["archiveSha256"],
+            "5cc04274c88115730fe982fd12c7525d57e5fc64b6b7271ab3929383e3ac4432",
+        )
+        self.assertEqual(evidence["verification"]["runId"], 33989342778)
+        self.assertEqual(evidence["verification"]["artifact"]["id"], 9976131871)
 
     def test_migration_policy_requires_exact_415_boundary(self):
         campaign = self.load_json("manifests/campaign-manifest.json")
