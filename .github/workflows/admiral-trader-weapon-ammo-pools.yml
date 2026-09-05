@@ -63,8 +63,8 @@ jobs:
           committed = json.loads(Path('mods/Admiral-Trader/manifests/weapon-ammo-capabilities.json').read_text())
           runtime_pools = json.loads(Path('mods/Admiral-Trader/manifests/weapon-family-runtime-pools.json').read_text())
           for data in (pools, selection, committed, runtime_pools):
-              if data.get('targetSptVersion') != '4.1.4':
-                  raise SystemExit('weapon/ammo runtime contract lost SPT 4.1.4 target')
+              if data.get('targetSptVersion') != '4.1.5':
+                  raise SystemExit('weapon/ammo runtime contract lost SPT 4.1.5 target')
           if set(runtime_pools['families']) != set(pools['families']):
               raise SystemExit('runtime weapon family set drifted from resolved family set')
           permanent = 0
@@ -113,6 +113,8 @@ jobs:
           from pathlib import Path
           data = json.loads(Path('build/admiral-trader-weapon-ammo-runtime.json').read_text())
           templates = data['templates']
+          if data.get('targetSptVersion') != '4.1.5':
+              raise SystemExit('generated runtime templates lost SPT 4.1.5 target')
           if len(templates) != 21:
               raise SystemExit(f'expected 21 native weapon-ammo quests, got {len(templates)}')
           if len(data['deferredRuntimeItems']) != 1:
