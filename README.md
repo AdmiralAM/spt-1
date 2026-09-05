@@ -29,9 +29,9 @@ Versions below are the module versions declared by current accepted source metad
 
 `Admiral Tactical HUD` is the canonical product identity and Issue #71 is its single milestone roadmap. The current active implementation authority is the one live HUD PR recorded by the canonical workstream; at present that is Draft PR #322 on `recovery/tactical-hud-rc2-clean`.
 
-Until M1 receives physical runtime acceptance and the active PR is deliberately integrated, `main` still contains the previously accepted legacy source tree at `mods/SPT-Tactical-HUD` (`1.13.2`). That legacy path is **not** a competing development authority and must not be used to start new HUD work. The target canonical source path after acceptance is `mods/Admiral-Tactical-HUD`.
+Until M1 receives physical runtime acceptance and the active line is deliberately integrated, `main` still contains the previously accepted legacy source tree at `mods/SPT-Tactical-HUD` (`1.13.2`). That legacy path is **not** a competing development authority and must not be used to start new HUD work. The target canonical source path is `mods/Admiral-Tactical-HUD`.
 
-Tactical HUD `1.14.0` remains retired because it accidentally combined early Item Intelligence code with the HUD. Historical PR #195 and branch `optimize/tactical-hud-runtime` are superseded evidence only.
+Tactical HUD `1.14.0` is retired. Historical PR #195 and branch `optimize/tactical-hud-runtime` are superseded evidence only. `archive/v1.13.0` is a temporary recovery reserve while the 1.13.3 line is not yet final; it is not a maintained product version and should be removed during the final 1.13.3 stable cleanup unless the user explicitly decides otherwise.
 
 ## Repository channels
 
@@ -44,7 +44,7 @@ Tactical HUD `1.14.0` remains retired because it accidentally combined early Ite
 - `runtime-item-valuation` — install-only Item Valuation MOD SPT 1.0.0 package for SPT 4.1.3.
 - `runtime-economy-admiral` — install-only Economy Admiral 0.1.0 package for SPT 4.1.3.
 - `runtime-artem-revival` — stable Admiral Artyom Revival publication identity; branch name retained as an established compatibility identifier.
-- `archive/v1.13.0` — intentional frozen Tactical HUD `1.13.0` reserve.
+- `archive/v1.13.0` — temporary Tactical HUD recovery reserve pending final Admiral Tactical HUD 1.13.3 stable cleanup; never development authority.
 
 Runtime branches are publication/runtime channels, not development branches. Their exact package model is documented by the owning module.
 
@@ -61,7 +61,7 @@ Runtime branches are publication/runtime channels, not development branches. The
 
 Installation: close SPT, download and unpack the ZIP, open the included `SPT_Runtime` directory, then copy its **contents** into the existing `SPT_Runtime` directory of the game. The package already contains both required parts: the BepInEx client DLL and the server mod DLL. Remove the obsolete `Trenchfoot-BeltSlot.dll` first if it is installed.
 
-Runtime branches provide the maintained install packages for Admiral Tactical HUD/Tactical HUD, Item Intelligence Admiral, Pause Admiral, B&A&HB, Item Valuation MOD SPT, Economy Admiral, and the validated server identity for Admiral Artyom Revival. Tactical HUD `1.13.0` remains preserved under `archive/v1.13.0`.
+Runtime branches provide the maintained install packages for Admiral Tactical HUD/Tactical HUD, Item Intelligence Admiral, Pause Admiral, B&A&HB, Item Valuation MOD SPT, Economy Admiral, and the validated server identity for Admiral Artyom Revival. The old Tactical HUD `archive/v1.13.0` branch is only a temporary recovery point until final 1.13.3 cleanup.
 
 Item Valuation MOD SPT `1.0.0` is published on `runtime-item-valuation` as a server-only install package rooted at `SPT_Runtime/user/mods/Item Valuation MOD SPT/`.
 
