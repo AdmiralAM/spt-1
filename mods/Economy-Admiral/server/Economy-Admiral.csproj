@@ -6,11 +6,27 @@
     <RootNamespace>EconomyAdmiral</RootNamespace>
     <AssemblyName>Economy-Admiral</AssemblyName>
     <Version>0.1.0</Version>
+    <UseExactSptRuntime Condition="'$(SptRuntimeLibDir)' != ''">true</UseExactSptRuntime>
+    <UseExactSptRuntime Condition="'$(SptRuntimeLibDir)' == ''">false</UseExactSptRuntime>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(UseExactSptRuntime)' != 'true'">
     <PackageReference Include="SPTarkov.Server.Core" Version="4.1.2" />
   </ItemGroup>
+
+  <ItemGroup Condition="'$(UseExactSptRuntime)' == 'true'">
+    <Reference Include="SPTarkov.Server.Core"><HintPath>$(SptRuntimeLibDir)/SPTarkov.Server.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="SPTarkov.Common"><HintPath>$(SptRuntimeLibDir)/SPTarkov.Common.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="SPTarkov.DI"><HintPath>$(SptRuntimeLibDir)/SPTarkov.DI.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="JetBrains.Annotations"><HintPath>$(SptRuntimeLibDir)/JetBrains.Annotations.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <Target Name="ValidateExactSptRuntimeReferences" BeforeTargets="ResolveReferences" Condition="'$(UseExactSptRuntime)' == 'true'">
+    <Error Condition="!Exists('$(SptRuntimeLibDir)/SPTarkov.Server.Core.dll')" Text="Exact SPT build requested but SPTarkov.Server.Core.dll is missing from $(SptRuntimeLibDir)" />
+    <Error Condition="!Exists('$(SptRuntimeLibDir)/SPTarkov.Common.dll')" Text="Exact SPT build requested but SPTarkov.Common.dll is missing from $(SptRuntimeLibDir)" />
+    <Error Condition="!Exists('$(SptRuntimeLibDir)/SPTarkov.DI.dll')" Text="Exact SPT build requested but SPTarkov.DI.dll is missing from $(SptRuntimeLibDir)" />
+    <Error Condition="!Exists('$(SptRuntimeLibDir)/JetBrains.Annotations.dll')" Text="Exact SPT build requested but JetBrains.Annotations.dll is missing from $(SptRuntimeLibDir)" />
+  </Target>
 
   <Target Name="CopyEconomyAdmiralConfig" AfterTargets="Build" Condition="Exists('$(ProjectDir)..\config\config.json')">
     <MakeDir Directories="$(OutputPath)config" />
