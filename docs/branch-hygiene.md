@@ -6,7 +6,7 @@ This repository keeps branches only when they have a clear current role. Task br
 
 - `main` — authoritative integrated source.
 - `stable` — deliberately promoted validated source snapshot.
-- `runtime` — Tactical HUD install-only publication channel.
+- `runtime` — Admiral Tactical HUD install-only publication channel; historical Tactical HUD naming may remain inside older published artifacts until deliberate replacement.
 - `runtime-item-intelligence` — Item Intelligence Admiral install-only publication channel; retained compatibility branch name.
 - `runtime-pause` — Pause Admiral install-only publication channel.
 - `runtime-belt-armband` — Belt/Armband Inventory install-only publication channel.
@@ -53,6 +53,8 @@ If a branch must be retained as a deliberate historical/recovery point:
 ## Runtime/publication branches
 
 `stable` and `runtime-*` are controlled publication channels, not development branches. Do not make normal feature commits on them, open development work from them, or treat their force-updated history as source history.
+
+For Admiral Tactical HUD, `runtime` is the publication channel while the single live implementation PR/branch is temporary development state. A legacy integrated path or retired historical branch is never a second active development authority.
 
 `runtime-artem-revival` is intentionally retained as the publication compatibility identifier for **Admiral Artyom Revival**. It pins the accepted server identity plus manifest/hashes for `r5-RU-compat`; authored upstream runtime data and approximately 1.5 GB Unity Bundles remain external source material. The branch is not a standalone full-install archive. It must remain publication-only and be updated only from a runtime-validated candidate.
 

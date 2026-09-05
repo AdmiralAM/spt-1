@@ -4,13 +4,15 @@ Development validation is module-specific. A pull request should trigger only th
 
 | Module | Pull-request workflow | Publication channel |
 | --- | --- | --- |
-| Tactical HUD | `Tactical HUD Validate` | `runtime` |
+| Admiral Tactical HUD | `Admiral Tactical HUD Validate` | `runtime` |
 | Item Intelligence Admiral | `Item Intelligence Validate` | `runtime-item-intelligence` |
 | Pause Admiral | `Pause Validate` | `runtime-pause` |
 | Belt/Armband Inventory | `Belt Armband Inventory Validate` | `runtime-belt-armband` |
 | Quest Planner | `Quest Planner Validate` | CI artifacts until deliberate runtime promotion |
 | Admiral Trader | Admiral Trader module-specific validation workflows | CI artifacts until deliberate runtime promotion |
 | Admiral Artyom Revival | `Admiral Artyom Revival Validate` | `runtime-artem-revival` (retained publication compatibility identifier) |
+
+For Admiral Tactical HUD, the active `1.13.3` replacement line is governed by Issue #71 and the single live HUD PR. Until that line is accepted and merged, `main` may still contain the previously accepted legacy `mods/SPT-Tactical-HUD` source tree; that legacy path is not a second active workstream.
 
 ## Isolation rules
 
