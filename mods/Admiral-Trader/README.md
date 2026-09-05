@@ -51,9 +51,13 @@ Current **design-only** M3 authority is kept on this canonical branch so the eve
 - `manifests/m3-campaign-product-spec.json` — curated 12-operation campaign shape, merge/hold decisions and runtime proof gates;
 - `manifests/m3-campaign-editorial-copy.json` — authored EN/RU player-facing copy for every admitted operation;
 - `manifests/m3-campaign-reward-plan.json` — conservative reward pacing and Economy Admiral handoff rules;
+- `manifests/m3-reward-comparator-review.json` — historical vanilla reward sanity check; exact SPT 4.1.5 nearest-comparator review remains a runtime gate;
 - `manifests/m3-campaign-uniqueness-review.json` — explicit conflict groups, operation fingerprints and merge triggers so cosmetic variants cannot re-enter the wave;
+- `manifests/m3-operation-context-review.json` — map/target context selection and deliberate continuity/contrast between operations;
 - `manifests/m3-campaign-progression.json` — non-linear level/prerequisite graph and narrative links between the four campaign acts;
-- `tests/test_m3_campaign_product_spec.py` — deterministic cross-manifest validation for copy, rewards, uniqueness, progression and the fail-closed M1/M2 boundary.
+- `manifests/m3-existing-campaign-integration.json` — justified prerequisite links from M3 into the accepted Access/Arsenal campaign, plus explicit non-dependencies to prevent artificial gating;
+- `manifests/m3-deferred-concepts-review.json` — fail-closed disposition for medical, chemical, endurance, boss and cultist themes that are not yet strong or observable enough to admit;
+- `tests/test_m3_campaign_product_spec.py` — deterministic cross-manifest validation for copy, rewards, uniqueness, contexts, progression, existing-campaign integration and the fail-closed M1/M2 boundary.
 
 These files **do not authorize M3 runtime materialization before M1 and M2 acceptance**. They replace the old assumption that every prepared PR #297 operation must survive unchanged. Weak duplicates may be merged or held instead of being replaced with filler.
 
