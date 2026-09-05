@@ -139,8 +139,8 @@
         {
           "key": "stable-release",
           "issue": 192,
-          "objective": "Produce and deliberately promote one exact-head install-ready SPT 4.1.5 Admiral Trader release candidate after the expanded product is complete.",
-          "acceptance": "One final batched runtime gate passes, the proven artifact is published, integration is verified and temporary work is cleaned up.",
+          "objective": "Produce and deliberately promote one exact-head install-ready Admiral Trader release candidate after the expanded product is complete, validated against the current approved SPT 4.1.x development baseline without an unnecessary exact patch lock.",
+          "acceptance": "One final batched runtime gate passes on the current approved SPT 4.1.x baseline, the proven artifact is published, integration is verified and temporary work is cleaned up.",
           "requiresUserRuntime": true
         }
       ],
@@ -163,7 +163,7 @@
         "current 31-quest / 11-offer baseline remains coherent before expansion",
         "approved post-0.1.0 operations become real runtime gameplay rather than manifest-only planning",
         "relationship/storefront progression remains finite and Economy Admiral-compatible",
-        "one exact-head SPT 4.1.5 release candidate passes the final batched runtime gate"
+        "one exact-head release candidate passes the final batched runtime gate on the current approved SPT 4.1.x baseline"
       ],
       "supersededAuthorities": {
         "issues": [115],
@@ -179,55 +179,30 @@
       "modulePath": "mods/Economy-Admiral",
       "version": "0.1.0",
       "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
-      "integratedPrs": [222, 223, 226],
+      "historicalEvidence": {
+        "issues": [141, 143, 197, 220],
+        "pullRequests": [222, 223, 226]
+      },
       "phasePlan": [
         {
-          "key": "bounded-item-rewards",
-          "issue": 220,
-          "objective": "Complete provenance-safe bounded grouped item-reward normalization.",
-          "acceptance": "Integrated evidence in PR #222 remains green and protected by regression coverage.",
+          "key": "product-completion",
+          "issue": 262,
+          "objective": "Maintain Economy Admiral as one coherent playable economy product: Quest, Trader, Flea and Loot pressure; meaningful Easy/Normal/Hard presets; bounded Custom controls; server-backed F12 cluster UX; atomic fail-closed enforcement; and optional Admiral Trader compatibility without a second economy engine.",
+          "acceptance": "Source-resolvable product gaps are exhausted, clean install and configuration paths are coherent, deterministic module validation/package checks are green, and no known product defect remains that can be resolved without physical gameplay evidence.",
           "requiresUserRuntime": false
         },
         {
-          "key": "source-pressure-observation",
-          "issue": 141,
-          "objective": "Observe final DB acquisition pressure and bounded effective-acquisition paths without mutation.",
-          "acceptance": "Integrated evidence in PR #226 remains deterministic, bounded, attributable and explicit about Unknown channels.",
-          "requiresUserRuntime": false
-        },
-        {
-          "key": "health-invariants",
-          "issue": 143,
-          "objective": "Define separately inspectable fail-closed health and anti-overcorrection invariants.",
-          "acceptance": "Integrated evidence in PR #226 preserves Pass/Fail/Unknown reasoning and blocks action on missing or conflicting evidence.",
-          "requiresUserRuntime": false
-        },
-        {
-          "key": "trader-compatibility",
-          "issue": 197,
-          "objective": "Consume the maintained Admiral Trader explicit contract without inference or a second economy engine.",
-          "acceptance": "Identity/schema/classes/gates/finite stock semantics validate explicitly; absent or incompatible evidence fails closed and does not authorize mutation.",
-          "requiresUserRuntime": false
-        },
-        {
-          "key": "beta-enforcement",
-          "issue": null,
-          "objective": "Activate only bounded Economy Beta policies justified by completed provenance, pressure, health and compatibility evidence.",
-          "acceptance": "Off/Audit remain safe; Enforce is transactional, idempotent, pristine-protecting, bounded and fail-closed with deterministic preview/evidence.",
-          "requiresUserRuntime": false
-        },
-        {
-          "key": "combined-release-candidate",
-          "issue": null,
-          "objective": "Produce one complete exact-head Economy Beta release candidate.",
-          "acceptance": "The worker directly gives the user one GitHub-artifact SPT 4.1.3 runtime handoff after all automated enforcement and compatibility work is complete.",
+          "key": "combined-gameplay-acceptance",
+          "issue": 262,
+          "objective": "Validate the complete Economy Admiral product in one meaningful gameplay session rather than micro-tests, using Normal across raid loot acquisition, trader sell/buy pressure, Flea price/fee behavior, quest reward/progression pressure and overall money flow, followed by bounded Easy/Hard sanity.",
+          "acceptance": "The combined economic loop is meaningfully tighter than vanilla without becoming grind-only, all enabled clusters act in the intended direction without breaking native semantics, concrete failures are remediated, and Easy/Hard remain coherent relative to Normal.",
           "requiresUserRuntime": true
         },
         {
           "key": "stable-release",
-          "issue": null,
-          "objective": "Remediate RC failures or deliberately publish the exact passing Economy package.",
-          "acceptance": "The batched runtime gate passes, integration/publication are verified and temporary work is cleaned up.",
+          "issue": 262,
+          "objective": "Remediate concrete gameplay failures or deliberately promote the exact Economy Admiral candidate that passes the combined product acceptance gate.",
+          "acceptance": "The accepted package is published, runtime/main integration and manifests are verified, Issue #262 is reconciled, and obsolete temporary implementation branches/PRs are cleaned up.",
           "requiresUserRuntime": false
         }
       ],
@@ -239,11 +214,12 @@
         "noSecondTraderEconomyEngine": true
       },
       "stableAcceptance": [
-        "provenance-safe bounded reward and economy enforcement",
-        "honest fail-closed source-pressure and health evidence",
-        "maintained Trader compatibility without inferred intent",
-        "transaction rollback, idempotence and pristine protection",
-        "one combined exact-head Economy Beta release candidate passes SPT 4.1.3 runtime validation"
+        "Quest, Trader, Flea and Loot clusters form one coherent playable economy rather than separate evidence-only systems",
+        "Easy, Normal and Hard are meaningfully distinct while Custom remains bounded and server-backed through F12",
+        "trader, barter, loyalty, unlock, flea and quest lifecycle semantics remain native except for the intended bounded pressure",
+        "Admiral Trader compatibility is optional and never creates a second economy engine",
+        "enforcement remains transactional, idempotent, pristine-protecting and fail-closed",
+        "one combined product-level gameplay gate passes before deliberate stable promotion"
       ]
     },
     "tacticalHud": {
