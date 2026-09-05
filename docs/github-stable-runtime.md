@@ -16,7 +16,7 @@ This is a multi-mod source repository. `main` is the authoritative integrated tr
 | `runtime-belt-armband` | Install-only Belt/Armband Inventory channel |
 | `runtime-economy-admiral` | Install-only Economy Admiral 0.1.0 channel for SPT 4.1.3 |
 | `runtime-artem-revival` | Stable Admiral Artyom Revival publication identity; retained compatibility branch name |
-| `archive/v1.13.0` | Intentional frozen Tactical HUD `1.13.0` historical reserve |
+| `archive/v1.13.0` | Temporary Tactical HUD recovery reserve until final Admiral Tactical HUD 1.13.3 cleanup; never active development authority |
 
 Feature, fix, diagnostic, research, build, and archaeology branches are temporary unless explicitly documented otherwise. They are not release channels and should be removed after their useful work is merged or superseded.
 
@@ -37,9 +37,13 @@ Long-term source modules currently integrated under `mods/` include:
 
 The canonical product identity is **Admiral Tactical HUD**. Issue #71 owns its milestone roadmap and the canonical workstream identifies the single live implementation PR.
 
-Before M1 physical acceptance and merge, `main` intentionally still contains the last accepted legacy source at `mods/SPT-Tactical-HUD`. The active `1.13.3` replacement uses `mods/Admiral-Tactical-HUD` in its live PR. These are **not two active HUD products**: the old `main` path is the integrated baseline, and the live PR is the only development authority. After deliberate acceptance/integration, the Admiral-named path becomes the integrated source path and the legacy path is removed by that product change.
+Before final integration, `main` intentionally still contains the last accepted legacy source at `mods/SPT-Tactical-HUD`. The active `1.13.3` replacement uses `mods/Admiral-Tactical-HUD` in its live PR. These are **not two active HUD products**: the old `main` path is the integrated baseline, and the live PR is the only development authority.
+
+Ordinary M1→M2→… milestone transitions remain in that single live HUD line by default. A milestone PASS does not create a frozen successor branch or a second implementation authority.
 
 The `runtime` branch remains the current published install channel until a candidate is deliberately promoted. An unmerged RC, CI artifact, or development PR must not silently rewrite it.
+
+`archive/v1.13.0` exists only as a temporary recovery point while the 1.13.3 replacement is unfinished. Once the canonical 1.13.3 line reaches deliberate stable cleanup, the archive should be removed so old versions do not remain as competing repository surfaces, unless the user explicitly asks to retain it.
 
 `Economy-Admiral` is integrated source with physically accepted SPT 4.1.3 Economy Beta behavior and module-specific CI. Its maintained install-only publication channel is `runtime-economy-admiral`; the runtime manifest pins version `0.1.0`, SPT `4.1.3`, the publication source commit, and install root `SPT_Runtime/user/mods/Economy Admiral`.
 
