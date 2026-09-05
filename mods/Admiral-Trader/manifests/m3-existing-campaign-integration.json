@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "M3-existing-campaign-integration-plan-only",
+  "runtimeMaterialize": false,
+  "m3Authority": "m3-campaign-product-spec.json",
+  "existingAuthorities": ["keys-authored-spec.json", "weapon-ammo-runtime-plan.json"],
+  "principle": "M3 is an authored continuation of the accepted 31-quest campaign, not a parallel second campaign. Reuse a current milestone as a prerequisite only when the earlier capability is genuinely needed by the new operation; do not force completion of unrelated weapon/key branches merely to lengthen progression.",
+  "externalPrerequisites": {
+    "borrowed-access": [
+      {
+        "questId": "cba3374f11375c4e7eea9efe",
+        "slug": "keys-customs",
+        "name": "Access Protocol: Customs",
+        "minimumLevel": 10,
+        "reason": "The existing campaign first establishes practical Customs key/access familiarity. Borrowed Access then changes the player decision from possessing representative keys to proving one restricted route can actually support an operation."
+      }
+    ],
+    "contractor-intercept": [
+      {
+        "questId": "9c438fa48f645044ddc75e8d",
+        "slug": "keys-reserve",
+        "name": "Access Protocol: Reserve",
+        "minimumLevel": 22,
+        "reason": "The player should already have completed Admiral's Reserve access milestone before being trusted to protect a timed movement window there."
+      }
+    ],
+    "observation-window": [
+      {
+        "questId": "153839f368b80b6fbc36d29e",
+        "slug": "precision-fieldwork",
+        "name": "Arsenal Protocol: Precision - Fieldwork",
+        "minimumLevel": 25,
+        "reason": "Observation Window is not another basic sniper qualification. It is the first authored field problem that applies already-proven precision competence to route control."
+      }
+    ],
+    "internal-security": [
+      {
+        "questId": "68a6527a3c73b2e85977d7a1",
+        "slug": "keys-labs-clearance",
+        "name": "Access Protocol: Clearance",
+        "minimumLevel": 35,
+        "reason": "Internal Security explicitly assumes the player already earned Admiral's Labs clearance. The capstone must not grant, bypass or narratively fake access."
+      }
+    ]
+  },
+  "explicitNonDependencies": [
+    {
+      "operation": "low-profile",
+      "notRequired": "Access Protocol: Interchange",
+      "reason": "The operation is about inconspicuous equipment, not restricted access. Sharing Interchange does not justify a key-branch gate."
+    },
+    {
+      "operation": "mobility-doctrine",
+      "notRequired": "Access Protocol: Shoreline",
+      "reason": "The operation is about movement/protection tradeoff. Requiring a Shoreline key milestone solely because both use the map would be artificial progression."
+    },
+    {
+      "operation": "acoustic-contact",
+      "notRequired": "Access Protocol: Woods",
+      "reason": "The operation already has a meaningful prerequisite in Acoustic Discipline; key ownership has no role in the field-awareness decision."
+    },
+    {
+      "operation": "heavy-assault",
+      "notRequired": "Assault Rifles Munitions",
+      "reason": "Heavy Assault tests protective fieldcraft and does not prescribe an assault-rifle family. A weapon-domain gate would be cosmetic coupling."
+    },
+    {
+      "operation": "break-the-perimeter",
+      "notRequired": "Access Protocol: Lighthouse",
+      "reason": "Rogue perimeter disruption occurs in open operational space and does not depend on the key-access capability represented by the historical Lighthouse milestone."
+    }
+  ],
+  "integrationContracts": {
+    "externalPrerequisiteCount": 4,
+    "currentQuestIdsMustExistBeforeMaterialization": true,
+    "currentQuestNamesAreDocumentationOnlyIdsAreRuntimeAuthority": true,
+    "noExternalPrerequisiteMayHaveHigherMinimumLevelThanItsM3Dependent": true,
+    "maximumTotalDirectPrerequisitesPerM3Operation": 2,
+    "crossCampaignPrerequisiteMustExpressActualCapabilityDependency": true,
+    "existingRewardIsNeverReissuedByM3": true,
+    "existingQuestContentIsNotMutatedByThisPlan": true
+  },
+  "materializationGate": {
+    "requiresM2ExistingCampaignPass": true,
+    "requiresExactCurrentQuestIdExistenceCheck": true,
+    "requiresPrerequisiteStatusSuccessSemantics": true,
+    "requiresGraphValidationAfterExternalEdgesAdded": true
+  }
+}
