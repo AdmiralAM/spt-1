@@ -9,7 +9,10 @@ using SPTarkov.Server.Core.Models.Spt.Tables;
 namespace SPTBeltArmbandInventory.Server;
 
 [Injectable(TypePriority = OnLoadOrder.TraderRegistration + 2)]
-public sealed class WristWalletAssort(TradersTable tradersTable, ISptLogger<WristWalletAssort> logger) : IOnLoad
+public sealed class WristWalletAssort(
+    TradersTable tradersTable,
+    TemplateTable templateTable,
+    ISptLogger<WristWalletAssort> logger) : IOnLoad
 {
     private const int PriceRoubles = 12500;
     private const int LoyaltyLevel = 1;
@@ -17,34 +20,46 @@ public sealed class WristWalletAssort(TradersTable tradersTable, ISptLogger<Wris
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
+        var templateId = new MongoId(RuntimeIdentity.WristWalletItemId);
+        if (!templateTable.Items.ContainsKey(templateId))
+            throw new InvalidOperationException("B&A&HB Wrist Wallet offer refused: exact product template is not registered.");
+        WearableOfferHostContract.RequireArmBandProduct(templateTable, templateId);
+
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB Wrist Wallet could not find Ragman.");
         var id = new MongoId(RuntimeIdentity.WristWalletAssortId);
-        var existing = trader.Assort.Items.FirstOrDefault(x => x.Id == id);
+        var matches = trader.Assort.Items.Where(x => x.Id == id).Take(2).ToArray();
+        if (matches.Length > 1)
+            throw new InvalidOperationException("B&A&HB Wrist Wallet assort ID collision: duplicate item entries own the persistent assort ID.");
+
+        var existing = matches.SingleOrDefault();
         if (existing != null)
         {
-            ValidateExisting(trader, id, existing);
+            ValidateExisting(trader, id, existing, templateId);
             logger.Success($"B&A&HB Wrist Wallet retained validated Ragman LL{LoyaltyLevel} offer for {PriceRoubles:N0} RUB.");
             return Task.CompletedTask;
         }
 
+        if (trader.Assort.BarterScheme.ContainsKey(id) || trader.Assort.LoyalLevelItems.ContainsKey(id))
+            throw new InvalidOperationException("B&A&HB Wrist Wallet assort ID collision: item is absent but barter/loyalty metadata already owns the persistent assort ID.");
+
         trader.Assort.Items.Add(new Item
         {
             Id = id,
-            Template = new MongoId(RuntimeIdentity.WristWalletItemId),
+            Template = templateId,
             ParentId = RuntimeCandidateOfferContract.RootId,
             SlotId = RuntimeCandidateOfferContract.RootId,
             Upd = new Upd { UnlimitedCount = true, StackObjectsCount = UnlimitedStock }
         });
-        trader.Assort.BarterScheme[id] = [[new BarterScheme { Count = PriceRoubles, Template = Money.ROUBLES }]];
-        trader.Assort.LoyalLevelItems[id] = LoyaltyLevel;
+        trader.Assort.BarterScheme.Add(id, [[new BarterScheme { Count = PriceRoubles, Template = Money.ROUBLES }]]);
+        trader.Assort.LoyalLevelItems.Add(id, LoyaltyLevel);
         logger.Success($"B&A&HB Wrist Wallet added to Ragman LL{LoyaltyLevel} for {PriceRoubles:N0} RUB.");
         return Task.CompletedTask;
     }
 
-    private static void ValidateExisting(Trader trader, MongoId id, Item existing)
+    private static void ValidateExisting(Trader trader, MongoId id, Item existing, MongoId templateId)
     {
-        if (!Equals(existing.Template, new MongoId(RuntimeIdentity.WristWalletItemId))
+        if (!Equals(existing.Template, templateId)
             || !string.Equals(existing.ParentId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal)
             || !string.Equals(existing.SlotId, RuntimeCandidateOfferContract.RootId, StringComparison.Ordinal))
             throw new InvalidOperationException("B&A&HB Wrist Wallet assort ID collision: hierarchy differs.");

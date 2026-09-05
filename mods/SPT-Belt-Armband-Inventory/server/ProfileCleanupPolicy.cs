@@ -18,14 +18,20 @@ public static class ProfileCleanupPolicy
     {
         if (profile is null) return new CleanupResult(0, 0, Array.Empty<string>());
 
+        // Instance IDs are expected to be unique in healthy profiles, but recovery
+        // must fail closed if a malformed/foreign payload violates that invariant.
+        // An ambiguous ID may still identify an owned template for direct removal,
+        // but it must never become authority for deleting parentId/itemId references.
+        Dictionary<string, int> instanceIdCounts = CollectInstanceIdCounts(profile);
         var removedInstanceIds = new HashSet<string>(StringComparer.Ordinal);
         var locations = new HashSet<string>(StringComparer.Ordinal);
         int removedItems = 0;
         int removedReferences = 0;
 
         // Pass 1: remove every serialized item whose _tpl belongs to this mod and
-        // remember its instance id. This catches stash/equipment, mail rewards,
-        // insurance payloads and build item trees without knowing profile schema.
+        // remember only cardinality-proven unique instance ids for cascading. This
+        // catches stash/equipment, mail rewards, insurance payloads and build item
+        // trees without allowing duplicate-id corruption to cross ownership bounds.
         Walk(profile, "$", (array, index, node, path) =>
         {
             if (node is not JsonObject obj) return false;
@@ -33,7 +39,7 @@ public static class ProfileCleanupPolicy
             if (!PersistentIdentityManifest.IsOwnedTemplate(tpl)) return false;
 
             string? id = ReadString(obj, "_id");
-            if (!string.IsNullOrEmpty(id)) removedInstanceIds.Add(id);
+            if (IsUniqueInstanceId(id, instanceIdCounts)) removedInstanceIds.Add(id!);
             array.RemoveAt(index);
             removedItems++;
             locations.Add(path);
@@ -41,8 +47,10 @@ public static class ProfileCleanupPolicy
         });
 
         // Pass 2: remove descendants and direct references to removed instances.
-        // ParentId is the critical inventory-tree edge; common reference fields
-        // cover build/service records while remaining ownership-specific.
+        // Only parentId is a containment edge and may promote the removed object's
+        // own unique _id into further cascade authority. itemId is a service/build
+        // reference edge: remove that exact reference, but never let an arbitrary
+        // reference record become a new ownership root for deleting foreign state.
         bool changed;
         do
         {
@@ -53,10 +61,12 @@ public static class ProfileCleanupPolicy
                 string? parentId = ReadString(obj, "parentId");
                 string? itemId = ReadString(obj, "itemId");
                 string? id = ReadString(obj, "_id");
-                if ((!string.IsNullOrEmpty(parentId) && removedInstanceIds.Contains(parentId))
-                    || (!string.IsNullOrEmpty(itemId) && removedInstanceIds.Contains(itemId)))
+                bool matchedParent = !string.IsNullOrEmpty(parentId) && removedInstanceIds.Contains(parentId);
+                bool matchedItemReference = !string.IsNullOrEmpty(itemId) && removedInstanceIds.Contains(itemId);
+                if (matchedParent || matchedItemReference)
                 {
-                    if (!string.IsNullOrEmpty(id)) removedInstanceIds.Add(id);
+                    if (matchedParent && IsUniqueInstanceId(id, instanceIdCounts))
+                        removedInstanceIds.Add(id!);
                     array.RemoveAt(index);
                     removedReferences++;
                     locations.Add(path);
@@ -68,6 +78,36 @@ public static class ProfileCleanupPolicy
         } while (changed);
 
         return new CleanupResult(removedItems, removedReferences, locations.OrderBy(x => x, StringComparer.Ordinal).ToArray());
+    }
+
+    private static Dictionary<string, int> CollectInstanceIdCounts(JsonNode profile)
+    {
+        var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+        CountInstanceIds(profile, counts);
+        return counts;
+    }
+
+    private static void CountInstanceIds(JsonNode node, Dictionary<string, int> counts)
+    {
+        if (node is JsonObject obj)
+        {
+            string? id = ReadString(obj, "_id");
+            if (!string.IsNullOrEmpty(id))
+                counts[id] = counts.TryGetValue(id, out int count) ? count + 1 : 1;
+
+            foreach (var property in obj)
+                if (property.Value is not null) CountInstanceIds(property.Value, counts);
+            return;
+        }
+
+        if (node is not JsonArray array) return;
+        foreach (JsonNode? child in array)
+            if (child is not null) CountInstanceIds(child, counts);
+    }
+
+    private static bool IsUniqueInstanceId(string? id, IReadOnlyDictionary<string, int> counts)
+    {
+        return !string.IsNullOrEmpty(id) && counts.TryGetValue(id, out int count) && count == 1;
     }
 
     private delegate bool ArrayVisitor(JsonArray owner, int index, JsonNode? node, string path);

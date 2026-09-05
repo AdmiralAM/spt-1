@@ -47,6 +47,23 @@ function Visit-Node([object]$Node) {
 
 Visit-Node $profile
 
+# Recovery data is untrusted. Healthy SPT profiles use globally unique item instance
+# IDs, but a malformed/mixed-mod profile can violate that invariant. Cascade authority
+# is granted only to IDs that occur exactly once anywhere in the serialized profile.
+$idCounts = @{}
+foreach ($obj in $allObjects) {
+    $idProperty = $obj.PSObject.Properties['_id']
+    if ($null -eq $idProperty) { continue }
+    $id = [string]$idProperty.Value
+    if ([string]::IsNullOrWhiteSpace($id)) { continue }
+    if ($idCounts.ContainsKey($id)) { $idCounts[$id] = [int]$idCounts[$id] + 1 }
+    else { $idCounts[$id] = 1 }
+}
+
+function Test-UniqueInstanceId([string]$Id) {
+    return (-not [string]::IsNullOrWhiteSpace($Id)) -and $idCounts.ContainsKey($Id) -and ([int]$idCounts[$Id] -eq 1)
+}
+
 $removedIds = @{}
 $directOwned = 0
 foreach ($obj in $allObjects) {
@@ -57,27 +74,28 @@ foreach ($obj in $allObjects) {
 
     $directOwned++
     $idProperty = $obj.PSObject.Properties['_id']
-    if ($null -ne $idProperty -and -not [string]::IsNullOrWhiteSpace([string]$idProperty.Value)) {
-        $removedIds[[string]$idProperty.Value] = $true
+    $id = if ($null -ne $idProperty) { [string]$idProperty.Value } else { $null }
+    if (Test-UniqueInstanceId $id) {
+        $removedIds[$id] = $true
     }
 }
 
-# Expand the removal set through inventory parent edges and common serialized
-# item references. This is ownership-scoped: unrelated objects are untouched.
+# Expand ownership only through inventory containment (parentId). itemId is a
+# direct service/build reference edge: the record referencing an already-owned
+# item is removed later, but its own ID must never become a new cascade root.
+# This keeps recovery exact even if foreign schemas chain records together.
 do {
     $changed = $false
     foreach ($obj in $allObjects) {
         $idProperty = $obj.PSObject.Properties['_id']
         $id = if ($null -ne $idProperty) { [string]$idProperty.Value } else { $null }
-        if (-not [string]::IsNullOrWhiteSpace($id) -and $removedIds.ContainsKey($id)) { continue }
+        if ((Test-UniqueInstanceId $id) -and $removedIds.ContainsKey($id)) { continue }
 
         $parentProperty = $obj.PSObject.Properties['parentId']
-        $itemProperty = $obj.PSObject.Properties['itemId']
         $parentId = if ($null -ne $parentProperty) { [string]$parentProperty.Value } else { $null }
-        $itemId = if ($null -ne $itemProperty) { [string]$itemProperty.Value } else { $null }
 
-        if (($parentId -and $removedIds.ContainsKey($parentId)) -or ($itemId -and $removedIds.ContainsKey($itemId))) {
-            if (-not [string]::IsNullOrWhiteSpace($id) -and -not $removedIds.ContainsKey($id)) {
+        if ($parentId -and $removedIds.ContainsKey($parentId)) {
+            if ((Test-UniqueInstanceId $id) -and -not $removedIds.ContainsKey($id)) {
                 $removedIds[$id] = $true
                 $changed = $true
             }

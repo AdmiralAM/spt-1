@@ -1,0 +1,487 @@
+using SPTarkov.Common.Models.Logging;
+using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.DI;
+using SPTarkov.Server.Core.Models.Common;
+using SPTarkov.Server.Core.Models.Eft.Common.Tables;
+using SPTarkov.Server.Core.Models.Enums;
+using SPTarkov.Server.Core.Models.Spt.Mod;
+using SPTarkov.Server.Core.Models.Spt.Tables;
+using SPTarkov.Server.Core.Services.Modding.Custom;
+
+namespace SPTBeltArmbandInventory.Server;
+
+/// <summary>
+/// Registers a dedicated Dogtag-slot container without replacing the vanilla
+/// player dogtag contract. The container is cloned from EFT's own Dogtag Case,
+/// and its single internal grid copies the source case's exact filter groups so
+/// B&A&HB never broadens what can be stored inside it.
+/// </summary>
+[Injectable(TypePriority = OnLoadOrder.Preload + 3)]
+public sealed class DogtagCaseItem(
+    TemplateTable templateTable,
+    CustomItemService customItemService,
+    ISptLogger<DogtagCaseItem> logger) : IOnLoad
+{
+    public const string TemplateId = RuntimeIdentity.DogtagCaseItemId;
+    public const string GridId = RuntimeIdentity.DogtagCaseGridId;
+
+    private static readonly MongoId SourceDogtagCaseTpl = new("5c093e3486f77430cb02e593");
+    private static readonly MongoId DogtagCaseTpl = new(TemplateId);
+    private static readonly MongoId DefaultInventoryTpl = RuntimeCandidateBeltItem.DefaultInventoryTpl;
+    private const string DogtagSlotName = "Dogtag";
+
+    private sealed class DogtagHostBoundary(object inventory, object slot, object filterGroup, HashSet<MongoId> filter)
+    {
+        public object Inventory { get; } = inventory;
+        public object Slot { get; } = slot;
+        public object FilterGroup { get; } = filterGroup;
+        public HashSet<MongoId> Filter { get; } = filter;
+        public object? InventoryProperties { get; init; }
+        public object? SlotsCollection { get; init; }
+        public object? SlotProperties { get; init; }
+        public object? FiltersCollection { get; init; }
+    }
+
+    /// <summary>
+    /// Carries exact host-add rollback authority across the small publication window
+    /// between committed Dogtag-slot exposure and the caller's final canonical-source
+    /// proof. The receipt is single-consumer: successful final proof consumes only
+    /// metadata, while failed final proof may remove only this transaction's exact
+    /// Case addition. Pre-existing Case exposure carries no mutation authority.
+    /// </summary>
+    private sealed class DogtagHostCommitReceipt(
+        DogtagCaseItem owner,
+        DogtagHostBoundary boundary,
+        HashSet<MongoId>? rollbackBaseline)
+    {
+        private bool consumed;
+
+        internal void Accept()
+        {
+            if (consumed)
+                throw new InvalidOperationException("B&A&HB Dogtag host post-commit receipt was already consumed.");
+
+            // Acceptance always re-proves the exact live host and committed shape,
+            // including the pre-existing/concurrently-committed Case path that carries
+            // no local mutation authority. Final canonical proof alone is not host proof.
+            owner.RequireLiveDogtagHostIdentity(boundary);
+            DogtagCaseHostContract.RequireCommitted(boundary.Filter);
+
+            if (rollbackBaseline == null)
+            {
+                consumed = true;
+                return;
+            }
+
+            if (!DogtagCaseHostContract.TryAbandonRollbackAuthority(boundary.Filter, rollbackBaseline))
+                throw new InvalidOperationException("B&A&HB Dogtag host post-commit receipt could not consume exact owned-add authority after final canonical proof.");
+
+            consumed = true;
+        }
+
+        internal bool TryRollback()
+        {
+            if (consumed)
+                return false;
+
+            try
+            {
+                // A metadata-empty receipt carries no local mutation authority, but
+                // it still represents a specific committed host observation. Do not
+                // report failure cleanup as proven merely because there is nothing to
+                // remove: exact live host identity + committed shape must still hold.
+                // This keeps pre-existing/concurrently-committed Case publication
+                // fail-closed if the host drifts in the final canonical-proof window.
+                owner.RequireLiveDogtagHostIdentity(boundary);
+                DogtagCaseHostContract.RequireCommitted(boundary.Filter);
+
+                if (rollbackBaseline == null)
+                {
+                    consumed = true;
+                    return true;
+                }
+
+                if (!DogtagCaseHostContract.TryRollbackOwnedCaseAddition(boundary.Filter, rollbackBaseline))
+                    return false;
+                consumed = true;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+
+    public Task OnLoadAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (!templateTable.Items.TryGetValue(SourceDogtagCaseTpl, out var source))
+            throw new InvalidOperationException("B&A&HB Dogtag Case source template is missing; refusing fallback cloning.");
+
+        var sourceProperties = source.Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case source properties are missing; refusing fallback cloning.");
+        var sourceGrids = sourceProperties.Grids?.ToArray();
+        if (sourceGrids == null || sourceGrids.Length != 1)
+            throw new InvalidOperationException("B&A&HB Dogtag Case source grid boundary is missing or ambiguous; exactly one canonical grid is required.");
+
+        var sourceGrid = sourceGrids[0];
+        if (!Equals(sourceGrid.Parent, SourceDogtagCaseTpl))
+            throw new InvalidOperationException("B&A&HB Dogtag Case canonical source grid parent drifted away from the EFT/SPT Dogtag Case template; refusing fallback cloning.");
+        var sourceGridProperties = sourceGrid.Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case canonical source grid properties are missing; refusing fallback cloning.");
+        var sourceFilters = sourceGridProperties.Filters?.ToArray();
+        if (sourceFilters == null || sourceFilters.Length == 0
+            || sourceFilters.Any(x => x.Filter == null || x.Filter.Count == 0
+                || x.Filter.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString()))))
+            throw new InvalidOperationException("B&A&HB Dogtag Case source filters are empty, admit a B&A&HB-owned product, or are ambiguous; refusing to create a broadened container.");
+
+        DogtagCaseCanonicalIdentityLease.Lease canonicalLease =
+            DogtagCaseCanonicalIdentityLease.Consume(templateTable, source);
+        canonicalLease.RequireCurrent(templateTable, source);
+
+        DogtagHostBoundary dogtagHost = PrepareDogtagSlotFilter();
+        var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceDogtagCaseTpl)
+            ?? throw new InvalidOperationException("B&A&HB Dogtag Case source handbook entry is missing.");
+
+        if (templateTable.Items.TryGetValue(DogtagCaseTpl, out var existing))
+        {
+            canonicalLease.RequireCurrent(templateTable, source);
+            ValidateExisting(existing, source);
+            RequireCanonicalRegisteredTemplate(templateTable);
+            canonicalLease.RequireCurrent(templateTable, source);
+            cancellationToken.ThrowIfCancellationRequested();
+            DogtagHostCommitReceipt receipt = CommitDogtagSlotExposure(dogtagHost, cancellationToken);
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                canonicalLease.RequireCurrent(templateTable, source);
+                cancellationToken.ThrowIfCancellationRequested();
+                receipt.Accept();
+            }
+            catch (Exception exception)
+            {
+                if (!receipt.TryRollback())
+                    throw new InvalidOperationException("B&A&HB Dogtag host post-commit rollback could not be proven after final canonical-source proof failed; ambiguous/foreign current host state was left untouched.", exception);
+                throw;
+            }
+            logger.Success("B&A&HB Dogtag Case retained existing validated template; Preload +2 canonical identity lease and vanilla Dogtag slot filter remained intact and exact container appended.");
+            return Task.CompletedTask;
+        }
+
+        canonicalLease.RequireCurrent(templateTable, source);
+        var copiedFilters = sourceFilters
+            .Select(filter => new GridFilter
+            {
+                Filter = new HashSet<MongoId>(filter.Filter!),
+                ExcludedFilter = filter.ExcludedFilter == null
+                    ? null
+                    : new HashSet<MongoId>(filter.ExcludedFilter)
+            })
+            .ToList();
+
+        var details = new NewItemFromCloneDetails
+        {
+            NewItemName = "B&A&HB Dogtag Case",
+            ItemTplToClone = SourceDogtagCaseTpl,
+            ParentId = source.Parent,
+            NewId = TemplateId,
+            FleaPriceRoubles = 50000,
+            HandbookPriceRoubles = 50000,
+            HandbookParentId = handbookItem.ParentId,
+            Locales = new Dictionary<string, LocaleDetails>
+            {
+                ["en"] = new LocaleDetails
+                {
+                    Name = "B&A&HB Dogtag Case",
+                    ShortName = "Dogtag Case",
+                    Description = "A dedicated dogtag container that can be equipped in the vanilla Dogtag slot while preserving the normal personal dogtag contract."
+                },
+                ["ru"] = new LocaleDetails
+                {
+                    Name = "Жетонница B&A&HB",
+                    ShortName = "Жетонница",
+                    Description = "Специальный контейнер для жетонов, устанавливаемый в штатный слот Dogtag без замены обычного личного жетона."
+                }
+            },
+            OverrideProperties = new TemplateItemProperties
+            {
+                BackgroundColor = sourceProperties.BackgroundColor,
+                ExaminedByDefault = sourceProperties.ExaminedByDefault,
+                Width = sourceProperties.Width,
+                Height = sourceProperties.Height,
+                StackMaxSize = sourceProperties.StackMaxSize,
+                Grids =
+                [
+                    new Grid
+                    {
+                        Name = sourceGrid.Name,
+                        Id = GridId,
+                        Parent = TemplateId,
+                        Prototype = sourceGrid.Prototype,
+                        Properties = new GridProperties
+                        {
+                            CellsH = sourceGridProperties.CellsH,
+                            CellsV = sourceGridProperties.CellsV,
+                            MinCount = sourceGridProperties.MinCount,
+                            MaxCount = sourceGridProperties.MaxCount,
+                            MaxWeight = sourceGridProperties.MaxWeight,
+                            IsSortingTable = sourceGridProperties.IsSortingTable,
+                            Filters = copiedFilters
+                        }
+                    }
+                ]
+            }
+        };
+
+        cancellationToken.ThrowIfCancellationRequested();
+        canonicalLease.RequireCurrent(templateTable, source);
+        var result = customItemService.CreateItemFromClone(details);
+        canonicalLease.RequireCurrent(templateTable, source);
+        if (!result.Success)
+            throw new InvalidOperationException($"B&A&HB Dogtag Case creation failed: {string.Join("; ", result.Errors)}");
+
+        if (!templateTable.Items.TryGetValue(DogtagCaseTpl, out var created))
+            throw new InvalidOperationException("B&A&HB Dogtag Case creation reported success but the exact template is absent; refusing Dogtag slot exposure.");
+        ValidateExisting(created, source);
+        RequireCanonicalRegisteredTemplate(templateTable);
+        canonicalLease.RequireCurrent(templateTable, source);
+        cancellationToken.ThrowIfCancellationRequested();
+        DogtagHostCommitReceipt createdReceipt = CommitDogtagSlotExposure(dogtagHost, cancellationToken);
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            canonicalLease.RequireCurrent(templateTable, source);
+            cancellationToken.ThrowIfCancellationRequested();
+            createdReceipt.Accept();
+        }
+        catch (Exception exception)
+        {
+            if (!createdReceipt.TryRollback())
+                throw new InvalidOperationException("B&A&HB Dogtag host post-commit rollback could not be proven after final canonical-source proof failed; ambiguous/foreign current host state was left untouched.", exception);
+            throw;
+        }
+        logger.Success("B&A&HB Dogtag Case created and revalidated against the exact Preload +2 canonical source identity/root/grid/filter contract; vanilla Dogtag slot entries preserved and exact container appended.");
+        return Task.CompletedTask;
+    }
+
+    private DogtagHostBoundary PrepareDogtagSlotFilter()
+    {
+        if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
+            throw new InvalidOperationException("B&A&HB default inventory template is missing for Dogtag host registration.");
+
+        var inventoryProperties = inventory.Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag host inventory properties are missing; refusing inventory mutation.");
+        var slotsCollection = inventoryProperties.Slots
+            ?? throw new InvalidOperationException("B&A&HB Dogtag host slots collection is missing; refusing inventory mutation.");
+        var slots = slotsCollection
+            .Where(x => string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal))
+            .Take(2)
+            .ToArray();
+        if (slots.Length != 1)
+            throw new InvalidOperationException("B&A&HB Dogtag slot boundary is missing or ambiguous; refusing inventory mutation.");
+
+        var slotProperties = slots[0].Properties
+            ?? throw new InvalidOperationException("B&A&HB Dogtag slot properties are missing; refusing inventory mutation.");
+        var filtersCollection = slotProperties.Filters
+            ?? throw new InvalidOperationException("B&A&HB Dogtag slot filter collection is missing; refusing inventory mutation.");
+        var groups = filtersCollection.ToArray();
+        if (groups.Length != 1 || groups[0].Filter == null || groups[0].Filter.Count == 0)
+            throw new InvalidOperationException("B&A&HB Dogtag slot filter boundary is missing or ambiguous; exactly one non-empty vanilla filter group is required.");
+
+        HashSet<MongoId> hostFilter = groups[0].Filter;
+        MongoId[] vanillaEntries = hostFilter
+            .Where(x => !PersistentIdentityManifest.IsOwnedTemplate(x.ToString()))
+            .ToArray();
+        DogtagCaseHostContract.CaptureVanillaEntries(vanillaEntries);
+
+        foreach (MongoId accepted in hostFilter)
+        {
+            string templateId = accepted.ToString();
+            if (PersistentIdentityManifest.IsOwnedTemplate(templateId)
+                && !string.Equals(templateId, TemplateId, StringComparison.Ordinal))
+                throw new InvalidOperationException("B&A&HB Dogtag slot is already contaminated by a different owned product template; refusing cross-host mutation.");
+        }
+
+        return new DogtagHostBoundary(inventory, slots[0], groups[0], hostFilter)
+        {
+            InventoryProperties = inventoryProperties,
+            SlotsCollection = slotsCollection,
+            SlotProperties = slotProperties,
+            FiltersCollection = filtersCollection
+        };
+    }
+
+    private void RequireLiveDogtagHostIdentity(DogtagHostBoundary boundary)
+    {
+        ArgumentNullException.ThrowIfNull(boundary);
+
+        if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var liveInventory)
+            || !ReferenceEquals(liveInventory, boundary.Inventory))
+            throw new InvalidOperationException("B&A&HB Dogtag host publication refused: DefaultInventory template was replaced after preload host capture.");
+        if (!ReferenceEquals(liveInventory.Properties, boundary.InventoryProperties)
+            || !ReferenceEquals(liveInventory.Properties?.Slots, boundary.SlotsCollection))
+            throw new InvalidOperationException("B&A&HB Dogtag host publication refused: DefaultInventory properties/slots collection was replaced after preload host capture.");
+
+        var liveSlots = liveInventory.Properties?.Slots?
+            .Where(x => string.Equals(x.Name, DogtagSlotName, StringComparison.Ordinal))
+            .Take(2)
+            .ToArray();
+        if (liveSlots == null || liveSlots.Length != 1 || !ReferenceEquals(liveSlots[0], boundary.Slot))
+            throw new InvalidOperationException("B&A&HB Dogtag host publication refused: Dogtag slot object was replaced or became ambiguous after preload host capture.");
+        if (!ReferenceEquals(liveSlots[0].Properties, boundary.SlotProperties)
+            || !ReferenceEquals(liveSlots[0].Properties?.Filters, boundary.FiltersCollection))
+            throw new InvalidOperationException("B&A&HB Dogtag host publication refused: Dogtag slot properties/filter collection was replaced after preload host capture.");
+
+        var liveGroups = liveSlots[0].Properties?.Filters?.ToArray();
+        if (liveGroups == null || liveGroups.Length != 1
+            || !ReferenceEquals(liveGroups[0], boundary.FilterGroup)
+            || !ReferenceEquals(liveGroups[0].Filter, boundary.Filter))
+            throw new InvalidOperationException("B&A&HB Dogtag host publication refused: Dogtag filter group/filter object was replaced after preload host capture.");
+    }
+
+    private DogtagHostCommitReceipt CommitDogtagSlotExposure(DogtagHostBoundary boundary, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(boundary);
+        HashSet<MongoId> filter = boundary.Filter;
+        cancellationToken.ThrowIfCancellationRequested();
+
+        RequireLiveDogtagHostIdentity(boundary);
+        DogtagCaseHostContract.RequirePreserved(filter);
+        cancellationToken.ThrowIfCancellationRequested();
+        RequireLiveDogtagHostIdentity(boundary);
+
+        HashSet<MongoId>? rollbackBaseline = null;
+        bool addedHere = false;
+        try
+        {
+            if (!filter.Contains(DogtagCaseTpl))
+                rollbackBaseline = DogtagCaseHostContract.CaptureRollbackBaseline(filter);
+
+            addedHere = filter.Add(DogtagCaseTpl);
+            if (!addedHere && rollbackBaseline != null)
+            {
+                if (!DogtagCaseHostContract.TryAbandonRollbackAuthority(filter, rollbackBaseline))
+                    throw new InvalidOperationException("B&A&HB Dogtag host pre-add authority could not be abandoned after another transaction supplied the exact Case commit; refusing a leaked/ambiguous capture gate.");
+                rollbackBaseline = null;
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            DogtagCaseHostContract.RequireCommitted(filter);
+            RequireLiveDogtagHostIdentity(boundary);
+            DogtagCaseHostContract.RequireCommitted(filter);
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Keep exact owned-add rollback authority alive across the caller's final
+            // canonical-source proof. A pre-existing/concurrently committed Case has
+            // no local mutation authority and therefore returns a metadata-empty receipt.
+            return new DogtagHostCommitReceipt(this, boundary, addedHere ? rollbackBaseline : null);
+        }
+        catch (Exception exception)
+        {
+            if (rollbackBaseline != null)
+            {
+                bool authorityReleased = addedHere
+                    ? DogtagCaseHostContract.TryRollbackOwnedCaseAddition(filter, rollbackBaseline)
+                    : DogtagCaseHostContract.TryAbandonRollbackAuthority(filter, rollbackBaseline);
+                if (!authorityReleased)
+                    throw new InvalidOperationException(
+                        addedHere
+                            ? "B&A&HB Dogtag host rollback could not be proven against the exact pre-commit acceptance snapshot; ambiguous/foreign current host state is not blindly rewritten."
+                            : "B&A&HB Dogtag host pre-add rollback authority could not be abandoned safely after a non-owned/failed add; exact-host capture remains ambiguous.",
+                        exception);
+            }
+            throw;
+        }
+    }
+
+    public static void RequireCanonicalRegisteredTemplate(TemplateTable templates)
+    {
+        ArgumentNullException.ThrowIfNull(templates);
+        if (!templates.Items.TryGetValue(SourceDogtagCaseTpl, out var source))
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: canonical source template is missing.");
+        if (!templates.Items.TryGetValue(DogtagCaseTpl, out var candidate))
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: exact product template is missing.");
+        ValidateExisting(candidate, source);
+
+        if (!templates.Items.TryGetValue(SourceDogtagCaseTpl, out var liveSource)
+            || !ReferenceEquals(liveSource, source))
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: canonical source template was replaced during validation.");
+        if (!templates.Items.TryGetValue(DogtagCaseTpl, out var liveCandidate)
+            || !ReferenceEquals(liveCandidate, candidate))
+            throw new InvalidOperationException("B&A&HB Dogtag Case publication refused: product template was replaced during validation.");
+
+        ValidateExisting(liveCandidate, liveSource);
+    }
+
+    private static void ValidateExisting(TemplateItem candidate, TemplateItem source)
+    {
+        if (!Equals(candidate.Parent, source.Parent))
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: existing template uses a different parent.");
+
+        var candidateProperties = candidate.Properties;
+        var sourceProperties = source.Properties;
+        if (candidateProperties == null || sourceProperties == null
+            || ReferenceEquals(candidateProperties, sourceProperties)
+            || !Equals(candidateProperties.BackgroundColor, sourceProperties.BackgroundColor)
+            || candidateProperties.ExaminedByDefault != sourceProperties.ExaminedByDefault
+            || candidateProperties.Width != sourceProperties.Width
+            || candidateProperties.Height != sourceProperties.Height
+            || candidateProperties.StackMaxSize != sourceProperties.StackMaxSize)
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: root presentation/ownership, examined state, geometry or stack policy differs from the canonical source contract.");
+
+        var grids = candidateProperties.Grids?.ToArray();
+        var sourceGrids = sourceProperties.Grids?.ToArray();
+        if (grids == null || grids.Length != 1 || sourceGrids == null || sourceGrids.Length != 1)
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: expected one grid.");
+
+        var grid = grids[0];
+        var sourceGrid = sourceGrids[0];
+        var actual = grid.Properties;
+        var expected = sourceGrid.Properties;
+        if (ReferenceEquals(grid, sourceGrid)
+            || !Equals(sourceGrid.Parent, SourceDogtagCaseTpl)
+            || !string.Equals(grid.Id.ToString(), GridId, StringComparison.Ordinal)
+            || !string.Equals(grid.Parent?.ToString(), TemplateId, StringComparison.Ordinal)
+            || !string.Equals(grid.Name, sourceGrid.Name, StringComparison.Ordinal)
+            || !Equals(grid.Prototype, sourceGrid.Prototype)
+            || actual == null
+            || expected == null
+            || ReferenceEquals(actual, expected)
+            || actual.CellsH != expected.CellsH
+            || actual.CellsV != expected.CellsV
+            || actual.MinCount != expected.MinCount
+            || actual.MaxCount != expected.MaxCount
+            || actual.MaxWeight != expected.MaxWeight
+            || actual.IsSortingTable != expected.IsSortingTable)
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: canonical source grid ownership, product grid identity/ownership, geometry or limits differ from the canonical source contract.");
+
+        var actualFilters = actual.Filters?.ToArray();
+        var expectedFilters = expected.Filters?.ToArray();
+        if (actualFilters == null || expectedFilters == null || expectedFilters.Length == 0 || actualFilters.Length != expectedFilters.Length)
+            throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: canonical filter-group contract is empty or count differs from source.");
+
+        for (int i = 0; i < expectedFilters.Length; i++)
+        {
+            if (ReferenceEquals(actualFilters[i], expectedFilters[i]))
+                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: filter-group object aliases canonical source state.");
+
+            var actualIncluded = actualFilters[i].Filter;
+            var expectedIncluded = expectedFilters[i].Filter;
+            var actualExcluded = actualFilters[i].ExcludedFilter;
+            var expectedExcluded = expectedFilters[i].ExcludedFilter;
+            if (actualIncluded == null || expectedIncluded == null
+                || actualIncluded.Count == 0 || expectedIncluded.Count == 0
+                || actualIncluded.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString()))
+                || expectedIncluded.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString()))
+                || ReferenceEquals(actualIncluded, expectedIncluded)
+                || !actualIncluded.SetEquals(expectedIncluded))
+                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: canonical included filter is empty, admits a B&A&HB-owned product, differs from, or aliases source.");
+            if ((actualExcluded == null) != (expectedExcluded == null)
+                || (actualExcluded != null && expectedExcluded != null
+                    && (ReferenceEquals(actualExcluded, expectedExcluded) || !actualExcluded.SetEquals(expectedExcluded))))
+                throw new InvalidOperationException("B&A&HB Dogtag Case ID collision: excluded filter differs from/aliases canonical source, including null/empty contract parity.");
+        }
+    }
+}

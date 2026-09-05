@@ -15,9 +15,9 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
 {
     public static readonly MongoId SourceArmbandTpl = new("5b3f3af486f774679e752c1f");
     public static readonly MongoId DefaultInventoryTpl = new("55d7217a4bdc2d86028b456d");
-    private static readonly MongoId SearchableItemBaseTpl = new("566162e44bdc2d3f298b4573");
     public static readonly MongoId CustomTemplateParentTpl = new(RuntimeIdentity.SearchableTemplateParentId);
     public static readonly MongoId CustomBeltParentTpl = new(RuntimeIdentity.BeltItemParentId);
+    private static readonly MongoId MagazineArmbandTpl = new(RuntimeIdentity.CandidateItemId);
     public const string RuntimeCandidateTpl = RuntimeIdentity.CandidateItemId;
     public const string RuntimeCandidateGridId = RuntimeIdentity.CandidateGridId;
     private const string RuntimeCandidateGridName = "main";
@@ -25,28 +25,41 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        if (!templateTable.Items.ContainsKey(SourceArmbandTpl)) throw new InvalidOperationException("B&A&HB RC source armband missing.");
-        var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl) ?? throw new InvalidOperationException("B&A&HB RC source handbook entry missing.");
+        if (!templateTable.Items.ContainsKey(SourceArmbandTpl)) throw new InvalidOperationException("B&A&HB Magazine Armband source armband missing.");
+        var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl) ?? throw new InvalidOperationException("B&A&HB Magazine Armband source handbook entry missing.");
 
-        EnsureCustomParents();
-        EnsureArmBandAcceptsCustomBeltParent();
-        if (templateTable.Items.TryGetValue(new MongoId(RuntimeCandidateTpl), out var existingCandidate))
+        ValidateTaxonomyParents();
+        if (templateTable.Items.TryGetValue(MagazineArmbandTpl, out var existingCandidate))
         {
             ValidateExistingCandidate(existingCandidate);
-            logger.Success($"B&A&HB RC retained existing validated item: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
+            logger.Success($"B&A&HB Magazine Armband retained existing validated item: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
             return Task.CompletedTask;
         }
 
         var details = new NewItemFromCloneDetails
         {
-            NewItemName = "B&A&HB Runtime Candidate Magazine Belt",
+            NewItemName = "B&A&HB Magazine Armband",
             ItemTplToClone = SourceArmbandTpl,
             ParentId = CustomBeltParentTpl,
             NewId = RuntimeCandidateTpl,
             FleaPriceRoubles = RuntimeCandidateOfferContract.PriceRoubles,
             HandbookPriceRoubles = RuntimeCandidateOfferContract.PriceRoubles,
             HandbookParentId = handbookItem.ParentId,
-            Locales = new Dictionary<string, LocaleDetails> { ["en"] = new LocaleDetails { Name = "B&A&HB Runtime Candidate Magazine Belt", ShortName = "B&A&HB Belt RC", Description = "Minimal 1x2 magazine belt runtime candidate." } },
+            Locales = new Dictionary<string, LocaleDetails>
+            {
+                ["en"] = new LocaleDetails
+                {
+                    Name = "B&A&HB Magazine Armband",
+                    ShortName = "Mag Armband",
+                    Description = "Compact 1x2 magazine carrier worn in the ArmBand equipment location."
+                },
+                ["ru"] = new LocaleDetails
+                {
+                    Name = "Повязка под магазины B&A&HB",
+                    ShortName = "Маг. повязка",
+                    Description = "Компактная повязка 1x2 для магазинов, устанавливаемая в слот ArmBand."
+                }
+            },
             OverrideProperties = new TemplateItemProperties
             {
                 BackgroundColor = "blue", ExaminedByDefault = true,
@@ -54,19 +67,23 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
             }
         };
         var result = customItemService.CreateItemFromClone(details);
-        if (!result.Success) throw new InvalidOperationException($"B&A&HB RC item creation failed: {string.Join("; ", result.Errors)}");
-        logger.Success($"B&A&HB RC created: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
+        if (!result.Success) throw new InvalidOperationException($"B&A&HB Magazine Armband creation failed: {string.Join("; ", result.Errors)}");
+
+        // ArmBand host exposure is intentionally owned by WristWalletItem at
+        // Preload+2. That later owner validates that both exact ArmBand products
+        // exist before mutating the vanilla slot filter, preventing dangling IDs.
+        logger.Success($"B&A&HB Magazine Armband created: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
         return Task.CompletedTask;
     }
 
     private static void ValidateExistingCandidate(TemplateItem candidate)
     {
         if (!Equals(candidate.Parent, CustomBeltParentTpl))
-            throw new InvalidOperationException("B&A&HB RC item ID collision: existing item uses a different parent.");
+            throw new InvalidOperationException("B&A&HB Magazine Armband ID collision: existing item uses a different parent.");
 
         var grids = candidate.Properties?.Grids?.ToArray();
         if (grids == null || grids.Length != 1)
-            throw new InvalidOperationException("B&A&HB RC item ID collision: existing item does not declare exactly one grid.");
+            throw new InvalidOperationException("B&A&HB Magazine Armband ID collision: existing item does not declare exactly one grid.");
 
         var grid = grids[0];
         var properties = grid.Properties;
@@ -81,11 +98,11 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
             || properties.MaxCount != 0
             || properties.MaxWeight != 0
             || properties.IsSortingTable == true)
-            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid identity, geometry, or limits differ from the shared runtime contract.");
+            throw new InvalidOperationException("B&A&HB Magazine Armband ID collision: existing grid identity, geometry, or limits differ from the shared product contract.");
 
         var filters = properties.Filters?.ToArray();
         if (filters == null || filters.Length != 1)
-            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid does not declare exactly one filter group.");
+            throw new InvalidOperationException("B&A&HB Magazine Armband ID collision: existing grid does not declare exactly one filter group.");
 
         var filter = filters[0];
         var included = filter.Filter?.ToArray();
@@ -94,45 +111,24 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
             || included.Length != 1
             || !included.Contains(BaseClasses.MAGAZINE)
             || (excluded != null && excluded.Length != 0))
-            throw new InvalidOperationException("B&A&HB RC item ID collision: existing grid does not retain the exact MAGAZINE-only filter.");
+            throw new InvalidOperationException("B&A&HB Magazine Armband ID collision: existing grid does not retain the exact MAGAZINE-only filter.");
     }
 
-    private void EnsureCustomParents()
+    private void ValidateTaxonomyParents()
     {
-        EnsureCustomParent(CustomTemplateParentTpl, "BAndHBSearchableContainerTemplate", SearchableItemBaseTpl);
-        EnsureCustomParent(CustomBeltParentTpl, "BAndHBCustomBeltItem", CustomTemplateParentTpl);
+        ValidateTaxonomyParent(CustomTemplateParentTpl, "BAndHBSearchableContainerTemplate", new MongoId("566162e44bdc2d3f298b4573"));
+        ValidateTaxonomyParent(CustomBeltParentTpl, "BAndHBCustomBeltItem", CustomTemplateParentTpl);
     }
 
-    private void EnsureCustomParent(MongoId id, string name, MongoId parent)
+    private void ValidateTaxonomyParent(MongoId id, string name, MongoId parent)
     {
         if (!templateTable.Items.TryGetValue(id, out var existing))
-        {
-            templateTable.Items[id] = new TemplateItem
-            {
-                Id = id,
-                Name = name,
-                Parent = parent,
-                Type = "Node",
-                Properties = new TemplateItemProperties()
-            };
-            return;
-        }
+            throw new InvalidOperationException($"B&A&HB taxonomy parent {id} was not registered by the Preload taxonomy owner.");
 
         if (!Equals(existing.Id, id)
             || !Equals(existing.Parent, parent)
             || !string.Equals(existing.Name, name, StringComparison.Ordinal)
             || !string.Equals(existing.Type, "Node", StringComparison.Ordinal))
-            throw new InvalidOperationException($"B&A&HB custom parent ID collision: {id} does not match the registered taxonomy contract.");
-    }
-
-    private void EnsureArmBandAcceptsCustomBeltParent()
-    {
-        if (!templateTable.Items.TryGetValue(DefaultInventoryTpl, out var inventory))
-            throw new InvalidOperationException("B&A&HB RC default inventory template missing.");
-
-        var armBand = inventory.Properties?.Slots?.FirstOrDefault(x => string.Equals(x.Name, "ArmBand", StringComparison.Ordinal));
-        var filter = armBand?.Properties?.Filters?.FirstOrDefault()?.Filter;
-        if (filter == null) throw new InvalidOperationException("B&A&HB RC ArmBand slot filter missing.");
-        if (!filter.Contains(CustomBeltParentTpl)) filter.Add(CustomBeltParentTpl);
+            throw new InvalidOperationException($"B&A&HB taxonomy parent collision: {id} does not match the registered taxonomy contract.");
     }
 }

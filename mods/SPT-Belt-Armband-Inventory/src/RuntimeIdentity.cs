@@ -15,11 +15,6 @@ namespace SPTBeltArmbandInventory
         internal const string WristWalletGridId = "68ac00000000000000000007";
         internal const string WristWalletAssortId = "68ac00000000000000000008";
 
-        // Product identities are human-readable and remain stable inside B&A&HB.
-        // EFT 4.1.x InventoryEquipment, however, parses every slot ID through the
-        // closed EquipmentSlot enum and indexes a slot cache by its numeric value.
-        // The vanilla enum currently ends at ArmBand=14, so the two dedicated
-        // locations use collision-checked pseudo-enum values 15 and 16 on the wire.
         internal const string DedicatedBeltSlotName = "BAndHBBelt";
         internal const string DedicatedHeadBandSlotName = "BAndHBHeadBand";
         internal const int DedicatedBeltEquipmentSlotValue = 15;
@@ -30,13 +25,22 @@ namespace SPTBeltArmbandInventory
         internal const string DedicatedHeadBandSlotMongoId = "68ac0000000000000000000a";
         internal const string HeadBandItemParentId = "68ac0000000000000000000b";
 
-        // First concrete items for the two new equipment locations.
         internal const string DedicatedMagazineBeltItemId = "68ac0000000000000000000c";
         internal const string DedicatedMagazineBeltGridId = "68ac0000000000000000000d";
         internal const string DedicatedMagazineBeltAssortId = "68ac0000000000000000000e";
         internal const string EmergencyHeadBandItemId = "68ac0000000000000000000f";
+        // Preserved from Stable Baseline 1. This remains the currency/wallet grid.
         internal const string EmergencyHeadBandGridId = "68ac00000000000000000010";
         internal const string EmergencyHeadBandAssortId = "68ac00000000000000000011";
+        // New post-stable persistent identity: cigarettes-only HeadBand grid.
+        internal const string EmergencyHeadBandCigarettesGridId = "68ac00000000000000000012";
+
+        // Dogtag Case is a container item hosted by the vanilla Dogtag equipment
+        // slot, not a new pseudo-slot. These IDs are new immutable profile-facing
+        // identities and must remain distinct from every wearable identity above.
+        internal const string DogtagCaseItemId = "68ac00000000000000000013";
+        internal const string DogtagCaseGridId = "68ac00000000000000000014";
+        internal const string DogtagCaseAssortId = "68ac00000000000000000015";
 
         internal const int CandidateGridColumns = 1;
         internal const int CandidateGridRows = 2;
@@ -46,5 +50,7 @@ namespace SPTBeltArmbandInventory
         internal const int DedicatedMagazineBeltGridRows = 2;
         internal const int EmergencyHeadBandGridColumns = 1;
         internal const int EmergencyHeadBandGridRows = 2;
+        internal const int EmergencyHeadBandSplitGridColumns = 1;
+        internal const int EmergencyHeadBandSplitGridRows = 1;
     }
 }

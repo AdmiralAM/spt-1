@@ -1,18 +1,20 @@
 using System;
 using System.Collections;
-using System.Reflection;
 using BepInEx;
+using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using UnityEngine;
 
 namespace SPTBeltArmbandInventory
 {
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
+    [BepInDependency("com.trenchfoot.beltslot", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("BeltSlot", BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
         public const string PluginGuid = "com.admiralam.spt.belt-armband-inventory";
         public const string PluginName = "B&A&HB #2 MOD SPT";
-        public const string PluginVersion = "0.1.0";
+        public const string PluginVersion = "0.2.0";
 
         ConfigEntry<bool> modEnabled;
         ProtectionSettingsSync protectionSettings;
@@ -20,6 +22,7 @@ namespace SPTBeltArmbandInventory
         RuntimeCustomHeadBandTypePatches runtimeHeadBandTypePatches;
         DedicatedEquipmentSlotPatches dedicatedEquipmentSlotPatches;
         DedicatedSlotPresentationPatches dedicatedSlotPresentationPatches;
+        CompactFaceHeadBandPresentationPatches compactFaceHeadBandPresentationPatches;
         FirstOpenHeadBandLayoutPatches firstOpenHeadBandLayoutPatches;
         DedicatedSlotLocalizationPatches dedicatedSlotLocalizationPatches;
         HeadwearCompatibilityPatches headwearCompatibilityPatches;
@@ -52,7 +55,12 @@ namespace SPTBeltArmbandInventory
 
             HostBoundaryDiscovery.Log(Logger.LogInfo, Logger.LogWarning);
 
-            if (LegacyBeltSlotDetected())
+            if (!TryDetectLegacyBeltSlot(out bool legacyBeltSlotDetected))
+            {
+                Logger.LogWarning("B&A&HB #2 legacy BeltSlot conflict state could not be proven from BepInEx PluginInfos; failing closed for this session and installing no wearable runtime patches.");
+                return;
+            }
+            if (legacyBeltSlotDetected)
             {
                 Logger.LogWarning("Trenchfoot-BeltSlot is already loaded. Remove/disable that DLL before enabling B&A&HB #2 MOD SPT; no duplicate patch was installed.");
                 return;
@@ -99,6 +107,14 @@ namespace SPTBeltArmbandInventory
                 Logger.LogWarning("Dedicated Belt/HeadBand equipment data remains active, but visible captions/HeadBand placement could not bind to SlotView.Show for this session.");
             }
 
+            compactFaceHeadBandPresentationPatches = new CompactFaceHeadBandPresentationPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!compactFaceHeadBandPresentationPatches.TryInstall())
+            {
+                compactFaceHeadBandPresentationPatches.Dispose();
+                compactFaceHeadBandPresentationPatches = null;
+                Logger.LogWarning("Accepted stable HeadBand presentation remains active; compact Face/HeadBand layout could not bind for this session.");
+            }
+
             firstOpenHeadBandLayoutPatches = new FirstOpenHeadBandLayoutPatches(Logger.LogInfo, Logger.LogWarning);
             if (!firstOpenHeadBandLayoutPatches.TryInstall())
             {
@@ -124,7 +140,7 @@ namespace SPTBeltArmbandInventory
             {
                 headwearCompatibilityPatches.Dispose();
                 headwearCompatibilityPatches = null;
-                Logger.LogWarning("Dedicated HeadBand remains active, but vanilla Headwear may still show a misleading compatibility highlight for Emergency HeadBand.");
+                Logger.LogWarning("Dedicated HeadBand remains active, but vanilla Headwear may still show a misleading compatibility highlight for Utility HeadBand.");
             }
 
             beltContainersPanelProjectionPatches = new BeltContainersPanelProjectionPatches(Logger.LogInfo, Logger.LogWarning);
@@ -203,7 +219,7 @@ namespace SPTBeltArmbandInventory
                 {
                     dedicatedPickupPatches.Dispose();
                     dedicatedPickupPatches = null;
-                    Logger.LogWarning("Core ArmBand pickup remains active, but exact Magazine Belt/Emergency HeadBand auto-placement is disabled for this session.");
+                    Logger.LogWarning("Core ArmBand pickup remains active, but exact Magazine Belt/Utility HeadBand auto-placement is disabled for this session.");
                 }
             }
 
@@ -239,7 +255,7 @@ namespace SPTBeltArmbandInventory
                 }
                 yield return null;
             }
-            Logger.LogWarning("B&A&HB protection F12 settings could not reach the server during bounded startup sync; all three categories remain Protected until a later setting change succeeds.");
+            Logger.LogWarning("B&A&HB protection F12 settings were not acknowledged during bounded startup sync; the server's current/default protection policy remains authoritative until a later setting change is acknowledged.");
             protectionSyncPump = null;
         }
 
@@ -266,26 +282,39 @@ namespace SPTBeltArmbandInventory
             deferredRuntimePump = null;
         }
 
-        bool LegacyBeltSlotDetected()
+        bool TryDetectLegacyBeltSlot(out bool detected)
         {
+            detected = false;
             try
             {
-                Type chainloader = Type.GetType("BepInEx.Bootstrap.Chainloader, BepInEx", false);
-                PropertyInfo pluginInfos = ReflectionTools.FindInstanceProperty(chainloader, "PluginInfos");
-                if (pluginInfos == null && chainloader != null)
+                var pluginInfos = Chainloader.PluginInfos;
+                if (pluginInfos == null)
                 {
-                    PropertyInfo[] properties = chainloader.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                    for (int i = 0; i < properties.Length; i++)
+                    Logger.LogWarning("B&A&HB legacy-plugin discovery could not read BepInEx Chainloader.PluginInfos.");
+                    return false;
+                }
+
+                if (pluginInfos.ContainsKey("com.trenchfoot.beltslot") || pluginInfos.ContainsKey("BeltSlot"))
+                {
+                    detected = true;
+                    return true;
+                }
+
+                foreach (var entry in pluginInfos)
+                {
+                    var metadata = entry.Value?.Metadata;
+                    if (metadata == null) continue;
+                    if (string.Equals(metadata.GUID, "com.trenchfoot.beltslot", StringComparison.Ordinal)
+                        || string.Equals(metadata.GUID, "BeltSlot", StringComparison.Ordinal)
+                        || string.Equals(metadata.Name, "BeltSlot", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(metadata.Name, "Trenchfoot-BeltSlot", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (string.Equals(properties[i].Name, "PluginInfos", StringComparison.Ordinal))
-                        {
-                            pluginInfos = properties[i];
-                            break;
-                        }
+                        detected = true;
+                        return true;
                     }
                 }
-                IDictionary dictionary = pluginInfos == null ? null : pluginInfos.GetValue(null, null) as IDictionary;
-                return dictionary != null && (dictionary.Contains("com.trenchfoot.beltslot") || dictionary.Contains("BeltSlot"));
+
+                return true;
             }
             catch (Exception exception)
             {
@@ -334,6 +363,8 @@ namespace SPTBeltArmbandInventory
             dedicatedSlotLocalizationPatches = null;
             if (firstOpenHeadBandLayoutPatches != null) firstOpenHeadBandLayoutPatches.Dispose();
             firstOpenHeadBandLayoutPatches = null;
+            if (compactFaceHeadBandPresentationPatches != null) compactFaceHeadBandPresentationPatches.Dispose();
+            compactFaceHeadBandPresentationPatches = null;
             if (dedicatedSlotPresentationPatches != null) dedicatedSlotPresentationPatches.Dispose();
             dedicatedSlotPresentationPatches = null;
             if (dedicatedEquipmentSlotPatches != null) dedicatedEquipmentSlotPatches.Dispose();

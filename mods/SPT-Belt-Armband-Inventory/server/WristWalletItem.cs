@@ -15,6 +15,11 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
 {
     public const string TemplateId = RuntimeIdentity.WristWalletItemId;
     public const string GridId = RuntimeIdentity.WristWalletGridId;
+    private static readonly MongoId WristWalletTpl = new(TemplateId);
+    private static readonly MongoId MagazineArmbandTpl = new(RuntimeIdentity.CandidateItemId);
+    private static readonly MongoId DedicatedMagazineBeltTpl = new(RuntimeIdentity.DedicatedMagazineBeltItemId);
+    private static readonly MongoId UtilityHeadBandTpl = new(RuntimeIdentity.EmergencyHeadBandItemId);
+    private static readonly MongoId BroadBeltParentTpl = new(RuntimeIdentity.BeltItemParentId);
     private const string GridName = "main";
     private const string GridPrototype = "55d329c24bdc2d892f8b4567";
 
@@ -24,15 +29,18 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
             throw new InvalidOperationException("B&A&HB Wrist Wallet source armband missing.");
         if (!templateTable.Items.ContainsKey(RuntimeCandidateBeltItem.CustomBeltParentTpl))
             throw new InvalidOperationException("B&A&HB Wrist Wallet searchable parent was not initialized.");
+        if (!templateTable.Items.ContainsKey(MagazineArmbandTpl))
+            throw new InvalidOperationException("B&A&HB Magazine Armband was not initialized before ArmBand host exposure.");
 
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == RuntimeCandidateBeltItem.SourceArmbandTpl)
             ?? throw new InvalidOperationException("B&A&HB Wrist Wallet source handbook entry missing.");
+        HashSet<MongoId> armBandFilter = PrepareArmBandExactProductFilter();
 
-        var id = new MongoId(TemplateId);
-        if (templateTable.Items.TryGetValue(id, out var existing))
+        if (templateTable.Items.TryGetValue(WristWalletTpl, out var existing))
         {
             ValidateExisting(existing);
-            logger.Success("B&A&HB Wrist Wallet retained existing validated 1x1 currency-only item.");
+            CommitArmBandExactProducts(armBandFilter);
+            logger.Success("B&A&HB Wrist Wallet retained existing validated 1x1 currency-only item; exact ArmBand products exposed atomically.");
             return Task.CompletedTask;
         }
 
@@ -52,6 +60,12 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
                     Name = "B&A&HB Wrist Wallet",
                     ShortName = "Wrist Wallet",
                     Description = "Compact 1x1 wrist wallet for RUB, USD and EUR."
+                },
+                ["ru"] = new LocaleDetails
+                {
+                    Name = "Наручный кошелёк B&A&HB",
+                    ShortName = "Наруч. кошелёк",
+                    Description = "Компактный наручный кошелёк 1x1 для рублей, долларов и евро."
                 }
             },
             OverrideProperties = new TemplateItemProperties
@@ -92,7 +106,10 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
         if (!result.Success)
             throw new InvalidOperationException($"B&A&HB Wrist Wallet creation failed: {string.Join("; ", result.Errors)}");
 
-        logger.Success("B&A&HB Wrist Wallet created: host=ArmBand, grid=1x1, filter=RUB/USD/EUR.");
+        // Host boundary was validated before item creation. Both exact ArmBand
+        // products now exist, so the final commit has no discovery/collision step.
+        CommitArmBandExactProducts(armBandFilter);
+        logger.Success("B&A&HB Wrist Wallet created: host=ArmBand, grid=1x1, filter=RUB/USD/EUR; exact ArmBand products exposed atomically.");
         return Task.CompletedTask;
     }
 
@@ -133,5 +150,38 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
             || !included.Contains(Money.EUROS)
             || (excluded != null && excluded.Length != 0))
             throw new InvalidOperationException("B&A&HB Wrist Wallet ID collision: filter differs from exact RUB/USD/EUR-only contract.");
+    }
+
+    private HashSet<MongoId> PrepareArmBandExactProductFilter()
+    {
+        if (!templateTable.Items.TryGetValue(RuntimeCandidateBeltItem.DefaultInventoryTpl, out var inventory))
+            throw new InvalidOperationException("B&A&HB default inventory template missing.");
+
+        var armBands = inventory.Properties?.Slots?
+            .Where(x => string.Equals(x.Name, "ArmBand", StringComparison.Ordinal))
+            .Take(2)
+            .ToArray();
+        if (armBands == null || armBands.Length != 1)
+            throw new InvalidOperationException("B&A&HB ArmBand slot boundary is missing or ambiguous; refusing to mutate an unproven inventory slot.");
+
+        var filterGroups = armBands[0].Properties?.Filters?.ToArray();
+        if (filterGroups == null || filterGroups.Length != 1 || filterGroups[0].Filter == null)
+            throw new InvalidOperationException("B&A&HB ArmBand slot filter boundary is missing or ambiguous; exactly one filter group is required.");
+
+        HashSet<MongoId> filter = filterGroups[0].Filter;
+        if (filter.Contains(BroadBeltParentTpl))
+            throw new InvalidOperationException("B&A&HB ArmBand filter contains the broad Belt parent; refusing host overlap that would admit dedicated Magazine Belt.");
+        if (filter.Contains(DedicatedMagazineBeltTpl) || filter.Contains(UtilityHeadBandTpl))
+            throw new InvalidOperationException("B&A&HB ArmBand filter contains an exact dedicated cross-host product; refusing Belt/HeadBand host overlap.");
+        return filter;
+    }
+
+    private void CommitArmBandExactProducts(HashSet<MongoId> filter)
+    {
+        if (!templateTable.Items.ContainsKey(MagazineArmbandTpl) || !templateTable.Items.ContainsKey(WristWalletTpl))
+            throw new InvalidOperationException("B&A&HB ArmBand host exposure requires both exact product templates to exist.");
+
+        if (!filter.Contains(MagazineArmbandTpl)) filter.Add(MagazineArmbandTpl);
+        if (!filter.Contains(WristWalletTpl)) filter.Add(WristWalletTpl);
     }
 }
