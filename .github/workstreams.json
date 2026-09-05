@@ -222,6 +222,102 @@
         "one combined product-level gameplay gate passes before deliberate stable promotion"
       ]
     },
+    "itemIntelligence": {
+      "workstreamName": "Item Intelligence MOD SPT",
+      "productName": "Item Intelligence Admiral",
+      "modulePath": "mods/SPT-Item-Intelligence",
+      "version": "1.1.0",
+      "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
+      "phasePlan": [
+        {
+          "key": "modular-f12-control-plane",
+          "issue": 338,
+          "objective": "Make Item Intelligence Admiral progressively disableable from F12 with independent Marker, Tooltip, Quest, Future Quest, Hideout, Value and Craft/Barter modules while keeping Item Valuation backgrounds independent.",
+          "acceptance": "Module combinations have deterministic dependency rules, runtime toggles invalidate only required cached state, unrelated layers remain available when one layer is disabled, and fully disabled II presentation performs no unnecessary steady-state work beyond the minimal re-enable/config shell.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "contextual-marker-ux",
+          "issue": 338,
+          "objective": "Replace the persistent information-glyph feel with a crisp contextual attention marker inspired by AllQuestsCheckmarks behavior while independently implementing the UI without GPL code/assets.",
+          "acceptance": "Irrelevant items have no II marker; active quest, hideout-only and future-quest needs are immediately distinct; fulfilled/enough behavior follows explicit policy; sprite resources are shared/static and no per-frame creation/search regression exists.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "information-card-hideout-hierarchy",
+          "issue": 338,
+          "objective": "Rebuild the tooltip/information hierarchy around Need summary, Active/Future Quests, Hideout owned/required/remaining, Value and optional Craft/Barter detail using native-style readable presentation and bounded long-list behavior.",
+          "acceptance": "The UI answers do-I-need/how-many/for-what/where-sell without duplicate technical lines; hideout totals exclude completed levels and aggregate applicable future upgrades exactly once; prepared cached data remains the only render input.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "data-performance-consolidation",
+          "issue": 338,
+          "objective": "Audit and harden ItemView lifecycle, marker ownership, cache invalidation, stack/FIR/hideout accounting and disabled-module runtime behavior while preserving one bounded server snapshot and template-keyed cached client access.",
+          "acceptance": "No permanent scene scans, raid polling, hot-path reflection or recurring avoidable allocations remain; disabled sections perform no hidden work; regression/build/package validation is green with zero unclassified warnings.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "overlap-compatibility-reassessment",
+          "issue": 338,
+          "objective": "After core II stabilization, reassess Task Item Indicator, CompatibilityHighlighter and Item Valuation ownership boundaries and classify each overlap without creating another always-on scanner/highlighter engine.",
+          "acceptance": "The module documentation contains one explicit keep-external/integrate-concept/compatibility-mode/redundant table, no duplicate visual signal exists without deliberate justification, and no external mod becomes mandatory.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "combined-release-candidate",
+          "issue": 338,
+          "objective": "Produce one exact-head install-ready Item Intelligence Admiral v1.1 candidate covering modular F12 control, contextual marker UX, readable quest/hideout/value hierarchy and performance/compatibility hardening.",
+          "acceptance": "All feasible automated validation is green and the worker directly gives the user one exact GitHub-artifact handoff whose batched checklist includes module toggles, active/future/hideout marker states, fulfilled/FIR cases, value rows, Item Valuation independence and stutter/log sanity.",
+          "requiresUserRuntime": true
+        },
+        {
+          "key": "stable-release",
+          "issue": 338,
+          "objective": "Remediate the batched runtime result or deliberately promote the exact passing Item Intelligence Admiral v1.1 candidate.",
+          "acceptance": "The physical gate passes, the single implementation PR is integrated, main/current-state documentation and controlled publication are verified, Issue #338 is completed and the temporary implementation branch is removed.",
+          "requiresUserRuntime": false
+        }
+      ],
+      "frozen": {
+        "productName": "Item Intelligence Admiral",
+        "stableBaseline": "1.0.0",
+        "compatibilitySourcePath": "mods/SPT-Item-Intelligence",
+        "compatibilityRuntimeBranch": "runtime-item-intelligence",
+        "preserveExistingGuidNamespaceEndpoint": true,
+        "itemValuationRemainsSeparate": true,
+        "noTransactionExecution": true,
+        "status": "published-stable-baseline-not-active-roadmap"
+      },
+      "referenceSources": [
+        {
+          "name": "danx91/AllQuestsCheckmarks",
+          "url": "https://github.com/danx91/AllQuestsCheckmarks",
+          "license": "GPL-3.0",
+          "role": "behavioral UX reference only: contextual native checkmark semantics, stash/needed summary and active/future quest hierarchy; no source/assets copied"
+        },
+        {
+          "name": "black-hawk95/BlackHawk-QuickSell",
+          "url": "https://github.com/black-hawk95/BlackHawk-QuickSell",
+          "role": "historical pricing/cache reference: prepared sell-destination data, early hot-path exits and cache-first hover behavior"
+        }
+      ],
+      "stableAcceptance": [
+        "official Item Intelligence Admiral identity and v1.0.0 compatibility identifiers remain stable while v1.1 evolves",
+        "F12 can disable Marker, Tooltip, Quest, Future Quest, Hideout, Value and Craft/Barter layers independently without disabling unrelated layers",
+        "Item Valuation MOD SPT background colors remain a separate independent server-side feature and are not duplicated inside II",
+        "irrelevant items have no II marker while active quest, hideout and future quest attention states remain immediately legible",
+        "quest and hideout owned/required/remaining quantities are deterministic, FIR-aware and free of double counting",
+        "tooltip hierarchy is readable and bounded, with value/sell data consuming prepared cached state only",
+        "disabled modules perform no unnecessary steady-state work and no permanent polling, global scans, hot-path reflection/allocations or extra hover networking are introduced",
+        "Task Item Indicator and CompatibilityHighlighter overlap is deliberately classified only after core II stabilization",
+        "one exact-head Item Intelligence Admiral v1.1 package passes the batched physical SPT runtime gate"
+      ],
+      "historicalEvidence": {
+        "issues": [82, 94, 118, 198],
+        "pullRequests": [86, 96, 108, 120, 126, 199]
+      }
+    },
     "tacticalHud": {
       "workstreamName": "Admiral Tactical HUD",
       "productName": "Admiral Tactical HUD",
