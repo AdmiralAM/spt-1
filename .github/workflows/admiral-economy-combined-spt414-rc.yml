@@ -58,6 +58,8 @@ jobs:
       - name: Run Economy deterministic suites
         shell: pwsh
         run: |
+          python -m unittest discover -s mods/Economy-Admiral/tests -p 'test_*.py'
+          if ($LASTEXITCODE -ne 0) { throw 'Fresh-profile quest regression failed.' }
           dotnet run --project mods/Economy-Admiral/tests/ConfigValidationSmoke/ConfigValidationSmoke.csproj -c Release
           dotnet run --project mods/Economy-Admiral/tests/EnforcementSmoke/EnforcementSmoke.csproj -c Release
           dotnet run --project mods/Economy-Admiral/tests/SourcePressureSmoke/SourcePressureSmoke.csproj -c Release

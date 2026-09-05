@@ -65,6 +65,8 @@ if (Test-Path $traderStage) { Remove-Item $traderStage -Recurse -Force }
 New-Item $traderStage -ItemType Directory -Force | Out-Null
 Copy-Item (Join-Path $traderModule 'server/bin/Release/net10.0/Admiral Trader Server.dll') $traderStage
 foreach ($directory in 'db','manifests','assets') { Copy-Item (Join-Path $traderModule $directory) (Join-Path $traderStage $directory) -Recurse }
+python (Join-Path $PSScriptRoot 'prepare_fresh_profile_quest.py') $traderStage
+if ($LASTEXITCODE -ne 0) { throw 'Fresh-profile quest staging failed.' }
 New-Item (Join-Path $traderStage 'tools') -ItemType Directory -Force | Out-Null
 Copy-Item (Join-Path $traderModule 'tools/Reset-AdmiralTraderProfile.ps1') (Join-Path $traderStage 'tools/Reset-AdmiralTraderProfile.ps1')
 $stagedTraderManifestPath = Join-Path $traderStage 'manifests/runtime-manifest.json'
