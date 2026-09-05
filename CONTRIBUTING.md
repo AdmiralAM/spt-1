@@ -48,3 +48,4 @@ After acceptance:
 Generated binaries, logs, caches, package copies, trigger files and CI metadata do not belong in source history. Preserve unique evidence in Issues, PRs or Actions artifacts instead.
 
 Supporting mechanics: `docs/development-workflow.md`, `docs/github-stable-runtime.md` and `docs/branch-hygiene.md`.
+For Windows GitHub CLI setup and the recurring `git executable in PATH` error, see [docs/github-cli-windows.md](docs/github-cli-windows.md).
