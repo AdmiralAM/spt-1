@@ -1,1 +1,342 @@
-{"schemaVersion":3,"updatedAt":"2026-09-05","authority":{"productAuthority":"user","coordinationWorker":"GitHub Work SPT","policyRef":"origin/main:AGENTS.md","registryRef":"origin/main:.github/workstreams.json","coordinationWorkerMayGateExecution":false,"workerRequiresAnotherWorkerPermission":false,"workerMayEncodeExplicitUserGovernanceInstruction":true,"governanceBranchPrefix":"governance/","branchSelectionContract":{"rule":"Use each workstream activeDevelopment.branch for new Codex tasks; never infer an active branch from chat memory or a retired branch.","exactHeadSource":"The referenced live pull request head is authoritative; frozen baselines are explicit and must not be confused with active development."}},"execution":{"stateMachine":["ACTIVE","IMPLEMENT","VALIDATE","FIX_UNTIL_GREEN","CONTINUE_NEXT_RECORDED_PACKAGE","RELEASE_CANDIDATE","ONE_BATCHED_RUNTIME_TEST","FAIL_REMEDIATE_OR_PASS_STABLE_RELEASE"],"roadmapAuthorization":"user-standing-authorization-all-recorded-phases","resumePolicy":"first-phase-without-recorded-acceptance-evidence","workerMayAdvanceWithinRecordedRoadmap":true,"registryUpdateRequiredForRecordedPhaseTransition":false,"maxActivePullRequestsPerModule":1,"runtimeGateActivation":"worker-direct-to-user-at-recorded-runtime-phase","workerMayRequestUserRuntimeDirectly":true,"workerMayChangeRoadmapWithoutExplicitUserInstruction":false,"workerMayPerformGovernanceWithoutExplicitUserInstruction":false},"workstreams":{"belt":{"workstreamName":"B&A&HB #2 MOD SPT","productName":"B&A&HB #2 MOD SPT","modulePath":"mods/SPT-Belt-Armband-Inventory","version":"0.1.0","resumePolicy":"first-phase-without-recorded-acceptance-evidence","phasePlan":[{"key":"profile-safety-and-dedicated-slots","issue":62,"objective":"Finish profile-safe dedicated ArmBand, Belt and HeadBand identities, slots, filters, routing and recovery without regressing proven container runtime.","acceptance":"Identity manifest, ownership-scoped recovery, exact slots 15/16, filters, presentation and routing pass deterministic source/build/package/performance validation.","requiresUserRuntime":false},{"key":"full-lifecycle-and-native-polish","issue":62,"objective":"Complete pickup, equip/remove, contents, persistence, native window/layout and fast-access lifecycle for all intended wearables.","acceptance":"Lifecycle behavior is coherent and regression-covered with no unbounded polling, scene scans, global UI mutation, freezes or measurable idle cost.","requiresUserRuntime":false},{"key":"release-hardening","issue":62,"objective":"Harden compatibility, localization, install layout, package identity and profile-safe update/disable/uninstall recovery.","acceptance":"All feasible automated regressions and exact-head packaging are green with frozen identities and no unresolved load/save or performance defect.","requiresUserRuntime":false},{"key":"combined-release-candidate","issue":62,"objective":"Produce one coherent exact-head SPT 4.1.3 release candidate covering the complete product.","acceptance":"The worker directly gives the user one GitHub-artifact runtime handoff with a short complete PASS/FAIL checklist after all automated work is exhausted.","requiresUserRuntime":true},{"key":"stable-release","issue":62,"objective":"Remediate RC failures or deliberately promote the exact passing candidate.","acceptance":"The batched runtime gate passes, the proven package is published, integration is verified and temporary work is cleaned up.","requiresUserRuntime":false}],"frozen":{"version":"0.1.0","slotIds":[15,16],"preserveDistributedIds":true},"stableAcceptance":["ArmBand, Belt and HeadBand use exact intended identities and slots","profile-safe update, disable, uninstall and downgrade","correct EN/RU presentation, pickup, lifecycle and persistence","no unbounded polling, scene scans, freezes or global UI mutation","one exact-head release candidate passes the batched SPT 4.1.3 runtime gate"],"activeDevelopment":{"issue":285,"pullRequest":286,"branch":"feature/bahb-v0.2-compact-headband","version":"0.2.0","headAuthority":"live-pull-request-head","state":"draft-release-candidate-runtime-pending"}},"trader":{"workstreamName":"Admiral TR #4 MOD SPT","productName":"Admiral Trader","modulePath":"mods/Admiral-Trader","version":"0.1.0+milestones","resumePolicy":"first-phase-without-recorded-acceptance-evidence","phasePlan":[{"key":"lifecycle-correctness","issue":192,"objective":"Fix the physical quest lifecycle so eligible quests remain offered until explicit Accept, objectives reach finish-ready without auto-Success, explicit Complete is required, and native success dialogue/reward delivery occurs exactly once.","acceptance":"Source and automated evidence support the native manual lifecycle and one exact-head candidate is ready for the coherent campaign runtime gate; AllQuestsCheckmarks remains ruled out as root cause absent new contrary evidence.","requiresUserRuntime":false},{"key":"existing-campaign-acceptance","issue":192,"objective":"Prove the current 31-quest / 11-offer campaign as one coherent playable baseline with native lifecycle, rewards, success message/mail, questassort unlock and restart persistence.","acceptance":"One batched physical milestone proves Offered -> explicit Accept -> Started -> progress -> AvailableForFinish -> explicit Complete -> Success -> reward/message -> unlock -> persistence with no duplicates.","requiresUserRuntime":true},{"key":"runtime-campaign-expansion","issue":192,"objective":"Materialize the prepared post-0.1.0 operation wave into actual runtime gameplay in bounded player-visible slices.","acceptance":"Approved operations exist as real runtime quests with objectives, EN/RU copy, rewards, progression and deterministic validation; manifest-only research is not product completion.","requiresUserRuntime":false},{"key":"selective-content-absorption","issue":192,"objective":"Consume approved QuestManiac/Andrudis/Natalya research only as curated rewritten source material for existing Admiral operations.","acceptance":"No second trader, duplicate campaign or unnecessary dependency is introduced; only distinct approved concepts improve Admiral.","requiresUserRuntime":false},{"key":"relationship-specialist-storefront","issue":192,"objective":"Add bounded relationship progression and finite specialist stock after lifecycle and campaign foundations are stable.","acceptance":"Relationship/storefront progression is finite, authored, Economy Admiral-compatible and does not create a second economy engine.","requiresUserRuntime":false},{"key":"stable-release","issue":192,"objective":"Produce and deliberately promote one exact-head install-ready SPT 4.1.5 Admiral Trader release candidate after the expanded product is complete.","acceptance":"One final batched runtime gate passes, the proven artifact is published, integration is verified and temporary work is cleaned up.","requiresUserRuntime":true}],"frozen":{"version":"0.1.0","exactHead":"053a62ff5f1cb545f13bc89a96bba3acd319a823","traderId":"d5c27bb3169f8dfbc13f6b69","questCount":31,"baselineOfferCount":4,"milestoneOfferCount":7,"portraitRoute":"/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg","portraitIdentityLocked":true,"economyOwnedByEconomyAdmiral":true,"status":"historical-baseline-not-active-authority"},"stableAcceptance":["native button-driven quest lifecycle uses explicit Accept and explicit Complete","success dialogue/mail and authored XP/standing/RUB/item rewards deliver exactly once","questassort success unlocks appear only after Success and persist after restart","current 31-quest / 11-offer baseline remains coherent before expansion","approved post-0.1.0 operations become real runtime gameplay rather than manifest-only planning","relationship/storefront progression remains finite and Economy Admiral-compatible","one exact-head SPT 4.1.5 release candidate passes the final batched runtime gate"],"activeDevelopment":{"issue":192,"pullRequest":328,"branch":"feature/admiral-trader-canonical-milestones","version":"0.1.0+milestones","targetSptVersion":"4.1.5","headAuthority":"live-pull-request-head","state":"lifecycle-correctness"},"supersededAuthorities":{"issues":[115],"pullRequests":[193,297,327]},"ruledOutHypotheses":["AllQuestsCheckmarks as root cause of the auto-accept/auto-turn-in lifecycle defect, based on user physical A/B test with the mod disabled"]},"economy":{"workstreamName":"Admiral Ec #2 MOD SPT","productName":"Economy Admiral","modulePath":"mods/Economy-Admiral","version":"0.1.0","resumePolicy":"first-phase-without-recorded-acceptance-evidence","integratedPrs":[222,223,226],"phasePlan":[{"key":"bounded-item-rewards","issue":220,"objective":"Complete provenance-safe bounded grouped item-reward normalization.","acceptance":"Integrated evidence in PR #222 remains green and protected by regression coverage.","requiresUserRuntime":false},{"key":"source-pressure-observation","issue":141,"objective":"Observe final DB acquisition pressure and bounded effective-acquisition paths without mutation.","acceptance":"Integrated evidence in PR #226 remains deterministic, bounded, attributable and explicit about Unknown channels.","requiresUserRuntime":false},{"key":"health-invariants","issue":143,"objective":"Define separately inspectable fail-closed health and anti-overcorrection invariants.","acceptance":"Integrated evidence in PR #226 preserves Pass/Fail/Unknown reasoning and blocks action on missing or conflicting evidence.","requiresUserRuntime":false},{"key":"trader-compatibility","issue":197,"objective":"Consume the maintained Admiral Trader explicit contract without inference or a second economy engine.","acceptance":"Identity/schema/classes/gates/finite stock semantics validate explicitly; absent or incompatible evidence fails closed and does not authorize mutation.","requiresUserRuntime":false},{"key":"beta-enforcement","issue":null,"objective":"Activate only bounded Economy Beta policies justified by completed provenance, pressure, health and compatibility evidence.","acceptance":"Off/Audit remain safe; Enforce is transactional, idempotent, pristine-protecting, bounded and fail-closed with deterministic preview/evidence.","requiresUserRuntime":false},{"key":"combined-release-candidate","issue":null,"objective":"Produce one complete exact-head Economy Beta release candidate.","acceptance":"The worker directly gives the user one GitHub-artifact SPT 4.1.3 runtime handoff after all automated enforcement and compatibility work is complete.","requiresUserRuntime":true},{"key":"stable-release","issue":null,"objective":"Remediate RC failures or deliberately publish the exact passing Economy package.","acceptance":"The batched runtime gate passes, integration/publication are verified and temporary work is cleaned up.","requiresUserRuntime":false}],"frozen":{"version":"0.1.0","modes":["Off","Audit","Enforce"],"preserveAcceptedEnforceAlpha":true,"classification":["Baseline","Relationship","Milestone"],"noSecondTraderEconomyEngine":true},"stableAcceptance":["provenance-safe bounded reward and economy enforcement","honest fail-closed source-pressure and health evidence","maintained Trader compatibility without inferred intent","transaction rollback, idempotence and pristine protection","one combined exact-head Economy Beta release candidate passes SPT 4.1.3 runtime validation"]},"tacticalHud":{"workstreamName":"Admiral Tactical HUD","productName":"Admiral Tactical HUD","modulePath":"mods/Admiral-Tactical-HUD","version":"1.13.3+milestones","resumePolicy":"first-phase-without-recorded-acceptance-evidence","phasePlan":[{"key":"m1-rc2-stabilization","issue":71,"objective":"Stabilize Admiral Tactical HUD 1.13.3 RC2 without adding post-RC functionality: reliable Compact/status/body/self icons, independent Full Census, clean short weapon-text kill feed, deterministic lifecycle and package.","acceptance":"Exact-head CI/package are green, no residual weapon-icon contract remains, and one batched physical SPT smoke proves Compact icons, fallback assets, Full Census, population, weapon-text kill feed, raid/menu lifecycle and clean logs.","requiresUserRuntime":true},{"key":"m2-architecture-consolidation","issue":71,"objective":"Simplify the accepted HUD architecture using typed EFT APIs where proven stable, reflection only for compatibility/optional integrations, unified world/player lifecycle, centralized icon/font/resources and removal of dead legacy paths.","acceptance":"Accepted M1 behavior is unchanged while complexity and redundant compatibility machinery are reduced; deterministic validation stays green with no new global scans or permanent polling.","requiresUserRuntime":false},{"key":"m3-population-best-of","issue":71,"objective":"Consolidate Compact and Full Census as two coherent population presentations using approved BotCensus-derived classification, glyph/resource, Fika observed-AI and bounded recount patterns.","acceptance":"Population classes/counts and both presentations are coherent and independently controllable, use one bounded data model, preserve MIT attribution and introduce no duplicate always-on counting engine.","requiresUserRuntime":false},{"key":"m4-status-best-of","issue":71,"objective":"Improve the status HUD with approved CompactHUD-derived typed status access, screen-aware BattleUI/Hideout visibility, optional total health and immediately usable Tactical Vest + Pockets grenade count.","acceptance":"Status remains compact and Tarkov-appropriate, grenade count excludes backpack/secure container, inventory/menu hiding is correct and update cadence is bounded.","requiresUserRuntime":false},{"key":"m5-hud-ux-layout","issue":71,"objective":"Unify per-module scale/gap, horizontal/vertical layout, screen clamping, drag/edit frame, save/reset positioning and safe cursor lock/visibility restore.","acceptance":"Editing is obvious, reversible and persistent, normal gameplay has no edit-mode overhead and all modules remain visually coherent.","requiresUserRuntime":false},{"key":"m6-performance-hardening","issue":71,"objective":"Minimize HUD runtime cost with separated status/population/kill cadences, cached immutable render data, reused scratch/UI objects and disabled-section zero/low-work behavior.","acceptance":"Guarded hot paths contain no recurring avoidable allocations/global scans/reflection, hidden sections do no unnecessary work, and no FPS/frametime/stutter regression is introduced.","requiresUserRuntime":false},{"key":"stable-release","issue":71,"objective":"Produce and deliberately promote one final install-ready Admiral Tactical HUD package after all approved milestones are complete.","acceptance":"Canonical naming/install paths, EN/RU terminology, third-party attribution and package cleanup are correct; one final exact-head physical runtime gate passes; merge/publication/main verification and branch cleanup succeed.","requiresUserRuntime":true}],"frozen":{"productName":"Admiral Tactical HUD","releaseLine":"1.13.3","compactWeaponNamesInsteadOfKillFeedIcons":true,"status":"identity-contract-not-active-branch-authority"},"referenceSources":[{"name":"CameronsWorks/BotCensus","url":"https://github.com/CameronsWorks/BotCensus","license":"MIT","role":"population classification, glyph/resource model, Fika observed-AI semantics, bounded census lifecycle, Bender-font patterns"},{"name":"notSENZE/CompactHUD","url":"https://github.com/notSENZE/CompactHUD","license":"MIT","role":"typed status reads, screen-aware visibility, vest+pockets grenade count, scale/gap, layout/edit/reset/cursor UX"}],"stableAcceptance":["single coherent Admiral Tactical HUD development line with one active implementation PR/branch at a time","canonical 1.13.3 identity and deterministic install/cleanup layout","compact readable weapon-name kill feed with no residual weapon-icon data contract","Compact and optional Full Census population modes share bounded coherent data behavior","status HUD has correct screen lifecycle and only useful non-duplicative information","EN/RU user-facing terminology and configuration descriptions are concise and consistent","no unbounded polling, global scans, hot-path reflection/allocations, freezes or frametime regression","MIT donor/reference attribution is complete without mandatory donor dependencies","one final exact-head package passes the batched physical SPT runtime gate"],"activeDevelopment":{"issue":71,"pullRequest":322,"branch":"recovery/tactical-hud-rc2-clean","version":"1.13.3-RC2","headAuthority":"live-pull-request-head","state":"m1-rc2-stabilization"},"supersededAuthorities":{"pullRequests":[195]}}}}
+{
+  "schemaVersion": 4,
+  "updatedAt": "2026-09-06",
+  "authority": {
+    "productAuthority": "user",
+    "coordinationWorker": "GitHub Work SPT",
+    "policyRef": "origin/main:AGENTS.md",
+    "registryRef": "origin/main:.github/workstreams.json",
+    "coordinationWorkerMayGateExecution": false,
+    "workerRequiresAnotherWorkerPermission": false,
+    "workerMayEncodeExplicitUserGovernanceInstruction": true,
+    "governanceBranchPrefix": "governance/",
+    "branchSelectionContract": {
+      "rule": "discover-single-live-implementation-pr-from-github",
+      "registryStoresTemporaryPointers": false,
+      "exactHeadSource": "single-live-pr-head",
+      "noLivePr": "create-from-current-main-when-coherent-implementation-exists",
+      "multipleLivePrs": "reconcile-to-one-from-current-issue-pr-evidence"
+    }
+  },
+  "execution": {
+    "stateMachine": [
+      "ACTIVE",
+      "IMPLEMENT",
+      "VALIDATE",
+      "FIX_UNTIL_GREEN",
+      "CONTINUE_NEXT_RECORDED_PACKAGE",
+      "RELEASE_CANDIDATE",
+      "ONE_BATCHED_RUNTIME_TEST",
+      "FAIL_REMEDIATE_OR_PASS_STABLE_RELEASE"
+    ],
+    "roadmapAuthorization": "user-standing-authorization-all-recorded-phases",
+    "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
+    "workerMayAdvanceWithinRecordedRoadmap": true,
+    "registryUpdateRequiredForRecordedPhaseTransition": false,
+    "liveImplementationAuthority": "discover-single-live-pr-from-github",
+    "registryStoresDynamicImplementationPointers": false,
+    "maxActivePullRequestsPerModule": 1,
+    "runtimeGateActivation": "worker-direct-to-user-at-recorded-runtime-phase",
+    "workerMayRequestUserRuntimeDirectly": true,
+    "workerMayChangeRoadmapWithoutExplicitUserInstruction": false,
+    "workerMayPerformGovernanceWithoutExplicitUserInstruction": false
+  },
+  "workstreams": {
+    "belt": {
+      "workstreamName": "B&A&HB #2 MOD SPT",
+      "productName": "B&A&HB #2 MOD SPT",
+      "modulePath": "mods/SPT-Belt-Armband-Inventory",
+      "version": "0.2.0",
+      "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
+      "phasePlan": [
+        {
+          "key": "v0.2-product-consolidation",
+          "issue": 285,
+          "objective": "Complete the coherent B&A&HB v0.2 product line: compact HeadBand presentation, split utility cells, Wrist Wallet, Magazine Armband, dedicated Magazine Belt and HeadBand slots, Dogtag Case integration, persistent identity safety and ownership-bounded recovery.",
+          "acceptance": "Current v0.2 behavior, identities, profile recovery, client/server builds, package layout and deterministic product guards are green with no unresolved profile/load-save regression.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "magazine-belt-reload-hardening",
+          "issue": 287,
+          "objective": "Finish vanilla-first Reload/QuickReload source selection so the exact Magazine Belt slot15 fallback is available without retry, redirect, alternate-source or unsupported-path behavior drift.",
+          "acceptance": "Exact reload ownership/fail-closed guards and regressions are green, Magazine Armband remains preserved, and one bundled v0.2 candidate is ready to prove Magazine Belt reload physically.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "combined-release-candidate",
+          "issue": 285,
+          "objective": "Produce one coherent exact-head SPT 4.1.3 B&A&HB v0.2 release candidate covering all intended wearables, Dogtag Case behavior and Magazine Armband/Belt reload sourcing.",
+          "acceptance": "All feasible automated validation is green and the worker directly gives the user one exact GitHub-artifact handoff with a short complete PASS/FAIL checklist.",
+          "requiresUserRuntime": true
+        },
+        {
+          "key": "stable-release",
+          "issue": 285,
+          "objective": "Remediate bundled runtime failures or deliberately promote the exact passing B&A&HB v0.2 candidate.",
+          "acceptance": "The combined physical gate passes, the proven package is published, integration is verified, Issues are reconciled and temporary implementation branches are cleaned up.",
+          "requiresUserRuntime": false
+        }
+      ],
+      "frozen": {
+        "version": "0.1.0",
+        "slotIds": [15, 16],
+        "preserveDistributedIds": true,
+        "status": "published-stable-baseline-not-active-roadmap"
+      },
+      "stableAcceptance": [
+        "all previously distributed v0.1.0 identities remain immutable and profile-safe",
+        "Wrist Wallet, Magazine Armband, Magazine Belt, Utility HeadBand and Dogtag Case keep their intended slots, filters and ownership boundaries",
+        "compact HeadBand and split utility-cell presentation remain coherent and persistent",
+        "Magazine Armband and Magazine Belt reload sourcing both follow the exact vanilla-first fail-closed contract",
+        "profile-safe update, disable, uninstall and downgrade paths preserve unrelated data",
+        "no unbounded polling, scene scans, freezes or global UI mutation",
+        "one exact-head B&A&HB v0.2 release candidate passes the batched SPT 4.1.3 runtime gate"
+      ]
+    },
+    "trader": {
+      "workstreamName": "Admiral TR #4 MOD SPT",
+      "productName": "Admiral Trader",
+      "modulePath": "mods/Admiral-Trader",
+      "version": "0.1.0+milestones",
+      "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
+      "phasePlan": [
+        {
+          "key": "lifecycle-correctness",
+          "issue": 192,
+          "objective": "Fix the physical quest lifecycle so eligible quests remain offered until explicit Accept, objectives reach finish-ready without auto-Success, explicit Complete is required, and native success dialogue/reward delivery occurs exactly once.",
+          "acceptance": "Source and automated evidence support the native manual lifecycle and one exact-head candidate is ready for the coherent campaign runtime gate; AllQuestsCheckmarks remains ruled out as root cause absent new contrary evidence.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "existing-campaign-acceptance",
+          "issue": 192,
+          "objective": "Prove the current 31-quest / 11-offer campaign as one coherent playable baseline with native lifecycle, rewards, success message/mail, questassort unlock and restart persistence.",
+          "acceptance": "One batched physical milestone proves Offered -> explicit Accept -> Started -> progress -> AvailableForFinish -> explicit Complete -> Success -> reward/message -> unlock -> persistence with no duplicates.",
+          "requiresUserRuntime": true
+        },
+        {
+          "key": "runtime-campaign-expansion",
+          "issue": 192,
+          "objective": "Materialize the prepared post-0.1.0 operation wave into actual runtime gameplay in bounded player-visible slices.",
+          "acceptance": "Approved operations exist as real runtime quests with objectives, EN/RU copy, rewards, progression and deterministic validation; manifest-only research is not product completion.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "selective-content-absorption",
+          "issue": 192,
+          "objective": "Consume approved QuestManiac/Andrudis/Natalya research only as curated rewritten source material for existing Admiral operations.",
+          "acceptance": "No second trader, duplicate campaign or unnecessary dependency is introduced; only distinct approved concepts improve Admiral.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "relationship-specialist-storefront",
+          "issue": 192,
+          "objective": "Add bounded relationship progression and finite specialist stock after lifecycle and campaign foundations are stable.",
+          "acceptance": "Relationship/storefront progression is finite, authored, Economy Admiral-compatible and does not create a second economy engine.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "stable-release",
+          "issue": 192,
+          "objective": "Produce and deliberately promote one exact-head install-ready SPT 4.1.5 Admiral Trader release candidate after the expanded product is complete.",
+          "acceptance": "One final batched runtime gate passes, the proven artifact is published, integration is verified and temporary work is cleaned up.",
+          "requiresUserRuntime": true
+        }
+      ],
+      "frozen": {
+        "version": "0.1.0",
+        "exactHead": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+        "traderId": "d5c27bb3169f8dfbc13f6b69",
+        "questCount": 31,
+        "baselineOfferCount": 4,
+        "milestoneOfferCount": 7,
+        "portraitRoute": "/files/trader/avatar/d5c27bb3169f8dfbc13f6b69.jpg",
+        "portraitIdentityLocked": true,
+        "economyOwnedByEconomyAdmiral": true,
+        "status": "historical-baseline-not-active-authority"
+      },
+      "stableAcceptance": [
+        "native button-driven quest lifecycle uses explicit Accept and explicit Complete",
+        "success dialogue/mail and authored XP/standing/RUB/item rewards deliver exactly once",
+        "questassort success unlocks appear only after Success and persist after restart",
+        "current 31-quest / 11-offer baseline remains coherent before expansion",
+        "approved post-0.1.0 operations become real runtime gameplay rather than manifest-only planning",
+        "relationship/storefront progression remains finite and Economy Admiral-compatible",
+        "one exact-head SPT 4.1.5 release candidate passes the final batched runtime gate"
+      ],
+      "supersededAuthorities": {
+        "issues": [115],
+        "pullRequests": [193, 297, 327]
+      },
+      "ruledOutHypotheses": [
+        "AllQuestsCheckmarks as root cause of the auto-accept/auto-turn-in lifecycle defect, based on user physical A/B test with the mod disabled"
+      ]
+    },
+    "economy": {
+      "workstreamName": "Admiral Ec #2 MOD SPT",
+      "productName": "Economy Admiral",
+      "modulePath": "mods/Economy-Admiral",
+      "version": "0.1.0",
+      "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
+      "integratedPrs": [222, 223, 226],
+      "phasePlan": [
+        {
+          "key": "bounded-item-rewards",
+          "issue": 220,
+          "objective": "Complete provenance-safe bounded grouped item-reward normalization.",
+          "acceptance": "Integrated evidence in PR #222 remains green and protected by regression coverage.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "source-pressure-observation",
+          "issue": 141,
+          "objective": "Observe final DB acquisition pressure and bounded effective-acquisition paths without mutation.",
+          "acceptance": "Integrated evidence in PR #226 remains deterministic, bounded, attributable and explicit about Unknown channels.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "health-invariants",
+          "issue": 143,
+          "objective": "Define separately inspectable fail-closed health and anti-overcorrection invariants.",
+          "acceptance": "Integrated evidence in PR #226 preserves Pass/Fail/Unknown reasoning and blocks action on missing or conflicting evidence.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "trader-compatibility",
+          "issue": 197,
+          "objective": "Consume the maintained Admiral Trader explicit contract without inference or a second economy engine.",
+          "acceptance": "Identity/schema/classes/gates/finite stock semantics validate explicitly; absent or incompatible evidence fails closed and does not authorize mutation.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "beta-enforcement",
+          "issue": null,
+          "objective": "Activate only bounded Economy Beta policies justified by completed provenance, pressure, health and compatibility evidence.",
+          "acceptance": "Off/Audit remain safe; Enforce is transactional, idempotent, pristine-protecting, bounded and fail-closed with deterministic preview/evidence.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "combined-release-candidate",
+          "issue": null,
+          "objective": "Produce one complete exact-head Economy Beta release candidate.",
+          "acceptance": "The worker directly gives the user one GitHub-artifact SPT 4.1.3 runtime handoff after all automated enforcement and compatibility work is complete.",
+          "requiresUserRuntime": true
+        },
+        {
+          "key": "stable-release",
+          "issue": null,
+          "objective": "Remediate RC failures or deliberately publish the exact passing Economy package.",
+          "acceptance": "The batched runtime gate passes, integration/publication are verified and temporary work is cleaned up.",
+          "requiresUserRuntime": false
+        }
+      ],
+      "frozen": {
+        "version": "0.1.0",
+        "modes": ["Off", "Audit", "Enforce"],
+        "preserveAcceptedEnforceAlpha": true,
+        "classification": ["Baseline", "Relationship", "Milestone"],
+        "noSecondTraderEconomyEngine": true
+      },
+      "stableAcceptance": [
+        "provenance-safe bounded reward and economy enforcement",
+        "honest fail-closed source-pressure and health evidence",
+        "maintained Trader compatibility without inferred intent",
+        "transaction rollback, idempotence and pristine protection",
+        "one combined exact-head Economy Beta release candidate passes SPT 4.1.3 runtime validation"
+      ]
+    },
+    "tacticalHud": {
+      "workstreamName": "Admiral Tactical HUD",
+      "productName": "Admiral Tactical HUD",
+      "modulePath": "mods/Admiral-Tactical-HUD",
+      "version": "1.13.3",
+      "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
+      "phasePlan": [
+        {
+          "key": "m1-rc2-stabilization",
+          "issue": 71,
+          "objective": "Stabilize Admiral Tactical HUD 1.13.3 RC2 without adding post-RC functionality: reliable Compact/status/body/self icons, independent Full Census, clean short weapon-text kill feed, deterministic lifecycle and package.",
+          "acceptance": "Exact-head CI/package are green, no residual weapon-icon contract remains, and one batched physical SPT smoke proves Compact icons, fallback assets, Full Census, population, weapon-text kill feed, raid/menu lifecycle and clean logs.",
+          "requiresUserRuntime": true
+        },
+        {
+          "key": "m2-architecture-consolidation",
+          "issue": 71,
+          "objective": "Simplify the accepted HUD architecture using typed EFT APIs where proven stable, reflection only for compatibility/optional integrations, unified world/player lifecycle, centralized icon/font/resources and removal of dead legacy paths.",
+          "acceptance": "Accepted M1 behavior is unchanged while complexity and redundant compatibility machinery are reduced; deterministic validation stays green with no new global scans or permanent polling.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "m3-population-best-of",
+          "issue": 71,
+          "objective": "Consolidate Compact and Full Census as two coherent population presentations using approved BotCensus-derived classification, glyph/resource, Fika observed-AI and bounded recount patterns.",
+          "acceptance": "Population classes/counts and both presentations are coherent and independently controllable, use one bounded data model, preserve MIT attribution and introduce no duplicate always-on counting engine.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "m4-status-best-of",
+          "issue": 71,
+          "objective": "Improve the status HUD with approved CompactHUD-derived typed status access, screen-aware BattleUI/Hideout visibility, optional total health and immediately usable Tactical Vest + Pockets grenade count.",
+          "acceptance": "Status remains compact and Tarkov-appropriate, grenade count excludes backpack/secure container, inventory/menu hiding is correct and update cadence is bounded.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "m5-hud-ux-layout",
+          "issue": 71,
+          "objective": "Unify per-module scale/gap, horizontal/vertical layout, screen clamping, drag/edit frame, save/reset positioning and safe cursor lock/visibility restore.",
+          "acceptance": "Editing is obvious, reversible and persistent, normal gameplay has no edit-mode overhead and all modules remain visually coherent.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "m6-performance-hardening",
+          "issue": 71,
+          "objective": "Minimize HUD runtime cost with separated status/population/kill cadences, cached immutable render data, reused scratch/UI objects and disabled-section zero/low-work behavior.",
+          "acceptance": "Guarded hot paths contain no recurring avoidable allocations/global scans/reflection, hidden sections do no unnecessary work, and no FPS/frametime/stutter regression is introduced.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "stable-release",
+          "issue": 71,
+          "objective": "Produce and deliberately promote one final install-ready Admiral Tactical HUD package after all approved milestones are complete.",
+          "acceptance": "Canonical naming/install paths, EN/RU terminology, third-party attribution and package cleanup are correct; one final exact-head physical runtime gate passes; merge/publication/main verification and branch cleanup succeed.",
+          "requiresUserRuntime": true
+        }
+      ],
+      "frozen": {
+        "productName": "Admiral Tactical HUD",
+        "releaseLine": "1.13.3",
+        "compactWeaponNamesInsteadOfKillFeedIcons": true,
+        "status": "identity-contract-not-active-branch-authority"
+      },
+      "referenceSources": [
+        {
+          "name": "CameronsWorks/BotCensus",
+          "url": "https://github.com/CameronsWorks/BotCensus",
+          "license": "MIT",
+          "role": "population classification, glyph/resource model, Fika observed-AI semantics, bounded census lifecycle, Bender-font patterns"
+        },
+        {
+          "name": "notSENZE/CompactHUD",
+          "url": "https://github.com/notSENZE/CompactHUD",
+          "license": "MIT",
+          "role": "typed status reads, screen-aware visibility, vest+pockets grenade count, scale/gap, layout/edit/reset/cursor UX"
+        }
+      ],
+      "stableAcceptance": [
+        "single coherent Admiral Tactical HUD development line with one active implementation PR/branch at a time",
+        "canonical 1.13.3 identity and deterministic install/cleanup layout",
+        "compact readable weapon-name kill feed with no residual weapon-icon data contract",
+        "Compact and optional Full Census population modes share bounded coherent data behavior",
+        "status HUD has correct screen lifecycle and only useful non-duplicative information",
+        "EN/RU user-facing terminology and configuration descriptions are concise and consistent",
+        "no unbounded polling, global scans, hot-path reflection/allocations, freezes or frametime regression",
+        "MIT donor/reference attribution is complete without mandatory donor dependencies",
+        "one final exact-head package passes the batched physical SPT runtime gate"
+      ],
+      "supersededAuthorities": {
+        "pullRequests": [195]
+      }
+    }
+  }
+}
