@@ -1,103 +1,123 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "M3-context-selection-plan-only",
   "campaignAuthority": "m3-campaign-product-spec.json",
+  "nativeConditionEvidence": "spt415-native-condition-evidence.json",
   "runtimeMaterialize": false,
-  "selectionRule": "A map or target is selected because it makes the operation's decision legible. Map variety alone is not a reason to create or retain a quest. Every selection remains fail-closed until exact SPT 4.1.5 target names/roles and current semantic overlap are proven.",
+  "selectionRule": "A map or target is selected because it makes the operation's decision legible. Exact SPT 4.1.5 database evidence may prove native primitives without authorizing runtime materialization; product semantics, overlap, role aliases and same-raid coupling remain fail-closed until separately proven.",
   "contexts": {
     "acoustic-discipline": {
       "mapIntent": "Woods",
+      "nativeLocationTarget": "Woods",
       "purpose": "Open terrain and long approaches make listening and route verification plausible without requiring combat.",
       "exactZone": null,
       "combatRequired": false,
       "continuity": "Establishes the same wider field route later used by Acoustic Contact.",
-      "status": "map-product-selected-zone-pending"
+      "status": "location-proven-zone-design-pending"
     },
     "forward-reserve": {
       "mapIntent": null,
       "purpose": "This is a logistics handover between raids; inventing a raid location would add friction without adding a decision.",
-      "status": "no-map-required"
+      "nativeConditionCandidates": ["FindItem", "HandoverItem"],
+      "status": "native-handover-primitives-proven-no-map-required"
     },
     "low-profile": {
       "mapIntent": "Interchange",
+      "nativeLocationTarget": "Interchange",
       "purpose": "A commercial complex full of improvised equipment and opportunistic traffic supports the idea of moving with ordinary, replaceable gear rather than a premium display loadout.",
       "exactZone": null,
-      "status": "map-product-selected-pending-overlap"
+      "nativeConditionCandidates": ["Equipment", "Kills", "Location"],
+      "status": "location-and-equipment-primitives-proven-overlap-and-loadout-pending"
     },
     "mobility-doctrine": {
       "mapIntent": "Shoreline",
+      "nativeLocationTarget": "Shoreline",
       "purpose": "Long movement between exposed and built-up terrain makes mobility a real reason to prefer lighter protection rather than merely the next armor tier.",
       "exactContactTarget": "ordinary Scav candidate",
+      "nativeKillTarget": "Savage",
       "maximumTargetCount": 3,
-      "status": "map-product-selected-target-pending-overlap"
+      "status": "location-and-scav-target-primitives-proven-overlap-pending"
     },
     "borrowed-access": {
       "mapIntent": "Customs",
-      "historicalTargetName": "bigmap",
-      "historicalVisitPlaceProxy": "room206_water",
+      "nativeLocationTarget": "bigmap",
+      "nativeVisitPlaceTarget": "room206_water",
       "purpose": "A restricted interior route is used as access reconnaissance; the objective is entry and confirmation, not key ownership.",
-      "status": "historical-proxy-selected-revalidate-spt415"
+      "status": "exact-location-and-visit-place-proven-overlap-pending"
     },
     "acoustic-contact": {
       "mapIntent": "Woods",
+      "nativeLocationTarget": "Woods",
       "purpose": "Returns to the route established by Acoustic Discipline, but now the problem is a real hostile presence rather than uncertain sound.",
       "targetIntent": "ordinary Scav",
+      "nativeKillTarget": "Savage",
       "targetCount": 2,
-      "status": "product-selected-revalidate-spt415-and-overlap"
+      "status": "exact-location-and-scav-target-proven-overlap-pending"
     },
     "route-security": {
       "mapIntent": "Customs",
-      "historicalTargetName": "bigmap",
+      "nativeLocationTarget": "bigmap",
       "purpose": "Customs functions as the campaign's practical logistics corridor; this is the consequence operation after access and supply work, not a generic map-clear quest.",
       "targetIntent": "ordinary Scav",
+      "nativeKillTarget": "Savage",
       "maximumTargetCount": 6,
-      "status": "product-selected-revalidate-spt415-and-overlap"
+      "status": "exact-location-and-scav-target-proven-overlap-pending"
     },
     "contractor-intercept": {
       "mapIntent": "Reserve",
-      "historicalTargetName": "RezervBase",
+      "nativeLocationTarget": "RezervBase",
       "purpose": "A military movement node supports a short counter-contractor intercept distinct from ordinary route clearance.",
       "targetIntent": "AnyPmc unless a narrower exact SPT 4.1.5 faction selector is proven and materially improves the operation",
+      "nativeKillTarget": "AnyPmc",
       "maximumTargetCount": 4,
       "timeWindowCandidate": {
-        "state": "design-candidate-not-final",
+        "state": "native-shape-proven-product-window-not-final",
         "intent": "Give the hostile movement window a real gameplay meaning instead of leaving it as flavor text.",
-        "preferredShape": "native Kills daytime window inside the same CounterCreator if exact SPT 4.1.5 semantics support it",
+        "preferredShape": "Kills daytime window inside the same CounterCreator",
+        "observedExactWindows": ["22->10", "21->4", "21->5", "21->6", "22->7"],
         "exactHours": null,
-        "rejectIf": "The time restriction produces scheduling annoyance, materially duplicates a current vanilla objective, or cannot be proven against exact SPT 4.1.5."
+        "rejectIf": "The time restriction produces scheduling annoyance or materially duplicates a current vanilla objective."
       },
-      "status": "map-product-selected-time-window-under-review"
+      "status": "exact-location-anypmc-daytime-primitives-proven-product-window-and-overlap-pending"
     },
     "observation-window": {
       "mapIntent": "Shoreline",
+      "nativeLocationTarget": "Shoreline",
       "purpose": "Long natural sightlines make stand-off control intelligible without turning the operation into an arbitrary distance staircase.",
       "targetIntent": "One or two specific practical threats; prefer a role/context that is not simply AnyPmc at range.",
-      "distanceIntent": "One meaningful minimum band selected after exact SPT 4.1.5 distance semantics and current vanilla precision overlap are measured.",
-      "status": "map-product-selected-target-and-distance-pending"
+      "distanceIntent": "One meaningful minimum band selected after current vanilla precision overlap is measured.",
+      "observedExactDistanceShapes": [">=:40", ">=:45", ">=:60", ">=:70", ">=:75", ">=:80", ">=:100", ">=:350"],
+      "status": "exact-location-distance-primitives-proven-target-and-overlap-pending"
     },
     "heavy-assault": {
       "mapIntent": "Factory",
+      "nativeLocationTargets": ["factory4_day", "factory4_night"],
       "purpose": "Short sightlines and compressed contact make accepting heavy protection a coherent tactical choice, sharply separating this operation from Shoreline Mobility Doctrine.",
       "targetIntent": "ordinary hostile element unless a more specific target survives overlap review",
+      "nativeConditionCandidates": ["Equipment", "Kills", "Location"],
       "maximumTargetCount": 4,
-      "status": "map-product-selected-target-pending-overlap"
+      "status": "factory-day-night-location-and-equipment-primitives-proven-exact-variant-and-overlap-pending"
     },
     "break-the-perimeter": {
       "mapIntent": "Lighthouse",
+      "nativeLocationTarget": "Lighthouse",
       "purpose": "Rogue defensive positions give the perimeter-disruption theme an actual prepared threat rather than another ordinary road clearance.",
       "targetIntent": "Rogue",
+      "nativeSavageRoleCandidate": "exUsec",
       "maximumTargetCount": 6,
-      "waterTreatmentBoundary": "Water Treatment is narrative context until an exact SPT 4.1.5 sub-location condition is proven. Do not imply a zone selector that runtime cannot enforce.",
-      "status": "product-selected-revalidate-spt415-role-location"
+      "waterTreatmentBoundary": "Water Treatment is narrative context until an exact SPT 4.1.5 sub-location condition is proven. Lighthouse is proven; no Water Treatment zone selector is claimed.",
+      "status": "lighthouse-proven-exusec-role-candidate-semantic-and-zone-pending"
     },
     "internal-security": {
       "mapIntent": "The Lab",
-      "historicalTargetName": "laboratory",
+      "nativeLocationTarget": "laboratory",
       "purpose": "Existing Labs access is exercised under pressure; the operation tests using clearance, controlling one Raider response and leaving, not earning another access token.",
       "targetIntent": "Raider",
+      "nativeSavageRoleCandidate": "pmcBot",
       "maximumTargetCount": 4,
-      "status": "product-selected-revalidate-spt415-role-location"
+      "sameRaidBoundary": "Exact vanilla data proves Kills+Location and ExitStatus+Location independently but does not prove a CounterCreator combining Kills with ExitStatus. Do not promise kill-and-extract coupling yet.",
+      "status": "laboratory-proven-pmcbot-role-candidate-semantic-and-exit-coupling-pending"
     }
   },
   "continuityPairs": [
