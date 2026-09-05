@@ -18,7 +18,7 @@ class WeaponAmmoPoolTests(unittest.TestCase):
             "a3": {"_type": "Item", "_name": "High", "_props": {"Caliber": "Caliber545x39", "PenetrationPower": 50, "Damage": 45}},
         }
         authored = {
-            "targetSptVersion": "4.1.4",
+            "targetSptVersion": "4.1.5",
             "families": [{"id": "assault-rifles", "caliberHints": ["5.45x39"]}],
         }
         pools = module.build_pools(items, authored)
@@ -36,7 +36,7 @@ class WeaponAmmoPoolTests(unittest.TestCase):
             "frag": {"_type": "Item", "_name": "shrapnel_F1", "_props": {"Caliber": "Caliber545x39", "PenetrationPower": 101, "Damage": 100}},
         }
         authored = {
-            "targetSptVersion": "4.1.4",
+            "targetSptVersion": "4.1.5",
             "families": [{"id": "assault-rifles", "caliberHints": ["5.45x39", "7.62x39"]}],
         }
         family = module.build_pools(items, authored)["families"]["assault-rifles"]
@@ -49,11 +49,15 @@ class WeaponAmmoPoolTests(unittest.TestCase):
             "launcher": {"_type": "Item", "_name": "Launcher", "_props": {"weapClass": "grenadeLauncher", "ammoCaliber": "Caliber40x46"}},
             "grenade": {"_type": "Item", "_name": "40mm grenade", "_props": {"Caliber": "Caliber40x46", "PenetrationPower": 5, "Damage": 100, "ammoType": "grenade"}},
         }
-        authored = {"targetSptVersion": "4.1.4", "families": [{"id": "special-weapons", "caliberHints": []}]}
+        authored = {"targetSptVersion": "4.1.5", "families": [{"id": "special-weapons", "caliberHints": []}]}
         family = module.build_pools(items, authored)["families"]["special-weapons"]
         self.assertEqual(family["weaponCount"], 1)
         self.assertEqual(family["ammoCount"], 0)
         self.assertEqual(family["excludedAmmoCount"], 1)
+
+    def test_rejects_stale_runtime_target(self):
+        with self.assertRaises(ValueError):
+            module.build_pools({}, {"targetSptVersion": "4.1.4", "families": []})
 
     def test_blackout_does_not_alias_366_tkm(self):
         tokens = module.caliber_tokens([".300 Blackout"])
