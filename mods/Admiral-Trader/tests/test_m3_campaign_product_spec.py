@@ -49,6 +49,12 @@ class M3CampaignProductSpecTests(unittest.TestCase):
         self.assertEqual(set(self.progression["prerequisites"]), set(product_keys))
         self.assertEqual(len(editorial_keys), len(set(editorial_keys)))
 
+    def test_product_level_intent_matches_progression_authority(self):
+        product_levels = {
+            row["key"]: row["campaignLevelIntent"] for row in self.product["operations"]
+        }
+        self.assertEqual(product_levels, self.progression["levels"])
+
     def test_act_membership_is_exact_and_nonduplicated(self):
         product_keys = {row["key"] for row in self.product["operations"]}
         flattened = [key for act in self.product["acts"] for key in act["operations"]]
