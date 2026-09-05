@@ -68,7 +68,7 @@ namespace SPTPopCounter
 
         sealed class KillLine
         {
-            public string Killer, Victim, WeaponIcon, HitIcon, DistanceText;
+            public string Killer, Victim, WeaponText, HitIcon, DistanceText;
             public float Created;
             public bool HasDistance;
         }
@@ -611,7 +611,7 @@ namespace SPTPopCounter
             {
                 Killer = killer,
                 Victim = victim,
-                WeaponIcon = HudVisualRenderer.WeaponKey(cleanWeapon),
+                WeaponText = cleanWeapon,
                 HitIcon = HudVisualRenderer.HitKey(hit),
                 DistanceText = hasDist ? Mathf.RoundToInt(dist) + "m" : string.Empty,
                 HasDistance = hasDist,
