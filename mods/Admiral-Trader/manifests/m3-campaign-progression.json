@@ -1,8 +1,9 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "Admiral Trader",
   "status": "M3-progression-plan-only",
   "campaignAuthority": "m3-campaign-product-spec.json",
+  "externalPrerequisiteAuthority": "m3-existing-campaign-integration.json",
   "runtimeMaterialize": false,
   "designRules": {
     "singleLinearChainAllowed": false,
@@ -10,11 +11,12 @@
     "salesVolumeGateAllowed": false,
     "repeatableGateAllowed": false,
     "mandatoryAllOperationsBeforeNextActAllowed": false,
-    "maximumDirectPrerequisitesPerOperation": 2,
+    "maximumTotalDirectPrerequisitesPerOperation": 2,
     "prerequisiteLevelRegressionAllowed": false,
     "questCountGateAllowed": false,
     "standingAsQuestPrerequisiteAllowed": false,
-    "loyaltyAsQuestPrerequisiteAllowed": false
+    "loyaltyAsQuestPrerequisiteAllowed": false,
+    "crossCampaignPrerequisiteMustRepresentRealCapability": true
   },
   "levels": {
     "acoustic-discipline": 15,
@@ -39,10 +41,16 @@
     "acoustic-contact": ["acoustic-discipline"],
     "route-security": ["forward-reserve", "borrowed-access"],
     "contractor-intercept": ["route-security"],
-    "observation-window": ["acoustic-contact", "borrowed-access"],
+    "observation-window": ["acoustic-contact"],
     "heavy-assault": ["mobility-doctrine"],
     "break-the-perimeter": ["contractor-intercept", "observation-window"],
-    "internal-security": ["heavy-assault", "observation-window"]
+    "internal-security": ["heavy-assault"]
+  },
+  "externalPrerequisites": {
+    "borrowed-access": ["cba3374f11375c4e7eea9efe"],
+    "contractor-intercept": ["9c438fa48f645044ddc75e8d"],
+    "observation-window": ["153839f368b80b6fbc36d29e"],
+    "internal-security": ["68a6527a3c73b2e85977d7a1"]
   },
   "branches": {
     "reconnaissance": ["acoustic-discipline", "acoustic-contact", "observation-window"],
@@ -74,7 +82,7 @@
     {
       "from": "acoustic-contact",
       "to": "observation-window",
-      "reason": "Close-range situational awareness grows into deliberate stand-off control instead of another headset or kill-count sequel."
+      "reason": "Close-range situational awareness grows into deliberate stand-off control; the existing Precision Fieldwork milestone supplies the weapon-skill prerequisite instead of another generic distance qualification."
     },
     {
       "from": "low-profile",
@@ -99,15 +107,12 @@
     {
       "from": "heavy-assault",
       "to": "internal-security",
-      "reason": "Labs security is late-game pressure work and assumes the player has already proven heavy assault discipline."
-    },
-    {
-      "from": "observation-window",
-      "to": "internal-security",
-      "reason": "The capstone also requires judgement about when a threat has been sufficiently controlled and when to leave."
+      "reason": "Labs security is late-game pressure work and assumes the player has already proven heavy assault discipline; existing Access Protocol: Clearance supplies the separate Labs-access gate."
     }
   ],
   "rootOperations": ["acoustic-discipline", "forward-reserve", "low-profile", "borrowed-access"],
+  "unconditionallyAvailableM3RootsByInternalGraph": ["acoustic-discipline", "forward-reserve", "low-profile"],
+  "externallyGatedM3Roots": ["borrowed-access"],
   "terminalOperations": ["break-the-perimeter", "internal-security"],
   "heldOutsideGraph": [
     {
@@ -117,17 +122,20 @@
   ],
   "graphContracts": {
     "operationCount": 12,
+    "externalPrerequisiteCount": 4,
     "acyclicRequired": true,
     "allOperationsReachableFromRootSet": true,
     "allOperationsHaveConcretePlayerLevel": true,
     "noOperationRequiresItselfTransitively": true,
     "laterOperationLevelMustBeAtLeastEveryDirectPrerequisiteLevel": true,
+    "maximumTotalDirectPrerequisitesPerOperation": 2,
     "finalMaterializationMaySplitAcrossBoundedSlices": true,
     "runtimeSubsetMustRevalidateReachability": true
   },
   "materializationGate": {
     "requiresM1LifecyclePass": true,
     "requiresM2ExistingCampaignPass": true,
+    "requiresExactExistingQuestIds": true,
     "requiresExactSpt415ConditionProofPerOperation": true,
     "requiresGraphValidationAgainstMaterializedSubset": true,
     "requiresBatchedPhysicalMilestonePerMeaningfulSlice": true
