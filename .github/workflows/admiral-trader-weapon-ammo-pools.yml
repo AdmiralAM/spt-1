@@ -31,7 +31,7 @@ jobs:
       - name: Run Admiral Trader unit tests
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 
-      - name: Fetch exact official SPT 4.1.5 item database
+      - name: Fetch exact official SPT 4.1.5 databases
         run: |
           set -euo pipefail
           mkdir -p build/spt415
@@ -42,25 +42,54 @@ jobs:
           echo '5cc04274c88115730fe982fd12c7525d57e5fc64b6b7271ab3929383e3ac4432  build/SPT-4.1.5-40743-7d7add5.7z' | sha256sum --check --strict
           7z x "$archive" -obuild/spt415 -y > /dev/null
           python - <<'PY'
+          import hashlib
           import json
           import shutil
           from pathlib import Path
 
           root = Path('build/spt415')
-          matches = [
-              path for path in root.rglob('*')
-              if path.is_file()
-              and path.as_posix().lower().endswith('/spt_data/database/templates/items.json')
-          ]
-          if len(matches) != 1:
-              raise SystemExit(f'expected exactly one exact SPT 4.1.5 items.json, found {len(matches)}: {matches}')
-          payload = json.loads(matches[0].read_text(encoding='utf-8-sig'))
-          if not isinstance(payload, dict) or len(payload) < 1000:
-              raise SystemExit(f'exact SPT 4.1.5 item database has unexpected shape/size: {type(payload).__name__} / {len(payload) if isinstance(payload, dict) else "n/a"}')
-          shutil.copyfile(matches[0], 'build/backend-items.json')
-          print(f'exact SPT 4.1.5 item DB: {matches[0]} ({len(payload)} records)')
+          expected = {
+              'items': '/spt_data/database/templates/items.json',
+              'quests': '/spt_data/database/templates/quests.json',
+          }
+          resolved = {}
+          for key, suffix in expected.items():
+              matches = [
+                  path for path in root.rglob('*')
+                  if path.is_file() and path.as_posix().lower().endswith(suffix)
+              ]
+              if len(matches) != 1:
+                  raise SystemExit(f'expected exactly one exact SPT 4.1.5 {key}.json, found {len(matches)}: {matches}')
+              payload = json.loads(matches[0].read_text(encoding='utf-8-sig'))
+              if not isinstance(payload, dict) or len(payload) < 400:
+                  raise SystemExit(f'exact SPT 4.1.5 {key} database has unexpected shape/size: {type(payload).__name__} / {len(payload) if isinstance(payload, dict) else "n/a"}')
+              destination = Path(f'build/exact-spt415-{key}.json')
+              shutil.copyfile(matches[0], destination)
+              resolved[key] = {
+                  'path': matches[0].as_posix(),
+                  'records': len(payload),
+                  'sha256': hashlib.sha256(matches[0].read_bytes()).hexdigest(),
+              }
+          shutil.copyfile('build/exact-spt415-items.json', 'build/backend-items.json')
+          Path('build/spt415-database-provenance.json').write_text(
+              json.dumps({
+                  'targetSptVersion': '4.1.5',
+                  'archive': 'SPT-4.1.5-40743-7d7add5.7z',
+                  'archiveSha256': '5cc04274c88115730fe982fd12c7525d57e5fc64b6b7271ab3929383e3ac4432',
+                  'databases': resolved,
+              }, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          print(json.dumps(resolved, sort_keys=True))
           PY
           python -m json.tool build/backend-items.json > /dev/null
+          python -m json.tool build/exact-spt415-quests.json > /dev/null
+
+      - name: Audit exact SPT 4.1.5 native quest condition shapes
+        run: >-
+          python mods/Admiral-Trader/tools/audit_spt415_quest_conditions.py
+          build/exact-spt415-quests.json
+          --output build/admiral-trader-spt415-quest-condition-audit.json
 
       - name: Resolve weapon and ammo candidate pools
         run: >-
@@ -161,11 +190,13 @@ jobs:
           mods/Admiral-Trader/db/quests
           build/admiral-trader-weapon-ammo-runtime.json
 
-      - name: Upload exact-runtime weapon/ammo evidence
+      - name: Upload exact-runtime Trader evidence
         uses: actions/upload-artifact@v4
         with:
           name: admiral-trader-weapon-ammo-runtime-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
+            build/spt415-database-provenance.json
+            build/admiral-trader-spt415-quest-condition-audit.json
             build/admiral-trader-weapon-ammo-pools.json
             build/admiral-trader-weapon-ammo-selection.json
             build/admiral-trader-weapon-ammo-runtime.json
