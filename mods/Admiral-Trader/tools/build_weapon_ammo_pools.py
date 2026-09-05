@@ -110,7 +110,7 @@ def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
     result: dict[str, Any] = {
         "schemaVersion": 3,
         "targetSptVersion": TARGET_SPT_VERSION,
-        "sourceRole": "pinned-backend-item-candidate-resolution; exact-runtime-4.1.5-verification-required",
+        "sourceRole": "exact-official-spt-runtime-item-db-candidate-resolution",
         "families": {},
     }
 
@@ -200,7 +200,7 @@ def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Resolve Admiral weapon/ammo candidates from a pinned EFT backend item database")
+    parser = argparse.ArgumentParser(description="Resolve Admiral weapon/ammo candidates from the exact official SPT 4.1.5 item database")
     parser.add_argument("items", type=Path)
     parser.add_argument("spec", type=Path)
     parser.add_argument("--output", type=Path, required=True)
