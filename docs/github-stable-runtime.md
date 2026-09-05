@@ -2,36 +2,44 @@
 
 ## Purpose
 
-This is a multi-mod source repository. `main` is the authoritative development tree. Generated packages, transient validation logs, and CI run metadata are not source and must not be persisted in `main`.
+This is a multi-mod source repository. `main` is the authoritative integrated tree. Generated packages, transient validation logs, and CI run metadata are not source and must not be persisted in `main`.
 
 ## Branch roles
 
 | Branch | Role |
 | --- | --- |
-| `main` | Active source, tests, maintained assets, workflows, and durable documentation |
+| `main` | Active integrated source, tests, maintained assets, workflows, and durable documentation |
 | `stable` | Source commit promoted after deliberate suite validation/publication |
-| `runtime` | Install-only Tactical HUD channel |
+| `runtime` | Install-only Admiral Tactical HUD / historical Tactical HUD publication channel |
 | `runtime-item-intelligence` | Install-only Item Intelligence Admiral channel; retained compatibility branch name |
 | `runtime-pause` | Install-only Pause Admiral channel |
 | `runtime-belt-armband` | Install-only Belt/Armband Inventory channel |
 | `runtime-economy-admiral` | Install-only Economy Admiral 0.1.0 channel for SPT 4.1.3 |
 | `runtime-artem-revival` | Stable Admiral Artyom Revival publication identity; retained compatibility branch name |
-| `archive/v1.13.0` | Intentional frozen Tactical HUD `1.13.0` reserve |
+| `archive/v1.13.0` | Intentional frozen Tactical HUD `1.13.0` historical reserve |
 
 Feature, fix, diagnostic, research, build, and archaeology branches are temporary unless explicitly documented otherwise. They are not release channels and should be removed after their useful work is merged or superseded.
 
 ## Current modules
 
-Long-term source modules currently integrated under `mods/`:
+Long-term source modules currently integrated under `mods/` include:
 
-- `SPT-Tactical-HUD`
-- `SPT-Item-Intelligence`
-- `SPT-Pause`
-- `SPT-Belt-Armband-Inventory`
-- `Item-Valuation-MOD-SPT`
-- `Economy-Admiral`
-- `Admiral-Trader`
-- `Admiral-Artyom-Revival`
+- `SPT-Tactical-HUD` — previously accepted integrated Tactical HUD source while the `Admiral Tactical HUD 1.13.3` replacement remains unmerged in its single active workstream PR;
+- `SPT-Item-Intelligence`;
+- `SPT-Pause`;
+- `SPT-Belt-Armband-Inventory`;
+- `Item-Valuation-MOD-SPT`;
+- `Economy-Admiral`;
+- `Admiral-Trader`;
+- `Admiral-Artyom-Revival`.
+
+### Admiral Tactical HUD transition
+
+The canonical product identity is **Admiral Tactical HUD**. Issue #71 owns its milestone roadmap and the canonical workstream identifies the single live implementation PR.
+
+Before M1 physical acceptance and merge, `main` intentionally still contains the last accepted legacy source at `mods/SPT-Tactical-HUD`. The active `1.13.3` replacement uses `mods/Admiral-Tactical-HUD` in its live PR. These are **not two active HUD products**: the old `main` path is the integrated baseline, and the live PR is the only development authority. After deliberate acceptance/integration, the Admiral-named path becomes the integrated source path and the legacy path is removed by that product change.
+
+The `runtime` branch remains the current published install channel until a candidate is deliberately promoted. An unmerged RC, CI artifact, or development PR must not silently rewrite it.
 
 `Economy-Admiral` is integrated source with physically accepted SPT 4.1.3 Economy Beta behavior and module-specific CI. Its maintained install-only publication channel is `runtime-economy-admiral`; the runtime manifest pins version `0.1.0`, SPT `4.1.3`, the publication source commit, and install root `SPT_Runtime/user/mods/Economy Admiral`.
 
@@ -81,10 +89,10 @@ A commit/runtime candidate may be promoted only after the validations required f
 
 Current-state documentation must describe what the repository contains now. Historical phase/revision notes may be retained when they explain design decisions or regression intent, but they must be clearly treated as history when later implementation has superseded them.
 
-Current product names and versions must agree between the root module index, module README, build/package metadata and maintained runtime manifest. Historical/upstream names or compatibility identifiers may remain only where their retained role is explicit. See `docs/development-workflow.md` for the complete naming/version contract.
+Current product names and versions must agree between the root module index, canonical workstream, active module documentation, build/package metadata and maintained runtime manifest, allowing an explicitly documented RC transition where accepted `main`/runtime state intentionally trails the active development line. Historical/upstream names or compatibility identifiers may remain only where their retained role is explicit. See `docs/development-workflow.md` for the complete naming/version contract.
 
 Avoid status text that becomes false as soon as development advances: prefer explicit version metadata, validation state, and links to current source/tests over prose such as "current phase" scattered across multiple files.
 
 ## Historical note
 
-Tactical HUD `1.14.0` is retired because it mixed early Item Intelligence code into the HUD assembly. The maintained Tactical HUD line returned to the independent `1.13.x` model. Detailed historical release information belongs with the affected module rather than in repository-governance documentation.
+Tactical HUD `1.14.0` is retired because it mixed early Item Intelligence code into the HUD assembly. The independent HUD returned to the `1.13.x` model; the current canonical product name is **Admiral Tactical HUD**. Detailed historical release information belongs with the affected module rather than in repository-governance documentation.
