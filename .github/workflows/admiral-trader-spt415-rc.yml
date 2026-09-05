@@ -59,6 +59,17 @@ jobs:
           python mods/Admiral-Trader/tools/validate_runtime_assort.py
           if ($LASTEXITCODE -ne 0) { throw 'Admiral Trader runtime assort gate failed.' }
 
+      - name: Compare lifecycle fields with exact SPT 4.1.5 quest DB
+        shell: pwsh
+        run: |
+          $quests = Join-Path $env:SPT_RUNTIME_ROOT 'SPT_Data/database/templates/quests.json'
+          if (-not (Test-Path $quests -PathType Leaf)) { throw "Exact SPT quest database is missing: $quests" }
+          python mods/Admiral-Trader/tools/audit_spt415_lifecycle_contract.py `
+            $quests `
+            --authored-dir mods/Admiral-Trader/db/quests `
+            --output build/trader-rc/spt415-lifecycle-contract.json
+          if ($LASTEXITCODE -ne 0) { throw 'Exact SPT 4.1.5 lifecycle field audit failed.' }
+
       - name: Build active-head exact-runtime install candidate
         shell: pwsh
         run: |
@@ -136,6 +147,7 @@ jobs:
             build/trader-rc/*.zip
             build/trader-rc/*.zip.sha256
             build/trader-rc/**/admiral-trader-provenance.json
+            build/trader-rc/spt415-lifecycle-contract.json
             build/trader-rc/server-smoke.*.log
           if-no-files-found: error
           retention-days: 14
