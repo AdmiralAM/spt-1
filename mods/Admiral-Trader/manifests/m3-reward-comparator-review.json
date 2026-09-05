@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "M3-historical-reward-comparator-review-only",
+  "runtimeMaterialize": false,
+  "rewardAuthority": "m3-campaign-reward-plan.json",
+  "historicalBenchmarkAuthority": "reward-policy.json",
+  "benchmarkBoundary": {
+    "sourceCommit": "fe74b07c6361e2c6d1532dc21ba1c3b981d88d93",
+    "questCountObserved": 558,
+    "exactSpt415Authority": false,
+    "purpose": "Catch obvious reward inflation during product design. Exact SPT 4.1.5 nearest-comparator review remains mandatory before runtime materialization."
+  },
+  "historicalMedians": {
+    "Elimination": {"xp": 18200, "rub": 65000},
+    "Completion": {"xp": 9200, "rub": 35000},
+    "PickUp": {"xp": 8350, "rub": 15000},
+    "Exploration": {"xp": 10000, "rub": 40000},
+    "overallStanding": 0.020,
+    "overallP90": {"xp": 39930, "rub": 170600, "standing": 0.040}
+  },
+  "reviews": [
+    {
+      "operation": "acoustic-discipline",
+      "comparator": "Exploration",
+      "planned": {"xp": 4000, "rub": 22000, "standing": 0.006},
+      "medianRatio": {"xp": 0.400, "rub": 0.550, "standingVsOverallMedian": 0.300},
+      "decision": "conservative",
+      "rationale": "Early non-combat reconnaissance pays well below historical Exploration medians and grants no item or unlock."
+    },
+    {
+      "operation": "forward-reserve",
+      "comparator": "PickUp",
+      "planned": {"xp": 5000, "rub": 30000, "standing": 0.008},
+      "medianRatio": {"xp": 0.599, "rub": 2.000, "standingVsOverallMedian": 0.400},
+      "decision": "acceptable-with-acquisition-burden",
+      "rationale": "Cash is above the generic historical PickUp median because the selected historical six-unit maintenance package had a measured handbook burden around 59.4k RUB. The 30k reward still does not reimburse the full acquisition burden; XP and standing remain conservative. Revalidate exact SPT 4.1.5 item values before runtime."
+    },
+    {
+      "operation": "low-profile",
+      "comparator": "Completion",
+      "planned": {"xp": 6500, "rub": 38000, "standing": 0.009},
+      "medianRatio": {"xp": 0.707, "rub": 1.086, "standingVsOverallMedian": 0.450},
+      "decision": "conservative",
+      "rationale": "The player retains the required ordinary equipment. Reward sits near the Completion cash median and below its XP median, with no equipment reimbursement or unlock."
+    },
+    {
+      "operation": "mobility-doctrine",
+      "comparator": "Elimination",
+      "planned": {"xp": 6500, "rub": 40000, "standing": 0.009},
+      "medianRatio": {"xp": 0.357, "rub": 0.615, "standingVsOverallMedian": 0.450},
+      "decision": "conservative",
+      "rationale": "A short light-protection combat operation remains far below historical Elimination medians."
+    },
+    {
+      "operation": "borrowed-access",
+      "comparator": "Exploration",
+      "planned": {"xp": 7500, "rub": 44000, "standing": 0.010},
+      "medianRatio": {"xp": 0.750, "rub": 1.100, "standingVsOverallMedian": 0.500},
+      "decision": "balanced",
+      "rationale": "Slightly above the historical Exploration cash median but below XP and standing medians; no key handover, key refund or access unlock is added."
+    },
+    {
+      "operation": "acoustic-contact",
+      "comparator": "Elimination",
+      "planned": {"xp": 7000, "rub": 42000, "standing": 0.010},
+      "medianRatio": {"xp": 0.385, "rub": 0.646, "standingVsOverallMedian": 0.500},
+      "decision": "conservative",
+      "rationale": "Two-target combat application remains deliberately below ordinary Elimination rewards."
+    },
+    {
+      "operation": "route-security",
+      "comparator": "Elimination",
+      "planned": {"xp": 8000, "rub": 50000, "standing": 0.012},
+      "medianRatio": {"xp": 0.440, "rub": 0.769, "standingVsOverallMedian": 0.600},
+      "decision": "conservative",
+      "rationale": "Six ordinary Scavs plus successful extraction stays below historical Elimination medians and grants no item or unlock."
+    },
+    {
+      "operation": "contractor-intercept",
+      "comparator": "Elimination",
+      "planned": {"xp": 10000, "rub": 62000, "standing": 0.015},
+      "medianRatio": {"xp": 0.549, "rub": 0.954, "standingVsOverallMedian": 0.750},
+      "decision": "balanced",
+      "rationale": "Hostile-PMC risk moves cash toward the historical Elimination median while XP and standing remain below it. Any future time-window constraint does not automatically justify a reward increase."
+    },
+    {
+      "operation": "observation-window",
+      "comparator": "Elimination",
+      "planned": {"xp": 12000, "rub": 70000, "standing": 0.018},
+      "medianRatio": {"xp": 0.659, "rub": 1.077, "standingVsOverallMedian": 0.900},
+      "decision": "balanced-specialist",
+      "rationale": "Precision and extraction pressure justify a modest cash premium over the generic historical Elimination median, while XP and standing remain below historical medians. The merged Precision Denial reward budget was not transferred."
+    },
+    {
+      "operation": "heavy-assault",
+      "comparator": "Elimination",
+      "planned": {"xp": 11000, "rub": 70000, "standing": 0.017},
+      "medianRatio": {"xp": 0.604, "rub": 1.077, "standingVsOverallMedian": 0.850},
+      "decision": "balanced-specialist",
+      "rationale": "Equipment restriction and compressed assault risk justify a small cash premium; the removed Ballistic Head Test budget is not transferred."
+    },
+    {
+      "operation": "break-the-perimeter",
+      "comparator": "Elimination",
+      "planned": {"xp": 12000, "rub": 78000, "standing": 0.018},
+      "medianRatio": {"xp": 0.659, "rub": 1.200, "standingVsOverallMedian": 0.900},
+      "decision": "balanced-high-risk",
+      "rationale": "Rogue pressure and successful extraction justify a higher cash component, but XP and standing remain below historical medians and there is no Rogue gear or ammo faucet."
+    },
+    {
+      "operation": "internal-security",
+      "comparator": "Elimination",
+      "planned": {"xp": 17000, "rub": 115000, "standing": 0.025},
+      "medianRatio": {"xp": 0.934, "rub": 1.769, "standingVsOverallMedian": 1.250},
+      "decision": "late-game-milestone-review-required-but-inside-historical-p90",
+      "rationale": "The level-37 Labs capstone intentionally exceeds the generic Elimination cash and standing medians, but all three values remain below historical overall p90 ceilings and no access token, Raider gear or permanent unlock is granted. Exact SPT 4.1.5 nearest-comparator review must explicitly confirm this premium before runtime."
+    }
+  ],
+  "campaignDecision": {
+    "obviousInflationDetected": false,
+    "itemRewardValueCurrentlyStacked": false,
+    "permanentUnlockValueCurrentlyStacked": false,
+    "removedQuestRewardsRedistributed": false,
+    "exactSpt415RebenchmarkStillRequired": true,
+    "economyAdmiralMayReduceWithoutTraderRedesign": true,
+    "increaseRequiresTraderReview": true
+  }
+}
