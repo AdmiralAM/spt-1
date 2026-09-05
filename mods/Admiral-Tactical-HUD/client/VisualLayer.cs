@@ -391,7 +391,7 @@ namespace SPTPopCounter
                     KillLine k = runtime.kills[i];
                     float age = Time.unscaledTime - k.Created;
                     float fade = Mathf.Clamp01((life - age) / fadeWindow);
-                    DrawKillRow(root, k.Killer, k.Victim, k.WeaponIcon, k.HitIcon, k.DistanceText, k.HasDistance,
+                    DrawKillRow(root, k.Killer, k.Victim, k.WeaponText, k.HitIcon, k.DistanceText, k.HasDistance,
                         shown, fade, displayMode, size, opacity);
                 }
             }
@@ -501,8 +501,6 @@ namespace SPTPopCounter
                 if (s.Length > 14) s = s.Substring(0, 14).Trim();
                 return string.IsNullOrEmpty(s) ? "?" : s;
             }
-
-            internal static string WeaponKey(string weapon) => CleanWeapon(weapon);
 
             static bool Contains(string value, string token) => value.IndexOf(token, StringComparison.OrdinalIgnoreCase) >= 0;
         }
