@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\server\SPT-Belt-Armband-Inventory.Server.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\src\AccessoryCategory.cs" Link="AccessoryCategory.cs" />
+    <Compile Include="..\src\AccessoryCapability.cs" Link="AccessoryCapability.cs" />
+    <Compile Include="..\src\AccessoryGridPolicy.cs" Link="AccessoryGridPolicy.cs" />
+    <Compile Include="..\src\WearableDescriptor.cs" Link="WearableDescriptor.cs" />
+    <Compile Include="..\src\WearableItemDescriptor.cs" Link="WearableItemDescriptor.cs" />
+    <Compile Include="..\src\WearableConceptCatalog.cs" Link="WearableConceptCatalog.cs" />
+    <Compile Include="..\src\HeadBandUtilityPolicy.cs" Link="HeadBandUtilityPolicy.cs" />
+    <Compile Include="..\src\WearableProtectionContract.cs" Link="WearableProtectionContract.cs" />
+    <Compile Include="..\src\HostBoundaryPolicy.cs" Link="HostBoundaryPolicy.cs" />
+    <Compile Include="..\src\DedicatedWearableSlotContract.cs" Link="DedicatedWearableSlotContract.cs" />
+    <Compile Include="..\src\DedicatedSlotPresentationPolicy.cs" Link="DedicatedSlotPresentationPolicy.cs" />
+    <Compile Include="..\src\BeltSlotPlan.cs" Link="BeltSlotPlan.cs" />
+    <Compile Include="..\src\LootPriorityPlan.cs" Link="LootPriorityPlan.cs" />
+    <Compile Include="..\src\ReflectionTools.cs" Link="ReflectionTools.cs" />
+    <Compile Include="..\src\ScavBeltPatches.cs" Link="ScavBeltPatches.cs" />
+    <Compile Include="..\src\GrenadeSlotPatches.cs" Link="GrenadeSlotPatches.cs" />
+    <Compile Include="..\src\FastAccessBeltSyncPatches.cs" Link="FastAccessBeltSyncPatches.cs" />
+    <Compile Include="..\src\FastAccessSlotPatches.cs" Link="FastAccessSlotPatches.cs" />
+    <Compile Include="..\src\RuntimeMutationPolicy.cs" Link="RuntimeMutationPolicy.cs" />
+    <Compile Include="..\src\RuntimeCustomBeltTypes.cs" Link="RuntimeCustomBeltTypes.cs" />
+    <Compile Include="..\src\RuntimeIdentity.cs" Link="RuntimeIdentity.cs" />
+    <Compile Include="..\src\RuntimeListOwnership.cs" Link="RuntimeListOwnership.cs" />
+    <Compile Include="..\src\BeltDeathPolicy.cs" Link="BeltDeathPolicy.cs" />
+    <Compile Include="..\src\SlotMergePatches.cs" Link="SlotMergePatches.cs" />
+    <Compile Include="..\src\PickupSlotPatches.cs" Link="PickupSlotPatches.cs" />
+    <Compile Include="..\src\PaymentSlotPatches.cs" Link="PaymentSlotPatches.cs" />
+    <Compile Include="..\src\EquipmentBuildValidationPatches.cs" Link="EquipmentBuildValidationPatches.cs" />
+    <Compile Include="..\server\PersistentIdentityManifest.cs" Link="PersistentIdentityManifest.cs" />
+    <Compile Include="..\server\ProfileCleanupPolicy.cs" Link="ProfileCleanupPolicy.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\profile-safety\persistent-identities.json" Link="persistent-identities.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
