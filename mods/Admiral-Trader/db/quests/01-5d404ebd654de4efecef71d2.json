@@ -10,7 +10,7 @@
     "AvailableForFinish": [
       {
         "id": "6f1312f5476c9a65eb582852",
-        "conditionType": "HandoverItem",
+        "conditionType": "FindItem",
         "dogtagLevel": 0,
         "dynamicLocale": false,
         "globalQuestCounterId": "",
