@@ -4,13 +4,18 @@ Development validation is module-specific. A pull request should trigger only th
 
 | Module | Pull-request workflow | Publication channel |
 | --- | --- | --- |
-| Tactical HUD | `Tactical HUD Validate` | `runtime` |
-| Item Intelligence Admiral | `Item Intelligence Validate` | `runtime-item-intelligence` |
+| Admiral Tactical HUD | integrated `main`: `Tactical HUD Validate`; active `1.13.3` replacement line: `Admiral Tactical HUD Validate` | `runtime` |
+| Item Intelligence Admiral | `Item Intelligence Admiral Validate` | `runtime-item-intelligence` |
 | Pause Admiral | `Pause Validate` | `runtime-pause` |
 | Belt/Armband Inventory | `Belt Armband Inventory Validate` | `runtime-belt-armband` |
 | Quest Planner | `Quest Planner Validate` | CI artifacts until deliberate runtime promotion |
+| Economy Admiral | Economy Admiral module-specific validation/package workflows | `runtime-economy-admiral` |
 | Admiral Trader | Admiral Trader module-specific validation workflows | CI artifacts until deliberate runtime promotion |
 | Admiral Artyom Revival | `Admiral Artyom Revival Validate` | `runtime-artem-revival` (retained publication compatibility identifier) |
+
+For Admiral Tactical HUD, Issue #71 and the single live HUD PR own the `1.13.3` replacement line. Until M1 is accepted and merged, `main` intentionally retains the previously accepted `mods/SPT-Tactical-HUD` tree and its `Tactical HUD Validate` workflow behavior, while the live replacement PR carries the Admiral-named path/workflow. This is one transitional workstream, not two independent HUD implementations.
+
+For Item Intelligence Admiral, Issue #338 owns the v1.1 roadmap. The workflow remains `Item Intelligence Admiral Validate`; `runtime-item-intelligence` stays the accepted v1.0.0 publication channel until deliberate v1.1 promotion.
 
 ## Isolation rules
 

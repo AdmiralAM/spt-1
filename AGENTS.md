@@ -7,11 +7,13 @@ This is the single repository-wide execution policy for automated workers.
 Before every work session, fetch `origin/main` and read these exact files from that ref:
 
 1. `origin/main:AGENTS.md` — immutable worker policy;
-2. `origin/main:.github/workstreams.json` — current workstream state;
+2. `origin/main:.github/workstreams.json` — durable workstream roadmap and contracts;
 3. the technical Issues recorded in its phase plan and the module's live GitHub PR/evidence;
 4. the affected module README and relevant technical docs.
 
 Policy copied into a feature branch, old PR body, chat memory, artifact, or historical Issue is not authority. Do not merge `main` merely to read control state.
+
+The registry deliberately does **not** store temporary implementation PR numbers, branch names, exact live heads, mutable current-phase pointers, or runtime-gate state. Discover those from GitHub evidence at the start of each run.
 
 ## Authority and roles
 
@@ -42,15 +44,20 @@ The complete ordered `phasePlan` is pre-authorized. At the start of every run, i
 - When a phase completes, record evidence in its technical Issue/PR and immediately continue to the next `phasePlan` entry.
 - Ordinary recorded phase transitions never require a registry edit, another worker's acknowledgement, or a new user message.
 - Create at most one implementation PR for the module, and only when coherent implementation exists.
-- Discover the module's single live implementation PR from GitHub; PR numbers and temporary branches are deliberately not stored as control pointers.
+- Discover the module's single live implementation PR from GitHub; PR numbers, temporary branches, exact live heads, mutable phase state, and runtime-gate state are deliberately not stored as registry control pointers.
+- If exactly one live implementation PR exists, its current head branch and exact head SHA are the implementation authority for that run.
+- If no live implementation PR exists, create a short-lived branch from current `main` only when coherent implementation for the first incomplete recorded phase exists.
+- If multiple live implementation PRs exist for one module, reconcile them to one authority from current Issue/PR evidence before implementation; never choose using stale registry data, chat memory, an old artifact, or a retired branch.
 - New branch/PR mechanics for an already recorded phase are not a new product decision.
 - Do not expand beyond the registry and linked Issue/PR.
 
 ## Registry update boundaries
 
-Do not update the registry merely because a phase, commit, CI run, PR, merge, artifact, or recorded successor completed. The evidence itself determines the resume point.
+The registry stores durable product scope, ordered phase authorization, frozen contracts, stable acceptance, and durable historical evidence only. It must not be used as a mutable execution dashboard.
 
-Only an explicit user instruction may add, remove, or reorder product scope; change a phase contract or frozen identity; cancel/park work; or change an undefined publication decision. The worker receiving that instruction may encode it directly. Runtime readiness, technical blockers, phase completion, and recorded stable/publication transitions live in Issue/PR evidence and never require a registry update.
+Do not update the registry merely because a phase, commit, CI run, PR, merge, artifact, branch, exact head, runtime gate, or recorded successor changed. The live GitHub evidence itself determines the resume point.
+
+Only an explicit user instruction may add, remove, or reorder product scope; change a phase contract or frozen identity; cancel/park work; or change an undefined publication decision. The worker receiving that instruction may encode it directly. Runtime readiness, technical blockers, phase completion, exact heads, active PR/branch identity, and recorded stable/publication transitions live in Issue/PR evidence and never require a registry update.
 
 ## Valid stop conditions
 
@@ -103,7 +110,7 @@ Detailed handoff mechanics live in `docs/runtime-artifact-gate.md`; that documen
 
 ## Safety and isolation
 
-- Work in the registered module branch/PR and change only that module plus narrowly required shared infrastructure.
+- Work in the module's single live implementation branch/PR discovered from GitHub evidence; if none exists, start from current `main` only as allowed by the worker execution loop.
 - `main` is integration-only; `runtime-*` and `stable` are deliberate publication channels, not development workspaces.
 - Never weaken tests, force-update another workstream, share unrelated concurrency groups, or invoke suite publication for ordinary validation.
 - Persistent profile identities require an immutable manifest covering current and retired distributed IDs, backup-first ownership-scoped recovery, and deterministic regression coverage.
