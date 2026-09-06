@@ -108,7 +108,7 @@ def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: di
         templates[qid] = {
             "QuestName": name, "_id": qid, "canShowNotificationsInGame": True,
             "conditions": {"AvailableForFinish": [elimination_condition(slug, int(stage["kills"]), weapon_ids)],
-                           "AvailableForStart": start_conditions(quest, authored), "Started": [], "Success": [], "Fail": []},
+                           "AvailableForStart": start_conditions(quest, authored), "Fail": []},
             "description": f"{qid} description", "failMessageText": f"{qid} failMessageText", "name": f"{qid} name",
             "note": f"{qid} note", "traderId": TRADER_ID, "location": "any", "image": QUEST_ICON, "type": "Elimination",
             "isKey": False, "restartable": False, "instantComplete": False, "secretQuest": False,
@@ -116,7 +116,8 @@ def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: di
             "acceptPlayerMessage": f"{qid} acceptPlayerMessage", "acceptanceAndFinishingSource": "eft",
             "declinePlayerMessage": f"{qid} declinePlayerMessage", "completePlayerMessage": f"{qid} completePlayerMessage",
             "rewards": {"Started": [], "Success": success_rewards(slug, stage, capability if quest["stage"] == "munitions" and family != "special-weapons" else None), "Fail": []},
-            "side": "Pmc",
+            "side": "Pmc", "status": 0, "progressSource": "eft",
+            "gameModes": [], "rankingModes": [], "arenaLocations": [],
         }
     if len(templates) != 21:
         raise ValueError(f"expected 21 runtime templates, got {len(templates)}")

@@ -18,7 +18,7 @@
       "id": "5d404ebd654de4efecef71d2",
       "slug": "keys-intro",
       "name": "Access Protocol: Fundamentals",
-      "minimumLevel": 5,
+      "minimumLevel": 1,
       "map": "any",
       "prerequisites": [],
       "objective": {"model": "possess-representative-keys", "representativeCount": 2, "maximumTargetPoolSize": 6, "sourceGroup": "keys-intro"},

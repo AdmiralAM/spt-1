@@ -199,8 +199,6 @@ def build_template(quest: dict[str, Any], key_pool: list[str]) -> tuple[dict[str
         "conditions": {
             "AvailableForFinish": finish_conditions(quest, key_pool),
             "AvailableForStart": start_conditions(quest),
-            "Started": [],
-            "Success": [],
             "Fail": [],
         },
         "declinePlayerMessage": f"{qid} declinePlayerMessage",
@@ -220,6 +218,11 @@ def build_template(quest: dict[str, Any], key_pool: list[str]) -> tuple[dict[str
         "successMessageText": f"{qid} successMessageText",
         "traderId": TRADER_ID,
         "type": "PickUp",
+        "status": 0,
+        "progressSource": "eft",
+        "gameModes": [],
+        "rankingModes": [],
+        "arenaLocations": [],
     }
     return template, deferred_unlocks
 
