@@ -1,14 +1,14 @@
-# Admiral Artyom Revival — SPT 4.1.3 Status
+# Admiral Artyom Revival — SPT 4.1.4 Status
 
 ## Result
 
-**Module version: 3.0.0. Stable runtime baseline: r5-RU-compat — PASS on SPT 4.1.3.**
+**Module version: 3.0.0. Stable runtime baseline: r5-RU-compat — PASS on SPT 4.1.4.**
 
 The archived upstream WTT-Artem package has been successfully revived as **Admiral Artyom Revival** for the SPT 4.1/.NET 10 server stack while preserving the authored Artem trader, 23-quest campaign, unique equipment and clothing set.
 
 ## Validated environment
 
-- SPT `4.1.3`
+- SPT `4.1.4`
 - WTT-ServerCommonLib `3.0.6`
 - WTT-ClientCommonLib `3.0.6`
 - server runtime: .NET 10
@@ -63,7 +63,7 @@ The six supplied bundle archives are one logical `Bundles/` directory. All 239 p
 
 The accepted r5 runtime uses three preserved layers:
 
-- the validated SPT 4.1.3 Admiral Artyom Revival server build;
+- the validated SPT 4.1.4 Admiral Artyom Revival server build;
 - repaired authored upstream Artem core data reconstructed from the archived source set by deterministic importer/repair/localization tooling in this module;
 - the external approximately 1.5 GB Unity `Bundles/` set retained in the installed Admiral Artyom Revival folder.
 

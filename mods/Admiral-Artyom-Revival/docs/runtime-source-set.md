@@ -6,7 +6,7 @@ Admiral Artyom Revival is reconstructed from one authoritative upstream WTT-Arte
 
 `artem main 1.zip` is the authoritative upstream runtime/core package. It contains the trader database, assort, custom items, clothing, quest zones, quests, locales, quest images, trader image, `bundles.json`, and the legacy SPT 4.0-era `WTT-Artem.dll`.
 
-The legacy DLL is evidence only and must never be copied into a 4.1.3 package. `tools/import_runtime_core.py` imports the remaining runtime content into `server/Resources` and applies only proven deterministic repairs.
+The legacy DLL is evidence only and must never be copied into a 4.1.4 package. `tools/import_runtime_core.py` imports the remaining runtime content into `server/Resources` and applies only proven deterministic repairs.
 
 ## Bundles folder
 

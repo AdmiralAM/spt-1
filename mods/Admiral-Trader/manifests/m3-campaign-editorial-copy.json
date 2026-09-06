@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 2,
+  "product": "Admiral Trader",
+  "status": "M3-editorial-spec-only",
+  "campaignAuthority": "m3-campaign-product-spec.json",
+  "runtimeMaterialize": false,
+  "editorialRules": {
+    "englishAndRussianAuthoredIndependently": true,
+    "developerMetaLanguageAllowed": false,
+    "unsupportedMechanicPromiseAllowed": false,
+    "successTextMustDescribeOperationalResult": true
+  },
+  "quests": [
+    {
+      "key": "acoustic-discipline",
+      "title": {"en": "Acoustic Discipline", "ru": "Акустическая дисциплина"},
+      "briefing": {
+        "en": "One of my patrols heard movement along a route and chose not to chase the noise. Correct decision. Sound means very little until you know where it came from and what it is doing there. Take a proper headset, check the approach, and come back with an answer. I do not need a fight. I need to know whether that ground is being used.",
+        "ru": "На одном из моих маршрутов патруль услышал движение и не полез проверять шум вслепую. Правильно сделал. Сам по себе звук мало что значит, пока не понимаешь, откуда он и зачем там появился. Возьми нормальную гарнитуру, проверь подходы и вернись с ответом. Бой мне не нужен. Мне нужно понять, пользуется ли кто-то этим маршрутом."
+      },
+      "objective": {
+        "en": ["Use a headset during the reconnaissance pass.", "Check the marked approach.", "Survive and extract."],
+        "ru": ["Использовать гарнитуру во время разведывательного выхода.", "Проверить отмеченный подход к маршруту.", "Выжить и выйти из рейда."]
+      },
+      "success": {
+        "en": "Good. You listened before you acted. The route stays open, but now we know what to watch for.",
+        "ru": "Хорошо. Сначала услышал, потом решил. Маршрут оставим открытым, но теперь понятно, за чем следить."
+      }
+    },
+    {
+      "key": "forward-reserve",
+      "title": {"en": "Forward Reserve", "ru": "Полевой резерв"},
+      "briefing": {
+        "en": "The route is usable. The people on it are another matter. A forward team lost most of its maintenance reserve during the last move. Nothing exotic: lubricant, tape, something to keep soft gear together. Small failures end operations just as reliably as bullets. Build them one replacement package. After that, they maintain themselves.",
+        "ru": "Маршрут использовать можно. С людьми на нём сложнее. Одна из передовых групп при последнем переходе потеряла почти весь ремонтный запас. Ничего редкого: смазка, лента, то, чем можно привести в порядок мягкое снаряжение. Операции срываются не только из-за пуль. Собери им один резервный комплект. Дальше пусть обеспечивают себя сами."
+      },
+      "objective": {
+        "en": ["Deliver the complete maintenance package requested by Admiral."],
+        "ru": ["Передать Адмиралу полный комплект полевого ремонта."]
+      },
+      "success": {
+        "en": "They have the reserve. It is mundane work, which is why people notice it only after it fails. This route will not stop over torn gear and dry fittings now.",
+        "ru": "Запас получили. Работа неприметная, поэтому о ней вспоминают только после отказа. Теперь маршрут не встанет из-за порванного снаряжения и сухих креплений."
+      }
+    },
+    {
+      "key": "low-profile",
+      "title": {"en": "Low Profile", "ru": "Низкий профиль"},
+      "briefing": {
+        "en": "Good equipment is useful until it starts telling everyone nearby who is worth robbing. For this run, leave the expensive display at home. Simple rig, simple pack, nothing memorable. Carry the setup through the route and come back with it. I want to see whether you can work without advertising yourself.",
+        "ru": "Хорошее снаряжение полезно до тех пор, пока не начинает сообщать всем вокруг, кого здесь стоит ограбить. На этот выход дорогая витрина не нужна. Простая разгрузка, простой рюкзак, ничего примечательного. Пройди маршрут и вернись с тем же комплектом. Посмотрим, умеешь ли ты работать, не объявляя о себе каждому встречному."
+      },
+      "objective": {
+        "en": ["Enter the operation wearing the assigned low-profile rig and backpack.", "Survive and extract with the loadout still in use."],
+        "ru": ["Выйти в рейд с назначенной неприметной разгрузкой и рюкзаком.", "Выжить и выйти, сохранив этот комплект в работе."]
+      },
+      "success": {
+        "en": "That is better. Sometimes the best loadout is the one nobody looks at twice.",
+        "ru": "Так лучше. Иногда лучший комплект — тот, на который никто не смотрит второй раз."
+      }
+    },
+    {
+      "key": "mobility-doctrine",
+      "title": {"en": "Mobility Doctrine", "ru": "Манёвренная защита"},
+      "briefing": {
+        "en": "Armor buys time, not victory. Too much of it and you spend that time carrying the armor instead of solving the problem. Take a light protective setup through a threatened route, deal with the immediate contact, and get out while you still control the pace.",
+        "ru": "Броня покупает время, а не победу. Перегрузишься — и это время уйдёт на то, чтобы таскать защиту вместо решения задачи. Возьми лёгкий защитный комплект, пройди через опасный участок, сними непосредственную угрозу и выходи, пока темп ещё задаёшь ты."
+      },
+      "objective": {
+        "en": ["Use the assigned light protective setup.", "Resolve the immediate hostile contact.", "Survive and extract."],
+        "ru": ["Использовать назначенный лёгкий защитный комплект.", "Снять непосредственную угрозу на маршруте.", "Выжить и выйти из рейда."]
+      },
+      "success": {
+        "en": "Protection helped the movement instead of replacing it. Keep that balance; most people learn it after they are already too slow.",
+        "ru": "Защита помогла пройти маршрут, а не стала самой задачей. Сохрани этот баланс — большинство понимает его слишком поздно."
+      }
+    },
+    {
+      "key": "borrowed-access",
+      "title": {"en": "Borrowed Access", "ru": "Чужой доступ"},
+      "briefing": {
+        "en": "There is a restricted route on Customs that used to be useful to people who preferred not to leave records. I need to know whether it still works. Get inside, check the space, and leave cleanly. Keep whatever opened the way; I am interested in the route, not your keyring.",
+        "ru": "На Таможне есть закрытый проход, которым раньше пользовались люди, не любившие оставлять записи. Мне нужно понять, работает ли он до сих пор. Доберись внутрь, осмотрись и выйди без лишнего шума. То, чем откроешь путь, оставь себе — меня интересует маршрут, а не твоя связка ключей."
+      },
+      "objective": {
+        "en": ["Reach the restricted route selected by Admiral.", "Confirm the interior area.", "Survive and extract from Customs."],
+        "ru": ["Добраться до выбранного Адмиралом закрытого маршрута.", "Подтвердить доступ во внутреннюю зону.", "Выжить и выйти с Таможни."]
+      },
+      "success": {
+        "en": "The route is real, usable, and no longer a rumor. That is enough. Access matters only when it leads somewhere.",
+        "ru": "Маршрут существует, работает и больше не является слухом. Этого достаточно. Доступ имеет смысл только тогда, когда куда-то ведёт."
+      }
+    },
+    {
+      "key": "acoustic-contact",
+      "title": {"en": "Acoustic Contact", "ru": "Акустический контакт"},
+      "briefing": {
+        "en": "The route you checked is no longer quiet. This time I do want the contact handled, but on our terms. Use your headset, choose the engagement instead of walking into it, remove the Scavs holding the approach, and leave as soon as the path is open.",
+        "ru": "Маршрут, который ты проверял, больше не тихий. На этот раз контакт нужно закрыть, но на наших условиях. Работай в гарнитуре, сам выбери момент боя, сними Диких, удерживающих подход, и уходи, как только путь будет открыт."
+      },
+      "objective": {
+        "en": ["Use an approved headset on Woods.", "Eliminate the Scavs holding the approach.", "Survive and extract."],
+        "ru": ["Использовать подходящую гарнитуру в Лесу.", "Устранить Диких, удерживающих подход.", "Выжить и выйти из рейда."]
+      },
+      "success": {
+        "en": "You heard enough to choose the fight instead of inheriting one. The approach is usable again.",
+        "ru": "Ты услышал достаточно, чтобы самому выбрать бой, а не получить его в наследство. Подход снова можно использовать."
+      }
+    },
+    {
+      "key": "route-security",
+      "title": {"en": "Route Security", "ru": "Безопасный маршрут"},
+      "briefing": {
+        "en": "Customs carries more than smugglers. It is one of the practical corridors between the industrial edge and the interior, and local Scavs have started treating it as their own toll road. Break the group that is making movement unreliable, then leave. I need traffic restored, not the whole district sterilized.",
+        "ru": "Через Таможню ходят не только контрабандисты. Это один из немногих рабочих коридоров между промышленной окраиной и внутренними районами, а местные Дикие решили превратить его в собственный платный проезд. Разбей группу, из-за которой движение стало ненадёжным, и выходи. Мне нужен работающий маршрут, а не выжженный район."
+      },
+      "objective": {
+        "en": ["Eliminate the Scav group threatening the Customs corridor.", "Survive and extract from Customs."],
+        "ru": ["Устранить группу Диких, угрожающую маршруту на Таможне.", "Выжить и выйти с Таможни."]
+      },
+      "success": {
+        "en": "Movement through Customs is viable again. Supplies can move; keep them moving.",
+        "ru": "Движение через Таможню снова возможно. Снабжение пойдёт — пусть идёт дальше."
+      }
+    },
+    {
+      "key": "contractor-intercept",
+      "title": {"en": "Contractor Intercept", "ru": "Перехват контрактников"},
+      "briefing": {
+        "en": "A hostile contractor element has been using Reserve as a crossing point. They are not important because they are PMCs; they are important because they keep appearing inside the same movement window as my people. Close that window. Hit the group, then disappear before someone decides to reinforce it.",
+        "ru": "На Резерве одна группа чужих контрактников использует тот же коридор и то же время прохода, что и мои люди. Опасны они не потому, что носят шевроны ЧВК, а потому, что постоянно оказываются в нашем окне движения. Закрой это окно. Ударь по группе и исчезни до того, как им пришлют подкрепление."
+      },
+      "objective": {
+        "en": ["Intercept the hostile PMC element on Reserve.", "Survive and extract after the intercept."],
+        "ru": ["Перехватить враждебную группу ЧВК на Резерве.", "После перехвата выжить и выйти из рейда."]
+      },
+      "success": {
+        "en": "Their window is gone. My people can move without sharing the timetable with armed strangers. Leave it there.",
+        "ru": "Их окно закрыто. Теперь мои люди могут двигаться, не деля расписание с вооружёнными чужаками. На этом закончили."
+      }
+    },
+    {
+      "key": "observation-window",
+      "title": {"en": "Observation Window", "ru": "Окно наблюдения"},
+      "briefing": {
+        "en": "Distance is useful when it gives you time to understand a problem before the problem understands you. I have a route that needs one clean observation position and one controlled denial action. Take the shot only when it buys us space, then leave before the position becomes predictable.",
+        "ru": "Дистанция полезна тогда, когда даёт время понять угрозу раньше, чем она поймёт тебя. На одном из маршрутов нужна чистая позиция наблюдения и один точный удар, который освободит нам пространство. Стреляй только тогда, когда это решает задачу, и уходи до того, как позицию начнут ждать."
+      },
+      "objective": {
+        "en": ["Engage the selected threat from the required standoff distance.", "Keep the engagement limited to the assigned targets.", "Survive and extract."],
+        "ru": ["Поразить выбранную угрозу с требуемой дистанции.", "Ограничиться назначенными целями.", "Выжить и выйти из рейда."]
+      },
+      "success": {
+        "en": "The threat lost its window before it could control the route. You used distance to control the ground, then left before the position exposed you.",
+        "ru": "Угроза потеряла своё окно до того, как успела взять маршрут под контроль. Ты использовал дистанцию, чтобы управлять местностью, и ушёл до того, как позиция выдала тебя."
+      }
+    },
+    {
+      "key": "heavy-assault",
+      "title": {"en": "Heavy Assault", "ru": "Тяжёлый штурм"},
+      "briefing": {
+        "en": "There are positions you do not cross by pretending mobility is free. For this one, accept the weight. Heavy protection, proper head coverage, one deliberate assault. Break the immediate resistance and disengage before the armor starts making decisions for you.",
+        "ru": "Есть позиции, которые не пройти, делая вид, будто подвижность ничего не стоит. Здесь вес придётся принять. Тяжёлая защита, нормальная защита головы, один осмысленный штурм. Сломай непосредственное сопротивление и отходи до того, как броня начнёт принимать решения за тебя."
+      },
+      "objective": {
+        "en": ["Use the assigned heavy protective setup for the assault.", "Break the immediate hostile position.", "Survive and extract."],
+        "ru": ["Использовать назначенный тяжёлый защитный комплект в штурме.", "Сломить сопротивление на выбранной позиции.", "Выжить и выйти из рейда."]
+      },
+      "success": {
+        "en": "You used the weight for the moment it mattered and left before it became the mission. That is how heavy protection earns its cost.",
+        "ru": "Ты использовал вес тогда, когда он действительно был нужен, и ушёл до того, как сам вес стал задачей. Так тяжёлая защита и оправдывает свою цену."
+      }
+    },
+    {
+      "key": "break-the-perimeter",
+      "title": {"en": "Break the Perimeter", "ru": "Прорыв периметра"},
+      "briefing": {
+        "en": "The water-treatment perimeter on Lighthouse has become too predictable in the wrong direction: everyone knows where the fire will come from, which means the Rogues control the ground before anyone moves. I need that pattern broken. Hit enough of the perimeter to make it unreliable, then get out before they rebuild the picture around you.",
+        "ru": "Периметр водоочистной на Маяке стал предсказуемым не в нашу пользу: все знают, откуда придёт огонь, а значит Отступники контролируют местность ещё до начала движения. Эту схему нужно сломать. Ударь по периметру так, чтобы он перестал работать как единое целое, и выходи до того, как они перестроятся уже вокруг тебя."
+      },
+      "objective": {
+        "en": ["Disrupt the Rogue element controlling the Lighthouse water-treatment perimeter.", "Survive and extract from Lighthouse."],
+        "ru": ["Нарушить работу группы Отступников, контролирующей периметр водоочистной станции на Маяке.", "Выжить и выйти с Маяка."]
+      },
+      "success": {
+        "en": "Their perimeter is no longer a reliable machine. Movement can resume before they rebuild it. Do not give them time to learn your pattern in return.",
+        "ru": "Их периметр больше не работает как единая машина. Движение можно возобновить, пока они перестраиваются. Не давай им времени выучить уже твою схему."
+      }
+    },
+    {
+      "key": "internal-security",
+      "title": {"en": "Internal Security", "ru": "Внутренняя охрана"},
+      "briefing": {
+        "en": "Access to Labs is worthless if you stop thinking once the doors close behind you. You already earned a way in; I am not giving you another one. Use what you have, break one Raider response before it closes the operation around you, and leave alive. The important part is not entering Labs. It is knowing when you have done enough inside.",
+        "ru": "Доступ в Лабораторию ничего не стоит, если после закрытия дверей ты перестаёшь думать. Способ войти у тебя уже есть; ещё один я выдавать не собираюсь. Используй свой доступ, сорви одну реакцию Рейдеров до того, как они замкнут операцию вокруг тебя, и выйди живым. Главное здесь не попасть внутрь. Главное — понять, когда внутри уже сделано достаточно."
+      },
+      "objective": {
+        "en": ["Enter The Lab using existing access.", "Disrupt the assigned Raider security element.", "Survive and extract from The Lab."],
+        "ru": ["Войти в Лабораторию, используя уже имеющийся доступ.", "Нарушить работу назначенной группы Рейдеров.", "Выжить и выйти из Лаборатории."]
+      },
+      "success": {
+        "en": "You used the clearance under pressure and left before the security response became the only thing you were doing. That is the standard I needed.",
+        "ru": "Ты использовал допуск под давлением и ушёл до того, как борьба с охраной стала единственным смыслом рейда. Именно это мне и требовалось."
+      }
+    }
+  ]
+}

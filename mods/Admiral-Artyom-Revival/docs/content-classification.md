@@ -42,7 +42,7 @@ Four custom templates have no quest reference, no root trader offer and no refer
 - `66bf757f27d0b097db0ace69` — **Carved Headcrab Trophy**;
 - `66bf757f27d0b097db0ace6a` — **Crackbone Figure**.
 
-They are candidates, not deletions. Keep them until a 4.1.3 runtime/package smoke test confirms that no loader-side or external authored behavior depends on them.
+They are candidates, not deletions. Keep them until a 4.1.4 runtime/package smoke test confirms that no loader-side or external authored behavior depends on them.
 
 ## Clothing and Unity bundles
 
@@ -66,4 +66,4 @@ After runtime/campaign verification, the intended packaging split is:
 - **Optional Cosmetics** — proven removable clothing/cosmetic sets;
 - **Removed/Archive** — proven stale/orphan physical assets only.
 
-The first stable 4.1.3 candidate remains **Full**. This avoids silently changing the upstream Artem content identity while compatibility is still being proven.
+The first stable 4.1.4 candidate remains **Full**. This avoids silently changing the upstream Artem content identity while compatibility is still being proven.

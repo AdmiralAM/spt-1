@@ -1,0 +1,153 @@
+name: Admiral Trader Canonical SPT 4.1.5 RC
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mods/Admiral-Trader/**'
+      - '.github/workflows/admiral-trader-spt415-rc.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: admiral-trader-canonical-spt415-rc-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  canonical-active-head-rc:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout exact canonical PR head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 1
+
+      - name: Set up .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download and verify exact SPT 4.1.5 runtime
+        shell: pwsh
+        run: |
+          $archive = "$env:RUNNER_TEMP/SPT-4.1.5-40743-7d7add5.7z"
+          Invoke-WebRequest 'https://github.com/SP-Tushonka/build/releases/download/4.1.5/SPT-4.1.5-40743-7d7add5.7z' -OutFile $archive
+          $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne '5cc04274c88115730fe982fd12c7525d57e5fc64b6b7271ab3929383e3ac4432') {
+            throw "SPT archive hash mismatch: $hash"
+          }
+          7z x $archive "-o$env:RUNNER_TEMP/spt415" -y
+          if ($LASTEXITCODE -ne 0) { throw 'SPT archive extraction failed.' }
+          $core = @(Get-ChildItem "$env:RUNNER_TEMP/spt415" -Recurse -Filter SPTarkov.Server.Core.dll -File)
+          if ($core.Count -ne 1) { throw "Expected one SPT runtime root; found $($core.Count)" }
+          "SPT_RUNTIME_ROOT=$($core[0].Directory.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Run canonical Trader deterministic gates
+        shell: pwsh
+        run: |
+          python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
+          if ($LASTEXITCODE -ne 0) { throw 'Admiral Trader unit tests failed.' }
+          python mods/Admiral-Trader/tools/validate_runtime_assort.py
+          if ($LASTEXITCODE -ne 0) { throw 'Admiral Trader runtime assort gate failed.' }
+
+      - name: Compare lifecycle fields with exact SPT 4.1.5 quest DB
+        shell: pwsh
+        run: |
+          $quests = Join-Path $env:SPT_RUNTIME_ROOT 'SPT_Data/database/templates/quests.json'
+          if (-not (Test-Path $quests -PathType Leaf)) { throw "Exact SPT quest database is missing: $quests" }
+          python mods/Admiral-Trader/tools/audit_spt415_lifecycle_contract.py `
+            $quests `
+            --authored-dir mods/Admiral-Trader/db/quests `
+            --output build/trader-rc/spt415-lifecycle-contract.json
+          if ($LASTEXITCODE -ne 0) { throw 'Exact SPT 4.1.5 lifecycle field audit failed.' }
+
+      - name: Build active-head exact-runtime install candidate
+        shell: pwsh
+        run: |
+          ./mods/Admiral-Trader/tools/Build-Spt415Rc.ps1 `
+            -SptRoot $env:SPT_RUNTIME_ROOT `
+            -SourceHeadSha '${{ github.event.pull_request.head.sha || github.sha }}' `
+            -OutputDirectory "$PWD/build/trader-rc"
+
+      - name: Assert package authority is active canonical head
+        shell: pwsh
+        run: |
+          $provenanceFiles = @(Get-ChildItem build/trader-rc -Recurse -Filter admiral-trader-provenance.json -File)
+          if ($provenanceFiles.Count -ne 1) { throw "Expected one Trader provenance file; found $($provenanceFiles.Count)" }
+          $p = Get-Content $provenanceFiles[0].FullName -Raw | ConvertFrom-Json
+          $expectedHead = '${{ github.event.pull_request.head.sha || github.sha }}'.ToLowerInvariant()
+          if ($p.sourceHeadSha -ne $expectedHead) { throw "RC source authority mismatch: $($p.sourceHeadSha) != $expectedHead" }
+          if ($p.sourceHeadSha -eq '053a62ff5f1cb545f13bc89a96bba3acd319a823') { throw 'Historical frozen Trader head must not be used as canonical PR #328 RC source.' }
+          if ($p.questCount -ne 31 -or $p.baselineOffers -ne 4 -or $p.milestoneOffers -ne 7 -or $p.relationshipOffers -ne 0) {
+            throw 'Canonical Trader campaign contract drifted in RC provenance.'
+          }
+          if ($p.allAssortTplsPresentInExactItemDb -ne $true) { throw 'Exact SPT 4.1.5 assort TPL proof is missing.' }
+          if ($p.sourceRegistrationEnabled -ne $false -or $p.stagedRegistrationEnabled -ne $true) {
+            throw 'Source/staged registration gate semantics drifted.'
+          }
+
+      - name: Automated exact-runtime server-start smoke
+        shell: pwsh
+        run: |
+          $candidateDirs = @(Get-ChildItem build/trader-rc -Directory | Where-Object {
+            Test-Path (Join-Path $_.FullName 'admiral-trader-provenance.json') -PathType Leaf
+          })
+          if ($candidateDirs.Count -ne 1) { throw "Expected one candidate directory; found $($candidateDirs.Count)" }
+          $candidate = $candidateDirs[0]
+          $candidateMod = Join-Path $candidate.FullName 'SPT_Runtime/user/mods/Admiral-Trader'
+          if (-not (Test-Path $candidateMod -PathType Container)) { throw 'Candidate Admiral-Trader directory is missing.' }
+
+          $runtimeMods = Join-Path $env:SPT_RUNTIME_ROOT 'user/mods'
+          New-Item $runtimeMods -ItemType Directory -Force | Out-Null
+          $target = Join-Path $runtimeMods 'Admiral-Trader'
+          if (Test-Path $target) { Remove-Item $target -Recurse -Force }
+          Copy-Item $candidateMod $target -Recurse -Force
+
+          $server = Get-ChildItem $env:SPT_RUNTIME_ROOT -File | Where-Object { $_.Name -in @('SPT.Server.exe','SPT.Server') } | Select-Object -First 1
+          if (-not $server) { throw 'SPT server executable was not found in the verified runtime.' }
+          $stdout = "$env:RUNNER_TEMP/admiral-trader-server.stdout.log"
+          $stderr = "$env:RUNNER_TEMP/admiral-trader-server.stderr.log"
+          $process = Start-Process $server.FullName -WorkingDirectory $env:SPT_RUNTIME_ROOT -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          try {
+            Start-Sleep -Seconds 45
+            $combined = ((Get-Content $stdout -Raw -ErrorAction SilentlyContinue) + "`n" + (Get-Content $stderr -Raw -ErrorAction SilentlyContinue))
+            if ($process.HasExited) { throw "SPT server exited before the smoke window completed (exit $($process.ExitCode)).`n$combined" }
+            if ($combined -match '(?im)(unhandled exception|failed to (load|register)|errors were found with mods|unexpectedly stopped|mismatch)') {
+              throw "Trader startup/registration error detected.`n$combined"
+            }
+            foreach ($required in @(
+              'Mod: Admiral Trader version: 0.1.0',
+              'SPT 4.1.5',
+              'Admiral Trader registered with id d5c27bb3169f8dfbc13f6b69',
+              'Registered 31 authored Admiral quests',
+              'Server has started'
+            )) {
+              if ($combined -notmatch [regex]::Escape($required)) { throw "Required active-head Trader evidence missing: $required`n$combined" }
+            }
+          } finally {
+            if (-not $process.HasExited) { Stop-Process $process -Force }
+          }
+          Copy-Item $stdout build/trader-rc/server-smoke.stdout.log
+          Copy-Item $stderr build/trader-rc/server-smoke.stderr.log
+
+      - name: Upload canonical active-head install-ready RC
+        uses: actions/upload-artifact@v4
+        with:
+          name: Admiral-Trader-SPT415-RC-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            build/trader-rc/*.zip
+            build/trader-rc/*.zip.sha256
+            build/trader-rc/**/admiral-trader-provenance.json
+            build/trader-rc/spt415-lifecycle-contract.json
+            build/trader-rc/server-smoke.*.log
+          if-no-files-found: error
+          retention-days: 14

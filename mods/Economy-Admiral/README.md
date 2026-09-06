@@ -1,6 +1,6 @@
 # Economy Admiral
 
-**Economy Admiral** is an SPT 4.1.3 economy difficulty layer. It makes money, loot and progression retain value longer by applying one coherent profile across quest rewards, traders, flea and world loot.
+**Economy Admiral** is an SPT 4.1.4 economy difficulty layer. It makes money, loot and progression retain value longer by applying one coherent profile across quest rewards, traders, flea and world loot.
 
 Version: **0.1.0** during final product acceptance.
 
@@ -135,6 +135,8 @@ Admiral Trader is an **optional integration**, not a dependency.
 
 If Admiral Trader is absent, Economy Admiral runs standalone. If the maintained Admiral Trader contract is installed, Economy Admiral validates its explicit identity/schema/offer classes and treats compatibility fail-closed on drift. Economy Admiral does not duplicate Admiral Trader's own progression/store logic.
 
+The supported frozen Admiral Trader 0.1.0 runtime surface is exactly 31 authored quests and 11 finite offers (4 Baseline + 7 Milestone, with no materialized Relationship offers). This compatibility gate also requires the schema-v4 Gameplay Alpha contract; legacy prototype schema-v3 contracts and post-0.1.0 surfaces are reported as unsupported instead of being guessed at or changing the trader's authored unlock semantics.
+
 ## Development diagnostics
 
 Runtime reports and `Validate-Runtime.ps1`, `Validate-Enforce.ps1`, `Validate-Beta.ps1` remain available in the source repository for development/release diagnosis. They are deliberately **not shipped in the player install package** and are not required to use Economy Admiral.
@@ -152,4 +154,6 @@ On the first server start, Economy Admiral validates `config.default.json` and c
 
 It does not bundle or replace the BepInEx runtime itself, and it does not install development validators/test harnesses into the game directory.
 
-Compile boundary: `SPTarkov.Server.Core 4.1.2` / .NET 10. Physical target: **SPT 4.1.3**. Runtime economy changes are applied during server database load; there is no permanent raid/frame economy polling.
+The combined SPT 4.1.4 release-candidate workflow additionally publishes one ZIP with this complete Economy runtime and the immutable Admiral Trader `0.1.0` runtime from commit `053a62ff5f1cb545f13bc89a96bba3acd319a823`. Extract that ZIP into the SPT root. It contains only the two owned server mod directories, the Economy F12 plugin, and exact provenance; it never contains SPT/EFT or BepInEx runtime binaries.
+
+Compile boundary: `SPTushonka.Server.Core 4.1.4` / .NET 10. Physical target: **SPT 4.1.4**. Runtime economy changes are applied during server database load; there is no permanent raid/frame economy polling.

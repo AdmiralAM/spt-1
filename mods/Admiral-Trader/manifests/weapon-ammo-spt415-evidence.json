@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "scope": "weapon-ammo-runtime-input-and-selection",
+  "targetSptVersion": "4.1.5",
+  "status": "verified",
+  "source": {
+    "repository": "SP-Tushonka/build",
+    "release": "4.1.5",
+    "archive": "SPT-4.1.5-40743-7d7add5.7z",
+    "archiveSha256": "5cc04274c88115730fe982fd12c7525d57e5fc64b6b7271ab3929383e3ac4432",
+    "itemDatabasePath": "SPT_Runtime/SPT_Data/database/templates/items.json",
+    "itemRecordCount": 4673
+  },
+  "verification": {
+    "exactHead": "146f49a889ade6d1a95e6bdba28280e4bf11eeda",
+    "workflow": "Admiral Trader Weapon Ammo Pools",
+    "runId": 33989342778,
+    "jobId": 101368645813,
+    "artifact": {
+      "name": "admiral-trader-weapon-ammo-runtime-146f49a889ade6d1a95e6bdba28280e4bf11eeda",
+      "id": 9976131871,
+      "sha256": "7c47f46568c2db3ff87154cd12e84c4e3fc969b02556d0a748f255836e127479"
+    },
+    "unitTests": 79,
+    "checks": [
+      "official release archive SHA-256 matched",
+      "exact SPT 4.1.5 items.json was unique and parsed successfully",
+      "all curated family weapon TPLs existed in the exact item database",
+      "six normal-family ammo selections exactly matched committed capabilities",
+      "Special Weapons remained sample-only with no permanent ammunition unlock",
+      "21 generated Arsenal templates matched committed runtime templates"
+    ]
+  },
+  "resolvedPools": {
+    "handguns": {"weapons": 19, "ammo": 41, "excludedAmmo": 8},
+    "smg-pdw": {"weapons": 18, "ammo": 32, "excludedAmmo": 0},
+    "shotguns": {"weapons": 15, "ammo": 32, "excludedAmmo": 2},
+    "assault-rifles": {"weapons": 37, "ammo": 40, "excludedAmmo": 0},
+    "marksman-battle": {"weapons": 7, "ammo": 23, "excludedAmmo": 0},
+    "precision": {"weapons": 8, "ammo": 21, "excludedAmmo": 0},
+    "special-weapons": {"weapons": 24, "ammo": 39, "excludedAmmo": 22}
+  },
+  "selectedCapabilities": {
+    "handguns": "5.7x28mm L191",
+    "smg-pdw": ".45 ACP AP",
+    "shotguns": "12/70 AP-20 armor-piercing slug",
+    "assault-rifles": "5.56x45mm M856A1",
+    "marksman-battle": "7.62x51mm M62 Tracer",
+    "precision": ".338 Lapua Magnum UPZ",
+    "special-weapons": "sample-only"
+  },
+  "boundary": "This proves item/TPL and deterministic weapon/ammo selection compatibility against the exact official SPT 4.1.5 database. It is not physical in-game quest lifecycle proof and does not satisfy M1 or M2."
+}

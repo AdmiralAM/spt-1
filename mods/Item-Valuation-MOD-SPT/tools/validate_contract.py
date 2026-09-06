@@ -79,9 +79,9 @@ assignments = re.findall(r"properties\.([A-Za-z0-9_]+)\s*=", source)
 if assignments != ["BackgroundColor", "BackgroundColor", "BackgroundColor"]:
     fail(f"template mutation surface must be BackgroundColor only; found {assignments}")
 
-if "<SptRuntimeTarget>4.1.3</SptRuntimeTarget>" not in project:
-    fail("SPT 4.1.3 runtime target missing")
-if "<SptPublishedApiBaseline>4.1.2</SptPublishedApiBaseline>" not in project:
+if "<SptRuntimeTarget>4.1.4</SptRuntimeTarget>" not in project:
+    fail("SPT 4.1.4 runtime target missing")
+if "<SptPublishedApiBaseline>4.1.4</SptPublishedApiBaseline>" not in project:
     fail("nearest published SPT API baseline missing")
 
 print("Item Valuation MOD SPT source contract OK")
