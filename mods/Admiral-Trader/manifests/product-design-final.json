@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "FINAL-DESIGN-AUTHORITY",
+  "canonicalIssue": 192,
+  "canonicalPr": 328,
+  "designScopeClosed": true,
+  "runtimeMaterialize": false,
+  "implementationAllowedByThisFile": false,
+  "versionPolicy": {
+    "currentDevelopmentValidationBaseline": "SPT 4.1.5",
+    "serverCompatibilityRange": "~4.1.0",
+    "exactPatchRuntimePin": false,
+    "rule": "Exact SPT versions are reproducibility and validation baselines, not automatic runtime refusal gates. Narrow compatibility only after demonstrated API/data breakage."
+  },
+  "campaign": {
+    "finalM3OperationCount": 12,
+    "acts": [
+      {
+        "key": "establish-network",
+        "titleEn": "Establish the Network",
+        "titleRu": "Развернуть сеть",
+        "operations": ["acoustic-discipline", "forward-reserve", "low-profile", "mobility-doctrine", "borrowed-access"]
+      },
+      {
+        "key": "keep-routes-open",
+        "titleEn": "Keep the Routes Open",
+        "titleRu": "Удержать маршруты",
+        "operations": ["acoustic-contact", "route-security", "contractor-intercept"]
+      },
+      {
+        "key": "deny-threat",
+        "titleEn": "Deny the Threat",
+        "titleRu": "Лишить противника инициативы",
+        "operations": ["observation-window", "heavy-assault", "break-the-perimeter"]
+      },
+      {
+        "key": "operate-without-support",
+        "titleEn": "Operate Without Support",
+        "titleRu": "Работать автономно",
+        "operations": ["internal-security"]
+      }
+    ],
+    "operations": [
+      {"key":"acoustic-discipline","titleEn":"Acoustic Discipline","titleRu":"Акустическая дисциплина","level":15,"sourceThemes":["Andrudis: Ultrasound"],"decision":"KEEP-REWRITE"},
+      {"key":"forward-reserve","titleEn":"Forward Reserve","titleRu":"Полевой резерв","level":15,"sourceThemes":["Andrudis: Errand Boy","Natalya: Exfil supply-cache motif"],"decision":"KEEP-REWRITE"},
+      {"key":"low-profile","titleEn":"Low Profile","titleRu":"Низкий профиль","level":15,"sourceThemes":["Andrudis: Deep Pockets","Andrudis: Tarkov Mule"],"decision":"KEEP-REWRITE"},
+      {"key":"mobility-doctrine","titleEn":"Mobility Doctrine","titleRu":"Манёвренная защита","level":17,"sourceThemes":["Andrudis: Iron Head","Andrudis: Juggernaut"],"decision":"KEEP-REWRITE"},
+      {"key":"borrowed-access","titleEn":"Borrowed Access","titleRu":"Чужой доступ","level":18,"sourceThemes":["Andrudis: Keys Proficiency","Natalya: Exfil transit/route motif"],"decision":"KEEP-REWRITE"},
+      {"key":"acoustic-contact","titleEn":"Acoustic Contact","titleRu":"Акустический контакт","level":20,"sourceThemes":["Andrudis: Ultrasound"],"decision":"KEEP"},
+      {"key":"route-security","titleEn":"Route Security","titleRu":"Безопасный маршрут","level":21,"sourceThemes":["Andrudis: Scav Hunt","Natalya: Exfil corridor-security motif"],"decision":"KEEP"},
+      {"key":"contractor-intercept","titleEn":"Contractor Intercept","titleRu":"Перехват контрактников","level":23,"sourceThemes":["Andrudis: PMC Hunt"],"decision":"KEEP-REWRITE"},
+      {"key":"observation-window","titleEn":"Observation Window","titleRu":"Окно наблюдения","level":28,"sourceThemes":["Andrudis: Sniper Life"],"decision":"KEEP-MERGED"},
+      {"key":"heavy-assault","titleEn":"Heavy Assault","titleRu":"Тяжёлый штурм","level":30,"sourceThemes":["Andrudis: Juggernaut","Andrudis: Iron Head"],"decision":"KEEP-MERGED"},
+      {"key":"break-the-perimeter","titleEn":"Break the Perimeter","titleRu":"Прорыв периметра","level":31,"sourceThemes":["Andrudis: Rogue Hunt","Natalya: Exfil Lighthouse-threat motif"],"decision":"KEEP-REWRITE"},
+      {"key":"internal-security","titleEn":"Internal Security","titleRu":"Внутренняя охрана","level":37,"sourceThemes":["Andrudis: Raider Hunt"],"decision":"KEEP-REWRITE"}
+    ]
+  },
+  "legacy15Disposition": [
+    {"legacyKey":"signal-discipline","final":"acoustic-discipline","decision":"REWRITE"},
+    {"legacyKey":"field-expedient-supply","final":"forward-reserve","decision":"REWRITE"},
+    {"legacyKey":"expedition-loadout","final":"low-profile","decision":"REWRITE"},
+    {"legacyKey":"protection-calibration","final":"mobility-doctrine","decision":"REWRITE"},
+    {"legacyKey":"access-reconnaissance","final":"borrowed-access","decision":"REWRITE"},
+    {"legacyKey":"ballistic-head-test","final":"heavy-assault","decision":"MERGE"},
+    {"legacyKey":"acoustic-contact","final":"acoustic-contact","decision":"KEEP"},
+    {"legacyKey":"route-security","final":"route-security","decision":"KEEP"},
+    {"legacyKey":"hostile-operator-intercept","final":"contractor-intercept","decision":"REWRITE"},
+    {"legacyKey":"precision-observation-window","final":"observation-window","decision":"KEEP"},
+    {"legacyKey":"precision-denial","final":"observation-window","decision":"MERGE"},
+    {"legacyKey":"heavy-assault-loadout","final":"heavy-assault","decision":"REWRITE-MERGE"},
+    {"legacyKey":"rogue-interdiction","final":"break-the-perimeter","decision":"REWRITE"},
+    {"legacyKey":"endurance-circuit","final":null,"decision":"DROP-FROM-M3"},
+    {"legacyKey":"labs-security-disruption","final":"internal-security","decision":"REWRITE"}
+  ],
+  "rewardAuthority": {
+    "source": "m3-campaign-reward-plan.json",
+    "operationCount": 12,
+    "totalXp": 106500,
+    "totalRub": 661000,
+    "totalStanding": 0.157,
+    "itemRewardCount": 0,
+    "permanentUnlockCount": 0,
+    "rules": [
+      "Do not preserve reward budgets from removed or merged quests.",
+      "Reward actual risk, difficulty and campaign contribution rather than raw counter size.",
+      "Economy Admiral remains owner of economy normalization.",
+      "Thematic one-time samples are optional future review items, not part of the final M3 design authority."
+    ]
+  },
+  "progressionAuthority": {
+    "source": "m3-campaign-progression.json",
+    "singleLinearChain": false,
+    "salesVolumeGate": false,
+    "standingQuestGate": false,
+    "loyaltyQuestGate": false,
+    "maximumTotalDirectPrerequisites": 2,
+    "rootOperations": ["acoustic-discipline", "forward-reserve", "low-profile", "borrowed-access"],
+    "terminalOperations": ["break-the-perimeter", "internal-security"]
+  },
+  "editorialAuthority": {
+    "source": "m3-campaign-editorial-copy.json",
+    "writingStandard": "docs/m3-quest-writing-standard.md",
+    "englishAndRussianAuthoredIndependently": true,
+    "literalTranslationRequired": false,
+    "developerMetaLanguageAllowed": false,
+    "voice": "Professional, restrained, operational, practical; no grind commentary, no generic military parody, no repeated kill-counter narration."
+  },
+  "externalAbsorption": {
+    "Natalya": {
+      "repository": "Colobos9mm/Natalya",
+      "use": ["Exfil evacuation/logistics premise", "route continuity", "supply-cache narrative", "transit/marked-corridor narrative", "threat escalation around moving people and supplies"],
+      "reject": ["separate Natalya trader requirement", "Pay Back map-by-map body-count chain", "Weapons Training duplication", "wholesale quest import", "broad assort/custom armor dependency", "verbatim dialogue"]
+    },
+    "AndrudisQuestManiac": {
+      "repository": "laurentmekka/AndrudisQuestManiac",
+      "use": ["theme inventory and idea provenance", "selected concepts listed on final operations", "modular bundle thinking as a research aid"],
+      "reject": ["six-trader runtime model", "thousands-of-quests quantity target", "count ladders", "map-by-map cosmetic copies", "wholesale bundle import", "WTT dependency merely for fidelity"]
+    },
+    "AdmiralArtyomRevival": {
+      "repository": "AdmiralAM/spt-1/mods/Admiral-Artyom-Revival",
+      "use": ["current in-repo SPT C# structure reference", "clear load ordering", "data/helper separation", "trader image/base/assort/locales registration patterns"],
+      "reject": ["copying WTT dependency when native Admiral implementation does not need it", "copying unrelated custom-item/clothing scope"]
+    },
+    "ScorpionCSharp": {
+      "repository": "acidphantasm/scorpion-csharp",
+      "use": ["maintained C# trader helper separation", "config provider/registration pattern", "models/data separation", "small focused integration helpers"],
+      "reject": ["custom router or compatibility machinery unless Admiral has the same demonstrated need"]
+    },
+    "RefFriendlyQuestsCSharp": {
+      "repository": "acidphantasm/reffriendlyquests-csharp",
+      "use": ["maintained C# quest/data/config organization", "native SPT table-oriented quest modification reference"],
+      "reject": ["copying behavior unrelated to Admiral quest publication/lifecycle"]
+    },
+    "AcidphantasmLegacySources": {
+      "repositories": ["acidphantasm/acidphantasm-scorpion", "acidphantasm/acidphantasm-refchanges"],
+      "use": ["historical behavior comparison", "content provenance", "compatibility reference"],
+      "reject": ["treating legacy code as preferred implementation over maintained C# references"]
+    }
+  },
+  "closedOrDeferred": {
+    "fieldMedicine": "OUT-OF-M3; no item-handover substitute for treatment skill",
+    "chemicalSupport": "OUT-OF-M3; no stim-handover or fake effect quest",
+    "enduranceCircuit": "DROPPED-FROM-M3; no cross-map extraction checklist",
+    "bossCommandStrike": "NO RESERVED SLOT; may return only through explicit M4 curation with unique Why/Context/Payoff",
+    "cultistNightOperation": "NO RESERVED SLOT; may return only through explicit M4 curation with unique Why/Context/Payoff"
+  },
+  "implementationBoundary": {
+    "requiresM1Acceptance": true,
+    "requiresM2Acceptance": true,
+    "requiresExplicitUserPermissionForNewFunctionalImplementation": true,
+    "noFurtherDesignChurnByDefault": true,
+    "reopenDesignOnlyFor": ["new user direction", "demonstrated runtime constraint invalidates a final design", "new external source materially improves a specific operation"]
+  }
+}

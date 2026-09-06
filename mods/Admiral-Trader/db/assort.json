@@ -1,6 +1,54 @@
 {
   "items": [
     {
+      "_id": "ad2000000000000000000001",
+      "_tpl": "5f4f9eb969cdc30ff33f09db",
+      "parentId": "hideout",
+      "slotId": "hideout",
+      "upd": {
+        "UnlimitedCount": false,
+        "StackObjectsCount": 4,
+        "BuyRestrictionMax": 1,
+        "BuyRestrictionCurrent": 0
+      }
+    },
+    {
+      "_id": "ad2000000000000000000002",
+      "_tpl": "5c12688486f77426843c7d32",
+      "parentId": "hideout",
+      "slotId": "hideout",
+      "upd": {
+        "UnlimitedCount": false,
+        "StackObjectsCount": 6,
+        "BuyRestrictionMax": 2,
+        "BuyRestrictionCurrent": 0
+      }
+    },
+    {
+      "_id": "ad2000000000000000000003",
+      "_tpl": "61605d88ffa6e502ac5e7eeb",
+      "parentId": "hideout",
+      "slotId": "hideout",
+      "upd": {
+        "UnlimitedCount": false,
+        "StackObjectsCount": 3,
+        "BuyRestrictionMax": 1,
+        "BuyRestrictionCurrent": 0
+      }
+    },
+    {
+      "_id": "ad2000000000000000000004",
+      "_tpl": "5991b51486f77447b112d44f",
+      "parentId": "hideout",
+      "slotId": "hideout",
+      "upd": {
+        "UnlimitedCount": false,
+        "StackObjectsCount": 12,
+        "BuyRestrictionMax": 4,
+        "BuyRestrictionCurrent": 0
+      }
+    },
+    {
       "_id": "ad1000000000000000000001",
       "_tpl": "5c94bbff86f7747ee735c08f",
       "parentId": "hideout",
@@ -86,6 +134,10 @@
     }
   ],
   "barter_scheme": {
+    "ad2000000000000000000001": [[{"count": 42000, "_tpl": "5449016a4bdc2d6f028b456f"}]],
+    "ad2000000000000000000002": [[{"count": 32000, "_tpl": "5449016a4bdc2d6f028b456f"}]],
+    "ad2000000000000000000003": [[{"count": 68000, "_tpl": "5449016a4bdc2d6f028b456f"}]],
+    "ad2000000000000000000004": [[{"count": 16500, "_tpl": "5449016a4bdc2d6f028b456f"}]],
     "ad1000000000000000000001": [[{"count": 166000, "_tpl": "5449016a4bdc2d6f028b456f"}]],
     "6cf0fc22a55417075c5af23e": [[{"count": 400, "_tpl": "5449016a4bdc2d6f028b456f"}]],
     "67d5501fb925a7836b99f112": [[{"count": 850, "_tpl": "5449016a4bdc2d6f028b456f"}]],
@@ -95,6 +147,10 @@
     "731e65964d324bc545a1b839": [[{"count": 1050, "_tpl": "5449016a4bdc2d6f028b456f"}]]
   },
   "loyal_level_items": {
+    "ad2000000000000000000001": 1,
+    "ad2000000000000000000002": 1,
+    "ad2000000000000000000003": 1,
+    "ad2000000000000000000004": 1,
     "ad1000000000000000000001": 1,
     "6cf0fc22a55417075c5af23e": 1,
     "67d5501fb925a7836b99f112": 1,

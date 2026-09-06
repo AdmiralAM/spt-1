@@ -1,6 +1,6 @@
 # B&A&HB #2 MOD SPT — profile / uninstall safety
 
-This directory is the recovery contract for SPT 4.1.3 profiles that contain persistent B&A&HB data.
+This directory is the recovery contract for SPT 4.1.4 profiles that contain persistent B&A&HB data.
 
 ## Authoritative persistent identities
 
@@ -68,4 +68,4 @@ The cleanup is ownership-scoped: it removes B&A&HB template instances and serial
 
 ## Proof boundary
 
-CI regression proves the deterministic recovery policy, identity-contract parity and package contents. It does **not** prove the exact physical SPT 4.1.3 profile-load lifecycle. Physical runtime evidence remains a separate gate before this behavior can be described as runtime-proven.
+CI regression proves the deterministic recovery policy, identity-contract parity and package contents. It does **not** prove the exact physical SPT 4.1.4 profile-load lifecycle. Physical runtime evidence remains a separate gate before this behavior can be described as runtime-proven.

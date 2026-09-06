@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "targetSptVersion": "4.1.3",
+  "targetSptVersion": "4.1.5",
   "purpose": "Stable curated weapon TPL allowlists used by Arsenal Protocol elimination objectives; excludes event/debug/duplicate backend variants.",
   "families": {
     "handguns": [

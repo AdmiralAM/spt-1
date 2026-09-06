@@ -10,6 +10,7 @@ from typing import Any
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
 RUB_TPL = "5449016a4bdc2d6f028b456f"
 QUEST_ICON = "/files/quest/icon/5a27cafa86f77424e20615d6.jpg"
+TARGET_SPT_VERSION = "4.1.5"
 
 
 def mongo_id(namespace: str) -> str:
@@ -92,8 +93,8 @@ def authored_index(spec: dict[str, Any]) -> dict[str, Any]:
 
 
 def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: dict[str, Any], runtime_pools: dict[str, Any]) -> dict[str, Any]:
-    if any(x.get("targetSptVersion") != "4.1.3" for x in (plan, spec, capabilities, runtime_pools)):
-        raise ValueError("all weapon-ammo runtime inputs must target SPT 4.1.3")
+    if any(x.get("targetSptVersion") != TARGET_SPT_VERSION for x in (plan, spec, capabilities, runtime_pools)):
+        raise ValueError(f"all weapon-ammo runtime inputs must target SPT {TARGET_SPT_VERSION}")
     authored = authored_index(spec); templates: dict[str, dict[str, Any]] = {}; deferred = []
     for quest in plan.get("quests") or []:
         slug, family = str(quest["slug"]), str(quest["family"])
@@ -102,12 +103,12 @@ def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: di
         capability = capabilities["families"].get(family)
         if family == "special-weapons" and quest["stage"] == "munitions":
             deferred.append({"questId": quest["id"], "slug": slug,
-                             "reason": "special sample TPL requires exact SPT 4.1.3 runtime item verification"})
+                             "reason": "special sample TPL requires exact SPT 4.1.5 runtime item verification"})
         name = f"Arsenal Protocol: {authored['displayByFamily'][family]} - {str(quest['stage']).title()}"; qid = str(quest["id"])
         templates[qid] = {
             "QuestName": name, "_id": qid, "canShowNotificationsInGame": True,
             "conditions": {"AvailableForFinish": [elimination_condition(slug, int(stage["kills"]), weapon_ids)],
-                           "AvailableForStart": start_conditions(quest, authored), "Started": [], "Success": [], "Fail": []},
+                           "AvailableForStart": start_conditions(quest, authored), "Fail": []},
             "description": f"{qid} description", "failMessageText": f"{qid} failMessageText", "name": f"{qid} name",
             "note": f"{qid} note", "traderId": TRADER_ID, "location": "any", "image": QUEST_ICON, "type": "Elimination",
             "isKey": False, "restartable": False, "instantComplete": False, "secretQuest": False,
@@ -115,11 +116,12 @@ def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: di
             "acceptPlayerMessage": f"{qid} acceptPlayerMessage", "acceptanceAndFinishingSource": "eft",
             "declinePlayerMessage": f"{qid} declinePlayerMessage", "completePlayerMessage": f"{qid} completePlayerMessage",
             "rewards": {"Started": [], "Success": success_rewards(slug, stage, capability if quest["stage"] == "munitions" and family != "special-weapons" else None), "Fail": []},
-            "side": "Pmc",
+            "side": "Pmc", "status": 0, "progressSource": "eft",
+            "gameModes": [], "rankingModes": [], "arenaLocations": [],
         }
     if len(templates) != 21:
         raise ValueError(f"expected 21 runtime templates, got {len(templates)}")
-    return {"schemaVersion": 2, "targetSptVersion": "4.1.3", "templates": templates, "deferredRuntimeItems": deferred}
+    return {"schemaVersion": 2, "targetSptVersion": TARGET_SPT_VERSION, "templates": templates, "deferredRuntimeItems": deferred}
 
 
 def main() -> int:

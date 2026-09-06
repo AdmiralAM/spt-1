@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 2,
+  "product": "Admiral Trader",
+  "status": "M3-progression-plan-only",
+  "campaignAuthority": "m3-campaign-product-spec.json",
+  "externalPrerequisiteAuthority": "m3-existing-campaign-integration.json",
+  "runtimeMaterialize": false,
+  "designRules": {
+    "singleLinearChainAllowed": false,
+    "parallelRootsRequired": true,
+    "salesVolumeGateAllowed": false,
+    "repeatableGateAllowed": false,
+    "mandatoryAllOperationsBeforeNextActAllowed": false,
+    "maximumTotalDirectPrerequisitesPerOperation": 2,
+    "prerequisiteLevelRegressionAllowed": false,
+    "questCountGateAllowed": false,
+    "standingAsQuestPrerequisiteAllowed": false,
+    "loyaltyAsQuestPrerequisiteAllowed": false,
+    "crossCampaignPrerequisiteMustRepresentRealCapability": true
+  },
+  "levels": {
+    "acoustic-discipline": 15,
+    "forward-reserve": 15,
+    "low-profile": 15,
+    "mobility-doctrine": 17,
+    "borrowed-access": 18,
+    "acoustic-contact": 20,
+    "route-security": 21,
+    "contractor-intercept": 23,
+    "observation-window": 28,
+    "heavy-assault": 30,
+    "break-the-perimeter": 31,
+    "internal-security": 37
+  },
+  "prerequisites": {
+    "acoustic-discipline": [],
+    "forward-reserve": [],
+    "low-profile": [],
+    "mobility-doctrine": ["low-profile"],
+    "borrowed-access": [],
+    "acoustic-contact": ["acoustic-discipline"],
+    "route-security": ["forward-reserve", "borrowed-access"],
+    "contractor-intercept": ["route-security"],
+    "observation-window": ["acoustic-contact"],
+    "heavy-assault": ["mobility-doctrine"],
+    "break-the-perimeter": ["contractor-intercept", "observation-window"],
+    "internal-security": ["heavy-assault"]
+  },
+  "externalPrerequisites": {
+    "borrowed-access": ["cba3374f11375c4e7eea9efe"],
+    "contractor-intercept": ["9c438fa48f645044ddc75e8d"],
+    "observation-window": ["153839f368b80b6fbc36d29e"],
+    "internal-security": ["68a6527a3c73b2e85977d7a1"]
+  },
+  "branches": {
+    "reconnaissance": ["acoustic-discipline", "acoustic-contact", "observation-window"],
+    "logistics-and-access": ["forward-reserve", "borrowed-access", "route-security", "contractor-intercept", "break-the-perimeter"],
+    "protective-fieldcraft": ["low-profile", "mobility-doctrine", "heavy-assault"],
+    "command-grade": ["internal-security"]
+  },
+  "narrativeLinks": [
+    {
+      "from": "acoustic-discipline",
+      "to": "acoustic-contact",
+      "reason": "The player first verifies a route using restraint, then later applies that situational awareness when a real hostile contact appears."
+    },
+    {
+      "from": "forward-reserve",
+      "to": "route-security",
+      "reason": "The player first sustains the forward element, then later protects the corridor that element depends on."
+    },
+    {
+      "from": "borrowed-access",
+      "to": "route-security",
+      "reason": "The campaign first establishes that restricted movement through Customs is possible before treating the broader Customs corridor as network infrastructure worth defending."
+    },
+    {
+      "from": "route-security",
+      "to": "contractor-intercept",
+      "reason": "After ordinary local pressure is controlled, trained hostile contractors become the next network threat rather than a larger Scav count."
+    },
+    {
+      "from": "acoustic-contact",
+      "to": "observation-window",
+      "reason": "Close-range situational awareness grows into deliberate stand-off control; the existing Precision Fieldwork milestone supplies the weapon-skill prerequisite instead of another generic distance qualification."
+    },
+    {
+      "from": "low-profile",
+      "to": "mobility-doctrine",
+      "reason": "The player first proves equipment restraint, then learns to balance purposeful protection against movement."
+    },
+    {
+      "from": "mobility-doctrine",
+      "to": "heavy-assault",
+      "reason": "Heavy protection appears only after the player has already proven that armor is a tactical choice, not an equipment collection ladder."
+    },
+    {
+      "from": "contractor-intercept",
+      "to": "break-the-perimeter",
+      "reason": "The campaign escalates from denying a hostile movement window to disrupting a prepared Rogue defensive system."
+    },
+    {
+      "from": "observation-window",
+      "to": "break-the-perimeter",
+      "reason": "The Rogue operation requires the player to have already demonstrated deliberate threat selection and controlled disengagement."
+    },
+    {
+      "from": "heavy-assault",
+      "to": "internal-security",
+      "reason": "Labs security is late-game pressure work and assumes the player has already proven heavy assault discipline; existing Access Protocol: Clearance supplies the separate Labs-access gate."
+    }
+  ],
+  "rootOperations": ["acoustic-discipline", "forward-reserve", "low-profile", "borrowed-access"],
+  "unconditionallyAvailableM3RootsByInternalGraph": ["acoustic-discipline", "forward-reserve", "low-profile"],
+  "externallyGatedM3Roots": ["borrowed-access"],
+  "terminalOperations": ["break-the-perimeter", "internal-security"],
+  "heldOutsideGraph": [
+    {
+      "legacyKey": "endurance-circuit",
+      "reason": "No distinct late-game decision has yet replaced the generic cross-map extraction checklist."
+    }
+  ],
+  "graphContracts": {
+    "operationCount": 12,
+    "externalPrerequisiteCount": 4,
+    "acyclicRequired": true,
+    "allOperationsReachableFromRootSet": true,
+    "allOperationsHaveConcretePlayerLevel": true,
+    "noOperationRequiresItselfTransitively": true,
+    "laterOperationLevelMustBeAtLeastEveryDirectPrerequisiteLevel": true,
+    "maximumTotalDirectPrerequisitesPerOperation": 2,
+    "finalMaterializationMaySplitAcrossBoundedSlices": true,
+    "runtimeSubsetMustRevalidateReachability": true
+  },
+  "materializationGate": {
+    "requiresM1LifecyclePass": true,
+    "requiresM2ExistingCampaignPass": true,
+    "requiresExactExistingQuestIds": true,
+    "requiresExactSpt415ConditionProofPerOperation": true,
+    "requiresGraphValidationAgainstMaterializedSubset": true,
+    "requiresBatchedPhysicalMilestonePerMeaningfulSlice": true
+  }
+}

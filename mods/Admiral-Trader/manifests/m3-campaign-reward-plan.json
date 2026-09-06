@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "M3-reward-plan-only",
+  "campaignAuthority": "m3-campaign-product-spec.json",
+  "runtimeMaterialize": false,
+  "economyOwner": "Economy Admiral",
+  "loyaltyAuthority": {
+    "source": "db/base.json",
+    "thresholds": [
+      {"loyaltyLevel": 1, "minPmcLevel": 1, "minStanding": 0.0},
+      {"loyaltyLevel": 2, "minPmcLevel": 15, "minStanding": 0.1},
+      {"loyaltyLevel": 3, "minPmcLevel": 25, "minStanding": 0.3},
+      {"loyaltyLevel": 4, "minPmcLevel": 35, "minStanding": 0.55}
+    ],
+    "salesVolumeGate": false,
+    "note": "M3 standing is not designed as a hidden loyalty-level requirement. Quest prerequisites and player level remain the campaign progression mechanism."
+  },
+  "policy": {
+    "defaultRewardTypes": ["Experience", "Roubles", "TraderStanding"],
+    "rewardRawCounterSize": false,
+    "rewardRiskAndCampaignContribution": true,
+    "removedQuestBudgetRedistributionAllowed": false,
+    "mergedQuestBudgetRedistributionAllowed": false,
+    "sameBandSameRewardRequired": false,
+    "itemRewardDefault": "none",
+    "permanentUnlockDefault": "none",
+    "nearestVanillaComparatorRequiredBeforeRuntime": true,
+    "exactSpt415EconomyRecheckRequiredBeforeRuntime": true
+  },
+  "actBudgets": [
+    {
+      "act": "establish-network",
+      "operationCount": 5,
+      "xp": 29500,
+      "rub": 174000,
+      "standing": 0.042,
+      "intent": "Early trust-building work pays modestly; rewards should feel useful without compensating the player for ordinary equipment they retain."
+    },
+    {
+      "act": "keep-routes-open",
+      "operationCount": 3,
+      "xp": 25000,
+      "rub": 154000,
+      "standing": 0.037,
+      "intent": "Combat risk rises, but these remain bounded network-defense jobs rather than high-end specialist farming."
+    },
+    {
+      "act": "deny-threat",
+      "operationCount": 3,
+      "xp": 35000,
+      "rub": 218000,
+      "standing": 0.053,
+      "intent": "Specialist precision, heavy assault and Rogue disruption receive the highest ordinary campaign payouts without introducing equipment or rare-ammo faucets."
+    },
+    {
+      "act": "operate-without-support",
+      "operationCount": 1,
+      "xp": 17000,
+      "rub": 115000,
+      "standing": 0.025,
+      "intent": "The Labs operation is a late-game capstone and may sit above normal operation rewards while remaining one-time and non-farming."
+    }
+  ],
+  "operationRewards": {
+    "acoustic-discipline": {"xp": 4000, "rub": 22000, "standing": 0.006, "itemReward": null},
+    "forward-reserve": {"xp": 5000, "rub": 30000, "standing": 0.008, "itemReward": null},
+    "low-profile": {"xp": 6500, "rub": 38000, "standing": 0.009, "itemReward": null},
+    "mobility-doctrine": {"xp": 6500, "rub": 40000, "standing": 0.009, "itemReward": null},
+    "borrowed-access": {"xp": 7500, "rub": 44000, "standing": 0.010, "itemReward": null},
+    "acoustic-contact": {"xp": 7000, "rub": 42000, "standing": 0.010, "itemReward": null},
+    "route-security": {"xp": 8000, "rub": 50000, "standing": 0.012, "itemReward": null},
+    "contractor-intercept": {"xp": 10000, "rub": 62000, "standing": 0.015, "itemReward": null},
+    "observation-window": {"xp": 12000, "rub": 70000, "standing": 0.018, "itemReward": null},
+    "heavy-assault": {"xp": 11000, "rub": 70000, "standing": 0.017, "itemReward": null},
+    "break-the-perimeter": {"xp": 12000, "rub": 78000, "standing": 0.018, "itemReward": null},
+    "internal-security": {"xp": 17000, "rub": 115000, "standing": 0.025, "itemReward": null}
+  },
+  "campaignTotals": {
+    "operationCount": 12,
+    "xp": 106500,
+    "rub": 661000,
+    "standing": 0.157,
+    "itemRewardCount": 0,
+    "permanentUnlockCount": 0
+  },
+  "standingPacing": {
+    "afterActI": 0.042,
+    "afterActII": 0.079,
+    "afterActIII": 0.132,
+    "afterActIV": 0.157,
+    "interpretation": "M3 standing is a trust reward layered onto the existing campaign. It must not be used to justify sales-volume grind or to pretend that M3 itself is the sole loyalty-level path."
+  },
+  "thematicSamplePolicy": {
+    "enabledByDefault": false,
+    "maximumCandidateOperationsBeforeSeparateReview": 3,
+    "nonRepeatableOnly": true,
+    "economyAdmiralApprovalRequired": true,
+    "exactTplAndValueRequired": true,
+    "cashOffsetRequired": true,
+    "recommendedCashOffsetRule": "Reduce the quest's planned RUB by the conservative handbook-equivalent value of the approved sample; do not add the sample on top of the planned envelope.",
+    "recommendedValueCeiling": "A normal thematic sample should remain at or below roughly one third of that operation's planned cash reward unless a separate milestone-reward review justifies more.",
+    "forbiddenByDefault": ["container", "high-tier armor", "complete high-tier weapon", "rare-ammo bundle", "renewable stim supply", "keycard faucet", "boss or Raider gear faucet"],
+    "candidateRoles": [
+      {"operation": "acoustic-discipline", "role": "low-value reconnaissance/support consumable", "state": "not-selected"},
+      {"operation": "observation-window", "role": "single bounded precision-support item or consumable", "state": "not-selected"},
+      {"operation": "internal-security", "role": "single late-game support sample that does not grant renewable Labs access", "state": "not-selected"}
+    ]
+  },
+  "mergedAndHeldBudget": [
+    {
+      "legacyKey": "ballistic-head-test",
+      "historicalReward": {"xp": 7500, "rub": 45000, "standing": 0.010},
+      "decision": "removed as standalone; reward not transferred"
+    },
+    {
+      "legacyKey": "precision-denial",
+      "historicalReward": {"xp": 11500, "rub": 72000, "standing": 0.017},
+      "decision": "merged conceptually into Observation Window; only a small final-difficulty uplift is retained, not the old reward total"
+    },
+    {
+      "legacyKey": "endurance-circuit",
+      "historicalReward": {"xp": 12000, "rub": 80000, "standing": 0.018},
+      "decision": "held for rewrite; reward budget is not reserved and is not redistributed"
+    }
+  ],
+  "materializationGate": {
+    "requiresM1AndM2Acceptance": true,
+    "requiresNearestVanillaComparator": true,
+    "requiresCurrentHandbookValueForAnyItemReward": true,
+    "requiresEconomyAdmiralApproval": true,
+    "allowsDownwardAdjustmentWithoutTraderRedesign": true,
+    "increaseBeyondPlannedEnvelopeRequiresTraderReview": true
+  }
+}

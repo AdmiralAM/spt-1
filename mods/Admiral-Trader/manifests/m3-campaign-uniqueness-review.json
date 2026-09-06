@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 2,
+  "product": "Admiral Trader",
+  "status": "M3-uniqueness-review-only",
+  "campaignAuthority": "m3-campaign-product-spec.json",
+  "runtimeMaterialize": false,
+  "rule": "Sharing a map, target class, equipment requirement or extraction condition is acceptable only when the player is solving a materially different operational problem. Cosmetic substitutions do not create a new quest.",
+  "conflictGroups": [
+    {
+      "group": "acoustic",
+      "operations": ["acoustic-discipline", "acoustic-contact"],
+      "risk": "Both use a headset and successful extraction and could collapse into the same wear-headset-and-fight template.",
+      "requiredSeparation": {
+        "acoustic-discipline": "Mandatory combat remains zero; the point is route reconnaissance and restraint.",
+        "acoustic-contact": "A short combat application follows later; the point is choosing a contact using already-established situational awareness."
+      },
+      "mergeTrigger": "If Acoustic Discipline gains a required kill condition, merge it with Acoustic Contact or redesign one of them."
+    },
+    {
+      "group": "protective-fieldcraft",
+      "operations": ["mobility-doctrine", "heavy-assault"],
+      "removedLegacyOperation": "ballistic-head-test",
+      "risk": "Light armor, helmet and heavy armor can easily become an equipment-class staircase with the same kill-and-extract loop.",
+      "requiredSeparation": {
+        "mobility-doctrine": "Protection is deliberately light because movement is the tactical advantage.",
+        "heavy-assault": "Protection is deliberately heavy because surviving a prepared assault position justifies accepting the mobility cost; head protection is folded into this operation rather than spun out into another quest."
+      },
+      "mergeTrigger": "If the heavy operation cannot obtain a materially different assault context, retain only Mobility Doctrine rather than publish a class-upgrade sequel."
+    },
+    {
+      "group": "precision",
+      "operations": ["observation-window"],
+      "removedLegacyOperation": "precision-denial",
+      "risk": "Two long-range quests differ only by distance wording or target count.",
+      "requiredSeparation": {
+        "observation-window": "Owns the complete precision theme: obtain stand-off control, solve one selected threat problem and disengage before the position becomes predictable."
+      },
+      "mergeTrigger": "Already executed: Precision Denial remains merged unless a future concept introduces a genuinely different player decision that cannot fit Observation Window."
+    },
+    {
+      "group": "route-defense",
+      "operations": ["route-security", "contractor-intercept", "break-the-perimeter"],
+      "risk": "All three can look like location-bound kill-and-extract quests when stripped of context.",
+      "requiredSeparation": {
+        "route-security": "Ordinary Scav pressure on Customs; restore basic logistics movement.",
+        "contractor-intercept": "Hostile PMC movement on Reserve; deny a specific crossing window used by trained competitors.",
+        "break-the-perimeter": "Rogue defensive network on Lighthouse; disrupt a prepared fire-control perimeter rather than clear a road."
+      },
+      "strengtheningOptions": {
+        "contractor-intercept": "Prefer a native SPT 4.1.5 time-window condition if exact semantics and overlap review support it; the narrative already describes a movement window. Do not add a gear restriction merely to force uniqueness.",
+        "break-the-perimeter": "Keep Water Treatment as narrative context unless an exact sub-location selector is proven. The Rogue role and Lighthouse map are the defining native constraints."
+      },
+      "mergeTrigger": "If Contractor Intercept cannot preserve any meaningful window/context distinction beyond target=PMC and map=Reserve, review it against Route Security before runtime admission."
+    },
+    {
+      "group": "customs-continuity",
+      "operations": ["borrowed-access", "route-security"],
+      "risk": "Two operations use Customs and could feel like repeated use of the same map without purpose.",
+      "requiredSeparation": {
+        "borrowed-access": "Reconnaissance/access problem: prove one restricted route is usable; combat is not the defining objective.",
+        "route-security": "Later consequence: local Scavs make movement through the broader corridor unreliable and must be removed before extraction."
+      },
+      "narrativeDecision": "The shared map is intentional continuity. The player first learns a route, then later helps keep the larger corridor operational. Do not create a third Customs operation in this wave without a new capability or consequence.",
+      "mergeTrigger": "If Borrowed Access loses its restricted-route interaction/proxy or Route Security loses its logistics-defense purpose, reassess the pair and keep only the operation with the stronger distinct player decision."
+    },
+    {
+      "group": "late-game-pressure",
+      "operations": ["internal-security"],
+      "heldLegacyOperation": "endurance-circuit",
+      "risk": "A generic cross-map survival checklist would add duration but not a new late-game decision.",
+      "requiredSeparation": {
+        "internal-security": "Existing Labs access is exercised under Raider pressure; entry itself is not rewarded and the player must leave after one security disruption.",
+        "endurance-circuit": "Not admitted. It may return only with a distinct operational problem that native SPT 4.1.5 mechanics can represent without becoming survive-on-three-maps bookkeeping."
+      },
+      "mergeTrigger": "No replacement is required if Endurance Circuit never clears the admission gate."
+    }
+  ],
+  "operationFingerprints": {
+    "acoustic-discipline": ["recon", "headset", "visit-or-location", "no-required-kills", "extract"],
+    "forward-reserve": ["logistics", "fixed-handover", "ordinary-maintenance-items"],
+    "low-profile": ["equipment", "low-tier-rig", "low-tier-backpack", "extract"],
+    "mobility-doctrine": ["light-protection", "short-contact", "extract"],
+    "borrowed-access": ["restricted-route", "visit-place", "extract"],
+    "acoustic-contact": ["headset", "woods", "two-scavs", "extract"],
+    "route-security": ["customs", "scavs", "logistics-corridor", "extract"],
+    "contractor-intercept": ["reserve", "pmcs", "movement-window", "extract"],
+    "observation-window": ["precision", "distance", "selected-threat", "extract"],
+    "heavy-assault": ["heavy-protection", "head-protection", "assault", "extract"],
+    "break-the-perimeter": ["lighthouse", "rogues", "prepared-perimeter", "extract"],
+    "internal-security": ["labs", "raiders", "existing-access", "extract"]
+  },
+  "admissionOutcome": {
+    "admitted": 12,
+    "merged": ["ballistic-head-test", "precision-denial"],
+    "held": ["endurance-circuit"],
+    "fillerAdded": 0
+  }
+}

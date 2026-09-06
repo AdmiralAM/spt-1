@@ -22,7 +22,7 @@ Write-Json 'economy-admiral-runtime-evidence.json' @{
     SchemaVersion = 5; Mode='Audit'; Preset='Normal'; ExpectedReportCount=7; PresentReportCount=7; AllExpectedReportsPresent=$true
     DatabaseFingerprintBefore=@{Sha256=$hash}; DatabaseFingerprintAfter=@{Sha256=$hash}; DatabaseUnchangedAcrossPipeline=$true; DatabaseChangeExpected=$false
     ApplyMutations=$false; DeclaredMutationCount=0; EnforcementEvidenceValid=$true; RuntimeGatePassed=$true
-    BuildIdentity=@{ Product='Economy Admiral'; HeadSha=$headSha; WorkflowRunId='123456789'; ArtifactName='economy-admiral-candidate'; CompilePackageVersion='4.1.2'; TargetRuntime='SPT 4.1.3' }
+    BuildIdentity=@{ Product='Economy Admiral'; HeadSha=$headSha; WorkflowRunId='123456789'; ArtifactName='economy-admiral-candidate'; CompilePackageVersion='4.1.4'; TargetRuntime='SPT 4.1.4' }
     Provenance=@{ CapturePriority=1; PristineQuestCount=100; FinalQuestCount=123; ModAddedQuestCount=25; PristineModifiedQuestCount=10; PristineUnchangedQuestCount=88; RemovedPristineQuestCount=2; BaselineCaptured=$true; CountsConsistent=$true }
 }
 

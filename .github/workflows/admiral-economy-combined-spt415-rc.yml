@@ -1,0 +1,131 @@
+name: Admiral Trader + Economy SPT 4.1.5 RC
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'mods/Economy-Admiral/**'
+      - '.github/workflows/admiral-economy-combined-spt415-rc.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-runtime-combined-rc:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Checkout immutable Admiral Trader 0.1.0
+        shell: pwsh
+        run: |
+          git fetch origin 053a62ff5f1cb545f13bc89a96bba3acd319a823
+          git worktree add --detach "$env:RUNNER_TEMP/frozen-trader" 053a62ff5f1cb545f13bc89a96bba3acd319a823
+
+      - name: Download and verify exact SPT 4.1.5 input
+        shell: pwsh
+        run: |
+          $archive = "$env:RUNNER_TEMP/SPT-4.1.5-40743-7d7add5.7z"
+          Invoke-WebRequest 'https://github.com/SP-Tushonka/build/releases/download/4.1.5/SPT-4.1.5-40743-7d7add5.7z' -OutFile $archive
+          $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne '5cc04274c88115730fe982fd12c7525d57e5fc64b6b7271ab3929383e3ac4432') { throw "SPT archive hash mismatch: $hash" }
+          7z x $archive "-o$env:RUNNER_TEMP/spt415" -y
+          if ($LASTEXITCODE -ne 0) { throw 'SPT archive extraction failed.' }
+          $core = Get-ChildItem "$env:RUNNER_TEMP/spt415" -Recurse -Filter SPTarkov.Server.Core.dll -File
+          if ($core.Count -ne 1) { throw "Expected one SPT runtime root; found $($core.Count)" }
+          "SPT_RUNTIME_ROOT=$($core[0].Directory.FullName)" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Provision BepInEx compile reference
+        shell: pwsh
+        run: |
+          $archive = "$env:RUNNER_TEMP/BepInEx.zip"
+          Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.21/BepInEx_x64_5.4.21.0.zip' -OutFile $archive
+          Expand-Archive $archive -DestinationPath "$env:RUNNER_TEMP/BepInEx" -Force
+          New-Item deps/BepInEx/core -ItemType Directory -Force | Out-Null
+          Copy-Item "$env:RUNNER_TEMP/BepInEx/BepInEx/core/BepInEx.dll" deps/BepInEx/core/BepInEx.dll
+
+      - name: Run Economy deterministic suites
+        shell: pwsh
+        run: |
+          python -m unittest discover -s mods/Economy-Admiral/tests -p 'test_*.py'
+          if ($LASTEXITCODE -ne 0) { throw 'Fresh-profile quest regression failed.' }
+          dotnet run --project mods/Economy-Admiral/tests/ConfigValidationSmoke/ConfigValidationSmoke.csproj -c Release
+          dotnet run --project mods/Economy-Admiral/tests/EnforcementSmoke/EnforcementSmoke.csproj -c Release
+          dotnet run --project mods/Economy-Admiral/tests/SourcePressureSmoke/SourcePressureSmoke.csproj -c Release
+
+      - name: Run frozen Trader deterministic suites
+        shell: pwsh
+        working-directory: ${{ runner.temp }}/frozen-trader
+        run: |
+          python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
+          python mods/Admiral-Trader/tools/validate_runtime_assort.py
+
+      - name: Build combined exact-runtime candidate
+        shell: pwsh
+        run: |
+          ./mods/Economy-Admiral/tools/Build-CombinedSpt415Rc.ps1 `
+            -SptRoot $env:SPT_RUNTIME_ROOT `
+            -TraderWorktree "$env:RUNNER_TEMP/frozen-trader" `
+            -SourceHeadSha '${{ github.event.pull_request.head.sha || github.sha }}' `
+            -OutputDirectory "$PWD/build/combined-rc"
+
+      - name: Automated combined server-start smoke
+        shell: pwsh
+        run: |
+          $candidates = @(Get-ChildItem build/combined-rc -Directory | Where-Object {
+            Test-Path (Join-Path $_.FullName 'combined-provenance.json') -PathType Leaf
+          })
+          if ($candidates.Count -ne 1) { throw "Expected one combined candidate directory; found $($candidates.Count)" }
+          $candidate = $candidates[0]
+          $runtimeMods = Join-Path $env:SPT_RUNTIME_ROOT 'user/mods'
+          New-Item $runtimeMods -ItemType Directory -Force | Out-Null
+          $candidateMods = @(Get-ChildItem (Join-Path $candidate.FullName 'SPT_Runtime/user/mods') -Directory)
+          $candidateModNames = @($candidateMods.Name | Sort-Object)
+          if (($candidateModNames -join ',') -ne 'Admiral-Trader,Economy Admiral') {
+            throw "Unexpected combined candidate mods: $($candidateMods.Name -join ', ')"
+          }
+          foreach ($mod in $candidateMods) {
+            $target = Join-Path $runtimeMods $mod.Name
+            if (Test-Path $target) { Remove-Item $target -Recurse -Force }
+            Copy-Item $mod.FullName $target -Recurse -Force
+          }
+          $server = Get-ChildItem $env:SPT_RUNTIME_ROOT -File | Where-Object { $_.Name -in @('SPT.Server.exe','SPT.Server') } | Select-Object -First 1
+          if (-not $server) { throw 'SPT server executable was not found in the verified runtime.' }
+          $stdout = "$env:RUNNER_TEMP/spt-server.stdout.log"; $stderr = "$env:RUNNER_TEMP/spt-server.stderr.log"
+          $process = Start-Process $server.FullName -WorkingDirectory $env:SPT_RUNTIME_ROOT -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          try {
+            Start-Sleep -Seconds 45
+            $combined = ((Get-Content $stdout -Raw -ErrorAction SilentlyContinue) + "`n" + (Get-Content $stderr -Raw -ErrorAction SilentlyContinue))
+            if ($process.HasExited) { throw "SPT server exited before the smoke window completed (exit $($process.ExitCode)).`n$combined" }
+            # SPT emits benign informational/error-labelled diagnostics during
+            # normal startup. Fail only on fatal lifecycle or registration
+            # markers; the required evidence checks below remain authoritative.
+            if ($combined -match '(?im)(unhandled exception|failed to (load|register)|errors were found with mods|unexpectedly stopped|mismatch)') { throw "Mod startup/registration error detected.`n$combined" }
+            foreach ($required in 'Mod: Economy Admiral version: 0.1.0','Mod: Admiral Trader version: 0.1.0','SPT 4.1.5','Server has started') {
+              if ($combined -notmatch [regex]::Escape($required)) { throw "Required server-start evidence missing: $required`n$combined" }
+            }
+          } finally { if (-not $process.HasExited) { Stop-Process $process -Force } }
+          Copy-Item $stdout build/combined-rc/server-smoke.stdout.log
+          Copy-Item $stderr build/combined-rc/server-smoke.stderr.log
+
+      - name: Upload combined install-ready ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Admiral-Trader-Economy-SPT415-RC-${{ github.event.pull_request.head.sha || github.sha }}
+          path: |
+            build/combined-rc/*.zip
+            build/combined-rc/*.zip.sha256
+            build/combined-rc/server-smoke.*.log
+          if-no-files-found: error
+          retention-days: 14

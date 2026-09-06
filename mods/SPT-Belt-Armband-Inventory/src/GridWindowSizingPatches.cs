@@ -49,7 +49,7 @@ namespace SPTBeltArmbandInventory
                 if (windows == null || windows.Count == 0) return;
 
                 // WindowData.WindowType is not a reliable System.Type discriminator in
-                // SPT 4.1.3. Resolve the actual Window instance instead.
+                // SPT 4.1.4. Resolve the actual Window instance instead.
                 int floor = Math.Max(0, windows.Count - MaxRecentWindowsToInspect);
                 for (int index = windows.Count - 1; index >= floor; index--)
                 {
