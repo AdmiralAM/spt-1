@@ -89,14 +89,14 @@ class KeysRuntimeTemplateTests(unittest.TestCase):
         self.assertEqual(template["traderId"], MODULE.TRADER_ID)
         self.assertEqual(template["type"], "PickUp")
 
-    def test_temporary_currency_objective_checks_roubles_without_consuming_them(self):
+    def test_explicit_beginner_pool_excludes_rare_source_keys(self):
         objective = self.spec["quests"][0]["objective"]
-        objective.update({"model": "possess-currency", "amount": 1000, "targetTpl": MODULE.RUB_TPL})
+        objective["targetTpls"] = ["key-b"]
         payload = MODULE.build_payload(self.spec, self.plan, self.inventory, self.root)
         finish = payload["templates"]["0123456789abcdef01234567"]["conditions"]["AvailableForFinish"]
         self.assertEqual(finish[0]["conditionType"], "FindItem")
-        self.assertEqual(finish[0]["target"], [MODULE.RUB_TPL])
-        self.assertEqual(finish[0]["value"], 1000)
+        self.assertEqual(finish[0]["target"], ["key-b"])
+        self.assertEqual(finish[0]["value"], 2)
         self.assertFalse(finish[0]["onlyFoundInRaid"])
 
     def test_reward_budget_materializes_without_legacy_unlock(self):

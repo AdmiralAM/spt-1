@@ -82,6 +82,15 @@ def validate(spec: dict[str, Any], plan: dict[str, Any], benchmark: dict[str, An
         representative_count = int(objective.get("representativeCount", 0))
         if representative_count < 1 or representative_count > 3:
             errors.append(f"{slug}: representative key count outside 1..3")
+        explicit_targets = objective.get("targetTpls")
+        if explicit_targets is not None:
+            if not isinstance(explicit_targets, list) or len(explicit_targets) < representative_count:
+                errors.append(f"{slug}: explicit target pool is smaller than the required count")
+            elif len(explicit_targets) != len(set(explicit_targets)) or any(
+                len(str(value)) != 24 or any(ch not in "0123456789abcdef" for ch in str(value))
+                for value in explicit_targets
+            ):
+                errors.append(f"{slug}: explicit target pool must contain unique lower-case 24-hex TPLs")
 
         reward = quest.get("rewardBudget") or {}
         bucket = level_buckets.get(level_bucket(level)) or {}

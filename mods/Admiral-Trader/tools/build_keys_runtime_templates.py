@@ -129,10 +129,7 @@ def finish_conditions(quest: dict[str, Any], key_pool: list[str]) -> list[dict[s
     slug = str(quest["slug"])
     objective = quest.get("objective") or {}
     count = int(objective.get("representativeCount", 1))
-    targets = key_pool
-    if objective.get("model") == "possess-currency":
-        count = int(objective["amount"])
-        targets = [str(objective.get("targetTpl") or RUB_TPL)]
+    targets = [str(value) for value in objective.get("targetTpls") or key_pool]
     return [
         {
             "id": condition_id(slug, "representative-keys"),

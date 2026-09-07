@@ -7,7 +7,7 @@
     "legacyTemplateReuse": false,
     "consumePlayerKeys": false,
     "foundInRaidRequired": false,
-    "moneyCollectionObjectives": "temporary-m1-test-only",
+    "moneyCollectionObjectives": false,
     "allKeysCollectionObjectives": false,
     "mapMilestonesMostlyIndependent": true,
     "labsIsLateGame": true,
@@ -21,7 +21,7 @@
       "minimumLevel": 1,
       "map": "any",
       "prerequisites": [],
-      "objective": {"model": "possess-currency", "amount": 1000, "targetTpl": "5449016a4bdc2d6f028b456f", "representativeCount": 1, "maximumTargetPoolSize": 1, "sourceGroup": "keys-intro"},
+      "objective": {"model": "possess-representative-keys", "representativeCount": 1, "maximumTargetPoolSize": 4, "sourceGroup": "keys-intro", "targetTpls": ["5672c92d4bdc2d180f8b4567", "5780cda02459777b272ede61", "5780cf692459777de4559321", "5780cf722459777a5108b9a1"]},
       "rewardBudget": {"xp": 4500, "rub": 15000, "standing": 0.01, "unlockSlots": 0}
     },
     {
