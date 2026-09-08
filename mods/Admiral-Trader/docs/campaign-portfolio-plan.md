@@ -70,7 +70,9 @@ Loadout assignments are a long-running campaign system rather than a single batc
 
 Only two weapon assignments should normally be offered at once. They run as two independent authored chains so the player has a minimum choice of raid setup. Completing either assignment exposes the next assignment in that chain; level alone must never expose the complete weapon pool.
 
-The first cycle introduces individual weapons or small closely related model pools with straightforward targets. After broad weapon coverage is complete, weapon families return in later cycles with meaningfully different contexts, for example:
+The first cycle introduces individual weapons or small closely related model pools with straightforward targets. A normal loadout assignment should allow a curated group of roughly 2-4 suitable locations. This preserves route choice while keeping the operation more specific than "any location." A single mandatory location is reserved for an authored story operation tied to a real place.
+
+After broad weapon coverage is complete, weapon families return in later cycles with meaningfully different contexts, for example:
 
 - a different location or enemy faction;
 - close-range, distance, day, or night work;
@@ -84,7 +86,7 @@ The same weapon and the same objective must not simply be repeated. Later cycles
 
 New original quests are allowed when the source mods do not contain a suitable reference. Additions should form several short authored stories rather than a flat collection of errands. Candidate story lanes include route security and access, field logistics, reconnaissance and signals, equipment evaluation, faction intelligence, and late-game command operations.
 
-Each story should intersect native progression without requiring another trader's quest state unless that dependency is stable and intentional. Its locations, objectives, and rewards must complement work from SPT, Scorpion, Artem, and Ref so the player can plan productive multi-purpose raids.
+Admiral stories do not need direct prerequisites, shared objectives, or explicit intersections with native quests. They should coexist at sensible progression levels and meet the same quality standard as strong native quest lines: clear motivation, an interesting and legible objective, credible pacing, proportional rewards, and no filler grind. Locations and requirements should still leave enough flexibility that the player can combine work from several traders when the opportunity arises.
 
 ## Storefront growth
 
