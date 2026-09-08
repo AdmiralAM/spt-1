@@ -87,7 +87,7 @@ jobs:
           $expectedHead = '${{ github.event.pull_request.head.sha || github.sha }}'.ToLowerInvariant()
           if ($p.sourceHeadSha -ne $expectedHead) { throw "RC source authority mismatch: $($p.sourceHeadSha) != $expectedHead" }
           if ($p.sourceHeadSha -eq '053a62ff5f1cb545f13bc89a96bba3acd319a823') { throw 'Historical frozen Trader head must not be used as canonical PR #328 RC source.' }
-          if ($p.questCount -ne 31 -or $p.baselineOffers -ne 4 -or $p.milestoneOffers -ne 7 -or $p.relationshipOffers -ne 0) {
+          if ($p.questCount -ne 43 -or $p.frozenBaselineQuestCount -ne 31 -or $p.m3OperationQuestCount -ne 12 -or $p.baselineOffers -ne 4 -or $p.milestoneOffers -ne 7 -or $p.relationshipOffers -ne 0) {
             throw 'Canonical Trader campaign contract drifted in RC provenance.'
           }
           if ($p.allAssortTplsPresentInExactItemDb -ne $true) { throw 'Exact SPT 4.1.5 assort TPL proof is missing.' }
@@ -128,7 +128,7 @@ jobs:
               'Mod: Admiral Trader version: 0.1.0',
               'SPT 4.1.5',
               'Admiral Trader registered with id d5c27bb3169f8dfbc13f6b69',
-              'Registered 31 authored Admiral quests',
+              'Registered 43 authored Admiral quests',
               'Server has started'
             )) {
               if ($combined -notmatch [regex]::Escape($required)) { throw "Required active-head Trader evidence missing: $required`n$combined" }

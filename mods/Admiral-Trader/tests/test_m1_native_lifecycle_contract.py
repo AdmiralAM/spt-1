@@ -16,8 +16,8 @@ class M1NativeLifecycleContractTests(unittest.TestCase):
         for path in sorted(QUEST_DIR.glob("*.json")):
             cls.quests.append((path, json.loads(path.read_text(encoding="utf-8"))))
 
-    def test_all_31_templates_require_explicit_native_accept_and_complete(self):
-        self.assertEqual(len(self.quests), 31)
+    def test_all_43_templates_require_explicit_native_accept_and_complete(self):
+        self.assertEqual(len(self.quests), 43)
         for path, quest in self.quests:
             with self.subTest(path=path.name):
                 self.assertIs(quest.get("instantComplete"), False)

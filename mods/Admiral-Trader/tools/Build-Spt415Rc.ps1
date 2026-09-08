@@ -70,7 +70,7 @@ $unclassified = @($rootIds | Where-Object { $_ -notin $baselineIds -and $_ -noti
 if ($unclassified.Count) { throw "Relationship/unclassified offers materialized unexpectedly: $($unclassified -join ', ')" }
 
 $questFiles = @(Get-ChildItem (Join-Path $traderRoot 'db/quests') -Filter '*.json' -File)
-if ($questFiles.Count -ne 31) { throw "Trader quest count drift: $($questFiles.Count)" }
+if ($questFiles.Count -ne 43) { throw "Trader quest count drift: $($questFiles.Count)" }
 
 $project = Join-Path $traderRoot 'server/AdmiralTrader.Server.csproj'
 dotnet build $project -c Release --nologo "-p:SptRuntimeLibDir=$runtimeRoot"
@@ -93,7 +93,7 @@ if (Test-Path (Join-Path $traderRoot 'README.md')) { Copy-Item (Join-Path $trade
 $stagedManifestPath = Join-Path $modTarget 'manifests/runtime-manifest.json'
 $stagedManifest = Get-Content $stagedManifestPath -Raw | ConvertFrom-Json
 $stagedManifest.registrationEnabled = $true
-$stagedManifest | Add-Member -NotePropertyName publicationMode -NotePropertyValue 'canonical-m1-test-candidate' -Force
+$stagedManifest | Add-Member -NotePropertyName publicationMode -NotePropertyValue 'canonical-m3-operation-wave-rc' -Force
 $stagedManifest | Add-Member -NotePropertyName sourceHeadSha -NotePropertyValue $sourceHead -Force
 $stagedManifest | ConvertTo-Json -Depth 20 | Set-Content $stagedManifestPath -Encoding utf8
 
@@ -101,7 +101,7 @@ $stagedAssort = Get-Content (Join-Path $modTarget 'db/assort.json') -Raw | Conve
 $stagedQuestAssort = Get-Content (Join-Path $modTarget 'db/questassort.json') -Raw | ConvertFrom-Json
 if (@($stagedAssort.items | Where-Object parentId -eq 'hideout').Count -ne 11) { throw 'Staged Trader lost the 11-offer contract.' }
 if (@($stagedQuestAssort.success.PSObject.Properties).Count -ne 7) { throw 'Staged Trader lost the seven Milestone gates.' }
-if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 31) { throw 'Staged Trader lost the 31-quest contract.' }
+if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 43) { throw 'Staged Trader lost the 43-quest expanded campaign contract.' }
 if (-not (Test-Path (Join-Path $modTarget 'assets/d5c27bb3169f8dfbc13f6b69.jpg') -PathType Leaf)) { throw 'Staged Trader portrait is missing.' }
 
 $provenance = [ordered]@{
@@ -112,7 +112,9 @@ $provenance = [ordered]@{
     sourceHeadSha = $sourceHead
     authority = 'PR #328 active canonical head'
     historicalReferenceOnly = '053a62ff5f1cb545f13bc89a96bba3acd319a823'
-    questCount = 31
+    questCount = 43
+    frozenBaselineQuestCount = 31
+    m3OperationQuestCount = 12
     baselineOffers = 4
     milestoneOffers = 7
     relationshipOffers = 0

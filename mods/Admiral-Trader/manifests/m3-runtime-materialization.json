@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "status": "M3-runtime-materialized",
+  "questIds": {
+    "acoustic-discipline": "8dad0d354ac000b7bbf05b9a",
+    "forward-reserve": "56813681ae0690016376f163",
+    "low-profile": "208db81b5ce195bf0c176852",
+    "mobility-doctrine": "6574a072f763d0b09a553401",
+    "borrowed-access": "8b6f2b25ab2e91e0540761e3",
+    "acoustic-contact": "41a41cb262ea084c1e110513",
+    "route-security": "133aa723b4695a3d93de92f1",
+    "contractor-intercept": "db220288bc8d5559a45feeb1",
+    "observation-window": "4c2cc3f85d60170907642d9e",
+    "heavy-assault": "b1b3d9e3a930a3eae47b2353",
+    "break-the-perimeter": "f62d8e1285027e336767513c",
+    "internal-security": "4072a5e458946a243b886ad8"
+  },
+  "questCount": 12,
+  "totalCampaignQuestCount": 43,
+  "baselineQuestCount": 31,
+  "equipmentAllowlists": {
+    "headsets": [
+      "5b432b965acfc47a8774094e",
+      "5c165d832e2216398b5a7e36",
+      "5e4d34ca86f774264f758330",
+      "6033fa48ffd42c541047f728",
+      "628e4e576d783146b124c64d"
+    ],
+    "lightArmor": [
+      "5df8a2ca86f7740bfe6df777",
+      "5c0e5edb86f77461f55ed1f7",
+      "5c0e57ba86f7747fa141986d",
+      "5b44d22286f774172b0c9de8"
+    ],
+    "heavyArmor": [
+      "5ca2151486f774244a3b8d30",
+      "5ca21c6986f77479963115a7",
+      "5e9dacf986f774054d6b89f4",
+      "5f5f41476bdad616ad46d631"
+    ],
+    "heavyHelmets": [
+      "5aa7e276e5b5b000171d0647",
+      "5ca20ee186f774799474abc2",
+      "5f60c74e3b85f6263c145586"
+    ]
+  }
+}

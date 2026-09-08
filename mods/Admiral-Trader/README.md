@@ -25,21 +25,13 @@ SPT version matters for development, API compatibility and release evidence, but
 - Exact-version builds/tests are reproducibility evidence, not an automatic runtime refusal policy.
 - Narrow the supported range only after a demonstrated API/data incompatibility.
 
-## Current milestone — M1 lifecycle correctness
+## Current milestone — M3 runtime campaign expansion
 
-The unresolved physical defect is the native quest lifecycle:
-
-1. eligible quest can enter the active lifecycle without explicit **Accept**;
-2. objective completion can resolve/turn in without explicit **Complete**;
-3. state transitions may appear only after trader/menu refresh;
-4. expected success dialogue/chat is missing;
-5. authored reward is not delivered through the expected native success path.
+M1 native lifecycle has passed physical gameplay validation. M2 physical gameplay validation is deferred to the first real fresh-profile run. The frozen 31-quest / 11-offer baseline remains intact while the approved 12-operation M3 wave is added as runtime content.
 
 Expected lifecycle:
 
 `Offered -> explicit Accept -> Started -> progress -> AvailableForFinish -> explicit Complete -> Success -> success dialogue/mail -> reward delivery -> questassort unlock -> persistence`
-
-**AllQuestsCheckmarks has been physically ruled out as the root cause unless new contrary evidence appears.**
 
 ## Milestone order
 
@@ -50,7 +42,7 @@ Expected lifecycle:
 - **M5 — Relationship / specialist storefront**
 - **M6 — Stable release**
 
-Do not expand runtime scope while M1 is unresolved.
+Current runtime shape: **43 quests** (31 frozen baseline + 12 M3 operations), **11 offers** (4 Baseline + 7 Milestone + 0 Relationship).
 
 ## Product-design scope — complete
 
@@ -124,6 +116,4 @@ Prefer native SPT behavior and maintained C# patterns. Reuse proven organization
 
 ## Implementation boundary
 
-The completed design authority does **not** authorize new runtime implementation by itself.
-
-Functional work beyond the currently approved scope remains gated by M1/M2 and explicit user direction where required. CI and exact-version evidence do not replace the required meaningful physical acceptance gate.
+The approved M3 operation wave is materialized in runtime quest templates and bilingual locale data. M4 content absorption and M5 relationship storefront work remain outside this slice. The first real fresh-profile run is the combined physical boundary for deferred M2 campaign validation and M3 gameplay validation.
