@@ -18,7 +18,7 @@ class FreshProfileQuestTests(unittest.TestCase):
             stage = Path(temp)
             shutil.copytree(ROOT / "mods/Admiral-Trader/db/quests", stage / "db/quests")
             before = {p.name: json.loads(p.read_text()) for p in (stage / "db/quests").glob("*.json")}
-            self.assertEqual(len(before), 31)
+            self.assertEqual(len(before), 43)
             onboarding.prepare(stage)
             for path in (stage / "db/quests").glob("*.json"):
                 actual = json.loads(path.read_text())
