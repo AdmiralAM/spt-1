@@ -25,9 +25,9 @@ SPT version matters for development, API compatibility and release evidence, but
 - Exact-version builds/tests are reproducibility evidence, not an automatic runtime refusal policy.
 - Narrow the supported range only after a demonstrated API/data incompatibility.
 
-## Current milestone — M3 runtime campaign expansion
+## Current milestone — M4 selective content absorption
 
-M1 native lifecycle has passed physical gameplay validation. M2 physical gameplay validation is deferred to the first real fresh-profile run. The frozen 31-quest / 11-offer baseline remains intact while the approved 12-operation M3 wave is added as runtime content.
+M1 lifecycle and the combined M2/M3 fresh-profile runtime pass are accepted. M4 maps useful external content into the accepted campaign without importing duplicate quest records, a second trader, external dependencies or filler.
 
 Expected lifecycle:
 
@@ -43,6 +43,8 @@ Expected lifecycle:
 - **M6 — Stable release**
 
 Current runtime shape: **43 quests** (31 frozen baseline + 12 M3 operations), **11 offers** (4 Baseline + 7 Milestone + 0 Relationship).
+
+The bounded M4 decision is recorded in `manifests/m4-selective-content-absorption.json`. Natalya's Exfil route and logistics ideas and the selected Andrudis capability themes already have explicit runtime homes in the 12 M3 operations. The rejected Pay Back, Weapons Training, boss and cultist copies do not add distinct player decisions, so M4 adds no parallel quest records and leaves the validated graph and balance intact.
 
 ## Product-design scope — complete
 
