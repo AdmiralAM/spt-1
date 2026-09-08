@@ -32,6 +32,8 @@ class QuestQualityRuntimeTests(unittest.TestCase):
                 rewards = "Rewards:" if language == "en" else "Награды:"
                 self.assertIn(req, description, qid)
                 self.assertIn(rewards, description, qid)
+                self.assertIn(f"{req}\n- ", description, qid)
+                self.assertIn(f"{rewards}\n- ", description, qid)
                 self.assertIn(req, started, qid)
                 self.assertIn(rewards, success, qid)
                 for condition in quest["conditions"]["AvailableForFinish"]:

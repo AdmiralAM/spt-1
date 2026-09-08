@@ -23,6 +23,7 @@ SPT version matters for development, API compatibility and release evidence, but
 - Current development/validation baseline: **SPT 4.1.5**.
 - Runtime metadata: **`~4.1.0`**, allowing compatible later `4.1.x` patches.
 - Exact-version builds/tests are reproducibility evidence, not an automatic runtime refusal policy.
+- Campaign sizing and concurrent-load policy: `docs/campaign-portfolio-plan.md`.
 - Narrow the supported range only after a demonstrated API/data incompatibility.
 
 ## Current milestone — M5 relationship specialist storefront

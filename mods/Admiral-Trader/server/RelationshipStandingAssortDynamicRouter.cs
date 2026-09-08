@@ -1,4 +1,5 @@
 using SPTarkov.DI.Annotations;
+using SPTarkov.Server.Core.Callbacks;
 using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
@@ -11,43 +12,40 @@ using SPTarkov.Server.Core.Utils;
 namespace AdmiralTrader.Server;
 
 /// <summary>
-/// Post-processes the vanilla SPT 4.1.5 trader-assort response for Admiral only.
-/// HttpRouter executes matching dynamic routers in registration order and passes the
-/// previous route output into the next route, so this router deliberately runs after
-/// the vanilla TraderDynamicRouter and projects only its already profile-scoped clone.
+/// Handles Admiral's exact SPT 4.1.5 trader-assort route, obtains the normal
+/// profile-scoped response from TraderCallbacks, then applies the relationship tier.
 /// M5 enables only the bounded, profile-scoped field-marker replenishment projection.
 /// </summary>
-[Injectable(TypePriority = OnLoadOrder.Routers + 1)]
+[Injectable(TypePriority = OnLoadOrder.Routers - 1)]
 public sealed class RelationshipStandingAssortDynamicRouter(
     JsonUtil jsonUtil,
     HttpResponseUtil httpResponseUtil,
+    TraderCallbacks traderCallbacks,
     RelationshipStandingAssortCoordinator coordinator)
     : DynamicRouter(
         jsonUtil,
         [
             new RouteAction<EmptyRequestData>(
-                "/client/trading/api/getTraderAssort/",
-                (url, _, sessionId, output, cancellationToken) =>
-                    ProjectAdmiralAssortAsync(url, sessionId, output, cancellationToken, jsonUtil, httpResponseUtil, coordinator)
+                $"/client/trading/api/getTraderAssort/{RuntimeIdentity.TraderId}",
+                (url, request, sessionId, _, cancellationToken) =>
+                    GetAndProjectAdmiralAssortAsync(url, request, sessionId, cancellationToken, jsonUtil, httpResponseUtil, traderCallbacks, coordinator)
             ),
         ]
     )
 {
-    private static ValueTask<string> ProjectAdmiralAssortAsync(
+    private static async ValueTask<string> GetAndProjectAdmiralAssortAsync(
         string url,
+        EmptyRequestData request,
         MongoId sessionId,
-        string? output,
         CancellationToken cancellationToken,
         JsonUtil jsonUtil,
         HttpResponseUtil httpResponseUtil,
+        TraderCallbacks traderCallbacks,
         RelationshipStandingAssortCoordinator coordinator)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (!url.EndsWith(RuntimeIdentity.TraderId, StringComparison.Ordinal) || string.IsNullOrEmpty(output))
-        {
-            return ValueTask.FromResult(output ?? string.Empty);
-        }
+        var output = await traderCallbacks.GetAssort(url, request, sessionId);
 
         GetBodyResponseData<TraderAssort>? response;
         try
@@ -57,15 +55,15 @@ public sealed class RelationshipStandingAssortDynamicRouter(
         catch
         {
             // Fail closed: malformed or incompatible vanilla output is returned unchanged.
-            return ValueTask.FromResult(output);
+            return output;
         }
 
         if (response?.Data is null || response.Err is not null and not BackendErrorCodes.None)
         {
-            return ValueTask.FromResult(output);
+            return output;
         }
 
         coordinator.Project(sessionId, response.Data);
-        return ValueTask.FromResult(httpResponseUtil.GetBody(response.Data, response.Err ?? BackendErrorCodes.None, response.ErrMsg));
+        return httpResponseUtil.GetBody(response.Data, response.Err ?? BackendErrorCodes.None, response.ErrMsg);
     }
 }

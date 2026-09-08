@@ -33,13 +33,15 @@
     ]
   },
   "profileScopedProjection": {
-    "route": "/client/trading/api/getTraderAssort/",
+    "route": "/client/trading/api/getTraderAssort/d5c27bb3169f8dfbc13f6b69",
+    "routing": "exact Admiral route handled before the generic SPT router; normal TraderCallbacks response is projected",
     "targetOfferId": "ad2000000000000000000004",
     "targetTpl": "5991b51486f77447b112d44f",
     "preservedPriceRub": 16500,
     "globalDatabaseMutation": false,
     "unknownProfileFallback": "LL1",
-    "allowedWrites": ["Upd.StackObjectsCount", "Upd.BuyRestrictionMax", "Upd.UnlimitedCount=false"]
+    "allowedWrites": ["Upd.StackObjectsCount", "Upd.BuyRestrictionMax", "Upd.UnlimitedCount=false"],
+    "physicalFindingCorrected": "A level-35/0.55-standing profile received the LL1 marker quantity, proving the previous generic post-router did not run."
   },
   "specialistOffers": [
     {"offerId": "068cab4ca6f6a9cf251adf7b", "tpl": "624c09da2cec124eb67c1046", "loyaltyLevel": 2},

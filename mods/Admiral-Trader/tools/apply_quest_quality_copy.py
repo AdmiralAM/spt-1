@@ -153,11 +153,13 @@ def main():
             existing_description = authored[lang][f"{qid} description"].split(f"\n\n{req_label}:", 1)[0]
             existing_started = authored[lang][f"{qid} startedMessageText"].split(f"\n\n{req_label}:", 1)[0]
             existing_success = authored[lang][f"{qid} successMessageText"].split(f"\n\n{rew_label}:", 1)[0]
-            block = " ".join(requirements)
+            # EFT renders embedded newlines in quest copy. Keep each runtime objective
+            # on its own line so exact requirements stay readable at normal UI scale.
+            block = "\n".join(f"- {requirement}" for requirement in requirements)
             updates = {
-                f"{qid} description": f"{existing_description}\n\n{req_label}: {block}\n{rew_label}: {rewards}",
-                f"{qid} startedMessageText": f"{existing_started}\n\n{req_label}: {block}",
-                f"{qid} acceptPlayerMessage": f"{existing_started}\n\n{req_label}: {block}",
+                f"{qid} description": f"{existing_description}\n\n{req_label}:\n{block}\n\n{rew_label}:\n- {rewards}",
+                f"{qid} startedMessageText": f"{existing_started}\n\n{req_label}:\n{block}",
+                f"{qid} acceptPlayerMessage": f"{existing_started}\n\n{req_label}:\n{block}",
                 f"{qid} successMessageText": f"{existing_success}\n\n{rew_label}: {rewards}",
                 f"{qid} completePlayerMessage": f"{existing_success}\n\n{rew_label}: {rewards}",
             }
