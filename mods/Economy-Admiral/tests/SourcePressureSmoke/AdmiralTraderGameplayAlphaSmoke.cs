@@ -58,6 +58,24 @@ internal static class AdmiralTraderGameplayAlphaSmoke
                 frozenRelease with { RelationshipOfferCount = 1 },
                 AdmiralTraderGameplayAlphaAdapter.FrozenQuestCount));
 
+        var activeCampaign = frozenRelease with
+        {
+            GameplayPolicySchemaVersion = 5,
+            BaselineOfferCount = AdmiralTraderGameplayAlphaAdapter.ActiveBaselineOfferCount,
+            RelationshipOfferCount = AdmiralTraderGameplayAlphaAdapter.ActiveRelationshipOfferCount,
+            MilestoneOfferCount = AdmiralTraderGameplayAlphaAdapter.ActiveMilestoneOfferCount,
+            Offers = Enumerable.Range(0, AdmiralTraderGameplayAlphaAdapter.ActiveTotalOfferCount)
+                .Select(index => frozen.Offers[index % frozen.Offers.Count])
+                .ToArray(),
+        };
+        AdmiralTraderGameplayAlphaAdapter.ValidateActiveCampaignShape(
+            activeCampaign,
+            AdmiralTraderGameplayAlphaAdapter.ActiveQuestCount);
+        MustFail("active M5 Relationship offer count drift", () =>
+            AdmiralTraderGameplayAlphaAdapter.ValidateActiveCampaignShape(
+                activeCampaign with { RelationshipOfferCount = 2 },
+                AdmiralTraderGameplayAlphaAdapter.ActiveQuestCount));
+
         var contract = AdmiralTraderGameplayAlphaAdapter.Parse(campaign, identity, traderBase, policy, baseline, assort, questassort, new[] { quest }, relationship);
         var offers = contract.Offers;
         Require(contract.ProductName == "Admiral Trader" && contract.ModGuid == "com.admiralam.spt.admiraltrader", "product/owner identity mismatch");

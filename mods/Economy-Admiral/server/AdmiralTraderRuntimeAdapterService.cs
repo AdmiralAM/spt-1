@@ -58,8 +58,8 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
         if (!policyDoc.RootElement.TryGetProperty("schemaVersion", out var schemaElement) || !schemaElement.TryGetInt32(out var schemaVersion))
             throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: gameplay-policy schemaVersion is missing or invalid.");
 
-        if (schemaVersion != 4)
-            throw new InvalidOperationException($"Economy Admiral Admiral Trader runtime adapter: unsupported gameplay-policy schemaVersion {schemaVersion}; frozen Admiral Trader 0.1.0 requires schemaVersion 4.");
+        if (schemaVersion is not (4 or 5))
+            throw new InvalidOperationException($"Economy Admiral Admiral Trader runtime adapter: unsupported gameplay-policy schemaVersion {schemaVersion}.");
 
         var assortJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "db", "assort.json"), cancellationToken);
         var questAssortJson = await File.ReadAllTextAsync(RequireFile(traderModPath, "db", "questassort.json"), cancellationToken);
@@ -82,9 +82,12 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
             questAssortJson,
             authoredQuestJson,
             relationshipJson);
-        AdmiralTraderGameplayAlphaAdapter.ValidateFrozenReleaseShape(gameplay, authoredQuestJson.Count);
+        if (schemaVersion == 4)
+            AdmiralTraderGameplayAlphaAdapter.ValidateFrozenReleaseShape(gameplay, authoredQuestJson.Count);
+        else
+            AdmiralTraderGameplayAlphaAdapter.ValidateActiveCampaignShape(gameplay, authoredQuestJson.Count);
         var offers = gameplay.Offers;
-        const string contractState = "LoadedGameplayAlphaV4";
+        var contractState = schemaVersion == 4 ? "LoadedGameplayAlphaV4" : "LoadedActiveCampaignV5";
 
         if (offers.Any(offer => offer.Source.EarliestProgressionLevel is null))
             throw new InvalidOperationException("Economy Admiral Admiral Trader runtime adapter: enriched offer progression evidence is incomplete.");

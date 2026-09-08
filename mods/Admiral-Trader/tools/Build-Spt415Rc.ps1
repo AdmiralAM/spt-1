@@ -48,26 +48,30 @@ if ($portraitBlob -ne '63e158fbd96b595a609560dfef452451b4783144') {
 }
 
 python (Join-Path $traderRoot 'tools/validate_runtime_assort.py')
-if ($LASTEXITCODE -ne 0) { throw 'Trader 4 Baseline + 8 Milestone runtime assort contract failed.' }
+if ($LASTEXITCODE -ne 0) { throw 'Trader 4 Baseline + 3 Relationship + 8 Milestone runtime assort contract failed.' }
 
 $itemsPath = Join-Path $runtimeRoot 'SPT_Data/database/templates/items.json'
 if (-not (Test-Path $itemsPath -PathType Leaf)) { throw "Exact SPT item database is missing: $itemsPath" }
 $itemDb = Get-Content $itemsPath -Raw | ConvertFrom-Json -AsHashtable
 $assort = Get-Content (Join-Path $traderRoot 'db/assort.json') -Raw | ConvertFrom-Json
 $baseline = Get-Content (Join-Path $traderRoot 'manifests/baseline-stock.json') -Raw | ConvertFrom-Json
+$relationship = Get-Content (Join-Path $traderRoot 'manifests/relationship-stock.json') -Raw | ConvertFrom-Json
 $questAssort = Get-Content (Join-Path $traderRoot 'db/questassort.json') -Raw | ConvertFrom-Json
 $rootOffers = @($assort.items | Where-Object parentId -eq 'hideout')
-if ($rootOffers.Count -ne 12) { throw "Expected 12 active-head root offers, got $($rootOffers.Count)" }
+if ($rootOffers.Count -ne 15) { throw "Expected 15 active-head root offers, got $($rootOffers.Count)" }
 $missingTpls = @($rootOffers | ForEach-Object { [string]$_."_tpl" } | Where-Object { -not $itemDb.ContainsKey($_) } | Sort-Object -Unique)
 if ($missingTpls.Count) { throw "Active-head assort contains TPLs missing from exact SPT 4.1.5 DB: $($missingTpls -join ', ')" }
 $baselineIds = @($baseline.offers | ForEach-Object { [string]$_.offerId })
+$relationshipIds = @($relationship.offers | ForEach-Object { [string]$_.offerId })
 $milestoneIds = @($questAssort.success.PSObject.Properties | ForEach-Object { [string]$_.Name })
 if ($baselineIds.Count -ne 4 -or ($baselineIds | Sort-Object -Unique).Count -ne 4) { throw 'Baseline authority must contain four unique offers.' }
 if ($milestoneIds.Count -ne 8 -or ($milestoneIds | Sort-Object -Unique).Count -ne 8) { throw 'Milestone questassort must contain eight unique offers.' }
+if ($relationship.materialization.enabled -ne $true -or $relationshipIds.Count -ne 3 -or ($relationshipIds | Sort-Object -Unique).Count -ne 3) { throw 'M5 Relationship authority must contain three unique materialized offers.' }
 if (@($baselineIds | Where-Object { $_ -in $milestoneIds }).Count) { throw 'Baseline offers must not be quest-gated Milestone offers.' }
+if (@($relationshipIds | Where-Object { $_ -in $milestoneIds -or $_ -in $baselineIds }).Count) { throw 'Relationship offers must remain distinct from Baseline and Milestone offers.' }
 $rootIds = @($rootOffers | ForEach-Object { [string]$_."_id" })
-$unclassified = @($rootIds | Where-Object { $_ -notin $baselineIds -and $_ -notin $milestoneIds })
-if ($unclassified.Count) { throw "Relationship/unclassified offers materialized unexpectedly: $($unclassified -join ', ')" }
+$unclassified = @($rootIds | Where-Object { $_ -notin $baselineIds -and $_ -notin $relationshipIds -and $_ -notin $milestoneIds })
+if ($unclassified.Count) { throw "Unclassified offers materialized unexpectedly: $($unclassified -join ', ')" }
 
 $questFiles = @(Get-ChildItem (Join-Path $traderRoot 'db/quests') -Filter '*.json' -File)
 if ($questFiles.Count -ne 43) { throw "Trader quest count drift: $($questFiles.Count)" }
@@ -93,13 +97,13 @@ if (Test-Path (Join-Path $traderRoot 'README.md')) { Copy-Item (Join-Path $trade
 $stagedManifestPath = Join-Path $modTarget 'manifests/runtime-manifest.json'
 $stagedManifest = Get-Content $stagedManifestPath -Raw | ConvertFrom-Json
 $stagedManifest.registrationEnabled = $true
-$stagedManifest | Add-Member -NotePropertyName publicationMode -NotePropertyValue 'canonical-m3-operation-wave-rc' -Force
+$stagedManifest | Add-Member -NotePropertyName publicationMode -NotePropertyValue 'canonical-m5-relationship-storefront-rc' -Force
 $stagedManifest | Add-Member -NotePropertyName sourceHeadSha -NotePropertyValue $sourceHead -Force
 $stagedManifest | ConvertTo-Json -Depth 20 | Set-Content $stagedManifestPath -Encoding utf8
 
 $stagedAssort = Get-Content (Join-Path $modTarget 'db/assort.json') -Raw | ConvertFrom-Json
 $stagedQuestAssort = Get-Content (Join-Path $modTarget 'db/questassort.json') -Raw | ConvertFrom-Json
-if (@($stagedAssort.items | Where-Object parentId -eq 'hideout').Count -ne 12) { throw 'Staged Trader lost the 12-offer contract.' }
+if (@($stagedAssort.items | Where-Object parentId -eq 'hideout').Count -ne 15) { throw 'Staged Trader lost the 15-offer contract.' }
 if (@($stagedQuestAssort.success.PSObject.Properties).Count -ne 8) { throw 'Staged Trader lost the eight Milestone gates.' }
 if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 43) { throw 'Staged Trader lost the 43-quest expanded campaign contract.' }
 if (-not (Test-Path (Join-Path $modTarget 'assets/d5c27bb3169f8dfbc13f6b69.jpg') -PathType Leaf)) { throw 'Staged Trader portrait is missing.' }
@@ -117,7 +121,16 @@ $provenance = [ordered]@{
     m3OperationQuestCount = 12
     baselineOffers = 4
     milestoneOffers = 8
-    relationshipOffers = 0
+    relationshipOffers = 3
+    relationshipProgression = [ordered]@{
+        loyaltyLevels = 4
+        standingThresholds = @(0.0, 0.1, 0.3, 0.55)
+        minimumLevels = @(1, 15, 25, 35)
+        profileScopedMarkerOfferId = 'ad2000000000000000000004'
+        markerStockByTier = @(12, 16, 20, 24)
+        markerBuyLimitByTier = @(4, 6, 8, 10)
+        specialistOfferIds = $relationshipIds
+    }
     selectedWeaponTemplates = 49
     weaponRotation = 'disjoint-three-stage-family-pools'
     correctedOperationRewardTotals = [ordered]@{ xp = 133000; rub = 752000; standing = 0.179 }

@@ -11,6 +11,7 @@ BASE_PATH = ROOT / "db" / "base.json"
 RUNTIME_MANIFEST_PATH = ROOT / "manifests" / "runtime-manifest.json"
 BASELINE_STOCK_PATH = ROOT / "manifests" / "baseline-stock.json"
 AMMO_POLICY_PATH = ROOT / "manifests" / "ammo-offer-policy.json"
+RELATIONSHIP_STOCK_PATH = ROOT / "manifests" / "relationship-stock.json"
 CSPROJ_PATH = ROOT / "server" / "AdmiralTrader.Server.csproj"
 
 EXPECTED_RUNTIME_TARGET = "4.1.5"
@@ -33,6 +34,11 @@ AMMO_OFFER_IDS = {
     "marksman-battle": "07efd6dee267ec18ed830dd6",
     "precision": "731e65964d324bc545a1b839",
     "special-weapons": "3500e7b76f097a98ced5d61b",
+}
+RELATIONSHIP_OFFER_IDS = {
+    "068cab4ca6f6a9cf251adf7b",
+    "7b316634b30868626d6dccb0",
+    "0e6ac10c4adc789996086c63",
 }
 NATIVE_QUESTASSORT_KEYS = {"started", "success", "fail"}
 LEGACY_CAPITALIZED_QUESTASSORT_KEYS = {"Started", "Success", "Fail"}
@@ -91,6 +97,7 @@ def main() -> None:
     questassort = json.loads(QUESTASSORT_PATH.read_text(encoding="utf-8"))
     baseline = json.loads(BASELINE_STOCK_PATH.read_text(encoding="utf-8"))
     ammo_policy = json.loads(AMMO_POLICY_PATH.read_text(encoding="utf-8"))
+    relationship = json.loads(RELATIONSHIP_STOCK_PATH.read_text(encoding="utf-8"))
     base = json.loads(BASE_PATH.read_text(encoding="utf-8"))
 
     if set(questassort) != NATIVE_QUESTASSORT_KEYS:
@@ -116,16 +123,38 @@ def main() -> None:
         fail("assort native collections have invalid types")
 
     milestone_ids = {LABS_OFFER_ID, *AMMO_OFFER_IDS.values()}
-    expected_ids = BASELINE_OFFER_IDS | milestone_ids
+    relationship_offers = relationship.get("offers") or []
+    relationship_by_id = {str(row.get("offerId")): row for row in relationship_offers}
+    if relationship.get("stockClass") != "Relationship" or (relationship.get("materialization") or {}).get("enabled") is not True:
+        fail("M5 Relationship stock must be explicitly materialized")
+    if set(relationship_by_id) != RELATIONSHIP_OFFER_IDS or len(relationship_offers) != 3:
+        fail("Relationship stock must contain the three approved specialist signal offers")
+    if any(row.get("questGate") is not None for row in relationship_offers):
+        fail("Relationship stock must use loyalty, never quest gates")
+
+    expected_ids = BASELINE_OFFER_IDS | milestone_ids | RELATIONSHIP_OFFER_IDS
     root_items = {item.get("_id"): item for item in items if item.get("parentId") == "hideout"}
-    if len(root_items) != len(items) or len(root_items) != 12:
-        fail(f"expected exactly twelve root-only Admiral offers, got roots={len(root_items)} items={len(items)}")
+    if len(root_items) != len(items) or len(root_items) != 15:
+        fail(f"expected exactly fifteen root-only Admiral offers, got roots={len(root_items)} items={len(items)}")
     if set(root_items) != expected_ids:
         fail(f"assort root id drift; missing={sorted(expected_ids-set(root_items))} extra={sorted(set(root_items)-expected_ids)}")
     if set(barter) != expected_ids or set(loyalty) != expected_ids:
-        fail("assort root/barter/loyalty key sets must match the 4 Baseline + 8 Milestone contract")
+        fail("assort root/barter/loyalty key sets must match the 4 Baseline + 3 Relationship + 8 Milestone contract")
 
     for offer_id, policy in baseline_by_id.items():
+        validate_single_rub_offer(
+            offer_id,
+            root_items[offer_id],
+            barter,
+            loyalty,
+            tpl=str(policy["tpl"]),
+            price=int(policy["priceRub"]),
+            stock=int(policy["stockPerReset"]),
+            buy_limit=int(policy["buyRestriction"]),
+            loyalty_level=int(policy["loyaltyLevel"]),
+        )
+
+    for offer_id, policy in relationship_by_id.items():
         validate_single_rub_offer(
             offer_id,
             root_items[offer_id],
@@ -162,6 +191,8 @@ def main() -> None:
         fail("questassort.success must contain exactly the eight Milestone offers and no Baseline offers")
     if BASELINE_OFFER_IDS & set(success):
         fail("Baseline offers must never leak into questassort.success")
+    if RELATIONSHIP_OFFER_IDS & set(success):
+        fail("Relationship offers must never leak into questassort.success")
     if success.get(LABS_OFFER_ID) != LABS_CLEARANCE_QUEST:
         fail("Labs offer is not gated by Access Protocol: Clearance success")
 
@@ -203,7 +234,7 @@ def main() -> None:
         if float(level.get("minStanding", -1)) != standing:
             fail(f"Admiral LL{index}: standing threshold drift")
 
-    print("Admiral Trader SPT 4.1.5 native questassort + 4 Baseline + 8 Milestone offer contract OK")
+    print("Admiral Trader SPT 4.1.5 native questassort + 4 Baseline + 3 Relationship + 8 Milestone offer contract OK")
 
 
 if __name__ == "__main__":

@@ -1,10 +1,24 @@
 # Admiral Trader: authoritative 43-quest campaign audit
 
-> Corrected audit snapshot: branch `feature/admiral-trader-canonical-milestones`, runtime baseline SPT 4.1.5, 43 committed quest templates. The four accepted corrective actions are materialized. Quest IDs, prerequisites, graph shape, runtime architecture, frozen 0.1.0 authority, and Relationship scope remain unchanged. M5 remains paused.
+> Current audit snapshot: branch `feature/admiral-trader-canonical-milestones`, runtime baseline SPT 4.1.5, 43 committed quest templates. The four campaign corrections remain materialized, and M5 now adds relationship progression through the existing Admiral loyalty and assortment systems. Quest IDs, prerequisites, graph shape, runtime architecture and frozen 0.1.0 authority remain unchanged.
 
 ## Executive findings
 
-The campaign contains 10 Access records, 21 Arsenal records, and 12 Operations records. It awards **483 500 XP, ₽1 997 000, and +0.829 Admiral standing** before valuing seven ammunition samples. Eight quest-assort offers unlock: one Labs access-card offer after Access Protocol: Clearance and seven ammunition offers after the seven Munitions finales. There are no relationship quests or relationship offers.
+The campaign contains 10 Access records, 21 Arsenal records, and 12 Operations records. It awards **483 500 XP, ₽1 997 000, and +0.829 Admiral standing** before valuing seven ammunition samples. Eight quest-assort offers unlock: one Labs access-card offer after Access Protocol: Clearance and seven ammunition offers after the seven Munitions finales. M5 adds no quests or graph branches. It adds three finite loyalty-gated Relationship offers and one requester-local replenishment projection for the existing field-marker offer.
+
+## M5 relationship storefront
+
+Admiral's existing loyalty thresholds are the progression authority: LL2 requires level 15 and 0.10 standing, LL3 requires level 25 and 0.30 standing, and LL4 requires level 35 and 0.55 standing. Sales volume and quest completion never substitute for those paired requirements.
+
+| Tier | Specialist offer | Price | Stock / personal limit |
+|---|---|---:|---:|
+| LL2 | Signal flare (White) | ₽12 000 | 4 / 2 |
+| LL3 | Signal flare (Yellow) | ₽18 000 | 3 / 1 |
+| LL4 | Signal flare (Blue) | ₽30 000 | 2 / 1 |
+
+The green extraction flare and red airdrop flare are deliberately excluded because they grant extraction or loot-delivery capabilities. The admitted white, yellow and blue signals have no direct fixed root offer in the exact SPT 4.1.5 trader database, remain finite, and do not overlap Access or Arsenal unlock authority.
+
+The existing MS2000 marker offer keeps ID `ad2000000000000000000004`, TPL `5991b51486f77447b112d44f` and price ₽16 500. Its requester-local stock / personal limit progresses as 12/4, 16/6, 20/8 and 24/10 from LL1 through LL4. The runtime post-processes only SPT's profile-scoped assort response and never mutates the global trader assort.
 
 The Access line is a retained-item readiness check: every key condition is non-FIR and non-consuming. The Arsenal line is seven independent three-step family chains. The Operations line supplies the actual campaign narrative and cross-links Access and Arsenal progress into map-specific field tasks.
 

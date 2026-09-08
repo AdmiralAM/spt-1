@@ -135,7 +135,7 @@ Admiral Trader is an **optional integration**, not a dependency.
 
 If Admiral Trader is absent, Economy Admiral runs standalone. If the maintained Admiral Trader contract is installed, Economy Admiral validates its explicit identity/schema/offer classes and treats compatibility fail-closed on drift. Economy Admiral does not duplicate Admiral Trader's own progression/store logic.
 
-The supported frozen Admiral Trader 0.1.0 runtime surface is exactly 31 authored quests and 11 finite offers (4 Baseline + 7 Milestone, with no materialized Relationship offers). This compatibility gate also requires the schema-v4 Gameplay Alpha contract; legacy prototype schema-v3 contracts and post-0.1.0 surfaces are reported as unsupported instead of being guessed at or changing the trader's authored unlock semantics.
+The frozen Admiral Trader 0.1.0 compatibility surface remains exactly 31 authored quests and 11 finite offers (4 Baseline + 7 Milestone, with no materialized Relationship offers) under the schema-v4 Gameplay Alpha contract. The canonical post-0.1.0 campaign uses schema v5: 43 quests and 15 finite offers (4 Baseline + 3 Relationship + 8 Milestone). Economy Admiral reads and validates both explicit contracts without changing Trader-owned loyalty, stock identity or quest unlock semantics.
 
 ## Development diagnostics
 

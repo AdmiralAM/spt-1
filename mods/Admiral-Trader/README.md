@@ -25,9 +25,9 @@ SPT version matters for development, API compatibility and release evidence, but
 - Exact-version builds/tests are reproducibility evidence, not an automatic runtime refusal policy.
 - Narrow the supported range only after a demonstrated API/data incompatibility.
 
-## Current milestone — M4 selective content absorption
+## Current milestone — M5 relationship specialist storefront
 
-M1 lifecycle and the combined M2/M3 fresh-profile runtime pass are accepted. M4 maps useful external content into the accepted campaign without importing duplicate quest records, a second trader, external dependencies or filler.
+M1 lifecycle and the combined M2/M3 fresh-profile runtime pass are accepted. M4 selective absorption is closed. M5 adds finite loyalty-gated specialist signalling stock and a profile-scoped field-marker replenishment benefit inside the existing Admiral engine.
 
 Expected lifecycle:
 
@@ -42,7 +42,9 @@ Expected lifecycle:
 - **M5 — Relationship / specialist storefront**
 - **M6 — Stable release**
 
-Current runtime shape: **43 quests** (31 frozen baseline + 12 M3 operations), **12 offers** (4 Baseline + 8 Milestone + 0 Relationship).
+Current runtime shape: **43 quests** (31 frozen baseline + 12 M3 operations), **15 offers** (4 Baseline + 3 Relationship + 8 Milestone).
+
+Relationship progression uses the existing Admiral loyalty thresholds: LL2 requires level 15 and 0.10 standing, LL3 requires level 25 and 0.30, and LL4 requires level 35 and 0.55. White, yellow and blue signalling flares provide finite specialist availability at those tiers. The existing MS2000 marker offer keeps its ID and ₽16,500 price while requester-local stock/buy limits rise from 12/4 at LL1 to 16/6, 20/8 and 24/10. The projection modifies only SPT's profile-scoped assort response; it never mutates the global trader table.
 
 The bounded M4 decision is recorded in `manifests/m4-selective-content-absorption.json`. Natalya's Exfil route and logistics ideas and the selected Andrudis capability themes already have explicit runtime homes in the 12 M3 operations. The rejected Pay Back, Weapons Training, boss and cultist copies do not add distinct player decisions, so M4 adds no parallel quest records and leaves the validated graph and balance intact.
 
@@ -118,4 +120,4 @@ Prefer native SPT behavior and maintained C# patterns. Reuse proven organization
 
 ## Implementation boundary
 
-The approved M3 operation wave is materialized in runtime quest templates and bilingual locale data. M4 content absorption and M5 relationship storefront work remain outside this slice. The first real fresh-profile run is the combined physical boundary for deferred M2 campaign validation and M3 gameplay validation.
+M5 is materialized in native assort data and the existing Trader DLL. Relationship offers use Admiral's native loyalty levels, remain finite, have no quest gates, and cannot replace Access or Arsenal capability unlocks. The historical frozen `0.1.0` commit and its 31-quest / 11-offer package remain unchanged.

@@ -23,6 +23,11 @@ public static class AdmiralTraderGameplayAlphaAdapter
     public const int FrozenBaselineOfferCount = 4;
     public const int FrozenMilestoneOfferCount = 7;
     public const int FrozenTotalOfferCount = 11;
+    public const int ActiveQuestCount = 43;
+    public const int ActiveBaselineOfferCount = 4;
+    public const int ActiveRelationshipOfferCount = 3;
+    public const int ActiveMilestoneOfferCount = 8;
+    public const int ActiveTotalOfferCount = 15;
     public const string ExpectedProductName = "Admiral Trader";
     public const string ExpectedTraderId = "d5c27bb3169f8dfbc13f6b69";
     public const string ExpectedModGuid = "com.admiralam.spt.admiraltrader";
@@ -44,6 +49,24 @@ public static class AdmiralTraderGameplayAlphaAdapter
             $"frozen 0.1.0 requires {FrozenTotalOfferCount} total offers but found {summary.Offers.Count}.");
     }
 
+    public static void ValidateActiveCampaignShape(
+        AdmiralTraderGameplayAlphaContractSummary summary,
+        int authoredQuestCount)
+    {
+        ArgumentNullException.ThrowIfNull(summary);
+        Require(summary.GameplayPolicySchemaVersion == 5, "active campaign requires gameplay-policy schemaVersion 5.");
+        Require(authoredQuestCount == ActiveQuestCount,
+            $"active campaign requires {ActiveQuestCount} authored quests but found {authoredQuestCount}.");
+        Require(summary.BaselineOfferCount == ActiveBaselineOfferCount,
+            $"active campaign requires {ActiveBaselineOfferCount} Baseline offers but found {summary.BaselineOfferCount}.");
+        Require(summary.RelationshipOfferCount == ActiveRelationshipOfferCount,
+            $"M5 requires {ActiveRelationshipOfferCount} Relationship offers but found {summary.RelationshipOfferCount}.");
+        Require(summary.MilestoneOfferCount == ActiveMilestoneOfferCount,
+            $"active campaign requires {ActiveMilestoneOfferCount} Milestone offers but found {summary.MilestoneOfferCount}.");
+        Require(summary.Offers.Count == ActiveTotalOfferCount,
+            $"active campaign requires {ActiveTotalOfferCount} total offers but found {summary.Offers.Count}.");
+    }
+
     public static AdmiralTraderGameplayAlphaContractSummary Parse(
         string campaignManifestJson,
         string identityAssetsJson,
@@ -59,7 +82,8 @@ public static class AdmiralTraderGameplayAlphaAdapter
 
         using var policyDoc = JsonDocument.Parse(gameplayPolicyJson);
         var policy = policyDoc.RootElement;
-        Require(policy.GetProperty("schemaVersion").GetInt32() == 4, "Gameplay Alpha requires gameplay-policy schemaVersion 4.");
+        var policySchemaVersion = policy.GetProperty("schemaVersion").GetInt32();
+        Require(policySchemaVersion is 4 or 5, "Gameplay Alpha requires gameplay-policy schemaVersion 4 or 5.");
         Require(policy.GetProperty("productRole").GetString() == "specialist-trader-and-capability-broker", "unsupported Gameplay Alpha productRole.");
         var traderStock = policy.GetProperty("traderStock");
         Require(traderStock.GetProperty("baselineStockRequired").GetBoolean(), "baseline stock must be required.");
@@ -68,17 +92,26 @@ public static class AdmiralTraderGameplayAlphaAdapter
         var relationshipAllowed = traderStock.GetProperty("relationshipStockAllowed").GetBoolean();
         var logistics = policy.GetProperty("logistics");
         var expectedMilestone = logistics.GetProperty("expectedMilestonePermanentOfferCount").GetInt32();
+        var expectedBaseline = policySchemaVersion == 5
+            ? logistics.GetProperty("expectedBaselineOfferCount").GetInt32()
+            : (int?)null;
+        var expectedRelationship = policySchemaVersion == 5
+            ? logistics.GetProperty("expectedRelationshipOfferCount").GetInt32()
+            : (int?)null;
         var maxStock = logistics.GetProperty("maximumPermanentOfferStockPerReset").GetInt32();
         Require(expectedMilestone > 0 && maxStock > 0, "invalid Gameplay Alpha logistics bounds.");
         Require(logistics.GetProperty("milestoneOffersMustBeQuestGated").GetBoolean(), "milestone offers must be quest-gated.");
         Require(logistics.GetProperty("offersMustBeFinite").GetBoolean(), "permanent offers must remain finite.");
         var specialPermanentAllowed = logistics.GetProperty("specialWeaponsPermanentOfferAllowed").GetBoolean();
         var specialSampleOnly = logistics.GetProperty("specialWeaponsSampleOnly").GetBoolean();
-        Require(!specialPermanentAllowed && specialSampleOnly, "special-weapons permanent/sample-only contract drift.");
+        if (policySchemaVersion == 4)
+            Require(!specialPermanentAllowed && specialSampleOnly, "frozen special-weapons permanent/sample-only contract drift.");
+        else
+            Require(specialPermanentAllowed && !specialSampleOnly, "active Special Weapons M576 capability contract drift.");
 
         using var baselineDoc = JsonDocument.Parse(baselineStockJson);
         var baselineRoot = baselineDoc.RootElement;
-        Require(baselineRoot.GetProperty("schemaVersion").GetInt32() == 1, "unsupported baseline-stock schema.");
+        Require(baselineRoot.GetProperty("schemaVersion").GetInt32() is 1 or 2, "unsupported baseline-stock schema.");
         Require(baselineRoot.GetProperty("stockClass").GetString() == "Baseline", "baseline-stock stockClass must be Baseline.");
         var baselineById = baselineRoot.GetProperty("offers").EnumerateArray().ToDictionary(x => ReqString(x, "offerId"), StringComparer.Ordinal);
         Require(baselineById.Count > 0, "Gameplay Alpha baseline-stock must contain offers.");
@@ -144,6 +177,11 @@ public static class AdmiralTraderGameplayAlphaAdapter
         Require(results.Count(x => x.StockClass == "Baseline") == baselineById.Count, "baseline-stock contains offers absent from assort.");
         Require(results.Count(x => x.StockClass == "Relationship") == relationshipById.Count, "relationship-stock contains offers absent from assort.");
         Require(results.Count(x => x.StockClass == "Milestone") == expectedMilestone, "milestone offer count drift.");
+        if (policySchemaVersion == 5)
+        {
+            Require(baselineById.Count == expectedBaseline, "gameplay-policy baseline offer count drift.");
+            Require(relationshipById.Count == expectedRelationship, "gameplay-policy Relationship offer count drift.");
+        }
         var graph = QuestGateJsonParser.ParseMany(authoredQuestJsonRecords);
         var enriched = AdmiralTraderItemAdapter.ApplyEffectiveQuestGates(results, graph);
 
@@ -152,7 +190,7 @@ public static class AdmiralTraderGameplayAlphaAdapter
             ProductName = ExpectedProductName,
             ModGuid = ExpectedModGuid,
             TraderId = ExpectedTraderId,
-            GameplayPolicySchemaVersion = 4,
+            GameplayPolicySchemaVersion = policySchemaVersion,
             RelationshipStockAllowed = relationshipAllowed,
             SpecialWeaponsPermanentOfferAllowed = specialPermanentAllowed,
             SpecialWeaponsSampleOnly = specialSampleOnly,

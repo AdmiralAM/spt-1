@@ -10,7 +10,8 @@
     "arsenalQuests": 21,
     "operationQuests": 12,
     "selectedWeaponTemplates": 49,
-    "relationshipOffers": 0
+    "relationshipOffers": 3,
+    "totalOffers": 15
   },
   "weaponRotation": {
     "authority": "weapon-family-runtime-pools.json#/stagePools",
@@ -36,13 +37,26 @@
       "route-security",
       "observation-window"
     ],
-    "delta": {"xp": 26500, "rub": 91000, "standing": 0.022},
-    "correctedOperationTotals": {"xp": 133000, "rub": 752000, "standing": 0.179}
+    "delta": {
+      "xp": 26500,
+      "rub": 91000,
+      "standing": 0.022
+    },
+    "correctedOperationTotals": {
+      "xp": 133000,
+      "rub": 752000,
+      "standing": 0.179
+    }
   },
   "canonical338": {
     "tpl": "5fc382c1016cce60e8341b20",
     "name": ".338 Lapua Magnum UCW",
-    "appliesTo": ["capability manifest", "SPT evidence", "quest reward copy", "purchase unlock copy"]
+    "appliesTo": [
+      "capability manifest",
+      "SPT evidence",
+      "quest reward copy",
+      "purchase unlock copy"
+    ]
   },
   "specialWeaponsMunitions": {
     "questId": "f1368cb3b69c3a4917c4f206",
@@ -60,6 +74,12 @@
     "builder": "tools/Build-Spt415Rc.ps1",
     "sourceHeadBinding": "The builder rejects a SourceHeadSha that differs from git HEAD.",
     "runtimeBinding": "Exact SPT 4.1.5 DLL and item-database hashes are recorded in admiral-trader-provenance.json inside every RC.",
-    "expectedRuntimeShape": {"quests": 43, "baselineOffers": 4, "milestoneOffers": 8, "relationshipOffers": 0}
+    "expectedRuntimeShape": {
+      "quests": 43,
+      "baselineOffers": 4,
+      "milestoneOffers": 8,
+      "relationshipOffers": 3,
+      "totalOffers": 15
+    }
   }
 }

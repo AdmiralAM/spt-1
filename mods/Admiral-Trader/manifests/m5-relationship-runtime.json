@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 1,
+  "status": "runtime-materialized",
+  "product": "Admiral Trader",
+  "phase": "M5 relationship-specialist storefront",
+  "targetSptVersion": "4.1.5",
+  "historicalFrozenAuthority": {
+    "sourceHead": "053a62ff5f1cb545f13bc89a96bba3acd319a823",
+    "questCount": 31,
+    "offerCount": 11,
+    "modified": false
+  },
+  "activeRuntime": {
+    "traderId": "d5c27bb3169f8dfbc13f6b69",
+    "questCount": 43,
+    "baselineOffers": 4,
+    "relationshipOffers": 3,
+    "milestoneOffers": 8,
+    "totalOffers": 15,
+    "relationshipManifest": "relationship-stock.json",
+    "gameplayPolicy": "gameplay-policy.json",
+    "exactItemEvidence": "m5-spt415-item-evidence.json"
+  },
+  "progression": {
+    "authority": "db/base.json#/loyaltyLevels",
+    "requiresLevelAndStanding": true,
+    "salesSumGate": false,
+    "tiers": [
+      {"loyaltyLevel": 1, "minimumPlayerLevel": 1, "requiredStanding": 0.0},
+      {"loyaltyLevel": 2, "minimumPlayerLevel": 15, "requiredStanding": 0.1},
+      {"loyaltyLevel": 3, "minimumPlayerLevel": 25, "requiredStanding": 0.3},
+      {"loyaltyLevel": 4, "minimumPlayerLevel": 35, "requiredStanding": 0.55}
+    ]
+  },
+  "profileScopedProjection": {
+    "route": "/client/trading/api/getTraderAssort/",
+    "targetOfferId": "ad2000000000000000000004",
+    "targetTpl": "5991b51486f77447b112d44f",
+    "preservedPriceRub": 16500,
+    "globalDatabaseMutation": false,
+    "unknownProfileFallback": "LL1",
+    "allowedWrites": ["Upd.StackObjectsCount", "Upd.BuyRestrictionMax", "Upd.UnlimitedCount=false"]
+  },
+  "specialistOffers": [
+    {"offerId": "068cab4ca6f6a9cf251adf7b", "tpl": "624c09da2cec124eb67c1046", "loyaltyLevel": 2},
+    {"offerId": "7b316634b30868626d6dccb0", "tpl": "624c09e49b98e019a3315b66", "loyaltyLevel": 3},
+    {"offerId": "0e6ac10c4adc789996086c63", "tpl": "66d97834d2985e11480d5c1e", "loyaltyLevel": 4}
+  ],
+  "boundaries": {
+    "secondTrader": false,
+    "externalNatalyaDependency": false,
+    "duplicateEngine": false,
+    "relationshipQuestBranches": 0,
+    "questIdsChanged": false,
+    "questGraphChanged": false,
+    "questCapabilityBypass": false,
+    "unlimitedOffers": 0
+  },
+  "artifactContract": {
+    "builder": "tools/Build-Spt415Rc.ps1",
+    "compiledServerDllRequired": true,
+    "exactSourceHeadRequired": true,
+    "exactSpt415ServerStartRequired": true
+  }
+}

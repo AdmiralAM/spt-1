@@ -54,6 +54,7 @@ public sealed class AdmiralTraderRegistration(
             modHelper.GetJsonDataFromFile<Dictionary<string, Dictionary<MongoId, MongoId>>>(modPath, "db/questassort.json");
 
         ValidateTraderData(traderBase, assort, questAssort);
+        ValidateRelationshipStock(modPath, assort, questAssort);
 
         imageRouter.AddRoute(traderBase.Avatar!.Replace(".jpg", string.Empty, StringComparison.OrdinalIgnoreCase), avatarPath);
         traderConfig.UpdateTime.Add(new UpdateTime
@@ -97,6 +98,50 @@ public sealed class AdmiralTraderRegistration(
             throw new InvalidDataException("questassort.json must contain exactly the native lower-case keys: started, success, fail");
         if (questAssort.Keys.Any(key => key is "Started" or "Success" or "Fail"))
             throw new InvalidDataException("questassort.json contains legacy capitalized state keys that are invalid for exact SPT 4.1.5 runtime validation");
+    }
+
+    private static void ValidateRelationshipStock(
+        string modPath,
+        TraderAssort assort,
+        Dictionary<string, Dictionary<MongoId, MongoId>> questAssort)
+    {
+        string path = IOPath.Combine(modPath, "manifests", "relationship-stock.json");
+        if (!File.Exists(path))
+            throw new FileNotFoundException("M5 Relationship stock manifest is missing", path);
+
+        using JsonDocument document = JsonDocument.Parse(File.ReadAllText(path));
+        JsonElement root = document.RootElement;
+        if (root.GetProperty("schemaVersion").GetInt32() != 1
+            || !string.Equals(root.GetProperty("stockClass").GetString(), "Relationship", StringComparison.Ordinal)
+            || !root.GetProperty("materialization").GetProperty("enabled").GetBoolean())
+            throw new InvalidDataException("M5 Relationship stock authority is not materialized");
+
+        JsonElement[] offers = root.GetProperty("offers").EnumerateArray().ToArray();
+        if (offers.Length != 3)
+            throw new InvalidDataException($"Expected three M5 Relationship offers, got {offers.Length}");
+
+        HashSet<string> milestoneIds = questAssort["success"].Keys.Select(id => id.ToString()).ToHashSet(StringComparer.Ordinal);
+        foreach (JsonElement policy in offers)
+        {
+            string offerId = policy.GetProperty("offerId").GetString()
+                ?? throw new InvalidDataException("Relationship offer id is missing");
+            string tpl = policy.GetProperty("tpl").GetString()
+                ?? throw new InvalidDataException($"Relationship offer {offerId} template is missing");
+            int loyaltyLevel = policy.GetProperty("loyaltyLevel").GetInt32();
+            int stock = policy.GetProperty("stockPerReset").GetInt32();
+            int buyRestriction = policy.GetProperty("buyRestriction").GetInt32();
+
+            if (milestoneIds.Contains(offerId))
+                throw new InvalidDataException($"Relationship offer {offerId} cannot be quest gated");
+
+            Item? item = assort.Items.SingleOrDefault(candidate => candidate.Id.ToString() == offerId);
+            if (item is null || item.Template.ToString() != tpl || item.Upd is null)
+                throw new InvalidDataException($"Relationship offer {offerId} runtime identity drift");
+            if (item.Upd.UnlimitedCount is not false || item.Upd.StackObjectsCount != stock || item.Upd.BuyRestrictionMax != buyRestriction)
+                throw new InvalidDataException($"Relationship offer {offerId} finite capacity drift");
+            if (!assort.LoyalLevelItems.TryGetValue(new MongoId(offerId), out int runtimeLoyalty) || runtimeLoyalty != loyaltyLevel)
+                throw new InvalidDataException($"Relationship offer {offerId} loyalty mapping drift");
+        }
     }
 
     private void AddLocales(TraderBase traderBase)

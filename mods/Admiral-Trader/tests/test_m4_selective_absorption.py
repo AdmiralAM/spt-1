@@ -35,7 +35,8 @@ class M4SelectiveAbsorptionTests(unittest.TestCase):
         self.assertFalse(boundary["externalRuntimeDependency"])
         self.assertFalse(boundary["externalIdsImported"])
         self.assertFalse(boundary["externalRewardsImported"])
-        self.assertFalse(boundary["m5RelationshipStorefrontStarted"])
+        self.assertTrue(boundary["m5RelationshipStorefrontStarted"])
+        self.assertEqual(boundary["m5RelationshipStorefrontState"], "materialized-in-current-runtime")
 
     def test_source_rejections_cover_known_duplicate_families(self):
         rejected = {entry["source"] for entry in self.plan["rejected"]}
