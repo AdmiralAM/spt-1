@@ -1,12 +1,12 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "status": "selection-policy",
   "targetSptVersion": "4.1.5",
-  "purpose": "Select one restrained and family-distinct permanent ammunition capability per normal weapon family; Special Weapons never receives a permanent ammunition unlock.",
+  "purpose": "Select one restrained and family-distinct permanent ammunition capability per weapon family; Special Weapons uses the exact verified M576 template with a two-round finite reset cap.",
   "globalRules": {
-    "permanentUnlockFamilies": 6,
+    "permanentUnlockFamilies": 7,
     "maximumPermanentUnlocksPerFamily": 1,
-    "specialWeaponsPermanentUnlocks": 0,
+    "specialWeaponsPermanentUnlocks": 1,
     "selectionTier": "controlled",
     "highEndPermanentUnlock": false,
     "sampleBeforeUnlock": true,
@@ -15,12 +15,72 @@
     "exactRuntimeVerificationRequired": "SPT 4.1.5"
   },
   "families": {
-    "handguns": {"preferredCalibers": ["Caliber57x28"], "maxPermanentPenetration": 36, "sampleUnits": 40, "stockPerReset": 80, "buyRestriction": 80},
-    "smg-pdw": {"preferredCalibers": ["Caliber1143x23ACP"], "maxPermanentPenetration": 38, "sampleUnits": 40, "stockPerReset": 80, "buyRestriction": 80},
-    "shotguns": {"preferredCalibers": ["Caliber12g"], "maxPermanentPenetration": 37, "sampleUnits": 30, "stockPerReset": 40, "buyRestriction": 40},
-    "assault-rifles": {"preferredCalibers": ["Caliber556x45NATO"], "maxPermanentPenetration": 40, "sampleUnits": 40, "stockPerReset": 80, "buyRestriction": 80},
-    "marksman-battle": {"preferredCalibers": ["Caliber762x51"], "maxPermanentPenetration": 42, "sampleUnits": 30, "stockPerReset": 60, "buyRestriction": 60},
-    "precision": {"preferredCalibers": ["Caliber86x70"], "maxPermanentPenetration": 43, "sampleUnits": 20, "stockPerReset": 40, "buyRestriction": 40},
-    "special-weapons": {"preferredCalibers": [], "maxPermanentPenetration": null, "sampleUnits": 1, "stockPerReset": 0, "buyRestriction": 0, "permanentUnlock": false}
+    "handguns": {
+      "preferredCalibers": [
+        "Caliber57x28"
+      ],
+      "maxPermanentPenetration": 36,
+      "sampleUnits": 40,
+      "stockPerReset": 80,
+      "buyRestriction": 80
+    },
+    "smg-pdw": {
+      "preferredCalibers": [
+        "Caliber1143x23ACP"
+      ],
+      "maxPermanentPenetration": 38,
+      "sampleUnits": 40,
+      "stockPerReset": 80,
+      "buyRestriction": 80
+    },
+    "shotguns": {
+      "preferredCalibers": [
+        "Caliber12g"
+      ],
+      "maxPermanentPenetration": 37,
+      "sampleUnits": 30,
+      "stockPerReset": 40,
+      "buyRestriction": 40
+    },
+    "assault-rifles": {
+      "preferredCalibers": [
+        "Caliber556x45NATO"
+      ],
+      "maxPermanentPenetration": 40,
+      "sampleUnits": 40,
+      "stockPerReset": 80,
+      "buyRestriction": 80
+    },
+    "marksman-battle": {
+      "preferredCalibers": [
+        "Caliber762x51"
+      ],
+      "maxPermanentPenetration": 42,
+      "sampleUnits": 30,
+      "stockPerReset": 60,
+      "buyRestriction": 60
+    },
+    "precision": {
+      "preferredCalibers": [
+        "Caliber86x70"
+      ],
+      "maxPermanentPenetration": 43,
+      "sampleUnits": 20,
+      "stockPerReset": 40,
+      "buyRestriction": 40,
+      "canonicalName": ".338 Lapua Magnum UCW"
+    },
+    "special-weapons": {
+      "preferredCalibers": [
+        "Caliber40x46"
+      ],
+      "maxPermanentPenetration": null,
+      "sampleUnits": 1,
+      "stockPerReset": 2,
+      "buyRestriction": 2,
+      "permanentUnlock": true,
+      "fixedVerifiedTpl": "5ede475339ee016e8c534742",
+      "canonicalName": "40x46mm M576 (MP-APERS) grenade"
+    }
   }
 }

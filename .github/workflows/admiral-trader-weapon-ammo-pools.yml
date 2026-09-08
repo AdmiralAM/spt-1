@@ -128,25 +128,27 @@ jobs:
               missing = sorted(set(frozen_ids) - candidate_ids)
               if missing:
                   raise SystemExit(f'{family_id}: curated weapon TPLs not present in exact SPT 4.1.5 candidate pool: {missing}')
+              stage_pools = runtime_pools.get('stagePools', {}).get(family_id, {})
+              if set(stage_pools) != {'qualification', 'fieldwork', 'munitions'}:
+                  raise SystemExit(f'{family_id}: missing three-stage weapon rotation')
+              flat = [tpl for stage in stage_pools.values() for tpl in stage]
+              if len(flat) != len(set(flat)) or set(flat) != set(frozen_ids):
+                  raise SystemExit(f'{family_id}: stage pools must be disjoint and cover the curated family exactly once')
               selected = selection['families'][family_id]
               frozen = committed['families'][family_id]
-              if family_id == 'special-weapons':
-                  if selected.get('permanentUnlock') or frozen.get('permanentUnlock') is not False:
-                      raise SystemExit('special weapons may not receive a permanent ammunition unlock')
-                  if selected.get('sampleUnits') != 1 or frozen.get('sampleUnits') != 1:
-                      raise SystemExit('special weapons sample must remain exactly one unit')
-                  continue
               keys = ('tpl','caliber','penetration','damage','sampleUnits','stockPerReset','buyRestriction')
               drift = {key: (selected.get(key), frozen.get(key)) for key in keys if selected.get(key) != frozen.get(key)}
               if drift:
                   raise SystemExit(f'{family_id}: committed capability drift against exact SPT 4.1.5 DB: {drift}')
-              if selected.get('tier') != 'controlled' or selected['penetration'] > selected['penetrationCeiling']:
+              if family_id != 'special-weapons' and (selected.get('tier') != 'controlled' or selected['penetration'] > selected['penetrationCeiling']):
                   raise SystemExit(f'{family_id}: unsafe capability selection')
+              if family_id == 'special-weapons' and (selected.get('tpl') != '5ede475339ee016e8c534742' or selected.get('sampleUnits') != 1):
+                  raise SystemExit('special weapons must use the exact verified M576 one-round sample')
               if selected['stockPerReset'] <= 0 or selected['buyRestriction'] <= 0:
                   raise SystemExit(f'{family_id}: unlock must remain finite')
               permanent += 1
-          if permanent != 6:
-              raise SystemExit(f'expected exactly six permanent ammo unlocks, got {permanent}')
+          if permanent != 7:
+              raise SystemExit(f'expected exactly seven permanent ammo unlocks, got {permanent}')
           PY
 
       - name: Compile native weapon-ammo runtime quest templates
@@ -169,8 +171,8 @@ jobs:
               raise SystemExit('generated runtime templates lost SPT 4.1.5 target')
           if len(templates) != 21:
               raise SystemExit(f'expected 21 native weapon-ammo quests, got {len(templates)}')
-          if len(data['deferredRuntimeItems']) != 1:
-              raise SystemExit('only the Special Weapons sample item may remain deferred')
+          if data['deferredRuntimeItems']:
+              raise SystemExit('all Arsenal runtime items must be resolved')
           for qid, quest in templates.items():
               if quest['traderId'] != 'd5c27bb3169f8dfbc13f6b69' or quest['restartable']:
                   raise SystemExit(f'{qid}: invalid Admiral ownership/restartability')

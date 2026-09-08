@@ -47,9 +47,9 @@ class M3RuntimeMaterializationTests(unittest.TestCase):
             totals["xp"] += rewards[0]["value"]
             totals["standing"] += rewards[1]["value"]
             totals["rub"] += rewards[2]["value"]
-        self.assertEqual(totals["xp"], 106500)
-        self.assertEqual(totals["rub"], 661000)
-        self.assertAlmostEqual(totals["standing"], 0.157)
+        self.assertEqual(totals["xp"], 133000)
+        self.assertEqual(totals["rub"], 752000)
+        self.assertAlmostEqual(totals["standing"], 0.179)
 
     def test_native_lifecycle_and_objective_locales(self):
         locales = {

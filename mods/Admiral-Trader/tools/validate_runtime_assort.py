@@ -32,6 +32,7 @@ AMMO_OFFER_IDS = {
     "assault-rifles": "b71182859e5958fd12c02e89",
     "marksman-battle": "07efd6dee267ec18ed830dd6",
     "precision": "731e65964d324bc545a1b839",
+    "special-weapons": "3500e7b76f097a98ced5d61b",
 }
 NATIVE_QUESTASSORT_KEYS = {"started", "success", "fail"}
 LEGACY_CAPITALIZED_QUESTASSORT_KEYS = {"Started", "Success", "Fail"}
@@ -117,12 +118,12 @@ def main() -> None:
     milestone_ids = {LABS_OFFER_ID, *AMMO_OFFER_IDS.values()}
     expected_ids = BASELINE_OFFER_IDS | milestone_ids
     root_items = {item.get("_id"): item for item in items if item.get("parentId") == "hideout"}
-    if len(root_items) != len(items) or len(root_items) != 11:
-        fail(f"expected exactly eleven root-only Admiral offers, got roots={len(root_items)} items={len(items)}")
+    if len(root_items) != len(items) or len(root_items) != 12:
+        fail(f"expected exactly twelve root-only Admiral offers, got roots={len(root_items)} items={len(items)}")
     if set(root_items) != expected_ids:
         fail(f"assort root id drift; missing={sorted(expected_ids-set(root_items))} extra={sorted(set(root_items)-expected_ids)}")
     if set(barter) != expected_ids or set(loyalty) != expected_ids:
-        fail("assort root/barter/loyalty key sets must match the 4 Baseline + 7 Milestone contract")
+        fail("assort root/barter/loyalty key sets must match the 4 Baseline + 8 Milestone contract")
 
     for offer_id, policy in baseline_by_id.items():
         validate_single_rub_offer(
@@ -153,12 +154,12 @@ def main() -> None:
         fail("ammo offer policy family set drift")
     if ammo_policy.get("targetSptVersion") != EXPECTED_RUNTIME_TARGET:
         fail("ammo offer policy lost SPT 4.1.5 target")
-    if (ammo_policy.get("specialWeapons") or {}).get("permanentOffer") is not False:
-        fail("Special Weapons must not receive a permanent offer")
+    if (ammo_policy.get("specialWeapons") or {}).get("permanentOffer") is not True:
+        fail("Special Weapons must retain its finite M576 offer")
 
     success = questassort.get("success")
     if not isinstance(success, dict) or set(success) != milestone_ids:
-        fail("questassort.success must contain exactly the seven Milestone offers and no Baseline offers")
+        fail("questassort.success must contain exactly the eight Milestone offers and no Baseline offers")
     if BASELINE_OFFER_IDS & set(success):
         fail("Baseline offers must never leak into questassort.success")
     if success.get(LABS_OFFER_ID) != LABS_CLEARANCE_QUEST:
@@ -202,7 +203,7 @@ def main() -> None:
         if float(level.get("minStanding", -1)) != standing:
             fail(f"Admiral LL{index}: standing threshold drift")
 
-    print("Admiral Trader SPT 4.1.5 native questassort + 4 Baseline + 7 Milestone offer contract OK")
+    print("Admiral Trader SPT 4.1.5 native questassort + 4 Baseline + 8 Milestone offer contract OK")
 
 
 if __name__ == "__main__":

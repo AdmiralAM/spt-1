@@ -362,7 +362,7 @@ class M3CampaignProductSpecTests(unittest.TestCase):
             self.assertGreater(reward["xp"], 0, key)
             self.assertGreater(reward["rub"], 0, key)
             self.assertGreater(reward["standing"], 0, key)
-            self.assertLessEqual(reward["standing"], 0.025, key)
+            self.assertLessEqual(reward["standing"], 0.03, key)
 
 
 if __name__ == "__main__":

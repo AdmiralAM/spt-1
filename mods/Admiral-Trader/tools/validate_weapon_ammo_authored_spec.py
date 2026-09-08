@@ -20,12 +20,14 @@ def validate(spec: dict[str, Any], reward_policy: dict[str, Any], audit: dict[st
     if spec.get("domain") != "weaponAmmo":
         fail("weapon/ammo authored spec has wrong domain")
     rules = spec.get("designRules") or {}
-    required_false = ["legacyTemplateReuse","foundInRaidRequired","handoverAmmoObjectives","currencySpamRewards","highEndAmmoUnlimited","containerRewards","specialWeaponPermanentAmmoUnlock"]
+    required_false = ["legacyTemplateReuse","foundInRaidRequired","handoverAmmoObjectives","currencySpamRewards","highEndAmmoUnlimited","containerRewards"]
     for key in required_false:
         if rules.get(key) is not False:
             fail(f"design rule {key} must remain false")
     if rules.get("sampleAmmoBeforeUnlock") is not True or rules.get("controlledAmmoUnlocksOnly") is not True:
         fail("ammo capability must remain sample + controlled unlock")
+    if rules.get("specialWeaponAmmoUnlockFinite") is not True:
+        fail("Special Weapons ammunition unlock must remain finite")
     if int(rules.get("maximumPermanentUnlocksPerQuest", -1)) != 1:
         fail("weapon/ammo quests may grant at most one permanent unlock")
     if int(rules.get("maximumFamilyQuestCount", -1)) != 3:
@@ -71,7 +73,7 @@ def validate(spec: dict[str, Any], reward_policy: dict[str, Any], audit: dict[st
             if index < 2 and unlock_slots != 0:
                 fail(f"{slug}: qualification/fieldwork may not grant permanent unlocks")
             if index == 2:
-                expected_unlocks = 0 if family_id == "special-weapons" else 1
+                expected_unlocks = 1
                 if unlock_slots != expected_unlocks:
                     fail(f"{slug}: expected {expected_unlocks} permanent unlock slot(s), got {unlock_slots}")
                 sample = int(stage.get("sampleAmmoUnits", 0))
@@ -84,8 +86,8 @@ def validate(spec: dict[str, Any], reward_policy: dict[str, Any], audit: dict[st
 
     if quest_count != 21:
         fail(f"weapon/ammo authored quest count must remain 21, got {quest_count}")
-    if unlock_count != 6:
-        fail(f"weapon/ammo authored permanent unlock budget must remain 6, got {unlock_count}")
+    if unlock_count != 7:
+        fail(f"weapon/ammo authored permanent unlock budget must remain 7, got {unlock_count}")
     if audit is not None:
         legacy = audit.get("summary") or {}
         source = spec.get("legacySource") or {}

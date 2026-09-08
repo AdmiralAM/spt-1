@@ -48,7 +48,7 @@ if ($portraitBlob -ne '63e158fbd96b595a609560dfef452451b4783144') {
 }
 
 python (Join-Path $traderRoot 'tools/validate_runtime_assort.py')
-if ($LASTEXITCODE -ne 0) { throw 'Trader 4 Baseline + 7 Milestone runtime assort contract failed.' }
+if ($LASTEXITCODE -ne 0) { throw 'Trader 4 Baseline + 8 Milestone runtime assort contract failed.' }
 
 $itemsPath = Join-Path $runtimeRoot 'SPT_Data/database/templates/items.json'
 if (-not (Test-Path $itemsPath -PathType Leaf)) { throw "Exact SPT item database is missing: $itemsPath" }
@@ -57,13 +57,13 @@ $assort = Get-Content (Join-Path $traderRoot 'db/assort.json') -Raw | ConvertFro
 $baseline = Get-Content (Join-Path $traderRoot 'manifests/baseline-stock.json') -Raw | ConvertFrom-Json
 $questAssort = Get-Content (Join-Path $traderRoot 'db/questassort.json') -Raw | ConvertFrom-Json
 $rootOffers = @($assort.items | Where-Object parentId -eq 'hideout')
-if ($rootOffers.Count -ne 11) { throw "Expected 11 active-head root offers, got $($rootOffers.Count)" }
+if ($rootOffers.Count -ne 12) { throw "Expected 12 active-head root offers, got $($rootOffers.Count)" }
 $missingTpls = @($rootOffers | ForEach-Object { [string]$_."_tpl" } | Where-Object { -not $itemDb.ContainsKey($_) } | Sort-Object -Unique)
 if ($missingTpls.Count) { throw "Active-head assort contains TPLs missing from exact SPT 4.1.5 DB: $($missingTpls -join ', ')" }
 $baselineIds = @($baseline.offers | ForEach-Object { [string]$_.offerId })
 $milestoneIds = @($questAssort.success.PSObject.Properties | ForEach-Object { [string]$_.Name })
 if ($baselineIds.Count -ne 4 -or ($baselineIds | Sort-Object -Unique).Count -ne 4) { throw 'Baseline authority must contain four unique offers.' }
-if ($milestoneIds.Count -ne 7 -or ($milestoneIds | Sort-Object -Unique).Count -ne 7) { throw 'Milestone questassort must contain seven unique offers.' }
+if ($milestoneIds.Count -ne 8 -or ($milestoneIds | Sort-Object -Unique).Count -ne 8) { throw 'Milestone questassort must contain eight unique offers.' }
 if (@($baselineIds | Where-Object { $_ -in $milestoneIds }).Count) { throw 'Baseline offers must not be quest-gated Milestone offers.' }
 $rootIds = @($rootOffers | ForEach-Object { [string]$_."_id" })
 $unclassified = @($rootIds | Where-Object { $_ -notin $baselineIds -and $_ -notin $milestoneIds })
@@ -99,8 +99,8 @@ $stagedManifest | ConvertTo-Json -Depth 20 | Set-Content $stagedManifestPath -En
 
 $stagedAssort = Get-Content (Join-Path $modTarget 'db/assort.json') -Raw | ConvertFrom-Json
 $stagedQuestAssort = Get-Content (Join-Path $modTarget 'db/questassort.json') -Raw | ConvertFrom-Json
-if (@($stagedAssort.items | Where-Object parentId -eq 'hideout').Count -ne 11) { throw 'Staged Trader lost the 11-offer contract.' }
-if (@($stagedQuestAssort.success.PSObject.Properties).Count -ne 7) { throw 'Staged Trader lost the seven Milestone gates.' }
+if (@($stagedAssort.items | Where-Object parentId -eq 'hideout').Count -ne 12) { throw 'Staged Trader lost the 12-offer contract.' }
+if (@($stagedQuestAssort.success.PSObject.Properties).Count -ne 8) { throw 'Staged Trader lost the eight Milestone gates.' }
 if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 43) { throw 'Staged Trader lost the 43-quest expanded campaign contract.' }
 if (-not (Test-Path (Join-Path $modTarget 'assets/d5c27bb3169f8dfbc13f6b69.jpg') -PathType Leaf)) { throw 'Staged Trader portrait is missing.' }
 
@@ -116,8 +116,20 @@ $provenance = [ordered]@{
     frozenBaselineQuestCount = 31
     m3OperationQuestCount = 12
     baselineOffers = 4
-    milestoneOffers = 7
+    milestoneOffers = 8
     relationshipOffers = 0
+    selectedWeaponTemplates = 49
+    weaponRotation = 'disjoint-three-stage-family-pools'
+    correctedOperationRewardTotals = [ordered]@{ xp = 133000; rub = 752000; standing = 0.179 }
+    specialWeaponsAmmo = [ordered]@{
+        tpl = '5ede475339ee016e8c534742'
+        name = '40x46mm M576 (MP-APERS) grenade'
+        sampleUnits = 1
+        offerId = '3500e7b76f097a98ced5d61b'
+        stockPerReset = 2
+        buyRestriction = 2
+    }
+    canonical338 = [ordered]@{ tpl = '5fc382c1016cce60e8341b20'; name = '.338 Lapua Magnum UCW' }
     traderId = 'd5c27bb3169f8dfbc13f6b69'
     portraitGitBlob = $portraitBlob
     serverDllSha256 = $dllHash

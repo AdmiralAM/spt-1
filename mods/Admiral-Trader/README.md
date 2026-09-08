@@ -42,7 +42,7 @@ Expected lifecycle:
 - **M5 — Relationship / specialist storefront**
 - **M6 — Stable release**
 
-Current runtime shape: **43 quests** (31 frozen baseline + 12 M3 operations), **11 offers** (4 Baseline + 7 Milestone + 0 Relationship).
+Current runtime shape: **43 quests** (31 frozen baseline + 12 M3 operations), **12 offers** (4 Baseline + 8 Milestone + 0 Relationship).
 
 The bounded M4 decision is recorded in `manifests/m4-selective-content-absorption.json`. Natalya's Exfil route and logistics ideas and the selected Andrudis capability themes already have explicit runtime homes in the 12 M3 operations. The rejected Pay Back, Weapons Training, boss and cultist copies do not add distinct player decisions, so M4 adds no parallel quest records and leaves the validated graph and balance intact.
 
@@ -86,7 +86,7 @@ Observation Window, Heavy Assault, Break the Perimeter.
 
 Internal Security.
 
-Final design envelope: **106,500 XP / 661,000 RUB / +0.157 standing**, with no selected item rewards or permanent unlocks in this M3 slice.
+Final design envelope after the bounded campaign-audit correction: **133,000 XP / 752,000 RUB / +0.179 standing**, with no selected item rewards or permanent unlocks in this M3 slice.
 
 ## Reference-first engineering
 

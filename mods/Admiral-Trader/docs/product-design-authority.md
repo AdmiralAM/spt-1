@@ -101,9 +101,9 @@ The detailed approved copy is in `manifests/m3-campaign-editorial-copy.json`; th
 The current final M3 design envelope is:
 
 - **12 operations**;
-- **106,500 XP** total;
-- **661,000 RUB** total;
-- **+0.157 standing** total;
+- **133,000 XP** total;
+- **752,000 RUB** total;
+- **+0.179 standing** total;
 - **0 selected item rewards**;
 - **0 permanent unlocks** in this design slice.
 

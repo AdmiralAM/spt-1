@@ -99,11 +99,11 @@ def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: di
     for quest in plan.get("quests") or []:
         slug, family = str(quest["slug"]), str(quest["family"])
         stage = authored["stagesBySlug"][slug]
-        weapon_ids = list(dict.fromkeys(str(x) for x in runtime_pools["families"].get(family, [])))
+        family_stage_pools = runtime_pools.get("stagePools") or {}
+        weapon_ids = list(dict.fromkeys(str(x) for x in (family_stage_pools.get(family) or {}).get(str(quest["stage"]), [])))
+        if not weapon_ids:
+            raise ValueError(f"{slug}: missing authored stage weapon pool")
         capability = capabilities["families"].get(family)
-        if family == "special-weapons" and quest["stage"] == "munitions":
-            deferred.append({"questId": quest["id"], "slug": slug,
-                             "reason": "special sample TPL requires exact SPT 4.1.5 runtime item verification"})
         name = f"Arsenal Protocol: {authored['displayByFamily'][family]} - {str(quest['stage']).title()}"; qid = str(quest["id"])
         templates[qid] = {
             "QuestName": name, "_id": qid, "canShowNotificationsInGame": True,
@@ -115,7 +115,7 @@ def build_templates(plan: dict[str, Any], spec: dict[str, Any], capabilities: di
             "startedMessageText": f"{qid} startedMessageText", "successMessageText": f"{qid} successMessageText",
             "acceptPlayerMessage": f"{qid} acceptPlayerMessage", "acceptanceAndFinishingSource": "eft",
             "declinePlayerMessage": f"{qid} declinePlayerMessage", "completePlayerMessage": f"{qid} completePlayerMessage",
-            "rewards": {"Started": [], "Success": success_rewards(slug, stage, capability if quest["stage"] == "munitions" and family != "special-weapons" else None), "Fail": []},
+            "rewards": {"Started": [], "Success": success_rewards(slug, stage, capability if quest["stage"] == "munitions" else None), "Fail": []},
             "side": "Pmc", "status": 0, "progressSource": "eft",
             "gameModes": [], "rankingModes": [], "arenaLocations": [],
         }
