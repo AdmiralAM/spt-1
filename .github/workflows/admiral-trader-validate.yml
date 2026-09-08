@@ -79,7 +79,7 @@ jobs:
               raise SystemExit('questassort native collections must be objects')
           if len(baseline.get('offers') or []) != 4:
               raise SystemExit('preserved Baseline offer count drift')
-          if len(questassort['success']) != 7:
+          if len(questassort['success']) != 8:
               raise SystemExit('Milestone questassort success gate count drift')
           PY
 
