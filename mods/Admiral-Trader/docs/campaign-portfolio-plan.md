@@ -63,3 +63,42 @@ Equipment constraints should normally use a small truthful pool rather than one 
 The 43-quest runtime is the current validated foundation, not the desired final volume. Future additions should be accepted only when they fill a measured map, level, objective, story, or equipment-rotation gap. The initial planning range is 60-80 Admiral quests, subject to a simulation of concurrent availability across the complete 746-record portfolio. The final count is secondary to keeping the Admiral layer near 6-10 concurrent tasks and avoiding duplicate objectives already supplied by SPT, Scorpion, Artem, or Ref.
 
 Runtime graph and rewards remain unchanged by this planning document.
+
+## Persistent loadout rotation
+
+Loadout assignments are a long-running campaign system rather than a single batch of mastery quests. The approximate first-pass design is 40 weapon assignments, adjusted after the exact SPT weapon pool and the other campaigns are compared.
+
+Only two weapon assignments should normally be offered at once. They run as two independent authored chains so the player has a minimum choice of raid setup. Completing either assignment exposes the next assignment in that chain; level alone must never expose the complete weapon pool.
+
+The first cycle introduces individual weapons or small closely related model pools with straightforward targets. After broad weapon coverage is complete, weapon families return in later cycles with meaningfully different contexts, for example:
+
+- a different location or enemy faction;
+- close-range, distance, day, or night work;
+- a suppressor, optic, light, magazine, or ammunition-class constraint;
+- pairing with light, medium, or heavy protection;
+- a one-raid survival condition only when the added risk is intentional.
+
+The same weapon and the same objective must not simply be repeated. Later cycles should reuse learned equipment while changing the operational problem. Weapon tasks must also be scheduled against armour, rig, headset, helmet, and backpack assignments so that the two available choices do not demand mutually exclusive versions of the same slot.
+
+## Story expansion
+
+New original quests are allowed when the source mods do not contain a suitable reference. Additions should form several short authored stories rather than a flat collection of errands. Candidate story lanes include route security and access, field logistics, reconnaissance and signals, equipment evaluation, faction intelligence, and late-game command operations.
+
+Each story should intersect native progression without requiring another trader's quest state unless that dependency is stable and intentional. Its locations, objectives, and rewards must complement work from SPT, Scorpion, Artem, and Ref so the player can plan productive multi-purpose raids.
+
+## Storefront growth
+
+Four permanent LL1 offers are too sparse for the final trader. Admiral needs a useful finite core at every loyalty level and a second layer earned through quests.
+
+The next storefront design must satisfy these bounds before offers are authored:
+
+| Stage | Visible offer target | Composition |
+| --- | ---: | --- |
+| LL1 | 8-12 | common mission support and early field equipment |
+| LL2 | 14-20 | improved logistics, signals, practical equipment alternatives |
+| LL3 | 22-30 | specialist field gear and bounded ammunition access |
+| LL4 plus campaign unlocks | 32-45 | complete Admiral specialty without becoming a general supermarket |
+
+Stock remains finite and useful items should have purchase limits. Loyalty provides the dependable core; selected quests unlock distinctive equipment, ammunition, access, or prepared mission-support offers. Quest unlocks must correspond to what the player proved or recovered during that branch.
+
+Admiral's identity is operational supply: navigation and access support, field marking and signals, reconnaissance equipment, bounded specialist ammunition, and selected prepared gear for campaign tasks. The final assortment must avoid duplicating another trader at a better price and must contain enough exclusive or differently constrained utility that the player has a reason to visit Admiral throughout progression.
