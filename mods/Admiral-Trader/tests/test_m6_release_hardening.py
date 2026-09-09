@@ -22,16 +22,16 @@ class M6ReleaseHardeningTests(unittest.TestCase):
         self.assertFalse(m6["stableClaimAllowed"])
 
     def test_runtime_sources_do_not_write_profiles_and_have_rollback(self):
-        sources = "\n".join(path.read_text() for path in (ROOT / "server").glob("*.cs"))
+        sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "server").glob("*.cs"))
         for forbidden in ("user/profiles", "SetPmcProfile", "SaveProfile", "ProfileStore"):
             self.assertNotIn(forbidden, sources)
         self.assertIn("tradersTable.Remove(traderBase.Id)", sources)
         self.assertIn("templateTable.Quests.Remove(questId)", sources)
 
     def test_install_and_build_contract_cover_aliases_and_inventory(self):
-        install = (ROOT / "docs/INSTALL.md").read_text()
-        lifecycle = (ROOT / "tools/Test-StablePackageLifecycle.ps1").read_text()
-        builder = (ROOT / "tools/Build-Spt415Rc.ps1").read_text()
+        install = (ROOT / "docs/INSTALL.md").read_text(encoding="utf-8")
+        lifecycle = (ROOT / "tools/Test-StablePackageLifecycle.ps1").read_text(encoding="utf-8")
+        builder = (ROOT / "tools/Build-Spt415Rc.ps1").read_text(encoding="utf-8")
         for alias in ("Admiral Trader", "Admiral-Trader"):
             self.assertIn(alias, install)
             self.assertIn(alias, lifecycle)
@@ -39,8 +39,8 @@ class M6ReleaseHardeningTests(unittest.TestCase):
         self.assertIn("stable-release-candidate", builder)
 
     def test_combined_candidate_uses_active_campaign(self):
-        builder = (REPO / "mods/Economy-Admiral/tools/Build-CombinedSpt415Rc.ps1").read_text()
-        workflow = (REPO / ".github/workflows/admiral-economy-combined-spt415-rc.yml").read_text()
+        builder = (REPO / "mods/Economy-Admiral/tools/Build-CombinedSpt415Rc.ps1").read_text(encoding="utf-8")
+        workflow = (REPO / ".github/workflows/admiral-economy-combined-spt415-rc.yml").read_text(encoding="utf-8")
         self.assertNotIn("TraderWorktree", builder + workflow)
         self.assertNotIn("frozen-trader", builder + workflow)
         self.assertIn("$quests.Count -ne 43", builder)
