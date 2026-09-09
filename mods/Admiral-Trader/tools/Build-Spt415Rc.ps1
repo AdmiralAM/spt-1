@@ -36,6 +36,7 @@ foreach ($entry in $expectedRuntime.GetEnumerator()) {
 
 $runtimeManifestPath = Join-Path $traderRoot 'manifests/runtime-manifest.json'
 $runtimeManifest = Get-Content $runtimeManifestPath -Raw | ConvertFrom-Json
+if ($runtimeManifest.schemaVersion -ne 2 -or $runtimeManifest.version -ne '0.1.0+milestones' -or $runtimeManifest.sptCompatibility -ne '~4.1.0') { throw 'Trader release metadata drift.' }
 if ($runtimeManifest.targetSptVersion -ne '4.1.5') { throw "Trader runtime target drift: $($runtimeManifest.targetSptVersion)" }
 if ($runtimeManifest.publishedApiCompileBaseline -ne '4.1.5') { throw 'Trader published API baseline drift.' }
 if ($runtimeManifest.registrationEnabled -ne $false) { throw 'Source runtime registration must remain fail-closed; only staged RC may enable it.' }
@@ -84,7 +85,7 @@ $dll = Join-Path $traderRoot 'server/bin/Release/net10.0/Admiral Trader Server.d
 if (-not (Test-Path $dll -PathType Leaf)) { throw "Compiled Trader DLL is missing: $dll" }
 $dllHash = (Get-FileHash $dll -Algorithm SHA256).Hash.ToLowerInvariant()
 
-$packageRoot = Join-Path $OutputDirectory "Admiral-Trader-SPT415-RC-$sourceHead"
+$packageRoot = Join-Path $OutputDirectory "Admiral-Trader-0.1.0-milestones-SPT415-RC-$sourceHead"
 $modTarget = Join-Path $packageRoot 'SPT_Runtime/user/mods/Admiral-Trader'
 if (Test-Path $packageRoot) { Remove-Item $packageRoot -Recurse -Force }
 New-Item $modTarget -ItemType Directory -Force | Out-Null
@@ -93,11 +94,12 @@ foreach ($directory in 'db','manifests','assets') {
     Copy-Item (Join-Path $traderRoot $directory) (Join-Path $modTarget $directory) -Recurse
 }
 if (Test-Path (Join-Path $traderRoot 'README.md')) { Copy-Item (Join-Path $traderRoot 'README.md') $modTarget }
+Copy-Item (Join-Path $traderRoot 'docs/INSTALL.md') (Join-Path $modTarget 'INSTALL.md')
 
 $stagedManifestPath = Join-Path $modTarget 'manifests/runtime-manifest.json'
 $stagedManifest = Get-Content $stagedManifestPath -Raw | ConvertFrom-Json
 $stagedManifest.registrationEnabled = $true
-$stagedManifest | Add-Member -NotePropertyName publicationMode -NotePropertyValue 'canonical-m5-relationship-storefront-rc' -Force
+$stagedManifest | Add-Member -NotePropertyName publicationMode -NotePropertyValue 'stable-release-candidate' -Force
 $stagedManifest | Add-Member -NotePropertyName sourceHeadSha -NotePropertyValue $sourceHead -Force
 $stagedManifest | ConvertTo-Json -Depth 20 | Set-Content $stagedManifestPath -Encoding utf8
 
@@ -111,7 +113,9 @@ if (-not (Test-Path (Join-Path $modTarget 'assets/d5c27bb3169f8dfbc13f6b69.jpg')
 $provenance = [ordered]@{
     schemaVersion = 1
     product = 'Admiral Trader'
-    version = '0.1.0'
+    version = '0.1.0+milestones'
+    sptCompatibility = '~4.1.0'
+    releaseChannel = 'release-candidate'
     targetSptVersion = '4.1.5'
     sourceHeadSha = $sourceHead
     authority = 'PR #328 active canonical head'
@@ -122,6 +126,7 @@ $provenance = [ordered]@{
     baselineOffers = 4
     milestoneOffers = 8
     relationshipOffers = 3
+    totalFiniteOffers = 15
     relationshipProgression = [ordered]@{
         loyaltyLevels = 4
         standingThresholds = @(0.0, 0.1, 0.3, 0.55)
@@ -160,6 +165,18 @@ $provenance = [ordered]@{
     ownedFilesOnly = $true
 }
 $provenance | ConvertTo-Json -Depth 10 | Set-Content (Join-Path $packageRoot 'admiral-trader-provenance.json') -Encoding utf8
+
+$inventory = @(Get-ChildItem $packageRoot -Recurse -File | Sort-Object FullName | ForEach-Object {
+    [ordered]@{
+        path = [IO.Path]::GetRelativePath($packageRoot, $_.FullName).Replace('\','/')
+        size = $_.Length
+        sha256 = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+})
+[ordered]@{ schemaVersion = 1; sourceHeadSha = $sourceHead; files = $inventory } |
+    ConvertTo-Json -Depth 6 | Set-Content (Join-Path $packageRoot 'admiral-trader-package-files.json') -Encoding utf8
+
+& (Join-Path $traderRoot 'tools/Test-StablePackageLifecycle.ps1') -CandidateRoot $packageRoot -WorkingDirectory $OutputDirectory -ExpectedSourceHead $sourceHead
 
 $foreign = @(Get-ChildItem $packageRoot -Recurse -File | Where-Object {
     $_.Name -in $expectedRuntime.Keys -or $_.Name -match '^(EscapeFromTarkov|SPT\.Server)'

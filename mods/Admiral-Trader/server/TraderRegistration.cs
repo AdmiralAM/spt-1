@@ -56,13 +56,18 @@ public sealed class AdmiralTraderRegistration(
         ValidateTraderData(traderBase, assort, questAssort);
         ValidateRelationshipStock(modPath, assort, questAssort);
 
-        imageRouter.AddRoute(traderBase.Avatar!.Replace(".jpg", string.Empty, StringComparison.OrdinalIgnoreCase), avatarPath);
-        traderConfig.UpdateTime.Add(new UpdateTime
+        if (tradersTable.ContainsKey(traderBase.Id))
+            throw new InvalidOperationException($"Cannot register Admiral Trader: trader id {traderBase.Id} already exists");
+        if (traderConfig.UpdateTime.Any(entry => entry.TraderId == traderBase.Id))
+            throw new InvalidOperationException($"Cannot register Admiral Trader: update-time entry {traderBase.Id} already exists");
+        if (ragfairConfig.Traders.ContainsKey(traderBase.Id))
+            throw new InvalidOperationException($"Cannot register Admiral Trader: ragfair entry {traderBase.Id} already exists");
+
+        UpdateTime updateTime = new()
         {
             TraderId = traderBase.Id,
             Seconds = new MinMax<int>(timeUtil.GetHoursAsSeconds(1), timeUtil.GetHoursAsSeconds(2))
-        });
-        ragfairConfig.Traders.TryAdd(traderBase.Id, true);
+        };
 
         Trader trader = new()
         {
@@ -72,10 +77,32 @@ public sealed class AdmiralTraderRegistration(
             Dialogue = []
         };
 
-        if (!tradersTable.TryAdd(traderBase.Id, trader))
-            throw new InvalidOperationException($"Cannot register Admiral Trader: trader id {traderBase.Id} already exists");
-
-        AddLocales(traderBase);
+        bool traderAdded = false;
+        bool updateTimeAdded = false;
+        bool ragfairAdded = false;
+        try
+        {
+            traderAdded = tradersTable.TryAdd(traderBase.Id, trader);
+            if (!traderAdded)
+                throw new InvalidOperationException($"Cannot register Admiral Trader: trader id {traderBase.Id} already exists");
+            traderConfig.UpdateTime.Add(updateTime);
+            updateTimeAdded = true;
+            ragfairAdded = ragfairConfig.Traders.TryAdd(traderBase.Id, true);
+            if (!ragfairAdded)
+                throw new InvalidOperationException($"Cannot register Admiral Trader: ragfair entry {traderBase.Id} already exists");
+            imageRouter.AddRoute(traderBase.Avatar!.Replace(".jpg", string.Empty, StringComparison.OrdinalIgnoreCase), avatarPath);
+            AddLocales(traderBase);
+        }
+        catch
+        {
+            if (ragfairAdded)
+                ragfairConfig.Traders.Remove(traderBase.Id);
+            if (updateTimeAdded)
+                traderConfig.UpdateTime.Remove(updateTime);
+            if (traderAdded)
+                tradersTable.Remove(traderBase.Id);
+            throw;
+        }
         logger.Success($"Admiral Trader registered with id {traderBase.Id} and {assort.Items.Count} assort item records");
     }
 
@@ -179,6 +206,14 @@ public sealed class AdmiralTraderRegistration(
 
         if (manifest is null)
             throw new InvalidDataException("Admiral Trader runtime manifest could not be parsed");
+        if (manifest.SchemaVersion != 2)
+            throw new InvalidDataException($"Unsupported Admiral Trader runtime manifest schema: {manifest.SchemaVersion}");
+        if (!string.Equals(manifest.Product, "Admiral Trader", StringComparison.Ordinal))
+            throw new InvalidDataException($"runtime-manifest product mismatch: {manifest.Product}");
+        if (!string.Equals(manifest.Version, "0.1.0+milestones", StringComparison.Ordinal))
+            throw new InvalidDataException($"runtime-manifest version mismatch: {manifest.Version}");
+        if (!string.Equals(manifest.SptCompatibility, "~4.1.0", StringComparison.Ordinal))
+            throw new InvalidDataException($"runtime-manifest SPT compatibility mismatch: {manifest.SptCompatibility}");
         if (!string.Equals(manifest.TraderId, RuntimeIdentity.TraderId, StringComparison.Ordinal))
             throw new InvalidDataException($"runtime-manifest trader id mismatch: {manifest.TraderId}");
         return manifest;
@@ -189,6 +224,8 @@ public sealed record RuntimeRegistrationManifest
 {
     public int SchemaVersion { get; init; }
     public string? Product { get; init; }
+    public string? Version { get; init; }
     public string? TraderId { get; init; }
+    public string? SptCompatibility { get; init; }
     public bool RegistrationEnabled { get; init; }
 }

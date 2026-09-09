@@ -85,6 +85,7 @@ jobs:
           if ($provenanceFiles.Count -ne 1) { throw "Expected one Trader provenance file; found $($provenanceFiles.Count)" }
           $p = Get-Content $provenanceFiles[0].FullName -Raw | ConvertFrom-Json
           $expectedHead = '${{ github.event.pull_request.head.sha || github.sha }}'.ToLowerInvariant()
+          if ($p.version -ne '0.1.0+milestones' -or $p.sptCompatibility -ne '~4.1.0' -or $p.totalFiniteOffers -ne 15) { throw 'M6 release metadata drifted.' }
           if ($p.sourceHeadSha -ne $expectedHead) { throw "RC source authority mismatch: $($p.sourceHeadSha) != $expectedHead" }
           if ($p.sourceHeadSha -eq '053a62ff5f1cb545f13bc89a96bba3acd319a823') { throw 'Historical frozen Trader head must not be used as canonical PR #328 RC source.' }
           if ($p.questCount -ne 43 -or $p.frozenBaselineQuestCount -ne 31 -or $p.m3OperationQuestCount -ne 12 -or $p.baselineOffers -ne 4 -or $p.milestoneOffers -ne 8 -or $p.relationshipOffers -ne 3) {
@@ -125,7 +126,7 @@ jobs:
               throw "Trader startup/registration error detected.`n$combined"
             }
             foreach ($required in @(
-              'Mod: Admiral Trader version: 0.1.0',
+              'Mod: Admiral Trader version: 0.1.0+milestones',
               'SPT 4.1.5',
               'Admiral Trader registered with id d5c27bb3169f8dfbc13f6b69',
               'Registered 43 authored Admiral quests',
@@ -142,7 +143,7 @@ jobs:
       - name: Upload canonical active-head install-ready RC
         uses: actions/upload-artifact@v4
         with:
-          name: Admiral-Trader-SPT415-RC-${{ github.event.pull_request.head.sha || github.sha }}
+          name: Admiral-Trader-0.1.0-milestones-SPT415-RC-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             build/trader-rc/*.zip
             build/trader-rc/*.zip.sha256

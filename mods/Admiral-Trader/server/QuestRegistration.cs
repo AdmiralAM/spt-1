@@ -61,10 +61,23 @@ public sealed class AdmiralQuestRegistration(
         ValidateQuests(quests);
         PreflightQuestIds(quests);
 
-        foreach (var (questId, quest) in quests)
-            templateTable.Quests.Add(questId, quest);
+        List<MongoId> addedQuestIds = [];
+        try
+        {
+            foreach (var (questId, quest) in quests)
+            {
+                templateTable.Quests.Add(questId, quest);
+                addedQuestIds.Add(questId);
+            }
 
-        RegisterQuestLocales(modPath, quests);
+            RegisterQuestLocales(modPath, quests);
+        }
+        catch
+        {
+            foreach (MongoId questId in addedQuestIds)
+                templateTable.Quests.Remove(questId);
+            throw;
+        }
         logger.Success($"Registered {quests.Count} authored Admiral quests");
         return Task.CompletedTask;
     }

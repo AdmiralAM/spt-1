@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "status": "release-candidate",
+  "product": "Admiral Trader",
+  "version": "0.1.0+milestones",
+  "sptCompatibility": "~4.1.0",
+  "exactValidationBaseline": "4.1.5",
+  "scopeFreeze": {
+    "quests": 43,
+    "offers": 15,
+    "baselineOffers": 4,
+    "relationshipOffers": 3,
+    "milestoneOffers": 8,
+    "newQuests": 0,
+    "newOffers": 0,
+    "newMechanics": 0,
+    "newDependencies": 0
+  },
+  "profileSafety": {
+    "directProfileWrites": false,
+    "persistentTraderIdPreserved": true,
+    "persistentQuestIdsPreserved": true,
+    "persistentOfferIdsPreserved": true,
+    "relationshipProjection": "requester-scoped cloned assort only",
+    "missingProfileFallback": "LL1 finite stock"
+  },
+  "package": {
+    "canonicalInstallDirectory": "SPT_Runtime/user/mods/Admiral-Trader",
+    "legacyDirectoryRemovedBeforeInstall": "SPT_Runtime/user/mods/Admiral Trader",
+    "upgradeRequiresDirectoryReplacement": true,
+    "cleanRemovalOwnsProfileFiles": false,
+    "fileInventory": "admiral-trader-package-files.json"
+  },
+  "requiredEvidence": {
+    "traderOnlyExactRuntime": true,
+    "traderEconomyExactRuntime": true,
+    "cleanInstallSimulation": true,
+    "upgradeSimulation": true,
+    "cleanRemovalSimulation": true,
+    "exactHeadArtifact": true,
+    "finalPhysicalGate": true
+  },
+  "stableClaimAllowed": false
+}
