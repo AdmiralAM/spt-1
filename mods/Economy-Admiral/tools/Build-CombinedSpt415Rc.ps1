@@ -19,10 +19,13 @@ $traderSource = Join-Path $traderCandidates[0].FullName 'SPT_Runtime/user/mods/A
 
 $runtimeRoot = if (Test-Path (Join-Path $SptRoot 'SPTarkov.Server.Core.dll')) { (Resolve-Path $SptRoot).Path } else { (Resolve-Path (Join-Path $SptRoot 'SPT_Runtime')).Path }
 $managedRoot = Join-Path (Split-Path $runtimeRoot -Parent) 'EscapeFromTarkov_Data/Managed'
-if (-not (Test-Path (Join-Path $managedRoot 'UnityEngine.CoreModule.dll') -PathType Leaf)) { throw "Exact EFT Unity managed directory is missing: $managedRoot" }
 dotnet build (Join-Path $economyRoot 'server/Economy-Admiral.csproj') -c Release --nologo "-p:SptRuntimeLibDir=$runtimeRoot"
 if ($LASTEXITCODE -ne 0) { throw 'Economy exact-runtime server build failed.' }
-dotnet build (Join-Path $economyRoot 'client/Economy-Admiral.Client.csproj') -c Release --nologo "-p:UnityManagedLibDir=$managedRoot"
+if (Test-Path (Join-Path $managedRoot 'UnityEngine.CoreModule.dll') -PathType Leaf) {
+    dotnet build (Join-Path $economyRoot 'client/Economy-Admiral.Client.csproj') -c Release --nologo "-p:UnityManagedLibDir=$managedRoot"
+} else {
+    dotnet build (Join-Path $economyRoot 'client/Economy-Admiral.Client.csproj') -c Release --nologo
+}
 if ($LASTEXITCODE -ne 0) { throw 'Economy client build failed.' }
 
 $packageRoot = Join-Path $OutputDirectory "Admiral-Trader-0.1.0-milestones-Economy-0.1.0-SPT415-RC-$head"
