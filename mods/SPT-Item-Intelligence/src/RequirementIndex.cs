@@ -48,9 +48,10 @@ namespace SPTItemIntelligence
 
     public sealed class OwnedTemplateCount
     {
-        public OwnedTemplateCount(string templateId, int count) { TemplateId = RequirementContribution.NormalizeId(templateId); Count = Math.Max(0, count); if (TemplateId.Length == 0) throw new ArgumentException("An owned count requires a template id.", nameof(templateId)); }
+        public OwnedTemplateCount(string templateId, int count, int foundInRaidCount = 0) { TemplateId = RequirementContribution.NormalizeId(templateId); Count = Math.Max(0, count); FoundInRaidCount = Math.Min(Count, Math.Max(0, foundInRaidCount)); if (TemplateId.Length == 0) throw new ArgumentException("An owned count requires a template id.", nameof(templateId)); }
         public string TemplateId { get; }
         public int Count { get; }
+        public int FoundInRaidCount { get; }
     }
 
     public sealed class RequirementProjection
@@ -68,14 +69,14 @@ namespace SPTItemIntelligence
     }
 
     public interface IRequirementDataProjector { RequirementProjection Project(RequirementDataEnvelope snapshot); }
-    public sealed class RequirementIndexOptions { public bool IncludeFutureQuests { get; set; } = true; public bool IncludeHideout { get; set; } = true; }
+    public sealed class RequirementIndexOptions { public bool IncludeCurrentQuests { get; set; } = true; public bool IncludeFutureQuests { get; set; } = true; public bool IncludeHideout { get; set; } = true; }
 
     public sealed class RequirementIndexEntry
     {
         internal static readonly RequirementIndexEntry Empty = new RequirementIndexEntry(string.Empty, 0, 0, 0, 0, 0, 0, RequirementReasonFlags.None, null);
-        internal RequirementIndexEntry(string templateId, int questNeededNow, int questNeededLater, int hideoutNeeded, int keepCount, int ownedCount, int surplusCount, RequirementReasonFlags reasons, IEnumerable<RequirementDetail> details)
+        internal RequirementIndexEntry(string templateId, int questNeededNow, int questNeededLater, int hideoutNeeded, int keepCount, int ownedCount, int surplusCount, RequirementReasonFlags reasons, IEnumerable<RequirementDetail> details, ItemRequirementAllocation allocation = null)
         {
-            TemplateId = templateId; QuestNeededNow = questNeededNow; QuestNeededLater = questNeededLater; HideoutNeeded = hideoutNeeded; KeepCount = keepCount; OwnedCount = ownedCount; SurplusCount = surplusCount; Reasons = reasons;
+            Allocation = allocation ?? new ItemRequirementAllocation(ownedCount, 0, questNeededNow, questNeededLater, hideoutNeeded, 0, 0); TemplateId = templateId; QuestNeededNow = questNeededNow; QuestNeededLater = questNeededLater; HideoutNeeded = hideoutNeeded; KeepCount = keepCount; OwnedCount = ownedCount; SurplusCount = surplusCount; Reasons = reasons;
             List<RequirementDetail> copied = new List<RequirementDetail>(); if (details != null) foreach (RequirementDetail detail in details) if (detail != null && detail.RemainingCount > 0 && detail.Label.Length > 0) copied.Add(detail); Details = copied.AsReadOnly();
         }
         public string TemplateId { get; }
@@ -87,6 +88,7 @@ namespace SPTItemIntelligence
         public int SurplusCount { get; }
         public RequirementReasonFlags Reasons { get; }
         public IReadOnlyList<RequirementDetail> Details { get; }
+        public ItemRequirementAllocation Allocation { get; }
         public bool RequiresFoundInRaid => (Reasons & RequirementReasonFlags.FoundInRaid) != 0;
         public bool HasRequirement => KeepCount > 0;
     }
@@ -110,77 +112,58 @@ namespace SPTItemIntelligence
         {
             if (projection == null) throw new ArgumentNullException(nameof(projection)); options = options ?? new RequirementIndexOptions();
             Dictionary<string, EntryAccumulator> accumulators = new Dictionary<string, EntryAccumulator>(StringComparer.Ordinal);
-            for (int i = 0; i < projection.Owned.Count; i++) { OwnedTemplateCount owned = projection.Owned[i]; GetOrCreate(accumulators, owned.TemplateId).OwnedCount += owned.Count; }
+            for (int i = 0; i < projection.Owned.Count; i++) { OwnedTemplateCount owned = projection.Owned[i]; EntryAccumulator accumulator = GetOrCreate(accumulators, owned.TemplateId); accumulator.OwnedCount = checked(accumulator.OwnedCount + owned.Count); accumulator.OwnedFir = checked(accumulator.OwnedFir + owned.FoundInRaidCount); }
             for (int i = 0; i < projection.Contributions.Count; i++) { RequirementContribution contribution = projection.Contributions[i]; int remaining = contribution.RemainingCount; if (remaining <= 0 || !Included(contribution.Source, options)) continue; GetOrCreate(accumulators, contribution.TemplateId).Add(contribution, remaining); }
             Dictionary<string, RequirementIndexEntry> published = new Dictionary<string, RequirementIndexEntry>(accumulators.Count, StringComparer.Ordinal);
             foreach (KeyValuePair<string, EntryAccumulator> pair in accumulators) { RequirementIndexEntry entry = pair.Value.Finish(pair.Key); if (entry.OwnedCount > 0 || entry.HasRequirement) published.Add(pair.Key, entry); }
             return new RequirementIndex(projection.GeneratedAtUnixSeconds, published);
         }
-        static bool Included(RequirementSource source, RequirementIndexOptions options) { if (source == RequirementSource.FutureQuest) return options.IncludeFutureQuests; if (source == RequirementSource.Hideout) return options.IncludeHideout; return source == RequirementSource.CurrentQuest; }
+        static bool Included(RequirementSource source, RequirementIndexOptions options) { if (source == RequirementSource.FutureQuest) return options.IncludeFutureQuests; if (source == RequirementSource.Hideout) return options.IncludeHideout; return source == RequirementSource.CurrentQuest && options.IncludeCurrentQuests; }
         static EntryAccumulator GetOrCreate(Dictionary<string, EntryAccumulator> entries, string templateId) { EntryAccumulator entry; if (!entries.TryGetValue(templateId, out entry)) { entry = new EntryAccumulator(); entries.Add(templateId, entry); } return entry; }
 
         sealed class EntryAccumulator
         {
-            readonly Dictionary<string, int> alternativeTotals = new Dictionary<string, int>(StringComparer.Ordinal);
-            readonly Dictionary<string, int> futureQuestTotals = new Dictionary<string, int>(StringComparer.Ordinal);
-            readonly List<RequirementDetail> details = new List<RequirementDetail>();
-            int additiveTotal;
-            int unlabeledFutureMaximum;
-            public int QuestNeededNow;
-            public int QuestNeededLater;
-            public int HideoutNeeded;
+            readonly List<RequirementContribution> additive = new List<RequirementContribution>();
+            readonly Dictionary<string, RequirementContribution> alternatives = new Dictionary<string, RequirementContribution>(StringComparer.Ordinal);
             public int OwnedCount;
-            public RequirementReasonFlags Reasons;
+            public int OwnedFir;
 
             public void Add(RequirementContribution contribution, int remaining)
             {
-                if (contribution.Label.Length > 0) details.Add(new RequirementDetail(contribution.Source, contribution.Label, remaining, contribution.FoundInRaidRequired));
-
-                if (contribution.Source == RequirementSource.FutureQuest && contribution.CombineMode == RequirementCombineMode.Additive)
-                {
-                    Reasons |= RequirementReasonFlags.FutureQuest;
-                    if (contribution.FoundInRaidRequired) Reasons |= RequirementReasonFlags.FoundInRaid;
-                    if (contribution.Label.Length == 0)
-                    {
-                        unlabeledFutureMaximum = Math.Max(unlabeledFutureMaximum, remaining);
-                    }
-                    else
-                    {
-                        int current;
-                        futureQuestTotals.TryGetValue(contribution.Label, out current);
-                        futureQuestTotals[contribution.Label] = current + remaining;
-                    }
-                    return;
-                }
-
-                switch (contribution.Source)
-                {
-                    case RequirementSource.CurrentQuest:
-                        QuestNeededNow += remaining; Reasons |= RequirementReasonFlags.CurrentQuest; break;
-                    case RequirementSource.FutureQuest:
-                        QuestNeededLater += remaining; Reasons |= RequirementReasonFlags.FutureQuest; break;
-                    case RequirementSource.Hideout:
-                        HideoutNeeded += remaining; Reasons |= RequirementReasonFlags.Hideout; break;
-                }
-                if (contribution.FoundInRaidRequired) Reasons |= RequirementReasonFlags.FoundInRaid;
-                if (contribution.CombineMode == RequirementCombineMode.Additive) { additiveTotal += remaining; return; }
-                int currentAlternative; if (!alternativeTotals.TryGetValue(contribution.AlternativeGroup, out currentAlternative) || remaining > currentAlternative) alternativeTotals[contribution.AlternativeGroup] = remaining;
+                if (contribution.CombineMode == RequirementCombineMode.Additive) { additive.Add(contribution); return; }
+                // Explicit alternatives stay alternatives; unrelated future quests are additive.
+                string key = contribution.Source + "|" + contribution.AlternativeGroup;
+                RequirementContribution prior;
+                if (!alternatives.TryGetValue(key, out prior) || remaining > prior.RemainingCount ||
+                    (remaining == prior.RemainingCount && contribution.FoundInRaidRequired && !prior.FoundInRaidRequired))
+                    alternatives[key] = contribution;
             }
 
             public RequirementIndexEntry Finish(string templateId)
             {
-                int futureReserve = unlabeledFutureMaximum;
-                foreach (KeyValuePair<string, int> quest in futureQuestTotals) futureReserve = Math.Max(futureReserve, quest.Value);
-                QuestNeededLater += futureReserve;
-
-                int keep = additiveTotal + futureReserve;
-                foreach (KeyValuePair<string, int> alternative in alternativeTotals) keep += alternative.Value;
-                int surplus = Math.Max(0, OwnedCount - keep);
-                return new RequirementIndexEntry(templateId, QuestNeededNow, QuestNeededLater, HideoutNeeded, keep, OwnedCount, surplus, Reasons, details);
+                List<RequirementContribution> selected = new List<RequirementContribution>(additive);
+                selected.AddRange(alternatives.Values);
+                selected.Sort((a, b) => { int source = a.Source.CompareTo(b.Source); return source != 0 ? source : StringComparer.Ordinal.Compare(a.Label, b.Label); });
+                int now = 0, later = 0, hideout = 0, nowFir = 0, laterFir = 0;
+                RequirementReasonFlags reasons = RequirementReasonFlags.None;
+                List<RequirementDetail> details = new List<RequirementDetail>();
+                checked
+                {
+                    foreach (RequirementContribution c in selected)
+                    {
+                        int n = c.RemainingCount;
+                        if (c.Source == RequirementSource.CurrentQuest) { now += n; if (c.FoundInRaidRequired) nowFir += n; reasons |= RequirementReasonFlags.CurrentQuest; }
+                        else if (c.Source == RequirementSource.FutureQuest) { later += n; if (c.FoundInRaidRequired) laterFir += n; reasons |= RequirementReasonFlags.FutureQuest; }
+                        else { hideout += n; reasons |= RequirementReasonFlags.Hideout; }
+                        if (c.FoundInRaidRequired) reasons |= RequirementReasonFlags.FoundInRaid;
+                        details.Add(new RequirementDetail(c.Source, c.Label, n, c.FoundInRaidRequired));
+                    }
+                }
+                ItemRequirementAllocation allocation = new ItemRequirementAllocation(OwnedCount, OwnedFir, now, later, hideout, nowFir, laterFir);
+                return new RequirementIndexEntry(templateId, now, later, hideout, allocation.Keep, OwnedCount, allocation.Surplus, reasons, details, allocation);
             }
         }
     }
-
     public sealed class RequirementIndexStore
     {
         RequirementIndex current = RequirementIndex.Empty;

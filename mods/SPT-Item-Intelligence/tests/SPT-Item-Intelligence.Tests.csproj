@@ -10,6 +10,7 @@
     <Compile Include="..\src\ItemIntelligence.cs" Link="ItemIntelligence.cs" />
     <Compile Include="..\src\SafeToSell.cs" Link="SafeToSell.cs" />
     <Compile Include="..\src\RequirementDataContract.cs" Link="RequirementDataContract.cs" />
+    <Compile Include="..\src\RequirementAllocation.cs" Link="RequirementAllocation.cs" />
     <Compile Include="..\src\RequirementIndex.cs" Link="RequirementIndex.cs" />
     <Compile Include="..\src\ItemRequirementState.cs" Link="ItemRequirementState.cs" />
     <Compile Include="..\src\ItemRelevanceRegistry.cs" Link="ItemRelevanceRegistry.cs" />

@@ -80,7 +80,7 @@ static class Phase13RuntimeBootstrapTests
         Expect(store.Get("a").Price.BestSource == PriceSource.Flea && store.Get("a").Price.TotalValue == 2000, "live flea/trader snapshot populates Value", ref assertions);
         ItemHoverText active = controller.OnHoverEnter("a");
         Expect(active.Primary == "1,000 ₽ · Therapist" && active.Secondary == "Flea: 2,000 ₽", "live cached vendor and alternate flea values reach hover formatting", ref assertions);
-        Expect(active.Status.Length == 0 && active.QuestNowLine == "Quest Now: 2/2 ✓", "live requirement fulfillment reaches hover without sell labels", ref assertions);
+        Expect(active.Status.Length == 0 && active.QuestNowLine == "Quest Now: 0/2 · FIR 0/2", "non-FIR stock does not fulfill live FIR-only requirements", ref assertions);
         ItemHoverText missingHideout = controller.OnHoverEnter("d");
         Expect(missingHideout.HideoutLine == "Hideout: 0/6" && ItemMarkerPresentation.From(missingHideout).Kind == ItemMarkerKind.Hideout,
             "numeric server hideout requirement reaches runtime marker classification", ref assertions);
@@ -157,3 +157,4 @@ static class Phase13RuntimeBootstrapTests
         public void Clear() { Current = ItemHoverText.Empty; }
     }
 }
+

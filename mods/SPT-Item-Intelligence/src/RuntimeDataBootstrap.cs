@@ -197,6 +197,7 @@ namespace SPTItemIntelligence
         static List<OwnedTemplateCount> ProjectOwned(object profile)
         {
             Dictionary<string, int> totals = new Dictionary<string, int>(StringComparer.Ordinal);
+            Dictionary<string, int> firTotals = new Dictionary<string, int>(StringComparer.Ordinal);
             object inventory = JsonNode.Get(profile, "Inventory", "inventory");
             object items = JsonNode.Get(inventory, "items", "Items");
             foreach (object item in JsonNode.Values(items))
@@ -207,11 +208,13 @@ namespace SPTItemIntelligence
                 int count = Math.Max(1, JsonNode.ReadInt(JsonNode.Get(upd, "StackObjectsCount", "stackObjectsCount"), 1));
                 int current;
                 totals.TryGetValue(templateId, out current);
-                totals[templateId] = current + count;
+                totals[templateId] = checked(current + count);
+                if (JsonNode.ReadBool(JsonNode.Get(upd, "SpawnedInSession", "spawnedInSession"), false))
+                { int fir; firTotals.TryGetValue(templateId, out fir); firTotals[templateId] = checked(fir + count); }
             }
 
             List<OwnedTemplateCount> result = new List<OwnedTemplateCount>(totals.Count);
-            foreach (KeyValuePair<string, int> pair in totals) result.Add(new OwnedTemplateCount(pair.Key, pair.Value));
+            foreach (KeyValuePair<string, int> pair in totals) { int fir; firTotals.TryGetValue(pair.Key, out fir); result.Add(new OwnedTemplateCount(pair.Key, pair.Value, fir)); }
             return result;
         }
 
@@ -247,19 +250,24 @@ namespace SPTItemIntelligence
 
                 object conditions = JsonNode.Get(JsonNode.Get(quest, "conditions", "Conditions"), "AvailableForFinish", "availableForFinish");
                 List<QuestCondition> parsed = ParseQuestConditions(conditions);
+                HashSet<string> seenConditions = new HashSet<string>(StringComparer.Ordinal);
                 for (int i = 0; i < parsed.Count; i++)
                 {
                     QuestCondition condition = parsed[i];
+                    if (condition.Id.Length > 0 && !seenConditions.Add(condition.Id)) continue;
                     if (state != null && state.IsConditionComplete(condition.Id)) continue;
-                    if (condition.Kind == "finditem" && HasMatchingHandover(parsed, condition)) continue;
                     if (condition.Kind != "handoveritem" && condition.Kind != "finditem" &&
                         condition.Kind != "leaveitematlocation" && condition.Kind != "placebeacon") continue;
 
+                    HashSet<string> seenTargets = new HashSet<string>(StringComparer.Ordinal);
                     for (int targetIndex = 0; targetIndex < condition.Targets.Count; targetIndex++)
                     {
                         string target = condition.Targets[targetIndex];
-                        if (target.Length == 0 || condition.Count <= 0) continue;
-                        output.Add(new RequirementContribution(target, source, condition.Count, 0, condition.FoundInRaid, label: questLabel));
+                        if (target.Length == 0 || condition.Count <= 0 || !seenTargets.Add(target)) continue;
+                        // Finding is observational; a matching consumptive objective owns the reserve.
+                        if (condition.Kind == "finditem" && HasMatchingConsumption(parsed, target)) continue;
+                        int satisfied = ReadSatisfied(profile, questId, condition.Id);
+                        output.Add(new RequirementContribution(target, source, condition.Count, satisfied, condition.FoundInRaid, label: questLabel));
                     }
                 }
             }
@@ -286,16 +294,24 @@ namespace SPTItemIntelligence
             return result;
         }
 
-        static bool HasMatchingHandover(List<QuestCondition> conditions, QuestCondition find)
+        static bool HasMatchingConsumption(List<QuestCondition> conditions, string target)
         {
             for (int i = 0; i < conditions.Count; i++)
             {
                 QuestCondition candidate = conditions[i];
-                if (candidate.Kind != "handoveritem" || candidate.Count != find.Count) continue;
-                for (int f = 0; f < find.Targets.Count; f++)
-                    if (candidate.Targets.Contains(find.Targets[f])) return true;
+                if (candidate.Kind != "handoveritem" && candidate.Kind != "leaveitematlocation" && candidate.Kind != "placebeacon") continue;
+                if (candidate.Targets.Contains(target)) return true;
             }
             return false;
+        }
+
+        static int ReadSatisfied(object profile, string questId, string conditionId)
+        {
+            if (conditionId.Length == 0) return 0;
+            object counter = JsonNode.Get(JsonNode.Get(profile, "TaskConditionCounters", "taskConditionCounters"), conditionId);
+            string source = JsonNode.ReadString(JsonNode.Get(counter, "sourceId", "SourceId"));
+            if (source.Length > 0 && !string.Equals(source, questId, StringComparison.OrdinalIgnoreCase)) return 0;
+            return Math.Max(0, JsonNode.ReadInt(JsonNode.Get(counter, "value", "Value"), 0));
         }
 
         void ProjectHideout(object profile, object hideoutTable, List<RequirementContribution> output)
@@ -312,11 +328,12 @@ namespace SPTItemIntelligence
                 if (!currentLevels.TryGetValue(type, out known) || level > known) currentLevels[type] = level;
             }
 
-            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "areas", "Areas"), currentLevels, output);
-            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "customAreas", "CustomAreas"), currentLevels, output);
+            HashSet<string> seenStages = new HashSet<string>(StringComparer.Ordinal);
+            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "areas", "Areas"), currentLevels, output, seenStages);
+            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "customAreas", "CustomAreas"), currentLevels, output, seenStages);
         }
 
-        void ProjectHideoutAreas(object areas, Dictionary<string, int> currentLevels, List<RequirementContribution> output)
+        void ProjectHideoutAreas(object areas, Dictionary<string, int> currentLevels, List<RequirementContribution> output, HashSet<string> seenStages)
         {
             foreach (object area in JsonNode.Values(areas))
             {
@@ -327,7 +344,7 @@ namespace SPTItemIntelligence
                 foreach (KeyValuePair<string, object> stagePair in JsonNode.Pairs(JsonNode.Get(area, "stages", "Stages")))
                 {
                     int stage = JsonNode.ReadInt(stagePair.Key, JsonNode.ReadInt(JsonNode.Get(stagePair.Value, "level", "Level"), 0));
-                    if (stage <= currentLevel) continue;
+                    if (stage <= currentLevel || !seenStages.Add(type + "|" + stage.ToString(CultureInfo.InvariantCulture))) continue;
                     foreach (object requirement in JsonNode.Values(JsonNode.Get(stagePair.Value, "requirements", "Requirements")))
                     {
                         string templateId = RequirementContribution.NormalizeId(JsonNode.ReadString(JsonNode.Get(requirement, "templateId", "TemplateId", "_tpl", "tpl")));
@@ -338,7 +355,7 @@ namespace SPTItemIntelligence
                         if (templateId == RequirementDataContract.RuntimeTraceTemplateId)
                             Trace("projector hideout stage=" + stage + " currentLevel=" + currentLevel + " type=" + requirementType + " count=" + count + " accepted=" + itemRequirement);
                         if (!itemRequirement) continue;
-                        string label = areaLabel + " L" + stage.ToString(CultureInfo.InvariantCulture);
+                        string label = areaLabel + " L" + stage.ToString(CultureInfo.InvariantCulture) + (stage == currentLevel + 1 ? " (current)" : " (future)");
                         output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count, label: label));
                     }
                 }

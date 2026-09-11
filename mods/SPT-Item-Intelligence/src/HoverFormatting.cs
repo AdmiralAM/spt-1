@@ -39,7 +39,7 @@ namespace SPTItemIntelligence
             string perSlotLine = null,
             string bestSellLine = null,
             string bestTraderLine = null,
-            string fleaPriceLine = null)
+            string fleaPriceLine = null, ItemRequirementAllocation allocation = null)
         {
             Primary = primary ?? string.Empty;
             Secondary = secondary ?? string.Empty;
@@ -54,36 +54,15 @@ namespace SPTItemIntelligence
             QuestNowFoundInRaid = Math.Min(QuestNeededNow, Math.Max(0, questNowFoundInRaid));
             QuestLaterFoundInRaid = Math.Min(QuestNeededLater, Math.Max(0, questLaterFoundInRaid));
 
-            int availableFir = OwnedFoundInRaid;
-            int availableNonFir = Math.Max(0, OwnedCount - OwnedFoundInRaid);
-
-            RequirementAllocation questNow = AllocateRequirement(
-                QuestNeededNow,
-                QuestNowFoundInRaid,
-                ref availableFir,
-                ref availableNonFir);
-            QuestNowOwned = questNow.TotalOwned;
-            QuestNowFoundInRaidOwned = questNow.FoundInRaidOwned;
-
-            RequirementAllocation hideout = AllocateRequirement(
-                HideoutNeeded,
-                0,
-                ref availableFir,
-                ref availableNonFir);
-            HideoutOwned = hideout.TotalOwned;
-
-            RequirementAllocation questLater = AllocateRequirement(
-                QuestNeededLater,
-                QuestLaterFoundInRaid,
-                ref availableFir,
-                ref availableNonFir);
-            QuestLaterOwned = questLater.TotalOwned;
-            QuestLaterFoundInRaidOwned = questLater.FoundInRaidOwned;
-
-            QuestNowMissing = QuestNeededNow - QuestNowOwned;
-            HideoutMissing = HideoutNeeded - HideoutOwned;
-            QuestLaterMissing = QuestNeededLater - QuestLaterOwned;
-
+            Allocation = allocation ?? new ItemRequirementAllocation(OwnedCount, OwnedFoundInRaid, QuestNeededNow, QuestNeededLater, HideoutNeeded, QuestNowFoundInRaid, QuestLaterFoundInRaid);
+            QuestNowOwned = Allocation.NowAllocated;
+            QuestNowFoundInRaidOwned = Allocation.NowFirAllocated;
+            HideoutOwned = Allocation.HideoutAllocated;
+            QuestLaterOwned = Allocation.LaterAllocated;
+            QuestLaterFoundInRaidOwned = Allocation.LaterFirAllocated;
+            QuestNowMissing = Allocation.NowMissing;
+            HideoutMissing = Allocation.HideoutMissing;
+            QuestLaterMissing = Allocation.LaterMissing;
             ValueLine = Primary.Length == 0 ? string.Empty : "Value: " + Primary;
             BestSellLine = bestSellLine ?? string.Empty;
             BestTraderLine = bestTraderLine ?? string.Empty;
@@ -131,6 +110,7 @@ namespace SPTItemIntelligence
                 : string.Empty;
         }
 
+        public ItemRequirementAllocation Allocation { get; }
         public string Primary { get; }
         public string Secondary { get; }
         public string Status { get; }
@@ -229,27 +209,6 @@ namespace SPTItemIntelligence
             return string.Empty;
         }
 
-        static RequirementAllocation AllocateRequirement(
-            int required,
-            int foundInRaidRequired,
-            ref int availableFir,
-            ref int availableNonFir)
-        {
-            int firRequired = Math.Min(required, Math.Max(0, foundInRaidRequired));
-            int anyRequired = Math.Max(0, required - firRequired);
-
-            int firForFir = Math.Min(availableFir, firRequired);
-            availableFir -= firForFir;
-
-            int nonFirForAny = Math.Min(availableNonFir, anyRequired);
-            availableNonFir -= nonFirForAny;
-            int anyStillMissing = anyRequired - nonFirForAny;
-            int firForAny = Math.Min(availableFir, anyStillMissing);
-            availableFir -= firForAny;
-
-            return new RequirementAllocation(firForFir + nonFirForAny + firForAny, firForFir);
-        }
-
         static bool TryLine(string line, int requestedIndex, ref int current, out string found)
         {
             found = string.Empty;
@@ -273,16 +232,6 @@ namespace SPTItemIntelligence
             return owned >= required && firOwned >= firRequired ? line + " ✓" : line;
         }
 
-        readonly struct RequirementAllocation
-        {
-            public RequirementAllocation(int totalOwned, int foundInRaidOwned)
-            {
-                TotalOwned = totalOwned;
-                FoundInRaidOwned = foundInRaidOwned;
-            }
-            public int TotalOwned { get; }
-            public int FoundInRaidOwned { get; }
-        }
     }
 
     public sealed class ItemHoverTextFormatter
@@ -326,7 +275,7 @@ namespace SPTItemIntelligence
                 ? "Per slot: " + FormatRoubles(hover.ValuePerSlot)
                 : string.Empty;
 
-            FirRequirementState fir = FirRequirementRegistry.Get(hover.TemplateId);
+            ItemRequirementAllocation truth = hover.Presentation.Requirement.Allocation;
             return new ItemHoverText(
                 primary,
                 secondary,
@@ -339,13 +288,13 @@ namespace SPTItemIntelligence
                 hover.KeepCount,
                 string.Empty,
                 FormatRequirementDetails(hover.RequirementDetails),
-                fir.OwnedFoundInRaid,
-                fir.QuestNowFoundInRaid,
-                fir.QuestLaterFoundInRaid,
+                truth.OwnedFir,
+                truth.NowFirRequired,
+                truth.LaterFirRequired,
                 perSlot,
                 bestSell,
                 bestTrader,
-                fleaPrice);
+                fleaPrice, truth);
         }
 
         static IEnumerable<string> FormatRequirementDetails(IReadOnlyList<RequirementDetail> details)

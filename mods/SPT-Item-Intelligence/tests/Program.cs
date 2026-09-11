@@ -6,8 +6,19 @@ static class Program
 {
     static int assertions;
 
-    static void Main()
+    static int Main()
     {
+        try { Run(); return 0; }
+        catch (Exception error)
+        {
+            Console.Error.WriteLine(error);
+            return 1;
+        }
+    }
+
+    static void Run()
+    {
+        ConsolidatedTruthTests.Run();
         ItemRegistry registry = ItemRegistry.CreateDefault();
         Expect(object.ReferenceEquals(ItemIntelligenceRegistry.Shared, ItemIntelligenceRegistry.Shared), "shared registry is canonical");
         Expect(registry.Resolve((object)null).Category == ItemCategory.Unknown, "null uses unknown fallback");
@@ -92,3 +103,4 @@ static class Program
     sealed class FakeTemplate { public string _id; public string _parent; public string _name; public string ShortName; public FakeProps Props; }
     sealed class FakeProps { public int Energy; }
 }
+
