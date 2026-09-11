@@ -37,6 +37,9 @@ class M6ReleaseHardeningTests(unittest.TestCase):
             self.assertIn(alias, lifecycle)
         self.assertIn("admiral-trader-package-files.json", builder)
         self.assertIn("stable-release-candidate", builder)
+        self.assertIn("removeInvalidTradersFromProfile", install)
+        self.assertIn("Leave `removeModItemsFromProfile` unchanged", install)
+        self.assertIn("d5c27bb3169f8dfbc13f6b69", install)
 
     def test_combined_candidate_uses_active_campaign(self):
         builder = (REPO / "mods/Economy-Admiral/tools/Build-CombinedSpt415Rc.ps1").read_text(encoding="utf-8")
