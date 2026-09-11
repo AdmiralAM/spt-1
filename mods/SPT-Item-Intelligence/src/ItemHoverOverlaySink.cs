@@ -324,7 +324,6 @@ namespace SPTItemIntelligence
             static readonly PropertyInfo colorProperty = imageType?.GetProperty("color");
             readonly Component image;
             readonly Color originalColor;
-            string applied;
             BackgroundView(Component image, Color originalColor) { this.image = image; this.originalColor = originalColor; }
             public static BackgroundView Create(RectTransform anchor)
             {
@@ -351,15 +350,20 @@ namespace SPTItemIntelligence
             }
             public void Apply(string hex)
             {
-                if (hex == applied) return;
                 Color color;
                 if (!ColorUtility.TryParseHtmlString(hex, out color)) return;
                 // Match the accepted Item Valuation HEX palette exactly. Alpha blending here
                 // changes every perceived tier and was the source of the runtime mismatch.
                 color.a = 1f;
+                object current = colorProperty.GetValue(image, null);
+                if (current is Color && SameColor((Color)current, color)) return;
                 colorProperty.SetValue(image, color, null);
-                applied = hex;
             }
+            static bool SameColor(Color left, Color right) =>
+                Mathf.Abs(left.r - right.r) < .002f &&
+                Mathf.Abs(left.g - right.g) < .002f &&
+                Mathf.Abs(left.b - right.b) < .002f &&
+                Mathf.Abs(left.a - right.a) < .002f;
             public void Dispose()
             {
                 try { if (image != null) colorProperty.SetValue(image, originalColor, null); }

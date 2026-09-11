@@ -31,6 +31,8 @@ static class Phase30LocalizedCardInteractionTests
             "whole-cell hover no longer drives the information card", ref assertions);
         Expect(sink.Contains("color.a = 1f") && settings.Contains("\"Background Coloring (Valuation)\", true"),
             "the accepted valuation palette is enabled by default without alpha-shifting its colors", ref assertions);
+        Expect(sink.Contains("SameColor((Color)current, color)"),
+            "valuation color is restored when EFT refreshes the native cell image", ref assertions);
         Expect(BackgroundPalette.Ammo(20) == "#526B3F" && BackgroundPalette.Ammo(21) == "#253552" && BackgroundPalette.Ammo(71) == "#5C4825",
             "ammunition retains the accepted penetration-specific thresholds and colors", ref assertions);
         Expect(sink.Contains("anchor.GetComponentsInChildren(imageType, true)") && sink.Contains("originalColor") &&
