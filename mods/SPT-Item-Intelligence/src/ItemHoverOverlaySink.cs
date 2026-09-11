@@ -69,6 +69,7 @@ namespace SPTItemIntelligence
             int stackCount = EftItemTemplateIdResolver.ResolveStackCount(itemView);
             RectTransform target = ResolveRectTransform(itemView);
             if (itemView == null || normalized.Length == 0 || target == null) return;
+            GameLanguageDetector.ObserveNativeUi(target);
 
             TrackedItemView tracked;
             if (!trackedViews.TryGetValue(itemView, out tracked))
@@ -131,7 +132,7 @@ namespace SPTItemIntelligence
             try
             {
                 Rect markerRect;
-                if (!tracked.TryGetScreenRect(out markerRect)) return;
+                if (!tracked.TryGetTooltipHotspot(out markerRect)) return;
                 Vector2 mouse = Event.current == null
                     ? new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)
                     : Event.current.mousePosition;
@@ -290,6 +291,22 @@ namespace SPTItemIntelligence
                 Vector2 max = RectTransformUtility.WorldToScreenPoint(null, corners[2]);
                 result = new Rect(min.x, Screen.height - max.y, max.x - min.x, max.y - min.y);
                 return result.width > 0 && result.height > 0;
+            }
+
+            public bool TryGetTooltipHotspot(out Rect result)
+            {
+                if (Marker != null && Marker.TryGetScreenRect(out result)) return true;
+                if (!TryGetScreenRect(out Rect cell))
+                {
+                    result = default(Rect);
+                    return false;
+                }
+
+                // Items without our marker still have one predictable, unobtrusive target:
+                // the caption strip at the top of the native item cell.
+                float height = Mathf.Clamp(cell.height * 0.24f, 16f, 24f);
+                result = new Rect(cell.xMin, cell.yMin, cell.width, height);
+                return true;
             }
 
             public void Dispose()
@@ -531,7 +548,8 @@ namespace SPTItemIntelligence
                 return haloSprite;
             }
 
-            // Original two-stroke geometry. No external sprite or font glyph.
+            // Original compact badge: dark field, semantic-color rim and check.
+            // It uses no external sprite, font glyph, asset, or copied geometry.
             static Sprite CheckmarkSprite()
             {
                 if (checkmarkSprite != null) return checkmarkSprite;
@@ -546,11 +564,16 @@ namespace SPTItemIntelligence
                 for (int x = 0; x < size; x++)
                 {
                     Vector2 p = new Vector2((x + .5f) / size, (y + .5f) / size);
-                    float d = Mathf.Min(SegmentDistance(p, new Vector2(.18f, .48f), new Vector2(.41f, .25f)),
-                        SegmentDistance(p, new Vector2(.41f, .25f), new Vector2(.84f, .78f)));
-                    byte alpha = (byte)Mathf.RoundToInt(Mathf.Clamp01((.087f - d) * size) * 255);
-                    byte ink = (byte)Mathf.RoundToInt(Mathf.Clamp01((.060f - d) * size) * 255);
-                    pixels[y * size + x] = new Color32(ink, ink, ink, alpha);
+                    Vector2 center = p - new Vector2(.5f, .5f);
+                    float radius = center.magnitude;
+                    float check = Mathf.Min(SegmentDistance(p, new Vector2(.22f, .50f), new Vector2(.43f, .30f)),
+                        SegmentDistance(p, new Vector2(.43f, .30f), new Vector2(.79f, .69f)));
+                    float edgeAlpha = Mathf.Clamp01((.49f - radius) * size);
+                    bool rim = radius >= .37f;
+                    bool ink = check <= .068f;
+                    if (edgeAlpha <= 0f) pixels[y * size + x] = new Color32(0, 0, 0, 0);
+                    else if (rim || ink) pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(edgeAlpha * 255f));
+                    else pixels[y * size + x] = new Color32(17, 21, 24, (byte)Mathf.RoundToInt(edgeAlpha * 245f));
                 }
                 texture.SetPixels32(pixels);
                 texture.Apply(false, true);

@@ -64,35 +64,35 @@ namespace SPTItemIntelligence
             QuestNowMissing = Allocation.NowMissing;
             HideoutMissing = Allocation.HideoutMissing;
             QuestLaterMissing = Allocation.LaterMissing;
-            ValueLine = Primary.Length == 0 ? string.Empty : "Value: " + Primary;
+            ValueLine = Primary.Length == 0 ? string.Empty : GameUiText.T("Value: ", "Цена: ") + Primary;
             BestSellLine = bestSellLine ?? string.Empty;
             BestTraderLine = bestTraderLine ?? string.Empty;
             FleaPriceLine = fleaPriceLine ?? string.Empty;
             QuestNowLine = RequirementLine(
-                "Quest Now", QuestNowOwned, QuestNeededNow, QuestNowFoundInRaidOwned, QuestNowFoundInRaid);
-            HideoutLine = RequirementLine("Hideout", HideoutOwned, HideoutNeeded, 0, 0);
+                GameUiText.T("Active quest", "Активный квест"), QuestNowOwned, QuestNeededNow, QuestNowFoundInRaidOwned, QuestNowFoundInRaid);
+            HideoutLine = RequirementLine(GameUiText.T("Hideout", "Убежище"), HideoutOwned, HideoutNeeded, 0, 0);
             QuestLaterLine = RequirementLine(
-                "Quest Later", QuestLaterOwned, QuestNeededLater, QuestLaterFoundInRaidOwned, QuestLaterFoundInRaid);
-            KeepLine = CountLine("Keep", KeepCount);
+                GameUiText.T("Future quest", "Будущий квест"), QuestLaterOwned, QuestNeededLater, QuestLaterFoundInRaidOwned, QuestLaterFoundInRaid);
+            KeepLine = CountLine(GameUiText.T("Keep", "Оставить"), KeepCount);
             PerSlotLine = perSlotLine ?? string.Empty;
 
             ItemRelevanceState relevance = modules.CraftBarter ? ItemRelevanceRegistry.Get(TemplateId) : ItemRelevanceState.Empty;
             SummaryLine = allocation == null ? string.Empty :
-                (allocation.Coverage == RequirementCoverage.NotNeeded ? "Not Needed" : allocation.Coverage == RequirementCoverage.Enough ? "Enough" : "Need More ×" + allocation.Missing.ToString(CultureInfo.InvariantCulture)) +
-                (allocation.MustKeep ? " · Keep ×" + allocation.Keep.ToString(CultureInfo.InvariantCulture) : string.Empty);
-            SummaryOwnedLine = "Owned ×" + OwnedCount.ToString(CultureInfo.InvariantCulture) + " · FIR ×" + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture);
+                (allocation.Coverage == RequirementCoverage.NotNeeded ? GameUiText.T("Not Needed", "Не нужен") : allocation.Coverage == RequirementCoverage.Enough ? GameUiText.T("Enough", "Достаточно") : GameUiText.T("Need More ×", "Нужно ещё ×") + allocation.Missing.ToString(CultureInfo.InvariantCulture)) +
+                (allocation.MustKeep ? GameUiText.T(" · Keep ×", " · Оставить ×") + allocation.Keep.ToString(CultureInfo.InvariantCulture) : string.Empty);
+            SummaryOwnedLine = GameUiText.T("Owned ×", "В наличии ×") + OwnedCount.ToString(CultureInfo.InvariantCulture) + GameUiText.T(" · FIR ×", " · Найдено в рейде ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture);
             string ownedLine = OwnedFoundInRaid > 0
-                ? "Owned ×" + OwnedCount.ToString(CultureInfo.InvariantCulture) + " · FIR ×" + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture)
-                : CountLine("Owned", OwnedCount);
+                ? GameUiText.T("Owned ×", "В наличии ×") + OwnedCount.ToString(CultureInfo.InvariantCulture) + GameUiText.T(" · FIR ×", " · Найдено в рейде ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture)
+                : CountLine(GameUiText.T("Owned", "В наличии"), OwnedCount);
             if (relevance.OnYouCount > 0)
             {
                 ownedLine = (ownedLine.Length == 0 ? string.Empty : ownedLine + " · ") +
-                    "On You ×" + relevance.OnYouCount.ToString(CultureInfo.InvariantCulture);
+                    GameUiText.T("On You ×", "При себе ×") + relevance.OnYouCount.ToString(CultureInfo.InvariantCulture);
             }
             OwnedLine = ownedLine;
             BestSourceLine = bestSource ?? string.Empty;
-            CraftLine = CountLine("Craft", relevance.CraftCount);
-            BarterLine = CountLine("Barter", relevance.BarterCount);
+            CraftLine = CountLine(GameUiText.T("Craft", "Крафт"), relevance.CraftCount);
+            BarterLine = CountLine(GameUiText.T("Barter", "Бартер"), relevance.BarterCount);
 
             List<string> details = new List<string>();
             List<string> detailed = new List<string>();
@@ -111,7 +111,7 @@ namespace SPTItemIntelligence
             DetailedRequirementLines = detailed.GetRange(0, detailedVisible).AsReadOnly();
             DetailedRequirementCount = detailedVisible;
             MoreRequirementsLine = detailed.Count > detailedVisible
-                ? "Requirements: +" + (detailed.Count - detailedVisible).ToString(CultureInfo.InvariantCulture) + " more"
+                ? GameUiText.T("Requirements: +", "Требования: +") + (detailed.Count - detailedVisible).ToString(CultureInfo.InvariantCulture) + GameUiText.T(" more", " ещё")
                 : string.Empty;
         }
 
@@ -185,14 +185,16 @@ namespace SPTItemIntelligence
             if (TryLine(SummaryLine, requestedIndex, ref current, out found)) return found;
             if (SummaryLine.Length > 0 && TryLine(SummaryOwnedLine, requestedIndex, ref current, out found)) return found;
 
-            if (mode == ItemTooltipMode.Full)
+            if (mode == ItemTooltipMode.Normal || mode == ItemTooltipMode.Full)
             {
-                if (TryLine(BestSellLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(BestTraderLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(FleaPriceLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(PerSlotLine, requestedIndex, ref current, out found)) return found;
-                if (TryLine(CraftLine, requestedIndex, ref current, out found)) return found;
-                if (TryLine(BarterLine, requestedIndex, ref current, out found)) return found;
+                if (mode == ItemTooltipMode.Full)
+                {
+                    if (TryLine(CraftLine, requestedIndex, ref current, out found)) return found;
+                    if (TryLine(BarterLine, requestedIndex, ref current, out found)) return found;
+                }
             }
             else if (TryLine(ValueLine, requestedIndex, ref current, out found))
             {
@@ -215,7 +217,7 @@ namespace SPTItemIntelligence
                     if (TryLine(selected[i], requestedIndex, ref current, out found)) return found;
                 if (mode == ItemTooltipMode.Detailed && TryLine(MoreRequirementsLine, requestedIndex, ref current, out found)) return found;
             }
-            if (current == 0 && requestedIndex == 0) return "No active requirements";
+            if (current == 0 && requestedIndex == 0) return GameUiText.T("No active requirements", "Нет активных требований");
             return string.Empty;
         }
 
@@ -238,7 +240,7 @@ namespace SPTItemIntelligence
             if (required <= 0) return string.Empty;
             string line = label + ": " + owned.ToString(CultureInfo.InvariantCulture) + "/" + required.ToString(CultureInfo.InvariantCulture);
             if (firRequired > 0)
-                line += " · FIR " + firOwned.ToString(CultureInfo.InvariantCulture) + "/" + firRequired.ToString(CultureInfo.InvariantCulture);
+                line += GameUiText.T(" · FIR ", " · Найдено в рейде ") + firOwned.ToString(CultureInfo.InvariantCulture) + "/" + firRequired.ToString(CultureInfo.InvariantCulture);
             return owned >= required && firOwned >= firRequired ? line + " ✓" : line;
         }
 
@@ -259,11 +261,11 @@ namespace SPTItemIntelligence
                 hover = new ItemHoverState(new ItemPresentationState(hover.TemplateId, hover.Presentation.Requirement, null));
 
             bool fleaPreferred = valueMode == ItemValueMode.Flea;
-            string trader = string.IsNullOrWhiteSpace(hover.BestTraderName) ? "Vendor" : hover.BestTraderName.Trim();
+            string trader = string.IsNullOrWhiteSpace(hover.BestTraderName) ? GameUiText.T("Trader", "Торговец") : hover.BestTraderName.Trim();
             long preferredValue = fleaPreferred ? hover.FleaUnitValue : hover.TraderUnitValue;
-            string preferredSource = fleaPreferred ? "Flea" : trader;
+            string preferredSource = fleaPreferred ? GameUiText.T("Flea", "Барахолка") : trader;
             long alternateValue = fleaPreferred ? hover.TraderUnitValue : hover.FleaUnitValue;
-            string alternateSource = fleaPreferred ? trader : "Flea";
+            string alternateSource = fleaPreferred ? trader : GameUiText.T("Flea", "Барахолка");
             bool useAlternateAsPrimary = preferredValue <= 0 && alternateValue > 0;
             long unitValue = useAlternateAsPrimary ? alternateValue : preferredValue;
             string source = useAlternateAsPrimary ? alternateSource : preferredSource;
@@ -272,20 +274,14 @@ namespace SPTItemIntelligence
                 ? alternateSource + ": " + FormatRoubles(alternateValue)
                 : string.Empty;
 
-            string bestSell = string.Empty;
-            if (hover.BestPriceSource == PriceSource.Flea && hover.FleaUnitValue > 0)
-                bestSell = "Best sell: Flea";
-            else if (hover.BestPriceSource == PriceSource.Trader && hover.TraderUnitValue > 0)
-                bestSell = "Best sell: " + trader;
-
             string bestTrader = hover.TraderUnitValue > 0
-                ? "Best trader: " + trader + " · " + FormatRoubles(hover.TraderUnitValue)
+                ? GameUiText.T("Trader: ", "Торговец: ") + trader + " · " + FormatRoubles(hover.TraderUnitValue)
                 : string.Empty;
             string fleaPrice = hover.FleaUnitValue > 0
-                ? "Flea: " + FormatRoubles(hover.FleaUnitValue)
+                ? GameUiText.T("Flea: ", "Барахолка: ") + FormatRoubles(hover.FleaUnitValue)
                 : string.Empty;
             string perSlot = hover.ValuePerSlot > 0
-                ? "Per slot: " + FormatRoubles(hover.ValuePerSlot)
+                ? GameUiText.T("Per slot: ", "За слот: ") + FormatRoubles(hover.ValuePerSlot)
                 : string.Empty;
 
             ItemRequirementAllocation truth = hover.Presentation.Requirement.Allocation;
@@ -305,7 +301,7 @@ namespace SPTItemIntelligence
                 truth.NowFirRequired,
                 truth.LaterFirRequired,
                 perSlot,
-                bestSell,
+                string.Empty,
                 bestTrader,
                 fleaPrice, truth, modules);
         }
@@ -334,10 +330,10 @@ namespace SPTItemIntelligence
             for (int i = 0; i < ordered.Count; i++)
             {
                 DetailAggregate detail = ordered[i];
-                string prefix = detail.Source == RequirementSource.CurrentQuest ? "Now" :
-                    detail.Source == RequirementSource.FutureQuest ? "Later" : "Hideout";
+                string prefix = detail.Source == RequirementSource.CurrentQuest ? GameUiText.T("Now", "Сейчас") :
+                    detail.Source == RequirementSource.FutureQuest ? GameUiText.T("Later", "Позже") : GameUiText.T("Hideout", "Убежище");
                 string line = prefix + ": " + detail.Label + " ×" + detail.RemainingCount.ToString(CultureInfo.InvariantCulture);
-                if (detail.FoundInRaidRequired) line += " · FIR";
+                if (detail.FoundInRaidRequired) line += GameUiText.T(" · FIR", " · Найдено в рейде");
                 yield return line;
             }
         }
@@ -368,6 +364,7 @@ namespace SPTItemIntelligence
         readonly Func<ItemValueMode> valueModeProvider;
         readonly Func<ModuleSelection> modulesProvider;
         int lastModuleKey = -1;
+        int lastLanguageKey = -1;
         readonly Dictionary<ItemPresentationState, ItemHoverText> cache = new Dictionary<ItemPresentationState, ItemHoverText>(ReferenceComparer.Instance);
         ItemPresentationIndex lastIndex;
         ItemValueMode lastValueMode;
@@ -387,13 +384,15 @@ namespace SPTItemIntelligence
             ItemValueMode valueMode = valueModeProvider();
             ModuleSelection modules = modulesProvider();
 
-            if (!object.ReferenceEquals(lastIndex, index) || !hasValueMode || valueMode != lastValueMode || lastModuleKey != modules.Key)
+            int languageKey = GameUiText.LanguageKey;
+            if (!object.ReferenceEquals(lastIndex, index) || !hasValueMode || valueMode != lastValueMode || lastModuleKey != modules.Key || lastLanguageKey != languageKey)
             {
                 cache.Clear();
                 lastIndex = index;
                 lastValueMode = valueMode;
                 hasValueMode = true;
                 lastModuleKey = modules.Key;
+                lastLanguageKey = languageKey;
             }
 
             ItemHoverText text;

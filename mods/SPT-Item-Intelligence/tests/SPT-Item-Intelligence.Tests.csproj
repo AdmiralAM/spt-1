@@ -7,6 +7,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\src\GameUiText.cs" Link="GameUiText.cs" />
     <Compile Include="..\src\BackgroundPalette.cs" Link="BackgroundPalette.cs" />
     <Compile Include="..\src\ModuleSelection.cs" Link="ModuleSelection.cs" />
     <Compile Include="..\src\ItemIntelligence.cs" Link="ItemIntelligence.cs" />

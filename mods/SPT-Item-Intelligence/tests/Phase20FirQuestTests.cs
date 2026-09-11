@@ -82,7 +82,7 @@ static class Phase20FirQuestTests
             questLaterFoundInRaid: fir.QuestLaterFoundInRaid);
         Expect(text.QuestNowOwned == 2 && text.QuestNowFoundInRaidOwned == 2,
             "non-FIR owned items cannot satisfy an FIR current quest requirement", ref assertions);
-        Expect(text.QuestNowLine == "Quest Now: 2/5 · FIR 2/5", "current quest line exposes FIR shortfall", ref assertions);
+        Expect(text.QuestNowLine == "Active quest: 2/5 · FIR 2/5", "current quest line exposes FIR shortfall", ref assertions);
         Expect(text.QuestLaterOwned == 3 && text.QuestLaterFoundInRaidOwned == 0,
             "remaining non-FIR inventory can satisfy only the unrestricted part of future reserve", ref assertions);
         Expect(text.OwnedLine == "Owned ×5 · FIR ×2", "Detailed/Full owned line exposes FIR stock", ref assertions);

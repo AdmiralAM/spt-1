@@ -40,8 +40,8 @@ namespace SPTItemIntelligence
 
         public ItemIntelligenceUiSettings(ConfigFile config)
         {
-            markers = Module(config, "Markers", true, "Show one contextual item-cell checkmark.");
-            tooltips = Module(config, "Tooltips", true, "Show the compact information card on item hover.");
+            markers = Module(config, "Markers", true, "Show one contextual item-cell intelligence badge.");
+            tooltips = Module(config, "Tooltips", true, "Show the compact information card when hovering the badge, or the item caption when no badge is present.");
             quests = Module(config, "Quests", true, "Include active quest requirements.");
             futureQuests = Module(config, "Future Quests", true, "Include independent future quest requirements.");
             hideout = Module(config, "Hideout", true, "Include incomplete current and future hideout upgrades.");
@@ -49,7 +49,7 @@ namespace SPTItemIntelligence
             relevance = Module(config, "Craft and Barter", true, "Show craft and barter relevance.");
             backgrounds = Module(config, "Background Coloring", false, "Optional economic/category tint. Disable legacy Item Valuation before enabling; no external mod is required.");
             tooltipMode = config.Bind("Tooltip", "Mode", ItemTooltipMode.Normal,
-                "Minimal: Value + Keep. Normal: adds Quest Now, Hideout and Quest Later with owned/required progress. Detailed: adds owned and up to three concrete targets. Full: shows every concrete target and FIR detail. Internal ids and sell/surplus decisions are never shown.");
+                "Minimal: summary/value only. Normal: regular-play card with owned/FIR, trader/flea/per-slot prices and active quest, hideout and future quest progress. Detailed: adds up to three concrete targets. Full: shows all concrete targets plus craft/barter relevance. Internal ids and sell recommendations are never shown.");
             valueMode = config.Bind("Tooltip", "Value Source", ItemValueMode.Vendor,
                 "Vendor: show the highest NPC trader sell value. Flea: show the flea-market value.");
             tooltipScale = config.Bind("Tooltip", "Scale", 1.00f,

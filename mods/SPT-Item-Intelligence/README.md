@@ -30,8 +30,7 @@ Current stable v1.0.0 presentation contracts include:
 - requirement-priority states: `Quest Now → Hideout → Quest Later → Default`;
 - compact Minimal / Normal / Detailed / Full tooltip modes;
 - owned-versus-required counts, FIR-aware quest allocation, `Keep ×N`, and concrete quest/hideout targets;
-- Full-mode sell decision rows: `Best sell`, `Best trader`, `Flea`, and `Per slot`;
-- best sell destination derived from already-precomputed trader/flea pricing state rather than recalculated during hover;
+- compact trader, flea, and per-slot price rows without a redundant best-sell recommendation;
 - price-amount bands: below 50k white, 50k+ green, 100k+ red, 250k+ gold;
 - compact Full-only `Craft ×N` / `Barter ×N` relevance;
 - fallback to the available Flea/Trader source when the preferred source has no price;
@@ -52,11 +51,11 @@ Craft/barter relevance and trader/flea valuation are precomputed while the exist
 
 ## UI lifecycle and performance
 
-Supported `ItemView`/`ItemCell` lifecycle hooks register live cells and remove them during cleanup. v1.1 uses one contextual checkmark and one card: the card is available from the item cell even when the marker layer is disabled. Irrelevant value-only items do not receive a marker.
+Supported `ItemView`/`ItemCell` lifecycle hooks register live cells and remove them during cleanup. v1.1 uses one contextual badge and one card. The badge is the card's hover target; when no badge is present, only the native caption strip at the top of the item cell acts as the fallback target. Irrelevant value-only items do not receive a marker.
 
 Network requests, reflection discovery, requirement aggregation, valuation work, and expensive text formatting are kept out of per-frame render paths. Cached state is invalidated only when the relevant source data or UI settings change. Full-mode display stripping and rich-text price/semantic strings use bounded caches so steady-state GUI repaint reuses prepared strings instead of rebuilding them every frame.
 
-The v1.1 marker is an original procedural checkmark sprite backed by one shared/static texture; it does not copy an AQC sprite or depend on a font glyph. The optional halo also uses one shared/static texture.
+The v1.1 marker is an original procedural dark badge with a semantic-color rim and check, backed by one shared/static texture; it does not copy an AQC sprite or depend on a font glyph. The optional halo also uses one shared/static texture. The information card follows the game's Russian or English UI language; other game languages use English.
 
 ## Version and naming
 

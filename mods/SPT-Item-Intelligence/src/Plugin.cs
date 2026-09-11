@@ -26,6 +26,7 @@ namespace SPTItemIntelligence
             if (ItemIntelligenceRegistry.Shared == null) throw new InvalidOperationException("Item Intelligence Admiral registry initialization failed.");
 
             PresentationStore = new ItemPresentationStore();
+            GameUiText.SetRussian(GameLanguageDetector.DetectRussian());
             uiSettings = new ItemIntelligenceUiSettings(Config);
             ItemHoverTextCache textCache = new ItemHoverTextCache(valueModeProvider: () => uiSettings.ValueMode, modulesProvider: () => uiSettings.Modules);
             hoverSink = new ItemHoverOverlaySink(uiSettings, PresentationStore, textCache, CreateFallback);
@@ -41,7 +42,7 @@ namespace SPTItemIntelligence
             uiSettings.Changed += ApplyModules;
             ApplyModules();
 
-            Logger.LogInfo("Item Intelligence Admiral v1.1 development loaded");
+            Logger.LogInfo("Item Intelligence Admiral v1.1 development loaded; UI language=" + (GameUiText.Russian ? "ru" : "en"));
         }
 
         void ApplyModules()
