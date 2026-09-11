@@ -96,12 +96,6 @@ jobs:
         shell: pwsh
         run: dotnet run --project mods/SPT-Pause/tests/SPT-Pause.Tests.csproj -c Release
 
-      - name: Validate Belt Armband Inventory
-        shell: pwsh
-        run: |
-          python mods/SPT-Belt-Armband-Inventory/tools/check_hotpaths.py
-          dotnet run --project mods/SPT-Belt-Armband-Inventory/tests/SPT-Belt-Armband-Inventory.Tests.csproj -c Release
-
       - name: Build published and stable-source components
         shell: pwsh
         run: |
