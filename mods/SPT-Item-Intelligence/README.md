@@ -46,6 +46,8 @@ The v1.1 target is recorded in Issue #338 and centers on modular F12 control, co
 
 The server publishes one bounded snapshot of authoritative SPT profile/database data. The client fetches that snapshot outside the render hot path, builds immutable/cached requirement, price, relevance, and presentation indexes, and refreshes registered item markers from those cached states.
 
+When Tyfon Hideout In Progress is installed, Item Intelligence also reads that profile's persisted `areaProgresses`. Deposited components reduce only the matching station's current upgrade requirement. They are already committed, so they are excluded from owned/FIR inventory and cannot satisfy a quest, another station, or a future hideout level. Missing or invalid companion data falls back to the native SPT requirement model without making Item Intelligence unavailable.
+
 `SPT profile/database → server snapshot → serialized payload → client bootstrap → cached indexes → presentation classification`
 
 Craft/barter relevance and trader/flea valuation are precomputed while the existing snapshot is built. No additional endpoint, hover request, per-frame inventory scan, database polling, or transaction execution is used.

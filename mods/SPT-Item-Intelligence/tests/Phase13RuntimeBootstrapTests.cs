@@ -44,7 +44,8 @@ static class Phase13RuntimeBootstrapTests
                     ["stages"] = new Dictionary<string, object>
                     {
                         ["1"] = Stage("OLD", 9),
-                        ["2"] = Stage("D", 6)
+                        ["2"] = Stage("D", 6),
+                        ["3"] = Stage("D", 5)
                     }
                 }
             }
@@ -54,7 +55,14 @@ static class Phase13RuntimeBootstrapTests
         {
             new ItemPriceSnapshotEntry("A", 1000, "Therapist", 2000, 500, 2, 1)
         };
-        RequirementDataEnvelope envelope = new RequirementDataEnvelope(123, profile, quests, hideout, prices);
+        Dictionary<string, object> hideoutProgress = new Dictionary<string, object>
+        {
+            ["areaProgresses"] = new Dictionary<string, object>
+            {
+                ["2"] = new Dictionary<string, object> { ["D"] = 4 }
+            }
+        };
+        RequirementDataEnvelope envelope = new RequirementDataEnvelope(123, profile, quests, hideout, prices, hideoutProgress);
         RequirementProjection projection = new SptRequirementDataProjector().Project(envelope);
         Expect(projection.Owned.Count == 2, "owned templates projected", ref assertions);
         RequirementIndex index = RequirementIndexBuilder.Build(projection);
@@ -63,7 +71,8 @@ static class Phase13RuntimeBootstrapTests
         Expect(index.Get("a").RequiresFoundInRaid, "FIR flag projected", ref assertions);
         Expect(index.Get("b").QuestNeededNow == 0 && index.Get("b").QuestNeededLater == 0, "completed quest ignored", ref assertions);
         Expect(index.Get("c").QuestNeededLater == 4, "future quest projected", ref assertions);
-        Expect(index.Get("d").HideoutNeeded == 6, "future hideout stage projected", ref assertions);
+        Expect(index.Get("d").HideoutNeeded == 7, "deposited Hideout In Progress items reduce the current stage but not a future stage", ref assertions);
+        Expect(index.Get("d").OwnedCount == 0, "deposited items are committed and never returned to shared owned inventory", ref assertions);
         Expect(index.Get("old") == RequirementIndexEntry.Empty, "completed hideout stage ignored", ref assertions);
 
         ItemPresentationStore store = new ItemPresentationStore();
@@ -82,7 +91,7 @@ static class Phase13RuntimeBootstrapTests
         Expect(active.Primary == "1,000 ₽ · Therapist" && active.Secondary == "Flea: 2,000 ₽", "live cached vendor and alternate flea values reach hover formatting", ref assertions);
         Expect(active.Status.Length == 0 && active.QuestNowLine == "Active quest: 0/2 · FIR 0/2", "non-FIR stock does not fulfill live FIR-only requirements", ref assertions);
         ItemHoverText missingHideout = controller.OnHoverEnter("d");
-        Expect(missingHideout.HideoutLine == "Hideout: 0/6" && ItemMarkerPresentation.From(missingHideout).Kind == ItemMarkerKind.Hideout,
+        Expect(missingHideout.HideoutLine == "Hideout: 0/7" && ItemMarkerPresentation.From(missingHideout).Kind == ItemMarkerKind.Hideout,
             "numeric server hideout requirement reaches runtime marker classification", ref assertions);
         ItemHoverText unknown = controller.OnHoverEnter("unknown");
         Expect(unknown.Primary == "ITEM INTELLIGENCE" && unknown.Status == "NO REQUIREMENT DATA", "ready fallback is diagnostic", ref assertions);

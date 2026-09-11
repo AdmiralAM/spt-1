@@ -17,6 +17,11 @@ namespace SPTItemIntelligence
         }
 
         public RequirementDataEnvelope(long generatedAtUnixSeconds, object profile, object quests, object hideout, object prices)
+            : this(generatedAtUnixSeconds, profile, quests, hideout, prices, Array.Empty<object>())
+        {
+        }
+
+        public RequirementDataEnvelope(long generatedAtUnixSeconds, object profile, object quests, object hideout, object prices, object hideoutProgress)
         {
             schemaVersion = RequirementDataContract.SchemaVersion;
             this.generatedAtUnixSeconds = Math.Max(0, generatedAtUnixSeconds);
@@ -24,6 +29,7 @@ namespace SPTItemIntelligence
             this.quests = quests ?? throw new ArgumentNullException(nameof(quests));
             this.hideout = hideout ?? throw new ArgumentNullException(nameof(hideout));
             this.prices = prices ?? throw new ArgumentNullException(nameof(prices));
+            this.hideoutProgress = hideoutProgress;
         }
 
         public int schemaVersion { get; }
@@ -33,6 +39,7 @@ namespace SPTItemIntelligence
         public object quests { get; }
         public object hideout { get; }
         public object prices { get; }
+        public object hideoutProgress { get; }
     }
 
     public sealed class ItemPriceSnapshotEntry

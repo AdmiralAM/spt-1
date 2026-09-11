@@ -11,6 +11,7 @@ using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Utils;
+using System.Text.Json;
 
 namespace SPTItemIntelligence.Server;
 
@@ -59,9 +60,41 @@ public sealed class RequirementDataService(
             profile!,
             templateTable.Quests,
             hideoutTable,
-            prices);
+            prices,
+            LoadHideoutProgress(sessionId));
         cancellationToken.ThrowIfCancellationRequested();
         return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+    }
+
+    private static object LoadHideoutProgress(MongoId sessionId)
+    {
+        const string fileName = "Tyfon.HideoutInProgress.json";
+        string relative = Path.Combine("SPT_Runtime", "user", "profileData", sessionId.ToString(), fileName);
+        List<string> roots = [Environment.CurrentDirectory, AppContext.BaseDirectory];
+        foreach (string root in roots)
+        {
+            DirectoryInfo? directory = new(root);
+            for (int depth = 0; directory is not null && depth < 8; depth++, directory = directory.Parent)
+            {
+                string path = Path.Combine(directory.FullName, relative);
+                if (!File.Exists(path)) continue;
+                try
+                {
+                    return JsonSerializer.Deserialize<HideoutProgressSnapshot>(File.ReadAllText(path)) ?? EmptyHideoutProgress();
+                }
+                catch (IOException) { return EmptyHideoutProgress(); }
+                catch (UnauthorizedAccessException) { return EmptyHideoutProgress(); }
+                catch (JsonException) { return EmptyHideoutProgress(); }
+            }
+        }
+        return EmptyHideoutProgress();
+    }
+
+    private static HideoutProgressSnapshot EmptyHideoutProgress() => new();
+
+    private sealed class HideoutProgressSnapshot
+    {
+        public Dictionary<string, Dictionary<string, int>> areaProgresses { get; set; } = new();
     }
 
     private (Dictionary<MongoId, int> Craft, Dictionary<MongoId, int> Barter) BuildRelevance(CancellationToken cancellationToken)

@@ -95,7 +95,8 @@ namespace SPTItemIntelligence
 
             long generated = JsonNode.ReadLong(JsonNode.Get(root, "generatedAtUnixSeconds"), 0);
             Trace("decoder profileReady=" + (!JsonNode.IsNull(profile)) + " quests=" + CountValues(quests) + " hideoutAreas=" + CountValues(JsonNode.Get(hideout, "areas", "Areas")));
-            return new RequirementDataEnvelope(generated, profile, quests, hideout, prices);
+            object hideoutProgress = JsonNode.Get(root, "hideoutProgress");
+            return new RequirementDataEnvelope(generated, profile, quests, hideout, prices, hideoutProgress);
         }
 
         void Trace(string message)
@@ -184,7 +185,7 @@ namespace SPTItemIntelligence
             List<OwnedTemplateCount> owned = ProjectOwned(snapshot.profile);
             List<RequirementContribution> contributions = new List<RequirementContribution>();
             ProjectQuests(snapshot.profile, snapshot.quests, contributions);
-            ProjectHideout(snapshot.profile, snapshot.hideout, contributions);
+            ProjectHideout(snapshot.profile, snapshot.hideout, snapshot.hideoutProgress, contributions);
             int ownedBulbex = 0;
             for (int i = 0; i < owned.Count; i++)
                 if (owned[i].TemplateId == RequirementDataContract.RuntimeTraceTemplateId) ownedBulbex += owned[i].Count;
@@ -319,7 +320,7 @@ namespace SPTItemIntelligence
             return satisfied;
         }
 
-        void ProjectHideout(object profile, object hideoutTable, List<RequirementContribution> output)
+        void ProjectHideout(object profile, object hideoutTable, object hideoutProgress, List<RequirementContribution> output)
         {
             Dictionary<string, int> currentLevels = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             object profileHideout = JsonNode.Get(profile, "Hideout", "hideout");
@@ -334,11 +335,12 @@ namespace SPTItemIntelligence
             }
 
             HashSet<string> seenStages = new HashSet<string>(StringComparer.Ordinal);
-            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "areas", "Areas"), currentLevels, output, seenStages);
-            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "customAreas", "CustomAreas"), currentLevels, output, seenStages);
+            object areaProgresses = JsonNode.Get(hideoutProgress, "areaProgresses", "AreaProgresses");
+            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "areas", "Areas"), currentLevels, areaProgresses, output, seenStages);
+            ProjectHideoutAreas(JsonNode.Get(hideoutTable, "customAreas", "CustomAreas"), currentLevels, areaProgresses, output, seenStages);
         }
 
-        void ProjectHideoutAreas(object areas, Dictionary<string, int> currentLevels, List<RequirementContribution> output, HashSet<string> seenStages)
+        void ProjectHideoutAreas(object areas, Dictionary<string, int> currentLevels, object areaProgresses, List<RequirementContribution> output, HashSet<string> seenStages)
         {
             foreach (object area in JsonNode.Values(areas))
             {
@@ -361,7 +363,13 @@ namespace SPTItemIntelligence
                             Trace("projector hideout stage=" + stage + " currentLevel=" + currentLevel + " type=" + requirementType + " count=" + count + " accepted=" + itemRequirement);
                         if (!itemRequirement) continue;
                         string label = areaLabel + " L" + stage.ToString(CultureInfo.InvariantCulture) + (stage == currentLevel + 1 ? " (current)" : " (future)");
-                        output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count, label: label));
+                        int satisfied = 0;
+                        if (stage == currentLevel + 1)
+                        {
+                            object areaProgress = JsonNode.Get(areaProgresses, type);
+                            satisfied = Math.Min(count, Math.Max(0, JsonNode.ReadInt(JsonNode.Get(areaProgress, templateId), 0)));
+                        }
+                        output.Add(new RequirementContribution(templateId, RequirementSource.Hideout, count, satisfied, label: label));
                     }
                 }
             }
