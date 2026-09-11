@@ -11,12 +11,19 @@
     "operationQuests": 12,
     "selectedWeaponTemplates": 49,
     "relationshipOffers": 3,
-    "totalOffers": 15
+    "totalOffers": 37
   },
   "weaponRotation": {
     "authority": "weapon-family-runtime-pools.json#/stagePools",
     "rule": "Each family has nonempty Qualification, Fieldwork and Munitions pools; the three pools are pairwise disjoint and their union equals the curated family pool.",
-    "questIdsAndPrerequisitesChanged": false,
+    "questIdsAndPrerequisitesChanged": true,
+    "prerequisiteCorrection": {
+      "reason": "Seven independent weapon-family roots overloaded high-level and migrated profiles. The same 21 quests now advance through two parallel family tracks.",
+      "trackA": ["sidearms", "shotguns", "marksman-battle", "special-weapons"],
+      "trackB": ["smg-pdw", "assault-rifles", "precision-rifles"],
+      "questIdsChanged": false,
+      "objectiveOrRewardBalanceChanged": false
+    },
     "killThresholdsChanged": false
   },
   "rewardCorrections": {
@@ -79,7 +86,7 @@
       "baselineOffers": 4,
       "milestoneOffers": 8,
       "relationshipOffers": 3,
-      "totalOffers": 15
+      "totalOffers": 37
     }
   }
 }

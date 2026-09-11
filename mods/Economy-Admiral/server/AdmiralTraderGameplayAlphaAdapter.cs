@@ -13,6 +13,7 @@ public sealed record AdmiralTraderGameplayAlphaContractSummary
     public required bool SpecialWeaponsSampleOnly { get; init; }
     public required int BaselineOfferCount { get; init; }
     public required int RelationshipOfferCount { get; init; }
+    public required int CoreOfferCount { get; init; }
     public required int MilestoneOfferCount { get; init; }
     public required IReadOnlyList<AdmiralTraderOfferAdapterEvidence> Offers { get; init; }
 }
@@ -27,7 +28,8 @@ public static class AdmiralTraderGameplayAlphaAdapter
     public const int ActiveBaselineOfferCount = 4;
     public const int ActiveRelationshipOfferCount = 3;
     public const int ActiveMilestoneOfferCount = 8;
-    public const int ActiveTotalOfferCount = 15;
+    public const int ActiveCoreOfferCount = 22;
+    public const int ActiveTotalOfferCount = 37;
     public const string ExpectedProductName = "Admiral Trader";
     public const string ExpectedTraderId = "d5c27bb3169f8dfbc13f6b69";
     public const string ExpectedModGuid = "com.admiralam.spt.admiraltrader";
@@ -63,6 +65,8 @@ public static class AdmiralTraderGameplayAlphaAdapter
             $"M5 requires {ActiveRelationshipOfferCount} Relationship offers but found {summary.RelationshipOfferCount}.");
         Require(summary.MilestoneOfferCount == ActiveMilestoneOfferCount,
             $"active campaign requires {ActiveMilestoneOfferCount} Milestone offers but found {summary.MilestoneOfferCount}.");
+        Require(summary.CoreOfferCount == ActiveCoreOfferCount,
+            $"active campaign requires {ActiveCoreOfferCount} Core offers but found {summary.CoreOfferCount}.");
         Require(summary.Offers.Count == ActiveTotalOfferCount,
             $"active campaign requires {ActiveTotalOfferCount} total offers but found {summary.Offers.Count}.");
     }
@@ -76,7 +80,8 @@ public static class AdmiralTraderGameplayAlphaAdapter
         string assortJson,
         string questAssortJson,
         IEnumerable<string> authoredQuestJsonRecords,
-        string? relationshipStockJson = null)
+        string? relationshipStockJson = null,
+        string? storefrontCoreJson = null)
     {
         ValidateIdentity(campaignManifestJson, identityAssetsJson, traderBaseJson);
 
@@ -130,11 +135,20 @@ public static class AdmiralTraderGameplayAlphaAdapter
         var relationshipById = relationshipOffers.ToDictionary(x => x.OfferId, StringComparer.Ordinal);
         Require(!relationshipById.Keys.Any(baselineById.ContainsKey), "Relationship offers must not overlap Baseline offers.");
         Require(!relationshipById.Keys.Any(successIds.Contains), "Relationship offers must not overlap quest-gated Milestone offers.");
+        using var coreDoc = string.IsNullOrWhiteSpace(storefrontCoreJson) ? null : JsonDocument.Parse(storefrontCoreJson);
+        var coreById = coreDoc is null
+            ? new Dictionary<string, JsonElement>(StringComparer.Ordinal)
+            : coreDoc.RootElement.GetProperty("offers").EnumerateArray().ToDictionary(x => ReqString(x, "offerId"), StringComparer.Ordinal);
+        Require(!coreById.Keys.Any(baselineById.ContainsKey), "Core offers must not overlap Baseline offers.");
+        Require(!coreById.Keys.Any(relationshipById.ContainsKey), "Core offers must not overlap Relationship offers.");
+        Require(!coreById.Keys.Any(successIds.Contains), "Core offers must not overlap quest-gated Milestone offers.");
 
         var results = new List<AdmiralTraderOfferAdapterEvidence>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var item in assortRoot.GetProperty("items").EnumerateArray())
         {
+            if (item.TryGetProperty("parentId", out var parent) && parent.GetString() != "hideout")
+                continue;
             var offerId = ReqString(item, "_id");
             var tpl = ReqString(item, "_tpl");
             Require(seen.Add(offerId), $"duplicate offer id '{offerId}'.");
@@ -171,12 +185,23 @@ public static class AdmiralTraderGameplayAlphaAdapter
                 continue;
             }
 
-            throw new InvalidOperationException($"Economy Admiral Admiral Trader Gameplay Alpha adapter: offer '{offerId}' has no explicit Baseline/Relationship/Milestone classification.");
+            if (coreById.TryGetValue(offerId, out var core))
+            {
+                Require(ReqString(core, "itemTpl") == tpl, $"Core tpl drift for '{offerId}'.");
+                Require(core.GetProperty("loyaltyLevel").GetInt32() == loyaltyLevel, $"Core loyalty drift for '{offerId}'.");
+                Require(core.GetProperty("stockPerReset").GetInt32() == stock && core.GetProperty("buyRestriction").GetInt32() == buy, $"Core capacity drift for '{offerId}'.");
+                var minimumLevel = loyaltyLevel switch { 1 => 1, 2 => 15, 3 => 25, 4 => 35, _ => throw new InvalidOperationException($"Unsupported Admiral loyalty level {loyaltyLevel}.") };
+                results.Add(AdmiralTraderItemAdapter.BuildEvidence(offerId, tpl, "Core", "Loyalty", null, loyaltyLevel, stock, buy, minimumLevel));
+                continue;
+            }
+
+            throw new InvalidOperationException($"Economy Admiral Admiral Trader Gameplay Alpha adapter: offer '{offerId}' has no explicit Baseline/Relationship/Core/Milestone classification.");
         }
 
         Require(results.Count(x => x.StockClass == "Baseline") == baselineById.Count, "baseline-stock contains offers absent from assort.");
         Require(results.Count(x => x.StockClass == "Relationship") == relationshipById.Count, "relationship-stock contains offers absent from assort.");
         Require(results.Count(x => x.StockClass == "Milestone") == expectedMilestone, "milestone offer count drift.");
+        Require(results.Count(x => x.StockClass == "Core") == coreById.Count, "storefront core contains offers absent from assort.");
         if (policySchemaVersion == 5)
         {
             Require(baselineById.Count == expectedBaseline, "gameplay-policy baseline offer count drift.");
@@ -196,6 +221,7 @@ public static class AdmiralTraderGameplayAlphaAdapter
             SpecialWeaponsSampleOnly = specialSampleOnly,
             BaselineOfferCount = enriched.Count(x => x.StockClass == "Baseline"),
             RelationshipOfferCount = enriched.Count(x => x.StockClass == "Relationship"),
+            CoreOfferCount = enriched.Count(x => x.StockClass == "Core"),
             MilestoneOfferCount = enriched.Count(x => x.StockClass == "Milestone"),
             Offers = enriched,
         };

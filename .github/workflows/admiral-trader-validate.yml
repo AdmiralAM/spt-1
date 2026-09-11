@@ -48,6 +48,7 @@ jobs:
           python -m json.tool mods/Admiral-Trader/manifests/relationship-stock.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/m5-relationship-runtime.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/m5-spt415-item-evidence.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/storefront-core-expansion.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/curated-quest-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/base.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/assort.json > /dev/null
@@ -60,6 +61,7 @@ jobs:
           runtime = json.loads((root / 'manifests/runtime-manifest.json').read_text(encoding='utf-8'))
           baseline = json.loads((root / 'manifests/baseline-stock.json').read_text(encoding='utf-8'))
           relationship = json.loads((root / 'manifests/relationship-stock.json').read_text(encoding='utf-8'))
+          storefront = json.loads((root / 'manifests/storefront-core-expansion.json').read_text(encoding='utf-8'))
           base = json.loads((root / 'db/base.json').read_text(encoding='utf-8'))
           assort = json.loads((root / 'db/assort.json').read_text(encoding='utf-8'))
           questassort = json.loads((root / 'db/questassort.json').read_text(encoding='utf-8'))
@@ -86,11 +88,12 @@ jobs:
           if len(questassort['success']) != 8:
               raise SystemExit('Milestone questassort success gate count drift')
           relationship_ids = {row['offerId'] for row in relationship.get('offers', [])}
+          storefront_ids = {row['offerId'] for row in storefront.get('offers', [])}
           if relationship.get('materialization', {}).get('enabled') is not True or len(relationship_ids) != 3:
               raise SystemExit('M5 Relationship materialization drift')
           root_ids = {row['_id'] for row in assort['items'] if row.get('parentId') == 'hideout'}
-          if len(root_ids) != 15 or not relationship_ids <= root_ids:
-              raise SystemExit('4 Baseline + 3 Relationship + 8 Milestone assort shape drift')
+          if len(root_ids) != 37 or len(storefront_ids) != 22 or not (relationship_ids | storefront_ids) <= root_ids:
+              raise SystemExit('37-offer stabilized assort shape drift')
           if relationship_ids & set(questassort['success']):
               raise SystemExit('Relationship offers must not be quest gated')
           PY
@@ -112,6 +115,7 @@ jobs:
               out / 'manifests/relationship-stock.json',
               out / 'manifests/m5-relationship-runtime.json',
               out / 'manifests/m5-spt415-item-evidence.json',
+              out / 'manifests/storefront-core-expansion.json',
               out / 'db/base.json',
               out / 'db/assort.json',
               out / 'db/questassort.json',

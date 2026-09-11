@@ -39,12 +39,14 @@ class QuestQualityRuntimeTests(unittest.TestCase):
                 for condition in quest["conditions"]["AvailableForFinish"]:
                     objective = locale.get(condition["id"], "")
                     self.assertTrue(objective.strip(), f"{language}: {condition['id']}")
+                    self.assertLessEqual(len(objective), 96, f"objective row is not UI-legible: {condition['id']}")
+                    self.assertNotIn("\n", objective, condition["id"])
                     if condition["conditionType"] in ("FindItem", "HandoverItem"):
                         fir = "Found in raid:" if language == "en" else "Статус «Найдено в рейде»:"
-                        self.assertIn(fir, objective, condition["id"])
+                        self.assertIn(fir, description, condition["id"])
                     else:
                         location = ("on " if language == "en" else "на ")
-                        self.assertIn(location, objective.lower(), condition["id"])
+                        self.assertIn(location, description.lower(), condition["id"])
 
     def test_copy_pass_does_not_change_runtime_contracts(self):
         manifest = json.loads((ROOT / "manifests/quest-quality-runtime.json").read_text(encoding="utf-8"))

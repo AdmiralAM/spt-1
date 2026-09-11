@@ -27,9 +27,9 @@ SPT version matters for development, API compatibility and release evidence, but
 - Campaign sizing and concurrent-load policy: `docs/campaign-portfolio-plan.md`.
 - Narrow the supported range only after a demonstrated API/data incompatibility.
 
-## Current milestone — M6 stable-release hardening
+## Current milestone — campaign-readiness stabilization
 
-M1 lifecycle and the combined M2/M3 fresh-profile runtime pass are accepted. M4 selective absorption and M5 relationship/storefront implementation are closed. M6 freezes the runtime at 43 quests and 15 finite offers while installation, upgrade, removal, package provenance, profile safety and exact-runtime integration are hardened for one final physical release gate.
+M1 lifecycle and the combined M2/M3 fresh-profile runtime pass are accepted. M4 selective absorption and M5 relationship/storefront implementation are closed. Physical review retained the 43-quest campaign but rejected the seven-root Arsenal release pattern, unreadable objective rows and 15-offer storefront. The stabilization amendment stages two weapon tracks, keeps complete requirements in descriptions and expands the finite core using the measured catalog gap left by retiring Andrudis.
 
 Expected lifecycle:
 
@@ -44,7 +44,7 @@ Expected lifecycle:
 - **M5 — Relationship / specialist storefront**
 - **M6 — Stable release**
 
-Current runtime shape: **43 quests** (31 frozen baseline + 12 M3 operations), **15 offers** (4 Baseline + 3 Relationship + 8 Milestone).
+Current runtime shape: **43 quests** (31 frozen baseline + 12 M3 operations), **37 offers** (4 Baseline + 3 Relationship + 8 Milestone + 22 bounded core offers).
 
 Install, replacement and clean-removal instructions are in `docs/INSTALL.md`. Always remove both known folder spellings before installing the canonical `Admiral-Trader` directory; this prevents two copies of the same persistent trader identity from loading together.
 
@@ -124,4 +124,4 @@ Prefer native SPT behavior and maintained C# patterns. Reuse proven organization
 
 ## Implementation boundary
 
-M5 is materialized in native assort data and the existing Trader DLL. M6 changes no quest, offer, mechanic or persistent ID. Relationship offers use Admiral's native loyalty levels, remain finite, have no quest gates, and cannot replace Access or Arsenal capability unlocks. The historical frozen `0.1.0` commit and its 31-quest / 11-offer package remain unchanged.
+M5 is materialized in native assort data and the existing Trader DLL. The subsequent stabilization amendment changes prerequisites, objective-row copy and the bounded core assortment in response to physical review; it adds no quest, mechanic or persistent-identity replacement. Relationship offers use Admiral's native loyalty levels, remain finite, have no quest gates, and cannot replace Access or Arsenal capability unlocks. The historical frozen `0.1.0` commit and its 31-quest / 11-offer package remain unchanged.

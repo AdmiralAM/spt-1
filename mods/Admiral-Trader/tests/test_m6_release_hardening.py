@@ -14,10 +14,10 @@ class M6ReleaseHardeningTests(unittest.TestCase):
         self.assertEqual(runtime["schemaVersion"], 2)
         self.assertFalse(runtime["registrationEnabled"])
         scope = m6["scopeFreeze"]
-        self.assertEqual((scope["quests"], scope["offers"]), (43, 15))
+        self.assertEqual((scope["quests"], scope["offers"]), (43, 37))
         self.assertEqual(
             (scope["newQuests"], scope["newOffers"], scope["newMechanics"], scope["newDependencies"]),
-            (0, 0, 0, 0),
+            (0, 22, 0, 0),
         )
         self.assertFalse(m6["stableClaimAllowed"])
 
@@ -47,7 +47,7 @@ class M6ReleaseHardeningTests(unittest.TestCase):
         self.assertNotIn("TraderWorktree", builder + workflow)
         self.assertNotIn("frozen-trader", builder + workflow)
         self.assertIn("$quests.Count -ne 43", builder)
-        self.assertIn("Count -ne 15", builder)
+        self.assertIn("Count -ne 37", builder)
         self.assertIn("'mods/Admiral-Trader/**'", workflow)
 
 

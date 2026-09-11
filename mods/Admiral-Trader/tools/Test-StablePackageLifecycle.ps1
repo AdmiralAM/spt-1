@@ -31,7 +31,7 @@ $inventoryPath = Join-Path $candidate 'admiral-trader-package-files.json'
 if ((-not (Test-Path $provenancePath -PathType Leaf)) -or (-not (Test-Path $inventoryPath -PathType Leaf))) { throw 'Package provenance or inventory is missing.' }
 $provenance = Get-Content $provenancePath -Raw | ConvertFrom-Json
 if ($provenance.sourceHeadSha -ne $ExpectedSourceHead.ToLowerInvariant() -or $provenance.version -ne '0.1.0+milestones') { throw 'Package provenance authority mismatch.' }
-if ($provenance.questCount -ne 43 -or $provenance.totalFiniteOffers -ne 15) { throw 'Frozen M6 scope drifted.' }
+if ($provenance.questCount -ne 43 -or $provenance.totalFiniteOffers -ne 37) { throw 'Stabilized campaign scope drifted.' }
 
 $forbidden = @(Get-ChildItem $candidate -Recurse -File | Where-Object {
     $_.FullName -match '[\\/]user[\\/]profiles[\\/]' -or

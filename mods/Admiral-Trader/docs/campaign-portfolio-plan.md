@@ -70,6 +70,8 @@ Loadout assignments are a long-running campaign system rather than a single batc
 
 Only two weapon assignments should normally be offered at once. They run as two independent authored chains so the player has a minimum choice of raid setup. Completing either assignment exposes the next assignment in that chain; level alone must never expose the complete weapon pool.
 
+The 43-quest stabilization pass applies that rule to the existing 21 Arsenal quests. Track A advances sidearms to shotguns, marksman/battle rifles and special weapons. Track B advances SMG/PDW to assault rifles and precision rifles. Each family still keeps its Qualification, Fieldwork and Munitions sequence, IDs, objectives and rewards. This changes five root prerequisites and reduces the Arsenal entry points from seven to two without removing content.
+
 The first cycle introduces individual weapons or small closely related model pools with straightforward targets. A normal loadout assignment should allow a curated group of roughly 2-4 suitable locations. This preserves route choice while keeping the operation more specific than "any location." A single mandatory location is reserved for an authored story operation tied to a real place.
 
 After broad weapon coverage is complete, weapon families return in later cycles with meaningfully different contexts, for example:

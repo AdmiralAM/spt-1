@@ -7,12 +7,12 @@
   "exactValidationBaseline": "4.1.5",
   "scopeFreeze": {
     "quests": 43,
-    "offers": 15,
+    "offers": 37,
     "baselineOffers": 4,
     "relationshipOffers": 3,
     "milestoneOffers": 8,
     "newQuests": 0,
-    "newOffers": 0,
+    "newOffers": 22,
     "newMechanics": 0,
     "newDependencies": 0
   },
@@ -40,5 +40,6 @@
     "exactHeadArtifact": true,
     "finalPhysicalGate": true
   },
+  "stabilizationAmendment": "Physical review rejected the 15-offer storefront as too sparse. Twenty-two bounded core offers were selected from the measured post-Andrudis catalog gap; quest count, IDs and runtime architecture remain unchanged.",
   "stableClaimAllowed": false
 }

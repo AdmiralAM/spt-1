@@ -43,14 +43,14 @@ Copy-Item (Join-Path $economyRoot 'README.md') $economyTarget
 
 $quests = @(Get-ChildItem (Join-Path $traderTarget 'db/quests') -Filter '*.json' -File)
 $assort = Get-Content (Join-Path $traderTarget 'db/assort.json') -Raw | ConvertFrom-Json
-if ($quests.Count -ne 43 -or @($assort.items | Where-Object parentId -eq 'hideout').Count -ne 15) { throw 'Combined package does not contain the frozen active Trader scope.' }
+if ($quests.Count -ne 43 -or @($assort.items | Where-Object parentId -eq 'hideout').Count -ne 37) { throw 'Combined package does not contain the stabilized active Trader scope.' }
 $config = Get-Content (Join-Path $economyTarget 'config/config.default.json') -Raw | ConvertFrom-Json
 if ($config.mode -ne 'Enforce' -or $config.preset -ne 'Normal') { throw 'Economy defaults drifted from Normal/Enforce.' }
 
 [ordered]@{
     schemaVersion = 2; product = 'Admiral Trader + Economy Admiral'; sourceHeadSha = $head
     targetSptVersion = '4.1.5'; sptCompatibility = '~4.1.0'; releaseChannel = 'release-candidate'
-    trader = [ordered]@{ version='0.1.0+milestones'; traderId='d5c27bb3169f8dfbc13f6b69'; questCount=43; totalFiniteOffers=15 }
+    trader = [ordered]@{ version='0.1.0+milestones'; traderId='d5c27bb3169f8dfbc13f6b69'; questCount=43; totalFiniteOffers=37 }
     economy = [ordered]@{ version='0.1.0'; defaultMode='Enforce'; recommendedPreset='Normal'; ownsTraderEngine=$false }
 } | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $packageRoot 'admiral-combined-provenance.json') -Encoding utf8
 

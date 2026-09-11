@@ -72,6 +72,10 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
         var relationshipJson = File.Exists(relationshipPath)
             ? await File.ReadAllTextAsync(relationshipPath, cancellationToken)
             : null;
+        var storefrontCorePath = Path.Combine(traderModPath, "manifests", "storefront-core-expansion.json");
+        var storefrontCoreJson = File.Exists(storefrontCorePath)
+            ? await File.ReadAllTextAsync(storefrontCorePath, cancellationToken)
+            : null;
         var gameplay = AdmiralTraderGameplayAlphaAdapter.Parse(
             campaignJson,
             identityJson,
@@ -81,7 +85,8 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
             assortJson,
             questAssortJson,
             authoredQuestJson,
-            relationshipJson);
+            relationshipJson,
+            storefrontCoreJson);
         if (schemaVersion == 4)
             AdmiralTraderGameplayAlphaAdapter.ValidateFrozenReleaseShape(gameplay, authoredQuestJson.Count);
         else
@@ -109,6 +114,7 @@ public sealed class AdmiralTraderRuntimeAdapterService(ModHelper modHelper)
             OfferCount = offers.Count,
             BaselineOfferCount = gameplay.BaselineOfferCount,
             RelationshipOfferCount = gameplay.RelationshipOfferCount,
+            CoreOfferCount = gameplay.CoreOfferCount,
             MilestoneOfferCount = gameplay.MilestoneOfferCount,
             BoundedRenewableOfferCount = offers.Count(o => o.Capacity.SupplyBound == RenewableSupplyBound.Bounded),
             RelationshipStockAllowed = gameplay.RelationshipStockAllowed,

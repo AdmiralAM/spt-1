@@ -57,21 +57,24 @@ $itemDb = Get-Content $itemsPath -Raw | ConvertFrom-Json -AsHashtable
 $assort = Get-Content (Join-Path $traderRoot 'db/assort.json') -Raw | ConvertFrom-Json
 $baseline = Get-Content (Join-Path $traderRoot 'manifests/baseline-stock.json') -Raw | ConvertFrom-Json
 $relationship = Get-Content (Join-Path $traderRoot 'manifests/relationship-stock.json') -Raw | ConvertFrom-Json
+$storefrontCore = Get-Content (Join-Path $traderRoot 'manifests/storefront-core-expansion.json') -Raw | ConvertFrom-Json
 $questAssort = Get-Content (Join-Path $traderRoot 'db/questassort.json') -Raw | ConvertFrom-Json
 $rootOffers = @($assort.items | Where-Object parentId -eq 'hideout')
-if ($rootOffers.Count -ne 15) { throw "Expected 15 active-head root offers, got $($rootOffers.Count)" }
+if ($rootOffers.Count -ne 37) { throw "Expected 37 active-head root offers, got $($rootOffers.Count)" }
 $missingTpls = @($rootOffers | ForEach-Object { [string]$_."_tpl" } | Where-Object { -not $itemDb.ContainsKey($_) } | Sort-Object -Unique)
 if ($missingTpls.Count) { throw "Active-head assort contains TPLs missing from exact SPT 4.1.5 DB: $($missingTpls -join ', ')" }
 $baselineIds = @($baseline.offers | ForEach-Object { [string]$_.offerId })
 $relationshipIds = @($relationship.offers | ForEach-Object { [string]$_.offerId })
+$storefrontCoreIds = @($storefrontCore.offers | ForEach-Object { [string]$_.offerId })
 $milestoneIds = @($questAssort.success.PSObject.Properties | ForEach-Object { [string]$_.Name })
 if ($baselineIds.Count -ne 4 -or ($baselineIds | Sort-Object -Unique).Count -ne 4) { throw 'Baseline authority must contain four unique offers.' }
 if ($milestoneIds.Count -ne 8 -or ($milestoneIds | Sort-Object -Unique).Count -ne 8) { throw 'Milestone questassort must contain eight unique offers.' }
 if ($relationship.materialization.enabled -ne $true -or $relationshipIds.Count -ne 3 -or ($relationshipIds | Sort-Object -Unique).Count -ne 3) { throw 'M5 Relationship authority must contain three unique materialized offers.' }
+if ($storefrontCoreIds.Count -ne 22 -or ($storefrontCoreIds | Sort-Object -Unique).Count -ne 22) { throw 'Stabilized storefront authority must contain 22 unique core offers.' }
 if (@($baselineIds | Where-Object { $_ -in $milestoneIds }).Count) { throw 'Baseline offers must not be quest-gated Milestone offers.' }
 if (@($relationshipIds | Where-Object { $_ -in $milestoneIds -or $_ -in $baselineIds }).Count) { throw 'Relationship offers must remain distinct from Baseline and Milestone offers.' }
 $rootIds = @($rootOffers | ForEach-Object { [string]$_."_id" })
-$unclassified = @($rootIds | Where-Object { $_ -notin $baselineIds -and $_ -notin $relationshipIds -and $_ -notin $milestoneIds })
+$unclassified = @($rootIds | Where-Object { $_ -notin $baselineIds -and $_ -notin $relationshipIds -and $_ -notin $milestoneIds -and $_ -notin $storefrontCoreIds })
 if ($unclassified.Count) { throw "Unclassified offers materialized unexpectedly: $($unclassified -join ', ')" }
 
 $questFiles = @(Get-ChildItem (Join-Path $traderRoot 'db/quests') -Filter '*.json' -File)
@@ -105,7 +108,7 @@ $stagedManifest | ConvertTo-Json -Depth 20 | Set-Content $stagedManifestPath -En
 
 $stagedAssort = Get-Content (Join-Path $modTarget 'db/assort.json') -Raw | ConvertFrom-Json
 $stagedQuestAssort = Get-Content (Join-Path $modTarget 'db/questassort.json') -Raw | ConvertFrom-Json
-if (@($stagedAssort.items | Where-Object parentId -eq 'hideout').Count -ne 15) { throw 'Staged Trader lost the 15-offer contract.' }
+if (@($stagedAssort.items | Where-Object parentId -eq 'hideout').Count -ne 37) { throw 'Staged Trader lost the 37-offer contract.' }
 if (@($stagedQuestAssort.success.PSObject.Properties).Count -ne 8) { throw 'Staged Trader lost the eight Milestone gates.' }
 if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 43) { throw 'Staged Trader lost the 43-quest expanded campaign contract.' }
 if (-not (Test-Path (Join-Path $modTarget 'assets/d5c27bb3169f8dfbc13f6b69.jpg') -PathType Leaf)) { throw 'Staged Trader portrait is missing.' }
@@ -126,7 +129,8 @@ $provenance = [ordered]@{
     baselineOffers = 4
     milestoneOffers = 8
     relationshipOffers = 3
-    totalFiniteOffers = 15
+    storefrontCoreOffers = 22
+    totalFiniteOffers = 37
     relationshipProgression = [ordered]@{
         loyaltyLevels = 4
         standingThresholds = @(0.0, 0.1, 0.3, 0.55)

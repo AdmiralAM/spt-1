@@ -46,6 +46,7 @@ internal static class AdmiralTraderGameplayAlphaSmoke
             BaselineOfferCount = AdmiralTraderGameplayAlphaAdapter.FrozenBaselineOfferCount,
             RelationshipOfferCount = 0,
             MilestoneOfferCount = AdmiralTraderGameplayAlphaAdapter.FrozenMilestoneOfferCount,
+            CoreOfferCount = 0,
             Offers = Enumerable.Range(0, AdmiralTraderGameplayAlphaAdapter.FrozenTotalOfferCount)
                 .Select(index => frozen.Offers[index % frozen.Offers.Count])
                 .ToArray(),
@@ -64,6 +65,7 @@ internal static class AdmiralTraderGameplayAlphaSmoke
             BaselineOfferCount = AdmiralTraderGameplayAlphaAdapter.ActiveBaselineOfferCount,
             RelationshipOfferCount = AdmiralTraderGameplayAlphaAdapter.ActiveRelationshipOfferCount,
             MilestoneOfferCount = AdmiralTraderGameplayAlphaAdapter.ActiveMilestoneOfferCount,
+            CoreOfferCount = AdmiralTraderGameplayAlphaAdapter.ActiveCoreOfferCount,
             Offers = Enumerable.Range(0, AdmiralTraderGameplayAlphaAdapter.ActiveTotalOfferCount)
                 .Select(index => frozen.Offers[index % frozen.Offers.Count])
                 .ToArray(),

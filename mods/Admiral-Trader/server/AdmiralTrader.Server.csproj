@@ -48,6 +48,7 @@
     <Content Include="..\manifests\relationship-stock.json" Link="manifests\relationship-stock.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\manifests\m5-relationship-runtime.json" Link="manifests\m5-relationship-runtime.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\manifests\m5-spt415-item-evidence.json" Link="manifests\m5-spt415-item-evidence.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\manifests\storefront-core-expansion.json" Link="manifests\storefront-core-expansion.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\manifests\identity-assets.json" Link="manifests\identity-assets.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\base.json" Link="db\base.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\assort.json" Link="db\assort.json" CopyToOutputDirectory="PreserveNewest" />
