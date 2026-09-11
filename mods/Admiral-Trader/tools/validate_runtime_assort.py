@@ -41,6 +41,26 @@ RELATIONSHIP_OFFER_IDS = {
     "7b316634b30868626d6dccb0",
     "0e6ac10c4adc789996086c63",
 }
+ARMORED_PRESET_CHILDREN = {
+    "32bdf9f1175fe841d44c87da": {
+        "Helmet_top": "657f8b94f92cd718b70154ff",
+        "Helmet_back": "657f8b43f92cd718b70154fb",
+    },
+    "bb47b68c39d86a0f8a082d18": {
+        "Soft_armor_front": "6575bc88c6700bd6b40e8a57",
+        "Soft_armor_back": "6575bca0dc9932aed601c5d7",
+        "Front_plate": "656fae5f7c2d57afe200c0d7",
+        "Back_plate": "656fae5f7c2d57afe200c0d7",
+    },
+    "f5a50959ede25e5b2e1ddbb1": {
+        "Soft_armor_front": "6570e5100b57c03ec90b970a",
+        "Soft_armor_back": "6570e479a6560e4ee50c2b02",
+        "Soft_armor_left": "6570e5674cc0d2ab1e05edbb",
+        "soft_armor_right": "6570e59b0b57c03ec90b970e",
+        "Front_plate": "656f9fa0498d1b7e3e071d98",
+        "Back_plate": "656f9fa0498d1b7e3e071d98",
+    },
+}
 NATIVE_QUESTASSORT_KEYS = {"started", "success", "fail"}
 LEGACY_CAPITALIZED_QUESTASSORT_KEYS = {"Started", "Success", "Fail"}
 
@@ -152,6 +172,15 @@ def main() -> None:
     for item in items:
         if item.get("parentId") != "hideout" and item.get("parentId") not in all_item_ids:
             fail(f"orphan child assort item {item.get('_id')}")
+
+    for offer_id, expected_children in ARMORED_PRESET_CHILDREN.items():
+        actual_children = {
+            item.get("slotId"): item.get("_tpl")
+            for item in items
+            if item.get("parentId") == offer_id
+        }
+        if actual_children != expected_children:
+            fail(f"{offer_id}: complete SPT 4.1.5 armored preset drift: {actual_children}")
 
     for offer_id, policy in baseline_by_id.items():
         validate_single_rub_offer(
