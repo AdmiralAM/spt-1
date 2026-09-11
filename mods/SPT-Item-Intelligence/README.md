@@ -31,6 +31,7 @@ Current stable v1.0.0 presentation contracts include:
 - compact Minimal / Normal / Detailed / Full tooltip modes;
 - owned-versus-required counts, FIR-aware quest allocation, `Keep ×N`, and concrete quest/hideout targets;
 - compact trader, flea, and per-slot price rows without a redundant best-sell recommendation;
+- the accepted Item Valuation background palette enabled by default, with ammunition retaining its separate penetration-based tiers and exact colors;
 - price-amount bands: below 50k white, 50k+ green, 100k+ red, 250k+ gold;
 - compact Full-only `Craft ×N` / `Barter ×N` relevance;
 - fallback to the available Flea/Trader source when the preferred source has no price;

@@ -345,7 +345,9 @@ namespace SPTItemIntelligence
                 if (hex == applied) return;
                 Color color;
                 if (!ColorUtility.TryParseHtmlString(hex, out color)) return;
-                color.a = .72f;
+                // Match the accepted Item Valuation HEX palette exactly. Alpha blending here
+                // changes every perceived tier and was the source of the runtime mismatch.
+                color.a = 1f;
                 colorProperty.SetValue(image, color, null);
                 applied = hex;
             }
