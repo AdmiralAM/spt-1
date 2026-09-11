@@ -40,6 +40,8 @@ jobs:
         run: dotnet build mods/SPT-Item-Intelligence/server/SPT-Item-Intelligence.Server.csproj -c Release
       - name: Stage Item Intelligence Admiral runtime test build
         shell: pwsh
+        env:
+          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
           $clientDir = 'runtime-test/BepInEx/plugins/Item Intelligence Admiral'
           $serverDir = 'runtime-test/SPT_Runtime/user/mods/Item Intelligence Admiral Server'
@@ -50,14 +52,14 @@ jobs:
           @(
             "Product=Item Intelligence Admiral"
             "Version=1.1.0-rc"
-            "Commit=$env:GITHUB_SHA"
+            "Commit=$env:CANDIDATE_SHA"
             "ClientSHA256=$((Get-FileHash "$clientDir/Item Intelligence Admiral.dll" -Algorithm SHA256).Hash)"
             "ServerSHA256=$((Get-FileHash "$serverDir/Item Intelligence Admiral Server.dll" -Algorithm SHA256).Hash)"
           ) | Set-Content 'runtime-test/CANDIDATE.txt'
       - name: Upload Item Intelligence Admiral runtime test build
         uses: actions/upload-artifact@v4
         with:
-          name: Item-Intelligence-Admiral-v1.1.0-rc-${{ github.sha }}
+          name: Item-Intelligence-Admiral-v1.1.0-rc-${{ github.event.pull_request.head.sha || github.sha }}
           path: runtime-test/**
           if-no-files-found: error
           retention-days: 7
