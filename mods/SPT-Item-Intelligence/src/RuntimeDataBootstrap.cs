@@ -267,7 +267,7 @@ namespace SPTItemIntelligence
                         if (target.Length == 0 || condition.Count <= 0 || !seenTargets.Add(target)) continue;
                         // Finding is observational; a matching consumptive objective owns the reserve.
                         if (condition.Kind == "finditem" && HasMatchingConsumption(parsed, target)) continue;
-                        int satisfied = ReadSatisfied(profile, questId, condition.Id);
+                        int satisfied = ReadSatisfied(profile, condition.Id);
                         output.Add(new RequirementContribution(target, source, condition.Count, satisfied, condition.FoundInRaid, label: questLabel));
                     }
                 }
@@ -306,13 +306,17 @@ namespace SPTItemIntelligence
             return false;
         }
 
-        static int ReadSatisfied(object profile, string questId, string conditionId)
+        static int ReadSatisfied(object profile, string conditionId)
         {
             if (conditionId.Length == 0) return 0;
-            object counter = JsonNode.Get(JsonNode.Get(profile, "TaskConditionCounters", "taskConditionCounters"), conditionId);
-            string source = JsonNode.ReadString(JsonNode.Get(counter, "sourceId", "SourceId"));
-            if (source.Length > 0 && !string.Equals(source, questId, StringComparison.OrdinalIgnoreCase)) return 0;
-            return Math.Max(0, JsonNode.ReadInt(JsonNode.Get(counter, "value", "Value"), 0));
+            int satisfied = 0;
+            foreach (object counter in JsonNode.Values(JsonNode.Get(profile, "TaskConditionCounters", "taskConditionCounters")))
+            {
+                string source = JsonNode.ReadString(JsonNode.Get(counter, "sourceId", "SourceId"));
+                if (!string.Equals(source, conditionId, StringComparison.OrdinalIgnoreCase)) continue;
+                satisfied = Math.Max(satisfied, Math.Max(0, JsonNode.ReadInt(JsonNode.Get(counter, "value", "Value"), 0)));
+            }
+            return satisfied;
         }
 
         void ProjectHideout(object profile, object hideoutTable, List<RequirementContribution> output)

@@ -76,7 +76,8 @@ static class ConsolidatedTruthTests
         var find = D("id", "find", "conditionType", "FindItem", "target", "x", "value", 4, "onlyFoundInRaid", true);
         var place = D("id", "place", "conditionType", "LeaveItemAtLocation", "target", "x", "value", 2);
         var profile = D("Inventory", D("items", new object[0]), "Quests", new object[] { D("qid", "q", "status", "Started") },
-            "TaskConditionCounters", D("fir", D("sourceId", "q", "value", 1), "any", D("sourceId", "unrelated", "value", 3)));
+            "TaskConditionCounters", D("counter-random-id", D("id", "counter-random-id", "sourceId", "fir", "value", 1),
+                "unrelated-counter", D("sourceId", "unrelated", "value", 3)));
         var quests = D("q", D("_id", "q", "QuestName", "Quest", "conditions", D("AvailableForFinish", new object[] { fir, any, find, place, fir })));
         var e = RequirementIndexBuilder.Build(new AqcQuestRequirementProjector().Project(new RequirementDataEnvelope(1, profile, quests, D()))).Get("x");
         Check(e.QuestNeededNow == 8 && e.Allocation.NowFirRequired == 3, "partial handover, distinct consumption, duplicate condition/target and Find projection");
