@@ -2,8 +2,9 @@
 
 ## Next campaign milestone — authored direction
 
+- Absorb Natalya's useful quest and storefront roles into Admiral because Natalya is retired from the target installation. Artem, Scorpion and Ref remain separate traders and are only used to reject duplicates.
 - Route the opening Admiral wave through Ground Zero alongside the retained traders' early progression.
-- Add a bounded signature weapon rack selected against the effective post-Andrudis trader catalog, with finite stock and progressive access.
+- Add a bounded signature weapon rack selected from Natalya's native stock against the effective post-Andrudis catalog, with finite stock and progressive access.
 
 ## 0.2.0 — stable campaign baseline
 

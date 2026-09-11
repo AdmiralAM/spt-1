@@ -132,7 +132,9 @@ The detailed graph is in `manifests/m3-campaign-progression.json`.
 
 ### Natalya
 
-Absorb selectively:
+The following was the 0.2.0 stable curation boundary. It is superseded for future content by `docs/natalya-absorption-program.md`: Natalya is retired from the target installation, so her useful roles are now the first intake into the existing Admiral runtime.
+
+0.2.0 absorbed selectively:
 
 - Exfil evacuation/logistics premise;
 - route continuity across Tarkov;
@@ -140,7 +142,7 @@ Absorb selectively:
 - marked transit/corridor narrative;
 - escalating threats around moving people and supplies.
 
-Do not absorb:
+0.2.0 did not absorb:
 
 - a second Natalya trader requirement;
 - the Pay Back map-by-map body-count chain;
@@ -148,7 +150,7 @@ Do not absorb:
 - wholesale quest/imported dialogue;
 - broad assort/custom armor dependencies merely for fidelity.
 
-Natalya's Exfil DNA is used as narrative glue for operations such as Forward Reserve, Borrowed Access, Route Security and Break the Perimeter rather than imported as an eleven-part checklist.
+Natalya's Exfil DNA is used as narrative glue for operations such as Forward Reserve, Borrowed Access, Route Security and Break the Perimeter rather than imported as an eleven-part checklist. Future intake may add distinct native Ground Zero and logistics operations, but cannot add a Natalya dependency, copy source IDs, or import the custom-zone/item pack.
 
 ### Andrudis / QuestManiac
 

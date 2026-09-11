@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "status": "active-intake",
+  "baseline": {
+    "tag": "admiral-trader-v0.2.0",
+    "commit": "7ecd3d8a6189c1c71d598115e68f41ee16d01fe0",
+    "questCount": 43,
+    "finiteOfferCount": 37,
+    "compatibility": "~4.1.0",
+    "validatedRuntime": "4.1.5"
+  },
+  "retainedRuntimeTraders": ["native", "Artem", "Scorpion", "Ref", "Admiral"],
+  "retiredSources": {
+    "Natalya": {
+      "repository": "Colobos9mm/Natalya",
+      "observedQuestRecords": 36,
+      "observedRootOffers": 203,
+      "runtimeDependency": false,
+      "absorptionPriority": 1
+    },
+    "AndrudisQuestManiac": {
+      "repository": "laurentmekka/AndrudisQuestManiac",
+      "runtimeEnabled": false,
+      "runtimeDependency": false,
+      "absorptionPriority": 2
+    }
+  },
+  "sourceFamilies": [
+    {"name": "Pay Back I-XIV", "records": 14, "decision": "re-author selected route beats"},
+    {"name": "Weapons Training", "records": 10, "decision": "feed staged Admiral rotation"},
+    {"name": "Exfil Part 1-11", "records": 12, "decision": "re-author native logistics operations"}
+  ],
+  "constraints": {
+    "secondTrader": false,
+    "externalRuntimeDependency": false,
+    "copyRetainedTraderContent": false,
+    "wholesaleQuestImport": false,
+    "frozenIdentityChanged": false,
+    "existingQuestIdsChanged": false
+  }
+}
