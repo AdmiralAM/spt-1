@@ -1,4 +1,4 @@
-# Admiral Trader 0.1.0+milestones installation
+# Admiral Trader 0.2.0 installation
 
 ## Clean install or upgrade
 
@@ -7,7 +7,7 @@
 3. Remove both known old install directories if present:
    - `SPT_Runtime/user/mods/Admiral Trader`
    - `SPT_Runtime/user/mods/Admiral-Trader`
-4. Extract the release-candidate ZIP into the SPT installation root. The resulting canonical server path must be:
+4. Extract the stable ZIP into the SPT installation root. The resulting canonical server path must be:
    - `SPT_Runtime/user/mods/Admiral-Trader/Admiral Trader Server.dll`
 5. Start the server and confirm that exactly one `Admiral Trader` mod and one trader ID `d5c27bb3169f8dfbc13f6b69` are registered.
 

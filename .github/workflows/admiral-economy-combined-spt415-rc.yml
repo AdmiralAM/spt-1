@@ -1,4 +1,4 @@
-name: Admiral Trader + Economy SPT 4.1.5 RC
+name: Admiral Trader 0.2.0 + Economy SPT 4.1.5
 
 on:
   pull_request:
@@ -106,7 +106,7 @@ jobs:
             # normal startup. Fail only on fatal lifecycle or registration
             # markers; the required evidence checks below remain authoritative.
             if ($combined -match '(?im)(unhandled exception|failed to (load|register)|errors were found with mods|unexpectedly stopped|mismatch)') { throw "Mod startup/registration error detected.`n$combined" }
-            foreach ($required in 'Mod: Economy Admiral version: 0.1.0','Mod: Admiral Trader version: 0.1.0+milestones','SPT 4.1.5','Server has started') {
+            foreach ($required in 'Mod: Economy Admiral version: 0.1.0','Mod: Admiral Trader version: 0.2.0','SPT 4.1.5','Server has started') {
               if ($combined -notmatch [regex]::Escape($required)) { throw "Required server-start evidence missing: $required`n$combined" }
             }
           } finally { if (-not $process.HasExited) { Stop-Process $process -Force } }
@@ -116,7 +116,7 @@ jobs:
       - name: Upload combined install-ready ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: Admiral-Trader-0.1.0-milestones-Economy-0.1.0-SPT415-RC-${{ github.event.pull_request.head.sha || github.sha }}
+          name: Admiral-Trader-0.2.0-Economy-0.1.0-SPT415-Stable-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             build/combined-rc/*.zip
             build/combined-rc/*.zip.sha256

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "draft",
+  "status": "stable-baseline",
   "product": {
     "modName": "Admiral Trader",
     "modGuid": "com.admiralam.spt.admiraltrader",
@@ -9,7 +9,7 @@
     "traderWorkingNameRu": "Адмирал",
     "traderId": "d5c27bb3169f8dfbc13f6b69",
     "traderIdDerivation": "first-24-hex-of-sha256(modGuid)",
-    "traderIcon": "TBD"
+    "traderIcon": "assets/d5c27bb3169f8dfbc13f6b69.jpg"
   },
   "source": {
     "repository": "Thirt3nth/Andrudis-Questmaniac",

@@ -210,7 +210,7 @@ public sealed class AdmiralTraderRegistration(
             throw new InvalidDataException($"Unsupported Admiral Trader runtime manifest schema: {manifest.SchemaVersion}");
         if (!string.Equals(manifest.Product, "Admiral Trader", StringComparison.Ordinal))
             throw new InvalidDataException($"runtime-manifest product mismatch: {manifest.Product}");
-        if (!string.Equals(manifest.Version, "0.1.0+milestones", StringComparison.Ordinal))
+        if (!string.Equals(manifest.Version, "0.2.0", StringComparison.Ordinal))
             throw new InvalidDataException($"runtime-manifest version mismatch: {manifest.Version}");
         if (!string.Equals(manifest.SptCompatibility, "~4.1.0", StringComparison.Ordinal))
             throw new InvalidDataException($"runtime-manifest SPT compatibility mismatch: {manifest.SptCompatibility}");

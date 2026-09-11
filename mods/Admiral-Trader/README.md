@@ -7,11 +7,11 @@ Official curated successor to the legacy Andrudis/QuestManiac ecosystem.
 Admiral Trader has **one active workstream**:
 
 - canonical issue: **#192**;
-- active Draft PR: **#328**;
+- canonical PR: **#328**;
 - active branch: `feature/admiral-trader-canonical-milestones`;
 - current development/validation baseline: **SPT 4.1.5**;
 - runtime metadata compatibility range: **`~4.1.0`**;
-- active release-candidate version: **`0.1.0+milestones`**;
+- stable gameplay baseline: **`0.2.0`**;
 - historical frozen `0.1.0`: `053a62ff5f1cb545f13bc89a96bba3acd319a823`, 31 runtime quests / 11 finite offers;
 - QuestManiac/Andrudis research archive: **#115**.
 
@@ -27,9 +27,9 @@ SPT version matters for development, API compatibility and release evidence, but
 - Campaign sizing and concurrent-load policy: `docs/campaign-portfolio-plan.md`.
 - Narrow the supported range only after a demonstrated API/data incompatibility.
 
-## Current milestone — campaign-readiness stabilization
+## Stable baseline — 0.2.0
 
-M1 lifecycle and the combined M2/M3 fresh-profile runtime pass are accepted. M4 selective absorption and M5 relationship/storefront implementation are closed. Physical review retained the 43-quest campaign but rejected the seven-root Arsenal release pattern, unreadable objective rows and 15-offer storefront. The stabilization amendment stages two weapon tracks, keeps complete requirements in descriptions and expands the finite core using the measured catalog gap left by retiring Andrudis.
+M1 through M6 are closed for the first playable campaign baseline. Physical validation confirmed quest visibility, explicit acceptance and completion, reward delivery and the expanded storefront. The final stabilization amendment stages two weapon tracks, keeps complete requirements in readable multiline descriptions, expands the finite core using the measured catalog gap left by retiring Andrudis, and ships armored offers as complete native SPT 4.1.5 presets.
 
 Expected lifecycle:
 
@@ -45,6 +45,8 @@ Expected lifecycle:
 - **M6 — Stable release**
 
 Current runtime shape: **43 quests** (31 frozen baseline + 12 M3 operations), **37 offers** (4 Baseline + 3 Relationship + 8 Milestone + 22 bounded core offers).
+
+This is the stable starting point for fresh-profile play and campaign polish. Future content work may improve pacing, prose, loadout rotation and campaign breadth, but must be authored as a new milestone and must preserve the persistent Trader, quest and offer identities already in use.
 
 Install, replacement and clean-removal instructions are in `docs/INSTALL.md`. Always remove both known folder spellings before installing the canonical `Admiral-Trader` directory; this prevents two copies of the same persistent trader identity from loading together.
 

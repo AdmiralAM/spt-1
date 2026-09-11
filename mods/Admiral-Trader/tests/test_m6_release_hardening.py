@@ -10,7 +10,7 @@ class M6ReleaseHardeningTests(unittest.TestCase):
     def test_release_metadata_and_scope_are_aligned(self):
         runtime = json.loads((ROOT / "manifests/runtime-manifest.json").read_text())
         m6 = json.loads((ROOT / "manifests/m6-stable-release.json").read_text())
-        self.assertEqual((runtime["version"], runtime["sptCompatibility"]), ("0.1.0+milestones", "~4.1.0"))
+        self.assertEqual((runtime["version"], runtime["releaseChannel"], runtime["sptCompatibility"]), ("0.2.0", "stable", "~4.1.0"))
         self.assertEqual(runtime["schemaVersion"], 2)
         self.assertFalse(runtime["registrationEnabled"])
         scope = m6["scopeFreeze"]
@@ -19,7 +19,8 @@ class M6ReleaseHardeningTests(unittest.TestCase):
             (scope["newQuests"], scope["newOffers"], scope["newMechanics"], scope["newDependencies"]),
             (0, 22, 0, 0),
         )
-        self.assertFalse(m6["stableClaimAllowed"])
+        self.assertTrue(m6["stableClaimAllowed"])
+        self.assertTrue(all(m6["physicalAcceptance"].values()))
 
     def test_runtime_sources_do_not_write_profiles_and_have_rollback(self):
         sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "server").glob("*.cs"))
@@ -36,7 +37,7 @@ class M6ReleaseHardeningTests(unittest.TestCase):
             self.assertIn(alias, install)
             self.assertIn(alias, lifecycle)
         self.assertIn("admiral-trader-package-files.json", builder)
-        self.assertIn("stable-release-candidate", builder)
+        self.assertIn("publicationMode -NotePropertyValue 'stable'", builder)
         self.assertIn("removeInvalidTradersFromProfile", install)
         self.assertIn("Leave `removeModItemsFromProfile` unchanged", install)
         self.assertIn("d5c27bb3169f8dfbc13f6b69", install)

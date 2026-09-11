@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "status": "release-candidate",
+  "status": "stable",
   "product": "Admiral Trader",
-  "version": "0.1.0+milestones",
+  "version": "0.2.0",
   "sptCompatibility": "~4.1.0",
   "exactValidationBaseline": "4.1.5",
   "scopeFreeze": {
@@ -41,5 +41,12 @@
     "finalPhysicalGate": true
   },
   "stabilizationAmendment": "Physical review rejected the 15-offer storefront as too sparse. Twenty-two bounded core offers were selected from the measured post-Andrudis catalog gap; quest count, IDs and runtime architecture remain unchanged.",
-  "stableClaimAllowed": false
+  "physicalAcceptance": {
+    "freshProfileLifecycle": true,
+    "questAcceptanceAndCompletion": true,
+    "rewardDelivery": true,
+    "storefrontReview": true,
+    "armoredPresetCorrection": true
+  },
+  "stableClaimAllowed": true
 }

@@ -28,7 +28,7 @@ if (Test-Path (Join-Path $managedRoot 'UnityEngine.CoreModule.dll') -PathType Le
 }
 if ($LASTEXITCODE -ne 0) { throw 'Economy client build failed.' }
 
-$packageRoot = Join-Path $OutputDirectory "Admiral-Trader-0.1.0-milestones-Economy-0.1.0-SPT415-RC-$head"
+$packageRoot = Join-Path $OutputDirectory "Admiral-Trader-0.2.0-Economy-0.1.0-SPT415-Stable-$head"
 if (Test-Path $packageRoot) { Remove-Item $packageRoot -Recurse -Force }
 $traderTarget = Join-Path $packageRoot 'SPT_Runtime/user/mods/Admiral-Trader'
 $economyTarget = Join-Path $packageRoot 'SPT_Runtime/user/mods/Economy Admiral'
@@ -49,8 +49,8 @@ if ($config.mode -ne 'Enforce' -or $config.preset -ne 'Normal') { throw 'Economy
 
 [ordered]@{
     schemaVersion = 2; product = 'Admiral Trader + Economy Admiral'; sourceHeadSha = $head
-    targetSptVersion = '4.1.5'; sptCompatibility = '~4.1.0'; releaseChannel = 'release-candidate'
-    trader = [ordered]@{ version='0.1.0+milestones'; traderId='d5c27bb3169f8dfbc13f6b69'; questCount=43; totalFiniteOffers=37 }
+    targetSptVersion = '4.1.5'; sptCompatibility = '~4.1.0'; releaseChannel = 'stable'
+    trader = [ordered]@{ version='0.2.0'; traderId='d5c27bb3169f8dfbc13f6b69'; questCount=43; totalFiniteOffers=37 }
     economy = [ordered]@{ version='0.1.0'; defaultMode='Enforce'; recommendedPreset='Normal'; ownsTraderEngine=$false }
 } | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $packageRoot 'admiral-combined-provenance.json') -Encoding utf8
 

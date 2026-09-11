@@ -14,23 +14,24 @@ if (-not (Test-Path $canonical -PathType Container)) { throw 'Canonical Admiral-
 if (Test-Path (Join-Path $candidate 'SPT_Runtime/user/mods/Admiral Trader')) { throw 'Legacy spaced install directory leaked into the package.' }
 
 foreach ($relative in @(
-    'Admiral Trader Server.dll', 'README.md', 'INSTALL.md', 'db/base.json', 'db/assort.json',
+    'Admiral Trader Server.dll', 'db/base.json', 'db/assort.json',
     'db/questassort.json', 'manifests/runtime-manifest.json', 'manifests/m6-stable-release.json',
+    'README.md', 'CHANGELOG.md', 'INSTALL.md', 'POLISHING.md',
     'assets/d5c27bb3169f8dfbc13f6b69.jpg'
 )) {
     if (-not (Test-Path (Join-Path $canonical $relative) -PathType Leaf)) { throw "Required package file is missing: $relative" }
 }
 
 $manifest = Get-Content (Join-Path $canonical 'manifests/runtime-manifest.json') -Raw | ConvertFrom-Json
-if ($manifest.version -ne '0.1.0+milestones' -or $manifest.sptCompatibility -ne '~4.1.0') { throw 'Staged version/compatibility metadata drifted.' }
-if ($manifest.registrationEnabled -ne $true -or $manifest.releaseChannel -ne 'release-candidate' -or $manifest.publicationMode -ne 'stable-release-candidate') { throw 'Staged release gate is not an M6 candidate.' }
+if ($manifest.version -ne '0.2.0' -or $manifest.sptCompatibility -ne '~4.1.0') { throw 'Staged version/compatibility metadata drifted.' }
+if ($manifest.registrationEnabled -ne $true -or $manifest.releaseChannel -ne 'stable' -or $manifest.publicationMode -ne 'stable') { throw 'Staged release gate is not the accepted M6 stable line.' }
 if ($manifest.sourceHeadSha -ne $ExpectedSourceHead.ToLowerInvariant()) { throw 'Staged manifest source HEAD mismatch.' }
 
 $provenancePath = Join-Path $candidate 'admiral-trader-provenance.json'
 $inventoryPath = Join-Path $candidate 'admiral-trader-package-files.json'
 if ((-not (Test-Path $provenancePath -PathType Leaf)) -or (-not (Test-Path $inventoryPath -PathType Leaf))) { throw 'Package provenance or inventory is missing.' }
 $provenance = Get-Content $provenancePath -Raw | ConvertFrom-Json
-if ($provenance.sourceHeadSha -ne $ExpectedSourceHead.ToLowerInvariant() -or $provenance.version -ne '0.1.0+milestones') { throw 'Package provenance authority mismatch.' }
+if ($provenance.sourceHeadSha -ne $ExpectedSourceHead.ToLowerInvariant() -or $provenance.version -ne '0.2.0') { throw 'Package provenance authority mismatch.' }
 if ($provenance.questCount -ne 43 -or $provenance.totalFiniteOffers -ne 37) { throw 'Stabilized campaign scope drifted.' }
 
 $forbidden = @(Get-ChildItem $candidate -Recurse -File | Where-Object {

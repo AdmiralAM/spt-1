@@ -1,15 +1,15 @@
 {
   "schemaVersion": 2,
   "product": "Admiral Trader",
-  "version": "0.1.0+milestones",
+  "version": "0.2.0",
   "traderId": "d5c27bb3169f8dfbc13f6b69",
   "sptCompatibility": "~4.1.0",
   "targetSptVersion": "4.1.5",
   "publishedApiCompileBaseline": "4.1.5",
-  "releaseChannel": "release-candidate",
+  "releaseChannel": "stable",
   "registrationEnabled": false,
   "registrationGate": {
-    "reason": "Source registration remains fail-closed; the exact-head install candidate enables it only after all compatibility, lifecycle, campaign, build and server-start gates pass.",
+    "reason": "Repository source remains fail-closed; the exact-head stable package enables registration only after compatibility, lifecycle, campaign, build and server-start gates pass.",
     "requiredBeforeEnable": [
       "approved trader portrait",
       "native base.json validated",

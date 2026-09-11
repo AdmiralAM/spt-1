@@ -8,7 +8,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "Admiral Trader";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("0.1.0+milestones");
+    public SemanticVersioning.Version Version { get; init; } = new("0.2.0");
 
     // Intentionally not pinned to one exact SPT patch.
     // The current development/validation baseline is tracked separately; compatible 4.1.x updates remain loadable.
