@@ -15,6 +15,10 @@ Admiral Trader 0.2.0 is the stable fresh-profile baseline. Polishing work is col
 
 The next authored campaign pass may expand story chains and create longer staged rotations for weapons, armor, rigs, headsets, helmets and backpacks. It should keep a small useful choice of concurrent loadouts, distribute activity across several suitable maps without binding each weapon to one map, and keep Admiral's concurrent quest load controlled alongside vanilla traders, Artem, Ref and Scorpion.
 
+Admiral's opening wave must participate in the normal early-game route through **Ground Zero / Эпицентр**. New players should receive useful Admiral work there alongside the opening quests from the retained vanilla traders. Ground Zero may be the primary location or one member of a small allowed-location pool; the whole early Admiral campaign must not be locked exclusively to one map.
+
+The storefront expansion must include a small, recognizable selection of **distinctive ready-to-use weapons**. Candidates must be checked against the effective assortments of the retained vanilla traders, Artem, Ref and Scorpion after Andrudis is disabled. Prefer native weapons or authored presets that are otherwise unavailable as fixed purchases, serve a clear tactical role, remain finite, and unlock at an appropriate loyalty tier or campaign milestone. Cosmetic duplicate presets and rows that merely undercut another trader do not qualify as unique stock.
+
 Changes should be evaluated in batches for campaign pacing, repetition, map coverage, reward pressure and storefront progression. Existing persistent IDs remain stable unless a documented graph correction requires a new record.
 
 ## Playtest notes

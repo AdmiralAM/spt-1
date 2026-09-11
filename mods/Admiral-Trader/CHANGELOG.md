@@ -1,5 +1,10 @@
 # Admiral Trader changelog
 
+## Next campaign milestone — authored direction
+
+- Route the opening Admiral wave through Ground Zero alongside the retained traders' early progression.
+- Add a bounded signature weapon rack selected against the effective post-Andrudis trader catalog, with finite stock and progressive access.
+
 ## 0.2.0 — stable campaign baseline
 
 - Materializes one persistent Admiral trader with 43 runtime quests and 37 finite offers.

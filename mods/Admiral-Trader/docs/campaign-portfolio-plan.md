@@ -44,6 +44,10 @@ Every ordinary progression band should give the player a useful reason to visit 
 
 Factory night and Ground Zero high-level variants may be used where SPT exposes stable location contracts. Labs tasks must remain late and must not become the only endgame activity.
 
+### Opening Ground Zero contract
+
+The opening Admiral wave must send a fresh character to Ground Zero / Эпицентр, matching the natural early-game route created by the retained vanilla traders. Its objectives should be practical at level 1 and allow useful parallel progress with other opening quests. Ground Zero can be the primary map or part of a small truthful location pool; later Admiral progression must continue across the wider map rotation rather than making the whole opening act Ground-Zero-only.
+
 ## Loadout variation target
 
 Weapon quests remain a staged rotation across weapon families and specific models. New campaign work should also rotate the rest of the raid loadout:
@@ -108,5 +112,7 @@ Stock remains finite and useful items should have purchase limits. Loyalty provi
 Admiral's identity is operational supply: navigation and access support, field marking and signals, reconnaissance equipment, bounded specialist ammunition, and selected prepared gear for campaign tasks. The final assortment must avoid duplicating another trader at a better price and must contain enough exclusive or differently constrained utility that the player has a reason to visit Admiral throughout progression.
 
 Before expanding the storefront, build an exact effective-assort comparison after QuestManiac/Andrudis is disabled. The comparison set is SPT's native traders (including Ref), Admiral, Artem and Scorpion. Inventory that disappears with the retired Andrudis traders is a candidate source, but it is not imported automatically: retain only useful items absent from the remaining traders, or items whose Admiral-specific stock, price, loyalty tier or quest gate creates a distinct operational role. Preserve the finite-offer policy and reject duplicate commodity rows that merely inflate the grid.
+
+The expanded shop must contain a bounded signature weapon rack. Each selected weapon or complete preset must provide a recognizable role and be unavailable as the same fixed purchase from the retained comparison set. Use native SPT items and the existing Admiral assort architecture; do not add an external weapon dependency. Signature weapons remain finite and are distributed across loyalty tiers and meaningful quest unlocks, so the shop is useful from the start without exposing its final inventory at level 1. A recolor, trivial attachment swap or cheaper copy of another trader's offer is not a signature weapon.
 
 Ultimate Loot Editor is a separate optional research reference for Economy Admiral. It edits individual loose-loot spawn points and their item weights and persists map-specific JSON; Economy Admiral currently applies global map loot pressure. Any future compatibility work must establish deterministic ownership and ordering when both are installed. Ultimate Loot Editor is not a Trader dependency and its authored spawn-point data must not be absorbed into the storefront.
