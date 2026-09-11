@@ -46,7 +46,7 @@ namespace SPTItemIntelligence
             int width,
             int height,
             int craftCount = 0,
-            int barterCount = 0)
+            int barterCount = 0, string backgroundColor = "")
         {
             this.templateId = templateId ?? string.Empty;
             this.traderUnitValue = Math.Max(0, traderUnitValue);
@@ -57,6 +57,7 @@ namespace SPTItemIntelligence
             this.height = Math.Max(1, height);
             this.craftCount = Math.Max(0, craftCount);
             this.barterCount = Math.Max(0, barterCount);
+            this.backgroundColor = backgroundColor ?? string.Empty;
         }
 
         public string templateId { get; }
@@ -68,5 +69,6 @@ namespace SPTItemIntelligence
         public int height { get; }
         public int craftCount { get; }
         public int barterCount { get; }
+        public string backgroundColor { get; }
     }
 }

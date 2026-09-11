@@ -160,7 +160,8 @@ namespace SPTItemIntelligence
                     JsonNode.ReadLong(JsonNode.Get(entry, "fleaUnitValue", "FleaUnitValue"), 0),
                     JsonNode.ReadLong(JsonNode.Get(entry, "fallbackUnitValue", "FallbackUnitValue"), 0),
                     JsonNode.ReadInt(JsonNode.Get(entry, "width", "Width"), 1),
-                    JsonNode.ReadInt(JsonNode.Get(entry, "height", "Height"), 1)));
+                    JsonNode.ReadInt(JsonNode.Get(entry, "height", "Height"), 1),
+                    backgroundColor: JsonNode.ReadString(JsonNode.Get(entry, "backgroundColor", "BackgroundColor"))));
             }
             return ItemPriceIndexBuilder.Build(inputs);
         }
@@ -455,6 +456,7 @@ namespace SPTItemIntelligence
         readonly ItemHoverRuntimeController hoverController;
         readonly Action<string> trace;
         int state = (int)RequirementBootstrapState.Loading;
+        readonly Func<ModuleSelection> modules;
         string detail = "LOADING ITEM DATA";
 
         public RequirementRuntimeBootstrap(
@@ -464,7 +466,7 @@ namespace SPTItemIntelligence
             ItemPresentationStore presentationStore,
             ItemHoverRuntimeController hoverController,
             IPriceDataProjector priceProjector = null,
-            Action<string> trace = null)
+            Action<string> trace = null, Func<ModuleSelection> modules = null)
         {
             this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
             this.decoder = decoder ?? throw new ArgumentNullException(nameof(decoder));
@@ -473,6 +475,7 @@ namespace SPTItemIntelligence
             this.hoverController = hoverController ?? throw new ArgumentNullException(nameof(hoverController));
             this.priceProjector = priceProjector ?? new SptPriceDataProjector();
             this.trace = trace;
+            this.modules = modules ?? (() => ModuleSelection.Default);
         }
 
         public RequirementBootstrapState State => (RequirementBootstrapState)Volatile.Read(ref state);
@@ -485,14 +488,24 @@ namespace SPTItemIntelligence
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                ModuleSelection selected = modules();
+                if (!selected.AnyConsumer)
+                {
+                    presentationStore.Refresh(ItemRequirementStateIndex.Empty, ItemPriceIndex.Empty);
+                    ItemRelevanceRegistry.Replace(null);
+                    Interlocked.Exchange(ref detail, "NO ENABLED MODULES");
+                    Interlocked.Exchange(ref state, (int)RequirementBootstrapState.Ready);
+                    error = null;
+                    return true;
+                }
                 string json = transport.GetSnapshotJson();
                 cancellationToken.ThrowIfCancellationRequested();
                 RequirementDataEnvelope snapshot = decoder.Decode(json);
                 if (snapshot == null || !snapshot.profileReady) throw new InvalidOperationException("Profile is not ready.");
-                RequirementProjection projection = projector.Project(snapshot);
-                RequirementIndex index = RequirementIndexBuilder.Build(projection);
+                RequirementProjection projection = selected.Requirements ? projector.Project(snapshot) : new RequirementProjection(snapshot.generatedAtUnixSeconds, null, null);
+                RequirementIndex index = RequirementIndexBuilder.Build(projection, selected.RequirementOptions);
                 ItemRequirementStateIndex requirements = ItemRequirementStateBuilder.Build(index);
-                ItemPriceIndex prices = priceProjector.Project(snapshot.prices);
+                ItemPriceIndex prices = selected.Prices ? priceProjector.Project(snapshot.prices) : ItemPriceIndex.Empty;
                 cancellationToken.ThrowIfCancellationRequested();
                 presentationStore.Refresh(requirements, prices);
                 TraceRuntimeBoundary(index, requirements);

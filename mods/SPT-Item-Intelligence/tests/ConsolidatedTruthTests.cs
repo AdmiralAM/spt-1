@@ -53,6 +53,8 @@ static class ConsolidatedTruthTests
         FirRequirementRegistry.Clear();
         HideoutProjection();
         QuestProjection();
+        ModulesAndPalette();
+        DisabledBootstrap();
         Console.WriteLine("Consolidated truth: " + assertions + " assertions passed.");
         return assertions;
     }
@@ -80,7 +82,48 @@ static class ConsolidatedTruthTests
         Check(e.QuestNeededNow == 8 && e.Allocation.NowFirRequired == 3, "partial handover, distinct consumption, duplicate condition/target and Find projection");
         Check(e.Details.Count == 3, "mixed FIR and any-item conditions stay explicit");
     }
+    static void ModulesAndPalette()
+    {
+        for (int mask = 0; mask < 256; mask++)
+        {
+            var m = new ModuleSelection((mask & 1) != 0, (mask & 2) != 0, (mask & 4) != 0, (mask & 8) != 0,
+                (mask & 16) != 0, (mask & 32) != 0, (mask & 64) != 0, (mask & 128) != 0);
+            Check(m.Key == mask, "each F12 toggle remains independent");
+            Check(!m.Backgrounds || (m.Prices && m.TrackViews), "background survives marker and tooltip disable");
+            Check(m.Markers || m.Tooltips || m.Backgrounds || !m.AnyConsumer, "no presentation consumers means no data work");
+            Check(m.Tooltips || !m.CraftBarter, "hidden relevance does no work");
+        }
+        Check(new ModuleSelection(markers: false).DataKey == ModuleSelection.Default.DataKey, "marker toggle with tooltip enabled needs no data refresh");
+        Check(BackgroundPalette.Money(9999) == "" && BackgroundPalette.Money(10000) == "#526B3F", "money tint entry threshold");
+        Check(BackgroundPalette.Money(24999) == "#526B3F" && BackgroundPalette.Money(25000) == "#294F31", "money tier boundary");
+        Check(BackgroundPalette.Ammo(20) == "#526B3F" && BackgroundPalette.Ammo(21) == "#253552", "ammo uses penetration-specific tiers");
+        Check(BackgroundPalette.Key(100000, false) == "#660415", "flea-banned key color takes precedence");
+        var irrelevant = new ItemHoverText("100 ₽", "", "");
+        Check(!ItemMarkerPresentation.From(irrelevant, contextual: true).IsVisible, "no contextual marker on irrelevant value-only item");
+        var need = new ItemHoverText("", "", "", "x", 0, 0, 0, 1, 1);
+        Check(ItemMarkerPresentation.From(need, contextual: true).Kind == ItemMarkerKind.Hideout, "hideout attention is first class");
+        var requirements = RequirementIndexBuilder.Build(new RequirementProjection(1, null, new[] { new RequirementContribution("x", RequirementSource.CurrentQuest, 1) }));
+        var presentation = ItemPresentationIndexBuilder.Build(ItemRequirementStateBuilder.Build(requirements), ItemPriceIndexBuilder.Build(new[] { new ItemPriceInput("x", 10000) })).Get("x");
+        var withoutValue = new ItemHoverTextFormatter().Format(new ItemHoverState(presentation), ItemValueMode.Vendor,
+            new ModuleSelection(value: false));
+        Check(withoutValue.ValueLine == "" && withoutValue.QuestNowLine.Length > 0, "value section disables without removing quest truth");
+    }
+    static void DisabledBootstrap()
+    {
+        var transport = new CountingTransport();
+        var store = new ItemPresentationStore();
+        var controller = new ItemHoverRuntimeController(store, new NullSink());
+        var bootstrap = new RequirementRuntimeBootstrap(transport, new NeverDecoder(), new NeverProjector(), store, controller,
+            modules: () => new ModuleSelection(false, false, false, false, false, false, false, false));
+        string error;
+        Check(bootstrap.TryRefresh(default(System.Threading.CancellationToken), out error), "all-disabled bootstrap succeeds without data");
+        Check(transport.Calls == 0 && bootstrap.State == RequirementBootstrapState.Ready && bootstrap.Detail == "NO ENABLED MODULES", "all-disabled performs no transport/projector work");
+    }
     static object Stage(int count) => D("requirements", new object[] { D("type", "Item", "templateId", "x", "count", count) });
     static Dictionary<string, object> D(params object[] pairs) { var d = new Dictionary<string, object>(); for (int i = 0; i < pairs.Length; i += 2) d[(string)pairs[i]] = pairs[i + 1]; return d; }
     static void Check(bool ok, string message) { assertions++; if (!ok) throw new InvalidOperationException("Consolidated truth: " + message); }
+    sealed class CountingTransport : IRequirementSnapshotTransport { public int Calls; public string GetSnapshotJson() { Calls++; return "unexpected"; } }
+    sealed class NeverDecoder : IRequirementSnapshotDecoder { public RequirementDataEnvelope Decode(string json) { throw new InvalidOperationException("decoder must be idle"); } }
+    sealed class NeverProjector : IRequirementDataProjector { public RequirementProjection Project(RequirementDataEnvelope snapshot) { throw new InvalidOperationException("projector must be idle"); } }
+    sealed class NullSink : IItemHoverViewSink { public void Show(ItemHoverText text) { } public void Clear() { } }
 }

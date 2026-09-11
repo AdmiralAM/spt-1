@@ -21,8 +21,8 @@ static class Phase21MarkerPolishTests
             "runtime placement switches by selected marker side", ref assertions);
         Expect(overlay.Contains("right ? -settings.MarkerOffsetX : settings.MarkerOffsetX"),
             "positive X offset moves inward from either selected edge", ref assertions);
-        Expect(overlay.Contains("size * 0.78f"),
-            "marker glyph is slightly smaller inside the same hit box", ref assertions);
+        Expect(overlay.Contains("static Sprite checkmarkSprite"),
+            "crisp original marker sprite is shared between item cells", ref assertions);
         Expect(!settings.Contains("Glow Strength") && !settings.Contains("Glow Radius") && !overlay.Contains("settings.MarkerGlow"),
             "rejected Outline glow path stays removed", ref assertions);
         Expect(settings.Contains("\"Halo\"") && settings.Contains("\"Halo Strength\"") &&

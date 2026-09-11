@@ -39,8 +39,9 @@ namespace SPTItemIntelligence
             string perSlotLine = null,
             string bestSellLine = null,
             string bestTraderLine = null,
-            string fleaPriceLine = null, ItemRequirementAllocation allocation = null)
+            string fleaPriceLine = null, ItemRequirementAllocation allocation = null, ModuleSelection modules = null)
         {
+            modules = modules ?? ModuleSelection.Default;
             Primary = primary ?? string.Empty;
             Secondary = secondary ?? string.Empty;
             Status = status ?? string.Empty;
@@ -75,7 +76,11 @@ namespace SPTItemIntelligence
             KeepLine = CountLine("Keep", KeepCount);
             PerSlotLine = perSlotLine ?? string.Empty;
 
-            ItemRelevanceState relevance = ItemRelevanceRegistry.Get(TemplateId);
+            ItemRelevanceState relevance = modules.CraftBarter ? ItemRelevanceRegistry.Get(TemplateId) : ItemRelevanceState.Empty;
+            SummaryLine = allocation == null ? string.Empty :
+                (allocation.Coverage == RequirementCoverage.NotNeeded ? "Not Needed" : allocation.Coverage == RequirementCoverage.Enough ? "Enough" : "Need More ×" + allocation.Missing.ToString(CultureInfo.InvariantCulture)) +
+                (allocation.MustKeep ? " · Keep ×" + allocation.Keep.ToString(CultureInfo.InvariantCulture) : string.Empty);
+            SummaryOwnedLine = "Owned ×" + OwnedCount.ToString(CultureInfo.InvariantCulture) + " · FIR ×" + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture);
             string ownedLine = OwnedFoundInRaid > 0
                 ? "Owned ×" + OwnedCount.ToString(CultureInfo.InvariantCulture) + " · FIR ×" + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture)
                 : CountLine("Owned", OwnedCount);
@@ -111,6 +116,8 @@ namespace SPTItemIntelligence
         }
 
         public ItemRequirementAllocation Allocation { get; }
+        public string SummaryLine { get; }
+        public string SummaryOwnedLine { get; }
         public string Primary { get; }
         public string Secondary { get; }
         public string Status { get; }
@@ -175,6 +182,9 @@ namespace SPTItemIntelligence
                 return string.Empty;
             }
 
+            if (TryLine(SummaryLine, requestedIndex, ref current, out found)) return found;
+            if (SummaryLine.Length > 0 && TryLine(SummaryOwnedLine, requestedIndex, ref current, out found)) return found;
+
             if (mode == ItemTooltipMode.Full)
             {
                 if (TryLine(BestSellLine, requestedIndex, ref current, out found)) return found;
@@ -195,11 +205,11 @@ namespace SPTItemIntelligence
                 if (TryLine(HideoutLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(QuestLaterLine, requestedIndex, ref current, out found)) return found;
             }
-            if (TryLine(KeepLine, requestedIndex, ref current, out found)) return found;
+            if (SummaryLine.Length == 0 && TryLine(KeepLine, requestedIndex, ref current, out found)) return found;
 
             if (mode == ItemTooltipMode.Detailed || mode == ItemTooltipMode.Full)
             {
-                if (TryLine(OwnedLine, requestedIndex, ref current, out found)) return found;
+                if (SummaryLine.Length == 0 && TryLine(OwnedLine, requestedIndex, ref current, out found)) return found;
                 IReadOnlyList<string> selected = mode == ItemTooltipMode.Full ? RequirementDetailLines : DetailedRequirementLines;
                 for (int i = 0; i < selected.Count; i++)
                     if (TryLine(selected[i], requestedIndex, ref current, out found)) return found;
@@ -241,9 +251,12 @@ namespace SPTItemIntelligence
             return Format(hover, ItemValueMode.Vendor);
         }
 
-        public ItemHoverText Format(ItemHoverState hover, ItemValueMode valueMode)
+        public ItemHoverText Format(ItemHoverState hover, ItemValueMode valueMode, ModuleSelection modules = null)
         {
             if (hover == null || !hover.HasData) return ItemHoverText.Empty;
+            modules = modules ?? ModuleSelection.Default;
+            if ((!modules.Tooltips || !modules.Value) && hover.Presentation.Price != null)
+                hover = new ItemHoverState(new ItemPresentationState(hover.TemplateId, hover.Presentation.Requirement, null));
 
             bool fleaPreferred = valueMode == ItemValueMode.Flea;
             string trader = string.IsNullOrWhiteSpace(hover.BestTraderName) ? "Vendor" : hover.BestTraderName.Trim();
@@ -294,7 +307,7 @@ namespace SPTItemIntelligence
                 perSlot,
                 bestSell,
                 bestTrader,
-                fleaPrice, truth);
+                fleaPrice, truth, modules);
         }
 
         static IEnumerable<string> FormatRequirementDetails(IReadOnlyList<RequirementDetail> details)
@@ -353,15 +366,18 @@ namespace SPTItemIntelligence
     {
         readonly ItemHoverTextFormatter formatter;
         readonly Func<ItemValueMode> valueModeProvider;
+        readonly Func<ModuleSelection> modulesProvider;
+        int lastModuleKey = -1;
         readonly Dictionary<ItemPresentationState, ItemHoverText> cache = new Dictionary<ItemPresentationState, ItemHoverText>(ReferenceComparer.Instance);
         ItemPresentationIndex lastIndex;
         ItemValueMode lastValueMode;
         bool hasValueMode;
 
-        public ItemHoverTextCache(ItemHoverTextFormatter formatter = null, Func<ItemValueMode> valueModeProvider = null)
+        public ItemHoverTextCache(ItemHoverTextFormatter formatter = null, Func<ItemValueMode> valueModeProvider = null, Func<ModuleSelection> modulesProvider = null)
         {
             this.formatter = formatter ?? new ItemHoverTextFormatter();
             this.valueModeProvider = valueModeProvider ?? (() => ItemValueMode.Vendor);
+            this.modulesProvider = modulesProvider ?? (() => ModuleSelection.Default);
         }
 
         public ItemHoverText Get(ItemHoverState hover, ItemPresentationIndex index)
@@ -369,18 +385,20 @@ namespace SPTItemIntelligence
             if (hover == null || !hover.HasData) return ItemHoverText.Empty;
             ItemPresentationState presentation = hover.Presentation;
             ItemValueMode valueMode = valueModeProvider();
+            ModuleSelection modules = modulesProvider();
 
-            if (!object.ReferenceEquals(lastIndex, index) || !hasValueMode || valueMode != lastValueMode)
+            if (!object.ReferenceEquals(lastIndex, index) || !hasValueMode || valueMode != lastValueMode || lastModuleKey != modules.Key)
             {
                 cache.Clear();
                 lastIndex = index;
                 lastValueMode = valueMode;
                 hasValueMode = true;
+                lastModuleKey = modules.Key;
             }
 
             ItemHoverText text;
             if (cache.TryGetValue(presentation, out text)) return text;
-            text = formatter.Format(hover, valueMode);
+            text = formatter.Format(hover, valueMode, modules);
             cache[presentation] = text;
             return text;
         }

@@ -28,13 +28,13 @@ namespace SPTItemIntelligence
         public string Glyph { get; }
         public bool IsVisible => Kind != ItemMarkerKind.Hidden;
 
-        public static ItemMarkerPresentation From(ItemHoverText text)
+        public static ItemMarkerPresentation From(ItemHoverText text, bool contextual = false)
         {
             if (text == null || !text.HasData) return hidden;
             if (text.QuestNowMissing > 0) return questNow;
             if (text.HideoutMissing > 0) return hideout;
             if (text.QuestLaterMissing > 0) return questLater;
-            return defaultMarker;
+            return contextual ? hidden : defaultMarker;
         }
     }
 }

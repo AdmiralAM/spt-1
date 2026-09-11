@@ -13,6 +13,7 @@ namespace SPTItemIntelligence
 
     public sealed class ItemIntelligenceUiSettings
     {
+        readonly ConfigEntry<bool> markers, tooltips, quests, futureQuests, hideout, value, relevance, backgrounds;
         readonly ConfigEntry<ItemTooltipMode> tooltipMode;
         readonly ConfigEntry<ItemValueMode> valueMode;
         readonly ConfigEntry<float> tooltipScale;
@@ -33,11 +34,20 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<Color> partialColor;
         readonly ConfigEntry<Color> missingColor;
         int revision;
+        ModuleSelection modules;
 
         public event Action Changed;
 
         public ItemIntelligenceUiSettings(ConfigFile config)
         {
+            markers = Module(config, "Markers", true, "Show one contextual item-cell checkmark.");
+            tooltips = Module(config, "Tooltips", true, "Show the compact information card on item hover.");
+            quests = Module(config, "Quests", true, "Include active quest requirements.");
+            futureQuests = Module(config, "Future Quests", true, "Include independent future quest requirements.");
+            hideout = Module(config, "Hideout", true, "Include incomplete current and future hideout upgrades.");
+            value = Module(config, "Value", true, "Show value, buyer, flea and per-slot information.");
+            relevance = Module(config, "Craft and Barter", true, "Show craft and barter relevance.");
+            backgrounds = Module(config, "Background Coloring", false, "Optional economic/category tint. Disable legacy Item Valuation before enabling; no external mod is required.");
             tooltipMode = config.Bind("Tooltip", "Mode", ItemTooltipMode.Normal,
                 "Minimal: Value + Keep. Normal: adds Quest Now, Hideout and Quest Later with owned/required progress. Detailed: adds owned and up to three concrete targets. Full: shows every concrete target and FIR detail. Internal ids and sell/surplus decisions are never shown.");
             valueMode = config.Bind("Tooltip", "Value Source", ItemValueMode.Vendor,
@@ -92,9 +102,12 @@ namespace SPTItemIntelligence
             enoughColor.SettingChanged += delegate { Touch(); };
             partialColor.SettingChanged += delegate { Touch(); };
             missingColor.SettingChanged += delegate { Touch(); };
+            modules = ReadModules();
         }
 
         public ItemTooltipMode TooltipMode => tooltipMode.Value;
+        public ModuleSelection Modules => modules;
+        ModuleSelection ReadModules() => new ModuleSelection(markers.Value, tooltips.Value, quests.Value, futureQuests.Value, hideout.Value, value.Value, relevance.Value, backgrounds.Value);
         public ItemValueMode ValueMode => valueMode.Value;
         public float TooltipScale => Mathf.Clamp(tooltipScale.Value, 0.75f, 1.50f);
         public float TooltipOpacity => Mathf.Clamp01(tooltipOpacity.Value);
@@ -124,9 +137,17 @@ namespace SPTItemIntelligence
 
         void Touch()
         {
+            modules = ReadModules();
             Interlocked.Increment(ref revision);
             Action changed = Changed;
             if (changed != null) changed();
+        }
+
+        ConfigEntry<bool> Module(ConfigFile config, string name, bool enabled, string description)
+        {
+            ConfigEntry<bool> entry = config.Bind("Modules", name, enabled, description);
+            entry.SettingChanged += delegate { Touch(); };
+            return entry;
         }
 
         static ConfigEntry<Color> ColorEntry(ConfigFile config, string section, string name, Color value, string description)

@@ -5,6 +5,7 @@ using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Helpers.Profile;
 using SPTarkov.Server.Core.Helpers.Traders;
+using SPTarkov.Server.Core.Helpers.Ragfair;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Mod;
@@ -37,8 +38,16 @@ public sealed class RequirementDataService(
     HideoutTable hideoutTable,
     HandbookHelper handbookHelper,
     ItemHelper itemHelper,
-    PresetHelper presetHelper)
+    PresetHelper presetHelper,
+    RagfairServerHelper ragfairServerHelper)
 {
+    private static readonly MongoId[] TotalValueBaseClasses =
+    [
+        BaseClasses.WEAPON,
+        BaseClasses.ARMORED_EQUIPMENT,
+        BaseClasses.VEST
+    ];
+
     public ValueTask<string> BuildSnapshotAsync(MongoId sessionId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -106,18 +115,28 @@ public sealed class RequirementDataService(
             var trader = ResolveBestTrader(templateId, traderBasis);
             int width = Math.Max(1, item.Properties?.Width ?? 1);
             int height = Math.Max(1, item.Properties?.Height ?? 1);
+            bool fleaAllowed = ragfairServerHelper.IsItemValidRagfairItem(itemHelper.GetItem(templateId));
+            double usableFlea = fleaAllowed ? fleaValue : 0;
+            double economic = Math.Max(trader.Price, usableFlea);
+            if (economic <= 0) economic = handbookValue;
+            bool total = itemHelper.IsOfBaseclasses(templateId, TotalValueBaseClasses);
+            string background = itemHelper.IsOfBaseclass(templateId, BaseClasses.AMMO)
+                ? BackgroundPalette.Ammo(item.Properties?.PenetrationPower ?? 0)
+                : itemHelper.IsOfBaseclass(templateId, BaseClasses.KEY)
+                    ? BackgroundPalette.Key(fleaValue > 0 ? fleaValue : handbookValue, fleaAllowed)
+                    : BackgroundPalette.Money(total ? economic : economic / ((double)width * height));
             craftCounts.TryGetValue(templateId, out int craftCount);
             barterCounts.TryGetValue(templateId, out int barterCount);
             result.Add(new ItemPriceSnapshotEntry(
                 templateId.ToString(),
                 ToLong(trader.Price),
                 trader.Name,
-                ToLong(fleaValue),
+                ToLong(usableFlea),
                 ToLong(handbookValue),
                 width,
                 height,
                 craftCount,
-                barterCount));
+                barterCount, background));
         }
         return result;
     }

@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SPTItemIntelligence
 {
-    public sealed class ItemHoverOverlaySink : IItemHoverViewSink, IItemHoverAnchorSink, IItemViewRegistrySink
+    public sealed class ItemHoverOverlaySink : IItemHoverViewSink, IItemHoverAnchorSink, IItemViewRegistrySink, IInventorySessionLifecycle
     {
         readonly Dictionary<object, TrackedItemView> trackedViews = new Dictionary<object, TrackedItemView>(ReferenceComparer.Instance);
         readonly List<object> staleViews = new List<object>();
@@ -21,6 +21,11 @@ namespace SPTItemIntelligence
         int invalidationVersion;
         int renderedInvalidation = -1;
         bool tooltipDrawingDisabled;
+        public event Action InventoryOpened;
+        public void OnViewInitialized()
+        {
+            if (settings.Modules.TrackViews && trackedViews.Count == 0) InventoryOpened?.Invoke();
+        }
 
         public ItemHoverOverlaySink(
             ItemIntelligenceUiSettings settings,
@@ -59,6 +64,7 @@ namespace SPTItemIntelligence
 
         public void RegisterView(object itemView, string templateId)
         {
+            if (!settings.Modules.TrackViews) return;
             string normalized = RequirementContribution.NormalizeId(templateId);
             int stackCount = EftItemTemplateIdResolver.ResolveStackCount(itemView);
             RectTransform target = ResolveRectTransform(itemView);
@@ -67,17 +73,18 @@ namespace SPTItemIntelligence
             TrackedItemView tracked;
             if (!trackedViews.TryGetValue(itemView, out tracked))
             {
-                tracked = new TrackedItemView(target, normalized, stackCount, AttachedMarkerView.TryCreate(target));
+                tracked = new TrackedItemView(target, normalized, stackCount, null);
                 trackedViews[itemView] = tracked;
             }
             else
             {
                 tracked.TemplateId = normalized;
                 tracked.StackCount = Math.Max(1, stackCount);
-                if (!object.ReferenceEquals(tracked.Anchor, target) || tracked.Marker == null) tracked.ReplaceAnchor(target);
+                if (!object.ReferenceEquals(tracked.Anchor, target)) tracked.ReplaceAnchor(target);
             }
 
             tracked.Text = ResolveText(normalized, tracked.StackCount, store.Current);
+            tracked.BackgroundColor = store.Current.Get(normalized).Price?.BackgroundColor;
             tracked.Apply(settings);
         }
 
@@ -111,19 +118,20 @@ namespace SPTItemIntelligence
 
         public void Draw()
         {
-            if (tooltipDrawingDisabled) return;
+            if (!settings.Modules.TrackViews) return;
             if (Event.current != null && Event.current.type != EventType.Repaint) return;
             RefreshTrackedViewsIfNeeded();
+            if (tooltipDrawingDisabled || !settings.Modules.Tooltips) return;
 
             object activeView = Volatile.Read(ref hoveredView);
             if (activeView == null) return;
             TrackedItemView tracked;
-            if (!trackedViews.TryGetValue(activeView, out tracked) || tracked.Marker == null) return;
+            if (!trackedViews.TryGetValue(activeView, out tracked)) return;
 
             try
             {
                 Rect markerRect;
-                if (!tracked.Marker.TryGetScreenRect(out markerRect)) return;
+                if (!tracked.TryGetScreenRect(out markerRect)) return;
                 Vector2 mouse = Event.current == null
                     ? new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)
                     : Event.current.mousePosition;
@@ -164,6 +172,7 @@ namespace SPTItemIntelligence
                     continue;
                 }
                 tracked.Text = ResolveText(tracked.TemplateId, tracked.StackCount, index);
+                tracked.BackgroundColor = index.Get(tracked.TemplateId).Price?.BackgroundColor;
                 tracked.Apply(settings);
             }
             RemoveStaleViews();
@@ -173,6 +182,7 @@ namespace SPTItemIntelligence
 
         ItemHoverText ResolveText(string templateId, int stackCount, ItemPresentationIndex index)
         {
+            if (!settings.Modules.Markers && !settings.Modules.Tooltips) return ItemHoverText.Empty;
             ItemPresentationIndex safeIndex = index ?? ItemPresentationIndex.Empty;
             ItemPresentationState presentation = safeIndex.Get(templateId);
             if (presentation != ItemPresentationState.Empty)
@@ -225,6 +235,8 @@ namespace SPTItemIntelligence
 
         sealed class TrackedItemView : IDisposable
         {
+            readonly Vector3[] corners = new Vector3[4];
+            BackgroundView background;
             public TrackedItemView(RectTransform anchor, string templateId, int stackCount, AttachedMarkerView marker)
             {
                 Anchor = anchor;
@@ -238,30 +250,94 @@ namespace SPTItemIntelligence
             public string TemplateId { get; set; }
             public int StackCount { get; set; }
             public ItemHoverText Text { get; set; }
+            public string BackgroundColor { get; set; }
             public AttachedMarkerView Marker { get; private set; }
 
             public void ReplaceAnchor(RectTransform anchor)
             {
                 if (Marker != null) Marker.Dispose();
+                if (background != null) background.Dispose();
+                background = null;
                 Anchor = anchor;
-                Marker = AttachedMarkerView.TryCreate(anchor);
+                Marker = null;
             }
 
             public void Apply(ItemIntelligenceUiSettings settings)
             {
-                if (Marker != null) Marker.Apply(ItemMarkerPresentation.From(Text), settings);
+                if (settings.Modules.Backgrounds && !string.IsNullOrEmpty(BackgroundColor))
+                {
+                    if (background == null) background = BackgroundView.Create(Anchor);
+                    if (background != null) background.Apply(BackgroundColor);
+                }
+                else { if (background != null) background.Dispose(); background = null; }
+                ItemMarkerPresentation state = ItemMarkerPresentation.From(Text, contextual: true);
+                if (!settings.Modules.Markers || !state.IsVisible)
+                {
+                    if (Marker != null) Marker.Dispose();
+                    Marker = null;
+                    return;
+                }
+                if (Marker == null) Marker = AttachedMarkerView.TryCreate(Anchor);
+                if (Marker != null) Marker.Apply(state, settings);
+            }
+
+            public bool TryGetScreenRect(out Rect result)
+            {
+                result = default(Rect);
+                if (Anchor == null || !Anchor.gameObject.activeInHierarchy) return false;
+                Anchor.GetWorldCorners(corners);
+                Vector2 min = RectTransformUtility.WorldToScreenPoint(null, corners[0]);
+                Vector2 max = RectTransformUtility.WorldToScreenPoint(null, corners[2]);
+                result = new Rect(min.x, Screen.height - max.y, max.x - min.x, max.y - min.y);
+                return result.width > 0 && result.height > 0;
             }
 
             public void Dispose()
             {
+                if (background != null) background.Dispose();
+                background = null;
                 if (Marker != null) Marker.Dispose();
                 Marker = null;
             }
         }
 
+        sealed class BackgroundView : IDisposable
+        {
+            static readonly Type imageType = Type.GetType("UnityEngine.UI.Image, UnityEngine.UI", false);
+            static readonly PropertyInfo colorProperty = imageType?.GetProperty("color");
+            readonly GameObject owned;
+            readonly Component image;
+            string applied;
+            BackgroundView(GameObject owned, Component image) { this.owned = owned; this.image = image; }
+            public static BackgroundView Create(RectTransform anchor)
+            {
+                if (imageType == null || colorProperty == null || anchor == null) return null;
+                var owned = new GameObject("ItemIntelligenceBackground", typeof(RectTransform));
+                owned.layer = anchor.gameObject.layer;
+                var rect = (RectTransform)owned.transform;
+                rect.SetParent(anchor, false);
+                rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
+                rect.offsetMin = Vector2.zero; rect.offsetMax = Vector2.zero;
+                rect.SetAsFirstSibling();
+                var image = (Component)owned.AddComponent(imageType);
+                imageType.GetProperty("raycastTarget")?.SetValue(image, false, null);
+                return new BackgroundView(owned, image);
+            }
+            public void Apply(string hex)
+            {
+                if (hex == applied) return;
+                Color color;
+                if (!ColorUtility.TryParseHtmlString(hex, out color)) return;
+                color.a = .72f;
+                colorProperty.SetValue(image, color, null);
+                applied = hex;
+            }
+            public void Dispose() { if (owned != null) UnityEngine.Object.Destroy(owned); }
+        }
+
         sealed class AttachedMarkerView : IDisposable
         {
-            static readonly Type textType = Type.GetType("UnityEngine.UI.Text, UnityEngine.UI", false);
+            static Sprite checkmarkSprite;
             static readonly Type imageType = Type.GetType("UnityEngine.UI.Image, UnityEngine.UI", false);
             static readonly Type outlineType = Type.GetType("UnityEngine.UI.Outline, UnityEngine.UI", false);
             static readonly object haloSpriteSync = new object();
@@ -295,7 +371,7 @@ namespace SPTItemIntelligence
 
             public static AttachedMarkerView TryCreate(RectTransform anchor)
             {
-                if (anchor == null || textType == null) return null;
+                if (anchor == null || imageType == null) return null;
                 try
                 {
                     GameObject haloObject = null;
@@ -330,21 +406,11 @@ namespace SPTItemIntelligence
                     rect.localScale = Vector3.one;
                     rect.localRotation = Quaternion.identity;
 
-                    Component text = markerObject.AddComponent(textType) as Component;
-                    Component outline = outlineType == null ? null : markerObject.AddComponent(outlineType) as Component;
-                    Set(text, "text", "ⓘ");
-                    Set(text, "fontStyle", FontStyle.Bold);
-                    Set(text, "alignment", Enum.Parse(PropertyType(text, "alignment"), "MiddleCenter"));
+                    Component text = markerObject.AddComponent(imageType) as Component;
+                    Component outline = null;
+                    Set(text, "sprite", CheckmarkSprite());
+                    Set(text, "preserveAspect", true);
                     Set(text, "raycastTarget", false);
-                    Set(text, "supportRichText", false);
-                    Set(text, "horizontalOverflow", Enum.Parse(PropertyType(text, "horizontalOverflow"), "Overflow"));
-                    Set(text, "verticalOverflow", Enum.Parse(PropertyType(text, "verticalOverflow"), "Overflow"));
-                    Set(text, "font", BuiltinFont());
-                    if (outline != null)
-                    {
-                        Set(outline, "effectColor", new Color(0f, 0f, 0f, 0.95f));
-                        Set(outline, "useGraphicAlpha", true);
-                    }
                     if (haloRect != null) haloRect.SetAsLastSibling();
                     rect.SetAsLastSibling();
                     return new AttachedMarkerView(markerObject, rect, text, haloObject, haloRect, haloImage, outline);
@@ -375,8 +441,6 @@ namespace SPTItemIntelligence
 
                 Color color = settings.GetColor(presentation.Kind);
                 color.a = settings.MarkerOpacity;
-                Set(text, "text", presentation.Glyph);
-                Set(text, "fontSize", Mathf.Clamp(Mathf.RoundToInt(size * 0.78f), 8, 22));
                 Set(text, "color", color);
 
                 bool haloEnabled = haloObject != null && haloRect != null && haloImage != null && settings.MarkerHalo && settings.MarkerHaloStrength > 0f;
@@ -467,16 +531,38 @@ namespace SPTItemIntelligence
                 return haloSprite;
             }
 
-            static Font BuiltinFont()
+            // Original two-stroke geometry. No external sprite or font glyph.
+            static Sprite CheckmarkSprite()
             {
-                try { return Resources.GetBuiltinResource<Font>("Arial.ttf"); }
-                catch
+                if (checkmarkSprite != null) return checkmarkSprite;
+                const int size = 64;
+                Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                texture.name = "ItemIntelligenceOriginalCheckmark";
+                texture.hideFlags = HideFlags.HideAndDontSave;
+                texture.filterMode = FilterMode.Bilinear;
+                texture.wrapMode = TextureWrapMode.Clamp;
+                Color32[] pixels = new Color32[size * size];
+                for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
                 {
-                    try { return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); }
-                    catch { return null; }
+                    Vector2 p = new Vector2((x + .5f) / size, (y + .5f) / size);
+                    float d = Mathf.Min(SegmentDistance(p, new Vector2(.18f, .48f), new Vector2(.41f, .25f)),
+                        SegmentDistance(p, new Vector2(.41f, .25f), new Vector2(.84f, .78f)));
+                    byte alpha = (byte)Mathf.RoundToInt(Mathf.Clamp01((.087f - d) * size) * 255);
+                    byte ink = (byte)Mathf.RoundToInt(Mathf.Clamp01((.060f - d) * size) * 255);
+                    pixels[y * size + x] = new Color32(ink, ink, ink, alpha);
                 }
+                texture.SetPixels32(pixels);
+                texture.Apply(false, true);
+                checkmarkSprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
+                checkmarkSprite.hideFlags = HideFlags.HideAndDontSave;
+                return checkmarkSprite;
             }
-
+            static float SegmentDistance(Vector2 p, Vector2 a, Vector2 b)
+            {
+                Vector2 ab = b - a;
+                return Vector2.Distance(p, a + ab * Mathf.Clamp01(Vector2.Dot(p - a, ab) / ab.sqrMagnitude));
+            }
             static Type PropertyType(object target, string name)
             {
                 PropertyInfo property = target == null ? null : target.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.Public);

@@ -7,6 +7,8 @@
     <ImplicitUsings>disable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\src\BackgroundPalette.cs" Link="BackgroundPalette.cs" />
+    <Compile Include="..\src\ModuleSelection.cs" Link="ModuleSelection.cs" />
     <Compile Include="..\src\ItemIntelligence.cs" Link="ItemIntelligence.cs" />
     <Compile Include="..\src\SafeToSell.cs" Link="SafeToSell.cs" />
     <Compile Include="..\src\RequirementDataContract.cs" Link="RequirementDataContract.cs" />
