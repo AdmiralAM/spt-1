@@ -19,7 +19,9 @@ namespace SPTItemIntelligence
         static GUIStyle cachedSemanticLabel;
         static GUIStyle cachedHeaderLabel;
         static GUIStyle cachedMutedLabel;
+        static GUIStyle cachedCardStyle;
         static Texture2D whiteTexture;
+        static Texture2D roundedCardTexture;
         static readonly GUIContent measureContent = new GUIContent();
         static readonly Dictionary<string, string> displayLineCache = new Dictionary<string, string>(StringComparer.Ordinal);
         static readonly Dictionary<string, string> priceRenderCache = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -39,9 +41,9 @@ namespace SPTItemIntelligence
 
             float scale = settings.TooltipScale;
             int fontSize = Mathf.RoundToInt(settings.TooltipFontSize * scale);
-            float baseLineHeight = Mathf.Max(fontSize + 6f, 18f * scale);
-            float horizontalPadding = 12f * scale;
-            float verticalPadding = 9f * scale;
+            float baseLineHeight = Mathf.Max(fontSize + 5f * scale, 6f * scale);
+            float horizontalPadding = settings.TooltipPadding * scale;
+            float verticalPadding = settings.TooltipPadding * scale;
             float rowGap = 0f;
 
             GUIStyle label = GetLabelStyle(fontSize);
@@ -57,11 +59,11 @@ namespace SPTItemIntelligence
                 naturalWidth = Mathf.Max(naturalWidth, label.CalcSize(measureContent).x);
             }
 
-            float minimumWidth = 200f * scale;
-            float preferredMaximumWidth = 360f * scale;
+            float minimumWidth = 80f * scale;
+            float preferredMaximumWidth = settings.TooltipMaximumWidth * scale;
             float screenMaximumWidth = Mathf.Max(minimumWidth, Screen.width - ScreenMargin * 2f);
             float maximumWidth = Mathf.Min(preferredMaximumWidth, screenMaximumWidth);
-            float width = Mathf.Clamp(naturalWidth + horizontalPadding * 2f, minimumWidth, maximumWidth);
+            float width = Mathf.Clamp(naturalWidth + horizontalPadding * 2f + 14f * scale, minimumWidth, maximumWidth);
             float textWidth = Mathf.Max(1f, width - horizontalPadding * 2f);
 
             float contentHeight = 0f;
@@ -89,10 +91,14 @@ namespace SPTItemIntelligence
 
             Color previous = GUI.color;
             Rect card = new Rect(x, y, width, height);
-            DrawRect(card, new Color(0.025f, 0.035f, 0.043f, settings.TooltipOpacity));
-            DrawBorder(card, new Color(0.40f, 0.46f, 0.48f, 0.78f), Mathf.Max(1f, scale));
+            Color cardTint = new Color(1f, 1f, 1f, settings.TooltipOpacity);
+            Color beforeCard = GUI.color;
+            GUI.color = cardTint;
+            GUI.Box(card, GUIContent.none, GetCardStyle());
+            GUI.color = beforeCard;
             Color accent = ResolveHeaderColor(text, settings);
-            DrawRect(new Rect(x, y, 3f * scale, height), new Color(accent.r, accent.g, accent.b, settings.TooltipOpacity));
+            float accentInset = 5f * scale;
+            DrawRect(new Rect(x + 1f * scale, y + accentInset, 3f * scale, Mathf.Max(1f, height - accentInset * 2f)), new Color(accent.r, accent.g, accent.b, settings.TooltipOpacity));
 
             float yCursor = y + verticalPadding;
             for (int i = 0; i < lineCount; i++)
@@ -179,6 +185,40 @@ namespace SPTItemIntelligence
             GUI.color = color;
             GUI.DrawTexture(rect, whiteTexture);
             GUI.color = previous;
+        }
+
+        static GUIStyle GetCardStyle()
+        {
+            if (cachedCardStyle != null) return cachedCardStyle;
+            const int size = 24;
+            const float radius = 5.5f;
+            roundedCardTexture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            roundedCardTexture.name = "ItemIntelligenceRoundedCard";
+            roundedCardTexture.hideFlags = HideFlags.HideAndDontSave;
+            roundedCardTexture.filterMode = FilterMode.Bilinear;
+            roundedCardTexture.wrapMode = TextureWrapMode.Clamp;
+            Color32[] pixels = new Color32[size * size];
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float dx = Mathf.Max(radius - (x + .5f), 0f, (x + .5f) - (size - radius));
+                float dy = Mathf.Max(radius - (y + .5f), 0f, (y + .5f) - (size - radius));
+                float distance = Mathf.Sqrt(dx * dx + dy * dy);
+                float alpha = Mathf.Clamp01(radius + .5f - distance);
+                bool border = distance > radius - 1.25f || x < 1 || y < 1 || x >= size - 1 || y >= size - 1;
+                Color color = border ? new Color(.34f, .39f, .41f, .92f) : new Color(.025f, .035f, .043f, .985f);
+                color.a *= alpha;
+                pixels[y * size + x] = color;
+            }
+            roundedCardTexture.SetPixels32(pixels);
+            roundedCardTexture.Apply(false, true);
+            cachedCardStyle = new GUIStyle(GUI.skin.box)
+            {
+                normal = { background = roundedCardTexture },
+                border = new RectOffset(7, 7, 7, 7),
+                padding = new RectOffset(0, 0, 0, 0)
+            };
+            return cachedCardStyle;
         }
 
         static void DrawBorder(Rect rect, Color color, float thickness)

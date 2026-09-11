@@ -36,7 +36,8 @@ static class Phase9HoverFormattingTests
         ItemHoverText flea = new ItemHoverTextFormatter().Format(hover, ItemValueMode.Flea);
         Expect(flea.Primary == "32,000 ₽ · Flea", "flea mode shows flea value", ref assertions);
         Expect(flea.Secondary == "Therapist: 22,000 ₽", "flea mode retains prepared best trader alternate data", ref assertions);
-        Expect(Contains(flea, ItemTooltipMode.Normal, "Trader: Therapist · 22,000 ₽"), "Normal mode keeps compact trader pricing for regular play", ref assertions);
+        Expect(Contains(flea, ItemTooltipMode.Normal, "Value: 32,000 ₽ · Flea"), "Normal mode shows only the F12-selected flea source", ref assertions);
+        Expect(!Contains(flea, ItemTooltipMode.Normal, "Trader: Therapist · 22,000 ₽"), "Normal mode omits the unselected trader source", ref assertions);
         Expect(Contains(flea, ItemTooltipMode.Full, "Trader: Therapist · 22,000 ₽"), "Full mode exposes trader alongside selected flea value", ref assertions);
         Expect(!Contains(flea, ItemTooltipMode.Full, "Best sell:"), "preferred compact source does not restore the removed best-sell recommendation", ref assertions);
 

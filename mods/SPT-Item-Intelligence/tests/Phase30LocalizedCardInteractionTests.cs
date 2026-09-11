@@ -33,7 +33,27 @@ static class Phase30LocalizedCardInteractionTests
             "the accepted valuation palette is enabled by default without alpha-shifting its colors", ref assertions);
         Expect(BackgroundPalette.Ammo(20) == "#526B3F" && BackgroundPalette.Ammo(21) == "#253552" && BackgroundPalette.Ammo(71) == "#5C4825",
             "ammunition retains the accepted penetration-specific thresholds and colors", ref assertions);
+        Expect(sink.Contains("anchor.GetComponentsInChildren(imageType, true)") && sink.Contains("originalColor") &&
+               !sink.Contains("new GameObject(\"ItemIntelligenceBackground\""),
+            "valuation color uses and restores the native cell background instead of blending a second rectangle", ref assertions);
+
+        ItemHoverText modes = new ItemHoverText("10,000 ₽ · Therapist", "Flea: 20,000 ₽", "", "mode", 1, 1, 1, 1, 3,
+            requirementDetails: new[] { "Now: Quest A ×1", "Later: Quest B ×1", "Hideout: Station L2 ×1" },
+            perSlotLine: "Per slot: 5,000 ₽", bestTraderLine: "Trader: Therapist · 10,000 ₽", fleaPriceLine: "Flea: 20,000 ₽");
+        Expect(Contains(modes, ItemTooltipMode.Normal, "Value: 10,000 ₽ · Therapist") && !Contains(modes, ItemTooltipMode.Normal, "Per slot: 5,000 ₽"),
+            "Normal shows only the selected price source and omits per-slot value", ref assertions);
+        Expect(Contains(modes, ItemTooltipMode.Detailed, "Now: Quest A ×1") && !Contains(modes, ItemTooltipMode.Detailed, "Hideout: Station L2 ×1"),
+            "Detailed adds exactly the nearest concrete target", ref assertions);
+        Expect(Contains(modes, ItemTooltipMode.Full, "Trader: Therapist · 10,000 ₽") && Contains(modes, ItemTooltipMode.Full, "Flea: 20,000 ₽") && Contains(modes, ItemTooltipMode.Full, "Per slot: 5,000 ₽"),
+            "Full exposes both price sources and per-slot value", ref assertions);
         return assertions;
+    }
+
+    static bool Contains(ItemHoverText text, ItemTooltipMode mode, string expected)
+    {
+        for (int i = 0; i < text.GetLineCount(mode); i++)
+            if (text.GetLine(mode, i) == expected) return true;
+        return false;
     }
 
     static string FindRepositoryRoot()

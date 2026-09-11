@@ -279,7 +279,7 @@ namespace SPTItemIntelligence
                     return;
                 }
                 if (Marker == null) Marker = AttachedMarkerView.TryCreate(Anchor);
-                if (Marker != null) Marker.Apply(state, settings);
+                if (Marker != null) Marker.Apply(state, Text, settings);
             }
 
             public bool TryGetScreenRect(out Rect result)
@@ -322,23 +322,32 @@ namespace SPTItemIntelligence
         {
             static readonly Type imageType = Type.GetType("UnityEngine.UI.Image, UnityEngine.UI", false);
             static readonly PropertyInfo colorProperty = imageType?.GetProperty("color");
-            readonly GameObject owned;
             readonly Component image;
+            readonly Color originalColor;
             string applied;
-            BackgroundView(GameObject owned, Component image) { this.owned = owned; this.image = image; }
+            BackgroundView(Component image, Color originalColor) { this.image = image; this.originalColor = originalColor; }
             public static BackgroundView Create(RectTransform anchor)
             {
                 if (imageType == null || colorProperty == null || anchor == null) return null;
-                var owned = new GameObject("ItemIntelligenceBackground", typeof(RectTransform));
-                owned.layer = anchor.gameObject.layer;
-                var rect = (RectTransform)owned.transform;
-                rect.SetParent(anchor, false);
-                rect.anchorMin = Vector2.zero; rect.anchorMax = Vector2.one;
-                rect.offsetMin = Vector2.zero; rect.offsetMax = Vector2.zero;
-                rect.SetAsFirstSibling();
-                var image = (Component)owned.AddComponent(imageType);
-                imageType.GetProperty("raycastTarget")?.SetValue(image, false, null);
-                return new BackgroundView(owned, image);
+                Component best = null;
+                int bestScore = int.MinValue;
+                foreach (Component candidate in anchor.GetComponentsInChildren(imageType, true))
+                {
+                    if (candidate == null || candidate.gameObject == null) continue;
+                    string name = candidate.gameObject.name ?? string.Empty;
+                    if (name.StartsWith("SPTItemIntelligence", StringComparison.Ordinal)) continue;
+                    int score = 0;
+                    if (name.IndexOf("background", StringComparison.OrdinalIgnoreCase) >= 0) score += 120;
+                    if (name.IndexOf("color", StringComparison.OrdinalIgnoreCase) >= 0) score += 60;
+                    if (name.IndexOf("icon", StringComparison.OrdinalIgnoreCase) >= 0) score -= 100;
+                    RectTransform rect = candidate.transform as RectTransform;
+                    if (rect != null && rect.anchorMin == Vector2.zero && rect.anchorMax == Vector2.one) score += 30;
+                    if (rect != null && object.ReferenceEquals(rect.parent, anchor)) score += 20;
+                    if (score > bestScore) { bestScore = score; best = candidate; }
+                }
+                if (best == null || bestScore < 50) return null;
+                object original = colorProperty.GetValue(best, null);
+                return original is Color ? new BackgroundView(best, (Color)original) : null;
             }
             public void Apply(string hex)
             {
@@ -351,12 +360,18 @@ namespace SPTItemIntelligence
                 colorProperty.SetValue(image, color, null);
                 applied = hex;
             }
-            public void Dispose() { if (owned != null) UnityEngine.Object.Destroy(owned); }
+            public void Dispose()
+            {
+                try { if (image != null) colorProperty.SetValue(image, originalColor, null); }
+                catch { }
+            }
         }
 
         sealed class AttachedMarkerView : IDisposable
         {
             static Sprite checkmarkSprite;
+            static Sprite circleSprite;
+            static Sprite ringSprite;
             static readonly Type imageType = Type.GetType("UnityEngine.UI.Image, UnityEngine.UI", false);
             static readonly Type outlineType = Type.GetType("UnityEngine.UI.Outline, UnityEngine.UI", false);
             static readonly object haloSpriteSync = new object();
@@ -364,7 +379,9 @@ namespace SPTItemIntelligence
             readonly Vector3[] worldCorners = new Vector3[4];
             readonly GameObject markerObject;
             readonly RectTransform rect;
-            readonly Component text;
+            readonly Component backgroundImage;
+            readonly Component ringImage;
+            readonly Component glyphImage;
             readonly GameObject haloObject;
             readonly RectTransform haloRect;
             readonly Component haloImage;
@@ -373,7 +390,9 @@ namespace SPTItemIntelligence
             AttachedMarkerView(
                 GameObject markerObject,
                 RectTransform rect,
-                Component text,
+                Component backgroundImage,
+                Component ringImage,
+                Component glyphImage,
                 GameObject haloObject,
                 RectTransform haloRect,
                 Component haloImage,
@@ -381,7 +400,9 @@ namespace SPTItemIntelligence
             {
                 this.markerObject = markerObject;
                 this.rect = rect;
-                this.text = text;
+                this.backgroundImage = backgroundImage;
+                this.ringImage = ringImage;
+                this.glyphImage = glyphImage;
                 this.haloObject = haloObject;
                 this.haloRect = haloRect;
                 this.haloImage = haloImage;
@@ -425,19 +446,21 @@ namespace SPTItemIntelligence
                     rect.localScale = Vector3.one;
                     rect.localRotation = Quaternion.identity;
 
-                    Component text = markerObject.AddComponent(imageType) as Component;
+                    Component backgroundImage = markerObject.AddComponent(imageType) as Component;
                     Component outline = null;
-                    Set(text, "sprite", CheckmarkSprite());
-                    Set(text, "preserveAspect", true);
-                    Set(text, "raycastTarget", false);
+                    Set(backgroundImage, "sprite", CircleSprite());
+                    Set(backgroundImage, "preserveAspect", true);
+                    Set(backgroundImage, "raycastTarget", false);
+                    Component ringImage = CreateMarkerLayer(markerObject, "SPTItemIntelligenceRing", RingSprite(), 1f);
+                    Component glyphImage = CreateMarkerLayer(markerObject, "SPTItemIntelligenceCheck", CheckmarkSprite(), .76f);
                     if (haloRect != null) haloRect.SetAsLastSibling();
                     rect.SetAsLastSibling();
-                    return new AttachedMarkerView(markerObject, rect, text, haloObject, haloRect, haloImage, outline);
+                    return new AttachedMarkerView(markerObject, rect, backgroundImage, ringImage, glyphImage, haloObject, haloRect, haloImage, outline);
                 }
                 catch { return null; }
             }
 
-            public void Apply(ItemMarkerPresentation presentation, ItemIntelligenceUiSettings settings)
+            public void Apply(ItemMarkerPresentation presentation, ItemHoverText hoverText, ItemIntelligenceUiSettings settings)
             {
                 if (markerObject == null || presentation == null || settings == null) return;
                 bool visible = presentation.IsVisible;
@@ -458,9 +481,15 @@ namespace SPTItemIntelligence
                 rect.sizeDelta = new Vector2(size, size);
                 rect.anchoredPosition = position;
 
-                Color color = settings.GetColor(presentation.Kind);
-                color.a = settings.MarkerOpacity;
-                Set(text, "color", color);
+                Color sourceColor = settings.GetColor(presentation.Kind);
+                sourceColor.a = settings.MarkerOpacity;
+                Set(ringImage, "color", sourceColor);
+                Color statusColor = ResolveStatusColor(hoverText, settings);
+                statusColor.a = settings.MarkerOpacity;
+                Set(glyphImage, "color", statusColor);
+                Color fillColor = settings.MarkerBackgroundColor;
+                fillColor.a = settings.MarkerBackgroundOpacity;
+                Set(backgroundImage, "color", fillColor);
 
                 bool haloEnabled = haloObject != null && haloRect != null && haloImage != null && settings.MarkerHalo && settings.MarkerHaloStrength > 0f;
                 if (haloObject != null && haloObject.activeSelf != haloEnabled) haloObject.SetActive(haloEnabled);
@@ -472,7 +501,7 @@ namespace SPTItemIntelligence
                     float haloSize = size * 1.70f;
                     haloRect.sizeDelta = new Vector2(haloSize, haloSize);
                     haloRect.anchoredPosition = position + new Vector2(right ? -size * 0.5f : size * 0.5f, -size * 0.5f);
-                    Color haloColor = color;
+                    Color haloColor = sourceColor;
                     haloColor.a = settings.MarkerHaloStrength * settings.MarkerOpacity;
                     Set(haloImage, "color", haloColor);
                     haloRect.SetAsLastSibling();
@@ -484,6 +513,35 @@ namespace SPTItemIntelligence
                     Set(outline, "effectDistance", new Vector2(thickness, -thickness));
                 }
                 rect.SetAsLastSibling();
+            }
+
+            static Color ResolveStatusColor(ItemHoverText text, ItemIntelligenceUiSettings settings)
+            {
+                if (text == null || text.Allocation == null) return settings.GetColor(ItemMarkerKind.Default);
+                if (text.Allocation.Coverage == RequirementCoverage.Enough) return settings.CompleteColor;
+                if (text.Allocation.Coverage == RequirementCoverage.NeedMore)
+                    return text.Allocation.KeepOwned > 0 ? settings.PartialColor : settings.MissingColor;
+                return settings.GetColor(ItemMarkerKind.Default);
+            }
+
+            static Component CreateMarkerLayer(GameObject parent, string name, Sprite sprite, float scale)
+            {
+                GameObject layer = new GameObject(name, typeof(RectTransform));
+                layer.layer = parent.layer;
+                RectTransform layerRect = layer.transform as RectTransform;
+                layerRect.SetParent(parent.transform, false);
+                layerRect.anchorMin = Vector2.zero;
+                layerRect.anchorMax = Vector2.one;
+                layerRect.pivot = new Vector2(.5f, .5f);
+                layerRect.offsetMin = Vector2.zero;
+                layerRect.offsetMax = Vector2.zero;
+                layerRect.sizeDelta = Vector2.zero;
+                layerRect.localScale = new Vector3(scale, scale, 1f);
+                Component image = layer.AddComponent(imageType) as Component;
+                Set(image, "sprite", sprite);
+                Set(image, "preserveAspect", true);
+                Set(image, "raycastTarget", false);
+                return image;
             }
 
             public bool TryGetScreenRect(out Rect result)
@@ -550,8 +608,49 @@ namespace SPTItemIntelligence
                 return haloSprite;
             }
 
-            // Original compact badge: dark field, semantic-color rim and check.
-            // It uses no external sprite, font glyph, asset, or copied geometry.
+            static Sprite CircleSprite()
+            {
+                if (circleSprite != null) return circleSprite;
+                circleSprite = RadialSprite("ItemIntelligenceCircle", .49f, 0f);
+                return circleSprite;
+            }
+
+            static Sprite RingSprite()
+            {
+                if (ringSprite != null) return ringSprite;
+                ringSprite = RadialSprite("ItemIntelligenceRing", .49f, .36f);
+                return ringSprite;
+            }
+
+            static Sprite RadialSprite(string name, float outer, float inner)
+            {
+                const int size = 64;
+                Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                texture.name = name;
+                texture.hideFlags = HideFlags.HideAndDontSave;
+                texture.filterMode = FilterMode.Bilinear;
+                texture.wrapMode = TextureWrapMode.Clamp;
+                Color32[] pixels = new Color32[size * size];
+                for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
+                {
+                    float nx = (x + .5f) / size - .5f;
+                    float ny = (y + .5f) / size - .5f;
+                    float distance = Mathf.Sqrt(nx * nx + ny * ny);
+                    float outerAlpha = Mathf.Clamp01((outer - distance) * size);
+                    float innerAlpha = inner <= 0f ? 1f : Mathf.Clamp01((distance - inner) * size);
+                    byte alpha = (byte)Mathf.RoundToInt(outerAlpha * innerAlpha * 255f);
+                    pixels[y * size + x] = new Color32(255, 255, 255, alpha);
+                }
+                texture.SetPixels32(pixels);
+                texture.Apply(false, true);
+                Sprite result = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
+                result.name = name + "Sprite";
+                result.hideFlags = HideFlags.HideAndDontSave;
+                return result;
+            }
+
+            // Original two-stroke geometry. No external sprite, font glyph, asset, or copied geometry.
             static Sprite CheckmarkSprite()
             {
                 if (checkmarkSprite != null) return checkmarkSprite;
@@ -566,16 +665,10 @@ namespace SPTItemIntelligence
                 for (int x = 0; x < size; x++)
                 {
                     Vector2 p = new Vector2((x + .5f) / size, (y + .5f) / size);
-                    Vector2 center = p - new Vector2(.5f, .5f);
-                    float radius = center.magnitude;
                     float check = Mathf.Min(SegmentDistance(p, new Vector2(.22f, .50f), new Vector2(.43f, .30f)),
                         SegmentDistance(p, new Vector2(.43f, .30f), new Vector2(.79f, .69f)));
-                    float edgeAlpha = Mathf.Clamp01((.49f - radius) * size);
-                    bool rim = radius >= .37f;
-                    bool ink = check <= .068f;
-                    if (edgeAlpha <= 0f) pixels[y * size + x] = new Color32(0, 0, 0, 0);
-                    else if (rim || ink) pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(edgeAlpha * 255f));
-                    else pixels[y * size + x] = new Color32(17, 21, 24, (byte)Mathf.RoundToInt(edgeAlpha * 245f));
+                    byte alpha = (byte)Mathf.RoundToInt(Mathf.Clamp01((.075f - check) * size) * 255f);
+                    pixels[y * size + x] = new Color32(255, 255, 255, alpha);
                 }
                 texture.SetPixels32(pixels);
                 texture.Apply(false, true);

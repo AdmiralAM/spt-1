@@ -107,7 +107,7 @@ namespace SPTItemIntelligence
                 }
             }
             RequirementDetailLines = details.AsReadOnly();
-            int detailedVisible = Math.Min(3, detailed.Count);
+            int detailedVisible = Math.Min(1, detailed.Count);
             DetailedRequirementLines = detailed.GetRange(0, detailedVisible).AsReadOnly();
             DetailedRequirementCount = detailedVisible;
             MoreRequirementsLine = detailed.Count > detailedVisible
@@ -185,20 +185,21 @@ namespace SPTItemIntelligence
             if (TryLine(SummaryLine, requestedIndex, ref current, out found)) return found;
             if (SummaryLine.Length > 0 && TryLine(SummaryOwnedLine, requestedIndex, ref current, out found)) return found;
 
-            if (mode == ItemTooltipMode.Normal || mode == ItemTooltipMode.Full)
+            if (mode == ItemTooltipMode.Full)
             {
                 if (TryLine(BestTraderLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(FleaPriceLine, requestedIndex, ref current, out found)) return found;
                 if (TryLine(PerSlotLine, requestedIndex, ref current, out found)) return found;
-                if (mode == ItemTooltipMode.Full)
-                {
-                    if (TryLine(CraftLine, requestedIndex, ref current, out found)) return found;
-                    if (TryLine(BarterLine, requestedIndex, ref current, out found)) return found;
-                }
             }
             else if (TryLine(ValueLine, requestedIndex, ref current, out found))
             {
                 return found;
+            }
+
+            if (mode != ItemTooltipMode.Minimal)
+            {
+                if (TryLine(CraftLine, requestedIndex, ref current, out found)) return found;
+                if (TryLine(BarterLine, requestedIndex, ref current, out found)) return found;
             }
 
             if (mode != ItemTooltipMode.Minimal)
@@ -215,7 +216,6 @@ namespace SPTItemIntelligence
                 IReadOnlyList<string> selected = mode == ItemTooltipMode.Full ? RequirementDetailLines : DetailedRequirementLines;
                 for (int i = 0; i < selected.Count; i++)
                     if (TryLine(selected[i], requestedIndex, ref current, out found)) return found;
-                if (mode == ItemTooltipMode.Detailed && TryLine(MoreRequirementsLine, requestedIndex, ref current, out found)) return found;
             }
             if (current == 0 && requestedIndex == 0) return GameUiText.T("No active requirements", "Нет активных требований");
             return string.Empty;

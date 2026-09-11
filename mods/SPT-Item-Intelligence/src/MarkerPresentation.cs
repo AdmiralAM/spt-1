@@ -34,6 +34,7 @@ namespace SPTItemIntelligence
             if (text.QuestNowMissing > 0) return questNow;
             if (text.HideoutMissing > 0) return hideout;
             if (text.QuestLaterMissing > 0) return questLater;
+            if (text.CraftLine.Length > 0 || text.BarterLine.Length > 0) return defaultMarker;
             return contextual ? hidden : defaultMarker;
         }
     }

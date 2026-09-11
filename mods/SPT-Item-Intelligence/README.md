@@ -33,7 +33,7 @@ Current stable v1.0.0 presentation contracts include:
 - compact trader, flea, and per-slot price rows without a redundant best-sell recommendation;
 - the accepted Item Valuation background palette enabled by default, with ammunition retaining its separate penetration-based tiers and exact colors;
 - price-amount bands: below 50k white, 50k+ green, 100k+ red, 250k+ gold;
-- compact Full-only `Craft ×N` / `Barter ×N` relevance;
+- compact `Craft ×N` / `Barter ×N` relevance in regular-play and expanded modes;
 - fallback to the available Flea/Trader source when the preferred source has no price;
 - semantic requirement colors;
 - F12 controls for marker appearance and tooltip presentation.
@@ -56,7 +56,9 @@ Supported `ItemView`/`ItemCell` lifecycle hooks register live cells and remove t
 
 Network requests, reflection discovery, requirement aggregation, valuation work, and expensive text formatting are kept out of per-frame render paths. Cached state is invalidated only when the relevant source data or UI settings change. Full-mode display stripping and rich-text price/semantic strings use bounded caches so steady-state GUI repaint reuses prepared strings instead of rebuilding them every frame.
 
-The v1.1 marker is an original procedural dark badge with a semantic-color rim and check, backed by one shared/static texture; it does not copy an AQC sprite or depend on a font glyph. The optional halo also uses one shared/static texture. The information card follows the game's Russian or English UI language; other game languages use English.
+The v1.1 marker is an original procedural three-layer badge: configurable inner fill, a requirement-source ring, and a stock-coverage check. For example, an entirely missing hideout item has a blue hideout ring and red check. Fill color and 0–100% fill opacity are independent F12 controls. It does not copy an AQC sprite or depend on a font glyph. The optional halo also uses one shared/static texture. The information card follows the game's Russian or English UI language; other game languages use English.
+
+Normal shows the selected F12 value source without per-slot value, plus compact requirement and craft/barter relevance. Detailed adds one nearest concrete target. Full shows both trader and flea values, per-slot value, every concrete target, craft and barter counts. The rounded card auto-fits short content up to its configurable maximum width.
 
 ## Version and naming
 
@@ -82,7 +84,7 @@ The install-only `runtime-item-intelligence` channel contains the accepted stabl
 
 Development PR artifacts are test candidates only and do not replace the stable runtime channel before deliberate acceptance/publication.
 
-For the v1.1 candidate, remove/disable external AllQuestsCheckmarks to verify replacement UX. Keep legacy Item Valuation installed only while the consolidated `Background Coloring` F12 module is off; before testing that module, remove/disable the legacy `com.admiralam.spt.itemvaluation` server mod so only one background owner runs. Restore the v1.0 package and legacy Item Valuation configuration to roll back.
+For the v1.1 candidate, remove/disable external AllQuestsCheckmarks to verify replacement UX and remove/disable legacy Item Valuation so only the consolidated package owns background coloring. `Background Coloring (Valuation)` remains independently switchable in F12 and restores each native cell color when disabled. Restore the v1.0 package and legacy Item Valuation configuration to roll back.
 
 ## Documentation
 

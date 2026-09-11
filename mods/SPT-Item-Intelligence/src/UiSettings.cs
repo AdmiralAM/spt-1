@@ -19,6 +19,8 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<float> tooltipScale;
         readonly ConfigEntry<float> tooltipOpacity;
         readonly ConfigEntry<int> tooltipFontSize;
+        readonly ConfigEntry<int> tooltipMaximumWidth;
+        readonly ConfigEntry<float> tooltipPadding;
         readonly ConfigEntry<ItemMarkerSide> markerSide;
         readonly ConfigEntry<float> markerSize;
         readonly ConfigEntry<float> markerOpacity;
@@ -26,6 +28,8 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<float> markerOffsetY;
         readonly ConfigEntry<bool> markerHalo;
         readonly ConfigEntry<float> markerHaloStrength;
+        readonly ConfigEntry<Color> markerBackgroundColor;
+        readonly ConfigEntry<int> markerBackgroundOpacity;
         readonly ConfigEntry<Color> defaultColor;
         readonly ConfigEntry<Color> questNowColor;
         readonly ConfigEntry<Color> hideoutColor;
@@ -49,22 +53,29 @@ namespace SPTItemIntelligence
             relevance = Module(config, "Craft and Barter", true, "Show craft and barter relevance.");
             backgrounds = Module(config, "Background Coloring (Valuation)", true, "Preserve the accepted Item Valuation palette, including penetration-based ammunition colors. No external mod is required.");
             tooltipMode = config.Bind("Tooltip", "Mode", ItemTooltipMode.Normal,
-                "Minimal: summary/value only. Normal: regular-play card with owned/FIR, trader/flea/per-slot prices and active quest, hideout and future quest progress. Detailed: adds up to three concrete targets. Full: shows all concrete targets plus craft/barter relevance. Internal ids and sell recommendations are never shown.");
+                "Minimal: summary and selected value. Normal: regular-play card with owned/FIR, the F12-selected value source, craft/barter relevance and active quest, hideout and future quest progress. Detailed: Normal plus one nearest concrete target. Full: both price sources, per-slot value, all concrete targets and craft/barter relevance. Internal ids and sell recommendations are never shown.");
             valueMode = config.Bind("Tooltip", "Value Source", ItemValueMode.Vendor,
                 "Vendor: show the highest NPC trader sell value. Flea: show the flea-market value.");
             tooltipScale = config.Bind("Tooltip", "Scale", 1.00f,
-                new ConfigDescription("Overall tooltip scale.", new AcceptableValueRange<float>(0.75f, 1.50f)));
+                new ConfigDescription("Scales the complete card after its content is measured. 1.00 is native size.", new AcceptableValueRange<float>(0.10f, 5.00f)));
             tooltipOpacity = config.Bind("Tooltip", "Opacity", 0.96f,
                 new ConfigDescription("Tooltip background opacity; 0 disables the background completely.", new AcceptableValueRange<float>(0f, 1.00f)));
             tooltipFontSize = config.Bind("Tooltip", "Font Size", 13,
-                new ConfigDescription("Tooltip text size before Scale is applied.", new AcceptableValueRange<int>(11, 18)));
+                new ConfigDescription("Tooltip text size before Scale is applied.", new AcceptableValueRange<int>(1, 64)));
+            tooltipMaximumWidth = config.Bind("Tooltip", "Maximum Width", 360,
+                new ConfigDescription("Maximum card width in pixels. The card remains fitted to shorter text.", new AcceptableValueRange<int>(80, 1000)));
+            tooltipPadding = config.Bind("Tooltip", "Inner Padding", 8f,
+                new ConfigDescription("Space between text and the card edge in pixels.", new AcceptableValueRange<float>(0f, 40f)));
 
             markerSide = config.Bind("Marker", "Side", ItemMarkerSide.Left,
                 "Select the upper-left or upper-right item-cell corner. This stays attached to the selected edge on multi-cell items.");
             markerSize = config.Bind("Marker", "Size", 14f,
-                new ConfigDescription("Information marker size in pixels.", new AcceptableValueRange<float>(10f, 28f)));
+                new ConfigDescription("Information marker size in pixels.", new AcceptableValueRange<float>(1f, 100f)));
             markerOpacity = config.Bind("Marker", "Opacity", 0.96f,
-                new ConfigDescription("Information marker opacity.", new AcceptableValueRange<float>(0.20f, 1f)));
+                new ConfigDescription("Check and ring opacity.", new AcceptableValueRange<float>(0f, 1f)));
+            markerBackgroundColor = ColorEntry(config, "Marker", "Circle Background Color", new Color(0.067f, 0.082f, 0.094f), "Color inside the marker circle.");
+            markerBackgroundOpacity = config.Bind("Marker", "Circle Background Opacity (%)", 92,
+                new ConfigDescription("Opacity inside the marker circle from 0 to 100 percent.", new AcceptableValueRange<int>(0, 100)));
             markerOffsetX = config.Bind("Marker", "Offset X", 3f,
                 new ConfigDescription("Horizontal offset from the selected edge. Positive values move inward; negative values move outward.", new AcceptableValueRange<float>(-80f, 80f)));
             markerOffsetY = config.Bind("Marker", "Offset Y", 3f,
@@ -88,9 +99,13 @@ namespace SPTItemIntelligence
             tooltipScale.SettingChanged += delegate { Touch(); };
             tooltipOpacity.SettingChanged += delegate { Touch(); };
             tooltipFontSize.SettingChanged += delegate { Touch(); };
+            tooltipMaximumWidth.SettingChanged += delegate { Touch(); };
+            tooltipPadding.SettingChanged += delegate { Touch(); };
             markerSide.SettingChanged += delegate { Touch(); };
             markerSize.SettingChanged += delegate { Touch(); };
             markerOpacity.SettingChanged += delegate { Touch(); };
+            markerBackgroundColor.SettingChanged += delegate { Touch(); };
+            markerBackgroundOpacity.SettingChanged += delegate { Touch(); };
             markerOffsetX.SettingChanged += delegate { Touch(); };
             markerOffsetY.SettingChanged += delegate { Touch(); };
             markerHalo.SettingChanged += delegate { Touch(); };
@@ -109,12 +124,16 @@ namespace SPTItemIntelligence
         public ModuleSelection Modules => modules;
         ModuleSelection ReadModules() => new ModuleSelection(markers.Value, tooltips.Value, quests.Value, futureQuests.Value, hideout.Value, value.Value, relevance.Value, backgrounds.Value);
         public ItemValueMode ValueMode => valueMode.Value;
-        public float TooltipScale => Mathf.Clamp(tooltipScale.Value, 0.75f, 1.50f);
+        public float TooltipScale => Mathf.Clamp(tooltipScale.Value, 0.10f, 5.00f);
         public float TooltipOpacity => Mathf.Clamp01(tooltipOpacity.Value);
-        public int TooltipFontSize => Mathf.Clamp(tooltipFontSize.Value, 11, 18);
+        public int TooltipFontSize => Mathf.Clamp(tooltipFontSize.Value, 1, 64);
+        public int TooltipMaximumWidth => Mathf.Clamp(tooltipMaximumWidth.Value, 80, 1000);
+        public float TooltipPadding => Mathf.Clamp(tooltipPadding.Value, 0f, 40f);
         public ItemMarkerSide MarkerSide => markerSide.Value;
-        public float MarkerSize => Mathf.Clamp(markerSize.Value, 10f, 28f);
+        public float MarkerSize => Mathf.Clamp(markerSize.Value, 1f, 100f);
         public float MarkerOpacity => Mathf.Clamp01(markerOpacity.Value);
+        public Color MarkerBackgroundColor => markerBackgroundColor.Value;
+        public float MarkerBackgroundOpacity => Mathf.Clamp(markerBackgroundOpacity.Value, 0, 100) / 100f;
         public float MarkerOffsetX => Mathf.Clamp(markerOffsetX.Value, -80f, 80f);
         public float MarkerOffsetY => Mathf.Clamp(markerOffsetY.Value, -40f, 40f);
         public bool MarkerHalo => markerHalo.Value;

@@ -23,6 +23,11 @@ static class Phase21MarkerPolishTests
             "positive X offset moves inward from either selected edge", ref assertions);
         Expect(overlay.Contains("static Sprite checkmarkSprite"),
             "crisp original marker sprite is shared between item cells", ref assertions);
+        Expect(settings.Contains("Circle Background Color") && settings.Contains("Circle Background Opacity (%)") &&
+               settings.Contains("AcceptableValueRange<int>(0, 100)"),
+            "marker fill color and zero-to-one-hundred-percent opacity are independently configurable", ref assertions);
+        Expect(overlay.Contains("Set(ringImage, \"color\", sourceColor)") && overlay.Contains("Set(glyphImage, \"color\", statusColor)"),
+            "ring communicates requirement source while the check communicates stock coverage", ref assertions);
         Expect(!settings.Contains("Glow Strength") && !settings.Contains("Glow Radius") && !overlay.Contains("settings.MarkerGlow"),
             "rejected Outline glow path stays removed", ref assertions);
         Expect(settings.Contains("\"Halo\"") && settings.Contains("\"Halo Strength\"") &&
