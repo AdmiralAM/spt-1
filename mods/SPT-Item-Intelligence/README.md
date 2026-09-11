@@ -52,11 +52,11 @@ Craft/barter relevance and trader/flea valuation are precomputed while the exist
 
 ## UI lifecycle and performance
 
-Supported `ItemView`/`ItemCell` lifecycle hooks register a child marker on each live item cell and remove it during cleanup. Hovering the item body does not open the Item Intelligence Admiral tooltip; the stable v1.0.0 tooltip belongs to the marker itself.
+Supported `ItemView`/`ItemCell` lifecycle hooks register live cells and remove them during cleanup. v1.1 uses one contextual checkmark and one card: the card is available from the item cell even when the marker layer is disabled. Irrelevant value-only items do not receive a marker.
 
 Network requests, reflection discovery, requirement aggregation, valuation work, and expensive text formatting are kept out of per-frame render paths. Cached state is invalidated only when the relevant source data or UI settings change. Full-mode display stripping and rich-text price/semantic strings use bounded caches so steady-state GUI repaint reuses prepared strings instead of rebuilding them every frame.
 
-The accepted v1.0.0 marker glow is a single soft radial image layer behind the glyph, backed by one shared/static texture. The rejected legacy Unity UI `Outline` duplication approach is not used.
+The v1.1 marker is an original procedural checkmark sprite backed by one shared/static texture; it does not copy an AQC sprite or depend on a font glyph. The optional halo also uses one shared/static texture.
 
 ## Version and naming
 
@@ -81,6 +81,8 @@ The install-only `runtime-item-intelligence` channel contains the accepted stabl
 - `SPT_Runtime/user/mods/Item Intelligence Admiral Server/Item Intelligence Admiral Server.dll`
 
 Development PR artifacts are test candidates only and do not replace the stable runtime channel before deliberate acceptance/publication.
+
+For the v1.1 candidate, remove/disable external AllQuestsCheckmarks to verify replacement UX. Keep legacy Item Valuation installed only while the consolidated `Background Coloring` F12 module is off; before testing that module, remove/disable the legacy `com.admiralam.spt.itemvaluation` server mod so only one background owner runs. Restore the v1.0 package and legacy Item Valuation configuration to roll back.
 
 ## Documentation
 
