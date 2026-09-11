@@ -31,7 +31,7 @@ Current stable v1.0.0 presentation contracts include:
 - compact Minimal / Normal / Detailed / Full tooltip modes;
 - owned-versus-required counts, FIR-aware quest allocation, `Keep ×N`, and concrete quest/hideout targets;
 - compact trader, flea, and per-slot price rows without a redundant best-sell recommendation;
-- the accepted Item Valuation background palette enabled by default, with ammunition retaining its separate penetration-based tiers and exact colors;
+- the accepted Item Valuation palette for neutral ordinary items, while ammunition, keys and already-authored backgrounds retain their dedicated game/mod owner;
 - price-amount bands: below 50k white, 50k+ green, 100k+ red, 250k+ gold;
 - compact `Craft ×N` / `Barter ×N` relevance in regular-play and expanded modes;
 - fallback to the available Flea/Trader source when the preferred source has no price;
@@ -59,6 +59,8 @@ Network requests, reflection discovery, requirement aggregation, valuation work,
 The v1.1 marker is an original procedural three-layer badge: configurable inner fill, a requirement-source ring, and a stock-coverage check. For example, an entirely missing hideout item has a blue hideout ring and red check. Fill color and 0–100% fill opacity are independent F12 controls. It does not copy an AQC sprite or depend on a font glyph. The optional halo also uses one shared/static texture. The information card follows the game's Russian or English UI language; other game languages use English.
 
 Normal shows the selected F12 value source without per-slot value, plus compact requirement and craft/barter relevance. Detailed adds one nearest concrete target. Full shows both trader and flea values, per-slot value, every concrete target, craft and barter counts. The rounded card auto-fits short content up to its configurable maximum width.
+
+Background ownership is cooperative. Item Intelligence only applies valuation color to a neutral ordinary-item background. It yields ammunition to its dedicated ammo presentation, keys to BetterKeys-style location coloring, existing authored/custom colors to their source, and temporary native highlights to CompatibilityHighlighter/EFT. Disabling the F12 module restores the native color captured for that cell.
 
 ## Version and naming
 

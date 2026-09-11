@@ -99,6 +99,10 @@ static class ConsolidatedTruthTests
         Check(BackgroundPalette.Money(24999) == "#526B3F" && BackgroundPalette.Money(25000) == "#294F31", "money tier boundary");
         Check(BackgroundPalette.Ammo(20) == "#526B3F" && BackgroundPalette.Ammo(21) == "#253552", "ammo uses penetration-specific tiers");
         Check(BackgroundPalette.Key(100000, false) == "#660415", "flea-banned key color takes precedence");
+        Check(BackgroundPalette.HasDedicatedOwner(true, false, "default"), "ammunition background yields to its dedicated color mod");
+        Check(BackgroundPalette.HasDedicatedOwner(false, true, "default"), "key background yields to BetterKeys-style ownership");
+        Check(BackgroundPalette.HasDedicatedOwner(false, false, "violet"), "authored item background is preserved");
+        Check(!BackgroundPalette.HasDedicatedOwner(false, false, "default"), "neutral ordinary item remains eligible for valuation tint");
         var irrelevant = new ItemHoverText("100 ₽", "", "");
         Check(!ItemMarkerPresentation.From(irrelevant, contextual: true).IsVisible, "no contextual marker on irrelevant value-only item");
         var need = new ItemHoverText("", "", "", "x", 0, 0, 0, 1, 1);

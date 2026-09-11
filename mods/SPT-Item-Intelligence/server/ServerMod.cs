@@ -120,11 +120,12 @@ public sealed class RequirementDataService(
             double economic = Math.Max(trader.Price, usableFlea);
             if (economic <= 0) economic = handbookValue;
             bool total = itemHelper.IsOfBaseclasses(templateId, TotalValueBaseClasses);
-            string background = itemHelper.IsOfBaseclass(templateId, BaseClasses.AMMO)
-                ? BackgroundPalette.Ammo(item.Properties?.PenetrationPower ?? 0)
-                : itemHelper.IsOfBaseclass(templateId, BaseClasses.KEY)
-                    ? BackgroundPalette.Key(fleaValue > 0 ? fleaValue : handbookValue, fleaAllowed)
-                    : BackgroundPalette.Money(total ? economic : economic / ((double)width * height));
+            bool ammunition = itemHelper.IsOfBaseclass(templateId, BaseClasses.AMMO);
+            bool key = itemHelper.IsOfBaseclass(templateId, BaseClasses.KEY);
+            string existingBackground = Convert.ToString(item.Properties?.BackgroundColor) ?? string.Empty;
+            string background = BackgroundPalette.HasDedicatedOwner(ammunition, key, existingBackground)
+                ? string.Empty
+                : BackgroundPalette.Money(total ? economic : economic / ((double)width * height));
             craftCounts.TryGetValue(templateId, out int craftCount);
             barterCounts.TryGetValue(templateId, out int barterCount);
             result.Add(new ItemPriceSnapshotEntry(
