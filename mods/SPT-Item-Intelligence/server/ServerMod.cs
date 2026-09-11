@@ -123,9 +123,11 @@ public sealed class RequirementDataService(
             bool ammunition = itemHelper.IsOfBaseclass(templateId, BaseClasses.AMMO);
             bool key = itemHelper.IsOfBaseclass(templateId, BaseClasses.KEY);
             string existingBackground = Convert.ToString(item.Properties?.BackgroundColor) ?? string.Empty;
-            string background = BackgroundPalette.HasDedicatedOwner(ammunition, key, existingBackground)
-                ? string.Empty
-                : BackgroundPalette.Money(total ? economic : economic / ((double)width * height));
+            string background = ammunition
+                ? BackgroundPalette.Ammo(item.Properties?.PenetrationPower ?? 0)
+                : BackgroundPalette.HasDedicatedOwner(key, existingBackground)
+                    ? string.Empty
+                    : BackgroundPalette.Money(total ? economic : economic / ((double)width * height));
             craftCounts.TryGetValue(templateId, out int craftCount);
             barterCounts.TryGetValue(templateId, out int barterCount);
             result.Add(new ItemPriceSnapshotEntry(

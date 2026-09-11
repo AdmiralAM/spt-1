@@ -51,7 +51,7 @@ namespace SPTItemIntelligence
             hideout = Module(config, "Hideout", true, "Include incomplete current and future hideout upgrades.");
             value = Module(config, "Value", true, "Show value, buyer, flea and per-slot information.");
             relevance = Module(config, "Craft and Barter", true, "Show craft and barter relevance.");
-            backgrounds = Module(config, "Background Coloring (Valuation)", true, "Color neutral ordinary-item backgrounds only. Ammunition, keys, authored colors and compatibility highlights keep their dedicated owner.");
+            backgrounds = Module(config, "Background Coloring (Valuation)", true, "Restore the accepted Item Valuation palette for ordinary items and ammunition. Keys, authored colors and compatibility highlights keep their dedicated owner.");
             tooltipMode = config.Bind("Tooltip", "Mode", ItemTooltipMode.Normal,
                 "Minimal: summary and selected value. Normal: regular-play card with owned/FIR, the F12-selected value source, craft/barter relevance and active quest, hideout and future quest progress. Detailed: Normal plus one nearest concrete target. Full: both price sources, per-slot value, all concrete targets and craft/barter relevance. Internal ids and sell recommendations are never shown.");
             valueMode = config.Bind("Tooltip", "Value Source", ItemValueMode.Vendor,

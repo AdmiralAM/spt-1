@@ -3,9 +3,9 @@ namespace SPTItemIntelligence
     // II-owned category rules, retaining the accepted valuation palette.
     public static class BackgroundPalette
     {
-        public static bool HasDedicatedOwner(bool ammunition, bool key, string existingBackground)
+        public static bool HasDedicatedOwner(bool key, string existingBackground)
         {
-            if (ammunition || key) return true;
+            if (key) return true;
             string existing = (existingBackground ?? string.Empty).Trim();
             return existing.Length > 0
                 && !string.Equals(existing, "default", System.StringComparison.OrdinalIgnoreCase)
