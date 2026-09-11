@@ -81,7 +81,7 @@ Wishlist, prerequisite-distance, encyclopedia-style item statistics, and direct 
 
 The install-only `runtime-item-intelligence` channel contains the accepted stable client and server components. The v1 package contract uses:
 
-- `BepInEx/plugins/Item Intelligence Admiral/Item Intelligence Admiral.dll`
+- `BepInEx/plugins/Admiral SPT/SPT Item Intelligence/Item Intelligence Admiral.dll`
 - `SPT_Runtime/user/mods/Item Intelligence Admiral Server/Item Intelligence Admiral Server.dll`
 
 Development PR artifacts are test candidates only and do not replace the stable runtime channel before deliberate acceptance/publication.

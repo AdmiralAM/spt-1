@@ -45,7 +45,7 @@ jobs:
         env:
           CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          $clientDir = 'runtime-test/BepInEx/plugins/Item Intelligence Admiral'
+          $clientDir = 'runtime-test/BepInEx/plugins/Admiral SPT/SPT Item Intelligence'
           $serverDir = 'runtime-test/SPT_Runtime/user/mods/Item Intelligence Admiral Server'
           New-Item -ItemType Directory -Force -Path $clientDir | Out-Null
           New-Item -ItemType Directory -Force -Path $serverDir | Out-Null
