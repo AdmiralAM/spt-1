@@ -28,6 +28,7 @@ internal static class ReloadPrimaryFallbackContractRegression
             "object beltSlotsArgument = BeltSlotsArgument;",
             "Type itemType = ItemType;",
             "Type magazineType = MagazineType;",
+            "Type importedBeltItemType = ImportedBeltItemType;",
             "Type returnType = ReturnType;",
             "Func<object, IEnumerable> getAllParentItems = GetAllParentItems;",
             "Func<object, string> readTemplateId = ReadTemplateId;"
@@ -53,7 +54,7 @@ internal static class ReloadPrimaryFallbackContractRegression
             "itemType.IsInstanceOfType(item)",
             "returnType.IsInstanceOfType(beltResult)",
             "magazineType.IsInstanceOfType(item)",
-            "HasExactMagazineBeltAncestor(item, getAllParentItems, readTemplateId)",
+            "HasExactMagazineBeltAncestor(item, getAllParentItems, readTemplateId, importedBeltItemType)",
             "getItemsInSlots.Invoke(inventory, new[] { beltSlotsArgument })",
             "Array.CreateInstance(itemType, merged.Count)",
             "return returnType.IsInstanceOfType(result) ? result : vanillaResult;"
@@ -96,6 +97,11 @@ internal static class ReloadPrimaryFallbackContractRegression
         if (helpers.Contains("AppDomain.CurrentDomain.GetAssemblies", StringComparison.Ordinal)
             || helpers.Contains("ReflectionTools.FindType", StringComparison.Ordinal))
             throw new InvalidOperationException("Reload primary fallback-contract regression failed: hot-path proof restored runtime discovery.");
+
+        Require(source, "ReflectionTools.FindType(\"PackNStrap.Core.Items.CustomBeltItemClass\")",
+            "private import must bind the imported belt runtime type before the reload hot path");
+        Require(helpers, "importedBeltItemType.IsInstanceOfType(parent)",
+            "candidate filtering must accept only the bound imported belt runtime type");
     }
 
     private static void Require(string source, string token, string message)

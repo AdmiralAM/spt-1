@@ -142,6 +142,7 @@ namespace SPTBeltArmbandInventory
     {
         internal static Type ItemType;
         internal static Type MagazineType;
+        internal static Type ImportedBeltItemType;
         internal static Func<object, IEnumerable> GetAllParentItems;
         internal static Func<object, string> ReadTemplateId;
         internal static Action<string> LogWarning;
@@ -161,7 +162,8 @@ namespace SPTBeltArmbandInventory
                 foreach (object parent in parents)
                 {
                     string templateId = parent == null ? null : ReadTemplateId(parent);
-                    bool fastAccessRoot = WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.FastAccess);
+                    bool fastAccessRoot = WearableItemDescriptorRegistry.HasCapability(templateId, AccessoryCapability.FastAccess)
+                        || (parent != null && ImportedBeltItemType != null && ImportedBeltItemType.IsInstanceOfType(parent));
                     if (FastAccessSlotPolicy.ShouldPromoteReloadReachability(result, isMagazine, fastAccessRoot))
                     {
                         result = true;
@@ -183,6 +185,7 @@ namespace SPTBeltArmbandInventory
         {
             ItemType = null;
             MagazineType = null;
+            ImportedBeltItemType = null;
             GetAllParentItems = null;
             ReadTemplateId = null;
             LogWarning = null;
@@ -207,6 +210,7 @@ namespace SPTBeltArmbandInventory
         internal static object InstalledBindAvailableSlots;
         internal static Type ItemType;
         internal static Type MagazineType;
+        internal static Type ImportedBeltItemType;
         internal static Type ReturnType;
         internal static Func<object, IEnumerable> GetAllParentItems;
         internal static Func<object, string> ReadTemplateId;
@@ -238,6 +242,7 @@ namespace SPTBeltArmbandInventory
             object beltSlotsArgument = BeltSlotsArgument;
             Type itemType = ItemType;
             Type magazineType = MagazineType;
+            Type importedBeltItemType = ImportedBeltItemType;
             Type returnType = ReturnType;
             Func<object, IEnumerable> getAllParentItems = GetAllParentItems;
             Func<object, string> readTemplateId = ReadTemplateId;
@@ -294,7 +299,7 @@ namespace SPTBeltArmbandInventory
                     if (item == null) continue;
                     if (!itemType.IsInstanceOfType(item)) return vanillaResult;
                     if (!magazineType.IsInstanceOfType(item)
-                        || !HasExactMagazineBeltAncestor(item, getAllParentItems, readTemplateId)) continue;
+                        || !HasExactMagazineBeltAncestor(item, getAllParentItems, readTemplateId, importedBeltItemType)) continue;
                     if (ContainsReference(vanillaItems, item) || (merged != null && ContainsReference(merged, item))) continue;
 
                     if (merged == null)
@@ -399,14 +404,15 @@ namespace SPTBeltArmbandInventory
             return false;
         }
 
-        static bool HasExactMagazineBeltAncestor(object item, Func<object, IEnumerable> getAllParentItems, Func<object, string> readTemplateId)
+        static bool HasExactMagazineBeltAncestor(object item, Func<object, IEnumerable> getAllParentItems, Func<object, string> readTemplateId, Type importedBeltItemType)
         {
             IEnumerable parents = getAllParentItems(item);
             if (parents == null) return false;
             foreach (object parent in parents)
             {
                 string templateId = parent == null ? null : readTemplateId(parent);
-                if (string.Equals(templateId, RuntimeIdentity.DedicatedMagazineBeltItemId, StringComparison.Ordinal)) return true;
+                if (string.Equals(templateId, RuntimeIdentity.DedicatedMagazineBeltItemId, StringComparison.Ordinal)
+                    || (parent != null && importedBeltItemType != null && importedBeltItemType.IsInstanceOfType(parent))) return true;
             }
             return false;
         }
@@ -421,6 +427,7 @@ namespace SPTBeltArmbandInventory
             InstalledBindAvailableSlots = null;
             ItemType = null;
             MagazineType = null;
+            ImportedBeltItemType = null;
             ReturnType = null;
             GetAllParentItems = null;
             ReadTemplateId = null;
@@ -685,6 +692,7 @@ namespace SPTBeltArmbandInventory
                 if (reachable == null || parentsMethod == null || templateIdMember == null || harmonyMethodCtor == null || patchMethod == null || reachabilityUnpatchSelf == null) return false;
                 FastAccessReloadRuntime.ItemType = itemType;
                 FastAccessReloadRuntime.MagazineType = magazineType;
+                FastAccessReloadRuntime.ImportedBeltItemType = ReflectionTools.FindType("PackNStrap.Core.Items.CustomBeltItemClass");
                 FastAccessReloadRuntime.GetAllParentItems = BuildParentEnumerator(parentsMethod, itemType);
                 FastAccessReloadRuntime.ReadTemplateId = BuildStringReader(itemType, templateIdMember);
                 FastAccessReloadRuntime.LogWarning = logWarning;
@@ -747,6 +755,7 @@ namespace SPTBeltArmbandInventory
                 ReloadCandidateBridgeRuntime.InstalledBindAvailableSlots = installedBindAvailableSlots;
                 ReloadCandidateBridgeRuntime.ItemType = itemType;
                 ReloadCandidateBridgeRuntime.MagazineType = FastAccessReloadRuntime.MagazineType;
+                ReloadCandidateBridgeRuntime.ImportedBeltItemType = FastAccessReloadRuntime.ImportedBeltItemType;
                 ReloadCandidateBridgeRuntime.ReturnType = getItemsInSlots.ReturnType;
                 ReloadCandidateBridgeRuntime.GetAllParentItems = FastAccessReloadRuntime.GetAllParentItems;
                 ReloadCandidateBridgeRuntime.ReadTemplateId = FastAccessReloadRuntime.ReadTemplateId;
