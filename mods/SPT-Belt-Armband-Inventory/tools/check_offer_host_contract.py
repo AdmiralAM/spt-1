@@ -35,7 +35,7 @@ require_tokens("offer-host contract", contract, [
     "UtilityHeadBandTpl",
     ".Take(2)",
     "matches.Length != 1",
-    "accepted.Count != 1 || !accepted.Contains(allowedTemplate)",
+    "accepted.Count != allowedTemplates.Count || allowedTemplates.Any(template => !accepted.Contains(template))",
 ])
 
 require_tokens("ArmBand registration exact cross-host isolation", armband_item, [
