@@ -9,6 +9,8 @@ param(
     [Parameter(Mandatory = $true)]
     [string] $ServerDll,
 
+    [string] $DefaultConfig,
+
     [string] $BackupRoot
 )
 
@@ -26,6 +28,7 @@ $clientTarget = Join-Path $resolvedSptRoot 'BepInEx\plugins\Admiral SPT\SPT Belt
 $serverTarget = Join-Path $resolvedSptRoot 'SPT_Runtime\user\mods\B&A&HB #2 MOD SPT\SPT-Belt-Armband-Inventory.Server.dll'
 $clientDirectory = Split-Path -Parent $clientTarget
 $serverDirectory = Split-Path -Parent $serverTarget
+$configTarget = Join-Path $serverDirectory 'config\config.json'
 $resolvedBackupRoot = [System.IO.Path]::GetFullPath($BackupRoot)
 
 $activeRoots = @(
@@ -84,5 +87,17 @@ finally {
         if (Test-Path -LiteralPath $temporaryTarget) {
             Remove-Item -LiteralPath $temporaryTarget -Force
         }
+    }
+}
+
+if ($DefaultConfig -and -not (Test-Path -LiteralPath $configTarget)) {
+    $resolvedDefaultConfig = (Resolve-Path -LiteralPath $DefaultConfig).Path
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $configTarget) | Out-Null
+    Copy-Item -LiteralPath $resolvedDefaultConfig -Destination $configTarget
+    [pscustomobject]@{
+        Component = 'server-config-default'
+        Path = $configTarget
+        Sha256 = (Get-FileHash -LiteralPath $configTarget -Algorithm SHA256).Hash.ToLowerInvariant()
+        Backup = 'not-required-new-file'
     }
 }

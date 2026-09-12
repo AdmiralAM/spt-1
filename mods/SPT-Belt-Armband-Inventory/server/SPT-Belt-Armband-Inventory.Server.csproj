@@ -27,6 +27,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\src\BeltDeathPolicy.cs" Link="BeltDeathPolicy.cs" />
+    <Compile Include="..\src\ArmBandVariantCatalog.cs" Link="ArmBandVariantCatalog.cs" />
+    <Compile Include="..\src\ArmBandLootPolicy.cs" Link="ArmBandLootPolicy.cs" />
     <Compile Include="..\src\HeadBandUtilityPolicy.cs" Link="HeadBandUtilityPolicy.cs" />
     <Compile Include="..\src\PackNStrapCompatibility.cs" Link="PackNStrapCompatibility.cs" />
     <Compile Include="..\src\RuntimeIdentity.cs" Link="RuntimeIdentity.cs" />
