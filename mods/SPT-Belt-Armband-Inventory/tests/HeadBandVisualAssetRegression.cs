@@ -16,8 +16,9 @@ internal static class HeadBandVisualAssetRegression
         string clientIconSource = File.ReadAllText(Path.Combine(module, "src", "HeadBandItemIconPatches.cs"));
         string clientProject = File.ReadAllText(Path.Combine(module, "src", "SPT-Belt-Armband-Inventory.csproj"));
         string deploySource = File.ReadAllText(Path.Combine(module, "tools", "Deploy-BAndHBHeadBandAsset.ps1"));
+        string bundleBuildSource = File.ReadAllText(Path.Combine(module, "assets", "headband-rambo", "unity", "Assets", "Editor", "BuildHeadBandBundle.cs"));
 
-        Require(new FileInfo(bundle).Length > 100_000, "HeadBand bundle is missing or unexpectedly small");
+        Require(new FileInfo(bundle).Length > 50_000, "HeadBand bundle is missing or unexpectedly small");
         Require(new FileInfo(icon).Length > 2_000, "HeadBand inventory icon is missing or unexpectedly small");
         using (FileStream iconStream = File.OpenRead(icon))
         using (var iconReader = new BinaryReader(iconStream))
@@ -39,6 +40,8 @@ internal static class HeadBandVisualAssetRegression
         Require(clientIconSource.Contains("ItemViewFactory", StringComparison.Ordinal)
             && clientIconSource.Contains("RuntimeIdentity.EmergencyHeadBandItemId", StringComparison.Ordinal), "client item-card icon override is not exact-template scoped");
         Require(clientProject.Contains("SPTBeltArmbandInventory.HeadBandIcon.png", StringComparison.Ordinal), "client item-card icon is not embedded in the plugin");
+        Require(bundleBuildSource.Contains("headband_rambo_red_inspect.png", StringComparison.Ordinal)
+            && bundleBuildSource.Contains("Unlit/Transparent", StringComparison.Ordinal), "HeadBand inspect preview must use the approved icon visual");
         Require(deploySource.Contains("SPT.Server','SPT.Launcher','EscapeFromTarkov", StringComparison.Ordinal), "asset deployment must refuse a running SPT/EFT process");
         Require(deploySource.Contains("headband-asset-$stamp", StringComparison.Ordinal), "asset deployment must preserve an out-of-tree backup");
     }

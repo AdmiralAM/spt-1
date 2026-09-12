@@ -6,7 +6,8 @@ using UnityEngine;
 
 public static class BuildHeadBandBundle
 {
-    private const string ModelPath = "Assets/HeadBand/headband_rambo_red.fbx";
+    private const string InspectTexturePath = "Assets/HeadBand/headband_rambo_red_inspect.png";
+    private const string InspectMaterialPath = "Assets/HeadBand/headband_rambo_red_inspect.mat";
     private const string PrefabPath = "Assets/HeadBand/headband_rambo_red.prefab";
     private const string BundleName = "headband_rambo_red.bundle";
 
@@ -15,9 +16,9 @@ public static class BuildHeadBandBundle
         string templatePath = CommandLineValue("-template=");
         string outputPath = CommandLineValue("-output=");
 
-        AssetDatabase.ImportAsset(ModelPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
-        GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath)
-            ?? throw new InvalidOperationException("Unable to import " + ModelPath);
+        AssetDatabase.ImportAsset(InspectTexturePath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+        Texture2D inspectTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(InspectTexturePath)
+            ?? throw new InvalidOperationException("Unable to import " + InspectTexturePath);
 
         AssetBundle templateBundle = AssetBundle.LoadFromFile(templatePath)
             ?? throw new InvalidOperationException("Unable to load template bundle " + templatePath);
@@ -40,11 +41,21 @@ public static class BuildHeadBandBundle
         foreach (Collider collider in root.GetComponentsInChildren<Collider>(true))
             UnityEngine.Object.DestroyImmediate(collider);
 
-        GameObject visual = UnityEngine.Object.Instantiate(model, root.transform);
+        GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Quad);
+        visual.transform.SetParent(root.transform, false);
         visual.name = "HeadBand_Rambo_Red_Visual";
         visual.transform.localPosition = Vector3.zero;
         visual.transform.localRotation = Quaternion.identity;
-        visual.transform.localScale = Vector3.one;
+        visual.transform.localScale = Vector3.one * 0.42f;
+        UnityEngine.Object.DestroyImmediate(visual.GetComponent<Collider>());
+
+        AssetDatabase.DeleteAsset(InspectMaterialPath);
+        Shader shader = Shader.Find("Unlit/Transparent")
+            ?? throw new InvalidOperationException("Unlit/Transparent shader is unavailable");
+        Material inspectMaterial = new Material(shader) { name = "HeadBand_Rambo_Red_Inspect" };
+        inspectMaterial.mainTexture = inspectTexture;
+        AssetDatabase.CreateAsset(inspectMaterial, InspectMaterialPath);
+        visual.GetComponent<MeshRenderer>().sharedMaterial = inspectMaterial;
 
         PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
         UnityEngine.Object.DestroyImmediate(root);

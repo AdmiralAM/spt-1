@@ -8,6 +8,7 @@ unity/*.log
 unity/belt_reference.bundle
 unity/Assets/**/*.meta
 unity/Assets/HeadBand/headband_rambo_red.prefab
+unity/Assets/HeadBand/headband_rambo_red_inspect.mat
 unity/Assets/Plugins/
 unity/AssetBundles/
 unity/Packages/packages-lock.json
