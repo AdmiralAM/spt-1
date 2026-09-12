@@ -1,0 +1,9 @@
+{
+  "spt_version": "4.1.x",
+  "version": "0.1.0",
+  "server_included": true,
+  "source_commit": "1a35436f28e7e1357ae16646c12a452f0e2c9077",
+  "name": "SPT Belt Armband Inventory",
+  "channel": "runtime-belt-armband",
+  "client_included": true
+}
