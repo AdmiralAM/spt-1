@@ -42,11 +42,13 @@ Expected lifecycle:
 - **M3 — Runtime campaign expansion**
 - **M4 — Selective external-content absorption**
 - **M5 — Relationship / specialist storefront**
-- **M6 — Stable release**
+- **M6 — Playable 0.2.0 baseline hardening**
+- **M7 — Full campaign, retired-source and optional-content absorption**
+- **Final gate — One coherent fresh-profile campaign review and stable release**
 
 Current runtime shape: **172 core quests** (72 validated foundation/rotation quests plus 100 authored story quests across ten map chains), **82 finite offers** (37 core/relationship/milestone offers, 10 story-finale unlocks and 35 Natalya weapon presets). Eighteen story beats use Natalya as a specialist inside Admiral's campaign; no second trader or external Natalya dependency is created. Verified Icebreaker 1.1.0 installations conditionally add the separate ten-operation **Boreas Protocol** chain, bringing the runtime total to 182 without changing the core graph.
 
-This is the stable starting point for fresh-profile play and campaign polish. Future content work may improve pacing, prose, loadout rotation and campaign breadth, but must be authored as a new milestone and must preserve the persistent Trader, quest and offer identities already in use.
+This is the complete M7 content candidate for the later fresh-profile campaign review. It is not declared stable until that coherent playthrough has exercised progression, pacing, rewards, unlocks and storefront tiers. Fixes from that review must preserve every persistent identity already in use.
 
 The active weapon campaign uses two paced lanes with 40 assignments in total, broad native SPT 4.1.5 coverage, no model-to-single-map lock, and 50 verified WTT Armory/Content Backport alternatives. WTT remains optional: every objective has a complete native weapon pool and no WTT quest gates the campaign.
 
@@ -54,7 +56,7 @@ Install, replacement and clean-removal instructions are in `docs/INSTALL.md`. Th
 
 Relationship progression uses the existing Admiral loyalty thresholds: LL2 requires level 15 and 0.10 standing, LL3 requires level 25 and 0.30, and LL4 requires level 35 and 0.55. White, yellow and blue signalling flares provide finite specialist availability at those tiers. The existing MS2000 marker offer keeps its ID and ₽16,500 price while requester-local stock/buy limits rise from 12/4 at LL1 to 16/6, 20/8 and 24/10. The projection modifies only SPT's profile-scoped assort response; it never mutates the global trader table.
 
-The bounded M4 decision is recorded in `manifests/m4-selective-content-absorption.json`. Natalya's Exfil route and logistics ideas and the selected Andrudis capability themes already have explicit runtime homes in the 12 M3 operations. The rejected Pay Back, Weapons Training, boss and cultist copies do not add distinct player decisions, so M4 adds no parallel quest records and leaves the validated graph and balance intact.
+The original bounded M4 decision is recorded in `manifests/m4-selective-content-absorption.json`. M7 supersedes its old content boundary: Natalya now appears in 18 story beats and contributes all 35 compatible native weapon presets, while selected Andrudis capability and hunt themes are distributed across the ten story chains and Arsenal lanes. The retired traders, source quest IDs, repetitive count ladders, custom Natalya items/zones and unsafe armour presets remain excluded.
 
 ## Product-design scope — complete
 
