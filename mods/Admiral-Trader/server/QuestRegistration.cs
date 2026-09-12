@@ -67,7 +67,6 @@ public sealed class AdmiralQuestRegistration(
         }
 
         Dictionary<MongoId, Quest> quests = LoadQuests(modPath, IOPath.Combine("db", "quests"));
-        int optionalRewardReplacements = ApplyOptionalRewardReplacements(modPath, quests);
         HashSet<string> storyQuestIds = LoadStoryQuestIds(modPath);
         ValidateQuests(quests, storyQuestIds);
         bool icebreakerInstalled = TryFindIcebreaker(modPath, out string? icebreakerPath);
@@ -98,31 +97,9 @@ public sealed class AdmiralQuestRegistration(
             throw;
         }
         logger.Success(icebreakerInstalled
-            ? $"Registered {quests.Count} authored Admiral quests ({ExpectedQuestCount} core + {ExpectedIcebreakerQuestCount} optional Icebreaker from {icebreakerPath}); {optionalRewardReplacements} optional item rewards"
-            : $"Registered {quests.Count} authored Admiral quests; optional Icebreaker chain not published; {optionalRewardReplacements} optional item rewards");
+            ? $"Registered {quests.Count} authored Admiral quests ({ExpectedQuestCount} core + {ExpectedIcebreakerQuestCount} optional Icebreaker from {icebreakerPath})"
+            : $"Registered {quests.Count} authored Admiral quests; optional Icebreaker chain not published");
         return Task.CompletedTask;
-    }
-
-    private int ApplyOptionalRewardReplacements(string modPath, Dictionary<MongoId, Quest> quests)
-    {
-        string relative = "db/optional/storefront/quest-reward-replacements.json";
-        string absolute = IOPath.Combine(modPath, relative.Replace('/', IOPath.DirectorySeparatorChar));
-        if (!File.Exists(absolute)) return 0;
-        Dictionary<MongoId, Reward> replacements = modHelper.GetJsonDataFromFile<Dictionary<MongoId, Reward>>(modPath, relative);
-        int applied = 0;
-        foreach (var (questId, replacement) in replacements)
-        {
-            if (replacement.Items is null || replacement.Items.Count == 0 || replacement.Items.Any(item => !templateTable.Items.ContainsKey(item.Template)))
-                continue;
-            if (!quests.TryGetValue(questId, out Quest? quest) || quest.Rewards is null || !quest.Rewards.TryGetValue("Success", out List<Reward>? success))
-                throw new InvalidDataException($"Optional reward targets unknown quest {questId}");
-            int index = success.FindIndex(reward => reward.Items is { Count: > 0 } && reward.Items[0].Template.ToString() != "5449016a4bdc2d6f028b456f");
-            if (index < 0) throw new InvalidDataException($"Optional reward quest {questId} has no replaceable item reward");
-            replacement.Index = success[index].Index;
-            success[index] = replacement;
-            applied++;
-        }
-        return applied;
     }
 
     private Dictionary<MongoId, Quest> LoadQuests(string modPath, string relativeDirectory)

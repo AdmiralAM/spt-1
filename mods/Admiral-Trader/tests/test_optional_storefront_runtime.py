@@ -4,6 +4,17 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 
 class OptionalStorefrontRuntimeTests(unittest.TestCase):
+    def test_optional_content_is_attached_after_third_party_template_publication(self):
+        early=(ROOT/"server/TraderRegistration.cs").read_text(encoding="utf-8")
+        quests=(ROOT/"server/QuestRegistration.cs").read_text(encoding="utf-8")
+        late=(ROOT/"server/OptionalContentRegistration.cs").read_text(encoding="utf-8")
+        self.assertNotIn("MergeOptionalStorefront",early)
+        self.assertNotIn("ApplyOptionalRewardReplacements",quests)
+        self.assertIn("OnLoadOrder.PostLoad",late)
+        self.assertIn("templateTable.Items.ContainsKey",late)
+        self.assertIn("MergeOptionalStorefront(modPath, trader.Assort)",late)
+        self.assertIn("ApplyOptionalRewardReplacements(modPath)",late)
+
     def test_optional_sources_are_bounded_and_never_required(self):
         manifest=json.loads((ROOT/"manifests/optional-storefront-runtime.json").read_text(encoding="utf-8"))
         self.assertFalse(manifest["requiredDependencies"])
