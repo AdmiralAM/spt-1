@@ -75,14 +75,23 @@ PR creation, branch synchronization, commits, documentation, CI, packaging, and 
 - A module worker enters its recorded `requiresUserRuntime` phase automatically after all prior acceptance is proven. No controller activation, registry edit, or inter-chat coordination is required.
 - Ask the user directly only at that coherent physical boundary. The user alone decides when to run the candidate and may choose the order if several modules become ready.
 - Batch related checks into one release-candidate session per module; do not use the user as a per-patch debugger.
-- Ask only after all feasible source inspection, automated tests, builds, packaging, integration, and CI repair are complete.
-- Provide the exact GitHub Actions/release URL, PR, branch, commit SHA, artifact name/ID, digest, install layout, and a short numbered table of action / PASS / FAIL / minimal evidence.
-- Chat attachments, local files, source ZIPs, CI success without an artifact, and vague `test everything` requests are invalid handoffs.
+- Ask only after all feasible source inspection, automated tests, builds, integration, and CI repair are complete. Packaging is required only for a release/distribution boundary or when direct deployment is unavailable.
+- When the user has granted a module worker direct access to the local SPT installation, prefer verified direct deployment for development/runtime iterations. Provide the PR, branch, exact source commit, deployed paths and hashes, validation result, and a short numbered table of action / PASS / FAIL / minimal evidence.
+- When direct deployment is unavailable or the candidate is a release/distribution boundary, provide the exact GitHub Actions/release URL, artifact name/ID, digest, install layout, PR, branch, exact commit, and the same bounded checklist.
+- Chat attachments, source-only ZIPs, unverified local builds, and vague `test everything` requests are invalid handoffs.
 - On FAIL, consume the evidence and resume remediation automatically. On PASS, follow the next recorded phase or release transition under the standing authorization; do not ask another worker for permission.
+
+### User-authorized direct SPT deployment
+
+- Direct deployment is a runtime delivery path, not permission to modify another module, third-party mod, profile, save, or unrelated SPT file. Each worker may replace only its own owned runtime paths and directly required integration files.
+- Before replacement, verify the target SPT installation and exact owned destination paths, preserve user configuration and profile data, and make a recoverable backup outside active mod/plugin load paths when rollback would otherwise be difficult.
+- Build and validate from the live PR exact head, deploy atomically where practical, verify the hashes of the files actually installed, and run the feasible local server/client smoke before asking the user to test behavior.
+- Do not build an intermediate ZIP merely to copy the same files into the authorized local installation. Produce an install-ready ZIP only for stable release, external distribution, deliberate rollback evidence, or an explicit user request.
+- A direct-deployment report must state what was replaced, where it was installed, which source head produced it, deployed file hashes, smoke outcome, and rollback location. Never claim deployment from build-output alone.
 
 ### Mandatory user-facing test request
 
-A runtime-test request is valid only when the same message gives the user one complete, immediately actionable handoff. It must begin with this compact block (translated to the conversation language when needed):
+A runtime-test request is valid only when the same message gives the user one complete, immediately actionable handoff. In artifact mode it must begin with this compact block (translated to the conversation language when needed):
 
 ```text
 Скачать: <one clickable GitHub download URL>
@@ -98,13 +107,14 @@ A runtime-test request is valid only when the same message gives the user one co
 
 Hard rules:
 
-- The first URL is the **primary candidate download**, not merely a repository home page, source tree, PR, commit, workflow list, or CI-status page. Provenance links may follow it.
+- In artifact mode, the first URL is the **primary candidate download**, not merely a repository home page, source tree, PR, commit, workflow list, or CI-status page. Provenance links may follow it.
 - State exactly which named file/artifact the user downloads. Never make the user search an Actions run, choose among builds, infer a filename, build source, or guess which ZIP is installable.
 - Verify that the linked GitHub artifact, Release asset, or install-ready `runtime-*` package actually exists and matches the named exact commit before asking.
 - Give exact install/replace/remove instructions for that candidate, including both client and server paths when applicable.
 - Test points are short, numbered, behavior-specific, and include observable PASS and FAIL results. `Test everything`, `try it`, free exploration, and an unbounded full-log request are invalid.
 - Ask for only the minimum evidence needed to decide the numbered gate.
-- **No working GitHub download link + no exact filename + no numbered checklist = no user test request.** Continue packaging/publication work or report the concrete blocker without assigning the user a test.
+- In authorized direct-deployment mode, replace the download/install lines with `Installed automatically`, exact deployed paths, exact source head, deployed hashes, smoke result, and rollback location. The user must not repeat an installation the worker already completed.
+- **No verified direct deployment and no working GitHub candidate download = no user test request.** Continue deployment/packaging work or report the concrete blocker without assigning the user a test.
 
 Detailed handoff mechanics live in `docs/runtime-artifact-gate.md`; that document cannot override this charter or the registry.
 
@@ -181,7 +191,7 @@ A PR timeline is not an execution log. Preserve technical proof while minimizing
 
 Repository automation must keep validation cheap and release evidence deliberate:
 
-- A normal PR push runs only the smallest affected deterministic validation. Exact-runtime downloads, server-start smoke, package assembly, publication, and install-ready artifact upload run only at a coherent RC/release boundary or explicit `workflow_dispatch`.
+- A normal GitHub PR push runs only the smallest affected deterministic validation. Expensive hosted exact-runtime downloads, hosted server-start smoke, package assembly, publication, and install-ready artifact upload run only at a coherent RC/release boundary or explicit `workflow_dispatch`. This does not prevent an authorized local worker from exact-runtime building, smoking, and directly deploying its owned module without creating a ZIP.
 - Validation output already preserved in the Actions log is not uploaded again as a transient JSON/report artifact. Upload only an actionable install-ready candidate or a file genuinely required to diagnose a non-reproducible failure.
 - Do not create a new workflow for a one-off diagnostic, source transport, checkpoint, or model handoff. Use local tooling, an existing manual diagnostic entry point, or a temporary uncommitted script instead.
 - A temporary workflow that is exceptionally required must be removed from the branch immediately after use and disabled in GitHub when retired. It must never remain registered as active after its source file is gone.
