@@ -41,7 +41,7 @@ The complete ordered `phasePlan` is pre-authorized. At the start of every run, i
 
 - Complete each phase's technical work without requiring approval between internal steps.
 - Fix scoped CI failures and continue; do not end a run merely because CI started or passed.
-- When a phase completes, record evidence in its technical Issue/PR and immediately continue to the next `phasePlan` entry.
+- When a phase completes, ensure its evidence is available through the commit, Checks/Actions, artifact metadata, or the PR's current summary, then immediately continue to the next `phasePlan` entry. Do not append a routine phase-completion comment merely to restate machine-recorded evidence.
 - Ordinary recorded phase transitions never require a registry edit, another worker's acknowledgement, or a new user message.
 - Create at most one implementation PR for the module, and only when coherent implementation exists.
 - Discover the module's single live implementation PR from GitHub; PR numbers, temporary branches, exact live heads, mutable phase state, and runtime-gate state are deliberately not stored as registry control pointers.
@@ -163,6 +163,19 @@ Use only:
 4. one coherent package/RC/stable result.
 
 Do not narrate file edits, branch creation, commits, CI polling, documentation, or every internal gate. Intermediate updates are non-terminal and require no user response.
+
+### PR evidence economy
+
+A PR timeline is not an execution log. Preserve technical proof while minimizing worker runs, comments, commits, and duplicated text:
+
+- Use commits, Checks, Actions logs, artifact metadata, and test outputs as the primary evidence. Do not copy them into PR comments unless a human decision or runtime handoff depends on the result.
+- Keep the PR body as one concise current summary. Update it when the authoritative state materially changes instead of appending repetitive status comments.
+- Do not post comments for individual commits, pushes, checkpoint saves, CI starts, routine failures/retries, green reruns, documentation-only updates, model recommendations, or ordinary phase transitions.
+- A new PR/Issue comment is justified only by a material root cause or plan-changing failure, a genuine blocker, an actionable runtime-test handoff, or one coherent RC/stable result.
+- Batch implementation and validation into coherent logical commits. Amend or fix up unpublished intermediate work when safe; never force-rewrite shared published history merely to make an old timeline look cleaner.
+- Do not run a worker solely to write status, duplicate evidence already recorded by GitHub, perform cosmetic reporting, or create documentation with no product, contract, operational, or maintenance value.
+- Documentation required by the product, compatibility contract, installation, recovery, or future maintenance remains part of the same implementation run; it is not a separate reporting phase.
+- Prefer the least expensive suitable model and the fewest runs that preserve correctness. Evidence economy must never remove required tests, exact-head verification, runtime smoke, artifact validation, or safety gates.
 
 ## Repository lifecycle
 
