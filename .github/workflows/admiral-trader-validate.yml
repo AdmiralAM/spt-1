@@ -100,8 +100,8 @@ jobs:
           signature = json.loads((root / 'db/natalya-signature-assort.json').read_text())
           base_root_ids = {row['_id'] for row in assort['items'] if row.get('parentId') == 'hideout'}
           signature_root_ids = {row['_id'] for row in signature['items'] if row.get('parentId') == 'hideout'}
-          if len(base_root_ids) != 47 or len(signature_root_ids) != 4 or len(base_root_ids | signature_root_ids) != 51:
-              raise SystemExit('51-offer active assort shape drift')
+          if len(base_root_ids) != 47 or len(signature_root_ids) != 35 or len(base_root_ids | signature_root_ids) != 82:
+              raise SystemExit('82-offer active assort shape drift')
           if len(storefront_ids) != 22 or not (relationship_ids | storefront_ids) <= base_root_ids:
               raise SystemExit('stabilized base assort ownership drift')
           if relationship_ids & set(questassort['success']):
