@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "preset": "Normal",
+  "status": "target-policy-pending-default-characterization",
+  "events": {
+    "ordinary": { "weight": 60 },
+    "ruaf": { "weight": 25, "groupSize": { "min": 2, "max": 4 }, "maxConsecutiveRaids": 2 },
+    "blackDivision": { "weight": 10, "groupSize": { "min": 2, "max": 3 }, "cooldownRaidsAfterAppearance": 2 },
+    "opposed": { "weight": 5 }
+  },
+  "constraints": {
+    "supplementOrdinaryPopulation": true,
+    "maximumEachFactionEventPerRaid": 1,
+    "preferDelayedArrival": true,
+    "difficultyIndependentFromFrequency": true,
+    "mutateUpstreamPersistentIds": false
+  }
+}
