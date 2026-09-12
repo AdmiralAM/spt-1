@@ -83,7 +83,7 @@ $unclassified = @($rootIds | Where-Object { $_ -notin $baselineIds -and $_ -noti
 if ($unclassified.Count) { throw "Unclassified offers materialized unexpectedly: $($unclassified -join ', ')" }
 
 $questFiles = @(Get-ChildItem (Join-Path $traderRoot 'db/quests') -Filter '*.json' -File)
-if ($questFiles.Count -ne 43) { throw "Trader quest count drift: $($questFiles.Count)" }
+if ($questFiles.Count -ne 72) { throw "Trader quest count drift: $($questFiles.Count)" }
 
 $project = Join-Path $traderRoot 'server/AdmiralTrader.Server.csproj'
 dotnet build $project -c Release --nologo "-p:SptRuntimeLibDir=$runtimeRoot"
@@ -119,7 +119,7 @@ if (@($stagedAssort.items | Where-Object parentId -eq 'hideout').Count -ne 37) {
 $stagedSignatureAssort = Get-Content (Join-Path $modTarget 'db/natalya-signature-assort.json') -Raw | ConvertFrom-Json
 if (@($stagedSignatureAssort.items | Where-Object parentId -eq 'hideout').Count -ne 4) { throw 'Staged Trader lost the four signature offers.' }
 if (@($stagedQuestAssort.success.PSObject.Properties).Count -ne 8) { throw 'Staged Trader lost the eight Milestone gates.' }
-if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 43) { throw 'Staged Trader lost the 43-quest expanded campaign contract.' }
+if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 72) { throw 'Staged Trader lost the 72-quest campaign contract.' }
 if (-not (Test-Path (Join-Path $modTarget 'assets/d5c27bb3169f8dfbc13f6b69.jpg') -PathType Leaf)) { throw 'Staged Trader portrait is missing.' }
 
 $provenance = [ordered]@{
@@ -132,7 +132,7 @@ $provenance = [ordered]@{
     sourceHeadSha = $sourceHead
     authority = 'PR #328 active canonical head'
     historicalReferenceOnly = '053a62ff5f1cb545f13bc89a96bba3acd319a823'
-    questCount = 43
+    questCount = 72
     frozenBaselineQuestCount = 31
     m3OperationQuestCount = 12
     baselineOffers = 4

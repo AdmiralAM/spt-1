@@ -6,6 +6,8 @@
 - Route the opening Admiral wave through Ground Zero alongside the retained traders' early progression.
 - Add a bounded signature weapon rack selected from Natalya's native stock against the effective post-Andrudis catalog, with finite stock and progressive access.
 - First runtime storefront intake adds complete M700, T-5000M, RPDN and Mk17 presets, bringing the active runtime to 41 finite offers.
+- Expands the campaign to 72 quests: 40 staged Arsenal assignments, 4 opening Ground Zero operations, and 6 progressive equipment assignments while preserving the 43-quest foundation.
+- Accepts 51 verified WTT Armory/Content Backport weapon templates as optional alternatives in matching Arsenal pools. Every quest keeps native SPT choices and the campaign remains fully playable without WTT.
 - Canonicalize the installed folder as `SPT_Runtime/user/mods/Admiral Trader` and reject the obsolete hyphenated alias during replacement validation.
 
 ## 0.2.0 — stable campaign baseline

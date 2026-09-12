@@ -24,7 +24,7 @@ public static class AdmiralTraderGameplayAlphaAdapter
     public const int FrozenBaselineOfferCount = 4;
     public const int FrozenMilestoneOfferCount = 7;
     public const int FrozenTotalOfferCount = 11;
-    public const int ActiveQuestCount = 43;
+    public const int ActiveQuestCount = 72;
     public const int ActiveBaselineOfferCount = 4;
     public const int ActiveRelationshipOfferCount = 3;
     public const int ActiveMilestoneOfferCount = 8;

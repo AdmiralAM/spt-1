@@ -12,7 +12,7 @@ Admiral Trader has **one active workstream**:
 - current development/validation baseline: **SPT 4.1.5**;
 - runtime metadata compatibility range: **`~4.1.0`**;
 - stable gameplay baseline: **`0.2.0`**;
-- active Natalya-absorption candidate: **`0.3.0-rc`**, 43 quests / 41 finite offers;
+- active content-expansion candidate: **`0.3.0-rc`**, 72 quests / 41 finite offers;
 - historical frozen `0.1.0`: `053a62ff5f1cb545f13bc89a96bba3acd319a823`, 31 runtime quests / 11 finite offers;
 - QuestManiac/Andrudis research archive: **#115**.
 
@@ -46,11 +46,11 @@ Expected lifecycle:
 - **M5 — Relationship / specialist storefront**
 - **M6 — Stable release**
 
-Current runtime shape: **43 quests** (31 frozen baseline + 12 M3 operations), **37 offers** (4 Baseline + 3 Relationship + 8 Milestone + 22 bounded core offers).
+Current runtime shape: **72 quests** (43 validated foundation + 19 staged weapon assignments + 4 Ground Zero operations + 6 equipment assignments), **41 finite offers** (37 core/relationship/milestone offers plus 4 Natalya signature presets).
 
 This is the stable starting point for fresh-profile play and campaign polish. Future content work may improve pacing, prose, loadout rotation and campaign breadth, but must be authored as a new milestone and must preserve the persistent Trader, quest and offer identities already in use.
 
-The next weapon milestone is fully scoped in [docs/weapon-rotation-expansion-plan.md](docs/weapon-rotation-expansion-plan.md): two paced 20-assignment lanes, broad native SPT 4.1.5 coverage, no model-to-single-map lock, and optional WTT Armory alternatives that never become a core dependency.
+The active weapon campaign uses two paced lanes with 40 assignments in total, broad native SPT 4.1.5 coverage, no model-to-single-map lock, and 50 verified WTT Armory/Content Backport alternatives. WTT remains optional: every objective has a complete native weapon pool and no WTT quest gates the campaign.
 
 Install, replacement and clean-removal instructions are in `docs/INSTALL.md`. The canonical runtime directory is `Admiral Trader`, matching the established installation. Replacement tooling removes the obsolete `Admiral-Trader` alias so two copies of the same persistent trader identity cannot load together.
 

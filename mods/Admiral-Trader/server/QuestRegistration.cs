@@ -20,15 +20,19 @@ public sealed class AdmiralQuestRegistration(
     ISptLogger<AdmiralQuestRegistration> logger) : IOnLoad
 {
     private const int ExpectedAccessQuestCount = 10;
-    private const int ExpectedArsenalQuestCount = 21;
-    private const int ExpectedOperationQuestCount = 12;
+    private const int ExpectedArsenalQuestCount = 40;
+    private const int ExpectedOperationQuestCount = 22;
     private const int ExpectedQuestCount = ExpectedAccessQuestCount + ExpectedArsenalQuestCount + ExpectedOperationQuestCount;
     private static readonly HashSet<string> OperationQuestIds =
     [
         "8dad0d354ac000b7bbf05b9a", "56813681ae0690016376f163", "208db81b5ce195bf0c176852",
         "6574a072f763d0b09a553401", "8b6f2b25ab2e91e0540761e3", "41a41cb262ea084c1e110513",
         "133aa723b4695a3d93de92f1", "db220288bc8d5559a45feeb1", "4c2cc3f85d60170907642d9e",
-        "b1b3d9e3a930a3eae47b2353", "f62d8e1285027e336767513c", "4072a5e458946a243b886ad8"
+        "b1b3d9e3a930a3eae47b2353", "f62d8e1285027e336767513c", "4072a5e458946a243b886ad8",
+        "02c07ee31821696597ceabef", "3c6e085fc02f0597efdb5d5a", "31ab6a69a8436df6b3834b0a",
+        "e520cec55b83621928e9e4ec", "4a8f533e1ed458e83b41c01f", "4ab0b49478adb233ae900b33",
+        "ca33fab8b9cc5f5f5ad322c0", "9c35b3ac22ede1a5a79118bc", "ee813142de655daf2dedfebc",
+        "47480d824cea0b80917cafa5"
     ];
 
     private static readonly string[] RequiredLocaleFields =
@@ -211,8 +215,8 @@ public sealed class AdmiralQuestRegistration(
 
     private void RegisterQuestLocales(string modPath, Dictionary<MongoId, Quest> quests)
     {
-        Dictionary<string, string> english = LoadLocaleSet(modPath, "en.json", "arsenal-en.json", "m3-en.json");
-        Dictionary<string, string> russian = LoadLocaleSet(modPath, "ru.json", "arsenal-ru.json", "m3-ru.json");
+        Dictionary<string, string> english = LoadLocaleSet(modPath, "en.json", "arsenal-en.json", "m3-en.json", "m8-en.json");
+        Dictionary<string, string> russian = LoadLocaleSet(modPath, "ru.json", "arsenal-ru.json", "m3-ru.json", "m8-ru.json");
 
         EnsureLocaleCoverage("en", english, quests);
         EnsureLocaleCoverage("ru", russian, quests);

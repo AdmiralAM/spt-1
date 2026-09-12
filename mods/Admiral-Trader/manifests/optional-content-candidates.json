@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "status": "installed-inventory-verified-runtime-smoke-blocked-externally",
+  "status": "wtt-optional-weapon-runtime-materialized",
   "observedInstallationDate": "2026-09-12",
-  "runtimeChangesAuthorized": false,
+  "runtimeChangesAuthorized": true,
   "stableCampaignChanges": {
-    "quests": 0,
+    "quests": 29,
     "graphEdges": 0,
     "rewards": 0,
     "offers": 0,
@@ -81,7 +81,12 @@
     },
     {
       "name": "Pack 'n' Strap",
-      "installed": false,
+      "installed": true,
+      "runtime": {
+        "guid": "com.wtt.packnstrap",
+        "version": "2.1.1",
+        "admittedByTrader": false
+      },
       "roles": ["equipment objectives", "proportional rewards", "finite unlocks"],
       "requiredEvidence": ["container template IDs", "slot and capacity contract", "value", "effective retained-trader overlap"],
       "fallback": "native equipment objectives and rewards remain unchanged"
@@ -92,9 +97,9 @@
     "crossModTemplateIdCollisions": 0,
     "nativeTemplateIdCollisions": 0,
     "serverMetadataValidationPassed": true,
-    "completeCombinedStartupPassed": false,
-    "combinedStartupBlocker": "B&A&HB Dogtag Case canonical-parent preflight stopped startup before WTT callbacks and final Economy analysis",
-    "admiralRuntimeChangeRequired": false,
+    "completeCombinedStartupPassed": true,
+    "combinedStartupBlocker": null,
+    "admiralRuntimeChangeRequired": true,
     "economyContract": {
       "foreignTemplateMutationAllowed": false,
       "authoredBarterMutationAllowed": false,

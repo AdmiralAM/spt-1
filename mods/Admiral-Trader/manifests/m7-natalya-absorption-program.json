@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "active-intake",
+  "status": "runtime-materialized",
   "baseline": {
     "tag": "admiral-trader-v0.2.0",
     "commit": "7ecd3d8a6189c1c71d598115e68f41ee16d01fe0",
@@ -36,7 +36,7 @@
     {"offerId": "67e6bf65f74c6d7fd2b6730a", "tpl": "65268d8ecb944ff1e90ea385", "name": "Degtyarev RPDN", "loyaltyLevel": 3, "stockPerReset": 2, "buyRestriction": 1, "priceRub": 155000},
     {"offerId": "67e6bf65c16dbddc52a3f240", "tpl": "6165ac306ef05c2ce828ef74", "name": "FN SCAR-H Mk17", "loyaltyLevel": 4, "stockPerReset": 1, "buyRestriction": 1, "priceRub": 265000}
   ],
-  "activeHeadScope": {"questCount": 43, "baseOffers": 37, "signatureOffers": 4, "runtimeFiniteOffers": 41},
+  "activeHeadScope": {"questCount": 72, "foundationQuestCount": 43, "weaponAssignments": 40, "groundZeroOperations": 4, "equipmentAssignments": 6, "baseOffers": 37, "signatureOffers": 4, "runtimeFiniteOffers": 41},
   "constraints": {
     "secondTrader": false,
     "externalRuntimeDependency": false,

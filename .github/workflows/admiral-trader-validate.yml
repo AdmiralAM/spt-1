@@ -48,6 +48,8 @@ jobs:
           python -m json.tool mods/Admiral-Trader/manifests/relationship-stock.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/m5-relationship-runtime.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/m5-spt415-item-evidence.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/m8-campaign-expansion-runtime.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/optional-weapon-runtime.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/storefront-core-expansion.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/curated-quest-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/base.json > /dev/null
@@ -120,6 +122,8 @@ jobs:
               out / 'manifests/relationship-stock.json',
               out / 'manifests/m5-relationship-runtime.json',
               out / 'manifests/m5-spt415-item-evidence.json',
+              out / 'manifests/m8-campaign-expansion-runtime.json',
+              out / 'manifests/optional-weapon-runtime.json',
               out / 'manifests/storefront-core-expansion.json',
               out / 'db/base.json',
               out / 'db/assort.json',

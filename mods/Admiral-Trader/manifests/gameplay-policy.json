@@ -2,11 +2,11 @@
   "schemaVersion": 5,
   "productRole": "specialist-trader-and-capability-broker",
   "campaign": {
-    "runtimeQuestCount": 43,
+    "runtimeQuestCount": 72,
     "frozenBaselineQuestCount": 31,
-    "operationQuestCount": 12,
+    "operationQuestCount": 22,
     "accessQuestCount": 10,
-    "arsenalQuestCount": 21,
+    "arsenalQuestCount": 40,
     "repeatableQuestsAllowed": false
   },
   "traderStock": {
