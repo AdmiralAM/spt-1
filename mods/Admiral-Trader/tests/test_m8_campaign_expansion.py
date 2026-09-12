@@ -65,22 +65,23 @@ class M8CampaignExpansionTests(unittest.TestCase):
         self.assertNotIn("WTT-ContentBackport.dll", csproj)
         self.assertEqual({x["guid"] for x in self.optional["sources"]}, {"com.wtt.armory", "com.wtt.contentbackport"})
 
-    def test_icebreaker_is_reserved_without_speculative_runtime_ids(self):
-        self.assertTrue(self.runtime["icebreaker"]["reserved"])
-        self.assertFalse(self.runtime["icebreaker"]["runtimePublished"])
+    def test_icebreaker_is_optional_and_isolated_from_core_quests(self):
+        self.assertFalse(self.runtime["icebreaker"]["reserved"])
+        self.assertTrue(self.runtime["icebreaker"]["runtimePublished"])
+        self.assertEqual(self.runtime["icebreaker"]["optionalQuestCount"], 10)
         for quest in self.quests:
             self.assertNotIn("icebreaker", json.dumps(quest).lower())
 
     def test_icebreaker_source_identity_is_recorded_without_runtime_dependency(self):
         candidates = json.loads((ROOT / "manifests/optional-content-candidates.json").read_text(encoding="utf-8"))
         icebreaker = next(row for row in candidates["candidates"] if row["name"] == "Icebreaker")
-        self.assertFalse(icebreaker["installed"])
+        self.assertTrue(icebreaker["installed"])
         self.assertEqual(icebreaker["sourceAudit"]["version"], "1.1.0")
         self.assertEqual(icebreaker["sourceAudit"]["guid"], "com.manimal.icebreaker")
         self.assertEqual(icebreaker["sourceAudit"]["locationKey"], "icebreaker")
         self.assertEqual(icebreaker["sourceAudit"]["locationId"], "882b2fa04bbd616567022938")
         self.assertEqual(icebreaker["sourceAudit"]["bundledQuestRecords"], 14)
-        self.assertEqual(icebreaker["sourceAudit"]["runtimeValidation"], "pending installation")
+        self.assertEqual(icebreaker["sourceAudit"]["runtimeValidation"], "combined startup observed on SPT 4.1.5")
 
 
 if __name__ == "__main__":

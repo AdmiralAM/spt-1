@@ -1,6 +1,6 @@
 # Optional content candidates
 
-These integrations remain optional. M7 admits only verified WTT weapon templates as alternatives inside the 19 new Arsenal assignments; it adds no dependency, reward, offer, graph edge, or mandatory objective. Icebreaker and the other candidates remain reserved.
+These integrations remain optional. M7 admits verified WTT weapon templates as alternatives inside the 19 new Arsenal assignments. Icebreaker adds a conditional side investigation while the other candidates remain reserved.
 
 The 2026-09-12 inspection of the active `C:\Games\SPT` installation confirmed WTT Armory, WTT Content Backport and WTT CommonLib. The authoritative server metadata is Armory **2.0.5** (`com.wtt.armory`, SPT `~4.1.0`), Content Backport **2.0.1** (`com.wtt.contentbackport`, SPT `~4.1.1`) and CommonLib **3.0.6** (`com.wtt.commonlib`, SPT `~4.1.3`). The installed Armory server and client assemblies both report 2.0.5; the folder supplied as “3.0.0” therefore does not contain an Armory 3.0.0 runtime.
 
@@ -38,11 +38,11 @@ Armory and Backport authored handbook and flea values remain the price authority
 
 ## Icebreaker
 
-Candidate role: optional operations on the additional map after its installation, location identity, access rules, extraction contract, and existing quest progression have been inspected.
+Icebreaker 1.1.0 is now verified in the installed SPT 4.1.5 runtime. Admiral conditionally publishes a separate ten-part **Boreas Protocol** investigation only when the exact Icebreaker location identity (`icebreaker` / `882b2fa04bbd616567022938`) and its server DLL are present. The branch begins after Icebreaker's own **Boreas - Part 3**, reuses its authored repair/camp/transit zones, and does not duplicate its custom item collection quests.
 
-The upstream `1.1.0` source at commit `728ea513eefb8f7f3bc4f9b6eecaa3fe7e3666e2` compiles against SPT 4.1.5 and declares location key `icebreaker`, persistent location ID `882b2fa04bbd616567022938`, and 14 bundled quests distributed across existing vanilla traders and the native BTR trader. It also has hard client dependencies on WTT CommonLib 3.0.6, Content Backport 2.0.1, BigBrain 1.5.0, MoreBotsAPI 2.1.1, Black Division 1.3.1, SAIN 4.5.1, Ladders, and Manimal CS Gas 2.0.0. The source identity is suitable for a future optional Admiral side chain, but installed runtime validation remains required because Icebreaker is not present in the authorized SPT installation yet.
+The normal Admiral campaign remains 172 quests. With Icebreaker present it becomes 182. No core quest points into the optional branch, Admiral adds no Icebreaker item to a profile, and removing Icebreaker suppresses the branch without invalidating the core campaign.
 
-Installing Icebreaker will add its own 14 quests before Admiral adds anything. Admiral therefore reserves a short optional side chain rather than another ten-part mandatory story. Exact extraction IDs, quest-zone IDs, custom item registration, profile behavior and Economy Admiral classification will be taken from the installed final database and startup logs. No Icebreaker template, quest, location or dependency enters Admiral's core graph.
+The upstream `1.1.0` source at commit `728ea513eefb8f7f3bc4f9b6eecaa3fe7e3666e2` compiles against SPT 4.1.5 and declares 14 bundled quests distributed across existing vanilla traders and the native BTR trader. The installed runtime confirmed both extracts (`Icebreaker_Exit_Gate`, `Icebreaker_Exit_Heli`), four reusable Boreas quest zones, its custom-item identities and the complete Economy Admiral classification pass. Icebreaker's own client dependencies remain Icebreaker's responsibility; Admiral references none of their assemblies.
 
 Icebreaker quests must remain side operations. They cannot gate Admiral loyalty, the core campaign, native-map quests, or essential storefront access. Admiral does not provide or bypass access to the map unless that behavior belongs to an explicitly verified item or quest contract.
 

@@ -10,9 +10,12 @@
   "optionalWeaponCount": 50,
   "optionalWeaponsRequired": false,
   "icebreaker": {
-    "reserved": true,
-    "runtimePublished": false,
-    "reason": "map not installed; no speculative IDs"
+    "reserved": false,
+    "runtimePublished": true,
+    "optionalQuestCount": 10,
+    "coreQuestCountWhenAbsent": 172,
+    "totalQuestCountWhenPresent": 182,
+    "manifest": "icebreaker-runtime.json"
   },
   "quests": [
     {

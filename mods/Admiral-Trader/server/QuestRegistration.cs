@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using SPTarkov.Common.Models.Logging;
@@ -25,6 +26,8 @@ public sealed class AdmiralQuestRegistration(
     private const int ExpectedOperationQuestCount = 22;
     private const int ExpectedStoryQuestCount = 100;
     private const int ExpectedQuestCount = ExpectedAccessQuestCount + ExpectedArsenalQuestCount + ExpectedOperationQuestCount + ExpectedStoryQuestCount;
+    private const int ExpectedIcebreakerQuestCount = 10;
+    private const string IcebreakerLocationId = "882b2fa04bbd616567022938";
     private static readonly HashSet<string> OperationQuestIds =
     [
         "8dad0d354ac000b7bbf05b9a", "56813681ae0690016376f163", "208db81b5ce195bf0c176852",
@@ -63,9 +66,17 @@ public sealed class AdmiralQuestRegistration(
             return Task.CompletedTask;
         }
 
-        Dictionary<MongoId, Quest> quests = LoadQuests(modPath);
+        Dictionary<MongoId, Quest> quests = LoadQuests(modPath, IOPath.Combine("db", "quests"));
         HashSet<string> storyQuestIds = LoadStoryQuestIds(modPath);
         ValidateQuests(quests, storyQuestIds);
+        bool icebreakerInstalled = TryFindIcebreaker(modPath, out string? icebreakerPath);
+        Dictionary<MongoId, Quest> optionalQuests = icebreakerInstalled
+            ? LoadQuests(modPath, IOPath.Combine("db", "optional", "icebreaker", "quests"))
+            : [];
+        ValidateOptionalIcebreakerQuests(optionalQuests);
+        foreach (var row in optionalQuests)
+            if (!quests.TryAdd(row.Key, row.Value))
+                throw new InvalidDataException($"Duplicate Admiral quest id {row.Key} across core and Icebreaker content");
         PreflightQuestIds(quests);
 
         List<MongoId> addedQuestIds = [];
@@ -77,7 +88,7 @@ public sealed class AdmiralQuestRegistration(
                 addedQuestIds.Add(questId);
             }
 
-            RegisterQuestLocales(modPath, quests);
+            RegisterQuestLocales(modPath, quests, icebreakerInstalled);
         }
         catch
         {
@@ -85,13 +96,15 @@ public sealed class AdmiralQuestRegistration(
                 templateTable.Quests.Remove(questId);
             throw;
         }
-        logger.Success($"Registered {quests.Count} authored Admiral quests");
+        logger.Success(icebreakerInstalled
+            ? $"Registered {quests.Count} authored Admiral quests ({ExpectedQuestCount} core + {ExpectedIcebreakerQuestCount} optional Icebreaker from {icebreakerPath})"
+            : $"Registered {quests.Count} authored Admiral quests; optional Icebreaker chain not published");
         return Task.CompletedTask;
     }
 
-    private Dictionary<MongoId, Quest> LoadQuests(string modPath)
+    private Dictionary<MongoId, Quest> LoadQuests(string modPath, string relativeDirectory)
     {
-        string questDirectory = IOPath.Combine(modPath, "db", "quests");
+        string questDirectory = IOPath.Combine(modPath, relativeDirectory);
         if (!Directory.Exists(questDirectory))
             throw new DirectoryNotFoundException($"Admiral quest directory is missing: {questDirectory}");
 
@@ -108,6 +121,56 @@ public sealed class AdmiralQuestRegistration(
         }
 
         return quests;
+    }
+
+    private static bool TryFindIcebreaker(string modPath, out string? icebreakerPath)
+    {
+        icebreakerPath = null;
+        DirectoryInfo? modsDirectory = Directory.GetParent(modPath.TrimEnd(IOPath.DirectorySeparatorChar, IOPath.AltDirectorySeparatorChar));
+        if (modsDirectory is null || !modsDirectory.Exists)
+            return false;
+
+        foreach (DirectoryInfo candidate in modsDirectory.EnumerateDirectories())
+        {
+            string serverDll = IOPath.Combine(candidate.FullName, "icebreaker-server.dll");
+            string baseFile = IOPath.Combine(candidate.FullName, "db", "base.json");
+            if (!File.Exists(serverDll) || !File.Exists(baseFile))
+                continue;
+            try
+            {
+                using JsonDocument document = JsonDocument.Parse(File.ReadAllText(baseFile));
+                JsonElement root = document.RootElement;
+                if (root.TryGetProperty("_Id", out JsonElement id)
+                    && root.TryGetProperty("Id", out JsonElement key)
+                    && string.Equals(id.GetString(), IcebreakerLocationId, StringComparison.Ordinal)
+                    && string.Equals(key.GetString(), "icebreaker", StringComparison.Ordinal))
+                {
+                    icebreakerPath = candidate.FullName;
+                    return true;
+                }
+            }
+            catch (JsonException)
+            {
+                // An unrelated malformed third-party base file is not Icebreaker evidence.
+            }
+        }
+        return false;
+    }
+
+    private static void ValidateOptionalIcebreakerQuests(Dictionary<MongoId, Quest> quests)
+    {
+        if (quests.Count == 0)
+            return;
+        if (quests.Count != ExpectedIcebreakerQuestCount)
+            throw new InvalidDataException($"Expected {ExpectedIcebreakerQuestCount} optional Icebreaker quests, got {quests.Count}");
+        foreach (var (questId, quest) in quests)
+        {
+            if (quest.TraderId.ToString() != RuntimeIdentity.TraderId)
+                throw new InvalidDataException($"Optional Icebreaker quest {questId} has unexpected trader id {quest.TraderId}");
+            ValidateNativeLifecycleBoundary(questId, quest);
+            if (quest.Conditions.AvailableForFinish is not { Count: > 0 })
+                throw new InvalidDataException($"Optional Icebreaker quest {questId} has no finish conditions");
+        }
     }
 
     private HashSet<string> LoadStoryQuestIds(string modPath)
@@ -238,10 +301,15 @@ public sealed class AdmiralQuestRegistration(
                 $"Cannot register Admiral quests: {collisions.Count} quest id collision(s): {string.Join(", ", collisions)}");
     }
 
-    private void RegisterQuestLocales(string modPath, Dictionary<MongoId, Quest> quests)
+    private void RegisterQuestLocales(string modPath, Dictionary<MongoId, Quest> quests, bool icebreakerInstalled)
     {
         Dictionary<string, string> english = LoadLocaleSet(modPath, "en.json", "arsenal-en.json", "m3-en.json", "m8-en.json", "story-en.json");
         Dictionary<string, string> russian = LoadLocaleSet(modPath, "ru.json", "arsenal-ru.json", "m3-ru.json", "m8-ru.json", "story-ru.json");
+        if (icebreakerInstalled)
+        {
+            MergeLocaleFile(modPath, english, "db/optional/icebreaker/locales/en.json");
+            MergeLocaleFile(modPath, russian, "db/optional/icebreaker/locales/ru.json");
+        }
 
         EnsureLocaleCoverage("en", english, quests);
         EnsureLocaleCoverage("ru", russian, quests);
@@ -262,6 +330,14 @@ public sealed class AdmiralQuestRegistration(
                 return lazyLoadedLocaleData;
             });
         }
+    }
+
+    private void MergeLocaleFile(string modPath, Dictionary<string, string> destination, string relativePath)
+    {
+        Dictionary<string, string> source = modHelper.GetJsonDataFromFile<Dictionary<string, string>>(modPath, relativePath);
+        foreach (var (key, value) in source)
+            if (!destination.TryAdd(key, value))
+                throw new InvalidDataException($"Duplicate Admiral locale key {key} while loading {relativePath}");
     }
 
     private Dictionary<string, string> LoadLocaleSet(string modPath, params string[] localeFiles)
