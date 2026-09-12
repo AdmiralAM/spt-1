@@ -39,7 +39,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "63a0b2eabea67a6d93009e52"
             }
           ],
           "prerequisite": null,
@@ -102,7 +103,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c621186f774138d11ea29"
             }
           ],
           "prerequisite": "e472a13c1478f7b9258522d3",
@@ -136,7 +138,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c651286f7741e566b6461"
             }
           ],
           "prerequisite": "4f3828ef74a66f154f6ac397",
@@ -229,7 +232,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590a358486f77429692b2790"
             }
           ],
           "prerequisite": "59230813b9f9e11ceed08033",
@@ -331,7 +335,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "660bbc47c38b837877075e47"
             }
           ],
           "prerequisite": "05c97b5823b0c42b7c25ccf9",
@@ -405,7 +410,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c645c86f77412b01304d9"
             }
           ],
           "prerequisite": "88c98ecb21d126970231b220",
@@ -467,7 +473,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c651286f7741e566b6461"
             }
           ],
           "prerequisite": "ed21744058dec7587de1081f",
@@ -524,7 +531,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "660bbc47c38b837877075e47"
             }
           ],
           "prerequisite": "70a745d426d2ba09157eb734",
@@ -553,7 +561,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "5c12613b86f7743bbe2c3f76"
             }
           ],
           "prerequisite": "743532fcd12b4a88ff7cd83f",
@@ -576,13 +585,24 @@
           "locations": [
             "bigmap"
           ],
-          "brief": "Устранить 3–6 охранников в районе передачи и выжить.",
+          "brief": "Устранить четырёх охранников в районе сорванной передачи, забрать носитель курьера и выжить.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c621186f774138d11ea29"
+            },
+            {
+              "kind": "eliminate",
+              "quantity": 4,
+              "target": "Scav"
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
             }
           ],
           "prerequisite": "e9de043a8379c87027f762b3",
@@ -642,7 +662,8 @@
             {
               "kind": "handover",
               "quantity": 1,
-              "foundInRaid": false
+              "foundInRaid": false,
+              "itemTpl": "5c12613b86f7743bbe2c3f76"
             }
           ],
           "prerequisite": "94dfbf0ec29ab7391528f217",
@@ -716,7 +737,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "5c052f6886f7746b1e3db148"
             }
           ],
           "prerequisite": "c28a9b8837dcf639ba524cc3",
@@ -773,7 +795,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c651286f7741e566b6461"
             }
           ],
           "prerequisite": "b61a1cd8d6a7a82e81033dbc",
@@ -802,7 +825,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c621186f774138d11ea29"
             }
           ],
           "prerequisite": "dcae6b2142ca93b7dd77df3e",
@@ -891,7 +915,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "63a0b2eabea67a6d93009e52"
             },
             {
               "kind": "placeOrMark",
@@ -1025,7 +1050,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c621186f774138d11ea29"
             }
           ],
           "prerequisite": "e69ffaae178e648aff9de3fd",
@@ -1086,7 +1112,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c645c86f77412b01304d9"
             }
           ],
           "prerequisite": "b4304b0bda66037ec83deba6",
@@ -1109,13 +1136,19 @@
           "locations": [
             "Interchange"
           ],
-          "brief": "Пометить три подходящие грузовые партии.",
+          "brief": "Пометить три подозрительные грузовые партии, забрать сопроводительную ведомость и эвакуироваться.",
           "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 3,
+              "oneRaid": false
+            },
             {
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c651286f7741e566b6461"
             },
             {
               "kind": "surviveExtract",
@@ -1149,7 +1182,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "61bf7c024770ee6f9c6b8b53"
             },
             {
               "kind": "surviveExtract",
@@ -1247,7 +1281,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "5c12613b86f7743bbe2c3f76"
             }
           ],
           "prerequisite": "b713c4f910eb245be9cda205",
@@ -1275,7 +1310,8 @@
             {
               "kind": "handover",
               "quantity": 1,
-              "foundInRaid": false
+              "foundInRaid": false,
+              "itemTpl": "5c12613b86f7743bbe2c3f76"
             }
           ],
           "prerequisite": "4b4bcd640d8659dd0e2e7fba",
@@ -1349,7 +1385,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c621186f774138d11ea29"
             }
           ],
           "prerequisite": "65c67fd56ef827fd8f8e28ae",
@@ -1384,7 +1421,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c645c86f77412b01304d9"
             }
           ],
           "prerequisite": "78cc2b3208abba4015448a90",
@@ -1413,7 +1451,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "619cc01e0a7c3a1a2731940c"
             },
             {
               "kind": "surviveExtract",
@@ -1441,13 +1480,19 @@
           "locations": [
             "Shoreline"
           ],
-          "brief": "Установить датчики в двух корпусах санатория.",
+          "brief": "Установить датчики в двух корпусах санатория и забрать журнал показаний контрольной группы.",
           "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 2,
+              "oneRaid": false
+            },
             {
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590a3b0486f7743954552bdb"
             }
           ],
           "prerequisite": "0f6c7610aabb03785c8c29a1",
@@ -1507,7 +1552,8 @@
             {
               "kind": "handover",
               "quantity": 1,
-              "foundInRaid": false
+              "foundInRaid": false,
+              "itemTpl": "619cc01e0a7c3a1a2731940c"
             }
           ],
           "prerequisite": "39f58ef5c9d91324d914d18b",
@@ -1568,7 +1614,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "61bf7c024770ee6f9c6b8b53"
             }
           ],
           "prerequisite": "e0fbd59d0be5c10d2ade5fb3",
@@ -1596,7 +1643,8 @@
             {
               "kind": "handover",
               "quantity": 1,
-              "foundInRaid": false
+              "foundInRaid": false,
+              "itemTpl": "68666887df54e1190902df57"
             }
           ],
           "prerequisite": "315693d54d1bec87808d640a",
@@ -1669,13 +1717,14 @@
           "locations": [
             "RezervBase"
           ],
-          "brief": "Найти офицерский жетон и служебную записку.",
+          "brief": "Найти пост дежурного офицера и вынести его служебную записку.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "62a0a16d0b9d3c46de5b6e97"
             }
           ],
           "prerequisite": "cddcd386eb050dbc936ef629",
@@ -1769,7 +1818,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "68666887df54e1190902df57"
             }
           ],
           "prerequisite": "2897ca5464686729182d5c18",
@@ -1826,7 +1876,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "5c052f6886f7746b1e3db148"
             },
             {
               "kind": "placeOrMark",
@@ -1860,7 +1911,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "5d03794386f77420415576f5"
             }
           ],
           "prerequisite": "a4e4d8c99a667c66900d17ec",
@@ -1889,7 +1941,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "5c12613b86f7743bbe2c3f76"
             },
             {
               "kind": "surviveExtract",
@@ -1922,7 +1975,8 @@
             {
               "kind": "handover",
               "quantity": 1,
-              "foundInRaid": false
+              "foundInRaid": false,
+              "itemTpl": "62a0a16d0b9d3c46de5b6e97"
             }
           ],
           "prerequisite": "fe7337b9337a7b318619a432",
@@ -1996,7 +2050,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "5c052f6886f7746b1e3db148"
             }
           ],
           "prerequisite": "e0cc5330a34ff96bfb670820",
@@ -2058,7 +2113,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c645c86f77412b01304d9"
             }
           ],
           "prerequisite": "67f5301e59630b656d927c5e",
@@ -2124,7 +2180,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "62e910aaf957f2915e0a5e36"
             }
           ],
           "prerequisite": "416b7201445436294eb53e42",
@@ -2209,7 +2266,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "660bbc47c38b837877075e47"
             },
             {
               "kind": "surviveExtract",
@@ -2242,7 +2300,8 @@
             {
               "kind": "handover",
               "quantity": 1,
-              "foundInRaid": false
+              "foundInRaid": false,
+              "itemTpl": "62e910aaf957f2915e0a5e36"
             }
           ],
           "prerequisite": "c705c50d6f524f36cd2cc8fe",
@@ -2321,7 +2380,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "660bbc47c38b837877075e47"
             }
           ],
           "prerequisite": "5d2360d47e11dfcb81acbdb5",
@@ -2350,7 +2410,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "5c12613b86f7743bbe2c3f76"
             }
           ],
           "prerequisite": "0b7abaaa7f084765e7d5c623",
@@ -2383,7 +2444,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c645c86f77412b01304d9"
             }
           ],
           "prerequisite": "f570f92d48a894c066066a95",
@@ -2467,7 +2529,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "660bbc47c38b837877075e47"
             }
           ],
           "prerequisite": "f503341ece8597c7de75a1df",
@@ -2529,7 +2592,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "68666887df54e1190902df57"
             },
             {
               "kind": "surviveExtract",
@@ -2562,7 +2626,8 @@
             {
               "kind": "handover",
               "quantity": 1,
-              "foundInRaid": false
+              "foundInRaid": false,
+              "itemTpl": "68666887df54e1190902df57"
             }
           ],
           "prerequisite": "b5038fda630a18690bb52872",
@@ -2639,7 +2704,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590c645c86f77412b01304d9"
             }
           ],
           "prerequisite": "e5c8b4080adfe4fa2caa7bc3",
@@ -2760,7 +2826,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "590a3b0486f7743954552bdb"
             }
           ],
           "prerequisite": "77622ff3eda4de9587dd55d8",
@@ -2853,7 +2920,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "5d0376a486f7747d8050965c"
             }
           ],
           "prerequisite": "3002161cfabbdcb40699a1df",
@@ -2882,7 +2950,8 @@
             {
               "kind": "handover",
               "quantity": 1,
-              "foundInRaid": false
+              "foundInRaid": false,
+              "itemTpl": "5d0376a486f7747d8050965c"
             }
           ],
           "prerequisite": "1e8e5bbebe432ca73b19747d",
@@ -2988,7 +3057,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "660bbc47c38b837877075e47"
             }
           ],
           "prerequisite": "3e217502dbe65fb4924d5d98",
@@ -3021,7 +3091,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "61bf7c024770ee6f9c6b8b53"
             }
           ],
           "prerequisite": "8eacc1d52dcb896ece6a1730",
@@ -3106,7 +3177,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "61bf7c024770ee6f9c6b8b53"
             },
             {
               "kind": "surviveExtract",
@@ -3168,7 +3240,8 @@
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
-              "surviveRequired": true
+              "surviveRequired": true,
+              "itemTpl": "68666887df54e1190902df57"
             },
             {
               "kind": "surviveExtract",

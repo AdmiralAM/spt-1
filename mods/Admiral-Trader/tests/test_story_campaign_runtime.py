@@ -49,9 +49,9 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
         self.assertEqual(kinds, {
             "visit": 30,
             "retrieveQuestItem": 45,
-            "placeOrMark": 24,
-            "eliminate": 8,
-            "surviveExtract": 17,
+            "placeOrMark": 26,
+            "eliminate": 9,
+            "surviveExtract": 18,
             "handover": 8,
             "possessAccessKey": 3,
         })
@@ -167,9 +167,37 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
     def test_item_objective_quantities_match_the_native_materializer(self):
         for chain in self.authored["chains"]:
             for row in chain["quests"]:
+                expected_find = []
+                expected_handover = []
                 for objective in row["objectives"]:
                     if objective["kind"] in {"retrieveQuestItem", "handover"}:
                         self.assertEqual(objective["quantity"], 1, row["id"])
+                        self.assertRegex(objective.get("itemTpl", ""), r"^[0-9a-f]{24}$", row["id"])
+                        expected_handover.append(objective["itemTpl"])
+                        if objective["kind"] == "retrieveQuestItem":
+                            expected_find.append(objective["itemTpl"])
+                finish = self.by_id[row["id"]]["conditions"]["AvailableForFinish"]
+                actual_find = [condition["target"][0] for condition in finish if condition["conditionType"] == "FindItem" and condition.get("onlyFoundInRaid")]
+                actual_handover = [condition["target"][0] for condition in finish if condition["conditionType"] == "HandoverItem"]
+                self.assertEqual(actual_find, expected_find, row["id"])
+                self.assertEqual(actual_handover, expected_handover, row["id"])
+
+    def test_promised_field_actions_are_materialized(self):
+        expected = {
+            "837bdd0ab80a2a1382caeedd": {"CounterCreator", "FindItem", "HandoverItem"},
+            "e74018c43dc3f47551445192": {"PlaceBeacon", "CounterCreator", "FindItem", "HandoverItem"},
+            "aef99c7f97ca615cf101a654": {"PlaceBeacon", "CounterCreator", "FindItem", "HandoverItem"},
+        }
+        for quest_id, required in expected.items():
+            finish = self.by_id[quest_id]["conditions"]["AvailableForFinish"]
+            self.assertTrue(required <= {row["conditionType"] for row in finish}, quest_id)
+        disrupted = self.by_id["837bdd0ab80a2a1382caeedd"]["conditions"]["AvailableForFinish"]
+        nested_types = {
+            condition["conditionType"]
+            for row in disrupted if row["conditionType"] == "CounterCreator"
+            for condition in row["counter"]["conditions"]
+        }
+        self.assertTrue({"Kills", "ExitStatus"} <= nested_types)
 
     def test_russian_story_locale_is_real_utf8_cyrillic(self):
         rendered = json.dumps(self.ru, ensure_ascii=False)

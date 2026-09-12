@@ -148,11 +148,11 @@ def key_pool_condition(qid: str, targets: list[str], index: int) -> dict:
 def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[str, str]) -> tuple[list[dict], list[str], list[str]]:
     qid, map_name, maps = q["id"], chain["map"], chain["runtimeLocations"]
     visits, places = VISIT_ZONES[map_name], PLACE_ZONES[map_name]
-    item_tpl = RECOVERY_ITEMS[map_name][(q["order"] - 1) % 3]
     rows, en, ru = [], [], []
     index = 0
     for objective_index, objective in enumerate(q["objectives"]):
         kind, quantity = objective["kind"], int(objective["quantity"])
+        item_tpl = objective.get("itemTpl", RECOVERY_ITEMS[map_name][(q["order"] - 1) % 3])
         if kind == "visit":
             for n in range(quantity):
                 zone = visits[(q["order"] + objective_index + n - 1) % len(visits)]
@@ -270,7 +270,14 @@ def main() -> None:
     global_ru = json.loads((args.spt_root / "SPT_Data/database/locales/global/ru.json").read_text(encoding="utf-8-sig"))
     names_en = {tpl: global_en.get(tpl + " Name", tpl) for tpl in items}
     names_ru = {tpl: global_ru.get(tpl + " Name", names_en[tpl]) for tpl in items}
-    required_tpls = {MARKER, ROUBLES} | {tpl for rows in RECOVERY_ITEMS.values() for tpl in rows} | {tpl for rows in REWARD_ITEMS.values() for tpl in rows} | {tpl for rows in ACCESS_KEY_POOLS.values() for tpl in rows}
+    authored_item_tpls = {
+        objective["itemTpl"]
+        for chain in authored["chains"]
+        for quest in chain["quests"]
+        for objective in quest["objectives"]
+        if objective.get("itemTpl")
+    }
+    required_tpls = {MARKER, ROUBLES} | authored_item_tpls | {tpl for rows in RECOVERY_ITEMS.values() for tpl in rows} | {tpl for rows in REWARD_ITEMS.values() for tpl in rows} | {tpl for rows in ACCESS_KEY_POOLS.values() for tpl in rows}
     missing = sorted(required_tpls - set(items))
     if missing:
         raise SystemExit(f"SPT 4.1.5 item IDs missing: {missing}")
