@@ -31,7 +31,7 @@ class OptionalStorefrontRuntimeTests(unittest.TestCase):
         manifest=json.loads((ROOT/"manifests/optional-storefront-runtime.json").read_text(encoding="utf-8"))
         self.assertFalse(manifest["requiredDependencies"])
         self.assertEqual(manifest["offerCount"],62)
-        self.assertEqual(manifest["totalAdmiralOffersWhenPresent"],113)
+        self.assertEqual(manifest["totalAdmiralOffersWhenPresent"],144)
         self.assertGreaterEqual(sum(x["loyaltyLevel"] == 1 for x in manifest["offers"]),20)
         self.assertEqual({x["source"] for x in manifest["offers"]},{"WTT Armory","WTT Content Backport"})
         self.assertEqual(sum(x["category"] == "complete weapon" for x in manifest["offers"]),20)

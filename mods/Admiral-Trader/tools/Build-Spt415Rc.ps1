@@ -49,7 +49,7 @@ if ($portraitBlob -ne '63e158fbd96b595a609560dfef452451b4783144') {
 }
 
 python (Join-Path $traderRoot 'tools/validate_runtime_assort.py')
-if ($LASTEXITCODE -ne 0) { throw 'Trader 51-offer runtime assort contract failed.' }
+if ($LASTEXITCODE -ne 0) { throw 'Trader 82-offer runtime assort contract failed.' }
 
 $itemsPath = Join-Path $runtimeRoot 'SPT_Data/database/templates/items.json'
 if (-not (Test-Path $itemsPath -PathType Leaf)) { throw "Exact SPT item database is missing: $itemsPath" }
@@ -64,8 +64,8 @@ $questAssort = Get-Content (Join-Path $traderRoot 'db/questassort.json') -Raw | 
 $rootOffers = @($assort.items | Where-Object parentId -eq 'hideout')
 if ($rootOffers.Count -ne 47) { throw "Expected 47 active-head root offers, got $($rootOffers.Count)" }
 $signatureRootOffers = @($signatureAssort.items | Where-Object parentId -eq 'hideout')
-if ($signatureRootOffers.Count -ne 4) { throw "Expected four Natalya signature offers, got $($signatureRootOffers.Count)" }
-if (@($m7.signatureOffers).Count -ne 4 -or $m7.activeHeadScope.runtimeFiniteOffers -ne 41) { throw 'M7 signature authority drift.' }
+if ($signatureRootOffers.Count -ne 35) { throw "Expected 35 Natalya weapon offers, got $($signatureRootOffers.Count)" }
+if (@($m7.signatureOffers).Count -ne 35 -or $m7.activeHeadScope.runtimeFiniteOffers -ne 72) { throw 'M7 signature authority drift.' }
 $missingTpls = @($rootOffers + @($signatureAssort.items) | ForEach-Object { [string]$_."_tpl" } | Where-Object { -not $itemDb.ContainsKey($_) } | Sort-Object -Unique)
 if ($missingTpls.Count) { throw "Active-head assort contains TPLs missing from exact SPT 4.1.5 DB: $($missingTpls -join ', ')" }
 $baselineIds = @($baseline.offers | ForEach-Object { [string]$_.offerId })
@@ -117,7 +117,7 @@ $stagedAssort = Get-Content (Join-Path $modTarget 'db/assort.json') -Raw | Conve
 $stagedQuestAssort = Get-Content (Join-Path $modTarget 'db/questassort.json') -Raw | ConvertFrom-Json
 if (@($stagedAssort.items | Where-Object parentId -eq 'hideout').Count -ne 47) { throw 'Staged Trader lost the 47 base-offer contract.' }
 $stagedSignatureAssort = Get-Content (Join-Path $modTarget 'db/natalya-signature-assort.json') -Raw | ConvertFrom-Json
-if (@($stagedSignatureAssort.items | Where-Object parentId -eq 'hideout').Count -ne 4) { throw 'Staged Trader lost the four signature offers.' }
+if (@($stagedSignatureAssort.items | Where-Object parentId -eq 'hideout').Count -ne 35) { throw 'Staged Trader lost the 35 Natalya weapon offers.' }
 if (@($stagedQuestAssort.success.PSObject.Properties).Count -ne 18) { throw 'Staged Trader lost the 18 quest-gated offers.' }
 if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 172) { throw 'Staged Trader lost the 172-quest campaign contract.' }
 if (-not (Test-Path (Join-Path $modTarget 'assets/d5c27bb3169f8dfbc13f6b69.jpg') -PathType Leaf)) { throw 'Staged Trader portrait is missing.' }
@@ -140,7 +140,7 @@ $provenance = [ordered]@{
     relationshipOffers = 3
     storefrontCoreOffers = 22
     natalyaSignatureOffers = 4
-    totalFiniteOffers = 51
+    totalFiniteOffers = 82
     relationshipProgression = [ordered]@{
         loyaltyLevels = 4
         standingThresholds = @(0.0, 0.1, 0.3, 0.55)

@@ -3,8 +3,8 @@
 ## 0.3.0-rc — Natalya absorption
 
 - Materializes ten connected map stories (100 quests) with native SPT exploration, retrieval, placement, combat and survival conditions; total runtime scope is 172 quests.
-- Integrates Natalya as an in-engine specialist across 18 story beats while preserving her four absorbed signature presets and avoiding a second trader/dependency.
-- Adds ten finite, quest-gated story-finale offers, bringing the active storefront to 51 offers without external item dependencies.
+- Integrates Natalya as an in-engine specialist across 18 story beats while preserving her 35 absorbed native weapon presets and avoiding a second trader/dependency.
+- Adds ten finite, quest-gated story-finale offers, bringing the active storefront to 82 offers without external item dependencies.
 - Hardens story objectives so every recovery includes a native operation point, no quest repeats an MS2000 zone, and all item/unlock rewards are stated explicitly in EN/RU success text.
 - Shows every story operation's position inside its ten-part investigation and names the next operation in success mail; each finale explicitly closes its map investigation.
 - Corrects `Ключ диспетчера` and `Ключ мастера` to check ownership of a bounded common-key pool without FIR or handover, matching their authored instructions.

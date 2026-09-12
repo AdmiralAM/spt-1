@@ -134,7 +134,7 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
     def test_each_story_finale_materializes_one_finite_unlock(self):
         unlocks = self.runtime["assortmentUnlocks"]
         self.assertEqual(len(unlocks), 10)
-        self.assertEqual(self.runtime["totalFiniteOfferCount"], 51)
+        self.assertEqual(self.runtime["totalFiniteOfferCount"], 82)
         roots = {row["_id"]: row for row in self.assort["items"] if row.get("parentId") == "hideout"}
         for row in unlocks:
             self.assertEqual(self.questassort["success"][row["offerId"]], row["questId"])

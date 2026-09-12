@@ -342,9 +342,9 @@ def main() -> None:
     assort["loyal_level_items"].update(unlock_loyalty)
     assort_path.write_text(json.dumps(assort, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     questassort_path.write_text(json.dumps(questassort, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    runtime_manifest = {"schemaVersion": 1, "status": "runtime-materialized", "storyQuestCount": 100, "totalQuestCount": 172, "natalyaIntegratedQuestCount": len(NATALYA_QUESTS), "natalyaMode": "specialist-inside-admiral-no-second-trader", "nativeZoneReuse": True, "customZoneDependency": False, "customItemDependency": False, "typicalEliminationMaximum": 12, "assortmentUnlockCount": len(unlock_rows), "totalFiniteOfferCount": 51, "assortmentUnlocks": unlock_rows, "quests": [{"id": q["id"], "chain": chain["chain"], "order": q["order"], "map": chain["map"], "natalya": specialist} for chain, q, _, specialist in runtime_rows]}
+    runtime_manifest = {"schemaVersion": 1, "status": "runtime-materialized", "storyQuestCount": 100, "totalQuestCount": 172, "natalyaIntegratedQuestCount": len(NATALYA_QUESTS), "natalyaMode": "specialist-inside-admiral-no-second-trader", "nativeZoneReuse": True, "customZoneDependency": False, "customItemDependency": False, "typicalEliminationMaximum": 12, "assortmentUnlockCount": len(unlock_rows), "totalFiniteOfferCount": 82, "assortmentUnlocks": unlock_rows, "quests": [{"id": q["id"], "chain": chain["chain"], "order": q["order"], "map": chain["map"], "natalya": specialist} for chain, q, _, specialist in runtime_rows]}
     (ROOT / "manifests/story-campaign-runtime.json").write_text(json.dumps(runtime_manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"generated": len(runtime_rows), "total": 172, "natalya": len(NATALYA_QUESTS), "storyUnlocks": len(unlock_rows), "finiteOffers": 51}))
+    print(json.dumps({"generated": len(runtime_rows), "total": 172, "natalya": len(NATALYA_QUESTS), "storyUnlocks": len(unlock_rows), "finiteOffers": 82}))
 
 
 if __name__ == "__main__":

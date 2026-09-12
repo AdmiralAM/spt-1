@@ -50,7 +50,7 @@ class M6ReleaseHardeningTests(unittest.TestCase):
         self.assertNotIn("frozen-trader", builder + workflow)
         self.assertIn("$quests.Count -ne 172", builder)
         self.assertIn("Count -ne 47", builder)
-        self.assertIn("Count -ne 4", builder)
+        self.assertIn("Count -ne 35", builder)
         self.assertIn("workflow_dispatch:", workflow)
         self.assertNotIn("pull_request:", workflow)
 

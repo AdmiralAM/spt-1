@@ -169,20 +169,20 @@ def main() -> None:
         fail("bounded post-Andrudis storefront core must contain 22 offers and 37 total finite offers")
     signature_offers = m7.get("signatureOffers") or []
     signature_by_id = {str(row.get("offerId")): row for row in signature_offers}
-    if len(signature_by_id) != 4 or (m7.get("activeHeadScope") or {}).get("runtimeFiniteOffers") != 41:
-        fail("M7 must contain exactly four signature offers and 41 finite runtime offers")
+    if len(signature_by_id) != 35 or (m7.get("activeHeadScope") or {}).get("runtimeFiniteOffers") != 72:
+        fail("M7 must contain exactly 35 Natalya offers and 72 finite runtime offers")
     story_offers = story.get("assortmentUnlocks") or []
     story_by_id = {str(row.get("offerId")): row for row in story_offers}
-    if len(story_by_id) != 10 or story.get("totalFiniteOfferCount") != 51:
-        fail("story campaign must contain ten finale unlocks and 51 total finite offers")
+    if len(story_by_id) != 10 or story.get("totalFiniteOfferCount") != 82:
+        fail("story campaign must contain ten finale unlocks and 82 total finite offers")
     expected_ids = BASELINE_OFFER_IDS | milestone_ids | RELATIONSHIP_OFFER_IDS | set(core_by_id) | set(signature_by_id) | set(story_by_id)
     root_items = {item.get("_id"): item for item in items if item.get("parentId") == "hideout"}
-    if len(root_items) != 51:
-        fail(f"expected exactly 51 finite Admiral root offers, got {len(root_items)}")
+    if len(root_items) != 82:
+        fail(f"expected exactly 82 finite Admiral root offers, got {len(root_items)}")
     if set(root_items) != expected_ids:
         fail(f"assort root id drift; missing={sorted(expected_ids-set(root_items))} extra={sorted(set(root_items)-expected_ids)}")
     if set(barter) != expected_ids or set(loyalty) != expected_ids:
-        fail("combined assort root/barter/loyalty key sets must match the 41-offer contract")
+        fail("combined assort root/barter/loyalty key sets must match the 82-offer contract")
     all_item_ids = {item.get("_id") for item in items}
     if len(all_item_ids) != len(items):
         fail("assort item ids must be unique")
@@ -330,7 +330,7 @@ def main() -> None:
         if float(level.get("minStanding", -1)) != standing:
             fail(f"Admiral LL{index}: standing threshold drift")
 
-    print("Admiral Trader SPT 4.1.5 native questassort + 51 finite-offer contract OK")
+    print("Admiral Trader SPT 4.1.5 native questassort + 82 finite-offer contract OK")
 
 
 if __name__ == "__main__":

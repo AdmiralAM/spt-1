@@ -138,8 +138,8 @@ public sealed class AdmiralTraderRegistration(
         var signatureBarters = signatureAssort.BarterScheme!;
         var signatureLoyalty = signatureAssort.LoyalLevelItems!;
         Item[] roots = signatureItems.Where(item => item.ParentId?.ToString() == "hideout").ToArray();
-        if (roots.Length != 4)
-            throw new InvalidDataException($"Expected four Natalya signature offers, got {roots.Length}");
+        if (roots.Length != 35)
+            throw new InvalidDataException($"Expected 35 Natalya weapon offers, got {roots.Length}");
         if (roots.Any(root => root.Upd is null || root.Upd.UnlimitedCount is not false || root.Upd.StackObjectsCount is null or <= 0 || root.Upd.BuyRestrictionMax is not 1))
             throw new InvalidDataException("Natalya signature offers must remain finite one-per-reset presets");
 

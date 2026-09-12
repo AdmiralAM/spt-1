@@ -79,7 +79,7 @@ def main():
             manifest["offers"].append({"offerId":offer,"tpl":tpl,"name":row.get("overrideProperties",{}).get("Name",tpl),"category":"equipment","source":"WTT Content Backport","loyaltyLevel":level,"priceRub":price,"completePreset":False})
     for name,payload in (("wtt-armory-assort.json",arm),("content-backport-assort.json",back)):
         (target/name).write_text(json.dumps(payload,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
-    manifest["offerCount"]=len(manifest["offers"]); manifest["totalAdmiralOffersWhenPresent"]=51+manifest["offerCount"]; manifest["absenceBehavior"]="No optional offer is published; all core quests and offers remain available."
+    manifest["offerCount"]=len(manifest["offers"]); manifest["totalAdmiralOffersWhenPresent"]=82+manifest["offerCount"]; manifest["absenceBehavior"]="No optional offer is published; all core quests and offers remain available."
     by_tpl={item["_tpl"]:(payload,item) for payload in (arm,back) for item in payload["items"] if item.get("parentId")=="hideout"}
     reward_rows={}; reward_meta=[]
     for quest_id,tpl,name in REWARD_PLAN:
