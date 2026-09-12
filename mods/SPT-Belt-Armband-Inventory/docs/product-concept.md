@@ -7,11 +7,11 @@ B&A&HB is an accessory-logistics framework, not a generic way to add free invent
 Stable **v0.1.0** is the accepted mechanical base and rollback release. Development candidate **v0.2.0** keeps those persistent/lifecycle boundaries while refining HeadBand presentation/storage, making the two magazine-specific wearables operational reload fallback sources, and adding one exact-purpose Dogtag-slot container without inventing another equipment slot.
 
 The Pack 'n' Strap compatibility direction supersedes this table as an active
-ownership plan while preserving it as the full-Belt reserve contract. Standard
-belts, pouches and mini-containers belong to unmodified upstream Pack 'n' Strap.
-The Admiral successor keeps Utility HeadBand, B&A&HB Dogtag Case, persistent-ID
-recovery, and an exact B&A-only protection whitelist. The source comparison and
-next runtime split are recorded in
+ownership plan while preserving it as the full-Belt reserve contract. The
+separately installed Pack 'n' Strap supplies standard belts, pouches and
+mini-containers. The Admiral companion ships only the missing Utility HeadBand,
+B&A&HB Dogtag Case, persistent-ID recovery, and an exact B&A-only protection
+whitelist. The source comparison and next runtime split are recorded in
 [`packnstrap-compatibility.md`](packnstrap-compatibility.md). No coexistence is
 claimed before that split is implemented and tested.
 

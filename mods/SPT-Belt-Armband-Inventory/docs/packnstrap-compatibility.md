@@ -2,7 +2,8 @@
 
 This document records the source audit performed on 2026-09-12. It is a
 planning and preservation record only: it does not claim runtime compatibility
-and does not change the installed game or profile.
+and does not change the installed game or profile. Pack 'n' Strap is installed
+and updated as its own standalone mod; it is not bundled into B&A&HB.
 
 ## Pinned inputs
 
@@ -67,12 +68,14 @@ method, and its container-priority prefix replaces the native result. Those are
 especially strong ownership points and make a broad "both full mods enabled"
 mode unsuitable as the first compatibility implementation.
 
-## Chosen path: separate the unique Admiral modules
+## Chosen path: ship only the missing Admiral features
 
-The next runtime line will be a narrow Admiral add-on around Pack 'n' Strap,
-not a fork or rewritten distribution of Pack 'n' Strap. Standard belts,
-pouches, mini-containers, their art/layouts and their ArmBand UI/routing remain
-owned by upstream Pack 'n' Strap.
+The next runtime line will be a narrow Admiral companion for Pack 'n' Strap.
+Standard belts, pouches, mini-containers, their art/layouts and their ArmBand
+UI/routing come from the separately installed Pack 'n' Strap. B&A&HB must not
+register or patch an equivalent feature when Pack 'n' Strap already supplies
+it. This absence-of-equivalent test, rather than provenance or licensing, is
+the product boundary.
 
 The Admiral-owned active surface will be:
 
@@ -95,13 +98,9 @@ Admiral ownership manifest or mutate upstream filters to simulate support.
 Legacy B&A identities stay immutable and cleanup remains ownership-bounded even
 when their products are no longer newly offered by the active add-on.
 
-## License boundary
-
-Pack 'n' Strap is published under CC BY-NC-ND 4.0. The repository may inspect
-and reference the upstream behavior and require an unmodified standalone
-installation, but it must not publish modified Pack 'n' Strap code, layouts,
-bundles or other derived resources without separate permission. No upstream
-code or asset is copied into B&A&HB by this plan.
+The repository contains no Pack 'n' Strap runtime code, bundles or art. Tests
+may pin public GUIDs, versions, method signatures and expected ownership
+boundaries, but the tested Pack 'n' Strap installation remains external.
 
 ## Next runtime stage
 

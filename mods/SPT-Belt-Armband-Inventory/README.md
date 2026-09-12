@@ -2,14 +2,15 @@
 
 Development candidate **v0.2.0** for **SPT 4.1.3**.
 
-The current product direction delegates standard belts, pouches and
-mini-containers to the unmodified standalone Pack 'n' Strap. B&A&HB retains its
-unique HeadBand and Dogtag Case modules, immutable profile identities, and
-exactly scoped protection for B&A-owned roots. This branch currently preserves
+The current product direction uses separately installed Pack 'n' Strap for
+standard belts, pouches and mini-containers. B&A&HB ships only functionality
+that Pack 'n' Strap does not provide: its HeadBand and Dogtag Case modules,
+immutable profile identities, and exactly scoped protection for B&A-owned
+roots. This branch currently preserves
 the complete pre-split v0.2 implementation as a reproducible reserve; it does
 not yet claim runtime compatibility with Pack 'n' Strap. See
 [`docs/packnstrap-compatibility.md`](docs/packnstrap-compatibility.md) for the
-pinned audit, conflict matrix, license boundary and next implementation stage.
+pinned audit, conflict matrix, ownership boundary and next implementation stage.
 
 Stable **v0.1.0** is already frozen and published separately on `runtime-belt-armband` / tag `bahb-v0.1.0`. This branch develops v0.2.0 without changing that release.
 
