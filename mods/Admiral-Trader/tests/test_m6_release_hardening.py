@@ -50,7 +50,8 @@ class M6ReleaseHardeningTests(unittest.TestCase):
         self.assertIn("$quests.Count -ne 43", builder)
         self.assertIn("Count -ne 37", builder)
         self.assertIn("Count -ne 4", builder)
-        self.assertIn("'mods/Admiral-Trader/**'", workflow)
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertNotIn("pull_request:", workflow)
 
 
 if __name__ == "__main__":

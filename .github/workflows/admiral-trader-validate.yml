@@ -233,13 +233,13 @@ jobs:
               raise SystemExit('vanilla benchmark has no quest-type distributions')
           PY
 
-      - name: Upload transient analysis reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: admiral-trader-analysis-${{ github.event.pull_request.head.sha || github.sha }}
-          path: |
-            build/admiral-trader-inventory.json
-            build/admiral-trader-curated-materialization.json
-            build/vanilla-reward-benchmark.json
-          if-no-files-found: error
-          retention-days: 7
+      - name: Validate authored keys and committed quest runtime
+        run: |
+          python mods/Admiral-Trader/tools/validate_keys_authored_spec.py mods/Admiral-Trader/manifests/keys-authored-spec.json mods/Admiral-Trader/manifests/curated-quest-manifest.json build/vanilla-reward-benchmark.json
+          python mods/Admiral-Trader/tools/build_keys_runtime_templates.py mods/Admiral-Trader/manifests/keys-authored-spec.json mods/Admiral-Trader/manifests/curated-quest-manifest.json build/admiral-trader-inventory.json legacy-andrudis/db/QuestBundles --output build/admiral-trader-keys-runtime.json
+          python mods/Admiral-Trader/tools/validate_committed_quest_runtime.py mods/Admiral-Trader/db/quests build/admiral-trader-keys-runtime.json mods/Admiral-Trader/db/locales/en.json mods/Admiral-Trader/db/locales/ru.json
+
+      - name: Validate weapon and ammunition authored coverage
+        run: |
+          python mods/Admiral-Trader/tools/build_weapon_ammo_audit.py build/admiral-trader-inventory.json --output build/admiral-trader-weapon-ammo-audit.json
+          python mods/Admiral-Trader/tools/validate_weapon_ammo_authored_spec.py mods/Admiral-Trader/manifests/weapon-ammo-authored-spec.json mods/Admiral-Trader/manifests/reward-policy.json --audit build/admiral-trader-weapon-ammo-audit.json

@@ -1,12 +1,6 @@
 name: Admiral Trader 0.3.0 RC + Economy SPT 4.1.5
 
 on:
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'mods/Economy-Admiral/**'
-      - 'mods/Admiral-Trader/**'
-      - '.github/workflows/admiral-economy-combined-spt415-rc.yml'
   workflow_dispatch:
 
 permissions:
