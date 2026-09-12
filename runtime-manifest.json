@@ -1,0 +1,11 @@
+{
+  "client_included": true,
+  "name": "Item Intelligence Admiral",
+  "server_version": "1.2.0",
+  "spt_version": "4.1.x",
+  "client_version": "1.2.0",
+  "source_commit": "14590a3976411fa63e30ce05bb2d7e92ada854ed",
+  "integrated_main_commit": "26e00f7228942a9f08ddd5c0919839eb1df21bf3",
+  "channel": "runtime-item-intelligence",
+  "server_included": true
+}
