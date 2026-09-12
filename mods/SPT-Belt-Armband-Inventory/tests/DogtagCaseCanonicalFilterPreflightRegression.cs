@@ -50,7 +50,7 @@ internal static class DogtagCaseCanonicalFilterPreflightRegression
         foreach (string pin in scalarPins) Require(source, pin, "canonical preflight must pin scalar source authority: " + pin);
 
         Require(source, "grids == null || grids.Length != 1", "canonical preflight must require the exact single-grid boundary");
-        Require(source, "!Equals(grid.Parent, SourceDogtagCaseTpl)", "canonical preflight must reject a detached/reparented EFT Dogtag Case grid before filter authority is consumed");
+        Require(source, "!DogtagCaseCanonicalIdentityLease.IsSourceGridParent(grid.Parent)", "canonical preflight must reject a detached/reparented EFT Dogtag Case grid before filter authority is consumed while accepting the same wire ID across MongoId/string loader representations");
         Require(source, "filters == null || filters.Length == 0", "canonical preflight must reject a vacuous filter-group contract");
         Require(source, "included == null || included.Count == 0", "canonical preflight must reject empty positive-admission filters");
         Require(source, "PersistentIdentityManifest.IsOwnedTemplate(accepted.ToString())", "canonical preflight must reject every B&A&HB-owned product admission rather than only self-recursion");

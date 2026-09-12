@@ -15,6 +15,15 @@ internal static class DogtagCaseCanonicalLeaseRegression
         string lease = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseCanonicalIdentityLease.cs"));
         string item = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseItem.cs"));
 
+        if (!lease.Contains("internal static bool IsSourceGridParent(object? parent)", StringComparison.Ordinal)
+            || !lease.Contains("parent?.ToString()", StringComparison.Ordinal)
+            || !lease.Contains("SourceDogtagCaseTpl.ToString()", StringComparison.Ordinal)
+            || !lease.Contains("StringComparison.Ordinal", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: source-grid ownership must compare the persisted wire ID across MongoId/string loader representations.");
+        if (preflight.Contains("Equals(grid.Parent, SourceDogtagCaseTpl)", StringComparison.Ordinal)
+            || item.Contains("Equals(sourceGrid.Parent, SourceDogtagCaseTpl)", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dogtag canonical lease regression failed: loader representation must not disable a semantically identical canonical grid parent.");
+
         int preflightIdentity = preflight.IndexOf("RequireCanonicalIdentity(source, identity);", StringComparison.Ordinal);
         int publish = preflight.IndexOf("DogtagCaseCanonicalIdentityLease.Publish(source);", StringComparison.Ordinal);
         int postPublishIdentity = publish < 0 ? -1 : preflight.IndexOf("RequireCanonicalIdentity(source, identity);", publish + 1, StringComparison.Ordinal);

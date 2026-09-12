@@ -12,6 +12,7 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
             throw new InvalidOperationException("Dogtag filter ownership isolation regression failed: module root could not be resolved.");
 
         string source = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseItem.cs"));
+        string assort = File.ReadAllText(Path.Combine(root, "server", "DogtagCaseAssort.cs"));
         Require(source, "Filter = new HashSet<MongoId>(filter.Filter!)",
             "Dogtag Case included filters must be deep-copied instead of sharing the canonical source HashSet");
         Require(source, "new HashSet<MongoId>(filter.ExcludedFilter)",
@@ -32,12 +33,25 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
         Require(source, "ReferenceEquals(actualExcluded, expectedExcluded)",
             "existing Dogtag Case excluded filter set must not alias canonical source state");
 
+        Require(source, "public static void SynchronizeOwnedFiltersFromCanonicalSource(TemplateTable templates)",
+            "owned Dogtag Case must have a bounded late compatibility sync for Content Backport dogtag additions");
+        Require(source, "candidateGroups[i].Filter!.UnionWith(sourceIncluded[i])",
+            "late compatibility sync may update only the owned candidate included filter from a detached canonical snapshot");
+        Require(source, "candidateGroups[i].ExcludedFilter!.UnionWith(sourceExcluded[i]!)",
+            "late compatibility sync must preserve canonical excluded-filter parity without touching the source");
+        Require(source, "candidateGroups[i].Filter?.UnionWith(candidateIncludedBefore[i])",
+            "failed late synchronization must restore the owned included-filter baseline");
+        Require(source, "candidateGroups[i].ExcludedFilter!.UnionWith(candidateExcludedBefore[i]!)",
+            "failed late synchronization must restore the owned excluded-filter baseline");
+        Require(assort, "DogtagCaseItem.SynchronizeOwnedFiltersFromCanonicalSource(templateTable);",
+            "every trader publication proof must first synchronize only the owned case against finalized foreign dogtag taxonomy");
+
         // Canonical taxonomy is not valid authority if its own grid has been detached
         // from the canonical EFT/SPT Dogtag Case template. Prove source-grid ownership
         // both before cloning and during every live candidate/source publication reproof.
-        Require(source, "if (!Equals(sourceGrid.Parent, SourceDogtagCaseTpl))",
+        Require(source, "if (!DogtagCaseCanonicalIdentityLease.IsSourceGridParent(sourceGrid.Parent))",
             "pre-create canonical source grid must remain owned by the EFT/SPT Dogtag Case template");
-        Require(source, "|| !Equals(sourceGrid.Parent, SourceDogtagCaseTpl)",
+        Require(source, "|| !DogtagCaseCanonicalIdentityLease.IsSourceGridParent(sourceGrid.Parent)",
             "ValidateExisting must reprove canonical source-grid ownership at host/trader publication boundaries");
 
         // Value parity alone is insufficient if another startup participant destroys
@@ -71,7 +85,7 @@ internal static class DogtagCaseFilterOwnershipIsolationRegression
         int validate = source.IndexOf("private static void ValidateExisting", StringComparison.Ordinal);
         int rootAlias = source.IndexOf("ReferenceEquals(candidateProperties, sourceProperties)", validate, StringComparison.Ordinal);
         int gridAlias = source.IndexOf("ReferenceEquals(grid, sourceGrid)", validate, StringComparison.Ordinal);
-        int sourceGridOwner = source.IndexOf("|| !Equals(sourceGrid.Parent, SourceDogtagCaseTpl)", validate, StringComparison.Ordinal);
+        int sourceGridOwner = source.IndexOf("|| !DogtagCaseCanonicalIdentityLease.IsSourceGridParent(sourceGrid.Parent)", validate, StringComparison.Ordinal);
         int nonEmptyGroups = source.IndexOf("expectedFilters.Length == 0", validate, StringComparison.Ordinal);
         int groupAlias = source.IndexOf("ReferenceEquals(actualFilters[i], expectedFilters[i])", validate, StringComparison.Ordinal);
         int nonEmptyIncluded = source.IndexOf("actualIncluded.Count == 0 || expectedIncluded.Count == 0", validate, StringComparison.Ordinal);

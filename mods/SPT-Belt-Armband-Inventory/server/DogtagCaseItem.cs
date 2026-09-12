@@ -133,7 +133,7 @@ public sealed class DogtagCaseItem(
             throw new InvalidOperationException("B&A&HB Dogtag Case source grid boundary is missing or ambiguous; exactly one canonical grid is required.");
 
         var sourceGrid = sourceGrids[0];
-        if (!Equals(sourceGrid.Parent, SourceDogtagCaseTpl))
+        if (!DogtagCaseCanonicalIdentityLease.IsSourceGridParent(sourceGrid.Parent))
             throw new InvalidOperationException("B&A&HB Dogtag Case canonical source grid parent drifted away from the EFT/SPT Dogtag Case template; refusing fallback cloning.");
         var sourceGridProperties = sourceGrid.Properties
             ?? throw new InvalidOperationException("B&A&HB Dogtag Case canonical source grid properties are missing; refusing fallback cloning.");
@@ -421,6 +421,96 @@ public sealed class DogtagCaseItem(
         ValidateExisting(liveCandidate, liveSource);
     }
 
+    public static void SynchronizeOwnedFiltersFromCanonicalSource(TemplateTable templates)
+    {
+        ArgumentNullException.ThrowIfNull(templates);
+        if (!templates.Items.TryGetValue(SourceDogtagCaseTpl, out var source)
+            || !templates.Items.TryGetValue(DogtagCaseTpl, out var candidate))
+            throw new InvalidOperationException("B&A&HB Dogtag Case filter synchronization refused: canonical source or exact owned product is missing.");
+
+        var sourceGroups = source.Properties?.Grids?.SingleOrDefault()?.Properties?.Filters?.ToArray();
+        var candidateGroups = candidate.Properties?.Grids?.SingleOrDefault()?.Properties?.Filters?.ToArray();
+        if (sourceGroups == null || candidateGroups == null || sourceGroups.Length == 0 || sourceGroups.Length != candidateGroups.Length)
+            throw new InvalidOperationException("B&A&HB Dogtag Case filter synchronization refused: canonical and owned filter-group boundaries differ.");
+
+        var sourceIncluded = new HashSet<MongoId>[sourceGroups.Length];
+        var sourceExcluded = new HashSet<MongoId>?[sourceGroups.Length];
+        var candidateIncludedBefore = new HashSet<MongoId>[sourceGroups.Length];
+        var candidateExcludedBefore = new HashSet<MongoId>?[sourceGroups.Length];
+        bool needsSynchronization = false;
+
+        for (int i = 0; i < sourceGroups.Length; i++)
+        {
+            var expectedIncluded = sourceGroups[i].Filter;
+            var actualIncluded = candidateGroups[i].Filter;
+            var expectedExcluded = sourceGroups[i].ExcludedFilter;
+            var actualExcluded = candidateGroups[i].ExcludedFilter;
+            if (expectedIncluded == null || actualIncluded == null || expectedIncluded.Count == 0
+                || expectedIncluded.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString()))
+                || actualIncluded.Any(id => PersistentIdentityManifest.IsOwnedTemplate(id.ToString()))
+                || ReferenceEquals(expectedIncluded, actualIncluded)
+                || (expectedExcluded == null) != (actualExcluded == null)
+                || (expectedExcluded != null && actualExcluded != null && ReferenceEquals(expectedExcluded, actualExcluded)))
+                throw new InvalidOperationException("B&A&HB Dogtag Case filter synchronization refused: canonical authority is empty, owned-contaminated, aliased, or has incompatible exclusion shape.");
+
+            sourceIncluded[i] = new HashSet<MongoId>(expectedIncluded);
+            sourceExcluded[i] = expectedExcluded == null ? null : new HashSet<MongoId>(expectedExcluded);
+            candidateIncludedBefore[i] = new HashSet<MongoId>(actualIncluded);
+            candidateExcludedBefore[i] = actualExcluded == null ? null : new HashSet<MongoId>(actualExcluded);
+            needsSynchronization |= !actualIncluded.SetEquals(sourceIncluded[i])
+                || (actualExcluded != null && sourceExcluded[i] != null && !actualExcluded.SetEquals(sourceExcluded[i]!));
+        }
+
+        if (!needsSynchronization)
+        {
+            ValidateExisting(candidate, source);
+            return;
+        }
+
+        try
+        {
+            for (int i = 0; i < sourceGroups.Length; i++)
+            {
+                candidateGroups[i].Filter!.Clear();
+                candidateGroups[i].Filter!.UnionWith(sourceIncluded[i]);
+                if (candidateGroups[i].ExcludedFilter != null && sourceExcluded[i] != null)
+                {
+                    candidateGroups[i].ExcludedFilter!.Clear();
+                    candidateGroups[i].ExcludedFilter!.UnionWith(sourceExcluded[i]!);
+                }
+            }
+
+            var liveSourceGroups = source.Properties?.Grids?.SingleOrDefault()?.Properties?.Filters?.ToArray();
+            if (liveSourceGroups == null || liveSourceGroups.Length != sourceGroups.Length)
+                throw new InvalidOperationException("B&A&HB Dogtag Case filter synchronization refused: canonical source boundary changed during owned update.");
+            for (int i = 0; i < sourceGroups.Length; i++)
+            {
+                if (!ReferenceEquals(liveSourceGroups[i], sourceGroups[i])
+                    || sourceGroups[i].Filter == null || !sourceGroups[i].Filter!.SetEquals(sourceIncluded[i])
+                    || (sourceGroups[i].ExcludedFilter == null) != (sourceExcluded[i] == null)
+                    || (sourceGroups[i].ExcludedFilter != null && sourceExcluded[i] != null
+                        && !sourceGroups[i].ExcludedFilter!.SetEquals(sourceExcluded[i]!)))
+                    throw new InvalidOperationException("B&A&HB Dogtag Case filter synchronization refused: canonical source changed during owned update.");
+            }
+
+            ValidateExisting(candidate, source);
+        }
+        catch
+        {
+            for (int i = 0; i < candidateGroups.Length; i++)
+            {
+                candidateGroups[i].Filter?.Clear();
+                candidateGroups[i].Filter?.UnionWith(candidateIncludedBefore[i]);
+                if (candidateGroups[i].ExcludedFilter != null && candidateExcludedBefore[i] != null)
+                {
+                    candidateGroups[i].ExcludedFilter!.Clear();
+                    candidateGroups[i].ExcludedFilter!.UnionWith(candidateExcludedBefore[i]!);
+                }
+            }
+            throw;
+        }
+    }
+
     private static void ValidateExisting(TemplateItem candidate, TemplateItem source)
     {
         if (!Equals(candidate.Parent, source.Parent))
@@ -447,7 +537,7 @@ public sealed class DogtagCaseItem(
         var actual = grid.Properties;
         var expected = sourceGrid.Properties;
         if (ReferenceEquals(grid, sourceGrid)
-            || !Equals(sourceGrid.Parent, SourceDogtagCaseTpl)
+            || !DogtagCaseCanonicalIdentityLease.IsSourceGridParent(sourceGrid.Parent)
             || !string.Equals(grid.Id.ToString(), GridId, StringComparison.Ordinal)
             || !string.Equals(grid.Parent?.ToString(), TemplateId, StringComparison.Ordinal)
             || !string.Equals(grid.Name, sourceGrid.Name, StringComparison.Ordinal)

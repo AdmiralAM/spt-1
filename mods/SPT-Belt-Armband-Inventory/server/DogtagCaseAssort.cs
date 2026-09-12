@@ -301,6 +301,7 @@ public sealed class DogtagCaseAssort(
 
     private static void RequirePublicationBoundary(TemplateTable templateTable, MongoId templateId)
     {
+        DogtagCaseItem.SynchronizeOwnedFiltersFromCanonicalSource(templateTable);
         DogtagCaseItem.RequireCanonicalRegisteredTemplate(templateTable);
         RequireExactDogtagHost(templateTable, templateId);
         DogtagCaseHostExclusionPolicy.RequireCurrentHost(templateTable);

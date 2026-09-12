@@ -168,6 +168,18 @@ internal static class DogtagCaseCanonicalIdentityLease
 
     internal static readonly MongoId SourceDogtagCaseTpl = new("5c093e3486f77430cb02e593");
 
+    internal static bool IsSourceGridParent(object? parent)
+    {
+        // WTT Content Backport rebuilds the cloned Dogtag Case grid from JSON.
+        // Depending on the loader boundary, the canonical parent can therefore
+        // arrive as either MongoId or string. The wire ID is the contract; object
+        // runtime type is not. Keep all later identity/value pins exact.
+        return string.Equals(
+            parent?.ToString(),
+            SourceDogtagCaseTpl.ToString(),
+            StringComparison.Ordinal);
+    }
+
     internal static void Publish(TemplateItem source)
     {
         ArgumentNullException.ThrowIfNull(source);

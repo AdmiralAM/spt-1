@@ -65,7 +65,7 @@ try {
         if ($stagedHash -ne $expectedHash) {
             throw "$($entry.Name) staged hash mismatch: expected $expectedHash, got $stagedHash"
         }
-        Move-Item -LiteralPath $temporaryTarget -Destination $entry.Target -Force
+        [System.IO.File]::Move($temporaryTarget, $entry.Target, $true)
         $installedHash = (Get-FileHash -LiteralPath $entry.Target -Algorithm SHA256).Hash
         if ($installedHash -ne $expectedHash) {
             throw "$($entry.Name) installed hash mismatch: expected $expectedHash, got $installedHash"

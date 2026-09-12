@@ -143,8 +143,8 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
             throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical grid boundary is missing or ambiguous.");
 
         var grid = grids[0];
-        if (!Equals(grid.Parent, SourceDogtagCaseTpl))
-            throw new InvalidOperationException("B&A&HB Dogtag Case preflight refused: canonical grid parent no longer owns the EFT/SPT Dogtag Case template.");
+        if (!DogtagCaseCanonicalIdentityLease.IsSourceGridParent(grid.Parent))
+            throw new InvalidOperationException($"B&A&HB Dogtag Case preflight refused: canonical grid parent {grid.Parent ?? "<null>"} no longer owns the EFT/SPT Dogtag Case template {SourceDogtagCaseTpl}.");
 
         var filters = grid.Properties?.Filters?.ToArray();
         if (filters == null || filters.Length == 0)
