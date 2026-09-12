@@ -12,6 +12,7 @@
 - Restores the individual Russian operational brief to all 100 story descriptions while keeping exact runtime requirements in a separate readable section.
 - Corrects seven story beats whose authored recovery was previously represented only by a visit, marker or extraction; each now requires the promised FIR recovery and handover, with `Камера хранения` retaining its survival requirement.
 - Gives `Запасной кабинет` a bounded four-key Health Resort access pool without FIR or key handover before its recovery objective.
+- Makes `Камера хранения` require the promised FIR surveillance-record recovery and removes unsupported same-raid/night claims from five operational briefs while retaining their exact native objectives.
 - Absorb Natalya's useful quest and storefront roles into Admiral because Natalya is retired from the target installation. Artem, Scorpion and Ref remain separate traders and are only used to reject duplicates.
 - Route the opening Admiral wave through Ground Zero alongside the retained traders' early progression.
 - Add a bounded signature weapon rack selected from Natalya's native stock against the effective post-Andrudis catalog, with finite stock and progressive access.

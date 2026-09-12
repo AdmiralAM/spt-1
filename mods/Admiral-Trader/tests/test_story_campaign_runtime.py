@@ -48,7 +48,7 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
                         self.assertLessEqual(objective["quantity"], 12)
         self.assertEqual(kinds, {
             "visit": 30,
-            "retrieveQuestItem": 44,
+            "retrieveQuestItem": 45,
             "placeOrMark": 24,
             "eliminate": 8,
             "surviveExtract": 17,
@@ -83,7 +83,7 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
             "bb49cbdbae242ffef21f95b7", "837bdd0ab80a2a1382caeedd",
             "e74018c43dc3f47551445192", "78143d5331afbc8ed5530c51",
             "aef99c7f97ca615cf101a654", "fcc999aeb0be8899307d5c11",
-            "42d9c21068539c9855e42daf",
+            "42d9c21068539c9855e42daf", "cbf1ff74b68b7026ebae3bf6",
         }
         for quest_id in corrected:
             kinds = [row["conditionType"] for row in self.by_id[quest_id]["conditions"]["AvailableForFinish"]]
@@ -156,6 +156,20 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
                     self.assertIn(f"Следующая операция: «{chain['quests'][index + 1]['name']}»", success, row["id"])
                 else:
                     self.assertIn("Расследование закрыто", success, row["id"])
+
+    def test_authored_briefs_do_not_claim_unenforced_session_or_time_constraints(self):
+        unsupported_claims = ("в одном рейде", "в том же рейде", "в ночное время")
+        for chain in self.authored["chains"]:
+            for row in chain["quests"]:
+                brief = row["brief"].lower()
+                self.assertFalse(any(claim in brief for claim in unsupported_claims), row["id"])
+
+    def test_item_objective_quantities_match_the_native_materializer(self):
+        for chain in self.authored["chains"]:
+            for row in chain["quests"]:
+                for objective in row["objectives"]:
+                    if objective["kind"] in {"retrieveQuestItem", "handover"}:
+                        self.assertEqual(objective["quantity"], 1, row["id"])
 
     def test_russian_story_locale_is_real_utf8_cyrillic(self):
         rendered = json.dumps(self.ru, ensure_ascii=False)
