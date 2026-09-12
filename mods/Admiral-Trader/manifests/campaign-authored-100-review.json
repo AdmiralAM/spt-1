@@ -226,9 +226,10 @@
           "brief": "Найти аккумуляторный модуль в подземной зоне и доставить Адмиралу.",
           "objectives": [
             {
-              "kind": "placeOrMark",
+              "kind": "retrieveQuestItem",
               "quantity": 1,
-              "oneRaid": false
+              "foundInRaid": true,
+              "surviveRequired": true
             }
           ],
           "prerequisite": "59230813b9f9e11ceed08033",
@@ -578,14 +579,10 @@
           "brief": "Устранить 3–6 охранников в районе передачи и выжить.",
           "objectives": [
             {
-              "kind": "eliminate",
-              "quantity": 6,
-              "target": "Any"
-            },
-            {
-              "kind": "surviveExtract",
+              "kind": "retrieveQuestItem",
               "quantity": 1,
-              "oneRaid": true
+              "foundInRaid": true,
+              "surviveRequired": true
             }
           ],
           "prerequisite": "e9de043a8379c87027f762b3",
@@ -1115,9 +1112,15 @@
           "brief": "Пометить три подходящие грузовые партии.",
           "objectives": [
             {
-              "kind": "placeOrMark",
-              "quantity": 3,
-              "oneRaid": false
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
             }
           ],
           "prerequisite": "dde90a4fac0d58df868b8377",
@@ -1366,8 +1369,16 @@
           "brief": "Получить доступ в одну комнату из умеренного пула и найти журнал выдачи.",
           "objectives": [
             {
-              "kind": "visit",
-              "quantity": 1
+              "kind": "possessAccessKey",
+              "quantity": 1,
+              "foundInRaid": false,
+              "handover": false
+            },
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true
             }
           ],
           "prerequisite": "78cc2b3208abba4015448a90",
@@ -1427,9 +1438,10 @@
           "brief": "Установить датчики в двух корпусах санатория.",
           "objectives": [
             {
-              "kind": "placeOrMark",
-              "quantity": 2,
-              "oneRaid": false
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true
             }
           ],
           "prerequisite": "0f6c7610aabb03785c8c29a1",
@@ -1654,8 +1666,10 @@
           "brief": "Найти офицерский жетон и служебную записку.",
           "objectives": [
             {
-              "kind": "visit",
-              "quantity": 1
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true
             }
           ],
           "prerequisite": "cddcd386eb050dbc936ef629",
@@ -1837,8 +1851,10 @@
           "brief": "Найти контейнер снабжения по данным из папки.",
           "objectives": [
             {
-              "kind": "visit",
-              "quantity": 1
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true
             }
           ],
           "prerequisite": "a4e4d8c99a667c66900d17ec",

@@ -9,6 +9,9 @@
 - Shows every story operation's position inside its ten-part investigation and names the next operation in success mail; each finale explicitly closes its map investigation.
 - Corrects `Ключ диспетчера` and `Ключ мастера` to check ownership of a bounded common-key pool without FIR or handover, matching their authored instructions.
 - Guards the generated Russian story locale against replacement-character corruption and verifies substantial UTF-8 Cyrillic coverage.
+- Restores the individual Russian operational brief to all 100 story descriptions while keeping exact runtime requirements in a separate readable section.
+- Corrects seven story beats whose authored recovery was previously represented only by a visit, marker or extraction; each now requires the promised FIR recovery and handover, with `Камера хранения` retaining its survival requirement.
+- Gives `Запасной кабинет` a bounded four-key Health Resort access pool without FIR or key handover before its recovery objective.
 - Absorb Natalya's useful quest and storefront roles into Admiral because Natalya is retired from the target installation. Artem, Scorpion and Ref remain separate traders and are only used to reject duplicates.
 - Route the opening Admiral wave through Ground Zero alongside the retained traders' early progression.
 - Add a bounded signature weapon rack selected from Natalya's native stock against the effective post-Andrudis catalog, with finite stock and progressive access.

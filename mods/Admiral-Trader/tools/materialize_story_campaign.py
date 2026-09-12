@@ -92,6 +92,12 @@ ACCESS_KEY_POOLS = {
         "57a349b2245977762b199ec7",  # Pumping station front door
         "593858c486f774253a24cb52",  # Pumping station back door
     ],
+    "Берег": [
+        "5a0dc45586f7742f6b0b73e3",  # Health Resort west office 104
+        "5a0dc95c86f77452440fc675",  # Health Resort west office 112
+        "5a0ea64786f7741707720468",  # Health Resort east office 107
+        "5a0ea79b86f7741d4a35298e",  # Health Resort utility room
+    ],
 }
 
 CHAIN_EN = ["First Circuit", "Missing Convoy", "Observation Net", "Dead Warehouse", "Sanitary Corridor", "Mobilization Protocol", "Coastal Blockade", "Archive of Collapse", "Black Shift", "Final Protocol"]
@@ -188,8 +194,12 @@ def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[
         elif kind == "possessAccessKey":
             targets = ACCESS_KEY_POOLS[map_name]
             rows.append(key_pool_condition(qid, targets, index)); index += 1
-            en_pool = "Dorm room 118, 306, 308 or 315 key" if map_name == "Таможня" else "Pumping station front or back door key"
-            ru_pool = "ключ от комнаты общежития 118, 306, 308 или 315" if map_name == "Таможня" else "ключ от передней или задней двери насосной станции"
+            if map_name == "Таможня":
+                en_pool, ru_pool = "Dorm room 118, 306, 308 or 315 key", "ключ от комнаты общежития 118, 306, 308 или 315"
+            elif map_name == "Берег":
+                en_pool, ru_pool = "Health Resort office 104, 112, 107 or utility key", "ключ Санатория: офис 104, 112, 107 или подсобка"
+            else:
+                en_pool, ru_pool = "Pumping station front or back door key", "ключ от передней или задней двери насосной станции"
             en.append(f"Have any 1 allowed key: {en_pool}. Found in raid: not required; the key is not handed over")
             ru.append(f"Иметь любой 1 допустимый ключ: {ru_pool}. Статус «Найдено в рейде»: не требуется; ключ не сдаётся")
         elif kind == "eliminate":
@@ -240,7 +250,7 @@ def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], obje
         reward_en += f"\n- Purchase unlocked: {names_en.get(unlock_tpl, unlock_tpl)}"
         reward_ru += f"\n- Открыта покупка: {names_ru.get(unlock_tpl, unlock_tpl)}"
     en_body = f"{speaker_en}\n\nSituation:\nOperation '{en_name}' is stage {q['order']} of 10 in the {CHAIN_EN[chain['chain'] - 1]} investigation on {chain['title'].split(':')[0]}. Complete the field work below to move the investigation forward. Every listed requirement is an exact completion condition.\n\nRequirements:\n" + "\n".join(f"- {x}" for x in objective_en) + f"\n\n{reward_en}"
-    ru_body = f"{speaker_ru}\n\nОбстановка:\nОперация «{q['name']}» — этап {q['order']} из 10 в расследовании «{chain['title']}» на карте «{chain['map']}». Выполните перечисленную полевую работу, чтобы продвинуть расследование. Каждый пункт ниже является точным условием зачёта.\n\nТребования:\n" + "\n".join(f"- {x}" for x in objective_ru) + f"\n\n{reward_ru}"
+    ru_body = f"{speaker_ru}\n\nОбстановка:\nОперация «{q['name']}» — этап {q['order']} из 10 в расследовании «{chain['title']}» на карте «{chain['map']}».\n\nОперативная сводка:\n{q['brief']}\n\nТребования:\n" + "\n".join(f"- {x}" for x in objective_ru) + f"\n\n{reward_ru}"
     continuation_en = f" Next operation: {next_en}." if next_en else " This investigation is closed; its result now feeds the wider Admiral campaign."
     continuation_ru = f" Следующая операция: «{next_ru}»." if next_ru else " Расследование закрыто; его результат учтён в общей кампании Адмирала."
     done_en = f"Operation '{en_name}' is complete. The result has been logged.{continuation_en}" + (" Natalya confirmed the specialist channel." if specialist else "")

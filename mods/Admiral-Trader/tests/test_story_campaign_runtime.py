@@ -46,11 +46,15 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
                     kinds[objective["kind"]] += 1
                     if objective["kind"] == "eliminate":
                         self.assertLessEqual(objective["quantity"], 12)
-        self.assertGreaterEqual(kinds["visit"], 30)
-        self.assertGreaterEqual(kinds["retrieveQuestItem"], 35)
-        self.assertGreaterEqual(kinds["placeOrMark"], 25)
-        self.assertLessEqual(kinds["eliminate"], 12)
-        self.assertEqual(kinds["possessAccessKey"], 2)
+        self.assertEqual(kinds, {
+            "visit": 30,
+            "retrieveQuestItem": 44,
+            "placeOrMark": 24,
+            "eliminate": 8,
+            "surviveExtract": 17,
+            "handover": 8,
+            "possessAccessKey": 3,
+        })
 
     def test_story_access_keys_are_owned_not_handed_over(self):
         expected = {
@@ -61,15 +65,32 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
             "30d087339ef8063ccd818036": {
                 "57a349b2245977762b199ec7", "593858c486f774253a24cb52",
             },
+            "78143d5331afbc8ed5530c51": {
+                "5a0dc45586f7742f6b0b73e3", "5a0dc95c86f77452440fc675",
+                "5a0ea64786f7741707720468", "5a0ea79b86f7741d4a35298e",
+            },
         }
         for quest_id, targets in expected.items():
             finish = self.by_id[quest_id]["conditions"]["AvailableForFinish"]
-            self.assertEqual(len(finish), 1, quest_id)
-            self.assertEqual(finish[0]["conditionType"], "FindItem", quest_id)
-            self.assertEqual(set(finish[0]["target"]), targets, quest_id)
-            self.assertFalse(finish[0]["onlyFoundInRaid"], quest_id)
-            self.assertNotIn("HandoverItem", {row["conditionType"] for row in finish}, quest_id)
+            key_conditions = [row for row in finish if row["conditionType"] == "FindItem" and set(row["target"]) == targets]
+            self.assertEqual(len(key_conditions), 1, quest_id)
+            self.assertFalse(key_conditions[0]["onlyFoundInRaid"], quest_id)
+            self.assertFalse(any(row["conditionType"] == "HandoverItem" and set(row["target"]) == targets for row in finish), quest_id)
             self.assertIn("ключ не сдаётся", self.ru[quest_id + " description"], quest_id)
+
+    def test_authored_recovery_beats_require_real_recovery_conditions(self):
+        corrected = {
+            "bb49cbdbae242ffef21f95b7", "837bdd0ab80a2a1382caeedd",
+            "e74018c43dc3f47551445192", "78143d5331afbc8ed5530c51",
+            "aef99c7f97ca615cf101a654", "fcc999aeb0be8899307d5c11",
+            "42d9c21068539c9855e42daf",
+        }
+        for quest_id in corrected:
+            kinds = [row["conditionType"] for row in self.by_id[quest_id]["conditions"]["AvailableForFinish"]]
+            self.assertIn("FindItem", kinds, quest_id)
+            self.assertIn("HandoverItem", kinds, quest_id)
+        nested = [row for row in self.by_id["e74018c43dc3f47551445192"]["conditions"]["AvailableForFinish"] if row["conditionType"] == "CounterCreator"]
+        self.assertTrue(any(any(c["conditionType"] == "ExitStatus" for c in row["counter"]["conditions"]) for row in nested))
 
     def test_runtime_uses_only_supported_native_condition_types(self):
         allowed = {"CounterCreator", "FindItem", "HandoverItem", "PlaceBeacon"}
@@ -129,6 +150,7 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
                 description = self.ru[row["id"] + " description"]
                 success = self.ru[row["id"] + " successMessageText"]
                 self.assertIn(f"этап {row['order']} из 10", description, row["id"])
+                self.assertIn("Оперативная сводка:\n" + row["brief"], description, row["id"])
                 self.assertIn("Требования:\n- ", description, row["id"])
                 if index + 1 < len(chain["quests"]):
                     self.assertIn(f"Следующая операция: «{chain['quests'][index + 1]['name']}»", success, row["id"])
