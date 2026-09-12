@@ -15,7 +15,14 @@ namespace SPTItemIntelligence
     {
         Check,
         Cross,
-        Diamond
+        Diamond,
+        Dot,
+        Plus,
+        Chevron,
+        Bolt,
+        Shield,
+        Target,
+        Spark
     }
 
     public sealed class ItemIntelligenceUiSettings
@@ -78,7 +85,7 @@ namespace SPTItemIntelligence
             markerSide = config.Bind("Marker", "Side", ItemMarkerSide.Left,
                 "Select the upper-left or upper-right item-cell corner. This stays attached to the selected edge on multi-cell items.");
             markerSymbol = config.Bind("Marker", "Symbol", ItemMarkerSymbol.Check,
-                "Inner marker symbol. Check is the stable default; Cross and Diamond are optional visual alternatives.");
+                "Inner marker symbol. All choices use original small-size geometry; Check is the stable default.");
             markerSize = config.Bind("Marker", "Size", 14f,
                 new ConfigDescription("Information marker size in pixels.", new AcceptableValueRange<float>(1f, 100f)));
             markerOpacity = config.Bind("Marker", "Opacity", 0.96f,

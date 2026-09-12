@@ -411,6 +411,13 @@ namespace SPTItemIntelligence
             static Sprite checkmarkSprite;
             static Sprite crossSprite;
             static Sprite diamondSprite;
+            static Sprite dotSprite;
+            static Sprite plusSprite;
+            static Sprite chevronSprite;
+            static Sprite boltSprite;
+            static Sprite shieldSprite;
+            static Sprite targetSprite;
+            static Sprite sparkSprite;
             static Sprite circleSprite;
             static Sprite ringSprite;
             static readonly Type imageType = Type.GetType("UnityEngine.UI.Image, UnityEngine.UI", false);
@@ -725,6 +732,13 @@ namespace SPTItemIntelligence
                 {
                     case ItemMarkerSymbol.Cross: return CrossSprite();
                     case ItemMarkerSymbol.Diamond: return DiamondSprite();
+                    case ItemMarkerSymbol.Dot: return DotSprite();
+                    case ItemMarkerSymbol.Plus: return PlusSprite();
+                    case ItemMarkerSymbol.Chevron: return ChevronSprite();
+                    case ItemMarkerSymbol.Bolt: return BoltSprite();
+                    case ItemMarkerSymbol.Shield: return ShieldSprite();
+                    case ItemMarkerSymbol.Target: return TargetSprite();
+                    case ItemMarkerSymbol.Spark: return SparkSprite();
                     default: return CheckmarkSprite();
                 }
             }
@@ -749,10 +763,106 @@ namespace SPTItemIntelligence
                 return diamondSprite;
             }
 
+            static Sprite DotSprite()
+            {
+                if (dotSprite != null) return dotSprite;
+                dotSprite = SampledSprite("ItemIntelligenceOriginalDot", p => .19f - Vector2.Distance(p, new Vector2(.5f, .5f)));
+                return dotSprite;
+            }
+
+            static Sprite PlusSprite()
+            {
+                if (plusSprite != null) return plusSprite;
+                plusSprite = SegmentSprite("ItemIntelligenceOriginalPlus",
+                    new Vector2(.50f, .22f), new Vector2(.50f, .78f),
+                    new Vector2(.22f, .50f), new Vector2(.78f, .50f), .070f);
+                return plusSprite;
+            }
+
+            static Sprite ChevronSprite()
+            {
+                if (chevronSprite != null) return chevronSprite;
+                chevronSprite = SegmentSprite("ItemIntelligenceOriginalChevron",
+                    new Vector2(.24f, .39f), new Vector2(.50f, .65f),
+                    new Vector2(.50f, .65f), new Vector2(.76f, .39f), .072f);
+                return chevronSprite;
+            }
+
+            static Sprite SparkSprite()
+            {
+                if (sparkSprite != null) return sparkSprite;
+                sparkSprite = SegmentSprite("ItemIntelligenceOriginalSpark",
+                    new Vector2(.50f, .18f), new Vector2(.50f, .82f),
+                    new Vector2(.18f, .50f), new Vector2(.82f, .50f), .052f,
+                    new Vector2(.29f, .29f), new Vector2(.71f, .71f),
+                    new Vector2(.29f, .71f), new Vector2(.71f, .29f));
+                return sparkSprite;
+            }
+
+            static Sprite TargetSprite()
+            {
+                if (targetSprite != null) return targetSprite;
+                targetSprite = SampledSprite("ItemIntelligenceOriginalTarget", p =>
+                {
+                    float d = Vector2.Distance(p, new Vector2(.5f, .5f));
+                    return Mathf.Max(.105f - d, .045f - Mathf.Abs(d - .255f));
+                });
+                return targetSprite;
+            }
+
+            static Sprite BoltSprite()
+            {
+                if (boltSprite != null) return boltSprite;
+                Vector2[] polygon = { new Vector2(.55f, .14f), new Vector2(.27f, .53f), new Vector2(.46f, .53f), new Vector2(.37f, .86f), new Vector2(.75f, .42f), new Vector2(.55f, .42f) };
+                boltSprite = PolygonSprite("ItemIntelligenceOriginalBolt", polygon);
+                return boltSprite;
+            }
+
+            static Sprite ShieldSprite()
+            {
+                if (shieldSprite != null) return shieldSprite;
+                Vector2[] polygon = { new Vector2(.50f, .16f), new Vector2(.77f, .28f), new Vector2(.72f, .66f), new Vector2(.50f, .84f), new Vector2(.28f, .66f), new Vector2(.23f, .28f) };
+                shieldSprite = SampledSprite("ItemIntelligenceOriginalShield", p =>
+                    Mathf.Min(PolygonSignedDistance(p, polygon), .070f - Mathf.Abs(PolygonSignedDistance(p, polygon))));
+                return shieldSprite;
+            }
+
             static Sprite SegmentSprite(string name, Vector2 a1, Vector2 b1, Vector2 a2, Vector2 b2, float width,
                 Vector2? a3 = null, Vector2? b3 = null, Vector2? a4 = null, Vector2? b4 = null)
             {
+                return SampledSprite(name, p =>
+                {
+                    float distance = Mathf.Min(SegmentDistance(p, a1, b1), SegmentDistance(p, a2, b2));
+                    if (a3.HasValue) distance = Mathf.Min(distance, SegmentDistance(p, a3.Value, b3.Value));
+                    if (a4.HasValue) distance = Mathf.Min(distance, SegmentDistance(p, a4.Value, b4.Value));
+                    return width - distance;
+                });
+            }
+
+            static Sprite PolygonSprite(string name, Vector2[] polygon)
+            {
+                return SampledSprite(name, p => PolygonSignedDistance(p, polygon));
+            }
+
+            static float PolygonSignedDistance(Vector2 p, Vector2[] polygon)
+            {
+                bool inside = false;
+                float distance = 2f;
+                for (int i = 0, j = polygon.Length - 1; i < polygon.Length; j = i++)
+                {
+                    distance = Mathf.Min(distance, SegmentDistance(p, polygon[j], polygon[i]));
+                    if (((polygon[i].y > p.y) != (polygon[j].y > p.y)) &&
+                        p.x < (polygon[j].x - polygon[i].x) * (p.y - polygon[i].y) / (polygon[j].y - polygon[i].y) + polygon[i].x)
+                        inside = !inside;
+                }
+                return inside ? distance : -distance;
+            }
+
+            // Four samples per output pixel keep tiny 10-16 px symbols symmetric and remove stair-step edges.
+            static Sprite SampledSprite(string name, Func<Vector2, float> signedCoverage)
+            {
                 const int size = 64;
+                const int samples = 2;
                 Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
                 texture.name = name;
                 texture.hideFlags = HideFlags.HideAndDontSave;
@@ -762,12 +872,14 @@ namespace SPTItemIntelligence
                 for (int y = 0; y < size; y++)
                 for (int x = 0; x < size; x++)
                 {
-                    Vector2 p = new Vector2((x + .5f) / size, (y + .5f) / size);
-                    float distance = Mathf.Min(SegmentDistance(p, a1, b1), SegmentDistance(p, a2, b2));
-                    if (a3.HasValue) distance = Mathf.Min(distance, SegmentDistance(p, a3.Value, b3.Value));
-                    if (a4.HasValue) distance = Mathf.Min(distance, SegmentDistance(p, a4.Value, b4.Value));
-                    byte alpha = (byte)Mathf.RoundToInt(Mathf.Clamp01((width - distance) * size) * 255f);
-                    pixels[y * size + x] = new Color32(255, 255, 255, alpha);
+                    float alpha = 0f;
+                    for (int sy = 0; sy < samples; sy++)
+                    for (int sx = 0; sx < samples; sx++)
+                    {
+                        Vector2 p = new Vector2((x + (sx + .5f) / samples) / size, (y + (sy + .5f) / samples) / size);
+                        alpha += Mathf.Clamp01(signedCoverage(p) * size + .5f);
+                    }
+                    pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f / (samples * samples)));
                 }
                 texture.SetPixels32(pixels);
                 texture.Apply(false, true);
