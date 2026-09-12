@@ -140,14 +140,26 @@ def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[
                 index += 1
         elif kind == "placeOrMark":
             for n in range(quantity):
-                zone = places[(q["order"] + objective_index + n - 1) % len(places)]
-                rows.append({"conditionType": "PlaceBeacon", "dynamicLocale": False, "globalQuestCounterId": "", "id": hid(f"{qid}:place:{objective_index}:{n}"), "index": index, "parentId": "", "plantTime": 10, "target": [MARKER], "value": 1, "visibilityConditions": [], "zoneId": zone})
-                en.append(f"Place an MS2000 marker at objective {n + 1}/{quantity}; the marker is consumed")
-                ru.append(f"Установить маркер MS2000 в точке {n + 1}/{quantity}; маркер расходуется")
+                if n < len(places):
+                    zone = places[(q["order"] + objective_index + n - 1) % len(places)]
+                    rows.append({"conditionType": "PlaceBeacon", "dynamicLocale": False, "globalQuestCounterId": "", "id": hid(f"{qid}:place:{objective_index}:{n}"), "index": index, "parentId": "", "plantTime": 10, "target": [MARKER], "value": 1, "visibilityConditions": [], "zoneId": zone})
+                    en.append(f"Place an MS2000 marker at objective {n + 1}/{quantity}; the marker is consumed")
+                    ru.append(f"Установить маркер MS2000 в точке {n + 1}/{quantity}; маркер расходуется")
+                else:
+                    zone = visits[(q["order"] + objective_index + n - 1) % len(visits)]
+                    suffix = f"place-fallback-visit-{objective_index}-{n}"
+                    rows.append(counter(qid, suffix, 1, [location(qid, suffix, maps), visit(qid, suffix, zone)], "Exploration", index))
+                    en.append(f"Inspect designated operation point {n + 1}/{quantity}; no marker is required")
+                    ru.append(f"Осмотреть назначенную оперативную точку {n + 1}/{quantity}; маркер не требуется")
                 index += 1
         elif kind == "retrieveQuestItem":
+            zone = visits[(q["order"] + objective_index - 1) % len(visits)]
+            suffix = f"recover-site-{objective_index}"
+            rows.append(counter(qid, suffix, 1, [location(qid, suffix, maps), visit(qid, suffix, zone)], "Exploration", index)); index += 1
             rows.append(item_condition(qid, f"recover-{objective_index}", item_tpl, "FindItem", index, True)); index += 1
             rows.append(item_condition(qid, f"recover-{objective_index}", item_tpl, "HandoverItem", index, True)); index += 1
+            en.append(f"Inspect the designated recovery point on {chain['title'].split(':')[0]}")
+            ru.append(f"Осмотреть назначенную точку изъятия на карте «{map_name}»")
             en.append(f"Find 1 × {names_en.get(item_tpl, item_tpl)}. Found in raid: required")
             ru.append(f"Найти 1 × {names_ru.get(item_tpl, item_tpl)}. Статус «Найдено в рейде»: требуется")
             en.append(f"Hand over 1 × {names_en.get(item_tpl, item_tpl)}. Found in raid: required")
@@ -189,16 +201,24 @@ def rewards(q: dict, map_name: str) -> list[dict]:
     return result
 
 
-def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], objective_ru: list[str], specialist: bool) -> tuple[dict, dict]:
+def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], objective_ru: list[str], specialist: bool, names_en: dict[str, str], names_ru: dict[str, str]) -> tuple[dict, dict]:
     qid = q["id"]
     speaker_en = "Natalya has isolated a lead inside Admiral's network." if specialist else "Admiral has assigned the next operation."
     speaker_ru = "Наталья выделила новую зацепку внутри сети Адмирала." if specialist else "Адмирал назначил следующую операцию."
     reward_en = f"Rewards:\n- {q['rewards']['xp']} XP\n- ₽{q['rewards']['roubles']}\n- +{q['rewards']['standing']:.3f} Admiral standing"
     reward_ru = f"Награды:\n- {q['rewards']['xp']} XP\n- ₽{q['rewards']['roubles']}\n- +{q['rewards']['standing']:.3f} репутации Адмирала"
-    en_body = f"{speaker_en}\n\nSituation:\n{en_name}. Complete the listed field operation and return the result to Admiral. Operation takes place on {chain['title'].split(':')[0]}.\n\nRequirements:\n" + "\n".join(f"- {x}" for x in objective_en) + f"\n\n{reward_en}"
-    ru_body = f"{speaker_ru}\n\nОбстановка:\n{q['brief']} Операция проводится на карте «{chain['map']}».\n\nТребования:\n" + "\n".join(f"- {x}" for x in objective_ru) + f"\n\n{reward_ru}"
-    done_en = "The operation is complete. The recovered result has been logged."
-    done_ru = "Операция завершена. Полученный результат принят и внесён в журнал."
+    if q["order"] in (3, 6, 10):
+        reward_tpl = REWARD_ITEMS[chain["map"]][{3: 0, 6: 1, 10: 2}[q["order"]]]
+        reward_en += f"\n- 1 × {names_en.get(reward_tpl, reward_tpl)}"
+        reward_ru += f"\n- 1 × {names_ru.get(reward_tpl, reward_tpl)}"
+    if q["rewards"].get("assortmentUnlock"):
+        unlock_tpl = STORY_UNLOCKS[chain["map"]][0]
+        reward_en += f"\n- Purchase unlocked: {names_en.get(unlock_tpl, unlock_tpl)}"
+        reward_ru += f"\n- Открыта покупка: {names_ru.get(unlock_tpl, unlock_tpl)}"
+    en_body = f"{speaker_en}\n\nSituation:\nOperation '{en_name}' advances the {CHAIN_EN[chain['chain'] - 1]} chain on {chain['title'].split(':')[0]}. The requirements below are the exact completion conditions.\n\nRequirements:\n" + "\n".join(f"- {x}" for x in objective_en) + f"\n\n{reward_en}"
+    ru_body = f"{speaker_ru}\n\nОбстановка:\nОперация «{q['name']}» продолжает сюжетную цепочку «{chain['title']}» на карте «{chain['map']}». Ниже перечислены точные условия зачёта.\n\nТребования:\n" + "\n".join(f"- {x}" for x in objective_ru) + f"\n\n{reward_ru}"
+    done_en = f"Operation '{en_name}' is complete. The result has been logged." + (" Natalya confirmed the specialist channel." if specialist else "")
+    done_ru = f"Операция «{q['name']}» завершена. Результат принят и внесён в журнал." + (" Наталья подтвердила канал специалиста." if specialist else "")
     def make(name: str, body: str, done: str, reward: str, objective_lines: list[str]) -> dict:
         return {qid + " name": name, qid + " description": body, qid + " note": "", qid + " startedMessageText": body, qid + " successMessageText": done + "\n\n" + reward, qid + " failMessageText": "", qid + " acceptPlayerMessage": body, qid + " declinePlayerMessage": "", qid + " completePlayerMessage": done, qid + " changeQuestMessageText": "", **{row["id"]: objective_lines[i] for i, row in enumerate(q["runtimeFinish"]) if i < len(objective_lines)}}
     return make(en_name, en_body, done_en, reward_en, objective_en), make(q["name"], ru_body, done_ru, reward_ru, objective_ru)
@@ -233,7 +253,7 @@ def main() -> None:
             template = {"QuestName": q["name"], "_id": q["id"], "canShowNotificationsInGame": True, "conditions": {"AvailableForFinish": finish, "AvailableForStart": start, "Fail": []}, "description": q["id"] + " description", "failMessageText": q["id"] + " failMessageText", "name": q["id"] + " name", "note": q["id"] + " note", "traderId": TRADER, "location": "any", "image": "/files/quest/icon/5a27cafa86f77424e20615d6.jpg", "type": "PickUp" if any(o["kind"] == "retrieveQuestItem" for o in q["objectives"]) else ("Elimination" if any(o["kind"] == "eliminate" for o in q["objectives"]) else "Exploration"), "isKey": False, "restartable": False, "instantComplete": False, "secretQuest": False, "startedMessageText": q["id"] + " startedMessageText", "successMessageText": q["id"] + " successMessageText", "acceptPlayerMessage": q["id"] + " acceptPlayerMessage", "acceptanceAndFinishingSource": "eft", "declinePlayerMessage": q["id"] + " declinePlayerMessage", "completePlayerMessage": q["id"] + " completePlayerMessage", "changeQuestMessageText": q["id"] + " changeQuestMessageText", "rewards": {"Started": [], "Success": rewards(q, chain["map"]), "Fail": []}, "side": "Pmc", "status": 0, "progressSource": "eft", "gameModes": [], "rankingModes": [], "arenaLocations": []}
             runtime_rows.append((chain, q, template, specialist))
             en_name = f"{CHAIN_EN[chain['chain'] - 1]} {q['order']}: {CODENAMES_EN[chain['chain'] - 1][q['order'] - 1]}"
-            en_set, ru_set = locale_set(q, chain, en_name, objective_en, objective_ru, specialist)
+            en_set, ru_set = locale_set(q, chain, en_name, objective_en, objective_ru, specialist, names_en, names_ru)
             en.update(en_set); ru.update(ru_set)
 
     quest_dir = ROOT / "db/quests"

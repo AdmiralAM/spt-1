@@ -62,6 +62,16 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
                     self.assertEqual(row["target"], ["5991b51486f77447b112d44f"])
                     self.assertTrue(row["zoneId"])
 
+    def test_markers_are_unique_per_quest_and_recoveries_require_a_site_visit(self):
+        authored_by_id = {q["id"]: q for chain in self.authored["chains"] for q in chain["quests"]}
+        for quest in self.story:
+            finish = quest["conditions"]["AvailableForFinish"]
+            marker_zones = [row["zoneId"] for row in finish if row["conditionType"] == "PlaceBeacon"]
+            self.assertEqual(len(marker_zones), len(set(marker_zones)), quest["_id"])
+            if any(row["kind"] == "retrieveQuestItem" for row in authored_by_id[quest["_id"]]["objectives"]):
+                nested = [condition for row in finish if row["conditionType"] == "CounterCreator" for condition in row["counter"]["conditions"]]
+                self.assertTrue(any(row["conditionType"] == "VisitPlace" for row in nested), quest["_id"])
+
     def test_natalya_is_integrated_without_second_trader_or_dependency(self):
         natalya = [row for row in self.runtime["quests"] if row["natalya"]]
         self.assertEqual(len(natalya), 18)
@@ -91,6 +101,7 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
             self.assertFalse(roots[row["offerId"]]["upd"]["UnlimitedCount"])
             quest = self.by_id[row["questId"]]
             self.assertIn(row["offerId"], [reward.get("target") for reward in quest["rewards"]["Success"] if reward["type"] == "AssortmentUnlock"])
+            self.assertIn("Открыта покупка:", self.ru[row["questId"] + " successMessageText"])
 
 
 if __name__ == "__main__":
