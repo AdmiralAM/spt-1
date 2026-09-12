@@ -21,6 +21,7 @@ namespace SPTBeltArmbandInventory
         ProtectionSettingsSync protectionSettings;
         RuntimeCustomBeltTypePatches runtimeTypePatches;
         RuntimeCustomHeadBandTypePatches runtimeHeadBandTypePatches;
+        EquipmentCacheCapacityPatches equipmentCacheCapacityPatches;
         DedicatedEquipmentSlotPatches dedicatedEquipmentSlotPatches;
         DedicatedSlotPresentationPatches dedicatedSlotPresentationPatches;
         CompactFaceHeadBandPresentationPatches compactFaceHeadBandPresentationPatches;
@@ -97,6 +98,19 @@ namespace SPTBeltArmbandInventory
                 return;
             }
 
+            equipmentCacheCapacityPatches = new EquipmentCacheCapacityPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!equipmentCacheCapacityPatches.TryInstall())
+            {
+                equipmentCacheCapacityPatches.Dispose();
+                equipmentCacheCapacityPatches = null;
+                runtimeHeadBandTypePatches.Dispose();
+                runtimeHeadBandTypePatches = null;
+                runtimeTypePatches.Dispose();
+                runtimeTypePatches = null;
+                Logger.LogWarning("B&A&HB #2 equipment cache capacity patch failed; slot16 publication was stopped before profile deserialization.");
+                return;
+            }
+
             dedicatedEquipmentSlotPatches = new DedicatedEquipmentSlotPatches(Logger.LogInfo, Logger.LogWarning, !packNStrapDetected);
             if (!dedicatedEquipmentSlotPatches.TryInstall())
             {
@@ -104,6 +118,8 @@ namespace SPTBeltArmbandInventory
                 dedicatedEquipmentSlotPatches = null;
                 runtimeHeadBandTypePatches.Dispose();
                 runtimeHeadBandTypePatches = null;
+                equipmentCacheCapacityPatches.Dispose();
+                equipmentCacheCapacityPatches = null;
                 runtimeTypePatches.Dispose();
                 runtimeTypePatches = null;
                 Logger.LogWarning("B&A&HB #2 dedicated Belt/HeadBand equipment-slot client projection failed; dedicated runtime mappings rolled back for this session.");
@@ -387,6 +403,8 @@ namespace SPTBeltArmbandInventory
             dedicatedSlotPresentationPatches = null;
             if (dedicatedEquipmentSlotPatches != null) dedicatedEquipmentSlotPatches.Dispose();
             dedicatedEquipmentSlotPatches = null;
+            if (equipmentCacheCapacityPatches != null) equipmentCacheCapacityPatches.Dispose();
+            equipmentCacheCapacityPatches = null;
             if (runtimeHeadBandTypePatches != null) runtimeHeadBandTypePatches.Dispose();
             runtimeHeadBandTypePatches = null;
             if (runtimeTypePatches != null) runtimeTypePatches.Dispose();
