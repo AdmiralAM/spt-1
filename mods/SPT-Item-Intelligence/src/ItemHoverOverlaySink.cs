@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -409,15 +410,6 @@ namespace SPTItemIntelligence
         sealed class AttachedMarkerView : IDisposable
         {
             static Sprite checkmarkSprite;
-            static Sprite crossSprite;
-            static Sprite diamondSprite;
-            static Sprite dotSprite;
-            static Sprite plusSprite;
-            static Sprite chevronSprite;
-            static Sprite boltSprite;
-            static Sprite shieldSprite;
-            static Sprite targetSprite;
-            static Sprite sparkSprite;
             static Sprite circleSprite;
             static Sprite ringSprite;
             static readonly Type imageType = Type.GetType("UnityEngine.UI.Image, UnityEngine.UI", false);
@@ -532,6 +524,8 @@ namespace SPTItemIntelligence
                 Color sourceColor = settings.GetColor(presentation.Kind);
                 sourceColor.a = settings.MarkerOpacity;
                 Set(ringImage, "color", sourceColor);
+                Set(backgroundImage, "sprite", FrameSprite(settings.MarkerFrame, false));
+                Set(ringImage, "sprite", FrameSprite(settings.MarkerFrame, true));
                 Set(glyphImage, "sprite", SymbolSprite(settings.MarkerSymbol));
                 Color statusColor = ResolveStatusColor(hoverText, settings);
                 statusColor.a = settings.MarkerOpacity;
@@ -659,70 +653,26 @@ namespace SPTItemIntelligence
 
             static Sprite CircleSprite()
             {
-                if (circleSprite != null) return circleSprite;
-                circleSprite = RadialSprite("ItemIntelligenceCircle", .49f, 0f);
-                return circleSprite;
+                return FrameSprite(ItemMarkerFrame.Circle, false);
             }
 
             static Sprite RingSprite()
             {
-                if (ringSprite != null) return ringSprite;
-                ringSprite = RadialSprite("ItemIntelligenceRing", .49f, .36f);
-                return ringSprite;
+                return FrameSprite(ItemMarkerFrame.Circle, true);
             }
 
-            static Sprite RadialSprite(string name, float outer, float inner)
+            static Sprite FrameSprite(ItemMarkerFrame frame, bool ring)
             {
-                const int size = 64;
-                Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-                texture.name = name;
-                texture.hideFlags = HideFlags.HideAndDontSave;
-                texture.filterMode = FilterMode.Bilinear;
-                texture.wrapMode = TextureWrapMode.Clamp;
-                Color32[] pixels = new Color32[size * size];
-                for (int y = 0; y < size; y++)
-                for (int x = 0; x < size; x++)
-                {
-                    float nx = (x + .5f) / size - .5f;
-                    float ny = (y + .5f) / size - .5f;
-                    float distance = Mathf.Sqrt(nx * nx + ny * ny);
-                    float outerAlpha = Mathf.Clamp01((outer - distance) * size);
-                    float innerAlpha = inner <= 0f ? 1f : Mathf.Clamp01((distance - inner) * size);
-                    byte alpha = (byte)Mathf.RoundToInt(outerAlpha * innerAlpha * 255f);
-                    pixels[y * size + x] = new Color32(255, 255, 255, alpha);
-                }
-                texture.SetPixels32(pixels);
-                texture.Apply(false, true);
-                Sprite result = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
-                result.name = name + "Sprite";
-                result.hideFlags = HideFlags.HideAndDontSave;
-                return result;
+                string shape = frame == ItemMarkerFrame.Hex ? "hex" : frame == ItemMarkerFrame.Diamond ? "diamond" : frame == ItemMarkerFrame.Square ? "square" : "circle";
+                string resource = "frame-" + shape + (ring ? "-ring.png" : "-fill.png");
+                Sprite sprite = EmbeddedSprite(resource);
+                if (frame == ItemMarkerFrame.Circle) { if (ring) ringSprite = sprite; else circleSprite = sprite; }
+                return sprite;
             }
 
-            // Original two-stroke geometry. No external sprite, font glyph, asset, or copied geometry.
             static Sprite CheckmarkSprite()
             {
-                if (checkmarkSprite != null) return checkmarkSprite;
-                const int size = 64;
-                Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-                texture.name = "ItemIntelligenceOriginalCheckmark";
-                texture.hideFlags = HideFlags.HideAndDontSave;
-                texture.filterMode = FilterMode.Bilinear;
-                texture.wrapMode = TextureWrapMode.Clamp;
-                Color32[] pixels = new Color32[size * size];
-                for (int y = 0; y < size; y++)
-                for (int x = 0; x < size; x++)
-                {
-                    Vector2 p = new Vector2((x + .5f) / size, (y + .5f) / size);
-                    float check = Mathf.Min(SegmentDistance(p, new Vector2(.22f, .50f), new Vector2(.43f, .30f)),
-                        SegmentDistance(p, new Vector2(.43f, .30f), new Vector2(.79f, .69f)));
-                    byte alpha = (byte)Mathf.RoundToInt(Mathf.Clamp01((.075f - check) * size) * 255f);
-                    pixels[y * size + x] = new Color32(255, 255, 255, alpha);
-                }
-                texture.SetPixels32(pixels);
-                texture.Apply(false, true);
-                checkmarkSprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
-                checkmarkSprite.hideFlags = HideFlags.HideAndDontSave;
+                if (checkmarkSprite == null) checkmarkSprite = EmbeddedSprite("symbol-check.png");
                 return checkmarkSprite;
             }
 
@@ -730,168 +680,37 @@ namespace SPTItemIntelligence
             {
                 switch (symbol)
                 {
-                    case ItemMarkerSymbol.Cross: return CrossSprite();
-                    case ItemMarkerSymbol.Diamond: return DiamondSprite();
-                    case ItemMarkerSymbol.Dot: return DotSprite();
-                    case ItemMarkerSymbol.Plus: return PlusSprite();
-                    case ItemMarkerSymbol.Chevron: return ChevronSprite();
-                    case ItemMarkerSymbol.Bolt: return BoltSprite();
-                    case ItemMarkerSymbol.Shield: return ShieldSprite();
-                    case ItemMarkerSymbol.Target: return TargetSprite();
-                    case ItemMarkerSymbol.Spark: return SparkSprite();
+                    case ItemMarkerSymbol.Cross: return EmbeddedSprite("symbol-cross.png");
+                    case ItemMarkerSymbol.Dot: return EmbeddedSprite("symbol-dot.png");
+                    case ItemMarkerSymbol.Alert: return EmbeddedSprite("symbol-alert.png");
                     default: return CheckmarkSprite();
                 }
             }
 
-            static Sprite CrossSprite()
+            static readonly Dictionary<string, Sprite> embeddedSprites = new Dictionary<string, Sprite>(StringComparer.Ordinal);
+            static Sprite EmbeddedSprite(string fileName)
             {
-                if (crossSprite != null) return crossSprite;
-                crossSprite = SegmentSprite("ItemIntelligenceOriginalCross",
-                    new Vector2(.27f, .27f), new Vector2(.73f, .73f),
-                    new Vector2(.27f, .73f), new Vector2(.73f, .27f), .068f);
-                return crossSprite;
-            }
-
-            static Sprite DiamondSprite()
-            {
-                if (diamondSprite != null) return diamondSprite;
-                diamondSprite = SegmentSprite("ItemIntelligenceOriginalDiamond",
-                    new Vector2(.50f, .20f), new Vector2(.80f, .50f),
-                    new Vector2(.80f, .50f), new Vector2(.50f, .80f), .060f,
-                    new Vector2(.50f, .80f), new Vector2(.20f, .50f),
-                    new Vector2(.20f, .50f), new Vector2(.50f, .20f));
-                return diamondSprite;
-            }
-
-            static Sprite DotSprite()
-            {
-                if (dotSprite != null) return dotSprite;
-                dotSprite = SampledSprite("ItemIntelligenceOriginalDot", p => .19f - Vector2.Distance(p, new Vector2(.5f, .5f)));
-                return dotSprite;
-            }
-
-            static Sprite PlusSprite()
-            {
-                if (plusSprite != null) return plusSprite;
-                plusSprite = SegmentSprite("ItemIntelligenceOriginalPlus",
-                    new Vector2(.50f, .22f), new Vector2(.50f, .78f),
-                    new Vector2(.22f, .50f), new Vector2(.78f, .50f), .070f);
-                return plusSprite;
-            }
-
-            static Sprite ChevronSprite()
-            {
-                if (chevronSprite != null) return chevronSprite;
-                chevronSprite = SegmentSprite("ItemIntelligenceOriginalChevron",
-                    new Vector2(.24f, .39f), new Vector2(.50f, .65f),
-                    new Vector2(.50f, .65f), new Vector2(.76f, .39f), .072f);
-                return chevronSprite;
-            }
-
-            static Sprite SparkSprite()
-            {
-                if (sparkSprite != null) return sparkSprite;
-                sparkSprite = SegmentSprite("ItemIntelligenceOriginalSpark",
-                    new Vector2(.50f, .18f), new Vector2(.50f, .82f),
-                    new Vector2(.18f, .50f), new Vector2(.82f, .50f), .052f,
-                    new Vector2(.29f, .29f), new Vector2(.71f, .71f),
-                    new Vector2(.29f, .71f), new Vector2(.71f, .29f));
-                return sparkSprite;
-            }
-
-            static Sprite TargetSprite()
-            {
-                if (targetSprite != null) return targetSprite;
-                targetSprite = SampledSprite("ItemIntelligenceOriginalTarget", p =>
+                Sprite cached;
+                if (embeddedSprites.TryGetValue(fileName, out cached)) return cached;
+                string resourceName = "SPTItemIntelligence.Markers." + fileName;
+                using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
                 {
-                    float d = Vector2.Distance(p, new Vector2(.5f, .5f));
-                    return Mathf.Max(.105f - d, .045f - Mathf.Abs(d - .255f));
-                });
-                return targetSprite;
-            }
-
-            static Sprite BoltSprite()
-            {
-                if (boltSprite != null) return boltSprite;
-                Vector2[] polygon = { new Vector2(.55f, .14f), new Vector2(.27f, .53f), new Vector2(.46f, .53f), new Vector2(.37f, .86f), new Vector2(.75f, .42f), new Vector2(.55f, .42f) };
-                boltSprite = PolygonSprite("ItemIntelligenceOriginalBolt", polygon);
-                return boltSprite;
-            }
-
-            static Sprite ShieldSprite()
-            {
-                if (shieldSprite != null) return shieldSprite;
-                Vector2[] polygon = { new Vector2(.50f, .16f), new Vector2(.77f, .28f), new Vector2(.72f, .66f), new Vector2(.50f, .84f), new Vector2(.28f, .66f), new Vector2(.23f, .28f) };
-                shieldSprite = SampledSprite("ItemIntelligenceOriginalShield", p =>
-                    Mathf.Min(PolygonSignedDistance(p, polygon), .070f - Mathf.Abs(PolygonSignedDistance(p, polygon))));
-                return shieldSprite;
-            }
-
-            static Sprite SegmentSprite(string name, Vector2 a1, Vector2 b1, Vector2 a2, Vector2 b2, float width,
-                Vector2? a3 = null, Vector2? b3 = null, Vector2? a4 = null, Vector2? b4 = null)
-            {
-                return SampledSprite(name, p =>
-                {
-                    float distance = Mathf.Min(SegmentDistance(p, a1, b1), SegmentDistance(p, a2, b2));
-                    if (a3.HasValue) distance = Mathf.Min(distance, SegmentDistance(p, a3.Value, b3.Value));
-                    if (a4.HasValue) distance = Mathf.Min(distance, SegmentDistance(p, a4.Value, b4.Value));
-                    return width - distance;
-                });
-            }
-
-            static Sprite PolygonSprite(string name, Vector2[] polygon)
-            {
-                return SampledSprite(name, p => PolygonSignedDistance(p, polygon));
-            }
-
-            static float PolygonSignedDistance(Vector2 p, Vector2[] polygon)
-            {
-                bool inside = false;
-                float distance = 2f;
-                for (int i = 0, j = polygon.Length - 1; i < polygon.Length; j = i++)
-                {
-                    distance = Mathf.Min(distance, SegmentDistance(p, polygon[j], polygon[i]));
-                    if (((polygon[i].y > p.y) != (polygon[j].y > p.y)) &&
-                        p.x < (polygon[j].x - polygon[i].x) * (p.y - polygon[i].y) / (polygon[j].y - polygon[i].y) + polygon[i].x)
-                        inside = !inside;
+                    if (stream == null) return null;
+                    byte[] bytes = new byte[stream.Length];
+                    int offset = 0;
+                    while (offset < bytes.Length) { int read = stream.Read(bytes, offset, bytes.Length - offset); if (read <= 0) break; offset += read; }
+                    Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                    if (!texture.LoadImage(bytes, true)) { UnityEngine.Object.Destroy(texture); return null; }
+                    texture.name = fileName;
+                    texture.filterMode = FilterMode.Bilinear;
+                    texture.wrapMode = TextureWrapMode.Clamp;
+                    texture.hideFlags = HideFlags.HideAndDontSave;
+                    cached = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(.5f, .5f), texture.width);
+                    cached.name = fileName + "Sprite";
+                    cached.hideFlags = HideFlags.HideAndDontSave;
+                    embeddedSprites[fileName] = cached;
+                    return cached;
                 }
-                return inside ? distance : -distance;
-            }
-
-            // Four samples per output pixel keep tiny 10-16 px symbols symmetric and remove stair-step edges.
-            static Sprite SampledSprite(string name, Func<Vector2, float> signedCoverage)
-            {
-                const int size = 64;
-                const int samples = 2;
-                Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
-                texture.name = name;
-                texture.hideFlags = HideFlags.HideAndDontSave;
-                texture.filterMode = FilterMode.Bilinear;
-                texture.wrapMode = TextureWrapMode.Clamp;
-                Color32[] pixels = new Color32[size * size];
-                for (int y = 0; y < size; y++)
-                for (int x = 0; x < size; x++)
-                {
-                    float alpha = 0f;
-                    for (int sy = 0; sy < samples; sy++)
-                    for (int sx = 0; sx < samples; sx++)
-                    {
-                        Vector2 p = new Vector2((x + (sx + .5f) / samples) / size, (y + (sy + .5f) / samples) / size);
-                        alpha += Mathf.Clamp01(signedCoverage(p) * size + .5f);
-                    }
-                    pixels[y * size + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(alpha * 255f / (samples * samples)));
-                }
-                texture.SetPixels32(pixels);
-                texture.Apply(false, true);
-                Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
-                sprite.name = name + "Sprite";
-                sprite.hideFlags = HideFlags.HideAndDontSave;
-                return sprite;
-            }
-            static float SegmentDistance(Vector2 p, Vector2 a, Vector2 b)
-            {
-                Vector2 ab = b - a;
-                return Vector2.Distance(p, a + ab * Mathf.Clamp01(Vector2.Dot(p - a, ab) / ab.sqrMagnitude));
             }
             static Type PropertyType(object target, string name)
             {

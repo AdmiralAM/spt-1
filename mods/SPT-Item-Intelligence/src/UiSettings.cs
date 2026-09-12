@@ -15,14 +15,16 @@ namespace SPTItemIntelligence
     {
         Check,
         Cross,
-        Diamond,
         Dot,
-        Plus,
-        Chevron,
-        Bolt,
-        Shield,
-        Target,
-        Spark
+        Alert
+    }
+
+    public enum ItemMarkerFrame
+    {
+        Circle,
+        Hex,
+        Diamond,
+        Square
     }
 
     public sealed class ItemIntelligenceUiSettings
@@ -37,6 +39,7 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<float> tooltipPadding;
         readonly ConfigEntry<ItemMarkerSide> markerSide;
         readonly ConfigEntry<ItemMarkerSymbol> markerSymbol;
+        readonly ConfigEntry<ItemMarkerFrame> markerFrame;
         readonly ConfigEntry<float> markerSize;
         readonly ConfigEntry<float> markerOpacity;
         readonly ConfigEntry<float> markerOffsetX;
@@ -85,7 +88,9 @@ namespace SPTItemIntelligence
             markerSide = config.Bind("Marker", "Side", ItemMarkerSide.Left,
                 "Select the upper-left or upper-right item-cell corner. This stays attached to the selected edge on multi-cell items.");
             markerSymbol = config.Bind("Marker", "Symbol", ItemMarkerSymbol.Check,
-                "Inner marker symbol. All choices use original small-size geometry; Check is the stable default.");
+                "Embedded high-resolution symbol: Check, Cross, Dot or Alert.");
+            markerFrame = config.Bind("Marker", "Frame", ItemMarkerFrame.Circle,
+                "Embedded badge silhouette: Circle, Hex, Diamond or Square.");
             markerSize = config.Bind("Marker", "Size", 14f,
                 new ConfigDescription("Information marker size in pixels.", new AcceptableValueRange<float>(1f, 100f)));
             markerOpacity = config.Bind("Marker", "Opacity", 0.96f,
@@ -120,6 +125,7 @@ namespace SPTItemIntelligence
             tooltipPadding.SettingChanged += delegate { Touch(); };
             markerSide.SettingChanged += delegate { Touch(); };
             markerSymbol.SettingChanged += delegate { Touch(); };
+            markerFrame.SettingChanged += delegate { Touch(); };
             markerSize.SettingChanged += delegate { Touch(); };
             markerOpacity.SettingChanged += delegate { Touch(); };
             markerBackgroundColor.SettingChanged += delegate { Touch(); };
@@ -149,6 +155,7 @@ namespace SPTItemIntelligence
         public float TooltipPadding => Mathf.Clamp(tooltipPadding.Value, 0f, 40f);
         public ItemMarkerSide MarkerSide => markerSide.Value;
         public ItemMarkerSymbol MarkerSymbol => markerSymbol.Value;
+        public ItemMarkerFrame MarkerFrame => markerFrame.Value;
         public float MarkerSize => Mathf.Clamp(markerSize.Value, 1f, 100f);
         public float MarkerOpacity => Mathf.Clamp01(markerOpacity.Value);
         public Color MarkerBackgroundColor => markerBackgroundColor.Value;
