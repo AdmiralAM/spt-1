@@ -129,6 +129,14 @@ unsuitable; otherwise continue without pausing for approval.
 - Use **GPT-5.3-Codex-Spark** for bounded, well-specified work: localized code
   changes, tests, configuration, manifests, documentation, mechanical cleanup,
   reruns, and verification against an already accepted design.
+- Use **GPT-5.6 Terra** for routine production implementation that still needs
+  sound engineering judgment but has a clear scope and accepted architecture.
+- Use **GPT-5.6 Luna** for high-volume, low-risk mechanical work such as narrow
+  extraction, classification, formatting, simple configuration edits, and
+  focused checks where small quality differences are not material.
+- Use **GPT-5.5** only as a low-risk fallback for small, clearly specified work
+  when Spark or the appropriate GPT-5.6 model is unavailable or offers no
+  practical advantage.
 - Use **GPT-5.6 Sol** for architecture, ambiguous implementation, runtime-sensitive
   integration, profile migrations, cross-module compatibility, unfamiliar
   failures, and substantial debugging or refactoring.
