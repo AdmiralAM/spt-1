@@ -1,0 +1,35 @@
+name: Second Life Validate
+
+on:
+  pull_request:
+    paths:
+      - "mods/Second-Life/**"
+      - ".github/workflows/second-life-validate.yml"
+  push:
+    branches-ignore:
+      - main
+    paths:
+      - "mods/Second-Life/**"
+      - ".github/workflows/second-life-validate.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: second-life-validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deterministic-core:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: Build core
+        run: dotnet build mods/Second-Life/src/SecondLife.Core.csproj --configuration Release
+      - name: Run lifecycle regression
+        run: dotnet run --project mods/Second-Life/tests/SecondLife.Core.Tests.csproj --configuration Release
