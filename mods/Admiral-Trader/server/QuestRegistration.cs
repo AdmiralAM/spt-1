@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
@@ -299,8 +300,8 @@ public sealed class AdmiralQuestRegistration(
 }
 
 public sealed record StoryCampaignRuntimeManifest(
-    string Status,
-    int StoryQuestCount,
-    List<StoryCampaignQuestRecord> Quests);
+    [property: JsonPropertyName("status")] string Status,
+    [property: JsonPropertyName("storyQuestCount")] int StoryQuestCount,
+    [property: JsonPropertyName("quests")] List<StoryCampaignQuestRecord> Quests);
 
-public sealed record StoryCampaignQuestRecord(string Id);
+public sealed record StoryCampaignQuestRecord([property: JsonPropertyName("id")] string Id);
