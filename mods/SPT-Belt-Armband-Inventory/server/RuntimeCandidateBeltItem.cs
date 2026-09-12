@@ -25,11 +25,7 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        if (PackNStrapCompatibility.IsServerPresentNow())
-        {
-            logger.Info("B&A&HB companion mode: Magazine Armband creation skipped; Pack 'n' Strap owns standard belt products.");
-            return Task.CompletedTask;
-        }
+        bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
         if (!templateTable.Items.ContainsKey(SourceArmbandTpl)) throw new InvalidOperationException("B&A&HB Magazine Armband source armband missing.");
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl) ?? throw new InvalidOperationException("B&A&HB Magazine Armband source handbook entry missing.");
 
@@ -37,7 +33,9 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         if (templateTable.Items.TryGetValue(MagazineArmbandTpl, out var existingCandidate))
         {
             ValidateExistingCandidate(existingCandidate);
-            logger.Success($"B&A&HB Magazine Armband retained existing validated item: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
+            logger.Success(companionMode
+                ? $"B&A&HB companion legacy Magazine Armband template retained for profile safety: tpl={RuntimeCandidateTpl}; no B&A offer or ArmBand filter publication."
+                : $"B&A&HB Magazine Armband retained existing validated item: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
             return Task.CompletedTask;
         }
 
@@ -77,7 +75,9 @@ public sealed class RuntimeCandidateBeltItem(TemplateTable templateTable, Custom
         // ArmBand host exposure is intentionally owned by WristWalletItem at
         // Preload+2. That later owner validates that both exact ArmBand products
         // exist before mutating the vanilla slot filter, preventing dangling IDs.
-        logger.Success($"B&A&HB Magazine Armband created: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
+        logger.Success(companionMode
+            ? $"B&A&HB companion legacy Magazine Armband template registered for profile safety: tpl={RuntimeCandidateTpl}; no B&A offer or ArmBand filter publication."
+            : $"B&A&HB Magazine Armband created: tpl={RuntimeCandidateTpl}, parent={CustomBeltParentTpl}, grid={RuntimeIdentity.CandidateGridColumns}x{RuntimeIdentity.CandidateGridRows}, filter=MAGAZINE.");
         return Task.CompletedTask;
     }
 

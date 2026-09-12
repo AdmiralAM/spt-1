@@ -30,10 +30,20 @@ for owner in [
     if companion_gate < 0 or client.find(owner) < companion_gate:
         violations.append(f"companion gate must return before {owner}")
 
-for filename in ["RuntimeCandidateBeltItem.cs", "RuntimeCandidateAssort.cs", "WristWalletItem.cs", "WristWalletAssort.cs"]:
+for filename in ["RuntimeCandidateAssort.cs", "WristWalletAssort.cs"]:
     text = (SERVER / filename).read_text(encoding="utf-8-sig")
     if "if (PackNStrapCompatibility.IsServerPresentNow())" not in text or "return Task.CompletedTask;" not in text:
         violations.append(f"{filename} does not suppress its standard owner")
+
+for filename, item_token in [
+    ("RuntimeCandidateBeltItem.cs", "legacy Magazine Armband template"),
+    ("WristWalletItem.cs", "legacy Wrist Wallet template"),
+]:
+    text = (SERVER / filename).read_text(encoding="utf-8-sig")
+    if "return Task.CompletedTask;" in text[text.find("public Task OnLoadAsync"):text.find("if (!templateTable", text.find("public Task OnLoadAsync"))]:
+        violations.append(f"{filename} drops a published persistent template in companion mode")
+    if item_token not in text or "if (!companionMode) CommitArmBandExactProducts" not in text and filename == "WristWalletItem.cs":
+        violations.append(f"{filename} does not retain its legacy template without foreign filter publication")
 
 for filename in ["DedicatedWearableItems.cs", "DedicatedEquipmentSlotRegistration.cs", "DedicatedWearableAssort.cs", "WearableTaxonomyRegistration.cs"]:
     text = (SERVER / filename).read_text(encoding="utf-8-sig")
@@ -49,6 +59,10 @@ for token in [
 ]:
     if token not in wearable_items:
         violations.append(f"missing legacy Magazine Belt profile-safety contract: {token!r}")
+
+taxonomy = (SERVER / "WearableTaxonomyRegistration.cs").read_text(encoding="utf-8-sig")
+if 'PrepareNode(BeltParentTpl, "BAndHBCustomBeltItem", SearchableParentTpl, companionMode)' in taxonomy:
+    violations.append("companion mode drops the persistent parent of legacy B&A item templates")
 
 if violations:
     raise SystemExit("B&A&HB Pack 'n' Strap companion gate failed:\n" + "\n".join(violations))

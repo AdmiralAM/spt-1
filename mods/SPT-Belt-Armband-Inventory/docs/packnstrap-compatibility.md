@@ -116,21 +116,22 @@ Client and server startup now detect Pack 'n' Strap through its public identity
 (`com.wtt.packnstrap` on BepInEx and `WTT-PackNStrapServer` on the server). When
 present, B&A&HB:
 
-1. omits new Magazine Armband and Wrist Wallet templates and all three B&A
-   standard-belt Ragman offers; the exact legacy Magazine Belt template remains
-   registered only so profiles that already contain it are loadable;
-2. omits the B&A Belt parent mapping and Belt row projection;
+1. omits all three B&A standard-belt Ragman offers; the exact legacy Magazine
+   Armband, Wrist Wallet and Magazine Belt templates remain registered only so
+   profiles that already contain them are loadable;
+2. retains their persistent B&A taxonomy parent but omits B&A ArmBand/Belt
+   filter publication and Belt row projection;
 3. stops before B&A loot, unload, Scav, fast-access, merge, pickup, payment and
    equipment-build patches are installed;
 4. retains Utility HeadBand slot 16 and its UI, Dogtag Case, profile migration,
    and exact-ID death/insurance protection.
 
-The legacy Magazine Belt registration does not add it to Pack 'n' Strap filters,
-does not publish a B&A Belt slot or trader offer, and does not extend Admiral
-protection to any Pack 'n' Strap or Content Backport item. Removing this
-persistent template while an existing profile contains
-`68ac0000000000000000000c` causes SPT to invalidate the whole profile before
-the HeadBand migration can run.
+The legacy template registrations do not add anything to Pack 'n' Strap or
+vanilla ArmBand filters, do not publish a B&A Belt slot or trader offer, and do
+not extend Admiral protection to any Pack 'n' Strap or Content Backport item.
+Removing any previously published persistent item template while an existing
+profile contains it causes SPT to invalidate the whole profile before the
+HeadBand migration can run.
 
 Automated build/regression proof is required before producing the combined
 package. Physical runtime acceptance remains a later gate and must distinguish

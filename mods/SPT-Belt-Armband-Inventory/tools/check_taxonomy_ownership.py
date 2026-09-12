@@ -50,8 +50,8 @@ if "EnsureArmBandAccepts" in armband or "CommitArmBandExactProducts" in armband:
 for token in [
     "[Injectable(TypePriority = OnLoadOrder.Preload + 2)]",
     "if (!templateTable.Items.ContainsKey(MagazineArmbandTpl))",
-    "HashSet<MongoId> armBandFilter = PrepareArmBandExactProductFilter();",
-    "CommitArmBandExactProducts(armBandFilter);",
+    "HashSet<MongoId>? armBandFilter = companionMode ? null : PrepareArmBandExactProductFilter();",
+    "if (!companionMode) CommitArmBandExactProducts(armBandFilter!);",
     "private HashSet<MongoId> PrepareArmBandExactProductFilter()",
     "private void CommitArmBandExactProducts(HashSet<MongoId> filter)",
     '.Where(x => string.Equals(x.Name, "ArmBand", StringComparison.Ordinal))',
@@ -73,11 +73,11 @@ if "filter.Add(BroadBeltParentTpl)" in wallet or "filter.Add(RuntimeCandidateBel
 
 # Host target/collision boundary must be proven before a new Wrist Wallet is
 # created. Exact filter mutation is committed only after successful creation.
-prepare = wallet.find("HashSet<MongoId> armBandFilter = PrepareArmBandExactProductFilter();")
+prepare = wallet.find("HashSet<MongoId>? armBandFilter = companionMode ? null : PrepareArmBandExactProductFilter();")
 details = wallet.find("var details = new NewItemFromCloneDetails")
 create = wallet.find("var result = customItemService.CreateItemFromClone(details);", details)
 failed = wallet.find("if (!result.Success)", create)
-commit = wallet.find("CommitArmBandExactProducts(armBandFilter);", failed)
+commit = wallet.find("if (!companionMode) CommitArmBandExactProducts(armBandFilter!);", failed)
 if min(prepare, details, create, failed, commit) < 0 or not (prepare < details < create < failed < commit):
     violations.append("new Wrist Wallet path must prepare host first, create item successfully, then commit exact ArmBand products")
 

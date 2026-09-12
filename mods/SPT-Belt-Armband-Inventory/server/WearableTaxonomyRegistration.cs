@@ -23,7 +23,10 @@ public sealed class WearableTaxonomyRegistration(
         // A collision in the second/third node must not leave earlier nodes partially installed.
         TemplateItem? searchableAddition = PrepareNode(SearchableParentTpl, "BAndHBSearchableContainerTemplate", SearchableItemBaseTpl);
         bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
-        TemplateItem? beltAddition = PrepareNode(BeltParentTpl, "BAndHBCustomBeltItem", SearchableParentTpl, companionMode);
+        // Published B&A item templates keep this parent ID in profiles. Retain
+        // the taxonomy node in companion mode without exposing a Belt slot or
+        // adding it to any Pack 'n' Strap-owned filter.
+        TemplateItem? beltAddition = PrepareNode(BeltParentTpl, "BAndHBCustomBeltItem", SearchableParentTpl);
         TemplateItem? headBandAddition = PrepareNode(HeadBandParentTpl, "BAndHBCustomHeadBandItem", SearchableParentTpl);
 
         if (searchableAddition != null) templateTable.Items.Add(SearchableParentTpl, searchableAddition);
@@ -31,14 +34,13 @@ public sealed class WearableTaxonomyRegistration(
         if (headBandAddition != null) templateTable.Items.Add(HeadBandParentTpl, headBandAddition);
 
         logger.Success(companionMode
-            ? "B&A&HB companion taxonomy registered for HeadBand; standard Belt taxonomy remains owned by Pack 'n' Strap."
+            ? "B&A&HB companion taxonomy registered for HeadBand and legacy profile identities; active Belt ownership remains with Pack 'n' Strap."
             : "B&A&HB #2 wearable taxonomy registered atomically for ArmBand/Belt/HeadBand runtime families.");
         return Task.CompletedTask;
     }
 
-    private TemplateItem? PrepareNode(MongoId id, string name, MongoId parent, bool suppress = false)
+    private TemplateItem? PrepareNode(MongoId id, string name, MongoId parent)
     {
-        if (suppress) return null;
         if (!templateTable.Items.TryGetValue(id, out var existing))
         {
             return new TemplateItem

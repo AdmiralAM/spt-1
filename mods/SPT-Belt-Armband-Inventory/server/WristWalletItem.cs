@@ -25,11 +25,7 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        if (PackNStrapCompatibility.IsServerPresentNow())
-        {
-            logger.Info("B&A&HB companion mode: Wrist Wallet creation and ArmBand filter mutation skipped.");
-            return Task.CompletedTask;
-        }
+        bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
         if (!templateTable.Items.ContainsKey(RuntimeCandidateBeltItem.SourceArmbandTpl))
             throw new InvalidOperationException("B&A&HB Wrist Wallet source armband missing.");
         if (!templateTable.Items.ContainsKey(RuntimeCandidateBeltItem.CustomBeltParentTpl))
@@ -39,13 +35,15 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
 
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == RuntimeCandidateBeltItem.SourceArmbandTpl)
             ?? throw new InvalidOperationException("B&A&HB Wrist Wallet source handbook entry missing.");
-        HashSet<MongoId> armBandFilter = PrepareArmBandExactProductFilter();
+        HashSet<MongoId>? armBandFilter = companionMode ? null : PrepareArmBandExactProductFilter();
 
         if (templateTable.Items.TryGetValue(WristWalletTpl, out var existing))
         {
             ValidateExisting(existing);
-            CommitArmBandExactProducts(armBandFilter);
-            logger.Success("B&A&HB Wrist Wallet retained existing validated 1x1 currency-only item; exact ArmBand products exposed atomically.");
+            if (!companionMode) CommitArmBandExactProducts(armBandFilter!);
+            logger.Success(companionMode
+                ? "B&A&HB companion legacy Wrist Wallet template retained for profile safety; no B&A offer or ArmBand filter publication."
+                : "B&A&HB Wrist Wallet retained existing validated 1x1 currency-only item; exact ArmBand products exposed atomically.");
             return Task.CompletedTask;
         }
 
@@ -113,8 +111,10 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
 
         // Host boundary was validated before item creation. Both exact ArmBand
         // products now exist, so the final commit has no discovery/collision step.
-        CommitArmBandExactProducts(armBandFilter);
-        logger.Success("B&A&HB Wrist Wallet created: host=ArmBand, grid=1x1, filter=RUB/USD/EUR; exact ArmBand products exposed atomically.");
+        if (!companionMode) CommitArmBandExactProducts(armBandFilter!);
+        logger.Success(companionMode
+            ? "B&A&HB companion legacy Wrist Wallet template registered for profile safety; no B&A offer or ArmBand filter publication."
+            : "B&A&HB Wrist Wallet created: host=ArmBand, grid=1x1, filter=RUB/USD/EUR; exact ArmBand products exposed atomically.");
         return Task.CompletedTask;
     }
 
