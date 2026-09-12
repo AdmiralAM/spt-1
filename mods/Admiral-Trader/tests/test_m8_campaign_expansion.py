@@ -72,6 +72,13 @@ class M8CampaignExpansionTests(unittest.TestCase):
         for quest in self.quests:
             self.assertNotIn("icebreaker", json.dumps(quest).lower())
 
+    def test_campaign_materializer_preserves_live_icebreaker_authority(self):
+        source = (ROOT / "tools/materialize_campaign_expansion.py").read_text(encoding="utf-8")
+        self.assertNotIn('"reserved":True', source)
+        self.assertIn('"runtimePublished":True', source)
+        authored = json.loads((ROOT / "manifests/campaign-authored-100-review.json").read_text(encoding="utf-8"))
+        self.assertIn("10-operation optional side chain materialized", authored["optionalExtensions"]["icebreaker"])
+
     def test_icebreaker_source_identity_is_recorded_without_runtime_dependency(self):
         candidates = json.loads((ROOT / "manifests/optional-content-candidates.json").read_text(encoding="utf-8"))
         icebreaker = next(row for row in candidates["candidates"] if row["name"] == "Icebreaker")

@@ -106,7 +106,7 @@ def main():
         (qdir/f"{prefix}-{i+1:02d}-{qid}.json").write_text(json.dumps(q,separators=(",",":"),ensure_ascii=False)+"\n",encoding="utf-8")
     (ROOT/"db/locales/m8-en.json").write_text(json.dumps(en,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     (ROOT/"db/locales/m8-ru.json").write_text(json.dumps(ru,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
-    manifest={"schemaVersion":1,"status":"runtime-materialized","totalQuestCount":72,"newQuestCount":29,"weaponAssignments":19,"groundZeroOperations":4,"equipmentAssignments":6,"maximumConcurrentWeaponAssignments":2,"optionalWeaponCount":len(optional["acceptedWeapons"]),"optionalWeaponsRequired":False,"icebreaker":{"reserved":True,"runtimePublished":False,"reason":"map not installed; no speculative IDs"},"quests":meta}
+    manifest={"schemaVersion":1,"status":"runtime-materialized","totalQuestCount":72,"newQuestCount":29,"weaponAssignments":19,"groundZeroOperations":4,"equipmentAssignments":6,"maximumConcurrentWeaponAssignments":2,"optionalWeaponCount":len(optional["acceptedWeapons"]),"optionalWeaponsRequired":False,"icebreaker":{"reserved":False,"runtimePublished":True,"optionalQuestCount":10,"coreQuestCountWhenAbsent":172,"totalQuestCountWhenPresent":182,"manifest":"icebreaker-runtime.json"},"quests":meta}
     (ROOT/"manifests/m8-campaign-expansion-runtime.json").write_text(json.dumps(manifest,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     first=qdir/"01-5d404ebd654de4efecef71d2.json"
     base=json.loads(first.read_text(encoding="utf-8"))

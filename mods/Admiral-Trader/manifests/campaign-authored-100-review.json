@@ -3294,7 +3294,7 @@
   "optionalExtensions": {
     "wttArmoryAndBackport": "eligible alternatives/rewards/unlocks after exact ID classification; never required",
     "packNStrap": "eligible equipment alternatives/rewards; never required",
-    "icebreaker": "reserved; no runtime IDs until installed and audited"
+    "icebreaker": "10-operation optional side chain materialized from verified 1.1.0 runtime IDs; never required by the 172-quest core"
   },
   "reviewDecisionRequiredBeforeRuntime": false
 }
