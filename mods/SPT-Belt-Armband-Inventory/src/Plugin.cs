@@ -31,6 +31,7 @@ namespace SPTBeltArmbandInventory
         HeadwearCompatibilityPatches headwearCompatibilityPatches;
         BeltContainersPanelProjectionPatches beltContainersPanelProjectionPatches;
         GridWindowSizingPatches gridWindowSizingPatches;
+        HeadBandItemIconPatches headBandItemIconPatches;
         LootPriorityPatches lootPatches;
         UnloadPriorityPatches unloadPatches;
         ScavBeltPatches scavPatches;
@@ -192,6 +193,14 @@ namespace SPTBeltArmbandInventory
             else
             {
                 GridWindowSizingRuntime.RequestFlush = EnsureDeferredRuntimePump;
+            }
+
+            headBandItemIconPatches = new HeadBandItemIconPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!headBandItemIconPatches.TryInstall())
+            {
+                headBandItemIconPatches.Dispose();
+                headBandItemIconPatches = null;
+                Logger.LogWarning("Utility HeadBand keeps its runtime model, but the owned inventory-card icon could not bind for this session.");
             }
 
             if (packNStrapDetected)
@@ -405,6 +414,8 @@ namespace SPTBeltArmbandInventory
             lootPatches = null;
             if (gridWindowSizingPatches != null) gridWindowSizingPatches.Dispose();
             gridWindowSizingPatches = null;
+            if (headBandItemIconPatches != null) headBandItemIconPatches.Dispose();
+            headBandItemIconPatches = null;
             if (beltContainersPanelProjectionPatches != null) beltContainersPanelProjectionPatches.Dispose();
             beltContainersPanelProjectionPatches = null;
             if (headwearCompatibilityPatches != null) headwearCompatibilityPatches.Dispose();

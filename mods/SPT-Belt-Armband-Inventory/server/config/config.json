@@ -1,0 +1,12 @@
+{
+  "ArmBandRoles": {
+    "Enabled": true,
+    "RaidVisualPool": "Standard",
+    "GridOrientation": "Vertical",
+    "Weights": { "Medical": 25, "Ammo": 25, "Magazine": 20, "Technical": 20, "Currency": 10 },
+    "EnabledRoles": [ "Medical", "Ammo", "Magazine", "Technical", "Currency" ],
+    "ProtectionTemplateAllowlist": []
+  },
+  "Wallet": { "PaymentPriority": [], "AutoDepositPriority": [] },
+  "EmbeddedGrids": { "Enabled": true }
+}

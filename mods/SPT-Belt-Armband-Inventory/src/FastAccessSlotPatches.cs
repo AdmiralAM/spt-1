@@ -412,6 +412,7 @@ namespace SPTBeltArmbandInventory
             {
                 string templateId = parent == null ? null : readTemplateId(parent);
                 if (string.Equals(templateId, RuntimeIdentity.DedicatedMagazineBeltItemId, StringComparison.Ordinal)
+                    || ArmBandVariantCatalog.HasRole(templateId, ArmBandRole.Magazine)
                     || (parent != null && importedBeltItemType != null && importedBeltItemType.IsInstanceOfType(parent))) return true;
             }
             return false;

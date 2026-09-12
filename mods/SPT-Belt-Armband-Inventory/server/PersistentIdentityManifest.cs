@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using SPTBeltArmbandInventory;
 
 namespace SPTBeltArmbandInventory.Server;
 
@@ -10,7 +12,7 @@ namespace SPTBeltArmbandInventory.Server;
 /// </summary>
 public static class PersistentIdentityManifest
 {
-    public static readonly string[] TemplateIds =
+    private static readonly string[] LegacyTemplateIds =
     [
         RuntimeIdentity.CandidateItemId,
         RuntimeIdentity.WristWalletItemId,
@@ -26,7 +28,7 @@ public static class PersistentIdentityManifest
         RuntimeIdentity.HeadBandItemParentId
     ];
 
-    public static readonly string[] GridIds =
+    private static readonly string[] LegacyGridIds =
     [
         RuntimeIdentity.CandidateGridId,
         RuntimeIdentity.WristWalletGridId,
@@ -56,6 +58,12 @@ public static class PersistentIdentityManifest
         RuntimeIdentity.DedicatedBeltSlotMongoId,
         RuntimeIdentity.DedicatedHeadBandSlotMongoId
     ];
+
+    public static readonly string[] TemplateIds =
+        LegacyTemplateIds.Concat(ArmBandVariantCatalog.All.Select(variant => variant.TemplateId)).ToArray();
+
+    public static readonly string[] GridIds =
+        LegacyGridIds.Concat(ArmBandVariantCatalog.All.Select(variant => variant.GridId)).ToArray();
 
     public static bool IsOwnedTemplate(string? templateId)
     {

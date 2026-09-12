@@ -1,3 +1,4 @@
+using System.Reflection;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Server.Core.DI;
@@ -6,6 +7,8 @@ using SPTarkov.Server.Core.Models.Eft.Common.Tables;
 using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Tables;
+using SPTarkov.Server.Core.Helpers.Server;
+using SPTarkov.Server.Core.Routers;
 using SPTarkov.Server.Core.Services.Modding.Custom;
 
 namespace SPTBeltArmbandInventory.Server;
@@ -14,6 +17,8 @@ namespace SPTBeltArmbandInventory.Server;
 public sealed class DedicatedWearableItems(
     TemplateTable templateTable,
     CustomItemService customItemService,
+    ModHelper modHelper,
+    ImageRouter imageRouter,
     ISptLogger<DedicatedWearableItems> logger) : IOnLoad
 {
     private static readonly MongoId SourceArmbandTpl = new("5b3f3af486f774679e752c1f");
@@ -56,11 +61,24 @@ public sealed class DedicatedWearableItems(
             45000);
 
         EnsureHeadBand(handbookItem.ParentId);
+        RegisterHeadBandIcon();
 
         logger.Success(companionMode
             ? "B&A&HB companion Utility HeadBand registered; legacy Magazine Belt template retained for profile safety without a B&A slot or offer."
             : "B&A&HB dedicated Magazine Belt and Utility HeadBand items registered; HeadBand uses native currency/wallet + cigarettes 1x1 grids.");
         return Task.CompletedTask;
+    }
+
+    private void RegisterHeadBandIcon()
+    {
+        string modPath = modHelper.GetAbsolutePathToModFolder(Assembly.GetExecutingAssembly());
+        string iconPath = System.IO.Path.Combine(modPath, "assets", "icons", $"{RuntimeIdentity.EmergencyHeadBandItemId}.png");
+        if (!File.Exists(iconPath))
+            throw new FileNotFoundException("B&A&HB Utility HeadBand inventory icon is missing.", iconPath);
+
+        // ImageRouter keys omit the extension; the client requests the PNG at
+        // /files/handbook/<template-id>.png.
+        imageRouter.AddRoute($"/files/handbook/{RuntimeIdentity.EmergencyHeadBandItemId}", iconPath);
     }
 
     private void EnsureHeadBand(MongoId handbookParent)
@@ -100,6 +118,11 @@ public sealed class DedicatedWearableItems(
             {
                 BackgroundColor = "blue",
                 ExaminedByDefault = true,
+                Prefab = new Prefab
+                {
+                    Path = "HeadBand/headband_rambo_red.bundle",
+                    Rcid = string.Empty
+                },
                 Grids =
                 [
                     CreateGrid(

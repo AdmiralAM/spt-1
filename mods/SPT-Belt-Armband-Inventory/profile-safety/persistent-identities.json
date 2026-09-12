@@ -1,13 +1,143 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "workstream": "B&A&HB #2 MOD SPT",
-  "targetSpt": "4.1.3",
+  "targetSpt": "~4.1.0",
   "templateIds": [
     "68ac00000000000000000001",
     "68ac00000000000000000006",
     "68ac0000000000000000000c",
     "68ac0000000000000000000f",
-    "68ac00000000000000000013"
+    "68ac00000000000000000013",
+    "68ad00000000000000000001",
+    "68ad00000000000000000002",
+    "68ad00000000000000000003",
+    "68ad00000000000000000004",
+    "68ad00000000000000000005",
+    "68ad00000000000000000006",
+    "68ad00000000000000000007",
+    "68ad00000000000000000008",
+    "68ad00000000000000000009",
+    "68ad0000000000000000000a",
+    "68ad0000000000000000000b",
+    "68ad0000000000000000000c",
+    "68ad0000000000000000000d",
+    "68ad0000000000000000000e",
+    "68ad0000000000000000000f",
+    "68ad00000000000000000010",
+    "68ad00000000000000000011",
+    "68ad00000000000000000012",
+    "68ad00000000000000000013",
+    "68ad00000000000000000014",
+    "68ad00000000000000000015",
+    "68ad00000000000000000016",
+    "68ad00000000000000000017",
+    "68ad00000000000000000018",
+    "68ad00000000000000000019",
+    "68ad0000000000000000001a",
+    "68ad0000000000000000001b",
+    "68ad0000000000000000001c",
+    "68ad0000000000000000001d",
+    "68ad0000000000000000001e",
+    "68ad0000000000000000001f",
+    "68ad00000000000000000020",
+    "68ad00000000000000000021",
+    "68ad00000000000000000022",
+    "68ad00000000000000000023",
+    "68ad00000000000000000024",
+    "68ad00000000000000000025",
+    "68ad00000000000000000026",
+    "68ad00000000000000000027",
+    "68ad00000000000000000028",
+    "68ad00000000000000000029",
+    "68ad0000000000000000002a",
+    "68ad0000000000000000002b",
+    "68ad0000000000000000002c",
+    "68ad0000000000000000002d",
+    "68ad0000000000000000002e",
+    "68ad0000000000000000002f",
+    "68ad00000000000000000030",
+    "68ad00000000000000000031",
+    "68ad00000000000000000032",
+    "68ad00000000000000000033",
+    "68ad00000000000000000034",
+    "68ad00000000000000000035",
+    "68ad00000000000000000036",
+    "68ad00000000000000000037",
+    "68ad00000000000000000038",
+    "68ad00000000000000000039",
+    "68ad0000000000000000003a",
+    "68ad0000000000000000003b",
+    "68ad0000000000000000003c",
+    "68ad0000000000000000003d",
+    "68ad0000000000000000003e",
+    "68ad0000000000000000003f",
+    "68ad00000000000000000040",
+    "68ad00000000000000000041",
+    "68ad00000000000000000042",
+    "68ad00000000000000000043",
+    "68ad00000000000000000044",
+    "68ad00000000000000000045",
+    "68ad00000000000000000046",
+    "68ad00000000000000000047",
+    "68ad00000000000000000048",
+    "68ad00000000000000000049",
+    "68ad0000000000000000004a",
+    "68ad0000000000000000004b",
+    "68ad0000000000000000004c",
+    "68ad0000000000000000004d",
+    "68ad0000000000000000004e",
+    "68ad0000000000000000004f",
+    "68ad00000000000000000050",
+    "68ad00000000000000000051",
+    "68ad00000000000000000052",
+    "68ad00000000000000000053",
+    "68ad00000000000000000054",
+    "68ad00000000000000000055",
+    "68ad00000000000000000056",
+    "68ad00000000000000000057",
+    "68ad00000000000000000058",
+    "68ad00000000000000000059",
+    "68ad0000000000000000005a",
+    "68ad0000000000000000005b",
+    "68ad0000000000000000005c",
+    "68ad0000000000000000005d",
+    "68ad0000000000000000005e",
+    "68ad0000000000000000005f",
+    "68ad00000000000000000060",
+    "68ad00000000000000000061",
+    "68ad00000000000000000062",
+    "68ad00000000000000000063",
+    "68ad00000000000000000064",
+    "68ad00000000000000000065",
+    "68ad00000000000000000066",
+    "68ad00000000000000000067",
+    "68ad00000000000000000068",
+    "68ad00000000000000000069",
+    "68ad0000000000000000006a",
+    "68ad0000000000000000006b",
+    "68ad0000000000000000006c",
+    "68ad0000000000000000006d",
+    "68ad0000000000000000006e",
+    "68ad0000000000000000006f",
+    "68ad00000000000000000070",
+    "68ad00000000000000000071",
+    "68ad00000000000000000072",
+    "68ad00000000000000000073",
+    "68ad00000000000000000074",
+    "68ad00000000000000000075",
+    "68ad00000000000000000076",
+    "68ad00000000000000000077",
+    "68ad00000000000000000078",
+    "68ad00000000000000000079",
+    "68ad0000000000000000007a",
+    "68ad0000000000000000007b",
+    "68ad0000000000000000007c",
+    "68ad0000000000000000007d",
+    "68ad0000000000000000007e",
+    "68ad0000000000000000007f",
+    "68ad00000000000000000080",
+    "68ad00000000000000000081",
+    "68ad00000000000000000082"
   ],
   "parentIds": [
     "68ac00000000000000000004",
@@ -32,7 +162,137 @@
     "68ac0000000000000000000d",
     "68ac00000000000000000010",
     "68ac00000000000000000012",
-    "68ac00000000000000000014"
+    "68ac00000000000000000014",
+    "68ae00000000000000000001",
+    "68ae00000000000000000002",
+    "68ae00000000000000000003",
+    "68ae00000000000000000004",
+    "68ae00000000000000000005",
+    "68ae00000000000000000006",
+    "68ae00000000000000000007",
+    "68ae00000000000000000008",
+    "68ae00000000000000000009",
+    "68ae0000000000000000000a",
+    "68ae0000000000000000000b",
+    "68ae0000000000000000000c",
+    "68ae0000000000000000000d",
+    "68ae0000000000000000000e",
+    "68ae0000000000000000000f",
+    "68ae00000000000000000010",
+    "68ae00000000000000000011",
+    "68ae00000000000000000012",
+    "68ae00000000000000000013",
+    "68ae00000000000000000014",
+    "68ae00000000000000000015",
+    "68ae00000000000000000016",
+    "68ae00000000000000000017",
+    "68ae00000000000000000018",
+    "68ae00000000000000000019",
+    "68ae0000000000000000001a",
+    "68ae0000000000000000001b",
+    "68ae0000000000000000001c",
+    "68ae0000000000000000001d",
+    "68ae0000000000000000001e",
+    "68ae0000000000000000001f",
+    "68ae00000000000000000020",
+    "68ae00000000000000000021",
+    "68ae00000000000000000022",
+    "68ae00000000000000000023",
+    "68ae00000000000000000024",
+    "68ae00000000000000000025",
+    "68ae00000000000000000026",
+    "68ae00000000000000000027",
+    "68ae00000000000000000028",
+    "68ae00000000000000000029",
+    "68ae0000000000000000002a",
+    "68ae0000000000000000002b",
+    "68ae0000000000000000002c",
+    "68ae0000000000000000002d",
+    "68ae0000000000000000002e",
+    "68ae0000000000000000002f",
+    "68ae00000000000000000030",
+    "68ae00000000000000000031",
+    "68ae00000000000000000032",
+    "68ae00000000000000000033",
+    "68ae00000000000000000034",
+    "68ae00000000000000000035",
+    "68ae00000000000000000036",
+    "68ae00000000000000000037",
+    "68ae00000000000000000038",
+    "68ae00000000000000000039",
+    "68ae0000000000000000003a",
+    "68ae0000000000000000003b",
+    "68ae0000000000000000003c",
+    "68ae0000000000000000003d",
+    "68ae0000000000000000003e",
+    "68ae0000000000000000003f",
+    "68ae00000000000000000040",
+    "68ae00000000000000000041",
+    "68ae00000000000000000042",
+    "68ae00000000000000000043",
+    "68ae00000000000000000044",
+    "68ae00000000000000000045",
+    "68ae00000000000000000046",
+    "68ae00000000000000000047",
+    "68ae00000000000000000048",
+    "68ae00000000000000000049",
+    "68ae0000000000000000004a",
+    "68ae0000000000000000004b",
+    "68ae0000000000000000004c",
+    "68ae0000000000000000004d",
+    "68ae0000000000000000004e",
+    "68ae0000000000000000004f",
+    "68ae00000000000000000050",
+    "68ae00000000000000000051",
+    "68ae00000000000000000052",
+    "68ae00000000000000000053",
+    "68ae00000000000000000054",
+    "68ae00000000000000000055",
+    "68ae00000000000000000056",
+    "68ae00000000000000000057",
+    "68ae00000000000000000058",
+    "68ae00000000000000000059",
+    "68ae0000000000000000005a",
+    "68ae0000000000000000005b",
+    "68ae0000000000000000005c",
+    "68ae0000000000000000005d",
+    "68ae0000000000000000005e",
+    "68ae0000000000000000005f",
+    "68ae00000000000000000060",
+    "68ae00000000000000000061",
+    "68ae00000000000000000062",
+    "68ae00000000000000000063",
+    "68ae00000000000000000064",
+    "68ae00000000000000000065",
+    "68ae00000000000000000066",
+    "68ae00000000000000000067",
+    "68ae00000000000000000068",
+    "68ae00000000000000000069",
+    "68ae0000000000000000006a",
+    "68ae0000000000000000006b",
+    "68ae0000000000000000006c",
+    "68ae0000000000000000006d",
+    "68ae0000000000000000006e",
+    "68ae0000000000000000006f",
+    "68ae00000000000000000070",
+    "68ae00000000000000000071",
+    "68ae00000000000000000072",
+    "68ae00000000000000000073",
+    "68ae00000000000000000074",
+    "68ae00000000000000000075",
+    "68ae00000000000000000076",
+    "68ae00000000000000000077",
+    "68ae00000000000000000078",
+    "68ae00000000000000000079",
+    "68ae0000000000000000007a",
+    "68ae0000000000000000007b",
+    "68ae0000000000000000007c",
+    "68ae0000000000000000007d",
+    "68ae0000000000000000007e",
+    "68ae0000000000000000007f",
+    "68ae00000000000000000080",
+    "68ae00000000000000000081",
+    "68ae00000000000000000082"
   ],
   "assortIds": [
     "68ac00000000000000000003",
@@ -40,5 +300,1047 @@
     "68ac0000000000000000000e",
     "68ac00000000000000000011",
     "68ac00000000000000000015"
+  ],
+  "armBandVariants": [
+    {
+      "sourceTemplateId": "5b3f16c486f7747c327f55f7",
+      "visualKey": "White",
+      "visualPool": "Standard",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000001",
+      "gridId": "68ae00000000000000000001"
+    },
+    {
+      "sourceTemplateId": "5b3f16c486f7747c327f55f7",
+      "visualKey": "White",
+      "visualPool": "Standard",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000002",
+      "gridId": "68ae00000000000000000002"
+    },
+    {
+      "sourceTemplateId": "5b3f16c486f7747c327f55f7",
+      "visualKey": "White",
+      "visualPool": "Standard",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000003",
+      "gridId": "68ae00000000000000000003"
+    },
+    {
+      "sourceTemplateId": "5b3f16c486f7747c327f55f7",
+      "visualKey": "White",
+      "visualPool": "Standard",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000004",
+      "gridId": "68ae00000000000000000004"
+    },
+    {
+      "sourceTemplateId": "5b3f16c486f7747c327f55f7",
+      "visualKey": "White",
+      "visualPool": "Standard",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000005",
+      "gridId": "68ae00000000000000000005"
+    },
+    {
+      "sourceTemplateId": "5b3f3ade86f7746b6b790d8e",
+      "visualKey": "Red",
+      "visualPool": "Standard",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000006",
+      "gridId": "68ae00000000000000000006"
+    },
+    {
+      "sourceTemplateId": "5b3f3ade86f7746b6b790d8e",
+      "visualKey": "Red",
+      "visualPool": "Standard",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000007",
+      "gridId": "68ae00000000000000000007"
+    },
+    {
+      "sourceTemplateId": "5b3f3ade86f7746b6b790d8e",
+      "visualKey": "Red",
+      "visualPool": "Standard",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000008",
+      "gridId": "68ae00000000000000000008"
+    },
+    {
+      "sourceTemplateId": "5b3f3ade86f7746b6b790d8e",
+      "visualKey": "Red",
+      "visualPool": "Standard",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000009",
+      "gridId": "68ae00000000000000000009"
+    },
+    {
+      "sourceTemplateId": "5b3f3ade86f7746b6b790d8e",
+      "visualKey": "Red",
+      "visualPool": "Standard",
+      "role": "Currency",
+      "templateId": "68ad0000000000000000000a",
+      "gridId": "68ae0000000000000000000a"
+    },
+    {
+      "sourceTemplateId": "5b3f3af486f774679e752c1f",
+      "visualKey": "Blue",
+      "visualPool": "Standard",
+      "role": "Medical",
+      "templateId": "68ad0000000000000000000b",
+      "gridId": "68ae0000000000000000000b"
+    },
+    {
+      "sourceTemplateId": "5b3f3af486f774679e752c1f",
+      "visualKey": "Blue",
+      "visualPool": "Standard",
+      "role": "Ammo",
+      "templateId": "68ad0000000000000000000c",
+      "gridId": "68ae0000000000000000000c"
+    },
+    {
+      "sourceTemplateId": "5b3f3af486f774679e752c1f",
+      "visualKey": "Blue",
+      "visualPool": "Standard",
+      "role": "Magazine",
+      "templateId": "68ad0000000000000000000d",
+      "gridId": "68ae0000000000000000000d"
+    },
+    {
+      "sourceTemplateId": "5b3f3af486f774679e752c1f",
+      "visualKey": "Blue",
+      "visualPool": "Standard",
+      "role": "Technical",
+      "templateId": "68ad0000000000000000000e",
+      "gridId": "68ae0000000000000000000e"
+    },
+    {
+      "sourceTemplateId": "5b3f3af486f774679e752c1f",
+      "visualKey": "Blue",
+      "visualPool": "Standard",
+      "role": "Currency",
+      "templateId": "68ad0000000000000000000f",
+      "gridId": "68ae0000000000000000000f"
+    },
+    {
+      "sourceTemplateId": "5b3f3b0186f774021a2afef7",
+      "visualKey": "Green",
+      "visualPool": "Standard",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000010",
+      "gridId": "68ae00000000000000000010"
+    },
+    {
+      "sourceTemplateId": "5b3f3b0186f774021a2afef7",
+      "visualKey": "Green",
+      "visualPool": "Standard",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000011",
+      "gridId": "68ae00000000000000000011"
+    },
+    {
+      "sourceTemplateId": "5b3f3b0186f774021a2afef7",
+      "visualKey": "Green",
+      "visualPool": "Standard",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000012",
+      "gridId": "68ae00000000000000000012"
+    },
+    {
+      "sourceTemplateId": "5b3f3b0186f774021a2afef7",
+      "visualKey": "Green",
+      "visualPool": "Standard",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000013",
+      "gridId": "68ae00000000000000000013"
+    },
+    {
+      "sourceTemplateId": "5b3f3b0186f774021a2afef7",
+      "visualKey": "Green",
+      "visualPool": "Standard",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000014",
+      "gridId": "68ae00000000000000000014"
+    },
+    {
+      "sourceTemplateId": "5b3f3b0e86f7746752107cda",
+      "visualKey": "Yellow",
+      "visualPool": "Standard",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000015",
+      "gridId": "68ae00000000000000000015"
+    },
+    {
+      "sourceTemplateId": "5b3f3b0e86f7746752107cda",
+      "visualKey": "Yellow",
+      "visualPool": "Standard",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000016",
+      "gridId": "68ae00000000000000000016"
+    },
+    {
+      "sourceTemplateId": "5b3f3b0e86f7746752107cda",
+      "visualKey": "Yellow",
+      "visualPool": "Standard",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000017",
+      "gridId": "68ae00000000000000000017"
+    },
+    {
+      "sourceTemplateId": "5b3f3b0e86f7746752107cda",
+      "visualKey": "Yellow",
+      "visualPool": "Standard",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000018",
+      "gridId": "68ae00000000000000000018"
+    },
+    {
+      "sourceTemplateId": "5b3f3b0e86f7746752107cda",
+      "visualKey": "Yellow",
+      "visualPool": "Standard",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000019",
+      "gridId": "68ae00000000000000000019"
+    },
+    {
+      "sourceTemplateId": "5f9949d869e2777a0e779ba5",
+      "visualKey": "Rivals2020",
+      "visualPool": "ExistingRaid",
+      "role": "Medical",
+      "templateId": "68ad0000000000000000001a",
+      "gridId": "68ae0000000000000000001a"
+    },
+    {
+      "sourceTemplateId": "5f9949d869e2777a0e779ba5",
+      "visualKey": "Rivals2020",
+      "visualPool": "ExistingRaid",
+      "role": "Ammo",
+      "templateId": "68ad0000000000000000001b",
+      "gridId": "68ae0000000000000000001b"
+    },
+    {
+      "sourceTemplateId": "5f9949d869e2777a0e779ba5",
+      "visualKey": "Rivals2020",
+      "visualPool": "ExistingRaid",
+      "role": "Magazine",
+      "templateId": "68ad0000000000000000001c",
+      "gridId": "68ae0000000000000000001c"
+    },
+    {
+      "sourceTemplateId": "5f9949d869e2777a0e779ba5",
+      "visualKey": "Rivals2020",
+      "visualPool": "ExistingRaid",
+      "role": "Technical",
+      "templateId": "68ad0000000000000000001d",
+      "gridId": "68ae0000000000000000001d"
+    },
+    {
+      "sourceTemplateId": "5f9949d869e2777a0e779ba5",
+      "visualKey": "Rivals2020",
+      "visualPool": "ExistingRaid",
+      "role": "Currency",
+      "templateId": "68ad0000000000000000001e",
+      "gridId": "68ae0000000000000000001e"
+    },
+    {
+      "sourceTemplateId": "60b0f988c4449e4cb624c1da",
+      "visualKey": "Evasion",
+      "visualPool": "ExistingRaid",
+      "role": "Medical",
+      "templateId": "68ad0000000000000000001f",
+      "gridId": "68ae0000000000000000001f"
+    },
+    {
+      "sourceTemplateId": "60b0f988c4449e4cb624c1da",
+      "visualKey": "Evasion",
+      "visualPool": "ExistingRaid",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000020",
+      "gridId": "68ae00000000000000000020"
+    },
+    {
+      "sourceTemplateId": "60b0f988c4449e4cb624c1da",
+      "visualKey": "Evasion",
+      "visualPool": "ExistingRaid",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000021",
+      "gridId": "68ae00000000000000000021"
+    },
+    {
+      "sourceTemplateId": "60b0f988c4449e4cb624c1da",
+      "visualKey": "Evasion",
+      "visualPool": "ExistingRaid",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000022",
+      "gridId": "68ae00000000000000000022"
+    },
+    {
+      "sourceTemplateId": "60b0f988c4449e4cb624c1da",
+      "visualKey": "Evasion",
+      "visualPool": "ExistingRaid",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000023",
+      "gridId": "68ae00000000000000000023"
+    },
+    {
+      "sourceTemplateId": "619bc61e86e01e16f839a999",
+      "visualKey": "Alpha",
+      "visualPool": "All",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000024",
+      "gridId": "68ae00000000000000000024"
+    },
+    {
+      "sourceTemplateId": "619bc61e86e01e16f839a999",
+      "visualKey": "Alpha",
+      "visualPool": "All",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000025",
+      "gridId": "68ae00000000000000000025"
+    },
+    {
+      "sourceTemplateId": "619bc61e86e01e16f839a999",
+      "visualKey": "Alpha",
+      "visualPool": "All",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000026",
+      "gridId": "68ae00000000000000000026"
+    },
+    {
+      "sourceTemplateId": "619bc61e86e01e16f839a999",
+      "visualKey": "Alpha",
+      "visualPool": "All",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000027",
+      "gridId": "68ae00000000000000000027"
+    },
+    {
+      "sourceTemplateId": "619bc61e86e01e16f839a999",
+      "visualKey": "Alpha",
+      "visualPool": "All",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000028",
+      "gridId": "68ae00000000000000000028"
+    },
+    {
+      "sourceTemplateId": "619bdd8886e01e16f839a99c",
+      "visualKey": "BEAR",
+      "visualPool": "ExistingRaid",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000029",
+      "gridId": "68ae00000000000000000029"
+    },
+    {
+      "sourceTemplateId": "619bdd8886e01e16f839a99c",
+      "visualKey": "BEAR",
+      "visualPool": "ExistingRaid",
+      "role": "Ammo",
+      "templateId": "68ad0000000000000000002a",
+      "gridId": "68ae0000000000000000002a"
+    },
+    {
+      "sourceTemplateId": "619bdd8886e01e16f839a99c",
+      "visualKey": "BEAR",
+      "visualPool": "ExistingRaid",
+      "role": "Magazine",
+      "templateId": "68ad0000000000000000002b",
+      "gridId": "68ae0000000000000000002b"
+    },
+    {
+      "sourceTemplateId": "619bdd8886e01e16f839a99c",
+      "visualKey": "BEAR",
+      "visualPool": "ExistingRaid",
+      "role": "Technical",
+      "templateId": "68ad0000000000000000002c",
+      "gridId": "68ae0000000000000000002c"
+    },
+    {
+      "sourceTemplateId": "619bdd8886e01e16f839a99c",
+      "visualKey": "BEAR",
+      "visualPool": "ExistingRaid",
+      "role": "Currency",
+      "templateId": "68ad0000000000000000002d",
+      "gridId": "68ae0000000000000000002d"
+    },
+    {
+      "sourceTemplateId": "619bddc6c9546643a67df6ee",
+      "visualKey": "DEADSKUL",
+      "visualPool": "Standard",
+      "role": "Medical",
+      "templateId": "68ad0000000000000000002e",
+      "gridId": "68ae0000000000000000002e"
+    },
+    {
+      "sourceTemplateId": "619bddc6c9546643a67df6ee",
+      "visualKey": "DEADSKUL",
+      "visualPool": "Standard",
+      "role": "Ammo",
+      "templateId": "68ad0000000000000000002f",
+      "gridId": "68ae0000000000000000002f"
+    },
+    {
+      "sourceTemplateId": "619bddc6c9546643a67df6ee",
+      "visualKey": "DEADSKUL",
+      "visualPool": "Standard",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000030",
+      "gridId": "68ae00000000000000000030"
+    },
+    {
+      "sourceTemplateId": "619bddc6c9546643a67df6ee",
+      "visualKey": "DEADSKUL",
+      "visualPool": "Standard",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000031",
+      "gridId": "68ae00000000000000000031"
+    },
+    {
+      "sourceTemplateId": "619bddc6c9546643a67df6ee",
+      "visualKey": "DEADSKUL",
+      "visualPool": "Standard",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000032",
+      "gridId": "68ae00000000000000000032"
+    },
+    {
+      "sourceTemplateId": "619bddffc9546643a67df6f0",
+      "visualKey": "TrainHard",
+      "visualPool": "Standard",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000033",
+      "gridId": "68ae00000000000000000033"
+    },
+    {
+      "sourceTemplateId": "619bddffc9546643a67df6f0",
+      "visualKey": "TrainHard",
+      "visualPool": "Standard",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000034",
+      "gridId": "68ae00000000000000000034"
+    },
+    {
+      "sourceTemplateId": "619bddffc9546643a67df6f0",
+      "visualKey": "TrainHard",
+      "visualPool": "Standard",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000035",
+      "gridId": "68ae00000000000000000035"
+    },
+    {
+      "sourceTemplateId": "619bddffc9546643a67df6f0",
+      "visualKey": "TrainHard",
+      "visualPool": "Standard",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000036",
+      "gridId": "68ae00000000000000000036"
+    },
+    {
+      "sourceTemplateId": "619bddffc9546643a67df6f0",
+      "visualKey": "TrainHard",
+      "visualPool": "Standard",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000037",
+      "gridId": "68ae00000000000000000037"
+    },
+    {
+      "sourceTemplateId": "619bde3dc9546643a67df6f2",
+      "visualKey": "KibaArms",
+      "visualPool": "Standard",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000038",
+      "gridId": "68ae00000000000000000038"
+    },
+    {
+      "sourceTemplateId": "619bde3dc9546643a67df6f2",
+      "visualKey": "KibaArms",
+      "visualPool": "Standard",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000039",
+      "gridId": "68ae00000000000000000039"
+    },
+    {
+      "sourceTemplateId": "619bde3dc9546643a67df6f2",
+      "visualKey": "KibaArms",
+      "visualPool": "Standard",
+      "role": "Magazine",
+      "templateId": "68ad0000000000000000003a",
+      "gridId": "68ae0000000000000000003a"
+    },
+    {
+      "sourceTemplateId": "619bde3dc9546643a67df6f2",
+      "visualKey": "KibaArms",
+      "visualPool": "Standard",
+      "role": "Technical",
+      "templateId": "68ad0000000000000000003b",
+      "gridId": "68ae0000000000000000003b"
+    },
+    {
+      "sourceTemplateId": "619bde3dc9546643a67df6f2",
+      "visualKey": "KibaArms",
+      "visualPool": "Standard",
+      "role": "Currency",
+      "templateId": "68ad0000000000000000003c",
+      "gridId": "68ae0000000000000000003c"
+    },
+    {
+      "sourceTemplateId": "619bde7fc9546643a67df6f4",
+      "visualKey": "Labs",
+      "visualPool": "ExistingRaid",
+      "role": "Medical",
+      "templateId": "68ad0000000000000000003d",
+      "gridId": "68ae0000000000000000003d"
+    },
+    {
+      "sourceTemplateId": "619bde7fc9546643a67df6f4",
+      "visualKey": "Labs",
+      "visualPool": "ExistingRaid",
+      "role": "Ammo",
+      "templateId": "68ad0000000000000000003e",
+      "gridId": "68ae0000000000000000003e"
+    },
+    {
+      "sourceTemplateId": "619bde7fc9546643a67df6f4",
+      "visualKey": "Labs",
+      "visualPool": "ExistingRaid",
+      "role": "Magazine",
+      "templateId": "68ad0000000000000000003f",
+      "gridId": "68ae0000000000000000003f"
+    },
+    {
+      "sourceTemplateId": "619bde7fc9546643a67df6f4",
+      "visualKey": "Labs",
+      "visualPool": "ExistingRaid",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000040",
+      "gridId": "68ae00000000000000000040"
+    },
+    {
+      "sourceTemplateId": "619bde7fc9546643a67df6f4",
+      "visualKey": "Labs",
+      "visualPool": "ExistingRaid",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000041",
+      "gridId": "68ae00000000000000000041"
+    },
+    {
+      "sourceTemplateId": "619bdeb986e01e16f839a99e",
+      "visualKey": "RFARMY",
+      "visualPool": "Standard",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000042",
+      "gridId": "68ae00000000000000000042"
+    },
+    {
+      "sourceTemplateId": "619bdeb986e01e16f839a99e",
+      "visualKey": "RFARMY",
+      "visualPool": "Standard",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000043",
+      "gridId": "68ae00000000000000000043"
+    },
+    {
+      "sourceTemplateId": "619bdeb986e01e16f839a99e",
+      "visualKey": "RFARMY",
+      "visualPool": "Standard",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000044",
+      "gridId": "68ae00000000000000000044"
+    },
+    {
+      "sourceTemplateId": "619bdeb986e01e16f839a99e",
+      "visualKey": "RFARMY",
+      "visualPool": "Standard",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000045",
+      "gridId": "68ae00000000000000000045"
+    },
+    {
+      "sourceTemplateId": "619bdeb986e01e16f839a99e",
+      "visualKey": "RFARMY",
+      "visualPool": "Standard",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000046",
+      "gridId": "68ae00000000000000000046"
+    },
+    {
+      "sourceTemplateId": "619bdef8c9546643a67df6f6",
+      "visualKey": "TerraGroup",
+      "visualPool": "ExistingRaid",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000047",
+      "gridId": "68ae00000000000000000047"
+    },
+    {
+      "sourceTemplateId": "619bdef8c9546643a67df6f6",
+      "visualKey": "TerraGroup",
+      "visualPool": "ExistingRaid",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000048",
+      "gridId": "68ae00000000000000000048"
+    },
+    {
+      "sourceTemplateId": "619bdef8c9546643a67df6f6",
+      "visualKey": "TerraGroup",
+      "visualPool": "ExistingRaid",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000049",
+      "gridId": "68ae00000000000000000049"
+    },
+    {
+      "sourceTemplateId": "619bdef8c9546643a67df6f6",
+      "visualKey": "TerraGroup",
+      "visualPool": "ExistingRaid",
+      "role": "Technical",
+      "templateId": "68ad0000000000000000004a",
+      "gridId": "68ae0000000000000000004a"
+    },
+    {
+      "sourceTemplateId": "619bdef8c9546643a67df6f6",
+      "visualKey": "TerraGroup",
+      "visualPool": "ExistingRaid",
+      "role": "Currency",
+      "templateId": "68ad0000000000000000004b",
+      "gridId": "68ae0000000000000000004b"
+    },
+    {
+      "sourceTemplateId": "619bdf9cc9546643a67df6f8",
+      "visualKey": "UNTAR",
+      "visualPool": "Standard",
+      "role": "Medical",
+      "templateId": "68ad0000000000000000004c",
+      "gridId": "68ae0000000000000000004c"
+    },
+    {
+      "sourceTemplateId": "619bdf9cc9546643a67df6f8",
+      "visualKey": "UNTAR",
+      "visualPool": "Standard",
+      "role": "Ammo",
+      "templateId": "68ad0000000000000000004d",
+      "gridId": "68ae0000000000000000004d"
+    },
+    {
+      "sourceTemplateId": "619bdf9cc9546643a67df6f8",
+      "visualKey": "UNTAR",
+      "visualPool": "Standard",
+      "role": "Magazine",
+      "templateId": "68ad0000000000000000004e",
+      "gridId": "68ae0000000000000000004e"
+    },
+    {
+      "sourceTemplateId": "619bdf9cc9546643a67df6f8",
+      "visualKey": "UNTAR",
+      "visualPool": "Standard",
+      "role": "Technical",
+      "templateId": "68ad0000000000000000004f",
+      "gridId": "68ae0000000000000000004f"
+    },
+    {
+      "sourceTemplateId": "619bdf9cc9546643a67df6f8",
+      "visualKey": "UNTAR",
+      "visualPool": "Standard",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000050",
+      "gridId": "68ae00000000000000000050"
+    },
+    {
+      "sourceTemplateId": "619bdfd4c9546643a67df6fa",
+      "visualKey": "USEC",
+      "visualPool": "ExistingRaid",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000051",
+      "gridId": "68ae00000000000000000051"
+    },
+    {
+      "sourceTemplateId": "619bdfd4c9546643a67df6fa",
+      "visualKey": "USEC",
+      "visualPool": "ExistingRaid",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000052",
+      "gridId": "68ae00000000000000000052"
+    },
+    {
+      "sourceTemplateId": "619bdfd4c9546643a67df6fa",
+      "visualKey": "USEC",
+      "visualPool": "ExistingRaid",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000053",
+      "gridId": "68ae00000000000000000053"
+    },
+    {
+      "sourceTemplateId": "619bdfd4c9546643a67df6fa",
+      "visualKey": "USEC",
+      "visualPool": "ExistingRaid",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000054",
+      "gridId": "68ae00000000000000000054"
+    },
+    {
+      "sourceTemplateId": "619bdfd4c9546643a67df6fa",
+      "visualKey": "USEC",
+      "visualPool": "ExistingRaid",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000055",
+      "gridId": "68ae00000000000000000055"
+    },
+    {
+      "sourceTemplateId": "660312cc4d6cdfa6f500c703",
+      "visualKey": "TheUnheard",
+      "visualPool": "All",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000056",
+      "gridId": "68ae00000000000000000056"
+    },
+    {
+      "sourceTemplateId": "660312cc4d6cdfa6f500c703",
+      "visualKey": "TheUnheard",
+      "visualPool": "All",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000057",
+      "gridId": "68ae00000000000000000057"
+    },
+    {
+      "sourceTemplateId": "660312cc4d6cdfa6f500c703",
+      "visualKey": "TheUnheard",
+      "visualPool": "All",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000058",
+      "gridId": "68ae00000000000000000058"
+    },
+    {
+      "sourceTemplateId": "660312cc4d6cdfa6f500c703",
+      "visualKey": "TheUnheard",
+      "visualPool": "All",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000059",
+      "gridId": "68ae00000000000000000059"
+    },
+    {
+      "sourceTemplateId": "660312cc4d6cdfa6f500c703",
+      "visualKey": "TheUnheard",
+      "visualPool": "All",
+      "role": "Currency",
+      "templateId": "68ad0000000000000000005a",
+      "gridId": "68ae0000000000000000005a"
+    },
+    {
+      "sourceTemplateId": "664a5480bfcc521bad3192ca",
+      "visualKey": "ARENA",
+      "visualPool": "All",
+      "role": "Medical",
+      "templateId": "68ad0000000000000000005b",
+      "gridId": "68ae0000000000000000005b"
+    },
+    {
+      "sourceTemplateId": "664a5480bfcc521bad3192ca",
+      "visualKey": "ARENA",
+      "visualPool": "All",
+      "role": "Ammo",
+      "templateId": "68ad0000000000000000005c",
+      "gridId": "68ae0000000000000000005c"
+    },
+    {
+      "sourceTemplateId": "664a5480bfcc521bad3192ca",
+      "visualKey": "ARENA",
+      "visualPool": "All",
+      "role": "Magazine",
+      "templateId": "68ad0000000000000000005d",
+      "gridId": "68ae0000000000000000005d"
+    },
+    {
+      "sourceTemplateId": "664a5480bfcc521bad3192ca",
+      "visualKey": "ARENA",
+      "visualPool": "All",
+      "role": "Technical",
+      "templateId": "68ad0000000000000000005e",
+      "gridId": "68ae0000000000000000005e"
+    },
+    {
+      "sourceTemplateId": "664a5480bfcc521bad3192ca",
+      "visualKey": "ARENA",
+      "visualPool": "All",
+      "role": "Currency",
+      "templateId": "68ad0000000000000000005f",
+      "gridId": "68ae0000000000000000005f"
+    },
+    {
+      "sourceTemplateId": "67614b3ab8c060ebb204b106",
+      "visualKey": "Khorovod",
+      "visualPool": "All",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000060",
+      "gridId": "68ae00000000000000000060"
+    },
+    {
+      "sourceTemplateId": "67614b3ab8c060ebb204b106",
+      "visualKey": "Khorovod",
+      "visualPool": "All",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000061",
+      "gridId": "68ae00000000000000000061"
+    },
+    {
+      "sourceTemplateId": "67614b3ab8c060ebb204b106",
+      "visualKey": "Khorovod",
+      "visualPool": "All",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000062",
+      "gridId": "68ae00000000000000000062"
+    },
+    {
+      "sourceTemplateId": "67614b3ab8c060ebb204b106",
+      "visualKey": "Khorovod",
+      "visualPool": "All",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000063",
+      "gridId": "68ae00000000000000000063"
+    },
+    {
+      "sourceTemplateId": "67614b3ab8c060ebb204b106",
+      "visualKey": "Khorovod",
+      "visualPool": "All",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000064",
+      "gridId": "68ae00000000000000000064"
+    },
+    {
+      "sourceTemplateId": "67614b542eb91250020f2b86",
+      "visualKey": "Prestige1",
+      "visualPool": "All",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000065",
+      "gridId": "68ae00000000000000000065"
+    },
+    {
+      "sourceTemplateId": "67614b542eb91250020f2b86",
+      "visualKey": "Prestige1",
+      "visualPool": "All",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000066",
+      "gridId": "68ae00000000000000000066"
+    },
+    {
+      "sourceTemplateId": "67614b542eb91250020f2b86",
+      "visualKey": "Prestige1",
+      "visualPool": "All",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000067",
+      "gridId": "68ae00000000000000000067"
+    },
+    {
+      "sourceTemplateId": "67614b542eb91250020f2b86",
+      "visualKey": "Prestige1",
+      "visualPool": "All",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000068",
+      "gridId": "68ae00000000000000000068"
+    },
+    {
+      "sourceTemplateId": "67614b542eb91250020f2b86",
+      "visualKey": "Prestige1",
+      "visualPool": "All",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000069",
+      "gridId": "68ae00000000000000000069"
+    },
+    {
+      "sourceTemplateId": "67614b6b47c71ea3d40256d7",
+      "visualKey": "Prestige2",
+      "visualPool": "All",
+      "role": "Medical",
+      "templateId": "68ad0000000000000000006a",
+      "gridId": "68ae0000000000000000006a"
+    },
+    {
+      "sourceTemplateId": "67614b6b47c71ea3d40256d7",
+      "visualKey": "Prestige2",
+      "visualPool": "All",
+      "role": "Ammo",
+      "templateId": "68ad0000000000000000006b",
+      "gridId": "68ae0000000000000000006b"
+    },
+    {
+      "sourceTemplateId": "67614b6b47c71ea3d40256d7",
+      "visualKey": "Prestige2",
+      "visualPool": "All",
+      "role": "Magazine",
+      "templateId": "68ad0000000000000000006c",
+      "gridId": "68ae0000000000000000006c"
+    },
+    {
+      "sourceTemplateId": "67614b6b47c71ea3d40256d7",
+      "visualKey": "Prestige2",
+      "visualPool": "All",
+      "role": "Technical",
+      "templateId": "68ad0000000000000000006d",
+      "gridId": "68ae0000000000000000006d"
+    },
+    {
+      "sourceTemplateId": "67614b6b47c71ea3d40256d7",
+      "visualKey": "Prestige2",
+      "visualPool": "All",
+      "role": "Currency",
+      "templateId": "68ad0000000000000000006e",
+      "gridId": "68ae0000000000000000006e"
+    },
+    {
+      "sourceTemplateId": "6841b2506c1fcc41ed0db319",
+      "visualKey": "Prestige3",
+      "visualPool": "All",
+      "role": "Medical",
+      "templateId": "68ad0000000000000000006f",
+      "gridId": "68ae0000000000000000006f"
+    },
+    {
+      "sourceTemplateId": "6841b2506c1fcc41ed0db319",
+      "visualKey": "Prestige3",
+      "visualPool": "All",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000070",
+      "gridId": "68ae00000000000000000070"
+    },
+    {
+      "sourceTemplateId": "6841b2506c1fcc41ed0db319",
+      "visualKey": "Prestige3",
+      "visualPool": "All",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000071",
+      "gridId": "68ae00000000000000000071"
+    },
+    {
+      "sourceTemplateId": "6841b2506c1fcc41ed0db319",
+      "visualKey": "Prestige3",
+      "visualPool": "All",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000072",
+      "gridId": "68ae00000000000000000072"
+    },
+    {
+      "sourceTemplateId": "6841b2506c1fcc41ed0db319",
+      "visualKey": "Prestige3",
+      "visualPool": "All",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000073",
+      "gridId": "68ae00000000000000000073"
+    },
+    {
+      "sourceTemplateId": "6841b3463fcc417de40a6768",
+      "visualKey": "Prestige4",
+      "visualPool": "All",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000074",
+      "gridId": "68ae00000000000000000074"
+    },
+    {
+      "sourceTemplateId": "6841b3463fcc417de40a6768",
+      "visualKey": "Prestige4",
+      "visualPool": "All",
+      "role": "Ammo",
+      "templateId": "68ad00000000000000000075",
+      "gridId": "68ae00000000000000000075"
+    },
+    {
+      "sourceTemplateId": "6841b3463fcc417de40a6768",
+      "visualKey": "Prestige4",
+      "visualPool": "All",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000076",
+      "gridId": "68ae00000000000000000076"
+    },
+    {
+      "sourceTemplateId": "6841b3463fcc417de40a6768",
+      "visualKey": "Prestige4",
+      "visualPool": "All",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000077",
+      "gridId": "68ae00000000000000000077"
+    },
+    {
+      "sourceTemplateId": "6841b3463fcc417de40a6768",
+      "visualKey": "Prestige4",
+      "visualPool": "All",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000078",
+      "gridId": "68ae00000000000000000078"
+    },
+    {
+      "sourceTemplateId": "6841b3ab322db20d190b4b9b",
+      "visualKey": "Prestige5",
+      "visualPool": "All",
+      "role": "Medical",
+      "templateId": "68ad00000000000000000079",
+      "gridId": "68ae00000000000000000079"
+    },
+    {
+      "sourceTemplateId": "6841b3ab322db20d190b4b9b",
+      "visualKey": "Prestige5",
+      "visualPool": "All",
+      "role": "Ammo",
+      "templateId": "68ad0000000000000000007a",
+      "gridId": "68ae0000000000000000007a"
+    },
+    {
+      "sourceTemplateId": "6841b3ab322db20d190b4b9b",
+      "visualKey": "Prestige5",
+      "visualPool": "All",
+      "role": "Magazine",
+      "templateId": "68ad0000000000000000007b",
+      "gridId": "68ae0000000000000000007b"
+    },
+    {
+      "sourceTemplateId": "6841b3ab322db20d190b4b9b",
+      "visualKey": "Prestige5",
+      "visualPool": "All",
+      "role": "Technical",
+      "templateId": "68ad0000000000000000007c",
+      "gridId": "68ae0000000000000000007c"
+    },
+    {
+      "sourceTemplateId": "6841b3ab322db20d190b4b9b",
+      "visualKey": "Prestige5",
+      "visualPool": "All",
+      "role": "Currency",
+      "templateId": "68ad0000000000000000007d",
+      "gridId": "68ae0000000000000000007d"
+    },
+    {
+      "sourceTemplateId": "688b2e574172ca83e70cf868",
+      "visualKey": "Discord",
+      "visualPool": "All",
+      "role": "Medical",
+      "templateId": "68ad0000000000000000007e",
+      "gridId": "68ae0000000000000000007e"
+    },
+    {
+      "sourceTemplateId": "688b2e574172ca83e70cf868",
+      "visualKey": "Discord",
+      "visualPool": "All",
+      "role": "Ammo",
+      "templateId": "68ad0000000000000000007f",
+      "gridId": "68ae0000000000000000007f"
+    },
+    {
+      "sourceTemplateId": "688b2e574172ca83e70cf868",
+      "visualKey": "Discord",
+      "visualPool": "All",
+      "role": "Magazine",
+      "templateId": "68ad00000000000000000080",
+      "gridId": "68ae00000000000000000080"
+    },
+    {
+      "sourceTemplateId": "688b2e574172ca83e70cf868",
+      "visualKey": "Discord",
+      "visualPool": "All",
+      "role": "Technical",
+      "templateId": "68ad00000000000000000081",
+      "gridId": "68ae00000000000000000081"
+    },
+    {
+      "sourceTemplateId": "688b2e574172ca83e70cf868",
+      "visualKey": "Discord",
+      "visualPool": "All",
+      "role": "Currency",
+      "templateId": "68ad00000000000000000082",
+      "gridId": "68ae00000000000000000082"
+    }
   ]
 }

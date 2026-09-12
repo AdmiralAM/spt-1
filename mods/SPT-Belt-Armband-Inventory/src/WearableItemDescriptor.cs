@@ -35,8 +35,11 @@ namespace SPTBeltArmbandInventory
 
     internal static class WearableItemDescriptorRegistry
     {
-        static readonly IReadOnlyDictionary<string, WearableItemDescriptor> ByTemplate =
-            new Dictionary<string, WearableItemDescriptor>(StringComparer.Ordinal)
+        static readonly IReadOnlyDictionary<string, WearableItemDescriptor> ByTemplate = Build();
+
+        static IReadOnlyDictionary<string, WearableItemDescriptor> Build()
+        {
+            var descriptors = new Dictionary<string, WearableItemDescriptor>(StringComparer.Ordinal)
             {
                 [RuntimeIdentity.CandidateItemId] = new WearableItemDescriptor(
                     RuntimeIdentity.CandidateItemId,
@@ -80,6 +83,27 @@ namespace SPTBeltArmbandInventory
                     AccessoryCapability.ScavHostRestoration |
                     AccessoryCapability.DeathRetention)
             };
+
+            foreach (ArmBandVariantDescriptor variant in ArmBandVariantCatalog.All)
+            {
+                AccessoryCapability capabilities = AccessoryCapability.BuildValidation;
+                if (variant.Role == ArmBandRole.Medical || variant.Role == ArmBandRole.Ammo)
+                    capabilities |= AccessoryCapability.LootPriority;
+                else if (variant.Role == ArmBandRole.Magazine)
+                    capabilities |= AccessoryCapability.LootPriority | AccessoryCapability.UnloadPriority | AccessoryCapability.FastAccess;
+                else if (variant.Role == ArmBandRole.Currency)
+                    capabilities |= AccessoryCapability.PaymentSource;
+
+                descriptors.Add(variant.TemplateId, new WearableItemDescriptor(
+                    variant.TemplateId,
+                    AccessoryCategory.ArmBand,
+                    1,
+                    2,
+                    capabilities));
+            }
+
+            return descriptors;
+        }
 
         internal static bool TryGet(string templateId, out WearableItemDescriptor descriptor)
         {

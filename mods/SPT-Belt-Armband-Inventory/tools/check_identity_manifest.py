@@ -5,11 +5,13 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = ROOT / "src" / "RuntimeIdentity.cs"
 CS_MANIFEST = ROOT / "server" / "PersistentIdentityManifest.cs"
+VARIANT_CATALOG = ROOT / "src" / "ArmBandVariantCatalog.cs"
 JSON_MANIFEST = ROOT / "profile-safety" / "persistent-identities.json"
 violations = []
 
 runtime_text = RUNTIME.read_text(encoding="utf-8-sig")
 cs_text = CS_MANIFEST.read_text(encoding="utf-8-sig")
+catalog_text = VARIANT_CATALOG.read_text(encoding="utf-8-sig")
 data = json.loads(JSON_MANIFEST.read_text(encoding="utf-8-sig"))
 
 string_constants = dict(re.findall(r'internal const string\s+(\w+)\s*=\s*"([^"]+)";', runtime_text))
@@ -42,15 +44,45 @@ for json_key, names in families.items():
         continue
     expected = [string_constants[name] for name in names]
     actual = data.get(json_key)
+    if json_key == "templateIds":
+        actual = actual[:len(expected)] if isinstance(actual, list) else actual
+    if json_key == "gridIds":
+        actual = actual[:len(expected)] if isinstance(actual, list) else actual
     if actual != expected:
         violations.append(f"{json_key} mismatch: expected {expected!r}, got {actual!r}")
 
-if data.get("schemaVersion") != 1:
-    violations.append("persistent-identities.json schemaVersion must remain 1 until a deliberate schema migration exists")
+if data.get("schemaVersion") != 2:
+    violations.append("persistent-identities.json schemaVersion must be 2 for the deliberate v0.3 ArmBand variant identity expansion")
 if data.get("workstream") != "B&A&HB #2 MOD SPT":
     violations.append("persistent-identities.json workstream identity drifted")
-if data.get("targetSpt") != "4.1.3":
-    violations.append("persistent-identities.json targetSpt drifted from candidate target")
+if data.get("targetSpt") != "~4.1.0":
+    violations.append("persistent-identities.json targetSpt must express the supported 4.1.x range")
+
+variant_pattern = re.compile(
+    r'new\("([0-9a-f]{24})", "([A-Za-z0-9]+)", ArmBandVisualPool\.(ExistingRaid|Standard|All), '
+    r'ArmBandRole\.(Medical|Ammo|Magazine|Technical|Currency), "([0-9a-f]{24})", "([0-9a-f]{24})"\)')
+catalog_variants = [
+    {
+        "sourceTemplateId": source,
+        "visualKey": visual,
+        "visualPool": pool,
+        "role": role,
+        "templateId": template,
+        "gridId": grid,
+    }
+    for source, visual, pool, role, template, grid in variant_pattern.findall(catalog_text)
+]
+json_variants = data.get("armBandVariants")
+if catalog_variants != json_variants:
+    violations.append("armBandVariants mismatch between compiled catalog and recovery manifest")
+if len(catalog_variants) != 130:
+    violations.append(f"armBandVariants must contain 26 visuals x 5 roles, got {len(catalog_variants)}")
+variant_templates = [entry["templateId"] for entry in catalog_variants]
+variant_grids = [entry["gridId"] for entry in catalog_variants]
+if data.get("templateIds", [])[len(families["templateIds"]):] != variant_templates:
+    violations.append("templateIds variant suffix differs from armBandVariants")
+if data.get("gridIds", [])[len(families["gridIds"]):] != variant_grids:
+    violations.append("gridIds variant suffix differs from armBandVariants")
 
 # Runtime C# ownership must reference every persistent identity family used for
 # cleanup/collision decisions. Semantic slot names are presentation identifiers

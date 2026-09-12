@@ -11,6 +11,7 @@
     <FileVersion>0.2.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="..\assets\headband-rambo\runtime\icons\68ac0000000000000000000f.png" LogicalName="SPTBeltArmbandInventory.HeadBandIcon.png" />
     <Reference Include="BepInEx"><HintPath>..\..\..\deps\BepInEx\core\BepInEx.dll</HintPath><Private>false</Private></Reference>
     <PackageReference Include="HarmonyX" Version="2.9.0"><PrivateAssets>all</PrivateAssets></PackageReference>
     <PackageReference Include="UnityEngine.Modules" Version="2021.3.33"><PrivateAssets>all</PrivateAssets></PackageReference>

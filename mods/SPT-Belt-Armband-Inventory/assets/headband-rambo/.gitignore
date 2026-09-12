@@ -1,0 +1,15 @@
+generated/*.blend1
+unity/Library/
+unity/Logs/
+unity/Temp/
+unity/UserSettings/
+unity/obj/
+unity/*.log
+unity/belt_reference.bundle
+unity/Assets/**/*.meta
+unity/Assets/HeadBand/headband_rambo_red.prefab
+unity/Assets/Plugins/
+unity/AssetBundles/
+unity/Packages/packages-lock.json
+unity/ProjectSettings/*
+!unity/ProjectSettings/ProjectVersion.txt
