@@ -15,6 +15,7 @@ AMMO_POLICY_PATH = ROOT / "manifests" / "ammo-offer-policy.json"
 RELATIONSHIP_STOCK_PATH = ROOT / "manifests" / "relationship-stock.json"
 STOREFRONT_CORE_PATH = ROOT / "manifests" / "storefront-core-expansion.json"
 M7_PATH = ROOT / "manifests" / "m7-natalya-absorption-program.json"
+STORY_PATH = ROOT / "manifests" / "story-campaign-runtime.json"
 CSPROJ_PATH = ROOT / "server" / "AdmiralTrader.Server.csproj"
 
 EXPECTED_RUNTIME_TARGET = "4.1.5"
@@ -124,6 +125,7 @@ def main() -> None:
     relationship = json.loads(RELATIONSHIP_STOCK_PATH.read_text(encoding="utf-8"))
     storefront_core = json.loads(STOREFRONT_CORE_PATH.read_text(encoding="utf-8"))
     m7 = json.loads(M7_PATH.read_text(encoding="utf-8"))
+    story = json.loads(STORY_PATH.read_text(encoding="utf-8"))
     base = json.loads(BASE_PATH.read_text(encoding="utf-8"))
 
     if set(questassort) != NATIVE_QUESTASSORT_KEYS:
@@ -169,10 +171,14 @@ def main() -> None:
     signature_by_id = {str(row.get("offerId")): row for row in signature_offers}
     if len(signature_by_id) != 4 or (m7.get("activeHeadScope") or {}).get("runtimeFiniteOffers") != 41:
         fail("M7 must contain exactly four signature offers and 41 finite runtime offers")
-    expected_ids = BASELINE_OFFER_IDS | milestone_ids | RELATIONSHIP_OFFER_IDS | set(core_by_id) | set(signature_by_id)
+    story_offers = story.get("assortmentUnlocks") or []
+    story_by_id = {str(row.get("offerId")): row for row in story_offers}
+    if len(story_by_id) != 10 or story.get("totalFiniteOfferCount") != 51:
+        fail("story campaign must contain ten finale unlocks and 51 total finite offers")
+    expected_ids = BASELINE_OFFER_IDS | milestone_ids | RELATIONSHIP_OFFER_IDS | set(core_by_id) | set(signature_by_id) | set(story_by_id)
     root_items = {item.get("_id"): item for item in items if item.get("parentId") == "hideout"}
-    if len(root_items) != 41:
-        fail(f"expected exactly 41 finite Admiral root offers, got {len(root_items)}")
+    if len(root_items) != 51:
+        fail(f"expected exactly 51 finite Admiral root offers, got {len(root_items)}")
     if set(root_items) != expected_ids:
         fail(f"assort root id drift; missing={sorted(expected_ids-set(root_items))} extra={sorted(set(root_items)-expected_ids)}")
     if set(barter) != expected_ids or set(loyalty) != expected_ids:
@@ -245,6 +251,14 @@ def main() -> None:
             loyalty_level=int(policy["loyaltyLevel"]),
         )
 
+    for offer_id, policy in story_by_id.items():
+        validate_single_rub_offer(
+            offer_id, root_items[offer_id], barter, loyalty,
+            tpl=str(policy["tpl"]), price=int(policy["priceRub"]),
+            stock=int(policy["stockPerReset"]), buy_limit=int(policy["buyRestriction"]),
+            loyalty_level=int(policy["loyaltyLevel"]),
+        )
+
     validate_single_rub_offer(
         LABS_OFFER_ID,
         root_items[LABS_OFFER_ID],
@@ -265,8 +279,8 @@ def main() -> None:
         fail("Special Weapons must retain its finite M576 offer")
 
     success = questassort.get("success")
-    if not isinstance(success, dict) or set(success) != milestone_ids:
-        fail("questassort.success must contain exactly the eight Milestone offers and no Baseline offers")
+    if not isinstance(success, dict) or set(success) != milestone_ids | set(story_by_id):
+        fail("questassort.success must contain exactly 8 capability and 10 story-finale offers")
     if BASELINE_OFFER_IDS & set(success):
         fail("Baseline offers must never leak into questassort.success")
     if RELATIONSHIP_OFFER_IDS & set(success):
@@ -288,6 +302,10 @@ def main() -> None:
         )
         if success.get(offer_id) != str(policy["questId"]):
             fail(f"{family}: questassort success gate drift")
+
+    for offer_id, policy in story_by_id.items():
+        if success.get(offer_id) != str(policy["questId"]):
+            fail(f"{offer_id}: story finale questassort success gate drift")
 
     for state in ("started", "fail"):
         mapping = questassort.get(state)
@@ -312,7 +330,7 @@ def main() -> None:
         if float(level.get("minStanding", -1)) != standing:
             fail(f"Admiral LL{index}: standing threshold drift")
 
-    print("Admiral Trader SPT 4.1.5 native questassort + 41 finite-offer contract OK")
+    print("Admiral Trader SPT 4.1.5 native questassort + 51 finite-offer contract OK")
 
 
 if __name__ == "__main__":

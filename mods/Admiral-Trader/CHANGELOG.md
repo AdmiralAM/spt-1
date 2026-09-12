@@ -2,10 +2,24 @@
 
 ## 0.3.0-rc — Natalya absorption
 
+- Materializes ten connected map stories (100 quests) with native SPT exploration, retrieval, placement, combat and survival conditions; total runtime scope is 172 quests.
+- Integrates Natalya as an in-engine specialist across 18 story beats while preserving her four absorbed signature presets and avoiding a second trader/dependency.
+- Adds ten finite, quest-gated story-finale offers, bringing the active storefront to 51 offers without external item dependencies.
+- Hardens story objectives so every recovery includes a native operation point, no quest repeats an MS2000 zone, and all item/unlock rewards are stated explicitly in EN/RU success text.
+- Shows every story operation's position inside its ten-part investigation and names the next operation in success mail; each finale explicitly closes its map investigation.
+- Corrects `Ключ диспетчера` and `Ключ мастера` to check ownership of a bounded common-key pool without FIR or handover, matching their authored instructions.
+- Guards the generated Russian story locale against replacement-character corruption and verifies substantial UTF-8 Cyrillic coverage.
+- Restores the individual Russian operational brief to all 100 story descriptions while keeping exact runtime requirements in a separate readable section.
+- Corrects seven story beats whose authored recovery was previously represented only by a visit, marker or extraction; each now requires the promised FIR recovery and handover, with `Камера хранения` retaining its survival requirement.
+- Gives `Запасной кабинет` a bounded four-key Health Resort access pool without FIR or key handover before its recovery objective.
+- Makes `Камера хранения` require the promised FIR surveillance-record recovery and removes unsupported same-raid/night claims from five operational briefs while retaining their exact native objectives.
+- Replaces cyclic placeholder recovery items with explicit per-operation native SPT items across all 53 story recovery/handover beats, and materializes the promised combat, marking and sensor work in three compound operations.
 - Absorb Natalya's useful quest and storefront roles into Admiral because Natalya is retired from the target installation. Artem, Scorpion and Ref remain separate traders and are only used to reject duplicates.
 - Route the opening Admiral wave through Ground Zero alongside the retained traders' early progression.
 - Add a bounded signature weapon rack selected from Natalya's native stock against the effective post-Andrudis catalog, with finite stock and progressive access.
 - First runtime storefront intake adds complete M700, T-5000M, RPDN and Mk17 presets, bringing the active runtime to 41 finite offers.
+- Expands the campaign to 72 quests: 40 staged Arsenal assignments, 4 opening Ground Zero operations, and 6 progressive equipment assignments while preserving the 43-quest foundation.
+- Accepts 51 verified WTT Armory/Content Backport weapon templates as optional alternatives in matching Arsenal pools. Every quest keeps native SPT choices and the campaign remains fully playable without WTT.
 - Canonicalize the installed folder as `SPT_Runtime/user/mods/Admiral Trader` and reject the obsolete hyphenated alias during replacement validation.
 
 ## 0.2.0 — stable campaign baseline

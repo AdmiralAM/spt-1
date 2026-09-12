@@ -26,12 +26,14 @@ Natalya's source assortment has 35 native weapon roots. A first comparison again
 
 That list is an intake list, not a promise to add every row. Each admitted offer must be a complete native preset, have finite stock, fill a role that is not already supplied by the retained trader set, and have a price and loyalty or quest gate that does not undercut the source trader. Broken custom-armour rows and detached parts are excluded.
 
-## Delivery order
+## Materialized delivery
 
-1. Add a small, complete set of native signature weapon presets selected from this intake and tested against the retained trader comparison set.
-2. Add the first Ground Zero Admiral operation from the Pay Back/Exfil opening role, using native lifecycle ownership and a realistic new-profile objective.
-3. Extend the campaign in staged batches: weapons and equipment choice first, then map-route and logistics operations. Existing 43 quest IDs and the frozen 0.1.0 identity remain valid.
-4. Review each batch against a fresh profile only after full runtime, install and artifact validation. Do not run a new CI/artifact cycle for isolated wording changes.
+1. Four complete native signature presets are finite Admiral offers.
+2. Four Ground Zero operations provide the opening route and gate the old key-access chain behind the first completed operation.
+3. Nineteen new weapon assignments complete two staged lanes with 40 Arsenal assignments across the full campaign; six equipment assignments rotate rigs, headsets, helmets and armor.
+4. Fifty verified WTT weapons are optional alternatives inside matching pools. Removing WTT leaves every quest and prerequisite playable through native weapons.
+5. Existing quest IDs and the frozen 0.1.0 identity remain valid. The expanded runtime contains 172 quests and 51 finite offers.
+6. Natalya appears as an authored specialist in 18 story beats spanning Ground Zero, Customs, Interchange, Shoreline, Lighthouse, Streets and The Lab; she remains inside Admiral's engine and never becomes a second trader.
 
 ## Explicit exclusions
 

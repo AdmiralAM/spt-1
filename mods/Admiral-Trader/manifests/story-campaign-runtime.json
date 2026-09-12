@@ -1,0 +1,828 @@
+{
+  "schemaVersion": 1,
+  "status": "runtime-materialized",
+  "storyQuestCount": 100,
+  "totalQuestCount": 172,
+  "natalyaIntegratedQuestCount": 18,
+  "natalyaMode": "specialist-inside-admiral-no-second-trader",
+  "nativeZoneReuse": true,
+  "customZoneDependency": false,
+  "customItemDependency": false,
+  "typicalEliminationMaximum": 12,
+  "assortmentUnlockCount": 10,
+  "totalFiniteOfferCount": 51,
+  "assortmentUnlocks": [
+    {
+      "chain": 1,
+      "map": "Эпицентр",
+      "questId": "6d9fda8875aed2082b4da528",
+      "offerId": "210b1e0eb2d100d2cdf8a6a6",
+      "tpl": "590a358486f77429692b2790",
+      "priceRub": 18500,
+      "stockPerReset": 4,
+      "buyRestriction": 2,
+      "loyaltyLevel": 1
+    },
+    {
+      "chain": 2,
+      "map": "Таможня",
+      "questId": "bcf61611e9723c765e07a740",
+      "offerId": "3e6f816c41a9c73328116881",
+      "tpl": "619cbf7d23893217ec30b689",
+      "priceRub": 42000,
+      "stockPerReset": 3,
+      "buyRestriction": 2,
+      "loyaltyLevel": 1
+    },
+    {
+      "chain": 3,
+      "map": "Лес",
+      "questId": "60df546a03bdc74ca45fb8ca",
+      "offerId": "f8da71976975811ca49a91b7",
+      "tpl": "618ba27d9008e4636a67f61d",
+      "priceRub": 68000,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "loyaltyLevel": 1
+    },
+    {
+      "chain": 4,
+      "map": "Развязка",
+      "questId": "181f902c56dab247a1f49d0c",
+      "offerId": "f530321b38abb5a472788c19",
+      "tpl": "5e2aee0a86f774755a234b62",
+      "priceRub": 55000,
+      "stockPerReset": 3,
+      "buyRestriction": 1,
+      "loyaltyLevel": 2
+    },
+    {
+      "chain": 5,
+      "map": "Берег",
+      "questId": "70258f2cc084c335a0542207",
+      "offerId": "b754aa18bd970cfc3343dcd7",
+      "tpl": "60098ad7c2240c0fe85c570a",
+      "priceRub": 72000,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "loyaltyLevel": 2
+    },
+    {
+      "chain": 6,
+      "map": "Резерв",
+      "questId": "6a24e1ca978938c1d4a8839f",
+      "offerId": "b5b55194b4a76ce0ce71a409",
+      "tpl": "5d03794386f77420415576f5",
+      "priceRub": 62000,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "loyaltyLevel": 2
+    },
+    {
+      "chain": 7,
+      "map": "Маяк",
+      "questId": "0f650f5ba44bfd17404b7ad6",
+      "offerId": "7c7325d2b0efa12b2ad4eea4",
+      "tpl": "62e910aaf957f2915e0a5e36",
+      "priceRub": 78000,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "loyaltyLevel": 3
+    },
+    {
+      "chain": 8,
+      "map": "Улицы",
+      "questId": "734ce8b802ca6a629387ca5b",
+      "offerId": "2d000c9208cd64ad066c30c9",
+      "tpl": "660bbc47c38b837877075e47",
+      "priceRub": 85000,
+      "stockPerReset": 2,
+      "buyRestriction": 1,
+      "loyaltyLevel": 3
+    },
+    {
+      "chain": 9,
+      "map": "Завод",
+      "questId": "df6c5b8f5660efd1b4c6d06c",
+      "offerId": "6b0d153489b984ae9b940adb",
+      "tpl": "5d1b5e94d7ad1a2b865a96b0",
+      "priceRub": 39000,
+      "stockPerReset": 3,
+      "buyRestriction": 1,
+      "loyaltyLevel": 3
+    },
+    {
+      "chain": 10,
+      "map": "Лаборатория",
+      "questId": "680c47f4c9a0e7b884a95908",
+      "offerId": "e76db2cbe4b00c66047ccb27",
+      "tpl": "68666887df54e1190902df57",
+      "priceRub": 125000,
+      "stockPerReset": 1,
+      "buyRestriction": 1,
+      "loyaltyLevel": 4
+    }
+  ],
+  "quests": [
+    {
+      "id": "e81e5d79bfdf40efc87cdf99",
+      "chain": 1,
+      "order": 1,
+      "map": "Эпицентр",
+      "natalya": false
+    },
+    {
+      "id": "e472a13c1478f7b9258522d3",
+      "chain": 1,
+      "order": 2,
+      "map": "Эпицентр",
+      "natalya": false
+    },
+    {
+      "id": "4f3828ef74a66f154f6ac397",
+      "chain": 1,
+      "order": 3,
+      "map": "Эпицентр",
+      "natalya": true
+    },
+    {
+      "id": "52cbb69039f63f3cfbad321a",
+      "chain": 1,
+      "order": 4,
+      "map": "Эпицентр",
+      "natalya": false
+    },
+    {
+      "id": "4876c8bf7bb9677e3970b01c",
+      "chain": 1,
+      "order": 5,
+      "map": "Эпицентр",
+      "natalya": false
+    },
+    {
+      "id": "59230813b9f9e11ceed08033",
+      "chain": 1,
+      "order": 6,
+      "map": "Эпицентр",
+      "natalya": false
+    },
+    {
+      "id": "bb49cbdbae242ffef21f95b7",
+      "chain": 1,
+      "order": 7,
+      "map": "Эпицентр",
+      "natalya": true
+    },
+    {
+      "id": "ac7bd06524b05c40da6f56ef",
+      "chain": 1,
+      "order": 8,
+      "map": "Эпицентр",
+      "natalya": false
+    },
+    {
+      "id": "05c97b5823b0c42b7c25ccf9",
+      "chain": 1,
+      "order": 9,
+      "map": "Эпицентр",
+      "natalya": false
+    },
+    {
+      "id": "6d9fda8875aed2082b4da528",
+      "chain": 1,
+      "order": 10,
+      "map": "Эпицентр",
+      "natalya": false
+    },
+    {
+      "id": "88c98ecb21d126970231b220",
+      "chain": 2,
+      "order": 1,
+      "map": "Таможня",
+      "natalya": false
+    },
+    {
+      "id": "5fd9397fbc40a37c1abf3790",
+      "chain": 2,
+      "order": 2,
+      "map": "Таможня",
+      "natalya": false
+    },
+    {
+      "id": "ed21744058dec7587de1081f",
+      "chain": 2,
+      "order": 3,
+      "map": "Таможня",
+      "natalya": false
+    },
+    {
+      "id": "3547b2765c993b58b04e6074",
+      "chain": 2,
+      "order": 4,
+      "map": "Таможня",
+      "natalya": false
+    },
+    {
+      "id": "70a745d426d2ba09157eb734",
+      "chain": 2,
+      "order": 5,
+      "map": "Таможня",
+      "natalya": false
+    },
+    {
+      "id": "743532fcd12b4a88ff7cd83f",
+      "chain": 2,
+      "order": 6,
+      "map": "Таможня",
+      "natalya": true
+    },
+    {
+      "id": "e9de043a8379c87027f762b3",
+      "chain": 2,
+      "order": 7,
+      "map": "Таможня",
+      "natalya": false
+    },
+    {
+      "id": "837bdd0ab80a2a1382caeedd",
+      "chain": 2,
+      "order": 8,
+      "map": "Таможня",
+      "natalya": false
+    },
+    {
+      "id": "94dfbf0ec29ab7391528f217",
+      "chain": 2,
+      "order": 9,
+      "map": "Таможня",
+      "natalya": false
+    },
+    {
+      "id": "bcf61611e9723c765e07a740",
+      "chain": 2,
+      "order": 10,
+      "map": "Таможня",
+      "natalya": false
+    },
+    {
+      "id": "c28a9b8837dcf639ba524cc3",
+      "chain": 3,
+      "order": 1,
+      "map": "Лес",
+      "natalya": false
+    },
+    {
+      "id": "1ca43f65c714ea7f9eec6e2a",
+      "chain": 3,
+      "order": 2,
+      "map": "Лес",
+      "natalya": false
+    },
+    {
+      "id": "b61a1cd8d6a7a82e81033dbc",
+      "chain": 3,
+      "order": 3,
+      "map": "Лес",
+      "natalya": false
+    },
+    {
+      "id": "dcae6b2142ca93b7dd77df3e",
+      "chain": 3,
+      "order": 4,
+      "map": "Лес",
+      "natalya": false
+    },
+    {
+      "id": "37475cbab1174e5619c16939",
+      "chain": 3,
+      "order": 5,
+      "map": "Лес",
+      "natalya": false
+    },
+    {
+      "id": "c5f5947263134fcda2387af8",
+      "chain": 3,
+      "order": 6,
+      "map": "Лес",
+      "natalya": false
+    },
+    {
+      "id": "9bf1b7ad200b0f5f59e9cbbd",
+      "chain": 3,
+      "order": 7,
+      "map": "Лес",
+      "natalya": false
+    },
+    {
+      "id": "f0874dd26a7b1f76d86aad88",
+      "chain": 3,
+      "order": 8,
+      "map": "Лес",
+      "natalya": false
+    },
+    {
+      "id": "9b41c75e4d147894f087e2b2",
+      "chain": 3,
+      "order": 9,
+      "map": "Лес",
+      "natalya": false
+    },
+    {
+      "id": "60df546a03bdc74ca45fb8ca",
+      "chain": 3,
+      "order": 10,
+      "map": "Лес",
+      "natalya": false
+    },
+    {
+      "id": "e69ffaae178e648aff9de3fd",
+      "chain": 4,
+      "order": 1,
+      "map": "Развязка",
+      "natalya": false
+    },
+    {
+      "id": "5268717351b03068d3b68ecd",
+      "chain": 4,
+      "order": 2,
+      "map": "Развязка",
+      "natalya": true
+    },
+    {
+      "id": "b4304b0bda66037ec83deba6",
+      "chain": 4,
+      "order": 3,
+      "map": "Развязка",
+      "natalya": false
+    },
+    {
+      "id": "dde90a4fac0d58df868b8377",
+      "chain": 4,
+      "order": 4,
+      "map": "Развязка",
+      "natalya": true
+    },
+    {
+      "id": "e74018c43dc3f47551445192",
+      "chain": 4,
+      "order": 5,
+      "map": "Развязка",
+      "natalya": false
+    },
+    {
+      "id": "cbf1ff74b68b7026ebae3bf6",
+      "chain": 4,
+      "order": 6,
+      "map": "Развязка",
+      "natalya": false
+    },
+    {
+      "id": "b69566c83e350e531fb4da63",
+      "chain": 4,
+      "order": 7,
+      "map": "Развязка",
+      "natalya": false
+    },
+    {
+      "id": "b713c4f910eb245be9cda205",
+      "chain": 4,
+      "order": 8,
+      "map": "Развязка",
+      "natalya": false
+    },
+    {
+      "id": "4b4bcd640d8659dd0e2e7fba",
+      "chain": 4,
+      "order": 9,
+      "map": "Развязка",
+      "natalya": true
+    },
+    {
+      "id": "181f902c56dab247a1f49d0c",
+      "chain": 4,
+      "order": 10,
+      "map": "Развязка",
+      "natalya": true
+    },
+    {
+      "id": "65c67fd56ef827fd8f8e28ae",
+      "chain": 5,
+      "order": 1,
+      "map": "Берег",
+      "natalya": false
+    },
+    {
+      "id": "78cc2b3208abba4015448a90",
+      "chain": 5,
+      "order": 2,
+      "map": "Берег",
+      "natalya": true
+    },
+    {
+      "id": "78143d5331afbc8ed5530c51",
+      "chain": 5,
+      "order": 3,
+      "map": "Берег",
+      "natalya": false
+    },
+    {
+      "id": "0f6c7610aabb03785c8c29a1",
+      "chain": 5,
+      "order": 4,
+      "map": "Берег",
+      "natalya": false
+    },
+    {
+      "id": "aef99c7f97ca615cf101a654",
+      "chain": 5,
+      "order": 5,
+      "map": "Берег",
+      "natalya": false
+    },
+    {
+      "id": "39f58ef5c9d91324d914d18b",
+      "chain": 5,
+      "order": 6,
+      "map": "Берег",
+      "natalya": true
+    },
+    {
+      "id": "0d712d3bafcc3a986f288d63",
+      "chain": 5,
+      "order": 7,
+      "map": "Берег",
+      "natalya": false
+    },
+    {
+      "id": "e0fbd59d0be5c10d2ade5fb3",
+      "chain": 5,
+      "order": 8,
+      "map": "Берег",
+      "natalya": false
+    },
+    {
+      "id": "315693d54d1bec87808d640a",
+      "chain": 5,
+      "order": 9,
+      "map": "Берег",
+      "natalya": true
+    },
+    {
+      "id": "70258f2cc084c335a0542207",
+      "chain": 5,
+      "order": 10,
+      "map": "Берег",
+      "natalya": false
+    },
+    {
+      "id": "cddcd386eb050dbc936ef629",
+      "chain": 6,
+      "order": 1,
+      "map": "Резерв",
+      "natalya": false
+    },
+    {
+      "id": "fcc999aeb0be8899307d5c11",
+      "chain": 6,
+      "order": 2,
+      "map": "Резерв",
+      "natalya": false
+    },
+    {
+      "id": "6fab9c0949646bad356c436d",
+      "chain": 6,
+      "order": 3,
+      "map": "Резерв",
+      "natalya": false
+    },
+    {
+      "id": "2897ca5464686729182d5c18",
+      "chain": 6,
+      "order": 4,
+      "map": "Резерв",
+      "natalya": false
+    },
+    {
+      "id": "aaf59cae44fc7164485287d9",
+      "chain": 6,
+      "order": 5,
+      "map": "Резерв",
+      "natalya": false
+    },
+    {
+      "id": "9821034c9dac42983248f7c2",
+      "chain": 6,
+      "order": 6,
+      "map": "Резерв",
+      "natalya": false
+    },
+    {
+      "id": "a4e4d8c99a667c66900d17ec",
+      "chain": 6,
+      "order": 7,
+      "map": "Резерв",
+      "natalya": false
+    },
+    {
+      "id": "42d9c21068539c9855e42daf",
+      "chain": 6,
+      "order": 8,
+      "map": "Резерв",
+      "natalya": false
+    },
+    {
+      "id": "fe7337b9337a7b318619a432",
+      "chain": 6,
+      "order": 9,
+      "map": "Резерв",
+      "natalya": false
+    },
+    {
+      "id": "6a24e1ca978938c1d4a8839f",
+      "chain": 6,
+      "order": 10,
+      "map": "Резерв",
+      "natalya": false
+    },
+    {
+      "id": "e0cc5330a34ff96bfb670820",
+      "chain": 7,
+      "order": 1,
+      "map": "Маяк",
+      "natalya": false
+    },
+    {
+      "id": "45a06f6c07f74caeb29f84a6",
+      "chain": 7,
+      "order": 2,
+      "map": "Маяк",
+      "natalya": true
+    },
+    {
+      "id": "67f5301e59630b656d927c5e",
+      "chain": 7,
+      "order": 3,
+      "map": "Маяк",
+      "natalya": false
+    },
+    {
+      "id": "0401aa332dde8b64670a325b",
+      "chain": 7,
+      "order": 4,
+      "map": "Маяк",
+      "natalya": false
+    },
+    {
+      "id": "416b7201445436294eb53e42",
+      "chain": 7,
+      "order": 5,
+      "map": "Маяк",
+      "natalya": false
+    },
+    {
+      "id": "83939b1ab5313a0059ed9c1e",
+      "chain": 7,
+      "order": 6,
+      "map": "Маяк",
+      "natalya": true
+    },
+    {
+      "id": "9d429e2927fca0923a803cd4",
+      "chain": 7,
+      "order": 7,
+      "map": "Маяк",
+      "natalya": false
+    },
+    {
+      "id": "45a5aeb435d89e93b6e9484a",
+      "chain": 7,
+      "order": 8,
+      "map": "Маяк",
+      "natalya": false
+    },
+    {
+      "id": "c705c50d6f524f36cd2cc8fe",
+      "chain": 7,
+      "order": 9,
+      "map": "Маяк",
+      "natalya": false
+    },
+    {
+      "id": "0f650f5ba44bfd17404b7ad6",
+      "chain": 7,
+      "order": 10,
+      "map": "Маяк",
+      "natalya": false
+    },
+    {
+      "id": "5d2360d47e11dfcb81acbdb5",
+      "chain": 8,
+      "order": 1,
+      "map": "Улицы",
+      "natalya": false
+    },
+    {
+      "id": "0b7abaaa7f084765e7d5c623",
+      "chain": 8,
+      "order": 2,
+      "map": "Улицы",
+      "natalya": false
+    },
+    {
+      "id": "f570f92d48a894c066066a95",
+      "chain": 8,
+      "order": 3,
+      "map": "Улицы",
+      "natalya": false
+    },
+    {
+      "id": "c502dfe9542fc5d5c3dc7c60",
+      "chain": 8,
+      "order": 4,
+      "map": "Улицы",
+      "natalya": true
+    },
+    {
+      "id": "8f427e0e5719ea89688c08a9",
+      "chain": 8,
+      "order": 5,
+      "map": "Улицы",
+      "natalya": false
+    },
+    {
+      "id": "f503341ece8597c7de75a1df",
+      "chain": 8,
+      "order": 6,
+      "map": "Улицы",
+      "natalya": true
+    },
+    {
+      "id": "bf3982de79ea3b1e90910200",
+      "chain": 8,
+      "order": 7,
+      "map": "Улицы",
+      "natalya": false
+    },
+    {
+      "id": "df9c920a04c11e9b8dc020d0",
+      "chain": 8,
+      "order": 8,
+      "map": "Улицы",
+      "natalya": false
+    },
+    {
+      "id": "b5038fda630a18690bb52872",
+      "chain": 8,
+      "order": 9,
+      "map": "Улицы",
+      "natalya": true
+    },
+    {
+      "id": "734ce8b802ca6a629387ca5b",
+      "chain": 8,
+      "order": 10,
+      "map": "Улицы",
+      "natalya": false
+    },
+    {
+      "id": "e5c8b4080adfe4fa2caa7bc3",
+      "chain": 9,
+      "order": 1,
+      "map": "Завод",
+      "natalya": false
+    },
+    {
+      "id": "7486bc36905b338d72289ad6",
+      "chain": 9,
+      "order": 2,
+      "map": "Завод",
+      "natalya": false
+    },
+    {
+      "id": "30d087339ef8063ccd818036",
+      "chain": 9,
+      "order": 3,
+      "map": "Завод",
+      "natalya": false
+    },
+    {
+      "id": "deab0605df9ef9ba0bd0ccc1",
+      "chain": 9,
+      "order": 4,
+      "map": "Завод",
+      "natalya": false
+    },
+    {
+      "id": "77622ff3eda4de9587dd55d8",
+      "chain": 9,
+      "order": 5,
+      "map": "Завод",
+      "natalya": false
+    },
+    {
+      "id": "559f5c085a346ae36e18fcd9",
+      "chain": 9,
+      "order": 6,
+      "map": "Завод",
+      "natalya": false
+    },
+    {
+      "id": "6d91d7193725645fcda53ea9",
+      "chain": 9,
+      "order": 7,
+      "map": "Завод",
+      "natalya": false
+    },
+    {
+      "id": "3002161cfabbdcb40699a1df",
+      "chain": 9,
+      "order": 8,
+      "map": "Завод",
+      "natalya": false
+    },
+    {
+      "id": "1e8e5bbebe432ca73b19747d",
+      "chain": 9,
+      "order": 9,
+      "map": "Завод",
+      "natalya": false
+    },
+    {
+      "id": "df6c5b8f5660efd1b4c6d06c",
+      "chain": 9,
+      "order": 10,
+      "map": "Завод",
+      "natalya": false
+    },
+    {
+      "id": "d3b6824cc5eda08126273277",
+      "chain": 10,
+      "order": 1,
+      "map": "Лаборатория",
+      "natalya": false
+    },
+    {
+      "id": "3e217502dbe65fb4924d5d98",
+      "chain": 10,
+      "order": 2,
+      "map": "Лаборатория",
+      "natalya": true
+    },
+    {
+      "id": "8eacc1d52dcb896ece6a1730",
+      "chain": 10,
+      "order": 3,
+      "map": "Лаборатория",
+      "natalya": false
+    },
+    {
+      "id": "06b32886806bf50896eb4ff8",
+      "chain": 10,
+      "order": 4,
+      "map": "Лаборатория",
+      "natalya": false
+    },
+    {
+      "id": "8024b7e157f21f5b35b6f38b",
+      "chain": 10,
+      "order": 5,
+      "map": "Лаборатория",
+      "natalya": false
+    },
+    {
+      "id": "a6b23de5ab1a1ad431e405ef",
+      "chain": 10,
+      "order": 6,
+      "map": "Лаборатория",
+      "natalya": false
+    },
+    {
+      "id": "97f0088fbb97e5376be4ddef",
+      "chain": 10,
+      "order": 7,
+      "map": "Лаборатория",
+      "natalya": true
+    },
+    {
+      "id": "786ce2de2cee30f3128aa04c",
+      "chain": 10,
+      "order": 8,
+      "map": "Лаборатория",
+      "natalya": false
+    },
+    {
+      "id": "c50d2ca0deca83e99e3d0d4a",
+      "chain": 10,
+      "order": 9,
+      "map": "Лаборатория",
+      "natalya": false
+    },
+    {
+      "id": "680c47f4c9a0e7b884a95908",
+      "chain": 10,
+      "order": 10,
+      "map": "Лаборатория",
+      "natalya": true
+    }
+  ]
+}

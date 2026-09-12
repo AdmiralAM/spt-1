@@ -48,6 +48,10 @@ jobs:
           python -m json.tool mods/Admiral-Trader/manifests/relationship-stock.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/m5-relationship-runtime.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/m5-spt415-item-evidence.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/m8-campaign-expansion-runtime.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/optional-weapon-runtime.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/campaign-authored-100-review.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/story-campaign-runtime.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/storefront-core-expansion.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/curated-quest-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/base.json > /dev/null
@@ -86,7 +90,8 @@ jobs:
               raise SystemExit('questassort native collections must be objects')
           if len(baseline.get('offers') or []) != 4:
               raise SystemExit('preserved Baseline offer count drift')
-          if len(questassort['success']) != 8:
+          story = json.loads((root / 'manifests/story-campaign-runtime.json').read_text(encoding='utf-8'))
+          if len(questassort['success']) != 18 or len(story.get('assortmentUnlocks', [])) != 10:
               raise SystemExit('Milestone questassort success gate count drift')
           relationship_ids = {row['offerId'] for row in relationship.get('offers', [])}
           storefront_ids = {row['offerId'] for row in storefront.get('offers', [])}
@@ -95,8 +100,8 @@ jobs:
           signature = json.loads((root / 'db/natalya-signature-assort.json').read_text())
           base_root_ids = {row['_id'] for row in assort['items'] if row.get('parentId') == 'hideout'}
           signature_root_ids = {row['_id'] for row in signature['items'] if row.get('parentId') == 'hideout'}
-          if len(base_root_ids) != 37 or len(signature_root_ids) != 4 or len(base_root_ids | signature_root_ids) != 41:
-              raise SystemExit('41-offer active assort shape drift')
+          if len(base_root_ids) != 47 or len(signature_root_ids) != 4 or len(base_root_ids | signature_root_ids) != 51:
+              raise SystemExit('51-offer active assort shape drift')
           if len(storefront_ids) != 22 or not (relationship_ids | storefront_ids) <= base_root_ids:
               raise SystemExit('stabilized base assort ownership drift')
           if relationship_ids & set(questassort['success']):
@@ -120,6 +125,10 @@ jobs:
               out / 'manifests/relationship-stock.json',
               out / 'manifests/m5-relationship-runtime.json',
               out / 'manifests/m5-spt415-item-evidence.json',
+              out / 'manifests/m8-campaign-expansion-runtime.json',
+              out / 'manifests/optional-weapon-runtime.json',
+              out / 'manifests/campaign-authored-100-review.json',
+              out / 'manifests/story-campaign-runtime.json',
               out / 'manifests/storefront-core-expansion.json',
               out / 'db/base.json',
               out / 'db/assort.json',

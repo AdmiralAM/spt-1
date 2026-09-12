@@ -16,8 +16,8 @@ class M1NativeLifecycleContractTests(unittest.TestCase):
         for path in sorted(QUEST_DIR.glob("*.json")):
             cls.quests.append((path, json.loads(path.read_text(encoding="utf-8"))))
 
-    def test_all_43_templates_require_explicit_native_accept_and_complete(self):
-        self.assertEqual(len(self.quests), 43)
+    def test_all_runtime_templates_require_explicit_native_accept_and_complete(self):
+        self.assertEqual(len(self.quests), 172)
         for path, quest in self.quests:
             with self.subTest(path=path.name):
                 self.assertIs(quest.get("instantComplete"), False)
@@ -40,7 +40,7 @@ class M1NativeLifecycleContractTests(unittest.TestCase):
                 self.assertTrue(conditions.get("AvailableForStart"))
                 self.assertTrue(conditions.get("AvailableForFinish"))
 
-    def test_clean_level_one_profile_has_one_manual_offer(self):
+    def test_clean_level_one_profile_has_two_weapon_choices_and_ground_zero_work(self):
         visible = []
         for _, quest in self.quests:
             start = quest["conditions"]["AvailableForStart"]
@@ -49,7 +49,7 @@ class M1NativeLifecycleContractTests(unittest.TestCase):
             if all(condition.get("value", 1) <= 1 for condition in start if condition["conditionType"] == "Level"):
                 visible.append(quest["_id"])
 
-        self.assertEqual(visible, ["5d404ebd654de4efecef71d2"])
+        self.assertEqual(set(visible), {"738588764e9531bdb8ccfc5f", "eb93814dd020bdc131d526aa", "02c07ee31821696597ceabef", "e81e5d79bfdf40efc87cdf99"})
 
     def test_no_rewards_are_issued_at_accept_time(self):
         for path, quest in self.quests:

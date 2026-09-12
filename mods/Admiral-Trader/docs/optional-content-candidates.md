@@ -1,12 +1,12 @@
 # Optional content candidates
 
-These integrations are candidates for later Admiral milestones. They do not change the stable campaign, the current 43 quest records, rewards, graph, assortment, or runtime behavior.
+These integrations remain optional. M7 admits verified WTT weapon templates as alternatives inside the 19 new Arsenal assignments. Icebreaker adds a conditional side investigation while the other candidates remain reserved.
 
 The 2026-09-12 inspection of the active `C:\Games\SPT` installation confirmed WTT Armory, WTT Content Backport and WTT CommonLib. The authoritative server metadata is Armory **2.0.5** (`com.wtt.armory`, SPT `~4.1.0`), Content Backport **2.0.1** (`com.wtt.contentbackport`, SPT `~4.1.1`) and CommonLib **3.0.6** (`com.wtt.commonlib`, SPT `~4.1.3`). The installed Armory server and client assemblies both report 2.0.5; the folder supplied as “3.0.0” therefore does not contain an Armory 3.0.0 runtime.
 
 Static inventory validation found 833 unique Armory templates including 77 weapon roots, and 642 unique Backport templates including 14 weapon-shaped roots. There are no duplicate IDs between the two mods and no collisions with the SPT 4.1.5 item database. Representative exact weapon IDs are `6868d249cdee524f8c0ba45f` (Beretta 92FS), `68fd4feab87d77a5aaf6bf64` (CheyTac M200), `6920a431c8f2ed5000c540a0` (XM8), `6871284e9a353bb50606f3ed` (AS VAL MOD.4), `69f9ebbcaae020b0db02f65d` (QBZ-191), and `68aee763130c00663d08aea8` (TKPD). Exact admission remains per-template rather than folder-name based.
 
-The latest combined server start proves all three GUIDs pass SPT validation. That run then stops in the unrelated B&A&HB Dogtag Case preflight before WTT item callbacks and Economy Admiral final analysis complete, so it is not evidence of a Trader/WTT failure. The previous complete Economy run passed its runtime gate, but it predates installation of Armory and Backport. A later full combined smoke must therefore re-check the final item/handbook counts once the B&A&HB blocker is repaired in its own workstream.
+Complete combined server starts prove all three GUIDs pass SPT validation and Economy Admiral completes its final database analysis and Enforce transaction with WTT present. The admitted inventory is recorded in `manifests/optional-weapon-runtime.json`: 50 weapons map safely to native mechanical pools; four clone-based false classifications remain deferred.
 
 ## Shared compatibility contract
 
@@ -20,25 +20,29 @@ The latest combined server start proves all three GUIDs pass SPT validation. Tha
 
 ## WTT Armory
 
-Candidate roles:
+Runtime role:
 
 - additional models in later weapon-rotation stages;
 - optional weapon-specific objectives with small concurrent choice;
 - finite quest rewards or Admiral offers unlocked by the corresponding qualification.
 
-Admission requires an installed-version inventory containing exact weapon, magazine, ammunition, and required-part template IDs. A complete preset must be validated as purchasable and usable against the exact SPT runtime. WTT Armory models may extend a pool, but no core quest may require one and no empty fallback objective may be published when the mod is absent.
+Admission uses exact weapon template IDs and their verified native clone role. These templates extend matching kill-condition pools only; Admiral neither sells nor rewards an incomplete WTT preset in this milestone. No core quest requires one and no empty fallback objective is published when the mod is absent.
 
 The native insertion points are authored in `manifests/weapon-rotation-expansion-plan.json`. A WTT model that behaves like an existing class joins the closest later pool after exact-ID validation. A categorically different model may receive an optional side assignment, but every affected quest retains a native weapon route and the two-active-assignment pacing limit.
 
 ## WTT Content Backport
 
-Content Backport is a second optional source for later weapon rotation, rewards, operations and finite unlocks. Its 14 weapon-shaped records include true weapons and at least one attachment cloned from a shotgun template, so admission must verify the final runtime parent and weapon class rather than trusting the source filename or clone type. No Backport ID may enter a core-only pool or become a prerequisite.
+Content Backport is a second optional source for weapon rotation and future rewards, operations and finite unlocks. Three verified rifle roots currently join matching native pools. No Backport ID enters a prerequisite.
 
 Armory and Backport authored handbook and flea values remain the price authority for their items. Economy Admiral may apply its configured global trader-fiat, trader-sell, Flea and map-loot pressure after registration, but it must not rewrite foreign templates, authored barter composition, spawn tables, or individual custom-item values. Unknown acquisition channels remain explicitly unknown instead of being guessed.
 
 ## Icebreaker
 
-Candidate role: optional operations on the additional map after its installation, location identity, access rules, extraction contract, and existing quest progression have been inspected.
+Icebreaker 1.1.0 is now verified in the installed SPT 4.1.5 runtime. Admiral conditionally publishes a separate ten-part **Boreas Protocol** investigation only when the exact Icebreaker location identity (`icebreaker` / `882b2fa04bbd616567022938`) and its server DLL are present. The branch begins after Icebreaker's own **Boreas - Part 3**, reuses its authored repair/camp/transit zones, and does not duplicate its custom item collection quests.
+
+The normal Admiral campaign remains 172 quests. With Icebreaker present it becomes 182. No core quest points into the optional branch, Admiral adds no Icebreaker item to a profile, and removing Icebreaker suppresses the branch without invalidating the core campaign.
+
+The upstream `1.1.0` source at commit `728ea513eefb8f7f3bc4f9b6eecaa3fe7e3666e2` compiles against SPT 4.1.5 and declares 14 bundled quests distributed across existing vanilla traders and the native BTR trader. The installed runtime confirmed both extracts (`Icebreaker_Exit_Gate`, `Icebreaker_Exit_Heli`), four reusable Boreas quest zones, its custom-item identities and the complete Economy Admiral classification pass. Icebreaker's own client dependencies remain Icebreaker's responsibility; Admiral references none of their assemblies.
 
 Icebreaker quests must remain side operations. They cannot gate Admiral loyalty, the core campaign, native-map quests, or essential storefront access. Admiral does not provide or bypass access to the map unless that behavior belongs to an explicitly verified item or quest contract.
 

@@ -1,0 +1,68 @@
+import json, unittest
+from pathlib import Path
+
+ROOT=Path(__file__).resolve().parents[1]
+
+class OptionalStorefrontRuntimeTests(unittest.TestCase):
+    def test_core_armor_offers_include_native_required_components(self):
+        assort=json.loads((ROOT/"db/assort.json").read_text(encoding="utf-8"))
+        required={"5d5e9c74a4b9364855191c40","5b44cad286f77402a54ae7e5","5d5d87f786f77427997cfaef"}
+        roots={x["_tpl"]:x["_id"] for x in assort["items"] if x.get("parentId")=="hideout" and x["_tpl"] in required}
+        self.assertEqual(set(roots),required)
+        for tpl,root_id in roots.items():
+            self.assertTrue(any(x.get("parentId")==root_id for x in assort["items"]),tpl)
+        ids=[x["_id"] for x in assort["items"]]
+        self.assertEqual(len(ids),len(set(ids)))
+        valid=set(ids)|{"hideout"}
+        self.assertTrue(all(x.get("parentId") in valid for x in assort["items"]))
+
+    def test_optional_content_is_attached_after_third_party_template_publication(self):
+        early=(ROOT/"server/TraderRegistration.cs").read_text(encoding="utf-8")
+        quests=(ROOT/"server/QuestRegistration.cs").read_text(encoding="utf-8")
+        late=(ROOT/"server/OptionalContentRegistration.cs").read_text(encoding="utf-8")
+        self.assertNotIn("MergeOptionalStorefront",early)
+        self.assertNotIn("ApplyOptionalRewardReplacements",quests)
+        self.assertIn("OnLoadOrder.PostLoad",late)
+        self.assertIn("templateTable.Items.ContainsKey",late)
+        self.assertIn("MergeOptionalStorefront(modPath, trader.Assort)",late)
+        self.assertIn("ApplyOptionalRewardReplacements(modPath)",late)
+
+    def test_optional_sources_are_bounded_and_never_required(self):
+        manifest=json.loads((ROOT/"manifests/optional-storefront-runtime.json").read_text(encoding="utf-8"))
+        self.assertFalse(manifest["requiredDependencies"])
+        self.assertEqual(manifest["offerCount"],62)
+        self.assertEqual(manifest["totalAdmiralOffersWhenPresent"],113)
+        self.assertGreaterEqual(sum(x["loyaltyLevel"] == 1 for x in manifest["offers"]),20)
+        self.assertEqual({x["source"] for x in manifest["offers"]},{"WTT Armory","WTT Content Backport"})
+        self.assertEqual(sum(x["category"] == "complete weapon" for x in manifest["offers"]),20)
+        self.assertEqual(len(manifest["questRewardReplacements"]),5)
+        self.assertTrue(all(x["mode"] == "replace-existing-item-reward" for x in manifest["questRewardReplacements"]))
+
+    def test_optional_rewards_are_single_bounded_replacements(self):
+        rewards=json.loads((ROOT/"db/optional/storefront/quest-reward-replacements.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(rewards),5)
+        for quest_id,reward in rewards.items():
+            self.assertEqual(reward["type"],"Item",quest_id)
+            self.assertEqual(reward["value"],1,quest_id)
+            self.assertEqual(reward["items"][0]["_id"],reward["target"],quest_id)
+            self.assertTrue(all(x.get("upd",{}).get("StackObjectsCount")==1 for x in reward["items"]),quest_id)
+
+    def test_optional_assorts_have_complete_native_shapes_and_unique_ids(self):
+        seen=set()
+        for filename,expected_roots in (("wtt-armory-assort.json",43),("content-backport-assort.json",19)):
+            assort=json.loads((ROOT/"db/optional/storefront"/filename).read_text(encoding="utf-8"))
+            roots=[x for x in assort["items"] if x.get("parentId")=="hideout"]
+            self.assertEqual(len(roots),expected_roots)
+            self.assertEqual(set(assort),{"items","barter_scheme","loyal_level_items"})
+            self.assertEqual(set(assort["barter_scheme"]),{x["_id"] for x in roots})
+            self.assertEqual(set(assort["loyal_level_items"]),{x["_id"] for x in roots})
+            ids={x["_id"] for x in assort["items"]}
+            self.assertEqual(len(ids),len(assort["items"]))
+            self.assertFalse(seen & ids); seen |= ids
+            for root in roots:
+                self.assertFalse(root["upd"]["UnlimitedCount"])
+                self.assertGreater(root["upd"]["BuyRestrictionMax"],0)
+                self.assertLessEqual(root["upd"]["BuyRestrictionMax"],60)
+                self.assertGreater(len([x for x in assort["items"] if x["_id"]==root["_id"] or x.get("parentId") in ids]),0)
+
+if __name__=="__main__": unittest.main()

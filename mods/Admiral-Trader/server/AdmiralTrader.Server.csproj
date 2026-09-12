@@ -49,6 +49,11 @@
     <Content Include="..\manifests\relationship-stock.json" Link="manifests\relationship-stock.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\manifests\m5-relationship-runtime.json" Link="manifests\m5-relationship-runtime.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\manifests\m5-spt415-item-evidence.json" Link="manifests\m5-spt415-item-evidence.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\manifests\m8-campaign-expansion-runtime.json" Link="manifests\m8-campaign-expansion-runtime.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\manifests\optional-weapon-runtime.json" Link="manifests\optional-weapon-runtime.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\manifests\campaign-authored-100-review.json" Link="manifests\campaign-authored-100-review.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\manifests\story-campaign-runtime.json" Link="manifests\story-campaign-runtime.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\manifests\icebreaker-runtime.json" Link="manifests\icebreaker-runtime.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\manifests\storefront-core-expansion.json" Link="manifests\storefront-core-expansion.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\manifests\identity-assets.json" Link="manifests\identity-assets.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\base.json" Link="db\base.json" CopyToOutputDirectory="PreserveNewest" />
@@ -57,5 +62,8 @@
     <Content Include="..\db\questassort.json" Link="db\questassort.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\quests\*.json" Link="db\quests\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\locales\*.json" Link="db\locales\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\db\optional\icebreaker\**\*.json" Link="db\optional\icebreaker\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\db\optional\storefront\*.json" Link="db\optional\storefront\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\manifests\optional-storefront-runtime.json" Link="manifests\optional-storefront-runtime.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

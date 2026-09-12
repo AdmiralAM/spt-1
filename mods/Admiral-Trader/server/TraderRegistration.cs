@@ -105,7 +105,7 @@ public sealed class AdmiralTraderRegistration(
                 tradersTable.Remove(traderBase.Id);
             throw;
         }
-        logger.Success($"Admiral Trader registered with id {traderBase.Id} and {assort.Items.Count} assort item records");
+        logger.Success($"Admiral Trader registered with id {traderBase.Id} and {assort.Items.Count} core assort item records");
     }
 
     private static void ValidateTraderData(
@@ -200,6 +200,7 @@ public sealed class AdmiralTraderRegistration(
                 throw new InvalidDataException($"Relationship offer {offerId} loyalty mapping drift");
         }
     }
+
 
     private void AddLocales(TraderBase traderBase)
     {

@@ -1,0 +1,3300 @@
+{
+  "schemaVersion": 1,
+  "status": "approved-runtime-source",
+  "campaignQuestCount": 100,
+  "chainCount": 10,
+  "rules": {
+    "coreWorksWithoutExternalMods": true,
+    "weaponRotationSeparate": true,
+    "equipmentRotationSeparate": true,
+    "maximumConcurrentWeaponRotations": 2,
+    "questItemsRequireAcceptedQuest": true,
+    "questItemLossRecoveryRequired": true,
+    "externalItemsMayNotGateCore": true,
+    "typicalEliminationMaximum": 12
+  },
+  "chains": [
+    {
+      "chain": 1,
+      "title": "Эпицентр: Первый контур",
+      "map": "Эпицентр",
+      "runtimeLocations": [
+        "Sandbox",
+        "Sandbox_high"
+      ],
+      "prerequisiteChains": [],
+      "quests": [
+        {
+          "id": "e81e5d79bfdf40efc87cdf99",
+          "order": 1,
+          "name": "Чужая частота",
+          "level": 1,
+          "locations": [
+            "Sandbox",
+            "Sandbox_high"
+          ],
+          "brief": "Осмотреть разбитую гражданскую радиостанцию в стартовом секторе и вынести пригодный элемент питания.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "5672cb124bdc2d1a0f8b4568"
+            }
+          ],
+          "prerequisite": null,
+          "crossChainPrerequisites": [],
+          "risk": "low",
+          "rewards": {
+            "xp": 2500,
+            "roubles": 11000,
+            "standing": 0.005,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Эпицентр storyline: Чужая частота"
+        },
+        {
+          "id": "e472a13c1478f7b9258522d3",
+          "order": 2,
+          "name": "Нулевая отметка",
+          "level": 2,
+          "locations": [
+            "Sandbox",
+            "Sandbox_high"
+          ],
+          "brief": "Осмотреть три наблюдательные точки и отметить безопасный проход.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 3
+            },
+            {
+              "kind": "placeOrMark",
+              "quantity": 3,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "e81e5d79bfdf40efc87cdf99",
+          "crossChainPrerequisites": [],
+          "risk": "low",
+          "rewards": {
+            "xp": 3250,
+            "roubles": 15000,
+            "standing": 0.006,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Эпицентр storyline: Нулевая отметка"
+        },
+        {
+          "id": "4f3828ef74a66f154f6ac397",
+          "order": 3,
+          "name": "Последний экипаж",
+          "level": 3,
+          "locations": [
+            "Sandbox",
+            "Sandbox_high"
+          ],
+          "brief": "Найти у старого терминала USB-переходник с фрагментом записи о последних сменах.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "5909e99886f7740c983b9984"
+            }
+          ],
+          "prerequisite": "e472a13c1478f7b9258522d3",
+          "crossChainPrerequisites": [],
+          "risk": "low",
+          "rewards": {
+            "xp": 4000,
+            "roubles": 18000,
+            "standing": 0.007,
+            "itemRewardTheme": "field supplies",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Эпицентр storyline: Последний экипаж"
+        },
+        {
+          "id": "52cbb69039f63f3cfbad321a",
+          "order": 4,
+          "name": "Запертый эфир",
+          "level": 4,
+          "locations": [
+            "Sandbox",
+            "Sandbox_high"
+          ],
+          "brief": "Проверить офис в винном магазине и вынести повреждённый накопитель с журналом внутренней связи.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            },
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590a386e86f77429692b27ab"
+            }
+          ],
+          "prerequisite": "4f3828ef74a66f154f6ac397",
+          "crossChainPrerequisites": [],
+          "risk": "low",
+          "rewards": {
+            "xp": 4750,
+            "roubles": 21000,
+            "standing": 0.007,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Эпицентр storyline: Запертый эфир"
+        },
+        {
+          "id": "4876c8bf7bb9677e3970b01c",
+          "order": 5,
+          "name": "Слепая зона",
+          "level": 5,
+          "locations": [
+            "Sandbox",
+            "Sandbox_high"
+          ],
+          "brief": "Установить два датчика на противоположных подходах, затем выжить.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 2,
+              "oneRaid": false
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "52cbb69039f63f3cfbad321a",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 5500,
+            "roubles": 24000,
+            "standing": 0.007,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Эпицентр storyline: Слепая зона"
+        },
+        {
+          "id": "59230813b9f9e11ceed08033",
+          "order": 6,
+          "name": "Незваные слушатели",
+          "level": 6,
+          "locations": [
+            "Sandbox",
+            "Sandbox_high"
+          ],
+          "brief": "Устранить небольшую группу Диких возле узла связи без ограничения одной конкретной пушкой.",
+          "objectives": [
+            {
+              "kind": "eliminate",
+              "quantity": 4,
+              "target": "Scav"
+            }
+          ],
+          "prerequisite": "4876c8bf7bb9677e3970b01c",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 6250,
+            "roubles": 28000,
+            "standing": 0.008,
+            "itemRewardTheme": "communications components",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Эпицентр storyline: Незваные слушатели"
+        },
+        {
+          "id": "bb49cbdbae242ffef21f95b7",
+          "order": 7,
+          "name": "Резервное питание",
+          "level": 7,
+          "locations": [
+            "Sandbox",
+            "Sandbox_high"
+          ],
+          "brief": "Найти аккумуляторный модуль в подземной зоне и доставить Адмиралу.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590a358486f77429692b2790"
+            }
+          ],
+          "prerequisite": "59230813b9f9e11ceed08033",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 7000,
+            "roubles": 31000,
+            "standing": 0.009,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Эпицентр storyline: Резервное питание"
+        },
+        {
+          "id": "ac7bd06524b05c40da6f56ef",
+          "order": 8,
+          "name": "Контрольный пакет",
+          "level": 8,
+          "locations": [
+            "Sandbox",
+            "Sandbox_high"
+          ],
+          "brief": "Оставить защищённый контейнер в авторском тайнике и проверить соседний выход.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            },
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "bb49cbdbae242ffef21f95b7",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 7750,
+            "roubles": 34000,
+            "standing": 0.009,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Эпицентр storyline: Контрольный пакет"
+        },
+        {
+          "id": "05c97b5823b0c42b7c25ccf9",
+          "order": 9,
+          "name": "Открытый канал",
+          "level": 9,
+          "locations": [
+            "Sandbox",
+            "Sandbox_high"
+          ],
+          "brief": "Установить ретранслятор на крыше, затем подтвердить работу канала успешной эвакуацией.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "ac7bd06524b05c40da6f56ef",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 8500,
+            "roubles": 38000,
+            "standing": 0.01,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Эпицентр storyline: Открытый канал"
+        },
+        {
+          "id": "6d9fda8875aed2082b4da528",
+          "order": 10,
+          "name": "Первый контур",
+          "level": 10,
+          "locations": [
+            "Sandbox",
+            "Sandbox_high"
+          ],
+          "brief": "Забрать ответный пакет из ранее подготовленного тайника; открыть базовую служебную полку магазина.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "660bbc47c38b837877075e47"
+            }
+          ],
+          "prerequisite": "05c97b5823b0c42b7c25ccf9",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 9250,
+            "roubles": 41000,
+            "standing": 0.01,
+            "itemRewardTheme": "basic service assortment",
+            "assortmentUnlock": "basic service assortment"
+          },
+          "successMessageIntent": "Advance Эпицентр storyline: Первый контур"
+        }
+      ]
+    },
+    {
+      "chain": 2,
+      "title": "Таможня: Исчезнувший конвой",
+      "map": "Таможня",
+      "runtimeLocations": [
+        "bigmap"
+      ],
+      "prerequisiteChains": [
+        1
+      ],
+      "quests": [
+        {
+          "id": "88c98ecb21d126970231b220",
+          "order": 1,
+          "name": "Следы колонны",
+          "level": 6,
+          "locations": [
+            "bigmap"
+          ],
+          "brief": "Осмотреть три точки предполагаемого маршрута грузовиков.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 3
+            }
+          ],
+          "prerequisite": null,
+          "crossChainPrerequisites": [
+            {
+              "chain": 1,
+              "questOrder": 10
+            }
+          ],
+          "risk": "low",
+          "rewards": {
+            "xp": 5000,
+            "roubles": 20000,
+            "standing": 0.007,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Таможня storyline: Следы колонны"
+        },
+        {
+          "id": "5fd9397fbc40a37c1abf3790",
+          "order": 2,
+          "name": "Машина без водителя",
+          "level": 7,
+          "locations": [
+            "bigmap"
+          ],
+          "brief": "Найти нужный грузовик и вынести путевой лист из кабины.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590c645c86f77412b01304d9"
+            }
+          ],
+          "prerequisite": "88c98ecb21d126970231b220",
+          "crossChainPrerequisites": [],
+          "risk": "low",
+          "rewards": {
+            "xp": 5750,
+            "roubles": 24000,
+            "standing": 0.007,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Таможня storyline: Машина без водителя"
+        },
+        {
+          "id": "ed21744058dec7587de1081f",
+          "order": 3,
+          "name": "Ключ диспетчера",
+          "level": 9,
+          "locations": [
+            "bigmap"
+          ],
+          "brief": "Добыть или иметь один ключ из честного пула доступа к следующему объекту; ключ не сдаётся.",
+          "objectives": [
+            {
+              "kind": "possessAccessKey",
+              "quantity": 1,
+              "foundInRaid": false,
+              "handover": false
+            }
+          ],
+          "prerequisite": "5fd9397fbc40a37c1abf3790",
+          "crossChainPrerequisites": [],
+          "risk": "low",
+          "rewards": {
+            "xp": 7000,
+            "roubles": 29000,
+            "standing": 0.007,
+            "itemRewardTheme": "repair materials",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Таможня storyline: Ключ диспетчера"
+        },
+        {
+          "id": "3547b2765c993b58b04e6074",
+          "order": 4,
+          "name": "Ночная ведомость",
+          "level": 10,
+          "locations": [
+            "bigmap"
+          ],
+          "brief": "Проникнуть в закрытый офис и вынести накладную.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            },
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590c651286f7741e566b6461"
+            }
+          ],
+          "prerequisite": "ed21744058dec7587de1081f",
+          "crossChainPrerequisites": [],
+          "risk": "low",
+          "rewards": {
+            "xp": 7750,
+            "roubles": 32000,
+            "standing": 0.008,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Таможня storyline: Ночная ведомость"
+        },
+        {
+          "id": "70a745d426d2ba09157eb734",
+          "order": 5,
+          "name": "Подмена маркировки",
+          "level": 11,
+          "locations": [
+            "bigmap"
+          ],
+          "brief": "Установить метки на двух партиях контрабанды.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 2,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "3547b2765c993b58b04e6074",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 8500,
+            "roubles": 35000,
+            "standing": 0.009,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Таможня storyline: Подмена маркировки"
+        },
+        {
+          "id": "743532fcd12b4a88ff7cd83f",
+          "order": 6,
+          "name": "Лишний посредник",
+          "level": 13,
+          "locations": [
+            "bigmap"
+          ],
+          "brief": "Найти тело курьера и забрать закодированную записку.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "660bbc47c38b837877075e47"
+            }
+          ],
+          "prerequisite": "70a745d426d2ba09157eb734",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 9750,
+            "roubles": 40000,
+            "standing": 0.009,
+            "itemRewardTheme": "weapon maintenance parts",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Таможня storyline: Лишний посредник"
+        },
+        {
+          "id": "e9de043a8379c87027f762b3",
+          "order": 7,
+          "name": "Двойное дно",
+          "level": 14,
+          "locations": [
+            "bigmap"
+          ],
+          "brief": "Открыть багажник сюжетной машины и вынести скрытый контейнер.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "5c12613b86f7743bbe2c3f76"
+            }
+          ],
+          "prerequisite": "743532fcd12b4a88ff7cd83f",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 10500,
+            "roubles": 44000,
+            "standing": 0.009,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Таможня storyline: Двойное дно"
+        },
+        {
+          "id": "837bdd0ab80a2a1382caeedd",
+          "order": 8,
+          "name": "Сорванная передача",
+          "level": 15,
+          "locations": [
+            "bigmap"
+          ],
+          "brief": "Устранить четырёх охранников в районе сорванной передачи, забрать носитель курьера и выжить.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590c621186f774138d11ea29"
+            },
+            {
+              "kind": "eliminate",
+              "quantity": 4,
+              "target": "Scav"
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "e9de043a8379c87027f762b3",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 11250,
+            "roubles": 47000,
+            "standing": 0.01,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Таможня storyline: Сорванная передача"
+        },
+        {
+          "id": "94dfbf0ec29ab7391528f217",
+          "order": 9,
+          "name": "Получатель",
+          "level": 17,
+          "locations": [
+            "bigmap"
+          ],
+          "brief": "Найти доказательство связи склада с конечным покупателем.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            }
+          ],
+          "prerequisite": "837bdd0ab80a2a1382caeedd",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 12500,
+            "roubles": 52000,
+            "standing": 0.011,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Таможня storyline: Получатель"
+        },
+        {
+          "id": "bcf61611e9723c765e07a740",
+          "order": 10,
+          "name": "Закрыть маршрут",
+          "level": 18,
+          "locations": [
+            "bigmap"
+          ],
+          "brief": "Доставить контейнер и документы; открыть уникальные ремонтные и оружейные расходники.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            },
+            {
+              "kind": "handover",
+              "quantity": 1,
+              "foundInRaid": false,
+              "itemTpl": "5c12613b86f7743bbe2c3f76"
+            }
+          ],
+          "prerequisite": "94dfbf0ec29ab7391528f217",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 13250,
+            "roubles": 55000,
+            "standing": 0.011,
+            "itemRewardTheme": "logistics assortment",
+            "assortmentUnlock": "logistics assortment"
+          },
+          "successMessageIntent": "Advance Таможня storyline: Закрыть маршрут"
+        }
+      ]
+    },
+    {
+      "chain": 3,
+      "title": "Лес: Сеть наблюдения",
+      "map": "Лес",
+      "runtimeLocations": [
+        "Woods"
+      ],
+      "prerequisiteChains": [
+        1
+      ],
+      "quests": [
+        {
+          "id": "c28a9b8837dcf639ba524cc3",
+          "order": 1,
+          "name": "Старые ориентиры",
+          "level": 8,
+          "locations": [
+            "Woods"
+          ],
+          "brief": "Посетить два заброшенных наблюдательных поста.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 2
+            }
+          ],
+          "prerequisite": null,
+          "crossChainPrerequisites": [
+            {
+              "chain": 1,
+              "questOrder": 10
+            }
+          ],
+          "risk": "medium",
+          "rewards": {
+            "xp": 6000,
+            "roubles": 24000,
+            "standing": 0.007,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лес storyline: Старые ориентиры"
+        },
+        {
+          "id": "1ca43f65c714ea7f9eec6e2a",
+          "order": 2,
+          "name": "Оптика в траве",
+          "level": 9,
+          "locations": [
+            "Woods"
+          ],
+          "brief": "Найти повреждённый наблюдательный прибор у одного из постов и вынести его.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "5c052f6886f7746b1e3db148"
+            }
+          ],
+          "prerequisite": "c28a9b8837dcf639ba524cc3",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 6750,
+            "roubles": 27000,
+            "standing": 0.008,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лес storyline: Оптика в траве"
+        },
+        {
+          "id": "b61a1cd8d6a7a82e81033dbc",
+          "order": 3,
+          "name": "Тихая установка",
+          "level": 11,
+          "locations": [
+            "Woods"
+          ],
+          "brief": "Разместить камеру у маршрута патруля, не требуя убийств.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "1ca43f65c714ea7f9eec6e2a",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 8000,
+            "roubles": 32000,
+            "standing": 0.009,
+            "itemRewardTheme": "optics",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лес storyline: Тихая установка"
+        },
+        {
+          "id": "dcae6b2142ca93b7dd77df3e",
+          "order": 4,
+          "name": "Карта обходов",
+          "level": 12,
+          "locations": [
+            "Woods"
+          ],
+          "brief": "Забрать карту патрулей из запертого служебного помещения.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590c651286f7741e566b6461"
+            }
+          ],
+          "prerequisite": "b61a1cd8d6a7a82e81033dbc",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 8750,
+            "roubles": 36000,
+            "standing": 0.009,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лес storyline: Карта обходов"
+        },
+        {
+          "id": "37475cbab1174e5619c16939",
+          "order": 5,
+          "name": "Пропавший наблюдатель",
+          "level": 14,
+          "locations": [
+            "Woods"
+          ],
+          "brief": "Найти разведчика и вынести его кодовую пластину.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590c621186f774138d11ea29"
+            }
+          ],
+          "prerequisite": "dcae6b2142ca93b7dd77df3e",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 10000,
+            "roubles": 41000,
+            "standing": 0.009,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лес storyline: Пропавший наблюдатель"
+        },
+        {
+          "id": "c5f5947263134fcda2387af8",
+          "order": 6,
+          "name": "Проверка дистанции",
+          "level": 15,
+          "locations": [
+            "Woods"
+          ],
+          "brief": "Устранить 3–5 целей на разумной дистанции из нескольких подходящих классов оружия.",
+          "objectives": [
+            {
+              "kind": "eliminate",
+              "quantity": 5,
+              "target": "Any"
+            }
+          ],
+          "prerequisite": "37475cbab1174e5619c16939",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 10750,
+            "roubles": 44000,
+            "standing": 0.01,
+            "itemRewardTheme": "reconnaissance equipment",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лес storyline: Проверка дистанции"
+        },
+        {
+          "id": "9bf1b7ad200b0f5f59e9cbbd",
+          "order": 7,
+          "name": "Ложный костёр",
+          "level": 17,
+          "locations": [
+            "Woods"
+          ],
+          "brief": "Оставить приманку в лагере и проверить точку наблюдения.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            },
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "c5f5947263134fcda2387af8",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 12000,
+            "roubles": 49000,
+            "standing": 0.011,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лес storyline: Ложный костёр"
+        },
+        {
+          "id": "f0874dd26a7b1f76d86aad88",
+          "order": 8,
+          "name": "Смена частоты",
+          "level": 18,
+          "locations": [
+            "Woods"
+          ],
+          "brief": "Установить передатчик и забрать ответный носитель из ответного тайника.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "63a0b2eabea67a6d93009e52"
+            },
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "9bf1b7ad200b0f5f59e9cbbd",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 12750,
+            "roubles": 52000,
+            "standing": 0.011,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лес storyline: Смена частоты"
+        },
+        {
+          "id": "9b41c75e4d147894f087e2b2",
+          "order": 9,
+          "name": "Чистый отход",
+          "level": 20,
+          "locations": [
+            "Woods"
+          ],
+          "brief": "Пройти заданный маршрут и эвакуироваться без требования большого числа убийств.",
+          "objectives": [
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "f0874dd26a7b1f76d86aad88",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 14000,
+            "roubles": 58000,
+            "standing": 0.011,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лес storyline: Чистый отход"
+        },
+        {
+          "id": "60df546a03bdc74ca45fb8ca",
+          "order": 10,
+          "name": "Видеть дальше",
+          "level": 21,
+          "locations": [
+            "Woods"
+          ],
+          "brief": "Передать полный комплект разведданных; открыть уникальную оптику или готовый наблюдательный пресет.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            }
+          ],
+          "prerequisite": "9b41c75e4d147894f087e2b2",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 14750,
+            "roubles": 61000,
+            "standing": 0.012,
+            "itemRewardTheme": "observation preset",
+            "assortmentUnlock": "observation preset"
+          },
+          "successMessageIntent": "Advance Лес storyline: Видеть дальше"
+        }
+      ]
+    },
+    {
+      "chain": 4,
+      "title": "Развязка: Мёртвый склад",
+      "map": "Развязка",
+      "runtimeLocations": [
+        "Interchange"
+      ],
+      "prerequisiteChains": [
+        2
+      ],
+      "quests": [
+        {
+          "id": "e69ffaae178e648aff9de3fd",
+          "order": 1,
+          "name": "Закрытые витрины",
+          "level": 12,
+          "locations": [
+            "Interchange"
+          ],
+          "brief": "Осмотреть три павильона, связанные с пропавшим грузом.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 3
+            }
+          ],
+          "prerequisite": null,
+          "crossChainPrerequisites": [
+            {
+              "chain": 2,
+              "questOrder": 10
+            }
+          ],
+          "risk": "medium",
+          "rewards": {
+            "xp": 8000,
+            "roubles": 31000,
+            "standing": 0.009,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Развязка storyline: Закрытые витрины"
+        },
+        {
+          "id": "5268717351b03068d3b68ecd",
+          "order": 2,
+          "name": "Служебный вход",
+          "level": 13,
+          "locations": [
+            "Interchange"
+          ],
+          "brief": "Найти пропуск сотрудника в охранной зоне и вынести его.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590c621186f774138d11ea29"
+            }
+          ],
+          "prerequisite": "e69ffaae178e648aff9de3fd",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 8750,
+            "roubles": 34000,
+            "standing": 0.009,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Развязка storyline: Служебный вход"
+        },
+        {
+          "id": "b4304b0bda66037ec83deba6",
+          "order": 3,
+          "name": "Нет питания",
+          "level": 15,
+          "locations": [
+            "Interchange"
+          ],
+          "brief": "Установить предохранитель или силовой модуль в технической точке.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "5268717351b03068d3b68ecd",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 10000,
+            "roubles": 40000,
+            "standing": 0.009,
+            "itemRewardTheme": "rare consumables",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Развязка storyline: Нет питания"
+        },
+        {
+          "id": "dde90a4fac0d58df868b8377",
+          "order": 4,
+          "name": "Складская книга",
+          "level": 16,
+          "locations": [
+            "Interchange"
+          ],
+          "brief": "Проникнуть в закрытую подсобку и забрать бумажный реестр.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            },
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590c645c86f77412b01304d9"
+            }
+          ],
+          "prerequisite": "b4304b0bda66037ec83deba6",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 10750,
+            "roubles": 43000,
+            "standing": 0.01,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Развязка storyline: Складская книга"
+        },
+        {
+          "id": "e74018c43dc3f47551445192",
+          "order": 5,
+          "name": "Неправильные коробки",
+          "level": 18,
+          "locations": [
+            "Interchange"
+          ],
+          "brief": "Пометить три подозрительные грузовые партии, забрать сопроводительную ведомость и эвакуироваться.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 3,
+              "oneRaid": false
+            },
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590c651286f7741e566b6461"
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "dde90a4fac0d58df868b8377",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 12000,
+            "roubles": 48000,
+            "standing": 0.011,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Развязка storyline: Неправильные коробки"
+        },
+        {
+          "id": "cbf1ff74b68b7026ebae3bf6",
+          "order": 6,
+          "name": "Камера хранения",
+          "level": 19,
+          "locations": [
+            "Interchange"
+          ],
+          "brief": "Найти запись наблюдения и эвакуироваться с носителем.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "61bf7c024770ee6f9c6b8b53"
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "e74018c43dc3f47551445192",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 12750,
+            "roubles": 51000,
+            "standing": 0.011,
+            "itemRewardTheme": "weapon components",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Развязка storyline: Камера хранения"
+        },
+        {
+          "id": "b69566c83e350e531fb4da63",
+          "order": 7,
+          "name": "После закрытия",
+          "level": 21,
+          "locations": [
+            "Interchange"
+          ],
+          "brief": "Проверить две точки после закрытия комплекса и пережить рейд.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 2
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "cbf1ff74b68b7026ebae3bf6",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 14000,
+            "roubles": 56000,
+            "standing": 0.011,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Развязка storyline: После закрытия"
+        },
+        {
+          "id": "b713c4f910eb245be9cda205",
+          "order": 8,
+          "name": "Чужая инвентаризация",
+          "level": 22,
+          "locations": [
+            "Interchange"
+          ],
+          "brief": "Устранить малую группу конкурентов рядом со складом, затем проверить груз.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            },
+            {
+              "kind": "eliminate",
+              "quantity": 4,
+              "target": "Any"
+            }
+          ],
+          "prerequisite": "b69566c83e350e531fb4da63",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 14750,
+            "roubles": 60000,
+            "standing": 0.012,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Развязка storyline: Чужая инвентаризация"
+        },
+        {
+          "id": "4b4bcd640d8659dd0e2e7fba",
+          "order": 9,
+          "name": "Образец со стены",
+          "level": 24,
+          "locations": [
+            "Interchange"
+          ],
+          "brief": "Вынести экспериментальный предмет из закрытой товарной зоны.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "5c12613b86f7743bbe2c3f76"
+            }
+          ],
+          "prerequisite": "b713c4f910eb245be9cda205",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 16000,
+            "roubles": 65000,
+            "standing": 0.013,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Развязка storyline: Образец со стены"
+        },
+        {
+          "id": "181f902c56dab247a1f49d0c",
+          "order": 10,
+          "name": "Своя полка",
+          "level": 25,
+          "locations": [
+            "Interchange"
+          ],
+          "brief": "Передать реестр и образец; открыть уникальную ограниченную товарную линию.",
+          "objectives": [
+            {
+              "kind": "handover",
+              "quantity": 1,
+              "foundInRaid": false,
+              "itemTpl": "5c12613b86f7743bbe2c3f76"
+            }
+          ],
+          "prerequisite": "4b4bcd640d8659dd0e2e7fba",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 16750,
+            "roubles": 68000,
+            "standing": 0.013,
+            "itemRewardTheme": "limited warehouse assortment",
+            "assortmentUnlock": "limited warehouse assortment"
+          },
+          "successMessageIntent": "Advance Развязка storyline: Своя полка"
+        }
+      ]
+    },
+    {
+      "chain": 5,
+      "title": "Берег: Санитарный коридор",
+      "map": "Берег",
+      "runtimeLocations": [
+        "Shoreline"
+      ],
+      "prerequisiteChains": [
+        3
+      ],
+      "quests": [
+        {
+          "id": "65c67fd56ef827fd8f8e28ae",
+          "order": 1,
+          "name": "Неотвеченный вызов",
+          "level": 15,
+          "locations": [
+            "Shoreline"
+          ],
+          "brief": "Проверить две машины скорой помощи и точку последнего сигнала.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 2
+            }
+          ],
+          "prerequisite": null,
+          "crossChainPrerequisites": [
+            {
+              "chain": 3,
+              "questOrder": 10
+            }
+          ],
+          "risk": "medium",
+          "rewards": {
+            "xp": 9500,
+            "roubles": 36000,
+            "standing": 0.01,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Берег storyline: Неотвеченный вызов"
+        },
+        {
+          "id": "78cc2b3208abba4015448a90",
+          "order": 2,
+          "name": "Пустые носилки",
+          "level": 17,
+          "locations": [
+            "Shoreline"
+          ],
+          "brief": "Найти личную карту медика и вынести её.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590c621186f774138d11ea29"
+            }
+          ],
+          "prerequisite": "65c67fd56ef827fd8f8e28ae",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 10750,
+            "roubles": 42000,
+            "standing": 0.01,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Берег storyline: Пустые носилки"
+        },
+        {
+          "id": "78143d5331afbc8ed5530c51",
+          "order": 3,
+          "name": "Запасной кабинет",
+          "level": 18,
+          "locations": [
+            "Shoreline"
+          ],
+          "brief": "Получить доступ в одну комнату из умеренного пула и найти журнал выдачи.",
+          "objectives": [
+            {
+              "kind": "possessAccessKey",
+              "quantity": 1,
+              "foundInRaid": false,
+              "handover": false
+            },
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590c645c86f77412b01304d9"
+            }
+          ],
+          "prerequisite": "78cc2b3208abba4015448a90",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 11500,
+            "roubles": 45000,
+            "standing": 0.011,
+            "itemRewardTheme": "medical supplies",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Берег storyline: Запасной кабинет"
+        },
+        {
+          "id": "0f6c7610aabb03785c8c29a1",
+          "order": 4,
+          "name": "Холодовая цепь",
+          "level": 20,
+          "locations": [
+            "Shoreline"
+          ],
+          "brief": "Забрать сюжетный охлаждаемый контейнер и выжить.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "619cc01e0a7c3a1a2731940c"
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "78143d5331afbc8ed5530c51",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 12750,
+            "roubles": 50000,
+            "standing": 0.011,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Берег storyline: Холодовая цепь"
+        },
+        {
+          "id": "aef99c7f97ca615cf101a654",
+          "order": 5,
+          "name": "Контроль среды",
+          "level": 21,
+          "locations": [
+            "Shoreline"
+          ],
+          "brief": "Установить датчики в двух корпусах санатория и забрать журнал показаний контрольной группы.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 2,
+              "oneRaid": false
+            },
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590a3b0486f7743954552bdb"
+            }
+          ],
+          "prerequisite": "0f6c7610aabb03785c8c29a1",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 13500,
+            "roubles": 53000,
+            "standing": 0.012,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Берег storyline: Контроль среды"
+        },
+        {
+          "id": "39f58ef5c9d91324d914d18b",
+          "order": 6,
+          "name": "Неверный пациент",
+          "level": 23,
+          "locations": [
+            "Shoreline"
+          ],
+          "brief": "Найти историю пациента, скрытую в административной части.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            }
+          ],
+          "prerequisite": "aef99c7f97ca615cf101a654",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 14750,
+            "roubles": 58000,
+            "standing": 0.012,
+            "itemRewardTheme": "protective equipment",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Берег storyline: Неверный пациент"
+        },
+        {
+          "id": "0d712d3bafcc3a986f288d63",
+          "order": 7,
+          "name": "Возврат долга",
+          "level": 24,
+          "locations": [
+            "Shoreline"
+          ],
+          "brief": "Доставить обычные медицинские материалы без FIR-требования.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            },
+            {
+              "kind": "handover",
+              "quantity": 1,
+              "foundInRaid": false,
+              "itemTpl": "619cc01e0a7c3a1a2731940c"
+            }
+          ],
+          "prerequisite": "39f58ef5c9d91324d914d18b",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 15500,
+            "roubles": 62000,
+            "standing": 0.013,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Берег storyline: Возврат долга"
+        },
+        {
+          "id": "e0fbd59d0be5c10d2ade5fb3",
+          "order": 8,
+          "name": "Чистая палата",
+          "level": 26,
+          "locations": [
+            "Shoreline"
+          ],
+          "brief": "Устранить 3–6 угроз в заданном корпусе и осмотреть палату.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            },
+            {
+              "kind": "eliminate",
+              "quantity": 6,
+              "target": "Any"
+            }
+          ],
+          "prerequisite": "0d712d3bafcc3a986f288d63",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 16750,
+            "roubles": 67000,
+            "standing": 0.013,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Берег storyline: Чистая палата"
+        },
+        {
+          "id": "315693d54d1bec87808d640a",
+          "order": 9,
+          "name": "Последний образец",
+          "level": 27,
+          "locations": [
+            "Shoreline"
+          ],
+          "brief": "Вынести защищённый образец из закрытой комнаты.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "61bf7c024770ee6f9c6b8b53"
+            }
+          ],
+          "prerequisite": "e0fbd59d0be5c10d2ade5fb3",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 17500,
+            "roubles": 70000,
+            "standing": 0.014,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Берег storyline: Последний образец"
+        },
+        {
+          "id": "70258f2cc084c335a0542207",
+          "order": 10,
+          "name": "Санитарный коридор",
+          "level": 29,
+          "locations": [
+            "Shoreline"
+          ],
+          "brief": "Передать комплект доказательств; открыть специализированные медикаменты и защитный набор.",
+          "objectives": [
+            {
+              "kind": "handover",
+              "quantity": 1,
+              "foundInRaid": false,
+              "itemTpl": "68666887df54e1190902df57"
+            }
+          ],
+          "prerequisite": "315693d54d1bec87808d640a",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 18750,
+            "roubles": 75000,
+            "standing": 0.014,
+            "itemRewardTheme": "medical response assortment",
+            "assortmentUnlock": "medical response assortment"
+          },
+          "successMessageIntent": "Advance Берег storyline: Санитарный коридор"
+        }
+      ]
+    },
+    {
+      "chain": 6,
+      "title": "Резерв: Протокол мобилизации",
+      "map": "Резерв",
+      "runtimeLocations": [
+        "RezervBase"
+      ],
+      "prerequisiteChains": [
+        3,
+        9
+      ],
+      "quests": [
+        {
+          "id": "cddcd386eb050dbc936ef629",
+          "order": 1,
+          "name": "Сигнал тревоги",
+          "level": 22,
+          "locations": [
+            "RezervBase"
+          ],
+          "brief": "Проверить командную точку и два военных объекта.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 2
+            }
+          ],
+          "prerequisite": null,
+          "crossChainPrerequisites": [
+            {
+              "chain": 3,
+              "questOrder": 10
+            },
+            {
+              "chain": 9,
+              "questOrder": 10
+            }
+          ],
+          "risk": "medium",
+          "rewards": {
+            "xp": 13000,
+            "roubles": 49000,
+            "standing": 0.011,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Резерв storyline: Сигнал тревоги"
+        },
+        {
+          "id": "fcc999aeb0be8899307d5c11",
+          "order": 2,
+          "name": "Дежурный офицер",
+          "level": 23,
+          "locations": [
+            "RezervBase"
+          ],
+          "brief": "Найти пост дежурного офицера и вынести его служебную записку.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "62a0a16d0b9d3c46de5b6e97"
+            }
+          ],
+          "prerequisite": "cddcd386eb050dbc936ef629",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 13750,
+            "roubles": 52000,
+            "standing": 0.011,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Резерв storyline: Дежурный офицер"
+        },
+        {
+          "id": "6fab9c0949646bad356c436d",
+          "order": 3,
+          "name": "Нижний уровень",
+          "level": 25,
+          "locations": [
+            "RezervBase"
+          ],
+          "brief": "Спуститься в бункер и отметить два маршрута отхода.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 2
+            },
+            {
+              "kind": "placeOrMark",
+              "quantity": 2,
+              "oneRaid": false
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "fcc999aeb0be8899307d5c11",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 15000,
+            "roubles": 58000,
+            "standing": 0.011,
+            "itemRewardTheme": "military ammunition",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Резерв storyline: Нижний уровень"
+        },
+        {
+          "id": "2897ca5464686729182d5c18",
+          "order": 4,
+          "name": "Мёртвый терминал",
+          "level": 26,
+          "locations": [
+            "RezervBase"
+          ],
+          "brief": "Установить накопитель в терминал и удержать действие.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "6fab9c0949646bad356c436d",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 15750,
+            "roubles": 61000,
+            "standing": 0.012,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Резерв storyline: Мёртвый терминал"
+        },
+        {
+          "id": "aaf59cae44fc7164485287d9",
+          "order": 5,
+          "name": "Мобилизационная папка",
+          "level": 28,
+          "locations": [
+            "RezervBase"
+          ],
+          "brief": "Вынести документы из закрытого помещения.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "68666887df54e1190902df57"
+            }
+          ],
+          "prerequisite": "2897ca5464686729182d5c18",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 17000,
+            "roubles": 66000,
+            "standing": 0.013,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Резерв storyline: Мобилизационная папка"
+        },
+        {
+          "id": "9821034c9dac42983248f7c2",
+          "order": 6,
+          "name": "Техника на учёте",
+          "level": 29,
+          "locations": [
+            "RezervBase"
+          ],
+          "brief": "Пометить три единицы военной техники.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 3,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "aaf59cae44fc7164485287d9",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 17750,
+            "roubles": 69000,
+            "standing": 0.013,
+            "itemRewardTheme": "armor components",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Резерв storyline: Техника на учёте"
+        },
+        {
+          "id": "a4e4d8c99a667c66900d17ec",
+          "order": 7,
+          "name": "Перехват связи",
+          "level": 31,
+          "locations": [
+            "RezervBase"
+          ],
+          "brief": "Установить антенну и забрать записанный пакет.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "5c052f6886f7746b1e3db148"
+            },
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "9821034c9dac42983248f7c2",
+          "crossChainPrerequisites": [],
+          "risk": "medium",
+          "rewards": {
+            "xp": 19000,
+            "roubles": 74000,
+            "standing": 0.013,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Резерв storyline: Перехват связи"
+        },
+        {
+          "id": "42d9c21068539c9855e42daf",
+          "order": 8,
+          "name": "Закрытый ящик",
+          "level": 32,
+          "locations": [
+            "RezervBase"
+          ],
+          "brief": "Найти контейнер снабжения по данным из папки.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "5d03794386f77420415576f5"
+            }
+          ],
+          "prerequisite": "a4e4d8c99a667c66900d17ec",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 19750,
+            "roubles": 78000,
+            "standing": 0.014,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Резерв storyline: Закрытый ящик"
+        },
+        {
+          "id": "fe7337b9337a7b318619a432",
+          "order": 9,
+          "name": "Тяжёлый выход",
+          "level": 34,
+          "locations": [
+            "RezervBase"
+          ],
+          "brief": "Вынести контейнер через один из подходящих выходов; допускаются несколько вариантов.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "5c12613b86f7743bbe2c3f76"
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "42d9c21068539c9855e42daf",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 21000,
+            "roubles": 83000,
+            "standing": 0.015,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Резерв storyline: Тяжёлый выход"
+        },
+        {
+          "id": "6a24e1ca978938c1d4a8839f",
+          "order": 10,
+          "name": "Резерв Адмирала",
+          "level": 35,
+          "locations": [
+            "RezervBase"
+          ],
+          "brief": "Передать военные данные; открыть ограниченный военный пресет и боеприпасы.",
+          "objectives": [
+            {
+              "kind": "handover",
+              "quantity": 1,
+              "foundInRaid": false,
+              "itemTpl": "62a0a16d0b9d3c46de5b6e97"
+            }
+          ],
+          "prerequisite": "fe7337b9337a7b318619a432",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 21750,
+            "roubles": 86000,
+            "standing": 0.015,
+            "itemRewardTheme": "reserve service preset",
+            "assortmentUnlock": "reserve service preset"
+          },
+          "successMessageIntent": "Advance Резерв storyline: Резерв Адмирала"
+        }
+      ]
+    },
+    {
+      "chain": 7,
+      "title": "Маяк: Береговая блокада",
+      "map": "Маяк",
+      "runtimeLocations": [
+        "Lighthouse"
+      ],
+      "prerequisiteChains": [
+        6
+      ],
+      "quests": [
+        {
+          "id": "e0cc5330a34ff96bfb670820",
+          "order": 1,
+          "name": "Дальний берег",
+          "level": 28,
+          "locations": [
+            "Lighthouse"
+          ],
+          "brief": "Осмотреть три подхода к зоне поставок.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 3
+            }
+          ],
+          "prerequisite": null,
+          "crossChainPrerequisites": [
+            {
+              "chain": 6,
+              "questOrder": 10
+            }
+          ],
+          "risk": "high",
+          "rewards": {
+            "xp": 16000,
+            "roubles": 60000,
+            "standing": 0.011,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Маяк storyline: Дальний берег"
+        },
+        {
+          "id": "45a06f6c07f74caeb29f84a6",
+          "order": 2,
+          "name": "Наблюдатель молчит",
+          "level": 29,
+          "locations": [
+            "Lighthouse"
+          ],
+          "brief": "Найти наблюдателя и вынести дальномер или журнал наблюдений.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "5c052f6886f7746b1e3db148"
+            }
+          ],
+          "prerequisite": "e0cc5330a34ff96bfb670820",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 16750,
+            "roubles": 63000,
+            "standing": 0.012,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Маяк storyline: Наблюдатель молчит"
+        },
+        {
+          "id": "67f5301e59630b656d927c5e",
+          "order": 3,
+          "name": "Контроль высоты",
+          "level": 31,
+          "locations": [
+            "Lighthouse"
+          ],
+          "brief": "Установить прибор на обзорной позиции и выжить.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "45a06f6c07f74caeb29f84a6",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 18000,
+            "roubles": 68000,
+            "standing": 0.012,
+            "itemRewardTheme": "navigation equipment",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Маяк storyline: Контроль высоты"
+        },
+        {
+          "id": "0401aa332dde8b64670a325b",
+          "order": 4,
+          "name": "Расписание прилива",
+          "level": 32,
+          "locations": [
+            "Lighthouse"
+          ],
+          "brief": "Забрать график поставок из служебного помещения.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590c645c86f77412b01304d9"
+            }
+          ],
+          "prerequisite": "67f5301e59630b656d927c5e",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 18750,
+            "roubles": 72000,
+            "standing": 0.013,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Маяк storyline: Расписание прилива"
+        },
+        {
+          "id": "416b7201445436294eb53e42",
+          "order": 5,
+          "name": "За линией",
+          "level": 33,
+          "locations": [
+            "Lighthouse"
+          ],
+          "brief": "Проникнуть в опасную зону и отметить склад без обязательной зачистки всех противников.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            },
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            },
+            {
+              "kind": "eliminate",
+              "quantity": 3,
+              "target": "Any"
+            }
+          ],
+          "prerequisite": "0401aa332dde8b64670a325b",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 19500,
+            "roubles": 75000,
+            "standing": 0.013,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Маяк storyline: За линией"
+        },
+        {
+          "id": "83939b1ab5313a0059ed9c1e",
+          "order": 6,
+          "name": "Чужая навигация",
+          "level": 35,
+          "locations": [
+            "Lighthouse"
+          ],
+          "brief": "Вынести навигационный модуль из техники или закрытого контейнера.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "62e910aaf957f2915e0a5e36"
+            }
+          ],
+          "prerequisite": "416b7201445436294eb53e42",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 20750,
+            "roubles": 80000,
+            "standing": 0.014,
+            "itemRewardTheme": "tactical supplies",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Маяк storyline: Чужая навигация"
+        },
+        {
+          "id": "9d429e2927fca0923a803cd4",
+          "order": 7,
+          "name": "Ложные координаты",
+          "level": 36,
+          "locations": [
+            "Lighthouse"
+          ],
+          "brief": "Установить подменный маяк на груз.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "83939b1ab5313a0059ed9c1e",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 21500,
+            "roubles": 83000,
+            "standing": 0.014,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Маяк storyline: Ложные координаты"
+        },
+        {
+          "id": "45a5aeb435d89e93b6e9484a",
+          "order": 8,
+          "name": "Контроль блокады",
+          "level": 37,
+          "locations": [
+            "Lighthouse"
+          ],
+          "brief": "Устранить ограниченное число Отступников и подтвердить результат наблюдением.",
+          "objectives": [
+            {
+              "kind": "eliminate",
+              "quantity": 4,
+              "target": "Rogue"
+            }
+          ],
+          "prerequisite": "9d429e2927fca0923a803cd4",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 22250,
+            "roubles": 87000,
+            "standing": 0.015,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Маяк storyline: Контроль блокады"
+        },
+        {
+          "id": "c705c50d6f524f36cd2cc8fe",
+          "order": 9,
+          "name": "Последняя лодка",
+          "level": 39,
+          "locations": [
+            "Lighthouse"
+          ],
+          "brief": "Забрать доказательство отправителя и эвакуироваться.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "660bbc47c38b837877075e47"
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "45a5aeb435d89e93b6e9484a",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 23500,
+            "roubles": 92000,
+            "standing": 0.015,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Маяк storyline: Последняя лодка"
+        },
+        {
+          "id": "0f650f5ba44bfd17404b7ad6",
+          "order": 10,
+          "name": "Берег закрыт",
+          "level": 40,
+          "locations": [
+            "Lighthouse"
+          ],
+          "brief": "Передать модуль и документы; открыть поздний морской/тактический комплект.",
+          "objectives": [
+            {
+              "kind": "handover",
+              "quantity": 1,
+              "foundInRaid": false,
+              "itemTpl": "62e910aaf957f2915e0a5e36"
+            }
+          ],
+          "prerequisite": "c705c50d6f524f36cd2cc8fe",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 24250,
+            "roubles": 95000,
+            "standing": 0.016,
+            "itemRewardTheme": "coastal operations preset",
+            "assortmentUnlock": "coastal operations preset"
+          },
+          "successMessageIntent": "Advance Маяк storyline: Берег закрыт"
+        }
+      ]
+    },
+    {
+      "chain": 8,
+      "title": "Улицы: Архив распада",
+      "map": "Улицы",
+      "runtimeLocations": [
+        "TarkovStreets"
+      ],
+      "prerequisiteChains": [
+        4,
+        5
+      ],
+      "quests": [
+        {
+          "id": "5d2360d47e11dfcb81acbdb5",
+          "order": 1,
+          "name": "Старый адрес",
+          "level": 24,
+          "locations": [
+            "TarkovStreets"
+          ],
+          "brief": "Найти муниципальный указатель и проверить первый адрес.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            }
+          ],
+          "prerequisite": null,
+          "crossChainPrerequisites": [
+            {
+              "chain": 4,
+              "questOrder": 10
+            },
+            {
+              "chain": 5,
+              "questOrder": 10
+            }
+          ],
+          "risk": "high",
+          "rewards": {
+            "xp": 14000,
+            "roubles": 53000,
+            "standing": 0.013,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Улицы storyline: Старый адрес"
+        },
+        {
+          "id": "0b7abaaa7f084765e7d5c623",
+          "order": 2,
+          "name": "Архивная карточка",
+          "level": 26,
+          "locations": [
+            "TarkovStreets"
+          ],
+          "brief": "Вынести карточку дела из административной зоны.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "660bbc47c38b837877075e47"
+            }
+          ],
+          "prerequisite": "5d2360d47e11dfcb81acbdb5",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 15250,
+            "roubles": 58000,
+            "standing": 0.013,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Улицы storyline: Архивная карточка"
+        },
+        {
+          "id": "f570f92d48a894c066066a95",
+          "order": 3,
+          "name": "Служебная печать",
+          "level": 27,
+          "locations": [
+            "TarkovStreets"
+          ],
+          "brief": "Найти печать или пропуск, открывающий следующую часть расследования.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "5c12613b86f7743bbe2c3f76"
+            }
+          ],
+          "prerequisite": "0b7abaaa7f084765e7d5c623",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 16000,
+            "roubles": 61000,
+            "standing": 0.013,
+            "itemRewardTheme": "compact weapon components",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Улицы storyline: Служебная печать"
+        },
+        {
+          "id": "c502dfe9542fc5d5c3dc7c60",
+          "order": 4,
+          "name": "Комната без жильца",
+          "level": 29,
+          "locations": [
+            "TarkovStreets"
+          ],
+          "brief": "Проникнуть в закрытый офис или квартиру и забрать список контактов.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            },
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590c645c86f77412b01304d9"
+            }
+          ],
+          "prerequisite": "f570f92d48a894c066066a95",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 17250,
+            "roubles": 66000,
+            "standing": 0.014,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Улицы storyline: Комната без жильца"
+        },
+        {
+          "id": "8f427e0e5719ea89688c08a9",
+          "order": 5,
+          "name": "Три свидетеля",
+          "level": 30,
+          "locations": [
+            "TarkovStreets"
+          ],
+          "brief": "Проверить три адреса без обязательного боя.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 3
+            }
+          ],
+          "prerequisite": "c502dfe9542fc5d5c3dc7c60",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 18000,
+            "roubles": 70000,
+            "standing": 0.015,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Улицы storyline: Три свидетеля"
+        },
+        {
+          "id": "f503341ece8597c7de75a1df",
+          "order": 6,
+          "name": "Тихие почтовые ящики",
+          "level": 32,
+          "locations": [
+            "TarkovStreets"
+          ],
+          "brief": "Оставить материалы в двух тайниках связи.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 2,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "8f427e0e5719ea89688c08a9",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 19250,
+            "roubles": 75000,
+            "standing": 0.015,
+            "itemRewardTheme": "urban equipment",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Улицы storyline: Тихие почтовые ящики"
+        },
+        {
+          "id": "bf3982de79ea3b1e90910200",
+          "order": 7,
+          "name": "Перехваченный пакет",
+          "level": 33,
+          "locations": [
+            "TarkovStreets"
+          ],
+          "brief": "Забрать ответный пакет из одного авторского места.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "660bbc47c38b837877075e47"
+            }
+          ],
+          "prerequisite": "f503341ece8597c7de75a1df",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 20000,
+            "roubles": 78000,
+            "standing": 0.015,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Улицы storyline: Перехваченный пакет"
+        },
+        {
+          "id": "df9c920a04c11e9b8dc020d0",
+          "order": 8,
+          "name": "Стереть адрес",
+          "level": 35,
+          "locations": [
+            "TarkovStreets"
+          ],
+          "brief": "Установить устройство у архива и покинуть район.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "bf3982de79ea3b1e90910200",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 21250,
+            "roubles": 83000,
+            "standing": 0.016,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Улицы storyline: Стереть адрес"
+        },
+        {
+          "id": "b5038fda630a18690bb52872",
+          "order": 9,
+          "name": "Живой список",
+          "level": 36,
+          "locations": [
+            "TarkovStreets"
+          ],
+          "brief": "Вынести главный список агентов и выжить.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "68666887df54e1190902df57"
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "df9c920a04c11e9b8dc020d0",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 22000,
+            "roubles": 86000,
+            "standing": 0.017,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Улицы storyline: Живой список"
+        },
+        {
+          "id": "734ce8b802ca6a629387ca5b",
+          "order": 10,
+          "name": "Городская сеть",
+          "level": 38,
+          "locations": [
+            "TarkovStreets"
+          ],
+          "brief": "Передать архив; открыть городской скрытый комплект и уникальный компактный пресет.",
+          "objectives": [
+            {
+              "kind": "handover",
+              "quantity": 1,
+              "foundInRaid": false,
+              "itemTpl": "68666887df54e1190902df57"
+            }
+          ],
+          "prerequisite": "b5038fda630a18690bb52872",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 23250,
+            "roubles": 91000,
+            "standing": 0.017,
+            "itemRewardTheme": "concealed urban preset",
+            "assortmentUnlock": "concealed urban preset"
+          },
+          "successMessageIntent": "Advance Улицы storyline: Городская сеть"
+        }
+      ]
+    },
+    {
+      "chain": 9,
+      "title": "Завод: Чёрная смена",
+      "map": "Завод",
+      "runtimeLocations": [
+        "factory4_day",
+        "factory4_night"
+      ],
+      "prerequisiteChains": [
+        2
+      ],
+      "quests": [
+        {
+          "id": "e5c8b4080adfe4fa2caa7bc3",
+          "order": 1,
+          "name": "После гудка",
+          "level": 14,
+          "locations": [
+            "factory4_day",
+            "factory4_night"
+          ],
+          "brief": "Осмотреть производственную линию и помещение мастера.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            }
+          ],
+          "prerequisite": null,
+          "crossChainPrerequisites": [
+            {
+              "chain": 2,
+              "questOrder": 10
+            }
+          ],
+          "risk": "high",
+          "rewards": {
+            "xp": 9000,
+            "roubles": 35000,
+            "standing": 0.014,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Завод storyline: После гудка"
+        },
+        {
+          "id": "7486bc36905b338d72289ad6",
+          "order": 2,
+          "name": "Журнал смен",
+          "level": 16,
+          "locations": [
+            "factory4_day",
+            "factory4_night"
+          ],
+          "brief": "Найти и вынести журнал рабочих.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590c645c86f77412b01304d9"
+            }
+          ],
+          "prerequisite": "e5c8b4080adfe4fa2caa7bc3",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 10250,
+            "roubles": 40000,
+            "standing": 0.014,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Завод storyline: Журнал смен"
+        },
+        {
+          "id": "30d087339ef8063ccd818036",
+          "order": 3,
+          "name": "Ключ мастера",
+          "level": 18,
+          "locations": [
+            "factory4_day",
+            "factory4_night"
+          ],
+          "brief": "Получить или иметь подходящий ключ; предмет остаётся у игрока.",
+          "objectives": [
+            {
+              "kind": "possessAccessKey",
+              "quantity": 1,
+              "foundInRaid": false,
+              "handover": false
+            }
+          ],
+          "prerequisite": "7486bc36905b338d72289ad6",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 11500,
+            "roubles": 45000,
+            "standing": 0.015,
+            "itemRewardTheme": "weapon parts",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Завод storyline: Ключ мастера"
+        },
+        {
+          "id": "deab0605df9ef9ba0bd0ccc1",
+          "order": 4,
+          "name": "Технический этаж",
+          "level": 19,
+          "locations": [
+            "factory4_day",
+            "factory4_night"
+          ],
+          "brief": "Проникнуть в закрытую зону и установить датчик.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            },
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "30d087339ef8063ccd818036",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 12250,
+            "roubles": 48000,
+            "standing": 0.015,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Завод storyline: Технический этаж"
+        },
+        {
+          "id": "77622ff3eda4de9587dd55d8",
+          "order": 5,
+          "name": "Номер партии",
+          "level": 21,
+          "locations": [
+            "factory4_day",
+            "factory4_night"
+          ],
+          "brief": "Найти маркировку на трёх производственных узлах.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 3
+            }
+          ],
+          "prerequisite": "deab0605df9ef9ba0bd0ccc1",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 13500,
+            "roubles": 53000,
+            "standing": 0.016,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Завод storyline: Номер партии"
+        },
+        {
+          "id": "559f5c085a346ae36e18fcd9",
+          "order": 6,
+          "name": "Незавершённая деталь",
+          "level": 23,
+          "locations": [
+            "factory4_day",
+            "factory4_night"
+          ],
+          "brief": "Вынести сюжетную оружейную заготовку.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "590a3b0486f7743954552bdb"
+            }
+          ],
+          "prerequisite": "77622ff3eda4de9587dd55d8",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 14750,
+            "roubles": 58000,
+            "standing": 0.016,
+            "itemRewardTheme": "ammunition",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Завод storyline: Незавершённая деталь"
+        },
+        {
+          "id": "6d91d7193725645fcda53ea9",
+          "order": 7,
+          "name": "Контроль качества",
+          "level": 25,
+          "locations": [
+            "factory4_day",
+            "factory4_night"
+          ],
+          "brief": "Использовать один из нескольких подходящих классов оружия и устранить 3–6 целей.",
+          "objectives": [
+            {
+              "kind": "eliminate",
+              "quantity": 6,
+              "target": "Any"
+            }
+          ],
+          "prerequisite": "559f5c085a346ae36e18fcd9",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 16000,
+            "roubles": 64000,
+            "standing": 0.017,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Завод storyline: Контроль качества"
+        },
+        {
+          "id": "3002161cfabbdcb40699a1df",
+          "order": 8,
+          "name": "Остановить линию",
+          "level": 26,
+          "locations": [
+            "factory4_day",
+            "factory4_night"
+          ],
+          "brief": "Установить два заряда на линии снабжения, затем подтвердить операцию успешной эвакуацией.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 2,
+              "oneRaid": false
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "6d91d7193725645fcda53ea9",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 16750,
+            "roubles": 67000,
+            "standing": 0.017,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Завод storyline: Остановить линию"
+        },
+        {
+          "id": "1e8e5bbebe432ca73b19747d",
+          "order": 9,
+          "name": "Эталон",
+          "level": 28,
+          "locations": [
+            "factory4_day",
+            "factory4_night"
+          ],
+          "brief": "Забрать готовый образец из защищённого места.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "5d0376a486f7747d8050965c"
+            }
+          ],
+          "prerequisite": "3002161cfabbdcb40699a1df",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 18000,
+            "roubles": 72000,
+            "standing": 0.018,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Завод storyline: Эталон"
+        },
+        {
+          "id": "df6c5b8f5660efd1b4c6d06c",
+          "order": 10,
+          "name": "Чёрная смена окончена",
+          "level": 30,
+          "locations": [
+            "factory4_day",
+            "factory4_night"
+          ],
+          "brief": "Передать образец; открыть специальную деталь и уникальный заводской пресет.",
+          "objectives": [
+            {
+              "kind": "handover",
+              "quantity": 1,
+              "foundInRaid": false,
+              "itemTpl": "5d0376a486f7747d8050965c"
+            }
+          ],
+          "prerequisite": "1e8e5bbebe432ca73b19747d",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 19250,
+            "roubles": 77000,
+            "standing": 0.018,
+            "itemRewardTheme": "factory weapon preset",
+            "assortmentUnlock": "factory weapon preset"
+          },
+          "successMessageIntent": "Advance Завод storyline: Чёрная смена окончена"
+        }
+      ]
+    },
+    {
+      "chain": 10,
+      "title": "Лаборатория: Последний протокол",
+      "map": "Лаборатория",
+      "runtimeLocations": [
+        "laboratory"
+      ],
+      "prerequisiteChains": [
+        7,
+        8
+      ],
+      "quests": [
+        {
+          "id": "d3b6824cc5eda08126273277",
+          "order": 1,
+          "name": "Ограниченный допуск",
+          "level": 35,
+          "locations": [
+            "laboratory"
+          ],
+          "brief": "Подтвердить доступ к Лаборатории без изъятия редкой карты.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            }
+          ],
+          "prerequisite": null,
+          "crossChainPrerequisites": [
+            {
+              "chain": 7,
+              "questOrder": 10
+            },
+            {
+              "chain": 8,
+              "questOrder": 10
+            }
+          ],
+          "risk": "high",
+          "rewards": {
+            "xp": 19500,
+            "roubles": 72000,
+            "standing": 0.015,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лаборатория storyline: Ограниченный допуск"
+        },
+        {
+          "id": "3e217502dbe65fb4924d5d98",
+          "order": 2,
+          "name": "Пустая группа",
+          "level": 36,
+          "locations": [
+            "laboratory"
+          ],
+          "brief": "Найти следы исследовательской команды в двух секторах.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 2
+            }
+          ],
+          "prerequisite": "d3b6824cc5eda08126273277",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 20250,
+            "roubles": 76000,
+            "standing": 0.015,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лаборатория storyline: Пустая группа"
+        },
+        {
+          "id": "8eacc1d52dcb896ece6a1730",
+          "order": 3,
+          "name": "Резервная копия",
+          "level": 38,
+          "locations": [
+            "laboratory"
+          ],
+          "brief": "Вынести накопитель из терминальной зоны.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "660bbc47c38b837877075e47"
+            }
+          ],
+          "prerequisite": "3e217502dbe65fb4924d5d98",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 21500,
+            "roubles": 81000,
+            "standing": 0.015,
+            "itemRewardTheme": "high-grade ammunition",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лаборатория storyline: Резервная копия"
+        },
+        {
+          "id": "06b32886806bf50896eb4ff8",
+          "order": 4,
+          "name": "Холодный сектор",
+          "level": 39,
+          "locations": [
+            "laboratory"
+          ],
+          "brief": "Проникнуть в закрытый сектор и забрать контейнер образцов.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            },
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "61bf7c024770ee6f9c6b8b53"
+            }
+          ],
+          "prerequisite": "8eacc1d52dcb896ece6a1730",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 22250,
+            "roubles": 84000,
+            "standing": 0.016,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лаборатория storyline: Холодный сектор"
+        },
+        {
+          "id": "8024b7e157f21f5b35b6f38b",
+          "order": 5,
+          "name": "Контроль утечки",
+          "level": 40,
+          "locations": [
+            "laboratory"
+          ],
+          "brief": "Установить датчики в двух лабораторных зонах.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 2,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "06b32886806bf50896eb4ff8",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 23000,
+            "roubles": 88000,
+            "standing": 0.017,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лаборатория storyline: Контроль утечки"
+        },
+        {
+          "id": "a6b23de5ab1a1ad431e405ef",
+          "order": 6,
+          "name": "Внутренняя охрана",
+          "level": 42,
+          "locations": [
+            "laboratory"
+          ],
+          "brief": "Устранить ограниченное число Рейдеров, не превращая задачу в массовый фарм.",
+          "objectives": [
+            {
+              "kind": "eliminate",
+              "quantity": 4,
+              "target": "Raider"
+            }
+          ],
+          "prerequisite": "8024b7e157f21f5b35b6f38b",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 24250,
+            "roubles": 93000,
+            "standing": 0.017,
+            "itemRewardTheme": "laboratory supplies",
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лаборатория storyline: Внутренняя охрана"
+        },
+        {
+          "id": "97f0088fbb97e5376be4ddef",
+          "order": 7,
+          "name": "Чистая комната",
+          "level": 43,
+          "locations": [
+            "laboratory"
+          ],
+          "brief": "Получить резервный носитель и эвакуироваться с найденным доказательством.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "61bf7c024770ee6f9c6b8b53"
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "a6b23de5ab1a1ad431e405ef",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 25000,
+            "roubles": 96000,
+            "standing": 0.018,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лаборатория storyline: Чистая комната"
+        },
+        {
+          "id": "786ce2de2cee30f3128aa04c",
+          "order": 8,
+          "name": "Подмена",
+          "level": 44,
+          "locations": [
+            "laboratory"
+          ],
+          "brief": "Установить ложный пакет данных в терминал.",
+          "objectives": [
+            {
+              "kind": "placeOrMark",
+              "quantity": 1,
+              "oneRaid": false
+            }
+          ],
+          "prerequisite": "97f0088fbb97e5376be4ddef",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 25750,
+            "roubles": 99000,
+            "standing": 0.018,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лаборатория storyline: Подмена"
+        },
+        {
+          "id": "c50d2ca0deca83e99e3d0d4a",
+          "order": 9,
+          "name": "Последний контейнер",
+          "level": 46,
+          "locations": [
+            "laboratory"
+          ],
+          "brief": "Вынести главный сюжетный контейнер и выжить.",
+          "objectives": [
+            {
+              "kind": "retrieveQuestItem",
+              "quantity": 1,
+              "foundInRaid": true,
+              "surviveRequired": true,
+              "itemTpl": "68666887df54e1190902df57"
+            },
+            {
+              "kind": "surviveExtract",
+              "quantity": 1,
+              "oneRaid": true
+            }
+          ],
+          "prerequisite": "786ce2de2cee30f3128aa04c",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 27000,
+            "roubles": 104000,
+            "standing": 0.019,
+            "itemRewardTheme": null,
+            "assortmentUnlock": null
+          },
+          "successMessageIntent": "Advance Лаборатория storyline: Последний контейнер"
+        },
+        {
+          "id": "680c47f4c9a0e7b884a95908",
+          "order": 10,
+          "name": "Решение Адмирала",
+          "level": 47,
+          "locations": [
+            "laboratory"
+          ],
+          "brief": "Выбрать способ завершения операции; получить соответствующее сообщение и один из равноценных финальных результатов.",
+          "objectives": [
+            {
+              "kind": "visit",
+              "quantity": 1
+            }
+          ],
+          "prerequisite": "c50d2ca0deca83e99e3d0d4a",
+          "crossChainPrerequisites": [],
+          "risk": "high",
+          "rewards": {
+            "xp": 27750,
+            "roubles": 108000,
+            "standing": 0.019,
+            "itemRewardTheme": "final classified assortment",
+            "assortmentUnlock": "final classified assortment"
+          },
+          "successMessageIntent": "Advance Лаборатория storyline: Решение Адмирала"
+        }
+      ]
+    }
+  ],
+  "optionalExtensions": {
+    "wttArmoryAndBackport": "eligible alternatives/rewards/unlocks after exact ID classification; never required",
+    "packNStrap": "eligible equipment alternatives/rewards; never required",
+    "icebreaker": "10-operation optional side chain materialized from verified 1.1.0 runtime IDs; never required by the 172-quest core"
+  },
+  "reviewDecisionRequiredBeforeRuntime": false
+}

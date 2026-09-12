@@ -17,12 +17,14 @@ def prepare(stage: Path):
     conditions = quest["conditions"]["AvailableForStart"]
     if (quest["_id"] != QUEST_ID or quest["traderId"] != TRADER_ID
             or quest["secretQuest"] is not False or quest["side"] != "Pmc"
-            or len(conditions) != 1 or conditions[0]["conditionType"] != "Level"
+            or len(conditions) not in (1, 2) or conditions[0]["conditionType"] != "Level"
             or conditions[0]["compareMethod"] != ">=" or conditions[0]["value"] not in (1, 5)
+            or any(condition.get("conditionType") != "Quest" for condition in conditions[1:])
             or len(quest["conditions"]["AvailableForFinish"]) != 1
             or quest["conditions"]["AvailableForFinish"][0]["conditionType"] not in ("FindItem", "HandoverItem")):
         raise ValueError("Fundamentals onboarding contract drifted; refusing broad gate changes")
     conditions[0]["value"] = 1
+    quest["conditions"]["AvailableForStart"] = [conditions[0]]
     finish = quest["conditions"]["AvailableForFinish"][0]
     finish["conditionType"] = "HandoverItem"
     finish["target"] = ["5449016a4bdc2d6f028b456f"]

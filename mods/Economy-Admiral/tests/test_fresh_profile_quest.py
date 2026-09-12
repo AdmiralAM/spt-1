@@ -17,14 +17,15 @@ class FreshProfileQuestTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             stage = Path(temp)
             shutil.copytree(ROOT / "mods/Admiral-Trader/db/quests", stage / "db/quests")
-            before = {p.name: json.loads(p.read_text()) for p in (stage / "db/quests").glob("*.json")}
-            self.assertEqual(len(before), 43)
+            before = {p.name: json.loads(p.read_text(encoding="utf-8")) for p in (stage / "db/quests").glob("*.json")}
+            self.assertEqual(len(before), 172)
             onboarding.prepare(stage)
             for path in (stage / "db/quests").glob("*.json"):
-                actual = json.loads(path.read_text())
+                actual = json.loads(path.read_text(encoding="utf-8"))
                 expected = copy.deepcopy(before[path.name])
                 if actual["_id"] == onboarding.QUEST_ID:
                     expected["conditions"]["AvailableForStart"][0]["value"] = 1
+                    expected["conditions"]["AvailableForStart"] = [expected["conditions"]["AvailableForStart"][0]]
                     expected["conditions"]["AvailableForFinish"][0]["conditionType"] = "HandoverItem"
                     expected["conditions"]["AvailableForFinish"][0]["target"] = ["5449016a4bdc2d6f028b456f"]
                     expected["conditions"]["AvailableForFinish"][0]["value"] = onboarding.TEST_HANDOVER_ROUBLES
@@ -36,7 +37,7 @@ class FreshProfileQuestTests(unittest.TestCase):
                     self.assertGreaterEqual(1, actual["conditions"]["AvailableForStart"][0]["value"])
                 self.assertEqual(actual, expected)
             onboarding.prepare(stage)  # Safe to stage the correction twice.
-            quest = json.loads(next((stage / "db/quests").glob(f"*-{onboarding.QUEST_ID}.json")).read_text())
+            quest = json.loads(next((stage / "db/quests").glob(f"*-{onboarding.QUEST_ID}.json")).read_text(encoding="utf-8"))
             self.assertEqual(quest["conditions"]["AvailableForFinish"][0]["target"], ["5449016a4bdc2d6f028b456f"])
             self.assertEqual(quest["conditions"]["AvailableForFinish"][0]["value"], 1000)
 
