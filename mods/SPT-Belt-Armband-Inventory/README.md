@@ -2,6 +2,15 @@
 
 Development candidate **v0.2.0** for **SPT 4.1.3**.
 
+The current product direction delegates standard belts, pouches and
+mini-containers to the unmodified standalone Pack 'n' Strap. B&A&HB retains its
+unique HeadBand and Dogtag Case modules, immutable profile identities, and
+exactly scoped protection for B&A-owned roots. This branch currently preserves
+the complete pre-split v0.2 implementation as a reproducible reserve; it does
+not yet claim runtime compatibility with Pack 'n' Strap. See
+[`docs/packnstrap-compatibility.md`](docs/packnstrap-compatibility.md) for the
+pinned audit, conflict matrix, license boundary and next implementation stage.
+
 Stable **v0.1.0** is already frozen and published separately on `runtime-belt-armband` / tag `bahb-v0.1.0`. This branch develops v0.2.0 without changing that release.
 
 Active authority:
@@ -34,6 +43,11 @@ Do not install v0.2.0 by copying only the client or only the server DLL. Client/
 Do not simply copy v0.1.0 binaries over a profile after v0.2.0 has migrated/created newer persistent data. Stop SPT, restore the pre-v0.2.0 profile backup when possible, then restore the complete stable v0.1.0 package. If no compatible backup exists, follow `profile-safety/README.md`: preserve a backup/copy and use the current cleanup contract before starting an older build that may not know newer distributed identities.
 
 ## Current v0.2 scope
+
+The sections below describe the full implementation reserve at PR #286 head
+`28bb0e8f90d86d2570d37a498effc868a29580cf`. They are retained for migration,
+recovery and reproducibility; they are not the promised active surface of the
+planned Pack 'n' Strap add-on mode.
 
 ### Products
 
