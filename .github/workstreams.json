@@ -496,7 +496,7 @@
           "requiresUserRuntime": true
         },
         {
-          "key": "stable-local-integration",
+          "key": "stable-release",
           "issue": 353,
           "objective": "Freeze the accepted upstream versions, hashes, owned configuration and rollback/update procedure without redistributing upstream binary content.",
           "acceptance": "One exact accepted integration state is reproducible and documented, temporary work is reconciled and the user has explicitly approved promotion/cleanup actions.",
