@@ -118,6 +118,41 @@ Detailed handoff mechanics live in `docs/runtime-artifact-gate.md`; that documen
 - A profile-load/save incident freezes feature expansion for that module until recovery and prevention are proven.
 - Performance-sensitive code must avoid permanent polling, scene-wide scans, hot-path reflection/allocations, and global UI mutation unless explicitly proven necessary and bounded.
 
+## Model routing and usage economy
+
+The user selects the model; workers only recommend it. At the end of each
+coherent result, state the recommended model for the next substantive step in
+one short line with a concrete reason. Before beginning a new substantive
+phase, warn first only when the currently selected model is materially
+unsuitable; otherwise continue without pausing for approval.
+
+- Use **GPT-5.3-Codex-Spark** for bounded, well-specified work: localized code
+  changes, tests, configuration, manifests, documentation, mechanical cleanup,
+  reruns, and verification against an already accepted design.
+- Use **GPT-5.6 Terra** for routine production implementation that still needs
+  sound engineering judgment but has a clear scope and accepted architecture.
+- Use **GPT-5.6 Luna** for high-volume, low-risk mechanical work such as narrow
+  extraction, classification, formatting, simple configuration edits, and
+  focused checks where small quality differences are not material.
+- Use **GPT-5.5** only as a low-risk fallback for small, clearly specified work
+  when Spark or the appropriate GPT-5.6 model is unavailable or offers no
+  practical advantage.
+- Use **GPT-5.6 Sol** for architecture, ambiguous implementation, runtime-sensitive
+  integration, profile migrations, cross-module compatibility, unfamiliar
+  failures, and substantial debugging or refactoring.
+- Consider **GPT-6 Astra** only for a narrowly identified, exceptionally hard
+  blocker where Sol has failed to resolve the problem or the decision has
+  unusually high correctness impact. Return to Sol or Spark after that bounded
+  problem is resolved.
+- Reassess the recommendation when evidence turns a routine task into an
+  architectural or runtime problem. Do not spend Sol or Astra on mechanical
+  work already determined by the recorded plan.
+
+Model routing is advisory only. It is not a governance gate, a valid stop
+condition, permission to change scope, or a reason to interrupt suitable work.
+Do not encode quotas or assume model availability; use the models actually
+offered to the user at that time.
+
 ## Communication
 
 Use only:
