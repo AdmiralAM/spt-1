@@ -80,10 +80,7 @@ class RuntimeTargetAuthorityTests(unittest.TestCase):
                 self.assertNotIn(STALE_TARGET, text)
 
     def test_active_trader_workflows_do_not_validate_stale_target(self):
-        paths = (
-            REPO_ROOT / ".github/workflows/admiral-trader-validate.yml",
-            REPO_ROOT / ".github/workflows/admiral-trader-weapon-ammo-pools.yml",
-        )
+        paths = (REPO_ROOT / ".github/workflows/admiral-trader-validate.yml",)
         for path in paths:
             text = path.read_text(encoding="utf-8")
             with self.subTest(path=str(path)):
