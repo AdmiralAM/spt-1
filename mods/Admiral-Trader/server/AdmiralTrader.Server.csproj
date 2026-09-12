@@ -6,10 +6,10 @@
     <OutputType>Library</OutputType>
     <AssemblyName>Admiral Trader Server</AssemblyName>
     <RootNamespace>AdmiralTrader.Server</RootNamespace>
-    <Version>0.2.0</Version>
-    <AssemblyVersion>0.2.0.0</AssemblyVersion>
-    <FileVersion>0.2.0.0</FileVersion>
-    <InformationalVersion>0.2.0</InformationalVersion>
+    <Version>0.3.0</Version>
+    <AssemblyVersion>0.3.0.0</AssemblyVersion>
+    <FileVersion>0.3.0.0</FileVersion>
+    <InformationalVersion>0.3.0-rc</InformationalVersion>
     <SptRuntimeTarget>4.1.5</SptRuntimeTarget>
     <SptPublishedApiBaseline>4.1.5</SptPublishedApiBaseline>
     <UseExactSptRuntime Condition="'$(SptRuntimeLibDir)' != ''">true</UseExactSptRuntime>
@@ -52,6 +52,7 @@
     <Content Include="..\manifests\identity-assets.json" Link="manifests\identity-assets.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\base.json" Link="db\base.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\assort.json" Link="db\assort.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\db\natalya-signature-assort.json" Link="db\natalya-signature-assort.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\questassort.json" Link="db\questassort.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\quests\*.json" Link="db\quests\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\locales\*.json" Link="db\locales\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />

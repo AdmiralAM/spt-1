@@ -25,7 +25,7 @@
     "missingProfileFallback": "LL1 finite stock"
   },
   "package": {
-    "canonicalInstallDirectory": "SPT_Runtime/user/mods/Admiral-Trader",
+    "canonicalInstallDirectory": "SPT_Runtime/user/mods/Admiral Trader",
     "legacyDirectoryRemovedBeforeInstall": "SPT_Runtime/user/mods/Admiral Trader",
     "upgradeRequiresDirectoryReplacement": true,
     "cleanRemovalOwnsProfileFiles": false,

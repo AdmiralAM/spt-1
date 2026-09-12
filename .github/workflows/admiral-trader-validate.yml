@@ -52,6 +52,7 @@ jobs:
           python -m json.tool mods/Admiral-Trader/manifests/curated-quest-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/base.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/assort.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/db/natalya-signature-assort.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/questassort.json > /dev/null
           python - <<'PY'
           import hashlib, json
@@ -91,9 +92,13 @@ jobs:
           storefront_ids = {row['offerId'] for row in storefront.get('offers', [])}
           if relationship.get('materialization', {}).get('enabled') is not True or len(relationship_ids) != 3:
               raise SystemExit('M5 Relationship materialization drift')
-          root_ids = {row['_id'] for row in assort['items'] if row.get('parentId') == 'hideout'}
-          if len(root_ids) != 37 or len(storefront_ids) != 22 or not (relationship_ids | storefront_ids) <= root_ids:
-              raise SystemExit('37-offer stabilized assort shape drift')
+          signature = json.loads((root / 'db/natalya-signature-assort.json').read_text())
+          base_root_ids = {row['_id'] for row in assort['items'] if row.get('parentId') == 'hideout'}
+          signature_root_ids = {row['_id'] for row in signature['items'] if row.get('parentId') == 'hideout'}
+          if len(base_root_ids) != 37 or len(signature_root_ids) != 4 or len(base_root_ids | signature_root_ids) != 41:
+              raise SystemExit('41-offer active assort shape drift')
+          if len(storefront_ids) != 22 or not (relationship_ids | storefront_ids) <= base_root_ids:
+              raise SystemExit('stabilized base assort ownership drift')
           if relationship_ids & set(questassort['success']):
               raise SystemExit('Relationship offers must not be quest gated')
           PY

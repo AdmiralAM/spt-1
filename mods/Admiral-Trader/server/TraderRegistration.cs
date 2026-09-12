@@ -50,9 +50,11 @@ public sealed class AdmiralTraderRegistration(
 
         TraderBase traderBase = modHelper.GetJsonDataFromFile<TraderBase>(modPath, "db/base.json");
         TraderAssort assort = modHelper.GetJsonDataFromFile<TraderAssort>(modPath, "db/assort.json");
+        TraderAssort natalyaSignatureAssort = modHelper.GetJsonDataFromFile<TraderAssort>(modPath, "db/natalya-signature-assort.json");
         Dictionary<string, Dictionary<MongoId, MongoId>> questAssort =
             modHelper.GetJsonDataFromFile<Dictionary<string, Dictionary<MongoId, MongoId>>>(modPath, "db/questassort.json");
 
+        MergeNatalyaSignatureStock(assort, natalyaSignatureAssort);
         ValidateTraderData(traderBase, assort, questAssort);
         ValidateRelationshipStock(modPath, assort, questAssort);
 
@@ -125,6 +127,34 @@ public sealed class AdmiralTraderRegistration(
             throw new InvalidDataException("questassort.json must contain exactly the native lower-case keys: started, success, fail");
         if (questAssort.Keys.Any(key => key is "Started" or "Success" or "Fail"))
             throw new InvalidDataException("questassort.json contains legacy capitalized state keys that are invalid for exact SPT 4.1.5 runtime validation");
+    }
+
+    private static void MergeNatalyaSignatureStock(TraderAssort assort, TraderAssort signatureAssort)
+    {
+        if (signatureAssort.Items is null || signatureAssort.BarterScheme is null || signatureAssort.LoyalLevelItems is null)
+            throw new InvalidDataException("Natalya signature stock is missing a required native collection");
+
+        var signatureItems = signatureAssort.Items!;
+        var signatureBarters = signatureAssort.BarterScheme!;
+        var signatureLoyalty = signatureAssort.LoyalLevelItems!;
+        Item[] roots = signatureItems.Where(item => item.ParentId?.ToString() == "hideout").ToArray();
+        if (roots.Length != 4)
+            throw new InvalidDataException($"Expected four Natalya signature offers, got {roots.Length}");
+        if (roots.Any(root => root.Upd is null || root.Upd.UnlimitedCount is not false || root.Upd.StackObjectsCount is null or <= 0 || root.Upd.BuyRestrictionMax is not 1))
+            throw new InvalidDataException("Natalya signature offers must remain finite one-per-reset presets");
+
+        HashSet<MongoId> existingItemIds = assort.Items.Select(item => item.Id).ToHashSet();
+        if (signatureItems.Any(item => !existingItemIds.Add(item.Id)))
+            throw new InvalidDataException("Natalya signature stock contains an item id already owned by Admiral");
+        if (signatureBarters.Keys.Any(assort.BarterScheme.ContainsKey)
+            || signatureLoyalty.Keys.Any(assort.LoyalLevelItems.ContainsKey))
+            throw new InvalidDataException("Natalya signature stock contains an offer id already owned by Admiral");
+
+        assort.Items.AddRange(signatureItems);
+        foreach (var (offerId, scheme) in signatureBarters)
+            assort.BarterScheme.Add(offerId, scheme);
+        foreach (var (offerId, loyalty) in signatureLoyalty)
+            assort.LoyalLevelItems.Add(offerId, loyalty);
     }
 
     private static void ValidateRelationshipStock(
@@ -210,7 +240,7 @@ public sealed class AdmiralTraderRegistration(
             throw new InvalidDataException($"Unsupported Admiral Trader runtime manifest schema: {manifest.SchemaVersion}");
         if (!string.Equals(manifest.Product, "Admiral Trader", StringComparison.Ordinal))
             throw new InvalidDataException($"runtime-manifest product mismatch: {manifest.Product}");
-        if (!string.Equals(manifest.Version, "0.2.0", StringComparison.Ordinal))
+        if (!string.Equals(manifest.Version, "0.3.0", StringComparison.Ordinal))
             throw new InvalidDataException($"runtime-manifest version mismatch: {manifest.Version}");
         if (!string.Equals(manifest.SptCompatibility, "~4.1.0", StringComparison.Ordinal))
             throw new InvalidDataException($"runtime-manifest SPT compatibility mismatch: {manifest.SptCompatibility}");

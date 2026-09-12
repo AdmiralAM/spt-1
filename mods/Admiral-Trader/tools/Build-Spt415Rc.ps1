@@ -36,7 +36,7 @@ foreach ($entry in $expectedRuntime.GetEnumerator()) {
 
 $runtimeManifestPath = Join-Path $traderRoot 'manifests/runtime-manifest.json'
 $runtimeManifest = Get-Content $runtimeManifestPath -Raw | ConvertFrom-Json
-if ($runtimeManifest.schemaVersion -ne 2 -or $runtimeManifest.version -ne '0.2.0' -or $runtimeManifest.sptCompatibility -ne '~4.1.0' -or $runtimeManifest.releaseChannel -ne 'stable') { throw 'Trader stable release metadata drift.' }
+if ($runtimeManifest.schemaVersion -ne 2 -or $runtimeManifest.version -ne '0.3.0' -or $runtimeManifest.sptCompatibility -ne '~4.1.0' -or $runtimeManifest.releaseChannel -ne 'release-candidate') { throw 'Trader release-candidate metadata drift.' }
 if ($runtimeManifest.targetSptVersion -ne '4.1.5') { throw "Trader runtime target drift: $($runtimeManifest.targetSptVersion)" }
 if ($runtimeManifest.publishedApiCompileBaseline -ne '4.1.5') { throw 'Trader published API baseline drift.' }
 if ($runtimeManifest.registrationEnabled -ne $false) { throw 'Source runtime registration must remain fail-closed; only staged RC may enable it.' }
@@ -55,13 +55,18 @@ $itemsPath = Join-Path $runtimeRoot 'SPT_Data/database/templates/items.json'
 if (-not (Test-Path $itemsPath -PathType Leaf)) { throw "Exact SPT item database is missing: $itemsPath" }
 $itemDb = Get-Content $itemsPath -Raw | ConvertFrom-Json -AsHashtable
 $assort = Get-Content (Join-Path $traderRoot 'db/assort.json') -Raw | ConvertFrom-Json
+$signatureAssort = Get-Content (Join-Path $traderRoot 'db/natalya-signature-assort.json') -Raw | ConvertFrom-Json
+$m7 = Get-Content (Join-Path $traderRoot 'manifests/m7-natalya-absorption-program.json') -Raw | ConvertFrom-Json
 $baseline = Get-Content (Join-Path $traderRoot 'manifests/baseline-stock.json') -Raw | ConvertFrom-Json
 $relationship = Get-Content (Join-Path $traderRoot 'manifests/relationship-stock.json') -Raw | ConvertFrom-Json
 $storefrontCore = Get-Content (Join-Path $traderRoot 'manifests/storefront-core-expansion.json') -Raw | ConvertFrom-Json
 $questAssort = Get-Content (Join-Path $traderRoot 'db/questassort.json') -Raw | ConvertFrom-Json
 $rootOffers = @($assort.items | Where-Object parentId -eq 'hideout')
 if ($rootOffers.Count -ne 37) { throw "Expected 37 active-head root offers, got $($rootOffers.Count)" }
-$missingTpls = @($rootOffers | ForEach-Object { [string]$_."_tpl" } | Where-Object { -not $itemDb.ContainsKey($_) } | Sort-Object -Unique)
+$signatureRootOffers = @($signatureAssort.items | Where-Object parentId -eq 'hideout')
+if ($signatureRootOffers.Count -ne 4) { throw "Expected four Natalya signature offers, got $($signatureRootOffers.Count)" }
+if (@($m7.signatureOffers).Count -ne 4 -or $m7.activeHeadScope.runtimeFiniteOffers -ne 41) { throw 'M7 signature authority drift.' }
+$missingTpls = @($rootOffers + @($signatureAssort.items) | ForEach-Object { [string]$_."_tpl" } | Where-Object { -not $itemDb.ContainsKey($_) } | Sort-Object -Unique)
 if ($missingTpls.Count) { throw "Active-head assort contains TPLs missing from exact SPT 4.1.5 DB: $($missingTpls -join ', ')" }
 $baselineIds = @($baseline.offers | ForEach-Object { [string]$_.offerId })
 $relationshipIds = @($relationship.offers | ForEach-Object { [string]$_.offerId })
@@ -88,8 +93,8 @@ $dll = Join-Path $traderRoot 'server/bin/Release/net10.0/Admiral Trader Server.d
 if (-not (Test-Path $dll -PathType Leaf)) { throw "Compiled Trader DLL is missing: $dll" }
 $dllHash = (Get-FileHash $dll -Algorithm SHA256).Hash.ToLowerInvariant()
 
-$packageRoot = Join-Path $OutputDirectory "Admiral-Trader-0.2.0-SPT415-Stable-$sourceHead"
-$modTarget = Join-Path $packageRoot 'SPT_Runtime/user/mods/Admiral-Trader'
+$packageRoot = Join-Path $OutputDirectory "Admiral-Trader-0.3.0-SPT415-RC-$sourceHead"
+$modTarget = Join-Path $packageRoot 'SPT_Runtime/user/mods/Admiral Trader'
 if (Test-Path $packageRoot) { Remove-Item $packageRoot -Recurse -Force }
 New-Item $modTarget -ItemType Directory -Force | Out-Null
 Copy-Item $dll $modTarget
@@ -104,13 +109,15 @@ Copy-Item (Join-Path $traderRoot 'docs/POLISHING.md') (Join-Path $modTarget 'POL
 $stagedManifestPath = Join-Path $modTarget 'manifests/runtime-manifest.json'
 $stagedManifest = Get-Content $stagedManifestPath -Raw | ConvertFrom-Json
 $stagedManifest.registrationEnabled = $true
-$stagedManifest | Add-Member -NotePropertyName publicationMode -NotePropertyValue 'stable' -Force
+$stagedManifest | Add-Member -NotePropertyName publicationMode -NotePropertyValue 'release-candidate' -Force
 $stagedManifest | Add-Member -NotePropertyName sourceHeadSha -NotePropertyValue $sourceHead -Force
 $stagedManifest | ConvertTo-Json -Depth 20 | Set-Content $stagedManifestPath -Encoding utf8
 
 $stagedAssort = Get-Content (Join-Path $modTarget 'db/assort.json') -Raw | ConvertFrom-Json
 $stagedQuestAssort = Get-Content (Join-Path $modTarget 'db/questassort.json') -Raw | ConvertFrom-Json
 if (@($stagedAssort.items | Where-Object parentId -eq 'hideout').Count -ne 37) { throw 'Staged Trader lost the 37-offer contract.' }
+$stagedSignatureAssort = Get-Content (Join-Path $modTarget 'db/natalya-signature-assort.json') -Raw | ConvertFrom-Json
+if (@($stagedSignatureAssort.items | Where-Object parentId -eq 'hideout').Count -ne 4) { throw 'Staged Trader lost the four signature offers.' }
 if (@($stagedQuestAssort.success.PSObject.Properties).Count -ne 8) { throw 'Staged Trader lost the eight Milestone gates.' }
 if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 43) { throw 'Staged Trader lost the 43-quest expanded campaign contract.' }
 if (-not (Test-Path (Join-Path $modTarget 'assets/d5c27bb3169f8dfbc13f6b69.jpg') -PathType Leaf)) { throw 'Staged Trader portrait is missing.' }
@@ -118,9 +125,9 @@ if (-not (Test-Path (Join-Path $modTarget 'assets/d5c27bb3169f8dfbc13f6b69.jpg')
 $provenance = [ordered]@{
     schemaVersion = 1
     product = 'Admiral Trader'
-    version = '0.2.0'
+    version = '0.3.0'
     sptCompatibility = '~4.1.0'
-    releaseChannel = 'stable'
+    releaseChannel = 'release-candidate'
     targetSptVersion = '4.1.5'
     sourceHeadSha = $sourceHead
     authority = 'PR #328 active canonical head'
@@ -132,7 +139,8 @@ $provenance = [ordered]@{
     milestoneOffers = 8
     relationshipOffers = 3
     storefrontCoreOffers = 22
-    totalFiniteOffers = 37
+    natalyaSignatureOffers = 4
+    totalFiniteOffers = 41
     relationshipProgression = [ordered]@{
         loyaltyLevels = 4
         standingThresholds = @(0.0, 0.1, 0.3, 0.55)

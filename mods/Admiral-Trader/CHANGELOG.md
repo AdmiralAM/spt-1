@@ -1,10 +1,12 @@
 # Admiral Trader changelog
 
-## Next campaign milestone — authored direction
+## 0.3.0-rc — Natalya absorption
 
 - Absorb Natalya's useful quest and storefront roles into Admiral because Natalya is retired from the target installation. Artem, Scorpion and Ref remain separate traders and are only used to reject duplicates.
 - Route the opening Admiral wave through Ground Zero alongside the retained traders' early progression.
 - Add a bounded signature weapon rack selected from Natalya's native stock against the effective post-Andrudis catalog, with finite stock and progressive access.
+- First runtime storefront intake adds complete M700, T-5000M, RPDN and Mk17 presets, bringing the active runtime to 41 finite offers.
+- Canonicalize the installed folder as `SPT_Runtime/user/mods/Admiral Trader` and reject the obsolete hyphenated alias during replacement validation.
 
 ## 0.2.0 — stable campaign baseline
 

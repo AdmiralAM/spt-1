@@ -10,7 +10,7 @@ class M6ReleaseHardeningTests(unittest.TestCase):
     def test_release_metadata_and_scope_are_aligned(self):
         runtime = json.loads((ROOT / "manifests/runtime-manifest.json").read_text())
         m6 = json.loads((ROOT / "manifests/m6-stable-release.json").read_text())
-        self.assertEqual((runtime["version"], runtime["releaseChannel"], runtime["sptCompatibility"]), ("0.2.0", "stable", "~4.1.0"))
+        self.assertEqual((runtime["version"], runtime["releaseChannel"], runtime["sptCompatibility"]), ("0.3.0", "release-candidate", "~4.1.0"))
         self.assertEqual(runtime["schemaVersion"], 2)
         self.assertFalse(runtime["registrationEnabled"])
         scope = m6["scopeFreeze"]
@@ -37,7 +37,7 @@ class M6ReleaseHardeningTests(unittest.TestCase):
             self.assertIn(alias, install)
             self.assertIn(alias, lifecycle)
         self.assertIn("admiral-trader-package-files.json", builder)
-        self.assertIn("publicationMode -NotePropertyValue 'stable'", builder)
+        self.assertIn("publicationMode -NotePropertyValue 'release-candidate'", builder)
         self.assertIn("removeInvalidTradersFromProfile", install)
         self.assertIn("Leave `removeModItemsFromProfile` unchanged", install)
         self.assertIn("d5c27bb3169f8dfbc13f6b69", install)
@@ -49,6 +49,7 @@ class M6ReleaseHardeningTests(unittest.TestCase):
         self.assertNotIn("frozen-trader", builder + workflow)
         self.assertIn("$quests.Count -ne 43", builder)
         self.assertIn("Count -ne 37", builder)
+        self.assertIn("Count -ne 4", builder)
         self.assertIn("'mods/Admiral-Trader/**'", workflow)
 
 

@@ -15,7 +15,7 @@ $traderOutput = Join-Path $OutputDirectory 'active-trader'
 & (Join-Path $traderRoot 'tools/Build-Spt415Rc.ps1') -SptRoot $SptRoot -SourceHeadSha $head -OutputDirectory $traderOutput
 $traderCandidates = @(Get-ChildItem $traderOutput -Directory | Where-Object { Test-Path (Join-Path $_.FullName 'admiral-trader-provenance.json') })
 if ($traderCandidates.Count -ne 1) { throw "Expected one active Trader candidate, got $($traderCandidates.Count)" }
-$traderSource = Join-Path $traderCandidates[0].FullName 'SPT_Runtime/user/mods/Admiral-Trader'
+$traderSource = Join-Path $traderCandidates[0].FullName 'SPT_Runtime/user/mods/Admiral Trader'
 
 $runtimeRoot = if (Test-Path (Join-Path $SptRoot 'SPTarkov.Server.Core.dll')) { (Resolve-Path $SptRoot).Path } else { (Resolve-Path (Join-Path $SptRoot 'SPT_Runtime')).Path }
 $managedRoot = Join-Path (Split-Path $runtimeRoot -Parent) 'EscapeFromTarkov_Data/Managed'
@@ -28,9 +28,9 @@ if (Test-Path (Join-Path $managedRoot 'UnityEngine.CoreModule.dll') -PathType Le
 }
 if ($LASTEXITCODE -ne 0) { throw 'Economy client build failed.' }
 
-$packageRoot = Join-Path $OutputDirectory "Admiral-Trader-0.2.0-Economy-0.1.0-SPT415-Stable-$head"
+$packageRoot = Join-Path $OutputDirectory "Admiral-Trader-0.3.0-Economy-0.1.0-SPT415-RC-$head"
 if (Test-Path $packageRoot) { Remove-Item $packageRoot -Recurse -Force }
-$traderTarget = Join-Path $packageRoot 'SPT_Runtime/user/mods/Admiral-Trader'
+$traderTarget = Join-Path $packageRoot 'SPT_Runtime/user/mods/Admiral Trader'
 $economyTarget = Join-Path $packageRoot 'SPT_Runtime/user/mods/Economy Admiral'
 $clientTarget = Join-Path $packageRoot 'BepInEx/plugins/Economy Admiral'
 New-Item (Join-Path $economyTarget 'config') -ItemType Directory -Force | Out-Null
@@ -43,14 +43,15 @@ Copy-Item (Join-Path $economyRoot 'README.md') $economyTarget
 
 $quests = @(Get-ChildItem (Join-Path $traderTarget 'db/quests') -Filter '*.json' -File)
 $assort = Get-Content (Join-Path $traderTarget 'db/assort.json') -Raw | ConvertFrom-Json
-if ($quests.Count -ne 43 -or @($assort.items | Where-Object parentId -eq 'hideout').Count -ne 37) { throw 'Combined package does not contain the stabilized active Trader scope.' }
+$signatureAssort = Get-Content (Join-Path $traderTarget 'db/natalya-signature-assort.json') -Raw | ConvertFrom-Json
+if ($quests.Count -ne 43 -or @($assort.items | Where-Object parentId -eq 'hideout').Count -ne 37 -or @($signatureAssort.items | Where-Object parentId -eq 'hideout').Count -ne 4) { throw 'Combined package does not contain the active 41-offer Trader scope.' }
 $config = Get-Content (Join-Path $economyTarget 'config/config.default.json') -Raw | ConvertFrom-Json
 if ($config.mode -ne 'Enforce' -or $config.preset -ne 'Normal') { throw 'Economy defaults drifted from Normal/Enforce.' }
 
 [ordered]@{
     schemaVersion = 2; product = 'Admiral Trader + Economy Admiral'; sourceHeadSha = $head
-    targetSptVersion = '4.1.5'; sptCompatibility = '~4.1.0'; releaseChannel = 'stable'
-    trader = [ordered]@{ version='0.2.0'; traderId='d5c27bb3169f8dfbc13f6b69'; questCount=43; totalFiniteOffers=37 }
+    targetSptVersion = '4.1.5'; sptCompatibility = '~4.1.0'; releaseChannel = 'release-candidate'
+    trader = [ordered]@{ version='0.3.0'; traderId='d5c27bb3169f8dfbc13f6b69'; questCount=43; totalFiniteOffers=41; natalyaSignatureOffers=4 }
     economy = [ordered]@{ version='0.1.0'; defaultMode='Enforce'; recommendedPreset='Normal'; ownsTraderEngine=$false }
 } | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $packageRoot 'admiral-combined-provenance.json') -Encoding utf8
 

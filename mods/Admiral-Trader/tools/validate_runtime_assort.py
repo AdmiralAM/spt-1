@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSORT_PATH = ROOT / "db" / "assort.json"
+SIGNATURE_ASSORT_PATH = ROOT / "db" / "natalya-signature-assort.json"
 QUESTASSORT_PATH = ROOT / "db" / "questassort.json"
 QUEST_DIR = ROOT / "db" / "quests"
 BASE_PATH = ROOT / "db" / "base.json"
@@ -13,6 +14,7 @@ BASELINE_STOCK_PATH = ROOT / "manifests" / "baseline-stock.json"
 AMMO_POLICY_PATH = ROOT / "manifests" / "ammo-offer-policy.json"
 RELATIONSHIP_STOCK_PATH = ROOT / "manifests" / "relationship-stock.json"
 STOREFRONT_CORE_PATH = ROOT / "manifests" / "storefront-core-expansion.json"
+M7_PATH = ROOT / "manifests" / "m7-natalya-absorption-program.json"
 CSPROJ_PATH = ROOT / "server" / "AdmiralTrader.Server.csproj"
 
 EXPECTED_RUNTIME_TARGET = "4.1.5"
@@ -115,11 +117,13 @@ def validate_single_rub_offer(offer_id: str, item: dict, barter: dict, loyalty: 
 def main() -> None:
     validate_runtime_target()
     assort = json.loads(ASSORT_PATH.read_text(encoding="utf-8"))
+    signature_assort = json.loads(SIGNATURE_ASSORT_PATH.read_text(encoding="utf-8"))
     questassort = json.loads(QUESTASSORT_PATH.read_text(encoding="utf-8"))
     baseline = json.loads(BASELINE_STOCK_PATH.read_text(encoding="utf-8"))
     ammo_policy = json.loads(AMMO_POLICY_PATH.read_text(encoding="utf-8"))
     relationship = json.loads(RELATIONSHIP_STOCK_PATH.read_text(encoding="utf-8"))
     storefront_core = json.loads(STOREFRONT_CORE_PATH.read_text(encoding="utf-8"))
+    m7 = json.loads(M7_PATH.read_text(encoding="utf-8"))
     base = json.loads(BASE_PATH.read_text(encoding="utf-8"))
 
     if set(questassort) != NATIVE_QUESTASSORT_KEYS:
@@ -138,9 +142,12 @@ def main() -> None:
     if any(row.get("questGate") is not None for row in baseline_offers):
         fail("Baseline offers must remain non-quest-gated")
 
-    items = assort.get("items")
-    barter = assort.get("barter_scheme")
-    loyalty = assort.get("loyal_level_items")
+    signature_items = signature_assort.get("items")
+    signature_barter = signature_assort.get("barter_scheme")
+    signature_loyalty = signature_assort.get("loyal_level_items")
+    items = [*(assort.get("items") or []), *(signature_items or [])]
+    barter = {**(assort.get("barter_scheme") or {}), **(signature_barter or {})}
+    loyalty = {**(assort.get("loyal_level_items") or {}), **(signature_loyalty or {})}
     if not isinstance(items, list) or not isinstance(barter, dict) or not isinstance(loyalty, dict):
         fail("assort native collections have invalid types")
 
@@ -158,14 +165,18 @@ def main() -> None:
     core_by_id = {str(row.get("offerId")): row for row in core_offers}
     if len(core_by_id) != 22 or storefront_core.get("totalFiniteOffers") != 37:
         fail("bounded post-Andrudis storefront core must contain 22 offers and 37 total finite offers")
-    expected_ids = BASELINE_OFFER_IDS | milestone_ids | RELATIONSHIP_OFFER_IDS | set(core_by_id)
+    signature_offers = m7.get("signatureOffers") or []
+    signature_by_id = {str(row.get("offerId")): row for row in signature_offers}
+    if len(signature_by_id) != 4 or (m7.get("activeHeadScope") or {}).get("runtimeFiniteOffers") != 41:
+        fail("M7 must contain exactly four signature offers and 41 finite runtime offers")
+    expected_ids = BASELINE_OFFER_IDS | milestone_ids | RELATIONSHIP_OFFER_IDS | set(core_by_id) | set(signature_by_id)
     root_items = {item.get("_id"): item for item in items if item.get("parentId") == "hideout"}
-    if len(root_items) != 37:
-        fail(f"expected exactly 37 finite Admiral root offers, got {len(root_items)}")
+    if len(root_items) != 41:
+        fail(f"expected exactly 41 finite Admiral root offers, got {len(root_items)}")
     if set(root_items) != expected_ids:
         fail(f"assort root id drift; missing={sorted(expected_ids-set(root_items))} extra={sorted(set(root_items)-expected_ids)}")
     if set(barter) != expected_ids or set(loyalty) != expected_ids:
-        fail("assort root/barter/loyalty key sets must match the 37-offer contract")
+        fail("combined assort root/barter/loyalty key sets must match the 41-offer contract")
     all_item_ids = {item.get("_id") for item in items}
     if len(all_item_ids) != len(items):
         fail("assort item ids must be unique")
@@ -215,6 +226,19 @@ def main() -> None:
             barter,
             loyalty,
             tpl=str(policy["itemTpl"]),
+            price=int(policy["priceRub"]),
+            stock=int(policy["stockPerReset"]),
+            buy_limit=int(policy["buyRestriction"]),
+            loyalty_level=int(policy["loyaltyLevel"]),
+        )
+
+    for offer_id, policy in signature_by_id.items():
+        validate_single_rub_offer(
+            offer_id,
+            root_items[offer_id],
+            barter,
+            loyalty,
+            tpl=str(policy["tpl"]),
             price=int(policy["priceRub"]),
             stock=int(policy["stockPerReset"]),
             buy_limit=int(policy["buyRestriction"]),
@@ -288,7 +312,7 @@ def main() -> None:
         if float(level.get("minStanding", -1)) != standing:
             fail(f"Admiral LL{index}: standing threshold drift")
 
-    print("Admiral Trader SPT 4.1.5 native questassort + 37 finite-offer contract OK")
+    print("Admiral Trader SPT 4.1.5 native questassort + 41 finite-offer contract OK")
 
 
 if __name__ == "__main__":
