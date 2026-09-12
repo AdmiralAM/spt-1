@@ -103,6 +103,18 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
             self.assertIn(row["offerId"], [reward.get("target") for reward in quest["rewards"]["Success"] if reward["type"] == "AssortmentUnlock"])
             self.assertIn("Открыта покупка:", self.ru[row["questId"] + " successMessageText"])
 
+    def test_story_copy_exposes_position_and_next_operation(self):
+        for chain in self.authored["chains"]:
+            for index, row in enumerate(chain["quests"]):
+                description = self.ru[row["id"] + " description"]
+                success = self.ru[row["id"] + " successMessageText"]
+                self.assertIn(f"этап {row['order']} из 10", description, row["id"])
+                self.assertIn("Требования:\n- ", description, row["id"])
+                if index + 1 < len(chain["quests"]):
+                    self.assertIn(f"Следующая операция: «{chain['quests'][index + 1]['name']}»", success, row["id"])
+                else:
+                    self.assertIn("Расследование закрыто", success, row["id"])
+
 
 if __name__ == "__main__":
     unittest.main()

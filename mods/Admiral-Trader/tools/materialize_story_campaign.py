@@ -201,7 +201,7 @@ def rewards(q: dict, map_name: str) -> list[dict]:
     return result
 
 
-def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], objective_ru: list[str], specialist: bool, names_en: dict[str, str], names_ru: dict[str, str]) -> tuple[dict, dict]:
+def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], objective_ru: list[str], specialist: bool, names_en: dict[str, str], names_ru: dict[str, str], next_en: str | None, next_ru: str | None) -> tuple[dict, dict]:
     qid = q["id"]
     speaker_en = "Natalya has isolated a lead inside Admiral's network." if specialist else "Admiral has assigned the next operation."
     speaker_ru = "Наталья выделила новую зацепку внутри сети Адмирала." if specialist else "Адмирал назначил следующую операцию."
@@ -215,10 +215,12 @@ def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], obje
         unlock_tpl = STORY_UNLOCKS[chain["map"]][0]
         reward_en += f"\n- Purchase unlocked: {names_en.get(unlock_tpl, unlock_tpl)}"
         reward_ru += f"\n- Открыта покупка: {names_ru.get(unlock_tpl, unlock_tpl)}"
-    en_body = f"{speaker_en}\n\nSituation:\nOperation '{en_name}' advances the {CHAIN_EN[chain['chain'] - 1]} chain on {chain['title'].split(':')[0]}. The requirements below are the exact completion conditions.\n\nRequirements:\n" + "\n".join(f"- {x}" for x in objective_en) + f"\n\n{reward_en}"
-    ru_body = f"{speaker_ru}\n\nОбстановка:\nОперация «{q['name']}» продолжает сюжетную цепочку «{chain['title']}» на карте «{chain['map']}». Ниже перечислены точные условия зачёта.\n\nТребования:\n" + "\n".join(f"- {x}" for x in objective_ru) + f"\n\n{reward_ru}"
-    done_en = f"Operation '{en_name}' is complete. The result has been logged." + (" Natalya confirmed the specialist channel." if specialist else "")
-    done_ru = f"Операция «{q['name']}» завершена. Результат принят и внесён в журнал." + (" Наталья подтвердила канал специалиста." if specialist else "")
+    en_body = f"{speaker_en}\n\nSituation:\nOperation '{en_name}' is stage {q['order']} of 10 in the {CHAIN_EN[chain['chain'] - 1]} investigation on {chain['title'].split(':')[0]}. Complete the field work below to move the investigation forward. Every listed requirement is an exact completion condition.\n\nRequirements:\n" + "\n".join(f"- {x}" for x in objective_en) + f"\n\n{reward_en}"
+    ru_body = f"{speaker_ru}\n\nОбстановка:\nОперация «{q['name']}» — этап {q['order']} из 10 в расследовании «{chain['title']}» на карте «{chain['map']}». Выполните перечисленную полевую работу, чтобы продвинуть расследование. Каждый пункт ниже является точным условием зачёта.\n\nТребования:\n" + "\n".join(f"- {x}" for x in objective_ru) + f"\n\n{reward_ru}"
+    continuation_en = f" Next operation: {next_en}." if next_en else " This investigation is closed; its result now feeds the wider Admiral campaign."
+    continuation_ru = f" Следующая операция: «{next_ru}»." if next_ru else " Расследование закрыто; его результат учтён в общей кампании Адмирала."
+    done_en = f"Operation '{en_name}' is complete. The result has been logged.{continuation_en}" + (" Natalya confirmed the specialist channel." if specialist else "")
+    done_ru = f"Операция «{q['name']}» завершена. Результат принят и внесён в журнал.{continuation_ru}" + (" Наталья подтвердила канал специалиста." if specialist else "")
     def make(name: str, body: str, done: str, reward: str, objective_lines: list[str]) -> dict:
         return {qid + " name": name, qid + " description": body, qid + " note": "", qid + " startedMessageText": body, qid + " successMessageText": done + "\n\n" + reward, qid + " failMessageText": "", qid + " acceptPlayerMessage": body, qid + " declinePlayerMessage": "", qid + " completePlayerMessage": done, qid + " changeQuestMessageText": "", **{row["id"]: objective_lines[i] for i, row in enumerate(q["runtimeFinish"]) if i < len(objective_lines)}}
     return make(en_name, en_body, done_en, reward_en, objective_en), make(q["name"], ru_body, done_ru, reward_ru, objective_ru)
@@ -243,7 +245,7 @@ def main() -> None:
     final_ids = {chain["chain"]: chain["quests"][-1]["id"] for chain in chains}
     runtime_rows, en, ru = [], {}, {}
     for chain in chains:
-        for q in chain["quests"]:
+        for quest_index, q in enumerate(chain["quests"]):
             start = [level_condition(q["id"], q["level"])]
             prereqs = ([q["prerequisite"]] if q["prerequisite"] else []) + [final_ids[row["chain"]] for row in q["crossChainPrerequisites"]]
             start.extend(prerequisite(q["id"], target, index + 1) for index, target in enumerate(prereqs))
@@ -253,7 +255,10 @@ def main() -> None:
             template = {"QuestName": q["name"], "_id": q["id"], "canShowNotificationsInGame": True, "conditions": {"AvailableForFinish": finish, "AvailableForStart": start, "Fail": []}, "description": q["id"] + " description", "failMessageText": q["id"] + " failMessageText", "name": q["id"] + " name", "note": q["id"] + " note", "traderId": TRADER, "location": "any", "image": "/files/quest/icon/5a27cafa86f77424e20615d6.jpg", "type": "PickUp" if any(o["kind"] == "retrieveQuestItem" for o in q["objectives"]) else ("Elimination" if any(o["kind"] == "eliminate" for o in q["objectives"]) else "Exploration"), "isKey": False, "restartable": False, "instantComplete": False, "secretQuest": False, "startedMessageText": q["id"] + " startedMessageText", "successMessageText": q["id"] + " successMessageText", "acceptPlayerMessage": q["id"] + " acceptPlayerMessage", "acceptanceAndFinishingSource": "eft", "declinePlayerMessage": q["id"] + " declinePlayerMessage", "completePlayerMessage": q["id"] + " completePlayerMessage", "changeQuestMessageText": q["id"] + " changeQuestMessageText", "rewards": {"Started": [], "Success": rewards(q, chain["map"]), "Fail": []}, "side": "Pmc", "status": 0, "progressSource": "eft", "gameModes": [], "rankingModes": [], "arenaLocations": []}
             runtime_rows.append((chain, q, template, specialist))
             en_name = f"{CHAIN_EN[chain['chain'] - 1]} {q['order']}: {CODENAMES_EN[chain['chain'] - 1][q['order'] - 1]}"
-            en_set, ru_set = locale_set(q, chain, en_name, objective_en, objective_ru, specialist, names_en, names_ru)
+            next_q = chain["quests"][quest_index + 1] if quest_index + 1 < len(chain["quests"]) else None
+            next_en = f"{CHAIN_EN[chain['chain'] - 1]} {next_q['order']}: {CODENAMES_EN[chain['chain'] - 1][next_q['order'] - 1]}" if next_q else None
+            next_ru = next_q["name"] if next_q else None
+            en_set, ru_set = locale_set(q, chain, en_name, objective_en, objective_ru, specialist, names_en, names_ru, next_en, next_ru)
             en.update(en_set); ru.update(ru_set)
 
     quest_dir = ROOT / "db/quests"
