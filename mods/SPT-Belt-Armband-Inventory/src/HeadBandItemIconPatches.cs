@@ -87,16 +87,17 @@ namespace SPTBeltArmbandInventory
 
                 HeadBandItemIconRuntime.LogWarning = logWarning;
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
-                object postfix = harmonyMethodCtor.Invoke(new object[] { CreatePostfix(target) });
-                patch.Invoke(harmony, new object[] { target, postfix, null, null, null });
+                object prefix = harmonyMethodCtor.Invoke(new object[] { typeof(HeadBandItemIconPatches).GetMethod(nameof(CreatePrefix), BindingFlags.Static | BindingFlags.NonPublic) });
+                patch.Invoke(harmony, new object[] { target, prefix, null, null, null });
                 logInfo?.Invoke("B&A&HB owned Utility HeadBand inventory icon installed on ItemViewFactory.LoadItemIcon.");
                 return true;
             }
-            catch (Exception exception) { Dispose(); logWarning?.Invoke("B&A&HB HeadBand icon patch failed safely: " + exception.Message); return false; }
+            catch (Exception exception) { Dispose(); logWarning?.Invoke("B&A&HB HeadBand icon patch failed safely: " + exception.ToString()); return false; }
         }
 
-        static MethodInfo CreatePostfix(MethodInfo original)
+        static MethodInfo CreatePrefix(MethodBase originalMethod)
         {
+            MethodInfo original = (MethodInfo)originalMethod;
             DynamicMethod method = new DynamicMethod("BAndHBHeadBandIconPrefix", typeof(bool), new[] { original.GetParameters()[0].ParameterType, original.ReturnType.MakeByRefType() }, typeof(HeadBandItemIconPatches), true);
             method.DefineParameter(1, ParameterAttributes.None, "__0");
             method.DefineParameter(2, ParameterAttributes.None, "__result");

@@ -9,7 +9,7 @@ namespace SPTBeltArmbandInventory
 {
     internal static class CompactFaceHeadBandPresentationRuntime
     {
-        const float HeadBandHeight = 44f;
+        const float HeadBandHeight = 40f;
         const float Gap = 4f;
 
 
