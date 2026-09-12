@@ -37,7 +37,10 @@ public sealed record EconomyConfig
     public EconomyMode Mode { get; init; } = EconomyMode.Enforce;
     public EconomyPreset Preset { get; init; } = EconomyPreset.Normal;
     public string ReportRelativePath { get; init; } = "reports/economy-admiral-audit.json";
-    public bool RepeatedRaidLootDecay { get; init; } = false;
+
+    [JsonInclude]
+    public bool RepeatedRaidLootDecay { get => false; private init { } }
+
     public bool EnablePlayableEconomyBundle { get; init; } = true;
 
     public bool EnableQuestEconomyCluster { get; init; } = true;
@@ -47,31 +50,31 @@ public sealed record EconomyConfig
 
     public bool EnableItemRewardStackNormalization
     {
-        get => EnableQuestEconomyCluster && (enableItemRewardStackNormalization || BundleEnforceActive);
+        get => EnableQuestEconomyCluster && (enableItemRewardStackNormalization || BundleProfileActive);
         init => enableItemRewardStackNormalization = value;
     }
 
     public bool EnableQuestXpPressure
     {
-        get => EnableQuestEconomyCluster && (enableQuestXpPressure || BundleEnforceActive);
+        get => EnableQuestEconomyCluster && (enableQuestXpPressure || BundleProfileActive);
         init => enableQuestXpPressure = value;
     }
 
     public bool EnableQuestStandingPressure
     {
-        get => EnableQuestEconomyCluster && (enableQuestStandingPressure || BundleEnforceActive);
+        get => EnableQuestEconomyCluster && (enableQuestStandingPressure || BundleProfileActive);
         init => enableQuestStandingPressure = value;
     }
 
     public bool EnableRestartableQuestPressure
     {
-        get => EnableQuestEconomyCluster && (enableRestartableQuestPressure || BundleEnforceActive);
+        get => EnableQuestEconomyCluster && (enableRestartableQuestPressure || BundleProfileActive);
         init => enableRestartableQuestPressure = value;
     }
 
     public bool EnableTraderPurchasePressure
     {
-        get => EnableTraderEconomyCluster && (enableTraderPurchasePressure || BundleEnforceActive);
+        get => EnableTraderEconomyCluster && (enableTraderPurchasePressure || BundleProfileActive);
         init => enableTraderPurchasePressure = value;
     }
 
@@ -79,7 +82,7 @@ public sealed record EconomyConfig
 
     public bool EnableTraderSellPressure
     {
-        get => EnableTraderEconomyCluster && (enableTraderSellPressure || BundleEnforceActive);
+        get => EnableTraderEconomyCluster && (enableTraderSellPressure || BundleProfileActive);
         init => enableTraderSellPressure = value;
     }
 
@@ -87,7 +90,7 @@ public sealed record EconomyConfig
 
     public bool EnableFleaPurchasePressure
     {
-        get => EnableFleaEconomyCluster && (enableFleaPurchasePressure || BundleEnforceActive);
+        get => EnableFleaEconomyCluster && (enableFleaPurchasePressure || BundleProfileActive);
         init => enableFleaPurchasePressure = value;
     }
 
@@ -97,13 +100,12 @@ public sealed record EconomyConfig
 
     public bool EnableFleaListingFeePressure
     {
-        get => EnableFleaEconomyCluster && (enableFleaListingFeePressure || BundleEnforceActive);
+        get => EnableFleaEconomyCluster && (enableFleaListingFeePressure || BundleProfileActive);
         init => enableFleaListingFeePressure = value;
     }
 
     public double CustomFleaListingFeeMultiplier { get; init; } = 1.25;
 
-    // Legacy/manual master remains accepted for old configs. New UI exposes loose/static mechanisms separately.
     public bool EnableLootPressure
     {
         get => EnableLooseLootPressure || EnableStaticLootPressure;
@@ -112,26 +114,26 @@ public sealed record EconomyConfig
 
     public bool EnableLooseLootPressure
     {
-        get => EnableLootEconomyCluster && (enableLootPressure || enableLooseLootPressure || BundleEnforceActive);
+        get => EnableLootEconomyCluster && (enableLootPressure || enableLooseLootPressure || BundleProfileActive);
         init => enableLooseLootPressure = value;
     }
 
     public bool EnableStaticLootPressure
     {
-        get => EnableLootEconomyCluster && (enableLootPressure || enableStaticLootPressure || BundleEnforceActive);
+        get => EnableLootEconomyCluster && (enableLootPressure || enableStaticLootPressure || BundleProfileActive);
         init => enableStaticLootPressure = value;
     }
 
     public double CustomLooseLootScale { get; init; } = 0.85;
     public double CustomStaticLootScale { get; init; } = 0.85;
 
-    // Custom gameplay enforcement targets are deliberately separate from CustomAuditPolicy.
-    // Changing Custom difficulty must not redefine the observational/detection thresholds.
     public double CustomQuestItemBudgetMultiple { get; init; } = 1.50;
     public double CustomRestartableQuestItemBudgetMultiple { get; init; } = 1.15;
+    public double CustomRestartableQuestItemCountMultiple { get; init; } = 1.15;
     public double CustomQuestXpMultiple { get; init; } = 1.50;
     public double CustomRestartableQuestXpMultiple { get; init; } = 1.15;
     public double CustomQuestStandingMultiple { get; init; } = 1.50;
+    public double CustomRestartableQuestStandingMultiple { get; init; } = 1.15;
 
     public RarityThresholds Rarity { get; init; } = new();
     public AuditPolicy CustomAuditPolicy { get; init; } = new();
@@ -155,7 +157,7 @@ public sealed record EconomyConfig
     [JsonIgnore] public bool ConfiguredEnableStaticLootPressure => enableStaticLootPressure;
     [JsonIgnore] public Dictionary<string, ManualQuestRewardOverride> ConfiguredQuestRewardOverrides => questRewardOverrides;
 
-    [JsonIgnore] private bool BundleEnforceActive => EnablePlayableEconomyBundle && Mode == EconomyMode.Enforce;
+    [JsonIgnore] private bool BundleProfileActive => EnablePlayableEconomyBundle && Mode != EconomyMode.Off;
 
     private static readonly Dictionary<string, ManualQuestRewardOverride> EmptyQuestRewardOverrides = new(StringComparer.Ordinal);
 }
@@ -183,6 +185,7 @@ public sealed record AuditPolicy
     public double HighStandingLowDepthWarnMultiple { get; init; } = 3.0;
     public double RestartableHighItemValueWarnMultiple { get; init; } = 2.0;
     public double RestartableHighXpWarnMultiple { get; init; } = 2.0;
+    public double RestartableHighStandingWarnMultiple { get; init; } = 2.0;
     public double LowDepthMaxRelativeMultiple { get; init; } = 1.0;
     public double LowStructureMaxRelativeMultiple { get; init; } = 1.0;
 }

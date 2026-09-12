@@ -63,10 +63,10 @@ static class Phase20FirQuestTests
         RequirementIndex index = RequirementIndexBuilder.Build(projection);
 
         Expect(index.Get("a").OwnedCount == 5, "total owned remains compatible with the main requirement index", ref assertions);
-        Expect(index.Get("a").QuestNeededNow == 5, "Find plus Handover is not double-counted", ref assertions);
-        Expect(index.Get("a").QuestNeededLater == 7, "future reserve remains the largest single future quest requirement", ref assertions);
-        Expect(index.Get("b").QuestNeededLater == 2, "LeaveItemAtLocation is suppressed when Find/Handover already represents the item", ref assertions);
-        Expect(index.Get("c") == RequirementIndexEntry.Empty, "PlaceBeacon is not treated as an item reserve", ref assertions);
+        Expect(index.Get("a").QuestNeededNow == 105, "Find/Handover deduplicated; independent beacon consumption retained", ref assertions);
+        Expect(index.Get("a").QuestNeededLater == 10, "independent future FIR and any-item demands are additive", ref assertions);
+        Expect(index.Get("b").QuestNeededLater == 10, "consumptive placement owns the observational Find reserve", ref assertions);
+        Expect(index.Get("c").QuestNeededLater == 50, "beacon consumption is a future requirement", ref assertions);
 
         FirRequirementState fir = FirRequirementRegistry.Get("A");
         Expect(fir.OwnedFoundInRaid == 2, "SpawnedInSession stacks are counted as FIR owned", ref assertions);
@@ -82,7 +82,7 @@ static class Phase20FirQuestTests
             questLaterFoundInRaid: fir.QuestLaterFoundInRaid);
         Expect(text.QuestNowOwned == 2 && text.QuestNowFoundInRaidOwned == 2,
             "non-FIR owned items cannot satisfy an FIR current quest requirement", ref assertions);
-        Expect(text.QuestNowLine == "Quest Now: 2/5 · FIR 2/5", "current quest line exposes FIR shortfall", ref assertions);
+        Expect(text.QuestNowLine == "Active quest: 2/5 · FIR 2/5", "current quest line exposes FIR shortfall", ref assertions);
         Expect(text.QuestLaterOwned == 3 && text.QuestLaterFoundInRaidOwned == 0,
             "remaining non-FIR inventory can satisfy only the unrestricted part of future reserve", ref assertions);
         Expect(text.OwnedLine == "Owned ×5 · FIR ×2", "Detailed/Full owned line exposes FIR stock", ref assertions);
@@ -131,3 +131,5 @@ static class Phase20FirQuestTests
         if (!condition) throw new InvalidOperationException("Phase 20 assertion failed: " + message);
     }
 }
+
+

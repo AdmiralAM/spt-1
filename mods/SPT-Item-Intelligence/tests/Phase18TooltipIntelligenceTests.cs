@@ -71,7 +71,7 @@ static class Phase18TooltipIntelligenceTests
         Expect(index.Get("ignored") == RequirementIndexEntry.Empty, "completed quest condition is excluded", ref assertions);
         Expect(entry.Details.Count == 2, "quest and hideout details are retained", ref assertions);
         Expect(entry.Details[0].Label == "Signal - Part 1" && entry.Details[0].FoundInRaidRequired, "quest name and FIR are retained", ref assertions);
-        Expect(entry.Details[1].Label == "Workbench L1", "hideout area and target level are concrete", ref assertions);
+        Expect(entry.Details[1].Label == "Workbench L1 (current)", "hideout area and target level are concrete", ref assertions);
 
         ItemPresentationStore store = new ItemPresentationStore();
         store.Refresh(ItemRequirementStateBuilder.Build(index), ItemPriceIndexBuilder.Build(new[]
@@ -83,7 +83,8 @@ static class Phase18TooltipIntelligenceTests
         Expect(text.Secondary == "Flea: 12,000 ₽", "vendor mode retains alternate flea value for Full", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "Per slot: 21,000 ₽"), "full mode exposes value per slot", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Detailed, "Now: Signal - Part 1 ×2 · FIR"), "detailed mode names the active quest", ref assertions);
-        Expect(Contains(text, ItemTooltipMode.Detailed, "Hideout: Workbench L1 ×3"), "detailed mode names the hideout target", ref assertions);
+        Expect(!Contains(text, ItemTooltipMode.Detailed, "Hideout: Workbench L1 (current) ×3"), "detailed mode stops after the single nearest target", ref assertions);
+        Expect(Contains(text, ItemTooltipMode.Full, "Hideout: Workbench L1 (current) ×3"), "full mode retains the hideout target", ref assertions);
 
         store.Refresh(ItemRequirementStateIndex.Empty, ItemPriceIndexBuilder.Build(new[]
         {
@@ -93,7 +94,7 @@ static class Phase18TooltipIntelligenceTests
         Expect(flea.Primary == "51,000 ₽ · Flea" && flea.Secondary == "Prapor: 10,000 ₽", "flea mode retains named trader alternate value for Full", ref assertions);
 
         ItemHoverText bounded = new ItemHoverText("1 ₽", "", "", "bounded", 0, 0, 0, 0, 0, "", new[] { "A", "B", "C", "D" });
-        Expect(Contains(bounded, ItemTooltipMode.Detailed, "Requirements: +1 more"), "detailed target list is bounded with a cached remainder line", ref assertions);
+        Expect(Contains(bounded, ItemTooltipMode.Detailed, "A") && !Contains(bounded, ItemTooltipMode.Detailed, "B"), "detailed mode exposes exactly one concrete target", ref assertions);
         Expect(Contains(bounded, ItemTooltipMode.Full, "D"), "full mode retains every concrete target", ref assertions);
 
         const string bulbexId = "619cbfeb6b8a1b37a54eebfa";
@@ -205,3 +206,4 @@ static class Phase18TooltipIntelligenceTests
         if (!condition) throw new InvalidOperationException("Phase 18 assertion failed: " + message);
     }
 }
+

@@ -119,7 +119,6 @@ if (!(fleaEasy.MaxPriceDifferenceBelowHandbookPercent > fleaNormal.MaxPriceDiffe
     throw new InvalidOperationException("Flea underpricing correction is not strictly stronger Easy < Normal < Hard.");
 Console.WriteLine("PASS flea pressure preset strength ordering");
 
-MustFail("unimplemented repeated raid loot decay", new EconomyConfig { RepeatedRaidLootDecay = true });
 MustFail("custom trader pressure below bound", new EconomyConfig { CustomTraderPurchasePriceMultiplier = 0.99 });
 MustFail("custom trader pressure above bound", new EconomyConfig { CustomTraderPurchasePriceMultiplier = 2.01 });
 MustFail("custom trader pressure NaN", new EconomyConfig { CustomTraderPurchasePriceMultiplier = double.NaN });
@@ -179,7 +178,11 @@ JsonMustPass("opt-in flea purchase pressure JSON", "{\"enableFleaPurchasePressur
 JsonMustPass("custom flea pressure JSON", "{\"preset\":\"Custom\",\"customFleaBasePriceMultiplier\":1.72}");
 JsonMustPass("exact item stack JSON", "{\"questRewardOverrides\":{\"fixture-quest\":{\"itemRewardStackCountTarget\":4}}}");
 foreach (var preset in new[] { "Easy", "Normal", "Hard", "Custom" }) JsonMustPass($"JSON preset {preset}", $"{{\"preset\":\"{preset}\"}}");
-JsonMustFail("enabled repeated raid loot decay", "{\"repeatedRaidLootDecay\":true}");
+JsonMustPass("retired repeated raid loot decay JSON remains compatible", "{\"repeatedRaidLootDecay\":true}");
+var retiredDecay = EconomyConfigJsonLoader.Deserialize("{\"repeatedRaidLootDecay\":true}");
+if (retiredDecay.RepeatedRaidLootDecay)
+    throw new InvalidOperationException("Retired repeated raid loot decay setting must remain inert.");
+Console.WriteLine("PASS retired repeated raid loot decay remains inert");
 JsonMustFail("custom trader pressure below bound JSON", "{\"customTraderPurchasePriceMultiplier\":0.5}");
 JsonMustFail("custom trader pressure above bound JSON", "{\"customTraderPurchasePriceMultiplier\":2.5}");
 JsonMustFail("custom flea pressure below bound JSON", "{\"customFleaBasePriceMultiplier\":0.5}");
@@ -198,4 +201,5 @@ JsonMustFail("null policy JSON", "{\"customAuditPolicy\":null}");
 JsonMustFail("null overrides JSON", "{\"manualOverrides\":null}");
 JsonMustFail("null override entry JSON", "{\"manualOverrides\":{\"fixture-template\":null}}");
 
+await ConfigBootstrapSmoke.RunAsync();
 Console.WriteLine("Economy Admiral config + playable policy validation smoke PASS");

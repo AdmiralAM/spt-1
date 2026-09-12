@@ -64,6 +64,7 @@ public static class EconomyConfigValidator
         ValidatePositiveFinite(config.CustomAuditPolicy.HighStandingLowDepthWarnMultiple, nameof(config.CustomAuditPolicy.HighStandingLowDepthWarnMultiple));
         ValidatePositiveFinite(config.CustomAuditPolicy.RestartableHighItemValueWarnMultiple, nameof(config.CustomAuditPolicy.RestartableHighItemValueWarnMultiple));
         ValidatePositiveFinite(config.CustomAuditPolicy.RestartableHighXpWarnMultiple, nameof(config.CustomAuditPolicy.RestartableHighXpWarnMultiple));
+        ValidatePositiveFinite(config.CustomAuditPolicy.RestartableHighStandingWarnMultiple, nameof(config.CustomAuditPolicy.RestartableHighStandingWarnMultiple));
         ValidatePositiveFinite(config.CustomAuditPolicy.LowDepthMaxRelativeMultiple, nameof(config.CustomAuditPolicy.LowDepthMaxRelativeMultiple));
         ValidatePositiveFinite(config.CustomAuditPolicy.LowStructureMaxRelativeMultiple, nameof(config.CustomAuditPolicy.LowStructureMaxRelativeMultiple));
         if (config.CustomAuditPolicy.DuplicateTraderSourcesWarnCount < 1)

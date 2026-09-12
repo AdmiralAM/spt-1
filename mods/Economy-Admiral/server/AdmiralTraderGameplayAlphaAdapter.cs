@@ -31,7 +31,8 @@ public static class AdmiralTraderGameplayAlphaAdapter
         string baselineStockJson,
         string assortJson,
         string questAssortJson,
-        IEnumerable<string> authoredQuestJsonRecords)
+        IEnumerable<string> authoredQuestJsonRecords,
+        string? relationshipStockJson = null)
     {
         ValidateIdentity(campaignManifestJson, identityAssetsJson, traderBaseJson);
 
@@ -71,6 +72,11 @@ public static class AdmiralTraderGameplayAlphaAdapter
         Require(successIds.Count == expectedMilestone, $"expected {expectedMilestone} milestone success mappings but found {successIds.Count}.");
         Require(!baselineById.Keys.Any(successIds.Contains), "baseline offers must not appear in questassort.success.");
 
+        var relationshipOffers = AdmiralTraderRelationshipManifest.Parse(relationshipStockJson, relationshipAllowed, traderBaseJson);
+        var relationshipById = relationshipOffers.ToDictionary(x => x.OfferId, StringComparer.Ordinal);
+        Require(!relationshipById.Keys.Any(baselineById.ContainsKey), "Relationship offers must not overlap Baseline offers.");
+        Require(!relationshipById.Keys.Any(successIds.Contains), "Relationship offers must not overlap quest-gated Milestone offers.");
+
         var results = new List<AdmiralTraderOfferAdapterEvidence>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
         foreach (var item in assortRoot.GetProperty("items").EnumerateArray())
@@ -96,21 +102,27 @@ public static class AdmiralTraderGameplayAlphaAdapter
                 continue;
             }
 
+            if (relationshipById.TryGetValue(offerId, out var relationship))
+            {
+                Require(relationship.ItemTemplateId == tpl, $"Relationship tpl drift for '{offerId}'.");
+                Require(relationship.LoyaltyLevel == loyaltyLevel, $"Relationship loyalty drift for '{offerId}'.");
+                Require(relationship.StockPerReset == stock && relationship.BuyRestrictionPerReset == buy, $"Relationship capacity drift for '{offerId}'.");
+                results.Add(AdmiralTraderItemAdapter.BuildEvidence(offerId, tpl, "Relationship", "Loyalty", null, loyaltyLevel, stock, buy, relationship.MinimumPlayerLevel));
+                continue;
+            }
+
             if (success.TryGetProperty(offerId, out var questValue) && questValue.ValueKind == JsonValueKind.String && !string.IsNullOrWhiteSpace(questValue.GetString()))
             {
                 results.Add(AdmiralTraderItemAdapter.BuildEvidence(offerId, tpl, "Milestone", "Quest", questValue.GetString(), loyaltyLevel, stock, buy, null));
                 continue;
             }
 
-            // Relationship is supported as a doctrine class, but the current Gameplay Alpha contract has
-            // no maintained machine-readable relationship-offer manifest. Never infer it from loyalty/name/id.
             throw new InvalidOperationException($"Economy Admiral Admiral Trader Gameplay Alpha adapter: offer '{offerId}' has no explicit Baseline/Relationship/Milestone classification.");
         }
 
         Require(results.Count(x => x.StockClass == "Baseline") == baselineById.Count, "baseline-stock contains offers absent from assort.");
+        Require(results.Count(x => x.StockClass == "Relationship") == relationshipById.Count, "relationship-stock contains offers absent from assort.");
         Require(results.Count(x => x.StockClass == "Milestone") == expectedMilestone, "milestone offer count drift.");
-        var relationshipCount = results.Count(x => x.StockClass == "Relationship");
-        Require(relationshipCount == 0 || relationshipAllowed, "relationship offers materialized while relationship stock is disabled.");
         var graph = QuestGateJsonParser.ParseMany(authoredQuestJsonRecords);
         var enriched = AdmiralTraderItemAdapter.ApplyEffectiveQuestGates(results, graph);
 

@@ -10,7 +10,11 @@
     <Compile Include="../../server/EconomyConfig.cs" Link="Production/EconomyConfig.cs" />
     <Compile Include="../../server/EconomyConfigJsonLoader.cs" Link="Production/EconomyConfigJsonLoader.cs" />
     <Compile Include="../../server/EconomyConfigValidator.cs" Link="Production/EconomyConfigValidator.cs" />
+    <Compile Include="../../server/EconomyConfigBootstrap.cs" Link="Production/EconomyConfigBootstrap.cs" />
     <Compile Include="../../server/PlayableQuestRewardCaps.cs" Link="Production/PlayableQuestRewardCaps.cs" />
+    <Compile Include="../../server/RestartableStandingPressureCore.cs" Link="Production/RestartableStandingPressureCore.cs" />
+    <Compile Include="../../server/NativeRepeatableQuestPressureCore.cs" Link="Production/NativeRepeatableQuestPressureCore.cs" />
+    <Compile Include="../../server/QuestRewardPressureClassifier.cs" Link="Production/QuestRewardPressureClassifier.cs" />
     <Compile Include="../../server/QuestMechanismGate.cs" Link="Production/QuestMechanismGate.cs" />
     <Compile Include="../../server/TraderPurchasePressurePolicy.cs" Link="Production/TraderPurchasePressurePolicy.cs" />
     <Compile Include="../../server/TraderSellPressurePolicy.cs" Link="Production/TraderSellPressurePolicy.cs" />

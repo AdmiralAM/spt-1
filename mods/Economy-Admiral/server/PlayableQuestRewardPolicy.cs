@@ -37,6 +37,7 @@ public static class PlayableQuestRewardPolicy
             HighStandingLowDepthWarnMultiple = playable.StandingMultiple,
             RestartableHighItemValueWarnMultiple = playable.RestartableItemBudgetMultiple,
             RestartableHighXpWarnMultiple = playable.RestartableXpMultiple,
+            RestartableHighStandingWarnMultiple = RestartableStandingPressureCore.ResolveThreshold(playable),
             LowDepthMaxRelativeMultiple = source.LowDepthMaxRelativeMultiple,
             LowStructureMaxRelativeMultiple = source.LowStructureMaxRelativeMultiple,
         };
@@ -44,8 +45,18 @@ public static class PlayableQuestRewardPolicy
         var quests = analysis.Quests
             .Select(row => row with
             {
-                ObservationalFlags = row.ObservationalFlags
+                ObservationalFlags = QuestRewardPressureClassifier.Reclassify(new QuestRewardPressureSignals
+                    {
+                        Restartable = row.Restartable,
+                        HandbookValueVsVanillaMedian = row.HandbookValueVsVanillaMedian,
+                        XpVsVanillaMedian = row.XpVsVanillaMedian,
+                        StandingVsVanillaMedian = row.StandingVsVanillaMedian,
+                        PrerequisiteDepthVsVanillaMedian = row.PrerequisiteDepthVsVanillaMedian,
+                        StructuredConstraintsVsVanillaMedian = row.StructuredConstraintsVsVanillaMedian,
+                        ExistingFlags = row.ObservationalFlags,
+                    }, enforcementPolicy)
                     .Where(flag => QuestMechanismGate.AutomaticFlagEnabled(config, row.Restartable, flag))
+                    .Distinct(StringComparer.Ordinal)
                     .ToList(),
             })
             .ToList();
@@ -60,7 +71,7 @@ public static class PlayableQuestRewardPolicy
             Policy = enforcementPolicy,
             Quests = quests,
             FlagCounts = flagCounts,
-            Note = $"{analysis.Note} Enforcement uses {playable.PolicyId} caps independently of observational outlier thresholds. " +
+            Note = $"{analysis.Note} Enforcement uses {playable.PolicyId} caps independently of observational outlier thresholds and reclassifies reward-pressure flags against those caps before mutation planning. " +
                    $"Automatic quest mechanisms: items={config.EnableItemRewardStackNormalization}, xp={config.EnableQuestXpPressure}, " +
                    $"standing={config.EnableQuestStandingPressure}, restartable={config.EnableRestartableQuestPressure}.",
         };

@@ -1,6 +1,10 @@
 namespace SPTEconomy;
 
-public sealed record GroupedItemRewardEntry(string TemplateId, double Count, bool HasKnownHandbookPrice);
+public sealed record GroupedItemRewardEntry(
+    string TemplateId,
+    double Count,
+    bool HasKnownHandbookPrice,
+    double? HandbookUnitPrice = null);
 
 public sealed record GroupedItemRewardSelection
 {
@@ -12,6 +16,7 @@ public sealed record GroupedItemRewardSelection
 public static class GroupedItemRewardSelectorCore
 {
     private const double IntegerTolerance = 0.000001;
+    private const double ValueTolerance = 0.01;
 
     public static GroupedItemRewardSelection Select(
         IReadOnlyList<GroupedItemRewardEntry> entries,
@@ -21,6 +26,10 @@ public static class GroupedItemRewardSelectorCore
         if (entries.Count == 0) return Block("EmptyItemRewardRecord");
 
         var candidateIndex = -1;
+        var candidateValue = 0d;
+        var candidateReducibleValue = 0d;
+        var reducibleCount = 0;
+        var dominantCount = 0;
         for (var index = 0; index < entries.Count; index++)
         {
             var entry = entries[index];
@@ -32,24 +41,72 @@ public static class GroupedItemRewardSelectorCore
             if (Math.Abs(entry.Count - rounded) > IntegerTolerance)
                 return Block("NonIntegralStackCount");
 
-            if (requireKnownHandbookPrice && !entry.HasKnownHandbookPrice)
-                return Block("UnknownHandbookPrice");
+            var unitPrice = 0d;
+            if (requireKnownHandbookPrice)
+            {
+                if (!entry.HasKnownHandbookPrice)
+                    return Block("UnknownHandbookPrice");
+
+                if (entry.HandbookUnitPrice is { } explicitPrice)
+                    unitPrice = explicitPrice;
+                else if (!QuestRewardHandbookPriceCatalog.TryGet(entry.TemplateId, out unitPrice))
+                    return Block("UnknownHandbookPrice");
+
+                if (!double.IsFinite(unitPrice) || unitPrice <= 0)
+                    return Block("InvalidHandbookPrice");
+            }
 
             if (rounded <= 1) continue;
-            if (candidateIndex >= 0) return Block("AmbiguousMultipleReducibleStacks");
-            candidateIndex = index;
+            reducibleCount++;
+
+            if (!requireKnownHandbookPrice && reducibleCount > 1)
+                return Block("AmbiguousMultipleReducibleStacks");
+
+            var economicValue = requireKnownHandbookPrice ? rounded * unitPrice : rounded;
+            var reducibleEconomicValue = requireKnownHandbookPrice ? (rounded - 1d) * unitPrice : rounded - 1d;
+            if (!double.IsFinite(economicValue) || economicValue <= 0
+                || !double.IsFinite(reducibleEconomicValue) || reducibleEconomicValue <= 0)
+                return Block("InvalidRewardEconomicValue");
+
+            if (candidateIndex < 0 || economicValue > candidateValue + ValueTolerance)
+            {
+                candidateIndex = index;
+                candidateValue = economicValue;
+                candidateReducibleValue = reducibleEconomicValue;
+                dominantCount = 1;
+            }
+            else if (Math.Abs(economicValue - candidateValue) <= ValueTolerance)
+            {
+                // Equal total economic contribution is not necessarily ambiguous. Prefer the stack with
+                // uniquely greater removable value while preserving one item: (count - 1) * unit price.
+                // This expands safe one-stack normalization without guessing or permitting item deletion.
+                if (reducibleEconomicValue > candidateReducibleValue + ValueTolerance)
+                {
+                    candidateIndex = index;
+                    candidateReducibleValue = reducibleEconomicValue;
+                    dominantCount = 1;
+                }
+                else if (Math.Abs(reducibleEconomicValue - candidateReducibleValue) <= ValueTolerance)
+                {
+                    dominantCount++;
+                }
+            }
         }
 
         if (candidateIndex < 0)
             return Block(requireKnownHandbookPrice ? "NoReducibleKnownPriceStack" : "NoReducibleStack");
+        if (requireKnownHandbookPrice && reducibleCount > 1 && dominantCount != 1)
+            return Block("AmbiguousMultipleReducibleStacks");
 
         return new GroupedItemRewardSelection
         {
             Eligible = true,
             SelectedIndex = candidateIndex,
-            Reason = entries.Count == 1
-                ? (requireKnownHandbookPrice ? "SingleReducibleStack" : "SingleReducibleStackManualExact")
-                : (requireKnownHandbookPrice ? "OneReducibleStackInGroupedReward" : "OneReducibleStackInGroupedRewardManualExact"),
+            Reason = reducibleCount > 1
+                ? "UniqueDominantReducibleStackInGroupedReward"
+                : entries.Count == 1
+                    ? (requireKnownHandbookPrice ? "SingleReducibleStack" : "SingleReducibleStackManualExact")
+                    : (requireKnownHandbookPrice ? "OneReducibleStackInGroupedReward" : "OneReducibleStackInGroupedRewardManualExact"),
         };
     }
 

@@ -14,14 +14,14 @@ static class Phase15RequirementMarkerUxTests
         Expect(text.GetLine(ItemTooltipMode.Minimal, 0) == "Value: 42,000 ₽", "value is the first minimal line", ref assertions);
         Expect(text.GetLine(ItemTooltipMode.Minimal, 1) == "Keep ×4", "keep count is the second minimal line", ref assertions);
 
-        Expect(text.GetLineCount(ItemTooltipMode.Normal) == 5, "normal mode exposes requirement progress", ref assertions);
-        Expect(text.GetLine(ItemTooltipMode.Normal, 1) == "Quest Now: 2/2 ✓", "inventory is allocated to current quests first", ref assertions);
+        Expect(text.GetLineCount(ItemTooltipMode.Normal) == 5, "normal mode exposes the selected value and compact requirement progress", ref assertions);
+        Expect(text.QuestNowLine == "Active quest: 2/2 ✓", "inventory is allocated to current quests first", ref assertions);
         Expect(text.GetLine(ItemTooltipMode.Normal, 2) == "Hideout: 3/4", "hideout is the second allocation and color priority", ref assertions);
-        Expect(text.GetLine(ItemTooltipMode.Normal, 3) == "Quest Later: 0/3", "future quest progress is explicit", ref assertions);
+        Expect(text.QuestLaterLine == "Future quest: 0/3", "future quest progress is explicit", ref assertions);
         Expect(text.GetLine(ItemTooltipMode.Normal, 4) == "Keep ×4", "aggregate keep count remains visible", ref assertions);
 
         Expect(text.GetLineCount(ItemTooltipMode.Detailed) == 6, "detailed mode adds owned count without Full-only value rows", ref assertions);
-        Expect(text.GetLine(ItemTooltipMode.Detailed, 5) == "Owned ×5", "detailed mode adds owned count", ref assertions);
+        Expect(text.OwnedLine == "Owned ×5", "detailed mode adds owned count", ref assertions);
         for (int i = 0; i < text.GetLineCount(ItemTooltipMode.Detailed); i++)
             Expect(text.GetLine(ItemTooltipMode.Detailed, i).IndexOf("21,000 ₽/slot", StringComparison.OrdinalIgnoreCase) < 0, "alternate value is absent from detailed mode", ref assertions);
 

@@ -26,6 +26,7 @@ Open the BepInEx/F12 Configuration Manager to change the preset or disable an ec
 - applies bounded XP reward pressure;
 - applies bounded trader-standing reward pressure;
 - uses stricter limits for restartable/repeatable reward outliers;
+- bounds native Daily/Weekly/Scav generated reward value and item-count potential independently in Custom;
 - preserves pristine/provenance protections and transactional rollback.
 
 ### Trader Economy
@@ -94,7 +95,7 @@ These switches expose maintained server feature flags; they do not create parall
 The legacy server-side `enableLootPressure` master remains accepted for compatibility with older configs and enables both loose and static loot pressure. New F12/manual configuration should use the two explicit loot switches.
 
 ### Advanced - Custom
-Custom exposes bounded numeric controls for trader purchase/sell multipliers, flea base/listing-fee multipliers, loose/static loot scales and quest item/XP/standing reward caps. These values are used by the `Custom` preset; Easy/Normal/Hard retain their maintained profile values.
+Custom exposes bounded numeric controls for trader purchase/sell multipliers, flea base/listing-fee multipliers, loose/static loot scales and quest item/XP/standing reward caps. For native Daily/Weekly/Scav generation, **Restartable Quest Reward Value Cap** controls the generated Rouble/GP and item-value budget while **Restartable Quest Item Count Cap** independently controls generated item-count potential. These values are used by the `Custom` preset; Easy/Normal/Hard retain their maintained profile values.
 
 The server remains the only source of economic calculations. The F12 plugin is only a settings client.
 
@@ -136,15 +137,19 @@ If Admiral Trader is absent, Economy Admiral runs standalone. If the maintained 
 
 ## Development diagnostics
 
-Runtime reports and `Validate-Runtime.ps1`, `Validate-Enforce.ps1`, `Validate-Beta.ps1` remain packaged for development/release diagnosis. They are **not** part of normal player interaction and are not required to use Economy Admiral.
+Runtime reports and `Validate-Runtime.ps1`, `Validate-Enforce.ps1`, `Validate-Beta.ps1` remain available in the source repository for development/release diagnosis. They are deliberately **not shipped in the player install package** and are not required to use Economy Admiral.
 
-## Installation
+## Installation and updates
 
-The complete package owns only its own files:
+Extract the package into the SPT root. The package contains only the maintained player runtime:
 
-- `SPT_Runtime/user/mods/Economy Admiral/` — server module, config and diagnostics;
+- `SPT_Runtime/user/mods/Economy Admiral/Economy-Admiral.dll` — server economy engine;
+- `SPT_Runtime/user/mods/Economy Admiral/config/config.default.json` — maintained first-install defaults;
+- `SPT_Runtime/user/mods/Economy Admiral/README.md` — player documentation;
 - `BepInEx/plugins/Economy Admiral/Economy Admiral v0.1.0.dll` — F12 settings client.
 
-It does not bundle or replace the BepInEx runtime itself.
+On the first server start, Economy Admiral validates `config.default.json` and creates `config/config.json`. That `config.json` is user state. **Update packages never contain it**, so extracting a newer Economy Admiral over an existing installation preserves the settings saved through F12.
+
+It does not bundle or replace the BepInEx runtime itself, and it does not install development validators/test harnesses into the game directory.
 
 Compile boundary: `SPTarkov.Server.Core 4.1.2` / .NET 10. Physical target: **SPT 4.1.3**. Runtime economy changes are applied during server database load; there is no permanent raid/frame economy polling.

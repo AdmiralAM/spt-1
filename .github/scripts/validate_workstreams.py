@@ -15,8 +15,8 @@ REQUIRED = {
     "resumePolicy", "phasePlan", "frozen", "stableAcceptance",
 }
 DEPRECATED_DYNAMIC_POINTERS = {
-    "activeIssue", "activePr", "activeBranch", "currentPhase",
-    "activePackage", "roadmap", "successor", "state", "userGate",
+    "activeIssue", "activePr", "activeBranch", "activeDevelopment",
+    "currentPhase", "activePackage", "roadmap", "successor", "state", "userGate",
 }
 
 
@@ -31,10 +31,11 @@ def main() -> None:
     except (OSError, json.JSONDecodeError) as error:
         fail(str(error))
 
-    if data.get("schemaVersion") != 3:
-        fail("schemaVersion must be 3")
+    if data.get("schemaVersion") != 4:
+        fail("schemaVersion must be 4")
     if "controller" in data:
         fail("controller is forbidden; no worker may gate another worker")
+
     authority = data.get("authority", {})
     if authority.get("productAuthority") != "user":
         fail("the user must be the sole product authority")
@@ -49,6 +50,18 @@ def main() -> None:
     if authority.get("governanceBranchPrefix") != "governance/":
         fail("governanceBranchPrefix must be governance/")
 
+    branch_contract = authority.get("branchSelectionContract", {})
+    if branch_contract.get("rule") != "discover-single-live-implementation-pr-from-github":
+        fail("live implementation authority must be discovered from GitHub")
+    if branch_contract.get("registryStoresTemporaryPointers") is not False:
+        fail("registry must not store temporary implementation pointers")
+    if branch_contract.get("exactHeadSource") != "single-live-pr-head":
+        fail("exact live head must come from the discovered live PR")
+    if branch_contract.get("noLivePr") != "create-from-current-main-when-coherent-implementation-exists":
+        fail("no-live-PR behavior is invalid")
+    if branch_contract.get("multipleLivePrs") != "reconcile-to-one-from-current-issue-pr-evidence":
+        fail("multiple-live-PR behavior is invalid")
+
     execution = data.get("execution", {})
     if execution.get("roadmapAuthorization") != "user-standing-authorization-all-recorded-phases":
         fail("the entire recorded roadmap must carry the user's standing authorization")
@@ -58,6 +71,10 @@ def main() -> None:
         fail("workers must advance within the recorded roadmap")
     if execution.get("registryUpdateRequiredForRecordedPhaseTransition") is not False:
         fail("ordinary recorded phase transitions must not require registry edits")
+    if execution.get("liveImplementationAuthority") != "discover-single-live-pr-from-github":
+        fail("execution must discover live implementation authority from GitHub")
+    if execution.get("registryStoresDynamicImplementationPointers") is not False:
+        fail("execution must forbid dynamic implementation pointers in the registry")
     if "maxActiveRuntimeGates" in execution:
         fail("global runtime-gate counters require forbidden inter-worker coordination")
     if execution.get("runtimeGateActivation") != "worker-direct-to-user-at-recorded-runtime-phase":
@@ -84,7 +101,7 @@ def main() -> None:
             fail(f"{key} is missing {sorted(missing)}")
         deprecated = DEPRECATED_DYNAMIC_POINTERS & stream.keys()
         if deprecated:
-            fail(f"{key} contains controller-churn pointers {sorted(deprecated)}")
+            fail(f"{key} contains dynamic/controller pointers {sorted(deprecated)}")
         if stream["resumePolicy"] != RESUME_POLICY:
             fail(f"{key}.resumePolicy is invalid")
         if not stream["stableAcceptance"]:
@@ -121,7 +138,7 @@ def main() -> None:
 
     print(
         f"workstream registry valid: {len(workstreams)} modules, "
-        f"{phase_count} user-authorized phases, direct user runtime handoff"
+        f"{phase_count} user-authorized phases, live PR discovery, direct user runtime handoff"
     )
 
 

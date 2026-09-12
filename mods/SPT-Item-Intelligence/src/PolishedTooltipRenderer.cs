@@ -17,6 +17,11 @@ namespace SPTItemIntelligence
         static GUISkin cachedSkin;
         static GUIStyle cachedLabel;
         static GUIStyle cachedSemanticLabel;
+        static GUIStyle cachedHeaderLabel;
+        static GUIStyle cachedMutedLabel;
+        static GUIStyle cachedCardStyle;
+        static Texture2D whiteTexture;
+        static Texture2D roundedCardTexture;
         static readonly GUIContent measureContent = new GUIContent();
         static readonly Dictionary<string, string> displayLineCache = new Dictionary<string, string>(StringComparer.Ordinal);
         static readonly Dictionary<string, string> priceRenderCache = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -36,10 +41,10 @@ namespace SPTItemIntelligence
 
             float scale = settings.TooltipScale;
             int fontSize = Mathf.RoundToInt(settings.TooltipFontSize * scale);
-            float baseLineHeight = Mathf.Max(fontSize + 8f, 20f * scale);
-            float horizontalPadding = 11f * scale;
-            float verticalPadding = 7f * scale;
-            float rowGap = 1f * scale;
+            float baseLineHeight = Mathf.Max(fontSize + 5f * scale, 6f * scale);
+            float horizontalPadding = settings.TooltipPadding * scale;
+            float verticalPadding = settings.TooltipPadding * scale;
+            float rowGap = 0f;
 
             GUIStyle label = GetLabelStyle(fontSize);
             GUIStyle semanticLabel = GetSemanticLabelStyle(fontSize);
@@ -54,11 +59,11 @@ namespace SPTItemIntelligence
                 naturalWidth = Mathf.Max(naturalWidth, label.CalcSize(measureContent).x);
             }
 
-            float minimumWidth = 200f * scale;
-            float preferredMaximumWidth = 430f * scale;
+            float minimumWidth = 80f * scale;
+            float preferredMaximumWidth = settings.TooltipMaximumWidth * scale;
             float screenMaximumWidth = Mathf.Max(minimumWidth, Screen.width - ScreenMargin * 2f);
             float maximumWidth = Mathf.Min(preferredMaximumWidth, screenMaximumWidth);
-            float width = Mathf.Clamp(naturalWidth + horizontalPadding * 2f, minimumWidth, maximumWidth);
+            float width = Mathf.Clamp(naturalWidth + horizontalPadding * 2f + 14f * scale, minimumWidth, maximumWidth);
             float textWidth = Mathf.Max(1f, width - horizontalPadding * 2f);
 
             float contentHeight = 0f;
@@ -85,9 +90,15 @@ namespace SPTItemIntelligence
             float y = Mathf.Clamp(marker.yMin, ScreenMargin, Mathf.Max(ScreenMargin, Screen.height - ScreenMargin - height));
 
             Color previous = GUI.color;
-            GUI.color = new Color(1f, 1f, 1f, settings.TooltipOpacity);
-            GUI.Box(new Rect(x, y, width, height), GUIContent.none);
-            GUI.color = Color.white;
+            Rect card = new Rect(x, y, width, height);
+            Color cardTint = new Color(1f, 1f, 1f, settings.TooltipOpacity);
+            Color beforeCard = GUI.color;
+            GUI.color = cardTint;
+            GUI.Box(card, GUIContent.none, GetCardStyle());
+            GUI.color = beforeCard;
+            Color accent = ResolveHeaderColor(text, settings);
+            float accentInset = 5f * scale;
+            DrawRect(new Rect(x + 1f * scale, y + accentInset, 3f * scale, Mathf.Max(1f, height - accentInset * 2f)), new Color(accent.r, accent.g, accent.b, settings.TooltipOpacity));
 
             float yCursor = y + verticalPadding;
             for (int i = 0; i < lineCount; i++)
@@ -98,11 +109,14 @@ namespace SPTItemIntelligence
                     Color semantic = ResolveColor(line, settings);
                     bool hasSemanticProgress = semantic != Color.white && HasProgressRatio(line);
                     bool hasPrice = TryReadRoubleAmount(line, out long price, out _, out _);
-                    GUIStyle activeStyle = hasSemanticProgress || hasPrice ? semanticLabel : label;
-                    activeStyle.normal.textColor = Color.white;
+                    bool header = i == 0;
+                    bool muted = i == 1 && text.SummaryLine.Length > 0;
+                    GUIStyle activeStyle = header ? GetHeaderStyle(fontSize + 1) : muted ? GetMutedStyle(fontSize - 1) : hasSemanticProgress || hasPrice ? semanticLabel : label;
+                    activeStyle.normal.textColor = header ? accent : muted ? new Color(.72f, .76f, .77f, 1f) : Color.white;
                     string rendered = hasSemanticProgress
                         ? GetCachedSemanticLine(line, semantic)
                         : hasPrice ? GetCachedPriceLine(line, price) : line;
+                    if (!header && !muted) rendered = "•  " + rendered;
                     GUI.Label(new Rect(x + horizontalPadding, yCursor, textWidth, rowHeightBuffer[i]), rendered, activeStyle);
                 }
                 yCursor += rowHeightBuffer[i] + rowGap;
@@ -126,10 +140,93 @@ namespace SPTItemIntelligence
                     padding = new RectOffset(0, 0, 1, 2)
                 };
                 cachedSemanticLabel = new GUIStyle(cachedLabel) { richText = true };
+                cachedHeaderLabel = new GUIStyle(cachedSemanticLabel) { fontStyle = FontStyle.Bold };
+                cachedMutedLabel = new GUIStyle(cachedLabel);
             }
             cachedLabel.fontSize = fontSize;
             cachedSemanticLabel.fontSize = fontSize;
             return cachedLabel;
+        }
+
+        static Color ResolveHeaderColor(ItemHoverText text, ItemIntelligenceUiSettings settings)
+        {
+            if (text != null && text.SummaryLine.Length > 0)
+            {
+                if (text.Allocation.Coverage == RequirementCoverage.Enough) return settings.CompleteColor;
+                if (text.Allocation.Coverage == RequirementCoverage.NeedMore)
+                    return text.Allocation.KeepOwned > 0 ? settings.PartialColor : settings.MissingColor;
+            }
+            return new Color(0.83f, 0.69f, 0.36f, 1f);
+        }
+
+        static GUIStyle GetHeaderStyle(int fontSize)
+        {
+            cachedHeaderLabel.fontSize = fontSize;
+            return cachedHeaderLabel;
+        }
+
+        static GUIStyle GetMutedStyle(int fontSize)
+        {
+            cachedMutedLabel.fontSize = Mathf.Max(10, fontSize);
+            return cachedMutedLabel;
+        }
+
+        static void DrawRect(Rect rect, Color color)
+        {
+            if (whiteTexture == null)
+            {
+                whiteTexture = new Texture2D(1, 1, TextureFormat.RGBA32, false);
+                whiteTexture.name = "ItemIntelligenceCardPixel";
+                whiteTexture.hideFlags = HideFlags.HideAndDontSave;
+                whiteTexture.SetPixel(0, 0, Color.white);
+                whiteTexture.Apply(false, true);
+            }
+            Color previous = GUI.color;
+            GUI.color = color;
+            GUI.DrawTexture(rect, whiteTexture);
+            GUI.color = previous;
+        }
+
+        static GUIStyle GetCardStyle()
+        {
+            if (cachedCardStyle != null) return cachedCardStyle;
+            const int size = 24;
+            const float radius = 5.5f;
+            roundedCardTexture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            roundedCardTexture.name = "ItemIntelligenceRoundedCard";
+            roundedCardTexture.hideFlags = HideFlags.HideAndDontSave;
+            roundedCardTexture.filterMode = FilterMode.Bilinear;
+            roundedCardTexture.wrapMode = TextureWrapMode.Clamp;
+            Color32[] pixels = new Color32[size * size];
+            for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float dx = Mathf.Max(radius - (x + .5f), 0f, (x + .5f) - (size - radius));
+                float dy = Mathf.Max(radius - (y + .5f), 0f, (y + .5f) - (size - radius));
+                float distance = Mathf.Sqrt(dx * dx + dy * dy);
+                float alpha = Mathf.Clamp01(radius + .5f - distance);
+                bool border = distance > radius - 1.25f || x < 1 || y < 1 || x >= size - 1 || y >= size - 1;
+                Color color = border ? new Color(.34f, .39f, .41f, .92f) : new Color(.025f, .035f, .043f, .985f);
+                color.a *= alpha;
+                pixels[y * size + x] = color;
+            }
+            roundedCardTexture.SetPixels32(pixels);
+            roundedCardTexture.Apply(false, true);
+            cachedCardStyle = new GUIStyle(GUI.skin.box)
+            {
+                normal = { background = roundedCardTexture },
+                border = new RectOffset(7, 7, 7, 7),
+                padding = new RectOffset(0, 0, 0, 0)
+            };
+            return cachedCardStyle;
+        }
+
+        static void DrawBorder(Rect rect, Color color, float thickness)
+        {
+            DrawRect(new Rect(rect.x, rect.y, rect.width, thickness), color);
+            DrawRect(new Rect(rect.x, rect.yMax - thickness, rect.width, thickness), color);
+            DrawRect(new Rect(rect.x, rect.y, thickness, rect.height), color);
+            DrawRect(new Rect(rect.xMax - thickness, rect.y, thickness, rect.height), color);
         }
 
         static GUIStyle GetSemanticLabelStyle(int fontSize)
@@ -149,16 +246,7 @@ namespace SPTItemIntelligence
 
         internal static string DisplayLine(string line, ItemTooltipMode mode)
         {
-            if (string.IsNullOrEmpty(line) || mode == ItemTooltipMode.Full) return line ?? string.Empty;
-            const string firSeparator = " · FIR";
-            int fir = line.IndexOf(firSeparator, StringComparison.OrdinalIgnoreCase);
-            if (fir < 0) return line;
-
-            string cached;
-            if (displayLineCache.TryGetValue(line, out cached)) return cached;
-            cached = line.Substring(0, fir);
-            AddBounded(displayLineCache, line, cached);
-            return cached;
+            return line ?? string.Empty;
         }
 
         internal static Color ResolveColor(string line, ItemIntelligenceUiSettings settings)

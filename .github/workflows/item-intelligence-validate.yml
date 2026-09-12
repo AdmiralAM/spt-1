@@ -20,6 +20,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
@@ -40,17 +42,26 @@ jobs:
         run: dotnet build mods/SPT-Item-Intelligence/server/SPT-Item-Intelligence.Server.csproj -c Release
       - name: Stage Item Intelligence Admiral runtime test build
         shell: pwsh
+        env:
+          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
-          $clientDir = 'runtime-test/BepInEx/plugins/Item Intelligence Admiral'
+          $clientDir = 'runtime-test/BepInEx/plugins/Admiral SPT/SPT Item Intelligence'
           $serverDir = 'runtime-test/SPT_Runtime/user/mods/Item Intelligence Admiral Server'
           New-Item -ItemType Directory -Force -Path $clientDir | Out-Null
           New-Item -ItemType Directory -Force -Path $serverDir | Out-Null
-          Copy-Item 'mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/Item Intelligence Admiral v1.0.0.dll' "$clientDir/Item Intelligence Admiral.dll"
+          Copy-Item 'mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/Item Intelligence Admiral v1.1.0.dll' "$clientDir/Item Intelligence Admiral.dll"
           Copy-Item 'mods/SPT-Item-Intelligence/server/bin/Release/net10.0/Item Intelligence Admiral Server.dll' "$serverDir/Item Intelligence Admiral Server.dll"
+          @(
+            "Product=Item Intelligence Admiral"
+            "Version=1.1.0-rc"
+            "Commit=$env:CANDIDATE_SHA"
+            "ClientSHA256=$((Get-FileHash "$clientDir/Item Intelligence Admiral.dll" -Algorithm SHA256).Hash)"
+            "ServerSHA256=$((Get-FileHash "$serverDir/Item Intelligence Admiral Server.dll" -Algorithm SHA256).Hash)"
+          ) | Set-Content 'runtime-test/CANDIDATE.txt'
       - name: Upload Item Intelligence Admiral runtime test build
         uses: actions/upload-artifact@v4
         with:
-          name: Item-Intelligence-Admiral-v1-runtime-test
+          name: Item-Intelligence-Admiral-v1.1.0-rc-${{ github.event.pull_request.head.sha || github.sha }}
           path: runtime-test/**
           if-no-files-found: error
           retention-days: 7

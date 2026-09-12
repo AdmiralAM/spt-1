@@ -121,7 +121,7 @@ public sealed class EnforcementPlanService(
             CandidateCountsByProvenance = countsByProvenance,
             CandidateCountsByEligibility = countsByEligibility,
             Note = itemStackEnabled
-                ? "Opt-in post-Alpha enforcement: Experience/TraderStanding plus one unambiguous mutable Success item stack may be changed while other Success item rewards remain immutable. A same-template grouped Item reward record may contribute exactly one reducible selected stack; Reward.Value remains the aggregate sum of that record and changes only by the selected-stack delta. Automatic item policy still requires handbook pricing, prices the complete Success item bundle, reserves all immutable handbook value, and only reduces the selected known-price stack. Mixed-template grouped records, ambiguous multiple reducible stacks, unknown immutable prices, non-finite quantities, or budgets requiring item removal are blocked. An explicit ItemRewardStackCountTarget may select exactly one structurally unambiguous existing synchronized integral stack greater than one without requiring handbook pricing; provenance and dimension gates still apply. Item templates, reward records and structural quest fields are never added, removed or replaced."
+                ? "Opt-in post-Alpha enforcement: Experience/TraderStanding plus one unambiguous mutable Success item stack may be changed while other Success item rewards remain immutable. Automatic item pressure may select a unique dominant reducible stack both inside one grouped reward record and across multiple separate Success Item reward records; all sibling records remain immutable and count toward the whole-bundle handbook budget. Reward.Value remains the aggregate sum of its own record and changes only by the selected-stack delta. Automatic item policy still requires handbook pricing, prices the complete Success item bundle, reserves all immutable handbook value, and only reduces the selected known-price stack. Equal dominant stacks, unknown immutable prices, non-finite quantities, or budgets requiring item removal are blocked. An explicit ItemRewardStackCountTarget remains strict and may select exactly one structurally unambiguous existing synchronized integral stack greater than one without requiring handbook pricing; provenance and dimension gates still apply. Item templates, reward records and structural quest fields are never added, removed or replaced."
                 : config.Mode == EconomyMode.Enforce
                     ? "Active Alpha enforcement: only numeric Success Experience and TraderStanding rewards may be changed. PristineUnchanged and unknown provenance remain protected; PristineModified requires the exact reward dimension to be proven changed. Item rewards and structural quest fields remain preview-only/non-mutating."
                     : "Audit preview: deterministic Experience/TraderStanding proposals are emitted but the final DB is not mutated.",
@@ -414,7 +414,8 @@ public sealed class EnforcementPlanService(
         if (manual?.TraderStandingTarget is { } exact) return Math.Round(exact, 4);
         var baseline = row.Restartable && analysis.VanillaRestartable.QuestSamples > 0 ? analysis.VanillaRestartable : analysis.Vanilla;
         if (baseline.MedianAbsoluteStanding <= 0 || row.TraderStanding == 0) return null;
-        var magnitude = baseline.MedianAbsoluteStanding * analysis.Policy.HighStandingLowDepthWarnMultiple;
+        var multiple = RestartableStandingPressureCore.ResolveTargetMultiple(row.Restartable, row.ObservationalFlags, analysis.Policy);
+        var magnitude = baseline.MedianAbsoluteStanding * multiple;
         return Math.Round(Math.CopySign(magnitude, row.TraderStanding), 4);
     }
 
@@ -454,7 +455,7 @@ public sealed class EnforcementPlanService(
         IReadOnlyDictionary<string, double>? handbookPrices,
         bool requireKnownHandbookPrice)
     {
-        ItemRewardRecord? candidate = null;
+        var candidates = new List<ItemRewardRecord>();
         foreach (var reward in GetSuccessItemRewards(quest))
         {
             var items = reward.Items?.ToList();
@@ -485,11 +486,35 @@ public sealed class EnforcementPlanService(
             if (selection.SelectedIndex is not { } selectedIndex) return null;
             var record = new ItemRewardRecord(reward, items, selectedIndex);
             if (!TryReadSynchronizedItemQuantity(record, out var count) || count <= 1) return null;
-            if (candidate is not null) return null;
-            candidate = record;
+            candidates.Add(record);
         }
 
-        return candidate;
+        var recordSelectionCandidates = candidates.Select((record, index) =>
+        {
+            var count = record.Item.Upd?.StackObjectsCount ?? 1d;
+            if (!requireKnownHandbookPrice)
+                return new ItemRewardRecordCandidate(index, count);
+
+            var templateId = record.Item.Template.ToString();
+            if (handbookPrices is null
+                || string.IsNullOrWhiteSpace(templateId)
+                || !handbookPrices.TryGetValue(templateId, out var unitPrice))
+                return new ItemRewardRecordCandidate(index, count, double.NaN, double.NaN);
+
+            return new ItemRewardRecordCandidate(
+                index,
+                count,
+                count * unitPrice,
+                (count - 1d) * unitPrice);
+        }).ToList();
+
+        var recordSelection = ItemRewardRecordSelectorCore.Select(
+            recordSelectionCandidates,
+            allowUniqueDominant: requireKnownHandbookPrice);
+        if (!recordSelection.Eligible || recordSelection.SelectedRecordIndex is not { } recordIndex)
+            return null;
+
+        return candidates[recordIndex];
     }
 
     private static double? CalculateImmutableSuccessItemHandbookValue(

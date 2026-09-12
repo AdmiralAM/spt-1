@@ -21,8 +21,10 @@ static class Phase22TooltipGeometryTests
             "label geometry reserves vertical glyph room for ascenders and descenders", ref assertions);
         Expect(renderer.Contains("float yCursor") && renderer.Contains("yCursor +=") && renderer.Contains("rowHeightBuffer[i] + rowGap"),
             "rows advance by measured height instead of a fixed line grid", ref assertions);
-        Expect(renderer.Contains("minimumWidth = 200f * scale") && renderer.Contains("preferredMaximumWidth = 430f * scale"),
-            "tooltip remains compact while retaining a bounded readable width", ref assertions);
+        Expect(renderer.Contains("minimumWidth = 80f * scale") && renderer.Contains("settings.TooltipMaximumWidth * scale"),
+            "tooltip hugs short text and exposes a clear maximum-width control", ref assertions);
+        Expect(renderer.Contains("GetCardStyle()") && renderer.Contains("ItemIntelligenceRoundedCard") && renderer.Contains("border = new RectOffset(7, 7, 7, 7)"),
+            "tooltip uses an original slightly rounded nine-slice card", ref assertions);
         return assertions;
     }
 

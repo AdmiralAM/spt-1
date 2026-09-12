@@ -4,25 +4,29 @@ public sealed record PlayableQuestRewardCaps(
     string PolicyId,
     double ItemBudgetMultiple,
     double RestartableItemBudgetMultiple,
+    double RestartableItemCountMultiple,
     double XpMultiple,
     double RestartableXpMultiple,
-    double StandingMultiple)
+    double StandingMultiple,
+    double RestartableStandingMultiple)
 {
     public static PlayableQuestRewardCaps Resolve(EconomyConfig config)
     {
         ArgumentNullException.ThrowIfNull(config);
         return config.Preset switch
         {
-            EconomyPreset.Easy => new("PlayableQuestRewardPolicyV1/Easy", 2.25, 1.75, 2.25, 1.75, 2.25),
-            EconomyPreset.Normal => new("PlayableQuestRewardPolicyV1/Normal", 1.50, 1.15, 1.50, 1.15, 1.50),
-            EconomyPreset.Hard => new("PlayableQuestRewardPolicyV1/Hard", 1.10, 1.00, 1.10, 1.00, 1.10),
+            EconomyPreset.Easy => new("PlayableQuestRewardPolicyV1/Easy", 2.25, 1.75, 1.75, 2.25, 1.75, 2.25, 1.75),
+            EconomyPreset.Normal => new("PlayableQuestRewardPolicyV1/Normal", 1.50, 1.15, 1.15, 1.50, 1.15, 1.50, 1.15),
+            EconomyPreset.Hard => new("PlayableQuestRewardPolicyV1/Hard", 1.10, 1.00, 1.00, 1.10, 1.00, 1.10, 1.00),
             EconomyPreset.Custom => Validate(new(
                 "PlayableQuestRewardPolicyV1/Custom",
                 config.CustomQuestItemBudgetMultiple,
                 config.CustomRestartableQuestItemBudgetMultiple,
+                config.CustomRestartableQuestItemCountMultiple,
                 config.CustomQuestXpMultiple,
                 config.CustomRestartableQuestXpMultiple,
-                config.CustomQuestStandingMultiple)),
+                config.CustomQuestStandingMultiple,
+                config.CustomRestartableQuestStandingMultiple)),
             _ => throw new ArgumentOutOfRangeException(nameof(config.Preset), config.Preset, "Unsupported Economy Admiral preset."),
         };
     }
@@ -33,9 +37,11 @@ public sealed record PlayableQuestRewardCaps(
                  {
                      policy.ItemBudgetMultiple,
                      policy.RestartableItemBudgetMultiple,
+                     policy.RestartableItemCountMultiple,
                      policy.XpMultiple,
                      policy.RestartableXpMultiple,
                      policy.StandingMultiple,
+                     policy.RestartableStandingMultiple,
                  })
         {
             if (!double.IsFinite(value) || value < 0.1 || value > 10.0)
