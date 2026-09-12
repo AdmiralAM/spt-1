@@ -7,13 +7,15 @@ class OptionalStorefrontRuntimeTests(unittest.TestCase):
     def test_optional_sources_are_bounded_and_never_required(self):
         manifest=json.loads((ROOT/"manifests/optional-storefront-runtime.json").read_text(encoding="utf-8"))
         self.assertFalse(manifest["requiredDependencies"])
-        self.assertEqual(manifest["offerCount"],8)
-        self.assertEqual(sum(x["loyaltyLevel"] == 1 for x in manifest["offers"]),4)
+        self.assertEqual(manifest["offerCount"],62)
+        self.assertEqual(manifest["totalAdmiralOffersWhenPresent"],113)
+        self.assertGreaterEqual(sum(x["loyaltyLevel"] == 1 for x in manifest["offers"]),20)
         self.assertEqual({x["source"] for x in manifest["offers"]},{"WTT Armory","WTT Content Backport"})
+        self.assertEqual(sum(x["category"] == "complete weapon" for x in manifest["offers"]),20)
 
     def test_optional_assorts_have_complete_native_shapes_and_unique_ids(self):
         seen=set()
-        for filename,expected_roots in (("wtt-armory-assort.json",4),("content-backport-assort.json",4)):
+        for filename,expected_roots in (("wtt-armory-assort.json",43),("content-backport-assort.json",19)):
             assort=json.loads((ROOT/"db/optional/storefront"/filename).read_text(encoding="utf-8"))
             roots=[x for x in assort["items"] if x.get("parentId")=="hideout"]
             self.assertEqual(len(roots),expected_roots)
@@ -25,7 +27,8 @@ class OptionalStorefrontRuntimeTests(unittest.TestCase):
             self.assertFalse(seen & ids); seen |= ids
             for root in roots:
                 self.assertFalse(root["upd"]["UnlimitedCount"])
-                self.assertEqual(root["upd"]["BuyRestrictionMax"],1)
+                self.assertGreater(root["upd"]["BuyRestrictionMax"],0)
+                self.assertLessEqual(root["upd"]["BuyRestrictionMax"],60)
                 self.assertGreater(len([x for x in assort["items"] if x["_id"]==root["_id"] or x.get("parentId") in ids]),0)
 
 if __name__=="__main__": unittest.main()

@@ -20,78 +20,627 @@
   "selectionRule": "Only complete weapon presets and standalone equipment not already assigned to the source mod's traders; bounded stock, one purchase per reset.",
   "offers": [
     {
-      "offerId": "ab2cf4ddf32c1d36564791e1",
-      "tpl": "6661012d16fbd2fb75408f87",
-      "name": "CZ 75B",
-      "source": "WTT Armory",
-      "loyaltyLevel": 1,
-      "priceRub": 18000,
-      "completePreset": true
-    },
-    {
-      "offerId": "e392c02f476aec7d9a211dc0",
-      "tpl": "68d40fb07130ef271f60991f",
-      "name": "PMM-12",
+      "offerId": "a14e297ff5072c43be7be275",
+      "tpl": "6868d249cdee524f8c0ba45f",
+      "name": "m9",
+      "category": "complete weapon",
       "source": "WTT Armory",
       "loyaltyLevel": 1,
       "priceRub": 16000,
       "completePreset": true
     },
     {
-      "offerId": "7b2f597188b6632e6f25c161",
-      "tpl": "67b05e25d83f07b7b587c0b5",
-      "name": "UMP9",
+      "offerId": "f946e97bd124c1b5060802a1",
+      "tpl": "0cb4a36dd2e587b46e813dbe",
+      "name": "AK74",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 3,
+      "priceRub": 133300,
+      "completePreset": true
+    },
+    {
+      "offerId": "9c8b38da2dbdb19af097ffe0",
+      "tpl": "6671ebcdd32bd95eb398e920",
+      "name": "AK5C",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 3,
+      "priceRub": 113460,
+      "completePreset": true
+    },
+    {
+      "offerId": "02f4b7baf984b11815d087c3",
+      "tpl": "678fe4a4906c7bd23722c71f",
+      "name": "AK74",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 3,
+      "priceRub": 133300,
+      "completePreset": true
+    },
+    {
+      "offerId": "0f7ebdc76e77cc19046c831d",
+      "tpl": "669fca7f9ed4916116c76d5e",
+      "name": "Browning Auto-5",
+      "category": "complete weapon",
       "source": "WTT Armory",
       "loyaltyLevel": 2,
-      "priceRub": 52000,
+      "priceRub": 24073,
       "completePreset": true
     },
     {
       "offerId": "ac5057eea4cd5096f3853689",
       "tpl": "66ba249b102a9dd6040a6e7e",
       "name": "IWI Carmel",
+      "category": "complete weapon",
       "source": "WTT Armory",
       "loyaltyLevel": 3,
-      "priceRub": 105000,
+      "priceRub": 99665,
       "completePreset": true
     },
     {
-      "offerId": "4fff7127da96fe59f76af6f6",
-      "tpl": "68a6d95addf0111c2f04c9c3",
-      "name": "Construction helmet, orange",
-      "source": "WTT Content Backport",
+      "offerId": "ab2cf4ddf32c1d36564791e1",
+      "tpl": "6661012d16fbd2fb75408f87",
+      "name": "CZ 75B",
+      "category": "complete weapon",
+      "source": "WTT Armory",
       "loyaltyLevel": 1,
-      "priceRub": 4500,
+      "priceRub": 16000,
+      "completePreset": true
+    },
+    {
+      "offerId": "c4f1910490b5480b0ab0260e",
+      "tpl": "6962f22fddc6698c6309b620",
+      "name": "F2000",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 3,
+      "priceRub": 139500,
+      "completePreset": true
+    },
+    {
+      "offerId": "b552aa7c791c727fcb8f6259",
+      "tpl": "664a5b945636ce820472f225",
+      "name": "G28",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 58900,
+      "completePreset": true
+    },
+    {
+      "offerId": "ee321a0519025ac785fb3c7c",
+      "tpl": "69417a3f787395b8cc0ab13e",
+      "name": "M1894 Dark Tracker",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 53667,
+      "completePreset": true
+    },
+    {
+      "offerId": "852474f66d4250d9786ffb47",
+      "tpl": "66e718dc498d978477e0ba75",
+      "name": "M249 5.56x45 Light Machinegun",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 4,
+      "priceRub": 279000,
+      "completePreset": true
+    },
+    {
+      "offerId": "3dbd3167d711dd111b776324",
+      "tpl": "68b7f4060a4536984f82cf4b",
+      "name": "USP",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 19840,
+      "completePreset": true
+    },
+    {
+      "offerId": "9afa4e27812b52ae122c585d",
+      "tpl": "696ce75f73805e693401aba0",
+      "name": "MSBS Grot",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 37186,
+      "completePreset": true
+    },
+    {
+      "offerId": "e392c02f476aec7d9a211dc0",
+      "tpl": "68d40fb07130ef271f60991f",
+      "name": "PM",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 16000,
+      "completePreset": true
+    },
+    {
+      "offerId": "4a5ca0e3192b802be4f974af",
+      "tpl": "665fe0e865683281eb8e7ed6",
+      "name": "m1911",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 16000,
+      "completePreset": true
+    },
+    {
+      "offerId": "546d7e248c1e3a7373f1aedb",
+      "tpl": "68452c3da87156b67d9ec538",
+      "name": "m1911",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 16275,
+      "completePreset": true
+    },
+    {
+      "offerId": "c7a12798c2e3e8337556e3f9",
+      "tpl": "69236a0b2d1260dbca41ef92",
+      "name": "SV98",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 52558,
+      "completePreset": true
+    },
+    {
+      "offerId": "7b2f597188b6632e6f25c161",
+      "tpl": "67b05e25d83f07b7b587c0b5",
+      "name": "UMP45",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 41075,
+      "completePreset": true
+    },
+    {
+      "offerId": "8f9fb816a0b52c5a81518363",
+      "tpl": "6958447bfc5cad58acf95c0f",
+      "name": "UMP45",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 26241,
+      "completePreset": true
+    },
+    {
+      "offerId": "65da87005042f441f2d2e5a5",
+      "tpl": "66a47e98c486ec9d1af3a4da",
+      "name": "IWI Tavor X95",
+      "category": "complete weapon",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 69750,
+      "completePreset": true
+    },
+    {
+      "offerId": "e97b5b9dea8d29e3bc391ff1",
+      "tpl": "684e2de88bb7e9f52bfab35c",
+      "name": "684e2de88bb7e9f52bfab35c",
+      "category": "ammunition",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 800,
+      "completePreset": false
+    },
+    {
+      "offerId": "8a8ba0d2ea287389c8532f6a",
+      "tpl": "68fd537f2965f74cf4a87894",
+      "name": "68fd537f2965f74cf4a87894",
+      "category": "ammunition",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 981,
+      "completePreset": false
+    },
+    {
+      "offerId": "0774375505eb9365d76f8ed5",
+      "tpl": "68fd53b6087e82ccf8586c51",
+      "name": "68fd53b6087e82ccf8586c51",
+      "category": "ammunition",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 981,
+      "completePreset": false
+    },
+    {
+      "offerId": "d4d589b6d886b688dd7f4b6f",
+      "tpl": "68fd53be7254b4b0b21f25b9",
+      "name": "68fd53be7254b4b0b21f25b9",
+      "category": "ammunition",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 981,
+      "completePreset": false
+    },
+    {
+      "offerId": "13e447d2e535648616aa13f6",
+      "tpl": "668070f11aff0d6b0cd7fb13",
+      "name": "668070f11aff0d6b0cd7fb13",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 4387,
+      "completePreset": false
+    },
+    {
+      "offerId": "a517d6c87b12fead4ba53b7c",
+      "tpl": "682d014f0f0eb62eb4269012",
+      "name": "682d014f0f0eb62eb4269012",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 5570,
+      "completePreset": false
+    },
+    {
+      "offerId": "40e225a29fae9882740dbecd",
+      "tpl": "66ba297b859e57cf91e38a5d",
+      "name": "66ba297b859e57cf91e38a5d",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 2632,
+      "completePreset": false
+    },
+    {
+      "offerId": "14f0a2adc61f7fb6d3540bdd",
+      "tpl": "66ba29d44744d98a4df0073b",
+      "name": "66ba29d44744d98a4df0073b",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 2632,
+      "completePreset": false
+    },
+    {
+      "offerId": "e8016ae3d20d79d193ab77b0",
+      "tpl": "66ba2a6be18ed84221edd72d",
+      "name": "66ba2a6be18ed84221edd72d",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 2025,
+      "completePreset": false
+    },
+    {
+      "offerId": "4832f13df8814030276896ec",
+      "tpl": "66ba2a7583204e25695233c0",
+      "name": "66ba2a7583204e25695233c0",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 2025,
+      "completePreset": false
+    },
+    {
+      "offerId": "403e20c8d6a3843e5b794907",
+      "tpl": "064a8c271a037b0c6a1b86f5",
+      "name": "064a8c271a037b0c6a1b86f5",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 14715,
+      "completePreset": false
+    },
+    {
+      "offerId": "cde4d93b4466d340eb0782a1",
+      "tpl": "0672adb8be2d7d5a552ab4f2",
+      "name": "0672adb8be2d7d5a552ab4f2",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 22275,
+      "completePreset": false
+    },
+    {
+      "offerId": "dcf9212a1f91620128903223",
+      "tpl": "5fa85819d2d2bfc0079e6b09",
+      "name": "5fa85819d2d2bfc0079e6b09",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 23625,
+      "completePreset": false
+    },
+    {
+      "offerId": "91c725f365c395d8b18b08e6",
+      "tpl": "6687512d9e062645579695cd",
+      "name": "6687512d9e062645579695cd",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 3,
+      "priceRub": 43875,
+      "completePreset": false
+    },
+    {
+      "offerId": "b572f3e9919ea1dbb48ecb9d",
+      "tpl": "664b9a705538c7da4f026f22",
+      "name": "664b9a705538c7da4f026f22",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 16200,
+      "completePreset": false
+    },
+    {
+      "offerId": "2ce32c43d8ac35c7dc114f90",
+      "tpl": "66ba253030ea88abba95c7ed",
+      "name": "66ba253030ea88abba95c7ed",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 6817,
+      "completePreset": false
+    },
+    {
+      "offerId": "340a679c0761215a3d5f7e01",
+      "tpl": "66ba25755bd539b9238365b0",
+      "name": "66ba25755bd539b9238365b0",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 6817,
+      "completePreset": false
+    },
+    {
+      "offerId": "593492cfbe914e5c94752c27",
+      "tpl": "03f6c86c56945862820e1006",
+      "name": "03f6c86c56945862820e1006",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 3,
+      "priceRub": 35100,
+      "completePreset": false
+    },
+    {
+      "offerId": "a8978ad51fbfe531b5afdd4b",
+      "tpl": "186b5c3e8ace3d9a1343bfeb",
+      "name": "186b5c3e8ace3d9a1343bfeb",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 8100,
+      "completePreset": false
+    },
+    {
+      "offerId": "a9a255c28f5bb679782fc550",
+      "tpl": "2322ee962f6c77a1284abc1e",
+      "name": "2322ee962f6c77a1284abc1e",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 16200,
+      "completePreset": false
+    },
+    {
+      "offerId": "e3cb0b2806c950323e7f95bf",
+      "tpl": "5ae3d18efa17cbd51e898ced",
+      "name": "5ae3d18efa17cbd51e898ced",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 28350,
+      "completePreset": false
+    },
+    {
+      "offerId": "ebc066cd8f79956420ccba25",
+      "tpl": "664b9a4798222d80ce536df6",
+      "name": "664b9a4798222d80ce536df6",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 3,
+      "priceRub": 61803,
+      "completePreset": false
+    },
+    {
+      "offerId": "f47ec4d712b348cbbe4ee259",
+      "tpl": "666102ef2d367ec85ddd2030",
+      "name": "666102ef2d367ec85ddd2030",
+      "category": "weapon support",
+      "source": "WTT Armory",
+      "loyaltyLevel": 3,
+      "priceRub": 50517,
+      "completePreset": false
+    },
+    {
+      "offerId": "0b6c04ba0eb8bf9a4d78a589",
+      "tpl": "69c139c022093da1c50a8808",
+      "name": "item_equipment_headset_liberator_multicam_bp03",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 2,
+      "priceRub": 55048,
+      "completePreset": false
+    },
+    {
+      "offerId": "a68bfd9ac21a3ec9ca8dd5a7",
+      "tpl": "69c14efe66c213ea750e1960",
+      "name": "item_equipment_headset_liberator_black_red_bp03",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 2,
+      "priceRub": 55048,
+      "completePreset": false
+    },
+    {
+      "offerId": "0fe99582b009e6b01cdc0eaf",
+      "tpl": "69c14fa8b33aad3beb036878",
+      "name": "item_equipment_headset_liberator_multicam_black_bp03",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 2,
+      "priceRub": 55048,
       "completePreset": false
     },
     {
       "offerId": "005bcf928ba20aa2ba5a277b",
       "tpl": "693bb59250fafa102607aeb7",
-      "name": "M32 headset, white",
+      "name": "item_equipment_headset_m32_white",
+      "category": "equipment",
       "source": "WTT Content Backport",
       "loyaltyLevel": 1,
-      "priceRub": 32000,
-      "completePreset": false
-    },
-    {
-      "offerId": "5b62df4e9a4b864f7458c0ef",
-      "tpl": "69e2441a18cb3157560855ec",
-      "name": "Spiritus Icebreaker rig",
-      "source": "WTT Content Backport",
-      "loyaltyLevel": 2,
-      "priceRub": 36000,
+      "priceRub": 31937,
       "completePreset": false
     },
     {
       "offerId": "a80edda563d726474ef89371",
       "tpl": "69413241b1ce1e5fbb09ed0a",
-      "name": "CENS ProFlex DX5",
+      "name": "Cens proflex dx5",
+      "category": "equipment",
       "source": "WTT Content Backport",
       "loyaltyLevel": 3,
-      "priceRub": 98000,
+      "priceRub": 111295,
+      "completePreset": false
+    },
+    {
+      "offerId": "df87cf250e376974c8767739",
+      "tpl": "68f263f099d2172e150d7ff8",
+      "name": "Item_equipment_head_cap_eft_coyote",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 1,
+      "priceRub": 4695,
+      "completePreset": false
+    },
+    {
+      "offerId": "a284d917f839da8ae530612f",
+      "tpl": "6937efd50543dcc2560a2c81",
+      "name": "item_equipment_head_ushanka_white",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 1,
+      "priceRub": 3000,
+      "completePreset": false
+    },
+    {
+      "offerId": "c3e2e7070dfd08f277e9d993",
+      "tpl": "6937f02dfd6488bb27024839",
+      "name": "item_equipment_head_ushanka_dmnt",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 1,
+      "priceRub": 35101,
+      "completePreset": false
+    },
+    {
+      "offerId": "8ca2799653f20a146836ed45",
+      "tpl": "6937ecc3dbdccab44605fcf0",
+      "name": "item_container_dogtagcase_twitch",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 3,
+      "priceRub": 127400,
+      "completePreset": false
+    },
+    {
+      "offerId": "5380ab8c5df899f6bab5ca54",
+      "tpl": "6937eccbfd921faceb0dfecd",
+      "name": "item_container_wallet_loui_peeton",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 2,
+      "priceRub": 87100,
+      "completePreset": false
+    },
+    {
+      "offerId": "c03368437cc23c16e4a1bd62",
+      "tpl": "6937ecd37713b904480013ac",
+      "name": "item_container_food_hot_rod",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 2,
+      "priceRub": 88400,
+      "completePreset": false
+    },
+    {
+      "offerId": "aa447289fd87ddf1c12b3d41",
+      "tpl": "69b11f46f3783ec37c03a116",
+      "name": "item_equipment_rig_thunderbolt_ranger_green_bp03",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 1,
+      "priceRub": 32708,
+      "completePreset": false
+    },
+    {
+      "offerId": "0f58ad527f2ff96a55b75315",
+      "tpl": "69b124822c6ed131290d921f",
+      "name": "item_equipment_rig_bearing_dnc_green_bp03",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 2,
+      "priceRub": 49725,
+      "completePreset": false
+    },
+    {
+      "offerId": "f7ca0239d08d3022d13c66e5",
+      "tpl": "69cfbf627eaa38bd240704ad",
+      "name": "item_equipment_rig_sprofi_mk2_smg_emr_bp03_01",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 2,
+      "priceRub": 42120,
+      "completePreset": false
+    },
+    {
+      "offerId": "2ce826a8bc482e4f9adc84dd",
+      "tpl": "693fd0e9deee848f70054999",
+      "name": "item_equipment_rig_jpc_first_gen_mil_spec_v1",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 3,
+      "priceRub": 143683,
+      "completePreset": false
+    },
+    {
+      "offerId": "d2feb18d2365680026098749",
+      "tpl": "693fd1200ec97e98040bd3f9",
+      "name": "item_equipment_rig_jpc_wild_1",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 2,
+      "priceRub": 85546,
+      "completePreset": false
+    },
+    {
+      "offerId": "a0ca8a7ed9b2d3c2cc4a70eb",
+      "tpl": "693fd13aa490096a05028cc8",
+      "name": "item_equipment_rig_jpc_wild_2",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 3,
+      "priceRub": 98822,
+      "completePreset": false
+    },
+    {
+      "offerId": "c3c8d2e813cc695a9aabfd49",
+      "tpl": "69cfc2d7a9102bdca0080070",
+      "name": "item_equipment_rig_bearing_multicam_bp03",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 2,
+      "priceRub": 49725,
+      "completePreset": false
+    },
+    {
+      "offerId": "b2920357efc0bf2805551770",
+      "tpl": "69d37050705756116e0a9037",
+      "name": "item_equipment_rig_d3crx_black_bp03",
+      "category": "equipment",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 2,
+      "priceRub": 41080,
       "completePreset": false
     }
   ],
-  "offerCount": 8,
+  "offerCount": 62,
+  "totalAdmiralOffersWhenPresent": 113,
   "absenceBehavior": "No optional offer is published; all core quests and offers remain available."
 }
