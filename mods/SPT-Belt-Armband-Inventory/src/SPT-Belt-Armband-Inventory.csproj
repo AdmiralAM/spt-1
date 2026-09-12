@@ -15,4 +15,18 @@
     <PackageReference Include="HarmonyX" Version="2.9.0"><PrivateAssets>all</PrivateAssets></PackageReference>
     <PackageReference Include="UnityEngine.Modules" Version="2021.3.33"><PrivateAssets>all</PrivateAssets></PackageReference>
   </ItemGroup>
+  <ItemGroup Condition="'$(PackNStrapSourceRoot)' != ''">
+    <Reference Include="Assembly-CSharp"><HintPath>$(PackNStrapSptRoot)\EscapeFromTarkov_Data\Managed\Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Comfort"><HintPath>$(PackNStrapSptRoot)\EscapeFromTarkov_Data\Managed\Comfort.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="ItemComponent.Types"><HintPath>$(PackNStrapSptRoot)\EscapeFromTarkov_Data\Managed\ItemComponent.Types.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="ItemTemplate.Types"><HintPath>$(PackNStrapSptRoot)\EscapeFromTarkov_Data\Managed\ItemTemplate.Types.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="WTT-ClientCommonLib">
+      <HintPath>$(PackNStrapClientCommonLib)</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Compile Include="$(PackNStrapSourceRoot)\WTT-PackNStrapClient\Core\Templates\CustomContainerTemplateClass.cs" Link="LocalPackNStrap\CustomContainerTemplateClass.cs" />
+    <Compile Include="$(PackNStrapSourceRoot)\WTT-PackNStrapClient\Core\Items\CustomContainerItemClass.cs" Link="LocalPackNStrap\CustomContainerItemClass.cs" />
+    <Compile Include="$(PackNStrapSourceRoot)\WTT-PackNStrapClient\Core\Items\CustomBeltItemClass.cs" Link="LocalPackNStrap\CustomBeltItemClass.cs" />
+    <Compile Include="$(PackNStrapSourceRoot)\WTT-PackNStrapClient\Core\Items\CustomSecureContainerClass.cs" Link="LocalPackNStrap\CustomSecureContainerClass.cs" />
+  </ItemGroup>
 </Project>

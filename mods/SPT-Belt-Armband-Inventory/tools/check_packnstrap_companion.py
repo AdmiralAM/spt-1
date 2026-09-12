@@ -32,7 +32,7 @@ for owner in [
 
 for filename in ["RuntimeCandidateAssort.cs", "WristWalletAssort.cs"]:
     text = (SERVER / filename).read_text(encoding="utf-8-sig")
-    if "if (PackNStrapCompatibility.IsServerPresentNow())" not in text or "return Task.CompletedTask;" not in text:
+    if "PackNStrapCompatibility.IsServerPresentNow()" not in text or "LocalPackNStrapImportState.Enabled" not in text or "return Task.CompletedTask;" not in text:
         violations.append(f"{filename} does not suppress its standard owner")
 
 for filename, item_token in [

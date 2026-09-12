@@ -16,7 +16,7 @@ public sealed class RuntimeCandidateAssort(
 {
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
-        if (PackNStrapCompatibility.IsServerPresentNow())
+        if (PackNStrapCompatibility.IsServerPresentNow() || LocalPackNStrapImportState.Enabled)
         {
             logger.Info("B&A&HB companion mode: Magazine Armband offer skipped.");
             return Task.CompletedTask;

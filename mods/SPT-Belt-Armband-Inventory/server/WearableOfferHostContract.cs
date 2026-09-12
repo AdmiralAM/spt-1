@@ -14,6 +14,7 @@ internal static class WearableOfferHostContract
     private static readonly MongoId DefaultInventoryTpl = new("55d7217a4bdc2d86028b456d");
     private static readonly MongoId BroadBeltParentTpl = new(RuntimeIdentity.BeltItemParentId);
     private static readonly MongoId DedicatedMagazineBeltTpl = new(RuntimeIdentity.DedicatedMagazineBeltItemId);
+    private static readonly MongoId ImportedPackNStrapBeltParentTpl = new(LocalPackNStrapImportState.BeltParentId);
     private static readonly MongoId UtilityHeadBandTpl = new(RuntimeIdentity.EmergencyHeadBandItemId);
     private static readonly MongoId BeltSlotMongoId = new(RuntimeIdentity.DedicatedBeltSlotMongoId);
     private static readonly MongoId HeadBandSlotMongoId = new(RuntimeIdentity.DedicatedHeadBandSlotMongoId);
@@ -37,12 +38,14 @@ internal static class WearableOfferHostContract
             RequireSingleSlot(templateTable, RuntimeIdentity.DedicatedBeltWireSlotId),
             RuntimeIdentity.DedicatedBeltWireSlotId,
             BeltSlotMongoId,
-            DedicatedMagazineBeltTpl);
+            LocalPackNStrapImportState.Enabled
+                ? [DedicatedMagazineBeltTpl, ImportedPackNStrapBeltParentTpl]
+                : [DedicatedMagazineBeltTpl]);
         ValidateDedicatedSlot(
             RequireSingleSlot(templateTable, RuntimeIdentity.DedicatedHeadBandWireSlotId),
             RuntimeIdentity.DedicatedHeadBandWireSlotId,
             HeadBandSlotMongoId,
-            UtilityHeadBandTpl);
+            [UtilityHeadBandTpl]);
     }
 
     private static Slot RequireSingleSlot(TemplateTable templateTable, string wireName)
@@ -68,7 +71,7 @@ internal static class WearableOfferHostContract
         return accepted;
     }
 
-    private static void ValidateDedicatedSlot(Slot slot, string wireName, MongoId id, MongoId allowedTemplate)
+    private static void ValidateDedicatedSlot(Slot slot, string wireName, MongoId id, IReadOnlyCollection<MongoId> allowedTemplates)
     {
         if (!Equals(slot.Id, id)
             || !Equals(slot.Parent, DefaultInventoryTpl)
@@ -77,7 +80,7 @@ internal static class WearableOfferHostContract
             throw new InvalidOperationException($"B&A&HB offer host contract: dedicated slot {wireName} identity differs from the product contract.");
 
         HashSet<MongoId> accepted = RequireSingleFilter(slot, wireName);
-        if (accepted.Count != 1 || !accepted.Contains(allowedTemplate))
+        if (accepted.Count != allowedTemplates.Count || allowedTemplates.Any(template => !accepted.Contains(template)))
             throw new InvalidOperationException($"B&A&HB offer host contract: dedicated slot {wireName} does not expose only its exact product template.");
     }
 }

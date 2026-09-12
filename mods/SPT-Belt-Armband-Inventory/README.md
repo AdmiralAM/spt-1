@@ -2,20 +2,21 @@
 
 Development candidate **v0.2.0** for **SPT 4.1.3**.
 
-The current product direction uses separately installed Pack 'n' Strap for
-standard belts, pouches and mini-containers. B&A&HB ships only functionality
-that Pack 'n' Strap does not provide: its HeadBand and Dogtag Case modules,
-immutable profile identities, and exactly scoped protection for B&A-owned
-roots. This branch currently preserves
-the complete pre-split v0.2 implementation as a reproducible reserve; it does
-not yet claim runtime compatibility with Pack 'n' Strap. See
+The private runtime direction imports Pack 'n' Strap belts, containers, models
+and layouts into B&A&HB while keeping all third-party assets and item databases
+out of this repository. The public source remains buildable without Pack 'n'
+Strap or WTT CommonLib. `tools/Import-PackNStrapLocal.ps1` builds an opt-in
+private variant from an existing local source checkout and installation, routes
+the imported belt parent to dedicated slot15, deploys B&A&HB, and preserves then
+disables the original Pack 'n' Strap runtime outside active mod/plugin paths.
+The imported template IDs remain unchanged for the later profile-safety gate.
+See
 [`docs/packnstrap-compatibility.md`](docs/packnstrap-compatibility.md) for the
 pinned audit, conflict matrix, ownership boundary and next implementation stage.
 
-Small Pack 'n' Strap-derived fragments may be used where a compatibility bridge
-or an otherwise missing Admiral feature requires them. Each such use names the
-upstream commit/file and its purpose; the companion does not bundle the complete
-Pack 'n' Strap mod or duplicate features supplied by its standalone installation.
+No Pack 'n' Strap source, JSON, model, icon or bundle is committed or packaged by
+this repository. The local importer consumes the user's own copy only. Imported
+foreign roots never enter the Admiral protection allowlist.
 
 Stable **v0.1.0** is already frozen and published separately on `runtime-belt-armband` / tag `bahb-v0.1.0`. This branch develops v0.2.0 without changing that release.
 

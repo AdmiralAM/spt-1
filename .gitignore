@@ -54,3 +54,4 @@ build-output/
 **/__pycache__/
 *.py[cod]
 .pytest_cache/
+mods/SPT-Belt-Armband-Inventory/.local-packnstrap/

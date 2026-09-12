@@ -22,6 +22,7 @@ internal static class Program
         Assert(!PackNStrapCompatibility.IsClientPresent(new[] { "com.trenchfoot.beltslot" }), "legacy BeltSlot does not impersonate Pack 'n' Strap");
         Assert(PackNStrapCompatibility.IsServerPresent(new[] { "System", "WTT-PackNStrapServer" }), "Pack 'n' Strap server assembly selects companion mode");
         Assert(!PackNStrapCompatibility.IsServerPresent(new[] { "SPT.Server", "SPT-Belt-Armband-Inventory.Server" }), "B&A server alone stays in standalone mode");
+        LocalPackNStrapImportRegression.Run();
         SPTBeltArmbandInventory.Tests.ProfileCleanupRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedWearableSlotContractRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedSlotPresentationPolicyRegression.Run();

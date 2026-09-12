@@ -72,19 +72,22 @@ public sealed class DedicatedEquipmentSlotRegistration(
             // Prepare both contracts before mutating the canonical slot list. If an
             // existing slot15/slot16 collides, validation throws while `slots` is still
             // unchanged; this prevents a half-installed Belt-only/HeadBand-only state.
+            MongoId[] beltAccepted = LocalPackNStrapImportState.Enabled
+                ? [DedicatedMagazineBeltTpl, new MongoId(LocalPackNStrapImportState.BeltParentId)]
+                : [DedicatedMagazineBeltTpl];
             Slot? beltAddition = PrepareDedicatedSlot(
                 slots,
                 armBand,
                 RuntimeIdentity.DedicatedBeltWireSlotId,
                 BeltSlotMongoId,
-                DedicatedMagazineBeltTpl,
+                beltAccepted,
                 companionMode);
             Slot? headBandAddition = PrepareDedicatedSlot(
                 slots,
                 armBand,
                 RuntimeIdentity.DedicatedHeadBandWireSlotId,
                 HeadBandSlotMongoId,
-                EmergencyHeadBandTpl);
+                [EmergencyHeadBandTpl]);
 
             if (beltAddition != null) slots.Add(beltAddition);
             if (headBandAddition != null) slots.Add(headBandAddition);
@@ -117,13 +120,13 @@ public sealed class DedicatedEquipmentSlotRegistration(
         return slots.Count(x => string.Equals(x.Name, wireName, StringComparison.Ordinal)) > 1;
     }
 
-    private static Slot? PrepareDedicatedSlot(List<Slot> slots, Slot armBandPrototype, string wireName, MongoId id, MongoId allowedTemplate, bool suppress = false)
+    private static Slot? PrepareDedicatedSlot(List<Slot> slots, Slot armBandPrototype, string wireName, MongoId id, IReadOnlyCollection<MongoId> allowedTemplates, bool suppress = false)
     {
         if (suppress) return null;
         var matches = slots.Where(x => string.Equals(x.Name, wireName, StringComparison.Ordinal)).ToArray();
         if (matches.Length == 1)
         {
-            ValidateDedicatedSlot(matches[0], wireName, id, allowedTemplate);
+            ValidateDedicatedSlot(matches[0], wireName, id, allowedTemplates);
             return null;
         }
 
@@ -139,19 +142,19 @@ public sealed class DedicatedEquipmentSlotRegistration(
             Properties = new SlotProperties
             {
                 MaxStackCount = 1,
-                Filters = [new SlotFilter { Filter = [allowedTemplate], Locked = false, MaxStackCount = 1 }]
+                Filters = [new SlotFilter { Filter = allowedTemplates.ToHashSet(), Locked = false, MaxStackCount = 1 }]
             }
         };
     }
 
-    private static void ValidateDedicatedSlot(Slot slot, string wireName, MongoId id, MongoId allowedTemplate)
+    private static void ValidateDedicatedSlot(Slot slot, string wireName, MongoId id, IReadOnlyCollection<MongoId> allowedTemplates)
     {
         if (!Equals(slot.Id, id) || !Equals(slot.Parent, DefaultInventoryTpl) || slot.MaxCount != 1 || slot.Required == true)
             throw new InvalidOperationException($"B&A&HB dedicated-slot identity collision for wire id {wireName}.");
 
         var filters = slot.Properties?.Filters?.ToArray();
         var accepted = filters?.Length == 1 ? filters[0].Filter : null;
-        if (accepted == null || accepted.Count != 1 || !accepted.Contains(allowedTemplate))
+        if (accepted == null || accepted.Count != allowedTemplates.Count || allowedTemplates.Any(template => !accepted.Contains(template)))
             throw new InvalidOperationException($"B&A&HB dedicated-slot filter collision for wire id {wireName}.");
     }
 }
