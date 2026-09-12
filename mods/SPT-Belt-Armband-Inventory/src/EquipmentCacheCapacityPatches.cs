@@ -37,6 +37,12 @@ namespace SPTBeltArmbandInventory
                     throw new InvalidOperationException("exact InventoryEquipment(string, InventoryEquipmentTemplate) boundary missing");
 
                 TargetSlotType = slot;
+                TargetCacheField = equipment.GetField("_cachedSlots", BindingFlags.Instance | BindingFlags.NonPublic);
+                TargetSlotsField = equipment.BaseType?.GetField("Slots", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (TargetCacheField == null
+                    || TargetSlotsField == null
+                    || TargetCacheField.FieldType != TargetSlotsField.FieldType)
+                    throw new InvalidOperationException("exact InventoryEquipment cache/source Slot[] fields missing");
                 harmony = new Harmony(HarmonyId);
                 harmony.Patch(target, transpiler: new HarmonyMethod(typeof(EquipmentCacheCapacityPatches), nameof(Transpiler)));
                 logInfo?.Invoke("B&A&HB equipment cache capacity installed for sparse HeadBand slot16; minimum cache length=17.");
@@ -51,14 +57,28 @@ namespace SPTBeltArmbandInventory
         }
 
         static Type TargetSlotType;
+        static FieldInfo TargetCacheField;
+        static FieldInfo TargetSlotsField;
 
         static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> input)
         {
             List<CodeInstruction> code = input.ToList();
             MethodInfo capacity = AccessTools.Method(typeof(EquipmentCacheCapacityPatches), nameof(RequiredCapacity));
-            int matches = 0;
+            int allocationMatches = 0;
+            int denseEnumerationMatches = 0;
             for (int i = 1; i + 2 < code.Count; i++)
             {
+                if (code[i].opcode == OpCodes.Ldfld
+                    && Equals(code[i].operand, TargetCacheField)
+                    && code[i + 1].opcode == OpCodes.Ldsfld)
+                {
+                    // The vanilla cache is dense, so EFT can enumerate it when
+                    // constructing ConflictingSlots. Sparse slot16 leaves index
+                    // 15 empty; enumerate the original real Slots array instead.
+                    code[i].operand = TargetSlotsField;
+                    denseEnumerationMatches++;
+                }
+
                 if (code[i].opcode != OpCodes.Ldlen
                     || code[i + 1].opcode != OpCodes.Conv_I4
                     || code[i + 2].opcode != OpCodes.Newarr
@@ -68,11 +88,13 @@ namespace SPTBeltArmbandInventory
 
                 code[i].opcode = OpCodes.Call;
                 code[i].operand = capacity;
-                matches++;
+                allocationMatches++;
             }
 
-            if (matches != 1)
-                throw new InvalidOperationException("InventoryEquipment slot-cache allocation shape changed; expected exactly one Slot[] allocation from Slots.Length, found " + matches);
+            if (allocationMatches != 1 || denseEnumerationMatches != 1)
+                throw new InvalidOperationException(
+                    "InventoryEquipment sparse-slot shape changed; allocation=" + allocationMatches
+                    + ", dense-enumeration=" + denseEnumerationMatches);
             return code;
         }
 
@@ -88,6 +110,8 @@ namespace SPTBeltArmbandInventory
             try { harmony?.UnpatchSelf(); } catch { }
             harmony = null;
             TargetSlotType = null;
+            TargetCacheField = null;
+            TargetSlotsField = null;
         }
     }
 
