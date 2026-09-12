@@ -430,10 +430,10 @@
           "brief": "Добыть или иметь один ключ из честного пула доступа к следующему объекту; ключ не сдаётся.",
           "objectives": [
             {
-              "kind": "retrieveQuestItem",
+              "kind": "possessAccessKey",
               "quantity": 1,
-              "foundInRaid": true,
-              "surviveRequired": true
+              "foundInRaid": false,
+              "handover": false
             }
           ],
           "prerequisite": "5fd9397fbc40a37c1abf3790",
@@ -2644,10 +2644,10 @@
           "brief": "Получить или иметь подходящий ключ; предмет остаётся у игрока.",
           "objectives": [
             {
-              "kind": "retrieveQuestItem",
+              "kind": "possessAccessKey",
               "quantity": 1,
-              "foundInRaid": true,
-              "surviveRequired": true
+              "foundInRaid": false,
+              "handover": false
             }
           ],
           "prerequisite": "7486bc36905b338d72289ad6",

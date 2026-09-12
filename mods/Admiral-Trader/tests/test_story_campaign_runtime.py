@@ -39,7 +39,7 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
                 self.assertEqual(prerequisites, expected, row["id"])
 
     def test_objective_mix_is_story_led_and_bounded(self):
-        kinds = {kind: 0 for kind in ("visit", "retrieveQuestItem", "placeOrMark", "eliminate", "surviveExtract", "handover")}
+        kinds = {kind: 0 for kind in ("visit", "retrieveQuestItem", "placeOrMark", "eliminate", "surviveExtract", "handover", "possessAccessKey")}
         for chain in self.authored["chains"]:
             for row in chain["quests"]:
                 for objective in row["objectives"]:
@@ -50,6 +50,26 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
         self.assertGreaterEqual(kinds["retrieveQuestItem"], 35)
         self.assertGreaterEqual(kinds["placeOrMark"], 25)
         self.assertLessEqual(kinds["eliminate"], 12)
+        self.assertEqual(kinds["possessAccessKey"], 2)
+
+    def test_story_access_keys_are_owned_not_handed_over(self):
+        expected = {
+            "ed21744058dec7587de1081f": {
+                "5672c92d4bdc2d180f8b4567", "5780cda02459777b272ede61",
+                "5780cf692459777de4559321", "5780cf722459777a5108b9a1",
+            },
+            "30d087339ef8063ccd818036": {
+                "57a349b2245977762b199ec7", "593858c486f774253a24cb52",
+            },
+        }
+        for quest_id, targets in expected.items():
+            finish = self.by_id[quest_id]["conditions"]["AvailableForFinish"]
+            self.assertEqual(len(finish), 1, quest_id)
+            self.assertEqual(finish[0]["conditionType"], "FindItem", quest_id)
+            self.assertEqual(set(finish[0]["target"]), targets, quest_id)
+            self.assertFalse(finish[0]["onlyFoundInRaid"], quest_id)
+            self.assertNotIn("HandoverItem", {row["conditionType"] for row in finish}, quest_id)
+            self.assertIn("ключ не сдаётся", self.ru[quest_id + " description"], quest_id)
 
     def test_runtime_uses_only_supported_native_condition_types(self):
         allowed = {"CounterCreator", "FindItem", "HandoverItem", "PlaceBeacon"}
@@ -114,6 +134,11 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
                     self.assertIn(f"Следующая операция: «{chain['quests'][index + 1]['name']}»", success, row["id"])
                 else:
                     self.assertIn("Расследование закрыто", success, row["id"])
+
+    def test_russian_story_locale_is_real_utf8_cyrillic(self):
+        rendered = json.dumps(self.ru, ensure_ascii=False)
+        self.assertNotIn("\ufffd", rendered)
+        self.assertGreater(sum("\u0400" <= char <= "\u04ff" for char in rendered), 100000)
 
 
 if __name__ == "__main__":

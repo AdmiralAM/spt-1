@@ -81,6 +81,19 @@ REWARD_ITEMS = {
     "Лаборатория": ["5ed51652f6c34d2cc26336a1", "62a0a16d0b9d3c46de5b6e97", "68666887df54e1190902df57"],
 }
 
+ACCESS_KEY_POOLS = {
+    "Таможня": [
+        "5672c92d4bdc2d180f8b4567",  # Dorm room 118
+        "5780cda02459777b272ede61",  # Dorm room 306
+        "5780cf692459777de4559321",  # Dorm room 315
+        "5780cf722459777a5108b9a1",  # Dorm room 308
+    ],
+    "Завод": [
+        "57a349b2245977762b199ec7",  # Pumping station front door
+        "593858c486f774253a24cb52",  # Pumping station back door
+    ],
+}
+
 CHAIN_EN = ["First Circuit", "Missing Convoy", "Observation Net", "Dead Warehouse", "Sanitary Corridor", "Mobilization Protocol", "Coastal Blockade", "Archive of Collapse", "Black Shift", "Final Protocol"]
 CODENAMES_EN = [
     ["Foreign Frequency", "Zero Mark", "Last Crew", "Locked Airwaves", "Blind Spot", "Uninvited Listeners", "Reserve Power", "Control Package", "Open Channel", "First Circuit"],
@@ -120,6 +133,10 @@ def visit(qid: str, suffix: str, zone: str) -> dict:
 
 def item_condition(qid: str, suffix: str, tpl: str, kind: str, index: int, fir: bool) -> dict:
     return {"conditionType": kind, "countInRaid": False, "dogtagLevel": 0, "dynamicLocale": False, "globalQuestCounterId": "", "id": hid(f"{qid}:{suffix}:{kind}"), "index": index, "isEncoded": False, "maxDurability": 100, "minDurability": 0, "onlyFoundInRaid": fir, "parentId": "", "target": [tpl], "value": 1, "visibilityConditions": []}
+
+
+def key_pool_condition(qid: str, targets: list[str], index: int) -> dict:
+    return {"conditionType": "FindItem", "countInRaid": False, "dogtagLevel": 0, "dynamicLocale": False, "globalQuestCounterId": "", "id": hid(f"{qid}:access-key:FindItem"), "index": index, "isEncoded": False, "maxDurability": 100, "minDurability": 0, "onlyFoundInRaid": False, "parentId": "", "target": targets, "value": 1, "visibilityConditions": []}
 
 
 def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[str, str]) -> tuple[list[dict], list[str], list[str]]:
@@ -168,6 +185,13 @@ def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[
             rows.append(item_condition(qid, f"handover-{objective_index}", item_tpl, "HandoverItem", index, False)); index += 1
             en.append(f"Hand over 1 × {names_en.get(item_tpl, item_tpl)}. Found in raid: not required")
             ru.append(f"Передать 1 × {names_ru.get(item_tpl, item_tpl)}. Статус «Найдено в рейде»: не требуется")
+        elif kind == "possessAccessKey":
+            targets = ACCESS_KEY_POOLS[map_name]
+            rows.append(key_pool_condition(qid, targets, index)); index += 1
+            en_pool = "Dorm room 118, 306, 308 or 315 key" if map_name == "Таможня" else "Pumping station front or back door key"
+            ru_pool = "ключ от комнаты общежития 118, 306, 308 или 315" if map_name == "Таможня" else "ключ от передней или задней двери насосной станции"
+            en.append(f"Have any 1 allowed key: {en_pool}. Found in raid: not required; the key is not handed over")
+            ru.append(f"Иметь любой 1 допустимый ключ: {ru_pool}. Статус «Найдено в рейде»: не требуется; ключ не сдаётся")
         elif kind == "eliminate":
             suffix = f"kill-{objective_index}"
             kill = {"id": hid(f"{qid}:{suffix}:kill"), "dynamicLocale": False, "target": {"Scav": "Savage", "Rogue": "Any", "Raider": "Any"}.get(objective.get("target"), "Any"), "compareMethod": ">=", "value": 1, "weapon": [], "distance": {"value": 0, "compareMethod": ">="}, "weaponModsInclusive": [], "weaponModsExclusive": [], "enemyEquipmentInclusive": [], "enemyEquipmentExclusive": [], "weaponCaliber": [], "savageRole": ["exUsec"] if objective.get("target") == "Rogue" else (["pmcBot"] if objective.get("target") == "Raider" else []), "bodyPart": [], "daytime": {"from": 0, "to": 0}, "conditionType": "Kills", "enemyHealthEffects": [], "resetOnSessionEnd": False}
@@ -236,7 +260,7 @@ def main() -> None:
     global_ru = json.loads((args.spt_root / "SPT_Data/database/locales/global/ru.json").read_text(encoding="utf-8-sig"))
     names_en = {tpl: global_en.get(tpl + " Name", tpl) for tpl in items}
     names_ru = {tpl: global_ru.get(tpl + " Name", names_en[tpl]) for tpl in items}
-    required_tpls = {MARKER, ROUBLES} | {tpl for rows in RECOVERY_ITEMS.values() for tpl in rows} | {tpl for rows in REWARD_ITEMS.values() for tpl in rows}
+    required_tpls = {MARKER, ROUBLES} | {tpl for rows in RECOVERY_ITEMS.values() for tpl in rows} | {tpl for rows in REWARD_ITEMS.values() for tpl in rows} | {tpl for rows in ACCESS_KEY_POOLS.values() for tpl in rows}
     missing = sorted(required_tpls - set(items))
     if missing:
         raise SystemExit(f"SPT 4.1.5 item IDs missing: {missing}")
