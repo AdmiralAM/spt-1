@@ -17,6 +17,8 @@ namespace SPTItemIntelligence
         readonly Func<string, ItemHoverText> fallbackFactory;
         ItemHoverText current = ItemHoverText.Empty;
         object hoveredView;
+        object pinnedView;
+        Rect pinnedCardRect;
         ItemPresentationIndex renderedIndex;
         int invalidationVersion;
         int renderedInvalidation = -1;
@@ -100,6 +102,7 @@ namespace SPTItemIntelligence
                 ClearAnchor();
                 Clear();
             }
+            if (object.ReferenceEquals(pinnedView, itemView)) ClearPinned();
         }
 
         public void ClearViews()
@@ -109,6 +112,7 @@ namespace SPTItemIntelligence
             staleViews.Clear();
             renderedIndex = null;
             ClearAnchor();
+            ClearPinned();
             Clear();
         }
 
@@ -120,11 +124,14 @@ namespace SPTItemIntelligence
         public void Draw()
         {
             if (!settings.Modules.TrackViews) return;
-            if (Event.current != null && Event.current.type != EventType.Repaint) return;
-            RefreshTrackedViewsIfNeeded();
+            Event guiEvent = Event.current;
+            bool repaint = guiEvent == null || guiEvent.type == EventType.Repaint;
+            bool click = guiEvent != null && guiEvent.type == EventType.MouseDown && guiEvent.button == 0;
+            if (!repaint && !click) return;
+            if (repaint) RefreshTrackedViewsIfNeeded();
             if (tooltipDrawingDisabled || !settings.Modules.Tooltips) return;
 
-            object activeView = Volatile.Read(ref hoveredView);
+            object activeView = pinnedView ?? Volatile.Read(ref hoveredView);
             if (activeView == null) return;
             TrackedItemView tracked;
             if (!trackedViews.TryGetValue(activeView, out tracked)) return;
@@ -133,10 +140,30 @@ namespace SPTItemIntelligence
             {
                 Rect markerRect;
                 if (!tracked.TryGetTooltipHotspot(out markerRect)) return;
-                Vector2 mouse = Event.current == null
+                Vector2 mouse = guiEvent == null
                     ? new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y)
-                    : Event.current.mousePosition;
-                if (!markerRect.Contains(mouse)) return;
+                    : guiEvent.mousePosition;
+
+                if (click)
+                {
+                    object hovered = Volatile.Read(ref hoveredView);
+                    if (hovered != null && trackedViews.TryGetValue(hovered, out TrackedItemView hoveredTracked) &&
+                        hoveredTracked.TryGetTooltipHotspot(out Rect hoveredMarker) && hoveredMarker.Contains(mouse))
+                    {
+                        if (object.ReferenceEquals(pinnedView, hovered)) ClearPinned();
+                        else { pinnedView = hovered; pinnedCardRect = default(Rect); }
+                        guiEvent.Use();
+                    }
+                    else if (pinnedView != null && !pinnedCardRect.Contains(mouse))
+                    {
+                        ClearPinned();
+                        guiEvent.Use();
+                    }
+                    return;
+                }
+
+                bool pinned = object.ReferenceEquals(pinnedView, activeView);
+                if (!pinned && !markerRect.Contains(mouse)) return;
 
                 int previousDepth = GUI.depth;
                 Color previousColor = GUI.color;
@@ -144,7 +171,9 @@ namespace SPTItemIntelligence
                 {
                     GUI.depth = -1000;
                     GUI.color = Color.white;
-                    PolishedTooltipRenderer.Draw(markerRect, tracked.Text, settings);
+                    Rect card = PolishedTooltipRenderer.Draw(markerRect, tracked.Text, settings,
+                        pinned ? ItemTooltipMode.Full : (ItemTooltipMode?)null);
+                    if (pinned) pinnedCardRect = card;
                 }
                 finally
                 {
@@ -156,6 +185,12 @@ namespace SPTItemIntelligence
             {
                 tooltipDrawingDisabled = true;
             }
+        }
+
+        void ClearPinned()
+        {
+            pinnedView = null;
+            pinnedCardRect = default(Rect);
         }
 
         void RefreshTrackedViewsIfNeeded()

@@ -5,7 +5,7 @@ using BepInEx;
 
 namespace SPTItemIntelligence
 {
-    [BepInPlugin("com.admiralam.spt.itemintelligence", "Item Intelligence Admiral", "1.1.0")]
+    [BepInPlugin("com.admiralam.spt.itemintelligence", "Item Intelligence Admiral", "1.2.0")]
     public sealed class Plugin : BaseUnityPlugin
     {
         ItemHoverOverlaySink hoverSink;
@@ -42,7 +42,7 @@ namespace SPTItemIntelligence
             uiSettings.Changed += ApplyModules;
             ApplyModules();
 
-            Logger.LogInfo("Item Intelligence Admiral v1.1 development loaded; UI language=" + (GameUiText.Russian ? "ru" : "en"));
+            Logger.LogInfo("Item Intelligence Admiral v1.2 development loaded; UI language=" + (GameUiText.Russian ? "ru" : "en"));
         }
 
         void ApplyModules()
@@ -82,7 +82,9 @@ namespace SPTItemIntelligence
         {
             RequirementRuntimeBootstrap bootstrap = dataBootstrap;
             return bootstrap == null
-                ? new ItemHoverText("ITEM INTELLIGENCE ADMIRAL", string.Empty, "DATA UNAVAILABLE")
+                ? new ItemHoverText("ITEM INTELLIGENCE ADMIRAL", string.Empty,
+                    GameUiText.T("Data unavailable", "Данные недоступны"),
+                    string.Empty, 0, 0, 0, 0, 0, dataState: ItemDataState.Unavailable)
                 : bootstrap.CreateFallback(templateId);
         }
 

@@ -35,8 +35,8 @@ static class Phase29QuickSellReferenceTests
             "steady-state tooltip string transformations are cached instead of rebuilt on every repaint", ref assertions);
         Expect(renderer.Contains("RenderCacheLimit = 1024") && renderer.Contains("GetCachedPriceLine") && renderer.Contains("GetCachedSemanticLine"),
             "renderer caches are explicitly bounded and used by the draw path", ref assertions);
-        Expect(overlay.Contains("Event.current.type != EventType.Repaint") && overlay.Contains("if (activeView == null) return"),
-            "overlay keeps cheap early returns ahead of tooltip rendering", ref assertions);
+        Expect(overlay.Contains("if (!repaint && !click) return") && overlay.Contains("if (activeView == null) return"),
+            "overlay accepts only repaint and deliberate click events before tooltip rendering", ref assertions);
         Expect(server.Contains("BuildPrices") && server.Contains("BuildSnapshotAsync") && !server.Contains("Timer") && !server.Contains("Update()"),
             "server pricing remains snapshot-built with no raid polling loop", ref assertions);
 

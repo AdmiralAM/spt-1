@@ -94,7 +94,8 @@ static class Program
         int phase28Assertions = Phase28RelevanceIntelligenceTests.Run();
         int phase29Assertions = Phase29QuickSellReferenceTests.Run();
         int phase30Assertions = Phase30LocalizedCardInteractionTests.Run();
-        Console.WriteLine("Item Intelligence regression passed through Phase 30: " + phase30Assertions + " localized card/interaction assertions; prior phases remain green if execution reaches this line.");
+        int phase31Assertions = Phase31PinnedFullCardTests.Run();
+        Console.WriteLine("Item Intelligence regression passed through Phase 31: " + phase31Assertions + " pinned Full-card/state assertions; Phase 30=" + phase30Assertions + "; prior phases remain green if execution reaches this line.");
     }
 
     static ItemDefinition Resolve(ItemRegistry registry, string id, string type, IDictionary<string, object> signals) => registry.Resolve(new ItemDescriptor(id, null, "  Test   Item  ", " Test ", type, signals));
