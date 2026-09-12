@@ -9,17 +9,18 @@ internal static class DedicatedWearableWindowSizingRegression
     {
         AssertExact("ArmBand", 1, 2, 73f, 158f);
         AssertExact("Belt", 2, 2, 136f, 158f);
-        AssertExact("HeadBand split strip", 2, 1, 136f, 95f);
+        AssertExact("HeadBand split strip", 1, 2, 73f, 158f);
 
         if (AccessoryGridPolicy.CellCount(2, 2) != 4)
             throw new InvalidOperationException("Dedicated Belt must retain exact 2x2 / four-cell capacity.");
-        if (AccessoryGridPolicy.CellCount(2, 1) != 2)
-            throw new InvalidOperationException("Dedicated HeadBand window must present its two separately filtered 1x1 grids as one horizontal strip.");
+        if (AccessoryGridPolicy.CellCount(1, 2) != 2)
+            throw new InvalidOperationException("Dedicated HeadBand window must present its two separately filtered 1x1 grids as one vertical strip.");
 
         string source = System.IO.File.ReadAllText(FindModuleFile("src", "GridWindowSizingPatches.cs"));
         if (!source.Contains("ApplySplitHeadBandContent(window)", StringComparison.Ordinal)
-            || !source.Contains("containedRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, cell)", StringComparison.Ordinal))
-            throw new InvalidOperationException("Dedicated HeadBand must normalize both native grid views and their content frame to one 2x1 strip.");
+            || !source.Contains("containedRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, cell * 2f)", StringComparison.Ordinal)
+            || !source.Contains("gridRect.anchoredPosition = new Vector2(0f, -cell * index)", StringComparison.Ordinal))
+            throw new InvalidOperationException("Dedicated HeadBand must normalize both native grid views and their content frame to one vertical 1x2 strip.");
     }
 
     static void AssertExact(string category, int columns, int rows, float expectedWidth, float expectedHeight)

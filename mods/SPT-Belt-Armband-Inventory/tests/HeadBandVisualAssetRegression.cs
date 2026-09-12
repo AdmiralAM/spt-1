@@ -13,6 +13,8 @@ internal static class HeadBandVisualAssetRegression
         string entryPath = Path.Combine(module, "assets", "headband-rambo", "runtime", "bundle-entry.json");
         string icon = Path.Combine(module, "assets", "headband-rambo", "runtime", "icons", $"{RuntimeIdentity.EmergencyHeadBandItemId}.png");
         string itemSource = File.ReadAllText(Path.Combine(module, "server", "DedicatedWearableItems.cs"));
+        string clientIconSource = File.ReadAllText(Path.Combine(module, "src", "HeadBandItemIconPatches.cs"));
+        string clientProject = File.ReadAllText(Path.Combine(module, "src", "SPT-Belt-Armband-Inventory.csproj"));
         string deploySource = File.ReadAllText(Path.Combine(module, "tools", "Deploy-BAndHBHeadBandAsset.ps1"));
 
         Require(new FileInfo(bundle).Length > 100_000, "HeadBand bundle is missing or unexpectedly small");
@@ -26,6 +28,9 @@ internal static class HeadBandVisualAssetRegression
         Require(entry["dependencyKeys"]!.AsArray().Count == 0, "owned bundle unexpectedly gained dependencies");
         Require(itemSource.Contains("Path = \"HeadBand/headband_rambo_red.bundle\"", StringComparison.Ordinal), "server item prefab path is not wired to the owned bundle");
         Require(itemSource.Contains("/files/handbook/{RuntimeIdentity.EmergencyHeadBandItemId}", StringComparison.Ordinal), "server item icon route is not registered");
+        Require(clientIconSource.Contains("ItemViewFactory", StringComparison.Ordinal)
+            && clientIconSource.Contains("RuntimeIdentity.EmergencyHeadBandItemId", StringComparison.Ordinal), "client item-card icon override is not exact-template scoped");
+        Require(clientProject.Contains("SPTBeltArmbandInventory.HeadBandIcon.png", StringComparison.Ordinal), "client item-card icon is not embedded in the plugin");
         Require(deploySource.Contains("SPT.Server','SPT.Launcher','EscapeFromTarkov", StringComparison.Ordinal), "asset deployment must refuse a running SPT/EFT process");
         Require(deploySource.Contains("headband-asset-$stamp", StringComparison.Ordinal), "asset deployment must preserve an out-of-tree backup");
     }

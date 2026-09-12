@@ -130,13 +130,13 @@ namespace SPTBeltArmbandInventory
             // Geometry comes from the registered item descriptor. No hierarchy
             // scan and no artificial minimum: declared cell extent + calibrated
             // native GridWindow chrome only.
-            // EFT lays the two separately-filtered 1x1 HeadBand grids next to
-            // each other. Size their outer window as one strict 2x1 strip.
+            // Utility HeadBand follows the compact ArmBand direction: two
+            // separately-filtered 1x1 grids in one strict vertical 1x2 strip.
             float width = splitHeadBand
-                ? AccessoryGridPolicy.ExactWindowWidth(2)
+                ? AccessoryGridPolicy.ExactWindowWidth(1)
                 : AccessoryGridPolicy.ExactWindowWidth(columns);
             float height = splitHeadBand
-                ? AccessoryGridPolicy.ExactWindowHeight(1)
+                ? AccessoryGridPolicy.ExactWindowHeight(2)
                 : AccessoryGridPolicy.ExactWindowHeight(rows);
             if (width <= 0f || height <= 0f) return false;
 
@@ -170,10 +170,10 @@ namespace SPTBeltArmbandInventory
             if (rect == null) return;
 
             float width = splitHeadBand
-                ? AccessoryGridPolicy.ExactWindowWidth(2)
+                ? AccessoryGridPolicy.ExactWindowWidth(1)
                 : AccessoryGridPolicy.ExactWindowWidth(columns);
             float height = splitHeadBand
-                ? AccessoryGridPolicy.ExactWindowHeight(1)
+                ? AccessoryGridPolicy.ExactWindowHeight(2)
                 : AccessoryGridPolicy.ExactWindowHeight(rows);
             float finalWidth = rect.rect.width;
             float finalHeight = rect.rect.height;
@@ -239,9 +239,14 @@ namespace SPTBeltArmbandInventory
                 if (containedRect == null || gridViews == null) return;
 
                 const float cell = 63f;
-                containedRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cell * 2f);
-                containedRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, cell);
-                ApplyLayoutElement(containedComponent.gameObject, cell * 2f, cell);
+                containedRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cell);
+                containedRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, cell * 2f);
+                ApplyLayoutElement(containedComponent.gameObject, cell, cell * 2f);
+
+                Type layoutGroupType = Type.GetType("UnityEngine.UI.LayoutGroup, UnityEngine.UI", false);
+                Component[] layoutGroups = layoutGroupType == null ? new Component[0] : containedComponent.gameObject.GetComponents(layoutGroupType);
+                for (int groupIndex = 0; groupIndex < layoutGroups.Length; groupIndex++)
+                    if (layoutGroups[groupIndex] is Behaviour behaviour) behaviour.enabled = false;
 
                 int index = 0;
                 foreach (object gridView in gridViews)
@@ -251,6 +256,10 @@ namespace SPTBeltArmbandInventory
                     if (gridRect == null || index >= 2) continue;
                     gridRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cell);
                     gridRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, cell);
+                    gridRect.anchorMin = new Vector2(0.5f, 1f);
+                    gridRect.anchorMax = new Vector2(0.5f, 1f);
+                    gridRect.pivot = new Vector2(0.5f, 1f);
+                    gridRect.anchoredPosition = new Vector2(0f, -cell * index);
                     ApplyLayoutElement(gridComponent.gameObject, cell, cell);
                     index++;
                 }
