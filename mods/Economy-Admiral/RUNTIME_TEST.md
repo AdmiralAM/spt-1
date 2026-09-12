@@ -1,10 +1,10 @@
 # Economy Admiral runtime testing
 
-Physical SPT 4.1.3 testing is reserved for the single combined release-candidate gate after automated work is exhausted. Earlier Alpha/item-stack runtime proofs remain accepted historical evidence and are not repeated as separate user tasks.
+Physical SPT 4.1.4 testing is reserved for the single combined release-candidate gate after automated work is exhausted. Earlier Alpha/item-stack runtime proofs remain accepted historical evidence and are not repeated as separate user tasks.
 
 ## Already accepted physical evidence
 
-Economy Admiral has already physically proven on SPT 4.1.3:
+Economy Admiral has already physically proven on SPT 4.1.4:
 
 - Audit is read-only with concrete policy preview and unchanged DB fingerprint;
 - Enforce performs real `Experience` / `TraderStanding` mutations with exact targets and pristine protection;
@@ -56,7 +56,7 @@ Absent Admiral Trader is valid. An installed but missing/incompatible Trader con
 
 ## Accepted Playable Economy v1 physical evidence
 
-The combined Playable Economy v1 RC has physically PASSed on SPT 4.1.3 in standalone mode with optional Admiral Trader absent: `totalApplied=123`, `itemStacks=35`, fingerprint changed, pristine protection/exact targets verified, representative `750000` / `1500000` quest reward stacks reduced to `338025` on Normal, and sourcePressure/health both observed 3846 items.
+The combined Playable Economy v1 RC has physically PASSed on SPT 4.1.4 in standalone mode with optional Admiral Trader absent: `totalApplied=123`, `itemStacks=35`, fingerprint changed, pristine protection/exact targets verified, representative `750000` / `1500000` quest reward stacks reduced to `338025` on Normal, and sourcePressure/health both observed 3846 items.
 
 ## After the gate
 

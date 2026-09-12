@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "targetSptVersion": "4.1.5",
+  "runtimeRelease": {
+    "archive": "SPT-4.1.5-40743-7d7add5.7z",
+    "sourceCommit": "7d7add5",
+    "itemsJsonSha256": "5093b348fd0d507cddc1e957114a77b44ff9358846299cbc98ac5e0ad4967a34",
+    "handbookJsonSha256": "3328a4b5e27148f46e667057dd2fd59103262d6941e7a3bf0263efc6762da31f"
+  },
+  "items": [
+    {
+      "tpl": "624c09da2cec124eb67c1046",
+      "name": "Signal flare (White)",
+      "internalName": "patron_rsp_white",
+      "parentTpl": "5485a8684bdc2da71d8b4567",
+      "handbookPriceRub": 74,
+      "questItem": false,
+      "canSellOnRagfair": true,
+      "caliber": "Caliber26x75",
+      "damage": 40,
+      "penetrationPower": 0,
+      "explosionStrength": 0,
+      "directVanillaRootOffers": []
+    },
+    {
+      "tpl": "624c09e49b98e019a3315b66",
+      "name": "Signal flare (Yellow)",
+      "internalName": "patron_rsp_yellow",
+      "parentTpl": "5485a8684bdc2da71d8b4567",
+      "handbookPriceRub": 74,
+      "questItem": false,
+      "canSellOnRagfair": true,
+      "caliber": "Caliber26x75",
+      "damage": 40,
+      "penetrationPower": 0,
+      "explosionStrength": 0,
+      "directVanillaRootOffers": []
+    },
+    {
+      "tpl": "66d97834d2985e11480d5c1e",
+      "name": "Signal flare (Blue)",
+      "internalName": "patron_rsp_blue",
+      "parentTpl": "5485a8684bdc2da71d8b4567",
+      "handbookPriceRub": 74,
+      "questItem": false,
+      "canSellOnRagfair": true,
+      "caliber": "Caliber26x75",
+      "damage": 40,
+      "penetrationPower": 0,
+      "explosionStrength": 0,
+      "directVanillaRootOffers": []
+    }
+  ]
+}

@@ -1,0 +1,276 @@
+{
+  "schemaVersion": 1,
+  "status": "runtime-copy-audited",
+  "questCount": 43,
+  "quests": {
+    "5d404ebd654de4efecef71d2": {
+      "questName": "Access Protocol: Fundamentals",
+      "finishConditionIds": [
+        "6f1312f5476c9a65eb582852"
+      ]
+    },
+    "1b92e4cf212d895be4f70b2c": {
+      "questName": "Access Protocol: Factory",
+      "finishConditionIds": [
+        "686d8ecb6398102461164f35"
+      ]
+    },
+    "cba3374f11375c4e7eea9efe": {
+      "questName": "Access Protocol: Customs",
+      "finishConditionIds": [
+        "487eb052e8d42c0af1d6da22"
+      ]
+    },
+    "80c11744c2310e1bfe160a8b": {
+      "questName": "Access Protocol: Woods",
+      "finishConditionIds": [
+        "a2b0e47fa77de4b540401d20"
+      ]
+    },
+    "42ff30bc152b8212dc15b20a": {
+      "questName": "Access Protocol: Interchange",
+      "finishConditionIds": [
+        "d81726267419b7468ca78184"
+      ]
+    },
+    "d737e3b990c371708db369f0": {
+      "questName": "Access Protocol: Shoreline",
+      "finishConditionIds": [
+        "53e45250b01cd1b0e28cd476"
+      ]
+    },
+    "9c438fa48f645044ddc75e8d": {
+      "questName": "Access Protocol: Reserve",
+      "finishConditionIds": [
+        "fd78d0034ef438a50d57bde7"
+      ]
+    },
+    "59a36c5ee68210f9154d94d0": {
+      "questName": "Access Protocol: Lighthouse",
+      "finishConditionIds": [
+        "7a6e134edb720933c4beb7ad"
+      ]
+    },
+    "a8b05eb5c5f0e67ee881df52": {
+      "questName": "Access Protocol: Laboratory",
+      "finishConditionIds": [
+        "fd5539a38fc34100a0fba6b7"
+      ]
+    },
+    "68a6527a3c73b2e85977d7a1": {
+      "questName": "Access Protocol: Clearance",
+      "finishConditionIds": [
+        "5da6f0a37e5f24fed22d04f5"
+      ]
+    },
+    "153839f368b80b6fbc36d29e": {
+      "questName": "Arsenal Protocol: Precision Rifles - Fieldwork",
+      "finishConditionIds": [
+        "d30d20c597a522979a066460"
+      ]
+    },
+    "2568ee0bfe2ee12f24d78f45": {
+      "questName": "Arsenal Protocol: Marksman / Battle Rifles - Qualification",
+      "finishConditionIds": [
+        "fe8911621fabb421e6bce908"
+      ]
+    },
+    "33810921ad5c893b866b3951": {
+      "questName": "Arsenal Protocol: Marksman / Battle Rifles - Fieldwork",
+      "finishConditionIds": [
+        "a21d4a93c1baef8fe71bb113"
+      ]
+    },
+    "43d9544a09d068476a1a18df": {
+      "questName": "Arsenal Protocol: SMG / PDW - Munitions",
+      "finishConditionIds": [
+        "4aa61c5706270f44dcc264b2"
+      ]
+    },
+    "4ada822d634041a721b346d5": {
+      "questName": "Arsenal Protocol: Assault Rifles - Qualification",
+      "finishConditionIds": [
+        "faa4624ecbb79343c8400c2a"
+      ]
+    },
+    "570d250679328757614dcbcb": {
+      "questName": "Arsenal Protocol: Assault Rifles - Fieldwork",
+      "finishConditionIds": [
+        "b556f68e6bd564065c405be8"
+      ]
+    },
+    "59ca4829e098dfafa03888d2": {
+      "questName": "Arsenal Protocol: Sidearms - Qualification",
+      "finishConditionIds": [
+        "6b4875d80b04e43ce8aba265"
+      ]
+    },
+    "5f62a924076e4b7c2320f2e8": {
+      "questName": "Arsenal Protocol: Shotguns - Qualification",
+      "finishConditionIds": [
+        "52dda51c6632938b46e0ba34"
+      ]
+    },
+    "73febe7f3f61ca0913410ffc": {
+      "questName": "Arsenal Protocol: Special Weapons - Fieldwork",
+      "finishConditionIds": [
+        "da1541497f50cb43f92f7be8"
+      ]
+    },
+    "7564e60e4c1c2f1b67a594a4": {
+      "questName": "Arsenal Protocol: Marksman / Battle Rifles - Munitions",
+      "finishConditionIds": [
+        "5b3f863bbdc829d3988964f1"
+      ]
+    },
+    "88118e994f26cab3bee1521d": {
+      "questName": "Arsenal Protocol: Shotguns - Fieldwork",
+      "finishConditionIds": [
+        "01249763ca1a786874311b57"
+      ]
+    },
+    "8cba3e2ec639a4aa2c26c4da": {
+      "questName": "Arsenal Protocol: Sidearms - Munitions",
+      "finishConditionIds": [
+        "bdf555e9736062fe9c9c265e"
+      ]
+    },
+    "8d8d81032315f4fdc5a06798": {
+      "questName": "Arsenal Protocol: Shotguns - Munitions",
+      "finishConditionIds": [
+        "6bc5208b68a0dc2a41eefb80"
+      ]
+    },
+    "a0d05e28971f1ba57639b97d": {
+      "questName": "Arsenal Protocol: Precision Rifles - Qualification",
+      "finishConditionIds": [
+        "007e6c3eb1b9cf83ab0e235e"
+      ]
+    },
+    "ad9233f54a7132d905d6f29d": {
+      "questName": "Arsenal Protocol: SMG / PDW - Qualification",
+      "finishConditionIds": [
+        "cd22cfe6153adaeee7ae2d3a"
+      ]
+    },
+    "b016df9d2bea4269cc59d531": {
+      "questName": "Arsenal Protocol: Sidearms - Fieldwork",
+      "finishConditionIds": [
+        "ab61e9d13eea0b7f93d5c160"
+      ]
+    },
+    "cb8a202d7107f39d860ccb38": {
+      "questName": "Arsenal Protocol: Special Weapons - Qualification",
+      "finishConditionIds": [
+        "1d8adadb81df57f4a4be83eb"
+      ]
+    },
+    "cd2641c70bede98dac3945d0": {
+      "questName": "Arsenal Protocol: Precision Rifles - Munitions",
+      "finishConditionIds": [
+        "1461e863a341fc8bce2b225e"
+      ]
+    },
+    "f1368cb3b69c3a4917c4f206": {
+      "questName": "Arsenal Protocol: Special Weapons - Munitions",
+      "finishConditionIds": [
+        "1d4ee68ca05784ae121e395e"
+      ]
+    },
+    "f6e51dc4e50e47ee9af50a4d": {
+      "questName": "Arsenal Protocol: Assault Rifles - Munitions",
+      "finishConditionIds": [
+        "7674b35b55e8d3c6df54202f"
+      ]
+    },
+    "ffb63228a333c8b0755741ea": {
+      "questName": "Arsenal Protocol: SMG / PDW - Fieldwork",
+      "finishConditionIds": [
+        "54164d9db77aad7f7cb9ee9f"
+      ]
+    },
+    "8dad0d354ac000b7bbf05b9a": {
+      "questName": "Acoustic Discipline",
+      "finishConditionIds": [
+        "4aad9529573642ec30c9105c"
+      ]
+    },
+    "56813681ae0690016376f163": {
+      "questName": "Forward Reserve",
+      "finishConditionIds": [
+        "d82d4ed891c929e0ba71488f",
+        "00489f3d43ab4c05dce91e07",
+        "a11b1f15b70082a372abdea8"
+      ]
+    },
+    "208db81b5ce195bf0c176852": {
+      "questName": "Low Profile",
+      "finishConditionIds": [
+        "96d629538203984d6a1ee835"
+      ]
+    },
+    "6574a072f763d0b09a553401": {
+      "questName": "Mobility Doctrine",
+      "finishConditionIds": [
+        "1f59a3743e20869842a50162",
+        "53de6446495ed86a6c2adaa1"
+      ]
+    },
+    "8b6f2b25ab2e91e0540761e3": {
+      "questName": "Borrowed Access",
+      "finishConditionIds": [
+        "9dd34c17ab503c7bd7ea89aa",
+        "6137c94c3ff44cf3413856be"
+      ]
+    },
+    "41a41cb262ea084c1e110513": {
+      "questName": "Acoustic Contact",
+      "finishConditionIds": [
+        "060c9e16949fdda830dd9339",
+        "e7a1dd9b3a542cc6eef2d7d8"
+      ]
+    },
+    "133aa723b4695a3d93de92f1": {
+      "questName": "Route Security",
+      "finishConditionIds": [
+        "d75e58abc206629b87f6dba9",
+        "d4ee61abf4fb680435d98268"
+      ]
+    },
+    "db220288bc8d5559a45feeb1": {
+      "questName": "Contractor Intercept",
+      "finishConditionIds": [
+        "7450986a44d2a76b79bdbb72",
+        "39bade34f34f14db7d5e7fea"
+      ]
+    },
+    "4c2cc3f85d60170907642d9e": {
+      "questName": "Observation Window",
+      "finishConditionIds": [
+        "bf98c6c0724a57ff24e02e03",
+        "5a1b3bc77f42fa3f0bd3188f"
+      ]
+    },
+    "b1b3d9e3a930a3eae47b2353": {
+      "questName": "Heavy Assault",
+      "finishConditionIds": [
+        "5cf677a3bbdbcd83519fc3d8",
+        "06066e04699d7b6946044fc6"
+      ]
+    },
+    "f62d8e1285027e336767513c": {
+      "questName": "Break the Perimeter",
+      "finishConditionIds": [
+        "d98b43cc7c2938a8233987c0",
+        "be3636c5bae25c8a8c60c2cc"
+      ]
+    },
+    "4072a5e458946a243b886ad8": {
+      "questName": "Internal Security",
+      "finishConditionIds": [
+        "7285e5a35357c79a8e84ef40",
+        "df0727022013a5ad9aaea2ee"
+      ]
+    }
+  }
+}

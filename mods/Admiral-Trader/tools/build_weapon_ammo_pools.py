@@ -7,6 +7,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+TARGET_SPT_VERSION = "4.1.5"
+
 FAMILY_CLASSES = {
     "handguns": {"pistol", "revolver"},
     "smg-pdw": {"smg"},
@@ -102,11 +104,13 @@ def is_explosive_or_fragment_ammo(item: dict[str, Any], family_id: str) -> bool:
 
 
 def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
+    if spec.get("targetSptVersion") != TARGET_SPT_VERSION:
+        raise ValueError(f"weapon/ammo authored spec must target SPT {TARGET_SPT_VERSION}")
     items = normalize_items(items_raw)
     result: dict[str, Any] = {
         "schemaVersion": 3,
-        "targetSptVersion": spec.get("targetSptVersion"),
-        "sourceRole": "pinned-backend-item-candidate-resolution; exact-runtime-4.1.3-verification-required",
+        "targetSptVersion": TARGET_SPT_VERSION,
+        "sourceRole": "exact-official-spt-runtime-item-db-candidate-resolution",
         "families": {},
     }
 
@@ -137,8 +141,6 @@ def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
             weapon_caliber = str(p.get("ammoCaliber") or p.get("Caliber") or "")
             if weapon_class not in wanted_classes:
                 continue
-            # Explicit authored calibers are a curated allowlist. This prevents exotic
-            # or class-mislabelled weapons from widening normal family ammo capability.
             if wanted_calibers and weapon_caliber and weapon_caliber not in wanted_calibers:
                 continue
             weapon_rows.append({
@@ -198,7 +200,7 @@ def build_pools(items_raw: Any, spec: dict[str, Any]) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Resolve Admiral weapon/ammo candidates from a pinned EFT backend item database")
+    parser = argparse.ArgumentParser(description="Resolve Admiral weapon/ammo candidates from the exact official SPT 4.1.5 item database")
     parser.add_argument("items", type=Path)
     parser.add_argument("spec", type=Path)
     parser.add_argument("--output", type=Path, required=True)

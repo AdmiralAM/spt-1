@@ -59,7 +59,7 @@ public static class SourcePressureRuntimeReportBuilder
             throw new InvalidOperationException("Economy Admiral source pressure: adapter product/modGuid/trader identity must not be empty.");
         if (!admiralTrader.Installed && admiralTrader.ContractAvailable)
             throw new InvalidOperationException("Economy Admiral source pressure: a not-installed adapter cannot have an available contract.");
-        if (!admiralTrader.ContractAvailable && (admiralTrader.Offers.Count != 0 || admiralTrader.OfferCount != 0 || admiralTrader.BoundedRenewableOfferCount != 0 || admiralTrader.BaselineOfferCount != 0 || admiralTrader.RelationshipOfferCount != 0 || admiralTrader.MilestoneOfferCount != 0))
+        if (!admiralTrader.ContractAvailable && (admiralTrader.Offers.Count != 0 || admiralTrader.OfferCount != 0 || admiralTrader.BoundedRenewableOfferCount != 0 || admiralTrader.BaselineOfferCount != 0 || admiralTrader.RelationshipOfferCount != 0 || admiralTrader.CoreOfferCount != 0 || admiralTrader.MilestoneOfferCount != 0))
             throw new InvalidOperationException("Economy Admiral source pressure: unavailable adapter contract cannot carry offer/class evidence.");
         if (!admiralTrader.ContractAvailable) return;
 
@@ -70,10 +70,11 @@ public static class SourcePressureRuntimeReportBuilder
             throw new InvalidOperationException("Economy Admiral source pressure: adapter bounded-offer count does not match supplied capacity evidence.");
         var baseline = admiralTrader.Offers.Count(offer => string.Equals(offer.StockClass, "Baseline", StringComparison.Ordinal));
         var relationship = admiralTrader.Offers.Count(offer => string.Equals(offer.StockClass, "Relationship", StringComparison.Ordinal));
+        var core = admiralTrader.Offers.Count(offer => string.Equals(offer.StockClass, "Core", StringComparison.Ordinal));
         var milestone = admiralTrader.Offers.Count(offer => string.Equals(offer.StockClass, "Milestone", StringComparison.Ordinal));
-        if (baseline != admiralTrader.BaselineOfferCount || relationship != admiralTrader.RelationshipOfferCount || milestone != admiralTrader.MilestoneOfferCount)
+        if (baseline != admiralTrader.BaselineOfferCount || relationship != admiralTrader.RelationshipOfferCount || core != admiralTrader.CoreOfferCount || milestone != admiralTrader.MilestoneOfferCount)
             throw new InvalidOperationException("Economy Admiral source pressure: adapter stock-class counts do not match supplied offers.");
-        if (baseline + relationship + milestone != admiralTrader.OfferCount)
+        if (baseline + relationship + core + milestone != admiralTrader.OfferCount)
             throw new InvalidOperationException("Economy Admiral source pressure: adapter contains an unclassified permanent offer.");
         if (admiralTrader.Offers.Any(offer => !string.Equals(offer.Source.ProvenanceClass, AdmiralTraderAdapterEvidence.AttributionConfidence, StringComparison.Ordinal)))
             throw new InvalidOperationException("Economy Admiral source pressure: adapter provenance is not ExplicitAdapter.");

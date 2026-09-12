@@ -36,7 +36,7 @@ jobs:
       - name: Run Admiral Trader analysis and migration tests
         run: python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
 
-      - name: Validate SPT 4.1.3 runtime assort contract
+      - name: Validate SPT 4.1.5 runtime assort contract
         run: python mods/Admiral-Trader/tools/validate_runtime_assort.py
 
       - name: Validate maintained manifests and stable trader identity
@@ -44,9 +44,15 @@ jobs:
           python -m json.tool mods/Admiral-Trader/manifests/campaign-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/reward-policy.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/runtime-manifest.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/baseline-stock.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/relationship-stock.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/m5-relationship-runtime.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/m5-spt415-item-evidence.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/manifests/storefront-core-expansion.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/curated-quest-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/base.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/assort.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/db/natalya-signature-assort.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/questassort.json > /dev/null
           python - <<'PY'
           import hashlib, json
@@ -54,6 +60,9 @@ jobs:
           root = Path('mods/Admiral-Trader')
           campaign = json.loads((root / 'manifests/campaign-manifest.json').read_text(encoding='utf-8'))
           runtime = json.loads((root / 'manifests/runtime-manifest.json').read_text(encoding='utf-8'))
+          baseline = json.loads((root / 'manifests/baseline-stock.json').read_text(encoding='utf-8'))
+          relationship = json.loads((root / 'manifests/relationship-stock.json').read_text(encoding='utf-8'))
+          storefront = json.loads((root / 'manifests/storefront-core-expansion.json').read_text(encoding='utf-8'))
           base = json.loads((root / 'db/base.json').read_text(encoding='utf-8'))
           assort = json.loads((root / 'db/assort.json').read_text(encoding='utf-8'))
           questassort = json.loads((root / 'db/questassort.json').read_text(encoding='utf-8'))
@@ -71,12 +80,30 @@ jobs:
           required_assort = {'items', 'barter_scheme', 'loyal_level_items'}
           if not required_assort.issubset(assort):
               raise SystemExit(f'assort missing native collections: {sorted(required_assort - set(assort))}')
-          for key in ('Started', 'Success', 'Fail'):
-              if key not in questassort or not isinstance(questassort[key], dict):
-                  raise SystemExit(f'questassort missing native collection: {key}')
+          if set(questassort) != {'started', 'success', 'fail'}:
+              raise SystemExit(f'questassort must use exact SPT 4.1.5 lower-case state keys, got {sorted(questassort)}')
+          if any(not isinstance(questassort[key], dict) for key in ('started', 'success', 'fail')):
+              raise SystemExit('questassort native collections must be objects')
+          if len(baseline.get('offers') or []) != 4:
+              raise SystemExit('preserved Baseline offer count drift')
+          if len(questassort['success']) != 8:
+              raise SystemExit('Milestone questassort success gate count drift')
+          relationship_ids = {row['offerId'] for row in relationship.get('offers', [])}
+          storefront_ids = {row['offerId'] for row in storefront.get('offers', [])}
+          if relationship.get('materialization', {}).get('enabled') is not True or len(relationship_ids) != 3:
+              raise SystemExit('M5 Relationship materialization drift')
+          signature = json.loads((root / 'db/natalya-signature-assort.json').read_text())
+          base_root_ids = {row['_id'] for row in assort['items'] if row.get('parentId') == 'hideout'}
+          signature_root_ids = {row['_id'] for row in signature['items'] if row.get('parentId') == 'hideout'}
+          if len(base_root_ids) != 37 or len(signature_root_ids) != 4 or len(base_root_ids | signature_root_ids) != 41:
+              raise SystemExit('41-offer active assort shape drift')
+          if len(storefront_ids) != 22 or not (relationship_ids | storefront_ids) <= base_root_ids:
+              raise SystemExit('stabilized base assort ownership drift')
+          if relationship_ids & set(questassort['success']):
+              raise SystemExit('Relationship offers must not be quest gated')
           PY
 
-      - name: Build server runtime foundation against SPT 4.1.3
+      - name: Build server runtime foundation against SPT 4.1.5
         run: dotnet build mods/Admiral-Trader/server/AdmiralTrader.Server.csproj -c Release
 
       - name: Validate built runtime package contract
@@ -88,6 +115,12 @@ jobs:
               out / 'manifests/campaign-manifest.json',
               out / 'manifests/reward-policy.json',
               out / 'manifests/runtime-manifest.json',
+              out / 'manifests/baseline-stock.json',
+              out / 'manifests/gameplay-policy.json',
+              out / 'manifests/relationship-stock.json',
+              out / 'manifests/m5-relationship-runtime.json',
+              out / 'manifests/m5-spt415-item-evidence.json',
+              out / 'manifests/storefront-core-expansion.json',
               out / 'db/base.json',
               out / 'db/assort.json',
               out / 'db/questassort.json',
@@ -200,13 +233,13 @@ jobs:
               raise SystemExit('vanilla benchmark has no quest-type distributions')
           PY
 
-      - name: Upload transient analysis reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: admiral-trader-analysis-${{ github.event.pull_request.head.sha || github.sha }}
-          path: |
-            build/admiral-trader-inventory.json
-            build/admiral-trader-curated-materialization.json
-            build/vanilla-reward-benchmark.json
-          if-no-files-found: error
-          retention-days: 7
+      - name: Validate authored keys and committed quest runtime
+        run: |
+          python mods/Admiral-Trader/tools/validate_keys_authored_spec.py mods/Admiral-Trader/manifests/keys-authored-spec.json mods/Admiral-Trader/manifests/curated-quest-manifest.json build/vanilla-reward-benchmark.json
+          python mods/Admiral-Trader/tools/build_keys_runtime_templates.py mods/Admiral-Trader/manifests/keys-authored-spec.json mods/Admiral-Trader/manifests/curated-quest-manifest.json build/admiral-trader-inventory.json legacy-andrudis/db/QuestBundles --output build/admiral-trader-keys-runtime.json
+          python mods/Admiral-Trader/tools/validate_committed_quest_runtime.py mods/Admiral-Trader/db/quests build/admiral-trader-keys-runtime.json mods/Admiral-Trader/db/locales/en.json mods/Admiral-Trader/db/locales/ru.json
+
+      - name: Validate weapon and ammunition authored coverage
+        run: |
+          python mods/Admiral-Trader/tools/build_weapon_ammo_audit.py build/admiral-trader-inventory.json --output build/admiral-trader-weapon-ammo-audit.json
+          python mods/Admiral-Trader/tools/validate_weapon_ammo_authored_spec.py mods/Admiral-Trader/manifests/weapon-ammo-authored-spec.json mods/Admiral-Trader/manifests/reward-policy.json --audit build/admiral-trader-weapon-ammo-audit.json

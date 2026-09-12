@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "status": "stable",
+  "product": "Admiral Trader",
+  "version": "0.2.0",
+  "sptCompatibility": "~4.1.0",
+  "exactValidationBaseline": "4.1.5",
+  "scopeFreeze": {
+    "quests": 43,
+    "offers": 37,
+    "baselineOffers": 4,
+    "relationshipOffers": 3,
+    "milestoneOffers": 8,
+    "newQuests": 0,
+    "newOffers": 22,
+    "newMechanics": 0,
+    "newDependencies": 0
+  },
+  "profileSafety": {
+    "directProfileWrites": false,
+    "persistentTraderIdPreserved": true,
+    "persistentQuestIdsPreserved": true,
+    "persistentOfferIdsPreserved": true,
+    "relationshipProjection": "requester-scoped cloned assort only",
+    "missingProfileFallback": "LL1 finite stock"
+  },
+  "package": {
+    "canonicalInstallDirectory": "SPT_Runtime/user/mods/Admiral Trader",
+    "legacyDirectoryRemovedBeforeInstall": "SPT_Runtime/user/mods/Admiral Trader",
+    "upgradeRequiresDirectoryReplacement": true,
+    "cleanRemovalOwnsProfileFiles": false,
+    "fileInventory": "admiral-trader-package-files.json"
+  },
+  "requiredEvidence": {
+    "traderOnlyExactRuntime": true,
+    "traderEconomyExactRuntime": true,
+    "cleanInstallSimulation": true,
+    "upgradeSimulation": true,
+    "cleanRemovalSimulation": true,
+    "exactHeadArtifact": true,
+    "finalPhysicalGate": true
+  },
+  "stabilizationAmendment": "Physical review rejected the 15-offer storefront as too sparse. Twenty-two bounded core offers were selected from the measured post-Andrudis catalog gap; quest count, IDs and runtime architecture remain unchanged.",
+  "physicalAcceptance": {
+    "freshProfileLifecycle": true,
+    "questAcceptanceAndCompletion": true,
+    "rewardDelivery": true,
+    "storefrontReview": true,
+    "armoredPresetCorrection": true
+  },
+  "stableClaimAllowed": true
+}

@@ -176,32 +176,40 @@ jobs:
           }
 
       - name: Upload Tactical HUD package
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: SPT-Tactical-HUD-v${{ env.HUD_VERSION }}
           path: build-output/SPT-Tactical-HUD/**
           if-no-files-found: error
+          retention-days: 14
 
       - name: Upload Item Intelligence package
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: SPT-Item-Intelligence-v${{ env.II_VERSION }}
           path: build-output/SPT-Item-Intelligence/**
           if-no-files-found: error
+          retention-days: 14
 
       - name: Upload Pause package
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: SPT-Pause-v${{ env.PAUSE_VERSION }}
           path: build-output/SPT-Pause/**
           if-no-files-found: error
+          retention-days: 14
 
       - name: Upload Belt Armband Inventory package
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: SPT-Belt-Armband-Inventory-v${{ env.BELT_VERSION }}
           path: build-output/SPT-Belt-Armband-Inventory/**
           if-no-files-found: error
+          retention-days: 14
 
       - name: Publish stable and runtime channels atomically
         if: github.event_name == 'workflow_dispatch'

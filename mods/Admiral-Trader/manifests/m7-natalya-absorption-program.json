@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "status": "active-intake",
+  "baseline": {
+    "tag": "admiral-trader-v0.2.0",
+    "commit": "7ecd3d8a6189c1c71d598115e68f41ee16d01fe0",
+    "questCount": 43,
+    "finiteOfferCount": 37,
+    "compatibility": "~4.1.0",
+    "validatedRuntime": "4.1.5"
+  },
+  "retainedRuntimeTraders": ["native", "Artem", "Scorpion", "Ref", "Admiral"],
+  "retiredSources": {
+    "Natalya": {
+      "repository": "Colobos9mm/Natalya",
+      "observedQuestRecords": 36,
+      "observedRootOffers": 203,
+      "runtimeDependency": false,
+      "absorptionPriority": 1
+    },
+    "AndrudisQuestManiac": {
+      "repository": "laurentmekka/AndrudisQuestManiac",
+      "runtimeEnabled": false,
+      "runtimeDependency": false,
+      "absorptionPriority": 2
+    }
+  },
+  "sourceFamilies": [
+    {"name": "Pay Back I-XIV", "records": 14, "decision": "re-author selected route beats"},
+    {"name": "Weapons Training", "records": 10, "decision": "feed staged Admiral rotation"},
+    {"name": "Exfil Part 1-11", "records": 12, "decision": "re-author native logistics operations"}
+  ],
+  "signatureOffers": [
+    {"offerId": "67e6bf6525c53becfdba880e", "tpl": "5bfea6e90db834001b7347f3", "name": "Remington Model 700", "loyaltyLevel": 4, "stockPerReset": 2, "buyRestriction": 1, "priceRub": 210000},
+    {"offerId": "67e6bf650c1627bd671e784b", "tpl": "5df24cf80dee1b22f862e9bc", "name": "ORSIS T-5000M", "loyaltyLevel": 3, "stockPerReset": 2, "buyRestriction": 1, "priceRub": 195000},
+    {"offerId": "67e6bf65f74c6d7fd2b6730a", "tpl": "65268d8ecb944ff1e90ea385", "name": "Degtyarev RPDN", "loyaltyLevel": 3, "stockPerReset": 2, "buyRestriction": 1, "priceRub": 155000},
+    {"offerId": "67e6bf65c16dbddc52a3f240", "tpl": "6165ac306ef05c2ce828ef74", "name": "FN SCAR-H Mk17", "loyaltyLevel": 4, "stockPerReset": 1, "buyRestriction": 1, "priceRub": 265000}
+  ],
+  "activeHeadScope": {"questCount": 43, "baseOffers": 37, "signatureOffers": 4, "runtimeFiniteOffers": 41},
+  "constraints": {
+    "secondTrader": false,
+    "externalRuntimeDependency": false,
+    "copyRetainedTraderContent": false,
+    "wholesaleQuestImport": false,
+    "frozenIdentityChanged": false,
+    "existingQuestIdsChanged": false
+  }
+}

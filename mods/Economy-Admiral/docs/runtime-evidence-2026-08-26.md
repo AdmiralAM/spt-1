@@ -1,6 +1,6 @@
 # Economy Admiral physical runtime evidence — 2026-08-26
 
-Latest uploaded SPT 4.1.3 server log evidence (late-evening run, not the older 09:33 segment):
+Latest uploaded SPT 4.1.4 server log evidence (late-evening run, not the older 09:33 segment):
 
 - source-correct primary parity completed successfully before the adapter failure;
 - current blocker is Admiral Trader explicit-adapter contract drift;

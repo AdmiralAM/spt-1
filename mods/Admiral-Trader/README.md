@@ -1,84 +1,133 @@
 # Admiral Trader
 
-Official curated successor workstream for the legacy Andrudis/QuestManiac ecosystem. Current module version: **0.1.0**.
+Official curated successor to the legacy Andrudis/QuestManiac ecosystem.
 
-## Product identity
+## Canonical authority
 
-- Mod name: **Admiral Trader**
-- Module version: **0.1.0**
-- Trader working name: **Admiral / Адмирал**
-- Trader icon/portrait and final character presentation: TBD
-- Legacy Andrudis/QuestManiac names are provenance/source references only and are not the target product identity.
+Admiral Trader has **one active workstream**:
 
-## Current state
+- canonical issue: **#192**;
+- canonical PR: **#328**;
+- active branch: `feature/admiral-trader-canonical-milestones`;
+- current development/validation baseline: **SPT 4.1.5**;
+- runtime metadata compatibility range: **`~4.1.0`**;
+- stable gameplay baseline: **`0.2.0`**;
+- active Natalya-absorption candidate: **`0.3.0-rc`**, 43 quests / 41 finite offers;
+- historical frozen `0.1.0`: `053a62ff5f1cb545f13bc89a96bba3acd319a823`, 31 runtime quests / 11 finite offers;
+- QuestManiac/Andrudis research archive: **#115**.
 
-The inventory / quest-graph / campaign-manifest / migration / reward-benchmark foundation is established. Runtime materialization is now in progress on Draft PR #138.
+PRs #193, #297 and #327 are historical evidence only. Do not resume product work on them or create parallel Trader implementation branches for work that belongs to #328.
 
-The current authored runtime set contains **31 quests**:
+## SPT compatibility policy
 
-- 10 **Access Protocol** quests replacing the legacy key-collection ladder with compact non-FIR capability checks;
-- 21 **Arsenal Protocol** quests across seven independent weapon families, with Qualification → Fieldwork → Munitions progression;
-- six controlled ammunition capability rewards/unlocks; Special Weapons remains sample-only/deferred until exact SPT 4.1.3 item proof.
+SPT version matters for development, API compatibility and release evidence, but Admiral Trader is **not hard-pinned to one exact SPT patch through server metadata**.
 
-The server runtime validates the mixed 10 + 21 quest registry, trader identity, quest IDs and objective shapes before publication. Missing authored locale entries fail over to deterministic QuestName-based runtime text so incomplete localization cannot expose raw locale keys; complete authored EN/RU text remains a polish target before final publication.
+- Current development/validation baseline: **SPT 4.1.5**.
+- Runtime metadata: **`~4.1.0`**, allowing compatible later `4.1.x` patches.
+- Exact-version builds/tests are reproducibility evidence, not an automatic runtime refusal policy.
+- Campaign sizing and concurrent-load policy: `docs/campaign-portfolio-plan.md`.
+- Optional-mod candidate and fallback policy: `docs/optional-content-candidates.md`.
+- Narrow the supported range only after a demonstrated API/data incompatibility.
 
-Live trader registration remains **fail-closed** through `runtime-manifest.json`. No runtime/user test is requested until the package is mechanically complete, module CI is green, and one defined SPT 4.1.3 physical gate has a downloadable exact-head artifact.
+## Stable baseline — 0.2.0
 
-The target remains one NPC, one curated campaign, deterministic migration behavior, and reward/unlock data that remains inspectable by Economy Admiral.
+M1 through M6 are closed for the first playable campaign baseline. Physical validation confirmed quest visibility, explicit acceptance and completion, reward delivery and the expanded storefront. The final stabilization amendment stages two weapon tracks, keeps complete requirements in readable multiline descriptions, expands the finite core using the measured catalog gap left by retiring Andrudis, and ships armored offers as complete native SPT 4.1.5 presets.
 
-Work order:
+Expected lifecycle:
 
-`source inventory -> quest graph -> manifest -> migration -> trader consolidation -> curated content -> reward normalization -> tests -> runtime`
+`Offered -> explicit Accept -> Started -> progress -> AvailableForFinish -> explicit Complete -> Success -> success dialogue/mail -> reward delivery -> questassort unlock -> persistence`
 
-Tracked by repository Issue #115 and Draft PR #138.
+## Milestone order
 
-## Design constraints
+- **M1 — Lifecycle correctness**
+- **M2 — Existing 31-quest / 11-offer campaign acceptance**
+- **M3 — Runtime campaign expansion**
+- **M4 — Selective external-content absorption**
+- **M5 — Relationship / specialist storefront**
+- **M6 — Stable release**
 
-- Six legacy custom traders are a source-data concern, not the target runtime architecture.
-- New-profile content must be explicitly selected; directory enumeration must not implicitly activate content.
-- Removed legacy quests must not create successor chains on existing profiles.
-- Already-accepted legacy quests should finish through the template-suppression completion bridge without direct profile mutation whenever possible.
-- Direct PMC profile writes remain forbidden until the exact SPT 4.1.3 mutation/persistence boundary is proven.
-- Restartable legacy quests are excluded from the completion bridge by default.
-- Hideout-assistant content is excluded from the curated campaign.
-- Repetitive kill/headshot/FIR/handover ladders are not preserved wholesale.
-- Weapon and ammo progression form one progression domain because the pinned legacy graph contains intentional cross-bundle prerequisite edges between them.
-- Assort, quest-assort, reward, and unlock data remain close to native SPT shapes so downstream economy auditing does not require an Admiral-Trader-specific opaque format.
+Current runtime shape: **43 quests** (31 frozen baseline + 12 M3 operations), **37 offers** (4 Baseline + 3 Relationship + 8 Milestone + 22 bounded core offers).
 
-## Baselines and findings
+This is the stable starting point for fresh-profile play and campaign polish. Future content work may improve pacing, prose, loadout rotation and campaign breadth, but must be authored as a new milestone and must preserve the persistent Trader, quest and offer identities already in use.
 
-- [`docs/source-baseline.md`](docs/source-baseline.md) defines which external references are authoritative for which boundary.
-- [`docs/inventory-findings.md`](docs/inventory-findings.md) records the full-corpus gate results.
-- [`docs/runtime-boundaries.md`](docs/runtime-boundaries.md) records proven and intentionally unproven SPT runtime boundaries.
-- [`docs/migration-contract.md`](docs/migration-contract.md) defines the no-profile-write legacy completion bridge and its safety limits.
-- [`manifests/campaign-manifest.json`](manifests/campaign-manifest.json) is the maintained source of truth for campaign classification and migration policy.
+The next weapon milestone is fully scoped in [docs/weapon-rotation-expansion-plan.md](docs/weapon-rotation-expansion-plan.md): two paced 20-assignment lanes, broad native SPT 4.1.5 coverage, no model-to-single-map lock, and optional WTT Armory alternatives that never become a core dependency.
 
-The legacy quest database itself remains external source material and is not copied wholesale into this repository.
+Install, replacement and clean-removal instructions are in `docs/INSTALL.md`. The canonical runtime directory is `Admiral Trader`, matching the established installation. Replacement tooling removes the obsolete `Admiral-Trader` alias so two copies of the same persistent trader identity cannot load together.
 
-## Analysis tools
+Relationship progression uses the existing Admiral loyalty thresholds: LL2 requires level 15 and 0.10 standing, LL3 requires level 25 and 0.30, and LL4 requires level 35 and 0.55. White, yellow and blue signalling flares provide finite specialist availability at those tiers. The existing MS2000 marker offer keeps its ID and ₽16,500 price while requester-local stock/buy limits rise from 12/4 at LL1 to 16/6, 20/8 and 24/10. The projection modifies only SPT's profile-scoped assort response; it never mutates the global trader table.
 
-`tools/build_inventory.py` walks the pinned legacy `db/QuestBundles` tree, builds a deterministic predecessor/successor graph, reports graph-integrity anomalies, summarizes objectives/rewards, and applies the maintained campaign rules.
+The bounded M4 decision is recorded in `manifests/m4-selective-content-absorption.json`. Natalya's Exfil route and logistics ideas and the selected Andrudis capability themes already have explicit runtime homes in the 12 M3 operations. The rejected Pay Back, Weapons Training, boss and cultist copies do not add distinct player decisions, so M4 adds no parallel quest records and leaves the validated graph and balance intact.
 
-`tools/build_reward_benchmark.py` consumes native-style vanilla quest JSON and builds descriptive reward distributions by level bucket, including XP, standing, item counts and unlock counts. It intentionally does not invent a ruble valuation for arbitrary item rewards; economic valuation remains a separate layer that Economy Admiral can supply.
+## Product-design scope — complete
 
-`tools/build_weapon_ammo_runtime_templates.py` compiles the maintained Arsenal Protocol plan, authored specification, capability selections and frozen runtime weapon-family pools into deterministic native SPT quest templates.
+The finite pre-implementation product-design scope is **closed**.
 
-The CI uses the official pinned `sp-tarkov/server-csharp` vanilla `quests.json` as the reward benchmark source and independently validates committed runtime materialization against compiler output.
+Final authority:
 
-## Validation
+- human-readable: `docs/product-design-authority.md`;
+- machine-readable: `manifests/product-design-final.json`.
 
-```bash
-python -m unittest discover -s mods/Admiral-Trader/tests -p 'test_*.py'
-```
+These two files define the final design outcome:
 
-Module-specific CI additionally:
+- **12 operations across four acts**;
+- final `KEEP / REWRITE / MERGE / DROP` disposition of the original 15-operation wave;
+- final EN/RU voice and editorial policy;
+- reward envelope and progression model;
+- selective absorption map for Natalya, Andrudis/QuestManiac, Admiral Artyom Revival, Scorpion C#, Ref Friendly Quests C# and legacy acidphantasm sources;
+- closed/deferred concepts and explicit implementation boundary.
 
-- checks the pinned 4,862-quest legacy corpus and graph invariants;
-- builds the official vanilla reward benchmark from a pinned SPT source revision;
-- validates Access Protocol and Arsenal Protocol compiler output;
-- validates frozen weapon-family pools and controlled ammo capability selections;
-- builds the .NET 10 server runtime against the nearest published SPTarkov package line;
-- validates the packaged 31-quest mixed runtime layout;
-- keeps generated reports only as transient Actions artifacts.
+The detailed `m3-*` manifests remain supporting evidence and implementation detail. They are **not parallel design authorities** and should not create further design churn by default.
 
-Runtime validation remains deferred until a mechanically complete exact-head SPT 4.1.3 test artifact is available for one defined physical gate.
+No further product-design expansion is expected unless the user changes direction, a demonstrated runtime constraint invalidates a final choice, or a new source materially improves one specific operation.
+
+## Final M3 shape
+
+### Act I — Establish the Network / Развернуть сеть
+
+Acoustic Discipline, Forward Reserve, Low Profile, Mobility Doctrine, Borrowed Access.
+
+### Act II — Keep the Routes Open / Удержать маршруты
+
+Acoustic Contact, Route Security, Contractor Intercept.
+
+### Act III — Deny the Threat / Лишить противника инициативы
+
+Observation Window, Heavy Assault, Break the Perimeter.
+
+### Act IV — Operate Without Support / Работать автономно
+
+Internal Security.
+
+Final design envelope after the bounded campaign-audit correction: **133,000 XP / 752,000 RUB / +0.179 standing**, with no selected item rewards or permanent unlocks in this M3 slice.
+
+## Reference-first engineering
+
+Admiral is a consolidation/adaptation product, not a greenfield trader framework.
+
+Required implementation references include:
+
+- `mods/Admiral-Artyom-Revival`;
+- `Colobos9mm/Natalya`;
+- `laurentmekka/AndrudisQuestManiac`;
+- `acidphantasm/scorpion-csharp`;
+- `acidphantasm/acidphantasm-scorpion`;
+- `acidphantasm/acidphantasm-refchanges`;
+- `acidphantasm/reffriendlyquests-csharp`.
+
+Prefer native SPT behavior and maintained C# patterns. Reuse proven organization, registration, quest, assort and localization patterns where appropriate. Do not copy obsolete dependencies, legacy defects or unrelated machinery merely for fidelity.
+
+## Product constraints
+
+- one NPC: Admiral / Адмирал;
+- trader ID: `d5c27bb3169f8dfbc13f6b69`;
+- no wholesale QuestManiac port or legacy trader zoo;
+- no repetitive filler/count ladders;
+- preserve only distinct authored concepts with clear Why / What / Context / Payoff;
+- EN/RU player-facing presentation is authored, not literal translation;
+- finite progression-aware rewards and unlocks;
+- Economy Admiral remains owner of global economy normalization;
+- no speculative destructive profile mutation.
+
+## Implementation boundary
+
+M5 is materialized in native assort data and the existing Trader DLL. The subsequent stabilization amendment changes prerequisites, objective-row copy and the bounded core assortment in response to physical review; it adds no quest, mechanic or persistent-identity replacement. Relationship offers use Admiral's native loyalty levels, remain finite, have no quest gates, and cannot replace Access or Arsenal capability unlocks. The historical frozen `0.1.0` commit and its 31-quest / 11-offer package remain unchanged.
