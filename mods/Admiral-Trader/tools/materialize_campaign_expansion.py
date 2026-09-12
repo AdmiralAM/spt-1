@@ -118,12 +118,21 @@ def main():
         req=f"Eliminate {count} {target} targets on Ground Zero. Progress carries across raids."
         en.update(locale(qid,name,req,level,f"Eliminate {count} targets on Ground Zero"));ru.update(locale(qid,name,f"Устранить {count} целей типа {target} на Эпицентре. Прогресс сохраняется между рейдами.",level,f"Устранить {count} целей на Эпицентре",True))
     # A staged non-weapon equipment chain.
-    gear=[("light-rig","Loadout: Low Signature",6,"Customs",["5c0e722886f7740458316a57","5e4abc1f86f774069619fbaa"]),("field-headset","Loadout: Acoustic Cover",11,"Woods",["5b432b965acfc47a8774094e","5e4d34ca86f774264f758330"]),("service-helmet","Loadout: Head Protection",16,"Shoreline",["5c06c6a80db834001b735491","5aa7cfc0e5b5b00015693143"]),("medium-armor","Loadout: Mobile Armor",21,"Interchange",["5c0e655586f774045612eeb2","5c0e625a86f7742d77340f62"]),("cargo-rig","Loadout: Sustainment",26,"Reserve",["5df8a42886f77412640e2e75","5c0e9f2c86f77432297fe0a3"]),("heavy-kit","Loadout: Breach Weight",31,"Factory",["5ca2151486f774244a3b8d30","5ca21c6986f77479963115a7"])]
+    gear=[
+        ("light-rig","Loadout: Low Signature",6,["Ground Zero","Customs","Woods"],["5c0e722886f7740458316a57","5e4abc1f86f774069619fbaa"]),
+        ("field-headset","Loadout: Acoustic Cover",11,["Customs","Woods","Shoreline"],["5b432b965acfc47a8774094e","5e4d34ca86f774264f758330"]),
+        ("service-helmet","Loadout: Head Protection",16,["Woods","Shoreline","Interchange"],["5c06c6a80db834001b735491","5aa7cfc0e5b5b00015693143"]),
+        ("medium-armor","Loadout: Mobile Armor",21,["Shoreline","Interchange","Streets"],["5c0e655586f774045612eeb2","5c0e625a86f7742d77340f62"]),
+        ("cargo-rig","Loadout: Sustainment",26,["Reserve","Lighthouse","Streets"],["5df8a42886f77412640e2e75","5c0e9f2c86f77432297fe0a3"]),
+        ("heavy-kit","Loadout: Breach Weight",31,["Factory","Reserve","The Lab"],["5ca2151486f774244a3b8d30","5ca21c6986f77479963115a7"]),
+    ]
     prev=None
-    for slug,name,level,location,items in gear:
-        qid,q=quest(slug,name,level,prev,lambda qid,l=location,i=items:counter(qid,1,loc_condition(qid,LOCATION_IDS[l],i),"Exploration",True),"Exploration");prev=qid;out.append((qid,q));meta.append({"id":qid,"kind":"equipment","location":location})
-        req=f"Enter a raid on {location} wearing one item from [{item_list(items,'en')}], then survive and extract in the same raid. FIR does not apply."
-        en.update(locale(qid,name,req,level,f"Use the allowed equipment and survive {location}"));ru.update(locale(qid,name,f"Выйти в рейд на {location} с одним предметом из [{item_list(items,'ru')}], выжить и эвакуироваться в том же рейде. FIR не применяется.",level,f"Использовать разрешённый комплект и выжить на {location}",True))
+    for slug,name,level,locations,items in gear:
+        runtime_locations=[runtime_id for location_name in locations for runtime_id in LOCATION_IDS[location_name]]
+        location_text=", ".join(locations)
+        qid,q=quest(slug,name,level,prev,lambda qid,l=runtime_locations,i=items:counter(qid,1,loc_condition(qid,l,i),"Exploration",True),"Exploration");prev=qid;out.append((qid,q));meta.append({"id":qid,"kind":"equipment","locations":locations})
+        req=f"Enter one raid on any allowed map ({location_text}) wearing one item from [{item_list(items,'en')}], then survive and extract. FIR does not apply."
+        en.update(locale(qid,name,req,level,"Use the allowed equipment and survive one listed map"));ru.update(locale(qid,name,f"Выйти в один рейд на любой допустимой карте ({location_text}) с одним предметом из [{item_list(items,'ru')}], выжить и эвакуироваться. FIR не применяется.",level,"Использовать разрешённый комплект и выжить на одной из указанных карт",True))
     qdir=ROOT/"db/quests"
     lane_lengths={}
     for lane in ("A", "B"):

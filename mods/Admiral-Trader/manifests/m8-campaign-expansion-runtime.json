@@ -180,32 +180,56 @@
     {
       "id": "4a8f533e1ed458e83b41c01f",
       "kind": "equipment",
-      "location": "Customs"
+      "locations": [
+        "Ground Zero",
+        "Customs",
+        "Woods"
+      ]
     },
     {
       "id": "4ab0b49478adb233ae900b33",
       "kind": "equipment",
-      "location": "Woods"
+      "locations": [
+        "Customs",
+        "Woods",
+        "Shoreline"
+      ]
     },
     {
       "id": "ca33fab8b9cc5f5f5ad322c0",
       "kind": "equipment",
-      "location": "Shoreline"
+      "locations": [
+        "Woods",
+        "Shoreline",
+        "Interchange"
+      ]
     },
     {
       "id": "9c35b3ac22ede1a5a79118bc",
       "kind": "equipment",
-      "location": "Interchange"
+      "locations": [
+        "Shoreline",
+        "Interchange",
+        "Streets"
+      ]
     },
     {
       "id": "ee813142de655daf2dedfebc",
       "kind": "equipment",
-      "location": "Reserve"
+      "locations": [
+        "Reserve",
+        "Lighthouse",
+        "Streets"
+      ]
     },
     {
       "id": "47480d824cea0b80917cafa5",
       "kind": "equipment",
-      "location": "Factory"
+      "locations": [
+        "Factory",
+        "Reserve",
+        "The Lab"
+      ]
     }
   ]
 }

@@ -65,6 +65,18 @@ class M8CampaignExpansionTests(unittest.TestCase):
         self.assertNotIn("WTT-ContentBackport.dll", csproj)
         self.assertEqual({x["guid"] for x in self.optional["sources"]}, {"com.wtt.armory", "com.wtt.contentbackport"})
 
+    def test_equipment_assignments_offer_a_small_map_pool(self):
+        rows = [row for row in self.runtime["quests"] if row["kind"] == "equipment"]
+        self.assertEqual(len(rows), 6)
+        for row in rows:
+            self.assertGreaterEqual(len(row["locations"]), 2, row["id"])
+            self.assertLessEqual(len(row["locations"]), 3, row["id"])
+            quest = self.by_id[row["id"]]
+            nested = quest["conditions"]["AvailableForFinish"][0]["counter"]["conditions"]
+            location = next(condition for condition in nested if condition["conditionType"] == "Location")
+            self.assertGreaterEqual(len(location["target"]), 2, row["id"])
+            self.assertLessEqual(len(location["target"]), 4, row["id"])
+
     def test_icebreaker_is_optional_and_isolated_from_core_quests(self):
         self.assertFalse(self.runtime["icebreaker"]["reserved"])
         self.assertTrue(self.runtime["icebreaker"]["runtimePublished"])
