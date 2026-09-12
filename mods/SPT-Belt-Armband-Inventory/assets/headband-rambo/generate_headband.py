@@ -11,10 +11,10 @@ bpy.ops.object.select_all(action="SELECT")
 bpy.ops.object.delete(use_global=False)
 
 red = bpy.data.materials.new("HeadBand_Rambo_Red")
-red.diffuse_color = (0.045, 0.0005, 0.001, 1.0)
+red.diffuse_color = (0.12, 0.001, 0.002, 1.0)
 red.use_nodes = True
 bsdf = red.node_tree.nodes.get("Principled BSDF")
-bsdf.inputs["Base Color"].default_value = (0.045, 0.0005, 0.001, 1.0)
+bsdf.inputs["Base Color"].default_value = (0.12, 0.001, 0.002, 1.0)
 bsdf.inputs["Roughness"].default_value = 0.9
 bsdf.inputs["Sheen Weight"].default_value = 0.05
 bsdf.inputs["Specular IOR Level"].default_value = 0.12

@@ -18,7 +18,15 @@ internal static class HeadBandVisualAssetRegression
         string deploySource = File.ReadAllText(Path.Combine(module, "tools", "Deploy-BAndHBHeadBandAsset.ps1"));
 
         Require(new FileInfo(bundle).Length > 100_000, "HeadBand bundle is missing or unexpectedly small");
-        Require(new FileInfo(icon).Length > 10_000, "HeadBand inventory icon is missing or unexpectedly small");
+        Require(new FileInfo(icon).Length > 2_000, "HeadBand inventory icon is missing or unexpectedly small");
+        using (FileStream iconStream = File.OpenRead(icon))
+        using (var iconReader = new BinaryReader(iconStream))
+        {
+            iconStream.Position = 16;
+            int width = ReadBigEndianInt32(iconReader);
+            int height = ReadBigEndianInt32(iconReader);
+            Require(width == 64 && height == 64, "HeadBand client icon must stay at one-cell native size (64x64)");
+        }
         using (FileStream stream = File.OpenRead(bundle))
         using (var reader = new BinaryReader(stream))
             Require(new string(reader.ReadChars(7)) == "UnityFS", "HeadBand runtime asset is not a UnityFS bundle");
@@ -38,6 +46,14 @@ internal static class HeadBandVisualAssetRegression
     private static void Require(bool condition, string message)
     {
         if (!condition) throw new InvalidOperationException("HeadBand visual asset regression failed: " + message + ".");
+    }
+
+    private static int ReadBigEndianInt32(BinaryReader reader)
+    {
+        byte[] bytes = reader.ReadBytes(4);
+        if (bytes.Length != 4) throw new EndOfStreamException("Truncated HeadBand PNG header.");
+        if (BitConverter.IsLittleEndian) Array.Reverse(bytes);
+        return BitConverter.ToInt32(bytes, 0);
     }
 
     private static string FindModuleRoot()
