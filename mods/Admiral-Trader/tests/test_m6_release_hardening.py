@@ -12,7 +12,7 @@ class M6ReleaseHardeningTests(unittest.TestCase):
         m6 = json.loads((ROOT / "manifests/m6-stable-release.json").read_text())
         self.assertEqual((runtime["version"], runtime["releaseChannel"], runtime["sptCompatibility"]), ("0.3.0", "release-candidate", "~4.1.0"))
         self.assertEqual(runtime["schemaVersion"], 2)
-        self.assertFalse(runtime["registrationEnabled"])
+        self.assertTrue(runtime["registrationEnabled"])
         scope = m6["scopeFreeze"]
         self.assertEqual((scope["quests"], scope["offers"]), (43, 37))
         self.assertEqual(
@@ -37,6 +37,7 @@ class M6ReleaseHardeningTests(unittest.TestCase):
             self.assertIn(alias, install)
             self.assertIn(alias, lifecycle)
         self.assertIn("admiral-trader-package-files.json", builder)
+        self.assertIn("assets\\d5c27bb3169f8dfbc13f6b69.jpg", (ROOT / "server/AdmiralTrader.Server.csproj").read_text(encoding="utf-8"))
         self.assertIn("publicationMode -NotePropertyValue 'release-candidate'", builder)
         self.assertIn("removeInvalidTradersFromProfile", install)
         self.assertIn("Leave `removeModItemsFromProfile` unchanged", install)
