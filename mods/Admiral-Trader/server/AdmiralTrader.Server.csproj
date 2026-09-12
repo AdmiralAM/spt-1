@@ -40,6 +40,7 @@
   </Target>
 
   <ItemGroup>
+    <Content Include="..\assets\d5c27bb3169f8dfbc13f6b69.jpg" Link="assets\d5c27bb3169f8dfbc13f6b69.jpg" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\manifests\campaign-manifest.json" Link="manifests\campaign-manifest.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\manifests\reward-policy.json" Link="manifests\reward-policy.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\manifests\runtime-manifest.json" Link="manifests\runtime-manifest.json" CopyToOutputDirectory="PreserveNewest" />

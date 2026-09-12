@@ -7,9 +7,9 @@
   "targetSptVersion": "4.1.5",
   "publishedApiCompileBaseline": "4.1.5",
   "releaseChannel": "release-candidate",
-  "registrationEnabled": false,
+  "registrationEnabled": true,
   "registrationGate": {
-    "reason": "Repository source remains fail-closed; the exact-head stable package enables registration only after compatibility, lifecycle, campaign, build and server-start gates pass.",
+    "reason": "Stable runtime registration is enabled because compatibility, lifecycle, campaign, build and server-start gates passed on SPT 4.1.5.",
     "requiredBeforeEnable": [
       "approved trader portrait",
       "native base.json validated",
