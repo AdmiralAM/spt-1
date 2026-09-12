@@ -73,7 +73,7 @@ $serverDll = Join-Path $moduleRoot 'server\bin\Release\net10.0\SPT-Belt-Armband-
 
 $activeServer = Join-Path $spt 'SPT_Runtime\user\mods\B&A&HB #2 MOD SPT'
 Get-ChildItem -LiteralPath $runtime | Copy-Item -Destination $activeServer -Recurse -Force
-$sourceCommit = (& git -C $source rev-parse HEAD 2>$null)
+$sourceCommit = (& git -c "safe.directory=$source" -C $source rev-parse HEAD 2>$null)
 if ($LASTEXITCODE -ne 0) { $sourceCommit = 'unavailable' }
 $marker = [ordered]@{ mode='private-packnstrap-import'; sourceVersion='2.1.1'; sourceCommit=$sourceCommit; importedAt=(Get-Date).ToString('o') }
 $marker | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $activeServer 'packnstrap-local-import.json') -Encoding utf8NoBOM
