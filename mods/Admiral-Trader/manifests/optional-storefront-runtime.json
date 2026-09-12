@@ -642,5 +642,37 @@
   ],
   "offerCount": 62,
   "totalAdmiralOffersWhenPresent": 113,
-  "absenceBehavior": "No optional offer is published; all core quests and offers remain available."
+  "absenceBehavior": "No optional offer is published; all core quests and offers remain available.",
+  "questRewardReplacements": [
+    {
+      "questId": "4f3828ef74a66f154f6ac397",
+      "tpl": "693bb59250fafa102607aeb7",
+      "name": "M32 headset, white",
+      "mode": "replace-existing-item-reward"
+    },
+    {
+      "questId": "59230813b9f9e11ceed08033",
+      "tpl": "6661012d16fbd2fb75408f87",
+      "name": "CZ 75B preset",
+      "mode": "replace-existing-item-reward"
+    },
+    {
+      "questId": "6d9fda8875aed2082b4da528",
+      "tpl": "6937eccbfd921faceb0dfecd",
+      "name": "small Louis Peeton wallet",
+      "mode": "replace-existing-item-reward"
+    },
+    {
+      "questId": "ed21744058dec7587de1081f",
+      "tpl": "69b11f46f3783ec37c03a116",
+      "name": "Thunderbolt Ranger rig",
+      "mode": "replace-existing-item-reward"
+    },
+    {
+      "questId": "743532fcd12b4a88ff7cd83f",
+      "tpl": "68d40fb07130ef271f60991f",
+      "name": "PMM-12 preset",
+      "mode": "replace-existing-item-reward"
+    }
+  ]
 }

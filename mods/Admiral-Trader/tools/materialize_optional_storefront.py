@@ -9,6 +9,13 @@ RUB = "5449016a4bdc2d6f028b456f"
 WEAPON_FILES = ["Weapon92fs.json","WeaponAEK.json","WeaponAK5C.json","WeaponAN94.json","WeaponAuto5.json","WeaponCarmel.json","WeaponCZ75.json","WeaponF2000.json","WeaponHK417.json","WeaponM1894.json","WeaponM249.json","WeaponMK23.json","WeaponMSBS.json","WeaponPMM12.json","WeaponProdigy.json","WeaponStaccatoXC.json","WeaponSV98M.json","WeaponUMP9.json","WeaponUSC.json","WeaponX95.json"]
 SUPPORT_FILES = ["Ammo.json","Attachment_Foregrips.json","Attachment_IronSights.json","Attachment_Magazines.json","Attachment_Muzzles.json","Attachment_PistolGrips.json","Attachment_Scopes.json","Attachment_Suppressors.json"]
 GEAR_FILES = ["Headphones_config.json","Headphones_config_2.json","Headwear_config.json","Headwear_config_2.json","SimpleContainer_config_2.json","Vest_config.json","Vest_config_2.json","vest_config.json"]
+REWARD_PLAN = [
+    ("4f3828ef74a66f154f6ac397", "693bb59250fafa102607aeb7", "M32 headset, white"),
+    ("59230813b9f9e11ceed08033", "6661012d16fbd2fb75408f87", "CZ 75B preset"),
+    ("6d9fda8875aed2082b4da528", "6937eccbfd921faceb0dfecd", "small Louis Peeton wallet"),
+    ("ed21744058dec7587de1081f", "69b11f46f3783ec37c03a116", "Thunderbolt Ranger rig"),
+    ("743532fcd12b4a88ff7cd83f", "68d40fb07130ef271f60991f", "PMM-12 preset"),
+]
 
 def oid(seed): return hashlib.sha256(("admiral-optional-store:" + seed).encode()).hexdigest()[:24]
 def empty(): return {"items": [], "barter_scheme": {}, "loyal_level_items": {}}
@@ -73,6 +80,25 @@ def main():
     for name,payload in (("wtt-armory-assort.json",arm),("content-backport-assort.json",back)):
         (target/name).write_text(json.dumps(payload,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
     manifest["offerCount"]=len(manifest["offers"]); manifest["totalAdmiralOffersWhenPresent"]=51+manifest["offerCount"]; manifest["absenceBehavior"]="No optional offer is published; all core quests and offers remain available."
+    by_tpl={item["_tpl"]:(payload,item) for payload in (arm,back) for item in payload["items"] if item.get("parentId")=="hideout"}
+    reward_rows={}; reward_meta=[]
+    for quest_id,tpl,name in REWARD_PLAN:
+        payload,root=by_tpl[tpl]; ids={root["_id"]}; changed=True
+        while changed:
+            changed=False
+            for item in payload["items"]:
+                if item.get("parentId") in ids and item["_id"] not in ids: ids.add(item["_id"]); changed=True
+        source=[item for item in payload["items"] if item["_id"] in ids]
+        remap={item["_id"]:oid(f"reward:{quest_id}:{i}") for i,item in enumerate(source)}; items=[]
+        for item in source:
+            row=dict(item); row["_id"]=remap[item["_id"]]; row.pop("parentId",None) if item["_id"]==root["_id"] else None
+            if item.get("parentId") in remap: row["parentId"]=remap[item["parentId"]]
+            upd=dict(row.get("upd",{})); upd.pop("UnlimitedCount",None); upd.pop("BuyRestrictionMax",None); upd.pop("BuyRestrictionCurrent",None); upd["StackObjectsCount"]=1; row["upd"]=upd
+            items.append(row)
+        rid=oid("reward-contract:"+quest_id); reward_rows[quest_id]={"value":1,"id":rid,"type":"Item","target":remap[root["_id"]],"index":3,"items":items}
+        reward_meta.append({"questId":quest_id,"tpl":tpl,"name":name,"mode":"replace-existing-item-reward"})
+    (target/"quest-reward-replacements.json").write_text(json.dumps(reward_rows,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+    manifest["questRewardReplacements"]=reward_meta
     (ROOT/"manifests/optional-storefront-runtime.json").write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
 
 if __name__ == "__main__": main()

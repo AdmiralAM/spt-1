@@ -1,0 +1,155 @@
+{
+  "4f3828ef74a66f154f6ac397": {
+    "value": 1,
+    "id": "ce70f94a0ddc77c338a12ce7",
+    "type": "Item",
+    "target": "9643a116fa844a880a4f8c94",
+    "index": 3,
+    "items": [
+      {
+        "_id": "9643a116fa844a880a4f8c94",
+        "_tpl": "693bb59250fafa102607aeb7",
+        "slotId": "hideout",
+        "upd": {
+          "StackObjectsCount": 1
+        }
+      }
+    ]
+  },
+  "59230813b9f9e11ceed08033": {
+    "value": 1,
+    "id": "856f4b9cbb4587abbab3f4e4",
+    "type": "Item",
+    "target": "48a4eea28e81d1e33e342ce0",
+    "index": 3,
+    "items": [
+      {
+        "_id": "48a4eea28e81d1e33e342ce0",
+        "_tpl": "6661012d16fbd2fb75408f87",
+        "upd": {
+          "Repairable": {
+            "MaxDurability": 100,
+            "Durability": 100
+          },
+          "FireMode": {
+            "FireMode": "single"
+          },
+          "StackObjectsCount": 1
+        },
+        "slotId": "hideout"
+      },
+      {
+        "_id": "f7b871ce695f4b0841ff1524",
+        "_tpl": "666102059eca4774fd5888a6",
+        "parentId": "48a4eea28e81d1e33e342ce0",
+        "slotId": "mod_barrel",
+        "upd": {
+          "StackObjectsCount": 1
+        }
+      },
+      {
+        "_id": "bdc3bd30e2b7536928810555",
+        "_tpl": "6661023c34cb7dd29de7f941",
+        "parentId": "48a4eea28e81d1e33e342ce0",
+        "slotId": "mod_reciever",
+        "upd": {
+          "StackObjectsCount": 1
+        }
+      },
+      {
+        "_id": "b1498756c9e5051e8ea09a13",
+        "_tpl": "666101d005b02d7b36e6e958",
+        "parentId": "48a4eea28e81d1e33e342ce0",
+        "slotId": "mod_magazine",
+        "upd": {
+          "StackObjectsCount": 1
+        }
+      }
+    ]
+  },
+  "6d9fda8875aed2082b4da528": {
+    "value": 1,
+    "id": "9a50588f44b8dba8c4684956",
+    "type": "Item",
+    "target": "7803bcddc7f1b1fd171a9176",
+    "index": 3,
+    "items": [
+      {
+        "_id": "7803bcddc7f1b1fd171a9176",
+        "_tpl": "6937eccbfd921faceb0dfecd",
+        "slotId": "hideout",
+        "upd": {
+          "StackObjectsCount": 1
+        }
+      }
+    ]
+  },
+  "ed21744058dec7587de1081f": {
+    "value": 1,
+    "id": "bda4a3fbfbbc604f625bdfab",
+    "type": "Item",
+    "target": "00b4b68e16080a6ef590da99",
+    "index": 3,
+    "items": [
+      {
+        "_id": "00b4b68e16080a6ef590da99",
+        "_tpl": "69b11f46f3783ec37c03a116",
+        "slotId": "hideout",
+        "upd": {
+          "StackObjectsCount": 1
+        }
+      }
+    ]
+  },
+  "743532fcd12b4a88ff7cd83f": {
+    "value": 1,
+    "id": "6e035b246cf0a6344bfd0a30",
+    "type": "Item",
+    "target": "0cf0cfc2035cd957f67817f3",
+    "index": 3,
+    "items": [
+      {
+        "_id": "0cf0cfc2035cd957f67817f3",
+        "_tpl": "68d40fb07130ef271f60991f",
+        "upd": {
+          "Repairable": {
+            "MaxDurability": 100,
+            "Durability": 100
+          },
+          "FireMode": {
+            "FireMode": "single"
+          },
+          "StackObjectsCount": 1
+        },
+        "slotId": "hideout"
+      },
+      {
+        "_id": "ba1b48159c46808999ad3fef",
+        "_tpl": "68d411fe0fe5406a6566ce17",
+        "parentId": "0cf0cfc2035cd957f67817f3",
+        "slotId": "mod_reciever",
+        "upd": {
+          "StackObjectsCount": 1
+        }
+      },
+      {
+        "_id": "3c30861b521ffe7c111c3258",
+        "_tpl": "68d416ce1bc7491da67d7880",
+        "parentId": "0cf0cfc2035cd957f67817f3",
+        "slotId": "mod_pistolgrip",
+        "upd": {
+          "StackObjectsCount": 1
+        }
+      },
+      {
+        "_id": "65edcdfd8dc4ccc4d4fe3841",
+        "_tpl": "68d4106532390e96f5a8f664",
+        "parentId": "0cf0cfc2035cd957f67817f3",
+        "slotId": "mod_magazine",
+        "upd": {
+          "StackObjectsCount": 1
+        }
+      }
+    ]
+  }
+}

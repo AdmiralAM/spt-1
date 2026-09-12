@@ -12,6 +12,17 @@ class OptionalStorefrontRuntimeTests(unittest.TestCase):
         self.assertGreaterEqual(sum(x["loyaltyLevel"] == 1 for x in manifest["offers"]),20)
         self.assertEqual({x["source"] for x in manifest["offers"]},{"WTT Armory","WTT Content Backport"})
         self.assertEqual(sum(x["category"] == "complete weapon" for x in manifest["offers"]),20)
+        self.assertEqual(len(manifest["questRewardReplacements"]),5)
+        self.assertTrue(all(x["mode"] == "replace-existing-item-reward" for x in manifest["questRewardReplacements"]))
+
+    def test_optional_rewards_are_single_bounded_replacements(self):
+        rewards=json.loads((ROOT/"db/optional/storefront/quest-reward-replacements.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(rewards),5)
+        for quest_id,reward in rewards.items():
+            self.assertEqual(reward["type"],"Item",quest_id)
+            self.assertEqual(reward["value"],1,quest_id)
+            self.assertEqual(reward["items"][0]["_id"],reward["target"],quest_id)
+            self.assertTrue(all(x.get("upd",{}).get("StackObjectsCount")==1 for x in reward["items"]),quest_id)
 
     def test_optional_assorts_have_complete_native_shapes_and_unique_ids(self):
         seen=set()
