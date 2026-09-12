@@ -33,7 +33,7 @@ $targetIcon = Join-Path $serverRoot 'assets\icons\68ac0000000000000000000f.png'
 if (-not (Test-Path -LiteralPath $manifestPath)) { throw "B&A&HB bundles.json is missing: $manifestPath" }
 
 $manifest = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json -AsHashtable
-$matches = @($manifest['manifest']) | Where-Object { $_['key'] -eq $ownedKey }
+$matches = @(@($manifest['manifest']) | Where-Object { $_['key'] -eq $ownedKey })
 if ($matches.Count -gt 1) { throw "B&A&HB bundles.json contains duplicate owned key $ownedKey" }
 if ($matches.Count -eq 1 -and (@($matches[0]['dependencyKeys']).Count -ne 0)) {
     throw "Existing owned HeadBand manifest entry has unexpected dependencies; refusing overwrite."
