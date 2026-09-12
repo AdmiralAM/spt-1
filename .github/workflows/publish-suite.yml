@@ -234,9 +234,11 @@ jobs:
           $pauseCommit = New-RuntimeCommit 'pause' (Join-Path $PWD 'build-output/SPT-Pause') 'Publish Pause runtime package'
           $beltCommit = New-RuntimeCommit 'belt' (Join-Path $PWD 'build-output/SPT-Belt-Armband-Inventory') 'Publish Belt Armband Inventory runtime package'
 
-          git push origin --force --atomic \
-            "$sourceSha`:refs/heads/stable" \
-            "$hudCommit`:refs/heads/runtime" \
-            "$iiCommit`:refs/heads/runtime-item-intelligence" \
-            "$pauseCommit`:refs/heads/runtime-pause" \
+          $refspecs = @(
+            "$sourceSha`:refs/heads/stable"
+            "$hudCommit`:refs/heads/runtime"
+            "$iiCommit`:refs/heads/runtime-item-intelligence"
+            "$pauseCommit`:refs/heads/runtime-pause"
             "$beltCommit`:refs/heads/runtime-belt-armband"
+          )
+          git push origin --force --atomic @refspecs
