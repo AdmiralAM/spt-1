@@ -20,7 +20,7 @@ class QuestQualityRuntimeTests(unittest.TestCase):
                 merged.update(payload)
             cls.locales[language] = merged
 
-    def test_all_runtime_quests_have_explicit_requirements_rewards_and_objectives(self):
+    def test_all_runtime_quests_use_native_panels_without_copy_duplication(self):
         self.assertEqual(len(self.quests), 172)
         for quest in self.quests:
             qid = quest["_id"]
@@ -28,25 +28,14 @@ class QuestQualityRuntimeTests(unittest.TestCase):
                 description = locale[f"{qid} description"]
                 started = locale[f"{qid} startedMessageText"]
                 success = locale[f"{qid} successMessageText"]
-                req = "Requirements:" if language == "en" else "Требования:"
-                rewards = "Rewards:" if language == "en" else "Награды:"
-                self.assertIn(req, description, qid)
-                self.assertIn(rewards, description, qid)
-                self.assertIn(f"{req}\n- ", description, qid)
-                self.assertIn(f"{rewards}\n- ", description, qid)
-                self.assertIn(req, started, qid)
-                self.assertIn(rewards, success, qid)
+                forbidden = ("Requirements:", "Требования:", "Rewards:", "Награды:")
+                for text in (description, started, success, locale[f"{qid} acceptPlayerMessage"], locale[f"{qid} completePlayerMessage"]):
+                    self.assertFalse(any(label in text for label in forbidden), qid)
                 for condition in quest["conditions"]["AvailableForFinish"]:
                     objective = locale.get(condition["id"], "")
                     self.assertTrue(objective.strip(), f"{language}: {condition['id']}")
                     self.assertLessEqual(len(objective), 140, f"objective row is not UI-legible: {condition['id']}")
                     self.assertNotIn("\n", objective, condition["id"])
-                    if condition["conditionType"] in ("FindItem", "HandoverItem"):
-                        fir = "Found in raid:" if language == "en" else "Статус «Найдено в рейде»:"
-                        self.assertIn(fir, description, condition["id"])
-                    else:
-                        location = ("on " if language == "en" else "на ")
-                        self.assertIn(location, description.lower(), condition["id"])
 
     def test_copy_pass_does_not_change_runtime_contracts(self):
         manifest = json.loads((ROOT / "manifests/quest-quality-runtime.json").read_text(encoding="utf-8"))

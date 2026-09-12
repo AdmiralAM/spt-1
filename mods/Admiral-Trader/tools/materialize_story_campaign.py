@@ -239,23 +239,18 @@ def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], obje
     qid = q["id"]
     speaker_en = "Natalya has isolated a lead inside Admiral's network." if specialist else "Admiral has assigned the next operation."
     speaker_ru = "Наталья выделила новую зацепку внутри сети Адмирала." if specialist else "Адмирал назначил следующую операцию."
-    reward_en = f"Rewards:\n- {q['rewards']['xp']} XP\n- ₽{q['rewards']['roubles']}\n- +{q['rewards']['standing']:.3f} Admiral standing"
-    reward_ru = f"Награды:\n- {q['rewards']['xp']} XP\n- ₽{q['rewards']['roubles']}\n- +{q['rewards']['standing']:.3f} репутации Адмирала"
-    if q["order"] in (3, 6, 10):
-        reward_tpl = REWARD_ITEMS[chain["map"]][{3: 0, 6: 1, 10: 2}[q["order"]]]
-        reward_en += f"\n- 1 × {names_en.get(reward_tpl, reward_tpl)}"
-        reward_ru += f"\n- 1 × {names_ru.get(reward_tpl, reward_tpl)}"
-    if q["rewards"].get("assortmentUnlock"):
-        unlock_tpl = STORY_UNLOCKS[chain["map"]][0]
-        reward_en += f"\n- Purchase unlocked: {names_en.get(unlock_tpl, unlock_tpl)}"
-        reward_ru += f"\n- Открыта покупка: {names_ru.get(unlock_tpl, unlock_tpl)}"
-    en_body = f"{speaker_en}\n\nSituation:\nOperation '{en_name}' is stage {q['order']} of 10 in the {CHAIN_EN[chain['chain'] - 1]} investigation on {chain['title'].split(':')[0]}. Complete the field work below to move the investigation forward. Every listed requirement is an exact completion condition.\n\nRequirements:\n" + "\n".join(f"- {x}" for x in objective_en) + f"\n\n{reward_en}"
-    ru_body = f"{speaker_ru}\n\nОбстановка:\nОперация «{q['name']}» — этап {q['order']} из 10 в расследовании «{chain['title']}» на карте «{chain['map']}».\n\nОперативная сводка:\n{q['brief']}\n\nТребования:\n" + "\n".join(f"- {x}" for x in objective_ru) + f"\n\n{reward_ru}"
+    key_details_en = [line for line in objective_en if "allowed key:" in line]
+    key_details_ru = [line for line in objective_ru if "допустимый ключ:" in line]
+    en_body = f"{speaker_en}\n\nSituation:\nOperation '{en_name}' is stage {q['order']} of 10 in the {CHAIN_EN[chain['chain'] - 1]} investigation on {chain['title'].split(':')[0]}. Complete the field work to move the investigation forward."
+    ru_body = f"{speaker_ru}\n\nОбстановка:\nОперация «{q['name']}» — этап {q['order']} из 10 в расследовании «{chain['title']}» на карте «{chain['map']}».\n\nОперативная сводка:\n{q['brief']}"
+    if key_details_en:
+        en_body += "\n\nOperational detail:\n- " + "\n- ".join(key_details_en)
+        ru_body += "\n\nУточнение:\n- " + "\n- ".join(key_details_ru)
     continuation_en = f" Next operation: {next_en}." if next_en else " This investigation is closed; its result now feeds the wider Admiral campaign."
     continuation_ru = f" Следующая операция: «{next_ru}»." if next_ru else " Расследование закрыто; его результат учтён в общей кампании Адмирала."
     done_en = f"Operation '{en_name}' is complete. The result has been logged.{continuation_en}" + (" Natalya confirmed the specialist channel." if specialist else "")
     done_ru = f"Операция «{q['name']}» завершена. Результат принят и внесён в журнал.{continuation_ru}" + (" Наталья подтвердила канал специалиста." if specialist else "")
-    def make(name: str, body: str, done: str, reward: str, objective_lines: list[str], ru: bool) -> dict:
+    def make(name: str, body: str, done: str, objective_lines: list[str], ru: bool) -> dict:
         labels = {}
         for i, row in enumerate(q["runtimeFinish"]):
             if i >= len(objective_lines):
@@ -264,8 +259,8 @@ def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], obje
                 labels[row["id"]] = "Иметь 1 допустимый ключ из списка в описании; ключ не сдаётся" if ru else "Have 1 allowed key from the list in the description; the key is not handed over"
             else:
                 labels[row["id"]] = objective_lines[i]
-        return {qid + " name": name, qid + " description": body, qid + " note": "", qid + " startedMessageText": body, qid + " successMessageText": done + "\n\n" + reward, qid + " failMessageText": "", qid + " acceptPlayerMessage": body, qid + " declinePlayerMessage": "", qid + " completePlayerMessage": done, qid + " changeQuestMessageText": "", **labels}
-    return make(en_name, en_body, done_en, reward_en, objective_en, False), make(q["name"], ru_body, done_ru, reward_ru, objective_ru, True)
+        return {qid + " name": name, qid + " description": body, qid + " note": "", qid + " startedMessageText": body, qid + " successMessageText": done, qid + " failMessageText": "", qid + " acceptPlayerMessage": body, qid + " declinePlayerMessage": "", qid + " completePlayerMessage": done, qid + " changeQuestMessageText": "", **labels}
+    return make(en_name, en_body, done_en, objective_en, False), make(q["name"], ru_body, done_ru, objective_ru, True)
 
 
 def main() -> None:

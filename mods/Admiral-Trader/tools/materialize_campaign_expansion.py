@@ -72,11 +72,12 @@ def loc_condition(qid, locations, equipment=None):
 
 def locale(qid,name,requirements,level,objective,ru=False):
     intro=("Адмирал формирует долгую программу полевых испытаний." if ru else "Admiral is building a long field qualification program.")
-    req=("Требования" if ru else "Requirements")+":\n- "+requirements
-    xp=2500+level*450; rub=10000+level*1800; standing=round(min(.005+level*.0005,.025),3)
-    rew=(f"Награды:\n- {xp} XP, +{standing:.3f} репутации Адмирала, ₽{rub}." if ru else f"Rewards:\n- {xp} XP, +{standing:.3f} Admiral standing, ₽{rub}.")
+    # Keep only information the compact objective row cannot expose (full pools,
+    # map rotation, session semantics). Exact requirements and rewards have native UI panels.
+    details = "" if requirements == objective else ("Уточнение:\n" if ru else "Operational detail:\n") + requirements
+    body = intro + (("\n\n" + details) if details else "")
     done=("Задача выполнена. Результат принят." if ru else "Assignment complete. The result is accepted.")
-    return {qid+" name":name,qid+" description":f"{intro}\n\n{req}\n\n{rew}",qid+" note":"",qid+" startedMessageText":f"{intro}\n\n{req}",qid+" successMessageText":f"{done}\n\n{rew}",qid+" failMessageText":"",qid+" acceptPlayerMessage":f"{intro}\n\n{req}",qid+" declinePlayerMessage":"",qid+" completePlayerMessage":done,qid+" changeQuestMessageText":"",hid(qid+":finish"):objective}
+    return {qid+" name":name,qid+" description":body,qid+" note":"",qid+" startedMessageText":body,qid+" successMessageText":done,qid+" failMessageText":"",qid+" acceptPlayerMessage":body,qid+" declinePlayerMessage":"",qid+" completePlayerMessage":done,qid+" changeQuestMessageText":"",hid(qid+":finish"):objective}
 
 def main():
     parser=argparse.ArgumentParser()

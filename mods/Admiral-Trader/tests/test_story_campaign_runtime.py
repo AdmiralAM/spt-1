@@ -142,7 +142,6 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
             self.assertFalse(roots[row["offerId"]]["upd"]["UnlimitedCount"])
             quest = self.by_id[row["questId"]]
             self.assertIn(row["offerId"], [reward.get("target") for reward in quest["rewards"]["Success"] if reward["type"] == "AssortmentUnlock"])
-            self.assertIn("Открыта покупка:", self.ru[row["questId"] + " successMessageText"])
 
     def test_story_copy_exposes_position_and_next_operation(self):
         for chain in self.authored["chains"]:
@@ -151,7 +150,8 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
                 success = self.ru[row["id"] + " successMessageText"]
                 self.assertIn(f"этап {row['order']} из 10", description, row["id"])
                 self.assertIn("Оперативная сводка:\n" + row["brief"], description, row["id"])
-                self.assertIn("Требования:\n- ", description, row["id"])
+                self.assertNotIn("Требования:", description, row["id"])
+                self.assertNotIn("Награды:", description, row["id"])
                 if index + 1 < len(chain["quests"]):
                     self.assertIn(f"Следующая операция: «{chain['quests'][index + 1]['name']}»", success, row["id"])
                 else:
@@ -215,7 +215,7 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
     def test_russian_story_locale_is_real_utf8_cyrillic(self):
         rendered = json.dumps(self.ru, ensure_ascii=False)
         self.assertNotIn("\ufffd", rendered)
-        self.assertGreater(sum("\u0400" <= char <= "\u04ff" for char in rendered), 100000)
+        self.assertGreater(sum("\u0400" <= char <= "\u04ff" for char in rendered), 80000)
 
     def test_objective_labels_remain_readable_in_the_single_line_client_row(self):
         for quest in self.story:

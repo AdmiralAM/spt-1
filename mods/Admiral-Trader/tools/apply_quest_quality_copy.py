@@ -139,7 +139,10 @@ def main():
     for offer, quest in qa.items():
         unlocks.setdefault(quest, []).append(offer)
     report = {"schemaVersion": 1, "status": "runtime-copy-audited", "questCount": 0, "quests": {}}
-    quests = [load(path) for path in sorted((ROOT / "db/quests").glob("*.json"))]
+    # This pass owns the frozen 43-quest foundation. Later campaign generators
+    # own their copy and must not be rewritten through the legacy locale set.
+    historical_ids = set(load(ROOT / "manifests/quest-quality-runtime.json")["quests"])
+    quests = [load(path) for path in sorted((ROOT / "db/quests").glob("*.json")) if load(path)["_id"] in historical_ids]
     for quest in quests:
         qid = quest["_id"]
         report["questCount"] += 1
@@ -147,24 +150,27 @@ def main():
         for lang in ("en", "ru"):
             locale = global_locales[lang]
             requirements = [condition_text(c, locale, lang) for c in quest["conditions"]["AvailableForFinish"]]
-            rewards = reward_text(quest, locale, unlocks, assort_tpl, lang)
             req_label = "Requirements" if lang == "en" else "Требования"
             rew_label = "Rewards" if lang == "en" else "Награды"
             existing_description = authored[lang][f"{qid} description"].split(f"\n\n{req_label}:", 1)[0]
             existing_started = authored[lang][f"{qid} startedMessageText"].split(f"\n\n{req_label}:", 1)[0]
             existing_success = authored[lang][f"{qid} successMessageText"].split(f"\n\n{rew_label}:", 1)[0]
-            # EFT renders embedded newlines in quest copy. Keep each runtime objective
-            # on its own line so exact requirements stay readable at normal UI scale.
-            block = "\n".join(f"- {requirement}" for requirement in requirements)
+            if qid == "cd2641c70bede98dac3945d0":
+                existing_success = ("Precision Rifles capability confirmed. The UCW ammunition authorization is now active."
+                                    if lang == "en" else
+                                    "Квалификация по высокоточным винтовкам подтверждена. Допуск к боеприпасу UCW активирован.")
             updates = {
-                f"{qid} description": f"{existing_description}\n\n{req_label}:\n{block}\n\n{rew_label}:\n- {rewards}",
-                f"{qid} startedMessageText": f"{existing_started}\n\n{req_label}:\n{block}",
-                f"{qid} acceptPlayerMessage": f"{existing_started}\n\n{req_label}:\n{block}",
-                f"{qid} successMessageText": f"{existing_success}\n\n{rew_label}: {rewards}",
-                f"{qid} completePlayerMessage": f"{existing_success}\n\n{rew_label}: {rewards}",
+                f"{qid} description": existing_description,
+                f"{qid} startedMessageText": existing_started,
+                f"{qid} acceptPlayerMessage": existing_started,
+                f"{qid} successMessageText": existing_success,
+                f"{qid} completePlayerMessage": existing_success,
             }
             for condition, objective in zip(quest["conditions"]["AvailableForFinish"], requirements):
-                updates[condition["id"]] = objective
+                # Objective labels may have an authored compact variant for the
+                # single-line EFT row. Only fill labels that do not exist yet.
+                if condition["id"] not in authored[lang]:
+                    updates[condition["id"]] = objective
             for key, value in updates.items():
                 filename = owners.get((lang, key)) or ("m3-en.json" if lang == "en" and qid in load(ROOT / "manifests/m3-runtime-materialization.json")["questIds"].values() else "m3-ru.json" if lang == "ru" and qid in load(ROOT / "manifests/m3-runtime-materialization.json")["questIds"].values() else "arsenal-en.json" if lang == "en" and quest["QuestName"].startswith("Arsenal") else "arsenal-ru.json" if lang == "ru" and quest["QuestName"].startswith("Arsenal") else f"{lang}.json")
                 path = ROOT / "db/locales" / filename
