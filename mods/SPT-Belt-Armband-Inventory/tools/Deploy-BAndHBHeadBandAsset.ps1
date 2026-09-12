@@ -21,6 +21,7 @@ if (Get-Process -Name 'SPT.Server','SPT.Launcher','EscapeFromTarkov' -ErrorActio
 
 $sourceRoot = Join-Path $moduleRoot 'assets\headband-rambo\runtime'
 $sourceBundle = (Resolve-Path -LiteralPath (Join-Path $sourceRoot 'bundles\HeadBand\headband_rambo_red.bundle')).Path
+$sourceIcon = (Resolve-Path -LiteralPath (Join-Path $sourceRoot 'icons\68ac0000000000000000000f.png')).Path
 $entry = Get-Content -Raw -LiteralPath (Join-Path $sourceRoot 'bundle-entry.json') | ConvertFrom-Json -AsHashtable
 $ownedKey = 'HeadBand/headband_rambo_red.bundle'
 if ($entry['key'] -ne $ownedKey) { throw "Unexpected HeadBand bundle key: $($entry['key'])" }
@@ -28,6 +29,7 @@ if ($entry['key'] -ne $ownedKey) { throw "Unexpected HeadBand bundle key: $($ent
 $serverRoot = Join-Path $spt 'SPT_Runtime\user\mods\B&A&HB #2 MOD SPT'
 $manifestPath = Join-Path $serverRoot 'bundles.json'
 $targetBundle = Join-Path $serverRoot 'bundles\HeadBand\headband_rambo_red.bundle'
+$targetIcon = Join-Path $serverRoot 'assets\icons\68ac0000000000000000000f.png'
 if (-not (Test-Path -LiteralPath $manifestPath)) { throw "B&A&HB bundles.json is missing: $manifestPath" }
 
 $manifest = Get-Content -Raw -LiteralPath $manifestPath | ConvertFrom-Json -AsHashtable
@@ -43,6 +45,9 @@ New-Item -ItemType Directory -Force -Path $backup | Out-Null
 Copy-Item -LiteralPath $manifestPath -Destination (Join-Path $backup 'bundles.json')
 if (Test-Path -LiteralPath $targetBundle) {
     Copy-Item -LiteralPath $targetBundle -Destination (Join-Path $backup 'headband_rambo_red.bundle')
+}
+if (Test-Path -LiteralPath $targetIcon) {
+    Copy-Item -LiteralPath $targetIcon -Destination (Join-Path $backup '68ac0000000000000000000f.png')
 }
 
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $targetBundle) | Out-Null
@@ -65,6 +70,13 @@ try {
     $installedHash = (Get-FileHash -LiteralPath $targetBundle -Algorithm SHA256).Hash
     if ($installedHash -ne $sourceHash) { throw "HeadBand installed bundle hash mismatch." }
 
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $targetIcon) | Out-Null
+    $stagedIcon = "$targetIcon.deploying"
+    Copy-Item -LiteralPath $sourceIcon -Destination $stagedIcon -Force
+    $sourceIconHash = (Get-FileHash -LiteralPath $sourceIcon -Algorithm SHA256).Hash
+    if ((Get-FileHash -LiteralPath $stagedIcon -Algorithm SHA256).Hash -ne $sourceIconHash) { throw "HeadBand staged icon hash mismatch." }
+    [IO.File]::Move($stagedIcon, $targetIcon, $true)
+
     [pscustomobject]@{
         Component = 'headband-visual-bundle'
         Path = $targetBundle
@@ -72,9 +84,16 @@ try {
         ManifestKey = $ownedKey
         Backup = $backup
     }
+    [pscustomobject]@{
+        Component = 'headband-inventory-icon'
+        Path = $targetIcon
+        Sha256 = $sourceIconHash.ToLowerInvariant()
+        ManifestKey = '/files/handbook/68ac0000000000000000000f'
+        Backup = $backup
+    }
 }
 finally {
-    foreach ($temporary in @($stagedBundle, "$manifestPath.deploying")) {
+    foreach ($temporary in @($stagedBundle, "$targetIcon.deploying", "$manifestPath.deploying")) {
         if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force }
     }
 }

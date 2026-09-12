@@ -72,6 +72,13 @@ The visual redesign is deliberately local:
 - do not require tab switching, Canvas force-refresh, coroutine retries or idle polling;
 - retain the accepted stable presentation as fail-safe fallback if the compact owner cannot install.
 
+The next fixed-accessory projection uses the unused right-side space directly
+below the native Special Slots block: Utility HeadBand above ArmBand, each as a
+compact always-visible two-cell panel. It must not translate or resize the
+native Special Slots, tactical rig, pockets, backpack or secured-container
+views. This placement is the accepted target layout; implementation remains a
+separate UI phase after the native item cards and split-grid frame are proven.
+
 ## Magazine reload role
 
 Magazine Armband and Magazine Belt extend EFT reload reachability narrowly; they do not replace vanilla magazine selection.

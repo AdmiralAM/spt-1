@@ -124,11 +124,13 @@ jobs:
           $modRoot = "$runtimeRoot/user/mods/B&A&HB #2 MOD SPT"
           New-Item -ItemType Directory -Force -Path $pluginRoot | Out-Null
           New-Item -ItemType Directory -Force -Path $modRoot | Out-Null
+          New-Item -ItemType Directory -Force -Path "$modRoot/assets" | Out-Null
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/src/bin/Release/netstandard2.1/SPT Belt Armband Inventory v0.1.0.dll' "$pluginRoot/"
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT-Belt-Armband-Inventory.Server.dll' "$modRoot/"
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/server/config' "$modRoot/config" -Recurse
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/profile-safety' "$modRoot/profile-safety" -Recurse
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/assets/headband-rambo/runtime/bundles' "$modRoot/bundles" -Recurse
+          Copy-Item 'mods/SPT-Belt-Armband-Inventory/assets/headband-rambo/runtime/icons' "$modRoot/assets/icons" -Recurse
           $bundleEntry = Get-Content 'mods/SPT-Belt-Armband-Inventory/assets/headband-rambo/runtime/bundle-entry.json' -Raw | ConvertFrom-Json
           @{ manifest = @($bundleEntry) } | ConvertTo-Json -Depth 10 | Set-Content "$modRoot/bundles.json" -Encoding utf8NoBOM
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/README.md' "$modRoot/README.md"

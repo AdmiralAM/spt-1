@@ -51,8 +51,9 @@ Copy-Item -LiteralPath (Join-Path $serverSource 'bundles.json') -Destination $ru
 
 $headBandAssetRoot = Join-Path $moduleRoot 'assets\headband-rambo\runtime'
 $headBandBundle = Join-Path $headBandAssetRoot 'bundles\HeadBand\headband_rambo_red.bundle'
+$headBandIcon = Join-Path $headBandAssetRoot 'icons\68ac0000000000000000000f.png'
 $headBandEntry = Join-Path $headBandAssetRoot 'bundle-entry.json'
-foreach ($requiredHeadBandAsset in @($headBandBundle, $headBandEntry)) {
+foreach ($requiredHeadBandAsset in @($headBandBundle, $headBandIcon, $headBandEntry)) {
     if (-not (Test-Path -LiteralPath $requiredHeadBandAsset)) {
         throw "Required B&A&HB HeadBand asset missing: $requiredHeadBandAsset"
     }
@@ -61,6 +62,9 @@ foreach ($requiredHeadBandAsset in @($headBandBundle, $headBandEntry)) {
 $headBandBundleTarget = Join-Path $runtime 'bundles\HeadBand\headband_rambo_red.bundle'
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $headBandBundleTarget) | Out-Null
 Copy-Item -LiteralPath $headBandBundle -Destination $headBandBundleTarget -Force
+$headBandIconTarget = Join-Path $runtime 'assets\icons\68ac0000000000000000000f.png'
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $headBandIconTarget) | Out-Null
+Copy-Item -LiteralPath $headBandIcon -Destination $headBandIconTarget -Force
 
 $bundlesPath = Join-Path $runtime 'bundles.json'
 $bundleManifest = Get-Content -Raw -LiteralPath $bundlesPath | ConvertFrom-Json -AsHashtable
