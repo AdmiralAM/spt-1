@@ -51,6 +51,18 @@ class IcebreakerOptionalRuntimeTests(unittest.TestCase):
         for path in (ROOT / "db/quests").glob("*.json"):
             self.assertTrue(optional_ids.isdisjoint(path.read_text(encoding="utf-8")))
 
+    def test_resort_zone_is_bound_to_shoreline(self):
+        quest = self.quests[4]
+        conditions = quest["conditions"]["AvailableForFinish"][0]["counter"]["conditions"]
+        self.assertIn("boreas_camp_resort", next(x for x in conditions if x["conditionType"] == "InZone")["zoneIds"])
+        self.assertEqual(next(x for x in conditions if x["conditionType"] == "Location")["target"], ["Shoreline"])
+
+    def test_even_steps_have_moderate_native_item_rewards(self):
+        expected = {2:"5d02797c86f774203f38e30a",4:"617aa4dd8166f034d57de9c5",6:"5ed51652f6c34d2cc26336a1",8:"5c0e534186f7747fa1419867",10:"5d1b376e86f774252519444e"}
+        for order, tpl in expected.items():
+            items = [x for x in self.quests[order-1]["rewards"]["Success"] if x["type"] == "Item"]
+            self.assertIn(tpl, {x["items"][0]["_tpl"] for x in items})
+
 
 if __name__ == "__main__":
     unittest.main()
