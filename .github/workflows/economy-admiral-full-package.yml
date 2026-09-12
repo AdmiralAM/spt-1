@@ -1,11 +1,6 @@
 name: Economy Admiral Full Package
 
 on:
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'mods/Economy-Admiral/**'
-      - '.github/workflows/economy-admiral-full-package.yml'
   workflow_dispatch:
 
 jobs:
@@ -118,3 +113,4 @@ jobs:
           name: Economy-Admiral-Full-v0.1.0
           path: build-output/Economy-Admiral-Full/**
           if-no-files-found: error
+          retention-days: 14

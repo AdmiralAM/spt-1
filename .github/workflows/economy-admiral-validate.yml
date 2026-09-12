@@ -223,6 +223,7 @@ jobs:
         shell: pwsh
         run: dotnet run --project mods/Economy-Admiral/tests/SourcePressureSmoke/SourcePressureSmoke.csproj -c Release --nologo
       - name: Stage candidate
+        if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         env:
           EA_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -244,7 +245,9 @@ jobs:
             CompilePackageVersion = '4.1.2'
             TargetRuntime = 'SPT 4.1.3'
           } | ConvertTo-Json | Set-Content 'build-output/Economy Admiral/BUILD_INFO.json' -Encoding UTF8
-      - uses: actions/upload-artifact@v4
+      - name: Upload manually requested Economy diagnostic candidate
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
         with:
           name: economy-admiral-candidate
           path: 'build-output/Economy Admiral'

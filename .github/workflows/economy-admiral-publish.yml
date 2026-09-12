@@ -1,11 +1,6 @@
 name: Publish Economy Admiral Runtime
 
 on:
-  pull_request:
-    branches: [ main ]
-    paths:
-      - '.github/workflows/economy-admiral-publish.yml'
-      - 'mods/Economy-Admiral/**'
   push:
     branches:
       - 'publish/economy-admiral-runtime'
@@ -140,6 +135,7 @@ jobs:
           name: Economy-Admiral-Full-v${{ env.EA_VERSION }}
           path: build-output/Economy-Admiral/**
           if-no-files-found: error
+          retention-days: 14
 
       - name: Publish runtime-economy-admiral
         if: github.event_name == 'push' && github.ref == 'refs/heads/publish/economy-admiral-runtime'

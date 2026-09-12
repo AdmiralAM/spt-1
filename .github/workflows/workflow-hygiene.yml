@@ -1,0 +1,23 @@
+name: Workflow hygiene
+
+on:
+  pull_request:
+    paths:
+      - '.github/scripts/validate_workflow_hygiene.py'
+      - '.github/workflows/**'
+  push:
+    branches: [main]
+    paths:
+      - '.github/scripts/validate_workflow_hygiene.py'
+      - '.github/workflows/**'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Reject recurring workflow and artifact churn
+        run: python3 .github/scripts/validate_workflow_hygiene.py

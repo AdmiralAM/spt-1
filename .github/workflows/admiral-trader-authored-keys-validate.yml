@@ -131,11 +131,3 @@ jobs:
           build/admiral-trader-keys-runtime.json
           mods/Admiral-Trader/db/locales/en.json
           mods/Admiral-Trader/db/locales/ru.json
-
-      - name: Upload transient authored template audit
-        uses: actions/upload-artifact@v4
-        with:
-          name: admiral-trader-authored-keys-${{ github.event.pull_request.head.sha || github.sha }}
-          path: build/admiral-trader-keys-runtime.json
-          if-no-files-found: error
-          retention-days: 7
