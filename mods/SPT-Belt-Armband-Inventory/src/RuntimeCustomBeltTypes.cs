@@ -19,15 +19,17 @@ namespace SPTBeltArmbandInventory
             this.logWarning = logWarning;
         }
 
-        internal bool TryInstall()
+        internal bool TryInstall(bool includeBelt = true)
         {
             try
             {
                 RuntimeCustomBeltTypes.LogInfo = logInfo;
                 RuntimeCustomBeltTypes.LogWarning = logWarning;
-                if (!RuntimeCustomBeltTypes.BuildAndRegister()) return false;
+                if (!RuntimeCustomBeltTypes.BuildAndRegister(includeBelt)) return false;
 
-                logInfo?.Invoke("B&A&HB RUNTIME TYPE: custom searchable belt item/template mappings registered directly in SPT 4.1.3 JsonTypes for RC parent " + CustomBeltParentId + ".");
+                logInfo?.Invoke(includeBelt
+                    ? "B&A&HB RUNTIME TYPE: shared searchable taxonomy and custom Belt item/template mappings registered directly in JsonTypes for parent " + CustomBeltParentId + "."
+                    : "B&A&HB companion runtime type: shared searchable taxonomy registered without the B&A Belt parent mapping.");
                 return true;
             }
             catch (Exception exception)
@@ -64,17 +66,21 @@ namespace SPTBeltArmbandInventory
         static IDictionary ownedTypeTable;
         static IDictionary ownedTemplateTable;
         static IDictionary ownedConstructors;
+        static object previousSearchableParentItemType;
+        static object previousSearchableParentConstructor;
         static object previousItemType;
         static object previousTemplateParentType;
         static object previousBeltTemplateType;
         static object previousConstructor;
         static object installedConstructor;
+        static bool hadSearchableParentItemType;
+        static bool hadSearchableParentConstructor;
         static bool hadItemType;
         static bool hadTemplateParentType;
         static bool hadBeltTemplateType;
         static bool hadConstructor;
 
-        internal static bool BuildAndRegister()
+        internal static bool BuildAndRegister(bool includeBelt = true)
         {
             if (CustomTemplateType == null || CustomBeltItemType == null)
             {
@@ -97,7 +103,7 @@ namespace SPTBeltArmbandInventory
                 if (customItemConstructor == null) throw new InvalidOperationException("generated custom belt constructor missing");
             }
 
-            RegisterJsonMappings();
+            RegisterJsonMappings(includeBelt);
             return true;
         }
 
@@ -152,7 +158,7 @@ namespace SPTBeltArmbandInventory
             return null;
         }
 
-        static void RegisterJsonMappings()
+        static void RegisterJsonMappings(bool includeBelt)
         {
             Type jsonTypes = ReflectionTools.FindType("EFT.InventoryLogic.JsonTypes");
             Type itemType = ReflectionTools.FindType("EFT.InventoryLogic.Item");
@@ -180,19 +186,29 @@ namespace SPTBeltArmbandInventory
             il.Emit(OpCodes.Ret);
             object constructorDelegate = factory.CreateDelegate(delegateType);
 
-            RequireAvailable(typeTable, RuntimeCustomBeltTypePatches.CustomBeltParentId, CustomBeltItemType, "item type");
-            RequireAvailable(templateTable, RuntimeCustomBeltTypePatches.CustomTemplateParentId, CustomTemplateType, "template parent type");
-            RequireAvailable(templateTable, RuntimeCustomBeltTypePatches.CustomBeltParentId, CustomTemplateType, "belt template type");
-            if (constructors.Contains(RuntimeCustomBeltTypePatches.CustomBeltParentId))
-                throw new InvalidOperationException("JsonTypes item-constructor id collision for " + RuntimeCustomBeltTypePatches.CustomBeltParentId);
+            RequireAvailable(typeTable, RuntimeCustomBeltTypePatches.CustomTemplateParentId, CustomBeltItemType, "searchable parent item type");
+            RequireAvailable(templateTable, RuntimeCustomBeltTypePatches.CustomTemplateParentId, CustomTemplateType, "searchable parent template type");
+            if (constructors.Contains(RuntimeCustomBeltTypePatches.CustomTemplateParentId))
+                throw new InvalidOperationException("JsonTypes item-constructor id collision for " + RuntimeCustomBeltTypePatches.CustomTemplateParentId);
+            if (includeBelt)
+            {
+                RequireAvailable(typeTable, RuntimeCustomBeltTypePatches.CustomBeltParentId, CustomBeltItemType, "item type");
+                RequireAvailable(templateTable, RuntimeCustomBeltTypePatches.CustomBeltParentId, CustomTemplateType, "belt template type");
+                if (constructors.Contains(RuntimeCustomBeltTypePatches.CustomBeltParentId))
+                    throw new InvalidOperationException("JsonTypes item-constructor id collision for " + RuntimeCustomBeltTypePatches.CustomBeltParentId);
+            }
 
             ownedTypeTable = typeTable;
             ownedTemplateTable = templateTable;
             ownedConstructors = constructors;
+            hadSearchableParentItemType = typeTable.Contains(RuntimeCustomBeltTypePatches.CustomTemplateParentId);
+            hadSearchableParentConstructor = constructors.Contains(RuntimeCustomBeltTypePatches.CustomTemplateParentId);
             hadItemType = typeTable.Contains(RuntimeCustomBeltTypePatches.CustomBeltParentId);
             hadTemplateParentType = templateTable.Contains(RuntimeCustomBeltTypePatches.CustomTemplateParentId);
             hadBeltTemplateType = templateTable.Contains(RuntimeCustomBeltTypePatches.CustomBeltParentId);
             hadConstructor = constructors.Contains(RuntimeCustomBeltTypePatches.CustomBeltParentId);
+            previousSearchableParentItemType = hadSearchableParentItemType ? typeTable[RuntimeCustomBeltTypePatches.CustomTemplateParentId] : null;
+            previousSearchableParentConstructor = hadSearchableParentConstructor ? constructors[RuntimeCustomBeltTypePatches.CustomTemplateParentId] : null;
             previousItemType = hadItemType ? typeTable[RuntimeCustomBeltTypePatches.CustomBeltParentId] : null;
             previousTemplateParentType = hadTemplateParentType ? templateTable[RuntimeCustomBeltTypePatches.CustomTemplateParentId] : null;
             previousBeltTemplateType = hadBeltTemplateType ? templateTable[RuntimeCustomBeltTypePatches.CustomBeltParentId] : null;
@@ -201,10 +217,15 @@ namespace SPTBeltArmbandInventory
 
             try
             {
-                typeTable[RuntimeCustomBeltTypePatches.CustomBeltParentId] = CustomBeltItemType;
+                typeTable[RuntimeCustomBeltTypePatches.CustomTemplateParentId] = CustomBeltItemType;
                 templateTable[RuntimeCustomBeltTypePatches.CustomTemplateParentId] = CustomTemplateType;
-                templateTable[RuntimeCustomBeltTypePatches.CustomBeltParentId] = CustomTemplateType;
-                constructors[RuntimeCustomBeltTypePatches.CustomBeltParentId] = constructorDelegate;
+                constructors[RuntimeCustomBeltTypePatches.CustomTemplateParentId] = constructorDelegate;
+                if (includeBelt)
+                {
+                    typeTable[RuntimeCustomBeltTypePatches.CustomBeltParentId] = CustomBeltItemType;
+                    templateTable[RuntimeCustomBeltTypePatches.CustomBeltParentId] = CustomTemplateType;
+                    constructors[RuntimeCustomBeltTypePatches.CustomBeltParentId] = constructorDelegate;
+                }
             }
             catch
             {
@@ -224,18 +245,24 @@ namespace SPTBeltArmbandInventory
         internal static void RollbackJsonMappings()
         {
             RestoreOwned(ownedConstructors, RuntimeCustomBeltTypePatches.CustomBeltParentId, installedConstructor, hadConstructor, previousConstructor);
+            RestoreOwned(ownedConstructors, RuntimeCustomBeltTypePatches.CustomTemplateParentId, installedConstructor, hadSearchableParentConstructor, previousSearchableParentConstructor);
             RestoreOwned(ownedTemplateTable, RuntimeCustomBeltTypePatches.CustomBeltParentId, CustomTemplateType, hadBeltTemplateType, previousBeltTemplateType);
             RestoreOwned(ownedTemplateTable, RuntimeCustomBeltTypePatches.CustomTemplateParentId, CustomTemplateType, hadTemplateParentType, previousTemplateParentType);
             RestoreOwned(ownedTypeTable, RuntimeCustomBeltTypePatches.CustomBeltParentId, CustomBeltItemType, hadItemType, previousItemType);
+            RestoreOwned(ownedTypeTable, RuntimeCustomBeltTypePatches.CustomTemplateParentId, CustomBeltItemType, hadSearchableParentItemType, previousSearchableParentItemType);
 
             ownedTypeTable = null;
             ownedTemplateTable = null;
             ownedConstructors = null;
+            previousSearchableParentItemType = null;
+            previousSearchableParentConstructor = null;
             previousItemType = null;
             previousTemplateParentType = null;
             previousBeltTemplateType = null;
             previousConstructor = null;
             installedConstructor = null;
+            hadSearchableParentItemType = false;
+            hadSearchableParentConstructor = false;
             hadItemType = false;
             hadTemplateParentType = false;
             hadBeltTemplateType = false;

@@ -39,14 +39,16 @@ namespace SPTBeltArmbandInventory
     {
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
+        readonly bool includeBeltProjection;
         FieldInfo containersOrderField;
         Array originalContainersOrder;
         Array installedContainersOrder;
 
-        internal DedicatedEquipmentSlotPatches(Action<string> logInfo, Action<string> logWarning)
+        internal DedicatedEquipmentSlotPatches(Action<string> logInfo, Action<string> logWarning, bool includeBeltProjection = true)
         {
             this.logInfo = logInfo;
             this.logWarning = logWarning;
+            this.includeBeltProjection = includeBeltProjection;
         }
 
         internal bool TryInstall()
@@ -64,12 +66,15 @@ namespace SPTBeltArmbandInventory
                 if (!DedicatedEquipmentSlotRuntime.ValidatePseudoSlotBoundary())
                     return Fail("EquipmentSlot enum no longer ends at ArmBand=14; pseudo-slot values 15/16 refused to avoid collision.");
 
-                containersOrderField = FindContainersOrderField(containersPanelType, equipmentSlotType);
-                if (containersOrderField == null)
-                    return Fail("ContainersPanel canonical slot-order array was not found exactly; Belt UI projection refused.");
-                originalContainersOrder = containersOrderField.GetValue(null) as Array;
-                installedContainersOrder = BuildBeltOrder(originalContainersOrder, equipmentSlotType);
-                containersOrderField.SetValue(null, installedContainersOrder);
+                if (includeBeltProjection)
+                {
+                    containersOrderField = FindContainersOrderField(containersPanelType, equipmentSlotType);
+                    if (containersOrderField == null)
+                        return Fail("ContainersPanel canonical slot-order array was not found exactly; Belt UI projection refused.");
+                    originalContainersOrder = containersOrderField.GetValue(null) as Array;
+                    installedContainersOrder = BuildBeltOrder(originalContainersOrder, equipmentSlotType);
+                    containersOrderField.SetValue(null, installedContainersOrder);
+                }
 
                 // HeadBand presentation is intentionally not created from EquipmentTab.Awake.
                 // The former early clone copied the full Headwear geometry before native
@@ -77,7 +82,9 @@ namespace SPTBeltArmbandInventory
                 // in physical RC1. DedicatedSlotPresentationPatches now owns the whole slot16
                 // visual lifecycle and creates/binds the compact view only from the real
                 // Headwear SlotView.Show boundary.
-                logInfo?.Invoke("B&A&HB #2 MOD SPT dedicated client slot contract installed: Belt pseudo-slot15 after Pockets; HeadBand pseudo-slot16 presentation deferred entirely to native SlotView.Show.");
+                logInfo?.Invoke(includeBeltProjection
+                    ? "B&A&HB #2 MOD SPT dedicated client slot contract installed: Belt pseudo-slot15 after Pockets; HeadBand pseudo-slot16 presentation deferred entirely to native SlotView.Show."
+                    : "B&A&HB companion slot contract installed: HeadBand pseudo-slot16 enabled; Belt ContainersPanel projection remains owned by Pack 'n' Strap.");
                 return true;
             }
             catch (Exception exception)

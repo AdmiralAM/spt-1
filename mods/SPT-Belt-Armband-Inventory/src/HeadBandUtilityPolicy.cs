@@ -15,6 +15,24 @@ namespace SPTBeltArmbandInventory
         internal const string Strike = "5734770f24597738025ee254";
 
         internal const string VanillaWallet = "5783c43d2459774bbe137486";
+        internal const string WzWallet = "60b0f6c058e0b0481a09ad11";
+
+        internal static readonly IReadOnlyList<string> CurrencyWalletTemplateIds = new[]
+        {
+            Rouble,
+            Dollar,
+            Euro,
+            VanillaWallet,
+            WzWallet
+        };
+
+        internal static readonly IReadOnlyList<string> CigaretteTemplateIds = new[]
+        {
+            ApolloSoyuz,
+            Malboro,
+            Wilston,
+            Strike
+        };
 
         internal static readonly IReadOnlyList<string> AcceptedTemplateIds = new[]
         {
@@ -25,14 +43,30 @@ namespace SPTBeltArmbandInventory
             Malboro,
             Wilston,
             Strike,
-            VanillaWallet
+            VanillaWallet,
+            WzWallet
         };
 
         internal static bool IsAccepted(string templateId)
         {
+            return IsCurrencyOrWallet(templateId) || IsCigarette(templateId);
+        }
+
+        internal static bool IsCurrencyOrWallet(string templateId)
+        {
+            return Contains(CurrencyWalletTemplateIds, templateId);
+        }
+
+        internal static bool IsCigarette(string templateId)
+        {
+            return Contains(CigaretteTemplateIds, templateId);
+        }
+
+        static bool Contains(IReadOnlyList<string> ids, string templateId)
+        {
             if (string.IsNullOrEmpty(templateId)) return false;
-            for (int i = 0; i < AcceptedTemplateIds.Count; i++)
-                if (string.Equals(AcceptedTemplateIds[i], templateId, StringComparison.Ordinal)) return true;
+            for (int i = 0; i < ids.Count; i++)
+                if (string.Equals(ids[i], templateId, StringComparison.Ordinal)) return true;
             return false;
         }
     }

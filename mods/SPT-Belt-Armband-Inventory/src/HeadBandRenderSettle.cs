@@ -5,13 +5,8 @@ using UnityEngine;
 
 namespace SPTBeltArmbandInventory
 {
-    // EFT 4.1.3 Gear Panel is a fixed RectTransform map, not a LayoutGroup. Slot16
-    // participates in the same _slotViews map as the native equipment slots. This
-    // class is the sole placement owner: move every native slot down by one compact
-    // row and put mapped slot16 into the original Headwear position. The host panel's
-    // LayoutElement/RectTransform is deliberately untouched: changing preferredHeight
-    // caused EFT's parent layout to move the whole character panel off-screen on first
-    // stash entry. No clone projection, canvas refresh, retry positioner or polling.
+    // Stable Baseline 1 fallback placement. Post-stable compact presentation may
+    // suppress this owner only after its own exact EquipmentTab patch installs.
     internal static class HeadBandRenderSettle
     {
         const float HeadBandCompactHeight = 44f;
@@ -29,13 +24,15 @@ namespace SPTBeltArmbandInventory
             }
         }
 
+        internal static bool Suppressed;
+
         static readonly Dictionary<int, ReflowState> States = new Dictionary<int, ReflowState>();
         static bool proofLogged;
         static bool failureLogged;
 
         internal static void OnHeadwearShown(Component headwearView)
         {
-            if (headwearView == null || headwearView.transform == null) return;
+            if (Suppressed || headwearView == null || headwearView.transform == null) return;
             TryApplyStructuralReflow(headwearView);
         }
 
@@ -174,7 +171,6 @@ namespace SPTBeltArmbandInventory
                             rect.anchoredPosition = original;
                     }
                 }
-
             }
 
             States.Clear();

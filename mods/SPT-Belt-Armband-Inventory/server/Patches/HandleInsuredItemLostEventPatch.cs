@@ -1,6 +1,7 @@
 using System.Reflection;
 using SPTarkov.DI.Annotations;
 using SPTarkov.Reflection.Patching;
+using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Eft.Common;
 using SPTarkov.Server.Core.Models.Eft.Match;
 using SPTarkov.Server.Core.Services.InRaid;
@@ -13,12 +14,22 @@ public sealed class HandleInsuredItemLostEventPatch : AbstractPatch
     protected override MethodBase? GetTargetMethod()
     {
         MethodInfo? selected = null;
-        foreach (var method in typeof(LocationLifecycleService).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance))
+        foreach (var method in typeof(LocationLifecycleService).GetMethods(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
         {
-            if (!string.Equals(method.Name, "HandleInsuredItemLostEvent", StringComparison.Ordinal))
+            if (!string.Equals(method.Name, "HandleInsuredItemLostEvent", StringComparison.Ordinal)
+                || method.ReturnType != typeof(void))
                 continue;
+
+            var parameters = method.GetParameters();
+            if (parameters.Length != 4
+                || parameters[0].ParameterType != typeof(MongoId)
+                || parameters[1].ParameterType != typeof(PmcData)
+                || parameters[2].ParameterType != typeof(EndLocalRaidRequestData)
+                || parameters[3].ParameterType != typeof(string))
+                continue;
+
             if (selected is not null)
-                throw new AmbiguousMatchException("Multiple LocationLifecycleService.HandleInsuredItemLostEvent methods found; insurance retention refused.");
+                throw new AmbiguousMatchException("Multiple exact LocationLifecycleService.HandleInsuredItemLostEvent(MongoId, PmcData, EndLocalRaidRequestData, string) methods found; insurance retention refused.");
             selected = method;
         }
         return selected;
