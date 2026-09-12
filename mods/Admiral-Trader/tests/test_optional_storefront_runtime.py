@@ -4,6 +4,14 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 
 class OptionalStorefrontRuntimeTests(unittest.TestCase):
+    def test_core_armor_offers_include_native_required_components(self):
+        assort=json.loads((ROOT/"db/assort.json").read_text(encoding="utf-8"))
+        required={"5d5e9c74a4b9364855191c40","5b44cad286f77402a54ae7e5","5d5d87f786f77427997cfaef"}
+        roots={x["_tpl"]:x["_id"] for x in assort["items"] if x.get("parentId")=="hideout" and x["_tpl"] in required}
+        self.assertEqual(set(roots),required)
+        for tpl,root_id in roots.items():
+            self.assertTrue(any(x.get("parentId")==root_id for x in assort["items"]),tpl)
+
     def test_optional_content_is_attached_after_third_party_template_publication(self):
         early=(ROOT/"server/TraderRegistration.cs").read_text(encoding="utf-8")
         quests=(ROOT/"server/QuestRegistration.cs").read_text(encoding="utf-8")

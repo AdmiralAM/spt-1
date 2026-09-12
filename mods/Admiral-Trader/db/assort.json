@@ -205,18 +205,6 @@
       }
     },
     {
-      "_id": "32bdf9f1175fe841d44c87db",
-      "_tpl": "657f8b94f92cd718b70154ff",
-      "parentId": "32bdf9f1175fe841d44c87da",
-      "slotId": "Helmet_top"
-    },
-    {
-      "_id": "32bdf9f1175fe841d44c87dc",
-      "_tpl": "657f8b43f92cd718b70154fb",
-      "parentId": "32bdf9f1175fe841d44c87da",
-      "slotId": "Helmet_back"
-    },
-    {
       "_id": "576766464a96c193b6f654b1",
       "_tpl": "5a7882dcc5856700177af662",
       "parentId": "hideout",
@@ -427,30 +415,6 @@
       }
     },
     {
-      "_id": "bb47b68c39d86a0f8a082d19",
-      "_tpl": "6575bc88c6700bd6b40e8a57",
-      "parentId": "bb47b68c39d86a0f8a082d18",
-      "slotId": "Soft_armor_front"
-    },
-    {
-      "_id": "bb47b68c39d86a0f8a082d1a",
-      "_tpl": "6575bca0dc9932aed601c5d7",
-      "parentId": "bb47b68c39d86a0f8a082d18",
-      "slotId": "Soft_armor_back"
-    },
-    {
-      "_id": "bb47b68c39d86a0f8a082d1b",
-      "_tpl": "656fae5f7c2d57afe200c0d7",
-      "parentId": "bb47b68c39d86a0f8a082d18",
-      "slotId": "Front_plate"
-    },
-    {
-      "_id": "bb47b68c39d86a0f8a082d1c",
-      "_tpl": "656fae5f7c2d57afe200c0d7",
-      "parentId": "bb47b68c39d86a0f8a082d18",
-      "slotId": "Back_plate"
-    },
-    {
       "_id": "f5a50959ede25e5b2e1ddbb1",
       "_tpl": "5d5d87f786f77427997cfaef",
       "parentId": "hideout",
@@ -461,42 +425,6 @@
         "BuyRestrictionMax": 1,
         "BuyRestrictionCurrent": 0
       }
-    },
-    {
-      "_id": "f5a50959ede25e5b2e1ddbb2",
-      "_tpl": "6570e5100b57c03ec90b970a",
-      "parentId": "f5a50959ede25e5b2e1ddbb1",
-      "slotId": "Soft_armor_front"
-    },
-    {
-      "_id": "f5a50959ede25e5b2e1ddbb3",
-      "_tpl": "6570e479a6560e4ee50c2b02",
-      "parentId": "f5a50959ede25e5b2e1ddbb1",
-      "slotId": "Soft_armor_back"
-    },
-    {
-      "_id": "f5a50959ede25e5b2e1ddbb4",
-      "_tpl": "6570e5674cc0d2ab1e05edbb",
-      "parentId": "f5a50959ede25e5b2e1ddbb1",
-      "slotId": "Soft_armor_left"
-    },
-    {
-      "_id": "f5a50959ede25e5b2e1ddbb5",
-      "_tpl": "6570e59b0b57c03ec90b970e",
-      "parentId": "f5a50959ede25e5b2e1ddbb1",
-      "slotId": "soft_armor_right"
-    },
-    {
-      "_id": "f5a50959ede25e5b2e1ddbb6",
-      "_tpl": "656f9fa0498d1b7e3e071d98",
-      "parentId": "f5a50959ede25e5b2e1ddbb1",
-      "slotId": "Front_plate"
-    },
-    {
-      "_id": "f5a50959ede25e5b2e1ddbb7",
-      "_tpl": "656f9fa0498d1b7e3e071d98",
-      "parentId": "f5a50959ede25e5b2e1ddbb1",
-      "slotId": "Back_plate"
     },
     {
       "_id": "837fba2b3d8b5e4d7d274e9b",
@@ -689,6 +617,78 @@
         "BuyRestrictionMax": 1,
         "BuyRestrictionCurrent": 0
       }
+    },
+    {
+      "_id": "34845dc6ffb844fd03d9e4ba",
+      "_tpl": "657f8b94f92cd718b70154ff",
+      "parentId": "32bdf9f1175fe841d44c87da",
+      "slotId": "Helmet_top"
+    },
+    {
+      "_id": "95ef3c290e5ad767baba9e94",
+      "_tpl": "657f8b43f92cd718b70154fb",
+      "parentId": "32bdf9f1175fe841d44c87da",
+      "slotId": "Helmet_back"
+    },
+    {
+      "_id": "f10f6f5223c2aee3f5f34393",
+      "_tpl": "6575bc88c6700bd6b40e8a57",
+      "parentId": "bb47b68c39d86a0f8a082d18",
+      "slotId": "Soft_armor_front"
+    },
+    {
+      "_id": "ed67ca2ba5b6db135cf09208",
+      "_tpl": "6575bca0dc9932aed601c5d7",
+      "parentId": "bb47b68c39d86a0f8a082d18",
+      "slotId": "Soft_armor_back"
+    },
+    {
+      "_id": "8213c61ddea6f7cd97258b5b",
+      "_tpl": "656fae5f7c2d57afe200c0d7",
+      "parentId": "bb47b68c39d86a0f8a082d18",
+      "slotId": "Front_plate"
+    },
+    {
+      "_id": "4faa0cd4e31f3b60264e9c44",
+      "_tpl": "656fae5f7c2d57afe200c0d7",
+      "parentId": "bb47b68c39d86a0f8a082d18",
+      "slotId": "Back_plate"
+    },
+    {
+      "_id": "8803888eca3697be882d8937",
+      "_tpl": "6570e5100b57c03ec90b970a",
+      "parentId": "f5a50959ede25e5b2e1ddbb1",
+      "slotId": "Soft_armor_front"
+    },
+    {
+      "_id": "149ec9a697ea953d5cb63be0",
+      "_tpl": "6570e479a6560e4ee50c2b02",
+      "parentId": "f5a50959ede25e5b2e1ddbb1",
+      "slotId": "Soft_armor_back"
+    },
+    {
+      "_id": "6ed74576c9ccc54a36a63317",
+      "_tpl": "6570e5674cc0d2ab1e05edbb",
+      "parentId": "f5a50959ede25e5b2e1ddbb1",
+      "slotId": "Soft_armor_left"
+    },
+    {
+      "_id": "00520ff7f56179f2e7c72a15",
+      "_tpl": "6570e59b0b57c03ec90b970e",
+      "parentId": "f5a50959ede25e5b2e1ddbb1",
+      "slotId": "soft_armor_right"
+    },
+    {
+      "_id": "8c7c40e298e759029841510a",
+      "_tpl": "656f9fa0498d1b7e3e071d98",
+      "parentId": "f5a50959ede25e5b2e1ddbb1",
+      "slotId": "Front_plate"
+    },
+    {
+      "_id": "95612b6417840d18d25b449d",
+      "_tpl": "656f9fa0498d1b7e3e071d98",
+      "parentId": "f5a50959ede25e5b2e1ddbb1",
+      "slotId": "Back_plate"
     }
   ],
   "barter_scheme": {

@@ -50,6 +50,23 @@ class QuestQualityRuntimeTests(unittest.TestCase):
                 [c["id"] for c in quest["conditions"]["AvailableForFinish"]],
             )
 
+    def test_russian_arsenal_copy_is_localized_and_names_every_allowed_weapon(self):
+        russian = self.locales["ru"]
+        weapon_quests = []
+        for quest in self.quests:
+            conditions = quest["conditions"]["AvailableForFinish"]
+            if not conditions or conditions[0].get("conditionType") != "CounterCreator":
+                continue
+            nested = conditions[0].get("counter", {}).get("conditions", [])
+            if any(row.get("weapon") for row in nested):
+                weapon_quests.append(quest)
+        self.assertEqual(len(weapon_quests), 40)
+        for quest in weapon_quests:
+            qid = quest["_id"]
+            self.assertNotRegex(russian[qid + " name"], r"^(Arsenal Rotation|Operation:|Loadout:)")
+            self.assertIn("Уточнение:", russian[qid + " description"])
+            self.assertIn("Разрешённое оружие:", russian[qid + " description"])
+
 
 if __name__ == "__main__":
     unittest.main()
