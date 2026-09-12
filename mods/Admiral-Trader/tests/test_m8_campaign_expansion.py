@@ -38,6 +38,15 @@ class M8CampaignExpansionTests(unittest.TestCase):
             self.assertIn("Sandbox", text)
             self.assertIn("Sandbox_high", text)
 
+    def test_access_foundation_follows_ground_zero_entry(self):
+        access = self.by_id["5d404ebd654de4efecef71d2"]
+        prerequisites = [
+            row["target"]
+            for row in access["conditions"]["AvailableForStart"]
+            if row.get("conditionType") == "Quest"
+        ]
+        self.assertEqual(prerequisites, ["02c07ee31821696597ceabef"])
+
     def test_optional_weapons_are_real_alternatives_with_native_fallback(self):
         accepted = self.optional["acceptedWeapons"]
         self.assertEqual(len(accepted), self.runtime["optionalWeaponCount"])

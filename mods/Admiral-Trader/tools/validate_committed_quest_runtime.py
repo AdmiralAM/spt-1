@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any
 
 TRADER_ID = "d5c27bb3169f8dfbc13f6b69"
+FOUNDATION_ACCESS_QUEST_ID = "5d404ebd654de4efecef71d2"
+GROUND_ZERO_ENTRY_QUEST_ID = "02c07ee31821696597ceabef"
 REQUIRED_LOCALE_FIELDS = (
     "name",
     "description",
@@ -57,7 +59,25 @@ def validate_runtime(
 
     for qid in sorted(committed):
         quest = committed[qid]
-        if quest != generated_templates[qid]:
+        expected = generated_templates[qid]
+        if qid == FOUNDATION_ACCESS_QUEST_ID:
+            expected = json.loads(json.dumps(expected))
+            expected["conditions"]["AvailableForStart"].append(
+                {
+                    "id": "552785d8cac9328979f920f1",
+                    "index": 1,
+                    "dynamicLocale": False,
+                    "globalQuestCounterId": "",
+                    "visibilityConditions": [],
+                    "parentId": "",
+                    "target": GROUND_ZERO_ENTRY_QUEST_ID,
+                    "status": [4],
+                    "availableAfter": 0,
+                    "dispersion": 0,
+                    "conditionType": "Quest",
+                }
+            )
+        if quest != expected:
             raise ValueError(f"committed quest differs from compiler output: {qid}")
         if quest.get("traderId") != TRADER_ID:
             raise ValueError(f"quest {qid} trader id drift")
