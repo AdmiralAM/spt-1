@@ -67,6 +67,15 @@ if 'PrepareNode(BeltParentTpl, "BAndHBCustomBeltItem", SearchableParentTpl, comp
 if "runtimeTypePatches.TryInstall(!packNStrapDetected)" in client:
     violations.append("companion mode drops the JsonTypes mapping required to deserialize legacy B&A profile items")
 
+runtime_types = (SRC / "RuntimeCustomBeltTypes.cs").read_text(encoding="utf-8-sig")
+for token in [
+    "typeTable[RuntimeCustomBeltTypePatches.CustomTemplateParentId] = CustomBeltItemType;",
+    "templateTable[RuntimeCustomBeltTypePatches.CustomTemplateParentId] = CustomTemplateType;",
+    "constructors[RuntimeCustomBeltTypePatches.CustomTemplateParentId] = constructorDelegate;",
+]:
+    if token not in runtime_types:
+        violations.append(f"shared searchable taxonomy lacks complete JsonTypes registration: {token}")
+
 if violations:
     raise SystemExit("B&A&HB Pack 'n' Strap companion gate failed:\n" + "\n".join(violations))
 print("B&A&HB Pack 'n' Strap companion gate: OK (standard Belt/ArmBand owners suppressed; HeadBand/Dogtag/protection retained)")
