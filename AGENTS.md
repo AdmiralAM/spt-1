@@ -89,6 +89,14 @@ PR creation, branch synchronization, commits, documentation, CI, packaging, and 
 - Do not build an intermediate ZIP merely to copy the same files into the authorized local installation. Produce an install-ready ZIP only for stable release, external distribution, deliberate rollback evidence, or an explicit user request.
 - A direct-deployment report must state what was replaced, where it was installed, which source head produced it, deployed file hashes, smoke outcome, and rollback location. Never claim deployment from build-output alone.
 
+### Locally started SPT process ownership
+
+- A worker that starts the local SPT server, launcher, game client, test host, helper service, or another task-owned long-running process must stop every process it started before ending its run, including on validation failure or timeout.
+- Prefer graceful shutdown first. After shutdown, verify by PID/process identity and listening port that no task-owned process remains.
+- Never leave the user to discover or terminate an unattended server started by automation.
+- Do not terminate a pre-existing user-owned SPT/game process. Record process identity before launch so cleanup remains ownership-bounded.
+- A deliberately persistent process may remain only when the user explicitly asked for it to stay running; report that exception clearly.
+
 ### Mandatory user-facing test request
 
 A runtime-test request is valid only when the same message gives the user one complete, immediately actionable handoff. In artifact mode it must begin with this compact block (translated to the conversation language when needed):
