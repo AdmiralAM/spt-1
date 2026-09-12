@@ -38,9 +38,9 @@ namespace SPTItemIntelligence
             RequirementReasonFlags reasons,
             ItemRequirementDecision decision,
             string holdReason,
-            IEnumerable<RequirementDetail> details = null)
+            IEnumerable<RequirementDetail> details = null, ItemRequirementAllocation allocation = null)
         {
-            TemplateId = templateId ?? string.Empty;
+            Allocation = allocation ?? new ItemRequirementAllocation(ownedCount, 0, questNeededNow, questNeededLater, hideoutNeeded, 0, 0); TemplateId = templateId ?? string.Empty;
             OwnedCount = Math.Max(0, ownedCount);
             QuestNeededNow = Math.Max(0, questNeededNow);
             QuestNeededLater = Math.Max(0, questNeededLater);
@@ -58,6 +58,7 @@ namespace SPTItemIntelligence
         }
 
         public string TemplateId { get; }
+        public ItemRequirementAllocation Allocation { get; }
         public int OwnedCount { get; }
         public int QuestNeededNow { get; }
         public int QuestNeededLater { get; }
@@ -134,7 +135,7 @@ namespace SPTItemIntelligence
                     entry.Reasons,
                     decision,
                     BuildHoldReason(entry),
-                    entry.Details);
+                    entry.Details, entry.Allocation);
             }
 
             return new ItemRequirementStateIndex(index.GeneratedAtUnixSeconds, states);

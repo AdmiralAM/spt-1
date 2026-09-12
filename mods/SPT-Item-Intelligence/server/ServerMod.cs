@@ -5,11 +5,13 @@ using SPTarkov.Server.Core.DI;
 using SPTarkov.Server.Core.Helpers.Items;
 using SPTarkov.Server.Core.Helpers.Profile;
 using SPTarkov.Server.Core.Helpers.Traders;
+using SPTarkov.Server.Core.Helpers.Ragfair;
 using SPTarkov.Server.Core.Models.Common;
 using SPTarkov.Server.Core.Models.Enums;
 using SPTarkov.Server.Core.Models.Spt.Mod;
 using SPTarkov.Server.Core.Models.Spt.Tables;
 using SPTarkov.Server.Core.Utils;
+using System.Text.Json;
 
 namespace SPTItemIntelligence.Server;
 
@@ -19,7 +21,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "SPT Item Intelligence Server";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("0.12.0");
+    public SemanticVersioning.Version Version { get; init; } = new("1.1.0");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
@@ -37,8 +39,16 @@ public sealed class RequirementDataService(
     HideoutTable hideoutTable,
     HandbookHelper handbookHelper,
     ItemHelper itemHelper,
-    PresetHelper presetHelper)
+    PresetHelper presetHelper,
+    RagfairServerHelper ragfairServerHelper)
 {
+    private static readonly MongoId[] TotalValueBaseClasses =
+    [
+        BaseClasses.WEAPON,
+        BaseClasses.ARMORED_EQUIPMENT,
+        BaseClasses.VEST
+    ];
+
     public ValueTask<string> BuildSnapshotAsync(MongoId sessionId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -50,9 +60,41 @@ public sealed class RequirementDataService(
             profile!,
             templateTable.Quests,
             hideoutTable,
-            prices);
+            prices,
+            LoadHideoutProgress(sessionId));
         cancellationToken.ThrowIfCancellationRequested();
         return ValueTask.FromResult(jsonUtil.Serialize(envelope)!);
+    }
+
+    private static object LoadHideoutProgress(MongoId sessionId)
+    {
+        const string fileName = "Tyfon.HideoutInProgress.json";
+        string relative = Path.Combine("SPT_Runtime", "user", "profileData", sessionId.ToString(), fileName);
+        List<string> roots = [Environment.CurrentDirectory, AppContext.BaseDirectory];
+        foreach (string root in roots)
+        {
+            DirectoryInfo? directory = new(root);
+            for (int depth = 0; directory is not null && depth < 8; depth++, directory = directory.Parent)
+            {
+                string path = Path.Combine(directory.FullName, relative);
+                if (!File.Exists(path)) continue;
+                try
+                {
+                    return JsonSerializer.Deserialize<HideoutProgressSnapshot>(File.ReadAllText(path)) ?? EmptyHideoutProgress();
+                }
+                catch (IOException) { return EmptyHideoutProgress(); }
+                catch (UnauthorizedAccessException) { return EmptyHideoutProgress(); }
+                catch (JsonException) { return EmptyHideoutProgress(); }
+            }
+        }
+        return EmptyHideoutProgress();
+    }
+
+    private static HideoutProgressSnapshot EmptyHideoutProgress() => new();
+
+    private sealed class HideoutProgressSnapshot
+    {
+        public Dictionary<string, Dictionary<string, int>> areaProgresses { get; set; } = new();
     }
 
     private (Dictionary<MongoId, int> Craft, Dictionary<MongoId, int> Barter) BuildRelevance(CancellationToken cancellationToken)
@@ -106,18 +148,35 @@ public sealed class RequirementDataService(
             var trader = ResolveBestTrader(templateId, traderBasis);
             int width = Math.Max(1, item.Properties?.Width ?? 1);
             int height = Math.Max(1, item.Properties?.Height ?? 1);
+            bool fleaAllowed = ragfairServerHelper.IsItemValidRagfairItem(itemHelper.GetItem(templateId));
+            double usableFlea = fleaAllowed ? fleaValue : 0;
+            double economic = Math.Max(trader.Price, usableFlea);
+            if (economic <= 0) economic = handbookValue;
+            bool total = itemHelper.IsOfBaseclasses(templateId, TotalValueBaseClasses);
+            bool ammunition = itemHelper.IsOfBaseclass(templateId, BaseClasses.AMMO);
+            bool key = itemHelper.IsOfBaseclass(templateId, BaseClasses.KEY);
+            string background = ammunition
+                ? BackgroundPalette.Ammo(item.Properties?.PenetrationPower ?? 0)
+                : key
+                    ? string.Empty
+                    : BackgroundPalette.Money(total ? economic : economic / ((double)width * height));
+            // Preserve the proven Item Valuation integration path: write the tier to
+            // the authoritative item template and let EFT render its native ColorPanel.
+            // Empty means below the tint threshold and therefore preserves the original.
+            // Keys remain untouched so BetterKeys keeps sole ownership of their colors.
+            if (background.Length > 0) item.Properties!.BackgroundColor = background;
             craftCounts.TryGetValue(templateId, out int craftCount);
             barterCounts.TryGetValue(templateId, out int barterCount);
             result.Add(new ItemPriceSnapshotEntry(
                 templateId.ToString(),
                 ToLong(trader.Price),
                 trader.Name,
-                ToLong(fleaValue),
+                ToLong(usableFlea),
                 ToLong(handbookValue),
                 width,
                 height,
                 craftCount,
-                barterCount));
+                barterCount, background));
         }
         return result;
     }
@@ -202,7 +261,7 @@ public sealed class ItemIntelligenceLoadNotice(ISptLogger<ItemIntelligenceLoadNo
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        logger.Success("SPT Item Intelligence Server v0.12.0 loaded; named trader, relevance and requirement-detail snapshot ready");
+        logger.Success("Item Intelligence Admiral Server v1.1.0 loaded; consolidated requirement, value, relevance and background snapshot ready");
         return Task.CompletedTask;
     }
 }

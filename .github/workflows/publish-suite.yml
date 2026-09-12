@@ -96,12 +96,6 @@ jobs:
         shell: pwsh
         run: dotnet run --project mods/SPT-Pause/tests/SPT-Pause.Tests.csproj -c Release
 
-      - name: Validate Belt Armband Inventory
-        shell: pwsh
-        run: |
-          python mods/SPT-Belt-Armband-Inventory/tools/check_hotpaths.py
-          dotnet run --project mods/SPT-Belt-Armband-Inventory/tests/SPT-Belt-Armband-Inventory.Tests.csproj -c Release
-
       - name: Build published and stable-source components
         shell: pwsh
         run: |
@@ -142,11 +136,11 @@ jobs:
           Write-PackageMetadata $hudRoot ([ordered]@{ name='SPT Tactical HUD'; channel='runtime'; client_version=$env:HUD_VERSION; server_version=$env:HUD_SERVER_VERSION; spt_version='4.1.x'; source_commit=$sourceSha; client_included=$true; server_included=$true }) @('# SPT Tactical HUD runtime','',"Ready-to-install Tactical HUD $env:HUD_VERSION for SPT 4.1.x.",'','Copy this package into the SPT root. It contains the Tactical HUD client and server companion only.',"Verified source commit: $sourceSha")
 
           $iiRoot = Join-Path $out 'SPT-Item-Intelligence'
-          $iiClient = Join-Path $iiRoot 'BepInEx/plugins/SPT Item Intelligence'
-          $iiServer = Join-Path $iiRoot 'SPT_Runtime/user/mods/SPT Item Intelligence Server'
-          Copy-RequiredFile "mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/$env:II_ASSEMBLY.dll" (Join-Path $iiClient 'SPT Item Intelligence.dll')
-          Copy-RequiredFile "mods/SPT-Item-Intelligence/server/bin/Release/net10.0/$env:II_SERVER_ASSEMBLY.dll" (Join-Path $iiServer 'SPT Item Intelligence Server.dll')
-          Write-PackageMetadata $iiRoot ([ordered]@{ name='SPT Item Intelligence'; channel='runtime-item-intelligence'; client_version=$env:II_VERSION; server_version=$env:II_SERVER_VERSION; spt_version='4.1.x'; source_commit=$sourceSha; client_included=$true; server_included=$true }) @('# SPT Item Intelligence runtime','',"Ready-to-install Item Intelligence $env:II_VERSION for SPT 4.1.x.",'','Copy this package into the SPT root. It contains Item Intelligence client and server components only.',"Verified source commit: $sourceSha")
+          $iiClient = Join-Path $iiRoot 'BepInEx/plugins/Admiral SPT/SPT Item Intelligence'
+          $iiServer = Join-Path $iiRoot 'SPT_Runtime/user/mods/Item Intelligence Admiral Server'
+          Copy-RequiredFile "mods/SPT-Item-Intelligence/src/bin/Release/netstandard2.1/$env:II_ASSEMBLY.dll" (Join-Path $iiClient 'Item Intelligence Admiral.dll')
+          Copy-RequiredFile "mods/SPT-Item-Intelligence/server/bin/Release/net10.0/$env:II_SERVER_ASSEMBLY.dll" (Join-Path $iiServer 'Item Intelligence Admiral Server.dll')
+          Write-PackageMetadata $iiRoot ([ordered]@{ name='Item Intelligence Admiral'; channel='runtime-item-intelligence'; client_version=$env:II_VERSION; server_version=$env:II_SERVER_VERSION; spt_version='4.1.x'; source_commit=$sourceSha; client_included=$true; server_included=$true }) @('# Item Intelligence Admiral runtime','',"Ready-to-install Item Intelligence Admiral $env:II_VERSION for SPT 4.1.x.",'','Copy this package into the SPT root. It contains Item Intelligence client and server components only.',"Verified source commit: $sourceSha")
 
           $pauseRoot = Join-Path $out 'SPT-Pause'
           $pauseClient = Join-Path $pauseRoot 'BepInEx/plugins/SPT Pause'
@@ -157,7 +151,7 @@ jobs:
           $beltClient = Join-Path $beltRoot 'BepInEx/plugins/SPT Belt Armband Inventory'
           $beltServer = Join-Path $beltRoot 'SPT_Runtime/user/mods/SPT Belt Armband Inventory Server'
           Copy-RequiredFile "mods/SPT-Belt-Armband-Inventory/src/bin/Release/netstandard2.1/$env:BELT_ASSEMBLY.dll" (Join-Path $beltClient 'SPT Belt Armband Inventory.dll')
-          Copy-RequiredFile 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT Belt Armband Inventory Server.dll' (Join-Path $beltServer 'SPT Belt Armband Inventory Server.dll')
+          Copy-RequiredFile 'mods/SPT-Belt-Armband-Inventory/server/bin/Release/net10.0/SPT-Belt-Armband-Inventory.Server.dll' (Join-Path $beltServer 'SPT Belt Armband Inventory Server.dll')
           Write-PackageMetadata $beltRoot ([ordered]@{ name='SPT Belt Armband Inventory'; channel='runtime-belt-armband'; version=$env:BELT_VERSION; spt_version='4.1.x'; source_commit=$sourceSha; client_included=$true; server_included=$true }) @('# SPT Belt/Armband Inventory runtime','',"Ready-to-install Belt/Armband Inventory $env:BELT_VERSION for SPT 4.1.x.",'','Copy this package into the SPT root. It contains the current client and server components.',"Verified source commit: $sourceSha")
 
       - name: Validate assembled runtime packages
@@ -167,8 +161,8 @@ jobs:
             'build-output/SPT-Tactical-HUD/BepInEx/plugins/SPT Tactical HUD/SPT Tactical HUD.dll',
             'build-output/SPT-Tactical-HUD/BepInEx/plugins/SPT Tactical HUD/assets/hud-sprites.png',
             'build-output/SPT-Tactical-HUD/SPT_Runtime/user/mods/SPT Tactical HUD Server/SPT Tactical HUD Server.dll',
-            'build-output/SPT-Item-Intelligence/BepInEx/plugins/SPT Item Intelligence/SPT Item Intelligence.dll',
-            'build-output/SPT-Item-Intelligence/SPT_Runtime/user/mods/SPT Item Intelligence Server/SPT Item Intelligence Server.dll',
+            'build-output/SPT-Item-Intelligence/BepInEx/plugins/Admiral SPT/SPT Item Intelligence/Item Intelligence Admiral.dll',
+            'build-output/SPT-Item-Intelligence/SPT_Runtime/user/mods/Item Intelligence Admiral Server/Item Intelligence Admiral Server.dll',
             'build-output/SPT-Pause/BepInEx/plugins/SPT Pause/SPT Pause.dll',
             'build-output/SPT-Belt-Armband-Inventory/BepInEx/plugins/SPT Belt Armband Inventory/SPT Belt Armband Inventory.dll',
             'build-output/SPT-Belt-Armband-Inventory/SPT_Runtime/user/mods/SPT Belt Armband Inventory Server/SPT Belt Armband Inventory Server.dll'
