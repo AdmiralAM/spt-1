@@ -73,8 +73,8 @@ jobs:
           trader_id = product['traderId']
           if runtime['traderId'] != trader_id or base['_id'] != trader_id:
               raise SystemExit('runtime/base trader identity drift')
-          if runtime['registrationEnabled'] is not False:
-              raise SystemExit('registration must remain fail-closed until runtime release gate')
+          if runtime['registrationEnabled'] is not True:
+              raise SystemExit('stable runtime must register the persistent Admiral trader identity')
           if len(trader_id) != 24 or any(ch not in '0123456789abcdef' for ch in trader_id):
               raise SystemExit('trader id is not lower-case 24-hex')
           required_assort = {'items', 'barter_scheme', 'loyal_level_items'}
