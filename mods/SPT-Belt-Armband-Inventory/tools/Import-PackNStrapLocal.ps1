@@ -49,6 +49,29 @@ Copy-Item -LiteralPath (Join-Path $serverSource 'bundles') -Destination $runtime
 Copy-Item -LiteralPath (Join-Path $serverSource 'db') -Destination $runtime -Recurse
 Copy-Item -LiteralPath (Join-Path $serverSource 'bundles.json') -Destination $runtime
 
+$headBandAssetRoot = Join-Path $moduleRoot 'assets\headband-rambo\runtime'
+$headBandBundle = Join-Path $headBandAssetRoot 'bundles\HeadBand\headband_rambo_red.bundle'
+$headBandEntry = Join-Path $headBandAssetRoot 'bundle-entry.json'
+foreach ($requiredHeadBandAsset in @($headBandBundle, $headBandEntry)) {
+    if (-not (Test-Path -LiteralPath $requiredHeadBandAsset)) {
+        throw "Required B&A&HB HeadBand asset missing: $requiredHeadBandAsset"
+    }
+}
+
+$headBandBundleTarget = Join-Path $runtime 'bundles\HeadBand\headband_rambo_red.bundle'
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $headBandBundleTarget) | Out-Null
+Copy-Item -LiteralPath $headBandBundle -Destination $headBandBundleTarget -Force
+
+$bundlesPath = Join-Path $runtime 'bundles.json'
+$bundleManifest = Get-Content -Raw -LiteralPath $bundlesPath | ConvertFrom-Json -AsHashtable
+$entry = Get-Content -Raw -LiteralPath $headBandEntry | ConvertFrom-Json -AsHashtable
+$existingEntry = @($bundleManifest['manifest']) | Where-Object { $_['key'] -eq $entry['key'] }
+if ($existingEntry.Count -gt 0) {
+    throw "Pack 'n' Strap bundle manifest already owns B&A&HB key $($entry['key'])"
+}
+$bundleManifest['manifest'] = @($bundleManifest['manifest']) + @($entry)
+$bundleManifest | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $bundlesPath -Encoding utf8NoBOM
+
 $gearPath = Join-Path $runtime 'db\CustomItems\Gear_Belts.json'
 $gear = Get-Content -Raw -LiteralPath $gearPath | ConvertFrom-Json -AsHashtable
 foreach ($item in $gear.Values) { $item['addtoInventorySlots'] = @() }

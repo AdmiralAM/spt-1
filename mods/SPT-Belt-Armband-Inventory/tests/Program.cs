@@ -27,6 +27,7 @@ internal static class Program
         ArmBandVariantCatalogRegression.Run();
         ArmBandLootPolicyRegression.Run();
         ArmBandFeatureConfigRegression.Run();
+        HeadBandVisualAssetRegression.Run();
         SPTBeltArmbandInventory.Tests.ProfileCleanupRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedWearableSlotContractRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedSlotPresentationPolicyRegression.Run();

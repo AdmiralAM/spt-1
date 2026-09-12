@@ -100,6 +100,11 @@ public sealed class DedicatedWearableItems(
             {
                 BackgroundColor = "blue",
                 ExaminedByDefault = true,
+                Prefab = new Prefab
+                {
+                    Path = "HeadBand/headband_rambo_red.bundle",
+                    Rcid = string.Empty
+                },
                 Grids =
                 [
                     CreateGrid(

@@ -43,6 +43,13 @@ Utility HeadBand keeps its persistent item identity and dedicated slot16 host. I
 
 The original `main` grid identity remains persistent. The cigarette grid uses a new dedicated persistent ID. Existing v0.1.0 profile contents migrate through SPT's profile-migration lifecycle: compatible money/wallet contents stay in `main`, cigarettes move to `cigarettes`, and excess same-category roots are preserved through the PMC sorting table rather than deleted.
 
+The v0.3 visual candidate keeps those identities and filters unchanged and
+replaces only the inherited ArmBand prefab with an owned red Rambo-style cloth
+model. Its bundle key is `HeadBand/headband_rambo_red.bundle`. The build source,
+Blender model, Unity project and deterministic bundle check live under
+`assets/headband-rambo/`; Pack 'n' Strap remains only a local coordinate/prefab
+reference during the asset build and is not a runtime dependency of this model.
+
 ## Dogtag Case v0.2
 
 Dogtag Case is intentionally **not** a fourth custom wearable host. It uses the existing vanilla `Dogtag` equipment slot and extends that host only with the exact B&A&HB Dogtag Case template while preserving every pre-existing vanilla acceptance entry.
