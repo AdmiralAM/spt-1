@@ -1,0 +1,10 @@
+{
+  "client_included": true,
+  "name": "SPT Tactical HUD",
+  "server_version": "1.13.0",
+  "spt_version": "4.1.x",
+  "client_version": "1.13.2",
+  "source_commit": "1a35436f28e7e1357ae16646c12a452f0e2c9077",
+  "channel": "runtime",
+  "server_included": true
+}
