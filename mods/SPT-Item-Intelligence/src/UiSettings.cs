@@ -11,6 +11,13 @@ namespace SPTItemIntelligence
         Right
     }
 
+    public enum ItemMarkerSymbol
+    {
+        Check,
+        Cross,
+        Diamond
+    }
+
     public sealed class ItemIntelligenceUiSettings
     {
         readonly ConfigEntry<bool> markers, tooltips, quests, futureQuests, hideout, value, relevance, backgrounds;
@@ -22,6 +29,7 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<int> tooltipMaximumWidth;
         readonly ConfigEntry<float> tooltipPadding;
         readonly ConfigEntry<ItemMarkerSide> markerSide;
+        readonly ConfigEntry<ItemMarkerSymbol> markerSymbol;
         readonly ConfigEntry<float> markerSize;
         readonly ConfigEntry<float> markerOpacity;
         readonly ConfigEntry<float> markerOffsetX;
@@ -69,6 +77,8 @@ namespace SPTItemIntelligence
 
             markerSide = config.Bind("Marker", "Side", ItemMarkerSide.Left,
                 "Select the upper-left or upper-right item-cell corner. This stays attached to the selected edge on multi-cell items.");
+            markerSymbol = config.Bind("Marker", "Symbol", ItemMarkerSymbol.Check,
+                "Inner marker symbol. Check is the stable default; Cross and Diamond are optional visual alternatives.");
             markerSize = config.Bind("Marker", "Size", 14f,
                 new ConfigDescription("Information marker size in pixels.", new AcceptableValueRange<float>(1f, 100f)));
             markerOpacity = config.Bind("Marker", "Opacity", 0.96f,
@@ -102,6 +112,7 @@ namespace SPTItemIntelligence
             tooltipMaximumWidth.SettingChanged += delegate { Touch(); };
             tooltipPadding.SettingChanged += delegate { Touch(); };
             markerSide.SettingChanged += delegate { Touch(); };
+            markerSymbol.SettingChanged += delegate { Touch(); };
             markerSize.SettingChanged += delegate { Touch(); };
             markerOpacity.SettingChanged += delegate { Touch(); };
             markerBackgroundColor.SettingChanged += delegate { Touch(); };
@@ -130,6 +141,7 @@ namespace SPTItemIntelligence
         public int TooltipMaximumWidth => Mathf.Clamp(tooltipMaximumWidth.Value, 80, 1000);
         public float TooltipPadding => Mathf.Clamp(tooltipPadding.Value, 0f, 40f);
         public ItemMarkerSide MarkerSide => markerSide.Value;
+        public ItemMarkerSymbol MarkerSymbol => markerSymbol.Value;
         public float MarkerSize => Mathf.Clamp(markerSize.Value, 1f, 100f);
         public float MarkerOpacity => Mathf.Clamp01(markerOpacity.Value);
         public Color MarkerBackgroundColor => markerBackgroundColor.Value;

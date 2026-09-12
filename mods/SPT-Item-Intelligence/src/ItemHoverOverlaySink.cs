@@ -409,6 +409,8 @@ namespace SPTItemIntelligence
         sealed class AttachedMarkerView : IDisposable
         {
             static Sprite checkmarkSprite;
+            static Sprite crossSprite;
+            static Sprite diamondSprite;
             static Sprite circleSprite;
             static Sprite ringSprite;
             static readonly Type imageType = Type.GetType("UnityEngine.UI.Image, UnityEngine.UI", false);
@@ -523,6 +525,7 @@ namespace SPTItemIntelligence
                 Color sourceColor = settings.GetColor(presentation.Kind);
                 sourceColor.a = settings.MarkerOpacity;
                 Set(ringImage, "color", sourceColor);
+                Set(glyphImage, "sprite", SymbolSprite(settings.MarkerSymbol));
                 Color statusColor = ResolveStatusColor(hoverText, settings);
                 statusColor.a = settings.MarkerOpacity;
                 Set(glyphImage, "color", statusColor);
@@ -714,6 +717,64 @@ namespace SPTItemIntelligence
                 checkmarkSprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
                 checkmarkSprite.hideFlags = HideFlags.HideAndDontSave;
                 return checkmarkSprite;
+            }
+
+            static Sprite SymbolSprite(ItemMarkerSymbol symbol)
+            {
+                switch (symbol)
+                {
+                    case ItemMarkerSymbol.Cross: return CrossSprite();
+                    case ItemMarkerSymbol.Diamond: return DiamondSprite();
+                    default: return CheckmarkSprite();
+                }
+            }
+
+            static Sprite CrossSprite()
+            {
+                if (crossSprite != null) return crossSprite;
+                crossSprite = SegmentSprite("ItemIntelligenceOriginalCross",
+                    new Vector2(.27f, .27f), new Vector2(.73f, .73f),
+                    new Vector2(.27f, .73f), new Vector2(.73f, .27f), .068f);
+                return crossSprite;
+            }
+
+            static Sprite DiamondSprite()
+            {
+                if (diamondSprite != null) return diamondSprite;
+                diamondSprite = SegmentSprite("ItemIntelligenceOriginalDiamond",
+                    new Vector2(.50f, .20f), new Vector2(.80f, .50f),
+                    new Vector2(.80f, .50f), new Vector2(.50f, .80f), .060f,
+                    new Vector2(.50f, .80f), new Vector2(.20f, .50f),
+                    new Vector2(.20f, .50f), new Vector2(.50f, .20f));
+                return diamondSprite;
+            }
+
+            static Sprite SegmentSprite(string name, Vector2 a1, Vector2 b1, Vector2 a2, Vector2 b2, float width,
+                Vector2? a3 = null, Vector2? b3 = null, Vector2? a4 = null, Vector2? b4 = null)
+            {
+                const int size = 64;
+                Texture2D texture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+                texture.name = name;
+                texture.hideFlags = HideFlags.HideAndDontSave;
+                texture.filterMode = FilterMode.Bilinear;
+                texture.wrapMode = TextureWrapMode.Clamp;
+                Color32[] pixels = new Color32[size * size];
+                for (int y = 0; y < size; y++)
+                for (int x = 0; x < size; x++)
+                {
+                    Vector2 p = new Vector2((x + .5f) / size, (y + .5f) / size);
+                    float distance = Mathf.Min(SegmentDistance(p, a1, b1), SegmentDistance(p, a2, b2));
+                    if (a3.HasValue) distance = Mathf.Min(distance, SegmentDistance(p, a3.Value, b3.Value));
+                    if (a4.HasValue) distance = Mathf.Min(distance, SegmentDistance(p, a4.Value, b4.Value));
+                    byte alpha = (byte)Mathf.RoundToInt(Mathf.Clamp01((width - distance) * size) * 255f);
+                    pixels[y * size + x] = new Color32(255, 255, 255, alpha);
+                }
+                texture.SetPixels32(pixels);
+                texture.Apply(false, true);
+                Sprite sprite = Sprite.Create(texture, new Rect(0, 0, size, size), new Vector2(.5f, .5f), size);
+                sprite.name = name + "Sprite";
+                sprite.hideFlags = HideFlags.HideAndDontSave;
+                return sprite;
             }
             static float SegmentDistance(Vector2 p, Vector2 a, Vector2 b)
             {

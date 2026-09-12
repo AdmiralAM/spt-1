@@ -12,6 +12,9 @@ static class Phase21MarkerPolishTests
 
         Expect(settings.Contains("enum ItemMarkerSide") && settings.Contains("Left") && settings.Contains("Right"),
             "marker side exposes left/right choices", ref assertions);
+        Expect(settings.Contains("enum ItemMarkerSymbol") && settings.Contains("Check") && settings.Contains("Cross") && settings.Contains("Diamond") &&
+               settings.Contains("\"Symbol\", ItemMarkerSymbol.Check"),
+            "marker offers stable check plus original cross and diamond alternatives", ref assertions);
         Expect(settings.Contains("AcceptableValueRange<float>(-80f, 80f)"),
             "horizontal marker offset has symmetric extended travel", ref assertions);
         Expect(settings.Contains("Tooltip background opacity; 0 disables the background completely.") &&
@@ -23,6 +26,8 @@ static class Phase21MarkerPolishTests
             "positive X offset moves inward from either selected edge", ref assertions);
         Expect(overlay.Contains("static Sprite checkmarkSprite"),
             "crisp original marker sprite is shared between item cells", ref assertions);
+        Expect(overlay.Contains("SymbolSprite(settings.MarkerSymbol)") && overlay.Contains("CrossSprite()") && overlay.Contains("DiamondSprite()"),
+            "selected marker symbol is applied without changing requirement colors", ref assertions);
         Expect(settings.Contains("Circle Background Color") && settings.Contains("Circle Background Opacity (%)") &&
                settings.Contains("AcceptableValueRange<int>(0, 100)"),
             "marker fill color and zero-to-one-hundred-percent opacity are independently configurable", ref assertions);
