@@ -56,6 +56,7 @@ if (-not (Test-Path (Join-Path $mods 'Admiral Trader/Admiral Trader Server.dll')
 
 # Upgrade from either historical directory spelling: remove both owned roots, then install once.
 New-Item (Join-Path $mods 'Admiral Trader') -ItemType Directory -Force | Out-Null
+New-Item (Join-Path $mods 'Admiral-Trader') -ItemType Directory -Force | Out-Null
 'stale' | Set-Content (Join-Path $mods 'Admiral Trader/stale.txt')
 'stale' | Set-Content (Join-Path $mods 'Admiral-Trader/stale.txt')
 foreach ($owned in 'Admiral Trader','Admiral-Trader') {
