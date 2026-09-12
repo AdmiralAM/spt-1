@@ -40,6 +40,16 @@ for filename in ["DedicatedWearableItems.cs", "DedicatedEquipmentSlotRegistratio
     if "PackNStrapCompatibility.IsServerPresentNow()" not in text or "companionMode" not in text:
         violations.append(f"{filename} does not split Belt from HeadBand")
 
+wearable_items = (SERVER / "DedicatedWearableItems.cs").read_text(encoding="utf-8-sig")
+if "if (!companionMode) EnsureSingleGridItem(" in wearable_items:
+    violations.append("companion mode drops the persistent B&A Magazine Belt template and can invalidate existing profiles")
+for token in [
+    "legacy Magazine Belt template retained for profile safety without a B&A slot or offer",
+    "EnsureSingleGridItem(\n            RuntimeIdentity.DedicatedMagazineBeltItemId",
+]:
+    if token not in wearable_items:
+        violations.append(f"missing legacy Magazine Belt profile-safety contract: {token!r}")
+
 if violations:
     raise SystemExit("B&A&HB Pack 'n' Strap companion gate failed:\n" + "\n".join(violations))
 print("B&A&HB Pack 'n' Strap companion gate: OK (standard Belt/ArmBand owners suppressed; HeadBand/Dogtag/protection retained)")

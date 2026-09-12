@@ -34,7 +34,12 @@ public sealed class DedicatedWearableItems(
             ?? throw new InvalidOperationException("B&A&HB dedicated wearable source handbook entry missing.");
 
         bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
-        if (!companionMode) EnsureSingleGridItem(
+        // The persistent Magazine Belt template must remain resolvable even when
+        // Pack 'n' Strap owns the active Belt feature. Existing profiles can
+        // contain this exact B&A template ID; omitting it makes SPT reject the
+        // entire profile before our migrations can run. Companion mode still
+        // suppresses B&A's slot, offer and client runtime patches.
+        EnsureSingleGridItem(
             RuntimeIdentity.DedicatedMagazineBeltItemId,
             RuntimeIdentity.DedicatedMagazineBeltGridId,
             BeltParentTpl,
@@ -53,7 +58,7 @@ public sealed class DedicatedWearableItems(
         EnsureHeadBand(handbookItem.ParentId);
 
         logger.Success(companionMode
-            ? "B&A&HB companion Utility HeadBand registered; Magazine Belt creation remains disabled while Pack 'n' Strap is present."
+            ? "B&A&HB companion Utility HeadBand registered; legacy Magazine Belt template retained for profile safety without a B&A slot or offer."
             : "B&A&HB dedicated Magazine Belt and Utility HeadBand items registered; HeadBand uses native currency/wallet + cigarettes 1x1 grids.");
         return Task.CompletedTask;
     }
