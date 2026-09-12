@@ -26,6 +26,7 @@ SPT version matters for development, API compatibility and release evidence, but
 - Runtime metadata: **`~4.1.0`**, allowing compatible later `4.1.x` patches.
 - Exact-version builds/tests are reproducibility evidence, not an automatic runtime refusal policy.
 - Campaign sizing and concurrent-load policy: `docs/campaign-portfolio-plan.md`.
+- Optional-mod candidate and fallback policy: `docs/optional-content-candidates.md`.
 - Narrow the supported range only after a demonstrated API/data incompatibility.
 
 ## Stable baseline — 0.2.0

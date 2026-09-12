@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "status": "planning-only-unconfirmed",
+  "observedInstallationDate": "2026-09-12",
+  "runtimeChangesAuthorized": false,
+  "stableCampaignChanges": {
+    "quests": 0,
+    "graphEdges": 0,
+    "rewards": 0,
+    "offers": 0,
+    "mechanics": 0,
+    "dependencies": 0
+  },
+  "globalContract": {
+    "worksWhenAllCandidatesAbsent": true,
+    "coreGraphMayDependOnCandidate": false,
+    "exactRuntimeIdsRequired": true,
+    "displayNameDetectionAllowed": false,
+    "foreignRuntimeCopied": false,
+    "moderateRewardPolicyRequired": true
+  },
+  "candidates": [
+    {
+      "name": "WTT Armory",
+      "installed": false,
+      "roles": ["weapon rotation", "optional weapon objectives", "quest rewards", "finite quest-gated offers"],
+      "requiredEvidence": ["weapon template IDs", "magazine and ammunition IDs", "complete preset parts", "effective retained-trader overlap"],
+      "fallback": "native weapon pool remains complete"
+    },
+    {
+      "name": "Icebreaker",
+      "installed": false,
+      "roles": ["optional map operations"],
+      "requiredEvidence": ["location ID", "access contract", "extract IDs", "existing quest progression"],
+      "fallback": "no Icebreaker quest records are published"
+    },
+    {
+      "name": "RUAF / Black Division",
+      "installed": false,
+      "roles": ["rare optional combat targets"],
+      "requiredEvidence": ["exact role IDs", "observed spawn availability", "ownership of spawn behavior"],
+      "spawnControlOwnedByAdmiral": false,
+      "fallback": "core campaign never requires the encounter"
+    },
+    {
+      "name": "Pack 'n' Strap",
+      "installed": false,
+      "roles": ["equipment objectives", "proportional rewards", "finite unlocks"],
+      "requiredEvidence": ["container template IDs", "slot and capacity contract", "value", "effective retained-trader overlap"],
+      "fallback": "native equipment objectives and rewards remain unchanged"
+    }
+  ],
+  "excluded": [
+    {"name": "ORBIT", "runtimeTraderIntegration": false},
+    {"name": "Extra Lives", "runtimeTraderIntegration": false}
+  ]
+}
