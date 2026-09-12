@@ -11,29 +11,30 @@ bpy.ops.object.select_all(action="SELECT")
 bpy.ops.object.delete(use_global=False)
 
 red = bpy.data.materials.new("HeadBand_Rambo_Red")
-red.diffuse_color = (0.42, 0.012, 0.018, 1.0)
+red.diffuse_color = (0.045, 0.0005, 0.001, 1.0)
 red.use_nodes = True
 bsdf = red.node_tree.nodes.get("Principled BSDF")
-bsdf.inputs["Base Color"].default_value = (0.42, 0.012, 0.018, 1.0)
-bsdf.inputs["Roughness"].default_value = 0.82
-bsdf.inputs["Sheen Weight"].default_value = 0.18
+bsdf.inputs["Base Color"].default_value = (0.045, 0.0005, 0.001, 1.0)
+bsdf.inputs["Roughness"].default_value = 0.9
+bsdf.inputs["Sheen Weight"].default_value = 0.05
+bsdf.inputs["Specular IOR Level"].default_value = 0.12
 
 
 def make_band():
     segments, rows = 128, 7
     verts, faces, uvs = [], [], []
     for side in range(2):
-        radial = 1.0 + side * 0.035
+        radial = 1.0 + side * 0.008
         for row in range(rows):
             v = row / (rows - 1)
-            z = 0.085 + v * 0.065
+            z = 0.09 + v * 0.052
             for segment in range(segments):
                 u = segment / segments
                 angle = math.tau * u
-                wrinkle = 0.0022 * math.sin(angle * 7 + v * 4.2) + 0.0012 * math.sin(angle * 17 - v * 7)
-                x = (0.092 * radial + wrinkle) * math.cos(angle)
-                y = (0.108 * radial + wrinkle) * math.sin(angle)
-                z_warp = z + 0.003 * math.sin(angle * 3 + v * 8) + 0.0015 * math.sin(angle * 11)
+                wrinkle = 0.0012 * math.sin(angle * 7 + v * 4.2) + 0.0006 * math.sin(angle * 17 - v * 7)
+                x = (0.13 * radial + wrinkle) * math.cos(angle)
+                y = (0.07 * radial + wrinkle) * math.sin(angle)
+                z_warp = z + 0.0015 * math.sin(angle * 3 + v * 8) + 0.0007 * math.sin(angle * 11)
                 verts.append((x, y, z_warp))
                 uvs.append((u, v))
 
@@ -62,8 +63,8 @@ def make_band():
     bpy.context.collection.objects.link(obj)
     obj.data.materials.append(red)
     bevel = obj.modifiers.new("Soft_Cloth_Edges", "BEVEL")
-    bevel.width = 0.0012
-    bevel.segments = 2
+    bevel.width = 0.00045
+    bevel.segments = 1
     bpy.context.view_layer.objects.active = obj
     obj.select_set(True)
     bpy.ops.object.shade_smooth()
@@ -89,10 +90,10 @@ def ribbon_tail(name, offset, length, angle):
     bpy.context.collection.objects.link(obj)
     obj.data.materials.append(red)
     solid = obj.modifiers.new("Cloth_Thickness", "SOLIDIFY")
-    solid.thickness = 0.0028
+    solid.thickness = 0.0012
     bevel = obj.modifiers.new("Frayed_Soft_Edges", "BEVEL")
-    bevel.width = 0.0008
-    bevel.segments = 2
+    bevel.width = 0.00035
+    bevel.segments = 1
     return obj
 
 
@@ -100,10 +101,10 @@ band = make_band()
 ribbon_tail("HeadBand_Tail_Long", -0.014, 0.155, -0.018)
 ribbon_tail("HeadBand_Tail_Short", 0.018, 0.118, 0.014)
 
-bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=3, radius=1, location=(0, 0.116, 0.112))
+bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=2, radius=1, location=(0, 0.116, 0.108))
 knot = bpy.context.object
 knot.name = "HeadBand_Knot"
-knot.scale = (0.031, 0.018, 0.025)
+knot.scale = (0.024, 0.012, 0.016)
 knot.data.materials.append(red)
 bpy.ops.object.shade_smooth()
 
@@ -150,5 +151,5 @@ scene.render.image_settings.file_format = "PNG"
 scene.render.film_transparent = True
 scene.render.filepath = str(OUT / "headband_rambo_red_icon.png")
 scene.view_settings.look = "AgX - Medium High Contrast"
-scene.view_settings.exposure = -1.0
+scene.view_settings.exposure = -1.7
 bpy.ops.render.render(write_still=True)
