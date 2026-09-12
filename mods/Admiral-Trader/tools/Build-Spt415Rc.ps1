@@ -39,7 +39,7 @@ $runtimeManifest = Get-Content $runtimeManifestPath -Raw | ConvertFrom-Json
 if ($runtimeManifest.schemaVersion -ne 2 -or $runtimeManifest.version -ne '0.3.0' -or $runtimeManifest.sptCompatibility -ne '~4.1.0' -or $runtimeManifest.releaseChannel -ne 'release-candidate') { throw 'Trader release-candidate metadata drift.' }
 if ($runtimeManifest.targetSptVersion -ne '4.1.5') { throw "Trader runtime target drift: $($runtimeManifest.targetSptVersion)" }
 if ($runtimeManifest.publishedApiCompileBaseline -ne '4.1.5') { throw 'Trader published API baseline drift.' }
-if ($runtimeManifest.registrationEnabled -ne $false) { throw 'Source runtime registration must remain fail-closed; only staged RC may enable it.' }
+if ($runtimeManifest.registrationEnabled -ne $true) { throw 'Published source must keep the persistent Admiral trader registration enabled.' }
 
 $portrait = Join-Path $traderRoot 'assets/d5c27bb3169f8dfbc13f6b69.jpg'
 if (-not (Test-Path $portrait -PathType Leaf)) { throw 'Approved Admiral portrait is missing from active source.' }
@@ -49,7 +49,7 @@ if ($portraitBlob -ne '63e158fbd96b595a609560dfef452451b4783144') {
 }
 
 python (Join-Path $traderRoot 'tools/validate_runtime_assort.py')
-if ($LASTEXITCODE -ne 0) { throw 'Trader 4 Baseline + 3 Relationship + 8 Milestone runtime assort contract failed.' }
+if ($LASTEXITCODE -ne 0) { throw 'Trader 51-offer runtime assort contract failed.' }
 
 $itemsPath = Join-Path $runtimeRoot 'SPT_Data/database/templates/items.json'
 if (-not (Test-Path $itemsPath -PathType Leaf)) { throw "Exact SPT item database is missing: $itemsPath" }
