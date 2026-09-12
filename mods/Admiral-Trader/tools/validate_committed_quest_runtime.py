@@ -64,7 +64,7 @@ def validate_runtime(
             expected = json.loads(json.dumps(expected))
             expected["conditions"]["AvailableForStart"].append(
                 {
-                    "id": "552785d8cac9328979f920f1",
+                    "id": "5c05ff1c8aaa09b73f5cefc3",
                     "index": 1,
                     "dynamicLocale": False,
                     "globalQuestCounterId": "",
