@@ -24,6 +24,6 @@ Later reuse changes the problem through faction, distance, day/night, suppressor
 
 This step does not alter the current 43 runtime quests, rewards, prerequisites or assortment. Runtime materialization is one coherent later change: allocate the retained 21 quest IDs into the new sequence, author 19 new records, update descriptions and rewards, simulate concurrent availability, build the DLL and artifact, and run one full validation cycle.
 
-## WTT Armory
+## Optional WTT sources
 
-WTT Armory remains optional. After installation, exact weapon, magazine, ammunition and required-part templates may extend the closest mechanical pool. A categorically different weapon may receive an optional side assignment. Every core assignment retains a native SPT route, and removing WTT Armory cannot leave an empty objective or break the graph.
+WTT Armory and WTT Content Backport remain optional. After installation, exact weapon, magazine, ammunition and required-part templates may extend the closest mechanical pool. A categorically different weapon may receive an optional side assignment. Every core assignment retains a native SPT route, and removing either WTT module cannot leave an empty objective or break the graph. The verified installed identities and representative exact IDs are recorded in `docs/optional-content-candidates.md` and `manifests/optional-content-candidates.json`.

@@ -58,6 +58,20 @@ class WeaponRotationExpansionPlanTests(unittest.TestCase):
         self.assertIn("native SPT weapon", extension["rule"])
         self.assertIn("No quest", extension["absenceBehavior"])
 
+    def test_verified_wtt_sources_remain_optional_and_collision_free(self):
+        candidates = json.loads(
+            (ROOT / "manifests" / "optional-content-candidates.json").read_text(encoding="utf-8")
+        )
+        by_name = {entry["name"]: entry for entry in candidates["candidates"]}
+        self.assertEqual("2.0.5", by_name["WTT Armory"]["runtime"]["version"])
+        self.assertEqual("2.0.1", by_name["WTT Content Backport"]["runtime"]["version"])
+        self.assertEqual("3.0.6", by_name["WTT CommonLib"]["runtime"]["version"])
+        self.assertEqual(0, candidates["stableCampaignChanges"]["dependencies"])
+        self.assertEqual(0, candidates["compatibilityEvidence"]["crossModTemplateIdCollisions"])
+        self.assertEqual(0, candidates["compatibilityEvidence"]["nativeTemplateIdCollisions"])
+        self.assertFalse(candidates["compatibilityEvidence"]["admiralRuntimeChangeRequired"])
+        self.assertFalse(candidates["compatibilityEvidence"]["economyContract"]["foreignTemplateMutationAllowed"])
+
 
 if __name__ == "__main__":
     unittest.main()
