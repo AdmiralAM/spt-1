@@ -226,7 +226,7 @@
       "workstreamName": "Item Intelligence MOD SPT",
       "productName": "Item Intelligence Admiral",
       "modulePath": "mods/SPT-Item-Intelligence",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
       "phasePlan": [
         {
@@ -281,13 +281,13 @@
       ],
       "frozen": {
         "productName": "Item Intelligence Admiral",
-        "stableBaseline": "1.0.0",
+        "stableBaseline": "1.2.0",
         "compatibilitySourcePath": "mods/SPT-Item-Intelligence",
         "compatibilityRuntimeBranch": "runtime-item-intelligence",
         "preserveExistingGuidNamespaceEndpoint": true,
-        "itemValuationRemainsSeparate": true,
+        "itemValuationRemainsSeparate": false,
         "noTransactionExecution": true,
-        "status": "published-stable-baseline-not-active-roadmap"
+        "status": "published-stable-not-active-roadmap"
       },
       "referenceSources": [
         {
@@ -303,19 +303,19 @@
         }
       ],
       "stableAcceptance": [
-        "official Item Intelligence Admiral identity and v1.0.0 compatibility identifiers remain stable while v1.1 evolves",
+        "official Item Intelligence Admiral identity and compatibility identifiers remain stable through v1.2.0",
         "F12 can disable Marker, Tooltip, Quest, Future Quest, Hideout, Value and Craft/Barter layers independently without disabling unrelated layers",
-        "Item Valuation MOD SPT background colors remain a separate independent server-side feature and are not duplicated inside II",
+        "Item Valuation background colors are an independently switchable Item Intelligence module while the standalone package remains rollback-compatible only",
         "irrelevant items have no II marker while active quest, hideout and future quest attention states remain immediately legible",
         "quest and hideout owned/required/remaining quantities are deterministic, FIR-aware and free of double counting",
         "tooltip hierarchy is readable and bounded, with value/sell data consuming prepared cached state only",
         "disabled modules perform no unnecessary steady-state work and no permanent polling, global scans, hot-path reflection/allocations or extra hover networking are introduced",
         "Task Item Indicator and CompatibilityHighlighter overlap is deliberately classified only after core II stabilization",
-        "one exact-head Item Intelligence Admiral v1.1 package passes the batched physical SPT runtime gate"
+        "one exact-head Item Intelligence Admiral v1.2.0 package passes the batched physical SPT runtime gate"
       ],
       "historicalEvidence": {
-        "issues": [82, 94, 118, 198],
-        "pullRequests": [86, 96, 108, 120, 126, 199]
+        "issues": [82, 94, 118, 198, 338],
+        "pullRequests": [86, 96, 108, 120, 126, 199, 341, 343]
       }
     },
     "tacticalHud": {
