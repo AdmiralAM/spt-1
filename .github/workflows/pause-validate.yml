@@ -44,6 +44,7 @@ jobs:
         run: dotnet build mods/SPT-Pause/src/SPT-Pause.csproj -c Release --nologo
 
       - name: Package Pause Admiral runtime test artifact
+        if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         run: |
           $source = 'mods/SPT-Pause/src/bin/Release/netstandard2.1/Pause Admiral.dll'
@@ -53,6 +54,7 @@ jobs:
           Copy-Item $source (Join-Path $target 'Pause Admiral.dll')
 
       - name: Upload exact-SHA Pause Admiral runtime test artifact
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: Pause-Admiral-v1-test-${{ github.event.pull_request.head.sha || github.sha }}

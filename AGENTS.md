@@ -177,6 +177,25 @@ A PR timeline is not an execution log. Preserve technical proof while minimizing
 - Documentation required by the product, compatibility contract, installation, recovery, or future maintenance remains part of the same implementation run; it is not a separate reporting phase.
 - Prefer the least expensive suitable model and the fewest runs that preserve correctness. Evidence economy must never remove required tests, exact-head verification, runtime smoke, artifact validation, or safety gates.
 
+### CI and artifact economy
+
+Repository automation must keep validation cheap and release evidence deliberate:
+
+- A normal PR push runs only the smallest affected deterministic validation. Exact-runtime downloads, server-start smoke, package assembly, publication, and install-ready artifact upload run only at a coherent RC/release boundary or explicit `workflow_dispatch`.
+- Validation output already preserved in the Actions log is not uploaded again as a transient JSON/report artifact. Upload only an actionable install-ready candidate or a file genuinely required to diagnose a non-reproducible failure.
+- Do not create a new workflow for a one-off diagnostic, source transport, checkpoint, or model handoff. Use local tooling, an existing manual diagnostic entry point, or a temporary uncommitted script instead.
+- A temporary workflow that is exceptionally required must be removed from the branch immediately after use and disabled in GitHub when retired. It must never remain registered as active after its source file is gone.
+- Workflow path filters stay inside the owning module plus the workflow itself. Root README or unrelated module documentation must not trigger a module build.
+- Keep fast validation separate from expensive RC/publication work. Prefer one coherent module validation workflow over several workflows that repeatedly provision the same SDKs and dependencies for the same change.
+- Every uploaded artifact declares a bounded retention period. Stable distribution belongs in a deliberate runtime/release channel, not in indefinitely retained CI artifacts.
+
+### Scope and compatibility hygiene
+
+- A module PR changes only its owned module, its directly required integration boundary, and the minimum shared workflow/docs needed for that implementation. Unrelated suite-wide version edits, documentation refreshes, and neighboring-module cleanup do not hitchhike in a feature PR.
+- Express supported runtime compatibility as a range (for example `~4.1.0`) separately from the exact SPT version used as the current validation baseline. Do not turn one successfully tested patch into an unnecessary hard product lock.
+- Historical evidence may keep the exact SPT version it proved, but active requirements, package metadata, and user-facing compatibility text must clearly distinguish compatibility range from validation baseline.
+- Before adding a validator, manifest, planning document, or regression file, reuse or extend an existing authority when practical. Do not create a new file solely to restate a fact already enforced elsewhere.
+
 ## Repository lifecycle
 
 `Issue -> short-lived branch -> implementation -> module CI -> PR -> runtime gate when required -> merge -> verify main -> close/update Issue -> delete temporary branch`

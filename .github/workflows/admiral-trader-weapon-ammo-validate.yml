@@ -79,11 +79,3 @@ jobs:
           mods/Admiral-Trader/manifests/weapon-ammo-authored-spec.json
           mods/Admiral-Trader/manifests/reward-policy.json
           --audit build/admiral-trader-weapon-ammo-audit.json
-
-      - name: Upload weapon-ammo evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: admiral-trader-weapon-ammo-${{ github.event.pull_request.head.sha || github.sha }}
-          path: build/admiral-trader-weapon-ammo-audit.json
-          if-no-files-found: error
-          retention-days: 7

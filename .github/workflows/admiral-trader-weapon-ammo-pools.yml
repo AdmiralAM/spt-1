@@ -135,14 +135,3 @@ jobs:
           python mods/Admiral-Trader/tools/validate_committed_arsenal_runtime.py
           mods/Admiral-Trader/db/quests
           build/admiral-trader-weapon-ammo-runtime.json
-
-      - name: Upload transient runtime evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: admiral-trader-weapon-ammo-runtime-${{ github.event.pull_request.head.sha || github.sha }}
-          path: |
-            build/admiral-trader-weapon-ammo-pools.json
-            build/admiral-trader-weapon-ammo-selection.json
-            build/admiral-trader-weapon-ammo-runtime.json
-          if-no-files-found: error
-          retention-days: 7
