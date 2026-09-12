@@ -24,6 +24,7 @@
       "name": "WTT Armory",
       "installed": false,
       "roles": ["weapon rotation", "optional weapon objectives", "quest rewards", "finite quest-gated offers"],
+      "nativeInsertionAuthority": "weapon-rotation-expansion-plan.json#/wttArmory",
       "requiredEvidence": ["weapon template IDs", "magazine and ammunition IDs", "complete preset parts", "effective retained-trader overlap"],
       "fallback": "native weapon pool remains complete"
     },

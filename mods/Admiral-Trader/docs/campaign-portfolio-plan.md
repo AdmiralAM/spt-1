@@ -70,7 +70,7 @@ Runtime graph and rewards remain unchanged by this planning document.
 
 ## Persistent loadout rotation
 
-Loadout assignments are a long-running campaign system rather than a single batch of mastery quests. The approximate first-pass design is 40 weapon assignments, adjusted after the exact SPT weapon pool and the other campaigns are compared.
+Loadout assignments are a long-running campaign system rather than a single batch of mastery quests. The authored target is now 40 weapon assignments in two 20-step lanes. The exact SPT 4.1.5 pools, early-game gaps, exclusions, location bands and objective semantics are recorded in `docs/weapon-rotation-expansion-plan.md` and `manifests/weapon-rotation-expansion-plan.json`.
 
 Only two weapon assignments should normally be offered at once. They run as two independent authored chains so the player has a minimum choice of raid setup. Completing either assignment exposes the next assignment in that chain; level alone must never expose the complete weapon pool.
 
@@ -87,6 +87,8 @@ After broad weapon coverage is complete, weapon families return in later cycles 
 - a one-raid survival condition only when the added risk is intentional.
 
 The same weapon and the same objective must not simply be repeated. Later cycles should reuse learned equipment while changing the operational problem. Weapon tasks must also be scheduled against armour, rig, headset, helmet, and backpack assignments so that the two available choices do not demand mutually exclusive versions of the same slot.
+
+The target catalog is broader than the original 49-template foundation. It includes practical starter and scavenged weapons, compact AK variants, civilian rifles, common pistols and shotguns, SMGs/PDWs, AUG and other service rifles, 9x39 weapons, battle rifles, precision rifles and late support weapons. Cosmetic variants share a model-family slot; mounted, test, event and signal weapons do not count as campaign variety.
 
 ## Story expansion
 

@@ -50,6 +50,8 @@ Current runtime shape: **43 quests** (31 frozen baseline + 12 M3 operations), **
 
 This is the stable starting point for fresh-profile play and campaign polish. Future content work may improve pacing, prose, loadout rotation and campaign breadth, but must be authored as a new milestone and must preserve the persistent Trader, quest and offer identities already in use.
 
+The next weapon milestone is fully scoped in [docs/weapon-rotation-expansion-plan.md](docs/weapon-rotation-expansion-plan.md): two paced 20-assignment lanes, broad native SPT 4.1.5 coverage, no model-to-single-map lock, and optional WTT Armory alternatives that never become a core dependency.
+
 Install, replacement and clean-removal instructions are in `docs/INSTALL.md`. The canonical runtime directory is `Admiral Trader`, matching the established installation. Replacement tooling removes the obsolete `Admiral-Trader` alias so two copies of the same persistent trader identity cannot load together.
 
 Relationship progression uses the existing Admiral loyalty thresholds: LL2 requires level 15 and 0.10 standing, LL3 requires level 25 and 0.30, and LL4 requires level 35 and 0.55. White, yellow and blue signalling flares provide finite specialist availability at those tiers. The existing MS2000 marker offer keeps its ID and ₽16,500 price while requester-local stock/buy limits rise from 12/4 at LL1 to 16/6, 20/8 and 24/10. The projection modifies only SPT's profile-scoped assort response; it never mutates the global trader table.

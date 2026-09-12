@@ -24,6 +24,8 @@ Candidate roles:
 
 Admission requires an installed-version inventory containing exact weapon, magazine, ammunition, and required-part template IDs. A complete preset must be validated as purchasable and usable against the exact SPT runtime. WTT Armory models may extend a pool, but no core quest may require one and no empty fallback objective may be published when the mod is absent.
 
+The native insertion points are authored in `manifests/weapon-rotation-expansion-plan.json`. A WTT model that behaves like an existing class joins the closest later pool after exact-ID validation. A categorically different model may receive an optional side assignment, but every affected quest retains a native weapon route and the two-active-assignment pacing limit.
+
 ## Icebreaker
 
 Candidate role: optional operations on the additional map after its installation, location identity, access rules, extraction contract, and existing quest progression have been inspected.
