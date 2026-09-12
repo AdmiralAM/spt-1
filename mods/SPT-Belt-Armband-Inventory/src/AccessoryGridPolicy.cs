@@ -63,6 +63,11 @@ namespace SPTBeltArmbandInventory
             return ExactWindowHeight(rows, 0f);
         }
 
+        internal static float ExactSplitGridWindowHeight(int rows)
+        {
+            return rows <= 0 ? 0f : rows * (CellPixels + WindowVerticalChrome);
+        }
+
         // Historical helper retained only so older regression coverage still
         // compiles while the production GridWindow route uses ExactWindow*.
         // Do not use these minimum-clamped helpers for wearable runtime sizing.

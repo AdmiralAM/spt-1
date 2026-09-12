@@ -20,13 +20,15 @@ namespace SPTBeltArmbandInventory
             internal readonly WeakReference Window;
             internal readonly int Columns;
             internal readonly int Rows;
+            internal readonly bool SplitHeadBand;
             internal int Attempts;
 
-            internal PendingWindow(object window, int columns, int rows)
+            internal PendingWindow(object window, int columns, int rows, bool splitHeadBand)
             {
                 Window = new WeakReference(window);
                 Columns = columns;
                 Rows = rows;
+                SplitHeadBand = splitHeadBand;
             }
         }
 
@@ -62,7 +64,8 @@ namespace SPTBeltArmbandInventory
                     object item = ReflectionTools.ReadMember(windowData, "Item");
                     if (!TryResolveDescriptor(item, out WearableItemDescriptor descriptor)) continue;
 
-                    ObserveWindow(window, descriptor.GridColumns, descriptor.GridRows);
+                    ObserveWindow(window, descriptor.GridColumns, descriptor.GridRows,
+                        string.Equals(descriptor.TemplateId, RuntimeIdentity.EmergencyHeadBandItemId, StringComparison.Ordinal));
                     return;
                 }
             }
@@ -73,9 +76,9 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static void ObserveWindow(object window, int columns, int rows)
+        static void ObserveWindow(object window, int columns, int rows, bool splitHeadBand)
         {
-            TryAdjust(window, columns, rows);
+            TryAdjust(window, columns, rows, splitHeadBand);
 
             for (int i = 0; i < PendingWindows.Count; i++)
             {
@@ -90,7 +93,7 @@ namespace SPTBeltArmbandInventory
                 return;
             }
 
-            PendingWindows.Add(new PendingWindow(window, columns, rows));
+            PendingWindows.Add(new PendingWindow(window, columns, rows, splitHeadBand));
             RequestFlush?.Invoke();
         }
 
@@ -107,16 +110,16 @@ namespace SPTBeltArmbandInventory
                     continue;
                 }
 
-                TryAdjust(window, pending.Columns, pending.Rows);
+                TryAdjust(window, pending.Columns, pending.Rows, pending.SplitHeadBand);
                 pending.Attempts++;
                 if (pending.Attempts < MaxDeferredAttempts) continue;
 
-                LogFinalFit(window, pending.Columns, pending.Rows);
+                LogFinalFit(window, pending.Columns, pending.Rows, pending.SplitHeadBand);
                 PendingWindows.RemoveAt(i--);
             }
         }
 
-        static bool TryAdjust(object window, int columns, int rows)
+        static bool TryAdjust(object window, int columns, int rows, bool splitHeadBand)
         {
             Component component = window as Component;
             if (component == null || component.gameObject == null || !component.gameObject.activeInHierarchy) return false;
@@ -128,7 +131,9 @@ namespace SPTBeltArmbandInventory
             // scan and no artificial minimum: declared cell extent + calibrated
             // native GridWindow chrome only.
             float width = AccessoryGridPolicy.ExactWindowWidth(columns);
-            float height = AccessoryGridPolicy.ExactWindowHeight(rows);
+            float height = splitHeadBand
+                ? AccessoryGridPolicy.ExactSplitGridWindowHeight(rows)
+                : AccessoryGridPolicy.ExactWindowHeight(rows);
             if (width <= 0f || height <= 0f) return false;
 
             float beforeWidth = rect.rect.width;
@@ -152,14 +157,16 @@ namespace SPTBeltArmbandInventory
             return true;
         }
 
-        static void LogFinalFit(object window, int columns, int rows)
+        static void LogFinalFit(object window, int columns, int rows, bool splitHeadBand)
         {
             Component component = window as Component;
             RectTransform rect = component == null ? null : component.transform as RectTransform;
             if (rect == null) return;
 
             float width = AccessoryGridPolicy.ExactWindowWidth(columns);
-            float height = AccessoryGridPolicy.ExactWindowHeight(rows);
+            float height = splitHeadBand
+                ? AccessoryGridPolicy.ExactSplitGridWindowHeight(rows)
+                : AccessoryGridPolicy.ExactWindowHeight(rows);
             float finalWidth = rect.rect.width;
             float finalHeight = rect.rect.height;
             string shape = columns + "x" + rows;

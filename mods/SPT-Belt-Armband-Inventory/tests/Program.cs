@@ -23,6 +23,7 @@ internal static class Program
         Assert(PackNStrapCompatibility.IsServerPresent(new[] { "System", "WTT-PackNStrapServer" }), "Pack 'n' Strap server assembly selects companion mode");
         Assert(!PackNStrapCompatibility.IsServerPresent(new[] { "SPT.Server", "SPT-Belt-Armband-Inventory.Server" }), "B&A server alone stays in standalone mode");
         LocalPackNStrapImportRegression.Run();
+        UseItemsAnywhereCompatibilityRegression.Run();
         SPTBeltArmbandInventory.Tests.ProfileCleanupRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedWearableSlotContractRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedSlotPresentationPolicyRegression.Run();
@@ -68,6 +69,7 @@ internal static class Program
         Assert(AccessoryCategoryPolicy.IsSupported(AccessoryCategory.Belt), "Belt category is supported");
         Assert(AccessoryCategoryPolicy.IsSupported(AccessoryCategory.HeadBand), "HeadBand category is supported");
         Assert(AccessoryCategoryPolicy.Capacity(AccessoryCategory.HeadBand) == AccessoryCapacityBand.Micro, "HeadBand uses micro capacity band");
+        Assert(Math.Abs(AccessoryGridPolicy.ExactSplitGridWindowHeight(2) - 190f) < 0.01f, "two separately filtered HeadBand rows reserve chrome for both native grids");
         Assert(AccessoryCategoryPolicy.Capacity(AccessoryCategory.ArmBand) == AccessoryCapacityBand.Compact, "ArmBand uses compact capacity band");
         Assert(AccessoryCategoryPolicy.Capacity(AccessoryCategory.Belt) == AccessoryCapacityBand.Expanded, "Belt uses expanded capacity band");
         Assert(AccessoryCategoryPolicy.HostState(AccessoryCategory.ArmBand) == AccessoryHostState.Validated, "ArmBand host remains runtime validated");

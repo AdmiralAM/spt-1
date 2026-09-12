@@ -11,6 +11,7 @@ namespace SPTBeltArmbandInventory
     {
         const float HeadBandHeight = 44f;
         const float Gap = 4f;
+        const float StackVerticalOffset = -28f;
 
         sealed class LayoutState
         {
@@ -99,7 +100,8 @@ namespace SPTBeltArmbandInventory
             faceRect.pivot = state.FacePivot;
             faceRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, originalWidth);
             faceRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, faceHeight);
-            faceRect.anchoredPosition = state.FaceAnchoredPosition - new Vector2(0f, (HeadBandHeight + Gap) * 0.5f);
+            faceRect.anchoredPosition = state.FaceAnchoredPosition
+                + new Vector2(0f, StackVerticalOffset - (HeadBandHeight + Gap) * 0.5f);
 
             if (headBandRect.parent != faceRect.parent)
                 headBandRect.SetParent(faceRect.parent, false);
@@ -109,7 +111,8 @@ namespace SPTBeltArmbandInventory
             headBandRect.pivot = state.FacePivot;
             headBandRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, originalWidth);
             headBandRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, HeadBandHeight);
-            headBandRect.anchoredPosition = state.FaceAnchoredPosition + new Vector2(0f, (faceHeight + Gap) * 0.5f);
+            headBandRect.anchoredPosition = state.FaceAnchoredPosition
+                + new Vector2(0f, StackVerticalOffset + (faceHeight + Gap) * 0.5f);
             headBandRect.gameObject.SetActive(true);
 
             if (!proofLogged)
