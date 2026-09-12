@@ -4,6 +4,12 @@
   "totalQuestCount": 72,
   "newQuestCount": 29,
   "weaponAssignments": 19,
+  "totalWeaponQuestCount": 40,
+  "weaponLaneQuestCounts": {
+    "A": 22,
+    "B": 18
+  },
+  "weaponGraphRoots": 2,
   "groundZeroOperations": 4,
   "equipmentAssignments": 6,
   "maximumConcurrentWeaponAssignments": 2,

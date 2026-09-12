@@ -14,6 +14,24 @@ LOCATION_IDS = {
     "Streets": ["TarkovStreets"], "The Lab": ["laboratory"],
 }
 
+LEGACY_WEAPON_LANES = {
+    "A": [
+        (5, "59ca4829e098dfafa03888d2"), (8, "b016df9d2bea4269cc59d531"),
+        (12, "8cba3e2ec639a4aa2c26c4da"), (12, "5f62a924076e4b7c2320f2e8"),
+        (13, "88118e994f26cab3bee1521d"), (18, "8d8d81032315f4fdc5a06798"),
+        (18, "2568ee0bfe2ee12f24d78f45"), (20, "33810921ad5c893b866b3951"),
+        (25, "7564e60e4c1c2f1b67a594a4"), (25, "cb8a202d7107f39d860ccb38"),
+        (30, "73febe7f3f61ca0913410ffc"), (35, "f1368cb3b69c3a4917c4f206"),
+    ],
+    "B": [
+        (8, "ad9233f54a7132d905d6f29d"), (12, "ffb63228a333c8b0755741ea"),
+        (16, "43d9544a09d068476a1a18df"), (16, "4ada822d634041a721b346d5"),
+        (16, "570d250679328757614dcbcb"), (20, "f6e51dc4e50e47ee9af50a4d"),
+        (20, "a0d05e28971f1ba57639b97d"), (25, "153839f368b80b6fbc36d29e"),
+        (30, "cd2641c70bede98dac3945d0"),
+    ],
+}
+
 def hid(text: str) -> str:
     return hashlib.sha256(("admiral-trader:" + text).encode()).hexdigest()[:24]
 
@@ -22,6 +40,12 @@ def start(level: int, previous: str | None):
     if previous:
         rows.append({"id":hid(f"previous:{previous}"),"index":1,"dynamicLocale":False,"globalQuestCounterId":"","visibilityConditions":[],"parentId":"","target":previous,"status":[4],"availableAfter":0,"dispersion":0,"conditionType":"Quest"})
     return rows
+
+def replace_prerequisite(quest: dict, previous: str | None):
+    rows = [row for row in quest["conditions"]["AvailableForStart"] if row["conditionType"] != "Quest"]
+    if previous:
+        rows.append({"id":hid(f"previous:{previous}"),"index":len(rows),"dynamicLocale":False,"globalQuestCounterId":"","visibilityConditions":[],"parentId":"","target":previous,"status":[4],"availableAfter":0,"dispersion":0,"conditionType":"Quest"})
+    quest["conditions"]["AvailableForStart"] = rows
 
 def counter(qid: str, value: int, conditions: list[dict], qtype="Elimination", one=False):
     return {"id":hid(qid+":finish"),"index":0,"dynamicLocale":False,"globalQuestCounterId":"","visibilityConditions":[],"parentId":"","value":value,"type":qtype,"oneSessionOnly":one,"isResetOnConditionFailed":False,"isNecessary":False,"doNotResetIfCounterCompleted":False,"counter":{"id":hid(qid+":counter"),"conditions":conditions},"completeInSeconds":0,"conditionType":"CounterCreator"}
@@ -74,10 +98,12 @@ def main():
     # Two independent weapon lanes: exactly two weapon assignments can be active.
     selected=plan["lanes"]["A-close-support"][:10]+plan["lanes"]["B-rifle-precision"][:9]
     previous={"A":None,"B":None}
+    expanded_by_lane={"A":[],"B":[]}
     for lane,row in [("A",x) for x in plan["lanes"]["A-close-support"][:10]]+[("B",x) for x in plan["lanes"]["B-rifle-precision"][:9]]:
         order,pool,band,locations,semantics=row; level=int(band.split('-')[0]); native_weapons=plan["pools"][pool]; optional_weapons=optional_by_pool.get(pool,[]); weapons=native_weapons+[x["tpl"] for x in optional_weapons]; runtime_locations=[x for label in locations for x in LOCATION_IDS[label]]; slug=f"rotation-{lane.lower()}-{order:02d}-{pool}"; name=f"Arsenal Rotation {lane}-{order}: {pool.replace('-',' ').title()}"
         qid,q=quest(slug,name,level,previous[lane],lambda qid,w=weapons,l=runtime_locations,v=min(6+order,15):counter(qid,v,kill(qid,w,l)),"Elimination")
         previous[lane]=qid;out.append((qid,q));meta.append({"id":qid,"kind":"weapon","lane":lane,"order":order,"pool":pool})
+        expanded_by_lane[lane].append((level, qid, q))
         optional_names=", ".join(x["name"] for x in optional_weapons)
         optional_names_ru=", ".join(x["nameRu"] for x in optional_weapons)
         allowed_en=item_list(native_weapons,'en')+(f"; optional WTT: {optional_names}" if optional_names else "")
@@ -99,6 +125,22 @@ def main():
         req=f"Enter a raid on {location} wearing one item from [{item_list(items,'en')}], then survive and extract in the same raid. FIR does not apply."
         en.update(locale(qid,name,req,level,f"Use the allowed equipment and survive {location}"));ru.update(locale(qid,name,f"Выйти в рейд на {location} с одним предметом из [{item_list(items,'ru')}], выжить и эвакуироваться в том же рейде. FIR не применяется.",level,f"Использовать разрешённый комплект и выжить на {location}",True))
     qdir=ROOT/"db/quests"
+    lane_lengths={}
+    for lane in ("A", "B"):
+        legacy=[]
+        for effective_level, quest_id in LEGACY_WEAPON_LANES[lane]:
+            path=next(qdir.glob(f"20-*{quest_id}.json"))
+            legacy.append((effective_level, quest_id, json.loads(path.read_text(encoding="utf-8")), path))
+        combined=[(level,0,index,quest_id,quest_data,None) for index,(level,quest_id,quest_data) in enumerate(expanded_by_lane[lane])]
+        combined += [(level,1,index,quest_id,quest_data,path) for index,(level,quest_id,quest_data,path) in enumerate(legacy)]
+        combined.sort(key=lambda row:(row[0],row[1],row[2]))
+        previous_id=None
+        for _,_,_,quest_id,quest_data,path in combined:
+            replace_prerequisite(quest_data, previous_id)
+            previous_id=quest_id
+            if path:
+                path.write_text(json.dumps(quest_data,separators=(",",":"),ensure_ascii=False)+"\n",encoding="utf-8")
+        lane_lengths[lane]=len(combined)
     for p in qdir.glob("40-*.json"): p.unlink()
     for p in qdir.glob("50-*.json"): p.unlink()
     for i,(qid,q) in enumerate(out):
@@ -106,7 +148,7 @@ def main():
         (qdir/f"{prefix}-{i+1:02d}-{qid}.json").write_text(json.dumps(q,separators=(",",":"),ensure_ascii=False)+"\n",encoding="utf-8")
     (ROOT/"db/locales/m8-en.json").write_text(json.dumps(en,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     (ROOT/"db/locales/m8-ru.json").write_text(json.dumps(ru,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
-    manifest={"schemaVersion":1,"status":"runtime-materialized","totalQuestCount":72,"newQuestCount":29,"weaponAssignments":19,"groundZeroOperations":4,"equipmentAssignments":6,"maximumConcurrentWeaponAssignments":2,"optionalWeaponCount":len(optional["acceptedWeapons"]),"optionalWeaponsRequired":False,"icebreaker":{"reserved":False,"runtimePublished":True,"optionalQuestCount":10,"coreQuestCountWhenAbsent":172,"totalQuestCountWhenPresent":182,"manifest":"icebreaker-runtime.json"},"quests":meta}
+    manifest={"schemaVersion":1,"status":"runtime-materialized","totalQuestCount":72,"newQuestCount":29,"weaponAssignments":19,"totalWeaponQuestCount":40,"weaponLaneQuestCounts":lane_lengths,"weaponGraphRoots":2,"groundZeroOperations":4,"equipmentAssignments":6,"maximumConcurrentWeaponAssignments":2,"optionalWeaponCount":len(optional["acceptedWeapons"]),"optionalWeaponsRequired":False,"icebreaker":{"reserved":False,"runtimePublished":True,"optionalQuestCount":10,"coreQuestCountWhenAbsent":172,"totalQuestCountWhenPresent":182,"manifest":"icebreaker-runtime.json"},"quests":meta}
     (ROOT/"manifests/m8-campaign-expansion-runtime.json").write_text(json.dumps(manifest,indent=2,ensure_ascii=False)+"\n",encoding="utf-8")
     first=qdir/"01-5d404ebd654de4efecef71d2.json"
     base=json.loads(first.read_text(encoding="utf-8"))

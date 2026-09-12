@@ -70,9 +70,9 @@ Runtime graph and rewards remain unchanged by this planning document.
 
 ## Persistent loadout rotation
 
-Loadout assignments are a long-running campaign system rather than a single batch of mastery quests. The authored target is now 40 weapon assignments in two 20-step lanes. The exact SPT 4.1.5 pools, early-game gaps, exclusions, location bands and objective semantics are recorded in `docs/weapon-rotation-expansion-plan.md` and `manifests/weapon-rotation-expansion-plan.json`.
+Loadout assignments are a long-running campaign system rather than a single batch of mastery quests. The runtime contains 40 weapon quests in two continuous lanes. Preserving the 21 established Arsenal IDs and family sequences produces 22 close/support steps and 18 rifle/precision steps; the planning catalogue remains a balanced 20-by-20 coverage model. The exact SPT 4.1.5 pools, early-game gaps, exclusions, location bands and objective semantics are recorded in `docs/weapon-rotation-expansion-plan.md` and `manifests/weapon-rotation-expansion-plan.json`.
 
-Only two weapon assignments should normally be offered at once. They run as two independent authored chains so the player has a minimum choice of raid setup. Completing either assignment exposes the next assignment in that chain; level alone must never expose the complete weapon pool.
+Only two weapon assignments should normally be offered at once. The 19 expansion records are woven through the retained 21 Arsenal records as two independent authored chains, so the player has a minimum choice of raid setup without receiving four parallel weapon branches. Completing either assignment exposes the next assignment in that chain; level alone never exposes the complete weapon pool.
 
 The 43-quest stabilization pass applies that rule to the existing 21 Arsenal quests. Track A advances sidearms to shotguns, marksman/battle rifles and special weapons. Track B advances SMG/PDW to assault rifles and precision rifles. Each family still keeps its Qualification, Fieldwork and Munitions sequence, IDs, objectives and rewards. This changes five root prerequisites and reduces the Arsenal entry points from seven to two without removing content.
 

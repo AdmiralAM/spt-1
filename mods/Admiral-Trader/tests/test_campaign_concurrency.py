@@ -21,28 +21,49 @@ class CampaignConcurrencyTests(unittest.TestCase):
             if condition["conditionType"] == "Quest"
         }
 
-    def test_weapon_campaign_has_two_entry_points_and_progressive_family_rotation(self):
-        tracks = (
-            (
-                "59ca4829e098dfafa03888d2",
-                "5f62a924076e4b7c2320f2e8",
-                "2568ee0bfe2ee12f24d78f45",
-                "cb8a202d7107f39d860ccb38",
-            ),
-            (
-                "ad9233f54a7132d905d6f29d",
-                "4ada822d634041a721b346d5",
-                "a0d05e28971f1ba57639b97d",
-            ),
-        )
-        previous_finals = (
-            (None, "8cba3e2ec639a4aa2c26c4da", "8d8d81032315f4fdc5a06798", "7564e60e4c1c2f1b67a594a4"),
-            (None, "43d9544a09d068476a1a18df", "f6e51dc4e50e47ee9af50a4d"),
-        )
-        for track, gates in zip(tracks, previous_finals):
-            for quest_id, gate in zip(track, gates):
-                expected = set() if gate is None else {gate}
-                self.assertEqual(self.prerequisites(quest_id), expected, quest_id)
+    def test_all_forty_weapon_quests_form_exactly_two_linear_lanes(self):
+        weapon_ids = {
+            json.loads(path.read_text(encoding="utf-8"))["_id"]
+            for pattern in ("20-*.json", "40-*.json")
+            for path in (ROOT / "db/quests").glob(pattern)
+        }
+        self.assertEqual(len(weapon_ids), 40)
+        roots = [quest_id for quest_id in weapon_ids if not (self.prerequisites(quest_id) & weapon_ids)]
+        self.assertEqual(set(roots), {"738588764e9531bdb8ccfc5f", "eb93814dd020bdc131d526aa"})
+
+        children = {quest_id: [] for quest_id in weapon_ids}
+        for quest_id in weapon_ids:
+            for parent in self.prerequisites(quest_id) & weapon_ids:
+                children[parent].append(quest_id)
+        self.assertTrue(all(len(rows) <= 1 for rows in children.values()))
+
+        visited = set()
+        for root in roots:
+            current = root
+            while current:
+                self.assertNotIn(current, visited)
+                visited.add(current)
+                current = children[current][0] if children[current] else None
+        self.assertEqual(visited, weapon_ids)
+
+    def test_fresh_high_level_profile_is_not_flooded_with_admiral_roots(self):
+        roots = []
+        for quest_id, quest in self.quests.items():
+            authored_parents = self.prerequisites(quest_id) & self.quests.keys()
+            if not authored_parents:
+                level = next(
+                    condition["value"]
+                    for condition in quest["conditions"]["AvailableForStart"]
+                    if condition["conditionType"] == "Level"
+                )
+                if level <= 35:
+                    roots.append(quest_id)
+        self.assertEqual(len(roots), 8)
+        weapon_roots = {
+            quest_id for quest_id in roots
+            if next(path for path in (ROOT / "db/quests").glob(f"*-{quest_id}.json")).name.startswith(("20-", "40-"))
+        }
+        self.assertEqual(len(weapon_roots), 2)
 
 
 if __name__ == "__main__":
