@@ -24,6 +24,9 @@ internal static class ProtectionSettingsContractRegression
             "exact applied snapshot is accepted as protection acknowledgement");
         Assert(WearableProtectionContract.IsAcknowledgement("  " + mixed + "\r\n", mixed),
             "transport-only outer whitespace does not invalidate acknowledgement");
+        Assert(WearableProtectionContract.IsAcknowledgement(
+            "\"{\\\"armBandProtected\\\":true,\\\"beltProtected\\\":false,\\\"headBandProtected\\\":true}\"", mixed),
+            "SPT JSON-string transport wrapper preserves an exact acknowledgement");
         Assert(!WearableProtectionContract.IsAcknowledgement("", mixed),
             "empty response must not be reported as successful sync");
         Assert(!WearableProtectionContract.IsAcknowledgement(

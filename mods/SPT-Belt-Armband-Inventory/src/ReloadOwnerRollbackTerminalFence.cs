@@ -203,14 +203,19 @@ namespace SPTBeltArmbandInventory
                 if (!string.Equals(method.Name, "Patch", StringComparison.Ordinal)) continue;
                 ParameterInfo[] parameters = method.GetParameters();
                 if (parameters.Length < 4 || parameters[0].ParameterType != typeof(MethodBase)) continue;
-                bool prefix = false, postfix = false;
+                bool prefix = false, postfix = false, finalizer = false;
                 for (int p = 1; p < parameters.Length; p++)
                 {
                     if (parameters[p].ParameterType != harmonyMethodType) continue;
                     if (string.Equals(parameters[p].Name, "prefix", StringComparison.OrdinalIgnoreCase)) prefix = true;
                     else if (string.Equals(parameters[p].Name, "postfix", StringComparison.OrdinalIgnoreCase)) postfix = true;
+                    else if (string.Equals(parameters[p].Name, "finalizer", StringComparison.OrdinalIgnoreCase)) finalizer = true;
                 }
-                if (!prefix || !postfix) continue;
+                // Harmony 2.4 exposes both the legacy five-argument overload and the
+                // six-argument overload that includes finalizer. Requiring finalizer
+                // keeps this lookup unique while PatchNamed can still supply only the
+                // prefix/postfix used by the fence.
+                if (!prefix || !postfix || !finalizer) continue;
                 if (selected != null) return null;
                 selected = method;
             }
