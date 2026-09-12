@@ -1,6 +1,6 @@
 {
   "schemaVersion": 4,
-  "updatedAt": "2026-09-06",
+  "updatedAt": "2026-09-12",
   "authority": {
     "productAuthority": "user",
     "coordinationWorker": "GitHub Work SPT",
@@ -80,7 +80,10 @@
       ],
       "frozen": {
         "version": "0.1.0",
-        "slotIds": [15, 16],
+        "slotIds": [
+          15,
+          16
+        ],
         "preserveDistributedIds": true,
         "status": "published-stable-baseline-not-active-roadmap"
       },
@@ -166,8 +169,14 @@
         "one exact-head release candidate passes the final batched runtime gate on the current approved SPT 4.1.x baseline"
       ],
       "supersededAuthorities": {
-        "issues": [115],
-        "pullRequests": [193, 297, 327]
+        "issues": [
+          115
+        ],
+        "pullRequests": [
+          193,
+          297,
+          327
+        ]
       },
       "ruledOutHypotheses": [
         "AllQuestsCheckmarks as root cause of the auto-accept/auto-turn-in lifecycle defect, based on user physical A/B test with the mod disabled"
@@ -180,8 +189,17 @@
       "version": "0.1.0",
       "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
       "historicalEvidence": {
-        "issues": [141, 143, 197, 220],
-        "pullRequests": [222, 223, 226]
+        "issues": [
+          141,
+          143,
+          197,
+          220
+        ],
+        "pullRequests": [
+          222,
+          223,
+          226
+        ]
       },
       "phasePlan": [
         {
@@ -208,9 +226,17 @@
       ],
       "frozen": {
         "version": "0.1.0",
-        "modes": ["Off", "Audit", "Enforce"],
+        "modes": [
+          "Off",
+          "Audit",
+          "Enforce"
+        ],
         "preserveAcceptedEnforceAlpha": true,
-        "classification": ["Baseline", "Relationship", "Milestone"],
+        "classification": [
+          "Baseline",
+          "Relationship",
+          "Milestone"
+        ],
         "noSecondTraderEconomyEngine": true
       },
       "stableAcceptance": [
@@ -314,8 +340,23 @@
         "one exact-head Item Intelligence Admiral v1.2.0 package passes the batched physical SPT runtime gate"
       ],
       "historicalEvidence": {
-        "issues": [82, 94, 118, 198, 338],
-        "pullRequests": [86, 96, 108, 120, 126, 199, 341, 343]
+        "issues": [
+          82,
+          94,
+          118,
+          198,
+          338
+        ],
+        "pullRequests": [
+          86,
+          96,
+          108,
+          120,
+          126,
+          199,
+          341,
+          343
+        ]
       }
     },
     "tacticalHud": {
@@ -407,8 +448,155 @@
         "one final exact-head package passes the batched physical SPT runtime gate"
       ],
       "supersededAuthorities": {
-        "pullRequests": [195]
+        "pullRequests": [
+          195
+        ]
       }
+    },
+    "icebreakerIntegration": {
+      "workstreamName": "Icebreaker / RUAF / Black Division MOD SPT",
+      "productName": "Icebreaker integration and faction rotation",
+      "modulePath": "integrations/Icebreaker",
+      "version": "0.1.0-foundation",
+      "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
+      "phasePlan": [
+        {
+          "key": "upstream-inventory",
+          "issue": 353,
+          "objective": "Acquire and inventory the exact Manimal Icebreaker 1.1.0 stack and dependencies, recording versions, hashes, package ownership, defaults and licenses without committing upstream binary content.",
+          "acceptance": "The exact SPT 4.1.5-compatible dependency graph, active paths, hashes, defaults and rollback targets are known and duplicate active copies are absent.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "baseline-installation",
+          "issue": 353,
+          "objective": "Install the exact upstream stack independently of B&A&HB, preserve recoverable backups and prove a clean SPT 4.1.5 server start while shutting down every process started by the worker.",
+          "acceptance": "The map and dependency stack load cleanly, owned installation evidence is recorded, and no task-owned server or helper process remains after validation.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "default-characterization",
+          "issue": 353,
+          "objective": "Determine actual default Icebreaker map, quest, loot, Wedge, RUAF and Black Division behavior from source, configuration and bounded runtime evidence before tuning.",
+          "acceptance": "Spawn timing, frequency, group size, additive/replacement behavior and configuration surfaces are evidenced rather than assumed.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "paced-faction-rotation",
+          "issue": 353,
+          "objective": "Implement the smallest reversible configuration or compatibility layer that makes ordinary raids the baseline and RUAF/Black Division uncommon paced events with bounded groups and cooldown-aware rotation.",
+          "acceptance": "Frequency and difficulty are independent, ordinary Scav/PMC population remains primary, upstream IDs remain untouched and the owned layer is replaceable.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "combined-runtime-acceptance",
+          "issue": 353,
+          "objective": "Validate the complete Icebreaker stack and faction pacing with SAIN/BPS, WTT and current Admiral modules in one batched gameplay session.",
+          "acceptance": "Map systems, quests and loot work; special factions are uncommon and correctly sized; no duplicate population, dependency error, severe performance regression or dirty log remains.",
+          "requiresUserRuntime": true
+        },
+        {
+          "key": "stable-local-integration",
+          "issue": 353,
+          "objective": "Freeze the accepted upstream versions, hashes, owned configuration and rollback/update procedure without redistributing upstream binary content.",
+          "acceptance": "One exact accepted integration state is reproducible and documented, temporary work is reconciled and the user has explicitly approved promotion/cleanup actions.",
+          "requiresUserRuntime": false
+        }
+      ],
+      "frozen": {
+        "upstream": "Manimal's Icebreaker Backport",
+        "upstreamVersion": "1.1.0",
+        "upstreamGuid": "com.manimal.icebreaker",
+        "exactValidationBaseline": "SPT 4.1.5",
+        "compatibilityTarget": "SPT 4.1.x",
+        "independentOfBelt": true,
+        "orbitOutOfScope": true,
+        "noUpstreamBinaryRedistribution": true
+      },
+      "stableAcceptance": [
+        "Icebreaker remains an upstream-owned full location/content backport",
+        "RUAF and Black Division supplement rather than replace ordinary raid population",
+        "Black Division is rarer than RUAF and repeated appearances are bounded",
+        "the integration is reversible and preserves exact third-party provenance",
+        "workers stop and verify cleanup of every local SPT process they start"
+      ]
+    },
+    "secondLife": {
+      "workstreamName": "Second Life MOD SPT",
+      "productName": "Second Life",
+      "modulePath": "mods/Second-Life",
+      "version": "0.1.0-foundation",
+      "resumePolicy": "first-phase-without-recorded-acceptance-evidence",
+      "phasePlan": [
+        {
+          "key": "runtime-archaeology",
+          "issue": 352,
+          "objective": "Map the exact SPT/EFT 4.1.5 local-player death, raid-end, profile-save and spawn lifecycle and prove a safe same-raid recovery seam.",
+          "acceptance": "Hooks, ownership boundaries, unsupported paths and a go/no-go implementation decision are documented with source evidence; no profile mutation is guessed.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "deterministic-state-machine",
+          "issue": 352,
+          "objective": "Implement and regression-test Alive -> FirstDeathCaptured -> RecoveryPending -> RecoverySpawned -> FinalDeath/Extract with fail-closed one-use accounting.",
+          "acceptance": "Tests prove one activation, exact terminal cleanup, disconnect/reconnect policy and no item/profile duplication.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "minimal-recovery-slice",
+          "issue": 352,
+          "objective": "Implement one map-independent alternate re-entry with a minimal emergency loadout while preserving the original body and equipment in-world.",
+          "acceptance": "Unsupported states fall back to native death; original equipment is never restored or cloned; automated build and validation are green.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "spawn-loadout-policy",
+          "issue": 352,
+          "objective": "Add bounded enablement, delay, safe-distance, spawn-selection and minimal-loadout configuration.",
+          "acceptance": "Selection avoids the killer, original corpse, active combat and invalid extracts, is bounded and fails closed when no safe point exists.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "cross-module-compatibility",
+          "issue": 352,
+          "objective": "Verify quests, health, insurance, B&A&HB protection, Economy Admiral, Icebreaker and common runtime boundaries without allowing another module to own respawn.",
+          "acceptance": "No duplicate items, rewards, quest events, insurance returns or protection bypass exists; unproven network/co-op paths remain disabled.",
+          "requiresUserRuntime": false
+        },
+        {
+          "key": "combined-runtime-acceptance",
+          "issue": 352,
+          "objective": "Run one batched physical gate covering first death, recovery spawn, minimal loadout, old-corpse recovery, extraction, final death and profile restart.",
+          "acceptance": "Exactly one recovery occurs, original gear exists exactly once, final raid/profile state is native-coherent and logs remain clean.",
+          "requiresUserRuntime": true
+        },
+        {
+          "key": "stable-release",
+          "issue": 352,
+          "objective": "Remediate concrete runtime failures and deliberately promote one exact physically accepted candidate.",
+          "acceptance": "Install-ready package and rollback are verified, main integration is coherent and merge/cleanup occurs only after explicit user confirmation.",
+          "requiresUserRuntime": false
+        }
+      ],
+      "frozen": {
+        "productName": "Second Life",
+        "oneRecoveryPerRaid": true,
+        "differentSafeSpawn": true,
+        "minimalEmergencyLoadout": true,
+        "originalCorpsePersists": true,
+        "noFullKitRestore": true,
+        "noItemDuplication": true,
+        "compatibilityTarget": "SPT 4.1.x",
+        "exactValidationBaseline": "SPT 4.1.5"
+      },
+      "stableAcceptance": [
+        "one additional appearance at most per raid",
+        "the first corpse and equipment remain recoverable in-world",
+        "the emergency loadout is minimal and configurable",
+        "native raid, quest, health, insurance and profile semantics remain coherent",
+        "disabled mode is behaviorally inert",
+        "one exact candidate passes a batched physical runtime gate"
+      ]
     }
   }
 }
