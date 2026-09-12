@@ -1,0 +1,97 @@
+{
+  "schemaVersion": 1,
+  "status": "runtime-materialized",
+  "requiredDependencies": false,
+  "validatedAgainst": "SPT 4.1.5",
+  "sources": [
+    {
+      "name": "WTT Armory",
+      "guid": "com.wtt.armory",
+      "observedVersion": "3.0.0",
+      "runtimeMetadataVersion": "2.0.5"
+    },
+    {
+      "name": "WTT Content Backport",
+      "guid": "com.wtt.contentbackport",
+      "observedVersion": "2.0.1",
+      "runtimeMetadataVersion": "2.0.1"
+    }
+  ],
+  "selectionRule": "Only complete weapon presets and standalone equipment not already assigned to the source mod's traders; bounded stock, one purchase per reset.",
+  "offers": [
+    {
+      "offerId": "ab2cf4ddf32c1d36564791e1",
+      "tpl": "6661012d16fbd2fb75408f87",
+      "name": "CZ 75B",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 18000,
+      "completePreset": true
+    },
+    {
+      "offerId": "e392c02f476aec7d9a211dc0",
+      "tpl": "68d40fb07130ef271f60991f",
+      "name": "PMM-12",
+      "source": "WTT Armory",
+      "loyaltyLevel": 1,
+      "priceRub": 16000,
+      "completePreset": true
+    },
+    {
+      "offerId": "7b2f597188b6632e6f25c161",
+      "tpl": "67b05e25d83f07b7b587c0b5",
+      "name": "UMP9",
+      "source": "WTT Armory",
+      "loyaltyLevel": 2,
+      "priceRub": 52000,
+      "completePreset": true
+    },
+    {
+      "offerId": "ac5057eea4cd5096f3853689",
+      "tpl": "66ba249b102a9dd6040a6e7e",
+      "name": "IWI Carmel",
+      "source": "WTT Armory",
+      "loyaltyLevel": 3,
+      "priceRub": 105000,
+      "completePreset": true
+    },
+    {
+      "offerId": "4fff7127da96fe59f76af6f6",
+      "tpl": "68a6d95addf0111c2f04c9c3",
+      "name": "Construction helmet, orange",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 1,
+      "priceRub": 4500,
+      "completePreset": false
+    },
+    {
+      "offerId": "005bcf928ba20aa2ba5a277b",
+      "tpl": "693bb59250fafa102607aeb7",
+      "name": "M32 headset, white",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 1,
+      "priceRub": 32000,
+      "completePreset": false
+    },
+    {
+      "offerId": "5b62df4e9a4b864f7458c0ef",
+      "tpl": "69e2441a18cb3157560855ec",
+      "name": "Spiritus Icebreaker rig",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 2,
+      "priceRub": 36000,
+      "completePreset": false
+    },
+    {
+      "offerId": "a80edda563d726474ef89371",
+      "tpl": "69413241b1ce1e5fbb09ed0a",
+      "name": "CENS ProFlex DX5",
+      "source": "WTT Content Backport",
+      "loyaltyLevel": 3,
+      "priceRub": 98000,
+      "completePreset": false
+    }
+  ],
+  "offerCount": 8,
+  "absenceBehavior": "No optional offer is published; all core quests and offers remain available."
+}

@@ -23,6 +23,7 @@ public sealed class AdmiralTraderRegistration(
     RagfairConfig ragfairConfig,
     TimeUtil timeUtil,
     TradersTable tradersTable,
+    TemplateTable templateTable,
     LocaleTable localesTable,
     ISptLogger<AdmiralTraderRegistration> logger) : IOnLoad
 {
@@ -55,6 +56,7 @@ public sealed class AdmiralTraderRegistration(
             modHelper.GetJsonDataFromFile<Dictionary<string, Dictionary<MongoId, MongoId>>>(modPath, "db/questassort.json");
 
         MergeNatalyaSignatureStock(assort, natalyaSignatureAssort);
+        int optionalOffers = MergeOptionalStorefront(modPath, assort);
         ValidateTraderData(traderBase, assort, questAssort);
         ValidateRelationshipStock(modPath, assort, questAssort);
 
@@ -105,7 +107,35 @@ public sealed class AdmiralTraderRegistration(
                 tradersTable.Remove(traderBase.Id);
             throw;
         }
-        logger.Success($"Admiral Trader registered with id {traderBase.Id} and {assort.Items.Count} assort item records");
+        logger.Success($"Admiral Trader registered with id {traderBase.Id} and {assort.Items.Count} assort item records ({optionalOffers} optional offers)");
+    }
+
+    private int MergeOptionalStorefront(string modPath, TraderAssort assort)
+    {
+        int merged = 0;
+        foreach (string file in new[] { "wtt-armory-assort.json", "content-backport-assort.json" })
+        {
+            string relative = IOPath.Combine("db", "optional", "storefront", file);
+            string absolute = IOPath.Combine(modPath, relative);
+            if (!File.Exists(absolute))
+                continue;
+            TraderAssort candidate = modHelper.GetJsonDataFromFile<TraderAssort>(modPath, relative.Replace('\\', '/'));
+            Item[] roots = candidate.Items.Where(item => item.ParentId?.ToString() == "hideout").ToArray();
+            HashSet<MongoId> templates = candidate.Items.Select(item => item.Template).ToHashSet();
+            if (templates.Any(tpl => !templateTable.Items.ContainsKey(tpl)))
+            {
+                logger.Info($"Optional Admiral storefront {file} skipped because its source mod is absent or incomplete");
+                continue;
+            }
+            HashSet<MongoId> ids = assort.Items.Select(item => item.Id).ToHashSet();
+            if (candidate.Items.Any(item => !ids.Add(item.Id)) || candidate.BarterScheme.Keys.Any(assort.BarterScheme.ContainsKey) || candidate.LoyalLevelItems.Keys.Any(assort.LoyalLevelItems.ContainsKey))
+                throw new InvalidDataException($"Optional Admiral storefront {file} collides with an existing offer");
+            assort.Items.AddRange(candidate.Items);
+            foreach (var row in candidate.BarterScheme) assort.BarterScheme.Add(row.Key, row.Value);
+            foreach (var row in candidate.LoyalLevelItems) assort.LoyalLevelItems.Add(row.Key, row.Value);
+            merged += roots.Length;
+        }
+        return merged;
     }
 
     private static void ValidateTraderData(

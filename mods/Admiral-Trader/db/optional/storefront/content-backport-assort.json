@@ -1,0 +1,92 @@
+{
+  "items": [
+    {
+      "_id": "4fff7127da96fe59f76af6f6",
+      "_tpl": "68a6d95addf0111c2f04c9c3",
+      "parentId": "hideout",
+      "slotId": "hideout",
+      "upd": {
+        "UnlimitedCount": false,
+        "StackObjectsCount": 3,
+        "BuyRestrictionMax": 1,
+        "BuyRestrictionCurrent": 0
+      }
+    },
+    {
+      "_id": "005bcf928ba20aa2ba5a277b",
+      "_tpl": "693bb59250fafa102607aeb7",
+      "parentId": "hideout",
+      "slotId": "hideout",
+      "upd": {
+        "UnlimitedCount": false,
+        "StackObjectsCount": 3,
+        "BuyRestrictionMax": 1,
+        "BuyRestrictionCurrent": 0
+      }
+    },
+    {
+      "_id": "5b62df4e9a4b864f7458c0ef",
+      "_tpl": "69e2441a18cb3157560855ec",
+      "parentId": "hideout",
+      "slotId": "hideout",
+      "upd": {
+        "UnlimitedCount": false,
+        "StackObjectsCount": 3,
+        "BuyRestrictionMax": 1,
+        "BuyRestrictionCurrent": 0
+      }
+    },
+    {
+      "_id": "a80edda563d726474ef89371",
+      "_tpl": "69413241b1ce1e5fbb09ed0a",
+      "parentId": "hideout",
+      "slotId": "hideout",
+      "upd": {
+        "UnlimitedCount": false,
+        "StackObjectsCount": 3,
+        "BuyRestrictionMax": 1,
+        "BuyRestrictionCurrent": 0
+      }
+    }
+  ],
+  "barter_scheme": {
+    "4fff7127da96fe59f76af6f6": [
+      [
+        {
+          "count": 4500,
+          "_tpl": "5449016a4bdc2d6f028b456f"
+        }
+      ]
+    ],
+    "005bcf928ba20aa2ba5a277b": [
+      [
+        {
+          "count": 32000,
+          "_tpl": "5449016a4bdc2d6f028b456f"
+        }
+      ]
+    ],
+    "5b62df4e9a4b864f7458c0ef": [
+      [
+        {
+          "count": 36000,
+          "_tpl": "5449016a4bdc2d6f028b456f"
+        }
+      ]
+    ],
+    "a80edda563d726474ef89371": [
+      [
+        {
+          "count": 98000,
+          "_tpl": "5449016a4bdc2d6f028b456f"
+        }
+      ]
+    ]
+  },
+  "loyal_level_items": {
+    "4fff7127da96fe59f76af6f6": 1,
+    "005bcf928ba20aa2ba5a277b": 1,
+    "5b62df4e9a4b864f7458c0ef": 2,
+    "a80edda563d726474ef89371": 3
+  }
+}

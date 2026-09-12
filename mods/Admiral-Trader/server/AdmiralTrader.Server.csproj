@@ -63,5 +63,7 @@
     <Content Include="..\db\quests\*.json" Link="db\quests\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\locales\*.json" Link="db\locales\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="..\db\optional\icebreaker\**\*.json" Link="db\optional\icebreaker\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\db\optional\storefront\*.json" Link="db\optional\storefront\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\manifests\optional-storefront-runtime.json" Link="manifests\optional-storefront-runtime.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>
