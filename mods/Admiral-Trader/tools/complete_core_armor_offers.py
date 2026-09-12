@@ -20,7 +20,15 @@ def main():
     presets = json.loads(args.globals.read_text(encoding="utf-8-sig"))["ItemPresets"]
     roots = {row["_tpl"]: row for row in assort["items"] if row.get("parentId") == "hideout" and row["_tpl"] in REQUIRED}
     if set(roots) != REQUIRED: raise ValueError(f"core armor root drift: {set(roots)}")
-    assort["items"] = [row for row in assort["items"] if not any(row.get("parentId") == root["_id"] for root in roots.values())]
+    owned = {root["_id"] for root in roots.values()}
+    descendants = set()
+    changed = True
+    while changed:
+        changed = False
+        for row in assort["items"]:
+            if row.get("parentId") in owned | descendants and row["_id"] not in descendants:
+                descendants.add(row["_id"]); changed = True
+    assort["items"] = [row for row in assort["items"] if row["_id"] not in descendants]
     for tpl, offer_root in roots.items():
         matches = []
         for preset in presets.values():

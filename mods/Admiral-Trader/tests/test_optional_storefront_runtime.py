@@ -11,6 +11,10 @@ class OptionalStorefrontRuntimeTests(unittest.TestCase):
         self.assertEqual(set(roots),required)
         for tpl,root_id in roots.items():
             self.assertTrue(any(x.get("parentId")==root_id for x in assort["items"]),tpl)
+        ids=[x["_id"] for x in assort["items"]]
+        self.assertEqual(len(ids),len(set(ids)))
+        valid=set(ids)|{"hideout"}
+        self.assertTrue(all(x.get("parentId") in valid for x in assort["items"]))
 
     def test_optional_content_is_attached_after_third_party_template_publication(self):
         early=(ROOT/"server/TraderRegistration.cs").read_text(encoding="utf-8")
