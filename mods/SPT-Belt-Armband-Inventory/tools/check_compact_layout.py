@@ -14,11 +14,10 @@ settle = SETTLE.read_text(encoding="utf-8-sig") if SETTLE.exists() else ""
 required_patch = [
     'const float HeadBandHeight = 44f;',
     'const float Gap = 4f;',
-    'const float StackVerticalOffset = -30f;',
+    'headBottom.y - faceBottom.y',
     'Enum.Parse(equipmentSlotType, "FaceCover", false)',
     'Mathf.Floor((originalHeight - Gap) * 0.5f)',
-    'StackVerticalOffset - (HeadBandHeight + Gap) * 0.5f',
-    'StackVerticalOffset + (faceHeight + Gap) * 0.5f',
+    'headTop.y - bandTop.y',
     'HeadBandRenderSettle.Suppressed = true;',
     'HeadBandRenderSettle.Suppressed = false;',
     'hostPanelMutation=false',
