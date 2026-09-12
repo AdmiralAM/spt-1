@@ -21,7 +21,7 @@ public record ModMetadata : IModMetadata
     public string Name { get; init; } = "SPT Item Intelligence Server";
     public string Author { get; init; } = "AdmiralAM";
     public List<string>? Contributors { get; init; }
-    public SemanticVersioning.Version Version { get; init; } = new("1.1.0");
+    public SemanticVersioning.Version Version { get; init; } = new("1.2.0");
     public SemanticVersioning.Range SptVersion { get; init; } = new("~4.1.0");
     public List<string>? Incompatibilities { get; init; }
     public Dictionary<string, SemanticVersioning.Range>? ModDependencies { get; init; }
@@ -261,7 +261,7 @@ public sealed class ItemIntelligenceLoadNotice(ISptLogger<ItemIntelligenceLoadNo
     public Task OnLoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        logger.Success("Item Intelligence Admiral Server v1.1.0 loaded; consolidated requirement, value, relevance and background snapshot ready");
+        logger.Success("Item Intelligence Admiral Server v1.2.0 loaded; consolidated requirement, value, relevance and background snapshot ready");
         return Task.CompletedTask;
     }
 }

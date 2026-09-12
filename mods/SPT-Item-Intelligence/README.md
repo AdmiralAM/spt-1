@@ -1,8 +1,8 @@
 # Item Intelligence Admiral
 
-Consolidated item-intelligence package for SPT 4.1.x. Stable release: **v1.1.0**.
+Consolidated item-intelligence package for SPT 4.1.x. Stable release: **v1.2.0**.
 
-## Current development authority
+## Stable authority
 
 The accepted **v1.0.0** line remains available as the rollback/reference baseline. The user-authorized 2026-09-11 amendment in Issue #338 supersedes the former separate-Item-Valuation product boundary: **v1.1 delivers one consolidated Item Intelligence Admiral package**, with optional background coloring and no required external AQC, Item Valuation, Task Item Indicator or CompatibilityHighlighter installation.
 
@@ -10,12 +10,12 @@ Start with the requirement/FIR/hideout truth model and deterministic tests, then
 
 The first implementation replaces maximum future-quest reserves with additive consumptive obligations, reserves FIR stock across all FIR-only quests before unrestricted consumption, and carries one immutable allocation into the tooltip. Completed hideout levels are excluded and repeated station/level entries across standard/custom tables are counted once. Current/future levels are identified explicitly. See [truth model](docs/v1.1-truth-model.md) for semantics and remaining acceptance work.
 
-Canonical stable and current-development authority:
+Canonical stable authority:
 
 - roadmap / product contract: **Issue #338 — Item Intelligence Admiral — v1.1 modular UX / AQC-reference roadmap**;
 - stable implementation: **PR #341 — Item Intelligence Admiral v1.1 — modular UX and contextual intelligence**;
-- current implementation branch: **`feature/item-intelligence-v1.2`**;
-- single live development PR: **PR #343 — Item Intelligence Admiral v1.2 — contextual raid decisions**;
+- accepted v1.2 implementation: **PR #343 — Item Intelligence Admiral v1.2 — contextual raid decisions**;
+- published install channel: **`runtime-item-intelligence`**;
 - ordinary implementation validation: **`Item Intelligence Admiral Validate`** only;
 - one batched physical runtime gate occurs only after the recorded roadmap is automated-green.
 
@@ -69,10 +69,10 @@ Background ownership is cooperative. Item Intelligence restores the accepted Ite
 
 ## Version and naming
 
-The official product name is **Item Intelligence Admiral**. The current stable release is **v1.1.0**.
+The official product name is **Item Intelligence Admiral**. The current stable release is **v1.2.0**.
 
-- stable client: **Item Intelligence Admiral v1.1.0**;
-- stable server: **Item Intelligence Admiral Server v1.1.0**.
+- stable client: **Item Intelligence Admiral v1.2.0**;
+- stable server: **Item Intelligence Admiral Server v1.2.0**.
 
 The existing source directory, namespace, GUID, endpoint, and `runtime-item-intelligence` branch are retained as technical compatibility identifiers. They are not the product name and should not be renamed casually because doing so would create unnecessary migration risk.
 
