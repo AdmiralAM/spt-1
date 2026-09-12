@@ -9,12 +9,12 @@ internal static class DedicatedWearableWindowSizingRegression
     {
         AssertExact("ArmBand", 1, 2, 73f, 158f);
         AssertExact("Belt", 2, 2, 136f, 158f);
-        AssertExact("HeadBand", 1, 1, 73f, 95f);
+        AssertExact("HeadBand split strip", 2, 1, 136f, 95f);
 
         if (AccessoryGridPolicy.CellCount(2, 2) != 4)
             throw new InvalidOperationException("Dedicated Belt must retain exact 2x2 / four-cell capacity.");
-        if (AccessoryGridPolicy.CellCount(1, 1) != 1)
-            throw new InvalidOperationException("Dedicated HeadBand must retain exact 1x1 / one-cell capacity.");
+        if (AccessoryGridPolicy.CellCount(2, 1) != 2)
+            throw new InvalidOperationException("Dedicated HeadBand window must present its two separately filtered 1x1 grids as one horizontal strip.");
     }
 
     static void AssertExact(string category, int columns, int rows, float expectedWidth, float expectedHeight)

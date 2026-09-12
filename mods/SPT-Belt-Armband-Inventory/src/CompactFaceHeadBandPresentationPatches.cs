@@ -11,7 +11,7 @@ namespace SPTBeltArmbandInventory
     {
         const float HeadBandHeight = 44f;
         const float Gap = 4f;
-        const float StackVerticalOffset = -28f;
+        const float StackVerticalOffset = -42f;
 
         sealed class LayoutState
         {

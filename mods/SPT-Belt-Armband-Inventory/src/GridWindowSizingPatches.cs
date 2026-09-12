@@ -130,9 +130,13 @@ namespace SPTBeltArmbandInventory
             // Geometry comes from the registered item descriptor. No hierarchy
             // scan and no artificial minimum: declared cell extent + calibrated
             // native GridWindow chrome only.
-            float width = AccessoryGridPolicy.ExactWindowWidth(columns);
+            // EFT lays the two separately-filtered 1x1 HeadBand grids next to
+            // each other. Size their outer window as one strict 2x1 strip.
+            float width = splitHeadBand
+                ? AccessoryGridPolicy.ExactWindowWidth(2)
+                : AccessoryGridPolicy.ExactWindowWidth(columns);
             float height = splitHeadBand
-                ? AccessoryGridPolicy.ExactSplitGridWindowHeight(rows)
+                ? AccessoryGridPolicy.ExactWindowHeight(1)
                 : AccessoryGridPolicy.ExactWindowHeight(rows);
             if (width <= 0f || height <= 0f) return false;
 
@@ -163,9 +167,11 @@ namespace SPTBeltArmbandInventory
             RectTransform rect = component == null ? null : component.transform as RectTransform;
             if (rect == null) return;
 
-            float width = AccessoryGridPolicy.ExactWindowWidth(columns);
+            float width = splitHeadBand
+                ? AccessoryGridPolicy.ExactWindowWidth(2)
+                : AccessoryGridPolicy.ExactWindowWidth(columns);
             float height = splitHeadBand
-                ? AccessoryGridPolicy.ExactSplitGridWindowHeight(rows)
+                ? AccessoryGridPolicy.ExactWindowHeight(1)
                 : AccessoryGridPolicy.ExactWindowHeight(rows);
             float finalWidth = rect.rect.width;
             float finalHeight = rect.rect.height;
