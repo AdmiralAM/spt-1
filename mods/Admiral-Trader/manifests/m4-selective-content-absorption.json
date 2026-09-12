@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "status": "M4-selective-absorption-complete",
+  "decision": "ABSORB-INTO-EXISTING-RUNTIME",
+  "runtimeResult": {
+    "questCountBefore": 43,
+    "questCountAfter": 43,
+    "newQuestRecords": 0,
+    "retiredQuestRecords": 0,
+    "graphChanges": 0,
+    "balanceChanges": 0,
+    "assortChanges": 0,
+    "reason": "Every external concept that passed curation already has a concrete home in the accepted M3 runtime wave. Creating parallel records would duplicate the same player decisions. M4 closes provenance and rejection boundaries without adding filler."
+  },
+  "sources": {
+    "Natalya": {
+      "repository": "Colobos9mm/Natalya",
+      "commit": "77e13452e0e77d1d4dc985703d83323e50f717e1",
+      "observedQuestCorpus": 36,
+      "observedFamilies": [
+        "Pay Back I-XIV",
+        "Weapons Training",
+        "Exfil Part 1-11"
+      ]
+    },
+    "AndrudisQuestManiac": {
+      "repository": "laurentmekka/AndrudisQuestManiac",
+      "commit": "58c3dd0487858c7ba8e8c053b873fbe76a222637",
+      "documentedActiveQuestCount": 4641,
+      "role": "theme and provenance corpus only"
+    },
+    "ScorpionCSharp": {
+      "repository": "acidphantasm/scorpion-csharp",
+      "role": "focused C# organization reference only"
+    },
+    "RefFriendlyQuestsCSharp": {
+      "repository": "acidphantasm/reffriendlyquests-csharp",
+      "role": "native quest-table integration reference only"
+    },
+    "AdmiralArtyomRevival": {
+      "repositoryPath": "mods/Admiral-Artyom-Revival",
+      "role": "in-repository load-order and data separation reference only"
+    }
+  },
+  "absorbed": [
+    {
+      "source": "Natalya Exfil",
+      "sourceQuestIds": [
+        "69a585a580900a3fe91a9c97",
+        "69a585a5440ec65e8aa8ccfa",
+        "69a6a9af5f8e85f9344a0e8d",
+        "69a6a9af127b2f9178de3b1b",
+        "69a6a9b21c25f96812bb007e",
+        "69a6a9b2a920eff732800353",
+        "69a6a9b549fcc24535da20ba",
+        "69a6a9b5107a1b8008083d19",
+        "69a8031b4bdbfa3f3702a4de",
+        "69a8031b0db3a0ada373e5ff",
+        "69a8031bbf2c80ca0c8e8cfd",
+        "69a8031b32b80398ed075904"
+      ],
+      "retainedIdeas": [
+        "forward resupply",
+        "restricted transit",
+        "corridor continuity",
+        "escalating route threats"
+      ],
+      "runtimeTargets": [
+        "56813681ae0690016376f163",
+        "8b6f2b25ab2e91e0540761e3",
+        "133aa723b4695a3d93de92f1",
+        "f62d8e1285027e336767513c"
+      ],
+      "adaptation": "The multi-part Exfil chain is condensed into four distinct operations. Admiral uses native SPT conditions, its own voice and its existing reward envelope; no Natalya trader, custom item, zone, armor, assort or dialogue is copied."
+    },
+    {
+      "source": "Andrudis QuestManiac",
+      "retainedIdeas": [
+        "Ultrasound",
+        "Errand Boy",
+        "Deep Pockets",
+        "Tarkov Mule",
+        "Iron Head",
+        "Juggernaut",
+        "Keys Proficiency",
+        "Scav Hunt",
+        "PMC Hunt",
+        "Sniper Life",
+        "Rogue Hunt",
+        "Raider Hunt"
+      ],
+      "runtimeTargets": [
+        "8dad0d354ac000b7bbf05b9a",
+        "56813681ae0690016376f163",
+        "208db81b5ce195bf0c176852",
+        "6574a072f763d0b09a553401",
+        "8b6f2b25ab2e91e0540761e3",
+        "41a41cb262ea084c1e110513",
+        "133aa723b4695a3d93de92f1",
+        "db220288bc8d5559a45feeb1",
+        "4c2cc3f85d60170907642d9e",
+        "b1b3d9e3a930a3eae47b2353",
+        "f62d8e1285027e336767513c",
+        "4072a5e458946a243b886ad8"
+      ],
+      "adaptation": "One distinct operation retains each useful capability theme. Six traders, WTT dependency, bundles, count ladders, map copies, imported IDs, rewards and dialogue are excluded."
+    },
+    {
+      "source": "Maintained C# references",
+      "retainedIdeas": [
+        "focused registration class",
+        "data-driven tables",
+        "explicit load order",
+        "small helper boundaries"
+      ],
+      "runtimeTargets": [
+        "AdmiralTrader.Server.AdmiralQuestRegistration",
+        "AdmiralTrader.Server.AdmiralTraderRegistration"
+      ],
+      "adaptation": "Existing native table registration already implements the applicable structure. No custom router, compatibility layer or unrelated feature is added."
+    }
+  ],
+  "rejected": [
+    {
+      "source": "Natalya Pay Back",
+      "reason": "Fourteen sequential map and target kill records duplicate native and Admiral elimination play and would restore a body-count ladder."
+    },
+    {
+      "source": "Natalya Weapons Training",
+      "reason": "The accepted 21-record Arsenal baseline already owns weapon-family progression and unlocks."
+    },
+    {
+      "source": "Natalya runtime dependencies",
+      "reason": "A second trader, custom items, zones, armor, broad assort and source dialogue are unnecessary for the retained route concepts."
+    },
+    {
+      "source": "Andrudis runtime corpus",
+      "reason": "Wholesale traders, bundles and thousands of quests conflict with the single curated Admiral campaign and its no-filler rule."
+    },
+    {
+      "source": "Boss Command Strike",
+      "reason": "Exact SPT 4.1.5 already contains target-specific quests for every ordinary boss role reviewed; another named boss kill has no distinct player decision or consequence."
+    },
+    {
+      "source": "Cultist Night Operation",
+      "reason": "Exact SPT 4.1.5 already contains cultist-role objectives, including Night of The Cult. A small night counter alone does not establish a distinct Admiral operation."
+    }
+  ],
+  "deferred": [
+    "Field Medicine remains deferred until exact runtime can observe treatment behavior.",
+    "Chemical Support remains deferred until exact runtime can observe the intended player effect.",
+    "Endurance Circuit remains deferred until it expresses a decision beyond a map extraction checklist."
+  ],
+  "boundary": {
+    "verbatimExternalCopy": false,
+    "externalRuntimeDependency": false,
+    "externalIdsImported": false,
+    "externalRewardsImported": false,
+    "m5RelationshipStorefrontStarted": true,
+    "m5RelationshipStorefrontState": "materialized-in-current-runtime"
+  }
+}

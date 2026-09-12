@@ -14,7 +14,7 @@ Primary content/data source:
 
 - `Thirt3nth/Andrudis-Questmaniac` — SPT 3.10-era repository containing the legacy `db/QuestBundles` tree and quest data.
 
-Current compatibility reference:
+Current-generation compatibility reference:
 
 - `laurentmekka/AndrudisQuestManiac` — SPT 4.1 port. It proves that the old quest corpus can be converted/loaded on the 4.1 generation and documents repairs for removed items, invalid durability conditions, incomplete weapon rewards, and modular armour inserts.
 
@@ -22,7 +22,8 @@ The legacy repositories are **content/data-model sources and compatibility refer
 
 ## Target
 
-- SPT 4.1.x, with the project runtime currently using 4.1.3 references where an exact runtime package boundary is required.
+- Canonical runtime target: **SPT 4.1.5**.
+- Historical SPT 4.1.3/4.1.4 evidence remains useful only as provenance or compatibility history; it is not current runtime authority.
 - .NET 10 server-mod generation, matching maintained server-side modules in this repository.
 - One trader: working display name `Admiral` / `Адмирал`.
 
@@ -38,14 +39,15 @@ Current SPT trader JSON supplied from an installed SPT runtime is a native data-
 
 ## Baseline viability conclusion
 
-The first gate does not require a runtime port. It operates only on legacy JSON and is therefore safe to implement independently of unresolved trader/migration runtime details.
+The legacy inventory/curation gates operate only on legacy JSON and remain independent of runtime migration details.
 
-Before server implementation begins, re-prove the exact SPT 4.1.3 boundaries needed for:
+Before server implementation or profile migration crosses a boundary, re-prove the exact SPT 4.1.5 behavior required for:
 
 1. single trader registration and image/locales;
 2. quest insertion/loading;
 3. quest-assort unlocks;
 4. profile quest-state access required for migration;
-5. load order relative to other trader/quest mods and the future Economy MOD.
+5. load order relative to other trader/quest mods and Economy Admiral;
+6. item/TPL availability used by weapon, ammunition, equipment and reward contracts.
 
-If any of those boundaries cannot be proven from current source/package/runtime references, stop at that boundary rather than guessing.
+If any boundary cannot be proven from current SPT 4.1.5 source/package/runtime references, stop at that boundary rather than inheriting a 4.1.4 assumption.

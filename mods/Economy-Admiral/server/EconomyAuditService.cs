@@ -9,7 +9,7 @@ using SPTarkov.Server.Core.Models.Spt.Tables;
 namespace SPTEconomy;
 
 /// <summary>
-/// Source-correct primary audit path proven by the physical SPT 4.1.3 parity gate.
+/// Source-correct primary audit path proven by the physical SPT 4.1.4 parity gate.
 /// Reads typed final quest rewards directly and uses the pristine startup snapshot for
 /// vanilla membership/benchmarks. It does not mutate TemplateTable or TradersTable.
 /// </summary>

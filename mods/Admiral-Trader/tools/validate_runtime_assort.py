@@ -5,19 +5,30 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSORT_PATH = ROOT / "db" / "assort.json"
+SIGNATURE_ASSORT_PATH = ROOT / "db" / "natalya-signature-assort.json"
 QUESTASSORT_PATH = ROOT / "db" / "questassort.json"
 QUEST_DIR = ROOT / "db" / "quests"
 BASE_PATH = ROOT / "db" / "base.json"
 RUNTIME_MANIFEST_PATH = ROOT / "manifests" / "runtime-manifest.json"
+BASELINE_STOCK_PATH = ROOT / "manifests" / "baseline-stock.json"
 AMMO_POLICY_PATH = ROOT / "manifests" / "ammo-offer-policy.json"
+RELATIONSHIP_STOCK_PATH = ROOT / "manifests" / "relationship-stock.json"
+STOREFRONT_CORE_PATH = ROOT / "manifests" / "storefront-core-expansion.json"
+M7_PATH = ROOT / "manifests" / "m7-natalya-absorption-program.json"
 CSPROJ_PATH = ROOT / "server" / "AdmiralTrader.Server.csproj"
 
-EXPECTED_RUNTIME_TARGET = "4.1.3"
-EXPECTED_PUBLISHED_API_BASELINE = "4.1.2"
+EXPECTED_RUNTIME_TARGET = "4.1.5"
+EXPECTED_PUBLISHED_API_BASELINE = "4.1.5"
 LABS_OFFER_ID = "ad1000000000000000000001"
 LABS_ITEM_TPL = "5c94bbff86f7747ee735c08f"
 LABS_CLEARANCE_QUEST = "68a6527a3c73b2e85977d7a1"
 RUB_TPL = "5449016a4bdc2d6f028b456f"
+BASELINE_OFFER_IDS = {
+    "ad2000000000000000000001",
+    "ad2000000000000000000002",
+    "ad2000000000000000000003",
+    "ad2000000000000000000004",
+}
 AMMO_OFFER_IDS = {
     "handguns": "6cf0fc22a55417075c5af23e",
     "smg-pdw": "67d5501fb925a7836b99f112",
@@ -25,7 +36,35 @@ AMMO_OFFER_IDS = {
     "assault-rifles": "b71182859e5958fd12c02e89",
     "marksman-battle": "07efd6dee267ec18ed830dd6",
     "precision": "731e65964d324bc545a1b839",
+    "special-weapons": "3500e7b76f097a98ced5d61b",
 }
+RELATIONSHIP_OFFER_IDS = {
+    "068cab4ca6f6a9cf251adf7b",
+    "7b316634b30868626d6dccb0",
+    "0e6ac10c4adc789996086c63",
+}
+ARMORED_PRESET_CHILDREN = {
+    "32bdf9f1175fe841d44c87da": {
+        "Helmet_top": "657f8b94f92cd718b70154ff",
+        "Helmet_back": "657f8b43f92cd718b70154fb",
+    },
+    "bb47b68c39d86a0f8a082d18": {
+        "Soft_armor_front": "6575bc88c6700bd6b40e8a57",
+        "Soft_armor_back": "6575bca0dc9932aed601c5d7",
+        "Front_plate": "656fae5f7c2d57afe200c0d7",
+        "Back_plate": "656fae5f7c2d57afe200c0d7",
+    },
+    "f5a50959ede25e5b2e1ddbb1": {
+        "Soft_armor_front": "6570e5100b57c03ec90b970a",
+        "Soft_armor_back": "6570e479a6560e4ee50c2b02",
+        "Soft_armor_left": "6570e5674cc0d2ab1e05edbb",
+        "soft_armor_right": "6570e59b0b57c03ec90b970e",
+        "Front_plate": "656f9fa0498d1b7e3e071d98",
+        "Back_plate": "656f9fa0498d1b7e3e071d98",
+    },
+}
+NATIVE_QUESTASSORT_KEYS = {"started", "success", "fail"}
+LEGACY_CAPITALIZED_QUESTASSORT_KEYS = {"Started", "Success", "Fail"}
 
 
 def fail(message: str) -> None:
@@ -49,13 +88,13 @@ def validate_runtime_target() -> None:
     package_versions = []
     for group in root.findall("ItemGroup"):
         for package in group.findall("PackageReference"):
-            if package.attrib.get("Include", "").startswith("SPTarkov."):
+            if package.attrib.get("Include", "").startswith(("SPTarkov.", "SPTushonka.")):
                 package_versions.append(package.attrib.get("Version"))
     if not package_versions or any(version != "$(SptPublishedApiBaseline)" for version in package_versions):
         fail(f"SPT package references must use the published API baseline property: {package_versions}")
 
 
-def validate_single_rub_offer(offer_id: str, item: dict, barter: dict, loyalty: dict, *, tpl: str, price: int, stock: int, buy_limit: int) -> None:
+def validate_single_rub_offer(offer_id: str, item: dict, barter: dict, loyalty: dict, *, tpl: str, price: int, stock: int, buy_limit: int, loyalty_level: int = 1) -> None:
     if item.get("_tpl") != tpl or item.get("parentId") != "hideout" or item.get("slotId") != "hideout":
         fail(f"{offer_id}: native root item contract drift")
     upd = item.get("upd") or {}
@@ -71,31 +110,140 @@ def validate_single_rub_offer(offer_id: str, item: dict, barter: dict, loyalty: 
     currency = scheme[0][0]
     if currency.get("_tpl") != RUB_TPL or currency.get("count") != price:
         fail(f"{offer_id}: RUB price drift: {currency}")
-    if loyalty.get(offer_id) != 1:
-        fail(f"{offer_id}: quest-unlocked offer must remain LL1; quest completion is the primary gate")
+    if loyalty.get(offer_id) != loyalty_level:
+        fail(f"{offer_id}: loyalty level drift: {loyalty.get(offer_id)} != {loyalty_level}")
 
 
 def main() -> None:
     validate_runtime_target()
     assort = json.loads(ASSORT_PATH.read_text(encoding="utf-8"))
+    signature_assort = json.loads(SIGNATURE_ASSORT_PATH.read_text(encoding="utf-8"))
     questassort = json.loads(QUESTASSORT_PATH.read_text(encoding="utf-8"))
+    baseline = json.loads(BASELINE_STOCK_PATH.read_text(encoding="utf-8"))
     ammo_policy = json.loads(AMMO_POLICY_PATH.read_text(encoding="utf-8"))
+    relationship = json.loads(RELATIONSHIP_STOCK_PATH.read_text(encoding="utf-8"))
+    storefront_core = json.loads(STOREFRONT_CORE_PATH.read_text(encoding="utf-8"))
+    m7 = json.loads(M7_PATH.read_text(encoding="utf-8"))
     base = json.loads(BASE_PATH.read_text(encoding="utf-8"))
 
-    items = assort.get("items")
-    barter = assort.get("barter_scheme")
-    loyalty = assort.get("loyal_level_items")
+    if set(questassort) != NATIVE_QUESTASSORT_KEYS:
+        fail(f"questassort top-level keys must be exact native lower-case {sorted(NATIVE_QUESTASSORT_KEYS)}, got {sorted(questassort)}")
+    if LEGACY_CAPITALIZED_QUESTASSORT_KEYS & set(questassort):
+        fail("legacy capitalized questassort state keys are forbidden on SPT 4.1.5")
+
+    if baseline.get("targetSptVersion") != EXPECTED_RUNTIME_TARGET:
+        fail("Baseline stock target drift")
+    if baseline.get("stockClass") != "Baseline" or baseline.get("status") != "FrozenPreserved":
+        fail("Baseline stock authority drift")
+    baseline_offers = baseline.get("offers") or []
+    baseline_by_id = {str(row.get("offerId")): row for row in baseline_offers}
+    if set(baseline_by_id) != BASELINE_OFFER_IDS or len(baseline_offers) != 4:
+        fail(f"Baseline stock must contain exactly four preserved offers: {sorted(baseline_by_id)}")
+    if any(row.get("questGate") is not None for row in baseline_offers):
+        fail("Baseline offers must remain non-quest-gated")
+
+    signature_items = signature_assort.get("items")
+    signature_barter = signature_assort.get("barter_scheme")
+    signature_loyalty = signature_assort.get("loyal_level_items")
+    items = [*(assort.get("items") or []), *(signature_items or [])]
+    barter = {**(assort.get("barter_scheme") or {}), **(signature_barter or {})}
+    loyalty = {**(assort.get("loyal_level_items") or {}), **(signature_loyalty or {})}
     if not isinstance(items, list) or not isinstance(barter, dict) or not isinstance(loyalty, dict):
         fail("assort native collections have invalid types")
 
+    milestone_ids = {LABS_OFFER_ID, *AMMO_OFFER_IDS.values()}
+    relationship_offers = relationship.get("offers") or []
+    relationship_by_id = {str(row.get("offerId")): row for row in relationship_offers}
+    if relationship.get("stockClass") != "Relationship" or (relationship.get("materialization") or {}).get("enabled") is not True:
+        fail("M5 Relationship stock must be explicitly materialized")
+    if set(relationship_by_id) != RELATIONSHIP_OFFER_IDS or len(relationship_offers) != 3:
+        fail("Relationship stock must contain the three approved specialist signal offers")
+    if any(row.get("questGate") is not None for row in relationship_offers):
+        fail("Relationship stock must use loyalty, never quest gates")
+
+    core_offers = storefront_core.get("offers") or []
+    core_by_id = {str(row.get("offerId")): row for row in core_offers}
+    if len(core_by_id) != 22 or storefront_core.get("totalFiniteOffers") != 37:
+        fail("bounded post-Andrudis storefront core must contain 22 offers and 37 total finite offers")
+    signature_offers = m7.get("signatureOffers") or []
+    signature_by_id = {str(row.get("offerId")): row for row in signature_offers}
+    if len(signature_by_id) != 4 or (m7.get("activeHeadScope") or {}).get("runtimeFiniteOffers") != 41:
+        fail("M7 must contain exactly four signature offers and 41 finite runtime offers")
+    expected_ids = BASELINE_OFFER_IDS | milestone_ids | RELATIONSHIP_OFFER_IDS | set(core_by_id) | set(signature_by_id)
     root_items = {item.get("_id"): item for item in items if item.get("parentId") == "hideout"}
-    if len(root_items) != len(items) or len(root_items) != 7:
-        fail(f"expected exactly seven root-only Admiral offers, got roots={len(root_items)} items={len(items)}")
-    expected_ids = {LABS_OFFER_ID, *AMMO_OFFER_IDS.values()}
+    if len(root_items) != 41:
+        fail(f"expected exactly 41 finite Admiral root offers, got {len(root_items)}")
     if set(root_items) != expected_ids:
         fail(f"assort root id drift; missing={sorted(expected_ids-set(root_items))} extra={sorted(set(root_items)-expected_ids)}")
     if set(barter) != expected_ids or set(loyalty) != expected_ids:
-        fail("assort root/barter/loyalty key sets must match exactly")
+        fail("combined assort root/barter/loyalty key sets must match the 41-offer contract")
+    all_item_ids = {item.get("_id") for item in items}
+    if len(all_item_ids) != len(items):
+        fail("assort item ids must be unique")
+    for item in items:
+        if item.get("parentId") != "hideout" and item.get("parentId") not in all_item_ids:
+            fail(f"orphan child assort item {item.get('_id')}")
+
+    for offer_id, expected_children in ARMORED_PRESET_CHILDREN.items():
+        actual_children = {
+            item.get("slotId"): item.get("_tpl")
+            for item in items
+            if item.get("parentId") == offer_id
+        }
+        if actual_children != expected_children:
+            fail(f"{offer_id}: complete SPT 4.1.5 armored preset drift: {actual_children}")
+
+    for offer_id, policy in baseline_by_id.items():
+        validate_single_rub_offer(
+            offer_id,
+            root_items[offer_id],
+            barter,
+            loyalty,
+            tpl=str(policy["tpl"]),
+            price=int(policy["priceRub"]),
+            stock=int(policy["stockPerReset"]),
+            buy_limit=int(policy["buyRestriction"]),
+            loyalty_level=int(policy["loyaltyLevel"]),
+        )
+
+    for offer_id, policy in relationship_by_id.items():
+        validate_single_rub_offer(
+            offer_id,
+            root_items[offer_id],
+            barter,
+            loyalty,
+            tpl=str(policy["tpl"]),
+            price=int(policy["priceRub"]),
+            stock=int(policy["stockPerReset"]),
+            buy_limit=int(policy["buyRestriction"]),
+            loyalty_level=int(policy["loyaltyLevel"]),
+        )
+
+    for offer_id, policy in core_by_id.items():
+        validate_single_rub_offer(
+            offer_id,
+            root_items[offer_id],
+            barter,
+            loyalty,
+            tpl=str(policy["itemTpl"]),
+            price=int(policy["priceRub"]),
+            stock=int(policy["stockPerReset"]),
+            buy_limit=int(policy["buyRestriction"]),
+            loyalty_level=int(policy["loyaltyLevel"]),
+        )
+
+    for offer_id, policy in signature_by_id.items():
+        validate_single_rub_offer(
+            offer_id,
+            root_items[offer_id],
+            barter,
+            loyalty,
+            tpl=str(policy["tpl"]),
+            price=int(policy["priceRub"]),
+            stock=int(policy["stockPerReset"]),
+            buy_limit=int(policy["buyRestriction"]),
+            loyalty_level=int(policy["loyaltyLevel"]),
+        )
 
     validate_single_rub_offer(
         LABS_OFFER_ID,
@@ -112,13 +260,17 @@ def main() -> None:
     if set(offers) != set(AMMO_OFFER_IDS):
         fail("ammo offer policy family set drift")
     if ammo_policy.get("targetSptVersion") != EXPECTED_RUNTIME_TARGET:
-        fail("ammo offer policy lost SPT 4.1.3 target")
-    if (ammo_policy.get("specialWeapons") or {}).get("permanentOffer") is not False:
-        fail("Special Weapons must not receive a permanent offer")
+        fail("ammo offer policy lost SPT 4.1.5 target")
+    if (ammo_policy.get("specialWeapons") or {}).get("permanentOffer") is not True:
+        fail("Special Weapons must retain its finite M576 offer")
 
-    success = questassort.get("Success")
-    if not isinstance(success, dict) or set(success) != expected_ids:
-        fail("questassort.Success must contain exactly the seven materialized quest-gated offers")
+    success = questassort.get("success")
+    if not isinstance(success, dict) or set(success) != milestone_ids:
+        fail("questassort.success must contain exactly the eight Milestone offers and no Baseline offers")
+    if BASELINE_OFFER_IDS & set(success):
+        fail("Baseline offers must never leak into questassort.success")
+    if RELATIONSHIP_OFFER_IDS & set(success):
+        fail("Relationship offers must never leak into questassort.success")
     if success.get(LABS_OFFER_ID) != LABS_CLEARANCE_QUEST:
         fail("Labs offer is not gated by Access Protocol: Clearance success")
 
@@ -137,7 +289,7 @@ def main() -> None:
         if success.get(offer_id) != str(policy["questId"]):
             fail(f"{family}: questassort success gate drift")
 
-    for state in ("Started", "Fail"):
+    for state in ("started", "fail"):
         mapping = questassort.get(state)
         if not isinstance(mapping, dict) or mapping:
             fail(f"questassort.{state} must remain empty")
@@ -160,7 +312,7 @@ def main() -> None:
         if float(level.get("minStanding", -1)) != standing:
             fail(f"Admiral LL{index}: standing threshold drift")
 
-    print("Admiral Trader SPT 4.1.3 target + seven-offer quest assort contract OK")
+    print("Admiral Trader SPT 4.1.5 native questassort + 41 finite-offer contract OK")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "draft",
+  "status": "stable-baseline",
   "product": "Admiral Trader",
   "benchmark": {
     "sourceRepository": "sp-tarkov/server-csharp",

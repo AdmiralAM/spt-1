@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "product": "Admiral Trader",
+  "targetSptVersion": "4.1.5",
+  "status": "exact-runtime-database-evidence",
+  "runtimeMaterialize": false,
+  "source": {
+    "archive": "SPT-4.1.5-40743-7d7add5.7z",
+    "archiveSha256": "5cc04274c88115730fe982fd12c7525d57e5fc64b6b7271ab3929383e3ac4432",
+    "itemsDatabaseRecords": 4673,
+    "itemsDatabaseSha256": "5093b348fd0d507cddc1e957114a77b44ff9358846299cbc98ac5e0ad4967a34",
+    "questsDatabaseRecords": 558,
+    "questsDatabaseSha256": "81d3ffc69f009723d62e3da93d4c88f3da108fc9cfb0657ce827913efe359956",
+    "evidenceRun": 33989750127,
+    "evidenceHead": "91368f5eb2999f435bf165ddee4218cea70f11f5",
+    "artifactId": 9976253345,
+    "artifactDigest": "sha256:968d8a20061fc110eaa8b2b8840c9d8362c95d9650015626f9a6c5e930118efe"
+  },
+  "nativeConditionCounts": {
+    "CounterCreator": 626,
+    "Kills": 283,
+    "Location": 208,
+    "ExitStatus": 109,
+    "VisitPlace": 213,
+    "Equipment": 26,
+    "FindItem": 269,
+    "HandoverItem": 413,
+    "InZone": 32
+  },
+  "provenLocationTargets": {
+    "Woods": 39,
+    "Shoreline": 46,
+    "bigmap": 33,
+    "RezervBase": 28,
+    "Lighthouse": 26,
+    "Interchange": 23,
+    "laboratory": 11,
+    "factory4_day": 16,
+    "factory4_night": 15
+  },
+  "provenVisitPlaceTargets": {
+    "room206_water": 1
+  },
+  "provenKillTargets": {
+    "Savage": 178,
+    "AnyPmc": 62,
+    "Any": 40,
+    "Usec": 2,
+    "Bear": 1
+  },
+  "provenSavageRoleCandidates": {
+    "pmcBot": 9,
+    "exUsec": 5,
+    "assault": 2,
+    "savage": 2,
+    "marksman": 5
+  },
+  "provenExitStatuses": {
+    "Survived": 83,
+    "Transit": 81,
+    "Runner": 33,
+    "Killed": 6,
+    "Left": 6,
+    "MissingInAction": 6
+  },
+  "provenDaytimeWindows": {
+    "22->10": 7,
+    "21->4": 2,
+    "21->5": 1,
+    "21->6": 1,
+    "22->7": 1
+  },
+  "provenDistanceShapes": {
+    ">=:40": 2,
+    ">=:45": 1,
+    ">=:60": 1,
+    ">=:70": 1,
+    ">=:75": 1,
+    ">=:80": 1,
+    ">=:100": 3,
+    ">=:350": 1,
+    "<=:25": 1,
+    "<=:60": 1
+  },
+  "provenCounterCompositions": {
+    "Kills": 129,
+    "Kills+Location": 95,
+    "ExitStatus+Location": 82,
+    "Equipment+Kills+Location": 19,
+    "Equipment+Kills": 4,
+    "InZone+Kills": 27,
+    "InZone+Kills+Location": 4,
+    "Location+VisitPlace": 2
+  },
+  "sessionFlags": {
+    "oneSessionOnlyTrue": 169,
+    "resetOnConditionFailedTrue": 1,
+    "doNotResetIfCounterCompletedTrue": 3
+  },
+  "negativeEvidence": {
+    "killsPlusExitStatusCounterObserved": false,
+    "killsPlusExitStatusPlusLocationCounterObserved": false,
+    "sameRaidKillAndSurviveSemanticsProven": false,
+    "reason": "The exact SPT 4.1.5 vanilla quest DB contains separate Kills+Location and ExitStatus+Location counter compositions but no CounterCreator combining Kills with ExitStatus. Do not claim same-raid kill-and-survive coupling until runtime/source semantics prove it."
+  },
+  "semanticBoundaries": {
+    "rogueRole": "exUsec is a proven native savageRole candidate in the exact database; treating it as the product-facing Rogue selector still requires semantic-label confirmation before materialization.",
+    "raiderRole": "pmcBot is a proven native savageRole candidate and appears in laboratory kill conditions; treating it as the product-facing Raider selector still requires semantic-label confirmation before materialization.",
+    "factoryLocation": "Exact database uses factory4_day and factory4_night Location targets; do not emit an unproven generic Factory Location target.",
+    "waterTreatment": "No Water Treatment sub-location selector is claimed by this evidence. Lighthouse is proven; any Water Treatment zone remains narrative-only until a concrete exact target is proven."
+  }
+}

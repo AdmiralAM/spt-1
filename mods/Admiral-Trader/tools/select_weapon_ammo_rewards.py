@@ -6,6 +6,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+TARGET_SPT_VERSION = "4.1.5"
+
 
 def choose_candidate(ammo: list[dict[str, Any]], ceiling: float, preferred_calibers: list[str] | None = None) -> dict[str, Any]:
     preferred = set(preferred_calibers or [])
@@ -25,34 +27,35 @@ def choose_candidate(ammo: list[dict[str, Any]], ceiling: float, preferred_calib
 
 
 def build_selection(pools: dict[str, Any], policy: dict[str, Any]) -> dict[str, Any]:
-    if pools.get("targetSptVersion") != "4.1.3" or policy.get("targetSptVersion") != "4.1.3":
-        raise ValueError("weapon/ammo selection must remain targeted to SPT 4.1.3")
+    if pools.get("targetSptVersion") != TARGET_SPT_VERSION or policy.get("targetSptVersion") != TARGET_SPT_VERSION:
+        raise ValueError(f"weapon/ammo selection must remain targeted to SPT {TARGET_SPT_VERSION}")
     output: dict[str, Any] = {
         "schemaVersion": 2,
-        "targetSptVersion": "4.1.3",
-        "sourceRole": "deterministic-family-distinct-candidate-selection; exact-runtime-4.1.3-template-verification-required",
+        "targetSptVersion": TARGET_SPT_VERSION,
+        "sourceRole": "deterministic-family-distinct-candidate-selection; exact-runtime-4.1.5-template-verification-required",
         "families": {},
     }
     for family_id, family_policy in policy["families"].items():
         pool = pools["families"].get(family_id)
         if pool is None:
             raise ValueError(f"missing candidate pool for {family_id}")
-        if family_id == "special-weapons":
-            output["families"][family_id] = {
-                "permanentUnlock": False,
-                "sampleUnits": int(family_policy["sampleUnits"]),
-                "reason": "explosive/heavy ammunition is sample-only and never becomes a permanent Admiral faucet"
-            }
-            continue
-        selected = choose_candidate(
-            pool.get("ammo") or [],
-            float(family_policy["maxPermanentPenetration"]),
-            [str(x) for x in family_policy.get("preferredCalibers") or []],
-        )
+        if family_policy.get("fixedVerifiedTpl"):
+            fixed_tpl = str(family_policy["fixedVerifiedTpl"])
+            candidates = [*(pool.get("ammo") or []), *(pool.get("excludedAmmo") or [])]
+            matches = [row for row in candidates if str(row.get("tpl")) == fixed_tpl]
+            if len(matches) != 1:
+                raise ValueError(f"{family_id}: fixed verified ammunition {fixed_tpl} missing or ambiguous")
+            selected = matches[0]
+        else:
+            selected = choose_candidate(
+                pool.get("ammo") or [],
+                float(family_policy["maxPermanentPenetration"]),
+                [str(x) for x in family_policy.get("preferredCalibers") or []],
+            )
         output["families"][family_id] = {
             "permanentUnlock": True,
             "tpl": selected["tpl"],
-            "name": selected["name"],
+            "name": family_policy.get("canonicalName") or selected["name"],
             "caliber": selected["caliber"],
             "penetration": selected["penetration"],
             "damage": selected["damage"],
@@ -60,7 +63,7 @@ def build_selection(pools: dict[str, Any], policy: dict[str, Any]) -> dict[str, 
             "sampleUnits": int(family_policy["sampleUnits"]),
             "stockPerReset": int(family_policy["stockPerReset"]),
             "buyRestriction": int(family_policy["buyRestriction"]),
-            "penetrationCeiling": family_policy["maxPermanentPenetration"],
+            "penetrationCeiling": family_policy.get("maxPermanentPenetration"),
             "preferredCalibers": family_policy.get("preferredCalibers") or []
         }
     permanent = [x for x in output["families"].values() if x.get("permanentUnlock")]
