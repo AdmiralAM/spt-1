@@ -10,11 +10,12 @@ Start with the requirement/FIR/hideout truth model and deterministic tests, then
 
 The first implementation replaces maximum future-quest reserves with additive consumptive obligations, reserves FIR stock across all FIR-only quests before unrestricted consumption, and carries one immutable allocation into the tooltip. Completed hideout levels are excluded and repeated station/level entries across standard/custom tables are counted once. Current/future levels are identified explicitly. See [truth model](docs/v1.1-truth-model.md) for semantics and remaining acceptance work.
 
-Canonical v1.1 authority:
+Canonical stable and current-development authority:
 
 - roadmap / product contract: **Issue #338 — Item Intelligence Admiral — v1.1 modular UX / AQC-reference roadmap**;
-- implementation branch: **`feature/item-intelligence-v1.1`**;
-- single live implementation PR: **PR #341 — Item Intelligence Admiral v1.1 — modular UX and contextual intelligence**;
+- stable implementation: **PR #341 — Item Intelligence Admiral v1.1 — modular UX and contextual intelligence**;
+- current implementation branch: **`feature/item-intelligence-v1.2`**;
+- single live development PR: **PR #343 — Item Intelligence Admiral v1.2 — contextual raid decisions**;
 - ordinary implementation validation: **`Item Intelligence Admiral Validate`** only;
 - one batched physical runtime gate occurs only after the recorded roadmap is automated-green.
 
@@ -58,7 +59,9 @@ Supported `ItemView`/`ItemCell` lifecycle hooks register live cells and remove t
 
 Network requests, reflection discovery, requirement aggregation, valuation work, and expensive text formatting are kept out of per-frame render paths. Cached state is invalidated only when the relevant source data or UI settings change. Full-mode display stripping and rich-text price/semantic strings use bounded caches so steady-state GUI repaint reuses prepared strings instead of rebuilding them every frame.
 
-The v1.1 marker is an original procedural three-layer badge: configurable inner fill, a requirement-source ring, and a stock-coverage check. For example, an entirely missing hideout item has a blue hideout ring and red check. Fill color and 0–100% fill opacity are independent F12 controls. It does not copy an AQC sprite or depend on a font glyph. The optional halo also uses one shared/static texture. The information card follows the game's Russian or English UI language; other game languages use English.
+The marker uses original embedded raster artwork with selectable frame and symbol variants, a configurable inner fill, requirement-source color, and stock-coverage color. Fill color and 0–100% fill opacity are independent F12 controls. It does not copy an AQC sprite or depend on a font glyph. The optional halo also uses one shared/static texture. The information card follows the game's Russian or English UI language; other game languages use English.
+
+In v1.2, optional Amands Sense integration carries the same cached unmet-requirement decision into loose world loot. Sense keeps ownership of its valuable/category/wishlist presentation; Item Intelligence changes only items that still need to be picked up for an active quest, current hideout upgrade, or future quest. The adapter reuses sprites already loaded by Sense at runtime, adds no required dependency, performs no world polling, and is independently switchable in F12.
 
 Normal shows the selected F12 value source without per-slot value, plus compact requirement and craft/barter relevance. Detailed adds one nearest concrete target. Full shows both trader and flea values, per-slot value, every concrete target, craft and barter counts. The rounded card auto-fits short content up to its configurable maximum width.
 
