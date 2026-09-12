@@ -62,7 +62,7 @@ The v1.1 marker is an original procedural three-layer badge: configurable inner 
 
 Normal shows the selected F12 value source without per-slot value, plus compact requirement and craft/barter relevance. Detailed adds one nearest concrete target. Full shows both trader and flea values, per-slot value, every concrete target, craft and barter counts. The rounded card auto-fits short content up to its configurable maximum width.
 
-Background ownership is cooperative. Item Intelligence restores the accepted Item Valuation palette for ordinary items and ammunition penetration tiers, including the original behavior of replacing native rarity backgrounds when a value tier applies. It yields keys to BetterKeys-style location coloring and temporary compatibility outlines to CompatibilityHighlighter/EFT. Disabling the F12 module restores the native color captured for that cell.
+Background ownership is cooperative. Item Intelligence restores the accepted Item Valuation palette through the same authoritative template `BackgroundColor` path that EFT renders natively. Ordinary items use value tiers and ammunition uses penetration tiers; values below the first threshold retain their original background. Keys remain under BetterKeys ownership and CompatibilityHighlighter/EFT keeps ownership of temporary compatibility outlines.
 
 ## Version and naming
 

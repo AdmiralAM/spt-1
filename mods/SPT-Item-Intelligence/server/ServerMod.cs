@@ -160,6 +160,11 @@ public sealed class RequirementDataService(
                 : key
                     ? string.Empty
                     : BackgroundPalette.Money(total ? economic : economic / ((double)width * height));
+            // Preserve the proven Item Valuation integration path: write the tier to
+            // the authoritative item template and let EFT render its native ColorPanel.
+            // Empty means below the tint threshold and therefore preserves the original.
+            // Keys remain untouched so BetterKeys keeps sole ownership of their colors.
+            if (background.Length > 0) item.Properties!.BackgroundColor = background;
             craftCounts.TryGetValue(templateId, out int craftCount);
             barterCounts.TryGetValue(templateId, out int barterCount);
             result.Add(new ItemPriceSnapshotEntry(
