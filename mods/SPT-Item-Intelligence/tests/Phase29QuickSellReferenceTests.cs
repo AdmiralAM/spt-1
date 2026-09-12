@@ -21,8 +21,8 @@ static class Phase29QuickSellReferenceTests
         ItemPresentationStore store = new ItemPresentationStore();
         store.Refresh(ItemRequirementStateIndex.Empty, index);
         ItemHoverText text = new ItemHoverTextFormatter().Format(new ItemHoverState(store.Get("cache-template")), ItemValueMode.Vendor);
-        Expect(Contains(text, ItemTooltipMode.Full, "Best sell: Flea"), "Full mode answers where to sell", ref assertions);
-        Expect(Contains(text, ItemTooltipMode.Full, "Best trader: Mechanic · 100,000 ₽"), "Full mode exposes best trader and trader sell price", ref assertions);
+        Expect(!Contains(text, ItemTooltipMode.Full, "Best sell:"), "Full mode omits the redundant sell recommendation", ref assertions);
+        Expect(Contains(text, ItemTooltipMode.Full, "Trader: Mechanic · 100,000 ₽"), "Full mode exposes trader and sell price", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "Flea: 125,000 ₽"), "Full mode exposes flea price", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "Per slot: 62,500 ₽"), "Full mode exposes prepared value per slot", ref assertions);
 

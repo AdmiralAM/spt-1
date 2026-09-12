@@ -23,8 +23,8 @@ static class Phase23SemanticColorTests
             "progress values are colored without tinting the whole label", ref assertions);
         Expect(renderer.Contains("colored.EndsWith(\"✓\"") && renderer.Contains(">✓</color>"),
             "completion checkmark receives the semantic color", ref assertions);
-        Expect(renderer.Contains("activeStyle.normal.textColor = Color.white"),
-            "labels remain white even when progress values are semantic-colored", ref assertions);
+        Expect(renderer.Contains(": Color.white") && renderer.Contains("GetMutedStyle"),
+            "body labels remain white while the owned row uses restrained hierarchy", ref assertions);
         return assertions;
     }
 

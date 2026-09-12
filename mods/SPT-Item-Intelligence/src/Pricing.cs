@@ -61,7 +61,7 @@ namespace SPTItemIntelligence
             long fallbackUnitValue = 0,
             int width = 1,
             int height = 1,
-            int stackCount = 1)
+            int stackCount = 1, string backgroundColor = "")
         {
             TemplateId = NormalizeId(templateId);
             TraderUnitValue = NonNegative(traderUnitValue);
@@ -71,6 +71,7 @@ namespace SPTItemIntelligence
             Width = width < 1 ? 1 : width;
             Height = height < 1 ? 1 : height;
             StackCount = stackCount < 1 ? 1 : stackCount;
+            BackgroundColor = backgroundColor ?? string.Empty;
         }
 
         public string TemplateId { get; }
@@ -81,6 +82,7 @@ namespace SPTItemIntelligence
         public int Width { get; }
         public int Height { get; }
         public int StackCount { get; }
+        public string BackgroundColor { get; }
 
         static long NonNegative(long value) => value < 0 ? 0 : value;
 
@@ -106,7 +108,7 @@ namespace SPTItemIntelligence
             int slotCount,
             int stackCount,
             ValueTier totalTier,
-            ValueTier perSlotTier)
+            ValueTier perSlotTier, string backgroundColor = "")
         {
             TemplateId = templateId;
             TraderUnitValue = traderUnitValue;
@@ -121,6 +123,7 @@ namespace SPTItemIntelligence
             StackCount = stackCount;
             TotalTier = totalTier;
             PerSlotTier = perSlotTier;
+            BackgroundColor = backgroundColor ?? string.Empty;
         }
 
         public string TemplateId { get; }
@@ -136,6 +139,7 @@ namespace SPTItemIntelligence
         public int StackCount { get; }
         public ValueTier TotalTier { get; }
         public ValueTier PerSlotTier { get; }
+        public string BackgroundColor { get; }
         public bool HasMarketValue => BestSource != PriceSource.None && BestUnitValue > 0;
     }
 
@@ -184,7 +188,7 @@ namespace SPTItemIntelligence
                 slots,
                 input.StackCount,
                 thresholds.Resolve(total),
-                thresholds.Resolve(perSlot));
+                thresholds.Resolve(perSlot), input.BackgroundColor);
         }
 
         public static ItemPriceState WithStackCount(ItemPriceState state, int stackCount, ValueTierThresholds thresholds = null)
@@ -198,7 +202,7 @@ namespace SPTItemIntelligence
                 state.FallbackUnitValue,
                 state.SlotCount,
                 1,
-                stackCount), thresholds);
+                stackCount, state.BackgroundColor), thresholds);
         }
 
         static int SaturatingMultiply(int left, int right)
