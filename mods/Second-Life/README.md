@@ -1,6 +1,6 @@
-# Second Life
+# Second Life Admiral
 
-Second Life is a bounded one-time same-raid recovery workstream for SPT 4.1.x.
+Second Life Admiral is a bounded one-time same-raid recovery workstream for SPT 4.1.x.
 
 ## Product contract
 
