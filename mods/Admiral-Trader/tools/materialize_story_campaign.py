@@ -255,9 +255,17 @@ def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], obje
     continuation_ru = f" Следующая операция: «{next_ru}»." if next_ru else " Расследование закрыто; его результат учтён в общей кампании Адмирала."
     done_en = f"Operation '{en_name}' is complete. The result has been logged.{continuation_en}" + (" Natalya confirmed the specialist channel." if specialist else "")
     done_ru = f"Операция «{q['name']}» завершена. Результат принят и внесён в журнал.{continuation_ru}" + (" Наталья подтвердила канал специалиста." if specialist else "")
-    def make(name: str, body: str, done: str, reward: str, objective_lines: list[str]) -> dict:
-        return {qid + " name": name, qid + " description": body, qid + " note": "", qid + " startedMessageText": body, qid + " successMessageText": done + "\n\n" + reward, qid + " failMessageText": "", qid + " acceptPlayerMessage": body, qid + " declinePlayerMessage": "", qid + " completePlayerMessage": done, qid + " changeQuestMessageText": "", **{row["id"]: objective_lines[i] for i, row in enumerate(q["runtimeFinish"]) if i < len(objective_lines)}}
-    return make(en_name, en_body, done_en, reward_en, objective_en), make(q["name"], ru_body, done_ru, reward_ru, objective_ru)
+    def make(name: str, body: str, done: str, reward: str, objective_lines: list[str], ru: bool) -> dict:
+        labels = {}
+        for i, row in enumerate(q["runtimeFinish"]):
+            if i >= len(objective_lines):
+                continue
+            if row["conditionType"] == "FindItem" and len(row.get("target", [])) > 1:
+                labels[row["id"]] = "Иметь 1 допустимый ключ из списка в описании; ключ не сдаётся" if ru else "Have 1 allowed key from the list in the description; the key is not handed over"
+            else:
+                labels[row["id"]] = objective_lines[i]
+        return {qid + " name": name, qid + " description": body, qid + " note": "", qid + " startedMessageText": body, qid + " successMessageText": done + "\n\n" + reward, qid + " failMessageText": "", qid + " acceptPlayerMessage": body, qid + " declinePlayerMessage": "", qid + " completePlayerMessage": done, qid + " changeQuestMessageText": "", **labels}
+    return make(en_name, en_body, done_en, reward_en, objective_en, False), make(q["name"], ru_body, done_ru, reward_ru, objective_ru, True)
 
 
 def main() -> None:

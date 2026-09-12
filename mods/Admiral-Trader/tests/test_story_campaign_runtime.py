@@ -204,6 +204,12 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
         self.assertNotIn("\ufffd", rendered)
         self.assertGreater(sum("\u0400" <= char <= "\u04ff" for char in rendered), 100000)
 
+    def test_objective_labels_remain_readable_in_the_single_line_client_row(self):
+        for quest in self.story:
+            for row in quest["conditions"]["AvailableForFinish"]:
+                label = self.ru.get(row["id"], "")
+                self.assertLessEqual(len(label), 100, row["id"])
+
 
 if __name__ == "__main__":
     unittest.main()
