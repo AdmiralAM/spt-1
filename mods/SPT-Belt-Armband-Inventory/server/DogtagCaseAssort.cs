@@ -28,6 +28,12 @@ public sealed class DogtagCaseAssort(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (!DogtagCaseAvailability.IsAvailable)
+        {
+            logger.Warning($"B&A&HB Dogtag Case offer skipped: {DogtagCaseAvailability.UnavailableReason}");
+            return Task.CompletedTask;
+        }
+
         var templateId = new MongoId(RuntimeIdentity.DogtagCaseItemId);
         RequirePublicationBoundary(templateTable, templateId);
         cancellationToken.ThrowIfCancellationRequested();

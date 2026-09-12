@@ -117,6 +117,12 @@ public sealed class DogtagCaseItem(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        if (!DogtagCaseAvailability.IsAvailable)
+        {
+            logger.Warning($"B&A&HB Dogtag Case registration skipped: {DogtagCaseAvailability.UnavailableReason}");
+            return Task.CompletedTask;
+        }
+
         if (!templateTable.Items.TryGetValue(SourceDogtagCaseTpl, out var source))
             throw new InvalidOperationException("B&A&HB Dogtag Case source template is missing; refusing fallback cloning.");
 

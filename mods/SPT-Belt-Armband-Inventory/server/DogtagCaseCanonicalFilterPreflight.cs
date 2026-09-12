@@ -81,6 +81,23 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
+        try
+        {
+            ValidateAndPublishLease(cancellationToken);
+        }
+        catch (InvalidOperationException exception)
+        {
+            DogtagCaseAvailability.MarkUnavailable(exception.Message);
+            logger.Warning($"B&A&HB Dogtag Case disabled for this startup: {exception.Message} HeadBand and exact Admiral-owned protection remain active; no foreign item or filter was changed.");
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private void ValidateAndPublishLease(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
         TemplateItem source = RequireCanonicalSourceContract(cancellationToken);
         CanonicalIdentitySnapshot identity = CaptureCanonicalIdentity(source);
         cancellationToken.ThrowIfCancellationRequested();
@@ -111,7 +128,6 @@ public sealed class DogtagCaseCanonicalFilterPreflight(
         }
 
         logger.Success("B&A&HB Dogtag Case canonical preflight passed: exact source/root/grid/filter identity, taxonomy and scalar geometry/presentation values are stable across lease publication and leased to Preload +3.");
-        return Task.CompletedTask;
     }
 
     private TemplateItem RequireCanonicalSourceContract(CancellationToken cancellationToken, TemplateItem? expectedReference = null)

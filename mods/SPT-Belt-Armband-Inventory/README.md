@@ -78,6 +78,11 @@ The original `main` grid identity is preserved. The cigarettes grid has its own 
 
 The Dogtag Case uses the **existing vanilla `Dogtag` equipment slot**; B&A&HB does not invent another equipment enum/slot for it.
 
+Until its separate combined-runtime milestone passes, a foreign extension of
+the canonical dogtag contract disables only this optional product and offer.
+The server continues without changing the foreign filter; HeadBand and exact
+Admiral-owned protection remain active.
+
 - The product clones canonical EFT/SPT Dogtag Case `5c093e3486f77430cb02e593`.
 - The vanilla Dogtag host must resolve uniquely with its existing non-empty filter contract before mutation.
 - Existing host acceptance is preserved and only the exact B&A&HB Dogtag Case template is appended.

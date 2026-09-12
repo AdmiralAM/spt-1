@@ -127,3 +127,39 @@ present, B&A&HB:
 Automated build/regression proof is required before producing the combined
 package. Physical runtime acceptance remains a later gate and must distinguish
 the exact SPT 4.1.5 build from the declared `~4.1.0` support range.
+
+## Installed WTT stack audit (2026-09-12)
+
+The exact SPT 4.1.5 startup inventory was re-read after installation rather
+than inferred from folder names:
+
+| Installed module | Runtime version | Runtime GUID | Result with B&A&HB companion |
+| --- | --- | --- | --- |
+| WTT Armory | `2.0.5` | `com.wtt.armory` | Loads; weapon/ammunition content has no B&A persistent-ID or protection-root overlap |
+| WTT Artem Revival | `3.0.0` | `com.crackbone.artem-wtt` | Loads; this is the installed WTT component that actually has version 3.0.0 |
+| WTT Content Backport | `2.0.1` | `com.wtt.contentbackport` | Loads; extends armbands, containers and dogtag classes without receiving Admiral protection |
+| WTT CommonLib | `3.0.6` | `com.wtt.commonlib` | Loads and serves its custom-parent/recipe/bundle endpoints; remains an external dependency of WTT, not a new B&A dependency |
+| WTT Pack 'n' Strap | `2.1.1` | `com.wtt.packnstrap` | Loads and selects B&A companion mode |
+
+Content Backport adds ordinary ArmBand templates under the vanilla armband
+parent and adds its own secure/simple containers and dogtag variants. None of
+the inspected 24-character template IDs collides with the B&A persistent
+identity manifest. Its ordinary ArmBands have no B&A grid or custom searchable
+parent, and B&A does not append those IDs to its owned families. Its containers
+retain their own filters and item classes; HeadBand slot 16 accepts only the
+exact B&A HeadBand product contract.
+
+The first combined server startup exposed one real boundary: Content Backport's
+expanded dogtag taxonomy means the live canonical EFT Dogtag Case grid no longer
+satisfies B&A's untested strict source-owner preflight. Dogtag Case has not yet
+passed its separate runtime milestone. B&A now fails that optional component
+closed: it publishes neither the Dogtag Case template nor its Ragman offer,
+leaves all foreign filters untouched, logs the exact reason, and continues
+starting HeadBand plus exact Admiral-owned protection. This is an optional
+compatibility gate and adds no WTT reference or mandatory dependency.
+
+Admiral protection remains limited to the four exact B&A wearable roots listed
+above and their descendants. Content Backport ArmBands, secure containers,
+simple containers, dogtags and any Pack 'n' Strap products are outside that
+set. Pack 'n' Strap may apply its own retention policy to its own products; that
+behavior is not an Admiral protection claim.

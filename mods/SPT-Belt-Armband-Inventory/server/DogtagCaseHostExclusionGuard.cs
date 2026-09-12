@@ -22,6 +22,8 @@ public sealed class DogtagCaseHostExclusionGuard(TemplateTable templateTable) : 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (!DogtagCaseAvailability.IsAvailable)
+            return Task.CompletedTask;
         DogtagCaseHostExclusionPolicy.RequireCurrentHost(templateTable);
         cancellationToken.ThrowIfCancellationRequested();
         return Task.CompletedTask;
@@ -40,6 +42,8 @@ public sealed class DogtagCaseTraderHostExclusionGuard(TemplateTable templateTab
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (!DogtagCaseAvailability.IsAvailable)
+            return Task.CompletedTask;
         DogtagCaseHostExclusionPolicy.RequireCurrentHost(templateTable);
         cancellationToken.ThrowIfCancellationRequested();
         return Task.CompletedTask;
