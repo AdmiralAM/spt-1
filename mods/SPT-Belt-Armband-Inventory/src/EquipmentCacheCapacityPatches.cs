@@ -37,7 +37,9 @@ namespace SPTBeltArmbandInventory
                     throw new InvalidOperationException("exact InventoryEquipment(string, InventoryEquipmentTemplate) boundary missing");
 
                 TargetSlotType = slot;
-                TargetCacheField = equipment.GetField("_cachedSlots", BindingFlags.Instance | BindingFlags.NonPublic);
+                TargetCacheField = equipment.GetField(
+                    "_cachedSlots",
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 TargetSlotsField = equipment.BaseType?.GetField("Slots", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 if (TargetCacheField == null
                     || TargetSlotsField == null

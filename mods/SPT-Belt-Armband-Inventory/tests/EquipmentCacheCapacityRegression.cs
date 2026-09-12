@@ -20,6 +20,7 @@ internal static class EquipmentCacheCapacityRegression
             || !source.Contains("OpCodes.Newarr", StringComparison.Ordinal)
             || !source.Contains("denseEnumerationMatches != 1", StringComparison.Ordinal)
             || !source.Contains("code[i].operand = TargetSlotsField", StringComparison.Ordinal)
+            || !source.Contains("BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic", StringComparison.Ordinal)
             || !source.Contains("harmony?.UnpatchSelf()", StringComparison.Ordinal))
             throw new InvalidOperationException("Equipment cache transpiler lost exact-shape or rollback proof.");
     }
