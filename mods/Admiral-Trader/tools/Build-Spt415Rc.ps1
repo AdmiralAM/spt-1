@@ -62,7 +62,7 @@ $relationship = Get-Content (Join-Path $traderRoot 'manifests/relationship-stock
 $storefrontCore = Get-Content (Join-Path $traderRoot 'manifests/storefront-core-expansion.json') -Raw | ConvertFrom-Json
 $questAssort = Get-Content (Join-Path $traderRoot 'db/questassort.json') -Raw | ConvertFrom-Json
 $rootOffers = @($assort.items | Where-Object parentId -eq 'hideout')
-if ($rootOffers.Count -ne 37) { throw "Expected 37 active-head root offers, got $($rootOffers.Count)" }
+if ($rootOffers.Count -ne 47) { throw "Expected 47 active-head root offers, got $($rootOffers.Count)" }
 $signatureRootOffers = @($signatureAssort.items | Where-Object parentId -eq 'hideout')
 if ($signatureRootOffers.Count -ne 4) { throw "Expected four Natalya signature offers, got $($signatureRootOffers.Count)" }
 if (@($m7.signatureOffers).Count -ne 4 -or $m7.activeHeadScope.runtimeFiniteOffers -ne 41) { throw 'M7 signature authority drift.' }
@@ -73,7 +73,7 @@ $relationshipIds = @($relationship.offers | ForEach-Object { [string]$_.offerId 
 $storefrontCoreIds = @($storefrontCore.offers | ForEach-Object { [string]$_.offerId })
 $milestoneIds = @($questAssort.success.PSObject.Properties | ForEach-Object { [string]$_.Name })
 if ($baselineIds.Count -ne 4 -or ($baselineIds | Sort-Object -Unique).Count -ne 4) { throw 'Baseline authority must contain four unique offers.' }
-if ($milestoneIds.Count -ne 8 -or ($milestoneIds | Sort-Object -Unique).Count -ne 8) { throw 'Milestone questassort must contain eight unique offers.' }
+if ($milestoneIds.Count -ne 18 -or ($milestoneIds | Sort-Object -Unique).Count -ne 18) { throw 'Questassort must contain eight capability and ten story-finale offers.' }
 if ($relationship.materialization.enabled -ne $true -or $relationshipIds.Count -ne 3 -or ($relationshipIds | Sort-Object -Unique).Count -ne 3) { throw 'M5 Relationship authority must contain three unique materialized offers.' }
 if ($storefrontCoreIds.Count -ne 22 -or ($storefrontCoreIds | Sort-Object -Unique).Count -ne 22) { throw 'Stabilized storefront authority must contain 22 unique core offers.' }
 if (@($baselineIds | Where-Object { $_ -in $milestoneIds }).Count) { throw 'Baseline offers must not be quest-gated Milestone offers.' }
@@ -83,7 +83,7 @@ $unclassified = @($rootIds | Where-Object { $_ -notin $baselineIds -and $_ -noti
 if ($unclassified.Count) { throw "Unclassified offers materialized unexpectedly: $($unclassified -join ', ')" }
 
 $questFiles = @(Get-ChildItem (Join-Path $traderRoot 'db/quests') -Filter '*.json' -File)
-if ($questFiles.Count -ne 72) { throw "Trader quest count drift: $($questFiles.Count)" }
+if ($questFiles.Count -ne 172) { throw "Trader quest count drift: $($questFiles.Count)" }
 
 $project = Join-Path $traderRoot 'server/AdmiralTrader.Server.csproj'
 dotnet build $project -c Release --nologo "-p:SptRuntimeLibDir=$runtimeRoot"
@@ -115,11 +115,11 @@ $stagedManifest | ConvertTo-Json -Depth 20 | Set-Content $stagedManifestPath -En
 
 $stagedAssort = Get-Content (Join-Path $modTarget 'db/assort.json') -Raw | ConvertFrom-Json
 $stagedQuestAssort = Get-Content (Join-Path $modTarget 'db/questassort.json') -Raw | ConvertFrom-Json
-if (@($stagedAssort.items | Where-Object parentId -eq 'hideout').Count -ne 37) { throw 'Staged Trader lost the 37-offer contract.' }
+if (@($stagedAssort.items | Where-Object parentId -eq 'hideout').Count -ne 47) { throw 'Staged Trader lost the 47 base-offer contract.' }
 $stagedSignatureAssort = Get-Content (Join-Path $modTarget 'db/natalya-signature-assort.json') -Raw | ConvertFrom-Json
 if (@($stagedSignatureAssort.items | Where-Object parentId -eq 'hideout').Count -ne 4) { throw 'Staged Trader lost the four signature offers.' }
-if (@($stagedQuestAssort.success.PSObject.Properties).Count -ne 8) { throw 'Staged Trader lost the eight Milestone gates.' }
-if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 72) { throw 'Staged Trader lost the 72-quest campaign contract.' }
+if (@($stagedQuestAssort.success.PSObject.Properties).Count -ne 18) { throw 'Staged Trader lost the 18 quest-gated offers.' }
+if (@(Get-ChildItem (Join-Path $modTarget 'db/quests') -Filter '*.json' -File).Count -ne 172) { throw 'Staged Trader lost the 172-quest campaign contract.' }
 if (-not (Test-Path (Join-Path $modTarget 'assets/d5c27bb3169f8dfbc13f6b69.jpg') -PathType Leaf)) { throw 'Staged Trader portrait is missing.' }
 
 $provenance = [ordered]@{
@@ -132,7 +132,7 @@ $provenance = [ordered]@{
     sourceHeadSha = $sourceHead
     authority = 'PR #328 active canonical head'
     historicalReferenceOnly = '053a62ff5f1cb545f13bc89a96bba3acd319a823'
-    questCount = 72
+    questCount = 172
     frozenBaselineQuestCount = 31
     m3OperationQuestCount = 12
     baselineOffers = 4
@@ -140,7 +140,7 @@ $provenance = [ordered]@{
     relationshipOffers = 3
     storefrontCoreOffers = 22
     natalyaSignatureOffers = 4
-    totalFiniteOffers = 41
+    totalFiniteOffers = 51
     relationshipProgression = [ordered]@{
         loyaltyLevels = 4
         standingThresholds = @(0.0, 0.1, 0.3, 0.55)

@@ -2,6 +2,9 @@
 
 ## 0.3.0-rc — Natalya absorption
 
+- Materializes ten connected map stories (100 quests) with native SPT exploration, retrieval, placement, combat and survival conditions; total runtime scope is 172 quests.
+- Integrates Natalya as an in-engine specialist across 18 story beats while preserving her four absorbed signature presets and avoiding a second trader/dependency.
+- Adds ten finite, quest-gated story-finale offers, bringing the active storefront to 51 offers without external item dependencies.
 - Absorb Natalya's useful quest and storefront roles into Admiral because Natalya is retired from the target installation. Artem, Scorpion and Ref remain separate traders and are only used to reject duplicates.
 - Route the opening Admiral wave through Ground Zero alongside the retained traders' early progression.
 - Add a bounded signature weapon rack selected from Natalya's native stock against the effective post-Andrudis catalog, with finite stock and progressive access.

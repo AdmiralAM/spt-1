@@ -15,7 +15,7 @@ class M8CampaignExpansionTests(unittest.TestCase):
         cls.by_id = {quest["_id"]: quest for quest in cls.quests}
 
     def test_campaign_shape_and_two_weapon_lanes(self):
-        self.assertEqual(len(self.quests), 72)
+        self.assertEqual(len(self.quests), 172)
         self.assertEqual(self.runtime["newQuestCount"], 29)
         self.assertEqual(self.runtime["weaponAssignments"], 19)
         self.assertEqual(self.runtime["maximumConcurrentWeaponAssignments"], 2)

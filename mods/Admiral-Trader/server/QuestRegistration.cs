@@ -22,7 +22,8 @@ public sealed class AdmiralQuestRegistration(
     private const int ExpectedAccessQuestCount = 10;
     private const int ExpectedArsenalQuestCount = 40;
     private const int ExpectedOperationQuestCount = 22;
-    private const int ExpectedQuestCount = ExpectedAccessQuestCount + ExpectedArsenalQuestCount + ExpectedOperationQuestCount;
+    private const int ExpectedStoryQuestCount = 100;
+    private const int ExpectedQuestCount = ExpectedAccessQuestCount + ExpectedArsenalQuestCount + ExpectedOperationQuestCount + ExpectedStoryQuestCount;
     private static readonly HashSet<string> OperationQuestIds =
     [
         "8dad0d354ac000b7bbf05b9a", "56813681ae0690016376f163", "208db81b5ce195bf0c176852",
@@ -62,7 +63,8 @@ public sealed class AdmiralQuestRegistration(
         }
 
         Dictionary<MongoId, Quest> quests = LoadQuests(modPath);
-        ValidateQuests(quests);
+        HashSet<string> storyQuestIds = LoadStoryQuestIds(modPath);
+        ValidateQuests(quests, storyQuestIds);
         PreflightQuestIds(quests);
 
         List<MongoId> addedQuestIds = [];
@@ -107,7 +109,20 @@ public sealed class AdmiralQuestRegistration(
         return quests;
     }
 
-    private static void ValidateQuests(Dictionary<MongoId, Quest> quests)
+    private HashSet<string> LoadStoryQuestIds(string modPath)
+    {
+        StoryCampaignRuntimeManifest manifest = modHelper.GetJsonDataFromFile<StoryCampaignRuntimeManifest>(
+            modPath,
+            "manifests/story-campaign-runtime.json");
+        if (manifest.Status != "runtime-materialized" || manifest.StoryQuestCount != ExpectedStoryQuestCount)
+            throw new InvalidDataException("Story campaign runtime manifest is not materialized at the expected 100-quest scope");
+        HashSet<string> ids = manifest.Quests.Select(row => row.Id).ToHashSet(StringComparer.Ordinal);
+        if (ids.Count != ExpectedStoryQuestCount)
+            throw new InvalidDataException($"Story campaign manifest has {ids.Count} unique quest IDs, expected {ExpectedStoryQuestCount}");
+        return ids;
+    }
+
+    private static void ValidateQuests(Dictionary<MongoId, Quest> quests, HashSet<string> storyQuestIds)
     {
         if (quests.Count != ExpectedQuestCount)
             throw new InvalidDataException($"Expected {ExpectedQuestCount} authored Admiral quests, got {quests.Count}");
@@ -115,6 +130,7 @@ public sealed class AdmiralQuestRegistration(
         int accessCount = 0;
         int arsenalCount = 0;
         int operationCount = 0;
+        int storyCount = 0;
 
         foreach (var (questId, quest) in quests)
         {
@@ -129,6 +145,14 @@ public sealed class AdmiralQuestRegistration(
 
             if (quest.Conditions.AvailableForFinish is not { Count: > 0 } finishConditions)
                 throw new InvalidDataException($"Quest {questId} must have at least one finish condition");
+
+            if (storyQuestIds.Contains(questId.ToString()))
+            {
+                if (finishConditions.Any(finish => finish.ConditionType is not ("CounterCreator" or "FindItem" or "HandoverItem" or "PlaceBeacon")))
+                    throw new InvalidDataException($"Story quest {questId} has an unsupported finish condition");
+                storyCount++;
+                continue;
+            }
 
             if (OperationQuestIds.Contains(questId.ToString()))
             {
@@ -161,9 +185,9 @@ public sealed class AdmiralQuestRegistration(
                 $"Quest {questId} has unsupported finish condition {finish.ConditionType}; expected FindItem or CounterCreator");
         }
 
-        if (accessCount != ExpectedAccessQuestCount || arsenalCount != ExpectedArsenalQuestCount || operationCount != ExpectedOperationQuestCount)
+        if (accessCount != ExpectedAccessQuestCount || arsenalCount != ExpectedArsenalQuestCount || operationCount != ExpectedOperationQuestCount || storyCount != ExpectedStoryQuestCount)
             throw new InvalidDataException(
-                $"Admiral quest mix drifted: Access={accessCount}/{ExpectedAccessQuestCount}, Arsenal={arsenalCount}/{ExpectedArsenalQuestCount}, Operations={operationCount}/{ExpectedOperationQuestCount}");
+                $"Admiral quest mix drifted: Access={accessCount}/{ExpectedAccessQuestCount}, Arsenal={arsenalCount}/{ExpectedArsenalQuestCount}, Operations={operationCount}/{ExpectedOperationQuestCount}, Story={storyCount}/{ExpectedStoryQuestCount}");
     }
 
     private static void ValidateNativeLifecycleBoundary(MongoId questId, Quest quest)
@@ -215,8 +239,8 @@ public sealed class AdmiralQuestRegistration(
 
     private void RegisterQuestLocales(string modPath, Dictionary<MongoId, Quest> quests)
     {
-        Dictionary<string, string> english = LoadLocaleSet(modPath, "en.json", "arsenal-en.json", "m3-en.json", "m8-en.json");
-        Dictionary<string, string> russian = LoadLocaleSet(modPath, "ru.json", "arsenal-ru.json", "m3-ru.json", "m8-ru.json");
+        Dictionary<string, string> english = LoadLocaleSet(modPath, "en.json", "arsenal-en.json", "m3-en.json", "m8-en.json", "story-en.json");
+        Dictionary<string, string> russian = LoadLocaleSet(modPath, "ru.json", "arsenal-ru.json", "m3-ru.json", "m8-ru.json", "story-ru.json");
 
         EnsureLocaleCoverage("en", english, quests);
         EnsureLocaleCoverage("ru", russian, quests);
@@ -273,3 +297,10 @@ public sealed class AdmiralQuestRegistration(
         }
     }
 }
+
+public sealed record StoryCampaignRuntimeManifest(
+    string Status,
+    int StoryQuestCount,
+    List<StoryCampaignQuestRecord> Quests);
+
+public sealed record StoryCampaignQuestRecord(string Id);

@@ -2,11 +2,12 @@
   "schemaVersion": 5,
   "productRole": "specialist-trader-and-capability-broker",
   "campaign": {
-    "runtimeQuestCount": 72,
+    "runtimeQuestCount": 172,
     "frozenBaselineQuestCount": 31,
     "operationQuestCount": 22,
     "accessQuestCount": 10,
     "arsenalQuestCount": 40,
+    "storyQuestCount": 100,
     "repeatableQuestsAllowed": false
   },
   "traderStock": {
@@ -21,7 +22,7 @@
   "logistics": {
     "expectedBaselineOfferCount": 4,
     "expectedRelationshipOfferCount": 3,
-    "expectedMilestonePermanentOfferCount": 8,
+    "expectedMilestonePermanentOfferCount": 18,
     "maximumPermanentOfferStockPerReset": 80,
     "milestoneOffersMustBeQuestGated": true,
     "offersMustBeFinite": true,

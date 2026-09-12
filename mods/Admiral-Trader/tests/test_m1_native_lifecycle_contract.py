@@ -17,7 +17,7 @@ class M1NativeLifecycleContractTests(unittest.TestCase):
             cls.quests.append((path, json.loads(path.read_text(encoding="utf-8"))))
 
     def test_all_runtime_templates_require_explicit_native_accept_and_complete(self):
-        self.assertEqual(len(self.quests), 72)
+        self.assertEqual(len(self.quests), 172)
         for path, quest in self.quests:
             with self.subTest(path=path.name):
                 self.assertIs(quest.get("instantComplete"), False)
@@ -49,7 +49,7 @@ class M1NativeLifecycleContractTests(unittest.TestCase):
             if all(condition.get("value", 1) <= 1 for condition in start if condition["conditionType"] == "Level"):
                 visible.append(quest["_id"])
 
-        self.assertEqual(set(visible), {"738588764e9531bdb8ccfc5f", "eb93814dd020bdc131d526aa", "02c07ee31821696597ceabef"})
+        self.assertEqual(set(visible), {"738588764e9531bdb8ccfc5f", "eb93814dd020bdc131d526aa", "02c07ee31821696597ceabef", "e81e5d79bfdf40efc87cdf99"})
 
     def test_no_rewards_are_issued_at_accept_time(self):
         for path, quest in self.quests:

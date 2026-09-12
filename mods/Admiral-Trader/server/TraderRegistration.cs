@@ -201,6 +201,7 @@ public sealed class AdmiralTraderRegistration(
         }
     }
 
+
     private void AddLocales(TraderBase traderBase)
     {
         foreach (var (localeCode, localeKvP) in localesTable.Global)
