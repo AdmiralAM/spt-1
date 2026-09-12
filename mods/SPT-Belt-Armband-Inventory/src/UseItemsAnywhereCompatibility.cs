@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Reflection;
 using BepInEx.Configuration;
 
@@ -17,10 +16,8 @@ namespace SPTBeltArmbandInventory
 
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
-        readonly List<ConfigEntryBase> entries = new List<ConfigEntryBase>();
         object armBand;
         object belt;
-        bool updating;
 
         internal UseItemsAnywhereCompatibility(Action<string> logInfo, Action<string> logWarning)
         {
@@ -43,12 +40,10 @@ namespace SPTBeltArmbandInventory
                     FieldInfo field = configuration.GetField(fieldName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
                     ConfigEntryBase entry = field?.GetValue(null) as ConfigEntryBase;
                     if (entry == null) continue;
-                    entry.SettingChanged += OnSettingChanged;
-                    entries.Add(entry);
                     if (EnsureBeltFollowsArmBand(entry)) extended++;
                 }
 
-                if (entries.Count == 0) throw new InvalidOperationException("Use Items Anywhere slot configuration entries were not found.");
+                if (extended == 0) throw new InvalidOperationException("Use Items Anywhere has no ArmBand-enabled access list to extend.");
                 logInfo?.Invoke("B&A&HB Use Items Anywhere compatibility installed: pseudo-slot15 follows ArmBand in " + extended + " configured access lists; binding/reload use the dedicated Belt slot without editing the foreign DLL.");
                 return true;
             }
@@ -60,24 +55,13 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        void OnSettingChanged(object sender, EventArgs args)
-        {
-            if (updating || !(sender is ConfigEntryBase entry)) return;
-            EnsureBeltFollowsArmBand(entry);
-        }
-
         bool EnsureBeltFollowsArmBand(ConfigEntryBase entry)
         {
             IList list = entry.BoxedValue as IList;
             if (list == null || !Contains(list, armBand) || Contains(list, belt)) return false;
-            try
-            {
-                updating = true;
-                list.Add(belt);
-                entry.BoxedValue = list;
-                return true;
-            }
-            finally { updating = false; }
+            list.Add(belt);
+            entry.BoxedValue = list;
+            return true;
         }
 
         static bool Contains(IList list, object value)
@@ -88,11 +72,8 @@ namespace SPTBeltArmbandInventory
 
         public void Dispose()
         {
-            foreach (ConfigEntryBase entry in entries) entry.SettingChanged -= OnSettingChanged;
-            entries.Clear();
             armBand = null;
             belt = null;
-            updating = false;
         }
     }
 }

@@ -14,7 +14,7 @@ internal static class UseItemsAnywhereCompatibilityRegression
         Require(source.Contains("com.cj.useFromAnywhere", StringComparison.Ordinal), "exact foreign GUID must own detection");
         Require(source.Contains("!Contains(list, armBand) || Contains(list, belt)", StringComparison.Ordinal), "slot15 must follow only lists where ArmBand is enabled");
         Require(source.Contains("list.Add(belt)", StringComparison.Ordinal), "runtime list must receive pseudo-slot15");
-        Require(source.Contains("entry.SettingChanged += OnSettingChanged", StringComparison.Ordinal), "later F12 changes must preserve compatibility");
+        Require(source.Contains("entry.BoxedValue = list", StringComparison.Ordinal), "extended lists must be published through the owning config entry");
         Require(plugin.Contains("BepInDependency(UseItemsAnywhereCompatibility.PluginGuid", StringComparison.Ordinal), "B&A must load after the optional foreign owner");
     }
 
