@@ -13,7 +13,7 @@ for token in [
     "PackNStrapCompatibility.IsClientPresent(Chainloader.PluginInfos.Keys)",
     "if (legacyBeltSlotDetected && !packNStrapDetected)",
     "accepts Pack 'n' Strap's required Trenchfoot-BeltSlot owner",
-    "runtimeTypePatches.TryInstall(!packNStrapDetected)",
+    "if (!runtimeTypePatches.TryInstall())",
     "new DedicatedEquipmentSlotPatches(Logger.LogInfo, Logger.LogWarning, !packNStrapDetected)",
     "protectionSyncPump = StartCoroutine(SyncProtectionSettingsBounded());",
 ]:
@@ -63,6 +63,9 @@ for token in [
 taxonomy = (SERVER / "WearableTaxonomyRegistration.cs").read_text(encoding="utf-8-sig")
 if 'PrepareNode(BeltParentTpl, "BAndHBCustomBeltItem", SearchableParentTpl, companionMode)' in taxonomy:
     violations.append("companion mode drops the persistent parent of legacy B&A item templates")
+
+if "runtimeTypePatches.TryInstall(!packNStrapDetected)" in client:
+    violations.append("companion mode drops the JsonTypes mapping required to deserialize legacy B&A profile items")
 
 if violations:
     raise SystemExit("B&A&HB Pack 'n' Strap companion gate failed:\n" + "\n".join(violations))

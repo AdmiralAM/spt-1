@@ -133,6 +133,10 @@ Removing any previously published persistent item template while an existing
 profile contains it causes SPT to invalidate the whole profile before the
 HeadBand migration can run.
 
+The client likewise retains only the matching B&A JsonTypes mapping needed to
+deserialize those legacy items. This mapping does not install the companion-
+gated loot, reload, pickup, fast-access, equipment or Belt presentation patches.
+
 Automated build/regression proof is required before producing the combined
 package. Physical runtime acceptance remains a later gate and must distinguish
 the exact SPT 4.1.5 build from the declared `~4.1.0` support range.

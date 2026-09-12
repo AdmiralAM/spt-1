@@ -74,7 +74,11 @@ namespace SPTBeltArmbandInventory
                 Logger.LogInfo("B&A&HB companion mode accepts Pack 'n' Strap's required Trenchfoot-BeltSlot owner and will not install competing standard Belt routes.");
 
             runtimeTypePatches = new RuntimeCustomBeltTypePatches(Logger.LogInfo, Logger.LogWarning);
-            if (!runtimeTypePatches.TryInstall(!packNStrapDetected))
+            // Published B&A item templates retain the custom Belt parent on the
+            // server in companion mode so old profiles remain loadable. The
+            // matching JsonTypes mapping is therefore always required for
+            // deserialization; active Belt patches remain gated below.
+            if (!runtimeTypePatches.TryInstall())
             {
                 runtimeTypePatches.Dispose();
                 runtimeTypePatches = null;
