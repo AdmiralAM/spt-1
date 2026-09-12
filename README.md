@@ -17,7 +17,7 @@ Versions below reflect the durable workstream roadmap when a module has an activ
 | Module | Version / state | Purpose | Install / development channel |
 | --- | --- | --- | --- |
 | [Admiral Tactical HUD](https://github.com/AdmiralAM/spt-1/issues/71) | `1.13.3`; active M1 stabilization | Population, player-status, and kill-feed HUD | Single live implementation PR discovered from GitHub; published `runtime` remains unchanged until deliberate acceptance |
-| [Item Intelligence Admiral](https://github.com/AdmiralAM/spt-1/issues/338) | `1.1.0`; active v1.1 roadmap (`1.0.0` published baseline) | Requirement, FIR, hideout, valuation, craft/barter relevance, and contextual per-item intelligence | Active implementation line discovered from GitHub; `runtime-item-intelligence` remains the accepted v1.0.0 publication until v1.1 acceptance |
+| [Item Intelligence Admiral](mods/SPT-Item-Intelligence) | `1.2.0`; stable / runtime validated | Requirement, FIR, hideout, valuation/background, craft/barter relevance, contextual inventory cards, and optional Amands Sense guidance | `runtime-item-intelligence` |
 | [Pause Admiral](mods/SPT-Pause) | `1.0.0`; stable / runtime validated | Offline-raid pause with raid-clock/time-of-day preservation and paused-input suppression | `runtime-pause` |
 | [B&A&HB #2 MOD SPT](https://github.com/AdmiralAM/spt-1/issues/285) | `0.2.0`; active (`0.1.0` published stable) | ArmBand inventory plus dedicated Belt and HeadBand equipment slots, Dogtag Case integration, and bounded reload/lifecycle behavior | Single live v0.2 PR discovered from GitHub; stable v0.1.0 remains on [`runtime-belt-armband`](https://github.com/AdmiralAM/spt-1/tree/runtime-belt-armband) |
 | [Item Valuation MOD SPT](mods/Item-Valuation-MOD-SPT) | `1.0.0`; stable / SPT 4.1.3 runtime validated | Server-only inventory background coloring by economic value/category, with penetration tiers for ammunition | `runtime-item-valuation` |
@@ -35,7 +35,7 @@ Tactical HUD `1.14.0` is retired. Historical PR #195 and branch `optimize/tactic
 
 ### Item Intelligence Admiral transition
 
-Issue #338 is the durable **v1.1.0** roadmap. The accepted `runtime-item-intelligence` channel remains the v1.0.0 publication baseline until the v1.1 milestone line completes its combined runtime gate and deliberate stable promotion. Item Valuation MOD SPT remains an independent server-side background-color product and is not folded into Item Intelligence.
+Issues #338 and PRs #341/#343 record the accepted consolidation through **v1.2.0**. `runtime-item-intelligence` is the maintained install channel. Item Valuation behavior is available as an optional Item Intelligence module; the legacy standalone source/runtime channel remains only for rollback compatibility.
 
 ## Repository channels
 

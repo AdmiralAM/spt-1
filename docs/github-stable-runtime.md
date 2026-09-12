@@ -47,7 +47,7 @@ The `runtime` branch remains the current published install channel until a candi
 
 `Economy-Admiral` is integrated source with physically accepted SPT 4.1.3 Economy Beta behavior and module-specific CI. Its maintained install-only publication channel is `runtime-economy-admiral`; the runtime manifest pins version `0.1.0`, SPT `4.1.3`, the publication source commit, and install root `SPT_Runtime/user/mods/Economy Admiral`.
 
-`Item-Valuation-MOD-SPT` remains a development/CI-artifact module until its SPT 4.1.3 physical runtime gate passes; it has no permanent runtime branch yet.
+`Item-Valuation-MOD-SPT` and `runtime-item-valuation` remain rollback-compatible historical surfaces. Their accepted background-color behavior is consolidated as an optional Item Intelligence Admiral module; they are not a second active product boundary.
 
 The root `README.md` is the human-readable module index. Each module README owns its current product name, version, scope, architecture, installation channel, and validation status. Project/package metadata is the machine-readable version authority. Detailed phase/revision documents are supporting history, not a second source of truth for current status.
 
