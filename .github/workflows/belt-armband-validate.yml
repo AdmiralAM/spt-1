@@ -115,6 +115,7 @@ jobs:
         shell: pwsh
         run: dotnet build mods/SPT-Belt-Armband-Inventory/server/SPT-Belt-Armband-Inventory.Server.csproj -c Release
       - name: 'Stage B&A&HB #2 MOD SPT RC1'
+        if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         run: |
           $root = 'artifact/B&A&HB #2 MOD SPT RC1'
@@ -191,6 +192,7 @@ jobs:
           if ($installedBuildInfo -ne $buildInfo) { throw 'Install-tree validation: installed BUILD-INFO differs from artifact-root provenance' }
           Write-Host "[B&A&HB #2 MOD SPT v0.2.0] RC1 install tree PASS: exactHead=$headSha clientFileVersion=$clientFileVersion serverFileVersion=$serverFileVersion serverModMetadataVersion=0.2.0 upgradeSafeClientPath=$clientDll clientSha256=$clientHash serverSha256=$serverHash provenanceCopies=2"
       - name: 'Upload B&A&HB #2 MOD SPT RC1'
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: 'B&A&HB #2 MOD SPT RC1'
