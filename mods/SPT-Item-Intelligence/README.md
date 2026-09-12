@@ -31,7 +31,7 @@ Current stable v1.1.0 presentation contracts include:
 - compact Minimal / Normal / Detailed / Full tooltip modes;
 - owned-versus-required counts, FIR-aware quest allocation, `Keep ×N`, and concrete quest/hideout targets;
 - compact trader, flea, and per-slot price rows without a redundant best-sell recommendation;
-- the accepted Item Valuation palette for neutral ordinary items and its original penetration-based ammunition tiers, while keys and already-authored backgrounds retain their dedicated game/mod owner;
+- the accepted Item Valuation palette for ordinary items and its original penetration-based ammunition tiers, while keys retain BetterKeys ownership;
 - price-amount bands: below 50k white, 50k+ green, 100k+ red, 250k+ gold;
 - compact `Craft ×N` / `Barter ×N` relevance in regular-play and expanded modes;
 - fallback to the available Flea/Trader source when the preferred source has no price;
@@ -62,7 +62,7 @@ The v1.1 marker is an original procedural three-layer badge: configurable inner 
 
 Normal shows the selected F12 value source without per-slot value, plus compact requirement and craft/barter relevance. Detailed adds one nearest concrete target. Full shows both trader and flea values, per-slot value, every concrete target, craft and barter counts. The rounded card auto-fits short content up to its configurable maximum width.
 
-Background ownership is cooperative. Item Intelligence restores the accepted Item Valuation palette for neutral ordinary items and ammunition penetration tiers. It yields keys to BetterKeys-style location coloring, existing authored/custom colors to their source, and temporary native highlights to CompatibilityHighlighter/EFT. Disabling the F12 module restores the native color captured for that cell.
+Background ownership is cooperative. Item Intelligence restores the accepted Item Valuation palette for ordinary items and ammunition penetration tiers, including the original behavior of replacing native rarity backgrounds when a value tier applies. It yields keys to BetterKeys-style location coloring and temporary compatibility outlines to CompatibilityHighlighter/EFT. Disabling the F12 module restores the native color captured for that cell.
 
 ## Version and naming
 

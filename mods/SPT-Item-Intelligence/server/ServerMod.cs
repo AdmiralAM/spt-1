@@ -155,10 +155,9 @@ public sealed class RequirementDataService(
             bool total = itemHelper.IsOfBaseclasses(templateId, TotalValueBaseClasses);
             bool ammunition = itemHelper.IsOfBaseclass(templateId, BaseClasses.AMMO);
             bool key = itemHelper.IsOfBaseclass(templateId, BaseClasses.KEY);
-            string existingBackground = Convert.ToString(item.Properties?.BackgroundColor) ?? string.Empty;
             string background = ammunition
                 ? BackgroundPalette.Ammo(item.Properties?.PenetrationPower ?? 0)
-                : BackgroundPalette.HasDedicatedOwner(key, existingBackground)
+                : key
                     ? string.Empty
                     : BackgroundPalette.Money(total ? economic : economic / ((double)width * height));
             craftCounts.TryGetValue(templateId, out int craftCount);

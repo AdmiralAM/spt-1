@@ -100,7 +100,6 @@ static class ConsolidatedTruthTests
         Check(BackgroundPalette.Ammo(20) == "#526B3F" && BackgroundPalette.Ammo(21) == "#253552", "ammo uses penetration-specific tiers");
         Check(BackgroundPalette.Key(100000, false) == "#660415", "flea-banned key color takes precedence");
         Check(BackgroundPalette.HasDedicatedOwner(true, "default"), "key background yields to BetterKeys-style ownership");
-        Check(BackgroundPalette.HasDedicatedOwner(false, "violet"), "authored item background is preserved");
         Check(!BackgroundPalette.HasDedicatedOwner(false, "default"), "neutral ordinary item remains eligible for valuation tint");
         Check(BackgroundPalette.Ammo(9) == "" && BackgroundPalette.Ammo(10) == "#526B3F", "legacy ammo tint starts at penetration ten");
         var irrelevant = new ItemHoverText("100 ₽", "", "");
