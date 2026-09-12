@@ -182,6 +182,19 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
                 self.assertEqual(actual_find, expected_find, row["id"])
                 self.assertEqual(actual_handover, expected_handover, row["id"])
 
+    def test_opening_ground_zero_recoveries_use_accessible_early_items(self):
+        opening = self.authored["chains"][0]["quests"]
+        expected = {
+            "e81e5d79bfdf40efc87cdf99": "5672cb124bdc2d1a0f8b4568",  # AA battery
+            "4f3828ef74a66f154f6ac397": "5909e99886f7740c983b9984",  # USB adapter
+            "52cbb69039f63f3cfbad321a": "590a386e86f77429692b27ab",  # damaged HDD
+        }
+        for row in opening:
+            if row["id"] not in expected:
+                continue
+            recovery = next(objective for objective in row["objectives"] if objective["kind"] == "retrieveQuestItem")
+            self.assertEqual(recovery["itemTpl"], expected[row["id"]])
+
     def test_promised_field_actions_are_materialized(self):
         expected = {
             "837bdd0ab80a2a1382caeedd": {"CounterCreator", "FindItem", "HandoverItem"},

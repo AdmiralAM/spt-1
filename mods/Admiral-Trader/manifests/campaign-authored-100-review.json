@@ -33,14 +33,14 @@
             "Sandbox",
             "Sandbox_high"
           ],
-          "brief": "Найти разбитую гражданскую радиостанцию в стартовом секторе и вынести её запись.",
+          "brief": "Осмотреть разбитую гражданскую радиостанцию в стартовом секторе и вынести пригодный элемент питания.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
               "surviveRequired": true,
-              "itemTpl": "63a0b2eabea67a6d93009e52"
+              "itemTpl": "5672cb124bdc2d1a0f8b4568"
             }
           ],
           "prerequisite": null,
@@ -97,14 +97,14 @@
             "Sandbox",
             "Sandbox_high"
           ],
-          "brief": "Найти машину пропавшей группы и забрать служебный жетон из салона.",
+          "brief": "Найти у старого терминала USB-переходник с фрагментом записи о последних сменах.",
           "objectives": [
             {
               "kind": "retrieveQuestItem",
               "quantity": 1,
               "foundInRaid": true,
               "surviveRequired": true,
-              "itemTpl": "590c621186f774138d11ea29"
+              "itemTpl": "5909e99886f7740c983b9984"
             }
           ],
           "prerequisite": "e472a13c1478f7b9258522d3",
@@ -128,7 +128,7 @@
             "Sandbox",
             "Sandbox_high"
           ],
-          "brief": "Получить доступ в закрытый технический кабинет и вынести журнал радиосвязи.",
+          "brief": "Проверить офис в винном магазине и вынести повреждённый накопитель с журналом внутренней связи.",
           "objectives": [
             {
               "kind": "visit",
@@ -139,7 +139,7 @@
               "quantity": 1,
               "foundInRaid": true,
               "surviveRequired": true,
-              "itemTpl": "590c651286f7741e566b6461"
+              "itemTpl": "590a386e86f77429692b27ab"
             }
           ],
           "prerequisite": "4f3828ef74a66f154f6ac397",
