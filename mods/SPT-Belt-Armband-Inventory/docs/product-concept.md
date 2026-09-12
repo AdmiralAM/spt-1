@@ -15,6 +15,11 @@ whitelist. The source comparison and next runtime split are recorded in
 [`packnstrap-compatibility.md`](packnstrap-compatibility.md). No coexistence is
 claimed before that split is implemented and tested.
 
+Targeted Pack 'n' Strap-derived implementation is permitted only for a required
+compatibility bridge or an Admiral behavior absent from the standalone mod. It
+is recorded against an exact upstream source and does not turn the companion
+into a second Pack 'n' Strap distribution.
+
 ## v0.2 roster
 
 | Product | Host | Capacity | Role | Ragman |

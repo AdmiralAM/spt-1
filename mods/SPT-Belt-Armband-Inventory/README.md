@@ -12,6 +12,11 @@ not yet claim runtime compatibility with Pack 'n' Strap. See
 [`docs/packnstrap-compatibility.md`](docs/packnstrap-compatibility.md) for the
 pinned audit, conflict matrix, ownership boundary and next implementation stage.
 
+Small Pack 'n' Strap-derived fragments may be used where a compatibility bridge
+or an otherwise missing Admiral feature requires them. Each such use names the
+upstream commit/file and its purpose; the companion does not bundle the complete
+Pack 'n' Strap mod or duplicate features supplied by its standalone installation.
+
 Stable **v0.1.0** is already frozen and published separately on `runtime-belt-armband` / tag `bahb-v0.1.0`. This branch develops v0.2.0 without changing that release.
 
 Active authority:

@@ -77,6 +77,13 @@ register or patch an equivalent feature when Pack 'n' Strap already supplies
 it. This absence-of-equivalent test, rather than provenance or licensing, is
 the product boundary.
 
+Targeted reuse from Pack 'n' Strap is allowed when it is needed to implement a
+compatibility bridge or an Admiral feature that the standalone Pack 'n' Strap
+does not provide. Such reuse stays limited to that missing behavior and records
+its upstream file/commit plus the concrete compatibility reason. This does not
+justify bundling the complete upstream mod or maintaining a second copy of
+functionality already supplied by the standalone installation.
+
 The Admiral-owned active surface will be:
 
 1. **Utility HeadBand** in the immutable B&A HeadBand slot 16, including its
@@ -98,9 +105,11 @@ Admiral ownership manifest or mutate upstream filters to simulate support.
 Legacy B&A identities stay immutable and cleanup remains ownership-bounded even
 when their products are no longer newly offered by the active add-on.
 
-The repository contains no Pack 'n' Strap runtime code, bundles or art. Tests
-may pin public GUIDs, versions, method signatures and expected ownership
-boundaries, but the tested Pack 'n' Strap installation remains external.
+The current repository change contains no Pack 'n' Strap runtime code, bundles
+or art. Tests may pin public GUIDs, versions, method signatures and expected
+ownership boundaries. A later runtime implementation may include a small,
+documented upstream-derived compatibility fragment under the rule above; the
+Pack 'n' Strap installation itself remains external.
 
 ## Next runtime stage
 
