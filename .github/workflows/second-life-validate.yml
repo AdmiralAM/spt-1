@@ -1,4 +1,4 @@
-name: Second Life Validate
+name: Second Life Admiral Validate
 
 on:
   pull_request:
