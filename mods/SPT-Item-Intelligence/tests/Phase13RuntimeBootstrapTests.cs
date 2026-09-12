@@ -81,7 +81,7 @@ static class Phase13RuntimeBootstrapTests
         ItemHoverRuntimeController controller = new ItemHoverRuntimeController(store, sink, null, id => bootstrap.CreateFallback(id));
         bootstrap = new RequirementRuntimeBootstrap(new FixedTransport("snapshot"), new FixedDecoder(envelope), new SptRequirementDataProjector(), store, controller);
         ItemHoverText loading = controller.OnHoverEnter("missing");
-        Expect(loading.Status == "LOADING ITEM DATA", "loading fallback is visible", ref assertions);
+        Expect(loading.Status == "Loading item data" && loading.DataState == ItemDataState.Loading, "loading fallback is visible and typed", ref assertions);
         string error;
         Expect(bootstrap.TryRefresh(CancellationToken.None, out error), "bootstrap succeeds", ref assertions);
         Expect(error == null && bootstrap.State == RequirementBootstrapState.Ready, "bootstrap publishes ready state", ref assertions);
@@ -94,7 +94,8 @@ static class Phase13RuntimeBootstrapTests
         Expect(missingHideout.HideoutLine == "Hideout: 0/7" && ItemMarkerPresentation.From(missingHideout).Kind == ItemMarkerKind.Hideout,
             "numeric server hideout requirement reaches runtime marker classification", ref assertions);
         ItemHoverText unknown = controller.OnHoverEnter("unknown");
-        Expect(unknown.Primary == "ITEM INTELLIGENCE" && unknown.Status == "NO REQUIREMENT DATA", "ready fallback is diagnostic", ref assertions);
+        Expect(unknown.SummaryLine == "Not Needed" && unknown.DataState == ItemDataState.Ready && !unknown.IsDiagnostic,
+            "a successfully indexed item with no requirement has the authoritative Not Needed state", ref assertions);
 
         RequirementRuntimeBootstrap failed = null;
         ItemHoverRuntimeController failedController = new ItemHoverRuntimeController(new ItemPresentationStore(), sink, null, id => failed.CreateFallback(id));

@@ -11,6 +11,22 @@ namespace SPTItemIntelligence
         Right
     }
 
+    public enum ItemMarkerSymbol
+    {
+        Check,
+        Cross,
+        Dot,
+        Alert
+    }
+
+    public enum ItemMarkerFrame
+    {
+        Circle,
+        Hex,
+        Diamond,
+        Square
+    }
+
     public sealed class ItemIntelligenceUiSettings
     {
         readonly ConfigEntry<bool> markers, tooltips, quests, futureQuests, hideout, value, relevance, backgrounds;
@@ -22,6 +38,8 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<int> tooltipMaximumWidth;
         readonly ConfigEntry<float> tooltipPadding;
         readonly ConfigEntry<ItemMarkerSide> markerSide;
+        readonly ConfigEntry<ItemMarkerSymbol> markerSymbol;
+        readonly ConfigEntry<ItemMarkerFrame> markerFrame;
         readonly ConfigEntry<float> markerSize;
         readonly ConfigEntry<float> markerOpacity;
         readonly ConfigEntry<float> markerOffsetX;
@@ -37,6 +55,8 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<Color> enoughColor;
         readonly ConfigEntry<Color> partialColor;
         readonly ConfigEntry<Color> missingColor;
+        readonly ConfigEntry<bool> senseIntegration, senseRequiredItems, senseSecondaryOutline, senseRemainingText;
+        readonly ConfigEntry<Color> senseQuestColor, senseHideoutColor, senseFutureColor;
         int revision;
         ModuleSelection modules;
 
@@ -69,6 +89,10 @@ namespace SPTItemIntelligence
 
             markerSide = config.Bind("Marker", "Side", ItemMarkerSide.Left,
                 "Select the upper-left or upper-right item-cell corner. This stays attached to the selected edge on multi-cell items.");
+            markerSymbol = config.Bind("Marker", "Symbol", ItemMarkerSymbol.Check,
+                "Embedded high-resolution symbol: Check, Cross, Dot or Alert.");
+            markerFrame = config.Bind("Marker", "Frame", ItemMarkerFrame.Circle,
+                "Embedded badge silhouette: Circle, Hex, Diamond or Square.");
             markerSize = config.Bind("Marker", "Size", 14f,
                 new ConfigDescription("Information marker size in pixels.", new AcceptableValueRange<float>(1f, 100f)));
             markerOpacity = config.Bind("Marker", "Opacity", 0.96f,
@@ -94,6 +118,18 @@ namespace SPTItemIntelligence
             partialColor = ColorEntry(config, "Tooltip Colors", "Partial Color", new Color(1.00f, 0.72f, 0.20f), "Requirement is partially satisfied.");
             missingColor = ColorEntry(config, "Tooltip Colors", "Missing Color", new Color(1.00f, 0.34f, 0.28f), "Requirement has no usable stock.");
 
+            senseIntegration = config.Bind("Amands Sense", "Integration", true,
+                "Use Item Intelligence requirement decisions for loose-loot Sense markers when Amands Sense is installed.");
+            senseRequiredItems = config.Bind("Amands Sense", "Required Items", true,
+                "Override Sense only for items that still have an unmet active quest, hideout or future quest requirement.");
+            senseSecondaryOutline = config.Bind("Amands Sense", "Secondary Reason Outline", true,
+                "Use the outline for a second simultaneous requirement reason.");
+            senseRemainingText = config.Bind("Amands Sense", "Remaining Count Text", true,
+                "Show the Item Intelligence requirement label and remaining count in Sense text mode.");
+            senseQuestColor = ColorEntry(config, "Amands Sense Colors", "Active Quest", new Color(1.00f, 0.35f, 0.21f), "Unmet active quest requirement.");
+            senseHideoutColor = ColorEntry(config, "Amands Sense Colors", "Hideout", new Color(0.20f, 0.78f, 1.00f), "Unmet hideout requirement.");
+            senseFutureColor = ColorEntry(config, "Amands Sense Colors", "Future Quest", new Color(0.75f, 0.55f, 1.00f), "Unmet future quest requirement.");
+
             tooltipMode.SettingChanged += delegate { Touch(); };
             valueMode.SettingChanged += delegate { Touch(); };
             tooltipScale.SettingChanged += delegate { Touch(); };
@@ -102,6 +138,8 @@ namespace SPTItemIntelligence
             tooltipMaximumWidth.SettingChanged += delegate { Touch(); };
             tooltipPadding.SettingChanged += delegate { Touch(); };
             markerSide.SettingChanged += delegate { Touch(); };
+            markerSymbol.SettingChanged += delegate { Touch(); };
+            markerFrame.SettingChanged += delegate { Touch(); };
             markerSize.SettingChanged += delegate { Touch(); };
             markerOpacity.SettingChanged += delegate { Touch(); };
             markerBackgroundColor.SettingChanged += delegate { Touch(); };
@@ -117,6 +155,13 @@ namespace SPTItemIntelligence
             enoughColor.SettingChanged += delegate { Touch(); };
             partialColor.SettingChanged += delegate { Touch(); };
             missingColor.SettingChanged += delegate { Touch(); };
+            senseIntegration.SettingChanged += delegate { Touch(); };
+            senseRequiredItems.SettingChanged += delegate { Touch(); };
+            senseSecondaryOutline.SettingChanged += delegate { Touch(); };
+            senseRemainingText.SettingChanged += delegate { Touch(); };
+            senseQuestColor.SettingChanged += delegate { Touch(); };
+            senseHideoutColor.SettingChanged += delegate { Touch(); };
+            senseFutureColor.SettingChanged += delegate { Touch(); };
             modules = ReadModules();
         }
 
@@ -130,6 +175,8 @@ namespace SPTItemIntelligence
         public int TooltipMaximumWidth => Mathf.Clamp(tooltipMaximumWidth.Value, 80, 1000);
         public float TooltipPadding => Mathf.Clamp(tooltipPadding.Value, 0f, 40f);
         public ItemMarkerSide MarkerSide => markerSide.Value;
+        public ItemMarkerSymbol MarkerSymbol => markerSymbol.Value;
+        public ItemMarkerFrame MarkerFrame => markerFrame.Value;
         public float MarkerSize => Mathf.Clamp(markerSize.Value, 1f, 100f);
         public float MarkerOpacity => Mathf.Clamp01(markerOpacity.Value);
         public Color MarkerBackgroundColor => markerBackgroundColor.Value;
@@ -141,6 +188,17 @@ namespace SPTItemIntelligence
         public Color CompleteColor => enoughColor.Value;
         public Color PartialColor => partialColor.Value;
         public Color MissingColor => missingColor.Value;
+        public bool SenseIntegration => senseIntegration.Value;
+        public bool SenseRequiredItems => senseRequiredItems.Value;
+        public bool SenseSecondaryOutline => senseSecondaryOutline.Value;
+        public bool SenseRemainingText => senseRemainingText.Value;
+        public Color GetSenseColor(ItemNeedReason reason)
+        {
+            if (reason == ItemNeedReason.ActiveQuest) return senseQuestColor.Value;
+            if (reason == ItemNeedReason.Hideout) return senseHideoutColor.Value;
+            if (reason == ItemNeedReason.FutureQuest) return senseFutureColor.Value;
+            return defaultColor.Value;
+        }
         public int Revision => Volatile.Read(ref revision);
 
         public Color GetColor(ItemMarkerKind kind)

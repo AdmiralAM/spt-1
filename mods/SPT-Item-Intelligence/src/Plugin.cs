@@ -5,7 +5,8 @@ using BepInEx;
 
 namespace SPTItemIntelligence
 {
-    [BepInPlugin("com.admiralam.spt.itemintelligence", "Item Intelligence Admiral", "1.1.0")]
+    [BepInPlugin("com.admiralam.spt.itemintelligence", "Item Intelligence Admiral", "1.2.0")]
+    [BepInDependency("xyz.drakia.Sense", BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
         ItemHoverOverlaySink hoverSink;
@@ -15,6 +16,7 @@ namespace SPTItemIntelligence
         CancellationTokenSource dataCancellation;
         Task dataTask;
         ItemIntelligenceUiSettings uiSettings;
+        AmandsSenseIntegration senseIntegration;
         int moduleKey = -1;
         int dataKey = -1;
         readonly object loadLock = new object();
@@ -42,12 +44,26 @@ namespace SPTItemIntelligence
             uiSettings.Changed += ApplyModules;
             ApplyModules();
 
-            Logger.LogInfo("Item Intelligence Admiral v1.1 development loaded; UI language=" + (GameUiText.Russian ? "ru" : "en"));
+            Logger.LogInfo("Item Intelligence Admiral v1.2 development loaded; UI language=" + (GameUiText.Russian ? "ru" : "en"));
         }
 
         void ApplyModules()
         {
             ModuleSelection modules = uiSettings.Modules;
+            if (uiSettings.SenseIntegration)
+            {
+                if (senseIntegration == null)
+                {
+                    senseIntegration = new AmandsSenseIntegration(uiSettings, PresentationStore,
+                        message => Logger.LogInfo(message), message => Logger.LogWarning(message));
+                    senseIntegration.TryInstall();
+                }
+            }
+            else if (senseIntegration != null)
+            {
+                senseIntegration.Dispose();
+                senseIntegration = null;
+            }
             if (moduleKey == modules.Key) return;
             moduleKey = modules.Key;
             if (!modules.TrackViews)
@@ -82,7 +98,9 @@ namespace SPTItemIntelligence
         {
             RequirementRuntimeBootstrap bootstrap = dataBootstrap;
             return bootstrap == null
-                ? new ItemHoverText("ITEM INTELLIGENCE ADMIRAL", string.Empty, "DATA UNAVAILABLE")
+                ? new ItemHoverText("ITEM INTELLIGENCE ADMIRAL", string.Empty,
+                    GameUiText.T("Data unavailable", "Данные недоступны"),
+                    string.Empty, 0, 0, 0, 0, 0, dataState: ItemDataState.Unavailable)
                 : bootstrap.CreateFallback(templateId);
         }
 
@@ -121,6 +139,7 @@ namespace SPTItemIntelligence
         {
             if (dataCancellation != null) dataCancellation.Cancel();
             if (hoverIntegration != null) hoverIntegration.Dispose();
+            if (senseIntegration != null) senseIntegration.Dispose();
             FirRequirementRegistry.Clear();
             ItemRelevanceRegistry.Replace(null);
             dataTask = null;
@@ -130,6 +149,7 @@ namespace SPTItemIntelligence
             hoverController = null;
             hoverSink = null;
             uiSettings = null;
+            senseIntegration = null;
             PresentationStore = null;
         }
     }

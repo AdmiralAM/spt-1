@@ -30,5 +30,7 @@
     <Compile Include="..\src\AqcQuestRequirementProjector.cs" Link="AqcQuestRequirementProjector.cs" />
     <Compile Include="..\src\FirRequirementRegistry.cs" Link="FirRequirementRegistry.cs" />
     <Compile Include="..\src\MarkerPresentation.cs" Link="MarkerPresentation.cs" />
+    <Compile Include="..\src\SenseRequirementPresentation.cs" Link="SenseRequirementPresentation.cs" />
+    <Compile Include="..\src\RaidRequirementLedger.cs" Link="RaidRequirementLedger.cs" />
   </ItemGroup>
 </Project>

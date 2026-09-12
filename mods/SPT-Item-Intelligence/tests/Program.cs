@@ -94,7 +94,12 @@ static class Program
         int phase28Assertions = Phase28RelevanceIntelligenceTests.Run();
         int phase29Assertions = Phase29QuickSellReferenceTests.Run();
         int phase30Assertions = Phase30LocalizedCardInteractionTests.Run();
-        Console.WriteLine("Item Intelligence regression passed through Phase 30: " + phase30Assertions + " localized card/interaction assertions; prior phases remain green if execution reaches this line.");
+        int phase31Assertions = Phase31PinnedFullCardTests.Run();
+        int phase32Assertions = Phase32SenseRequirementMappingTests.Run();
+        int phase33Assertions = Phase33RaidRequirementLedgerTests.Run();
+        int phase34Assertions = Phase34WttCompatibilityTests.Run();
+        int phase35Assertions = Phase35AmandsSenseRuntimeAdapterTests.Run();
+        Console.WriteLine("Item Intelligence regression passed through Phase 35: " + phase35Assertions + " Amands Sense adapter assertions; Phase 34=" + phase34Assertions + "; Phase 33=" + phase33Assertions + "; Phase 32=" + phase32Assertions + "; Phase 31=" + phase31Assertions + "; prior phases remain green if execution reaches this line.");
     }
 
     static ItemDefinition Resolve(ItemRegistry registry, string id, string type, IDictionary<string, object> signals) => registry.Resolve(new ItemDescriptor(id, null, "  Test   Item  ", " Test ", type, signals));

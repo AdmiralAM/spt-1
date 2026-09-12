@@ -12,6 +12,14 @@ namespace SPTItemIntelligence
         Full
     }
 
+    public enum ItemDataState
+    {
+        Ready,
+        Loading,
+        Missing,
+        Unavailable
+    }
+
     public sealed class ItemHoverText
     {
         internal static readonly ItemHoverText Empty = new ItemHoverText(string.Empty, string.Empty, string.Empty);
@@ -39,12 +47,14 @@ namespace SPTItemIntelligence
             string perSlotLine = null,
             string bestSellLine = null,
             string bestTraderLine = null,
-            string fleaPriceLine = null, ItemRequirementAllocation allocation = null, ModuleSelection modules = null)
+            string fleaPriceLine = null, ItemRequirementAllocation allocation = null, ModuleSelection modules = null,
+            ItemDataState dataState = ItemDataState.Ready)
         {
             modules = modules ?? ModuleSelection.Default;
             Primary = primary ?? string.Empty;
             Secondary = secondary ?? string.Empty;
             Status = status ?? string.Empty;
+            DataState = dataState;
             TemplateId = templateId ?? string.Empty;
             OwnedCount = Math.Max(0, ownedCount);
             QuestNeededNow = Math.Max(0, questNeededNow);
@@ -121,6 +131,7 @@ namespace SPTItemIntelligence
         public string Primary { get; }
         public string Secondary { get; }
         public string Status { get; }
+        public ItemDataState DataState { get; }
         public string TemplateId { get; }
         public int OwnedCount { get; }
         public int OwnedFoundInRaid { get; }
@@ -155,8 +166,8 @@ namespace SPTItemIntelligence
         public IReadOnlyList<string> DetailedRequirementLines { get; }
         public int DetailedRequirementCount { get; }
         public string MoreRequirementsLine { get; }
-        public bool HasData => Primary.Length != 0 || Secondary.Length != 0 || Status.Length != 0 || KeepCount > 0;
-        public bool IsDiagnostic =>
+        public bool HasData => Primary.Length != 0 || Secondary.Length != 0 || Status.Length != 0 || SummaryLine.Length != 0 || KeepCount > 0;
+        public bool IsDiagnostic => DataState != ItemDataState.Ready ||
             string.Equals(Status, "LOADING ITEM DATA", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(Status, "NO REQUIREMENT DATA", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(Status, "DATA UNAVAILABLE", StringComparison.OrdinalIgnoreCase);
