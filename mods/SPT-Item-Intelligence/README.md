@@ -1,10 +1,10 @@
 # Item Intelligence Admiral
 
-Standalone item-intelligence module for SPT 4.1.x. Stable release: **v1.0.0**. Physical SPT 4.1.3 runtime acceptance is complete.
+Consolidated item-intelligence package for SPT 4.1.x. Stable release: **v1.1.0**.
 
 ## Current development authority
 
-The accepted **v1.0.0** line remains the stable rollback/reference baseline. The user-authorized 2026-09-11 amendment in Issue #338 supersedes the former separate-Item-Valuation product boundary: **v1.1 delivers one consolidated Item Intelligence Admiral package**, with optional background coloring and no required external AQC, Item Valuation, Task Item Indicator or CompatibilityHighlighter installation.
+The accepted **v1.0.0** line remains available as the rollback/reference baseline. The user-authorized 2026-09-11 amendment in Issue #338 supersedes the former separate-Item-Valuation product boundary: **v1.1 delivers one consolidated Item Intelligence Admiral package**, with optional background coloring and no required external AQC, Item Valuation, Task Item Indicator or CompatibilityHighlighter installation.
 
 Start with the requirement/FIR/hideout truth model and deterministic tests, then modular presentation. AQC is the primary visual-quality benchmark: one crisp contextual marker and one compact readable card, independently reimplemented without its GPL source/assets/text. Independent F12 layers cover markers, tooltips, active quests, future quests, hideout, value, craft/barter and background coloring. No hidden steady-state work in disabled modules. Preserve existing identifiers and rollback compatibility until consolidated physical acceptance.
 
@@ -24,7 +24,7 @@ The branch/PR are a prepared implementation workspace for the dedicated work/Cod
 
 Item Intelligence Admiral attaches persistent information markers to supported EFT item cells and projects player-relative item requirements and value data without per-frame inventory/network polling.
 
-Current stable v1.0.0 presentation contracts include:
+Current stable v1.1.0 presentation contracts include:
 
 - persistent per-item `ⓘ` markers with optional soft radial halo;
 - requirement-priority states: `Quest Now → Hideout → Quest Later → Default`;
@@ -66,10 +66,10 @@ Background ownership is cooperative. Item Intelligence restores the accepted Ite
 
 ## Version and naming
 
-The official product name is **Item Intelligence Admiral**. The current stable release is **v1.0.0**; **v1.1** is active development and is not stable/published until its recorded runtime gate passes.
+The official product name is **Item Intelligence Admiral**. The current stable release is **v1.1.0**.
 
-- stable client: **Item Intelligence Admiral v1.0.0**;
-- stable server: **Item Intelligence Admiral Server v1.0.0**.
+- stable client: **Item Intelligence Admiral v1.1.0**;
+- stable server: **Item Intelligence Admiral Server v1.1.0**.
 
 The existing source directory, namespace, GUID, endpoint, and `runtime-item-intelligence` branch are retained as technical compatibility identifiers. They are not the product name and should not be renamed casually because doing so would create unnecessary migration risk.
 
@@ -86,9 +86,9 @@ The install-only `runtime-item-intelligence` channel contains the accepted stabl
 - `BepInEx/plugins/Admiral SPT/SPT Item Intelligence/Item Intelligence Admiral.dll`
 - `SPT_Runtime/user/mods/Item Intelligence Admiral Server/Item Intelligence Admiral Server.dll`
 
-Development PR artifacts are test candidates only and do not replace the stable runtime channel before deliberate acceptance/publication.
+The stable runtime channel is published from the accepted exact source commit and contains only the consolidated client and server package.
 
-For the v1.1 candidate, remove/disable external AllQuestsCheckmarks to verify replacement UX and remove/disable legacy Item Valuation so only the consolidated package owns background coloring. `Background Coloring (Valuation)` remains independently switchable in F12 and restores each native cell color when disabled. Restore the v1.0 package and legacy Item Valuation configuration to roll back.
+External AllQuestsCheckmarks and legacy Item Valuation are unnecessary with v1.1. `Background Coloring (Valuation)` remains independently switchable in F12 and restores each native cell color when disabled. Restore the v1.0 package and legacy Item Valuation configuration only when rolling back.
 
 ## Documentation
 
