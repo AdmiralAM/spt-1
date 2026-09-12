@@ -31,7 +31,8 @@ public sealed class DedicatedEquipmentSlotRegistration(
             // DedicatedWearableItems runs at Preload+3. Never publish slot15/16
             // filters until both exact product templates exist and are therefore
             // safe host targets for the remainder of server startup.
-            if (!templateTable.Items.ContainsKey(DedicatedMagazineBeltTpl)
+            bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
+            if ((!companionMode && !templateTable.Items.ContainsKey(DedicatedMagazineBeltTpl))
                 || !templateTable.Items.ContainsKey(EmergencyHeadBandTpl))
             {
                 logger.Warning("B&A&HB dedicated-slot registration skipped safely: dedicated product templates were not both initialized.");
@@ -76,7 +77,8 @@ public sealed class DedicatedEquipmentSlotRegistration(
                 armBand,
                 RuntimeIdentity.DedicatedBeltWireSlotId,
                 BeltSlotMongoId,
-                DedicatedMagazineBeltTpl);
+                DedicatedMagazineBeltTpl,
+                companionMode);
             Slot? headBandAddition = PrepareDedicatedSlot(
                 slots,
                 armBand,
@@ -92,7 +94,9 @@ public sealed class DedicatedEquipmentSlotRegistration(
             // list positions. Client presentation owns the requested visual anchors.
             inventory.Properties!.Slots = slots;
 
-            logger.Success($"B&A&HB #2 MOD SPT dedicated equipment slot contracts registered atomically after exact product templates: Belt wire={RuntimeIdentity.DedicatedBeltWireSlotId}; HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId}. Visual placement is client-owned.");
+            logger.Success(companionMode
+                ? $"B&A&HB companion equipment contract registered: HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId}; Belt remains owned by Pack 'n' Strap."
+                : $"B&A&HB #2 MOD SPT dedicated equipment slot contracts registered atomically after exact product templates: Belt wire={RuntimeIdentity.DedicatedBeltWireSlotId}; HeadBand wire={RuntimeIdentity.DedicatedHeadBandWireSlotId}. Visual placement is client-owned.");
         }
         catch (Exception exception)
         {
@@ -113,8 +117,9 @@ public sealed class DedicatedEquipmentSlotRegistration(
         return slots.Count(x => string.Equals(x.Name, wireName, StringComparison.Ordinal)) > 1;
     }
 
-    private static Slot? PrepareDedicatedSlot(List<Slot> slots, Slot armBandPrototype, string wireName, MongoId id, MongoId allowedTemplate)
+    private static Slot? PrepareDedicatedSlot(List<Slot> slots, Slot armBandPrototype, string wireName, MongoId id, MongoId allowedTemplate, bool suppress = false)
     {
+        if (suppress) return null;
         var matches = slots.Where(x => string.Equals(x.Name, wireName, StringComparison.Ordinal)).ToArray();
         if (matches.Length == 1)
         {

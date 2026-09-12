@@ -59,6 +59,9 @@ jobs:
       - name: 'Run B&A&HB #2 legacy-conflict guard'
         shell: pwsh
         run: python mods/SPT-Belt-Armband-Inventory/tools/check_legacy_conflict_gate.py
+      - name: 'Run B&A&HB #2 Pack n Strap companion guard'
+        shell: pwsh
+        run: python mods/SPT-Belt-Armband-Inventory/tools/check_packnstrap_companion.py
       - name: 'Run B&A&HB #2 offer-host guard'
         shell: pwsh
         run: python mods/SPT-Belt-Armband-Inventory/tools/check_offer_host_contract.py

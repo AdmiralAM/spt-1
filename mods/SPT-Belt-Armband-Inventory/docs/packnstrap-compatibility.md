@@ -1,9 +1,9 @@
 # Pack 'n' Strap ownership and B&A&HB compatibility plan
 
-This document records the source audit performed on 2026-09-12. It is a
-planning and preservation record only: it does not claim runtime compatibility
-and does not change the installed game or profile. Pack 'n' Strap is installed
-and updated as its own standalone mod; it is not bundled into B&A&HB.
+This document records the source audit and the first companion implementation
+performed on 2026-09-12. It does not claim physical runtime acceptance and does
+not change the profile. Pack 'n' Strap is to be installed and updated as its own
+standalone mod; it is not bundled into B&A&HB.
 
 ## Pinned inputs
 
@@ -70,7 +70,7 @@ mode unsuitable as the first compatibility implementation.
 
 ## Chosen path: ship only the missing Admiral features
 
-The next runtime line will be a narrow Admiral companion for Pack 'n' Strap.
+The active runtime line is a narrow Admiral companion for Pack 'n' Strap.
 Standard belts, pouches, mini-containers, their art/layouts and their ArmBand
 UI/routing come from the separately installed Pack 'n' Strap. B&A&HB must not
 register or patch an equivalent feature when Pack 'n' Strap already supplies
@@ -105,26 +105,25 @@ Admiral ownership manifest or mutate upstream filters to simulate support.
 Legacy B&A identities stay immutable and cleanup remains ownership-bounded even
 when their products are no longer newly offered by the active add-on.
 
-The current repository change contains no Pack 'n' Strap runtime code, bundles
-or art. Tests may pin public GUIDs, versions, method signatures and expected
-ownership boundaries. A later runtime implementation may include a small,
+The current repository change contains no Pack 'n' Strap code, bundles or art.
+Tests pin its public GUID and expected ownership boundaries. A later change may include a small,
 documented upstream-derived compatibility fragment under the rule above; the
 Pack 'n' Strap installation itself remains external.
 
-## Next runtime stage
+## Implemented companion gate
 
-The next implementation stage is an exact, fail-closed feature split:
+Client and server startup now detect Pack 'n' Strap through its public identity
+(`com.wtt.packnstrap` on BepInEx and `WTT-PackNStrapServer` on the server). When
+present, B&A&HB:
 
-1. add startup detection for Pack 'n' Strap 2.1.1 / CommonLib 3.0.6 on exact
-   SPT 4.1.5;
-2. when that supported combination is present, do not install B&A ArmBand,
-   dedicated Belt UI, Belt fast-access/reload/unload, payment, grenade,
-   container-priority or new standard-belt publication owners;
-3. install only HeadBand, Dogtag Case, immutable-ID migration/cleanup and the
-   exact B&A protection whitelist above;
-4. add deterministic coexistence guards for plugin GUIDs, patch ownership,
-   unchanged Pack 'n' Strap filters/IDs and duplicate-load prevention;
-5. build one exact-head package and only then define a combined runtime gate.
+1. omits new Magazine Armband, Wrist Wallet and Magazine Belt templates and
+   Ragman offers;
+2. omits the B&A Belt parent mapping and Belt row projection;
+3. stops before B&A loot, unload, Scav, fast-access, merge, pickup, payment and
+   equipment-build patches are installed;
+4. retains Utility HeadBand slot 16 and its UI, Dogtag Case, profile migration,
+   and exact-ID death/insurance protection.
 
-Until that stage passes automated and physical verification, Pack 'n' Strap and
-the full B&A&HB v0.2 reserve are **not claimed compatible**.
+Automated build/regression proof is required before producing the combined
+package. Physical runtime acceptance remains a later gate and must distinguish
+the exact SPT 4.1.5 build from the declared `~4.1.0` support range.

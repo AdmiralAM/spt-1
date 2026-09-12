@@ -10,6 +10,7 @@ namespace SPTBeltArmbandInventory
     [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
     [BepInDependency("com.trenchfoot.beltslot", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("BeltSlot", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(PackNStrapCompatibility.PluginGuid, BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
         public const string PluginGuid = "com.admiralam.spt.belt-armband-inventory";
@@ -55,19 +56,25 @@ namespace SPTBeltArmbandInventory
 
             HostBoundaryDiscovery.Log(Logger.LogInfo, Logger.LogWarning);
 
+            bool packNStrapDetected = PackNStrapCompatibility.IsClientPresent(Chainloader.PluginInfos.Keys);
+            if (packNStrapDetected)
+                Logger.LogInfo("B&A&HB companion mode selected: WTT Pack 'n' Strap owns standard belt/container behavior; only Admiral HeadBand, Dogtag and exact-ID protection remain active.");
+
             if (!TryDetectLegacyBeltSlot(out bool legacyBeltSlotDetected))
             {
                 Logger.LogWarning("B&A&HB #2 legacy BeltSlot conflict state could not be proven from BepInEx PluginInfos; failing closed for this session and installing no wearable runtime patches.");
                 return;
             }
-            if (legacyBeltSlotDetected)
+            if (legacyBeltSlotDetected && !packNStrapDetected)
             {
                 Logger.LogWarning("Trenchfoot-BeltSlot is already loaded. Remove/disable that DLL before enabling B&A&HB #2 MOD SPT; no duplicate patch was installed.");
                 return;
             }
+            if (legacyBeltSlotDetected)
+                Logger.LogInfo("B&A&HB companion mode accepts Pack 'n' Strap's required Trenchfoot-BeltSlot owner and will not install competing standard Belt routes.");
 
             runtimeTypePatches = new RuntimeCustomBeltTypePatches(Logger.LogInfo, Logger.LogWarning);
-            if (!runtimeTypePatches.TryInstall())
+            if (!runtimeTypePatches.TryInstall(!packNStrapDetected))
             {
                 runtimeTypePatches.Dispose();
                 runtimeTypePatches = null;
@@ -86,7 +93,7 @@ namespace SPTBeltArmbandInventory
                 return;
             }
 
-            dedicatedEquipmentSlotPatches = new DedicatedEquipmentSlotPatches(Logger.LogInfo, Logger.LogWarning);
+            dedicatedEquipmentSlotPatches = new DedicatedEquipmentSlotPatches(Logger.LogInfo, Logger.LogWarning, !packNStrapDetected);
             if (!dedicatedEquipmentSlotPatches.TryInstall())
             {
                 dedicatedEquipmentSlotPatches.Dispose();
@@ -163,6 +170,13 @@ namespace SPTBeltArmbandInventory
             else
             {
                 GridWindowSizingRuntime.RequestFlush = EnsureDeferredRuntimePump;
+            }
+
+            if (packNStrapDetected)
+            {
+                protectionSyncPump = StartCoroutine(SyncProtectionSettingsBounded());
+                Logger.LogInfo("B&A&HB companion mode initialized without Belt/ArmBand loot, unload, Scav, fast-access, merge, pickup, payment or equipment-build patches.");
+                return;
             }
 
             lootPatches = new LootPriorityPatches(Logger.LogInfo, Logger.LogWarning);

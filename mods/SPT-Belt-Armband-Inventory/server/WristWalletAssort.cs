@@ -20,6 +20,11 @@ public sealed class WristWalletAssort(
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
+        if (PackNStrapCompatibility.IsServerPresentNow())
+        {
+            logger.Info("B&A&HB companion mode: Wrist Wallet offer skipped.");
+            return Task.CompletedTask;
+        }
         var templateId = new MongoId(RuntimeIdentity.WristWalletItemId);
         if (!templateTable.Items.ContainsKey(templateId))
             throw new InvalidOperationException("B&A&HB Wrist Wallet offer refused: exact product template is not registered.");

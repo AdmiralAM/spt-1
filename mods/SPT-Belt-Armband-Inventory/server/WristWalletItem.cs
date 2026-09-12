@@ -25,6 +25,11 @@ public sealed class WristWalletItem(TemplateTable templateTable, CustomItemServi
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
+        if (PackNStrapCompatibility.IsServerPresentNow())
+        {
+            logger.Info("B&A&HB companion mode: Wrist Wallet creation and ArmBand filter mutation skipped.");
+            return Task.CompletedTask;
+        }
         if (!templateTable.Items.ContainsKey(RuntimeCandidateBeltItem.SourceArmbandTpl))
             throw new InvalidOperationException("B&A&HB Wrist Wallet source armband missing.");
         if (!templateTable.Items.ContainsKey(RuntimeCandidateBeltItem.CustomBeltParentTpl))

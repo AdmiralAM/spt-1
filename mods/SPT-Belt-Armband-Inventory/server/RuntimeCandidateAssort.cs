@@ -16,6 +16,11 @@ public sealed class RuntimeCandidateAssort(
 {
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
+        if (PackNStrapCompatibility.IsServerPresentNow())
+        {
+            logger.Info("B&A&HB companion mode: Magazine Armband offer skipped.");
+            return Task.CompletedTask;
+        }
         var templateId = new MongoId(RuntimeCandidateBeltItem.RuntimeCandidateTpl);
         if (!templateTable.Items.ContainsKey(templateId))
             throw new InvalidOperationException("B&A&HB Magazine Armband offer refused: exact product template is not registered.");

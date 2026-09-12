@@ -24,6 +24,7 @@ internal static class ValidateWorkflowAuthorityRegression
             "check_product_contract.py",
             "check_identity_manifest.py",
             "check_legacy_conflict_gate.py",
+            "check_packnstrap_companion.py",
             "check_offer_host_contract.py",
             "check_offer_template_boundary.py",
             "check_protection_sync.py",

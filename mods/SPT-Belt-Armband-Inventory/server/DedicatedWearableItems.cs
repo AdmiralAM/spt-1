@@ -33,7 +33,8 @@ public sealed class DedicatedWearableItems(
         var handbookItem = templateTable.Handbook.Items.FirstOrDefault(x => x.Id == SourceArmbandTpl)
             ?? throw new InvalidOperationException("B&A&HB dedicated wearable source handbook entry missing.");
 
-        EnsureSingleGridItem(
+        bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
+        if (!companionMode) EnsureSingleGridItem(
             RuntimeIdentity.DedicatedMagazineBeltItemId,
             RuntimeIdentity.DedicatedMagazineBeltGridId,
             BeltParentTpl,
@@ -51,7 +52,9 @@ public sealed class DedicatedWearableItems(
 
         EnsureHeadBand(handbookItem.ParentId);
 
-        logger.Success("B&A&HB dedicated Magazine Belt and Utility HeadBand items registered; HeadBand uses native currency/wallet + cigarettes 1x1 grids.");
+        logger.Success(companionMode
+            ? "B&A&HB companion Utility HeadBand registered; Magazine Belt creation remains disabled while Pack 'n' Strap is present."
+            : "B&A&HB dedicated Magazine Belt and Utility HeadBand items registered; HeadBand uses native currency/wallet + cigarettes 1x1 grids.");
         return Task.CompletedTask;
     }
 

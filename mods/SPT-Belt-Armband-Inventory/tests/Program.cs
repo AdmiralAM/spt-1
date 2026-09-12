@@ -17,6 +17,11 @@ internal static class Program
 
     static void Main()
     {
+        Assert(PackNStrapCompatibility.IsClientPresent(new[] { "other", "com.wtt.packnstrap" }), "Pack 'n' Strap client GUID selects companion mode");
+        Assert(PackNStrapCompatibility.IsClientPresent(new[] { "COM.WTT.PACKNSTRAP" }), "Pack 'n' Strap GUID detection is case-insensitive");
+        Assert(!PackNStrapCompatibility.IsClientPresent(new[] { "com.trenchfoot.beltslot" }), "legacy BeltSlot does not impersonate Pack 'n' Strap");
+        Assert(PackNStrapCompatibility.IsServerPresent(new[] { "System", "WTT-PackNStrapServer" }), "Pack 'n' Strap server assembly selects companion mode");
+        Assert(!PackNStrapCompatibility.IsServerPresent(new[] { "SPT.Server", "SPT-Belt-Armband-Inventory.Server" }), "B&A server alone stays in standalone mode");
         SPTBeltArmbandInventory.Tests.ProfileCleanupRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedWearableSlotContractRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedSlotPresentationPolicyRegression.Run();

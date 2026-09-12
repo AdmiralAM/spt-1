@@ -24,11 +24,12 @@ public sealed class DedicatedWearableAssort(
 
     public Task OnLoadAsync(CancellationToken cancellationToken = default)
     {
+        bool companionMode = PackNStrapCompatibility.IsServerPresentNow();
         var beltTemplateId = new MongoId(RuntimeIdentity.DedicatedMagazineBeltItemId);
         var headBandTemplateId = new MongoId(RuntimeIdentity.EmergencyHeadBandItemId);
-        if (!templateTable.Items.ContainsKey(beltTemplateId) || !templateTable.Items.ContainsKey(headBandTemplateId))
+        if ((!companionMode && !templateTable.Items.ContainsKey(beltTemplateId)) || !templateTable.Items.ContainsKey(headBandTemplateId))
             throw new InvalidOperationException("B&A&HB dedicated wearable offers refused: both exact product templates must be registered before Ragman assort mutation.");
-        WearableOfferHostContract.RequireDedicatedProducts(templateTable);
+        if (!companionMode) WearableOfferHostContract.RequireDedicatedProducts(templateTable);
 
         var trader = tradersTable.GetValueOrDefault(RuntimeCandidateOfferContract.RagmanTraderId)
             ?? throw new InvalidOperationException("B&A&HB dedicated wearable offers could not find Ragman.");
@@ -51,11 +52,14 @@ public sealed class DedicatedWearableAssort(
         if (beltPlan != null) CommitOffer(beltPlan);
         if (headBandPlan != null) CommitOffer(headBandPlan);
 
-        logger.Success($"B&A&HB product offers registered atomically: Magazine Belt Ragman LL{BeltLoyaltyLevel}/{BeltPrice:N0} RUB; Utility HeadBand Ragman LL{HeadBandLoyaltyLevel}/{HeadBandPrice:N0} RUB.");
+        logger.Success(companionMode
+            ? $"B&A&HB companion offer registered: Utility HeadBand Ragman LL{HeadBandLoyaltyLevel}/{HeadBandPrice:N0} RUB; Magazine Belt offer skipped."
+            : $"B&A&HB product offers registered atomically: Magazine Belt Ragman LL{BeltLoyaltyLevel}/{BeltPrice:N0} RUB; Utility HeadBand Ragman LL{HeadBandLoyaltyLevel}/{HeadBandPrice:N0} RUB.");
         return Task.CompletedTask;
 
         OfferPlan? PrepareOffer(MongoId assortId, MongoId templateId, int price, int loyaltyLevel, string label)
         {
+            if (companionMode && templateId == beltTemplateId) return null;
             var matches = trader.Assort.Items.Where(x => x.Id == assortId).Take(2).ToArray();
             if (matches.Length > 1)
                 throw new InvalidOperationException($"B&A&HB dedicated {label} assort ID collision: duplicate item entries own the persistent assort ID.");

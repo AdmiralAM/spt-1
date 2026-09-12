@@ -19,6 +19,7 @@
   <ItemGroup>
     <Compile Include="..\src\BeltDeathPolicy.cs" Link="BeltDeathPolicy.cs" />
     <Compile Include="..\src\HeadBandUtilityPolicy.cs" Link="HeadBandUtilityPolicy.cs" />
+    <Compile Include="..\src\PackNStrapCompatibility.cs" Link="PackNStrapCompatibility.cs" />
     <Compile Include="..\src\RuntimeIdentity.cs" Link="RuntimeIdentity.cs" />
     <Compile Include="..\src\WearableProtectionContract.cs" Link="WearableProtectionContract.cs" />
   </ItemGroup>

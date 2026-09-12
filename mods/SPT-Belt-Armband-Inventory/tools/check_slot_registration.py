@@ -8,8 +8,9 @@ violations = []
 
 required = [
     "[Injectable(TypePriority = OnLoadOrder.Preload + 4)]",
-    "if (!templateTable.Items.ContainsKey(DedicatedMagazineBeltTpl)",
+    "if ((!companionMode && !templateTable.Items.ContainsKey(DedicatedMagazineBeltTpl))",
     "|| !templateTable.Items.ContainsKey(EmergencyHeadBandTpl))",
+    "DedicatedMagazineBeltTpl,\n                companionMode);",
     "dedicated product templates were not both initialized",
     "Slot? beltAddition = PrepareDedicatedSlot(",
     "Slot? headBandAddition = PrepareDedicatedSlot(",
@@ -24,7 +25,7 @@ for token in required:
 if "UpsertDedicatedSlot(" in text:
     violations.append("mutating UpsertDedicatedSlot helper is forbidden; dedicated slots must prepare before commit")
 
-product_check = text.find("if (!templateTable.Items.ContainsKey(DedicatedMagazineBeltTpl)")
+product_check = text.find("if ((!companionMode && !templateTable.Items.ContainsKey(DedicatedMagazineBeltTpl))")
 belt_prepare = text.find("Slot? beltAddition = PrepareDedicatedSlot(")
 head_prepare = text.find("Slot? headBandAddition = PrepareDedicatedSlot(")
 first_add = text.find("slots.Add(")
