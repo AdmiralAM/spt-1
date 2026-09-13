@@ -1,5 +1,6 @@
 import json
 import unittest
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
@@ -54,6 +55,13 @@ class NatalyaStorefrontAbsorptionTests(unittest.TestCase):
         signature_tpls = {row["_tpl"] for row in self.roots}
         self.assertEqual(len(signature_tpls), 35)
         self.assertTrue(base_tpls.isdisjoint(signature_tpls))
+
+    def test_build_always_refreshes_runtime_content(self):
+        project = ET.parse(ROOT / "server/AdmiralTrader.Server.csproj")
+        content = project.findall(".//Content")
+        self.assertTrue(content)
+        self.assertTrue(any(row.get("Include") == r"..\db\natalya-signature-assort.json" for row in content))
+        self.assertTrue(all(row.get("CopyToOutputDirectory") == "Always" for row in content))
 
 
 if __name__ == "__main__":
