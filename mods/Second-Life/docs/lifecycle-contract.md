@@ -34,7 +34,9 @@ one owner/address throughout the committed transfer. Selection supports a fixed
 seed for deterministic tests. If no complete set exists, recovery continues
 unarmed. An invalid tree or partial move rolls back to the captured stash
 addresses or resumes native death; equipment from the first corpse is never a
-substitute.
+substitute. Native protected trees (secure container, armband, B&A&HB belt and
+headband) are the exception: they move once from corpse slots to recovery slots
+and are never cloned.
 
 The pistol and installed magazine form one ownership tree and therefore use
 one physical move. The installed magazine must retain its original ID and

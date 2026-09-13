@@ -14,8 +14,9 @@ Second Life Admiral is a bounded one-time same-raid recovery workstream for SPT 
   funds ends the raid through the native death path;
 - the pistol pool remains configurable; random selection is bounded and can be
   seeded for deterministic validation;
-- the original corpse and equipment remain in the raid;
-- original gear is never cloned or restored automatically;
+- the original corpse and its non-protected equipment remain in the raid;
+- secure container, armband, B&A&HB belt and headband keep their native
+  protected ownership; other original gear is never cloned or restored;
 - unsupported states fail closed to native raid death;
 - disabled mode is behaviorally inert.
 
@@ -23,7 +24,8 @@ Second Life Admiral is a bounded one-time same-raid recovery workstream for SPT 
 
 The client patches the proven corpse/finalization boundary and contains the
 first guarded solo recovery executor. It captures the corpse-owned equipment
-root, prepares a distinct empty equipment/inventory root, reuses the native
+root and constructs a distinct recovery object using the profile's persistent
+equipment identity, reuses the native
 local-game player and owner factories, replaces the dead player registration,
 and resumes native death if preflight or reconstruction fails. The executor is
 disabled by default and has not yet passed the physical gameplay gate. The

@@ -18,10 +18,12 @@ namespace Admiral.SecondLife.Client
         internal FieldInfo OwnerFactory { get; private set; }
         internal FieldInfo LocalPlayer { get; private set; }
         internal FieldInfo PlayerOwner { get; private set; }
+        internal FieldInfo GamePlayerOwnerMyPlayer { get; private set; }
         internal FieldInfo Players { get; private set; }
         internal MethodInfo Spawn { get; private set; }
         internal MethodInfo CreatePlayerCamera { get; private set; }
         internal MethodInfo DestroyPlayerCamera { get; private set; }
+        internal PropertyInfo CullingSamplerInstance { get; private set; }
         internal MethodInfo RegisterWorldPlayer { get; private set; }
         internal MethodInfo UnregisterWorldPlayer { get; private set; }
 
@@ -38,12 +40,14 @@ namespace Admiral.SecondLife.Client
             Type equipment = FindType("EFT.InventoryLogic.InventoryEquipment");
             Type equipmentTemplate = FindType("EFT.InventoryLogic.InventoryEquipmentTemplate");
             Type cameraController = FindType("EFT.CameraControl.PlayerCameraController");
+            Type cullingSampler = FindType("Koenigz.PerfectCulling.EFT.PerfectCullingCrossSceneSampler");
             Type itemUiContext = FindType("EFT.UI.ItemUiContext");
             Type activeHealthController = FindType("EFT.HealthSystem.ActiveHealthController");
             Type healthHelper = FindType("EFT.HealthSystem.HealthHelper");
             Type globalConfiguration = FindType("EFT.GlobalConfiguration");
             Type gameWorld = FindType("EFT.GameWorld");
-            if (new[] { player, localPlayer, localGame, profile, inventory, equipment, equipmentTemplate, cameraController, itemUiContext, activeHealthController, healthHelper, globalConfiguration, gameWorld }.Any(type => type == null))
+            Type gamePlayerOwner = FindType("EFT.GamePlayerOwner");
+            if (new[] { player, localPlayer, localGame, profile, inventory, equipment, equipmentTemplate, cameraController, cullingSampler, itemUiContext, activeHealthController, healthHelper, globalConfiguration, gameWorld, gamePlayerOwner }.Any(type => type == null))
                 return Fail("required SPT 4.1 recovery types are missing", out failure);
 
             Type baseLocalGame = localGame.BaseType;
@@ -69,12 +73,14 @@ namespace Admiral.SecondLife.Client
             FieldInfo ownerFactory = FindField(baseLocalGame, "_ownerFactory");
             FieldInfo localPlayerField = FindField(baseLocalGame, "_localPlayer");
             FieldInfo playerOwner = FindField(baseLocalGame, "_playerOwner");
+            FieldInfo gamePlayerOwnerMyPlayer = gamePlayerOwner.GetField("_myPlayer", BindingFlags.Static | BindingFlags.NonPublic);
             FieldInfo players = FindField(baseLocalGame, "_players");
             MethodInfo spawn = baseLocalGame?.GetMethod("Spawn", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             MethodInfo createPlayerCamera = cameraController.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                 .SingleOrDefault(method => method.Name == "Create" && method.GetParameters().Length == 1 && method.GetParameters()[0].ParameterType == player);
             MethodInfo destroyPlayerCamera = cameraController.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                 .SingleOrDefault(method => method.Name == "Destroy" && method.GetParameters().Length == 1 && method.GetParameters()[0].ParameterType == player);
+            PropertyInfo cullingSamplerInstance = cullingSampler.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public);
             MethodInfo registerWorldPlayer = gameWorld.GetMethod("RegisterPlayer", BindingFlags.Instance | BindingFlags.Public);
             MethodInfo unregisterWorldPlayer = gameWorld.GetMethod("UnregisterPlayer", BindingFlags.Instance | BindingFlags.Public);
             MethodInfo healingConfirmation = itemUiContext.GetMethods(BindingFlags.Instance | BindingFlags.Public)
@@ -94,8 +100,8 @@ namespace Admiral.SecondLife.Client
                 return Fail("empty equipment/inventory construction signatures changed", out failure);
             if (localPlayerCreate == null || inventoryControllerConstructor == null)
                 return Fail("local-player reconstruction signatures changed", out failure);
-            if (new[] { gameProfile, playerFactory, ownerFactory, localPlayerField, playerOwner, players }.Any(field => field == null) ||
-                spawn == null || createPlayerCamera == null || destroyPlayerCamera == null || registerWorldPlayer == null || unregisterWorldPlayer == null)
+            if (new[] { gameProfile, playerFactory, ownerFactory, localPlayerField, playerOwner, players, gamePlayerOwnerMyPlayer }.Any(field => field == null) ||
+                spawn == null || createPlayerCamera == null || destroyPlayerCamera == null || cullingSamplerInstance?.GetMethod == null || registerWorldPlayer == null || unregisterWorldPlayer == null)
                 return Fail("local-game player/owner/camera binding contract changed", out failure);
             if (healingConfirmation == null || restoreFullHealth == null || realBodyParts == null || healthSettings == null || allRealPlayerItems == null)
                 return Fail("native paid-healing contract changed", out failure);
@@ -114,10 +120,12 @@ namespace Admiral.SecondLife.Client
                 OwnerFactory = ownerFactory,
                 LocalPlayer = localPlayerField,
                 PlayerOwner = playerOwner,
+                GamePlayerOwnerMyPlayer = gamePlayerOwnerMyPlayer,
                 Players = players,
                 Spawn = spawn,
                 CreatePlayerCamera = createPlayerCamera
                 ,DestroyPlayerCamera = destroyPlayerCamera
+                ,CullingSamplerInstance = cullingSamplerInstance
                 ,RegisterWorldPlayer = registerWorldPlayer
                 ,UnregisterWorldPlayer = unregisterWorldPlayer
             };

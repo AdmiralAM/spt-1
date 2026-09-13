@@ -14,7 +14,7 @@ public readonly record struct RecoveryOwnershipPlan(
         plan = default;
         if (string.IsNullOrWhiteSpace(corpseEquipmentRootId) ||
             string.IsNullOrWhiteSpace(recoveryEquipmentRootId) ||
-            string.Equals(corpseEquipmentRootId, recoveryEquipmentRootId, StringComparison.Ordinal))
+            !string.Equals(corpseEquipmentRootId, recoveryEquipmentRootId, StringComparison.Ordinal))
         {
             return false;
         }
@@ -24,7 +24,6 @@ public readonly record struct RecoveryOwnershipPlan(
             string[] ids =
             {
                 corpseEquipmentRootId,
-                recoveryEquipmentRootId,
                 selected.PistolItemId,
                 selected.InstalledMagazineItemId,
                 selected.SpareMagazineItemId

@@ -60,8 +60,10 @@ The recovered profile therefore requires a different, newly created empty
 `InventoryEquipment` root. `EFT.ItemFactory.CreateItem(id, templateId, diff)`
 and the public `InventoryEquipment(string id, InventoryEquipmentTemplate)`
 constructor are available, but the replacement root must be installed before
-constructing the recovered `SinglePlayerInventoryController`. Reusing the
-corpse root is a hard preflight failure even when all slots appear empty.
+constructing the recovered `SinglePlayerInventoryController`. The corpse and
+recovery never share the same root object. Both controller-local root anchors
+retain the persistent profile equipment ID so SPT raid-end serialization cannot
+leave a dangling equipment pointer; all contained item trees remain single-owned.
 
 Metadata-only inspection additionally proves that `EFT.Profile.Inventory` is
 a public replaceable `Inventory` field, while `Inventory.Equipment` is a public

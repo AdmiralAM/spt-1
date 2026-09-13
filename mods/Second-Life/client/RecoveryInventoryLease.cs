@@ -12,6 +12,7 @@ namespace Admiral.SecondLife.Client
         readonly object profile;
         readonly object originalInventory;
         readonly object recoveryInventory;
+        readonly System.Collections.Generic.List<SlotTransfer> protectedTransfers;
         bool applied;
 
         RecoveryInventoryLease(
@@ -19,6 +20,7 @@ namespace Admiral.SecondLife.Client
             object profile,
             object originalInventory,
             object recoveryInventory,
+            System.Collections.Generic.List<SlotTransfer> protectedTransfers,
             string corpseEquipmentRootId,
             string recoveryEquipmentRootId)
         {
@@ -26,6 +28,7 @@ namespace Admiral.SecondLife.Client
             this.profile = profile;
             this.originalInventory = originalInventory;
             this.recoveryInventory = recoveryInventory;
+            this.protectedTransfers = protectedTransfers;
             CorpseEquipmentRootId = corpseEquipmentRootId;
             RecoveryEquipmentRootId = recoveryEquipmentRootId;
         }
@@ -91,10 +94,15 @@ namespace Admiral.SecondLife.Client
             if (string.IsNullOrWhiteSpace(corpseRootId) || equipmentTemplate == null)
                 return Fail("corpse equipment identity/template is unavailable", out failure);
 
-            string recoveryRootId = Guid.NewGuid().ToString("N").Substring(0, 24);
+            // Keep the profile's persistent equipment identity on the distinct
+            // recovery object. Equipment roots are controller-local anchors; a
+            // new random ID leaves SPT's authoritative equipment pointer dangling
+            // after the raid result merge.
+            string recoveryRootId = corpseRootId;
             object recoveryEquipment = contract.EquipmentConstructor.Invoke(new[] { recoveryRootId, equipmentTemplate });
             if (!TryCreateIntrinsicPockets(originalEquipment, recoveryEquipment))
                 return Fail("intrinsic recovery pockets could not be constructed", out failure);
+            var protectedTransfers = PrepareProtectedTransfers(originalEquipment, recoveryEquipment);
             object[] inventoryArguments = BuildInventoryArguments(contract, originalInventory, recoveryEquipment);
             object recoveryInventory = contract.InventoryConstructor.Invoke(inventoryArguments);
             if (recoveryInventory == null || ReferenceEquals(recoveryEquipment, corpseEquipment))
@@ -105,6 +113,7 @@ namespace Admiral.SecondLife.Client
                 profile,
                 originalInventory,
                 recoveryInventory,
+                protectedTransfers,
                 corpseRootId,
                 recoveryRootId);
             return true;
@@ -115,9 +124,19 @@ namespace Admiral.SecondLife.Client
             if (applied || !ReferenceEquals(contract.ProfileInventory.GetValue(profile), originalInventory))
                 return false;
 
-            contract.ProfileInventory.SetValue(profile, recoveryInventory);
-            applied = ReferenceEquals(contract.ProfileInventory.GetValue(profile), recoveryInventory);
-            return applied;
+            try
+            {
+                foreach (SlotTransfer transfer in protectedTransfers) transfer.MoveToRecovery();
+                contract.ProfileInventory.SetValue(profile, recoveryInventory);
+                applied = ReferenceEquals(contract.ProfileInventory.GetValue(profile), recoveryInventory);
+                if (!applied) throw new InvalidOperationException("replacement inventory assignment was rejected");
+                return true;
+            }
+            catch
+            {
+                for (int index = protectedTransfers.Count - 1; index >= 0; index--) protectedTransfers[index].MoveToCorpse();
+                throw;
+            }
         }
 
         internal bool Rollback()
@@ -126,6 +145,7 @@ namespace Admiral.SecondLife.Client
             if (!ReferenceEquals(contract.ProfileInventory.GetValue(profile), recoveryInventory)) return false;
 
             contract.ProfileInventory.SetValue(profile, originalInventory);
+            for (int index = protectedTransfers.Count - 1; index >= 0; index--) protectedTransfers[index].MoveToCorpse();
             applied = false;
             return ReferenceEquals(contract.ProfileInventory.GetValue(profile), originalInventory);
         }
@@ -173,6 +193,60 @@ namespace Admiral.SecondLife.Client
             if (pockets == null || attach == null) return false;
             attach.Invoke(recoverySlot, new[] { pockets });
             return ReferenceEquals(AccessTools.Property(recoverySlot.GetType(), "ContainedItem")?.GetValue(recoverySlot, null), pockets);
+        }
+
+        static System.Collections.Generic.List<SlotTransfer> PrepareProtectedTransfers(object corpseEquipment, object recoveryEquipment)
+        {
+            Type equipmentSlot = FindType("EFT.InventoryLogic.EquipmentSlot");
+            MethodInfo getSlot = corpseEquipment.GetType().GetMethod("GetSlot", new[] { equipmentSlot });
+            var transfers = new System.Collections.Generic.List<SlotTransfer>();
+            object[] protectedSlots =
+            {
+                Enum.Parse(equipmentSlot, "SecuredContainer"),
+                Enum.Parse(equipmentSlot, "ArmBand"),
+                Enum.ToObject(equipmentSlot, 15),
+                Enum.ToObject(equipmentSlot, 16)
+            };
+            foreach (object slotValue in protectedSlots)
+            {
+                object corpseSlot = getSlot.Invoke(corpseEquipment, new[] { slotValue });
+                object recoverySlot = getSlot.Invoke(recoveryEquipment, new[] { slotValue });
+                object item = corpseSlot == null ? null : ReadCurrentItem(corpseSlot);
+                if (item != null && recoverySlot != null) transfers.Add(new SlotTransfer(corpseSlot, recoverySlot, item));
+            }
+            return transfers;
+        }
+
+        sealed class SlotTransfer
+        {
+            readonly object corpseSlot;
+            readonly object recoverySlot;
+            readonly object item;
+            readonly MethodInfo corpseAttach;
+            readonly MethodInfo recoveryAttach;
+
+            internal SlotTransfer(object corpseSlot, object recoverySlot, object item)
+            {
+                this.corpseSlot = corpseSlot;
+                this.recoverySlot = recoverySlot;
+                this.item = item;
+                corpseAttach = corpseSlot.GetType().GetMethod("ChangeContainedItemDirectly", BindingFlags.Instance | BindingFlags.Public);
+                recoveryAttach = recoverySlot.GetType().GetMethod("ChangeContainedItemDirectly", BindingFlags.Instance | BindingFlags.Public);
+                if (corpseAttach == null || recoveryAttach == null) throw new InvalidOperationException("protected-slot transfer contract is unavailable");
+            }
+
+            internal void MoveToRecovery()
+            {
+                corpseAttach.Invoke(corpseSlot, new object[] { null });
+                recoveryAttach.Invoke(recoverySlot, new[] { item });
+                if (!ReferenceEquals(ReadCurrentItem(recoverySlot), item)) throw new InvalidOperationException("protected item transfer to recovery failed");
+            }
+
+            internal void MoveToCorpse()
+            {
+                recoveryAttach.Invoke(recoverySlot, new object[] { null });
+                corpseAttach.Invoke(corpseSlot, new[] { item });
+            }
         }
 
         static object FindGridAddress(object compound, object item)

@@ -179,27 +179,27 @@ Expect(!detachedInstalledMagazine.TryExecute(), "installed magazine must remain 
 Expect(rolledBack.SequenceEqual(new[] { armament.SpareMagazineItemId, armament.PistolItemId }), "ownership drift rolls both physical moves back");
 
 Expect(RecoveryOwnershipPlan.TryCreate(
-    "corpse-equipment-root",
-    "recovery-equipment-root",
+    "persistent-equipment-root",
+    "persistent-equipment-root",
     armament,
-    out RecoveryOwnershipPlan ownership), "distinct corpse and recovery roots are accepted");
-Expect(ownership.CorpseEquipmentRootId != ownership.RecoveryEquipmentRootId, "corpse equipment root is never reused by recovery");
+    out RecoveryOwnershipPlan ownership), "distinct controller roots retain the persistent profile identity");
+Expect(ownership.CorpseEquipmentRootId == ownership.RecoveryEquipmentRootId, "raid-end equipment pointer remains resolvable");
 Expect(ownership.Armament == armament, "stash armament identities are preserved by ownership plan");
-Expect(!RecoveryOwnershipPlan.TryCreate(
+Expect(RecoveryOwnershipPlan.TryCreate(
     "same-equipment-root",
     "same-equipment-root",
-    armament,
-    out _), "shared corpse/recovery root is rejected");
+    null,
+    out _), "unarmed recovery retains the persistent root identity");
 Expect(!RecoveryOwnershipPlan.TryCreate(
     "corpse-equipment-root",
     armament.PistolItemId,
     armament,
-    out _), "recovery root cannot reuse a stash item identity");
+    out _), "recovery cannot replace the authoritative equipment identity");
 Expect(RecoveryOwnershipPlan.TryCreate(
-    "corpse-equipment-root",
-    "unarmed-recovery-root",
+    "persistent-unarmed-root",
+    "persistent-unarmed-root",
     null,
-    out RecoveryOwnershipPlan unarmedOwnership), "unarmed recovery still receives a distinct empty equipment root");
+    out RecoveryOwnershipPlan unarmedOwnership), "unarmed recovery still receives a distinct empty equipment object");
 Expect(unarmedOwnership.Armament is null, "unarmed ownership plan generates no equipment");
 
 var unavailableGate = new RecoveryFinalizationGate();
