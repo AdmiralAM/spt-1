@@ -48,11 +48,20 @@ has already been created at that point.
 
 `Player.OnDead(...)` removes the player's first-level inventory items before
 calling `CreateCorpse()`. Corpse construction receives the existing
-`InventoryEquipment` tree. This is the native single-owner transfer seam; the
+`InventoryEquipment` tree. `Corpse.Init(...)` constructs a new
+`CorpseItemController` over that exact equipment root and initializes the loot
+item from it. This is the native single-owner transfer seam; the
 recovery implementation must not clone that tree or repopulate it from the
 pre-death equipment. Emergency armament must instead move existing persistent
 item IDs from their stash addresses, with rollback before any partial transfer
 is committed.
+
+The recovered profile therefore requires a different, newly created empty
+`InventoryEquipment` root. `EFT.ItemFactory.CreateItem(id, templateId, diff)`
+and the public `InventoryEquipment(string id, InventoryEquipmentTemplate)`
+constructor are available, but the replacement root must be installed before
+constructing the recovered `SinglePlayerInventoryController`. Reusing the
+corpse root is a hard preflight failure even when all slots appear empty.
 
 ## Proven recovery construction APIs
 

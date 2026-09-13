@@ -157,6 +157,30 @@ var failedPreflightTransfer = new ArmamentTransferTransaction(
 Expect(!failedPreflightTransfer.TryExecute(), "all stash moves preflight before mutation");
 Expect(moved.Count == 0 && rolledBack.Count == 0, "failed transfer preflight is mutation-free");
 
+Expect(RecoveryOwnershipPlan.TryCreate(
+    "corpse-equipment-root",
+    "recovery-equipment-root",
+    armament,
+    out RecoveryOwnershipPlan ownership), "distinct corpse and recovery roots are accepted");
+Expect(ownership.CorpseEquipmentRootId != ownership.RecoveryEquipmentRootId, "corpse equipment root is never reused by recovery");
+Expect(ownership.Armament == armament, "stash armament identities are preserved by ownership plan");
+Expect(!RecoveryOwnershipPlan.TryCreate(
+    "same-equipment-root",
+    "same-equipment-root",
+    armament,
+    out _), "shared corpse/recovery root is rejected");
+Expect(!RecoveryOwnershipPlan.TryCreate(
+    "corpse-equipment-root",
+    armament.PistolItemId,
+    armament,
+    out _), "recovery root cannot reuse a stash item identity");
+Expect(RecoveryOwnershipPlan.TryCreate(
+    "corpse-equipment-root",
+    "unarmed-recovery-root",
+    null,
+    out RecoveryOwnershipPlan unarmedOwnership), "unarmed recovery still receives a distinct empty equipment root");
+Expect(unarmedOwnership.Armament is null, "unarmed ownership plan generates no equipment");
+
 Console.WriteLine($"Second Life foundation PASS: {assertions} assertions.");
 
 sealed class FakeMove : IReversibleInventoryMove
