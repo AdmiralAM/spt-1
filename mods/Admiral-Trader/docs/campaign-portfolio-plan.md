@@ -130,3 +130,22 @@ This milestone must not add a second recovery engine, replace another trader's i
 WTT Armory, Icebreaker, RUAF / Black Division, and Pack 'n' Strap are recorded as later optional expansion candidates. They do not modify the stable campaign or current runtime scope until their installed content and exact IDs are inspected. WTT Armory may extend weapon rotations, rewards, and finite quest-gated stock; Icebreaker may supply optional map operations; RUAF / Black Division may supply rare optional combat targets without Admiral-owned spawn changes; Pack 'n' Strap may broaden equipment objectives, rewards, and unlocks after duplicate-storefront review.
 
 All four integrations must degrade cleanly when absent and cannot gate the core graph. ORBIT and Extra Lives are explicitly excluded from Trader runtime integration. The detailed admission contract is in `docs/optional-content-candidates.md` and `manifests/optional-content-candidates.json`.
+
+## Post-stable trial — qualification and requisition chains
+
+VAI-RLTP is retained as a research reference for two small original Admiral chains after the stable 0.3.0 scope. Its useful idea is the progression link between demonstrated equipment competence, themed procurement and finite trader unlocks. Its 430 generated single-condition mastery quests, 183 handover-only collector quests, extreme kill ladders, text, IDs, reward values and graph are not imported. VAI-RLTP is CC BY-NC-SA 3.0 material; these trials must be independently authored from the high-level concept rather than adapted from its quest records.
+
+The trial is bounded to two chains of three operations each:
+
+1. **Field certification**
+   - category qualification with a small weapon pool and moderate target count across several suitable locations;
+   - a field-specialization operation that changes the tactical problem through target, range, time or supporting equipment instead of repeating the same kills;
+   - a short capstone proving the capability against a bounded elite-target pool and unlocking one complete preset plus its practical magazine/ammunition support.
+2. **Operational requisition**
+   - recover or assemble a coherent field-service kit whose items share a real function;
+   - use the supplied equipment context in a distinct reconnaissance, recovery or route operation rather than submitting a second shopping list;
+   - complete the delivery/validation step and unlock one finite mission-support offer appropriate to that kit.
+
+Both chains remain optional side content, use new persistent Admiral quest IDs, enter through one suitable post-stable campaign milestone and never gate the 172-quest core graph, loyalty or essential stock. At most one trial step per chain may be offered at once. Rewards replace part of the ordinary cash envelope rather than stacking free value, and every unlock must correspond to the capability or supply package just proven.
+
+Before runtime implementation, the six-operation bundle must be reviewed together at the product level for titles, story purpose, objective variety, exact location pools, requirements, rewards and storefront unlocks. Admission requires that neither chain duplicates an existing Arsenal rotation, map story, Natalya operation or Icebreaker branch. If the trial does not add a new player decision, it is dropped rather than expanded into a mastery grind.
