@@ -15,12 +15,14 @@ if (Test-Path (Join-Path $candidate 'SPT_Runtime/user/mods/Admiral-Trader')) { t
 
 foreach ($relative in @(
     'Admiral Trader Server.dll', 'db/base.json', 'db/assort.json', 'db/natalya-signature-assort.json',
-    'db/questassort.json', 'manifests/runtime-manifest.json', 'manifests/m6-stable-release.json',
+    'db/questassort.json', 'manifests/campaign-manifest.json', 'manifests/relationship-stock.json',
+    'manifests/runtime-manifest.json', 'manifests/story-campaign-runtime.json',
     'README.md', 'CHANGELOG.md', 'INSTALL.md', 'POLISHING.md',
     'assets/d5c27bb3169f8dfbc13f6b69.jpg'
 )) {
     if (-not (Test-Path (Join-Path $canonical $relative) -PathType Leaf)) { throw "Required package file is missing: $relative" }
 }
+if (@(Get-ChildItem (Join-Path $canonical 'manifests') -File).Count -ne 4) { throw 'Package contains non-runtime design manifests.' }
 
 $manifest = Get-Content (Join-Path $canonical 'manifests/runtime-manifest.json') -Raw | ConvertFrom-Json
 if ($manifest.version -ne '0.3.0' -or $manifest.sptCompatibility -ne '~4.1.0') { throw 'Staged version/compatibility metadata drifted.' }

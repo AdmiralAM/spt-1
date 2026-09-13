@@ -98,8 +98,12 @@ $modTarget = Join-Path $packageRoot 'SPT_Runtime/user/mods/Admiral Trader'
 if (Test-Path $packageRoot) { Remove-Item $packageRoot -Recurse -Force }
 New-Item $modTarget -ItemType Directory -Force | Out-Null
 Copy-Item $dll $modTarget
-foreach ($directory in 'db','manifests','assets') {
+foreach ($directory in 'db','assets') {
     Copy-Item (Join-Path $traderRoot $directory) (Join-Path $modTarget $directory) -Recurse
+}
+New-Item (Join-Path $modTarget 'manifests') -ItemType Directory -Force | Out-Null
+foreach ($manifest in 'campaign-manifest.json','relationship-stock.json','runtime-manifest.json','story-campaign-runtime.json') {
+    Copy-Item (Join-Path $traderRoot "manifests/$manifest") (Join-Path $modTarget "manifests/$manifest")
 }
 if (Test-Path (Join-Path $traderRoot 'README.md')) { Copy-Item (Join-Path $traderRoot 'README.md') $modTarget }
 if (Test-Path (Join-Path $traderRoot 'CHANGELOG.md')) { Copy-Item (Join-Path $traderRoot 'CHANGELOG.md') $modTarget }
