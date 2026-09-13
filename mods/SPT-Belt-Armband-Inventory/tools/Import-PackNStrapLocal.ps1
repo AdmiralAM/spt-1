@@ -100,6 +100,15 @@ $serverDll = Join-Path $moduleRoot 'server\bin\Release\net10.0\SPT-Belt-Armband-
 
 $activeServer = Join-Path $spt 'SPT_Runtime\user\mods\B&A&HB #2 MOD SPT'
 Get-ChildItem -LiteralPath $runtime | Copy-Item -Destination $activeServer -Recurse -Force
+$obsoleteRuntimeFiles = @('DESIGN-SPT-4.1.3-BELT.md', 'RC1-runtime-checklist.md')
+$obsoletePresent = @($obsoleteRuntimeFiles | Where-Object { Test-Path -LiteralPath (Join-Path $activeServer $_) })
+if ($obsoletePresent.Count -gt 0) {
+    $cleanupBackup = Join-Path $BackupRoot ("stable-cleanup-" + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
+    New-Item -ItemType Directory -Force -Path $cleanupBackup | Out-Null
+    foreach ($name in $obsoletePresent) {
+        Move-Item -LiteralPath (Join-Path $activeServer $name) -Destination (Join-Path $cleanupBackup $name)
+    }
+}
 $sourceCommit = (& git -c "safe.directory=$source" -C $source rev-parse HEAD 2>$null)
 if ($LASTEXITCODE -ne 0) { $sourceCommit = 'unavailable' }
 $marker = [ordered]@{ mode='private-packnstrap-import'; sourceVersion='2.1.1'; sourceCommit=$sourceCommit; importedAt=(Get-Date).ToString('o') }
