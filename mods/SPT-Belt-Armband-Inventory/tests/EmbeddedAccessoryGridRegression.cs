@@ -19,6 +19,7 @@ internal static class EmbeddedAccessoryGridRegression
         Require(source.Contains("ignoreLayout", StringComparison.Ordinal), "overlay and panels must be excluded from automatic layout");
         Require(source.Contains("_slotPlace", StringComparison.Ordinal) && source.Contains("SetActive(false)", StringComparison.Ordinal), "compact panels must hide the duplicate equipped-item card");
         Require(source.Contains("WaitForEndOfFrame", StringComparison.Ordinal) && source.Contains("ForceRebuildLayoutImmediate", StringComparison.Ordinal), "compact panels must move after native layout without extending the container column");
+        Require(source.Contains("_gridsContainer", StringComparison.Ordinal) && source.Contains("CompactNativeRow", StringComparison.Ordinal), "panel size must follow the rendered native grid instead of the hidden item card");
         Require(slots.Contains("BuildWearableOrder", StringComparison.Ordinal) && slots.Contains("HeadBandSlotKey", StringComparison.Ordinal) && slots.Contains("ArmBand", StringComparison.Ordinal), "native ContainersPanel order must create both accessory rows");
         Require(projection.Contains("IsProjectedWearable", StringComparison.Ordinal), "native row factory must accept Belt, HeadBand and ArmBand");
         Require(!source.Contains("GeneratedGridsView", StringComparison.Ordinal) && !source.Contains("Instantiate", StringComparison.Ordinal), "must not create detached decorative grid windows");
