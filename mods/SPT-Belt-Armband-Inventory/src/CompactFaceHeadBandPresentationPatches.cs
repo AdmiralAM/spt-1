@@ -9,9 +9,9 @@ namespace SPTBeltArmbandInventory
 {
     internal static class CompactFaceHeadBandPresentationRuntime
     {
-        const float HeadBandHeight = 44f;
+        const float HeadBandHeight = 40f;
         const float Gap = 4f;
-        const float StackVerticalOffset = -42f;
+
 
         sealed class LayoutState
         {
@@ -74,7 +74,9 @@ namespace SPTBeltArmbandInventory
                     States[key] = state;
                 }
 
-                Apply(state, faceRect, headBandRect);
+                RectTransform headwearRect = (ReflectionTools.ReadMember(equipmentTab, "_headwearSlot") as Component)?.transform as RectTransform;
+                if (headwearRect == null) return;
+                Apply(state, faceRect, headBandRect, headwearRect);
             }
             catch (Exception exception)
             {
@@ -82,7 +84,7 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static void Apply(LayoutState state, RectTransform faceRect, RectTransform headBandRect)
+        static void Apply(LayoutState state, RectTransform faceRect, RectTransform headBandRect, RectTransform headwearRect)
         {
             float originalHeight = Mathf.Max(1f, state.FaceSize.y);
             float originalWidth = Mathf.Max(1f, state.FaceSize.x);
@@ -100,8 +102,7 @@ namespace SPTBeltArmbandInventory
             faceRect.pivot = state.FacePivot;
             faceRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, originalWidth);
             faceRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, faceHeight);
-            faceRect.anchoredPosition = state.FaceAnchoredPosition
-                + new Vector2(0f, StackVerticalOffset - (HeadBandHeight + Gap) * 0.5f);
+            faceRect.anchoredPosition = state.FaceAnchoredPosition;
 
             if (headBandRect.parent != faceRect.parent)
                 headBandRect.SetParent(faceRect.parent, false);
@@ -111,14 +112,21 @@ namespace SPTBeltArmbandInventory
             headBandRect.pivot = state.FacePivot;
             headBandRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, originalWidth);
             headBandRect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, HeadBandHeight);
-            headBandRect.anchoredPosition = state.FaceAnchoredPosition
-                + new Vector2(0f, StackVerticalOffset + (faceHeight + Gap) * 0.5f);
+            headBandRect.anchoredPosition = state.FaceAnchoredPosition;
+            // Align actual outer edges in the shared parent's coordinates; pivots
+            // and canvas scaling must not turn this into another guessed offset.
+            Vector3 headTop = faceRect.parent.InverseTransformPoint(headwearRect.TransformPoint(new Vector3(0f, headwearRect.rect.yMax, 0f)));
+            Vector3 headBottom = faceRect.parent.InverseTransformPoint(headwearRect.TransformPoint(new Vector3(0f, headwearRect.rect.yMin, 0f)));
+            Vector3 faceBottom = faceRect.parent.InverseTransformPoint(faceRect.TransformPoint(new Vector3(0f, faceRect.rect.yMin, 0f)));
+            Vector3 bandTop = faceRect.parent.InverseTransformPoint(headBandRect.TransformPoint(new Vector3(0f, headBandRect.rect.yMax, 0f)));
+            faceRect.anchoredPosition += new Vector2(0f, headBottom.y - faceBottom.y);
+            headBandRect.anchoredPosition += new Vector2(0f, headTop.y - bandTop.y);
             headBandRect.gameObject.SetActive(true);
 
             if (!proofLogged)
             {
                 proofLogged = true;
-                LogInfo?.Invoke("B&A&HB COMPACT FACE/HEADBAND PROOF: stable reflow suppressed; slot16 and FaceCover share the original FaceCover footprint; face="
+                LogInfo?.Invoke("B&A&HB COMPACT FACE/HEADBAND PROOF: stable reflow suppressed; HeadBand top and FaceCover bottom aligned to Headwear edges; face="
                     + originalWidth.ToString("0.0") + "x" + faceHeight.ToString("0.0")
                     + ", headband=" + originalWidth.ToString("0.0") + "x" + HeadBandHeight.ToString("0.0")
                     + ", hostPanelMutation=false.");

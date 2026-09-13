@@ -1,6 +1,6 @@
 # B&A&HB #2 MOD SPT runtime architecture audit — archived Phase 1 snapshot
 
-> **Historical evidence only.** This audit describes the original magazine-only ArmBand-hosted candidate before dedicated Belt/HeadBand hosts and the current v0.2.0 product/reload work existed. Statements below such as “current RC”, `ConceptOnly`, and the old completion gate are retained to document that phase and are not current authority. Active architecture is `../DESIGN-SPT-4.1.3-BELT.md`; active product/gate authority is `../README.md`, `product-concept.md`, and `RC1-runtime-checklist.md` under Issue #285 / PR #286.
+> **Historical evidence only.** This audit describes the original magazine-only ArmBand-hosted candidate before dedicated Belt/HeadBand hosts and later product work. Statements below such as “current RC” and `ConceptOnly` are retained only as history. Current stable authority is Issue #351 / PR #357 and `../README.md`.
 
 This audit describes the then-current magazine-only ArmBand-hosted runtime candidate.
 Phase 1 was deliberately kept narrow until its complete physical lifecycle gate passed.

@@ -16,7 +16,7 @@ namespace SPTBeltArmbandInventory
     {
         public const string PluginGuid = "com.admiralam.spt.belt-armband-inventory";
         public const string PluginName = "B&A&HB #2 MOD SPT";
-        public const string PluginVersion = "0.2.0";
+        public const string PluginVersion = "0.3.0";
 
         ConfigEntry<bool> modEnabled;
         ProtectionSettingsSync protectionSettings;
@@ -31,6 +31,8 @@ namespace SPTBeltArmbandInventory
         HeadwearCompatibilityPatches headwearCompatibilityPatches;
         BeltContainersPanelProjectionPatches beltContainersPanelProjectionPatches;
         GridWindowSizingPatches gridWindowSizingPatches;
+        HeadBandItemIconPatches headBandItemIconPatches;
+        EmbeddedAccessoryGridPatches embeddedAccessoryGridPatches;
         LootPriorityPatches lootPatches;
         UnloadPriorityPatches unloadPatches;
         ScavBeltPatches scavPatches;
@@ -194,10 +196,40 @@ namespace SPTBeltArmbandInventory
                 GridWindowSizingRuntime.RequestFlush = EnsureDeferredRuntimePump;
             }
 
+            headBandItemIconPatches = new HeadBandItemIconPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!headBandItemIconPatches.TryInstall())
+            {
+                headBandItemIconPatches.Dispose();
+                headBandItemIconPatches = null;
+                Logger.LogWarning("Utility HeadBand keeps its runtime model, but the owned inventory-card icon could not bind for this session.");
+            }
+
+            embeddedAccessoryGridPatches = new EmbeddedAccessoryGridPatches(Logger.LogInfo, Logger.LogWarning);
+            if (!embeddedAccessoryGridPatches.TryInstall())
+            {
+                embeddedAccessoryGridPatches.Dispose();
+                embeddedAccessoryGridPatches = null;
+                Logger.LogWarning("Accessory containers remain available through their normal GridWindow, but embedded HeadBand/ArmBand grids are unavailable for this session.");
+            }
+
             if (packNStrapDetected)
             {
+                lootPatches = new LootPriorityPatches(Logger.LogInfo, Logger.LogWarning, true);
+                if (!lootPatches.TryInstall())
+                {
+                    lootPatches.Dispose();
+                    lootPatches = null;
+                    Logger.LogWarning("Pack 'n' Strap keeps its container ordering, but exact Admiral wallet money auto-deposit could not be added.");
+                }
+                paymentPatches = new PaymentSlotPatches(Logger.LogInfo, Logger.LogWarning);
+                if (!paymentPatches.TryInstall())
+                {
+                    paymentPatches.Dispose();
+                    paymentPatches = null;
+                    Logger.LogWarning("Pack 'n' Strap remains authoritative for Belt routing, but exact Admiral wallet payment sources could not be added.");
+                }
                 protectionSyncPump = StartCoroutine(SyncProtectionSettingsBounded());
-                Logger.LogInfo("B&A&HB companion mode initialized without Belt/ArmBand loot, unload, Scav, fast-access, merge, pickup, payment or equipment-build patches.");
+                Logger.LogInfo("B&A&HB companion mode initialized with exact Admiral wallet payment sources and money-only auto-deposit; Pack 'n' Strap retains general Belt/ArmBand loot ordering, unload, Scav, fast-access, merge, pickup and equipment-build ownership.");
                 return;
             }
 
@@ -405,6 +437,10 @@ namespace SPTBeltArmbandInventory
             lootPatches = null;
             if (gridWindowSizingPatches != null) gridWindowSizingPatches.Dispose();
             gridWindowSizingPatches = null;
+            if (embeddedAccessoryGridPatches != null) embeddedAccessoryGridPatches.Dispose();
+            embeddedAccessoryGridPatches = null;
+            if (headBandItemIconPatches != null) headBandItemIconPatches.Dispose();
+            headBandItemIconPatches = null;
             if (beltContainersPanelProjectionPatches != null) beltContainersPanelProjectionPatches.Dispose();
             beltContainersPanelProjectionPatches = null;
             if (headwearCompatibilityPatches != null) headwearCompatibilityPatches.Dispose();

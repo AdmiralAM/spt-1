@@ -412,6 +412,7 @@ namespace SPTBeltArmbandInventory
             {
                 string templateId = parent == null ? null : readTemplateId(parent);
                 if (string.Equals(templateId, RuntimeIdentity.DedicatedMagazineBeltItemId, StringComparison.Ordinal)
+                    || ArmBandVariantCatalog.HasRole(templateId, ArmBandRole.Magazine)
                     || (parent != null && importedBeltItemType != null && importedBeltItemType.IsInstanceOfType(parent))) return true;
             }
             return false;
@@ -468,7 +469,6 @@ namespace SPTBeltArmbandInventory
         bool wroteFastAccessSlots;
         bool wroteBindAvailableSlots;
         bool reloadPatchInstalled;
-        bool reloadCandidateBridgeInstalled;
         bool reachabilityRollbackUnsafe;
         bool candidateBridgeRollbackUnsafe;
         bool arrayRollbackUnsafe;
@@ -770,7 +770,6 @@ namespace SPTBeltArmbandInventory
                 PatchNamed(candidateBridgeHarmony, patchMethod, harmonyMethodType, quickReload, "prefix", prefix);
                 PatchNamed(candidateBridgeHarmony, patchMethod, harmonyMethodType, quickReload, "finalizer", finalizer);
                 PatchNamed(candidateBridgeHarmony, patchMethod, harmonyMethodType, getItemsInSlots, "postfix", candidatesPostfix);
-                reloadCandidateBridgeInstalled = true;
                 return true;
             }
             catch (Exception exception)
@@ -1120,7 +1119,6 @@ namespace SPTBeltArmbandInventory
         bool UnpatchCandidateBridge()
         {
             bool rollbackProven = TryRollbackCandidateBridgeOwner(candidateBridgeHarmony, candidateBridgeUnpatchSelf);
-            reloadCandidateBridgeInstalled = false;
             ReloadCandidateBridgeRuntime.Reset();
             if (rollbackProven)
             {
@@ -1171,7 +1169,6 @@ namespace SPTBeltArmbandInventory
         {
             installed = false;
             reloadPatchInstalled = false;
-            reloadCandidateBridgeInstalled = false;
             if (!arrayRollbackUnsafe)
             {
                 wroteFastAccessSlots = false;

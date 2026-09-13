@@ -49,6 +49,33 @@ Copy-Item -LiteralPath (Join-Path $serverSource 'bundles') -Destination $runtime
 Copy-Item -LiteralPath (Join-Path $serverSource 'db') -Destination $runtime -Recurse
 Copy-Item -LiteralPath (Join-Path $serverSource 'bundles.json') -Destination $runtime
 
+$headBandAssetRoot = Join-Path $moduleRoot 'assets\headband-rambo\runtime'
+$headBandBundle = Join-Path $headBandAssetRoot 'bundles\HeadBand\headband_rambo_red.bundle'
+$headBandIcon = Join-Path $headBandAssetRoot 'icons\68ac0000000000000000000f.png'
+$headBandEntry = Join-Path $headBandAssetRoot 'bundle-entry.json'
+foreach ($requiredHeadBandAsset in @($headBandBundle, $headBandIcon, $headBandEntry)) {
+    if (-not (Test-Path -LiteralPath $requiredHeadBandAsset)) {
+        throw "Required B&A&HB HeadBand asset missing: $requiredHeadBandAsset"
+    }
+}
+
+$headBandBundleTarget = Join-Path $runtime 'bundles\HeadBand\headband_rambo_red.bundle'
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $headBandBundleTarget) | Out-Null
+Copy-Item -LiteralPath $headBandBundle -Destination $headBandBundleTarget -Force
+$headBandIconTarget = Join-Path $runtime 'assets\icons\68ac0000000000000000000f.png'
+New-Item -ItemType Directory -Force -Path (Split-Path -Parent $headBandIconTarget) | Out-Null
+Copy-Item -LiteralPath $headBandIcon -Destination $headBandIconTarget -Force
+
+$bundlesPath = Join-Path $runtime 'bundles.json'
+$bundleManifest = Get-Content -Raw -LiteralPath $bundlesPath | ConvertFrom-Json -AsHashtable
+$entry = Get-Content -Raw -LiteralPath $headBandEntry | ConvertFrom-Json -AsHashtable
+$existingEntry = @($bundleManifest['manifest']) | Where-Object { $_['key'] -eq $entry['key'] }
+if ($existingEntry.Count -gt 0) {
+    throw "Pack 'n' Strap bundle manifest already owns B&A&HB key $($entry['key'])"
+}
+$bundleManifest['manifest'] = @($bundleManifest['manifest']) + @($entry)
+$bundleManifest | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $bundlesPath -Encoding utf8NoBOM
+
 $gearPath = Join-Path $runtime 'db\CustomItems\Gear_Belts.json'
 $gear = Get-Content -Raw -LiteralPath $gearPath | ConvertFrom-Json -AsHashtable
 foreach ($item in $gear.Values) { $item['addtoInventorySlots'] = @() }
@@ -73,6 +100,15 @@ $serverDll = Join-Path $moduleRoot 'server\bin\Release\net10.0\SPT-Belt-Armband-
 
 $activeServer = Join-Path $spt 'SPT_Runtime\user\mods\B&A&HB #2 MOD SPT'
 Get-ChildItem -LiteralPath $runtime | Copy-Item -Destination $activeServer -Recurse -Force
+$obsoleteRuntimeFiles = @('DESIGN-SPT-4.1.3-BELT.md', 'RC1-runtime-checklist.md')
+$obsoletePresent = @($obsoleteRuntimeFiles | Where-Object { Test-Path -LiteralPath (Join-Path $activeServer $_) })
+if ($obsoletePresent.Count -gt 0) {
+    $cleanupBackup = Join-Path $BackupRoot ("stable-cleanup-" + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
+    New-Item -ItemType Directory -Force -Path $cleanupBackup | Out-Null
+    foreach ($name in $obsoletePresent) {
+        Move-Item -LiteralPath (Join-Path $activeServer $name) -Destination (Join-Path $cleanupBackup $name)
+    }
+}
 $sourceCommit = (& git -c "safe.directory=$source" -C $source rev-parse HEAD 2>$null)
 if ($LASTEXITCODE -ne 0) { $sourceCommit = 'unavailable' }
 $marker = [ordered]@{ mode='private-packnstrap-import'; sourceVersion='2.1.1'; sourceCommit=$sourceCommit; importedAt=(Get-Date).ToString('o') }

@@ -48,6 +48,8 @@
     <Compile Include="..\src\PaymentSlotPatches.cs" Link="PaymentSlotPatches.cs" />
     <Compile Include="..\src\EquipmentBuildValidationPatches.cs" Link="EquipmentBuildValidationPatches.cs" />
     <Compile Include="..\server\PersistentIdentityManifest.cs" Link="PersistentIdentityManifest.cs" />
+    <Compile Include="..\src\ArmBandVariantCatalog.cs" Link="ArmBandVariantCatalog.cs" />
+    <Compile Include="..\src\ArmBandLootPolicy.cs" Link="ArmBandLootPolicy.cs" />
     <Compile Include="..\server\ProfileCleanupPolicy.cs" Link="ProfileCleanupPolicy.cs" />
   </ItemGroup>
   <ItemGroup>

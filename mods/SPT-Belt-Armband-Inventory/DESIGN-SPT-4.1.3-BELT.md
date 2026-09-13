@@ -2,7 +2,7 @@
 
 ## Authority
 
-Stable v0.1.0 is already frozen/published and remains the rollback release. Active development candidate is **v0.2.0** under Issue #285 / PR #286, with magazine reload integration tracked by Issue #287.
+Stable **v0.3.0** is the active product line under Issue #351 / PR #357. Published v0.1.0 and v0.2.0 identities remain immutable compatibility and recovery contracts.
 
 ## Persistent equipment model
 
@@ -93,7 +93,7 @@ v0.2 extends the existing fast-access owner rather than adding a parallel reload
 - `Inventory.FastAccessSlots` and `BindAvailableSlotsExtended` preserve the complete vanilla sequence and append ArmBand plus dedicated Belt afterward.
 - Exact `InventoryController.IsAtReachablePlace(Item)` is the narrow eligibility boundary. A vanilla `true` result is never changed.
 - Only an otherwise-unreachable `Magazine` with an exact B&A&HB `FastAccess` ancestor may be promoted; the registered roots are Magazine Armband and Magazine Belt.
-- Wrist Wallet, Utility HeadBand and Dogtag Case do not own `FastAccess` and cannot become reload roots.
+- Wrist Wallet and Utility HeadBand are exact payment sources and money auto-deposit targets; neither owns `FastAccess` or becomes a reload root. Dogtag Case owns neither capability.
 - Reload/QuickReload keep the complete vanilla candidate sequence as strict priority prefix. Magazine Belt descendants are appended only through one scoped pseudo-slot15 `GetItemsInSlots` query; Magazine Armband remains on the native ArmBand path.
 - The pinned SPT 4.1.x query boundary is exactly `IEnumerable<Item> GetItemsInSlots(IEnumerable<EquipmentSlot>)`. Array/non-generic/lookalike return or parameter shapes fail closed.
 - Candidate bridge activation accepts only the exact retained/installed `FastAccessSlots` and `BindAvailableSlotsExtended` array references, with install-time content snapshots re-proved at four bounded execution stages.

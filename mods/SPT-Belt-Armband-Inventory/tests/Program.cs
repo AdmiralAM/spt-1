@@ -24,6 +24,10 @@ internal static class Program
         Assert(!PackNStrapCompatibility.IsServerPresent(new[] { "SPT.Server", "SPT-Belt-Armband-Inventory.Server" }), "B&A server alone stays in standalone mode");
         LocalPackNStrapImportRegression.Run();
         UseItemsAnywhereCompatibilityRegression.Run();
+        ArmBandVariantCatalogRegression.Run();
+        ArmBandLootPolicyRegression.Run();
+        ArmBandFeatureConfigRegression.Run();
+        HeadBandVisualAssetRegression.Run();
         SPTBeltArmbandInventory.Tests.ProfileCleanupRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedWearableSlotContractRegression.Run();
         SPTBeltArmbandInventory.Tests.DedicatedSlotPresentationPolicyRegression.Run();

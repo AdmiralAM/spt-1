@@ -41,6 +41,7 @@ internal static class WearableProtectionRuntime
     private static bool armBandProtected = true;
     private static bool beltProtected = true;
     private static bool headBandProtected = true;
+    private static ProtectedWearableRoot[] variantArmBandRoots = [];
     private static ProtectedWearableRoot[] activeRoots = BuildRoots(true, true, true);
 
     // Never expose the mutable shared publication array. Death/insurance callers get
@@ -74,9 +75,18 @@ internal static class WearableProtectionRuntime
         }
     }
 
+    internal static void ConfigureVariantRoots(IEnumerable<string> templateIds)
+    {
+        lock (Sync)
+        {
+            variantArmBandRoots = templateIds.Select(id => new ProtectedWearableRoot(BeltDeathPolicy.ArmBand, id)).ToArray();
+            Volatile.Write(ref activeRoots, BuildRoots(armBandProtected, beltProtected, headBandProtected));
+        }
+    }
+
     private static ProtectedWearableRoot[] BuildRoots(bool armBand, bool belt, bool headBand)
     {
-        int count = (armBand ? ArmBandRoots.Length : 0)
+        int count = (armBand ? ArmBandRoots.Length + variantArmBandRoots.Length : 0)
             + (belt ? BeltRoots.Length : 0)
             + (headBand ? HeadBandRoots.Length : 0);
         var result = new ProtectedWearableRoot[count];
@@ -85,6 +95,8 @@ internal static class WearableProtectionRuntime
         {
             Array.Copy(ArmBandRoots, 0, result, offset, ArmBandRoots.Length);
             offset += ArmBandRoots.Length;
+            Array.Copy(variantArmBandRoots, 0, result, offset, variantArmBandRoots.Length);
+            offset += variantArmBandRoots.Length;
         }
         if (belt)
         {

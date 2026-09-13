@@ -4,7 +4,7 @@
 
 B&A&HB is an accessory-logistics framework, not a generic way to add free inventory cells. Each accessory has a narrow role, explicit capacity/filter rules and a concrete equipment opportunity cost while retaining native EFT inventory behavior.
 
-Stable **v0.1.0** is the accepted mechanical base and rollback release. Development candidate **v0.2.0** keeps those persistent/lifecycle boundaries while refining HeadBand presentation/storage, making the two magazine-specific wearables operational reload fallback sources, and adding one exact-purpose Dogtag-slot container without inventing another equipment slot.
+Stable **v0.3.0** keeps all published persistent and lifecycle boundaries while adding immutable randomized ArmBand roles, wallet logistics, the Utility HeadBand visual and always-visible native container panels. The v0.2 products remain the compatible mechanical foundation.
 
 The Pack 'n' Strap compatibility direction supersedes this table as an active
 ownership plan while preserving it as the full-Belt reserve contract. The
@@ -43,6 +43,13 @@ Utility HeadBand keeps its persistent item identity and dedicated slot16 host. I
 
 The original `main` grid identity remains persistent. The cigarette grid uses a new dedicated persistent ID. Existing v0.1.0 profile contents migrate through SPT's profile-migration lifecycle: compatible money/wallet contents stay in `main`, cigarettes move to `cigarettes`, and excess same-category roots are preserved through the PMC sorting table rather than deleted.
 
+The v0.3 visual candidate keeps those identities and filters unchanged and
+replaces only the inherited ArmBand prefab with an owned red Rambo-style cloth
+model. Its bundle key is `HeadBand/headband_rambo_red.bundle`. The build source,
+Blender model, Unity project and deterministic bundle check live under
+`assets/headband-rambo/`; Pack 'n' Strap remains only a local coordinate/prefab
+reference during the asset build and is not a runtime dependency of this model.
+
 ## Dogtag Case v0.2
 
 Dogtag Case is intentionally **not** a fourth custom wearable host. It uses the existing vanilla `Dogtag` equipment slot and extends that host only with the exact B&A&HB Dogtag Case template while preserving every pre-existing vanilla acceptance entry.
@@ -64,6 +71,13 @@ The visual redesign is deliberately local:
 - do not move unrelated native equipment slots;
 - do not require tab switching, Canvas force-refresh, coroutine retries or idle polling;
 - retain the accepted stable presentation as fail-safe fallback if the compact owner cannot install.
+
+The next fixed-accessory projection uses the unused right-side space directly
+below the native Special Slots block: Utility HeadBand above ArmBand, each as a
+compact always-visible two-cell panel. It must not translate or resize the
+native Special Slots, tactical rig, pockets, backpack or secured-container
+views. This placement is the accepted target layout; implementation remains a
+separate UI phase after the native item cards and split-grid frame are proven.
 
 ## Magazine reload role
 

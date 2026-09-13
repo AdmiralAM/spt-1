@@ -1,6 +1,6 @@
 # B&A&HB #2 MOD SPT
 
-Development candidate **v0.2.0** for **SPT 4.1.3**.
+Stable **v0.3.0**, compatible with **SPT 4.1.x** and validated against **SPT 4.1.5**.
 
 The private runtime direction imports Pack 'n' Strap belts, containers, models
 and layouts into B&A&HB while keeping all third-party assets and item databases
@@ -18,32 +18,29 @@ No Pack 'n' Strap source, JSON, model, icon or bundle is committed or packaged b
 this repository. The local importer consumes the user's own copy only. Imported
 foreign roots never enter the Admiral protection allowlist.
 
-Stable **v0.1.0** is already frozen and published separately on `runtime-belt-armband` / tag `bahb-v0.1.0`. This branch develops v0.2.0 without changing that release.
+Stable v0.3.0 includes the v0.2 product line plus randomized functional ArmBands, wallet logistics, the crimson Utility HeadBand visual, and native always-visible HeadBand/ArmBand container panels. Previously published identities remain immutable.
 
-Active authority:
-- Issue **#285**
-- PR **#286**
-- branch `feature/bahb-v0.2-compact-headband`
+Release authority: Issue **#351** and PR **#357**.
 
-The v0.2.0 client reports `AssemblyVersion/FileVersion/BepInEx PluginVersion = 0.2.0`. Its physical DLL filename intentionally remains `SPT Belt Armband Inventory v0.1.0.dll` for this upgrade line so extracting the candidate over an installed stable v0.1.0 replaces the existing client file instead of leaving two DLLs with the same BepInEx GUID. CI explicitly forbids a second `...v0.2.0.dll` in the candidate package.
+The v0.3.0 client reports `AssemblyVersion/FileVersion/BepInEx PluginVersion = 0.3.0`. Its physical DLL filename intentionally remains `SPT Belt Armband Inventory v0.1.0.dll` so an in-place upgrade replaces the existing client instead of leaving duplicate BepInEx GUIDs. CI forbids additional versioned client DLLs.
 
-The BepInEx plugin GUID/name remain unchanged for in-place upgrade compatibility. Every CI artifact contains `BUILD-INFO.txt` with the exact head SHA, runtime candidate version, filename-compatibility marker and SHA-256 hashes for both runtime DLLs.
+The BepInEx plugin GUID/name remain unchanged for in-place upgrade compatibility. Every stable artifact contains `BUILD-INFO.txt` with the exact source SHA, runtime version, filename-compatibility marker and SHA-256 hashes for both runtime DLLs.
 
-## Candidate install / upgrade
+## Stable install / upgrade
 
 The CI artifact contains one install root: `SPT_Runtime`.
 
 1. Stop the SPT server and game completely.
-2. Back up the active SPT profile before the first v0.2.0 launch. v0.2.0 includes a one-way profile migration for the Utility HeadBand split-grid shape and introduces new Dogtag Case persistent identities; the migration preserves valid HeadBand content, but a profile backup remains the rollback boundary.
+2. Back up the active SPT profile before the first v0.3.0 launch. The inherited v0.2 migration and expanded v0.3 identity manifest preserve valid content, but a profile backup remains the rollback boundary.
 3. Extract/copy the artifact's `SPT_Runtime` directory **over the existing SPT root**, preserving paths.
-4. Confirm the client path is exactly `SPT_Runtime/BepInEx/plugins/SPT Belt Armband Inventory v0.1.0.dll`. The filename is intentionally legacy; its compiled/BepInEx version is v0.2.0.
-5. Confirm there is **no** second `SPT Belt Armband Inventory v0.2.0.dll` (or another duplicate B&A&HB client DLL) beside it.
+4. Confirm the client path is exactly `SPT_Runtime/BepInEx/plugins/SPT Belt Armband Inventory v0.1.0.dll`. The filename is intentionally legacy; its compiled/BepInEx version is v0.3.0.
+5. Confirm there is no second versioned B&A&HB client DLL beside it.
 6. Confirm the server path is `SPT_Runtime/user/mods/B&A&HB #2 MOD SPT/SPT-Belt-Armband-Inventory.Server.dll` and that the same directory contains `BUILD-INFO.txt`.
-7. For an exact candidate check, compare `BUILD-INFO.txt` `HeadSha`, `ClientSha256` and `ServerSha256` with the handoff evidence before launching SPT.
+7. Compare `BUILD-INFO.txt` `HeadSha`, `ClientSha256` and `ServerSha256` with the release evidence before launching SPT.
 
-The published stable v0.1.0 runtime uses those same client/server paths, so an in-place v0.2.0 overlay replaces both runtime DLLs rather than creating a second server-mod directory.
+Earlier stable releases use those same client/server paths, so an in-place v0.3.0 overlay replaces both runtime DLLs rather than creating a second server-mod directory.
 
-Do not install v0.2.0 by copying only the client or only the server DLL. Client/server code and the profile migration belong to one exact candidate.
+Install the client and server parts from the same v0.3.0 package.
 
 ### Rollback to stable v0.1.0
 

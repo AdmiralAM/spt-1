@@ -16,6 +16,7 @@ namespace SPTBeltArmbandInventory
     {
         internal const string Vest = "Vest";
         internal const string Belt = "Belt";
+        internal const string Wallet = "Wallet";
         internal const string Pockets = "Pockets";
         internal const string Backpack = "Backpack";
         internal const string Secure = "Secure";
@@ -57,6 +58,7 @@ namespace SPTBeltArmbandInventory
                     result.Add(Secure);
                     break;
                 case LootItemKind.Money:
+                    result.Add(Wallet);
                     result.Add(Secure);
                     result.Add(Backpack);
                     result.Add(Vest);

@@ -15,6 +15,7 @@ internal static class LocalPackNStrapImportRegression
         string dedicatedAssort = File.ReadAllText(Path.Combine(root, "server", "DedicatedWearableAssort.cs"));
         string candidateAssort = File.ReadAllText(Path.Combine(root, "server", "RuntimeCandidateAssort.cs"));
         string walletAssort = File.ReadAllText(Path.Combine(root, "server", "WristWalletAssort.cs"));
+        string plugin = File.ReadAllText(Path.Combine(root, "src", "Plugin.cs"));
 
         Require(script.Contains("$item['addtoInventorySlots'] = @()", StringComparison.Ordinal), "import must remove upstream ArmBand publication");
         Require(script.Contains("'SPT.Server','SPT.Launcher','EscapeFromTarkov'", StringComparison.Ordinal), "deployment must stop while SPT/EFT is active");
@@ -26,6 +27,15 @@ internal static class LocalPackNStrapImportRegression
         Require(dedicatedAssort.Contains("|| LocalPackNStrapImportState.Enabled", StringComparison.Ordinal), "private import must suppress the duplicate Admiral belt offer");
         Require(candidateAssort.Contains("|| LocalPackNStrapImportState.Enabled", StringComparison.Ordinal), "private import must suppress the duplicate Admiral armband offer");
         Require(walletAssort.Contains("|| LocalPackNStrapImportState.Enabled", StringComparison.Ordinal), "private import must suppress the duplicate Admiral wallet offer");
+        Require(plugin.Contains("B&A&HB companion mode initialized with exact Admiral wallet payment sources", StringComparison.Ordinal)
+            && !plugin.Contains("without Belt/ArmBand loot, unload, Scav, fast-access, merge, pickup, payment", StringComparison.Ordinal),
+            "companion mode must retain exact Admiral payment-source ownership");
+        Require(plugin.Contains("new LootPriorityPatches(Logger.LogInfo, Logger.LogWarning, true)", StringComparison.Ordinal),
+            "companion mode must add money-only Admiral wallet auto-deposit");
+        string lootRuntime = File.ReadAllText(Path.Combine(root, "src", "LootPriorityRuntime.cs"));
+        Require(lootRuntime.Contains("if (walletOnly)", StringComparison.Ordinal)
+            && lootRuntime.Contains("AddUnique(augmented, existing)", StringComparison.Ordinal),
+            "companion wallet mode must preserve Pack 'n' Strap's existing container order after exact wallets");
     }
 
     private static void Require(bool condition, string message)
