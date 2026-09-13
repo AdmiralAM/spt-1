@@ -74,7 +74,9 @@ namespace SPTBeltArmbandInventory
 
                 Vector3 specialBottomLeft = VisibleBottomLeftIn(content, specialRect);
                 float beltRight = RightEdgeIn(content, belt);
-                Vector3 anchor = new Vector3(Math.Max(specialBottomLeft.x, beltRight + AnchorGap), specialBottomLeft.y - AnchorGap, 0f);
+                float beltTop = TopEdgeIn(content, belt);
+                float alignedTop = Math.Min(specialBottomLeft.y - AnchorGap, beltTop + HeaderHeight);
+                Vector3 anchor = new Vector3(Math.Max(specialBottomLeft.x, beltRight + AnchorGap), alignedTop, 0f);
                 PlaceNativeRow(headBand, content.TransformPoint(anchor));
                 PlaceNativeRow(armBand, content.TransformPoint(anchor + Vector3.down * (headHeight + PanelGap)));
             }
@@ -196,6 +198,32 @@ namespace SPTBeltArmbandInventory
             fallback.GetWorldCorners(corners);
             for (int i = 0; i < corners.Length; i++) right = Math.Max(right, space.InverseTransformPoint(corners[i]).x);
             return right;
+        }
+
+        static float TopEdgeIn(RectTransform space, Component view)
+        {
+            Component searchableItem = SearchableItemViewField?.GetValue(view) as Component;
+            object contained = searchableItem == null ? null : ContainedGridsViewField?.GetValue(searchableItem);
+            IEnumerable grids = ReflectionTools.ReadMember(contained, "GridViews") as IEnumerable
+                ?? ReflectionTools.ReadMember(contained, "_gridViews") as IEnumerable;
+            float top = float.MinValue;
+            Vector3[] corners = new Vector3[4];
+            if (grids != null)
+            {
+                foreach (object entry in grids)
+                {
+                    RectTransform grid = (entry as Component)?.transform as RectTransform;
+                    if (grid == null || !grid.gameObject.activeInHierarchy) continue;
+                    grid.GetWorldCorners(corners);
+                    for (int i = 0; i < corners.Length; i++) top = Math.Max(top, space.InverseTransformPoint(corners[i]).y);
+                }
+            }
+            if (top > float.MinValue) return top;
+            RectTransform fallback = view.transform as RectTransform;
+            if (fallback == null) return 0f;
+            fallback.GetWorldCorners(corners);
+            for (int i = 0; i < corners.Length; i++) top = Math.Max(top, space.InverseTransformPoint(corners[i]).y);
+            return top;
         }
 
         static void PlaceNativeRow(Component view, Vector3 worldPosition)
