@@ -29,9 +29,9 @@
       "questId": "bcf61611e9723c765e07a740",
       "offerId": "3e6f816c41a9c73328116881",
       "tpl": "619cbf7d23893217ec30b689",
-      "priceRub": 42000,
-      "stockPerReset": 3,
-      "buyRestriction": 2,
+      "priceRub": 420000,
+      "stockPerReset": 1,
+      "buyRestriction": 1,
       "loyaltyLevel": 1
     },
     {
@@ -73,8 +73,8 @@
       "questId": "6a24e1ca978938c1d4a8839f",
       "offerId": "b5b55194b4a76ce0ce71a409",
       "tpl": "5d03794386f77420415576f5",
-      "priceRub": 62000,
-      "stockPerReset": 2,
+      "priceRub": 330000,
+      "stockPerReset": 1,
       "buyRestriction": 1,
       "loyaltyLevel": 2
     },
@@ -106,8 +106,8 @@
       "questId": "df6c5b8f5660efd1b4c6d06c",
       "offerId": "6b0d153489b984ae9b940adb",
       "tpl": "5d1b5e94d7ad1a2b865a96b0",
-      "priceRub": 39000,
-      "stockPerReset": 3,
+      "priceRub": 600000,
+      "stockPerReset": 1,
       "buyRestriction": 1,
       "loyaltyLevel": 3
     },
@@ -116,7 +116,7 @@
       "map": "Лаборатория",
       "questId": "680c47f4c9a0e7b884a95908",
       "offerId": "e76db2cbe4b00c66047ccb27",
-      "tpl": "68666887df54e1190902df57",
+      "tpl": "5c94bbff86f7747ee735c08f",
       "priceRub": 125000,
       "stockPerReset": 1,
       "buyRestriction": 1,

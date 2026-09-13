@@ -97,5 +97,26 @@
     "Container rewards consume the milestone special-reward budget and must replace other high-value generic rewards rather than stack with them.",
     "High-end ammunition quantity is never justified solely by difficulty; capability access is expressed primarily through controlled unlocks.",
     "Trader standing above normal vanilla bands requires explicit campaign rationale and must not be used as filler reward."
-  ]
+  ],
+  "runtimeNormalization": {
+    "scope": "172 core quests plus 10 optional Icebreaker quests",
+    "ordinaryFreeItemHandbookCeilingRub": 170600,
+    "storyFinaleUnlockCount": 10,
+    "storyFinaleFreeItemCount": 1,
+    "containerUnlockRule": "A quest-gated container may be purchased at approximately handbook value; the quest does not also award that container for free.",
+    "exceptionalFinale": {
+      "questId": "680c47f4c9a0e7b884a95908",
+      "reason": "Level-47 finale of the tenth ten-part investigation; one Labs access card sample and its finite purchase unlock replace the unusable classified quest-folder reward."
+    },
+    "optionalExceptionalFinale": {
+      "questId": "9e9a2e84abbe66b87ff5075a",
+      "reason": "Level-39 finale of the optional ten-part Icebreaker expedition; one moonshine bottle accompanies the final cash reward after the full high-risk map chain and creates no permanent unlock or repeatable source."
+    },
+    "removedFreeHighValueTemplates": [
+      "619cbf7d23893217ec30b689",
+      "591094e086f7747caa7bb2ef",
+      "5d1b5e94d7ad1a2b865a96b0",
+      "5d03794386f77420415576f5"
+    ]
+  }
 }
