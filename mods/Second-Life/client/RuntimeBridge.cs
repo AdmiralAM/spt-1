@@ -18,6 +18,7 @@ namespace Admiral.SecondLife.Client
         RecoveryRuntimeContract runtimeContract;
         RecoveryExecutor executor;
         object pendingCorpseEquipment;
+        object pendingCorpse;
         string pendingCorpseEquipmentRootId;
         string pendingProfileId;
         bool warnedExecutorUnavailable;
@@ -75,6 +76,7 @@ namespace Admiral.SecondLife.Client
             if (enabled == null || !enabled.Value || player == null || corpse == null) return;
             if (!ReadBoolean(player, "IsYourPlayer")) return;
 
+            pendingCorpse = corpse;
             pendingCorpseEquipment = ReadObject(corpse, "Item");
             pendingCorpseEquipmentRootId = ReadString(pendingCorpseEquipment, "Id");
             pendingProfileId = ReadString(player, "ProfileId");
@@ -94,7 +96,7 @@ namespace Admiral.SecondLife.Client
             bool executorReady = state == RecoveryState.RecoveryPending ||
                 (state != RecoveryState.RecoverySpawned &&
                  executor != null &&
-                 executor.TryPrepare(localGame, pendingCorpseEquipment, pendingProfileId, out plan, out failure));
+                 executor.TryPrepare(localGame, pendingCorpseEquipment, pendingCorpse, pendingProfileId, out plan, out failure));
             NativeFinalizationDecision decision = finalizationGate.HandleDeathBoundary(
                 raidId,
                 pendingCorpseEquipmentRootId,
@@ -182,6 +184,7 @@ namespace Admiral.SecondLife.Client
             executor = null;
             runtimeContract = null;
             pendingCorpseEquipment = null;
+            pendingCorpse = null;
             pendingCorpseEquipmentRootId = null;
             pendingProfileId = null;
         }

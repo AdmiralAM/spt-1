@@ -13,6 +13,7 @@ namespace Admiral.SecondLife.Client
         internal bool TryPrepare(
             object localGame,
             object corpseEquipment,
+            object corpse,
             string expectedProfileId,
             out RecoveryExecutionPlan plan,
             out string failure)
@@ -36,6 +37,8 @@ namespace Admiral.SecondLife.Client
 
             if (!RecoveryInventoryLease.TryPrepare(contract, profile, corpseEquipment, out RecoveryInventoryLease lease, out failure))
                 return false;
+            if (!RuntimeSafeSpawnSelector.TrySelect(playerFactory, originalPlayer, corpse, expectedProfileId + ":" + lease.CorpseEquipmentRootId, out RuntimeSpawnSelection spawnSelection, out failure))
+                return false;
 
             plan = new RecoveryExecutionPlan(
                 contract,
@@ -46,6 +49,7 @@ namespace Admiral.SecondLife.Client
                 playerFactory,
                 ownerFactory,
                 lease,
+                spawnSelection,
                 profileId);
             return true;
         }

@@ -15,6 +15,7 @@ namespace Admiral.SecondLife.Client
         readonly Delegate playerFactory;
         readonly Delegate ownerFactory;
         readonly RecoveryInventoryLease inventoryLease;
+        readonly RuntimeSpawnSelection spawnSelection;
 
         internal RecoveryExecutionPlan(
             RecoveryRuntimeContract contract,
@@ -25,6 +26,7 @@ namespace Admiral.SecondLife.Client
             Delegate playerFactory,
             Delegate ownerFactory,
             RecoveryInventoryLease inventoryLease,
+            RuntimeSpawnSelection spawnSelection,
             string profileId)
         {
             this.contract = contract;
@@ -35,6 +37,7 @@ namespace Admiral.SecondLife.Client
             this.playerFactory = playerFactory;
             this.ownerFactory = ownerFactory;
             this.inventoryLease = inventoryLease;
+            this.spawnSelection = spawnSelection;
             ProfileId = profileId;
         }
 
@@ -56,6 +59,7 @@ namespace Admiral.SecondLife.Client
                 await creationTask;
                 newPlayer = creationTask.GetType().GetProperty("Result")?.GetValue(creationTask, null);
                 if (newPlayer == null) throw new InvalidOperationException("player factory returned no LocalPlayer");
+                RuntimeSafeSpawnSelector.Apply(newPlayer, spawnSelection);
 
                 newOwner = ownerFactory.DynamicInvoke(newPlayer);
                 if (newOwner == null) throw new InvalidOperationException("owner factory returned no PlayerOwner");
