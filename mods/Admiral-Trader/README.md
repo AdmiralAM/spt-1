@@ -43,13 +43,13 @@ Expected lifecycle:
 - **M4 — Selective external-content absorption**
 - **M5 — Relationship / specialist storefront**
 - **M6 — Playable 0.2.0 baseline hardening**
-- **M7 — Full campaign, retired-source and optional-content absorption**
+- **M7 — Full campaign, retired-source and optional-content absorption — closed in `0.3.0-rc`**
 - **Late implementation milestone — Admiral insurance service**: unlock Admiral as an insurer through the native SPT insurance lifecycle, with authored eligibility, price, return timing, messages and progression; retain the same trader identity and do not introduce a parallel recovery engine.
 - **Final gates — Full campaign review, reward/storefront audit, regression hardening and stable release**
 
 Current runtime shape: **172 core quests** (72 validated foundation/rotation quests plus 100 authored story quests across ten map chains), **82 finite offers** (37 core/relationship/milestone offers, 10 story-finale unlocks and 35 Natalya weapon presets). Eighteen story beats use Natalya as a specialist inside Admiral's campaign; no second trader or external Natalya dependency is created. Verified Icebreaker 1.1.0 installations conditionally add the separate ten-operation **Boreas Protocol** chain, bringing the runtime total to 182 without changing the core graph.
 
-This is the complete M7 content candidate for the later fresh-profile campaign review. It is not declared stable until that coherent playthrough has exercised progression, pacing, rewards, unlocks and storefront tiers. Fixes from that review must preserve every persistent identity already in use.
+M7 content implementation is closed: the complete campaign, Natalya absorption, optional integrations, storefront and progressive reward layers are present in runtime. The release remains an RC until the later coherent fresh-profile review has exercised progression, pacing, rewards, unlocks and storefront tiers. Fixes from that review must preserve every persistent identity already in use.
 
 The active weapon campaign uses two paced lanes with 40 assignments in total, broad native SPT 4.1.5 coverage, no model-to-single-map lock, and 50 verified WTT Armory/Content Backport alternatives. WTT remains optional: every objective has a complete native weapon pool and no WTT quest gates the campaign.
 

@@ -21,6 +21,7 @@
 - Expands the campaign to 72 quests: 40 staged Arsenal assignments, 4 opening Ground Zero operations, and 6 progressive equipment assignments while preserving the 43-quest foundation.
 - Accepts 51 verified WTT Armory/Content Backport weapon templates as optional alternatives in matching Arsenal pools. Every quest keeps native SPT choices and the campaign remains fully playable without WTT.
 - Canonicalize the installed folder as `SPT_Runtime/user/mods/Admiral Trader` and reject the obsolete hyphenated alias during replacement validation.
+- Complete the M7 reward layer with 20 progressive native field-support items, four early complete weapons, ten Natalya signature presets and conditional B&A&HB equipment/container trades; every added item replaces a bounded share of roubles.
 
 ## 0.2.0 — stable campaign baseline
 

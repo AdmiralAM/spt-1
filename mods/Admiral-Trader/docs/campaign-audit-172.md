@@ -1,6 +1,6 @@
 # Campaign audit — 172 core quests
 
-This audit describes the published Admiral campaign at the M8 exact runtime head. It is a content and progression review, not a replacement for the final fresh-profile playthrough.
+This audit describes the published Admiral campaign at the closed M7 content scope. It is a content and progression review, not a replacement for the final fresh-profile playthrough.
 
 ## Scope
 
@@ -37,7 +37,7 @@ The 35 complete native presets recovered from Natalya are all present as Admiral
 
 ## Reward review
 
-M8’s normalized core distribution is: median 11,950 XP, 47,800 roubles and +0.013 Admiral standing; the observed range is 2,500–28,000 XP, 11,000–135,000 roubles and +0.005–0.03 standing. There are 37 free physical-item rewards and 10 controlled storefront unlocks.
+The pre-field-support normalized core distribution was: median 11,950 XP, 47,800 roubles and +0.013 Admiral standing; the observed range was 2,500–28,000 XP, 11,000–135,000 roubles and +0.005–0.03 standing. M7 then converted bounded portions of 20 payouts into progressive native field equipment, alongside four early complete weapons, ten signature finale presets and conditional B&A&HB equipment/container trades. Ten controlled storefront unlocks remain finite purchases rather than free rewards.
 
 High-value containers, the armour repair kit and tank battery are no longer early free payouts. They are controlled one-per-reset purchase unlocks at actual value. The Labs finale now uses a usable access-card sample instead of an inert classified folder. The optional Icebreaker finale is separately documented as a non-repeatable exceptional reward.
 
