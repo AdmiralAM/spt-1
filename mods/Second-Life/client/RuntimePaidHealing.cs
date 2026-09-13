@@ -13,8 +13,9 @@ namespace Admiral.SecondLife.Client
         readonly List<MoneyDebit> debits;
         bool applied;
 
-        RuntimePaidHealing(int cost, List<MoneyDebit> debits) { Cost = cost; this.debits = debits; }
+        RuntimePaidHealing(int cost, List<MoneyDebit> debits, bool canAfford) { Cost = cost; this.debits = debits; CanAfford = canAfford; }
         internal int Cost { get; }
+        internal bool CanAfford { get; }
 
         internal static bool TryPrepare(object profile, object player, out RuntimePaidHealing healing, out string failure)
         {
@@ -27,9 +28,8 @@ namespace Admiral.SecondLife.Client
                 object traderInfo = FindTherapistInfo(profile);
                 if (traderInfo == null) return Fail("Therapist loyalty data is unavailable", out failure);
                 int cost = CalculateNativeCost(profile, traderInfo, missingHealth);
-                if (!TrySelectRubles(profile, cost, out List<MoneyDebit> debits))
-                    return Fail("not enough rubles in the stash for native healing price " + cost, out failure);
-                healing = new RuntimePaidHealing(cost, debits);
+                bool canAfford = TrySelectRubles(profile, cost, out List<MoneyDebit> debits);
+                healing = new RuntimePaidHealing(cost, debits, canAfford);
                 return true;
             }
             catch (Exception exception) { return Fail("native healing contract rejected: " + Unwrap(exception).Message, out failure); }
@@ -37,6 +37,7 @@ namespace Admiral.SecondLife.Client
 
         internal void Apply(object recoveredPlayer)
         {
+            if (!CanAfford) throw new InvalidOperationException("paid healing cannot be applied without sufficient stash rubles");
             if (applied) throw new InvalidOperationException("paid healing was already applied");
             foreach (MoneyDebit debit in debits) WriteField(debit.Item, "StackObjectsCount", debit.OriginalCount - debit.Amount);
             try
@@ -71,7 +72,7 @@ namespace Admiral.SecondLife.Client
             }
         }
 
-        internal static bool TryShowNativeConfirmation(int cost, Action accept, Action cancel, out string failure)
+        internal static bool TryShowNativeConfirmation(int cost, bool canAfford, Action accept, Action cancel, out string failure)
         {
             failure = null;
             try
@@ -83,7 +84,9 @@ namespace Admiral.SecondLife.Client
                 if (context == null || show == null) return Fail("native confirmation window is unavailable", out failure);
                 show.Invoke(context, new object[]
                 {
-                    "Восстановить здоровье перед возвращением в рейд за " + cost + " ₽?\nОтказ завершит рейд обычной смертью.",
+                    canAfford
+                        ? "Восстановить здоровье перед возвращением в рейд за " + cost + " ₽?\nОтказ завершит рейд обычной смертью."
+                        : "Для возвращения в рейд требуется " + cost + " ₽.\nВ схроне недостаточно рублей — рейд завершится обычной смертью.",
                     accept, cancel, "Second Life Admiral", 0f, true, Enum.ToObject(show.GetParameters()[6].ParameterType, 514)
                 });
                 return true;
@@ -143,7 +146,10 @@ namespace Admiral.SecondLife.Client
             debits = new List<MoneyDebit>();
             if (cost == 0) return true;
             object stash = ReadField(ReadField(profile, "Inventory"), "Stash");
-            var items = stash?.GetType().GetMethod("GetAllVisibleItems", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.Invoke(stash, null) as IEnumerable;
+            Type extensions = FindType("EFT.InventoryLogic.ItemExtensions");
+            MethodInfo allItems = extensions?.GetMethods(BindingFlags.Static | BindingFlags.Public)
+                .SingleOrDefault(method => method.Name == "GetAllItems" && method.GetParameters().Length == 1);
+            var items = stash == null ? null : allItems?.Invoke(null, new[] { stash }) as IEnumerable;
             if (items == null) return false;
             object[] rubles = items.Cast<object>().Where(item => string.Equals(ReadProperty(item, "StringTemplateId")?.ToString(), RubleTemplateId, StringComparison.Ordinal)).OrderBy(item => ReadProperty(item, "Id")?.ToString(), StringComparer.Ordinal).ToArray();
             int[] counts = rubles.Select(item => Convert.ToInt32(ReadField(item, "StackObjectsCount"))).ToArray();

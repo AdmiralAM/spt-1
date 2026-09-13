@@ -39,7 +39,8 @@ namespace Admiral.SecondLife.Client
             Type activeHealthController = FindType("EFT.HealthSystem.ActiveHealthController");
             Type healthHelper = FindType("EFT.HealthSystem.HealthHelper");
             Type globalConfiguration = FindType("EFT.GlobalConfiguration");
-            if (new[] { player, localPlayer, localGame, profile, inventory, equipment, equipmentTemplate, cameraController, itemUiContext, activeHealthController, healthHelper, globalConfiguration }.Any(type => type == null))
+            Type itemExtensions = FindType("EFT.InventoryLogic.ItemExtensions");
+            if (new[] { player, localPlayer, localGame, profile, inventory, equipment, equipmentTemplate, cameraController, itemUiContext, activeHealthController, healthHelper, globalConfiguration, itemExtensions }.Any(type => type == null))
                 return Fail("required SPT 4.1 recovery types are missing", out failure);
 
             Type baseLocalGame = localGame.BaseType;
@@ -74,6 +75,8 @@ namespace Admiral.SecondLife.Client
             MethodInfo restoreFullHealth = activeHealthController.GetMethod("RestoreFullHealth", BindingFlags.Instance | BindingFlags.Public);
             FieldInfo realBodyParts = healthHelper.GetField("RealBodyParts", BindingFlags.Static | BindingFlags.Public);
             FieldInfo healthSettings = globalConfiguration.GetField("Health", BindingFlags.Instance | BindingFlags.Public);
+            MethodInfo nestedStashItems = itemExtensions.GetMethods(BindingFlags.Static | BindingFlags.Public)
+                .SingleOrDefault(method => method.Name == "GetAllItems" && method.GetParameters().Length == 1);
 
             if (createCorpse == null || initiateGameStopping == null)
                 return Fail("exact corpse/finalization boundary changed", out failure);
@@ -88,7 +91,7 @@ namespace Admiral.SecondLife.Client
             if (new[] { gameProfile, playerFactory, ownerFactory, localPlayerField, playerOwner, players }.Any(field => field == null) ||
                 spawn == null || createPlayerCamera == null)
                 return Fail("local-game player/owner/camera binding contract changed", out failure);
-            if (healingConfirmation == null || restoreFullHealth == null || realBodyParts == null || healthSettings == null)
+            if (healingConfirmation == null || restoreFullHealth == null || realBodyParts == null || healthSettings == null || nestedStashItems == null)
                 return Fail("native paid-healing contract changed", out failure);
 
             contract = new RecoveryRuntimeContract
