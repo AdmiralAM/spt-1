@@ -8,6 +8,13 @@
   "publishedApiCompileBaseline": "4.1.5",
   "releaseChannel": "release-candidate",
   "registrationEnabled": true,
+  "insurance": {
+    "nativeLifecycle": true,
+    "returnChancePercent": 90,
+    "returnWindowHours": [18, 30],
+    "storageHours": 120,
+    "loyaltyPriceCoefficients": [25, 22, 19, 16]
+  },
   "registrationGate": {
     "reason": "Stable runtime registration is enabled because compatibility, lifecycle, campaign, build and server-start gates passed on SPT 4.1.5.",
     "requiredBeforeEnable": [
@@ -23,6 +30,7 @@
     "base": "db/base.json",
     "assort": "db/assort.json",
     "questAssort": "db/questassort.json",
+    "dialogue": "db/dialogue.json",
     "avatar": "assets/d5c27bb3169f8dfbc13f6b69.jpg"
   }
 }

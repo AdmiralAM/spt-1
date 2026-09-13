@@ -55,6 +55,7 @@ jobs:
           python -m json.tool mods/Admiral-Trader/manifests/storefront-core-expansion.json > /dev/null
           python -m json.tool mods/Admiral-Trader/manifests/curated-quest-manifest.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/base.json > /dev/null
+          python -m json.tool mods/Admiral-Trader/db/dialogue.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/assort.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/natalya-signature-assort.json > /dev/null
           python -m json.tool mods/Admiral-Trader/db/questassort.json > /dev/null
@@ -131,6 +132,7 @@ jobs:
               out / 'manifests/story-campaign-runtime.json',
               out / 'manifests/storefront-core-expansion.json',
               out / 'db/base.json',
+              out / 'db/dialogue.json',
               out / 'db/assort.json',
               out / 'db/questassort.json',
           ]
