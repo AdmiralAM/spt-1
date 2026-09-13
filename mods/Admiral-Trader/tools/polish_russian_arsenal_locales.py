@@ -32,6 +32,7 @@ REPLACEMENTS = {
 
 def load(path): return json.loads(path.read_text(encoding="utf-8"))
 def save(path, value): path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+def save_quest(path, value): path.write_text(json.dumps(value, separators=(",", ":"), ensure_ascii=False) + "\n", encoding="utf-8")
 
 def weapon_names():
     text = (ROOT / "docs/campaign-audit-43.md").read_text(encoding="utf-8")
@@ -65,5 +66,19 @@ def main():
         arsenal[qid + " startedMessageText"] = arsenal[qid + " description"]
         arsenal[qid + " acceptPlayerMessage"] = arsenal[qid + " description"]
     save(RU / "arsenal-ru.json", arsenal)
+
+    # SPT normally resolves the locale key, but QuestName is also used by
+    # fallback UI paths. Keep it Russian so an unavailable or late locale load
+    # cannot expose the old English generator title to the player.
+    localized = {}
+    for filename in ("ru.json", "arsenal-ru.json", "m3-ru.json", "m8-ru.json", "story-ru.json"):
+        localized.update(load(RU / filename))
+    for quest_path in sorted((ROOT / "db/quests").glob("*.json")):
+        quest = load(quest_path)
+        title = localized[quest["_id"] + " name"]
+        if not re.search(r"[А-Яа-яЁё]", title):
+            raise ValueError(f"{quest['_id']}: Russian title is missing")
+        quest["QuestName"] = title
+        save_quest(quest_path, quest)
 
 if __name__ == "__main__": main()

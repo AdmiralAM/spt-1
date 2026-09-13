@@ -67,6 +67,24 @@ class QuestQualityRuntimeTests(unittest.TestCase):
             self.assertIn("Уточнение:", russian[qid + " description"])
             self.assertIn("Разрешённое оружие:", russian[qid + " description"])
 
+    def test_m8_descriptions_keep_only_the_detail_missing_from_native_objective_rows(self):
+        russian = self.locales["ru"]
+        expansion = json.loads((ROOT / "manifests/m8-campaign-expansion-runtime.json").read_text(encoding="utf-8"))
+        for row in expansion["quests"]:
+            description = russian[row["id"] + " description"]
+            self.assertNotIn("Награды", description)
+            self.assertNotIn("Прогресс сохраняется между рейдами", description)
+            if row["kind"] == "weapon":
+                self.assertIn("Разрешённое оружие:", description)
+                self.assertNotIn("Устранить ", description)
+
+    def test_questname_fallbacks_match_russian_titles(self):
+        russian = self.locales["ru"]
+        for quest in self.quests:
+            title = russian[quest["_id"] + " name"]
+            self.assertEqual(quest["QuestName"], title)
+            self.assertRegex(title, r"[А-Яа-яЁё]")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -70,11 +70,12 @@ def loc_condition(qid, locations, equipment=None):
     rows += [{"id":hid(qid+":loc"),"dynamicLocale":False,"conditionType":"Location","target":locations},{"id":hid(qid+":exit"),"dynamicLocale":False,"conditionType":"ExitStatus","status":["Survived"]}]
     return rows
 
-def locale(qid,name,requirements,level,objective,ru=False):
+def locale(qid,name,detail,level,objective,ru=False):
     intro=("Адмирал формирует долгую программу полевых испытаний." if ru else "Admiral is building a long field qualification program.")
-    # Keep only information the compact objective row cannot expose (full pools,
-    # map rotation, session semantics). Exact requirements and rewards have native UI panels.
-    details = "" if requirements == objective else ("Уточнение:\n" if ru else "Operational detail:\n") + requirements
+    # The native panels already show the task count, locations and rewards.
+    # Keep only information that the compact objective row cannot make clear:
+    # the concrete eligible equipment or weapon pool.
+    details = ("Уточнение:\n" if ru else "Operational detail:\n") + detail if detail else ""
     body = intro + (("\n\n" + details) if details else "")
     done=("Задача выполнена. Результат принят." if ru else "Assignment complete. The result is accepted.")
     return {qid+" name":name,qid+" description":body,qid+" note":"",qid+" startedMessageText":body,qid+" successMessageText":done,qid+" failMessageText":"",qid+" acceptPlayerMessage":body,qid+" declinePlayerMessage":"",qid+" completePlayerMessage":done,qid+" changeQuestMessageText":"",hid(qid+":finish"):objective}
@@ -109,15 +110,15 @@ def main():
         optional_names_ru=", ".join(x["nameRu"] for x in optional_weapons)
         allowed_en=item_list(native_weapons,'en')+(f"; optional WTT: {optional_names}" if optional_names else "")
         allowed_ru=item_list(native_weapons,'ru')+(f"; опционально WTT: {optional_names_ru}" if optional_names_ru else "")
-        req=f"Eliminate {min(6+order,15)} targets on {', '.join(locations)}. Allowed weapons: [{allowed_en}]. Progress carries across raids; FIR does not apply."
-        en.update(locale(qid,name,req,level,f"Eliminate {min(6+order,15)} targets with the allowed weapon pool"));ru.update(locale(qid,name,f"Устранить {min(6+order,15)} целей на картах: {', '.join(locations)}. Разрешённое оружие: [{allowed_ru}]. Прогресс сохраняется между рейдами; FIR не применяется.",level,f"Устранить {min(6+order,15)} целей разрешённым оружием",True))
+        en_detail=f"Allowed weapons: {item_list(native_weapons,'en')}." + (f"\nOptional WTT additions: {optional_names}." if optional_names else "")
+        ru_detail=f"Разрешённое оружие:\n- {item_list(native_weapons,'ru')}." + (f"\nДополнительные модели при установленном WTT:\n- {optional_names_ru}." if optional_names_ru else "")
+        en.update(locale(qid,name,en_detail,level,f"Eliminate {min(6+order,15)} targets with the allowed weapon pool"));ru.update(locale(qid,name,ru_detail,level,f"Устранить {min(6+order,15)} целей разрешённым оружием",True))
     # Ground Zero opening chain.
     prev=None
     gz=[("ground-zero-arrival","Operation: First Contact",1,2,"Savage"),("ground-zero-corridor","Operation: Open Corridor",3,4,"Savage"),("ground-zero-pressure","Operation: Contested Ground",5,2,"AnyPmc"),("ground-zero-exit","Operation: Exit Discipline",7,5,"Any")]
     for slug,name,level,count,target in gz:
         qid,q=quest(slug,name,level,prev,lambda qid,c=count,t=target:counter(qid,c,kill(qid,[],LOCATION_IDS["Ground Zero"],t)),"Elimination");prev=qid;out.append((qid,q));meta.append({"id":qid,"kind":"operation","location":"Ground Zero"})
-        req=f"Eliminate {count} {target} targets on Ground Zero. Progress carries across raids."
-        en.update(locale(qid,name,req,level,f"Eliminate {count} targets on Ground Zero"));ru.update(locale(qid,name,f"Устранить {count} целей типа {target} на Эпицентре. Прогресс сохраняется между рейдами.",level,f"Устранить {count} целей на Эпицентре",True))
+        en.update(locale(qid,name,"",level,f"Eliminate {count} targets on Ground Zero"));ru.update(locale(qid,name,"",level,f"Устранить {count} целей на Эпицентре",True))
     # A staged non-weapon equipment chain.
     gear=[
         ("light-rig","Loadout: Low Signature",6,["Ground Zero","Customs","Woods"],["5c0e722886f7740458316a57","5e4abc1f86f774069619fbaa"]),
@@ -132,8 +133,9 @@ def main():
         runtime_locations=[runtime_id for location_name in locations for runtime_id in LOCATION_IDS[location_name]]
         location_text=", ".join(locations)
         qid,q=quest(slug,name,level,prev,lambda qid,l=runtime_locations,i=items:counter(qid,1,loc_condition(qid,l,i),"Exploration",True),"Exploration");prev=qid;out.append((qid,q));meta.append({"id":qid,"kind":"equipment","locations":locations})
-        req=f"Enter one raid on any allowed map ({location_text}) wearing one item from [{item_list(items,'en')}], then survive and extract. FIR does not apply."
-        en.update(locale(qid,name,req,level,"Use the allowed equipment and survive one listed map"));ru.update(locale(qid,name,f"Выйти в один рейд на любой допустимой карте ({location_text}) с одним предметом из [{item_list(items,'ru')}], выжить и эвакуироваться. FIR не применяется.",level,"Использовать разрешённый комплект и выжить на одной из указанных карт",True))
+        en_detail=f"Eligible equipment: {item_list(items,'en')}."
+        ru_detail=f"Допуск по снаряжению:\n- {item_list(items,'ru')}."
+        en.update(locale(qid,name,en_detail,level,"Use the allowed equipment and survive one listed map"));ru.update(locale(qid,name,ru_detail,level,"Использовать разрешённый комплект и выжить на одной из указанных карт",True))
     qdir=ROOT/"db/quests"
     lane_lengths={}
     for lane in ("A", "B"):
