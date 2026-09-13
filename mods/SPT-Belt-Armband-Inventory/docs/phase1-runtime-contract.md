@@ -1,6 +1,6 @@
 # Phase 1 runtime contract — archived snapshot
 
-> **Historical evidence only.** This file records the original ArmBand-hosted Phase 1 candidate and its then-current acceptance gate. That phase is complete and the references below (including PR #64 and magazine-only/current-candidate language) are intentionally preserved as history, not current authority. For active v0.2.0 behavior use `../README.md`, `../DESIGN-SPT-4.1.3-BELT.md`, `product-concept.md`, and `RC1-runtime-checklist.md` under Issue #285 / PR #286.
+> **Historical evidence only.** This file records the original ArmBand-hosted Phase 1 candidate and its then-current acceptance gate. That phase is complete and the references below are intentionally preserved as history. Current stable authority is Issue #351 / PR #357 and `../README.md`.
 
 Target: SPT 4.1.3 client + server runtime.
 

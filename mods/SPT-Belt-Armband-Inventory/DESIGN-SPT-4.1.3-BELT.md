@@ -2,7 +2,7 @@
 
 ## Authority
 
-Stable v0.1.0 is already frozen/published and remains the rollback release. Active development candidate is **v0.2.0** under Issue #285 / PR #286, with magazine reload integration tracked by Issue #287.
+Stable **v0.3.0** is the active product line under Issue #351 / PR #357. Published v0.1.0 and v0.2.0 identities remain immutable compatibility and recovery contracts.
 
 ## Persistent equipment model
 

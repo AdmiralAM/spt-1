@@ -4,7 +4,7 @@
 
 B&A&HB is an accessory-logistics framework, not a generic way to add free inventory cells. Each accessory has a narrow role, explicit capacity/filter rules and a concrete equipment opportunity cost while retaining native EFT inventory behavior.
 
-Stable **v0.1.0** is the accepted mechanical base and rollback release. Development candidate **v0.2.0** keeps those persistent/lifecycle boundaries while refining HeadBand presentation/storage, making the two magazine-specific wearables operational reload fallback sources, and adding one exact-purpose Dogtag-slot container without inventing another equipment slot.
+Stable **v0.3.0** keeps all published persistent and lifecycle boundaries while adding immutable randomized ArmBand roles, wallet logistics, the Utility HeadBand visual and always-visible native container panels. The v0.2 products remain the compatible mechanical foundation.
 
 The Pack 'n' Strap compatibility direction supersedes this table as an active
 ownership plan while preserving it as the full-Belt reserve contract. The

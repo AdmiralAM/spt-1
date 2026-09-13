@@ -57,14 +57,14 @@ internal static class ValidateWorkflowAuthorityRegression
             "server build");
         RequireExactlyOnce(workflow,
             "uses: actions/upload-artifact@v4",
-            "RC artifact upload");
+            "stable artifact upload");
 
         int firstGuard = workflow.IndexOf("check_hotpaths.py", StringComparison.Ordinal);
         int regressions = workflow.IndexOf("dotnet run --project mods/SPT-Belt-Armband-Inventory/tests/SPT-Belt-Armband-Inventory.Tests.csproj -c Release", StringComparison.Ordinal);
         int recovery = workflow.IndexOf("Clean-BAndHBProfile.ps1' -ProfilePath $fixture", StringComparison.Ordinal);
         int clientBuild = workflow.IndexOf("dotnet build mods/SPT-Belt-Armband-Inventory/src/SPT-Belt-Armband-Inventory.csproj -c Release", StringComparison.Ordinal);
         int serverBuild = workflow.IndexOf("dotnet build mods/SPT-Belt-Armband-Inventory/server/SPT-Belt-Armband-Inventory.Server.csproj -c Release", StringComparison.Ordinal);
-        int staging = workflow.IndexOf("Stage B&A&HB #2 MOD SPT RC1", StringComparison.Ordinal);
+        int staging = workflow.IndexOf("Stage B&A&HB #2 MOD SPT v0.3.0 Stable", StringComparison.Ordinal);
         int upload = workflow.IndexOf("uses: actions/upload-artifact@v4", StringComparison.Ordinal);
 
         if (firstGuard < 0 || regressions < 0 || recovery < 0 || clientBuild < 0 || serverBuild < 0 || staging < 0 || upload < 0

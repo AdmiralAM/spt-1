@@ -16,7 +16,7 @@ namespace SPTBeltArmbandInventory
     {
         public const string PluginGuid = "com.admiralam.spt.belt-armband-inventory";
         public const string PluginName = "B&A&HB #2 MOD SPT";
-        public const string PluginVersion = "0.2.0";
+        public const string PluginVersion = "0.3.0";
 
         ConfigEntry<bool> modEnabled;
         ProtectionSettingsSync protectionSettings;

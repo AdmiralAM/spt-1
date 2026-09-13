@@ -114,11 +114,11 @@ jobs:
       - name: 'Build B&A&HB #2 server'
         shell: pwsh
         run: dotnet build mods/SPT-Belt-Armband-Inventory/server/SPT-Belt-Armband-Inventory.Server.csproj -c Release
-      - name: 'Stage B&A&HB #2 MOD SPT RC1'
+      - name: 'Stage B&A&HB #2 MOD SPT v0.3.0 Stable'
         if: github.event_name == 'workflow_dispatch'
         shell: pwsh
         run: |
-          $root = 'artifact/B&A&HB #2 MOD SPT RC1'
+          $root = 'artifact/B&A&HB #2 MOD SPT v0.3.0 Stable'
           $runtimeRoot = "$root/SPT_Runtime"
           $pluginRoot = "$runtimeRoot/BepInEx/plugins"
           $modRoot = "$runtimeRoot/user/mods/B&A&HB #2 MOD SPT"
@@ -134,32 +134,26 @@ jobs:
           $bundleEntry = Get-Content 'mods/SPT-Belt-Armband-Inventory/assets/headband-rambo/runtime/bundle-entry.json' -Raw | ConvertFrom-Json
           @{ manifest = @($bundleEntry) } | ConvertTo-Json -Depth 10 | Set-Content "$modRoot/bundles.json" -Encoding utf8NoBOM
           Copy-Item 'mods/SPT-Belt-Armband-Inventory/README.md' "$modRoot/README.md"
-          Copy-Item 'mods/SPT-Belt-Armband-Inventory/DESIGN-SPT-4.1.3-BELT.md' "$modRoot/DESIGN-SPT-4.1.3-BELT.md"
-          Copy-Item 'mods/SPT-Belt-Armband-Inventory/docs/RC1-runtime-checklist.md' "$modRoot/RC1-runtime-checklist.md"
 
           $clientDll = "$pluginRoot/SPT Belt Armband Inventory v0.1.0.dll"
           $serverDll = "$modRoot/SPT-Belt-Armband-Inventory.Server.dll"
           $manifest = "$modRoot/profile-safety/persistent-identities.json"
           $recovery = "$modRoot/profile-safety/README.md"
           $moduleReadme = "$modRoot/README.md"
-          $designNote = "$modRoot/DESIGN-SPT-4.1.3-BELT.md"
-          $runtimeChecklist = "$modRoot/RC1-runtime-checklist.md"
           $headBandBundle = "$modRoot/bundles/HeadBand/headband_rambo_red.bundle"
           if (-not (Test-Path -LiteralPath $clientDll)) { throw 'Install-tree validation: upgrade-safe client DLL missing under SPT_Runtime/BepInEx/plugins' }
           if (-not (Test-Path -LiteralPath $serverDll)) { throw 'Install-tree validation: server DLL missing under SPT_Runtime/user/mods' }
           if (-not (Test-Path -LiteralPath $manifest)) { throw 'Install-tree validation: profile-safety manifest missing from server mod' }
           if (-not (Test-Path -LiteralPath $recovery)) { throw 'Install-tree validation: recovery instructions missing from server mod' }
           if (-not (Test-Path -LiteralPath $moduleReadme)) { throw 'Install-tree validation: module README missing from RC package' }
-          if (-not (Test-Path -LiteralPath $designNote)) { throw 'Install-tree validation: current architecture note missing from RC package' }
-          if (-not (Test-Path -LiteralPath $runtimeChecklist)) { throw 'Install-tree validation: RC runtime checklist missing from package' }
           if (-not (Test-Path -LiteralPath $headBandBundle)) { throw 'Install-tree validation: HeadBand visual bundle missing from server mod' }
-          if (Test-Path -LiteralPath "$pluginRoot/SPT Belt Armband Inventory v0.2.0.dll") { throw 'Install-tree validation: second versioned client DLL would break in-place upgrade with duplicate BepInEx GUID' }
+          if (Test-Path -LiteralPath "$pluginRoot/SPT Belt Armband Inventory v0.3.0.dll") { throw 'Install-tree validation: second versioned client DLL would break in-place upgrade with duplicate BepInEx GUID' }
           if (Test-Path -LiteralPath "$root/BepInEx") { throw 'Install-tree validation: forbidden split top-level BepInEx root exists' }
 
           $clientFileVersion = (Get-Item -LiteralPath $clientDll).VersionInfo.FileVersion
           $serverFileVersion = (Get-Item -LiteralPath $serverDll).VersionInfo.FileVersion
-          if ($clientFileVersion -ne '0.2.0.0') { throw "Compiled client FileVersion mismatch: expected 0.2.0.0, got $clientFileVersion" }
-          if ($serverFileVersion -ne '0.2.0.0') { throw "Compiled server FileVersion mismatch: expected 0.2.0.0, got $serverFileVersion" }
+          if ($clientFileVersion -ne '0.3.0.0') { throw "Compiled client FileVersion mismatch: expected 0.3.0.0, got $clientFileVersion" }
+          if ($serverFileVersion -ne '0.3.0.0') { throw "Compiled server FileVersion mismatch: expected 0.3.0.0, got $serverFileVersion" }
 
           $clientHash = (Get-FileHash -LiteralPath $clientDll -Algorithm SHA256).Hash.ToLowerInvariant()
           $serverHash = (Get-FileHash -LiteralPath $serverDll -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -167,14 +161,14 @@ jobs:
           $headBranch = '${{ github.head_ref || github.ref_name }}'
           $prNumber = '${{ github.event.pull_request.number }}'
           @(
-            'B&A&HB #2 MOD SPT development candidate',
-            'CandidateLine=v0.2.0',
-            'ClientRuntimeVersion=0.2.0',
+            'B&A&HB #2 MOD SPT stable release',
+            'ReleaseLine=v0.3.0',
+            'ClientRuntimeVersion=0.3.0',
             "ClientFileVersion=$clientFileVersion",
             "ServerFileVersion=$serverFileVersion",
-            'ServerModMetadataVersion=0.2.0',
+            'ServerModMetadataVersion=0.3.0',
             'ClientFilenameCompatibility=legacy-v0.1.0-path',
-            'StableBaseline=v0.1.0',
+            'StableBaseline=v0.2.0',
             'SPTTarget=4.1.3',
             "HeadSha=$headSha",
             "HeadBranch=$headBranch",
@@ -188,22 +182,22 @@ jobs:
 
           $buildInfo = Get-Content -LiteralPath "$root/BUILD-INFO.txt" -Raw
           $installedBuildInfo = Get-Content -LiteralPath "$modRoot/BUILD-INFO.txt" -Raw
-          if (-not $buildInfo.Contains('CandidateLine=v0.2.0')) { throw 'Install-tree validation: BUILD-INFO v0.2.0 line missing' }
-          if (-not $buildInfo.Contains('ClientRuntimeVersion=0.2.0')) { throw 'Install-tree validation: BUILD-INFO client runtime version missing' }
-          if (-not $buildInfo.Contains('ClientFileVersion=0.2.0.0')) { throw 'Install-tree validation: BUILD-INFO compiled client FileVersion missing' }
-          if (-not $buildInfo.Contains('ServerFileVersion=0.2.0.0')) { throw 'Install-tree validation: BUILD-INFO compiled server FileVersion missing' }
-          if (-not $buildInfo.Contains('ServerModMetadataVersion=0.2.0')) { throw 'Install-tree validation: BUILD-INFO SPT server mod metadata version missing' }
+          if (-not $buildInfo.Contains('ReleaseLine=v0.3.0')) { throw 'Install-tree validation: BUILD-INFO v0.3.0 line missing' }
+          if (-not $buildInfo.Contains('ClientRuntimeVersion=0.3.0')) { throw 'Install-tree validation: BUILD-INFO client runtime version missing' }
+          if (-not $buildInfo.Contains('ClientFileVersion=0.3.0.0')) { throw 'Install-tree validation: BUILD-INFO compiled client FileVersion missing' }
+          if (-not $buildInfo.Contains('ServerFileVersion=0.3.0.0')) { throw 'Install-tree validation: BUILD-INFO compiled server FileVersion missing' }
+          if (-not $buildInfo.Contains('ServerModMetadataVersion=0.3.0')) { throw 'Install-tree validation: BUILD-INFO SPT server mod metadata version missing' }
           if (-not $buildInfo.Contains('ClientFilenameCompatibility=legacy-v0.1.0-path')) { throw 'Install-tree validation: BUILD-INFO upgrade-path marker missing' }
           if (-not $buildInfo.Contains("HeadSha=$headSha")) { throw 'Install-tree validation: BUILD-INFO exact head missing' }
           if (-not $buildInfo.Contains("ClientSha256=$clientHash")) { throw 'Install-tree validation: BUILD-INFO client hash missing' }
           if (-not $buildInfo.Contains("ServerSha256=$serverHash")) { throw 'Install-tree validation: BUILD-INFO server hash missing' }
           if ($installedBuildInfo -ne $buildInfo) { throw 'Install-tree validation: installed BUILD-INFO differs from artifact-root provenance' }
-          Write-Host "[B&A&HB #2 MOD SPT v0.2.0] RC1 install tree PASS: exactHead=$headSha clientFileVersion=$clientFileVersion serverFileVersion=$serverFileVersion serverModMetadataVersion=0.2.0 upgradeSafeClientPath=$clientDll clientSha256=$clientHash serverSha256=$serverHash provenanceCopies=2"
-      - name: 'Upload B&A&HB #2 MOD SPT RC1'
+          Write-Host "[B&A&HB #2 MOD SPT v0.3.0] stable install tree PASS: exactHead=$headSha clientFileVersion=$clientFileVersion serverFileVersion=$serverFileVersion serverModMetadataVersion=0.3.0 upgradeSafeClientPath=$clientDll clientSha256=$clientHash serverSha256=$serverHash provenanceCopies=2"
+      - name: 'Upload B&A&HB #2 MOD SPT v0.3.0 Stable'
         if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
-          name: 'B&A&HB #2 MOD SPT RC1'
-          path: 'artifact/B&A&HB #2 MOD SPT RC1'
+          name: 'B&A&HB #2 MOD SPT v0.3.0 Stable'
+          path: 'artifact/B&A&HB #2 MOD SPT v0.3.0 Stable'
           if-no-files-found: error
           retention-days: 14

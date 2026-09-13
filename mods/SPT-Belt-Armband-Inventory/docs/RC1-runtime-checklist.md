@@ -1,4 +1,6 @@
-# B&A&HB #2 MOD SPT — v0.2 runtime gate
+# B&A&HB #2 MOD SPT — archived v0.2 runtime gate
+
+> Historical acceptance evidence. Stable v0.3.0 authority is Issue #351 / PR #357 and the module README.
 
 Target: **SPT 4.1.3**.
 

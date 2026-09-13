@@ -155,12 +155,24 @@ namespace SPTBeltArmbandInventory
             float left = float.MaxValue;
             float bottom = float.MaxValue;
             Vector3[] corners = new Vector3[4];
-            RectTransform[] descendants = root.GetComponentsInChildren<RectTransform>(false);
-            for (int childIndex = 0; childIndex < descendants.Length; childIndex++)
+            for (int childIndex = 0; childIndex < root.childCount; childIndex++)
             {
-                RectTransform child = descendants[childIndex];
-                if (child == root || !child.gameObject.activeInHierarchy || child.rect.width < 1f || child.rect.height < 1f) continue;
-                child.GetWorldCorners(corners);
+                RectTransform child = root.GetChild(childIndex) as RectTransform;
+                MeasureVisibleRect(child);
+                if (child == null) continue;
+                for (int grandchildIndex = 0; grandchildIndex < child.childCount; grandchildIndex++)
+                {
+                    MeasureVisibleRect(child.GetChild(grandchildIndex) as RectTransform);
+                }
+            }
+            if (left < float.MaxValue && bottom < float.MaxValue) return new Vector3(left, bottom, 0f);
+            root.GetWorldCorners(corners);
+            return space.InverseTransformPoint(corners[0]);
+
+            void MeasureVisibleRect(RectTransform rect)
+            {
+                if (rect == null || !rect.gameObject.activeInHierarchy || rect.rect.width < 1f || rect.rect.height < 1f) return;
+                rect.GetWorldCorners(corners);
                 for (int cornerIndex = 0; cornerIndex < corners.Length; cornerIndex++)
                 {
                     Vector3 point = space.InverseTransformPoint(corners[cornerIndex]);
@@ -168,9 +180,6 @@ namespace SPTBeltArmbandInventory
                     bottom = Math.Min(bottom, point.y);
                 }
             }
-            if (left < float.MaxValue && bottom < float.MaxValue) return new Vector3(left, bottom, 0f);
-            root.GetWorldCorners(corners);
-            return space.InverseTransformPoint(corners[0]);
         }
 
         static float RightEdgeIn(RectTransform space, Component view)

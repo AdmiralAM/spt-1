@@ -18,10 +18,10 @@ def require(path: Path, tokens, label: str):
 require(
     ROOT / "README.md",
     [
-        "Development candidate **v0.2.0**",
-        "Issue **#285**",
-        "PR **#286**",
-        "Candidate install / upgrade",
+        "Stable **v0.3.0**",
+        "Issue **#351**",
+        "PR **#357**",
+        "Stable install / upgrade",
         "physical DLL filename intentionally remains",
         "Magazine operational integration",
         "Dogtag Case",
@@ -33,8 +33,7 @@ require(
 require(
     ROOT / "DESIGN-SPT-4.1.3-BELT.md",
     [
-        "Issue #285 / PR #286",
-        "Issue #287",
+        "Issue #351 / PR #357",
         "Magazine reload reachability",
         "Candidate identity / upgrade boundary",
         "Physical runtime acceptance is one combined gate",
@@ -45,7 +44,7 @@ require(
 require(
     DOCS / "product-concept.md",
     [
-        "Development candidate **v0.2.0**",
+        "Stable **v0.3.0**",
         "low-priority reload fallback",
         "Magazine reload role",
         "Current gate",
@@ -91,7 +90,7 @@ require(
     [
         "# Phase 1 runtime contract — archived snapshot",
         "**Historical evidence only.**",
-        "Current development authority is Issue #285 / PR #286.",
+        "Current stable authority is Issue #351 / PR #357",
     ],
     "Phase 1 archive marker",
 )
@@ -101,7 +100,7 @@ require(
     [
         "archived Phase 1 snapshot",
         "**Historical evidence only.**",
-        "Current v0.2.0 acceptance is defined only by `RC1-runtime-checklist.md`.",
+        "Current stable authority is Issue #351 / PR #357",
     ],
     "architecture audit archive marker",
 )
@@ -109,4 +108,4 @@ require(
 if violations:
     raise SystemExit("B&A&HB doc-authority gate failed:\n" + "\n".join(violations))
 
-print("B&A&HB doc-authority gate: OK (v0.2.0 current/recovery authority aligned; Dogtag Case identity and recovery boundaries guarded; eight-check combined milestone authoritative; Issue #285/PR #286/#287 explicit; Phase 1 records archived, not current)")
+print("B&A&HB doc-authority gate: OK (v0.3.0 stable authority aligned; v0.2 recovery evidence retained; Issue #351/PR #357 explicit; Phase 1 records archived)")
