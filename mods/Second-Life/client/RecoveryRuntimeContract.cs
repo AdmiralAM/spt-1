@@ -28,6 +28,7 @@ namespace Admiral.SecondLife.Client
         internal PropertyInfo CullingSamplerInstance { get; private set; }
         internal MethodInfo RegisterWorldPlayer { get; private set; }
         internal MethodInfo UnregisterWorldPlayer { get; private set; }
+        internal MethodInfo LoadItemBundles { get; private set; }
 
         internal static bool TryResolve(out RecoveryRuntimeContract contract, out string failure)
         {
@@ -49,7 +50,8 @@ namespace Admiral.SecondLife.Client
             Type globalConfiguration = FindType("EFT.GlobalConfiguration");
             Type gameWorld = FindType("EFT.GameWorld");
             Type gamePlayerOwner = FindType("EFT.GamePlayerOwner");
-            if (new[] { player, localPlayer, localGame, profile, inventory, equipment, equipmentTemplate, cameraController, cullingSampler, itemUiContext, activeHealthController, healthHelper, globalConfiguration, gameWorld, gamePlayerOwner }.Any(type => type == null))
+            Type changeItemsOperation = FindType("EFT.InventoryLogic.Operations.ChangeItemsOperation");
+            if (new[] { player, localPlayer, localGame, profile, inventory, equipment, equipmentTemplate, cameraController, cullingSampler, itemUiContext, activeHealthController, healthHelper, globalConfiguration, gameWorld, gamePlayerOwner, changeItemsOperation }.Any(type => type == null))
                 return Fail("required SPT 4.1 recovery types are missing", out failure);
 
             Type baseLocalGame = localGame.BaseType;
@@ -87,6 +89,8 @@ namespace Admiral.SecondLife.Client
             PropertyInfo cullingSamplerInstance = cullingSampler.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public);
             MethodInfo registerWorldPlayer = gameWorld.GetMethod("RegisterPlayer", BindingFlags.Instance | BindingFlags.Public);
             MethodInfo unregisterWorldPlayer = gameWorld.GetMethod("UnregisterPlayer", BindingFlags.Instance | BindingFlags.Public);
+            MethodInfo loadItemBundles = changeItemsOperation.GetMethods(BindingFlags.Static | BindingFlags.Public)
+                .SingleOrDefault(method => method.Name == "LoadBundles" && method.GetParameters().Length == 1);
             MethodInfo healingConfirmation = itemUiContext.GetMethods(BindingFlags.Instance | BindingFlags.Public)
                 .SingleOrDefault(method => method.Name == "ShowMessageWindow" && method.GetParameters().Length == 7);
             MethodInfo restoreFullHealth = activeHealthController.GetMethod("RestoreFullHealth", BindingFlags.Instance | BindingFlags.Public);
@@ -106,7 +110,7 @@ namespace Admiral.SecondLife.Client
                 return Fail("local-player reconstruction signatures changed", out failure);
             if (new[] { gameProfile, playerFactory, ownerFactory, localPlayerField, playerOwner, players, gamePlayerOwnerMyPlayer }.Any(field => field == null) ||
                 gamePlayerOwnerPlayer?.GetMethod == null || gamePlayerOwnerCleanup == null ||
-                spawn == null || createPlayerCamera == null || destroyPlayerCamera == null || cullingSamplerInstance?.GetMethod == null || registerWorldPlayer == null || unregisterWorldPlayer == null)
+                spawn == null || createPlayerCamera == null || destroyPlayerCamera == null || cullingSamplerInstance?.GetMethod == null || registerWorldPlayer == null || unregisterWorldPlayer == null || loadItemBundles == null)
                 return Fail("local-game player/owner/camera binding contract changed", out failure);
             if (healingConfirmation == null || restoreFullHealth == null || realBodyParts == null || healthSettings == null || allRealPlayerItems == null)
                 return Fail("native paid-healing contract changed", out failure);
@@ -135,6 +139,7 @@ namespace Admiral.SecondLife.Client
                 ,CullingSamplerInstance = cullingSamplerInstance
                 ,RegisterWorldPlayer = registerWorldPlayer
                 ,UnregisterWorldPlayer = unregisterWorldPlayer
+                ,LoadItemBundles = loadItemBundles
             };
             return true;
         }

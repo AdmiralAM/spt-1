@@ -72,4 +72,11 @@ its culling sampler before native finalization; it never recreates an FPS camera
 for the already-dead original player. Runtime trace entries identify the last
 completed handoff stage and the local/global/main-player references.
 
+Before detaching the original player, the replacement equipment tree is passed
+through EFT's native `ChangeItemsOperation.LoadBundles` path and awaited. This
+loads custom weapon and attachment bundles that were not part of the original
+raid loadout. A load failure therefore refunds the reservation while the old
+player and camera are still intact. Runtime fast-access bindings start empty
+because first-life hotkeys otherwise point at items left on the corpse.
+
 Any local server/client/helper started for archaeology or smoke testing must be stopped by the same worker. Record PIDs before launch, prefer graceful shutdown, and verify no owned process or listening port remains.

@@ -277,21 +277,10 @@ namespace Admiral.SecondLife.Client
 
         static object CopyFastAccessIds(object inventory, Type dictionaryType)
         {
+            // The recovered equipment intentionally omits the first-life gear.
+            // Carrying its runtime hotkey IDs into the replacement controller
+            // produces dangling FastAccess bindings during LocalPlayer.Init.
             object copy = Activator.CreateInstance(dictionaryType);
-            MethodInfo add = dictionaryType.GetMethod("Add");
-            object fastAccess = ReadField(inventory, "FastAccess");
-            var boundItems = ReadField(fastAccess, "BoundItems") as IDictionary;
-            Type mongoIdType = dictionaryType.GetGenericArguments()[1];
-            ConstructorInfo mongoIdConstructor = mongoIdType.GetConstructor(new[] { typeof(string) });
-            if (boundItems == null || add == null || mongoIdConstructor == null) return copy;
-
-            foreach (DictionaryEntry entry in boundItems)
-            {
-                string itemId = ReadString(entry.Value, "Id");
-                if (!string.IsNullOrWhiteSpace(itemId))
-                    add.Invoke(copy, new[] { entry.Key, mongoIdConstructor.Invoke(new object[] { itemId }) });
-            }
-
             return copy;
         }
 

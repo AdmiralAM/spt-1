@@ -91,6 +91,9 @@ namespace Admiral.SecondLife.Client
             try
             {
                 Trace(stage, gameWorld, newPlayer);
+                stage = "recovery-assets-load";
+                await LoadRecoveryAssets();
+                Trace(stage, gameWorld, newPlayer);
                 stage = "old-player-unregister";
                 contract.UnregisterWorldPlayer.Invoke(gameWorld, new[] { originalPlayer });
                 Trace(stage, gameWorld, newPlayer);
@@ -146,7 +149,9 @@ namespace Admiral.SecondLife.Client
                 attached = true;
                 paidHealing.ReleaseDebit();
                 armamentReservation?.ReleaseReservation();
-                TryDispose(originalPlayer);
+                TryDeactivate(originalPlayer);
+                try { DisposeStrict(originalPlayer); }
+                catch (Exception exception) { trace?.Invoke("Recovery trace: original-player disposal warning: " + Unwrap(exception).Message); }
             }
             catch (Exception exception)
             {
@@ -161,6 +166,7 @@ namespace Admiral.SecondLife.Client
                 var cleanupFailures = new System.Collections.Generic.List<string>();
                 TryCleanupStep(() => paidHealing.Rollback(), "payment refund", cleanupFailures);
                 TryCleanupStep(() => armamentReservation?.Refund(), "armament refund", cleanupFailures);
+                TryCleanupStep(() => TryDeactivate(newPlayer), "new player deactivate", cleanupFailures);
                 if (newCameraCreated)
                 {
                     TryCleanupStep(() => contract.DestroyPlayerCamera.Invoke(null, new[] { newPlayer }), "new camera destroy", cleanupFailures);
@@ -171,7 +177,7 @@ namespace Admiral.SecondLife.Client
                 }
                 if (newPlayerRegistered) TryCleanupStep(() => contract.UnregisterWorldPlayer.Invoke(gameWorld, new[] { newPlayer }), "new player unregister", cleanupFailures);
                 TryCleanupStep(() => TryCleanupOwner(newOwner), "new owner cleanup", cleanupFailures);
-                TryCleanupStep(() => TryDispose(newPlayer), "new player dispose", cleanupFailures);
+                TryCleanupStep(() => DisposeStrict(newPlayer), "new player dispose", cleanupFailures);
                 TryCleanupStep(() => contract.LocalPlayer.SetValue(localGame, originalPlayer), "local player restore", cleanupFailures);
                 TryCleanupStep(() => contract.PlayerOwner.SetValue(localGame, originalOwner), "player owner restore", cleanupFailures);
                 TryCleanupStep(() => contract.GamePlayerOwnerMyPlayer.SetValue(null, originalPlayer), "global player restore", cleanupFailures);
@@ -191,6 +197,13 @@ namespace Admiral.SecondLife.Client
             }
 
             if (failure != null) ExceptionDispatchInfo.Capture(failure).Throw();
+        }
+
+        async Task LoadRecoveryAssets()
+        {
+            object taskObject = contract.LoadItemBundles.Invoke(null, new[] { inventoryLease.RecoveryEquipment });
+            if (!(taskObject is Task task)) throw new InvalidOperationException("native recovery asset loader returned no Task");
+            await task;
         }
 
         void Trace(string stage, object gameWorld, object newPlayer)
@@ -284,15 +297,27 @@ namespace Admiral.SecondLife.Client
                 throw new InvalidOperationException("recovered owner did not retain GamePlayerOwner.MyPlayer");
         }
 
-        static void TryDispose(object instance)
+        static void DisposeStrict(object instance)
         {
             if (instance == null) return;
-            try
-            {
-                instance.GetType().GetMethod("Dispose", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.Invoke(instance, null);
-            }
-            catch { }
+            MethodInfo dispose = instance.GetType().GetMethod("Dispose", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (dispose == null) throw new InvalidOperationException("player disposal contract is unavailable");
+            dispose.Invoke(instance, null);
         }
+
+        static void TryDeactivate(object instance)
+        {
+            if (instance == null) return;
+            object gameObject = ReadProperty(instance, "gameObject");
+            MethodInfo setActive = gameObject?.GetType().GetMethod("SetActive", new[] { typeof(bool) });
+            if (setActive == null) throw new InvalidOperationException("player GameObject deactivation contract is unavailable");
+            setActive.Invoke(gameObject, new object[] { false });
+        }
+
+        static Exception Unwrap(Exception exception) =>
+            exception is TargetInvocationException invocation && invocation.InnerException != null
+                ? invocation.InnerException
+                : exception;
 
         static object ReadProperty(object instance, string name) => instance?.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(instance, null);
 
