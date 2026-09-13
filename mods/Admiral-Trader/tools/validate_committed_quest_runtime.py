@@ -59,7 +59,7 @@ def validate_runtime(
 
     for qid in sorted(committed):
         quest = committed[qid]
-        expected = generated_templates[qid]
+        expected = json.loads(json.dumps(generated_templates[qid]))
         if qid == FOUNDATION_ACCESS_QUEST_ID:
             expected = json.loads(json.dumps(expected))
             expected["conditions"]["AvailableForStart"].append(
@@ -77,6 +77,14 @@ def validate_runtime(
                     "conditionType": "Quest",
                 }
             )
+        # The compiler owns objective and reward structure.  The published
+        # runtime intentionally replaces its English fallback title with the
+        # Russian localized title, so a client that reads QuestName before its
+        # locale bundle is ready never exposes an English quest title.
+        localized_name = russian.get(f"{qid} name")
+        if not localized_name:
+            raise ValueError(f"Russian locale missing localized QuestName for {qid}")
+        expected["QuestName"] = localized_name
         if quest != expected:
             raise ValueError(f"committed quest differs from compiler output: {qid}")
         if quest.get("traderId") != TRADER_ID:
