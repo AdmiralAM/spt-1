@@ -109,25 +109,28 @@ namespace Admiral.SecondLife.Client
                 return false;
             if (decision == NativeFinalizationDecision.SuppressForRecovery && plan != null)
             {
-                executor.Execute(
-                    plan,
-                    recoveryRootId =>
-                    {
-                        if (finalizationGate.ConfirmRecovery(recoveryRootId))
-                        {
-                            logInfo?.Invoke("One-time recovery spawned with empty equipment root " + recoveryRootId + ".");
-                            return;
-                        }
-
-                        logWarning?.Invoke("Recovery spawned but lifecycle confirmation failed; native finalization resumed.");
-                        ResumeNativeFinalization(localGame);
-                    },
-                    exception =>
-                    {
-                        finalizationGate.AbortPendingRecovery();
-                        logWarning?.Invoke("Recovery failed safely; resuming native death: " + exception.Message);
-                        ResumeNativeFinalization(localGame);
-                    });
+                bool resolved = false;
+                Action accept = () =>
+                {
+                    if (resolved) return;
+                    resolved = true;
+                    BeginRecovery(localGame, plan);
+                };
+                Action cancel = () =>
+                {
+                    if (resolved) return;
+                    resolved = true;
+                    finalizationGate.AbortPendingRecovery();
+                    logInfo?.Invoke("Paid healing declined; continuing native death.");
+                    ResumeNativeFinalization(localGame);
+                };
+                if (!RuntimePaidHealing.TryShowNativeConfirmation(plan.PaidHealingCost, accept, cancel, out string promptFailure))
+                {
+                    resolved = true;
+                    finalizationGate.AbortPendingRecovery();
+                    logWarning?.Invoke("Paid-healing offer failed closed; resuming native death: " + promptFailure);
+                    ResumeNativeFinalization(localGame);
+                }
                 return false;
             }
 
@@ -138,6 +141,28 @@ namespace Admiral.SecondLife.Client
                 logWarning?.Invoke("Recovery preflight rejected; continuing native death: " + failure);
             }
             return true;
+        }
+
+        void BeginRecovery(object localGame, RecoveryExecutionPlan plan)
+        {
+            executor.Execute(
+                plan,
+                recoveryRootId =>
+                {
+                    if (finalizationGate.ConfirmRecovery(recoveryRootId))
+                    {
+                        logInfo?.Invoke("One-time recovery spawned after paid healing (" + plan.PaidHealingCost + " rubles), equipment root " + recoveryRootId + ".");
+                        return;
+                    }
+                    logWarning?.Invoke("Recovery spawned but lifecycle confirmation failed; native finalization resumed.");
+                    ResumeNativeFinalization(localGame);
+                },
+                exception =>
+                {
+                    finalizationGate.AbortPendingRecovery();
+                    logWarning?.Invoke("Recovery failed safely; healing debit rolled back; resuming native death: " + exception.Message);
+                    ResumeNativeFinalization(localGame);
+                });
         }
 
         void ResumeNativeFinalization(object localGame)

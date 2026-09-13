@@ -213,6 +213,14 @@ Expect(abortedGate.HandleDeathBoundary("gate-abort", "gate-abort-corpse", execut
 Expect(abortedGate.AbortPendingRecovery(), "asynchronous recovery failure resumes terminal native path");
 Expect(abortedGate.Snapshot.State == RecoveryState.FinalDeath, "aborted recovery cannot remain pending");
 
+Expect(PaidHealingPolicy.CalculateCost(100f, 10f, 100f, false, 0f, 0, 1, 0f) == 1000, "native health-point price is charged");
+Expect(PaidHealingPolicy.CalculateCost(100f, 10f, 1f, false, 0f, 0, 1, 0f) == 50, "native loyalty coefficient is clamped to five percent");
+Expect(PaidHealingPolicy.CalculateCost(100f, 10f, 100f, true, 0f, 0, 1, 0f) == 0, "native fast-heal trial remains free");
+Expect(PaidHealingPolicy.CalculateCost(100f, 10f, 100f, false, 0.01f, 10, 4, 0.5f) == 951, "native charisma float precision and ceiling are preserved");
+Expect(PaidHealingPolicy.PlanDebits(125, new[] { 50, 100 })!.SequenceEqual(new[] { 50, 75 }), "ruble debit spans stable stash stacks");
+Expect(PaidHealingPolicy.PlanDebits(151, new[] { 50, 100 }) is null, "insufficient stash rubles reject recovery");
+Expect(PaidHealingPolicy.PlanDebits(0, Array.Empty<int>())!.Count == 0, "free native healing requires no ruble stack");
+
 Console.WriteLine($"Second Life foundation PASS: {assertions} assertions.");
 
 sealed class FakeMove : IReversibleInventoryMove

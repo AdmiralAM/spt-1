@@ -9,6 +9,9 @@ Second Life Admiral is a bounded one-time same-raid recovery workstream for SPT 
 - emergency armament moves one randomly selected owned pistol, its installed
   magazine and exactly one compatible spare magazine from the stash;
 - if the stash has no complete eligible set, recovery starts unarmed;
+- before recovery, EFT's native confirmation window offers full healing at the
+  ordinary Therapist price paid from owned stash rubles; declining or lacking
+  funds ends the raid through the native death path;
 - the pistol pool remains configurable; random selection is bounded and can be
   seeded for deterministic validation;
 - the original corpse and equipment remain in the raid;
@@ -28,7 +31,9 @@ runtime armament path searches a bounded direct stash-root set, moves the
 selected pistol tree and one compatible spare magazine through native inventory
 transactions, and rolls both roots back on failure. A newly created intrinsic
 pockets item gives the spare magazine a legal recovery address without reusing
-the corpse-owned pockets instance.
+the corpse-owned pockets instance. The paid-healing gate mirrors EFT's native
+HP price, Therapist loyalty coefficient, free-heal trial and Charisma discount;
+its ruble debit is rolled back if recovery reconstruction fails.
 
 Authority: Issue #352 and `origin/main:.github/workstreams.json` after the governance registration is integrated.
 

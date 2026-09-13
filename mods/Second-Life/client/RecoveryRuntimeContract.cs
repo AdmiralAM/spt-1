@@ -35,7 +35,11 @@ namespace Admiral.SecondLife.Client
             Type equipment = FindType("EFT.InventoryLogic.InventoryEquipment");
             Type equipmentTemplate = FindType("EFT.InventoryLogic.InventoryEquipmentTemplate");
             Type cameraController = FindType("EFT.CameraControl.PlayerCameraController");
-            if (new[] { player, localPlayer, localGame, profile, inventory, equipment, equipmentTemplate, cameraController }.Any(type => type == null))
+            Type itemUiContext = FindType("EFT.UI.ItemUiContext");
+            Type activeHealthController = FindType("EFT.HealthSystem.ActiveHealthController");
+            Type healthHelper = FindType("EFT.HealthSystem.HealthHelper");
+            Type globalConfiguration = FindType("EFT.GlobalConfiguration");
+            if (new[] { player, localPlayer, localGame, profile, inventory, equipment, equipmentTemplate, cameraController, itemUiContext, activeHealthController, healthHelper, globalConfiguration }.Any(type => type == null))
                 return Fail("required SPT 4.1 recovery types are missing", out failure);
 
             Type baseLocalGame = localGame.BaseType;
@@ -65,6 +69,11 @@ namespace Admiral.SecondLife.Client
             MethodInfo spawn = baseLocalGame?.GetMethod("Spawn", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             MethodInfo createPlayerCamera = cameraController.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
                 .SingleOrDefault(method => method.Name == "Create" && method.GetParameters().Length == 1 && method.GetParameters()[0].ParameterType == player);
+            MethodInfo healingConfirmation = itemUiContext.GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                .SingleOrDefault(method => method.Name == "ShowMessageWindow" && method.GetParameters().Length == 7);
+            MethodInfo restoreFullHealth = activeHealthController.GetMethod("RestoreFullHealth", BindingFlags.Instance | BindingFlags.Public);
+            FieldInfo realBodyParts = healthHelper.GetField("RealBodyParts", BindingFlags.Static | BindingFlags.Public);
+            FieldInfo healthSettings = globalConfiguration.GetField("Health", BindingFlags.Instance | BindingFlags.Public);
 
             if (createCorpse == null || initiateGameStopping == null)
                 return Fail("exact corpse/finalization boundary changed", out failure);
@@ -79,6 +88,8 @@ namespace Admiral.SecondLife.Client
             if (new[] { gameProfile, playerFactory, ownerFactory, localPlayerField, playerOwner, players }.Any(field => field == null) ||
                 spawn == null || createPlayerCamera == null)
                 return Fail("local-game player/owner/camera binding contract changed", out failure);
+            if (healingConfirmation == null || restoreFullHealth == null || realBodyParts == null || healthSettings == null)
+                return Fail("native paid-healing contract changed", out failure);
 
             contract = new RecoveryRuntimeContract
             {

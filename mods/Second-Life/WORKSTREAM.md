@@ -9,6 +9,9 @@ Authority for continuation lives in this file, Issue #352, the live PR body and 
 - emergency armament moves one randomly selected owned pistol, its installed
   magazine and exactly one compatible spare magazine from the stash;
 - no complete eligible stash set means an unarmed recovery;
+- recovery is offered only with the ordinary Therapist health price; accepting
+  atomically debits owned stash rubles and restores health, while declining or
+  lacking funds continues native death;
 - the eligible pistol pool is configurable, while selection is bounded and
   seedable for deterministic validation;
 - first corpse and original equipment remain recoverable in-world;
@@ -69,7 +72,12 @@ cleanly resumes native death.
 
 Validate quests, health, insurance, B&A&HB, Economy Admiral, Icebreaker, save/restart and supported solo lifecycle.
 
-Acceptance: no duplicate rewards/events/items, no stale state and no permanent scans/polling.
+Acceptance: the native EFT confirmation window shows the native Therapist HP,
+loyalty, trial and Charisma-adjusted price; accepting debits only owned stash
+rubles and restores the recovered player; any reconstruction failure rolls the
+debit back; declining, insufficient funds or an unavailable native contract
+continues ordinary death; no duplicate rewards/events/items, stale state or
+permanent scans/polling.
 
 ### M6 — Batched physical gate
 

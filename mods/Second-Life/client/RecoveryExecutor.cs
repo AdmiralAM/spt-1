@@ -46,6 +46,8 @@ namespace Admiral.SecondLife.Client
                 return false;
             if (!RuntimeArmamentService.TrySelect(profile, expectedProfileId.GetHashCode(), eligiblePistolTemplates?.Invoke(), out RuntimeArmament armament))
                 return Fail("stash traversal exceeded its bounded limit", out failure);
+            if (!RuntimePaidHealing.TryPrepare(profile, originalPlayer, out RuntimePaidHealing paidHealing, out failure))
+                return false;
 
             plan = new RecoveryExecutionPlan(
                 contract,
@@ -58,6 +60,7 @@ namespace Admiral.SecondLife.Client
                 lease,
                 spawnSelection,
                 armament,
+                paidHealing,
                 profileId);
             return true;
         }

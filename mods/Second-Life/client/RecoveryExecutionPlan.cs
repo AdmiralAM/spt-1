@@ -17,6 +17,7 @@ namespace Admiral.SecondLife.Client
         readonly RecoveryInventoryLease inventoryLease;
         readonly RuntimeSpawnSelection spawnSelection;
         readonly RuntimeArmament armament;
+        readonly RuntimePaidHealing paidHealing;
 
         internal RecoveryExecutionPlan(
             RecoveryRuntimeContract contract,
@@ -29,6 +30,7 @@ namespace Admiral.SecondLife.Client
             RecoveryInventoryLease inventoryLease,
             RuntimeSpawnSelection spawnSelection,
             RuntimeArmament armament,
+            RuntimePaidHealing paidHealing,
             string profileId)
         {
             this.contract = contract;
@@ -41,11 +43,13 @@ namespace Admiral.SecondLife.Client
             this.inventoryLease = inventoryLease;
             this.spawnSelection = spawnSelection;
             this.armament = armament;
+            this.paidHealing = paidHealing;
             ProfileId = profileId;
         }
 
         internal string ProfileId { get; }
         internal string RecoveryEquipmentRootId => inventoryLease.RecoveryEquipmentRootId;
+        internal int PaidHealingCost => paidHealing.Cost;
 
         internal async Task ExecuteAsync()
         {
@@ -76,7 +80,9 @@ namespace Admiral.SecondLife.Client
                 players[ProfileId] = newPlayer;
                 contract.CreatePlayerCamera.Invoke(null, new[] { newPlayer });
                 contract.Spawn.Invoke(localGame, null);
+                paidHealing.Apply(newPlayer);
                 attached = true;
+                paidHealing.FinalizeDebit(newPlayer);
                 TryDispose(originalPlayer);
                 TryCleanupOwner(originalOwner);
             }
@@ -84,6 +90,7 @@ namespace Admiral.SecondLife.Client
             {
                 if (!attached)
                 {
+                    paidHealing.Rollback();
                     contract.LocalPlayer.SetValue(localGame, originalPlayer);
                     contract.PlayerOwner.SetValue(localGame, originalOwner);
                     players[ProfileId] = originalPlayer;
