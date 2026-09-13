@@ -189,7 +189,7 @@ namespace SPTBeltArmbandInventory
                 EmbeddedAccessoryGridRuntime.GeneratedGridsShow = FindGeneratedShow(generated);
                 EmbeddedAccessoryGridRuntime.LogInfo = logInfo;
                 EmbeddedAccessoryGridRuntime.LogWarning = logWarning;
-                if (show == null || close == null || EmbeddedAccessoryGridRuntime.GetSlot == null || EmbeddedAccessoryGridRuntime.ItemUiContextInstance == null || EmbeddedAccessoryGridRuntime.GridWindowTemplate == null || EmbeddedAccessoryGridRuntime.ContainedGridsTemplate == null || EmbeddedAccessoryGridRuntime.GeneratedGridsShow == null)
+                if (show == null || EmbeddedAccessoryGridRuntime.GetSlot == null || EmbeddedAccessoryGridRuntime.ItemUiContextInstance == null || EmbeddedAccessoryGridRuntime.GridWindowTemplate == null || EmbeddedAccessoryGridRuntime.ContainedGridsTemplate == null || EmbeddedAccessoryGridRuntime.GeneratedGridsShow == null)
                     return Fail("Embedded-grid exact SPT 4.1 lifecycle changed.");
 
                 MethodInfo patch = FindPatch(harmonyType, harmonyMethodType);
@@ -198,7 +198,8 @@ namespace SPTBeltArmbandInventory
                 if (patch == null || hm == null || unpatchSelf == null) return Fail("Embedded-grid Harmony API unavailable.");
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 Patch(patch, harmonyMethodType, show, null, hm.Invoke(new object[] { Method(nameof(ShowPostfix)) }));
-                Patch(patch, harmonyMethodType, close, hm.Invoke(new object[] { Method(nameof(ClosePrefix)) }), null);
+                if (close != null)
+                    Patch(patch, harmonyMethodType, close, hm.Invoke(new object[] { Method(nameof(ClosePrefix)) }), null);
                 logInfo?.Invoke("B&A&HB native embedded HeadBand/ArmBand grids installed on EquipmentTab Show/Close lifecycle.");
                 return true;
             }
