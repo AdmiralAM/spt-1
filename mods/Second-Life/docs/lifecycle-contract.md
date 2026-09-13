@@ -2,7 +2,10 @@
 
 ## Current proof
 
-The pure state machine establishes one-use and terminal-state semantics without touching EFT or profile data. It is deliberately insufficient to claim runtime support.
+The state machine and finalization gate establish one-use and terminal-state
+semantics. The guarded client executor now uses the proven local-game factories
+and a replacement inventory/equipment root, but remains insufficient to claim
+runtime support until the complete vertical slice passes the physical gate.
 
 Exact SPT 4.1.5 metadata/IL evidence and the guarded solo go decision are
 recorded in `runtime-archaeology-spt-4.1.5.md`.

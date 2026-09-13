@@ -1,6 +1,4 @@
 using System;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using BepInEx.Configuration;
 using HarmonyLib;
@@ -17,9 +15,13 @@ namespace Admiral.SecondLife.Client
         readonly Action<string> logWarning;
         readonly RecoveryFinalizationGate finalizationGate = new RecoveryFinalizationGate();
         Harmony harmony;
-        string pendingCorpseId;
+        RecoveryRuntimeContract runtimeContract;
+        RecoveryExecutor executor;
+        object pendingCorpseEquipment;
+        string pendingCorpseEquipmentRootId;
         string pendingProfileId;
         bool warnedExecutorUnavailable;
+        bool nativeFinalizationReentry;
 
         internal RuntimeBridge(
             ConfigEntry<bool> enabled,
@@ -38,6 +40,8 @@ namespace Admiral.SecondLife.Client
                 if (!RecoveryRuntimeContract.TryResolve(out RecoveryRuntimeContract contract, out string failure))
                     return Fail("SPT 4.1 recovery contract rejected: " + failure + "; module remains inert.");
 
+                runtimeContract = contract;
+                executor = new RecoveryExecutor(contract);
                 harmony = new Harmony(HarmonyId);
                 active = this;
                 harmony.Patch(
@@ -71,29 +75,81 @@ namespace Admiral.SecondLife.Client
             if (enabled == null || !enabled.Value || player == null || corpse == null) return;
             if (!ReadBoolean(player, "IsYourPlayer")) return;
 
-            pendingCorpseId = ReadString(corpse, "Id");
+            pendingCorpseEquipment = ReadObject(corpse, "Item");
+            pendingCorpseEquipmentRootId = ReadString(pendingCorpseEquipment, "Id");
             pendingProfileId = ReadString(player, "ProfileId");
-            if (string.IsNullOrWhiteSpace(pendingCorpseId))
-                logWarning?.Invoke("Native corpse has no stable ID; recovery will fail closed.");
+            if (string.IsNullOrWhiteSpace(pendingCorpseEquipmentRootId))
+                logWarning?.Invoke("Native corpse has no stable equipment-root ID; recovery will fail closed.");
         }
 
         bool ContinueNativeFinalization(object localGame)
         {
+            if (nativeFinalizationReentry) return true;
             if (enabled == null || !enabled.Value) return true;
 
             string raidId = pendingProfileId + ":" + RuntimeHelpers.GetHashCode(localGame).ToString("X8");
-            // The boundary is executable, but native finalization is never suppressed
-            // until the player reconstruction executor proves all prerequisites.
+            RecoveryState state = finalizationGate.Snapshot.State;
+            RecoveryExecutionPlan plan = null;
+            string failure = null;
+            bool executorReady = state == RecoveryState.RecoveryPending ||
+                (state != RecoveryState.RecoverySpawned &&
+                 executor != null &&
+                 executor.TryPrepare(localGame, pendingCorpseEquipment, pendingProfileId, out plan, out failure));
             NativeFinalizationDecision decision = finalizationGate.HandleDeathBoundary(
                 raidId,
-                pendingCorpseId,
-                executorReady: false);
-            if (!warnedExecutorUnavailable)
+                pendingCorpseEquipmentRootId,
+                executorReady);
+
+            if (decision == NativeFinalizationDecision.SuppressDuplicate)
+                return false;
+            if (decision == NativeFinalizationDecision.SuppressForRecovery && plan != null)
+            {
+                executor.Execute(
+                    plan,
+                    recoveryRootId =>
+                    {
+                        if (finalizationGate.ConfirmRecovery(recoveryRootId))
+                        {
+                            logInfo?.Invoke("One-time recovery spawned with empty equipment root " + recoveryRootId + ".");
+                            return;
+                        }
+
+                        logWarning?.Invoke("Recovery spawned but lifecycle confirmation failed; native finalization resumed.");
+                        ResumeNativeFinalization(localGame);
+                    },
+                    exception =>
+                    {
+                        finalizationGate.AbortPendingRecovery();
+                        logWarning?.Invoke("Recovery failed safely; resuming native death: " + exception.Message);
+                        ResumeNativeFinalization(localGame);
+                    });
+                return false;
+            }
+
+            if (decision != NativeFinalizationDecision.ContinueNative) return false;
+            if (!string.IsNullOrWhiteSpace(failure) && !warnedExecutorUnavailable)
             {
                 warnedExecutorUnavailable = true;
-                logWarning?.Invoke("Recovery executor is not ready; continuing the native death path.");
+                logWarning?.Invoke("Recovery preflight rejected; continuing native death: " + failure);
             }
-            return decision == NativeFinalizationDecision.ContinueNative;
+            return true;
+        }
+
+        void ResumeNativeFinalization(object localGame)
+        {
+            try
+            {
+                nativeFinalizationReentry = true;
+                runtimeContract.InitiateGameStopping.Invoke(localGame, null);
+            }
+            catch (Exception exception)
+            {
+                logWarning?.Invoke("Native death re-entry failed: " + (exception.InnerException?.Message ?? exception.Message));
+            }
+            finally
+            {
+                nativeFinalizationReentry = false;
+            }
         }
 
         static bool ReadBoolean(object instance, string propertyName)
@@ -108,6 +164,9 @@ namespace Admiral.SecondLife.Client
             return value?.ToString();
         }
 
+        static object ReadObject(object instance, string propertyName) =>
+            instance == null ? null : AccessTools.Property(instance.GetType(), propertyName)?.GetValue(instance, null);
+
         bool Fail(string message)
         {
             logWarning?.Invoke(message);
@@ -120,7 +179,10 @@ namespace Admiral.SecondLife.Client
             catch { }
             if (ReferenceEquals(active, this)) active = null;
             harmony = null;
-            pendingCorpseId = null;
+            executor = null;
+            runtimeContract = null;
+            pendingCorpseEquipment = null;
+            pendingCorpseEquipmentRootId = null;
             pendingProfileId = null;
         }
     }

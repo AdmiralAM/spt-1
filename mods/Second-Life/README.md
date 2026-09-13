@@ -16,20 +16,24 @@ Second Life Admiral is a bounded one-time same-raid recovery workstream for SPT 
 - unsupported states fail closed to native raid death;
 - disabled mode is behaviorally inert.
 
-## Current foundation
+## Current implementation
 
-This branch intentionally begins with a pure deterministic lifecycle core. It does not yet patch EFT death or spawn methods and is not an installable gameplay candidate. The first implementation task is M0 runtime archaeology: prove exact SPT 4.1.5 hooks before connecting this state machine to the client.
+The client patches the proven corpse/finalization boundary and contains the
+first guarded solo recovery executor. It captures the corpse-owned equipment
+root, prepares a distinct empty equipment/inventory root, reuses the native
+local-game player and owner factories, replaces the dead player registration,
+and resumes native death if preflight or reconstruction fails. The executor is
+disabled by default and has not yet passed the physical gameplay gate.
 
 Authority: Issue #352 and `origin/main:.github/workstreams.json` after the governance registration is integrated.
 
 ## Resume order
 
-1. Prove death, raid-end, profile-save and local-player-spawn hooks.
-2. Connect the state machine without profile mutation.
-3. Add safe alternate-spawn selection.
-4. Add owned random-pistol emergency loadout with one compatible spare magazine.
-5. Validate cross-module semantics.
-6. Produce one batched physical runtime candidate.
+1. Complete and validate the minimal recovery vertical slice.
+2. Connect bounded safe alternate-spawn selection.
+3. Connect the owned random-pistol emergency loadout with one compatible spare magazine.
+4. Validate cross-module semantics.
+5. Produce one batched physical runtime candidate.
 
 Do not create a second PR for this workstream. Continue from the live PR exact head.
 

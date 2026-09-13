@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using HarmonyLib;
 
 namespace Admiral.SecondLife.Client
 {
@@ -10,21 +9,36 @@ namespace Admiral.SecondLife.Client
         internal Type LocalGameType { get; private set; }
         internal MethodInfo CreateCorpse { get; private set; }
         internal MethodInfo InitiateGameStopping { get; private set; }
+        internal FieldInfo ProfileInventory { get; private set; }
+        internal FieldInfo InventoryEquipment { get; private set; }
+        internal ConstructorInfo EquipmentConstructor { get; private set; }
+        internal ConstructorInfo InventoryConstructor { get; private set; }
+        internal FieldInfo GameProfile { get; private set; }
+        internal FieldInfo PlayerFactory { get; private set; }
+        internal FieldInfo OwnerFactory { get; private set; }
+        internal FieldInfo LocalPlayer { get; private set; }
+        internal FieldInfo PlayerOwner { get; private set; }
+        internal FieldInfo Players { get; private set; }
+        internal MethodInfo Spawn { get; private set; }
+        internal MethodInfo CreatePlayerCamera { get; private set; }
 
         internal static bool TryResolve(out RecoveryRuntimeContract contract, out string failure)
         {
             contract = null;
             failure = null;
 
-            Type player = AccessTools.TypeByName("EFT.Player");
-            Type localPlayer = AccessTools.TypeByName("EFT.LocalPlayer");
-            Type localGame = AccessTools.TypeByName("EFT.LocalGame");
-            Type profile = AccessTools.TypeByName("EFT.Profile");
-            Type inventory = AccessTools.TypeByName("EFT.InventoryLogic.Inventory");
-            Type equipment = AccessTools.TypeByName("EFT.InventoryLogic.InventoryEquipment");
-            Type equipmentTemplate = AccessTools.TypeByName("EFT.InventoryLogic.InventoryEquipmentTemplate");
-            if (new[] { player, localPlayer, localGame, profile, inventory, equipment, equipmentTemplate }.Any(type => type == null))
+            Type player = FindType("EFT.Player");
+            Type localPlayer = FindType("EFT.LocalPlayer");
+            Type localGame = FindType("EFT.LocalGame");
+            Type profile = FindType("EFT.Profile");
+            Type inventory = FindType("EFT.InventoryLogic.Inventory");
+            Type equipment = FindType("EFT.InventoryLogic.InventoryEquipment");
+            Type equipmentTemplate = FindType("EFT.InventoryLogic.InventoryEquipmentTemplate");
+            Type cameraController = FindType("EFT.CameraControl.PlayerCameraController");
+            if (new[] { player, localPlayer, localGame, profile, inventory, equipment, equipmentTemplate, cameraController }.Any(type => type == null))
                 return Fail("required SPT 4.1 recovery types are missing", out failure);
+
+            Type baseLocalGame = localGame.BaseType;
 
             MethodInfo createCorpse = UniqueMethod(player, "CreateCorpse", isStatic: false, parameterCount: 0);
             MethodInfo initiateGameStopping = localGame.BaseType?.GetMethod(
@@ -42,6 +56,15 @@ namespace Admiral.SecondLife.Client
             Type inventoryController = player.GetNestedType("SinglePlayerInventoryController", BindingFlags.Public | BindingFlags.NonPublic);
             ConstructorInfo inventoryControllerConstructor = inventoryController?.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 .SingleOrDefault(ctor => ctor.GetParameters().Length == 4 && ctor.GetParameters()[0].ParameterType == player && ctor.GetParameters()[1].ParameterType == profile);
+            FieldInfo gameProfile = FindField(baseLocalGame, "_profile");
+            FieldInfo playerFactory = FindField(baseLocalGame, "_playerFactory");
+            FieldInfo ownerFactory = FindField(baseLocalGame, "_ownerFactory");
+            FieldInfo localPlayerField = FindField(baseLocalGame, "_localPlayer");
+            FieldInfo playerOwner = FindField(baseLocalGame, "_playerOwner");
+            FieldInfo players = FindField(baseLocalGame, "_players");
+            MethodInfo spawn = baseLocalGame?.GetMethod("Spawn", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            MethodInfo createPlayerCamera = cameraController.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
+                .SingleOrDefault(method => method.Name == "Create" && method.GetParameters().Length == 1 && method.GetParameters()[0].ParameterType == player);
 
             if (createCorpse == null || initiateGameStopping == null)
                 return Fail("exact corpse/finalization boundary changed", out failure);
@@ -53,12 +76,27 @@ namespace Admiral.SecondLife.Client
                 return Fail("empty equipment/inventory construction signatures changed", out failure);
             if (localPlayerCreate == null || inventoryControllerConstructor == null)
                 return Fail("local-player reconstruction signatures changed", out failure);
+            if (new[] { gameProfile, playerFactory, ownerFactory, localPlayerField, playerOwner, players }.Any(field => field == null) ||
+                spawn == null || createPlayerCamera == null)
+                return Fail("local-game player/owner/camera binding contract changed", out failure);
 
             contract = new RecoveryRuntimeContract
             {
                 LocalGameType = localGame,
                 CreateCorpse = createCorpse,
-                InitiateGameStopping = initiateGameStopping
+                InitiateGameStopping = initiateGameStopping,
+                ProfileInventory = profileInventory,
+                InventoryEquipment = inventoryEquipment,
+                EquipmentConstructor = equipmentConstructor,
+                InventoryConstructor = inventoryConstructor,
+                GameProfile = gameProfile,
+                PlayerFactory = playerFactory,
+                OwnerFactory = ownerFactory,
+                LocalPlayer = localPlayerField,
+                PlayerOwner = playerOwner,
+                Players = players,
+                Spawn = spawn,
+                CreatePlayerCamera = createPlayerCamera
             };
             return true;
         }
@@ -70,6 +108,22 @@ namespace Admiral.SecondLife.Client
                     method.IsStatic == isStatic &&
                     !method.IsGenericMethod &&
                     method.GetParameters().Length == parameterCount);
+
+        static FieldInfo FindField(Type type, string name)
+        {
+            while (type != null)
+            {
+                FieldInfo field = type.GetField(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+                if (field != null) return field;
+                type = type.BaseType;
+            }
+            return null;
+        }
+
+        static Type FindType(string fullName) =>
+            AppDomain.CurrentDomain.GetAssemblies()
+                .Select(assembly => assembly.GetType(fullName, false))
+                .FirstOrDefault(type => type != null);
 
         static bool Fail(string message, out string failure)
         {

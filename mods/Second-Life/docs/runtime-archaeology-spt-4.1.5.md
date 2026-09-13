@@ -132,6 +132,23 @@ No suitable public Extra Lives source repository or verifiable source license
 was found in the GitHub search performed for this milestone, so no third-party
 code or assets were used.
 
+## Reconnect and same-raid re-entry
+
+EFT retains `TarkovApplication.GameReconnect(...)`, but its async path creates
+a new `ClientGameWorld` for a network session. The installed
+`spt-singleplayer.dll` contains no adapter that reconnects this path to the
+current `LocalGame`, so it is not a usable same-world recovery entry point in
+SPT 4.1.5. The reusable native basis is instead the current local game's
+existing `_playerFactory` and `_ownerFactory`, followed by the same player
+dictionary, camera and `Spawn()` binding sequence used during initial startup.
+
+Before invoking `_playerFactory` again, the dead local player must be removed
+from `GameWorld`: `Player.Init(...)` registers the new player, and
+`GameWorld.RegisterPlayer(...)` keys the alive-player tables by profile ID.
+After successful replacement, `Player.Dispose()` unregisters and cleans up the
+old player while retaining its separately created corpse and corpse-owned
+equipment root.
+
 ## Remaining physical proof
 
 Metadata and IL prove the available seam and ordering, not that a reconstructed
