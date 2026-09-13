@@ -1,156 +1,73 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Reflection.Emit;
 using UnityEngine;
 
 namespace SPTBeltArmbandInventory
 {
     internal static class EmbeddedAccessoryGridRuntime
     {
-        const float PanelWidth = 82f;
-        const float PanelHeight = 166f;
-        const float PanelGap = 8f;
-        const float OverlayWidth = 180f;
-        const float OverlayHeight = PanelHeight * 2f + PanelGap;
-        const float AnchorGap = 8f;
-
-        sealed class State
-        {
-            internal readonly WeakReference Owner;
-            internal readonly List<Component> Views = new List<Component>();
-            internal GameObject Root;
-            internal State(Component owner) { Owner = new WeakReference(owner); }
-        }
-
+        const float Gap = 8f;
         internal static Action<string> LogInfo;
         internal static Action<string> LogWarning;
         internal static Type EquipmentSlotType;
-        internal static MethodInfo GetSlot;
-        internal static PropertyInfo ItemUiContextInstance;
-        internal static FieldInfo GridWindowTemplate;
-        internal static FieldInfo ContainedGridsTemplate;
-        internal static MethodInfo GeneratedGridsShow;
-        internal static FieldInfo EquipmentTabSlotViews;
-
-        static readonly Dictionary<int, State> States = new Dictionary<int, State>();
+        internal static FieldInfo SlotViewsField;
+        internal static FieldInfo SpecialSlotsPanelField;
         static bool logged;
         static bool warned;
 
-        internal static void AfterShow(object ownerObject, object[] args)
+        internal static void AfterShow(object ownerObject)
         {
             Component owner = ownerObject as Component;
-            if (owner == null || args == null || args.Length != 6 || args[1] == null || args[2] == null) return;
+            if (owner == null) return;
             try
             {
-                Remove(owner);
-                object itemUiContext = ItemUiContextInstance.GetValue(null, null);
-                Component template = ResolveTemplate(itemUiContext);
-                RectTransform root = CreateOverlayRoot(owner);
-                if (template == null || root == null) return;
+                IDictionary views = SlotViewsField.GetValue(owner) as IDictionary;
+                if (views == null) return;
+                object pocketsKey = Enum.Parse(EquipmentSlotType, "Pockets", false);
+                object armBandKey = Enum.Parse(EquipmentSlotType, "ArmBand", false);
+                object headBandKey = Enum.ToObject(EquipmentSlotType, RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue);
+                Component pockets = views[pocketsKey] as Component;
+                Component headBand = views[headBandKey] as Component;
+                Component armBand = views[armBandKey] as Component;
+                if (pockets == null || headBand == null || armBand == null) return;
 
-                State state = new State(owner);
-                state.Root = root.gameObject;
-                States[owner.GetInstanceID()] = state;
-                EmbeddedAccessoryGridLifetime lifetime = owner.gameObject.GetComponent<EmbeddedAccessoryGridLifetime>()
-                    ?? owner.gameObject.AddComponent<EmbeddedAccessoryGridLifetime>();
-                lifetime.Owner = owner;
-                lifetime.Root = root.gameObject;
-                Add(state, template, root, args[1], args[0], args[2], itemUiContext,
-                    RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue, 0);
-                Add(state, template, root, args[1], args[0], args[2], itemUiContext,
-                    Convert.ToInt32(Enum.Parse(EquipmentSlotType, "ArmBand", false)), 1);
+                Transform specialPanel = SpecialSlotsPanelField.GetValue(pockets) as Transform;
+                RectTransform content = headBand.transform.parent as RectTransform;
+                RectTransform specialRect = specialPanel as RectTransform;
+                if (specialRect == null || content == null || !specialPanel.gameObject.activeInHierarchy) return;
 
-                if (state.Views.Count == 0) Remove(owner);
-
-                if (!logged && state.Views.Count > 0)
+                Canvas.ForceUpdateCanvases();
+                Vector3[] corners = new Vector3[4];
+                specialRect.GetWorldCorners(corners);
+                Vector3 anchor = content.InverseTransformPoint(corners[0]);
+                PlaceNativeRow(headBand, anchor);
+                float height = Math.Max(1f, ((RectTransform)headBand.transform).rect.height);
+                PlaceNativeRow(armBand, anchor + Vector3.down * (height + Gap));
+                if (!logged)
                 {
                     logged = true;
-                    LogInfo?.Invoke("B&A&HB embedded accessory grids initialized from EFT GeneratedGridsView; HeadBand is above ArmBand and native equipment panels were not moved.");
+                    LogInfo?.Invoke("B&A&HB native HeadBand/ArmBand rows placed below the Pockets special-slot panel.");
                 }
             }
-            catch (Exception exception) { Warn("Embedded accessory grids failed closed", exception); }
-        }
-
-        internal static void OwnerDisabled(Component owner)
-        {
-            if (owner != null) Remove(owner);
-        }
-
-        static void Add(State state, Component template, RectTransform host, object equipment, object itemContext, object controller, object itemUiContext, int slotNumber, int index)
-        {
-            object slotValue = Enum.ToObject(EquipmentSlotType, slotNumber);
-            object slot = GetSlot.Invoke(equipment, new[] { slotValue });
-            object item = ReflectionTools.ReadMember(slot, "ContainedItem");
-            if (item == null || !IsOwnedAccessory(item, slotNumber)) return;
-
-            Component view = UnityEngine.Object.Instantiate(template, host, false);
-            if (view == null) return;
-            view.gameObject.name = index == 0 ? "BAndHB_EmbeddedHeadBand" : "BAndHB_EmbeddedArmBand";
-            RectTransform rect = view.transform as RectTransform;
-            if (rect == null) { UnityEngine.Object.Destroy(view.gameObject); return; }
-            IgnoreAutomaticLayout(view.gameObject);
-            GeneratedGridsShow.Invoke(view, new[] { item, itemContext, controller, null, itemUiContext, false });
-            rect.anchorMin = new Vector2(0f, 1f);
-            rect.anchorMax = new Vector2(0f, 1f);
-            rect.pivot = new Vector2(0f, 1f);
-            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, PanelWidth);
-            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, PanelHeight);
-            rect.anchoredPosition = new Vector2(0f, -index * (PanelHeight + PanelGap));
-
-            view.gameObject.SetActive(true);
-            state.Views.Add(view);
-        }
-
-        static bool IsOwnedAccessory(object item, int slotNumber)
-        {
-            object value = ReflectionTools.ReadMember(item, "StringTemplateId") ?? ReflectionTools.ReadMember(item, "TemplateId");
-            string templateId = value?.ToString();
-            if (slotNumber == RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue)
-                return string.Equals(templateId, RuntimeIdentity.EmergencyHeadBandItemId, StringComparison.Ordinal);
-            return WearableItemDescriptorRegistry.TryGet(templateId, out WearableItemDescriptor descriptor)
-                && descriptor.Category == AccessoryCategory.ArmBand;
-        }
-
-        static Component ResolveTemplate(object itemUiContext)
-        {
-            object gridWindow = GridWindowTemplate.GetValue(itemUiContext);
-            return gridWindow == null ? null : ContainedGridsTemplate.GetValue(gridWindow) as Component;
-        }
-
-        static RectTransform CreateOverlayRoot(Component owner)
-        {
-            IDictionary slotViews = EquipmentTabSlotViews?.GetValue(owner) as IDictionary;
-            if (slotViews == null) return null;
-            RectTransform firstSpecial = null;
-            foreach (DictionaryEntry entry in slotViews)
+            catch (Exception exception)
             {
-                if (entry.Key == null || entry.Key.ToString().IndexOf("SpecialSlot", StringComparison.OrdinalIgnoreCase) < 0) continue;
-                RectTransform candidate = (entry.Value as Component)?.transform as RectTransform;
-                if (candidate == null) continue;
-                if (firstSpecial == null || candidate.position.x < firstSpecial.position.x) firstSpecial = candidate;
+                if (warned) return;
+                warned = true;
+                while (exception is TargetInvocationException invocation && invocation.InnerException != null) exception = invocation.InnerException;
+                LogWarning?.Invoke("Native accessory-row placement failed closed: " + exception.GetType().FullName + ": " + exception.Message);
             }
-            RectTransform host = firstSpecial?.parent as RectTransform;
-            if (firstSpecial == null || host == null) return null;
+        }
 
-            Canvas.ForceUpdateCanvases();
-            Vector3[] corners = new Vector3[4];
-            firstSpecial.GetWorldCorners(corners);
-            Vector3 belowLeft = host.InverseTransformPoint(corners[0]);
-
-            GameObject rootObject = new GameObject("BAndHB_EmbeddedAccessories", typeof(RectTransform));
-            rootObject.transform.SetParent(host, false);
-            IgnoreAutomaticLayout(rootObject);
-            RectTransform root = (RectTransform)rootObject.transform;
-            root.anchorMin = Vector2.zero;
-            root.anchorMax = Vector2.zero;
-            root.pivot = new Vector2(0f, 1f);
-            root.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, OverlayWidth);
-            root.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, OverlayHeight);
-            root.anchoredPosition = new Vector2(belowLeft.x, belowLeft.y - AnchorGap);
-            root.SetAsLastSibling();
-            return root;
+        static void PlaceNativeRow(Component view, Vector3 localPosition)
+        {
+            RectTransform rect = view.transform as RectTransform;
+            if (rect == null) return;
+            IgnoreAutomaticLayout(view.gameObject);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.localPosition = new Vector3(localPosition.x, localPosition.y, rect.localPosition.z);
+            rect.SetAsLastSibling();
+            view.gameObject.SetActive(true);
         }
 
         static void IgnoreAutomaticLayout(GameObject target)
@@ -161,51 +78,11 @@ namespace SPTBeltArmbandInventory
             type.GetProperty("ignoreLayout", BindingFlags.Instance | BindingFlags.Public)?.SetValue(element, true, null);
         }
 
-        static void Remove(Component owner)
-        {
-            if (!States.TryGetValue(owner.GetInstanceID(), out State state)) return;
-            for (int i = 0; i < state.Views.Count; i++)
-            {
-                Component view = state.Views[i];
-                if (view == null) continue;
-                try { ReflectionTools.FindInstanceMethod(view.GetType(), "Close", typeof(void))?.Invoke(view, null); } catch { }
-            }
-            if (state.Root != null) UnityEngine.Object.Destroy(state.Root);
-            States.Remove(owner.GetInstanceID());
-        }
-
-        static void Warn(string message, Exception exception)
-        {
-            if (warned) return;
-            warned = true;
-            while (exception is TargetInvocationException invocation && invocation.InnerException != null) exception = invocation.InnerException;
-            LogWarning?.Invoke(message + ": " + exception.GetType().FullName + ": " + exception.Message);
-        }
-
         internal static void Reset()
         {
-            var owners = new List<Component>();
-            foreach (State state in States.Values)
-                if (state.Owner.Target is Component owner) owners.Add(owner);
-            for (int i = 0; i < owners.Count; i++) Remove(owners[i]);
-            States.Clear();
-            LogInfo = null; LogWarning = null; EquipmentSlotType = null; GetSlot = null;
-            ItemUiContextInstance = null; GridWindowTemplate = null; ContainedGridsTemplate = null; GeneratedGridsShow = null;
-            EquipmentTabSlotViews = null;
+            LogInfo = null; LogWarning = null; EquipmentSlotType = null;
+            SlotViewsField = null; SpecialSlotsPanelField = null;
             logged = false; warned = false;
-        }
-    }
-
-    internal sealed class EmbeddedAccessoryGridLifetime : MonoBehaviour
-    {
-        internal Component Owner;
-        internal GameObject Root;
-
-        void OnDisable()
-        {
-            if (Owner != null) EmbeddedAccessoryGridRuntime.OwnerDisabled(Owner);
-            else if (Root != null) UnityEngine.Object.Destroy(Root);
-            Root = null;
         }
     }
 
@@ -217,7 +94,8 @@ namespace SPTBeltArmbandInventory
         object harmony;
         MethodInfo unpatchSelf;
 
-        internal EmbeddedAccessoryGridPatches(Action<string> logInfo, Action<string> logWarning) { this.logInfo = logInfo; this.logWarning = logWarning; }
+        internal EmbeddedAccessoryGridPatches(Action<string> logInfo, Action<string> logWarning)
+        { this.logInfo = logInfo; this.logWarning = logWarning; }
 
         internal bool TryInstall()
         {
@@ -225,54 +103,38 @@ namespace SPTBeltArmbandInventory
             {
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
-                Type equipmentTab = ReflectionTools.FindType("EFT.UI.EquipmentTab");
+                Type panel = ReflectionTools.FindType("EFT.UI.ContainersPanel");
                 Type equipment = ReflectionTools.FindType("EFT.InventoryLogic.InventoryEquipment");
                 Type equipmentSlot = ReflectionTools.FindType("EFT.InventoryLogic.EquipmentSlot");
-                Type itemUiContext = ReflectionTools.FindType("EFT.UI.ItemUiContext");
-                Type gridWindow = ReflectionTools.FindType("EFT.UI.GridWindow");
-                Type generated = ReflectionTools.FindType("EFT.UI.DragAndDrop.GeneratedGridsView");
-                if (harmonyType == null || harmonyMethodType == null || equipmentTab == null || equipment == null || equipmentSlot == null || itemUiContext == null || gridWindow == null || generated == null)
-                    return Fail("Embedded-grid EFT boundary is unavailable.");
-
-                MethodInfo show = FindShow(equipmentTab, equipment);
+                Type searchable = ReflectionTools.FindType("EFT.UI.DragAndDrop.SearchableSlotView");
+                if (harmonyType == null || harmonyMethodType == null || panel == null || equipment == null || equipmentSlot == null || searchable == null)
+                    return Fail("Native accessory-row boundary unavailable.");
+                MethodInfo show = FindShow(panel, equipment);
                 EmbeddedAccessoryGridRuntime.EquipmentSlotType = equipmentSlot;
-                EmbeddedAccessoryGridRuntime.GetSlot = equipment.GetMethod("GetSlot", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { equipmentSlot }, null);
-                EmbeddedAccessoryGridRuntime.ItemUiContextInstance = itemUiContext.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-                EmbeddedAccessoryGridRuntime.GridWindowTemplate = itemUiContext.GetField("_gridWindowTemplate", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                EmbeddedAccessoryGridRuntime.ContainedGridsTemplate = gridWindow.GetField("_containedGridsTemplate", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                EmbeddedAccessoryGridRuntime.GeneratedGridsShow = FindGeneratedShow(generated);
-                EmbeddedAccessoryGridRuntime.EquipmentTabSlotViews = FindSlotViewsField(equipmentTab, equipmentSlot);
+                EmbeddedAccessoryGridRuntime.SlotViewsField = panel.GetField("_slotViews", BindingFlags.Instance | BindingFlags.NonPublic);
+                EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField = searchable.GetField("_specSlotsPanel", BindingFlags.Instance | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.LogInfo = logInfo;
                 EmbeddedAccessoryGridRuntime.LogWarning = logWarning;
-                if (show == null || EmbeddedAccessoryGridRuntime.GetSlot == null || EmbeddedAccessoryGridRuntime.ItemUiContextInstance == null || EmbeddedAccessoryGridRuntime.GridWindowTemplate == null || EmbeddedAccessoryGridRuntime.ContainedGridsTemplate == null || EmbeddedAccessoryGridRuntime.GeneratedGridsShow == null || EmbeddedAccessoryGridRuntime.EquipmentTabSlotViews == null)
-                    return Fail("Embedded-grid exact SPT 4.1 lifecycle changed: Show=" + (show != null)
-                        + ", GetSlot=" + (EmbeddedAccessoryGridRuntime.GetSlot != null)
-                        + ", ItemUiContext.Instance=" + (EmbeddedAccessoryGridRuntime.ItemUiContextInstance != null)
-                        + ", GridWindowTemplate=" + (EmbeddedAccessoryGridRuntime.GridWindowTemplate != null)
-                        + ", ContainedGridsTemplate=" + (EmbeddedAccessoryGridRuntime.ContainedGridsTemplate != null)
-                        + ", GeneratedGridsView.Show=" + (EmbeddedAccessoryGridRuntime.GeneratedGridsShow != null)
-                        + ", EquipmentTabSlotViews=" + (EmbeddedAccessoryGridRuntime.EquipmentTabSlotViews != null) + ".");
-
+                if (show == null || EmbeddedAccessoryGridRuntime.SlotViewsField == null || EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField == null)
+                    return Fail("Exact ContainersPanel/SearchableSlotView fields unavailable.");
                 MethodInfo patch = FindPatch(harmonyType, harmonyMethodType);
                 ConstructorInfo hm = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
                 unpatchSelf = harmonyType.GetMethod("UnpatchSelf", BindingFlags.Instance | BindingFlags.Public);
-                if (patch == null || hm == null || unpatchSelf == null) return Fail("Embedded-grid Harmony API unavailable.");
+                if (patch == null || hm == null || unpatchSelf == null) return Fail("Native accessory-row Harmony API unavailable.");
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
-                Patch(patch, harmonyMethodType, show, null, hm.Invoke(new object[] { Method(nameof(ShowPostfix)) }));
-                logInfo?.Invoke("B&A&HB native embedded HeadBand/ArmBand grids installed on the EquipmentTab lifecycle.");
+                Patch(patch, harmonyMethodType, show, hm.Invoke(new object[] { Method(nameof(ShowPostfix)) }));
+                logInfo?.Invoke("B&A&HB native HeadBand/ArmBand rows installed through the Pack 'n' Strap ContainersPanel pattern.");
                 return true;
             }
-            catch (Exception exception) { Dispose(); return Fail("Embedded-grid installation failed safely: " + exception.Message); }
+            catch (Exception exception) { Dispose(); return Fail("Native accessory-row installation failed safely: " + exception.Message); }
         }
 
-        static void ShowPostfix(object __instance, object[] __args) { EmbeddedAccessoryGridRuntime.AfterShow(__instance, __args); }
-        static MethodInfo Method(string n) => typeof(EmbeddedAccessoryGridPatches).GetMethod(n, BindingFlags.Static | BindingFlags.NonPublic);
-        static MethodInfo FindShow(Type t, Type equipment) { foreach (MethodInfo m in t.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) { ParameterInfo[] p=m.GetParameters(); if(m.Name=="Show" && p.Length==6 && p[1].ParameterType==equipment) return m; } return null; }
-        static MethodInfo FindGeneratedShow(Type t) { foreach(MethodInfo m in t.GetMethods(BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.DeclaredOnly)) if(m.Name=="Show" && m.GetParameters().Length==6) return m; return null; }
-        static FieldInfo FindSlotViewsField(Type tab, Type slotEnum) { for(Type current=tab;current!=null;current=current.BaseType) foreach(FieldInfo f in current.GetFields(BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.DeclaredOnly)) { Type ft=f.FieldType; if(!typeof(IDictionary).IsAssignableFrom(ft) && (!ft.IsGenericType || ft.GetGenericArguments().Length!=2 || ft.GetGenericArguments()[0]!=slotEnum)) continue; return f; } return null; }
-        static MethodInfo FindPatch(Type ht, Type hmt) { foreach(MethodInfo m in ht.GetMethods(BindingFlags.Instance|BindingFlags.Public)) { if(m.Name!="Patch") continue; ParameterInfo[] p=m.GetParameters(); if(p.Length>2 && typeof(MethodBase).IsAssignableFrom(p[0].ParameterType)) return m; } return null; }
-        void Patch(MethodInfo method, Type hmt, MethodInfo original, object prefix, object postfix) { ParameterInfo[] p=method.GetParameters(); object[] a=new object[p.Length]; a[0]=original; for(int i=1;i<p.Length;i++){if(p[i].ParameterType!=hmt)continue;if(p[i].Name.Equals("prefix",StringComparison.OrdinalIgnoreCase))a[i]=prefix;else if(p[i].Name.Equals("postfix",StringComparison.OrdinalIgnoreCase))a[i]=postfix;} method.Invoke(harmony,a); }
+        static void ShowPostfix(object __instance) { EmbeddedAccessoryGridRuntime.AfterShow(__instance); }
+        static MethodInfo Method(string name) => typeof(EmbeddedAccessoryGridPatches).GetMethod(name, BindingFlags.Static | BindingFlags.NonPublic);
+        static MethodInfo FindShow(Type type, Type equipment) { foreach (MethodInfo method in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) { ParameterInfo[] p = method.GetParameters(); if (method.Name == "Show" && p.Length == 6 && p[1].ParameterType == equipment) return method; } return null; }
+        static MethodInfo FindPatch(Type harmonyType, Type harmonyMethodType) { foreach (MethodInfo method in harmonyType.GetMethods(BindingFlags.Instance | BindingFlags.Public)) { if (method.Name != "Patch") continue; ParameterInfo[] p = method.GetParameters(); if (p.Length > 2 && typeof(MethodBase).IsAssignableFrom(p[0].ParameterType)) return method; } return null; }
+        void Patch(MethodInfo method, Type harmonyMethodType, MethodInfo original, object postfix) { ParameterInfo[] p = method.GetParameters(); object[] args = new object[p.Length]; args[0] = original; for (int i = 1; i < p.Length; i++) if (p[i].ParameterType == harmonyMethodType && p[i].Name.Equals("postfix", StringComparison.OrdinalIgnoreCase)) args[i] = postfix; method.Invoke(harmony, args); }
         bool Fail(string message) { logWarning?.Invoke(message); return false; }
-        public void Dispose() { try { if(harmony!=null && unpatchSelf!=null) unpatchSelf.Invoke(harmony,null); } catch {} harmony=null; unpatchSelf=null; EmbeddedAccessoryGridRuntime.Reset(); }
+        public void Dispose() { try { if (harmony != null && unpatchSelf != null) unpatchSelf.Invoke(harmony, null); } catch { } harmony = null; unpatchSelf = null; EmbeddedAccessoryGridRuntime.Reset(); }
     }
 }

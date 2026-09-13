@@ -72,7 +72,7 @@ namespace SPTBeltArmbandInventory
                     if (containersOrderField == null)
                         return Fail("ContainersPanel canonical slot-order array was not found exactly; Belt UI projection refused.");
                     originalContainersOrder = containersOrderField.GetValue(null) as Array;
-                    installedContainersOrder = BuildBeltOrder(originalContainersOrder, equipmentSlotType);
+                    installedContainersOrder = BuildWearableOrder(originalContainersOrder, equipmentSlotType);
                     containersOrderField.SetValue(null, installedContainersOrder);
                 }
 
@@ -83,7 +83,7 @@ namespace SPTBeltArmbandInventory
                 // visual lifecycle and creates/binds the compact view only from the real
                 // Headwear SlotView.Show boundary.
                 logInfo?.Invoke(includeBeltProjection
-                    ? "B&A&HB #2 MOD SPT dedicated client slot contract installed: Belt pseudo-slot15 after Pockets; HeadBand pseudo-slot16 presentation deferred entirely to native SlotView.Show."
+                    ? "B&A&HB #2 MOD SPT dedicated client slot contract installed: Belt, HeadBand and ArmBand use native ContainersPanel rows after Pockets."
                     : "B&A&HB companion slot contract installed: HeadBand pseudo-slot16 enabled; Belt ContainersPanel projection remains owned by Pack 'n' Strap.");
                 return true;
             }
@@ -112,17 +112,21 @@ namespace SPTBeltArmbandInventory
             return null;
         }
 
-        static Array BuildBeltOrder(Array source, Type equipmentSlotType)
+        static Array BuildWearableOrder(Array source, Type equipmentSlotType)
         {
             if (source == null || source.Length != 5) throw new InvalidOperationException("canonical ContainersPanel order unavailable");
-            Array result = Array.CreateInstance(equipmentSlotType, source.Length + 1);
+            Array result = Array.CreateInstance(equipmentSlotType, source.Length + 3);
             int target = 0;
             for (int i = 0; i < source.Length; i++)
             {
                 object value = source.GetValue(i);
                 result.SetValue(value, target++);
                 if (string.Equals(value?.ToString(), "Pockets", StringComparison.Ordinal))
+                {
                     result.SetValue(DedicatedEquipmentSlotRuntime.BeltSlotKey, target++);
+                    result.SetValue(DedicatedEquipmentSlotRuntime.HeadBandSlotKey, target++);
+                    result.SetValue(Enum.Parse(equipmentSlotType, "ArmBand", false), target++);
+                }
             }
             if (target != result.Length) throw new InvalidOperationException("Pockets anchor missing from canonical ContainersPanel order");
             return result;

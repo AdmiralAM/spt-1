@@ -19,12 +19,14 @@ namespace SPTBeltArmbandInventory
         static Component lastBeltView;
         static readonly Dictionary<Type, PropertyInfo> TextPropertyCache = new Dictionary<Type, PropertyInfo>();
 
-        internal static bool IsDedicatedBelt(object value)
+        internal static bool IsProjectedWearable(object value)
         {
-            return value != null
-                && EquipmentSlotType != null
-                && EquipmentSlotType.IsInstanceOfType(value)
-                && Convert.ToInt32(value) == RuntimeIdentity.DedicatedBeltEquipmentSlotValue;
+            if (value == null || EquipmentSlotType == null || !EquipmentSlotType.IsInstanceOfType(value)) return false;
+            int slot = Convert.ToInt32(value);
+            int armBand = Convert.ToInt32(Enum.Parse(EquipmentSlotType, "ArmBand", false));
+            return slot == RuntimeIdentity.DedicatedBeltEquipmentSlotValue
+                || slot == RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue
+                || slot == armBand;
         }
 
         internal static void BeginPanelShow()
@@ -200,7 +202,7 @@ namespace SPTBeltArmbandInventory
 
         static void SlotFactoryPrefix(object[] __args, object __instance, ref object __state)
         {
-            if (__args == null || __args.Length != 1 || !BeltContainersPanelProjectionRuntime.IsDedicatedBelt(__args[0])) return;
+            if (__args == null || __args.Length != 1 || !BeltContainersPanelProjectionRuntime.IsProjectedWearable(__args[0])) return;
             try
             {
                 object installed = BeltContainersPanelProjectionRuntime.DefaultTemplateField.GetValue(__instance);
@@ -217,8 +219,9 @@ namespace SPTBeltArmbandInventory
 
         static void SlotFactoryPostfix(object[] __args, object __result)
         {
-            if (__args == null || __args.Length != 1 || !BeltContainersPanelProjectionRuntime.IsDedicatedBelt(__args[0])) return;
-            BeltContainersPanelProjectionRuntime.RecordFactoryResult(__result);
+            if (__args == null || __args.Length != 1 || !BeltContainersPanelProjectionRuntime.IsProjectedWearable(__args[0])) return;
+            if (Convert.ToInt32(__args[0]) == RuntimeIdentity.DedicatedBeltEquipmentSlotValue)
+                BeltContainersPanelProjectionRuntime.RecordFactoryResult(__result);
         }
 
         static Exception SlotFactoryFinalizer(Exception __exception, object __instance, object __state)
