@@ -40,7 +40,9 @@ class OptionalStorefrontRuntimeTests(unittest.TestCase):
 
     def test_optional_rewards_are_single_bounded_replacements(self):
         rewards=json.loads((ROOT/"db/optional/storefront/quest-reward-replacements.json").read_text(encoding="utf-8"))
+        signature=json.loads((ROOT/"db/rewards/natalya-signature-replacements.json").read_text(encoding="utf-8"))
         self.assertEqual(len(rewards),5)
+        self.assertFalse(set(rewards) & set(signature))
         for quest_id,reward in rewards.items():
             self.assertEqual(reward["type"],"Item",quest_id)
             self.assertEqual(reward["value"],1,quest_id)
