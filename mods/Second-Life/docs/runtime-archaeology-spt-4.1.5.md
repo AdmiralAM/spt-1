@@ -63,6 +63,15 @@ constructor are available, but the replacement root must be installed before
 constructing the recovered `SinglePlayerInventoryController`. Reusing the
 corpse root is a hard preflight failure even when all slots appear empty.
 
+Metadata-only inspection additionally proves that `EFT.Profile.Inventory` is
+a public replaceable `Inventory` field, while `Inventory.Equipment` is a public
+readonly field. The public `Inventory` constructor takes the new equipment root
+first and the existing stash, quest-raid, quest-stash, sorting-table, hideout,
+discard-limit and deserialization state thereafter (12 parameters total).
+Recovery must therefore construct a replacement inventory atomically around
+the preserved non-equipment roots; mutating the readonly equipment field or
+sharing the corpse-owned root is forbidden.
+
 ## Proven recovery construction APIs
 
 The normal local-player constructor is:

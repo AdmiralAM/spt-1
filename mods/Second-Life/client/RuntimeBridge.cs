@@ -35,32 +35,18 @@ namespace Admiral.SecondLife.Client
         {
             try
             {
-                Type playerType = AccessTools.TypeByName("EFT.Player");
-                Type localGameType = AccessTools.TypeByName("EFT.LocalGame");
-                if (playerType == null || localGameType == null)
-                    return Fail("SPT 4.1 Player/LocalGame types were not found; module remains inert.");
-
-                MethodInfo createCorpse = playerType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                    .SingleOrDefault(method => method.Name == "CreateCorpse" && !method.IsGenericMethod && method.GetParameters().Length == 0);
-                MethodInfo initiateGameStopping = localGameType.BaseType?.GetMethod(
-                    "InitiateGameStopping",
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                    null,
-                    Type.EmptyTypes,
-                    null);
-
-                if (createCorpse == null || initiateGameStopping == null)
-                    return Fail("Exact SPT 4.1 death boundary changed; module remains inert.");
+                if (!RecoveryRuntimeContract.TryResolve(out RecoveryRuntimeContract contract, out string failure))
+                    return Fail("SPT 4.1 recovery contract rejected: " + failure + "; module remains inert.");
 
                 harmony = new Harmony(HarmonyId);
                 active = this;
                 harmony.Patch(
-                    createCorpse,
+                    contract.CreateCorpse,
                     postfix: new HarmonyMethod(typeof(RuntimeBridge), nameof(CorpseCreatedPostfix)));
                 harmony.Patch(
-                    initiateGameStopping,
+                    contract.InitiateGameStopping,
                     prefix: new HarmonyMethod(typeof(RuntimeBridge), nameof(GameStoppingPrefix)));
-                logInfo?.Invoke("Verified and patched the SPT 4.1 corpse/finalization boundary.");
+                logInfo?.Invoke("Verified SPT 4.1 recovery ownership/construction contract and patched the death boundary.");
                 return true;
             }
             catch (Exception exception)
