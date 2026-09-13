@@ -71,9 +71,14 @@ def main():
   start=[{"id":hid(qid+"level"),"index":0,"compareMethod":">=","dynamicLocale":False,"globalQuestCounterId":"","visibilityConditions":[],"parentId":"","value":level,"conditionType":"Level"},{"id":hid(qid+"pre"),"index":1,"dynamicLocale":False,"globalQuestCounterId":"","visibilityConditions":[],"parentId":"","target":previous,"status":[4],"availableAfter":0,"dispersion":0,"conditionType":"Quest"}]
   quest={"QuestName":en_name,"_id":qid,"canShowNotificationsInGame":True,"conditions":{"AvailableForFinish":finish,"AvailableForStart":start,"Fail":[]},"description":qid+" description","failMessageText":qid+" failMessageText","name":qid+" name","note":qid+" note","traderId":TRADER,"location":"any","image":"/files/quest/icon/5a27cafa86f77424e20615d6.jpg","type":"PickUp" if order in (2,8) else ("Elimination" if order in (3,5,7,9,10) else "Exploration"),"isKey":False,"restartable":False,"instantComplete":False,"secretQuest":False,"startedMessageText":qid+" startedMessageText","successMessageText":qid+" successMessageText","acceptPlayerMessage":qid+" acceptPlayerMessage","acceptanceAndFinishingSource":"eft","declinePlayerMessage":qid+" declinePlayerMessage","completePlayerMessage":qid+" completePlayerMessage","changeQuestMessageText":qid+" changeQuestMessageText","rewards":{"Started":[],"Success":rewards,"Fail":[]},"side":"Pmc","status":0,"progressSource":"eft","gameModes":[],"rankingModes":[],"arenaLocations":[]}
   (qdir/f"{order:02d}-{qid}.json").write_text(json.dumps(quest,ensure_ascii=False,separators=(",",":"))+"\n",encoding="utf-8")
-  for loc,name,brief,done in ((en,en_name,en_brief,"Icebreaker operation logged."),(ru,ru_name,ru_brief,"Операция на Icebreaker внесена в журнал.")):
+  next_en = STEPS[order][0] if order < len(STEPS) else None
+  next_ru = STEPS[order][1] if order < len(STEPS) else None
+  done_en = (f"Operation {en_name} is closed. Next assignment: {next_en}." if next_en else f"Operation {en_name} is closed. The Boreas investigation is complete.")
+  done_ru = (f"Операция «{ru_name}» закрыта. Следующая задача: «{next_ru}»." if next_ru else f"Операция «{ru_name}» закрыта. Расследование по «Борею» завершено.")
+  for loc,name,brief,done,requirements in ((en,en_name,en_brief,done_en,en_req),(ru,ru_name,ru_brief,done_ru,ru_req)):
    body=(f"Situation:\n{brief}" if loc is en else f"Обстановка:\n{brief}")
    loc.update({qid+" name":name,qid+" description":body,qid+" note":"",qid+" startedMessageText":body,qid+" successMessageText":done,qid+" failMessageText":"",qid+" acceptPlayerMessage":body,qid+" declinePlayerMessage":"",qid+" completePlayerMessage":done,qid+" changeQuestMessageText":""})
+   for condition,label in zip(finish,requirements): loc[condition["id"]]=label
   rows.append({"order":order,"id":qid,"prerequisite":previous,"level":level,"nameEn":en_name,"nameRu":ru_name})
   previous=qid
  (ldir/"en.json").write_text(json.dumps(en,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")

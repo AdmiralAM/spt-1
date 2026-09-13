@@ -45,6 +45,10 @@ class IcebreakerOptionalRuntimeTests(unittest.TestCase):
                 for field in fields:
                     self.assertIn(f"{quest['_id']} {field}", locale)
                 self.assertIn("\n", locale[f"{quest['_id']} description"])
+                self.assertNotIn("operation logged", locale[f"{quest['_id']} successMessageText"].lower())
+                self.assertNotIn("внесена в журнал", locale[f"{quest['_id']} successMessageText"].lower())
+                for condition in quest["conditions"]["AvailableForFinish"]:
+                    self.assertTrue(locale.get(condition["id"]), condition["id"])
 
     def test_core_graph_never_depends_on_optional_ids(self):
         optional_ids = {q["_id"] for q in self.quests}
