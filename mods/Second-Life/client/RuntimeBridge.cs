@@ -15,7 +15,7 @@ namespace Admiral.SecondLife.Client
         readonly ConfigEntry<bool> enabled;
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
-        readonly RecoveryStateMachine lifecycle = new RecoveryStateMachine();
+        readonly RecoveryFinalizationGate finalizationGate = new RecoveryFinalizationGate();
         Harmony harmony;
         string pendingCorpseId;
         string pendingProfileId;
@@ -96,22 +96,18 @@ namespace Admiral.SecondLife.Client
             if (enabled == null || !enabled.Value) return true;
 
             string raidId = pendingProfileId + ":" + RuntimeHelpers.GetHashCode(localGame).ToString("X8");
-            if (!lifecycle.TryApply(RecoveryTransition.EnableRaid, raidId: raidId) &&
-                lifecycle.Snapshot.RaidId != raidId)
-                return true;
-
-            if (!lifecycle.TryApply(RecoveryTransition.CaptureFirstDeath, originalCorpseId: pendingCorpseId))
-                return true;
-
             // The boundary is executable, but native finalization is never suppressed
             // until the player reconstruction executor proves all prerequisites.
-            lifecycle.TryApply(RecoveryTransition.AbortToNativeDeath);
+            NativeFinalizationDecision decision = finalizationGate.HandleDeathBoundary(
+                raidId,
+                pendingCorpseId,
+                executorReady: false);
             if (!warnedExecutorUnavailable)
             {
                 warnedExecutorUnavailable = true;
                 logWarning?.Invoke("Recovery executor is not ready; continuing the native death path.");
             }
-            return true;
+            return decision == NativeFinalizationDecision.ContinueNative;
         }
 
         static bool ReadBoolean(object instance, string propertyName)

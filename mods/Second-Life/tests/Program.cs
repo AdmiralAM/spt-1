@@ -181,6 +181,27 @@ Expect(RecoveryOwnershipPlan.TryCreate(
     out RecoveryOwnershipPlan unarmedOwnership), "unarmed recovery still receives a distinct empty equipment root");
 Expect(unarmedOwnership.Armament is null, "unarmed ownership plan generates no equipment");
 
+var unavailableGate = new RecoveryFinalizationGate();
+Expect(unavailableGate.HandleDeathBoundary("gate-raid-native", "gate-corpse-native", executorReady: false) == NativeFinalizationDecision.ContinueNative, "unavailable executor continues native death");
+Expect(unavailableGate.Snapshot.State == RecoveryState.FinalDeath, "unavailable executor closes the raid lifecycle");
+
+var pendingGate = new RecoveryFinalizationGate();
+Expect(pendingGate.HandleDeathBoundary("gate-raid", "gate-corpse", executorReady: true) == NativeFinalizationDecision.SuppressForRecovery, "ready executor suppresses first native finalization");
+Expect(pendingGate.Snapshot.State == RecoveryState.RecoveryPending, "ready executor reserves recovery before asynchronous work");
+Expect(pendingGate.HandleDeathBoundary("gate-raid", "gate-corpse", executorReady: true) == NativeFinalizationDecision.SuppressDuplicate, "duplicate pending callback stays suppressed");
+Expect(pendingGate.Snapshot.State == RecoveryState.RecoveryPending, "duplicate callback cannot mutate pending recovery");
+Expect(!pendingGate.ConfirmRecovery(""), "recovery cannot complete without loadout transaction identity");
+Expect(pendingGate.ConfirmRecovery("unarmed-transaction"), "unarmed recovery transaction can complete explicitly");
+Expect(pendingGate.Snapshot.RecoveryConsumed, "successful recovery consumes the raid life before gameplay resumes");
+Expect(pendingGate.HandleDeathBoundary("gate-raid", "second-corpse", executorReady: true) == NativeFinalizationDecision.ContinueNative, "second death always continues native finalization");
+Expect(pendingGate.Snapshot.State == RecoveryState.FinalDeath, "second death is terminal");
+Expect(!pendingGate.ConfirmRecovery("second-loadout"), "second death cannot confirm another recovery");
+
+var abortedGate = new RecoveryFinalizationGate();
+Expect(abortedGate.HandleDeathBoundary("gate-abort", "gate-abort-corpse", executorReady: true) == NativeFinalizationDecision.SuppressForRecovery, "abort test enters pending recovery");
+Expect(abortedGate.AbortPendingRecovery(), "asynchronous recovery failure resumes terminal native path");
+Expect(abortedGate.Snapshot.State == RecoveryState.FinalDeath, "aborted recovery cannot remain pending");
+
 Console.WriteLine($"Second Life foundation PASS: {assertions} assertions.");
 
 sealed class FakeMove : IReversibleInventoryMove
