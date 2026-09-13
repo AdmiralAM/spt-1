@@ -125,4 +125,64 @@ Expect(!EmergencyArmamentSelector.TrySelectFromStash(
     73,
     out _), "no complete stash set means unarmed recovery");
 
+var moved = new List<string>();
+var rolledBack = new List<string>();
+var successfulTransfer = new ArmamentTransferTransaction(
+    armament,
+    new FakeMove(armament.PistolItemId, true, true, moved, rolledBack),
+    new FakeMove(armament.InstalledMagazineItemId, true, true, moved, rolledBack),
+    new FakeMove(armament.SpareMagazineItemId, true, true, moved, rolledBack));
+Expect(successfulTransfer.TryExecute(), "complete stash transfer commits");
+Expect(moved.SequenceEqual(new[] { armament.PistolItemId, armament.InstalledMagazineItemId, armament.SpareMagazineItemId }), "stash items move exactly once in plan order");
+Expect(rolledBack.Count == 0, "successful stash transfer does not roll back");
+
+moved.Clear();
+rolledBack.Clear();
+var failedTransfer = new ArmamentTransferTransaction(
+    armament,
+    new FakeMove(armament.PistolItemId, true, true, moved, rolledBack),
+    new FakeMove(armament.InstalledMagazineItemId, true, false, moved, rolledBack),
+    new FakeMove(armament.SpareMagazineItemId, true, true, moved, rolledBack));
+Expect(!failedTransfer.TryExecute(), "partial stash transfer fails closed");
+Expect(moved.SequenceEqual(new[] { armament.PistolItemId }), "later stash move is not attempted after failure");
+Expect(rolledBack.SequenceEqual(new[] { armament.InstalledMagazineItemId, armament.PistolItemId }), "failed and completed moves roll back in reverse order");
+
+moved.Clear();
+rolledBack.Clear();
+var failedPreflightTransfer = new ArmamentTransferTransaction(
+    armament,
+    new FakeMove(armament.PistolItemId, true, true, moved, rolledBack),
+    new FakeMove(armament.InstalledMagazineItemId, false, true, moved, rolledBack),
+    new FakeMove(armament.SpareMagazineItemId, true, true, moved, rolledBack));
+Expect(!failedPreflightTransfer.TryExecute(), "all stash moves preflight before mutation");
+Expect(moved.Count == 0 && rolledBack.Count == 0, "failed transfer preflight is mutation-free");
+
 Console.WriteLine($"Second Life foundation PASS: {assertions} assertions.");
+
+sealed class FakeMove : IReversibleInventoryMove
+{
+    private readonly bool canExecute;
+    private readonly bool executeResult;
+    private readonly List<string> moved;
+    private readonly List<string> rolledBack;
+
+    public FakeMove(string itemId, bool canExecute, bool executeResult, List<string> moved, List<string> rolledBack)
+    {
+        ItemId = itemId;
+        this.canExecute = canExecute;
+        this.executeResult = executeResult;
+        this.moved = moved;
+        this.rolledBack = rolledBack;
+    }
+
+    public string ItemId { get; }
+    public bool CanExecute() => canExecute;
+
+    public bool Execute()
+    {
+        if (executeResult) moved.Add(ItemId);
+        return executeResult;
+    }
+
+    public void RollBack() => rolledBack.Add(ItemId);
+}
