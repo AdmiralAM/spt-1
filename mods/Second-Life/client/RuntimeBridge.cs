@@ -156,6 +156,7 @@ namespace Admiral.SecondLife.Client
                         BeginRecovery(localGame, plan);
                         return;
                     }
+                    plan.CancelPaidHealing();
                     finalizationGate.AbortPendingRecovery();
                     logInfo?.Invoke("Paid recovery unavailable because stash rubles are insufficient; continuing native death.");
                     ResumeNativeFinalization(localGame);
@@ -164,6 +165,7 @@ namespace Admiral.SecondLife.Client
                 {
                     if (resolved) return;
                     resolved = true;
+                    plan.CancelPaidHealing();
                     finalizationGate.AbortPendingRecovery();
                     logInfo?.Invoke("Paid healing declined; continuing native death.");
                     ResumeNativeFinalization(localGame);
@@ -171,6 +173,7 @@ namespace Admiral.SecondLife.Client
                 if (!RuntimePaidHealing.TryShowNativeConfirmation(plan.PaidHealingCost, plan.CanAffordPaidHealing, accept, cancel, out string promptFailure))
                 {
                     resolved = true;
+                    plan.CancelPaidHealing();
                     finalizationGate.AbortPendingRecovery();
                     logWarning?.Invoke("Paid-healing offer failed closed; resuming native death: " + promptFailure);
                     ResumeNativeFinalization(localGame);
@@ -178,6 +181,7 @@ namespace Admiral.SecondLife.Client
             }
             catch (Exception exception)
             {
+                plan.CancelPaidHealing();
                 finalizationGate.AbortPendingRecovery();
                 logWarning?.Invoke("Paid-healing offer failed closed; resuming native death: " + exception.Message);
                 ResumeNativeFinalization(localGame);

@@ -11,9 +11,11 @@ namespace Admiral.SecondLife.Client
         const string TherapistId = "54cb57776803fa99248b456e";
         const string RubleTemplateId = "5449016a4bdc2d6f028b456f";
         readonly List<MoneyDebit> debits;
+        readonly string reservationToken;
         bool applied;
+        bool committed;
 
-        RuntimePaidHealing(int cost, List<MoneyDebit> debits, bool canAfford, string scanSummary) { Cost = cost; this.debits = debits; CanAfford = canAfford; ScanSummary = scanSummary; }
+        RuntimePaidHealing(int cost, bool canAfford, string reservationToken, string scanSummary) { Cost = cost; debits = new List<MoneyDebit>(); CanAfford = canAfford; this.reservationToken = reservationToken; ScanSummary = scanSummary; }
         internal int Cost { get; }
         internal bool CanAfford { get; }
         internal string ScanSummary { get; }
@@ -29,8 +31,8 @@ namespace Admiral.SecondLife.Client
                 object traderInfo = FindTherapistInfo(profile);
                 if (traderInfo == null) return Fail("Therapist loyalty data is unavailable", out failure);
                 int cost = CalculateNativeCost(profile, traderInfo, missingHealth);
-                bool canAfford = TrySelectRubles(profile, cost, out List<MoneyDebit> debits, out string scanSummary);
-                healing = new RuntimePaidHealing(cost, debits, canAfford, scanSummary);
+                if (!RuntimeServerPayment.TryReserve(cost, out string token, out bool canAfford, out int available, out failure)) return false;
+                healing = new RuntimePaidHealing(cost, canAfford, canAfford ? token : null, $"server-authoritative, rubles={available}, price={cost}, reserved={canAfford}");
                 return true;
             }
             catch (Exception exception) { return Fail("native healing contract rejected: " + Unwrap(exception).Message, out failure); }
@@ -47,6 +49,9 @@ namespace Admiral.SecondLife.Client
                 MethodInfo restore = controller?.GetType().GetMethod("RestoreFullHealth", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 if (restore == null) throw new InvalidOperationException("recovered player has no native RestoreFullHealth operation");
                 restore.Invoke(controller, null);
+                if (!RuntimeServerPayment.Commit(reservationToken, out string commitFailure))
+                    throw new InvalidOperationException(commitFailure);
+                committed = true;
                 applied = true;
             }
             catch { Rollback(); throw; }
@@ -54,9 +59,12 @@ namespace Admiral.SecondLife.Client
 
         internal void Rollback()
         {
+            if (!committed) RuntimeServerPayment.Refund(reservationToken);
             foreach (MoneyDebit debit in debits) WriteField(debit.Item, "StackObjectsCount", debit.OriginalCount);
             applied = false;
         }
+
+        internal void Cancel() => Rollback();
 
         internal void FinalizeDebit(object recoveredPlayer)
         {

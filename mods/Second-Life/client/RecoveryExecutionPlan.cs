@@ -52,6 +52,7 @@ namespace Admiral.SecondLife.Client
         internal int PaidHealingCost => paidHealing.Cost;
         internal bool CanAffordPaidHealing => paidHealing.CanAfford;
         internal string PaidHealingScanSummary => paidHealing.ScanSummary;
+        internal void CancelPaidHealing() => paidHealing.Cancel();
 
         internal async Task ExecuteAsync()
         {

@@ -33,3 +33,5 @@ jobs:
         run: dotnet build mods/Second-Life/src/SecondLife.Core.csproj --configuration Release
       - name: Run lifecycle regression
         run: dotnet run --project mods/Second-Life/tests/SecondLife.Core.Tests.csproj --configuration Release
+      - name: Build server payment authority
+        run: dotnet build mods/Second-Life/server/SecondLife.Server.csproj --configuration Release
