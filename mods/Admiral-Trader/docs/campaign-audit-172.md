@@ -39,7 +39,37 @@ The 35 complete native presets recovered from Natalya are all present as Admiral
 
 The pre-field-support normalized core distribution was: median 11,950 XP, 47,800 roubles and +0.013 Admiral standing; the observed range was 2,500–28,000 XP, 11,000–135,000 roubles and +0.005–0.03 standing. M7 then converted bounded portions of 20 payouts into progressive native field equipment, alongside four early complete weapons, ten signature finale presets and conditional B&A&HB equipment/container trades. Ten controlled storefront unlocks remain finite purchases rather than free rewards.
 
+The 20 native trades progress from IFAK/GSSH/Salewa and an early Day Pack through surgery kits, headsets, armour, rigs and backpacks to late combat stimulants. They are disjoint from the early-weapon, Natalya-finale, WTT-substitution and B&A&HB layers, so no later registration pass overwrites another reward. Every cash trade leaves a positive rouble payout.
+
+Five raw reward rows sit above one of the campaign review thresholds and remain intentionally visible for final balance review: `Break the Perimeter` (28,000 XP / ₽120,000 / +0.030), `The Last Signal` (22,000 XP / ₽135,000 / +0.030), `Black Shift Ended` (25,750 XP), `Final Containment` (27,000 XP) and `Admiral's Decision` (27,750 XP). These are late, boss/Rogue or chain-finale operations; the audit does not justify a blanket reduction. Their physical rewards and effective cash after trades must be judged together during the final balance pass.
+
 High-value containers, the armour repair kit and tank battery are no longer early free payouts. They are controlled one-per-reset purchase unlocks at actual value. The Labs finale now uses a usable access-card sample instead of an inert classified folder. The optional Icebreaker finale is separately documented as a non-repeatable exceptional reward.
+
+B&A&HB currently publishes five stable product templates usable by Trader. Sixteen reward trades resolve against those products, with twelve placed by level 20. Sixteen additional small-container candidates remain correctly dormant because their proposed templates are not present in the installed runtime; Admiral does not fabricate or clone Belt-owned containers. This is the only present gap against the desired broader early mini-container variety.
+
+## Graph and availability audit
+
+- All 172 core IDs and ten optional Icebreaker IDs are unique; every prerequisite resolves and no graph cycle is present.
+- The core campaign has eight entry points: four at level 1, one at level 6 and three at level 15. The level-1 choice consists of the opening Ground Zero operation, both paced Arsenal lanes and the first Ground Zero story.
+- The largest level band is level 15 with twelve records, but most remain behind chain prerequisites. Raw level counts therefore do not represent twelve simultaneous offers.
+- Quest types remain 60 Elimination, 56 Exploration, 55 PickUp and one Completion. The story set supplies the reconnaissance, retrieval, placement and survival variety; weapon elimination stays in the two paced Arsenal lanes.
+- All Russian quest names exist and contain Cyrillic. Every quest has required name, description, started and success locale records. No description still embeds duplicate `Требования:` or `Награды:` blocks.
+
+## Storefront audit
+
+The core assortment is structurally valid: 47 base roots plus 35 complete Natalya weapon presets produce 82 finite offers. Every root has barter and loyalty metadata, every child points to an owned parent and no offer is unlimited. The combined loyalty distribution is LL1 30, LL2 21, LL3 21 and LL4 10; 18 base offers are quest-gated.
+
+All 35 Natalya roots are assembled presets with two to nine child parts. The complex core armour roots retain their required child armour/plate trees. The red background visible on some equipment is therefore not evidence of a missing child by itself; no orphaned or structurally incomplete offer was found in the committed assortment.
+
+With the installed WTT modules, 19 Content Backport and 43 WTT Armory roots pass the post-load template gate and register as 62 additional finite offers. Their template IDs do not exist in the vanilla database by design; the exact combined server start proves they are published before Admiral's optional-content pass. Without WTT, all 82 core offers and the full quest graph remain available.
+
+## Audit decisions
+
+1. Preserve the 172+10 graph, eight entry points, 40-quest weapon rotation and current storefront counts.
+2. Carry the five high raw reward rows into the final effective-value comparison rather than changing them in isolation.
+3. Do not manufacture the sixteen unavailable B&A&HB container templates. Expand those rewards only after Belt publishes stable owned IDs.
+4. Treat Russian weapon-model wording, long allowed-pool presentation and remaining voice consistency as the M9 editorial package after the content-order gates.
+5. Treat actual offer usefulness, insurance speed and reward satisfaction as one final fresh-profile acceptance session after repository-side stabilization.
 
 ## M9 editorial work derived from this audit
 
