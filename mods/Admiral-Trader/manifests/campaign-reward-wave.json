@@ -3,10 +3,12 @@
   "status": "runtime-materialized",
   "coreSignaturePresetRewards": 10,
   "earlyCompleteWeaponRewardTrades": 4,
-  "optionalPackNStrapRewardTrades": 32,
+  "optionalBeltEquipmentRewardTrades": 32,
+  "directBeltProductRewardTrades": 16,
+  "additionalBeltPackCandidateRewardTrades": 16,
   "requiredDependencies": false,
-  "policy": "Story midpoints, equipment contracts and selected operations trade part of their rouble reward for one useful optional small container; story finales replace the existing generic item reward with one complete staged Natalya weapon preset.",
-  "absenceBehavior": "When Pack 'n' Strap templates are unavailable, no cash is removed and the core quest reward remains unchanged.",
+  "policy": "Early operations trade part of their rouble reward for useful optional B&A&HB wrist, belt and head-band equipment while later story and equipment contracts may award its small container catalogue; story finales replace the existing generic item reward with one complete staged Natalya weapon preset.",
+  "absenceBehavior": "When a B&A&HB template is unavailable, no cash is removed and the core quest reward remains unchanged.",
   "signatureFinales": [
     {
       "questId": "6d9fda8875aed2082b4da528",
@@ -75,101 +77,101 @@
       "cashReductionRub": 12000
     }
   ],
-  "packNStrapTrades": [
+  "beltEquipmentTrades": [
     {
       "questId": "4876c8bf7bb9677e3970b01c",
-      "tpl": "6761b213607f9a6f79017aef",
-      "name": "Поясная сумка",
+      "tpl": "68ac00000000000000000006",
+      "name": "Наручный кошелёк B&A&HB",
       "cashReductionRub": 6000
     },
     {
       "questId": "70a745d426d2ba09157eb734",
-      "tpl": "12403f74773f49be6a2d84b7",
-      "name": "Малый медицинский подсумок",
+      "tpl": "68ac00000000000000000001",
+      "name": "Подсумок для магазинов B&A&HB",
       "cashReductionRub": 12000
     },
     {
       "questId": "37475cbab1174e5619c16939",
-      "tpl": "ae9e418fd5d4c4eec4a0e6ea",
-      "name": "Малый подсумок для боеприпасов",
+      "tpl": "68ac0000000000000000000c",
+      "name": "Пояс для магазинов B&A&HB",
       "cashReductionRub": 12000
     },
     {
       "questId": "e74018c43dc3f47551445192",
-      "tpl": "440de5d056825485a0cf3a19",
-      "name": "Малый подсумок для магазинов",
+      "tpl": "68ac0000000000000000000f",
+      "name": "Утилитарная повязка B&A&HB",
       "cashReductionRub": 15000
     },
     {
       "questId": "aef99c7f97ca615cf101a654",
-      "tpl": "9543bbe8083934dc3b1b1330",
-      "name": "Малая сумка для инструментов",
+      "tpl": "68ac00000000000000000013",
+      "name": "Кейс для жетонов B&A&HB",
       "cashReductionRub": 15000
     },
     {
       "questId": "77622ff3eda4de9587dd55d8",
-      "tpl": "6a3c0e9643138b61c8739586",
-      "name": "Малый кейс для бронеплит",
+      "tpl": "68ac00000000000000000001",
+      "name": "Подсумок для магазинов B&A&HB",
       "cashReductionRub": 35000
     },
     {
       "questId": "4a8f533e1ed458e83b41c01f",
-      "tpl": "6761b213607f9a6f79017aef",
-      "name": "Поясная сумка",
+      "tpl": "68ac0000000000000000000c",
+      "name": "Пояс для магазинов B&A&HB",
       "cashReductionRub": 6000
     },
     {
       "questId": "4ab0b49478adb233ae900b33",
-      "tpl": "ae9e418fd5d4c4eec4a0e6ea",
-      "name": "Малый подсумок для боеприпасов",
+      "tpl": "68ac00000000000000000006",
+      "name": "Наручный кошелёк B&A&HB",
       "cashReductionRub": 10000
     },
     {
       "questId": "ca33fab8b9cc5f5f5ad322c0",
-      "tpl": "12403f74773f49be6a2d84b7",
-      "name": "Малый медицинский подсумок",
+      "tpl": "68ac00000000000000000001",
+      "name": "Подсумок для магазинов B&A&HB",
       "cashReductionRub": 12000
     },
     {
       "questId": "9c35b3ac22ede1a5a79118bc",
-      "tpl": "440de5d056825485a0cf3a19",
-      "name": "Малый подсумок для магазинов",
+      "tpl": "68ac0000000000000000000c",
+      "name": "Пояс для магазинов B&A&HB",
       "cashReductionRub": 15000
     },
     {
       "questId": "ee813142de655daf2dedfebc",
-      "tpl": "6925918065a41e6b1e02a7d7",
-      "name": "Винтажный ланч-бокс",
+      "tpl": "68ac0000000000000000000f",
+      "name": "Утилитарная повязка B&A&HB",
       "cashReductionRub": 18000
     },
     {
       "questId": "8dad0d354ac000b7bbf05b9a",
-      "tpl": "6761b213607f9a6f79017aef",
-      "name": "Поясная сумка",
+      "tpl": "68ac00000000000000000001",
+      "name": "Подсумок для магазинов B&A&HB",
       "cashReductionRub": 7000
     },
     {
       "questId": "56813681ae0690016376f163",
-      "tpl": "9543bbe8083934dc3b1b1330",
-      "name": "Малая сумка для инструментов",
+      "tpl": "68ac0000000000000000000c",
+      "name": "Пояс для магазинов B&A&HB",
       "cashReductionRub": 10000
     },
     {
       "questId": "208db81b5ce195bf0c176852",
-      "tpl": "c29f11b2e63a089916739c96",
-      "name": "Малый кожаный портфель",
+      "tpl": "68ac00000000000000000006",
+      "name": "Наручный кошелёк B&A&HB",
       "cashReductionRub": 12000
     },
     {
       "questId": "6574a072f763d0b09a553401",
-      "tpl": "440de5d056825485a0cf3a19",
-      "name": "Малый подсумок для магазинов",
+      "tpl": "68ac00000000000000000001",
+      "name": "Подсумок для магазинов B&A&HB",
       "cashReductionRub": 15000
     },
     {
       "questId": "8b6f2b25ab2e91e0540761e3",
-      "tpl": "2eabd4da4ab194eb168e72d3",
-      "name": "Малое кольцо для ключей",
+      "tpl": "68ac0000000000000000000c",
+      "name": "Пояс для магазинов B&A&HB",
       "cashReductionRub": 22000
     },
     {

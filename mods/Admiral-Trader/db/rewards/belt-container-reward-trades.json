@@ -1,7 +1,7 @@
 {
   "4876c8bf7bb9677e3970b01c": {
     "cashReductionRub": 6000,
-    "name": "Поясная сумка",
+    "name": "Наручный кошелёк B&A&HB",
     "reward": {
       "value": 1,
       "id": "aa52f01b4ed370009446d438",
@@ -11,7 +11,7 @@
       "items": [
         {
           "_id": "46bb98e696102b4b98966b1f",
-          "_tpl": "6761b213607f9a6f79017aef",
+          "_tpl": "68ac00000000000000000006",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -22,7 +22,7 @@
   },
   "70a745d426d2ba09157eb734": {
     "cashReductionRub": 12000,
-    "name": "Малый медицинский подсумок",
+    "name": "Подсумок для магазинов B&A&HB",
     "reward": {
       "value": 1,
       "id": "68cf4d2dac247556b8ba174a",
@@ -32,7 +32,7 @@
       "items": [
         {
           "_id": "be436bef1c0913b0055a4e14",
-          "_tpl": "12403f74773f49be6a2d84b7",
+          "_tpl": "68ac00000000000000000001",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -43,7 +43,7 @@
   },
   "37475cbab1174e5619c16939": {
     "cashReductionRub": 12000,
-    "name": "Малый подсумок для боеприпасов",
+    "name": "Пояс для магазинов B&A&HB",
     "reward": {
       "value": 1,
       "id": "69bf2049391bad46bd9c34fa",
@@ -53,7 +53,7 @@
       "items": [
         {
           "_id": "bd82633b120230d032e2d2e8",
-          "_tpl": "ae9e418fd5d4c4eec4a0e6ea",
+          "_tpl": "68ac0000000000000000000c",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -64,7 +64,7 @@
   },
   "e74018c43dc3f47551445192": {
     "cashReductionRub": 15000,
-    "name": "Малый подсумок для магазинов",
+    "name": "Утилитарная повязка B&A&HB",
     "reward": {
       "value": 1,
       "id": "205816e794cb52089bd5d028",
@@ -74,7 +74,7 @@
       "items": [
         {
           "_id": "56efbfd33b94d250bd80f90b",
-          "_tpl": "440de5d056825485a0cf3a19",
+          "_tpl": "68ac0000000000000000000f",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -85,7 +85,7 @@
   },
   "aef99c7f97ca615cf101a654": {
     "cashReductionRub": 15000,
-    "name": "Малая сумка для инструментов",
+    "name": "Кейс для жетонов B&A&HB",
     "reward": {
       "value": 1,
       "id": "0010bf032eaaae554439f734",
@@ -95,7 +95,7 @@
       "items": [
         {
           "_id": "1a996b46f114b3bebfff2bc2",
-          "_tpl": "9543bbe8083934dc3b1b1330",
+          "_tpl": "68ac00000000000000000013",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -106,7 +106,7 @@
   },
   "77622ff3eda4de9587dd55d8": {
     "cashReductionRub": 35000,
-    "name": "Малый кейс для бронеплит",
+    "name": "Подсумок для магазинов B&A&HB",
     "reward": {
       "value": 1,
       "id": "6d22a34bb3326daa9cba4d34",
@@ -116,7 +116,7 @@
       "items": [
         {
           "_id": "880642972e834c1aab249a8c",
-          "_tpl": "6a3c0e9643138b61c8739586",
+          "_tpl": "68ac00000000000000000001",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -127,7 +127,7 @@
   },
   "4a8f533e1ed458e83b41c01f": {
     "cashReductionRub": 6000,
-    "name": "Поясная сумка",
+    "name": "Пояс для магазинов B&A&HB",
     "reward": {
       "value": 1,
       "id": "0a24165a8c4f2d9f221a9366",
@@ -137,7 +137,7 @@
       "items": [
         {
           "_id": "b992659b6e5877f354193e57",
-          "_tpl": "6761b213607f9a6f79017aef",
+          "_tpl": "68ac0000000000000000000c",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -148,7 +148,7 @@
   },
   "4ab0b49478adb233ae900b33": {
     "cashReductionRub": 10000,
-    "name": "Малый подсумок для боеприпасов",
+    "name": "Наручный кошелёк B&A&HB",
     "reward": {
       "value": 1,
       "id": "9b9aeb6acf1a34292e83a247",
@@ -158,7 +158,7 @@
       "items": [
         {
           "_id": "7a3e4b53ed911f99d9fc455b",
-          "_tpl": "ae9e418fd5d4c4eec4a0e6ea",
+          "_tpl": "68ac00000000000000000006",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -169,7 +169,7 @@
   },
   "ca33fab8b9cc5f5f5ad322c0": {
     "cashReductionRub": 12000,
-    "name": "Малый медицинский подсумок",
+    "name": "Подсумок для магазинов B&A&HB",
     "reward": {
       "value": 1,
       "id": "1a615d25d012a775e014ab68",
@@ -179,7 +179,7 @@
       "items": [
         {
           "_id": "e59a1d8c16fd8ef2c10d3534",
-          "_tpl": "12403f74773f49be6a2d84b7",
+          "_tpl": "68ac00000000000000000001",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -190,7 +190,7 @@
   },
   "9c35b3ac22ede1a5a79118bc": {
     "cashReductionRub": 15000,
-    "name": "Малый подсумок для магазинов",
+    "name": "Пояс для магазинов B&A&HB",
     "reward": {
       "value": 1,
       "id": "89a71e714e2ebf1ed292a987",
@@ -200,7 +200,7 @@
       "items": [
         {
           "_id": "1596880f1c39a615076e6f38",
-          "_tpl": "440de5d056825485a0cf3a19",
+          "_tpl": "68ac0000000000000000000c",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -211,7 +211,7 @@
   },
   "ee813142de655daf2dedfebc": {
     "cashReductionRub": 18000,
-    "name": "Винтажный ланч-бокс",
+    "name": "Утилитарная повязка B&A&HB",
     "reward": {
       "value": 1,
       "id": "7f4fa1b36ca0b935a00fa46e",
@@ -221,7 +221,7 @@
       "items": [
         {
           "_id": "107a0ced61cd00b687c31b8a",
-          "_tpl": "6925918065a41e6b1e02a7d7",
+          "_tpl": "68ac0000000000000000000f",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -232,7 +232,7 @@
   },
   "8dad0d354ac000b7bbf05b9a": {
     "cashReductionRub": 7000,
-    "name": "Поясная сумка",
+    "name": "Подсумок для магазинов B&A&HB",
     "reward": {
       "value": 1,
       "id": "2c2e742dd101aea64b56b5de",
@@ -242,7 +242,7 @@
       "items": [
         {
           "_id": "775e1e5cf23af88fcbc6e020",
-          "_tpl": "6761b213607f9a6f79017aef",
+          "_tpl": "68ac00000000000000000001",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -253,7 +253,7 @@
   },
   "56813681ae0690016376f163": {
     "cashReductionRub": 10000,
-    "name": "Малая сумка для инструментов",
+    "name": "Пояс для магазинов B&A&HB",
     "reward": {
       "value": 1,
       "id": "a977269daf587cb56642c3c9",
@@ -263,7 +263,7 @@
       "items": [
         {
           "_id": "764ae1029358d29b406be7bc",
-          "_tpl": "9543bbe8083934dc3b1b1330",
+          "_tpl": "68ac0000000000000000000c",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -274,7 +274,7 @@
   },
   "208db81b5ce195bf0c176852": {
     "cashReductionRub": 12000,
-    "name": "Малый кожаный портфель",
+    "name": "Наручный кошелёк B&A&HB",
     "reward": {
       "value": 1,
       "id": "e129f8aa0da4e4addea53230",
@@ -284,7 +284,7 @@
       "items": [
         {
           "_id": "543735b25744f707017f4acb",
-          "_tpl": "c29f11b2e63a089916739c96",
+          "_tpl": "68ac00000000000000000006",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -295,7 +295,7 @@
   },
   "6574a072f763d0b09a553401": {
     "cashReductionRub": 15000,
-    "name": "Малый подсумок для магазинов",
+    "name": "Подсумок для магазинов B&A&HB",
     "reward": {
       "value": 1,
       "id": "fe962a46191490fb656e8504",
@@ -305,7 +305,7 @@
       "items": [
         {
           "_id": "ed5cc84e75dd4b20c243e04a",
-          "_tpl": "440de5d056825485a0cf3a19",
+          "_tpl": "68ac00000000000000000001",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -316,7 +316,7 @@
   },
   "8b6f2b25ab2e91e0540761e3": {
     "cashReductionRub": 22000,
-    "name": "Малое кольцо для ключей",
+    "name": "Пояс для магазинов B&A&HB",
     "reward": {
       "value": 1,
       "id": "03f7ffb86ab92cf24c9938a5",
@@ -326,7 +326,7 @@
       "items": [
         {
           "_id": "1abdf6d55a67f2a3972f1284",
-          "_tpl": "2eabd4da4ab194eb168e72d3",
+          "_tpl": "68ac0000000000000000000c",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
