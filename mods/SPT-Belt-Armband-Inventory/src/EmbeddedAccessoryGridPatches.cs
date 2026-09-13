@@ -14,8 +14,7 @@ namespace SPTBeltArmbandInventory
         const float PanelGap = 8f;
         const float OverlayWidth = 180f;
         const float OverlayHeight = PanelHeight * 2f + PanelGap;
-        const float OverlayRightInset = 214f;
-        const float OverlayTopInset = 206f;
+        const float AnchorGap = 8f;
 
         sealed class State
         {
@@ -33,6 +32,7 @@ namespace SPTBeltArmbandInventory
         internal static FieldInfo GridWindowTemplate;
         internal static FieldInfo ContainedGridsTemplate;
         internal static MethodInfo GeneratedGridsShow;
+        internal static FieldInfo EquipmentTabSlotViews;
 
         static readonly Dictionary<int, State> States = new Dictionary<int, State>();
         static bool logged;
@@ -121,22 +121,34 @@ namespace SPTBeltArmbandInventory
 
         static RectTransform CreateOverlayRoot(Component owner)
         {
-            Canvas canvas = owner.GetComponentInParent<Canvas>();
-            if (canvas == null) return null;
-            Canvas rootCanvas = canvas.rootCanvas ?? canvas;
-            RectTransform canvasRect = rootCanvas.transform as RectTransform;
-            if (canvasRect == null) return null;
+            IDictionary slotViews = EquipmentTabSlotViews?.GetValue(owner) as IDictionary;
+            if (slotViews == null) return null;
+            RectTransform firstSpecial = null;
+            foreach (DictionaryEntry entry in slotViews)
+            {
+                if (entry.Key == null || entry.Key.ToString().IndexOf("SpecialSlot", StringComparison.OrdinalIgnoreCase) < 0) continue;
+                RectTransform candidate = (entry.Value as Component)?.transform as RectTransform;
+                if (candidate == null) continue;
+                if (firstSpecial == null || candidate.position.x < firstSpecial.position.x) firstSpecial = candidate;
+            }
+            RectTransform host = firstSpecial?.parent as RectTransform;
+            if (firstSpecial == null || host == null) return null;
+
+            Canvas.ForceUpdateCanvases();
+            Vector3[] corners = new Vector3[4];
+            firstSpecial.GetWorldCorners(corners);
+            Vector3 belowLeft = host.InverseTransformPoint(corners[0]);
 
             GameObject rootObject = new GameObject("BAndHB_EmbeddedAccessories", typeof(RectTransform));
-            rootObject.transform.SetParent(canvasRect, false);
+            rootObject.transform.SetParent(host, false);
             IgnoreAutomaticLayout(rootObject);
             RectTransform root = (RectTransform)rootObject.transform;
-            root.anchorMin = new Vector2(1f, 1f);
-            root.anchorMax = new Vector2(1f, 1f);
-            root.pivot = new Vector2(1f, 1f);
+            root.anchorMin = Vector2.zero;
+            root.anchorMax = Vector2.zero;
+            root.pivot = new Vector2(0f, 1f);
             root.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, OverlayWidth);
             root.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, OverlayHeight);
-            root.anchoredPosition = new Vector2(-OverlayRightInset, -OverlayTopInset);
+            root.anchoredPosition = new Vector2(belowLeft.x, belowLeft.y - AnchorGap);
             root.SetAsLastSibling();
             return root;
         }
@@ -179,6 +191,7 @@ namespace SPTBeltArmbandInventory
             States.Clear();
             LogInfo = null; LogWarning = null; EquipmentSlotType = null; GetSlot = null;
             ItemUiContextInstance = null; GridWindowTemplate = null; ContainedGridsTemplate = null; GeneratedGridsShow = null;
+            EquipmentTabSlotViews = null;
             logged = false; warned = false;
         }
     }
@@ -228,15 +241,17 @@ namespace SPTBeltArmbandInventory
                 EmbeddedAccessoryGridRuntime.GridWindowTemplate = itemUiContext.GetField("_gridWindowTemplate", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.ContainedGridsTemplate = gridWindow.GetField("_containedGridsTemplate", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.GeneratedGridsShow = FindGeneratedShow(generated);
+                EmbeddedAccessoryGridRuntime.EquipmentTabSlotViews = FindSlotViewsField(equipmentTab, equipmentSlot);
                 EmbeddedAccessoryGridRuntime.LogInfo = logInfo;
                 EmbeddedAccessoryGridRuntime.LogWarning = logWarning;
-                if (show == null || EmbeddedAccessoryGridRuntime.GetSlot == null || EmbeddedAccessoryGridRuntime.ItemUiContextInstance == null || EmbeddedAccessoryGridRuntime.GridWindowTemplate == null || EmbeddedAccessoryGridRuntime.ContainedGridsTemplate == null || EmbeddedAccessoryGridRuntime.GeneratedGridsShow == null)
+                if (show == null || EmbeddedAccessoryGridRuntime.GetSlot == null || EmbeddedAccessoryGridRuntime.ItemUiContextInstance == null || EmbeddedAccessoryGridRuntime.GridWindowTemplate == null || EmbeddedAccessoryGridRuntime.ContainedGridsTemplate == null || EmbeddedAccessoryGridRuntime.GeneratedGridsShow == null || EmbeddedAccessoryGridRuntime.EquipmentTabSlotViews == null)
                     return Fail("Embedded-grid exact SPT 4.1 lifecycle changed: Show=" + (show != null)
                         + ", GetSlot=" + (EmbeddedAccessoryGridRuntime.GetSlot != null)
                         + ", ItemUiContext.Instance=" + (EmbeddedAccessoryGridRuntime.ItemUiContextInstance != null)
                         + ", GridWindowTemplate=" + (EmbeddedAccessoryGridRuntime.GridWindowTemplate != null)
                         + ", ContainedGridsTemplate=" + (EmbeddedAccessoryGridRuntime.ContainedGridsTemplate != null)
-                        + ", GeneratedGridsView.Show=" + (EmbeddedAccessoryGridRuntime.GeneratedGridsShow != null) + ".");
+                        + ", GeneratedGridsView.Show=" + (EmbeddedAccessoryGridRuntime.GeneratedGridsShow != null)
+                        + ", EquipmentTabSlotViews=" + (EmbeddedAccessoryGridRuntime.EquipmentTabSlotViews != null) + ".");
 
                 MethodInfo patch = FindPatch(harmonyType, harmonyMethodType);
                 ConstructorInfo hm = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
@@ -254,6 +269,7 @@ namespace SPTBeltArmbandInventory
         static MethodInfo Method(string n) => typeof(EmbeddedAccessoryGridPatches).GetMethod(n, BindingFlags.Static | BindingFlags.NonPublic);
         static MethodInfo FindShow(Type t, Type equipment) { foreach (MethodInfo m in t.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) { ParameterInfo[] p=m.GetParameters(); if(m.Name=="Show" && p.Length==6 && p[1].ParameterType==equipment) return m; } return null; }
         static MethodInfo FindGeneratedShow(Type t) { foreach(MethodInfo m in t.GetMethods(BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.DeclaredOnly)) if(m.Name=="Show" && m.GetParameters().Length==6) return m; return null; }
+        static FieldInfo FindSlotViewsField(Type tab, Type slotEnum) { for(Type current=tab;current!=null;current=current.BaseType) foreach(FieldInfo f in current.GetFields(BindingFlags.Instance|BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.DeclaredOnly)) { Type ft=f.FieldType; if(!typeof(IDictionary).IsAssignableFrom(ft) && (!ft.IsGenericType || ft.GetGenericArguments().Length!=2 || ft.GetGenericArguments()[0]!=slotEnum)) continue; return f; } return null; }
         static MethodInfo FindPatch(Type ht, Type hmt) { foreach(MethodInfo m in ht.GetMethods(BindingFlags.Instance|BindingFlags.Public)) { if(m.Name!="Patch") continue; ParameterInfo[] p=m.GetParameters(); if(p.Length>2 && typeof(MethodBase).IsAssignableFrom(p[0].ParameterType)) return m; } return null; }
         void Patch(MethodInfo method, Type hmt, MethodInfo original, object prefix, object postfix) { ParameterInfo[] p=method.GetParameters(); object[] a=new object[p.Length]; a[0]=original; for(int i=1;i<p.Length;i++){if(p[i].ParameterType!=hmt)continue;if(p[i].Name.Equals("prefix",StringComparison.OrdinalIgnoreCase))a[i]=prefix;else if(p[i].Name.Equals("postfix",StringComparison.OrdinalIgnoreCase))a[i]=postfix;} method.Invoke(harmony,a); }
         bool Fail(string message) { logWarning?.Invoke(message); return false; }

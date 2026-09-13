@@ -13,7 +13,7 @@ internal static class EmbeddedAccessoryGridRegression
         Require(source.Contains("EFT.UI.DragAndDrop.GeneratedGridsView", StringComparison.Ordinal), "must use the native EFT generated-grid view");
         Require(source.Contains("DedicatedHeadBandEquipmentSlotValue, 0", StringComparison.Ordinal), "HeadBand must remain above ArmBand");
         Require(source.Contains("Enum.Parse(EquipmentSlotType, \"ArmBand\"", StringComparison.Ordinal), "must bind the native ArmBand equipment slot");
-        Require(source.Contains("Canvas rootCanvas", StringComparison.Ordinal), "must use an isolated root-canvas overlay");
+        Require(source.Contains("SpecialSlot", StringComparison.Ordinal) && source.Contains("firstSpecial", StringComparison.Ordinal), "must anchor below the native special-slot row");
         Require(source.Contains("ignoreLayout", StringComparison.Ordinal), "overlay and panels must be excluded from automatic layout");
         Require(source.Contains("EmbeddedAccessoryGridLifetime", StringComparison.Ordinal) && source.Contains("OnDisable()", StringComparison.Ordinal), "view ownership must follow the EquipmentTab lifetime");
         Require(!source.Contains("ClosePrefix", StringComparison.Ordinal), "must not patch the inherited global UI close method");
