@@ -26,9 +26,11 @@ namespace Admiral.SecondLife.Client
             if (!string.IsNullOrWhiteSpace(token)) Send("release", token, 0, out _, out _, out _);
         }
 
-        internal static void Refund(string token)
+        internal static bool Refund(string token, out string failure)
         {
-            if (!string.IsNullOrWhiteSpace(token)) Send("refund", token, 0, out _, out _, out _);
+            failure = null;
+            return string.IsNullOrWhiteSpace(token) ||
+                (Send("refund", token, 0, out bool reserved, out _, out failure) && reserved);
         }
 
         static bool Send(string action, string token, int cost, out bool reserved, out int available, out string failure)

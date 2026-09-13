@@ -66,6 +66,22 @@ namespace Admiral.SecondLife.Client
             return true;
         }
 
+        internal static void ValidatePreloaded(object recoveryEquipment, RuntimeArmament armament)
+        {
+            if (armament == null) return;
+            Type slotEnum = FindType("EFT.InventoryLogic.EquipmentSlot");
+            MethodInfo getSlot = recoveryEquipment?.GetType().GetMethod("GetSlot", new[] { slotEnum });
+            object holster = getSlot?.Invoke(recoveryEquipment, new[] { Enum.Parse(slotEnum, "Holster") });
+            object pocketsSlot = getSlot?.Invoke(recoveryEquipment, new[] { Enum.Parse(slotEnum, "Pockets") });
+            object pockets = ReadProperty(pocketsSlot, "ContainedItem");
+            object spareAddress = ReadProperty(armament.SpareMagazine, "CurrentAddress");
+            object spareContainer = ReadField(spareAddress, "Container");
+            if (!ReferenceEquals(ReadProperty(holster, "ContainedItem"), armament.Pistol) ||
+                !ReferenceEquals(ReadProperty(spareContainer, "ParentItem"), pockets) ||
+                !ReferenceEquals(armament.Pistol.GetType().GetMethod("GetCurrentMagazine")?.Invoke(armament.Pistol, null), armament.InstalledMagazine))
+                throw new InvalidOperationException("preloaded recovery armament was not preserved by player construction");
+        }
+
         internal static async Task TransferAsync(object newPlayer, object recoveryEquipment, RuntimeArmament armament)
         {
             if (armament == null) return;

@@ -59,7 +59,8 @@ namespace Admiral.SecondLife.Client
 
         internal void Rollback()
         {
-            RuntimeServerPayment.Refund(reservationToken);
+            if (!RuntimeServerPayment.Refund(reservationToken, out string failure))
+                throw new InvalidOperationException("payment refund failed: " + failure);
             foreach (MoneyDebit debit in debits) WriteField(debit.Item, "StackObjectsCount", debit.OriginalCount);
             applied = false;
         }

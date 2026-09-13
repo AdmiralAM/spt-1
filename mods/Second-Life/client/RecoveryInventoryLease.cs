@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Linq;
 using System.Reflection;
 using HarmonyLib;
 
@@ -32,6 +33,39 @@ namespace Admiral.SecondLife.Client
         internal string CorpseEquipmentRootId { get; }
         internal string RecoveryEquipmentRootId { get; }
         internal object RecoveryEquipment => contract.InventoryEquipment.GetValue(recoveryInventory);
+
+        internal bool TryAttachArmament(RuntimeArmament armament, out string failure)
+        {
+            failure = null;
+            if (armament == null) return true;
+            if (!armament.DetachedRoots) return Fail("reserved armament is not detached from the authoritative stash", out failure);
+            try
+            {
+                Type equipmentSlot = FindType("EFT.InventoryLogic.EquipmentSlot");
+                MethodInfo getSlot = RecoveryEquipment.GetType().GetMethod("GetSlot", new[] { equipmentSlot });
+                object holster = getSlot?.Invoke(RecoveryEquipment, new[] { Enum.Parse(equipmentSlot, "Holster") });
+                MethodInfo attach = holster?.GetType().GetMethod("ChangeContainedItemDirectly", BindingFlags.Instance | BindingFlags.Public);
+                if (attach == null) return Fail("recovery holster direct-attachment contract is unavailable", out failure);
+                attach.Invoke(holster, new[] { armament.Pistol });
+
+                object pocketsSlot = getSlot.Invoke(RecoveryEquipment, new[] { Enum.Parse(equipmentSlot, "Pockets") });
+                object pockets = AccessTools.Property(pocketsSlot.GetType(), "ContainedItem")?.GetValue(pocketsSlot, null);
+                object address = FindGridAddress(pockets, armament.SpareMagazine);
+                MethodInfo add = address?.GetType().GetMethod("AddWithoutRestrictions", BindingFlags.Instance | BindingFlags.Public);
+                object result = add?.Invoke(address, new[] { armament.SpareMagazine });
+                if (result == null || !(AccessTools.Property(result.GetType(), "Succeeded")?.GetValue(result, null) is bool succeeded) || !succeeded)
+                    return Fail("reserved spare magazine could not be attached to recovery pockets", out failure);
+                if (!ReferenceEquals(ReadCurrentItem(holster), armament.Pistol) ||
+                    !ReferenceEquals(AccessTools.Property(armament.SpareMagazine.GetType(), "CurrentAddress")?.GetValue(armament.SpareMagazine, null), address) ||
+                    !ReferenceEquals(armament.Pistol.GetType().GetMethod("GetCurrentMagazine")?.Invoke(armament.Pistol, null), armament.InstalledMagazine))
+                    return Fail("recovery armament identity changed during direct attachment", out failure);
+                return true;
+            }
+            catch (Exception exception)
+            {
+                return Fail("recovery armament direct attachment failed: " + (exception.InnerException?.Message ?? exception.Message), out failure);
+            }
+        }
 
         internal static bool TryPrepare(
             RecoveryRuntimeContract contract,
@@ -140,6 +174,21 @@ namespace Admiral.SecondLife.Client
             attach.Invoke(recoverySlot, new[] { pockets });
             return ReferenceEquals(AccessTools.Property(recoverySlot.GetType(), "ContainedItem")?.GetValue(recoverySlot, null), pockets);
         }
+
+        static object FindGridAddress(object compound, object item)
+        {
+            if (!(ReadField(compound, "Grids") is IEnumerable grids)) return null;
+            foreach (object grid in grids)
+            {
+                MethodInfo find = grid.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                    .FirstOrDefault(method => method.Name == "FindLocationForItem" && method.GetParameters().Length == 1);
+                object address = find?.Invoke(grid, new[] { item });
+                if (address != null) return address;
+            }
+            return null;
+        }
+
+        static object ReadCurrentItem(object slot) => AccessTools.Property(slot.GetType(), "ContainedItem")?.GetValue(slot, null);
 
         static object CopyFastAccessIds(object inventory, Type dictionaryType)
         {

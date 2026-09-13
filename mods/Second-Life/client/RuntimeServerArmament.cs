@@ -74,7 +74,8 @@ namespace Admiral.SecondLife.Client
         internal void Refund()
         {
             if (!active) return;
-            Send("refund", token, string.Empty, out _, out _);
+            if (!Send("refund", token, string.Empty, out ArmamentResponse response, out string failure) || !response.Reserved)
+                throw new InvalidOperationException("armament refund failed: " + failure);
             active = false;
         }
 

@@ -51,6 +51,11 @@ namespace Admiral.SecondLife.Client
             if (!RuntimeServerArmamentReservation.TryReserve(eligiblePistolTemplates?.Invoke(), out RuntimeServerArmamentReservation armamentReservation, out failure))
                 return false;
             RuntimeArmament armament = armamentReservation.Armament;
+            if (!lease.TryAttachArmament(armament, out failure))
+            {
+                armamentReservation.Refund();
+                return false;
+            }
             if (!RuntimePaidHealing.TryPrepare(profile, originalPlayer, out RuntimePaidHealing paidHealing, out failure))
             {
                 armamentReservation.Refund();
@@ -76,12 +81,13 @@ namespace Admiral.SecondLife.Client
 
         internal async void Execute(
             RecoveryExecutionPlan plan,
+            Func<string, bool> confirmRecovery,
             Action<string> completed,
             Action<Exception> failed)
         {
             try
             {
-                await plan.ExecuteAsync();
+                await plan.ExecuteAsync(confirmRecovery);
                 completed?.Invoke(plan.RecoveryEquipmentRootId);
             }
             catch (Exception exception)

@@ -221,20 +221,15 @@ namespace Admiral.SecondLife.Client
         {
             executor.Execute(
                 plan,
+                recoveryRootId => finalizationGate.ConfirmRecovery(recoveryRootId),
                 recoveryRootId =>
                 {
-                    if (finalizationGate.ConfirmRecovery(recoveryRootId))
-                    {
-                        logInfo?.Invoke("One-time recovery spawned after paid healing (" + plan.PaidHealingCost + " rubles), equipment root " + recoveryRootId + ", emergency armament=" + (plan.HasEmergencyArmament ? "owned pistol plus spare magazine" : "unarmed; no complete stash set") + ".");
-                        return;
-                    }
-                    logWarning?.Invoke("Recovery spawned but lifecycle confirmation failed; native finalization resumed.");
-                    ResumeNativeFinalization(localGame);
+                    logInfo?.Invoke("One-time recovery spawned after paid healing (" + plan.PaidHealingCost + " rubles), equipment root " + recoveryRootId + ", emergency armament=" + (plan.HasEmergencyArmament ? "owned pistol plus spare magazine" : "unarmed; no complete stash set") + ".");
                 },
                 exception =>
                 {
                     finalizationGate.AbortPendingRecovery();
-                    logWarning?.Invoke("Recovery failed safely; healing debit rolled back; resuming native death: " + exception.Message);
+                    logWarning?.Invoke("Recovery failed; cleanup attempted; resuming native death: " + exception.Message);
                     ResumeNativeFinalization(localGame);
                 });
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
 namespace Admiral.SecondLife.Client
@@ -62,7 +63,7 @@ namespace Admiral.SecondLife.Client
             armamentReservation?.Refund();
         }
 
-        internal async Task ExecuteAsync()
+        internal async Task ExecuteAsync(Func<string, bool> confirmRecovery)
         {
             if (!inventoryLease.Apply()) throw new InvalidOperationException("profile inventory ownership changed before recovery");
 
@@ -75,6 +76,7 @@ namespace Admiral.SecondLife.Client
             bool newCameraCreated = false;
             object gameWorld = ReadProperty(originalPlayer, "GameWorld");
             if (gameWorld == null) throw new InvalidOperationException("active GameWorld is unavailable");
+            Exception failure = null;
             try
             {
                 contract.UnregisterWorldPlayer.Invoke(gameWorld, new[] { originalPlayer });
@@ -91,11 +93,7 @@ namespace Admiral.SecondLife.Client
                 // Track that ownership immediately so every later failure unregisters it.
                 newPlayerRegistered = true;
                 RuntimeSafeSpawnSelector.Apply(newPlayer, spawnSelection);
-                await RuntimeArmamentService.TransferAsync(
-                    newPlayer,
-                    inventoryLease.RecoveryEquipment,
-                    armament);
-
+                RuntimeArmamentService.ValidatePreloaded(inventoryLease.RecoveryEquipment, armament);
                 newOwner = ownerFactory.DynamicInvoke(newPlayer);
                 if (newOwner == null) throw new InvalidOperationException("owner factory returned no PlayerOwner");
 
@@ -113,35 +111,61 @@ namespace Admiral.SecondLife.Client
                 armamentReservation?.Commit();
                 paidHealing.FinalizeDebit(newPlayer);
                 armamentReservation?.FinalizeReservation();
+                if (confirmRecovery == null || !confirmRecovery(RecoveryEquipmentRootId))
+                    throw new InvalidOperationException("recovery lifecycle confirmation was rejected");
                 attached = true;
                 paidHealing.ReleaseDebit();
                 armamentReservation?.ReleaseReservation();
                 TryDispose(originalPlayer);
                 TryCleanupOwner(originalOwner);
             }
-            finally
+            catch (Exception exception)
             {
-                if (!attached)
+                failure = exception is TargetInvocationException invocation && invocation.InnerException != null
+                    ? invocation.InnerException
+                    : exception;
+            }
+
+            if (!attached)
+            {
+                var cleanupFailures = new System.Collections.Generic.List<string>();
+                TryCleanupStep(() => paidHealing.Rollback(), "payment refund", cleanupFailures);
+                TryCleanupStep(() => armamentReservation?.Refund(), "armament refund", cleanupFailures);
+                if (newCameraCreated)
                 {
-                    paidHealing.Rollback();
-                    armamentReservation?.Refund();
-                    if (newCameraCreated)
-                    {
-                        contract.DestroyPlayerCamera.Invoke(null, new[] { newPlayer });
-                        await WaitForCameraRemoval(newPlayer);
-                    }
-                    if (newPlayerRegistered) contract.UnregisterWorldPlayer.Invoke(gameWorld, new[] { newPlayer });
-                    TryDispose(newPlayer);
-                    contract.LocalPlayer.SetValue(localGame, originalPlayer);
-                    contract.PlayerOwner.SetValue(localGame, originalOwner);
-                    players[ProfileId] = originalPlayer;
-                    if (originalPlayerUnregistered) contract.RegisterWorldPlayer.Invoke(gameWorld, new[] { originalPlayer });
-                    if (originalCameraRemoved)
-                        contract.CreatePlayerCamera.Invoke(null, new[] { originalPlayer });
-                    if (!inventoryLease.Rollback())
-                        throw new InvalidOperationException("recovery failed and profile inventory rollback was rejected");
+                    TryCleanupStep(() => contract.DestroyPlayerCamera.Invoke(null, new[] { newPlayer }), "new camera destroy", cleanupFailures);
+                    try { await WaitForCameraRemoval(newPlayer); }
+                    catch (Exception exception) { cleanupFailures.Add("new camera removal: " + exception.Message); }
+                }
+                if (newPlayerRegistered) TryCleanupStep(() => contract.UnregisterWorldPlayer.Invoke(gameWorld, new[] { newPlayer }), "new player unregister", cleanupFailures);
+                TryCleanupStep(() => TryCleanupOwner(newOwner), "new owner cleanup", cleanupFailures);
+                TryCleanupStep(() => TryDispose(newPlayer), "new player dispose", cleanupFailures);
+                TryCleanupStep(() => contract.LocalPlayer.SetValue(localGame, originalPlayer), "local player restore", cleanupFailures);
+                TryCleanupStep(() => contract.PlayerOwner.SetValue(localGame, originalOwner), "player owner restore", cleanupFailures);
+                TryCleanupStep(() => players[ProfileId] = originalPlayer, "player dictionary restore", cleanupFailures);
+                if (originalPlayerUnregistered) TryCleanupStep(() => contract.RegisterWorldPlayer.Invoke(gameWorld, new[] { originalPlayer }), "original player register", cleanupFailures);
+                if (originalCameraRemoved) TryCleanupStep(() => contract.CreatePlayerCamera.Invoke(null, new[] { originalPlayer }), "original camera restore", cleanupFailures);
+                TryCleanupStep(() =>
+                {
+                    if (!inventoryLease.Rollback()) throw new InvalidOperationException("profile inventory rollback was rejected");
+                }, "inventory restore", cleanupFailures);
+
+                if (cleanupFailures.Count > 0)
+                {
+                    string cleanupMessage = string.Join("; ", cleanupFailures);
+                    failure = failure == null
+                        ? new InvalidOperationException("recovery cleanup failed: " + cleanupMessage)
+                        : new InvalidOperationException(failure.Message + "; cleanup failures: " + cleanupMessage, failure);
                 }
             }
+
+            if (failure != null) ExceptionDispatchInfo.Capture(failure).Throw();
+        }
+
+        static void TryCleanupStep(Action action, string name, System.Collections.Generic.List<string> failures)
+        {
+            try { action(); }
+            catch (Exception exception) { failures.Add(name + ": " + (exception.InnerException?.Message ?? exception.Message)); }
         }
 
         async Task WaitForCameraRemoval(object player)
