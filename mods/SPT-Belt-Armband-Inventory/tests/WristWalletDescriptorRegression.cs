@@ -25,6 +25,8 @@ internal static class WristWalletDescriptorRegression
             throw new InvalidOperationException("Non-container Wrist Wallet shape must fail closed.");
         if (PaymentSlotPolicy.ShouldIncludeWearable(RuntimeIdentity.CandidateItemId, true))
             throw new InvalidOperationException("Magazine RC must never be promoted to a payment source.");
+        if (!PaymentSlotPolicy.ShouldIncludeWearable(RuntimeIdentity.EmergencyHeadBandItemId, true))
+            throw new InvalidOperationException("Utility HeadBand money grid must participate in payment-source enumeration.");
         if (Math.Abs(AccessoryGridPolicy.ExactWindowWidth(1) - 73f) > 0.01f
             || Math.Abs(AccessoryGridPolicy.ExactWindowHeight(1) - 95f) > 0.01f)
             throw new InvalidOperationException("1x1 wearable window must use runtime-calibrated cell extent plus native chrome.");

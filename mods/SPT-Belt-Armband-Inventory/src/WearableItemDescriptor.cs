@@ -54,6 +54,7 @@ namespace SPTBeltArmbandInventory
                     RuntimeIdentity.WristWalletGridColumns,
                     RuntimeIdentity.WristWalletGridRows,
                     AccessoryCapability.PaymentSource |
+                    AccessoryCapability.LootPriority |
                     AccessoryCapability.BuildValidation |
                     AccessoryCapability.DeathRetention),
 
@@ -72,13 +73,15 @@ namespace SPTBeltArmbandInventory
                     AccessoryCapability.ScavHostRestoration |
                     AccessoryCapability.DeathRetention),
 
-                // HeadBand is protected personal utility storage. It deliberately does not
-                // inherit tactical fast-access, payment-source or grenade semantics.
+                // HeadBand is protected personal utility storage. Its exact money grid is
+                // a payment source; it does not inherit tactical fast-access or grenade semantics.
                 [RuntimeIdentity.EmergencyHeadBandItemId] = new WearableItemDescriptor(
                     RuntimeIdentity.EmergencyHeadBandItemId,
                     AccessoryCategory.HeadBand,
                     RuntimeIdentity.EmergencyHeadBandGridColumns,
                     RuntimeIdentity.EmergencyHeadBandGridRows,
+                    AccessoryCapability.PaymentSource |
+                    AccessoryCapability.LootPriority |
                     AccessoryCapability.BuildValidation |
                     AccessoryCapability.ScavHostRestoration |
                     AccessoryCapability.DeathRetention)
@@ -92,7 +95,7 @@ namespace SPTBeltArmbandInventory
                 else if (variant.Role == ArmBandRole.Magazine)
                     capabilities |= AccessoryCapability.LootPriority | AccessoryCapability.UnloadPriority | AccessoryCapability.FastAccess;
                 else if (variant.Role == ArmBandRole.Currency)
-                    capabilities |= AccessoryCapability.PaymentSource;
+                    capabilities |= AccessoryCapability.PaymentSource | AccessoryCapability.LootPriority;
 
                 descriptors.Add(variant.TemplateId, new WearableItemDescriptor(
                     variant.TemplateId,

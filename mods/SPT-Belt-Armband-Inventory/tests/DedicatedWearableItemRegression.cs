@@ -31,13 +31,13 @@ internal static class DedicatedWearableItemRegression
             || headBand.GridRows != RuntimeIdentity.EmergencyHeadBandGridRows)
             throw new InvalidOperationException("Emergency HeadBand geometry/category contract drifted.");
         if (!headBand.Has(AccessoryCapability.BuildValidation)
+            || !headBand.Has(AccessoryCapability.PaymentSource)
             || !headBand.Has(AccessoryCapability.ScavHostRestoration)
             || !headBand.Has(AccessoryCapability.DeathRetention))
             throw new InvalidOperationException("Emergency HeadBand lost required build/ReplaceInventory/protected lifecycle capabilities.");
         if (headBand.Has(AccessoryCapability.FastAccess)
-            || headBand.Has(AccessoryCapability.PaymentSource)
             || headBand.Has(AccessoryCapability.GrenadeAccess))
-            throw new InvalidOperationException("Emergency HeadBand activated unrelated tactical/payment/grenade capabilities.");
+            throw new InvalidOperationException("Emergency HeadBand activated unrelated tactical/grenade capabilities.");
 
         if (!WearableItemDescriptorRegistry.TryGet(RuntimeIdentity.WristWalletItemId, out var wristWallet)
             || !wristWallet.Has(AccessoryCapability.DeathRetention))

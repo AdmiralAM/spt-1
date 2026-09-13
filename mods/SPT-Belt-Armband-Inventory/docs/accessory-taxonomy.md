@@ -21,7 +21,7 @@ The category is a gameplay/UI concept. It must not be inferred from a mesh name,
 | Wrist Wallet | ArmBand | `1x1`, RUB/USD/EUR | payment source; no magazine reload |
 | Magazine Armband | ArmBand | `1x2`, MAGAZINE-only | fast-access/reload fallback |
 | Magazine Belt | Belt/slot15 | `2x2`, MAGAZINE-only | loot/unload integration + fast-access/reload fallback |
-| Utility HeadBand | HeadBand/slot16 | `main` 1x1 + `cigarettes` 1x1 | micro utility only; no payment/reload/grenade inheritance |
+| Utility HeadBand | HeadBand/slot16 | `main` 1x1 + `cigarettes` 1x1 | exact money payment source and money auto-deposit target; no reload/grenade inheritance |
 
 Capabilities are exact-item properties, not automatic category inheritance. In particular, another ArmBand container must not become a reload root merely because Magazine Armband is one, and HeadBand must not inherit Belt tactical semantics.
 
@@ -76,7 +76,7 @@ Magazine Armband and Magazine Belt are appended reload fallback sources only:
 - vanilla reachable source/order remains authoritative;
 - exact B&A&HB fast-access locations are appended after vanilla fast-access locations;
 - only a `Magazine` under an exact registered fast-access wearable ancestor may gain reachability;
-- Wrist Wallet and Utility HeadBand are not reload roots;
+- Wrist Wallet and Utility HeadBand are exact payment/auto-deposit roots, but are not reload roots;
 - parent/template access is startup-bound; no broad scans or runtime reflection discovery in the reload path.
 
 ## Implementation / maintenance order

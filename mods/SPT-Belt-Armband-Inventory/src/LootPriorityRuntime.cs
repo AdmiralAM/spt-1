@@ -12,6 +12,7 @@ namespace SPTBeltArmbandInventory
         static Func<IList> createTypedList;
         static object armBandValue;
         static object dedicatedBeltValue;
+        static object dedicatedHeadBandValue;
         static Type containerType;
         static Action<string> logWarning;
 
@@ -35,6 +36,7 @@ namespace SPTBeltArmbandInventory
 
             armBandValue = Enum.Parse(slotEnumType, BeltSlotPlan.ArmBand);
             dedicatedBeltValue = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedBeltEquipmentSlotValue);
+            dedicatedHeadBandValue = Enum.ToObject(slotEnumType, RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue);
             object postfix = harmonyMethodConstructor.Invoke(new object[] { typeof(LootPriorityRuntime).GetMethod(nameof(Postfix), BindingFlags.Static | BindingFlags.NonPublic) });
             Patch(harmony, patchMethod, harmonyMethodType, target, postfix);
             return true;
@@ -46,6 +48,7 @@ namespace SPTBeltArmbandInventory
             createTypedList = null;
             armBandValue = null;
             dedicatedBeltValue = null;
+            dedicatedHeadBandValue = null;
             containerType = null;
             logWarning = null;
         }
@@ -58,7 +61,9 @@ namespace SPTBeltArmbandInventory
                 object equipment = __args[0];
                 List<object> belt = ReadCapabilityContainers(equipment, armBandValue, AccessoryCapability.LootPriority);
                 AppendUnique(belt, ReadCapabilityContainers(equipment, dedicatedBeltValue, AccessoryCapability.LootPriority));
-                if (belt.Count == 0) return;
+                List<object> wallet = ReadCapabilityContainers(equipment, armBandValue, AccessoryCapability.PaymentSource);
+                AppendUnique(wallet, ReadCapabilityContainers(equipment, dedicatedHeadBandValue, AccessoryCapability.PaymentSource));
+                if (belt.Count == 0 && wallet.Count == 0) return;
 
                 var groups = new Dictionary<string, List<object>>
                 {
@@ -66,7 +71,8 @@ namespace SPTBeltArmbandInventory
                     { LootPriorityPlan.Pockets, ReadSlotContainers(equipment, "Pockets") },
                     { LootPriorityPlan.Backpack, ReadSlotContainers(equipment, "Backpack") },
                     { LootPriorityPlan.Secure, ReadSlotContainers(equipment, "SecuredContainer") },
-                    { LootPriorityPlan.Belt, belt }
+                    { LootPriorityPlan.Belt, belt },
+                    { LootPriorityPlan.Wallet, wallet }
                 };
 
                 List<object> vanilla = ToObjects(__result);
