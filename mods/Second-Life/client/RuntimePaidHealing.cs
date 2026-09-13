@@ -145,13 +145,15 @@ namespace Admiral.SecondLife.Client
         {
             debits = new List<MoneyDebit>();
             if (cost == 0) return true;
-            object stash = ReadField(ReadField(profile, "Inventory"), "Stash");
-            Type extensions = FindType("EFT.InventoryLogic.ItemExtensions");
-            MethodInfo allItems = extensions?.GetMethods(BindingFlags.Static | BindingFlags.Public)
-                .SingleOrDefault(method => method.Name == "GetAllItems" && method.GetParameters().Length == 1);
-            var items = stash == null ? null : allItems?.Invoke(null, new[] { stash }) as IEnumerable;
+            object inventory = ReadField(profile, "Inventory");
+            object stash = ReadField(inventory, "Stash");
+            var items = ReadProperty(inventory, "AllRealPlayerItems") as IEnumerable;
             if (items == null) return false;
-            object[] rubles = items.Cast<object>().Where(item => string.Equals(ReadProperty(item, "StringTemplateId")?.ToString(), RubleTemplateId, StringComparison.Ordinal)).OrderBy(item => ReadProperty(item, "Id")?.ToString(), StringComparer.Ordinal).ToArray();
+            object[] rubles = items.Cast<object>()
+                .Where(item => IsOwnedBy(item, stash))
+                .Where(item => string.Equals(ReadProperty(item, "StringTemplateId")?.ToString(), RubleTemplateId, StringComparison.Ordinal))
+                .OrderBy(item => ReadProperty(item, "Id")?.ToString(), StringComparer.Ordinal)
+                .ToArray();
             int[] counts = rubles.Select(item => Convert.ToInt32(ReadField(item, "StackObjectsCount"))).ToArray();
             IReadOnlyList<int> plan = PaidHealingPolicy.PlanDebits(cost, counts);
             if (plan == null) return false;
@@ -160,6 +162,19 @@ namespace Admiral.SecondLife.Client
                 if (plan[index] > 0) debits.Add(new MoneyDebit(rubles[index], counts[index], plan[index]));
             }
             return true;
+        }
+
+        static bool IsOwnedBy(object item, object root)
+        {
+            object current = item;
+            for (int depth = 0; depth < 32 && current != null; depth++)
+            {
+                if (ReferenceEquals(current, root)) return true;
+                object address = ReadProperty(current, "CurrentAddress");
+                object container = ReadField(address, "Container");
+                current = ReadProperty(container, "ParentItem");
+            }
+            return false;
         }
 
         static float Clamp(float value, float minimum, float maximum) => Math.Max(minimum, Math.Min(maximum, value));
