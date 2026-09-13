@@ -8,11 +8,15 @@ namespace Admiral.SecondLife.Client
     {
         readonly RecoveryRuntimeContract contract;
         readonly Func<string> eligiblePistolTemplates;
+        readonly Func<float> minimumCorpseDistance;
+        readonly Func<float> minimumPlayerDistance;
 
-        internal RecoveryExecutor(RecoveryRuntimeContract contract, Func<string> eligiblePistolTemplates)
+        internal RecoveryExecutor(RecoveryRuntimeContract contract, Func<string> eligiblePistolTemplates, Func<float> minimumCorpseDistance, Func<float> minimumPlayerDistance)
         {
             this.contract = contract;
             this.eligiblePistolTemplates = eligiblePistolTemplates;
+            this.minimumCorpseDistance = minimumCorpseDistance;
+            this.minimumPlayerDistance = minimumPlayerDistance;
         }
 
         internal bool TryPrepare(
@@ -42,7 +46,7 @@ namespace Admiral.SecondLife.Client
 
             if (!RecoveryInventoryLease.TryPrepare(contract, profile, corpseEquipment, out RecoveryInventoryLease lease, out failure))
                 return false;
-            if (!RuntimeSafeSpawnSelector.TrySelect(playerFactory, originalPlayer, corpse, expectedProfileId + ":" + lease.CorpseEquipmentRootId, out RuntimeSpawnSelection spawnSelection, out failure))
+            if (!RuntimeSafeSpawnSelector.TrySelect(playerFactory, originalPlayer, corpse, expectedProfileId + ":" + lease.CorpseEquipmentRootId, minimumCorpseDistance(), minimumPlayerDistance(), out RuntimeSpawnSelection spawnSelection, out failure))
                 return false;
             if (!RuntimeArmamentService.TrySelect(profile, expectedProfileId.GetHashCode(), eligiblePistolTemplates?.Invoke(), out RuntimeArmament armament))
                 return Fail("stash traversal exceeded its bounded limit", out failure);

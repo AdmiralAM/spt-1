@@ -20,14 +20,14 @@ namespace Admiral.SecondLife.Client
     internal static class RuntimeSafeSpawnSelector
     {
         const int MaximumSpawnPoints = 512;
-        const float MinimumCorpseDistance = 100f;
-        const float MinimumPlayerDistance = 75f;
 
         internal static bool TrySelect(
             Delegate playerFactory,
             object originalPlayer,
             object corpse,
             string seedIdentity,
+            float minimumCorpseDistance,
+            float minimumPlayerDistance,
             out RuntimeSpawnSelection selection,
             out string failure)
         {
@@ -62,6 +62,10 @@ namespace Admiral.SecondLife.Client
             }
 
             var combatPositions = new List<WorldPoint>();
+            WorldPoint? killerPosition = null;
+            object lastAggressor = ReadMember(originalPlayer, "LastAggressor");
+            object lastAggressorPosition = ReadProperty(lastAggressor, "Position");
+            if (lastAggressorPosition != null) killerPosition = ToWorldPoint(lastAggressorPosition);
             object gameWorld = ReadProperty(originalPlayer, "GameWorld");
             if (ReadMember(gameWorld, "RegisteredPlayers") is IEnumerable players)
             {
@@ -73,12 +77,12 @@ namespace Admiral.SecondLife.Client
                 }
             }
 
-            var policy = new SafeSpawnPolicy(MinimumPlayerDistance, MinimumCorpseDistance, MinimumPlayerDistance);
+            var policy = new SafeSpawnPolicy(minimumPlayerDistance, minimumCorpseDistance, minimumPlayerDistance);
             if (!SafeSpawnSelector.TrySelect(
                     candidates,
                     originalId,
                     ToWorldPoint(corpsePosition),
-                    null,
+                    killerPosition,
                     combatPositions,
                     policy,
                     StableSeed(seedIdentity),

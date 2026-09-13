@@ -20,10 +20,28 @@ namespace Admiral.SecondLife.Client
                 "Eligible pistol template IDs",
                 string.Empty,
                 "Comma-separated pistol template IDs. Empty allows every owned pistol placed directly in the stash root.");
+            ConfigEntry<float> recoveryDelaySeconds = Config.Bind(
+                "Recovery",
+                "Offer delay seconds",
+                0f,
+                new ConfigDescription("Real-time delay before the paid recovery offer.", new AcceptableValueRange<float>(0f, 60f)));
+            ConfigEntry<float> minimumCorpseDistance = Config.Bind(
+                "Recovery",
+                "Minimum corpse distance",
+                100f,
+                new ConfigDescription("Minimum recovery-spawn distance from the first corpse.", new AcceptableValueRange<float>(0f, 500f)));
+            ConfigEntry<float> minimumPlayerDistance = Config.Bind(
+                "Recovery",
+                "Minimum live-player distance",
+                75f,
+                new ConfigDescription("Minimum recovery-spawn distance from every other live player.", new AcceptableValueRange<float>(0f, 500f)));
 
             bridge = new RuntimeBridge(
                 enabled,
                 eligiblePistolTemplates,
+                recoveryDelaySeconds,
+                minimumCorpseDistance,
+                minimumPlayerDistance,
                 message => Logger.LogInfo(message),
                 message => Logger.LogWarning(message));
 

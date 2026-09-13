@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using BepInEx.Configuration;
 using HarmonyLib;
 
@@ -12,6 +13,9 @@ namespace Admiral.SecondLife.Client
 
         readonly ConfigEntry<bool> enabled;
         readonly ConfigEntry<string> eligiblePistolTemplates;
+        readonly ConfigEntry<float> recoveryDelaySeconds;
+        readonly ConfigEntry<float> minimumCorpseDistance;
+        readonly ConfigEntry<float> minimumPlayerDistance;
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         readonly RecoveryFinalizationGate finalizationGate = new RecoveryFinalizationGate();
@@ -28,11 +32,17 @@ namespace Admiral.SecondLife.Client
         internal RuntimeBridge(
             ConfigEntry<bool> enabled,
             ConfigEntry<string> eligiblePistolTemplates,
+            ConfigEntry<float> recoveryDelaySeconds,
+            ConfigEntry<float> minimumCorpseDistance,
+            ConfigEntry<float> minimumPlayerDistance,
             Action<string> logInfo,
             Action<string> logWarning)
         {
             this.enabled = enabled;
             this.eligiblePistolTemplates = eligiblePistolTemplates;
+            this.recoveryDelaySeconds = recoveryDelaySeconds;
+            this.minimumCorpseDistance = minimumCorpseDistance;
+            this.minimumPlayerDistance = minimumPlayerDistance;
             this.logInfo = logInfo;
             this.logWarning = logWarning;
         }
@@ -45,7 +55,11 @@ namespace Admiral.SecondLife.Client
                     return Fail("SPT 4.1 recovery contract rejected: " + failure + "; module remains inert.");
 
                 runtimeContract = contract;
-                executor = new RecoveryExecutor(contract, () => eligiblePistolTemplates?.Value);
+                executor = new RecoveryExecutor(
+                    contract,
+                    () => eligiblePistolTemplates?.Value,
+                    () => minimumCorpseDistance?.Value ?? 100f,
+                    () => minimumPlayerDistance?.Value ?? 75f);
                 harmony = new Harmony(HarmonyId);
                 active = this;
                 harmony.Patch(
@@ -109,6 +123,27 @@ namespace Admiral.SecondLife.Client
                 return false;
             if (decision == NativeFinalizationDecision.SuppressForRecovery && plan != null)
             {
+                OfferRecoveryAfterDelay(localGame, plan);
+                return false;
+            }
+
+            if (decision != NativeFinalizationDecision.ContinueNative) return false;
+            if (!string.IsNullOrWhiteSpace(failure) && !warnedExecutorUnavailable)
+            {
+                warnedExecutorUnavailable = true;
+                logWarning?.Invoke("Recovery preflight rejected; continuing native death: " + failure);
+            }
+            return true;
+        }
+
+        async void OfferRecoveryAfterDelay(object localGame, RecoveryExecutionPlan plan)
+        {
+            float seconds = Math.Max(0f, Math.Min(60f, recoveryDelaySeconds?.Value ?? 0f));
+            if (seconds > 0f) await Task.Delay(TimeSpan.FromSeconds(seconds));
+            if (finalizationGate.Snapshot.State != RecoveryState.RecoveryPending) return;
+
+            try
+            {
                 bool resolved = false;
                 Action accept = () =>
                 {
@@ -131,16 +166,13 @@ namespace Admiral.SecondLife.Client
                     logWarning?.Invoke("Paid-healing offer failed closed; resuming native death: " + promptFailure);
                     ResumeNativeFinalization(localGame);
                 }
-                return false;
             }
-
-            if (decision != NativeFinalizationDecision.ContinueNative) return false;
-            if (!string.IsNullOrWhiteSpace(failure) && !warnedExecutorUnavailable)
+            catch (Exception exception)
             {
-                warnedExecutorUnavailable = true;
-                logWarning?.Invoke("Recovery preflight rejected; continuing native death: " + failure);
+                finalizationGate.AbortPendingRecovery();
+                logWarning?.Invoke("Paid-healing offer failed closed; resuming native death: " + exception.Message);
+                ResumeNativeFinalization(localGame);
             }
-            return true;
         }
 
         void BeginRecovery(object localGame, RecoveryExecutionPlan plan)

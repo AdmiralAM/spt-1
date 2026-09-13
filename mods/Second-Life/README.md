@@ -35,6 +35,9 @@ the corpse-owned pockets instance. The paid-healing gate mirrors EFT's native
 HP price, Therapist loyalty coefficient, free-heal trial and Charisma discount;
 its ruble debit is rolled back if recovery reconstruction fails.
 
+The exact pre-runtime settlement and neighboring-module audit is recorded in
+`docs/compatibility-spt-4.1.5.md`.
+
 Authority: Issue #352 and `origin/main:.github/workstreams.json` after the governance registration is integrated.
 
 ## Resume order
