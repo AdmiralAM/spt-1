@@ -60,6 +60,12 @@ ordinary death path without profile mutation.
 - corpse and live-player distances are bounded F12 values (`0..500m`);
 - duplicate death/finalization callbacks remain state-machine suppressed.
 
+Custom spawn systems may legitimately leave `Player.SpawnPoint` unset. This is
+not a failure: the selector falls back to the full side/category mask while
+still enforcing distance from the corpse, last aggressor and every other live
+player. The absent original point cannot be selected by identity, but the
+corpse-distance rule guarantees a different recovery location.
+
 ## Remaining physical evidence
 
 Camera/input/HUD rebinding, corpse retrieval, protected-item/insurance outcome,

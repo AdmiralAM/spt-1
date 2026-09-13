@@ -38,12 +38,14 @@ namespace Admiral.SecondLife.Client
             object originalPoint = ReadProperty(originalPlayer, "SpawnPoint");
             object corpseTransform = ReadProperty(corpse, "transform");
             object corpsePosition = ReadProperty(corpseTransform, "position");
-            if (!(spawnPoints is IEnumerable enumerable) || originalPoint == null || corpsePosition == null)
-                return Fail("current map spawn collection or corpse position is unavailable", out failure);
+            if (!(spawnPoints is IEnumerable enumerable))
+                return Fail("current map spawn collection is unavailable", out failure);
+            if (corpsePosition == null)
+                return Fail("native corpse position is unavailable", out failure);
 
             string originalId = ReadString(originalPoint, "Id");
-            long originalSides = ReadMask(originalPoint, "Sides");
-            long originalCategories = ReadMask(originalPoint, "Categories");
+            long originalSides = originalPoint == null ? long.MaxValue : ReadMask(originalPoint, "Sides");
+            long originalCategories = originalPoint == null ? long.MaxValue : ReadMask(originalPoint, "Categories");
             var candidates = new List<SpawnCandidate>();
             var pointsById = new Dictionary<string, object>(StringComparer.Ordinal);
             int visited = 0;

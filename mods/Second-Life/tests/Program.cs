@@ -99,6 +99,16 @@ Expect(!SafeSpawnSelector.TrySelect(
     spawnPolicy,
     42,
     out _), "no safe point fails closed");
+Expect(SafeSpawnSelector.TrySelect(
+    spawnCandidates,
+    null!,
+    new WorldPoint(0, 0, 0),
+    new WorldPoint(100, 0, 0),
+    new[] { new WorldPoint(200, 0, 0) },
+    spawnPolicy,
+    42,
+    out SpawnCandidate customSpawnRecovery), "custom spawn without native SpawnPoint remains recoverable");
+Expect(customSpawnRecovery.Id is "safe-a" or "safe-b", "custom spawn still enforces corpse, killer and combat distance");
 
 var stashPistols = new[]
 {
