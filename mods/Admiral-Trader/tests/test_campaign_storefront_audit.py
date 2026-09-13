@@ -53,6 +53,23 @@ class CampaignStorefrontAuditTests(unittest.TestCase):
         self.assertEqual(len(all_roots), 82)
         self.assertEqual(Counter(assort["loyal_level_items"][root["_id"]] for root, assort in all_roots), {1: 30, 2: 21, 3: 21, 4: 10})
 
+    def test_editorial_copy_has_no_placeholder_briefs_or_success_messages(self):
+        placeholder_fragments = (
+            "Задача выполнена. Результат принят.",
+            "Адмирал формирует долгую программу полевых испытаний.",
+            "Подтвердите рабочее покрытие",
+            "Подтвердите базовое покрытие",
+            "Подтвердите позднее покрытие",
+            "Подтвердите работоспособность доступа",
+        )
+        for quest in self.quests:
+            quest_id = quest["_id"]
+            description = self.ru[f"{quest_id} description"]
+            success = self.ru[f"{quest_id} successMessageText"]
+            for fragment in placeholder_fragments:
+                self.assertNotIn(fragment, description, quest_id)
+                self.assertNotIn(fragment, success, quest_id)
+
 
 if __name__ == "__main__":
     unittest.main()
