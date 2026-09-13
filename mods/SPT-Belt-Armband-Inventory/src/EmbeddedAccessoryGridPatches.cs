@@ -71,7 +71,7 @@ namespace SPTBeltArmbandInventory
                 ForceRebuild(content);
                 Canvas.ForceUpdateCanvases();
 
-                Vector3 specialBottomLeft = BottomLeftIn(content, specialRect);
+                Vector3 specialBottomLeft = VisibleBottomLeftIn(content, specialRect);
                 float beltRight = RightEdgeIn(content, belt);
                 Vector3 anchor = new Vector3(Math.Max(specialBottomLeft.x, beltRight + Gap), specialBottomLeft.y - Gap, 0f);
                 PlaceNativeRow(headBand, content.TransformPoint(anchor));
@@ -148,10 +148,26 @@ namespace SPTBeltArmbandInventory
             height = Math.Max(1f, maxY - minY);
         }
 
-        static Vector3 BottomLeftIn(RectTransform space, RectTransform target)
+        static Vector3 VisibleBottomLeftIn(RectTransform space, RectTransform root)
         {
+            float left = float.MaxValue;
+            float bottom = float.MaxValue;
             Vector3[] corners = new Vector3[4];
-            target.GetWorldCorners(corners);
+            RectTransform[] descendants = root.GetComponentsInChildren<RectTransform>(false);
+            for (int childIndex = 0; childIndex < descendants.Length; childIndex++)
+            {
+                RectTransform child = descendants[childIndex];
+                if (child == root || !child.gameObject.activeInHierarchy || child.rect.width < 1f || child.rect.height < 1f) continue;
+                child.GetWorldCorners(corners);
+                for (int cornerIndex = 0; cornerIndex < corners.Length; cornerIndex++)
+                {
+                    Vector3 point = space.InverseTransformPoint(corners[cornerIndex]);
+                    left = Math.Min(left, point.x);
+                    bottom = Math.Min(bottom, point.y);
+                }
+            }
+            if (left < float.MaxValue && bottom < float.MaxValue) return new Vector3(left, bottom, 0f);
+            root.GetWorldCorners(corners);
             return space.InverseTransformPoint(corners[0]);
         }
 
