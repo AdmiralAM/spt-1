@@ -139,7 +139,7 @@ namespace SPTBeltArmbandInventory
                 EmbeddedAccessoryGridRuntime.EquipmentSlotType = equipmentSlot;
                 EmbeddedAccessoryGridRuntime.SlotViewsField = panel.GetField("_slotViews", BindingFlags.Instance | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField = searchable.GetField("_specSlotsPanel", BindingFlags.Instance | BindingFlags.NonPublic);
-                EmbeddedAccessoryGridRuntime.SlotPlaceField = searchable.BaseType?.GetField("_slotPlace", BindingFlags.Instance | BindingFlags.NonPublic);
+                EmbeddedAccessoryGridRuntime.SlotPlaceField = searchable.BaseType?.GetField("_slotPlace", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.LogInfo = logInfo;
                 EmbeddedAccessoryGridRuntime.LogWarning = logWarning;
                 if (show == null || EmbeddedAccessoryGridRuntime.SlotViewsField == null || EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField == null || EmbeddedAccessoryGridRuntime.SlotPlaceField == null)
