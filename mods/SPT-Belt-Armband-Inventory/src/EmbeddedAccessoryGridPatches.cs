@@ -42,11 +42,6 @@ namespace SPTBeltArmbandInventory
                 PrepareCompactRow(headBand);
                 PrepareCompactRow(armBand);
                 coroutineOwner.StartCoroutine(PlaceAfterNativeLayout(content, specialRect, headBand, armBand));
-                if (!logged)
-                {
-                    logged = true;
-                    LogInfo?.Invoke("B&A&HB native HeadBand/ArmBand rows placed below the Pockets special-slot panel.");
-                }
             }
             catch (Exception exception)
             {
@@ -70,6 +65,11 @@ namespace SPTBeltArmbandInventory
             RectTransform headRect = headBand.transform as RectTransform;
             float height = headRect == null ? 1f : Math.Max(1f, headRect.rect.height);
             PlaceNativeRow(armBand, corners[0] + Vector3.down * (height + Gap));
+            if (!logged)
+            {
+                logged = true;
+                LogInfo?.Invoke("B&A&HB native HeadBand/ArmBand rows compacted and placed below the Pockets special-slot panel.");
+            }
         }
 
         static void PrepareCompactRow(Component view)
@@ -138,7 +138,7 @@ namespace SPTBeltArmbandInventory
                 MethodInfo show = FindShow(panel, equipment);
                 EmbeddedAccessoryGridRuntime.EquipmentSlotType = equipmentSlot;
                 EmbeddedAccessoryGridRuntime.SlotViewsField = panel.GetField("_slotViews", BindingFlags.Instance | BindingFlags.NonPublic);
-                EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField = searchable.GetField("_specSlotsPanel", BindingFlags.Instance | BindingFlags.NonPublic);
+                EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField = searchable.GetField("_specSlotsPanel", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.SlotPlaceField = searchable.BaseType?.GetField("_slotPlace", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.LogInfo = logInfo;
                 EmbeddedAccessoryGridRuntime.LogWarning = logWarning;
