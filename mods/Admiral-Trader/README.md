@@ -44,7 +44,8 @@ Expected lifecycle:
 - **M5 — Relationship / specialist storefront**
 - **M6 — Playable 0.2.0 baseline hardening**
 - **M7 — Full campaign, retired-source and optional-content absorption**
-- **Final gate — One coherent fresh-profile campaign review and stable release**
+- **Late implementation milestone — Admiral insurance service**: unlock Admiral as an insurer through the native SPT insurance lifecycle, with authored eligibility, price, return timing, messages and progression; retain the same trader identity and do not introduce a parallel recovery engine.
+- **Final gates — Full campaign review, reward/storefront audit, regression hardening and stable release**
 
 Current runtime shape: **172 core quests** (72 validated foundation/rotation quests plus 100 authored story quests across ten map chains), **82 finite offers** (37 core/relationship/milestone offers, 10 story-finale unlocks and 35 Natalya weapon presets). Eighteen story beats use Natalya as a specialist inside Admiral's campaign; no second trader or external Natalya dependency is created. Verified Icebreaker 1.1.0 installations conditionally add the separate ten-operation **Boreas Protocol** chain, bringing the runtime total to 182 without changing the core graph.
 

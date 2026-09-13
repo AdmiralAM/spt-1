@@ -119,6 +119,12 @@ The expanded shop must contain a bounded signature weapon rack. Each selected we
 
 Ultimate Loot Editor is a separate optional research reference for Economy Admiral. It edits individual loose-loot spawn points and their item weights and persists map-specific JSON; Economy Admiral currently applies global map loot pressure. Any future compatibility work must establish deterministic ownership and ordering when both are installed. Ultimate Loot Editor is not a Trader dependency and its authored spawn-point data must not be absorbed into the storefront.
 
+## Late service milestone — Admiral insurance
+
+After campaign, reward and storefront content is complete, Admiral gains a late-progression insurance service before the final audit and stabilization gates. The service must use SPT's native insurance lifecycle and the existing Admiral trader ID. Its unlock point, eligible equipment, price, return window, loss/return behavior and messages must be authored as one coherent progression reward.
+
+This milestone must not add a second recovery engine, replace another trader's insurance globally, mutate profiles speculatively, or make Economy Admiral responsible for insurance ownership. Existing messages, standing and campaign progress must survive enable, upgrade, restart and clean removal paths.
+
 ## Optional content candidates
 
 WTT Armory, Icebreaker, RUAF / Black Division, and Pack 'n' Strap are recorded as later optional expansion candidates. They do not modify the stable campaign or current runtime scope until their installed content and exact IDs are inspected. WTT Armory may extend weapon rotations, rewards, and finite quest-gated stock; Icebreaker may supply optional map operations; RUAF / Black Division may supply rare optional combat targets without Admiral-owned spawn changes; Pack 'n' Strap may broaden equipment objectives, rewards, and unlocks after duplicate-storefront review.
