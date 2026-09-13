@@ -33,6 +33,18 @@ public static class SafeSpawnSelector
         SafeSpawnPolicy policy,
         int seed,
         out SpawnCandidate selected)
+        => TrySelect(candidates, originalSpawnId, corpsePosition, killerPosition, activeCombatPositions, policy, seed, out selected, out _);
+
+    public static bool TrySelect(
+        IEnumerable<SpawnCandidate> candidates,
+        string originalSpawnId,
+        WorldPoint corpsePosition,
+        WorldPoint? killerPosition,
+        IEnumerable<WorldPoint> activeCombatPositions,
+        SafeSpawnPolicy policy,
+        int seed,
+        out SpawnCandidate selected,
+        out int eligibleCount)
     {
         if (candidates is null) throw new ArgumentNullException(nameof(candidates));
         if (activeCombatPositions is null) throw new ArgumentNullException(nameof(activeCombatPositions));
@@ -52,6 +64,8 @@ public static class SafeSpawnSelector
             .Where(candidate => combat.All(point => candidate.Position.SquaredDistanceTo(point) >= combatDistance))
             .OrderBy(candidate => candidate.Id, StringComparer.Ordinal)
             .ToArray();
+
+        eligibleCount = eligible.Length;
 
         if (eligible.Length == 0)
         {

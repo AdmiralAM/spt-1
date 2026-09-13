@@ -43,22 +43,34 @@ namespace Admiral.SecondLife.Client
             if (corpsePosition == null)
                 return Fail("native corpse position is unavailable", out failure);
 
-            string originalId = ReadString(originalPoint, "Id");
-            long originalSides = originalPoint == null ? long.MaxValue : ReadMask(originalPoint, "Sides");
-            long originalCategories = originalPoint == null ? long.MaxValue : ReadMask(originalPoint, "Categories");
+            string originalId = ReadSpawnString(originalPoint, "Id");
+            long originalSides = originalPoint == null ? 0 : ReadSpawnMask(originalPoint, "Sides");
+            long originalCategories = originalPoint == null ? 0 : ReadSpawnMask(originalPoint, "Categories");
+            string playerSide = ReadMember(originalPlayer, "Side")?.ToString();
             var candidates = new List<SpawnCandidate>();
             var pointsById = new Dictionary<string, object>(StringComparer.Ordinal);
             int visited = 0;
+            int readable = 0;
+            int maskPass = 0;
+            int nativePass = 0;
             foreach (object point in enumerable)
             {
                 if (++visited > MaximumSpawnPoints)
                     return Fail("map spawn collection exceeds the bounded limit", out failure);
-                string id = ReadString(point, "Id");
-                object position = ReadProperty(point, "Position");
+                string id = ReadSpawnString(point, "Id");
+                object position = ReadSpawnMember(point, "Position");
                 if (string.IsNullOrWhiteSpace(id) || position == null) continue;
-                bool masksMatch = (ReadMask(point, "Sides") & originalSides) != 0 &&
-                                  (ReadMask(point, "Categories") & originalCategories) != 0;
-                bool nativeEligible = masksMatch && !ReadBoolean(point, "SpawnBlocked") && !ReadBoolean(point, "IsSnipeZone");
+                readable++;
+                object sides = ReadSpawnMember(point, "Sides");
+                object categories = ReadSpawnMember(point, "Categories");
+                long requiredSides = originalPoint == null ? ReadNamedMask(sides, playerSide) : originalSides;
+                long requiredCategories = originalPoint == null ? ReadNamedMask(categories, "Player") : originalCategories;
+                bool masksMatch = sides != null && categories != null && requiredSides != 0 && requiredCategories != 0 &&
+                                  (Convert.ToInt64(sides) & requiredSides) != 0 &&
+                                  (Convert.ToInt64(categories) & requiredCategories) != 0;
+                if (masksMatch) maskPass++;
+                bool nativeEligible = masksMatch && !ReadSpawnBoolean(point, "SpawnBlocked") && !ReadSpawnBoolean(point, "IsSnipeZone");
+                if (nativeEligible) nativePass++;
                 candidates.Add(new SpawnCandidate(id, ToWorldPoint(position), nativeEligible, false));
                 pointsById[id] = point;
             }
@@ -88,13 +100,14 @@ namespace Admiral.SecondLife.Client
                     combatPositions,
                     policy,
                     StableSeed(seedIdentity),
-                    out SpawnCandidate selected) ||
+                    out SpawnCandidate selected,
+                    out int safePass) ||
                 !pointsById.TryGetValue(selected.Id, out object selectedPoint))
             {
-                return Fail("no bounded safe alternate spawn exists", out failure);
+                return Fail($"no bounded safe alternate spawn exists (visited={visited}, readable={readable}, mask-pass={maskPass}, native-pass={nativePass}, distance-pass={safePass})", out failure);
             }
 
-            selection = new RuntimeSpawnSelection(selectedPoint, ReadProperty(selectedPoint, "Position"));
+            selection = new RuntimeSpawnSelection(selectedPoint, ReadSpawnMember(selectedPoint, "Position"));
             return true;
         }
 
@@ -129,9 +142,27 @@ namespace Admiral.SecondLife.Client
             Convert.ToSingle(FindField(vector.GetType(), "y")?.GetValue(vector)),
             Convert.ToSingle(FindField(vector.GetType(), "z")?.GetValue(vector)));
 
-        static long ReadMask(object instance, string property) => Convert.ToInt64(ReadProperty(instance, property));
-        static bool ReadBoolean(object instance, string property) => ReadProperty(instance, property) is bool value && value;
-        static string ReadString(object instance, string property) => ReadProperty(instance, property)?.ToString();
+        static object ReadSpawnMember(object instance, string name)
+        {
+            if (instance == null) return null;
+            foreach (Type contract in instance.GetType().GetInterfaces())
+            {
+                if (contract.FullName != "EFT.Game.Spawning.ISpawnPoint") continue;
+                PropertyInfo property = contract.GetProperty(name, BindingFlags.Instance | BindingFlags.Public);
+                if (property != null) return property.GetValue(instance, null);
+            }
+            return ReadMember(instance, name);
+        }
+
+        static long ReadSpawnMask(object instance, string name) => Convert.ToInt64(ReadSpawnMember(instance, name));
+        static bool ReadSpawnBoolean(object instance, string name) => ReadSpawnMember(instance, name) is bool value && value;
+        static string ReadSpawnString(object instance, string name) => ReadSpawnMember(instance, name)?.ToString();
+        static long ReadNamedMask(object mask, string name)
+        {
+            if (mask == null || string.IsNullOrWhiteSpace(name) || !mask.GetType().IsEnum) return 0;
+            try { return Convert.ToInt64(Enum.Parse(mask.GetType(), name, true)); }
+            catch (ArgumentException) { return 0; }
+        }
         static object ReadMember(object instance, string name) => ReadProperty(instance, name) ?? ReadField(instance, name);
         static object ReadProperty(object instance, string name) => instance == null ? null : FindProperty(instance.GetType(), name)?.GetValue(instance, null);
         static object ReadField(object instance, string name) => instance == null ? null : FindField(instance.GetType(), name)?.GetValue(instance);
