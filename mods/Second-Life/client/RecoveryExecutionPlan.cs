@@ -81,12 +81,15 @@ namespace Admiral.SecondLife.Client
                 originalPlayerUnregistered = true;
                 contract.DestroyPlayerCamera.Invoke(null, new[] { originalPlayer });
                 originalCameraRemoved = true;
-                await Task.Yield();
+                await Task.Delay(50);
                 var creationTask = playerFactory.DynamicInvoke() as Task;
                 if (creationTask == null) throw new InvalidOperationException("player factory did not return a Task");
                 await creationTask;
                 newPlayer = creationTask.GetType().GetProperty("Result")?.GetValue(creationTask, null);
                 if (newPlayer == null) throw new InvalidOperationException("player factory returned no LocalPlayer");
+                // Player.Init registers the player before the factory task completes.
+                // Track that ownership immediately so every later failure unregisters it.
+                newPlayerRegistered = true;
                 RuntimeSafeSpawnSelector.Apply(newPlayer, spawnSelection);
                 await RuntimeArmamentService.TransferAsync(
                     newPlayer,
@@ -102,15 +105,14 @@ namespace Admiral.SecondLife.Client
                 // Player.Init, reached by the captured native factory, already calls
                 // GameWorld.RegisterPlayer. Registering it a second time corrupts the
                 // RegisteredPlayers list and leaves world/camera consumers ambiguous.
-                newPlayerRegistered = true;
                 contract.CreatePlayerCamera.Invoke(null, new[] { newPlayer });
                 newCameraCreated = true;
                 contract.Spawn.Invoke(localGame, null);
                 paidHealing.Apply(newPlayer);
                 ValidateAttachment(gameWorld, newPlayer);
-                attached = true;
                 paidHealing.FinalizeDebit(newPlayer);
                 armamentReservation?.Commit();
+                attached = true;
                 TryDispose(originalPlayer);
                 TryCleanupOwner(originalOwner);
             }
@@ -128,7 +130,7 @@ namespace Admiral.SecondLife.Client
                     if (newCameraCreated) contract.DestroyPlayerCamera.Invoke(null, new[] { newPlayer });
                     if (originalCameraRemoved)
                     {
-                        await Task.Yield();
+                        await Task.Delay(50);
                         contract.CreatePlayerCamera.Invoke(null, new[] { originalPlayer });
                     }
                     TryDispose(newPlayer);

@@ -182,12 +182,30 @@ namespace Admiral.SecondLife.Client
         static async Task Run(object controller, object operation)
         {
             MethodInfo run = FindMethod(controller.GetType(), "TryRunNetworkTransaction", 2);
-            var task = run?.Invoke(controller, new[] { operation, null }) as Task;
+            object compatibleOperation = ConvertOperationResult(operation, run?.GetParameters()[0].ParameterType);
+            var task = run?.Invoke(controller, new[] { compatibleOperation, null }) as Task;
             if (task == null) throw new InvalidOperationException("inventory controller rejected transaction startup");
             await task;
             object result = task.GetType().GetProperty("Result")?.GetValue(task, null);
             if (result == null || !ReadBoolean(result, "Succeed"))
                 throw new InvalidOperationException("native inventory transaction failed");
+        }
+
+        static object ConvertOperationResult(object operation, Type requiredType)
+        {
+            if (operation == null || requiredType == null)
+                throw new InvalidOperationException("native inventory operation contract is unavailable");
+            if (requiredType.IsInstanceOfType(operation)) return operation;
+            MethodInfo conversion = operation.GetType().GetMethods(BindingFlags.Static | BindingFlags.Public)
+                .SingleOrDefault(method =>
+                    method.Name == "op_Implicit" &&
+                    method.ReturnType == requiredType &&
+                    method.GetParameters().Length == 1 &&
+                    method.GetParameters()[0].ParameterType == operation.GetType());
+            object converted = conversion?.Invoke(null, new[] { operation });
+            if (converted == null || !requiredType.IsInstanceOfType(converted))
+                throw new InvalidOperationException("generic inventory operation cannot be converted to the native transaction result");
+            return converted;
         }
 
         static bool IsPistol(object item)
