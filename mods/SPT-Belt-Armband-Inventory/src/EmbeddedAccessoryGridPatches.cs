@@ -20,7 +20,8 @@ namespace SPTBeltArmbandInventory
         internal static void AfterShow(object ownerObject)
         {
             Component owner = ownerObject as Component;
-            if (owner == null) return;
+            MonoBehaviour coroutineOwner = ownerObject as MonoBehaviour;
+            if (owner == null || coroutineOwner == null) return;
             try
             {
                 IDictionary views = SlotViewsField.GetValue(owner) as IDictionary;
@@ -40,7 +41,7 @@ namespace SPTBeltArmbandInventory
 
                 PrepareCompactRow(headBand);
                 PrepareCompactRow(armBand);
-                owner.StartCoroutine(PlaceAfterNativeLayout(content, specialRect, headBand, armBand));
+                coroutineOwner.StartCoroutine(PlaceAfterNativeLayout(content, specialRect, headBand, armBand));
                 if (!logged)
                 {
                     logged = true;
