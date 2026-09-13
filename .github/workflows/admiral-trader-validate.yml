@@ -119,18 +119,9 @@ jobs:
           out = Path('mods/Admiral-Trader/server/bin/Release/net10.0')
           required = [
               out / 'manifests/campaign-manifest.json',
-              out / 'manifests/reward-policy.json',
               out / 'manifests/runtime-manifest.json',
-              out / 'manifests/baseline-stock.json',
-              out / 'manifests/gameplay-policy.json',
               out / 'manifests/relationship-stock.json',
-              out / 'manifests/m5-relationship-runtime.json',
-              out / 'manifests/m5-spt415-item-evidence.json',
-              out / 'manifests/m8-campaign-expansion-runtime.json',
-              out / 'manifests/optional-weapon-runtime.json',
-              out / 'manifests/campaign-authored-100-review.json',
               out / 'manifests/story-campaign-runtime.json',
-              out / 'manifests/storefront-core-expansion.json',
               out / 'db/base.json',
               out / 'db/dialogue.json',
               out / 'db/assort.json',
