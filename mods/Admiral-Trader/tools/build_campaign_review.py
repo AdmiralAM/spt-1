@@ -141,7 +141,7 @@ def requirement(quest: dict[str, Any], items: dict[str, Any], locale: dict[str, 
     return " ".join(parts) or "Нет условия завершения."
 
 
-def reward(quest: dict[str, Any], items: dict[str, Any], locale: dict[str, str], optional: dict[str, str], optional_rewards: dict[str, str], signature_rewards: dict[str, str], pack_rewards: dict[str, dict[str, Any]]) -> str:
+def reward(quest: dict[str, Any], items: dict[str, Any], locale: dict[str, str], optional: dict[str, str], optional_rewards: dict[str, str], signature_rewards: dict[str, str], early_rewards: dict[str, dict[str, Any]], pack_rewards: dict[str, dict[str, Any]]) -> str:
     xp = rub = 0
     standing = 0.0
     item_extras: list[str] = []
@@ -167,6 +167,9 @@ def reward(quest: dict[str, Any], items: dict[str, Any], locale: dict[str, str],
     if qid in pack_rewards:
         rub -= int(pack_rewards[qid]["cashReductionRub"])
         item_extras.append(f"{pack_rewards[qid]['name']} ×1 (при наличии Pack ’n’ Strap)")
+    if qid in early_rewards:
+        rub -= int(early_rewards[qid]["cashReductionRub"])
+        item_extras.append(f"готовый оружейный комплект: {early_rewards[qid]['name']} ×1")
     if qid in signature_rewards:
         item_extras = [f"готовый оружейный комплект: {item_name(signature_rewards[qid], items, locale, optional)} ×1"]
     elif qid in optional_rewards:
@@ -234,6 +237,7 @@ def main() -> int:
     optional_rewards = {str(row["questId"]): str(row["name"]) for row in storefront.get("questRewardReplacements") or []}
     reward_wave = load(root / "manifests/campaign-reward-wave.json")
     signature_rewards = {str(row["questId"]): str(row["tpl"]) for row in reward_wave.get("signatureFinales") or []}
+    early_rewards = {str(row["questId"]): row for row in reward_wave.get("earlyWeaponTrades") or []}
     pack_rewards = {str(row["questId"]): row for row in reward_wave.get("packNStrapTrades") or []}
     quests = [load(path) for path in sorted((root / "db/quests").glob("*.json"))]
     groups = group_quests(root, quests)
@@ -256,7 +260,7 @@ def main() -> int:
         lines.extend(["", f"## {name}", "", "| Задание | Условие завершения | Награда |", "| --- | --- | --- |"])
         for quest in rows:
             title = str(quest.get("QuestName") or quest.get("_id"))
-            lines.append(f"| {title} | {requirement(quest, items, locale, optional, quest_locale)} | {reward(quest, items, locale, optional, optional_rewards, signature_rewards, pack_rewards)} |")
+            lines.append(f"| {title} | {requirement(quest, items, locale, optional, quest_locale)} | {reward(quest, items, locale, optional, optional_rewards, signature_rewards, early_rewards, pack_rewards)} |")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"wrote {args.output} with {len(quests)} quests in {len(groups)} clusters")

@@ -32,8 +32,9 @@ public sealed class OptionalContentRegistration(
         int offers = MergeOptionalStorefront(modPath, trader.Assort);
         int optionalRewards = ApplyItemRewardReplacements(modPath, "db/optional/storefront/quest-reward-replacements.json", optional: true);
         int signatureRewards = ApplyItemRewardReplacements(modPath, "db/rewards/natalya-signature-replacements.json", optional: false);
-        int packRewards = ApplyOptionalCashTrades(modPath, "db/rewards/packnstrap-reward-trades.json");
-        logger.Success($"Admiral content attached after template publication: {offers} optional offers, {signatureRewards} signature rewards, {optionalRewards} optional equipment rewards and {packRewards} Pack 'n' Strap reward trades");
+        int earlyWeaponRewards = ApplyCashTrades(modPath, "db/rewards/early-weapon-reward-trades.json", optional: false);
+        int packRewards = ApplyCashTrades(modPath, "db/rewards/packnstrap-reward-trades.json", optional: true);
+        logger.Success($"Admiral content attached after template publication: {offers} optional offers, {signatureRewards} signature rewards, {earlyWeaponRewards} early weapon rewards, {optionalRewards} optional equipment rewards and {packRewards} Pack 'n' Strap reward trades");
         return Task.CompletedTask;
     }
 
@@ -88,7 +89,7 @@ public sealed class OptionalContentRegistration(
         return applied;
     }
 
-    private int ApplyOptionalCashTrades(string modPath, string relative)
+    private int ApplyCashTrades(string modPath, string relative, bool optional)
     {
         if (!File.Exists(IOPath.Combine(modPath, relative.Replace('/', IOPath.DirectorySeparatorChar)))) return 0;
         Dictionary<MongoId, OptionalCashTrade> trades = modHelper.GetJsonDataFromFile<Dictionary<MongoId, OptionalCashTrade>>(modPath, relative);
@@ -99,7 +100,10 @@ public sealed class OptionalContentRegistration(
             if (trade.CashReductionRub <= 0 || reward.Items is null || reward.Items.Count == 0)
                 throw new InvalidDataException($"Optional reward trade for {questId} is malformed");
             if (reward.Items.Any(item => !templateTable.Items.ContainsKey(item.Template)))
-                continue;
+            {
+                if (optional) continue;
+                throw new InvalidDataException($"Required reward trade for {questId} references an unknown template");
+            }
             if (!templateTable.Quests.TryGetValue(questId, out Quest? quest) || quest.Rewards is null || !quest.Rewards.TryGetValue("Success", out List<Reward>? success))
                 throw new InvalidDataException($"Optional reward trade targets unknown quest {questId}");
             Reward? cash = success.FirstOrDefault(candidate => candidate.Items is { Count: > 0 } && candidate.Items[0].Template.ToString() == "5449016a4bdc2d6f028b456f");

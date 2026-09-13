@@ -15,6 +15,7 @@ class CampaignRewardWaveTests(unittest.TestCase):
     def setUpClass(cls):
         cls.manifest = load("manifests/campaign-reward-wave.json")
         cls.signature = load("db/rewards/natalya-signature-replacements.json")
+        cls.early = load("db/rewards/early-weapon-reward-trades.json")
         cls.pack = load("db/rewards/packnstrap-reward-trades.json")
         cls.quests = {}
         for path in (ROOT / "db/quests").glob("*.json"):
@@ -24,9 +25,11 @@ class CampaignRewardWaveTests(unittest.TestCase):
     def test_reward_wave_is_bounded_and_optional_pack_is_not_required(self):
         self.assertEqual(self.manifest["status"], "runtime-materialized")
         self.assertEqual(self.manifest["coreSignaturePresetRewards"], 10)
+        self.assertEqual(self.manifest["earlyCompleteWeaponRewardTrades"], 4)
         self.assertEqual(self.manifest["optionalPackNStrapRewardTrades"], 9)
         self.assertFalse(self.manifest["requiredDependencies"])
         self.assertEqual(len(self.signature), 10)
+        self.assertEqual(len(self.early), 4)
         self.assertEqual(len(self.pack), 9)
 
     def test_signature_rewards_are_complete_unique_item_trees(self):
@@ -54,11 +57,18 @@ class CampaignRewardWaveTests(unittest.TestCase):
 
     def test_runtime_skips_pack_trade_without_template_and_preserves_cash(self):
         source = (ROOT / "server/OptionalContentRegistration.cs").read_text(encoding="utf-8")
-        self.assertIn("ApplyOptionalCashTrades", source)
+        self.assertIn("ApplyCashTrades", source)
         self.assertIn("if (reward.Items.Any(item => !templateTable.Items.ContainsKey(item.Template)))", source)
         self.assertIn("continue;", source)
         self.assertIn("cash.Value = reduced", source)
         self.assertIn("success.Add(reward)", source)
+
+    def test_early_weapon_rewards_are_complete_cash_trades(self):
+        for quest_id, trade in self.early.items():
+            quest = self.quests[quest_id]
+            cash = next(row for row in quest["rewards"]["Success"] if row.get("items", [{}])[0].get("_tpl") == RUB)
+            self.assertGreater(cash["value"], trade["cashReductionRub"])
+            self.assertGreater(len(trade["reward"]["items"]), 1)
 
 
 if __name__ == "__main__":

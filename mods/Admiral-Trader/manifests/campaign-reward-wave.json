@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "status": "runtime-materialized",
   "coreSignaturePresetRewards": 10,
+  "earlyCompleteWeaponRewardTrades": 4,
   "optionalPackNStrapRewardTrades": 9,
   "requiredDependencies": false,
   "policy": "Story midpoints trade part of their rouble reward for one useful optional container; story finales replace the existing generic item reward with one complete staged Natalya weapon preset.",
@@ -9,43 +10,69 @@
   "signatureFinales": [
     {
       "questId": "6d9fda8875aed2082b4da528",
-      "tpl": "624c2e8614da335f1e034d8c"
+      "tpl": "5beed0f50db834001c062b12"
     },
     {
       "questId": "bcf61611e9723c765e07a740",
-      "tpl": "63088377b5cd696784087147"
+      "tpl": "59d6088586f774275f37482f"
     },
     {
       "questId": "60df546a03bdc74ca45fb8ca",
-      "tpl": "54491c4f4bdc2db1078b4568"
+      "tpl": "5de652c31b7e3716273428be"
     },
     {
       "questId": "181f902c56dab247a1f49d0c",
-      "tpl": "61a4c8884f95bc3b2c5dc96f"
+      "tpl": "628b9c37a733087d0d7fe84b"
     },
     {
       "questId": "70258f2cc084c335a0542207",
-      "tpl": "6193a720f8ee7e52e42109ed"
+      "tpl": "5aafa857e5b5b00018480968"
     },
     {
       "questId": "6a24e1ca978938c1d4a8839f",
-      "tpl": "5a7828548dc32e5a9c28b516"
+      "tpl": "65268d8ecb944ff1e90ea385"
     },
     {
       "questId": "0f650f5ba44bfd17404b7ad6",
-      "tpl": "633ec7c2a6918cb895019c6c"
+      "tpl": "6176aca650224f204c1da3fb"
     },
     {
       "questId": "734ce8b802ca6a629387ca5b",
-      "tpl": "59984ab886f7743e98271174"
+      "tpl": "5447a9cd4bdc2dbd208b4567"
     },
     {
       "questId": "df6c5b8f5660efd1b4c6d06c",
-      "tpl": "606dae0ab0e443224b421bb7"
+      "tpl": "576165642459773c7a400233"
     },
     {
       "questId": "680c47f4c9a0e7b884a95908",
-      "tpl": "5f2a9575926fd9352339381f"
+      "tpl": "6165ac306ef05c2ce828ef74"
+    }
+  ],
+  "earlyWeaponTrades": [
+    {
+      "questId": "02c07ee31821696597ceabef",
+      "tpl": "624c2e8614da335f1e034d8c",
+      "name": "Револьвер Chiappa Rhino 200DS",
+      "cashReductionRub": 4000
+    },
+    {
+      "questId": "3c6e085fc02f0597efdb5d5a",
+      "tpl": "63088377b5cd696784087147",
+      "name": "Пистолет Glock 19X",
+      "cashReductionRub": 7000
+    },
+    {
+      "questId": "31ab6a69a8436df6b3834b0a",
+      "tpl": "5926bb2186f7744b1c6c6e60",
+      "name": "Пистолет-пулемёт HK MP5",
+      "cashReductionRub": 10000
+    },
+    {
+      "questId": "e520cec55b83621928e9e4ec",
+      "tpl": "54491c4f4bdc2db1078b4568",
+      "name": "Помповое ружьё MP-133",
+      "cashReductionRub": 12000
     }
   ],
   "packNStrapTrades": [
