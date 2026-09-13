@@ -13,9 +13,10 @@ namespace Admiral.SecondLife.Client
         readonly List<MoneyDebit> debits;
         bool applied;
 
-        RuntimePaidHealing(int cost, List<MoneyDebit> debits, bool canAfford) { Cost = cost; this.debits = debits; CanAfford = canAfford; }
+        RuntimePaidHealing(int cost, List<MoneyDebit> debits, bool canAfford, string scanSummary) { Cost = cost; this.debits = debits; CanAfford = canAfford; ScanSummary = scanSummary; }
         internal int Cost { get; }
         internal bool CanAfford { get; }
+        internal string ScanSummary { get; }
 
         internal static bool TryPrepare(object profile, object player, out RuntimePaidHealing healing, out string failure)
         {
@@ -28,8 +29,8 @@ namespace Admiral.SecondLife.Client
                 object traderInfo = FindTherapistInfo(profile);
                 if (traderInfo == null) return Fail("Therapist loyalty data is unavailable", out failure);
                 int cost = CalculateNativeCost(profile, traderInfo, missingHealth);
-                bool canAfford = TrySelectRubles(profile, cost, out List<MoneyDebit> debits);
-                healing = new RuntimePaidHealing(cost, debits, canAfford);
+                bool canAfford = TrySelectRubles(profile, cost, out List<MoneyDebit> debits, out string scanSummary);
+                healing = new RuntimePaidHealing(cost, debits, canAfford, scanSummary);
                 return true;
             }
             catch (Exception exception) { return Fail("native healing contract rejected: " + Unwrap(exception).Message, out failure); }
@@ -141,20 +142,25 @@ namespace Admiral.SecondLife.Client
             return null;
         }
 
-        static bool TrySelectRubles(object profile, int cost, out List<MoneyDebit> debits)
+        static bool TrySelectRubles(object profile, int cost, out List<MoneyDebit> debits, out string scanSummary)
         {
             debits = new List<MoneyDebit>();
-            if (cost == 0) return true;
+            scanSummary = null;
+            if (cost == 0) { scanSummary = "cost=0"; return true; }
             object inventory = ReadField(profile, "Inventory");
             object stash = ReadField(inventory, "Stash");
             var items = ReadProperty(inventory, "AllRealPlayerItems") as IEnumerable;
-            if (items == null) return false;
-            object[] rubles = items.Cast<object>()
-                .Where(item => IsOwnedBy(item, stash))
+            if (items == null) { scanSummary = $"inventory={(inventory != null)}, stash={(stash != null)}, items=false"; return false; }
+            object[] all = items.Cast<object>().Take(8193).ToArray();
+            if (all.Length > 8192) { scanSummary = "inventory scan exceeded 8192 items"; return false; }
+            object[] owned = all.Where(item => IsOwnedBy(item, stash)).ToArray();
+            object[] rubles = owned
                 .Where(item => string.Equals(ReadProperty(item, "StringTemplateId")?.ToString(), RubleTemplateId, StringComparison.Ordinal))
                 .OrderBy(item => ReadProperty(item, "Id")?.ToString(), StringComparer.Ordinal)
                 .ToArray();
             int[] counts = rubles.Select(item => Convert.ToInt32(ReadField(item, "StackObjectsCount"))).ToArray();
+            long available = counts.Aggregate(0L, (total, count) => total + Math.Max(0, count));
+            scanSummary = $"inventory={(inventory != null)}, stash={(stash != null)}, all={all.Length}, stash-owned={owned.Length}, ruble-stacks={rubles.Length}, rubles={available}, price={cost}";
             IReadOnlyList<int> plan = PaidHealingPolicy.PlanDebits(cost, counts);
             if (plan == null) return false;
             for (int index = 0; index < rubles.Length; index++)

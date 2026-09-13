@@ -123,6 +123,7 @@ namespace Admiral.SecondLife.Client
                 return false;
             if (decision == NativeFinalizationDecision.SuppressForRecovery && plan != null)
             {
+                logInfo?.Invoke("Paid-healing inventory scan: " + plan.PaidHealingScanSummary);
                 OfferRecoveryAfterDelay(localGame, plan);
                 return false;
             }

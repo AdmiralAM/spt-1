@@ -51,6 +51,7 @@ namespace Admiral.SecondLife.Client
         internal string RecoveryEquipmentRootId => inventoryLease.RecoveryEquipmentRootId;
         internal int PaidHealingCost => paidHealing.Cost;
         internal bool CanAffordPaidHealing => paidHealing.CanAfford;
+        internal string PaidHealingScanSummary => paidHealing.ScanSummary;
 
         internal async Task ExecuteAsync()
         {
