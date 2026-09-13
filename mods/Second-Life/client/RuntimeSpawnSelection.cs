@@ -7,14 +7,16 @@ namespace Admiral.SecondLife.Client
 {
     internal sealed class RuntimeSpawnSelection
     {
-        internal RuntimeSpawnSelection(object spawnPoint, object position)
+        internal RuntimeSpawnSelection(object spawnPoint, object position, object rotation)
         {
             SpawnPoint = spawnPoint;
             Position = position;
+            Rotation = rotation;
         }
 
         internal object SpawnPoint { get; }
         internal object Position { get; }
+        internal object Rotation { get; }
     }
 
     internal static class RuntimeSafeSpawnSelector
@@ -107,7 +109,10 @@ namespace Admiral.SecondLife.Client
                 return Fail($"no bounded safe alternate spawn exists (visited={visited}, readable={readable}, mask-pass={maskPass}, native-pass={nativePass}, distance-pass={safePass})", out failure);
             }
 
-            selection = new RuntimeSpawnSelection(selectedPoint, ReadSpawnMember(selectedPoint, "Position"));
+            selection = new RuntimeSpawnSelection(
+                selectedPoint,
+                ReadSpawnMember(selectedPoint, "Position"),
+                ReadSpawnMember(selectedPoint, "Rotation"));
             return true;
         }
 
@@ -124,6 +129,10 @@ namespace Admiral.SecondLife.Client
                 throw new InvalidOperationException("new player cannot be bound to the selected spawn");
             spawnPoint.SetValue(player, selection.SpawnPoint, null);
             teleport.Invoke(player, new[] { selection.Position, (object)true });
+            object transform = ReadProperty(ReadProperty(player, "Transform"), "Original");
+            PropertyInfo rotation = transform?.GetType().GetProperty("rotation", BindingFlags.Instance | BindingFlags.Public);
+            if (selection.Rotation != null && rotation?.CanWrite == true)
+                rotation.SetValue(transform, selection.Rotation, null);
         }
 
         static int StableSeed(string value)
