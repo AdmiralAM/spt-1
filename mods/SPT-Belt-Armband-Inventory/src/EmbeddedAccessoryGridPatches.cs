@@ -85,10 +85,17 @@ namespace SPTBeltArmbandInventory
         {
             IgnoreAutomaticLayout(view.gameObject);
             RectTransform slotPlace = SlotPlaceField?.GetValue(view) as RectTransform;
-            if (slotPlace != null) slotPlace.gameObject.SetActive(false);
+            HideRootBranch(view.transform, slotPlace);
             Component slotBackground = SlotBackgroundField?.GetValue(view) as Component;
-            Transform slotPanel = slotBackground == null ? null : slotBackground.transform.parent;
-            if (slotPanel != null && slotPanel != view.transform) slotPanel.gameObject.SetActive(false);
+            HideRootBranch(view.transform, slotBackground == null ? null : slotBackground.transform);
+        }
+
+        static void HideRootBranch(Transform row, Transform descendant)
+        {
+            if (row == null || descendant == null || descendant == row) return;
+            Transform branch = descendant;
+            while (branch.parent != null && branch.parent != row) branch = branch.parent;
+            if (branch.parent == row) branch.gameObject.SetActive(false);
         }
 
         static float CompactNativeRow(Component view)
