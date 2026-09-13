@@ -140,6 +140,7 @@ namespace Admiral.SecondLife.Client
         {
             float seconds = Math.Max(0f, Math.Min(60f, recoveryDelaySeconds?.Value ?? 0f));
             if (seconds > 0f) await Task.Delay(TimeSpan.FromSeconds(seconds));
+            await WaitForNeutralInput();
             if (finalizationGate.Snapshot.State != RecoveryState.RecoveryPending) return;
 
             try
@@ -179,6 +180,25 @@ namespace Admiral.SecondLife.Client
                 finalizationGate.AbortPendingRecovery();
                 logWarning?.Invoke("Paid-healing offer failed closed; resuming native death: " + exception.Message);
                 ResumeNativeFinalization(localGame);
+            }
+        }
+
+        static async Task WaitForNeutralInput()
+        {
+            Type input = Type.GetType("UnityEngine.Input, UnityEngine.InputLegacyModule", throwOnError: false);
+            var anyKey = input?.GetProperty("anyKey", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+            if (anyKey == null)
+            {
+                await Task.Delay(350);
+                return;
+            }
+
+            int neutralSamples = 0;
+            while (neutralSamples < 5)
+            {
+                bool pressed = anyKey.GetValue(null, null) is bool value && value;
+                neutralSamples = pressed ? 0 : neutralSamples + 1;
+                await Task.Delay(50);
             }
         }
 
