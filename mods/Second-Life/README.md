@@ -32,3 +32,12 @@ Authority: Issue #352 and `origin/main:.github/workstreams.json` after the gover
 6. Produce one batched physical runtime candidate.
 
 Do not create a second PR for this workstream. Continue from the live PR exact head.
+
+## Post-stable follow-up
+
+After the first stable release, add a pre-raid emergency preset selector. At
+raid entry it records the persistent item IDs of an owned stash pistol, its
+installed magazine and one compatible spare magazine. An empty preset requests
+bounded random selection across the stash and nested stash containers. If the
+chosen set is unavailable or no complete random set exists, recovery is
+unarmed. This follow-up must not delay or silently expand the first stable gate.

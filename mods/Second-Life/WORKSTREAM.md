@@ -82,8 +82,25 @@ Remediate failures, package and deliberately promote only the exact physically a
 
 Acceptance: install/rollback are verified; main and runtime identity agree; merge, Issue closure and branch deletion occur only after explicit user confirmation.
 
+### M8 — Post-stable pre-raid emergency preset
+
+After the first stable release, add a pre-raid selector that lets the player
+assign an owned stash pistol, its installed magazine and one compatible spare
+magazine as the emergency set. Capture only persistent item IDs at raid entry;
+do not clone, reserve or remove the items at selection time. An empty preset
+uses bounded seeded random selection across the stash root and nested stash
+containers. If an explicitly selected set is missing/invalid at raid entry, or
+if random selection finds no complete eligible set, recovery proceeds unarmed.
+
+Acceptance: the selector is available before raid launch; selected IDs resolve
+to the same owned items at raid entry; nested-container traversal is bounded
+and cycle-safe; explicit, random and unarmed fallback paths are deterministic;
+no item is duplicated, removed merely by selecting it, or sourced from the
+first corpse; and the post-stable candidate passes its own focused physical
+gate before publication.
+
 ## Worker execution
 
-`M0 -> M1 -> M2 -> M3 -> M4 -> M5 -> M6 physical gate -> M7 stable`
+`M0 -> M1 -> M2 -> M3 -> M4 -> M5 -> M6 physical gate -> M7 stable -> M8 post-stable preset`
 
 Use one PR. Do not stop merely at CI green. Do not request user testing before exact build, direct deployment or a verified install-ready artifact. Any worker that starts local SPT processes must stop its own processes and verify cleanup before ending.

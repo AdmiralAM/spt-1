@@ -33,6 +33,18 @@ unarmed. An invalid tree or partial move rolls back to the captured stash
 addresses or resumes native death; equipment from the first corpse is never a
 substitute.
 
+The first stable release uses automatic selection only. A post-stable pre-raid
+preset may record the three selected persistent item IDs when entering the
+raid. Selection itself never moves or reserves items. Resolution order is:
+
+1. a complete explicitly selected set present in the stash tree;
+2. when the preset is empty, a complete seeded-random set from the stash root
+   or nested stash containers;
+3. unarmed recovery when the applicable set cannot be resolved.
+
+An invalid explicit preset does not silently choose different equipment.
+Traversal of nested containers must be bounded and cycle-safe.
+
 ## Process cleanup
 
 Any local server/client/helper started for archaeology or smoke testing must be stopped by the same worker. Record PIDs before launch, prefer graceful shutdown, and verify no owned process or listening port remains.
