@@ -135,8 +135,8 @@ public sealed class AdmiralTraderRegistration(
             throw new InvalidDataException("assort.json is missing a required native collection");
         string[] insuranceDialogueKeys = ["insuranceStart", "insuranceFound", "insuranceExpired", "insuranceComplete", "insuranceFailed", "insuranceFailedLabs", "insuranceFailedLabyrinth"];
         if (traderBase.Insurance?.Availability is not true
-            || traderBase.Insurance.MinReturnHour != 18
-            || traderBase.Insurance.MaxReturnHour != 30
+            || traderBase.Insurance.MinReturnHour != 6
+            || traderBase.Insurance.MaxReturnHour != 12
             || traderBase.Insurance.MaxStorageTime != 120
             || insuranceDialogueKeys.Any(key => !dialogue.TryGetValue(key, out var messages) || messages is null || messages.Count == 0))
             throw new InvalidDataException("Admiral native insurance contract is incomplete");

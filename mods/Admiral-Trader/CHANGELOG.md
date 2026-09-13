@@ -22,7 +22,7 @@
 - Accepts 51 verified WTT Armory/Content Backport weapon templates as optional alternatives in matching Arsenal pools. Every quest keeps native SPT choices and the campaign remains fully playable without WTT.
 - Canonicalize the installed folder as `SPT_Runtime/user/mods/Admiral Trader` and reject the obsolete hyphenated alias during replacement validation.
 - Complete the M7 reward layer with 20 progressive native field-support items, four early complete weapons, ten Natalya signature presets and conditional B&A&HB equipment/container trades; every added item replaces a bounded share of roubles.
-- Add Admiral as a native SPT insurer with a 90% return chance, 18–30 hour delivery, 120-hour storage, relationship-scaled 25/22/19/16% pricing and complete EN/RU lifecycle mail.
+- Add Admiral as a native SPT insurer with a 90% return chance, fast 6–12 hour delivery, 120-hour storage, relationship-scaled 25/22/19/16% pricing and complete EN/RU lifecycle mail.
 
 ## 0.2.0 — stable campaign baseline
 

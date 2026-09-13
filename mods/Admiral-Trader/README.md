@@ -44,7 +44,7 @@ Expected lifecycle:
 - **M5 — Relationship / specialist storefront**
 - **M6 — Playable 0.2.0 baseline hardening**
 - **M7 — Full campaign, retired-source and optional-content absorption — closed in `0.3.0-rc`**
-- **M8 — Admiral insurance service**: native SPT insurance with relationship-scaled prices, 90% return chance, an 18–30 hour return window, 120-hour storage and authored EN/RU messages; the existing trader identity owns every return.
+- **M8 — Admiral insurance service**: native SPT insurance with relationship-scaled prices, 90% return chance, a fast 6–12 hour return window, 120-hour storage and authored EN/RU messages; the existing trader identity owns every return.
 - **Final gates — Full campaign review, reward/storefront audit, regression hardening and stable release**
 
 Current runtime shape: **172 core quests** (72 validated foundation/rotation quests plus 100 authored story quests across ten map chains), **82 finite offers** (37 core/relationship/milestone offers, 10 story-finale unlocks and 35 Natalya weapon presets). Eighteen story beats use Natalya as a specialist inside Admiral's campaign; no second trader or external Natalya dependency is created. Verified Icebreaker 1.1.0 installations conditionally add the separate ten-operation **Boreas Protocol** chain, bringing the runtime total to 182 without changing the core graph.
@@ -55,7 +55,7 @@ The active weapon campaign uses two paced lanes with 40 assignments in total, br
 
 Campaign rewards now include 20 progressive native field-support trades, four early complete weapons, ten Natalya signature presets and 16 currently verified B&A&HB wrist/belt/head-band/container trades. Each trade replaces a bounded part of the quest's rouble payout instead of stacking free value; optional rewards leave the original cash untouched when their template is absent.
 
-Admiral uses SPT's native insurance purchase, raid-loss, return scheduling and mail delivery. His return chance sits between Prapor and Therapist, while the price coefficient improves from 25% at LL1 to 16% at LL4. Labs and Labyrinth retain their native no-return behavior; no profile migration or parallel recovery store is introduced.
+Admiral uses SPT's native insurance purchase, raid-loss, return scheduling and mail delivery. His defining advantage is the fast 6–12 hour return window; the return chance is 90%, while the price coefficient improves from 25% at LL1 to 16% at LL4. Labs and Labyrinth retain their native no-return behavior; no profile migration or parallel recovery store is introduced.
 
 Install, replacement and clean-removal instructions are in `docs/INSTALL.md`. The canonical runtime directory is `Admiral Trader`, matching the established installation. Replacement tooling removes the obsolete `Admiral-Trader` alias so two copies of the same persistent trader identity cannot load together.
 
