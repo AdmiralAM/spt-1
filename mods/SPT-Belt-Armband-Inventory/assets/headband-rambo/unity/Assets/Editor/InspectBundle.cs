@@ -31,7 +31,7 @@ public static class InspectBundle
                 Debug.Log($"BUNDLE_GEOMETRY meshes={filters.Length} vertices={vertices} triangles={indices / 3} renderers={renderers.Length} missing={missing}");
                 foreach (Renderer renderer in renderers)
                     foreach (Material material in renderer.sharedMaterials)
-                        Debug.Log($"BUNDLE_MATERIAL name={material?.name} shader={material?.shader?.name} mainTexture={material?.mainTexture?.name} normalTexture={material?.GetTexture("_BumpMap")?.name}");
+                        Debug.Log($"BUNDLE_MATERIAL name={material?.name} shader={material?.shader?.name} mainTexture={material?.mainTexture?.name} normalTexture={material?.GetTexture("_BumpMap")?.name} emissionTexture={material?.GetTexture("_EmissionMap")?.name}");
                 if (output != null) RenderViews(go, output);
             }
         }

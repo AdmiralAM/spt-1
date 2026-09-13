@@ -57,8 +57,10 @@ public static class BuildHeadBandBundle
         GameObject visual = UnityEngine.Object.Instantiate(model, root.transform);
         visual.name = "HeadBand_Rambo_Red_Visual";
         visual.transform.localPosition = Vector3.zero;
-        visual.transform.localRotation = Quaternion.identity;
-        visual.transform.localScale = Vector3.one * 2.15f;
+        visual.transform.localRotation = Quaternion.Euler(-8f, 0f, 0f);
+        // EFT's inspect camera uses the prefab transform rather than fitting the
+        // imported FBX bounds. Keep the model comfortably inside that frame.
+        visual.transform.localScale = Vector3.one * 0.68f;
 
         AssetDatabase.DeleteAsset(MaterialPath);
         Shader shader = Shader.Find("Standard")
@@ -71,6 +73,12 @@ public static class BuildHeadBandBundle
         material.SetTexture("_BumpMap", normal);
         material.SetFloat("_BumpScale", 0.35f);
         material.EnableKeyword("_NORMALMAP");
+        // EFT's item-inspect scene is deliberately dim. A restrained fabric-
+        // colored emission keeps the approved crimson readable without making
+        // the cloth look luminous in normal inventory lighting.
+        material.SetTexture("_EmissionMap", albedo);
+        material.SetColor("_EmissionColor", new Color(0.28f, 0.018f, 0.022f, 1f));
+        material.EnableKeyword("_EMISSION");
         AssetDatabase.CreateAsset(material, MaterialPath);
         foreach (Renderer renderer in visual.GetComponentsInChildren<Renderer>(true))
             renderer.sharedMaterial = material;

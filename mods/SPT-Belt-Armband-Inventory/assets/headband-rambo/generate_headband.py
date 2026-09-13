@@ -29,8 +29,8 @@ def create_texture_maps(size=512):
             warp = math.sin(x * math.tau / 5.0)
             weft = math.sin(y * math.tau / 4.0)
             broad = math.sin((x + y) * math.tau / 73.0) * 0.5 + math.sin((x - y) * math.tau / 119.0) * 0.5
-            fiber = 0.84 + 0.012 * warp + 0.010 * weft + 0.025 * broad
-            albedo_pixels.extend((int(255 * 0.56 * fiber), int(255 * 0.022 * fiber), int(255 * 0.030 * fiber), 255))
+            fiber = 0.92 + 0.008 * warp + 0.007 * weft + 0.018 * broad
+            albedo_pixels.extend((int(255 * 0.72 * fiber), int(255 * 0.018 * fiber), int(255 * 0.024 * fiber), 255))
             nx = 0.045 * math.cos(x * math.tau / 5.0)
             ny = 0.040 * math.cos(y * math.tau / 4.0)
             nz = math.sqrt(max(0.0, 1.0 - nx * nx - ny * ny))
