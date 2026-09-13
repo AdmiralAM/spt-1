@@ -77,6 +77,7 @@ Magazine Armband and Magazine Belt are appended reload fallback sources only:
 - exact B&A&HB fast-access locations are appended after vanilla fast-access locations;
 - only a `Magazine` under an exact registered fast-access wearable ancestor may gain reachability;
 - Wrist Wallet and Utility HeadBand are exact payment/auto-deposit roots, but are not reload roots;
+- SPT 4.1.5 paid extracts already select the required currency through `Inventory.GetAllItemByTemplate` and therefore see compatible nested wallet contents; B&A&HB does not replace `TransferExitItem`;
 - parent/template access is startup-bound; no broad scans or runtime reflection discovery in the reload path.
 
 ## Implementation / maintenance order
