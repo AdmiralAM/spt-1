@@ -84,6 +84,8 @@ namespace Admiral.SecondLife.Client
             bool attached = false;
             bool newPlayerRegistered = false;
             bool newCameraCreated = false;
+            bool playerDictionaryReplaced = false;
+            object playerDictionaryKey = null;
             object gameWorld = ReadProperty(originalPlayer, "GameWorld");
             if (gameWorld == null) throw new InvalidOperationException("active GameWorld is unavailable");
             Exception failure = null;
@@ -91,6 +93,8 @@ namespace Admiral.SecondLife.Client
             try
             {
                 Trace(stage, gameWorld, newPlayer);
+                trace?.Invoke("Recovery trace: protected transfers=" + inventoryLease.ProtectedTransferSummary);
+                playerDictionaryKey = ResolvePlayerDictionaryKey();
                 stage = "recovery-assets-load";
                 await LoadRecoveryAssets();
                 Trace(stage, gameWorld, newPlayer);
@@ -100,7 +104,7 @@ namespace Admiral.SecondLife.Client
                 stage = "old-camera-destroy";
                 contract.DestroyPlayerCamera.Invoke(null, new[] { originalPlayer });
                 await WaitForCameraRemoval(originalPlayer);
-                await RemoveCullingSampler();
+                ClearCullingCameraState();
                 Trace(stage, gameWorld, newPlayer);
                 stage = "new-player-create";
                 var creationTask = playerFactory.DynamicInvoke() as Task;
@@ -121,14 +125,16 @@ namespace Admiral.SecondLife.Client
 
                 contract.LocalPlayer.SetValue(localGame, newPlayer);
                 contract.PlayerOwner.SetValue(localGame, newOwner);
-                players[ProfileId] = newPlayer;
+                players[playerDictionaryKey] = newPlayer;
+                playerDictionaryReplaced = true;
                 Trace(stage, gameWorld, newPlayer);
                 // Player.Init, reached by the captured native factory, already calls
                 // GameWorld.RegisterPlayer. Registering it a second time corrupts the
                 // RegisteredPlayers list and leaves world/camera consumers ambiguous.
                 stage = "new-camera-create";
-                contract.CreatePlayerCamera.Invoke(null, new[] { newPlayer });
+                object newCameraController = contract.CreatePlayerCamera.Invoke(null, new[] { newPlayer });
                 newCameraCreated = true;
+                RegisterNewCullingCamera(newCameraController);
                 Trace(stage, gameWorld, newPlayer);
                 stage = "new-player-spawn";
                 contract.Spawn.Invoke(localGame, null);
@@ -145,6 +151,7 @@ namespace Admiral.SecondLife.Client
                 // the replacement immediately after retiring the old owner.
                 TryCleanupOwner(originalOwner);
                 ValidateAttachment(gameWorld, newPlayer);
+                RefreshDynamicMapsPlayerMarker();
                 Trace(stage, gameWorld, newPlayer);
                 attached = true;
                 paidHealing.ReleaseDebit();
@@ -172,8 +179,7 @@ namespace Admiral.SecondLife.Client
                     TryCleanupStep(() => contract.DestroyPlayerCamera.Invoke(null, new[] { newPlayer }), "new camera destroy", cleanupFailures);
                     try { await WaitForCameraRemoval(newPlayer); }
                     catch (Exception exception) { cleanupFailures.Add("new camera removal: " + exception.Message); }
-                    try { await RemoveCullingSampler(); }
-                    catch (Exception exception) { cleanupFailures.Add("new culling sampler removal: " + exception.Message); }
+                    TryCleanupStep(ClearCullingCameraState, "new culling camera clear", cleanupFailures);
                 }
                 if (newPlayerRegistered) TryCleanupStep(() => contract.UnregisterWorldPlayer.Invoke(gameWorld, new[] { newPlayer }), "new player unregister", cleanupFailures);
                 TryCleanupStep(() => TryCleanupOwner(newOwner), "new owner cleanup", cleanupFailures);
@@ -181,7 +187,8 @@ namespace Admiral.SecondLife.Client
                 TryCleanupStep(() => contract.LocalPlayer.SetValue(localGame, originalPlayer), "local player restore", cleanupFailures);
                 TryCleanupStep(() => contract.PlayerOwner.SetValue(localGame, originalOwner), "player owner restore", cleanupFailures);
                 TryCleanupStep(() => contract.GamePlayerOwnerMyPlayer.SetValue(null, originalPlayer), "global player restore", cleanupFailures);
-                TryCleanupStep(() => players[ProfileId] = originalPlayer, "player dictionary restore", cleanupFailures);
+                if (playerDictionaryReplaced)
+                    TryCleanupStep(() => players[playerDictionaryKey] = originalPlayer, "player dictionary restore", cleanupFailures);
                 TryCleanupStep(() =>
                 {
                     if (!inventoryLease.Rollback()) throw new InvalidOperationException("profile inventory rollback was rejected");
@@ -265,21 +272,72 @@ namespace Admiral.SecondLife.Client
             throw new InvalidOperationException("previous player camera was not destroyed within the bounded frame wait");
         }
 
-        async Task RemoveCullingSampler()
+        object ResolvePlayerDictionaryKey()
         {
-            object sampler = contract.CullingSamplerInstance.GetValue(null, null);
-            if (sampler == null) return;
-            Type unityObject = sampler.GetType();
-            while (unityObject != null && unityObject.FullName != "UnityEngine.Object") unityObject = unityObject.BaseType;
-            MethodInfo destroy = unityObject?.GetMethod("Destroy", BindingFlags.Static | BindingFlags.Public, null, new[] { unityObject }, null);
-            if (destroy == null) throw new InvalidOperationException("culling sampler destruction contract is unavailable");
-            destroy.Invoke(null, new[] { sampler });
-            for (int attempt = 0; attempt < 60; attempt++)
+            object match = null;
+            int matches = 0;
+            foreach (DictionaryEntry entry in players)
             {
-                await Task.Delay(16);
-                if (contract.CullingSamplerInstance.GetValue(null, null) == null) return;
+                if (!ReferenceEquals(entry.Value, originalPlayer)) continue;
+                match = entry.Key;
+                matches++;
             }
-            throw new InvalidOperationException("previous FPS-camera culling sampler was not released within the bounded frame wait");
+            if (matches != 1) throw new InvalidOperationException("original local-player dictionary entry count is " + matches);
+            return match;
+        }
+
+        void ClearCullingCameraState()
+        {
+            object manager = contract.CullingManagerInstance.GetValue(null, null);
+            if (manager == null) throw new InvalidOperationException("CullingManager.Instance is unavailable");
+            contract.FinishCullingJobs.Invoke(manager, null);
+            contract.ClearCullingCameraData.Invoke(manager, null);
+        }
+
+        void RegisterNewCullingCamera(object cameraController)
+        {
+            object manager = contract.CullingManagerInstance.GetValue(null, null);
+            object camera = ReadProperty(cameraController, "Camera");
+            if (manager == null || camera == null) throw new InvalidOperationException("replacement culling camera is unavailable");
+            contract.RegisterCullingCamera.Invoke(manager, new[] { camera });
+        }
+
+        void RefreshDynamicMapsPlayerMarker()
+        {
+            try
+            {
+                Type screenType = FindType("DynamicMaps.UI.ModdedMapScreen");
+                if (screenType == null) return;
+                Type resources = Type.GetType("UnityEngine.Resources, UnityEngine.CoreModule", false);
+                MethodInfo findAll = resources?.GetMethod("FindObjectsOfTypeAll", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(Type) }, null);
+                var screens = findAll?.Invoke(null, new object[] { screenType }) as IEnumerable;
+                int refreshed = 0;
+                if (screens != null)
+                {
+                    foreach (object screen in screens)
+                    {
+                        object providers = ReadField(screen, "_dynamicMarkerProviders");
+                        object mapView = ReadField(screen, "_mapView");
+                        if (!(providers is IDictionary dictionary) || mapView == null) continue;
+                        foreach (DictionaryEntry entry in dictionary)
+                        {
+                            object provider = entry.Value;
+                            if (provider?.GetType().FullName != "DynamicMaps.DynamicMarkers.PlayerMarkerProvider") continue;
+                            MethodInfo remove = provider.GetType().GetMethod("TryRemoveMarker", BindingFlags.Instance | BindingFlags.NonPublic);
+                            MethodInfo add = provider.GetType().GetMethod("TryAddMarker", BindingFlags.Instance | BindingFlags.NonPublic);
+                            if (remove == null || add == null) continue;
+                            remove.Invoke(provider, null);
+                            add.Invoke(provider, new[] { mapView });
+                            refreshed++;
+                        }
+                    }
+                }
+                trace?.Invoke("Recovery trace: Dynamic Maps player marker refresh count=" + refreshed);
+            }
+            catch (Exception exception)
+            {
+                trace?.Invoke("Recovery trace: Dynamic Maps player marker refresh warning: " + Unwrap(exception).Message);
+            }
         }
 
         void ValidateAttachment(object gameWorld, object newPlayer)
@@ -320,6 +378,16 @@ namespace Admiral.SecondLife.Client
                 : exception;
 
         static object ReadProperty(object instance, string name) => instance?.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(instance, null);
+
+        static Type FindType(string fullName)
+        {
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                Type type = assembly.GetType(fullName, false);
+                if (type != null) return type;
+            }
+            return null;
+        }
 
         static object ReadField(object instance, string name)
         {

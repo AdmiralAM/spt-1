@@ -36,6 +36,9 @@ namespace Admiral.SecondLife.Client
         internal string CorpseEquipmentRootId { get; }
         internal string RecoveryEquipmentRootId { get; }
         internal object RecoveryEquipment => contract.InventoryEquipment.GetValue(recoveryInventory);
+        internal string ProtectedTransferSummary => protectedTransfers.Count == 0
+            ? "none"
+            : string.Join(",", protectedTransfers.Select(transfer => transfer.SlotName));
 
         internal bool TryAttachArmament(RuntimeArmament armament, out string failure)
         {
@@ -212,9 +215,33 @@ namespace Admiral.SecondLife.Client
                 object corpseSlot = getSlot.Invoke(corpseEquipment, new[] { slotValue });
                 object recoverySlot = getSlot.Invoke(recoveryEquipment, new[] { slotValue });
                 object item = corpseSlot == null ? null : ReadCurrentItem(corpseSlot);
-                if (item != null && recoverySlot != null) transfers.Add(new SlotTransfer(corpseSlot, recoverySlot, item));
+                if (item != null && recoverySlot != null) transfers.Add(new SlotTransfer(slotValue.ToString(), corpseSlot, recoverySlot, item));
             }
+            object pocketsValue = Enum.Parse(equipmentSlot, "Pockets");
+            object corpsePocketsSlot = getSlot.Invoke(corpseEquipment, new[] { pocketsValue });
+            object recoveryPocketsSlot = getSlot.Invoke(recoveryEquipment, new[] { pocketsValue });
+            object corpsePockets = corpsePocketsSlot == null ? null : ReadCurrentItem(corpsePocketsSlot);
+            object recoveryPockets = recoveryPocketsSlot == null ? null : ReadCurrentItem(recoveryPocketsSlot);
+            AddNestedSlotTransfers(corpsePockets, recoveryPockets, transfers);
             return transfers;
+        }
+
+        static void AddNestedSlotTransfers(object corpsePockets, object recoveryPockets, System.Collections.Generic.List<SlotTransfer> transfers)
+        {
+            if (corpsePockets == null || recoveryPockets == null)
+                throw new InvalidOperationException("protected pocket-slot transfer contract is unavailable");
+            MethodInfo corpseGetContainer = corpsePockets.GetType().GetMethod("GetContainer", new[] { typeof(string) });
+            MethodInfo recoveryGetContainer = recoveryPockets.GetType().GetMethod("GetContainer", new[] { typeof(string) });
+            if (corpseGetContainer == null || recoveryGetContainer == null)
+                throw new InvalidOperationException("protected pocket container lookup contract is unavailable");
+
+            foreach (string slotName in new[] { "SpecialSlot1", "SpecialSlot2", "SpecialSlot3" })
+            {
+                object corpseSlot = corpseGetContainer.Invoke(corpsePockets, new object[] { slotName });
+                object recoverySlot = recoveryGetContainer.Invoke(recoveryPockets, new object[] { slotName });
+                object item = corpseSlot == null ? null : ReadCurrentItem(corpseSlot);
+                if (item != null && recoverySlot != null) transfers.Add(new SlotTransfer(slotName, corpseSlot, recoverySlot, item));
+            }
         }
 
         sealed class SlotTransfer
@@ -224,9 +251,11 @@ namespace Admiral.SecondLife.Client
             readonly object item;
             readonly MethodInfo corpseAttach;
             readonly MethodInfo recoveryAttach;
+            internal string SlotName { get; }
 
-            internal SlotTransfer(object corpseSlot, object recoverySlot, object item)
+            internal SlotTransfer(string slotName, object corpseSlot, object recoverySlot, object item)
             {
+                SlotName = slotName;
                 this.corpseSlot = corpseSlot;
                 this.recoverySlot = recoverySlot;
                 this.item = item;

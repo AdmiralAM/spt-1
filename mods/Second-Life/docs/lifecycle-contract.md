@@ -34,9 +34,11 @@ one owner/address throughout the committed transfer. Selection supports a fixed
 seed for deterministic tests. If no complete set exists, recovery continues
 unarmed. An invalid tree or partial move rolls back to the captured stash
 addresses or resumes native death; equipment from the first corpse is never a
-substitute. Native protected trees (secure container, armband, B&A&HB belt and
-headband) are the exception: they move once from corpse slots to recovery slots
-and are never cloned.
+substitute. Native protected trees (secure container, the three special slots,
+armband, B&A&HB belt and headband) are the exception: they move once from corpse
+slots to recovery slots and are never cloned. Special-slot items move between
+the corresponding slots of the original and newly constructed pockets while
+ordinary pocket contents remain corpse-owned.
 
 The pistol and installed magazine form one ownership tree and therefore use
 one physical move. The installed magazine must retain its original ID and
@@ -67,10 +69,17 @@ Traversal of nested containers must be bounded and cycle-safe.
 
 During a player handoff, delayed cleanup of the original `GamePlayerOwner`
 must preserve a different replacement player already stored in
-`GamePlayerOwner.MyPlayer`. A failed handoff removes the replacement camera and
-its culling sampler before native finalization; it never recreates an FPS camera
-for the already-dead original player. Runtime trace entries identify the last
-completed handoff stage and the local/global/main-player references.
+`GamePlayerOwner.MyPlayer`. The camera handoff preserves the cross-scene culling
+sampler, clears only the retired camera records and immediately registers the
+replacement FPS camera. A failed handoff clears replacement camera records
+before native finalization; it never recreates an FPS camera for the already-dead
+original player. Runtime trace entries identify the last completed handoff stage
+and the local/global/main-player references.
+
+The local-game player dictionary entry is replaced by its captured key rather
+than by an assumed profile key. This prevents a disposed first-life player from
+remaining as a second cleanup entry. If Dynamic Maps is loaded, its existing
+main-player provider is refreshed once after the replacement is committed.
 
 Before detaching the original player, the replacement equipment tree is passed
 through EFT's native `ChangeItemsOperation.LoadBundles` path and awaited. This

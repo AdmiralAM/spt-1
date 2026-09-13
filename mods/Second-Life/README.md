@@ -15,7 +15,7 @@ Second Life Admiral is a bounded one-time same-raid recovery workstream for SPT 
 - the pistol pool remains configurable; random selection is bounded and can be
   seeded for deterministic validation;
 - the original corpse and its non-protected equipment remain in the raid;
-- secure container, armband, B&A&HB belt and headband keep their native
+- secure container, the three special slots, armband, B&A&HB belt and headband keep their native
   protected ownership; other original gear is never cloned or restored;
 - unsupported states fail closed to native raid death;
 - disabled mode is behaviorally inert.
@@ -39,6 +39,9 @@ pockets instance. The paid-healing gate mirrors EFT's native
 HP price, Therapist loyalty coefficient, free-heal trial and Charisma discount.
 The local SPT server reserves rubles from the authoritative stash, including
 nested wallets, then commits after recovery or refunds on decline and failure.
+The camera handoff preserves the map-wide PerfectCulling sampler, resets only
+the retired FPS-camera entries and registers the replacement camera. When
+Dynamic Maps is installed, its main-player marker is refreshed after handoff.
 
 The exact pre-runtime settlement and neighboring-module audit is recorded in
 `docs/compatibility-spt-4.1.5.md`.

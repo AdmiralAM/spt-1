@@ -42,7 +42,8 @@ ordinary death path without profile mutation.
 
 | Module/path | Source-resolvable result |
 | --- | --- |
-| B&A&HB (`mods/SPT-Belt-Armband-Inventory`) | No client patch shares `CreateCorpse` or `InitiateGameStopping`. SecureContainer, ArmBand, Belt 15 and HeadBand 16 are moved as the same item trees from the corpse to recovery, matching their protected-on-death ownership without duplicating items. Other equipment remains corpse-owned. Physical insurance/protection settlement remains in the batched gate. |
+| B&A&HB (`mods/SPT-Belt-Armband-Inventory`) | No client patch shares `CreateCorpse` or `InitiateGameStopping`. SecureContainer, all three native special slots, ArmBand, Belt 15 and HeadBand 16 are moved as the same item trees from the corpse to recovery, matching their protected-on-death ownership without duplicating items. Other equipment remains corpse-owned. Physical insurance/protection settlement remains in the batched gate. |
+| Dynamic Maps | Its player provider caches a marker bound to the first local-player object. When present, Second Life refreshes that provider once after the replacement becomes `GameWorld.MainPlayer`; no recurring scan or Dynamic Maps binary change is used. |
 | Economy Admiral (`mods/Economy-Admiral`) | Server template/economy enforcement only; it does not own player death, healing or local inventory reconstruction. Second Life uses the native Therapist price and creates no second economy engine. |
 | Admiral Trader (`mods/Admiral-Trader`) | Server trader/quest content only. Second Life calls no accept/complete/reward endpoint, so it cannot duplicate authored rewards by itself. |
 | Item Intelligence / Item Valuation | Presentation and prepared item-data consumers only; persistent item IDs are retained for the moved pistol tree and spare magazine. |
