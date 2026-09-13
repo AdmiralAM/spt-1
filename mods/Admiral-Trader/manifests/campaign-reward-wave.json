@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "status": "runtime-materialized",
+  "coreSignaturePresetRewards": 10,
+  "optionalPackNStrapRewardTrades": 9,
+  "requiredDependencies": false,
+  "policy": "Story midpoints trade part of their rouble reward for one useful optional container; story finales replace the existing generic item reward with one complete staged Natalya weapon preset.",
+  "absenceBehavior": "When Pack 'n' Strap templates are unavailable, no cash is removed and the core quest reward remains unchanged.",
+  "signatureFinales": [
+    {
+      "questId": "6d9fda8875aed2082b4da528",
+      "tpl": "624c2e8614da335f1e034d8c"
+    },
+    {
+      "questId": "bcf61611e9723c765e07a740",
+      "tpl": "63088377b5cd696784087147"
+    },
+    {
+      "questId": "60df546a03bdc74ca45fb8ca",
+      "tpl": "54491c4f4bdc2db1078b4568"
+    },
+    {
+      "questId": "181f902c56dab247a1f49d0c",
+      "tpl": "61a4c8884f95bc3b2c5dc96f"
+    },
+    {
+      "questId": "70258f2cc084c335a0542207",
+      "tpl": "6193a720f8ee7e52e42109ed"
+    },
+    {
+      "questId": "6a24e1ca978938c1d4a8839f",
+      "tpl": "5a7828548dc32e5a9c28b516"
+    },
+    {
+      "questId": "0f650f5ba44bfd17404b7ad6",
+      "tpl": "633ec7c2a6918cb895019c6c"
+    },
+    {
+      "questId": "734ce8b802ca6a629387ca5b",
+      "tpl": "59984ab886f7743e98271174"
+    },
+    {
+      "questId": "df6c5b8f5660efd1b4c6d06c",
+      "tpl": "606dae0ab0e443224b421bb7"
+    },
+    {
+      "questId": "680c47f4c9a0e7b884a95908",
+      "tpl": "5f2a9575926fd9352339381f"
+    }
+  ],
+  "packNStrapTrades": [
+    {
+      "questId": "4876c8bf7bb9677e3970b01c",
+      "tpl": "6761b213607f9a6f79017aef",
+      "name": "Поясная сумка",
+      "cashReductionRub": 6000
+    },
+    {
+      "questId": "70a745d426d2ba09157eb734",
+      "tpl": "12403f74773f49be6a2d84b7",
+      "name": "Малый медицинский подсумок",
+      "cashReductionRub": 12000
+    },
+    {
+      "questId": "37475cbab1174e5619c16939",
+      "tpl": "ae9e418fd5d4c4eec4a0e6ea",
+      "name": "Малый подсумок для боеприпасов",
+      "cashReductionRub": 12000
+    },
+    {
+      "questId": "e74018c43dc3f47551445192",
+      "tpl": "440de5d056825485a0cf3a19",
+      "name": "Малый подсумок для магазинов",
+      "cashReductionRub": 15000
+    },
+    {
+      "questId": "aef99c7f97ca615cf101a654",
+      "tpl": "9543bbe8083934dc3b1b1330",
+      "name": "Малая сумка для инструментов",
+      "cashReductionRub": 15000
+    },
+    {
+      "questId": "aaf59cae44fc7164485287d9",
+      "tpl": "c29f11b2e63a089916739c96",
+      "name": "Малый кожаный портфель",
+      "cashReductionRub": 18000
+    },
+    {
+      "questId": "416b7201445436294eb53e42",
+      "tpl": "2eabd4da4ab194eb168e72d3",
+      "name": "Малое кольцо для ключей",
+      "cashReductionRub": 30000
+    },
+    {
+      "questId": "8f427e0e5719ea89688c08a9",
+      "tpl": "681d1395a5c2308fdcbcda92",
+      "name": "Кейс для обвесов",
+      "cashReductionRub": 25000
+    },
+    {
+      "questId": "77622ff3eda4de9587dd55d8",
+      "tpl": "6a3c0e9643138b61c8739586",
+      "name": "Малый кейс для бронеплит",
+      "cashReductionRub": 35000
+    }
+  ]
+}

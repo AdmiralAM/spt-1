@@ -65,5 +65,7 @@
     <Content Include="..\db\optional\icebreaker\**\*.json" Link="db\optional\icebreaker\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
     <Content Include="..\db\optional\storefront\*.json" Link="db\optional\storefront\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
     <Content Include="..\manifests\optional-storefront-runtime.json" Link="manifests\optional-storefront-runtime.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\manifests\campaign-reward-wave.json" Link="manifests\campaign-reward-wave.json" CopyToOutputDirectory="Always" />
+    <Content Include="..\db\rewards\*.json" Link="db\rewards\%(Filename)%(Extension)" CopyToOutputDirectory="Always" />
   </ItemGroup>
 </Project>

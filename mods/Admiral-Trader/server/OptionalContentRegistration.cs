@@ -30,8 +30,10 @@ public sealed class OptionalContentRegistration(
             throw new InvalidOperationException("Admiral Trader must be registered before optional content is attached");
 
         int offers = MergeOptionalStorefront(modPath, trader.Assort);
-        int rewards = ApplyOptionalRewardReplacements(modPath);
-        logger.Success($"Admiral optional content attached after template publication: {offers} offers and {rewards} quest reward replacements");
+        int optionalRewards = ApplyItemRewardReplacements(modPath, "db/optional/storefront/quest-reward-replacements.json", optional: true);
+        int signatureRewards = ApplyItemRewardReplacements(modPath, "db/rewards/natalya-signature-replacements.json", optional: false);
+        int packRewards = ApplyOptionalCashTrades(modPath, "db/rewards/packnstrap-reward-trades.json");
+        logger.Success($"Admiral content attached after template publication: {offers} optional offers, {signatureRewards} signature rewards, {optionalRewards} optional equipment rewards and {packRewards} Pack 'n' Strap reward trades");
         return Task.CompletedTask;
     }
 
@@ -61,16 +63,20 @@ public sealed class OptionalContentRegistration(
         return merged;
     }
 
-    private int ApplyOptionalRewardReplacements(string modPath)
+    private int ApplyItemRewardReplacements(string modPath, string relative, bool optional)
     {
-        const string relative = "db/optional/storefront/quest-reward-replacements.json";
         if (!File.Exists(IOPath.Combine(modPath, relative.Replace('/', IOPath.DirectorySeparatorChar)))) return 0;
         Dictionary<MongoId, Reward> replacements = modHelper.GetJsonDataFromFile<Dictionary<MongoId, Reward>>(modPath, relative);
         int applied = 0;
         foreach (var (questId, replacement) in replacements)
         {
-            if (replacement.Items is null || replacement.Items.Count == 0 || replacement.Items.Any(item => !templateTable.Items.ContainsKey(item.Template)))
-                continue;
+            if (replacement.Items is null || replacement.Items.Count == 0)
+                throw new InvalidDataException($"Reward replacement for {questId} has no items");
+            if (replacement.Items.Any(item => !templateTable.Items.ContainsKey(item.Template)))
+            {
+                if (optional) continue;
+                throw new InvalidDataException($"Required signature reward for {questId} references an unknown template");
+            }
             if (!templateTable.Quests.TryGetValue(questId, out Quest? quest) || quest.Rewards is null || !quest.Rewards.TryGetValue("Success", out List<Reward>? success))
                 throw new InvalidDataException($"Optional reward targets unknown quest {questId}");
             int index = success.FindIndex(reward => reward.Items is { Count: > 0 } && reward.Items[0].Template.ToString() != "5449016a4bdc2d6f028b456f");
@@ -81,4 +87,38 @@ public sealed class OptionalContentRegistration(
         }
         return applied;
     }
+
+    private int ApplyOptionalCashTrades(string modPath, string relative)
+    {
+        if (!File.Exists(IOPath.Combine(modPath, relative.Replace('/', IOPath.DirectorySeparatorChar)))) return 0;
+        Dictionary<MongoId, OptionalCashTrade> trades = modHelper.GetJsonDataFromFile<Dictionary<MongoId, OptionalCashTrade>>(modPath, relative);
+        int applied = 0;
+        foreach (var (questId, trade) in trades)
+        {
+            Reward reward = trade.Reward;
+            if (trade.CashReductionRub <= 0 || reward.Items is null || reward.Items.Count == 0)
+                throw new InvalidDataException($"Optional reward trade for {questId} is malformed");
+            if (reward.Items.Any(item => !templateTable.Items.ContainsKey(item.Template)))
+                continue;
+            if (!templateTable.Quests.TryGetValue(questId, out Quest? quest) || quest.Rewards is null || !quest.Rewards.TryGetValue("Success", out List<Reward>? success))
+                throw new InvalidDataException($"Optional reward trade targets unknown quest {questId}");
+            Reward? cash = success.FirstOrDefault(candidate => candidate.Items is { Count: > 0 } && candidate.Items[0].Template.ToString() == "5449016a4bdc2d6f028b456f");
+            Item? cashItem = cash?.Items?.FirstOrDefault();
+            if (cash?.Value is null || cash.Value <= trade.CashReductionRub || cashItem?.Upd is null)
+                throw new InvalidDataException($"Optional reward trade for {questId} cannot preserve a positive rouble reward");
+            double reduced = cash.Value.Value - trade.CashReductionRub;
+            cash.Value = reduced;
+            cashItem.Upd.StackObjectsCount = reduced;
+            reward.Index = success.Max(candidate => candidate.Index ?? 0) + 1;
+            success.Add(reward);
+            applied++;
+        }
+        return applied;
+    }
+}
+
+public sealed record OptionalCashTrade
+{
+    public int CashReductionRub { get; init; }
+    public required Reward Reward { get; init; }
 }

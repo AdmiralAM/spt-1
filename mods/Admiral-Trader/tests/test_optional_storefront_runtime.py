@@ -25,7 +25,7 @@ class OptionalStorefrontRuntimeTests(unittest.TestCase):
         self.assertIn("OnLoadOrder.PostLoad",late)
         self.assertIn("templateTable.Items.ContainsKey",late)
         self.assertIn("MergeOptionalStorefront(modPath, trader.Assort)",late)
-        self.assertIn("ApplyOptionalRewardReplacements(modPath)",late)
+        self.assertIn('ApplyItemRewardReplacements(modPath, "db/optional/storefront/quest-reward-replacements.json", optional: true)',late)
 
     def test_optional_sources_are_bounded_and_never_required(self):
         manifest=json.loads((ROOT/"manifests/optional-storefront-runtime.json").read_text(encoding="utf-8"))
