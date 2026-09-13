@@ -38,6 +38,20 @@ its ruble debit is rolled back if recovery reconstruction fails.
 The exact pre-runtime settlement and neighboring-module audit is recorded in
 `docs/compatibility-spt-4.1.5.md`.
 
+## Development installation
+
+Copy both build outputs into one dedicated plugin directory; the client DLL is
+not standalone:
+
+```text
+BepInEx/plugins/Second Life Admiral/Second Life Admiral.dll
+BepInEx/plugins/Second Life Admiral/SecondLife.Core.dll
+```
+
+Both files must come from the same exact source commit. A load warning that
+`Second Life Admiral.dll` references a missing `SecondLife.Core` means the
+installation is incomplete and the recovery module is inert.
+
 Authority: Issue #352 and `origin/main:.github/workstreams.json` after the governance registration is integrated.
 
 ## Resume order
