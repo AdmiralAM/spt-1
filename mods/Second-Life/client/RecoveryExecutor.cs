@@ -10,13 +10,15 @@ namespace Admiral.SecondLife.Client
         readonly Func<string> eligiblePistolTemplates;
         readonly Func<float> minimumCorpseDistance;
         readonly Func<float> minimumPlayerDistance;
+        readonly Action<string> trace;
 
-        internal RecoveryExecutor(RecoveryRuntimeContract contract, Func<string> eligiblePistolTemplates, Func<float> minimumCorpseDistance, Func<float> minimumPlayerDistance)
+        internal RecoveryExecutor(RecoveryRuntimeContract contract, Func<string> eligiblePistolTemplates, Func<float> minimumCorpseDistance, Func<float> minimumPlayerDistance, Action<string> trace)
         {
             this.contract = contract;
             this.eligiblePistolTemplates = eligiblePistolTemplates;
             this.minimumCorpseDistance = minimumCorpseDistance;
             this.minimumPlayerDistance = minimumPlayerDistance;
+            this.trace = trace;
         }
 
         internal bool TryPrepare(
@@ -75,7 +77,8 @@ namespace Admiral.SecondLife.Client
                 armament,
                 armamentReservation,
                 paidHealing,
-                profileId);
+                profileId,
+                trace);
             return true;
         }
 

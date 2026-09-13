@@ -20,6 +20,7 @@ namespace Admiral.SecondLife.Client
         readonly RuntimeArmament armament;
         readonly RuntimeServerArmamentReservation armamentReservation;
         readonly RuntimePaidHealing paidHealing;
+        readonly Action<string> trace;
 
         internal RecoveryExecutionPlan(
             RecoveryRuntimeContract contract,
@@ -34,7 +35,8 @@ namespace Admiral.SecondLife.Client
             RuntimeArmament armament,
             RuntimeServerArmamentReservation armamentReservation,
             RuntimePaidHealing paidHealing,
-            string profileId)
+            string profileId,
+            Action<string> trace)
         {
             this.contract = contract;
             this.localGame = localGame;
@@ -48,6 +50,7 @@ namespace Admiral.SecondLife.Client
             this.armament = armament;
             this.armamentReservation = armamentReservation;
             this.paidHealing = paidHealing;
+            this.trace = trace;
             ProfileId = profileId;
         }
 
@@ -79,21 +82,24 @@ namespace Admiral.SecondLife.Client
             object newPlayer = null;
             object newOwner = null;
             bool attached = false;
-            bool originalPlayerUnregistered = false;
             bool newPlayerRegistered = false;
-            bool originalCameraRemoved = false;
             bool newCameraCreated = false;
             object gameWorld = ReadProperty(originalPlayer, "GameWorld");
             if (gameWorld == null) throw new InvalidOperationException("active GameWorld is unavailable");
             Exception failure = null;
+            string stage = "inventory-apply";
             try
             {
+                Trace(stage, gameWorld, newPlayer);
+                stage = "old-player-unregister";
                 contract.UnregisterWorldPlayer.Invoke(gameWorld, new[] { originalPlayer });
-                originalPlayerUnregistered = true;
+                Trace(stage, gameWorld, newPlayer);
+                stage = "old-camera-destroy";
                 contract.DestroyPlayerCamera.Invoke(null, new[] { originalPlayer });
-                originalCameraRemoved = true;
                 await WaitForCameraRemoval(originalPlayer);
                 await RemoveCullingSampler();
+                Trace(stage, gameWorld, newPlayer);
+                stage = "new-player-create";
                 var creationTask = playerFactory.DynamicInvoke() as Task;
                 if (creationTask == null) throw new InvalidOperationException("player factory did not return a Task");
                 await creationTask;
@@ -102,22 +108,31 @@ namespace Admiral.SecondLife.Client
                 // Player.Init registers the player before the factory task completes.
                 // Track that ownership immediately so every later failure unregisters it.
                 newPlayerRegistered = true;
+                Trace(stage, gameWorld, newPlayer);
+                stage = "new-player-prepare";
                 RuntimeSafeSpawnSelector.Apply(newPlayer, spawnSelection);
                 RuntimeArmamentService.ValidatePreloaded(inventoryLease.RecoveryEquipment, armament);
+                stage = "new-owner-create";
                 newOwner = ownerFactory.DynamicInvoke(newPlayer);
                 if (newOwner == null) throw new InvalidOperationException("owner factory returned no PlayerOwner");
 
                 contract.LocalPlayer.SetValue(localGame, newPlayer);
                 contract.PlayerOwner.SetValue(localGame, newOwner);
                 players[ProfileId] = newPlayer;
+                Trace(stage, gameWorld, newPlayer);
                 // Player.Init, reached by the captured native factory, already calls
                 // GameWorld.RegisterPlayer. Registering it a second time corrupts the
                 // RegisteredPlayers list and leaves world/camera consumers ambiguous.
+                stage = "new-camera-create";
                 contract.CreatePlayerCamera.Invoke(null, new[] { newPlayer });
                 newCameraCreated = true;
+                Trace(stage, gameWorld, newPlayer);
+                stage = "new-player-spawn";
                 contract.Spawn.Invoke(localGame, null);
                 paidHealing.Apply(newPlayer);
-                ValidateAttachment(gameWorld, newPlayer, newOwner);
+                ValidateAttachment(gameWorld, newPlayer);
+                Trace(stage, gameWorld, newPlayer);
+                stage = "server-settlement";
                 armamentReservation?.Commit();
                 paidHealing.FinalizeDebit(newPlayer);
                 armamentReservation?.FinalizeReservation();
@@ -126,8 +141,8 @@ namespace Admiral.SecondLife.Client
                 // CleanupOnDestroy always clears GamePlayerOwner._myPlayer. Rebind
                 // the replacement immediately after retiring the old owner.
                 TryCleanupOwner(originalOwner);
-                contract.GamePlayerOwnerMyPlayer.SetValue(null, newPlayer);
-                ValidateAttachment(gameWorld, newPlayer, newOwner);
+                ValidateAttachment(gameWorld, newPlayer);
+                Trace(stage, gameWorld, newPlayer);
                 attached = true;
                 paidHealing.ReleaseDebit();
                 armamentReservation?.ReleaseReservation();
@@ -135,9 +150,10 @@ namespace Admiral.SecondLife.Client
             }
             catch (Exception exception)
             {
-                failure = exception is TargetInvocationException invocation && invocation.InnerException != null
+                Exception root = exception is TargetInvocationException invocation && invocation.InnerException != null
                     ? invocation.InnerException
                     : exception;
+                failure = new InvalidOperationException("recovery stage " + stage + " failed: " + root.Message + "; " + DescribeState(gameWorld, newPlayer), root);
             }
 
             if (!attached)
@@ -150,6 +166,8 @@ namespace Admiral.SecondLife.Client
                     TryCleanupStep(() => contract.DestroyPlayerCamera.Invoke(null, new[] { newPlayer }), "new camera destroy", cleanupFailures);
                     try { await WaitForCameraRemoval(newPlayer); }
                     catch (Exception exception) { cleanupFailures.Add("new camera removal: " + exception.Message); }
+                    try { await RemoveCullingSampler(); }
+                    catch (Exception exception) { cleanupFailures.Add("new culling sampler removal: " + exception.Message); }
                 }
                 if (newPlayerRegistered) TryCleanupStep(() => contract.UnregisterWorldPlayer.Invoke(gameWorld, new[] { newPlayer }), "new player unregister", cleanupFailures);
                 TryCleanupStep(() => TryCleanupOwner(newOwner), "new owner cleanup", cleanupFailures);
@@ -158,8 +176,6 @@ namespace Admiral.SecondLife.Client
                 TryCleanupStep(() => contract.PlayerOwner.SetValue(localGame, originalOwner), "player owner restore", cleanupFailures);
                 TryCleanupStep(() => contract.GamePlayerOwnerMyPlayer.SetValue(null, originalPlayer), "global player restore", cleanupFailures);
                 TryCleanupStep(() => players[ProfileId] = originalPlayer, "player dictionary restore", cleanupFailures);
-                if (originalPlayerUnregistered) TryCleanupStep(() => contract.RegisterWorldPlayer.Invoke(gameWorld, new[] { originalPlayer }), "original player register", cleanupFailures);
-                if (originalCameraRemoved) TryCleanupStep(() => contract.CreatePlayerCamera.Invoke(null, new[] { originalPlayer }), "original camera restore", cleanupFailures);
                 TryCleanupStep(() =>
                 {
                     if (!inventoryLease.Rollback()) throw new InvalidOperationException("profile inventory rollback was rejected");
@@ -175,6 +191,40 @@ namespace Admiral.SecondLife.Client
             }
 
             if (failure != null) ExceptionDispatchInfo.Capture(failure).Throw();
+        }
+
+        void Trace(string stage, object gameWorld, object newPlayer)
+        {
+            trace?.Invoke("Recovery trace: " + stage + "; " + DescribeState(gameWorld, newPlayer));
+        }
+
+        string DescribeState(object gameWorld, object newPlayer)
+        {
+            try
+            {
+                object localPlayer = contract.LocalPlayer.GetValue(localGame);
+                object ownerPlayer = contract.GamePlayerOwnerMyPlayer.GetValue(null);
+                int registrations = 0;
+                if (newPlayer != null && ReadField(gameWorld, "RegisteredPlayers") is IEnumerable registered)
+                    foreach (object player in registered) if (ReferenceEquals(player, newPlayer)) registrations++;
+                return "local=" + ReferenceName(localPlayer, originalPlayer, newPlayer) +
+                    ", global=" + ReferenceName(ownerPlayer, originalPlayer, newPlayer) +
+                    ", main=" + ReferenceName(ReadField(gameWorld, "MainPlayer"), originalPlayer, newPlayer) +
+                    ", newRegistrations=" + registrations +
+                    ", sampler=" + (contract.CullingSamplerInstance.GetValue(null, null) == null ? "none" : "live");
+            }
+            catch (Exception exception)
+            {
+                return "state-unavailable=" + exception.Message;
+            }
+        }
+
+        static string ReferenceName(object value, object originalPlayer, object newPlayer)
+        {
+            if (value == null) return "null";
+            if (ReferenceEquals(value, originalPlayer)) return "original";
+            if (ReferenceEquals(value, newPlayer)) return "replacement";
+            return "other";
         }
 
         static void TryCleanupStep(Action action, string name, System.Collections.Generic.List<string> failures)
@@ -219,7 +269,7 @@ namespace Admiral.SecondLife.Client
             throw new InvalidOperationException("previous FPS-camera culling sampler was not released within the bounded frame wait");
         }
 
-        static void ValidateAttachment(object gameWorld, object newPlayer, object newOwner)
+        void ValidateAttachment(object gameWorld, object newPlayer)
         {
             if (!ReferenceEquals(ReadField(gameWorld, "MainPlayer"), newPlayer))
                 throw new InvalidOperationException("recovered player did not become GameWorld.MainPlayer");
@@ -230,8 +280,7 @@ namespace Admiral.SecondLife.Client
                 if (ReferenceEquals(player, newPlayer)) matches++;
             if (matches != 1)
                 throw new InvalidOperationException("recovered player registration count is " + matches);
-            PropertyInfo myPlayer = newOwner?.GetType().GetProperty("MyPlayer", BindingFlags.Static | BindingFlags.Public);
-            if (myPlayer == null || !ReferenceEquals(myPlayer.GetValue(null, null), newPlayer))
+            if (!ReferenceEquals(contract.GamePlayerOwnerMyPlayer.GetValue(null), newPlayer))
                 throw new InvalidOperationException("recovered owner did not retain GamePlayerOwner.MyPlayer");
         }
 

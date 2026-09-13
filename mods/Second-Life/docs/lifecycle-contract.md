@@ -65,4 +65,11 @@ Traversal of nested containers must be bounded and cycle-safe.
 
 ## Process cleanup
 
+During a player handoff, delayed cleanup of the original `GamePlayerOwner`
+must preserve a different replacement player already stored in
+`GamePlayerOwner.MyPlayer`. A failed handoff removes the replacement camera and
+its culling sampler before native finalization; it never recreates an FPS camera
+for the already-dead original player. Runtime trace entries identify the last
+completed handoff stage and the local/global/main-player references.
+
 Any local server/client/helper started for archaeology or smoke testing must be stopped by the same worker. Record PIDs before launch, prefer graceful shutdown, and verify no owned process or listening port remains.

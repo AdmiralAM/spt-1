@@ -19,6 +19,8 @@ namespace Admiral.SecondLife.Client
         internal FieldInfo LocalPlayer { get; private set; }
         internal FieldInfo PlayerOwner { get; private set; }
         internal FieldInfo GamePlayerOwnerMyPlayer { get; private set; }
+        internal PropertyInfo GamePlayerOwnerPlayer { get; private set; }
+        internal MethodInfo GamePlayerOwnerCleanup { get; private set; }
         internal FieldInfo Players { get; private set; }
         internal MethodInfo Spawn { get; private set; }
         internal MethodInfo CreatePlayerCamera { get; private set; }
@@ -74,6 +76,8 @@ namespace Admiral.SecondLife.Client
             FieldInfo localPlayerField = FindField(baseLocalGame, "_localPlayer");
             FieldInfo playerOwner = FindField(baseLocalGame, "_playerOwner");
             FieldInfo gamePlayerOwnerMyPlayer = gamePlayerOwner.GetField("_myPlayer", BindingFlags.Static | BindingFlags.NonPublic);
+            PropertyInfo gamePlayerOwnerPlayer = gamePlayerOwner.GetProperty("Player", BindingFlags.Instance | BindingFlags.Public);
+            MethodInfo gamePlayerOwnerCleanup = gamePlayerOwner.GetMethod("CleanupOnDestroy", BindingFlags.Instance | BindingFlags.Public);
             FieldInfo players = FindField(baseLocalGame, "_players");
             MethodInfo spawn = baseLocalGame?.GetMethod("Spawn", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             MethodInfo createPlayerCamera = cameraController.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
@@ -101,6 +105,7 @@ namespace Admiral.SecondLife.Client
             if (localPlayerCreate == null || inventoryControllerConstructor == null)
                 return Fail("local-player reconstruction signatures changed", out failure);
             if (new[] { gameProfile, playerFactory, ownerFactory, localPlayerField, playerOwner, players, gamePlayerOwnerMyPlayer }.Any(field => field == null) ||
+                gamePlayerOwnerPlayer?.GetMethod == null || gamePlayerOwnerCleanup == null ||
                 spawn == null || createPlayerCamera == null || destroyPlayerCamera == null || cullingSamplerInstance?.GetMethod == null || registerWorldPlayer == null || unregisterWorldPlayer == null)
                 return Fail("local-game player/owner/camera binding contract changed", out failure);
             if (healingConfirmation == null || restoreFullHealth == null || realBodyParts == null || healthSettings == null || allRealPlayerItems == null)
@@ -121,6 +126,8 @@ namespace Admiral.SecondLife.Client
                 LocalPlayer = localPlayerField,
                 PlayerOwner = playerOwner,
                 GamePlayerOwnerMyPlayer = gamePlayerOwnerMyPlayer,
+                GamePlayerOwnerPlayer = gamePlayerOwnerPlayer,
+                GamePlayerOwnerCleanup = gamePlayerOwnerCleanup,
                 Players = players,
                 Spawn = spawn,
                 CreatePlayerCamera = createPlayerCamera

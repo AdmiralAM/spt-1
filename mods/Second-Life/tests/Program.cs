@@ -203,6 +203,12 @@ Expect(RecoveryOwnershipPlan.TryCreate(
 Expect(unarmedOwnership.Armament is null, "unarmed ownership plan generates no equipment");
 
 var unavailableGate = new RecoveryFinalizationGate();
+var oldOwnerPlayer = new object();
+var replacementOwnerPlayer = new object();
+Expect(OwnerHandoffGuard.MustPreserveReplacement(replacementOwnerPlayer, oldOwnerPlayer), "late old-owner cleanup preserves the replacement global player");
+Expect(!OwnerHandoffGuard.MustPreserveReplacement(oldOwnerPlayer, oldOwnerPlayer), "active owner cleanup may clear its own global player");
+Expect(!OwnerHandoffGuard.MustPreserveReplacement(null!, oldOwnerPlayer), "empty global player has nothing to preserve");
+Expect(OwnerHandoffGuard.MustPreserveReplacement(replacementOwnerPlayer, null!), "owner destruction with no player cannot clear a live replacement");
 Expect(unavailableGate.HandleDeathBoundary("gate-raid-native", "gate-corpse-native", executorReady: false) == NativeFinalizationDecision.ContinueNative, "unavailable executor continues native death");
 Expect(unavailableGate.Snapshot.State == RecoveryState.FinalDeath, "unavailable executor closes the raid lifecycle");
 

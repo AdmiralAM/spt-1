@@ -59,7 +59,8 @@ namespace Admiral.SecondLife.Client
                     contract,
                     () => eligiblePistolTemplates?.Value,
                     () => minimumCorpseDistance?.Value ?? 100f,
-                    () => minimumPlayerDistance?.Value ?? 75f);
+                    () => minimumPlayerDistance?.Value ?? 75f,
+                    logInfo);
                 harmony = new Harmony(HarmonyId);
                 active = this;
                 harmony.Patch(
@@ -68,6 +69,10 @@ namespace Admiral.SecondLife.Client
                 harmony.Patch(
                     contract.InitiateGameStopping,
                     prefix: new HarmonyMethod(typeof(RuntimeBridge), nameof(GameStoppingPrefix)));
+                harmony.Patch(
+                    contract.GamePlayerOwnerCleanup,
+                    prefix: new HarmonyMethod(typeof(RuntimeBridge), nameof(OwnerCleanupPrefix)),
+                    postfix: new HarmonyMethod(typeof(RuntimeBridge), nameof(OwnerCleanupPostfix)));
                 logInfo?.Invoke("Verified SPT 4.1 recovery ownership/construction contract and patched the death boundary.");
                 return true;
             }
@@ -93,6 +98,25 @@ namespace Admiral.SecondLife.Client
                 active.logWarning?.Invoke("Recovery death-boundary failed open; continuing native death: " + (exception.InnerException?.Message ?? exception.Message));
                 return true;
             }
+        }
+
+        static void OwnerCleanupPrefix(object __instance, out object __state)
+        {
+            __state = null;
+            RecoveryRuntimeContract contract = active?.runtimeContract;
+            if (contract == null || __instance == null) return;
+            object currentPlayer = contract.GamePlayerOwnerMyPlayer.GetValue(null);
+            object cleanupOwnerPlayer = contract.GamePlayerOwnerPlayer.GetValue(__instance, null);
+            if (OwnerHandoffGuard.MustPreserveReplacement(currentPlayer, cleanupOwnerPlayer))
+                __state = currentPlayer;
+        }
+
+        static void OwnerCleanupPostfix(object __state)
+        {
+            RecoveryRuntimeContract contract = active?.runtimeContract;
+            if (contract == null || __state == null) return;
+            if (contract.GamePlayerOwnerMyPlayer.GetValue(null) == null)
+                contract.GamePlayerOwnerMyPlayer.SetValue(null, __state);
         }
 
         void CaptureCorpse(object player, object corpse)
