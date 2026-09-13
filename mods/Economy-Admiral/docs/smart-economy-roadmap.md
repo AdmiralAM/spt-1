@@ -30,7 +30,13 @@ Score supply and usefulness separately. Supply considers source count, loyalty s
 
 Level bands represent early, middle and late progression. A common low-level necessity must not receive the same pressure as a rare late-game luxury item merely because their handbook prices are similar.
 
-Acceptance: maintained fixtures cover each category and stage; early essentials and required quest paths retain at least one practical acquisition route; rare items remain meaningfully valuable.
+Early-game protection is a progression guarantee, not a blanket discount. Before applying pressure, the engine proves that a new profile retains practical routes to basic medicine, usable ammunition, one affordable weapon path, simple armor, rigs, backpacks and required hideout or quest items. Protection can preserve one trader offer, barter, craft or sufficiently common loot source. It does not make rare equipment common and expires per category as replacements become available.
+
+Weapons are evaluated as usable systems rather than bare receivers. Their effective cost includes required magazines, available ammunition and installed parts. Presets and assembled quest rewards use the value and availability of the complete build, while individual parts retain their own evidence.
+
+Weapon and ammunition availability is paired. An accessible weapon must have at least one viable magazine and ammunition route at the same progression stage; premium ammunition may remain limited by loyalty, stock, barter or quest unlock.
+
+Acceptance: maintained fixtures cover each category and stage; early essentials and required quest paths retain at least one practical acquisition route; usable weapon/ammunition pairs exist at their authored stage; rare items remain meaningfully valuable.
 
 ## E3 — targeted pressure engine
 
@@ -41,7 +47,14 @@ Replace broad surface multipliers with bounded target bands derived from acquisi
 - keep buy and sell changes internally consistent;
 - detect cash, barter, craft and flea arbitrage loops before committing mutations;
 - normalize quest rewards by difficulty, risk, duration and progression stage rather than by reward type alone;
+- audit trader offers for unusable barters, dominated purchases, underpriced assembled builds, unlimited rare supply and offers with no rational use;
+- use stock quantity and restock cadence as bounded pressure tools instead of solving every imbalance through price;
+- reduce oversupply only when multiple renewable sources prove it, leaving items with uncertain or narrow supply unchanged;
+- price repair and durability loss so repairing ordinary equipment remains useful while badly damaged premium equipment creates a real replace-or-repair decision;
+- balance the complete money flow across raid sales, quests, traders, flea fees, barters, crafts, insurance, repair and healing rather than cutting every incoming reward;
 - keep transactional rollback, idempotency and pristine-data protection.
+
+An arbitrage loop is any repeatable route where the player can buy or barter inputs, transform or dismantle them, and sell the result for guaranteed profit without raid risk. Detection evaluates fees, component quantities, durability, finite stock, loyalty requirements and reset limits. The engine first reports the complete route, then adjusts the smallest safe economic edge. It never disables a barter or craft merely because one reference price looks suspicious.
 
 The engine computes once during database startup. It adds no raid polling, client-frame work or repeated filesystem scans.
 
@@ -55,9 +68,11 @@ Easy, Normal and Hard define target outcomes instead of fixed global percentages
 - **Normal:** makes raid loot, barters, trader progression and purchases remain relevant together;
 - **Hard:** increases scarcity and recovery time without blocking required progression.
 
-Custom exposes bounded policy controls. Cluster switches remain hard gates. F12 reports effective behavior and the reason for a classification; it remains a settings client and never becomes a second economy engine.
+Custom exposes bounded policy controls. Cluster switches remain hard gates. F12 remains a settings client and never becomes a second economy engine.
 
-Acceptance: the same scenario suite shows ordered but non-linear pressure from Easy to Hard, and disabling a cluster leaves that surface byte-identical.
+Audit mode produces developer-only structured logs comparing Easy, Normal and Hard from the same immutable database snapshot. Reports include the evidence, original value, proposed value, applied guardrail and blocked mutations. These diagnostics are not shown in normal gameplay UI and are not written repeatedly during raids.
+
+Acceptance: the same scenario suite shows ordered but non-linear pressure from Easy to Hard; Audit changes no database values; disabling a cluster leaves that surface byte-identical; normal gameplay receives no diagnostic spam.
 
 ## E5 — ecosystem adapters
 
@@ -69,6 +84,8 @@ Use optional, fail-closed adapters for known content:
 - Belt: recognize owned container categories without copying or rewriting Belt behavior.
 
 Adapters contain IDs and schema checks only. Economy Admiral gains no mandatory third-party dependency and does not control third-party spawns or inventories.
+
+Economy Admiral preserves the authored identity and relative loot character of every location. Map-specific redistribution is outside this roadmap; installed locations contribute only evidence about real item supply.
 
 Acceptance: each supported mod is tested both present and absent; schema drift disables only its adapter and leaves the base economy operational.
 
