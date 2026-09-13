@@ -26,11 +26,17 @@ class CampaignRewardWaveTests(unittest.TestCase):
         self.assertEqual(self.manifest["status"], "runtime-materialized")
         self.assertEqual(self.manifest["coreSignaturePresetRewards"], 10)
         self.assertEqual(self.manifest["earlyCompleteWeaponRewardTrades"], 4)
-        self.assertEqual(self.manifest["optionalPackNStrapRewardTrades"], 23)
+        self.assertEqual(self.manifest["optionalPackNStrapRewardTrades"], 32)
         self.assertFalse(self.manifest["requiredDependencies"])
         self.assertEqual(len(self.signature), 10)
         self.assertEqual(len(self.early), 4)
-        self.assertEqual(len(self.pack), 23)
+        self.assertEqual(len(self.pack), 32)
+
+        early_levels = []
+        for quest_id in self.pack:
+            level = next(row["value"] for row in self.quests[quest_id]["conditions"]["AvailableForStart"] if row["conditionType"] == "Level")
+            early_levels.append(int(level))
+        self.assertGreaterEqual(sum(level <= 20 for level in early_levels), 24)
 
     def test_signature_rewards_are_complete_unique_item_trees(self):
         item_ids = set()

@@ -104,69 +104,6 @@
       ]
     }
   },
-  "aaf59cae44fc7164485287d9": {
-    "cashReductionRub": 18000,
-    "name": "Малый кожаный портфель",
-    "reward": {
-      "value": 1,
-      "id": "6fa4e41baad05e96d1339225",
-      "type": "Item",
-      "target": "75122ea5f1d395a9fa601220",
-      "index": 3,
-      "items": [
-        {
-          "_id": "75122ea5f1d395a9fa601220",
-          "_tpl": "c29f11b2e63a089916739c96",
-          "slotId": "hideout",
-          "upd": {
-            "StackObjectsCount": 1
-          }
-        }
-      ]
-    }
-  },
-  "416b7201445436294eb53e42": {
-    "cashReductionRub": 30000,
-    "name": "Малое кольцо для ключей",
-    "reward": {
-      "value": 1,
-      "id": "bccabd000a2d8ce36cd8106b",
-      "type": "Item",
-      "target": "e021f216b84abc4168b5c12c",
-      "index": 3,
-      "items": [
-        {
-          "_id": "e021f216b84abc4168b5c12c",
-          "_tpl": "2eabd4da4ab194eb168e72d3",
-          "slotId": "hideout",
-          "upd": {
-            "StackObjectsCount": 1
-          }
-        }
-      ]
-    }
-  },
-  "8f427e0e5719ea89688c08a9": {
-    "cashReductionRub": 25000,
-    "name": "Кейс для обвесов",
-    "reward": {
-      "value": 1,
-      "id": "ff5764c13b8cd0e2ac168d32",
-      "type": "Item",
-      "target": "730034f9afd130795c392902",
-      "index": 3,
-      "items": [
-        {
-          "_id": "730034f9afd130795c392902",
-          "_tpl": "681d1395a5c2308fdcbcda92",
-          "slotId": "hideout",
-          "upd": {
-            "StackObjectsCount": 1
-          }
-        }
-      ]
-    }
-  },
   "77622ff3eda4de9587dd55d8": {
     "cashReductionRub": 35000,
     "name": "Малый кейс для бронеплит",
@@ -285,27 +222,6 @@
         {
           "_id": "107a0ced61cd00b687c31b8a",
           "_tpl": "6925918065a41e6b1e02a7d7",
-          "slotId": "hideout",
-          "upd": {
-            "StackObjectsCount": 1
-          }
-        }
-      ]
-    }
-  },
-  "47480d824cea0b80917cafa5": {
-    "cashReductionRub": 22000,
-    "name": "Кейс для обвесов",
-    "reward": {
-      "value": 1,
-      "id": "835eea7efe87f3a3386d0eec",
-      "type": "Item",
-      "target": "ba875133da34007290d4b6ef",
-      "index": 3,
-      "items": [
-        {
-          "_id": "ba875133da34007290d4b6ef",
-          "_tpl": "681d1395a5c2308fdcbcda92",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
@@ -474,6 +390,279 @@
         {
           "_id": "c3d9487eb62e002325644622",
           "_tpl": "669c10fa06c00c483c58537a",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "5d404ebd654de4efecef71d2": {
+    "cashReductionRub": 5000,
+    "name": "Поясная сумка",
+    "reward": {
+      "value": 1,
+      "id": "deabb95bef05861452308ba3",
+      "type": "Item",
+      "target": "b4bf6db2af36dba820eb5451",
+      "index": 3,
+      "items": [
+        {
+          "_id": "b4bf6db2af36dba820eb5451",
+          "_tpl": "6761b213607f9a6f79017aef",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "1b92e4cf212d895be4f70b2c": {
+    "cashReductionRub": 7000,
+    "name": "Малый подсумок для боеприпасов",
+    "reward": {
+      "value": 1,
+      "id": "e3c1eebeae40bfbdb7aa8133",
+      "type": "Item",
+      "target": "31e8b15aac3c1c1ca7f3b125",
+      "index": 3,
+      "items": [
+        {
+          "_id": "31e8b15aac3c1c1ca7f3b125",
+          "_tpl": "ae9e418fd5d4c4eec4a0e6ea",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "cba3374f11375c4e7eea9efe": {
+    "cashReductionRub": 14000,
+    "name": "Малое кольцо для ключей",
+    "reward": {
+      "value": 1,
+      "id": "26c14edb2e74e707ef5f351e",
+      "type": "Item",
+      "target": "15a1a1987d9e4c5ca02a7bb3",
+      "index": 3,
+      "items": [
+        {
+          "_id": "15a1a1987d9e4c5ca02a7bb3",
+          "_tpl": "2eabd4da4ab194eb168e72d3",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "80c11744c2310e1bfe160a8b": {
+    "cashReductionRub": 9000,
+    "name": "Малая сумка для инструментов",
+    "reward": {
+      "value": 1,
+      "id": "2a8d5cddf2901b52527e2731",
+      "type": "Item",
+      "target": "f5ecfe0de3202d420cd19e4c",
+      "index": 3,
+      "items": [
+        {
+          "_id": "f5ecfe0de3202d420cd19e4c",
+          "_tpl": "9543bbe8083934dc3b1b1330",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "42ff30bc152b8212dc15b20a": {
+    "cashReductionRub": 12000,
+    "name": "Малый кожаный портфель",
+    "reward": {
+      "value": 1,
+      "id": "0ffe2af9c31e2d3f9740eb84",
+      "type": "Item",
+      "target": "779306b6851b728ebbab5466",
+      "index": 3,
+      "items": [
+        {
+          "_id": "779306b6851b728ebbab5466",
+          "_tpl": "c29f11b2e63a089916739c96",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "d737e3b990c371708db369f0": {
+    "cashReductionRub": 14000,
+    "name": "Малый медицинский подсумок",
+    "reward": {
+      "value": 1,
+      "id": "d10fdc4b14d1328b5534924c",
+      "type": "Item",
+      "target": "6a4700f1ebafdfcdef671010",
+      "index": 3,
+      "items": [
+        {
+          "_id": "6a4700f1ebafdfcdef671010",
+          "_tpl": "12403f74773f49be6a2d84b7",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "9c438fa48f645044ddc75e8d": {
+    "cashReductionRub": 25000,
+    "name": "Малый кейс для бронеплит",
+    "reward": {
+      "value": 1,
+      "id": "ea14799235aebba17c2862ca",
+      "type": "Item",
+      "target": "9c98c8f2e004957d46963faf",
+      "index": 3,
+      "items": [
+        {
+          "_id": "9c98c8f2e004957d46963faf",
+          "_tpl": "6a3c0e9643138b61c8739586",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "59a36c5ee68210f9154d94d0": {
+    "cashReductionRub": 24000,
+    "name": "Кейс для обвесов",
+    "reward": {
+      "value": 1,
+      "id": "ec61299feb0f138b9c3703fe",
+      "type": "Item",
+      "target": "36f9fe0261c694de00364386",
+      "index": 3,
+      "items": [
+        {
+          "_id": "36f9fe0261c694de00364386",
+          "_tpl": "681d1395a5c2308fdcbcda92",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "59ca4829e098dfafa03888d2": {
+    "cashReductionRub": 5000,
+    "name": "Малый денежный ящик",
+    "reward": {
+      "value": 1,
+      "id": "a1c363cae219ab0e019f1b83",
+      "type": "Item",
+      "target": "afedca91640fac4c3318f5e4",
+      "index": 3,
+      "items": [
+        {
+          "_id": "afedca91640fac4c3318f5e4",
+          "_tpl": "669c10fa06c00c483c58537a",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "5f62a924076e4b7c2320f2e8": {
+    "cashReductionRub": 7000,
+    "name": "Малый подсумок для магазинов",
+    "reward": {
+      "value": 1,
+      "id": "ec1c725953652103c54433f2",
+      "type": "Item",
+      "target": "ee872b8797cc64b097862724",
+      "index": 3,
+      "items": [
+        {
+          "_id": "ee872b8797cc64b097862724",
+          "_tpl": "440de5d056825485a0cf3a19",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "ad9233f54a7132d905d6f29d": {
+    "cashReductionRub": 7000,
+    "name": "Малый подсумок для боеприпасов",
+    "reward": {
+      "value": 1,
+      "id": "1e44d237962701076d3f58cf",
+      "type": "Item",
+      "target": "73e9d9da10450caa9bfeeeb9",
+      "index": 3,
+      "items": [
+        {
+          "_id": "73e9d9da10450caa9bfeeeb9",
+          "_tpl": "ae9e418fd5d4c4eec4a0e6ea",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "4ada822d634041a721b346d5": {
+    "cashReductionRub": 10000,
+    "name": "Кейс для обвесов",
+    "reward": {
+      "value": 1,
+      "id": "5eee82a781116e39d6c6eeee",
+      "type": "Item",
+      "target": "85ef298f8d1b27f66baca182",
+      "index": 3,
+      "items": [
+        {
+          "_id": "85ef298f8d1b27f66baca182",
+          "_tpl": "681d1395a5c2308fdcbcda92",
+          "slotId": "hideout",
+          "upd": {
+            "StackObjectsCount": 1
+          }
+        }
+      ]
+    }
+  },
+  "2568ee0bfe2ee12f24d78f45": {
+    "cashReductionRub": 11000,
+    "name": "Малый подсумок для магазинов",
+    "reward": {
+      "value": 1,
+      "id": "33c7e42a4b0ed314f7ad7d4b",
+      "type": "Item",
+      "target": "dd057bde83cdcafb506f5896",
+      "index": 3,
+      "items": [
+        {
+          "_id": "dd057bde83cdcafb506f5896",
+          "_tpl": "440de5d056825485a0cf3a19",
           "slotId": "hideout",
           "upd": {
             "StackObjectsCount": 1
