@@ -11,6 +11,7 @@ namespace Admiral.SecondLife.Client
         static RuntimeBridge active;
 
         readonly ConfigEntry<bool> enabled;
+        readonly ConfigEntry<string> eligiblePistolTemplates;
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         readonly RecoveryFinalizationGate finalizationGate = new RecoveryFinalizationGate();
@@ -26,10 +27,12 @@ namespace Admiral.SecondLife.Client
 
         internal RuntimeBridge(
             ConfigEntry<bool> enabled,
+            ConfigEntry<string> eligiblePistolTemplates,
             Action<string> logInfo,
             Action<string> logWarning)
         {
             this.enabled = enabled;
+            this.eligiblePistolTemplates = eligiblePistolTemplates;
             this.logInfo = logInfo;
             this.logWarning = logWarning;
         }
@@ -42,7 +45,7 @@ namespace Admiral.SecondLife.Client
                     return Fail("SPT 4.1 recovery contract rejected: " + failure + "; module remains inert.");
 
                 runtimeContract = contract;
-                executor = new RecoveryExecutor(contract);
+                executor = new RecoveryExecutor(contract, () => eligiblePistolTemplates?.Value);
                 harmony = new Harmony(HarmonyId);
                 active = this;
                 harmony.Patch(

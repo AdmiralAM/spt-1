@@ -7,8 +7,13 @@ namespace Admiral.SecondLife.Client
     internal sealed class RecoveryExecutor
     {
         readonly RecoveryRuntimeContract contract;
+        readonly Func<string> eligiblePistolTemplates;
 
-        internal RecoveryExecutor(RecoveryRuntimeContract contract) => this.contract = contract;
+        internal RecoveryExecutor(RecoveryRuntimeContract contract, Func<string> eligiblePistolTemplates)
+        {
+            this.contract = contract;
+            this.eligiblePistolTemplates = eligiblePistolTemplates;
+        }
 
         internal bool TryPrepare(
             object localGame,
@@ -39,6 +44,8 @@ namespace Admiral.SecondLife.Client
                 return false;
             if (!RuntimeSafeSpawnSelector.TrySelect(playerFactory, originalPlayer, corpse, expectedProfileId + ":" + lease.CorpseEquipmentRootId, out RuntimeSpawnSelection spawnSelection, out failure))
                 return false;
+            if (!RuntimeArmamentService.TrySelect(profile, expectedProfileId.GetHashCode(), eligiblePistolTemplates?.Invoke(), out RuntimeArmament armament))
+                return Fail("stash traversal exceeded its bounded limit", out failure);
 
             plan = new RecoveryExecutionPlan(
                 contract,
@@ -50,6 +57,7 @@ namespace Admiral.SecondLife.Client
                 ownerFactory,
                 lease,
                 spawnSelection,
+                armament,
                 profileId);
             return true;
         }

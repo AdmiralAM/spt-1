@@ -15,9 +15,15 @@ namespace Admiral.SecondLife.Client
                 "Enabled",
                 false,
                 "Enable one guarded recovery per supported solo raid. Disabled until the recovery executor passes preflight.");
+            ConfigEntry<string> eligiblePistolTemplates = Config.Bind(
+                "Emergency armament",
+                "Eligible pistol template IDs",
+                string.Empty,
+                "Comma-separated pistol template IDs. Empty allows every owned pistol placed directly in the stash root.");
 
             bridge = new RuntimeBridge(
                 enabled,
+                eligiblePistolTemplates,
                 message => Logger.LogInfo(message),
                 message => Logger.LogWarning(message));
 

@@ -23,17 +23,20 @@ first guarded solo recovery executor. It captures the corpse-owned equipment
 root, prepares a distinct empty equipment/inventory root, reuses the native
 local-game player and owner factories, replaces the dead player registration,
 and resumes native death if preflight or reconstruction fails. The executor is
-disabled by default and has not yet passed the physical gameplay gate.
+disabled by default and has not yet passed the physical gameplay gate. Its
+runtime armament path searches a bounded direct stash-root set, moves the
+selected pistol tree and one compatible spare magazine through native inventory
+transactions, and rolls both roots back on failure. A newly created intrinsic
+pockets item gives the spare magazine a legal recovery address without reusing
+the corpse-owned pockets instance.
 
 Authority: Issue #352 and `origin/main:.github/workstreams.json` after the governance registration is integrated.
 
 ## Resume order
 
 1. Complete and validate the minimal recovery vertical slice.
-2. Connect bounded safe alternate-spawn selection.
-3. Connect the owned random-pistol emergency loadout with one compatible spare magazine.
-4. Validate cross-module semantics.
-5. Produce one batched physical runtime candidate.
+2. Validate cross-module semantics and terminal profile settlement.
+3. Produce one batched physical runtime candidate.
 
 Do not create a second PR for this workstream. Continue from the live PR exact head.
 

@@ -36,6 +36,19 @@ unarmed. An invalid tree or partial move rolls back to the captured stash
 addresses or resumes native death; equipment from the first corpse is never a
 substitute.
 
+The pistol and installed magazine form one ownership tree and therefore use
+one physical move. The installed magazine must retain its original ID and
+remain in the pistol magazine slot before and after that move. The spare
+magazine is the second physical move. Treating the installed magazine as an
+independent move is forbidden because it creates a transient invalid weapon
+tree. The first stable selector considers only items placed directly in the
+stash root; nested-case traversal belongs to the post-stable preset milestone.
+
+The recovered equipment root receives a newly constructed intrinsic pockets
+item using the native pockets template so the owned spare magazine has a legal
+address. This infrastructure is not selected armament and never reuses the
+corpse-owned pockets instance.
+
 The first stable release uses automatic selection only. A post-stable pre-raid
 preset may record the three selected persistent item IDs when entering the
 raid. Selection itself never moves or reserves items. Resolution order is:

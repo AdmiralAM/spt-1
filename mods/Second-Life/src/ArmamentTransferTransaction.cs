@@ -11,24 +11,24 @@ public interface IReversibleInventoryMove
 public sealed class ArmamentTransferTransaction
 {
     private readonly IReversibleInventoryMove[] moves;
+    private readonly Func<bool> installedMagazineStillAttached;
 
     public ArmamentTransferTransaction(
         EmergencyArmamentPlan plan,
         IReversibleInventoryMove pistolMove,
-        IReversibleInventoryMove installedMagazineMove,
-        IReversibleInventoryMove spareMagazineMove)
+        IReversibleInventoryMove spareMagazineMove,
+        Func<bool> installedMagazineStillAttached)
     {
         moves = new[]
         {
             pistolMove ?? throw new ArgumentNullException(nameof(pistolMove)),
-            installedMagazineMove ?? throw new ArgumentNullException(nameof(installedMagazineMove)),
             spareMagazineMove ?? throw new ArgumentNullException(nameof(spareMagazineMove))
         };
+        this.installedMagazineStillAttached = installedMagazineStillAttached ?? throw new ArgumentNullException(nameof(installedMagazineStillAttached));
 
         string[] expected =
         {
             plan.PistolItemId,
-            plan.InstalledMagazineItemId,
             plan.SpareMagazineItemId
         };
         string[] actual = moves.Select(move => move.ItemId).ToArray();
@@ -36,13 +36,13 @@ public sealed class ArmamentTransferTransaction
             expected.Distinct(StringComparer.Ordinal).Count() != expected.Length ||
             !expected.SequenceEqual(actual, StringComparer.Ordinal))
         {
-            throw new ArgumentException("Transfer moves must match the three distinct stash item IDs in the armament plan.");
+            throw new ArgumentException("Physical moves must match the pistol tree and spare magazine IDs in the armament plan.");
         }
     }
 
     public bool TryExecute()
     {
-        if (moves.Any(move => !move.CanExecute())) return false;
+        if (!installedMagazineStillAttached() || moves.Any(move => !move.CanExecute())) return false;
 
         int completed = 0;
         try
@@ -57,7 +57,9 @@ public sealed class ArmamentTransferTransaction
                 }
             }
 
-            return true;
+            if (installedMagazineStillAttached()) return true;
+            RollBackCompleted(completed);
+            return false;
         }
         catch
         {

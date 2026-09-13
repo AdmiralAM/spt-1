@@ -130,10 +130,10 @@ var rolledBack = new List<string>();
 var successfulTransfer = new ArmamentTransferTransaction(
     armament,
     new FakeMove(armament.PistolItemId, true, true, moved, rolledBack),
-    new FakeMove(armament.InstalledMagazineItemId, true, true, moved, rolledBack),
-    new FakeMove(armament.SpareMagazineItemId, true, true, moved, rolledBack));
+    new FakeMove(armament.SpareMagazineItemId, true, true, moved, rolledBack),
+    () => true);
 Expect(successfulTransfer.TryExecute(), "complete stash transfer commits");
-Expect(moved.SequenceEqual(new[] { armament.PistolItemId, armament.InstalledMagazineItemId, armament.SpareMagazineItemId }), "stash items move exactly once in plan order");
+Expect(moved.SequenceEqual(new[] { armament.PistolItemId, armament.SpareMagazineItemId }), "pistol tree and spare magazine move exactly once");
 Expect(rolledBack.Count == 0, "successful stash transfer does not roll back");
 
 moved.Clear();
@@ -141,21 +141,32 @@ rolledBack.Clear();
 var failedTransfer = new ArmamentTransferTransaction(
     armament,
     new FakeMove(armament.PistolItemId, true, true, moved, rolledBack),
-    new FakeMove(armament.InstalledMagazineItemId, true, false, moved, rolledBack),
-    new FakeMove(armament.SpareMagazineItemId, true, true, moved, rolledBack));
+    new FakeMove(armament.SpareMagazineItemId, true, false, moved, rolledBack),
+    () => true);
 Expect(!failedTransfer.TryExecute(), "partial stash transfer fails closed");
 Expect(moved.SequenceEqual(new[] { armament.PistolItemId }), "later stash move is not attempted after failure");
-Expect(rolledBack.SequenceEqual(new[] { armament.InstalledMagazineItemId, armament.PistolItemId }), "failed and completed moves roll back in reverse order");
+Expect(rolledBack.SequenceEqual(new[] { armament.SpareMagazineItemId, armament.PistolItemId }), "failed and completed moves roll back in reverse order");
 
 moved.Clear();
 rolledBack.Clear();
 var failedPreflightTransfer = new ArmamentTransferTransaction(
     armament,
     new FakeMove(armament.PistolItemId, true, true, moved, rolledBack),
-    new FakeMove(armament.InstalledMagazineItemId, false, true, moved, rolledBack),
-    new FakeMove(armament.SpareMagazineItemId, true, true, moved, rolledBack));
+    new FakeMove(armament.SpareMagazineItemId, false, true, moved, rolledBack),
+    () => true);
 Expect(!failedPreflightTransfer.TryExecute(), "all stash moves preflight before mutation");
 Expect(moved.Count == 0 && rolledBack.Count == 0, "failed transfer preflight is mutation-free");
+
+moved.Clear();
+rolledBack.Clear();
+var ownershipChecks = 0;
+var detachedInstalledMagazine = new ArmamentTransferTransaction(
+    armament,
+    new FakeMove(armament.PistolItemId, true, true, moved, rolledBack),
+    new FakeMove(armament.SpareMagazineItemId, true, true, moved, rolledBack),
+    () => ++ownershipChecks == 1);
+Expect(!detachedInstalledMagazine.TryExecute(), "installed magazine must remain attached to the moved pistol tree");
+Expect(rolledBack.SequenceEqual(new[] { armament.SpareMagazineItemId, armament.PistolItemId }), "ownership drift rolls both physical moves back");
 
 Expect(RecoveryOwnershipPlan.TryCreate(
     "corpse-equipment-root",

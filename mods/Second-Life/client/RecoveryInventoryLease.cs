@@ -31,6 +31,7 @@ namespace Admiral.SecondLife.Client
 
         internal string CorpseEquipmentRootId { get; }
         internal string RecoveryEquipmentRootId { get; }
+        internal object RecoveryEquipment => contract.InventoryEquipment.GetValue(recoveryInventory);
 
         internal static bool TryPrepare(
             RecoveryRuntimeContract contract,
@@ -58,6 +59,8 @@ namespace Admiral.SecondLife.Client
 
             string recoveryRootId = Guid.NewGuid().ToString("N").Substring(0, 24);
             object recoveryEquipment = contract.EquipmentConstructor.Invoke(new[] { recoveryRootId, equipmentTemplate });
+            if (!TryCreateIntrinsicPockets(originalEquipment, recoveryEquipment))
+                return Fail("intrinsic recovery pockets could not be constructed", out failure);
             object[] inventoryArguments = BuildInventoryArguments(contract, originalInventory, recoveryEquipment);
             object recoveryInventory = contract.InventoryConstructor.Invoke(inventoryArguments);
             if (recoveryInventory == null || ReferenceEquals(recoveryEquipment, corpseEquipment))
@@ -116,6 +119,28 @@ namespace Admiral.SecondLife.Client
             };
         }
 
+        static bool TryCreateIntrinsicPockets(object originalEquipment, object recoveryEquipment)
+        {
+            Type equipmentSlot = FindType("EFT.InventoryLogic.EquipmentSlot");
+            object pocketsValue = Enum.Parse(equipmentSlot, "Pockets");
+            MethodInfo getSlot = originalEquipment.GetType().GetMethod("GetSlot", new[] { equipmentSlot });
+            object originalSlot = getSlot?.Invoke(originalEquipment, new[] { pocketsValue });
+            object originalPockets = originalSlot == null ? null : AccessTools.Property(originalSlot.GetType(), "ContainedItem")?.GetValue(originalSlot, null);
+            string templateId = ReadString(originalPockets, "StringTemplateId");
+            if (string.IsNullOrWhiteSpace(templateId)) return false;
+
+            Type itemFactoryType = FindType("EFT.ItemFactory");
+            Type singleton = FindType("Comfort.Common.Singleton`1")?.MakeGenericType(itemFactoryType);
+            object factory = singleton?.GetProperty("Instance", BindingFlags.Static | BindingFlags.Public)?.GetValue(null, null);
+            MethodInfo createItem = itemFactoryType?.GetMethod("CreateItem", BindingFlags.Instance | BindingFlags.Public);
+            object pockets = createItem?.Invoke(factory, new object[] { Guid.NewGuid().ToString("N").Substring(0, 24), templateId, null });
+            object recoverySlot = getSlot?.Invoke(recoveryEquipment, new[] { pocketsValue });
+            MethodInfo attach = recoverySlot?.GetType().GetMethod("ChangeContainedItemDirectly", BindingFlags.Instance | BindingFlags.Public);
+            if (pockets == null || attach == null) return false;
+            attach.Invoke(recoverySlot, new[] { pockets });
+            return ReferenceEquals(AccessTools.Property(recoverySlot.GetType(), "ContainedItem")?.GetValue(recoverySlot, null), pockets);
+        }
+
         static object CopyFastAccessIds(object inventory, Type dictionaryType)
         {
             object copy = Activator.CreateInstance(dictionaryType);
@@ -162,6 +187,16 @@ namespace Admiral.SecondLife.Client
                 ? null
                 : AccessTools.Property(instance.GetType(), propertyName)?.GetValue(instance, null);
             return value?.ToString();
+        }
+
+        static Type FindType(string fullName)
+        {
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                Type type = assembly.GetType(fullName, false);
+                if (type != null) return type;
+            }
+            return null;
         }
 
         static bool Fail(string message, out string failure)

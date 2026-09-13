@@ -52,8 +52,9 @@ Acceptance: deterministic seeded tests pass; no valid point means native death.
 After spawn acceptance, move one owned pistol selected at random from eligible
 stash items, its existing installed magazine, and exactly one compatible spare
 magazine from the stash into the recovered inventory. Preserve every item ID
-and remove each item from its former stash address before attaching it to the
-recovered player. Do not source anything from the first corpse. If the stash
+and remove each root item from its former stash address before attaching it to
+the recovered player. The installed magazine remains attached to the pistol
+through the pistol-tree move. Do not source anything from the first corpse. If the stash
 does not contain a complete eligible set, recovery proceeds unarmed.
 
 Acceptance: seeded selection is deterministic; unseeded selection can vary;
