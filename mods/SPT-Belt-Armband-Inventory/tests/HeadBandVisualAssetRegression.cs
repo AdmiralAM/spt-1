@@ -40,8 +40,10 @@ internal static class HeadBandVisualAssetRegression
         Require(clientIconSource.Contains("ItemViewFactory", StringComparison.Ordinal)
             && clientIconSource.Contains("RuntimeIdentity.EmergencyHeadBandItemId", StringComparison.Ordinal), "client item-card icon override is not exact-template scoped");
         Require(clientProject.Contains("SPTBeltArmbandInventory.HeadBandIcon.png", StringComparison.Ordinal), "client item-card icon is not embedded in the plugin");
-        Require(bundleBuildSource.Contains("headband_rambo_red_inspect.png", StringComparison.Ordinal)
-            && bundleBuildSource.Contains("Unlit/Transparent", StringComparison.Ordinal), "HeadBand inspect preview must use the approved icon visual");
+        Require(bundleBuildSource.Contains("headband_rambo_red.fbx", StringComparison.Ordinal)
+            && bundleBuildSource.Contains("headband_rambo_red_albedo.png", StringComparison.Ordinal)
+            && bundleBuildSource.Contains("headband_rambo_red_normal.png", StringComparison.Ordinal)
+            && bundleBuildSource.Contains("_NORMALMAP", StringComparison.Ordinal), "HeadBand inspect preview must use the textured 3D model");
         Require(deploySource.Contains("SPT.Server','SPT.Launcher','EscapeFromTarkov", StringComparison.Ordinal), "asset deployment must refuse a running SPT/EFT process");
         Require(deploySource.Contains("headband-asset-$stamp", StringComparison.Ordinal), "asset deployment must preserve an out-of-tree backup");
     }

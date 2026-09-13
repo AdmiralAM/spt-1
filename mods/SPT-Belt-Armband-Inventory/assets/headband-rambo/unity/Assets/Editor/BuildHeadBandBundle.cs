@@ -6,8 +6,10 @@ using UnityEngine;
 
 public static class BuildHeadBandBundle
 {
-    private const string InspectTexturePath = "Assets/HeadBand/headband_rambo_red_inspect.png";
-    private const string InspectMaterialPath = "Assets/HeadBand/headband_rambo_red_inspect.mat";
+    private const string ModelPath = "Assets/HeadBand/headband_rambo_red.fbx";
+    private const string AlbedoPath = "Assets/HeadBand/headband_rambo_red_albedo.png";
+    private const string NormalPath = "Assets/HeadBand/headband_rambo_red_normal.png";
+    private const string MaterialPath = "Assets/HeadBand/headband_rambo_red.mat";
     private const string PrefabPath = "Assets/HeadBand/headband_rambo_red.prefab";
     private const string BundleName = "headband_rambo_red.bundle";
 
@@ -16,9 +18,20 @@ public static class BuildHeadBandBundle
         string templatePath = CommandLineValue("-template=");
         string outputPath = CommandLineValue("-output=");
 
-        AssetDatabase.ImportAsset(InspectTexturePath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
-        Texture2D inspectTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(InspectTexturePath)
-            ?? throw new InvalidOperationException("Unable to import " + InspectTexturePath);
+        AssetDatabase.ImportAsset(ModelPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+        AssetDatabase.ImportAsset(AlbedoPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+        AssetDatabase.ImportAsset(NormalPath, ImportAssetOptions.ForceSynchronousImport | ImportAssetOptions.ForceUpdate);
+        TextureImporter normalImporter = AssetImporter.GetAtPath(NormalPath) as TextureImporter
+            ?? throw new InvalidOperationException("Unable to configure " + NormalPath);
+        normalImporter.textureType = TextureImporterType.NormalMap;
+        normalImporter.sRGBTexture = false;
+        normalImporter.SaveAndReimport();
+        GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(ModelPath)
+            ?? throw new InvalidOperationException("Unable to import " + ModelPath);
+        Texture2D albedo = AssetDatabase.LoadAssetAtPath<Texture2D>(AlbedoPath)
+            ?? throw new InvalidOperationException("Unable to import " + AlbedoPath);
+        Texture2D normal = AssetDatabase.LoadAssetAtPath<Texture2D>(NormalPath)
+            ?? throw new InvalidOperationException("Unable to import " + NormalPath);
 
         AssetBundle templateBundle = AssetBundle.LoadFromFile(templatePath)
             ?? throw new InvalidOperationException("Unable to load template bundle " + templatePath);
@@ -41,21 +54,26 @@ public static class BuildHeadBandBundle
         foreach (Collider collider in root.GetComponentsInChildren<Collider>(true))
             UnityEngine.Object.DestroyImmediate(collider);
 
-        GameObject visual = GameObject.CreatePrimitive(PrimitiveType.Quad);
-        visual.transform.SetParent(root.transform, false);
+        GameObject visual = UnityEngine.Object.Instantiate(model, root.transform);
         visual.name = "HeadBand_Rambo_Red_Visual";
         visual.transform.localPosition = Vector3.zero;
         visual.transform.localRotation = Quaternion.identity;
-        visual.transform.localScale = Vector3.one * 0.42f;
-        UnityEngine.Object.DestroyImmediate(visual.GetComponent<Collider>());
+        visual.transform.localScale = Vector3.one * 2.15f;
 
-        AssetDatabase.DeleteAsset(InspectMaterialPath);
-        Shader shader = Shader.Find("Unlit/Transparent")
-            ?? throw new InvalidOperationException("Unlit/Transparent shader is unavailable");
-        Material inspectMaterial = new Material(shader) { name = "HeadBand_Rambo_Red_Inspect" };
-        inspectMaterial.mainTexture = inspectTexture;
-        AssetDatabase.CreateAsset(inspectMaterial, InspectMaterialPath);
-        visual.GetComponent<MeshRenderer>().sharedMaterial = inspectMaterial;
+        AssetDatabase.DeleteAsset(MaterialPath);
+        Shader shader = Shader.Find("Standard")
+            ?? throw new InvalidOperationException("Standard shader is unavailable");
+        Material material = new Material(shader) { name = "HeadBand_Rambo_Red" };
+        material.SetTexture("_MainTex", albedo);
+        material.SetColor("_Color", Color.white);
+        material.SetFloat("_Metallic", 0f);
+        material.SetFloat("_Glossiness", 0.16f);
+        material.SetTexture("_BumpMap", normal);
+        material.SetFloat("_BumpScale", 0.35f);
+        material.EnableKeyword("_NORMALMAP");
+        AssetDatabase.CreateAsset(material, MaterialPath);
+        foreach (Renderer renderer in visual.GetComponentsInChildren<Renderer>(true))
+            renderer.sharedMaterial = material;
 
         PrefabUtility.SaveAsPrefabAsset(root, PrefabPath);
         UnityEngine.Object.DestroyImmediate(root);

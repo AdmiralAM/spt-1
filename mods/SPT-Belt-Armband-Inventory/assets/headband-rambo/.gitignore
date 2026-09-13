@@ -1,4 +1,6 @@
 generated/*.blend1
+generated/*_preview_*.png
+generated/*.fbm/
 unity/Library/
 unity/Logs/
 unity/Temp/
@@ -8,7 +10,7 @@ unity/*.log
 unity/belt_reference.bundle
 unity/Assets/**/*.meta
 unity/Assets/HeadBand/headband_rambo_red.prefab
-unity/Assets/HeadBand/headband_rambo_red_inspect.mat
+unity/Assets/HeadBand/headband_rambo_red.mat
 unity/Assets/Plugins/
 unity/AssetBundles/
 unity/Packages/packages-lock.json
