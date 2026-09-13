@@ -26,12 +26,14 @@ first guarded solo recovery executor. It captures the corpse-owned equipment
 root, prepares a distinct empty equipment/inventory root, reuses the native
 local-game player and owner factories, replaces the dead player registration,
 and resumes native death if preflight or reconstruction fails. The executor is
-disabled by default and has not yet passed the physical gameplay gate. Its
-runtime armament path searches a bounded direct stash-root set, moves the
-selected pistol tree and one compatible spare magazine through native inventory
-transactions, and rolls both roots back on failure. A newly created intrinsic
-pockets item gives the spare magazine a legal recovery address without reusing
-the corpse-owned pockets instance. The paid-healing gate mirrors EFT's native
+disabled by default and has not yet passed the physical gameplay gate. The
+server reserves a bounded random complete pistol set from the authoritative
+stash, including nested containers. The client reconstructs the exact pistol
+tree, installed magazine and one same-template spare magazine with their
+persistent IDs and item state, then commits only after native inventory
+transactions accept both roots. A newly created intrinsic pockets item gives
+the spare magazine a legal recovery address without reusing the corpse-owned
+pockets instance. The paid-healing gate mirrors EFT's native
 HP price, Therapist loyalty coefficient, free-heal trial and Charisma discount.
 The local SPT server reserves rubles from the authoritative stash, including
 nested wallets, then commits after recovery or refunds on decline and failure.

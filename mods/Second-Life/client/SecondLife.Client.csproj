@@ -17,5 +17,6 @@
     <Reference Include="0Harmony"><HintPath>$(SPTPath)\BepInEx\core\0Harmony.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine"><HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\UnityEngine.dll</HintPath><Private>false</Private></Reference>
     <Reference Include="UnityEngine.CoreModule"><HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>$(SPTPath)\EscapeFromTarkov_Data\Managed\Newtonsoft.Json.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
 </Project>

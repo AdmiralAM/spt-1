@@ -48,10 +48,14 @@ namespace Admiral.SecondLife.Client
                 return false;
             if (!RuntimeSafeSpawnSelector.TrySelect(playerFactory, originalPlayer, corpse, expectedProfileId + ":" + lease.CorpseEquipmentRootId, minimumCorpseDistance(), minimumPlayerDistance(), out RuntimeSpawnSelection spawnSelection, out failure))
                 return false;
-            if (!RuntimeArmamentService.TrySelect(profile, expectedProfileId.GetHashCode(), eligiblePistolTemplates?.Invoke(), out RuntimeArmament armament))
-                return Fail("stash traversal exceeded its bounded limit", out failure);
-            if (!RuntimePaidHealing.TryPrepare(profile, originalPlayer, out RuntimePaidHealing paidHealing, out failure))
+            if (!RuntimeServerArmamentReservation.TryReserve(eligiblePistolTemplates?.Invoke(), out RuntimeServerArmamentReservation armamentReservation, out failure))
                 return false;
+            RuntimeArmament armament = armamentReservation.Armament;
+            if (!RuntimePaidHealing.TryPrepare(profile, originalPlayer, out RuntimePaidHealing paidHealing, out failure))
+            {
+                armamentReservation.Refund();
+                return false;
+            }
 
             plan = new RecoveryExecutionPlan(
                 contract,
@@ -64,6 +68,7 @@ namespace Admiral.SecondLife.Client
                 lease,
                 spawnSelection,
                 armament,
+                armamentReservation,
                 paidHealing,
                 profileId);
             return true;

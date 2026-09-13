@@ -153,7 +153,7 @@ namespace Admiral.SecondLife.Client
                     resolved = true;
                     if (plan.CanAffordPaidHealing)
                     {
-                        BeginRecovery(localGame, plan);
+                        BeginRecoveryAfterConfirmationDelay(localGame, plan);
                         return;
                     }
                     plan.CancelPaidHealing();
@@ -188,6 +188,16 @@ namespace Admiral.SecondLife.Client
             }
         }
 
+        async void BeginRecoveryAfterConfirmationDelay(object localGame, RecoveryExecutionPlan plan)
+        {
+            // Keep the confirmation legible and absorb the key/button release so
+            // recovery never fires on the same frame as the user's click.
+            await Task.Delay(650);
+            await WaitForNeutralInput();
+            if (finalizationGate.Snapshot.State == RecoveryState.RecoveryPending)
+                BeginRecovery(localGame, plan);
+        }
+
         static async Task WaitForNeutralInput()
         {
             Type input = Type.GetType("UnityEngine.Input, UnityEngine.InputLegacyModule", throwOnError: false);
@@ -215,7 +225,7 @@ namespace Admiral.SecondLife.Client
                 {
                     if (finalizationGate.ConfirmRecovery(recoveryRootId))
                     {
-                        logInfo?.Invoke("One-time recovery spawned after paid healing (" + plan.PaidHealingCost + " rubles), equipment root " + recoveryRootId + ".");
+                        logInfo?.Invoke("One-time recovery spawned after paid healing (" + plan.PaidHealingCost + " rubles), equipment root " + recoveryRootId + ", emergency armament=" + (plan.HasEmergencyArmament ? "owned pistol plus spare magazine" : "unarmed; no complete stash set") + ".");
                         return;
                     }
                     logWarning?.Invoke("Recovery spawned but lifecycle confirmation failed; native finalization resumed.");

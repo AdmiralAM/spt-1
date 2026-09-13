@@ -17,6 +17,7 @@ namespace Admiral.SecondLife.Client
         readonly RecoveryInventoryLease inventoryLease;
         readonly RuntimeSpawnSelection spawnSelection;
         readonly RuntimeArmament armament;
+        readonly RuntimeServerArmamentReservation armamentReservation;
         readonly RuntimePaidHealing paidHealing;
 
         internal RecoveryExecutionPlan(
@@ -30,6 +31,7 @@ namespace Admiral.SecondLife.Client
             RecoveryInventoryLease inventoryLease,
             RuntimeSpawnSelection spawnSelection,
             RuntimeArmament armament,
+            RuntimeServerArmamentReservation armamentReservation,
             RuntimePaidHealing paidHealing,
             string profileId)
         {
@@ -43,16 +45,22 @@ namespace Admiral.SecondLife.Client
             this.inventoryLease = inventoryLease;
             this.spawnSelection = spawnSelection;
             this.armament = armament;
+            this.armamentReservation = armamentReservation;
             this.paidHealing = paidHealing;
             ProfileId = profileId;
         }
 
         internal string ProfileId { get; }
         internal string RecoveryEquipmentRootId => inventoryLease.RecoveryEquipmentRootId;
+        internal bool HasEmergencyArmament => armament != null;
         internal int PaidHealingCost => paidHealing.Cost;
         internal bool CanAffordPaidHealing => paidHealing.CanAfford;
         internal string PaidHealingScanSummary => paidHealing.ScanSummary;
-        internal void CancelPaidHealing() => paidHealing.Cancel();
+        internal void CancelPaidHealing()
+        {
+            paidHealing.Cancel();
+            armamentReservation?.Refund();
+        }
 
         internal async Task ExecuteAsync()
         {
@@ -102,6 +110,7 @@ namespace Admiral.SecondLife.Client
                 ValidateAttachment(gameWorld, newPlayer);
                 attached = true;
                 paidHealing.FinalizeDebit(newPlayer);
+                armamentReservation?.Commit();
                 TryDispose(originalPlayer);
                 TryCleanupOwner(originalOwner);
             }
@@ -110,6 +119,7 @@ namespace Admiral.SecondLife.Client
                 if (!attached)
                 {
                     paidHealing.Rollback();
+                    armamentReservation?.Refund();
                     if (newPlayerRegistered) contract.UnregisterWorldPlayer.Invoke(gameWorld, new[] { newPlayer });
                     contract.LocalPlayer.SetValue(localGame, originalPlayer);
                     contract.PlayerOwner.SetValue(localGame, originalOwner);
