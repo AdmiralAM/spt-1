@@ -16,8 +16,10 @@ namespace SPTBeltArmbandInventory
         internal static FieldInfo SlotViewsField;
         internal static FieldInfo SpecialSlotsPanelField;
         internal static FieldInfo SlotPlaceField;
+        internal static FieldInfo SlotBackgroundField;
         internal static FieldInfo SearchableItemViewField;
         internal static FieldInfo GridsContainerField;
+        internal static FieldInfo ContainedGridsViewField;
         static bool logged;
         static bool warned;
 
@@ -58,19 +60,20 @@ namespace SPTBeltArmbandInventory
 
         static IEnumerator PlaceAfterNativeLayout(RectTransform content, RectTransform specialRect, Component headBand, Component armBand)
         {
-            yield return new WaitForEndOfFrame();
-            CompactNativeRow(headBand);
-            CompactNativeRow(armBand);
-            Canvas.ForceUpdateCanvases();
-            ForceRebuild(content);
-            Canvas.ForceUpdateCanvases();
+            for (int settle = 0; settle < 6; settle++)
+            {
+                yield return new WaitForEndOfFrame();
+                float headHeight = CompactNativeRow(headBand);
+                CompactNativeRow(armBand);
+                Canvas.ForceUpdateCanvases();
+                ForceRebuild(content);
+                Canvas.ForceUpdateCanvases();
 
-            Vector3[] corners = new Vector3[4];
-            specialRect.GetWorldCorners(corners);
-            PlaceNativeRow(headBand, corners[0]);
-            RectTransform headRect = headBand.transform as RectTransform;
-            float height = headRect == null ? 1f : Math.Max(1f, headRect.rect.height);
-            PlaceNativeRow(armBand, corners[0] + Vector3.down * (height + Gap));
+                Vector3[] corners = new Vector3[4];
+                specialRect.GetWorldCorners(corners);
+                PlaceNativeRow(headBand, corners[0]);
+                PlaceNativeRow(armBand, corners[0] + Vector3.down * (headHeight + Gap));
+            }
             if (!logged)
             {
                 logged = true;
@@ -83,22 +86,56 @@ namespace SPTBeltArmbandInventory
             IgnoreAutomaticLayout(view.gameObject);
             RectTransform slotPlace = SlotPlaceField?.GetValue(view) as RectTransform;
             if (slotPlace != null) slotPlace.gameObject.SetActive(false);
+            Component slotBackground = SlotBackgroundField?.GetValue(view) as Component;
+            Transform slotPanel = slotBackground == null ? null : slotBackground.transform.parent;
+            if (slotPanel != null && slotPanel != view.transform) slotPanel.gameObject.SetActive(false);
         }
 
-        static void CompactNativeRow(Component view)
+        static float CompactNativeRow(Component view)
         {
             PrepareCompactRow(view);
             RectTransform rect = view.transform as RectTransform;
             Component searchableItem = SearchableItemViewField?.GetValue(view) as Component;
             RectTransform grids = searchableItem == null ? null : GridsContainerField?.GetValue(searchableItem) as RectTransform;
-            if (rect == null || grids == null) return;
+            if (rect == null || grids == null) return 1f;
 
             ForceRebuild(grids);
-            float width = Math.Max(MinimumPanelWidth, Math.Max(1f, grids.rect.width));
-            float height = HeaderHeight + Math.Max(1f, grids.rect.height);
+            MeasureGridViews(rect, searchableItem, out float gridWidth, out float gridHeight);
+            float width = Math.Max(MinimumPanelWidth, gridWidth);
+            float height = HeaderHeight + gridHeight;
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, height);
             ForceRebuild(rect);
+            return height;
+        }
+
+        static void MeasureGridViews(RectTransform row, Component searchableItem, out float width, out float height)
+        {
+            width = 1f;
+            height = 1f;
+            object contained = ContainedGridsViewField?.GetValue(searchableItem);
+            IEnumerable views = ReflectionTools.ReadMember(contained, "GridViews") as IEnumerable
+                ?? ReflectionTools.ReadMember(contained, "_gridViews") as IEnumerable;
+            if (views == null) return;
+            bool measured = false;
+            float minX = float.MaxValue, minY = float.MaxValue, maxX = float.MinValue, maxY = float.MinValue;
+            Vector3[] corners = new Vector3[4];
+            foreach (object entry in views)
+            {
+                RectTransform grid = (entry as Component)?.transform as RectTransform;
+                if (grid == null || !grid.gameObject.activeInHierarchy) continue;
+                grid.GetWorldCorners(corners);
+                for (int i = 0; i < corners.Length; i++)
+                {
+                    Vector3 point = row.InverseTransformPoint(corners[i]);
+                    minX = Math.Min(minX, point.x); maxX = Math.Max(maxX, point.x);
+                    minY = Math.Min(minY, point.y); maxY = Math.Max(maxY, point.y);
+                }
+                measured = true;
+            }
+            if (!measured) return;
+            width = Math.Max(1f, maxX - minX);
+            height = Math.Max(1f, maxY - minY);
         }
 
         static void PlaceNativeRow(Component view, Vector3 worldPosition)
@@ -129,8 +166,8 @@ namespace SPTBeltArmbandInventory
         internal static void Reset()
         {
             LogInfo = null; LogWarning = null; EquipmentSlotType = null;
-            SlotViewsField = null; SpecialSlotsPanelField = null; SlotPlaceField = null;
-            SearchableItemViewField = null; GridsContainerField = null;
+            SlotViewsField = null; SpecialSlotsPanelField = null; SlotPlaceField = null; SlotBackgroundField = null;
+            SearchableItemViewField = null; GridsContainerField = null; ContainedGridsViewField = null;
             logged = false; warned = false;
         }
     }
@@ -164,11 +201,13 @@ namespace SPTBeltArmbandInventory
                 EmbeddedAccessoryGridRuntime.SlotViewsField = panel.GetField("_slotViews", BindingFlags.Instance | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField = searchable.GetField("_specSlotsPanel", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.SlotPlaceField = searchable.BaseType?.GetField("_slotPlace", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                EmbeddedAccessoryGridRuntime.SlotBackgroundField = searchable.BaseType?.GetField("_slotBackground", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.SearchableItemViewField = searchable.GetField("_searchableItemView", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.GridsContainerField = searchableItem.GetField("_gridsContainer", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                EmbeddedAccessoryGridRuntime.ContainedGridsViewField = searchableItem.GetField("_containedGridsView", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.LogInfo = logInfo;
                 EmbeddedAccessoryGridRuntime.LogWarning = logWarning;
-                if (show == null || EmbeddedAccessoryGridRuntime.SlotViewsField == null || EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField == null || EmbeddedAccessoryGridRuntime.SlotPlaceField == null || EmbeddedAccessoryGridRuntime.SearchableItemViewField == null || EmbeddedAccessoryGridRuntime.GridsContainerField == null)
+                if (show == null || EmbeddedAccessoryGridRuntime.SlotViewsField == null || EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField == null || EmbeddedAccessoryGridRuntime.SlotPlaceField == null || EmbeddedAccessoryGridRuntime.SlotBackgroundField == null || EmbeddedAccessoryGridRuntime.SearchableItemViewField == null || EmbeddedAccessoryGridRuntime.GridsContainerField == null || EmbeddedAccessoryGridRuntime.ContainedGridsViewField == null)
                     return Fail("Exact ContainersPanel/SearchableSlotView fields unavailable.");
                 MethodInfo patch = FindPatch(harmonyType, harmonyMethodType);
                 ConstructorInfo hm = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });
