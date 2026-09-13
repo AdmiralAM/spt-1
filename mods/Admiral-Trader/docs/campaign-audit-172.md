@@ -41,7 +41,17 @@ The pre-field-support normalized core distribution was: median 11,950 XP, 47,800
 
 The 20 native trades progress from IFAK/GSSH/Salewa and an early Day Pack through surgery kits, headsets, armour, rigs and backpacks to late combat stimulants. They are disjoint from the early-weapon, Natalya-finale, WTT-substitution and B&A&HB layers, so no later registration pass overwrites another reward. Every cash trade leaves a positive rouble payout.
 
-Five raw reward rows sit above one of the campaign review thresholds and remain intentionally visible for final balance review: `Break the Perimeter` (28,000 XP / ₽120,000 / +0.030), `The Last Signal` (22,000 XP / ₽135,000 / +0.030), `Black Shift Ended` (25,750 XP), `Final Containment` (27,000 XP) and `Admiral's Decision` (27,750 XP). These are late, boss/Rogue or chain-finale operations; the audit does not justify a blanket reduction. Their physical rewards and effective cash after trades must be judged together during the final balance pass.
+Five raw reward rows sit above one campaign review threshold. Their effective rewards and objective risk were reviewed individually:
+
+| Quest | Effective reason | Decision |
+| --- | --- | --- |
+| Протокол доступа: Допуск | Level-35 finale of the ten-step access chain; the rare-card check is possession-only and the payout represents the completed access progression. | Retain 28,000 XP / ₽120,000 / +0.030. |
+| Последний сигнал | Four Lighthouse Rogues plus survival in one raid creates concentrated combat and reset risk. | Retain 22,000 XP / ₽135,000 / +0.030. |
+| Подмена | Level-44 deep-Labs placement in step eight of the final chain carries access cost and survival exposure. | Retain 25,750 XP / ₽99,000 / +0.018. |
+| Последний контейнер | Level-46 Labs quest-item retrieval, handover and same-raid survival immediately precedes the finale. | Retain 27,000 XP / ₽104,000 / +0.019. |
+| Решение Адмирала | Level-47 campaign finale after ten complete story chains; its preset and finite Labs-card unlock are non-repeatable endgame rewards. | Retain 27,750 XP / ₽108,000 / +0.019. |
+
+No reward is reduced by the audit. The apparent outliers are bounded late-game milestones, remain below the vanilla p90 cash ceiling, and create no repeatable faucet. The exact reviewed ID set is now enforced so a future unreviewed outlier cannot enter silently.
 
 High-value containers, the armour repair kit and tank battery are no longer early free payouts. They are controlled one-per-reset purchase unlocks at actual value. The Labs finale now uses a usable access-card sample instead of an inert classified folder. The optional Icebreaker finale is separately documented as a non-repeatable exceptional reward.
 
@@ -66,7 +76,7 @@ With the installed WTT modules, 19 Content Backport and 43 WTT Armory roots pass
 ## Audit decisions
 
 1. Preserve the 172+10 graph, eight entry points, 40-quest weapon rotation and current storefront counts.
-2. Carry the five high raw reward rows into the final effective-value comparison rather than changing them in isolation.
+2. Preserve the five individually reviewed high raw reward rows; deterministic validation rejects any new unreviewed threshold outlier.
 3. Do not manufacture the sixteen unavailable B&A&HB container templates. Expand those rewards only after Belt publishes stable owned IDs.
 4. Treat Russian weapon-model wording, long allowed-pool presentation and remaining voice consistency as the M9 editorial package after the content-order gates.
 5. Treat actual offer usefulness, insurance speed and reward satisfaction as one final fresh-profile acceptance session after repository-side stabilization.

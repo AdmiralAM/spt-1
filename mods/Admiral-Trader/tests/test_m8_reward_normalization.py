@@ -74,6 +74,21 @@ class M8RewardNormalizationTests(unittest.TestCase):
         self.assertEqual(self.physical_templates(quest), {"5d1b376e86f774252519444e"})
         self.assertFalse(any(reward["type"] == "AssortmentUnlock" for reward in quest["rewards"]["Success"]))
 
+    def test_every_high_raw_reward_is_explicitly_reviewed(self):
+        reviewed = self.policy["reviewedHighRewardQuests"]
+        self.assertEqual(len(reviewed), 5)
+        self.assertTrue(all(row["decision"] == "retain" and row["reason"] for row in reviewed))
+        reviewed_ids = {row["questId"] for row in reviewed}
+        observed_ids = set()
+        for quest_id, quest in self.quests.items():
+            rewards = quest["rewards"]["Success"]
+            xp = next((float(row["value"]) for row in rewards if row["type"] == "Experience"), 0)
+            rub = next((float(row["value"]) for row in rewards if row.get("items") and row["items"][0]["_tpl"] == ROUBLES), 0)
+            standing = next((float(row["value"]) for row in rewards if row["type"] == "TraderStanding"), 0)
+            if xp > 25000 or rub > 110000 or standing > 0.03:
+                observed_ids.add(quest_id)
+        self.assertEqual(observed_ids, reviewed_ids)
+
 
 if __name__ == "__main__":
     unittest.main()
