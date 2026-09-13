@@ -13,6 +13,7 @@ namespace SPTBeltArmbandInventory
         internal static Type EquipmentSlotType;
         internal static FieldInfo SlotViewsField;
         internal static FieldInfo SpecialSlotsPanelField;
+        internal static FieldInfo SlotPlaceField;
         static bool logged;
         static bool warned;
 
@@ -37,13 +38,9 @@ namespace SPTBeltArmbandInventory
                 RectTransform specialRect = specialPanel as RectTransform;
                 if (specialRect == null || content == null || !specialPanel.gameObject.activeInHierarchy) return;
 
-                Canvas.ForceUpdateCanvases();
-                Vector3[] corners = new Vector3[4];
-                specialRect.GetWorldCorners(corners);
-                Vector3 anchor = content.InverseTransformPoint(corners[0]);
-                PlaceNativeRow(headBand, anchor);
-                float height = Math.Max(1f, ((RectTransform)headBand.transform).rect.height);
-                PlaceNativeRow(armBand, anchor + Vector3.down * (height + Gap));
+                PrepareCompactRow(headBand);
+                PrepareCompactRow(armBand);
+                owner.StartCoroutine(PlaceAfterNativeLayout(content, specialRect, headBand, armBand));
                 if (!logged)
                 {
                     logged = true;
@@ -59,15 +56,43 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static void PlaceNativeRow(Component view, Vector3 localPosition)
+        static IEnumerator PlaceAfterNativeLayout(RectTransform content, RectTransform specialRect, Component headBand, Component armBand)
+        {
+            yield return new WaitForEndOfFrame();
+            Canvas.ForceUpdateCanvases();
+            ForceRebuild(content);
+            Canvas.ForceUpdateCanvases();
+
+            Vector3[] corners = new Vector3[4];
+            specialRect.GetWorldCorners(corners);
+            PlaceNativeRow(headBand, corners[0]);
+            RectTransform headRect = headBand.transform as RectTransform;
+            float height = headRect == null ? 1f : Math.Max(1f, headRect.rect.height);
+            PlaceNativeRow(armBand, corners[0] + Vector3.down * (height + Gap));
+        }
+
+        static void PrepareCompactRow(Component view)
+        {
+            IgnoreAutomaticLayout(view.gameObject);
+            RectTransform slotPlace = SlotPlaceField?.GetValue(view) as RectTransform;
+            if (slotPlace != null) slotPlace.gameObject.SetActive(false);
+        }
+
+        static void PlaceNativeRow(Component view, Vector3 worldPosition)
         {
             RectTransform rect = view.transform as RectTransform;
             if (rect == null) return;
-            IgnoreAutomaticLayout(view.gameObject);
             rect.pivot = new Vector2(0f, 1f);
-            rect.localPosition = new Vector3(localPosition.x, localPosition.y, rect.localPosition.z);
+            rect.position = new Vector3(worldPosition.x, worldPosition.y, rect.position.z);
             rect.SetAsLastSibling();
             view.gameObject.SetActive(true);
+        }
+
+        static void ForceRebuild(RectTransform content)
+        {
+            Type type = Type.GetType("UnityEngine.UI.LayoutRebuilder, UnityEngine.UI", false);
+            MethodInfo method = type?.GetMethod("ForceRebuildLayoutImmediate", BindingFlags.Static | BindingFlags.Public, null, new[] { typeof(RectTransform) }, null);
+            method?.Invoke(null, new object[] { content });
         }
 
         static void IgnoreAutomaticLayout(GameObject target)
@@ -81,7 +106,7 @@ namespace SPTBeltArmbandInventory
         internal static void Reset()
         {
             LogInfo = null; LogWarning = null; EquipmentSlotType = null;
-            SlotViewsField = null; SpecialSlotsPanelField = null;
+            SlotViewsField = null; SpecialSlotsPanelField = null; SlotPlaceField = null;
             logged = false; warned = false;
         }
     }
@@ -113,9 +138,10 @@ namespace SPTBeltArmbandInventory
                 EmbeddedAccessoryGridRuntime.EquipmentSlotType = equipmentSlot;
                 EmbeddedAccessoryGridRuntime.SlotViewsField = panel.GetField("_slotViews", BindingFlags.Instance | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField = searchable.GetField("_specSlotsPanel", BindingFlags.Instance | BindingFlags.NonPublic);
+                EmbeddedAccessoryGridRuntime.SlotPlaceField = searchable.BaseType?.GetField("_slotPlace", BindingFlags.Instance | BindingFlags.NonPublic);
                 EmbeddedAccessoryGridRuntime.LogInfo = logInfo;
                 EmbeddedAccessoryGridRuntime.LogWarning = logWarning;
-                if (show == null || EmbeddedAccessoryGridRuntime.SlotViewsField == null || EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField == null)
+                if (show == null || EmbeddedAccessoryGridRuntime.SlotViewsField == null || EmbeddedAccessoryGridRuntime.SpecialSlotsPanelField == null || EmbeddedAccessoryGridRuntime.SlotPlaceField == null)
                     return Fail("Exact ContainersPanel/SearchableSlotView fields unavailable.");
                 MethodInfo patch = FindPatch(harmonyType, harmonyMethodType);
                 ConstructorInfo hm = harmonyMethodType.GetConstructor(new[] { typeof(MethodInfo) });

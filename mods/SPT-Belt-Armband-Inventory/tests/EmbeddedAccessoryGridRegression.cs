@@ -16,6 +16,8 @@ internal static class EmbeddedAccessoryGridRegression
         Require(source.Contains("EFT.UI.DragAndDrop.SearchableSlotView", StringComparison.Ordinal), "must resolve the actual native special-slot owner");
         Require(source.Contains("_specSlotsPanel", StringComparison.Ordinal) && source.Contains("specialPanel", StringComparison.Ordinal), "must anchor below the exact native special-slot panel");
         Require(source.Contains("ignoreLayout", StringComparison.Ordinal), "overlay and panels must be excluded from automatic layout");
+        Require(source.Contains("_slotPlace", StringComparison.Ordinal) && source.Contains("SetActive(false)", StringComparison.Ordinal), "compact panels must hide the duplicate equipped-item card");
+        Require(source.Contains("WaitForEndOfFrame", StringComparison.Ordinal) && source.Contains("ForceRebuildLayoutImmediate", StringComparison.Ordinal), "compact panels must move after native layout without extending the container column");
         Require(slots.Contains("BuildWearableOrder", StringComparison.Ordinal) && slots.Contains("HeadBandSlotKey", StringComparison.Ordinal) && slots.Contains("ArmBand", StringComparison.Ordinal), "native ContainersPanel order must create both accessory rows");
         Require(projection.Contains("IsProjectedWearable", StringComparison.Ordinal), "native row factory must accept Belt, HeadBand and ArmBand");
         Require(!source.Contains("GeneratedGridsView", StringComparison.Ordinal) && !source.Contains("Instantiate", StringComparison.Ordinal), "must not create detached decorative grid windows");
