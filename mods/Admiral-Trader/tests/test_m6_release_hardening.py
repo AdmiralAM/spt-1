@@ -42,6 +42,10 @@ class M6ReleaseHardeningTests(unittest.TestCase):
         self.assertIn("removeInvalidTradersFromProfile", install)
         self.assertIn("Leave `removeModItemsFromProfile` unchanged", install)
         self.assertIn("d5c27bb3169f8dfbc13f6b69", install)
+        self.assertIn("milestoneOffers = 18", builder)
+        self.assertIn("natalyaSignatureOffers = 35", builder)
+        self.assertIn("sourceRegistrationEnabled = $true", builder)
+        self.assertNotIn("PR #328 active canonical head", builder)
 
     def test_combined_candidate_uses_active_campaign(self):
         builder = (REPO / "mods/Economy-Admiral/tools/Build-CombinedSpt415Rc.ps1").read_text(encoding="utf-8")

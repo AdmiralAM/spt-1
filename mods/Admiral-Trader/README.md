@@ -14,7 +14,7 @@ Admiral Trader has **one active workstream**:
 - historical frozen `0.1.0`: `053a62ff5f1cb545f13bc89a96bba3acd319a823`, 31 runtime quests / 11 finite offers;
 - QuestManiac/Andrudis research archive: **#115**.
 
-PRs #193, #297 and #327 are historical evidence only. Do not resume product work on them or create parallel Trader implementation branches for work that belongs to #328.
+PRs #193, #297, #327 and #328 are historical evidence only. Continue implementation only in the single live Admiral Trader PR discovered from GitHub; do not create a parallel Trader branch.
 
 ## SPT compatibility policy
 
