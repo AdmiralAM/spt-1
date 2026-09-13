@@ -61,9 +61,15 @@ namespace Admiral.SecondLife.Client
             object newPlayer = null;
             object newOwner = null;
             bool attached = false;
+            bool originalPlayerUnregistered = false;
+            bool newPlayerRegistered = false;
+            bool cameraSwapped = false;
+            object gameWorld = ReadProperty(originalPlayer, "GameWorld");
+            if (gameWorld == null) throw new InvalidOperationException("active GameWorld is unavailable");
             try
             {
-                UnregisterOriginalPlayer();
+                contract.UnregisterWorldPlayer.Invoke(gameWorld, new[] { originalPlayer });
+                originalPlayerUnregistered = true;
                 var creationTask = playerFactory.DynamicInvoke() as Task;
                 if (creationTask == null) throw new InvalidOperationException("player factory did not return a Task");
                 await creationTask;
@@ -81,7 +87,12 @@ namespace Admiral.SecondLife.Client
                 contract.LocalPlayer.SetValue(localGame, newPlayer);
                 contract.PlayerOwner.SetValue(localGame, newOwner);
                 players[ProfileId] = newPlayer;
+                contract.RegisterWorldPlayer.Invoke(gameWorld, new[] { newPlayer });
+                newPlayerRegistered = true;
+                contract.DestroyPlayerCamera.Invoke(null, new[] { originalPlayer });
+                await Task.Yield();
                 contract.CreatePlayerCamera.Invoke(null, new[] { newPlayer });
+                cameraSwapped = true;
                 contract.Spawn.Invoke(localGame, null);
                 paidHealing.Apply(newPlayer);
                 attached = true;
@@ -94,9 +105,14 @@ namespace Admiral.SecondLife.Client
                 if (!attached)
                 {
                     paidHealing.Rollback();
+                    if (newPlayerRegistered) contract.UnregisterWorldPlayer.Invoke(gameWorld, new[] { newPlayer });
                     contract.LocalPlayer.SetValue(localGame, originalPlayer);
                     contract.PlayerOwner.SetValue(localGame, originalOwner);
                     players[ProfileId] = originalPlayer;
+                    if (originalPlayerUnregistered) contract.RegisterWorldPlayer.Invoke(gameWorld, new[] { originalPlayer });
+                    if (cameraSwapped) contract.DestroyPlayerCamera.Invoke(null, new[] { newPlayer });
+                    await Task.Yield();
+                    contract.CreatePlayerCamera.Invoke(null, new[] { originalPlayer });
                     TryDispose(newPlayer);
                     if (!inventoryLease.Rollback())
                         throw new InvalidOperationException("recovery failed and profile inventory rollback was rejected");
@@ -114,14 +130,7 @@ namespace Admiral.SecondLife.Client
             catch { }
         }
 
-        void UnregisterOriginalPlayer()
-        {
-            object gameWorld = originalPlayer.GetType().GetProperty("GameWorld")?.GetValue(originalPlayer, null);
-            MethodInfo unregister = gameWorld?.GetType().GetMethod("UnregisterPlayer", BindingFlags.Instance | BindingFlags.Public);
-            if (gameWorld == null || unregister == null)
-                throw new InvalidOperationException("original player cannot be unregistered from GameWorld");
-            unregister.Invoke(gameWorld, new[] { originalPlayer });
-        }
+        static object ReadProperty(object instance, string name) => instance?.GetType().GetProperty(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)?.GetValue(instance, null);
 
         static void TryCleanupOwner(object owner)
         {
