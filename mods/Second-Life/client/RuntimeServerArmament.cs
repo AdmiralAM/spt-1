@@ -103,7 +103,7 @@ namespace Admiral.SecondLife.Client
             }
             object installed = pistol?.GetType().GetMethod("GetCurrentMagazine", BindingFlags.Instance | BindingFlags.Public)?.Invoke(pistol, null);
             if (pistol == null || installed == null || spare == null) throw new InvalidOperationException("complete pistol and two-magazine tree was not restored");
-            return new RuntimeArmament(pistol, installed, spare);
+            return new RuntimeArmament(pistol, installed, spare, detachedRoots: true);
         }
 
         static bool Send(string action, string token, string eligible, out ArmamentResponse response, out string failure)

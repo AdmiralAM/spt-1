@@ -9,15 +9,17 @@ namespace Admiral.SecondLife.Client
 {
     internal sealed class RuntimeArmament
     {
-        internal RuntimeArmament(object pistol, object installedMagazine, object spareMagazine)
+        internal RuntimeArmament(object pistol, object installedMagazine, object spareMagazine, bool detachedRoots = false)
         {
             Pistol = pistol;
             InstalledMagazine = installedMagazine;
             SpareMagazine = spareMagazine;
+            DetachedRoots = detachedRoots;
         }
         internal object Pistol { get; }
         internal object InstalledMagazine { get; }
         internal object SpareMagazine { get; }
+        internal bool DetachedRoots { get; }
     }
 
     internal static class RuntimeArmamentService
@@ -68,6 +70,17 @@ namespace Admiral.SecondLife.Client
         {
             if (armament == null) return;
             object controller = ReadProperty(newPlayer, "InventoryController");
+            if (armament.DetachedRoots)
+            {
+                if (controller == null) throw new InvalidOperationException("recovery inventory controller is unavailable");
+                await AddDetached(controller, recoveryEquipment, armament.Pistol, "Holster");
+                await AddDetached(controller, recoveryEquipment, armament.SpareMagazine, "Pockets");
+                if (!ReferenceEquals(
+                        armament.Pistol.GetType().GetMethod("GetCurrentMagazine")?.Invoke(armament.Pistol, null),
+                        armament.InstalledMagazine))
+                    throw new InvalidOperationException("installed magazine identity changed during reserved pistol attachment");
+                return;
+            }
             object pistolOrigin = ReadProperty(armament.Pistol, "CurrentAddress");
             object spareOrigin = ReadProperty(armament.SpareMagazine, "CurrentAddress");
             if (controller == null || pistolOrigin == null || spareOrigin == null)
@@ -93,6 +106,47 @@ namespace Admiral.SecondLife.Client
                     await MoveTo(controller, armament.SpareMagazine, spareOrigin);
                 throw;
             }
+        }
+
+        static async Task AddDetached(object controller, object equipment, object item, string equipmentSlotName)
+        {
+            Type slotEnum = FindType("EFT.InventoryLogic.EquipmentSlot");
+            object slotValue = Enum.Parse(slotEnum, equipmentSlotName);
+            object slot = equipment.GetType().GetMethod("GetSlot", new[] { slotEnum })?.Invoke(equipment, new[] { slotValue });
+            object address;
+            if (equipmentSlotName == "Holster")
+            {
+                address = slot?.GetType().GetMethod("CreateItemAddress", Type.EmptyTypes)?.Invoke(slot, null);
+            }
+            else
+            {
+                object pockets = ReadProperty(slot, "ContainedItem");
+                address = FindGridAddress(pockets, item);
+            }
+            if (address == null) throw new InvalidOperationException("no recovery " + equipmentSlotName + " address for reserved item");
+            Type manipulator = FindType("EFT.InventoryLogic.ItemManipulator");
+            MethodInfo add = manipulator.GetMethods(BindingFlags.Static | BindingFlags.Public)
+                .Single(value => value.Name == "Add" && value.GetParameters().Length == 4);
+            object operation = add.Invoke(null, new[] { item, address, controller, (object)false });
+            if (!ReadBoolean(operation, "Succeeded")) throw new InvalidOperationException("reserved item add was rejected for " + equipmentSlotName);
+            await Run(controller, operation);
+        }
+
+        static object FindGridAddress(object compound, object item)
+        {
+            if (!(ReadField(compound, "Grids") is IEnumerable grids)) return null;
+            foreach (object grid in grids)
+            {
+                MethodInfo method = grid.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public)
+                    .FirstOrDefault(value => value.Name == "FindLocationForItem" && value.GetParameters().Length == 1);
+                try
+                {
+                    object address = method?.Invoke(grid, new[] { item });
+                    if (address != null) return address;
+                }
+                catch (TargetInvocationException) { }
+            }
+            return null;
         }
 
         static async Task QuickMove(object controller, object equipment, object item)
