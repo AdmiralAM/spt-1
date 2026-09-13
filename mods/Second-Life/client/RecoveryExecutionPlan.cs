@@ -59,8 +59,17 @@ namespace Admiral.SecondLife.Client
         internal string PaidHealingScanSummary => paidHealing.ScanSummary;
         internal void CancelPaidHealing()
         {
-            paidHealing.Cancel();
-            armamentReservation?.Refund();
+            Exception failure = null;
+            try { paidHealing.Cancel(); }
+            catch (Exception exception) { failure = exception; }
+            try { armamentReservation?.Refund(); }
+            catch (Exception exception)
+            {
+                failure = failure == null
+                    ? exception
+                    : new InvalidOperationException(failure.Message + "; armament refund failed: " + (exception.InnerException?.Message ?? exception.Message), failure);
+            }
+            if (failure != null) ExceptionDispatchInfo.Capture(failure).Throw();
         }
 
         internal async Task ExecuteAsync(Func<string, bool> confirmRecovery)

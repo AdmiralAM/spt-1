@@ -53,12 +53,12 @@ namespace Admiral.SecondLife.Client
             RuntimeArmament armament = armamentReservation.Armament;
             if (!lease.TryAttachArmament(armament, out failure))
             {
-                armamentReservation.Refund();
+                RefundArmament(armamentReservation, ref failure);
                 return false;
             }
             if (!RuntimePaidHealing.TryPrepare(profile, originalPlayer, out RuntimePaidHealing paidHealing, out failure))
             {
-                armamentReservation.Refund();
+                RefundArmament(armamentReservation, ref failure);
                 return false;
             }
 
@@ -103,6 +103,15 @@ namespace Admiral.SecondLife.Client
             exception is System.Reflection.TargetInvocationException invocation && invocation.InnerException != null
                 ? invocation.InnerException
                 : exception;
+
+        static void RefundArmament(RuntimeServerArmamentReservation reservation, ref string failure)
+        {
+            try { reservation?.Refund(); }
+            catch (Exception exception)
+            {
+                failure = (failure ?? "recovery preparation failed") + "; armament cleanup failed: " + Unwrap(exception).Message;
+            }
+        }
 
         static bool Fail(string message, out string failure)
         {

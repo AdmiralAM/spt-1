@@ -56,7 +56,7 @@ namespace Admiral.SecondLife.Client
                 if (result == null || !(AccessTools.Property(result.GetType(), "Succeeded")?.GetValue(result, null) is bool succeeded) || !succeeded)
                     return Fail("reserved spare magazine could not be attached to recovery pockets", out failure);
                 if (!ReferenceEquals(ReadCurrentItem(holster), armament.Pistol) ||
-                    !ReferenceEquals(AccessTools.Property(armament.SpareMagazine.GetType(), "CurrentAddress")?.GetValue(armament.SpareMagazine, null), address) ||
+                    !HasSameContainer(armament.SpareMagazine, address) ||
                     !ReferenceEquals(armament.Pistol.GetType().GetMethod("GetCurrentMagazine")?.Invoke(armament.Pistol, null), armament.InstalledMagazine))
                     return Fail("recovery armament identity changed during direct attachment", out failure);
                 return true;
@@ -189,6 +189,17 @@ namespace Admiral.SecondLife.Client
         }
 
         static object ReadCurrentItem(object slot) => AccessTools.Property(slot.GetType(), "ContainedItem")?.GetValue(slot, null);
+        static bool HasSameContainer(object item, object expectedAddress)
+        {
+            object currentAddress = AccessTools.Property(item.GetType(), "CurrentAddress")?.GetValue(item, null);
+            object currentContainer = ReadField(currentAddress, "Container");
+            object expectedContainer = ReadField(expectedAddress, "Container");
+            object currentLocation = ReadField(currentAddress, "LocationInGrid");
+            object expectedLocation = ReadField(expectedAddress, "LocationInGrid");
+            return currentAddress != null && currentContainer != null &&
+                ReferenceEquals(currentContainer, expectedContainer) &&
+                Equals(currentLocation, expectedLocation);
+        }
 
         static object CopyFastAccessIds(object inventory, Type dictionaryType)
         {

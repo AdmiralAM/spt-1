@@ -30,7 +30,7 @@ namespace Admiral.SecondLife.Client
         {
             failure = null;
             return string.IsNullOrWhiteSpace(token) ||
-                (Send("refund", token, 0, out bool reserved, out _, out failure) && reserved);
+                Send("refund", token, 0, out _, out _, out failure);
         }
 
         static bool Send(string action, string token, int cost, out bool reserved, out int available, out string failure)

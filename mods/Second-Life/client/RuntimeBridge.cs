@@ -85,7 +85,14 @@ namespace Admiral.SecondLife.Client
 
         static bool GameStoppingPrefix(object __instance)
         {
-            return active == null || active.ContinueNativeFinalization(__instance);
+            if (active == null) return true;
+            try { return active.ContinueNativeFinalization(__instance); }
+            catch (Exception exception)
+            {
+                active.finalizationGate?.AbortPendingRecovery();
+                active.logWarning?.Invoke("Recovery death-boundary failed open; continuing native death: " + (exception.InnerException?.Message ?? exception.Message));
+                return true;
+            }
         }
 
         void CaptureCorpse(object player, object corpse)
@@ -110,10 +117,19 @@ namespace Admiral.SecondLife.Client
             RecoveryState state = finalizationGate.Snapshot.State;
             RecoveryExecutionPlan plan = null;
             string failure = null;
-            bool executorReady = state == RecoveryState.RecoveryPending ||
-                (state != RecoveryState.RecoverySpawned &&
-                 executor != null &&
-                 executor.TryPrepare(localGame, pendingCorpseEquipment, pendingCorpse, pendingProfileId, out plan, out failure));
+            bool executorReady = state == RecoveryState.RecoveryPending;
+            if (!executorReady && state != RecoveryState.RecoverySpawned && executor != null)
+            {
+                try
+                {
+                    executorReady = executor.TryPrepare(localGame, pendingCorpseEquipment, pendingCorpse, pendingProfileId, out plan, out failure);
+                }
+                catch (Exception exception)
+                {
+                    failure = "recovery preparation threw: " + (exception.InnerException?.Message ?? exception.Message);
+                    executorReady = false;
+                }
+            }
             NativeFinalizationDecision decision = finalizationGate.HandleDeathBoundary(
                 raidId,
                 pendingCorpseEquipmentRootId,
@@ -156,7 +172,7 @@ namespace Admiral.SecondLife.Client
                         BeginRecoveryAfterConfirmationDelay(localGame, plan);
                         return;
                     }
-                    plan.CancelPaidHealing();
+                    CancelPlanSafely(plan);
                     finalizationGate.AbortPendingRecovery();
                     logInfo?.Invoke("Paid recovery unavailable because stash rubles are insufficient; continuing native death.");
                     ResumeNativeFinalization(localGame);
@@ -165,7 +181,7 @@ namespace Admiral.SecondLife.Client
                 {
                     if (resolved) return;
                     resolved = true;
-                    plan.CancelPaidHealing();
+                    CancelPlanSafely(plan);
                     finalizationGate.AbortPendingRecovery();
                     logInfo?.Invoke("Paid healing declined; continuing native death.");
                     ResumeNativeFinalization(localGame);
@@ -173,7 +189,7 @@ namespace Admiral.SecondLife.Client
                 if (!RuntimePaidHealing.TryShowNativeConfirmation(plan.PaidHealingCost, plan.CanAffordPaidHealing, accept, cancel, out string promptFailure))
                 {
                     resolved = true;
-                    plan.CancelPaidHealing();
+                    CancelPlanSafely(plan);
                     finalizationGate.AbortPendingRecovery();
                     logWarning?.Invoke("Paid-healing offer failed closed; resuming native death: " + promptFailure);
                     ResumeNativeFinalization(localGame);
@@ -181,7 +197,7 @@ namespace Admiral.SecondLife.Client
             }
             catch (Exception exception)
             {
-                plan.CancelPaidHealing();
+                CancelPlanSafely(plan);
                 finalizationGate.AbortPendingRecovery();
                 logWarning?.Invoke("Paid-healing offer failed closed; resuming native death: " + exception.Message);
                 ResumeNativeFinalization(localGame);
@@ -196,6 +212,15 @@ namespace Admiral.SecondLife.Client
             await WaitForNeutralInput();
             if (finalizationGate.Snapshot.State == RecoveryState.RecoveryPending)
                 BeginRecovery(localGame, plan);
+        }
+
+        void CancelPlanSafely(RecoveryExecutionPlan plan)
+        {
+            try { plan?.CancelPaidHealing(); }
+            catch (Exception exception)
+            {
+                logWarning?.Invoke("Recovery cancellation cleanup failed; native death will continue: " + (exception.InnerException?.Message ?? exception.Message));
+            }
         }
 
         static async Task WaitForNeutralInput()
