@@ -8,13 +8,15 @@ namespace SPTBeltArmbandInventory
         const string HarmonyId = "com.admiralam.spt.belt-armband-inventory.loot-priority";
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
+        readonly bool companionWalletOnly;
         object harmony;
         MethodInfo unpatchSelf;
 
-        internal LootPriorityPatches(Action<string> logInfo, Action<string> logWarning)
+        internal LootPriorityPatches(Action<string> logInfo, Action<string> logWarning, bool companionWalletOnly = false)
         {
             this.logInfo = logInfo;
             this.logWarning = logWarning;
+            this.companionWalletOnly = companionWalletOnly;
         }
 
         internal bool TryInstall()
@@ -36,13 +38,15 @@ namespace SPTBeltArmbandInventory
                     return Fail("Harmony patch/rollback API is incompatible; belt loot priority remains disabled.");
                 unpatchSelf = rollback;
 
-                if (!LootPriorityRuntime.TryInstall(harmony, patchMethod, harmonyMethodType, harmonyMethodConstructor, equipmentType, slotEnumType, logWarning))
+                if (!LootPriorityRuntime.TryInstall(harmony, patchMethod, harmonyMethodType, harmonyMethodConstructor, equipmentType, slotEnumType, companionWalletOnly, logWarning))
                 {
                     Dispose();
                     return false;
                 }
 
-                if (logInfo != null) logInfo("Belt loot-priority integration installed for GetPrioritizedContainersForLoot.");
+                if (logInfo != null) logInfo(companionWalletOnly
+                    ? "Exact Admiral wallet money auto-deposit installed without replacing Pack 'n' Strap container ordering."
+                    : "Belt loot-priority integration installed for GetPrioritizedContainersForLoot.");
                 return true;
             }
             catch (Exception exception)

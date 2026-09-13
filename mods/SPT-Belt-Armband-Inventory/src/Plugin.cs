@@ -205,6 +205,13 @@ namespace SPTBeltArmbandInventory
 
             if (packNStrapDetected)
             {
+                lootPatches = new LootPriorityPatches(Logger.LogInfo, Logger.LogWarning, true);
+                if (!lootPatches.TryInstall())
+                {
+                    lootPatches.Dispose();
+                    lootPatches = null;
+                    Logger.LogWarning("Pack 'n' Strap keeps its container ordering, but exact Admiral wallet money auto-deposit could not be added.");
+                }
                 paymentPatches = new PaymentSlotPatches(Logger.LogInfo, Logger.LogWarning);
                 if (!paymentPatches.TryInstall())
                 {
@@ -213,7 +220,7 @@ namespace SPTBeltArmbandInventory
                     Logger.LogWarning("Pack 'n' Strap remains authoritative for Belt routing, but exact Admiral wallet payment sources could not be added.");
                 }
                 protectionSyncPump = StartCoroutine(SyncProtectionSettingsBounded());
-                Logger.LogInfo("B&A&HB companion mode initialized with exact Admiral wallet payment sources; Pack 'n' Strap retains Belt/ArmBand loot, unload, Scav, fast-access, merge, pickup and equipment-build ownership.");
+                Logger.LogInfo("B&A&HB companion mode initialized with exact Admiral wallet payment sources and money-only auto-deposit; Pack 'n' Strap retains general Belt/ArmBand loot ordering, unload, Scav, fast-access, merge, pickup and equipment-build ownership.");
                 return;
             }
 

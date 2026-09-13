@@ -30,6 +30,12 @@ internal static class LocalPackNStrapImportRegression
         Require(plugin.Contains("B&A&HB companion mode initialized with exact Admiral wallet payment sources", StringComparison.Ordinal)
             && !plugin.Contains("without Belt/ArmBand loot, unload, Scav, fast-access, merge, pickup, payment", StringComparison.Ordinal),
             "companion mode must retain exact Admiral payment-source ownership");
+        Require(plugin.Contains("new LootPriorityPatches(Logger.LogInfo, Logger.LogWarning, true)", StringComparison.Ordinal),
+            "companion mode must add money-only Admiral wallet auto-deposit");
+        string lootRuntime = File.ReadAllText(Path.Combine(root, "src", "LootPriorityRuntime.cs"));
+        Require(lootRuntime.Contains("if (walletOnly)", StringComparison.Ordinal)
+            && lootRuntime.Contains("AddUnique(augmented, existing)", StringComparison.Ordinal),
+            "companion wallet mode must preserve Pack 'n' Strap's existing container order after exact wallets");
     }
 
     private static void Require(bool condition, string message)
