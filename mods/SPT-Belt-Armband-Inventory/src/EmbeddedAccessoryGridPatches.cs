@@ -7,7 +7,8 @@ namespace SPTBeltArmbandInventory
 {
     internal static class EmbeddedAccessoryGridRuntime
     {
-        const float Gap = 8f;
+        const float AnchorGap = 20f;
+        const float PanelGap = 40f;
         const float HeaderHeight = 22f;
         const float MinimumPanelWidth = 128f;
         internal static Action<string> LogInfo;
@@ -73,9 +74,9 @@ namespace SPTBeltArmbandInventory
 
                 Vector3 specialBottomLeft = VisibleBottomLeftIn(content, specialRect);
                 float beltRight = RightEdgeIn(content, belt);
-                Vector3 anchor = new Vector3(Math.Max(specialBottomLeft.x, beltRight + Gap), specialBottomLeft.y - Gap, 0f);
+                Vector3 anchor = new Vector3(Math.Max(specialBottomLeft.x, beltRight + AnchorGap), specialBottomLeft.y - AnchorGap, 0f);
                 PlaceNativeRow(headBand, content.TransformPoint(anchor));
-                PlaceNativeRow(armBand, content.TransformPoint(anchor + Vector3.down * (headHeight + Gap)));
+                PlaceNativeRow(armBand, content.TransformPoint(anchor + Vector3.down * (headHeight + PanelGap)));
             }
             if (!logged)
             {
