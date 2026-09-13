@@ -6,8 +6,9 @@ Authority for continuation lives in this file, Issue #352, the live PR body and 
 
 - one additional appearance at most per raid;
 - different safe spawn on the same map;
-- emergency armament is one randomly selected pistol with its usable magazine
-  plus exactly one compatible spare magazine;
+- emergency armament moves one randomly selected owned pistol, its installed
+  magazine and exactly one compatible spare magazine from the stash;
+- no complete eligible stash set means an unarmed recovery;
 - the eligible pistol pool is configurable, while selection is bounded and
   seedable for deterministic validation;
 - first corpse and original equipment remain recoverable in-world;
@@ -23,6 +24,10 @@ Authority for continuation lives in this file, Issue #352, the live PR body and 
 Prove exact local-player death, raid-finalization, profile-save, corpse ownership and local-player construction hooks from SPT 4.1.5 assemblies/source.
 
 Acceptance: exact signatures and ordering are recorded; a rollback-safe seam is proven; unsupported Fika/network paths are identified. Guessed Harmony patches are forbidden.
+
+Evidence: `docs/runtime-archaeology-spt-4.1.5.md` records the installed
+assembly hash/MVID, exact signatures and IL ordering. Result: guarded
+solo-only vertical slice GO; Fika/network paths remain fail-closed.
 
 ### M1 — Lifecycle integration
 
@@ -44,16 +49,20 @@ Acceptance: deterministic seeded tests pass; no valid point means native death.
 
 ### M4 — Emergency loadout
 
-After spawn acceptance, create only an owned emergency weapon tree: one pistol
-selected at random from the configured eligible pool, its usable magazine, and
-exactly one additional compatible magazine. Do not restore or derive the choice
-from the dead player's original equipment.
+After spawn acceptance, move one owned pistol selected at random from eligible
+stash items, its existing installed magazine, and exactly one compatible spare
+magazine from the stash into the recovered inventory. Preserve every item ID
+and remove each item from its former stash address before attaching it to the
+recovered player. Do not source anything from the first corpse. If the stash
+does not contain a complete eligible set, recovery proceeds unarmed.
 
 Acceptance: seeded selection is deterministic; unseeded selection can vary;
-weapon and magazine identities are unique; both magazines are compatible with
-the selected pistol; capacity/slot rules are valid; exactly one spare magazine
-is granted; no original gear is restored; and an empty/invalid pool or partial
-construction failure rolls back cleanly to native death.
+the selected pistol and both magazines retain their persistent IDs and have
+exactly one owner/address at every committed step; both magazines are
+compatible; capacity/slot rules are valid; exactly one spare is moved; no
+original corpse gear is restored; no complete stash set produces an unarmed
+recovery; and a partial transfer rolls back to the original stash addresses or
+cleanly resumes native death.
 
 ### M5 — Cross-module hardening
 

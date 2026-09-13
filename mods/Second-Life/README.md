@@ -6,8 +6,9 @@ Second Life Admiral is a bounded one-time same-raid recovery workstream for SPT 
 
 - at most one recovery after the first player death;
 - recovery uses a different safe spawn;
-- emergency armament is one randomly selected pistol with its usable magazine
-  plus exactly one compatible spare magazine;
+- emergency armament moves one randomly selected owned pistol, its installed
+  magazine and exactly one compatible spare magazine from the stash;
+- if the stash has no complete eligible set, recovery starts unarmed;
 - the pistol pool remains configurable; random selection is bounded and can be
   seeded for deterministic validation;
 - the original corpse and equipment remain in the raid;
