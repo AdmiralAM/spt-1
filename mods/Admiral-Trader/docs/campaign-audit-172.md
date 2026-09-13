@@ -55,7 +55,9 @@ No reward is reduced by the audit. The apparent outliers are bounded late-game m
 
 High-value containers, the armour repair kit and tank battery are no longer early free payouts. They are controlled one-per-reset purchase unlocks at actual value. The Labs finale now uses a usable access-card sample instead of an inert classified folder. The optional Icebreaker finale is separately documented as a non-repeatable exceptional reward.
 
-B&A&HB currently publishes five stable product templates usable by Trader. Sixteen reward trades resolve against those products, with twelve placed by level 20. Sixteen additional small-container candidates remain correctly dormant because their proposed templates are not present in the installed runtime; Admiral does not fabricate or clone Belt-owned containers. This is the only present gap against the desired broader early mini-container variety.
+B&A&HB publishes five stable wearable product templates plus its owned small-container catalogue. Admiral defines 32 conditional reward trades: nine are placed by level 10 and 24 by level 20. The current installed runtime resolves all 32, while a setup without B&A&HB skips them and preserves the unreduced cash reward. Admiral neither fabricates nor clones Belt-owned containers.
+
+The final balance pass confirms that the four early complete-weapon rewards arrive at levels 1, 3, 5 and 7. Every equipment substitution leaves at least ₽10,000 of the original cash payout, and the early-weapon, native field-support, B&A&HB and Natalya-finale layers use disjoint quest IDs. This keeps early rewards useful without stacking several premium reward classes on one task.
 
 ## Graph and availability audit
 
@@ -77,7 +79,7 @@ With the installed WTT modules, 19 Content Backport and 43 WTT Armory roots pass
 
 1. Preserve the 172+10 graph, eight entry points, 40-quest weapon rotation and current storefront counts.
 2. Preserve the five individually reviewed high raw reward rows; deterministic validation rejects any new unreviewed threshold outlier.
-3. Do not manufacture the sixteen unavailable B&A&HB container templates. Expand those rewards only after Belt publishes stable owned IDs.
+3. Keep all 32 B&A&HB rewards conditional on Belt-owned template publication; never manufacture or clone those templates inside Trader.
 4. Treat Russian weapon-model wording, long allowed-pool presentation and remaining voice consistency as the M9 editorial package after the content-order gates.
 5. Treat actual offer usefulness, insurance speed and reward satisfaction as one final fresh-profile acceptance session after repository-side stabilization.
 

@@ -53,7 +53,14 @@ class CampaignRewardWaveTests(unittest.TestCase):
         for quest_id in self.belt:
             level = next(row["value"] for row in self.quests[quest_id]["conditions"]["AvailableForStart"] if row["conditionType"] == "Level")
             early_levels.append(int(level))
+        self.assertGreaterEqual(sum(level <= 10 for level in early_levels), 9)
         self.assertGreaterEqual(sum(level <= 20 for level in early_levels), 24)
+
+        weapon_levels = []
+        for quest_id in self.early:
+            level = next(row["value"] for row in self.quests[quest_id]["conditions"]["AvailableForStart"] if row["conditionType"] == "Level")
+            weapon_levels.append(int(level))
+        self.assertEqual(sorted(weapon_levels), [1, 3, 5, 7])
 
     def test_signature_rewards_are_complete_unique_item_trees(self):
         item_ids = set()
@@ -73,6 +80,7 @@ class CampaignRewardWaveTests(unittest.TestCase):
             quest = self.quests[quest_id]
             cash = next(row for row in quest["rewards"]["Success"] if row.get("items", [{}])[0].get("_tpl") == RUB)
             self.assertGreater(cash["value"], trade["cashReductionRub"])
+            self.assertGreaterEqual(cash["value"] - trade["cashReductionRub"], 10000)
             reward = trade["reward"]
             self.assertEqual(reward["value"], 1)
             self.assertEqual(len(reward["items"]), 1)
