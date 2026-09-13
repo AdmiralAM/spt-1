@@ -6,7 +6,10 @@ Authority for continuation lives in this file, Issue #352, the live PR body and 
 
 - one additional appearance at most per raid;
 - different safe spawn on the same map;
-- minimal configurable emergency loadout;
+- emergency armament is one randomly selected pistol with its usable magazine
+  plus exactly one compatible spare magazine;
+- the eligible pistol pool is configurable, while selection is bounded and
+  seedable for deterministic validation;
 - first corpse and original equipment remain recoverable in-world;
 - no automatic full-kit restore and no item duplication;
 - unsupported states fail closed to native death;
@@ -41,9 +44,16 @@ Acceptance: deterministic seeded tests pass; no valid point means native death.
 
 ### M4 — Emergency loadout
 
-Create only an owned minimal configurable weapon/loadout tree after spawn acceptance.
+After spawn acceptance, create only an owned emergency weapon tree: one pistol
+selected at random from the configured eligible pool, its usable magazine, and
+exactly one additional compatible magazine. Do not restore or derive the choice
+from the dead player's original equipment.
 
-Acceptance: identity is unique, capacity/slot rules are valid, no original gear is restored and failure rolls back cleanly.
+Acceptance: seeded selection is deterministic; unseeded selection can vary;
+weapon and magazine identities are unique; both magazines are compatible with
+the selected pistol; capacity/slot rules are valid; exactly one spare magazine
+is granted; no original gear is restored; and an empty/invalid pool or partial
+construction failure rolls back cleanly to native death.
 
 ### M5 — Cross-module hardening
 

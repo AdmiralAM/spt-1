@@ -6,7 +6,10 @@ Second Life Admiral is a bounded one-time same-raid recovery workstream for SPT 
 
 - at most one recovery after the first player death;
 - recovery uses a different safe spawn;
-- only a minimal configurable emergency loadout is granted;
+- emergency armament is one randomly selected pistol with its usable magazine
+  plus exactly one compatible spare magazine;
+- the pistol pool remains configurable; random selection is bounded and can be
+  seeded for deterministic validation;
 - the original corpse and equipment remain in the raid;
 - original gear is never cloned or restored automatically;
 - unsupported states fail closed to native raid death;
@@ -23,7 +26,7 @@ Authority: Issue #352 and `origin/main:.github/workstreams.json` after the gover
 1. Prove death, raid-end, profile-save and local-player-spawn hooks.
 2. Connect the state machine without profile mutation.
 3. Add safe alternate-spawn selection.
-4. Add minimal emergency-loadout ownership.
+4. Add owned random-pistol emergency loadout with one compatible spare magazine.
 5. Validate cross-module semantics.
 6. Produce one batched physical runtime candidate.
 

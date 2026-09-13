@@ -18,6 +18,16 @@ The pure state machine establishes one-use and terminal-state semantics without 
 
 Do not add Harmony hooks merely because a method name appears plausible. M0 passes only when exact method signatures, ownership and ordering are evidenced and a rollback-safe seam exists. If native raid finalization cannot be safely suspended, the feature must fail closed rather than reconstruct the profile.
 
+## Emergency armament contract
+
+The recovered player receives one pistol chosen at random from a configurable
+eligible pool. The generated weapon tree contains a usable magazine and exactly
+one additional magazine compatible with that pistol. Selection must support a
+fixed seed for deterministic tests, and every generated item must have fresh
+identity independent of the original corpse inventory. An empty pool, missing
+compatible magazine, invalid item tree or partial construction fails closed;
+the module must not substitute or clone equipment from the dead player.
+
 ## Process cleanup
 
 Any local server/client/helper started for archaeology or smoke testing must be stopped by the same worker. Record PIDs before launch, prefer graceful shutdown, and verify no owned process or listening port remains.
