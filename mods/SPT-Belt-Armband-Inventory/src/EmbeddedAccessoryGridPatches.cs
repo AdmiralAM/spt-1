@@ -34,11 +34,13 @@ namespace SPTBeltArmbandInventory
                 if (views == null) return;
                 object pocketsKey = Enum.Parse(EquipmentSlotType, "Pockets", false);
                 object armBandKey = Enum.Parse(EquipmentSlotType, "ArmBand", false);
+                object beltKey = Enum.ToObject(EquipmentSlotType, RuntimeIdentity.DedicatedBeltEquipmentSlotValue);
                 object headBandKey = Enum.ToObject(EquipmentSlotType, RuntimeIdentity.DedicatedHeadBandEquipmentSlotValue);
                 Component pockets = views[pocketsKey] as Component;
+                Component belt = views[beltKey] as Component;
                 Component headBand = views[headBandKey] as Component;
                 Component armBand = views[armBandKey] as Component;
-                if (pockets == null || headBand == null || armBand == null) return;
+                if (pockets == null || belt == null || headBand == null || armBand == null) return;
 
                 Transform specialPanel = SpecialSlotsPanelField.GetValue(pockets) as Transform;
                 RectTransform content = headBand.transform.parent as RectTransform;
@@ -47,7 +49,7 @@ namespace SPTBeltArmbandInventory
 
                 PrepareCompactRow(headBand);
                 PrepareCompactRow(armBand);
-                coroutineOwner.StartCoroutine(PlaceAfterNativeLayout(content, specialRect, headBand, armBand));
+                coroutineOwner.StartCoroutine(PlaceAfterNativeLayout(content, specialRect, belt, headBand, armBand));
             }
             catch (Exception exception)
             {
@@ -58,7 +60,7 @@ namespace SPTBeltArmbandInventory
             }
         }
 
-        static IEnumerator PlaceAfterNativeLayout(RectTransform content, RectTransform specialRect, Component headBand, Component armBand)
+        static IEnumerator PlaceAfterNativeLayout(RectTransform content, RectTransform specialRect, Component belt, Component headBand, Component armBand)
         {
             for (int settle = 0; settle < 6; settle++)
             {
@@ -69,10 +71,11 @@ namespace SPTBeltArmbandInventory
                 ForceRebuild(content);
                 Canvas.ForceUpdateCanvases();
 
-                Vector3[] corners = new Vector3[4];
-                specialRect.GetWorldCorners(corners);
-                PlaceNativeRow(headBand, corners[0]);
-                PlaceNativeRow(armBand, corners[0] + Vector3.down * (headHeight + Gap));
+                Vector3 specialBottomLeft = BottomLeftIn(content, specialRect);
+                float beltRight = RightEdgeIn(content, belt);
+                Vector3 anchor = new Vector3(Math.Max(specialBottomLeft.x, beltRight + Gap), specialBottomLeft.y - Gap, 0f);
+                PlaceNativeRow(headBand, content.TransformPoint(anchor));
+                PlaceNativeRow(armBand, content.TransformPoint(anchor + Vector3.down * (headHeight + Gap)));
             }
             if (!logged)
             {
@@ -143,6 +146,39 @@ namespace SPTBeltArmbandInventory
             if (!measured) return;
             width = Math.Max(1f, maxX - minX);
             height = Math.Max(1f, maxY - minY);
+        }
+
+        static Vector3 BottomLeftIn(RectTransform space, RectTransform target)
+        {
+            Vector3[] corners = new Vector3[4];
+            target.GetWorldCorners(corners);
+            return space.InverseTransformPoint(corners[0]);
+        }
+
+        static float RightEdgeIn(RectTransform space, Component view)
+        {
+            Component searchableItem = SearchableItemViewField?.GetValue(view) as Component;
+            object contained = searchableItem == null ? null : ContainedGridsViewField?.GetValue(searchableItem);
+            IEnumerable grids = ReflectionTools.ReadMember(contained, "GridViews") as IEnumerable
+                ?? ReflectionTools.ReadMember(contained, "_gridViews") as IEnumerable;
+            float right = float.MinValue;
+            Vector3[] corners = new Vector3[4];
+            if (grids != null)
+            {
+                foreach (object entry in grids)
+                {
+                    RectTransform grid = (entry as Component)?.transform as RectTransform;
+                    if (grid == null || !grid.gameObject.activeInHierarchy) continue;
+                    grid.GetWorldCorners(corners);
+                    for (int i = 0; i < corners.Length; i++) right = Math.Max(right, space.InverseTransformPoint(corners[i]).x);
+                }
+            }
+            if (right > float.MinValue) return right;
+            RectTransform fallback = view.transform as RectTransform;
+            if (fallback == null) return 0f;
+            fallback.GetWorldCorners(corners);
+            for (int i = 0; i < corners.Length; i++) right = Math.Max(right, space.InverseTransformPoint(corners[i]).x);
+            return right;
         }
 
         static void PlaceNativeRow(Component view, Vector3 worldPosition)
