@@ -18,6 +18,14 @@ namespace Admiral.SecondLife.Client
         internal static bool Commit(string token, out string failure) =>
             Send("commit", token, 0, out bool reserved, out _, out failure) && reserved;
 
+        internal static bool Finalize(string token, out string failure) =>
+            Send("finalize", token, 0, out bool reserved, out _, out failure) && reserved;
+
+        internal static void Release(string token)
+        {
+            if (!string.IsNullOrWhiteSpace(token)) Send("release", token, 0, out _, out _, out _);
+        }
+
         internal static void Refund(string token)
         {
             if (!string.IsNullOrWhiteSpace(token)) Send("refund", token, 0, out _, out _, out _);

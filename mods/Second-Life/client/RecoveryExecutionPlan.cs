@@ -81,7 +81,7 @@ namespace Admiral.SecondLife.Client
                 originalPlayerUnregistered = true;
                 contract.DestroyPlayerCamera.Invoke(null, new[] { originalPlayer });
                 originalCameraRemoved = true;
-                await Task.Delay(50);
+                await WaitForCameraRemoval(originalPlayer);
                 var creationTask = playerFactory.DynamicInvoke() as Task;
                 if (creationTask == null) throw new InvalidOperationException("player factory did not return a Task");
                 await creationTask;
@@ -110,9 +110,12 @@ namespace Admiral.SecondLife.Client
                 contract.Spawn.Invoke(localGame, null);
                 paidHealing.Apply(newPlayer);
                 ValidateAttachment(gameWorld, newPlayer);
-                paidHealing.FinalizeDebit(newPlayer);
                 armamentReservation?.Commit();
+                paidHealing.FinalizeDebit(newPlayer);
+                armamentReservation?.FinalizeReservation();
                 attached = true;
+                paidHealing.ReleaseDebit();
+                armamentReservation?.ReleaseReservation();
                 TryDispose(originalPlayer);
                 TryCleanupOwner(originalOwner);
             }
@@ -122,22 +125,42 @@ namespace Admiral.SecondLife.Client
                 {
                     paidHealing.Rollback();
                     armamentReservation?.Refund();
+                    if (newCameraCreated)
+                    {
+                        contract.DestroyPlayerCamera.Invoke(null, new[] { newPlayer });
+                        await WaitForCameraRemoval(newPlayer);
+                    }
                     if (newPlayerRegistered) contract.UnregisterWorldPlayer.Invoke(gameWorld, new[] { newPlayer });
+                    TryDispose(newPlayer);
                     contract.LocalPlayer.SetValue(localGame, originalPlayer);
                     contract.PlayerOwner.SetValue(localGame, originalOwner);
                     players[ProfileId] = originalPlayer;
                     if (originalPlayerUnregistered) contract.RegisterWorldPlayer.Invoke(gameWorld, new[] { originalPlayer });
-                    if (newCameraCreated) contract.DestroyPlayerCamera.Invoke(null, new[] { newPlayer });
                     if (originalCameraRemoved)
-                    {
-                        await Task.Delay(50);
                         contract.CreatePlayerCamera.Invoke(null, new[] { originalPlayer });
-                    }
-                    TryDispose(newPlayer);
                     if (!inventoryLease.Rollback())
                         throw new InvalidOperationException("recovery failed and profile inventory rollback was rejected");
                 }
             }
+        }
+
+        async Task WaitForCameraRemoval(object player)
+        {
+            object gameObject = ReadProperty(player, "gameObject");
+            Type cameraType = contract.DestroyPlayerCamera.DeclaringType;
+            MethodInfo getComponent = gameObject?.GetType().GetMethod("GetComponent", new[] { typeof(Type) });
+            Type unityObject = cameraType;
+            while (unityObject != null && unityObject.FullName != "UnityEngine.Object") unityObject = unityObject.BaseType;
+            MethodInfo isAlive = unityObject?.GetMethod("op_Implicit", BindingFlags.Static | BindingFlags.Public, null, new[] { unityObject }, null);
+            if (gameObject == null || cameraType == null || getComponent == null || isAlive == null)
+                throw new InvalidOperationException("camera destruction verification contract is unavailable");
+            for (int attempt = 0; attempt < 20; attempt++)
+            {
+                object component = getComponent.Invoke(gameObject, new object[] { cameraType });
+                if (component == null || !(isAlive.Invoke(null, new[] { component }) is bool alive) || !alive) return;
+                await Task.Delay(16);
+            }
+            throw new InvalidOperationException("previous player camera was not destroyed within the bounded frame wait");
         }
 
         static void ValidateAttachment(object gameWorld, object newPlayer)

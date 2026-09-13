@@ -51,6 +51,8 @@ public sealed class PaymentReservationService(ProfileHelper profiles)
             {
                 "reserve" => Reserve(sessionId, key, request.Cost),
                 "commit" => Commit(key),
+                "finalize" => Finalize(key),
+                "release" => Release(key),
                 "refund" => Refund(key),
                 _ => new(false, false, 0, "invalid action")
             };
@@ -91,10 +93,26 @@ public sealed class PaymentReservationService(ProfileHelper profiles)
 
     PaymentResponse Commit(string key)
     {
-        if (!reservations.TryRemove(key, out Reservation? reservation)) return new(false, false, 0, "reservation missing");
+        if (!reservations.TryGetValue(key, out Reservation? reservation)) return new(false, false, 0, "reservation missing");
+        reservation.Committed = true;
+        return new(true, true, reservation.Cost, "committed");
+    }
+
+    PaymentResponse Finalize(string key)
+    {
+        if (!reservations.TryGetValue(key, out Reservation? reservation) || !reservation.Committed)
+            return new(false, false, 0, "committed reservation missing");
+        reservation.Finalized = true;
+        return new(true, true, reservation.Cost, "finalized");
+    }
+
+    PaymentResponse Release(string key)
+    {
+        if (!reservations.TryGetValue(key, out Reservation? reservation) || !reservation.Finalized || !reservations.TryRemove(key, out _))
+            return new(false, false, 0, "finalized reservation missing");
         foreach (Debit debit in reservation.Debits.Where(value => (value.Item.Upd?.StackObjectsCount ?? 0) <= 0))
             reservation.Items.Remove(debit.Item);
-        return new(true, true, reservation.Cost, "committed");
+        return new(true, true, reservation.Cost, "released");
     }
 
     PaymentResponse Refund(string key)
@@ -121,7 +139,14 @@ public sealed class PaymentReservationService(ProfileHelper profiles)
     }
 
     sealed record Debit(Item Item, int Original);
-    sealed record Reservation(int Cost, List<Item> Items, List<Debit> Debits);
+    sealed class Reservation(int cost, List<Item> items, List<Debit> debits)
+    {
+        public int Cost { get; } = cost;
+        public List<Item> Items { get; } = items;
+        public List<Debit> Debits { get; } = debits;
+        public bool Committed { get; set; }
+        public bool Finalized { get; set; }
+    }
 }
 
 [Injectable]
@@ -142,6 +167,8 @@ public sealed class ArmamentReservationService(ProfileHelper profiles, ItemHelpe
             {
                 "reserve" => Reserve(sessionId, key, request.EligibleTemplates),
                 "commit" => Commit(key),
+                "finalize" => Finalize(key),
+                "release" => Release(key),
                 "refund" => Refund(key),
                 _ => new(false, false, "invalid action", null)
             };
@@ -183,7 +210,25 @@ public sealed class ArmamentReservationService(ProfileHelper profiles, ItemHelpe
         return new(true, true, "reserved", nodes);
     }
 
-    ArmamentResponse Commit(string key) => reservations.TryRemove(key, out _) ? new(true, true, "committed", null) : new(false, false, "reservation missing", null);
+    ArmamentResponse Commit(string key)
+    {
+        if (!reservations.TryGetValue(key, out Reservation? reservation)) return new(false, false, "reservation missing", null);
+        reservation.Committed = true;
+        return new(true, true, "committed", null);
+    }
+
+    ArmamentResponse Finalize(string key)
+    {
+        if (!reservations.TryGetValue(key, out Reservation? reservation) || !reservation.Committed)
+            return new(false, false, "committed reservation missing", null);
+        reservation.Finalized = true;
+        return new(true, true, "finalized", null);
+    }
+
+    ArmamentResponse Release(string key) =>
+        reservations.TryGetValue(key, out Reservation? reservation) && reservation.Finalized && reservations.TryRemove(key, out _)
+            ? new(true, true, "released", null)
+            : new(false, false, "finalized reservation missing", null);
 
     ArmamentResponse Refund(string key)
     {
@@ -204,7 +249,14 @@ public sealed class ArmamentReservationService(ProfileHelper profiles, ItemHelpe
         return false;
     }
 
-    sealed record Reservation(List<Item> Inventory, List<Item> Items, List<ArmamentNode> Nodes);
+    sealed class Reservation(List<Item> inventory, List<Item> items, List<ArmamentNode> nodes)
+    {
+        public List<Item> Inventory { get; } = inventory;
+        public List<Item> Items { get; } = items;
+        public List<ArmamentNode> Nodes { get; } = nodes;
+        public bool Committed { get; set; }
+        public bool Finalized { get; set; }
+    }
 }
 
 [Injectable(TypePriority = OnLoadOrder.Routers + 1)]

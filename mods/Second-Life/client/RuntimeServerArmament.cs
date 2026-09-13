@@ -12,6 +12,7 @@ namespace Admiral.SecondLife.Client
         const string Route = "/second-life/v1/armament";
         readonly string token;
         bool active;
+        bool committed;
 
         RuntimeServerArmamentReservation(string token, RuntimeArmament armament, bool active)
         {
@@ -52,6 +53,21 @@ namespace Admiral.SecondLife.Client
             if (!active) return;
             if (!Send("commit", token, string.Empty, out ArmamentResponse response, out string failure) || !response.Reserved)
                 throw new InvalidOperationException("armament commit failed: " + failure);
+            committed = true;
+        }
+
+        internal void FinalizeReservation()
+        {
+            if (!active) return;
+            string failure = null;
+            if (!committed || !Send("finalize", token, string.Empty, out ArmamentResponse response, out failure) || !response.Reserved)
+                throw new InvalidOperationException("armament finalization failed: " + failure);
+        }
+
+        internal void ReleaseReservation()
+        {
+            if (!active) return;
+            Send("release", token, string.Empty, out _, out _);
             active = false;
         }
 

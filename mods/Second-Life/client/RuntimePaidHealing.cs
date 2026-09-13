@@ -59,7 +59,7 @@ namespace Admiral.SecondLife.Client
 
         internal void Rollback()
         {
-            if (!committed) RuntimeServerPayment.Refund(reservationToken);
+            RuntimeServerPayment.Refund(reservationToken);
             foreach (MoneyDebit debit in debits) WriteField(debit.Item, "StackObjectsCount", debit.OriginalCount);
             applied = false;
         }
@@ -73,13 +73,20 @@ namespace Admiral.SecondLife.Client
             Type manipulator = FindType("EFT.InventoryLogic.ItemManipulator");
             MethodInfo remove = manipulator?.GetMethods(BindingFlags.Static | BindingFlags.Public)
                 .SingleOrDefault(method => method.Name == "Remove" && method.GetParameters().Length == 3);
-            if (controller == null || remove == null) return;
-            foreach (MoneyDebit debit in debits.Where(value => value.OriginalCount == value.Amount))
+            if (controller != null && remove != null)
             {
-                try { remove.Invoke(null, new[] { debit.Item, controller, (object)false }); }
-                catch { }
+                foreach (MoneyDebit debit in debits.Where(value => value.OriginalCount == value.Amount))
+                {
+                    try { remove.Invoke(null, new[] { debit.Item, controller, (object)false }); }
+                    catch { }
+                }
             }
+            string failure = null;
+            if (!committed || !RuntimeServerPayment.Finalize(reservationToken, out failure))
+                throw new InvalidOperationException(failure ?? "payment finalization failed");
         }
+
+        internal void ReleaseDebit() => RuntimeServerPayment.Release(reservationToken);
 
         internal static bool TryShowNativeConfirmation(int cost, bool canAfford, Action accept, Action cancel, out string failure)
         {
