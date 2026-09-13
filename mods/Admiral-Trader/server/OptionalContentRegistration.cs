@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using SPTarkov.Common.Models.Logging;
 using SPTarkov.DI.Annotations;
@@ -123,6 +124,9 @@ public sealed class OptionalContentRegistration(
 
 public sealed record OptionalCashTrade
 {
+    [JsonPropertyName("cashReductionRub")]
     public int CashReductionRub { get; init; }
+
+    [JsonPropertyName("reward")]
     public required Reward Reward { get; init; }
 }

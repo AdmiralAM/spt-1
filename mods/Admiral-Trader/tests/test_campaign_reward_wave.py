@@ -68,6 +68,8 @@ class CampaignRewardWaveTests(unittest.TestCase):
         self.assertIn("continue;", source)
         self.assertIn("cash.Value = reduced", source)
         self.assertIn("success.Add(reward)", source)
+        self.assertIn('[JsonPropertyName("cashReductionRub")]', source)
+        self.assertIn('[JsonPropertyName("reward")]', source)
 
     def test_early_weapon_rewards_are_complete_cash_trades(self):
         for quest_id, trade in self.early.items():
