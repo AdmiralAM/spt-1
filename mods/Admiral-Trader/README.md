@@ -53,6 +53,8 @@ This is the complete M7 content candidate for the later fresh-profile campaign r
 
 The active weapon campaign uses two paced lanes with 40 assignments in total, broad native SPT 4.1.5 coverage, no model-to-single-map lock, and 50 verified WTT Armory/Content Backport alternatives. WTT remains optional: every objective has a complete native weapon pool and no WTT quest gates the campaign.
 
+Campaign rewards now include 20 progressive native field-support trades, four early complete weapons, ten Natalya signature presets and 16 currently verified B&A&HB wrist/belt/head-band/container trades. Each trade replaces a bounded part of the quest's rouble payout instead of stacking free value; optional rewards leave the original cash untouched when their template is absent.
+
 Install, replacement and clean-removal instructions are in `docs/INSTALL.md`. The canonical runtime directory is `Admiral Trader`, matching the established installation. Replacement tooling removes the obsolete `Admiral-Trader` alias so two copies of the same persistent trader identity cannot load together.
 
 Relationship progression uses the existing Admiral loyalty thresholds: LL2 requires level 15 and 0.10 standing, LL3 requires level 25 and 0.30, and LL4 requires level 35 and 0.55. White, yellow and blue signalling flares provide finite specialist availability at those tiers. The existing MS2000 marker offer keeps its ID and ₽16,500 price while requester-local stock/buy limits rise from 12/4 at LL1 to 16/6, 20/8 and 24/10. The projection modifies only SPT's profile-scoped assort response; it never mutates the global trader table.

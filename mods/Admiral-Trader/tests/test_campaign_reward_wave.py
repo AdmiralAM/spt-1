@@ -16,6 +16,7 @@ class CampaignRewardWaveTests(unittest.TestCase):
         cls.manifest = load("manifests/campaign-reward-wave.json")
         cls.signature = load("db/rewards/natalya-signature-replacements.json")
         cls.early = load("db/rewards/early-weapon-reward-trades.json")
+        cls.field_support = load("db/rewards/field-support-reward-trades.json")
         cls.belt = load("db/rewards/belt-container-reward-trades.json")
         cls.quests = {}
         for path in (ROOT / "db/quests").glob("*.json"):
@@ -26,13 +27,27 @@ class CampaignRewardWaveTests(unittest.TestCase):
         self.assertEqual(self.manifest["status"], "runtime-materialized")
         self.assertEqual(self.manifest["coreSignaturePresetRewards"], 10)
         self.assertEqual(self.manifest["earlyCompleteWeaponRewardTrades"], 4)
+        self.assertEqual(self.manifest["nativeFieldSupportRewardTrades"], 20)
         self.assertEqual(self.manifest["optionalBeltEquipmentRewardTrades"], 32)
         self.assertEqual(self.manifest["directBeltProductRewardTrades"], 16)
         self.assertEqual(self.manifest["additionalBeltPackCandidateRewardTrades"], 16)
         self.assertFalse(self.manifest["requiredDependencies"])
         self.assertEqual(len(self.signature), 10)
         self.assertEqual(len(self.early), 4)
+        self.assertEqual(len(self.field_support), 20)
         self.assertEqual(len(self.belt), 32)
+        self.assertEqual(
+            self.manifest["fieldSupportTrades"],
+            [
+                {
+                    "questId": quest_id,
+                    "tpl": trade["reward"]["items"][0]["_tpl"],
+                    "name": trade["name"],
+                    "cashReductionRub": trade["cashReductionRub"],
+                }
+                for quest_id, trade in self.field_support.items()
+            ],
+        )
 
         early_levels = []
         for quest_id in self.belt:
@@ -93,6 +108,41 @@ class CampaignRewardWaveTests(unittest.TestCase):
             cash = next(row for row in quest["rewards"]["Success"] if row.get("items", [{}])[0].get("_tpl") == RUB)
             self.assertGreater(cash["value"], trade["cashReductionRub"])
             self.assertGreater(len(trade["reward"]["items"]), 1)
+
+    def test_field_support_rewards_are_native_bounded_cash_trades(self):
+        expected_templates = {
+            "544fb45d4bdc2dee738b4568", "545cdae64bdc2d39198b4568",
+            "5648a69d4bdc2ded0b8b457b", "5648a7494bdc2d9d488b4583",
+            "590c657e86f77412b013051d", "590c678286f77426c9660122",
+            "5aa2ba71e5b5b000137b758f", "5b432b965acfc47a8774094e",
+            "5c0e530286f7747fa1419862", "5c0e531d86f7747fa23f4d42",
+            "5c0e533786f7747fa23f4d47", "5c0e534186f7747fa1419867",
+            "5d02778e86f774203e7dedbe",
+            "5d02797c86f774203f38e30a", "5e4bfc1586f774264f7582d3",
+            "5e9dcf5986f7746c417435b3",
+            "60098ad7c2240c0fe85c570a",
+        }
+        actual_templates = set()
+        for quest_id, trade in self.field_support.items():
+            quest = self.quests[quest_id]
+            cash = next(row for row in quest["rewards"]["Success"] if row.get("items", [{}])[0].get("_tpl") == RUB)
+            self.assertGreater(cash["value"], trade["cashReductionRub"])
+            self.assertEqual(trade["reward"]["value"], 1)
+            self.assertEqual(len(trade["reward"]["items"]), 1)
+            self.assertEqual(trade["reward"]["items"][0]["_id"], trade["reward"]["target"])
+            actual_templates.add(trade["reward"]["items"][0]["_tpl"])
+        self.assertEqual(actual_templates, expected_templates)
+
+    def test_reward_layers_do_not_compete_for_the_same_quest(self):
+        layers = {
+            "signature": set(self.signature),
+            "early": set(self.early),
+            "field-support": set(self.field_support),
+            "belt": set(self.belt),
+        }
+        for index, left in enumerate(layers):
+            for right in list(layers)[index + 1:]:
+                self.assertFalse(layers[left] & layers[right], f"{left} and {right} overlap")
 
 
 if __name__ == "__main__":
