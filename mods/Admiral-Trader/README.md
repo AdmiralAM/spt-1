@@ -10,7 +10,7 @@ Admiral Trader has **one active workstream**:
 - current development/validation baseline: **SPT 4.1.5**;
 - runtime metadata compatibility range: **`~4.1.0`**;
 - stable gameplay baseline: **`0.2.0`**;
-- active content-expansion candidate: **`0.3.0-rc`**, 172 core quests / 82 finite offers, plus 10 optional Icebreaker quests when its verified runtime is present;
+- stable campaign release: **`0.3.0`**, 172 core quests / 82 finite offers, plus 10 optional Icebreaker quests when its verified runtime is present;
 - historical frozen `0.1.0`: `053a62ff5f1cb545f13bc89a96bba3acd319a823`, 31 runtime quests / 11 finite offers;
 - QuestManiac/Andrudis research archive: **#115**.
 
@@ -43,9 +43,9 @@ Expected lifecycle:
 - **M4 — Selective external-content absorption**
 - **M5 — Relationship / specialist storefront**
 - **M6 — Playable 0.2.0 baseline hardening**
-- **M7 — Full campaign, retired-source and optional-content absorption — closed in `0.3.0-rc`**
+- **M7 — Full campaign, retired-source and optional-content absorption — closed in `0.3.0`**
 - **M8 — Admiral insurance service — closed**: native SPT insurance with relationship-scaled prices, 90% return chance, a fast 6–12 hour return window, 120-hour storage and authored EN/RU messages; the existing trader identity owns every return.
-- **M9 — Editorial, technical and balance audit — closed in `0.3.0-rc`**
+- **M9 — Editorial, technical and balance audit — closed in `0.3.0`**
 - **Final gate — coherent fresh-profile acceptance and stable release**
 
 Current runtime shape: **172 core quests** (72 validated foundation/rotation quests plus 100 authored story quests across ten map chains), **82 finite offers** (37 core/relationship/milestone offers, 10 story-finale unlocks and 35 Natalya weapon presets). Eighteen story beats use Natalya as a specialist inside Admiral's campaign; no second trader or external Natalya dependency is created. Verified Icebreaker 1.1.0 installations conditionally add the separate ten-operation **Boreas Protocol** chain, bringing the runtime total to 182 without changing the core graph.

@@ -1,6 +1,6 @@
 # Admiral Trader changelog
 
-## 0.3.0-rc — Natalya absorption
+## 0.3.0 — stable campaign and storefront
 
 - Materializes ten connected map stories (100 quests) with native SPT exploration, retrieval, placement, combat and survival conditions; total runtime scope is 172 quests.
 - Integrates Natalya as an in-engine specialist across 18 story beats while preserving her 35 absorbed native weapon presets and avoiding a second trader/dependency.

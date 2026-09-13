@@ -1,4 +1,4 @@
-name: Admiral Trader 0.3.0 RC + Economy SPT 4.1.5
+name: Admiral Suite: Trader 0.3.0 stable + Economy 0.1.0 preview
 
 on:
   workflow_dispatch:
@@ -110,7 +110,7 @@ jobs:
       - name: Upload combined install-ready ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: Admiral-Trader-0.3.0-Economy-0.1.0-SPT415-RC-${{ github.event.pull_request.head.sha || github.sha }}
+          name: Admiral-Suite-Trader-0.3.0-STABLE-Economy-0.1.0-PREVIEW-SPT415-${{ github.event.pull_request.head.sha || github.sha }}
           path: |
             build/combined-rc/*.zip
             build/combined-rc/*.zip.sha256

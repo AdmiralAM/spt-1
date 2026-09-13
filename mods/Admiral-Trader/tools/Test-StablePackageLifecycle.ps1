@@ -26,7 +26,7 @@ if (@(Get-ChildItem (Join-Path $canonical 'manifests') -File).Count -ne 4) { thr
 
 $manifest = Get-Content (Join-Path $canonical 'manifests/runtime-manifest.json') -Raw | ConvertFrom-Json
 if ($manifest.version -ne '0.3.0' -or $manifest.sptCompatibility -ne '~4.1.0') { throw 'Staged version/compatibility metadata drifted.' }
-if ($manifest.registrationEnabled -ne $true -or $manifest.releaseChannel -ne 'release-candidate' -or $manifest.publicationMode -ne 'release-candidate') { throw 'Staged release gate is not the active M7 candidate line.' }
+if ($manifest.registrationEnabled -ne $true -or $manifest.releaseChannel -ne 'stable' -or $manifest.publicationMode -ne 'stable') { throw 'Staged package is not the stable Trader line.' }
 if ($manifest.sourceHeadSha -ne $ExpectedSourceHead.ToLowerInvariant()) { throw 'Staged manifest source HEAD mismatch.' }
 
 $provenancePath = Join-Path $candidate 'admiral-trader-provenance.json'

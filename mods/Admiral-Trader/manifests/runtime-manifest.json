@@ -6,7 +6,7 @@
   "sptCompatibility": "~4.1.0",
   "targetSptVersion": "4.1.5",
   "publishedApiCompileBaseline": "4.1.5",
-  "releaseChannel": "release-candidate",
+  "releaseChannel": "stable",
   "registrationEnabled": true,
   "insurance": {
     "nativeLifecycle": true,

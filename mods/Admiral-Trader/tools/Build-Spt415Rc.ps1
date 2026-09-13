@@ -36,7 +36,7 @@ foreach ($entry in $expectedRuntime.GetEnumerator()) {
 
 $runtimeManifestPath = Join-Path $traderRoot 'manifests/runtime-manifest.json'
 $runtimeManifest = Get-Content $runtimeManifestPath -Raw | ConvertFrom-Json
-if ($runtimeManifest.schemaVersion -ne 2 -or $runtimeManifest.version -ne '0.3.0' -or $runtimeManifest.sptCompatibility -ne '~4.1.0' -or $runtimeManifest.releaseChannel -ne 'release-candidate') { throw 'Trader release-candidate metadata drift.' }
+if ($runtimeManifest.schemaVersion -ne 2 -or $runtimeManifest.version -ne '0.3.0' -or $runtimeManifest.sptCompatibility -ne '~4.1.0' -or $runtimeManifest.releaseChannel -ne 'stable') { throw 'Trader stable metadata drift.' }
 if ($runtimeManifest.targetSptVersion -ne '4.1.5') { throw "Trader runtime target drift: $($runtimeManifest.targetSptVersion)" }
 if ($runtimeManifest.publishedApiCompileBaseline -ne '4.1.5') { throw 'Trader published API baseline drift.' }
 if ($runtimeManifest.registrationEnabled -ne $true) { throw 'Published source must keep the persistent Admiral trader registration enabled.' }
@@ -93,7 +93,7 @@ $dll = Join-Path $traderRoot 'server/bin/Release/net10.0/Admiral Trader Server.d
 if (-not (Test-Path $dll -PathType Leaf)) { throw "Compiled Trader DLL is missing: $dll" }
 $dllHash = (Get-FileHash $dll -Algorithm SHA256).Hash.ToLowerInvariant()
 
-$packageRoot = Join-Path $OutputDirectory "Admiral-Trader-0.3.0-SPT415-RC-$sourceHead"
+$packageRoot = Join-Path $OutputDirectory "Admiral-Trader-0.3.0-SPT415-STABLE-$sourceHead"
 $modTarget = Join-Path $packageRoot 'SPT_Runtime/user/mods/Admiral Trader'
 if (Test-Path $packageRoot) { Remove-Item $packageRoot -Recurse -Force }
 New-Item $modTarget -ItemType Directory -Force | Out-Null
@@ -113,7 +113,7 @@ Copy-Item (Join-Path $traderRoot 'docs/POLISHING.md') (Join-Path $modTarget 'POL
 $stagedManifestPath = Join-Path $modTarget 'manifests/runtime-manifest.json'
 $stagedManifest = Get-Content $stagedManifestPath -Raw | ConvertFrom-Json
 $stagedManifest.registrationEnabled = $true
-$stagedManifest | Add-Member -NotePropertyName publicationMode -NotePropertyValue 'release-candidate' -Force
+$stagedManifest | Add-Member -NotePropertyName publicationMode -NotePropertyValue 'stable' -Force
 $stagedManifest | Add-Member -NotePropertyName sourceHeadSha -NotePropertyValue $sourceHead -Force
 $stagedManifest | ConvertTo-Json -Depth 20 | Set-Content $stagedManifestPath -Encoding utf8
 
@@ -131,7 +131,7 @@ $provenance = [ordered]@{
     product = 'Admiral Trader'
     version = '0.3.0'
     sptCompatibility = '~4.1.0'
-    releaseChannel = 'release-candidate'
+    releaseChannel = 'stable'
     targetSptVersion = '4.1.5'
     sourceHeadSha = $sourceHead
     authority = 'single live Admiral Trader implementation PR exact head'

@@ -81,7 +81,7 @@ Required proof before any direct profile write:
 ## Runtime evidence status
 
 - SPT 4.1.3/4.1.4 logs and builds remain historical evidence only.
-- The active `0.3.0-rc` source compiles against the verified SPT 4.1.5 runtime input.
+- The stable `0.3.0` source compiles against the verified SPT 4.1.5 runtime input.
 - The manual combined workflow builds the exact Trader + Economy HEAD, runs deterministic suites and completes an isolated server-start smoke before publishing its install-ready artifact.
 - Runtime metadata remains `~4.1.0`; exact 4.1.5 validation is reproducibility evidence rather than a patch lock.
 
