@@ -1,66 +1,38 @@
-name: B&A&HB Operational Access RC
-
-# Deliberate user-requested RC publication branch, not an ordinary PR upload.
-# No other branch or module can trigger this package build.
+name: 'B&A&HB Integrated Access RC'
 on:
   push:
-    branches: ['fix/bahb-equipped-belt-operational-access']
-    paths:
-      - 'mods/SPT-Belt-Armband-Inventory/operational-hotfix/**'
-      - 'mods/SPT-Belt-Armband-Inventory/operational-hotfix-tests/**'
-      - '.github/workflows/belt-operational-access.yml'
+    branches: [fix/bahb-equipped-belt-operational-access]
+    paths: ['mods/SPT-Belt-Armband-Inventory/integrated-repair/**', '.github/workflows/belt-operational-access.yml']
   workflow_dispatch:
-
 permissions:
   contents: read
-
 concurrency:
-  group: bahb-operational-access-${{ github.ref }}
+  group: bahb-integrated-repair-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   candidate:
-    runs-on: windows-latest
-    timeout-minutes: 10
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.sha }}
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Shared policy and adapter-shape regressions
-        shell: pwsh
-        run: dotnet run --project mods/SPT-Belt-Armband-Inventory/operational-hotfix-tests/BAndHB.OperationalAccess.Tests.csproj -c Release
-      - name: Build exact overlay against real BepInEx and Harmony
-        shell: pwsh
+      - name: Compile primary-assembly integration input
+        run: dotnet build mods/SPT-Belt-Armband-Inventory/integrated-repair/Runtime/IntegratedBeltAccess.csproj -c Release -warnaserror
+      - name: Build reproducible private-binary integrator
         run: |
-          New-Item -ItemType Directory -Force deps | Out-Null
-          Invoke-WebRequest 'https://github.com/BepInEx/BepInEx/releases/download/v5.4.23.5/BepInEx_win_x64_5.4.23.5.zip' -OutFile deps/bepinex.zip
-          Expand-Archive deps/bepinex.zip -DestinationPath deps -Force
-          dotnet build mods/SPT-Belt-Armband-Inventory/operational-hotfix/BAndHB.OperationalAccess.csproj -c Release -warnaserror
-          if ($LASTEXITCODE -ne 0) { throw 'Overlay build failed' }
-      - name: Package requested RC without replacing private runtime
-        shell: pwsh
+          dotnet publish mods/SPT-Belt-Armband-Inventory/integrated-repair/Builder/Builder.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o artifact/integrator
+          cp mods/SPT-Belt-Armband-Inventory/integrated-repair/Runtime/bin/Release/netstandard2.1/BAndHB.Integration.BuildInput.dll artifact/integrator/
+          echo '${{ github.sha }}' > artifact/integrator/SOURCE-SHA.txt
+      - name: Verify exact SPT input and inspect native access signatures
         run: |
-          $root = 'artifact/BAndHB-Operational-Access-RC1'
-          New-Item -ItemType Directory -Force "$root/BepInEx/plugins" | Out-Null
-          $src = 'mods/SPT-Belt-Armband-Inventory/operational-hotfix'
-          $dll = "$root/BepInEx/plugins/BAndHB.OperationalAccess.dll"
-          Copy-Item "$src/bin/Release/netstandard2.1/BAndHB.OperationalAccess.dll" $dll
-          Copy-Item "$src/README.md" "$root/README.md"
-          $hash = (Get-FileHash $dll -Algorithm SHA256).Hash.ToLowerInvariant()
-          $sha = '${{ github.sha }}'
-          $version = [System.Reflection.AssemblyName]::GetAssemblyName((Resolve-Path $dll)).Version.ToString()
-          if ($version -ne '0.3.0.1') { throw "Overlay version mismatch: $version" }
-          @("SourceSha=$sha", 'Artifact=BAndHB-Operational-Access-RC1', 'Status=RC-PHYSICAL-NOT-TESTED', 'TargetBaseline=SPT-4.1.5', 'ClientOverlayVersion=0.3.0.1', 'RequiredBaseClientSha256=ca2774ba4fc6cc1183863b8f008916f40a78e2b517e4934344286e233c26453a', "OverlaySha256=$hash", 'OriginalClientServerConfigBundlesProfiles=unchanged') | Set-Content "$root/BUILD-INFO.txt" -Encoding utf8NoBOM
-          if ((Get-ChildItem "$root/BepInEx/plugins" -File).Count -ne 1) { throw 'Unexpected extra runtime file' }
-          if (Test-Path "$root/user") { throw 'Overlay must not replace server state' }
-          Write-Host "Verified overlay SHA256=$hash exactHead=$sha"
-      - name: Upload user-requested runtime candidate
+          curl -fL --retry 2 'https://github.com/SP-Tushonka/build/releases/download/4.1.5/SPT-4.1.5-40743-7d7add5.7z' -o /tmp/spt.7z
+          echo '5cc04274c88115730fe982fd12c7525d57e5fc64b6b7271ab3929383e3ac4432  /tmp/spt.7z' | sha256sum -c -
+          7z x /tmp/spt.7z -o/tmp/spt >/dev/null
+          find /tmp/spt -name 'Assembly-CSharp.dll' -print -exec artifact/integrator/BAndHB.Integrator inspect '{}' \;
+      - name: Upload reproducible private integration builder
         uses: actions/upload-artifact@v4
         with:
-          name: BAndHB-Operational-Access-RC1
-          path: artifact/BAndHB-Operational-Access-RC1
-          if-no-files-found: error
+          name: BAndHB-Integrated-RC2-BuildKit
+          path: artifact/integrator
           retention-days: 7
