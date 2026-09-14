@@ -90,7 +90,9 @@ namespace SPTItemIntelligence
             SummaryLine = allocation == null ? string.Empty :
                 (allocation.Coverage == RequirementCoverage.NotNeeded ? GameUiText.T("Not Needed", "Не нужен") : allocation.Coverage == RequirementCoverage.Enough ? GameUiText.T("Enough", "Достаточно") : GameUiText.T("Need More ×", "Нужно ещё ×") + allocation.Missing.ToString(CultureInfo.InvariantCulture)) +
                 (allocation.MustKeep ? GameUiText.T(" · Keep ×", " · Оставить ×") + allocation.Keep.ToString(CultureInfo.InvariantCulture) : string.Empty);
-            SummaryOwnedLine = GameUiText.T("Owned ×", "В наличии ×") + OwnedCount.ToString(CultureInfo.InvariantCulture) + GameUiText.T(" · FIR ×", " · Найдено в рейде ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture);
+            SummaryOwnedLine = GameUiText.T("Owned ×", "В наличии ×") + OwnedCount.ToString(CultureInfo.InvariantCulture);
+            OwnedBreakdownLine = GameUiText.T("FIR ×", "Из рейда ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture) +
+                GameUiText.T(" · non-FIR ×", " · не из рейда ×") + (OwnedCount - OwnedFoundInRaid).ToString(CultureInfo.InvariantCulture);
             string ownedLine = OwnedFoundInRaid > 0
                 ? GameUiText.T("Owned ×", "В наличии ×") + OwnedCount.ToString(CultureInfo.InvariantCulture) + GameUiText.T(" · FIR ×", " · Найдено в рейде ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture)
                 : CountLine(GameUiText.T("Owned", "В наличии"), OwnedCount);
@@ -128,6 +130,7 @@ namespace SPTItemIntelligence
         public ItemRequirementAllocation Allocation { get; }
         public string SummaryLine { get; }
         public string SummaryOwnedLine { get; }
+        public string OwnedBreakdownLine { get; }
         public string Primary { get; }
         public string Secondary { get; }
         public string Status { get; }
@@ -195,6 +198,7 @@ namespace SPTItemIntelligence
 
             if (TryLine(SummaryLine, requestedIndex, ref current, out found)) return found;
             if (SummaryLine.Length > 0 && TryLine(SummaryOwnedLine, requestedIndex, ref current, out found)) return found;
+            if (mode == ItemTooltipMode.Full && SummaryLine.Length > 0 && TryLine(OwnedBreakdownLine, requestedIndex, ref current, out found)) return found;
 
             if (mode == ItemTooltipMode.Full)
             {

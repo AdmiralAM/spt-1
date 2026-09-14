@@ -32,8 +32,8 @@ static class Phase35AmandsSenseRuntimeAdapterTests
         Expect(adapter.Contains("icon_quest.png") && adapter.Contains("icon_barter_building.png") && adapter.Contains("icon_info.png"),
             "the adapter reuses Sense-owned runtime sprites instead of copying or shipping its assets", ref assertions);
         Expect(adapter.Contains("ledger.Observe(id, template, stack, fir)") &&
-               adapter.Contains("if (itemId.Length > 0 && pickedItemIds.Remove(itemId)) ledger.Remove(itemId);") &&
-               adapter.Contains("void ResetRaid() { ledger.Reset(); pickedItemIds.Clear(); }"),
+               adapter.Contains("pickedItemIds.Remove(itemId) && ledger.Remove(itemId)") &&
+               adapter.Contains("ledger.Reset();") && adapter.Contains("pickedItemIds.Clear();"),
             "successive pickup, returned loot and raid reset update reservations without polling", ref assertions);
         Expect(settings.Contains("config.Bind(\"Amands Sense\", \"Integration\", true") &&
                settings.Contains("config.Bind(\"Amands Sense\", \"Required Items\", true") &&

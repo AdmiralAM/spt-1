@@ -16,6 +16,7 @@ namespace SPTItemIntelligence
         readonly ItemPresentationStore store;
         readonly ItemHoverTextCache textCache;
         readonly Func<string, ItemHoverText> fallbackFactory;
+        readonly RaidRequirementLedger raidLedger;
         ItemHoverText current = ItemHoverText.Empty;
         object hoveredView;
         object pinnedView;
@@ -34,12 +35,14 @@ namespace SPTItemIntelligence
             ItemIntelligenceUiSettings settings,
             ItemPresentationStore store,
             ItemHoverTextCache textCache,
-            Func<string, ItemHoverText> fallbackFactory)
+            Func<string, ItemHoverText> fallbackFactory,
+            RaidRequirementLedger raidLedger = null)
         {
             this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
             this.store = store ?? throw new ArgumentNullException(nameof(store));
             this.textCache = textCache ?? throw new ArgumentNullException(nameof(textCache));
             this.fallbackFactory = fallbackFactory;
+            this.raidLedger = raidLedger;
         }
 
         public ItemHoverText Current => Volatile.Read(ref current);
@@ -224,6 +227,7 @@ namespace SPTItemIntelligence
             ItemPresentationState presentation = safeIndex.Get(templateId);
             if (presentation != ItemPresentationState.Empty)
             {
+                if (raidLedger != null) presentation = raidLedger.Apply(presentation);
                 if (presentation.Price != null && stackCount > 1)
                     presentation = new ItemPresentationState(
                         presentation.TemplateId,

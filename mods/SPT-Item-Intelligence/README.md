@@ -1,6 +1,6 @@
 # Item Intelligence Admiral
 
-Consolidated item-intelligence package for SPT 4.1.x. Stable release: **v1.2.0**.
+Consolidated item-intelligence package for SPT 4.1.x. Current development release: **v1.2.1**.
 
 ## Stable authority
 
@@ -63,16 +63,18 @@ The marker uses original embedded raster artwork with selectable frame and symbo
 
 In v1.2, optional Amands Sense integration carries the same cached unmet-requirement decision into loose world loot. Sense keeps ownership of its valuable/category/wishlist presentation; Item Intelligence changes only items that still need to be picked up for an active quest, current hideout upgrade, or future quest. The adapter reuses sprites already loaded by Sense at runtime, adds no required dependency, performs no world polling, and is independently switchable in F12.
 
+In v1.2.1, successful pickups observed through that event-driven integration are folded into the same authoritative owned count during the raid, including full stack sizes and FIR state. Normal presentation stays concise with one combined total; Full adds the FIR/non-FIR split. Item-instance IDs make repeated Sense callbacks idempotent, and dropping an observed pickup removes it from the raid ledger.
+
 Normal shows the selected F12 value source without per-slot value, plus compact requirement and craft/barter relevance. Detailed adds one nearest concrete target. Full shows both trader and flea values, per-slot value, every concrete target, craft and barter counts. The rounded card auto-fits short content up to its configurable maximum width.
 
 Background ownership is cooperative. Item Intelligence restores the accepted Item Valuation palette through the same authoritative template `BackgroundColor` path that EFT renders natively. Ordinary items use value tiers and ammunition uses penetration tiers; values below the first threshold retain their original background. Keys remain under BetterKeys ownership and CompatibilityHighlighter/EFT keeps ownership of temporary compatibility outlines.
 
 ## Version and naming
 
-The official product name is **Item Intelligence Admiral**. The current stable release is **v1.2.0**.
+The official product name is **Item Intelligence Admiral**. The current development release is **v1.2.1**.
 
-- stable client: **Item Intelligence Admiral v1.2.0**;
-- stable server: **Item Intelligence Admiral Server v1.2.0**.
+- client: **Item Intelligence Admiral v1.2.1**;
+- server: **Item Intelligence Admiral Server v1.2.1**.
 
 The existing source directory, namespace, GUID, endpoint, and `runtime-item-intelligence` branch are retained as technical compatibility identifiers. They are not the product name and should not be renamed casually because doing so would create unnecessary migration risk.
 

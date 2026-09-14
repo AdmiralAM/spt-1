@@ -56,6 +56,43 @@ namespace SPTItemIntelligence
             return ItemIntelligenceDecisionEngine.Evaluate(baseline, candidateFoundInRaid, count.Owned, count.FoundInRaid);
         }
 
+        public ItemPresentationState Apply(ItemPresentationState baseline)
+        {
+            if (baseline == null || baseline == ItemPresentationState.Empty || baseline.Requirement == null)
+                return baseline ?? ItemPresentationState.Empty;
+
+            RaidTemplateCount raid = Get(baseline.TemplateId);
+            if (raid.Owned == 0) return baseline;
+
+            ItemRequirementState requirement = baseline.Requirement;
+            ItemRequirementAllocation source = requirement.Allocation;
+            ItemRequirementAllocation combined = new ItemRequirementAllocation(
+                checked(source.Owned + raid.Owned),
+                checked(source.OwnedFir + raid.FoundInRaid),
+                source.NowRequired,
+                source.LaterRequired,
+                source.HideoutRequired,
+                source.NowFirRequired,
+                source.LaterFirRequired);
+            ItemRequirementDecision decision = combined.Keep > 0
+                ? ItemRequirementDecision.Keep
+                : combined.Surplus > 0 ? ItemRequirementDecision.SafeToSell : ItemRequirementDecision.None;
+            ItemRequirementState adjusted = new ItemRequirementState(
+                requirement.TemplateId,
+                combined.Owned,
+                requirement.QuestNeededNow,
+                requirement.QuestNeededLater,
+                requirement.HideoutNeeded,
+                combined.Keep,
+                combined.Surplus,
+                requirement.Reasons,
+                decision,
+                requirement.HoldReason,
+                requirement.Details,
+                combined);
+            return new ItemPresentationState(baseline.TemplateId, adjusted, baseline.Price);
+        }
+
         public RaidTemplateCount Get(string templateId)
         {
             string template = RequirementContribution.NormalizeId(templateId);

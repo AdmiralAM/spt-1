@@ -5,7 +5,7 @@ using BepInEx;
 
 namespace SPTItemIntelligence
 {
-    [BepInPlugin("com.admiralam.spt.itemintelligence", "Item Intelligence Admiral", "1.2.0")]
+    [BepInPlugin("com.admiralam.spt.itemintelligence", "Item Intelligence Admiral", "1.2.1")]
     [BepInDependency("xyz.drakia.Sense", BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
@@ -20,6 +20,7 @@ namespace SPTItemIntelligence
         int moduleKey = -1;
         int dataKey = -1;
         readonly object loadLock = new object();
+        readonly RaidRequirementLedger raidLedger = new RaidRequirementLedger();
 
         internal static ItemPresentationStore PresentationStore { get; private set; }
 
@@ -31,7 +32,7 @@ namespace SPTItemIntelligence
             GameUiText.SetRussian(GameLanguageDetector.DetectRussian());
             uiSettings = new ItemIntelligenceUiSettings(Config);
             ItemHoverTextCache textCache = new ItemHoverTextCache(valueModeProvider: () => uiSettings.ValueMode, modulesProvider: () => uiSettings.Modules);
-            hoverSink = new ItemHoverOverlaySink(uiSettings, PresentationStore, textCache, CreateFallback);
+            hoverSink = new ItemHoverOverlaySink(uiSettings, PresentationStore, textCache, CreateFallback, raidLedger);
             hoverSink.InventoryOpened += RefreshInventorySession;
             uiSettings.Changed += hoverSink.Invalidate;
             hoverController = new ItemHoverRuntimeController(PresentationStore, hoverSink, textCache, CreateFallback);
@@ -44,7 +45,7 @@ namespace SPTItemIntelligence
             uiSettings.Changed += ApplyModules;
             ApplyModules();
 
-            Logger.LogInfo("Item Intelligence Admiral v1.2 development loaded; UI language=" + (GameUiText.Russian ? "ru" : "en"));
+            Logger.LogInfo("Item Intelligence Admiral v1.2.1 loaded; UI language=" + (GameUiText.Russian ? "ru" : "en"));
         }
 
         void ApplyModules()
@@ -55,7 +56,8 @@ namespace SPTItemIntelligence
                 if (senseIntegration == null)
                 {
                     senseIntegration = new AmandsSenseIntegration(uiSettings, PresentationStore,
-                        message => Logger.LogInfo(message), message => Logger.LogWarning(message));
+                        message => Logger.LogInfo(message), message => Logger.LogWarning(message),
+                        raidLedger, () => hoverSink.Invalidate());
                     senseIntegration.TryInstall();
                 }
             }

@@ -12,20 +12,23 @@ namespace SPTItemIntelligence
         static AmandsSenseIntegration active;
         readonly ItemIntelligenceUiSettings settings;
         readonly ItemPresentationStore store;
-        readonly RaidRequirementLedger ledger = new RaidRequirementLedger();
+        readonly RaidRequirementLedger ledger;
+        readonly Action raidChanged;
         readonly HashSet<string> pickedItemIds = new HashSet<string>(StringComparer.Ordinal);
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
         object harmony;
-        ItemPresentationIndex observedIndex;
 
         public AmandsSenseIntegration(ItemIntelligenceUiSettings settings, ItemPresentationStore store,
-            Action<string> logInfo, Action<string> logWarning)
+            Action<string> logInfo, Action<string> logWarning,
+            RaidRequirementLedger ledger = null, Action raidChanged = null)
         {
             this.settings = settings;
             this.store = store;
             this.logInfo = logInfo;
             this.logWarning = logWarning;
+            this.ledger = ledger ?? new RaidRequirementLedger();
+            this.raidChanged = raidChanged;
         }
 
         public bool IsInstalled { get; private set; }
@@ -74,14 +77,13 @@ namespace SPTItemIntelligence
         {
             if (!settings.SenseIntegration || !settings.SenseRequiredItems || senseItem == null) return;
             ItemPresentationIndex index = store.Current;
-            if (!ReferenceEquals(index, observedIndex)) { observedIndex = index; ResetRaid(); }
             object observed = Member(senseItem, "observedLootItem");
             object item = Member(observed, "Item");
             string templateId = Text(Member(item, "TemplateId", "Tpl"));
             string itemId = Text(Member(item, "Id", "ID"));
             int stack = Math.Max(1, Number(Member(item, "StackObjectsCount"), 1));
             bool fir = Flag(Member(item, "SpawnedInSession"));
-            if (itemId.Length > 0 && pickedItemIds.Remove(itemId)) ledger.Remove(itemId);
+            if (itemId.Length > 0 && pickedItemIds.Remove(itemId) && ledger.Remove(itemId) && raidChanged != null) raidChanged();
 
             ItemPresentationState state = index.Get(templateId);
             ItemRequirementAllocation allocation = state.Requirement == null ? null : state.Requirement.Allocation;
@@ -111,11 +113,17 @@ namespace SPTItemIntelligence
             if (id.Length == 0 || template.Length == 0) return;
             int stack = Math.Max(1, Number(Member(item, "StackObjectsCount"), 1));
             bool fir = Flag(Member(item, "SpawnedInSession"));
-            ledger.Observe(id, template, stack, fir);
+            if (ledger.Observe(id, template, stack, fir) && raidChanged != null) raidChanged();
             pickedItemIds.Add(id);
         }
 
-        void ResetRaid() { ledger.Reset(); pickedItemIds.Clear(); }
+        void ResetRaid()
+        {
+            int revision = ledger.Revision;
+            ledger.Reset();
+            pickedItemIds.Clear();
+            if (ledger.Revision != revision && raidChanged != null) raidChanged();
+        }
 
         static string Label(SenseRequirementPresentation value)
         {
