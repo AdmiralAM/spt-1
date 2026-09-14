@@ -1,4 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net10.0</TargetFramework><EnableDefaultCompileItems>false</EnableDefaultCompileItems><ImplicitUsings>disable</ImplicitUsings></PropertyGroup>
-<ItemGroup><Compile Include="../operational-hotfix/BeltAccessCore.cs" Link="BeltAccessCore.cs" /><Compile Include="CoreTests.cs" /></ItemGroup>
+<ItemGroup>
+<Compile Include="../operational-hotfix/BeltAccessCore.cs" Link="BeltAccessCore.cs" />
+<Compile Include="../operational-hotfix/Plugin.cs" Link="ProductionAdapter.cs" />
+<Compile Include="CoreTests.cs" /><Compile Include="AdapterShapeTests.cs" />
+</ItemGroup>
 </Project>

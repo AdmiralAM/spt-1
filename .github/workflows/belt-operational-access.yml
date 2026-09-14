@@ -1,8 +1,10 @@
 name: B&A&HB Operational Access RC
 
+# Deliberate user-requested RC publication branch, not an ordinary PR upload.
+# No other branch or module can trigger this package build.
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: ['fix/bahb-equipped-belt-operational-access']
     paths:
       - 'mods/SPT-Belt-Armband-Inventory/operational-hotfix/**'
       - 'mods/SPT-Belt-Armband-Inventory/operational-hotfix-tests/**'
@@ -13,7 +15,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: bahb-operational-access-${{ github.event.pull_request.number || github.ref }}
+  group: bahb-operational-access-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -23,14 +25,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          ref: ${{ github.sha }}
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
-      - name: Shared policy regressions
+      - name: Shared policy and adapter-shape regressions
         shell: pwsh
         run: dotnet run --project mods/SPT-Belt-Armband-Inventory/operational-hotfix-tests/BAndHB.OperationalAccess.Tests.csproj -c Release
-      - name: Build exact overlay
+      - name: Build exact overlay against real BepInEx and Harmony
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force deps | Out-Null
@@ -48,7 +50,9 @@ jobs:
           Copy-Item "$src/bin/Release/netstandard2.1/BAndHB.OperationalAccess.dll" $dll
           Copy-Item "$src/README.md" "$root/README.md"
           $hash = (Get-FileHash $dll -Algorithm SHA256).Hash.ToLowerInvariant()
-          $sha = '${{ github.event.pull_request.head.sha || github.sha }}'
+          $sha = '${{ github.sha }}'
+          $version = [System.Reflection.AssemblyName]::GetAssemblyName((Resolve-Path $dll)).Version.ToString()
+          if ($version -ne '0.3.0.1') { throw "Overlay version mismatch: $version" }
           @("SourceSha=$sha", 'Artifact=BAndHB-Operational-Access-RC1', 'Status=RC-PHYSICAL-NOT-TESTED', 'TargetBaseline=SPT-4.1.5', 'ClientOverlayVersion=0.3.0.1', 'RequiredBaseClientSha256=ca2774ba4fc6cc1183863b8f008916f40a78e2b517e4934344286e233c26453a', "OverlaySha256=$hash", 'OriginalClientServerConfigBundlesProfiles=unchanged') | Set-Content "$root/BUILD-INFO.txt" -Encoding utf8NoBOM
           if ((Get-ChildItem "$root/BepInEx/plugins" -File).Count -ne 1) { throw 'Unexpected extra runtime file' }
           if (Test-Path "$root/user") { throw 'Overlay must not replace server state' }
