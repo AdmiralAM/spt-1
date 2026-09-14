@@ -11,25 +11,32 @@ concurrency:
   cancel-in-progress: true
 jobs:
   candidate:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
+      - name: Test production integration and emitted native-signature wrappers
+        run: dotnet run --project mods/SPT-Belt-Armband-Inventory/integrated-repair/Tests/Tests.csproj -c Release
       - name: Compile primary-assembly integration input
         run: dotnet build mods/SPT-Belt-Armband-Inventory/integrated-repair/Runtime/IntegratedBeltAccess.csproj -c Release -warnaserror
       - name: Build reproducible private-binary integrator
+        shell: pwsh
         run: |
           dotnet publish mods/SPT-Belt-Armband-Inventory/integrated-repair/Builder/Builder.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o artifact/integrator
-          cp mods/SPT-Belt-Armband-Inventory/integrated-repair/Runtime/bin/Release/netstandard2.1/BAndHB.Integration.BuildInput.dll artifact/integrator/
-          echo '${{ github.sha }}' > artifact/integrator/SOURCE-SHA.txt
+          if ($LASTEXITCODE -ne 0) { throw 'Integrator build failed' }
+          Copy-Item mods/SPT-Belt-Armband-Inventory/integrated-repair/Runtime/bin/Release/netstandard2.1/BAndHB.Integration.BuildInput.dll artifact/integrator/
+          '${{ github.sha }}' | Set-Content artifact/integrator/SOURCE-SHA.txt
       - name: Verify exact SPT input and inspect native access signatures
+        shell: pwsh
         run: |
-          curl -fL --retry 2 'https://github.com/SP-Tushonka/build/releases/download/4.1.5/SPT-4.1.5-40743-7d7add5.7z' -o /tmp/spt.7z
-          echo '5cc04274c88115730fe982fd12c7525d57e5fc64b6b7271ab3929383e3ac4432  /tmp/spt.7z' | sha256sum -c -
-          7z x /tmp/spt.7z -o/tmp/spt >/dev/null
-          find /tmp/spt -name 'Assembly-CSharp.dll' -print -exec artifact/integrator/BAndHB.Integrator inspect '{}' \;
+          Invoke-WebRequest 'https://github.com/SP-Tushonka/build/releases/download/4.1.5/SPT-4.1.5-40743-7d7add5.7z' -OutFile spt.7z
+          if ((Get-FileHash spt.7z -Algorithm SHA256).Hash.ToLowerInvariant() -ne '5cc04274c88115730fe982fd12c7525d57e5fc64b6b7271ab3929383e3ac4432') { throw 'SPT hash mismatch' }
+          7z x spt.7z -ospt | Out-Null
+          foreach ($dll in Get-ChildItem spt -Recurse -Filter Assembly-CSharp.dll) {
+            dotnet run --project mods/SPT-Belt-Armband-Inventory/integrated-repair/Builder/Builder.csproj -c Release -- inspect $dll.FullName
+          }
       - name: Upload reproducible private integration builder
         uses: actions/upload-artifact@v4
         with:
