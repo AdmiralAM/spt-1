@@ -24,6 +24,13 @@ STORY_UNLOCKS = {
     "Лаборатория": ("5c94bbff86f7747ee735c08f", 125000, 1, 1),
 }
 
+QUEST_LOCATIONS = {
+    "Эпицентр": "Sandbox", "Таможня": "bigmap", "Лес": "Woods",
+    "Развязка": "Interchange", "Берег": "Shoreline", "Резерв": "RezervBase",
+    "Маяк": "Lighthouse", "Улицы": "TarkovStreets", "Завод": "factory4_day",
+    "Лаборатория": "laboratory",
+}
+
 
 def hid(value: str) -> str:
     return hashlib.sha256(("admiral-story-runtime:" + value).encode()).hexdigest()[:24]
@@ -286,17 +293,17 @@ def main() -> None:
         raise SystemExit(f"SPT 4.1.5 item IDs missing: {missing}")
 
     chains = authored["chains"]
-    final_ids = {chain["chain"]: chain["quests"][-1]["id"] for chain in chains}
+    quest_ids = {chain["chain"]: {q["order"]: q["id"] for q in chain["quests"]} for chain in chains}
     runtime_rows, en, ru = [], {}, {}
     for chain in chains:
         for quest_index, q in enumerate(chain["quests"]):
             start = [level_condition(q["id"], q["level"])]
-            prereqs = ([q["prerequisite"]] if q["prerequisite"] else []) + [final_ids[row["chain"]] for row in q["crossChainPrerequisites"]]
+            prereqs = ([q["prerequisite"]] if q["prerequisite"] else []) + [quest_ids[row["chain"]][row["questOrder"]] for row in q["crossChainPrerequisites"]]
             start.extend(prerequisite(q["id"], target, index + 1) for index, target in enumerate(prereqs))
             finish, objective_en, objective_ru = build_finish(q, chain, names_en, names_ru)
             q["runtimeFinish"] = finish
             specialist = (chain["chain"], q["order"]) in NATALYA_QUESTS
-            template = {"QuestName": q["name"], "_id": q["id"], "canShowNotificationsInGame": True, "conditions": {"AvailableForFinish": finish, "AvailableForStart": start, "Fail": []}, "description": q["id"] + " description", "failMessageText": q["id"] + " failMessageText", "name": q["id"] + " name", "note": q["id"] + " note", "traderId": TRADER, "location": "any", "image": "/files/quest/icon/5a27cafa86f77424e20615d6.jpg", "type": "PickUp" if any(o["kind"] == "retrieveQuestItem" for o in q["objectives"]) else ("Elimination" if any(o["kind"] == "eliminate" for o in q["objectives"]) else "Exploration"), "isKey": False, "restartable": False, "instantComplete": False, "secretQuest": False, "startedMessageText": q["id"] + " startedMessageText", "successMessageText": q["id"] + " successMessageText", "acceptPlayerMessage": q["id"] + " acceptPlayerMessage", "acceptanceAndFinishingSource": "eft", "declinePlayerMessage": q["id"] + " declinePlayerMessage", "completePlayerMessage": q["id"] + " completePlayerMessage", "changeQuestMessageText": q["id"] + " changeQuestMessageText", "rewards": {"Started": [], "Success": rewards(q, chain["map"]), "Fail": []}, "side": "Pmc", "status": 0, "progressSource": "eft", "gameModes": [], "rankingModes": [], "arenaLocations": []}
+            template = {"QuestName": q["name"], "_id": q["id"], "canShowNotificationsInGame": True, "conditions": {"AvailableForFinish": finish, "AvailableForStart": start, "Fail": []}, "description": q["id"] + " description", "failMessageText": q["id"] + " failMessageText", "name": q["id"] + " name", "note": q["id"] + " note", "traderId": TRADER, "location": QUEST_LOCATIONS[chain["map"]], "image": "/files/quest/icon/5a27cafa86f77424e20615d6.jpg", "type": "PickUp" if any(o["kind"] == "retrieveQuestItem" for o in q["objectives"]) else ("Elimination" if any(o["kind"] == "eliminate" for o in q["objectives"]) else "Exploration"), "isKey": False, "restartable": False, "instantComplete": False, "secretQuest": False, "startedMessageText": q["id"] + " startedMessageText", "successMessageText": q["id"] + " successMessageText", "acceptPlayerMessage": q["id"] + " acceptPlayerMessage", "acceptanceAndFinishingSource": "eft", "declinePlayerMessage": q["id"] + " declinePlayerMessage", "completePlayerMessage": q["id"] + " completePlayerMessage", "changeQuestMessageText": q["id"] + " changeQuestMessageText", "rewards": {"Started": [], "Success": rewards(q, chain["map"]), "Fail": []}, "side": "Pmc", "status": 0, "progressSource": "eft", "gameModes": [], "rankingModes": [], "arenaLocations": []}
             runtime_rows.append((chain, q, template, specialist))
             en_name = f"{CHAIN_EN[chain['chain'] - 1]} {q['order']}: {CODENAMES_EN[chain['chain'] - 1][q['order'] - 1]}"
             next_q = chain["quests"][quest_index + 1] if quest_index + 1 < len(chain["quests"]) else None

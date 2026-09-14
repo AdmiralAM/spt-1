@@ -85,6 +85,44 @@ class QuestQualityRuntimeTests(unittest.TestCase):
             self.assertEqual(quest["QuestName"], title)
             self.assertRegex(title, r"[А-Яа-яЁё]")
 
+    def test_equipment_qualifications_require_combat_and_explain_exact_gear(self):
+        ids = {
+            "4a8f533e1ed458e83b41c01f", "4ab0b49478adb233ae900b33",
+            "ca33fab8b9cc5f5f5ad322c0", "9c35b3ac22ede1a5a79118bc",
+            "ee813142de655daf2dedfebc", "47480d824cea0b80917cafa5",
+        }
+        by_id = {quest["_id"]: quest for quest in self.quests}
+        for qid in ids:
+            counter = by_id[qid]["conditions"]["AvailableForFinish"][0]
+            nested = {row["conditionType"] for row in counter["counter"]["conditions"]}
+            self.assertTrue({"Equipment", "Kills", "Location", "ExitStatus"} <= nested, qid)
+            self.assertTrue(counter["oneSessionOnly"], qid)
+            self.assertIn("Уточнение:", self.locales["ru"][qid + " description"], qid)
+            self.assertIn("Задача:", self.locales["ru"][qid + " description"], qid)
+
+    def test_acoustic_discipline_names_all_five_allowed_headsets_and_woods(self):
+        qid = "8dad0d354ac000b7bbf05b9a"
+        quest = next(q for q in self.quests if q["_id"] == qid)
+        self.assertEqual(quest["location"], "Woods")
+        description = self.locales["ru"][qid + " description"]
+        for name in ("ГСШ-01", "Peltor Tactical Sport", "Walker’s Razor Digital", "OPSMEN Earmor M32", "Peltor ComTac IV Hybrid"):
+            self.assertIn(name, description)
+
+    def test_single_map_runtime_conditions_are_not_presented_as_any_location(self):
+        aliases = {"Sandbox": "Sandbox", "Sandbox_high": "Sandbox", "factory4_day": "factory4_day", "factory4_night": "factory4_day"}
+        for quest in self.quests:
+            locations = []
+            def visit(value):
+                if isinstance(value, dict):
+                    if value.get("conditionType") == "Location": locations.extend(value.get("target", []))
+                    for child in value.values(): visit(child)
+                elif isinstance(value, list):
+                    for child in value: visit(child)
+            visit(quest["conditions"])
+            logical = {aliases.get(value, value) for value in locations}
+            if len(logical) == 1:
+                self.assertNotEqual(quest["location"], "any", quest["_id"])
+
 
 if __name__ == "__main__":
     unittest.main()

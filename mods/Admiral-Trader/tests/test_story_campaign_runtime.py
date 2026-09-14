@@ -27,7 +27,7 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
         self.assertEqual({row["id"] for row in self.runtime["quests"]}, set(self.by_id))
         self.assertTrue(all(q["traderId"] == "d5c27bb3169f8dfbc13f6b69" for q in self.story))
 
-    def test_ten_linear_chains_have_authored_cross_chain_gates(self):
+    def test_ten_chains_overlap_through_authored_campaign_waves(self):
         self.assertEqual(len(self.authored["chains"]), 10)
         for chain in self.authored["chains"]:
             self.assertEqual(len(chain["quests"]), 10)
@@ -35,8 +35,22 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
                 quest = self.by_id[row["id"]]
                 prerequisites = [c["target"] for c in quest["conditions"]["AvailableForStart"] if c["conditionType"] == "Quest"]
                 expected = ([] if index == 0 else [chain["quests"][index - 1]["id"]])
-                expected += [self.authored["chains"][x["chain"] - 1]["quests"][-1]["id"] for x in row["crossChainPrerequisites"]]
+                expected += [self.authored["chains"][x["chain"] - 1]["quests"][x["questOrder"] - 1]["id"] for x in row["crossChainPrerequisites"]]
                 self.assertEqual(prerequisites, expected, row["id"])
+        roots = [chain["quests"][0] for chain in self.authored["chains"][1:]]
+        self.assertTrue(all(max(x["questOrder"] for x in row["crossChainPrerequisites"]) <= 5 for row in roots))
+        self.assertTrue(all(x["questOrder"] < 10 for row in roots for x in row["crossChainPrerequisites"]))
+
+    def test_single_map_story_quests_expose_their_map_in_client_metadata(self):
+        expected = {
+            "Эпицентр": "Sandbox", "Таможня": "bigmap", "Лес": "Woods",
+            "Развязка": "Interchange", "Берег": "Shoreline", "Резерв": "RezervBase",
+            "Маяк": "Lighthouse", "Улицы": "TarkovStreets", "Завод": "factory4_day",
+            "Лаборатория": "laboratory",
+        }
+        for chain in self.authored["chains"]:
+            for row in chain["quests"]:
+                self.assertEqual(self.by_id[row["id"]]["location"], expected[chain["map"]], row["id"])
 
     def test_objective_mix_is_story_led_and_bounded(self):
         kinds = {kind: 0 for kind in ("visit", "retrieveQuestItem", "placeOrMark", "eliminate", "surviveExtract", "handover", "possessAccessKey")}

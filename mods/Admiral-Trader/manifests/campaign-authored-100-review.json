@@ -383,7 +383,7 @@
           "crossChainPrerequisites": [
             {
               "chain": 1,
-              "questOrder": 10
+              "questOrder": 3
             }
           ],
           "risk": "low",
@@ -710,7 +710,7 @@
           "crossChainPrerequisites": [
             {
               "chain": 1,
-              "questOrder": 10
+              "questOrder": 5
             }
           ],
           "risk": "medium",
@@ -1023,7 +1023,7 @@
           "crossChainPrerequisites": [
             {
               "chain": 2,
-              "questOrder": 10
+              "questOrder": 3
             }
           ],
           "risk": "medium",
@@ -1358,7 +1358,7 @@
           "crossChainPrerequisites": [
             {
               "chain": 3,
-              "questOrder": 10
+              "questOrder": 3
             }
           ],
           "risk": "medium",
@@ -1692,11 +1692,11 @@
           "crossChainPrerequisites": [
             {
               "chain": 3,
-              "questOrder": 10
+              "questOrder": 5
             },
             {
               "chain": 9,
-              "questOrder": 10
+              "questOrder": 3
             }
           ],
           "risk": "medium",
@@ -2023,7 +2023,7 @@
           "crossChainPrerequisites": [
             {
               "chain": 6,
-              "questOrder": 10
+              "questOrder": 3
             }
           ],
           "risk": "high",
@@ -2349,11 +2349,11 @@
           "crossChainPrerequisites": [
             {
               "chain": 4,
-              "questOrder": 10
+              "questOrder": 3
             },
             {
               "chain": 5,
-              "questOrder": 10
+              "questOrder": 3
             }
           ],
           "risk": "high",
@@ -2676,7 +2676,7 @@
           "crossChainPrerequisites": [
             {
               "chain": 2,
-              "questOrder": 10
+              "questOrder": 5
             }
           ],
           "risk": "high",
@@ -2999,11 +2999,11 @@
           "crossChainPrerequisites": [
             {
               "chain": 7,
-              "questOrder": 10
+              "questOrder": 3
             },
             {
               "chain": 8,
-              "questOrder": 10
+              "questOrder": 3
             }
           ],
           "risk": "high",
