@@ -14,13 +14,36 @@ string Fingerprint(MethodDefinition m)
  var b=m.Body; string Operand(object o) => o switch { Instruction i => "I"+b.Instructions.IndexOf(i), Instruction[] v => string.Join(",",v.Select(i=>"I"+b.Instructions.IndexOf(i))), ParameterDefinition p=>"P"+p.Index, VariableDefinition v=>"V"+v.Index, MemberReference r=>r.FullName, null=>"", _=>o.ToString() };
  return string.Join("\n",b.Instructions.Select(i=>i.OpCode.Name+" "+Operand(i.Operand)))+string.Join(";",b.Variables.Select(v=>v.VariableType.FullName))+string.Join(";",b.ExceptionHandlers.Select(e=>$"{e.HandlerType}:{Operand(e.TryStart)}:{Operand(e.TryEnd)}:{Operand(e.HandlerStart)}:{Operand(e.HandlerEnd)}:{e.CatchType?.FullName}"));
 }
+// Read-only local diagnostic. Never uploads or changes the supplied game assembly.
+if(args.Length>=2 && args[0]=="dump")
+{
+ using var mod=ModuleDefinition.ReadModule(args[1]);
+ Console.WriteLine("ASSEMBLY "+mod.Assembly.Name+" SHA256="+Hash(args[1]));
+ string typeFilter=args.Length>2?args[2]:"";
+ string[] names=args.Length>3?args[3].Split('|'):Array.Empty<string>();
+ foreach(var t in All(mod).Where(t=>t.FullName.Contains(typeFilter,StringComparison.Ordinal)))
+ {
+  Console.WriteLine("TYPE "+t.FullName+" BASE "+t.BaseType);
+  foreach(var f in t.Fields)Console.WriteLine("FIELD "+f.FullName);
+  foreach(var p in t.Properties)Console.WriteLine("PROPERTY "+p.FullName);
+  foreach(var m in t.Methods.Where(m=>names.Length==0||names.Any(n=>m.Name.Contains(n,StringComparison.Ordinal))))
+  {
+   Console.WriteLine("METHOD "+m.FullName+" TOKEN="+m.MetadataToken);
+   if(!m.HasBody)continue;
+   foreach(var v in m.Body.Variables)Console.WriteLine("LOCAL "+v.Index+" "+v.VariableType);
+   foreach(var i in m.Body.Instructions)Console.WriteLine(i.ToString());
+   foreach(var e in m.Body.ExceptionHandlers)Console.WriteLine("HANDLER "+e.HandlerType+" "+e.TryStart+" -> "+e.HandlerStart);
+  }
+ }
+ return;
+}
 if(args.Length==2 && args[0]=="inspect")
 {
  using var mod=ModuleDefinition.ReadModule(args[1]);
  foreach(var t in All(mod)) foreach(var m in t.Methods) if(new[]{"IsAtReachablePlace","GetAllParentItems","GetItemsInSlots","GetThrowablePriorityGrenadesList","get_Grids","get_Items"}.Contains(m.Name)) Console.WriteLine(m.FullName);
  return;
 }
-if(args.Length!=4) throw new ArgumentException("Usage: input-client.dll build-runtime.dll output-client.dll source-sha; or inspect assembly.dll");
+if(args.Length!=4) throw new ArgumentException("Usage: input-client.dll build-runtime.dll output-client.dll source-sha; inspect assembly.dll; or dump assembly.dll [type-filter] [method-filter|method-filter]");
 if(Hash(args[0])!=InputHash) throw new InvalidOperationException("Unknown input client; no output written.");
 using var basis=ModuleDefinition.ReadModule(args[0],new ReaderParameters{ReadSymbols=false,InMemory=true});
 using var donor=ModuleDefinition.ReadModule(args[1],new ReaderParameters{ReadSymbols=false,InMemory=true});
