@@ -81,6 +81,9 @@ The local-game player dictionary entry is replaced by its captured key rather
 than by an assumed profile key. This prevents a disposed first-life player from
 remaining as a second cleanup entry. If Dynamic Maps is loaded, its existing
 main-player provider is refreshed once after the replacement is committed.
+The first-life player component is disposed without deactivating its GameObject:
+native `Corpse.CreateCorpse` attaches the corpse component to that same object,
+and deactivation would hide the recovered player's original body.
 
 Before detaching the original player, the replacement equipment tree is passed
 through EFT's native `ChangeItemsOperation.LoadBundles` path and awaited. This

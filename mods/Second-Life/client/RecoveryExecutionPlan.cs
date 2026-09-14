@@ -160,7 +160,9 @@ namespace Admiral.SecondLife.Client
                 attached = true;
                 paidHealing.ReleaseDebit();
                 armamentReservation?.ReleaseReservation();
-                TryDeactivate(originalPlayer);
+                // EFT adds Corpse to the original player's own GameObject. Do not
+                // deactivate that object after handoff or the corpse disappears
+                // with it. Player.Dispose preserves PlayerBody when Corpse exists.
                 try { DisposeStrict(originalPlayer); }
                 catch (Exception exception) { trace?.Invoke("Recovery trace: original-player disposal warning: " + Unwrap(exception).Message); }
             }
