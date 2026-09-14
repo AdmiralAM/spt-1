@@ -87,6 +87,7 @@ namespace Admiral.SecondLife.Client
             bool playerDictionaryReplaced = false;
             object playerDictionaryKey = null;
             object gameWorld = ReadProperty(originalPlayer, "GameWorld");
+            object retiredCullingSampler = null;
             if (gameWorld == null) throw new InvalidOperationException("active GameWorld is unavailable");
             Exception failure = null;
             string stage = "inventory-apply";
@@ -104,6 +105,7 @@ namespace Admiral.SecondLife.Client
                 stage = "old-camera-destroy";
                 contract.DestroyPlayerCamera.Invoke(null, new[] { originalPlayer });
                 await WaitForCameraRemoval(originalPlayer);
+                retiredCullingSampler = await RemoveCurrentCullingSampler();
                 ClearCullingCameraState();
                 Trace(stage, gameWorld, newPlayer);
                 stage = "new-player-create";
@@ -138,6 +140,8 @@ namespace Admiral.SecondLife.Client
                 Trace(stage, gameWorld, newPlayer);
                 stage = "new-player-spawn";
                 contract.Spawn.Invoke(localGame, null);
+                stage = "new-culling-ready";
+                await WaitForReplacementCullingSampler(retiredCullingSampler);
                 paidHealing.Apply(newPlayer);
                 ValidateAttachment(gameWorld, newPlayer);
                 Trace(stage, gameWorld, newPlayer);
@@ -284,6 +288,34 @@ namespace Admiral.SecondLife.Client
             }
             if (matches != 1) throw new InvalidOperationException("original local-player dictionary entry count is " + matches);
             return match;
+        }
+
+        async Task<object> RemoveCurrentCullingSampler()
+        {
+            object sampler = contract.CullingSamplerInstance.GetValue(null, null);
+            if (sampler == null) throw new InvalidOperationException("active cross-scene culling sampler is unavailable");
+            Type unityObject = sampler.GetType();
+            while (unityObject != null && unityObject.FullName != "UnityEngine.Object") unityObject = unityObject.BaseType;
+            MethodInfo destroy = unityObject?.GetMethod("Destroy", BindingFlags.Static | BindingFlags.Public, null, new[] { unityObject }, null);
+            if (destroy == null) throw new InvalidOperationException("cross-scene culling sampler destruction contract is unavailable");
+            destroy.Invoke(null, new[] { sampler });
+            for (int attempt = 0; attempt < 120; attempt++)
+            {
+                await Task.Delay(16);
+                if (contract.CullingSamplerInstance.GetValue(null, null) == null) return sampler;
+            }
+            throw new InvalidOperationException("retired cross-scene culling sampler did not shut down within the bounded frame wait");
+        }
+
+        async Task WaitForReplacementCullingSampler(object retiredSampler)
+        {
+            for (int attempt = 0; attempt < 120; attempt++)
+            {
+                await Task.Delay(16);
+                object sampler = contract.CullingSamplerInstance.GetValue(null, null);
+                if (sampler != null && !ReferenceEquals(sampler, retiredSampler)) return;
+            }
+            throw new InvalidOperationException("replacement cross-scene culling sampler did not initialize within the bounded frame wait");
         }
 
         void ClearCullingCameraState()

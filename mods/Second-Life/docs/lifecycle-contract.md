@@ -69,9 +69,10 @@ Traversal of nested containers must be bounded and cycle-safe.
 
 During a player handoff, delayed cleanup of the original `GamePlayerOwner`
 must preserve a different replacement player already stored in
-`GamePlayerOwner.MyPlayer`. The camera handoff preserves the cross-scene culling
-sampler, clears only the retired camera records and immediately registers the
-replacement FPS camera. A failed handoff clears replacement camera records
+`GamePlayerOwner.MyPlayer`. The camera handoff retires and awaits shutdown of
+the old cross-scene sampler, completes and clears the retired camera records,
+registers the replacement FPS camera, then awaits its new sampler before commit.
+A failed handoff clears replacement camera records
 before native finalization; it never recreates an FPS camera for the already-dead
 original player. Runtime trace entries identify the last completed handoff stage
 and the local/global/main-player references.

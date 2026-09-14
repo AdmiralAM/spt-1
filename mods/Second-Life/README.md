@@ -39,8 +39,8 @@ pockets instance. The paid-healing gate mirrors EFT's native
 HP price, Therapist loyalty coefficient, free-heal trial and Charisma discount.
 The local SPT server reserves rubles from the authoritative stash, including
 nested wallets, then commits after recovery or refunds on decline and failure.
-The camera handoff preserves the map-wide PerfectCulling sampler, resets only
-the retired FPS-camera entries and registers the replacement camera. When
+The camera handoff retires the old PerfectCulling sampler, resets the retired
+FPS-camera entries, registers the replacement camera and awaits its new sampler. When
 Dynamic Maps is installed, its main-player marker is refreshed after handoff.
 
 The exact pre-runtime settlement and neighboring-module audit is recorded in
