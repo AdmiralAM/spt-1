@@ -27,19 +27,16 @@ jobs:
           dotnet publish mods/SPT-Belt-Armband-Inventory/integrated-repair/Builder/Builder.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o artifact/integrator
           if ($LASTEXITCODE -ne 0) { throw 'Integrator build failed' }
           Copy-Item mods/SPT-Belt-Armband-Inventory/integrated-repair/Runtime/bin/Release/netstandard2.1/BAndHB.Integration.BuildInput.dll artifact/integrator/
+          $refs = Join-Path $env:DOTNET_ROOT 'packs/NETStandard.Library.Ref/2.1.0/ref/netstandard2.1'
+          if (-not (Test-Path "$refs/netstandard.dll")) { throw 'Exact netstandard2.1 reference assembly is missing' }
+          Copy-Item "$refs/*.dll" artifact/integrator/
           '${{ github.sha }}' | Set-Content artifact/integrator/SOURCE-SHA.txt
-      - name: Verify exact SPT input and inspect native access signatures
-        shell: pwsh
-        run: |
-          Invoke-WebRequest 'https://github.com/SP-Tushonka/build/releases/download/4.1.5/SPT-4.1.5-40743-7d7add5.7z' -OutFile spt.7z
-          if ((Get-FileHash spt.7z -Algorithm SHA256).Hash.ToLowerInvariant() -ne '5cc04274c88115730fe982fd12c7525d57e5fc64b6b7271ab3929383e3ac4432') { throw 'SPT hash mismatch' }
-          7z x spt.7z -ospt | Out-Null
-          foreach ($dll in Get-ChildItem spt -Recurse -Filter Assembly-CSharp.dll) {
-            dotnet run --project mods/SPT-Belt-Armband-Inventory/integrated-repair/Builder/Builder.csproj -c Release -- inspect $dll.FullName
-          }
+          Write-Host 'Run integrator from this directory so Cecil resolves enum constants against netstandard2.1. Reference assemblies are BUILD-TIME ONLY and must not be installed in SPT.'
+          Write-Host 'Native EFT Assembly-CSharp.dll is not included in the verified official SPT-only archive. Tests above use explicit fixtures, not native EFT execution.'
       - name: Upload reproducible private integration builder
         uses: actions/upload-artifact@v4
         with:
           name: BAndHB-Integrated-RC2-BuildKit
           path: artifact/integrator
           retention-days: 7
+          if-no-files-found: error
