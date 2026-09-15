@@ -13,6 +13,7 @@ static class Phase36RaidInventoryTooltipTests
             ItemRequirementDecision.Keep, "Current quest (FIR)", null, allocation);
         ItemPresentationState baseline = new ItemPresentationState("tpl", requirement, null);
         RaidRequirementLedger ledger = new RaidRequirementLedger();
+        ledger.BeginRaid();
         ledger.Observe("raid-stack", "tpl", 3, true);
 
         ItemPresentationState combined = ledger.Apply(baseline);
@@ -22,11 +23,15 @@ static class Phase36RaidInventoryTooltipTests
             "combined stash and raid stock drives the final state", ref assertions);
 
         ItemHoverText text = new ItemHoverTextFormatter().Format(new ItemHoverState(combined));
-        Expect(text.SummaryOwnedLine == "Owned ×5", "regular modes expose one combined owned count", ref assertions);
+        Expect(text.SummaryOwnedLine == "In raid ×3", "regular modes expose only current-raid stock", ref assertions);
+        Expect(text.TotalOwnedLine == "Total (stash + raid) ×5", "Full preserves the combined stash and raid total", ref assertions);
         Expect(text.OwnedBreakdownLine == "FIR ×4 · non-FIR ×1", "Full owns the FIR/non-FIR breakdown", ref assertions);
         Expect(text.RequirementBreakdownLine == "Required: FIR ×2 · any ×2", "Full separates FIR-only from unrestricted demand", ref assertions);
         Expect(!Contains(text, ItemTooltipMode.Normal, "non-FIR"), "Normal omits the breakdown", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "FIR ×4 · non-FIR ×1"), "Full renders the breakdown", ref assertions);
+        Expect(!Contains(text, ItemTooltipMode.Normal, "Total (stash + raid) ×5") &&
+               Contains(text, ItemTooltipMode.Full, "Total (stash + raid) ×5"),
+            "combined stock is available only from Full", ref assertions);
         return assertions;
     }
 

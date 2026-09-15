@@ -232,7 +232,10 @@ namespace SPTItemIntelligence
                     presentation = new ItemPresentationState(
                         presentation.TemplateId,
                         presentation.Requirement,
-                        ItemPriceEvaluator.WithStackCount(presentation.Price, stackCount));
+                        ItemPriceEvaluator.WithStackCount(presentation.Price, stackCount),
+                        presentation.RaidOwnedCount,
+                        presentation.RaidFoundInRaidCount,
+                        presentation.RaidSessionActive);
                 return textCache.Get(new ItemHoverState(presentation), safeIndex) ?? ItemHoverText.Empty;
             }
 

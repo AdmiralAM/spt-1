@@ -10,6 +10,15 @@ namespace SPTItemIntelligence
 
         public int Revision { get; private set; }
         public int ItemCount => items.Count;
+        public bool IsRaidSessionActive { get; private set; }
+
+        public bool BeginRaid()
+        {
+            if (IsRaidSessionActive) return false;
+            IsRaidSessionActive = true;
+            Revision++;
+            return true;
+        }
 
         public bool Observe(string itemId, string templateId, int stackCount, bool foundInRaid)
         {
@@ -44,9 +53,10 @@ namespace SPTItemIntelligence
 
         public void Reset()
         {
-            if (items.Count == 0 && totals.Count == 0) return;
+            if (items.Count == 0 && totals.Count == 0 && !IsRaidSessionActive) return;
             items.Clear();
             totals.Clear();
+            IsRaidSessionActive = false;
             Revision++;
         }
 
@@ -62,7 +72,10 @@ namespace SPTItemIntelligence
                 return baseline ?? ItemPresentationState.Empty;
 
             RaidTemplateCount raid = Get(baseline.TemplateId);
-            if (raid.Owned == 0) return baseline;
+            if (raid.Owned == 0)
+                return IsRaidSessionActive
+                    ? new ItemPresentationState(baseline.TemplateId, baseline.Requirement, baseline.Price, 0, 0, true)
+                    : baseline;
 
             ItemRequirementState requirement = baseline.Requirement;
             ItemRequirementAllocation source = requirement.Allocation;
@@ -92,7 +105,8 @@ namespace SPTItemIntelligence
                 requirement.HoldReason,
                 requirement.Details,
                 combined);
-            return new ItemPresentationState(baseline.TemplateId, adjusted, baseline.Price);
+            return new ItemPresentationState(baseline.TemplateId, adjusted, baseline.Price,
+                raid.Owned, raid.FoundInRaid, IsRaidSessionActive);
         }
 
         public RaidTemplateCount Get(string templateId)

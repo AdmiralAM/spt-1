@@ -81,6 +81,7 @@ namespace SPTItemIntelligence
         void Apply(object senseItem)
         {
             if (!settings.SenseIntegration || !settings.SenseRequiredItems || senseItem == null) return;
+            if (ledger.BeginRaid() && raidChanged != null) raidChanged();
             ItemPresentationIndex index = store.Current;
             object observed = Member(senseItem, "observedLootItem");
             object item = Member(observed, "Item");
