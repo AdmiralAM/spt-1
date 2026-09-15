@@ -21,6 +21,8 @@ namespace SPTItemIntelligence
         int dataKey = -1;
         readonly object loadLock = new object();
         readonly RaidRequirementLedger raidLedger = new RaidRequirementLedger();
+        RaidInventoryRuntimeScanner raidInventoryScanner;
+        int lastRaidInventoryScanFrame = -1;
 
         internal static ItemPresentationStore PresentationStore { get; private set; }
 
@@ -34,6 +36,8 @@ namespace SPTItemIntelligence
             ItemHoverTextCache textCache = new ItemHoverTextCache(valueModeProvider: () => uiSettings.ValueMode, modulesProvider: () => uiSettings.Modules);
             hoverSink = new ItemHoverOverlaySink(uiSettings, PresentationStore, textCache, CreateFallback, raidLedger);
             hoverSink.InventoryOpened += RefreshInventorySession;
+            raidInventoryScanner = new RaidInventoryRuntimeScanner(message => Logger.LogInfo(message));
+            hoverSink.RaidInventoryRefreshRequested += RefreshRaidInventory;
             uiSettings.Changed += hoverSink.Invalidate;
             hoverController = new ItemHoverRuntimeController(PresentationStore, hoverSink, textCache, CreateFallback);
             dataBootstrap = new RequirementRuntimeBootstrap(
@@ -57,7 +61,7 @@ namespace SPTItemIntelligence
                 {
                     senseIntegration = new AmandsSenseIntegration(uiSettings, PresentationStore,
                         message => Logger.LogInfo(message), message => Logger.LogWarning(message),
-                        raidLedger, () => hoverSink.Invalidate());
+                        raidLedger, () => hoverSink.Invalidate(), CaptureRaidBaseline);
                     senseIntegration.TryInstall();
                 }
             }
@@ -132,6 +136,19 @@ namespace SPTItemIntelligence
             StartDataLoad();
         }
 
+        void CaptureRaidBaseline()
+        {
+            if (raidInventoryScanner != null) raidInventoryScanner.CaptureBaseline(raidLedger);
+        }
+
+        void RefreshRaidInventory()
+        {
+            int frame = UnityEngine.Time.frameCount;
+            if (frame == lastRaidInventoryScanFrame) return;
+            lastRaidInventoryScanFrame = frame;
+            if (raidInventoryScanner != null && raidInventoryScanner.Refresh(raidLedger) && hoverSink != null) hoverSink.Invalidate();
+        }
+
         void OnGUI()
         {
             if (uiSettings != null && uiSettings.Modules.TrackViews && hoverSink != null) hoverSink.Draw();
@@ -152,6 +169,7 @@ namespace SPTItemIntelligence
             hoverSink = null;
             uiSettings = null;
             senseIntegration = null;
+            raidInventoryScanner = null;
             PresentationStore = null;
         }
     }

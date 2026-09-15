@@ -14,6 +14,7 @@ namespace SPTItemIntelligence
         readonly ItemPresentationStore store;
         readonly RaidRequirementLedger ledger;
         readonly Action raidChanged;
+        readonly Action raidStarted;
         readonly HashSet<string> pickedItemIds = new HashSet<string>(StringComparer.Ordinal);
         readonly Action<string> logInfo;
         readonly Action<string> logWarning;
@@ -22,7 +23,7 @@ namespace SPTItemIntelligence
 
         public AmandsSenseIntegration(ItemIntelligenceUiSettings settings, ItemPresentationStore store,
             Action<string> logInfo, Action<string> logWarning,
-            RaidRequirementLedger ledger = null, Action raidChanged = null)
+            RaidRequirementLedger ledger = null, Action raidChanged = null, Action raidStarted = null)
         {
             this.settings = settings;
             this.store = store;
@@ -30,6 +31,7 @@ namespace SPTItemIntelligence
             this.logWarning = logWarning;
             this.ledger = ledger ?? new RaidRequirementLedger();
             this.raidChanged = raidChanged;
+            this.raidStarted = raidStarted;
         }
 
         public bool IsInstalled { get; private set; }
@@ -81,7 +83,11 @@ namespace SPTItemIntelligence
         void Apply(object senseItem)
         {
             if (!settings.SenseIntegration || !settings.SenseRequiredItems || senseItem == null) return;
-            if (ledger.BeginRaid() && raidChanged != null) raidChanged();
+            if (ledger.BeginRaid())
+            {
+                if (raidStarted != null) raidStarted();
+                if (raidChanged != null) raidChanged();
+            }
             ItemPresentationIndex index = store.Current;
             object observed = Member(senseItem, "observedLootItem");
             object item = Member(observed, "Item");

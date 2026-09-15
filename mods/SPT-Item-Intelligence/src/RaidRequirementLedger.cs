@@ -7,10 +7,12 @@ namespace SPTItemIntelligence
     {
         readonly Dictionary<string, RaidItemRecord> items = new Dictionary<string, RaidItemRecord>(StringComparer.Ordinal);
         readonly Dictionary<string, RaidTemplateCount> totals = new Dictionary<string, RaidTemplateCount>(StringComparer.Ordinal);
+        readonly Dictionary<string, RaidInventoryItemSnapshot> initialInventory = new Dictionary<string, RaidInventoryItemSnapshot>(StringComparer.Ordinal);
 
         public int Revision { get; private set; }
         public int ItemCount => items.Count;
         public bool IsRaidSessionActive { get; private set; }
+        public bool HasInitialInventory { get; private set; }
 
         public bool BeginRaid()
         {
@@ -18,6 +20,42 @@ namespace SPTItemIntelligence
             IsRaidSessionActive = true;
             Revision++;
             return true;
+        }
+
+        public bool CaptureInitialInventory(IEnumerable<RaidInventoryItemSnapshot> snapshot)
+        {
+            if (HasInitialInventory) return false;
+            BeginRaid();
+            initialInventory.Clear();
+            if (snapshot != null)
+                foreach (RaidInventoryItemSnapshot item in snapshot)
+                    if (item != null && item.ItemId.Length > 0) initialInventory[item.ItemId] = item;
+            HasInitialInventory = true;
+            Revision++;
+            return true;
+        }
+
+        public bool ReplaceFromPlayerInventory(IEnumerable<RaidInventoryItemSnapshot> snapshot)
+        {
+            if (!HasInitialInventory) return CaptureInitialInventory(snapshot);
+            Dictionary<string, RaidInventoryItemSnapshot> current = new Dictionary<string, RaidInventoryItemSnapshot>(StringComparer.Ordinal);
+            if (snapshot != null)
+                foreach (RaidInventoryItemSnapshot item in snapshot)
+                    if (item != null && item.ItemId.Length > 0) current[item.ItemId] = item;
+
+            bool changed = false;
+            List<string> removed = new List<string>();
+            foreach (string id in items.Keys) if (!current.ContainsKey(id)) removed.Add(id);
+            for (int i = 0; i < removed.Count; i++) changed |= Remove(removed[i]);
+            foreach (RaidInventoryItemSnapshot item in current.Values)
+            {
+                RaidInventoryItemSnapshot initial;
+                int initialCount = initialInventory.TryGetValue(item.ItemId, out initial) && initial.TemplateId == item.TemplateId
+                    ? initial.StackCount : 0;
+                int acquired = Math.Max(0, item.StackCount - initialCount);
+                changed |= acquired > 0 ? Observe(item.ItemId, item.TemplateId, acquired, item.FoundInRaid) : Remove(item.ItemId);
+            }
+            return changed;
         }
 
         public bool Observe(string itemId, string templateId, int stackCount, bool foundInRaid)
@@ -56,6 +94,8 @@ namespace SPTItemIntelligence
             if (items.Count == 0 && totals.Count == 0 && !IsRaidSessionActive) return;
             items.Clear();
             totals.Clear();
+            initialInventory.Clear();
+            HasInitialInventory = false;
             IsRaidSessionActive = false;
             Revision++;
         }
@@ -135,6 +175,21 @@ namespace SPTItemIntelligence
             public int StackCount { get; }
             public bool FoundInRaid { get; }
         }
+    }
+
+    public sealed class RaidInventoryItemSnapshot
+    {
+        public RaidInventoryItemSnapshot(string itemId, string templateId, int stackCount, bool foundInRaid)
+        {
+            ItemId = string.IsNullOrWhiteSpace(itemId) ? string.Empty : itemId.Trim();
+            TemplateId = RequirementContribution.NormalizeId(templateId);
+            StackCount = Math.Max(0, stackCount);
+            FoundInRaid = foundInRaid;
+        }
+        public string ItemId { get; }
+        public string TemplateId { get; }
+        public int StackCount { get; }
+        public bool FoundInRaid { get; }
     }
 
     public sealed class RaidTemplateCount

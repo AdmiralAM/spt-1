@@ -26,9 +26,11 @@ namespace SPTItemIntelligence
         int renderedInvalidation = -1;
         bool tooltipDrawingDisabled;
         public event Action InventoryOpened;
+        public event Action RaidInventoryRefreshRequested;
         public void OnViewInitialized()
         {
             if (settings.Modules.TrackViews && trackedViews.Count == 0) InventoryOpened?.Invoke();
+            if (settings.Modules.TrackViews) RaidInventoryRefreshRequested?.Invoke();
         }
 
         public ItemHoverOverlaySink(
