@@ -30,10 +30,28 @@ static class Phase37AlternativeQuestPoolTests
         ((object[])((Dictionary<string, object>)((Dictionary<string, object>)quests["q"])["conditions"])["AvailableForFinish"])[0] = Condition(true);
         RequirementIndex fir = RequirementIndexBuilder.Build(new SptRequirementDataProjector().Project(new RequirementDataEnvelope(2, profile, quests, emptyHideout, Array.Empty<object>())));
         Expect(fir.Get("a").Allocation.OwnedFir == 1 && fir.Get("a").Allocation.Missing == 1, "non-FIR alternative cannot fill the shared FIR-only requirement", ref assertions);
+
+        var separateProfile = new Dictionary<string, object>
+        {
+            ["Inventory"] = new Dictionary<string, object> { ["items"] = new object[] { Stack("water", 5, false) } },
+            ["Quests"] = profile["Quests"], ["Hideout"] = profile["Hideout"]
+        };
+        var separateQuest = (Dictionary<string, object>)quests["q"];
+        ((Dictionary<string, object>)separateQuest["conditions"])["AvailableForFinish"] = new object[]
+        {
+            SingleCondition("water", 5), SingleCondition("stew", 5)
+        };
+        RequirementIndex separate = RequirementIndexBuilder.Build(new SptRequirementDataProjector().Project(new RequirementDataEnvelope(3, separateProfile, quests, emptyHideout, Array.Empty<object>())));
+        Expect(separate.Get("water").Allocation.Coverage == RequirementCoverage.Enough,
+            "five waters cover only the water condition", ref assertions);
+        Expect(separate.Get("stew").Allocation.Missing == 5 && separate.Get("stew").Allocation.Coverage == RequirementCoverage.NeedMore,
+            "a separate five-stew condition remains fully required", ref assertions);
         return assertions;
     }
 
     static Dictionary<string, object> Item(string tpl, bool fir) => new Dictionary<string, object> { ["_tpl"] = tpl, ["upd"] = new Dictionary<string, object> { ["StackObjectsCount"] = 1, ["SpawnedInSession"] = fir } };
+    static Dictionary<string, object> Stack(string tpl, int count, bool fir) => new Dictionary<string, object> { ["_tpl"] = tpl, ["upd"] = new Dictionary<string, object> { ["StackObjectsCount"] = count, ["SpawnedInSession"] = fir } };
     static Dictionary<string, object> Condition(bool fir) => new Dictionary<string, object> { ["id"] = "shared", ["conditionType"] = "HandoverItem", ["target"] = new object[] { "a", "b" }, ["value"] = 2, ["onlyFoundInRaid"] = fir };
+    static Dictionary<string, object> SingleCondition(string tpl, int count) => new Dictionary<string, object> { ["id"] = tpl, ["conditionType"] = "HandoverItem", ["target"] = new object[] { tpl }, ["value"] = count, ["onlyFoundInRaid"] = false };
     static void Expect(bool value, string message, ref int assertions) { assertions++; if (!value) throw new InvalidOperationException("Phase 37 assertion failed: " + message); }
 }
