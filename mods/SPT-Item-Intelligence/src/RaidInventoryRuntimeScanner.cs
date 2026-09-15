@@ -14,22 +14,34 @@ namespace SPTItemIntelligence
         public bool CaptureBaseline(RaidRequirementLedger ledger)
         {
             List<RaidInventoryItemSnapshot> items;
-            return ledger != null && TryRead(out items) && ledger.CaptureInitialInventory(items);
+            bool raidActive;
+            return ledger != null && TryRead(out items, out raidActive) && raidActive && ledger.CaptureInitialInventory(items);
         }
 
         public bool Refresh(RaidRequirementLedger ledger)
         {
             List<RaidInventoryItemSnapshot> items;
-            if (ledger == null || !TryRead(out items)) return false;
+            bool raidActive;
+            if (ledger == null) return false;
+            if (!TryRead(out items, out raidActive))
+            {
+                if (!raidActive && ledger.IsRaidSessionActive)
+                {
+                    ledger.Reset();
+                    return true;
+                }
+                return false;
+            }
             bool changed = ledger.ReplaceFromPlayerInventory(items);
             if (System.Threading.Interlocked.Exchange(ref confirmed, 1) == 0 && logInfo != null)
                 logInfo("Item Intelligence player inventory scanner active; records=" + items.Count + ".");
             return changed;
         }
 
-        static bool TryRead(out List<RaidInventoryItemSnapshot> result)
+        static bool TryRead(out List<RaidInventoryItemSnapshot> result, out bool raidActive)
         {
             result = new List<RaidInventoryItemSnapshot>();
+            raidActive = false;
             Type gameWorldType = FindType("EFT.GameWorld");
             Type singletonOpen = FindType("Comfort.Common.Singleton`1");
             if (gameWorldType == null || singletonOpen == null) return false;
@@ -38,6 +50,8 @@ namespace SPTItemIntelligence
             if (instantiated is bool && !(bool)instantiated) return false;
             object world = Member(singleton, "Instance");
             object player = Member(world, "MainPlayer");
+            raidActive = world != null && player != null;
+            if (!raidActive) return false;
             object inventory = Member(player, "Inventory");
             IEnumerable items = Member(inventory, "AllRealPlayerItems") as IEnumerable;
             if (items == null) return false;

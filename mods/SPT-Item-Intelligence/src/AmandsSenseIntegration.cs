@@ -43,13 +43,16 @@ namespace SPTItemIntelligence
             {
                 Assembly sense = FindAssembly("AmandsSense");
                 Type itemType = sense == null ? null : sense.GetType("AmandsSense.Components.AmandsSenseItem", false);
+                Type containerType = sense == null ? null : sense.GetType("AmandsSense.Components.AmandsSenseContainer", false);
                 Type senseClass = sense == null ? null : sense.GetType("AmandsSense.Components.AmandsSenseClass", false);
                 MethodInfo setSense = FindMethod(itemType, "SetSense", 1);
+                MethodInfo setContainerSense = FindMethod(containerType, "SetSense", 1);
                 MethodInfo remove = FindMethod(itemType, "RemoveLootItem", 1);
                 MethodInfo clear = FindMethod(senseClass, "Clear", 0);
-                if (setSense == null || remove == null || clear == null)
+                if (setSense == null || setContainerSense == null || remove == null || clear == null)
                 {
-                    if (logWarning != null) logWarning("Item Intelligence Sense bridge unavailable: SetSense=" + (setSense != null) + ", RemoveLootItem=" + (remove != null) + ", Clear=" + (clear != null));
+                    if (logWarning != null) logWarning("Item Intelligence Sense bridge unavailable: Item.SetSense=" + (setSense != null) +
+                        ", Container.SetSense=" + (setContainerSense != null) + ", RemoveLootItem=" + (remove != null) + ", Clear=" + (clear != null));
                     return false;
                 }
 
@@ -61,6 +64,7 @@ namespace SPTItemIntelligence
 
                 harmony = Activator.CreateInstance(harmonyType, new object[] { HarmonyId });
                 Patch(patch, hmCtor, setSense, null, typeof(AmandsSenseIntegration).GetMethod(nameof(SetSensePostfix), BindingFlags.Static | BindingFlags.NonPublic));
+                Patch(patch, hmCtor, setContainerSense, null, typeof(AmandsSenseIntegration).GetMethod(nameof(SetSensePostfix), BindingFlags.Static | BindingFlags.NonPublic));
                 Patch(patch, hmCtor, remove, typeof(AmandsSenseIntegration).GetMethod(nameof(RemovePrefix), BindingFlags.Static | BindingFlags.NonPublic), null);
                 Patch(patch, hmCtor, clear, null, typeof(AmandsSenseIntegration).GetMethod(nameof(ClearPostfix), BindingFlags.Static | BindingFlags.NonPublic));
                 active = this;
@@ -95,7 +99,7 @@ namespace SPTItemIntelligence
             if (itemId.Length > 0 && pickedItemIds.Remove(itemId) && ledger.Remove(itemId) && raidChanged != null) raidChanged();
 
             List<SenseVisualPolicy> candidates = new List<SenseVisualPolicy>();
-            foreach (object contained in EnumerateItemTree(item))
+            foreach (object contained in EnumerateSenseItemTree(senseItem, item))
             {
                 string templateId = Text(Member(contained, "TemplateId", "Tpl"));
                 if (templateId.Length == 0) continue;
@@ -124,6 +128,27 @@ namespace SPTItemIntelligence
             ApplyLight(Member(senseItem, "light"), preserveIcon ? stock : primary);
             if (settings.SenseRemainingText)
                 ApplyText(Member(senseItem, "typeText"), TwoLineText(policy, primary, stock), Color.white, secondary);
+        }
+
+        static IEnumerable<object> EnumerateSenseItemTree(object senseItem, object looseItem)
+        {
+            HashSet<object> yielded = new HashSet<object>(ReferenceEqualityComparer.Instance);
+            foreach (object value in EnumerateItemTree(looseItem))
+                if (yielded.Add(value)) yield return value;
+
+            // AmandsSense uses a separate component for world containers. Its loot is owned by
+            // LootableContainer.ItemOwner and is therefore not reachable from observedLootItem.
+            object lootableContainer = Member(senseItem, "lootableContainer");
+            object owner = Member(lootableContainer, "ItemOwner", "Owner");
+            object root = Member(owner, "RootItem");
+            foreach (object value in EnumerateItemTree(root))
+                if (yielded.Add(value)) yield return value;
+
+            IEnumerable ownerItems = Member(owner, "Items", "AllItems", "AllRealPlayerItems") as IEnumerable;
+            if (ownerItems == null) yield break;
+            foreach (object owned in ownerItems)
+                foreach (object value in EnumerateItemTree(owned))
+                    if (yielded.Add(value)) yield return value;
         }
 
         static IEnumerable<object> EnumerateItemTree(object root)

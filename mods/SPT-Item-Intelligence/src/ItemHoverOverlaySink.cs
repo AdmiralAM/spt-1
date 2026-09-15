@@ -134,7 +134,15 @@ namespace SPTItemIntelligence
             bool repaint = guiEvent == null || guiEvent.type == EventType.Repaint;
             bool click = guiEvent != null && guiEvent.type == EventType.MouseDown && guiEvent.button == 0;
             if (!repaint && !click) return;
-            if (repaint) RefreshTrackedViewsIfNeeded();
+            if (repaint)
+            {
+                // ItemView initialization only tells us that an inventory window opened. A pickup can
+                // change the player's inventory while that same window stays open, so refresh lazily
+                // while an Item Intelligence marker/card is actually being inspected.
+                if (pinnedView != null || Volatile.Read(ref hoveredView) != null)
+                    RaidInventoryRefreshRequested?.Invoke();
+                RefreshTrackedViewsIfNeeded();
+            }
             if (tooltipDrawingDisabled || !settings.Modules.Tooltips) return;
 
             object activeView = pinnedView ?? Volatile.Read(ref hoveredView);

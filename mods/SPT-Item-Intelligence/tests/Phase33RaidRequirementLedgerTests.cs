@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using SPTItemIntelligence;
 
 static class Phase33RaidRequirementLedgerTests
@@ -46,7 +47,21 @@ static class Phase33RaidRequirementLedgerTests
         inventory.ReplaceFromPlayerInventory(new[] { new RaidInventoryItemSnapshot("brought", "tpl", 2, false) });
         Expect(inventory.Get("tpl").Owned == 0,
             "authoritative inventory refresh removes dropped acquired items", ref assertions);
+        string scanner = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "mods", "SPT-Item-Intelligence", "src", "RaidInventoryRuntimeScanner.cs"));
+        Expect(scanner.Contains("if (!raidActive && ledger.IsRaidSessionActive)") && scanner.Contains("ledger.Reset();"),
+            "leaving GameWorld clears raid-only counts before stash presentation", ref assertions);
         return assertions;
+    }
+
+    static string FindRepositoryRoot()
+    {
+        DirectoryInfo current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current != null)
+        {
+            if (Directory.Exists(Path.Combine(current.FullName, "mods", "SPT-Item-Intelligence"))) return current.FullName;
+            current = current.Parent;
+        }
+        throw new DirectoryNotFoundException("Repository root not found.");
     }
 
     static void Expect(bool condition, string message, ref int assertions)

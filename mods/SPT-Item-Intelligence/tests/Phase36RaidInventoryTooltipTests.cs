@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using SPTItemIntelligence;
 
 static class Phase36RaidInventoryTooltipTests
@@ -32,7 +33,22 @@ static class Phase36RaidInventoryTooltipTests
         Expect(!Contains(text, ItemTooltipMode.Normal, "Total (stash + raid) ×5") &&
                Contains(text, ItemTooltipMode.Full, "Total (stash + raid) ×5"),
             "combined stock is available only from Full", ref assertions);
+        string sink = File.ReadAllText(Path.Combine(FindRepositoryRoot(), "mods", "SPT-Item-Intelligence", "src", "ItemHoverOverlaySink.cs"));
+        Expect(sink.Contains("if (pinnedView != null || Volatile.Read(ref hoveredView) != null)") &&
+               sink.Contains("RaidInventoryRefreshRequested?.Invoke();"),
+            "an inspected item refreshes raid inventory without reopening the inventory window", ref assertions);
         return assertions;
+    }
+
+    static string FindRepositoryRoot()
+    {
+        DirectoryInfo current = new DirectoryInfo(AppContext.BaseDirectory);
+        while (current != null)
+        {
+            if (Directory.Exists(Path.Combine(current.FullName, "mods", "SPT-Item-Intelligence"))) return current.FullName;
+            current = current.Parent;
+        }
+        throw new DirectoryNotFoundException("Repository root not found.");
     }
 
     static bool Contains(ItemHoverText text, ItemTooltipMode mode, string expected)

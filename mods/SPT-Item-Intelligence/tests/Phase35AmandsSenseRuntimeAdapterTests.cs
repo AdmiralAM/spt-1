@@ -17,9 +17,11 @@ static class Phase35AmandsSenseRuntimeAdapterTests
             "Sense load ordering is optional and never becomes a mandatory plugin dependency", ref assertions);
         Expect(adapter.Contains("FindAssembly(\"AmandsSense\")") &&
                adapter.Contains("AmandsSense.Components.AmandsSenseItem") &&
+               adapter.Contains("AmandsSense.Components.AmandsSenseContainer") &&
                adapter.Contains("AmandsSense.Components.AmandsSenseClass"),
             "the adapter discovers the installed Sense runtime without a compile-time type dependency", ref assertions);
         Expect(adapter.Contains("FindMethod(itemType, \"SetSense\", 1)") &&
+               adapter.Contains("FindMethod(containerType, \"SetSense\", 1)") &&
                adapter.Contains("FindMethod(itemType, \"RemoveLootItem\", 1)") &&
                adapter.Contains("FindMethod(senseClass, \"Clear\", 0)"),
             "bounded lifecycle hooks cover presentation, pickup/drop and raid reset", ref assertions);
@@ -54,6 +56,11 @@ static class Phase35AmandsSenseRuntimeAdapterTests
         Expect(adapter.Contains("Member(item, \"Containers\")") && adapter.Contains("\"ContainedItems\"") &&
                adapter.Contains("foreach (object picked in EnumerateItemTree(item))"),
             "Sense integration traverses EFT containers for both markers and picked-item accounting", ref assertions);
+        Expect(adapter.Contains("Member(senseItem, \"lootableContainer\")") &&
+               adapter.Contains("Member(lootableContainer, \"ItemOwner\", \"Owner\")") &&
+               adapter.Contains("Member(owner, \"RootItem\")") &&
+               adapter.Contains("\"Items\", \"AllItems\", \"AllRealPlayerItems\""),
+            "Sense world containers are evaluated from the lootable container item owner", ref assertions);
         Expect(adapter.Contains("\"Succeed\", \"Succeeded\", \"Success\", \"IsSuccess\"") &&
                adapter.Contains("if (status == null) return true"),
             "pickup completion accepts the runtime result shapes used by Sense 3.1", ref assertions);
