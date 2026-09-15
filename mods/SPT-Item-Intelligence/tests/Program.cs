@@ -101,7 +101,8 @@ static class Program
         int phase35Assertions = Phase35AmandsSenseRuntimeAdapterTests.Run();
         int phase36Assertions = Phase36RaidInventoryTooltipTests.Run();
         int phase37Assertions = Phase37AlternativeQuestPoolTests.Run();
-        Console.WriteLine("Item Intelligence regression passed through Phase 37: " + phase37Assertions + " alternative quest pool assertions; Phase 36=" + phase36Assertions + "; Phase 35=" + phase35Assertions + "; prior phases remain green if execution reaches this line.");
+        int phase38Assertions = Phase38SenseVisualPolicyTests.Run();
+        Console.WriteLine("Item Intelligence regression passed through Phase 38: " + phase38Assertions + " Sense visual policy assertions; Phase 37=" + phase37Assertions + "; Phase 36=" + phase36Assertions + "; prior phases remain green if execution reaches this line.");
     }
 
     static ItemDefinition Resolve(ItemRegistry registry, string id, string type, IDictionary<string, object> signals) => registry.Resolve(new ItemDescriptor(id, null, "  Test   Item  ", " Test ", type, signals));
