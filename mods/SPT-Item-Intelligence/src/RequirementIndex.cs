@@ -48,10 +48,13 @@ namespace SPTItemIntelligence
 
     public sealed class OwnedTemplateCount
     {
-        public OwnedTemplateCount(string templateId, int count, int foundInRaidCount = 0) { TemplateId = RequirementContribution.NormalizeId(templateId); Count = Math.Max(0, count); FoundInRaidCount = Math.Min(Count, Math.Max(0, foundInRaidCount)); if (TemplateId.Length == 0) throw new ArgumentException("An owned count requires a template id.", nameof(templateId)); }
+        public OwnedTemplateCount(string templateId, int count, int foundInRaidCount = 0, int sharedCount = -1, int sharedFoundInRaidCount = -1) { TemplateId = RequirementContribution.NormalizeId(templateId); Count = Math.Max(0, count); FoundInRaidCount = Math.Min(Count, Math.Max(0, foundInRaidCount)); SharedCount = sharedCount < 0 ? Count : Math.Max(Count, sharedCount); SharedFoundInRaidCount = sharedFoundInRaidCount < 0 ? FoundInRaidCount : Math.Min(SharedCount, Math.Max(FoundInRaidCount, sharedFoundInRaidCount)); if (TemplateId.Length == 0) throw new ArgumentException("An owned count requires a template id.", nameof(templateId)); }
         public string TemplateId { get; }
         public int Count { get; }
         public int FoundInRaidCount { get; }
+        public int SharedCount { get; }
+        public int SharedFoundInRaidCount { get; }
+        public bool HasSharedPool => SharedCount != Count || SharedFoundInRaidCount != FoundInRaidCount;
     }
 
     public sealed class RequirementProjection
@@ -112,7 +115,7 @@ namespace SPTItemIntelligence
         {
             if (projection == null) throw new ArgumentNullException(nameof(projection)); options = options ?? new RequirementIndexOptions();
             Dictionary<string, EntryAccumulator> accumulators = new Dictionary<string, EntryAccumulator>(StringComparer.Ordinal);
-            for (int i = 0; i < projection.Owned.Count; i++) { OwnedTemplateCount owned = projection.Owned[i]; EntryAccumulator accumulator = GetOrCreate(accumulators, owned.TemplateId); accumulator.OwnedCount = checked(accumulator.OwnedCount + owned.Count); accumulator.OwnedFir = checked(accumulator.OwnedFir + owned.FoundInRaidCount); }
+            for (int i = 0; i < projection.Owned.Count; i++) { OwnedTemplateCount owned = projection.Owned[i]; EntryAccumulator accumulator = GetOrCreate(accumulators, owned.TemplateId); accumulator.ExactOwned = checked(accumulator.ExactOwned + owned.Count); accumulator.ExactFir = checked(accumulator.ExactFir + owned.FoundInRaidCount); if (owned.HasSharedPool) { accumulator.AllocationOwned = Math.Max(accumulator.AllocationOwned, owned.SharedCount); accumulator.AllocationFir = Math.Max(accumulator.AllocationFir, owned.SharedFoundInRaidCount); } else { accumulator.AllocationOwned = checked(accumulator.AllocationOwned + owned.Count); accumulator.AllocationFir = checked(accumulator.AllocationFir + owned.FoundInRaidCount); } }
             for (int i = 0; i < projection.Contributions.Count; i++) { RequirementContribution contribution = projection.Contributions[i]; int remaining = contribution.RemainingCount; if (remaining <= 0 || !Included(contribution.Source, options)) continue; GetOrCreate(accumulators, contribution.TemplateId).Add(contribution, remaining); }
             Dictionary<string, RequirementIndexEntry> published = new Dictionary<string, RequirementIndexEntry>(accumulators.Count, StringComparer.Ordinal);
             foreach (KeyValuePair<string, EntryAccumulator> pair in accumulators) { RequirementIndexEntry entry = pair.Value.Finish(pair.Key); if (entry.OwnedCount > 0 || entry.HasRequirement) published.Add(pair.Key, entry); }
@@ -125,8 +128,10 @@ namespace SPTItemIntelligence
         {
             readonly List<RequirementContribution> additive = new List<RequirementContribution>();
             readonly Dictionary<string, RequirementContribution> alternatives = new Dictionary<string, RequirementContribution>(StringComparer.Ordinal);
-            public int OwnedCount;
-            public int OwnedFir;
+            public int ExactOwned;
+            public int ExactFir;
+            public int AllocationOwned;
+            public int AllocationFir;
 
             public void Add(RequirementContribution contribution, int remaining)
             {
@@ -159,8 +164,9 @@ namespace SPTItemIntelligence
                         details.Add(new RequirementDetail(c.Source, c.Label, n, c.FoundInRaidRequired));
                     }
                 }
-                ItemRequirementAllocation allocation = new ItemRequirementAllocation(OwnedCount, OwnedFir, now, later, hideout, nowFir, laterFir);
-                return new RequirementIndexEntry(templateId, now, later, hideout, allocation.Keep, OwnedCount, allocation.Surplus, reasons, details, allocation);
+                ItemRequirementAllocation allocation = new ItemRequirementAllocation(AllocationOwned, AllocationFir, now, later, hideout, nowFir, laterFir, ExactOwned, ExactFir);
+                int exactSurplus = Math.Max(0, ExactOwned - Math.Min(ExactOwned, allocation.KeepOwned));
+                return new RequirementIndexEntry(templateId, now, later, hideout, allocation.Keep, ExactOwned, exactSurplus, reasons, details, allocation);
             }
         }
     }

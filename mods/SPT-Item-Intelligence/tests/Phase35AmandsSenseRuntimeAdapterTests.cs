@@ -17,23 +17,27 @@ static class Phase35AmandsSenseRuntimeAdapterTests
             "Sense load ordering is optional and never becomes a mandatory plugin dependency", ref assertions);
         Expect(adapter.Contains("FindAssembly(\"AmandsSense\")") &&
                adapter.Contains("AmandsSense.Components.AmandsSenseItem") &&
+               adapter.Contains("AmandsSense.Components.AmandsSenseContainer") &&
                adapter.Contains("AmandsSense.Components.AmandsSenseClass"),
             "the adapter discovers the installed Sense runtime without a compile-time type dependency", ref assertions);
         Expect(adapter.Contains("FindMethod(itemType, \"SetSense\", 1)") &&
+               adapter.Contains("FindMethod(containerType, \"SetSense\", 1)") &&
                adapter.Contains("FindMethod(itemType, \"RemoveLootItem\", 1)") &&
                adapter.Contains("FindMethod(senseClass, \"Clear\", 0)"),
             "bounded lifecycle hooks cover presentation, pickup/drop and raid reset", ref assertions);
         Expect(adapter.Contains("!settings.SenseIntegration || !settings.SenseRequiredItems") &&
                plugin.Contains("senseIntegration.Dispose();"),
             "disabled integration exits immediately and removes its runtime patches", ref assertions);
-        Expect(adapter.Contains("SenseRequirementMapper.Map(ledger.Evaluate(templateId, allocation, fir))") &&
-               adapter.Contains("if (!presentation.OverridesSense) return;"),
+        Expect(adapter.Contains("ledger.Evaluate(templateId, allocation, fir)") &&
+               adapter.Contains("if (!policy.HasItemIntelligence) return;"),
             "the shared deterministic requirement decision is the only reason Sense presentation is changed", ref assertions);
+        Expect(adapter.Contains("BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic"),
+            "Sense 3.1 static Clear lifecycle method is discovered", ref assertions);
         Expect(adapter.Contains("icon_quest.png") && adapter.Contains("icon_barter_building.png") && adapter.Contains("icon_info.png"),
             "the adapter reuses Sense-owned runtime sprites instead of copying or shipping its assets", ref assertions);
         Expect(adapter.Contains("ledger.Observe(id, template, stack, fir)") &&
-               adapter.Contains("if (itemId.Length > 0 && pickedItemIds.Remove(itemId)) ledger.Remove(itemId);") &&
-               adapter.Contains("void ResetRaid() { ledger.Reset(); pickedItemIds.Clear(); }"),
+               adapter.Contains("pickedItemIds.Remove(itemId) && ledger.Remove(itemId)") &&
+               adapter.Contains("ledger.Reset();") && adapter.Contains("pickedItemIds.Clear();"),
             "successive pickup, returned loot and raid reset update reservations without polling", ref assertions);
         Expect(settings.Contains("config.Bind(\"Amands Sense\", \"Integration\", true") &&
                settings.Contains("config.Bind(\"Amands Sense\", \"Required Items\", true") &&
@@ -49,6 +53,22 @@ static class Phase35AmandsSenseRuntimeAdapterTests
             "Amands Sense is not a build dependency and remains optional", ref assertions);
         Expect(!adapter.Contains("File.Write") && !adapter.Contains("Items.json") && !adapter.Contains("Sense.cfg"),
             "the integration never rewrites Sense files or user configuration", ref assertions);
+        Expect(adapter.Contains("Member(item, \"Containers\")") && adapter.Contains("\"ContainedItems\"") &&
+               adapter.Contains("foreach (object picked in EnumerateItemTree(item))"),
+            "Sense integration traverses EFT containers for both markers and picked-item accounting", ref assertions);
+        Expect(adapter.Contains("Member(senseItem, \"lootableContainer\")") &&
+               adapter.Contains("Member(lootableContainer, \"ItemOwner\", \"Owner\")") &&
+               adapter.Contains("Member(owner, \"RootItem\")") &&
+               adapter.Contains("\"Items\", \"AllItems\", \"AllRealPlayerItems\""),
+            "Sense world containers are evaluated from the lootable container item owner", ref assertions);
+        Expect(adapter.Contains("\"Succeed\", \"Succeeded\", \"Success\", \"IsSuccess\"") &&
+               adapter.Contains("if (status == null) return true"),
+            "pickup completion accepts the runtime result shapes used by Sense 3.1", ref assertions);
+        Expect(adapter.Contains("CompactText(policy, primary, stock)") &&
+               adapter.Contains("if (policy.Stock == SenseStockState.Complete)") &&
+               !adapter.Contains("ALL ✓") && !adapter.Contains("ВСЁ ✓") &&
+               !adapter.Contains(">\\n<"),
+            "Sense status stays on one compact line and colors the category itself when complete", ref assertions);
 
         return assertions;
     }

@@ -184,7 +184,9 @@ namespace SPTItemIntelligence
 
             List<OwnedTemplateCount> owned = ProjectOwned(snapshot.profile);
             List<RequirementContribution> contributions = new List<RequirementContribution>();
-            ProjectQuests(snapshot.profile, snapshot.quests, contributions);
+            Dictionary<string, PoolCount> alternativePools = new Dictionary<string, PoolCount>(StringComparer.Ordinal);
+            ProjectQuests(snapshot.profile, snapshot.quests, contributions, owned, alternativePools);
+            owned = ApplyAlternativePools(owned, alternativePools);
             ProjectHideout(snapshot.profile, snapshot.hideout, snapshot.hideoutProgress, contributions);
             int ownedBulbex = 0;
             for (int i = 0; i < owned.Count; i++)
@@ -220,7 +222,7 @@ namespace SPTItemIntelligence
             return result;
         }
 
-        static void ProjectQuests(object profile, object questTable, List<RequirementContribution> output)
+        static void ProjectQuests(object profile, object questTable, List<RequirementContribution> output, List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> alternativePools)
         {
             Dictionary<string, QuestProgress> progress = new Dictionary<string, QuestProgress>(StringComparer.OrdinalIgnoreCase);
             foreach (object quest in JsonNode.Values(JsonNode.Get(profile, "Quests", "quests")))
@@ -261,6 +263,8 @@ namespace SPTItemIntelligence
                     if (condition.Kind != "handoveritem" && condition.Kind != "finditem" &&
                         condition.Kind != "leaveitematlocation" && condition.Kind != "placebeacon") continue;
 
+                    RegisterAlternativePool(condition, owned, alternativePools);
+
                     HashSet<string> seenTargets = new HashSet<string>(StringComparer.Ordinal);
                     for (int targetIndex = 0; targetIndex < condition.Targets.Count; targetIndex++)
                     {
@@ -273,6 +277,45 @@ namespace SPTItemIntelligence
                     }
                 }
             }
+        }
+
+        static void RegisterAlternativePool(QuestCondition condition, List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> pools)
+        {
+            HashSet<string> targets = new HashSet<string>(condition.Targets, StringComparer.Ordinal);
+            if (targets.Count < 2) return;
+            int total = 0, fir = 0;
+            for (int i = 0; i < owned.Count; i++)
+            {
+                if (!targets.Contains(owned[i].TemplateId)) continue;
+                total = checked(total + owned[i].Count);
+                fir = checked(fir + owned[i].FoundInRaidCount);
+            }
+            foreach (string target in targets)
+            {
+                PoolCount prior;
+                pools.TryGetValue(target, out prior);
+                pools[target] = new PoolCount(Math.Max(total, prior == null ? 0 : prior.Total), Math.Max(fir, prior == null ? 0 : prior.Fir));
+            }
+        }
+
+        static List<OwnedTemplateCount> ApplyAlternativePools(List<OwnedTemplateCount> owned, Dictionary<string, PoolCount> pools)
+        {
+            Dictionary<string, OwnedTemplateCount> byTemplate = new Dictionary<string, OwnedTemplateCount>(StringComparer.Ordinal);
+            for (int i = 0; i < owned.Count; i++) byTemplate[owned[i].TemplateId] = owned[i];
+            foreach (KeyValuePair<string, PoolCount> pair in pools)
+            {
+                OwnedTemplateCount exact;
+                byTemplate.TryGetValue(pair.Key, out exact);
+                byTemplate[pair.Key] = new OwnedTemplateCount(pair.Key, exact == null ? 0 : exact.Count, exact == null ? 0 : exact.FoundInRaidCount, pair.Value.Total, pair.Value.Fir);
+            }
+            return new List<OwnedTemplateCount>(byTemplate.Values);
+        }
+
+        sealed class PoolCount
+        {
+            public PoolCount(int total, int fir) { Total = total; Fir = fir; }
+            public int Total { get; }
+            public int Fir { get; }
         }
 
         static List<QuestCondition> ParseQuestConditions(object conditions)

@@ -5,7 +5,7 @@ using BepInEx;
 
 namespace SPTItemIntelligence
 {
-    [BepInPlugin("com.admiralam.spt.itemintelligence", "Item Intelligence Admiral", "1.2.0")]
+    [BepInPlugin("com.admiralam.spt.itemintelligence", "Item Intelligence Admiral", "1.2.1")]
     [BepInDependency("xyz.drakia.Sense", BepInDependency.DependencyFlags.SoftDependency)]
     public sealed class Plugin : BaseUnityPlugin
     {
@@ -20,6 +20,9 @@ namespace SPTItemIntelligence
         int moduleKey = -1;
         int dataKey = -1;
         readonly object loadLock = new object();
+        readonly RaidRequirementLedger raidLedger = new RaidRequirementLedger();
+        RaidInventoryRuntimeScanner raidInventoryScanner;
+        int lastRaidInventoryScanFrame = -1;
 
         internal static ItemPresentationStore PresentationStore { get; private set; }
 
@@ -31,8 +34,10 @@ namespace SPTItemIntelligence
             GameUiText.SetRussian(GameLanguageDetector.DetectRussian());
             uiSettings = new ItemIntelligenceUiSettings(Config);
             ItemHoverTextCache textCache = new ItemHoverTextCache(valueModeProvider: () => uiSettings.ValueMode, modulesProvider: () => uiSettings.Modules);
-            hoverSink = new ItemHoverOverlaySink(uiSettings, PresentationStore, textCache, CreateFallback);
+            hoverSink = new ItemHoverOverlaySink(uiSettings, PresentationStore, textCache, CreateFallback, raidLedger);
             hoverSink.InventoryOpened += RefreshInventorySession;
+            raidInventoryScanner = new RaidInventoryRuntimeScanner(message => Logger.LogInfo(message));
+            hoverSink.RaidInventoryRefreshRequested += RefreshRaidInventory;
             uiSettings.Changed += hoverSink.Invalidate;
             hoverController = new ItemHoverRuntimeController(PresentationStore, hoverSink, textCache, CreateFallback);
             dataBootstrap = new RequirementRuntimeBootstrap(
@@ -44,7 +49,7 @@ namespace SPTItemIntelligence
             uiSettings.Changed += ApplyModules;
             ApplyModules();
 
-            Logger.LogInfo("Item Intelligence Admiral v1.2 development loaded; UI language=" + (GameUiText.Russian ? "ru" : "en"));
+            Logger.LogInfo("Item Intelligence Admiral v1.2.1 loaded; UI language=" + (GameUiText.Russian ? "ru" : "en"));
         }
 
         void ApplyModules()
@@ -55,7 +60,8 @@ namespace SPTItemIntelligence
                 if (senseIntegration == null)
                 {
                     senseIntegration = new AmandsSenseIntegration(uiSettings, PresentationStore,
-                        message => Logger.LogInfo(message), message => Logger.LogWarning(message));
+                        message => Logger.LogInfo(message), message => Logger.LogWarning(message),
+                        raidLedger, () => hoverSink.Invalidate(), CaptureRaidBaseline);
                     senseIntegration.TryInstall();
                 }
             }
@@ -130,6 +136,19 @@ namespace SPTItemIntelligence
             StartDataLoad();
         }
 
+        void CaptureRaidBaseline()
+        {
+            if (raidInventoryScanner != null) raidInventoryScanner.CaptureBaseline(raidLedger);
+        }
+
+        void RefreshRaidInventory()
+        {
+            int frame = UnityEngine.Time.frameCount;
+            if (frame == lastRaidInventoryScanFrame) return;
+            lastRaidInventoryScanFrame = frame;
+            if (raidInventoryScanner != null && raidInventoryScanner.Refresh(raidLedger) && hoverSink != null) hoverSink.Invalidate();
+        }
+
         void OnGUI()
         {
             if (uiSettings != null && uiSettings.Modules.TrackViews && hoverSink != null) hoverSink.Draw();
@@ -150,6 +169,7 @@ namespace SPTItemIntelligence
             hoverSink = null;
             uiSettings = null;
             senseIntegration = null;
+            raidInventoryScanner = null;
             PresentationStore = null;
         }
     }
