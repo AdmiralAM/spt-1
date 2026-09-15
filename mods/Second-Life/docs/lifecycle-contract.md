@@ -99,11 +99,18 @@ used by `Corpse.CreateStillCorpse`. This is required before the replacement
 camera is created; an active corpse GameObject alone does not make the former
 local body visible from the new player camera.
 
+Fast-access bindings are filtered transactionally. Only bindings whose exact
+item instances belong to protected trees transferred into the recovery
+equipment are retained. Bindings to corpse-owned gear are omitted. Protected
+trees are temporarily attached while the replacement `Inventory` is built so
+EFT's native `FastAccess` constructor can resolve every retained Mongo ID; they
+are then returned to the corpse until the recovery lease commits.
+
 Before detaching the original player, the replacement equipment tree is passed
 through EFT's native `ChangeItemsOperation.LoadBundles` path and awaited. This
 loads custom weapon and attachment bundles that were not part of the original
 raid loadout. A load failure therefore refunds the reservation while the old
-player and camera are still intact. Runtime fast-access bindings start empty
-because first-life hotkeys otherwise point at items left on the corpse.
+player and camera are still intact. Runtime fast-access bindings therefore
+contain no dangling corpse references.
 
 Any local server/client/helper started for archaeology or smoke testing must be stopped by the same worker. Record PIDs before launch, prefer graceful shutdown, and verify no owned process or listening port remains.

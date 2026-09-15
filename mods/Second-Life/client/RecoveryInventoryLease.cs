@@ -13,6 +13,7 @@ namespace Admiral.SecondLife.Client
         readonly object originalInventory;
         readonly object recoveryInventory;
         readonly System.Collections.Generic.List<SlotTransfer> protectedTransfers;
+        readonly int preservedFastAccessCount;
         bool applied;
 
         RecoveryInventoryLease(
@@ -21,6 +22,7 @@ namespace Admiral.SecondLife.Client
             object originalInventory,
             object recoveryInventory,
             System.Collections.Generic.List<SlotTransfer> protectedTransfers,
+            int preservedFastAccessCount,
             string corpseEquipmentRootId,
             string recoveryEquipmentRootId)
         {
@@ -29,6 +31,7 @@ namespace Admiral.SecondLife.Client
             this.originalInventory = originalInventory;
             this.recoveryInventory = recoveryInventory;
             this.protectedTransfers = protectedTransfers;
+            this.preservedFastAccessCount = preservedFastAccessCount;
             CorpseEquipmentRootId = corpseEquipmentRootId;
             RecoveryEquipmentRootId = recoveryEquipmentRootId;
         }
@@ -39,6 +42,7 @@ namespace Admiral.SecondLife.Client
         internal string ProtectedTransferSummary => protectedTransfers.Count == 0
             ? "none"
             : string.Join(",", protectedTransfers.Select(transfer => transfer.SlotName));
+        internal int PreservedFastAccessCount => preservedFastAccessCount;
 
         internal bool TryAttachArmament(RuntimeArmament armament, out string failure)
         {
@@ -106,8 +110,32 @@ namespace Admiral.SecondLife.Client
             if (!TryCreateIntrinsicPockets(originalEquipment, recoveryEquipment))
                 return Fail("intrinsic recovery pockets could not be constructed", out failure);
             var protectedTransfers = PrepareProtectedTransfers(originalEquipment, recoveryEquipment);
-            object[] inventoryArguments = BuildInventoryArguments(contract, originalInventory, recoveryEquipment);
-            object recoveryInventory = contract.InventoryConstructor.Invoke(inventoryArguments);
+            object recoveryInventory;
+            int preservedFastAccessCount;
+            int temporarilyMoved = 0;
+            try
+            {
+                // FastAccess resolves every stored ID against equipment inside the
+                // Inventory constructor. Temporarily attach the protected trees so
+                // EFT can validate the subset that will actually survive recovery.
+                foreach (SlotTransfer transfer in protectedTransfers)
+                {
+                    transfer.MoveToRecovery();
+                    temporarilyMoved++;
+                }
+                object[] inventoryArguments = BuildInventoryArguments(
+                    contract,
+                    originalInventory,
+                    recoveryEquipment,
+                    protectedTransfers,
+                    out preservedFastAccessCount);
+                recoveryInventory = contract.InventoryConstructor.Invoke(inventoryArguments);
+            }
+            finally
+            {
+                for (int index = temporarilyMoved - 1; index >= 0; index--)
+                    protectedTransfers[index].MoveToCorpse();
+            }
             if (recoveryInventory == null || ReferenceEquals(recoveryEquipment, corpseEquipment))
                 return Fail("replacement inventory construction failed ownership checks", out failure);
 
@@ -117,6 +145,7 @@ namespace Admiral.SecondLife.Client
                 originalInventory,
                 recoveryInventory,
                 protectedTransfers,
+                preservedFastAccessCount,
                 corpseRootId,
                 recoveryRootId);
             return true;
@@ -156,9 +185,12 @@ namespace Admiral.SecondLife.Client
         static object[] BuildInventoryArguments(
             RecoveryRuntimeContract contract,
             object inventory,
-            object recoveryEquipment)
+            object recoveryEquipment,
+            System.Collections.Generic.List<SlotTransfer> protectedTransfers,
+            out int preservedFastAccessCount)
         {
             ParameterInfo[] parameters = contract.InventoryConstructor.GetParameters();
+            object fastAccessIds = CopyFastAccessIds(inventory, parameters[7].ParameterType, protectedTransfers, out preservedFastAccessCount);
             return new[]
             {
                 recoveryEquipment,
@@ -168,7 +200,7 @@ namespace Admiral.SecondLife.Client
                 ReadField(inventory, "SortingTable"),
                 ReadField(inventory, "HideoutCustomizationStash"),
                 ReadField(inventory, "HideoutAreaStashes"),
-                CopyFastAccessIds(inventory, parameters[7].ParameterType),
+                fastAccessIds,
                 ReadField(inventory, "DiscardLimits"),
                 CopyFavoriteIds(inventory, parameters[9].ParameterType),
                 ReadField(inventory, "DeserializationErrors"),
@@ -276,6 +308,18 @@ namespace Admiral.SecondLife.Client
                 recoveryAttach.Invoke(recoverySlot, new object[] { null });
                 corpseAttach.Invoke(corpseSlot, new[] { item });
             }
+
+            internal bool Contains(object candidate)
+            {
+                if (ReferenceEquals(item, candidate)) return true;
+                MethodInfo getAllVisibleItems = item.GetType().GetMethod(
+                    "GetAllVisibleItems",
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (!(getAllVisibleItems?.Invoke(item, null) is IEnumerable descendants)) return false;
+                foreach (object descendant in descendants)
+                    if (ReferenceEquals(descendant, candidate)) return true;
+                return false;
+            }
         }
 
         static object FindGridAddress(object compound, object item)
@@ -304,12 +348,30 @@ namespace Admiral.SecondLife.Client
                 Equals(currentLocation, expectedLocation);
         }
 
-        static object CopyFastAccessIds(object inventory, Type dictionaryType)
+        static object CopyFastAccessIds(
+            object inventory,
+            Type dictionaryType,
+            System.Collections.Generic.List<SlotTransfer> protectedTransfers,
+            out int preservedCount)
         {
-            // The recovered equipment intentionally omits the first-life gear.
-            // Carrying its runtime hotkey IDs into the replacement controller
-            // produces dangling FastAccess bindings during LocalPlayer.Init.
             object copy = Activator.CreateInstance(dictionaryType);
+            preservedCount = 0;
+            object fastAccess = ReadField(inventory, "FastAccess");
+            var boundItems = ReadField(fastAccess, "BoundItems") as IDictionary;
+            MethodInfo add = dictionaryType.GetMethod("Add");
+            Type mongoId = dictionaryType.GetGenericArguments()[1];
+            ConstructorInfo mongoIdConstructor = mongoId.GetConstructor(new[] { typeof(string) });
+            if (boundItems == null || add == null || mongoIdConstructor == null) return copy;
+
+            foreach (DictionaryEntry binding in boundItems)
+            {
+                object item = binding.Value;
+                if (item == null || !protectedTransfers.Any(transfer => transfer.Contains(item))) continue;
+                string id = ReadString(item, "Id");
+                if (string.IsNullOrWhiteSpace(id)) continue;
+                add.Invoke(copy, new[] { binding.Key, mongoIdConstructor.Invoke(new object[] { id }) });
+                preservedCount++;
+            }
             return copy;
         }
 
