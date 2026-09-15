@@ -93,6 +93,10 @@ namespace SPTItemIntelligence
             SummaryOwnedLine = GameUiText.T("Owned ×", "В наличии ×") + OwnedCount.ToString(CultureInfo.InvariantCulture);
             OwnedBreakdownLine = GameUiText.T("FIR ×", "Из рейда ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture) +
                 GameUiText.T(" · non-FIR ×", " · не из рейда ×") + (OwnedCount - OwnedFoundInRaid).ToString(CultureInfo.InvariantCulture);
+            RequirementBreakdownLine = GameUiText.T("Required: FIR ×", "Требуется: из рейда ×") +
+                (QuestNowFoundInRaid + QuestLaterFoundInRaid).ToString(CultureInfo.InvariantCulture) +
+                GameUiText.T(" · any ×", " · любые ×") +
+                (Math.Max(0, KeepCount - QuestNowFoundInRaid - QuestLaterFoundInRaid)).ToString(CultureInfo.InvariantCulture);
             string ownedLine = OwnedFoundInRaid > 0
                 ? GameUiText.T("Owned ×", "В наличии ×") + OwnedCount.ToString(CultureInfo.InvariantCulture) + GameUiText.T(" · FIR ×", " · Найдено в рейде ×") + OwnedFoundInRaid.ToString(CultureInfo.InvariantCulture)
                 : CountLine(GameUiText.T("Owned", "В наличии"), OwnedCount);
@@ -131,6 +135,7 @@ namespace SPTItemIntelligence
         public string SummaryLine { get; }
         public string SummaryOwnedLine { get; }
         public string OwnedBreakdownLine { get; }
+        public string RequirementBreakdownLine { get; }
         public string Primary { get; }
         public string Secondary { get; }
         public string Status { get; }
@@ -199,6 +204,7 @@ namespace SPTItemIntelligence
             if (TryLine(SummaryLine, requestedIndex, ref current, out found)) return found;
             if (SummaryLine.Length > 0 && TryLine(SummaryOwnedLine, requestedIndex, ref current, out found)) return found;
             if (mode == ItemTooltipMode.Full && SummaryLine.Length > 0 && TryLine(OwnedBreakdownLine, requestedIndex, ref current, out found)) return found;
+            if (mode == ItemTooltipMode.Full && SummaryLine.Length > 0 && TryLine(RequirementBreakdownLine, requestedIndex, ref current, out found)) return found;
 
             if (mode == ItemTooltipMode.Full)
             {

@@ -24,6 +24,7 @@ static class Phase36RaidInventoryTooltipTests
         ItemHoverText text = new ItemHoverTextFormatter().Format(new ItemHoverState(combined));
         Expect(text.SummaryOwnedLine == "Owned ×5", "regular modes expose one combined owned count", ref assertions);
         Expect(text.OwnedBreakdownLine == "FIR ×4 · non-FIR ×1", "Full owns the FIR/non-FIR breakdown", ref assertions);
+        Expect(text.RequirementBreakdownLine == "Required: FIR ×2 · any ×2", "Full separates FIR-only from unrestricted demand", ref assertions);
         Expect(!Contains(text, ItemTooltipMode.Normal, "non-FIR"), "Normal omits the breakdown", ref assertions);
         Expect(Contains(text, ItemTooltipMode.Full, "FIR ×4 · non-FIR ×1"), "Full renders the breakdown", ref assertions);
         return assertions;
