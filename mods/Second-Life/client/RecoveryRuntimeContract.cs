@@ -33,6 +33,9 @@ namespace Admiral.SecondLife.Client
         internal MethodInfo ClearCullingCameraData { get; private set; }
         internal MethodInfo RegisterCullingCamera { get; private set; }
         internal MethodInfo FinishCullingJobs { get; private set; }
+        internal FieldInfo CorpsePlayerBody { get; private set; }
+        internal MethodInfo UpdatePlayerRenders { get; private set; }
+        internal object ThirdPersonPointOfView { get; private set; }
 
         internal static bool TryResolve(out RecoveryRuntimeContract contract, out string failure)
         {
@@ -56,7 +59,10 @@ namespace Admiral.SecondLife.Client
             Type gamePlayerOwner = FindType("EFT.GamePlayerOwner");
             Type changeItemsOperation = FindType("EFT.InventoryLogic.Operations.ChangeItemsOperation");
             Type cullingManager = FindType("CullingManager");
-            if (new[] { player, localPlayer, localGame, profile, inventory, equipment, equipmentTemplate, cameraController, cullingSampler, itemUiContext, activeHealthController, healthHelper, globalConfiguration, gameWorld, gamePlayerOwner, changeItemsOperation, cullingManager }.Any(type => type == null))
+            Type corpse = FindType("EFT.Interactive.Corpse");
+            Type playerBody = FindType("EFT.PlayerBody");
+            Type pointOfView = FindType("EFT.EPointOfView");
+            if (new[] { player, localPlayer, localGame, profile, inventory, equipment, equipmentTemplate, cameraController, cullingSampler, itemUiContext, activeHealthController, healthHelper, globalConfiguration, gameWorld, gamePlayerOwner, changeItemsOperation, cullingManager, corpse, playerBody, pointOfView }.Any(type => type == null))
                 return Fail("required SPT 4.1 recovery types are missing", out failure);
 
             Type baseLocalGame = localGame.BaseType;
@@ -106,6 +112,14 @@ namespace Admiral.SecondLife.Client
             FieldInfo realBodyParts = healthHelper.GetField("RealBodyParts", BindingFlags.Static | BindingFlags.Public);
             FieldInfo healthSettings = globalConfiguration.GetField("Health", BindingFlags.Instance | BindingFlags.Public);
             PropertyInfo allRealPlayerItems = inventory.GetProperty("AllRealPlayerItems", BindingFlags.Instance | BindingFlags.Public);
+            FieldInfo corpsePlayerBody = corpse.GetField("PlayerBody", BindingFlags.Instance | BindingFlags.Public);
+            MethodInfo updatePlayerRenders = playerBody.GetMethod(
+                "UpdatePlayerRenders",
+                BindingFlags.Instance | BindingFlags.Public,
+                null,
+                new[] { pointOfView, FindType("EFT.EPlayerSide") },
+                null);
+            object thirdPersonPointOfView = Enum.Parse(pointOfView, "ThirdPerson");
 
             if (createCorpse == null || initiateGameStopping == null)
                 return Fail("exact corpse/finalization boundary changed", out failure);
@@ -124,6 +138,8 @@ namespace Admiral.SecondLife.Client
                 return Fail("local-game player/owner/camera binding contract changed", out failure);
             if (healingConfirmation == null || restoreFullHealth == null || realBodyParts == null || healthSettings == null || allRealPlayerItems == null)
                 return Fail("native paid-healing contract changed", out failure);
+            if (corpsePlayerBody == null || corpsePlayerBody.FieldType != playerBody || updatePlayerRenders == null)
+                return Fail("native corpse third-person rendering contract changed", out failure);
 
             contract = new RecoveryRuntimeContract
             {
@@ -154,6 +170,9 @@ namespace Admiral.SecondLife.Client
                 ,ClearCullingCameraData = clearCullingCameraData
                 ,RegisterCullingCamera = registerCullingCamera
                 ,FinishCullingJobs = finishCullingJobs
+                ,CorpsePlayerBody = corpsePlayerBody
+                ,UpdatePlayerRenders = updatePlayerRenders
+                ,ThirdPersonPointOfView = thirdPersonPointOfView
             };
             return true;
         }

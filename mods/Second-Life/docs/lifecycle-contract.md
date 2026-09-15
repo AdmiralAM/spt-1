@@ -91,6 +91,14 @@ the world registry, local-game ownership, input owner and camera, so retaining
 it preserves only the native corpse lifetime rather than a second controllable
 player.
 
+The live local corpse inherits the first-person `PlayerBody` rendering state.
+Unlike a reconnect corpse, `Corpse.CreateCorpse` does not convert that body for
+world rendering. After the old FPS camera is removed, recovery therefore calls
+the same native `PlayerBody.UpdatePlayerRenders(ThirdPerson, side)` operation
+used by `Corpse.CreateStillCorpse`. This is required before the replacement
+camera is created; an active corpse GameObject alone does not make the former
+local body visible from the new player camera.
+
 Before detaching the original player, the replacement equipment tree is passed
 through EFT's native `ChangeItemsOperation.LoadBundles` path and awaited. This
 loads custom weapon and attachment bundles that were not part of the original

@@ -111,6 +111,9 @@ namespace Admiral.SecondLife.Client
                 retiredCullingSampler = await RemoveCurrentCullingSampler();
                 ClearCullingCameraState();
                 Trace(stage, gameWorld, newPlayer);
+                stage = "corpse-third-person-rendering";
+                PromoteCorpseToThirdPersonRendering();
+                trace?.Invoke("Recovery trace: promoted first-life corpse to native third-person rendering; " + DescribeCorpseState());
                 stage = "new-player-create";
                 var creationTask = playerFactory.DynamicInvoke() as Task;
                 if (creationTask == null) throw new InvalidOperationException("player factory did not return a Task");
@@ -262,6 +265,16 @@ namespace Admiral.SecondLife.Client
                 ", sharedGameObject=" + ReferenceEquals(corpseObject, playerObject) +
                 ", activeSelf=" + (activeSelf?.ToString() ?? "unknown") +
                 ", activeInHierarchy=" + (activeInHierarchy?.ToString() ?? "unknown");
+        }
+
+        void PromoteCorpseToThirdPersonRendering()
+        {
+            if (originalCorpse == null) throw new InvalidOperationException("captured corpse is unavailable");
+            object playerBody = contract.CorpsePlayerBody.GetValue(originalCorpse);
+            if (playerBody == null) throw new InvalidOperationException("captured corpse has no PlayerBody");
+            object side = ReadProperty(originalPlayer, "Side");
+            if (side == null) throw new InvalidOperationException("first-life player side is unavailable");
+            contract.UpdatePlayerRenders.Invoke(playerBody, new[] { contract.ThirdPersonPointOfView, side });
         }
 
         static string ReferenceName(object value, object originalPlayer, object newPlayer)

@@ -154,6 +154,14 @@ that can retire that object. The old player is instead left dead, unregistered,
 camera-less and detached from local-game ownership until normal world teardown,
 preserving the corpse and corpse-owned equipment root.
 
+`Player.CreateCorpse()` reuses the local player's existing `PlayerBody` and
+does not call `UpdatePlayerRenders`. That body remains configured for the old
+first-person camera. EFT's reconnect path proves the missing native step:
+`Corpse.CreateStillCorpse()` explicitly calls
+`PlayerBody.UpdatePlayerRenders(EPointOfView.ThirdPerson, side)`. Same-world
+recovery performs that exact conversion after retiring the old FPS camera and
+before creating the replacement player.
+
 ## Remaining physical proof
 
 Metadata and IL prove the available seam and ordering, not that a reconstructed
