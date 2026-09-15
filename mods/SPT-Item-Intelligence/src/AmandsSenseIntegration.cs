@@ -44,7 +44,11 @@ namespace SPTItemIntelligence
                 MethodInfo setSense = FindMethod(itemType, "SetSense", 1);
                 MethodInfo remove = FindMethod(itemType, "RemoveLootItem", 1);
                 MethodInfo clear = FindMethod(senseClass, "Clear", 0);
-                if (setSense == null || remove == null || clear == null) return false;
+                if (setSense == null || remove == null || clear == null)
+                {
+                    if (logWarning != null) logWarning("Item Intelligence Sense bridge unavailable: SetSense=" + (setSense != null) + ", RemoveLootItem=" + (remove != null) + ", Clear=" + (clear != null));
+                    return false;
+                }
 
                 Type harmonyType = Type.GetType("HarmonyLib.Harmony, 0Harmony", false);
                 Type harmonyMethodType = Type.GetType("HarmonyLib.HarmonyMethod, 0Harmony", false);
@@ -87,21 +91,27 @@ namespace SPTItemIntelligence
 
             ItemPresentationState state = index.Get(templateId);
             ItemRequirementAllocation allocation = state.Requirement == null ? null : state.Requirement.Allocation;
-            SenseRequirementPresentation presentation = SenseRequirementMapper.Map(ledger.Evaluate(templateId, allocation, fir));
-            if (!presentation.OverridesSense) return;
+            ItemIntelligenceDecision decision = ledger.Evaluate(templateId, allocation, fir);
+            SenseRequirementPresentation presentation = SenseRequirementMapper.Map(decision);
+            SenseVisualPolicy policy = SenseVisualPolicyEngine.Evaluate(decision.Allocation);
+            if (!policy.HasItemIntelligence) return;
 
-            Color primary = settings.GetSenseColor(presentation.PrimaryReason);
-            SetField(senseItem, "color", primary);
+            Color primary = settings.GetSenseColor(policy.Category);
+            Color stock = settings.GetSenseStockColor(policy.Stock);
+            bool preserveIcon = HasProtectedSenseVisual(senseItem);
+            if (!preserveIcon) SetField(senseItem, "color", primary);
             Color secondary = presentation.OutlineReason == ItemNeedReason.None || !settings.SenseSecondaryOutline
                 ? primary : settings.GetSenseColor(presentation.OutlineReason);
             SetField(senseItem, "outlineColor", secondary);
 
-            object sprite = FindSenseSprite(senseItem.GetType().Assembly, IconFile(presentation.Icon));
-            if (sprite != null) SetField(senseItem, "sprite", sprite);
-            ApplyRenderer(Member(senseItem, "spriteRenderer"), sprite, primary);
-            ApplyLight(Member(senseItem, "light"), primary);
+            object sprite = preserveIcon ? Member(senseItem, "sprite") : FindSenseSprite(senseItem.GetType().Assembly, IconFile(policy.Icon));
+            if (!preserveIcon && sprite != null) SetField(senseItem, "sprite", sprite);
+            object nativeColor = Member(senseItem, "color");
+            Color renderColor = preserveIcon && nativeColor is Color ? (Color)nativeColor : primary;
+            ApplyRenderer(Member(senseItem, "spriteRenderer"), sprite, renderColor);
+            ApplyLight(Member(senseItem, "light"), preserveIcon ? stock : primary);
             if (settings.SenseRemainingText)
-                ApplyText(Member(senseItem, "typeText"), Label(presentation) + " ×" + presentation.Remaining, primary, secondary);
+                ApplyText(Member(senseItem, "typeText"), Label(policy.Category) + StockText(policy), stock, secondary);
         }
 
         void RecordPickup(object senseItem, object eventArgs)
@@ -125,11 +135,30 @@ namespace SPTItemIntelligence
             if (ledger.Revision != revision && raidChanged != null) raidChanged();
         }
 
-        static string Label(SenseRequirementPresentation value)
+        static string Label(ItemNeedReason reason)
         {
-            if (value.PrimaryReason == ItemNeedReason.ActiveQuest) return GameUiText.T("QUEST", "КВЕСТ");
-            if (value.PrimaryReason == ItemNeedReason.Hideout) return GameUiText.T("HIDEOUT", "УБЕЖИЩЕ");
+            if (reason == ItemNeedReason.ActiveQuest) return GameUiText.T("QUEST", "КВЕСТ");
+            if (reason == ItemNeedReason.Hideout) return GameUiText.T("HIDEOUT", "УБЕЖИЩЕ");
             return GameUiText.T("FUTURE", "ПОТОМ");
+        }
+
+        static string StockText(SenseVisualPolicy policy)
+        {
+            if (policy.Stock == SenseStockState.Complete) return GameUiText.T(" · ALL ✓", " · ВСЁ ✓");
+            if (policy.Stock == SenseStockState.NextCovered) return GameUiText.T(" · NEXT ✓", " · ЭТАП ✓");
+            return " · −" + policy.Remaining;
+        }
+
+        static bool HasProtectedSenseVisual(object senseItem)
+        {
+            string type = Text(Member(senseItem, "senseItemType"));
+            if (type == "Valuables" || type == "QuestItems") return true;
+            object raw = Member(senseItem, "color");
+            if (!(raw is Color)) return false;
+            Color color = (Color)raw;
+            return (color.r > .85f && color.g < .25f) ||
+                   (color.r > .85f && color.g > .70f && color.b < .30f) ||
+                   (color.b > .45f && color.r > .25f && color.g < .45f);
         }
 
         static string IconFile(ItemNeedIcon icon)
@@ -221,7 +250,7 @@ namespace SPTItemIntelligence
         static bool Flag(object value) { try { return value != null && Convert.ToBoolean(value); } catch { return false; } }
         static int Number(object value, int fallback) { try { return value == null ? fallback : Convert.ToInt32(value); } catch { return fallback; } }
         static Assembly FindAssembly(string name) { foreach (Assembly value in AppDomain.CurrentDomain.GetAssemblies()) if (string.Equals(value.GetName().Name, name, StringComparison.OrdinalIgnoreCase)) return value; return null; }
-        static MethodInfo FindMethod(Type type, string name, int parameters) { if (type == null) return null; foreach (MethodInfo method in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) if (method.Name == name && method.GetParameters().Length == parameters) return method; return null; }
+        static MethodInfo FindMethod(Type type, string name, int parameters) { if (type == null) return null; foreach (MethodInfo method in type.GetMethods(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)) if (method.Name == name && method.GetParameters().Length == parameters) return method; return null; }
 
         static MethodInfo FindPatchMethod(Type harmonyType, Type harmonyMethodType)
         {

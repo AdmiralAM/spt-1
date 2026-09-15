@@ -57,6 +57,7 @@ namespace SPTItemIntelligence
         readonly ConfigEntry<Color> missingColor;
         readonly ConfigEntry<bool> senseIntegration, senseRequiredItems, senseSecondaryOutline, senseRemainingText;
         readonly ConfigEntry<Color> senseQuestColor, senseHideoutColor, senseFutureColor;
+        readonly ConfigEntry<Color> senseMissingColor, sensePartialColor, senseNextColor, senseCompleteColor;
         int revision;
         ModuleSelection modules;
 
@@ -129,6 +130,10 @@ namespace SPTItemIntelligence
             senseQuestColor = ColorEntry(config, "Amands Sense Colors", "Active Quest", new Color(1.00f, 0.35f, 0.21f), "Unmet active quest requirement.");
             senseHideoutColor = ColorEntry(config, "Amands Sense Colors", "Hideout", new Color(0.20f, 0.78f, 1.00f), "Unmet hideout requirement.");
             senseFutureColor = ColorEntry(config, "Amands Sense Colors", "Future Quest", new Color(0.75f, 0.55f, 1.00f), "Unmet future quest requirement.");
+            senseMissingColor = ColorEntry(config, "Amands Sense Stock Colors", "Missing", new Color(1.00f, 0.16f, 0.12f), "Not enough for the nearest requirement.");
+            sensePartialColor = ColorEntry(config, "Amands Sense Stock Colors", "Partial", new Color(1.00f, 0.58f, 0.12f), "Some useful stock, but the nearest requirement is not covered.");
+            senseNextColor = ColorEntry(config, "Amands Sense Stock Colors", "Next Covered", new Color(0.62f, 1.00f, 0.38f), "Nearest requirement covered, later requirements remain.");
+            senseCompleteColor = ColorEntry(config, "Amands Sense Stock Colors", "Complete", new Color(0.10f, 1.00f, 0.20f), "All tracked requirements are covered.");
 
             tooltipMode.SettingChanged += delegate { Touch(); };
             valueMode.SettingChanged += delegate { Touch(); };
@@ -162,6 +167,10 @@ namespace SPTItemIntelligence
             senseQuestColor.SettingChanged += delegate { Touch(); };
             senseHideoutColor.SettingChanged += delegate { Touch(); };
             senseFutureColor.SettingChanged += delegate { Touch(); };
+            senseMissingColor.SettingChanged += delegate { Touch(); };
+            sensePartialColor.SettingChanged += delegate { Touch(); };
+            senseNextColor.SettingChanged += delegate { Touch(); };
+            senseCompleteColor.SettingChanged += delegate { Touch(); };
             modules = ReadModules();
         }
 
@@ -198,6 +207,13 @@ namespace SPTItemIntelligence
             if (reason == ItemNeedReason.Hideout) return senseHideoutColor.Value;
             if (reason == ItemNeedReason.FutureQuest) return senseFutureColor.Value;
             return defaultColor.Value;
+        }
+        public Color GetSenseStockColor(SenseStockState state)
+        {
+            if (state == SenseStockState.Complete) return senseCompleteColor.Value;
+            if (state == SenseStockState.NextCovered) return senseNextColor.Value;
+            if (state == SenseStockState.Partial) return sensePartialColor.Value;
+            return senseMissingColor.Value;
         }
         public int Revision => Volatile.Read(ref revision);
 

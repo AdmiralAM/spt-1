@@ -26,9 +26,11 @@ static class Phase35AmandsSenseRuntimeAdapterTests
         Expect(adapter.Contains("!settings.SenseIntegration || !settings.SenseRequiredItems") &&
                plugin.Contains("senseIntegration.Dispose();"),
             "disabled integration exits immediately and removes its runtime patches", ref assertions);
-        Expect(adapter.Contains("SenseRequirementMapper.Map(ledger.Evaluate(templateId, allocation, fir))") &&
-               adapter.Contains("if (!presentation.OverridesSense) return;"),
+        Expect(adapter.Contains("ledger.Evaluate(templateId, allocation, fir)") &&
+               adapter.Contains("if (!policy.HasItemIntelligence) return;"),
             "the shared deterministic requirement decision is the only reason Sense presentation is changed", ref assertions);
+        Expect(adapter.Contains("BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic"),
+            "Sense 3.1 static Clear lifecycle method is discovered", ref assertions);
         Expect(adapter.Contains("icon_quest.png") && adapter.Contains("icon_barter_building.png") && adapter.Contains("icon_info.png"),
             "the adapter reuses Sense-owned runtime sprites instead of copying or shipping its assets", ref assertions);
         Expect(adapter.Contains("ledger.Observe(id, template, stack, fir)") &&
