@@ -43,10 +43,16 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
 
     def test_single_map_story_quests_expose_their_map_in_client_metadata(self):
         expected = {
-            "Эпицентр": "Sandbox", "Таможня": "bigmap", "Лес": "Woods",
-            "Развязка": "Interchange", "Берег": "Shoreline", "Резерв": "RezervBase",
-            "Маяк": "Lighthouse", "Улицы": "TarkovStreets", "Завод": "factory4_day",
-            "Лаборатория": "laboratory",
+            "Эпицентр": "653e6760052c01c1c805532f",
+            "Таможня": "56f40101d2720b2a4d8b45d6",
+            "Лес": "5704e3c2d2720bac5b8b4567",
+            "Развязка": "5714dbc024597771384a510d",
+            "Берег": "5704e554d2720bac5b8b456e",
+            "Резерв": "5704e5fad2720bc05b8b4567",
+            "Маяк": "5704e4dad2720bb55b8b4567",
+            "Улицы": "5714dc692459777137212e12",
+            "Завод": "55f2d3fd4bdc2d5f408b4567",
+            "Лаборатория": "5b0fc42d86f7744a585f9105",
         }
         for chain in self.authored["chains"]:
             for row in chain["quests"]:
@@ -73,8 +79,8 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
     def test_story_access_keys_are_owned_not_handed_over(self):
         expected = {
             "ed21744058dec7587de1081f": {
-                "5672c92d4bdc2d180f8b4567", "5780cda02459777b272ede61",
-                "5780cf692459777de4559321", "5780cf722459777a5108b9a1",
+                "59387a4986f77401cc236e62", "59148c8a86f774197930e983",
+                "5780cf942459777df90dcb72", "5780cfa52459777dfb276eb1",
             },
             "30d087339ef8063ccd818036": {
                 "57a349b2245977762b199ec7", "593858c486f774253a24cb52",
@@ -91,6 +97,18 @@ class StoryCampaignRuntimeTests(unittest.TestCase):
             self.assertFalse(key_conditions[0]["onlyFoundInRaid"], quest_id)
             self.assertFalse(any(row["conditionType"] == "HandoverItem" and set(row["target"]) == targets for row in finish), quest_id)
             self.assertIn("ключ не сдаётся", self.ru[quest_id + " description"], quest_id)
+
+    def test_dispatcher_key_uses_a_distinct_common_dorm_pool_and_explains_it(self):
+        quest_id = "ed21744058dec7587de1081f"
+        description = self.ru[quest_id + " description"]
+        for room in ("114", "204", "214", "220"):
+            self.assertIn(room, description)
+        self.assertIn("не требуется", description)
+        self.assertIn("ключ останется у тебя", description)
+
+    def test_english_story_copy_contains_no_russian_map_names(self):
+        for key, value in self.en.items():
+            self.assertNotRegex(value, r"[А-Яа-яЁё]", key)
 
     def test_authored_recovery_beats_require_real_recovery_conditions(self):
         corrected = {

@@ -25,10 +25,18 @@ STORY_UNLOCKS = {
 }
 
 QUEST_LOCATIONS = {
-    "Эпицентр": "Sandbox", "Таможня": "bigmap", "Лес": "Woods",
-    "Развязка": "Interchange", "Берег": "Shoreline", "Резерв": "RezervBase",
-    "Маяк": "Lighthouse", "Улицы": "TarkovStreets", "Завод": "factory4_day",
-    "Лаборатория": "laboratory",
+    # Quest.location is a location-template Mongo ID. The nested Location
+    # conditions below deliberately keep EFT's runtime map names.
+    "Эпицентр": "653e6760052c01c1c805532f",
+    "Таможня": "56f40101d2720b2a4d8b45d6",
+    "Лес": "5704e3c2d2720bac5b8b4567",
+    "Развязка": "5714dbc024597771384a510d",
+    "Берег": "5704e554d2720bac5b8b456e",
+    "Резерв": "5704e5fad2720bc05b8b4567",
+    "Маяк": "5704e4dad2720bb55b8b4567",
+    "Улицы": "5714dc692459777137212e12",
+    "Завод": "55f2d3fd4bdc2d5f408b4567",
+    "Лаборатория": "5b0fc42d86f7744a585f9105",
 }
 
 
@@ -90,10 +98,10 @@ REWARD_ITEMS = {
 
 ACCESS_KEY_POOLS = {
     "Таможня": [
-        "5672c92d4bdc2d180f8b4567",  # Dorm room 118
-        "5780cda02459777b272ede61",  # Dorm room 306
-        "5780cf692459777de4559321",  # Dorm room 315
-        "5780cf722459777a5108b9a1",  # Dorm room 308
+        "59387a4986f77401cc236e62",  # Dorm room 114
+        "59148c8a86f774197930e983",  # Dorm room 204
+        "5780cf942459777df90dcb72",  # Dorm room 214
+        "5780cfa52459777dfb276eb1",  # Dorm room 220
     ],
     "Завод": [
         "57a349b2245977762b199ec7",  # Pumping station front door
@@ -108,6 +116,12 @@ ACCESS_KEY_POOLS = {
 }
 
 CHAIN_EN = ["First Circuit", "Missing Convoy", "Observation Net", "Dead Warehouse", "Sanitary Corridor", "Mobilization Protocol", "Coastal Blockade", "Archive of Collapse", "Black Shift", "Final Protocol"]
+MAP_NAMES_EN = {
+    "Эпицентр": "Ground Zero", "Таможня": "Customs", "Лес": "Woods",
+    "Развязка": "Interchange", "Берег": "Shoreline", "Резерв": "Reserve",
+    "Маяк": "Lighthouse", "Улицы": "Streets of Tarkov", "Завод": "Factory",
+    "Лаборатория": "The Lab",
+}
 CODENAMES_EN = [
     ["Foreign Frequency", "Zero Mark", "Last Crew", "Locked Airwaves", "Blind Spot", "Uninvited Listeners", "Reserve Power", "Control Package", "Open Channel", "First Circuit"],
     ["Convoy Tracks", "Driverless Truck", "Dispatcher Key", "Night Manifest", "False Labels", "Extra Middleman", "False Bottom", "Broken Transfer", "Recipient", "Close the Route"],
@@ -165,7 +179,7 @@ def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[
                 zone = visits[(q["order"] + objective_index + n - 1) % len(visits)]
                 suffix = f"visit-{objective_index}-{n}"
                 rows.append(counter(qid, suffix, 1, [location(qid, suffix, maps), visit(qid, suffix, zone)], "Exploration", index))
-                en.append(f"Inspect operational point {n + 1}/{quantity} on {chain['title'].split(':')[0]}")
+                en.append(f"Inspect operational point {n + 1}/{quantity} on {MAP_NAMES_EN[map_name]}")
                 ru.append(f"Осмотреть оперативную точку {n + 1}/{quantity} на карте «{map_name}»")
                 index += 1
         elif kind == "placeOrMark":
@@ -188,7 +202,7 @@ def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[
             rows.append(counter(qid, suffix, 1, [location(qid, suffix, maps), visit(qid, suffix, zone)], "Exploration", index)); index += 1
             rows.append(item_condition(qid, f"recover-{objective_index}", item_tpl, "FindItem", index, True)); index += 1
             rows.append(item_condition(qid, f"recover-{objective_index}", item_tpl, "HandoverItem", index, True)); index += 1
-            en.append(f"Inspect the designated recovery point on {chain['title'].split(':')[0]}")
+            en.append(f"Inspect the designated recovery point on {MAP_NAMES_EN[map_name]}")
             ru.append(f"Осмотреть назначенную точку изъятия на карте «{map_name}»")
             en.append(f"Find 1 × {names_en.get(item_tpl, item_tpl)}. Found in raid: required")
             ru.append(f"Найти 1 × {names_ru.get(item_tpl, item_tpl)}. Статус «Найдено в рейде»: требуется")
@@ -202,7 +216,7 @@ def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[
             targets = ACCESS_KEY_POOLS[map_name]
             rows.append(key_pool_condition(qid, targets, index)); index += 1
             if map_name == "Таможня":
-                en_pool, ru_pool = "Dorm room 118, 306, 308 or 315 key", "ключ от комнаты общежития 118, 306, 308 или 315"
+                en_pool, ru_pool = "Dorm room 114, 204, 214 or 220 key", "ключ от комнаты общежития 114, 204, 214 или 220"
             elif map_name == "Берег":
                 en_pool, ru_pool = "Health Resort office 104, 112, 107 or utility key", "ключ Санатория: офис 104, 112, 107 или подсобка"
             else:
@@ -215,13 +229,13 @@ def build_finish(q: dict, chain: dict, names_en: dict[str, str], names_ru: dict[
             rows.append(counter(qid, suffix, quantity, [kill, location(qid, suffix, maps)], "Elimination", index)); index += 1
             target = {"Scav": "Scavs", "Rogue": "Rogues", "Raider": "Raiders"}.get(objective.get("target"), "hostile targets")
             target_ru = {"Scav": "Диких", "Rogue": "Отступников", "Raider": "Рейдеров"}.get(objective.get("target"), "противников")
-            en.append(f"Eliminate {quantity} {target} on {chain['title'].split(':')[0]}; progress carries across raids")
+            en.append(f"Eliminate {quantity} {target} on {MAP_NAMES_EN[map_name]}; progress carries across raids")
             ru.append(f"Устранить {quantity} {target_ru} на карте «{map_name}»; прогресс сохраняется между рейдами")
         elif kind == "surviveExtract":
             suffix = f"survive-{objective_index}"
             exit_condition = {"id": hid(f"{qid}:{suffix}:exit"), "dynamicLocale": False, "conditionType": "ExitStatus", "status": ["Survived"]}
             rows.append(counter(qid, suffix, 1, [location(qid, suffix, maps), exit_condition], "Completion", index, True)); index += 1
-            en.append(f"Survive and extract from {chain['title'].split(':')[0]} in one raid")
+            en.append(f"Survive and extract from {MAP_NAMES_EN[map_name]} in one raid")
             ru.append(f"Выжить и эвакуироваться с карты «{map_name}» в одном рейде")
     return rows, en, ru
 
@@ -248,7 +262,7 @@ def locale_set(q: dict, chain: dict, en_name: str, objective_en: list[str], obje
     speaker_ru = "Наталья выделила новую зацепку внутри сети Адмирала." if specialist else "Адмирал назначил следующую операцию."
     key_details_en = [line for line in objective_en if "allowed key:" in line]
     key_details_ru = [line for line in objective_ru if "допустимый ключ:" in line]
-    en_body = f"{speaker_en}\n\nSituation:\nOperation '{en_name}' is stage {q['order']} of 10 in the {CHAIN_EN[chain['chain'] - 1]} investigation on {chain['title'].split(':')[0]}. Complete the field work to move the investigation forward."
+    en_body = f"{speaker_en}\n\nSituation:\nOperation '{en_name}' is stage {q['order']} of 10 in the {CHAIN_EN[chain['chain'] - 1]} investigation on {MAP_NAMES_EN[chain['map']]}. Complete the field work to move the investigation forward."
     ru_body = f"{speaker_ru}\n\nОбстановка:\nОперация «{q['name']}» — этап {q['order']} из 10 в расследовании «{chain['title']}» на карте «{chain['map']}».\n\nОперативная сводка:\n{q['brief']}"
     if key_details_en:
         en_body += "\n\nOperational detail:\n- " + "\n- ".join(key_details_en)

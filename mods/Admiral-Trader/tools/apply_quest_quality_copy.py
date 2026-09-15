@@ -142,6 +142,7 @@ def main():
     # This pass owns the frozen 43-quest foundation. Later campaign generators
     # own their copy and must not be rewritten through the legacy locale set.
     historical_ids = set(load(ROOT / "manifests/quest-quality-runtime.json")["quests"])
+    access_ids = {row["id"] for row in load(ROOT / "manifests/keys-authored-spec.json")["quests"]}
     quests = [load(path) for path in sorted((ROOT / "db/quests").glob("*.json")) if load(path)["_id"] in historical_ids]
     for quest in quests:
         qid = quest["_id"]
@@ -152,9 +153,15 @@ def main():
             requirements = [condition_text(c, locale, lang) for c in quest["conditions"]["AvailableForFinish"]]
             req_label = "Requirements" if lang == "en" else "Требования"
             rew_label = "Rewards" if lang == "en" else "Награды"
-            existing_description = authored[lang][f"{qid} description"].split(f"\n\n{req_label}:", 1)[0]
-            existing_started = authored[lang][f"{qid} startedMessageText"].split(f"\n\n{req_label}:", 1)[0]
-            existing_success = authored[lang][f"{qid} successMessageText"].split(f"\n\n{rew_label}:", 1)[0]
+            existing_description = authored[lang][f"{qid} description"].replace("\r", "").split(f"\n\n{req_label}:", 1)[0]
+            existing_started = authored[lang][f"{qid} startedMessageText"].replace("\r", "").split(f"\n\n{req_label}:", 1)[0]
+            existing_success = authored[lang][f"{qid} successMessageText"].replace("\r", "").split(f"\n\n{rew_label}:", 1)[0]
+            if qid in access_ids:
+                detail_label = "Clarification" if lang == "en" else "Уточнение"
+                existing_description = existing_description.split(f"\n\n{detail_label}:", 1)[0]
+                existing_started = existing_started.split(f"\n\n{detail_label}:", 1)[0]
+                existing_description += f"\n\n{detail_label}:\n- " + "\n- ".join(requirements)
+                existing_started += f"\n\n{detail_label}:\n- " + "\n- ".join(requirements)
             if qid == "cd2641c70bede98dac3945d0":
                 existing_success = ("Precision Rifles capability confirmed. The UCW ammunition authorization is now active."
                                     if lang == "en" else

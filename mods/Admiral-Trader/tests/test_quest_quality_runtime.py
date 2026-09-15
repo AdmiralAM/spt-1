@@ -3,6 +3,18 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+LOCATION_IDS = {
+    "sandbox": "653e6760052c01c1c805532f",
+    "bigmap": "56f40101d2720b2a4d8b45d6",
+    "woods": "5704e3c2d2720bac5b8b4567",
+    "interchange": "5714dbc024597771384a510d",
+    "shoreline": "5704e554d2720bac5b8b456e",
+    "rezervbase": "5704e5fad2720bc05b8b4567",
+    "lighthouse": "5704e4dad2720bb55b8b4567",
+    "tarkovstreets": "5714dc692459777137212e12",
+    "factory4_day": "55f2d3fd4bdc2d5f408b4567",
+    "laboratory": "5b0fc42d86f7744a585f9105",
+}
 
 
 class QuestQualityRuntimeTests(unittest.TestCase):
@@ -103,13 +115,13 @@ class QuestQualityRuntimeTests(unittest.TestCase):
     def test_acoustic_discipline_names_all_five_allowed_headsets_and_woods(self):
         qid = "8dad0d354ac000b7bbf05b9a"
         quest = next(q for q in self.quests if q["_id"] == qid)
-        self.assertEqual(quest["location"], "Woods")
+        self.assertEqual(quest["location"], "5704e3c2d2720bac5b8b4567")
         description = self.locales["ru"][qid + " description"]
         for name in ("ГСШ-01", "Peltor Tactical Sport", "Walker’s Razor Digital", "OPSMEN Earmor M32", "Peltor ComTac IV Hybrid"):
             self.assertIn(name, description)
 
     def test_single_map_runtime_conditions_are_not_presented_as_any_location(self):
-        aliases = {"Sandbox": "Sandbox", "Sandbox_high": "Sandbox", "factory4_day": "factory4_day", "factory4_night": "factory4_day"}
+        aliases = {"sandbox_high": "sandbox", "factory4_night": "factory4_day"}
         for quest in self.quests:
             locations = []
             def visit(value):
@@ -119,9 +131,27 @@ class QuestQualityRuntimeTests(unittest.TestCase):
                 elif isinstance(value, list):
                     for child in value: visit(child)
             visit(quest["conditions"])
-            logical = {aliases.get(value, value) for value in locations}
+            logical = {aliases.get(value.lower(), value.lower()) for value in locations}
             if len(logical) == 1:
-                self.assertNotEqual(quest["location"], "any", quest["_id"])
+                runtime_map = next(iter(logical))
+                self.assertEqual(quest["location"], LOCATION_IDS[runtime_map], quest["_id"])
+
+    def test_spatial_objectives_use_the_native_contract_consumed_by_dynamic_maps(self):
+        spatial_quests = 0
+        for quest in self.quests:
+            for condition in quest["conditions"]["AvailableForFinish"]:
+                if condition.get("conditionType") == "PlaceBeacon":
+                    spatial_quests += 1
+                    self.assertTrue(condition.get("zoneId"), quest["_id"])
+                    self.assertRegex(quest["location"], r"^[0-9a-f]{24}$", quest["_id"])
+                if condition.get("conditionType") != "CounterCreator":
+                    continue
+                nested = condition.get("counter", {}).get("conditions", [])
+                if any(row.get("conditionType") == "VisitPlace" for row in nested):
+                    spatial_quests += 1
+                    self.assertTrue(any(row.get("conditionType") == "Location" for row in nested), quest["_id"])
+                    self.assertRegex(quest["location"], r"^[0-9a-f]{24}$", quest["_id"])
+        self.assertGreater(spatial_quests, 0)
 
 
 if __name__ == "__main__":
